@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.70 1999/06/17 20:23:14 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.71 1999/06/17 22:20:42 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -48,37 +48,29 @@ extern StatCounters *snmpStatGet(int);
 variable_list *
 snmp_sysFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
-
+    variable_list *Answer = NULL;
     debug(49, 5) ("snmp_sysFn: Processing request:\n", Var->name[LEN_SQ_SYS]);
     snmpDebugOid(5, Var->name, Var->name_length);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-
     switch (Var->name[LEN_SQ_SYS]) {
     case SYSVMSIZ:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = store_mem_size >> 10;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    store_mem_size >> 10,
+	    ASN_INTEGER);
 	break;
     case SYSSTOR:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = store_swap_size;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    store_swap_size,
+	    ASN_INTEGER);
 	break;
     case SYS_UPTIME:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = tvSubDsec(squid_start, current_time) * 100;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    tvSubDsec(squid_start, current_time) * 100,
+	    SMI_TIMETICKS);
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	break;
     }
     return Answer;
 }
@@ -86,64 +78,58 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_confFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
+    variable_list *Answer = NULL;
     char *cp = NULL;
-    char *pp = NULL;
     debug(49, 5) ("snmp_confFn: Processing request with magic %d!\n", Var->name[8]);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-
     switch (Var->name[LEN_SQ_CONF]) {
     case CONF_ADMIN:
+	Answer = snmp_var_new(Var->name, Var->name_length);
 	Answer->type = ASN_OCTET_STR;
 	Answer->val_len = strlen(Config.adminEmail);
 	Answer->val.string = (u_char *) xstrdup(Config.adminEmail);
 	break;
     case CONF_VERSION:
+	Answer = snmp_var_new(Var->name, Var->name_length);
 	Answer->type = ASN_OCTET_STR;
 	Answer->val_len = strlen(appname);
 	Answer->val.string = (u_char *) xstrdup(appname);
 	break;
     case CONF_VERSION_ID:
-	pp = SQUID_VERSION;
+	Answer = snmp_var_new(Var->name, Var->name_length);
 	Answer->type = ASN_OCTET_STR;
-	Answer->val_len = strlen(pp);
-	Answer->val.string = (u_char *) xstrdup(pp);
+	Answer->val_len = strlen(SQUID_VERSION);
+	Answer->val.string = (u_char *) xstrdup(SQUID_VERSION);
 	break;
     case CONF_STORAGE:
 	switch (Var->name[LEN_SQ_CONF + 1]) {
 	case CONF_ST_MMAXSZ:
-	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) Config.memMaxSize >> 20;
+	    snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Config.memMaxSize >> 20,
+		ASN_INTEGER);
 	    break;
 	case CONF_ST_SWMAXSZ:
-	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) Config.Swap.maxSize >> 10;
+	    snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Config.Swap.maxSize >> 10,
+		ASN_INTEGER);
 	    break;
 	case CONF_ST_SWHIWM:
-	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) Config.Swap.highWaterMark;
+	    snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Config.Swap.highWaterMark,
+		ASN_INTEGER);
 	    break;
 	case CONF_ST_SWLOWM:
-	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) Config.Swap.lowWaterMark;
+	    snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Config.Swap.lowWaterMark,
+		ASN_INTEGER);
 	    break;
 	default:
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
-	    snmp_var_free(Answer);
-	    return (NULL);
+	    break;
 	}
 	break;
     case CONF_LOG_FAC:
+	Answer = snmp_var_new(Var->name, Var->name_length);
 	if (!(cp = Config.debugOptions))
 	    cp = "None";
 	Answer->type = ASN_OCTET_STR;
@@ -152,8 +138,7 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	break;
     }
     return Answer;
 }
@@ -161,111 +146,92 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
+    variable_list *Answer = NULL;
     struct in_addr *laddr;
     char *cp = NULL;
     peer *p = NULL;
     int cnt = 0;
     debug(49, 5) ("snmp_meshPtblFn: peer %d requested!\n", Var->name[LEN_SQ_MESH + 3]);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-
     laddr = oid2addr(&Var->name[LEN_SQ_MESH + 3]);
-
     for (p = Config.peers; p != NULL; p = p->next, cnt++)
 	if (p->in_addr.sin_addr.s_addr == laddr->s_addr)
 	    break;
-
     if (p == NULL) {
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	return NULL;
     }
     switch (Var->name[LEN_SQ_MESH + 2]) {
     case MESH_PTBL_NAME:
 	cp = p->host;
+	Answer = snmp_var_new(Var->name, Var->name_length);
 	Answer->type = ASN_OCTET_STR;
 	Answer->val_len = strlen(cp);
 	Answer->val.string = (u_char *) xstrdup(cp);
 	break;
     case MESH_PTBL_IP:
-	Answer->type = SMI_IPADDRESS;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	*(Answer->val.integer) = (snint) (p->in_addr.sin_addr.s_addr);
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) p->in_addr.sin_addr.s_addr,
+	    SMI_IPADDRESS);
 	break;
     case MESH_PTBL_HTTP:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = (snint) p->http_port;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) p->http_port,
+	    ASN_INTEGER);
 	break;
     case MESH_PTBL_ICP:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = (snint) p->icp.port;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) p->icp.port,
+	    ASN_INTEGER);
 	break;
     case MESH_PTBL_TYPE:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = (snint) p->type;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) p->type,
+	    ASN_INTEGER);
 	break;
     case MESH_PTBL_STATE:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = (snint) neighborUp(p);
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) neighborUp(p),
+	    ASN_INTEGER);
 	break;
     case MESH_PTBL_SENT:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = p->stats.pings_sent;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    p->stats.pings_sent,
+	    ASN_INTEGER);
 	break;
     case MESH_PTBL_PACKED:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = p->stats.pings_acked;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    p->stats.pings_acked,
+	    ASN_INTEGER);
 	break;
     case MESH_PTBL_FETCHES:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = p->stats.fetches;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    p->stats.fetches,
+	    SMI_COUNTER32);
 	break;
     case MESH_PTBL_RTT:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = ASN_INTEGER;
-	*(Answer->val.integer) = p->stats.rtt;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    p->stats.rtt,
+	    ASN_INTEGER);
 	break;
     case MESH_PTBL_IGN:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = p->stats.ignored_replies;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    p->stats.ignored_replies,
+	    SMI_COUNTER32);
 	break;
     case MESH_PTBL_KEEPAL_S:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = p->stats.n_keepalives_sent;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    p->stats.n_keepalives_sent,
+	    SMI_COUNTER32);
 	break;
     case MESH_PTBL_KEEPAL_R:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = p->stats.n_keepalives_recv;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    p->stats.n_keepalives_recv,
+	    SMI_COUNTER32);
 	break;
-
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	break;
     }
     return Answer;
 }
@@ -273,67 +239,73 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_prfSysFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
+    variable_list *Answer = NULL;
     static struct rusage rusage;
-
     debug(49, 5) ("snmp_prfSysFn: Processing request with magic %d!\n", Var->name[LEN_SQ_PRF + 1]);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-    Answer->val_len = sizeof(snint);
-    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-    Answer->type = ASN_INTEGER;
-
     switch (Var->name[LEN_SQ_PRF + 1]) {
     case PERF_SYS_PF:
 	squid_getrusage(&rusage);
-	*(Answer->val.integer) = rusage_pagefaults(&rusage);
-	Answer->type = SMI_COUNTER32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    rusage_pagefaults(&rusage),
+	    SMI_COUNTER32);
 	break;
     case PERF_SYS_NUMR:
-	*(Answer->val.integer) = IOStats.Http.reads;
-	Answer->type = SMI_COUNTER32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    IOStats.Http.reads,
+	    SMI_COUNTER32);
 	break;
     case PERF_SYS_MEMUSAGE:
-	*(Answer->val.integer) = (snint) memTotalAllocated() >> 10;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) memTotalAllocated() >> 10,
+	    ASN_INTEGER);
 	break;
     case PERF_SYS_CPUTIME:
 	squid_getrusage(&rusage);
-	*(Answer->val.integer) = (snint) rusage_cputime(&rusage);
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) rusage_cputime(&rusage),
+	    ASN_INTEGER);
 	break;
     case PERF_SYS_CPUUSAGE:
 	squid_getrusage(&rusage);
-	*(Answer->val.integer) = (snint)
-	    dpercent(rusage_cputime(&rusage), tvSubDsec(squid_start, current_time));
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) dpercent(rusage_cputime(&rusage), tvSubDsec(squid_start, current_time)),
+	    ASN_INTEGER);
 	break;
     case PERF_SYS_MAXRESSZ:
 	squid_getrusage(&rusage);
-	*(Answer->val.integer) = (snint) rusage_maxrss(&rusage);
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) rusage_maxrss(&rusage),
+	    ASN_INTEGER);
 	break;
     case PERF_SYS_CURLRUEXP:
-	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (snint) (storeExpiredReferenceAge() * 100);
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) (storeExpiredReferenceAge() * 100),
+	    SMI_TIMETICKS);
 	break;
     case PERF_SYS_CURUNLREQ:
-	*(Answer->val.integer) = (snint) Counter.unlink.requests;
-	Answer->type = SMI_COUNTER32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) Counter.unlink.requests,
+	    SMI_COUNTER32);
 	break;
     case PERF_SYS_CURUNUSED_FD:
-	*(Answer->val.integer) = (snint) Squid_MaxFD - Number_FD;
-	Answer->type = SMI_GAUGE32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) Squid_MaxFD - Number_FD,
+	    SMI_GAUGE32);
 	break;
     case PERF_SYS_CURRESERVED_FD:
-	*(Answer->val.integer) = (snint) Number_FD;
-	Answer->type = SMI_GAUGE32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) Number_FD,
+	    SMI_GAUGE32);
 	break;
     case PERF_SYS_NUMOBJCNT:
-	*(Answer->val.integer) = (snint) memInUse(MEM_STOREENTRY);
-	Answer->type = SMI_COUNTER32;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) memInUse(MEM_STOREENTRY),
+	    SMI_COUNTER32);
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	break;
     }
     return Answer;
 }
@@ -341,94 +313,107 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
+    variable_list *Answer = NULL;
     static StatCounters *f = NULL;
     static StatCounters *l = NULL;
     double x;
     int minutes;
-
     debug(49, 5) ("snmp_prfProtoFn: Processing request with magic %d!\n", Var->name[LEN_SQ_PRF]);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-
     switch (Var->name[LEN_SQ_PRF + 1]) {
     case PERF_PROTOSTAT_AGGR:	/* cacheProtoAggregateStats */
-	Answer->type = SMI_COUNTER32;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	switch (Var->name[LEN_SQ_PRF + 2]) {
 	case PERF_PROTOSTAT_AGGR_HTTP_REQ:
-	    *(Answer->val.integer) = (snint) Counter.client_http.requests;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.client_http.requests,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_HITS:
-	    *(Answer->val.integer) = (snint) Counter.client_http.hits;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.client_http.hits,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_ERRORS:
-	    *(Answer->val.integer) = (snint) Counter.client_http.errors;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.client_http.errors,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_IN:
-	    *(Answer->val.integer) = (snint) Counter.client_http.kbytes_in.kb;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.client_http.kbytes_in.kb,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_OUT:
-	    *(Answer->val.integer) = (snint) Counter.client_http.kbytes_out.kb;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.client_http.kbytes_out.kb,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_S:
-	    *(Answer->val.integer) = (snint) Counter.icp.pkts_sent;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.icp.pkts_sent,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_R:
-	    *(Answer->val.integer) = (snint) Counter.icp.pkts_recv;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.icp.pkts_recv,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_SKB:
-	    *(Answer->val.integer) = (snint) Counter.icp.kbytes_sent.kb;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.icp.kbytes_sent.kb,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_RKB:
-	    *(Answer->val.integer) = (snint) Counter.icp.kbytes_recv.kb;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.icp.kbytes_recv.kb,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_REQ:
-	    *(Answer->val.integer) = (snint) Counter.server.all.requests;
-	    Answer->type = SMI_INTEGER;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.server.all.requests,
+		SMI_INTEGER);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ERRORS:
-	    *(Answer->val.integer) = (snint) Counter.server.all.errors;
-	    Answer->type = SMI_INTEGER;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.server.all.errors,
+		SMI_INTEGER);
 	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_IN:
-	    *(Answer->val.integer) = (snint) Counter.server.all.kbytes_in.kb;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.server.all.kbytes_in.kb,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_OUT:
-	    *(Answer->val.integer) = (snint) Counter.server.all.kbytes_out.kb;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.server.all.kbytes_out.kb,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_CURSWAP:
-	    *(Answer->val.integer) = (snint) store_swap_size;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) store_swap_size,
+		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_CLIENTS:
-	    *(Answer->val.integer) = (snint) Counter.client_http.clients;
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
+		(snint) Counter.client_http.clients,
+		SMI_COUNTER32);
 	    break;
 	default:
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
-	    snmp_var_free(Answer);
-	    return (NULL);
+	    break;
 	}
 	return Answer;
     case PERF_PROTOSTAT_MEDIAN:
-
 	if (Var->name_length == LEN_SQ_PRF + 5)
 	    minutes = Var->name[LEN_SQ_PRF + 4];
 	else
 	    break;
 	if ((minutes < 1) || (minutes > 60))
 	    break;
-
 	f = snmpStatGet(0);
 	l = snmpStatGet(minutes);
-
 	debug(49, 8) ("median: min= %d, %d l= %x , f = %x\n", minutes,
 	    Var->name[LEN_SQ_PRF + 3], l, f);
-	Answer->type = SMI_INTEGER;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-
 	debug(49, 8) ("median: l= %x , f = %x\n", l, f);
 	switch (Var->name[LEN_SQ_PRF + 3]) {
 	case PERF_MEDIAN_TIME:
@@ -467,13 +452,12 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	    break;
 	default:
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
-	    snmp_var_free(Answer);
-	    return (NULL);
+	    return NULL;
 	}
-	*(Answer->val.integer) = (snint) x;
-	return Answer;
+	return snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) x,
+	    SMI_INTEGER);
     }
     *ErrP = SNMP_ERR_NOSUCHNAME;
-    snmp_var_free(Answer);
-    return (NULL);
+    return NULL;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.38 1999/06/17 20:23:15 wessels Exp $
+ * $Id: snmp_core.cc,v 1.39 1999/06/17 22:20:43 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -333,7 +333,6 @@ snmpInit(void)
 	);
 
     debug(49, 9) ("snmpInit: Completed SNMP mib tree structure\n");
-    memDataInit(MEM_SNMP_SNINT, "snmp_snint", sizeof(snint), 0);
 }
 
 void

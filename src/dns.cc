@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.78 1999/06/17 20:23:09 wessels Exp $
+ * $Id: dns.cc,v 1.79 1999/06/17 22:20:37 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -105,29 +105,30 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
 variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
+    variable_list *Answer = NULL;
     debug(49, 5) ("snmp_netDnsFn: Processing request:\n", Var->name[LEN_SQ_NET +
 	    1]);
     snmpDebugOid(5, Var->name, Var->name_length);
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-    Answer->val_len = sizeof(snint);
-    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-    Answer->type = SMI_COUNTER32;
     switch (Var->name[LEN_SQ_NET + 1]) {
     case DNS_REQ:
-	*(Answer->val.integer) = dnsservers->stats.requests;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    dnsservers->stats.requests,
+	    SMI_COUNTER32);
 	break;
     case DNS_REP:
-	*(Answer->val.integer) = dnsservers->stats.replies;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    dnsservers->stats.replies,
+	    SMI_COUNTER32);
 	break;
     case DNS_SERVERS:
-	*(Answer->val.integer) = dnsservers->n_running;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    dnsservers->n_running,
+	    SMI_COUNTER32);
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	break;
     }
     return Answer;
 }

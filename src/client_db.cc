@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.45 1999/06/17 20:23:08 wessels Exp $
+ * $Id: client_db.cc,v 1.46 1999/06/17 22:20:36 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -230,18 +230,14 @@ client_entry(struct in_addr *current)
 variable_list *
 snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer;
+    variable_list *Answer = NULL;
     static char key[15];
     ClientInfo *c = NULL;
     int aggr = 0;
     log_type l;
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-
     debug(49, 6) ("snmp_meshCtblFn: Current : \n");
     snmpDebugOid(6, Var->name, Var->name_length);
-
     snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[LEN_SQ_NET + 3], Var->name[LEN_SQ_NET + 4],
 	Var->name[LEN_SQ_NET + 5], Var->name[LEN_SQ_NET + 6]);
     debug(49, 5) ("snmp_meshCtblFn: [%s] requested!\n", key);
@@ -254,22 +250,19 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     }
     switch (Var->name[LEN_SQ_NET + 2]) {
     case MESH_CTBL_ADDR:
-	Answer->type = SMI_IPADDRESS;
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	*(Answer->val.integer) = (snint) c->addr.s_addr;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) c->addr.s_addr,
+	    SMI_IPADDRESS);
 	break;
     case MESH_CTBL_HTBYTES:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) c->Http.kbytes_out.kb;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) c->Http.kbytes_out.kb,
+	    SMI_COUNTER32);
 	break;
     case MESH_CTBL_HTREQ:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) c->Http.n_requests;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) c->Http.n_requests,
+	    SMI_COUNTER32);
 	break;
     case MESH_CTBL_HTHITS:
 	aggr = 0;
@@ -277,47 +270,40 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	    if (isTcpHit(l))
 		aggr += c->Http.result_hist[l];
 	}
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) aggr;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) aggr,
+	    SMI_COUNTER32);
 	break;
     case MESH_CTBL_HTHITBYTES:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) c->Http.hit_kbytes_out.kb;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) c->Http.hit_kbytes_out.kb,
+	    SMI_COUNTER32);
 	break;
     case MESH_CTBL_ICPBYTES:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) c->Icp.kbytes_out.kb;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) c->Icp.kbytes_out.kb,
+	    SMI_COUNTER32);
 	break;
     case MESH_CTBL_ICPREQ:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) c->Icp.n_requests;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) c->Icp.n_requests,
+	    SMI_COUNTER32);
 	break;
     case MESH_CTBL_ICPHITS:
 	aggr = c->Icp.result_hist[LOG_UDP_HIT];
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) aggr;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) aggr,
+	    SMI_COUNTER32);
 	break;
     case MESH_CTBL_ICPHITBYTES:
-	Answer->val_len = sizeof(snint);
-	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) c->Icp.hit_kbytes_out.kb;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    (snint) c->Icp.hit_kbytes_out.kb,
+	    SMI_COUNTER32);
 	break;
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
 	debug(49, 5) ("snmp_meshCtblFn: illegal column.\n");
-	return (NULL);
+	break;
     }
     return Answer;
 }
