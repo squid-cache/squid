@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.210 2001/01/30 10:06:48 hno Exp $
+# $Id: cf.data.pre,v 1.211 2001/01/30 21:31:05 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -398,10 +398,8 @@ DOC_START
 	sometimes it can lead to very large values (say 5 seconds).
 	Use this option to put an upper limit on the dynamic timeout
 	value.  Do NOT use this option to always use a fixed (instead
-	of a dynamic) timeout value.
-
-	If 'icp_query_timeout' is set to zero, then this value is
-	ignored.
+	of a dynamic) timeout value. To set a fixed timeout see the
+	'icp_query_timeout' directive.
 DOC_END
 
 NAME: mcast_icp_query_timeout
