@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.23 1998/05/12 20:16:34 wessels Exp $
+ * $Id: mem.cc,v 1.24 1998/05/22 23:44:15 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -273,7 +273,7 @@ memInit(void)
     /* test that all entries are initialized */
     for (t = MEM_NONE + 1; t < MEM_MAX; t++) {
 	if (MEM_DONTFREE == t)
-		continue;
+	    continue;
 	/*
 	 * If you hit this assertion, then you forgot to add a
 	 * memDataInit() line for type 't' above.

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.416 1998/05/21 22:23:59 wessels Exp $
+ * $Id: store.cc,v 1.417 1998/05/22 23:44:29 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -627,8 +627,8 @@ storeGetMemSpace(int size)
 	prev = m->prev;
 	e = m->data;
 	if (storeEntryLocked(e)) {
-            dlinkDelete(m, &inmem_list);
-            dlinkAdd(e, m, &inmem_list);
+	    dlinkDelete(m, &inmem_list);
+	    dlinkAdd(e, m, &inmem_list);
 	    continue;
 	}
 	released++;

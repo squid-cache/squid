@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.115 1998/05/22 21:11:47 wessels Exp $
+ * $Id: disk.cc,v 1.116 1998/05/22 23:44:03 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -274,7 +274,7 @@ diskHandleWrite(int fd, void *notused)
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 #if USE_ASYNC_IO
     aioWrite(fd,
-	-1, /* seek offset, -1 == append */
+	-1,			/* seek offset, -1 == append */
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset,
 	diskHandleWriteComplete,

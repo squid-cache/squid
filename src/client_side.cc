@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.312 1998/05/21 23:14:05 wessels Exp $
+ * $Id: client_side.cc,v 1.313 1998/05/22 23:44:00 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1992,9 +1992,9 @@ clientReadRequest(int fd, void *data)
 			if (request->port == Config.Port.http->i)
 			    http->flags.internal = 1;
 		    } else if (internalStaticCheck(strBuf(request->urlpath))) {
-			    xstrncpy(request->host, getMyHostname(), SQUIDHOSTNAMELEN);
-			    request->port = Config.Port.http->i;
-			    http->flags.internal = 1;
+			xstrncpy(request->host, getMyHostname(), SQUIDHOSTNAMELEN);
+			request->port = Config.Port.http->i;
+			http->flags.internal = 1;
 		    }
 		}
 	    }

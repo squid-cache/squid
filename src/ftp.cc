@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.225 1998/05/21 07:05:38 wessels Exp $
+ * $Id: ftp.cc,v 1.226 1998/05/22 23:44:07 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -56,24 +56,24 @@ typedef enum {
 } ftp_state_t;
 
 struct _ftp_flags {
-	int isdir:1;
-	int pasv_supported:1;
-	int skip_whitespace:1;
-	int rest_supported:1;
-	int pasv_only:1;
-	int authenticated:1;
-	int http_header_sent:1;
-	int tried_nlst:1;
-	int use_base:1;
-	int root_dir:1;
-	int no_dotdot:1;
-	int html_header_sent:1;
-	int binary:1;
-	int try_slash_hack:1;
-	int put:1;
-	int put_mkdir:1;
-	int listformat_unknown:1;
-	int datachannel_hack:1;
+    int isdir:1;
+    int pasv_supported:1;
+    int skip_whitespace:1;
+    int rest_supported:1;
+    int pasv_only:1;
+    int authenticated:1;
+    int http_header_sent:1;
+    int tried_nlst:1;
+    int use_base:1;
+    int root_dir:1;
+    int no_dotdot:1;
+    int html_header_sent:1;
+    int binary:1;
+    int try_slash_hack:1;
+    int put:1;
+    int put_mkdir:1;
+    int listformat_unknown:1;
+    int datachannel_hack:1;
 };
 
 typedef struct _Ftpdata {
@@ -717,7 +717,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
     while (*end != '\r' && *end != '\n' && end > sbuf)
 	end--;
     usable = end - sbuf;
-    debug(9,3)("ftpParseListing: usable = %d\n", usable);
+    debug(9, 3) ("ftpParseListing: usable = %d\n", usable);
     if (usable == 0) {
 	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
 	xfree(sbuf);
@@ -853,7 +853,7 @@ ftpDataRead(int fd, void *data)
  * Return 0 if something is missing.
  */
 static int
-ftpCheckAuth(FtpStateData * ftpState, const HttpHeader *req_hdr)
+ftpCheckAuth(FtpStateData * ftpState, const HttpHeader * req_hdr)
 {
     char *orig_user;
     const char *auth;

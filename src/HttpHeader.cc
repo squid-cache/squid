@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.35 1998/05/21 00:01:28 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.36 1998/05/22 23:43:52 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -85,7 +85,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Accept-Ranges", HDR_ACCEPT_RANGES, ftStr},
     {"Age", HDR_AGE, ftInt},
     {"Age", HDR_ALLOW, ftStr},
-    {"Authorization", HDR_AUTHORIZATION, ftStr}, /* for now */
+    {"Authorization", HDR_AUTHORIZATION, ftStr},	/* for now */
     {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
     {"Connection", HDR_CONNECTION, ftStr},	/* for now */
     {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
@@ -149,7 +149,7 @@ static http_hdr_type ListHeadersArr[] =
     /* HDR_TRANSFER_ENCODING, */
     HDR_UPGRADE,
     HDR_VARY,
-    HDR_VIA, 
+    HDR_VIA,
     /* HDR_WARNING, */
     HDR_WWW_AUTHENTICATE,
     /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
@@ -538,7 +538,7 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
     /* only fields from ListHeaders array can be "listed" */
     assert(CBIT_TEST(ListHeadersMask, id));
     if (!CBIT_TEST(hdr->mask, id))
-        return s;
+	return s;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
 	if (e->id == id)
 	    strListAdd(&s, strBuf(e->value), ',');
@@ -606,7 +606,7 @@ httpHeaderPutAuth(HttpHeader * hdr, const char *authScheme, const char *realm)
 }
 
 void
-httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc *cc)
+httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc)
 {
     MemBuf mb;
     Packer p;
@@ -740,17 +740,17 @@ httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *authSche
     int l;
     assert(hdr && authScheme);
     field = httpHeaderGetStr(hdr, id);
-    if (!field) /* no authorization field */
+    if (!field)			/* no authorization field */
 	return NULL;
     l = strlen(authScheme);
-    if (!l || strncasecmp(field, authScheme, l)) /* wrong scheme */
+    if (!l || strncasecmp(field, authScheme, l))	/* wrong scheme */
 	return NULL;
     field += l;
-    if (!isspace(*field)) /* wrong scheme */
+    if (!isspace(*field))	/* wrong scheme */
 	return NULL;
     /* skip white space */
     field += xcountws(field);
-    if (!*field) /* no authorization cookie */
+    if (!*field)		/* no authorization cookie */
 	return NULL;
     return base64_decode(field);
 }

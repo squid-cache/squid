@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.8 1998/05/11 18:44:30 rousskov Exp $
+ * $Id: MemBuf.cc,v 1.9 1998/05/22 23:43:57 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -259,7 +259,7 @@ memBufGrow(MemBuf * mb, mb_size_t min_cap)
 	mb->buf = xmalloc(new_cap);
 	mb->freefunc = &xfree;
     } else {
-	assert(mb->freefunc == &xfree); /* for now */
+	assert(mb->freefunc == &xfree);		/* for now */
 	mb->buf = xrealloc(mb->buf, new_cap);
     }
     memset(mb->buf + mb->size, 0, new_cap - mb->size);	/* just in case */

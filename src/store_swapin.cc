@@ -95,7 +95,7 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     if (fd < 0) {
 	storeReleaseRequest(e);
     } else {
-        debug(20, 5) ("storeSwapInFileOpened: initialized '%s' for '%s'\n",
+	debug(20, 5) ("storeSwapInFileOpened: initialized '%s' for '%s'\n",
 	    ctrlp->path, storeUrl(e));
     }
     (ctrlp->callback) (fd, ctrlp->callback_data);

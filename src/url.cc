@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.93 1998/05/20 20:46:50 wessels Exp $
+ * $Id: url.cc,v 1.94 1998/05/22 23:44:34 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -353,7 +353,7 @@ urlCanonicalClean(const request_t * request)
     return buf;
 }
 
-#if OLD_CODE /* moved to HttpRequest.c */
+#if OLD_CODE			/* moved to HttpRequest.c */
 request_t *
 requestLink(request_t * request)
 {
@@ -435,11 +435,11 @@ urlCheckRequest(const request_t * r)
 
 /*
  * Quick-n-dirty host extraction from a URL.  Steps:
- *	Look for a colon
- *	Skip any '/' after the colon
- *	Copy the next SQUID_MAXHOSTNAMELEN bytes to host[]
- *	Look for an ending '/' or ':' and terminate
- *	Look for login info preceeded by '@'
+ *      Look for a colon
+ *      Skip any '/' after the colon
+ *      Copy the next SQUID_MAXHOSTNAMELEN bytes to host[]
+ *      Look for an ending '/' or ':' and terminate
+ *      Look for login info preceeded by '@'
  */
 char *
 urlHostname(const char *url)
@@ -459,7 +459,7 @@ urlHostname(const char *url)
 	*t = '\0';
     if ((t = strrchr(host, '@'))) {
 	t++;
-        xmemmove(host, t, strlen(t)+1);
+	xmemmove(host, t, strlen(t) + 1);
     }
     return host;
 }
