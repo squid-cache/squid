@@ -8,6 +8,10 @@
 	  failures (e.g. miss_access rules).
 	- Changed signal handlers with ASYNC_IO and Linux so that
 	  -k command line options work (Miquel van Smoorenburg).
+	- Fixed cachemgr 'objects' (statObjects()) by adding a check
+	  for READ_AHEAD_GAP.
+	- Modified storeExpireNow() to move expired entries to the
+	  tail of the LRU list.
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
