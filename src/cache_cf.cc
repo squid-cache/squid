@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.179 1997/04/25 21:43:56 wessels Exp $
+ * $Id: cache_cf.cc,v 1.180 1997/04/25 22:01:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -110,7 +110,7 @@ struct SquidConfig Config;
 #define DefaultMemMaxSize 	(8 << 20)	/* 8 MB */
 #define DefaultMemHighWaterMark 90	/* 90% */
 #define DefaultMemLowWaterMark  75	/* 75% */
-#define DefaultSwapMaxSize	0 
+#define DefaultSwapMaxSize	0
 #define DefaultSwapHighWaterMark 95	/* 95% */
 #define DefaultSwapLowWaterMark  90	/* 90% */
 #define DefaultNetdbHigh	1000	/* counts, not percents */
@@ -858,7 +858,7 @@ parseCacheDir(void)
 	self_destruct();
     dir = token;
     GetInteger(i);
-    size = i << 10;	/* Mbytes to kbytes */
+    size = i << 10;		/* Mbytes to kbytes */
     Config.Swap.maxSize += size;
     GetInteger(i);
     l1 = i;
