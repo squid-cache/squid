@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.40 1996/04/16 23:05:44 wessels Exp $ */
+/* $Id: main.cc,v 1.41 1996/04/17 15:07:31 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -344,7 +344,7 @@ int main(argc, argv)
 	case COMM_SHUTDOWN:
 	    /* delayed close so we can transmit while shutdown pending */
 	    if (theUdpConnection > 0) {
-		comm_close (theUdpConnection);
+		comm_close(theUdpConnection);
 		theUdpConnection = -1;
 	    }
 	    if (shutdown_pending) {
