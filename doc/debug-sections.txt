@@ -1,5 +1,3 @@
-
-none
 section 0     Announcement Server
 section 0     CGI Cache Manager
 section 0     Client Database
@@ -8,6 +6,7 @@ section 0     Debug Routines
 section 0     Hash Tables
 section 0     WWW Client
 section 1     Startup and Main Loop
+section 2     UNUSED
 section 3     Configuration File Parsing
 section 4     Error Generation
 section 5     Socket Functions
@@ -20,12 +19,12 @@ section 11    Hypertext Transfer Protocol (HTTP)
 section 12    Unlink Daemon
 section 13    High Level Memory Pool Management
 section 14    IP Cache
-section 15    Neighbor Routines
+section 15    Request Forwarding
 section 16    Cache Manager Objects
 section 17    Neighbor Selection
 section 18    Cache Manager Statistics
 section 19    Store Memory Primitives
-section 20    Storeage Manager
+section 20    Storage Manager
 section 21    Misc Functions
 section 22    Refresh Calculation
 section 23    URL Parsing
@@ -36,14 +35,15 @@ section 27    Cache Announcer
 section 28    Access Control
 section 29    Redirector
 section 30    Ident (RFC 931)
+section 31    Hypertext Caching Protocol
 section 32    Asynchronous Disk I/O
 section 33    Client-side Routines
 section 34    Dnsserver interface
 section 35    FQDN Cache
 section 36    Cache Directory Cleanup
 section 37    ICMP Routines
-section 37    Network Measurement Database
-section 39    HTTP Passthrough
+section 38    Network Measurement Database
+section 39    Cache Array Routing Protocol
 section 40    User-Agent logging
 section 41    Event Processing
 section 42    ICMP Pinger program
@@ -54,6 +54,7 @@ section 46    Access Log
 section 47    Store Directory Routines
 section 48    Persistent Connections
 section 49    SNMP support
+section 50    strerror() reporting
 section 51    Filedescriptor Functions
 section 52    URN Parsing
 section 53    AS Number handling
@@ -64,9 +65,15 @@ section 57    HTTP Status-line
 section 58    HTTP Reply (Response)
 section 59    auto-growing Memory Buffer with printf
 section 60    Packer: A uniform interface to store-like modules
-section 61    Pump module for PUT/POST
+section 61    PUMP handler
 section 62    Generic Histogram
 section 63    Low Level Memory Pool Management
-section 64    HTTP Content-Range Header
+section 64    HTTP Range Header
 section 65    HTTP Cache Control Header
 section 66    HTTP Header Tools
+section 67    String
+section 68    HTTP Content-Range Header
+section 69    HTTP Header: Extension Field
+section 70    Cache Digest
+section 71    Store Digest Manager
+section 72    Peer Digest Routines
