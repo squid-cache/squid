@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.116 2004/04/03 14:07:39 hno Exp $
+ * $Id: forward.cc,v 1.117 2004/04/04 13:37:20 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -589,8 +589,8 @@ fwdConnectStart(void *data)
         ctimeout = Config.Timeout.connect;
     }
 
-    if (fwdCheckRetriable(fwdState)) {
-        if ((fd = pconnPop(host, port, domain)) >= 0) {
+    if ((fd = pconnPop(host, port, domain)) >= 0) {
+        if (fwdCheckRetriable(fwdState)) {
             debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
             fwdState->server_fd = fd;
             fwdState->n_tries++;
@@ -603,6 +603,12 @@ fwdConnectStart(void *data)
             fwdDispatch(fwdState);
 
             return;
+        } else {
+            /* Discard the persistent connection to not cause
+             * a imbalance in number of conenctions open if there
+             * is a lot of POST requests
+             */
+            comm_close(fd);
         }
     }
 
