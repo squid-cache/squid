@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.215 1998/03/06 22:19:41 wessels Exp $
+ * $Id: stat.cc,v 1.216 1998/03/12 17:51:21 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -322,7 +322,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	storeAppendPrintf(sentry, "KEY %s\n", storeKeyText(entry->key));
 	if (mem)
 	    storeAppendPrintf(sentry, "\t%s %s\n",
-		RequestMethodStr[mem->method], mem->url);
+		RequestMethodStr[mem->method], mem->log_url);
 	storeAppendPrintf(sentry, "\t%s\n", describeStatuses(entry));
 	storeAppendPrintf(sentry, "\t%s\n", describeFlags(entry));
 	storeAppendPrintf(sentry, "\t%s\n", describeTimestamps(entry));
