@@ -1,5 +1,5 @@
 #
-#  $Id: Makefile.in,v 1.38 1998/04/08 05:33:26 wessels Exp $
+#  $Id: Makefile.in,v 1.39 1998/07/22 20:36:33 wessels Exp $
 #
 prefix		= @prefix@
 top_srcdir	= @top_srcdir@
@@ -38,7 +38,7 @@ UTILOBJS	= rfc1123.o \
 		  Stack.o \
 		  $(LIBOBJS)
 REGEXOBJS	= GNUregex.o
-DLMALLOCOBJS	= malloc-2.6.4.o
+DLMALLOCOBJS	= dlmalloc.o
 LIBS		= libmiscutil.a @LIBREGEX@ @LIBDLMALLOC@
 
 CFLAGS		= $(AC_CFLAGS) $(INCLUDE)
