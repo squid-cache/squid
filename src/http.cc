@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.229 1997/12/06 01:26:16 wessels Exp $
+ * $Id: http.cc,v 1.230 1997/12/07 00:48:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -258,7 +258,7 @@ httpTimeout(int fd, void *data)
 	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
     } else {
-        storeAbort(entry, 0);
+	storeAbort(entry, 0);
     }
     comm_close(fd);
 }
@@ -612,7 +612,7 @@ httpPconnTransferDone(HttpStateData * httpState)
     else if (mem->inmem_hi < reply->content_length + reply->hdr_sz)
 	return 0;
     else
-        return 1;
+	return 1;
 }
 
 /* This will be called when data is ready to be read from fd.  Read until
@@ -657,7 +657,7 @@ httpReadReply(int fd, void *data)
 		err->request = requestLink(httpState->orig_request);
 		errorAppendEntry(entry, err);
 	    } else {
-	        storeAbort(entry, 0);
+		storeAbort(entry, 0);
 	    }
 	    comm_close(fd);
 	}
@@ -678,6 +678,12 @@ httpReadReply(int fd, void *data)
 	/* Connection closed; retrieval done. */
 	httpState->eof = 1;
 	if (httpState->reply_hdr_state < 2)
+	    /*
+	     * Yes Henrik, there is a point to doing this.  When we
+	     * called httpProcessReplyHeader() before, we didn't find
+	     * the end of headers, but now we are definately at EOF, so
+	     * we want to process the reply headers.
+	     */
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeComplete(entry);	/* deallocates mem_obj->request */
 	comm_close(fd);

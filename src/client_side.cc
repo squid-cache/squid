@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.176 1997/12/06 19:38:36 wessels Exp $
+ * $Id: client_side.cc,v 1.177 1997/12/07 00:48:12 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -974,6 +974,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     clientHttpRequest *http = data;
     ConnStateData *conn;
     StoreEntry *entry = http->entry;
+    int done;
     http->out.size += size;
     debug(12, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
 	fd, size, errflag, http->out.offset, entry->object_len);
@@ -989,17 +990,24 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    urlParseProtocol(storeUrl(entry)),
 	    http->out.size);
 	comm_close(fd);
-    } else if (icpCheckTransferDone(http) || size == 0) {
+    } else if ((done = icpCheckTransferDone(http)) || size == 0) {
 	debug(12, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
 	/* We're finished case */
 	HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
 	    http->request->protocol,
 	    http->out.size);
-	if (http->entry->mem_obj->reply->content_length < 0) {
+	if (http->entry->mem_obj->reply->content_length < 0 || !done ||
+	    EBIT_TEST(entry->flag, ENTRY_BAD_LENGTH)) {
+	    /* 
+	     * Client connection closed due to unknown or invalid
+	     * content length. Persistent connection is not possible.
+	     * This catches most cases, but probably not all.
+	     */
 	    comm_close(fd);
 	} else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
 	    debug(12, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
 	    conn = http->conn;
+	    conn->defer.until = 0;	/* Kick it to read a new request */
 	    httpRequestFree(http);
 	    if ((http = conn->chr) != NULL) {
 		debug(12, 1) ("clientWriteComplete: FD %d Sending next request\n", fd);
@@ -1851,17 +1859,17 @@ icpCheckTransferDone(clientHttpRequest * http)
     assert(http->request != NULL);
     reply = mem->reply;
     if (reply->hdr_sz == 0)
-	return 0;	/* haven't found end of headers yet */
+	return 0;		/* haven't found end of headers yet */
     else if (reply->code == HTTP_OK)
-        sending = SENDING_BODY;
+	sending = SENDING_BODY;
     else if (reply->content_length < 0)
 	sending = SENDING_HDRSONLY;
     else if (reply->code == HTTP_NO_CONTENT)
-        sending = SENDING_HDRSONLY;
+	sending = SENDING_HDRSONLY;
     else if (reply->code == HTTP_NOT_MODIFIED)
-        sending = SENDING_HDRSONLY;
+	sending = SENDING_HDRSONLY;
     else if (http->request->method == METHOD_HEAD)
-        sending = SENDING_HDRSONLY;
+	sending = SENDING_HDRSONLY;
     else
 	sending = SENDING_BODY;
     /*
@@ -1882,7 +1890,7 @@ icpCheckTransferDone(clientHttpRequest * http)
     if (http->out.offset < sendlen)
 	return 0;
     else
-        return 1;
+	return 1;
 }
 
 static char *
