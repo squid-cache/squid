@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.285 1998/04/23 20:08:07 rousskov Exp $
+ * $Id: client_side.cc,v 1.286 1998/04/23 20:25:51 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -348,11 +348,10 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    /* use old entry, this repeats the code above */
 	    http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
 	    storeUnregister(entry, http);
+	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    entry->refcount++;
 	} else {
-	    if (entry->store_status == STORE_ABORTED)
-		debug(33, 0) ("clientHandleIMSReply: entry->swap_status == STORE_ABORTED\n");
 	    storeClientCopy(entry,
 		http->out.offset + size,
 		http->out.offset,
