@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.53 2001/07/11 22:29:50 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.54 2001/09/03 21:28:57 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -44,10 +44,6 @@
 #define DefaultLevelOneDirs     16
 #define DefaultLevelTwoDirs     256
 #define STORE_META_BDISKDZ 4096
-
-#ifndef SQUID_PREFIX
-#error "SQUID_PREFIX needs defining!"
-#endif
 
 diskd_stats_t diskd_stats;
 
@@ -429,7 +425,7 @@ storeDiskdDirInit(SwapDir * sd)
 	&rfd,
 	&diskdinfo->wfd);
     if (x < 0)
-	fatal("execl " SQUID_PREFIX "/bin/diskd failed");
+	fatalf("execl: %s", Config.Program.diskd);
     if (rfd != diskdinfo->wfd)
 	comm_close(rfd);
     fd_note(diskdinfo->wfd, "squid -> diskd");
