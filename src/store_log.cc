@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.14 2000/05/12 00:29:09 wessels Exp $
+ * $Id: store_log.cc,v 1.15 2000/05/29 23:30:46 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -52,10 +52,9 @@ storeLog(int tag, const StoreEntry * e)
     HttpReply *reply;
     if (NULL == storelog)
 	return;
-    if (mem == NULL)
-	return;
     if (EBIT_TEST(e->flags, ENTRY_DONT_LOG))
 	return;
+    if (mem != NULL) {
     if (mem->log_url == NULL) {
 	debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
 	storeMemObjectDump(mem);
@@ -82,6 +81,16 @@ storeLog(int tag, const StoreEntry * e)
 	(int) (mem->inmem_hi - mem->reply->hdr_sz),
 	RequestMethodStr[mem->method],
 	mem->log_url);
+    } else {
+	/* no mem object. Most RELEASE cases */
+	logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X    ?         ?         ?         ? ?/? ?/? ? %s\n",
+	    (int) current_time.tv_sec,
+	    (int) current_time.tv_usec / 1000,
+	    storeLogTags[tag],
+	    e->swap_dirn,
+	    e->swap_filen,
+	    storeKeyText(e->key));
+    }
 }
 
 void
