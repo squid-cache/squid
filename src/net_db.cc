@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.104 1998/05/21 00:46:17 wessels Exp $
+ * $Id: net_db.cc,v 1.105 1998/05/21 03:48:19 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1071,7 +1071,7 @@ netdbExchangeStart(void *data)
 }
 
 peer *
-netdbClosestParent(const request_t *request)
+netdbClosestParent(request_t *request)
 {
 #if USE_ICMP
     peer *p = NULL;
