@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.194 1997/01/19 00:16:02 wessels Exp $
+ * $Id: store.cc,v 1.195 1997/01/19 08:10:52 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -245,7 +245,6 @@ static void storeSetPrivateKey _PARAMS((StoreEntry *));
 static void storeDoRebuildFromDisk _PARAMS((void *data));
 static void storeRebuiltFromDisk _PARAMS((struct storeRebuild_data * data));
 static unsigned int getKeyCounter _PARAMS((void));
-static time_t storeExpiredReferenceAge _PARAMS((void));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -2779,7 +2778,7 @@ storeCheckExpired(const StoreEntry * e)
 }
 
 /* gnuplot> plot 724**((x)+1)*60  */
-static time_t
+time_t
 storeExpiredReferenceAge(void)
 {
     int half;
