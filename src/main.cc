@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.147 1997/05/15 23:33:43 wessels Exp $
+ * $Id: main.cc,v 1.148 1997/05/16 07:42:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -129,9 +129,10 @@ int vhost_mode = 0;
 int Squid_MaxFD = SQUID_MAXFD;
 int Biggest_FD = -1;
 int select_loops = 0;		/* how many times thru select loop */
+int configured_once = 0;
 volatile int unbuffered_logs = 1;	/* debug and hierarchy unbuffered by default */
 volatile int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
-volatile int reread_pending = 0;	/* set by SIGHUP handler */
+volatile int reconfigure_pending = 0;	/* set by SIGHUP handler */
 const char *const version_string = SQUID_VERSION;
 const char *const appname = "squid";
 const char *const localhost = "127.0.0.1";
@@ -157,7 +158,7 @@ static int malloc_debug_level = 0;
 static void rotate_logs _PARAMS((int));
 static void reconfigure _PARAMS((int));
 static void mainInitialize _PARAMS((void));
-static void mainReinitialize _PARAMS((void));
+static void mainReconfigure _PARAMS((void));
 static void usage _PARAMS((void));
 static void mainParseOptions _PARAMS((int, char **));
 static void sendSignal _PARAMS((void));
@@ -306,10 +307,7 @@ rotate_logs(int sig)
 static void
 reconfigure(int sig)
 {
-    debug(1, 1, "reconfigure: SIGHUP received\n");
-    debug(1, 1, "Waiting %d seconds for active connections to finish\n",
-	Config.shutdownLifetime);
-    reread_pending = 1;
+    reconfigure_pending = 1;
 #if !HAVE_SIGACTION
     signal(sig, reconfigure);
 #endif
@@ -504,7 +502,7 @@ serverConnectionsClose(void)
 }
 
 static void
-mainReinitialize(void)
+mainReconfigure(void)
 {
     debug(1, 0, "Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
@@ -525,7 +523,6 @@ mainReinitialize(void)
 static void
 mainInitialize(void)
 {
-    static int first_time = 1;
     if (opt_catch_signals) {
 	squid_signal(SIGSEGV, death, SA_NODEFER | SA_RESETHAND);
 	squid_signal(SIGBUS, death, SA_NODEFER | SA_RESETHAND);
@@ -558,7 +555,7 @@ mainInitialize(void)
 	CONFIG_HOST_TYPE);
     debug(1, 1, "With %d file descriptors available\n", Squid_MaxFD);
 
-    if (first_time) {
+    if (!configured_once) {
 	stmemInit();		/* stmem must go before at least redirect */
 	disk_init();		/* disk_init must go before ipcache_init() */
     }
@@ -573,7 +570,7 @@ mainInitialize(void)
     malloc_debug(0, malloc_debug_level);
 #endif
 
-    if (first_time) {
+    if (!configured_once) {
 	unlinkdInit();
 	/* module initialization */
 	urlInitialize();
@@ -597,7 +594,7 @@ mainInitialize(void)
     if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
 
-    if (first_time)
+    if (!configured_once)
 	writePidFile();		/* write PID file */
 
     squid_signal(SIGUSR1, rotate_logs, SA_RESTART);
@@ -607,7 +604,7 @@ mainInitialize(void)
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     debug(1, 0, "Ready to serve requests.\n");
 
-    if (first_time) {
+    if (!configured_once) {
 	eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
 	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
 	eventAdd("storeDirClean", storeDirClean, NULL, 15);
@@ -615,7 +612,7 @@ mainInitialize(void)
 	    eventAdd("start_announce", start_announce, NULL, 3600);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
     }
-    first_time = 0;
+    configured_once = 1;
 }
 
 int
@@ -731,9 +728,9 @@ main(int argc, char **argv)
 	    }
 	    if (shutdown_pending) {
 		normal_shutdown();
-	    } else if (reread_pending) {
-		mainReinitialize();
-		reread_pending = 0;	/* reset */
+	    } else if (reconfigure_pending) {
+		mainReconfigure();
+		reconfigure_pending = 0;	/* reset */
 	    } else {
 		fatal_dump("MAIN: SHUTDOWN from comm_select, but nothing pending.");
 	    }
