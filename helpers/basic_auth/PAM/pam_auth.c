@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.8 2002/08/12 01:11:50 hno Exp $
+ * $Id: pam_auth.c,v 1.9 2002/08/12 16:58:11 hno Exp $
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999,2002 Henrik Nordstrom <hno@squid-cache.org>
@@ -63,6 +63,8 @@
 #include <unistd.h>
 
 #include <security/pam_appl.h>
+
+#include "util.h"
 
 #define BUFSIZE 8192
 

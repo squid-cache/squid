@@ -37,6 +37,7 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include "util.h"
 #include "msntauth.h"
 
 extern char version[];
