@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.46 1998/09/01 23:31:25 wessels Exp $
+ * $Id: peer_digest.cc,v 1.47 1998/09/14 15:46:48 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -525,8 +525,9 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
 	peer->host, b_read,
 	mkrfc1123(fetch->entry->expires), mkrfc1123(fetch->entry->lastmod));
     if (err_msg) {
-	debug(72, 1) ("disabling corrupted (%s) digest from %s\n",
-	    err_msg, peer->host);
+	if (cbdataValid(peer))
+	    debug(72, 1) ("disabling corrupted (%s) digest from %s\n",
+	        err_msg, peer->host);
 	if (peer->digest.cd) {
 	    cacheDigestDestroy(peer->digest.cd);
 	    peer->digest.cd = NULL;
