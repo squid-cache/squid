@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.270 1998/09/09 17:51:05 wessels Exp $
+ * $Id: main.cc,v 1.271 1998/09/15 06:34:55 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -704,6 +704,7 @@ SquidShutdown(void *unused)
     snmpConnectionClose();
 #endif
     releaseServerSockets();
+    redirectShutdownServers(NULL);
     commCloseAllSockets();
     unlinkdClose();
     storeDirWriteCleanLogs(0);
@@ -715,7 +716,6 @@ SquidShutdown(void *unused)
     configFreeMemory();
     storeFreeMemory();
     dnsFreeMemory();
-    redirectFreeMemory();
     /*stmemFreeMemory(); */
     netdbFreeMemory();
     ipcacheFreeMemory();

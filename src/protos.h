@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.265 1998/09/15 06:23:07 wessels Exp $
+ * $Id: protos.h,v 1.266 1998/09/15 06:34:56 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -635,7 +635,6 @@ extern void redirectStart(clientHttpRequest *, RH *, void *);
 extern void redirectOpenServers(void);
 extern void redirectShutdownServers(void *);
 extern void redirectStats(StoreEntry *);
-extern void redirectFreeMemory(void);
 
 extern void authenticateStart(acl_proxy_auth_user *, RH *, void *);
 extern void authenticateOpenServers(void);
