@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.25 1996/11/25 06:15:31 wessels Exp $
+ * $Id: mime.cc,v 1.26 1996/12/05 17:36:12 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -172,18 +172,18 @@ mime_headers_end(const char *mime)
     return (char *) end;
 }
 
+#ifdef OLD_CODE
 int
 mime_headers_size(const char *mime)
 {
     const char *end;
-
     end = mime_headers_end(mime);
-
     if (end)
 	return end - mime;
     else
 	return 0;
 }
+#endif
 
 const ext_table_entry *
 mime_ext_to_type(const char *extension)
