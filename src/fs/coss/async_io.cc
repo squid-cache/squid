@@ -11,7 +11,7 @@
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
  *
- * $Id: async_io.cc,v 1.4 2001/08/12 15:29:58 adrian Exp $
+ * $Id: async_io.cc,v 1.5 2001/08/12 22:23:22 adrian Exp $
  */
 
 #include "squid.h"
@@ -240,7 +240,13 @@ a_file_syncqueue(async_queue_t *q)
 {
 	assert(q->aq_state == AQ_STATE_SETUP);
 
-	/* Good point? :-) */
+	/*
+	 * Keep calling callback to complete ops until the queue is empty
+	 * We can't quit when callback returns 0 - some calls may not
+	 * return any completed pending events, but they're still pending!
+	 */
+	while (q->aq_numpending)
+		a_file_callback(q);
 }
 
 
