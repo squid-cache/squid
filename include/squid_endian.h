@@ -1,5 +1,5 @@
 /*
- * $Id: squid_endian.h,v 1.3 2003/08/16 23:32:29 robertc Exp $
+ * $Id: squid_endian.h,v 1.4 2004/12/21 16:17:58 hno Exp $
  *
  * AUTHOR: Alan Barrett
  *
@@ -124,7 +124,14 @@
  *
  * XXX: If htole16() is missing, we assume that the other *le*() functions
  *      are also missing.
+ *
+ *      Except OpenBSD - htole16 & 32 exist, but not le16toh etc
  */
+#if defined(_SQUID_OPENBSD_)
+#  define le16toh(x) htole16(x)
+#  define le32toh(x) htole32(x)
+#endif
+
 #if ! HAVE_HTOLE16 && ! defined(htole16)
 #  ifdef WORDS_BIGENDIAN
 #    define htole16(x) bswap16(x)

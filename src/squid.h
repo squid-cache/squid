@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.241 2004/12/20 16:30:36 robertc Exp $
+ * $Id: squid.h,v 1.242 2004/12/21 16:18:00 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -74,7 +74,7 @@ extern void xassert(const char *, const char *, int);
 #endif
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
-#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#elif HAVE_MALLOC_H
 #include <malloc.h>
 #endif
 #if HAVE_MEMORY_H

@@ -12,7 +12,7 @@ typedef int64_t  hrtime_t;
 #include <sys/time.h>
 #endif
 
-#if defined(__i386)
+#if defined(__i386) || defined(__i386__)
 static inline hrtime_t
 get_tick(void)
 {
