@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.103 1997/07/14 03:33:34 wessels Exp $
+ * $Id: acl.cc,v 1.104 1997/07/15 23:23:14 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -477,12 +477,12 @@ aclParseRegexList(void *curlist)
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	if (strcmp(t, "-i") == 0) {
-		flags |= REG_ICASE;
-		continue;
+	    flags |= REG_ICASE;
+	    continue;
 	}
 	if (strcmp(t, "+i") == 0) {
-		flags &= ~REG_ICASE;
-		continue;
+	    flags &= ~REG_ICASE;
+	    continue;
 	}
 	if ((errcode = regcomp(&comp, t, flags)) != 0) {
 	    char errbuf[256];
@@ -570,7 +570,7 @@ aclParseDomainList(void *curlist)
 #endif /* USE_SPLAY_TREE */
 
 void
-aclParseAclLine(acl **head)
+aclParseAclLine(acl ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
@@ -1352,7 +1352,7 @@ aclDestroyRegexList(struct _relist *data)
 }
 
 void
-aclDestroyAcls(acl **head)
+aclDestroyAcls(acl ** head)
 {
     struct _acl *a = NULL;
     struct _acl *next = NULL;

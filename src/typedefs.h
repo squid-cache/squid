@@ -5,9 +5,9 @@ typedef unsigned int ping_status_t;
 typedef unsigned int swap_status_t;
 
 /*
-    grep '^struct' structs.h \
-    | perl -ne '($a,$b)=split;$c=$b;$c=~s/^_//; print "typedef struct $b $c;\n";'
-*/
+ * grep '^struct' structs.h \
+ * | perl -ne '($a,$b)=split;$c=$b;$c=~s/^_//; print "typedef struct $b $c;\n";'
+ */
 
 typedef struct _acl_ip_data acl_ip_data;
 typedef struct _acl_time_data acl_time_data;

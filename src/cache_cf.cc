@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.206 1997/07/15 23:15:34 wessels Exp $
+ * $Id: cache_cf.cc,v 1.207 1997/07/15 23:23:15 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -54,14 +54,14 @@ static void wordlistAdd _PARAMS((wordlist **, const char *));
 static void configDoConfigure _PARAMS((void));
 static void parse_refreshpattern _PARAMS((refresh_t **));
 static int parseTimeUnits _PARAMS((const char *unit));
-static void parseTimeLine _PARAMS((time_t *tptr, const char *units));
+static void parseTimeLine _PARAMS((time_t * tptr, const char *units));
 
 static void parse_string _PARAMS((char **));
 static void parse_wordlist _PARAMS((wordlist **));
 static void default_all _PARAMS((void));
 static int parse_line _PARAMS((char *));
 static cache_peer *configFindPeer _PARAMS((const char *name));
-static void parseBytesLine _PARAMS((size_t *bptr, const char *units));
+static void parseBytesLine _PARAMS((size_t * bptr, const char *units));
 static size_t parseBytesUnits _PARAMS((const char *unit));
 
 /* These come from cf_gen.c */
@@ -216,9 +216,9 @@ configDoConfigure(void)
     cache_peer *p;
     memset(&Config2, '\0', sizeof(SquidConfig2));
     if (Config.Accel.host) {
-        snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
-        Config2.Accel.prefix = xstrdup(buf);
-        Config2.Accel.on = 1;
+	snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
+	Config2.Accel.prefix = xstrdup(buf);
+	Config2.Accel.on = 1;
     }
     if (Config.appendDomain)
 	if (*Config.appendDomain != '.')
@@ -243,21 +243,21 @@ configDoConfigure(void)
     safe_free(debug_options)
 	debug_options = xstrdup(Config.debugOptions);
     /* ICK */
-    for (p = Config.peers; p; p=p->next) {
+    for (p = Config.peers; p; p = p->next) {
 	neighborAdd(p->host,
-		p->type,	
-		p->http,
-		p->icp,
-		p->options,
-		p->weight,
-		p->mcast_ttl);
+	    p->type,
+	    p->http,
+	    p->icp,
+	    p->options,
+	    p->weight,
+	    p->mcast_ttl);
     }
 }
 
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
-parseTimeLine(time_t *tptr, const char *units)
+parseTimeLine(time_t * tptr, const char *units)
 {
     char *token;
     double d;
@@ -270,10 +270,10 @@ parseTimeLine(time_t *tptr, const char *units)
     d = atof(token);
     m = u;			/* default to 'units' if none specified */
     if ((token = strtok(NULL, w_space)) == NULL)
-	debug(3,0)("WARNING: No units on '%s', assuming %f %s\n",
-		config_input_line, d, units);
+	debug(3, 0) ("WARNING: No units on '%s', assuming %f %s\n",
+	    config_input_line, d, units);
     else if ((m = parseTimeUnits(token)) == 0)
-	    self_destruct();
+	self_destruct();
     *tptr = m * d / u;
 }
 
@@ -329,11 +329,11 @@ parseBytesUnits(const char *unit)
     if (!strncasecmp(unit, B_BYTES_STR, strlen(B_BYTES_STR)))
 	return 1;
     if (!strncasecmp(unit, B_KBYTES_STR, strlen(B_KBYTES_STR)))
-	return 1<<10;
+	return 1 << 10;
     if (!strncasecmp(unit, B_MBYTES_STR, strlen(B_MBYTES_STR)))
-	return 1<<20;
+	return 1 << 20;
     if (!strncasecmp(unit, B_GBYTES_STR, strlen(B_GBYTES_STR)))
-	return 1<<30;
+	return 1 << 30;
     debug(3, 1) ("parseBytesUnits: unknown bytes unit '%s'\n", unit);
     return 0;
 }
@@ -343,19 +343,19 @@ parseBytesUnits(const char *unit)
  *****************************************************************************/
 
 static void
-dump_acl(acl *acl)
+dump_acl(acl * acl)
 {
     assert(0);
 }
 
 static void
-parse_acl(acl **acl)
+parse_acl(acl ** acl)
 {
     aclParseAclLine(acl);
 }
 
 static void
-free_acl(acl **acl)
+free_acl(acl ** acl)
 {
     aclDestroyAcls(acl);
 }
@@ -375,7 +375,7 @@ parse_acl_access(struct _acl_access **head)
 static void
 free_acl_access(struct _acl_access **head)
 {
-	aclDestroyAccessList(head);
+    aclDestroyAccessList(head);
 }
 
 static void
@@ -403,7 +403,7 @@ parse_address(struct in_addr *addr)
 static void
 free_address(struct in_addr *addr)
 {
-	memset(addr, '\0', sizeof(struct in_addr));
+    memset(addr, '\0', sizeof(struct in_addr));
 }
 
 static void
@@ -437,11 +437,11 @@ parse_cachedir(struct _cacheSwap *swap)
 	if (!strcasecmp(token, "read-only"))
 	    readonly = 1;
     for (i = 0; i < swap->n_configured; i++) {
-	tmp = swap->swapDirs+i;
+	tmp = swap->swapDirs + i;
 	if (!strcmp(path, tmp->path)) {
 	    /* just reconfigure it */
-            tmp->max_size = size;
-            tmp->read_only = readonly;
+	    tmp->max_size = size;
+	    tmp->read_only = readonly;
 	    return;
 	}
     }
@@ -472,27 +472,27 @@ parse_cachedir(struct _cacheSwap *swap)
 static void
 free_cachedir(struct _cacheSwap *swap)
 {
-	SwapDir *s;
-	int i;
-	for (i = 0; i<swap->n_configured; i++) {
-		s = swap->swapDirs+i;
-		xfree(s->path);	
-		filemapFreeMemory(s->map);
-	}
-	safe_free(swap->swapDirs);
-	swap->swapDirs = NULL;
-	swap->n_allocated = 0;
-	swap->n_configured = 0;
+    SwapDir *s;
+    int i;
+    for (i = 0; i < swap->n_configured; i++) {
+	s = swap->swapDirs + i;
+	xfree(s->path);
+	filemapFreeMemory(s->map);
+    }
+    safe_free(swap->swapDirs);
+    swap->swapDirs = NULL;
+    swap->n_allocated = 0;
+    swap->n_configured = 0;
 }
 
 static void
-dump_cache_peer(cache_peer *p)
+dump_cache_peer(cache_peer * p)
 {
     assert(0);
 }
 
 static void
-parse_cache_peer(cache_peer **head)
+parse_cache_peer(cache_peer ** head)
 {
     char *token = NULL;
     cache_peer peer;
@@ -502,7 +502,7 @@ parse_cache_peer(cache_peer **head)
     peer.http = CACHE_HTTP_PORT;
     peer.icp = CACHE_ICP_PORT;
     peer.weight = 1;
-    if (!(peer.host = strtok(NULL, w_space))) 
+    if (!(peer.host = strtok(NULL, w_space)))
 	self_destruct();
     if (!(peer.type = strtok(NULL, w_space)))
 	self_destruct();
@@ -546,25 +546,25 @@ parse_cache_peer(cache_peer **head)
 }
 
 static void
-free_cache_peer(cache_peer **P)
+free_cache_peer(cache_peer ** P)
 {
-	cache_peer *p;
-	while ((p = *P)) {
-		*P = p->next;
-		xfree(p->host);
-		xfree(p->type);
-		xfree(p);
-	}
+    cache_peer *p;
+    while ((p = *P)) {
+	*P = p->next;
+	xfree(p->host);
+	xfree(p->type);
+	xfree(p);
+    }
 }
 
 static void
-dump_cachemgrpasswd(cachemgr_passwd *list)
+dump_cachemgrpasswd(cachemgr_passwd * list)
 {
     assert(0);
 }
 
 static void
-parse_cachemgrpasswd(cachemgr_passwd **head)
+parse_cachemgrpasswd(cachemgr_passwd ** head)
 {
     char *passwd = NULL;
     wordlist *actions = NULL;
@@ -575,14 +575,14 @@ parse_cachemgrpasswd(cachemgr_passwd **head)
 }
 
 static void
-free_cachemgrpasswd(cachemgr_passwd **head)
+free_cachemgrpasswd(cachemgr_passwd ** head)
 {
-	cachemgr_passwd *p;
-	while ((p = *head)) {
-		*head = p->next;
-		xfree(p->passwd);
-		xfree(p);
-	}
+    cachemgr_passwd *p;
+    while ((p = *head)) {
+	*head = p->next;
+	xfree(p->passwd);
+	xfree(p);
+    }
 }
 
 
@@ -599,19 +599,19 @@ parse_denyinfo(struct _acl_deny_info_list **var)
 }
 
 void
-free_denyinfo(acl_deny_info_list **list)
+free_denyinfo(acl_deny_info_list ** list)
 {
     struct _acl_deny_info_list *a = NULL;
     struct _acl_deny_info_list *a_next = NULL;
     struct _acl_name_list *l = NULL;
     struct _acl_name_list *l_next = NULL;
     for (a = *list; a; a = a_next) {
-        for (l = a->acl_list; l; l = l_next) {
-            l_next = l->next;
-            safe_free(l);
-        }
-        a_next = a->next;
-        safe_free(a);
+	for (l = a->acl_list; l; l = l_next) {
+	    l_next = l->next;
+	    safe_free(l);
+	}
+	a_next = a->next;
+	safe_free(a);
     }
     *list = NULL;
 }
@@ -655,12 +655,12 @@ parse_peeracl(void)
 }
 
 static cache_peer *
-configFindPeer (const char *name)
+configFindPeer(const char *name)
 {
     cache_peer *p = NULL;
     for (p = Config.peers; p; p = p->next) {
-        if (!strcasecmp(name, p->host))
-            break;
+	if (!strcasecmp(name, p->host))
+	    break;
     }
     return p;
 }
@@ -753,7 +753,7 @@ parse_httpanonymizer(int *var)
 
 
 static void
-dump_ushortlist(ushortlist *u)
+dump_ushortlist(ushortlist * u)
 {
     while (u) {
 	printf("%d ", (int) u->i);
@@ -781,13 +781,13 @@ parse_ushortlist(ushortlist ** P)
 }
 
 static void
-free_ushortlist(ushortlist **P)
+free_ushortlist(ushortlist ** P)
 {
-	ushortlist *u;
-	while ((u = *P)) {
-		*P = u->next;
-		xfree(u);
-	}
+    ushortlist *u;
+    while ((u = *P)) {
+	*P = u->next;
+	xfree(u);
+    }
 }
 
 static void
@@ -809,7 +809,7 @@ parse_int(int *var)
 static void
 free_int(int *var)
 {
-	*var = 0;
+    *var = 0;
 }
 
 static void
@@ -850,7 +850,7 @@ parse_pathname_stat(char **path)
 }
 
 static void
-dump_refreshpattern(refresh_t *head)
+dump_refreshpattern(refresh_t * head)
 {
     assert(0);
 }
@@ -911,7 +911,7 @@ parse_refreshpattern(refresh_t ** head)
 }
 
 static void
-free_refreshpattern(refresh_t **head)
+free_refreshpattern(refresh_t ** head)
 {
     refresh_t *t;
     while ((t = *head)) {
@@ -960,8 +960,8 @@ parse_string(char **var)
 static void
 free_string(char **var)
 {
-	xfree(*var);
-	*var = NULL;
+    xfree(*var);
+    *var = NULL;
 }
 
 static void
@@ -981,15 +981,15 @@ dump_time_t(time_t var)
 }
 
 static void
-parse_time_t(time_t *var)
+parse_time_t(time_t * var)
 {
     parseTimeLine(var, T_SECOND_STR);
 }
 
 static void
-free_time_t(time_t *var)
+free_time_t(time_t * var)
 {
-	*var = 0;
+    *var = 0;
 }
 
 static void
@@ -1005,21 +1005,21 @@ dump_kb_size_t(size_t var)
 }
 
 static void
-parse_size_t(size_t *var)
+parse_size_t(size_t * var)
 {
     parseBytesLine(var, B_BYTES_STR);
 }
 
 static void
-parse_kb_size_t(size_t *var)
+parse_kb_size_t(size_t * var)
 {
     parseBytesLine(var, B_KBYTES_STR);
 }
 
 static void
-free_size_t(size_t *var)
+free_size_t(size_t * var)
 {
-	*var = 0;
+    *var = 0;
 }
 
 #define free_kb_size_t free_size_t
@@ -1033,7 +1033,7 @@ dump_ushort(u_short var)
 }
 
 static void
-free_ushort(u_short *u)
+free_ushort(u_short * u)
 {
     *u = 0;
 }
@@ -1090,4 +1090,3 @@ parseNeighborType(const char *s)
     debug(15, 0) ("WARNING: Unknown neighbor type: %s\n", s);
     return PEER_SIBLING;
 }
-

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.272 1997/07/15 15:46:27 wessels Exp $
+ * $Id: store.cc,v 1.273 1997/07/15 23:23:34 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -197,6 +197,7 @@ struct storeRebuildState {
     int clashcount;		/* # swapfile clashes avoided */
     int dupcount;		/* # duplicates purged */
     int invalid;		/* # bad lines */
+    int badflags;		/* # bad e->flags */
     int need_to_validate;
     time_t start;
     time_t stop;
@@ -765,15 +766,10 @@ static StoreEntry *
 storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod, u_num32 refcount, u_num32 flags, int clean)
 {
     StoreEntry *e = NULL;
-
-    debug(20, 5) ("StoreAddDiskRestore: '%s': size %d: expires %d: fileno=%08X\n",
-	url, size, expires, file_number);
-
+    debug(20, 5) ("StoreAddDiskRestore: %s, fileno=%08X\n", url, file_number);
     /* if you call this you'd better be sure file_number is not 
      * already in use! */
-
     meta_data.url_strings += strlen(url);
-
     e = new_StoreEntry(WITHOUT_MEMOBJ);
     e->url = xstrdup(url);
     e->method = METHOD_GET;
@@ -868,10 +864,10 @@ InvokeHandlers(StoreEntry * e)
     struct _store_client *sc;
     ssize_t size;
     assert(mem->clients != NULL || mem->nclients == 0);
-    debug(20,3)("InvokeHandlers: %s\n", e->key);
+    debug(20, 3) ("InvokeHandlers: %s\n", e->key);
     /* walk the entire list looking for valid callbacks */
     for (i = 0; i < mem->nclients; i++) {
-        debug(20,3)("InvokeHandlers: checking client #%d\n", i);
+	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i);
 	sc = &mem->clients[i];
 	if (sc->callback_data == NULL)
 	    continue;
@@ -883,7 +879,7 @@ InvokeHandlers(StoreEntry * e)
 	    sc->copy_offset,
 	    sc->copy_buf,
 	    sc->copy_size);
-        debug(20,3)("InvokeHandlers: calling handler: %p\n", callback);
+	debug(20, 3) ("InvokeHandlers: calling handler: %p\n", callback);
 	callback(sc->callback_data, sc->copy_buf, size);
     }
 }
@@ -1343,6 +1339,10 @@ storeDoRebuildFromDisk(void *data)
 	    RB->invalid++;
 	    continue;
 	}
+	if (BIT_TEST(scan6, KEY_PRIVATE)) {
+	    RB->badflags++;
+	    continue;
+	}
 	sfileno = storeDirProperFileno(d->dirn, sfileno);
 	timestamp = (time_t) scan1;
 	expires = (time_t) scan2;
@@ -1551,6 +1551,7 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
     debug(20, 1) ("Finished rebuilding storage from disk image.\n");
     debug(20, 1) ("  %7d Lines read from previous logfile.\n", data->linecount);
     debug(20, 1) ("  %7d Invalid lines.\n", data->invalid);
+    debug(20, 1) ("  %7d With invalid flags.\n", data->badflags);
     debug(20, 1) ("  %7d Objects loaded.\n", data->objcount);
     debug(20, 1) ("  %7d Objects expired.\n", data->expcount);
     debug(20, 1) ("  %7d Duplicate URLs purged.\n", data->dupcount);
@@ -2144,7 +2145,7 @@ storeClientCopy(StoreEntry * e,
     assert(seen_offset <= mem->e_current_len);
     assert(copy_offset >= mem->e_lowest_offset);
     assert(recurse_detect < 3);	/* could == 1 for IMS not modified's */
-    debug(20,3)("storeClientCopy: %s, seen %d want %d, size %d, cb %p, cbdata %p\n",
+    debug(20, 3) ("storeClientCopy: %s, seen %d want %d, size %d, cb %p, cbdata %p\n",
 	e->key,
 	(int) seen_offset,
 	(int) copy_offset,
@@ -2267,8 +2268,8 @@ storeInitHashValues(void)
 	store_maintain_buckets == 1 ? null_string : "s",
 	store_maintain_rate,
 	store_maintain_rate == 1 ? null_string : "s");
-    debug(20,1)("Max Mem  size: %d KB\n", Config.Mem.maxSize>>10);
-    debug(20,1)("Max Swap size: %d KB\n", Config.Swap.maxSize);
+    debug(20, 1) ("Max Mem  size: %d KB\n", Config.Mem.maxSize >> 10);
+    debug(20, 1) ("Max Swap size: %d KB\n", Config.Swap.maxSize);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.150 1997/07/15 23:15:36 wessels Exp $
+ * $Id: neighbors.cc,v 1.151 1997/07/15 23:23:30 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -730,11 +730,11 @@ neighborAdd(const char *host,
     ushortlist *u;
     const char *me = getMyHostname();
     if (!strcmp(host, me)) {
-	for (u=Config.Port.http; u; u=u->next) {
+	for (u = Config.Port.http; u; u = u->next) {
 	    if (http_port != u->i)
 		continue;
 	    debug(15, 0) ("neighborAdd: skipping cache_host %s %s/%d/%d\n",
-	        type, host, http_port, icp_port);
+		type, host, http_port, icp_port);
 	    return;
 	}
     }
