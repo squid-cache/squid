@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.45 1996/04/15 04:08:52 wessels Exp $ */
+/* $Id: http.cc,v 1.46 1996/04/15 22:52:04 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -54,21 +54,26 @@ static int http_url_parser(url, host, port, request)
      char *request;
 {
     static char hostbuf[MAX_URL];
-    static char atypebuf[MAX_URL];
+    static char proto[MAX_URL];
     int t;
+    char *s = NULL;
 
     /* initialize everything */
-    (*port) = 0;
-    atypebuf[0] = hostbuf[0] = request[0] = host[0] = '\0';
+    (*port) = urlDefaultPort(PROTO_HTTP);
+    proto[0] = hostbuf[0] = request[0] = host[0] = '\0';
 
-    t = sscanf(url, "%[a-zA-Z]://%[^/]%s", atypebuf, hostbuf, request);
-    if ((t < 2) || (strcasecmp(atypebuf, "http") != 0)) {
+    t = sscanf(url, "%[a-zA-Z]://%[^/]%s", proto, hostbuf, request);
+    if (t < 2)
 	return -1;
-    } else if (t == 2) {
+    if (strcasecmp(proto, "http") != 0) {
+	return -1;
+    } else if (t == 2)
 	strcpy(request, "/");
+    if ((s = strchr(hostbuf, ':')) && *(s+1)) {
+        *s = '\0';
+        *port = atoi(s + 1);
     }
-    if (sscanf(hostbuf, "%[^:]:%d", host, port) < 2)
-	(*port) = urlDefaultPort(PROTO_HTTP);
+    strncpy(host, hostbuf, SQUIDHOSTNAMELEN);
     return 0;
 }
 
