@@ -1,4 +1,8 @@
+Changes to squid-1.1.alpha10:
+
 	- Fixed directory increment bug in storeDirClean().
+	- Misc little changes trying to track town random coredumps.
+	- Includes all squid-1.0 changes up to squid-1.0.8.
 
 Changes to squid-1.1.alpha9:
 
@@ -51,7 +55,6 @@ Changes to squid-1.1.alpha6:
 	- Added 'log_fqdn' option to config file.
 	- Added 'client_netmask' to config file.
 
-
 Changes to squid-1.1.alpha5:
 
 	- Got Asynchronous I/O stuff to compile and run on IRIX 5.3
@@ -92,6 +95,21 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+
+Changes to squid-1.0.8 (August 19, 1996):
+
+	- Added ftpget fixes from carson@lehman.com and moy@parc.xerox.com.
+	- Fixed -s option to enable syslog logging.
+	- Added 'err_html_text' for configurable error messages.
+	- Fixed protoDispatchDNSHandle() to not try a direct fetch if
+	  host is beyond firewall_ip list.
+	- Changed storeDirClean() to handle one directory per call and
+	  not keep the dirhandle open between calls.
+	- Changed .zip MIME type to "application/x-zip-compressed".
+	- Added new 'url_regex' ACL type, regular expression match over
+	  the whole URL.
+	- Removed xrealloc() call from storeClientListAdd().
+
 Changes to squid-1.0.7 (August 14, 1996):
 
 	- Added "store_clean" routines to periodically remove orphaned
