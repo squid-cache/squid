@@ -247,6 +247,10 @@ struct _SquidConfig {
 	char *content_type;
     } icons;
     char *errorDirectory;
+    struct {
+	time_t timeout;
+	int maxtries;
+    } retry;
 };
 
 struct _SquidConfig2 {
@@ -329,6 +333,7 @@ struct _fde {
     DEFER *defer_check;		/* check if we should defer read */
     void *defer_data;
     CommWriteStateData *rwstate;	/* State data for comm_write */
+    time_t connect_timeout;
 };
 
 struct _fileMap {
@@ -505,7 +510,9 @@ struct _ConnStateData {
 struct _ipcache_addrs {
     unsigned char count;
     unsigned char cur;
+    unsigned char badcount;
     struct in_addr *in_addrs;
+    unsigned char *bad_mask;
 };
 
 struct _ipcache_entry {

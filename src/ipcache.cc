@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.135 1997/10/25 17:22:48 wessels Exp $
+ * $Id: ipcache.cc,v 1.136 1997/10/26 06:26:26 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -256,6 +256,7 @@ ipcache_release(ipcache_entry * i)
     }
     if (i->status == IP_CACHED) {
 	safe_free(i->addrs.in_addrs);
+	safe_free(i->addrs.bad_mask);
 	debug(14, 5) ("ipcache_release: Released IP cached record for '%s'.\n",
 	    i->name);
     }
@@ -417,10 +418,13 @@ ipcacheAddHostent(ipcache_entry * i, const struct hostent *hp)
     int addr_count = 0;
     int k;
     safe_free(i->addrs.in_addrs);
+    safe_free(i->addrs.bad_mask);
     while ((addr_count < 255) && *(hp->h_addr_list + addr_count))
 	++addr_count;
     i->addrs.count = (unsigned char) addr_count;
     i->addrs.in_addrs = xcalloc(addr_count, sizeof(struct in_addr));
+    i->addrs.bad_mask = xcalloc(addr_count, sizeof(unsigned char));
+    i->addrs.badcount = 0;
     for (k = 0; k < addr_count; k++)
 	xmemcpy(&i->addrs.in_addrs[k].s_addr,
 	    *(hp->h_addr_list + k),
@@ -517,8 +521,10 @@ ipcache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
 	    i.addrs.count = (unsigned char) ipcount;
 	    if (ipcount == 0) {
 		i.addrs.in_addrs = NULL;
+		i.addrs.bad_mask = NULL;
 	    } else {
 		i.addrs.in_addrs = xcalloc(ipcount, sizeof(struct in_addr));
+		i.addrs.bad_mask = xcalloc(ipcount, sizeof(unsigned char));
 	    }
 	    for (k = 0; k < ipcount; k++) {
 		if ((token = strtok(NULL, w_space)) == NULL)
@@ -778,6 +784,7 @@ ipcache_init(void)
     ip_table = hash_create(urlcmp, 229, hash4);		/* small hash table */
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
     static_addrs.in_addrs = xcalloc(1, sizeof(struct in_addr));
+    static_addrs.bad_mask = xcalloc(1, sizeof(unsigned char));
 
     ipcache_high = (long) (((float) Config.ipcache.size *
 	    (float) Config.ipcache.high) / (float) 100);
@@ -856,6 +863,8 @@ ipcache_gethostbyname(const char *name, int flags)
 		/* only dnsHandleRead() can change from DISPATCHED to CACHED */
 		static_addrs.count = 1;
 		static_addrs.cur = 0;
+		static_addrs.badcount = 0;
+		static_addrs.bad_mask[0] = FALSE;
 		xmemcpy(&static_addrs.in_addrs[0].s_addr,
 		    *(hp->h_addr_list),
 		    hp->h_length);
@@ -887,15 +896,17 @@ static void
 ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 {
     int k;
-    storeAppendPrintf(sentry, " {%-32.32s  %c%c %6d %6d %d",
+    storeAppendPrintf(sentry, " {%-32.32s  %c%c %6d %6d %2d(%2d)",
 	i->name,
 	ipcache_status_char[i->status],
 	i->locks ? 'L' : ' ',
 	(int) (squid_curtime - i->lastref),
 	(int) (i->expires - squid_curtime),
-	(int) i->addrs.count);
+	(int) i->addrs.count,
+	(int) i->addrs.badcount);
     for (k = 0; k < (int) i->addrs.count; k++)
-	storeAppendPrintf(sentry, " %15s", inet_ntoa(i->addrs.in_addrs[k]));
+	storeAppendPrintf(sentry, " %15s-%3s", inet_ntoa(i->addrs.in_addrs[k]),
+	    i->addrs.bad_mask[k] ? "BAD" : "OK ");
     storeAppendPrintf(sentry, close_bracket);
 }
 
@@ -1004,6 +1015,8 @@ ipcacheCheckNumeric(const char *name)
     static_addrs.count = 1;
     static_addrs.cur = 0;
     static_addrs.in_addrs[0].s_addr = ip.s_addr;
+    static_addrs.bad_mask[0] = FALSE;
+    static_addrs.badcount = 0;
     return &static_addrs;
 }
 
@@ -1035,17 +1048,35 @@ void
 ipcacheCycleAddr(const char *name)
 {
     ipcache_entry *i;
+    ipcache_addrs *ia;
+    unsigned char fullcircle;
     if ((i = ipcache_get(name)) == NULL)
 	return;
     if (i->status != IP_CACHED)
 	return;
     i->addrs.cur++;
-    if (i->addrs.cur == i->addrs.count)
-	i->addrs.cur = 0;
+    ia = &i->addrs;
+    fullcircle = ia->cur;
+    while (ia->bad_mask[ia->cur]) {
+	if (++ia->cur == ia->count)
+	    ia->cur = 0;
+	if (ia->cur == fullcircle) {	/* All bad, just use next one */
+	    if (++ia->cur == ia->count)
+		ia->cur = 0;
+	    break;
+	}
+    }
 }
 
+/* "MarkBad" function must leave the "cur" pointer at the next
+ * available good address, or the next bad address, in the list.
+ * This simulates the functionality of RemoveBadAddr() which it
+ * replaces.  Marking, instead of removing, allows bad addresses
+ * to be retried as a last resort before returning an error to
+ * the user.
+ */
 void
-ipcacheRemoveBadAddr(const char *name, struct in_addr addr)
+ipcacheMarkBadAddr(const char *name, struct in_addr addr)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
@@ -1059,11 +1090,47 @@ ipcacheRemoveBadAddr(const char *name, struct in_addr addr)
     }
     if (k == (int) ia->count)
 	return;
-    ia->in_addrs[k] = ia->in_addrs[--ia->count];
-    if (ia->count == 0)
-	i->expires = squid_curtime;
-    if (ia->cur >= ia->count)
+    if (!ia->bad_mask[k]) {
+	ia->bad_mask[k] = TRUE;
+	ia->badcount++;
+	debug(14, 1) ("ipcacheMarkBad: %s [%s]\n",
+	    name, inet_ntoa(ia->in_addrs[k]));
+	if (ia->badcount != ia->count) {
+	    /* at least one good address left */
+	    i->expires = squid_curtime + Config.positiveDnsTtl;
+	    while (ia->bad_mask[ia->cur])
+		if (++ia->cur == ia->count)
+		    ia->cur = 0;
+	    return;
+	}
+    }
+    if (++ia->cur == ia->count)
 	ia->cur = 0;
+}
+
+void
+ipcacheMarkGoodAddr(const char *name, struct in_addr addr)
+{
+    ipcache_entry *i;
+    ipcache_addrs *ia;
+    int k;
+    if ((i = ipcache_get(name)) == NULL)
+	return;
+    ia = &i->addrs;
+    for (k = 0; k < (int) ia->count; k++) {
+	if (ia->in_addrs[k].s_addr == addr.s_addr)
+	    break;
+    }
+    if (k == (int) ia->count)
+	return;
+    i->expires = squid_curtime + Config.positiveDnsTtl;
+    if (ia->bad_mask[k]) {
+	ia->bad_mask[k] = FALSE;
+	ia->badcount--;
+	i->expires = squid_curtime + Config.positiveDnsTtl;
+	debug(14, 1) ("ipcacheMarkGoodAddr: %s [%s]\n",
+	    name, inet_ntoa(ia->in_addrs[k]));
+    }
 }
 
 void
@@ -1083,6 +1150,7 @@ ipcacheFreeMemory(void)
     for (j = 0; j < k; j++) {
 	i = *(list + j);
 	safe_free(i->addrs.in_addrs);
+	safe_free(i->addrs.bad_mask);
 	safe_free(i->name);
 	safe_free(i->error_message);
 	safe_free(i);
