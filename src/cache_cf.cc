@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.230 1997/11/05 05:29:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.231 1997/11/12 23:36:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -62,10 +62,8 @@ static void defaults_if_none(void);
 static int parse_line(char *);
 static void parseBytesLine(size_t * bptr, const char *units);
 static size_t parseBytesUnits(const char *unit);
-
-/* These come from cf_gen.c */
-static void default_all(void);
 static void free_all(void);
+static void requirePathnameExists(const char *name, const char *path);
 
 static void
 self_destruct(void)
@@ -170,42 +168,6 @@ parseConfigFile(const char *file_name)
 	}
 	safe_free(tmp_line);
     }
-
-    /* Sanity checks */
-    if (Config.cacheSwap.swapDirs == NULL)
-	fatal("No cache_dir's specified in config file");
-    if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10)) {
-	printf("WARNING: cache_swap (%d kbytes) is less than cache_mem (%d bytes).\n", Config.Swap.maxSize, Config.Mem.maxSize);
-	printf("         This will cause serious problems with your cache!!!\n");
-	printf("         Change your configuration file.\n");
-	fflush(stdout);		/* print message */
-    }
-    if (Config.Announce.period < 1) {
-	Config.Announce.period = 86400 * 365;	/* one year */
-	Config.onoff.announce = 0;
-    }
-    if (Config.dnsChildren < 0)
-	Config.dnsChildren = 0;
-    if (Config.dnsChildren < 1) {
-	printf("WARNING: dnsservers are disabled!\n");
-	printf("WARNING: Cache performance may be very poor\n");
-    } else if (Config.dnsChildren > DefaultDnsChildrenMax) {
-	printf("WARNING: dns_children was set to a bad value: %d\n",
-	    Config.dnsChildren);
-	printf("Setting it to the maximum (%d).\n", DefaultDnsChildrenMax);
-	Config.dnsChildren = DefaultDnsChildrenMax;
-    }
-    if (Config.Program.redirect) {
-	if (Config.redirectChildren < 1) {
-	    Config.redirectChildren = 0;
-	    safe_free(Config.Program.redirect);
-	} else if (Config.redirectChildren > DefaultRedirectChildrenMax) {
-	    printf("WARNING: redirect_children was set to a bad value: %d\n",
-		Config.redirectChildren);
-	    printf("Setting it to the maximum (%d).\n", DefaultRedirectChildrenMax);
-	    Config.redirectChildren = DefaultRedirectChildrenMax;
-	}
-    }
     fclose(fp);
     defaults_if_none();
     configDoConfigure();
@@ -217,6 +179,35 @@ configDoConfigure(void)
 {
     LOCAL_ARRAY(char, buf, BUFSIZ);
     memset(&Config2, '\0', sizeof(SquidConfig2));
+    /* Sanity checks */
+    if (Config.cacheSwap.swapDirs == NULL)
+	fatal("No cache_dir's specified in config file");
+    if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10))
+	fatal("cache_swap is lower than cache_mem");
+    if (Config.Announce.period < 1) {
+	Config.Announce.period = 86400 * 365;	/* one year */
+	Config.onoff.announce = 0;
+    }
+    if (Config.dnsChildren < 1)
+	fatal("No dnsservers allocated");
+    if (Config.dnsChildren > DefaultDnsChildrenMax) {
+	debug(3, 0) ("WARNING: dns_children was set to a bad value: %d\n",
+	    Config.dnsChildren);
+	debug(3, 0) ("Setting it to the maximum (%d).\n",
+	    DefaultDnsChildrenMax);
+	Config.dnsChildren = DefaultDnsChildrenMax;
+    }
+    if (Config.Program.redirect) {
+	if (Config.redirectChildren < 1) {
+	    Config.redirectChildren = 0;
+	    safe_free(Config.Program.redirect);
+	} else if (Config.redirectChildren > DefaultRedirectChildrenMax) {
+	    debug(3, 0) ("WARNING: redirect_children was set to a bad value: %d\n",
+		Config.redirectChildren);
+	    debug(3, 0) ("Setting it to the maximum (%d).\n", DefaultRedirectChildrenMax);
+	    Config.redirectChildren = DefaultRedirectChildrenMax;
+	}
+    }
     if (Config.Accel.host) {
 	snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
 	Config2.Accel.prefix = xstrdup(buf);
@@ -256,6 +247,14 @@ configDoConfigure(void)
 	debug(3, 0) ("WARNING: resetting 'reference_age' to 1 week\n");
 	Config.referenceAge = 86400 * 7;
     }
+    requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
+    requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
+    requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
+    if (Config.Program.redirect)
+	requirePathnameExists("redirect_program", Config.Program.redirect);
+    requirePathnameExists("announce_file", Config.Announce.file);
+    requirePathnameExists("Icon Directory", Config.icons.directory);
+    requirePathnameExists("Error Directory", Config.errorDirectory);
 }
 
 /* Parse a time specification from the config file.  Store the
@@ -749,13 +748,13 @@ dump_httpanonymizer(StoreEntry * entry, const char *name, int var)
 {
     switch (var) {
     case ANONYMIZER_NONE:
-	printf("off");
+	storeAppendPrintf(entry, "%s off\n", name);
 	break;
     case ANONYMIZER_STANDARD:
-	printf("paranoid");
+	storeAppendPrintf(entry, "%s paranoid\n", name);
 	break;
     case ANONYMIZER_PARANOID:
-	printf("standard");
+	storeAppendPrintf(entry, "%s standard\n", name);
 	break;
     }
 }
@@ -862,21 +861,8 @@ parse_onoff(int *var)
 
 #define free_onoff free_int
 #define free_httpanonymizer free_int
-#define dump_pathname_stat dump_string
-#define free_pathname_stat free_string
 #define dump_eol dump_string
 #define free_eol free_string
-
-static void
-parse_pathname_stat(char **path)
-{
-    struct stat sb;
-    parse_string(path);
-    if (stat(*path, &sb) < 0) {
-	debug(50, 1) ("parse_pathname_stat: %s: %s\n", *path, xstrerror());
-	self_destruct();
-    }
-}
 
 static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
@@ -1139,4 +1125,16 @@ void
 configFreeMemory(void)
 {
     free_all();
+}
+
+static void
+requirePathnameExists(const char *name, const char *path)
+{
+    struct stat sb;
+    char buf[MAXPATHLEN];
+    assert(path != NULL);
+    if (stat(path, &sb) < 0) {
+	snprintf(buf, MAXPATHLEN, "%s: %s", path, xstrerror());
+	fatal(buf);
+    }
 }
