@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.99 1997/04/30 18:30:44 wessels Exp $
+ * $Id: client_side.cc,v 1.100 1997/05/02 04:28:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -120,14 +120,13 @@ clientAccessCheck(icpStateData * icpState, PF handler)
 	clientAccessCheckDone(0, icpState);
 	return;
     }
-    browser = mime_get_header(icpState->request_hdr, "User-Agent"),
-	aclNBCheck(Config.accessList.HTTP,
+    browser = mime_get_header(icpState->request_hdr, "User-Agent");
+    icpState->acl_checklist = aclChecklistCreate(Config.accessList.HTTP,
 	icpState->request,
 	icpState->peer.sin_addr,
 	browser,
-	icpState->ident.ident,
-	handler,
-	icpState);
+	icpState->ident.ident);
+    aclNBCheck(icpState->acl_checklist, handler, icpState);
 }
 
 void
@@ -138,6 +137,7 @@ clientAccessCheckDone(int answer, void *data)
     char *buf = NULL;
     char *redirectUrl = NULL;
     debug(33, 5, "clientAccessCheckDone: '%s' answer=%d\n", icpState->url, answer);
+    icpState->acl_checklist = NULL;
     if (answer) {
 	urlCanonical(icpState->request, icpState->url);
 	if (icpState->redirect_state != REDIRECT_NONE)
