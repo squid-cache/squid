@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.92 2000/05/30 09:24:35 hno Exp $
+ * $Id: store_client.cc,v 1.93 2000/05/31 04:27:20 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -59,7 +59,7 @@ storeClientWaiting(const StoreEntry * e)
     dlink_node *node;
     store_client *sc;
     for (node = mem->clients.head; node; node = node->next) {
-	sc = (store_client *) node->data;
+	sc = node->data;
 	if (sc->callback_data != NULL)
 	    return 1;
     }
@@ -73,7 +73,7 @@ storeClientListSearch(const MemObject * mem, void *data)
     dlink_node *node;
     store_client *sc = NULL;
     for (node = mem->clients.head; node; node = node->next) {
-	sc = (store_client *) node->data;
+	sc = node->data;
 	if (sc->callback_data == data)
 	    return sc;
     }
@@ -409,7 +409,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	case STORE_META_KEY:
 	    assert(t->length == MD5_DIGEST_CHARS);
 	    if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
-		    memcmp(t->value, e->key, MD5_DIGEST_CHARS)) {
+		memcmp(t->value, e->key, MD5_DIGEST_CHARS)) {
 		debug(20, 1) ("WARNING: swapin MD5 mismatch\n");
 		debug(20, 1) ("\t%s\n", storeKeyText(t->value));
 		debug(20, 1) ("\t%s\n", storeKeyText(e->key));
@@ -500,7 +500,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 	return 0;
     if (mem->clients.head == NULL)
 	return 0;
-    if (sc == (store_client *) mem->clients.head->data) {
+    if (sc == mem->clients.head->data) {
 	/*
 	 * If we are unregistering the _first_ client for this
 	 * entry, then we have to reset the client FD to -1.
@@ -544,7 +544,7 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
     dlink_node *node;
 
     for (node = mem->clients.head; node; node = nx) {
-	sc = (store_client *) node->data;
+	sc = node->data;
 	nx = node->next;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
@@ -572,7 +572,7 @@ InvokeHandlers(StoreEntry * e)
     debug(20, 3) ("InvokeHandlers: %s\n", storeKeyText(e->key));
     /* walk the entire list looking for valid callbacks */
     for (node = mem->clients.head; node; node = nx) {
-	sc = (store_client *) node->data;
+	sc = node->data;
 	nx = node->next;
 	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i++);
 	if (sc->callback_data == NULL)
