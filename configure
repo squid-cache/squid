@@ -1911,7 +1911,7 @@ if test "$with_pthreads"; then
             fi
         fi
     ;;
-    *-solaris-*)
+    *-solaris2.*)
         if test "$GCC" = "yes" ; then
 	    CFLAGS="$CFLAGS -pthreads"
 	else
