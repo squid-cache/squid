@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.61 1996/08/21 05:47:03 wessels Exp $
+ * $Id: main.cc,v 1.62 1996/08/26 19:13:03 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -113,11 +113,12 @@ int theOutIcpConnection = -1;
 int do_reuse = 1;
 int opt_unlink_on_reload = 0;
 int opt_reload_hit_only = 0;	/* only UDP_HIT during store relaod */
-int catch_signals = 1;
+int opt_catch_signals = 1;
 int opt_dns_tests = 1;
 int opt_foreground_rebuild = 0;
 int opt_zap_disk_store = 0;
 int opt_syslog_enable = 0;	/* disabled by default */
+int opt_no_ipcache = 0;		/* use ipcache by default */
 int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -146,6 +147,7 @@ Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port]\n\
        -a port   Specify ASCII port number (default: %d).\n\
        -f file   Use given config-file instead of\n\
                  %s\n\
+       -i        Disable IP caching.\n\
        -h        Print help message.\n\
        -s        Enable logging to syslog.\n\
        -u port   Specify ICP port number (default: %d), disable with 0.\n\
@@ -169,10 +171,10 @@ static void mainParseOptions(argc, argv)
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFRUVYa:bf:hm:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFRUVYa:bf:him:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
-	    catch_signals = 0;
+	    opt_catch_signals = 0;
 	    break;
 	case 'D':
 	    opt_dns_tests = 0;
@@ -204,6 +206,9 @@ static void mainParseOptions(argc, argv)
 	    break;
 	case 'h':
 	    usage();
+	    break;
+	case 'i':
+	    opt_no_ipcache = 1;
 	    break;
 	case 'm':
 #if MALLOC_DBG
@@ -390,7 +395,7 @@ static void mainReinitialize()
 static void mainInitialize()
 {
     static int first_time = 1;
-    if (catch_signals) {
+    if (opt_catch_signals) {
 	squid_signal(SIGSEGV, death, SA_NODEFER | SA_RESETHAND);
 	squid_signal(SIGBUS, death, SA_NODEFER | SA_RESETHAND);
     }
@@ -513,7 +518,7 @@ int main(argc, argv)
 
     setMaxFD();
 
-    if (catch_signals)
+    if (opt_catch_signals)
 	for (n = FD_SETSIZE; n > 2; n--)
 	    close(n);
 

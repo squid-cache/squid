@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.48 1996/08/19 23:09:26 wessels Exp $
+ * $Id: tools.cc,v 1.49 1996/08/26 19:14:54 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -323,7 +323,7 @@ void fatal_dump(message)
 {
     if (message)
 	fatal_common(message);
-    if (catch_signals)
+    if (opt_catch_signals)
 	storeWriteCleanLog();
     abort();
 }
