@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.187 1998/01/02 18:09:20 wessels Exp $
+ * $Id: client_side.cc,v 1.188 1998/01/03 05:27:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1887,11 +1887,11 @@ clientCheckTransferDone(clientHttpRequest * http)
 	return 0;		/* haven't found end of headers yet */
     else if (reply->code == HTTP_OK)
 	sending = SENDING_BODY;
-    else if (reply->content_length < 0)
-	sending = SENDING_HDRSONLY;
     else if (reply->code == HTTP_NO_CONTENT)
 	sending = SENDING_HDRSONLY;
     else if (reply->code == HTTP_NOT_MODIFIED)
+	sending = SENDING_HDRSONLY;
+    else if (reply->code < HTTP_OK)
 	sending = SENDING_HDRSONLY;
     else if (http->request->method == METHOD_HEAD)
 	sending = SENDING_HDRSONLY;

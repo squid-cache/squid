@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.230 1997/12/07 00:48:14 wessels Exp $
+ * $Id: http.cc,v 1.231 1998/01/03 05:27:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -584,26 +584,26 @@ httpPconnTransferDone(HttpStateData * httpState)
      *    - If we haven't seen the end of the reply headers, we can't
      *      be persistent.
      *    - For "200 OK" check the content-length in the next block.
-     *    - For other replies without a content-length, we're done.
      *    - For "204 No Content" (even with content-length) we're done.
      *    - For "304 Not Modified" (even with content-length) we're done.
+     *    - 1XX replies never have a body; we're done.
      *    - For HEAD requests with content-length we're done.
-     *    - For other replies with a content length, we continue...
+     *    - For all other replies, check content length in next block.
      */
     if (httpState->reply_hdr_state < 2)
 	return 0;
     else if (reply->code == HTTP_OK)
-	(void) 0;		/* continue */
-    else if (reply->content_length < 0)
-	return 1;
+	(void) 0;		/* common case, continue */
     else if (reply->code == HTTP_NO_CONTENT)
 	return 1;
     else if (reply->code == HTTP_NOT_MODIFIED)
 	return 1;
+    else if (reply->code < HTTP_OK)
+	return 1;
     else if (httpState->request->method == METHOD_HEAD)
 	return 1;
     /*
-     * If there is no content-length, then we probably can't be
+     * If there is no content-length, then we can't be
      * persistent.  If there is a content length, then we must
      * wait until we've seen the end of the body.
      */
