@@ -14,8 +14,5 @@ For detailed usage information please see the supplied man page
 
   nroff -man squid_ldap_auth.8 | less
 
-Please also see Glenns Web page at:
-http://orca.cisti.nrc.ca/~gnewton/opensource/squid_ldap_auth/
-
 In order to use squid_ldap_auth, you will also need to install
 the OpenLDAP libraries (ldap lber) from http://www.openldap.org.
