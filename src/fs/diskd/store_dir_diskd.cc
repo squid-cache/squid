@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.15 2000/06/27 22:06:23 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.16 2000/07/16 07:28:38 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -446,6 +446,19 @@ storeDiskdStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "open_fail_queue_len: %d\n", diskd_stats.open_fail_queue_len);
     storeAppendPrintf(sentry, "block_queue_len: %d\n", diskd_stats.block_queue_len);
     diskd_stats.max_away = diskd_stats.max_shmuse = 0;
+    storeAppendPrintf(sentry, "\n             OPS SUCCESS    FAIL\n");
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+	"open", diskd_stats.open.ops, diskd_stats.open.success, diskd_stats.open.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+	"create", diskd_stats.create.ops, diskd_stats.create.success, diskd_stats.create.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+	"close", diskd_stats.close.ops, diskd_stats.close.success, diskd_stats.close.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+	"unlink", diskd_stats.unlink.ops, diskd_stats.unlink.success, diskd_stats.unlink.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+	"read", diskd_stats.read.ops, diskd_stats.read.success, diskd_stats.read.fail);
+    storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
+	"write", diskd_stats.write.ops, diskd_stats.write.success, diskd_stats.write.fail);
 }
 
 /*
@@ -482,10 +495,9 @@ storeDiskdDirCallback(SwapDir * SD)
 
     if (diskdinfo->away >= diskdinfo->magic2) {
 	diskd_stats.block_queue_len++;
-        retval = 1; /* We might not have anything to do, but our queue
-                     * is full.. */
+	retval = 1;		/* We might not have anything to do, but our queue
+				 * is full.. */
     }
-
     if (diskd_stats.sent_count - diskd_stats.recv_count >
 	diskd_stats.max_away) {
 	diskd_stats.max_away = diskd_stats.sent_count - diskd_stats.recv_count;
@@ -495,7 +507,7 @@ storeDiskdDirCallback(SwapDir * SD)
 	memset(&M, '\0', sizeof(M));
 	x = msgrcv(diskdinfo->rmsgid, &M, msg_snd_rcv_sz, 0, IPC_NOWAIT);
 	if (x < 0)
-		break;
+	    break;
 	else if (x != msg_snd_rcv_sz) {
 	    debug(81, 1) ("storeDiskdDirCallback: msgget returns %d\n",
 		x);
@@ -504,7 +516,7 @@ storeDiskdDirCallback(SwapDir * SD)
 	diskd_stats.recv_count++;
 	diskdinfo->away--;
 	storeDiskdHandle(&M);
-        retval = 1; /* Return that we've actually done some work */
+	retval = 1;		/* Return that we've actually done some work */
 	if (M.shm_offset > -1)
 	    storeDiskdShmPut(SD, M.shm_offset);
     }
@@ -1156,7 +1168,7 @@ storeDiskdDirCleanLogNextEntry(SwapDir * sd)
  * "write" an entry to the clean log file.
  */
 static void
-storeDiskdDirWriteCleanEntry(SwapDir *sd, const StoreEntry * e)
+storeDiskdDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 {
     storeSwapLogData s;
     static size_t ss = sizeof(storeSwapLogData);

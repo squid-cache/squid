@@ -73,6 +73,11 @@ struct _diskd_stats {
     int sent_count;
     int recv_count;
     int sio_id;
+    struct {
+	int ops;
+	int success;
+	int fail;
+    } open, create, close, unlink, read, write;
 };
 
 typedef struct _diskd_stats diskd_stats_t;
