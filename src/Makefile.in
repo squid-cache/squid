@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.72 1997/05/26 04:04:54 wessels Exp $
+#  $Id: Makefile.in,v 1.73 1997/06/01 04:23:08 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -67,7 +67,6 @@ CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
 SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
-FTPGET_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = squid client
@@ -126,7 +125,6 @@ OBJS	 	= \
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
 	-DDEFAULT_MIME_TABLE=\"$(DEFAULT_MIME_TABLE)\" \
-	-DDEFAULT_FTPGET=\"$(DEFAULT_FTPGET)\" \
 	-DDEFAULT_DNSSERVER=\"$(DEFAULT_DNSSERVER)\" \
 	-DDEFAULT_CACHE_LOG=\"$(DEFAULT_CACHE_LOG)\" \
 	-DDEFAULT_ACCESS_LOG=\"$(DEFAULT_ACCESS_LOG)\" \
@@ -165,7 +163,6 @@ squid.conf: squid.conf.pre Makefile
 	sed "\
 	s%@DEFAULT_CONFIG_FILE@%$(DEFAULT_CONFIG_FILE)%g;\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
-	s%@DEFAULT_FTPGET@%$(DEFAULT_FTPGET)%g;\
 	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
 	s%@DEFAULT_UNLINKD@%$(DEFAULT_UNLINKD)%g;\
 	s%@DEFAULT_PINGER@%$(DEFAULT_PINGER)%g;\

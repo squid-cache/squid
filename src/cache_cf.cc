@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.193 1997/05/27 02:48:50 wessels Exp $
+ * $Id: cache_cf.cc,v 1.194 1997/06/01 04:23:09 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -151,8 +151,6 @@ struct SquidConfig Config;
 #endif /* USE_PROXY_AUTH */
 #define DefaultLogRotateNumber  10
 #define DefaultAdminEmail	"webmaster"
-#define DefaultFtpgetProgram	DEFAULT_FTPGET
-#define DefaultFtpgetOptions	""
 #define DefaultDnsserverProgram DEFAULT_DNSSERVER
 #define DefaultPingerProgram    DEFAULT_PINGER
 #define DefaultUnlinkdProgram   DEFAULT_UNLINKD
@@ -182,7 +180,7 @@ struct SquidConfig Config;
 #define DefaultPidFilename      DEFAULT_PID_FILE
 #define DefaultMimeTable        DEFAULT_MIME_TABLE
 #define DefaultVisibleHostname  (char *)NULL	/* default NONE */
-#define DefaultFtpUser		"squid@"	/* Default without domain */
+#define DefaultFtpAnonUser	"squid@"	/* Default without domain */
 #define DefaultAnnounceHost	"sd.cache.nlanr.net"
 #define DefaultAnnouncePort	3131
 #define DefaultAnnounceFile	(char *)NULL	/* default NONE */
@@ -252,8 +250,6 @@ static void parseCacheHostLine _PARAMS((void));
 static void parseDebugOptionsLine _PARAMS((void));
 static void parseEffectiveUserLine _PARAMS((void));
 static void parseErrHtmlLine _PARAMS((void));
-static void parseFtpOptionsLine _PARAMS((void));
-static void parseFtpUserLine _PARAMS((void));
 static void parseWordlist _PARAMS((wordlist **));
 static void parseHostAclLine _PARAMS((void));
 static void parseHostDomainLine _PARAMS((void));
@@ -579,17 +575,6 @@ parsePathname(char **path, int fatal)
 }
 
 static void
-parseFtpOptionsLine(void)
-{
-    char *token;
-    token = strtok(NULL, null_string);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Program.ftpget_opts);
-    Config.Program.ftpget_opts = xstrdup(token);
-}
-
-static void
 parseOnOff(int *var)
 {
     char *token;
@@ -710,17 +695,6 @@ parseVisibleHostnameLine(void)
     if (token == NULL)
 	self_destruct();
     Config.visibleHostname = xstrdup(token);
-}
-
-static void
-parseFtpUserLine(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.ftpUser);
-    Config.ftpUser = xstrdup(token);
 }
 
 static void
@@ -1058,16 +1032,6 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "request_size"))
 	    parseKilobytes(&Config.maxRequestSize);
 
-	else if (!strcmp(token, "cache_ftp_program"))
-	    parsePathname(&Config.Program.ftpget, 1);
-	else if (!strcmp(token, "ftpget_program"))
-	    parsePathname(&Config.Program.ftpget, 1);
-
-	else if (!strcmp(token, "cache_ftp_options"))
-	    parseFtpOptionsLine();
-	else if (!strcmp(token, "ftpget_options"))
-	    parseFtpOptionsLine();
-
 	else if (!strcmp(token, "cache_dns_program"))
 	    parsePathname(&Config.Program.dnsserver, 1);
 
@@ -1168,7 +1132,7 @@ parseConfigFile(const char *file_name)
 	    parseVisibleHostnameLine();
 
 	else if (!strcmp(token, "ftp_user"))
-	    parseFtpUserLine();
+	    parseString(&Config.Ftp.anon_user);
 
 	else if (!strcmp(token, "cache_announce"))
 	    parseCacheAnnounceLine();
@@ -1296,8 +1260,6 @@ configFreeMemory(void)
     safe_free(Config.adminEmail);
     safe_free(Config.effectiveUser);
     safe_free(Config.effectiveGroup);
-    safe_free(Config.Program.ftpget);
-    safe_free(Config.Program.ftpget_opts);
     safe_free(Config.Program.dnsserver);
     safe_free(Config.Program.redirect);
     safe_free(Config.Program.unlinkd);
@@ -1309,7 +1271,6 @@ configFreeMemory(void)
     safe_free(Config.pidFilename);
     safe_free(Config.mimeTablePathname);
     safe_free(Config.visibleHostname);
-    safe_free(Config.ftpUser);
 #if USE_PROXY_AUTH
     safe_free(Config.proxyAuth.File);
     aclDestroyRegexList(Config.proxyAuth.IgnoreDomains);
@@ -1318,6 +1279,9 @@ configFreeMemory(void)
     safe_free(Config.Announce.host);
     safe_free(Config.Announce.file);
     safe_free(Config.errHtmlText);
+    safe_free(Config.Ftp.icon_prefix);
+    safe_free(Config.Ftp.icon_suffix);
+    safe_free(Config.Ftp.anon_user);
     peerDestroy(Config.sslProxy);
     peerDestroy(Config.passProxy);
     wordlistDestroy(&Config.hierarchy_stoplist);
@@ -1389,8 +1353,6 @@ configSetFactoryDefaults(void)
     Config.Log.useragent = safe_xstrdup(DefaultUseragentLogFile);
 #endif
     Config.Log.rotateNumber = DefaultLogRotateNumber;
-    Config.Program.ftpget = safe_xstrdup(DefaultFtpgetProgram);
-    Config.Program.ftpget_opts = safe_xstrdup(DefaultFtpgetOptions);
     Config.Program.dnsserver = safe_xstrdup(DefaultDnsserverProgram);
     Config.Program.redirect = safe_xstrdup(DefaultRedirectProgram);
     Config.Program.pinger = safe_xstrdup(DefaultPingerProgram);
@@ -1406,7 +1368,6 @@ configSetFactoryDefaults(void)
     Config.proxyAuth.File = safe_xstrdup(DefaultProxyAuthFile);
 /*    Config.proxyAuth.IgnoreDomains = safe_xstrdup(DefaultproxyAuthIgnoreDomains); */
 #endif /* USE_PROXY_AUTH */
-    Config.ftpUser = safe_xstrdup(DefaultFtpUser);
     Config.Announce.host = safe_xstrdup(DefaultAnnounceHost);
     Config.Announce.port = DefaultAnnouncePort;
     Config.Announce.file = safe_xstrdup(DefaultAnnounceFile);
@@ -1438,6 +1399,7 @@ configSetFactoryDefaults(void)
     Config.Ftp.icon_suffix = safe_xstrdup(DefaultFtpIconSuffix);
     Config.Ftp.list_width = DefaultFtpListWidth;
     Config.Ftp.list_wrap = DefaultFtpListWrap;
+    Config.Ftp.anon_user = DefaultFtpAnonUser;
 }
 
 static void
@@ -1447,10 +1409,6 @@ configDoConfigure(void)
     if (Config.errHtmlText == NULL)
 	Config.errHtmlText = xstrdup(null_string);
     storeConfigure();
-    if (httpd_accel_mode && !Config.Accel.withProxy) {
-	safe_free(Config.Program.ftpget);
-	Config.Program.ftpget = xstrdup("none");
-    }
     if (httpd_accel_mode && !strcmp(Config.Accel.host, "virtual"))
 	vhost_mode = 1;
     sprintf(ThisCache, "%s:%d (Squid/%s)",
