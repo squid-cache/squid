@@ -14,7 +14,7 @@ Our Todo List
 		- Allow for 'backup' parents 
 		- An orderd list of siblings to try.  
 		- Hash function load balancing
-(2)     Use storeBuffer/Flush where needed, consider supporting nested calls
+(2)	Track cache keys (MD5) in memory utilization
 
 (3)	hit metering
 (3)	ETag support (makes metadata bigger--ack!)
@@ -30,10 +30,7 @@ Our Todo List
 (3)     deny/allow tags for HTTP header fields (AR)
 (3)	LDAP support.  See http://miso.wwa.com/~donley/ and
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
-(3)	'no_cache' access list for specifing objects which should not
-	be cached.
 (3)	What to do about ACL's and URL escaping?
-(3)	Full request headers for CONNECT requests.
 
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
 	stoplist_pattern, refresh_pattern, ...  (DW)
@@ -104,3 +101,6 @@ DONE:
 (3) **  shrink-able memory pools (AR)
 (3) **	request-range (AR)
 (4) **  Double check that MemBuf.size is used correctly everywhere (AR)
+(3)	'no_cache' access list for specifing objects which should not
+	be cached.
+(3)	Full request headers for CONNECT requests.
