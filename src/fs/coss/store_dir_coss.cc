@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.58 2005/01/06 13:16:39 serassio Exp $
+ * $Id: store_dir_coss.cc,v 1.59 2005/01/06 14:09:26 serassio Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -911,7 +911,14 @@ CossSwapDir::create()
 
     if (::stat(path, &swap_sb) < 0) {
         debugs (47, 2, "COSS swap space space being allocated.");
+#ifdef _SQUID_MSWIN_
+
+        mkdir(path);
+#else
+
         mkdir(path, 0700);
+#endif
+
     }
 
     /* should check here for directories instead of files, and for file size
