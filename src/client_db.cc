@@ -59,10 +59,13 @@ int
 clientdbDeniedPercent(struct in_addr addr)
 {
     char *key = inet_ntoa(addr);
+    int n = 100;
     ClientInfo *c = (ClientInfo *) hash_lookup(client_table, key);
     if (c == NULL)
 	return 0;
-    return 100 * c->result_hist[ICP_OP_DENIED] / c->n_icp;
+    if (c->n_icp > 100)
+	n = c->n_icp;
+    return 100 * c->result_hist[ICP_OP_DENIED] / n;
 }
 
 void
@@ -89,6 +92,7 @@ clientdbDump(StoreEntry * sentry)
 		c->result_hist[l],
 		percent(c->result_hist[l], c->n_requests));
 	}
+	storeAppendPrintf(sentry, "{}\n");
 	c = (ClientInfo *) hash_next(client_table);
     }
     storeAppendPrintf(sentry, close_bracket);
