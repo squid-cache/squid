@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.21 2002/10/21 14:00:03 adrian Exp $
+ * $Id: whois.cc,v 1.22 2002/10/21 15:21:52 adrian Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "comm.h"
 
 #define WHOIS_PORT 43
 
@@ -53,6 +54,12 @@ static IOCB whoisReadReply;
 
 CBDATA_TYPE(WhoisState);
 
+static void
+whoisWriteComplete(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+{
+	xfree(buf);
+}
+
 void
 whoisStart(FwdState * fwd)
 {
@@ -70,7 +77,7 @@ whoisStart(FwdState * fwd)
     l = strLen(p->request->urlpath) + 3;
     buf = (char *)xmalloc(l);
     snprintf(buf, l, "%s\r\n", strBuf(p->request->urlpath) + 1);
-    comm_old_write(fd, buf, strlen(buf), NULL, p, xfree);
+    comm_write(fd, buf, strlen(buf), whoisWriteComplete, p);
     comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);
     commSetTimeout(fd, Config.Timeout.read, whoisTimeout, p);
 }
