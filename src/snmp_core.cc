@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.55 2002/10/13 20:35:03 robertc Exp $
+ * $Id: snmp_core.cc,v 1.56 2002/10/21 05:45:30 adrian Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -33,6 +33,7 @@
  *
  */
 #include "squid.h"
+#include "comm.h"
 #include "cache_snmp.h"
 
 #define SNMP_REQUEST_SIZE 4096
@@ -459,9 +460,7 @@ snmpHandleUdp(int sock, void *not_used)
     memset(&from, '\0', from_len);
     memset(buf, '\0', SNMP_REQUEST_SIZE);
 
-    statCounter.syscalls.sock.recvfroms++;
-
-    len = recvfrom(sock,
+    len = comm_recvfrom(sock,
 	buf,
 	SNMP_REQUEST_SIZE,
 	0,

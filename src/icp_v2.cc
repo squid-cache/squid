@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.69 2002/10/14 11:50:08 adrian Exp $
+ * $Id: icp_v2.cc,v 1.70 2002/10/21 05:45:30 adrian Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "comm.h"
 #include "ICP.h"
 
 static void icpLogIcp(struct in_addr, log_type, int, const char *, int);
@@ -484,8 +485,7 @@ icpHandleUdp(int sock, void *data)
     while (max--) {
 	from_len = sizeof(from);
 	memset(&from, '\0', from_len);
-	statCounter.syscalls.sock.recvfroms++;
-	len = recvfrom(sock,
+	len = comm_recvfrom(sock,
 	    buf,
 	    SQUID_UDP_SO_RCVBUF - 1,
 	    0,

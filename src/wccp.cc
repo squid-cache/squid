@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.25 2002/09/01 15:16:49 hno Exp $
+ * $Id: wccp.cc,v 1.26 2002/10/21 05:45:30 adrian Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -33,6 +33,7 @@
  *
  */
 #include "squid.h"
+#include "comm.h"
 
 #if USE_WCCP
 
@@ -219,9 +220,7 @@ wccpHandleUdp(int sock, void *not_used)
     memset(&from, '\0', from_len);
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
-    statCounter.syscalls.sock.recvfroms++;
-
-    len = recvfrom(sock,
+    len = comm_recvfrom(sock,
 	(void *) &wccp_i_see_you,
 	WCCP_RESPONSE_SIZE,
 	0,

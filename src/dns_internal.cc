@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.48 2002/10/13 20:35:00 robertc Exp $
+ * $Id: dns_internal.cc,v 1.49 2002/10/21 05:45:30 adrian Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "comm.h"
 
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 #include <windows.h>
@@ -501,8 +502,7 @@ idnsRead(int fd, void *data)
     while (max--) {
 	from_len = sizeof(from);
 	memset(&from, '\0', from_len);
-	statCounter.syscalls.sock.recvfroms++;
-	len = recvfrom(fd, rbuf, 512, 0, (struct sockaddr *) &from, &from_len);
+	len = comm_recvfrom(fd, rbuf, 512, 0, (struct sockaddr *) &from, &from_len);
 	if (len == 0)
 	    break;
 	if (len < 0) {
