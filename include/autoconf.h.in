@@ -71,6 +71,11 @@
    byte first (like Motorola and SPARC, unlike Intel and VAX).  */
 #undef WORDS_BIGENDIAN
 
+/*
+ * configure command line used to configure Squid
+ */
+#undef SQUID_CONFIGURE_OPTIONS
+
 /*********************************
  * START OF CONFIGURABLE OPTIONS *
  *********************************/

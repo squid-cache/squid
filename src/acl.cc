@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.265 2001/10/22 01:22:45 hno Exp $
+ * $Id: acl.cc,v 1.266 2001/10/23 12:14:48 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1264,7 +1264,7 @@ aclDumpUserMaxIP(void *data)
     char buf[128];
     if (acldata->flags.strict)
 	wordlistAdd(&W, "-s");
-    snprintf(buf, sizeof(buf), "%d", acldata->max);
+    snprintf(buf, sizeof(buf), "%ld", acldata->max);
     wordlistAdd(&W, buf);
     return W;
 }
