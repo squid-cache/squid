@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.499 2000/10/04 00:24:16 wessels Exp $
+ * $Id: client_side.cc,v 1.500 2000/10/04 01:46:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -573,6 +573,7 @@ clientPurgeRequest(clientHttpRequest * http)
     StoreEntry *entry;
     ErrorState *err = NULL;
     HttpReply *r;
+    http_status status;
     debug(33, 3) ("Config2.onoff.enable_purge = %d\n", Config2.onoff.enable_purge);
     if (!Config2.onoff.enable_purge) {
 	http->log_type = LOG_TCP_DENIED;
@@ -587,10 +588,10 @@ clientPurgeRequest(clientHttpRequest * http)
     /* Release both IP and object cache entries */
     ipcacheInvalidate(http->request->host);
     if ((entry = storeGetPublic(http->uri, METHOD_GET)) == NULL) {
-	http->http_code = HTTP_NOT_FOUND;
+	status = HTTP_NOT_FOUND;
     } else {
 	storeRelease(entry);
-	http->http_code = HTTP_OK;
+	status = HTTP_OK;
     }
     debug(33, 4) ("clientPurgeRequest: Not modified '%s'\n",
 	storeUrl(entry));
@@ -600,7 +601,7 @@ clientPurgeRequest(clientHttpRequest * http)
      */
     http->entry = clientCreateStoreEntry(http, http->request->method, null_request_flags);
     httpReplyReset(r = http->entry->mem_obj->reply);
-    httpReplySetHeaders(r, 1.0, http->http_code, NULL, NULL, 0, 0, -1);
+    httpReplySetHeaders(r, 1.0, status, NULL, NULL, 0, 0, -1);
     httpReplySwapOut(r, http->entry);
     storeComplete(http->entry);
 }
