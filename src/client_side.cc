@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.50 1996/10/24 06:10:40 wessels Exp $
+ * $Id: client_side.cc,v 1.51 1996/10/24 20:57:03 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -416,6 +416,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	icpState->log_type = LOG_TCP_EXPIRED_FAIL_HIT;
 	storeUnlockObject(entry);
 	icpState->entry = icpState->old_entry;
+	icpState->entry->refcount++;
     } else if (mem->reply->code == 0) {
 	debug(33, 1, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
