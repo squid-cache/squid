@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.279 1998/06/02 21:38:09 rousskov Exp $
+ * $Id: http.cc,v 1.280 1998/06/02 21:46:02 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -217,6 +217,8 @@ httpCachableReply(HttpStateData * httpState)
     if (EBIT_TEST(cc_mask, CC_PRIVATE))
 	return 0;
     if (EBIT_TEST(cc_mask, CC_NO_CACHE))
+	return 0;
+    if (EBIT_TEST(cc_mask, CC_NO_STORE))
 	return 0;
     if (EBIT_TEST(httpState->request->flags, REQ_AUTH))
 	if (!EBIT_TEST(cc_mask, CC_PROXY_REVALIDATE))
