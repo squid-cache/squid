@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.8 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACL.h,v 1.9 2003/07/06 21:50:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +38,6 @@
 #include "Array.h"
 
 /* acl.c */
-SQUIDCEXTERN int aclMatchAclList(const acl_list * list, ACLChecklist * checklist);
 SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
 SQUIDCEXTERN void aclDestroyAcls(acl **);
 SQUIDCEXTERN void aclDestroyAclList(acl_list **);

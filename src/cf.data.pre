@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.328 2003/07/06 21:43:36 hno Exp $
+# $Id: cf.data.pre,v 1.329 2003/07/06 21:50:55 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1067,13 +1067,91 @@ DOC_START
 DOC_END
 
 
-NAME: cache_access_log
-TYPE: string
-DEFAULT: @DEFAULT_ACCESS_LOG@
-LOC: Config.Log.access
+NAME: logformat
+TYPE: logformat
+LOC: Config.Log.logformats
+DEFAULT: none
 DOC_START
-	Logs the client request activity.  Contains an entry for
-	every HTTP and ICP queries received. To disable, enter "none".
+	Usage:
+
+	logformat <name> <format specification>
+
+	Defines an access log format.
+
+	The <format specification> is a string with embedded % format codes
+	
+	% format codes all follow the same basic structure where all but
+	the formatcode is optional. Output strings are automatically quoted
+	as required according to their context and the output format
+	modifiers are usually unneeded but can be specified if an explicit
+	quoting format is desired.
+
+		% ["|[|'|#] [-] [[0]width] [{argument}] formatcode
+	
+		"	quoted string output format
+		[	squid log quoted format as used by log_mime_hdrs
+		#	URL quoted output format
+		'	No automatic quoting
+		-	left aligned
+		width	field width. If starting with 0 then the
+			output is zero padded
+		{arg}	argument such as header name etc
+
+	Format codes:
+
+		>a	Client source IP address
+		>A	Client FQDN
+		<A	Server IP address or peer name
+		la	Local IP address (http_port)
+		lp	Local port number (http_port)
+		ts	Seconds since epoch
+		tu	subsecond time (milliseconds)
+		tl	Local time. Optional strftime format argument
+			default %d/%b/%Y:%H:%M:S %z
+		tg	GMT time. Optional strftime format argument
+			default %d/%b/%Y:%H:%M:S %z
+		>h	Request header. Optional header name argument
+			on the format header[:[separator]element]
+		<h	Reply header. Optional header name argument
+			as for >h
+		un	User name
+		ul	User login
+		ui	User ident
+		Hs	HTTP status code
+		Ss	Squid request status (TCP_MISS etc)
+		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
+		mt	MIME content type
+		rm	Request method (GET/POST etc)
+		ru	Request URL
+		rv	Request protocol version
+		<st	Reply size including HTTP headers
+		%	a literal % character
+
+logformat squid  %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt
+logformat squidmime  %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt [%>h] [%<h]
+logformat common %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %Hs %<st %Ss:%Sh
+logformat combined %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+DOC_END
+
+NAME: access_log cache_access_log
+TYPE: access_log
+LOC: Config.Log.accesslogs
+DEFAULT: none
+DOC_START
+  These files log client request activities. Has a line every HTTP or
+  ICP request. The format is:
+  access_log <filepath> [<logformat name> [acl acl ...]]
+
+  Will log to the specified file using the specified format (which
+  must be defined in a logformat directive) those entries which match
+  ALL the acl's specified (which must be defined in acl clauses).
+  If no acl is specified, all requests will be logged to this file.
+  
+  To disable logging of a request use the filepath "none", in which case
+  a logformat name should not be specified.
+NOCOMMENT_START
+access_log @DEFAULT_ACCESS_LOG@ squid
+NOCOMMENT_END
 DOC_END
 
 
@@ -2615,6 +2693,17 @@ DOC_START
 
 	If you set this parameter none (the default), there will be
 	no limit imposed.
+DOC_END
+
+NAME: log_access
+TYPE: acl_access
+LOC: Config.accessList.log
+DEFAULT: none
+COMMENT: allow|deny acl acl...
+DOC_START
+        This options allows you to control which requests gets logged
+	to access.log (see cache_access_log directive). Requests denied
+	for logging will also not be accounted for in performance counters.
 DOC_END
 
 COMMENT_START

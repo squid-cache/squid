@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.231 2003/04/24 06:35:09 hno Exp $
+ * $Id: enums.h,v 1.232 2003/07/06 21:50:56 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -725,5 +725,14 @@ enum {
 };
 
 #endif
+
+typedef enum {
+    CLF_UNKNOWN,
+    CLF_AUTO,
+    CLF_CUSTOM,
+    CLF_SQUID,
+    CLF_COMMON,
+    CLF_NONE
+} customlog_type;
 
 #endif /* SQUID_ENUMS_H */

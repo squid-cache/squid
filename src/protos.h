@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.480 2003/07/06 14:16:56 hno Exp $
+ * $Id: protos.h,v 1.481 2003/07/06 21:50:56 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,12 +34,15 @@
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
 
-SQUIDCEXTERN void accessLogLog(AccessLogEntry *);
+SQUIDCEXTERN void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
 SQUIDCEXTERN void accessLogRotate(void);
 SQUIDCEXTERN void accessLogClose(void);
 SQUIDCEXTERN void accessLogInit(void);
 SQUIDCEXTERN void accessLogFreeMemory(AccessLogEntry * aLogEntry);
 SQUIDCEXTERN const char *accessLogTime(time_t);
+SQUIDCEXTERN int accessLogParseLogFormat(logformat_token ** fmt, char *def);
+SQUIDCEXTERN void accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definitions);
+SQUIDCEXTERN void accessLogFreeLogFormat(logformat_token ** fmt);
 SQUIDCEXTERN void hierarchyNote(HierarchyLogEntry *, hier_code, const char *);
 #if FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
