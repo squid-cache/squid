@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.42 1999/01/12 23:37:51 wessels Exp $
+ * $Id: store_swapout.cc,v 1.43 1999/01/18 22:23:45 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -74,6 +74,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
     StoreEntry *e = ctrlp->e;
     MemObject *mem = e->mem_obj;
     debug(20, 3) ("storeSwapOutHandle: '%s', len=%d\n", storeKeyText(e->key), (int) len);
+    fdTouch(fdnotused);
     if (flag < 0) {
 	debug(20, 1) ("storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
@@ -92,6 +93,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	storeSwapOutFileClose(e);
 	return;
     }
+    fdTouch(fdnotused);
 #if USE_ASYNC_IO
     if (mem == NULL) {
 	debug(20, 1) ("storeSwapOutHandle: mem == NULL : Cancelling swapout\n");
@@ -109,6 +111,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	storeCheckSwapOut(e);
 	return;
     }
+    fdTouch(fdnotused);
     /* swapping complete */
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	storeUrl(e), storeSwapFullPath(e->swap_file_number, NULL));
@@ -119,6 +122,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	storeLog(STORE_LOG_SWAPOUT, e);
 	storeDirSwapLog(e, SWAP_LOG_ADD);
     }
+    fdTouch(fdnotused);
     /* Note, we don't otherwise call storeReleaseRequest() here because
      * storeCheckCachable() does it for is if necessary */
     storeSwapOutFileClose(e);
@@ -248,6 +252,7 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: swapping out %d bytes from %d\n",
 	swap_buf_len, (int) mem->swapout.queue_offset);
     mem->swapout.queue_offset += swap_buf_len - hdr_len;
+    fdTouch(mem->swapout.fd);
     file_write(mem->swapout.fd,
 	-1,
 	swap_buf,
@@ -288,6 +293,7 @@ storeSwapOutFileOpened(void *data, int fd, int errcode)
     int swap_hdr_sz = 0;
     tlv *tlv_list;
     char *buf;
+    fdTouch(fd);
     if (fd == -2 && errcode == -2) {	/* Cancelled - Clean up */
 	xfree(ctrlp->swapfilename);
 	cbdataFree(ctrlp);

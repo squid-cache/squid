@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.482 1999/01/15 06:30:10 wessels Exp $
+ * $Id: store.cc,v 1.483 1999/01/18 22:23:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -594,8 +594,6 @@ void
 storeAbort(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    STABH *callback;
-    void *data;
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
     debug(20, 6) ("storeAbort: %s\n", storeKeyText(e->key));
@@ -614,11 +612,13 @@ storeAbort(StoreEntry * e)
     mem->object_sz = mem->inmem_hi;
     /* Notify the server side */
     if (mem->abort.callback) {
-	callback = mem->abort.callback;
-	data = mem->abort.data;
+	eventAdd("mem->abort.callback",
+	    mem->abort.callback,
+	    mem->abort.data,
+	    0.0,
+	    0);
 	mem->abort.callback = NULL;
 	mem->abort.data = NULL;
-	callback(data);
     }
     /* Notify the client side */
     InvokeHandlers(e);

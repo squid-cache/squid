@@ -2,7 +2,7 @@
 
 
 /*
- * $Id: structs.h,v 1.260 1999/01/15 06:11:46 wessels Exp $
+ * $Id: structs.h,v 1.261 1999/01/18 22:23:46 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -509,7 +509,6 @@ struct _fde {
 #ifdef OPTIMISTIC_IO
 	unsigned int calling_io_handler:1;
 #endif
-	unsigned int delayed_comm_close:1;
     } flags;
     int bytes_read;
     int bytes_written;
@@ -533,6 +532,10 @@ struct _fde {
     DEFER *defer_check;		/* check if we should defer read */
     void *defer_data;
     CommWriteStateData *rwstate;	/* State data for comm_write */
+    struct {
+	const char *file;
+	int line;
+    } last;
 };
 
 struct _fileMap {
