@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.5 1998/08/17 21:19:42 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.6 1998/08/18 03:07:05 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -75,7 +75,7 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
      */
     *blk_start = *parse_start;
     *blk_end = *blk_start;
-    for (nnl = 0; nnl == 0; *parse_start++) {
+    for (nnl = 0; nnl == 0; (*parse_start)++) {
 	if (**parse_start == '\r')
 	    (void) 0;
 	else if (**parse_start == '\n')
