@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.92 1998/03/21 22:06:00 kostas Exp $
+ * $Id: fqdncache.cc,v 1.93 1998/03/24 17:29:45 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -616,16 +616,17 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 void
 fqdncache_init(void)
 {
+    int n;
     if (fqdn_table)
 	return;
     debug(35, 3) ("Initializing FQDN Cache...\n");
     memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
-    /* small hash table */
-    fqdn_table = hash_create(urlcmp, 229, hash4);
     fqdncache_high = (long) (((float) MAX_FQDN *
 	    (float) FQDN_HIGH_WATER) / (float) 100);
     fqdncache_low = (long) (((float) MAX_FQDN *
 	    (float) FQDN_LOW_WATER) / (float) 100);
+    n = hashPrime(fqdncache_high / 4);
+    fqdn_table = hash_create(urlcmp, n, hash4);
     cachemgrRegister("fqdncache",
 	"FQDN Cache Stats and Contents",
 	fqdnStats, 0);

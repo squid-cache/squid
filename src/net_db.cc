@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.75 1998/03/21 22:06:02 kostas Exp $
+ * $Id: net_db.cc,v 1.76 1998/03/24 17:29:47 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -475,10 +475,13 @@ void
 netdbInit(void)
 {
 #if USE_ICMP
+    int n;
     if (addr_table)
 	return;
-    addr_table = hash_create((HASHCMP *) strcmp, 229, hash_string);
-    host_table = hash_create((HASHCMP *) strcmp, 467, hash_string);
+    n = hashPrime(Config.Netdb.high / 4);
+    addr_table = hash_create((HASHCMP *) strcmp, n, hash_string);
+    n = hashPrime(3 * Config.Netdb.high / 4);
+    host_table = hash_create((HASHCMP *) strcmp, n, hash_string);
     eventAdd("netdbSaveState", netdbSaveState, NULL, 3617);
     netdbReloadState();
     cachemgrRegister("netdb",

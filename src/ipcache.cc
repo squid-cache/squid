@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.170 1998/03/21 22:06:01 kostas Exp $
+ * $Id: ipcache.cc,v 1.171 1998/03/24 17:29:46 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -668,6 +668,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 void
 ipcache_init(void)
 {
+    int n;
     debug(14, 3) ("Initializing IP Cache...\n");
 
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
@@ -681,7 +682,6 @@ ipcache_init(void)
 	debug(14, 1) ("Successful DNS name lookup tests...\n");
     }
 
-    ip_table = hash_create(urlcmp, 229, hash4);		/* small hash table */
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
     static_addrs.in_addrs = xcalloc(1, sizeof(struct in_addr));
     static_addrs.bad_mask = xcalloc(1, sizeof(unsigned char));
@@ -690,6 +690,8 @@ ipcache_init(void)
 	    (float) Config.ipcache.high) / (float) 100);
     ipcache_low = (long) (((float) Config.ipcache.size *
 	    (float) Config.ipcache.low) / (float) 100);
+    n = hashPrime(ipcache_high / 4);
+    ip_table = hash_create(urlcmp, n, hash4);
     cachemgrRegister("ipcache",
 	"IP Cache Stats and Contents",
 	stat_ipcache_get, 0);
