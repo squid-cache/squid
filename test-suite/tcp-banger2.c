@@ -29,12 +29,15 @@ static int reqpersec;
 static int nrequests;
 static int opt_ims = 0;
 static int max_connections = 64;
+static time_t lifetime = 60;
+static struct timeval now;
 
 typedef void (CB) (int, void *);
 
 struct _f {
     CB *cb;
     void *data;
+    time_t start;
 };
 
 struct _f FD[MAX_FDS];
@@ -72,6 +75,7 @@ fd_open(int fd, CB * cb, void *data)
 {
     FD[fd].cb = cb;
     FD[fd].data = data;
+    FD[fd].start = now.tv_sec;
     if (fd > maxfd)
 	maxfd = fd;
     nfds++;
@@ -180,7 +184,6 @@ main(argc, argv)
     int dt;
     fd_set R;
     struct timeval start;
-    struct timeval now;
     struct timeval last;
     struct timeval to;
     setbuf(stdout, NULL);
@@ -188,7 +191,7 @@ main(argc, argv)
     progname = strdup(argv[0]);
     gettimeofday(&start, NULL);
     last = start;
-    while ((c = getopt(argc, argv, "p:h:n:i")) != -1) {
+    while ((c = getopt(argc, argv, "p:h:n:il:")) != -1) {
 	switch (c) {
 	case 'p':
 	    proxy_port = atoi(optarg);
@@ -201,6 +204,9 @@ main(argc, argv)
 	    break;
 	case 'i':
 	    opt_ims = 1;
+	    break;
+	case 'l':
+	    lifetime = (time_t) atoi(optarg);
 	    break;
 	default:
 	    usage();
@@ -218,6 +224,10 @@ main(argc, argv)
 	for (i = 1; i <= maxfd; i++) {
 	    if (FD[i].cb == NULL)
 		continue;
+	    if (now.tv_sec - FD[i].start > lifetime) {
+		fd_close(i);
+		continue;
+	    }
 	    FD_SET(i, &R);
 	}
 	if (select(maxfd + 1, &R, NULL, NULL, &to) < 0) {
