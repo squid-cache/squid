@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.95 2001/10/08 16:18:32 hno Exp $
+ * $Id: defines.h,v 1.96 2001/10/08 16:55:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,8 +31,8 @@
  *
  */
 
-#ifndef SQUID_STRUCTS_H
-#define SQUID_STRUCTS_H
+#ifndef SQUID_DEFINES_H
+#define SQUID_DEFINES_H
 
 #ifndef TRUE
 #define TRUE 1
@@ -307,4 +307,4 @@
 #define _WIN_OS_WINXP	6
 #endif
 
-#endif /* SQUID_STRUCTS_H */
+#endif /* SQUID_DEFINES_H */
