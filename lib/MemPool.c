@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.13 2002/10/18 22:42:00 hno Exp $
+ * $Id: MemPool.c,v 1.14 2002/11/15 13:07:25 hno Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -134,11 +134,15 @@ static MemPool *lastPool;
 /* local prototypes */
 static int memCompChunks(MemChunk * chunkA, MemChunk * chunkB);
 static int memCompObjChunks(void *obj, MemChunk * chunk);
+#if !DISABLE_POOLS
 static MemChunk *memPoolChunkNew(MemPool * pool);
+#endif
 static void memPoolChunkDestroy(MemPool * pool, MemChunk * chunk);
+#if !DISABLE_POOLS
 static void memPoolPush(MemPool * pool, void *obj);
 static void *memPoolGet(MemPool * pool);
 static void memPoolCreateChunk(MemPool * pool);
+#endif
 static void memPoolFlushMeters(MemPool * pool);
 static void memPoolFlushMetersFull(MemPool * pool);
 static void memPoolFlushMetersAll(void);
@@ -205,6 +209,7 @@ memCompObjChunks(void *obj, MemChunk * chunk)
     return 1;
 }
 
+#if !DISABLE_POOLS
 static MemChunk *
 memPoolChunkNew(MemPool * pool)
 {
@@ -232,6 +237,7 @@ memPoolChunkNew(MemPool * pool)
     pool->allChunks = splay_insert(chunk, pool->allChunks, (SPLAYCMP *) memCompChunks);
     return chunk;
 }
+#endif
 
 static void
 memPoolChunkDestroy(MemPool * pool, MemChunk * chunk)
@@ -245,6 +251,8 @@ memPoolChunkDestroy(MemPool * pool, MemChunk * chunk)
     xfree(chunk->objCache);
     xfree(chunk);
 }
+
+#if !DISABLE_POOLS
 
 static void
 memPoolPush(MemPool * pool, void *obj)
@@ -334,6 +342,8 @@ memPoolCreateChunk(MemPool * pool)
     chunk->next = new;
     return;
 }
+
+#endif
 
 static void
 memPoolInit(void)
