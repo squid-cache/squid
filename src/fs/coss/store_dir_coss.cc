@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.19 2001/02/10 16:40:41 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.20 2001/03/03 10:39:37 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -339,7 +339,7 @@ storeCossDirRebuild(SwapDir * sd)
     FILE *fp;
     EVH *func = NULL;
     CBDATA_INIT_TYPE(RebuildState);
-    rb = CBDATA_ALLOC(RebuildState, NULL);
+    rb = cbdataAlloc(RebuildState);
     rb->sd = sd;
     rb->speed = opt_foreground_rebuild ? 1 << 30 : 50;
     func = storeCossRebuildFromSwapLog;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.377 2001/02/23 20:59:50 hno Exp $
+ * $Id: cache_cf.cc,v 1.378 2001/03/03 10:39:30 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -380,7 +380,7 @@ configDoConfigure(void)
     if (Config.Wais.relayHost) {
 	if (Config.Wais.peer)
 	    cbdataFree(Config.Wais.peer);
-	Config.Wais.peer = CBDATA_ALLOC(peer, peerDestroy);
+	Config.Wais.peer = cbdataAlloc(peer);
 	Config.Wais.peer->host = xstrdup(Config.Wais.relayHost);
 	Config.Wais.peer->http_port = Config.Wais.relayPort;
     }
@@ -778,7 +778,7 @@ dump_http_header_access(StoreEntry * entry, const char *name, header_mangler hea
     int i;
     for (i = 0; i < HDR_ENUM_END; i++) {
 	if (header[i].access_list != NULL) {
-	    storeAppendPrintf(entry, "%s ",name);
+	    storeAppendPrintf(entry, "%s ", name);
 	    dump_acl_access(entry, httpHeaderNameById(i),
 		header[i].access_list);
 	}
@@ -811,9 +811,9 @@ parse_http_header_access(header_mangler header[])
     if (id != HDR_ENUM_END) {
 	parse_acl_access(&header[id].access_list);
     } else {
-	char *next_string = t + strlen(t) -1;
+	char *next_string = t + strlen(t) - 1;
 	*next_string = 'A';
-	*(next_string+1) = ' ';
+	*(next_string + 1) = ' ';
 	for (i = 0; i < HDR_ENUM_END; i++) {
 	    char *new_string = xstrdup(next_string);
 	    strtok(new_string, w_space);
@@ -1246,7 +1246,7 @@ parse_peer(peer ** head)
     char *token = NULL;
     peer *p;
     int i;
-    p = CBDATA_ALLOC(peer, peerDestroy);
+    p = cbdataAlloc(peer);
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
     p->weight = 1;

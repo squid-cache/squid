@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.100 2001/01/12 00:37:22 wessels Exp $
+ * $Id: store_client.cc,v 1.101 2001/03/03 10:39:34 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -133,7 +133,7 @@ storeClientListAdd(StoreEntry * e, void *data)
 #endif
     e->refcount++;
     mem->nclients++;
-    sc = CBDATA_ALLOC(store_client, NULL);
+    sc = cbdataAlloc(store_client);
     cbdataLock(data);		/* locked while we point to it */
     sc->callback_data = data;
     sc->seen_offset = 0;

@@ -22,6 +22,8 @@ static int storeAufsSomethingPending(storeIOState *);
 static int storeAufsKickWriteQueue(storeIOState * sio);
 static CBDUNL storeAufsIOFreeEntry;
 
+CBDATA_TYPE(storeIOState);
+
 /* === PUBLIC =========================================================== */
 
 /* open for reading */
@@ -51,7 +53,8 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	return NULL;
     }
 #endif
-    sio = CBDATA_ALLOC(storeIOState, storeAufsIOFreeEntry);
+    CBDATA_INIT_TYPE_FREECB(storeIOState, storeAufsIOFreeEntry);
+    sio = cbdataAlloc(storeIOState);
     sio->fsstate = memPoolAlloc(aio_state_pool);
     ((aiostate_t *) (sio->fsstate))->fd = -1;
     ((aiostate_t *) (sio->fsstate))->flags.opening = 1;
@@ -105,7 +108,8 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 	return NULL;
     }
 #endif
-    sio = CBDATA_ALLOC(storeIOState, storeAufsIOFreeEntry);
+    CBDATA_INIT_TYPE_FREECB(storeIOState, storeAufsIOFreeEntry);
+    sio = cbdataAlloc(storeIOState);
     sio->fsstate = memPoolAlloc(aio_state_pool);
     ((aiostate_t *) (sio->fsstate))->fd = -1;
     ((aiostate_t *) (sio->fsstate))->flags.opening = 1;

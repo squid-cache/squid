@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.156 2001/01/12 00:37:20 wessels Exp $
+ * $Id: net_db.cc,v 1.157 2001/03/03 10:39:33 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -682,7 +682,7 @@ netdbPingSite(const char *hostname)
     if ((n = netdbLookupHost(hostname)) != NULL)
 	if (n->next_ping_time > squid_curtime)
 	    return;
-    h = CBDATA_ALLOC(generic_cbdata, NULL);
+    h = cbdataAlloc(generic_cbdata);
     h->data = xstrdup(hostname);
     ipcache_nbgethostbyname(hostname, netdbSendPing, h);
 #endif
@@ -991,7 +991,7 @@ netdbExchangeStart(void *data)
     char *uri;
     netdbExchangeState *ex;
     CBDATA_INIT_TYPE(netdbExchangeState);
-    ex = CBDATA_ALLOC(netdbExchangeState, NULL);
+    ex = cbdataAlloc(netdbExchangeState);
     cbdataLock(p);
     ex->p = p;
     uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.37 2001/01/31 21:46:04 hno Exp $
+ * $Id: cbdata.cc,v 1.38 2001/03/03 10:39:31 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -71,8 +71,7 @@ static int cbdataCount = 0;
 typedef struct _cbdata {
     int valid;
     int locks;
-    CBDUNL *free_func;
-    int type;			/* move to CBDATA_DEBUG with type argument to cbdataFree */
+    int type;
 #if CBDATA_DEBUG
     const char *file;
     int line;
@@ -87,36 +86,40 @@ typedef struct _cbdata {
 
 static OBJH cbdataDump;
 
-static MemPool **cbdata_memory_pool = NULL;
+struct {
+    MemPool *pool;
+    FREE *free_func;
+}     *cbdata_index = NULL;
 int cbdata_types = 0;
 
 #define OFFSET_OF(type, member) ((int)(char *)&((type *)0L)->member)
 
 void
-cbdataInitType(cbdata_type type, char *name, int size)
+cbdataInitType(cbdata_type type, char *name, int size, FREE * free_func)
 {
     char *label;
     if (type >= cbdata_types) {
-	cbdata_memory_pool = xrealloc(cbdata_memory_pool, (type + 1) * sizeof(*cbdata_memory_pool));
-	memset(&cbdata_memory_pool[cbdata_types], 0,
-	    (type + 1 - cbdata_types) * sizeof(*cbdata_memory_pool));
+	cbdata_index = xrealloc(cbdata_index, (type + 1) * sizeof(*cbdata_index));
+	memset(&cbdata_index[cbdata_types], 0,
+	    (type + 1 - cbdata_types) * sizeof(*cbdata_index));
 	cbdata_types = type + 1;
     }
-    if (cbdata_memory_pool[type])
+    if (cbdata_index[type].pool)
 	return;
     label = xmalloc(strlen(name) + 20);
     snprintf(label, strlen(name) + 20, "cbdata %s (%d)", name, (int) type);
     assert(OFFSET_OF(cbdata, data) == (sizeof(cbdata) - sizeof(((cbdata *) NULL)->data)));
-    cbdata_memory_pool[type] = memPoolCreate(label, size + OFFSET_OF(cbdata, data));
+    cbdata_index[type].pool = memPoolCreate(label, size + OFFSET_OF(cbdata, data));
+    cbdata_index[type].free_func = free_func;
 }
 
 cbdata_type
-cbdataAddType(cbdata_type type, char *name, int size)
+cbdataAddType(cbdata_type type, char *name, int size, FREE * free_func)
 {
     if (type)
 	return type;
     type = cbdata_types;
-    cbdataInitType(type, name, size);
+    cbdataInitType(type, name, size, free_func);
     return type;
 }
 
@@ -127,7 +130,8 @@ cbdataInit(void)
     cachemgrRegister("cbdata",
 	"Callback Data Registry Contents",
 	cbdataDump, 0, 1);
-#define CREATE_CBDATA(type) cbdataInitType(CBDATA_##type, #type, sizeof(type))
+#define CREATE_CBDATA(type) cbdataInitType(CBDATA_##type, #type, sizeof(type), NULL)
+#define CREATE_CBDATA_FREE(type, free_func) cbdataInitType(CBDATA_##type, #type, sizeof(type), free_func)
     CREATE_CBDATA(acl_access);
     CREATE_CBDATA(aclCheck_t);
     CREATE_CBDATA(clientHttpRequest);
@@ -140,27 +144,25 @@ cbdataInit(void)
     CREATE_CBDATA(statefulhelper);
     CREATE_CBDATA(helper_stateful_server);
     CREATE_CBDATA(HttpStateData);
-    CREATE_CBDATA(peer);
+    CREATE_CBDATA_FREE(peer, peerDestroy);
     CREATE_CBDATA(ps_state);
     CREATE_CBDATA(RemovalPolicy);
     CREATE_CBDATA(RemovalPolicyWalker);
     CREATE_CBDATA(RemovalPurgeWalker);
     CREATE_CBDATA(store_client);
-    CREATE_CBDATA(storeIOState);
 }
 
 void *
 #if CBDATA_DEBUG
-cbdataInternalAllocDbg(cbdata_type type, CBDUNL * free_func, const char *file, int line)
+cbdataInternalAllocDbg(cbdata_type type, const char *file, int line)
 #else
-cbdataInternalAlloc(cbdata_type type, CBDUNL * free_func)
+cbdataInternalAlloc(cbdata_type type)
 #endif
 {
     cbdata *p;
     assert(type > 0 && type < cbdata_types);
-    p = memPoolAlloc(cbdata_memory_pool[type]);
+    p = memPoolAlloc(cbdata_index[type].pool);
     p->type = type;
-    p->free_func = free_func;
     p->valid = 1;
     p->locks = 0;
 #if CBDATA_DEBUG
@@ -174,11 +176,13 @@ cbdataInternalAlloc(cbdata_type type, CBDUNL * free_func)
 }
 
 void
-cbdataFree(void *p)
+cbdataInternalFree(void *p)
 {
     cbdata *c;
+    FREE *free_func;
+    if (!p)
+	return;
     debug(45, 3) ("cbdataFree: %p\n", p);
-    assert(p);
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
     assert(c->y == c);
     c->valid = 0;
@@ -189,9 +193,22 @@ cbdataFree(void *p)
     }
     cbdataCount--;
     debug(45, 3) ("cbdataFree: Freeing %p\n", p);
-    if (c->free_func)
-	c->free_func((void *) p);
-    memPoolFree(cbdata_memory_pool[c->type], c);
+    free_func = cbdata_index[c->type].free_func;
+    if (free_func)
+	free_func((void *) p);
+    memPoolFree(cbdata_index[c->type].pool, c);
+}
+
+int
+cbdataLocked(const void *p)
+{
+    cbdata *c;
+    assert(p);
+    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
+    assert(c->y == c);
+    debug(45, 3) ("cbdataLocked: %p = %d\n", p, c->locks);
+    assert(c != NULL);
+    return c->locks;
 }
 
 void
@@ -223,6 +240,7 @@ cbdataUnlock(const void *p)
 #endif
 {
     cbdata *c;
+    FREE *free_func;
     if (p == NULL)
 	return;
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
@@ -239,9 +257,10 @@ cbdataUnlock(const void *p)
 	return;
     cbdataCount--;
     debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
-    if (c->free_func)
-	c->free_func((void *) p);
-    memPoolFree(cbdata_memory_pool[c->type], c);
+    free_func = cbdata_index[c->type].free_func;
+    if (free_func)
+	free_func((void *) p);
+    memPoolFree(cbdata_index[c->type].pool, c);
 }
 
 int

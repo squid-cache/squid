@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.20 2001/01/12 00:37:33 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.21 2001/03/03 10:39:38 hno Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -46,6 +46,8 @@ static int storeDiskdSend(int, SwapDir *, int, storeIOState *, int, int, int);
 static void storeDiskdIOCallback(storeIOState * sio, int errflag);
 static CBDUNL storeDiskdIOFreeEntry;
 
+CBDATA_TYPE(storeIOState);
+
 /* === PUBLIC =========================================================== */
 
 storeIOState *
@@ -68,7 +70,8 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	diskd_stats.open_fail_queue_len++;
 	return NULL;
     }
-    sio = CBDATA_ALLOC(storeIOState, storeDiskdIOFreeEntry);
+    CBDATA_INIT_TYPE_FREECB(storeIOState, storeDiskdIOFreeEntry);
+    sio = cbdataAlloc(storeIOState);
     sio->fsstate = diskdstate = memPoolAlloc(diskd_state_pool);
 
     sio->swap_filen = f;
@@ -126,7 +129,8 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     f = storeDiskdDirMapBitAllocate(SD);
     debug(81, 3) ("storeDiskdCreate: fileno %08X\n", f);
 
-    sio = CBDATA_ALLOC(storeIOState, storeDiskdIOFreeEntry);
+    CBDATA_INIT_TYPE_FREECB(storeIOState, storeDiskdIOFreeEntry);
+    sio = cbdataAlloc(storeIOState);
     sio->fsstate = diskdstate = memPoolAlloc(diskd_state_pool);
 
     sio->swap_filen = f;

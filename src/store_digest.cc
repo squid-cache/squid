@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.48 2001/02/07 19:09:25 hno Exp $
+ * $Id: store_digest.cc,v 1.49 2001/03/03 10:39:34 hno Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -352,7 +352,7 @@ storeDigestRewriteStart(void *datanotused)
     flags.cachable = 1;
     e = storeCreateEntry(url, url, flags, METHOD_GET);
     assert(e);
-    sd_state.rewrite_lock = CBDATA_ALLOC(generic_cbdata, NULL);
+    sd_state.rewrite_lock = cbdataAlloc(generic_cbdata);
     sd_state.rewrite_lock->data = e;
     debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText(e->hash.key));
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));

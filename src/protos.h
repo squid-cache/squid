@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.399 2001/02/23 20:59:51 hno Exp $
+ * $Id: protos.h,v 1.400 2001/03/03 10:39:33 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -101,20 +101,20 @@ extern void parse_cachedir_options(SwapDir * sd, struct cache_dir_option *option
  */
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
-extern void *cbdataInternalAllocDbg(cbdata_type type, CBDUNL *, int, const char *);
+extern void *cbdataInternalAllocDbg(cbdata_type type, int, const char *);
 extern void cbdataLockDbg(const void *p, const char *, int);
 extern void cbdataUnlockDbg(const void *p, const char *, int);
 #else
-extern void *cbdataInternalAlloc(cbdata_type type, CBDUNL *);
+extern void *cbdataInternalAlloc(cbdata_type type);
 extern void cbdataLock(const void *p);
 extern void cbdataUnlock(const void *p);
 #endif
-/* Note: Allocations is done using the CBDATA_ALLOC macro */
-
-extern void cbdataFree(void *p);
+/* Note: Allocations is done using the cbdataAlloc macro */
+extern void cbdataInternalFree(void *p);
 extern int cbdataValid(const void *p);
-extern void cbdataInitType(cbdata_type type, char *label, int size);
-extern cbdata_type cbdataAddType(cbdata_type type, char *label, int size);
+extern void cbdataInitType(cbdata_type type, char *label, int size, FREE * free_func);
+extern cbdata_type cbdataAddType(cbdata_type type, char *label, int size, FREE * free_func);
+extern int cbdataLocked(const void *p);
 
 extern void clientdbInit(void);
 extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t);

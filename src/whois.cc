@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.14 2001/01/12 00:37:23 wessels Exp $
+ * $Id: whois.cc,v 1.15 2001/03/03 10:39:34 hno Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -59,7 +59,7 @@ whoisStart(FwdState * fwd)
     char *buf;
     size_t l;
     CBDATA_INIT_TYPE(WhoisState);
-    p = CBDATA_ALLOC(WhoisState, NULL);
+    p = cbdataAlloc(WhoisState);
     p->request = fwd->request;
     p->entry = fwd->entry;
     p->fwd = fwd;

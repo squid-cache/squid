@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.56 2001/01/12 00:37:18 wessels Exp $
+ * $Id: ident.cc,v 1.57 2001/03/03 10:39:32 hno Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -216,7 +216,7 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
 	return;
     }
     CBDATA_INIT_TYPE(IdentStateData);
-    state = CBDATA_ALLOC(IdentStateData, NULL);
+    state = cbdataAlloc(IdentStateData);
     state->hash.key = xstrdup(key);
     state->fd = fd;
     state->me = *me;

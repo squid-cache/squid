@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.530 2001/03/01 23:02:31 wessels Exp $
+ * $Id: client_side.cc,v 1.531 2001/03/03 10:39:31 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2302,7 +2302,7 @@ static clientHttpRequest *
 parseHttpRequestAbort(ConnStateData * conn, const char *uri)
 {
     clientHttpRequest *http;
-    http = CBDATA_ALLOC(clientHttpRequest, NULL);
+    http = cbdataAlloc(clientHttpRequest);
     http->conn = conn;
     http->start = current_time;
     http->req_sz = conn->in.offset;
@@ -2441,7 +2441,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     assert(prefix_sz <= conn->in.offset);
 
     /* Ok, all headers are received */
-    http = CBDATA_ALLOC(clientHttpRequest, NULL);
+    http = cbdataAlloc(clientHttpRequest);
     http->http_ver = http_ver;
     http->conn = conn;
     http->start = current_time;
@@ -3074,7 +3074,7 @@ httpAccept(int sock, void *data)
 	    break;
 	}
 	debug(33, 4) ("httpAccept: FD %d: accepted\n", fd);
-	connState = CBDATA_ALLOC(ConnStateData, NULL);
+	connState = cbdataAlloc(ConnStateData);
 	connState->peer = peer;
 	connState->log_addr = peer.sin_addr;
 	connState->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.135 2001/01/12 00:37:23 wessels Exp $
+ * $Id: wais.cc,v 1.136 2001/03/03 10:39:34 hno Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -230,7 +230,7 @@ waisStart(FwdState * fwd)
     statCounter.server.all.requests++;
     statCounter.server.other.requests++;
     CBDATA_INIT_TYPE(WaisStateData);
-    waisState = CBDATA_ALLOC(WaisStateData, NULL);
+    waisState = cbdataAlloc(WaisStateData);
     waisState->method = method;
     waisState->request_hdr = &request->header;
     waisState->fd = fd;

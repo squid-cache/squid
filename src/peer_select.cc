@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.113 2001/02/07 18:56:52 hno Exp $
+ * $Id: peer_select.cc,v 1.114 2001/03/03 10:39:33 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -139,7 +139,7 @@ peerSelect(request_t * request,
 	debug(44, 3) ("peerSelect: %s\n", storeUrl(entry));
     else
 	debug(44, 3) ("peerSelect: %s\n", RequestMethodStr[request->method]);
-    psstate = CBDATA_ALLOC(ps_state, NULL);
+    psstate = cbdataAlloc(ps_state);
     psstate->request = requestLink(request);
     psstate->entry = entry;
     psstate->callback = callback;
