@@ -72,7 +72,8 @@ typedef struct _cachemgr_passwd cachemgr_passwd;
 typedef struct _refresh_t refresh_t;
 typedef struct _CommWriteStateData CommWriteStateData;
 typedef struct _ErrorState ErrorState;
-
+typedef struct _dlink_node dlink_node;
+typedef struct _dlink_list dlink_list;
 typedef void AIOCB(void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, int size, int errflag, void *data);
 typedef void CNCB(int fd, int status, void *);
