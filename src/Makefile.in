@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.192 2000/08/19 14:23:19 hno Exp $
+#  $Id: Makefile.in,v 1.193 2000/09/01 00:39:45 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -197,11 +197,12 @@ LEAKFINDER_OBJS	= \
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
-all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
+all:    squid.conf
 	@for dir in $(SUBDIRS); do \
 		echo "Making $@ in $$dir..."; \
 		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
 	done
+	@$(MAKE) $(MFLAGS) $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
