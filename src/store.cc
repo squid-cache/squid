@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.207 1997/02/06 20:00:33 wessels Exp $
+ * $Id: store.cc,v 1.208 1997/02/07 04:56:40 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -196,6 +196,11 @@ struct storeRebuild_data {
     char line_in[4096];
 };
 
+struct _bucketOrder {
+	unsigned int bucket;
+	int index;
+};
+
 /* initializtion flag */
 int store_rebuilding = STORE_REBUILDING_SLOW;
 
@@ -205,7 +210,7 @@ static char *storeSwapFullPath _PARAMS((int, char *));
 static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
-static int compareRandom _PARAMS((int *a, int *b));
+static int compareBucketOrder _PARAMS((struct _bucketOrder *, struct _bucketOrder *));
 static int storeAddSwapDisk _PARAMS((const char *));
 static int storeCheckExpired _PARAMS((const StoreEntry *));
 static int storeCheckPurgeMem _PARAMS((const StoreEntry *));
@@ -279,7 +284,7 @@ static int store_buckets;
 int store_maintain_rate;
 static int store_maintain_buckets;
 int scan_revolutions;
-static unsigned int *MaintBucketsOrder = NULL;
+static struct _bucketOrder *MaintBucketsOrder = NULL;
 
 static MemObject *
 new_MemObject(void)
@@ -1861,15 +1866,9 @@ compareLastRef(StoreEntry ** e1, StoreEntry ** e2)
 }
 
 static int
-compareRandom(int *a, int *b)
+compareBucketOrder(struct _bucketOrder *a, struct _bucketOrder *b)
 {
-#if HAVE_RANDOM
-    return random() - random();
-#elif HAVE_LRAND48
-    return lrand48() - lrand48();
-#else
-    return rand() - rand();
-#endif
+    return a->index - b->index;
 }
 
 /* returns the bucket number to work on,
@@ -2374,18 +2373,30 @@ storeCreateSwapSubDirs(void)
     }
 }
 
+#if HAVE_RANDOM
+#define squid_random random
+#elif HAVE_LRAND48
+#define squid_random lrand48
+#else
+#define squid_random rand
+#endif
+
 static void
 storeRandomizeBuckets(void)
 {
     int i;
+    struct _bucketOrder *b;
     if (MaintBucketsOrder == NULL)
-	MaintBucketsOrder = xcalloc(store_buckets, sizeof(unsigned int));
-    for (i = 0; i < store_buckets; i++)
-	*(MaintBucketsOrder + i) = (unsigned int) i;
+	MaintBucketsOrder = xcalloc(store_buckets, sizeof(struct _bucketOrder));
+    for (i = 0; i < store_buckets; i++) {
+	b = MaintBucketsOrder + i;
+	b->bucket = (unsigned int) i;
+	b->index = (int) squid_random();
+    }
     qsort((char *) MaintBucketsOrder,
 	store_buckets,
-	sizeof(unsigned int),
-	    (QS) compareRandom);
+	sizeof(struct _bucketOrder),
+	(QS) compareBucketOrder);
 }
 
 static void
@@ -2530,12 +2541,12 @@ storeMaintainSwapSpace(void *unused)
 {
     static time_t last_time = 0;
     static int bucket_index = 0;
-    static unsigned int bucket;
     hash_link *link_ptr = NULL, *next = NULL;
     StoreEntry *e = NULL;
     int rm_obj = 0;
     int scan_buckets = 0;
     int scan_obj = 0;
+    static struct _bucketOrder *b;
 
     eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
     /* We can't delete objects while rebuilding swap */
@@ -2557,9 +2568,8 @@ storeMaintainSwapSpace(void *unused)
 		    scan_revolutions);
 		storeRandomizeBuckets();
 	    }
-	    bucket = *(MaintBucketsOrder + bucket_index);
-	    bucket_index++;
-	    next = hash_get_bucket(store_table, bucket);
+	    b = MaintBucketsOrder + bucket_index++;
+	    next = hash_get_bucket(store_table, b->bucket);
 	    while ((link_ptr = next)) {
 		scan_obj++;
 		next = link_ptr->next;
@@ -2570,8 +2580,8 @@ storeMaintainSwapSpace(void *unused)
 	    }
 	}
     }
-    debug(51, 2, "Removed %d of %d objects from bucket %d\n",
-	rm_obj, scan_obj, (int) bucket);
+    debug(51, rm_obj ? 2 : 9, "Removed %d of %d objects from bucket %d\n",
+	rm_obj, scan_obj, (int) b->bucket);
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */
     storeGetSwapSpace(0);
