@@ -10,8 +10,9 @@ while (<>) {
 	die unless (/^extern\s+([^;]+);(.*)$/);
 	$var = $1;
 	$comments = $2;
-	if ($comments =~ m+/\*\s*(\S*)\s*\*/+) {
+	if ($comments =~ m+/\*\s*(.*)\s*\*/+) {
 		$init = $1;
+		$init =~ s/\s$// while ($init =~ /\s$/);
 	}
 	print $var;
 	print " = $init" if (defined $init);
