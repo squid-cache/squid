@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.34 2004/08/30 05:12:32 robertc Exp $
+ * $Id: auth_digest.cc,v 1.35 2004/09/03 21:25:29 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -821,7 +821,7 @@ authenticateDigestHandleReply(void *data, char *reply)
         if ((t = strchr(reply, ' ')))
             *t = '\0';
 
-        if (*reply == '\0')
+        if (*reply == '\0' || *reply == '\n')
             reply = NULL;
     }
 
@@ -833,7 +833,7 @@ authenticateDigestHandleReply(void *data, char *reply)
 
     if (reply && (strncasecmp(reply, "ERR", 3) == 0))
         digest_request->credentials(AuthDigestUserRequest::Failed);
-    else {
+    else if (reply) {
         CvtBin(reply, digest_user->HA1);
         digest_user->HA1created = 1;
     }
