@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.26 2000/11/30 20:08:50 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.27 2000/12/05 09:11:31 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1245,6 +1245,8 @@ static void
 storeDiskdDirWriteCleanDone(SwapDir * sd)
 {
     struct _clean_state *state = sd->log.clean.state;
+    if (NULL == state)
+	return;
     if (state->fd < 0)
 	return;
     state->walker->Done(state->walker);
