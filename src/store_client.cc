@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.81 2000/01/03 19:37:47 wessels Exp $
+ * $Id: store_client.cc,v 1.82 2000/01/05 02:20:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -153,7 +153,6 @@ storeClientCallback(store_client * sc, ssize_t sz)
     char *buf = sc->copy_buf;
     assert(sc->callback);
     assert(sc->copy_buf);
-    leakTouch(buf);
     sc->callback = NULL;
     sc->copy_buf = NULL;
     if (cbdataValid(sc->callback_data))
