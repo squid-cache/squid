@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.109 1998/10/14 21:12:04 wessels Exp $
+ * $Id: url.cc,v 1.110 1998/12/09 04:16:48 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -257,7 +257,7 @@ urlParse(method_t method, char *url)
     }
 #endif
     if (stringHasWhitespace(urlpath)) {
-	debug(23, 1) ("urlParse: URI has whitespace: {%s}\n", url);
+	debug(23, 2) ("urlParse: URI has whitespace: {%s}\n", url);
 	switch (Config.uri_whitespace) {
 	case URI_WHITESPACE_DENY:
 	    return NULL;
