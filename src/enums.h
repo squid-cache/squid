@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.123 1998/08/25 04:11:36 wessels Exp $
+ * $Id: enums.h,v 1.124 1998/08/25 19:19:05 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -263,6 +263,9 @@ typedef enum {
 /* possible owners of http header */
 typedef enum {
     hoNone,
+#if USE_HTCP
+    hoHtcpReply,
+#endif
     hoRequest,
     hoReply
 } http_hdr_owner_type;
