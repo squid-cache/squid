@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.223 2001/11/30 14:53:09 hno Exp $
+#  $Id: Makefile.in,v 1.224 2001/11/30 15:35:47 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -346,8 +346,11 @@ BUILT_SOURCES = \
 
 sysconf_DATA = \
 	squid.conf.default \
-	mib.txt \
 	mime.conf.default
+
+
+data_DATA = \
+	mib.txt
 
 
 LDADD = -L../lib -lmiscutil @XTRA_LIBS@
@@ -377,9 +380,9 @@ DEFAULT_SWAP_DIR = $(localstatedir)/cache
 DEFAULT_PINGER = $(libexecdir)/@OPT_PINGER_EXE@
 DEFAULT_UNLINKD = $(libexecdir)/$(UNLINKD_EXE)
 DEFAULT_DISKD = $(libexecdir)/@OPT_DISKD_EXE@
-DEFAULT_ICON_DIR = $(datadir)/squid/icons
-DEFAULT_ERROR_DIR = $(datadir)/squid/errors/@ERR_DEFAULT_LANGUAGE@
-DEFAULT_MIB_PATH = $(sysconfdir)/mib.txt
+DEFAULT_ICON_DIR = $(datadir)/icons
+DEFAULT_ERROR_DIR = $(datadir)/errors/@ERR_DEFAULT_LANGUAGE@
+DEFAULT_MIB_PATH = $(datadir)/mib.txt
 
 DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
@@ -560,7 +563,7 @@ CFLAGS = @CFLAGS@
 DIST_SOURCES = cachemgr.c $(cf_gen_SOURCES) client.c dnsserver.c \
 	$(pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) \
 	$(unlinkd_SOURCES)
-DATA = $(sysconf_DATA)
+DATA = $(data_DATA) $(sysconf_DATA)
 
 
 RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
@@ -780,6 +783,23 @@ distclean-depend:
 	$(COMPILE) -c `cygpath -w $<`
 CCDEPMODE = @CCDEPMODE@
 uninstall-info-am:
+install-dataDATA: $(data_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(datadir)
+	@list='$(data_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(datadir)/$$f"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(datadir)/$$f; \
+	done
+
+uninstall-dataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(data_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(datadir)/$$f"; \
+	  rm -f $(DESTDIR)$(datadir)/$$f; \
+	done
 install-sysconfDATA: $(sysconf_DATA)
 	@$(NORMAL_INSTALL)
 	$(mkinstalldirs) $(DESTDIR)$(sysconfdir)
@@ -929,7 +949,7 @@ check: check-recursive
 all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs) $(DESTDIR)$(bindir) $(DESTDIR)$(libexecdir) $(DESTDIR)$(sysconfdir)
+	$(mkinstalldirs) $(DESTDIR)$(bindir) $(DESTDIR)$(libexecdir) $(DESTDIR)$(datadir) $(DESTDIR)$(sysconfdir)
 
 install: install-recursive
 install-exec: install-exec-recursive
@@ -974,7 +994,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-data-local
+install-data-am: install-data-local install-dataDATA
 
 install-exec-am: install-binPROGRAMS install-libexecPROGRAMS \
 	install-sysconfDATA
@@ -993,7 +1013,7 @@ mostlyclean: mostlyclean-recursive
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am \
+uninstall-am: uninstall-binPROGRAMS uninstall-dataDATA uninstall-info-am \
 	uninstall-libexecPROGRAMS uninstall-local uninstall-sysconfDATA
 
 uninstall-info: uninstall-info-recursive
@@ -1005,17 +1025,19 @@ uninstall-info: uninstall-info-recursive
 	distclean-recursive distclean-tags distdir dvi dvi-am \
 	dvi-recursive info info-am info-recursive install install-am \
 	install-binPROGRAMS install-data install-data-am \
-	install-data-local install-data-recursive install-exec \
-	install-exec-am install-exec-recursive install-info \
-	install-info-am install-info-recursive install-libexecPROGRAMS \
-	install-man install-recursive install-strip install-sysconfDATA \
-	installcheck installcheck-am installdirs installdirs-am \
-	installdirs-recursive maintainer-clean maintainer-clean-generic \
+	install-data-local install-data-recursive install-dataDATA \
+	install-exec install-exec-am install-exec-recursive \
+	install-info install-info-am install-info-recursive \
+	install-libexecPROGRAMS install-man install-recursive \
+	install-strip install-sysconfDATA installcheck installcheck-am \
+	installdirs installdirs-am installdirs-recursive \
+	maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-recursive tags tags-recursive \
-	uninstall uninstall-am uninstall-binPROGRAMS uninstall-info-am \
-	uninstall-info-recursive uninstall-libexecPROGRAMS \
-	uninstall-local uninstall-recursive uninstall-sysconfDATA
+	uninstall uninstall-am uninstall-binPROGRAMS uninstall-dataDATA \
+	uninstall-info-am uninstall-info-recursive \
+	uninstall-libexecPROGRAMS uninstall-local uninstall-recursive \
+	uninstall-sysconfDATA
 
 cf_gen.$(OBJEXT): cf_gen_defines.h
 unlinkd-daemon.o: unlinkd.c
@@ -1075,7 +1097,7 @@ repl_modules.c: repl_modules.sh Makefile
 auth_modules.c: auth_modules.sh Makefile
 	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
 
-install-data-local: install-sysconfDATA
+install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/mime.conf" ; \
 	else \
