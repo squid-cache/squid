@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.87 1996/12/20 23:45:44 wessels Exp $
+ * $Id: squid.h,v 1.88 1997/01/03 22:45:16 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -257,9 +257,11 @@ typedef unsigned long u_num32;
  * we might really be able to open more than FD_SETSIZE descriptors.
  * happy happy happy joy joy joy.
  */
+#if defined(FD_SETSIZE) && defined(SQUID_MAXFD)
 #if FD_SETSIZE < SQUID_MAXFD
 #undef SQUID_MAXFD
 #define SQUID_MAXFD FD_SETSIZE
+#endif
 #endif
 
 typedef void (*SIH) (int, void *);	/* swap in */
