@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.57 2003/03/09 12:29:41 robertc Exp $
+ * $Id: dns_internal.cc,v 1.58 2003/04/22 15:06:09 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -43,7 +43,7 @@
  */
 #ifndef USE_DNSSERVERS
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
-#include <windows.h>
+#include "squid_windows.h"
 #endif
 #ifndef _PATH_RESOLV_CONF
 #define _PATH_RESOLV_CONF "/etc/resolv.conf"

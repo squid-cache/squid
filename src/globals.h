@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.122 2003/04/20 05:28:58 robertc Exp $
+ * $Id: globals.h,v 1.123 2003/04/22 15:06:09 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -177,5 +177,6 @@ extern void *sbrk_start;	/* 0 */
 
 extern int ssl_ex_index_server;	/* -1 */
 extern int ssl_ctx_ex_index_dont_verify_domain; /* -1 */
+extern int opt_no_daemon; /* 0 */
 
 #endif /* SQUID_GLOBALS_H */
