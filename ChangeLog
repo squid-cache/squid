@@ -1,3 +1,8 @@
+	- Fixed ipcache TTL bug from new ipcache_parsebuffer().
+	- Copied recent ipcache.c changes to fqdncache.c
+	- Copied icpHandleIcpV2() fix to icpHandleIcpV3().
+	- incorporate squid-1.0.12 changes.
+
 Changes to squid-1.1.alpha15:
 
 	- Removed 'bad swap_status' trap in icpHandleIcpV2.
