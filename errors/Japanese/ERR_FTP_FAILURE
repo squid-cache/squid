@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>エラー: リクエストされた URL は取得できませんでした</TITLE>
+</HEAD><BODY>
+<H1>エラー</H1>
+<H2>リクエストされた URL は取得できませんでした</H2>
+<HR>
+<P>
+以下の URL を取得した際に，FTP プロトコルエラーが発生しました:
+<A HREF="%U">%U</A>
+<P>
+Squid は以下の ftp コマンドを送りましたが:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+このような結果を受け取りました．
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+おそらく，FTP URL が絶対パスとなっていたからかもしれません(これは
+RFC 1738 に従っていません)．もしこれが原因ならば，ファイルは
+<A HREF="%B">%B</A> にあるかもしれません．
+</P>
+
