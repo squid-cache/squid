@@ -1,3 +1,15 @@
+Changes to squid-1.1.0 (December 6, 1996):
+
+	- Fixed inequality bug in neighborUp().
+	- Fixed off-by-one ack_deficit bug in neighborUp() (Joe Ramey).
+	- Fixed pfds[] ABW bug for USE_POLL (Joe Ramey).
+	- Added anonymizer options; compile with USE_ANONYMIZER (Lutz
+	  Donnerhacke).
+	- Added Gauntlet proxy support to ftpget (Mukaigawa Shin'ichi).
+	- Updated doc/Release-Notes-1.1.txt
+
+==============================================================================
+
 Changes to squid-1.1.beta28 (December 5, 1996):
 
 	- Fixed missing CR on Not-Modified replies (Balint Nagy Endre)
