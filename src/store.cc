@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.168 1996/11/19 07:11:48 wessels Exp $
+ * $Id: store.cc,v 1.169 1996/11/22 05:06:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -138,7 +138,7 @@
 #define WITH_MEMOBJ	1
 #define WITHOUT_MEMOBJ	0
 
-#define STORE_IN_MEM_BUCKETS		(143)
+#define STORE_IN_MEM_BUCKETS		(229)
 
 #define STORE_LOG_CREATE	0
 #define STORE_LOG_SWAPIN	1
