@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.43 1997/10/25 17:22:39 wessels Exp $
+ * $Id: dns.cc,v 1.44 1997/10/27 22:49:26 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -215,6 +215,8 @@ dnsGetFirstAvailable(void)
     for (k = 0; k < NDnsServersAlloc; k++) {
 	dns = *(dns_child_table + k);
 	if (BIT_TEST(dns->flags, DNS_FLAG_BUSY))
+	    continue;
+	if (BIT_TEST(dns->flags, DNS_FLAG_CLOSING))
 	    continue;
 	if (!BIT_TEST(dns->flags, DNS_FLAG_ALIVE))
 	    continue;
