@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.37 2003/07/14 15:14:51 robertc Exp $
+#  $Id: Makefile.in,v 1.38 2003/07/16 05:30:16 robertc Exp $
 #
 
 srcdir = @srcdir@
@@ -226,6 +226,7 @@ ESI_ALL_TESTS = \
 
 TESTS = debug \
 	syntheticoperators \
+	VirtualDeleteOperator \
 	StackTest \
 	rfc1738 \
 	refcount\
@@ -247,7 +248,8 @@ check_PROGRAMS = debug \
 		rfc1738\
 		splay \
 		StackTest \
-		syntheticoperators
+		syntheticoperators \
+		VirtualDeleteOperator
 
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
@@ -284,6 +286,7 @@ splay_SOURCES = splay.cc
 StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
 
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
+VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
 
 rfc1738_SOURCES = rfc1738.cc
 subdir = test-suite
@@ -297,12 +300,14 @@ EXTRA_PROGRAMS = mem_node_test$(EXEEXT) membanger$(EXEEXT) \
 @USE_ESI_TRUE@	http_range_test$(EXEEXT) MemPoolTest$(EXEEXT) \
 @USE_ESI_TRUE@	mem_node_test$(EXEEXT) mem_hdr_test$(EXEEXT) \
 @USE_ESI_TRUE@	refcount$(EXEEXT) rfc1738$(EXEEXT) splay$(EXEEXT) \
-@USE_ESI_TRUE@	StackTest$(EXEEXT) syntheticoperators$(EXEEXT)
+@USE_ESI_TRUE@	StackTest$(EXEEXT) syntheticoperators$(EXEEXT) \
+@USE_ESI_TRUE@	VirtualDeleteOperator$(EXEEXT)
 @USE_ESI_FALSE@check_PROGRAMS = debug$(EXEEXT) http_range_test$(EXEEXT) \
 @USE_ESI_FALSE@	MemPoolTest$(EXEEXT) mem_node_test$(EXEEXT) \
 @USE_ESI_FALSE@	mem_hdr_test$(EXEEXT) refcount$(EXEEXT) \
 @USE_ESI_FALSE@	rfc1738$(EXEEXT) splay$(EXEEXT) \
-@USE_ESI_FALSE@	StackTest$(EXEEXT) syntheticoperators$(EXEEXT)
+@USE_ESI_FALSE@	StackTest$(EXEEXT) syntheticoperators$(EXEEXT) \
+@USE_ESI_FALSE@	VirtualDeleteOperator$(EXEEXT)
 am__objects_1 = test_tools.$(OBJEXT)
 am_ESIExpressions_OBJECTS = ESIExpressions.$(OBJEXT) $(am__objects_1)
 ESIExpressions_OBJECTS = $(am_ESIExpressions_OBJECTS)
@@ -319,6 +324,12 @@ StackTest_OBJECTS = $(am_StackTest_OBJECTS)
 StackTest_LDADD = $(LDADD)
 StackTest_DEPENDENCIES =
 StackTest_LDFLAGS =
+am_VirtualDeleteOperator_OBJECTS = VirtualDeleteOperator.$(OBJEXT) \
+	$(am__objects_1)
+VirtualDeleteOperator_OBJECTS = $(am_VirtualDeleteOperator_OBJECTS)
+VirtualDeleteOperator_LDADD = $(LDADD)
+VirtualDeleteOperator_DEPENDENCIES =
+VirtualDeleteOperator_LDFLAGS =
 am_debug_OBJECTS = debug.$(OBJEXT) $(am__objects_1)
 debug_OBJECTS = $(am_debug_OBJECTS)
 debug_DEPENDENCIES = $(top_builddir)/src/globals.o
@@ -377,6 +388,7 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/ESIExpressions.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/MemPoolTest.Po ./$(DEPDIR)/StackTest.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/VirtualDeleteOperator.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/debug.Po ./$(DEPDIR)/http_range_test.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mem_hdr_test.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mem_node_test.Po \
@@ -395,13 +407,13 @@ CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 DIST_SOURCES = $(ESIExpressions_SOURCES) $(MemPoolTest_SOURCES) \
-	$(StackTest_SOURCES) $(debug_SOURCES) \
-	$(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) \
-	$(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) \
-	$(rfc1738_SOURCES) $(splay_SOURCES) \
+	$(StackTest_SOURCES) $(VirtualDeleteOperator_SOURCES) \
+	$(debug_SOURCES) $(http_range_test_SOURCES) \
+	$(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c \
+	$(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) \
 	$(syntheticoperators_SOURCES) tcp-banger2.c
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(ESIExpressions_SOURCES) $(MemPoolTest_SOURCES) $(StackTest_SOURCES) $(debug_SOURCES) $(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) $(syntheticoperators_SOURCES) tcp-banger2.c
+SOURCES = $(ESIExpressions_SOURCES) $(MemPoolTest_SOURCES) $(StackTest_SOURCES) $(VirtualDeleteOperator_SOURCES) $(debug_SOURCES) $(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) $(syntheticoperators_SOURCES) tcp-banger2.c
 
 all: all-am
 
@@ -424,6 +436,9 @@ MemPoolTest$(EXEEXT): $(MemPoolTest_OBJECTS) $(MemPoolTest_DEPENDENCIES)
 StackTest$(EXEEXT): $(StackTest_OBJECTS) $(StackTest_DEPENDENCIES) 
 	@rm -f StackTest$(EXEEXT)
 	$(CXXLINK) $(StackTest_LDFLAGS) $(StackTest_OBJECTS) $(StackTest_LDADD) $(LIBS)
+VirtualDeleteOperator$(EXEEXT): $(VirtualDeleteOperator_OBJECTS) $(VirtualDeleteOperator_DEPENDENCIES) 
+	@rm -f VirtualDeleteOperator$(EXEEXT)
+	$(CXXLINK) $(VirtualDeleteOperator_LDFLAGS) $(VirtualDeleteOperator_OBJECTS) $(VirtualDeleteOperator_LDADD) $(LIBS)
 debug$(EXEEXT): $(debug_OBJECTS) $(debug_DEPENDENCIES) 
 	@rm -f debug$(EXEEXT)
 	$(CXXLINK) $(debug_LDFLAGS) $(debug_OBJECTS) $(debug_LDADD) $(LIBS)
@@ -464,6 +479,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIExpressions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemPoolTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StackTest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VirtualDeleteOperator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http_range_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mem_hdr_test.Po@am__quote@
