@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.8 1996/03/27 04:42:10 wessels Exp $ */
+/* $Id: tools.cc,v 1.9 1996/03/27 05:12:40 wessels Exp $ */
 
 #include "squid.h"
 
@@ -102,8 +102,10 @@ void shut_down(sig)
 void fatal_common(message)
      char *message;
 {
+#if HAVE_SYSLOG
     if (syslog_enable)
 	syslog(LOG_ALERT, message);
+#endif
     fprintf(stderr, "FATAL: %s\n", message);
     fprintf(stderr, "Harvest Cache (Version %s): Terminated abnormally.\n",
 	SQUID_VERSION);
