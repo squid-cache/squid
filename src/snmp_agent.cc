@@ -83,7 +83,7 @@ extern int parse_parameters();
 
 
 int
-init_agent_auth()
+init_agent_auth(void)
 {
 	char hostname[ 256 ];
 	struct hostent *hp;
@@ -101,8 +101,12 @@ init_agent_auth()
 	  return -1;
 	}
 	_agentID[3] = 35; /* BNR private enterprise number */
-	memcpy( &_agentID[4], hp->h_addr, hp->h_length );
+	xmemcpy( &_agentID[4], hp->h_addr, hp->h_length );
 
+	if (Config.Snmp.agentInfo == NULL) {
+		debug(49,1)("init_agent_auth: WARNING: Config.Snmp.agentInfo == NULL\n");
+		return -1;
+	}
 	if( (f = fopen( Config.Snmp.agentInfo, "r+" )) == NULL ) {
 	    debug(49,5) ("init_agent_auth: Agent not installed properly, cannot open '%s'\n", 
 		    Config.Snmp.agentInfo );
@@ -181,7 +185,7 @@ long		*ireqid;
 			if( !(session->qoS & USEC_QOS_GENREPORT) ) return 0;
 			session->agentBoots = _agentBoots;
 			session->agentClock = _agentStartTime;
-			memcpy( session->agentID, _agentID, 12 );
+			xmemcpy( session->agentID, _agentID, 12 );
 			session->MMS = SNMP_MAX_LEN;
 			create_report( session, out_sn_data, out_length, -ret, reqid );
 			return 1;
@@ -263,7 +267,7 @@ long		*ireqid;
     time( (time_t *) &session->agentTime );
     session->agentClock = _agentStartTime;
     session->agentBoots = _agentBoots;
-    memcpy( session->agentID, _agentID, 12 );
+    xmemcpy( session->agentID, _agentID, 12 );
 
     out_auth = out_sn_data;
     out_header = snmp_auth_build( out_auth, out_length, session, 1, 0 );
@@ -706,11 +710,11 @@ usecEntry	   **ueret;
 	/* setup session record for this packet */
 	/* setup before any error detection so report may be generated if required */
 	session->qoS = params.qoS;
-	memcpy( session->userName, params.userName, params.userLen );
+	xmemcpy( session->userName, params.userName, params.userLen );
 	session->userLen = params.userLen;
 	session->MMS = params.MMS;
 	session->contextLen = params.contextLen;
-	memcpy( session->contextSelector, params.contextSelector, params.contextLen );
+	xmemcpy( session->contextSelector, params.contextSelector, params.contextLen );
 
 	/* agentID must be my agentID */
 	if( memcmp( _agentID, params.agentID, 12 ) != 0 )
@@ -732,14 +736,14 @@ usecEntry	   **ueret;
 	/* verify that the requested qoS is supported by the userName */
 	if( (params.qoS & USEC_QOS_AUTHPRIV) > ue->qoS ) return -USEC_STAT_UNSUPPORTED_QOS;
 
-	memcpy( session->authKey, ue->authKey, 16 );
+	xmemcpy( session->authKey, ue->authKey, 16 );
 
 	/* check digest and timeliness if this is an auth message */
 	if( params.qoS & USEC_QOS_AUTH ) {
 		int	upper, lower, agentTime;
 
 		/* check the digest */
-		memcpy( params.authDigestPtr, ue->authKey, 16 );
+		xmemcpy( params.authDigestPtr, ue->authKey, 16 );
 		md5Digest( sn_data, length, ue->authKey, params.authDigestPtr );
 		if( memcmp( params.authDigest, params.authDigestPtr, 16 ) != 0 )
 			return -USEC_STAT_WRONG_DIGEST_VALUES;
