@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: neighbors.cc,v 1.1 1996/02/22 06:23:55 wessels Exp $";
+static char rcsid[] = "$Id: neighbors.cc,v 1.2 1996/02/23 06:56:33 wessels Exp $";
 /*
  *  File:         icp.c
  *  Description:  Keeps track of other caches and cache clients
@@ -144,7 +144,7 @@ edge *whichEdge(header, from)
      icp_common_t *header;
      struct sockaddr_in *from;
 {
-    int i, j;
+    int j;
     int port;
     struct in_addr ip;
     edge *e = NULL;
@@ -203,15 +203,15 @@ void hierarchy_log_append(url, code, timeout, cache_host)
 	}
     } else {
 	if (cache_host) {
-	    fprintf(cache_hierarchy_log, "%ld %s %s%s %s\n",
-		cached_curtime,
+	    fprintf(cache_hierarchy_log, "%d %s %s%s %s\n",
+		(int) cached_curtime,
 		url,
 		timeout ? "TIMEOUT_" : "",
 		hier_strings[code],
 		cache_host);
 	} else {
-	    fprintf(cache_hierarchy_log, "%ld %s %s%s\n",
-		cached_curtime,
+	    fprintf(cache_hierarchy_log, "%d %s %s%s\n",
+		(int) cached_curtime,
 		url,
 		timeout ? "TIMEOUT_" : "",
 		hier_strings[code]);
@@ -255,7 +255,6 @@ edge *getSingleParent(host, n)
 {
     edge *p = NULL;
     edge *e = NULL;
-    int i;
     int count = 0;
 
     if (n == NULL && friends->n_parent < 1)
@@ -293,7 +292,6 @@ edge *getFirstParent(host)
      char *host;
 {
     edge *e = NULL;
-    int i;
     if (friends->n_parent < 1)
 	return NULL;
     for (e = friends->edges_head; e; e = e->next) {
@@ -323,7 +321,6 @@ void neighbors_install(host, type, ascii_port, udp_port, proxy_only, domains)
      int proxy_only;
      dom_list *domains;
 {
-    int i;
     edge *e;
 
     debug(1, "Adding a %s: %s\n", type, host);
@@ -364,7 +361,7 @@ void neighbors_install(host, type, ascii_port, udp_port, proxy_only, domains)
 void neighbors_open(fd)
      int fd;
 {
-    int i, j;
+    int j;
     struct sockaddr_in our_socket_name;
     struct sockaddr_in *ap;
     int sock_name_length = sizeof(our_socket_name);
@@ -486,9 +483,9 @@ int neighborsUdpPing(proto)
     edge *e = NULL;
     int i;
 
-    store_mem_obj(entry, e_pings_n_pings) = 0;
-    store_mem_obj(entry, e_pings_n_acks) = 0;
-    store_mem_obj(entry, e_pings_first_miss) = NULL;
+    entry->mem_obj->e_pings_n_pings = 0;
+    entry->mem_obj->e_pings_n_acks = 0;
+    entry->mem_obj->e_pings_first_miss = NULL;
 
     if (friends->edges_head == (edge *) NULL)
 	return 0;
@@ -530,7 +527,7 @@ int neighborsUdpPing(proto)
 	if (e->ack_deficit < HIER_MAX_DEFICIT) {
 	    /* consider it's alive. count it */
 	    e->neighbor_up = 1;
-	    store_mem_obj(entry, e_pings_n_pings)++;
+	    entry->mem_obj->e_pings_n_pings++;
 	} else {
 	    /* consider it's dead. send a ping but don't count it. */
 	    e->neighbor_up = 0;
@@ -574,7 +571,7 @@ int neighborsUdpPing(proto)
 	    debug(6, "neighborsUdpPing: Source Ping is disabled.\n");
 	}
     }
-    return (store_mem_obj(entry, e_pings_n_pings));
+    return (entry->mem_obj->e_pings_n_pings);
 }
 
 
@@ -664,7 +661,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	/* If an edge is not found, count it as a MISS message. */
 	if (!e) {
 	    /* count it as a MISS message */
-	    store_mem_obj(entry, e_pings_n_acks)++;
+	    entry->mem_obj->e_pings_n_acks++;
 	    return;
 	}
 	/* GOT a HIT here */
@@ -681,7 +678,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	return;
     } else if ((header->opcode == ICP_OP_MISS) || (header->opcode == ICP_OP_DECHO)) {
 	/* everytime we get here, count it as a miss */
-	store_mem_obj(entry, e_pings_n_acks)++;
+	entry->mem_obj->e_pings_n_acks++;
 	if (e)
 	    e->misses++;
 
@@ -694,9 +691,9 @@ void neighborsUdpAck(fd, url, header, from, entry)
 		debug(6, "Good.");
 
 		if (e->type == is_a_parent) {
-		    if (store_mem_obj(entry, e_pings_first_miss) == NULL) {
+		    if (entry->mem_obj->e_pings_first_miss == NULL) {
 			debug(6, "OK. We got dumb-cached parent as the first miss here.\n");
-			store_mem_obj(entry, e_pings_first_miss) = e;
+			entry->mem_obj->e_pings_first_miss = e;
 		    }
 		} else {
 		    debug(6, "Dumb Cached as a neighbor does not make sense.\n");
@@ -711,13 +708,13 @@ void neighborsUdpAck(fd, url, header, from, entry)
 
 	} else {
 	    /* ICP_OP_MISS from a cache */
-	    if ((store_mem_obj(entry, e_pings_first_miss) == NULL) && e && e->type == is_a_parent) {
-		store_mem_obj(entry, e_pings_first_miss) = e;
+	    if ((entry->mem_obj->e_pings_first_miss == NULL) && e && e->type == is_a_parent) {
+		entry->mem_obj->e_pings_first_miss = e;
 
 	    }
 	}
 
-	if (store_mem_obj(entry, e_pings_n_acks) == store_mem_obj(entry, e_pings_n_pings)) {
+	if (entry->mem_obj->e_pings_n_acks == entry->mem_obj->e_pings_n_pings) {
 	    BIT_SET(entry->flag, REQ_DISPATCHED);
 	    entry->ping_status = DONE;
 	    debug(6, "Receive MISSes from all neighbors and parents\n");

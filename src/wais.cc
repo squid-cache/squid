@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: wais.cc,v 1.2 1996/02/23 05:41:29 wessels Exp $";
+static char rcsid[] = "$Id: wais.cc,v 1.3 1996/02/23 06:56:36 wessels Exp $";
 /*
  *  File:         wais.c
  *  Description:  state machine for wais retrieval protocol (just open a
@@ -154,7 +154,7 @@ void waisReadReplyTimeout(fd, data)
     CacheInfo->log_append(CacheInfo,
 	entry->url,
 	"0.0.0.0",
-	store_mem_obj(entry, e_current_len),
+	entry->mem_obj->e_current_len,
 	"ERR_403",		/* WAIS READ TIMEOUT */
 	"GET");
 #endif
@@ -186,7 +186,7 @@ void waisLifetimeExpire(fd, data)
     CacheInfo->log_append(CacheInfo,
 	entry->url,
 	"0.0.0.0",
-	store_mem_obj(entry, e_current_len),
+	entry->mem_obj->e_current_len,
 	"ERR_410",		/* WAIS LIFETIME EXPIRE */
 	"GET");
 #endif
@@ -210,12 +210,12 @@ void waisReadReply(fd, data)
     if (entry->flag & DELETE_BEHIND) {
 	if (storeClientWaiting(entry)) {
 	    /* check if we want to defer reading */
-	    if ((store_mem_obj(entry, e_current_len) -
-		    store_mem_obj(entry, e_lowest_offset)) > WAIS_DELETE_GAP) {
+	    if ((entry->mem_obj->e_current_len -
+		    entry->mem_obj->e_lowest_offset) > WAIS_DELETE_GAP) {
 		debug(3, "waisReadReply: Read deferred for Object: %s\n", entry->key);
 		debug(3, "                Current Gap: %d bytes\n",
-		    store_mem_obj(entry, e_current_len) -
-		    store_mem_obj(entry, e_lowest_offset));
+		    entry->mem_obj->e_current_len -
+		    entry->mem_obj->e_lowest_offset);
 
 		/* reschedule, so it will automatically reactivated when Gap is big enough. */
 		comm_set_select_handler(fd, COMM_SELECT_READ, (PF) waisReadReply, (caddr_t) data);
@@ -240,7 +240,7 @@ void waisReadReply(fd, data)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_419",	/* WAIS NO CLIENTS, BIG OBJECT */
 		"GET");
 #endif
@@ -251,7 +251,7 @@ void waisReadReply(fd, data)
     len = read(fd, buf, 4096);
     debug(5, "waisReadReply - fd: %d read len:%d\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (store_mem_obj(entry, e_current_len) == 0))) {
+    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	debug(1, "waisReadReply - error reading errno %d: %s\n",
 	    errno, xstrerror());
 	if (errno == ECONNRESET) {
@@ -279,7 +279,7 @@ void waisReadReply(fd, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_405",		/* WAIS READ ERROR */
 	    "GET");
 #endif
@@ -290,7 +290,7 @@ void waisReadReply(fd, data)
 	storeComplete(entry);
 	comm_close(fd);
 	safe_free(data);
-    } else if (((store_mem_obj(entry, e_current_len) + len) > getWAISMax()) &&
+    } else if (((entry->mem_obj->e_current_len + len) > getWAISMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -337,7 +337,7 @@ void waisSendComplete(fd, buf, size, errflag, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_401",		/* WAIS CONNECT FAILURE */
 	    "GET");
 #endif
@@ -413,7 +413,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_412",		/* WAIS NO RELAY */
 	    "GET");
 #endif
@@ -443,7 +443,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_411",		/* WAIS NO FD'S */
 	    "GET");
 #endif
@@ -470,7 +470,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_402",		/* WAIS DNS FAILURE */
 	    "GET");
 #endif
@@ -495,7 +495,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_401",	/* WAIS CONNECT FAIL */
 		"GET");
 #endif

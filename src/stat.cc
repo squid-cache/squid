@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: stat.cc,v 1.2 1996/02/23 05:41:27 wessels Exp $";
+static char rcsid[] = "$Id: stat.cc,v 1.3 1996/02/23 06:56:34 wessels Exp $";
 /* 
  *  File:         stat.c
  *  Description:  stat module for object cache
@@ -277,7 +277,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	obj_size = entry->object_len;
 	npend = storePendingNClients(entry);
 	if (entry->mem_obj)
-	    obj_size = store_mem_obj(entry, e_current_len);
+	    obj_size = entry->mem_obj->e_current_len;
 	tempbuf[0] = '\0';
 	sprintf(tempbuf, "{ %s %d %s %s %s %s %d %ld %s %s }\n",
 	    entry->url,
@@ -505,7 +505,6 @@ void info_get(obj, sentry)
      StoreEntry *sentry;
 {
     char *tod = NULL;
-    static char tempbuf[MAX_LINELEN];
     static char line[MAX_LINELEN];
 
 #if defined(HAVE_GETRUSAGE) && defined(RUSAGE_SELF)
