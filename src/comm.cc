@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.351 2002/10/23 10:11:53 adrian Exp $
+ * $Id: comm.cc,v 1.352 2002/10/23 11:24:20 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1752,19 +1752,17 @@ comm_accept_try(int fd, void *data)
 
 	Fc = &(fdc_table[fd]);
 
-	/* XXX magic number! */
 	for (count = 0; count < MAX_ACCEPT_PER_LOOP; count++) {
 		/* Accept a new connection */
 		newfd = comm_old_accept(fd, &Fc->accept.pn, &Fc->accept.me);
-
-			if (newfd < 0) {
-			/* Issues - check them */
+		/* Check for errors */
+		if (newfd < 0) {
 			if (newfd == COMM_NOMESSAGE) {
 				/* register interest again */
 				commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
 				return;
 			}
-			/* Problem! */
+			/* A non-recoverable error - register an error callback */
 			comm_addacceptcallback(fd, -1, Fc->accept.handler, &Fc->accept.pn,
 			    &Fc->accept.me, COMM_ERROR, errno, Fc->accept.handler_data);
 			Fc->accept.handler = NULL;
