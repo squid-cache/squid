@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.30 1999/01/13 23:24:10 wessels Exp $
+ * $Id: cf_gen.cc,v 1.31 1999/01/24 04:29:43 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -433,21 +433,19 @@ gen_parse(Entry * head, FILE * fp)
 	"\tint\tresult = 1;\n"
 	"\tchar\t*token;\n"
 	"\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
-	"\tif ((token = strtok(buff, w_space)) == NULL) {\n"
-	"\t\t/* ignore empty lines */\n"
-	"\t\t(void) 0;\n"
+	"\tif ((token = strtok(buff, w_space)) == NULL)\n"
+	"\t\t(void) 0;\t/* ignore empty lines */\n"
 	);
 
     for (entry = head; entry != NULL; entry = entry->next) {
 	if (strcmp(entry->name, "comment") == 0)
 	    continue;
-	fprintf(fp,
-	    "\t} else if (!strcmp(token, \"%s\")) {\n",
+	if (entry->ifdef)
+	    fprintf(fp, "#if %s\n", entry->ifdef);
+	fprintf(fp, "\telse if (!strcmp(token, \"%s\"))\n",
 	    entry->name
 	    );
 	assert(entry->loc);
-	if (entry->ifdef)
-	    fprintf(fp, "#if %s\n", entry->ifdef);
 	if (strcmp(entry->loc, "none") == 0) {
 	    fprintf(fp,
 		"\t\tparse_%s();\n",
@@ -464,9 +462,8 @@ gen_parse(Entry * head, FILE * fp)
     }
 
     fprintf(fp,
-	"\t} else {\n"
+	"\telse\n"
 	"\t\tresult = 0; /* failure */\n"
-	"\t}\n"
 	"\treturn(result);\n"
 	"}\n\n"
 	);
