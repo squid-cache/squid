@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.15 1996/04/05 17:47:39 wessels Exp $ */
+/* $Id: comm.cc,v 1.16 1996/04/05 17:48:27 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -702,7 +702,7 @@ int comm_set_select_handler(fd, type, handler, client_data)
      unsigned int type;
 /* 01 - read; 10 - write; 100 - except; 1000 - timeout ; 10000 - lifetime */
      int (*handler) ();
-     void * client_data;
+     void *client_data;
 {
 
     return (comm_set_select_handler_plus_timeout(fd, type, handler, client_data, 0));
@@ -714,7 +714,7 @@ int comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeout
      unsigned int type;
 /* 01 - read; 10 - write; 100 - except; 1000 - timeout ; 10000 - lifetime */
      int (*handler) ();
-     void * client_data;
+     void *client_data;
      time_t timeout;
 {
     if (type & COMM_SELECT_TIMEOUT) {

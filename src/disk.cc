@@ -1,4 +1,4 @@
-/* $Id: disk.cc,v 1.8 1996/04/05 17:47:41 wessels Exp $ */
+/* $Id: disk.cc,v 1.9 1996/04/05 17:48:28 wessels Exp $ */
 
 /* DEBUG: Section 6             disk: disk I/O routines */
 
@@ -14,9 +14,9 @@ typedef struct _dread_ctrl {
     char *buf;
     int cur_len;
     int end_of_file;
-    int (*handler) _PARAMS((int fd, char *buf, int size, int errflag, void * data,
+    int (*handler) _PARAMS((int fd, char *buf, int size, int errflag, void *data,
 	    int offset));
-    void * client_data;
+    void *client_data;
 } dread_ctrl;
 
 typedef struct _dwalk_ctrl {
@@ -24,10 +24,10 @@ typedef struct _dwalk_ctrl {
     off_t offset;
     char *buf;			/* line buffer */
     int cur_len;		/* line len */
-    int (*handler) _PARAMS((int fd, int errflag, void * data));
-    void * client_data;
-    int (*line_handler) _PARAMS((int fd, char *buf, int size, void * line_data));
-    void * line_data;
+    int (*handler) _PARAMS((int fd, int errflag, void *data));
+    void *client_data;
+    int (*line_handler) _PARAMS((int fd, char *buf, int size, void *line_data));
+    void *line_data;
 } dwalk_ctrl;
 
 typedef struct _dwrite_q {
@@ -393,7 +393,7 @@ int diskHandleWrite(fd, entry)
 /* call a handle when writing is complete. */
 int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
      int fd;
-     char* ptr_to_buf;
+     char *ptr_to_buf;
      int len;
      int access_code;
      void (*handle) ();
@@ -434,7 +434,7 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
     if (file_table[fd].write_daemon == NOT_PRESENT) {
 	/* got to start write routine for this fd */
 	comm_set_select_handler(fd, COMM_SELECT_WRITE, (PF) diskHandleWrite,
-	    (void *) & file_table[fd]);
+	    (void *) &file_table[fd]);
     }
     return DISK_OK;
 }
@@ -507,7 +507,7 @@ int file_read(fd, buf, req_len, offset, handler, client_data)
      int req_len;
      int offset;
      FILE_READ_HD handler;
-     void * client_data;
+     void *client_data;
 {
     dread_ctrl *ctrl_dat;
 
@@ -602,9 +602,9 @@ int diskHandleWalk(fd, walk_dat)
 int file_walk(fd, handler, client_data, line_handler, line_data)
      int fd;
      FILE_WALK_HD handler;
-     void * client_data;
+     void *client_data;
      FILE_WALK_LHD line_handler;
-     void * line_data;
+     void *line_data;
 
 {
     dwalk_ctrl *walk_dat;
