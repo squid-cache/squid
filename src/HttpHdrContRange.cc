@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.3 1998/03/11 22:18:44 rousskov Exp $
+ * $Id: HttpHdrContRange.cc,v 1.4 1998/04/06 22:32:06 wessels Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -31,17 +31,17 @@
 
 #include "squid.h"
 
-#if 0
-    Currently only byte ranges are supported
-
-    Content-Range = "Content-Range" ":" content-range-spec
-    content-range-spec      = byte-content-range-spec
-    byte-content-range-spec = bytes-unit SP
-                              ( byte-range-resp-spec | "*") "/"
-                              ( entity-length | "*" )
-    byte-range-resp-spec = first-byte-pos "-" last-byte-pos
-    entity-length        = 1*DIGIT
-#endif
+/*
+ *    Currently only byte ranges are supported
+ *
+ *    Content-Range = "Content-Range" ":" content-range-spec
+ *    content-range-spec      = byte-content-range-spec
+ *    byte-content-range-spec = bytes-unit SP
+ *                              ( byte-range-resp-spec | "*") "/"
+ *                              ( entity-length | "*" )
+ *    byte-range-resp-spec = first-byte-pos "-" last-byte-pos
+ *    entity-length        = 1*DIGIT
+ */
 
 
 /* local constants */
@@ -56,7 +56,7 @@
 
 /* parses range-resp-spec and inits spec, returns true on success */
 static int
-httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec *spec, const char *field, int flen)
+httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int flen)
 {
     const char *p;
     assert(spec);
@@ -67,20 +67,20 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec *spec, const char *field, int fle
     if (*field == '*')
 	return 1;
     /* check format, must be %d-%d */
-    if (!((p = strchr(field, '-')) && (p-field < flen))) {
+    if (!((p = strchr(field, '-')) && (p - field < flen))) {
 	debug(68, 2) ("invalid (no '-') resp-range-spec near: '%s'\n", field);
 	return 0;
     }
     /* parse offset */
     if (!httpHeaderParseSize(field, &spec->offset))
-	    return 0;
+	return 0;
     p++;
     /* do we have last-pos ? */
     if (p - field < flen) {
 	size_t last_pos;
 	if (!httpHeaderParseSize(p, &last_pos))
 	    return 0;
-	spec->length = size_diff(last_pos+1, spec->offset);
+	spec->length = size_diff(last_pos + 1, spec->offset);
     }
     /* we managed to parse, check if the result makes sence */
     if (known_spec(spec->length) && !spec->length) {
@@ -92,13 +92,13 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec *spec, const char *field, int fle
 }
 
 static void
-httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec *spec, Packer *p)
+httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 {
     if (!known_spec(spec->offset) || !known_spec(spec->length))
 	packerPrintf(p, "*");
     else
-	packerPrintf(p, "%d-%d", 
-	    spec->offset, spec->offset+spec->length-1);
+	packerPrintf(p, "%d-%d",
+	    spec->offset, spec->offset + spec->length - 1);
 }
 
 /*
@@ -127,7 +127,7 @@ httpHdrContRangeParseCreate(const char *str)
 
 /* returns true if ranges are valid; inits HttpHdrContRange */
 int
-httpHdrContRangeParseInit(HttpHdrContRange *range, const char *str)
+httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
 {
     const char *p;
     assert(range && str);
@@ -141,23 +141,21 @@ httpHdrContRangeParseInit(HttpHdrContRange *range, const char *str)
 	return 0;
     if (*str == '*')
 	range->spec.offset = range->spec.length = range_spec_unknown;
-    else
-    if (!httpHdrRangeRespSpecParseInit(&range->spec, str, p-str))
+    else if (!httpHdrRangeRespSpecParseInit(&range->spec, str, p - str))
 	return 0;
     p++;
     if (*p == '*')
 	range->elength = range_spec_unknown;
-    else
-    if (!httpHeaderParseSize(p, &range->elength))
+    else if (!httpHeaderParseSize(p, &range->elength))
 	return 0;
-    debug(68, 8) ("parsed content-range field: %d-%d / %d\n", 
-	range->spec.offset, range->spec.offset+range->spec.length-1,
+    debug(68, 8) ("parsed content-range field: %d-%d / %d\n",
+	range->spec.offset, range->spec.offset + range->spec.length - 1,
 	range->elength);
     return 1;
 }
 
 void
-httpHdrContRangeDestroy(HttpHdrContRange *range)
+httpHdrContRangeDestroy(HttpHdrContRange * range)
 {
     assert(range);
     memFree(MEM_HTTP_HDR_CONTENT_RANGE, range);

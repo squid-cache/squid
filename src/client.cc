@@ -1,10 +1,6 @@
 
-
-
-
-
 /*
- * $Id: client.cc,v 1.63 1998/04/02 04:45:03 rousskov Exp $
+ * $Id: client.cc,v 1.64 1998/04/06 22:32:12 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -237,7 +233,7 @@ main(int argc, char *argv[])
 		    char *t;
 		    strncpy(extra_hdrs, optarg, sizeof(extra_hdrs));
 		    while ((t = strstr(extra_hdrs, "\\n")))
-			*t = '\r', *(t+1) = '\n';
+			*t = '\r', *(t + 1) = '\n';
 		}
 		break;
 	    case 'v':

@@ -514,8 +514,8 @@ extern peer *peerGetSomeParent(request_t *, hier_code *);
 extern void peerSelectInit(void);
 
 /* peer_digest.c */
-extern void peerDigestValidate(peer *p);
-extern void peerDigestRequest(peer *p);
+extern void peerDigestValidate(peer * p);
+extern void peerDigestRequest(peer * p);
 
 extern void protoDispatch(int, StoreEntry *, request_t *);
 

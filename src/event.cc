@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.12 1998/04/05 22:29:00 rousskov Exp $
+ * $Id: event.cc,v 1.13 1998/04/06 22:32:14 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -67,7 +67,7 @@ void
 eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish)
 {
     if (delta_ish >= 3) {
-	const time_t two_third = (2*delta_ish)/3;
+	const time_t two_third = (2 * delta_ish) / 3;
 	delta_ish = two_third + (squid_random() % two_third);
     }
     eventAdd(name, func, arg, delta_ish);

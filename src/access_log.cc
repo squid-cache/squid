@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.26 1998/03/31 08:37:29 wessels Exp $
+ * $Id: access_log.cc,v 1.27 1998/04/06 22:32:10 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -419,7 +419,7 @@ fvdbDumpForw(StoreEntry * e)
 }
 
 static
-void 
+void
 fvdbFreeEntry(void *data)
 {
     fvdb_entry *fv = data;

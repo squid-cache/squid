@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.223 1998/04/06 22:00:29 rousskov Exp $
+ * $Id: stat.cc,v 1.224 1998/04/06 22:32:20 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1032,7 +1032,7 @@ statMedianSvc(int interval, int which)
 int
 get_median_svc(int interval, int which)
 {
-	return(int) statMedianSvc(interval, which);
+    return (int) statMedianSvc(interval, which);
 }
 
 StatCounters *
