@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.11 1998/06/28 03:24:34 wessels Exp $
+ * $Id: forward.cc,v 1.12 1998/06/28 07:52:13 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ fwdStateFree(FwdState * fwdState)
     if (sfd > -1) {
 	comm_remove_close_handler(sfd, fwdServerClosed, fwdState);
 	fwdState->server_fd = -1;
-	debug(17,1)("fwdStateFree: closing FD %d\n", sfd);
+	debug(17, 1) ("fwdStateFree: closing FD %d\n", sfd);
 	comm_close(sfd);
     }
     cbdataFree(fwdState);
@@ -107,8 +107,8 @@ fwdServerClosed(int fd, void *data)
     fwdState->server_fd = -1;
     if (fwdCheckRetry(fwdState)) {
 	debug(17, 1) ("fwdServerClosed: re-forwarding (%d tries, %d secs)\n",
-		fwdState->n_tries,
-		(int) (squid_curtime - fwdState->start));
+	    fwdState->n_tries,
+	    (int) (squid_curtime - fwdState->start));
 	fwdConnectStart(fwdState);
     } else {
 	fwdStateFree(fwdState);
@@ -177,7 +177,7 @@ fwdConnectStart(FwdState * fwdState)
     debug(17, 3) ("fwdConnectStart: %s\n", url);
     if ((fd = pconnPop(srv->host, srv->port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
-        fwdState->server_fd = fd;
+	fwdState->server_fd = fd;
 	comm_add_close_handler(fd, fwdServerClosed, fwdState);
 	fwdConnectDone(fd, COMM_OK, fwdState);
 	return;
@@ -251,7 +251,7 @@ fwdDispatch(FwdState * fwdState)
 	fwdState->client_fd,
 	RequestMethodStr[request->method],
 	storeUrl(entry));
-    /*assert(!EBIT_TEST(entry->flag, ENTRY_DISPATCHED));*/
+    /*assert(!EBIT_TEST(entry->flag, ENTRY_DISPATCHED)); */
     assert(entry->ping_status != PING_WAITING);
     assert(entry->lock_count);
     EBIT_SET(entry->flag, ENTRY_DISPATCHED);
@@ -387,20 +387,20 @@ fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
 void
 fwdAbort(void *data)
 {
-	FwdState * fwdState = data;
-	debug(17,1)("fwdAbort: %s\n", storeUrl(fwdState->entry));
-        fwdStateFree(fwdState);
+    FwdState *fwdState = data;
+    debug(17, 1) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
+    fwdStateFree(fwdState);
 }
 
 /*
  * Frees fwdState without closing FD or generating an abort
  */
 void
-fwdUnregister(int fd, FwdState *fwdState)
+fwdUnregister(int fd, FwdState * fwdState)
 {
-	debug(17,1)("fwdUnregister: %s\n", storeUrl(fwdState->entry));
-	assert(fd = fwdState->server_fd);
-	comm_remove_close_handler(fd, fwdServerClosed, fwdState);
-	fwdState->server_fd = -1;
-	fwdStateFree(fwdState);
+    debug(17, 3) ("fwdUnregister: %s\n", storeUrl(fwdState->entry));
+    assert(fd = fwdState->server_fd);
+    comm_remove_close_handler(fd, fwdServerClosed, fwdState);
+    fwdState->server_fd = -1;
+    fwdStateFree(fwdState);
 }
