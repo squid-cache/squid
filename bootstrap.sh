@@ -79,7 +79,7 @@ do
 	    # Bootstrap the autotool subsystems
 	    bootstrap aclocal$amver
 	    bootstrap autoheader$acver
-	    bootstrap libtoolize --force --copy --automake
+	    bootstrap libtoolize$ltver --force --copy --automake
 	    bootstrap automake$amver --foreign --add-missing --copy -f
 	    bootstrap autoconf$acver
 	fi ); then
