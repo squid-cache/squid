@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.131 2001/07/04 00:12:05 hno Exp $
+ * $Id: store_dir.cc,v 1.132 2001/08/11 16:34:37 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -112,6 +112,15 @@ storeDirValidSwapDirSize(int swapdir, ssize_t objsize)
      */
     if (Config.cacheSwap.swapDirs[swapdir].max_objsize == -1)
 	return 1;
+
+    /*
+     * If the object size is -1, then if the storedir isn't -1 we
+     * can't store it
+     */
+    if ((objsize == -1) &&
+        (Config.cacheSwap.swapDirs[swapdir].max_objsize != -1))
+        return 0;
+
     /*
      * Else, make sure that the max object size is larger than objsize
      */
@@ -191,6 +200,8 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 	if (load < 0 || load > 1000) {
 	    continue;
 	}
+	if (!storeDirValidSwapDirSize(i, objsize))
+	    continue;
 	if (SD->flags.read_only)
 	    continue;
 	if (SD->cur_size > SD->max_size)
@@ -202,7 +213,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 	if (load == least_load) {
 	    /* closest max_objsize fit */
 	    if (least_objsize != -1)
-		if (SD->max_size > least_objsize || SD->max_size == -1)
+		if (SD->max_objsize > least_objsize || SD->max_objsize == -1)
 		    continue;
 	    /* most free */
 	    if (cur_free < most_free)
@@ -213,10 +224,6 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 	most_free = cur_free;
 	dirn = i;
     }
-
-    if (dirn >= 0)
-	Config.cacheSwap.swapDirs[dirn].flags.selected = 1;
-
     return dirn;
 }
 
