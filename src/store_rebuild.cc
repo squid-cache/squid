@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.51 1998/09/19 17:06:15 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.52 1998/10/09 17:46:37 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -273,8 +273,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 		 * the cleanup procedure.
 		 */
 		storeExpireNow(e);
-		storeSetPrivateKey(e);
-		EBIT_SET(e->flags, RELEASE_REQUEST);
+		storeReleaseRequest(e);
 		if (e->swap_file_number > -1) {
 		    storeDirMapBitReset(e->swap_file_number);
 		    e->swap_file_number = -1;
@@ -355,8 +354,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	    /* key already exists, this swapfile not being used */
 	    /* junk old, load new */
 	    storeExpireNow(e);
-	    storeSetPrivateKey(e);
-	    EBIT_SET(e->flags, RELEASE_REQUEST);
+	    storeReleaseRequest(e);
 	    if (e->swap_file_number > -1) {
 		storeDirMapBitReset(e->swap_file_number);
 		e->swap_file_number = -1;
