@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.225 2001/09/27 21:59:22 hno Exp $
+# $Id: cf.data.pre,v 1.226 2001/10/01 12:46:13 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3656,12 +3656,12 @@ DOC_START
 	objects not intended for caching to get cached.
 DOC_END
 
-NAME: sleep_after_fork 
-COMMENT: (microseconds) 
-TYPE: int 
-LOC: Config.sleep_after_fork 
-DEFAULT: 0 
-DOC_START 
+NAME: sleep_after_fork
+COMMENT: (microseconds)
+TYPE: int
+LOC: Config.sleep_after_fork
+DEFAULT: 0
+DOC_START
 	When this is set to a non-zero value, the main Squid process 
 	sleeps the specified number of microseconds after a fork() 
 	system call. This sleep may help the situation where your 
@@ -3670,7 +3670,7 @@ DOC_START
 	processes, then these sleep delays will add up and your 
 	Squid will not service requests for some amount of time 
 	until all the child processes have been started. 
-DOC_END 
+DOC_END
 
 EOF
 
