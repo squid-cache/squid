@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.273 2002/04/13 23:07:48 hno Exp $
+ * $Id: acl.cc,v 1.274 2002/04/17 05:31:46 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -88,6 +88,7 @@ static wordlist *aclDumpIntlistList(intlist * data);
 static wordlist *aclDumpIntRangeList(intrange * data);
 static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
+static SPLAYCMP aclIpAddrNetworkCompare;
 static SPLAYCMP aclIpNetworkCompare;
 static SPLAYCMP aclHostDomainCompare;
 static SPLAYCMP aclDomainCompare;
@@ -1050,7 +1051,21 @@ static int
 aclMatchIp(void *dataptr, struct in_addr c)
 {
     splayNode **Top = dataptr;
-    *Top = splay_splay(&c, *Top, aclIpNetworkCompare);
+    acl_ip_data x;
+    /*
+     * aclIpAddrNetworkCompare() takes two acl_ip_data pointers as
+     * arguments, so we must create a fake one for the client's IP
+     * address, and use a /32 netmask.  However, the current code
+     * probably only accesses the addr1 element of this argument,
+     * so it might be possible to leave addr2 and mask unset.
+     * XXX Could eliminate these repetitive assignments with a
+     * static structure.
+     */
+    x.addr1 = c;
+    x.addr2 = any_addr;
+    x.mask = no_addr;
+    x.next = NULL;
+    *Top = splay_splay(&x, *Top, aclIpAddrNetworkCompare);
     debug(28, 3) ("aclMatchIp: '%s' %s\n",
 	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
@@ -2217,24 +2232,39 @@ aclHostDomainCompare(const void *a, const void *b)
     return matchDomainName(h, d);
 }
 
-/* compare two network specs
- * 
- * NOTE: this is very similar to aclIpNetworkCompare and it's not yet
- * clear whether this OK. The problem could be with when a network
- * is a subset of the other networks:
- * 
- * 128.1.2.0/255.255.255.128 == 128.1.2.0/255.255.255.0 ?
- * 
- * Currently only the first address of the first network is used.
+/*
+ * aclIpDataToStr - print/format an acl_ip_data structure for
+ * debugging output.
  */
-
-/* compare an address and a network spec */
-
-static int
-aclIpNetworkCompare(const void *a, const void *b)
+static void
+aclIpDataToStr(const acl_ip_data * ip, char *buf, int len)
 {
-    struct in_addr A = *(const struct in_addr *) a;
-    const acl_ip_data *q = b;
+    char b1[20];
+    char b2[20];
+    char b3[20];
+    snprintf(b1, 20, "%s", inet_ntoa(ip->addr1));
+    if (ip->addr2.s_addr != any_addr.s_addr)
+	snprintf(b2, 20, "-%s", inet_ntoa(ip->addr2));
+    else
+	b2[0] = '\0';
+    if (ip->mask.s_addr != no_addr.s_addr)
+	snprintf(b3, 20, "/%s", inet_ntoa(ip->mask));
+    else
+	b3[0] = '\0';
+    snprintf(buf, len, "%s%s%s", b1, b2, b3);
+}
+
+/*
+ * aclIpNetworkCompare2 - The guts of the comparison for IP ACLs.
+ * The first argument (a) is a "host" address, i.e. the IP address
+ * of a cache client.  The second argument (b) is a "network" address
+ * that might have a subnet and/or range.  We mask the host address
+ * bits with the network subnet mask.
+ */
+static int
+aclIpNetworkCompare2(const acl_ip_data * p, const acl_ip_data * q)
+{
+    struct in_addr A = p->addr1;
     const struct in_addr B = q->addr1;
     const struct in_addr C = q->addr2;
     int rc = 0;
@@ -2255,6 +2285,56 @@ aclIpNetworkCompare(const void *a, const void *b)
 	    rc = 0;
     }
     return rc;
+}
+
+/*
+ * aclIpNetworkCompare - Compare two acl_ip_data entries.  Strictly
+ * used by the splay insertion routine.  It emits a warning if it
+ * detects a "collision" or overlap that would confuse the splay
+ * sorting algorithm.  Much like aclDomainCompare.
+ */
+static int
+aclIpNetworkCompare(const void *a, const void *b)
+{
+    const acl_ip_data *n1;
+    const acl_ip_data *n2;
+    int ret;
+    n1 = b;
+    n2 = a;
+    ret = aclIpNetworkCompare2(n1, n2);
+    if (ret != 0) {
+	n1 = a;
+	n2 = b;
+	ret = aclIpNetworkCompare2(n1, n2);
+    }
+    if (ret == 0) {
+	char buf_n1[60];
+	char buf_n2[60];
+	char buf_a[60];
+	aclIpDataToStr(n1, buf_n1, 60);
+	aclIpDataToStr(n2, buf_n2, 60);
+	aclIpDataToStr((acl_ip_data *) a, buf_a, 60);
+	debug(28, 0) ("WARNING: '%s' is a subnetwork of "
+	    "'%s'\n", buf_n1, buf_n2);
+	debug(28, 0) ("WARNING: because of this '%s' is ignored "
+	    "to keep splay tree searching predictable\n", buf_a);
+	debug(28, 0) ("WARNING: You should probably remove '%s' "
+	    "from the ACL named '%s'\n", buf_n1, AclMatchedName);
+    }
+    return ret;
+}
+
+/*
+ * aclIpAddrNetworkCompare - The comparison function used for ACL
+ * matching checks.  The first argument (a) is a "host" address,
+ * i.e.  the IP address of a cache client.  The second argument (b)
+ * is an entry in some address-based access control element.  This
+ * function is called via aclMatchIp() and the splay library.
+ */
+static int
+aclIpAddrNetworkCompare(const void *a, const void *b)
+{
+    return aclIpNetworkCompare2(a, b);
 }
 
 static void
