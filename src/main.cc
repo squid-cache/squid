@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.166 1997/07/19 02:56:38 wessels Exp $
+ * $Id: main.cc,v 1.167 1997/07/19 07:20:02 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -593,7 +593,6 @@ main(int argc, char **argv)
 	sendSignal();
 	/* NOTREACHED */
     }
-
     setMaxFD();
 
     if (opt_catch_signals)
