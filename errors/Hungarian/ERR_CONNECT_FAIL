@@ -1,25 +1,26 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>HIBA</H1>
+<H2>A kért URL nem tölthető le</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+Az alábbi URL letöltésekor:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+a következő hiba lépett fel:
 <UL>
 <LI>
 <STRONG>
-Connection Failed
+Sikertelen kapcsolatfelvétel
 </STRONG>
 </UL>
 
 <P>
-The system returned:
+A rendszer válasza:
 <PRE><I>    %E</I></PRE>
 
 <P>
-The remote host or network may be down.  Please try the request again.
+A kiszolgáló szerver vagy az adott hálózat valószínűleg nem működik. Kérjük, ismételje
+meg kérését!
 </P>
