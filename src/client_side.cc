@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.539 2001/07/16 12:44:05 hno Exp $
+ * $Id: client_side.cc,v 1.540 2001/07/17 09:50:38 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -310,8 +310,10 @@ clientRedirectDone(void *data, char *result)
 	new_request->my_addr = old_request->my_addr;
 	new_request->my_port = old_request->my_port;
 	new_request->flags.redirected = 1;
-	new_request->auth_user_request = old_request->auth_user_request;
-	authenticateAuthUserRequestLock(new_request->auth_user_request);
+	if (old_request->auth_user_request) {
+	    new_request->auth_user_request = old_request->auth_user_request;
+	    authenticateAuthUserRequestLock(new_request->auth_user_request);
+	}
 	if (old_request->body_connection) {
 	    new_request->body_connection = old_request->body_connection;
 	    old_request->body_connection = NULL;
