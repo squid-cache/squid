@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.305 1999/01/11 16:50:39 wessels Exp $
+ * $Id: stat.cc,v 1.306 1999/01/11 19:42:22 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -228,6 +228,8 @@ storeEntryFlags(const StoreEntry * entry)
 	strcat(buf, "VALIDATED,");
     if (EBIT_TEST(flags, ENTRY_BAD_LENGTH))
 	strcat(buf, "BAD_LENGTH,");
+    if (EBIT_TEST(flags, ENTRY_ABORTED))
+	strcat(buf, "ABORTED,");
     if ((t = strrchr(buf, ',')))
 	*t = '\0';
     return buf;
