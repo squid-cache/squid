@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.55 1998/09/15 19:37:41 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.56 1998/09/24 20:20:22 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -103,6 +103,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Public", HDR_PUBLIC, ftStr},
     {"Range", HDR_RANGE, ftPRange},
     {"Referer", HDR_REFERER, ftStr},
+    {"Request-Range", HDR_REQUEST_RANGE, ftPRange}, /* usually matches HDR_RANGE */
     {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
     {"Server", HDR_SERVER, ftStr},
     {"Set-Cookie", HDR_SET_COOKIE, ftStr},
@@ -186,8 +187,8 @@ static http_hdr_type RequestHeadersArr[] =
 {
     HDR_AUTHORIZATION, HDR_FROM, HDR_HOST, HDR_IF_MODIFIED_SINCE,
     HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
-    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_USER_AGENT,
-    HDR_X_FORWARDED_FOR
+    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE, 
+    HDR_USER_AGENT, HDR_X_FORWARDED_FOR
 };
 
 /* header accounting */
@@ -677,7 +678,7 @@ httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range)
     Packer p;
     assert(hdr && range);
     /* remove old directives if any */
-    httpHeaderDelById(hdr, HDR_CONTENT_RANGE);
+    httpHeaderDelById(hdr, HDR_RANGE);
     /* pack into mb */
     memBufDefInit(&mb);
     packerToMemInit(&p, &mb);
@@ -777,9 +778,14 @@ httpHeaderGetRange(const HttpHeader * hdr)
 {
     HttpHdrRange *r = NULL;
     HttpHeaderEntry *e;
-    if ((e = httpHeaderFindEntry(hdr, HDR_RANGE))) {
+    /* some clients will send "Request-Range" _and_ *matching* "Range"
+     * who knows, some clients might send Request-Range only;
+     * this "if" should work correctly in both cases;
+     * hopefully no clients send mismatched headers! */
+    if ((e = httpHeaderFindEntry(hdr, HDR_RANGE)) ||
+	(e = httpHeaderFindEntry(hdr, HDR_REQUEST_RANGE))) {
 	r = httpHdrRangeParseCreate(&e->value);
-	httpHeaderNoteParsedEntry(HDR_RANGE, e->value, !r);
+	httpHeaderNoteParsedEntry(e->id, e->value, !r);
     }
     return r;
 }
