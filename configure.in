@@ -3,17 +3,17 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.290 2002/10/06 08:18:01 robertc Exp $
+dnl  $Id: configure.in,v 1.291 2002/10/09 07:06:54 robertc Exp $
 dnl
 dnl
 dnl
 AC_INIT
-AC_PREREQ(2.53)
+AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 2.6-DEVEL)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.290 $)dnl
+AC_REVISION($Revision: 1.291 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1403,13 +1403,13 @@ AC_CHECK_TYPE(int16_t,
 
 dnl fallback #1
 AC_CHECK_TYPE(short,[
-  AC_CHECK_SIZEOF(short,,SQUID_DEFAULT_INCLUDES)
+  AC_CHECK_SIZEOF(short,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_SHORT,1,[short is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
 dnl fallback #2
 AC_CHECK_TYPE(int,[
-  AC_CHECK_SIZEOF(int,,SQUID_DEFAULT_INCLUDES)
+  AC_CHECK_SIZEOF(int,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_INT,1,[int is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
@@ -1433,7 +1433,7 @@ AC_CHECK_TYPE(int32_t,
 
 dnl fallback #1
 AC_CHECK_TYPE(long,[
-  AC_CHECK_SIZEOF(long,,SQUID_DEFAULT_INCLUDES)
+  AC_CHECK_SIZEOF(long,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_LONG,1,[long is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
@@ -1463,7 +1463,7 @@ AC_CHECK_TYPE(__int64,
 
 dnl fallback #2
 AC_CHECK_TYPE(long long,[
-  AC_CHECK_SIZEOF(long long,,SQUID_DEFAULT_INCLUDES)
+  AC_CHECK_SIZEOF(long long,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_LONG_LONG,1,[long long is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
@@ -1480,10 +1480,10 @@ AC_CHECK_TYPE(uint64_t,
   ,SQUID_DEFAULT_INCLUDES)
 
 AC_CHECK_TYPE(pid_t, AC_DEFINE(HAVE_PID_T,1,[pid_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
-AC_CHECK_TYPE(size_t, [AC_CHECK_SIZEOF(size_t,,SQUID_DEFAULT_INCLUDES)
+AC_CHECK_TYPE(size_t, [AC_CHECK_SIZEOF(size_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_SIZE_T,1,[size_t is defined by the system headers])],,SQUID_DEFAULT_INCLUDES)
 AC_CHECK_TYPE(ssize_t, AC_DEFINE(HAVE_SSIZE_T,1,[ssize_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
-AC_CHECK_TYPE(off_t,[ AC_CHECK_SIZEOF(off_t,,SQUID_DEFAULT_INCLUDES)
+AC_CHECK_TYPE(off_t,[ AC_CHECK_SIZEOF(off_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_OFF_T,1,[off_t is defined by the system headers])],,SQUID_DEFAULT_INCLUDES)
 AC_CHECK_TYPE(mode_t, AC_DEFINE(HAVE_MODE_T,1,[mode_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
 AC_CHECK_TYPE(fd_mask,  AC_DEFINE(HAVE_FD_MASK,1,[fd_mask is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
