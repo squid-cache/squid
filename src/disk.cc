@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.111 1998/03/05 01:11:22 wessels Exp $
+ * $Id: disk.cc,v 1.112 1998/03/27 03:23:05 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -405,13 +405,14 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	    do_callback = 0;
 	if (fdd->wrt_handle_data != NULL)
 	    cbdataUnlock(fdd->wrt_handle_data);
-	if (do_callback)
+	if (do_callback) {
 	    fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
-	/*
-	 * NOTE, this callback can close the FD, so we must
-	 * not touch 'F', 'fdd', etc. after this.
-	 */
-	return;
+	    /*
+	     * NOTE, this callback can close the FD, so we must
+	     * not touch 'F', 'fdd', etc. after this.
+	     */
+	    return;
+	}
     }
     if (do_close)
 	file_close(fd);
