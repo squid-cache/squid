@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.60 1996/08/19 22:44:54 wessels Exp $
+ * $Id: main.cc,v 1.61 1996/08/21 05:47:03 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -586,6 +586,7 @@ int main(argc, argv)
 		    send_announce();
 		last_announce = squid_curtime;
 	    }
+	    ipcache_purgelru();
 	    /* house keeping */
 	    break;
 	case COMM_SHUTDOWN:
