@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.7 2002/10/13 20:35:00 robertc Exp $
+ * $Id: comm_poll.cc,v 1.8 2002/10/28 01:12:28 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -335,8 +335,6 @@ comm_select(int msec)
 	double start;
 	getCurrentTime();
 	start = current_dtime;
-	/* Handle any fs callbacks that need doing */
-	storeDirCallback();
 #if DELAY_POOLS
 	FD_ZERO(&slowfds);
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.357 2002/10/18 22:43:23 hno Exp $
+ * $Id: main.cc,v 1.358 2002/10/28 01:12:27 adrian Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -718,6 +718,8 @@ main(int argc, char **argv)
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
 	    loop_delay = 0;
+        /* Attempt any pending storedir IO */
+        storeDirCallback();
 	comm_calliocallback();
 	switch (comm_select(loop_delay)) {
 	case COMM_OK:

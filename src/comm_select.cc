@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.62 2002/10/14 11:06:53 adrian Exp $
+ * $Id: comm_select.cc,v 1.63 2002/10/28 01:12:28 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -348,8 +348,6 @@ comm_select(int msec)
 #if DELAY_POOLS
 	FD_ZERO(&slowfds);
 #endif
-	/* Handle any fs callbacks that need doing */
-	storeDirCallback();
 	if (commCheckICPIncoming)
 	    comm_select_icp_incoming();
 	if (commCheckDNSIncoming)
