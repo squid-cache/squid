@@ -110,7 +110,7 @@ snmpAclCheckDone(int answer, void *data)
 	    return;
 	}
     }
-    Session->community = xstrdup(Community);
+    Session->community = Community;
     Session->community_len = strlen(Community);
     RespPDU = snmp_agent_response(PDU);
     snmp_free_pdu(PDU);
@@ -765,7 +765,6 @@ snmp_prfPeerFn(variable_list * Var, long *ErrP)
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
-	xfree(Answer->val.integer);
 	return (NULL);
     }
     return Answer;
@@ -835,9 +834,6 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	    *(Answer->val.integer) = (long) store_swap_size;
 	    break;
 	default:
-#if 0
-	    xfree(Answer->val.integer);
-#endif
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
 	    snmp_var_free(Answer);
 	    return (NULL);
@@ -887,9 +883,6 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	    x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
 	    break;
 	default:
-#if 0
-	    xfree(Answer->val.integer);
-#endif
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
 	    snmp_var_free(Answer);
 	    return (NULL);

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.41 1998/02/23 13:04:40 rousskov Exp $
+ * $Id: util.h,v 1.42 1998/02/26 22:16:26 kostas Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -125,6 +125,10 @@
 #else
 #define SQUIDHOSTNAMELEN MAXHOSTNAMELEN
 #endif
+#endif
+
+#if defined(_SQUID_FREEBSD_)
+#define _etext etext
 #endif
 
 extern const char *getfullhostname(void);

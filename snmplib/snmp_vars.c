@@ -238,6 +238,9 @@ void snmp_var_free(struct variable_list *Ptr)
 
   if (Ptr->val.string && Ptr->val_len > 0)
     xfree((char *) Ptr->val.string);
+  else
+  if (Ptr->val.integer && Ptr->val_len > 0)
+    xfree((char *) Ptr->val.integer);
 
   xfree(Ptr);
 }
