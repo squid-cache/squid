@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.359 1998/07/20 20:37:38 wessels Exp $
+ * $Id: client_side.cc,v 1.360 1998/07/21 03:16:04 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -234,6 +234,7 @@ clientProcessExpired(void *data)
     char *url = http->uri;
     StoreEntry *entry = NULL;
     debug(33, 3) ("clientProcessExpired: '%s'\n", http->uri);
+    assert(entry->lastmod >= 0);
     /*
      * check if we are allowed to contact other servers
      * @?@: Instead of a 504 (Gateway Timeout) reply, we may want to return 
@@ -253,8 +254,7 @@ clientProcessExpired(void *data)
     storeClientListAdd(entry, http);
     storeClientListAdd(http->old_entry, http);
     entry->lastmod = http->old_entry->lastmod;
-    debug(33, 5) ("clientProcessExpired: setting lmt = %d\n",
-	(int) entry->lastmod);
+    debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
     entry->refcount++;		/* EXPIRED CASE */
     http->entry = entry;
     http->out.offset = 0;
@@ -405,17 +405,21 @@ modifiedSince(StoreEntry * entry, request_t * request)
 {
     int object_length;
     MemObject *mem = entry->mem_obj;
+    time_t mod_time = entry->lastmod;
     debug(33, 3) ("modifiedSince: '%s'\n", storeUrl(entry));
-    if (entry->lastmod < 0)
+    if (mod_time < 0)
+	mod_time = entry->timestamp;
+    debug(33,3)("modifiedSince: mod_time = %d\n", (int) mod_time);
+    if (mod_time < 0)
 	return 1;
     /* Find size of the object */
     object_length = mem->reply->content_length;
     if (object_length < 0)
 	object_length = contentLen(entry);
-    if (entry->lastmod > request->ims) {
+    if (mod_time > request->ims) {
 	debug(33, 3) ("--> YES: entry newer than client\n");
 	return 1;
-    } else if (entry->lastmod < request->ims) {
+    } else if (mod_time < request->ims) {
 	debug(33, 3) ("-->  NO: entry older than client\n");
 	return 0;
     } else if (request->imslen < 0) {
@@ -884,7 +888,9 @@ isTcpHit(log_type code)
     return 0;
 }
 
-/* returns true if If-Range specs match reply, false otherwise */
+/*
+ * returns true if If-Range specs match reply, false otherwise
+ */
 static int
 clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
 {
@@ -1159,7 +1165,14 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	/*
 	 * We hold a stale copy; it needs to be validated
 	 */
-	if (r->protocol == PROTO_HTTP) {
+        if (e->lastmod < 0) {
+ 	    /*
+	     * Previous reply didn't have a Last-Modified header,
+	     * we cannot revalidate it.
+	     */
+	    http->log_type = LOG_TCP_MISS;
+	    clientProcessMiss(http);
+	} else if (r->protocol == PROTO_HTTP) {
 	    http->log_type = LOG_TCP_REFRESH_MISS;
 	    clientProcessExpired(http);
 	} else {
