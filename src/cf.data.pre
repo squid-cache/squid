@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.115 1998/09/23 21:21:05 wessels Exp $
+# $Id: cf.data.pre,v 1.116 1998/09/30 02:53:20 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2616,5 +2616,14 @@ TYPE: int
 LOC: Config.max_open_disk_fds
 DEFAULT: 0
 DOC_NONE
+
+NAME: offline_mode
+TYPE: onoff
+LOC: Config.onoff.offline
+DEFAULT: off
+DOC_START
+	Enable this option and Squid will never try to validate cached
+	objects.
+DOC_END
 
 EOF

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.404 1998/09/29 23:53:27 rousskov Exp $
+ * $Id: client_side.cc,v 1.405 1998/09/30 02:53:18 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -532,6 +532,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	break;
     case LOG_TCP_HIT:
     case LOG_TCP_MEM_HIT:
+    case LOG_TCP_OFFLINE_HIT:
 	statHistCount(&Counter.client_http.hit_svc_time, svc_time);
 	break;
     case LOG_TCP_MISS:
@@ -863,6 +864,8 @@ isTcpHit(log_type code)
     if (code == LOG_TCP_NEGATIVE_HIT)
 	return 1;
     if (code == LOG_TCP_MEM_HIT)
+	return 1;
+    if (code == LOG_TCP_OFFLINE_HIT)
 	return 1;
     return 0;
 }
@@ -1215,6 +1218,8 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 */
 	if (e->mem_status == IN_MEMORY)
 	    http->log_type = LOG_TCP_MEM_HIT;
+	else if (Config.onoff.offline)
+	    http->log_type = LOG_TCP_OFFLINE_HIT;
 	clientSendMoreData(data, buf, size);
     }
 }
@@ -1604,6 +1609,9 @@ clientProcessRequest2(clientHttpRequest * http)
     if (NULL == e) {
 	/* this object isn't in the cache */
 	return LOG_TCP_MISS;
+    } else if (Config.onoff.offline) {
+	http->entry = e;
+	return LOG_TCP_HIT;
     } else if (!storeEntryValidToSend(e)) {
 	http->entry = NULL;
 	return LOG_TCP_MISS;

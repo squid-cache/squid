@@ -2,7 +2,7 @@
 
 
 /*
- * $Id: structs.h,v 1.236 1998/09/29 16:33:55 wessels Exp $
+ * $Id: structs.h,v 1.237 1998/09/30 02:53:19 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -377,6 +377,7 @@ struct _SquidConfig {
 #if HTTP_VIOLATIONS
 	int reload_into_ims;
 #endif
+	int offline;
     } onoff;
     acl *aclList;
     struct {
