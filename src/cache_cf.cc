@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.462 2005/01/03 16:08:25 robertc Exp $
+ * $Id: cache_cf.cc,v 1.463 2005/02/09 13:01:40 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2639,6 +2639,8 @@ parse_http_port_specification(http_port_list * s, char *token)
     unsigned short port = 0;
     char *t;
 
+    s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
+
     if ((t = strchr(token, ':'))) {
         /* host:port */
         host = token;
@@ -2693,6 +2695,15 @@ parse_http_port_option(http_port_list * s, char *token)
         s->accel = 1;
     } else if (strcmp(token, "accel") == 0) {
         s->accel = 1;
+    } else if (strncmp(token, "disable-pmtu-discovery=", 23) == 0) {
+        if (!strcasecmp(token + 23, "off"))
+            s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
+        else if (!strcasecmp(token + 23, "transparent"))
+            s->disable_pmtu_discovery = DISABLE_PMTU_TRANSPARENT;
+        else if (!strcasecmp(token + 23, "always"))
+            s->disable_pmtu_discovery = DISABLE_PMTU_ALWAYS;
+        else
+            self_destruct();
     } else {
         self_destruct();
     }
@@ -2773,6 +2784,17 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 
     if (s->vport)
         storeAppendPrintf(e, " vport");
+
+    if (s->disable_pmtu_discovery != DISABLE_PMTU_OFF) {
+        const char *pmtu;
+
+        if (s->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)
+            pmtu = "always";
+        else
+            pmtu = "transparent";
+
+        storeAppendPrintf(e, " disable-pmtu-discovery=%s", pmtu);
+    }
 }
 
 static void

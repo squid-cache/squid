@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.507 2005/01/08 22:50:45 hno Exp $
+ * $Id: structs.h,v 1.508 2005/02/09 13:01:40 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -180,6 +180,7 @@ unsigned int vhost:
     1; /* uses host header */
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
+    int disable_pmtu_discovery;
 };
 
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.239 2004/12/21 17:52:53 robertc Exp $
+ * $Id: enums.h,v 1.240 2005/02/09 13:01:40 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -737,5 +737,11 @@ typedef enum {
     CLF_COMMON,
     CLF_NONE
 } customlog_type;
+
+enum {
+    DISABLE_PMTU_OFF,
+    DISABLE_PMTU_ALWAYS,
+    DISABLE_PMTU_TRANSPARENT
+};
 
 #endif /* SQUID_ENUMS_H */

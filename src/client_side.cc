@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.679 2005/01/23 11:32:42 serassio Exp $
+ * $Id: client_side.cc,v 1.680 2005/02/09 13:01:40 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2803,6 +2803,26 @@ connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_p
             result->me = dst; /* XXX This should be moved to another field */
             result->transparent(true);
         }
+    }
+
+    if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
+            (result->transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS))
+    {
+#if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
+        int i = IP_PMTUDISC_DONT;
+        setsockopt(fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i);
+
+#else
+
+        static int reported = 0;
+
+        if (!reported) {
+            debug(33, 1) ("Notice: httpd_accel_no_pmtu_disc not supported on your platform\n");
+            reported = 1;
+        }
+
+#endif
+
     }
 
     result->flags.readMoreRequests = 1;

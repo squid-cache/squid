@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.373 2005/01/29 19:41:22 serassio Exp $
+# $Id: cf.data.pre,v 1.374 2005/02/09 13:01:40 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -99,6 +99,21 @@ DOC_START
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http
+
+	   disable-pmtu-discovery=
+                        Control Path-MTU discovery usage:
+                            off         lets OS decide on what to do (default).
+                            transparent disable PMTU discovery when transparent
+                                        support is enabled.
+                            always      disable always PMTU discovery.
+
+	In many setups of transparently intercepting proxies Path-MTU
+ 	discovery can not work on traffic towards the clients. This is
+ 	the case when the intercepting device does not fully track
+ 	connections and fails to forward ICMP must fragment messages
+ 	to the cache server. If you have such setup and experience that
+	certain clients sporadically hang or never complete requests set
+	disable-pmtu-discovery option to 'transparent'.
 
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
