@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.5 1996/09/17 16:32:26 wessels Exp $
+ * $Id: rfc1738.c,v 1.6 1996/09/17 16:53:58 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -112,6 +112,7 @@
 #include <string.h>
 #endif
 
+#include "ansiproto.h"
 #include "util.h"
 #define BIG_BUFSIZ (BUFSIZ * 4)
 

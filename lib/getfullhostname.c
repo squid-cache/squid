@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.7 1996/09/17 02:29:46 wessels Exp $
+ * $Id: getfullhostname.c,v 1.8 1996/09/17 16:53:56 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -136,6 +136,7 @@
 #include <netdb.h>
 #endif
 
+#include "ansiproto.h"
 #include "util.h"
 
 /*

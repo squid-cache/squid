@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.17 1996/09/17 16:43:37 wessels Exp $
+ * $Id: util.c,v 1.18 1996/09/17 16:54:00 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -127,8 +127,8 @@
 #include <errno.h>
 #endif
 
-#include "util.h"
 #include "ansiproto.h"
+#include "util.h"
 
 void (*failure_notify) __P((char *)) = NULL;
 static char msg[128];

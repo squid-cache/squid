@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.25 1996/09/17 16:39:04 wessels Exp $
+ * $Id: cachemgr.cc,v 1.26 1996/09/17 16:54:02 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -195,8 +195,8 @@
 #include <sys/select.h>
 #endif
 
-#include "util.h"
 #include "ansiproto.h"
+#include "util.h"
 
 #define MAX_ENTRIES 10000
 

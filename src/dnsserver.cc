@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.22 1996/09/14 08:45:50 wessels Exp $
+ * $Id: dnsserver.cc,v 1.23 1996/09/17 16:57:00 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -212,6 +212,7 @@
 #define INADDR_NONE -1
 #endif
 
+#include "ansiproto.h"
 #include "util.h"
 
 extern int h_errno;
