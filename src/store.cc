@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.167 1996/11/15 17:26:22 wessels Exp $
+ * $Id: store.cc,v 1.168 1996/11/19 07:11:48 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1211,7 +1211,6 @@ storeSwapLog(const StoreEntry * e)
 static void
 storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 {
-    LOCAL_ARRAY(char, filename, SQUID_MAXPATHLEN);
     MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
@@ -1220,8 +1219,6 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	debug_trap("Someone is swapping out a bad entry");
 	return;
     }
-    storeSwapFullPath(e->swap_file_number, filename);
-
     if (flag < 0) {
 	debug(20, 1, "storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
@@ -1230,7 +1227,7 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	file_close(fd);
 	if (e->swap_file_number != -1) {
 	    file_map_bit_reset(e->swap_file_number);
-	    safeunlink(filename, 0);	/* remove it */
+	    safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 0);
 	    e->swap_file_number = -1;
 	}
 	storeRelease(e);
