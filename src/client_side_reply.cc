@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.79 2004/12/20 17:35:58 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.80 2004/12/21 15:03:01 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -211,14 +211,11 @@ clientReplyContext::getNextNode() const
 void
 clientReplyContext::triggerInitialStoreRead()
 {
-    StoreIOBuffer tempBuffer;
     /* when confident, 0 becomes reqofs, and then this factors into
      * startSendProcess 
      */
     assert(reqofs == 0);
-    tempBuffer.offset = 0;
-    tempBuffer.length = next()->readBuffer.length;
-    tempBuffer.data = next()->readBuffer.data;
+    StoreIOBuffer tempBuffer (next()->readBuffer.length, 0, next()->readBuffer.data);
     storeClientCopy(sc, http->storeEntry(), tempBuffer, SendMoreData, this);
 }
 
@@ -1588,20 +1585,6 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         debug(85, 3) ("clientProcessRequest2: no-cache REFRESH MISS\n");
         http->storeEntry(NULL);
         http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
-        doGetMoreData();
-        return;
-    }
-
-    /* We don't cache any range requests (for now!) -- adrian */
-    /* RBC - and we won't until the store supports sparse objects.
-     * I suspec this test is incorrect though, as we can extract ranges from
-     * a fully cached object
-     */
-    if (r->flags.range) {
-        /* XXX: test to see if we can satisfy the range with the cached object */
-        debug(85, 3) ("clientProcessRequest2: force MISS due to range presence\n");
-        http->storeEntry(NULL);
-        http->logType = LOG_TCP_MISS;
         doGetMoreData();
         return;
     }

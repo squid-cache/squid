@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.677 2004/12/20 16:30:35 robertc Exp $
+ * $Id: client_side.cc,v 1.678 2004/12/21 15:03:01 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -779,8 +779,8 @@ ClientSocketContext::noteSentBodyBytes(size_t bytes)
         assert (http->range_iter.debt() >= 0);
     }
 
-    assert (http->range_iter.debt() == -1 ||
-            http->range_iter.debt() >= 0);
+    /* debt() always stops at -1, below that is a bug */
+    assert (http->range_iter.debt() >= -1);
 }
 
 bool
