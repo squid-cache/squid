@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.90 2002/08/22 12:29:15 hno Exp $
+ * $Id: peer_digest.cc,v 1.91 2002/09/29 11:43:17 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -36,6 +36,8 @@
 #include "squid.h"
 
 #if USE_CACHE_DIGESTS
+
+#include "StoreClient.h"
 
 /* local types */
 
@@ -268,6 +270,7 @@ peerDigestRequest(PeerDigest * pd)
     const cache_key *key;
     request_t *req;
     DigestFetchState *fetch = NULL;
+    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
 
     pd->req_result = NULL;
     pd->flags.requested = 1;
@@ -323,7 +326,10 @@ peerDigestRequest(PeerDigest * pd)
     /* push towards peer cache */
     debug(72, 3) ("peerDigestRequest: forwarding to fwdStart...\n");
     fwdStart(-1, e, req);
-    storeClientCopy(fetch->sc, e, 0, SM_PAGE_SIZE, fetch->buf,
+    tempBuffer.offset = 0;
+    tempBuffer.length =  SM_PAGE_SIZE;
+    tempBuffer.data = fetch->buf;
+    storeClientCopy(fetch->sc, e, tempBuffer,
 	peerDigestHandleReply, fetch);
 }
 
@@ -337,7 +343,7 @@ peerDigestRequest(PeerDigest * pd)
  * not interested in rewriting everything to suit my little idea.
  */
 static void
-peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
+peerDigestHandleReply(void *data, StoreIOBuffer recievedData)
 {
     DigestFetchState *fetch = data;
     PeerDigest *pd = fetch->pd;
@@ -345,10 +351,14 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
     digest_read_state_t prevstate;
     int newsize;
 
-    assert(pd && buf);
+    assert(pd && recievedData.data);
+    /* The existing code assumes that the recieved pointer is
+     * where we asked the data to be put
+     */
+    assert(fetch->buf + fetch->bufofs == recievedData.data);
 
     /* Update the buffer size */
-    fetch->bufofs += copysize;
+    fetch->bufofs += recievedData.length;
 
     assert(fetch->bufofs <= SM_PAGE_SIZE);
 
@@ -405,12 +415,16 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
     } while (cbdataReferenceValid(fetch) && prevstate != fetch->state && fetch->bufofs > 0);
 
     /* Update the copy offset */
-    fetch->offset += copysize;
+    fetch->offset += recievedData.length;
 
     /* Schedule another copy */
     if (cbdataReferenceValid(fetch)) {
-	storeClientCopy(fetch->sc, fetch->entry, fetch->offset, SM_PAGE_SIZE - fetch->bufofs,
-	    fetch->buf + fetch->bufofs, peerDigestHandleReply, fetch);
+	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+	tempBuffer.offset = fetch->offset;
+	tempBuffer.length = SM_PAGE_SIZE - fetch->bufofs;
+	tempBuffer.data = fetch->buf + fetch->bufofs;
+	storeClientCopy(fetch->sc, fetch->entry, tempBuffer,
+	    peerDigestHandleReply, fetch);
     }
   finish:
     /* Get rid of our reference, we've finished with it for now */
