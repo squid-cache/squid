@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.27 2000/05/31 08:57:08 hno Exp $
+ * $Id: dns_internal.cc,v 1.28 2000/06/25 21:22:47 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -470,14 +470,14 @@ snmp_netIdnsFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOERROR;
     switch (Var->name[LEN_SQ_NET + 1]) {
     case DNS_REQ:
-	for (i = 0; i < nss; i++)
+	for (i = 0; i < nns; i++)
 	    n += nameservers[i].nqueries;
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
 	    n,
 	    SMI_COUNTER32);
 	break;
     case DNS_REP:
-	for (i = 0; i < nss; i++)
+	for (i = 0; i < nns; i++)
 	    n += nameservers[i].nreplies;
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
 	    n,
