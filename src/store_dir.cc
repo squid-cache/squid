@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.143 2003/02/04 22:09:03 robertc Exp $
+ * $Id: store_dir.cc,v 1.144 2003/02/04 22:25:16 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -98,8 +98,8 @@ storeCreateSwapDirectories(void)
     for (int i = 0; i < Config.cacheSwap.n_configured; i++)
 	startOneStoreCreation(*INDEXSD(i));
 #ifndef _SQUID_MSWIN_
+    pid_t pid;
     do {
-	pid_t pid;
 	int status;
 #ifdef _SQUID_NEXT_
 	pid = wait3(&status, WNOHANG, NULL);
