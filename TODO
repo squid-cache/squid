@@ -13,7 +13,7 @@ Squid-2.6:
   - Appropriate parts of rproxy
   - Some kind of Range support to at least the level of 2.5 and earlier
   - ETag caching
-  - Other sponsored work that needs to get into manline sooner rather
+  - Other sponsored work that needs to get into mainline sooner rather
     than later
   - Go over the old TODO (below) and sort out what has
      o) Been done
