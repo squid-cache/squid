@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.209 1998/01/31 05:31:59 wessels Exp $
+ * $Id: main.cc,v 1.210 1998/02/02 21:15:03 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -445,7 +445,9 @@ mainInitialize(void)
 #endif
 
     if (!configured_once) {
+#if !USE_ASYNC_IO
 	unlinkdInit();
+#endif
 	/* module initialization */
 	urlInitialize();
 	objcacheInit();

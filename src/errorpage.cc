@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.115 1998/01/12 04:30:00 wessels Exp $
+ * $Id: errorpage.cc,v 1.116 1998/02/02 21:15:00 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -64,7 +64,7 @@ errorInitialize(void)
     for (i = ERR_NONE + 1; i < ERR_MAX; i++) {
 	snprintf(path, MAXPATHLEN, "%s/%s",
 	    Config.errorDirectory, err_type_str[i]);
-	fd = file_open(path, O_RDONLY, NULL, NULL);
+	fd = file_open(path, O_RDONLY, NULL, NULL, NULL);
 	if (fd < 0) {
 	    debug(4, 0) ("errorInitialize: %s: %s\n", path, xstrerror());
 	    fatal("Failed to open error text file");

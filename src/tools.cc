@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.142 1998/01/31 05:32:09 wessels Exp $
+ * $Id: tools.cc,v 1.143 1998/02/02 21:15:10 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -384,7 +384,9 @@ normal_shutdown(void)
 	leave_suid();
     }
     releaseServerSockets();
+#if !USE_ASYNC_IO
     unlinkdClose();
+#endif
     storeWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
@@ -629,7 +631,7 @@ writePidFile(void)
 	return;
     enter_suid();
     old_umask = umask(022);
-    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL);
+    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL);
     umask(old_umask);
     leave_suid();
     if (fd < 0) {

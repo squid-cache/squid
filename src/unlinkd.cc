@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.14 1998/02/02 07:20:58 wessels Exp $
+ * $Id: unlinkd.cc,v 1.15 1998/02/02 21:15:12 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -73,6 +73,8 @@ main(int argc, char *argv[])
 /* This code gets linked to Squid */
 
 #include "squid.h"
+
+#if !USE_ASYNC_IO
 
 static int unlinkd_fd = -1;
 
@@ -151,4 +153,5 @@ unlinkdInit(void)
     debug(43, 0) ("Unlinkd pipe opened on FD %d\n", unlinkd_fd);
 }
 
+#endif /* !USE_ASYNC_IO */
 #endif /* ndef UNLINK_DAEMON */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.222 1998/01/12 04:29:58 wessels Exp $
+ * $Id: comm.cc,v 1.223 1998/02/02 21:14:58 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -328,6 +328,10 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     cs->locks--;
     if (ia == NULL) {
 	debug(5, 3) ("commConnectDnsHandle: Unknown host: %s\n", cs->host);
+	if (!dns_error_message) {
+	    dns_error_message = "Unknown DNS error";
+	    debug(5,1) ("commConnectDnsHandle: Bad dns_error_message\n");
+	}
 	assert(dns_error_message != NULL);
 	commConnectCallback(cs, COMM_ERR_DNS);
 	return;
@@ -621,6 +625,8 @@ comm_close(int fd)
     F = &fd_table[fd];
     if (EBIT_TEST(F->flags, FD_CLOSING))
 	return;
+    if(shutdown_pending && (!F->open || F->type == FD_FILE))
+	return;
     assert(F->open);
     assert(F->type != FD_FILE);
     EBIT_SET(F->flags, FD_CLOSING);
@@ -733,14 +739,18 @@ comm_poll_incoming(void)
 	if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
 	    continue;
 	if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
-	    hdl = fd_table[fd].read_handler;
-	    fd_table[fd].read_handler = NULL;
-	    hdl(fd, fd_table[fd].read_data);
+	    if(hdl = fd_table[fd].read_handler) {
+		fd_table[fd].read_handler = NULL;
+		hdl(fd, fd_table[fd].read_data);
+	    } else
+		debug(5,1) ("comm_poll_incoming: NULL read handler\n");
 	}
 	if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
-	    hdl = fd_table[fd].write_handler;
-	    fd_table[fd].write_handler = NULL;
-	    hdl(fd, fd_table[fd].write_data);
+	    if(hdl = fd_table[fd].write_handler) {
+		fd_table[fd].write_handler = NULL;
+		hdl(fd, fd_table[fd].write_data);
+	    } else
+		debug(5,1) ("comm_poll_incoming: NULL write handler\n");
 	}
     }
     /* TO FIX: repoll ICP connection here */
@@ -801,14 +811,20 @@ comm_select_incoming(void)
     for (i = 0; i < N; i++) {
 	fd = fds[i];
 	if (FD_ISSET(fd, &read_mask)) {
-	    hdl = fd_table[fd].read_handler;
-	    fd_table[fd].read_handler = NULL;
-	    hdl(fd, fd_table[fd].read_data);
+	    if((hdl = fd_table[fd].read_handler) != NULL) {
+		fd_table[fd].read_handler = NULL;
+		hdl(fd, fd_table[fd].read_data);
+	    } else {
+		debug(5,1) ("comm_select_incoming: NULL read handler\n");
+	    }
 	}
 	if (FD_ISSET(fd, &write_mask)) {
-	    hdl = fd_table[fd].write_handler;
-	    fd_table[fd].write_handler = NULL;
-	    hdl(fd, fd_table[fd].write_data);
+	    if((hdl = fd_table[fd].write_handler) != NULL) {
+		fd_table[fd].write_handler = NULL;
+		hdl(fd, fd_table[fd].write_data);
+	    } else {
+		debug(5,1) ("comm_select_incoming: NULL write handler\n");
+	    }
 	}
     }
 }
@@ -864,6 +880,9 @@ comm_poll(time_t sec)
 	    else
 		setSocketShutdownLifetimes(1);
 	}
+#if USE_ASYNC_IO
+	aioCheckCallbacks();
+#endif
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
@@ -887,7 +906,6 @@ comm_poll(time_t sec)
 	    return COMM_SHUTDOWN;
 #if USE_ASYNC_IO
 	poll_time = sec > 0 ? 50 : 0;
-	aioCheckCallbacks();
 #else
 	poll_time = sec > 0 ? 1000 : 0;
 #endif
@@ -961,6 +979,8 @@ comm_poll(time_t sec)
 		F->timeout_handler = NULL;
 		F->read_handler = NULL;
 		F->write_handler = NULL;
+		if(F->open != 0)
+		    fd_close(fd);
 	    }
 	    lastinc = polledinc;
 	}
@@ -999,6 +1019,11 @@ comm_select(time_t sec)
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
 #endif
+
+#if USE_ASYNC_IO
+	aioCheckCallbacks();
+#endif
+
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
 	if (shutdown_pending || reconfigure_pending) {
@@ -1031,9 +1056,6 @@ comm_select(time_t sec)
 	    debug(5, 2) ("comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
-#if USE_ASYNC_IO
-	aioCheckCallbacks();
-#endif
 	for (;;) {
 	    poll_time.tv_sec = sec > 0 ? 1 : 0;
 	    poll_time.tv_usec = 0;
@@ -1394,6 +1416,14 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
     CommWriteStateData *state = NULL;
     debug(5, 5) ("comm_write: FD %d: sz %d: hndl %p: data %p.\n",
 	fd, size, handler, handler_data);
+    if (fd_table[fd].rwstate) {
+	debug(5,1) ("comm_write: fd_table[%d].rwstate != NULL", fd);
+	state = fd_table[fd].rwstate;
+	debug(5,1) ("comm_write: %d'%s',(%d,%d)'%s'\n", size, buf, state->size,
+	    state->offset, state->buf);
+	safe_free(fd_table[fd].rwstate);
+	fd_table[fd].rwstate = NULL;
+    }
     assert(fd_table[fd].rwstate == NULL);
     state = xcalloc(1, sizeof(CommWriteStateData));
     state->buf = buf;

@@ -27,6 +27,7 @@ extern void aclDestroyRegexList(struct _relist *data);
 extern int aclMatchRegex(relist * data, const char *word);
 extern void aclParseRegexList(void *curlist);
 
+#if USE_ASYNC_IO
 extern int aio_cancel(aio_result_t *);
 extern int aio_open(const char *, int, mode_t, aio_result_t *);
 extern int aio_read(int, char *, int, off_t, int, aio_result_t *);
@@ -37,15 +38,15 @@ extern int aio_unlink(const char *, aio_result_t *);
 extern int aio_opendir(const char *, aio_result_t *);
 extern aio_result_t *aio_poll_done(void);
 
-
-extern void aioCancel(int);
-extern void aioOpen(const char *, int, mode_t, AIOCB *, void *);
+extern void aioCancel(int, void *);
+extern void aioOpen(const char *, int, mode_t, AIOCB *, void *, void *);
 extern void aioClose(int);
 extern void aioWrite(int, char *, int, AIOCB *, void *);
 extern void aioRead(int, char *, int, AIOCB *, void *);
-extern void aioStat(char *, struct stat *, AIOCB *, void *);
+extern void aioStat(char *, struct stat *, AIOCB *, void *, void *);
 extern void aioUnlink(const char *, AIOCB *, void *);
 extern void aioCheckCallbacks(void);
+#endif
 
 extern int parseConfigFile(const char *file_name);
 extern void intlistDestroy(intlist **);
@@ -119,7 +120,7 @@ extern void _db_print();
 #endif
 
 
-extern int file_open(const char *path, int mode, FOCB *, void *callback_data);
+extern int file_open(const char *path, int mode, FOCB *, void *callback_data, void *tag);
 extern void file_close(int fd);
 extern int file_write(int, off_t, char *, int len, DWCB *, void *, FREE *);
 extern int file_read(int, char *, int, off_t, DRCB *, void *);
