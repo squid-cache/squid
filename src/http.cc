@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.6 1996/03/23 00:03:02 wessels Exp $ */
+/* $Id: http.cc,v 1.7 1996/03/25 19:05:50 wessels Exp $ */
 
 #include "config.h"
 #include <sys/errno.h>
@@ -20,6 +20,7 @@
 
 #define HTTP_PORT         80
 #define HTTP_DELETE_GAP   (64*1024)
+#define READBUFSIZ	4096
 
 extern int errno;
 extern char *dns_error_message;
@@ -108,7 +109,7 @@ void httpReadReplyTimeout(fd, data)
 
     entry = data->entry;
     debug(4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error(entry, ERR_READ_TIMEOUT);
+    cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
     if (data->icp_page_ptr) {
@@ -130,7 +131,7 @@ void httpLifetimeExpire(fd, data)
     entry = data->entry;
     debug(4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
-    cached_error(entry, ERR_LIFETIME_EXP);
+    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     if (data->icp_page_ptr) {
 	put_free_8k_page(data->icp_page_ptr);
 	data->icp_page_ptr = NULL;
@@ -150,7 +151,7 @@ void httpReadReply(fd, data)
      int fd;
      HttpData *data;
 {
-    static char buf[4096];
+    static char buf[READBUFSIZ];
     int len;
     int clen;
     int off;
@@ -193,13 +194,13 @@ void httpReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error(entry, ERR_NO_CLIENTS_BIG_OBJ);
+	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    comm_close(fd);
 	    safe_free(data);
 	    return;
 	}
     }
-    len = read(fd, buf, 4096);
+    len = read(fd, buf, READBUFSIZ);
     debug(5, "httpReadReply: FD %d: len %d.\n", fd, len);
 
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
@@ -215,7 +216,7 @@ void httpReadReply(fd, data)
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
 	} else {
-	    cached_error(entry, ERR_READ_ERROR);
+	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	}
 	comm_close(fd);
 	safe_free(data);
@@ -240,7 +241,7 @@ void httpReadReply(fd, data)
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
-	cached_error(entry, ERR_CLIENT_ABORT);
+	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
 	safe_free(data);
     } else {
@@ -275,7 +276,7 @@ void httpSendComplete(fd, buf, size, errflag, data)
     data->icp_rwd_ptr = NULL;	/* Don't double free in lifetimeexpire */
 
     if (errflag) {
-	cached_error(entry, ERR_CONNECT_FAIL);
+	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
 	safe_free(data);
 	return;
@@ -382,7 +383,7 @@ void httpConnInProgress(fd, data)
 	    break;		/* cool, we're connected */
 	default:
 	    comm_close(fd);
-	    cached_error(entry, ERR_CONNECT_FAIL);
+	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    safe_free(data);
 	    return;
 	}
@@ -421,7 +422,7 @@ int proxyhttpStart(e, url, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(4, "proxyhttpStart: Failed because we're out of sockets.\n");
-	cached_error(entry, ERR_NO_FDS);
+	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -431,7 +432,7 @@ int proxyhttpStart(e, url, entry)
     if (!ipcache_gethostbyname(data->host)) {
 	debug(4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
-	cached_error(entry, ERR_DNS_FAIL, dns_error_message);
+	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -439,7 +440,7 @@ int proxyhttpStart(e, url, entry)
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
 	    comm_close(sock);
-	    cached_error(entry, ERR_CONNECT_FAIL);
+	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    safe_free(data);
 	    e->last_fail_time = cached_curtime;
 	    e->neighbor_up = 0;
@@ -484,7 +485,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 
     /* Parse url. */
     if (http_url_parser(url, data->host, &data->port, data->request)) {
-	cached_error(entry, ERR_INVALID_URL);
+	cached_error_entry(entry, ERR_INVALID_URL, NULL);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -492,7 +493,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(4, "httpStart: Failed because we're out of sockets.\n");
-	cached_error(entry, ERR_NO_FDS);
+	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -502,7 +503,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
     if (!ipcache_gethostbyname(data->host)) {
 	debug(4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
-	cached_error(entry, ERR_DNS_FAIL, dns_error_message);
+	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -510,7 +511,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
 	    comm_close(sock);
-	    cached_error(entry, ERR_CONNECT_FAIL);
+	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    safe_free(data);
 	    return COMM_ERROR;
 	} else {

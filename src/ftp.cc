@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.8 1996/03/23 00:02:14 wessels Exp $ */
+/* $Id: ftp.cc,v 1.9 1996/03/25 19:05:49 wessels Exp $ */
 
 #include "config.h"
 #include <stdio.h>
@@ -143,7 +143,7 @@ void ftpLifetimeExpire(fd, data)
 	data->icp_page_ptr = NULL;
     }
     safe_free(data->icp_rwd_ptr);
-    cached_error(entry, ERR_LIFETIME_EXP);
+    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     /* ftp_close_pipe(data->ftp_fd, data->cpid); */
     comm_close(fd);
     safe_free(data);
@@ -185,7 +185,7 @@ int ftpReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error(entry, ERR_NO_CLIENTS_BIG_OBJ);
+	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    /* ftp_close_pipe(data->ftp_fd, data->cpid); */
 	    comm_close(fd);
 	    safe_free(data);
@@ -198,7 +198,7 @@ int ftpReadReply(fd, data)
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	if (len < 0)
 	    debug(1, "ftpReadReply - error reading: %s\n", xstrerror());
-	cached_error(entry, ERR_READ_ERROR);
+	cached_error_entry(entry, ERR_READ_ERROR, NULL);
 	/* ftp_close_pipe(data->ftp_fd, data->cpid); */
 	comm_close(fd);
 	safe_free(data);
@@ -235,7 +235,7 @@ int ftpReadReply(fd, data)
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
-	cached_error(entry, ERR_CLIENT_ABORT);
+	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	/* ftp_close_pipe(data->ftp_fd, data->cpid); */
 	comm_close(fd);
 	safe_free(data);
@@ -275,7 +275,7 @@ void ftpSendComplete(fd, buf, size, errflag, data)
     data->icp_rwd_ptr = NULL;	/* Don't double free in lifetimeexpire */
 
     if (errflag) {
-	cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
 	safe_free(data);
 	return;
@@ -400,7 +400,7 @@ void ftpConnInProgress(fd, data)
 	    break;		/* cool, we're connected */
 	default:
 	    comm_close(fd);
-	    cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    safe_free(data);
 	    return;
 	}
@@ -428,7 +428,7 @@ int ftpStart(unusedfd, url, entry)
 
     /* Parse url. */
     if (ftp_url_parser(url, data)) {
-	cached_error(entry, ERR_INVALID_URL);
+	cached_error_entry(entry, ERR_INVALID_URL, NULL);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -437,7 +437,7 @@ int ftpStart(unusedfd, url, entry)
 
     data->ftp_fd = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (data->ftp_fd == COMM_ERROR) {
-	cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -447,7 +447,7 @@ int ftpStart(unusedfd, url, entry)
     if ((status = comm_connect(data->ftp_fd, "localhost", 3131))) {
 	if (status != EINPROGRESS) {
 	    comm_close(data->ftp_fd);
-	    cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    safe_free(data);
 	    return COMM_ERROR;
 	} else {

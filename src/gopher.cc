@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.5 1996/03/23 00:03:01 wessels Exp $ */
+/* $Id: gopher.cc,v 1.6 1996/03/25 19:05:49 wessels Exp $ */
 
 #include "config.h"
 #include <errno.h>
@@ -583,7 +583,7 @@ int gopherReadReplyTimeout(fd, data)
     StoreEntry *entry = NULL;
     entry = data->entry;
     debug(4, "GopherReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
-    cached_error(entry, ERR_READ_TIMEOUT);
+    cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     if (data->icp_page_ptr)
 	put_free_4k_page(data->icp_page_ptr);
     if (data->icp_rwd_ptr)
@@ -601,7 +601,7 @@ void gopherLifetimeExpire(fd, data)
     StoreEntry *entry = NULL;
     entry = data->entry;
     debug(4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error(entry, ERR_LIFETIME_EXP);
+    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     if (data->icp_page_ptr)
 	put_free_4k_page(data->icp_page_ptr);
     if (data->icp_rwd_ptr)
@@ -664,7 +664,7 @@ int gopherReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error(entry, ERR_NO_CLIENTS_BIG_OBJ);
+	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    comm_close(fd);
 	    freeGopherData(data);
 	    return 0;
@@ -677,7 +677,7 @@ int gopherReadReply(fd, data)
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	debug(1, "gopherReadReply - error reading: %s\n",
 	    xstrerror());
-	cached_error(entry, ERR_READ_ERROR);
+	cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	comm_close(fd);
 	freeGopherData(data);
     } else if (len == 0) {
@@ -713,7 +713,7 @@ int gopherReadReply(fd, data)
 	} else {
 	    storeAppend(entry, buf, len);
 	}
-	cached_error(entry, ERR_CLIENT_ABORT);
+	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	if (data->conversion != NORMAL)
 	    gopherEndHTML(data);
 	BIT_RESET(entry->flag, DELAY_SENDING);
@@ -747,7 +747,7 @@ int gopherSendComplete(fd, buf, size, errflag, data)
     debug(5, "gopherSendComplete - fd: %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
 	freeGopherData(data);
 	if (buf)
@@ -860,7 +860,7 @@ int gopherStart(unusedfd, url, entry)
     /* Parse url. */
     if (gopher_url_parser(url, data->host, &data->port,
 	    &data->type_id, data->request)) {
-	cached_error(entry, ERR_INVALID_URL);
+	cached_error_entry(entry, ERR_INVALID_URL, NULL);
 	freeGopherData(data);
 	return COMM_ERROR;
     }
@@ -868,7 +868,7 @@ int gopherStart(unusedfd, url, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(4, "gopherStart: Failed because we're out of sockets.\n");
-	cached_error(entry, ERR_NO_FDS);
+	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
 	freeGopherData(data);
 	return COMM_ERROR;
     }
@@ -878,7 +878,7 @@ int gopherStart(unusedfd, url, entry)
     if (!ipcache_gethostbyname(data->host)) {
 	debug(4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
-	cached_error(entry, ERR_DNS_FAIL, dns_error_message);
+	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	freeGopherData(data);
 	return COMM_ERROR;
     }
@@ -908,7 +908,7 @@ int gopherStart(unusedfd, url, entry)
     if ((status = comm_connect(sock, data->host, data->port)) != 0) {
 	if (status != EINPROGRESS) {
 	    comm_close(sock);
-	    cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    freeGopherData(data);
 	    return COMM_ERROR;
 	} else {
