@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.17 2002/10/14 08:16:58 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.18 2002/10/14 10:53:15 adrian Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -42,7 +42,7 @@
 
 class clientReplyContext : public StoreClient {
 public:
-    void *operator new (unsigned int byteCount);
+    void *operator new (size_t byteCount);
     void operator delete (void *address);
 	
     void saveState(clientHttpRequest *);
@@ -183,7 +183,7 @@ clientRemoveStoreReference(clientReplyContext * context, store_client ** scp,
 }
 
 void *
-clientReplyContext::operator new (unsigned int byteCount)
+clientReplyContext::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (clientReplyContext));
