@@ -13,6 +13,10 @@ TODO LIST before official squid-1.1:
 	- Write Perl script to convert squid-1.0 store to squid-1.1
 	  structure.
 
+Changes to squid-1.1.beta7 ():
+
+	- Combined and renamed comm_set_select_handler() functions.
+
 Changes to squid-1.1.beta6 ():
 
 	- Fixed lots of function prototypes, etc (Ed Knowles).
