@@ -10,7 +10,7 @@
  *
  * - comment lines are possible and should start with a '#';
  * - empty or blank lines are possible;
- * - file format is username:password
+ * - file format is username:plaintext or username:realm:HA1
  * 
  * To build a directory integrated backend, you need to be able to
  * calculate the HA1 returned to squid. To avoid storing a plaintext
@@ -40,6 +40,7 @@ static time_t change_time = 0;
 typedef struct _user_data {
     hash_link hash;
     char *passwd;
+    char *ha1;
 } user_data;
 
 static void
@@ -59,7 +60,8 @@ read_passwd_file(const char *passwdfile, int ha1mode)
     user_data *u;
     char *user;
     char *passwd;
-    int passwdha1;
+    char *ha1 = NULL;
+    char *realm;
 
     if (hash != NULL) {
 	hashFreeItems(hash, my_free);
@@ -76,21 +78,40 @@ read_passwd_file(const char *passwdfile, int ha1mode)
 	    (buf[0] == '\n'))
 	    continue;
 	user = strtok(buf, ":\n");
+	realm = strtok(NULL, ":\n");
 	passwd = strtok(NULL, ":\n");
+	if (!passwd) {
+	    passwd = realm;
+	    realm = NULL;
+	}
 	if ((strlen(user) > 0) && passwd) {
- 	    passwdha1 = (strncmp("{HHA1}", passwd, 6))?0:1;
- 	    if (!ha1mode || passwdha1) {
-		u = xmalloc(sizeof(*u));
-		u->hash.key = xstrdup(user);
-		u->passwd = xstrdup(passwd);
-		hash_join(hash, &u->hash);
-	    } else {
+	    if (strncmp(passwd, "{HHA1}", 6) == 0) {
+		ha1 = passwd + 6;
+		passwd = NULL;
+	    } else if (ha1mode) {
+		ha1 = passwd;
+		passwd = NULL;
+	    }
+	    if (ha1 && strlen(ha1) != 32) {
 		/* We cannot accept plaintext passwords when using HA1 encoding,
 		 * as the passwords may be output to cache.log if debugging is on.
 		 */
-		fprintf(stderr, "digest_pw_auth: ignoring %s password for %s\n",
-			"plaintext", user);
- 	    }
+		fprintf(stderr, "digest_pw_auth: ignoring invalid password for %s\n", user);
+		continue;
+	    }
+	    u = xmalloc(sizeof(*u));
+	    if (realm) {
+		int len = strlen(user)+strlen(realm)+2;
+		u->hash.key = malloc(len);
+		snprintf(u->hash.key, len, "%s:%s", user, realm);
+	    } else {
+		u->hash.key = xstrdup(user);
+	    }
+	    if (ha1)
+		u->ha1 = xstrdup(ha1);
+	    else
+		u->passwd = xstrdup(passwd);
+	    hash_join(hash, &u->hash);
   	}
     }
     fclose(f);
@@ -109,7 +130,7 @@ TextArguments (int argc, char **argv)
     }
     if (!passwdfile) {
         fprintf(stderr, "Usage: digest_pw_auth [OPTIONS] <passwordfile>\n");
-        fprintf(stderr, "  -c   accept HHA1 passwords rather than plaintext in passwordfile\n");
+        fprintf(stderr, "  -c   accept digest hashed passwords rather than plaintext in passwordfile\n");
 	exit(1);
     }
     if (stat(passwdfile, &sb) != 0) {
@@ -118,38 +139,43 @@ TextArguments (int argc, char **argv)
     }
 }
 
-static void
+const user_data *
 GetPassword (RequestData *requestData)
 {
     user_data *u;
     struct stat sb;
+    char buf[256];
+    int len;
     if (stat(passwdfile, &sb) == 0) {
 	if (sb.st_mtime != change_time) {
 	    read_passwd_file(passwdfile, ha1mode);
 	    change_time = sb.st_mtime;
 	}
     }
-    requestData->password = NULL;
     if (!hash)
-	return;
+	return NULL;
+    len = snprintf(buf, sizeof(buf), "%s:%s", requestData->user, requestData->realm);
+    if (len >= sizeof(buf))
+	return NULL;
+    u = (user_data *)hash_lookup(hash, buf);
+    if (u)
+	return u;
     u = (user_data *)hash_lookup(hash, requestData->user);
-    if (u != NULL)
-	requestData->password = u->passwd;
+    return u;
 }
 
 void
 TextHHA1(RequestData *requestData)
 {
-    GetPassword (requestData);
-    if (requestData->password == NULL) {
+    const user_data *u = GetPassword (requestData);
+    if (!u) {
 	requestData->error = -1;
 	return;
     }
-    if(!ha1mode) {
+    if (u->ha1) {
+	xstrncpy (requestData->HHA1, u->ha1, sizeof (requestData->HHA1));
+    } else {
 	HASH HA1;
-	DigestCalcHA1("md5", requestData->user, requestData->realm, requestData->password, NULL, NULL, HA1, requestData->HHA1);
-	
-	/* fprintf(stderr, "digest_pw_auth: %s:{HHA1}%s\n", requestData.user, HHA1); */
-    } else
-	xstrncpy (requestData->HHA1, &requestData->password[6], sizeof (requestData->HHA1));
+	DigestCalcHA1("md5", requestData->user, requestData->realm, u->passwd, NULL, NULL, HA1, requestData->HHA1);
+    }
 }
