@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Un documento valido non &egrave; stato trovato in questa cache ed &egrave;
+stata specificata l'istruzione "solo se in cache".
+</STRONG>
+</UL>
+
+<P>
+
+Avete formulato una richiesta contenente la direttiva di controllo
+"solo se in cache" (<code>only-if-cached</code>). Il documento non
+&egrave; stato trovato nella cache, <em>oppure</em> necessitava di una
+ri-validazione proibita dall'istruzione <code>only-if-cached</code>.
+
+</P>

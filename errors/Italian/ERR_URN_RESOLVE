@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URN richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>Non pu&ograve; essere recuperata una URL per la URN richiesta</h2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URN:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Impossibile risolvere la URN
+</STRONG>
+</UL>
+
+<P>
+Non aspettatevi molte URN nel %T! :)
+</P>

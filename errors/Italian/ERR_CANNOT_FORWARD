@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Impossibile inoltrare questa richiesta.
+</STRONG>
+</UL>
+
+<P>
+La richiesta non pu&ograve; essere inoltrata al server originale
+o ad alcuna delle cache padri. La causa pi&ugrave; probabile &egrave; che:
+<UL>
+<LI>l'amministratore della cache non consente che questa cache si colleghi
+direttamente ai server originali;
+<LI>tutte le cache padri configurate sono al momento irrangiungibili.
+</UL>
+</P>

@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Accesso Negato.
+</STRONG>
+<P>
+La configurazione del controllo d'accesso non permette alla vostra richiesta
+di essere soddisfatta. Contattate il vostro fornitore se pensate che
+ci&ograve; sia errato.
+</UL>
+</P>
+

@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Attesa scaduta per la lettura
+</STRONG>
+</UL>
+
+<P>
+Il sistema ha risposto:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Il tempo di attesa &egrave; scaduto mentre si attendeva risposta dalla rete.
+La rete o il server possono essere scollegati o congestionati.
+Riprovate la richiesta.
+</P>

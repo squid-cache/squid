@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+</HEAD><BODY>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
+<HR>
+<P>
+Mentre si cercava di recuperare la URL:
+<A HREF="%U">%U</A>
+<P>
+&Egrave; avvenuto il seguente errore:
+<UL>
+<LI>
+<STRONG>
+Collegamento fallito
+</STRONG>
+</UL>
+
+<P>
+Il sistema ha risposto:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Il server o la rete esterna possono essere scollegati. Riprovate la richiesta.
+</P>
