@@ -47,7 +47,7 @@ bootstrap() {
     echo "$1 failed"
     echo "Autotool bootstrapping failed. You will need to investigate and correct" ;
     echo "before you can develop on this source tree" 
-    exit 1
+    sleep 10
   fi
 }
 
@@ -62,34 +62,13 @@ acver=`find_version autoconf ${acversions}`
 AUTOCONF="autoconf${acver}" ; export AUTOCONF
 
 
-for dir in \
-	"" \
-	lib/libTrie \
-	lib/cppunit-1.10.0
-do
-    if [ -z "$dir" ] || [ -d $dir ] && [ ! -f $dir/configure ]; then
-	if (
-	echo "Bootstrapping $dir"
-	cd ./$dir
-	if [ -f bootstrap.sh ]; then
-	    ./bootstrap.sh
-	else
-	    # Bootstrap the autotool subsystems
-	    bootstrap aclocal$amver
-	    #workaround for Automake 1.5
-	    if grep m4_regex aclocal.m4 >/dev/null; then
-		perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
-	    fi
-	    bootstrap autoheader$acver
-	    #bootstrap libtoolize --automake
-	    bootstrap automake$amver --foreign --add-missing
-	    bootstrap autoconf$acver
-	fi ); then
-	    : # OK
-	else
-	    exit 1
-	fi
-    fi
-done
-
-echo "Autotool bootstrapping complete."
+# Bootstrap the autotool subsystems
+bootstrap aclocal$amver -I config
+#workaround for Automake 1.5
+if grep m4_regex aclocal.m4 >/dev/null; then
+    perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
+fi
+bootstrap autoheader$acver
+#bootstrap libtoolize --automake
+bootstrap automake$amver --add-missing
+bootstrap autoconf$acver
