@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.128 1996/12/04 18:22:11 wessels Exp $
+ * $Id: http.cc,v 1.129 1996/12/04 18:37:30 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -665,7 +665,7 @@ httpBuildRequestHeader(request_t * request,
 	if (l > 4096)
 	    l = 4096;
 	xstrncpy(xbuf, t, l);
-	debug(0, 0, "httpBuildRequestHeader: %s\n", xbuf);
+	debug(11, 5, "httpBuildRequestHeader: %s\n", xbuf);
 	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
 	    continue;
 	if (strncasecmp(xbuf, "Connection:", 11) == 0)
