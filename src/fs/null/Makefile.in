@@ -1,7 +1,7 @@
 #
 #  Makefile for the UFS storage driver for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2000/12/09 04:12:16 wessels Exp $
+#  $Id: Makefile.in,v 1.2 2001/02/07 17:42:21 hno Exp $
 #
 
 FS		= null
@@ -22,8 +22,7 @@ CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
 OUT		= ../$(FS).a
 
 OBJS	 	= \
-		store_dir_null.o \
-		store_io_null.o
+		store_null.o \
 
 
 all: $(OUT)
