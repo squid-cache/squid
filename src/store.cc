@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.246 1997/06/01 18:19:56 wessels Exp $
+ * $Id: store.cc,v 1.247 1997/06/01 23:21:50 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1061,7 +1061,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 	return;
     }
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
-        if (storeDirMapBitTest(e->swap_file_number)) {
+	if (storeDirMapBitTest(e->swap_file_number)) {
 	    /* someone took our file while we weren't looking */
 	    callback(callback_data, -1);
 	    return;

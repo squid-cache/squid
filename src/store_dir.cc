@@ -69,7 +69,7 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
 	xfree(SwapDirs);
 	SwapDirs = tmp;
     }
-    debug(20,1,"Creating Swap Dir #%d in %s\n", ncache_dirs+1, path);
+    debug(20, 1, "Creating Swap Dir #%d in %s\n", ncache_dirs + 1, path);
     tmp = SwapDirs + ncache_dirs;
     tmp->path = xstrdup(path);
     tmp->max_size = size;
