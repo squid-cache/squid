@@ -1434,7 +1434,7 @@ DOC_NONE
 NAME: httpd_accel_port
 TYPE: ushort
 LOC: Config.Accel.port
-DEFAULT: 0
+DEFAULT: 80
 DOC_START
 	If you want to run squid as an httpd accelerator, define the
 	host name and port number where the real HTTP server is.
