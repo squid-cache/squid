@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.34 2003/02/02 12:06:32 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.35 2003/02/05 01:27:11 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -106,7 +106,11 @@ private:
     void waitForMoreData (StoreIOBuffer const &result);
     clientStreamNode * next() const;
     void startSendProcess();
-
+    StoreIOBuffer holdingBuffer;
+    HttpReply *holdingReply;
+    void processReplyAccess();
+    static PF ProcessReply;
+    void processReply(bool accessAllowed);
 };
 
 CBDATA_TYPE(clientReplyContext);
@@ -497,6 +501,7 @@ clientHandleIMSReply(void *data, StoreIOBuffer result)
 	    context->restoreState(http);
 	    entry = http->entry;
 	} else {
+	    context->reqofs += result.length;
 	    context->waitForMoreData(result);
 	}
 	return;
@@ -1744,7 +1749,6 @@ clientReplyContext::waitForMoreData (StoreIOBuffer const &result)
      * obsolete this routine 
      */
     /* wait for more to arrive */
-    reqofs += result.length;
     startSendProcess();
 }
 
@@ -1763,6 +1767,97 @@ clientReplyContext::startSendProcess()
 }
 
 void
+clientReplyContext::processReplyAccess ()
+{
+    HttpReply *rep = holdingReply;
+    holdingReply = NULL;
+	httpReplyBodyBuildSize(http->request, rep, &Config.ReplyBodySize);
+	if (clientReplyBodyTooLarge(rep, rep->content_length)) {
+	    ErrorState *err =
+	    clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
+		http->conn ? &http->conn->peer.sin_addr : &no_addr,
+		http->request);
+	    clientRemoveStoreReference(this, &sc, &http->entry);
+	    startError(this, http, err);
+	    httpReplyDestroy(rep);
+	    return;
+	}
+	headers_sz = rep->hdr_sz;
+	ACLChecklist *replyChecklist;
+	replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
+	replyChecklist->reply = rep;
+	holdingReply = rep;
+	aclNBCheck(replyChecklist, ProcessReply, this);
+}
+
+void
+clientReplyContext::ProcessReply (int rv, void *voidMe)
+{
+    clientReplyContext *me = static_cast<clientReplyContext *>(voidMe);
+    me->processReply(rv);
+}
+
+void
+clientReplyContext::processReply(bool accessAllowed)
+{
+	debug(88, 2) ("The reply for %s %s is %s, because it matched '%s'\n",
+	    RequestMethodStr[http->request->method], http->uri,
+	    accessAllowed ? "ALLOWED" : "DENIED",
+	    AclMatchedName ? AclMatchedName : "NO ACL's");
+	HttpReply *rep = holdingReply;
+    holdingReply = NULL;
+	if (!accessAllowed && rep->sline.status != HTTP_FORBIDDEN
+	    && !clientAlwaysAllowResponse(rep->sline.status)) {
+	    /* the if above is slightly broken, but there is no way
+	     * to tell if this is a squid generated error page, or one from
+	     *  upstream at this point. */
+	    ErrorState *err;
+	    err =
+		clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
+		http->conn ? &http->conn->peer.sin_addr : &no_addr,
+		http->request);
+	    clientRemoveStoreReference(this, &sc, &http->entry);
+	    startError(this, http, err);
+	    httpReplyDestroy(rep);
+	    return;
+	}
+	ssize_t body_size = reqofs - rep->hdr_sz;
+	assert(body_size >= 0);
+	debug(88,3)
+	    ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
+	    (int) body_size, rep->hdr_sz);
+	if (http->request->method == METHOD_HEAD) {
+	    /* do not forward body for HEAD replies */
+	    body_size = 0;
+	    http->flags.done_copying = 1;
+	    flags.complete = 1;
+	}
+	assert (!flags.headersSent);
+	flags.headersSent = true;
+	
+	StoreIOBuffer tempBuffer;
+	char *buf = next()->readBuffer.data;
+	char *body_buf = buf + rep->hdr_sz;
+	if (next()->readBuffer.offset != 0) {
+	    if (next()->readBuffer.offset > body_size) {
+		/* Can't use any of the body we recieved. send nothing */
+		tempBuffer.length = 0;
+		tempBuffer.data = NULL;
+	    } else {
+		tempBuffer.length = body_size - next()->readBuffer.offset;
+		tempBuffer.data = body_buf + next()->readBuffer.offset;
+	    }
+	} else {
+	    tempBuffer.length = body_size;
+	    tempBuffer.data = body_buf;
+	}
+	/* TODO: move the data in the buffer back by the request header size */
+	clientStreamCallback((clientStreamNode *)http->client_stream.head->data, 
+	    http, rep, tempBuffer);
+	return;
+}
+
+void
 clientReplyContext::sendMoreData (StoreIOBuffer result)
 {
     StoreEntry *entry = http->entry;
@@ -1771,8 +1866,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     HttpReply *rep = NULL;
     char *buf = next()->readBuffer.data;
     char *body_buf = buf;
-    ssize_t sizeToProcess = reqofs + result.length;
-
 
     /* This is always valid until we get the headers as metadata from 
      * storeClientCopy. 
@@ -1795,7 +1888,9 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     /* We've got the final data to start pushing... */
     flags.storelogiccomplete = 1;
 
-    assert(sizeToProcess <= HTTP_REQBUF_SZ || flags.headersSent);
+    reqofs += result.length;
+
+    assert(reqofs <= HTTP_REQBUF_SZ || flags.headersSent);
     assert(http->request != NULL);
     /* ESI TODO: remove this assert once everything is stable */
     assert(http->client_stream.head->data
@@ -1803,12 +1898,12 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     makeThisHead();
     debug(88, 5) ("clientSendMoreData: %s, %d bytes (%u new bytes)\n",
-	http->uri, (int) sizeToProcess, (unsigned int)result.length);
+	http->uri, (int) reqofs, (unsigned int)result.length);
     debug(88, 5) ("clientSendMoreData: FD %d '%s', out.offset=%ld \n",
 	fd, storeUrl(entry), (long int) http->out.offset);
 
     /* update size of the request */
-    reqsize = sizeToProcess;
+    reqsize = reqofs;
     
     if (http->request->flags.resetTCP()) {
 	/* yuck. FIXME: move to client_side.c */
@@ -1817,7 +1912,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 	return;
     }
     
-    if (errorInStream(result, sizeToProcess)) {
+    if (errorInStream(result, reqofs)) {
 	sendStreamError(result);
 	return;
     }
@@ -1829,86 +1924,20 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     /* handle headers */
     if (Config.onoff.log_mime_hdrs) {
 	size_t k;
-	if ((k = headersEnd(buf, sizeToProcess))) {
+	if ((k = headersEnd(buf, reqofs))) {
 	    safe_free(http->al.headers.reply);
 	    http->al.headers.reply = (char *)xcalloc(k + 1, 1);
 	    xstrncpy(http->al.headers.reply, buf, k);
 	}
     }
-    rep = clientBuildReply(this, buf, sizeToProcess);
-    ssize_t body_size = sizeToProcess;
+    rep = clientBuildReply(this, buf, reqofs);
+    ssize_t body_size = reqofs;
     if (rep) {
-	int rv;
-	httpReplyBodyBuildSize(http->request, rep, &Config.ReplyBodySize);
-	if (clientReplyBodyTooLarge(rep, rep->content_length)) {
-	    ErrorState *err =
-	    clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
-		http->conn ? &http->conn->peer.sin_addr : &no_addr,
-		http->request);
-	    clientRemoveStoreReference(this, &sc, &http->entry);
-	    startError(this, http, err);
-	    httpReplyDestroy(rep);
-	    return;
-	}
-	headers_sz = rep->hdr_sz;
-	body_size = sizeToProcess - rep->hdr_sz;
-	assert(body_size >= 0);
-	body_buf = buf + rep->hdr_sz;
-	debug(88,3)
-	    ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
-	    (int) body_size, rep->hdr_sz);
-	ACLChecklist *ch = clientAclChecklistCreate(Config.accessList.reply, http);
-	ch->reply = rep;
-	rv = aclCheckFast(Config.accessList.reply, ch);
-	aclChecklistFree(ch);
-	ch = NULL;
-	debug(88, 2) ("The reply for %s %s is %s, because it matched '%s'\n",
-	    RequestMethodStr[http->request->method], http->uri,
-	    rv ? "ALLOWED" : "DENIED",
-	    AclMatchedName ? AclMatchedName : "NO ACL's");
-	if (!rv && rep->sline.status != HTTP_FORBIDDEN
-	    && !clientAlwaysAllowResponse(rep->sline.status)) {
-	    /* the if above is slightly broken, but there is no way
-	     * to tell if this is a squid generated error page, or one from
-	     *  upstream at this point. */
-	    ErrorState *err;
-	    err =
-		clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
-		http->conn ? &http->conn->peer.sin_addr : &no_addr,
-		http->request);
-	    clientRemoveStoreReference(this, &sc, &http->entry);
-	    startError(this, http, err);
-	    httpReplyDestroy(rep);
-	    return;
-	}
-	if (http->request->method == METHOD_HEAD) {
-	    /* do not forward body for HEAD replies */
-	    body_size = 0;
-	    http->flags.done_copying = 1;
-	    flags.complete = 1;
-	}
-	assert (!flags.headersSent);
-	flags.headersSent = true;
-	
-	StoreIOBuffer tempBuffer;
-	if (next()->readBuffer.offset != 0) {
-	    if (next()->readBuffer.offset > body_size) {
-		/* Can't use any of the body we recieved. send nothing */
-		tempBuffer.length = 0;
-		tempBuffer.data = NULL;
-	    } else {
-		tempBuffer.length = body_size - next()->readBuffer.offset;
-		tempBuffer.data = body_buf + next()->readBuffer.offset;
-	    }
-	} else {
-	    tempBuffer.length = body_size;
-	    tempBuffer.data = body_buf;
-	}
-	/* TODO: move the data in the buffer back by the request header size */
-	clientStreamCallback((clientStreamNode *)http->client_stream.head->data, 
-	    http, rep, tempBuffer);
+	holdingReply = rep;
+	holdingBuffer = result;
+	processReplyAccess ();
 	return;
-    } else if (sizeToProcess < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
+    } else if (reqofs < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
 	waitForMoreData(result);
 	return;
     } else if (http->request->method == METHOD_HEAD) {
@@ -1940,6 +1969,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 	StoreIOBuffer tempBuffer;
 	tempBuffer.flags.error = 1;
 	sendStreamError(tempBuffer);
+	return;
     }
     fatal ("clientReplyContext::sendMoreData: Unreachable code reached \n");
 }
