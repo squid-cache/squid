@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.22 2000/05/02 22:34:46 hno Exp $
+ * $Id: dns_internal.cc,v 1.23 2000/05/11 03:05:24 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -322,6 +322,7 @@ idnsRead(int fd, void *data)
 	    break;
 	}
 	fd_bytes(DnsSocket, len, FD_READ);
+	assert(N);
 	(*N)++;
 	debug(78, 3) ("idnsRead: FD %d: received %d bytes from %s.\n",
 	    fd,
