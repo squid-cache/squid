@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.291 1998/04/24 07:09:30 wessels Exp $
+ * $Id: client_side.cc,v 1.292 1998/04/24 18:32:11 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -593,10 +593,7 @@ clientUpdateCounters(clientHttpRequest * http)
     } else {
 	assert(H->alg == PEER_SA_NONE);
     }
-    /*
-     * account for outgoing digest traffic (this has nothing to do with
-     * USE_CACHE_DIGESTS, but counters are all in USE_CACHE_DIGESTS ifdefs)
-     */
+    /* account for outgoing digest traffic */
     if (http->flags.internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
 	kb_incr(&Counter.cd.kbytes_sent, http->out.size);
 	Counter.cd.msgs_sent++;
