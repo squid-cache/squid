@@ -145,6 +145,7 @@ typedef enum {
     MGR_VM_OBJECTS,
     MGR_STOREDIR,
     MGR_CBDATA,
+    MGR_PCONN,
     MGR_MAX
 } objcache_op;
 

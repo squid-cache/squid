@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.170 1997/07/28 06:40:59 wessels Exp $
+ * $Id: main.cc,v 1.171 1997/08/09 05:42:34 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -504,6 +504,7 @@ mainInitialize(void)
 	urlInitialize();
 	stat_init(&HTTPCacheInfo, Config.Log.access);
 	stat_init(&ICPCacheInfo, NULL);
+	objcacheInit();
 	storeInit();
 
 	if (Config.effectiveUser) {
