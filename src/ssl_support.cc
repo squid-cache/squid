@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.22 2005/03/18 15:17:17 hno Exp $
+ * $Id: ssl_support.cc,v 1.23 2005/03/18 15:26:30 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -73,10 +73,49 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
-    static RSA *rsa = NULL;
+    static RSA *rsa_512 = NULL;
+    static RSA *rsa_1024 = NULL;
+    RSA *rsa = NULL;
+    int newkey = 0;
 
-    if (rsa == NULL)
-        rsa = RSA_generate_key(512, RSA_F4, NULL, NULL);
+    switch (keylen) {
+
+    case 512:
+
+        if (!rsa_512) {
+            rsa_512 = RSA_generate_key(512, RSA_F4, NULL, NULL);
+            newkey = 1;
+        }
+
+        rsa = rsa_512;
+        break;
+
+    case 1024:
+
+        if (!rsa_1024) {
+            rsa_1024 = RSA_generate_key(1024, RSA_F4, NULL, NULL);
+            newkey = 1;
+        }
+
+        rsa = rsa_1024;
+        break;
+
+    default:
+        debug(83,1)("ssl_temp_rsa_cb: Unexpected key length %d\n", keylen);
+        return NULL;
+    }
+
+    if (rsa == NULL) {
+        debug(83,1)("ssl_temp_rsa_cb: Failed to generate key %d\n", keylen);
+        return NULL;
+    }
+
+    if (newkey) {
+        if (do_debug(83, 5))
+            PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
+
+        debug(83,1)("Generated ephemeral RSA key of length %d\n", keylen);
+    }
 
     return rsa;
 }
