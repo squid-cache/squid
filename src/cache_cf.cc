@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.212 1997/07/16 22:56:12 wessels Exp $
+ * $Id: cache_cf.cc,v 1.213 1997/07/16 22:58:23 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1085,5 +1085,5 @@ parseNeighborType(const char *s)
 void
 configFreeMemory(void)
 {
-	free_all();
+    free_all();
 }

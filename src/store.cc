@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.275 1997/07/16 22:57:24 wessels Exp $
+ * $Id: store.cc,v 1.276 1997/07/16 22:58:25 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -766,15 +766,15 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
  * use to rebuild store from disk. */
 static StoreEntry *
 storeAddDiskRestore(const char *url,
-	int file_number,
-	int size,
-	time_t expires,
-	time_t timestamp,
-	time_t lastref,
-	time_t lastmod,
-	u_num32 refcount,
-	u_num32 flags,
-	int clean)
+    int file_number,
+    int size,
+    time_t expires,
+    time_t timestamp,
+    time_t lastref,
+    time_t lastmod,
+    u_num32 refcount,
+    u_num32 flags,
+    int clean)
 {
     StoreEntry *e = NULL;
     debug(20, 5) ("StoreAddDiskRestore: %s, fileno=%08X\n", url, file_number);

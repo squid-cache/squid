@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.26 1997/07/16 22:57:25 wessels Exp $
+ * $Id: store_dir.cc,v 1.27 1997/07/16 22:58:26 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -217,7 +217,7 @@ storeDirSwapLog(const StoreEntry * e)
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
     if (BIT_TEST(e->flag, KEY_PRIVATE))
-	debug(0,0)("storeDirSwapLog: PRIVATE: %s\n", e->url);
+	debug(0, 0) ("storeDirSwapLog: PRIVATE: %s\n", e->url);
     /* Note this printf format appears in storeWriteCleanLog() too */
     sprintf(logmsg, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
 	(int) e->swap_file_number,

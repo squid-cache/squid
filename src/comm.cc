@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.181 1997/07/16 22:56:38 wessels Exp $
+ * $Id: comm.cc,v 1.182 1997/07/16 22:58:24 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -287,7 +287,7 @@ comm_open(int sock_type,
 	    comm_close(new_socket);
 	    return COMM_ERROR;
 	}
-    } 
+    }
     F->local_port = port;
 
     if (BIT_TEST(flags, COMM_NONBLOCKING))
