@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.10 2003/07/23 10:12:33 robertc Exp $
+ * $Id: MemObject.cc,v 1.11 2003/08/03 10:37:30 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -249,7 +249,7 @@ MemObject::stat (StoreEntry *s) const
 
     StoreClientStats statsVisitor(s);
 
-    for_each(clients, statsVisitor);
+    for_each<StoreClientStats>(clients, statsVisitor);
 }
 
 off_t
@@ -282,7 +282,7 @@ MemObject::lowestMemReaderOffset() const
 {
     LowestMemReader lowest (endOffset() + 1);
 
-    for_each (clients, lowest);
+    for_each <LowestMemReader>(clients, lowest);
 
     return lowest.current;
 }
