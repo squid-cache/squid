@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.251 1998/02/25 11:16:39 kostas Exp $
+ * $Id: cache_cf.cc,v 1.252 1998/02/25 19:15:06 kostas Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -436,6 +436,8 @@ free_acl(acl ** acl)
     aclDestroyAcls(acl);
 }
 
+#if SQUID_SNMP
+
 static void
 dump_snmp_access(StoreEntry * entry, const char *name, communityEntry * Head)
 {
@@ -457,6 +459,7 @@ dump_snmp_access(StoreEntry * entry, const char *name, communityEntry * Head)
        }
     }
 }
+#endif
 
 static void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
@@ -473,6 +476,8 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 	head = head->next;
     }
 }
+
+#if SQUID_SNMP
 
 static void
 parse_snmp_access(communityEntry  **head)
@@ -497,6 +502,7 @@ free_snmp_access(communityEntry ** Head)
     for (cp = *Head; cp; cp = cp->next) 
 	aclDestroyAccessList(&cp->acls);
 }
+#endif
 
 static void
 parse_acl_access(acl_access ** head)
