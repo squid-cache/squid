@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.4 2002/05/20 02:03:57 hno Exp $
+#  $Id: Makefile.am,v 1.5 2002/05/23 14:01:20 hno Exp $
 #
 
 libexec_PROGRAMS = wb_ntlmauth
@@ -11,4 +11,4 @@ EXTRA_DIST = \
 	patches/winbind_nss_config.patch
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
     -I$(top_srcdir)/src
-LDADD = -L$(top_builddir)/lib -lmiscutil -lntlmauth -lm
+LDADD = -L$(top_builddir)/lib -lmiscutil -lntlmauth $(XTRA_LIBS)
