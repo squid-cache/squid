@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.555 2001/10/24 07:45:34 hno Exp $
+ * $Id: client_side.cc,v 1.556 2001/10/26 23:11:56 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2439,11 +2439,14 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     size_t sock_sz = sizeof(conn->me);
 #endif
 
+    /* pre-set these values to make aborting simpler */
+    *prefix_p = NULL;
+    *method_p = METHOD_NONE;
+    *status = -1;
+
     if ((req_sz = headersEnd(conn->in.buf, conn->in.offset)) == 0) {
 	debug(33, 5) ("Incomplete request, waiting for end of headers\n");
 	*status = 0;
-	*prefix_p = NULL;
-	*method_p = METHOD_NONE;
 	return NULL;
     }
     assert(req_sz <= conn->in.offset);
@@ -2451,11 +2454,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     inbuf = xmalloc(req_sz + 1);
     xmemcpy(inbuf, conn->in.buf, req_sz);
     *(inbuf + req_sz) = '\0';
-
-    /* pre-set these values to make aborting simpler */
-    *prefix_p = inbuf;
-    *method_p = METHOD_NONE;
-    *status = -1;
 
     /* Barf on NULL characters in the headers */
     if (strlen(inbuf) != req_sz) {
