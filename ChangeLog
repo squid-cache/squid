@@ -77,6 +77,43 @@ Changes to Squid-2.4.DEVEL2 (Feb 29, 2000):
 
 Changes to Squid-2.4.DEVEL1 ():
 
+Changes to Squid-2.3.STABLE4 (July 18, 2000):
+
+	- Fixed --localstatedir configure option (IKEDA Shigeru).
+	- Fixed IPFilter headers on OpenBSD (Nic Bellamy, Brad
+	  Smith).
+	- Added pthread_sigmask() check to configure (Daniel
+	  Ehrlich).
+	- Added CYGWIN patches from Robert Collins.
+	- Changed internal DNS lookups to retry queries that are
+	  returned with RCODE 2 (ServFail).
+	- Added 'virtual port' support (Gregg Kellogg).  If
+	  'httpd_accel_uses_host_header' is enabled, then we use
+	  the port number from the Host header.  Otherwise, when
+	  'httpd_accel_port' is set to "0" we use the port number
+	  of the local end of the client socket.
+	- Fixed a typo in carp.c (Nikolaj Yourgandjiev).
+	- Made Squid accept GET requests that have a "content-length:
+	  0" header.
+	- Added a sanity check on the NHttpSockets[] array index
+	  (Gregg Kellogg).
+	- Added a friendlier message when Squid can't find any DNS
+	  nameserver addresses to use (Daniel Kiracofe).
+	- Added nonstandard WEBDAV methods: BMOVE, BDELETE, BPROPFIND
+	  (Craig Whitmore).
+	- Added missing '%c' token replacement in error page
+	  generation.
+	- Fixed a bug with 'minimum_object_size' that prevented
+	  internal icons from being loaded.
+	- Fixed "extra semicolon" bug in storeExpiredReferenceAge()
+	  that could prevent any objects from being replaced.
+	- Make sure that storeDirDiskFull() doesn't actually
+	  *increase* the cache size.
+	- Changed a storeSwapMetaUnpack() assertion to a recoverable
+	  error condition.
+	- Removed "wccpHereIam" event check that could cause Squid
+	  to stop sending HERE_I_AM messages.
+
 Changes to Squid-2.3.STABLE3 (May 15, 2000):
 
 	- Fixed malloc linking problems on Solaris.  The configure

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.153 2000/03/06 16:23:31 wessels Exp $
+ * $Id: errorpage.cc,v 1.154 2000/07/18 06:16:41 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -428,6 +428,11 @@ errorConvert(char token, ErrorState * err)
     switch (token) {
     case 'B':
 	p = r ? ftpUrlWith2f(r) : "[no URL]";
+	break;
+    case 'c':
+	assert(err->type >= ERR_NONE);
+	assert(err->type < ERR_MAX);
+	p = err_type_str[err->type];
 	break;
     case 'e':
 	memBufPrintf(&mb, "%d", err->xerrno);

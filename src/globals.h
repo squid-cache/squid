@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.96 2000/07/13 06:06:16 wessels Exp $
+ * $Id: globals.h,v 1.97 2000/07/18 06:16:41 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -98,6 +98,7 @@ extern int theOutSnmpConnection;	/* -1 */
 extern char *snmp_agentinfo;
 #endif
 extern int vhost_mode;		/* 0 */
+extern int vport_mode;		/* 0 */
 extern int n_disk_objects;	/* 0 */
 extern iostats IOStats;
 extern struct _acl_deny_info_list *DenyInfoList;	/* NULL */

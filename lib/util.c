@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.69 2000/03/27 21:56:21 wessels Exp $
+ * $Id: util.c,v 1.70 2000/07/18 06:16:40 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -73,7 +73,11 @@
 void (*failure_notify) (const char *) = NULL;
 static char msg[128];
 
+#if !defined(__CYGWIN__)
 extern int sys_nerr;
+#else
+extern __declspec(dllimport) int sys_nerr;
+#endif
 
 #if MEM_GEN_TRACE
 

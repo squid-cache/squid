@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.10 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store_swapmeta.cc,v 1.11 2000/07/18 06:16:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -122,7 +122,12 @@ storeSwapMetaUnpack(const char *buf, int *hdr_len)
 	return NULL;
     xmemcpy(&buflen, &buf[j], sizeof(int));
     j += sizeof(int);
-    assert(buflen > (sizeof(char) + sizeof(int)));
+    /*
+     * sanity check on 'buflen' value.  It should be at least big
+     * enough to hold one type and one length.
+     */
+    if (buflen <= (sizeof(char) + sizeof(int)))
+	    return NULL;
     while (buflen - j > (sizeof(char) + sizeof(int))) {
 	type = buf[j++];
 	if (type < STORE_META_VOID || type > STORE_META_END) {

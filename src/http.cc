@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.365 2000/07/16 05:31:08 wessels Exp $
+ * $Id: http.cc,v 1.366 2000/07/18 06:16:41 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -188,6 +188,8 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     case METHOD_PROPPATCH:
     case METHOD_MKCOL:
     case METHOD_MOVE:
+    case METHOD_BMOVE:
+    case METHOD_BDELETE:
 	/*
 	 * Remove any cached GET object if it is beleived that the
 	 * object may have changed as a result of other methods
