@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.55 1999/06/25 23:37:34 wessels Exp $
+ * $Id: store_swapout.cc,v 1.56 1999/06/30 05:19:36 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -56,9 +56,16 @@ storeSwapOutStart(StoreEntry * e)
     cbdataAdd(c, cbdataXfree, 0);
     mem->swapout.sio = storeOpen(e->swap_file_number,
 	O_WRONLY, storeSwapOutFileClosed, c);
-    assert(mem->swapout.sio != NULL);
-    cbdataLock(mem->swapout.sio);
+    if (NULL == mem->swapout.sio) {
+	e->swap_status = SWAPOUT_NONE;
+	storeDirMapBitReset(e->swap_file_number);
+	e->swap_file_number = -1;
+	cbdataFree(c);
+	storeUnlockObject(e);
+	return;
+    }
     e->swap_status = SWAPOUT_WRITING;
+    cbdataLock(mem->swapout.sio);
     debug(20, 5) ("storeSwapOutStart: Begin SwapOut '%s' to fileno %08X\n",
 	storeUrl(e), e->swap_file_number);
     tlv_list = storeSwapMetaBuild(e);
@@ -148,7 +155,8 @@ storeSwapOut(StoreEntry * e)
 	    return;
 	/* ENTRY_CACHABLE will be cleared and we'll never get here again */
     }
-    assert(mem->swapout.sio != NULL);
+    if (NULL == mem->swapout.sio)
+	return;
     do {
 	if (swapout_size > DISK_PAGE_SIZE)
 	    swapout_size = DISK_PAGE_SIZE;
@@ -182,6 +190,9 @@ storeSwapOut(StoreEntry * e)
 	    if (swapout_size < DISK_PAGE_SIZE)
 		break;
     } while (swapout_size > 0);
+    if (NULL == mem->swapout.sio)
+	/* oops, we're not swapping out any more */
+	return;
     if (e->store_status == STORE_OK) {
 	/*
 	 * If the state is STORE_OK, then all data must have been given
