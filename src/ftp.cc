@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.272 1999/01/20 19:43:00 wessels Exp $
+ * $Id: ftp.cc,v 1.273 1999/01/21 05:26:14 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1830,6 +1830,7 @@ ftpAcceptDataConnection(int fd, void *data)
     ftpState->data.fd = fd;
     ftpState->data.port = ntohs(peer.sin_port);
     ftpState->data.host = xstrdup(inet_ntoa(peer.sin_addr));
+    commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
     commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout,
 	ftpState);
     /* XXX We should have a flag to track connect state...
