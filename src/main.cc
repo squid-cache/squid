@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.39 1996/04/16 20:31:22 wessels Exp $ */
+/* $Id: main.cc,v 1.40 1996/04/16 23:05:44 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -81,8 +81,8 @@ static void mainParseOptions(argc, argv)
 	    opt_unlink_on_reload = 1;
 	    break;
 	case 'f':
-	    xfree(config_file);
-	    config_file = xstrdup(optarg);
+	    xfree(ConfigFile);
+	    ConfigFile = xstrdup(optarg);
 	    break;
 	case 'a':
 	    asciiPortNumOverride = atoi(optarg);
@@ -174,7 +174,7 @@ static void mainReinitialize()
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     neighborsDestroy();
 
-    parseConfigFile(config_file);
+    parseConfigFile(ConfigFile);
     _db_init(getCacheLogFile());
     neighbors_init();
     ipcacheOpenServers();
@@ -195,7 +195,9 @@ static void mainInitialize()
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, sig_child);
 
-    parseConfigFile(config_file);
+    if (ConfigFile == NULL)
+	ConfigFile = xstrdup(DefaultConfigFile);
+    parseConfigFile(ConfigFile);
 
     if (asciiPortNumOverride > 0)
 	setAsciiPortNum(asciiPortNumOverride);
