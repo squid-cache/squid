@@ -1,4 +1,4 @@
-/* $Id: ident.cc,v 1.2 1996/07/09 03:41:31 wessels Exp $ */
+/* $Id: ident.cc,v 1.3 1996/07/09 22:59:29 wessels Exp $ */
 
 /*
  * DEBUG: Section 30           ident/RFC931
@@ -16,7 +16,6 @@ static void identClose(fd, icpState)
      int fd;
      icpStateData *icpState;
 {
-    debug(30, 1, "identClose: FD %d\n", fd);
     icpState->ident_fd = -1;
 }
 
@@ -32,8 +31,6 @@ void identStart(sock, icpState)
     host = inet_ntoa(icpState->peer.sin_addr);
     port = ntohs(icpState->peer.sin_port);
 
-    debug(30, 1, "identStart: peer is %s:%d\n", host, port);
-
     if (sock < 0) {
 	sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, "ident");
 	if (sock == COMM_ERROR)
@@ -48,14 +45,12 @@ void identStart(sock, icpState)
 	    comm_close(sock);
 	    return;		/* die silently */
 	}
-	debug(30, 1, "identStart: FD %d: %s\n", sock, xstrerror());
 	comm_set_select_handler(sock,
 	    COMM_SELECT_WRITE,
 	    (PF) identStart,
 	    (void *) icpState);
 	return;
     }
-    debug(30, 1, "identStart: FD %d: Connected, preparing request...\n", sock);
     sprintf(reqbuf, "%d, %d\r\n",
 	ntohs(icpState->peer.sin_port),
 	ntohs(icpState->me.sin_port));
@@ -78,7 +73,7 @@ static void identRequestComplete(fd, buf, size, errflag, data)
      int errflag;
      void *data;
 {
-    debug(30, 1, "identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
+    debug(30, 5, "identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
 }
 
 static void identReadReply(fd, icpState)
@@ -91,20 +86,17 @@ static void identReadReply(fd, icpState)
 
     buf[0] = '\0';
     len = read(fd, buf, BUFSIZ);
-    if (len < 0) {
-	debug(30, 1, "identReadReply: FD %d: %s\n", fd, xstrerror());
-    } else if (len == 0) {
-	debug(30, 1, "identReadReply: FD %d: Read 0 bytes\n", fd);
-    }
-    if ((t = strchr(buf, '\r')))
-	*t = '\0';
-    if ((t = strchr(buf, '\n')))
-	*t = '\0';
-    debug(30, 1, "identReadReply: FD %d: Read '%s'\n", fd, buf);
-    if (strstr(buf, "USERID")) {
-	if ((t = strrchr(buf, ':'))) {
-	    while (isspace(*++t));
-	    strncpy(icpState->ident, t, ICP_IDENT_SZ);
+    if (len > 0) {
+	if ((t = strchr(buf, '\r')))
+	    *t = '\0';
+	if ((t = strchr(buf, '\n')))
+	    *t = '\0';
+	debug(30, 1, "identReadReply: FD %d: Read '%s'\n", fd, buf);
+	if (strstr(buf, "USERID")) {
+	    if ((t = strrchr(buf, ':'))) {
+		while (isspace(*++t));
+		strncpy(icpState->ident, t, ICP_IDENT_SZ);
+	    }
 	}
     }
     comm_close(fd);
