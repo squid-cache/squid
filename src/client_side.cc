@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.104 1997/05/22 15:51:50 wessels Exp $
+ * $Id: client_side.cc,v 1.105 1997/05/22 22:16:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -395,7 +395,6 @@ icpHandleIMSReply(void *data, char *buf, size_t size)
     int fd = http->conn->fd;
     StoreEntry *entry = http->entry;
     MemObject *mem = entry->mem_obj;
-    int len;
     int unlink_request = 0;
     StoreEntry *oldentry;
     debug(33, 3, "icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
