@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.37 2005/02/08 01:10:59 hno Exp $
+#  $Id: Makefile.in,v 1.38 2005/03/20 01:10:45 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -116,6 +116,8 @@ LIBREGEX = @LIBREGEX@
 LIBS = @LIBS@
 LIBSASL = @LIBSASL@
 LIBTOOL = @LIBTOOL@
+LIB_LBER = @LIB_LBER@
+LIB_LDAP = @LIB_LDAP@
 LIB_MALLOC = @LIB_MALLOC@
 LN = @LN@
 LN_S = @LN_S@
