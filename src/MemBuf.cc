@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.10 1998/05/27 22:51:47 rousskov Exp $
+ * $Id: MemBuf.cc,v 1.11 1998/05/28 17:32:41 rousskov Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -164,7 +164,7 @@ memBufAppend(MemBuf * mb, const char *buf, mb_size_t sz)
     }
 }
 
-/* calls snprintf, extends buffer if needed */
+/* calls memBufVPrintf */
 #ifdef __STDC__
 void
 memBufPrintf(MemBuf * mb, const char *fmt,...)
@@ -189,11 +189,11 @@ memBufPrintf(va_alist)
 }
 
 
-/* vprintf for other printf()'s to use */
+/* vprintf for other printf()'s to use; calls vsnprintf, extends buf if needed */
 void
 memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
 {
-    mb_size_t sz = 0;
+    int sz = 0;
     assert(mb && fmt);
     assert(mb->buf);
     assert(mb->freefunc);	/* not frozen */
@@ -202,15 +202,21 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
     while (mb->capacity <= mb->max_capacity) {
 	mb_size_t free_space = mb->capacity - mb->size;
 	/* put as much as we can */
-	sz = vsnprintf(mb->buf + mb->size, free_space, fmt, vargs) + 1;
-	/* check for possible overflow @?@ can vsnprintf cut more than needed off? */
-	if (sz + 32 >= free_space)	/* magic constant 32, ARGH! @?@ */
+	sz = vsnprintf(mb->buf + mb->size, free_space, fmt, vargs);
+	/* check for possible overflow */
+	/* snprintf on Linuz returns -1 on overflows */
+	/* snprintf on FreeBSD returns at least free_space on overflows */
+	if (sz < 0 || sz + 32 >= free_space)	/* magic constant 32, ARGH! @?@ */
 	    memBufGrow(mb, mb->capacity + 1);
 	else
 	    break;
     }
-    assert(sz > 0);
-    mb->size += sz - 1;		/* note that we cut 0-terminator as store does */
+    /* snprintf on FreeBSD and linux do not count terminating '\0' as "character stored" */
+    if (!sz || mb->buf[mb->size+sz-1])
+	assert(!mb->buf[mb->size+sz]);
+    else
+	sz--;	/* we cut 0-terminator as store does */
+    mb->size += sz;
 }
 
 /*
