@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.295 1998/05/01 21:09:57 wessels Exp $
+ * $Id: client_side.cc,v 1.296 1998/05/01 22:06:35 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -540,12 +540,8 @@ clientUpdateCounters(clientHttpRequest * http)
     HierarchyLogEntry *H;
 #endif
     Counter.client_http.requests++;
-    kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
-    kb_incr(&Counter.client_http.kbytes_out, http->out.size);
-    if (isTcpHit(http->log_type)) {
+    if (isTcpHit(http->log_type))
 	Counter.client_http.hits++;
-	kb_incr(&Counter.client_http.hit_kbytes_out, http->out.size);
-    }
     if (http->request->err_type != ERR_NONE)
 	Counter.client_http.errors++;
     statHistCount(&Counter.client_http.all_svc_time, svc_time);
@@ -1220,6 +1216,11 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     http->out.size += size;
     debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
 	fd, size, errflag, (int) http->out.offset, objectLen(entry));
+    if (size > 0) {
+        kb_incr(&Counter.client_http.kbytes_out, size);
+        if (isTcpHit(http->log_type))
+	    kb_incr(&Counter.client_http.hit_kbytes_out, size);
+    }
     if (errflag) {
 #if DONT_DO_THIS
 	/*
@@ -1900,7 +1901,10 @@ clientReadRequest(int fd, void *data)
     int len = conn->in.size - conn->in.offset - 1;
     debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
     size = read(fd, conn->in.buf + conn->in.offset, len);
-    fd_bytes(fd, size, FD_READ);
+    if (size > 0) {
+        fd_bytes(fd, size, FD_READ);
+        kb_incr(&Counter.client_http.kbytes_in, size);
+    }
     /*
      * Don't reset the timeout value here.  The timeout value will be
      * set to Config.Timeout.request by httpAccept() and
