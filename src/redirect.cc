@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.9 1996/08/17 05:09:00 wessels Exp $
+ * $Id: redirect.cc,v 1.10 1996/08/19 22:46:01 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -386,7 +386,7 @@ void redirectShutdownServers()
     if (Config.Program.redirect == NULL)
 	return;
     if (redirectQueueHead) {
-        while ((redirect = GetFirstAvailable()) && (r = Dequeue()))
+	while ((redirect = GetFirstAvailable()) && (r = Dequeue()))
 	    redirectDispatch(redirect, r);
 	return;
     }
