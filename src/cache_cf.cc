@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.190 1997/05/16 07:43:54 wessels Exp $
+ * $Id: cache_cf.cc,v 1.191 1997/05/23 19:45:25 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1029,25 +1029,25 @@ parseConfigFile(const char *file_name)
 	    parseQuickAbort();
 
 	else if (!strcmp(token, "negative_ttl"))
-	    parseTimeLine(&Config.negativeTtl, T_MINUTE_STR);
+	    parseTimeLine(&Config.negativeTtl, T_SECOND_STR);
 	else if (!strcmp(token, "negative_dns_ttl"))
-	    parseTimeLine(&Config.negativeDnsTtl, T_MINUTE_STR);
+	    parseTimeLine(&Config.negativeDnsTtl, T_SECOND_STR);
 	else if (!strcmp(token, "positive_dns_ttl"))
-	    parseTimeLine(&Config.positiveDnsTtl, T_MINUTE_STR);
+	    parseTimeLine(&Config.positiveDnsTtl, T_SECOND_STR);
 	else if (!strcmp(token, "read_timeout"))
-	    parseTimeLine(&Config.Timeout.read, T_MINUTE_STR);
+	    parseTimeLine(&Config.Timeout.read, T_SECOND_STR);
 	else if (!strcmp(token, "connect_timeout"))
 	    parseTimeLine(&Config.Timeout.connect, T_SECOND_STR);
 	else if (!strcmp(token, "defer_timeout"))
-	    parseTimeLine(&Config.Timeout.defer, T_MINUTE_STR);
+	    parseTimeLine(&Config.Timeout.defer, T_SECOND_STR);
 	else if (!strcmp(token, "request_timeout"))
 	    parseTimeLine(&Config.Timeout.request, T_SECOND_STR);
 	else if (!strcmp(token, "client_lifetime"))
-	    parseTimeLine(&Config.Timeout.lifetime, T_MINUTE_STR);
+	    parseTimeLine(&Config.Timeout.lifetime, T_SECOND_STR);
 	else if (!strcmp(token, "shutdown_lifetime"))
 	    parseTimeLine(&Config.shutdownLifetime, T_SECOND_STR);
 	else if (!strcmp(token, "clean_rate"))
-	    parseTimeLine(&Config.cleanRate, T_MINUTE_STR);
+	    parseTimeLine(&Config.cleanRate, T_SECOND_STR);
 	else if (!strcmp(token, "reference_age"))
 	    parseTimeLine(&Config.referenceAge, T_MINUTE_STR);
 
