@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.301 1998/08/21 04:03:44 wessels Exp $
+ * $Id: cache_cf.cc,v 1.302 1998/08/21 16:58:11 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -307,19 +307,19 @@ configDoConfigure(void)
     requirePathnameExists("Error Directory", Config.errorDirectory);
 #if HTTP_VIOLATIONS
     {
-    const refresh_t *R;
-    for (R = Config.Refresh; R; R = R->next) {
-	if (!R->flags.override_expire)
-	    continue;
-	debug(22, 1) ("WARNING: use of 'override-expire' in 'refresh_pattern' violates HTTP\n");
-	break;
-    }
-    for (R = Config.Refresh; R; R = R->next) {
-	if (!R->flags.override_lastmod)
-	    continue;
-	debug(22, 1) ("WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP\n");
-	break;
-    }
+	const refresh_t *R;
+	for (R = Config.Refresh; R; R = R->next) {
+	    if (!R->flags.override_expire)
+		continue;
+	    debug(22, 1) ("WARNING: use of 'override-expire' in 'refresh_pattern' violates HTTP\n");
+	    break;
+	}
+	for (R = Config.Refresh; R; R = R->next) {
+	    if (!R->flags.override_lastmod)
+		continue;
+	    debug(22, 1) ("WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP\n");
+	    break;
+	}
     }
 #endif
 }
