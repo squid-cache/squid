@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.67 1998/10/14 21:12:00 wessels Exp $
+ * $Id: defines.h,v 1.68 1998/11/20 06:08:01 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -263,3 +263,7 @@
 #define URI_WHITESPACE_ALLOW 1
 #define URI_WHITESPACE_ENCODE 2
 #define URI_WHITESPACE_CHOP 3
+
+#ifndef _PATH_DEVNULL
+#define _PATH_DEVNULL "/dev/null"
+#endif

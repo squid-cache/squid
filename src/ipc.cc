@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.14 1998/11/17 01:28:56 wessels Exp $
+ * $Id: ipc.cc,v 1.15 1998/11/20 06:08:01 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -66,6 +66,7 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     int cwfd = -1;
     int pwfd = -1;
     int fd;
+    int t1, t2, t3;
     socklen_t len;
     int tmp_s;
 #if HAVE_PUTENV
@@ -244,21 +245,27 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     snprintf(env_str, tmp_s, "SQUID_DEBUG=%s", Config.debugOptions);
     putenv(env_str);
 #endif
-    dup2(fileno(debug_log), 2);
-    if (fileno(debug_log) > 2)
-	fclose(debug_log);
-    dup2(crfd, 0);
-    dup2(cwfd, 1);
     /*
-     * Solaris pthreads seems to close FD 0 upon fork(), so don't close
-     * this FD if its 0, 1, or 2.
-     * -- Michael O'Reilly <michael@metal.iinet.net.au>
+     * This double-dup stuff avoids problems when one of 
+     *  crfd, cwfd, or debug_log are in the rage 0-2.
      */
-    if (crfd > 2)
-	close(crfd);
-    if (cwfd != crfd)
-	if (cwfd > 2)
-	    close(cwfd);
+    do {
+	x = open(_PATH_DEVNULL, 0, 0444);
+	commSetCloseOnExec(x);
+    } while (x < 3);
+    t1 = dup(crfd);
+    t2 = dup(cwfd);
+    t3 = dup(fileno(debug_log));
+    assert(t1 > 2 && t2 > 2 && t3 > 2);
+    close(crfd);
+    close(cwfd);
+    close(fileno(debug_log));
+    dup2(t1, 0);
+    dup2(t2, 1);
+    dup2(t3, 2);
+    close(t1);
+    close(t2);
+    close(t3);
 #if HAVE_SETSID
     setsid();
 #endif
