@@ -1,5 +1,6 @@
+
 /*
- * $Id: whois.cc,v 1.7 1998/12/05 00:54:49 wessels Exp $
+ * $Id: whois.cc,v 1.8 1999/01/08 21:12:19 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -106,7 +107,6 @@ whoisReadReply(int fd, void *data)
 	    fwdFail(p->fwd, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
 	    comm_close(fd);
 	} else {
-	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else {

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.141 1998/12/05 00:54:26 wessels Exp $
+ * $Id: gopher.cc,v 1.142 1999/01/08 21:12:13 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -580,8 +580,6 @@ gopherTimeout(int fd, void *data)
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->url = xstrdup(gopherState->request);
 	errorAppendEntry(entry, err);
-    } else {
-	storeAbort(entry, 0);
     }
     comm_close(fd);
 }
@@ -638,7 +636,6 @@ gopherReadReply(int fd, void *data)
 	    errorAppendEntry(entry, err);
 	    comm_close(fd);
 	} else {
-	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.40 1998/12/29 22:51:11 wessels Exp $
+ * $Id: forward.cc,v 1.41 1999/01/08 21:12:10 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -87,8 +87,6 @@ fwdStateFree(FwdState * fwdState)
 	    err->request = requestLink(fwdState->request);
 	    err->xerrno = fwdState->fail.xerrno;
 	    errorAppendEntry(e, err);
-	} else {
-	    storeAbort(e, 0);
 	}
     }
     fwdServersFree(&fwdState->servers);
@@ -193,8 +191,6 @@ fwdConnectTimeout(int fd, void *data)
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->request = requestLink(fwdState->request);
 	errorAppendEntry(entry, err);
-    } else {
-	storeAbort(entry, 0);
     }
     comm_close(fd);
 }
@@ -498,7 +494,7 @@ fwdComplete(FwdState * fwdState)
 	e->mem_obj->reply->sline.status);
     fwdLogReplyStatus(fwdState->n_tries, e->mem_obj->reply->sline.status);
     if (fwdReforward(fwdState)) {
-	debug(17, 1) ("fwdComplete: re-forwarding %d %s\n",
+	debug(17, 3) ("fwdComplete: re-forwarding %d %s\n",
 	    e->mem_obj->reply->sline.status,
 	    storeUrl(e));
 	if (fwdState->server_fd > -1)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.334 1998/12/11 23:10:47 wessels Exp $
+ * $Id: http.cc,v 1.335 1999/01/08 21:12:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -93,8 +93,6 @@ httpTimeout(int fd, void *data)
     assert(entry->store_status == STORE_PENDING);
     if (entry->mem_obj->inmem_hi == 0) {
 	fwdFail(httpState->fwd, ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, 0);
-    } else {
-	storeAbort(entry, 0);
     }
     comm_close(fd);
 }
@@ -473,7 +471,6 @@ httpReadReply(int fd, void *data)
 	    fwdFail(httpState->fwd, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
 	    comm_close(fd);
 	} else {
-	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
