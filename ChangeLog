@@ -29,6 +29,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Async-IO on linux now makes proper use of mutexes. This fixes some
 	  odd pthread segfaults on SMP Linux machines, at a slight performance
 	  penalty.
+	- %s can now be used in cache_swap_log and will be substituded with
+	  the last path component of cache_dir.
 
 Changes to Squid-2.4.DEVEL2 ():
 
