@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.61 1996/10/09 15:34:33 wessels Exp $
+ * $Id: neighbors.cc,v 1.62 1996/10/09 15:43:53 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -472,7 +472,12 @@ neighborsUdpPing(protodispatch_data * proto)
 		PROTO_NONE);
 	}
 
-	e->stats.ack_deficit++;
+	if (e->mcast_ttl > 0) {
+	    /* XXX kill us off, so Squid won't expect a reply */
+	    e->stats.ack_deficit = HIER_MAX_DEFICIT;
+	} else {
+	    e->stats.ack_deficit++;
+	}
 	e->stats.pings_sent++;
 
 	debug(15, 3, "neighborsUdpPing: %s: ack_deficit = %d\n",
@@ -695,7 +700,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 }
 
 void
-neighbors_cf_add(char *host, char *type, int http_port, int icp_port, int options, int weight)
+neighbors_cf_add(char *host, char *type, int http_port, int icp_port, int options, int weight, int mcast_ttl)
 {
     struct neighbor_cf *t, *u;
 
@@ -706,6 +711,7 @@ neighbors_cf_add(char *host, char *type, int http_port, int icp_port, int option
     t->icp_port = icp_port;
     t->options = options;
     t->weight = weight;
+    t->mcast_ttl = mcast_ttl;
     t->next = (struct neighbor_cf *) NULL;
 
     if (Neighbor_cf == (struct neighbor_cf *) NULL) {
@@ -815,6 +821,7 @@ neighbors_init(void)
 	e = xcalloc(1, sizeof(edge));
 	e->http_port = t->http_port;
 	e->icp_port = t->icp_port;
+	e->mcast_ttl = t->mcast_ttl;
 	e->options = t->options;
 	e->weight = t->weight;
 	e->host = t->host;
