@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: gopher.cc,v 1.153 2000/05/16 07:06:04 wessels Exp $
+ * $Id: gopher.cc,v 1.154 2000/06/06 19:34:31 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived

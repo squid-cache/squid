@@ -1,5 +1,6 @@
+
 /*
- * $Id: cache_diff.cc,v 1.11 2000/03/06 16:23:29 wessels Exp $
+ * $Id: cache_diff.cc,v 1.12 2000/06/06 19:34:31 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
