@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>エラー: FTP アップロードは失敗しました</TITLE>
+</HEAD><BODY>
+<H1>エラー</H1>
+<H2>FTP アップロードは失敗しました<H2>
+<HR>
+<P>
+以下の URL を PUT しようとした際に:
+<A HREF="%U">%U</A>
+<P>
+Squid は以下の ftp コマンドを送りましたが:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+このような結果を受け取りました．
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+この意味は次の通りです:
+<PRE>
+  パス，パーミッション，ディスクの空き容量を確認し，再度試してください．
+</PRE>
+</P>
+

@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>エラー: リクエストされた URL は取得できませんでした</TITLE>
+</HEAD><BODY>
+<H1>エラー</H1>
+<H2>リクエストされた URL は取得できませんでした</H2>
+<HR>
+<P>
+以下の URL を取得した際に:
+<A HREF="%U">%U</A>
+<P>
+次のエラーが発生しました:
+<BLOCKQUOTE>
+以下のホスト名の IP address を調べられません．
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+DNS サーバが以下のエラーを返しました:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+この意味は次の通りです:
+<PRE>
+ キャッシュは URL 中のホスト名から IP address を調べることができませんでした．
+ アドレスが間違っていないか確認してください．
+</PRE>
+</P>
+
