@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.328 2005/01/06 03:22:22 robertc Exp $
+ * $Id: neighbors.cc,v 1.329 2005/03/10 20:22:46 serassio Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -793,6 +793,9 @@ peerDigestLookup(peer * p, HttpRequest * request)
     if (!p->digest) {
         debug(15, 5) ("peerDigestLookup: gone!\n");
         return LOOKUP_NONE;
+    } else if (!peerHTTPOkay(p, request)) {
+        debug(15, 5) ("peerDigestLookup: !peerHTTPOkay\n");
+        return LOOKUP_NONE;
     } else if (!p->digest->flags.needed) {
         debug(15, 5) ("peerDigestLookup: note need\n");
         peerDigestNeeded(p->digest);
@@ -800,9 +803,6 @@ peerDigestLookup(peer * p, HttpRequest * request)
     } else if (!p->digest->flags.usable) {
         debug(15, 5) ("peerDigestLookup: !ready && %srequested\n",
                       p->digest->flags.requested ? "" : "!");
-        return LOOKUP_NONE;
-    } else if (!peerHTTPOkay(p, request)) {
-        debug(15, 5) ("peerDigestLookup: !peerHTTPOkay\n");
         return LOOKUP_NONE;
     }
 
