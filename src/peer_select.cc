@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.24 1997/07/26 04:48:34 wessels Exp $
+ * $Id: peer_select.cc,v 1.25 1997/08/24 00:37:05 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -75,7 +75,7 @@ static void
 peerSelectStateFree(ps_state * psstate)
 {
     if (psstate->acl_checklist) {
-	debug(0, 0) ("calling aclChecklistFree() from peerSelectStateFree\n");
+	debug(44, 1) ("calling aclChecklistFree() from peerSelectStateFree\n");
 	aclChecklistFree(psstate->acl_checklist);
     }
     requestUnlink(psstate->request);
