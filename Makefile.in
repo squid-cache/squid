@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.15 2002/05/20 01:18:11 hno Exp $
+# $Id: Makefile.in,v 1.16 2002/06/13 00:10:44 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -117,7 +117,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects VERSION=1.5
+AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
 DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc
 SUBDIRS = lib @makesnmplib@ scripts src icons errors doc
 
