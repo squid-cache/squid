@@ -1,7 +1,7 @@
 #
 #  Makefile for the AUFS storage driver for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2000/05/03 17:15:46 adrian Exp $
+#  $Id: Makefile.in,v 1.2 2000/11/10 21:42:03 hno Exp $
 #
 
 FS		= aufs
@@ -36,6 +36,7 @@ $(OUT): $(OBJS)
 	$(RANLIB) $(OUT)
 
 $(OBJS): $(top_srcdir)/include/version.h ../../../include/autoconf.h
+$(OBJS): store_asyncufs.h
 
 .c.o:
 	@rm -f ../stamp
