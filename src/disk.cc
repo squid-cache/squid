@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.93 1997/11/12 00:10:45 wessels Exp $
+ * $Id: disk.cc,v 1.94 1997/11/14 04:55:07 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -378,8 +378,8 @@ static void
 diskHandleRead(int fd, void *data)
 {
     dread_ctrl *ctrl_dat = data;
-    fde *F = &fd_table[fd];
 #if !USE_ASYNC_IO
+    fde *F = &fd_table[fd];
     int len;
 #endif
     disk_ctrl_t *ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
