@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.456 2004/11/06 22:20:47 hno Exp $
+ * $Id: cache_cf.cc,v 1.457 2004/12/08 00:06:03 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -395,6 +395,13 @@ parseConfigFile(const char *file_name)
     }
 
     defaults_if_none();
+
+    if (!Config.chroot_dir) {
+        leave_suid();
+        _db_init(Config.Log.log, Config.debugOptions);
+        enter_suid();
+    }
+
     configDoConfigure();
     cachemgrRegister("config",
                      "Current Squid Configuration",
@@ -653,7 +660,32 @@ configDoConfigure(void)
     urlExtMethodConfigure();
 #if USE_SSL
 
+    debug(3, 1) ("Initializing https proxy context\n");
+
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath);
+
+    {
+
+        peer *p;
+
+        for (p = Config.peers; p != NULL; p = p->next) {
+            if (p->use_ssl) {
+                debug(3, 1) ("Initializing cache_peer %s SSL context\n", p->name);
+                p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath);
+            }
+        }
+    }
+
+    {
+
+        https_port_list *s;
+
+        for (s = Config.Sockaddr.https; s != NULL; s = s->next) {
+            debug(3, 1) ("Initializing https_port %s:%d SSL context\n", inet_ntoa(s->s.sin_addr), ntohs(s->s.sin_port));
+            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->dhfile);
+        }
+    }
+
 #endif
 }
 
@@ -1711,12 +1743,6 @@ parse_peer(peer ** head)
     }
 
 #endif
-#if USE_SSL
-    if (p->use_ssl) {
-        p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath);
-    }
-
-#endif
     while (*head != NULL)
         head = &(*head)->next;
 
@@ -2725,6 +2751,7 @@ free_generic_http_port_data(http_port_list * s)
 {
     safe_free(s->name);
     safe_free(s->defaultsite);
+    safe_free(s->protocol);
 }
 
 static void
@@ -2834,6 +2861,12 @@ cbdataFree_https_port(void *data)
     free_generic_http_port_data(&s->http);
     safe_free(s->cert);
     safe_free(s->key);
+    safe_free(s->options);
+    safe_free(s->cipher);
+    safe_free(s->cafile);
+    safe_free(s->capath);
+    safe_free(s->dhfile);
+    safe_free(s->sslflags);
 }
 
 static void
@@ -2889,11 +2922,6 @@ parse_https_port_list(https_port_list ** head)
             parse_http_port_option(&s->http, token);
         }
     }
-
-    s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->dhfile);
-
-    if (!s->sslContext)
-        self_destruct();
 
     while (*head)
         head = (https_port_list **)&(*head)->http.next;
