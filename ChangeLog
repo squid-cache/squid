@@ -43,6 +43,7 @@ Changes to squid-2.5 ():
 	- SASL authentication helper by Ian Castle
         - msntauth updated to v2.0.3
 	- no_cache now applies to cache hits as well as cache misses
+	- the Gopher client in Squid has been significantly improved
 	- Countless other small things and fixes
 
 Changes to Squid-2.4.STABLE6 (March 19, 2002):
