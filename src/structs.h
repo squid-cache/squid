@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.375 2001/01/07 23:36:40 hno Exp $
+ * $Id: structs.h,v 1.376 2001/01/09 01:13:36 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -763,9 +763,6 @@ struct _Packer {
 struct _HttpStatusLine {
     /* public, read only */
     http_version_t version;
-#if 0
-    float version;
-#endif
     const char *reason;		/* points to a _constant_ string (default or supplied), never free()d */
     http_status status;
 };
