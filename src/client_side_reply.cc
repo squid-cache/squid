@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.3 2002/09/15 07:34:20 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.4 2002/09/15 14:42:05 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1142,6 +1142,19 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	    ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
 	request->flags.proxy_keepalive = 0;
     }
+    /* Append VIA */
+      {                           
+	LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
+	String strVia = httpHeaderGetList(hdr, HDR_VIA);
+	snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
+		 rep->sline.version.major,
+		 rep->sline.version.minor,
+		 ThisCache);
+	strListAdd(&strVia, bbuf, ',');
+	httpHeaderDelById(hdr, HDR_VIA);
+	httpHeaderPutStr(hdr, HDR_VIA, strBuf(strVia));
+	stringClean(&strVia);
+      }
     /* Signal keep-alive if needed */
     httpHeaderPutStr(hdr,
 	http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
