@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.284 2000/05/16 07:06:05 wessels Exp $
+ * $Id: neighbors.cc,v 1.285 2000/10/04 01:13:25 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -901,6 +901,12 @@ neighborUp(const peer * p)
 	return 1;
     if (p->stats.probe_start != 0 &&
 	squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer)
+	return 0;
+    /*
+     * The peer can not be UP if we don't have any IP addresses
+     * for it.
+     */
+    if (0 == p->n_addresses)
 	return 0;
     return 1;
 }
