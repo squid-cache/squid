@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.140 2003/01/18 02:27:16 hno Exp $
+ * $Id: url.cc,v 1.141 2003/01/18 15:00:39 hno Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -318,16 +318,16 @@ urlParse(method_t method, char *url)
 	return NULL;
     }
 #endif
-#if DONT_DO_THIS_IT_BREAKS_SEMANTIC_TRANSPARENCY
+    if (Config.appendDomain && !strchr(host, '.'))
+	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')
 	host[l] = '\0';
-    /* remove duplicate dots */
-    while ((t = strstr(host, "..")))
-	xmemmove(t, t + 1, strlen(t));
-#endif
-    if (Config.appendDomain && !strchr(host, '.'))
-	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
+    /* reject duplicate or leading dots */
+    if (strstr(host, "..") || *host == '.') {
+	debug(23, 1) ("urlParse: Illegal hostname '%s'\n", host);
+	return NULL;
+    }
     if (port < 1 || port > 65535) {
 	debug(23, 3) ("urlParse: Invalid port '%d'\n", port);
 	return NULL;
