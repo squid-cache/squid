@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.167 1997/11/12 00:08:58 wessels Exp $
+ * $Id: neighbors.cc,v 1.168 1997/11/12 23:47:39 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -188,8 +188,7 @@ peerAllowedToUse(const peer * p, request_t * request)
     int do_ping = 1;
     const struct _acl_list *a = NULL;
     aclCheck_t checklist;
-    if (request == NULL)
-	fatal_dump("peerAllowedToUse: NULL request");
+    assert(request != NULL);
     if (EBIT_TEST(request->flags, REQ_NOCACHE))
 	if (neighborType(p, request) == PEER_SIBLING)
 	    return 0;
@@ -414,12 +413,8 @@ neighborsUdpPing(request_t * request,
 
     if (Config.peers == NULL)
 	return 0;
-    if (theOutIcpConnection < 0) {
-	debug(15, 0) ("neighborsUdpPing: There is no ICP socket!\n");
-	debug(15, 0) ("Cannot query neighbors for '%s'.\n", url);
-	debug(15, 0) ("Check 'icp_port' in your config file\n");
-	fatal_dump(NULL);
-    }
+    if (theOutIcpConnection < 0)
+	fatal("neighborsUdpPing: There is no ICP socket!");
     assert(entry->swap_status == SWAPOUT_NONE);
     mem->start_ping = current_time;
     mem->icp_reply_callback = callback;
@@ -900,8 +895,7 @@ peerCountMcastPeersStart(void *data)
     MemObject *mem;
     icp_common_t *query;
     LOCAL_ARRAY(char, url, MAX_URL);
-    if (p->type != PEER_MULTICAST)
-	fatal_dump("peerCountMcastPeersStart: non-multicast peer");
+    assert(p->type == PEER_MULTICAST);
     p->mcast.flags &= ~PEER_COUNT_EVENT_PENDING;
     snprintf(url, MAX_URL, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
     fake = storeCreateEntry(url, url, 0, METHOD_GET);

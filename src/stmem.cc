@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.52 1997/10/25 17:23:00 wessels Exp $
+ * $Id: stmem.cc,v 1.53 1997/11/12 23:47:41 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -272,8 +272,7 @@ get_free_thing(stmem_stats * thing)
     void *p = NULL;
     if (!empty_stack(&thing->free_page_stack)) {
 	p = pop(&thing->free_page_stack);
-	if (p == NULL)
-	    fatal_dump("get_free_thing: NULL pointer?");
+	assert(p != NULL);
     } else {
 	p = xmalloc(thing->page_size);
 	thing->total_pages_allocated++;
@@ -310,8 +309,7 @@ get_free_8k_page(void)
 static void
 put_free_thing(stmem_stats * thing, void *p)
 {
-    if (p == NULL)
-	fatal_dump("Somebody is putting a NULL pointer!");
+    assert(p != NULL);
     thing->n_pages_in_use--;
     if (thing->total_pages_allocated > thing->max_pages) {
 	xfree(p);

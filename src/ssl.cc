@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.70 1997/11/12 00:09:05 wessels Exp $
+ * $Id: ssl.cc,v 1.71 1997/11/12 23:47:40 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -99,8 +99,7 @@ sslStateFree(int fd, void *data)
     debug(26, 3) ("sslStateFree: FD %d, sslState=%p\n", fd, sslState);
     if (sslState == NULL)
 	return;
-    if (fd != sslState->server.fd)
-	fatal_dump("sslStateFree: FD mismatch!\n");
+    assert(fd == sslState->server.fd);
     safe_free(sslState->server.buf);
     safe_free(sslState->client.buf);
     xfree(sslState->url);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.169 1997/11/12 00:09:06 wessels Exp $
+ * $Id: stat.cc,v 1.170 1997/11/12 23:47:40 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -889,7 +889,7 @@ pconnHistCount(int what, int i)
     else if (what == 1)
 	server_pconn_hist[i]++;
     else
-	fatal_dump("pconnHistCount: bad 'what' arg");
+	assert(0);
 }
 
 void
