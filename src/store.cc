@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.161 1996/11/13 06:52:29 wessels Exp $
+ * $Id: store.cc,v 1.162 1996/11/13 18:12:10 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -919,7 +919,7 @@ InvokeHandlers(StoreEntry * e)
     PIF handler = NULL;
     void *data = NULL;
     struct _store_client *sc;
-    if (mem->clients == NULL) {
+    if (mem->clients == NULL && mem->nclients) {
 	debug_trap("InvokeHandlers: NULL mem->clients");
 	return;
     }
@@ -1123,12 +1123,14 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	    debug(20, 0, "  --> Only read %d bytes\n",
 		mem->e_current_len);
 	}
+	e->lock_count++;	/* lock while calling handler */
 	if ((handler = mem->swapin_complete_handler) != NULL) {
 	    data = mem->swapin_complete_data;
 	    mem->swapin_complete_handler = NULL;
 	    mem->swapin_complete_data = NULL;
-	    handler(0, data);
+	    handler(0, data);	/* handler might call storeRelease() */
 	}
+	e->lock_count--;
 	if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
 	    storeRelease(e);
 	} else if ((mem = e->mem_obj)) {
