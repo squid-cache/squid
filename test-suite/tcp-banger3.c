@@ -108,6 +108,12 @@ static int debug = 1;
 static int debug = 0;
 #endif
 
+int
+tvSubMsec(struct timeval t1, struct timeval t2)
+{
+    return (t2.tv_sec - t1.tv_sec) * 1000 + (t2.tv_usec - t1.tv_usec) / 1000;
+}
+
 static int
 get_url(const char *url)
 {
@@ -142,12 +148,16 @@ get_url(const char *url)
     S.sin_port = htons(port);
     S.sin_family = AF_INET;
     if (debug)
-    fprintf(stderr, "%s (%s) %d %s\n", host, inet_ntoa(S.sin_addr), (int) port, path);
+	fprintf(stderr, "%s (%s) %d %s\n", host, inet_ntoa(S.sin_addr), (int) port, path);
     s = socket(PF_INET, SOCK_STREAM, 0);
+    if (s < 0) {
+	perror("socket");
+	return -errno;
+    }
     x = connect(s, (struct sockaddr *) &S, sizeof(S));
     if (x < 0) {
 	perror(host);
-	return 0;
+	return -errno;
     }
     snprintf(request, URL_BUF_SZ,
 	"GET %s HTTP/1.1\r\n"
@@ -160,7 +170,7 @@ get_url(const char *url)
     x = write(s, request, strlen(request));
     if (x < 0) {
 	perror("write");
-	return 0;
+	return -errno;
     }
     do {
 	x = read(s, reply, READ_BUF_SZ);
@@ -177,8 +187,10 @@ child_main_loop(void)
     char buf[URL_BUF_SZ];
     char *t;
     int n;
+    struct timeval t1;
+    struct timeval t2;
     if (debug)
-    fprintf(stderr, "Child PID %d entering child_main_loop\n", (int) getpid());
+	fprintf(stderr, "Child PID %d entering child_main_loop\n", (int) getpid());
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
@@ -189,8 +201,10 @@ child_main_loop(void)
 	*t = '\0';
 	if (strncmp(buf, "http://", 7))
 	    continue;
+	gettimeofday(&t1, NULL);
 	n = get_url(buf);
-	printf ("%d\n", n);
+	gettimeofday(&t2, NULL);
+	printf("%d %d\n", n, tvSubMsec(t1, t2));
     }
 }
 
@@ -246,9 +260,9 @@ create_children(char *argv[])
     for (i = 0; i < 20; i++) {
 	t = create_a_thing(argv);
 	assert(t);
-    if (debug)
-	fprintf(stderr, "Thing #%d on FD %d/%d\n",
-	    i, t->rfd, t->wfd);
+	if (debug)
+	    fprintf(stderr, "Thing #%d on FD %d/%d\n",
+		i, t->rfd, t->wfd);
 	*T = t;
 	T = &t->next;
     }
@@ -289,7 +303,7 @@ dispatch(thing * t, char *url)
     if (x < 0)
 	perror("write");
     if (debug)
-    fprintf(stderr, "dispatched URL to thing PID %d, %d bytes\n", (int) t->pid, x);
+	fprintf(stderr, "dispatched URL to thing PID %d, %d bytes\n", (int) t->pid, x);
     strncpy(t->url, url, URL_BUF_SZ);
     if ((s = strchr(t->url, '\n')))
 	*s = '\0';
@@ -303,13 +317,13 @@ read_reply(thing * t)
     char buf[128];
     int i;
     int x;
+    int j;
     x = read(t->rfd, buf, 128);
     if (x < 0) {
 	perror("read");
-    } else {
-	i = atoi(buf);
+    } else if (2 == sscanf(buf, "%d %d", &i, &j)) {
 	gettimeofday(&now, NULL);
-	printf("%d.%06d %9d %s\n", (int) now.tv_sec, (int) now.tv_usec, i, t->url);
+	printf("%d.%06d %9d %9d %s\n", (int) now.tv_sec, (int) now.tv_usec, i, j, t->url);
     }
     t->state = 0;
     FD_CLR(t->rfd, &R1);
