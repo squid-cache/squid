@@ -929,8 +929,6 @@ struct _StatLogHist {
     double min;
     double max;
     double scale;
-    DTOI *val_to_bin;
-    DTOD *bin_to_val;
 };
 
 struct _StatCounters {
