@@ -278,10 +278,10 @@ extern void httpHeaderSetTime(HttpHeader * hdr, http_hdr_type type, time_t time)
 extern void httpHeaderSetStr(HttpHeader * hdr, http_hdr_type type, const char *str);
 extern void httpHeaderSetAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
 extern void httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *value);
-extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
+extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
+extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
 extern HttpScc *httpHeaderGetScc(const HttpHeader * hdr);
-extern field_store httpHeaderGet(const HttpHeader * hdr, http_hdr_type id);
 int httpHeaderDelFields(HttpHeader * hdr, const char *name);
 /* store report about current header usage and other stats */
 extern void httpHeaderStoreReport(StoreEntry * e);

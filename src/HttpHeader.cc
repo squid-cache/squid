@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.12 1998/03/03 22:17:50 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.13 1998/03/04 05:39:28 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -252,6 +252,7 @@ static HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos
 static void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
 static void httpHeaderAddParsedEntry(HttpHeader * hdr, HttpHeaderEntry * e);
 static void httpHeaderAddNewEntry(HttpHeader * hdr, const HttpHeaderEntry * e);
+static field_store httpHeaderGet(const HttpHeader * hdr, http_hdr_type id);
 static void httpHeaderSet(HttpHeader * hdr, http_hdr_type id, const field_store value);
 static void httpHeaderSyncMasks(HttpHeader * hdr, const HttpHeaderEntry * e, int add);
 static int httpHeaderIdByName(const char *name, int name_len, const field_attrs_t * attrs, int end, int mask);
@@ -299,6 +300,10 @@ static void freeShortString(char *str);
 
 static int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 static const char *getStringPrefix(const char *str);
+
+
+/* delete this when everybody remembers that ':' is not a part of a name */
+#define conversion_period_name_check(name) assert(!strchr((name), ':'))
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
@@ -840,7 +845,7 @@ httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *value)
 }
 
 /* get a value of a field (not lvalue though) */
-field_store
+static field_store
 httpHeaderGet(const HttpHeader * hdr, http_hdr_type id)
 {
     HttpHeaderEntry *e;
@@ -854,11 +859,19 @@ httpHeaderGet(const HttpHeader * hdr, http_hdr_type id)
 	return httpHeaderFieldBadValue(Headers[id].type);
 }
 
+int
+httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id)
+{
+    assert_eid(id);
+    assert(Headers[id].type == ftInt);    /* must be of an apropriate type */
+    return httpHeaderGet(hdr, id).v_int;
+}
+
 const char *
 httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftPChar);	/* must be of an apropriate type */
+    assert(Headers[id].type == ftPChar);  /* must be of an apropriate type */
     return httpHeaderGet(hdr, id).v_pchar;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.8 1998/03/03 22:17:50 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.9 1998/03/04 05:39:27 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -280,7 +280,7 @@ int
 httpReplyContentLen(const HttpReply * rep)
 {
     assert(rep);
-    return httpHeaderGet(&rep->hdr, HDR_CONTENT_LENGTH).v_int;
+    return httpHeaderGetInt(&rep->hdr, HDR_CONTENT_LENGTH);
 }
 
 /* should we return "" or NULL if no content-type? Return NULL for now @?@ */
