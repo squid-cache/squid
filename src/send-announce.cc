@@ -1,3 +1,5 @@
+/* $Id: send-announce.cc,v 1.3 1996/02/29 07:23:20 wessels Exp $ */
+
 #include "config.h"
 
 #include <stdio.h>

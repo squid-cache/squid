@@ -1,3 +1,5 @@
+/* $Id: recv-announce.cc,v 1.2 1996/02/29 07:23:19 wessels Exp $ */
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
