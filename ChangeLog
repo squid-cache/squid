@@ -171,6 +171,8 @@ Changes to squid-1.2.beta20 (April 24, 1998):
 	  them goes BAD.
 	- Fixed squid-internal bug for mixed-case hostnames (Henrik
 	  Nordstrom).
+	- Fixed ICP counting probelm.  icpUdpSend() arg should be
+	  LOG_ICP_QUERY instead of LOG_TAG_NONE.
 	- Added some additional fault toleranse on FTP data channels
 	  (Henrik Nordstrom).
 	- Corrected error reporting on FTP "hacks" (Henrik Nordstrom).
