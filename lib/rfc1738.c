@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.17 1998/07/22 20:36:37 wessels Exp $
+ * $Id: rfc1738.c,v 1.18 1998/08/12 16:08:05 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -134,18 +134,21 @@ rfc1738_unescape(char *s)
     char hexnum[3];
     int i, j;			/* i is write, j is read */
     unsigned int x;
-
     for (i = j = 0; s[j]; i++, j++) {
 	s[i] = s[j];
-	if (s[i] == '%') {
-	    hexnum[0] = s[++j];
-	    if (hexnum[0] != '%') {
-		hexnum[1] = s[++j];
-		hexnum[2] = '\0';
-		sscanf(hexnum, "%x", &x);
-		s[i] = (char) (0x0ff & x);
-	    } else {
-		s[i] = '%';
+	if (s[i] != '%')
+	    continue;
+	if (s[j+1] == '%') {	/* %% case */
+	    j++;
+	    continue;
+	}
+	if (s[j+1] && s[j+2]) {
+	    hexnum[0] = s[j+1];
+	    hexnum[1] = s[j+2];
+	    hexnum[2] = '\0';
+	    if (1 == sscanf(hexnum, "%x", &x)) {
+	        s[i] = (char) (0x0ff & x);
+		j += 2;
 	    }
 	}
     }
