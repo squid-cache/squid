@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.106 1996/10/09 22:49:28 wessels Exp $
+ * $Id: cache_cf.cc,v 1.107 1996/10/10 16:33:37 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1474,6 +1474,7 @@ configFreeMemory(void)
     safe_free(Config.Program.ftpget_opts);
     safe_free(Config.Program.dnsserver);
     safe_free(Config.Program.redirect);
+    safe_free(Config.Program.pinger);
     safe_free(Config.Accel.host);
     safe_free(Config.Accel.prefix);
     safe_free(Config.appendDomain);
