@@ -38,7 +38,7 @@ splay_insert(void *data, splayNode * top, SPCMP * compare)
 	return new;
     } else {
 	/* duplicate entry */
-	free(new);
+	xfree(new);
 	return top;
     }
 }

@@ -35,6 +35,25 @@
 	  Forster).
 	- Patches for Qnx4 (Jean-Claude MICHOT).
 	- Fixed returning void functions which seems to be a GCC-ism.
+	- New configure script options (Henrik Nordstrom):
+		--enable-new-storekey=[sha|md5(|url)] (was --enable-hashkey)
+		--enable-acltree
+		--enable-icmp
+		--enable-delay-hack
+		--enable-useragent-log
+		--enable-kill-parent  (this should be named -hack)
+		--enable-snmp
+		--enable-time-hack
+		--enable-cachemgr-hostname[=hostname]   (new)
+		--enable-arp-acl  (new)
+	- Added Doug Lea malloc-2.6.4 to the distribution, so that
+	  people easily can try a decent malloc package if they syspect
+	  their malloc is broken.  --enable-dlmalloc (Henrik Nordstrom).
+	- Made XMALLOC_DEBUG_COUNT working again. Requires a small stub
+	  function (Henrik Nordstrom).
+	- Removed top-level Makefile.  People must now run 'configure'
+	  before 'make'.
+
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
 

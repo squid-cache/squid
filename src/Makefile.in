@@ -1,16 +1,10 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.111 1998/01/02 02:05:19 wessels Exp $
+#  $Id: Makefile.in,v 1.112 1998/01/06 00:27:55 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
-
-# define all three for SNMP support
-#SQUID_SNMP		= -DSQUID_SNMP=1
-#SQUID_SNMP_LIBS 	= -L../snmplib -lsnmp
-
-DEFINES         = $(SQUID_SNMP)
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -48,6 +42,7 @@ PERL            = @PERL@
 CRYPTLIB	= @CRYPTLIB@
 REGEXLIB	= @REGEXLIB@
 PTHREADLIB	= @PTHREADLIB@
+SNMPLIB		= @SNMPLIB@
 AC_CFLAGS	= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
@@ -59,8 +54,8 @@ SHELL		= /bin/sh
 
 INCLUDE		= -I. -I../include -I$(srcdir)/../include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) $(PTHREADLIB) \
-		  -lmiscutil $(XTRA_LIBS)
+SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @PTHREADLIB@ \
+		  $(SNMPLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
@@ -72,9 +67,8 @@ CGIPROGS	= cachemgr.cgi
 OBJS	 	= \
 		access_log.o \
 		acl.o \
-		aiops.o \
 		asn.o \
-		async_io.o \
+		@ASYNC_OBJS@ \
 		cache_cf.o \
 		cbdata.o \
 		client_db.o \
@@ -113,7 +107,7 @@ OBJS	 	= \
 		redirect.o \
 		refresh.o \
 		send-announce.o \
-		$(SNMP_OBJS) \
+		@SNMP_OBJS@ \
 		ssl.o \
 		stack.o \
 		stat.o \
@@ -121,9 +115,7 @@ OBJS	 	= \
 		store.o \
 		store_clean.o \
 		store_dir.o \
-		store_key_md5.o \
-		store_key_sha.o \
-		store_key_url.o \
+		store_key_@STORE_KEY@.o \
 		string_arrays.o \
 		tools.o \
 		unlinkd.o \
@@ -139,6 +131,10 @@ SNMP_OBJS	= \
                 snmp_agent.o \
                 snmp_config.o 
 
+ASYNC_OBJS	= \
+		aiops.o \
+		async_io.o
+		
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
@@ -147,7 +143,7 @@ all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 $(OBJS): ../include/version.h
 
 squid:	$(OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_SNMP_LIBS) $(SQUID_LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
 
 globals.o: globals.c Makefile
 	$(CC) -c $< $(CFLAGS) $(DEFAULTS)
@@ -300,7 +296,7 @@ clean:
 	-rm -f cf_gen cf_parser.c cf.data globals.c string_arrays.c
 
 distclean:	clean
-	-rm -f Makefile squid.conf squid.conf.pre options.h
+	-rm -f Makefile squid.conf squid.conf.pre
 
 tags:
 	ctags *.[ch] ../include/*.h ../lib/*.[ch]
