@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.368 1998/07/30 06:14:31 wessels Exp $
+ * $Id: client_side.cc,v 1.369 1998/07/30 21:49:11 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -856,7 +856,7 @@ clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
 	if (!rep_tag.str)
 	    return 0;		/* entity has no etag to compare with! */
 	if (spec.tag.weak || rep_tag.weak) {
-	    debug(33, 1) ("clientIfRangeMatch: Weak ETags are not in If-Range: %s ? %s\n",
+	    debug(33, 1) ("clientIfRangeMatch: Weak ETags are not allowed in If-Range: %s ? %s\n",
 		spec.tag.str, rep_tag.str);
 	    return 0;		/* must use strong validator for sub-range requests */
 	}
@@ -878,7 +878,9 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
     const char *range_err = NULL;
     assert(http->request->range);
     /* check if we still want to do ranges */
-    if (rep->sline.status != HTTP_OK)
+    if (!rep)
+	range_err = "no [parse-able] reply";
+    else if (rep->sline.status != HTTP_OK)
 	range_err = "wrong status code";
     else if (httpHeaderHas(hdr, HDR_CONTENT_RANGE))
 	range_err = "origin server does ranges";
@@ -1042,6 +1044,9 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 	/* parsing failure, get rid of the invalid reply */
 	httpReplyDestroy(rep);
 	rep = NULL;
+	/* if we were going to do ranges, backoff */
+	if (http->request->range)
+	    clientBuildRangeHeader(http, rep); /* will fail and destroy request->range */
     }
     return rep;
 }
@@ -1237,6 +1242,8 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
     /* offset in range specs does not count the prefix of an http msg */
     off_t body_off = http->out.offset - i->prefix_size;
     assert(size >= 0);
+    /* check: reply was parsed and range iterator was initialized */
+    assert(i->prefix_size > 0);
     /* filter out data according to range specs */
     /* note: order of loop conditions is significant! */
     while (clientCanPackMoreRanges(http, i, size)) {
