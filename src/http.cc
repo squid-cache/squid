@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.309 1998/08/19 06:05:53 wessels Exp $
+ * $Id: http.cc,v 1.310 1998/08/20 22:21:02 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -54,6 +54,7 @@ static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
 static int httpCachableReply(HttpStateData *);
+static void httpMaybeRemovePublic(StoreEntry *, http_status);
 
 static void
 httpStateFree(int fdnotused, void *data)
@@ -125,6 +126,42 @@ httpCacheNegatively(StoreEntry * entry)
     storeNegativeCache(entry);
     if (EBIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
+}
+
+static void
+httpMaybeRemovePublic(StoreEntry * e, http_status status)
+{
+    int remove = 0;
+    const cache_key *key;
+    StoreEntry *pe;
+    switch (status) {
+    case HTTP_OK:
+    case HTTP_NON_AUTHORITATIVE_INFORMATION:
+    case HTTP_MULTIPLE_CHOICES:
+    case HTTP_MOVED_PERMANENTLY:
+    case HTTP_MOVED_TEMPORARILY:
+    case HTTP_FORBIDDEN:
+    case HTTP_NOT_FOUND:
+    case HTTP_METHOD_NOT_ALLOWED:
+    case HTTP_GONE:
+	remove = 1;
+	break;
+#if WORK_IN_PROGRESS
+	case HTTP_UNAUTHORIZED
+	    remove = 1;
+	break;
+#endif
+    default:
+	remove = 0;
+	break;
+    }
+    if (!remove)
+	return;
+    assert(e->mem_obj);
+    key = storeKeyPublic(e->mem_obj->url, e->mem_obj->method);
+    if ((pe = storeGet(key)) == NULL)
+	return;
+    storeRelease(pe);
 }
 
 static int
@@ -261,6 +298,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->sline.status);
+	httpMaybeRemovePublic(entry, reply->sline.status);
 	switch (httpCachableReply(httpState)) {
 	case 1:
 	    httpMakePublic(entry);
