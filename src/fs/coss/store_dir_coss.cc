@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.11 2000/12/05 09:11:31 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.12 2000/12/09 00:35:04 wessels Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -467,15 +467,16 @@ storeCossDirWriteCleanStart(SwapDir * sd)
     CossInfo *cs = (CossInfo *) sd->fsdata;
     struct _clean_state *state = xcalloc(1, sizeof(*state));
     struct stat sb;
+    state->new = xstrdup(storeCossDirSwapLogFile(sd, ".clean"));
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
     if (state->fd < 0) {
+	xfree(state->new);
 	xfree(state);
 	return -1;
     }
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
     state->cur = xstrdup(storeCossDirSwapLogFile(sd, NULL));
-    state->new = xstrdup(storeCossDirSwapLogFile(sd, ".clean"));
     state->cln = xstrdup(storeCossDirSwapLogFile(sd, ".last-clean"));
     state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.17 2000/12/05 09:11:34 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.18 2000/12/09 00:35:05 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -969,13 +969,14 @@ storeUfsDirWriteCleanStart(SwapDir * sd)
     struct stat sb;
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
+    state->new = xstrdup(storeUfsDirSwapLogFile(sd, ".clean"));
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
     if (state->fd < 0) {
+	xfree(state->new);
 	xfree(state);
 	return -1;
     }
     state->cur = xstrdup(storeUfsDirSwapLogFile(sd, NULL));
-    state->new = xstrdup(storeUfsDirSwapLogFile(sd, ".clean"));
     state->cln = xstrdup(storeUfsDirSwapLogFile(sd, ".last-clean"));
     state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
