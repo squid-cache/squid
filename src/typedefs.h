@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.113 2001/01/05 09:51:41 adrian Exp $
+ * $Id: typedefs.h,v 1.114 2001/01/07 14:47:17 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -62,6 +62,7 @@ typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
 typedef struct _acl_proxy_auth acl_proxy_auth;
+typedef struct _acl_proxy_auth_data acl_proxy_auth_data;
 typedef struct _acl_proxy_auth_user acl_proxy_auth_user;
 typedef struct _acl_arp_data acl_arp_data;
 typedef struct _acl acl;

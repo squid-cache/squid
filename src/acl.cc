@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.231 2001/01/05 09:51:36 adrian Exp $
+ * $Id: acl.cc,v 1.232 2001/01/07 14:47:17 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@ static FILE *aclFile;
 static hash_table *proxy_auth_cache = NULL;
 
 static void aclParseDomainList(void *curlist);
+static void aclParseProxyAuthList(void **current);
 static void aclParseIpList(void *curlist);
 static void aclParseIntlist(void *curlist);
 static void aclParseWordList(void *curlist);
@@ -57,7 +58,7 @@ static struct _acl *aclFindByName(const char *name);
 static int aclMatchAcl(struct _acl *, aclCheck_t *);
 static int aclMatchIntegerRange(intrange * data, int i);
 static int aclMatchTime(acl_time_data * data, time_t when);
-static int aclMatchUser(wordlist * data, const char *ident);
+static int aclMatchUser(void *proxyauth_acl, char *user);
 static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
 static int aclMatchIntegerRange(intrange * data, int i);
@@ -634,6 +635,48 @@ aclParseWordList(void *curlist)
 	wordlistAdd(curlist, t);
 }
 
+static void
+aclParseProxyAuthList(void **current)
+{
+    char *t = NULL;
+    acl_proxy_auth_data *data;
+    splayNode *Top = NULL;
+
+    debug(28, 2) ("aclParseProxyAuthList: parsing authlist\n");
+    if (*current == NULL) {
+	debug(28, 3) ("aclParseProxyAuthList: current is null. Creating\n");
+	*current = memAllocate(MEM_ACL_PROXY_AUTH_DATA);	/*we rely on mA. zeroing */
+    }
+    data = *current;
+    if ((t = strtokFile())) {
+	debug(28, 5) ("aclParseProxyAuthList: First token is %s\n", t);
+	if (strcmp("-i", t) == 0) {
+	    debug(28, 5) ("aclParseProxyAuthList: Going case-insensitive\n");
+	    data->flags.case_insensitive = 1;
+	} else if (strcmp("REQUIRED", t) == 0) {
+	    debug(28, 5) ("aclParseProxyAuthList: REQUIRED-type enabled\n");
+	    data->flags.required = 1;
+	} else {
+	    if (data->flags.case_insensitive)
+		Tolower(t);
+	    Top = splay_insert(xstrdup(t), Top, (SPLAYCMP *) strcmp);
+	}
+    }
+    debug(28, 3) ("aclParseProxyAuthList: Case-insensitive-switch is %d\n",
+	data->flags.case_insensitive);
+    /* we might inherit from a previous declaration */
+
+    debug(28, 4) ("aclParseProxyAuthList: parsing proxy-auth list\n");
+    while ((t = strtokFile())) {
+	debug(28, 6) ("aclParseProxyAuthList: Got token: %s\n", t);
+	if (data->flags.case_insensitive)
+	    Tolower(t);
+	Top = splay_insert(xstrdup(t), Top, (SPLAYCMP *) strcmp);
+    }
+    data->names = Top;
+}
+
+
 /**********************/
 /* aclParseDomainList */
 /**********************/
@@ -745,7 +788,7 @@ aclParseAclLine(acl ** head)
 	aclParseMethodList(&A->data);
 	break;
     case ACL_PROXY_AUTH:
-	aclParseWordList(&A->data);
+	aclParseProxyAuthList(&A->data);
 	if (!proxy_auth_cache) {
 	    /* First time around, 7921 should be big enough */
 	    proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -1009,20 +1052,33 @@ aclMatchRegex(relist * data, const char *word)
 }
 
 static int
-aclMatchUser(wordlist * data, const char *user)
+aclMatchUser(void *proxyauth_acl, char *user)
 {
+    acl_proxy_auth_data *data = (acl_proxy_auth_data *) proxyauth_acl;
+    splayNode *Top = data->names;
+
+    debug(28, 7) ("aclMatchUser: user is %s, case_insensitive is %d\n",
+	user, data->flags.case_insensitive);
+    debug(28, 8) ("Top is %p, Top->data is %s\n", Top,
+	(Top != NULL ? (Top)->data : "Unavailable"));
+
     if (user == NULL)
 	return 0;
-    debug(28, 3) ("aclMatchUser: checking '%s'\n", user);
-    while (data) {
-	debug(28, 3) ("aclMatchUser: looking for '%s'\n", data->key);
-	if (strcmp(data->key, "REQUIRED") == 0 && *user != '\0' && strcmp(user, "-") != 0)
-	    return 1;
-	if (strcmp(data->key, user) == 0)
-	    return 1;
-	data = data->next;
+
+    if (data->flags.case_insensitive)
+	Tolower(user);
+
+    if (data->flags.required) {
+	debug(28, 7) ("aclMatchUser: user REQUIRED and auth-info present.\n");
+	return 1;
     }
-    return 0;
+    Top = splay_splay(user, Top, (SPLAYCMP *) strcmp);
+    /* Top=splay_splay(user,Top,(SPLAYCMP *)dumping_strcmp); */
+    debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
+	!splayLastResult,
+	Top, (Top ? Top->data : "Unavailable"));
+    data->names = Top;
+    return !splayLastResult;
 }
 
 static int
@@ -1892,6 +1948,15 @@ aclFreeIpData(void *p)
     memFree(p, MEM_ACL_IP_DATA);
 }
 
+static void
+aclFreeProxyAuthData(void *data)
+{
+    acl_proxy_auth_data *d = data;
+    splay_destroy(d->names, xfree);
+    memFree(d, MEM_ACL_PROXY_AUTH_DATA);
+}
+
+
 void
 aclDestroyAcls(acl ** head)
 {
@@ -1913,12 +1978,16 @@ aclDestroyAcls(acl ** head)
 	    break;
 #if SQUID_SNMP
 	case ACL_SNMP_COMMUNITY:
+	    wordlistDestroy((wordlist **) & a->data);
+	    break;
 #endif
 #if USE_IDENT
 	case ACL_IDENT:
+	    wordlistDestroy((wordlist **) & a->data);
+	    break;
 #endif
 	case ACL_PROXY_AUTH:
-	    wordlistDestroy((wordlist **) & a->data);
+	    aclFreeProxyAuthData(a->data);
 	    break;
 	case ACL_TIME:
 	    aclDestroyTimeList(a->data);
@@ -2095,6 +2164,27 @@ aclIpNetworkCompare(const void *a, const void *b)
 }
 
 static void
+aclDumpProxyAuthListWalkee(void *node_data, void *outlist)
+{
+    /* outlist is really a wordlist ** */
+    wordlistAdd(outlist, node_data);
+}
+
+wordlist *
+aclDumpProxyAuthList(acl_proxy_auth_data * data)
+{
+    wordlist *wl = NULL;
+    if ((data->flags.case_insensitive) != 0)
+	wordlistAdd(&wl, "-i");
+    /* damn this is VERY inefficient for long ACL lists... filling
+     * a wordlist this way costs Sum(1,N) iterations. For instance
+     * a 1000-elements list will be filled in 499500 iterations.
+     */
+    splay_walk(data->names, aclDumpProxyAuthListWalkee, &wl);
+    return wl;
+}
+
+static void
 aclDumpIpListWalkee(void *node, void *state)
 {
     acl_ip_data *ip = node;
@@ -2235,6 +2325,8 @@ aclDumpGeneric(const acl * a)
 	break;
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
+	return wordlistDup(a->data);
+	break;
 #endif
 #if USE_IDENT
     case ACL_IDENT:
@@ -2245,7 +2337,7 @@ aclDumpGeneric(const acl * a)
 	break;
 #endif
     case ACL_PROXY_AUTH:
-	return wordlistDup(a->data);
+	return aclDumpProxyAuthList(a->data);
 	break;
     case ACL_TIME:
 	return aclDumpTimeSpecList(a->data);

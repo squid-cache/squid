@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.179 2001/01/06 11:45:46 hno Exp $
+ * $Id: enums.h,v 1.180 2001/01/07 14:47:17 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -517,6 +517,7 @@ typedef enum {
     MEM_ACL_IP_DATA,
     MEM_ACL_LIST,
     MEM_ACL_NAME_LIST,
+    MEM_ACL_PROXY_AUTH_DATA,
     MEM_ACL_PROXY_AUTH_USER,
     MEM_ACL_TIME_DATA,
     MEM_CACHEMGR_PASSWD,
