@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.291 1997/10/17 19:39:32 wessels Exp $
+ * $Id: store.cc,v 1.292 1997/10/17 20:21:46 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -345,6 +345,7 @@ static void
 destroy_MemObject(MemObject * mem)
 {
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
+    assert(mem->swapout.fd == -1);
     destroy_MemObjectData(mem);
     meta_data.url_strings -= strlen(mem->log_url);
     safe_free(mem->clients);
@@ -763,6 +764,8 @@ storeUnregister(StoreEntry * e, void *data)
     sc = storeClientListSearch(mem, data);
     if (sc == NULL)
 	return 0;
+    if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
+    	storeCheckSwapOut(e);
     sc->seen_offset = 0;
     sc->copy_offset = 0;
     if (sc->swapin_fd > -1)
@@ -896,7 +899,8 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
 	    flag);
 	e->swap_status = SWAPOUT_NONE;
 	put_free_8k_page(mem->e_swap_buf);
-	file_close(fd);
+	file_close(mem->swapout.fd);
+	mem->swapout.fd = -1;
 	if (e->swap_file_number != -1) {
 	    storePutUnusedFileno(e->swap_file_number);
 	    e->swap_file_number = -1;
@@ -919,6 +923,7 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
     /* swapping complete */
     e->swap_status = SWAPOUT_DONE;
     file_close(mem->swapout.fd);
+    mem->swapout.fd = -1;
     storeLog(STORE_LOG_SWAPOUT, e);
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	e->url, storeSwapFullPath(e->swap_file_number, NULL));
