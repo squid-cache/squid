@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.107 1998/02/24 16:39:22 wessels Exp $
+ * $Id: disk.cc,v 1.108 1998/02/24 21:13:43 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -296,6 +296,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     int do_callback;
+    int do_close;
     errno = errcode;
     debug(6, 3) ("diskHandleWriteComplete: FD %d len = %d\n", fd, len);
 #if USE_ASYNC_IO
@@ -393,6 +394,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
 	EBIT_SET(F->flags, FD_WRITE_DAEMON);
     }
+    do_close = EBIT_TEST(F->flags, FD_CLOSE_REQUEST);
     if (fdd->wrt_handle) {
 	if (fdd->wrt_handle_data == NULL)
 	    do_callback = 1;
@@ -410,7 +412,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	 */
 	return;
     }
-    if (EBIT_TEST(F->flags, FD_CLOSE_REQUEST))
+    if (do_close)
 	file_close(fd);
 }
 
