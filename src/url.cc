@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.116 1999/05/04 21:58:46 wessels Exp $
+ * $Id: url.cc,v 1.117 1999/06/18 04:25:01 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -44,7 +44,17 @@ const char *RequestMethodStr[] =
     "HEAD",
     "CONNECT",
     "TRACE",
-    "PURGE"
+    "PURGE",
+#ifndef RFC_2518
+    "PROPFIND",
+    "PROPPATCH",
+    "MKCOL",
+    "COPY",
+    "MOVE",
+    "LOCK",
+    "UNLOCK",
+#endif
+    "ERROR"
 };
 
 const char *ProtocolStr[] =
@@ -131,6 +141,22 @@ urlParseMethod(const char *s)
 	return METHOD_TRACE;
     } else if (strcasecmp(s, "PURGE") == 0) {
 	return METHOD_PURGE;
+#ifndef RFC_2518
+    } else if (strcasecmp(s, "PROPFIND") == 0) {
+	return METHOD_PROPFIND;
+    } else if (strcasecmp(s, "PROPPATCH") == 0) {
+	return METHOD_PROPPATCH;
+    } else if (strcasecmp(s, "MKCOL") == 0) {
+	return METHOD_MKCOL;
+    } else if (strcasecmp(s, "COPY") == 0) {
+	return METHOD_COPY;
+    } else if (strcasecmp(s, "MOVE") == 0) {
+	return METHOD_MOVE;
+    } else if (strcasecmp(s, "LOCK") == 0) {
+	return METHOD_LOCK;
+    } else if (strcasecmp(s, "UNLOCK") == 0) {
+	return METHOD_UNLOCK;
+#endif
     }
     return METHOD_NONE;
 }
