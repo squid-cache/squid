@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.22 2000/10/31 23:48:18 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.23 2000/11/01 03:35:48 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -780,9 +780,12 @@ storeDiskdDirRebuildFromSwapLog(void *data)
 	    rb->counts.invalid++;
 	    continue;
 	}
-	if ((++rb->counts.scancount & 0xFFFF) == 0)
-	    debug(20, 3) ("  %7d %s Entries read so far.\n",
-		rb->counts.scancount, rb->sd->path);
+	if ((++rb->counts.scancount & 0xFFF) == 0) {
+	    struct stat sb;
+	    if (0 == fstat(fileno(rb->log), &sb))
+		storeRebuildProgress(SD->index,
+		    (int) sb.st_size / ss, rb->n_read);
+	}
 	if (!storeDiskdDirValidFileno(SD, s.swap_filen, 0)) {
 	    rb->counts.invalid++;
 	    continue;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.70 2000/05/03 17:15:44 adrian Exp $
+ * $Id: store_rebuild.cc,v 1.71 2000/11/01 03:35:41 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -38,6 +38,15 @@
 static struct _store_rebuild_data counts;
 static struct timeval rebuild_start;
 static void storeCleanup(void *);
+
+typedef struct {
+    /* total number of "swap.state" entries that will be read */
+    int total;
+    /* number of entries read so far */
+    int scanned;
+} store_rebuild_progress;
+
+static store_rebuild_progress *RebuildProgress = NULL;
 
 static int
 storeCleanupDoubleCheck(StoreEntry * e)
@@ -134,6 +143,8 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
 	(double) counts.objcount / (dt > 0.0 ? dt : 1.0));
     debug(20, 1) ("Beginning Validation Procedure\n");
     eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
+    xfree(RebuildProgress);
+    RebuildProgress = NULL;
 }
 
 /*
@@ -152,4 +163,34 @@ storeRebuildStart(void)
      * finished rebuilding for sure.  The corresponding decrement
      * occurs in storeCleanup(), when it is finished.
      */
+    RebuildProgress = xcalloc(Config.cacheSwap.n_configured,
+	sizeof(store_rebuild_progress));
+}
+
+/*
+ * A fs-specific rebuild procedure periodically reports its
+ * progress.
+ */
+void
+storeRebuildProgress(int index, int total, int sofar)
+{
+    static time_t last_report = 0;
+    double n = 0.0;
+    double d = 0.0;
+    if (index < 0)
+	return;
+    if (index >= Config.cacheSwap.n_configured)
+	return;
+    if (NULL == RebuildProgress)
+	return;
+    RebuildProgress[index].total = total;
+    RebuildProgress[index].scanned = sofar;
+    if (squid_curtime - last_report < 15)
+	return;
+    for (index = 0; index < Config.cacheSwap.n_configured; index++) {
+	n += (double) RebuildProgress[index].scanned;
+	d += (double) RebuildProgress[index].total;
+    }
+    debug(20, 1) ("Store rebuilding is %4.1f%% complete\n", 100.0 * n / d);
+    last_report = squid_curtime;
 }
