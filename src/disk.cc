@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.105 1998/02/17 23:04:03 wessels Exp $
+ * $Id: disk.cc,v 1.106 1998/02/20 21:04:50 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -212,6 +212,7 @@ file_close(int fd)
     assert(F->open);
     if (EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
 	EBIT_SET(F->flags, FD_CLOSE_REQUEST);
+	debug(6, 5) ("file_close: FD %d, delaying close\n");
 	return;
     }
 #if USE_ASYNC_IO
@@ -219,7 +220,7 @@ file_close(int fd)
 #else
     close(fd);
 #endif
-    debug(6, 5) ("file_close: FD %d\n", fd);
+    debug(6, 5) ("file_close: FD %d, really closing\n", fd);
     fd_close(fd);
 }
 
@@ -236,6 +237,7 @@ diskHandleWrite(int fd, void *notused)
     struct _fde_disk *fdd = &F->disk;
     if (!fdd->write_q)
 	return;
+    debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
     /* We need to combine subsequent write requests after the first */
     /* But only if we don't need to seek() in betwen them, ugh! */
     if (fdd->write_q->next != NULL && fdd->write_q->next->next != NULL) {
@@ -272,6 +274,8 @@ diskHandleWrite(int fd, void *notused)
 	diskHandleWriteComplete,
 	ctrlp);
 #else
+    debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
+	fd, fdd->write_q->len - fdd->write_q->buf_offset);
     len = write(fd,
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset);
@@ -288,8 +292,9 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     struct _fde_disk *fdd = &F->disk;
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
+    int do_callback;
     errno = errcode;
-
+    debug(6, 3) ("diskHandleWriteComplete: FD %d len = %d\n", fd, len);
     safe_free(data);
     if (q == NULL)		/* Someone aborted then write completed */
 	return;
@@ -364,10 +369,21 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	EBIT_SET(F->flags, FD_WRITE_DAEMON);
     }
     if (fdd->wrt_handle) {
-	if (fdd->wrt_handle_data == NULL || cbdataValid(fdd->wrt_handle_data))
-	    fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
+	if (fdd->wrt_handle_data == NULL)
+	    do_callback = 1;
+	else if (cbdataValid(fdd->wrt_handle_data))
+	    do_callback = 1;
+	else
+	    do_callback = 0;
 	if (fdd->wrt_handle_data != NULL)
 	    cbdataUnlock(fdd->wrt_handle_data);
+	if (do_callback)
+	    fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
+	/*
+	 * NOTE, this callback can close the FD, so we must
+	 * not touch 'F', 'fdd', etc. after this.
+	 */
+	return;
     }
     if (EBIT_TEST(F->flags, FD_CLOSE_REQUEST))
 	file_close(fd);
