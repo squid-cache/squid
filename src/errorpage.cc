@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.124 1998/03/31 05:37:39 wessels Exp $
+ * $Id: errorpage.cc,v 1.125 1998/04/21 20:41:20 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -347,6 +347,7 @@ errorStateFree(ErrorState * err)
  * E - strerror()                               x
  * f - FTP request line                         x
  * F - FTP reply line                           x
+ * g - FTP server message                       x
  * h - cache hostname                           x
  * H - server host name                         x
  * i - client IP address                        x
@@ -372,6 +373,8 @@ errorConvert(char token, ErrorState * err)
     request_t *r = err->request;
     static char buf[CVT_BUF_SZ];
     const char *p = buf;
+    wordlist *w;
+    int o;
     switch (token) {
     case 'B':
 	p = r ? ftpUrlWith2f(r) : "[no URL]";
@@ -398,6 +401,16 @@ errorConvert(char token, ErrorState * err)
 	    p = err->ftp.reply;
 	else
 	    p = "<none>";
+	break;
+    case 'g':
+	/* FTP SERVER MESSAGE */
+	buf[0] = '\0';
+	o = 0;
+	for (w = err->ftp_server_msg; w; w = w->next) {
+	    o += snprintf(buf + o, CVT_BUF_SZ - o, "%s\n", w->key);
+	    if (o >= CVT_BUF_SZ)
+		break;
+	}
 	break;
     case 'h':
 	snprintf(buf, CVT_BUF_SZ, "%s", getMyHostname());
