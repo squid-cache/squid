@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.398 1998/09/19 17:05:59 wessels Exp $
+ * $Id: client_side.cc,v 1.399 1998/09/21 06:49:41 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -449,7 +449,6 @@ clientPurgeRequest(clientHttpRequest * http)
 {
     StoreEntry *entry;
     ErrorState *err = NULL;
-    const cache_key *k;
     HttpReply *r;
     debug(33, 3) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
     if (!Config.onoff.enable_purge) {
@@ -462,8 +461,7 @@ clientPurgeRequest(clientHttpRequest * http)
 	return;
     }
     http->log_type = LOG_TCP_MISS;
-    k = storeKeyPublic(http->uri, METHOD_GET);
-    if ((entry = storeGet(k)) == NULL) {
+    if ((entry = storeGetPublic(http->uri, METHOD_GET)) == NULL) {
 	http->http_code = HTTP_NOT_FOUND;
     } else {
 	storeRelease(entry);
@@ -1584,11 +1582,11 @@ clientProcessRequest2(clientHttpRequest * http)
     const cache_key *key;
     StoreEntry *e;
     key = storeKeyPublic(http->uri, r->method);
-    e = http->entry = storeGet(key);
+    e = http->entry = storeGetPublic(http->uri, r->method);
     if (r->method == METHOD_HEAD && e == NULL) {
 	/* We can generate a HEAD reply from a cached GET object */
 	key = storeKeyPublic(http->uri, METHOD_GET);
-	e = http->entry = storeGet(key);
+	e = http->entry = storeGetPublic(http->uri, METHOD_GET);
     }
 #if USE_CACHE_DIGESTS
     http->lookup_type = e ? "HIT" : "MISS";

@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.48 1998/09/10 22:30:19 wessels Exp $
+ * $Id: asn.cc,v 1.49 1998/09/21 06:49:39 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -176,19 +176,17 @@ static void
 asnCacheStart(int as)
 {
     LOCAL_ARRAY(char, asres, 4096);
-    const cache_key *k;
     StoreEntry *e;
     request_t *req;
     ASState *asState = xcalloc(1, sizeof(ASState));
     cbdataAdd(asState, MEM_NONE);
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
-    k = storeKeyPublic(asres, METHOD_GET);
     asState->as_number = as;
     req = urlParse(METHOD_GET, asres);
     assert(NULL != req);
     asState->request = requestLink(req);
-    if ((e = storeGet(k)) == NULL) {
+    if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
 	e = storeCreateEntry(asres, asres, null_request_flags, METHOD_GET);
 	storeClientListAdd(e, asState);
 	fwdStart(-1, e, asState->request, no_addr);
