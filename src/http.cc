@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.447 2005/03/06 21:08:13 serassio Exp $
+ * $Id: http.cc,v 1.448 2005/03/08 21:38:40 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -81,7 +81,9 @@ httpStateFree(int fd, void *data)
         return;
 
     if (httpState->body_buf) {
-        clientAbortBody(httpState->orig_request);
+        if (httpState->orig_request->body_connection.getRaw()) {
+            clientAbortBody(httpState->orig_request);
+        }
 
         if (httpState->body_buf) {
             memFree(httpState->body_buf, MEM_8K_BUF);
