@@ -1280,9 +1280,9 @@ fi
 
 echo "Store modules built: $STORE_MODULES"
 
-STORE_OBJS="fs/`echo $STORE_MODULES|sed -e's% %.a fs/%g'`.a"
+STORE_OBJS="fs/`echo $STORE_MODULES|sed -e 's% %.a fs/%g'`.a"
 
-STORE_LIBS="`echo $STORE_OBJS|sed -e's%fs/%%g'`"
+STORE_LIBS="`echo $STORE_OBJS|sed -e 's%fs/%%g'`"
 
 
 # Check whether --enable-heap-replacement or --disable-heap-replacement was given.
@@ -1324,9 +1324,9 @@ fi
 
 echo "Removal policies built: $REPL_POLICIES"
 
-REPL_OBJS="repl/`echo $REPL_POLICIES|sed -e's% %.a repl/%g'`.a"
+REPL_OBJS="repl/`echo $REPL_POLICIES|sed -e 's% %.a repl/%g'`.a"
 
-REPL_LIBS="`echo $REPL_OBJS|sed -e's%repl/%%g'`"
+REPL_LIBS="`echo $REPL_OBJS|sed -e 's%repl/%%g'`"
 
 
 OPT_PINGER_EXE=''
@@ -1780,9 +1780,9 @@ fi
 
 echo "Auth scheme modules built: $AUTH_MODULES"
 
-AUTH_OBJS="auth/`echo $AUTH_MODULES|sed -e's% %.a auth/%g'`.a"
+AUTH_OBJS="auth/`echo $AUTH_MODULES|sed -e 's% %.a auth/%g'`.a"
 
-AUTH_LIBS="`echo $AUTH_OBJS|sed -e's%auth/%%g'`"
+AUTH_LIBS="`echo $AUTH_OBJS|sed -e 's%auth/%%g'`"
 
 
 BASIC_AUTH_HELPERS=""
