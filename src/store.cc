@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.346 1997/11/18 01:02:42 wessels Exp $
+ * $Id: store.cc,v 1.347 1997/11/24 22:32:38 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -702,7 +702,6 @@ InvokeHandlers(StoreEntry * e)
 {
     int i = 0;
     MemObject *mem = e->mem_obj;
-    STCB *callback = NULL;
     store_client *sc;
     store_client *nx = NULL;
     assert(mem->clients != NULL || mem->nclients == 0);
@@ -710,10 +709,10 @@ InvokeHandlers(StoreEntry * e)
     /* walk the entire list looking for valid callbacks */
     for (sc = mem->clients; sc; sc = nx) {
 	nx = sc->next;
-	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i++);
+	debug(20, 0) ("InvokeHandlers: checking client #%d\n", i++);
 	if (sc->callback_data == NULL)
 	    continue;
-	if ((callback = sc->callback) == NULL)
+	if (sc->callback == NULL)
 	    continue;
 	storeClientCopy2(e, sc);
     }
@@ -1694,7 +1693,7 @@ storeClientCopy(StoreEntry * e,
 {
     store_client *sc;
     static int recurse_detect = 0;
-    assert(e->store_status != STORE_ABORTED);
+    /*assert(e->store_status != STORE_ABORTED); */
     assert(recurse_detect < 3);	/* could == 1 for IMS not modified's */
     debug(20, 3) ("storeClientCopy: %s, seen %d, want %d, size %d, cb %p, cbdata %p\n",
 	storeKeyText(e->key),
@@ -1796,6 +1795,18 @@ storeClientCopyHandleRead(int fd, const char *buf, int len, int flagnotused, voi
 	httpParseReplyHeaders(buf, mem->reply);
     sc->callback = NULL;
     callback(sc->callback_data, sc->copy_buf, len);
+}
+
+int
+storeClientCopyPending(StoreEntry * e, void *data)
+{
+    /* return 1 if there is a callback registered for this client */
+    store_client *sc = storeClientListSearch(e->mem_obj, data);
+    if (sc == NULL)
+	return 0;
+    if (sc->callback == NULL)
+	return 0;
+    return 1;
 }
 
 static int
@@ -2378,15 +2389,15 @@ storeCopyNotModifiedReplyHeaders(MemObject * oldmem, MemObject * newmem)
 
 /* this just sets DELAY_SENDING */
 void
-storeBuffer(StoreEntry *e)
+storeBuffer(StoreEntry * e)
 {
-	EBIT_SET(e->flag, DELAY_SENDING);
+    EBIT_SET(e->flag, DELAY_SENDING);
 }
 
 /* this just clears DELAY_SENDING and Invokes the handlers */
 void
-storeBufferFlush(StoreEntry *e)
+storeBufferFlush(StoreEntry * e)
 {
-	EBIT_CLR(e->flag, DELAY_SENDING);
-	InvokeHandlers(e);
+    EBIT_CLR(e->flag, DELAY_SENDING);
+    InvokeHandlers(e);
 }
