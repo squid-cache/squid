@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.166 1998/07/25 04:47:29 wessels Exp $
+ * $Id: tools.cc,v 1.167 1998/08/24 22:06:49 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -49,7 +49,7 @@ static void fatal_common(const char *);
 static void fatalvf(const char *fmt, va_list args);
 static void mail_warranty(void);
 #if USE_ASYNC_IO
-static void safeunlinkComplete(void *data, int retcode, int errcode);
+static AIOCB safeunlinkComplete;
 #endif
 #if MEM_GEN_TRACE
 extern void log_trace_done();
@@ -446,7 +446,7 @@ safeunlink(const char *s, int quiet)
 
 #if USE_ASYNC_IO
 static void
-safeunlinkComplete(void *data, int retcode, int errcode)
+safeunlinkComplete(int fd, void *data, int retcode, int errcode)
 {
     char *s = data;
     if (retcode < 0) {
