@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.181 1998/08/21 03:15:14 wessels Exp $
+ * $Id: acl.cc,v 1.182 1998/09/14 22:27:57 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -47,17 +47,20 @@ static void aclParseProtoList(void *curlist);
 static void aclParseMethodList(void *curlist);
 static void aclParseTimeSpec(void *curlist);
 static void aclParseSnmpComm(void *curlist);
+static void aclParseIntRange(void *curlist);
 static char *strtokFile(void);
 static void aclDestroyAclList(acl_list * list);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyProxyAuth(acl_proxy_auth * p);
+static void aclDestroyIntRange(intrange *);
 static FREE aclFreeProxyAuthUser;
 static int aclMatchAcl(struct _acl *, aclCheck_t *);
-static int aclMatchInteger(intlist * data, int i);
+static int aclMatchIntegerRange(intrange * data, int i);
 static int aclMatchTime(acl_time_data * data, time_t when);
 static int aclMatchIdent(wordlist * data, const char *ident);
 static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
+static int aclMatchIntegerRange(intrange * data, int i);
 static squid_acl aclStrToType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
@@ -72,6 +75,7 @@ static wordlist *aclDumpDomainList(void *data);
 static wordlist *aclDumpTimeSpecList(acl_time_data *);
 static wordlist *aclDumpRegexList(relist * data);
 static wordlist *aclDumpIntlistList(intlist * data);
+static wordlist *aclDumpIntRangeList(intrange * data);
 static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
 static wordlist *aclDumpProxyAuthList(acl_proxy_auth * data);
@@ -250,6 +254,26 @@ aclParseIntlist(void *curlist)
     while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = atoi(t);
+	*(Tail) = q;
+	Tail = &q->next;
+    }
+}
+
+static void
+aclParseIntRange(void *curlist)
+{
+    intrange **Tail;
+    intrange *q = NULL;
+    char *t = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    while ((t = strtokFile())) {
+	q = xcalloc(1, sizeof(intrange));
+	q->i = atoi(t);
+	t = strchr(t, '-');
+	if (t && *(++t))
+		q->j = atoi(t);
+	else
+		q->j = q->i;
 	*(Tail) = q;
 	Tail = &q->next;
     }
@@ -697,11 +721,13 @@ aclParseAclLine(acl ** head)
     case ACL_DST_DOM_REGEX:
 	aclParseRegexList(&A->data);
 	break;
-    case ACL_URL_PORT:
     case ACL_SRC_ASN:
     case ACL_DST_ASN:
     case ACL_NETDB_SRC_RTT:
 	aclParseIntlist(&A->data);
+	break;
+    case ACL_URL_PORT:
+	aclParseIntRange(&A->data);
 	break;
     case ACL_USER:
 	Config.onoff.ident_lookup = 1;
@@ -1078,6 +1104,34 @@ aclMatchInteger(intlist * data, int i)
 }
 
 static int
+aclMatchIntegerRange(intrange * data, int i)
+{
+    intrange *first, *prev;
+    first = data;
+    prev = NULL;
+    while (data) {
+	if (i < data->i) {
+		(void) 0;
+	} else if (i > data->j) {
+		(void) 0;
+	} else {
+	    /* matched */
+	    if (prev != NULL) {
+		/* shift the element just found to the second position
+		 * in the list */
+		prev->next = data->next;
+		data->next = first->next;
+		first->next = data;
+	    }
+	    return 1;
+	}
+	prev = data;
+	data = data->next;
+    }
+    return 0;
+}
+
+static int
 aclMatchTime(acl_time_data * data, time_t when)
 {
     static time_t last_when = 0;
@@ -1199,7 +1253,7 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
 	return k;
 	/* NOTREACHED */
     case ACL_URL_PORT:
-	return aclMatchInteger(acl->data, r->port);
+	return aclMatchIntegerRange(acl->data, r->port);
 	/* NOTREACHED */
     case ACL_USER:
 	return aclMatchIdent(acl->data, checklist->ident);
@@ -1571,12 +1625,14 @@ aclDestroyAcls(acl ** head)
 	case ACL_BROWSER:
 	    aclDestroyRegexList(a->data);
 	    break;
-	case ACL_URL_PORT:
 	case ACL_PROTO:
 	case ACL_METHOD:
 	case ACL_SRC_ASN:
 	case ACL_DST_ASN:
 	    intlistDestroy((intlist **) & a->data);
+	    break;
+	case ACL_URL_PORT:
+	    aclDestroyIntRange(a->data);
 	    break;
 	case ACL_PROXY_AUTH:
 	    aclDestroyProxyAuth(a->data);
@@ -1639,6 +1695,17 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 	safe_free(a);
     }
     *list = NULL;
+}
+
+static void
+aclDestroyIntRange(intrange *list)
+{
+    intrange *w = NULL;
+    intrange *n = NULL;
+    for (w = list; w; w = n) {
+        n = w->next;
+        safe_free(w);
+    }
 }
 
 /* general compare functions, these are used for tree search algorithms
@@ -1842,6 +1909,26 @@ aclDumpIntlistList(intlist * data)
 }
 
 static wordlist *
+aclDumpIntRangeList(intrange * data)
+{
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    char buf[32];
+    while (data != NULL) {
+	wordlist *w = xcalloc(1, sizeof(wordlist));
+	if (data->i == data->j)
+	    snprintf(buf, sizeof(buf), "%d", data->i);
+	else
+	    snprintf(buf, sizeof(buf), "%d-%d", data->i, data->j);
+	w->key = xstrdup(buf);
+	*T = w;
+	T = &w->next;
+	data = data->next;
+    }
+    return W;
+}
+
+static wordlist *
 aclDumpProtoList(intlist * data)
 {
     wordlist *W = NULL;
@@ -1909,10 +1996,12 @@ aclDumpGeneric(const acl * a)
     case ACL_BROWSER:
 	return aclDumpRegexList(a->data);
 	break;
-    case ACL_URL_PORT:
     case ACL_SRC_ASN:
     case ACL_DST_ASN:
 	return aclDumpIntlistList(a->data);
+	break;
+    case ACL_URL_PORT:
+	return aclDumpIntRangeList(a->data);
 	break;
     case ACL_PROTO:
 	return aclDumpProtoList(a->data);

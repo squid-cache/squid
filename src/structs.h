@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.224 1998/09/14 22:20:00 wessels Exp $
+ * $Id: structs.h,v 1.225 1998/09/14 22:27:59 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -187,6 +187,12 @@ struct _wordlist {
 struct _intlist {
     int i;
     intlist *next;
+};
+
+struct _intrange {
+    int i;
+    int j;
+    intrange *next;
 };
 
 struct _ushortlist {
