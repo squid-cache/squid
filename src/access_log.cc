@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.81 2003/02/23 00:08:03 robertc Exp $
+ * $Id: access_log.cc,v 1.82 2003/06/09 21:52:21 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -156,10 +156,10 @@ log_quote(const char *header)
 #endif
             if (c <= 0x1F
                     || c >= 0x7F
+                    || c == '%'
 #if OLD_LOG_MIME
                     || c == '"'
                     || c == '#'
-                    || c == '%'
                     || c == ';'
                     || c == '<'
                     || c == '>'
@@ -225,6 +225,7 @@ username_quote(const char *header)
             *buf_cursor++ = 'n';
         } else if (c <= 0x1F
                    || c >= 0x7F
+                   || c == '%'
                    || c == ' ') {
             *buf_cursor++ = '%';
             i = c * 2;
