@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.19 1998/08/27 06:28:28 wessels Exp $
+ * $Id: htcp.cc,v 1.20 1998/08/27 06:29:30 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -184,6 +184,7 @@ static void htcpHandleTstResponse(htcpDataHeader *, char *, int, struct sockaddr
 static void
 htcpHexdump(const char *tag, const char *s, int sz)
 {
+#if USE_HEXDUMP
     int i;
     int k;
     char hex[80];
@@ -197,6 +198,7 @@ htcpHexdump(const char *tag, const char *s, int sz)
 	debug(31, 1) ("\t%s\n", hex);
 	memset(hex, '\0', 80);
     }
+#endif
 }
 
 /*
