@@ -20,6 +20,14 @@ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
+#include "config.h"
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 
 #include "asn1.h"
 #include "snmp.h"
