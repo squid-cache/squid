@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.h,v 1.5 1998/09/23 17:19:56 wessels Exp $
+ * $Id: GNUregex.h,v 1.6 1999/01/11 21:55:33 wessels Exp $
  */
 
 /* Definitions for data structures and routines for the regular
@@ -389,7 +389,7 @@ typedef struct {
  * unfortunately clutters up the declarations a bit, but I think it's
  * worth it.  */
 
-#ifdef __STDC__
+#if STDC_HEADERS
 
 #define _RE_ARGS(args) args
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.476 1999/01/11 16:50:41 wessels Exp $
+ * $Id: store.cc,v 1.477 1999/01/11 21:55:43 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -419,7 +419,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 #endif
 }
 
-#ifdef __STDC__
+#if STDC_HEADERS
 void
 storeAppendPrintf(StoreEntry * e, const char *fmt,...)
 {

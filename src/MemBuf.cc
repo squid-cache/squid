@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.20 1998/09/02 04:00:42 wessels Exp $
+ * $Id: MemBuf.cc,v 1.21 1999/01/11 21:55:37 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -203,7 +203,7 @@ memBufAppend(MemBuf * mb, const char *buf, mb_size_t sz)
 }
 
 /* calls memBufVPrintf */
-#ifdef __STDC__
+#if STDC_HEADERS
 void
 memBufPrintf(MemBuf * mb, const char *fmt,...)
 {

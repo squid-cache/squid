@@ -5,7 +5,7 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#ifdef __STDC__
+#if STDC_HEADERS
 #include <stdarg.h>
 #else
 #include <varargs.h>
@@ -15,14 +15,14 @@
 #include "snprintf.h"
 #endif
 
-#ifdef __STDC__
+#if STDC_HEADERS
 void (*snmplib_debug_hook) (int, char *,...) = NULL;
 #else
 void (*snmplib_debug_hook) (va_alist) = NULL;
 #endif
 
 extern void
-#ifdef __STDC__
+#if STDC_HEADERS
 snmplib_debug(int lvl, char *fmt,...)
 {
     char buf[BUFSIZ];

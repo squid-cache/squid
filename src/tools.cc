@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.172 1998/11/13 06:00:32 wessels Exp $
+ * $Id: tools.cc,v 1.173 1999/01/11 21:55:44 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -326,7 +326,7 @@ fatal(const char *message)
 }
 
 /* printf-style interface for fatal */
-#ifdef __STDC__
+#if STDC_HEADERS
 void
 fatalf(const char *fmt,...)
 {

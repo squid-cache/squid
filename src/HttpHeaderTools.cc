@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.21 1998/07/22 20:36:47 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.22 1999/01/11 21:55:36 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -111,7 +111,7 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
 }
 
 /* same as httpHeaderPutStr, but formats the string using snprintf first */
-#ifdef __STDC__
+#if STDC_HEADERS
 void
 httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...)
 {
