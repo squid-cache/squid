@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.274 1999/01/29 21:28:21 wessels Exp $
+ * $Id: structs.h,v 1.275 1999/01/29 23:01:07 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1301,6 +1301,7 @@ struct _request_t {
     int imslen;
     int max_forwards;
     struct in_addr client_addr;
+    struct in_addr my_addr;
     HttpHeader header;
     char *body;
     size_t body_sz;
