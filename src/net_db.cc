@@ -34,7 +34,7 @@ netdbHashInsert(netdbEntry * n, struct in_addr addr)
     strncpy(n->network, inet_ntoa(networkFromInaddr(addr)), 15);
     n->key = n->network;
     hash_join(addr_table, (hash_link *) n);
-    meta_data.netdb++;
+    meta_data.netdb_addrs++;
 }
 
 static void
@@ -46,7 +46,7 @@ netdbHashDelete(char *key)
 	return;
     }
     hash_remove_link(addr_table, hptr);
-    meta_data.netdb--;
+    meta_data.netdb_addrs--;
 }
 
 static void
@@ -58,6 +58,7 @@ netdbHashLink(netdbEntry * n, char *hostname)
     n->hosts = x;
     hash_insert(host_table, x->name, n);
     n->link_count++;
+    meta_data.netdb_hosts++;
 }
 
 static void
@@ -72,6 +73,7 @@ netdbHashUnlink(char *key)
     n = (netdbEntry *) hptr->item;
     n->link_count--;
     hash_delete_link(host_table, hptr);
+    meta_data.netdb_hosts--;
 }
 
 static netdbEntry *
@@ -130,11 +132,11 @@ netdbPurgeLRU(void)
     int k = 0;
     int list_count = 0;
     int removed = 0;
-    list = xcalloc(meta_data.netdb, sizeof(netdbEntry *));
+    list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
     for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table)) {
 	*(list + list_count) = n;
 	list_count++;
-	if (list_count > meta_data.netdb)
+	if (list_count > meta_data.netdb_addrs)
 	    fatal_dump("netdbPurgeLRU: list_count overflow");
     }
     qsort((char *) list,
@@ -142,7 +144,7 @@ netdbPurgeLRU(void)
 	sizeof(netdbEntry *),
 	(QS) netdbLRU);
     for (k = 0; k < list_count; k++) {
-	if (meta_data.netdb < NETDB_LOW_MARK)
+	if (meta_data.netdb_addrs < NETDB_LOW_MARK)
 	    break;
 	netdbRelease(*(list + k));
 	removed++;
@@ -161,7 +163,7 @@ static netdbEntry *
 netdbAdd(struct in_addr addr, char *hostname)
 {
     netdbEntry *n;
-    if (meta_data.netdb > NETDB_HIGH_MARK)
+    if (meta_data.netdb_addrs > NETDB_HIGH_MARK)
 	netdbPurgeLRU();
     if ((n = netdbLookupAddr(addr)) == NULL) {
 	n = xcalloc(1, sizeof(netdbEntry));
@@ -262,7 +264,7 @@ netdbDump(StoreEntry * sentry)
 	"RTT",
 	"Hops",
 	"Hostnames");
-    list = xcalloc(meta_data.netdb, sizeof(netdbEntry *));
+    list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
     i = 0;
     for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table))
 	*(list + i++) = n;
@@ -301,19 +303,41 @@ void
 netdbFreeMemory(void)
 {
     netdbEntry *e;
-    netdbEntry **list;
+    netdbEntry **L1;
+    hash_link *h;
+    hash_link **L2;
+    struct _net_db_name *x;
     int i = 0;
     int j;
-    list = xcalloc(meta_data.netdb, sizeof(netdbEntry));
+
+    L1 = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry));
     e = (netdbEntry *) hash_first(addr_table);
-    while (e && i < meta_data.netdb) {
-	*(list + i) = e;
+    while (e && i < meta_data.netdb_addrs) {
+	*(L1 + i) = e;
 	i++;
 	e = (netdbEntry *) hash_next(addr_table);
     }
     for (j = 0; j < i; j++)
-	xfree(*(list + j));
-    xfree(list);
+	xfree(*(L1 + j));
+    xfree(L1);
+
+    i = 0;
+    L2 = xcalloc(meta_data.netdb_hosts, sizeof(netdbEntry));
+    h = hash_first(host_table);
+    while (h && i < meta_data.netdb_hosts) {
+	*(L2 + i) = h;
+	i++;
+	h = hash_next(host_table);
+    }
+    for (j = 0; j < i; j++) {
+	h = *(L2 + j);
+	x = (struct _net_db_name *) h->item;
+	xfree(x->name);
+	xfree(x);
+	xfree(h);
+    }
+    xfree(L2);
+
     hashFreeMemory(addr_table);
     hashFreeMemory(host_table);
 }
