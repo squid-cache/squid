@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.59 1996/07/11 22:44:11 wessels Exp $
+ * $Id: cache_cf.cc,v 1.60 1996/07/15 23:11:54 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -273,7 +273,7 @@ ip_acl *firewall_ip_list = NULL;
 int zap_disk_store = 0;		/* off, try to rebuild from disk */
 int httpd_accel_mode = 0;	/* for fast access */
 int emulate_httpd_log = DefaultCommonLogFormat;		/* for fast access */
-int identLookup = DefaultIdentLookup;			/* for fast access */
+int identLookup = DefaultIdentLookup;	/* for fast access */
 time_t neighbor_timeout = DefaultNeighborTimeout;	/* for fast access */
 int single_parent_bypass = 0;
 int DnsPositiveTtl = DefaultPositiveDnsTtl;
@@ -909,7 +909,7 @@ static void parseRedirectProgramLine()
 }
 
 static void parseOnOff(var)
-	int *var;
+     int *var;
 {
     char *token;
     token = strtok(NULL, w_space);
