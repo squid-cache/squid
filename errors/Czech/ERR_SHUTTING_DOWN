@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>CHYBA</H1>
+<H2>Pořadovaný dokument je nedostupný</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+Při pokusu o přístup k:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+se objevila následující chyba:
 <UL>
 <P>
-This cache is in the process of shutting down and can not
-service your request at this time.  Please retry your
-request again soon.
+Tento cache server je právě restartován a nemůže obsloužit Váš požadavek.
+Zkuste to za chvíli znova.
 </P>
