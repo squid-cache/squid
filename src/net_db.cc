@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.109 1998/05/26 19:08:57 wessels Exp $
+ * $Id: net_db.cc,v 1.110 1998/05/26 19:12:21 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -574,7 +574,11 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	ex->used += rec_sz;
 	size -= rec_sz;
 	p += rec_sz;
-	if (++nused == 10)
+	/*
+	 * This is a fairly cpu-intensive loop, break after adding
+	 * just a few
+	 */
+	if (++nused == 20)
 	    break;
     }
     debug(37, 3) ("netdbExchangeHandleReply: used %d entries, (x %d bytes) == %d bytes total\n",
