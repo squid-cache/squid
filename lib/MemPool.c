@@ -1,5 +1,5 @@
 /*
- * $Id: MemPool.c,v 1.2 1998/02/21 00:56:38 rousskov Exp $
+ * $Id: MemPool.c,v 1.3 1998/02/25 07:42:34 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -172,11 +172,13 @@ const char *
 memPoolReport(MemPool *mp)
 {
     static char buf[512]; /* we do not use LOCALL_ARRAY in squid/lib, do we? */
-
+    u_num32 dyn_alive_cnt;
     assert(mp);
+
+#if 0 /* old detailed format */
     snprintf(buf, sizeof(buf),
-	"pool %s: obj_sz: %ud cap: %ud/%ud "
-	"stat: +%uld-%uld dyn: +%uld-%uld alloc: +%uld/-%uld<%uld",
+	"pool %s: obj_sz: %u cap: %u/%u "
+	"stat: +%lu-%lu dyn: +%lu-%lu alloc: +%lu/-%lu<%lu",
 	mp->name,
 	mp->obj_size,
 	mp->static_stack->capacity,
@@ -187,6 +189,21 @@ memPoolReport(MemPool *mp)
 	mp->dynamic_stack->pop_count,
 	mp->alloc_count,
 	mp->free_count,
+	mp->alloc_high_water);
+#endif
+    dyn_alive_cnt = (mp->dynamic_stack->pop_count > mp->dynamic_stack->push_count) ?
+	mp->dynamic_stack->pop_count - mp->dynamic_stack->push_count : 0;
+
+    snprintf(buf, sizeof(buf),
+	"pool %s: obj_sz: %u static+dyn+alloc: capacity: %u+%u+oo "
+	"alive: %lu+%lu+%lu alloc-high-water: %lu",
+	mp->name,
+	mp->obj_size,
+	mp->static_stack->capacity,
+	mp->dynamic_stack->capacity,
+	mp->static_stack->capacity + mp->static_stack->pop_count - mp->static_stack->push_count,
+	dyn_alive_cnt,
+	mp->alloc_count - mp->free_count,
 	mp->alloc_high_water);
 
     return buf;
