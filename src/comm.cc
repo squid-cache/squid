@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.159 1997/06/04 06:15:48 wessels Exp $
+ * $Id: comm.cc,v 1.160 1997/06/04 07:00:31 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -116,6 +116,7 @@
  * 64 file descriptors free for disk-i/o and connections to remote servers */
 
 int RESERVED_FD = 64;
+int polledinc = 0;
 
 #define min(x,y) ((x)<(y)? (x) : (y))
 #define max(a,b) ((a)>(b)? (a) : (b))
@@ -669,6 +670,7 @@ comm_poll_incoming(void)
     unsigned long i, nfds;
     int j;
     PF *hdl = NULL;
+    polledinc = 0;
     if (theInIcpConnection >= 0)
 	fds[N++] = theInIcpConnection;
     if (theInIcpConnection != theOutIcpConnection)
@@ -698,11 +700,11 @@ comm_poll_incoming(void)
     }
     if (!nfds)
 	return;
-    if (poll(pfds, nfds, 0) < 1)
+    polledinc = poll(pfds, nfds, 0);
+    if (polledinc < 1) {
+	polledinc = 0;
 	return;
-#ifndef LESS_TIMING
-    getCurrentTime();
-#endif
+    }
     for (i = 0; i < nfds; i++) {
 	int revents;
 	if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
@@ -734,6 +736,7 @@ comm_select_incoming(void)
     int N = 0;
     int i = 0;
     PF *hdl = NULL;
+    polledinc = 0;
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
     for (i = 0; i < NHttpSockets; i++) {
@@ -764,11 +767,11 @@ comm_select_incoming(void)
     }
     if (maxfd++ == 0)
 	return;
-    if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
+    polledinc = select(maxfd, &read_mask, &write_mask, NULL, &zero_tv);
+    if (polledinc < 1) {
+	polledinc = 0;
 	return;
-#ifndef LESS_TIMING
-    getCurrentTime();
-#endif
+    }
     for (i = 0; i < N; i++) {
 	fd = fds[i];
 	if (FD_ISSET(fd, &read_mask)) {
@@ -813,17 +816,15 @@ comm_poll(time_t sec)
     unsigned long nfds;
     int num;
     static time_t last_timeout = 0;
+    static int lastinc = 0;
     int poll_time;
     static int incoming_counter = 0;
     time_t timeout;
     /* assume all process are very fast (less than 1 second). Call
      * time() only once */
-    getCurrentTime();
     /* use only 1 second granularity */
     timeout = squid_curtime + sec;
     do {
-	if (sec > 60)
-	    fatal_dump(NULL);
 	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
 	    dnsShutdownServers();
@@ -866,7 +867,6 @@ comm_poll(time_t sec)
 	    poll_time = sec > 0 ? 1000 : 0;
 	    num = poll(pfds, nfds, poll_time);
 	    select_loops++;
-	    getCurrentTime();
 	    if (num >= 0)
 		break;
 	    if (errno == EINTR)
@@ -877,7 +877,6 @@ comm_poll(time_t sec)
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
-	getCurrentTime();
 	debug(5, num ? 5 : 8) ("comm_poll: %d sockets ready\n", num);
 	/* Check timeout handlers ONCE each second. */
 	if (squid_curtime > last_timeout) {
@@ -893,7 +892,7 @@ comm_poll(time_t sec)
 	    int revents;
 	    if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
 		continue;
-	    if ((incoming_counter++ % 2) == 0)
+	    if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0)
 		comm_poll_incoming();
 	    if (fdIsHttpOrIcp(fd))
 		continue;
@@ -939,9 +938,10 @@ comm_poll(time_t sec)
 		fde->read_handler = NULL;
 		fde->write_handler = NULL;
 	    }
+	    lastinc = polledinc;
 	}
 	return COMM_OK;
-    } while (timeout > getCurrentTime());
+    } while (timeout > squid_curtime);
     debug(5, 8) ("comm_poll: time out: %d.\n", squid_curtime);
     return COMM_TIMEOUT;
 }
@@ -960,22 +960,20 @@ comm_select(time_t sec)
     int maxfd;
     int nfds;
     int num;
+    static int incoming_counter = 0;
     static time_t last_timeout = 0;
     struct timeval poll_time;
+    static int lastinc;
     time_t timeout;
 
     /* assume all process are very fast (less than 1 second). Call
      * time() only once */
-    getCurrentTime();
     /* use only 1 second granularity */
     timeout = squid_curtime + sec;
 
     do {
-	if (sec > 60)
-	    fatal_dump(NULL);
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
-
 	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
 	    dnsShutdownServers();
@@ -1016,7 +1014,6 @@ comm_select(time_t sec)
 	    poll_time.tv_usec = 0;
 	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
 	    select_loops++;
-	    getCurrentTime();
 	    if (num >= 0)
 		break;
 	    if (errno == EINTR)
@@ -1048,12 +1045,8 @@ comm_select(time_t sec)
 	for (fd = 0; fd < maxfd; fd++) {
 	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
 		continue;
-	    /*
-	     * Admit more connections quickly until we hit the hard limit.
-	     * Don't forget to keep the UDP acks coming and going.
-	     */
-	    comm_select_incoming();
-
+	    if ((incoming_counter++ & (lastinc > 0 ? 1 : 7) == 0)
+		comm_poll_incoming();
 	    if (fdIsHttpOrIcp(fd))
 		continue;
 	    if (FD_ISSET(fd, &readfds)) {
@@ -1062,7 +1055,6 @@ comm_select(time_t sec)
 		    hdl = fd_table[fd].read_handler;
 		    fd_table[fd].read_handler = 0;
 		    hdl(fd, fd_table[fd].read_data);
-		    comm_select_incoming();
 		}
 	    }
 	    if (FD_ISSET(fd, &writefds)) {
@@ -1071,13 +1063,12 @@ comm_select(time_t sec)
 		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = 0;
 		    hdl(fd, fd_table[fd].write_data);
-		    comm_select_incoming();
 		}
 	    }
+	    lastinc = polledinc;
 	}
 	return COMM_OK;
-    } while (timeout > getCurrentTime());
-
+    } while (timeout > squid_curtime);
     debug(5, 8) ("comm_select: time out: %d.\n", squid_curtime);
     return COMM_TIMEOUT;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.151 1997/06/04 06:16:01 wessels Exp $
+ * $Id: main.cc,v 1.152 1997/06/04 07:00:31 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -157,6 +157,7 @@ static int malloc_debug_level = 0;
 
 static void rotate_logs _PARAMS((int));
 static void reconfigure _PARAMS((int));
+static void time_tick _PARAMS((int));
 static void mainInitialize _PARAMS((void));
 static void mainReconfigure _PARAMS((void));
 static void usage _PARAMS((void));
@@ -303,6 +304,17 @@ rotate_logs(int sig)
     signal(sig, rotate_logs);
 #endif
 }
+
+static void
+time_tick(int sig)
+{
+    getCurrentTime();
+    alarm(1);
+#if !HAVE_SIGACTION
+    signal(sig, time_tick);
+#endif
+}
+
 
 static void
 reconfigure(int sig)
@@ -605,6 +617,8 @@ mainInitialize(void)
     squid_signal(SIGHUP, reconfigure, SA_RESTART);
     squid_signal(SIGTERM, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
+    squid_signal(SIGALRM, time_tick, SA_RESTART);
+    alarm(1);
     debug(1, 0) ("Ready to serve requests.\n");
 
     if (!configured_once) {
