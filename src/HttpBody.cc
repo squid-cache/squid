@@ -1,7 +1,7 @@
 /*
- * $Id: HttpBody.cc,v 1.2 1998/02/21 00:56:40 rousskov Exp $
+ * $Id: HttpBody.cc,v 1.3 1998/02/21 18:46:32 rousskov Exp $
  *
- * DEBUG: section ??    HTTP Body
+ * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

@@ -118,3 +118,6 @@ typedef void STVLDCB(void *, int, int);
 
 /* MD5 cache keys */
 typedef unsigned char cache_key;
+
+/* context-based debugging, the actual type is subject to change */
+typedef int Ctx;

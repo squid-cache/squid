@@ -1,7 +1,7 @@
 /*
- * $Id: HttpStatusLine.cc,v 1.2 1998/02/21 00:56:44 rousskov Exp $
+ * $Id: HttpStatusLine.cc,v 1.3 1998/02/21 18:46:34 rousskov Exp $
  *
- * DEBUG: section ??    HTTP Status-line
+ * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
