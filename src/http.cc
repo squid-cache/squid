@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.231 1998/01/03 05:27:18 wessels Exp $
+ * $Id: http.cc,v 1.232 1998/01/10 08:15:14 kostas Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -770,6 +770,7 @@ httpBuildRequestHeader(request_t * request,
     int flags)
 {
     LOCAL_ARRAY(char, ybuf, YBUF_SZ);
+    LOCAL_ARRAY(char, no_forward, 1024);
     char *xbuf = get_free_4k_page();
     char *viabuf = get_free_4k_page();
     char *fwdbuf = get_free_4k_page();
@@ -813,8 +814,10 @@ httpBuildRequestHeader(request_t * request,
 	    /* If we're not going to do proxy auth, then it must be passed on */
 	    if (EBIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
 		continue;
-	if (strncasecmp(xbuf, "Connection:", 11) == 0)
+	if (strncasecmp(xbuf, "Connection:", 11) == 0) {
+            handleConnectionHeader(0, no_forward, &xbuf[11]);
 	    continue;
+        }
 	if (strncasecmp(xbuf, "Host:", 5) == 0) {
 	    EBIT_SET(hdr_flags, HDR_HOST);
 	} else if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
@@ -843,7 +846,8 @@ httpBuildRequestHeader(request_t * request,
 		snprintf(xbuf, 4096, "Max-Forwards: %d", n - 1);
 	    }
 	}
-	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512, 1);
+        if (!handleConnectionHeader(1, no_forward, xbuf))
+	    httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512, 1);
     }
     hdr_len = t - hdr_in;
     if (Config.fake_ua && strstr(hdr_out, "User-Agent") == NULL) {
