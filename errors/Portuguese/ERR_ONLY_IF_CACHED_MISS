@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+<UL>
+<LI>
+<STRONG>
+N&atilde;o foi encontrado documento v&aacute;lido no cache e 
+a op&ccedil;&atilde;o <code>only-if-cached</code> foi especificada.
+</STRONG>
+</UL>
+
+<P>
+
+Voc&ecirc; requisitou com a diretiva de controle do cache <code>only-if-cached</code>
+ativa. O documento n&atilde;o foi encontrado no cache, <em>ou</em> requer revalida&ccedil;&atilde;o 
+proibida pela op&ccedil;&atilde;o <code>only-if-cached</code>
+
+</P>
