@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.38 2004/10/18 12:05:37 hno Exp $
+ * $Id: client_side_request.cc,v 1.39 2004/10/20 22:48:52 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -784,6 +784,7 @@ clientRedirectDone(void *data, char *result)
         new_request->my_addr = old_request->my_addr;
         new_request->my_port = old_request->my_port;
         new_request->flags = old_request->flags;
+        new_request->flags.redirected = 1;
 
         if (old_request->auth_user_request) {
             new_request->auth_user_request = old_request->auth_user_request;
