@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.18 2002/11/15 13:27:58 hno Exp $
+ * $Id: external_acl.cc,v 1.19 2002/11/15 14:54:50 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -712,7 +712,7 @@ externalAclHandleReply(void *data, char *reply)
 	if (reply)
 	    entry = external_acl_cache_add(state->def, state->key, result, user, error);
 	else {
-	    entry = hash_lookup(state->def->cache, state->key);
+	    entry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);
 	    if (entry)
 		external_acl_cache_delete(state->def, entry);
 	}
