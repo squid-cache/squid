@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.91 1996/12/15 03:22:28 wessels Exp $
+ * $Id: tools.cc,v 1.92 1997/01/03 23:09:24 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -368,6 +368,11 @@ fatal_common(const char *message)
 void
 fatal(const char *message)
 {
+    /* check for store_rebuilding flag because fatal() is often
+     * used in early initialization phases, long before we ever
+     * get to the store log. */
+    if (!store_rebuilding)
+	storeWriteCleanLog();
     fatal_common(message);
     exit(1);
 }
