@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.312 2003/09/21 00:30:46 robertc Exp $
+ * $Id: acl.cc,v 1.313 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -52,10 +52,10 @@ ACL::operator delete (void *address)
     fatal ("unusable ACL::delete");
 }
 
-acl *
+ACL *
 ACL::FindByName(const char *name)
 {
-    acl *a;
+    ACL *a;
 
     for (a = Config.aclList; a; a = a->next)
         if (!strcasecmp(a->name, name))
@@ -78,11 +78,11 @@ ACL::Factory (char const *type)
 ACL::ACL () {}
 
 void
-ACL::ParseAclLine(acl ** head)
+ACL::ParseAclLine(ACL ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
-    acl *A = NULL;
+    ACL *A = NULL;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     int new_acl = 0;
 
@@ -200,7 +200,7 @@ aclIsProxyAuth(const char *name)
     if (NULL == name)
         return false;
 
-    acl *a;
+    ACL *a;
 
     if ((a = ACL::FindByName(name)))
         return a->isProxyAuth();
@@ -338,7 +338,7 @@ void
 aclParseAclList(acl_list ** head)
 {
     acl_list **Tail = head;	/* sane name in the use below */
-    acl *a = NULL;
+    ACL *a = NULL;
     char *t;
 
     /* next expect a list of ACL names, possibly preceeded
@@ -482,11 +482,11 @@ ACLList::matches (ACLChecklist *checklist) const
 /*********************/
 
 void
-aclDestroyAcls(acl ** head)
+aclDestroyAcls(ACL ** head)
 {
     ACL *next = NULL;
 
-    for (acl *a = *head; a; a = next) {
+    for (ACL *a = *head; a; a = next) {
         next = a->next;
         delete a;
     }
@@ -687,7 +687,7 @@ ACL::Prototype::Factory (char const *typeToClone)
 void
 ACL::Initialize()
 {
-    acl *a = Config.aclList;
+    ACL *a = Config.aclList;
     debug(53, 3) ("ACL::Initialize\n");
 
     while (a) {

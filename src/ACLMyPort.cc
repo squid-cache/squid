@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMyPort.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLMyPort.cc,v 1.2 2003/10/20 12:33:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +38,14 @@
 #include "ACLIntRange.h"
 #include "ACLChecklist.h"
 
+/* explicit template instantiation required for some systems */
+
+template class ACLStrategised<int>
+
+;
+
 ACL::Prototype ACLMyPort::RegistryProtoype(&ACLMyPort::RegistryEntry_, "myport");
+
 ACLStrategised<int> ACLMyPort::RegistryEntry_(new ACLIntRange, ACLMyPortStrategy::Instance(), "myport");
 
 int

@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.17 2003/06/19 13:12:00 robertc Exp $
+ * $Id: radix.h,v 1.18 2003/10/20 12:33:03 robertc Exp $
  */
 
 #ifndef SQUID_RADIX_H
@@ -45,8 +45,11 @@
  * Radix search tree node layout.
  */
 
-struct squid_radix_node {
+struct squid_radix_node
+{
+
     struct squid_radix_mask *rn_mklist;	/* list of masks contained in subtree */
+
     struct squid_radix_node *rn_p;	/* parent */
     short rn_b;			/* bit offset; -1-index(netmask) */
     char rn_bmask;		/* node: mask for bit test */
@@ -54,21 +57,34 @@ struct squid_radix_node {
 #define RNF_NORMAL	1	/* leaf contains normal route */
 #define RNF_ROOT	2	/* leaf is root leaf for tree */
 #define RNF_ACTIVE	4	/* This node is alive (for rtfree) */
+
     union {
-	struct {		/* leaf only data: */
-	    char *rn_Key;	/* object of search */
-	    char *rn_Mask;	/* netmask, if present */
-	    struct squid_radix_node *rn_Dupedkey;
-	} rn_leaf;
-	struct {		/* node only data: */
-	    int rn_Off;		/* where to start compare */
-	    struct squid_radix_node *rn_L;	/* progeny */
-	    struct squid_radix_node *rn_R;	/* progeny */
-	} rn_node;
+
+        struct {		/* leaf only data: */
+            char *rn_Key;	/* object of search */
+            char *rn_Mask;	/* netmask, if present */
+
+            struct squid_radix_node *rn_Dupedkey;
+        }
+
+        rn_leaf;
+
+        struct {		/* node only data: */
+            int rn_Off;		/* where to start compare */
+
+            struct squid_radix_node *rn_L;	/* progeny */
+
+            struct squid_radix_node *rn_R;	/* progeny */
+        }
+
+        rn_node;
     } rn_u;
 #ifdef RN_DEBUG
+
     int rn_info;
+
     struct squid_radix_node *rn_twin;
+
     struct squid_radix_node *rn_ybro;
 #endif
 };
@@ -80,56 +96,88 @@ struct squid_radix_node {
  * Annotations to tree concerning potential routes applying to subtrees.
  */
 
-struct squid_radix_mask {
+struct squid_radix_mask
+{
     short rm_b;			/* bit offset; -1-index(netmask) */
     char rm_unused;		/* cf. rn_bmask */
     unsigned char rm_flags;	/* cf. rn_flags */
+
     struct squid_radix_mask *rm_mklist;	/* more masks to try */
     union {
-	char *rmu_mask;		/* the mask */
-	struct squid_radix_node *rmu_leaf;	/* for normal routes */
+        char *rmu_mask;		/* the mask */
+
+        struct squid_radix_node *rmu_leaf;	/* for normal routes */
     } rm_rmu;
     int rm_refs;		/* # of references to this struct */
-}         *squid_rn_mkfreelist;
+};
 
-struct squid_radix_node_head {
+struct squid_radix_node_head
+{
+
     struct squid_radix_node *rnh_treetop;
     int rnh_addrsize;		/* permit, but not require fixed keys */
     int rnh_pktsize;		/* permit, but not require fixed keys */
+
     struct squid_radix_node *(*rnh_addaddr)	/* add based on sockaddr */
-               (void *v, void *mask,
-	    struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+                (void *v, void *mask,
+
+                 struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+
     struct squid_radix_node *(*rnh_addpkt)	/* add based on packet hdr */
-               (void *v, void *mask,
-	    struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+                (void *v, void *mask,
+
+                 struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+
     struct squid_radix_node *(*rnh_deladdr)	/* remove based on sockaddr */
-               (void *v, void *mask, struct squid_radix_node_head * head);
+
+                (void *v, void *mask, struct squid_radix_node_head * head);
+
     struct squid_radix_node *(*rnh_delpkt)	/* remove based on packet hdr */
-               (void *v, void *mask, struct squid_radix_node_head * head);
+
+                (void *v, void *mask, struct squid_radix_node_head * head);
+
     struct squid_radix_node *(*rnh_matchaddr)		/* locate based on sockaddr */
-               (void *v, struct squid_radix_node_head * head);
+
+                (void *v, struct squid_radix_node_head * head);
+
     struct squid_radix_node *(*rnh_lookup)	/* locate based on sockaddr */
-               (void *v, void *mask, struct squid_radix_node_head * head);
+
+                (void *v, void *mask, struct squid_radix_node_head * head);
+
     struct squid_radix_node *(*rnh_matchpkt)	/* locate based on packet hdr */
-               (void *v, struct squid_radix_node_head * head);
+
+                (void *v, struct squid_radix_node_head * head);
     int (*rnh_walktree)		/* traverse tree */
-        (struct squid_radix_node_head * head, int (*f) (struct squid_radix_node *, void *), void *w);
+
+    (struct squid_radix_node_head * head, int (*f) (struct squid_radix_node *, void *), void *w);
+
     struct squid_radix_node rnh_nodes[3];	/* empty tree for common case */
 };
 
 
 SQUIDCEXTERN void squid_rn_init (void);
+
 SQUIDCEXTERN int squid_rn_inithead(struct squid_radix_node_head **, int);
 SQUIDCEXTERN int squid_rn_refines(void *, void *);
+
 SQUIDCEXTERN int squid_rn_walktree(struct squid_radix_node_head *, int (*)(struct squid_radix_node *, void *), void *);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_addmask(void *, int, int);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_addroute(void *, void *, struct squid_radix_node_head *, struct squid_radix_node[2]);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_delete(void *, void *, struct squid_radix_node_head *);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_insert(void *, struct squid_radix_node_head *, int *, struct squid_radix_node[2]);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_match(void *, struct squid_radix_node_head *);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_newpair(void *, int, struct squid_radix_node[2]);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_search(void *, struct squid_radix_node *);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_search_m(void *, struct squid_radix_node *, void *);
+
 SQUIDCEXTERN struct squid_radix_node *squid_rn_lookup(void *, void *, struct squid_radix_node_head *);
 
 #endif /* SQUID_RADIX_H */

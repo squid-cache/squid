@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.483 2003/10/16 21:40:16 robertc Exp $
+ * $Id: structs.h,v 1.484 2003/10/20 12:33:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -110,8 +110,6 @@ struct _snmp_request_t
 };
 
 #endif
-
-typedef class ACL acl;
 
 
 struct _acl_address
@@ -565,7 +563,8 @@ struct _SquidConfig
     }
 
     onoff;
-    acl *aclList;
+
+    class ACL *aclList;
 
     struct
     {

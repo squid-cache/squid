@@ -173,7 +173,7 @@ AUFSFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
 void
 AUFSFile::read(char *buf, off_t offset, size_t size)
 {
-    debug(79, 3) ("AUFSFile::read: %p, size %u\n", this, size);
+    debugs(79, 3, "AUFSFile::read: " << this << ", size " << size);
     assert (fd > -1);
     assert (ioRequestor.getRaw());
     statCounter.syscalls.disk.reads++;

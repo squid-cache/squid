@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.53 2003/08/10 11:00:43 robertc Exp $
+ * $Id: external_acl.cc,v 1.54 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -1188,7 +1188,7 @@ ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
 {
     /* TODO: optimise this - we probably have a pointer to this
      * around somewhere */
-    acl *acl = ACL::FindByName(AclMatchedName);
+    ACL *acl = ACL::FindByName(AclMatchedName);
     ACLExternal *me = dynamic_cast<ACLExternal *> (acl);
     assert (me);
     checklist->asyncInProgress(true);
