@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.17 1996/04/04 01:30:54 wessels Exp $ */
+/* $Id: wais.cc,v 1.18 1996/04/05 17:22:22 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -101,19 +101,12 @@ void waisReadReply(fd, data)
 		    COMM_SELECT_READ,
 		    (PF) waisReadReply,
 		    (caddr_t) data);
-#ifdef INSTALL_READ_TIMEOUT_ABOVE_GAP
-		comm_set_select_handler_plus_timeout(fd,
-		    COMM_SELECT_TIMEOUT,
-		    (PF) waisReadReplyTimeout,
-		    (caddr_t) data,
-		    getReadTimeout());
-#else
+		/* don't install read handler while we're above the gap */
 		comm_set_select_handler_plus_timeout(fd,
 		    COMM_SELECT_TIMEOUT,
 		    (PF) NULL,
 		    (caddr_t) NULL,
 		    (time_t) 0);
-#endif
 		/* dont try reading again for a while */
 		comm_set_stall(fd, getStallDelay());
 		return;
