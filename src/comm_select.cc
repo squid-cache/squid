@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.61 2002/10/13 20:35:00 robertc Exp $
+ * $Id: comm_select.cc,v 1.62 2002/10/14 11:06:53 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -331,7 +331,7 @@ comm_select(int msec)
     int callicp = 0, callhttp = 0;
     int calldns = 0;
     int maxindex;
-    int k;
+    unsigned int k;
     int j;
 #if DEBUG_FDBITS
     int i;
