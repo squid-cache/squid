@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.58 2001/01/12 00:37:17 wessels Exp $
+ * $Id: dnsserver.cc,v 1.59 2001/09/04 01:02:50 robertc Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -322,7 +322,7 @@ main(int argc, char *argv[])
 #endif /* HAVE_RES_INIT */
 	    break;
 	case 'v':
-	    printf("dnsserver version %s\n", SQUID_VERSION);
+	    printf("dnsserver version %s\n", VERSION);
 	    exit(0);
 	    break;
 	case 'h':
