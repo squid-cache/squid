@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.31 1998/11/12 06:28:28 wessels Exp $
+ * $Id: store_digest.cc,v 1.32 1998/11/13 21:02:10 rousskov Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -335,7 +335,7 @@ storeDigestRewriteStart(void *datanotused)
     }
     debug(71, 2) ("storeDigestRewrite: start rewrite #%d\n", sd_state.rewrite_count + 1);
     /* make new store entry */
-    url = internalLocalUri("/squid-internal-periodic/", StoreDigestUrlPath);
+    url = internalLocalUri("/squid-internal-periodic/", StoreDigestFileName);
     flags = null_request_flags;
     flags.cachable = 1;
     sd_state.rewrite_lock = e = storeCreateEntry(url, url, flags, METHOD_GET);
@@ -367,7 +367,8 @@ storeDigestRewriteResume(void)
     httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, "Cache Digest OK",
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + StoreDigestRewritePeriod);
-    debug(71, 3) ("storeDigestRewrite: entry expires on %s\n", mkrfc1123(e->mem_obj->reply->expires));
+    debug(71, 3) ("storeDigestRewrite: entry expires on %d (%+d)\n", 
+	e->mem_obj->reply->expires, e->mem_obj->reply->expires-squid_curtime);
     storeBuffer(e);
     httpReplySwapOut(e->mem_obj->reply, e);
     storeDigestCBlockSwapOut(e);
@@ -382,8 +383,8 @@ storeDigestRewriteFinish(StoreEntry * e)
     assert(e == sd_state.rewrite_lock);
     storeComplete(e);
     storeTimestampsSet(e);
-    debug(71, 2) ("storeDigestRewriteFinish: digest expires on %s (%d)\n",
-	mkrfc1123(e->expires), e->expires);
+    debug(71, 2) ("storeDigestRewriteFinish: digest expires at %d (%+d)\n",
+	e->expires, e->expires-squid_curtime);
     /* is this the write order? @?@ */
     requestUnlink(e->mem_obj->request);
     e->mem_obj->request = NULL;
