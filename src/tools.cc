@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.26 1996/04/09 23:28:37 wessels Exp $ */
+/* $Id: tools.cc,v 1.27 1996/04/10 05:10:28 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -161,21 +161,6 @@ void normal_shutdown()
 	SQUID_VERSION);
     exit(0);
 }
-
-#ifdef OLD_SHUTDOWN
-void shut_down(sig)
-     int sig;
-{
-    debug(21, 1, "Shutting down...\n");
-    if (getPidFilename())
-	safeunlink(getPidFilename(), 0);
-    storeWriteCleanLog();
-    PrintRusage(NULL, debug_log);
-    debug(21, 0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
-	SQUID_VERSION, sig);
-    exit(1);
-}
-#else
 void shut_down(sig)
      int sig;
 {
@@ -183,9 +168,8 @@ void shut_down(sig)
     serverConnectionsClose();
     ipcacheShutdownServers();
     shutdown_pending = 1;
+    /* reinstall signal handler? */
 }
-
-#endif
 
 void fatal_common(message)
      char *message;
