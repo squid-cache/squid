@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.263 1998/04/08 19:28:47 wessels Exp $
+ * $Id: client_side.cc,v 1.264 1998/04/08 21:38:36 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2026,9 +2026,9 @@ httpAccept(int sock, void *notused)
 static int
 CheckQuickAbort2(const clientHttpRequest * http)
 {
-    long curlen;
-    long minlen;
-    long expectlen;
+    int curlen;
+    int minlen;
+    int expectlen;
 
     if (!EBIT_TEST(http->request->flags, REQ_CACHABLE))
 	return 1;
@@ -2037,8 +2037,8 @@ CheckQuickAbort2(const clientHttpRequest * http)
     if (http->entry->mem_obj == NULL)
 	return 1;
     expectlen = http->entry->mem_obj->reply->content_length;
-    curlen = http->entry->mem_obj->inmem_hi;
-    minlen = Config.quickAbort.min;
+    curlen = (int) http->entry->mem_obj->inmem_hi;
+    minlen = (int) Config.quickAbort.min;
     if (minlen < 0)
 	/* disabled */
 	return 0;
@@ -2051,7 +2051,10 @@ CheckQuickAbort2(const clientHttpRequest * http)
     if ((expectlen - curlen) > Config.quickAbort.max)
 	/* too much left to go */
 	return 1;
-    if ((curlen / (expectlen / 128U)) > Config.quickAbort.pct)
+    if (expectlen < 128)
+	/* avoid FPE */
+	return 0;
+    if ((curlen / (expectlen / QUICK_ABORT_100PCT)) > Config.quickAbort.pct)
 	/* past point of no return */
 	return 0;
     return 1;
