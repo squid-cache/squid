@@ -1,5 +1,5 @@
 -- File: SQUID.MIB
--- Maintained by: kostas@nlanr.net
+-- Maintained by: glenn@ircache.net
 --
 -- NOTE: This version (1.14) of the mib is supported as of squid1.2beta19. 
 --
