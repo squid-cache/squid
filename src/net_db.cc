@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.77 1998/03/25 09:21:47 kostas Exp $
+ * $Id: net_db.cc,v 1.78 1998/03/25 09:23:20 kostas Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -701,34 +701,38 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 
 #if SQUID_SNMP
 
-int netdbGetRowFn(oid *New,oid *Oid)
+int 
+netdbGetRowFn(oid * New, oid * Oid)
 {
-        netdbEntry *c = NULL;
-	static struct in_addr maddr;
-        static char key[15];
-	
+    netdbEntry *c = NULL;
+    static struct in_addr maddr;
+    static char key[15];
+
 #if USE_ICMP
-        if (!Oid[0]&&!Oid[1]&&!Oid[2]&&!Oid[3])
-                c = (netdbEntry *)hash_first(addr_table);
-        else {
-                snprintf(key,15,"%d.%d.%d.%d", Oid[0],Oid[1],Oid[2],Oid[3]);
-                c = (netdbEntry *) hash_lookup(addr_table, key);
-                if (!c) return 0;
-		debug(49,8)("netdbGetRowFn: [%s] found\n",key);
-                c= (netdbEntry *)hash_next(addr_table);
-		if (!c) debug(49,8)("netdbGetRowFn: next does not exist!\n");
-        }
+    if (!Oid[0] && !Oid[1] && !Oid[2] && !Oid[3])
+	c = (netdbEntry *) hash_first(addr_table);
+    else {
+	snprintf(key, 15, "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
+	c = (netdbEntry *) hash_lookup(addr_table, key);
+	if (!c)
+	    return 0;
+	debug(49, 8) ("netdbGetRowFn: [%s] found\n", key);
+	c = (netdbEntry *) hash_next(addr_table);
+	if (!c)
+	    debug(49, 8) ("netdbGetRowFn: next does not exist!\n");
+    }
 #endif
-        if (!c) return 0;
-	debug(49,8)("netdbGetRowFn: [%s] is returned\n",c->network);
-	safe_inet_addr(c->network, &maddr);
-        addr2oid(maddr, New);
-        return 1;
+    if (!c)
+	return 0;
+    debug(49, 8) ("netdbGetRowFn: [%s] is returned\n", c->network);
+    safe_inet_addr(c->network, &maddr);
+    addr2oid(maddr, New);
+    return 1;
 }
 
 
 variable_list *
-snmp_netdbFn(variable_list * Var, snint *ErrP)
+snmp_netdbFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
 #if 0
@@ -740,16 +744,16 @@ snmp_netdbFn(variable_list * Var, snint *ErrP)
 #if USE_ICMP
     struct in_addr addr;
 #endif
-    snprintf(key,15,"%d.%d.%d.%d", Var->name[11], Var->name[12],
-                        Var->name[13],Var->name[14]);
+    snprintf(key, 15, "%d.%d.%d.%d", Var->name[11], Var->name[12],
+	Var->name[13], Var->name[14]);
 
-    debug(49, 5) ("snmp_netdbFn: request with %d. (%s)!\n", Var->name[10],key);
+    debug(49, 5) ("snmp_netdbFn: request with %d. (%s)!\n", Var->name[10], key);
 
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
 #if USE_ICMP
-    n = (netdbEntry *) hash_lookup(addr_table,key);
+    n = (netdbEntry *) hash_lookup(addr_table, key);
 
 #endif
     if (n == NULL) {

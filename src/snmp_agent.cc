@@ -177,7 +177,7 @@ snmp_agent_response(struct snmp_pdu *PDU)
 		Answer->errstat = SNMP_ERR_NOSUCHNAME;
 		debug(49, 5) ("snmp_agent_response: No such oid. ");
 	    } else
-		VarNew = (*ParseFn) (VarPtr, (snint *) &(Answer->errstat));
+		VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
 
 	    /* Was there an error? */
 	    if ((Answer->errstat != SNMP_ERR_NOERROR) ||
@@ -204,7 +204,7 @@ snmp_agent_response(struct snmp_pdu *PDU)
 	VarPtr = PDU->variables;
 
 	ParseFn = oidlist_Next(VarPtr->name, VarPtr->name_length,
-	    &(TmpOidName), (snint *) &(TmpOidNameLen));
+	    &(TmpOidName), (snint *) & (TmpOidNameLen));
 
 	if (ParseFn == NULL) {
 	    Answer->errstat = SNMP_ERR_NOSUCHNAME;
@@ -214,7 +214,7 @@ snmp_agent_response(struct snmp_pdu *PDU)
 	    xfree(VarPtr->name);
 	    VarPtr->name = TmpOidName;
 	    VarPtr->name_length = TmpOidNameLen;
-	    VarNew = (*ParseFn) (VarPtr, (snint *) &(Answer->errstat));
+	    VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
 	}
 
 	/* Was there an error? */
@@ -297,7 +297,7 @@ init_agent_auth()
  ************************************************************************/
 
 variable_list *
-snmp_basicFn(variable_list * Var, snint *ErrP)
+snmp_basicFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     char *pp;
@@ -320,7 +320,7 @@ snmp_basicFn(variable_list * Var, snint *ErrP)
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (snint) ( tvSubDsec(squid_start, current_time) );
+	*(Answer->val.integer) = (snint) (tvSubDsec(squid_start, current_time));
 	break;
     case SYSCONTACT:
 	Answer->type = ASN_OCTET_STR;
@@ -354,7 +354,7 @@ snmp_basicFn(variable_list * Var, snint *ErrP)
 }
 
 variable_list *
-snmp_sysFn(variable_list * Var, snint *ErrP)
+snmp_sysFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     static fde *f = NULL;
@@ -383,69 +383,69 @@ snmp_sysFn(variable_list * Var, snint *ErrP)
 	*(Answer->val.integer) = store_swap_size;
 	break;
     case SYSCONNTBL:
-        snprintf(addrbuf,16, "%d.%d.%d.%d", Var->name[11], Var->name[12],
-			Var->name[13],Var->name[14]);
+	snprintf(addrbuf, 16, "%d.%d.%d.%d", Var->name[11], Var->name[12],
+	    Var->name[13], Var->name[14]);
 
-        debug(49, 9) ("snmp_sysFn: CONN Table, [%s]\n", addrbuf);
+	debug(49, 9) ("snmp_sysFn: CONN Table, [%s]\n", addrbuf);
 
-        while (cnt < Squid_MaxFD) {
-            f = &fd_table[cnt++];
-            if (!f->open)
-                continue;
-	    if (f->type==FD_SOCKET && !strcmp(f->ipaddr, addrbuf ) &&
-				f->remote_port==Var->name[15])
-            	break;	
-        }
-        if (!f || cnt==Squid_MaxFD) {
-            debug(49, 9) ("snmp_sysFn: no such name. %x\n", f);
-            *ErrP = SNMP_ERR_NOSUCHNAME;
-            snmp_var_free(Answer);
-            return (NULL);
-        }
-	switch(Var->name[10]) {
-        case SYS_CONN_FDNUM:
-            Answer->val_len = sizeof(snint);
-            Answer->val.integer = xmalloc(Answer->val_len);
-            Answer->type = ASN_INTEGER;
-            *(Answer->val.integer) = Var->name[11];
-            break;
-        case SYS_CONN_PORT:
-            Answer->val_len = sizeof(snint);
-            Answer->val.integer = xmalloc(Answer->val_len);
-            Answer->type = ASN_INTEGER;
-            *(Answer->val.integer) = f->remote_port;
-            break;
-        case SYS_CONN_READ:
-            Answer->val_len = sizeof(snint);
-            Answer->val.integer = xmalloc(Answer->val_len);
-            Answer->type = ASN_INTEGER;
-            *(Answer->val.integer) = (snint) f->bytes_read;
-            break;
-        case SYS_CONN_WRITE:
-            Answer->val_len = sizeof(snint);
-            Answer->val.integer = xmalloc(Answer->val_len);
-            Answer->type = ASN_INTEGER;
-            *(Answer->val.integer) = (snint) f->bytes_written;
-            break;
-        case SYS_CONN_ADDR:
-            safe_inet_addr(f->ipaddr, &addr);
-            snint_return = (snint) addr.s_addr;
-            Answer->val_len = sizeof(snint);
-            Answer->val.integer = xmalloc(Answer->val_len);
-            Answer->type = SMI_IPADDRESS;
-            *(Answer->val.integer) = (snint) snint_return;
-            break;
-        case SYS_CONN_NAME:
-            Answer->type = ASN_OCTET_STR;
-            Answer->val_len = strlen(f->desc);
-            Answer->val.string = (u_char *) xstrdup(f->desc);
-            break;
-        default:
-            *ErrP = SNMP_ERR_NOSUCHNAME;
-            snmp_var_free(Answer);
-            return (NULL);
-        }
-        break; /* end SYSCONNTBL */
+	while (cnt < Squid_MaxFD) {
+	    f = &fd_table[cnt++];
+	    if (!f->open)
+		continue;
+	    if (f->type == FD_SOCKET && !strcmp(f->ipaddr, addrbuf) &&
+		f->remote_port == Var->name[15])
+		break;
+	}
+	if (!f || cnt == Squid_MaxFD) {
+	    debug(49, 9) ("snmp_sysFn: no such name. %x\n", f);
+	    *ErrP = SNMP_ERR_NOSUCHNAME;
+	    snmp_var_free(Answer);
+	    return (NULL);
+	}
+	switch (Var->name[10]) {
+	case SYS_CONN_FDNUM:
+	    Answer->val_len = sizeof(snint);
+	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->type = ASN_INTEGER;
+	    *(Answer->val.integer) = Var->name[11];
+	    break;
+	case SYS_CONN_PORT:
+	    Answer->val_len = sizeof(snint);
+	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->type = ASN_INTEGER;
+	    *(Answer->val.integer) = f->remote_port;
+	    break;
+	case SYS_CONN_READ:
+	    Answer->val_len = sizeof(snint);
+	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->type = ASN_INTEGER;
+	    *(Answer->val.integer) = (snint) f->bytes_read;
+	    break;
+	case SYS_CONN_WRITE:
+	    Answer->val_len = sizeof(snint);
+	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->type = ASN_INTEGER;
+	    *(Answer->val.integer) = (snint) f->bytes_written;
+	    break;
+	case SYS_CONN_ADDR:
+	    safe_inet_addr(f->ipaddr, &addr);
+	    snint_return = (snint) addr.s_addr;
+	    Answer->val_len = sizeof(snint);
+	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->type = SMI_IPADDRESS;
+	    *(Answer->val.integer) = (snint) snint_return;
+	    break;
+	case SYS_CONN_NAME:
+	    Answer->type = ASN_OCTET_STR;
+	    Answer->val_len = strlen(f->desc);
+	    Answer->val.string = (u_char *) xstrdup(f->desc);
+	    break;
+	default:
+	    *ErrP = SNMP_ERR_NOSUCHNAME;
+	    snmp_var_free(Answer);
+	    return (NULL);
+	}
+	break;			/* end SYSCONNTBL */
     case SYSFDTBL:
 	num = Var->name[11];
 	debug(49, 9) ("snmp_sysFn: FD Table, num=%d\n", num);
@@ -453,8 +453,8 @@ snmp_sysFn(variable_list * Var, snint *ErrP)
 	    f = &fd_table[cnt++];
 	    if (!f->open)
 		continue;
-	    if (f->type!=FD_SOCKET)
-	    	num--;
+	    if (f->type != FD_SOCKET)
+		num--;
 	}
 	if (num != 0 || !f) {
 	    debug(49, 9) ("snmp_sysFn: no such name. %x\n", f);
@@ -516,7 +516,7 @@ snmp_sysFn(variable_list * Var, snint *ErrP)
 }
 
 variable_list *
-snmp_confFn(variable_list * Var, snint *ErrP)
+snmp_confFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     char *cp = NULL;
@@ -539,17 +539,17 @@ snmp_confFn(variable_list * Var, snint *ErrP)
 	*(Answer->val.integer) = tvSubDsec(squid_start, current_time);
 	break;
     case CONF_VERSION:
-        pp= "Squid";
-        Answer->type = ASN_OCTET_STR;
-        Answer->val_len = strlen(pp);
-        Answer->val.string = (u_char *) xstrdup(pp);
-        break;
+	pp = "Squid";
+	Answer->type = ASN_OCTET_STR;
+	Answer->val_len = strlen(pp);
+	Answer->val.string = (u_char *) xstrdup(pp);
+	break;
     case CONF_VERSION_ID:
-        pp = SQUID_VERSION;
-        Answer->type = ASN_OCTET_STR;
-        Answer->val_len = strlen(pp);
-        Answer->val.string = (u_char *) xstrdup(pp);
-        break;
+	pp = SQUID_VERSION;
+	Answer->type = ASN_OCTET_STR;
+	Answer->val_len = strlen(pp);
+	Answer->val.string = (u_char *) xstrdup(pp);
+	break;
     case CONF_STORAGE:
 	switch (Var->name[9]) {
 	case CONF_ST_MMAXSZ:
@@ -610,24 +610,24 @@ snmp_confFn(variable_list * Var, snint *ErrP)
 }
 
 variable_list *
-snmp_meshPtblFn(variable_list * Var, snint *ErrP)
+snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     struct in_addr *laddr;
     char *cp = NULL;
     peer *p = NULL;
-    int cnt=0;
+    int cnt = 0;
     debug(49, 5) ("snmp_meshPtblFn: peer %d requested!\n", Var->name[11]);
 
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
-    laddr=oid2addr(&Var->name[11]);
-    
-    for (p=Config.peers;p!=NULL;p=p->next,cnt++) 
-         if (p->in_addr.sin_addr.s_addr == laddr->s_addr)
-             break;
-   
+    laddr = oid2addr(&Var->name[11]);
+
+    for (p = Config.peers; p != NULL; p = p->next, cnt++)
+	if (p->in_addr.sin_addr.s_addr == laddr->s_addr)
+	    break;
+
 #if SNMP_OLD_INDEX
     p = Config.peers;
     cnt = Var->name[11];
@@ -681,44 +681,44 @@ snmp_meshPtblFn(variable_list * Var, snint *ErrP)
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = p->stats.pings_sent;
-        break;
+	*(Answer->val.integer) = p->stats.pings_sent;
+	break;
     case MESH_PTBL_PACKED:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = p->stats.pings_acked;
-        break;
+	*(Answer->val.integer) = p->stats.pings_acked;
+	break;
     case MESH_PTBL_FETCHES:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = p->stats.fetches;
-        break;
+	*(Answer->val.integer) = p->stats.fetches;
+	break;
     case MESH_PTBL_RTT:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = ASN_INTEGER;
-        *(Answer->val.integer) = p->stats.rtt;
-        break;
+	*(Answer->val.integer) = p->stats.rtt;
+	break;
     case MESH_PTBL_IGN:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = p->stats.ignored_replies;
-        break;
+	*(Answer->val.integer) = p->stats.ignored_replies;
+	break;
     case MESH_PTBL_KEEPAL_S:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = p->stats.n_keepalives_sent;
-        break;
+	*(Answer->val.integer) = p->stats.n_keepalives_sent;
+	break;
     case MESH_PTBL_KEEPAL_R:
 	Answer->val_len = sizeof(snint);
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->type = SMI_COUNTER32;
-        *(Answer->val.integer) = p->stats.n_keepalives_recv;
-        break;
+	*(Answer->val.integer) = p->stats.n_keepalives_recv;
+	break;
 
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
@@ -729,7 +729,7 @@ snmp_meshPtblFn(variable_list * Var, snint *ErrP)
 }
 
 variable_list *
-snmp_prfSysFn(variable_list * Var, snint *ErrP)
+snmp_prfSysFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     static struct rusage rusage;
@@ -789,7 +789,7 @@ snmp_prfSysFn(variable_list * Var, snint *ErrP)
 }
 
 variable_list *
-snmp_prfProtoFn(variable_list * Var, snint *ErrP)
+snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     static StatCounters *f = NULL;
@@ -914,7 +914,7 @@ snmp_prfProtoFn(variable_list * Var, snint *ErrP)
 
 
 variable_list *
-snmp_dnsFn(variable_list * Var, snint *ErrP)
+snmp_dnsFn(variable_list * Var, snint * ErrP)
 {
     debug(49, 5) ("snmp_dnsFn: Processing request with magic %d!\n", Var->name[9]);
     if (Var->name[9] == NET_DNS_IPCACHE)
@@ -926,30 +926,30 @@ snmp_dnsFn(variable_list * Var, snint *ErrP)
 }
 
 void
-addr2oid(struct in_addr addr, oid *Dest)
+addr2oid(struct in_addr addr, oid * Dest)
 {
-   u_char *cp;
-   cp=(u_char *)&(addr.s_addr);
-   Dest[0] = *cp++;
-   Dest[1] = *cp++;
-   Dest[2] = *cp++;
-   Dest[3] = *cp++;
+    u_char *cp;
+    cp = (u_char *) & (addr.s_addr);
+    Dest[0] = *cp++;
+    Dest[1] = *cp++;
+    Dest[2] = *cp++;
+    Dest[3] = *cp++;
 }
 
 struct in_addr *
-oid2addr(oid *id)
+oid2addr(oid * id)
 {
-   static struct in_addr laddr;
+    static struct in_addr laddr;
 #if 0
-   static u_char buf[15];
-   snprintf(buf,15,"%d.%d.%d.%d", id[0],id[1],id[2],id[3]);
-   safe_inet_addr(buf, &laddr);
-   return &laddr;
+    static u_char buf[15];
+    snprintf(buf, 15, "%d.%d.%d.%d", id[0], id[1], id[2], id[3]);
+    safe_inet_addr(buf, &laddr);
+    return &laddr;
 #endif
-   u_char *cp=(u_char *)&(laddr.s_addr);  
-   cp[0]=id[0];
-   cp[1]=id[1];
-   cp[2]=id[2];
-   cp[3]=id[3];
-   return &laddr;
+    u_char *cp = (u_char *) & (laddr.s_addr);
+    cp[0] = id[0];
+    cp[1] = id[1];
+    cp[2] = id[2];
+    cp[3] = id[3];
+    return &laddr;
 }

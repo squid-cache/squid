@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.234 1998/03/25 09:21:44 kostas Exp $
+ * $Id: client_side.cc,v 1.235 1998/03/25 09:23:19 kostas Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -170,7 +170,7 @@ clientAccessCheckDone(int answer, void *data)
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
 	debug(33, 5) ("AclMatchedName = %s\n",
-		AclMatchedName ? AclMatchedName : "<null>");
+	    AclMatchedName ? AclMatchedName : "<null>");
 	http->log_type = LOG_TCP_DENIED;
 	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
 	page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
@@ -558,7 +558,7 @@ httpRequestFree(void *data)
 	}
 	accessLogLog(&http->al);
 	clientUpdateCounters(http);
-	clientdbUpdate(conn->peer.sin_addr, http->log_type, PROTO_HTTP,http->out.size);
+	clientdbUpdate(conn->peer.sin_addr, http->log_type, PROTO_HTTP, http->out.size);
     }
     if (http->redirect_state == REDIRECT_PENDING)
 	redirectUnregister(http->uri, http);
@@ -881,8 +881,8 @@ clientBuildReplyHeader(clientHttpRequest * http,
     memFree(MEM_4K_BUF, ybuf);
     /* temporary kludge to test headers, remove it @?@ @?@ */
     {
-        extern void httpHeaderTestParser(const char *hstr);
-        httpHeaderTestParser(hdr_out);
+	extern void httpHeaderTestParser(const char *hstr);
+	httpHeaderTestParser(hdr_out);
     }
     /* end of kludge */
     return len;
@@ -1586,8 +1586,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", *headers_p);
     /* temporary kludge to test headers, remove it @?@ @?@ */
     {
-        extern void httpHeaderTestParser(const char *hstr);
-        httpHeaderTestParser(*headers_p);
+	extern void httpHeaderTestParser(const char *hstr);
+	httpHeaderTestParser(*headers_p);
     }
     /* end of kludge */
 
