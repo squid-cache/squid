@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.31 2001/03/03 10:39:39 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.32 2001/03/04 01:12:16 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1407,7 +1407,13 @@ storeUfsDirUnlinkFile(SwapDir * SD, sfileno f)
 {
     debug(79, 3) ("storeUfsDirUnlinkFile: unlinking fileno %08X\n", f);
     /* storeUfsDirMapBitReset(SD, f); */
+#if USE_UNLINKD
     unlinkdUnlink(storeUfsDirFullPath(SD, f, NULL));
+#elif USE_TRUNCATE
+    truncate(storeUfsDirFullPath(SD, f, NULL), 0);
+#else
+    unlink(storeUfsDirFullPath(SD, f, NULL));
+#endif
 }
 
 /*
