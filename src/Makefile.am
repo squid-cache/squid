@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.14 2001/11/30 15:27:13 hno Exp $
+#  $Id: Makefile.am,v 1.15 2001/11/30 15:34:37 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -242,8 +242,10 @@ BUILT_SOURCES = \
 
 sysconf_DATA = \
 	squid.conf.default \
-	mib.txt \
 	mime.conf.default
+
+data_DATA = \
+	mib.txt
 
 LDADD = -L../lib -lmiscutil @XTRA_LIBS@
 
@@ -273,7 +275,7 @@ DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
 DEFAULT_DISKD		= $(libexecdir)/@OPT_DISKD_EXE@
 DEFAULT_ICON_DIR	= $(datadir)/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors/@ERR_DEFAULT_LANGUAGE@
-DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
+DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 
 DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
@@ -335,7 +337,7 @@ repl_modules.c: repl_modules.sh Makefile
 auth_modules.c: auth_modules.sh Makefile
 	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
 
-install-data-local: install-sysconfDATA
+install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/mime.conf" ; \
 	else \
