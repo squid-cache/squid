@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.16 2002/10/22 07:02:00 hno Exp $
+ * $Id: aiops.cc,v 1.17 2002/11/09 09:35:26 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -270,7 +270,7 @@ squidaio_init(void)
 
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
-    assert (NUMTHREADS);
+    assert(NUMTHREADS);
     for (i = 0; i < NUMTHREADS; i++) {
 	threadp = (squidaio_thread_t *)memPoolAlloc(squidaio_thread_pool);
 	threadp->status = _THREAD_STARTING;
