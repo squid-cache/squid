@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.4 2003/07/06 13:43:40 hno Exp $
+ * $Id: CommRead.h,v 1.5 2003/07/10 09:37:56 robertc Exp $
  *
  * DEBUG: section 5    Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -67,24 +67,20 @@ public:
 
     ~CallBack()
     {
-        if (data)
-            cbdataReferenceDone(data);
+        replaceData (NULL);
     }
 
     CallBack &operator = (CallBack const & rhs)
     {
         handler = rhs.handler;
 
-        if (rhs.data)
-            data = cbdataReference (rhs.data);
-        else
-            data = NULL;
+        replaceData (rhs.data);
 
         return *this;
     }
 
 
-bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rhs.data;}
+    bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rhs.data;}
 
 #if 0
     // twould be nice - RBC 20030307
@@ -93,6 +89,20 @@ bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rh
 
     C *handler;
     void *data;
+
+private:
+    void replaceData(void *someData)
+    {
+        void *temp = NULL;
+
+        if (someData)
+            temp = cbdataReference(someData);
+
+        if (data)
+            cbdataReferenceDone(data);
+
+        data = temp;
+    }
 };
 
 #if 0
