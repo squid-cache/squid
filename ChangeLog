@@ -5,6 +5,8 @@ Changes to squid-1.1.alpha4:
 	- Added 'echo request' URL hack:  http://cachehost:3128/echo
 	- Added URL redirector feature.
 	- Addeed 'ident_lookup' option to config file
+	- Fixed http to never rely on blocking IP cache lookups.
+	- Removed need for locked IP cache entries.
 	- Changed free page stacks to always free pages if more than
 	  'max' are allocated.
 
