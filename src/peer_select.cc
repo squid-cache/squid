@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.112 2001/01/12 00:37:20 wessels Exp $
+ * $Id: peer_select.cc,v 1.113 2001/02/07 18:56:52 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -109,7 +109,7 @@ peerSelectStateFree(ps_state * psstate)
     cbdataFree(psstate);
 }
 
-int
+static int
 peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
 {
     int n;

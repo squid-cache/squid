@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.58 2001/01/12 00:37:12 wessels Exp $
+ * $Id: util.h,v 1.59 2001/02/07 18:56:50 hno Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -126,5 +126,10 @@ extern const char *xitoa(int num);
 #if !HAVE_DRAND48
 double drand48(void);
 #endif
+
+/*
+ * Returns the amount of known allocated memory
+ */
+int statMemoryAccounted(void);
 
 #endif /* ndef _UTIL_H_ */

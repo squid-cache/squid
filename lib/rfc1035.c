@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.20 2001/01/12 00:37:12 wessels Exp $
+ * $Id: rfc1035.c,v 1.21 2001/02/07 18:56:50 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -174,7 +174,7 @@ rfc1035LabelPack(char *buf, size_t sz, const char *label)
  * Note message compression is not supported here.
  * Returns number of octets packed.
  */
-off_t
+static off_t
 rfc1035NamePack(char *buf, size_t sz, const char *name)
 {
     off_t off = 0;
@@ -423,7 +423,7 @@ rfc1035AnswersUnpack(const char *buf,
     rfc1035_rr ** records,
     unsigned short *id)
 {
-    off_t off = 0;
+    size_t off = 0;
     int l;
     int i;
     int nr = 0;
@@ -482,7 +482,7 @@ unsigned short
 rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
 {
     static rfc1035_header h;
-    off_t offset = 0;
+    size_t offset = 0;
     size_t sz = *szp;
     memset(&h, '\0', sizeof(h));
     /* the first char of hostname must be alphanmeric */
@@ -520,7 +520,7 @@ unsigned short
 rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t * szp)
 {
     static rfc1035_header h;
-    off_t offset = 0;
+    size_t offset = 0;
     size_t sz = *szp;
     static char rev[32];
     unsigned int i;
@@ -543,7 +543,7 @@ rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t * szp)
 	RFC1035_TYPE_PTR,
 	RFC1035_CLASS_IN);
     assert(offset <= sz);
-    *szp = (size_t) offset;
+    *szp = offset;
     return h.id;
 }
 

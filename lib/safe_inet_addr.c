@@ -1,9 +1,10 @@
 
 /*
- * $Id: safe_inet_addr.c,v 1.11 1999/05/04 21:20:41 wessels Exp $
+ * $Id: safe_inet_addr.c,v 1.12 2001/02/07 18:56:51 hno Exp $
  */
 
 #include "config.h"
+#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>

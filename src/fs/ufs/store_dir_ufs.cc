@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.27 2001/01/12 00:37:34 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.28 2001/02/07 18:56:55 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -116,6 +116,8 @@ static void storeUfsDirStats(SwapDir *, StoreEntry *);
 static void storeUfsDirInitBitmap(SwapDir *);
 static int storeUfsDirValidFileno(SwapDir *, sfileno, int);
 
+STSETUP storeFsSetup_ufs;
+
 /*
  * These functions were ripped straight out of the heart of store_dir.c.
  * They assume that the given filenum is on a ufs partiton, which may or
@@ -123,7 +125,7 @@ static int storeUfsDirValidFileno(SwapDir *, sfileno, int);
  * XXX this evilness should be tidied up at a later date!
  */
 
-int
+static int
 storeUfsDirMapBitTest(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
@@ -132,7 +134,7 @@ storeUfsDirMapBitTest(SwapDir * SD, int fn)
     return file_map_bit_test(ufsinfo->map, filn);
 }
 
-void
+static void
 storeUfsDirMapBitSet(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
@@ -1486,7 +1488,7 @@ storeUfsDirStats(SwapDir * SD, StoreEntry * sentry)
  *
  * This routine is called when the given swapdir needs reconfiguring 
  */
-void
+static void
 storeUfsDirReconfigure(SwapDir * sd, int index, char *path)
 {
     char *token;
@@ -1610,7 +1612,7 @@ storeUfsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
  *
  * Called when a *new* fs is being setup.
  */
-void
+static void
 storeUfsDirParse(SwapDir * sd, int index, char *path)
 {
     char *token;
@@ -1683,7 +1685,7 @@ storeUfsDirParse(SwapDir * sd, int index, char *path)
 /*
  * Initial setup / end destruction
  */
-void
+static void
 storeUfsDirDone(void)
 {
     memPoolDestroy(ufs_state_pool);

@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.22 2001/01/12 00:37:13 wessels Exp $
+ * $Id: rfc1738.c,v 1.23 2001/02/07 18:56:51 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -92,7 +92,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
     static size_t bufsize = 0;
     const char *p;
     char *q;
-    int i, do_escape;
+    unsigned int i, do_escape;
 
     if (buf == NULL || strlen(url) * 3 > bufsize) {
 	xfree(buf);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.30 2001/01/12 00:37:14 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.31 2001/02/07 18:56:51 hno Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -35,7 +35,9 @@
 
 #include "squid.h"
 
+#if UNUSED_CODE
 static int httpHeaderStrCmp(const char *h1, const char *h2, int len);
+#endif
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 
 
@@ -312,6 +314,7 @@ httpHeaderParseSize(const char *start, ssize_t * value)
  * parses a given string then packs compiled headers and compares the result
  * with the original, reports discrepancies
  */
+#if UNUSED_CODE
 void
 httpHeaderTestParser(const char *hstr)
 {
@@ -362,9 +365,11 @@ httpHeaderTestParser(const char *hstr)
     packerClean(&p);
     memBufClean(&mb);
 }
+#endif
 
 
 /* like strncasecmp but ignores ws characters */
+#if UNUSED_CODE
 static int
 httpHeaderStrCmp(const char *h1, const char *h2, int len)
 {
@@ -391,12 +396,13 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
     /* NOTREACHED */
     return 0;
 }
+#endif
 
 /*
  * httpHdrMangle checks the anonymizer (header_access) configuration.
  * Returns 1 if the header is allowed.
  */
-int
+static int
 httpHdrMangle(HttpHeaderEntry * e, request_t * request)
 {
     int retval;

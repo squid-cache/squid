@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.17 2001/01/12 00:37:32 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.18 2001/02/07 18:56:54 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -86,6 +86,9 @@ static STFREE storeCossDirShutdown;
 static STFSPARSE storeCossDirParse;
 static STFSRECONFIGURE storeCossDirReconfigure;
 static STDUMP storeCossDirDump;
+
+/* The "only" externally visible function */
+STSETUP storeFsSetup_coss;
 
 static char *
 storeCossDirSwapLogFile(SwapDir * sd, const char *ext)
@@ -679,7 +682,7 @@ storeCossDirCheckObj(SwapDir * SD, const StoreEntry * e)
 
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
 
-void
+static void
 storeCossDirStats(SwapDir * SD, StoreEntry * sentry)
 {
     CossInfo *cs = (CossInfo *) SD->fsdata;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.77 2001/01/12 00:37:20 wessels Exp $
+ * $Id: peer_digest.cc,v 1.78 2001/02/07 18:56:52 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -115,7 +115,7 @@ peerDigestCreate(peer * p)
 }
 
 /* call Clean and free/unlock everything */
-void
+static void
 peerDigestDestroy(PeerDigest * pd)
 {
     peer *p;

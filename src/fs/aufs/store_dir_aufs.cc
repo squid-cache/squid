@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.28 2001/01/12 00:37:32 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.29 2001/02/07 18:56:53 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -118,6 +118,9 @@ static void storeAufsDirStats(SwapDir *, StoreEntry *);
 static void storeAufsDirInitBitmap(SwapDir *);
 static int storeAufsDirValidFileno(SwapDir *, sfileno, int);
 
+/* The MAIN externally visible function */
+STSETUP storeFsSetup_aufs;
+ 
 /*
  * These functions were ripped straight out of the heart of store_dir.c.
  * They assume that the given filenum is on a asyncufs partiton, which may or
@@ -125,7 +128,7 @@ static int storeAufsDirValidFileno(SwapDir *, sfileno, int);
  * XXX this evilness should be tidied up at a later date!
  */
 
-int
+static int
 storeAufsDirMapBitTest(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
@@ -134,7 +137,7 @@ storeAufsDirMapBitTest(SwapDir * SD, int fn)
     return file_map_bit_test(aioinfo->map, filn);
 }
 
-void
+static void
 storeAufsDirMapBitSet(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
@@ -1493,7 +1496,7 @@ storeAufsDirStats(SwapDir * SD, StoreEntry * sentry)
  *
  * This routine is called when the given swapdir needs reconfiguring 
  */
-void
+static void
 storeAufsDirReconfigure(SwapDir * sd, int index, char *path)
 {
     char *token;
@@ -1615,7 +1618,7 @@ storeAufsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
  * storeAufsDirParse *
  * Called when a *new* fs is being setup.
  */
-void
+static void
 storeAufsDirParse(SwapDir * sd, int index, char *path)
 {
     char *token;
@@ -1688,7 +1691,7 @@ storeAufsDirParse(SwapDir * sd, int index, char *path)
 /*
  * Initial setup / end destruction
  */
-void
+static void
 storeAufsDirDone(void)
 {
     aioDone();

@@ -1,5 +1,5 @@
 /*
- * $Id: radix.c,v 1.11 2001/01/12 00:37:12 wessels Exp $
+ * $Id: radix.c,v 1.12 2001/02/07 18:56:50 hno Exp $
  *
  * DEBUG: section 53     Radix tree data structure implementation
  * AUTHOR: NetBSD Derived
@@ -69,6 +69,7 @@
  */
 
 #include "config.h"
+#include "radix.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -220,7 +221,7 @@ rn_refines(m_arg, n_arg)
     return (!masks_are_equal);
 }
 
-struct radix_node *
+static struct radix_node *
 rn_lookup(v_arg, m_arg, head)
      void *v_arg, *m_arg;
      struct radix_node_head *head;

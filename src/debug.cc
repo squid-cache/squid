@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.80 2001/01/12 00:37:16 wessels Exp $
+ * $Id: debug.cc,v 1.81 2001/02/07 18:56:52 hno Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -38,7 +38,7 @@
 static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
 static const char *debugLogTime(time_t);
-static void ctx_print();
+static void ctx_print(void);
 
 #if STDC_HEADERS
 void

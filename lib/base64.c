@@ -1,8 +1,9 @@
 /*
- * $Id: base64.c,v 1.17 2001/01/07 23:36:36 hno Exp $
+ * $Id: base64.c,v 1.18 2001/02/07 18:56:50 hno Exp $
  */
 
 #include "config.h"
+#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -10,6 +11,7 @@
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+
 
 static void base64_init(void);
 
