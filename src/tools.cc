@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.31 1996/04/15 18:00:27 wessels Exp $ */
+/* $Id: tools.cc,v 1.32 1996/04/15 19:20:27 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -417,4 +417,12 @@ void reconfigure(sig)
 #if defined(_SQUID_SYSV_SIGNALS_)
     signal(sig, reconfigure);
 #endif
+}
+
+int tvSubMsec (t1, t2)
+	struct timeval t1;
+	struct timeval t2;
+{
+    return (t2.tv_sec - t1.tv_sec) * 1000 +
+        (t2.tv_usec - t1.tv_usec) / 1000;
 }

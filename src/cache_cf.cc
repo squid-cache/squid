@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.38 1996/04/12 04:34:15 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.39 1996/04/15 19:20:23 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -414,6 +414,7 @@ static void parseCacheHostLine()
     int ascii_port = CACHE_HTTP_PORT;
     int udp_port = CACHE_ICP_PORT;
     int proxy_only = 0;
+    int weight = 1;
 
     /* Parse a cache_host line */
     if (!(hostname = strtok(NULL, w_space)))
@@ -423,11 +424,16 @@ static void parseCacheHostLine()
 
     GetInteger(ascii_port);
     GetInteger(udp_port);
-    if ((token = strtok(NULL, w_space))) {
-	if (!strcasecmp(token, "proxy-only"))
+    while ((token = strtok(NULL, w_space))) {
+	if (!strcasecmp(token, "proxy-only")) {
 	    proxy_only = 1;
+	} else if (!strcasecmp(token, "weight=")) {
+		weight = atoi(token+7);
+	} else {
+		self_destruct();
+	}
     }
-    neighbors_cf_add(hostname, type, ascii_port, udp_port, proxy_only);
+    neighbors_cf_add(hostname, type, ascii_port, udp_port, proxy_only, weight);
 }
 
 static void parseHostDomainLine()
