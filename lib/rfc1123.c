@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.14 1998/02/02 21:16:13 wessels Exp $
+ * $Id: rfc1123.c,v 1.15 1998/03/11 18:07:22 rousskov Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -185,8 +185,10 @@ parse_rfc1123(const char *str)
     memset(&tm, '\0', sizeof(struct tm));
     if ((s = strchr(str, ','))) {	/* Thursday, 10-Jun-93 01:29:59 GMT */
 	s++;			/* or: Thu, 10 Jan 1993 01:29:59 GMT */
-	while (*s && *s == ' ')
+	while (*s == ' ')
 	    s++;
+	if (isdigit(*s) && !isdigit(*(s+1))) /* backoff if only one digit */
+	    s--;
 	if (strchr(s, '-')) {	/* First format */
 	    if ((int) strlen(s) < 18)
 		return -1;
