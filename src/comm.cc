@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.168 1997/06/20 00:00:11 wessels Exp $
+ * $Id: comm.cc,v 1.169 1997/06/20 05:08:30 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -444,8 +444,8 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 {
     FD_ENTRY *fde;
     debug(5, 3) ("commSetTimeout: FD %d timeout %d\n", fd, timeout);
-    if (fd < 0 || fd > Squid_MaxFD)
-	fatal_dump("commSetTimeout: bad FD");
+    assert(fd >= 0);
+    assert(fd < Squid_MaxFD);
     fde = &fd_table[fd];
     if (timeout < 0) {
 	fde->timeout_handler = NULL;
@@ -457,11 +457,10 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 	if (fde->timeout > 0 && (int) (fde->timeout - squid_curtime) < timeout)
 	    return fde->timeout;
     }
+    assert(handler || fde->timeout_handler);
     if (handler || data) {
 	fde->timeout_handler = handler;
 	fde->timeout_data = data;
-    } else if (fde->timeout_handler == NULL) {
-	debug_trap("commSetTimeout: setting timeout, but no handler");
     }
     return fde->timeout = squid_curtime + (time_t) timeout;
 }
@@ -580,15 +579,12 @@ comm_close(int fd)
 {
     FD_ENTRY *fde = NULL;
     debug(5, 5) ("comm_close: FD %d\n", fd);
-    if (fd < 0)
-	fatal_dump("comm_close: bad FD");
-    if (fd >= Squid_MaxFD)
-	fatal_dump("comm_close: bad FD");
+    assert(fd >= 0);
+    assert(fd < Squid_MaxFD);
     fde = &fd_table[fd];
     if (!fde->open)
 	return;
-    if (fd_table[fd].type == FD_FILE)
-	fatal_dump("comm_close: not a SOCKET");
+    assert(fd_table[fd].type =! FD_FILE);
     fde->open = 0;
     CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     commCallCloseHandlers(fd);
@@ -876,8 +872,7 @@ comm_poll(time_t sec)
 	    if (errno == EINTR)
 		continue;
 	    debug(5, 0) ("comm_poll: poll failure: %s\n", xstrerror());
-	    if (errno == EINVAL)
-		fatal_dump("Poll returned EINVAL");
+	    assert(errno != EINVAL);
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
@@ -1372,8 +1367,7 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
     CommWriteStateData *state = NULL;
     debug(5, 5) ("comm_write: FD %d: sz %d: hndl %p: data %p.\n",
 	fd, size, handler, handler_data);
-    if (fd_table[fd].rwstate)
-	fatal_dump("comm_write: comm_write is already active");
+    assert(fd_table[fd].rwstate == NULL);
     state = xcalloc(1, sizeof(CommWriteStateData));
     state->buf = buf;
     state->size = size;
