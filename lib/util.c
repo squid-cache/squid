@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.46 1998/02/26 22:16:26 kostas Exp $
+ * $Id: util.c,v 1.47 1998/02/27 05:51:15 kostas Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -139,6 +139,28 @@ static char msg[128];
 
 extern int sys_nerr;
 
+#if MEM_GEN_TRACE
+
+static FILE *tracefp;
+
+void
+log_trace_init(char *fn)
+{
+        tracefp=fopen(fn,"w+");
+        if (!tracefp) {
+            perror("log_trace_init");
+            exit(1);
+        }
+}
+
+void
+log_trace_done()
+{
+        fclose(tracefp);
+}
+
+#endif
+
 #if XMALLOC_STATISTICS
 #define DBG_MAXSIZE   (1024*1024)
 #define DBG_GRAIN     (16)
@@ -146,6 +168,7 @@ extern int sys_nerr;
 #define DBG_INDEX(sz) (sz<DBG_MAXSIZE?(sz+DBG_GRAIN-1)/DBG_GRAIN:DBG_MAXINDEX)
 static int malloc_sizes[DBG_MAXINDEX + 1];
 static int dbg_stat_init = 0;
+
 
 static void
 stat_init(void)
@@ -448,6 +471,7 @@ xmalloc(size_t sz)
 
     if (sz < 1)
 	sz = 1;
+
     if ((p = malloc(sz)) == NULL) {
 	if (failure_notify) {
 	    snprintf(msg, 128, "xmalloc: Unable to allocate %d bytes!\n",
@@ -467,6 +491,9 @@ xmalloc(size_t sz)
 #if XMALLOC_TRACE
     xmalloc_show_trace(p, 1);
 #endif
+#if MEM_GEN_TRACE
+	fprintf(tracefp, "m:%d:%x\n",sz,p);
+#endif
     return (p);
 }
 
@@ -479,11 +506,15 @@ xfree(void *s)
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
 #endif
+
 #if XMALLOC_DEBUG
     check_free(s);
 #endif
     if (s != NULL)
 	free(s);
+#if MEM_GEN_TRACE
+    fprintf(tracefp,"f:%x\n",s);
+#endif
 }
 
 /* xxfree() - like xfree(), but we already know s != NULL */
@@ -497,6 +528,9 @@ xxfree(void *s)
     check_free(s);
 #endif
     free(s);
+#if MEM_GEN_TRACE
+    fprintf(tracefp,"f:%x\n",s);
+#endif
 }
 
 /*
@@ -567,6 +601,9 @@ xcalloc(int n, size_t sz)
 #endif
 #if XMALLOC_TRACE
     xmalloc_show_trace(p, 1);
+#endif
+#if MEM_GEN_TRACE
+	fprintf(tracefp,"c:%d:%d:%x\n", n, sz,p);
 #endif
     return (p);
 }
