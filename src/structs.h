@@ -293,7 +293,9 @@ struct _SquidConfig {
 	int query_icmp;
 	int icp_hit_stale;
 	int buffered_logs;
+#if ALLOW_SOURCE_PING
 	int source_ping;
+#endif
 	int common_log;
 	int log_mime_hdrs;
 	int ident_lookup;

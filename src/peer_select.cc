@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.39 1998/03/05 08:28:01 wessels Exp $
+ * $Id: peer_select.cc,v 1.40 1998/03/06 22:53:06 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -95,9 +95,12 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
     assert(direct != DIRECT_YES);
     if (!EBIT_TEST(entry->flag, HIERARCHICAL) && direct != DIRECT_NO)
 	return 0;
-    if (Config.onoff.single_parent_bypass && !Config.onoff.source_ping)
-	if (getSingleParent(request))
-	    return 0;
+    if (Config.onoff.single_parent_bypass)
+#if ALLOW_SOURCE_PING
+	if (!Config.onoff.source_ping)
+#endif
+	    if (getSingleParent(request))
+	        return 0;
     if (EBIT_TEST(entry->flag, KEY_PRIVATE) && !neighbors_do_private_keys)
 	if (direct != DIRECT_NO)
 	    return 0;

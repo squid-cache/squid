@@ -293,11 +293,11 @@ DOC_START
 single_parent_bypass off
 DOC_END
 
-
 NAME: source_ping
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
+IFDEF: ALLOW_SOURCE_PING
 LOC: Config.onoff.source_ping
 DOC_START
 	If source_ping is enabled, then Squid will include the source

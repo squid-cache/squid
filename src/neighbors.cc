@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.178 1998/03/05 08:33:42 wessels Exp $
+ * $Id: neighbors.cc,v 1.179 1998/03/06 22:53:07 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -407,11 +407,8 @@ neighborsUdpPing(request_t * request,
     void *callback_data,
     int *exprep)
 {
-    char *host = request->host;
     const char *url = storeUrl(entry);
     MemObject *mem = entry->mem_obj;
-    const ipcache_addrs *ia = NULL;
-    struct sockaddr_in to_addr;
     peer *p = NULL;
     int i;
     int reqnum = 0;
@@ -492,8 +489,12 @@ neighborsUdpPing(request_t * request,
     if ((first_ping = first_ping->next) == NULL)
 	first_ping = Config.peers;
 
+#if ALLOW_SOURCE_PING
     /* only do source_ping if we have neighbors */
     if (Config.npeers) {
+        const ipcache_addrs *ia = NULL;
+        struct sockaddr_in to_addr;
+        char *host = request->host;
 	if (!Config.onoff.source_ping) {
 	    debug(15, 6) ("neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, 0))) {
@@ -518,6 +519,7 @@ neighborsUdpPing(request_t * request,
 		host);
 	}
     }
+#endif
 #if LOG_ICP_NUMBERS
     request->hierarchy.n_sent = peers_pinged;
     request->hierarchy.n_expect = *exprep;
@@ -692,10 +694,12 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	if (p) {
 	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
 	    neighborCountIgnored(p, opcode);
-	} else if (!Config.onoff.source_ping) {
-	    debug(15, 1) ("Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
-	} else {
+#if ALLOW_SOURCE_PING
+	} else if (Config.onoff.source_ping) {
 	    mem->icp_reply_callback(NULL, ntype, header, mem->ircb_data);
+#endif
+	} else {
+	    debug(15, 1) ("Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
 	}
     } else if (opcode == ICP_DENIED) {
 	if (p == NULL) {
