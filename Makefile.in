@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4s from Makefile.am.
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
 
 # Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
 # Free Software Foundation, Inc.
@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.1 2001/08/31 11:19:05 robertc Exp $
+# $Id: Makefile.in,v 1.2 2001/09/25 23:45:12 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -70,8 +70,6 @@ AUTH_MODULES = @AUTH_MODULES@
 AUTH_OBJS = @AUTH_OBJS@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
-CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
-CACHE_ICP_PORT = @CACHE_ICP_PORT@
 CC = @CC@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
@@ -91,7 +89,9 @@ MKDIR = @MKDIR@
 MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
+OPT_DISKD_EXE = @OPT_DISKD_EXE@
 OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
+OPT_PINGER = @OPT_PINGER@
 OPT_PINGER_EXE = @OPT_PINGER_EXE@
 PACKAGE = @PACKAGE@
 PERL = @PERL@
@@ -121,17 +121,16 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects
+AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects VERSION=1.5
 DIST_SUBDIRS = lib snmplib scripts src icons errors contrib
 SUBDIRS = lib @makesnmplib@ scripts src icons errors
 
-EXTRA_DIST = include/config.h.in
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
-CONFIG_CLEAN_FILES = include/config.h
+CONFIG_CLEAN_FILES =
 DIST_SOURCES =
 
 RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
@@ -186,8 +185,6 @@ $(srcdir)/./include/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_s
 
 distclean-hdr:
 	-rm -f include/autoconf.h
-include/config.h: $(top_builddir)/config.status $(top_srcdir)/include/config.h.in
-	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
 uninstall-info-am:
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -293,7 +290,7 @@ GZIP_ENV = --best
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/./include $(distdir)/cfgaux $(distdir)/include $(distdir)/scripts
+	$(mkinstalldirs) $(distdir)/./include $(distdir)/cfgaux $(distdir)/scripts
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
