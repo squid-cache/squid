@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.311 2003/04/17 15:25:44 hno Exp $
+# $Id: cf.data.pre,v 1.312 2003/04/27 00:34:12 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2559,7 +2559,7 @@ DOC_START
 	partial responses and give them out as hits.  You should NOT
 	use this option if you have downstream caches.
 
-	WARNING: A maximum size larger than the size of squid's error messages
+	WARNING: A maximum size smaller than the size of squid's error messages
 	will cause an infinite loop and crash squid. Ensure that the smallest
 	non-zero value you use is greater that the maximum header size plus
 	the size of your largest error page.
