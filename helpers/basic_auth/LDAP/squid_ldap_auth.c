@@ -383,8 +383,8 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 	    }
 	}
 	snprintf(filter, sizeof(filter), searchfilter, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid, userid);
-	if (ldap_search_s(ld, basedn, searchscope, filter, searchattr, 1, &res) != LDAP_SUCCESS) {
-	    int rc = ldap_result2error(ld, res, 0);
+	rc = ldap_search_s(ld, basedn, searchscope, filter, searchattr, 1, &res);
+	if (rc != LDAP_SUCCESS) {
 	    if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
 		/* Everything is fine. This is expected when referrals
 		 * are disabled.
