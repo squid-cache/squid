@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.335 2001/04/14 00:03:23 hno Exp $
+ * $Id: main.cc,v 1.336 2001/05/04 13:37:42 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -280,7 +280,7 @@ shut_down(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    clientHttpConnectionsOpen();
+    clientOpenListenSockets();
     icpConnectionsOpen();
 #if USE_HTCP
     htcpInit();
@@ -518,10 +518,6 @@ mainInitialize(void)
     }
 #if USE_WCCP
     wccpInit();
-#endif
-#if USE_SSL
-    if (Config.Sockaddr.https)
-	sslInit(Config.SSL.certificate, Config.SSL.key);
 #endif
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0) {

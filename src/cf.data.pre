@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.218 2001/04/14 00:25:17 hno Exp $
+# $Id: cf.data.pre,v 1.219 2001/05/04 13:37:41 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -86,40 +86,24 @@ DOC_END
 
 NAME: https_port
 IFDEF: USE_SSL
-TYPE: sockaddr_in_list
+TYPE: https_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
-        Usage:  port
-                hostname:port
-                1.2.3.4:port
+        Usage:  [ip:]port cert=certificate.pem [key=key.pem]
 
-        The socket addresses where Squid will listen for HTTPS client
-        requests.  You may specify multiple socket addresses.
-
+        The socket address where Squid will listen for HTTPS client
+        requests.
+	
         This is really only useful for situations where you are running
         squid in accelerator mode and you want to do the SSL work at the
         accelerator level.
-DOC_END
 
-NAME: ssl_certificate
-IFDEF: USE_SSL
-TYPE: string
-DEFAULT: none
-LOC: Config.SSL.certificate
-COMMENT: /path/to/certificate
-DOC_START
-        Certificate for use with SSL acceleration.
-DOC_END
+	If key is not specified then the given certificate is assumed to be a
+	combined certificate and key file.
 
-NAME: ssl_key
-IFDEF: USE_SSL
-TYPE: string
-DEFAULT: none
-LOC: Config.SSL.key
-COMMENT: /path/to/key
-DOC_START
-        Key for SSL certificate defined in ssl_certificate.
+	You may specify multiple socket addresses on multiple lines,
+	each with their own SSL certificate.
 DOC_END
 
 NAME: ssl_version

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.49 2001/02/23 20:59:50 hno Exp $
+ * $Id: comm_select.cc,v 1.50 2001/05/04 13:37:42 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -201,10 +201,10 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 {
     int i;
     int fd;
-    int incame = 0;
     PF *hdl = NULL;
     int npfds;
     struct pollfd pfds[3 + MAXHTTPPORTS];
+    incoming_sockets_accepted = 0;
     for (i = npfds = 0; i < nfds; i++) {
 	int events;
 	fd = fds[i];
@@ -227,7 +227,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 #endif
     statCounter.syscalls.polls++;
     if (poll(pfds, npfds, 0) < 1)
-	return incame;
+	return incoming_sockets_accepted;
     for (i = 0; i < npfds; i++) {
 	int revents;
 	if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
@@ -235,7 +235,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 	if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
 	    if ((hdl = fd_table[fd].read_handler)) {
 		fd_table[fd].read_handler = NULL;
-		hdl(fd, &incame);
+		hdl(fd, fd_table[fd].read_data);
 	    } else if (pfds[i].events & POLLRDNORM)
 		debug(5, 1) ("comm_poll_incoming: FD %d NULL read handler\n",
 		    fd);
@@ -243,13 +243,13 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 	if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
 	    if ((hdl = fd_table[fd].write_handler)) {
 		fd_table[fd].write_handler = NULL;
-		hdl(fd, &incame);
+		hdl(fd, fd_table[fd].write_data);
 	    } else if (pfds[i].events & POLLWRNORM)
 		debug(5, 1) ("comm_poll_incoming: FD %d NULL write_handler\n",
 		    fd);
 	}
     }
-    return incame;
+    return incoming_sockets_accepted;
 }
 
 static void
@@ -521,13 +521,13 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 {
     int i;
     int fd;
-    int incame = 0;
     int maxfd = 0;
     PF *hdl = NULL;
     fd_set read_mask;
     fd_set write_mask;
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
+    incoming_sockets_accepted = 0;
     for (i = 0; i < nfds; i++) {
 	fd = fds[i];
 	if (fd_table[fd].read_handler) {
@@ -548,14 +548,14 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 #endif
     statCounter.syscalls.selects++;
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
-	return incame;
+	return incoming_sockets_accepted;
     for (i = 0; i < nfds; i++) {
 	fd = fds[i];
 	if (FD_ISSET(fd, &read_mask)) {
 	    if ((hdl = fd_table[fd].read_handler) != NULL) {
 		fd_table[fd].read_handler = NULL;
 		commUpdateReadBits(fd, NULL);
-		hdl(fd, &incame);
+		hdl(fd, fd_table[fd].read_data);
 	    } else {
 		debug(5, 1) ("comm_select_incoming: FD %d NULL read handler\n",
 		    fd);
@@ -565,14 +565,14 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 	    if ((hdl = fd_table[fd].write_handler) != NULL) {
 		fd_table[fd].write_handler = NULL;
 		commUpdateWriteBits(fd, NULL);
-		hdl(fd, &incame);
+		hdl(fd, fd_table[fd].write_data);
 	    } else {
 		debug(5, 1) ("comm_select_incoming: FD %d NULL write handler\n",
 		    fd);
 	    }
 	}
     }
-    return incame;
+    return incoming_sockets_accepted;
 }
 
 static void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.536 2001/04/17 22:43:10 hno Exp $
+ * $Id: client_side.cc,v 1.537 2001/05/04 13:37:41 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -3155,7 +3155,7 @@ httpAcceptDefer(int fdunused, void *dataunused)
 void
 httpAccept(int sock, void *data)
 {
-    int *N = data;
+    int *N = &incoming_sockets_accepted;
     int fd = -1;
     ConnStateData *connState = NULL;
     struct sockaddr_in peer;
@@ -3243,11 +3243,19 @@ clientNegotiateSSL(int fd, void *data)
     commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
 }
 
+struct _https_port_data {
+    SSL_CTX *sslContext;
+};
+typedef struct _https_port_data https_port_data;
+CBDATA_TYPE(https_port_data);
+
 /* handle a new HTTPS connection */
 static void
 httpsAccept(int sock, void *data)
 {
-    int *N = data;
+    int *N = &incoming_sockets_accepted;
+    https_port_data *https_port = data;
+    SSL_CTX *sslContext = https_port->sslContext;
     int fd = -1;
     ConnStateData *connState = NULL;
     struct sockaddr_in peer;
@@ -3258,7 +3266,7 @@ httpsAccept(int sock, void *data)
 #if USE_IDENT
     static aclCheck_t identChecklist;
 #endif
-    commSetSelect(sock, COMM_SELECT_READ, httpsAccept, NULL, 0);
+    commSetSelect(sock, COMM_SELECT_READ, httpsAccept, https_port, 0);
     while (max-- && !httpAcceptDefer(sock, NULL)) {
 	memset(&peer, '\0', sizeof(struct sockaddr_in));
 	memset(&me, '\0', sizeof(struct sockaddr_in));
@@ -3433,7 +3441,7 @@ checkFailureRatio(err_type etype, hier_code hcode)
     request_failure_ratio = 0.8;	/* reset to something less than 1.0 */
 }
 
-void
+static void
 clientHttpConnectionsOpen(void)
 {
     sockaddr_in_list *s;
@@ -3467,7 +3475,15 @@ clientHttpConnectionsOpen(void)
 	    fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
-#ifdef USE_SSL
+}
+
+#if USE_SSL
+static void
+clientHttpsConnectionsOpen(void)
+{
+    https_port_list *s;
+    https_port_data *https_port;
+    int fd;
     for (s = Config.Sockaddr.https; s; s = s->next) {
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
@@ -3479,20 +3495,32 @@ clientHttpConnectionsOpen(void)
 	leave_suid();
 	if (fd < 0)
 	    continue;
+	CBDATA_INIT_TYPE(https_port_data);
+	https_port = cbdataAlloc(https_port_data);
+	https_port->sslContext = sslLoadCert(s->cert, s->key);
 	comm_listen(fd);
-	commSetSelect(fd, COMM_SELECT_READ, httpsAccept, NULL, 0);
-	/*commSetDefer(fd, httpAcceptDefer, NULL); */
+	commSetSelect(fd, COMM_SELECT_READ, httpsAccept, https_port, 0);
+	commSetDefer(fd, httpAcceptDefer, NULL);
 	debug(1, 1) ("Accepting HTTPS connections at %s, port %d, FD %d.\n",
 	    inet_ntoa(s->s.sin_addr),
 	    (int) ntohs(s->s.sin_port),
 	    fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
+}
+
+#endif
+
+void
+clientOpenListenSockets(void)
+{
+    clientHttpConnectionsOpen();
+#if USE_SSL
+    clientHttpsConnectionsOpen();
 #endif
     if (NHttpSockets < 1)
 	fatal("Cannot open HTTP Port");
 }
-
 void
 clientHttpConnectionsClose(void)
 {
