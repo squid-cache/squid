@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.53 2004/08/30 05:12:32 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.54 2004/09/24 22:19:55 hno Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -428,14 +428,7 @@ storeCossDirCloseTmpSwapLog(CossSwapDir * sd)
     char *new_path = xstrdup(storeCossDirSwapLogFile(sd, ".new"));
     int anfd;
     file_close(sd->swaplog_fd);
-#if defined (_SQUID_OS2_) || defined (_SQUID_CYGWIN_)
 
-    if (unlink(swaplog_path) < 0) {
-        debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
-        fatal("storeCossDirCloseTmpSwapLog: unlink failed");
-    }
-
-#endif
     if (xrename(new_path, swaplog_path) < 0) {
         fatal("storeCossDirCloseTmpSwapLog: rename failed");
     }
@@ -671,13 +664,9 @@ CossSwapDir::writeCleanDone()
     /* rename */
 
     if (state->fd >= 0) {
-#if defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_)
+#if defined(_SQUID_OS2_) || defined(_SQUID_WIN32_)
         file_close(state->fd);
         state->fd = -1;
-
-        if (unlink(state->cur) < 0)
-            debug(50, 0) ("storeCossDirWriteCleanLogs: unlinkd failed: %s, %s\n",
-                          xstrerror(), state->cur);
 
 #endif
 
