@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.78 2004/12/20 16:30:35 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.79 2004/12/20 17:35:58 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1834,7 +1834,11 @@ clientReplyContext::buildMaxBodySize(HttpReply * reply)
     acl_size_t *l = Config.ReplyBodySize;
     ACLChecklist *ch;
 
+    if (http->logType == LOG_TCP_DENIED)
+        return;
+
     ch = clientAclChecklistCreate(NULL, http);
+
     ch->reply = reply;
 
     for (l = Config.ReplyBodySize; l; l = l -> next) {

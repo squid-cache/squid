@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthUserRequest.cc,v 1.2 2004/12/20 17:35:58 robertc Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -624,8 +624,22 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_use
     if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
             && t->lastReply != AUTH_ACL_HELPER)
     {
-        if (!*auth_user_request)
+        if (!*auth_user_request) {
             *auth_user_request = t;
+
+            (*auth_user_request)->lock()
+
+            ;
+            //TODO: check if needed. If there's a leak, it is not
+        }
+
+        if (!request->auth_user_request) {
+            request->auth_user_request=t;
+
+            request->auth_user_request->lock()
+
+            ;
+        }
 
         return t->lastReply;
     }
