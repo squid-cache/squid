@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.93 1996/10/13 06:19:48 wessels Exp $
+ * $Id: main.cc,v 1.94 1996/10/13 09:17:13 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -716,7 +716,7 @@ sendSignal(void)
 	    !(opt_send_signal == 0 && errno == EPERM)) {
 	    fprintf(stderr, "%s: ERROR: Could not send ", appname);
 	    fprintf(stderr, "signal %d to process %d: %s\n",
-		opt_send_signal, pid, xstrerror());
+		opt_send_signal, (int) pid, xstrerror());
 	    exit(1);
 	}
     } else {
