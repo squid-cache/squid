@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cci,v 1.1 2003/05/17 17:35:03 hno Exp $
+ * $Id: ACLChecklist.cci,v 1.2 2003/05/19 09:11:31 robertc Exp $
  *
  * DEBUG: none
  * AUTHOR: Henrik Nordstrom
@@ -32,8 +32,14 @@
  *
  */
 
-inline void matchAclListFast(const acl_list * list)
+void
+ACLChecklist::matchAclListFast(const acl_list * list)
 {
     matchAclList(list, true);
-    inline void matchAclListSlow(const acl_list * list) {
-        matchAclList(list, false);
+}
+
+void
+ACLChecklist::matchAclListSlow(const acl_list * list)
+{
+    matchAclList(list, false);
+}
