@@ -1,6 +1,7 @@
 Changes to squid-1.2.alpha7 ():
 
-	- fixes fixes fixes
+	- fixes fixes fixes.
+	- Made Arjan's PROXY_AUTH ACL patch standard.
 
 Changes to squid-1.2.alpha6 ():
 
