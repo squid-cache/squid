@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.115 2003/11/09 11:05:24 hno Exp $
+ * $Id: forward.cc,v 1.116 2004/04/03 14:07:39 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -164,6 +164,9 @@ fwdCheckRetry(FwdState * fwdState)
     if (fwdState->n_tries > 10)
         return 0;
 
+    if (fwdState->origin_tries > 2)
+        return 0;
+
     if (squid_curtime - fwdState->start > Config.Timeout.connect)
         return 0;
 
@@ -220,6 +223,7 @@ fwdServerClosed(int fd, void *data)
     fwdState->server_fd = -1;
 
     if (fwdCheckRetry(fwdState)) {
+        int originserver = (fwdState->servers->_peer == NULL);
         debug(17, 3) ("fwdServerClosed: re-forwarding (%d tries, %d secs)\n",
                       fwdState->n_tries,
                       (int) (squid_curtime - fwdState->start));
@@ -241,11 +245,12 @@ fwdServerClosed(int fd, void *data)
                 /* Use next. The last "direct" entry is retried multiple times */
                 fwdState->servers = fs->next;
                 fwdServerFree(fs);
+                originserver = 0;
             }
         }
 
-        /* use eventAdd to break potential call sequence loops */
-        eventAdd("fwdConnectStart", fwdConnectStart, fwdState, 0.0, 0);
+        /* use eventAdd to break potential call sequence loops and to slow things down a little */
+        eventAdd("fwdConnectStart", fwdConnectStart, fwdState, originserver ? 0.05 : 0.005, 0);
 
         return;
     }
@@ -589,8 +594,14 @@ fwdConnectStart(void *data)
             debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
             fwdState->server_fd = fd;
             fwdState->n_tries++;
+
+            if (!fs->_peer)
+                fwdState->origin_tries++;
+
             comm_add_close_handler(fd, fwdServerClosed, fwdState);
+
             fwdDispatch(fwdState);
+
             return;
         }
     }
@@ -627,6 +638,10 @@ fwdConnectStart(void *data)
 
     fwdState->server_fd = fd;
     fwdState->n_tries++;
+
+    if (!fs->_peer)
+        fwdState->origin_tries++;
+
     /*
      * stats.conn_open is used to account for the number of
      * connections that we have open to the peer, so we can limit
@@ -807,6 +822,9 @@ fwdReforward(FwdState * fwdState)
     }
 
     if (fwdState->n_tries > 9)
+        return 0;
+
+    if (fwdState->origin_tries > 1)
         return 0;
 
     if (fwdState->request->flags.body_sent)

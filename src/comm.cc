@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.393 2004/03/01 01:37:34 adrian Exp $
+ * $Id: comm.cc,v 1.394 2004/04/03 14:07:38 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -66,7 +66,6 @@ public:
     CallBack<CNCB> callback;
 
     struct in_addr in_addr;
-    int locks;
     int fd;
     int tries;
     int addrcount;
@@ -1304,7 +1303,6 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs->port = port;
     cs->callback = CallBack<CNCB>(callback, data);
     comm_add_close_handler(fd, commConnectFree, cs);
-    cs->locks++;
     ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
 }
 
@@ -1312,8 +1310,6 @@ static void
 commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 {
     ConnectStateData *cs = (ConnectStateData *)data;
-    assert(cs->locks == 1);
-    cs->locks--;
 
     if (ia == NULL) {
         debug(5, 3) ("commConnectDnsHandle: Unknown host: %s\n", cs->host);
@@ -1466,6 +1462,13 @@ commRetryConnect(ConnectStateData * cs)
     return commResetFD(cs);
 }
 
+static void
+commReconnect(void *data)
+{
+    ConnectStateData *cs = (ConnectStateData *)data;
+    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
+}
+
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
 void
 ConnectStateData::Connect (int fd, void *me)
@@ -1512,8 +1515,7 @@ ConnectStateData::connect()
             netdbDeleteAddrNetwork(S.sin_addr);
 
         if (commRetryConnect(this)) {
-            locks++;
-            ipcache_nbgethostbyname(host, commConnectDnsHandle, this);
+            eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
         } else {
             callCallback(COMM_ERR_CONNECT, errno);
         }
