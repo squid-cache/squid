@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.125 1997/06/19 22:51:50 wessels Exp $
+ * $Id: ftp.cc,v 1.126 1997/06/20 00:00:12 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -644,8 +644,7 @@ ftpReadData(int fd, void *data)
     if (len < 0) {
 	debug(50, 1) ("ftpReadData: read error: %s\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    commSetSelect(fd, COMM_SELECT_READ,
-		ftpReadData, data, 0);
+	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, 0);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
@@ -661,7 +660,12 @@ ftpReadData(int fd, void *data)
 	    ftpListingFinish(ftpState);
 	storeTimestampsSet(entry);
 	storeComplete(entry);
-	ftpDataTransferDone(ftpState);
+	/* expect the "transfer complete" message on the control socket */
+    	commSetSelect(ftpState->ctrl.fd,
+		COMM_SELECT_READ,
+		ftpReadControlReply,
+		ftpState,
+		0);
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	    ftpParseListing(ftpState, len);
@@ -913,6 +917,7 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
     StoreEntry *entry = ftpState->entry;
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
     if (errflag) {
+	debug(50,1)("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
 	BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(entry);
 	storeAbort(entry, ERR_WRITE_ERROR, xstrerror(), 0);
@@ -1393,6 +1398,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
 	debug(9, 1) ("Got code %d after reading data, releasing entry\n");
 	storeReleaseRequest(ftpState->entry);
     }
+    ftpDataTransferDone(ftpState);
 }
 
 static void
