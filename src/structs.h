@@ -817,6 +817,7 @@ struct _PeerDigest {
     int flags;        /* PD_ */
     time_t last_fetch_resp_time;
     time_t last_req_timestamp;
+    time_t last_dis_delay;    /* last disability delay */
     struct {
 	cd_guess_stats guess;
 	int used_count;

@@ -239,9 +239,10 @@ extern void httpInit(void);
 /* init/clean */
 extern void httpStatusLineInit(HttpStatusLine * sline);
 extern void httpStatusLineClean(HttpStatusLine * sline);
-/* set values */
+/* set/get values */
 extern void httpStatusLineSet(HttpStatusLine * sline, double version,
     http_status status, const char *reason);
+extern const char *httpStatusLineReason(const HttpStatusLine * sline);
 /* parse/pack */
 /* parse a 0-terminating buffer and fill internal structires; returns true on success */
 extern int httpStatusLineParse(HttpStatusLine * sline, const char *start,
