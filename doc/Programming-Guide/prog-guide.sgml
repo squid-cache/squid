@@ -1,0 +1,325 @@
+<!doctype linuxdoc system>
+<article>
+<title>Squid Programmers Guide</title>
+<author>Duane Wessels, Squid Developers
+
+<abstract>
+Squid is a WWW Cache application developed by the National Laboratory
+for Applied Network Research and members of the Web Caching community.
+Squid is implemented as a single, non-blocking process based around
+a BSD select() loop.  This document describes the operation of the Squid
+source code and is intended to be used by others who wish to customize
+or improve it.
+</abstract>
+
+
+<!-- %%%% Chapter : INTRODUCTION %%%% -->
+<sect>Introduction
+
+<P>
+The Squid source code has evolved more from empirical observation and
+tinkering, rather than a solid design process.  It carries a legacy of
+being ``touched'' by numerous individuals, each with somewhat different
+techniques and terminology.  
+
+<P>
+Squid is a single-process proxy server.  Every request is handled by
+the main process, with the exception of FTP.  However, Squid does not
+use a ``threads package'' such has Pthreads.  While this might be 
+easier to code, it suffers from portability and performance problems.
+Instead Squid maintains data structures and state information for
+each active request.
+
+<P>
+The code is often difficult to follow because there are no explicit
+state variables for the active requests.  Instead, thread execution
+progresses as a sequence of ``handler functions'' which get called
+when I/O is ready to occur.  As a handler completes, it will register
+another handler for the next time I/O occurs.
+
+<P>
+Note there is only a pseudo-consistent naming scheme.  In most 
+cases functions are named like <tt/moduleFooBar()/.  However, there
+are also some functions named like <tt/module_foo_bar()/.
+
+<P>
+Note that the Squid source changes rapidly, and some parts of this
+document may become out-of-date.  If you find any inconsistencies, please
+feel free to notify
+<url url="mailto:squid-dev@nlanr.net"
+name="the Squid Developers">.
+
+<sect1>Conventions
+
+<P>
+Function names and file names will be written in a courier font, such
+as <em/store.c/ and <tt/storeRegister()/.  Data structures and their
+members will be written in an italicised font, such as <em/StoreEntry/.
+
+<sect>The Big Picture
+
+<P>
+Squid consists of the following major components
+
+<sect1>Client Side
+
+<P>
+    These routines exist primarily in two source files: <em/cp.c/, and
+    <em/client_side.c/.  The name <em/icp.c/ is misleading, as it
+    has more to do with accepting HTTP requests than the ICP protocol.
+
+<P>
+    This is where new client connections are accepted and processed.
+    This is where we determine if the request is a HIT, REFRESH, MISS, etc.
+    The client-side state for each request is held in an <tt/icpStateData/
+    structure.
+    
+<sect1>Server Side
+
+<P>
+    These routines exist in various source files.  <em/proto.c/
+    contains generic server-side functions, notably the neighbor
+    selection algorithms.  Protocol-specific functions are in
+    <em/http.c/,
+    <em/ftp.c/,
+    <em/gopher.c/,
+    <em/wais.c/,
+    <em/ssl.c/,
+    and <em/pass.c/.
+
+<P>
+    This is where server connections are made, and replies are read.
+    Apart from processing headers, HTTP is relatively simple--just
+    copying bytes.  Note that all requests (FTP, Gopher) to other
+    proxies are sent as HTTP requests.  Requests to FTP servers are
+    handled in the external <tt/ftpget/ process, so the <em/ftp.c/
+    functions are simply to communicate with <tt/ftpget/.
+    <em/gopher.c/ is somewhat complex and gross because it must
+    convert from the Gopher protocol to HTTP.  Wais and Gopher don't
+    receive much attention because they are relatively insignificant
+    compared to HTTP.
+
+<P>
+    <em/ssl.c/ handles SSL requests (the CONNECT method) and
+    <em/pass.c/ (``passthrough'') handles uncachable requests which
+    the cache doesn't really care about.   These two modules basically
+    pass bits back and forth between client and server.  Note they do
+    not use a <em/StoreEntry/ to do so.  About the only difference
+    between the two is that the SSL module sends a special ``connection
+    established'' message.
+
+<sect1>Storage Manager
+
+<P>
+    The Storage Manager is the glue between client and server sides.
+    Every object saved in the cache is allocated a <em/StoreEntry/
+    structure.  While the object is being fetched, it also has a 
+    <em/MemObject/ structure.
+
+<P>
+    The <em/store.c/ file is quite large.  It includes functions to 
+    allocate and deallocate data structures, accept incoming data from
+    the server side, and maintain the objects in memory and on disk.
+
+<P>
+    Squid can quickly located cached objects because it keeps a hash
+    table of all <em/StoreEntry/'s.  
+    Current versions of Squid hold in-transit objects fully in memory
+    before saving them to disk.  This approach has both advantages
+    and disadvantages.  These ``in-memory'' objects are also indexed
+    by a separate ``in-memory'' hash table.
+
+<P>
+    Objects are saved to disk in a two-level directory structure.  For
+    each object the <em/StoreEntry/ includes a 4-byte <em/fileno/
+    field.  This file number is converted to a disk pathname by a
+    simple algorithm which evenly distributes the files across all 
+    cache directories.
+
+<P>
+    When new object data arrives on the server side, it is added to the
+    <em/StoreEntry/ with the <tt/storeAppend()/ function.  The client
+    side registers interest in an object with the <tt/storeRegister()/
+    function.  When more data arrives, the client side is notified via
+    the callback it has registered.  The client functions then copy 
+    the new data from the <em/StoreEntry/ and write it to the 
+    client socket.   This approach easily allows multiple clients to
+    read from a single <em/StoreEntry/ as it is being fetched.
+
+<sect1>Other Components
+
+<P>
+<descrip>
+<tag/Neighbors/
+
+    Maintains the list of neighbor caches.  Sends and receives 
+    ICP messages to neighbors.  File: <em/neighbors.c/.
+
+<tag>IP/FQDN Cache</tag>
+
+    A cache of name-to-address and address-to-name lookups.  These are
+    hash tables keyed on the names and addresses.
+    <tt/ipcache_nbgethostbyname()/ and <tt/fqdncache_nbgethostbyaddr()/
+    implement the non-blocking lookups.  Files: <em/ipcache.c/,
+    <em/fqdncache.c/.
+
+<tag/DNS Servers/
+
+    Because the standard <tt/gethostbyname(3)/ library call blocks,
+    Squid must use external processes to actually make these calls.
+    Typically there will be ten <tt/dnsserver/ processes spawned from
+    Squid.  Communication occurs via TCP sockets bound to the loopback
+    interface.  The functions in <em/dns.c/ are primarily concerned
+    with starting and stopping the dnsservers.  Reading and writing to
+    and from the dnsservers occurs in the IP and FQDN cache modules.
+
+<tag/Cache Manager/
+
+<tag/Network Probe Database/
+
+<tag/Redirectors/
+
+<tag/Access Controls/
+
+</descrip>
+
+<sect1>Function Sequence of a Typical Request
+
+<P>
+<verb>
+	asciiHandleConn
+	clientReadRequest
+	parseHttpRequest
+	clientAccessCheck -- clientAccessCheckDone
+	redirectStart -- clientRedirectDone
+	icpProcessRequest
+	icpProcessMISS
+	protoDispatch -- protoDispatchDNSHandle
+	protoStart
+	proxyhttpStart
+	httpConnect -- httpConnectDone
+	httpSendRequest -- httpSendComplete
+
+	while (data arriving from server) {
+		httpReadReply
+		storeAppend
+		InvokeHandlers
+		icpHandleStore
+		icpSendMoreData
+	}
+
+	storeComplete			
+	comm_close(server socket)
+	httpStateFree
+	comm_close(client_socket)
+	icpStateFree
+</verb>
+
+
+<!-- %%%% Chapter : MAIN LOOP %%%% -->
+<sect>The Main Loop: <tt/comm_select()/
+
+<P>
+At the core of Squid is the <tt/select(2)/ system call.  Squid uses
+<tt/select()/ (or alternatively <tt/poll(2)/ in recent versions) to 
+process I/O on all open file descriptors.
+
+<sect1>Comm Handlers
+
+<P>
+For every open file descriptor, there are N types of handler functions.
+<itemize>
+<item>Read
+<item>Write
+<item>Timeout
+<item>Lifetime
+<item>Close
+</itemize>
+
+<P>
+These handlers are stored in the <em/FD_ENTRY/ structure as defined in
+<em/comm.h/.  <tt/fd_table[]/ is the global array of <em/FD_ENTRY/
+structures.  The handler functions are of type <em/PF/, which is a
+typedef:
+<verb>
+    typedef void (*PF) (int, void *);
+</verb>
+The close handler is really a linked list of handler functions.
+Each handler also has an associated pointer <tt/(void *data)/ to
+some kind of data structure.
+
+<P>
+<tt/comm_select()/ is the function which issues the select() system
+call.  It scans the entire <tt/fd_table[]/ array looking for handler
+functions.  Each file descriptor with a read handler will be set in
+the <tt/fd_set/ read bitmask.  Similarly, write handlers are scanned and
+bits set for the write bitmask.  <tt/select()/ is then called, and the
+return read and write bitmasks are scanned for descriptors with pending
+I/O.  For each ready descriptor, the handler is called.  Note that
+the handler is cleared from the <em/FD_ENTRY/ before it is called.
+
+<P>
+After each handler is called, <tt/comm_select_incoming()/ is
+called to process new HTTP and ICP requests.
+
+<P>
+Typical read handlers are
+<tt/httpReadReply()/,
+<tt/diskHandleRead()/,
+<tt/icpHandleUdp()/,
+and <tt/ipcache_dnsHandleRead()/.
+Typical write handlers are
+<tt/commHandleWrite()/,
+<tt/diskHandleWrite()/,
+and <tt/icpUdpReply()/.
+The handler function is set with <tt/commSetSelect()/, with the
+exception of the close handlers, which are set with
+<tt/comm_add_close_handler()/.
+
+<P>
+The close handlers are normally called from <tt/comm_close()/.  
+The job of the close handlers is to deallocate data structures 
+associated with the file descriptor.  For this reason <tt/comm_close()/
+must normally be the last function in a sequence to prevent accessing
+just-freed memory.
+
+<P>
+The timeout and lifetime handlers are called for file descriptors which
+have been idle for too long.  They are futher discussed in a following 
+chapter.
+
+<!-- %%%% Chapter : DATA STRUCTURES %%%% -->
+<sect>Data Structures
+<sect1>Main Config
+
+<!-- %%%% Chapter : STORAGE MANAGER %%%% -->
+<sect>Storage Manager
+
+<!-- %%%% Chapter : IP CACHE %%%% -->
+<sect>IP Cache
+
+<!-- %%%% Chapter : SERVER PROTOCOLS %%%% -->
+<sect>Server Protocols
+<sect1>HTTP
+<sect1>FTP
+<sect1>Gopher
+<sect1>Wais
+<sect1>SSL
+<sect1>Passthrough
+
+<!-- %%%% Chapter : TIMEOUTS %%%% -->
+<sect>Timeouts
+
+<!-- %%%% Chapter : EVENTS %%%% -->
+<sect>Events
+
+<!-- %%%% Chapter : ACCESS CONTROLS %%%% -->
+<sect>Access Controls
+
+<!-- %%%% Chapter : ICP %%%% -->
+<sect>ICP
+
+<!-- %%%% Chapter : CACHE MANAGER %%%% -->
+<sect>Cache Manager
+
+</article>
