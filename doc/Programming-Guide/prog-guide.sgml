@@ -756,6 +756,7 @@ Squid consists of the following major components
 	<P>
 	These functions all relate to per-object I/O tasks: opening,
 	closing, reading, writing, and unlinking objects on disk.
+	These functions can all be found in <tt/store_io.c/.
 
 	<P>
 	Note that the underlying storage system functions are
@@ -881,9 +882,6 @@ Squid consists of the following major components
 	does not need to be opened first.  The filesystem
 	layer will remove the object if it exists on the disk.
 
-	<P>
-	These functions can be found in <tt/store_io.c/.
-
 <sect4><tt/storeOffset()/
 
 	<P>
@@ -893,8 +891,10 @@ Squid consists of the following major components
 </verb>
 
 	<P>
-	Returns the current byte-offset of the cache object
-	on disk.
+	Returns the current byte-offset of the cache object on
+	disk.  For read-objects, this is the offset after the last
+	successful disk read operation.  For write-objects, it is
+	the offset of the last successful disk write operation.
 
 <sect4><em/STIOCB/ callback
 
@@ -921,7 +921,7 @@ Squid consists of the following major components
 
 	<P>
 	Once the The <em/stiocb/ function has been called,
-	the <em/sio/ data should not be accessed further.
+	the <em/sio/ structure should not be accessed further.
 
 <sect4><em/STRCB/ callback
 
@@ -977,13 +977,14 @@ Squid consists of the following major components
 	<P>
 	These functions deal with initializing, state
 	logging, and related tasks for a squid storage system.
-	These functions can be found in <tt/store_dir.c/.
+	These functions are used (called) in <tt/store_dir.c/.
 
 	<P>
-	Each storage system must provide the functions
-	described in this section.  Each function is
-	accessed through a function pointer stored in
-	the <em/SwapDir/ structure:
+	Each storage system must provide the functions described
+	in this section, although it may be a no-op (null) function
+	that does nothing.  Each function is accessed through a
+	function pointer stored in the <em/SwapDir/ structure:
+
 <verb>
     struct _SwapDir {
         ...
@@ -1003,7 +1004,7 @@ Squid consists of the following major components
     };
 </verb>
 
-<sect4><tt/init/
+<sect4><tt/init()/
 
 	<P>
 <verb>
@@ -1018,9 +1019,7 @@ Squid consists of the following major components
 	reading saved state information from disk (aka the "rebuild"
 	procedure).
 
-<sect4><tt/newfs/
-            STOBJLOG *log;
-            STOBJLOG *log;
+<sect4><tt/newfs()/
 
 	<P>
 <verb>
@@ -1034,7 +1033,7 @@ Squid consists of the following major components
 	the user runs <em/squid -z/.  For the Unix file system,
 	the <tt/newfs/ function makes all the two-layer subdirectories.
 
-<sect4><tt/log.open/
+<sect4><tt/log.open()/
 
 	<P>
 <verb>
@@ -1052,10 +1051,10 @@ Squid consists of the following major components
 	The <tt/log.open/ function may be called any number of
 	times during Squid's execution.  For example, the
 	process of rotating, or writing clean logfiles closes
-	the state log and then re-opens.  A <em/squid -k reconfigure/
+	the state log and then re-opens them.  A <em/squid -k reconfigure/
 	does the same.
 
-<sect4><tt/log.close/
+<sect4><tt/log.close()/
 
 	<P>
 <verb>
@@ -1069,7 +1068,7 @@ Squid consists of the following major components
 	the open state-holding log files (if any) for the storage
 	system.
 
-<sect4><tt/log.write/
+<sect4><tt/log.write()/
 
 	<P>
 <verb>
@@ -1084,7 +1083,7 @@ Squid consists of the following major components
 	This feature may not be required by some storage systems
 	and can be implemented as a null-function (no-op).
 
-<sect4><tt/log.clean.open/
+<sect4><tt/log.clean.open()/
 
 	<P>
 <verb>
@@ -1095,17 +1094,18 @@ Squid consists of the following major components
 	<P>
 	The <tt/log.clean.open/ function, of type <em/STLOGCLEANOPEN/,
 	is used for the process of writing "clean" state-holding
-	log files.  This is a special case because we want to
-	optimize the process as much as possible.  This might be
-	a no-op for some storage systems that don't have the
-	same loggins issues as UFS.
+	log files.  The clean-writing procedure is initiated by
+	the <em/squid -k rotate/ command.  This is a special case
+	because we want to optimize the process as much as possible.
+	This might be a no-op for some storage systems that don't
+	have the same logging issues as UFS.
 
 	<P>
 	The <em/log.clean.state/ pointer may be used to
 	keep state information for the clean-writing process, but
 	should not be accessed by upper layers.
 
-<sect4><tt/log.clean.write/
+<sect4><tt/log.clean.write()/
 
 	<P>
 <verb>
