@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.37 1996/04/12 00:11:02 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.38 1996/04/12 04:34:15 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -22,6 +22,7 @@ static struct {
     } Wais;
     int negativeTtl;
     int negativeDnsTtl;
+    int positiveDnsTtl;
     int readTimeout;
     int lifetimeDefault;
     int connectTimeout;
@@ -101,6 +102,7 @@ static struct {
 
 #define DefaultNegativeTtl	(5 * 60)	/* 5 min */
 #define DefaultNegativeDnsTtl	(2 * 60)	/* 2 min */
+#define DefaultPositiveDnsTtl	(360 * 60)	/* 6 hours */
 #define DefaultReadTimeout	(15 * 60)	/* 15 min */
 #define DefaultLifetimeDefault	(200 * 60)	/* 3+ hours */
 #define DefaultConnectTimeout	(2 * 60)	/* 2 min */
@@ -173,6 +175,7 @@ int httpd_accel_mode = 0;	/* for fast access */
 int emulate_httpd_log = DefaultCommonLogFormat;		/* for fast access */
 time_t neighbor_timeout = DefaultNeighborTimeout;	/* for fast access */
 int single_parent_bypass = 0;
+int DnsPositiveTtl = DefaultPositiveDnsTtl;
 
 char w_space[] = " \t\n";
 char config_input_line[BUFSIZ];
@@ -616,6 +619,14 @@ static void parseNegativeDnsLine()
     int i;
     GetInteger(i);
     Config.negativeDnsTtl = i * 60;
+}
+
+static void parsePositiveDnsLine()
+{
+    char *token;
+    int i;
+    GetInteger(i);
+    Config.positiveDnsTtl = i * 60;
 }
 
 static void parseReadTimeoutLine()
@@ -1296,6 +1307,10 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "negative_dns_ttl"))
 	    parseNegativeDnsLine();
 
+	/* Parse a positive_dns_ttl line */
+	else if (!strcmp(token, "positive_dns_ttl"))
+	    parsePositiveDnsLine();
+
 	/* Parse a read_timeout line */
 	else if (!strcmp(token, "read_timeout"))
 	    parseReadTimeoutLine();
@@ -1769,6 +1784,8 @@ static void configSetFactoryDefaults()
     Config.Wais.relayPort = DefaultWaisRelayPort;
 
     Config.negativeTtl = DefaultNegativeTtl;
+    Config.negativeDnsTtl = DefaultNegativeDnsTtl;
+    Config.positiveDnsTtl = DefaultPositiveDnsTtl;
     Config.readTimeout = DefaultReadTimeout;
     Config.lifetimeDefault = DefaultLifetimeDefault;
     Config.maxRequestSize = DefaultMaxRequestSize;
@@ -1818,6 +1835,7 @@ static void configDoConfigure()
     emulate_httpd_log = Config.commonLogFormat;
     neighbor_timeout = (time_t) Config.neighborTimeout;
     single_parent_bypass = Config.singleParentBypass;
+    DnsPositiveTtl = Config.positiveDnsTtl;
 
 #if !ALLOW_HOT_CACHE
     if (!httpd_accel_mode || Config.Accel.withProxy) {
