@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.53 2001/10/29 08:45:18 robertc Exp $
+#  $Id: Makefile.in,v 1.54 2001/11/14 23:20:53 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -153,32 +153,15 @@ am_libdlmalloc_a_OBJECTS = dlmalloc.$(OBJEXT)
 libdlmalloc_a_OBJECTS = $(am_libdlmalloc_a_OBJECTS)
 libmiscutil_a_AR = $(AR) cru
 libmiscutil_a_DEPENDENCIES = @LIBOBJS@
-@NEED_OWN_SNPRINTF_TRUE@am_libmiscutil_a_OBJECTS = rfc1123.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	rfc1738.$(OBJEXT) rfc1035.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	rfc2617.$(OBJEXT) util.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	getfullhostname.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	base64.$(OBJEXT) uudecode.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	splay.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	safe_inet_addr.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	iso3307.$(OBJEXT) md5.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	radix.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	stub_memaccount.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	Array.$(OBJEXT) Stack.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	hash.$(OBJEXT) heap.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_TRUE@	html_quote.$(OBJEXT) snprintf.$(OBJEXT)
-@NEED_OWN_SNPRINTF_FALSE@am_libmiscutil_a_OBJECTS = rfc1123.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	rfc1738.$(OBJEXT) rfc1035.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	rfc2617.$(OBJEXT) util.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	getfullhostname.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	base64.$(OBJEXT) uudecode.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	splay.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	safe_inet_addr.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	iso3307.$(OBJEXT) md5.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	radix.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	stub_memaccount.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	Array.$(OBJEXT) Stack.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	hash.$(OBJEXT) heap.$(OBJEXT) \
-@NEED_OWN_SNPRINTF_FALSE@	html_quote.$(OBJEXT)
+@NEED_OWN_SNPRINTF_TRUE@am__objects_1 = snprintf.$(OBJEXT)
+@NEED_OWN_SNPRINTF_FALSE@am__objects_1 =
+am_libmiscutil_a_OBJECTS = rfc1123.$(OBJEXT) rfc1738.$(OBJEXT) \
+	rfc1035.$(OBJEXT) rfc2617.$(OBJEXT) util.$(OBJEXT) \
+	getfullhostname.$(OBJEXT) base64.$(OBJEXT) uudecode.$(OBJEXT) \
+	splay.$(OBJEXT) safe_inet_addr.$(OBJEXT) iso3307.$(OBJEXT) \
+	md5.$(OBJEXT) radix.$(OBJEXT) stub_memaccount.$(OBJEXT) \
+	Array.$(OBJEXT) Stack.$(OBJEXT) hash.$(OBJEXT) heap.$(OBJEXT) \
+	html_quote.$(OBJEXT) $(am__objects_1)
 libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
 libntlmauth_a_AR = $(AR) cru
 libntlmauth_a_DEPENDENCIES = @LIBOBJS@
