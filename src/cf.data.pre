@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.247 2002/01/13 01:08:43 robertc Exp $
+# $Id: cf.data.pre,v 1.248 2002/01/16 02:55:40 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -199,9 +199,6 @@ TYPE: address
 LOC: Config.Addrs.udp_outgoing
 DEFAULT: 255.255.255.255
 DOC_START
-	Usage: tcp_incoming_address 10.20.30.40
-	       udp_outgoing_address fully.qualified.domain.name
-
 	udp_incoming_address	is used for the ICP socket receiving packets
 				from other caches.
 	udp_outgoing_address	is used for ICP packets sent out to other
@@ -209,8 +206,8 @@ DOC_START
 
 	The default behavior is to not bind to any specific address.
 
-	A *_incoming_address value of 0.0.0.0 indicates that Squid should
-	listen on all available interfaces.
+	A udp_incoming_address value of 0.0.0.0 indicates that Squid should
+	listen for UDP messages on all available interfaces.
 
 	If udp_outgoing_address is set to 255.255.255.255 (the default)
 	then it will use the same socket as udp_incoming_address. Only
@@ -220,9 +217,6 @@ DOC_START
 
 	NOTE, udp_incoming_address and udp_outgoing_address can not
 	have the same value since they both use port 3130.
-
-	NOTE, tcp_incoming_address has been removed.  You can now
-	specify IP addresses on the 'http_port' line.
 DOC_END
 
 COMMENT_START
