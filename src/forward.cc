@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.9 1998/06/26 21:24:55 wessels Exp $
+ * $Id: forward.cc,v 1.10 1998/06/26 21:54:48 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@ static void fwdStateFree(FwdState * fwdState);
 static PF fwdConnectTimeout;
 static PF fwdServerClosed;
 static CNCB fwdConnectDone;
+static int fwdCheckRetry(FwdState * fwdState);
 
 static void
 fwdStateFree(FwdState * fwdState)
@@ -56,6 +57,7 @@ fwdStateFree(FwdState * fwdState)
 	assert(fwdState->fail.err_code);
 	err = errorCon(fwdState->fail.err_code, fwdState->fail.http_code);
 	err->request = requestLink(fwdState->request);
+	err->xerrno = fwdState->fail.xerrno;
 	errorAppendEntry(e, err);
     } else if (e->store_status == STORE_PENDING) {
 	storeAbort(e, 0);
@@ -82,19 +84,29 @@ fwdStateFree(FwdState * fwdState)
     loop_detect--;
 }
 
+static int
+fwdCheckRetry(FwdState * fwdState)
+{
+    if (fwdState->entry->mem_obj->inmem_hi > 0)
+	return 0;
+    if (fwdState->n_tries > 10)
+	return 0;
+    if (squid_curtime - fwdState->start > 120)
+	return 0;
+    return 1;
+}
+
 static void
 fwdServerClosed(int fd, void *data)
 {
     FwdState *fwdState = data;
-    StoreEntry *e = fwdState->entry;
-    debug(17, 3) ("fwdServerClosed: FD %d %s\n", fd, storeUrl(e));
+    debug(17, 3) ("fwdServerClosed: FD %d %s\n", fd, storeUrl(fwdState->entry));
     assert(fwdState->server_fd == fd);
     fwdState->server_fd = -1;
-    if (e->mem_obj->inmem_hi > 0) {
-	/* someone already stuffed some data into the entry */
-	fwdStateFree(fwdState);
-    } else if (squid_curtime - fwdState->start < 120) {
-	debug(17, 3) ("fwdServerClosed: re-forwarding\n");
+    if (fwdCheckRetry(fwdState)) {
+	debug(17, 1) ("fwdServerClosed: re-forwarding (%d tries, %d secs)\n",
+		fwdState->n_tries,
+		(int) (squid_curtime - fwdState->start));
 	fwdConnectStart(fwdState);
     } else {
 	fwdStateFree(fwdState);
@@ -184,6 +196,7 @@ fwdConnectStart(FwdState * fwdState)
 	return;
     }
     fwdState->server_fd = fd;
+    fwdState->n_tries++;
     comm_add_close_handler(fd, fwdServerClosed, fwdState);
     commSetTimeout(fd,
 	Config.Timeout.connect,
@@ -236,7 +249,7 @@ fwdDispatch(FwdState * fwdState)
 	fwdState->client_fd,
 	RequestMethodStr[request->method],
 	storeUrl(entry));
-    assert(!EBIT_TEST(entry->flag, ENTRY_DISPATCHED));
+    /*assert(!EBIT_TEST(entry->flag, ENTRY_DISPATCHED));*/
     assert(entry->ping_status != PING_WAITING);
     assert(entry->lock_count);
     EBIT_SET(entry->flag, ENTRY_DISPATCHED);
