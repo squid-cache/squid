@@ -1838,6 +1838,19 @@ DOC_START
 query_icmp off
 DOC_END
 
+NAME: test_rechability
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.test_reachability
+DOC_START
+	When this is 'on', ICP MISS replies will be ICP_MISS_NOFETCH
+	instead of ICP_MISS if the target host is NOT in the ICMP
+	database, or has a zero RTT.
+
+test_reachability off
+DOC_END
+
 NAME: buffered_logs
 COMMENT: on|off
 TYPE: onoff

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.233 1998/03/07 05:50:15 wessels Exp $
+ * $Id: comm.cc,v 1.234 1998/03/20 06:51:44 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -455,6 +455,8 @@ commConnectHandle(int fd, void *data)
     default:
 	cs->tries++;
 	ipcacheMarkBadAddr(cs->host, cs->S.sin_addr);
+	if (Config.onoff.test_reachability)
+	    netdbDeleteAddrNetwork(cs->S.sin_addr);
 	if (commRetryConnect(cs)) {
 	    cs->locks++;
 	    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);

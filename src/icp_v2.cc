@@ -1,3 +1,4 @@
+
 #include "squid.h"
 
 static void icpLogIcp(icpUdpData *);
@@ -144,6 +145,8 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     int src_rtt = 0;
     u_num32 flags = 0;
     method_t method;
+    int rtt = 0;
+    int hops = 0;
     xmemcpy(&header, buf, sizeof(icp_common_t));
     /*
      * Only these fields need to be converted
@@ -182,8 +185,8 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    break;
 	}
 	if (header.flags & ICP_FLAG_SRC_RTT) {
-	    int rtt = netdbHostRtt(icp_request->host);
-	    int hops = netdbHostHops(icp_request->host);
+	    rtt = netdbHostRtt(icp_request->host);
+	    hops = netdbHostHops(icp_request->host);
 	    src_rtt = ((hops & 0xFFFF) << 16) | (rtt & 0xFFFF);
 	    if (rtt)
 		flags |= ICP_FLAG_SRC_RTT;
@@ -197,11 +200,18 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
 	    break;
 	}
+	if (Config.onoff.test_reachability && rtt == 0) {
+	    if ((rtt = netdbHostRtt(icp_request->host)) == 0)
+		netdbPingSite(icp_request->host);
+	}
 	/* if store is rebuilding, return a UDP_HIT, but not a MISS */
 	if (store_rebuilding && opt_reload_hit_only) {
 	    reply = icpCreateMessage(ICP_MISS_NOFETCH, flags, url, header.reqnum, src_rtt);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, icp_request->protocol);
 	} else if (hit_only_mode_until > squid_curtime) {
+	    reply = icpCreateMessage(ICP_MISS_NOFETCH, flags, url, header.reqnum, src_rtt);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, icp_request->protocol);
+	} else if (Config.onoff.test_reachability && rtt == 0) {
 	    reply = icpCreateMessage(ICP_MISS_NOFETCH, flags, url, header.reqnum, src_rtt);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, icp_request->protocol);
 	} else {
