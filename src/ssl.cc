@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.48 1997/04/30 20:06:36 wessels Exp $
+ * $Id: ssl.cc,v 1.49 1997/05/08 07:22:07 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -44,7 +44,7 @@ typedef struct {
 	char *buf;
     } client, server;
     time_t timeout;
-    int *size_ptr;		/* pointer to size in an icpStateData for logging */
+    int *size_ptr;		/* pointer to size in an ConnStateData for logging */
     int proxying;
     int ip_lookup_pending;
 } SslStateData;

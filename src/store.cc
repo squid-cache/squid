@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.229 1997/05/05 03:43:49 wessels Exp $
+ * $Id: store.cc,v 1.230 1997/05/08 07:22:08 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -254,7 +254,7 @@ static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
 static int compareBucketOrder _PARAMS((struct _bucketOrder *, struct _bucketOrder *));
 static int storeCheckExpired _PARAMS((const StoreEntry *, int flag));
 static int storeCheckPurgeMem _PARAMS((const StoreEntry *));
-static int storeClientListSearch _PARAMS((const MemObject *, int));
+static int storeClientListSearch _PARAMS((const MemObject *, void *));
 static int storeCopy _PARAMS((const StoreEntry *, int, int, char *, int *));
 static void storeLockObjectComplete _PARAMS((void *, int));
 static int storeEntryLocked _PARAMS((const StoreEntry *));
@@ -841,8 +841,6 @@ storeCreateEntry(const char *url,
     /* allocate client list */
     mem->nclients = MIN_CLIENT;
     mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
-    for (i = 0; i < mem->nclients; i++)
-	mem->clients[i].fd = -1;
     /* storeLog(STORE_LOG_CREATE, e); */
     return e;
 }
@@ -895,12 +893,12 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
 
 /* Register interest in an object currently being retrieved. */
 int
-storeRegister(StoreEntry * e, int fd, PIF * handler, void *data)
+storeRegister(StoreEntry * e, int fd, STCB * handler, void *data)
 {
     int i;
     MemObject *mem = e->mem_obj;
     debug(20, 3, "storeRegister: FD %d '%s'\n", fd, e->key);
-    if ((i = storeClientListSearch(mem, fd)) < 0)
+    if ((i = storeClientListSearch(mem, data)) < 0)
 	i = storeClientListAdd(e, fd, 0);
     if (mem->clients[i].callback)
 	fatal_dump("storeRegister: handler already exists");
@@ -910,16 +908,15 @@ storeRegister(StoreEntry * e, int fd, PIF * handler, void *data)
 }
 
 int
-storeUnregister(StoreEntry * e, int fd)
+storeUnregister(StoreEntry * e, void *data)
 {
     int i;
     MemObject *mem = e->mem_obj;
     if (mem == NULL)
 	return 0;
-    debug(20, 3, "storeUnregister: called for FD %d '%s'\n", fd, e->key);
-    if ((i = storeClientListSearch(mem, fd)) < 0)
+    debug(20, 3, "storeUnregister: called for '%s'\n", e->key);
+    if ((i = storeClientListSearch(mem, data)) < 0)
 	return 0;
-    mem->clients[i].fd = -1;
     mem->clients[i].last_offset = 0;
     mem->clients[i].callback = NULL;
     mem->clients[i].callback_data = NULL;
@@ -934,7 +931,7 @@ storeGetLowestReaderOffset(const StoreEntry * entry)
     int lowest = mem->e_current_len;
     int i;
     for (i = 0; i < mem->nclients; i++) {
-	if (mem->clients[i].fd == -1)
+	if (mem->clients[i].callback_data == NULL)
 	    continue;
 	if (mem->clients[i].last_offset < lowest)
 	    lowest = mem->clients[i].last_offset;
@@ -965,7 +962,7 @@ InvokeHandlers(StoreEntry * e)
 {
     int i;
     MemObject *mem = e->mem_obj;
-    PIF *handler = NULL;
+    STCB *handler = NULL;
     void *data = NULL;
     struct _store_client *sc;
     if (mem->clients == NULL && mem->nclients) {
@@ -975,14 +972,14 @@ InvokeHandlers(StoreEntry * e)
     /* walk the entire list looking for valid handlers */
     for (i = 0; i < mem->nclients; i++) {
 	sc = &mem->clients[i];
-	if (sc->fd == -1)
+	if (sc->callback_data == NULL)
 	    continue;
 	if ((handler = sc->callback) == NULL)
 	    continue;
 	data = sc->callback_data;
 	sc->callback = NULL;
-	sc->callback_data = NULL;
-	handler(sc->fd, e, data);
+	/* Don't NULL the callback_data, its used to identify the client */
+	handler(data);
     }
 }
 
@@ -2243,7 +2240,7 @@ storeClientWaiting(const StoreEntry * e)
     MemObject *mem = e->mem_obj;
     if (mem->clients) {
 	for (i = 0; i < mem->nclients; i++) {
-	    if (mem->clients[i].fd != -1)
+	    if (mem->clients[i].callback_data != NULL)
 		return 1;
 	}
     }
@@ -2251,14 +2248,12 @@ storeClientWaiting(const StoreEntry * e)
 }
 
 static int
-storeClientListSearch(const MemObject * mem, int fd)
+storeClientListSearch(const MemObject * mem, void *data)
 {
     int i;
     if (mem->clients) {
 	for (i = 0; i < mem->nclients; i++) {
-	    if (mem->clients[i].fd == -1)
-		continue;
-	    if (mem->clients[i].fd != fd)
+	    if (mem->clients[i].callback_data != data)
 		continue;
 	    return i;
 	}
@@ -2268,7 +2263,7 @@ storeClientListSearch(const MemObject * mem, int fd)
 
 /* add client with fd to client list */
 int
-storeClientListAdd(StoreEntry * e, int fd, int last_offset)
+storeClientListAdd(StoreEntry * e, void *data, int last_offset)
 {
     int i;
     MemObject *mem = e->mem_obj;
@@ -2278,30 +2273,25 @@ storeClientListAdd(StoreEntry * e, int fd, int last_offset)
     if (mem->clients == NULL) {
 	mem->nclients = MIN_CLIENT;
 	mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
-	for (i = 0; i < mem->nclients; i++)
-	    mem->clients[i].fd = -1;
     }
     for (i = 0; i < mem->nclients; i++) {
-	if (mem->clients[i].fd == fd)
+	if (mem->clients[i].callback_data == data)
 	    return i;		/* its already here */
-	if (mem->clients[i].fd == -1)
+	if (mem->clients[i].callback_data == NULL)
 	    break;
     }
     if (i == mem->nclients) {
-	debug(20, 3, "storeClientListAdd: FD %d Growing clients for '%s'\n",
-	    fd, e->url);
+	debug(20, 3, "storeClientListAdd: Growing clients for '%s'\n", e->url);
 	oldlist = mem->clients;
 	oldsize = mem->nclients;
 	mem->nclients <<= 1;
 	mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
 	for (i = 0; i < oldsize; i++)
 	    mem->clients[i] = oldlist[i];
-	for (; i < mem->nclients; i++)
-	    mem->clients[i].fd = -1;
 	safe_free(oldlist);
 	i = oldsize;
     }
-    mem->clients[i].fd = fd;
+    mem->clients[i].callback_data = data;
     mem->clients[i].last_offset = last_offset;
     return i;
 }
@@ -2314,7 +2304,7 @@ storeClientCopy(StoreEntry * e,
     int maxSize,
     char *buf,
     int *size,
-    int fd)
+    void *data)
 {
     int ci;
     int sz;
@@ -2328,7 +2318,7 @@ storeClientCopy(StoreEntry * e,
 	*size = 0;
 	return 0;
     }
-    if ((ci = storeClientListSearch(mem, fd)) < 0) {
+    if ((ci = storeClientListSearch(mem, data)) < 0) {
 	debug_trap("storeClientCopy: Unregistered client");
 	debug(20, 0, "--> '%s'\n", e->url);
 	*size = 0;
@@ -2693,7 +2683,7 @@ storePendingNClients(const StoreEntry * e)
     if (mem == NULL)
 	return 0;
     for (i = 0; i < mem->nclients; i++) {
-	if (mem->clients[i].fd == -1)
+	if (mem->clients[i].callback_data == NULL)
 	    continue;
 	npend++;
     }
@@ -2888,21 +2878,6 @@ storeEntryValidToSend(StoreEntry * e)
     if (e->store_status == STORE_ABORTED)
 	return 0;
     return 1;
-}
-
-int
-storeFirstClientFD(MemObject * mem)
-{
-    int i;
-    if (mem == NULL)
-	return -1;
-    if (mem->clients == NULL)
-	return -1;
-    for (i = 0; i < mem->nclients; i++) {
-	if (mem->clients[i].fd > -1)
-	    return mem->clients[i].fd;
-    }
-    return -1;
 }
 
 void
