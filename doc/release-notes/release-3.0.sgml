@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.15 2003/08/20 07:08:01 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.16 2004/08/14 22:57:48 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -97,6 +97,7 @@ This fixes two issues:
 	<item>ext_user acl type added for matching the user name returned by external acls. Not longer abusing the ident acl for this purpose
 	<item>external_acl extended with soft timeouts
 	<item>external_acl can optionally return information to be logged in access.log
+	<item>external_acl protocol changed to use URL-escaped strings. Squid-2.5 compatible mode also available.
 	<item>Requests denied due to 'http_reply_access' are now logged with TCP_DENIED_REPLY.
 	<item>Added counters for HTCP messages sent and received, reported in 'info' cache manager page.
 	<item>Fixed 'ICP dynamic timeout algorithm ignores multicast' bug
@@ -123,7 +124,7 @@ This fixes two issues:
 	<tag>header_replace</tag>This is now dependent on --disable-http-violations (Henrik Nordstr&ouml;m) 
 	<tag>email_err_data</tag>Allow disabling the data now embedded in the mailto links on Squid's ERR pages.
 	<tag>reply_body_max_size</tag>No longer uses allow/deny. Instead it is specified as a size followed by acl elements. The size "none" can be used for no limit (the default)
-	<tag>external_acl_type</tag>The argument which was named concurrenty= in Squid-2.5 is now named children=. concurrency= has a different meaing in Squid-3.0 and your external acls will not work until updated.
+	<tag>external_acl_type</tag>The argument which was named concurrenty= in Squid-2.5 is now named children=. concurrency= has a different meaing in Squid-3.0 and your external acls will not work until updated. New protocol=2.5 parameter for compatibility with acl helpers written for Squid-2.5.
 	<tag>ext_user acl</tag>this acl matches the username returned by external acl. ident can no longer be used for this purpose.
 	<tag>access_log</tag>The access_log directive now optionally includes specifications on what log format to use and acls matching which requests to log. Can be specified multiple times to log different requests to different files.
 	<tag>logformat</tag>new directive to define custom log formats
