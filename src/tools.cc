@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.105 1997/05/15 01:07:04 wessels Exp $
+ * $Id: tools.cc,v 1.106 1997/05/15 23:43:31 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -304,7 +304,7 @@ void
 sigusr2_handle(int sig)
 {
     static int state = 0;
-    debug(21, 1, "sigusr2_handle: SIGUSR2 received.\n");
+    /* no debug() here; bad things happen if the signal is delivered during _db_print() */
     if (state == 0) {
 	_db_init(Config.Log.log, "ALL,10");
 	state = 1;
@@ -448,7 +448,7 @@ sig_child(int sig)
 #else
 	pid = waitpid(-1, &status, WNOHANG);
 #endif
-	debug(21, 3, "sig_child: Ate pid %d\n", pid);
+    /* no debug() here; bad things happen if the signal is delivered during _db_print() */
 #if HAVE_SIGACTION
     } while (pid > 0);
 #else
