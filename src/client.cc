@@ -3,7 +3,7 @@
 
 
 /*
- * $Id: client.cc,v 1.59 1998/03/06 05:43:33 kostas Exp $
+ * $Id: client.cc,v 1.60 1998/03/07 05:49:35 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -122,8 +122,8 @@ static SIGHDLR pipe_handler;
 static void set_our_signal();
 static int put_fd;
 static char *put_file = NULL;
-static struct stat p;
-int total_bytes=0;
+static struct stat sb;
+int total_bytes = 0;
 
 static void
 usage(const char *progname)
@@ -254,7 +254,7 @@ main(int argc, char *argv[])
     }
     if (put_file) {
 	opt_put = 1;
-	method = xstrdup("PUT");
+	/*method = xstrdup("PUT"); */
 	put_fd = open(put_file, O_RDONLY);
 	set_our_signal();
 	if (put_fd < 0) {
@@ -262,7 +262,7 @@ main(int argc, char *argv[])
 		xstrerror());
 	    exit(-1);
 	}
-	fstat(put_fd, &p);
+	fstat(put_fd, &sb);
     }
     snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);
     if (reload) {
@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 	strcat(msg, buf);
     }
     if (put_fd > 0) {
-	snprintf(buf, BUFSIZ, "Content-length: %d\r\n", p.st_size);
+	snprintf(buf, BUFSIZ, "Content-length: %d\r\n", sb.st_size);
 	strcat(msg, buf);
     }
     if (opt_noaccept == 0) {
@@ -345,13 +345,12 @@ main(int argc, char *argv[])
 	    int x;
 	    while ((x = read(put_fd, msg, BUFSIZ)) > 0) {
 		x = write(conn, msg, x);
-		total_bytes+=x;
+		total_bytes += x;
 		if (x <= 0)
 		    break;
 	    }
-	    if (x != 0) 
+	    if (x != 0)
 		fprintf(stderr, "client: ERROR: Cannot send file.\n");
-	    fprintf(stderr, "TOTAL SENT: %d\n",total_bytes);
 	    close(put_fd);
 	}
 	/* Read the data */
@@ -444,10 +443,11 @@ catch(int sig)
     interrupted = 1;
     fprintf(stderr, "Interrupted.\n");
 }
+
 void
 pipe_handler(int sig)
 {
-	fprintf(stderr,"SIGPIPE received.\n");
+    fprintf(stderr, "SIGPIPE received.\n");
 }
 
 static void
@@ -459,7 +459,7 @@ set_our_signal()
     sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIGPIPE, &sa, NULL) < 0) {
-	fprintf(stderr,"Cannot set PIPE signal.\n");
+	fprintf(stderr, "Cannot set PIPE signal.\n");
 	exit(-1);
     }
 #else
