@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.68 1999/05/19 19:57:54 wessels Exp $
+ * $Id: store_client.cc,v 1.69 1999/05/19 22:36:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -313,7 +313,7 @@ storeClientFileRead(store_client * sc)
 }
 
 static void
-storeClientReadBody(void *data, const char *buf, size_t len, int flagnotused)
+storeClientReadBody(void *data, const char *buf, size_t len)
 {
     store_client *sc = data;
     MemObject *mem = sc->entry->mem_obj;
@@ -329,7 +329,7 @@ storeClientReadBody(void *data, const char *buf, size_t len, int flagnotused)
 }
 
 static void
-storeClientReadHeader(void *data, const char *buf, size_t len, int flagnotused)
+storeClientReadHeader(void *data, const char *buf, size_t len)
 {
     store_client *sc = data;
     StoreEntry *e = sc->entry;
