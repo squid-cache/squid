@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.427 1999/01/11 16:50:29 wessels Exp $
+ * $Id: client_side.cc,v 1.428 1999/01/11 20:16:04 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -332,6 +332,12 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
     const http_status status = new_entry->mem_obj->reply->sline.status;
     if (0 == status) {
 	debug(33, 5) ("clientGetsOldEntry: YES, broken HTTP reply\n");
+	return 1;
+    }
+    /* If the reply is a failure then send the old object as a last
+     * resort */
+    if (status >= 500 && status < 600) {
+	debug(33, 2) ("clientGetsOldEntry: YES, failure reply=%d\n", status);
 	return 1;
     }
     /* If the reply is anything but "Not Modified" then
