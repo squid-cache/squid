@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.1 2003/01/23 00:38:34 robertc Exp $
+ * $Id: http_range_test.cc,v 1.2 2003/02/02 21:25:05 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -38,6 +38,7 @@
 //#include "Store.h"
 #include "HttpHeaderRange.h"
 //#include "client_side_request.h"
+#include "ACLChecklist.h"
 
 /* Stub routines */
 SQUIDCEXTERN void 
@@ -97,13 +98,13 @@ SQUIDCEXTERN HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHea
     return NULL;
 }
 
-SQUIDCEXTERN int aclCheckFast(const struct _acl_access *A, aclCheck_t *)
+SQUIDCEXTERN int aclCheckFast(const acl_access *A, ACLChecklist *)
 {
     fatal ("dummy function\n");
     return 0;
 }
 
-SQUIDCEXTERN void aclChecklistFree(aclCheck_t *)
+SQUIDCEXTERN void aclChecklistFree(ACLChecklist *)
 {
     fatal ("dummy function\n");
 }
@@ -114,7 +115,7 @@ SQUIDCEXTERN void fatal (char const *msg)
     exit (1);
 }
 
-SQUIDCEXTERN aclCheck_t *aclChecklistCreate(const struct _acl_access *,
+SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
     request_t *,
     const char *ident)
 {
