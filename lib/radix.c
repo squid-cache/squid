@@ -113,7 +113,7 @@ int max_keylen;
 struct radix_mask *rn_mkfreelist;
 struct radix_node_head *mask_rnhead;
 static char *addmask_key;
-static char normal_chars[] =
+static unsigned char normal_chars[] =
 {0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, -1};
 static char *rn_zeros, *rn_ones;
 
@@ -169,7 +169,7 @@ rn_search(v_arg, head)
 	    x = x->rn_l;
     }
     return (x);
-};
+}
 
 struct radix_node *
 rn_search_m(v_arg, head, m_arg)
@@ -187,7 +187,7 @@ rn_search_m(v_arg, head, m_arg)
 	    x = x->rn_l;
     }
     return x;
-};
+}
 
 int
 rn_refines(m_arg, n_arg)
@@ -361,7 +361,7 @@ rn_match(v_arg, head)
 	}
     } while (t != top);
     return 0;
-};
+}
 
 #ifdef RN_DEBUG
 int rn_nodenum;
