@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.402 2005/01/03 16:08:26 robertc Exp $
+ * $Id: main.cc,v 1.403 2005/01/08 10:09:31 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1283,7 +1283,10 @@ static int
 checkRunningPid(void)
 {
     pid_t pid;
-    debug_log = stderr;
+
+    if (!debug_log)
+        debug_log = stderr;
+
     pid = readPidFile();
 
     if (pid < 2)
