@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.182 1996/12/19 21:24:17 wessels Exp $
+ * $Id: store.cc,v 1.183 1996/12/19 21:35:24 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -622,7 +622,7 @@ unsigned int
 getKeyCounter(void)
 {
     static unsigned int key_counter = 0;
-    if (++key_counter == (1<<24))
+    if (++key_counter == (1 << 24))
 	key_counter = 1;
     return key_counter;
 }
