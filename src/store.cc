@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.542 2001/10/17 20:25:03 hno Exp $
+ * $Id: store.cc,v 1.543 2001/10/24 06:16:17 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1142,8 +1142,6 @@ storeMemObjectDump(MemObject * mem)
 	(int) mem->inmem_hi);
     debug(20, 1) ("MemObject->inmem_lo: %d\n",
 	(int) mem->inmem_lo);
-    debug(20, 1) ("MemObject->clients: %p\n",
-	mem->clients);
     debug(20, 1) ("MemObject->nclients: %d\n",
 	mem->nclients);
     debug(20, 1) ("MemObject->reply: %p\n",

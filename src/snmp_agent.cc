@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.82 2001/10/17 20:25:03 hno Exp $
+ * $Id: snmp_agent.cc,v 1.83 2001/10/24 06:16:17 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -47,7 +47,7 @@ variable_list *
 snmp_sysFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_sysFn: Processing request:\n", Var->name[LEN_SQ_SYS]);
+    debug(49, 5) ("snmp_sysFn: Processing request:\n");
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
     switch (Var->name[LEN_SQ_SYS]) {
@@ -411,9 +411,9 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	    break;
 	f = snmpStatGet(0);
 	l = snmpStatGet(minutes);
-	debug(49, 8) ("median: min= %d, %d l= %x , f = %x\n", minutes,
+	debug(49, 8) ("median: min= %d, %d l= %p , f = %p\n", minutes,
 	    Var->name[LEN_SQ_PRF + 3], l, f);
-	debug(49, 8) ("median: l= %x , f = %x\n", l, f);
+	debug(49, 8) ("median: l= %p , f = %p\n", l, f);
 	switch (Var->name[LEN_SQ_PRF + 3]) {
 	case PERF_MEDIAN_TIME:
 	    x = minutes;

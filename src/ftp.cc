@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.313 2001/10/17 20:25:02 hno Exp $
+ * $Id: ftp.cc,v 1.314 2001/10/24 06:16:16 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1987,7 +1987,7 @@ ftpReadStor(FtpStateData * ftpState)
 	    ftpState,
 	    0);
     } else {
-	debug(9, 3) ("ftpReadStor: Unexpected reply code %s\n", code);
+	debug(9, 3) ("ftpReadStor: Unexpected reply code %03d\n", code);
 	ftpFail(ftpState);
     }
 }
