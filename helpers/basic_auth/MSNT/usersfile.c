@@ -107,9 +107,9 @@ Read_usersfile(const char *path, usersfile * uf)
 	    uf->names = calloc(uf->Alloc, sizeof(*uf->names));
 	} else if (uf->Inuse == uf->Alloc) {
 	    uf->Alloc = uf->Alloc << 1;
-	    uf->names = realloc(uf->names, uf->Alloc);
+	    uf->names = realloc(uf->names, uf->Alloc * sizeof(*uf->names));
 	    /* zero out the newly allocated memory */
-	    memset(uf->names[uf->Alloc >> 1],
+	    memset(&uf->names[uf->Alloc >> 1],
 		'\0',
 		(uf->Alloc >> 1) * sizeof(*uf->names));
 	}
@@ -170,6 +170,9 @@ Check_forfilechange(usersfile * uf)
 
     /* Stat the allowed users file. If it cannot be accessed, return. */
 
+    if (uf->path == NULL)
+	return;
+
     if (stat(uf->path, &ChkBuf) < 0) {
 	if (errno == ENOENT) {
 	    uf->LMT = 0;
@@ -186,6 +189,6 @@ Check_forfilechange(usersfile * uf)
     /*
      * The file changed, so re-read it.
      */
-    syslog(LOG_INFO, "Check_forchange: Reloading user list.");
+    syslog(LOG_INFO, "Check_forfilechange: Reloading user list '%s'.", uf->path);
     Read_usersfile(NULL, uf);
 }
