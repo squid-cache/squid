@@ -61,10 +61,10 @@ storeRebuildRawFile(void *data)
 	    debug(20, 1) ("storeRebuildRawFile: done!\n");
 	    store_rebuilding = 0;
 	    return;
-	} else if (fd == 0) {
+	} else if (fd < 0) {
 	    continue;
 	}
-	assert(fd > 0);
+	assert(fd > -1);
 	/* lets get file stats here */
 	if (fstat(fd, &fst) < 0) {
 	    debug(20, 1) ("storeRebuildRawFile: fstat(FD %d): %s\n",
@@ -92,6 +92,7 @@ storeRebuildRawFile(void *data)
 	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
 	    continue;
 	}
+	debug(20,1)("storeRebuildRawFile: successful swap meta unpacking\n");
 	storeKeyFree(tmpe.key);
 	memset(&tmpe, '\0', sizeof(StoreEntry));
 	for (t = tlv_list; t; t = t->next) {
@@ -136,9 +137,8 @@ storeRebuildRawFile(void *data)
 	    storeRelease(e);	/* release old entry */
 	    RB->dupcount++;
 	}
-	/* update store_swap_size */
 	RB->objcount++;
-	storeEntryDump(&tmpe);
+	storeEntryDump(&tmpe, 5);
 	e = storeAddDiskRestore(tmpe.key,
 	    sfileno,
 	    (int) tmpe.object_len,
@@ -235,15 +235,16 @@ storeGetNextFile(int *sfileno, int *size)
     static int dirn, curlvl1, curlvl2, flag, done, in_dir, fn;
     static struct dirent *entry;
     static DIR *td;
-    int fd = 0, used = 0;
+    int fd = -1;
+    int used = 0;
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     LOCAL_ARRAY(char, fullpath, SQUID_MAXPATHLEN);
     debug(20, 3) ("storeGetNextFile: flag=%d, %d: /%02X/%02X\n", flag,
 	dirn, curlvl1, curlvl2);
     if (done)
 	return -2;
-    while (!fd && !done) {
-	fd = 0;
+    while (fd < 0 && done == 0) {
+	fd = -1;
 	if (!flag) {		/* initialize, open first file */
 	    done = dirn = curlvl1 = curlvl2 = in_dir = 0;
 	    flag = 1;

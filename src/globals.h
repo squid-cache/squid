@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.30 1998/02/03 07:35:26 wessels Exp $
+ * $Id: globals.h,v 1.31 1998/02/03 22:08:12 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -54,7 +54,6 @@ extern int icmp_sock;		/* -1 */
 extern int neighbors_do_private_keys;	/* 1 */
 extern int opt_accel_uses_host;	/* 0 */
 extern int opt_catch_signals;	/* 1 */
-extern int opt_convert;		/* 0 */
 extern int opt_debug_stderr;	/* 0 */
 extern int opt_dns_tests;	/* 1 */
 extern int opt_foreground_rebuild;	/* 0 */
@@ -101,6 +100,7 @@ extern double request_failure_ratio;	/* 0.0 */
 extern int store_hash_buckets; /* 0 */
 extern hash_table *store_table; /* NULL */
 extern size_t cacheKeySize;
+extern dlink_list store_list;
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;

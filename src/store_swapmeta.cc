@@ -39,15 +39,14 @@ storeSwapMetaBuild(StoreEntry * e)
     debug(20, 3) ("storeSwapMetaBuild: %s\n", url);
     T = storeSwapTLVAdd(STORE_META_KEY, e->key, cacheKeySize, T);
     T = storeSwapTLVAdd(STORE_META_STD, &e->timestamp, STORE_HDR_METASIZE, T);
-    T = storeSwapTLVAdd(STORE_META_URL, url, strlen(url), T);
+    T = storeSwapTLVAdd(STORE_META_URL, url, strlen(url)+1, T);
     return TLV;
 }
 
 char *
 storeSwapMetaPack(tlv * tlv_list, int *length)
 {
-    size_t buflen = 0;
-    int i;
+    int buflen = 0;
     tlv *t;
     off_t j = 0;
     char *buf;
@@ -55,12 +54,12 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     buflen++;			/* STORE_META_OK */
     buflen += sizeof(int);	/* size of header to follow */
     for (t = tlv_list; t; t = t->next)
-	buflen += t->length + sizeof(char) + sizeof(int);
+	buflen += sizeof(char) + sizeof(int) + t->length;
     buflen++;			/* STORE_META_END */
     buf = xmalloc(buflen);
     buf[j++] = (char) STORE_META_OK;
-    i = (int) buflen - (sizeof(char) + sizeof(int));
-    xmemcpy(&buf[j], &i, sizeof(int));
+    xmemcpy(&buf[j], &buflen, sizeof(int));
+    j += sizeof(int);
     for (t = tlv_list; t; t = t->next) {
 	buf[j++] = (char) t->type;
 	xmemcpy(&buf[j], &t->length, sizeof(int));
@@ -69,8 +68,8 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
 	j += t->length;
     }
     buf[j++] = (char) STORE_META_END;
-    assert(j == buflen);
-    *length = (int) buflen;
+    assert((int) j == buflen);
+    *length = buflen;
     return buf;
 }
 
@@ -83,14 +82,13 @@ storeSwapMetaUnpack(const char *buf, int *hdr_len)
     int length;
     int buflen;
     off_t j = 0;
-    assert(buflen > (sizeof(char) + sizeof(int)));
     assert(buf != NULL);
     assert(hdr_len != NULL);
     if (buf[j++] != (char) STORE_META_OK)
 	return NULL;
     xmemcpy(&buflen, &buf[j], sizeof(int));
     j += sizeof(int);
-    assert(buflen > 0);
+    assert(buflen > (sizeof(char) + sizeof(int)));
     while (buflen - j > (sizeof(char) + sizeof(int))) {
 	type = buf[j++];
 	xmemcpy(&length, &buf[j], sizeof(int));
@@ -104,6 +102,6 @@ storeSwapMetaUnpack(const char *buf, int *hdr_len)
 	T = storeSwapTLVAdd(type, &buf[j], (size_t) length, T);
 	j += length;
     }
-    *hdr_len = buflen + sizeof(char) + sizeof(int);
+    *hdr_len = buflen;
     return TLV;
 }

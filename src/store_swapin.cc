@@ -58,7 +58,11 @@ storeSwapInValidateComplete(void *data, int retcode, int errcode)
     }
     ctrlp->path = xstrdup(storeSwapFullPath(e->swap_file_number, NULL));
     debug(20, 3) ("storeSwapInValidateComplete: Opening %s\n", ctrlp->path);
-    file_open(ctrlp->path, O_RDONLY, storeSwapInFileOpened, ctrlp, ctrlp->callback_data);
+    file_open(ctrlp->path,
+	O_RDONLY,
+	storeSwapInFileOpened,
+	ctrlp,
+	ctrlp->callback_data);
 }
 
 void
@@ -67,7 +71,6 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
     StoreEntry *e = ctrlp->e;
     MemObject *mem = e->mem_obj;
-    struct stat sb;
     if (fd == -2 && errcode == -2) {
 	xfree(ctrlp->path);
 	xfree(ctrlp);
@@ -76,23 +79,31 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     assert(mem != NULL);
     assert(e->mem_status == NOT_IN_MEMORY);
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
-    if (e->swap_status == SWAPOUT_DONE && (fd >= 0) && fstat(fd, &sb) == 0)
-	if (sb.st_size == 0 || sb.st_size != e->object_len) {
-	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, sb.st_size, e->object_len);
-	    file_close(fd);
-	    fd = -1;
-	}
     if (fd < 0) {
-	debug(20, 0) ("storeSwapInStartComplete: Failed for '%s' (%s)\n", mem->url,
-	    ctrlp->path);
+	debug(20, 0) ("storeSwapInFileOpened: Failed '%s' for '%s'\n",
+	    ctrlp->path, storeUrl(e));
 	/* Invoke a store abort that should free the memory object */
 	(ctrlp->callback) (-1, ctrlp->callback_data);
 	xfree(ctrlp->path);
 	xfree(ctrlp);
 	return;
     }
-    debug(20, 5) ("storeSwapInStart: initialized swap file '%s' for '%s'\n",
-	ctrlp->path, mem->url);
+    /*
+     * We can't use fstat() to check file size here because of the
+     * metadata header.  We have to parse the header first and find
+     * the header size.
+     */
+#if OLD_CODE
+    if (e->swap_status == SWAPOUT_DONE && fstat(fd, &sb) == 0) {
+	if (sb.st_size == 0 || sb.st_size != e->object_len) {
+	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, sb.st_size, e->object_len);
+	    file_close(fd);
+	    fd = -1;
+	}
+    }
+#endif
+    debug(20, 5) ("storeSwapInFileOpened: initialized '%s' for '%s'\n",
+	ctrlp->path, storeUrl(e));
     (ctrlp->callback) (fd, ctrlp->callback_data);
     xfree(ctrlp->path);
     xfree(ctrlp);

@@ -1,9 +1,15 @@
 #include "squid.h"
 
+/*
+ * NOTE: 'Header' refers to the swapfile metadata header.
+ *       'Body' refers to the swapfile body, which is the full
+ *        HTTP reply (including HTTP headers and body).
+ */
+static DRCB storeClientReadBody;
+static DRCB storeClientReadHeader;
+static SIH storeClientFileOpened;
 static void storeClientCopy2(StoreEntry * e, store_client * sc);
-static SIH storeClientCopyFileOpened;
-static void storeClientCopyFileRead(store_client * sc);
-static DRCB storeClientCopyHandleRead;
+static void storeClientFileRead(store_client * sc);
 
 /* check if there is any client waiting for this object at all */
 /* return 1 if there is at least one client */
@@ -151,7 +157,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	/* assert(sc->copy_offset == 0); */
 	if (sc->disk_op_in_progress == 0) {
 	    sc->disk_op_in_progress = 1;
-	    storeSwapInStart(e, storeClientCopyFileOpened, sc);
+	    storeSwapInStart(e, storeClientFileOpened, sc);
 	} else {
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
 	}
@@ -161,7 +167,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	assert(sc->type == STORE_DISK_CLIENT);
 	if (sc->disk_op_in_progress == 0) {
 	    sc->disk_op_in_progress = 1;
-	    storeClientCopyFileRead(sc);
+	    storeClientFileRead(sc);
 	} else {
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
 	}
@@ -170,55 +176,116 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 }
 
 static void
-storeClientCopyFileOpened(int fd, void *data)
+storeClientFileOpened(int fd, void *data)
 {
     store_client *sc = data;
     STCB *callback = sc->callback;
     if (fd < 0) {
-	debug(20, 3) ("storeClientCopyFileOpened: failed\n");
+	debug(20, 3) ("storeClientFileOpened: failed\n");
 	sc->disk_op_in_progress = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, -1);
 	return;
     }
     sc->swapin_fd = fd;
-    storeClientCopyFileRead(sc);
+    storeClientFileRead(sc);
 }
 
 static void
-storeClientCopyFileRead(store_client * sc)
+storeClientFileRead(store_client * sc)
 {
+    MemObject *mem = sc->mem;
     assert(sc->callback != NULL);
-    file_read(sc->swapin_fd,
-	sc->copy_buf,
-	sc->copy_size,
-	sc->copy_offset,
-	storeClientCopyHandleRead,
-	sc);
+    if (mem->swap_hdr_sz == 0)
+	file_read(sc->swapin_fd,
+	    memAllocate(MEM_DISK_BUF, 1),
+	    DISK_PAGE_SIZE,
+	    0,
+	    storeClientReadHeader,
+	    sc);
+    else
+	file_read(sc->swapin_fd,
+	    sc->copy_buf,
+	    sc->copy_size,
+	    sc->copy_offset + mem->swap_hdr_sz,
+	    storeClientReadBody,
+	    sc);
 }
 
 static void
-storeClientCopyHandleRead(int fd, const char *buf, int len, int flagnotused, void *data)
+storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *data)
 {
     store_client *sc = data;
-    MemObject *mem = sc->mem;
     STCB *callback = sc->callback;
-    int hdr_len = 0;
     assert(sc->disk_op_in_progress != 0);
     sc->disk_op_in_progress = 0;
     assert(sc->callback != NULL);
-    debug(20, 3) ("storeClientCopyHandleRead: FD %d, len %d\n", fd, len);
-#if USE_SWAP_HEADERS
-	/* XXX: BROKEN */
-    if (sc->copy_offset == 0 && len > 0 && mem != NULL) {
-	hdr_len = storeGetMetaBuf(buf, mem);
-	memmove((char *) buf, (char *) (buf + hdr_len), len - hdr_len);
-	len -= hdr_len;
-	httpParseReplyHeaders(buf, mem->reply);
-    }
-#endif
+    debug(20, 3) ("storeClientReadBody: FD %d, len %d\n", fd, len);
     sc->callback = NULL;
     callback(sc->callback_data, sc->copy_buf, len);
+}
+
+static void
+storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *data)
+{
+    /*
+     * 'buf' should have been allocated by memAllocate(MEM_DISK_BUF)
+     */
+    store_client *sc = data;
+    MemObject *mem = sc->mem;
+    STCB *callback = sc->callback;
+    int swap_hdr_sz = 0;
+    size_t body_sz;
+    size_t copy_sz;
+    tlv *tlv_list;
+    assert(sc->disk_op_in_progress != 0);
+    sc->disk_op_in_progress = 0;
+    assert(sc->callback != NULL);
+    debug(20, 3) ("storeClientReadHeader: FD %d, len %d\n", fd, len);
+    if (len < 0) {
+        debug(20, 3) ("storeClientReadHeader: FD %d: %s\n", fd, xstrerror());
+	memFree(MEM_DISK_BUF, (void *) buf);
+        sc->callback = NULL;
+        callback(sc->callback_data, sc->copy_buf, len);
+	return;
+    }
+    tlv_list = storeSwapMetaUnpack(buf, &swap_hdr_sz);
+    if (tlv_list == NULL) {
+        debug(20, 1) ("storeClientReadHeader: failed to unpack meta data\n");
+	memFree(MEM_DISK_BUF, (void *) buf);
+        sc->callback = NULL;
+        callback(sc->callback_data, sc->copy_buf, -1);
+	return;
+    }
+    /*
+     * XXX Here we should check the meta data and make sure we got
+     * the right object.
+     */
+    mem->swap_hdr_sz = swap_hdr_sz;
+    /*
+     * If our last read got some data the client wants, then give
+     * it to them, otherwise schedule another read.
+     */
+    body_sz = len - swap_hdr_sz;
+    if (sc->copy_offset < body_sz) {
+	/*
+         * we have (part of )what they want
+	 */
+	copy_sz = XMIN(sc->copy_size, body_sz);
+	debug(20,1)("storeClientReadHeader: copying %d bytes of body\n",
+		copy_sz);
+	xmemcpy(sc->copy_buf, buf+swap_hdr_sz, copy_sz);
+	memFree(MEM_DISK_BUF, (void *) buf);
+	sc->callback = NULL;
+        callback(sc->callback_data, sc->copy_buf, copy_sz);
+	return;
+    }
+    /*
+     * we don't have what the client wants, but at least we now
+     * know the swap header size.
+     */
+    memFree(MEM_DISK_BUF, (void *) buf);
+    storeClientFileRead(sc);
 }
 
 int
