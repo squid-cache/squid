@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.29 1996/05/01 22:36:43 wessels Exp $ */
+/* $Id: wais.cc,v 1.30 1996/05/03 22:56:34 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -258,7 +258,7 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
     data->mime_hdr = mime_hdr;
     comm_set_select_handler(sock,
 	COMM_SELECT_CLOSE,
-	waisStateFree,
+	(PF) waisStateFree,
 	(void *) data);
 
     /* check if IP is already in cache. It must be. 

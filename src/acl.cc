@@ -1,4 +1,4 @@
-/* "$Id: acl.cc,v 1.13 1996/05/01 22:36:23 wessels Exp $" */
+/* "$Id: acl.cc,v 1.14 1996/05/03 22:56:21 wessels Exp $" */
 
 /*
  * DEBUG: Section 28          acl
@@ -329,6 +329,7 @@ void aclParseAclLine()
 	debug(28, 0, "aclParseAclLine: Invalid ACL type '%s'\n", t);
 	xfree(A);
 	return;
+	/* NOTREACHED */
 	break;
     }
     A->cfgline = xstrdup(config_input_line);
@@ -500,29 +501,36 @@ static int aclMatchAcl(acl, c, m, pr, h, po, r)
     switch (acl->type) {
     case ACL_SRC_IP:
 	return aclMatchIp(acl->data, c);
+	/* NOTREACHED */
 	break;
     case ACL_DST_DOMAIN:
 	return aclMatchWord(acl->data, h);
+	/* NOTREACHED */
 	break;
     case ACL_TIME:
 	return aclMatchTime(acl->data, squid_curtime);
-	return 0;
+	/* NOTREACHED */
 	break;
     case ACL_URL_REGEX:
 	return aclMatchRegex(acl->data, r);
+	/* NOTREACHED */
 	break;
     case ACL_URL_PORT:
 	return aclMatchInteger(acl->data, po);
+	/* NOTREACHED */
 	break;
     case ACL_USER:
 	debug(28, 0, "aclMatchAcl: ACL_USER unimplemented\n");
 	return 0;
+	/* NOTREACHED */
 	break;
     case ACL_PROTO:
 	return aclMatchInteger(acl->data, pr);
+	/* NOTREACHED */
 	break;
     case ACL_METHOD:
 	return aclMatchInteger(acl->data, m);
+	/* NOTREACHED */
 	break;
     case ACL_NONE:
     default:

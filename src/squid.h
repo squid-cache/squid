@@ -1,8 +1,9 @@
 
-/* $Id: squid.h,v 1.20 1996/05/01 22:36:37 wessels Exp $ */
+/* $Id: squid.h,v 1.21 1996/05/03 22:56:31 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
+#include "version.h"
 
 #if SQUID_FD_SETSIZE > 256
 #define FD_SETSIZE SQUID_FD_SETSIZE
@@ -16,7 +17,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
+#ifndef _SQUID_FREEBSD_		/* "Obsolete" Markus Stumpf <maex@Space.NET> */
 #include <malloc.h>
+#endif
 #include <memory.h>
 #include <netdb.h>
 #include <pwd.h>
@@ -73,6 +76,10 @@
 #define SQUIDHOSTNAMELEN MAXHOSTNAMELEN
 #endif
 
+#ifndef BUFSIZ
+#define BUFSIZ  4096		/* make reasonable guess */
+#endif
+
 typedef struct sentry StoreEntry;
 typedef struct mem_hdr *mem_ptr;
 typedef struct _edge edge;
@@ -120,7 +127,7 @@ typedef unsigned long u_num32;
 #include "ftp.h"
 #include "gopher.h"
 #include "wais.h"
-#include "connect.h"
+#include "ssl.h"
 #include "objcache.h"
 #include "send-announce.h"
 #include "acl.h"

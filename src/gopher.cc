@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.29 1996/05/01 22:36:31 wessels Exp $ */
+/* $Id: gopher.cc,v 1.30 1996/05/03 22:56:27 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -874,7 +874,7 @@ int gopherStart(unusedfd, url, entry)
     }
     comm_set_select_handler(sock,
 	COMM_SELECT_CLOSE,
-	gopherStateFree,
+	(PF) gopherStateFree,
 	(void *) data);
 
     /* check if IP is already in cache. It must be. 

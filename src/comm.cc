@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.31 1996/05/01 22:36:26 wessels Exp $ */
+/* $Id: comm.cc,v 1.32 1996/05/03 22:56:23 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -168,7 +168,7 @@ int comm_open(io_type, port, handler, note)
 }
 
    /*
-    * NOTE: set the listen queue to 50 and rely on the kernel to      
+    * NOTE: set the listen queue to getMaxFD()/4 and rely on the kernel to      
     * impose an upper limit.  Solaris' listen(3n) page says it has   
     * no limit on this parameter, but sys/socket.h sets SOMAXCONN 
     * to 5.  HP-UX currently has a limit of 20.  SunOS is 5 and
@@ -178,8 +178,9 @@ int comm_listen(sock)
      int sock;
 {
     int x;
-    if ((x = listen(sock, 50)) < 0) {
-	debug(5, 0, "comm_listen: listen(%d, 50): %s\n",
+    if ((x = listen(sock, getMaxFD() >> 2)) < 0) {
+	debug(5, 0, "comm_listen: listen(%d, %d): %s\n",
+	    getMaxFD() >> 2,
 	    sock, xstrerror());
 	return x;
     }
@@ -364,7 +365,7 @@ int comm_close(fd)
     conn = &fd_table[fd];
 
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
-    debug(5, 10, "comm_close: FD %d\n", fd);
+    debug(5, 5, "comm_close: FD %d\n", fd);
     /* update fdstat */
     fdstat_close(fd);
     if (conn->close_handler)
@@ -569,7 +570,7 @@ int comm_select(sec, failtime)
 	    FD_CLR(theAsciiConnection, &readfds);
 	}
 	if (shutdown_pending || reread_pending)
-	    debug(5, 1, "comm_select: Still waiting on %d FDs\n", nfds);
+	    debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
 	while (1) {

@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.27 1996/05/01 22:36:33 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.28 1996/05/03 22:56:29 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -831,7 +831,7 @@ int ipcache_parsebuffer(buf, offset, data)
 				    break;
 				}
 				e->entry.h_addr_list[i] = (char *) xcalloc(1, e->entry.h_length);
-				*((unsigned long *) e->entry.h_addr_list[i]) = inet_addr(line_cur->line);
+				*((unsigned long *) (void *) e->entry.h_addr_list[i]) = inet_addr(line_cur->line);
 				line_cur = line_cur->next;
 				i++;
 			    }
@@ -1064,10 +1064,16 @@ void ipcacheOpenServers()
     int i;
     int dnssocket;
     static char fd_note_buf[FD_ASCII_NOTE_SZ];
+    static int NChildrenAlloc = 0;
 
-    /* start up companion process */
-    safe_free(dns_child_table);
+    /* free old structures if present */
+    if (dns_child_table) {
+	for (i = 0; i < NChildrenAlloc; i++)
+	    safe_free(dns_child_table[i]->ip_inbuf);
+	safe_free(dns_child_table);
+    }
     dns_child_table = (dnsserver_entry **) xcalloc(N, sizeof(dnsserver_entry));
+    NChildrenAlloc = N;
     dns_child_alive = 0;
     debug(14, 1, "ipcacheOpenServers: Starting %d 'dns_server' processes\n", N);
     for (i = 0; i < N; i++) {
@@ -1233,7 +1239,7 @@ struct hostent *ipcache_gethostbyname(name)
 	}
 	/* check if it's already a IP address in text form. */
 	if (sscanf(name, "%u.%u.%u.%u", &a1, &a2, &a3, &a4) == 4) {
-	    *((unsigned long *) static_result->h_addr_list[0]) = inet_addr(name);
+	    *((unsigned long *) (void *) static_result->h_addr_list[0]) = inet_addr(name);
 	    strncpy(static_result->h_name, name, MAX_HOST_NAME);
 	    return static_result;
 	} else {

@@ -1,20 +1,22 @@
 #!/bin/sh
 #
-#  $Id: RunAccel.in,v 1.2 1996/04/16 16:37:53 wessels Exp $
+#  $Id: RunAccel.in,v 1.3 1996/05/03 22:56:19 wessels Exp $
 
 # enable HTTP requests on port 80
-set port="-a 80"
+port="-a 80"
 
-PATH=@prefix@/bin:/bin
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+PATH=@bindir@:/bin
 export PATH
 
-if test $#argv = 1 ; then
+if test $# = 1 ; then
 	conf="-f $1"
-	shift;
+	shift
 fi
 
 failcount=0
-while test 1 ; do
+while : ; do
 	echo "Running: squid $port -s $conf >> squid.out 2>&1"
 	start=`date '+%d%H%M%S'`
 	squid $port -s $conf >> squid.out 2>&1
@@ -26,7 +28,7 @@ while test 1 ; do
 		failcount=0
 	fi
 	if test $failcount -gt 5 ; then
-		echo "RunCache: EXITING DUE TO REPEATED, FREQUENT FAILURES"
+              echo "RunCache: EXITING DUE TO REPEATED, FREQUENT FAILURES" >&2
 		exit 1
 	fi
 	sleep 10

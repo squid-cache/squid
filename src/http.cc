@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.57 1996/05/01 22:36:31 wessels Exp $ */
+/* $Id: http.cc,v 1.58 1996/05/03 22:56:27 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -474,7 +474,7 @@ static void httpConnInProgress(fd, data)
     debug(11, 5, "httpConnInProgress: FD %d data=%p\n", fd, data);
 
     if (comm_connect(fd, req->host, req->port) != COMM_OK) {
-	debug(11, 5, "httpConnInProgress: FD %d errno=%d\n", fd, errno);
+	debug(11, 5, "httpConnInProgress: FD %d: %s\n", fd, xstrerror());
 	switch (errno) {
 	case EINPROGRESS:
 	case EALREADY:
@@ -484,8 +484,6 @@ static void httpConnInProgress(fd, data)
 		(PF) httpConnInProgress,
 		(void *) data);
 	    return;
-	case EISCONN:
-	    break;		/* cool, we're connected */
 	default:
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    comm_close(fd);
@@ -531,7 +529,7 @@ int proxyhttpStart(e, url, entry)
     /* register the handler to free HTTP state data when the FD closes */
     comm_set_select_handler(sock,
 	COMM_SELECT_CLOSE,
-	httpStateFree,
+	(PF) httpStateFree,
 	(void *) data);
 
     request->method = entry->method;
@@ -602,7 +600,7 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
     data->request = request;
     comm_set_select_handler(sock,
 	COMM_SELECT_CLOSE,
-	httpStateFree,
+	(PF) httpStateFree,
 	(void *) data);
 
     /* check if IP is already in cache. It must be. 

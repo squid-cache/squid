@@ -1,3 +1,10 @@
+
+Changes to squid-1.1.alpha2:
+
+	- Added Support for RFC931/ident
+
+==============================================================================
+
 Changes to squid-1.0.beta1 (Apr 19, 1996) from Harvest cached-1.4.pl3:
 
 	- Added a "server mode" to ftpget.  Now the (much smaller)
@@ -121,7 +128,22 @@ Changes to squid-1.0.beta5:
 	- Fixed cachemgr to send 'HTTP/1.0' on request so it works
 	  with beta4 fixes to icp.c.
 
+Changes to squid-1.0.beta6:
 
-Changes to squid-1.1.alpha2:
-
-	- Support for RFC931/ident
+	- Fixed null error message coredump in ftpget.
+	- Added -m Method option to `client'.
+	- Fixed ftpget server bug with missing trailing slash.
+	- Removed 'connect_ports' from config, use general ACLs instead.
+	- Changed requested listen queue length to 1/4 of getMaxFD().
+	- Rewrote SSL/CONNECT handlers.  Now doesn't use a StoreEntry.
+	- Fixed some aborted objects getting stuck in VM bug.
+	- Fixed ftpget PASV reply sscanf to work for VMS ftpd.
+	- Changed FTP URL parsing to use urlParse().
+	- Changed ftpget to skip RETR command if URLs ends with '/'.
+	- Changed ftpget to display README at the bottom if there are other
+	  server messages.
+	- Changed ftpget to not reopen a new data connection
+  	  if one is already open.
+	- Fixed handling of FTP URLs with spaces (and other unsafe characters)
+	- Changed ftpget to only generate BASE HREF if the FTP URL does
+	  not end with '/'.

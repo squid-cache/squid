@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.64 1996/05/01 22:37:14 wessels Exp $ */
+/* $Id: store.cc,v 1.65 1996/05/03 22:56:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -435,13 +435,14 @@ int storeUnlockObject(e)
 {
     int e_lock_count;
 
-    debug(20, 3, "storeUnlockObject: key '%s' count=%d\n", e->key, e->lock_count);
 
     if ((int) e->lock_count > 0)
 	e->lock_count--;
     else if (e->lock_count == 0) {
 	debug(20, 0, "Entry lock count %d is out-of-whack\n", e->lock_count);
     }
+    debug(20, 3, "storeUnlockObject: key '%s' count=%d\n", e->key, e->lock_count);
+
     /* Prevent UMR if we end up freeing the entry */
     e_lock_count = (int) e->lock_count;
 
@@ -512,18 +513,22 @@ char *storeGeneratePublicKey(url, method)
     switch (method) {
     case METHOD_GET:
 	return url;
+	/* NOTREACHED */
 	break;
     case METHOD_POST:
 	sprintf(key_temp_buffer, "/post/%s", url);
 	return key_temp_buffer;
+	/* NOTREACHED */
 	break;
     case METHOD_HEAD:
 	sprintf(key_temp_buffer, "/head/%s", url);
 	return key_temp_buffer;
+	/* NOTREACHED */
 	break;
     case METHOD_CONNECT:
 	sprintf(key_temp_buffer, "/connect/%s", url);
 	return key_temp_buffer;
+	/* NOTREACHED */
 	break;
     default:
 	fatal_dump("storeGeneratePublicKey: Unsupported request method");
@@ -1491,9 +1496,9 @@ void storeStartRebuildFromDisk()
 
     /* Start reading the log file */
     runInBackground("storeRebuild",
-	storeDoRebuildFromDisk,
+	(int (*)(void *)) storeDoRebuildFromDisk,
 	data,
-	storeRebuiltFromDisk);
+	(void (*)(void *)) storeRebuiltFromDisk);
 }
 
 /* return current swap size in kilo-bytes */

@@ -21,9 +21,9 @@ LN_S		= @LN_S@
 all: 
 
 install:	
-	@if test ! -d $(prefix); then \
-		echo "mkdir $(prefix)"; \
-		mkdir $(prefix); \
+	@if test ! -d $(exec_prefix); then \
+		echo "mkdir $(exec_prefix)"; \
+		mkdir $(exec_prefix); \
 	fi
 	@if test ! -d $(bindir); then \
 		echo "mkdir $(bindir)"; \

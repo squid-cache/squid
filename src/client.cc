@@ -1,5 +1,5 @@
 
-/* $Id: client.cc,v 1.5 1996/05/01 22:36:25 wessels Exp $ */
+/* $Id: client.cc,v 1.6 1996/05/03 22:56:22 wessels Exp $ */
 
 #include "squid.h"
 
@@ -128,6 +128,7 @@ int main(argc, argv)
     (void) close(conn);		/* done with socket */
     exit(0);
     /*NOTREACHED */
+    return 0;
 }
 
 static int client_comm_connect(sock, dest_host, dest_port)
