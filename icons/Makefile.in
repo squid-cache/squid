@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.54 2003/05/05 22:57:16 hno Exp $
+# $Id: Makefile.in,v 1.55 2003/05/21 07:24:40 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -406,7 +406,8 @@ $(ICON1):
 	@$(SHELL) "$(srcdir)/icons.shar"
 
 icons.shar:
-	shar --no-timestamp $(ICON1) $(ICON2) > $@
+	shar --no-timestamp $(ICON1) $(ICON2) > $@ 2>/dev/null || \
+	shar $(ICON1) $(ICON2) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
