@@ -86,7 +86,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
     storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
     if (storeCheckCachable(e)) {
 	storeLog(STORE_LOG_SWAPOUT, e);
-	storeDirSwapLog(e);
+	storeDirSwapLog(e, SWAP_LOG_ADD);
     }
     /* Note, we don't otherwise call storeReleaseRequest() here because
      * storeCheckCachable() does it for is if necessary */
@@ -173,9 +173,9 @@ storeCheckSwapOut(StoreEntry * e)
 	swapout_size = STORE_SWAP_BUF;
     swap_buf = memAllocate(MEM_DISK_BUF, 1);
     swap_buf_len = stmemCopy(mem->data,
-        mem->swapout.queue_offset,
-        swap_buf,
-        swapout_size);
+	mem->swapout.queue_offset,
+	swap_buf,
+	swapout_size);
     if (swap_buf_len < 0) {
 	debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
 	/* XXX This is probably wrong--we should storeRelease()? */

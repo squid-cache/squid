@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.99 1998/02/03 22:08:11 wessels Exp $
+ * $Id: disk.cc,v 1.100 1998/02/04 00:18:00 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -358,7 +358,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 void
 file_write(int fd,
     off_t file_offset,
-    char *ptr_to_buf,
+    void *ptr_to_buf,
     int len,
     DWCB handle,
     void *handle_data,

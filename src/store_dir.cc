@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.43 1998/02/03 22:08:16 wessels Exp $
+ * $Id: store_dir.cc,v 1.44 1998/02/04 00:18:05 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -221,7 +221,7 @@ storeDirValidFileno(int fn)
     SwapDir *SD;
     if (dirn > Config.cacheSwap.n_configured)
 	return 0;
-    SD =  &Config.cacheSwap.swapDirs[dirn];
+    SD = &Config.cacheSwap.swapDirs[dirn];
     if (filn > SD->map->max_n_files)
 	return 0;
     return 1;
@@ -290,32 +290,34 @@ storeDirProperFileno(int dirn, int fn)
 }
 
 void
-storeDirSwapLog(const StoreEntry * e)
+storeDirSwapLog(const StoreEntry * e, int op)
 {
-    LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
+    storeSwapData *s = xcalloc(1, sizeof(storeSwapData));
     int dirn;
-
-    assert(e->swap_file_number >= 0);
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
-#if !USE_ASYNC_IO
-    assert(!EBIT_TEST(e->flag, KEY_PRIVATE));
-#endif
-    /* Note this printf format appears in storeWriteCleanLog() too */
-    snprintf(logmsg, MAX_URL << 1, "%08x %08x %08x %08x %08x %d %6d %08x %s\n",
-	(int) e->swap_file_number,
-	(int) e->timestamp,
-	(int) e->lastref,
-	(int) e->expires,
-	(int) e->lastmod,
-	e->object_len,
-	e->refcount,
-	e->flag,
-	storeKeyText(e->key));
+    if (op == SWAP_LOG_ADD) {
+	assert(!EBIT_TEST(e->flag, KEY_PRIVATE));
+	assert(e->swap_file_number >= 0);
+    }
+    if (op == SWAP_LOG_DEL) {
+	if (e->swap_file_number < 0)	/* was never swapped out */
+	    return;
+    }
+    s->op = (char) op;
+    s->swap_file_number = e->swap_file_number;
+    s->timestamp = e->timestamp;
+    s->lastref = e->lastref;
+    s->expires = e->expires;
+    s->lastmod = e->lastmod;
+    s->object_len = e->object_len;
+    s->refcount = e->refcount;
+    s->flags = e->flag;
+    xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
     file_write(Config.cacheSwap.swapDirs[dirn].swaplog_fd,
 	-1,
-	xstrdup(logmsg),
-	strlen(logmsg),
+	s,
+	sizeof(storeSwapData),
 	NULL,
 	NULL,
 	xfree);

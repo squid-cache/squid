@@ -951,8 +951,21 @@ struct _StatCounters {
 };
 
 struct _tlv {
-	char type;
-	int length;
-	void *value;
-	struct _tlv *next;
+    char type;
+    int length;
+    void *value;
+    struct _tlv *next;
+};
+
+struct _storeSwapData {
+    char op;
+    int swap_file_number;
+    time_t timestamp;
+    time_t lastref;
+    time_t expires;
+    time_t lastmod;
+    int object_len;
+    u_short refcount;
+    u_short flags;
+    char key[MD5_DIGEST_CHARS];
 };

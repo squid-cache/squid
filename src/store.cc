@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.374 1998/02/03 22:08:14 wessels Exp $
+ * $Id: store.cc,v 1.375 1998/02/04 00:18:04 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -716,9 +716,7 @@ storeRelease(StoreEntry * e)
 	storeExpireNow(e);
 	storeSetPrivateKey(e);
 	EBIT_SET(e->flag, RELEASE_REQUEST);
-	e->object_len = -(e->object_len);
-	storeDirSwapLog(e);
-	e->object_len = -(e->object_len);
+	storeDirSwapLog(e, SWAP_LOG_DEL);
 	return;
     }
 #endif
@@ -735,9 +733,7 @@ storeRelease(StoreEntry * e)
 #endif
 	if (e->swap_status == SWAPOUT_DONE)
 	    storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
-	e->object_len = -(e->object_len);
-	storeDirSwapLog(e);
-	e->object_len = -(e->object_len);
+	storeDirSwapLog(e, SWAP_LOG_DEL);
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_StoreEntry(e);
@@ -845,9 +841,9 @@ storeInit(void)
 	fatal(tmp_error_buf);
     }
     storeDirOpenSwapLogs();
-    storeStartRebuildFromDisk();
     store_list.head = store_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
+    storeRebuildStart();
 }
 
 void
