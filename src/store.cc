@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.66 1996/07/09 03:41:43 wessels Exp $
+ * $Id: store.cc,v 1.67 1996/07/11 17:26:05 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1280,7 +1280,7 @@ void storeSwapOutHandle(fd, flag, e)
 	    NULL,
 	    NULL);
 	CacheInfo->proto_newobject(CacheInfo,
-	    CacheInfo->proto_id(e->url),
+	    e->mem_obj->request->protocol,
 	    e->object_len,
 	    FALSE);
 	/* check if it's request to be released. */
@@ -1511,7 +1511,7 @@ static int storeDoRebuildFromDisk(data)
 	    expires,
 	    timestamp);
 	CacheInfo->proto_newobject(CacheInfo,
-	    CacheInfo->proto_id(url),
+	    urlParseProtocol(url),
 	    (int) size,
 	    TRUE);
     }
@@ -1708,11 +1708,9 @@ int storeAbort(e, msg)
     storeLockObject(e, NULL, NULL);
 
     /* Count bytes faulted through cache but not moved to disk */
-    CacheInfo->proto_touchobject(CacheInfo, CacheInfo->proto_id(e->url),
+    CacheInfo->proto_touchobject(CacheInfo,
+	e->mem_obj->request->protocol,
 	e->mem_obj->e_current_len);
-    CacheInfo->proto_touchobject(CacheInfo, CacheInfo->proto_id("abort:"),
-	e->mem_obj->e_current_len);
-
     mk_mime_hdr(mime_hdr,
 	(time_t) getNegativeTTL(),
 	6 + strlen(msg),
@@ -2311,7 +2309,7 @@ int storeRelease(e)
 	e->swap_file_number = -1;
 	store_swap_size -= (e->object_len + 1023) >> 10;
 	CacheInfo->proto_purgeobject(CacheInfo,
-	    CacheInfo->proto_id(e->url),
+	    urlParseProtocol(e->url),
 	    e->object_len);
     }
     if (hptr)
