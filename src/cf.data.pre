@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.282 2002/09/04 03:51:41 wessels Exp $
+# $Id: cf.data.pre,v 1.283 2002/09/04 13:33:13 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3054,11 +3054,16 @@ DOC_START
 DOC_END
 
 NAME: header_access
+IFDEF: HTTP_VIOLATIONS
 TYPE: http_header_access[]
 LOC: Config.header_access
 DEFAULT: none
 DOC_START
 	Usage: header_access header_name allow|deny [!]aclname ...
+
+	WARNING: Doing this VIOLATES the HTTP standard.  Enabling
+	this feature could make you liable for problems which it
+	causes.
 
 	This option replaces the old 'anonymize_headers' and the
 	older 'http_anonymizer' option with something that is much
@@ -3097,7 +3102,7 @@ DOC_START
 		header_access Location allow all
 		header_access Pragma allow all
 		header_access Accept allow all
-		header_access Charset allow all
+		header_access Accept-Charset allow all
 		header_access Accept-Encoding allow all
 		header_access Accept-Language allow all
 		header_access Content-Language allow all
