@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.83 1996/10/07 14:59:39 wessels Exp $
+ * $Id: comm.cc,v 1.84 1996/10/08 21:20:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -942,13 +942,18 @@ commSetTcpRcvbuf(int fd, int size)
 int
 commSetNonBlocking(int fd)
 {
+    int flags;
+    if ((flags = fcntl(fd, F_GETFL)) < 0) {
+	debug(5, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+	return COMM_ERROR;
+    }
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
-    if (fcntl(fd, F_SETFL, O_NONBLOCK)) {
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
 	debug(5, 0, "FD %d: error setting O_NONBLOCK: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
 #else
-    if (fcntl(fd, F_SETFL, O_NDELAY)) {
+    if (fcntl(fd, F_SETFL, flags | O_NDELAY) < 0) {
 	debug(5, 0, "FD %d: error setting O_NDELAY: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
@@ -960,8 +965,13 @@ void
 commSetCloseOnExec(int fd)
 {
 #ifdef FD_CLOEXEC
-    if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
-	debug(5, 0, "comm_open: FD %d: set close-on-exec failed: %s\n",
+    int flags;
+    if ((flags = fcntl(fd, F_GETFL)) < 0) {
+	debug(5, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+	return COMM_ERROR;
+    }
+    if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
+	debug(5, 0, "FD %d: set close-on-exec failed: %s\n",
 	    fd, xstrerror());
     }
 #endif
