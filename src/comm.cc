@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.232 1998/03/06 22:19:32 wessels Exp $
+ * $Id: comm.cc,v 1.233 1998/03/07 05:50:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1167,6 +1167,8 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     close_handler *p;
     close_handler *last = NULL;
     /* Find handler in list */
+    debug(5, 5) ("comm_remove_close_handler: FD %d, handler=%p, data=%p\n",
+	fd, handler, data);
     for (p = fd_table[fd].close_handler; p != NULL; last = p, p = p->next)
 	if (p->handler == handler && p->data == data)
 	    break;		/* This is our handler */
