@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.252 1998/04/02 07:37:16 wessels Exp $
+ * $Id: client_side.cc,v 1.253 1998/04/03 22:05:10 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1257,6 +1257,11 @@ clientProcessRequest2(clientHttpRequest * http)
 	/* this object isn't in the cache */
 	return LOG_TCP_MISS;
     } else if (EBIT_TEST(e->flag, ENTRY_SPECIAL)) {
+	/* ideally, special entries should be processed later, 
+	 * so we can use std processing routines for IMS and such */
+	if (EBIT_TEST(r->flags, REQ_IMS) && e->lastmod <= r->ims)
+	    return LOG_TCP_IMS_HIT;
+	else
 	if (e->mem_status == IN_MEMORY)
 	    return LOG_TCP_MEM_HIT;
 	else
@@ -1355,6 +1360,7 @@ clientProcessRequest(clientHttpRequest * http)
     case LOG_TCP_HIT:
     case LOG_TCP_NEGATIVE_HIT:
     case LOG_TCP_MEM_HIT:
+    case LOG_TCP_IMS_HIT:
 	entry->refcount++;	/* HIT CASE */
 	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientProcessRequest: entry->swap_status == STORE_ABORTED\n");
@@ -1370,6 +1376,7 @@ clientProcessRequest(clientHttpRequest * http)
 	break;
     }
     /* ok, it is a miss or a "dirty" hit (will contact other servers) */
+    /* note: bug: LOG_TCP_IMS_MISS may result in a "pure" hit @?@ */
     /* are we allowed to contact other servers? */
     if (EBIT_TEST(r->flags, REQ_CC_ONLY_IF_CACHED)) {
 	/* future interface: if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) { */
@@ -1418,6 +1425,8 @@ clientProcessMiss(clientHttpRequest * http)
      * or IMS request.
      */
     if (http->entry) {
+	if (EBIT_TEST(http->entry->flag, ENTRY_SPECIAL))
+	    debug(33, 0) ("clientProcessMiss: miss on a special object (%s).\n", url);
 	storeUnregister(http->entry, http);
 	storeUnlockObject(http->entry);
 	http->entry = NULL;

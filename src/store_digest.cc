@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.1 1998/04/02 17:11:27 rousskov Exp $
+ * $Id: store_digest.cc,v 1.2 1998/04/03 22:05:14 rousskov Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -30,6 +30,52 @@
 
 #include "squid.h"
 
+/* local types */
+
+/* digest control block */
+typedef struct {
+    char reserved[128];
+} StoreDigestCBlock;
+
+typedef struct {
+    StoreDigestCBlock cblock;
+    int rebuild_lock;         /* bucket number */
+    StoreEntry *rewrite_lock; /* store entry with the digest */
+    const char *other_lock;   /* used buy external modules to pause rebuilds and rewrites */
+    int rebuild_offset;
+    int rewrite_offset;
+    int rebuild_count;
+    int rewrite_count;    
+} StoreDigestState;
+
+/*
+ * local constants (many of these are good candidates for SquidConfig
+ */
+
+/* fake url suffix */
+static const char *StoreDigestUrl = "cache_digest";
+/* how often we want to rebuild the digest, seconds */
+static const time_t StoreDigestRebuildPeriod = 60*60;
+/* how often we want to rewrite the digest, seconds */
+static const time_t StoreDigestRewritePeriod = 60*60;
+/* how many bytes to swap out at a time */
+static const int StoreDigestSwapOutChunkSize = SM_PAGE_SIZE;
+/* portion (0,1] of a hash table to be rescanned at a time */
+static const double StoreDigestRebuildChunkPercent = 0.10;
+/* local vars */
+
+static StoreDigestState sd_state;
+
+/* local prototypes */
+static void storeDigestRebuild(void *datanotused);
+static void storeDigestRebuildFinish();
+static void storeDigestRebuildStep(void *datanotused);
+static void storeDigestRewrite();
+static void storeDigestRewriteFinish(StoreEntry *e);
+static void storeDigestSwapOutStep(StoreEntry *e);
+static void storeDigestCBlockSwapOut(StoreEntry *e);
+
+
 void
 storeDigestInit()
 {
@@ -39,21 +85,199 @@ storeDigestInit()
      * number of _entries_ we want to pre-allocate for.
      * Use 1.5*max#entries because 2*max#entries gives about 40% utilization.
      */
-    const int cap = (int)(1.5 * Config.Swap.maxSize / Config.Store.avgObjectSize);
 #if SQUID_MAINTAIN_CACHE_DIGEST
+    const int cap = (int)(1.5 * Config.Swap.maxSize / Config.Store.avgObjectSize);
     store_digest = cacheDigestCreate(cap);
+    debug(71, 1) ("Using %d byte cache digest; rebuild/rewrite every %d/%d sec\n",
+	store_digest->mask_size, StoreDigestRebuildPeriod, StoreDigestRewritePeriod);
 #else
     store_digest = NULL;
+    debug(71, 1) ("Local cache digest is 'off'\n");
 #endif
+    memset(&sd_state, 0, sizeof(sd_state));
     cachemgrRegister("store_digest", "Store Digest",
         storeDigestReport, 0);
 }
 
-/* rebuilds digest from scratch */
+/* you probably want to call this before storeDigestRewriteContinue() */
 void
-storeDigestRebuild()
+storeDigestScheduleRebuild()
+{
+    eventAdd("storeDigestRebuild", storeDigestRebuild, NULL, StoreDigestRebuildPeriod);
+}
+
+/* externally initiated rewrite (inits store entry and pauses) */
+void
+storeDigestRewriteStart(const char *initiator) {
+    assert(initiator);
+    assert(!sd_state.other_lock);
+    sd_state.other_lock = initiator;
+    storeDigestRewrite(NULL);
+}
+
+/* continue externally initiated rewrite */
+void
+storeDigestRewriteContinue(const char *initiator) {
+    assert(initiator);
+    assert(!strcmp(sd_state.other_lock, initiator));
+    assert(sd_state.rewrite_lock);
+    sd_state.other_lock = NULL;
+    storeDigestSwapOutStep(sd_state.rewrite_lock);
+}
+
+/* rebuilds digest from scratch */
+static void
+storeDigestRebuild(void *datanotused)
 {
     assert(store_digest);
+    /* prevent overlapping if rebuild schedule is too tight */
+    if (sd_state.rebuild_lock) {
+	debug(71, 1) ("storeDigestRebuild: overlap detected, consider increasing rebuild period\n");
+	return;
+    }
+    sd_state.rebuild_lock = 1;
+    sd_state.rebuild_offset = 0;
+    /* not clean()! */
+    cacheDigestClear(store_digest);
+    debug(71, 2) ("storeDigestRebuild: start rebuild #%d\n", sd_state.rebuild_count+1);
+    storeDigestRebuildStep(NULL);
+}
+
+/* finishes swap out sequence for the digest; schedules next rebuild */
+static void
+storeDigestRebuildFinish()
+{
+    assert(sd_state.rebuild_lock);
+    sd_state.rebuild_lock = 0;
+    sd_state.rebuild_count++;
+    debug(71, 2) ("storeDigestRebuildFinish: done.\n");
+    storeDigestScheduleRebuild();
+    /* resume pending write if any */
+    if (sd_state.rewrite_lock)
+	storeDigestSwapOutStep(sd_state.rewrite_lock);
+}
+
+/* recalculate a few hash buckets per invocation; schedules next step */
+static void
+storeDigestRebuildStep(void *datanotused)
+{
+    int bcount = (int)ceil(store_hash_buckets*StoreDigestRebuildChunkPercent);
+    assert(sd_state.rebuild_lock);
+    if (sd_state.rebuild_offset + bcount > store_hash_buckets)
+	bcount = store_hash_buckets - sd_state.rebuild_offset;
+    debug(71, 3) ("storeDigestRebuildStep: buckets: %d offset: %d chunk: %d buckets\n",
+	store_hash_buckets, sd_state.rebuild_offset, bcount);
+    while (bcount--) {
+	hash_link *link_ptr = hash_get_bucket(store_table, sd_state.rebuild_offset);
+	for (; link_ptr; link_ptr = link_ptr->next) {
+	    StoreEntry *e = (StoreEntry *) link_ptr;
+	    if (!EBIT_TEST(e->flag, KEY_PRIVATE))
+		cacheDigestAdd(store_digest, e->key);
+	}
+	sd_state.rebuild_offset++;
+    }
+    /* are we done ? */
+    if (sd_state.rebuild_offset >= store_hash_buckets)
+	storeDigestRebuildFinish();
+    else
+	eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0);
+}
+
+
+/* starts swap out sequence for the digest */
+static void
+storeDigestRewrite(void *datanotused)
+{
+    int flags;
+    StoreEntry *e;
+    char url[MAX_URL];
+
+    assert(store_digest);
+    /* prevent overlapping if rewrite schedule is too tight */
+    if (sd_state.rewrite_lock) {
+	debug(71, 1) ("storeDigestRewrite: overlap detected, consider increasing rewrite period\n");
+	return;
+    }
+    debug(71, 2) ("storeDigestRewrite: start rewrite #%d\n", sd_state.rewrite_count+1);
+    /* make new store entry */
+    snprintf(url, sizeof(url), "http://%s:%d/squid-internal/%s",
+	getMyHostname(), Config.Port.http->i, StoreDigestUrl);
+    flags = 0;
+    EBIT_SET(flags, REQ_CACHABLE);
+    e = storeCreateEntry(url, url, flags, METHOD_GET);
+    assert(e);
+    sd_state.rewrite_lock = e;
+    sd_state.rewrite_offset = 0;
+    EBIT_SET(e->flag, ENTRY_SPECIAL);
+    /* this will purge old digest entry if any */
+    storeSetPublicKey(e);
+    e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
+    httpReplyReset(e->mem_obj->reply);
+    httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, "Cache Digest OK",
+	"application/cache-digest", store_digest->mask_size+sizeof(sd_state.cblock),
+	squid_curtime, squid_curtime + StoreDigestRewritePeriod);
+    storeBuffer(e);
+    httpReplySwapOut(e->mem_obj->reply, e);
+    storeDigestCBlockSwapOut(e);
+    storeBufferFlush(e);
+    if (sd_state.other_lock) {
+	debug(71, 2) ("storeDigestRewrite: waiting for %s to finish.\n", sd_state.other_lock);
+	return;
+    }
+    storeDigestSwapOutStep(e);
+}
+
+/* finishes swap out sequence for the digest; schedules next rewrite */
+static void
+storeDigestRewriteFinish(StoreEntry *e)
+{
+    assert(e);
+    assert(e == sd_state.rewrite_lock);
+    storeComplete(e);
+    storeTimestampsSet(e);
+    storeUnlockObject(e);
+    sd_state.rewrite_lock = NULL;
+    sd_state.rewrite_count++;
+    debug(71, 2) ("storeDigestRewriteFinish: done.\n");
+    eventAdd("storeDigestRewrite", storeDigestRewrite, NULL, StoreDigestRewritePeriod);
+}
+
+/* swaps out one digest "chunk" per invocation; schedules next swap out */
+static void
+storeDigestSwapOutStep(StoreEntry *e)
+{
+    int chunk_size = StoreDigestSwapOutChunkSize;
+    assert(e);
+    assert(!sd_state.other_lock);
+    assert(e == sd_state.rewrite_lock);
+    /* wait for rebuild (if any) to finish @?@ */
+    if (sd_state.rebuild_lock) {
+	debug(71, 2) ("storeDigestRewrite: waiting for rebuild to finish.\n");
+	return;
+    }
+    /* _add_ check that nothing bad happened while we were waiting @?@ @?@ */
+    if (sd_state.rewrite_offset + chunk_size > store_digest->mask_size)
+	chunk_size = store_digest->mask_size - sd_state.rewrite_offset;
+    storeAppend(e, store_digest->mask + sd_state.rewrite_offset, chunk_size);
+    debug(71, 3) ("storeDigestSwapOutStep: size: %d offset: %d chunk: %d bytes\n",
+	store_digest->mask_size, sd_state.rewrite_offset, chunk_size);
+    sd_state.rewrite_offset += chunk_size;
+    /* are we done ? */
+    if (sd_state.rewrite_offset >= store_digest->mask_size)
+	storeDigestRewriteFinish(e);
+    else
+	eventAdd("storeDigestSwapOutStep", (EVH*) storeDigestSwapOutStep, e, 0);
+}
+
+static void
+storeDigestCBlockSwapOut(StoreEntry *e)
+{
+    /*
+     * when we actually start using control block, do not forget to convert to
+     * network byte order if needed
+     */
+    memset(&sd_state.cblock, 0, sizeof(sd_state.cblock));
+    storeAppend(e, (char*) &sd_state.cblock, sizeof(sd_state.cblock));
 }
 
 void

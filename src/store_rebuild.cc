@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.27 1998/04/02 17:11:27 rousskov Exp $
+ * $Id: store_rebuild.cc,v 1.28 1998/04/03 22:05:15 rousskov Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -564,7 +564,7 @@ storeAddDiskRestore(const cache_key * key,
     return e;
 }
 
-void
+static void
 storeCleanup(void *datanotused)
 {
     static int bucketnum = -1;
@@ -579,6 +579,8 @@ storeCleanup(void *datanotused)
 	store_rebuilding = 0;
 	if (opt_store_doublecheck)
 	    assert(store_errors == 0);
+	if (store_digest)
+	    storeDigestRewriteContinue("store-rebuild");
 	return;
     }
     link_ptr = hash_get_bucket(store_table, bucketnum);
@@ -740,6 +742,8 @@ storeRebuildStart(void)
     int i;
     memset(&RebuildState, '\0', sizeof(RebuildState));
     RebuildState.start = squid_curtime;
+    if (store_digest)
+	storeDigestRewriteStart("store-rebuild");
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	d = xcalloc(1, sizeof(rebuild_dir));
 	d->dirn = i;
