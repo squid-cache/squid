@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.93 2000/05/31 04:27:20 wessels Exp $
+ * $Id: store_client.cc,v 1.94 2000/06/26 22:46:14 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -515,6 +515,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 	storeClose(sc->swapin_sio);
 	cbdataUnlock(sc->swapin_sio);
 	sc->swapin_sio = NULL;
+	Counter.swap.ins++;
     }
     if (NULL != sc->callback) {
 	/* callback with ssize = -1 to indicate unexpected termination */
