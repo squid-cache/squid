@@ -234,7 +234,7 @@ rn_lookup(v_arg, m_arg, head)
 }
 
 static
-int 
+int
 rn_satsifies_leaf(trial, leaf, skip)
      char *trial;
      register struct radix_node *leaf;

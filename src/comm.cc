@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.213 1997/12/03 04:39:07 wessels Exp $
+ * $Id: comm.cc,v 1.214 1997/12/30 02:47:40 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -503,7 +503,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 	     * we get into fast loops on EALREADY.  select(2) continually
 	     * says the FD is ready for writing, but connect always
 	     * returns EALREADY. I applied a patch (PHNE_12906) but
-	     * it didn't help.	-DW Dec 1, 1997
+	     * it didn't help.  -DW Dec 1, 1997
 	     */
 	    debug(50, 1) ("connect: %s:%d: %s.\n",
 		fqdnFromAddr(address->sin_addr),

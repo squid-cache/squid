@@ -51,11 +51,11 @@
 #define S43 15
 #define S44 21
 
-static void MD5Transform (u_num32[4], unsigned char[64]);
-static void Encode (unsigned char *, u_num32 *, unsigned int);
-static void Decode (u_num32 *, unsigned char *, unsigned int);
-static void MD5_memcpy (char *, char *, unsigned int);
-static void MD5_memset (char *, int, unsigned int);
+static void MD5Transform(u_num32[4], unsigned char[64]);
+static void Encode(unsigned char *, u_num32 *, unsigned int);
+static void Decode(u_num32 *, unsigned char *, unsigned int);
+static void MD5_memcpy(char *, char *, unsigned int);
+static void MD5_memset(char *, int, unsigned int);
 
 static unsigned char PADDING[64] =
 {
@@ -106,7 +106,7 @@ static unsigned char PADDING[64] =
  * MD5 initialization. Begins an MD5 operation, writing a new context.
  */
 void
-MD5Init(MD5_CTX *context)
+MD5Init(MD5_CTX * context)
 {
     context->count[0] = context->count[1] = 0;
     /*
@@ -123,7 +123,7 @@ MD5Init(MD5_CTX *context)
  * processing another message block, and updating the context.
  */
 void
-MD5Update(MD5_CTX *context, unsigned char *input, unsigned int inputLen)
+MD5Update(MD5_CTX * context, unsigned char *input, unsigned int inputLen)
 {
     unsigned int i, index, partLen;
 
@@ -163,7 +163,7 @@ MD5Update(MD5_CTX *context, unsigned char *input, unsigned int inputLen)
  * message digest and zeroizing the context.
  */
 void
-MD5Final(unsigned char digest[16], MD5_CTX *context)
+MD5Final(unsigned char digest[16], MD5_CTX * context)
 {
     unsigned char bits[8];
     unsigned int index, padLen;
@@ -186,7 +186,7 @@ MD5Final(unsigned char digest[16], MD5_CTX *context)
     /*
      * Zeroize sensitive information.
      */
-    MD5_memset((char *)context, 0, sizeof(*context));
+    MD5_memset((char *) context, 0, sizeof(*context));
 }
 
 /*
@@ -279,7 +279,7 @@ MD5Transform(u_num32 state[4], unsigned char block[64])
     /*
      * Zeroize sensitive information.
      */
-    MD5_memset((char *)x, 0, sizeof(x));
+    MD5_memset((char *) x, 0, sizeof(x));
 }
 
 /*
@@ -287,7 +287,7 @@ MD5Transform(u_num32 state[4], unsigned char block[64])
  * multiple of 4.
  */
 static void
-Encode(unsigned char *output, u_num32 *input, unsigned int len)
+Encode(unsigned char *output, u_num32 * input, unsigned int len)
 {
     unsigned int i, j;
 
@@ -304,7 +304,7 @@ Encode(unsigned char *output, u_num32 *input, unsigned int len)
  * multiple of 4.
  */
 static void
-Decode(u_num32 *output, unsigned char *input, unsigned int len)
+Decode(u_num32 * output, unsigned char *input, unsigned int len)
 {
     unsigned int i, j;
 
@@ -318,7 +318,7 @@ Decode(u_num32 *output, unsigned char *input, unsigned int len)
  */
 
 static void
-MD5_memcpy(char * output, char * input, unsigned int len)
+MD5_memcpy(char *output, char *input, unsigned int len)
 {
     unsigned int i;
     for (i = 0; i < len; i++)
@@ -329,7 +329,7 @@ MD5_memcpy(char * output, char * input, unsigned int len)
  * Note: Replace "for loop" with standard memset if possible.
  */
 static void
-MD5_memset(char * output, int value, unsigned int len)
+MD5_memset(char *output, int value, unsigned int len)
 {
     unsigned int i;
     for (i = 0; i < len; i++)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.178 1997/12/30 02:47:03 wessels Exp $
+ * $Id: client_side.cc,v 1.179 1997/12/30 02:47:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1223,11 +1223,11 @@ clientProcessRequest(clientHttpRequest * http)
 	    storeReleaseRequest(http->entry);
 	    storeBuffer(http->entry);
 	    hdr = httpReplyHeader(1.0,
-        	HTTP_OK,
-        	"text/plain",
-        	r->headers_sz,
-        	0,
-        	squid_curtime);
+		HTTP_OK,
+		"text/plain",
+		r->headers_sz,
+		0,
+		squid_curtime);
 	    storeAppend(http->entry, hdr, strlen(hdr));
 	    storeAppend(http->entry, "\r\n", 2);
 	    storeAppend(http->entry, r->headers, r->headers_sz);
