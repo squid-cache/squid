@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.280 1998/04/20 18:32:46 wessels Exp $
+ * $Id: client_side.cc,v 1.281 1998/04/21 21:28:13 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -847,7 +847,8 @@ clientCachable(clientHttpRequest * http)
      */
     ch.src_addr = http->conn->peer.sin_addr;
     ch.request = http->request;
-    if (aclCheckFast(Config.accessList.noCache, &ch))
+    /* aclCheckFast returns 0 if there is a match with "no_cache deny" acl */
+    if (!aclCheckFast(Config.accessList.noCache, &ch))
 	    return 0;
     if (Config.cache_stop_relist)
 	if (aclMatchRegex(Config.cache_stop_relist, url))
