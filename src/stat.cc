@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.17 1996/04/05 17:47:47 wessels Exp $ */
+/* $Id: stat.cc,v 1.18 1996/04/10 03:52:56 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -630,25 +630,25 @@ void info_get(obj, sentry)
     sprintf(line, "{\t\tStoreEntry %d x %d bytes = %d KB}\n",
 	meta_data.store_entries,
 	(int) sizeof(StoreEntry),
-	(int) meta_data.store_entries * sizeof(StoreEntry) >> 10);
+	(int) (meta_data.store_entries * sizeof(StoreEntry) >> 10));
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\t\tStoreMemObject %d x %d bytes = %d KB}\n",
 	meta_data.store_in_mem_objects,
 	(int) sizeof(MemObject),
-	(int) meta_data.store_in_mem_objects * sizeof(MemObject) >> 10);
+	(int) (meta_data.store_in_mem_objects * sizeof(MemObject) >> 10));
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\t\tIPCacheEntry %d x %d bytes = %d KB}\n",
 	meta_data.ipcache_count,
 	(int) sizeof(ipcache_entry),
-	(int) meta_data.ipcache_count * sizeof(ipcache_entry) >> 10);
+	(int) (meta_data.ipcache_count * sizeof(ipcache_entry) >> 10));
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\t\tHash link  %d x %d bytes = %d KB}\n",
 	meta_data.hash_links = hash_links_allocated,
 	(int) sizeof(hash_link),
-	(int) meta_data.hash_links * sizeof(hash_link) >> 10);
+	(int) (meta_data.hash_links * sizeof(hash_link) >> 10));
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\t\tURL strings %d KB}\n",
