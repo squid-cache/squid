@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.299 1999/01/18 22:23:32 wessels Exp $
+ * $Id: comm.cc,v 1.300 1999/04/23 02:57:20 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -325,7 +325,6 @@ commResetFD(ConnectStateData * cs)
     commSetCloseOnExec(cs->fd);
     if (Config.Addrs.tcp_outgoing.s_addr != no_addr.s_addr) {
 	if (commBind(cs->fd, Config.Addrs.tcp_outgoing, 0) != COMM_OK) {
-	    comm_close(cs->fd);
 	    return 0;
 	}
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.20 1999/01/19 02:24:33 wessels Exp $
+ * $Id: store_key_md5.cc,v 1.21 1999/04/23 02:57:38 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -101,21 +101,6 @@ storeKeyPrivate(const char *url, method_t method, int id)
 	RequestMethodStr[method], url);
     MD5Init(&M);
     MD5Update(&M, (unsigned char *) &id, sizeof(id));
-    MD5Update(&M, (unsigned char *) &method, sizeof(method));
-    MD5Update(&M, (unsigned char *) url, strlen(url));
-    MD5Final(digest, &M);
-    return digest;
-}
-
-/*
- * Compatibility transition period.  Remove this after Mar 26, 1998
- */
-const cache_key *
-storeKeyPublicOld(const char *url, const method_t method)
-{
-    static cache_key digest[MD5_DIGEST_CHARS];
-    MD5_CTX M;
-    MD5Init(&M);
     MD5Update(&M, (unsigned char *) &method, sizeof(method));
     MD5Update(&M, (unsigned char *) url, strlen(url));
     MD5Final(digest, &M);

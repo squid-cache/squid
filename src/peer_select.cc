@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.98 1999/01/29 23:01:07 wessels Exp $
+ * $Id: peer_select.cc,v 1.99 1999/04/23 02:57:28 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -420,6 +420,8 @@ peerGetSomeParent(ps_state * ps)
     debug(44, 3) ("peerGetSomeParent: %s %s\n",
 	RequestMethodStr[request->method],
 	request->host);
+    if (ps->direct == DIRECT_YES)
+	return;
     if ((p = getDefaultParent(request))) {
 	code = DEFAULT_PARENT;
     } else if ((p = getRoundRobinParent(request))) {

@@ -1,6 +1,7 @@
 
 /*
- * $Id: store_client.cc,v 1.62 1999/04/15 06:16:11 wessels Exp $
+ * $Id: store_client.cc,v 1.63 1999/04/23 02:57:37 wessels Exp $
+ * $Id: store_client.cc,v 1.63 1999/04/23 02:57:37 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -133,6 +134,10 @@ storeClientListAdd(StoreEntry * e, void *data)
     for (T = &mem->clients; *T; T = &(*T)->next);
     *T = sc;
 #if DELAY_POOLS
+    delayRegisterDelayIdPtr(&sc->delay_id);
+#endif
+#if DELAY_POOLS
+    sc->delay_id = 0;
     delayRegisterDelayIdPtr(&sc->delay_id);
 #endif
 }

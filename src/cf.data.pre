@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.147 1999/04/15 06:15:47 wessels Exp $
+# $Id: cf.data.pre,v 1.148 1999/04/23 02:57:19 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -35,8 +35,8 @@ COMMENT_START
 	------------------
 
 	This is the default Squid configuration file. You may wish
-	to look at http://cache.is.co.za/squid/ for documentation,
-	or the Squid home page (http://squid.nlanr.net/) for the FAQ.
+	to look at the Squid home page (http://squid.nlanr.net/)
+	for the FAQ and other documentation.
 
 	The default Squid config file shows what the defaults for
 	various options happen to be.  If you don't need to change the
@@ -92,6 +92,8 @@ DOC_START
 	and from neighbor caches.  Default is 4827.  To disable use
 	"0".
 
+	To enable this option, you must use --enable-htcp with the
+	configure script.
 htcp_port 4827
 DOC_END
 
@@ -777,6 +779,9 @@ DOC_START
 	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
 	ident_lookup_access allow ident_aware_hosts
 	ident_lookup_access deny all
+
+	This option may be disabled by using --disable-ident with
+	the configure script.
 ident_lookup_access deny all
 DOC_END
 
@@ -1097,8 +1102,8 @@ DOC_START
 	description of Squid's refresh algorithm.  Basically a
 	cached object is: (the order is changed from 1.1.X)
 
-		STALE if age > max
 		FRESH if expires < now, else STALE
+		STALE if age > max
 		FRESH if lm-factor < percent, else STALE
 		FRESH if age < min
 		else STALE
@@ -1108,7 +1113,9 @@ DOC_START
 	match, then the default will be used.
 
 Default:
-refresh_pattern 	.	0 20% 4320
+refresh_pattern		^ftp:		1440	20%	10080
+refresh_pattern		^gopher:	1440	0%	1440
+refresh_pattern 	.		0	20%	4320
 DOC_END
 
 
@@ -1371,6 +1378,9 @@ DOC_START
 	and you enabled 'ident_lookup', then you might be susceptible
 	to denial-of-service by having many ident requests going at
 	once.
+
+	This option may be disabled by using --disable-ident with
+	the configure script.
 ident_timeout 10 seconds
 DOC_END
 
@@ -2202,6 +2212,8 @@ DOC_START
 	
 	see also refresh_pattern for a more selective approach.
 
+	This option may be disabled by using --disable-http-violations
+	with the configure script.
 reload_into_ims off
 DOC_END
 
@@ -2500,6 +2512,8 @@ DOC_START
 	if you have one class 2 delay pool and one class 3 delays pool, you
 	have a total of 2 delay pools.
 
+	To enable this option, you must use --enable-delay-pools with the
+	configure script.
 delay_pools 0
 DOC_END
 

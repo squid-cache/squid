@@ -1,6 +1,7 @@
 
 /*
- * $Id: protos.h,v 1.320 1999/04/19 05:01:24 wessels Exp $
+ * $Id: protos.h,v 1.321 1999/04/23 02:57:29 wessels Exp $
+ * $Id: protos.h,v 1.321 1999/04/23 02:57:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -95,6 +96,7 @@ extern int parseConfigFile(const char *file_name);
 extern void intlistDestroy(intlist **);
 extern int intlistFind(intlist * list, int i);
 extern wordlist *wordlistAdd(wordlist **, const char *);
+extern wordlist *wordlistDup(const wordlist *);
 extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
 extern void wordlistCat(const wordlist *, MemBuf * mb);
@@ -859,7 +861,6 @@ extern void storeKeyFree(const cache_key *);
 extern const cache_key *storeKeyScan(const char *);
 extern const char *storeKeyText(const cache_key *);
 extern const cache_key *storeKeyPublic(const char *, const method_t);
-extern const cache_key *storeKeyPublicOld(const char *, const method_t);
 extern const cache_key *storeKeyPrivate(const char *, method_t, int);
 extern int storeKeyHashBuckets(int);
 extern int storeKeyNull(const cache_key *);
