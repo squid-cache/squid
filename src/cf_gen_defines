@@ -20,7 +20,11 @@ BEGIN {
 	define["USE_REFERER_LOG"]="--enable-referer-log"
 }
 /^IFDEF:/ {
-	print "{\"" $2 "\", \"" (define[$2] != "" ? define[$2] : ("-D" $2)) "\", "
+	if (define[$2] != "")
+	    DEFINE=define[$2]
+	else  
+	    DEFINE="-D" $2
+	print "{\"" $2 "\", \"" DEFINE "\", "
 	print "#if " $2
 	print "1"
 	print "#else"
