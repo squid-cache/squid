@@ -1,11 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.15 2002/09/29 21:41:18 hno Exp $
+# $Id: Makefile.am,v 1.16 2002/11/21 12:35:52 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
-DIST_SUBDIRS	= lib snmplib scripts src icons errors contrib doc helpers
-SUBDIRS		= lib @makesnmplib@ scripts src icons errors doc helpers
+DIST_SUBDIRS	= lib snmplib scripts src icons errors contrib doc helpers test-suite 
+SUBDIRS		= lib @makesnmplib@ scripts src icons errors doc helpers test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 DEFAULT_PINGER		= $(libexecdir)/pinger$(EXEEXT)
