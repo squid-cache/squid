@@ -14,6 +14,10 @@ Changes to Squid-2.1 ():
 	  bugs.
 	- Configurable handling of whitespace in request URI's.
 	  See 'uri_whitespace' in squid.conf.
+	- Eliminated refreshWhen() which was out-of-sync with refreshCheck()
+	  potentially causing under-utilized cache digests
+	- Maintain refreshCheck statistics on per-protocol basis so we
+	  can tell why ICP or Digests return too many misses, etc.
 
 Changes to Squid-2.0 (October 2, 1998):
 

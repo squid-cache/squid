@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.280 1998/10/16 20:02:47 wessels Exp $
+ * $Id: protos.h,v 1.281 1998/10/17 04:34:11 rousskov Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -643,8 +643,9 @@ extern void authenticateInit(void);
 extern void authenticateShutdown(void);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
-extern int refreshCheck(const StoreEntry *, request_t *, time_t delta);
-extern time_t refreshWhen(const StoreEntry * entry);
+extern int refreshCheckHTTP(const StoreEntry *, request_t *);
+extern int refreshCheckICP(const StoreEntry *, request_t *);
+extern int refreshCheckDigest(const StoreEntry *, time_t delta);
 extern time_t getMaxAge(const char *url);
 extern void refreshInit(void);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.54 1998/10/13 20:35:55 wessels Exp $
+ * $Id: icp_v2.cc,v 1.55 1998/10/17 04:34:10 rousskov Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -173,7 +173,7 @@ icpCheckUdpHit(StoreEntry * e, request_t * request)
 	return 0;
     if (Config.onoff.icp_hit_stale)
 	return 1;
-    if (refreshCheck(e, request, 30))
+    if (refreshCheckICP(e, request))
 	return 0;
     return 1;
 }
