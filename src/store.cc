@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.153 1996/11/06 23:15:01 wessels Exp $
+ * $Id: store.cc,v 1.154 1996/11/07 00:30:05 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -748,6 +748,7 @@ storeCreateEntry(const char *url,
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
+    int i;
     debug(20, 3, "storeCreateEntry: '%s' icp flags=%x\n", url, flags);
 
     e = new_StoreEntry(WITH_MEMOBJ);
@@ -791,8 +792,9 @@ storeCreateEntry(const char *url,
 
     /* allocate client list */
     mem->nclients = MIN_CLIENT;
-    mem->clients =
-	xcalloc(mem->nclients, sizeof(struct _store_client));
+    mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
+    for (i=0; i<mem->nclients; i++)
+	mem->clients[i].fd = -1;
     /* storeLog(STORE_LOG_CREATE, e); */
     return e;
 }
@@ -2190,8 +2192,9 @@ storeClientListAdd(StoreEntry * e, int fd, int last_offset)
     /* look for empty slot */
     if (mem->clients == NULL) {
 	mem->nclients = MIN_CLIENT;
-	mem->clients =
-	    xcalloc(mem->nclients, sizeof(struct _store_client));
+	mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
+        for (i=0; i<mem->nclients; i++)
+    	    mem->clients[i].fd = -1;
     }
     for (i = 0; i < mem->nclients; i++) {
 	if (mem->clients[i].fd == -1)
@@ -2203,8 +2206,7 @@ storeClientListAdd(StoreEntry * e, int fd, int last_offset)
 	oldlist = mem->clients;
 	oldsize = mem->nclients;
 	mem->nclients <<= 1;
-	mem->clients =
-	    xcalloc(mem->nclients, sizeof(struct _store_client));
+	mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
 	for (i = 0; i < oldsize; i++)
 	    mem->clients[i] = oldlist[i];
 	for (; i < mem->nclients; i++)
