@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.175 1999/05/26 20:41:15 wessels Exp $
+#  $Id: Makefile.in,v 1.176 1999/05/27 05:56:31 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -369,7 +369,6 @@ clean:
 
 distclean:	clean
 	-rm -f Makefile squid.conf squid.conf.pre
-	-rm -f Makefile.in
 
 tags:
 	ctags *.[ch] ../include/*.h ../lib/*.[ch]
