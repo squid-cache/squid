@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.12 2003/07/06 12:03:40 hno Exp $
+ * $Id: comm_poll.cc,v 1.13 2003/07/06 14:16:57 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -434,6 +434,9 @@ comm_select(int msec)
             assert(shutting_down);
             return COMM_SHUTDOWN;
         }
+
+        if (comm_iocallbackpending())
+            npending++;
 
         if (npending)
             msec = 0;

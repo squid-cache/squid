@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.379 2003/06/24 12:42:25 robertc Exp $
+ * $Id: comm.cc,v 1.380 2003/07/06 14:16:56 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -580,6 +580,8 @@ comm_calliocallback(void)
      */
     PROF_start(comm_calliocallback);
 
+    debug(5, 7) ("comm_calliocallback: %p\n", CommCallbackList.head);
+
     while (CommCallbackList.head != NULL && oldseqnum != ((CommCallbackData *)CommCallbackList.head->data)->result.seqnum) {
         dlink_node *node = (dlink_node *)CommCallbackList.head;
         cio = (CommCallbackData *)node->data;
@@ -588,6 +590,13 @@ comm_calliocallback(void)
     }
 
     PROF_stop(comm_calliocallback);
+}
+
+bool
+comm_iocallbackpending(void)
+{
+    debug(5, 7) ("comm_iocallbackpending: %p\n", CommCallbackList.head);
+    return CommCallbackList.head != NULL;
 }
 
 void
