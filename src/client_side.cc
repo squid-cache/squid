@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.341 1998/07/04 00:34:07 wessels Exp $
+ * $Id: client_side.cc,v 1.342 1998/07/04 00:41:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1440,8 +1440,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	if (rep) {
 	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
-	    if (body_size)
-	        body_buf = buf + rep->hdr_sz;
+	    body_buf = buf + rep->hdr_sz;
 	    http->range_iter.prefix_size = rep->hdr_sz;
 	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
 		body_size, rep->hdr_sz);
@@ -1464,19 +1463,16 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	if (rep) {
 	    /* do not forward body for HEAD replies */
 	    body_size = 0;
-	    body_buf = NULL;
 	    http->flags.done_copying = 1;
 	} else {
 	    /* unparseable reply, stop and end-of-headers */
 	    body_size = headersEnd(buf, size);
 	    if (body_size)
 		http->flags.done_copying = 1;
-	    else
-	        body_buf = NULL;
 	}
     }
     /* write headers and/or body if any */
-    assert(rep || body_buf);
+    assert(rep || (body_buf && body_size));
     /* init mb; put status line and headers if any */
     if (rep) {
 	mb = httpReplyPack(rep);
@@ -1487,8 +1483,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	memBufInit(&mb, SM_PAGE_SIZE, 2 * SM_PAGE_SIZE);
     }
     /* append body if any */
-    if (body_buf) {
-	assert(body_size > 0);
+    if (body_buf && body_size) {
 	if (http->request->range) {
 	    assert(http->request->method == METHOD_PUT);
 	    /* Returning out.offset its physical meaning; Argh! @?@ @?@ */
