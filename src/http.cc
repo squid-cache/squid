@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.59 1996/07/09 03:41:28 wessels Exp $
+ * $Id: http.cc,v 1.60 1996/07/12 17:39:00 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -115,6 +115,18 @@ struct {
     int clen;
     int ctype;
 } ReplyHeaderStats;
+
+static int httpStateFree _PARAMS((int fd, HttpStateData *));
+static void httpReadReplyTimeout _PARAMS((int fd, HttpStateData *));
+static void httpLifetimeExpire _PARAMS((int fd, HttpStateData *));
+static void httpMakePublic _PARAMS((StoreEntry *));
+static void httpMakePrivate _PARAMS((StoreEntry *));
+static void httpCacheNegatively _PARAMS((StoreEntry *));
+static void httpReadReply _PARAMS((int fd, HttpStateData *));
+static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
+static void httpSendRequest _PARAMS((int fd, HttpStateData *));
+static void httpConnInProgress _PARAMS((int fd, HttpStateData *));
+static int httpConnect _PARAMS((int fd, struct hostent *, void *));
 
 static int httpStateFree(fd, httpState)
      int fd;
@@ -675,7 +687,6 @@ int proxyhttpStart(e, url, entry)
      StoreEntry *entry;
 {
     int sock;
-    int status;
     HttpStateData *httpState = NULL;
     request_t *request = NULL;
 
@@ -713,34 +724,53 @@ int proxyhttpStart(e, url, entry)
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(request->host, IP_BLOCKING_LOOKUP)) {
-	debug(11, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
+    ipcache_nbgethostbyname(request->host,
+	sock,
+	(IPH) httpConnect,
+	httpState);
+    return COMM_OK;
+}
+
+static int httpConnect(fd, hp, data)
+	int fd;
+	struct hostent *hp;
+	void *data;
+{
+    HttpStateData *httpState = data;
+    request_t *request = httpState->request;
+    StoreEntry *entry = httpState->entry;
+    edge *e = NULL;
+    int status;
+    if (hp == NULL) {
+	debug(11, 4, "httpConnect: Unknown host: %s\n", request->host);
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	comm_close(sock);
+	comm_close(fd);
 	return COMM_ERROR;
     }
     /* Open connection. */
-    if ((status = comm_connect(sock, request->host, request->port))) {
+    if ((status = comm_connect(fd, request->host, request->port))) {
 	if (status != EINPROGRESS) {
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(sock);
-	    e->last_fail_time = squid_curtime;
-	    e->neighbor_up = 0;
+	    comm_close(fd);
+	    if ((e = httpState->neighbor)) {
+	    	e->last_fail_time = squid_curtime;
+	    	e->neighbor_up = 0;
+	    }
 	    return COMM_ERROR;
 	} else {
-	    debug(11, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", sock);
-	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
+	    debug(11, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", fd);
+	    comm_set_select_handler(fd, COMM_SELECT_LIFETIME,
 		(PF) httpLifetimeExpire, (void *) httpState);
-	    comm_set_select_handler(sock, COMM_SELECT_WRITE,
+	    comm_set_select_handler(fd, COMM_SELECT_WRITE,
 		(PF) httpConnInProgress, (void *) httpState);
 	    return COMM_OK;
 	}
     }
     /* Install connection complete handler. */
-    fd_note(sock, entry->url);
-    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
+    fd_note(fd, entry->url);
+    comm_set_select_handler(fd, COMM_SELECT_LIFETIME,
 	(PF) httpLifetimeExpire, (void *) httpState);
-    comm_set_select_handler(sock, COMM_SELECT_WRITE,
+    comm_set_select_handler(fd, COMM_SELECT_WRITE,
 	(PF) httpSendRequest, (void *) httpState);
     return COMM_OK;
 }
@@ -753,7 +783,7 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
      StoreEntry *entry;
 {
     /* Create state structure. */
-    int sock, status;
+    int sock;
     HttpStateData *httpState = NULL;
 
     debug(11, 3, "httpStart: \"%s %s\"\n",
@@ -774,37 +804,11 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
     comm_add_close_handler(sock,
 	(PF) httpStateFree,
 	(void *) httpState);
+    ipcache_nbgethostbyname(request->host,
+	sock,
+	httpConnect,
+	httpState);
 
-    /* check if IP is already in cache. It must be. 
-     * It should be done before this route is called. 
-     * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(request->host, 0)) {
-	debug(11, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
-	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	comm_close(sock);
-	return COMM_ERROR;
-    }
-    /* Open connection. */
-    if ((status = comm_connect(sock, request->host, request->port))) {
-	if (status != EINPROGRESS) {
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(sock);
-	    return COMM_ERROR;
-	} else {
-	    debug(11, 5, "httpStart: FD %d: EINPROGRESS.\n", sock);
-	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-		(PF) httpLifetimeExpire, (void *) httpState);
-	    comm_set_select_handler(sock, COMM_SELECT_WRITE,
-		(PF) httpConnInProgress, (void *) httpState);
-	    return COMM_OK;
-	}
-    }
-    /* Install connection complete handler. */
-    fd_note(sock, entry->url);
-    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-	(PF) httpLifetimeExpire, (void *) httpState);
-    comm_set_select_handler(sock, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (void *) httpState);
     return COMM_OK;
 }
 
