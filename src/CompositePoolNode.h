@@ -1,6 +1,6 @@
 
 /*
- * $Id: CompositePoolNode.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: CompositePoolNode.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -46,6 +46,7 @@
 #include "squid.h"
 #include "DelayPools.h"
 #include "DelayIdComposite.h"
+#include "CommRead.h"
 
 class StoreEntry;
 
@@ -67,6 +68,11 @@ public:
     virtual void parse() = 0;
 
     virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *) = 0;
+    void delayRead(DeferredRead const &);
+
+protected:
+    void kickReads();
+    DeferredReadManager deferredReads;
 };
 
 #endif

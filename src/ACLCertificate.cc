@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificate.cc,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLCertificate.cc,v 1.2 2003/03/04 01:40:25 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,6 +39,7 @@
 #include "ACLChecklist.h"
 #include "ACLCertificateData.h"
 #include "fde.h"
+#include "client_side.h"
 
 ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");
 ACLStrategised<SSL *> ACLCertificate::UserRegistryEntry_(new ACLCertificateData (sslGetUserAttribute), ACLCertificateStrategy::Instance(), "user_cert");

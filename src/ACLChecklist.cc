@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.9 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.10 2003/03/04 01:40:25 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "HttpRequest.h"
 #include "authenticate.h"
 #include "ACLProxyAuth.h"
+#include "client_side.h"
 
 int
 ACLChecklist::authenticated()

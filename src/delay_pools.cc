@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.34 2003/02/21 22:50:07 robertc Exp $
+ * $Id: delay_pools.cc,v 1.35 2003/03/04 01:40:27 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -109,6 +109,7 @@ class AggregateId:public DelayIdComposite
         AggregateId (Aggregate::Pointer);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
+        virtual void delayRead(DeferredRead const &);
 
     private:
         Aggregate::Pointer theAggregate;
@@ -277,6 +278,11 @@ class Id:public DelayIdComposite
     };
 };
 
+void
+Aggregate::AggregateId::delayRead(DeferredRead const &aRead)
+{
+    theAggregate->delayRead(aRead);
+}
 
 void *
 CommonPool::operator new(size_t size)
@@ -500,6 +506,7 @@ void
 Aggregate::update(int incr)
 {
     theBucket.update(*rate(), incr);
+    kickReads();
 }
 
 void
@@ -551,10 +558,10 @@ void
 Aggregate::AggregateId::bytesIn(int qty)
 {
     theAggregate->theBucket.bytesIn(qty);
+    theAggregate->kickReads();
 }
 
 DelayPool *DelayPools::delay_data = NULL;
-fd_set DelayPools::delay_no_delay;
 time_t DelayPools::LastUpdate = 0;
 unsigned short DelayPools::pools_ (0);
 
@@ -562,7 +569,6 @@ void
 DelayPools::Init()
 {
     LastUpdate = getCurrentTime();
-    FD_ZERO(&delay_no_delay);
     cachemgrRegister("delay", "Delay Pool Levels", Stats, 0, 1);
 }
 
@@ -585,24 +591,6 @@ DelayPools::FreeDelayData()
     delete[] DelayPools::delay_data;
     DelayPools::MemoryUsed -= pools() * sizeof(*DelayPools::delay_data);
     pools_ = 0;
-}
-
-void
-DelayPools::SetNoDelay(int fd)
-{
-    FD_SET(fd, &delay_no_delay);
-}
-
-void
-DelayPools::ClearNoDelay(int fd)
-{
-    FD_CLR(fd, &delay_no_delay);
-}
-
-bool
-DelayPools::IsNoDelay(int fd)
-{
-    return FD_ISSET(fd, &delay_no_delay);
 }
 
 void
@@ -891,6 +879,7 @@ VectorPool::Id::bytesIn(int qty)
 {
     theVector->buckets.values[theIndex].bytesIn (qty);
 }
+
 
 unsigned int const
 

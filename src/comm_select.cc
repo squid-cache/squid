@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.68 2003/02/21 22:50:07 robertc Exp $
+ * $Id: comm_select.cc,v 1.69 2003/03/04 01:40:27 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -335,9 +335,6 @@ comm_select_http_incoming(void)
         if (HttpSockets[j] < 0)
             continue;
 
-        if (commDeferRead(HttpSockets[j]))
-            continue;
-
         fds[nfds++] = HttpSockets[j];
     }
 
@@ -441,25 +438,6 @@ comm_select(int msec)
                 /* Found a set bit */
                 fd = (j * FD_MASK_BITS) + k;
 
-                switch (commDeferRead(fd)) {
-
-                case 0:
-                    break;
-
-                case 1:
-                    FD_CLR(fd, &readfds);
-                    break;
-#if DELAY_POOLS
-
-                case -1:
-                    FD_SET(fd, &slowfds);
-                    break;
-#endif
-
-                default:
-                    fatalf("bad return value from commDeferRead(FD %d)\n", fd);
-                }
-
                 if (FD_ISSET(fd, &readfds) && fd_table[fd].flags.read_pending) {
                     FD_SET(fd, &pendingfds);
                     pending++;
@@ -470,13 +448,8 @@ comm_select(int msec)
 #if DEBUG_FDBITS
         for (i = 0; i < maxfd; i++) {
             /* Check each open socket for a handler. */
-#if DELAY_POOLS
 
-            if (fd_table[i].read_handler && commDeferRead(i) != 1) {
-#else
-
-            if (fd_table[i].read_handler && !commDeferRead(i)) {
-#endif
+            if (fd_table[i].read_handler) {
                 assert(FD_ISSET(i, &readfds));
             }
 
@@ -715,9 +688,7 @@ comm_select(int msec)
         statCounter.select_time += (current_dtime - start);
 
         return COMM_OK;
-    }
-
-    while (timeout > current_dtime)
+    } while (timeout > current_dtime)
 
         ;
     debug(5, 8) ("comm_select: time out: %d\n", (int) squid_curtime);
@@ -726,7 +697,8 @@ comm_select(int msec)
 }
 
 static void
-comm_select_dns_incoming(void) {
+comm_select_dns_incoming(void)
+{
     int nfds = 0;
     int fds[2];
     int nevents;
@@ -757,7 +729,8 @@ comm_select_dns_incoming(void) {
 }
 
 void
-comm_select_init(void) {
+comm_select_init(void)
+{
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
     cachemgrRegister("comm_incoming",
@@ -779,7 +752,8 @@ comm_select_init(void) {
  * Call this from where the select loop fails.
  */
 static int
-examine_select(fd_set * readfds, fd_set * writefds) {
+examine_select(fd_set * readfds, fd_set * writefds)
+{
     int fd = 0;
     fd_set read_x;
     fd_set write_x;
@@ -847,7 +821,8 @@ examine_select(fd_set * readfds, fd_set * writefds) {
 
 
 static void
-commIncomingStats(StoreEntry * sentry) {
+commIncomingStats(StoreEntry * sentry)
+{
     StatCounters *f = &statCounter;
     storeAppendPrintf(sentry, "Current incoming_icp_interval: %d\n",
                       incoming_icp_interval >> INCOMING_FACTOR);
@@ -866,7 +841,8 @@ commIncomingStats(StoreEntry * sentry) {
 }
 
 void
-commUpdateReadBits(int fd, PF * handler) {
+commUpdateReadBits(int fd, PF * handler)
+{
     if (handler && !FD_ISSET(fd, &global_readfds)) {
         FD_SET(fd, &global_readfds);
         nreadfds++;
@@ -877,7 +853,8 @@ commUpdateReadBits(int fd, PF * handler) {
 }
 
 void
-commUpdateWriteBits(int fd, PF * handler) {
+commUpdateWriteBits(int fd, PF * handler)
+{
     if (handler && !FD_ISSET(fd, &global_writefds)) {
         FD_SET(fd, &global_writefds);
         nwritefds++;
@@ -889,7 +866,8 @@ commUpdateWriteBits(int fd, PF * handler) {
 
 /* Called by async-io or diskd to speed up the polling */
 void
-comm_quick_poll_required(void) {
+comm_quick_poll_required(void)
+{
     MAX_POLL_TIME = 10;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.469 2003/02/25 12:22:34 robertc Exp $
+ * $Id: protos.h,v 1.470 2003/03/04 01:40:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -128,7 +128,6 @@ SQUIDCEXTERN void clientSetReplyToError(void *, err_type, http_status, method_t,
 /* comm.c */
 extern int comm_existsiocallback(void);
 extern void comm_calliocallback(void);
-extern void comm_read(int fd, char *buf, int len, IOCB *handler, void *data);
 
 extern int comm_listen(int fd);
 SQUIDCEXTERN int commSetNonBlocking(int fd);
@@ -151,8 +150,6 @@ SQUIDCEXTERN int comm_openex(int, int, struct in_addr, u_short, int, unsigned ch
 SQUIDCEXTERN u_short comm_local_port(int fd);
 
 SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
-SQUIDCEXTERN void comm_add_close_handler(int fd, PF *, void *);
-SQUIDCEXTERN void comm_remove_close_handler(int fd, PF *, void *);
 
 SQUIDCEXTERN int comm_udp_sendto(int, const struct sockaddr_in *, int, const void *, int);
 SQUIDCEXTERN void comm_old_write(int fd,
@@ -164,11 +161,9 @@ SQUIDCEXTERN void comm_old_write(int fd,
 SQUIDCEXTERN void comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
-SQUIDCEXTERN void commSetDefer(int fd, DEFER * func, void *);
 SQUIDCEXTERN int ignoreErrno(int);
 SQUIDCEXTERN void commCloseAllSockets(void);
 SQUIDCEXTERN void checkTimeouts(void);
-SQUIDCEXTERN int commDeferRead(int fd);
 
 
 /*

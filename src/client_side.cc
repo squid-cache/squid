@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.627 2003/03/02 23:13:48 hno Exp $
+ * $Id: client_side.cc,v 1.628 2003/03/04 01:40:26 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -56,6 +56,7 @@
  */
 
 #include "squid.h"
+#include "client_side.h"
 #include "clientStream.h"
 #include "IPInterception.h"
 #include "authenticate.h"
@@ -155,6 +156,7 @@ private:
 
 CBDATA_TYPE(ClientSocketContext);
 
+
 /* Local functions */
 /* ClientSocketContext */
 static FREE ClientSocketContextFree;
@@ -177,7 +179,7 @@ static CSCB clientSocketRecipient;
 static CSD clientSocketDetach;
 static void clientSetKeepaliveFlag(clientHttpRequest *);
 static int clientIsContentLengthValid(request_t * r);
-static DEFER httpAcceptDefer;
+static bool okToAccept();
 static int clientIsRequestBodyValid(int bodyLength);
 static int clientIsRequestBodyTooLargeForPolicy(size_t bodyLength);
 static void clientProcessBody(ConnStateData * conn);
@@ -187,10 +189,9 @@ static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 static void clientPrepareLogWithRequestDetails(request_t *, AccessLogEntry *);
 static int connIsUsable(ConnStateData * conn);
-static ClientSocketContext *connGetCurrentContext(ConnStateData * conn);
+static ClientSocketContext *connGetCurrentContext(ConnStateData const * conn);
 static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &recievedData);
 static int contextStartOfOutput(ClientSocketContext * context);
-static void connReadNextRequest(ConnStateData * conn);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext * deferredRequest, ConnStateData * conn);
 static void clientUpdateSocketStats(log_type logType, size_t size);
 
@@ -202,8 +203,6 @@ static void trimTrailingSpaces(char *aString, size_t len);
 #endif
 static ClientSocketContext *parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p, ConnStateData * conn, char *http_version_str);
 static void setLogUri(clientHttpRequest * http, char const *uri);
-static int connGetAvailableBufferLength(ConnStateData const *conn);
-static void connMakeSpaceAvailable(ConnStateData * conn);
 static void connAddContextToQueue(ConnStateData * conn, ClientSocketContext * context);
 static int connGetConcurrentRequestCount(ConnStateData * conn);
 static int connReadWasError(ConnStateData * conn, comm_err_t, int size, int xerrno);
@@ -213,8 +212,6 @@ static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
 
 static ConnStateData *connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_port_list *port);
-static int connAreAllContextsForThisConnection(ConnStateData * connState);
-static void connFreeAllContexts(ConnStateData * connState);
 
 int
 ClientSocketContext::fd() const
@@ -241,26 +238,22 @@ ClientSocketContext::getClientReplyContext() const
  * call comm_read().
  */
 void
-clientReadSomeData(ConnStateData *conn)
+ConnStateData::readSomeData()
 {
-    if (conn->reading)
+    if (reading())
         return;
 
-    conn->reading = true;
+    reading(true);
 
-    size_t len;
+    debug(33, 4) ("clientReadSomeData: FD %d: reading request...\n", fd);
 
-    debug(33, 4) ("clientReadSomeData: FD %d: reading request...\n", conn->fd);
-
-    connMakeSpaceAvailable(conn);
-
-    len = connGetAvailableBufferLength(conn) - 1;
+    makeSpaceAvailable();
 
     /* Make sure we are not still reading from the client side! */
     /* XXX this could take a bit of CPU time! aiee! -- adrian */
-    assert(!comm_has_pending_read(conn->fd));
+    assert(!comm_has_pending_read(fd));
 
-    comm_read(conn->fd, conn->in.buf + conn->in.notYetUsed, len, clientReadRequest, conn);
+    comm_read(fd, in.addressToReadInto(), getAvailableBufferLength(), clientReadRequest, this);
 }
 
 
@@ -547,31 +540,30 @@ httpRequestFree(void *data)
     delete http;
 }
 
-int
-connAreAllContextsForThisConnection(ConnStateData * connState)
+bool
+ConnStateData::areAllContextsForThisConnection() const
 {
-    ClientSocketContext *context;
-    assert(connState != NULL);
-    context = connGetCurrentContext(connState);
+    assert(this != NULL);
+    ClientSocketContext *context = connGetCurrentContext(this);
 
     while (context) {
-        if (context->http->conn != connState)
-            return 0;
+        if (context->http->conn != this)
+            return false;
 
         context = context->next;
     }
 
-    return -1;
+    return true;
 }
 
 void
-connFreeAllContexts(ConnStateData * connState)
+ConnStateData::freeAllContexts()
 {
     ClientSocketContext *context;
 
-    while ((context = connGetCurrentContext(connState)) != NULL) {
-        assert(connGetCurrentContext(connState) !=
-               connGetCurrentContext(connState)->next);
+    while ((context = connGetCurrentContext(this)) != NULL) {
+        assert(connGetCurrentContext(this) !=
+               connGetCurrentContext(this)->next);
         cbdataFree(context);
     }
 }
@@ -581,24 +573,26 @@ static void
 connStateFree(int fd, void *data)
 {
     ConnStateData *connState = (ConnStateData *)data;
-    debug(33, 3) ("connStateFree: FD %d\n", fd);
-    assert(connState != NULL);
-    clientdbEstablished(connState->peer.sin_addr, -1);	/* decrement */
-    assert(connAreAllContextsForThisConnection(connState));
-    connFreeAllContexts(connState);
+    assert (fd == connState->fd);
+    connState->deleteSelf();
+}
 
-    if (connState->auth_user_request)
-        authenticateAuthUserRequestUnlock(connState->auth_user_request);
+ConnStateData::~ConnStateData()
+{
+    debug(33, 3) ("ConnStateData::~ConnStateData: FD %d\n", fd);
+    assert(this != NULL);
+    clientdbEstablished(peer.sin_addr, -1);	/* decrement */
+    assert(areAllContextsForThisConnection());
+    freeAllContexts();
 
-    connState->auth_user_request = NULL;
+    if (auth_user_request)
+        authenticateAuthUserRequestUnlock(auth_user_request);
 
-    authenticateOnCloseConnection(connState);
+    auth_user_request = NULL;
 
-    memFreeBuf(connState->in.allocatedSize, connState->in.buf);
+    authenticateOnCloseConnection(this);
 
-    pconnHistCount(0, connState->nrequests);
-
-    cbdataFree(connState);
+    pconnHistCount(0, nrequests);
 }
 
 /*
@@ -684,7 +678,7 @@ connIsUsable(ConnStateData * conn)
 }
 
 ClientSocketContext *
-connGetCurrentContext(ConnStateData * conn)
+connGetCurrentContext(ConnStateData const * conn)
 {
     assert(conn);
     return (ClientSocketContext *)conn->currentobject;
@@ -693,7 +687,7 @@ connGetCurrentContext(ConnStateData * conn)
 void
 ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData)
 {
-    debug(33, 2) ("clientSocketRecipient: Deferring %s\n", http->uri);
+    debug(33, 2) ("clientSocketRecipient: Deferring request %s\n", http->uri);
     assert(flags.deferred == 0);
     flags.deferred = 1;
     deferredparams.node = node;
@@ -1223,18 +1217,16 @@ clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, int 
 }
 
 void
-connReadNextRequest(ConnStateData * conn)
+ConnStateData::readNextRequest()
 {
-    debug(33, 5) ("clientReadNextRequest: FD %d reading next req\n",
-                  conn->fd);
-    fd_note(conn->fd, "Waiting for next request");
+    debug(33, 5) ("ConnStateData::readNextRequest: FD %d reading next req\n", fd);
+    fd_note(fd, "Waiting for next request");
     /*
      * Set the timeout BEFORE calling clientReadRequest().
      */
-    commSetTimeout(conn->fd, Config.Timeout.persistent_request,
-                   requestTimeout, conn);
-    conn->defer.until = 0;	/* Kick it to read a new request */
-    clientReadSomeData(conn);
+    commSetTimeout(fd, Config.Timeout.persistent_request,
+                   requestTimeout, this);
+    readSomeData();
     /* Please don't do anything with the FD past here! */
 }
 
@@ -1270,7 +1262,7 @@ clientKeepaliveNextRequest(ClientSocketContext * context)
     cbdataFree(context);
 
     if ((deferredRequest = connGetCurrentContext(conn)) == NULL)
-        connReadNextRequest(conn);
+        conn->readNextRequest();
     else
         ClientSocketContextPushDeferredIfNeeded(deferredRequest, conn);
 }
@@ -1855,7 +1847,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
 #endif
 
     /* Rewrite the URL in transparent or accelerator mode */
-    if (conn->transparent) {
+    if (conn->transparent()) {
         prepareTransparentURL(conn, http, url, req_hdr);
     } else if (conn->port->accel) {
         prepareAcceleratedURL(conn, http, url, req_hdr);
@@ -1877,30 +1869,19 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
 
 }
 
-static int
-clientReadDefer(int fdnotused, void *data)
-{
-    ConnStateData *conn = (ConnStateData *)data;
-
-    if (conn->body.size_left)
-        return conn->in.notYetUsed >= conn->in.allocatedSize - 1;
-    else
-        return conn->defer.until > squid_curtime;
-}
-
 int
-connGetAvailableBufferLength(ConnStateData const *conn)
+ConnStateData::getAvailableBufferLength() const
 {
-    return conn->in.allocatedSize - conn->in.notYetUsed;
+    return in.allocatedSize - in.notYetUsed;
 }
 
 void
-connMakeSpaceAvailable(ConnStateData * conn)
+ConnStateData::makeSpaceAvailable()
 {
-    if (connGetAvailableBufferLength(conn) < 2) {
-        conn->in.buf = (char *)memReallocBuf(conn->in.buf, conn->in.allocatedSize * 2, &conn->in.allocatedSize);
+    if (getAvailableBufferLength() < 2) {
+        in.buf = (char *)memReallocBuf(in.buf, in.allocatedSize * 2, &in.allocatedSize);
         debug(33, 2) ("growing request buffer: notYetUsed=%ld size=%ld\n",
-                      (long) conn->in.notYetUsed, (long) conn->in.allocatedSize);
+                      (long) in.notYetUsed, (long) in.allocatedSize);
     }
 }
 
@@ -2014,7 +1995,7 @@ clientMaybeReadData(ConnStateData *conn, int do_next_read)
 {
     if (do_next_read) {
         conn->flags.readMoreRequests = 1;
-        clientReadSomeData(conn);
+        conn->readSomeData();
     }
 }
 
@@ -2187,23 +2168,15 @@ connOkToAddRequest(ConnStateData *conn)
 }
 
 static void
-connSetDefer (ConnStateData *conn, size_t milliSeconds)
-{
-    conn->defer.until = squid_curtime + milliSeconds;
-    conn->defer.n++;
-}
-
-static void
 clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
                   void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    assert (conn->reading);
-    conn->reading = false;
+    conn->reading(false);
     method_t method;
     char *prefix = NULL;
     ClientSocketContext *context;
-    int do_next_read = 1; /* the default _is_ to read data! - adrian */
+    bool do_next_read = 1; /* the default _is_ to read data! - adrian */
 
     assert (fd == conn->fd);
 
@@ -2241,7 +2214,9 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
             /* It might be half-closed, we can't tell */
             fd_table[fd].flags.socket_eof = 1;
 
-            connSetDefer (conn, 1);
+            commMarkHalfClosed(fd);
+
+            do_next_read = 0;
 
             fd_note(fd, "half-closed");
 
@@ -2262,6 +2237,11 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
     if (connGetConcurrentRequestCount(conn) == 0)
         fd_note(conn->fd, "Reading next request");
 
+    /* XXX: if we read *exactly* two requests, and the client sends no more,
+     * if pipelined requests are off, we will *never* parse and insert the 
+     * second.  the corner condition is due to the parsing being tied to the 
+     * read, not the presence of data in the buffer.
+     */
     while (conn->in.notYetUsed > 0 && conn->body.size_left == 0) {
         size_t req_line_sz;
         connStripBufferWhitespace (conn);
@@ -2273,9 +2253,6 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 
         /* Limit the number of concurrent requests to 2 */
         if (!connOkToAddRequest(conn)) {
-            /* Reset when a request is complete */
-            connSetDefer (conn, 100);
-            clientMaybeReadData (conn, do_next_read);
             return;
         }
 
@@ -2552,27 +2529,27 @@ clientLifetimeTimeout(int fd, void *data)
     comm_close(fd);
 }
 
-static int
-httpAcceptDefer(int fdunused, void *dataunused)
+static bool
+okToAccept()
 {
     static time_t last_warn = 0;
 
     if (fdNFree() >= RESERVED_FD)
-        return 0;
+        return true;
 
     if (last_warn + 15 < squid_curtime) {
         debug(33, 0) ("WARNING! Your cache is running out of filedescriptors\n");
         last_warn = squid_curtime;
     }
 
-    return 1;
+    return false;
 }
 
 ConnStateData *
 
 connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_port_list *port)
 {
-    ConnStateData *result = cbdataAlloc(ConnStateData);
+    ConnStateData *result = new ConnStateData;
     result->peer = *peer;
     result->log_addr = peer->sin_addr;
     result->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
@@ -2588,7 +2565,7 @@ connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_p
 
         if (clientNatLookup(fd, *me, *peer, &dst) == 0) {
             result->me = dst; /* XXX This should be moved to another field */
-            result->transparent = 1;
+            result->transparent(true);
         }
     }
 
@@ -2608,10 +2585,11 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
         return;
     }
 
-    /* kick off another one for later */
-    comm_accept(sock, httpAccept, data);
-
-    /* XXX we're not considering httpAcceptDefer yet! */
+    if (!okToAccept())
+        AcceptLimiter::Instance().defer (sock, httpAccept, data);
+    else
+        /* kick off another one for later */
+        comm_accept(sock, httpAccept, data);
 
     if (flag != COMM_OK) {
         debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
@@ -2645,9 +2623,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
 #endif
 
-    clientReadSomeData(connState);
-
-    commSetDefer(newfd, clientReadDefer, connState);
+    connState->readSomeData();
 
     clientdbEstablished(details->peer.sin_addr, 1);
 
@@ -2705,7 +2681,7 @@ clientNegotiateSSL(int fd, void *data)
         debug(83, 5) ("clientNegotiateSSL: FD %d has no certificate.\n", fd);
     }
 
-    clientReadSomeData(conn);
+    conn->readSomeData();
 }
 
 /* handle a new HTTPS connection */
@@ -2722,6 +2698,12 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
+
+    if (!okToAccept())
+        AcceptLimiter::Instance().defer (sock, httpsAccept, data);
+    else
+        /* kick off another one for later */
+        comm_accept(sock, httpsAccept, data);
 
     if (flag != COMM_OK) {
         errno = xerrno;
@@ -2770,8 +2752,6 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     commSetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 
-    commSetDefer(newfd, clientReadDefer, connState);
-
     clientdbEstablished(details->peer.sin_addr, 1);
 
     incoming_sockets_accepted++;
@@ -2807,12 +2787,6 @@ clientHttpConnectionsOpen(void)
 
         comm_accept(fd, httpAccept, s);
 
-        /*
-         * We need to set a defer handler here so that we don't
-         * peg the CPU with select() when we hit the FD limit.
-         */
-        commSetDefer(fd, httpAcceptDefer, NULL);
-
         debug(1, 1) ("Accepting HTTP connections at %s, port %d, FD %d.\n",
                      inet_ntoa(s->s.sin_addr), (int) ntohs(s->s.sin_port), fd);
 
@@ -2847,8 +2821,6 @@ clientHttpsConnectionsOpen(void)
         comm_listen(fd);
 
         comm_accept(fd, httpsAccept, s);
-
-        commSetDefer(fd, httpAcceptDefer, NULL);
 
         debug(1, 1) ("Accepting HTTPS connections at %s, port %d, FD %d.\n",
                      inet_ntoa(s->http.s.sin_addr), (int) ntohs(s->http.s.sin_port), fd);
@@ -2976,4 +2948,70 @@ clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
         ch->conn(cbdataReference(conn));	/* unreferenced in acl.cc */
 
     return ch;
+}
+
+CBDATA_CLASS_INIT(ConnStateData);
+
+void *
+ConnStateData::operator new (size_t)
+{
+    CBDATA_INIT_TYPE(ConnStateData);
+    ConnStateData *result = cbdataAlloc(ConnStateData);
+    return result;
+}
+
+void
+ConnStateData::operator delete (void *address)
+{
+    ConnStateData *t = static_cast<ConnStateData *>(address);
+    cbdataFree(t);
+}
+
+void
+ConnStateData::deleteSelf () const
+{
+    delete this;
+}
+
+ConnStateData::ConnStateData() : transparent_ (false), reading_ (false)
+{}
+
+bool
+ConnStateData::transparent() const
+{
+    return transparent_;
+}
+
+void
+ConnStateData::transparent(bool const anInt)
+{
+    transparent_ = anInt;
+}
+
+bool
+ConnStateData::reading() const
+{
+    return reading_;
+}
+
+void
+ConnStateData::reading(bool const newBool)
+{
+    assert (reading() != newBool);
+    reading_ = newBool;
+}
+
+char *
+ConnStateData::In::addressToReadInto() const
+{
+    return buf + notYetUsed;
+}
+
+ConnStateData::In::In() : buf (NULL), notYetUsed (0), allocatedSize (0)
+{}
+
+ConnStateData::In::~In()
+{
+    if (allocatedSize)
+        memFreeBuf(allocatedSize, buf);
 }

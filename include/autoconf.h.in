@@ -738,6 +738,9 @@
 /* Use dnsserver processes instead of the internal DNS protocol support */
 #undef USE_DNSSERVERS
 
+/* Use epoll() for the IO loop */
+#undef USE_EPOLL
+
 /* Define if we should use GNU regex */
 #undef USE_GNUREGEX
 

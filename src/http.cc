@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.410 2003/02/21 22:50:09 robertc Exp $
+ * $Id: http.cc,v 1.411 2003/03/04 01:40:28 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -76,12 +76,6 @@ static void
 httpStateFree(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-#if DELAY_POOLS
-
-    if (fd >= 0)
-        DelayPools::ClearNoDelay(fd);
-
-#endif
 
     if (httpState == NULL)
         return;
@@ -800,14 +794,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
     /* prepare the read size for the next read (if any) */
 #if DELAY_POOLS
 
-    DelayId delayId;
-
-    /* special "if" only for http (for nodelay proxy conns) */
-
-    if (DelayPools::IsNoDelay(fd))
-        delayId = DelayId();
-    else
-        delayId = entry->mem_obj->mostBytesAllowed();
+    DelayId delayId = entry->mem_obj->mostBytesAllowed();
 
 #endif
 
@@ -965,13 +952,8 @@ HttpStateData::processReplyData(const char *buf, size_t len)
 
         case COMPLETE_PERSISTENT_MSG:
             /* yes we have to clear all these! */
-            commSetDefer(fd, NULL, NULL);
             commSetTimeout(fd, -1, NULL, NULL);
             do_next_read = 0;
-#if DELAY_POOLS
-
-            DelayPools::ClearNoDelay(fd);
-#endif
 
             comm_remove_close_handler(fd, httpStateFree, this);
             fwdUnregister(fd, fwd);
@@ -984,14 +966,8 @@ HttpStateData::processReplyData(const char *buf, size_t len)
         case COMPLETE_NONPERSISTENT_MSG:
             /* close the connection ourselves */
             /* yes - same as for a complete persistent conn here */
-            commSetDefer(fd, NULL, NULL);
             commSetTimeout(fd, -1, NULL, NULL);
             commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-#if DELAY_POOLS
-
-            DelayPools::ClearNoDelay(fd);
-#endif
-
             comm_remove_close_handler(fd, httpStateFree, this);
             fwdUnregister(fd, fwd);
             fwdComplete(fwd);
@@ -1005,29 +981,12 @@ HttpStateData::processReplyData(const char *buf, size_t len)
     maybeReadData();
 }
 
-size_t
-HttpStateData::amountToRead()
-{
-    read_sz = SQUID_TCP_SO_RCVBUF;
-#if DELAY_POOLS
-    /* special "if" only for http (for nodelay proxy conns) */
-
-    if (!DelayPools::IsNoDelay(fd))
-        read_sz = entry->mem_obj->mostBytesAllowed().bytesWanted(1, read_sz);
-
-#endif
-
-    debug (11,4)("HttpStateData::amountToRead: Returning %u\n", (unsigned) read_sz);
-
-    return read_sz;
-}
-
 void
 HttpStateData::maybeReadData()
 {
     if (do_next_read) {
         do_next_read = 0;
-        comm_read(fd, buf, amountToRead(), httpReadReply, this);
+        entry->delayAwareRead(fd, buf, SQUID_TCP_SO_RCVBUF, httpReadReply, this);
     }
 }
 
@@ -1064,7 +1023,7 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
         return;
     } else {
         /* Schedule read reply. */
-        comm_read(fd, httpState->buf, httpState->amountToRead(), httpReadReply, httpState);
+        entry->delayAwareRead(fd, httpState->buf, SQUID_TCP_SO_RCVBUF, httpReadReply, httpState);
         /*
          * Set the read timeout here because it hasn't been set yet.
          * We only set the read timeout after the request has been
@@ -1074,7 +1033,6 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
          * request bodies.
          */
         commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
-        commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
     }
 }
 
@@ -1557,10 +1515,7 @@ httpStart(FwdState * fwd)
 
 #if DELAY_POOLS
 
-        assert(DelayPools::IsNoDelay(fd) == 0);
-
-        if (httpState->_peer->options.no_delay)
-            DelayPools::SetNoDelay(fd);
+        httpState->entry->setNoDelay(httpState->_peer->options.no_delay);
 
 #endif
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayId.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,10 +55,13 @@ public:
     operator bool() const;
     int bytesWanted(int min, int max) const;
     void bytesIn (int qty);
+    void setNoDelay(bool const);
+    void delayRead(DeferredRead const &);
 
 private:
     unsigned short pool_;
     DelayIdComposite::Pointer compositeId;
+    bool markedAsNoDelay;
 };
 
 #endif /* SQUID_DELAYID_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayPools.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayPools.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,9 +55,6 @@ class DelayPools
 public:
     static void Init();
     static void Update(void *);
-    static void SetNoDelay(int fd);
-    static void ClearNoDelay(int fd);
-    static bool IsNoDelay(int fd);
     static unsigned short pools();
     static void pools (u_short pools);
     static void FreePools();
@@ -71,7 +68,6 @@ private:
     static void Stats(StoreEntry *);
     static void InitDelayData();
     static time_t LastUpdate;
-    static fd_set delay_no_delay;
     static unsigned short pools_;
     static void FreeDelayData ();
     static Vector<Updateable *> toUpdate;

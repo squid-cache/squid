@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.16 2003/02/12 06:10:50 robertc Exp $
+ * $Id: splay.h,v 1.17 2003/03/04 01:40:22 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -150,8 +150,11 @@ template<class V>
 SplayNode<V> *
 SplayNode<V>::splay(Value const &data, SPLAYCMP * compare) const
 {
-    if (this == NULL)
+    if (this == NULL) {
+	/* can't have compared successfully :} */
+	splayLastResult = -1;
 	return NULL;
+    }
     SplayNode<V> N;
     SplayNode<V> *l;
     SplayNode<V> *r;

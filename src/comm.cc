@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.367 2003/03/02 23:13:49 hno Exp $
+ * $Id: comm.cc,v 1.368 2003/03/04 01:40:27 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -101,8 +101,10 @@ public:
     void *handler_data;
 };
 
-struct _fdc_t
+class fdc_t
 {
+
+public:
     int active;
     int fd;
     dlink_list CommCallbackList;
@@ -152,9 +154,9 @@ struct _fdc_t
 
     fill;
 
+    bool half_closed;
 };
 
-typedef struct _fdc_t fdc_t;
 
 typedef enum {
     COMM_CB_READ = 1,
@@ -515,7 +517,7 @@ comm_fill_read(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 {
     /* TODO use a reference to the table entry, or use C++ :] */
     StoreIOBuffer *sb;
-    _fdc_t::CommFiller *fill;
+    fdc_t::CommFiller *fill;
     assert(fdc_table[fd].active == 1);
 
     if (flag != COMM_OK) {
@@ -1518,6 +1520,9 @@ comm_reset_close(int fd)
  * + call write handlers with ERR_CLOSING
  * + call read handlers with ERR_CLOSING
  * + call closing handlers
+ *
+ * NOTE: COMM_ERR_CLOSING will NOT be called for CommReads' sitting in a 
+ * DeferredReadManager.
  */
 void
 _comm_close(int fd, char *file, int line)
@@ -1619,11 +1624,20 @@ _comm_close(int fd, char *file, int line)
 
     fdc_table[fd].active = 0;
 
+    if (fdc_table[fd].half_closed) {
+        AbortChecker::Instance().stopMonitoring(fd);
+        fdc_table[fd].half_closed = false;
+    }
+
     bzero(&fdc_table[fd], sizeof(fdc_t));
 
     statCounter.syscalls.sock.closes++;
 
     PROF_stop(comm_close);
+    /* When an fd closes, give accept() a chance, if need be */
+
+    if (fdNFree() >= RESERVED_FD)
+        AcceptLimiter::Instance().kick();
 }
 
 /* Send a udp datagram to specified TO_ADDR. */
@@ -1659,14 +1673,6 @@ comm_udp_sendto(int fd,
     }
 
     return x;
-}
-
-void
-commSetDefer(int fd, DEFER * func, void *data)
-{
-    fde *F = &fd_table[fd];
-    F->defer_check = func;
-    F->defer_data = data;
 }
 
 void
@@ -2064,19 +2070,6 @@ checkTimeouts(void)
     }
 }
 
-
-int
-commDeferRead(int fd)
-{
-    fde *F = &fd_table[fd];
-
-    if (F->defer_check == NULL)
-        return 0;
-
-    return F->defer_check(fd, F->defer_data);
-}
-
-
 /*
  * New-style listen and accept routines
  *
@@ -2233,4 +2226,271 @@ CommIO::ResetNotifications()
         FlushPipe();
         DoneSignalled = false;
     }
+}
+
+AcceptLimiter AcceptLimiter::Instance_;
+
+AcceptLimiter &AcceptLimiter::Instance()
+{
+    return Instance_;
+}
+
+void
+AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data)
+{
+    Acceptor temp;
+    temp.theFunction = aFunc;
+    temp.acceptFD = fd;
+    temp.theData = data;
+    deferred.push_back(temp);
+}
+
+void
+AcceptLimiter::kick()
+{
+    if (!deferred.size())
+        return;
+
+    /* Yes, this means the first on is the last off....
+     * If the list container was a little more friendly, we could sensibly us it.
+     */
+    Acceptor temp = deferred.pop_back();
+
+    comm_accept (temp.acceptFD, temp.theFunction, temp.theData);
+}
+
+void
+commMarkHalfClosed(int fd)
+{
+    assert (fdc_table[fd].active && !fdc_table[fd].half_closed);
+    AbortChecker::Instance().monitor(fd);
+    fdc_table[fd].half_closed = true;
+}
+
+AbortChecker &AbortChecker::Instance() {return Instance_;}
+
+AbortChecker AbortChecker::Instance_;
+
+void
+AbortChecker::AbortCheckReader(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data)
+{
+    assert (size == 0);
+    /* sketch:
+     * if the read is ok and 0, the conn is still open.
+     * if the read is a fail, close the conn
+     */
+
+    if (flag != COMM_OK && flag != COMM_ERR_CLOSING) {
+        debug (5,3) ("AbortChecker::AbortCheckReader: fd %d aborted\n", fd);
+        comm_close(fd);
+    }
+}
+
+void
+AbortChecker::monitor(int fd)
+{
+    assert (!contains(fd));
+
+    add
+        (fd);
+
+    debug (5,3) ("AbortChecker::monitor: monitoring half closed fd %d for aborts\n", fd);
+}
+
+void
+AbortChecker::stopMonitoring (int fd)
+{
+    assert (contains (fd));
+
+    remove
+        (fd);
+
+    debug (5,3) ("AbortChecker::stopMonitoring: stopped monitoring half closed fd %d for aborts\n", fd);
+}
+
+#include "splay.h"
+void
+AbortChecker::doIOLoop()
+{
+    if (checking) {
+        /*
+        fds->walk(RemoveCheck, this);
+        */
+        checking = false;
+        return;
+    }
+
+    if (lastCheck >= squid_curtime)
+        return;
+
+    fds->walk(AddCheck, this);
+
+    checking = true;
+
+    lastCheck = squid_curtime;
+}
+
+void
+AbortChecker::AddCheck (int const &fd, void *data)
+{
+    AbortChecker *me = (AbortChecker *)data;
+    me->addCheck(fd);
+}
+
+void
+AbortChecker::RemoveCheck (int const &fd, void *data)
+{
+    AbortChecker *me = (AbortChecker *)data;
+    me->removeCheck(fd);
+}
+
+
+int
+AbortChecker::IntCompare (int const &lhs, int const &rhs)
+{
+    return lhs - rhs;
+}
+
+bool
+AbortChecker::contains (int const fd) const
+{
+    fds = fds->splay(fd, IntCompare);
+
+    if (splayLastResult != 0)
+        return false;
+
+    return true;
+}
+
+void
+
+AbortChecker::remove
+    (int const fd)
+{
+
+    fds = fds->remove
+          (fd, IntCompare);
+}
+
+void
+
+AbortChecker::add
+    (int const fd)
+{
+    fds = fds->insert (fd, IntCompare);
+}
+
+void
+AbortChecker::addCheck (int const fd)
+{
+    /* assert comm_is_open (fd); */
+    comm_read(fd, NULL, 0, AbortCheckReader, NULL);
+}
+
+void
+AbortChecker::removeCheck (int const fd)
+{
+    /*
+      comm_read_cancel(fd, AbortCheckReader, NULL);
+    */
+}
+
+CommRead::CommRead() : fd(-1), buf(NULL), len(0), handler(NULL), data(NULL)
+{}
+
+CommRead::CommRead(int fd_, char *buf_, int len_, IOCB *handler_, void *data_)
+        : fd(fd_), buf(buf_), len(len_), handler(handler_), data(data_)
+{}
+
+DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false)
+{}
+
+DeferredRead::DeferredRead (DeferrableRead *aReader, void *data, CommRead const &aRead) : theReader(aReader), theContext (data), theRead(aRead), cancelled(false)
+{}
+
+DeferredReadManager::~DeferredReadManager()
+{
+    flushReads();
+    assert (deferredReads.empty());
+}
+
+void
+DeferredReadManager::delayRead(DeferredRead const &aRead)
+{
+    debug (5, 3)("Adding deferred read on fd %d\n", aRead.theRead.fd);
+    List<DeferredRead> *temp = deferredReads.push_back(aRead);
+    comm_add_close_handler (aRead.theRead.fd, CloseHandler, temp);
+}
+
+void
+DeferredReadManager::CloseHandler(int fd, void *thecbdata)
+{
+    if (!cbdataReferenceValid (thecbdata))
+        return;
+
+    List<DeferredRead> *temp = (List<DeferredRead> *)thecbdata;
+
+    temp->element.markCancelled();
+}
+
+DeferredRead
+DeferredReadManager::popHead(ListContainer<DeferredRead> &deferredReads)
+{
+    assert (!deferredReads.empty());
+
+    if (!deferredReads.head->element.cancelled)
+        comm_remove_close_handler(deferredReads.head->element.theRead.fd, CloseHandler, deferredReads.head);
+
+    DeferredRead result = deferredReads.pop_front();
+
+    return result;
+}
+
+void
+DeferredReadManager::kickReads(int const count)
+{
+    /* if we had List::size() we could consolidate this and flushReads */
+
+    if (count < 1)
+        flushReads();
+
+    size_t remaining = count;
+
+    while (!deferredReads.empty() && remaining) {
+        DeferredRead aRead = popHead(deferredReads);
+        kickARead(aRead);
+
+        if (!aRead.cancelled)
+            --remaining;
+    }
+}
+
+void
+DeferredReadManager::flushReads()
+{
+    ListContainer<DeferredRead> reads;
+    reads = deferredReads;
+    deferredReads = ListContainer<DeferredRead>();
+
+    while (!reads.empty()) {
+        DeferredRead aRead = popHead(reads);
+        kickARead(aRead);
+    }
+}
+
+void
+DeferredReadManager::kickARead(DeferredRead const &aRead)
+{
+    if (aRead.cancelled)
+        return;
+
+    debug (5,3)("Kicking deferred read on fd %d\n", aRead.theRead.fd);
+
+    aRead.theReader(aRead.theContext, aRead.theRead);
+}
+
+void
+DeferredRead::markCancelled()
+{
+    cancelled = true;
 }

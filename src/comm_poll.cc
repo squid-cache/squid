@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.10 2003/02/21 22:50:07 robertc Exp $
+ * $Id: comm_poll.cc,v 1.11 2003/03/04 01:40:27 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -331,11 +331,10 @@ comm_poll_http_incoming(void)
     int nevents;
     http_io_events = 0;
 
+    /* only poll sockets that won't be deferred */
+
     for (j = 0; j < NHttpSockets; j++) {
         if (HttpSockets[j] < 0)
-            continue;
-
-        if (commDeferRead(HttpSockets[j]))
             continue;
 
         fds[nfds++] = HttpSockets[j];
@@ -412,27 +411,8 @@ comm_select(int msec)
             events = 0;
             /* Check each open socket for a handler. */
 
-            if (fd_table[i].read_handler) {
-                switch (commDeferRead(i)) {
-
-                case 0:
-                    events |= POLLRDNORM;
-                    break;
-
-                case 1:
-                    break;
-#if DELAY_POOLS
-
-                case -1:
-                    events |= POLLRDNORM;
-                    FD_SET(i, &slowfds);
-                    break;
-#endif
-
-                default:
-                    fatalf("bad return value from commDeferRead(FD %d)\n", i);
-                }
-            }
+            if (fd_table[i].read_handler)
+                events |= POLLRDNORM;
 
             if (fd_table[i].write_handler)
                 events |= POLLWRNORM;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.93 2003/02/21 22:50:12 robertc Exp $
+ * $Id: store_swapout.cc,v 1.94 2003/03/04 01:40:30 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -255,7 +255,7 @@ storeSwapOut(StoreEntry * e)
          * Wait until we are below the disk FD limit, only if the
          * next server-side read won't be deferred.
          */
-        if (storeTooManyDiskFilesOpen() && !StoreEntry::CheckDeferRead(-1, e))
+        if (storeTooManyDiskFilesOpen() && !e->checkDeferRead(-1))
             return;
     }
 

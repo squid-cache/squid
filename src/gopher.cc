@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.180 2003/02/21 22:50:08 robertc Exp $
+ * $Id: gopher.cc,v 1.181 2003/03/04 01:40:28 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -892,10 +892,7 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
     }
 
     /* Schedule read reply. */
-    /* XXX this read isn't being bound by delay pools! */
-    comm_read(fd, gopherState->replybuf, BUFSIZ, gopherReadReply, gopherState);
-
-    commSetDefer(fd, StoreEntry::CheckDeferRead, entry);
+    entry->delayAwareRead(fd, gopherState->replybuf, BUFSIZ, gopherReadReply, gopherState);
 
     if (buf)
         memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.560 2003/02/21 22:50:11 robertc Exp $
+ * $Id: store.cc,v 1.561 2003/03/04 01:40:30 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -149,51 +149,81 @@ StoreEntry::getMD5Text() const
     return storeKeyText((const cache_key *)key);
 }
 
-int
-StoreEntry::CheckDeferRead(int fd, void *data)
+#include "comm.h"
+
+void
+StoreEntry::DeferReader(void *theContext, CommRead const &aRead)
 {
-    assert (data);
-    return ((StoreEntry *)data)->checkDeferRead(fd);
+    StoreEntry *anEntry = (StoreEntry *)theContext;
+    anEntry->delayAwareRead(aRead.fd,
+                            aRead.buf,
+                            aRead.len,
+                            aRead.handler,
+                            aRead.data);
 }
 
-int
-StoreEntry::checkDeferRead(int fd) const
+void
+StoreEntry::delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data)
 {
-    int rc = 0;
+    size_t amountToRead = bytesWanted(Range<size_t>(0, len));
+    /* sketch: readdeferer* = getdeferer.
+     * ->deferRead (fd, buf, len, handler, data, DelayAwareRead, this)
+     */
+
+    if (amountToRead == 0) {
+        assert (mem_obj);
+        /* read ahead limit */
+        /* Perhaps these two calls should both live in MemObject */
+
+        if (!mem_obj->readAheadPolicyCanRead()) {
+            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, handler, data)));
+            return;
+        }
+
+        /* delay id limit */
+        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, handler, data)));
+
+        return;
+    }
+
+    comm_read(fd, buf, amountToRead, handler, data);
+}
+
+size_t
+StoreEntry::bytesWanted (Range<size_t> const aRange) const
+{
+    assert (aRange.size());
 
     if (mem_obj == NULL)
-        return 0;
+        return aRange.end - 1;
 
 #if URL_CHECKSUM_DEBUG
 
     mem_obj->checkUrlChecksum();
 
 #endif
-#if DELAY_POOLS
 
-    if (fd < 0)
-        (void) 0;
-    else if (! DelayPools::IsNoDelay(fd)) {
-        int i = mem_obj->mostBytesWanted(INT_MAX);
-
-        if (0 == i)
-            return 1;
-
-        /* was: rc = -(rc != INT_MAX); */
-        else if (INT_MAX == i)
-            rc = 0;
-        else
-            rc = -1;
-    }
-
-#endif
+    /* Always read *something* here - we haven't got the header yet */
     if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT))
-        return rc;
+        return aRange.end - 1;
 
-    if (mem_obj->readAheadPolicyCanRead())
-        return rc;
+    if (!mem_obj->readAheadPolicyCanRead())
+        return 0;
 
-    return 1;
+    return mem_obj->mostBytesWanted(aRange.end - 1);
+}
+
+bool
+StoreEntry::checkDeferRead(int fd) const
+{
+    return (bytesWanted(Range<size_t>(0,INT_MAX)) == 0);
+}
+
+void
+StoreEntry::setNoDelay (bool const newValue)
+{
+    if (mem_obj)
+        mem_obj->setNoDelay(newValue);
 }
 
 store_client_t

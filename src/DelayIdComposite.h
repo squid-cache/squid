@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayIdComposite.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayIdComposite.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -45,6 +45,8 @@
 #include "squid.h"
 #include "RefCount.h"
 
+class DeferredRead;
+
 class DelayIdComposite : public RefCountable
 {
 
@@ -55,6 +57,8 @@ public:
 
     virtual int bytesWanted (int min, int max) const =0;
     virtual void bytesIn(int qty) = 0;
+    /* only aggregate and vector need this today */
+    virtual void delayRead(DeferredRead const &) {fatal("Not implemented");}
 };
 
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.96 2003/02/21 22:50:10 robertc Exp $
+ * $Id: redirect.cc,v 1.97 2003/03/04 01:40:29 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -39,6 +39,7 @@
 #include "client_side_request.h"
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
+#include "client_side.h"
 
 typedef struct
 {

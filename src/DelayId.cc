@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.4 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayId.cc,v 1.5 2003/03/04 01:40:25 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -39,7 +39,9 @@
 
 #include "config.h"
 
-#if DELAY_POOLS
+#if !DELAY_POOLS
+#error DELAY_POOLS not enabled
+#endif
 #include "squid.h"
 #include "DelayId.h"
 #include "client_side_request.h"
@@ -47,28 +49,13 @@
 #include "DelayPools.h"
 #include "DelayPool.h"
 #include "HttpRequest.h"
-/*
-#include "DelaySpec.h"
-#include "StoreClient.h"
-#include "Store.h"
-#include "MemObject.h"
-#include "ACL.h"
-#include "Config.h"
-#include "DelayId.h"
-#include "Array.h"
-#include "String.h"
-#include "CommonPool.h"
-#include "CompositePoolNode.h"
-#include "DelayVector.h"
-#include "NullDelayId.h"
-#include "DelayBucket.h"
-*/
+#include "CommRead.h"
 
-DelayId::DelayId () : pool_ (0), compositeId(NULL)
+DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
 {}
 
 DelayId::DelayId (unsigned short aPool) :
-        pool_ (aPool), compositeId (NULL)
+        pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
 {
     debug (77,3)("DelayId::DelayId: Pool %du\n", aPool);
 }
@@ -136,6 +123,12 @@ DelayId::DelayClient(clientHttpRequest * http)
     return DelayId();
 }
 
+void
+DelayId::setNoDelay(bool const newValue)
+{
+    markedAsNoDelay = newValue;
+}
+
 /*
  * this returns the number of bytes the client is permitted. it does not take
  * into account bytes already buffered - that is up to the caller.
@@ -145,7 +138,7 @@ DelayId::bytesWanted(int min, int max) const
 {
     /* unlimited */
 
-    if (! (*this))
+    if (! (*this) || markedAsNoDelay)
         return XMAX(min, max);
 
     /* limited */
@@ -168,6 +161,9 @@ DelayId::bytesIn(int qty)
     if (! (*this))
         return;
 
+    if (markedAsNoDelay)
+        return;
+
     unsigned short tempPool = pool() - 1;
 
     assert (tempPool != 0xFFFF);
@@ -176,5 +172,10 @@ DelayId::bytesIn(int qty)
         compositeId->bytesIn(qty);
 }
 
-#endif
+void
+DelayId::delayRead(DeferredRead const &aRead)
+{
+    assert (compositeId.getRaw());
+    compositeId->delayRead(aRead);
 
+}

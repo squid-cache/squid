@@ -1,10 +1,11 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.62 2003/02/25 12:24:32 robertc Exp $
+#  $Id: Makefile.am,v 1.63 2003/03/04 01:40:25 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
+
 
 if USE_DNSSERVER
 DNSSOURCE = dns.cc
@@ -244,6 +245,7 @@ squid_SOURCES = \
 	cbdata.cc \
 	client_db.cc \
 	client_side.cc \
+	client_side.h \
 	client_side_reply.cc \
 	client_side_request.cc \
 	client_side_request.h \
@@ -254,6 +256,8 @@ squid_SOURCES = \
 	comm_select.cc \
 	comm_poll.cc \
 	comm_kqueue.cc \
+	comm_epoll.cc \
+	CommRead.h \
 	Config.h \
 	ConnectionDetail.h \
 	debug.cc \
@@ -412,7 +416,8 @@ squid_LDADD = \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \
 	-lmiscutil \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@EPOLL_LIBS@
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@
 
 unlinkd_SOURCES = unlinkd.cc
@@ -464,6 +469,7 @@ ufsdump_SOURCES = debug.cc \
 	comm_select.cc \
 	comm_poll.cc \
 	comm_kqueue.cc \
+	comm_epoll.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
@@ -574,7 +580,8 @@ ufsdump_LDADD = \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \
 	-lmiscutil \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@EPOLL_LIBS@
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
@@ -603,7 +610,7 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = -L../lib -lmiscutil @XTRA_LIBS@
+LDADD = -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \

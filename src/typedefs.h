@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.156 2003/03/02 23:13:49 hno Exp $
+ * $Id: typedefs.h,v 1.157 2003/03/04 01:40:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -138,8 +138,6 @@ typedef struct _HttpHeaderStat HttpHeaderStat;
 typedef struct _HttpBody HttpBody;
 
 typedef struct _HttpReply HttpReply;
-
-typedef struct _ConnStateData ConnStateData;
 
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
 
@@ -310,7 +308,6 @@ typedef void IRCB(peer *, peer_t, protocol_t, void *, void *data);
 typedef void PSC(FwdServer *, void *);
 typedef void RH(void *data, char *);
 typedef void UH(void *data, wordlist *);
-typedef int DEFER(int fd, void *data);
 typedef int READ_HANDLER(int, char *, int);
 typedef int WRITE_HANDLER(int, const char *, int);
 typedef void CBCB(char *buf, ssize_t size, void *data);
