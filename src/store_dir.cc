@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.141 2003/01/23 00:37:26 robertc Exp $
+ * $Id: store_dir.cc,v 1.142 2003/02/04 21:57:15 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -77,12 +77,22 @@ void
 storeCreateSwapDirectories(void)
 {
     int i;
+/* 
+ * On Windows, fork() is not available.
+ * The following is a workaround for create store directories sequentially
+ * when running on native Windows port.
+ */
+#ifndef _SQUID_MSWIN_
     pid_t pid;
     int status;
+#endif
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+#ifndef _SQUID_MSWIN_
 	if (fork())
 	    continue;
+#endif
 	INDEXSD(i)->newFileSystem();
+#ifndef _SQUID_MSWIN_
 	exit(0);
     }
     do {
@@ -92,6 +102,9 @@ storeCreateSwapDirectories(void)
 	pid = waitpid(-1, &status, 0);
 #endif
     } while (pid > 0 || (pid < 0 && errno == EINTR));
+#else
+    }
+#endif
 }
 
 /*
