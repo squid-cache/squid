@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.13 1997/07/02 22:42:57 wessels Exp $
+ * $Id: refresh.cc,v 1.14 1997/07/07 05:29:52 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -45,72 +45,6 @@
 #define REFRESH_DEFAULT_PCT	(time_t)20
 #define REFRESH_DEFAULT_MAX	(time_t)259200
 
-typedef struct _refresh_t {
-    char *pattern;
-    regex_t compiled_pattern;
-    time_t min;
-    int pct;
-    time_t max;
-    struct _refresh_t *next;
-} refresh_t;
-
-static refresh_t *Refresh_tbl = NULL;
-static refresh_t *Refresh_tail = NULL;
-
-static void
-refreshFreeList(refresh_t * t)
-{
-    refresh_t *tnext;
-
-    for (; t; t = tnext) {
-	tnext = t->next;
-	safe_free(t->pattern);
-	regfree(&t->compiled_pattern);
-	safe_free(t);
-    }
-}
-
-void
-refreshFreeMemory(void)
-{
-    refreshFreeList(Refresh_tbl);
-    Refresh_tail = Refresh_tbl = NULL;
-}
-
-void
-refreshAddToList(const char *pattern, int opts, time_t min, int pct, time_t max)
-{
-    refresh_t *t;
-    regex_t comp;
-    int errcode;
-    int flags = REG_EXTENDED | REG_NOSUB;
-    if (opts & REFRESH_ICASE)
-	flags |= REG_ICASE;
-    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
-	char errbuf[256];
-	regerror(errcode, &comp, errbuf, sizeof errbuf);
-	debug(22, 0) ("%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(22, 0) ("refreshAddToList: Invalid regular expression '%s': %s\n",
-	    pattern, errbuf);
-	return;
-    }
-    pct = pct < 0 ? 0 : pct;
-    max = max < 0 ? 0 : max;
-    t = xcalloc(1, sizeof(refresh_t));
-    t->pattern = (char *) xstrdup(pattern);
-    t->compiled_pattern = comp;
-    t->min = min;
-    t->pct = pct;
-    t->max = max;
-    t->next = NULL;
-    if (!Refresh_tbl)
-	Refresh_tbl = t;
-    if (Refresh_tail)
-	Refresh_tail->next = t;
-    Refresh_tail = t;
-}
-
 /*
  * refreshCheck():
  *     return 1 if its time to revalidate this entry, 0 otherwise
@@ -131,7 +65,7 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 	debug(22, 3)("refreshCheck: YES: Required Authorization\n");
 	return 1;
     }
-    for (R = Refresh_tbl; R; R = R->next) {
+    for (R = Config.Refresh; R; R = R->next) {
 	if (regexec(&(R->compiled_pattern), entry->url, 0, 0, 0) != 0)
 	    continue;
 	min = R->min;
@@ -189,7 +123,7 @@ getMaxAge(const char *url)
 {
     refresh_t *R;
     debug(22, 3) ("getMaxAge: '%s'\n", url);
-    for (R = Refresh_tbl; R; R = R->next) {
+    for (R = Config.Refresh; R; R = R->next) {
 	if (regexec(&(R->compiled_pattern), url, 0, 0, 0) == 0)
 	    return R->max;
     }

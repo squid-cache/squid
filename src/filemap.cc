@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.18 1997/06/04 06:15:52 wessels Exp $
+ * $Id: filemap.cc,v 1.19 1997/07/07 05:29:45 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -104,7 +104,6 @@
  */
 
 #include "squid.h"
-#include "filemap.h"
 
 /* Number of bits in a long */
 #if SIZEOF_LONG == 8

@@ -1,6 +1,6 @@
 
 /*
- * $Id: multicast.cc,v 1.2 1997/06/26 22:35:54 wessels Exp $
+ * $Id: multicast.cc,v 1.3 1997/07/07 05:29:49 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Martin Hamilton
@@ -70,42 +70,5 @@ mcastJoinGroups(const ipcache_addrs * ia, void *data)
 	if (x < 0)
 	    debug(5, 1) ("Can't disable multicast loopback: %s\n", xstrerror());
     }
-#endif
-}
-
-void
-mcastJoinVizSock(void)
-{
-#if defined(IP_ADD_MEMBERSHIP) && defined(IP_MULTICAST_TTL)
-    int x;
-    if (Config.vizHack.addr.s_addr > inet_addr("224.0.0.0")) {
-	struct ip_mreq mr;
-	char ttl = (char) Config.vizHack.mcast_ttl;
-	memset(&mr, '\0', sizeof(struct ip_mreq));
-	mr.imr_multiaddr.s_addr = Config.vizHack.addr.s_addr;
-	mr.imr_interface.s_addr = INADDR_ANY;
-	x = setsockopt(vizSock,
-	    IPPROTO_IP,
-	    IP_ADD_MEMBERSHIP,
-	    (char *) &mr,
-	    sizeof(struct ip_mreq));
-	if (x < 0)
-	    debug(50, 1) ("IP_ADD_MEMBERSHIP: FD %d, addr %s: %s\n",
-		vizSock, inet_ntoa(Config.vizHack.addr), xstrerror());
-	x = setsockopt(vizSock,
-	    IPPROTO_IP,
-	    IP_MULTICAST_TTL,
-	    &ttl,
-	    sizeof(char));
-	if (x < 0)
-	    debug(50, 1) ("IP_MULTICAST_TTL: FD %d, TTL %d: %s\n",
-		vizSock, Config.vizHack.mcast_ttl, xstrerror());
-	ttl = 0;
-	x = sizeof(char);
-	getsockopt(vizSock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, &x);
-	debug(1, 0) ("vizSock on FD %d, ttl=%d\n", vizSock, (int) ttl);
-    }
-#else
-    debug(1, 0) ("vizSock: Could not join multicast group\n");
 #endif
 }

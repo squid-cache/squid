@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.80 1997/07/06 05:14:07 wessels Exp $
+#  $Id: Makefile.in,v 1.81 1997/07/07 05:29:37 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -93,6 +93,7 @@ OBJS	 	= \
 		filemap.o \
 		fqdncache.o \
 		ftp.o \
+		globals.o \
 		gopher.o \
 		hash.o \
 		http.o \
@@ -138,8 +139,11 @@ $(OBJS): ../include/version.h
 squid:	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
 
-cache_cf.o: cache_cf.c Makefile
+globals.o: globals.c Makefile
 	$(CC) -c $< $(CFLAGS) $(DEFAULTS)
+
+globals.c: globals.h mk-globals-c.pl
+	perl mk-globals-c.pl < globals.h > $@
 
 client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)
@@ -275,7 +279,7 @@ install-pinger:
 
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
-	-rm -f cf_gen cf_parser.c cf.data
+	-rm -f cf_gen cf_parser.c cf.data globals.c
 
 distclean:	clean
 	-rm -f Makefile squid.conf squid.conf.pre

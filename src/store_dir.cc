@@ -1,33 +1,55 @@
+
+/*
+ * $Id: store_dir.cc,v 1.24 1997/07/07 05:29:57 wessels Exp $
+ *
+ * DEBUG: section 47    Store Directory Routines
+ * AUTHOR: Duane Wessels
+ *
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
+
 #include "squid.h"
-#include "filemap.h"
-#include "store_dir.h"
 
 #define SWAP_DIR_SHIFT 24
 #define SWAP_FILE_MASK 0x00FFFFFF
 #define DefaultLevelOneDirs     16
 #define DefaultLevelTwoDirs     256
 
-/* GLOBALS */
-int ncache_dirs = 0;
-
-/* LOCALS */
-static int SwapDirsAllocated = 0;
-static SwapDir *SwapDirs = NULL;
-
 /* return full name to swapfile */
 char *
 storeSwapFullPath(int fn, char *fullpath)
 {
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
-    int dirn = (fn >> SWAP_DIR_SHIFT) % ncache_dirs;
+    int dirn = (fn >> SWAP_DIR_SHIFT) % Config.cacheSwap.n_configured;
     int filn = fn & SWAP_FILE_MASK;
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
     sprintf(fullpath, "%s/%02X/%02X/%08X",
-	SwapDirs[dirn].path,
-	filn % SwapDirs[dirn].l1,
-	filn / SwapDirs[dirn].l1 % SwapDirs[dirn].l2,
+	Config.cacheSwap.swapDirs[dirn].path,
+	filn % Config.cacheSwap.swapDirs[dirn].l1,
+	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2,
 	filn);
     return fullpath;
 }
@@ -37,63 +59,16 @@ char *
 storeSwapSubSubDir(int fn, char *fullpath)
 {
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
-    int dirn = (fn >> SWAP_DIR_SHIFT) % ncache_dirs;
+    int dirn = (fn >> SWAP_DIR_SHIFT) % Config.cacheSwap.n_configured;
     int filn = fn & SWAP_FILE_MASK;
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
     sprintf(fullpath, "%s/%02X/%02X",
-	SwapDirs[dirn].path,
-	filn % SwapDirs[dirn].l1,
-	filn / SwapDirs[dirn].l1 % SwapDirs[dirn].l2);
+	Config.cacheSwap.swapDirs[dirn].path,
+	filn % Config.cacheSwap.swapDirs[dirn].l1,
+	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2);
     return fullpath;
-}
-
-/* add directory to swap disk */
-int
-storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
-{
-    SwapDir *tmp = NULL;
-    int i;
-    if (strlen(path) > (SQUID_MAXPATHLEN - 32))
-	fatal_dump("cache_dir pathname is too long");
-    if (SwapDirs == NULL) {
-	SwapDirsAllocated = 4;
-	SwapDirs = xcalloc(SwapDirsAllocated, sizeof(SwapDir));
-    }
-    if (SwapDirsAllocated == ncache_dirs) {
-	SwapDirsAllocated <<= 1;
-	tmp = xcalloc(SwapDirsAllocated, sizeof(SwapDir));
-	for (i = 0; i < ncache_dirs; i++)
-	    tmp[i] = SwapDirs[i];
-	xfree(SwapDirs);
-	SwapDirs = tmp;
-    }
-    debug(20, 1) ("Creating Swap Dir #%d in %s\n", ncache_dirs + 1, path);
-    tmp = SwapDirs + ncache_dirs;
-    tmp->path = xstrdup(path);
-    tmp->max_size = size;
-    tmp->l1 = l1;
-    tmp->l2 = l2;
-    tmp->read_only = read_only;
-    tmp->map = file_map_create(MAX_FILES_PER_DIR);
-    tmp->swaplog_fd = -1;
-    return ++ncache_dirs;
-}
-
-void
-storeReconfigureSwapDisk(const char *path, int size, int l1, int l2, int read_only)
-{
-    int i;
-    for (i = 0; i < ncache_dirs; i++) {
-	if (!strcmp(path, SwapDirs[i].path))
-	    break;
-    }
-    if (i == ncache_dirs)
-	return;
-    SwapDirs[i].max_size = size;
-    SwapDirs[i].read_only = read_only;
-    /* ignore the rest */
 }
 
 static int
@@ -101,7 +76,7 @@ storeVerifyOrCreateDir(const char *path)
 {
     struct stat sb;
     if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode)) {
-	debug(20, 3) ("%s exists\n", path);
+	debug(47, 3) ("%s exists\n", path);
 	return 0;
     }
     safeunlink(path, 1);
@@ -113,7 +88,7 @@ storeVerifyOrCreateDir(const char *path)
 	    fatal(tmp_error_buf);
 	}
     }
-    debug(20, 1) ("Created directory %s\n", path);
+    debug(47, 1) ("Created directory %s\n", path);
     if (stat(path, &sb) < 0 || !S_ISDIR(sb.st_mode)) {
 	sprintf(tmp_error_buf,
 	    "Failed to create directory %s: %s", path, xstrerror());
@@ -128,9 +103,9 @@ storeVerifySwapDirs(void)
     int i;
     const char *path = NULL;
     int directory_created = 0;
-    for (i = 0; i < ncache_dirs; i++) {
-	path = SwapDirs[i].path;
-	debug(20, 3) ("storeVerifySwapDirs: Creating swap space in %s\n", path);
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	path = Config.cacheSwap.swapDirs[i].path;
+	debug(47, 3) ("storeVerifySwapDirs: Creating swap space in %s\n", path);
 	storeVerifyOrCreateDir(path);
 	storeCreateSwapSubDirs(i);
     }
@@ -141,13 +116,13 @@ void
 storeCreateSwapSubDirs(int j)
 {
     int i, k;
-    SwapDir *SD = &SwapDirs[j];
+    SwapDir *SD = &Config.cacheSwap.swapDirs[j];
     LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (i = 0; i < SD->l1; i++) {
 	sprintf(name, "%s/%02X", SD->path, i);
 	if (storeVerifyOrCreateDir(name) == 0)
 	    continue;
-	debug(20, 1) ("Making directories in %s\n", name);
+	debug(47, 1) ("Making directories in %s\n", name);
 	for (k = 0; k < SD->l2; k++) {
 	    sprintf(name, "%s/%02X/%02X", SD->path, i, k);
 	    storeVerifyOrCreateDir(name);
@@ -163,8 +138,8 @@ storeMostFreeSwapDir(void)
     int dirn = 0;
     int i;
     SwapDir *SD;
-    for (i = 0; i < ncache_dirs; i++) {
-	SD = &SwapDirs[i];
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	SD = &Config.cacheSwap.swapDirs[i];
 	this_used = (double) SD->cur_size / SD->max_size;
 	if (this_used > least_used)
 	    continue;
@@ -181,7 +156,7 @@ storeDirMapBitTest(int fn)
 {
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
-    return file_map_bit_test(SwapDirs[dirn].map, filn);
+    return file_map_bit_test(Config.cacheSwap.swapDirs[dirn].map, filn);
 }
 
 void
@@ -189,8 +164,8 @@ storeDirMapBitSet(int fn)
 {
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
-    file_map_bit_set(SwapDirs[dirn].map, filn);
-    SwapDirs[dirn].suggest++;
+    file_map_bit_set(Config.cacheSwap.swapDirs[dirn].map, filn);
+    Config.cacheSwap.swapDirs[dirn].suggest++;
 }
 
 void
@@ -198,16 +173,16 @@ storeDirMapBitReset(int fn)
 {
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
-    file_map_bit_reset(SwapDirs[dirn].map, filn);
-    if (fn < SwapDirs[dirn].suggest)
-	SwapDirs[dirn].suggest = fn;
+    file_map_bit_reset(Config.cacheSwap.swapDirs[dirn].map, filn);
+    if (fn < Config.cacheSwap.swapDirs[dirn].suggest)
+	Config.cacheSwap.swapDirs[dirn].suggest = fn;
 }
 
 int
 storeDirMapAllocate(void)
 {
     int dirn = storeMostFreeSwapDir();
-    SwapDir *SD = &SwapDirs[dirn];
+    SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     int filn = file_map_allocate(SD->map, SD->suggest);
     return (dirn << SWAP_DIR_SHIFT) | (filn & SWAP_FILE_MASK);
 }
@@ -215,9 +190,9 @@ storeDirMapAllocate(void)
 char *
 storeSwapDir(int dirn)
 {
-    if (dirn < 0 || dirn >= ncache_dirs)
+    if (dirn < 0 || dirn >= Config.cacheSwap.n_configured)
 	fatal_dump("storeSwapDir: bad index");
-    return SwapDirs[dirn].path;
+    return Config.cacheSwap.swapDirs[dirn].path;
 }
 
 int
@@ -240,7 +215,7 @@ storeDirSwapLog(const StoreEntry * e)
     if (e->swap_file_number < 0)
 	fatal_dump("storeDirSwapLog: swap_file_number < 0");
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
-    assert(dirn < ncache_dirs);
+    assert(dirn < Config.cacheSwap.n_configured);
     /* Note this printf format appears in storeWriteCleanLog() too */
     sprintf(logmsg, "%08x %08x %08x %08x %9d %6d %08x %s\n",
 	(int) e->swap_file_number,
@@ -251,7 +226,7 @@ storeDirSwapLog(const StoreEntry * e)
 	e->refcount,
 	e->flag,
 	e->url);
-    file_write(SwapDirs[dirn].swaplog_fd,
+    file_write(Config.cacheSwap.swapDirs[dirn].swaplog_fd,
 	xstrdup(logmsg),
 	strlen(logmsg),
 	NULL,
@@ -285,15 +260,15 @@ storeDirOpenSwapLogs(void)
     char *path;
     int fd;
     SwapDir *SD;
-    for (i = 0; i < ncache_dirs; i++) {
-	SD = &SwapDirs[i];
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	SD = &Config.cacheSwap.swapDirs[i];
 	path = storeDirSwapLogFile(i, NULL);
 	fd = file_open(path, O_WRONLY | O_CREAT, NULL, NULL);
 	if (fd < 0) {
 	    debug(50, 1) ("%s: %s\n", path, xstrerror());
 	    fatal("storeDirOpenSwapLogs: Failed to open swap log.");
 	}
-	debug(20, 3) ("Cache Dir #%d log opened on FD %d\n", i, fd);
+	debug(47, 3) ("Cache Dir #%d log opened on FD %d\n", i, fd);
 	SD->swaplog_fd = fd;
     }
 }
@@ -303,10 +278,10 @@ storeDirCloseSwapLogs(void)
 {
     int i;
     SwapDir *SD;
-    for (i = 0; i < ncache_dirs; i++) {
-	SD = &SwapDirs[i];
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	SD = &Config.cacheSwap.swapDirs[i];
 	file_close(SD->swaplog_fd);
-	debug(20, 3) ("Cache Dir #%d log closed on FD %d\n", i, SD->swaplog_fd);
+	debug(47, 3) ("Cache Dir #%d log closed on FD %d\n", i, SD->swaplog_fd);
 	SD->swaplog_fd = -1;
     }
 }
@@ -319,11 +294,11 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
     char *new_path = xstrdup(storeDirSwapLogFile(dirn, ".new"));
     struct stat log_sb;
     struct stat clean_sb;
-    SwapDir *SD = &SwapDirs[dirn];
+    SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     FILE *fp;
     int fd;
     if (stat(swaplog_path, &log_sb) < 0) {
-	debug(20, 1) ("Cache Dir #%d: No log file\n", dirn);
+	debug(47, 1) ("Cache Dir #%d: No log file\n", dirn);
 	safe_free(swaplog_path);
 	safe_free(clean_path);
 	safe_free(new_path);
@@ -364,7 +339,7 @@ storeDirCloseTmpSwapLog(int dirn)
 {
     char *swaplog_path = xstrdup(storeDirSwapLogFile(dirn, NULL));
     char *new_path = xstrdup(storeDirSwapLogFile(dirn, ".new"));
-    SwapDir *SD = &SwapDirs[dirn];
+    SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     int fd;
     if (rename(new_path, swaplog_path) < 0) {
 	debug(50, 0) ("%s,%s: %s\n", new_path, swaplog_path, xstrerror());
@@ -379,15 +354,15 @@ storeDirCloseTmpSwapLog(int dirn)
     safe_free(swaplog_path);
     safe_free(new_path);
     SD->swaplog_fd = fd;
-    debug(20, 3) ("Cache Dir #%d log opened on FD %d\n", dirn, fd);
+    debug(47, 3) ("Cache Dir #%d log opened on FD %d\n", dirn, fd);
 }
 
 void
 storeDirUpdateSwapSize(int fn, size_t size, int sign)
 {
-    int dirn = (fn >> SWAP_DIR_SHIFT) % ncache_dirs;
+    int dirn = (fn >> SWAP_DIR_SHIFT) % Config.cacheSwap.n_configured;
     int k = ((size + 1023) >> 10) * sign;
-    SwapDirs[dirn].cur_size += k;
+    Config.cacheSwap.swapDirs[dirn].cur_size += k;
     store_swap_size += k;
 }
 
@@ -399,8 +374,8 @@ storeDirStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries: %d\n", meta_data.store_entries);
     storeAppendPrintf(sentry, "Store Swap Size: %d KB\n", store_swap_size);
-    for (i = 0; i < ncache_dirs; i++) {
-	SD = &SwapDirs[i];
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	SD = &Config.cacheSwap.swapDirs[i];
 	storeAppendPrintf(sentry, "\n");
 	storeAppendPrintf(sentry, "Store Directory #%d: %s\n", i, SD->path);
 	storeAppendPrintf(sentry, "First level subdirectories: %d\n", SD->l1);

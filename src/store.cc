@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.264 1997/07/02 22:42:58 wessels Exp $
+ * $Id: store.cc,v 1.265 1997/07/07 05:29:56 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -130,8 +130,6 @@
  */
 
 #include "squid.h"		/* goes first */
-#include "filemap.h"
-#include "store_dir.h"
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 #define SWAP_BUF		DISK_PAGE_SIZE
@@ -264,7 +262,7 @@ static DRCB storeSwapInHandle;
 static VCB storeSwapInValidateComplete;
 static void storeSwapInStartComplete _PARAMS((void *, int));
 static int swapInError _PARAMS((int, StoreEntry *));
-static mem_ptr new_MemObjectData _PARAMS((void));
+static mem_hdr *new_MemObjectData _PARAMS((void));
 static MemObject *new_MemObject _PARAMS((void));
 static StoreEntry *new_StoreEntry _PARAMS((int));
 static StoreEntry *storeAddDiskRestore _PARAMS((const char *,
@@ -398,7 +396,7 @@ destroy_StoreEntry(StoreEntry * e)
     meta_data.store_entries--;
 }
 
-static mem_ptr
+static mem_hdr *
 new_MemObjectData(void)
 {
     debug(20, 3) ("new_MemObjectData: calling memInit()\n");
@@ -1596,7 +1594,7 @@ storeStartRebuildFromDisk(void)
     int clean;
     RB = xcalloc(1, sizeof(struct storeRebuildState));
     RB->start = squid_curtime;
-    for (i = 0; i < ncache_dirs; i++) {
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	fp = storeDirOpenTmpSwapLog(i, &clean);
 	if (fp == NULL)
 	    continue;
@@ -1743,28 +1741,6 @@ StoreEntry *
 storeGetNext(void)
 {
     return ((StoreEntry *) hash_next(store_table));
-}
-
-/* free up all ttl-expired objects */
-void
-storePurgeOld(void *unused)
-{
-    StoreEntry *e = NULL;
-    int n = 0;
-    int count = 0;
-    /* reschedule */
-    eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
-    for (e = storeGetFirst(); e; e = storeGetNext()) {
-	if ((++n & 0xFF) == 0) {
-	    if (shutdown_pending || reconfigure_pending)
-		break;
-	}
-	if ((n & 0xFFF) == 0)
-	    debug(20, 2) ("storeWalkThrough: %7d objects so far.\n", n);
-	if (storeCheckExpired(e, 1))
-	    count += storeRelease(e);
-    }
-    debug(20, 0) ("storePurgeOld: Removed %d objects\n", count);
 }
 
 
@@ -2312,7 +2288,7 @@ storeInit(void)
 	storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL);
     if (storelog_fd < 0)
 	debug(20, 1) ("Store logging disabled\n");
-    if (ncache_dirs < 1)
+    if (Config.cacheSwap.n_configured < 1)
 	fatal("No cache_dir's specified in config file");
     storeVerifySwapDirs();
     storeDirOpenSwapLogs();
@@ -2434,11 +2410,11 @@ storeWriteCleanLogs(void)
     }
     debug(20, 1) ("storeWriteCleanLogs: Starting...\n");
     start = squid_curtime;
-    fd = xcalloc(ncache_dirs, sizeof(int));
-    cur = xcalloc(ncache_dirs, sizeof(char *));
-    new = xcalloc(ncache_dirs, sizeof(char *));
-    cln = xcalloc(ncache_dirs, sizeof(char *));
-    for (dirn = 0; dirn < ncache_dirs; dirn++) {
+    fd = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
+    cur = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    new = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    cln = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	fd[dirn] = -1;
 	cur[dirn] = xstrdup(storeDirSwapLogFile(dirn, NULL));
 	new[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".clean"));
@@ -2470,7 +2446,7 @@ storeWriteCleanLogs(void)
 	    continue;
 	if (BIT_TEST(e->flag, KEY_PRIVATE))
 	    continue;
-	if ((dirn = storeDirNumber(e->swap_file_number)) >= ncache_dirs) {
+	if ((dirn = storeDirNumber(e->swap_file_number)) >= Config.cacheSwap.n_configured) {
 	    debug_trap("storeWriteCleanLogss: dirn out of range");
 	    continue;
 	}
@@ -2496,7 +2472,7 @@ storeWriteCleanLogs(void)
 	}
     }
     safe_free(line);
-    for (dirn = 0; dirn < ncache_dirs; dirn++) {
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	file_close(fd[dirn]);
 	fd[dirn] = -1;
 	if (rename(new[dirn], cur[dirn]) < 0) {
@@ -2512,7 +2488,7 @@ storeWriteCleanLogs(void)
     debug(20, 1) ("  Took %d seconds (%6.1lf lines/sec).\n",
 	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
     /* touch a timestamp file if we're not still validating */
-    for (dirn = 0; dirn < ncache_dirs; dirn++) {
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	if (!store_rebuilding)
 	    file_close(file_open(cln[dirn],
 		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL));
@@ -2742,7 +2718,6 @@ storeTimestampsSet(StoreEntry * entry)
 
 #define FILENO_STACK_SIZE 128
 static int fileno_stack[FILENO_STACK_SIZE];
-int fileno_stack_count = 0;
 
 static int
 storeGetUnusedFileno(void)

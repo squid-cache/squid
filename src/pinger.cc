@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.23 1997/06/04 06:16:06 wessels Exp $
+ * $Id: pinger.cc,v 1.24 1997/07/07 05:29:51 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -30,7 +30,6 @@
  */
 
 #include "squid.h"
-#include "pinger.h"
 
 /* Junk so we can link with debug.o */
 int opt_syslog_enable = 0;
@@ -39,7 +38,7 @@ const char *const appname = "pinger";
 const char *const w_space = " \r\n\t";
 struct timeval current_time;
 time_t squid_curtime;
-struct SquidConfig Config;
+SquidConfig Config;
 int opt_debug_stderr = 0;
 
 #if USE_ICMP
