@@ -99,3 +99,8 @@ alpha19
 	- Added close handler to be called from comm_close().  Now
 	  all the *CloseAndFree() calls have been changed back to
 	  comm_close() which calls *StateFree, etc.
+	- Fixed comm_select to actually get to select() during background
+	  processing.
+	- Fixed rebuild bug which unlinked swap files of already-in-use
+	  file numbers.
+	- Added configurable shutdown lifetime (30 sec default)
