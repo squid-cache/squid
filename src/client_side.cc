@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.242 1998/03/31 05:37:37 wessels Exp $
+ * $Id: client_side.cc,v 1.243 1998/03/31 06:06:33 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -830,7 +830,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
     if (0 != strncmp(hdr_in, "HTTP/", 5))
 	return 0;
     hdr_len = headersEnd(hdr_in, hdr_in_sz);
-    if (hdr_len < 0) {
+    if (0 == hdr_len) {
 	debug(33, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
 	return 0;
     }
