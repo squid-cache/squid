@@ -12,13 +12,15 @@ Changes to squid-1.1.2 (December 18, 1996):
 	  ICP performance (Stewart Forster).
 	- Added access.log documentation to Release-Notes-1.1.txt
 	- Added support for TRACE method.
-	- Added 'log_icp_queries on|off' to config.
-	- Added hierarchy tag to common HTTP format access.log.
+	- Added 'log_icp_queries on|off' to config (David Luyer).
+	- Added hierarchy tag to common HTTP format access.log (David Luyer).
 	- Moved second SQUID_MAXFD/FD_SETSIZE check to after #includes.
 	- Added reverse DNS lookups for 'dstdomain' ACLs when the URL
 	  contains an IP address.
 	- Made HTTP reply header parsing more robust to deal with
 	  bad 304 replies from squid-1.1.beta27 and earlier.
+	- Changed reqnum passed in ICP replies to encode request method
+	  in high byte.
 
 Changes to squid-1.1.1 (December 15, 1996):
 
