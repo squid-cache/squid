@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.61 1996/11/08 00:46:42 wessels Exp $
+ * $Id: client_side.cc,v 1.62 1996/11/08 17:51:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -109,6 +109,7 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
     char *browser = NULL;
 
     if (Config.identLookup && icpState->ident.state == IDENT_NONE) {
+        icpState->aclHandler = handler;
         identStart(-1, icpState, clientLookupIdentDone);
 	return;
     }
