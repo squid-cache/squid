@@ -1,3 +1,4 @@
+	- Changed StoreEntry->lock_count to a u_short.
 	- Replaced urlcmp with strcmp
 	- Fixed pragma no-cache ejecting ENTRY_SPECIAL objects
 	  (Henrik Nordstrom).
