@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.141 1996/12/18 18:15:28 wessels Exp $
+ * $Id: http.cc,v 1.142 1996/12/19 00:51:49 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -105,7 +105,7 @@
 
 /*
  * Anonymizing patch by lutz@as-node.jena.thur.de
- * have a look into http.anon.c to get more informations.
+ * have a look into http-anon.c to get more informations.
  */
 
 #include "squid.h"
