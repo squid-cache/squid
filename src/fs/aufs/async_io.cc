@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.2 2000/05/12 00:29:18 wessels Exp $
+ * $Id: async_io.cc,v 1.3 2000/05/29 21:06:28 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -76,8 +76,6 @@ static OBJH aioStats;
 static MemPool *aio_ctrl_pool;
 static void aioFDWasClosed(int fd);
 
-MemPool *aio_state_pool;
-
 static void
 aioFDWasClosed(int fd)
 {
@@ -91,7 +89,6 @@ aioInit(void)
     if (initialised)
 	return;
     aio_ctrl_pool = memPoolCreate("aio_ctrl", sizeof(aio_ctrl_t));
-    aio_state_pool = memPoolCreate("Async UFS IO State data", sizeof(aiostate_t));
     cachemgrRegister("aio_counts", "Async IO Function Counters",
 	aioStats, 0, 1);
     initialised = 1;
@@ -102,7 +99,6 @@ void
 aioDone(void)
 {
     memPoolDestroy(aio_ctrl_pool);
-    memPoolDestroy(aio_state_pool);
     initialised = 0;
 }
 

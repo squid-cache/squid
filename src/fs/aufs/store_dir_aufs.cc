@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.2 2000/05/12 00:29:18 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.3 2000/05/29 21:06:28 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -44,7 +44,7 @@
 
 #define DefaultLevelOneDirs     16
 #define DefaultLevelTwoDirs     256
-#define STORE_META_BASYNCUFSZ 4096
+#define STORE_META_BUFSZ 4096
 
 typedef struct _RebuildState RebuildState;
 struct _RebuildState {
@@ -71,6 +71,8 @@ struct _RebuildState {
 
 static int n_asyncufs_dirs = 0;
 static int *asyncufs_dir_index = NULL;
+MemPool *aio_state_pool = NULL;
+static int asyncufs_initialised = 0;
 
 static char *storeAufsDirSwapSubDir(SwapDir *, int subdirn);
 static int storeAufsDirCreateDirectory(const char *path, int);
@@ -116,7 +118,7 @@ static int storeAufsFilenoBelongsHere(int fn, int F0, int F1, int F2);
 static int storeAufsCleanupDoubleCheck(SwapDir *, StoreEntry *);
 static void storeAufsDirStats(SwapDir *, StoreEntry *);
 static void storeAufsDirInitBitmap(SwapDir *);
-static int storeAufsDirValidFileno(SwapDir *, sfileno);
+static int storeAufsDirValidFileno(SwapDir *, sfileno, int);
 static int storeAufsDirCheckExpired(SwapDir *, StoreEntry *);
 #if !HEAP_REPLACEMENT
 static time_t storeAufsDirExpiredReferenceAge(SwapDir *);
@@ -166,7 +168,6 @@ storeAufsDirMapBitAllocate(SwapDir * SD)
     aioinfo->suggest = fn + 1;
     return fn;
 }
-
 
 /*
  * Initialise the asyncufs bitmap
@@ -536,6 +537,15 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	    continue;
 	if (s.op >= SWAP_LOG_MAX)
 	    continue;
+	/*
+	 * BC: during 2.4 development, we changed the way swap file
+	 * numbers are assigned and stored.  The high 16 bits used
+	 * to encode the SD index number.  There used to be a call
+	 * to storeDirProperFileno here that re-assigned the index 
+	 * bits.  Now, for backwards compatibility, we just need
+	 * to mask it off.
+	 */
+	s.swap_filen &= 0x00FFFFFF;
 	debug(20, 3) ("storeAufsDirRebuildFromSwapLog: %s %s %08X\n",
 	    swap_log_op_str[(int) s.op],
 	    storeKeyText(s.key),
@@ -554,12 +564,12 @@ storeAufsDirRebuildFromSwapLog(void *data)
 		storeExpireNow(e);
 		storeReleaseRequest(e);
 		storeAufsDirReplRemove(e);
-		storeRelease(e);
 		if (e->swap_filen > -1) {
-		    /* Fake a unlink here, this is a bad hack :( */
+		    storeAufsDirMapBitReset(SD, e->swap_filen);
 		    e->swap_filen = -1;
 		    e->swap_dirn = -1;
 		}
+		storeRelease(e);
 		rb->counts.objcount--;
 		rb->counts.cancelcount++;
 	    }
@@ -575,7 +585,7 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	if ((++rb->counts.scancount & 0xFFFF) == 0)
 	    debug(20, 3) ("  %7d %s Entries read so far.\n",
 		rb->counts.scancount, rb->sd->path);
-	if (!storeAufsDirValidFileno(SD, s.swap_filen)) {
+	if (!storeAufsDirValidFileno(SD, s.swap_filen, 0)) {
 	    rb->counts.invalid++;
 	    continue;
 	}
@@ -642,12 +652,13 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	    storeExpireNow(e);
 	    storeReleaseRequest(e);
 	    storeAufsDirReplRemove(e);
-	    storeRelease(e);
 	    if (e->swap_filen > -1) {
-		/* Fake a unlink here, this is a bad hack :( */
+		/* Make sure we don't actually unlink the file */
+		storeAufsDirMapBitReset(SD, e->swap_filen);
 		e->swap_filen = -1;
 		e->swap_dirn = -1;
 	    }
+	    storeRelease(e);
 	    rb->counts.dupcount++;
 	} else {
 	    /* URL doesnt exist, swapfile not in use */
@@ -927,7 +938,7 @@ struct _clean_state {
 
 #define CLEAN_BUF_SZ 16384
 /*
- * Begin the process to write clean cache state.  For ASYNCUFS this means
+ * Begin the process to write clean cache state.  For AUFS this means
  * opening some log files and allocating write buffers.  Return 0 if
  * we succeed, and assign the 'func' and 'data' return pointers.
  */
@@ -1138,7 +1149,7 @@ storeAufsDirClean(int swap_index)
 	if (sscanf(de->d_name, "%X", &swapfileno) != 1)
 	    continue;
 	fn = swapfileno;	/* XXX should remove this cruft ! */
-	if (storeAufsDirValidFileno(SD, fn))
+	if (storeAufsDirValidFileno(SD, fn, 1))
 	    if (storeAufsDirMapBitTest(SD, fn))
 		if (storeAufsFilenoBelongsHere(fn, D0, D1, D2))
 		    continue;
@@ -1177,7 +1188,7 @@ storeAufsDirCleanEvent(void *unused)
     int j = 0;
     int n = 0;
     /*
-     * Assert that there are ASYNCUFS cache_dirs configured, otherwise
+     * Assert that there are AUFS cache_dirs configured, otherwise
      * we should never be called.
      */
     assert(n_asyncufs_dirs);
@@ -1185,7 +1196,7 @@ storeAufsDirCleanEvent(void *unused)
 	SwapDir *sd;
 	aioinfo_t *aioinfo;
 	/*
-	 * Initialize the little array that translates ASYNCUFS cache_dir
+	 * Initialize the little array that translates AUFS cache_dir
 	 * number into the Config.cacheSwap.swapDirs array index.
 	 */
 	asyncufs_dir_index = xcalloc(n_asyncufs_dirs, sizeof(*asyncufs_dir_index));
@@ -1200,7 +1211,7 @@ storeAufsDirCleanEvent(void *unused)
 	assert(n == n_asyncufs_dirs);
 	/*
 	 * Start the storeAufsDirClean() swap_index with a random
-	 * value.  j equals the total number of ASYNCUFS level 2
+	 * value.  j equals the total number of AUFS level 2
 	 * swap directories
 	 */
 	swap_index = (int) (squid_random() % j);
@@ -1246,11 +1257,16 @@ storeAufsFilenoBelongsHere(int fn, int F0, int F1, int F2)
 }
 
 int
-storeAufsDirValidFileno(SwapDir * SD, sfileno filn)
+storeAufsDirValidFileno(SwapDir * SD, sfileno filn, int flag)
 {
     aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
     if (filn < 0)
 	return 0;
+    /*
+     * If flag is set it means out-of-range file number should
+     * be considered invalid.
+     */
+    if (flag)
     if (filn > aioinfo->map->max_n_files)
 	return 0;
     return 1;
@@ -1447,7 +1463,7 @@ storeAufsDirCheckObj(SwapDir * SD, const StoreEntry * e)
 void
 storeAufsDirRefObj(SwapDir * SD, StoreEntry * e)
 {
-    debug(1, 3) ("storeAufsDirRefObj: referencing %d/%d\n", e->swap_dirn,
+    debug(1, 3) ("storeAufsDirRefObj: referencing %p %d/%d\n", e, e->swap_dirn,
 	e->swap_filen);
 #if HEAP_REPLACEMENT
     /* Nothing to do here */
@@ -1469,7 +1485,7 @@ storeAufsDirRefObj(SwapDir * SD, StoreEntry * e)
 void
 storeAufsDirUnrefObj(SwapDir * SD, StoreEntry * e)
 {
-    debug(1, 3) ("storeAufsDirUnrefObj: referencing %d/%d\n", e->swap_dirn,
+    debug(1, 3) ("storeAufsDirUnrefObj: referencing %p %d/%d\n", e, e->swap_dirn,
 	e->swap_filen);
 #if HEAP_REPLACEMENT
     if (e->repl.node)
@@ -1570,14 +1586,14 @@ storeAufsDirCheckExpired(SwapDir * SD, StoreEntry * e)
 void
 storeAufsDirReplAdd(SwapDir * SD, StoreEntry * e)
 {
-    debug(20, 4) ("storeUfsDirReplAdd: added node %p to dir %d\n", e,
+    debug(20, 4) ("storeAufsDirReplAdd: added node %p to dir %d\n", e,
 	SD->index);
 #if HEAP_REPLACEMENT
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
 	(void) 0;
     } else {
 	e->repl.node = heap_insert(SD->repl.heap.heap, e);
-	debug(20, 4) ("storeUfsDirReplAdd: inserted node 0x%x\n", e->repl.node);
+	debug(20, 4) ("storeAufsDirReplAdd: inserted node 0x%x\n", e->repl.node);
     }
 #else
     /* Shouldn't we not throw special objects into the lru ? */
@@ -1590,12 +1606,12 @@ void
 storeAufsDirReplRemove(StoreEntry * e)
 {
     SwapDir *SD = INDEXSD(e->swap_dirn);
-    debug(20, 4) ("storeUfsDirReplRemove: remove node %p from dir %d\n", e,
+    debug(20, 4) ("storeAufsDirReplRemove: remove node %p from dir %d\n", e,
 	SD->index);
 #if HEAP_REPLACEMENT
     /* And now, release the object from the replacement policy */
     if (e->repl.node) {
-	debug(20, 4) ("storeUfsDirReplRemove: deleting node 0x%x\n",
+	debug(20, 4) ("storeAufsDirReplRemove: deleting node 0x%x\n",
 	    e->repl.node);
 	heap_delete(SD->repl.heap.heap, e->repl.node);
 	e->repl.node = NULL;
@@ -1604,6 +1620,7 @@ storeAufsDirReplRemove(StoreEntry * e)
     dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
 #endif
 }
+
 
 
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
@@ -1708,7 +1725,7 @@ storeAufsDirDump(StoreEntry * entry, const char *name, SwapDir * s)
     aioinfo_t *aioinfo = (aioinfo_t *) s->fsdata;
     storeAppendPrintf(entry, "%s %s %s %d %d %d\n",
 	name,
-	"asyncufs",
+	"aufs",
 	s->path,
 	s->max_size >> 10,
 	aioinfo->l1,
@@ -1885,11 +1902,25 @@ storeAufsDirParse(SwapDir * sd, int index, char *path)
 #endif
 }
 
+/*
+ * Initial setup / end destruction
+ */
+void
+storeAufsDirDone(void)
+{
+    aioDone();
+    memPoolDestroy(aio_state_pool);
+    asyncufs_initialised = 0;
+}
+
 void
 storeFsSetup_aufs(storefs_entry_t * storefs)
 {
+    assert(!asyncufs_initialised);
     storefs->parsefunc = storeAufsDirParse;
     storefs->reconfigurefunc = storeAufsDirReconfigure;
-    storefs->donefunc = aioDone;
+    storefs->donefunc = storeAufsDirDone;
+    aio_state_pool = memPoolCreate("AUFS IO State data", sizeof(aiostate_t));
+    asyncufs_initialised = 1;
     aioInit();
 }
