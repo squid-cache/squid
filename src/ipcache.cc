@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.131 1997/10/17 00:00:41 wessels Exp $
+ * $Id: ipcache.cc,v 1.132 1997/10/17 22:09:04 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -790,7 +790,7 @@ ipcacheUnregister(const char *name, void *data)
     ipcache_entry *i = NULL;
     struct _ip_pending *p = NULL;
     int n = 0;
-    debug(14, 3) ("ipcacheUnregister: FD %d, name '%s'\n", name);
+    debug(14, 3) ("ipcacheUnregister: name '%s'\n", name);
     if ((i = ipcache_get(name)) == NULL)
 	return 0;
     if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
