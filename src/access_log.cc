@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.42 1998/08/27 06:28:54 wessels Exp $
+ * $Id: access_log.cc,v 1.43 1998/09/30 02:53:17 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -56,6 +56,7 @@ const char *log_tags[] =
     "TCP_NEGATIVE_HIT",
     "TCP_MEM_HIT",
     "TCP_DENIED",
+    "TCP_OFFLINE_HIT",
     "UDP_HIT",
     "UDP_MISS",
     "UDP_DENIED",
