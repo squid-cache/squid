@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.69 2003/03/04 01:40:27 robertc Exp $
+ * $Id: comm_select.cc,v 1.70 2003/07/06 12:03:40 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -496,8 +496,10 @@ comm_select(int msec)
         if (num < 0 && !pending)
             continue;
 
-        debug(5, num ? 5 : 8) ("comm_select: %d+%d FDs ready at %d\n",
-                               num, pending, (int) squid_curtime);
+        getCurrentTime();
+
+        debug(5, num ? 5 : 8) ("comm_select: %d+%d FDs ready\n",
+                               num, pending);
 
         statHistCount(&statCounter.select_fds_hist, num);
 

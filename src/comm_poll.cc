@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.11 2003/03/04 01:40:27 robertc Exp $
+ * $Id: comm_poll.cc,v 1.12 2003/07/06 12:03:40 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -462,6 +462,8 @@ comm_select(int msec)
 
             /* NOTREACHED */
         }
+
+        getCurrentTime();
 
         debug(5, num ? 5 : 8) ("comm_poll: %d+%ld FDs ready\n", num, npending);
         statHistCount(&statCounter.select_fds_hist, num);
