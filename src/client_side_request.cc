@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.13 2003/02/05 02:20:09 robertc Exp $
+ * $Id: client_side_request.cc,v 1.14 2003/02/05 03:11:14 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -626,6 +626,13 @@ void
 clientRedirectDone(void *data, char *result)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
+    clientHttpRequest *http_ = context->http;
+
+    if (!cbdataReferenceValid (http_)) {
+	context->deleteSelf();
+	return;
+    }
+    
     clientHttpRequest *http = context->http;
     request_t *new_request = NULL;
     request_t *old_request = http->request;
