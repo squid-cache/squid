@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: ipcache.cc,v 1.3 1996/02/23 07:09:10 wessels Exp $";
+static char rcsid[] = "$Id: ipcache.cc,v 1.4 1996/02/23 07:12:58 wessels Exp $";
 /* 
  *  File:         ipcache.c
  *  Description:  ip address cache. speed up gethostbyname()
@@ -1368,43 +1368,6 @@ int ipcache_unregister(name, fd)
     return 1;
 }
 
-#ifdef OLD_CODE
-/* return 0 if address match one of address listed for that host */
-int ipcache_check(name, address, insist)
-     char *name;
-     void *address;
-     int insist;		/* insist another lookup if that name is not in a cache */
-{
-    ipcache_entry *e;
-    int i;
-
-    e = ipcache_get(name);
-    if (!e)
-	if (insist != 1)
-	    return -1;
-	else {
-	    /* do a blocking gethostbyname */
-	    ipcache_gethostbyname(name);
-	    e = ipcache_get(name);
-	    if (!e) {
-		debug(1, "ipcache_check: Failed to lookup up %s even with insist flag.\n", name);
-		return -1;
-	    }
-	}
-    if (e->status != CACHED)
-	return -1;
-
-    for (i = 0; i < (int) e->addr_count; i++) {
-	if (memcmp(e->entry.h_addr_list[i], address,
-		e->entry.h_length) == 0)
-	    return 0;
-    }
-
-    return -1;
-
-}
-#endif /* OLD_CODE */
-
 
 struct hostent *ipcache_gethostbyname(name)
      char *name;
@@ -1454,68 +1417,6 @@ struct hostent *ipcache_gethostbyname(name)
     return (result->status == CACHED) ? &(result->entry) : NULL;
 }
 
-
-#ifdef OLD_CODE
-/* return 0 if name match one of name listed for that host */
-int ipcache_checkname(refname, cname)
-     char *refname;
-     char *cname;
-{
-    ipcache_entry *e, *f;
-    int i, j;
-
-    if (strcasecmp(refname, cname) == 0)
-	return 0;
-
-    (void) ipcache_gethostbyname(cname);
-    e = ipcache_get(cname);
-    if (!e) {
-	/* try to look up */
-	e = ipcache_get(cname);
-	if (!e)
-	    return -1;
-    }
-    if (e->status != CACHED)
-	return -1;
-
-    if (strcasecmp(refname, e->entry.h_name) == 0)
-	return 0;
-    for (i = 0; i < (int) e->alias_count; i++) {
-	if (strcasecmp(refname, e->entry.h_aliases[i]) == 0)
-	    return 0;
-    }
-
-    /* try ipentry of ref */
-
-    f = ipcache_get(refname);
-    if (!f) {
-	/* try to look up */
-	(void) ipcache_gethostbyname(cname);
-	f = ipcache_get(refname);
-	if (!f)
-	    return -1;
-    }
-    /* PBD POSSIBLE BUG FIX?  ANAWAT, PLEASE CHECK */
-    if (f->entry.h_name && strcasecmp(f->entry.h_name, cname) == 0)
-	return 0;
-
-    /* check name from ref look up again all cname aliases */
-    for (i = 0; i < (int) e->alias_count; i++) {
-	if (strcasecmp(f->entry.h_name, e->entry.h_aliases[i]) == 0)
-	    return 0;
-    }
-
-    /* check aliases from ref look up again all cname aliases */
-    for (j = 0; j < (int) f->alias_count; j++) {
-	for (i = 0; i < (int) e->alias_count; i++) {
-	    if (strcasecmp(f->entry.h_aliases[j], e->entry.h_aliases[i]) == 0)
-		return 0;
-	}
-    }
-    return -1;
-
-}
-#endif /* OLD_CODE */
 
 
 /* process objects list */
