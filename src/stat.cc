@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.62 1996/09/12 16:59:57 wessels Exp $
+ * $Id: stat.cc,v 1.63 1996/09/13 20:23:03 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -900,8 +900,91 @@ void parameter_get(obj, sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
+#ifdef LOG_FULL_HEADERS
+/* Table of char to hex string conversions */
+#endif /* LOG_FULL_HEADERS */
 
+#ifndef LOG_FULL_HEADERS
 void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData)
+#else
+static char c2x[] =
+{
+    "000102030405060708090a0b0c0d0e0f"
+    "101112131415161718191a1b1c1d1e1f"
+    "202122232425262728292a2b2c2d2e2f"
+    "303132333435363738393a3b3c3d3e3f"
+    "404142434445464748494a4b4c4d4e4f"
+    "505152535455565758595a5b5c5d5e5f"
+    "606162636465666768696a6b6c6d6e6f"
+    "707172737475767778797a7b7c7d7e7f"
+    "808182838485868788898a8b8c8d8e8f"
+    "909192939495969798999a9b9c9d9e9f"
+    "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf"
+    "b0b1b2b3b4b5b6b7b8b9babbbcbdbebf"
+    "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf"
+    "d0d1d2d3d4d5d6d7d8d9dadbdcdddedf"
+    "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
+    "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+};
+
+/* log_quote -- URL-style encoding on MIME headers. */
+
+char *log_quote(header)
+     char *header;
+{
+    int c, i;
+    char *buf, *buf_cursor;
+    
+    if (header == NULL) {
+	buf = xcalloc(1, 1);
+	*buf = '\0';
+	return buf;
+    }
+    
+    buf = xcalloc((strlen(header) * 3) + 1, 1);
+    buf_cursor = buf;
+
+    /*
+     * We escape: \x00-\x1F"#%;<>?{}|\\\\^~`\[\]\x7F-\xFF 
+     * which is the default escape list for the CPAN Perl5 URI module
+     * modulo the inclusion of space (x40) to make the raw logs a bit
+     * more readable.
+     */
+    while ((c = *header++)) {
+	if (c <= 0x1F
+	  || c >= 0x7F
+	  || c == '"'
+	  || c == '#'
+	  || c == '%'
+	  || c == ';'
+	  || c == '<'
+	  || c == '>'
+	  || c == '?'
+	  || c == '{'
+	  || c == '}'
+	  || c == '|'
+	  || c == '\\'
+	  || c == '^'
+	  || c == '~'
+	  || c == '`'
+	  || c == '['
+	  || c == ']') {
+	    *buf_cursor++ = '%';
+	    i = c*2;
+	    *buf_cursor++ = c2x[i];
+	    *buf_cursor++ = c2x[i+1];
+	} else {
+	    *buf_cursor++ = c;
+	}
+    }
+
+    *buf_cursor = '\0';
+    return buf;
+}
+
+
+void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData, request_hdr, reply_hdr)
+#endif /* LOG_FULL_HEADERS */
      cacheinfo *obj;
      char *url;
      struct in_addr caddr;
@@ -912,8 +995,16 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
      int msec;
      char *ident;
      struct _hierarchyLogData *hierData;
+#ifdef LOG_FULL_HEADERS
+     char *request_hdr;
+     char *reply_hdr;
+#endif /* LOG_FULL_HEADERS */
 {
+#ifndef LOG_FULL_HEADERS
     LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
+#else
+    LOCAL_ARRAY(char, tmp, 10000);	/* MAX_URL is 4096 */
+#endif /* LOG_FULL_HEADERS */
     int x;
     char *client = NULL;
     hier_code hier_code = HIER_NONE;
@@ -963,6 +1054,22 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 		hier_timeout ? "TIMEOUT_" : "",
 		hier_strings[hier_code],
 		hier_host);
+#ifdef LOG_FULL_HEADERS
+
+	if (Config.logMimeHdrs) {
+	    int msize = strlen(tmp);
+	    char *ereq = log_quote(request_hdr);
+	    char *erep = log_quote(reply_hdr);
+
+	    if (msize + strlen(ereq) + strlen(erep) + 7 <= sizeof(tmp))
+		sprintf(tmp+msize-1, " [%s] [%s]\n", ereq, erep);
+	    else
+		debug(18, 1, "log_append: Long headers not logged.\n");
+	    safe_free(ereq);
+	    safe_free(erep);
+	}
+
+#endif /* LOG_FULL_HEADERS */
 	x = file_write(obj->logfile_fd,
 	    xstrdup(tmp),
 	    strlen(tmp),
