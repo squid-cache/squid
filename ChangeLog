@@ -6,9 +6,22 @@
 	- Changed #includes and such.
 	- the -d (debug) option is now gone.  Use new "debug" in the
 	  config file instead.  Debugging is section,level.
-	- Added pid_filename to cached.conf
+	- Added 'pid_filename' to cached.conf
 	- Changed default behaviour to unbuffered, use -b to make buffered.
 	- fix byte order conversion bug on echo port
 	- Removed all code and references to binary port
 	- WAIS fully compiled in always.
 	- Implemented IMS-GET and change-key-until-headers-read
+	- added 'visible_hostname' config option
+	- Made check_valid_url() do URL equivalencing
+	- Fixed logging:  Now logging to "access.log" occurs when the
+	  client data structure gets destroyed. This should mean that
+	  every client connection results in a log entry. The
+	  ``TCP_DONE'' tag is no longer used. Instead ``TCP_MISS'' is
+	  logged with a valid size. ``TCP_MISS_TTL'' has been changed
+	  to ``TCP_EXPIRED.'' Because logging occurs when the client
+	  connection is closed all connections should have a valid
+	  size. Note we're only logging the client side. It might be
+	  useful to also log the server side to get really accurate
+	  numbers for the traffic comming into and out of the cache.
+
