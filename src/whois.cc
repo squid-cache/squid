@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.15 2001/03/03 10:39:34 hno Exp $
+ * $Id: whois.cc,v 1.16 2001/04/14 00:03:24 hno Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -92,7 +92,7 @@ whoisReadReply(int fd, void *data)
     MemObject *mem = entry->mem_obj;
     int len;
     statCounter.syscalls.sock.reads++;
-    len = read(fd, buf, 4095);
+    len = FD_READ_METHOD(fd, buf, 4095);
     buf[len] = '\0';
     debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
     debug(75, 5) ("{%s}\n", buf);

@@ -1,9 +1,27 @@
 /*
- * $Id: md5.h,v 1.8 2001/03/11 21:55:20 hno Exp $
+ * $Id: md5.h,v 1.9 2001/04/14 00:03:20 hno Exp $
  */
 
 #ifndef MD5_H
 #define MD5_H
+
+#if USE_OPENSSL
+
+#if HAVE_OPENSSL_MD5_H
+#include <openssl/md5.h>
+#else
+#error Cannot find OpenSSL headers
+#endif
+
+/* Hack to adopt Squid to the OpenSSL syntax */
+#define MD5_DIGEST_CHARS MD5_DIGEST_LENGTH
+
+#define MD5Init MD5_Init
+#define MD5Update MD5_Update
+#define MD5Final MD5_Final
+
+#else /* USE_OPENSSL */
+
 /* MD5.H - header file for MD5C.C
  */
 
@@ -44,4 +62,5 @@ void MD5Final(unsigned char[16], MD5_CTX *);
 
 #define MD5_DIGEST_CHARS         16
 
+#endif /* USE_OPENSSL */
 #endif /* MD5_H */

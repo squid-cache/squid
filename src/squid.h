@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.214 2001/03/11 21:55:20 hno Exp $
+ * $Id: squid.h,v 1.215 2001/04/14 00:03:23 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -368,6 +368,20 @@ struct rusage {
 #endif
 
 #include "md5.h"
+
+#if USE_SSL
+#include "ssl_support.h"
+/* This is an ugly hack, but necessary.
+ *
+ * Squid's md5 conflicts with OpenSSL's md5, but they're more or less
+ * interchangable.
+ * Free is defined in include/radix.h and also in OpenSSL, but we don't need
+ * OpenSSL's, so it can be undef'd and then appear from radix.h later.
+ * It's dangerous and ugly, but I can't see any other way to get around it.
+ */
+#undef Free
+#endif
+
 #include "Stack.h"
 
 /* Needed for poll() on Linux at least */
@@ -464,7 +478,9 @@ struct rusage {
 /*
  * I'm sick of having to keep doing this ..
  */
-
 #define INDEXSD(i)   (&Config.cacheSwap.swapDirs[(i)])
+
+#define FD_READ_METHOD(fd, buf, len) (*fd_table[fd].read_method)(fd, buf, len)
+#define FD_WRITE_METHOD(fd, buf, len) (*fd_table[fd].write_method)(fd, buf, len)
 
 #endif /* SQUID_H */

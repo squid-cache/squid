@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2001/01/31 22:16:42 hno Exp $
+#  $Id: Makefile.in,v 1.2 2001/04/14 00:03:25 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -45,11 +45,11 @@ XTRA_OBJS 	= @XTRA_OBJS@
 MV		= @MV@
 RM		= @RM@
 SHELL		= /bin/sh
-
+SSLLIB		= @SSLLIB@
 
 INCLUDE		= -I. -I../../../../../include -I$(top_srcdir)/include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-AUTH_LIBS	= -L../../../../../lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
+AUTH_LIBS	= -L../../../../../lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS) $(SSLLIB)
 
 PROGS           = $(DIGEST_PW_AUTH_EXE)
 OBJS	 	= digest_pw_auth.o

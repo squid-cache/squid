@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.533 2001/04/13 14:59:11 hno Exp $
+ * $Id: client_side.cc,v 1.534 2001/04/14 00:03:21 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -831,7 +831,7 @@ connStateFree(int fd, void *data)
     /* prevent those nasty RST packets */
     {
 	char buf[SQUID_TCP_SO_RCVBUF];
-	while (read(fd, buf, SQUID_TCP_SO_RCVBUF) > 0);
+	while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0);
     }
 #endif
 }
@@ -2472,6 +2472,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
 	    int vport;
 	    char *q;
+	    char *protocol_name = "http";
 	    if (vport_mode)
 		vport = (int) ntohs(http->conn->me.sin_port);
 	    else
@@ -2494,8 +2495,15 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    url_sz = strlen(url) + 32 + Config.appendDomainLen +
 		strlen(t);
 	    http->uri = xcalloc(url_sz, 1);
-	    snprintf(http->uri, url_sz, "http://%s:%d%s",
-		t, vport, url);
+
+#if SSL_FORWARDING_NOT_YET_DONE
+	    if (Config.Sockaddr.https->s.sin_port == http->conn->me.sin_port) {
+		protocol_name = "https";
+		vport = ntohs(http->conn->me.sin_port);
+	    }
+#endif
+	    snprintf(http->uri, url_sz, "%s://%s:%d%s",
+		protocol_name, t, vport, url);
 	} else if (vhost_mode) {
 	    int vport;
 	    /* Put the local socket IP address as the hostname */
@@ -2611,7 +2619,7 @@ clientReadRequest(int fd, void *data)
     int len = conn->in.size - conn->in.offset - 1;
     debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
     statCounter.syscalls.sock.reads++;
-    size = read(fd, conn->in.buf + conn->in.offset, len);
+    size = FD_READ_METHOD(fd, conn->in.buf + conn->in.offset, len);
     if (size > 0) {
 	fd_bytes(fd, size, FD_READ);
 	kb_incr(&statCounter.client_http.kbytes_in, size);
@@ -3105,6 +3113,112 @@ httpAccept(int sock, void *data)
     }
 }
 
+#if USE_SSL
+
+/* negotiate an SSL connection */
+static void
+clientNegotiateSSL(int fd, void *data)
+{
+    ConnStateData *conn = data;
+    X509 *client_cert;
+    int ret;
+
+    if ((ret = SSL_accept(fd_table[fd].ssl)) <= 0) {
+	if (BIO_sock_should_retry(ret)) {
+	    commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
+	    return;
+	}
+	ret = ERR_get_error();
+	debug(81, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s\n",
+	    fd, ERR_error_string(ret, NULL));
+	comm_close(fd);
+	return;
+    }
+    debug(81, 5) ("clientNegotiateSSL: FD %d negotiated cipher %s\n", fd,
+	SSL_get_cipher(fd_table[fd].ssl));
+
+    client_cert = SSL_get_peer_certificate(fd_table[fd].ssl);
+    if (client_cert != NULL) {
+	debug(81, 5) ("clientNegotiateSSL: FD %d client certificate: subject: %s\n", fd,
+	    X509_NAME_oneline(X509_get_subject_name(client_cert), 0, 0));
+
+	debug(81, 5) ("clientNegotiateSSL: FD %d client certificate: issuer: %s\n", fd,
+	    X509_NAME_oneline(X509_get_issuer_name(client_cert), 0, 0));
+
+	X509_free(client_cert);
+    } else {
+	debug(81, 5) ("clientNegotiateSSL: FD %d has no certificate.\n", fd);
+    }
+
+    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
+}
+
+/* handle a new HTTPS connection */
+static void
+httpsAccept(int sock, void *data)
+{
+    int *N = data;
+    int fd = -1;
+    ConnStateData *connState = NULL;
+    struct sockaddr_in peer;
+    struct sockaddr_in me;
+    int max = INCOMING_HTTP_MAX;
+    SSL *ssl;
+    int ssl_error;
+#if USE_IDENT
+    static aclCheck_t identChecklist;
+#endif
+    commSetSelect(sock, COMM_SELECT_READ, httpsAccept, NULL, 0);
+    while (max-- && !httpAcceptDefer(sock, NULL)) {
+	memset(&peer, '\0', sizeof(struct sockaddr_in));
+	memset(&me, '\0', sizeof(struct sockaddr_in));
+	if ((fd = comm_accept(sock, &peer, &me)) < 0) {
+	    if (!ignoreErrno(errno))
+		debug(50, 1) ("httpsAccept: FD %d: accept failure: %s\n",
+		    sock, xstrerror());
+	    break;
+	}
+	if ((ssl = SSL_new(sslContext)) == NULL) {
+	    ssl_error = ERR_get_error();
+	    debug(81, 1) ("httpsAccept: Error allocating handle: %s\n",
+		ERR_error_string(ssl_error, NULL));
+	    break;
+	}
+	SSL_set_fd(ssl, fd);
+	fd_table[fd].ssl = ssl;
+	fd_table[fd].read_method = &ssl_read_method;
+	fd_table[fd].write_method = &ssl_write_method;
+	debug(50, 5) ("httpsAccept: FD %d accepted, starting SSL negotiation.\n", fd);
+
+	connState = cbdataAlloc(ConnStateData);
+	connState->peer = peer;
+	connState->log_addr = peer.sin_addr;
+	connState->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
+	connState->me = me;
+	connState->fd = fd;
+	connState->in.size = CLIENT_REQ_BUF_SZ;
+	connState->in.buf = memAllocate(MEM_CLIENT_REQ_BUF);
+	/* XXX account connState->in.buf */
+	comm_add_close_handler(fd, connStateFree, connState);
+	if (Config.onoff.log_fqdn)
+	    fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
+	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
+#if USE_IDENT
+	identChecklist.src_addr = peer.sin_addr;
+	identChecklist.my_addr = me.sin_addr;
+	identChecklist.my_port = ntohs(me.sin_port);
+	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
+	    identStart(&me, &peer, clientIdentDone, connState);
+#endif
+	commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+	commSetDefer(fd, clientReadDefer, connState);
+	clientdbEstablished(peer.sin_addr, 1);
+	(*N)++;
+    }
+}
+
+#endif /* USE_SSL */
+
 #define SENDING_BODY 0
 #define SENDING_HDRSONLY 1
 static int
@@ -3263,6 +3377,28 @@ clientHttpConnectionsOpen(void)
 	    fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
+#ifdef USE_SSL
+    for (s = Config.Sockaddr.https; s; s = s->next) {
+	enter_suid();
+	fd = comm_open(SOCK_STREAM,
+	    0,
+	    s->s.sin_addr,
+	    ntohs(s->s.sin_port),
+	    COMM_NONBLOCKING,
+	    "HTTPS Socket");
+	leave_suid();
+	if (fd < 0)
+	    continue;
+	comm_listen(fd);
+	commSetSelect(fd, COMM_SELECT_READ, httpsAccept, NULL, 0);
+	/*commSetDefer(fd, httpAcceptDefer, NULL); */
+	debug(1, 1) ("Accepting HTTPS connections at %s, port %d, FD %d.\n",
+	    inet_ntoa(s->s.sin_addr),
+	    (int) ntohs(s->s.sin_port),
+	    fd);
+	HttpSockets[NHttpSockets++] = fd;
+    }
+#endif
     if (NHttpSockets < 1)
 	fatal("Cannot open HTTP Port");
 }

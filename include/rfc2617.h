@@ -14,7 +14,7 @@
 
 
 /*
- * $Id: rfc2617.h,v 1.1 2001/01/31 22:16:36 hno Exp $
+ * $Id: rfc2617.h,v 1.2 2001/04/14 00:03:20 hno Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -49,7 +49,6 @@
 
 #ifndef RFC2617_H
 #define RFC2617_H
-#include "md5.h"
 
 #define HASHLEN 16
 typedef char HASH[HASHLEN];

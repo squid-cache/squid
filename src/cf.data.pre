@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.216 2001/04/03 20:22:10 adrian Exp $
+# $Id: cf.data.pre,v 1.217 2001/04/14 00:03:21 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -82,6 +82,57 @@ DOC_START
 	address, however.
 
 	You may specify multiple socket addresses on multiple lines.
+DOC_END
+
+NAME: https_port
+IFDEF: USE_SSL
+TYPE: sockaddr_in_list
+DEFAULT: none
+LOC: Config.Sockaddr.https
+DOC_START
+        Usage:  port
+                hostname:port
+                1.2.3.4:port
+
+        The socket addresses where Squid will listen for HTTPS client
+        requests.  You may specify multiple socket addresses.
+
+        This is really only useful for situations where you are running
+        squid in accelerator mode and you want to do the SSL work at the
+        accelerator level.
+DOC_END
+
+NAME: ssl_certificate
+IFDEF: USE_SSL
+TYPE: string
+DEFAULT: none
+LOC: Config.SSL.certificate
+COMMENT: /path/to/certificate
+DOC_START
+        Certificate for use with SSL acceleration.
+DOC_END
+
+NAME: ssl_key
+IFDEF: USE_SSL
+TYPE: string
+DEFAULT: none
+LOC: Config.SSL.key
+COMMENT: /path/to/key
+DOC_START
+        Key for SSL certificate defined in ssl_certificate.
+DOC_END
+
+NAME: ssl_version
+IFDEF: USE_SSL
+TYPE: int
+DEFAULT: 1
+LOC: Config.SSL.version
+DOC_START
+        Determines the version of SSL/TLS used.
+        1:      SSLv2/SSLv3
+        2:      SSLv2 only
+        3:      SSLv3 only
+        4:      TLSv1
 DOC_END
 
 
@@ -447,7 +498,6 @@ DOC_START
 	be handled directly by this cache.  In other words, use this
 	to not query neighbor caches for certain objects.  You may
 	list this option multiple times.
-
 NOCOMMENT_START
 #We recommend you to use at least the following line.
 hierarchy_stoplist cgi-bin ?
@@ -684,6 +734,8 @@ DOC_START
 	Usage:
 	
 	cache_dir Type Directory-Name Fs-specific-data [options]
+
+	cache_dir diskd Maxobjsize Directory-Name MB L1 L2 Q1 Q2
 
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.

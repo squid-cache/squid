@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.334 2001/03/28 23:24:18 wessels Exp $
+ * $Id: main.cc,v 1.335 2001/04/14 00:03:23 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -518,6 +518,10 @@ mainInitialize(void)
     }
 #if USE_WCCP
     wccpInit();
+#endif
+#if USE_SSL
+    if (Config.Sockaddr.https)
+	sslInit(Config.SSL.certificate, Config.SSL.key);
 #endif
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0) {

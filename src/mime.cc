@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.99 2001/01/12 00:37:19 wessels Exp $
+ * $Id: mime.cc,v 1.100 2001/04/14 00:03:23 hno Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -439,7 +439,7 @@ mimeLoadIconFile(const char *icon)
     reply->hdr_sz = e->mem_obj->inmem_hi;	/* yuk */
     /* read the file into the buffer and append it to store */
     buf = memAllocate(MEM_4K_BUF);
-    while ((n = read(fd, buf, 4096)) > 0)
+    while ((n = FD_READ_METHOD(fd, buf, 4096)) > 0)
 	storeAppend(e, buf, n);
     file_close(fd);
     EBIT_SET(e->flags, ENTRY_SPECIAL);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.385 2001/04/03 20:22:10 adrian Exp $
+ * $Id: structs.h,v 1.386 2001/04/14 00:03:23 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -381,6 +381,9 @@ struct _SquidConfig {
     } Port;
     struct {
 	sockaddr_in_list *http;
+#if USE_SSL
+	sockaddr_in_list *https;
+#endif
     } Sockaddr;
 #if SQUID_SNMP
     struct {
@@ -621,6 +624,13 @@ struct _SquidConfig {
 	int rebuild_chunk_percentage;
     } digest;
 #endif
+#if USE_SSL
+    struct {
+	char *certificate;
+	char *key;
+	int version;
+    } SSL;
+#endif
     wordlist *ext_methods;
     struct {
 	int high_rptm;
@@ -734,6 +744,11 @@ struct _fde {
     DEFER *defer_check;		/* check if we should defer read */
     void *defer_data;
     CommWriteStateData *rwstate;	/* State data for comm_write */
+    READ_HANDLER *read_method;
+    WRITE_HANDLER *write_method;
+#if USE_SSL
+    SSL *ssl;
+#endif
 };
 
 struct _fileMap {
