@@ -269,8 +269,12 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	break;
     }
     if (icp_request) {
+#if OLD_CODE
 	stringClean(&icp_request->urlpath);
 	memFree(MEM_REQUEST_T, icp_request);
+#else
+	requestDestroy(icp_request);
+#endif
     }
 }
 

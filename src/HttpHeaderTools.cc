@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.10 1998/04/27 19:16:05 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.11 1998/05/11 18:44:27 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -76,14 +76,13 @@ httpHeaderMaskInit(HttpHeaderMask * mask)
     memset(mask, 0, sizeof(*mask));
 }
 
-/* calculates a bit mask of a given array */
+/* calculates a bit mask of a given array; does not reset mask! */
 void
 httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count)
 {
     int i;
     assert(mask && enums);
-    assert(count < sizeof(int) * 8);	/* check for overflow */
-    httpHeaderMaskInit(mask);
+    assert(count < sizeof(*mask) * 8);	/* check for overflow */
 
     for (i = 0; i < count; ++i) {
 	assert(!CBIT_TEST(*mask, enums[i]));	/* check for duplicates */
@@ -107,6 +106,50 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
 }
 
 /*
+ * return true if a given directive is found in at least one of the "connection" header-fields
+ * note: if HDR_PROXY_CONNECTION is present we ignore HDR_CONNECTION
+ */
+int
+httpHeaderHasConnDir(const HttpHeader *hdr, const char *directive)
+{
+    if (httpHeaderHas(hdr, HDR_PROXY_CONNECTION)) {
+	const char *str = httpHeaderGetStr(hdr, HDR_PROXY_CONNECTION);
+	return str && !strcasecmp(str, directive);
+    }
+    if (httpHeaderHas(hdr, HDR_CONNECTION)) {
+	String str = httpHeaderGetList(hdr, HDR_CONNECTION);
+	const int res = strListIsMember(&str, directive, ',');
+	stringClean(&str);
+	return res;
+    }
+    return 0;
+}
+
+/* returns true iff "m" is a member of the list */
+int
+strListIsMember(const String *list, const char *m, char del)
+{
+    const char *pos = NULL;
+    const char *item;
+    assert(list && m);
+    while (strListGetItem(list, del, &item, NULL, &pos)) {
+	if (!strcasecmp(item, m))
+	    return 1;
+    }
+    return 0;
+}
+
+/* appends an item to the list */
+void
+strListAdd(String *str, const char *item, char del)
+{
+    assert(str && item);
+    if (strLen(*str))
+	stringAppend(str, &del, 1);
+    stringAppend(str, item, strlen(item));
+}
+
+/*
  * iterates through a 0-terminated string of items separated by 'del's.
  * white space around 'del' is considered to be a part of 'del'
  * like strtok, but preserves the source, and can iterate several strings at once
@@ -115,7 +158,7 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
  * init pos with NULL to start iteration.
  */
 int
-strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos)
+strListGetItem(const String *str, char del, const char **item, int *ilen, const char **pos)
 {
     size_t len;
     assert(str && item && pos);
@@ -125,7 +168,9 @@ strListGetItem(const char *str, char del, const char **item, int *ilen, const ch
 	else
 	    (*pos)++;
     } else {
-	*pos = str;
+	*pos = strBuf(*str);
+	if (!*pos)
+	    return 0;
     }
 
     /* skip leading ws (ltrim) */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.6 1998/04/06 22:32:07 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.7 1998/05/11 18:44:25 rousskov Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -172,7 +172,7 @@ httpHdrRangeCreate()
 }
 
 HttpHdrRange *
-httpHdrRangeParseCreate(const char *str)
+httpHdrRangeParseCreate(const String *str)
 {
     HttpHdrRange *r = httpHdrRangeCreate();
     if (!httpHdrRangeParseInit(r, str)) {
@@ -184,18 +184,20 @@ httpHdrRangeParseCreate(const char *str)
 
 /* returns true if ranges are valid; inits HttpHdrRange */
 int
-httpHdrRangeParseInit(HttpHdrRange * range, const char *str)
+httpHdrRangeParseInit(HttpHdrRange * range, const String *str)
 {
     const char *item;
     const char *pos = NULL;
     int ilen;
+    int count = 0;
     assert(range && str);
     RangeParsedCount++;
-    debug(64, 8) ("parsing range field: '%s'\n", str);
+    debug(64, 8) ("parsing range field: '%s'\n", strBuf(*str));
     /* check range type */
-    if (strncasecmp(str, "bytes=", 6))
+    if (strNCaseCmp(*str, "bytes=", 6))
 	return 0;
-    str += 6;
+    /* skip "bytes="; hack! */
+    pos = strBuf(*str)+5;
     /* iterate through comma separated list */
     while (strListGetItem(str, ',', &item, &ilen, &pos)) {
 	HttpHdrRangeSpec *spec = httpHdrRangeSpecParseCreate(item, ilen);
@@ -205,6 +207,7 @@ httpHdrRangeParseInit(HttpHdrRange * range, const char *str)
 	 */
 	if (spec)
 	    stackPush(&range->specs, spec);
+	count++;
     }
     debug(68, 8) ("parsed range range count: %d\n", range->specs.count);
     return range->specs.count;

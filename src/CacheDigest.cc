@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.17 1998/04/24 07:09:26 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.18 1998/05/11 18:44:24 rousskov Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -56,7 +56,7 @@ cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
     cd->bits_per_entry = bpe;
     cd->mask_size = mask_size;
     cd->mask = xcalloc(cd->mask_size, 1);
-    debug(70, 2) ("cacheDigestInit: capacity: %d entries, pbe: %d; size: %d bytes\n",
+    debug(70, 2) ("cacheDigestInit: capacity: %d entries, bpe: %d; size: %d bytes\n",
 	cd->capacity, cd->bits_per_entry, cd->mask_size);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.24 1998/05/09 04:49:11 wessels Exp $
+ * $Id: peer_digest.cc,v 1.25 1998/05/11 18:44:44 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -247,18 +247,15 @@ peerDigestRequest(peer * p)
     requestLink(req);
     assert(req);
     /* add custom headers */
-    /* rewrite this when requests get new header interface */
-    assert(!req->headers);
+    /* rewrite this when requests get rid of "prefix" */
+    assert(!req->prefix);
     {
 	MemBuf mb;
 	memBufDefInit(&mb);
 	memBufPrintf(&mb, "Accept: %s,text/html\r\n", StoreDigestMimeStr);
 	memBufPrintf(&mb, "Cache-control: only-if-cached\r\n");
-	memBufAppend(&mb, "\r\n", 2);
-	/* kludge! */
-	assert(memBufFreeFunc(&mb) == &xfree);
-	req->headers = mb.buf;
-	req->headers_sz = mb.size;
+	httpRequestSetHeaders(req, METHOD_GET, url, mb.buf);
+	memBufClean(&mb);
     }
     /* create fetch state structure */
     fetch = memAllocate(MEM_DIGEST_FETCH_STATE);
@@ -555,12 +552,12 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
     }
     /* update global stats */
     /* note: outgoing numbers are not precise! @?@ */
-    kb_incr(&Counter.cd.kbytes_sent, req->headers_sz);
+    kb_incr(&Counter.cd.kbytes_sent, req->prefix_sz);
     kb_incr(&Counter.cd.kbytes_recv, (size_t) b_read);
     Counter.cd.msgs_sent++;
     Counter.cd.msgs_recv++;
     /* update peer stats */
-    kb_incr(&peer->digest.stats.kbytes_sent, req->headers_sz);
+    kb_incr(&peer->digest.stats.kbytes_sent, req->prefix_sz);
     kb_incr(&peer->digest.stats.kbytes_recv, (size_t) b_read);
     peer->digest.stats.msgs_sent++;
     peer->digest.stats.msgs_recv++;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.205 1998/05/06 21:09:51 wessels Exp $
+ * $Id: neighbors.cc,v 1.206 1998/05/11 18:44:42 rousskov Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1190,7 +1190,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 		storeAppendPrintf(sentry, "!%s ", d->domain);
 	}
 	storeAppendPrintf(sentry, "\n");
-	storeAppendPrintf(sentry, "Keep-Alive Ratio: %d%%\n",
+	storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n",
 	    percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.4 1998/04/06 22:32:10 wessels Exp $
+ * $Id: String.cc,v 1.5 1998/05/11 18:44:30 rousskov Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -87,7 +87,8 @@ stringReset(String * s, const char *str)
 void
 stringAppend(String * s, const char *str, int len)
 {
-    assert(s && s->buf);
+    assert(s);
+    assert(str && len >= 0);
     if (s->len + len < s->size) {
 	strncat(s->buf, str, len);
 	s->len += len;
@@ -95,8 +96,10 @@ stringAppend(String * s, const char *str, int len)
 	String snew = StringNull;
 	snew.len = s->len + len;
 	stringInitBuf(&snew, snew.len + 1);
-	xmemcpy(snew.buf, s->buf, s->len);
-	xmemcpy(snew.buf + s->len, str, len);
+	if (s->buf)
+	    xmemcpy(snew.buf, s->buf, s->len);
+	if (len)
+	    xmemcpy(snew.buf + s->len, str, len);
 	snew.buf[snew.len] = '\0';
 	stringClean(s);
 	*s = snew;

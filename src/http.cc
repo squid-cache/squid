@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.269 1998/05/09 04:49:10 wessels Exp $
+ * $Id: http.cc,v 1.270 1998/05/11 18:44:38 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -131,7 +131,9 @@ static PF httpReadReply;
 static PF httpSendRequest;
 static PF httpStateFree;
 static PF httpTimeout;
+#if OLD_CODE
 static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, int);
+#endif
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
@@ -381,7 +383,7 @@ httpPconnTransferDone(HttpStateData * httpState)
     HttpReply *reply = mem->reply;
     debug(11, 3) ("httpPconnTransferDone: FD %d\n", httpState->fd);
     /*
-     * If we didn't send a Keepalive request header, then this
+     * If we didn't send a keep-alive request header, then this
      * can not be a persistent connection.
      */
     if (!EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
@@ -569,6 +571,7 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
     }
 }
 
+#if OLD_CODE
 static void
 httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, int check)
 {
@@ -590,155 +593,164 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, in
     strcat(hdr + (*sz), crlf);
     *sz = n;
 }
+#endif
 
-#define YBUF_SZ (MAX_URL+32)
-size_t
+/*
+ * build request headers and append them to a given MemBuf 
+ * used by httpBuildRequestPrefix()
+ * note: calls httpHeaderInit(), the caller is responsible for Clean()-ing
+ */
+static void
 httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
-    size_t * in_len,
-    char *hdr_out,
-    size_t out_sz,
+    HttpHeader *hdr_out,
     int cfd,
     int flags)
 {
-    LOCAL_ARRAY(char, ybuf, YBUF_SZ);
-    LOCAL_ARRAY(char, no_forward, 1024);
-    char *xbuf = memAllocate(MEM_4K_BUF);
-    char *viabuf = memAllocate(MEM_4K_BUF);
-    char *fwdbuf = memAllocate(MEM_4K_BUF);
-    char *t = NULL;
-    char *s = NULL;
-    char *end = NULL;
-    size_t len = 0;
-    size_t hdr_len = 0;
-    size_t l;
-    int hdr_flags = 0;
-    int cc_flags = 0;
-    int n;
-    const char *url = NULL;
-    char *hdr_in;
+    /* building buffer for complex strings */
+    #define BBUF_SZ (MAX_URL+32)
+    LOCAL_ARRAY(char, bbuf, BBUF_SZ);
+    String strConnection = StringNull;
+    const HttpHeader *hdr_in = &orig_request->header;
+    const HttpHeaderEntry *e;
+    HttpHeaderPos pos = HttpHeaderInitPos;
 
-    assert(orig_request->headers != NULL);
-    hdr_in = orig_request->headers;
-    debug(11, 3) ("httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
-    xstrncpy(fwdbuf, "X-Forwarded-For: ", 4096);
-    xstrncpy(viabuf, "Via: ", 4096);
-    snprintf(ybuf, YBUF_SZ, "%s %s HTTP/1.0",
-	RequestMethodStr[request->method],
-	strLen(request->urlpath) ? strBuf(request->urlpath) : "/");
-    httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
-    /* Add IMS header */
-    if (entry && entry->lastmod && request->method == METHOD_GET) {
-	snprintf(ybuf, YBUF_SZ, "If-Modified-Since: %s", mkrfc1123(entry->lastmod));
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
-	EBIT_SET(hdr_flags, HDR_IMS);
-    }
-    assert(orig_request->headers_sz > 0);
-    end = orig_request->headers + orig_request->headers_sz;
-    for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
-	hdr_len = t - hdr_in;
-	l = strcspn(t, crlf) + 1;
-	if (l > 4096)
-	    l = 4096;
-	/* We might find a NULL before 'end' */
-	if (1 == l)
-	    break;
-	xstrncpy(xbuf, t, l);
-	debug(11, 5) ("httpBuildRequestHeader: %s\n", xbuf);
-	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
+    assert(orig_request->prefix != NULL);
+    debug(11, 3) ("httpBuildRequestHeader:\n%s", orig_request->prefix);
+    httpHeaderInit(hdr_out);
+    
+    /* append our IMS header */
+    if (entry && entry->lastmod && request->method == METHOD_GET)
+	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);
+
+    strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
+    while ((e = httpHeaderGetEntry(hdr_in, &pos))) {
+	debug(11, 5) ("httpBuildRequestHeader: %s: %s\n",
+	    strBuf(e->name), strBuf(e->value));
+	if (!httpRequestHdrAllowed(e, &strConnection))
 	    continue;
-	if (strncasecmp(xbuf, "Proxy-authorization:", 20) == 0)
+	switch (e->id) {
+	case HDR_PROXY_AUTHORIZATION:
 	    /* If we're not going to do proxy auth, then it must be passed on */
-	    if (EBIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
-		continue;
-	if (strncasecmp(xbuf, "Connection:", 11) == 0) {
-	    handleConnectionHeader(0, no_forward, &xbuf[11]);
-	    continue;
-	}
-	if (strncasecmp(xbuf, "Host:", 5) == 0) {
+	    if (!EBIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	    break;
+	case HDR_HOST:
 	    /* Don't use client's Host: header for redirected requests */
-	    if (EBIT_TEST(request->flags, REQ_REDIRECTED))
-		continue;
-	    EBIT_SET(hdr_flags, HDR_HOST);
-	} else if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
-	    for (s = xbuf + 14; *s && isspace(*s); s++);
-	    if (strncasecmp(s, "Max-age=", 8) == 0)
-		EBIT_SET(cc_flags, CCC_MAXAGE);
-	} else if (strncasecmp(xbuf, "Via:", 4) == 0) {
-	    for (s = xbuf + 4; *s && isspace(*s); s++);
-	    if ((int) strlen(viabuf) + (int) strlen(s) < 4000)
-		strcat(viabuf, s);
-	    strcat(viabuf, ", ");
-	    continue;
-	} else if (strncasecmp(xbuf, "X-Forwarded-For:", 16) == 0) {
-	    for (s = xbuf + 16; *s && isspace(*s); s++);
-	    if ((int) strlen(fwdbuf) + (int) strlen(s) < 4000)
-		strcat(fwdbuf, s);
-	    strcat(fwdbuf, ", ");
-	    continue;
-	} else if (strncasecmp(xbuf, "If-Modified-Since:", 18) == 0) {
-	    if (EBIT_TEST(hdr_flags, HDR_IMS))
-		continue;
-	} else if (strncasecmp(xbuf, "Max-Forwards:", 13) == 0) {
+	    if (!EBIT_TEST(request->flags, REQ_REDIRECTED))
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	    break;
+	case HDR_IF_MODIFIED_SINCE:
+	    /* append unless we added our own;
+	     * note: at most one client's ims header can pass through */
+	    if (!httpHeaderHas(hdr_out, HDR_IF_MODIFIED_SINCE))
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	    break;
+	case HDR_MAX_FORWARDS:
 	    if (orig_request->method == METHOD_TRACE) {
-		for (s = xbuf + 13; *s && isspace(*s); s++);
-		n = atoi(s);
-		snprintf(xbuf, 4096, "Max-Forwards: %d", n - 1);
+		/* sacrificing efficiency over clarity, etc. */
+		const int hops = httpHeaderGetInt(hdr_in, HDR_MAX_FORWARDS);
+		if (hops > 0)
+		    httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops-1);
 	    }
+	    break;
+	case HDR_PROXY_CONNECTION:
+	case HDR_CONNECTION:
+	case HDR_VIA:
+	case HDR_X_FORWARDED_FOR:
+	case HDR_CACHE_CONTROL:
+	    /* append these after the loop if needed */
+	    break;
+	default:
+	    /* pass on all other header fields */
+	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	}
-	if (!handleConnectionHeader(1, no_forward, xbuf))
-	    httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512, 1);
     }
-    hdr_len = t - hdr_in;
-    if (Config.fake_ua && strstr(hdr_out, "User-Agent") == NULL) {
-	snprintf(ybuf, YBUF_SZ, "User-Agent: %s", Config.fake_ua);
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 0);
+
+    /* append fake user agent if configured and 
+     * the real one is not supplied by the client */
+    if (Config.fake_ua && !httpHeaderHas(hdr_out, HDR_USER_AGENT))
+	httpHeaderPutStr(hdr_out, HDR_USER_AGENT, Config.fake_ua);
+
+    /* append Via */
+    {
+	String strVia = httpHeaderGetList(hdr_in, HDR_VIA);
+	snprintf(bbuf, BBUF_SZ, "%3.1f %s", orig_request->http_ver, ThisCache);
+	strListAdd(&strVia, bbuf, ',');
+	httpHeaderPutStr(hdr_out, HDR_VIA, strBuf(strVia));
+	stringClean(&strVia);
     }
-    /* Append Via: */
-    /* snprintf would fail here too */
-    snprintf(ybuf, YBUF_SZ, "%3.1f %s", orig_request->http_ver, ThisCache);
-    strcat(viabuf, ybuf);
-    httpAppendRequestHeader(hdr_out, viabuf, &len, out_sz, 1);
-    /* Append to X-Forwarded-For: */
-    strcat(fwdbuf, cfd < 0 ? "unknown" : fd_table[cfd].ipaddr);
-    httpAppendRequestHeader(hdr_out, fwdbuf, &len, out_sz, 1);
-    if (!EBIT_TEST(hdr_flags, HDR_HOST)) {
-	if (orig_request->port == urlDefaultPort(orig_request->protocol))
-	    snprintf(ybuf, YBUF_SZ, "Host: %s", orig_request->host);
-	else
-	    snprintf(ybuf, YBUF_SZ, "Host: %s:%d", orig_request->host,
-		orig_request->port);
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
+    /* append X-Forwarded-For */
+    {
+	String strFwd = httpHeaderGetList(hdr_in, HDR_X_FORWARDED_FOR);
+	strListAdd(&strFwd, (cfd < 0 ? "unknown" : fd_table[cfd].ipaddr), ',');
+	httpHeaderPutStr(hdr_out, HDR_X_FORWARDED_FOR, strBuf(strFwd));
+	stringClean(&strFwd);
     }
-    if (!EBIT_TEST(cc_flags, CCC_MAXAGE)) {
-	url = entry ? storeUrl(entry) : urlCanonical(orig_request, NULL);
-	snprintf(ybuf, YBUF_SZ, "Cache-control: Max-age=%d", (int) getMaxAge(url));
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
-	if (strLen(request->urlpath))
-	    assert(strstr(url, strBuf(request->urlpath)));
+    /* append Host if not there already */
+    if (!httpHeaderHas(hdr_out, HDR_HOST)) {
+	/* use port# only if not default */
+	if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
+	    httpHeaderPutStr(hdr_out, HDR_HOST, orig_request->host);
+	} else {
+	    snprintf(bbuf, BBUF_SZ, "%s:%d",
+		orig_request->host, (int) orig_request->port);
+	    httpHeaderPutStr(hdr_out, HDR_HOST, bbuf);
+	}
     }
-    /* maybe append Connection: Keep-Alive */
+    /* append Cache-Control, add max-age if not there already */
+    {
+	HttpHdrCc *cc = httpHeaderGetCc(hdr_in);
+	if (!cc)
+	    cc = httpHdrCcCreate();
+	if (!EBIT_TEST(cc->mask, CC_MAX_AGE)) {
+	    const char *url = entry ? storeUrl(entry) : urlCanonical(orig_request, NULL);
+	    httpHdrCcSetMaxAge(cc, getMaxAge(url));
+	    if (strLen(request->urlpath))
+		assert(strstr(url, strBuf(request->urlpath)));
+	}
+	httpHeaderPutCc(hdr_out, cc);
+	httpHdrCcDestroy(cc);
+    }
+    /* maybe append Connection: keep-alive */
     if (EBIT_TEST(flags, HTTP_KEEPALIVE)) {
 	if (EBIT_TEST(flags, HTTP_PROXYING)) {
-	    snprintf(ybuf, YBUF_SZ, "Proxy-Connection: Keep-Alive");
+	    httpHeaderPutStr(hdr_out, HDR_PROXY_CONNECTION, "keep-alive");
 	} else {
-	    snprintf(ybuf, YBUF_SZ, "Connection: Keep-Alive");
+	    httpHeaderPutStr(hdr_out, HDR_CONNECTION, "keep-alive");
 	}
-	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
-    httpAppendRequestHeader(hdr_out, null_string, &len, out_sz, 1);
-    memFree(MEM_4K_BUF, xbuf);
-    memFree(MEM_4K_BUF, viabuf);
-    memFree(MEM_4K_BUF, fwdbuf);
-    if (in_len)
-	*in_len = hdr_len;
-    if ((l = strlen(hdr_out)) != len) {
-	debug_trap("httpBuildRequestHeader: size mismatch");
-	len = l;
+    stringClean(&strConnection);
+}
+
+/* build request prefix and append it to a given MemBuf; 
+ * return the length of the prefix */
+size_t
+httpBuildRequestPrefix(request_t * request,
+    request_t * orig_request,
+    StoreEntry * entry,
+    MemBuf *mb,
+    int cfd,
+    int flags)
+{
+    const int offset = mb->size;
+    memBufPrintf(mb, "%s %s HTTP/1.0\r\n",
+	RequestMethodStr[request->method],
+	strLen(request->urlpath) ? strBuf(request->urlpath) : "/");
+    /* build and pack headers */
+    {
+	HttpHeader hdr;
+	Packer p;
+	httpBuildRequestHeader(request, orig_request, entry, &hdr, cfd, flags);
+	packerToMemInit(&p, mb);
+	httpHeaderPackInto(&hdr, &p);
+	httpHeaderClean(&hdr);
+	packerClean(&p);
     }
-    debug(11, 3) ("httpBuildRequestHeader: OUTPUT:\n%s\n", hdr_out);
-    return len;
+    /* append header terminator */
+    memBufAppend(mb, "\r\n", 2);
+    return mb->size - offset;
 }
 
 /* This will be called when connect completes. Write request. */
@@ -746,35 +758,20 @@ static void
 httpSendRequest(int fd, void *data)
 {
     HttpStateData *httpState = data;
-    char *buf = NULL;
-    int len = 0;
-    int buflen;
+    MemBuf mb;
     request_t *req = httpState->request;
-    int buftype = 0;
     StoreEntry *entry = httpState->entry;
     int cfd;
     peer *p = httpState->peer;
     CWCB *sendHeaderDone;
 
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
-    buflen = strLen(req->urlpath);
-    if (req->headers)
-	buflen += req->headers_sz + 1;
-    buflen += 512;		/* lots of extra */
 
     if (pumpMethod(req->method))
 	sendHeaderDone = httpSendRequestEntry;
     else
 	sendHeaderDone = httpSendComplete;
 
-    if (buflen < DISK_PAGE_SIZE) {
-	buf = memAllocate(MEM_8K_BUF);
-	buftype = BUF_TYPE_8K;
-	buflen = DISK_PAGE_SIZE;
-    } else {
-	buf = xcalloc(buflen, 1);
-	buftype = BUF_TYPE_MALLOC;
-    }
     if (!opt_forwarded_for)
 	cfd = -1;
     else if (entry->mem_obj == NULL)
@@ -785,7 +782,7 @@ httpSendRequest(int fd, void *data)
     if (p != NULL)
 	EBIT_SET(httpState->flags, HTTP_PROXYING);
     /*
-     * Is Keepalive okay for all request methods?
+     * Is keep-alive okay for all request methods?
      */
     if (p == NULL)
 	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
@@ -793,21 +790,15 @@ httpSendRequest(int fd, void *data)
 	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
     else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
 	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
-    len = httpBuildRequestHeader(req,
+    memBufDefInit(&mb);
+    httpBuildRequestPrefix(req,
 	httpState->orig_request,
 	entry,
-	NULL,
-	buf,
-	buflen,
+	&mb,
 	cfd,
 	httpState->flags);
-    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, buf);
-    comm_write(fd,
-	buf,
-	len,
-	sendHeaderDone,
-	httpState,
-	buftype == BUF_TYPE_8K ? memFree8K : xfree);
+    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
+    comm_write_mbuf(fd, mb, sendHeaderDone, httpState);
 }
 
 static int
@@ -841,11 +832,10 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
     httpState->entry = entry;
     httpState->fd = fd;
     if (e) {
-	request = memAllocate(MEM_REQUEST_T);
-	request->method = orig_request->method;
+	request = requestCreate(
+	    orig_request->method, PROTO_NONE, storeUrl(entry));
 	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
 	request->port = e->http_port;
-	stringReset(&request->urlpath, storeUrl(entry));
 	httpState->request = requestLink(request);
 	httpState->peer = e;
 	httpState->orig_request = requestLink(orig_request);

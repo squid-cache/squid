@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.163 1998/05/08 22:58:38 wessels Exp $
+ * $Id: acl.cc,v 1.164 1998/05/11 18:44:31 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1117,12 +1117,16 @@ static int
 aclMatchProxyAuth(acl_proxy_auth * p, aclCheck_t * checklist)
 {
     LOCAL_ARRAY(char, sent_user, ICP_IDENT_SZ);
-    char *s;
+    const char *s;
     char *cleartext;
     char *sent_auth;
     char *passwd = NULL;
     acl_proxy_auth_user *u;
+#if OLD_CODE
     s = mime_get_header(checklist->request->headers, "Proxy-authorization:");
+#else
+    s = httpHeaderGetStr(&checklist->request->header, HDR_PROXY_AUTHORIZATION);
+#endif
     if (s == NULL)
 	return 0;
     if (strlen(s) < SKIP_BASIC_SZ)
@@ -1556,8 +1560,8 @@ aclCheck_t *
 aclChecklistCreate(const acl_access * A,
     request_t * request,
     struct in_addr src_addr,
-    char *user_agent,
-    char *ident)
+    const char *user_agent,
+    const char *ident)
 {
     int i;
     aclCheck_t *checklist = xcalloc(1, sizeof(aclCheck_t));;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.300 1998/05/09 04:49:09 wessels Exp $
+ * $Id: client_side.cc,v 1.301 1998/05/11 18:44:34 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -54,6 +54,7 @@ static void checkFailureRatio(err_type, hier_code);
 static void clientProcessMiss(clientHttpRequest *);
 static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
 size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t, size_t *, char *, size_t);
+static clientHttpRequest *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
 static RH clientRedirectDone;
 static STCB clientHandleIMSReply;
@@ -62,7 +63,7 @@ static int checkAccelOnly(clientHttpRequest *);
 static int clientOnlyIfCached(clientHttpRequest * http);
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
-static void clientParseRequestHeaders(clientHttpRequest *);
+static void clientInterpretRequestHeaders(clientHttpRequest *);
 static void clientProcessRequest(clientHttpRequest *);
 static void clientProcessExpired(void *data);
 static void clientProcessOnlyIfCachedMiss(clientHttpRequest * http);
@@ -92,7 +93,7 @@ clientAccessCheck(void *data)
 {
     clientHttpRequest *http = data;
     ConnStateData *conn = http->conn;
-    char *browser;
+    const char *browser;
     if (Config.onoff.ident_lookup && conn->ident.state == IDENT_NONE) {
 	identStart(-1, conn, clientAccessCheck, http);
 	return;
@@ -101,7 +102,11 @@ clientAccessCheck(void *data)
 	clientAccessCheckDone(0, http);
 	return;
     }
+#if OLD_CODE
     browser = mime_get_header(http->request->headers, "User-Agent");
+#else
+    browser = httpHeaderGetStr(&http->request->header, HDR_USER_AGENT);
+#endif
     http->acl_checklist = aclChecklistCreate(Config.accessList.http,
 	http->request,
 	conn->peer.sin_addr,
@@ -144,17 +149,12 @@ StoreEntry *
 clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
 {
     StoreEntry *e;
-    request_t *r;
     /*
      * For erroneous requests, we might not have a h->request,
      * so make a fake one.
      */
-    if (h->request == NULL) {
-	r = memAllocate(MEM_REQUEST_T);
-	r->method = m;
-	r->protocol = PROTO_NONE;
-	h->request = requestLink(r);
-    }
+    if (h->request == NULL)
+	h->request = requestLink(requestCreate(m, PROTO_NONE, NULL));
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     storeClientListAdd(e, h);
     storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF), clientSendMoreData, h);
@@ -225,8 +225,14 @@ clientRedirectDone(void *data, char *result)
 	http->uri = xcalloc(l, 1);
 	xstrncpy(http->uri, result, l);
 	new_request->http_ver = old_request->http_ver;
+#if OLD_CODE
 	new_request->headers = xstrdup(old_request->headers);
 	new_request->headers_sz = old_request->headers_sz;
+#else
+	new_request->prefix = xstrdup(old_request->prefix);
+	new_request->prefix_sz = old_request->prefix_sz;
+	httpHeaderUpdate(&new_request->header, &old_request->header);
+#endif
 	new_request->client_addr = old_request->client_addr;
 	EBIT_SET(new_request->flags, REQ_REDIRECTED);
 	if (old_request->body) {
@@ -238,7 +244,7 @@ clientRedirectDone(void *data, char *result)
 	http->request = requestLink(new_request);
 	urlCanonical(http->request, http->uri);
     }
-    clientParseRequestHeaders(http);
+    clientInterpretRequestHeaders(http);
     fd_note(http->conn->fd, http->uri);
     clientProcessRequest(http);
 }
@@ -450,6 +456,7 @@ modifiedSince(StoreEntry * entry, request_t * request)
     }
 }
 
+#if UNUSED_CODE
 char *
 clientConstructTraceEcho(clientHttpRequest * http)
 {
@@ -478,6 +485,7 @@ clientConstructTraceEcho(clientHttpRequest * http)
     http->http_code = HTTP_OK;
     return buf;
 }
+#endif /* UNUSED_CODE */
 
 void
 clientPurgeRequest(clientHttpRequest * http)
@@ -597,7 +605,8 @@ clientUpdateCounters(clientHttpRequest * http)
 	    inet_ntoa(http->request->client_addr), http->out.size);
     }
     /* @?@ split this ugly if-monster */
-    if (			/* we used ICP or CD for peer selecton */
+    if (
+    /* we used ICP or CD for peer selecton */
 	H->alg != PEER_SA_NONE &&
     /* a successful CD lookup was made */
 	H->cd_lookup != LOOKUP_NONE &&
@@ -680,7 +689,7 @@ httpRequestFree(void *data)
 	http->al.cache.ident = conn->ident.ident;
 	if (request) {
 	    http->al.http.method = request->method;
-	    http->al.headers.request = request->headers;
+	    http->al.headers.request = request->prefix;
 	    http->al.hier = request->hier;
 	}
 	accessLogLog(&http->al);
@@ -745,61 +754,91 @@ connStateFree(int fd, void *data)
 }
 
 static void
-clientParseRequestHeaders(clientHttpRequest * http)
+clientInterpretRequestHeaders(clientHttpRequest * http)
 {
     request_t *request = http->request;
+#if OLD_CODE
     char *request_hdr = request->headers;
-    char *t = NULL;
+    const char *t = NULL;
+#else
+    const HttpHeader *req_hdr = &request->header;
+#if USE_USERAGENT_LOG
+    const char *str;
+#endif
+#endif
+#if OLD_CODE
     request->ims = -2;
     request->imslen = -1;
-    if ((t = mime_get_header(request_hdr, "If-Modified-Since"))) {
+    if ((t = httpHeaderGetStr(req_hdr, HDR_IF_MODIFIED_SINCE))) {
 	EBIT_SET(request->flags, REQ_IMS);
 	request->ims = parse_rfc1123(t);
+	/*
+	 * "length=..." is not in the HTTP/1.1 specs. Any real proof that we
+	 * should hornor it? Send complains to rousskov@nlanr.net
+	 */
 	while ((t = strchr(t, ';'))) {
 	    for (t++; isspace(*t); t++);
 	    if (strncasecmp(t, "length=", 7) == 0)
 		request->imslen = atoi(t + 7);
 	}
     }
-    if ((t = mime_get_header_field(request_hdr, "Pragma", "no-cache"))) {
-	EBIT_SET(request->flags, REQ_NOCACHE);
+#else
+    request->imslen = -1;
+    request->ims = httpHeaderGetTime(req_hdr, HDR_IF_MODIFIED_SINCE);
+    if (request->ims > 0)
+	EBIT_SET(request->flags, REQ_IMS);
+#endif
+    if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
+	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
+	if (strListIsMember(&s, "no-cache", ','))
+	    EBIT_SET(request->flags, REQ_NOCACHE);
+	stringClean(&s);
     }
-    if (mime_get_header(request_hdr, "Range")) {
+    if (httpHeaderHas(req_hdr, HDR_RANGE)) {
 	EBIT_SET(request->flags, REQ_NOCACHE);
 	EBIT_SET(request->flags, REQ_RANGE);
-    } else if (mime_get_header(request_hdr, "Request-Range")) {
-	EBIT_SET(request->flags, REQ_NOCACHE);
-	EBIT_SET(request->flags, REQ_RANGE);
+	/* Request-Range: deleted, not in the specs. Does it exist? */
     }
-    if (mime_get_header(request_hdr, "Authorization"))
+    if (httpHeaderHas(req_hdr, HDR_AUTHORIZATION))
 	EBIT_SET(request->flags, REQ_AUTH);
     if (request->login[0] != '\0')
 	EBIT_SET(request->flags, REQ_AUTH);
-    if ((t = mime_get_header(request_hdr, "Proxy-Connection"))) {
+#if OLD_CODE
+    if ((t =  httpHeaderGetStr(req_hdr, HDR_PROXY_CONNECTION))) {
 	if (!strcasecmp(t, "Keep-Alive"))
 	    EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
     }
-    if ((t = mime_get_header(request_hdr, "Via"))) {
-	if (strstr(t, ThisCache)) {
+#else
+    if (httpMsgIsPersistent(request->http_ver, req_hdr))
+	EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
+#endif
+    if (httpHeaderHas(req_hdr, HDR_VIA)) {
+	String s = httpHeaderGetList(req_hdr, HDR_VIA);
+	if (strListIsMember(&s, ThisCache, ',')) {
 	    if (!http->flags.accel) {
 		debug(33, 1) ("WARNING: Forwarding loop detected for '%s'\n",
 		    http->uri);
-		debug(33, 1) ("--> %s\n", t);
+		debug(33, 1) ("--> %s\n", strBuf(s));
 	    }
 	    EBIT_SET(request->flags, REQ_LOOPDETECT);
 	}
 #if FORW_VIA_DB
-	fvdbCountVia(t);
+	fvdbCountVia(strBuf(s));	
 #endif
+	stringClean(&s);
     }
 #if USE_USERAGENT_LOG
-    if ((t = mime_get_header(request_hdr, "User-Agent")))
-	logUserAgent(fqdnFromAddr(http->conn->peer.sin_addr), t);
+    if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)))
+	logUserAgent(fqdnFromAddr(http->conn->peer.sin_addr), str);
 #endif
 #if FORW_VIA_DB
-    if ((t = mime_get_header(request_hdr, "X-Forwarded-For")))
-	fvdbCountForw(t);
+    if (httpHeaderHas(req_hdr, HDR_X_FORWARDED_FOR)) {
+	String s = httpHeaderGetList(req_hdr, HDR_X_FORWARDED_FOR);
+	fvdbCountForw(strBuf(s));
+	stringClean(&s);
+    }
 #endif
+#if OLD_CODE
     if ((t = mime_get_header_field(request_hdr, "Cache-control", "max-age="))) {
 	request->max_age = atoi(t + 8);
     } else {
@@ -808,25 +847,33 @@ clientParseRequestHeaders(clientHttpRequest * http)
     if ((t = mime_get_header_field(request_hdr, "Cache-control", "only-if-cached"))) {
 	EBIT_SET(request->flags, REQ_CC_ONLY_IF_CACHED);
     }
+#else
+    request->cache_control = httpHeaderGetCc(req_hdr);
+#endif
     if (request->method == METHOD_TRACE) {
+#if OLD_CODE
 	if ((t = mime_get_header(request_hdr, "Max-Forwards")))
 	    request->max_forwards = atoi(t);
+#else
+	request->max_forwards = httpHeaderGetInt(req_hdr, HDR_MAX_FORWARDS);
+#endif
     }
     if (clientCachable(http))
 	EBIT_SET(request->flags, REQ_CACHABLE);
     if (clientHierarchical(http))
 	EBIT_SET(request->flags, REQ_HIERARCHICAL);
-    debug(33, 5) ("clientParseRequestHeaders: REQ_NOCACHE = %s\n",
+    debug(33, 5) ("clientInterpretRequestHeaders: REQ_NOCACHE = %s\n",
 	EBIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
-    debug(33, 5) ("clientParseRequestHeaders: REQ_CACHABLE = %s\n",
+    debug(33, 5) ("clientInterpretRequestHeaders: REQ_CACHABLE = %s\n",
 	EBIT_TEST(request->flags, REQ_CACHABLE) ? "SET" : "NOT SET");
-    debug(33, 5) ("clientParseRequestHeaders: REQ_HIERARCHICAL = %s\n",
+    debug(33, 5) ("clientInterpretRequestHeaders: REQ_HIERARCHICAL = %s\n",
 	EBIT_TEST(request->flags, REQ_HIERARCHICAL) ? "SET" : "NOT SET");
 }
 
 static int
 clientCheckContentLength(request_t * r)
 {
+#if OLD_CODE
     char *t;
     int len;
     /*
@@ -841,6 +888,11 @@ clientCheckContentLength(request_t * r)
     if (len < 0)
 	return 0;
     return 1;
+#else
+    /* We only require a content-length for "upload" methods */
+    return !pumpMethod(r->method) || 
+	httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) >= 0;
+#endif
 }
 
 static int
@@ -989,7 +1041,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	    xmemmove(xbuf + 5, "1.0 ", 4);
 #if DONT_FILTER_THESE
 	/*
-	 * but you might want to if you run Squid as a HTTP accelerator
+	 * but you might want to if you run Squid as an HTTP accelerator
 	 */
 	if (strncasecmp(xbuf, "Accept-Ranges:", 14) == 0)
 	    continue;
@@ -1002,7 +1054,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	    handleConnectionHeader(0, no_forward, &xbuf[11]);
 	    continue;
 	}
-	if (strncasecmp(xbuf, "Keep-Alive:", 11) == 0)
+	if (strncasecmp(xbuf, "keep-alive:", 11) == 0)
 	    continue;
 	if (strncasecmp(xbuf, "Set-Cookie:", 11) == 0)
 	    if (isTcpHit(http->log_type))
@@ -1024,7 +1076,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
 #endif
     /* Append Proxy-Connection: */
     if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
-	snprintf(ybuf, 4096, "Proxy-Connection: Keep-Alive");
+	snprintf(ybuf, 4096, "Proxy-Connection: keep-alive");
 	clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
     }
     clientAppendReplyHeader(hdr_out, null_string, &len, out_sz);
@@ -1271,7 +1323,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 
 /* called when clientGetHeadersFor*IMS completes */
 static void
-clientFinishIMS(clientHttpRequest * http)
+clientFinishIMS(clientHttpRequest *http)
 {
     StoreEntry *entry = http->entry;
     MemBuf mb;
@@ -1388,12 +1440,10 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 }
 
 /*
- * Client sent an IMS request for ENTRY_SPECIAL
- *   - fetch the headers
- *   - construct a 304 reply
- *   - if something goes wrong call clientCacheHit()
- *     to mimic our usual processing of special entries
- *   - note that clientGetHeadersForIMS frees "buf" earlier than we do
+ * client sent an IMS request for ENTRY_SPECIAL;
+ * mimic clientGetHeadersForIMS(), but call clientCacheHit()
+ *     if something goes wrong;
+ * note: clientGetHeadersForIMS frees "buf" earlier than we do
  */
 static void
 clientGetHeadersForSpecialIMS(void *data, char *buf, ssize_t size)
@@ -1434,9 +1484,9 @@ clientGetHeadersForSpecialIMS(void *data, char *buf, ssize_t size)
 }
 
 /*
- * client issued a request with an only-if-cached cache-control directive
+ * client issued a request with an only-if-cached cache-control directive;
  * we did not find a cached object that can be returned without
- *     contacting other servers
+ *     contacting other servers;
  * respond with a 504 (Gateway Timeout) as suggested in [RFC 2068]
  */
 static void
@@ -1447,7 +1497,6 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
     ErrorState *err = NULL;
     debug(33, 4) ("clientProcessOnlyIfCachedMiss: '%s %s'\n",
 	RequestMethodStr[r->method], url);
-    debug(33, 10) ("clientProcessMiss: request_hdr:\n%s\n", r->headers);
     http->al.http.code = HTTP_GATEWAY_TIMEOUT;
     err = errorCon(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT);
     err->request = requestLink(r);
@@ -1542,10 +1591,10 @@ clientProcessRequest(clientHttpRequest * http)
 	    storeBuffer(http->entry);
 	    rep = httpReplyCreate();
 	    httpReplySetHeaders(rep, 1.0, HTTP_OK, NULL, "text/plain",
-		r->headers_sz, 0, squid_curtime);
+		r->prefix_sz, 0, squid_curtime);
 	    httpReplySwapOut(rep, http->entry);
 	    httpReplyDestroy(rep);
-	    storeAppend(http->entry, r->headers, r->headers_sz);
+	    storeAppend(http->entry, r->prefix, r->prefix_sz);
 	    storeComplete(http->entry);
 	    return;
 	}
@@ -1591,8 +1640,8 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    SM_PAGE_SIZE,
 	    memAllocate(MEM_4K_BUF),
-	    (http->log_type == LOG_TCP_IMS_MISS) ?
-	    clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
+	    (http->log_type == LOG_TCP_IMS_MISS) ? 
+		clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
 	    http);
 	break;
     case LOG_TCP_REFRESH_MISS:
@@ -1612,13 +1661,12 @@ clientProcessMiss(clientHttpRequest * http)
 {
     char *url = http->uri;
     request_t *r = http->request;
-    char *request_hdr = r->headers;
     aclCheck_t ch;
     int answer;
     ErrorState *err = NULL;
     debug(33, 4) ("clientProcessMiss: '%s %s'\n",
 	RequestMethodStr[r->method], url);
-    debug(33, 10) ("clientProcessMiss: request_hdr:\n%s\n", request_hdr);
+    debug(33, 10) ("clientProcessMiss: prefix:\n%s\n", r->prefix);
     /*
      * We might have a left-over StoreEntry from a failed cache hit
      * or IMS request.
@@ -1630,9 +1678,6 @@ clientProcessMiss(clientHttpRequest * http)
 	storeUnlockObject(http->entry);
 	http->entry = NULL;
     }
-    /*
-     * Check if client tolerates misses
-     */
     if (clientOnlyIfCached(http)) {
 	clientProcessOnlyIfCachedMiss(http);
 	return;
@@ -1661,6 +1706,19 @@ clientProcessMiss(clientHttpRequest * http)
     protoDispatch(http->conn->fd, http->entry, r);
 }
 
+static clientHttpRequest *
+parseHttpRequestAbort(ConnStateData * conn, const char *uri)
+{
+    clientHttpRequest *http = xcalloc(1, sizeof(clientHttpRequest));
+    cbdataAdd(http, MEM_NONE);
+    http->conn = conn;
+    http->start = current_time;
+    http->req_sz = conn->in.offset;
+    http->uri = xstrdup(uri);
+    http->log_uri = xstrdup(uri);
+    return http;
+}
+
 /*
  *  parseHttpRequest()
  * 
@@ -1670,7 +1728,7 @@ clientProcessMiss(clientHttpRequest * http)
  */
 static clientHttpRequest *
 parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
-    char **headers_p, size_t * headers_sz_p)
+    char **prefix_p, size_t *req_line_sz_p)
 {
     char *inbuf = NULL;
     char *mstr = NULL;
@@ -1682,54 +1740,38 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     char *end;
     int free_request = 0;
     size_t header_sz;		/* size of headers, not including first line */
-    size_t req_sz;		/* size of whole request */
+    size_t prefix_sz;		/* size of whole request (req-line + headers)*/
     size_t url_sz;
     method_t method;
     clientHttpRequest *http = NULL;
 
     /* Make sure a complete line has been received */
-    if (strchr(conn->in.buf, '\n') == NULL) {
+    if ((t = strchr(conn->in.buf, '\n')) == NULL) {
 	debug(33, 5) ("Incomplete request line, waiting for more data\n");
 	*status = 0;
 	return NULL;
     }
+    *req_line_sz_p = t - conn->in.buf;
     /* Use xmalloc/xmemcpy instead of xstrdup because inbuf might
      * contain NULL bytes; especially for POST data  */
     inbuf = xmalloc(conn->in.offset + 1);
     xmemcpy(inbuf, conn->in.buf, conn->in.offset);
     *(inbuf + conn->in.offset) = '\0';
 
+    /* pre-set these values to make aborting simpler */
+    *prefix_p = inbuf;
+    *method_p = METHOD_NONE;
+    *status = -1;
+
     /* Look for request method */
     if ((mstr = strtok(inbuf, "\t ")) == NULL) {
 	debug(33, 1) ("parseHttpRequest: Can't get request method\n");
-	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http, MEM_NONE);
-	http->conn = conn;
-	http->start = current_time;
-	http->req_sz = conn->in.offset;
-	http->uri = xstrdup("error:invalid-request-method");
-	http->log_uri = xstrdup("error:invalid-request-method");
-	*headers_sz_p = conn->in.offset;
-	*headers_p = inbuf;
-	*method_p = METHOD_NONE;
-	*status = -1;
-	return http;
+	return parseHttpRequestAbort(conn, "error:invalid-request-method");
     }
     method = urlParseMethod(mstr);
     if (method == METHOD_NONE) {
 	debug(33, 1) ("parseHttpRequest: Unsupported method '%s'\n", mstr);
-	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http, MEM_NONE);
-	http->conn = conn;
-	http->start = current_time;
-	http->req_sz = conn->in.offset;
-	http->uri = xstrdup("error:unsupported-request-method");
-	http->log_uri = xstrdup("error:unsupported-request-method");
-	*headers_sz_p = conn->in.offset;
-	*headers_p = inbuf;
-	*method_p = METHOD_NONE;
-	*status = -1;
-	return http;
+	return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
     debug(33, 5) ("parseHttpRequest: Method is '%s'\n", mstr);
     *method_p = method;
@@ -1737,17 +1779,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     /* look for URL */
     if ((url = strtok(NULL, "\r\n\t ")) == NULL) {
 	debug(33, 1) ("parseHttpRequest: Missing URL\n");
-	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http, MEM_NONE);
-	http->conn = conn;
-	http->start = current_time;
-	http->req_sz = conn->in.offset;
-	http->uri = xstrdup("error:missing-url");
-	http->log_uri = xstrdup("error:missing-url");
-	*headers_sz_p = conn->in.offset;
-	*headers_p = inbuf;
-	*status = -1;
-	return http;
+	return parseHttpRequestAbort(conn, "error:missing-url");
     }
     debug(33, 5) ("parseHttpRequest: Request is '%s'\n", url);
 
@@ -1758,20 +1790,11 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 #if RELAXED_HTTP_PARSER
 	http_ver = (float) 0.9;	/* wild guess */
 #else
-	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http, MEM_NONE);
-	http->conn = conn;
-	http->start = current_time;
-	http->req_sz = conn->in.offset;
-	http->uri = xstrdup("error:missing-http-ident");
-	http->log_uri = xstrdup("error:missing-http-ident");
-	*headers_sz_p = conn->in.offset;
-	*headers_p = inbuf;
-	*status = -1;
-	return http;
+	return parseHttpRequestAbort(conn, "error:missing-http-ident");
 #endif
-    } else
+    } else {
 	http_ver = (float) atof(token + 5);
+    }
 
     /* Check if headers are received */
     req_hdr = t;
@@ -1783,7 +1806,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	return NULL;
     }
     /*
-     * Skip whitespace at the end of the frist line, up to the
+     * Skip whitespace at the end of the first line, up to the
      * first newline.
      */
     while (isspace(*req_hdr)) {
@@ -1795,9 +1818,19 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
     end = req_hdr + header_sz;
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
-    req_sz = end - inbuf;
-    debug(33, 3) ("parseHttpRequest: req_sz = %d\n", (int) req_sz);
-    assert(req_sz <= conn->in.offset);
+
+#if UNREACHABLE_CODE
+    if (end <= req_hdr) {
+	/* Invalid request */
+	debug(33, 3) ("parseHttpRequest: No request headers?\n");
+	return parseHttpRequestAbort(conn, "error:no-request-headers");
+    }
+#endif
+    prefix_sz = end - inbuf;
+    *req_line_sz_p = req_hdr - inbuf;
+    debug(33, 3) ("parseHttpRequest: prefix_sz = %d, req_line_sz = %d\n", 
+	(int) prefix_sz, (int) *req_line_sz_p);
+    assert(prefix_sz <= conn->in.offset);
 
     /* Ok, all headers are received */
     http = xcalloc(1, sizeof(clientHttpRequest));
@@ -1805,13 +1838,12 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     http->http_ver = http_ver;
     http->conn = conn;
     http->start = current_time;
-    http->req_sz = req_sz;
-    *headers_sz_p = header_sz;
-    *headers_p = xmalloc(header_sz + 1);
-    xmemcpy(*headers_p, req_hdr, header_sz);
-    *(*headers_p + header_sz) = '\0';
+    http->req_sz = prefix_sz;
+    *prefix_p = xmalloc(prefix_sz + 1);
+    xmemcpy(*prefix_p, conn->in.buf, prefix_sz);
+    *(*prefix_p + prefix_sz) = '\0';
 
-    debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", *headers_p);
+    debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", (*prefix_p)+*req_line_sz_p);
     /* Assign http->uri */
     if ((t = strchr(url, '\n')))	/* remove NL */
 	*t = '\0';
@@ -1895,8 +1927,7 @@ clientReadRequest(int fd, void *data)
     method_t method;
     clientHttpRequest *http = NULL;
     clientHttpRequest **H = NULL;
-    char *headers;
-    size_t headers_sz;
+    char *prefix;
     ErrorState *err = NULL;
     fde *F = &fd_table[fd];
     int len = conn->in.size - conn->in.offset - 1;
@@ -1948,6 +1979,7 @@ clientReadRequest(int fd, void *data)
     conn->in.buf[conn->in.offset] = '\0';	/* Terminate the string */
     while (conn->in.offset > 0) {
 	int nrequests;
+	int req_line_sz;
 	/* Limit the number of concurrent requests to 2 */
 	for (H = &conn->chr, nrequests = 0; *H; H = &(*H)->next, nrequests++);
 	if (nrequests >= 2) {
@@ -1960,8 +1992,8 @@ clientReadRequest(int fd, void *data)
 	http = parseHttpRequest(conn,
 	    &method,
 	    &parser_return_code,
-	    &headers,
-	    &headers_sz);
+	    &prefix,
+	    &req_line_sz);
 	if (http) {
 	    assert(http->req_sz > 0);
 	    conn->in.offset -= http->req_sz;
@@ -1993,8 +2025,15 @@ clientReadRequest(int fd, void *data)
 		http->al.http.code = err->http_status;
 		http->entry = clientCreateStoreEntry(http, method, 0);
 		errorAppendEntry(http->entry, err);
-		safe_free(headers);
+		safe_free(prefix);
 		break;
+	    } else {
+		/* compile headers */
+		/* we should skip request line! */
+		if (!httpRequestParseHeader(request, prefix+req_line_sz))
+		    debug(33, 1) ("Failed to parse request headers: %s\n%s\n",
+			http->uri, prefix);
+		/* continue anyway? */
 	    }
 	    if (!http->flags.internal)
     		if (internalCheck(strBuf(request->urlpath)))
@@ -2005,8 +2044,8 @@ clientReadRequest(int fd, void *data)
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;
 	    request->http_ver = http->http_ver;
-	    request->headers = headers;
-	    request->headers_sz = headers_sz;
+	    request->prefix = prefix;
+	    request->prefix_sz = http->req_sz;
 	    if (!urlCheckRequest(request)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);
 		err->src_addr = conn->peer.sin_addr;

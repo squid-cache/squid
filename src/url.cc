@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.91 1998/05/08 23:29:31 wessels Exp $
+ * $Id: url.cc,v 1.92 1998/05/11 18:44:47 rousskov Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -271,30 +271,18 @@ urlParse(method_t method, char *url)
 	return NULL;
     }
 #endif
-    request = memAllocate(MEM_REQUEST_T);
-    request->method = method;
-    request->protocol = protocol;
+    request = requestCreate(method, protocol, urlpath);
     xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
     request->port = (u_short) port;
-    stringReset(&request->urlpath, urlpath);
-    request->max_age = -1;
-    request->max_forwards = -1;
     return request;
 }
 
 static request_t *
 urnParse(method_t method, char *urn)
 {
-    request_t *request = NULL;
     debug(50, 5) ("urnParse: %s\n", urn);
-    request = memAllocate(MEM_REQUEST_T);
-    request->method = method;
-    request->protocol = PROTO_URN;
-    stringReset(&request->urlpath, urn + 4);
-    request->max_age = -1;
-    request->max_forwards = -1;
-    return request;
+    return requestCreate(method, PROTO_URN, urn + 4);
 }
 
 char *
@@ -365,6 +353,7 @@ urlCanonicalClean(const request_t * request)
     return buf;
 }
 
+#if OLD_CODE /* moved to HttpRequest.c */
 request_t *
 requestLink(request_t * request)
 {
@@ -380,11 +369,17 @@ requestUnlink(request_t * request)
     request->link_count--;
     if (request->link_count)
 	return;
+#if OLD_CODE
     safe_free(request->headers);
+#else
+    httpHeaderClean(&request->header);
+    safe_free(request->prefix);
+#endif
     safe_free(request->body);
     stringClean(&request->urlpath);
     memFree(MEM_REQUEST_T, request);
 }
+#endif
 
 int
 matchDomainName(const char *domain, const char *host)
@@ -407,12 +402,14 @@ int
 urlCheckRequest(const request_t * r)
 {
     int rc = 0;
+    /* protocol "independent" methods */
     if (r->method == METHOD_CONNECT)
 	return 1;
     if (r->method == METHOD_TRACE)
 	return 1;
     if (r->method == METHOD_PURGE)
 	return 1;
+    /* does method match the protocol? */
     switch (r->protocol) {
     case PROTO_URN:
     case PROTO_HTTP:

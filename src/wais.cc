@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.106 1998/03/31 05:37:55 wessels Exp $
+ * $Id: wais.cc,v 1.107 1998/05/11 18:44:48 rousskov Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -322,7 +322,7 @@ waisStart(request_t * request, StoreEntry * entry)
     waisState->method = method;
     waisState->relayhost = Config.Wais.relayHost;
     waisState->relayport = Config.Wais.relayPort;
-    waisState->request_hdr = request->headers;
+    waisState->request_hdr = request->prefix;
     waisState->fd = fd;
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);
