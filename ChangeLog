@@ -1,5 +1,7 @@
 Changes to squid-1.2.beta20 ():
-
+	- Fixed "huge 304 reply" loop bug.
+	- Improved support for only-if-cached cache control directive.
+	- Enabled 304 replies for ENTRY_SPECIAL objects (e.g., icons).
 	- Fixed 'quick_abort' percent calculation bug.
 	- Fixed quick_abort FPE bug.
 	- Changed more errno-checking functions to use ignoreErrno().
@@ -33,6 +35,8 @@ Changes to squid-1.2.beta20 ():
 	- Fixed ftpTraverseDirectory coredump for NULL ftpState->filepath
 	  (Joe Ramey).
 	- Fixed daylight savings time bug (again).
+	- A lot of Cache Digests additions, fixes, and tuning. 
+	  Cache Digests are still "very experimental".
 	- Fixed snprintf() bug.  When len == 1, snprintf() would treat
 	  the buffer as unknown size, emulating sprintf() behaviour.
 	- Made Error page language configurable with configure script
@@ -54,6 +58,7 @@ Changes to squid-1.2.beta20 ():
 	- Changed error message to 'Generated TIME by HOST (SQUID/VER)'
 	  because any string with an '@' must be an email address.
 	- Fixed POST for content-length == 0.
+
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
 	- Squid-1.2.beta19 compiles and runs on Windows/NT with
