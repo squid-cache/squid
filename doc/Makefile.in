@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.7 2002/07/06 12:24:26 hno Exp $
+#  $Id: Makefile.in,v 1.8 2002/07/20 23:03:19 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -128,7 +128,8 @@ man_MANS = \
 
 
 EXTRA_DIST = \
-	squid.8
+	squid.8 \
+	debug-sections.txt
 
 subdir = doc
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
