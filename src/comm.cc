@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.102 1996/11/13 06:52:20 wessels Exp $
+ * $Id: comm.cc,v 1.103 1996/11/14 02:59:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -484,13 +484,11 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 
     if (peer)
 	*peer = P;
-
-    if (me) {
-	Slen = sizeof(M);
-	memset(&M, '\0', Slen);
-	getsockname(sock, (struct sockaddr *) &M, &Slen);
+    Slen = sizeof(M);
+    memset(&M, '\0', Slen);
+    getsockname(sock, (struct sockaddr *) &M, &Slen);
+    if (me)
 	*me = M;
-    }
     commSetCloseOnExec(sock);
     /* fdstat update */
     fdstat_open(sock, FD_SOCKET);
