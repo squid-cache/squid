@@ -60,6 +60,7 @@ Changes to squid-1.2.beta20 (April 24, 1998):
 	- Fixed POST for content-length == 0.
 	- Fixed "huge 304 reply" loop bug.
 	- Fixed --enable-splaytree compile bugs.
+	- Removed ASN lookup code in peer_select.c.
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
