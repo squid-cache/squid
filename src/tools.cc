@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.210 2001/10/17 20:25:03 hno Exp $
+ * $Id: tools.cc,v 1.211 2001/11/13 22:17:01 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -966,8 +966,6 @@ parseEtcHosts(void)
     char buf2[512];
     char *nt = buf;
     char *lt = buf;
-    char *addr = buf;
-    char *host = NULL;
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     char *systemroot = NULL;
 #endif
@@ -986,6 +984,7 @@ parseEtcHosts(void)
 #endif
     while (fgets(buf, 1024, fp)) {	/* for each line */
 	wordlist *hosts = NULL;
+	char *addr;
 	if (buf[0] == '#')	/* MS-windows likes to add comments */
 	    continue;
 	lt = buf;
@@ -998,6 +997,7 @@ parseEtcHosts(void)
 	debug(1, 5) ("etc_hosts: address is '%s'\n", addr);
 	lt = nt + 1;
 	while ((nt = strpbrk(lt, w_space))) {
+	    char *host = NULL;
 	    if (nt == lt) {	/* multiple spaces */
 		debug(1, 5) ("etc_hosts: multiple spaces, skipping\n");
 		lt = nt + 1;
@@ -1013,12 +1013,13 @@ parseEtcHosts(void)
 	    } else {
 		host = lt;
 	    }
-	    wordlistAdd(&hosts, host);
 	    if (ipcacheAddEntryFromHosts(host, addr) != 0)
-		continue;	/* invalid address, continuing is useless */
+		goto skip;	/* invalid address, continuing is useless */
+	    wordlistAdd(&hosts, host);
 	    lt = nt + 1;
 	}
 	fqdncacheAddEntryFromHosts(addr, hosts);
+skip:
 	wordlistDestroy(&hosts);
     }
 }
