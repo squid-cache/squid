@@ -20,8 +20,11 @@ Changes to squid-1.1.7 (February @@@, 1997):
 	- Support for balanced binary trees in acl.c (Arjan de Vet).
 	- Made HTTP anonymizing a standard feature and settable in
 	  squid.conf (disabled by default).
-	- Ignore ICP_MISS replies from multicast parents which would
-	  violate the domain restrictions.
+	- Ignore ICP_MISS replies from multicast-responding parents
+	  which would violate the domain restrictions.
+	- Fixed another diskHandleWrite coredump bug when freeing
+	  list of pending blocks.
+	- Added support for 'src' ACLs in cache_host_acl lines.
 
 Changes to squid-1.novm.6 (February 7, 1997):
 
