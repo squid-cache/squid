@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.56 2003/05/21 08:17:00 hno Exp $
+# $Id: Makefile.in,v 1.57 2003/05/21 08:32:42 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -405,6 +405,7 @@ $(ICON2): $(ICON1)
 $(ICON1):
 	@if [ ! -f "$(srcdir)/$(ICON1)" ]; then \
 	    $(SHELL) "$(srcdir)/icons.shar" ; \
+	    touch -r "$(srcdir)/icons.shar" *.gif ; \
 	fi
 
 update-icons.shar:
