@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.73 1997/06/04 06:15:50 wessels Exp $
+ * $Id: disk.cc,v 1.74 1997/06/18 03:06:49 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -192,6 +192,7 @@ file_open_complete(void *data, int fd, int errcode)
 	xfree(ctrlp);
 	return;
     }
+    debug(6,5)("file_open: FD %d\n", fd);
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, ctrlp->path);
     fde = &fd_table[fd];
@@ -217,6 +218,7 @@ file_close(int fd)
 	return;
     }
     fd_close(fd);
+    debug(6,5)("file_close: FD %d\n", fd);
 #if USE_ASYNC_IO
     aioClose(fd);
 #else
