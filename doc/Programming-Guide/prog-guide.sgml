@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid v1.2 Programmers Guide</title>
+<title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
 
 <abstract>
@@ -59,15 +59,12 @@ Function names and file names will be written in a courier font, such
 as <tt/store.c/ and <tt/storeRegister()/.  Data structures and their
 members will be written in an italicized font, such as <em/StoreEntry/.
 
-<sect1>The Big Picture
+<sect>Source Code Overview
 
 <P>
 Squid consists of the following major components
 
-<sect2>Client Side
-
-<P>
-<em/Files:/ <tt/client_side.c/
+<sect1>Client Side
 
 <P>
     Here new client connections are accepted, parsed, and processed.
@@ -77,17 +74,7 @@ Squid consists of the following major components
     is held in a data structure called <em/ConnStateData/.  Per-request
     state information is stored in the <em/clientHttpRequest/ structure.
     
-<sect2>Server Side
-
-<P>
-<em/Files:/
-    <tt/proto.c/,
-    <tt/http.c/,
-    <tt/ftp.c/,
-    <tt/gopher.c/,
-    <tt/wais.c/,
-    <tt/ssl.c/,
-    <tt/pass.c/
+<sect1>Server Side
 
 <P>
     These routines are responsible for forwarding cache misses
@@ -100,29 +87,7 @@ Squid consists of the following major components
     receive much attention because they comprise a relatively insignificant
     portion of Internet traffic.
 
-<P>
-    <tt/ssl.c/ handles SSL requests (the CONNECT method) and
-    <tt/pass.c/ (``passthrough'') handles uncachable requests which
-    the cache doesn't really care about.   These two modules basically
-    pass bits back and forth between client and server.  Note they do
-    not use a <em/StoreEntry/ to do so.  About the only difference
-    between the two is that the SSL module sends a special ``connection
-    established'' message.
-
-<sect2>Storage Manager
-
-<P>
-<em/Files:/
-    <tt/store_clean.c/,
-    <tt/store_client.c/,
-    <tt/store_dir.c/,
-    <tt/store_key_md5.c/,
-    <tt/store_log.c/,
-    <tt/store_rebuild.c/,
-    <tt/store_swapin.c/,
-    <tt/store_swapmeta.c/,
-    <tt/store_swapout.c/,
-    <tt/store.c/
+<sect1>Storage Manager
 
 <P>
     The Storage Manager is the glue between client and server sides.
@@ -156,22 +121,16 @@ Squid consists of the following major components
     PUT request, this process works in reverse.  Server-side functions
     are notified when additional data is read from the client.
 
-<sect2>Peer Selection
+<sect1>Request Forwarding
 
-<P>
-<em/Files:/
-	<tt/peer_select.c/
+<sect1>Peer Selection
 
 <P>
     These functions are responsible for selecting
     one (or none) of the neighbor caches as the appropriate forwarding
     location.
 
-<sect2>Access Control
-
-<P>
-<em/Files:/
-	<tt/acl.c/
+<sect1>Access Control
 
 <P>
     These functions are responsible for allowing
@@ -184,11 +143,7 @@ Squid consists of the following major components
     continues the access control checks when the information is
     available.
 
-<sect2>Network Communication
-
-<P>
-<em/Files:/
-	<tt/comm.c/
+<sect1>Network Communication
 
 <P>
     These are the routines for communicating over
@@ -200,11 +155,7 @@ Squid consists of the following major components
     blocks of data for writing.  Consequently, a callback occurs
     for every write request.
 
-<sect2>File/Disk I/O
-
-<P>
-<em/Files:/
-	<tt/disk.c/
+<sect1>File/Disk I/O
 
 <P>
     Routines for reading and writing disk files (and FIFOs).
@@ -217,22 +168,14 @@ Squid consists of the following major components
     a single write request.  The write callback does not necessarily
     occur for every write request.
 
-<sect2>Neighbors
-
-<P>
-<em/Files:/
-	<tt/neighbors.c/
+<sect1>Neighbors
 
 <P>
     Maintains the list of neighbor caches.  Sends and receives 
     ICP messages to neighbors.  Decides which neighbors to
     query for a given request.  File: <tt/neighbors.c/.
 
-<sect2>IP/FQDN Cache
-
-<P>
-<em/Files:/
-	<tt/ipcache.c/, <tt/fqdncache.c/
+<sect1>IP/FQDN Cache
 
 <P>
     A cache of name-to-address and address-to-name lookups.  These are
@@ -241,11 +184,7 @@ Squid consists of the following major components
     implement the non-blocking lookups.  Files: <tt/ipcache.c/,
     <tt/fqdncache.c/.
 
-<sect2>Cache Manager
-
-<P>
-<em/Files:/
-	<tt/objcache.c/, <tt/stat.c/
+<sect1>Cache Manager
 
 <P>
 	This provides access to certain information needed by the
@@ -260,11 +199,7 @@ Squid consists of the following major components
 	to information.  It does not provide a method for configuring
 	Squid while it is running.
 
-<sect2>Network Measurement Database
-
-<P>
-<em/Files:/
-	<tt/net_db.c/
+<sect1>Network Measurement Database
 
 <P>
 	In a number of situation, Squid finds it useful to know the
@@ -283,11 +218,7 @@ Squid consists of the following major components
 	aggregation is used to reduce the overall database size.  File:
 	<tt/net_db.c/.
 
-<sect2>Redirectors
-
-<P>
-<em/Files:/
-	<tt/redirect.c/
+<sect1>Redirectors
 
 <P>
 	Squid has the ability to rewrite requests from clients.  After
@@ -298,11 +229,7 @@ Squid consists of the following major components
 	Common applications for this feature are extended access controls
 	and local mirroring.  File: <tt/redirect.c/.
 
-<sect2>Autonomous System Numbers
-
-<P>
-<em/Files:/
-	<tt/asn.c/
+<sect1>Autonomous System Numbers
 
 <P>
 	Squid supports Autonomous System (AS) numbers as another 
@@ -310,26 +237,8 @@ Squid consists of the following major components
 	query databases which map AS numbers into lists of CIDR
 	prefixes.  These results are stored in a radix tree which
 	allows fast searching of the AS number for a given IP address.
-	
-<sect2>Asynchronous I/O Operations
 
-<P>
-<em/Files:/
-	<tt/async_io.c/, <tt/aiops.c/
-
-<P>
-	These routines in <tt/async_io.c/ and <tt/aiops.c/ 
-	implement blocking disk operations in a set of thread (child)
-	processes.
-
-<sect2>Configuration File Parsing
-
-<P>
-<em/Files:/
-	<tt/cf.data.pre/,
-	<tt/cf_gen.c/,
-	<tt/cf_parser.c/,
-	<tt/cache_cf.c/
+<sect1>Configuration File Parsing
 
 <P>
 	The primary configuration file specification is in the file
@@ -338,11 +247,7 @@ Squid consists of the following major components
 	and <tt/squid.conf/.  <tt/cf_parser.c/ is included directly
 	into <tt/cache_cf.c/ at compile time.
 
-<sect2>Callback Data Database
-
-<P>
-<em/Files:/
-	<tt/cbdata.c/
+<sect1>Callback Data Database
 
 <P>
 	Squid's extensive use of callback functions makes it very
@@ -352,11 +257,7 @@ Squid consists of the following major components
 	provide a uniform method for managing callback data memory,
 	canceling callbacks, and preventing erroneous memory accesses.
 
-<sect2>Debugging
-
-<P>
-<em/Files:/
-	<tt/debug.c/
+<sect1>Debugging
 
 <P>
 	Squid includes extensive debugging statements to assist in
@@ -373,22 +274,14 @@ Squid consists of the following major components
 	probably sounds more complicated than it really is.
 	File: <em/debug.c/.  Note that <tt/debug()/ itself is a macro.
 
-<sect2>Error Generation
-
-<P>
-<em/Files:/
-	<tt/errorpage.c/
+<sect1>Error Generation
 
 <P>
 	The routines in <tt/errorpage.c/ generate error messages from
 	a template file and specific request parameters.  This allows
 	for customized error messages and multilingual support.
 
-<sect2>Event Queue
-
-<P>
-<em/Files:/
-	<tt/event.c/
+<sect1>Event Queue
 
 <P>
 	The routines in <tt/event.c/ maintain a linked-list event
@@ -397,10 +290,7 @@ Squid consists of the following major components
 	cache replacement, cleaning swap directories, as well as one-time
 	functions such as ICP query timeouts.
 	
-<sect2>Filedescriptor Management
-<P>
-<em/Files:/
-	<tt/fd.c/
+<sect1>Filedescriptor Management
 
 <P>
 	Here we track the number of filedescriptors in use, and the
@@ -408,20 +298,14 @@ Squid consists of the following major components
 	file descriptor.
 
 
-<sect2>Hashtable Support
-<P>
-<em/Files:/
-	<tt/hash.c/
+<sect1>Hashtable Support
 
 <P>
 	These routines implement generic hash tables.  A hash table
 	is created with a function for hashing the key values, and a
 	function for comparing the key values.
 
-<sect2>HTTP Anonymization
-<P>
-<em/Files:/
-	<tt/http-anon.c/
+<sect1>HTTP Anonymization
 
 <P>
 	These routines support anonymizing of HTTP requests leaving
@@ -430,11 +314,7 @@ Squid consists of the following major components
 	will be allowed (the ``paranoid'' mode).
 
 
-<sect2>Internet Cache Protocol
-<P>
-<em/Files:/
-	<tt/icp_v2.c/,
-	<tt/icp_v3.c/
+<sect1>Internet Cache Protocol
 
 <P>
 	Here we implement the Internet Cache Protocol.  This 
@@ -445,10 +325,7 @@ Squid consists of the following major components
 	a different version number and a slightly different message
 	format.
 
-<sect2>Ident Lookups
-<P>
-<em/Files:/
-	<tt/ident.c/
+<sect1>Ident Lookups
 
 <P>
 	These routines support RFC 931 ``Ident'' lookups.   An ident
@@ -456,10 +333,7 @@ Squid consists of the following major components
 	with a connected TCP socket.  Some sites use this facility for
 	access control and logging purposes.
 
-<sect2>Memory Management
-<P>
-<em/Files:/
-	<tt/mem.c/
+<sect1>Memory Management
 
 <P>
 	These routines allocate and manage pools of memory for
@@ -469,10 +343,7 @@ Squid consists of the following major components
 	in more efficient use of memory at the expense of a larger
 	process size.
 
-<sect2>Multicast Support
-<P>
-<em/Files:/
-	<tt/multicast.c/
+<sect1>Multicast Support
 
 <P>
 	Currently, multicast is only used for ICP queries.   The
@@ -480,10 +351,7 @@ Squid consists of the following major components
 	socket to a multicast group (or groups), and setting
 	the multicast TTL value on outgoing packets.
 
-<sect2>Persistent Server Connections
-<P>
-<em/Files:/
-	<tt/pconn.c/
+<sect1>Persistent Server Connections
 
 <P>
 	These routines manage idle, persistent HTTP connections
@@ -494,11 +362,7 @@ Squid consists of the following major components
 	15 seconds.  After 15 seconds, idle socket connections
 	are closed.
 
-<sect2>Refresh Rules
-
-<P>
-<em/Files:/
-	<tt/refresh.c/
+<sect1>Refresh Rules
 
 <P>
 	These routines decide wether a cached object is stale or fresh,
@@ -507,23 +371,14 @@ Squid consists of the following major components
 	If it is stale, then it must be revalidated with an	
 	If-Modified-Since request.
 
-<sect2>SNMP Support
-<P>
-<em/Files:/
-	<tt/snmp.c/,
-	<tt/snmp_agent.c/,
-	<tt/snmp_config.c/,
-	<tt/snmp_vars.c/
+<sect1>SNMP Support
 
 <P>
 	These routines implement SNMP for Squid.  At the present time,
 	we have made almost all of the cachemgr information available
 	via SNMP.
 
-<sect2>URN Support
-<P>
-<em/Files:/
-	<tt/urn.c/
+<sect1>URN Support
 
 <P>
 We are experimenting with URN support in Squid version 1.2.  Note,
@@ -534,12 +389,9 @@ mirror sites.  For more details, please see
 	name="URN support in Squid">.
 
 
-<sect1>External Programs
+<sect>External Programs
 
-<sect2>dnsserver
-<P>
-<em/Files:/
-	<tt/dnsserver.c/
+<sect1>dnsserver
 
 <P>
     Because the standard <tt/gethostbyname(3)/ library call blocks,
@@ -550,10 +402,7 @@ mirror sites.  For more details, please see
     with starting and stopping the dnsservers.  Reading and writing to
     and from the dnsservers occurs in the IP and FQDN cache modules.
 
-<sect2>pinger
-<P>
-<em/Files:/
-	<tt/pinger.c/
+<sect1>pinger
 
 <P>
 	Although it would be possible for Squid to send and receive
@@ -569,10 +418,7 @@ mirror sites.  For more details, please see
 	program installed with setuid permissions.
 	</enum>
 	
-<sect2>unlinkd
-<P>
-<em/Files:/
-	<tt/unlinkd.c/
+<sect1>unlinkd
 
 <P>
 	The <tt/unlink(2)/ system call can cause a process to block
@@ -580,18 +426,14 @@ mirror sites.  For more details, please see
 	to make unlink() calls from Squid.  Instead we pass them
 	to this external process.
 
-<sect2>redirector
-
-<P>
-<em/Files:/
-	user-developed
+<sect1>redirector
 
 <P>
 	A redirector process reads URLs on stdin and writes (possibly
 	changed) URLs on stdout.  It is implemented as an external
 	process to maximize flexibility.
 
-<sect1>Sequence of a Typical Request
+<sect>Flow of a Typical Request
 
 <P>
 <enum>
@@ -664,7 +506,8 @@ another request from the client, or closes the client connection.
 
 </enum>
 
-<!-- %%%% Chapter : MAIN LOOP %%%% -->
+<sect>Callback Functions
+
 <sect>The Main Loop: <tt/comm_select()/
 
 <P>
@@ -1019,61 +862,72 @@ according to the <em/ipcache_high/ threshold.
 </verb>
 
 <P> 
-	Prior to use, an <tt/HttpHeader/ must be initialized. A programmer must
-	specify if a header belongs to a request or reply message. The
-	"ownership" information is used mostly for statistical purposes.
+	Prior to use, an <tt/HttpHeader/ must be initialized. A
+	programmer must specify if a header belongs to a request
+	or reply message. The "ownership" information is used mostly
+	for statistical purposes.
 
 <P>
-	Once initialized, the <tt/HttpHeader/ object <em/must/ be, eventually,
-	cleaned.  Failure to do so will result in a memory leak.
+	Once initialized, the <tt/HttpHeader/ object <em/must/ be,
+	eventually, cleaned.  Failure to do so will result in a
+	memory leak.
 
 <P>
-	Note that there are no methods for "creating" or "destroying" a
-	"dynamic" <tt/HttpHeader/ object. Looks like headers are always stored as a
-	part of another object or as a temporary variable. Thus, dynamic
-	allocation of headers is not needed.
+	Note that there are no methods for "creating" or "destroying"
+	a "dynamic" <tt/HttpHeader/ object. Looks like headers are
+	always stored as a part of another object or as a temporary
+	variable. Thus, dynamic allocation of headers is not needed.
 
 
 <sect1>Header Manipulation.
 
 <P>
-	The mostly common operations on HTTP headers are testing for a particular
-	header-field (<tt/httpHeaderHas()/), extracting field-values (<tt/httpHeaderGet*()/), and
-	adding new fields (<tt/httpHeaderPut*()/).
+	The mostly common operations on HTTP headers are testing
+	for a particular header-field (<tt/httpHeaderHas()/),
+	extracting field-values (<tt/httpHeaderGet*()/), and adding
+	new fields (<tt/httpHeaderPut*()/).
 
 <P>
-	<tt/httpHeaderHas(hdr, id)/ returns true if at least one header-field specified by
-	"id" is present in the header. Note that using <em/HDR_OTHER/ as an id is
-	prohibited.  There is usually no reason to know if there are "other"
+	<tt/httpHeaderHas(hdr, id)/ returns true if at least one
+	header-field specified by "id" is present in the header.
+	Note that using <em/HDR_OTHER/ as an id is prohibited.
+	There is usually no reason to know if there are "other"
 	header-fields in a header.
 
 <P>
-	<tt/httpHeaderGet&lt;Type&gt;(hdr, id)/ returns the value of the specified header-field.
-	The "Type" must match header-field type. If a header is not present a "null"
-	value is returned. "Null" values depend on field-type, of course.
+	<tt/httpHeaderGet&lt;Type&gt;(hdr, id)/ returns the value
+	of the specified header-field.  The "Type" must match
+	header-field type. If a header is not present a "null"
+	value is returned. "Null" values depend on field-type, of
+	course.
 
 <P>
-	Special care must be taken when several header-fields with the same id are
-	preset in the header. If HTTP protocol allows only one copy of the specified
-	field per header (e.g. "Content-Length"), <tt/httpHeaderGet&lt;Type&gt;()/ will return
-	one of the field-values (chosen semi-randomly). If HTTP protocol allows for
-	several values (e.g. "Accept"), a "String List" will be returned.
+	Special care must be taken when several header-fields with
+	the same id are preset in the header. If HTTP protocol
+	allows only one copy of the specified field per header
+	(e.g. "Content-Length"), <tt/httpHeaderGet&lt;Type&gt;()/
+	will return one of the field-values (chosen semi-randomly).
+	If HTTP protocol allows for several values (e.g. "Accept"),
+	a "String List" will be returned.
 
 <P>
-	It is prohibited to ask for a List of values when only one value is permitted,
-	and visa-versa. This restriction prevents a programmer from processing one
-	value of an header-field while ignoring other valid values.
+	It is prohibited to ask for a List of values when only one
+	value is permitted, and visa-versa. This restriction prevents
+	a programmer from processing one value of an header-field
+	while ignoring other valid values.
 
 <P>
-	<tt/httpHeaderPut&lt;Type&gt;(hdr, id, value)/ will add an header-field with a specified
-	field-name (based on "id") and field_value. The location of the newly added
-	field in the header array is undefined, but it is guaranteed to be after all
-	fields with the same "id" if any. Note that old header-fields with the same id
-	(if any) are not altered in any way.
+	<tt/httpHeaderPut&lt;Type&gt;(hdr, id, value)/ will add an
+	header-field with a specified field-name (based on "id")
+	and field_value. The location of the newly added field in
+	the header array is undefined, but it is guaranteed to be
+	after all fields with the same "id" if any. Note that old
+	header-fields with the same id (if any) are not altered in
+	any way.
 
 <P>
-	The value being put using one of the <tt/httpHeaderPut()/ methods is converted to
-	and stored as a String object.
+	The value being put using one of the <tt/httpHeaderPut()/
+	methods is converted to and stored as a String object.
 
 <P>
 	Example:
@@ -1086,20 +940,20 @@ according to the <em/ipcache_high/ threshold.
 </verb>
 
 <P>
-	There are two ways to delete a field from a header. To delete a "known" field
-	(a field with "id" other than <em/HDR_OTHER/), use <tt/httpHeaderDelById()/ function.
-	Sometimes, it is convenient to delete all fields with a given name ("known" or
-	not) using <tt/httpHeaderDelByName()/ method. Both methods will delete <em/all/ fields
-	specified.
-
+	There are two ways to delete a field from a header. To
+	delete a "known" field (a field with "id" other than
+	<em/HDR_OTHER/), use <tt/httpHeaderDelById()/ function.
+	Sometimes, it is convenient to delete all fields with a
+	given name ("known" or not) using <tt/httpHeaderDelByName()/
+	method. Both methods will delete <em/all/ fields specified.
 
 <P>
-
-	The <em/httpHeaderGetEntry(hdr, pos)/ function can be used for
-	iterating through all fields in a given header. Iteration is
-	controlled by the <em/pos/ parameter. Thus, several concurrent
-	iterations over one <em/hdr/ are possible. It is also safe to
-	delete/add fields from/to <em/hdr/ while iteration is in progress.
+	The <em/httpHeaderGetEntry(hdr, pos)/ function can be used
+	for iterating through all fields in a given header. Iteration
+	is controlled by the <em/pos/ parameter. Thus, several
+	concurrent iterations over one <em/hdr/ are possible. It
+	is also safe to delete/add fields from/to <em/hdr/ while
+	iteration is in progress.
 
 <verb>
 	/* delete all fields with a given name */
@@ -1111,79 +965,89 @@ according to the <em/ipcache_high/ threshold.
 	}
 </verb>
 
-	Note that <em/httpHeaderGetEntry()/ is a low level function and must
-	not be used if high level alternatives are available. For example, to
-	delete an entry with a given name, use the <em/httpHeaderDelByName()/
-	function rather than the loop above.
+	Note that <em/httpHeaderGetEntry()/ is a low level function
+	and must not be used if high level alternatives are available.
+	For example, to delete an entry with a given name, use the
+	<em/httpHeaderDelByName()/ function rather than the loop
+	above.
 
 <sect1>I/O and Headers.
 
 <P>
-	To store a header in a file or socket, pack it using <tt/httpHeaderPackInto()/
-	method and a corresponding "Packer". Note that <tt/httpHeaderPackInto/ will pack
-	only header-fields; request-lines and status-lines are not prepended, and
-	CRLF is not appended. Remember that neither of them is a part of HTTP
-	message header as defined by the HTTP protocol.
+	To store a header in a file or socket, pack it using
+	<tt/httpHeaderPackInto()/ method and a corresponding
+	"Packer". Note that <tt/httpHeaderPackInto/ will pack only
+	header-fields; request-lines and status-lines are not
+	prepended, and CRLF is not appended. Remember that neither
+	of them is a part of HTTP message header as defined by the
+	HTTP protocol.
 
 
 <sect1>Adding new header-field ids.
 
 <P> 
-	Adding new ids is simple. First add new HDR_ entry to the http_hdr_type
-	enumeration in enums.h. Then describe a new header-field attributes in
-	the HeadersAttrs array located in <tt/HttpHeader.c/. The last
-	attribute specifies field type. Five types are supported: integer
-	(<em/ftInt/), string (<em/ftStr/), date in RFC 1123 format
-	(<em/ftDate_1123/), cache control field (<em/ftPCc/), range field
-	(<em/ftPRange/), and content range field (<em/ftPContRange/).  Squid
-	uses type information to convert internal binary representation of
-	fields to their string representation (<tt/httpHeaderPut/ functions)
-	and visa-versa (<tt/httpHeaderGet/ functions).
+	Adding new ids is simple. First add new HDR_ entry to the
+	http_hdr_type enumeration in enums.h. Then describe a new
+	header-field attributes in the HeadersAttrs array located
+	in <tt/HttpHeader.c/. The last attribute specifies field
+	type. Five types are supported: integer (<em/ftInt/), string
+	(<em/ftStr/), date in RFC 1123 format (<em/ftDate_1123/),
+	cache control field (<em/ftPCc/), range field (<em/ftPRange/),
+	and content range field (<em/ftPContRange/).  Squid uses
+	type information to convert internal binary representation
+	of fields to their string representation (<tt/httpHeaderPut/
+	functions) and visa-versa (<tt/httpHeaderGet/ functions).
 
 <P>
 	Finally, add new id to one of the following arrays:
-	<em/GeneralHeadersArr/, <em/EntityHeadersArr/, <em/ReplyHeadersArr/,
-	<em/RequestHeadersArr/.  Use HTTP specs to determine the applicable
-	array.  If your header-field is an "extension-header", its place is in
-	<em/ReplyHeadersArr/ and/or in <em/RequestHeadersArr/. You can also
-	use <em/EntityHeadersArr/ for "extension-header"s that can be used
-	both in replies and requests.  Header fields other than
-	"extension-header"s must go to one and only one of the arrays
-	mentioned above.
+	<em/GeneralHeadersArr/, <em/EntityHeadersArr/,
+	<em/ReplyHeadersArr/, <em/RequestHeadersArr/.  Use HTTP
+	specs to determine the applicable array.  If your header-field
+	is an "extension-header", its place is in <em/ReplyHeadersArr/
+	and/or in <em/RequestHeadersArr/. You can also use
+	<em/EntityHeadersArr/ for "extension-header"s that can be
+	used both in replies and requests.  Header fields other
+	than "extension-header"s must go to one and only one of
+	the arrays mentioned above.
 
 <P>
 	Also, if the new field is a "list" header, add it to the
-	<em/ListHeadersArr/ array.  A "list" field-header is the one that is
-	defined (or can be defined) using "#" BNF construct described in the
-	HTTP specs. Essentially, a field that may have more than one valid
-	field-value in a single header is a "list" field.
+	<em/ListHeadersArr/ array.  A "list" field-header is the
+	one that is defined (or can be defined) using "#" BNF
+	construct described in the HTTP specs. Essentially, a field
+	that may have more than one valid field-value in a single
+	header is a "list" field.
 
 <P>
-	In most cases, if you forget to include a new field id in one of the required
-	arrays, you will get a run-time assertion. For rarely used fields, however, it
-	may take a long time for an assertion to be triggered.
+	In most cases, if you forget to include a new field id in
+	one of the required arrays, you will get a run-time assertion.
+	For rarely used fields, however, it may take a long time
+	for an assertion to be triggered.
 
 <P>
-	There is virtually no limit on the number of fields supported by Squid. If
-	current mask sizes cannot fit all the ids (you will get an assertion if that
-	happens), simply enlarge HttpHeaderMask type in <tt/typedefs.h/.
+	There is virtually no limit on the number of fields supported
+	by Squid. If current mask sizes cannot fit all the ids (you
+	will get an assertion if that happens), simply enlarge
+	HttpHeaderMask type in <tt/typedefs.h/.
 
 
 <sect1>A Word on Efficiency.
 
 <P>
-	<tt/httpHeaderHas()/ is a very cheap (fast) operation implemented using a bit mask
-	lookup.
+	<tt/httpHeaderHas()/ is a very cheap (fast) operation
+	implemented using a bit mask lookup.
 
 <P>
-	Adding new fields is somewhat expensive if they require complex conversions to
-	a string.
+	Adding new fields is somewhat expensive if they require
+	complex conversions to a string.
 
 <P>
-	Deleting existing fields requires scan of all the entries and comparing their
-	"id"s (faster) or "names" (slower) with the one specified for deletion.
+	Deleting existing fields requires scan of all the entries
+	and comparing their "id"s (faster) or "names" (slower) with
+	the one specified for deletion.
 
 <P>
-	Most of the operations are faster than their "ascii string" equivalents.
+	Most of the operations are faster than their "ascii string"
+	equivalents.
 
 </article>
