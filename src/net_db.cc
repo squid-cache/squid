@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.98 1998/05/11 18:44:43 rousskov Exp $
+ * $Id: net_db.cc,v 1.99 1998/05/11 20:35:32 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -996,6 +996,8 @@ netdbBinaryExchange(StoreEntry * s)
 	n = next;
 	next = (netdbEntry *) hash_next(addr_table);
 	if (0.0 == n->rtt)
+	    continue;
+	if (n->rtt > 60000)	/* RTT > 1 MIN probably bogus */
 	    continue;
 	if (!safe_inet_addr(n->network, &addr))
 	    continue;
