@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.2 2000/05/12 00:29:20 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.3 2000/06/26 20:17:13 adrian Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -186,6 +186,7 @@ storeUfsUnlink(SwapDir * SD, StoreEntry * e)
 {
     debug(79, 3) ("storeUfsUnlink: fileno %08X\n", e->swap_filen);
     storeUfsDirReplRemove(e);
+    storeUfsDirMapBitReset(SD, e->swap_filen);
     storeUfsDirUnlinkFile(SD, e->swap_filen);
 }
 
