@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.13 1996/03/29 21:15:48 wessels Exp $ */
+/* $Id: comm.cc,v 1.14 1996/04/01 18:21:48 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -17,7 +17,6 @@ int RESERVED_FD = 64;
 
 
 /* GLOBAL */
-time_t cached_curtime = 0L;	/* global time var set by select loop */
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
@@ -506,14 +505,13 @@ int comm_select(sec, usec, failtime)
 
     /* assume all process are very fast (less than 1 second). Call
      * time() only once */
-    cached_curtime = time(0L);
+    getCurrentTime();
     /* use only 1 second granularity */
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
     timeout = cached_curtime + sec;
 
-
-    while (timeout > (cached_curtime = time(0L))) {
+    while (timeout > getCurrentTime()) {
 	if (0 < failtime && failtime < cached_curtime)
 	    break;
 
@@ -720,7 +718,7 @@ int comm_set_select_handler_plus_timeout(fd, type, handler, client_data, timeout
      time_t timeout;
 {
     if (type & COMM_SELECT_TIMEOUT) {
-	fd_table[fd].timeout_time = (time(0L) + timeout);
+	fd_table[fd].timeout_time = (getCurrentTime() + timeout);
 	fd_table[fd].timeout_delta = timeout;
 	fd_table[fd].timeout_handler = handler;
 	fd_table[fd].timeout_data = client_data;
