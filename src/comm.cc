@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.392 2004/02/18 01:58:59 adrian Exp $
+ * $Id: comm.cc,v 1.393 2004/03/01 01:37:34 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2560,6 +2560,20 @@ commMarkHalfClosed(int fd) {
     fdc_table[fd].half_closed = true;
 }
 
+int commIsHalfClosed(int fd) {
+    if (fdc_table[fd].active != 1) {
+        fatal("foo");
+    }
+
+    return fdc_table[fd].half_closed;
+}
+
+void
+commCheckHalfClosed(void *data) {
+    AbortChecker::Instance().doIOLoop();
+    eventAdd("commCheckHalfClosed", commCheckHalfClosed, NULL, 1.0, false);
+}
+
 AbortChecker &AbortChecker::Instance() {return Instance_;}
 
 AbortChecker AbortChecker::Instance_;
@@ -2601,22 +2615,8 @@ AbortChecker::stopMonitoring (int fd) {
 #include "splay.h"
 void
 AbortChecker::doIOLoop() {
-    if (checking) {
-        /*
-        fds->walk(RemoveCheck, this);
-        */
-        checking = false;
-        return;
-    }
-
-    if (lastCheck >= squid_curtime)
-        return;
-
+    fds->walk(RemoveCheck, this);
     fds->walk(AddCheck, this);
-
-    checking = true;
-
-    lastCheck = squid_curtime;
 }
 
 void
