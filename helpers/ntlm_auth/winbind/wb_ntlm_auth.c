@@ -261,7 +261,7 @@ do_authenticate(ntlm_authenticate * auth, int auth_length)
     return;			/* useless */
 }
 
-void
+int
 manage_request(char *target_domain)
 {
     char buf[BUFFER_SIZE + 1];
@@ -271,18 +271,15 @@ manage_request(char *target_domain)
 
 
 try_again:
-    if (fgets(buf, BUFFER_SIZE, stdin) == NULL) {
-	warn("fgets() failed! dying..... errno=%d (%s)\n", errno,
-	    strerror(errno));
-	exit(1);		/* BIIG buffer */
-    }
+    if (fgets(buf, BUFFER_SIZE, stdin) == NULL)
+	return 0;
 
     c = memchr(buf, '\n', BUFFER_SIZE);
     if (c) {
 	if (oversized) {
 	    helperfail("illegal request received");
 	    warn("Illegal request received: '%s'\n", buf);
-	    return;
+	    return 1;
 	}
 	*c = '\0';
     }
@@ -296,44 +293,44 @@ try_again:
     if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
 	sendchallenge(ntlm_make_challenge(target_domain, NULL,
 		build_challenge(), CHALLENGE_LEN));
-	return;
+	return 1;
     }
     if (strncmp(buf, "KK ", 3) != 0) {	/* not an auth-request */
 	helperfail("illegal request received");
 	warn("Illegal request received: '%s'\n", buf);
-	return;
+	return 1;
     }
     /* At this point I'm sure it's a KK */
     decoded = base64_decode(buf + 3);
     if (!decoded) {		/* decoding failure, return error */
 	authfail("-", "-", "Auth-format error, base64-decoding error");
-	return;
+	return 1;
     }
     fast_header = (struct _ntlmhdr *) decoded;
 
     /* sanity-check: it IS a NTLMSSP packet, isn't it? */
     if (memcmp(fast_header->signature, "NTLMSSP", 8) != 0) {
 	authfail("-", "-", "Broken NTLM packet, missing NTLMSSP signature");
-	return;
+	return 1;
     }
     /* Understand what we got */
     switch le32toh(fast_header->type) {
     case NTLM_NEGOTIATE:
 	authfail("-", "-", "Received neg-request while expecting auth packet");
-	return;
+	return 1;
     case NTLM_CHALLENGE:
 	authfail("-", "-", "Received challenge. Refusing to abide");
-	return;
+	return 1;
     case NTLM_AUTHENTICATE:
 	do_authenticate((ntlm_authenticate *) decoded,
 	    (strlen(buf) - 3) * 3 / 4);
-	return;
+	return 1;
     default:
 	helperfail("Unknown authentication packet type");
-	return;
+	return 1;
     }
     /* notreached */
-    return;
+    return 1;
 }
 
 static char *
@@ -410,9 +407,14 @@ void
 check_winbindd()
 {
     NSS_STATUS r;
+    int retry=10;
     struct winbindd_request request;
     struct winbindd_response response;
-    r = winbindd_request(WINBINDD_INTERFACE_VERSION, &request, &response);
+    do {
+	r = winbindd_request(WINBINDD_INTERFACE_VERSION, &request, &response);
+	if (r != NSS_STATUS_SUCCESS)
+	    retry--; 
+    } while (r != NSS_STATUS_SUCCESS && retry);
     if (r != NSS_STATUS_SUCCESS) {
 	warn("Can't contact winbindd. Dying\n");
 	exit(1);
@@ -451,8 +453,8 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
     init_random();
-    while (1) {
-	manage_request(target_domain);
+    while (manage_request(target_domain)) {
+	/* everything is done within manage_request */
     }
     return 0;
 }

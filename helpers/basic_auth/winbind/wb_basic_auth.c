@@ -31,7 +31,6 @@
 char debug_enabled=0;
 char *myname;
 pid_t mypid;
-int err = 0;
 
 NSS_STATUS winbindd_request(int req_type,
 			    struct winbindd_request *request,
@@ -99,31 +98,24 @@ process_options(int argc, char *argv[])
     return;
 }
 
-void manage_request(void)
+int manage_request(void)
 {
     char buf[BUFFER_SIZE+1];
     int length;
     char *c, *user, *pass;
   
-    if (fgets(buf, BUFFER_SIZE, stdin) == NULL) {
-	warn("fgets() failed! dying..... errno=%d (%s)\n", errno,
-	    strerror(errno));
-	exit(1);    /* BIIG buffer */
-    }
-	
+    if (fgets(buf, BUFFER_SIZE, stdin) == NULL)
+	return 0;
+    
     c=memchr(buf,'\n',BUFFER_SIZE);
     if (c) {
 	*c = '\0';
 	length = c-buf;
     } else {
-	err = 1;
-	return;
-    }
-    if (err) {
 	warn("Oversized message\n");
+	fgets(buf, BUFFER_SIZE, stdin);
 	SEND("ERR");
-	err = 0;
-	return;
+	return 1;
     }
   
     debug("Got '%s' from squid (length: %d).\n",buf,length);
@@ -131,7 +123,7 @@ void manage_request(void)
     if (buf[0] == '\0') {
 	warn("Invalid Request\n");
 	SEND("ERR");
-	return;
+	return 1;
     }
 
     user=buf;
@@ -140,7 +132,7 @@ void manage_request(void)
     if (!pass) {
 	warn("Password not found. Denying access\n");
 	SEND("ERR");
-	return;
+	return 1;
     }
     *pass='\0';
     pass++;
@@ -149,6 +141,29 @@ void manage_request(void)
     rfc1738_unescape(pass);
 
     do_authenticate(user,pass);
+    return 1;
+}
+
+void
+check_winbindd()
+{
+    NSS_STATUS r;
+    int retry=10;
+    struct winbindd_request request;
+    struct winbindd_response response;
+    do {
+	r = winbindd_request(WINBINDD_INTERFACE_VERSION, &request, &response);
+	if (r != NSS_STATUS_SUCCESS)
+	    retry--; 
+    } while (r != NSS_STATUS_SUCCESS && retry);
+    if (r != NSS_STATUS_SUCCESS) {
+	warn("Can't contact winbindd. Dying\n");
+	exit(1);
+    }
+    if (response.data.interface_version != WINBIND_INTERFACE_VERSION) {
+	warn("Winbind protocol mismatch. Align squid and samba. Dying\n");
+	exit(1);
+    }
 }
 
 
@@ -170,8 +185,10 @@ int main (int argc, char ** argv)
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
-    while(1) {
-	manage_request();
+    check_winbindd();
+
+    while(manage_request()) {
+	/* everything is done within manage_request */
     }
     return 0;
 }
