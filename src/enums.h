@@ -19,6 +19,7 @@ typedef enum {
     LOG_UDP_DENIED,
     LOG_UDP_INVALID,
     LOG_UDP_MISS_NOFETCH,
+    LOG_ICP_QUERY,
     LOG_TYPE_MAX
 } log_type;
 
@@ -610,4 +611,9 @@ enum {
     MEDIAN_MISS,
     MEDIAN_NM,
     MEDIAN_ICP_REPLY
+};
+
+enum {
+    SENT,
+    RECV
 };

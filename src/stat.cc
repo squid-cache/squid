@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.230 1998/04/09 21:15:02 rousskov Exp $
+ * $Id: stat.cc,v 1.231 1998/04/09 21:32:11 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -120,14 +120,13 @@ static void statCountersInit(StatCounters *);
 static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
 static void statCountersCopy(StatCounters * dest, const StatCounters * orig);
-static void statCountersDump(StoreEntry * sentry);
 static double statMedianSvc(int, int);
 static OBJH stat_io_get;
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
 static OBJH info_get;
 static OBJH statFiledescriptors;
-static OBJH statCounters;
+static OBJH statCountersDump;
 static OBJH statPeerSelect;
 static OBJH statDigestBlob;
 static OBJH statAvg5min;
@@ -650,6 +649,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	&f->client_http.hit_svc_time);
     storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
 	x / 1000.0);
+
 #if SQUID_PEER_DIGEST
     storeAppendPrintf(sentry, "cd.msgs_sent = %f/sec\n",
 	XAVG(cd.msgs_sent));
@@ -717,12 +717,30 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	XAVG(icp.pkts_sent));
     storeAppendPrintf(sentry, "icp.pkts_recv = %f/sec\n",
 	XAVG(icp.pkts_recv));
+    storeAppendPrintf(sentry, "icp.queries_sent = %f/sec\n",
+	XAVG(icp.queries_sent));
+    storeAppendPrintf(sentry, "icp.replies_sent = %f/sec\n",
+	XAVG(icp.replies_sent));
+    storeAppendPrintf(sentry, "icp.queries_recv = %f/sec\n",
+	XAVG(icp.queries_recv));
+    storeAppendPrintf(sentry, "icp.replies_recv = %f/sec\n",
+	XAVG(icp.replies_recv));
     storeAppendPrintf(sentry, "icp.replies_queued = %f/sec\n",
 	XAVG(icp.replies_queued));
+    storeAppendPrintf(sentry, "icp.query_timeouts = %f/sec\n",
+	XAVG(icp.query_timeouts));
     storeAppendPrintf(sentry, "icp.kbytes_sent = %f/sec\n",
 	XAVG(icp.kbytes_sent.kb));
     storeAppendPrintf(sentry, "icp.kbytes_recv = %f/sec\n",
 	XAVG(icp.kbytes_recv.kb));
+    storeAppendPrintf(sentry, "icp.q_kbytes_sent = %f/sec\n",
+	XAVG(icp.q_kbytes_sent.kb));
+    storeAppendPrintf(sentry, "icp.r_kbytes_sent = %f/sec\n",
+	XAVG(icp.r_kbytes_sent.kb));
+    storeAppendPrintf(sentry, "icp.q_kbytes_recv = %f/sec\n",
+	XAVG(icp.q_kbytes_recv.kb));
+    storeAppendPrintf(sentry, "icp.r_kbytes_recv = %f/sec\n",
+	XAVG(icp.r_kbytes_recv.kb));
     x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
     storeAppendPrintf(sentry, "icp.query_median_svc_time = %f seconds\n",
 	x / 1000000.0);
@@ -771,7 +789,7 @@ statInit(void)
 	stat_io_get, 0);
     cachemgrRegister("counters",
 	"Traffic and Resource Counters",
-	statCounters, 0);
+	statCountersDump, 0);
     cachemgrRegister("peer_select",
 	"Peer Selection Algorithms",
 	statPeerSelect, 0);
@@ -910,6 +928,40 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 }
 
 static void
+statCountersHistograms(StoreEntry *sentry)
+{
+    StatCounters *f = &Counter;
+#if TOO_MUCH_OUTPUT
+    storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
+    statHistDump(&f->client_http.all_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
+    statHistDump(&f->client_http.miss_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.nm_svc_time histogram:\n");
+    statHistDump(&f->client_http.nm_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
+    statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
+#endif
+#if SQUID_PEER_DIGEST
+    storeAppendPrintf(sentry, "\nicp.query_svc_time histogram:\n");
+    statHistDump(&f->icp.query_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "\nicp.reply_svc_time histogram:\n");
+    statHistDump(&f->icp.reply_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "\nicp.client_svc_time histogram:\n");
+    statHistDump(&f->icp.client_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "\ncd.client_svc_time histogram:\n");
+    statHistDump(&f->cd.client_svc_time, sentry, NULL);
+#endif
+#if TOO_MUCH_OUTPUT
+    storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
+    statHistDump(&f->icp.query_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "icp.reply_svc_time histogram:\n");
+    statHistDump(&f->icp.reply_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
+    statHistDump(&f->dns.svc_time, sentry, NULL);
+#endif
+}
+
+static void
 statCountersDump(StoreEntry * sentry)
 {
     StatCounters *f = &Counter;
@@ -932,17 +984,6 @@ statCountersDump(StoreEntry * sentry)
 	(int) f->client_http.kbytes_in.kb);
     storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
 	(int) f->client_http.kbytes_out.kb);
-
-#if TOO_MUCH_OUTPUT
-    storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
-    statHistDump(&f->client_http.all_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
-    statHistDump(&f->client_http.miss_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.nm_svc_time histogram:\n");
-    statHistDump(&f->client_http.nm_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
-    statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
-#endif
 
     storeAppendPrintf(sentry, "server.all.requests = %d\n",
 	(int) f->server.all.requests);
@@ -984,35 +1025,48 @@ statCountersDump(StoreEntry * sentry)
 	f->icp.pkts_sent);
     storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
 	f->icp.pkts_recv);
+    storeAppendPrintf(sentry, "icp.queries_sent = %d\n",
+	f->icp.queries_sent);
+    storeAppendPrintf(sentry, "icp.replies_sent = %d\n",
+	f->icp.replies_sent);
+    storeAppendPrintf(sentry, "icp.queries_recv = %d\n",
+	f->icp.queries_recv);
+    storeAppendPrintf(sentry, "icp.replies_recv = %d\n",
+	f->icp.replies_recv);
+    storeAppendPrintf(sentry, "icp.query_timeouts = %d\n",
+	f->icp.query_timeouts);
     storeAppendPrintf(sentry, "icp.replies_queued = %d\n",
 	f->icp.replies_queued);
     storeAppendPrintf(sentry, "icp.kbytes_sent = %d\n",
 	(int) f->icp.kbytes_sent.kb);
     storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
 	(int) f->icp.kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.q_kbytes_sent = %d\n",
+	(int) f->icp.q_kbytes_sent.kb);
+    storeAppendPrintf(sentry, "icp.r_kbytes_sent = %d\n",
+	(int) f->icp.r_kbytes_sent.kb);
+    storeAppendPrintf(sentry, "icp.q_kbytes_recv = %d\n",
+	(int) f->icp.q_kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.r_kbytes_recv = %d\n",
+	(int) f->icp.r_kbytes_recv.kb);
 
 #if SQUID_PEER_DIGEST
+    storeAppendPrintf(sentry, "icp.times_used = %d\n",
+        f->icp.times_used);
+    storeAppendPrintf(sentry, "cd.times_used = %d\n",
+        f->cd.times_used);
     storeAppendPrintf(sentry, "cd.msgs_sent = %d\n",
 	f->cd.msgs_sent);
     storeAppendPrintf(sentry, "cd.msgs_recv = %d\n",
 	f->cd.msgs_recv);
+    storeAppendPrintf(sentry, "cd.memory = %d\n",
+	(int)f->cd.memory.kb);
+    storeAppendPrintf(sentry, "cd.store_memory = %d\n",
+        (int) (store_digest ? store_digest->mask_size/1024 : 0));
     storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
 	(int) f->cd.kbytes_sent.kb);
     storeAppendPrintf(sentry, "cd.kbytes_recv = %d\n",
 	(int) f->cd.kbytes_recv.kb);
-    storeAppendPrintf(sentry, "cd.memory = %d\n",
-	(int)f->cd.memory.kb);
-    storeAppendPrintf(sentry, "cd.local_memory = %d\n",
-	store_digest ? store_digest->mask_size/1024 : 0);
-#endif
-
-#if TOO_MUCH_OUTPUT
-    storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
-    statHistDump(&f->icp.query_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "icp.reply_svc_time histogram:\n");
-    statHistDump(&f->icp.reply_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
-    statHistDump(&f->dns.svc_time, sentry, NULL);
 #endif
 
     storeAppendPrintf(sentry, "unlink.requests = %d\n",
@@ -1069,88 +1123,14 @@ statPeerSelect(StoreEntry * sentry)
 static void
 statDigestBlob(StoreEntry * sentry)
 {
-#if SQUID_PEER_DIGEST
-    StatCounters *f = &CountHist[0];
-    StatCounters *l = &CountHist[5];
-    double x;
-
-    storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
-    statHistDump(&f->client_http.all_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
-    statHistDump(&f->client_http.miss_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.nm_svc_time histogram:\n");
-    statHistDump(&f->client_http.nm_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
-    statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\nicp.query_svc_time histogram:\n");
-    statHistDump(&f->icp.query_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\nicp.reply_svc_time histogram:\n");
-    statHistDump(&f->icp.reply_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\nicp.client_svc_time histogram:\n");
-    statHistDump(&f->icp.client_svc_time, sentry, NULL);
-    storeAppendPrintf(sentry, "\ncd.client_svc_time histogram:\n");
-    statHistDump(&f->cd.client_svc_time, sentry, NULL);
-
-    storeAppendPrintf(sentry, "\nMedian service times:\n");
-    x = statHistDeltaMedian(&l->client_http.all_svc_time,
-	&f->client_http.all_svc_time);
-    storeAppendPrintf(sentry, "client_http.all_median_svc_time = %f seconds\n",
-	x / 1000.0);
-    x = statHistDeltaMedian(&l->client_http.miss_svc_time,
-	&f->client_http.miss_svc_time);
-    storeAppendPrintf(sentry, "client_http.miss_median_svc_time = %f seconds\n",
-	x / 1000.0);
-    x = statHistDeltaMedian(&l->client_http.hit_svc_time,
-	&f->client_http.hit_svc_time);
-    storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
-	x / 1000.0);
-    x = statHistDeltaMedian(&l->cd.client_svc_time,
-	&f->cd.client_svc_time);
-    storeAppendPrintf(sentry, "cd.client_median_svc_time = %f seconds\n",
-	x / 1000.0);
-    x = statHistDeltaMedian(&l->icp.client_svc_time,
-	&f->icp.client_svc_time);
-    storeAppendPrintf(sentry, "icp.client_median_svc_time = %f seconds\n",
-	x / 1000.0);
-
-    storeAppendPrintf(sentry, "\nTraffic:\n");
-    storeAppendPrintf(sentry, "icp.times_used = %d\n",
-	f->icp.times_used);
-    storeAppendPrintf(sentry, "icp.pkts_sent = %d\n",
-	f->icp.pkts_sent);
-    storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
-	f->icp.pkts_recv);
-    storeAppendPrintf(sentry, "icp.replies_queued = %d\n",
-	f->icp.replies_queued);
-    storeAppendPrintf(sentry, "icp.kbytes_sent = %d\n",
-	(int) f->icp.kbytes_sent.kb);
-    storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
-	(int) f->icp.kbytes_recv.kb);
-    storeAppendPrintf(sentry, "cd.times_used = %d\n",
-	f->cd.times_used);
-    storeAppendPrintf(sentry, "cd.msgs_sent = %d\n",
-	f->cd.msgs_sent);
-    storeAppendPrintf(sentry, "cd.msgs_recv = %d\n",
-	f->cd.msgs_recv);
-    storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
-	(int) f->cd.kbytes_sent.kb);
-    storeAppendPrintf(sentry, "cd.kbytes_recv = %d\n",
-	(int) f->cd.kbytes_recv.kb);
-    storeAppendPrintf(sentry, "cd.peer_memory = %d\n",
-	(int) f->cd.memory.kb);
-    storeAppendPrintf(sentry, "cd.store_memory = %d\n",
-	(int) (store_digest ? store_digest->mask_size/1024 : 0));
-    storeAppendPrintf(sentry, "\n");
-#endif
+    storeAppendPrintf(sentry, "\nCounters:\n");
+    statCountersDump(sentry);
+    storeAppendPrintf(sentry, "\nHistograms:\n");
+    statCountersHistograms(sentry);
+    storeAppendPrintf(sentry, "\nPeer Digests:\n");
     statPeerSelect(sentry);
-    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, "\nDigest Report:\n");
     storeDigestReport(sentry);
-}
-
-static void
-statCounters(StoreEntry * e)
-{
-    statCountersDump(e);
 }
 
 static void

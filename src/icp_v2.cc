@@ -4,6 +4,7 @@
 static void icpLogIcp(struct in_addr, log_type, int, const char *, int);
 static void icpHandleIcpV2(int, struct sockaddr_in, char *, int);
 static PF icpUdpSendQueue;
+static void icpCount(void *, int, size_t, int);
 
 static icpUdpData *UdpQueueHead = NULL;
 static icpUdpData *UdpQueueTail = NULL;
@@ -14,12 +15,9 @@ icpLogIcp(struct in_addr caddr, log_type logcode, int len, const char *url, int 
     AccessLogEntry al;
     if (LOG_TAG_NONE == logcode)
 	return;
+    if (LOG_ICP_QUERY == logcode)
+	return;
     clientdbUpdate(caddr, logcode, PROTO_ICP, len);
-    Counter.icp.pkts_sent++;
-    if (logcode == LOG_UDP_HIT)
-	Counter.icp.hits_sent++;
-    kb_incr(&Counter.icp.kbytes_sent, (size_t) len);
-    statHistCount(&Counter.icp.reply_svc_time, delay);
     if (!Config.onoff.log_udp)
 	return;
     memset(&al, '\0', sizeof(al));
@@ -101,6 +99,7 @@ icpUdpSend(int fd,
     if (x >= 0) {
 	/* successfully written */
 	icpLogIcp(to->sin_addr, logcode, len, (char *) (msg + 1), delay);
+	icpCount(msg, SENT, (size_t) len, delay);
 	safe_free(msg);
     } else if (0 == delay) {
 	/* send failed, but queue it */
@@ -236,7 +235,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	break;
 
     case ICP_HIT:
-	Counter.icp.hits_recv++;
     case ICP_SECHO:
     case ICP_DECHO:
     case ICP_MISS:
@@ -325,8 +323,7 @@ icpHandleUdp(int sock, void *datanotused)
 		sock, xstrerror());
 	return;
     }
-    Counter.icp.pkts_recv++;
-    kb_incr(&Counter.icp.kbytes_recv, (size_t) len);
+    icpCount(buf, RECV, (size_t) len, 0);
     buf[len] = '\0';
     debug(12, 4) ("icpHandleUdp: FD %d: received %d bytes from %s.\n",
 	sock,
@@ -453,5 +450,41 @@ icpConnectionClose(void)
     if (theOutIcpConnection > -1) {
 	debug(12, 1) ("FD %d Closing ICP connection\n", theOutIcpConnection);
 	comm_close(theOutIcpConnection);
+    }
+}
+
+static void
+icpCount(void *buf, int which, size_t len, int delay)
+{
+    icp_common_t *icp = buf;
+    if (len < sizeof(*icp))
+	return;
+    if (SENT == which) {
+	Counter.icp.pkts_sent++;
+	kb_incr(&Counter.icp.kbytes_sent, len);
+	if (ICP_QUERY == icp->opcode) {
+	    Counter.icp.queries_sent++;
+	    kb_incr(&Counter.icp.q_kbytes_sent, len);
+	} else {
+	    Counter.icp.replies_sent++;
+	    kb_incr(&Counter.icp.r_kbytes_sent, len);
+	    /* this is the sent-reply service time */
+            statHistCount(&Counter.icp.reply_svc_time, delay);
+	}
+        if (ICP_HIT == icp->opcode)
+	    Counter.icp.hits_sent++;
+    } else if (RECV == which) {
+	Counter.icp.pkts_recv++;
+	kb_incr(&Counter.icp.kbytes_recv, len);
+	if (ICP_QUERY == icp->opcode) {
+	    Counter.icp.queries_recv++;
+	    kb_incr(&Counter.icp.q_kbytes_recv, len);
+	} else {
+	    Counter.icp.replies_recv++;
+	    kb_incr(&Counter.icp.r_kbytes_recv, len);
+	    /* Counter.icp.query_svc_time set in clientUpdateCounters */
+	}
+        if (ICP_HIT == icp->opcode)
+	    Counter.icp.hits_recv++;
     }
 }
