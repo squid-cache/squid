@@ -1,5 +1,5 @@
 /*
- * $Id: version.h,v 1.105 1998/02/26 23:56:16 kostas Exp $
+ * $Id: version.h,v 1.106 1998/02/26 23:56:43 kostas Exp $
  *
  *  SQUID_VERSION - String for version id of this distribution
  */
@@ -7,7 +7,8 @@
 #define SQUID_VERSION	"1.2.beta15"
 #endif
 #ifndef CURRENT_MIB_VERSION
-#define CURRENT_MIB_VERSION "Id: version.h,v 1.104 1998/02/26 23:55:44 kostas Exp $"
+#define CURRENT_MIB_VERSION "Id: mib.txt,v 1.11 1998/02/26 23:16:52 kostas Exp $"
+
 #endif
 
 #ifndef SQUID_RELEASE_TIME
