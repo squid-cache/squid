@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.114 2003/09/21 00:30:47 robertc Exp $
+ * $Id: forward.cc,v 1.115 2003/11/09 11:05:24 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -576,10 +576,8 @@ fwdConnectStart(void *data)
         ctimeout = fs->_peer->connect_timeout > 0 ? fs->_peer->connect_timeout
                    : Config.Timeout.peer_connect;
 
-        if (fs->_peer->options.originserver) {
+        if (fs->_peer->options.originserver)
             domain = fwdState->request->host;
-            port = fwdState->request->port;
-        }
     } else {
         host = fwdState->request->host;
         port = fwdState->request->port;
