@@ -76,6 +76,8 @@ Changes to Squid-2.1 ():
 	  authentication.  It is also possible to do automatic login to
 	  certain servers by using a redirector to add the needed
 	  authentication information.  (Henrik Nordstrom)
+	- Changed refreshCheck() so that objects with negative age
+	  are always stale.
 
 Changes to Squid-2.0 (October 2, 1998):
 
