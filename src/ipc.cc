@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.12 1998/11/12 06:28:12 wessels Exp $
+ * $Id: ipc.cc,v 1.13 1998/11/12 23:07:35 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -218,7 +218,7 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
 	    debug(50, 0) ("ipcCreate: FD %d accept: %s\n", crfd, xstrerror());
 	    _exit(1);
 	}
-	debug(54, 3) ("ipcCreate: accepted new FD %d\n", fd);
+	debug(54, 3) ("ipcCreate: CHILD accepted new FD %d\n", fd);
 	close(crfd);
 	cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
@@ -244,10 +244,11 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     snprintf(env_str, tmp_s, "SQUID_DEBUG=%s", Config.debugOptions);
     putenv(env_str);
 #endif
+    dup2(fileno(debug_log), 2);
+    if (fileno(debug_log) > 2)
+	fclose(debug_log);
     dup2(crfd, 0);
     dup2(cwfd, 1);
-    dup2(fileno(debug_log), 2);
-    fclose(debug_log);
     /*
      * Solaris pthreads seems to close FD 0 upon fork(), so don't close
      * this FD if its 0, 1, or 2.
