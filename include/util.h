@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.45 1998/03/11 22:18:42 rousskov Exp $
+ * $Id: util.h,v 1.46 1998/03/13 05:46:01 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -170,6 +170,8 @@ extern int xmalloc_line;
 extern char *xmalloc_file;
 extern char *xmalloc_func;
 extern int xmalloc_trace;
+extern int xmalloc_total;
+extern void xmalloc_find_leaks(void);
 #endif
 
 typedef struct in_addr SIA;
