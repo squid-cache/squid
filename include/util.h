@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.38 1998/02/06 00:55:56 wessels Exp $
+ * $Id: util.h,v 1.39 1998/02/13 18:26:52 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -164,6 +164,7 @@ void malloc_statistics(void (*)(int, int, void *), void *);
 extern int xmalloc_line;
 extern char *xmalloc_file;
 extern char *xmalloc_func;
+extern int xmalloc_trace;
 #endif
 
 typedef struct in_addr SIA;
