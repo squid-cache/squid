@@ -154,10 +154,8 @@ Check_userlist(usersfile * uf, char *User)
 	sizeof(*uf->names),
 	name_cmp);
     if (NULL == p) {
-	syslog(LOG_DEBUG, "User %s not found", User);
 	return 0;
     }
-    syslog(LOG_DEBUG, "User %s found", User);
     return 1;
 }
 
