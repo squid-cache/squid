@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: HttpBody.cc,v 1.6 1998/03/31 05:35:36 wessels Exp $
+ * $Id: HttpBody.cc,v 1.7 1998/04/09 23:40:39 rousskov Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -71,6 +71,8 @@ httpBodySet(HttpBody * body, const char *buf, int size, FREE * freefunc)
 	body->buf = xmalloc(size);
 	xmemcpy(body->buf, buf, size);
 	freefunc = &xfree;
+    } else {
+	body->buf = buf;
     }
     body->freefunc = freefunc;
     body->size = size;
