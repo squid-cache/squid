@@ -11,6 +11,7 @@ typedef enum {
     LOG_TCP_IMS_HIT,		/* 7 */
     LOG_TCP_IMS_MISS,		/* 8 */
     LOG_TCP_SWAPFAIL_MISS,	/* 9 */
+    LOG_TCP_NEGATIVE_HIT,	/* 10 */
     LOG_UDP_HIT,		/* 11 */
     LOG_UDP_HIT_OBJ,		/* 12 */
     LOG_UDP_MISS,		/* 13 */
