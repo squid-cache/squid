@@ -47,8 +47,8 @@ typedef enum {
     ERR_CACHE_MGR_ACCESS_DENIED,
     ERR_SQUID_SIGNATURE,	/* not really an error */
     ERR_FTP_PUT_CREATED,	/* !error,a note that the file was created */
-    ERR_FTP_PUT_MODIFIED,	/* modified, !created*/
-    ERR_FTP_PUT_ERROR, 
+    ERR_FTP_PUT_MODIFIED,	/* modified, !created */
+    ERR_FTP_PUT_ERROR,
     ERR_MAX
 } err_type;
 
@@ -470,6 +470,7 @@ typedef enum {
     MEM_DWRITE_Q,
     MEM_FILEMAP,
     MEM_FQDNCACHE_ENTRY,
+    MEM_FQDNCACHE_PENDING,
     MEM_HASH_LINK,
     MEM_HASH_TABLE,
 #if 0				/* renamed to detect all old uses */
@@ -484,7 +485,7 @@ typedef enum {
     MEM_ICPUDPDATA,
     MEM_CLIENTHTTPREQUEST,
     MEM_CONNSTATEDATA,
-    MEM_IPCACHE_ADDRS,
+    MEM_IPCACHE_PENDING,
     MEM_IPCACHE_ENTRY,
     MEM_DOMAIN_PING,
     MEM_DOMAIN_TYPE,
@@ -515,6 +516,7 @@ typedef enum {
     MEM_DLINK_NODE,
     MEM_DLINK_LIST,
     MEM_STATCOUNTERS,
+    MEM_CLIENT_INFO,
     MEM_MAX
 } mem_type;
 

@@ -479,9 +479,9 @@ struct _HttpHdrRangeSpec {
 };
 
 /* There may be more than one byte range specified in the request.
-   This object holds all range specs in order of their appearence
-   in the request because we SHOULD preserve that order.
-*/
+ * This object holds all range specs in order of their appearence
+ * in the request because we SHOULD preserve that order.
+ */
 struct _HttpHdrRange {
     Stack specs;
 };
@@ -677,6 +677,12 @@ struct _ipcache_addrs {
     unsigned char badcount;
 };
 
+struct _ip_pending {
+    IPH *handler;
+    void *handlerData;
+    ip_pending *next;
+};
+
 struct _ipcache_entry {
     /* first two items must be equivalent to hash_link in hash.h */
     char *name;
@@ -684,11 +690,17 @@ struct _ipcache_entry {
     time_t lastref;
     time_t expires;
     ipcache_addrs addrs;
-    struct _ip_pending *pending_head;
+    ip_pending *pending_head;
     char *error_message;
     dlink_node lru;
     u_char locks;
     ipcache_status_t status:3;
+};
+
+struct _fqdn_pending {
+    FQDNH *handler;
+    void *handlerData;
+    fqdn_pending *next;
 };
 
 struct _fqdncache_entry {
@@ -699,7 +711,7 @@ struct _fqdncache_entry {
     time_t expires;
     unsigned char name_count;
     char *names[FQDN_MAX_NAMES + 1];
-    struct _fqdn_pending *pending_head;
+    fqdn_pending *pending_head;
     char *error_message;
     dlink_node lru;
     unsigned char locks;
@@ -841,16 +853,6 @@ struct _Stack {
 };
 
 #endif
-
-struct _Meta_data {
-    int hot_vm;
-    int ipcache_count;
-    int fqdncache_count;
-    int netdb_peers;
-    int misc;
-    int client_info;
-    int store_keys;
-};
 
 struct _iostats {
     struct {
@@ -1125,4 +1127,19 @@ struct _storeSwapLogData {
     u_short refcount;
     u_short flags;
     unsigned char key[MD5_DIGEST_CHARS];
+};
+
+struct _ClientInfo {
+    char *key;
+    struct client_info *next;
+    struct in_addr addr;
+    struct {
+	int result_hist[LOG_TYPE_MAX];
+	int n_requests;
+    } Http, Icp;
+    struct {
+	time_t time;
+	int n_req;
+	int n_denied;
+    } cutoff;
 };

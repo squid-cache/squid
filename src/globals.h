@@ -1,11 +1,10 @@
 
 /*
- * $Id: globals.h,v 1.40 1998/02/26 18:00:43 wessels Exp $
+ * $Id: globals.h,v 1.41 1998/03/06 22:19:35 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
 extern FILE *cache_useragent_log;	/* NULL */
-extern Meta_data meta_data;
 extern SquidConfig Config;
 extern SquidConfig2 Config2;
 extern char *ConfigFile;	/* NULL */
@@ -86,7 +85,6 @@ extern volatile int reconfigure_pending;	/* 0 */
 extern volatile int shutdown_pending;	/* 0 */
 extern int store_rebuilding;	/* 1 */
 extern int store_swap_size;	/* 0 */
-extern int client_info_sz;	/* 0 */
 extern unsigned long store_mem_size;	/* 0 */
 extern icpUdpData *UdpQueueHead;	/* NULL */
 extern icpUdpData *UdpQueueTail;	/* NULL */
@@ -100,6 +98,7 @@ extern double request_failure_ratio;	/* 0.0 */
 extern int store_hash_buckets;	/* 0 */
 extern hash_table *store_table;	/* NULL */
 extern dlink_list store_list;
+extern int hot_obj_count;	/* 0 */
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;

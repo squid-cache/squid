@@ -98,7 +98,7 @@ storeKeyDup(const cache_key * key)
 {
     cache_key *dup = xmalloc(MD5_DIGEST_CHARS);
     xmemcpy(dup, key, MD5_DIGEST_CHARS);
-    meta_data.store_keys += MD5_DIGEST_CHARS;
+    /* XXX account key */
     return dup;
 }
 
@@ -106,7 +106,7 @@ void
 storeKeyFree(const cache_key * key)
 {
     xfree((void *) key);
-    meta_data.store_keys -= MD5_DIGEST_CHARS;
+    /* XXX account key */
 }
 
 int

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.390 1998/03/03 22:56:45 wessels Exp $
+ * $Id: store.cc,v 1.391 1998/03/06 22:19:42 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -180,7 +180,7 @@ new_MemObject(const char *url, const char *log_url)
     mem->log_url = xstrdup(log_url);
     mem->swapout.fd = -1;
     mem->object_sz = -1;
-    meta_data.misc += strlen(log_url);
+    /* XXX account log_url */
     debug(20, 3) ("new_MemObject: returning %p\n", mem);
     return mem;
 }
@@ -204,7 +204,7 @@ destroy_MemObject(StoreEntry * e)
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
     assert(mem->swapout.fd == -1);
     destroy_MemObjectData(mem);
-    meta_data.misc -= strlen(mem->log_url);
+    /* XXX account log_url */
 #if USE_ASYNC_IO
     while (mem->clients != NULL)
 	storeUnregister(e, mem->clients->callback_data);
@@ -618,7 +618,7 @@ storeGetMemSpace(int size)
 	    break;
     }
     debug(20, 3) ("storeGetMemSpace stats:\n");
-    debug(20, 3) ("  %6d HOT objects\n", meta_data.hot_vm);
+    debug(20, 3) ("  %6d HOT objects\n", hot_obj_count);
     debug(20, 3) ("  %6d were released\n", released);
 }
 
@@ -1067,10 +1067,10 @@ storeSetMemStatus(StoreEntry * e, int new_status)
     if (new_status == IN_MEMORY) {
 	assert(mem->inmem_lo == 0);
 	dlinkAdd(e, &mem->lru, &inmem_list);
-	meta_data.hot_vm++;
+	hot_obj_count++;
     } else {
 	dlinkDelete(&mem->lru, &inmem_list);
-	meta_data.hot_vm--;
+	hot_obj_count--;
     }
     e->mem_status = new_status;
 }

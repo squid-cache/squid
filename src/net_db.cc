@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.73 1998/03/03 17:10:57 wessels Exp $
+ * $Id: net_db.cc,v 1.74 1998/03/06 22:19:39 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -130,7 +130,6 @@ netdbRelease(netdbEntry * n)
     }
     n->hosts = NULL;
     safe_free(n->peers);
-    meta_data.netdb_peers -= n->n_peers_alloc;
     n->peers = NULL;
     n->n_peers = 0;
     n->n_peers_alloc = 0;
@@ -321,12 +320,10 @@ netdbPeerAdd(netdbEntry * n, peer * e)
 	debug(37, 3) ("netdbPeerAdd: Growing peer list for '%s' to %d\n",
 	    n->network, n->n_peers_alloc);
 	n->peers = xcalloc(n->n_peers_alloc, sizeof(net_db_peer));
-	meta_data.netdb_peers += n->n_peers_alloc;
 	for (i = 0; i < osize; i++)
 	    *(n->peers + i) = *(o + i);
 	if (osize) {
 	    safe_free(o);
-	    meta_data.netdb_peers -= osize;
 	}
     }
     p = n->peers + n->n_peers;

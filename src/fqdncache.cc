@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.90 1998/03/05 00:42:51 wessels Exp $
+ * $Id: fqdncache.cc,v 1.91 1998/03/06 22:19:35 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -112,12 +112,6 @@
 #define FQDN_LOW_WATER       90
 #define FQDN_HIGH_WATER      95
 
-struct _fqdn_pending {
-    FQDNH *handler;
-    void *handlerData;
-    struct _fqdn_pending *next;
-};
-
 struct fqdncacheQueueData {
     struct fqdncacheQueueData *next;
     fqdncache_entry *f;
@@ -138,7 +132,6 @@ static dlink_list lru_list;
 
 static void fqdncache_dnsHandleRead(int, void *);
 static fqdncache_entry *fqdncache_parsebuffer(const char *buf, dnsserver_t *);
-static void fqdncache_purgelru(void);
 static void fqdncache_release(fqdncache_entry *);
 static fqdncache_entry *fqdncache_create(const char *name);
 static void fqdncache_call_pending(fqdncache_entry *);
@@ -219,8 +212,7 @@ fqdncache_release(fqdncache_entry * f)
     dlinkDelete(&f->lru, &lru_list);
     safe_free(f->name);
     safe_free(f->error_message);
-    safe_free(f);
-    --meta_data.fqdncache_count;
+    memFree(MEM_FQDNCACHE_ENTRY, f);
 }
 
 /* return match for given name */
@@ -252,15 +244,16 @@ fqdncacheExpiredEntry(const fqdncache_entry * f)
     return 1;
 }
 
-static void
-fqdncache_purgelru(void)
+void
+fqdncache_purgelru(void *notused)
 {
     dlink_node *m;
     dlink_node *prev = NULL;
     fqdncache_entry *f;
     int removed = 0;
+    eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 10);
     for (m = lru_list.tail; m; m = prev) {
-	if (meta_data.fqdncache_count < fqdncache_low)
+	if (memInUse(MEM_FQDNCACHE_ENTRY) < fqdncache_low)
 	    break;
 	prev = m->prev;
 	f = m->data;
@@ -282,10 +275,7 @@ static fqdncache_entry *
 fqdncache_create(const char *name)
 {
     static fqdncache_entry *f;
-    if (meta_data.fqdncache_count > fqdncache_high)
-	fqdncache_purgelru();
-    meta_data.fqdncache_count++;
-    f = xcalloc(1, sizeof(fqdncache_entry));
+    f = memAllocate(MEM_FQDNCACHE_ENTRY);
     f->name = xstrdup(name);
     f->expires = squid_curtime + Config.negativeDnsTtl;
     hash_join(fqdn_table, (hash_link *) f);
@@ -326,7 +316,7 @@ fqdncacheAddNew(const char *name, const struct hostent *hp, fqdncache_status_t s
 static void
 fqdncache_call_pending(fqdncache_entry * f)
 {
-    struct _fqdn_pending *p = NULL;
+    fqdn_pending *p = NULL;
     int nhandler = 0;
 
     f->lastref = squid_curtime;
@@ -341,7 +331,7 @@ fqdncache_call_pending(fqdncache_entry * f)
 	    p->handler((f->status == FQDN_CACHED) ? f->names[0] : NULL,
 		p->handlerData);
 	}
-	safe_free(p);
+	memFree(MEM_FQDNCACHE_PENDING, p);
     }
     f->pending_head = NULL;	/* nuke list */
     debug(35, 10) ("fqdncache_call_pending: Called %d handlers.\n", nhandler);
@@ -505,8 +495,8 @@ fqdncache_dnsHandleRead(int fd, void *data)
 static void
 fqdncacheAddPending(fqdncache_entry * f, FQDNH * handler, void *handlerData)
 {
-    struct _fqdn_pending *pending = xcalloc(1, sizeof(struct _fqdn_pending));
-    struct _fqdn_pending **I = NULL;
+    fqdn_pending *pending = memAllocate(MEM_FQDNCACHE_PENDING);
+    fqdn_pending **I = NULL;
     f->lastref = squid_curtime;
     pending->handler = handler;
     pending->handlerData = handlerData;
@@ -648,7 +638,7 @@ fqdncacheUnregister(struct in_addr addr, void *data)
 {
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
-    struct _fqdn_pending *p = NULL;
+    fqdn_pending *p = NULL;
     int n = 0;
     debug(35, 3) ("fqdncacheUnregister: FD %d, name '%s'\n", name);
     if ((f = fqdncache_get(name)) == NULL)
@@ -716,7 +706,7 @@ fqdnStats(StoreEntry * sentry)
 	return;
     storeAppendPrintf(sentry, "FQDN Cache Statistics:\n");
     storeAppendPrintf(sentry, "FQDNcache Entries: %d\n",
-	meta_data.fqdncache_count);
+	memInUse(MEM_FQDNCACHE_ENTRY));
     storeAppendPrintf(sentry, "FQDNcache Requests: %d\n",
 	FqdncacheStats.requests);
     storeAppendPrintf(sentry, "FQDNcache Hits: %d\n",
@@ -758,7 +748,7 @@ dummy_handler(const char *bufnotused, void *datanotused)
 static int
 fqdncacheHasPending(const fqdncache_entry * f)
 {
-    const struct _fqdn_pending *p = NULL;
+    const fqdn_pending *p = NULL;
     if (f->status != FQDN_PENDING)
 	return 0;
     for (p = f->pending_head; p; p = p->next)
@@ -818,9 +808,10 @@ fqdncacheFreeMemory(void)
     int i = 0;
     int j = 0;
     int k = 0;
-    list = xcalloc(meta_data.fqdncache_count, sizeof(fqdncache_entry *));
+    int n = memInUse(MEM_FQDNCACHE_ENTRY);
+    list = xcalloc(n, sizeof(fqdncache_entry *));
     f = (fqdncache_entry *) hash_first(fqdn_table);
-    while (f && i < meta_data.fqdncache_count) {
+    while (f != NULL && i < n) {
 	*(list + i) = f;
 	i++;
 	f = (fqdncache_entry *) hash_next(fqdn_table);
@@ -831,7 +822,7 @@ fqdncacheFreeMemory(void)
 	    safe_free(f->names[k]);
 	safe_free(f->name);
 	safe_free(f->error_message);
-	safe_free(f);
+	memFree(MEM_FQDNCACHE_ENTRY, f);
     }
     xfree(list);
     hashFreeMemory(fqdn_table);

@@ -46,6 +46,7 @@ typedef struct _dwrite_q dwrite_q;
 typedef struct _fde fde;
 typedef struct _fileMap fileMap;
 typedef struct _fqdncache_entry fqdncache_entry;
+typedef struct _fqdn_pending fqdn_pending;
 typedef struct _hash_link hash_link;
 typedef struct _hash_table hash_table;
 typedef struct _HttpReply http_reply;
@@ -67,6 +68,7 @@ typedef struct _clientHttpRequest clientHttpRequest;
 typedef struct _ConnStateData ConnStateData;
 typedef struct _ipcache_addrs ipcache_addrs;
 typedef struct _ipcache_entry ipcache_entry;
+typedef struct _ip_pending ip_pending;
 typedef struct _domain_ping domain_ping;
 typedef struct _domain_type domain_type;
 typedef struct _DynPool DynPool;
@@ -104,6 +106,7 @@ typedef struct _tlv tlv;
 typedef struct _storeSwapLogData storeSwapLogData;
 typedef struct _cacheSwap cacheSwap;
 typedef struct _StatHist StatHist;
+typedef struct _ClientInfo ClientInfo;
 
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);

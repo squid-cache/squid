@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.221 1998/03/06 05:43:34 kostas Exp $
+ * $Id: client_side.cc,v 1.222 1998/03/06 22:19:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -614,7 +614,7 @@ connStateFree(int fd, void *data)
     if (connState->ident.fd > -1)
 	comm_close(connState->ident.fd);
     safe_free(connState->in.buf);
-    meta_data.misc -= connState->in.size;
+    /* XXX account connState->in.buf */
     pconnHistCount(0, connState->nrequests);
     cbdataFree(connState);
 }
@@ -1743,7 +1743,7 @@ clientReadRequest(int fd, void *data)
 		/* Grow the request memory area to accomodate for a large request */
 		conn->in.size += REQUEST_BUF_SIZE;
 		conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
-		meta_data.misc += REQUEST_BUF_SIZE;
+		/* XXX account conn->in.buf */
 		debug(33, 2) ("Handling a large request, offset=%d inbufsize=%d\n",
 		    conn->in.offset, conn->in.size);
 		k = conn->in.size - 1 - conn->in.offset;
@@ -1824,7 +1824,7 @@ httpAccept(int sock, void *notused)
     connState->in.size = REQUEST_BUF_SIZE;
     connState->in.buf = xcalloc(connState->in.size, 1);
     cbdataAdd(connState, MEM_NONE);
-    meta_data.misc += connState->in.size;
+    /* XXX account connState->in.buf */
     comm_add_close_handler(fd, connStateFree, connState);
     if (Config.onoff.log_fqdn)
 	fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);

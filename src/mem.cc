@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.12 1998/03/06 01:30:58 rousskov Exp $
+ * $Id: mem.cc,v 1.13 1998/03/06 22:19:38 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -134,13 +134,12 @@ memInit(void)
     memDataInit(MEM_ICP_PING_DATA, "icp_ping_data", sizeof(icp_ping_data), 0);
     memDataInit(MEM_INTLIST, "intlist", sizeof(intlist), 0);
     memDataInit(MEM_IOSTATS, "iostats", sizeof(iostats), 0);
-    memDataInit(MEM_IPCACHE_ADDRS, "ipcache_addrs", sizeof(ipcache_addrs), 0);
+    memDataInit(MEM_IPCACHE_PENDING, "ip_pending", sizeof(ip_pending), 0);
     memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
     memDataInit(MEM_MEMOBJECT, "MemObject", sizeof(MemObject),
 	Squid_MaxFD >> 3);
     memDataInit(MEM_MEM_HDR, "mem_hdr", sizeof(mem_hdr), 0);
     memDataInit(MEM_MEM_NODE, "mem_node", sizeof(mem_node), 0);
-    memDataInit(MEM_META_DATA, "mem_data", sizeof(meta_data), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_NET_DB_PEER, "net_db_peer", sizeof(net_db_peer), 0);
@@ -167,6 +166,7 @@ memInit(void)
     memDataInit(MEM_SWAPDIR, "SwapDir", sizeof(SwapDir), 0);
     memDataInit(MEM_USHORTLIST, "ushort_list", sizeof(ushortlist), 0);
     memDataInit(MEM_WORDLIST, "wordlist", sizeof(wordlist), 0);
+    memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     /* test that all entries are initialized */
     for (t = MEM_NONE + 1; t < MEM_MAX; t++) {
 	/*

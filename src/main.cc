@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.232 1998/03/05 00:42:58 wessels Exp $
+ * $Id: main.cc,v 1.233 1998/03/06 22:19:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -502,6 +502,7 @@ mainInitialize(void)
 	if (Config.onoff.announce)
 	    eventAdd("start_announce", start_announce, NULL, 3600);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
+	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15);
     }
     configured_once = 1;
 #ifdef SQUID_SNMP
