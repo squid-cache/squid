@@ -1,5 +1,5 @@
 /*
- * $Id: sasl_auth.c,v 1.1 2002/03/30 16:42:59 hno Exp $
+ * $Id: sasl_auth.c,v 1.2 2002/04/01 09:08:38 hno Exp $
  *
  * SASL authenticator module for Squid.
  * Copyright (C) 2002 Ian Castle <ian.castle@coldcomfortfarm.net>
@@ -42,6 +42,9 @@ main()
 
 	int rc;
         sasl_conn_t *conn = NULL;
+
+	/* make standard output line buffered */
+	setvbuf(stdout, NULL, _IOLBF, 0);
 
 	rc = sasl_server_init( NULL, APP_NAME_SASL );
 
