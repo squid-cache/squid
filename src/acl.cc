@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.35 1996/09/14 16:05:39 wessels Exp $
+ * $Id: acl.cc,v 1.36 1996/09/15 05:04:11 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,26 +41,26 @@ struct _acl_access *ICPAccessList = NULL;
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
 
-static void aclDestroyAclList(struct _acl_list *list);
-static void aclDestroyIpList(struct _acl_ip_data *data);
-static void aclDestroyRegexList(struct _relist *data);
-static void aclDestroyTimeList(struct _acl_time_data *data);
-static int aclMatchDomainList(wordlist *, char *);
-static int aclMatchAclList(struct _acl_list *, aclCheck_t *);
-static int aclMatchInteger(intlist * data, int i);
-static int aclMatchIp(struct _acl_ip_data *data, struct in_addr c);
-static int aclMatchRegex(relist * data, char *word);
-static int aclMatchTime(struct _acl_time_data *data, time_t when);
-static intlist *aclParseIntlist(void);
-static struct _acl_ip_data *aclParseIpList(void);
-static intlist *aclParseMethodList(void);
-static intlist *aclParseProtoList(void);
-static struct _relist *aclParseRegexList(void);
-static struct _acl_time_data *aclParseTimeSpec(void);
-static wordlist *aclParseWordList(void);
-static wordlist *aclParseDomainList(void);
-static squid_acl aclType(char *s);
-static int decode_addr(char *, struct in_addr *, struct in_addr *);
+static void aclDestroyAclList __P((struct _acl_list *list));
+static void aclDestroyIpList __P((struct _acl_ip_data *data));
+static void aclDestroyRegexList __P((struct _relist *data));
+static void aclDestroyTimeList __P((struct _acl_time_data *data));
+static int aclMatchDomainList __P((wordlist *, char *));
+static int aclMatchAclList __P((struct _acl_list *, aclCheck_t *));
+static int aclMatchInteger __P((intlist * data, int i));
+static int aclMatchIp __P((struct _acl_ip_data *data, struct in_addr c));
+static int aclMatchRegex __P((relist * data, char *word));
+static int aclMatchTime __P((struct _acl_time_data *data, time_t when));
+static intlist *aclParseIntlist __P((void));
+static struct _acl_ip_data *aclParseIpList __P((void));
+static intlist *aclParseMethodList __P((void));
+static intlist *aclParseProtoList __P((void));
+static struct _relist *aclParseRegexList __P((void));
+static struct _acl_time_data *aclParseTimeSpec __P((void));
+static wordlist *aclParseWordList __P((void));
+static wordlist *aclParseDomainList __P((void));
+static squid_acl aclType __P((char *s));
+static int decode_addr __P((char *, struct in_addr *, struct in_addr *));
 
 static squid_acl
 aclType(char *s)

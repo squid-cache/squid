@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.46 1996/09/14 16:05:48 wessels Exp $
+ * $Id: squid.h,v 1.47 1996/09/15 05:04:41 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -255,8 +255,8 @@ typedef int (*QS) (const void *, const void *);
 #include "tempnam.h"
 #endif
 
-extern void serverConnectionsClose(void);
-extern void shut_down(int);
+extern void serverConnectionsClose __P((void));
+extern void shut_down __P((int));
 
 
 extern time_t squid_starttime;	/* main.c */
@@ -287,14 +287,14 @@ extern struct in_addr no_addr;	/* comm.c */
 
 #define  CONNECT_PORT        443
 
-extern int objcacheStart(int, char *, StoreEntry *);
-extern void send_announce(void);
-extern int sslStart(int fd, char *, request_t *, char *, int *sz);
-extern char *storeToString(StoreEntry *);
-extern void ttlSet(StoreEntry *);
-extern void ttlFreeList(void);
-extern void ttlAddToList(char *, int, int, time_t, int, time_t);
-extern void ttlAddToForceList(char *, time_t, time_t);
-extern int waisStart(int, char *, method_t, char *, StoreEntry *);
-extern void storeDirClean(void);
+extern int objcacheStart __P((int, char *, StoreEntry *));
+extern void send_announce __P((void));
+extern int sslStart __P((int fd, char *, request_t *, char *, int *sz));
+extern char *storeToString __P((StoreEntry *));
+extern void ttlSet __P((StoreEntry *));
+extern void ttlFreeList __P((void));
+extern void ttlAddToList __P((char *, int, int, time_t, int, time_t));
+extern void ttlAddToForceList __P((char *, time_t, time_t));
+extern int waisStart __P((int, char *, method_t, char *, StoreEntry *));
+extern void storeDirClean __P((void));
 extern char *dash_str;

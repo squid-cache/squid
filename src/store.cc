@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.109 1996/09/14 08:46:30 wessels Exp $
+ * $Id: store.cc,v 1.110 1996/09/15 05:04:46 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -202,24 +202,24 @@ struct storeRebuild_data {
 int store_rebuilding = STORE_REBUILDING_SLOW;
 
 /* Static Functions */
-static int storeSwapInStart(StoreEntry *, SIH, void *);
-static void destroy_MemObject(MemObject *);
-static void destroy_MemObjectData(MemObject *);
-static void destroy_StoreEntry(StoreEntry *);
-static MemObject *new_MemObject(void);
-static mem_ptr new_MemObjectData(void);
-static StoreEntry *new_StoreEntry(int mem_obj_flag);
-static int storeCheckPurgeMem(StoreEntry * e);
-static int storeCheckExpired(StoreEntry * e);
-static void storeSwapLog(StoreEntry *);
-static int storeHashDelete(StoreEntry *);
-static char *storeDescribeStatus(StoreEntry *);
-static int compareLastRef(StoreEntry ** e1, StoreEntry ** e2);
-static int compareSize(StoreEntry ** e1, StoreEntry ** e2);
-static int storeClientListSearch(MemObject *, int fd);
-static void storeHashMemInsert(StoreEntry *);
-static void storeHashMemDelete(StoreEntry *);
-static int storeCopy(StoreEntry *, int, int, char *, int *);
+static int storeSwapInStart __P((StoreEntry *, SIH, void *));
+static void destroy_MemObject __P((MemObject *));
+static void destroy_MemObjectData __P((MemObject *));
+static void destroy_StoreEntry __P((StoreEntry *));
+static MemObject *new_MemObject __P((void));
+static mem_ptr new_MemObjectData __P((void));
+static StoreEntry *new_StoreEntry __P((int mem_obj_flag));
+static int storeCheckPurgeMem __P((StoreEntry * e));
+static int storeCheckExpired __P((StoreEntry * e));
+static void storeSwapLog __P((StoreEntry *));
+static int storeHashDelete __P((StoreEntry *));
+static char *storeDescribeStatus __P((StoreEntry *));
+static int compareLastRef __P((StoreEntry ** e1, StoreEntry ** e2));
+static int compareSize __P((StoreEntry ** e1, StoreEntry ** e2));
+static int storeClientListSearch __P((MemObject *, int fd));
+static void storeHashMemInsert __P((StoreEntry *));
+static void storeHashMemDelete __P((StoreEntry *));
+static int storeCopy __P((StoreEntry *, int, int, char *, int *));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */

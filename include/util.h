@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.14 1996/09/14 16:54:48 wessels Exp $
+ * $Id: util.h,v 1.15 1996/09/15 05:04:08 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -122,7 +122,7 @@
 #endif
 
 #if !HAVE_STRDUP
-extern char *strdup(char *);
+extern char *strdup __P((char *));
 #endif
 extern char *xstrdup(char *);	/* Duplicate a string */
 
@@ -175,22 +175,22 @@ extern int Harvest_debug_levels[];
 void debug_flag(char *);
 
 char *mkhttpdlogtime(time_t *);
-extern char *mkrfc850(time_t);
-extern time_t parse_rfc850(char *str);
-extern void init_log3(char *pn, FILE * a, FILE * b);
-extern void debug_init();
-extern void log_errno2(char *, int, char *);
+extern char *mkrfc850 __P((time_t));
+extern time_t parse_rfc850 __P((char *str));
+extern void init_log3 __P((char *pn, FILE * a, FILE * b));
+extern void debug_init __P((void));
+extern void log_errno2 __P((char *, int, char *));
 
 #if defined(__STRICT_ANSI__)
-extern void Log(char *,...);
-extern void errorlog(char *,...);
+extern void Log __P((char *,...));
+extern void errorlog __P((char *,...));
 #else
-extern void Log();
-extern void errorlog();
+extern void Log __P((void));
+extern void errorlog __P((void));
 #endif /* __STRICT_ANSI__ */
 
-extern void Tolower(char *);
+extern void Tolower __P((char *));
 
-extern char *uudecode(char *);
+extern char *uudecode __P((char *));
 
 #endif /* ndef _UTIL_H_ */

@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.56 1996/09/14 08:46:10 wessels Exp $
+ * $Id: ipcache.cc,v 1.57 1996/09/15 05:04:34 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -135,30 +135,30 @@ static struct {
     int ghbn_calls;		/* # calls to blocking gethostbyname() */
 } IpcacheStats;
 
-static int ipcache_testname(void);
-static int ipcache_compareLastRef(ipcache_entry **, ipcache_entry **);
-static int ipcache_reverseLastRef(ipcache_entry **, ipcache_entry **);
-static int ipcache_dnsHandleRead(int, dnsserver_t *);
-static ipcache_entry *ipcache_parsebuffer(char *buf, dnsserver_t *);
-static void ipcache_release(ipcache_entry *);
-static ipcache_entry *ipcache_GetFirst(void);
-static ipcache_entry *ipcache_GetNext(void);
-static ipcache_entry *ipcache_create(void);
-static void ipcache_add_to_hash(ipcache_entry *);
-static void ipcache_call_pending(ipcache_entry *);
-static void ipcache_add(char *, ipcache_entry *, struct hostent *, int);
-static int ipcacheHasPending(ipcache_entry *);
-static ipcache_entry *ipcache_get(char *);
-static int dummy_handler(int, struct hostent *hp, void *);
-static int ipcacheExpiredEntry(ipcache_entry *);
-static void ipcacheAddPending(ipcache_entry *, int fd, IPH, void *);
-static void ipcacheEnqueue(ipcache_entry *);
-static void *ipcacheDequeue(void);
-static void ipcache_dnsDispatch(dnsserver_t *, ipcache_entry *);
-static struct hostent *ipcacheCheckNumeric(char *name);
-static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
-static void ipcacheUnlockEntry(ipcache_entry *);
-static void ipcacheLockEntry(ipcache_entry *);
+static int ipcache_testname __P((void));
+static int ipcache_compareLastRef __P((ipcache_entry **, ipcache_entry **));
+static int ipcache_reverseLastRef __P((ipcache_entry **, ipcache_entry **));
+static int ipcache_dnsHandleRead __P((int, dnsserver_t *));
+static ipcache_entry *ipcache_parsebuffer __P((char *buf, dnsserver_t *));
+static void ipcache_release __P((ipcache_entry *));
+static ipcache_entry *ipcache_GetFirst __P((void));
+static ipcache_entry *ipcache_GetNext __P((void));
+static ipcache_entry *ipcache_create __P((void));
+static void ipcache_add_to_hash __P((ipcache_entry *));
+static void ipcache_call_pending __P((ipcache_entry *));
+static void ipcache_add __P((char *, ipcache_entry *, struct hostent *, int));
+static int ipcacheHasPending __P((ipcache_entry *));
+static ipcache_entry *ipcache_get __P((char *));
+static int dummy_handler __P((int, struct hostent *hp, void *));
+static int ipcacheExpiredEntry __P((ipcache_entry *));
+static void ipcacheAddPending __P((ipcache_entry *, int fd, IPH, void *));
+static void ipcacheEnqueue __P((ipcache_entry *));
+static void *ipcacheDequeue __P((void));
+static void ipcache_dnsDispatch __P((dnsserver_t *, ipcache_entry *));
+static struct hostent *ipcacheCheckNumeric __P((char *name));
+static void ipcacheStatPrint __P((ipcache_entry *, StoreEntry *));
+static void ipcacheUnlockEntry __P((ipcache_entry *));
+static void ipcacheLockEntry __P((ipcache_entry *));
 
 static struct hostent *static_result = NULL;
 static HashID ip_table = 0;

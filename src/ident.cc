@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.11 1996/09/14 08:46:09 wessels Exp $
+ * $Id: ident.cc,v 1.12 1996/09/15 05:04:34 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -32,9 +32,9 @@
 
 #define IDENT_PORT 113
 
-static void identRequestComplete(int, char *, int, int, void *);
-static void identReadReply(int, icpStateData *);
-static void identClose(int, icpStateData *);
+static void identRequestComplete __P((int, char *, int, int, void *));
+static void identReadReply __P((int, icpStateData *));
+static void identClose __P((int, icpStateData *));
 
 static void
 identClose(int fd, icpStateData * icpState)

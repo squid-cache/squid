@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.14 1996/09/14 08:46:24 wessels Exp $
+ * $Id: tunnel.cc,v 1.15 1996/09/15 05:04:42 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -49,19 +49,19 @@ typedef struct {
 
 static char conn_established[] = "HTTP/1.0 200 Connection established\r\n\r\n";
 
-static void sslLifetimeExpire(int fd, SslStateData * sslState);
-static void sslReadTimeout(int fd, SslStateData * sslState);
-static void sslReadServer(int fd, SslStateData * sslState);
-static void sslReadClient(int fd, SslStateData * sslState);
-static void sslWriteServer(int fd, SslStateData * sslState);
-static void sslWriteClient(int fd, SslStateData * sslState);
-static void sslConnected(int fd, SslStateData * sslState);
-static void sslProxyConnected(int fd, SslStateData * sslState);
-static int sslConnect(int fd, struct hostent *, SslStateData *);
-static void sslConnInProgress(int fd, SslStateData * sslState);
-static void sslErrorComplete(int, char *, int, int, void *);
-static void sslClose(SslStateData * sslState);
-static int sslClientClosed(int fd, SslStateData * sslState);
+static void sslLifetimeExpire __P((int fd, SslStateData * sslState));
+static void sslReadTimeout __P((int fd, SslStateData * sslState));
+static void sslReadServer __P((int fd, SslStateData * sslState));
+static void sslReadClient __P((int fd, SslStateData * sslState));
+static void sslWriteServer __P((int fd, SslStateData * sslState));
+static void sslWriteClient __P((int fd, SslStateData * sslState));
+static void sslConnected __P((int fd, SslStateData * sslState));
+static void sslProxyConnected __P((int fd, SslStateData * sslState));
+static int sslConnect __P((int fd, struct hostent *, SslStateData *));
+static void sslConnInProgress __P((int fd, SslStateData * sslState));
+static void sslErrorComplete __P((int, char *, int, int, void *));
+static void sslClose __P((SslStateData * sslState));
+static int sslClientClosed __P((int fd, SslStateData * sslState));
 
 static void
 sslClose(SslStateData * sslState)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.17 1996/09/14 08:45:58 wessels Exp $
+ * $Id: fqdncache.cc,v 1.18 1996/09/15 05:04:25 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -137,26 +137,26 @@ static struct {
     int ghba_calls;		/* # calls to blocking gethostbyaddr() */
 } FqdncacheStats;
 
-static int fqdncache_compareLastRef(fqdncache_entry **, fqdncache_entry **);
-static int fqdncache_dnsHandleRead(int, dnsserver_t *);
-static fqdncache_entry *fqdncache_parsebuffer(char *buf, dnsserver_t *);
-static int fqdncache_purgelru(void);
-static void fqdncache_release(fqdncache_entry *);
-static fqdncache_entry *fqdncache_GetFirst(void);
-static fqdncache_entry *fqdncache_GetNext(void);
-static fqdncache_entry *fqdncache_create(void);
-static void fqdncache_add_to_hash(fqdncache_entry *);
-static void fqdncache_call_pending(fqdncache_entry *);
-static void fqdncache_call_pending_badname(int fd, FQDNH handler, void *);
-static void fqdncache_add(char *, fqdncache_entry *, struct hostent *, int);
-static int fqdncacheHasPending(fqdncache_entry *);
-static fqdncache_entry *fqdncache_get(char *);
-static void dummy_handler(int, char *, void *);
-static int fqdncacheExpiredEntry(fqdncache_entry *);
-static void fqdncacheAddPending(fqdncache_entry *, int fd, FQDNH, void *);
-static void fqdncacheEnqueue(fqdncache_entry *);
-static void *fqdncacheDequeue(void);
-static void fqdncache_dnsDispatch(dnsserver_t *, fqdncache_entry *);
+static int fqdncache_compareLastRef __P((fqdncache_entry **, fqdncache_entry **));
+static int fqdncache_dnsHandleRead __P((int, dnsserver_t *));
+static fqdncache_entry *fqdncache_parsebuffer __P((char *buf, dnsserver_t *));
+static int fqdncache_purgelru __P((void));
+static void fqdncache_release __P((fqdncache_entry *));
+static fqdncache_entry *fqdncache_GetFirst __P((void));
+static fqdncache_entry *fqdncache_GetNext __P((void));
+static fqdncache_entry *fqdncache_create __P((void));
+static void fqdncache_add_to_hash __P((fqdncache_entry *));
+static void fqdncache_call_pending __P((fqdncache_entry *));
+static void fqdncache_call_pending_badname __P((int fd, FQDNH handler, void *));
+static void fqdncache_add __P((char *, fqdncache_entry *, struct hostent *, int));
+static int fqdncacheHasPending __P((fqdncache_entry *));
+static fqdncache_entry *fqdncache_get __P((char *));
+static void dummy_handler __P((int, char *, void *));
+static int fqdncacheExpiredEntry __P((fqdncache_entry *));
+static void fqdncacheAddPending __P((fqdncache_entry *, int fd, FQDNH, void *));
+static void fqdncacheEnqueue __P((fqdncache_entry *));
+static void *fqdncacheDequeue __P((void));
+static void fqdncache_dnsDispatch __P((dnsserver_t *, fqdncache_entry *));
 
 static struct hostent *static_result = NULL;
 static HashID fqdn_table = 0;

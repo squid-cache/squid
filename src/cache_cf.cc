@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.87 1996/09/14 08:45:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.88 1996/09/15 05:04:13 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -208,53 +208,53 @@ char w_space[] = " \t\n";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
-static char *safe_xstrdup(char *p);
-static void parseOnOff(int *);
-static void parseIntegerValue(int *);
+static char *safe_xstrdup __P((char *p));
+static void parseOnOff __P((int *));
+static void parseIntegerValue __P((int *));
 static char fatal_str[BUFSIZ];
-static void configDoConfigure(void);
-static void configFreeMemory(void);
-static void configSetFactoryDefaults(void);
-static void parseAccessLogLine(void);
-static void parseAddressLine(struct in_addr *);
-static void parseAnnounceToLine(void);
-static void parseAppendDomainLine(void);
-static void parseCacheAnnounceLine(void);
-static void parseCacheHostLine(void);
-static void parseDebugOptionsLine(void);
-static void parseDirLine(void);
-static void parseDnsProgramLine(void);
-static void parseDnsTestnameLine(void);
-static void parseEffectiveUserLine(void);
-static void parseErrHtmlLine(void);
-static void parseFtpLine(void);
-static void parseFtpOptionsLine(void);
-static void parseFtpProgramLine(void);
-static void parseFtpUserLine(void);
-static void parseGopherLine(void);
-static void parseHierarchyStoplistLine(void);
-static void parseHostAclLine(void);
-static void parseHostDomainLine(void);
-static void parseHotVmFactorLine(void);
-static void parseHttpLine(void);
-static void parseHttpPortLine(void);
-static void parseHttpdAccelLine(void);
-static void parseIPLine(ip_acl ** list);
-static void parseIcpPortLine(void);
-static void parseInsideFirewallLine(void);
-static void parseLocalDomainFile(char *fname);
-static void parseLocalDomainLine(void);
-static void parseLogLine(void);
-static void parseMemLine(void);
-static void parseMgrLine(void);
-static void parsePidFilenameLine(void);
-static void parseRequestSizeLine(void);
-static void parseStoreLogLine(void);
-static void parseSwapLine(void);
-static void parseTTLPattern(int icase, int force);
-static void parseVisibleHostnameLine(void);
-static void parseWAISRelayLine(void);
-static void parseMinutesLine(int *);
+static void configDoConfigure __P((void));
+static void configFreeMemory __P((void));
+static void configSetFactoryDefaults __P((void));
+static void parseAccessLogLine __P((void));
+static void parseAddressLine __P((struct in_addr *));
+static void parseAnnounceToLine __P((void));
+static void parseAppendDomainLine __P((void));
+static void parseCacheAnnounceLine __P((void));
+static void parseCacheHostLine __P((void));
+static void parseDebugOptionsLine __P((void));
+static void parseDirLine __P((void));
+static void parseDnsProgramLine __P((void));
+static void parseDnsTestnameLine __P((void));
+static void parseEffectiveUserLine __P((void));
+static void parseErrHtmlLine __P((void));
+static void parseFtpLine __P((void));
+static void parseFtpOptionsLine __P((void));
+static void parseFtpProgramLine __P((void));
+static void parseFtpUserLine __P((void));
+static void parseGopherLine __P((void));
+static void parseHierarchyStoplistLine __P((void));
+static void parseHostAclLine __P((void));
+static void parseHostDomainLine __P((void));
+static void parseHotVmFactorLine __P((void));
+static void parseHttpLine __P((void));
+static void parseHttpPortLine __P((void));
+static void parseHttpdAccelLine __P((void));
+static void parseIPLine __P((ip_acl ** list));
+static void parseIcpPortLine __P((void));
+static void parseInsideFirewallLine __P((void));
+static void parseLocalDomainFile __P((char *fname));
+static void parseLocalDomainLine __P((void));
+static void parseLogLine __P((void));
+static void parseMemLine __P((void));
+static void parseMgrLine __P((void));
+static void parsePidFilenameLine __P((void));
+static void parseRequestSizeLine __P((void));
+static void parseStoreLogLine __P((void));
+static void parseSwapLine __P((void));
+static void parseTTLPattern __P((int icase, int force));
+static void parseVisibleHostnameLine __P((void));
+static void parseWAISRelayLine __P((void));
+static void parseMinutesLine __P((int *));
 
 void
 self_destruct()

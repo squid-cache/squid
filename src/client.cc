@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.9 1996/09/14 08:45:41 wessels Exp $
+ * $Id: client.cc,v 1.10 1996/09/15 05:04:15 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -111,8 +111,8 @@
 #endif
 
 /* Local functions */
-static int client_comm_connect(int sock, char *dest_host, u_short dest_port);
-static void usage(char *progname);
+static int client_comm_connect __P((int sock, char *dest_host, u_short dest_port));
+static void usage __P((char *progname));
 
 static void
 usage(char *progname)
