@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.33 2002/10/21 06:43:07 adrian Exp $
+ * $Id: ipc.cc,v 1.34 2002/11/28 12:21:46 robertc Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -56,6 +56,18 @@ ipcCloseAllFD(int prfd, int pwfd, int crfd, int cwfd)
     return -1;
 }
 
+static void
+PutEnvironment()
+{
+#if HAVE_PUTENV   
+    char *env_str;
+    int tmp_s;
+    env_str = (char *)xcalloc((tmp_s = strlen(Config.debugOptions) + 32), 1);
+    snprintf(env_str, tmp_s, "SQUID_DEBUG=%s", Config.debugOptions);
+    putenv(env_str);
+#endif
+}
+
 int
 ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd)
 {
@@ -69,10 +81,6 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     int fd;
     int t1, t2, t3;
     socklen_t len;
-    int tmp_s;
-#if HAVE_PUTENV
-    char *env_str;
-#endif
     int x;
 
 #if USE_POLL && defined(_SQUID_OSF_)
@@ -272,11 +280,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 	    _exit(1);
 	}
     }
-#if HAVE_PUTENV
-    env_str = (char *)xcalloc((tmp_s = strlen(Config.debugOptions) + 32), 1);
-    snprintf(env_str, tmp_s, "SQUID_DEBUG=%s", Config.debugOptions);
-    putenv(env_str);
-#endif
+    PutEnvironment();
     /*
      * This double-dup stuff avoids problems when one of 
      *  crfd, cwfd, or debug_log are in the rage 0-2.
