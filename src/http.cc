@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.305 1998/08/14 09:22:37 wessels Exp $
+ * $Id: http.cc,v 1.306 1998/08/14 19:25:20 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -236,7 +236,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
 	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", httpState->reply_hdr);
 	    httpState->reply_hdr_state += 2;
-	    reply->sline.status = 555;
+	    reply->sline.status = HTTP_INVALID_HEADER;
 	    return;
 	}
 	t = httpState->reply_hdr + hdr_len;

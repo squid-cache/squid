@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.16 1998/08/10 19:37:47 wessels Exp $
+ * $Id: HttpStatusLine.cc,v 1.17 1998/08/14 19:25:12 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -42,13 +42,13 @@ const char *HttpStatusLineFormat = "HTTP/%3.1f %3d %s\r\n";
 void
 httpStatusLineInit(HttpStatusLine * sline)
 {
-    httpStatusLineSet(sline, 0.0, 0, NULL);
+    httpStatusLineSet(sline, 0.0, HTTP_STATUS_NONE, NULL);
 }
 
 void
 httpStatusLineClean(HttpStatusLine * sline)
 {
-    httpStatusLineSet(sline, 0.0, 500, NULL);
+    httpStatusLineSet(sline, 0.0, HTTP_INTERNAL_SERVER_ERROR, NULL);
 }
 
 /* set values */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.81 1998/07/22 20:37:03 wessels Exp $
+ * $Id: cachemgr.cc,v 1.82 1998/08/14 19:25:14 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -346,8 +346,8 @@ munge_other_line(const char *buf, cachemgr_request * req)
     static const char *ttags[] =
     {"td", "th"};
     static char html[4096];
-    static table_line_num = 0;
-    static next_is_header = 0;
+    static int table_line_num = 0;
+    static int next_is_header = 0;
     int is_header = 0;
     const char *ttag;
     char *buf_copy;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.140 1998/07/22 20:37:17 wessels Exp $
+ * $Id: errorpage.cc,v 1.141 1998/08/14 19:25:18 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -97,11 +97,11 @@ static CWCB errorSendComplete;
 void
 errorInitialize(void)
 {
-    int i;
+    err_type i;
     const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.count;
     error_text = xcalloc(error_page_count, sizeof(char *));
-    for (i = ERR_NONE + 1; i < error_page_count; i++) {
+    for (i = ERR_NONE, i++; i < error_page_count; i++) {
 	safe_free(error_text[i]);
 	/* hard-coded ? */
 	if ((text = errorFindHardText(i)))
@@ -217,7 +217,7 @@ errorFree(void)
  * Abstract:  This function creates a ErrorState object.
  */
 ErrorState *
-errorCon(int type, http_status status)
+errorCon(err_type type, http_status status)
 {
     ErrorState *err = xcalloc(1, sizeof(ErrorState));
     err->page_id = type;	/* has to be reset manually if needed */
