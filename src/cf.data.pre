@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.285 2002/09/25 15:11:28 wessels Exp $
+# $Id: cf.data.pre,v 1.286 2002/09/29 19:04:15 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3132,6 +3132,7 @@ DOC_START
 DOC_END
 
 NAME: header_replace
+IFDEF: HTTP_VIOLATIONS
 TYPE: http_header_replace[]
 LOC: Config.header_access
 DEFAULT: none
