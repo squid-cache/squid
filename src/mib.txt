@@ -1,6 +1,6 @@
 SQUID-MIB  DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.18 1998/10/14 20:12:14 wessels Exp $
+-- $Id: mib.txt,v 1.19 1998/11/13 22:28:10 glenn Exp $
 --
 
 IMPORTS
@@ -37,22 +37,6 @@ squid MODULE-IDENTITY
     DESCRIPTION
 		"Move to SMIv2. Prepare to split into proxy/squid."
     ::= { nlanr 1 }
-
--- v 1.16 1998/09/22 glenn@ircache.net
-
---
---     This is a hack to get around a problem with the current
---     version of the SNMP library. Remove the following seven lines
---     before using with SNMP tools.
---
-
-org            OBJECT IDENTIFIER ::= { iso 1 }
-dod            OBJECT IDENTIFIER ::= { org 6 }
-internet       OBJECT IDENTIFIER ::= { dod 1 }
-private        OBJECT IDENTIFIER ::= { internet 4 }
-enterprises    OBJECT IDENTIFIER ::= { private 1 }
-nlanr          OBJECT IDENTIFIER ::= { enterprises 3495 }
-squid          OBJECT IDENTIFIER ::= { nlanr 1 }
 
 --
 -- OID Assignments
