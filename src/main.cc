@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.184 1997/10/30 20:38:16 wessels Exp $
+ * $Id: main.cc,v 1.185 1997/10/30 22:40:51 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -735,6 +735,7 @@ watch_child(char *argv[])
 #else
     int status;
 #endif
+    pid_t pid;
     if (*(argv[0]) == '(')
 	return;
     for (;;) {
@@ -747,11 +748,14 @@ watch_child(char *argv[])
 	}
 	/* parent */
 	time(&start);
+	squid_signal(SIGINT, SIG_IGN, SA_RESTART);
+	do {
 #ifdef _SQUID_NEXT_
-	wait3(&status, 0, NULL);
+	    pid = wait3(&status, 0, NULL);
 #else
-	waitpid(-1, &status, 0);
+	    pid = waitpid(-1, &status, 0);
 #endif
+	} while (pid > 0);
 	time(&stop);
 	if (stop - start < 10)
 	    failcount++;
