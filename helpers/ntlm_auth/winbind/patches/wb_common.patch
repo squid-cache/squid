@@ -1,0 +1,11 @@
+--- samba-HEAD/source/nsswitch/wb_common.c	Sat Jan 12 23:12:11 2002
++++ squid-ntlm/src/auth/ntlm/helpers/winbind/wb_common.c	Sat Jan 12 23:45:03 2002
+@@ -25,6 +25,8 @@
+ 
+ #include "winbind_nss_config.h"
+ #include "winbindd_nss.h"
++#include "config.h"
++
+ 
+ /* Global variables.  These are effectively the client state information */
+ 
