@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.182 1997/12/31 23:57:16 wessels Exp $
+ * $Id: client_side.cc,v 1.183 1998/01/01 00:05:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1022,7 +1022,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    } else {
 		debug(12, 5) ("clientWriteComplete: FD %d Setting read handler for next request\n", fd);
 		fd_note(fd, "Reading next request");
-		commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
+		clientReadRequest(fd, conn); /* Read next request */
 		commSetTimeout(fd, 15, requestTimeout, conn);
 	    }
 	} else {
@@ -1575,12 +1575,27 @@ clientReadRequest(int fd, void *data)
 	if (!ignoreErrno(errno)) {
 	    debug(50, 2) ("clientReadRequest: FD %d: %s\n", fd, xstrerror());
 	    comm_close(fd);
+	    return;
+	} else if(conn->in.offset == 0) {
+	    debug(50, 2) ("clientReadRequest: FD %d: no data to process\n");
+	    return;
 	}
-	return;
+	/* Continue to process previously read data */
+	size=0;
     }
     conn->in.offset += size;
     conn->in.buf[conn->in.offset] = '\0';	/* Terminate the string */
     while (conn->in.offset > 0) {
+	int nrequests;
+	/* Limit the number of concurrent requests to 2 */
+	for (H = &conn->chr, nrequests = 0; *H; H = &(*H)->next, nrequests++);
+	if (nrequests >= 2) {
+	    debug(12, 2) ("clientReadRequest: FD %d max concurrent requests reached\n", fd);
+	    debug(12, 5) ("clientReadRequest: FD %d defering new request until one is done\n", fd);
+	    conn->defer.until = squid_curtime + 100; /* Reset when a request is complete */
+	    break;
+	}
+	/* Process request */
 	http = parseHttpRequest(conn,
 	    &method,
 	    &parser_return_code,
@@ -1596,7 +1611,7 @@ clientReadRequest(int fd, void *data)
 	     */
 	    if (conn->in.offset > 0)
 	        memmove(conn->in.buf, conn->in.buf + http->req_sz, conn->in.size);
-	    /* link */
+	    /* add to the client request queue */
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
 	    conn->nrequests++;
