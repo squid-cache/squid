@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.60 1998/04/05 02:34:58 rousskov Exp $
+ * $Id: mime.cc,v 1.61 1998/04/06 22:24:04 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -145,8 +145,9 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
     const int preflen = prefix ? strlen(prefix) : 0;
     int l;
 
-    if (!mime || !name)
+    if (NULL == mime)
 	return NULL;
+    assert(NULL != name);
 
     debug(25, 5) ("mime_get_header: looking for '%s'\n", name);
 
