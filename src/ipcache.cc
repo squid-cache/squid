@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.109 1997/04/28 04:23:15 wessels Exp $
+ * $Id: ipcache.cc,v 1.110 1997/04/28 05:32:47 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -567,7 +567,7 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	if (len < 0 && (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)) {
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
-		(PF) ipcache_dnsHandleRead,
+		ipcache_dnsHandleRead,
 		dnsData, 0);
 	    return;
 	}
@@ -616,7 +616,7 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
     /* reschedule */
     commSetSelect(dnsData->inpipe,
 	COMM_SELECT_READ,
-	(PF) ipcache_dnsHandleRead,
+	ipcache_dnsHandleRead,
 	dnsData, 0);
     ipcacheNudgeQueue();
 }
@@ -737,7 +737,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 	xfree);
     commSetSelect(dns->outpipe,
 	COMM_SELECT_READ,
-	(PF) ipcache_dnsHandleRead,
+	ipcache_dnsHandleRead,
 	dns, 0);
     debug(14, 5, "ipcache_dnsDispatch: Request sent to DNS server #%d.\n",
 	dns->id);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.141 1997/04/28 04:23:01 wessels Exp $
+ * $Id: comm.cc,v 1.142 1997/04/28 05:32:41 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1513,7 +1513,7 @@ commHandleWrite(int fd, RWStateData * state)
 		fd, xstrerror());
 	    commSetSelect(fd,
 		COMM_SELECT_WRITE,
-		(PF) commHandleWrite,
+		commHandleWrite,
 		state,
 		0);
 	} else {
@@ -1528,7 +1528,7 @@ commHandleWrite(int fd, RWStateData * state)
 	    /* Not done, reinstall the write handler and write some more */
 	    commSetSelect(fd,
 		COMM_SELECT_WRITE,
-		(PF) commHandleWrite,
+		commHandleWrite,
 		state,
 		0);
 	} else {
@@ -1565,7 +1565,7 @@ comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handl
     fd_table[fd].rwstate = state;
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
-	(PF) commHandleWrite,
+	commHandleWrite,
 	fd_table[fd].rwstate,
 	0);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.154 1997/04/28 04:23:11 wessels Exp $
+ * $Id: http.cc,v 1.155 1997/04/28 05:32:43 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -589,13 +589,13 @@ httpReadReply(int fd, void *data)
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    httpReadReply,
-	    (void *) httpState, 0);
+	    httpState, 0);
 	/* disable read timeout until we are below the GAP */
 	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    NULL,
-	    (void *) NULL,
-	    (time_t) 0);
+	    NULL,
+	    0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
 	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
 	    BIT_SET(entry->flag, READ_DEFERRED);
@@ -621,9 +621,9 @@ httpReadReply(int fd, void *data)
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    commSetSelect(fd, COMM_SELECT_READ,
-		httpReadReply, (void *) httpState, 0);
+		httpReadReply, httpState, 0);
 	    commSetSelect(fd, COMM_SELECT_TIMEOUT,
-		httpReadReplyTimeout, (void *) httpState, Config.readTimeout);
+		httpReadReplyTimeout, httpState, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
@@ -658,12 +658,12 @@ httpReadReply(int fd, void *data)
 	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    httpReadReplyTimeout,
-	    (void *) httpState,
+	    httpState,
 	    Config.readTimeout);
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    httpReadReply,
-	    (void *) httpState, 0);
+	    httpState, 0);
     }
 }
 
@@ -688,11 +688,11 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    httpReadReply,
-	    (void *) httpState, 0);
+	    httpState, 0);
 	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    httpReadReplyTimeout,
-	    (void *) httpState,
+	    httpState,
 	    Config.readTimeout);
 	comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     }
@@ -945,7 +945,7 @@ proxyhttpStartComplete(void *data, int status)
     /* register the handler to free HTTP state data when the FD closes */
     comm_add_close_handler(httpState->fd,
 	httpStateFree,
-	(void *) httpState);
+	httpState);
     request->method = orig_request->method;
     xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
     request->port = e->http_port;
@@ -997,9 +997,9 @@ httpConnectDone(int fd, int status, void *data)
 	    ipcacheInvalidate(request->host);
 	fd_note(fd, entry->url);
 	commSetSelect(fd, COMM_SELECT_LIFETIME,
-	    httpLifetimeExpire, (void *) httpState, 0);
+	    httpLifetimeExpire, httpState, 0);
 	commSetSelect(fd, COMM_SELECT_WRITE,
-	    httpSendRequest, (void *) httpState, 0);
+	    httpSendRequest, httpState, 0);
     }
 }
 
@@ -1064,7 +1064,7 @@ httpStartComplete(void *data, int status)
     httpState->fd = sock;
     comm_add_close_handler(httpState->fd,
 	httpStateFree,
-	(void *) httpState);
+	httpState);
     httpState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(request->host,
 	httpState->fd,

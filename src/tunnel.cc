@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.44 1997/04/28 04:23:27 wessels Exp $
+ * $Id: tunnel.cc,v 1.45 1997/04/28 05:32:49 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -75,7 +75,7 @@ sslClose(SslStateData * sslState)
 	/* remove the "unexpected" client close handler */
 	comm_remove_close_handler(sslState->client.fd,
 	    sslClientClosed,
-	    (void *) sslState);
+	    sslState);
 	comm_close(sslState->client.fd);
 	sslState->client.fd = -1;
     }
@@ -151,11 +151,11 @@ sslReadServer(int fd, void *data)
 	    commSetSelect(sslState->server.fd,
 		COMM_SELECT_READ,
 		sslReadServer,
-		(void *) sslState, 0);
+		sslState, 0);
 	    commSetSelect(sslState->server.fd,
 		COMM_SELECT_TIMEOUT,
 		sslReadTimeout,
-		(void *) sslState,
+		sslState,
 		sslState->timeout);
 	} else {
 	    sslClose(sslState);
@@ -169,7 +169,7 @@ sslReadServer(int fd, void *data)
 	commSetSelect(sslState->client.fd,
 	    COMM_SELECT_WRITE,
 	    sslWriteClient,
-	    (void *) sslState, 0);
+	    sslState, 0);
     }
 }
 
@@ -191,7 +191,7 @@ sslReadClient(int fd, void *data)
 	    commSetSelect(sslState->client.fd,
 		COMM_SELECT_READ,
 		sslReadClient,
-		(void *) sslState, 0);
+		sslState, 0);
 	} else {
 	    sslClose(sslState);
 	}
@@ -204,7 +204,7 @@ sslReadClient(int fd, void *data)
 	commSetSelect(sslState->server.fd,
 	    COMM_SELECT_WRITE,
 	    sslWriteServer,
-	    (void *) sslState, 0);
+	    sslState, 0);
     }
 }
 
@@ -223,7 +223,7 @@ sslWriteServer(int fd, void *data)
 	    commSetSelect(sslState->server.fd,
 		COMM_SELECT_WRITE,
 		sslWriteServer,
-		(void *) sslState, 0);
+		sslState, 0);
 	    return;
 	}
 	debug(50, 2, "sslWriteServer: FD %d: write failure: %s.\n",
@@ -236,18 +236,18 @@ sslWriteServer(int fd, void *data)
 	commSetSelect(sslState->client.fd,
 	    COMM_SELECT_READ,
 	    sslReadClient,
-	    (void *) sslState, 0);
+	    sslState, 0);
 	commSetSelect(sslState->server.fd,
 	    COMM_SELECT_TIMEOUT,
 	    sslReadTimeout,
-	    (void *) sslState,
+	    sslState,
 	    sslState->timeout);
     } else {
 	/* still have more to write */
 	commSetSelect(sslState->server.fd,
 	    COMM_SELECT_WRITE,
 	    sslWriteServer,
-	    (void *) sslState, 0);
+	    sslState, 0);
     }
 }
 
@@ -270,7 +270,7 @@ sslWriteClient(int fd, void *data)
 	    commSetSelect(sslState->client.fd,
 		COMM_SELECT_WRITE,
 		sslWriteClient,
-		(void *) sslState, 0);
+		sslState, 0);
 	    return;
 	}
 	debug(50, 2, "sslWriteClient: FD %d: write failure: %s.\n",
@@ -285,13 +285,13 @@ sslWriteClient(int fd, void *data)
 	commSetSelect(sslState->server.fd,
 	    COMM_SELECT_READ,
 	    sslReadServer,
-	    (void *) sslState, 0);
+	    sslState, 0);
     } else {
 	/* still have more to write */
 	commSetSelect(sslState->client.fd,
 	    COMM_SELECT_WRITE,
 	    sslWriteClient,
-	    (void *) sslState, 0);
+	    sslState, 0);
     }
 }
 
@@ -315,11 +315,11 @@ sslConnected(int fd, void *data)
     commSetSelect(sslState->client.fd,
 	COMM_SELECT_WRITE,
 	sslWriteClient,
-	(void *) sslState, 0);
+	sslState, 0);
     commSetSelect(sslState->client.fd,
 	COMM_SELECT_READ,
 	sslReadClient,
-	(void *) sslState, 0);
+	sslState, 0);
 }
 
 static void
@@ -354,7 +354,7 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
 	    strlen(buf),
 	    30,
 	    sslErrorComplete,
-	    (void *) sslState,
+	    sslState,
 	    xfree);
 	return;
     }
@@ -365,7 +365,7 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_LIFETIME,
 	sslLifetimeExpire,
-	(void *) sslState, 0);
+	sslState, 0);
     /* NOTE this changes the lifetime handler for the client side.
      * It used to be asciiConnLifetimeHandle, but it does funny things
      * like looking for read handlers and assuming it was still reading
@@ -373,7 +373,7 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
     commSetSelect(sslState->client.fd,
 	COMM_SELECT_LIFETIME,
 	sslLifetimeExpire,
-	(void *) sslState, 0);
+	sslState, 0);
     commConnectStart(fd,
 	sslState->host,
 	sslState->port,
@@ -398,7 +398,7 @@ sslConnectDone(int fd, int status, void *data)
 	    strlen(buf),
 	    30,
 	    sslErrorComplete,
-	    (void *) sslState,
+	    sslState,
 	    xfree);
 	return;
     }
@@ -455,10 +455,10 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     sslState->client.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     comm_add_close_handler(sslState->server.fd,
 	sslStateFree,
-	(void *) sslState);
+	sslState);
     comm_add_close_handler(sslState->client.fd,
 	sslClientClosed,
-	(void *) sslState);
+	sslState);
     peerSelect(request,
 	NULL,
 	sslPeerSelectComplete,
@@ -480,11 +480,11 @@ sslProxyConnected(int fd, void *data)
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_WRITE,
 	sslWriteServer,
-	(void *) sslState, 0);
+	sslState, 0);
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_READ,
 	sslReadServer,
-	(void *) sslState, 0);
+	sslState, 0);
 }
 
 static void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.223 1997/04/28 05:11:47 wessels Exp $
+ * $Id: store.cc,v 1.224 1997/04/28 05:32:51 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1099,8 +1099,8 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	    mem->e_swap_buf,
 	    SWAP_BUF,
 	    mem->swap_offset,
-	    (FILE_READ_HD) storeSwapInHandle,
-	    (void *) e);
+	    storeSwapInHandle,
+	    e);
 	return 0;
     }
     /* complete swapping in */
@@ -1211,8 +1211,8 @@ storeSwapInStartComplete(void *data, int fd)
 	mem->e_swap_buf,
 	SWAP_BUF,
 	mem->swap_offset,
-	(FILE_READ_HD) storeSwapInHandle,
-	(void *) e);
+	storeSwapInHandle,
+	e);
     (ctrlp->callback) (ctrlp->callback_data, 0);
     xfree(ctrlp->path);
     xfree(ctrlp);

@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.73 1997/03/04 05:16:30 wessels Exp $
+ * $Id: gopher.cc,v 1.74 1997/04/28 05:32:43 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -740,8 +740,8 @@ gopherReadReply(int fd, GopherStateData * data)
 	 * Gap is big enough.  */
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) gopherReadReply,
-	    (void *) data, 0);
+	    gopherReadReply,
+	    data, 0);
 	/* don't install read timeout until we are below the GAP */
 	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
@@ -776,12 +776,12 @@ gopherReadReply(int fd, GopherStateData * data)
 	    /* XXX This may loop forever */
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
-		(PF) gopherReadReply,
-		(void *) data, 0);
+		gopherReadReply,
+		data, 0);
 	    commSetSelect(fd,
 		COMM_SELECT_TIMEOUT,
-		(PF) gopherReadReplyTimeout,
-		(void *) data,
+		gopherReadReplyTimeout,
+		data,
 		Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
@@ -824,12 +824,12 @@ gopherReadReply(int fd, GopherStateData * data)
 	}
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
-	    (PF) gopherReadReply,
-	    (void *) data, 0);
+	    gopherReadReply,
+	    data, 0);
 	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) gopherReadReplyTimeout,
-	    (void *) data,
+	    gopherReadReplyTimeout,
+	    data,
 	    Config.readTimeout);
     }
     put_free_4k_page(buf);
@@ -893,12 +893,12 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
     /* Schedule read reply. */
     commSetSelect(fd,
 	COMM_SELECT_READ,
-	(PF) gopherReadReply,
-	(void *) gopherState, 0);
+	gopherReadReply,
+	gopherState, 0);
     commSetSelect(fd,
 	COMM_SELECT_TIMEOUT,
-	(PF) gopherReadReplyTimeout,
-	(void *) gopherState,
+	gopherReadReplyTimeout,
+	gopherState,
 	Config.readTimeout);
     comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
 
@@ -929,7 +929,7 @@ gopherSendRequest(int fd, GopherStateData * data)
 	strlen(buf),
 	30,
 	gopherSendComplete,
-	(void *) data,
+	data,
 	put_free_4k_page);
     if (BIT_TEST(data->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(data->entry);		/* Make it public */
@@ -973,8 +973,8 @@ gopherStartComplete(void *datap, int status)
 	return;
     }
     comm_add_close_handler(sock,
-	(PF) gopherStateFree,
-	(void *) data);
+	gopherStateFree,
+	data);
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
@@ -1025,12 +1025,12 @@ gopherConnectDone(int fd, int status, void *data)
 	ipcacheInvalidate(gopherState->host);
     commSetSelect(fd,
 	COMM_SELECT_LIFETIME,
-	(PF) gopherLifetimeExpire,
-	(void *) gopherState, 0);
+	gopherLifetimeExpire,
+	gopherState, 0);
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
-	(PF) gopherSendRequest,
-	(void *) gopherState, 0);
+	gopherSendRequest,
+	gopherState, 0);
 }
 
 

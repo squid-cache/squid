@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.25 1997/03/04 05:16:34 wessels Exp $
+ * $Id: ident.cc,v 1.26 1997/04/28 05:32:46 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -64,8 +64,8 @@ identStart(int fd, icpStateData * icpState, void (*callback) _PARAMS((void *)))
     }
     icpState->ident.fd = fd;
     comm_add_close_handler(fd,
-	(PF) identClose,
-	(void *) icpState);
+	identClose,
+	icpState);
     commConnectStart(fd,
 	inet_ntoa(icpState->peer.sin_addr),
 	IDENT_PORT,
@@ -91,12 +91,12 @@ identConnectDone(int fd, int status, void *data)
 	strlen(reqbuf),
 	5,			/* timeout */
 	identRequestComplete,
-	(void *) icpState,
+	icpState,
 	NULL);
     commSetSelect(fd,
 	COMM_SELECT_READ,
-	(PF) identReadReply,
-	(void *) icpState, 0);
+	identReadReply,
+	icpState, 0);
 }
 
 static void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.33 1997/04/28 04:23:12 wessels Exp $
+ * $Id: icmp.cc,v 1.34 1997/04/28 05:32:44 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -79,8 +79,8 @@ icmpRecv(int unused1, void *unused2)
     static struct sockaddr_in F;
     commSetSelect(icmp_sock,
 	COMM_SELECT_READ,
-	(PF) icmpRecv,
-	(void *) -1, 0);
+	icmpRecv,
+	-1, 0);
     memset(&preply, '\0', sizeof(pingerReplyData));
     n = recv(icmp_sock,
 	(char *) &preply,
@@ -134,8 +134,8 @@ icmpQueueSend(pingerEchoData * pkt,
     *H = q;
     commSetSelect(icmp_sock,
 	COMM_SELECT_WRITE,
-	(PF) icmpSend,
-	(void *) IcmpQueueHead, 0);
+	icmpSend,
+	IcmpQueueHead, 0);
 }
 
 static void
@@ -167,8 +167,8 @@ icmpSend(int fd, icmpQueueData * queue)
     if (IcmpQueueHead) {
 	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
-	    (PF) icmpSend,
-	    (void *) IcmpQueueHead, 0);
+	    icmpSend,
+	    IcmpQueueHead, 0);
     } else {
 	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
@@ -304,8 +304,8 @@ icmpOpen(void)
     comm_close(child_sock);
     commSetSelect(icmp_sock,
 	COMM_SELECT_READ,
-	(PF) icmpRecv,
-	(void *) -1, 0);
+	icmpRecv,
+	-1, 0);
     comm_set_fd_lifetime(icmp_sock, -1);
     debug(29, 0, "Pinger socket opened on FD %d\n", icmp_sock);
 #endif
