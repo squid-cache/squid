@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL requerida n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL requerida n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<PRE>
+%R
+</PRE>
+<P>
+O seguinte erro foi encontrado:
+<UL>
+<LI>
+<STRONG>
+Requisi&ccedil;&atilde;o inv&aacute;lida.
+</STRONG>
+</UL>
+
+<P>
+Alguns aspectos de requisi&ccedil;&atilde;o HTTP s&atilde;o invalidos. Problemas poss&iacute;veis:
+<UL>
+<LI>M&eacute;todo desconhecido ou faltando (GET, POST)
+<LI>Faltou a URL
+<LI>Faltou o identificador HTTP (HTTP/1.0)
+<LI>A requisi&ccedil;&atilde;o pode ser muito grande
+<LI>Hostname com caracter inv&aacute;lido; n&atilde;o &eacute; permitido o uso de underscores
+</UL>
+</P>

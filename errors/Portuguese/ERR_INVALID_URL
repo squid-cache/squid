@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL requisitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL requisitada n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+URL inv&aacute;lida
+</STRONG>
+</UL>
+
+<P>
+Alguns aspectos de requisi&ccedil;&otilde;es URL s&atilde;o incorretos. Problemas poss&iacute;veis:
+<UL>
+<LI>Protocolo de acesso incorreto ou faltando (deve ser `http://` ou similar)
+<LI>Faltou o hostname
+<LI>Hostname com caracter inv&aacute;lido; n&atilde;o s&atilde;o permitidos underscores.
+</UL>
+</P>

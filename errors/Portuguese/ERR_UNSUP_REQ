@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL requisitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL requisitada n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+M&eacute;todo ou protocolo n&atilde;o suportado.
+</STRONG>
+</UL>
+
+<P>
+Squid n&atilde;o suporta todos os m&eacute;todos para todos os protocolos.
+Por exemplo: voc&ecirc; n&atilde;o pode fazer cache de Gopher.
+</P>
+

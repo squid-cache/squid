@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL requerida n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL requerida n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+FTP desabilitado.
+</STRONG>
+</UL>
+
+<P>
+Este cache n&atilde;o est&aacute; habilitado para FTP.
+</P>

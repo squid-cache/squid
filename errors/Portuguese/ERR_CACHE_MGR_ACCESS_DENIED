@@ -1,0 +1,35 @@
+<HTML><HEAD>
+<TITLE>ERRO: Proibido o acesso ao Gerenciador do Cache</TITLE>
+</HEAD>
+<BODY>
+<H1>ERRO</H1>
+<H2>Proibido o acesso ao Gerenciador do Cache</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+Proibido o acesso ao Gerenciador do Cache.
+</STRONG>
+</UL>
+</P>
+
+<P>Desculpe, voc&ecirc; n&atilde;o tem autoriza&ccedil;&atilde;o para: 
+<PRE>    %U</PRE>
+at&eacute; que se autentique.
+</P>
+
+<P>
+Voc&ecirc; deve usar o Netscape vers&atilde;o 2.0 ou maior, ou Microsoft Internet
+Explorer 3.0, ou um browser que obede&ccedil;a ao HTTP/1.1.
+Por favor contate o <A HREF="mailto:%w">administrador do cache</a> se voc&ecirc; tiver
+dificuldades para se autenticar ou, se voc&ecirc; &eacute; o administrador,
+leia a documenta&ccedil;&atilde;o do Squid no pr&oacute;prio gerenciador de cache
+e verifique o log para mensagens de erros mais detalhadas.
+</P>

@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<TITLE>ERRO: Proibido o acesso ao Cache</TITLE>
+</HEAD>
+<BODY>
+<H1>ERRO</H1>
+<H2>Proibido o acesso ao Cache</H2>
+<HR>
+<P>
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+<UL>
+<LI>
+<STRONG>
+Proibido o acesso ao Cache.
+</STRONG>
+</UL>
+</P>
+
+<P>Desculpe, voce n&atilde;o tem autoriza&ccedil;&atilde;o para solicitar:
+<PRE>    %U</PRE>
+atrav&eacute;s desse cache at&eacute; que voc&ecirc; se autentique.
+</P>
+
+<P>
+Voc&ecirc; deve usar o Netscape vers&atilde;o 2.0 ou maior, ou Microsoft Internet
+Explorer 3.0, ou um browser que obede&ccedil;a ao HTTP/1.1.
+Por favor, contate o <A HREF="mailto:%w">administrador do cache</a> se voc&ecirc; tiver
+dificuldades para se autenticar ou, <A HREF="http://%h/cgi-bin/chpasswd.cgi\"> altere</A>
+sua senha.
+</P>

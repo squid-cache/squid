@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL Solicitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL requerida n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+Falha na conex&atilde;o
+</STRONG>
+</UL>
+
+<P>
+O sistema retornou:
+<PRE><I>    %E</I></PRE>
+
+<P>
+O host remoto (servidor) ou a rede pode estar fora do ar. Por favor tente novamente.
+</P>
