@@ -562,6 +562,8 @@ double statHistDeltaMedian(const StatHist * A, const StatHist * B);
 void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd);
 void statHistLogInit(StatHist * H, int capacity, double min, double max);
 void statHistEnumInit(StatHist * H, int last_enum);
+void statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+
 
 /* MemMeter */
 extern void memMeterSyncHWater(MemMeter * m);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.12 1998/04/10 00:39:32 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.13 1998/04/12 06:10:06 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -87,7 +87,8 @@ static void
 peerDigestClean(peer *p)
 {
     if (!cbdataValid(p))
-	debug(72, 2) ("peerDigest: note: peer '%s' was reset or deleted\n", p->host);
+	debug(72, 2) ("peerDigest: note: peer '%s' was reset or deleted\n", 
+	    p->host ? p->host : "<null>");
     assert(!EBIT_TEST(p->digest.flags, PD_REQUESTED));
     peerDigestDisable(p);
     cbdataUnlock(p);
@@ -136,13 +137,14 @@ peerDigestDelay(peer *p, int disable, time_t delay)
 	assert(delay || !disable);
 	debug(72, 2) ("peerDigestDelay: %s: peer %s for %d secs till %s\n",
 	    disable ? "disabling" : "delaying",
-	    p->host, delay, mkrfc1123(squid_curtime + delay));
+	    p->host ? p->host : "<null>", 
+	    delay, mkrfc1123(squid_curtime + delay));
 	eventAdd("peerDigestValidate", (EVH*) peerDigestValidate,
 	    p, delay);
     } else {
 	assert(disable);
 	debug(72, 2) ("peerDigestDisable: disabling peer %s for good\n",
-	    p->host);
+	    p->host ? p->host : "<null>");
 	/* just in case, will not need it anymore */
 	EBIT_CLR(p->digest.flags, PD_USABLE);
     }
@@ -300,8 +302,8 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	assert(reply);
 	httpReplyParse(reply, buf);
 	status = reply->sline.status;
-	debug(72, 3) ("peerDigestFetchHeaders: status: %d, expires: %s\n",
-	    status, mkrfc1123(reply->expires));
+	debug(72, 3) ("peerDigestFetchHeaders: %s status: %d, expires: %s\n",
+	    peer->host, status, mkrfc1123(reply->expires));
 	/* this "if" is based on clientHandleIMSReply() */
 	if (status == HTTP_NOT_MODIFIED) {
 	    request_t *r = NULL;
@@ -309,7 +311,8 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	    assert(fetch->old_entry);
 	    if (!fetch->old_entry->mem_obj->request)
 		fetch->old_entry->mem_obj->request = r =
-		    requestLink(fetch->old_entry->mem_obj->request);
+		    requestLink(fetch->entry->mem_obj->request);
+	    assert(fetch->old_entry->mem_obj->request);
 	    httpReplyUpdateOnNotModified(fetch->old_entry->mem_obj->reply, reply);
 	    storeTimestampsSet(fetch->old_entry);
 	    /* get rid of 304 reply */
@@ -319,8 +322,10 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(fetch->entry);
 	    fetch->entry = fetch->old_entry;
 	    fetch->old_entry = NULL;
-	    requestUnlink(r);
-	    fetch->entry->mem_obj->request = NULL;
+	    /* preserve request -- we need its size to update counters */
+	    /* requestUnlink(r); */
+	    /* fetch->entry->mem_obj->request = NULL; */
+	    assert(fetch->entry->mem_obj);
 	} else
 	if (status == HTTP_OK) {
 	    /* get rid of old entry if any */
@@ -489,6 +494,7 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
     const time_t fetch_resp_time = squid_curtime - fetch->start_time;
     const int b_read = (fetch->entry->store_status == STORE_PENDING) ? 
 	mem->inmem_hi : mem->object_sz;
+    assert(req);
     if (!err_msg && !peer->digest.cd)
 	err_msg = "null digest (internal bug?)";
     if (!err_msg && fetch->mask_offset != peer->digest.cd->mask_size)
@@ -501,8 +507,9 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	fetch->old_entry = NULL;
     }
     assert(fetch->entry);
-    debug(72, 3) ("peerDigestFetchFinish: %s, read %d bytes\n",
-	peer->host, b_read);
+    debug(72, 3) ("peerDigestFetchFinish: %s, read %d b, expires: %s lmt: %s\n",
+	peer->host, b_read, 
+	mkrfc1123(fetch->entry->expires), mkrfc1123(fetch->entry->lastmod));
     if (err_msg) {
 	debug(72, 1) ("disabling corrupted (%s) digest from %s\n",
 	    err_msg, peer->host);
@@ -519,8 +526,12 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	/* release buggy entry */
 	storeReleaseRequest(fetch->entry);
     } else {
-	debug(72, 2) ("received valid digest from %s\n", peer->host);
-        storeComplete(fetch->entry);
+	if (fetch->entry->store_status == STORE_OK) {
+	   debug(72, 2) ("re-used old digest from %s\n", peer->host);
+	} else {
+	   debug(72, 2) ("received valid digest from %s\n", peer->host);
+           storeComplete(fetch->entry);
+	}
 	EBIT_SET(peer->digest.flags, PD_USABLE);
 	EBIT_CLR(peer->digest.flags, PD_DISABLED);
 	peer->digest.last_dis_delay = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.48 1998/04/09 11:41:28 rousskov Exp $
+ * $Id: peer_select.cc,v 1.49 1998/04/12 06:10:07 rousskov Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -314,7 +314,10 @@ peerSelectFoo(ps_state * psstate)
 	    request->hier.alg = PEER_SA_DIGEST;
 	    if (1 /* global_digested_peer_count */)
 		p = neighborsDigestSelect(request, entry);
-  	    code = DIRECT; /* default @?@: CACHE_DIGEST_NONE */
+	    /* update counters */
+	    statHistCount(&Counter.cd.peer_choice_count, request->hier.n_choices);
+	    statHistCount(&Counter.cd.peer_ichoice_count, request->hier.n_ichoices);
+  	    code = DIRECT;
 	    switch (request->hier.cd_lookup) {
 	    case LOOKUP_HIT:
 		assert(p);

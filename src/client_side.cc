@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.274 1998/04/10 01:27:29 wessels Exp $
+ * $Id: client_side.cc,v 1.275 1998/04/12 06:10:05 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -44,7 +44,9 @@ static CWCB clientWriteComplete;
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
+static void clientFinishIMS(clientHttpRequest *http);
 static STCB clientGetHeadersForIMS;
+static STCB clientGetHeadersForSpecialIMS;
 static int CheckQuickAbort2(const clientHttpRequest *);
 static int clientCheckTransferDone(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
@@ -1218,13 +1220,53 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     }
 }
 
+/* called when clientGetHeadersFor*IMS completes */
+static void
+clientFinishIMS(clientHttpRequest *http)
+{
+    StoreEntry *entry = http->entry;
+    MemBuf mb;
+
+    http->log_type = LOG_TCP_IMS_HIT;
+    entry->refcount++;
+    /* All headers are available, double check if object is modified or not */
+    if (modifiedSince(entry, http->request)) {
+	debug(33, 4) ("clientFinishIMS: Modified '%s'\n",
+	    storeUrl(entry));
+	if (entry->store_status == STORE_ABORTED)
+	    debug(33, 0) ("clientFinishIMS: entry->swap_status == STORE_ABORTED\n");
+	storeClientCopy(entry,
+	    http->out.offset,
+	    http->out.offset,
+	    SM_PAGE_SIZE,
+	    memAllocate(MEM_4K_BUF),
+	    clientSendMoreData,
+	    http);
+	return;
+    }
+    debug(33, 4) ("clientFinishIMS: Not modified '%s'\n",
+	storeUrl(entry));
+    /*
+     * Create the Not-Modified reply from the existing entry,
+     * Then make a new entry to hold the reply to be written
+     * to the client.
+     */
+    mb = httpPacked304Reply(entry->mem_obj->reply);
+    storeUnregister(entry, http);
+    storeUnlockObject(entry);
+    http->entry = clientCreateStoreEntry(http, http->request->method, 0);
+    httpReplyParse(http->entry->mem_obj->reply, mb.buf);
+    storeAppend(http->entry, mb.buf, mb.size);
+    memBufClean(&mb);
+    storeComplete(http->entry);
+}
+
 static void
 clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
     MemObject *mem;
-    MemBuf mb;
     debug(33, 3) ("clientGetHeadersForIMS: %s, %d bytes\n",
 	http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
@@ -1293,35 +1335,53 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	return;
     }
 #endif
-    http->log_type = LOG_TCP_IMS_HIT;
-    entry->refcount++;
-    if (modifiedSince(entry, http->request)) {
+    clientFinishIMS(http);
+}
+
+/*
+ * Client sent an IMS request for ENTRY_SPECIAL
+ *   - fetch the headers
+ *   - construct a 304 reply
+ *   - if something goes wrong call clientCacheHit()
+ *     to mimic our usual processing of special entries
+ *   - note that clientGetHeadersForIMS frees "buf" earlier than we do
+ */
+static void
+clientGetHeadersForSpecialIMS(void *data, char *buf, ssize_t size)
+{
+    clientHttpRequest *http = data;
+    StoreEntry *entry = http->entry;
+    debug(33, 3) ("clientGetHeadersForSpecialIMS: %s, %d bytes\n",
+	http->uri, (int) size);
+    assert(size <= SM_PAGE_SIZE);
+    if (size < 0 || entry->store_status == STORE_ABORTED) {
+	clientCacheHit(data, buf, size);
+	return;
+    }
+    if (entry->mem_obj->reply->sline.status == 0) {
+	if (entry->mem_status == IN_MEMORY) {
+	    clientCacheHit(data, buf, size);
+	    return;
+	}
+	if (size == SM_PAGE_SIZE && http->out.offset == 0) {
+	    clientCacheHit(data, buf, size);
+	    return;
+	}
+	debug(33, 3) ("clientGetHeadersForSpecialIMS: waiting for HTTP reply headers\n");
+	/* All headers are not yet available, wait for more data */
 	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientGetHeadersForIMS 2: entry->swap_status == STORE_ABORTED\n");
+	    debug(33, 0) ("clientGetHeadersForSpecialIMS: entry->swap_status == STORE_ABORTED\n");
 	storeClientCopy(entry,
-	    http->out.offset,
+	    http->out.offset + size,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    memAllocate(MEM_4K_BUF),
-	    clientSendMoreData,
+	    buf,
+	    clientGetHeadersForSpecialIMS,
 	    http);
 	return;
     }
-    debug(33, 4) ("clientGetHeadersForIMS: Not modified '%s'\n",
-	storeUrl(entry));
-    /*
-     * Create the Not-Modified reply from the existing entry,
-     * Then make a new entry to hold the reply to be written
-     * to the client.
-     */
-    mb = httpPacked304Reply(mem->reply);
-    storeUnregister(entry, http);
-    storeUnlockObject(entry);
-    http->entry = clientCreateStoreEntry(http, http->request->method, 0);
-    httpReplyParse(http->entry->mem_obj->reply, mb.buf);
-    storeAppend(http->entry, mb.buf, mb.size);
-    memBufClean(&mb);
-    storeComplete(http->entry);
+    memFree(MEM_4K_BUF, buf);
+    clientFinishIMS(http);
 }
 
 /*
@@ -1458,7 +1518,6 @@ clientProcessRequest(clientHttpRequest * http)
     case LOG_TCP_HIT:
     case LOG_TCP_NEGATIVE_HIT:
     case LOG_TCP_MEM_HIT:
-    case LOG_TCP_IMS_HIT:
 	entry->refcount++;	/* HIT CASE */
 	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientProcessRequest: entry->swap_status == STORE_ABORTED\n");
@@ -1470,6 +1529,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    clientCacheHit,
 	    http);
 	return;
+    case LOG_TCP_IMS_HIT:
     case LOG_TCP_IMS_MISS:
 	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientProcessRequest 2: entry->swap_status == STORE_ABORTED\n");
@@ -1478,7 +1538,8 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    SM_PAGE_SIZE,
 	    memAllocate(MEM_4K_BUF),
-	    clientGetHeadersForIMS,
+	    (http->log_type == LOG_TCP_IMS_MISS) ? 
+		clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
 	    http);
 	break;
     case LOG_TCP_REFRESH_MISS:
