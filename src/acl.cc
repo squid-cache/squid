@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.147 1998/03/07 23:43:00 rousskov Exp $
+ * $Id: acl.cc,v 1.148 1998/03/16 22:26:45 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ static wordlist *aclDumpUnimplemented(void);
 static int checkARP(u_long ip, char *eth);
 static int decode_eth(const char *asc, char *eth);
 static int aclMatchArp(void *dataptr, struct in_addr c);
-static const char *aclDumpArp(acl_arp_data *);
+static const char *aclDumpArpList(acl_arp_data *);
 #endif
 
 #if defined(USE_SPLAY_TREE)
@@ -2545,7 +2545,7 @@ checkARP(u_long ip, char *eth)
 }
 
 static const char *
-aclDumpArp(acl_arp_data * data)
+aclDumpArpList(acl_arp_data * data)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
