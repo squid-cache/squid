@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.11 2001/08/12 10:20:41 adrian Exp $
+ * $Id: store_io_coss.cc,v 1.12 2001/10/24 05:26:22 hno Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -282,7 +282,7 @@ storeCossRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t of
     assert(sio->read.callback_data == NULL);
     sio->read.callback = callback;
     sio->read.callback_data = callback_data;
-    debug(81, 3) ("storeCossRead: offset %d\n", offset);
+    debug(81, 3) ("storeCossRead: offset %ld\n", (long int)offset);
     sio->offset = offset;
     cstate->flags.reading = 1;
     if ((offset + size) > sio->st_size)
@@ -322,7 +322,7 @@ storeCossWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
      */
     assert(sio->e->mem_obj->object_sz != -1);
 
-    debug(81, 3) ("storeCossWrite: offset %d, len %d\n", sio->offset, size);
+    debug(81, 3) ("storeCossWrite: offset %ld, len %lu\n", (long int)sio->offset, (unsigned long int)size);
     diskoffset = sio->swap_filen + sio->offset;
     dest = storeCossMemPointerFromDiskOffset(SD, diskoffset, &membuf);
     assert(dest != NULL);
@@ -416,12 +416,12 @@ storeCossMemBufLock(SwapDir * SD, storeIOState * e)
     for (m = cs->membufs.head; m; m = m->next) {
 	t = m->data;
 	if ((e->swap_filen >= t->diskstart) && (e->swap_filen <= t->diskend)) {
-	    debug(81, 3) ("storeCossMemBufLock: locking %08X, lockcount %d\n", t, t->lockcount);
+	    debug(81, 3) ("storeCossMemBufLock: locking %p, lockcount %d\n", t, t->lockcount);
 	    t->lockcount++;
 	    return;
 	}
     }
-    debug(81, 3) ("storeCossMemBufLock: FAILED to lock %08X\n", e);
+    debug(81, 3) ("storeCossMemBufLock: FAILED to lock %p\n", e);
 }
 
 static void
@@ -441,7 +441,7 @@ storeCossMemBufUnlock(SwapDir * SD, storeIOState * e)
 	t = m->data;
 	if ((e->swap_filen >= t->diskstart) && (e->swap_filen <= t->diskend)) {
 	    t->lockcount--;
-	    debug(81, 3) ("storeCossMemBufUnlock: unlocking %08X, lockcount %d\n", t, t->lockcount);
+	    debug(81, 3) ("storeCossMemBufUnlock: unlocking %p, lockcount %d\n", t, t->lockcount);
 	}
 	if (t->flags.full && !t->flags.writing && !t->lockcount)
 	    storeCossWriteMemBuf(SD, t);
@@ -491,7 +491,7 @@ storeCossWriteMemBufDone(int fd, int errflag, size_t len, void *my_data)
     CossMemBuf *t = my_data;
     CossInfo *cs = (CossInfo *) t->SD->fsdata;
 
-    debug(81, 3) ("storeCossWriteMemBufDone: buf %08X, len %d\n", t, len);
+    debug(81, 3) ("storeCossWriteMemBufDone: buf %p, len %ld\n", t, (long int)len);
     if (errflag)
 	debug(81, 0) ("storeCossMemBufWriteDone: got failure (%d)\n", errflag);
 
@@ -513,7 +513,7 @@ storeCossCreateMemBuf(SwapDir * SD, size_t start,
     newmb = cbdataAlloc(CossMemBuf);
     newmb->diskstart = start;
     debug(81, 3) ("storeCossCreateMemBuf: creating new membuf at %d\n", newmb->diskstart);
-    debug(81, 3) ("storeCossCreateMemBuf: at %08X\n", newmb);
+    debug(81, 3) ("storeCossCreateMemBuf: at %p\n", newmb);
     newmb->diskend = newmb->diskstart + COSS_MEMBUF_SZ - 1;
     newmb->flags.full = 0;
     newmb->flags.writing = 0;

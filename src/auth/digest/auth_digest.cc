@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.9 2001/10/17 19:43:41 hno Exp $
+ * $Id: auth_digest.cc,v 1.10 2001/10/24 05:26:14 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -190,7 +190,7 @@ authenticateDigestNonceNew(void)
     /* the cache's link */
     authDigestNonceLink(newnonce);
     newnonce->flags.incache = 1;
-    debug(29, 5) ("authenticateDigestNonceNew: created nonce %0p at %d\n", newnonce, newnonce->noncedata.creationtime);
+    debug(29, 5) ("authenticateDigestNonceNew: created nonce %p at %ld\n", newnonce, (long int)newnonce->noncedata.creationtime);
     return newnonce;
 }
 
@@ -260,14 +260,14 @@ authenticateDigestNonceCacheCleanup(void *data)
      */
     digest_nonce_h *nonce;
     debug(29, 3) ("authenticateDigestNonceCacheCleanup: Cleaning the nonce cache now\n");
-    debug(29, 3) ("authenticateDigestNonceCacheCleanup: Current time: %d\n",
-	current_time.tv_sec);
+    debug(29, 3) ("authenticateDigestNonceCacheCleanup: Current time: %ld\n",
+	(long int)current_time.tv_sec);
     hash_first(digest_nonce_cache);
     while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
-	debug(29, 3) ("authenticateDigestNonceCacheCleanup: nonce entry  : '%s'\n", nonce->hash.key);
-	debug(29, 4) ("authenticateDigestNonceCacheCleanup: Creation time: %d\n", nonce->noncedata.creationtime);
+	debug(29, 3) ("authenticateDigestNonceCacheCleanup: nonce entry  : %p '%s'\n", nonce, (char *)nonce->hash.key);
+	debug(29, 4) ("authenticateDigestNonceCacheCleanup: Creation time: %ld\n", (long int)nonce->noncedata.creationtime);
 	if (authDigestNonceIsStale(nonce)) {
-	    debug(29, 4) ("authenticateDigestNonceCacheCleanup: Removing nonce %s from cache due to timeout.\n", nonce->hash.key);
+	    debug(29, 4) ("authenticateDigestNonceCacheCleanup: Removing nonce %s from cache due to timeout.\n", (char *)nonce->hash.key);
 	    assert(nonce->flags.incache);
 	    /* invalidate nonce so future requests fail */
 	    nonce->flags.valid = 0;
@@ -286,7 +286,7 @@ authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
     nonce->references++;
-    debug(29, 9) ("authDigestNonceLink: nonce '%d' now at '%d'.\n", nonce, nonce->references);
+    debug(29, 9) ("authDigestNonceLink: nonce '%p' now at '%d'.\n", nonce, nonce->references);
 }
 
 #if NOT_USED
@@ -306,9 +306,9 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
     if (nonce->references > 0) {
 	nonce->references--;
     } else {
-	debug(29, 1) ("authDigestNonceUnlink; Attempt to lower nonce %d refcount below 0!\n", nonce);
+	debug(29, 1) ("authDigestNonceUnlink; Attempt to lower nonce %p refcount below 0!\n", nonce);
     }
-    debug(29, 9) ("authDigestNonceUnlink: nonce '%d' now at '%d'.\n", nonce, nonce->references);
+    debug(29, 9) ("authDigestNonceUnlink: nonce '%p' now at '%d'.\n", nonce, nonce->references);
     if (nonce->references == 0)
 	authenticateDigestNonceDelete(nonce);
 }
@@ -331,7 +331,7 @@ authenticateDigestNonceFindNonce(const char *nonceb64)
     nonce = hash_lookup(digest_nonce_cache, nonceb64);
     if ((nonce == NULL) || (strcmp(nonce->hash.key, nonceb64)))
 	return NULL;
-    debug(29, 9) ("authDigestNonceFindNonce: Found nonce '%d'\n", nonce);
+    debug(29, 9) ("authDigestNonceFindNonce: Found nonce '%p'\n", nonce);
     return nonce;
 }
 
@@ -365,7 +365,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
 	return -1;
     /* has it's max duration expired? */
     if (nonce->noncedata.creationtime + digestConfig->noncemaxduration < current_time.tv_sec) {
-	debug(29, 4) ("authDigestNonceIsStale: Nonce is too old. %d %d %d\n", nonce->noncedata.creationtime, digestConfig->noncemaxduration, current_time.tv_sec);
+	debug(29, 4) ("authDigestNonceIsStale: Nonce is too old. %ld %d %ld\n", (long int)nonce->noncedata.creationtime, (int)digestConfig->noncemaxduration, (long int)current_time.tv_sec);
 	nonce->flags.valid = 0;
 	return -1;
     }
@@ -580,8 +580,8 @@ authDigestCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
 	name, "digest", config->digestAuthRealm,
 	name, "digest", config->authenticateChildren,
 	name, "digest", config->noncemaxuses,
-	name, "digest", config->noncemaxduration,
-	name, "digest", config->nonceGCInterval);
+	name, "digest", (int)config->noncemaxduration,
+	name, "digest", (int)config->nonceGCInterval);
 }
 
 void
@@ -1296,7 +1296,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	 */
 	authDigestUserLinkNonce(auth_user, nonce);
     } else {
-	debug(29, 9) ("authDigestDecodeAuth: Found user '%s' in the user cache as '%d'\n", username, auth_user);
+	debug(29, 9) ("authDigestDecodeAuth: Found user '%s' in the user cache as '%p'\n", username, auth_user);
 	digest_user = auth_user->scheme_data;
 	xfree(username);
     }
@@ -1308,7 +1308,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
     node = dlinkNodeNew();
     dlinkAdd(auth_user_request, node, &auth_user->requests);
 
-    debug(29, 9) ("username = '%s'\nrealm = '%s'\nqop = '%s'\nalgorithm = '%s'\nuri = '%s'\nnonce = '%s'\nnc = '%s'\ncnonce = '%s'\nresponse = '%s'\ndigestnonce = '%d'\n",
+    debug(29, 9) ("username = '%s'\nrealm = '%s'\nqop = '%s'\nalgorithm = '%s'\nuri = '%s'\nnonce = '%s'\nnc = '%s'\ncnonce = '%s'\nresponse = '%s'\ndigestnonce = '%p'\n",
 	digest_user->username, digest_request->realm,
 	digest_request->qop, digest_request->algorithm,
 	digest_request->uri, digest_request->nonceb64,

@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.11 2001/10/17 19:33:06 hno Exp $
+ * $Id: aiops.cc,v 1.12 2001/10/24 05:26:18 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -475,8 +475,8 @@ squidaio_queue_request(squidaio_request_t * request)
 	    squid_curtime >= (high_start + 5)) {
 	    debug(43, 1) ("squidaio_queue_request: WARNING - Disk I/O overloading\n");
 	    if (squid_curtime >= (high_start + 15))
-		debug(43, 1) ("squidaio_queue_request: Queue Length: current=%d, high=%d, low=%d, duration=%d\n",
-		    request_queue_len, queue_high, queue_low, squid_curtime - high_start);
+		debug(43, 1) ("squidaio_queue_request: Queue Length: current=%d, high=%d, low=%d, duration=%ld\n",
+		    request_queue_len, queue_high, queue_low, (long int) (squid_curtime - high_start));
 	    last_warn = squid_curtime;
 	}
     } else {
