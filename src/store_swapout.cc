@@ -15,10 +15,7 @@ storeSwapOutStart(StoreEntry * e)
     swapout_ctrl_t *ctrlp;
     LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN);
     storeLockObject(e);
-#if !MONOTONIC_STORE
-    if ((e->swap_file_number = storeGetUnusedFileno()) < 0)
-#endif
-	e->swap_file_number = storeDirMapAllocate();
+    e->swap_file_number = storeDirMapAllocate();
     storeSwapFullPath(e->swap_file_number, swapfilename);
     ctrlp = xmalloc(sizeof(swapout_ctrl_t));
     ctrlp->swapfilename = xstrdup(swapfilename);
@@ -42,15 +39,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	    flag);
 	e->swap_status = SWAPOUT_NONE;
 	if (e->swap_file_number > -1) {
-#if MONOTONIC_STORE
-#if USE_ASYNC_IO
-	    safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
-#else
-	    unlinkdUnlink(storeSwapFullPath(e->swap_file_number, NULL));
-#endif
-#else
-	    storePutUnusedFileno(e);
-#endif
+	    storeUnlinkFileno(e->swap_file_number);
 	    e->swap_file_number = -1;
 	}
 	if (flag == DISK_NO_SPACE_LEFT) {

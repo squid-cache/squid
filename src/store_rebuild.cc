@@ -29,12 +29,13 @@ struct storeRebuildState {
     int objcount;		/* # objects successfully reloaded */
     int expcount;		/* # objects expired */
     int linecount;		/* # lines parsed from cache logfile */
+    int statcount;		/* # entries from directory walking */
     int clashcount;		/* # swapfile clashes avoided */
-    int cancelcount;		/* # objects cancelled */
     int dupcount;		/* # duplicates purged */
     int invalid;		/* # bad lines */
     int badflags;		/* # bad e->flags */
     int need_to_validate;
+    int zero_object_len;
     time_t start;
     time_t stop;
 } RebuildState;
@@ -58,15 +59,16 @@ storeRebuildFromDirectory(rebuild_dir * d)
     LOCAL_ARRAY(char, hdr_buf, DISK_PAGE_SIZE);
     StoreEntry *e = NULL;
     StoreEntry tmpe;
+    cache_key key[MD5_DIGEST_CHARS];
     int sfileno = 0;
     int count;
     int size;
     struct stat fst;
-    static int filecount;
     int hdr_len;
     int fd = -1;
     tlv *tlv_list;
     tlv *t;
+    double x;
     assert(d != NULL);
     debug(20, 3) ("storeRebuildFromDirectory: DIR #%s\n", d->dirn);
     for (count = 0; count < d->speed; count++) {
@@ -88,8 +90,9 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    fd = -1;
 	    continue;
 	}
-	if ((++filecount & 0x3FFF) == 0)
-	    debug(20, 1) ("  %7d files processed so far.\n", RebuildState.linecount);
+	if ((++RebuildState.statcount & 0x3FFF) == 0)
+	    debug(20, 1) ("  %7d files opened so far.\n",
+		RebuildState.statcount);
 	debug(20, 9) ("file_in: fd=%d %08x\n", fd, sfileno);
 	if (read(fd, hdr_buf, DISK_PAGE_SIZE) < 0) {
 	    debug(20, 1) ("storeRebuildFromDirectory: read(FD %d): %s\n",
@@ -104,18 +107,20 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	tlv_list = storeSwapMetaUnpack(hdr_buf, &hdr_len);
 	if (tlv_list == NULL) {
 	    debug(20, 1) ("storeRebuildFromDirectory: failed to get meta data\n");
-	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    storeUnlinkFileno(sfileno);
 	    continue;
 	}
-	debug(20, 1) ("storeRebuildFromDirectory: successful swap meta unpacking\n");
-	storeKeyFree(tmpe.key);
+	debug(20, 3) ("storeRebuildFromDirectory: successful swap meta unpacking\n");
+	memset(key, '\0', MD5_DIGEST_CHARS);
 	memset(&tmpe, '\0', sizeof(StoreEntry));
 	for (t = tlv_list; t; t = t->next) {
 	    switch (t->type) {
 	    case STORE_META_KEY:
-		tmpe.key = storeKeyDup(t->value);
+		assert(t->length == MD5_DIGEST_CHARS);
+		xmemcpy(key, t->value, MD5_DIGEST_CHARS);
 		break;
 	    case STORE_META_STD:
+		assert(t->length == STORE_HDR_METASIZE);
 		xmemcpy(&tmpe.timestamp, t->value, STORE_HDR_METASIZE);
 		break;
 	    default:
@@ -124,29 +129,34 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	}
 	storeSwapTLVFree(tlv_list);
 	tlv_list = NULL;
-	if (tmpe.key == NULL) {
+	if (storeKeyNull(key)) {
 	    debug(20, 1) ("storeRebuildFromDirectory: NULL key\n");
-	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    storeUnlinkFileno(sfileno);
 	    continue;
 	}
+	tmpe.key = key;
 	if (tmpe.object_len == 0) {
-	    debug(20, 1) ("storeRebuildFromDirectory: ZERO object length\n");
-	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    RebuildState.invalid++;
+	    x = log(++RebuildState.zero_object_len) / log(10.0);
+	    if (0.0 == x - (double) (int) x)
+		debug(20, 1) ("WARNING: %d swapfiles found with ZERO length\n",
+		    RebuildState.zero_object_len);
+	    storeUnlinkFileno(sfileno);
 	    continue;
 	}
 	/* check sizes */
 	if (hdr_len + tmpe.object_len != fst.st_size) {
 	    debug(20, 1) ("storeRebuildFromDirectory: SIZE MISMATCH %d+%d!=%d\n",
 		hdr_len, tmpe.object_len, fst.st_size);
-	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    storeUnlinkFileno(sfileno);
 	    continue;
 	}
 	if (EBIT_TEST(tmpe.flag, KEY_PRIVATE)) {
-	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
+	    storeUnlinkFileno(sfileno);
 	    RebuildState.badflags++;
 	    continue;
 	}
-	if ((e = storeGet(tmpe.key)) != NULL) {
+	if ((e = storeGet(key)) != NULL) {
 	    /* URL already exists, this swapfile not being used */
 	    /* junk old, load new */
 	    storeRelease(e);	/* release old entry */
@@ -154,7 +164,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	}
 	RebuildState.objcount++;
 	storeEntryDump(&tmpe, 5);
-	e = storeAddDiskRestore(tmpe.key,
+	e = storeAddDiskRestore(key,
 	    sfileno,
 	    (int) tmpe.object_len,
 	    tmpe.expires,
@@ -200,7 +210,8 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	    continue;
 	}
 	if ((++RebuildState.linecount & 0x3FFF) == 0)
-	    debug(20, 1) ("  %7d Entries read so far.\n", RebuildState.linecount);
+	    debug(20, 1) ("  %7d Entries read so far.\n",
+		RebuildState.linecount);
 	if (!storeDirValidFileno(s.swap_file_number)) {
 	    RebuildState.invalid++;
 	    continue;
@@ -581,11 +592,12 @@ storeRebuildComplete(void)
     debug(20, 1) ("Finished rebuilding storage disk.\n");
     debug(20, 1) ("  %7d Entries read from previous logfile.\n",
 	RebuildState.linecount);
+    debug(20, 1) ("  %7d Entries scanned from swap files.\n",
+	RebuildState.statcount);
     debug(20, 1) ("  %7d Invalid entries.\n", RebuildState.invalid);
     debug(20, 1) ("  %7d With invalid flags.\n", RebuildState.badflags);
     debug(20, 1) ("  %7d Objects loaded.\n", RebuildState.objcount);
     debug(20, 1) ("  %7d Objects expired.\n", RebuildState.expcount);
-    debug(20, 1) ("  %7d Objects cancelled.\n", RebuildState.cancelcount);
     debug(20, 1) ("  %7d Duplicate URLs purged.\n", RebuildState.dupcount);
     debug(20, 1) ("  %7d Swapfile clashes avoided.\n", RebuildState.clashcount);
     debug(20, 1) ("  Took %d seconds (%6.1lf objects/sec).\n",
@@ -599,6 +611,7 @@ storeRebuildStart(void)
 {
     rebuild_dir *d;
     int clean = 0;
+    int zero = 0;
     FILE *fp;
     int i;
     memset(&RebuildState, '\0', sizeof(RebuildState));
@@ -613,8 +626,8 @@ storeRebuildStart(void)
 	 * use storeRebuildFromDirectory() to open up each file
 	 * and suck in the meta data.
 	 */
-	fp = storeDirOpenTmpSwapLog(i, &clean);
-	if (fp == NULL) {
+	fp = storeDirOpenTmpSwapLog(i, &clean, &zero);
+	if (fp == NULL || zero) {
 	    d->rebuild_func = storeRebuildFromDirectory;
 	} else {
 	    d->rebuild_func = storeRebuildFromSwapLog;

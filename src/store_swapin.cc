@@ -108,4 +108,3 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     xfree(ctrlp->path);
     xfree(ctrlp);
 }
-

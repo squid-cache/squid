@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.375 1998/02/04 00:18:04 wessels Exp $
+ * $Id: store.cc,v 1.376 1998/02/04 23:41:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -708,7 +708,10 @@ storeRelease(StoreEntry * e)
 	return;
     }
 #if USE_ASYNC_IO
-    aioCancel(-1, e);		/* Make sure all forgotten async ops are cancelled */
+    /*
+     * Make sure all forgotten async ops are cancelled
+     */
+    aioCancel(-1, e);
 #else
     if (store_rebuilding) {
 	debug(20, 2) ("storeRelease: Delaying release until store is rebuilt: '%s'\n",
@@ -722,15 +725,7 @@ storeRelease(StoreEntry * e)
 #endif
     storeLog(STORE_LOG_RELEASE, e);
     if (e->swap_file_number > -1) {
-#if MONOTONIC_STORE
-#if USE_ASYNC_IO
-	safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
-#else
-	unlinkdUnlink(storeSwapFullPath(e->swap_file_number, NULL));
-#endif
-#else
-	storePutUnusedFileno(e);
-#endif
+	storeUnlinkFileno(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
 	    storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
 	storeDirSwapLog(e, SWAP_LOG_DEL);
@@ -828,6 +823,7 @@ storeInitHashValues(void)
 void
 storeInit(void)
 {
+    storeKeyInit();
     storeInitHashValues();
     store_table = hash_create(storeKeyHashCmp,
 	store_hash_buckets, storeKeyHashHash);
@@ -988,50 +984,6 @@ storeTimestampsSet(StoreEntry * entry)
     entry->timestamp = served_date;
 }
 
-#define FILENO_STACK_SIZE 128
-static int fileno_stack[FILENO_STACK_SIZE];
-
-#if !MONOTONIC_STORE
-int
-storeGetUnusedFileno(void)
-{
-    int fn;
-    if (fileno_stack_count < 1)
-	return -1;
-    fn = fileno_stack[--fileno_stack_count];
-    assert(!storeDirMapBitTest(fn));
-    storeDirMapBitSet(fn);
-    return fn;
-}
-
-void
-storePutUnusedFileno(StoreEntry * e)
-{
-    assert(storeDirMapBitTest(e->swap_file_number));
-    storeDirMapBitReset(e->swap_file_number);
-    /* If we're still rebuilding the swap state, then we need to avoid the */
-    /* race condition where a new object gets pulled in, it expires, gets */
-    /* its swapfileno added to the stack, and then that swapfileno gets */
-    /* claimed by the rebuild. Must still remove the file though in any */
-    /* event to avoid serving up the wrong data.  This will leave us with */
-    /* a URL pointing to no file at all, but that's okay since it'll fail */
-    /* and get removed later anyway. */
-    if (store_rebuilding) {
-	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
-	    safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
-	return;
-    }
-    if (fileno_stack_count < FILENO_STACK_SIZE)
-	fileno_stack[fileno_stack_count++] = e->swap_file_number;
-    else
-#if USE_ASYNC_IO
-	safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
-#else
-	unlinkdUnlink(storeSwapFullPath(e->swap_file_number, NULL));
-#endif
-}
-#endif
-
 void
 storeRegisterAbort(StoreEntry * e, STABH * cb, void *data)
 {
@@ -1164,4 +1116,14 @@ storeBufferFlush(StoreEntry * e)
 {
     EBIT_CLR(e->flag, DELAY_SENDING);
     InvokeHandlers(e);
+}
+
+void
+storeUnlinkFileno(int fileno)
+{
+#if USE_ASYNC_IO
+    safeunlink(storeSwapFullPath(fileno, NULL), 1);
+#else
+    unlinkdUnlink(storeSwapFullPath(fileno, NULL));
+#endif
 }
