@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.73 1998/08/27 06:28:59 wessels Exp $
+ * $Id: typedefs.h,v 1.74 1998/09/14 21:28:18 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -131,6 +131,7 @@ typedef struct _MemObject MemObject;
 typedef struct _StoreEntry StoreEntry;
 typedef struct _SwapDir SwapDir;
 typedef struct _request_flags request_flags;
+typedef struct _store_flags store_flags;
 typedef struct _request_t request_t;
 typedef struct _AccessLogEntry AccessLogEntry;
 typedef struct _cachemgr_passwd cachemgr_passwd;

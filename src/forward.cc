@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.26 1998/09/01 23:31:23 wessels Exp $
+ * $Id: forward.cc,v 1.27 1998/09/14 21:28:02 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -260,10 +260,10 @@ fwdDispatch(FwdState * fwdState)
 	fwdState->client_fd,
 	RequestMethodStr[request->method],
 	storeUrl(entry));
-    /*assert(!EBIT_TEST(entry->flag, ENTRY_DISPATCHED)); */
+    /*assert(!entry->flags.entry_dispatched); */
     assert(entry->ping_status != PING_WAITING);
     assert(entry->lock_count);
-    EBIT_SET(entry->flag, ENTRY_DISPATCHED);
+    entry->flags.entry_dispatched = 1;
     netdbPingSite(request->host);
     /*
      * Assert that server_fd is set.  This is to guarantee that fwdState
@@ -412,7 +412,7 @@ void
 fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
 {
 #ifdef PPNR_WIP
-    assert(EBIT_TEST(fwdState->entry->flag, ENTRY_FWD_HDR_WAIT));
+    assert(fwdState->entry->flags.entry_fwd_hdr_wait);
 #endif /* PPNR_WIP */
     debug(17, 3) ("fwdFail: %s \"%s\"\n\t%s\n",
 	err_type_str[err_code],

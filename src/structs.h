@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.220 1998/09/11 17:07:50 wessels Exp $
+ * $Id: structs.h,v 1.221 1998/09/14 21:28:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1172,6 +1172,31 @@ struct _MemObject {
     size_t swap_hdr_sz;
 };
 
+struct _store_flags {
+    /*
+     * These are for StoreEntry->flag, which is defined as a SHORT
+     *
+     * NOTE: These flags are written to swap.state, so think very carefully
+     * about deleting or re-assigning!
+     */
+    int entry_special:1;
+    int entry_revalidate:1;
+    int delay_sending:1;
+    int release_request:1;
+    int refresh_request:1;
+    int entry_cachable:1;
+    int entry_dispatched:1;
+    int key_private:1;
+#ifndef PPNR_WIP
+    int entry_unused_08:1;
+#else
+    int entry_fwd_hdr_wait:1;
+#endif				/* PPNR_WIP */
+    int entry_negcached:1;
+    int entry_validated:1;
+    int entry_bad_length:1;
+};
+
 struct _StoreEntry {
     /* first two items must be same as hash_link */
     const cache_key *key;
@@ -1183,7 +1208,7 @@ struct _StoreEntry {
     time_t lastmod;
     size_t swap_file_sz;
     u_short refcount;
-    u_short flag;
+    store_flags flags;
     int swap_file_number;
     dlink_node lru;
     u_short lock_count;		/* Assume < 65536! */
@@ -1459,7 +1484,7 @@ struct _storeSwapLogData {
     time_t lastmod;
     size_t swap_file_sz;
     u_short refcount;
-    u_short flags;
+    store_flags flags;
     unsigned char key[MD5_DIGEST_CHARS];
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.47 1998/09/04 23:05:03 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.48 1998/09/14 21:28:15 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -99,7 +99,7 @@ static StoreEntry *storeAddDiskRestore(const cache_key * key,
     time_t lastref,
     time_t lastmod,
     u_num32 refcount,
-    u_num32 flags,
+    store_flags flags,
     int clean);
 static AIOCB storeValidateComplete;
 
@@ -197,7 +197,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    storeUnlinkFileno(sfileno);
 	    continue;
 	}
-	if (EBIT_TEST(tmpe.flag, KEY_PRIVATE)) {
+	if (tmpe.flags.key_private) {
 	    storeUnlinkFileno(sfileno);
 	    RebuildState.badflags++;
 	    continue;
@@ -224,7 +224,7 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	    tmpe.lastref,
 	    tmpe.lastmod,
 	    tmpe.refcount,	/* refcount */
-	    tmpe.flag,		/* flags */
+	    tmpe.flags,		/* flags */
 	    d->clean);
     }
     return count;
@@ -274,7 +274,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 		 */
 		storeExpireNow(e);
 		storeSetPrivateKey(e);
-		EBIT_SET(e->flag, RELEASE_REQUEST);
+		e->flags.release_request = 1;
 		if (e->swap_file_number > -1) {
 		    storeDirMapBitReset(e->swap_file_number);
 		    e->swap_file_number = -1;
@@ -298,7 +298,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	    RebuildState.invalid++;
 	    continue;
 	}
-	if (EBIT_TEST(s.flags, KEY_PRIVATE)) {
+	if (s.flags.key_private) {
 	    RebuildState.badflags++;
 	    continue;
 	}
@@ -314,13 +314,17 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	    continue;
 	} else if (used && e && e->swap_file_number == s.swap_file_number) {
 	    /* swapfile taken, same URL, newer, update meta */
-	    /* XXX what if e->store_status != STORE_OK? */
-	    e->lastref = s.timestamp;
-	    e->timestamp = s.timestamp;
-	    e->expires = s.expires;
-	    e->lastmod = s.lastmod;
-	    e->flag |= s.flags;
-	    e->refcount += s.refcount;
+	    if (e->store_status == STORE_OK) {
+	        e->lastref = s.timestamp;
+	        e->timestamp = s.timestamp;
+	        e->expires = s.expires;
+	        e->lastmod = s.lastmod;
+	        e->flags = s.flags;
+	        e->refcount += s.refcount;
+	    } else {
+		debug_trap("storeRebuildFromSwapLog: bad condition");
+		debug(20,1)("\tSee %s:%d\n", __FILE__, __LINE__);
+	    }
 	    continue;
 	} else if (used) {
 	    /* swapfile in use, not by this URL, log entry is newer */
@@ -352,7 +356,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	    /* junk old, load new */
 	    storeExpireNow(e);
 	    storeSetPrivateKey(e);
-	    EBIT_SET(e->flag, RELEASE_REQUEST);
+	    e->flags.release_request = 1;
 	    if (e->swap_file_number > -1) {
 		storeDirMapBitReset(e->swap_file_number);
 		e->swap_file_number = -1;
@@ -541,7 +545,7 @@ storeAddDiskRestore(const cache_key * key,
     time_t lastref,
     time_t lastmod,
     u_num32 refcount,
-    u_num32 flags,
+    store_flags flags,
     int clean)
 {
     StoreEntry *e = NULL;
@@ -561,12 +565,12 @@ storeAddDiskRestore(const cache_key * key,
     e->expires = expires;
     e->lastmod = lastmod;
     e->refcount = refcount;
-    e->flag = flags;
-    EBIT_SET(e->flag, ENTRY_CACHABLE);
-    EBIT_CLR(e->flag, RELEASE_REQUEST);
-    EBIT_CLR(e->flag, KEY_PRIVATE);
+    e->flags = flags;
+    e->flags.entry_cachable = 1;
+    e->flags.release_request = 0;
+    e->flags.key_private = 0;
     e->ping_status = PING_NONE;
-    EBIT_CLR(e->flag, ENTRY_VALIDATED);
+    e->flags.entry_validated = 0;
     storeDirMapBitSet(e->swap_file_number);
     storeHashInsert(e, key);	/* do it after we clear KEY_PRIVATE */
     return e;
@@ -596,7 +600,7 @@ storeCleanup(void *datanotused)
     while (NULL != (link_ptr = link_next)) {
 	link_next = link_ptr->next;
 	e = (StoreEntry *) link_ptr;
-	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
+	if (e->flags.entry_validated)
 	    continue;
 	/*
 	 * Calling storeRelease() has no effect because we're
@@ -627,7 +631,7 @@ storeCleanup(void *datanotused)
 		continue;
 	    }
 	}
-	EBIT_SET(e->flag, ENTRY_VALIDATED);
+	e->flags.entry_validated = 1;
 	/* Only set the file bit if we know its a valid entry */
 	/* otherwise, set it in the validation procedure */
 	storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, 1);
@@ -646,9 +650,9 @@ storeValidate(StoreEntry * e, STVLDCB * callback, void *callback_data, void *tag
 #if !USE_ASYNC_IO
     int x;
 #endif
-    assert(!EBIT_TEST(e->flag, ENTRY_VALIDATED));
+    assert(!e->flags.entry_validated);
     if (e->swap_file_number < 0) {
-	EBIT_CLR(e->flag, ENTRY_VALIDATED);
+	e->flags.entry_validated = 0;
 	callback(callback_data, 0, 0);
 	return;
     }
@@ -692,9 +696,9 @@ storeValidateComplete(int fd, void *data, int retcode, int errcode)
 	retcode = stat(path, sb);
     }
     if (retcode < 0 || sb->st_size == 0 || sb->st_size != e->swap_file_sz) {
-	EBIT_CLR(e->flag, ENTRY_VALIDATED);
+	e->flags.entry_validated = 0;
     } else {
-	EBIT_SET(e->flag, ENTRY_VALIDATED);
+	e->flags.entry_validated = 1;
 	storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, 1);
     }
     errno = errcode;

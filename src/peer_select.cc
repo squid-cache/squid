@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.79 1998/08/27 06:28:28 wessels Exp $
+ * $Id: peer_select.cc,v 1.80 1998/09/14 21:28:08 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
     assert(direct != DIRECT_YES);
     if (!request->flags.hierarchical && direct != DIRECT_NO)
 	return 0;
-    if (EBIT_TEST(entry->flag, KEY_PRIVATE) && !neighbors_do_private_keys)
+    if (entry->flags.key_private && !neighbors_do_private_keys)
 	if (direct != DIRECT_NO)
 	    return 0;
     n = neighborsCount(request);

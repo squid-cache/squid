@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.137 1998/09/04 23:04:47 wessels Exp $
+ * $Id: gopher.cc,v 1.138 1998/09/14 21:28:04 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -763,7 +763,7 @@ gopherSendRequest(int fd, void *data)
 	gopherSendComplete,
 	data,
 	memFree4K);
-    if (EBIT_TEST(gopherState->entry->flag, ENTRY_CACHABLE))
+    if (gopherState->entry->flags.entry_cachable)
 	storeSetPublicKey(gopherState->entry);	/* Make it public */
 }
 

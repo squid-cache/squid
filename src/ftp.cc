@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.250 1998/09/04 23:04:46 wessels Exp $
+ * $Id: ftp.cc,v 1.251 1998/09/14 21:28:03 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2235,7 +2235,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     storeBufferFlush(e);
     reply->hdr_sz = e->mem_obj->inmem_hi;
     storeTimestampsSet(e);
-    if (EBIT_TEST(e->flag, ENTRY_CACHABLE))
+    if (e->flags.entry_cachable)
 	storeSetPublicKey(e);
 }
 

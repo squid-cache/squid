@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.126 1998/08/30 05:21:40 wessels Exp $
+ * $Id: enums.h,v 1.127 1998/09/14 21:28:01 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -435,31 +435,6 @@ typedef enum {
     PD_DISABLED,		/* do not use/validate the digest */
     PD_INIT_PENDING
 } peer_cd_t;
-
-/*
- * These are for StoreEntry->flag, which is defined as a SHORT
- *
- * NOTE: These flags are written to swap.state, so think very carefully
- * about deleting or re-assigning!
- */
-enum {
-    ENTRY_SPECIAL,
-    ENTRY_REVALIDATE,
-    DELAY_SENDING,
-    RELEASE_REQUEST,
-    REFRESH_REQUEST,
-    ENTRY_CACHABLE,
-    ENTRY_DISPATCHED,
-    KEY_PRIVATE,
-#ifndef PPNR_WIP
-    ENTRY_UNUSED_08,
-#else
-    ENTRY_FWD_HDR_WAIT,
-#endif				/* PPNR_WIP */
-    ENTRY_NEGCACHED,
-    ENTRY_VALIDATED,
-    ENTRY_BAD_LENGTH
-};
 
 enum {
     HTTP_PROXYING,

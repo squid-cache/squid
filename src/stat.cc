@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.286 1998/09/10 16:03:25 wessels Exp $
+ * $Id: stat.cc,v 1.287 1998/09/14 21:28:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -47,7 +47,6 @@ typedef struct {
 
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
-static const char *describeFlags(const StoreEntry *);
 static const char *describeTimestamps(const StoreEntry *);
 static void statAvgTick(void *notused);
 static void statAvgDump(StoreEntry *, int minutes, int hours);
@@ -196,34 +195,33 @@ describeStatuses(const StoreEntry * entry)
     return buf;
 }
 
-static const char *
-describeFlags(const StoreEntry * entry)
+const char *
+storeEntryFlags(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
-    int flags = (int) entry->flag;
     char *t;
     buf[0] = '\0';
-    if (EBIT_TEST(flags, ENTRY_SPECIAL))
+    if (entry->flags.entry_special)
 	strcat(buf, "SPECIAL,");
-    if (EBIT_TEST(flags, ENTRY_REVALIDATE))
+    if (entry->flags.entry_revalidate)
 	strcat(buf, "REVALIDATE,");
-    if (EBIT_TEST(flags, DELAY_SENDING))
+    if (entry->flags.delay_sending)
 	strcat(buf, "DELAY_SENDING,");
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
+    if (entry->flags.release_request)
 	strcat(buf, "RELEASE_REQUEST,");
-    if (EBIT_TEST(flags, REFRESH_REQUEST))
+    if (entry->flags.refresh_request)
 	strcat(buf, "REFRESH_REQUEST,");
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
+    if (entry->flags.entry_cachable)
 	strcat(buf, "CACHABLE,");
-    if (EBIT_TEST(flags, ENTRY_DISPATCHED))
+    if (entry->flags.entry_dispatched)
 	strcat(buf, "DISPATCHED,");
-    if (EBIT_TEST(flags, KEY_PRIVATE))
+    if (entry->flags.key_private)
 	strcat(buf, "PRIVATE,");
-    if (EBIT_TEST(flags, ENTRY_NEGCACHED))
+    if (entry->flags.entry_negcached)
 	strcat(buf, "NEGCACHED,");
-    if (EBIT_TEST(flags, ENTRY_VALIDATED))
+    if (entry->flags.entry_validated)
 	strcat(buf, "VALIDATED,");
-    if (EBIT_TEST(flags, ENTRY_BAD_LENGTH))
+    if (entry->flags.entry_bad_length)
 	strcat(buf, "BAD_LENGTH,");
     if ((t = strrchr(buf, ',')))
 	*t = '\0';
@@ -253,7 +251,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	storeAppendPrintf(s, "\t%s %s\n",
 	    RequestMethodStr[mem->method], mem->log_url);
     storeAppendPrintf(s, "\t%s\n", describeStatuses(e));
-    storeAppendPrintf(s, "\t%s\n", describeFlags(e));
+    storeAppendPrintf(s, "\t%s\n", storeEntryFlags(e));
     storeAppendPrintf(s, "\t%s\n", describeTimestamps(e));
     storeAppendPrintf(s, "\t%d locks, %d clients, %d refs\n",
 	(int) e->lock_count,

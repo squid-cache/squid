@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.47 1998/09/14 15:46:48 wessels Exp $
+ * $Id: peer_digest.cc,v 1.48 1998/09/14 21:28:07 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -274,7 +274,7 @@ peerDigestRequest(peer * p)
     }
     e = fetch->entry = storeCreateEntry(url, url, req->flags, req->method);
     debug(72, 5) ("peerDigestRequest: new entry is private: %d\n",
-	(int) EBIT_TEST(e->flag, KEY_PRIVATE));
+	(int) e->flags.key_private);
     storeClientListAdd(e, fetch);
     /* set lastmod to trigger IMS request if possible */
     if (old_e)

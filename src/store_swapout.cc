@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.30 1998/09/10 19:50:58 wessels Exp $
+ * $Id: store_swapout.cc,v 1.31 1998/09/14 21:28:16 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -140,7 +140,7 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: store_status = %s\n",
 	storeStatusStr[e->store_status]);
     if (e->store_status == STORE_ABORTED) {
-	assert(EBIT_TEST(e->flag, RELEASE_REQUEST));
+	assert(e->flags.release_request);
 	storeSwapOutFileClose(e);
 	return;
     }
@@ -155,7 +155,7 @@ storeCheckSwapOut(StoreEntry * e)
 #if USE_ASYNC_IO
     if (mem->inmem_hi < mem->swapout.queue_offset) {
 	storeAbort(e, 0);
-	assert(EBIT_TEST(e->flag, RELEASE_REQUEST));
+	assert(e->flags.release_request);
 	storeSwapOutFileClose(e);
 	return;
     }
@@ -376,5 +376,5 @@ storeSwapOutAble(const StoreEntry * e)
     if (e->mem_obj->inmem_lo > 0)
 	return 0;
     /* swapout.fd == -1 && inmem_lo == 0 */
-    return EBIT_TEST(e->flag, ENTRY_CACHABLE);
+    return e->flags.entry_cachable;
 }
