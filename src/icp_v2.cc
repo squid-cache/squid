@@ -19,7 +19,7 @@ icpLogIcp(icpUdpData * queue)
     if (!Config.onoff.log_udp)
 	return;
     memset(&al, '\0', sizeof(AccessLogEntry));
-    al.icp.opcode = ICP_OP_QUERY;
+    al.icp.opcode = ICP_QUERY;
     al.url = url;
     al.cache.caddr = queue->address.sin_addr;
     al.cache.size = queue->len;
@@ -78,7 +78,7 @@ icpCreateMessage(
     char *urloffset = NULL;
     int buf_len;
     buf_len = sizeof(icp_common_t) + strlen(url) + 1;
-    if (opcode == ICP_OP_QUERY)
+    if (opcode == ICP_QUERY)
 	buf_len += sizeof(u_num32);
     buf = xcalloc(buf_len, 1);
     headerp = (icp_common_t *) (void *) buf;
@@ -90,7 +90,7 @@ icpCreateMessage(
     headerp->pad = htonl(pad);
     headerp->shostid = htonl(theOutICPAddr.s_addr);
     urloffset = buf + sizeof(icp_common_t);
-    if (opcode == ICP_OP_QUERY)
+    if (opcode == ICP_QUERY)
 	urloffset += sizeof(u_num32);
     xmemcpy(urloffset, url, strlen(url));
     return buf;
@@ -116,7 +116,7 @@ icpCreateHitObjMessage(
     MemObject *m = entry->mem_obj;
     assert(m != NULL);
     buf_len = sizeof(icp_common_t) + strlen(url) + 1 + 2 + entry->object_len;
-    if (opcode == ICP_OP_QUERY)
+    if (opcode == ICP_QUERY)
 	buf_len += sizeof(u_num32);
     buf = xcalloc(buf_len, 1);
     headerp = (icp_common_t *) (void *) buf;
@@ -154,7 +154,7 @@ icpUdpSend(int fd,
 {
     icpUdpData *data = xcalloc(1, sizeof(icpUdpData));
     debug(12, 4) ("icpUdpSend: Queueing %s for %s\n",
-	IcpOpcodeStr[msg->opcode],
+	icp_opcode_str[msg->opcode],
 	inet_ntoa(to->sin_addr));
     data->address = *to;
     data->msg = msg;
@@ -233,11 +233,11 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     header.pad = ntohl(headerp->pad);
 
     switch (header.opcode) {
-    case ICP_OP_QUERY:
+    case ICP_QUERY:
 	/* We have a valid packet */
 	url = buf + sizeof(header) + sizeof(u_num32);
 	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
-	    reply = icpCreateMessage(ICP_OP_ERR, 0, url, header.reqnum, 0);
+	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, PROTO_NONE);
 	    break;
 	}
@@ -248,7 +248,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    debug(12, 2) ("icpHandleIcpV2: Access Denied for %s by %s.\n",
 		inet_ntoa(from.sin_addr), AclMatchedName);
 	    if (clientdbDeniedPercent(from.sin_addr) < 95) {
-		reply = icpCreateMessage(ICP_OP_DENIED, 0, url, header.reqnum, 0);
+		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
 		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, icp_request->protocol);
 	    }
 	    break;
@@ -263,12 +263,12 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	/* The peer is allowed to use this cache */
 	key = storeKeyPublic(url, METHOD_GET);
 	entry = storeGet(key);
-	debug(12, 5) ("icpHandleIcpV2: OPCODE %s\n", IcpOpcodeStr[header.opcode]);
+	debug(12, 5) ("icpHandleIcpV2: OPCODE %s\n", icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
 	    pkt_len = sizeof(icp_common_t) + strlen(url) + 1 + 2 + entry->object_len;
 #if USE_ICP_HIT_OBJ
 	    if (icpCheckUdpHitObj(entry, icp_request, &header, pkt_len)) {
-		reply = icpCreateHitObjMessage(ICP_OP_HIT_OBJ,
+		reply = icpCreateHitObjMessage(ICP_HIT_OBJ,
 		    flags,
 		    url,
 		    header.reqnum,
@@ -278,7 +278,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 		break;
 	    } else {
 #endif
-		reply = icpCreateMessage(ICP_OP_HIT, flags, url, header.reqnum, src_rtt);
+		reply = icpCreateMessage(ICP_HIT, flags, url, header.reqnum, src_rtt);
 		icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
 		break;
 #if USE_ICP_HIT_OBJ
@@ -287,24 +287,24 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	}
 	/* if store is rebuilding, return a UDP_HIT, but not a MISS */
 	if (store_rebuilding && opt_reload_hit_only) {
-	    reply = icpCreateMessage(ICP_OP_MISS_NOFETCH, flags, url, header.reqnum, src_rtt);
+	    reply = icpCreateMessage(ICP_MISS_NOFETCH, flags, url, header.reqnum, src_rtt);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, icp_request->protocol);
 	} else if (hit_only_mode_until > squid_curtime) {
-	    reply = icpCreateMessage(ICP_OP_MISS_NOFETCH, flags, url, header.reqnum, src_rtt);
+	    reply = icpCreateMessage(ICP_MISS_NOFETCH, flags, url, header.reqnum, src_rtt);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS_NOFETCH, icp_request->protocol);
 	} else {
-	    reply = icpCreateMessage(ICP_OP_MISS, flags, url, header.reqnum, src_rtt);
+	    reply = icpCreateMessage(ICP_MISS, flags, url, header.reqnum, src_rtt);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_MISS, icp_request->protocol);
 	}
 	break;
 
-    case ICP_OP_HIT_OBJ:
-    case ICP_OP_HIT:
-    case ICP_OP_SECHO:
-    case ICP_OP_DECHO:
-    case ICP_OP_MISS:
-    case ICP_OP_DENIED:
-    case ICP_OP_MISS_NOFETCH:
+    case ICP_HIT_OBJ:
+    case ICP_HIT:
+    case ICP_SECHO:
+    case ICP_DECHO:
+    case ICP_MISS:
+    case ICP_DENIED:
+    case ICP_MISS_NOFETCH:
 	if (neighbors_do_private_keys && header.reqnum == 0) {
 	    debug(12, 0) ("icpHandleIcpV2: Neighbor %s returned reqnum = 0\n",
 		inet_ntoa(from.sin_addr));
@@ -312,18 +312,18 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    neighbors_do_private_keys = 0;
 	}
 	url = buf + sizeof(header);
-	if (header.opcode == ICP_OP_HIT_OBJ) {
+	if (header.opcode == ICP_HIT_OBJ) {
 	    data = url + strlen(url) + 1;
 	    xmemcpy((char *) &u, data, sizeof(u_short));
 	    data += sizeof(u_short);
 	    data_sz = ntohs(u);
 	    if ((int) data_sz > (len - (data - buf))) {
-		debug(12, 0) ("icpHandleIcpV2: ICP_OP_HIT_OBJ object too small\n");
+		debug(12, 0) ("icpHandleIcpV2: ICP_HIT_OBJ object too small\n");
 		break;
 	    }
 	}
 	debug(12, 3) ("icpHandleIcpV2: %s from %s for '%s'\n",
-	    IcpOpcodeStr[header.opcode],
+	    icp_opcode_str[header.opcode],
 	    inet_ntoa(from.sin_addr),
 	    url);
 	if (neighbors_do_private_keys && header.reqnum)
@@ -334,15 +334,15 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    storeKeyText(key));
 	if ((entry = storeGet(key)) == NULL) {
 	    debug(12, 3) ("icpHandleIcpV2: Ignoring %s for NULL Entry.\n",
-		IcpOpcodeStr[header.opcode]);
+		icp_opcode_str[header.opcode]);
 	} else {
 	    /* call neighborsUdpAck even if ping_status != PING_WAITING */
 	    neighborsUdpAck(url, &header, &from, entry);
 	}
 	break;
 
-    case ICP_OP_INVALID:
-    case ICP_OP_ERR:
+    case ICP_INVALID:
+    case ICP_ERR:
 	break;
 
     default:
@@ -362,7 +362,7 @@ icpPktDump(icp_common_t * pkt)
 
     debug(12, 9) ("opcode:     %3d %s\n",
 	(int) pkt->opcode,
-	IcpOpcodeStr[pkt->opcode]);
+	icp_opcode_str[pkt->opcode]);
     debug(12, 9) ("version: %-8d\n", (int) pkt->version);
     debug(12, 9) ("length:  %-8d\n", (int) ntohs(pkt->length));
     debug(12, 9) ("reqnum:  %-8d\n", ntohl(pkt->reqnum));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.32 1997/11/12 00:09:01 wessels Exp $
+ * $Id: peer_select.cc,v 1.33 1997/11/20 06:25:29 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -385,20 +385,20 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
     icp_opcode op = header->opcode;
     request_t *request = psstate->request;
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
-	IcpOpcodeStr[op],
+	icp_opcode_str[op],
 	storeUrl(psstate->entry));
     psstate->icp.n_recv++;
-    if (op == ICP_OP_MISS || op == ICP_OP_DECHO) {
+    if (op == ICP_MISS || op == ICP_DECHO) {
 	if (type == PEER_PARENT)
 	    peerIcpParentMiss(p, header, psstate);
-    } else if (op == ICP_OP_HIT || op == ICP_OP_HIT_OBJ) {
+    } else if (op == ICP_HIT || op == ICP_HIT_OBJ) {
 	hierarchyNote(&request->hier,
 	    type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT,
 	    &psstate->icp,
 	    p->host);
 	peerSelectCallback(psstate, p);
 	return;
-    } else if (op == ICP_OP_SECHO) {
+    } else if (op == ICP_SECHO) {
 	hierarchyNote(&request->hier,
 	    SOURCE_FASTEST,
 	    &psstate->icp,

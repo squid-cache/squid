@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.95 1997/11/13 05:25:47 wessels Exp $
+#  $Id: Makefile.in,v 1.96 1997/11/20 06:25:24 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -131,6 +131,7 @@ OBJS	 	= \
 		store_dir.o \
 		store_key_sha.o \
 		store_key_url.o \
+		string_arrays.o \
 		tools.o \
 		unlinkd.o \
 		url.o \
@@ -153,6 +154,9 @@ globals.o: globals.c Makefile
 
 globals.c: globals.h mk-globals-c.pl
 	$(PERL) mk-globals-c.pl < globals.h > $@
+
+string_arrays.c: enums.h mk-string-arrays.pl
+	$(PERL) mk-string-arrays.pl < enums.h > $@
 
 client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)

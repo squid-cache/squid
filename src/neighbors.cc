@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.168 1997/11/12 23:47:39 wessels Exp $
+ * $Id: neighbors.cc,v 1.169 1997/11/20 06:25:28 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -377,7 +377,7 @@ neighbors_open(int fd)
 	debug(15, 1) ("getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
     peerRefreshDNS(NULL);
     if (0 == echo_hdr.opcode) {
-	echo_hdr.opcode = ICP_OP_SECHO;
+	echo_hdr.opcode = ICP_SECHO;
 	echo_hdr.version = ICP_VERSION_CURRENT;
 	echo_hdr.length = 0;
 	echo_hdr.reqnum = 0;
@@ -437,7 +437,7 @@ neighborsUdpPing(request_t * request,
 	if (p->icp_port == echo_port) {
 	    debug(15, 4) ("neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    echo_hdr.reqnum = reqnum;
-	    query = icpCreateMessage(ICP_OP_DECHO, 0, url, reqnum, 0);
+	    query = icpCreateMessage(ICP_DECHO, 0, url, reqnum, 0);
 	    icpUdpSend(theOutIcpConnection,
 		&p->in_addr,
 		query,
@@ -453,7 +453,7 @@ neighborsUdpPing(request_t * request,
 	    if (Config.onoff.query_icmp)
 		if (p->icp_version == ICP_VERSION_2)
 		    flags |= ICP_FLAG_SRC_RTT;
-	    query = icpCreateMessage(ICP_OP_QUERY, flags, url, reqnum, 0);
+	    query = icpCreateMessage(ICP_QUERY, flags, url, reqnum, 0);
 	    icpUdpSend(theOutIcpConnection,
 		&p->in_addr,
 		query,
@@ -499,7 +499,7 @@ neighborsUdpPing(request_t * request,
 		to_addr.sin_family = AF_INET;
 		to_addr.sin_addr = ia->in_addrs[ia->cur];
 		to_addr.sin_port = htons(echo_port);
-		query = icpCreateMessage(ICP_OP_SECHO, 0, url, reqnum, 0);
+		query = icpCreateMessage(ICP_SECHO, 0, url, reqnum, 0);
 		icpUdpSend(theOutIcpConnection,
 		    &to_addr,
 		    query,
@@ -531,7 +531,7 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
     }
     p->stats.ack_deficit = 0;
     n = ++p->stats.pings_acked;
-    if ((icp_opcode) header->opcode <= ICP_OP_END)
+    if ((icp_opcode) header->opcode <= ICP_END)
 	p->stats.counts[header->opcode]++;
     if (mem) {
 	rtt = tvSubMsec(mem->start_ping, current_time);
@@ -624,9 +624,9 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
     debug(15, 6) ("neighborsUdpAck: opcode %d '%s'\n", (int) opcode, url);
     if ((p = whichPeer(from)))
 	neighborAlive(p, mem, header);
-    if (opcode > ICP_OP_END)
+    if (opcode > ICP_END)
 	return;
-    opcode_d = IcpOpcodeStr[opcode];
+    opcode_d = icp_opcode_str[opcode];
     /* check if someone is already fetching it */
     if (EBIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
 	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n", url);
@@ -654,7 +654,7 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	ntype = neighborType(p, mem->request);
     if (ignoreMulticastReply(p, mem)) {
 	neighborCountIgnored(p, opcode);
-    } else if (opcode == ICP_OP_SECHO) {
+    } else if (opcode == ICP_SECHO) {
 	/* Received source-ping reply */
 	if (p) {
 	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
@@ -665,7 +665,7 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	    debug(15, 6) ("Source is the first to respond.\n");
 	    mem->icp_reply_callback(NULL, ntype, header, mem->ircb_data);
 	}
-    } else if (opcode == ICP_OP_MISS) {
+    } else if (opcode == ICP_MISS) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else if (ntype != PEER_PARENT) {
@@ -673,14 +673,14 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	} else {
 	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
 	}
-    } else if (opcode == ICP_OP_HIT || opcode == ICP_OP_HIT_OBJ) {
+    } else if (opcode == ICP_HIT || opcode == ICP_HIT_OBJ) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else {
-	    header->opcode = ICP_OP_HIT;
+	    header->opcode = ICP_HIT;
 	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
 	}
-    } else if (opcode == ICP_OP_DECHO) {
+    } else if (opcode == ICP_DECHO) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else if (ntype == PEER_SIBLING) {
@@ -689,7 +689,7 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	} else {
 	    mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
 	}
-    } else if (opcode == ICP_OP_SECHO) {
+    } else if (opcode == ICP_SECHO) {
 	if (p) {
 	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
 	    neighborCountIgnored(p, opcode);
@@ -698,11 +698,11 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	} else {
 	    mem->icp_reply_callback(NULL, ntype, header, mem->ircb_data);
 	}
-    } else if (opcode == ICP_OP_DENIED) {
+    } else if (opcode == ICP_DENIED) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else if (p->stats.pings_acked > 100) {
-	    if (100 * p->stats.counts[ICP_OP_DENIED] / p->stats.pings_acked > 95) {
+	    if (100 * p->stats.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
 		debug(15, 0) ("95%% of replies from '%s' are UDP_DENIED\n", p->host);
 		debug(15, 0) ("Disabling '%s', please check your configuration.\n", p->host);
 		neighborRemove(p);
@@ -711,7 +711,7 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 		neighborCountIgnored(p, opcode);
 	    }
 	}
-    } else if (opcode == ICP_OP_MISS_NOFETCH) {
+    } else if (opcode == ICP_MISS_NOFETCH) {
 	mem->icp_reply_callback(p, ntype, header, mem->ircb_data);
     } else {
 	debug(15, 0) ("neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
@@ -912,7 +912,7 @@ peerCountMcastPeersStart(void *data)
     mem->ircb_data = psstate;
     mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
     p->mcast.reqnum = mem->reqnum;
-    query = icpCreateMessage(ICP_OP_QUERY, 0, url, p->mcast.reqnum, 0);
+    query = icpCreateMessage(ICP_QUERY, 0, url, p->mcast.reqnum, 0);
     icpUdpSend(theOutIcpConnection,
 	&p->in_addr,
 	query,
