@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.333 1999/05/26 04:36:56 wessels Exp $
+ * $Id: protos.h,v 1.334 1999/05/26 06:48:06 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -938,7 +938,6 @@ extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
  * store_dir_ufs.c
  */
 extern OBJH storeUfsDirStats;
-extern int storeUfsFilenoBelongsHere(int, int, int, int);
 extern void storeUfsDirParse(cacheSwap * swap);
 extern void storeUfsDirDump(StoreEntry * entry, const char *name, SwapDir * s);
 extern void storeUfsDirFree(SwapDir *);
