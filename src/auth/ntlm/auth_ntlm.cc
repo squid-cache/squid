@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.13 2001/10/17 12:41:52 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.14 2001/10/17 17:09:08 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -41,6 +41,8 @@
 #include "squid.h"
 #include "auth_ntlm.h"
 
+extern AUTHSSETUP authSchemeSetup_ntlm;
+
 static void
 authenticateStateFree(authenticateStateData * r)
 {
@@ -80,9 +82,9 @@ CBDATA_TYPE(authenticateStateData);
 
 static int authntlm_initialised = 0;
 
-MemPool *ntlm_helper_state_pool = NULL;
-MemPool *ntlm_user_pool = NULL;
-MemPool *ntlm_request_pool = NULL;
+static MemPool *ntlm_helper_state_pool = NULL;
+static MemPool *ntlm_user_pool = NULL;
+static MemPool *ntlm_request_pool = NULL;
 static auth_ntlm_config *ntlmConfig = NULL;
 
 static hash_table *proxy_auth_cache = NULL;
@@ -93,7 +95,7 @@ static hash_table *proxy_auth_cache = NULL;
  *
  */
 
-void
+static void
 authNTLMDone(void)
 {
     debug(29, 2) ("authNTLMDone: shutting down NTLM authentication.\n");
@@ -124,7 +126,7 @@ authNTLMDone(void)
 }
 
 /* free any allocated configuration details */
-void
+static void
 authNTLMFreeConfig(authScheme * scheme)
 {
     if (ntlmConfig == NULL)
@@ -255,14 +257,14 @@ authNTLMInit(authScheme * scheme)
     }
 }
 
-int
+static int
 authenticateNTLMActive()
 {
     return (authntlm_initialised == 1) ? 1 : 0;
 }
 
 
-int
+static int
 authNTLMConfigured()
 {
     if ((ntlmConfig != NULL) && (ntlmConfig->authenticate != NULL) && (ntlmConfig->authenticateChildren != 0) && (ntlmConfig->challengeuses > -1) && (ntlmConfig->challengelifetime > -1)) {
@@ -275,7 +277,7 @@ authNTLMConfigured()
 
 /* NTLM Scheme */
 
-int
+static int
 authenticateNTLMDirection(auth_user_request_t * auth_user_request)
 {
     ntlm_request_t *ntlm_request = auth_user_request->scheme_data;
@@ -301,7 +303,7 @@ authenticateNTLMDirection(auth_user_request_t * auth_user_request)
  * must be first. To ensure that, the configure use --enable-auth=ntlm, anything
  * else.
  */
-void
+static void
 authenticateNTLMFixErrorHeader(auth_user_request_t * auth_user_request, HttpReply * rep, http_hdr_type type, request_t * request)
 {
     ntlm_request_t *ntlm_request;
@@ -341,7 +343,7 @@ authenticateNTLMFixErrorHeader(auth_user_request_t * auth_user_request, HttpRepl
     }
 }
 
-void
+static void
 authNTLMRequestFree(ntlm_request_t * ntlm_request)
 {
     if (!ntlm_request)
@@ -360,7 +362,7 @@ authNTLMRequestFree(ntlm_request_t * ntlm_request)
     memPoolFree(ntlm_request_pool, ntlm_request);
 }
 
-void
+static void
 authNTLMAURequestFree(auth_user_request_t * auth_user_request)
 {
     if (auth_user_request->scheme_data)
@@ -368,7 +370,7 @@ authNTLMAURequestFree(auth_user_request_t * auth_user_request)
     auth_user_request->scheme_data = NULL;
 }
 
-void
+static void
 authenticateNTLMFreeUser(auth_user_t * auth_user)
 {
     dlink_node *link, *tmplink;
@@ -617,7 +619,7 @@ authenticateNTLMStats(StoreEntry * sentry)
 }
 
 /* is a particular challenge still valid ? */
-int
+static int
 authenticateNTLMValidChallenge(ntlm_helper_state_t * helperstate)
 {
     debug(29, 9) ("authenticateNTLMValidChallenge: Challenge is %s\n", helperstate->challenge ? "Valid" : "Invalid");
@@ -627,7 +629,7 @@ authenticateNTLMValidChallenge(ntlm_helper_state_t * helperstate)
 }
 
 /* does our policy call for changing the challenge now? */
-int
+static int
 authenticateNTLMChangeChallenge_p(ntlm_helper_state_t * helperstate)
 {
     /* don't check for invalid challenges just for expiry choices */
@@ -774,7 +776,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 }
 
 /* callback used by stateful helper routines */
-int
+static int
 authenticateNTLMHelperServerAvailable(void *data)
 {
     ntlm_helper_state_t *statedata = data;
@@ -791,7 +793,7 @@ authenticateNTLMHelperServerAvailable(void *data)
     return 0;
 }
 
-void
+static void
 authenticateNTLMHelperServerOnEmpty(void *data)
 {
     ntlm_helper_state_t *statedata = data;
@@ -810,7 +812,7 @@ authenticateNTLMHelperServerOnEmpty(void *data)
 
 
 /* clear the NTLM helper of being reserved for future requests */
-void
+static void
 authenticateNTLMReleaseServer(auth_user_request_t * auth_user_request)
 {
     ntlm_request_t *ntlm_request;
@@ -823,7 +825,7 @@ authenticateNTLMReleaseServer(auth_user_request_t * auth_user_request)
 }
 
 /* clear any connection related authentication details */
-void
+static void
 authenticateNTLMOnCloseConnection(ConnStateData * conn)
 {
     ntlm_request_t *ntlm_request;
@@ -848,7 +850,7 @@ authenticateNTLMOnCloseConnection(ConnStateData * conn)
 }
 
 /* authenticateUserUsername: return a pointer to the username in the */
-char *
+static char *
 authenticateNTLMUsername(auth_user_t * auth_user)
 {
     ntlm_user_t *ntlm_user = auth_user->scheme_data;
@@ -860,7 +862,7 @@ authenticateNTLMUsername(auth_user_t * auth_user)
 /* NTLMLastHeader: return a pointer to the last header used in authenticating
  * the request/conneciton
  */
-const char *
+static const char *
 NTLMLastHeader(auth_user_request_t * auth_user_request)
 {
     ntlm_request_t *ntlm_request;
@@ -875,7 +877,7 @@ NTLMLastHeader(auth_user_request_t * auth_user_request)
  * Auth_user structure.
  */
 
-void
+static void
 authenticateDecodeNTLMAuth(auth_user_request_t * auth_user_request, const char *proxy_auth)
 {
     dlink_node *node;
@@ -895,7 +897,7 @@ authenticateDecodeNTLMAuth(auth_user_request_t * auth_user_request, const char *
     return;
 }
 
-int
+static int
 authenticateNTLMcmpUsername(ntlm_user_t * u1, ntlm_user_t * u2)
 {
     return strcmp(u1->username, u2->username);
@@ -906,7 +908,7 @@ authenticateNTLMcmpUsername(ntlm_user_t * u1, ntlm_user_t * u2)
  * and sends the same response to squid on a single select cycle.
  * Check for this and if found ignore the new link 
  */
-void
+static void
 authenticateProxyAuthCacheAddLink(const char *key, auth_user_t * auth_user)
 {
     auth_user_hash_pointer *proxy_auth_hash;
@@ -928,7 +930,7 @@ authenticateProxyAuthCacheAddLink(const char *key, auth_user_t * auth_user)
 }
 
 
-int
+static int
 authNTLMAuthenticated(auth_user_request_t * auth_user_request)
 {
     ntlm_request_t *ntlm_request = auth_user_request->scheme_data;
