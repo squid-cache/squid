@@ -1,5 +1,5 @@
 
-/* $Id: debug.cc,v 1.12 1996/04/08 18:39:29 wessels Exp $ */
+/* $Id: debug.cc,v 1.13 1996/04/14 03:06:33 wessels Exp $ */
 
 #include "squid.h"
 
@@ -110,7 +110,7 @@ static void debugOpenLog(logfile)
 	return;
     }
     if (debug_log_file)
-	free(debug_log_file);
+	xfree(debug_log_file);
     debug_log_file = xstrdup(logfile);	/* keep a static copy */
     debug_log = fopen(logfile, "a+");
     if (!debug_log) {
