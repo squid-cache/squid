@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.95 2000/06/27 22:06:04 hno Exp $
+ * $Id: store_client.cc,v 1.96 2000/10/09 18:37:10 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -404,7 +404,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
     /*
      * Check the meta data and make sure we got the right object.
      */
-    for (t = tlv_list; t; t = t->next) {
+    for (t = tlv_list; t && swap_object_ok; t = t->next) {
 	switch (t->type) {
 	case STORE_META_KEY:
 	    assert(t->length == MD5_DIGEST_CHARS);
