@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.186 1997/08/25 23:45:27 wessels Exp $
+ * $Id: http.cc,v 1.187 1997/08/26 04:21:19 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -809,7 +809,7 @@ httpBuildRequestHeader(request_t * request,
 	    continue;
 	if (strncasecmp(xbuf, "Proxy-authorization:", 20) == 0)
 	    /* If we're not going to do proxy auth, then it must be passed on */
-	    if (Config.proxyAuth.File)
+	    if (BIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
 		continue;
 	if (strncasecmp(xbuf, "Connection:", 11) == 0)
 	    continue;

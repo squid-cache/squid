@@ -196,7 +196,7 @@
 #define MAX_URL  4096
 #define MAX_LOGIN_SZ  128
 
-/* bitfields for the flags member */
+/* bitfields for request_t->flags */
 #define REQ_RANGE		0x01
 #define REQ_NOCACHE		0x02
 #define REQ_IMS			0x04
@@ -208,6 +208,7 @@
 #define REQ_PROXY_KEEPALIVE	0x100
 #define REQ_PROXYING		0x200
 #define REQ_REFRESH		0x400
+#define REQ_USED_PROXY_AUTH	0x800
 #define PEER_MAX_ADDRESSES 10
 #define RTT_AV_FACTOR      1000
 
