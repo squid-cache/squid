@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.199 2001/11/16 15:59:07 hno Exp $
+ * $Id: enums.h,v 1.200 2001/11/16 17:02:20 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -388,6 +388,7 @@ enum {
     METHOD_BMOVE,
     METHOD_BDELETE,
     METHOD_BPROPFIND,
+    METHOD_BPROPPATCH,
     METHOD_SEARCH,
     METHOD_EXT00,
     METHOD_EXT01,
