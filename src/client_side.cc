@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.8 1996/08/19 22:46:00 wessels Exp $
+ * $Id: client_side.cc,v 1.9 1996/08/20 15:44:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ void clientAccessCheck(icpState, handler)
     requestUnlink(icpState->aclChecklist->request);
     safe_free(icpState->aclChecklist);
     icpState->aclHandler = NULL;
-    (*handler) (icpState, answer);
+    handler(icpState, answer);
 }
 
 void clientAccessCheckDone(icpState, answer)

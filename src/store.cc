@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.84 1996/08/19 23:09:25 wessels Exp $
+ * $Id: store.cc,v 1.85 1996/08/20 15:44:19 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -501,12 +501,9 @@ int storeLockObject(e, handler, data)
      SIH handler;
      void *data;
 {
-    int swap_in_stat = 0;
     int status = 0;
-
     e->lock_count++;
     debug(20, 3, "storeLockObject: locks %d: '%s'\n", e->lock_count, e->key);
-
     if (e->mem_status != NOT_IN_MEMORY)
 	/* ok, its either IN_MEMORY or SWAPPING_IN */
 	debug(20, 5, "storeLockObject: OK: mem_status is %s\n", memStatusStr[e->mem_status]);
@@ -519,27 +516,24 @@ int storeLockObject(e, handler, data)
     else
 	fatal_dump(storeDescribeStatus(e));
     e->lastref = squid_curtime;
-
     /* If the object is NOT_IN_MEMORY, fault it in. */
     if ((e->mem_status == NOT_IN_MEMORY) && (e->swap_status == SWAP_OK)) {
 	/* object is in disk and no swapping daemon running. Bring it in. */
-	if ((swap_in_stat = storeSwapInStart(e, handler, data)) < 0) {
-	    /*
-	     * We couldn't find or couldn't open object's swapfile.
+	if ((status = storeSwapInStart(e, handler, data)) < 0) {
+	    /* We couldn't find or couldn't open object's swapfile.
 	     * So, return a -1 here, indicating that we will treat
 	     * the reference like a MISS_TTL, force a keychange and
 	     storeRelease.  */
 	    e->lock_count--;
 	}
-	status = swap_in_stat;
     } else if (e->mem_status == IN_MEMORY && handler) {
 	/* its already in memory, so call the handler */
-	(*handler) (0, data);
+	handler(0, data);
     } else if (handler) {
 	/* The object is probably in state SWAPPING_IN, not much we can do.
 	 * Instead of returning failure here, we should have a list of complete
 	 * handlers which we could append to... */
-	(*handler) (1, data);
+	handler(1, data);
     }
     return status;
 }
@@ -2632,6 +2626,7 @@ static void storeCreateSwapSubDirs()
     for (j = 0; j < ncache_dirs; j++) {
 	for (i = 0; i < SWAP_DIRECTORIES_L1; i++) {
 	    sprintf(name, "%s/%02X", swappath(j), i);
+	    debug(20, 1, "Making directories in %s\n", name);
 	    if (mkdir(name, 0755) < 0) {
 		if (errno != EEXIST) {
 		    sprintf(tmp_error_buf,

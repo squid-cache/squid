@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.10 1996/08/19 22:46:01 wessels Exp $
+ * $Id: redirect.cc,v 1.11 1996/08/20 15:44:18 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -305,7 +305,7 @@ void redirectStart(cfd, icpState, handler, data)
     if (!icpState)
 	fatal_dump("redirectStart: NULL icpState");
     if (Config.Program.redirect == NULL) {
-	(*handler) (data, NULL);
+	handler(data, NULL);
 	return;
     }
     r = xcalloc(1, sizeof(redirectStateData));
