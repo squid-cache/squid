@@ -758,25 +758,6 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
-#  TAG: ftpget_program
-#	Where to find the 'ftpget' program that retrieves FTP data (HTTP
-#	and Gopher protocol support are built into the cache).
-#
-#	To disable ftpget and the ability to retrieve FTP objects, set
-#	this to "none".  Note that ftpget is automatically disabled for
-#	http_accel mode.
-#
-#ftpget_program @DEFAULT_FTPGET@
-
-#  TAG: ftpget_options
-#	Options for the 'ftpget' program.  Please run 'ftpget' without
-#	any arguments to see a list of options.  The default is
-#	no options.  An example is
-#
-#	ftpget_options -n 60 -R -W
-#
-#ftpget_options
-
 NAME: ftp_user
 TYPE: string
 DEFAULT: Squid@
@@ -1864,7 +1845,33 @@ TYPE: acl_access
 LOC: Config.accessList.AlwaysDirect
 DEFAULT: none
 DOC_START
-	XXX need docs
+	Usage: always_direct allow|deny [!]aclname ...
+
+	Here you can use ACL elements to specify requests which should
+	ALWAYS be forwarded directly to origin servers.  This option
+	replaces some v1.1 options such as inside_firewall,
+	firewall_ip, local_domain, and local_ip.  For example, to
+	always directly forward requests for local servers use
+	something like:
+
+		acl local-servers dstdomain my.domain.net
+		always_direct allow local-servers
+
+	To always forward FTP requests directly, use
+
+		acl FTP proto FTP
+		always_direct allow FTP
+
+	NOTE: There is a similar, but opposite option named
+	'never_direct'.  You need to be aware that "always_direct deny
+	foo" is NOT the same thing as "never_direct allow foo".  You
+	may need to use a deny rule to exclude a more-specific case of
+	some other rule.  Example:
+
+		acl local-external dstdomain external.foo.net
+		acl local-servers dstdomain  foo.net
+		always_direct deny local-external
+		always_direct allow local-servers
 DOC_END
 
 NAME: never_direct
@@ -1872,15 +1879,23 @@ TYPE: acl_access
 LOC: Config.accessList.NeverDirect
 DEFAULT: none
 DOC_START
-	XXX need docs
-DOC_END
+        Usage: never_direct allow|deny [!]aclname ...
 
-#NAME: proxy_auth_ignore
-#TYPE: regexplist_icase
-#LOC: Config.proxyAuth.IgnoreDomains
-#DOC_START
-#	XXX need docs
-#DOC_END
+	never_direct is the opposite of always_direct.  Please read
+	the description for always_direct if you have not already.
+
+	With 'never_direct' you can use ACL elements to specify
+	requests which should NEVER be forwarded directly to origin
+	servers.  This option replaces some v1.1 options such as
+	inside_firewall, firewall_ip, local_domain, and local_ip.  For
+	example, to force the use of a proxy for all requests, except
+	those in your local domain, use something like:
+
+                acl local-servers dstdomain my.domain.net
+		acl all src 0.0.0.0/0.0.0.0
+                never_direct deny local-servers
+                never_direct allow all
+DOC_END
 
 NAME: fake_user_agent
 TYPE: eol
