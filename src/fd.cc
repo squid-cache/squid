@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.16 1997/12/02 00:17:34 wessels Exp $
+ * $Id: fd.cc,v 1.17 1998/01/31 05:31:57 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -70,6 +70,7 @@ fd_open(int fd, unsigned int type, const char *desc)
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->open == 0);
+    debug(51, 3) ("fd_open FD %d %s\n", fd, desc);
     F->type = type;
     fdUpdateBiggest(fd, F->open = FD_OPEN);
     if (desc)

@@ -12,9 +12,6 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     const cache_key *key;
     request_t *icp_request = NULL;
     int allow = 0;
-    char *data = NULL;
-    u_short data_sz = 0;
-    u_short u;
     aclCheck_t checklist;
 
     header.opcode = headerp->opcode;
@@ -68,7 +65,6 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	}
 	break;
 
-    case ICP_HIT_OBJ:
     case ICP_HIT:
     case ICP_SECHO:
     case ICP_DECHO:
@@ -82,16 +78,6 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    neighbors_do_private_keys = 0;
 	}
 	url = buf + sizeof(header);
-	if (header.opcode == ICP_HIT_OBJ) {
-	    data = url + strlen(url) + 1;
-	    xmemcpy((char *) &u, data, sizeof(u_short));
-	    data += sizeof(u_short);
-	    data_sz = ntohs(u);
-	    if ((int) data_sz > (len - (data - buf))) {
-		debug(12, 0) ("icpHandleIcpV3: ICP_HIT_OBJ object too small\n");
-		break;
-	    }
-	}
 	debug(12, 3) ("icpHandleIcpV3: %s from %s for '%s'\n",
 	    icp_opcode_str[header.opcode],
 	    inet_ntoa(from.sin_addr),

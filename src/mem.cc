@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.1 1998/01/12 04:57:23 wessels Exp $
+ * $Id: mem.cc,v 1.2 1998/01/31 05:32:00 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -154,7 +154,6 @@ memInit(void)
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
     memDataInit(MEM_ACL_TIME_DATA, "acl_time_data", sizeof(acl_time_data), 0);
     memDataInit(MEM_AIO_RESULT_T, "aio_result_t", sizeof(aio_result_t), 0);
-    memDataInit(MEM_CACHEINFO, "cacheinfo", sizeof(cacheinfo), 0);
     memDataInit(MEM_CACHEMGR_PASSWD, "cachemgr_passwd",
 	sizeof(cachemgr_passwd), 0);
     memDataInit(MEM_CLIENTHTTPREQUEST, "clientHttpRequest",
@@ -202,7 +201,6 @@ memInit(void)
 	sizeof(pingerEchoData), 0);
     memDataInit(MEM_PINGERREPLYDATA, "pingerReplyData",
 	sizeof(pingerReplyData), 0);
-    memDataInit(MEM_PROTO_STAT, "proto_stat", sizeof(proto_stat), 0);
     memDataInit(MEM_PS_STATE, "ps_state", sizeof(ps_state), 0);
     memDataInit(MEM_REFRESH_T, "refresh_t", sizeof(refresh_t), 0);
     memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);

@@ -3,7 +3,6 @@
 extern void accessLogLog(AccessLogEntry *);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
-extern void accessLogOpen(const char *);
 extern void accessLogInit(void);
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, icp_ping_data *, const char *);
 
@@ -376,9 +375,8 @@ extern void storeDirClean(void *unused);
 extern void passStart(int, const char *, request_t *, size_t *);
 extern void identStart(int, ConnStateData *, IDCB * callback);
 
-extern void stat_init(cacheinfo **, const char *);
+extern void statInit(void);
 extern void pconnHistCount(int, int);
-extern void statAvgInit(void);
 extern int statMemoryAccounted(void);
 
 extern void memInit(void);
@@ -504,7 +502,7 @@ extern void setMaxFD(void);
 extern time_t getCurrentTime(void);
 extern void normal_shutdown(void);
 extern int percent(int, int);
-extern int dpercent(double, double);
+extern double dpercent(double, double);
 extern void squid_signal(int sig, SIGHDLR *, int flags);
 extern pid_t readPidFile(void);
 extern struct in_addr inaddrFromHostent(const struct hostent *hp);
@@ -561,7 +559,8 @@ extern OBJH dump_config;
 extern OBJH storeDirStats;
 extern OBJH pconnHistDump;
 extern void dump_peers(StoreEntry *, peer *);
-extern OBJH statAvgDump;
+extern OBJH statAvg5min;
+extern OBJH statAvg60min;
 
 extern void pconnPush(int, const char *host, u_short port);
 extern int pconnPop(const char *host, u_short port);
@@ -574,6 +573,7 @@ extern void asnInit(void);
 extern void asnFreeMemory(void);
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
+extern void kb_incr (kb_t *, size_t);
 
 /*
  * prototypes for system functions missing from system includes
@@ -584,6 +584,13 @@ int getrusage(int, struct rusage *);
 int getpagesize(void);
 int gethostname(char *, int);
 #endif
+
+extern int ipcCreate(int type,
+	const char *prog,
+	char *const args[],
+	const char *name,
+	int *rfd,
+	int *wfd);
 
 extern int handleConnectionHeader(int, char * , char * );
 

@@ -743,23 +743,6 @@ struct _Stack {
     int stack_size;
 };
 
-struct _proto_stat {
-    char protoname[25];
-    int object_count;
-    struct _usage {
-	int max;
-	int avg;
-	int min;
-	int now;
-    } kb;
-    unsigned int hit;
-    unsigned int miss;
-    float hitratio;
-    unsigned int transferrate;
-    unsigned int refcount;
-    unsigned int transferbyte;
-};
-
 struct _Meta_data {
     int hot_vm;
     int ipcache_count;
@@ -770,16 +753,6 @@ struct _Meta_data {
     int misc;
     int client_info;
     int store_keys;
-};
-
-struct _cacheinfo {
-    protocol_t(*proto_id) (const char *url);
-    void (*proto_newobject) (struct _cacheinfo * c, protocol_t proto_id, int len, int flag);
-    void (*proto_purgeobject) (struct _cacheinfo * c, protocol_t proto_id, int len);
-    void (*proto_touchobject) (struct _cacheinfo * c, protocol_t proto_id, int len);
-    void (*proto_count) (struct _cacheinfo * obj, protocol_t proto_id,
-	log_type);
-    proto_stat proto_stat_data[PROTO_MAX + 1];
 };
 
 struct _iostats {
@@ -957,14 +930,17 @@ struct _StatCounters {
 	int requests;
 	int hits;
 	int errors;
-	int bytes_in;
-	int bytes_out;
+	kb_t kbytes_in;
+	kb_t kbytes_out;
+	kb_t hit_kbytes_out;
     } client_http;
     struct {
 	int pkts_sent;
 	int pkts_recv;
-	int bytes_sent;
-	int bytes_recv;
+	int hits_sent;
+	int hits_recv;
+	kb_t kbytes_sent;
+	kb_t kbytes_recv;
     } icp;
     struct {
 	int requests;

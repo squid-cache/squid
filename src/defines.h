@@ -177,3 +177,8 @@
 #define META_OK     0x03
 #define META_DIRTY  0x04
 #define META_BAD    0x05
+
+#define IPC_NONE 0
+#define IPC_TCP_SOCKET 1
+#define IPC_UDP_SOCKET 2
+#define IPC_FIFO 3

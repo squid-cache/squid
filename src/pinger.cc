@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.28 1997/10/31 05:15:08 wessels Exp $
+ * $Id: pinger.cc,v 1.29 1998/01/31 05:32:03 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -117,7 +117,7 @@ pingerOpen(void)
 	exit(1);
     }
     icmp_ident = getpid() & 0xffff;
-    debug(42, 0) ("ICMP socket opened\n", icmp_sock);
+    debug(42, 0) ("pinger: ICMP socket opened\n");
 }
 
 void
@@ -335,17 +335,17 @@ main(int argc, char *argv[])
 	x = select(icmp_sock + 1, &R, NULL, NULL, &tv);
 	getCurrentTime();
 	if (x < 0)
-	    return 1;
+	    exit(1);
 	if (FD_ISSET(0, &R))
 	    if (pingerReadRequest() < 0) {
 		debug(42, 0) ("Pinger exiting.\n");
-		return 1;
+		exit(1);
 	    }
 	if (FD_ISSET(icmp_sock, &R))
 	    pingerRecv();
 	if (10 + last_check_time < squid_curtime) {
 	    if (send(1, (char *) &tv, 0, 0) < 0)
-		return 1;
+		exit(1);
 	    last_check_time = squid_curtime;
 	}
     }

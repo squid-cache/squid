@@ -4,6 +4,11 @@ typedef unsigned int mem_status_t;
 typedef unsigned int ping_status_t;
 typedef unsigned int swap_status_t;
 
+typedef struct {
+	size_t bytes;
+	size_t kb;
+} kb_t;
+
 /*
  * grep '^struct' structs.h \
  * | perl -ne '($a,$b)=split;$c=$b;$c=~s/^_//; print "typedef struct $b $c;\n";'
@@ -54,9 +59,7 @@ typedef struct _HierarchyLogEntry HierarchyLogEntry;
 typedef struct _pingerEchoData pingerEchoData;
 typedef struct _pingerReplyData pingerReplyData;
 typedef struct _icp_common_t icp_common_t;
-typedef struct _proto_stat proto_stat;
 typedef struct _Meta_data Meta_data;
-typedef struct _cacheinfo cacheinfo;
 typedef struct _iostats iostats;
 typedef struct _mem_node mem_node;
 typedef struct _mem_hdr mem_hdr;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.35 1998/01/12 04:30:08 wessels Exp $
+ * $Id: peer_select.cc,v 1.36 1998/01/31 05:32:03 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -46,8 +46,6 @@ const char *hier_strings[] =
     "CLOSEST_DIRECT",
     "NO_DIRECT_FAIL",
     "SOURCE_FASTEST",
-    "SIBLING_UDP_HIT_OBJ",
-    "PARENT_UDP_HIT_OBJ",
     "ROUNDROBIN_PARENT",
     "INVALID CODE"
 };
@@ -419,7 +417,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
     if (op == ICP_MISS || op == ICP_DECHO) {
 	if (type == PEER_PARENT)
 	    peerIcpParentMiss(p, header, psstate);
-    } else if (op == ICP_HIT || op == ICP_HIT_OBJ) {
+    } else if (op == ICP_HIT) {
 	hierarchyNote(&request->hier,
 	    type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT,
 	    &psstate->icp,

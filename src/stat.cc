@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.185 1998/01/12 04:30:11 wessels Exp $
+ * $Id: stat.cc,v 1.186 1998/01/31 05:32:06 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -111,11 +111,9 @@
 static const char *describeStatuses(const StoreEntry *);
 static const char *describeFlags(const StoreEntry *);
 static const char *describeTimestamps(const StoreEntry *);
-static void proto_count(cacheinfo *, protocol_t, log_type);
-static void proto_newobject(cacheinfo *, protocol_t, int, int);
-static void proto_purgeobject(cacheinfo *, protocol_t, int);
-static void proto_touchobject(cacheinfo *, protocol_t, int);
 static void statAvgTick(void *notused);
+static void statAvgDump(StoreEntry *, int minutes);
+static void statCountersDump(StoreEntry * sentry);
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -125,71 +123,17 @@ static void info_get_mallstat(int, int, StoreEntry *);
 int client_pconn_hist[PCONN_HIST_SZ];
 int server_pconn_hist[PCONN_HIST_SZ];
 
-#define N_COUNT_HIST 5
+/*
+ * An hour's worth, plus the 'current' counter
+ */
+#define N_COUNT_HIST 61
 static StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
-
-/* process utilization information */
-static void
-statUtilization(cacheinfo * obj, StoreEntry * sentry, const char *desc)
-{
-    protocol_t proto_id;
-    proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
-    proto_stat *q = NULL;
-    int secs = 0;
-    secs = (int) (squid_curtime - squid_start.tv_sec);
-    storeAppendPrintf(sentry, "{ %s\n", desc);	/* } */
-    strcpy(p->protoname, "TOTAL");
-    p->object_count = 0;
-    p->kb.max = 0;
-    p->kb.min = 0;
-    p->kb.avg = 0;
-    p->kb.now = 0;
-    p->hit = 0;
-    p->miss = 0;
-    p->refcount = 0;
-    p->transferbyte = 0;
-    /* find the total */
-    for (proto_id = PROTO_NONE; proto_id < PROTO_MAX; ++proto_id) {
-	q = &obj->proto_stat_data[proto_id];
-	p->object_count += q->object_count;
-	p->kb.max += q->kb.max;
-	p->kb.min += q->kb.min;
-	p->kb.avg += q->kb.avg;
-	p->kb.now += q->kb.now;
-	p->hit += q->hit;
-	p->miss += q->miss;
-	p->refcount += q->refcount;
-	p->transferbyte += q->transferbyte;
-    }
-    /* dump it */
-    for (proto_id = PROTO_NONE; proto_id <= PROTO_MAX; ++proto_id) {
-	p = &obj->proto_stat_data[proto_id];
-	if (p->hit != 0) {
-	    p->hitratio =
-		(float) p->hit /
-		((float) p->hit +
-		(float) p->miss);
-	}
-	storeAppendPrintf(sentry, "{%8.8s %d %d %d %d %4.2f %d %d %d}\n",
-	    p->protoname,
-	    p->object_count,
-	    p->kb.max,
-	    p->kb.now,
-	    p->kb.min,
-	    p->hitratio,
-	    (secs ? p->transferbyte / secs : 0),
-	    p->refcount,
-	    p->transferbyte);
-    }
-    storeAppendPrintf(sentry, close_bracket);
-}
 
 void
 stat_utilization_get(StoreEntry * e)
 {
-    statUtilization(HTTPCacheInfo, e, "HTTP");
-    statUtilization(ICPCacheInfo, e, "ICP");
+	/* MAKE SOMETHING UP */
 }
 
 void
@@ -572,7 +516,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);
     storeAppendPrintf(sentry, "{\tUP Time:\t%.3f seconds}\n", runtime);
     storeAppendPrintf(sentry, "{\tCPU Time:\t%.3f seconds}\n", cputime);
-    storeAppendPrintf(sentry, "{\tCPU Usage:\t%d%%}\n",
+    storeAppendPrintf(sentry, "{\tCPU Usage:\t%.2f%%}\n",
 	dpercent(cputime, runtime));
     storeAppendPrintf(sentry, "{\tMaximum Resident Size: %ld KB}\n",
 	rusage_maxrss(&rusage));
@@ -708,119 +652,102 @@ info_get(StoreEntry * sentry)
 }
 
 static void
-proto_newobject(cacheinfo * obj, protocol_t proto_id, int size, int restart)
+statCountersDump(StoreEntry * sentry)
 {
-    proto_stat *p = &obj->proto_stat_data[proto_id];
-
-    p->object_count++;
-
-    /* Account for 1KB granularity */
-    p->kb.now += ((size + 1023) >> 10);
-
-    if (p->kb.now > p->kb.max)
-	p->kb.max = p->kb.now;
-    if (restart)
-	p->kb.min = p->kb.now;
+    StatCounters *f = &Counter;
+    struct rusage rusage;
+    squid_getrusage(&rusage);
+    f->page_faults = rusage_pagefaults(&rusage);
+    f->cputime = rusage_cputime(&rusage);
+    storeAppendPrintf(sentry, "client_http.requests = %d\n",
+	f->client_http.requests);
+    storeAppendPrintf(sentry, "client_http.hits = %d\n",
+	f->client_http.hits);
+    storeAppendPrintf(sentry, "client_http.errors = %d\n",
+	f->client_http.errors);
+    storeAppendPrintf(sentry, "client_http.kbytes_in = %d\n",
+	(int) f->client_http.kbytes_in.kb);
+    storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
+	(int) f->client_http.kbytes_out.kb);
+    storeAppendPrintf(sentry, "icp.pkts_sent = %d\n",
+	f->icp.pkts_sent);
+    storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
+	f->icp.pkts_recv);
+    storeAppendPrintf(sentry, "icp.kbytes_sent = %d\n",
+	(int) f->icp.kbytes_sent.kb);
+    storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
+	(int) f->icp.kbytes_recv.kb);
+    storeAppendPrintf(sentry, "unlink.requests = %d\n",
+	f->unlink.requests);
+    storeAppendPrintf(sentry, "page_faults = %d\n",
+	f->page_faults);
+    storeAppendPrintf(sentry, "select_loops = %d\n",
+	f->select_loops);
+    storeAppendPrintf(sentry, "cpu_time = %f\n",
+	f->cputime);
+    storeAppendPrintf(sentry, "wall_time = %f\n",
+        tvSubDsec(f->timestamp, current_time));
 }
 
-
+#define XAVG(X) (dt ? (double) (f->X - l->X) / dt : 0.0)
 static void
-proto_purgeobject(cacheinfo * obj, protocol_t proto_id, int size)
+statAvgDump(StoreEntry * sentry, int minutes)
 {
-    proto_stat *p = &obj->proto_stat_data[proto_id];
-
-    p->object_count--;
-
-    /* Scale down to KB */
-    p->kb.now -= ((size + 1023) >> 10);
-
-    if (p->kb.now < p->kb.min)
-	p->kb.min = p->kb.now;
+    StatCounters *f;
+    StatCounters *l;
+    double dt;
+    double ct;
+    assert(N_COUNT_HIST > 1);
+    assert(minutes > 0);
+    f = &CountHist[0];
+    if (minutes > N_COUNT_HIST-1)
+	minutes = N_COUNT_HIST-1;
+    l = &CountHist[minutes];
+    dt = tvSubDsec(l->timestamp, f->timestamp);
+    ct = f->cputime - l->cputime;
+    storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
+	XAVG(client_http.requests));
+    storeAppendPrintf(sentry, "client_http.hits = %f/sec\n",
+	XAVG(client_http.hits));
+    storeAppendPrintf(sentry, "client_http.errors = %f/sec\n",
+	XAVG(client_http.errors));
+    storeAppendPrintf(sentry, "client_http.kbytes_in = %f/sec\n",
+	XAVG(client_http.kbytes_in.kb));
+    storeAppendPrintf(sentry, "client_http.kbytes_out = %f/sec\n",
+	XAVG(client_http.kbytes_out.kb));
+    storeAppendPrintf(sentry, "icp.pkts_sent = %f/sec\n",
+	XAVG(icp.pkts_sent));
+    storeAppendPrintf(sentry, "icp.pkts_recv = %f/sec\n",
+	XAVG(icp.pkts_recv));
+    storeAppendPrintf(sentry, "icp.kbytes_sent = %f/sec\n",
+	XAVG(icp.kbytes_sent.kb));
+    storeAppendPrintf(sentry, "icp.kbytes_recv = %f/sec\n",
+	XAVG(icp.kbytes_recv.kb));
+    storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
+	XAVG(unlink.requests));
+    storeAppendPrintf(sentry, "page_faults = %f/sec\n",
+	XAVG(page_faults));
+    storeAppendPrintf(sentry, "select_loops = %f/sec\n",
+	XAVG(select_loops));
+    storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
+    storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
+    storeAppendPrintf(sentry, "cpu_usage = %f%%\n",dpercent(ct,dt));
 }
-
-/* update stat for each particular protocol when an object is fetched */
-static void
-proto_touchobject(cacheinfo * obj, protocol_t proto_id, int size)
-{
-    obj->proto_stat_data[proto_id].refcount++;
-    obj->proto_stat_data[proto_id].transferbyte += (1023 + size) >> 10;
-}
-
-static void
-proto_count(cacheinfo * obj, protocol_t proto_id, log_type type)
-{
-    switch (type) {
-    case LOG_TCP_HIT:
-    case LOG_TCP_IMS_HIT:
-    case LOG_TCP_REFRESH_HIT:
-    case LOG_TCP_REFRESH_FAIL_HIT:
-    case LOG_UDP_HIT:
-    case LOG_UDP_HIT_OBJ:
-	obj->proto_stat_data[proto_id].hit++;
-	break;
-    default:
-	obj->proto_stat_data[proto_id].miss++;
-	break;
-    }
-}
-
 
 void
-stat_init(cacheinfo ** object, const char *logfilename)
+statInit(void)
 {
-    cacheinfo *obj = NULL;
     int i;
-    debug(18, 5) ("stat_init: Initializing...\n");
-    obj = xcalloc(1, sizeof(cacheinfo));
-    if (logfilename)
-	accessLogOpen(logfilename);
-    obj->proto_id = urlParseProtocol;
-    obj->proto_newobject = proto_newobject;
-    obj->proto_purgeobject = proto_purgeobject;
-    obj->proto_touchobject = proto_touchobject;
-    obj->proto_count = proto_count;
-    for (i = PROTO_NONE; i <= PROTO_MAX; i++) {
-	switch (i) {
-	case PROTO_HTTP:
-	    strcpy(obj->proto_stat_data[i].protoname, "HTTP");
-	    break;
-	case PROTO_GOPHER:
-	    strcpy(obj->proto_stat_data[i].protoname, "GOPHER");
-	    break;
-	case PROTO_FTP:
-	    strcpy(obj->proto_stat_data[i].protoname, "FTP");
-	    break;
-	case PROTO_WAIS:
-	    strcpy(obj->proto_stat_data[i].protoname, "WAIS");
-	    break;
-	case PROTO_CACHEOBJ:
-	    strcpy(obj->proto_stat_data[i].protoname, "CACHE_OBJ");
-	    break;
-	case PROTO_MAX:
-	    strcpy(obj->proto_stat_data[i].protoname, "TOTAL");
-	    break;
-	case PROTO_NONE:
-	default:
-	    strcpy(obj->proto_stat_data[i].protoname, "OTHER");
-	    break;
-	}
-	obj->proto_stat_data[i].object_count = 0;
-	obj->proto_stat_data[i].hit = 0;
-	obj->proto_stat_data[i].miss = 0;
-	obj->proto_stat_data[i].hitratio = 0.0;
-	obj->proto_stat_data[i].transferrate = 0;
-	obj->proto_stat_data[i].refcount = 0;
-	obj->proto_stat_data[i].transferbyte = 0;
-	obj->proto_stat_data[i].kb.max = 0;
-	obj->proto_stat_data[i].kb.min = 0;
-	obj->proto_stat_data[i].kb.avg = 0;
-	obj->proto_stat_data[i].kb.now = 0;
-    }
-    *object = obj;
+    debug(18, 5) ("statInit: Initializing...\n");
     for (i = 0; i < PCONN_HIST_SZ; i++) {
 	client_pconn_hist[i] = 0;
 	server_pconn_hist[i] = 0;
     }
+    memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
+    for (i=0; i<N_COUNT_HIST; i++)
+	CountHist[i].timestamp = current_time;
+    Counter.timestamp = current_time;
+    eventAdd("statAvgTick", statAvgTick, NULL, 60);
 }
 
 void
@@ -866,16 +793,6 @@ pconnHistDump(StoreEntry * e)
     }
 }
 
-void
-statAvgInit(void)
-{
-    int i;
-    memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
-    for (i=0; i<N_COUNT_HIST; i++)
-	CountHist[i].timestamp = current_time;
-    eventAdd("statAvgTick", statAvgTick, NULL, 60);
-}
-
 static void
 statAvgTick(void *notused)
 {
@@ -893,45 +810,22 @@ statAvgTick(void *notused)
     NCountHist++;
 }
 
-#define XAVG(X) (double) (f->X - l->X) / dt
 void
-statAvgDump(StoreEntry * sentry)
+statAvg5min(StoreEntry *e)
 {
-    StatCounters *f = &CountHist[0];
-    StatCounters *l = &CountHist[N_COUNT_HIST - 1];
-    double dt;
-    double ct;
-    eventDelete(statAvgTick, NULL);
-    statAvgTick(NULL);
-    dt = tvSubDsec(l->timestamp, f->timestamp);
-    ct = f->cputime - l->cputime;
-    storeBuffer(sentry);
-    storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
-	XAVG(client_http.requests));
-    storeAppendPrintf(sentry, "client_http.hits = %f/sec\n",
-	XAVG(client_http.hits));
-    storeAppendPrintf(sentry, "client_http.errors = %f/sec\n",
-	XAVG(client_http.errors));
-    storeAppendPrintf(sentry, "client_http.bytes_in = %f/sec\n",
-	XAVG(client_http.bytes_in));
-    storeAppendPrintf(sentry, "client_http.bytes_out = %f/sec\n",
-	XAVG(client_http.bytes_out));
-    storeAppendPrintf(sentry, "icp.pkts_sent = %f/sec\n",
-	XAVG(icp.pkts_sent));
-    storeAppendPrintf(sentry, "icp.pkts_recv = %f/sec\n",
-	XAVG(icp.pkts_recv));
-    storeAppendPrintf(sentry, "icp.bytes_sent = %f/sec\n",
-	XAVG(icp.bytes_sent));
-    storeAppendPrintf(sentry, "icp.bytes_recv = %f/sec\n",
-	XAVG(icp.bytes_recv));
-    storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
-	XAVG(unlink.requests));
-    storeAppendPrintf(sentry, "page_faults = %f/sec\n",
-	XAVG(page_faults));
-    storeAppendPrintf(sentry, "select_loops = %f/sec\n",
-	XAVG(select_loops));
-    storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
-    storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
-    storeAppendPrintf(sentry, "cpu_usage = %f%%\n", 100.0*ct/dt);
-    storeBufferFlush(sentry);
+#if NOT_YET
+	statCountersDump(e);
+	storeAppendPrintf(e, "\n");
+#endif
+	statAvgDump(e, 5);
+}
+
+void
+statAvg60min(StoreEntry *e)
+{
+#if NOT_YET
+	statCountersDump(e);
+	storeAppendPrintf(e, "\n");
+#endif
+	statAvgDump(e, 60);
 }

@@ -15,7 +15,6 @@ typedef enum {
     LOG_TCP_MEM_HIT,
     LOG_TCP_DENIED,
     LOG_UDP_HIT,
-    LOG_UDP_HIT_OBJ,
     LOG_UDP_MISS,
     LOG_UDP_DENIED,
     LOG_UDP_INVALID,
@@ -152,6 +151,7 @@ typedef enum {
     MGR_CBDATA,
     MGR_PCONN,
     MGR_5MIN,
+    MGR_60MIN,
     MGR_MEM,
     MGR_MAX
 } objcache_op;
@@ -170,8 +170,6 @@ typedef enum {
     CLOSEST_DIRECT,
     NO_DIRECT_FAIL,
     SOURCE_FASTEST,
-    SIBLING_UDP_HIT_OBJ,
-    PARENT_UDP_HIT_OBJ,
     ROUNDROBIN_PARENT,
     HIER_MAX
 } hier_code;
@@ -431,9 +429,7 @@ typedef enum {
     MEM_PINGERECHODATA,
     MEM_PINGERREPLYDATA,
     MEM_ICP_COMMON_T,
-    MEM_PROTO_STAT,
     MEM_META_DATA,
-    MEM_CACHEINFO,
     MEM_IOSTATS,
     MEM_MEM_NODE,
     MEM_MEM_HDR,

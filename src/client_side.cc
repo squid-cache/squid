@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.198 1998/01/12 04:29:58 wessels Exp $
+ * $Id: client_side.cc,v 1.199 1998/01/31 05:31:54 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -67,6 +67,7 @@ static void clientProcessExpired(void *data);
 static char *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
+static int isTcpHit(log_type code);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -496,6 +497,20 @@ checkNegativeHit(StoreEntry * e)
     return 1;
 }
 
+void
+clientUpdateCounters(clientHttpRequest *http)
+{
+	Counter.client_http.requests++;
+	kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
+	kb_incr(&Counter.client_http.kbytes_out, http->out.size);
+        if (isTcpHit(http->log_type)) {
+	    Counter.client_http.hits++;
+	    kb_incr(&Counter.client_http.hit_kbytes_out, http->out.size);
+	}
+	if (http->request->err_type != ERR_NONE)
+	    Counter.client_http.errors++;
+}
+
 static void
 httpRequestFree(void *data)
 {
@@ -536,9 +551,7 @@ httpRequestFree(void *data)
 	    http->al.hier = request->hier;
 	}
 	accessLogLog(&http->al);
-	HTTPCacheInfo->proto_count(HTTPCacheInfo,
-	    request ? request->protocol : PROTO_NONE,
-	    http->log_type);
+	clientUpdateCounters(http);
 	clientdbUpdate(conn->peer.sin_addr, http->log_type, PROTO_HTTP);
     }
     if (http->redirect_state == REDIRECT_PENDING)
@@ -734,7 +747,7 @@ clientHierarchical(clientHttpRequest * http)
     return 1;
 }
 
-int
+static int
 isTcpHit(log_type code)
 {
     /* this should be a bitmap for better optimization */
@@ -966,22 +979,12 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	fd, size, errflag, http->out.offset, entry->object_len);
     if (errflag) {
 	CheckQuickAbort(http);
-	/* Log the number of bytes that we managed to read */
-	HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
-	    urlParseProtocol(storeUrl(entry)),
-	    http->out.size);
 	comm_close(fd);
     } else if (entry->store_status == STORE_ABORTED) {
-	HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
-	    urlParseProtocol(storeUrl(entry)),
-	    http->out.size);
 	comm_close(fd);
     } else if ((done = clientCheckTransferDone(http)) || size == 0) {
 	debug(12, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
 	/* We're finished case */
-	HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
-	    http->request->protocol,
-	    http->out.size);
 	if (http->entry->mem_obj->reply->content_length < 0 || !done ||
 	    EBIT_TEST(entry->flag, ENTRY_BAD_LENGTH)) {
 	    /* 
@@ -1114,9 +1117,6 @@ clientHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *d
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
     debug(12, 5) ("clientHandleIMSComplete: Not Modified sent '%s'\n", storeUrl(entry));
-    HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
-	http->request->protocol,
-	size);
     /* Set up everything for the logging */
     storeUnregister(entry, http);
     storeUnlockObject(entry);
@@ -1619,7 +1619,6 @@ clientReadRequest(int fd, void *data)
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
 	    conn->nrequests++;
-	    Counter.client_http.requests++;
 	    commSetTimeout(fd, Config.Timeout.lifetime, NULL, NULL);
 	    if (parser_return_code < 0) {
 		debug(12, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
