@@ -1,10 +1,10 @@
 /*
- * $Id: acl.cc,v 1.59 1996/11/05 17:07:57 wessels Exp $
+ * $Id: acl.cc,v 1.60 1996/11/06 23:14:18 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

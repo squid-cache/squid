@@ -1,10 +1,10 @@
 /*
- * $Id: mime.cc,v 1.18 1996/11/04 18:12:52 wessels Exp $
+ * $Id: mime.cc,v 1.19 1996/11/06 23:14:45 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

@@ -1,11 +1,11 @@
 
 /*
- * $Id: tools.cc,v 1.80 1996/11/04 18:13:11 wessels Exp $
+ * $Id: tools.cc,v 1.81 1996/11/06 23:15:04 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

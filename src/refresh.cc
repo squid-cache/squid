@@ -1,11 +1,11 @@
 
 /*
- * $Id: refresh.cc,v 1.5 1996/11/05 17:08:22 wessels Exp $
+ * $Id: refresh.cc,v 1.6 1996/11/06 23:14:53 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

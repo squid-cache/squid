@@ -1,12 +1,12 @@
 
 
 /*
- * $Id: pinger.cc,v 1.14 1996/11/05 17:08:20 wessels Exp $
+ * $Id: pinger.cc,v 1.15 1996/11/06 23:14:49 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

@@ -1,11 +1,11 @@
 
 /*
- * $Id: cachemgr.cc,v 1.41 1996/11/05 17:08:01 wessels Exp $
+ * $Id: cachemgr.cc,v 1.42 1996/11/06 23:14:23 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

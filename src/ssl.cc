@@ -1,11 +1,11 @@
 
 /*
- * $Id: ssl.cc,v 1.24 1996/11/05 17:08:24 wessels Exp $
+ * $Id: ssl.cc,v 1.25 1996/11/06 23:14:55 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the
