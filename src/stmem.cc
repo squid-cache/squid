@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.18 1996/08/21 20:11:56 wessels Exp $
+ * $Id: stmem.cc,v 1.19 1996/08/27 05:17:50 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -420,6 +420,8 @@ static void put_free_thing(thing, p)
      stmem_stats *thing;
      void *p;
 {
+    if (p == NULL)
+	fatal_dump("Somebody is putting a NULL pointer!");
     thing->n_pages_in_use--;
     if (thing->total_pages_allocated > thing->max_pages) {
 	xfree(p);
