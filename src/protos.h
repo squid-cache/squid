@@ -600,3 +600,6 @@ int getrusage(int, struct rusage *);
 int getpagesize(void);
 int gethostname(char *, int);
 #endif
+
+extern int handleConnectionHeader(int, char * , char * );
+

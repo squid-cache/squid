@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.196 1998/01/09 01:18:12 wessels Exp $
+ * $Id: client_side.cc,v 1.197 1998/01/10 08:15:13 kostas Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -771,6 +771,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
     char *hdr_out,
     size_t out_sz)
 {
+    LOCAL_ARRAY(char, no_forward, 1024);
     char *xbuf;
     char *ybuf;
     char *t = NULL;
@@ -781,16 +782,15 @@ clientBuildReplyHeader(clientHttpRequest * http,
     end = mime_headers_end(hdr_in);
     if (end == NULL) {
 	debug(12, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
-	debug(12, 3) ("\n%s", hdr_in);
 	return 0;
     }
     xbuf = get_free_4k_page();
     ybuf = get_free_4k_page();
+
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	hdr_len = t - hdr_in;
 	l = strcspn(t, crlf) + 1;
 	xstrncpy(xbuf, t, l > 4096 ? 4096 : l);
-	debug(12, 5) ("clientBuildReplyHeader: %s\n", xbuf);
 #if 0
 	if (strncasecmp(xbuf, "Accept-Ranges:", 14) == 0)
 	    continue;
@@ -799,14 +799,17 @@ clientBuildReplyHeader(clientHttpRequest * http,
 #endif
 	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
 	    continue;
-	if (strncasecmp(xbuf, "Connection:", 11) == 0)
+	if (strncasecmp(xbuf, "Connection:", 11) == 0) {
+	    handleConnectionHeader(0, no_forward, &xbuf[11]);
 	    continue;
+	}
 	if (strncasecmp(xbuf, "Keep-Alive:", 11) == 0)
 	    continue;
 	if (strncasecmp(xbuf, "Set-Cookie:", 11) == 0)
 	    if (isTcpHit(http->log_type))
 		continue;
-	clientAppendReplyHeader(hdr_out, xbuf, &len, out_sz - 512);
+	if (!handleConnectionHeader(1, no_forward, xbuf))
+	    clientAppendReplyHeader(hdr_out, xbuf, &len, out_sz - 512);
     }
     hdr_len = end - hdr_in;
     /* Append X-Cache: */
@@ -862,7 +865,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     char C = '\0';
     assert(size <= SM_PAGE_SIZE);
     assert(http->request != NULL);
-    debug(12, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d\n",
+    debug(12, 5) ("clientSendMoreData: FD %d '%s', out.offset=%d \n",
 	fd, storeUrl(entry), http->out.offset);
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
@@ -898,6 +901,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	*(buf + size) = '\0';
 	newbuf = get_free_8k_page();
 	hdrlen = 0;
+
 	l = clientBuildReplyHeader(http, buf, &hdrlen, newbuf, 8192);
 	if (hack)
 	    *(buf + size++) = C;
@@ -2016,6 +2020,51 @@ clientHttpConnectionsOpen(void)
     }
     if (NHttpSockets < 1)
 	fatal("Cannot open HTTP Port");
+}
+
+int
+handleConnectionHeader(int flag, char *where, char *what)
+{
+    char *t, *p, *wh;
+    int i;
+    LOCAL_ARRAY(char, mbuf, 256);
+
+    if (flag) {			/* lookup mode */
+	if (where[0] == '\0' || what[0] == '\0')
+	    return 0;
+	p = xstrdup(what);
+	t = strtok(p, ":");
+	if (t == NULL)
+	    return 0;
+	debug(20, 3) ("handleConnectionHeader: %s\n AND %s (%p)\n", where, t, p);
+	i = strstr(where, t) ? 1 : 0;
+	xfree(p);
+	return (i);
+    }
+    where[0] = '\0';
+    wh = xstrdup(what);
+    t = strtok(wh, ",");
+    while (t != NULL) {
+
+#ifdef BE_PARANOID
+	static char no_conn[] = "Expires:Host:Content-length:Content-type:";
+
+	if (handleConnectionHeader(1, no_conn, t)) {
+	    debug(1, 1) ("handleConnectionHeader: problematic header %s\n", t);
+	    t = strtok(NULL, ",\n");
+	    continue;
+	}
+#endif
+	if ((p = strchr(t, ':')))
+	    xstrncpy(mbuf, t, p - t + 1);
+	else
+	    snprintf(mbuf, 256, "%s:", t);
+	strcat(where, mbuf);
+	t = strtok(NULL, ",\n");
+    }
+    debug(20, 3) ("handleConnectionHeader: we have %s\n", where);
+    xfree(wh);
+    return 1;
 }
 
 void
