@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.276 1998/04/16 18:14:54 wessels Exp $
+ * $Id: cache_cf.cc,v 1.277 1998/04/16 21:51:54 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -194,6 +194,8 @@ configDoConfigure(void)
     LOCAL_ARRAY(char, buf, BUFSIZ);
     int i;
     SwapDir *SD;
+    fileMap *fm;
+    int n;
     memset(&Config2, '\0', sizeof(SquidConfig2));
     /* init memory as early as possible */
     memConfigure();
@@ -205,7 +207,18 @@ configDoConfigure(void)
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
         SD = &Config.cacheSwap.swapDirs[i];;
 	Config.Swap.maxSize += SD->max_size;
-        SD->map = file_map_create(2 * SD->max_size / Config.Store.avgObjectSize);
+	n = 2 * SD->max_size / Config.Store.avgObjectSize;
+	if (NULL == SD->map) {
+	    /* first time */
+	    SD->map = file_map_create(n);
+	} else if (n > SD->map->max_n_files) {
+	    /* it grew, need to expand */
+	    fm = file_map_create(n);
+            filemapCopy(SD->map, fm);
+	    filemapFreeMemory(SD->map);
+	    SD->map = fm;
+	}
+	/* else it shrunk, and we leave the old one in place */
     }
     if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10))
 	fatal("cache_swap is lower than cache_mem");
