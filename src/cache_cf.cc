@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.413 2002/09/07 15:02:24 hno Exp $
+ * $Id: cache_cf.cc,v 1.414 2002/09/07 15:12:56 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2469,11 +2469,14 @@ requirePathnameExists(const char *name, const char *path)
 char *
 strtokFile(void)
 {
+    static int fromFile = 0;
+    static FILE *wordFile = NULL;
+
     char *t, *fn;
     LOCAL_ARRAY(char, buf, 256);
 
   strtok_again:
-    if (!aclFromFile) {
+    if (!fromFile) {
 	t = (strtok(NULL, w_space));
 	if (!t || *t == '#') {
 	    return NULL;
@@ -2483,23 +2486,24 @@ strtokFile(void)
 	    while (*t && *t != '\"' && *t != '\'')
 		t++;
 	    *t = '\0';
-	    if ((aclFile = fopen(fn, "r")) == NULL) {
+	    if ((wordFile = fopen(fn, "r")) == NULL) {
 		debug(28, 0) ("strtokFile: %s not found\n", fn);
 		return (NULL);
 	    }
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
-	    setmode(fileno(aclFile), O_TEXT);
+	    setmode(fileno(wordFile), O_TEXT);
 #endif
-	    aclFromFile = 1;
+	    fromFile = 1;
 	} else {
 	    return t;
 	}
     }
-    /* aclFromFile */
-    if (fgets(buf, 256, aclFile) == NULL) {
+    /* fromFile */
+    if (fgets(buf, 256, wordFile) == NULL) {
 	/* stop reading from file */
-	fclose(aclFile);
-	aclFromFile = 0;
+	fclose(wordFile);
+	wordFile = NULL;
+	fromFile = 0;
 	goto strtok_again;
     } else {
 	t = buf;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.283 2002/09/05 21:09:23 hno Exp $
+ * $Id: acl.cc,v 1.284 2002/09/07 15:12:55 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,9 +36,6 @@
 #include "squid.h"
 #include "splay.h"
 
-static int aclFromFile = 0;
-static FILE *aclFile;
-
 static void aclParseDomainList(void *curlist);
 static void aclParseUserList(void **current);
 static void aclParseIpList(void *curlist);
@@ -50,7 +47,6 @@ static void aclParseProtoList(void *curlist);
 static void aclParseMethodList(void *curlist);
 static void aclParseTimeSpec(void *curlist);
 static void aclParseIntRange(void *curlist);
-extern char *strtokFile(void);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
 static void aclLookupProxyAuthStart(aclCheck_t * checklist);
@@ -106,56 +102,6 @@ static SPLAYCMP aclArpCompare;
 static SPLAYWALKEE aclDumpArpListWalkee;
 #endif
 static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char *MatchParam);
-
-char *
-strtokFile(void)
-{
-    char *t, *fn;
-    LOCAL_ARRAY(char, buf, 256);
-
-  strtok_again:
-    if (!aclFromFile) {
-	t = (strtok(NULL, w_space));
-	if (!t || *t == '#') {
-	    return NULL;
-	} else if (*t == '\"' || *t == '\'') {
-	    /* quote found, start reading from file */
-	    fn = ++t;
-	    while (*t && *t != '\"' && *t != '\'')
-		t++;
-	    *t = '\0';
-	    if ((aclFile = fopen(fn, "r")) == NULL) {
-		debug(28, 0) ("strtokFile: %s not found\n", fn);
-		return (NULL);
-	    }
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
-	    setmode(fileno(aclFile), O_TEXT);
-#endif
-	    aclFromFile = 1;
-	} else {
-	    return t;
-	}
-    }
-    /* aclFromFile */
-    if (fgets(buf, 256, aclFile) == NULL) {
-	/* stop reading from file */
-	fclose(aclFile);
-	aclFromFile = 0;
-	goto strtok_again;
-    } else {
-	t = buf;
-	/* skip leading and trailing white space */
-	t += strspn(buf, w_space);
-	t[strcspn(t, w_space)] = '\0';
-	/* skip comments */
-	if (*t == '#')
-	    goto strtok_again;
-	/* skip blank lines */
-	if (!*t)
-	    goto strtok_again;
-	return t;
-    }
-}
 
 static squid_acl
 aclStrToType(const char *s)

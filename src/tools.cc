@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.222 2002/09/07 14:55:24 hno Exp $
+ * $Id: tools.cc,v 1.223 2002/09/07 15:12:56 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1013,7 +1013,7 @@ getMyPort(void)
  * Similar to strtok, but has some rudimentary knowledge
  * of quoting
  */
-static char *
+char *
 strwordtok(char *buf, char **t)
 {
     unsigned char *word = NULL;
@@ -1060,7 +1060,7 @@ strwordtok(char *buf, char **t)
 /*
  * Inverse of strwordtok. Quotes a word if needed
  */
-static void
+void
 strwordquote(MemBuf * mb, const char *str)
 {
     int quoted = 0;
