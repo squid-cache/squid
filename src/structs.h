@@ -53,6 +53,19 @@ struct _snmpconf {
     snmpconf *next;
 };
 
+struct _snmp_request_t {
+	char *buf;
+	char *outbuf;
+	int len;
+	int sock;
+        long reqid;
+	int outlen;
+	struct sockaddr_in from;
+	struct snmp_pdu *PDU;
+	aclCheck_t *acl_checklist;
+        char *community;
+};
+
 typedef struct _viewEntry {
     char viewName[32];
     int viewIndex;
@@ -66,6 +79,7 @@ typedef struct _communityEntry {
     char name[64];
     int readView;
     int writeView;
+    struct _acl_access *acls;
     struct _communityEntry *next;
 } communityEntry;
 
@@ -104,6 +118,7 @@ struct _acl_access {
     char *cfgline;
     struct _acl_access *next;
 };
+
 
 struct _aclCheck_t {
     const struct _acl_access *access_list;

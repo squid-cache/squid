@@ -2085,6 +2085,20 @@ DOC_START
 		snmp_agent_conf community readwrite all all
 DOC_END
 
+NAME: snmp_acl
+TYPE: snmp_access
+LOC: Config.Snmp.communities
+DEFAULT: none
+IFDEF: SQUID_SNMP
+DOC_START
+	Define access controls per community:
+	snmp_access communityname allow|deny [!]aclname ...
+	Example:
+		snmp_acl public allow adminsubnet
+		snmp_acl public deny all
+DOC_END
+
+
 NAME: as_whois_server
 TYPE: string
 LOC: Config.as_whois_server
