@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL requisitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>A URL requisitada n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+Erro de grava&ccedil;&atilde;o
+</STRONG>
+</UL>
+
+<P>
+O sistema retornou:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Uma condi&ccedil;&atilde;o de erro ocorreu enquanto escrevia na rede.
+Por favor tente novamente.
+</P>

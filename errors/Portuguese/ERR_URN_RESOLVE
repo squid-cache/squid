@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>ERRO: URN requisitada n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>Uma URL para requisi&ccedil;&atilde;o URN n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+N&atilde;o pode resolver a URN
+</STRONG>
+</UL>
+
+<P>
+N&atilde;o espere muita coisa de URNS em %t :-)
+</P>

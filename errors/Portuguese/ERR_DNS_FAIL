@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<TITLE>ERRO:  A URL requerida n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H2> A URL requerida n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<BLOCKQUOTE>
+Incapaz de determinar o endere&ccedil;o IP atrav&eacute;s do nome do host
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+O servidor DNS retornou:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Isso significa que:
+<PRE>
+ O cache foi incapaz de resolver o nome do host presente na URL.
+ Verifique se o endere&ccedil;o est&aacute; correto.
+</PRE>
+</P>
+

@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<TITLE>ERRO: A URL requerida n&atilde;o pode ser recuperada</TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2> A URL requerida n&atilde;o pode ser recuperada</H2>
+<HR>
+<P>
+
+Na tentativa de recuperar a URL:
+<A HREF="%U">%U</A>
+<P>
+O seguinte erro foi encontrado:
+
+<UL>
+<LI>
+<STRONG>
+Cache incapaz de encaminhar esta requsi&ccedil;&atilde;o neste momento.
+</STRONG>
+</UL>
+
+<P>
+Esta requsi&ccedil;&atilde;o n&atilde;o pode ser encaminhada para o servidor ou
+para qualquer outro cache. A causa mais prov&aacute;vel para este erro &eacute;:
+<UL>
+<LI>O administrador do cache n&atilde;o permite que este cache fa&ccedil;a
+    conex&otilde;es diretas para servidores, e
+<LI>Todos os caches configurados n&atilde;o est&atilde;o dispon&iacute;veis.
+</UL>
+</P>
