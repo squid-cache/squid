@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.144 2003/03/09 12:29:41 robertc Exp $
+ * $Id: url.cc,v 1.145 2003/06/09 04:41:36 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -706,35 +706,89 @@ urlCheckRequest(const request_t * r)
  *      Look for an ending '/' or ':' and terminate
  *      Look for login info preceeded by '@'
  */
+
+class URLHostName
+{
+
+public:
+    char * extract(char const *url);
+
+private:
+    static char Host [SQUIDHOSTNAMELEN];
+    void init(char const *);
+    void findHostStart();
+    void trimTrailingChars();
+    void trimAuth();
+    char const *hostStart;
+    char const *url;
+};
+
 char *
 urlHostname(const char *url)
 {
-    LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN);
-    char *t;
-    host[0] = '\0';
+    return URLHostName().extract(url);
+}
 
-    if (NULL == (t = strchr(url, ':')))
+char URLHostName::Host[SQUIDHOSTNAMELEN];
+
+void
+URLHostName::init(char const *aUrl)
+{
+    Host[0] = '\0';
+    url = url;
+}
+
+void
+URLHostName::findHostStart()
+{
+    if (NULL == (hostStart = strchr(url, ':')))
+        return;
+
+    ++hostStart;
+
+    while (*hostStart != '\0' && *hostStart == '/')
+        ++hostStart;
+}
+
+void
+URLHostName::trimTrailingChars()
+{
+    char *t;
+
+    if ((t = strchr(Host, '/')))
+        *t = '\0';
+
+    if ((t = strchr(Host, ':')))
+        *t = '\0';
+}
+
+void
+URLHostName::trimAuth()
+{
+    char *t;
+
+    if ((t = strrchr(Host, '@'))) {
+        t++;
+        xmemmove(Host, t, strlen(t) + 1);
+    }
+}
+
+char *
+URLHostName::extract(char const *aUrl)
+{
+    init(aUrl);
+    findHostStart();
+
+    if (hostStart == NULL)
         return NULL;
 
-    t++;
+    xstrncpy(Host, hostStart, SQUIDHOSTNAMELEN);
 
-    while (*t != '\0' && *t == '/')
-        t++;
+    trimTrailingChars();
 
-    xstrncpy(host, t, SQUIDHOSTNAMELEN);
+    trimAuth();
 
-    if ((t = strchr(host, '/')))
-        *t = '\0';
-
-    if ((t = strchr(host, ':')))
-        *t = '\0';
-
-    if ((t = strrchr(host, '@'))) {
-        t++;
-        xmemmove(host, t, strlen(t) + 1);
-    }
-
-    return host;
+    return Host;
 }
 
 static void
