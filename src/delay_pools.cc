@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.35 2003/03/04 01:40:27 robertc Exp $
+ * $Id: delay_pools.cc,v 1.36 2003/03/04 06:22:12 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -114,6 +114,8 @@ class AggregateId:public DelayIdComposite
     private:
         Aggregate::Pointer theAggregate;
     };
+
+    friend class AggregateId;
 
     DelayBucket theBucket;
     DelaySpec spec;
