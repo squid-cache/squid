@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.370 2003/04/20 05:28:58 robertc Exp $
+ * $Id: main.cc,v 1.371 2003/04/21 12:52:40 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -43,7 +43,7 @@
 #include "ACL.h"
 
 /* for error reporting from xmalloc and friends */
-extern void (*failure_notify) (const char *);
+SQUIDCEXTERN void (*failure_notify) (const char *);
 
 static int opt_send_signal = -1;
 static int opt_no_daemon = 0;
@@ -59,8 +59,6 @@ static volatile int do_shutdown = 0;
 
 static void mainRotate(void);
 static void mainReconfigure(void);
-static SIGHDLR rotate_logs;
-static SIGHDLR reconfigure;
 static void mainInitialize(void);
 static void usage(void);
 static void mainParseOptions(int, char **);
@@ -76,7 +74,9 @@ static EVH SquidShutdown;
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
+#ifndef _SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
+#endif
 
 #if TEST_ACCESS
 #include "test_access.c"
@@ -302,7 +302,7 @@ mainParseOptions(int argc, char *argv[])
 }
 
 /* ARGSUSED */
-static void
+void
 rotate_logs(int sig)
 {
     do_rotate = 1;
@@ -315,7 +315,7 @@ rotate_logs(int sig)
 }
 
 /* ARGSUSED */
-static void
+void
 reconfigure(int sig)
 {
     do_reconfigure = 1;
@@ -587,6 +587,16 @@ mainInitialize(void)
     debug(1, 0) ("Starting Squid Cache version %s for %s...\n",
                  version_string,
                  CONFIG_HOST_TYPE);
+
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+
+    if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
+        debug(1, 0) ("Running as %s Windows System Service on %s\n", WIN32_Service_name, WIN32_OS_string);
+        debug(1, 0) ("Service command line is: %s\n", WIN32_Service_Command_Line);
+    } else
+        debug(1, 0) ("Running on %s\n",WIN32_OS_string);
+
+#endif
 
     debug(1, 1) ("Process ID %d\n", (int) getpid());
 

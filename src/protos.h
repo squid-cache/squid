@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.475 2003/04/20 05:28:59 robertc Exp $
+ * $Id: protos.h,v 1.476 2003/04/21 12:52:40 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -658,6 +658,8 @@ extern void refreshInit(void);
 
 extern void serverConnectionsClose(void);
 extern void shut_down(int);
+extern void rotate_logs(int);
+extern void reconfigure(int);
 
 
 extern void start_announce(void *unused);
