@@ -1,3 +1,22 @@
+TODO LIST before official squid-1.1:
+
+	- Changes to 'TTL' handling:
+		- Basically get away from thinking in TTLs.  Instead think
+		  about refresh times.  
+		- change ttl_pattern to refresh_pattern
+		- remove 'http', 'gopher', and 'ftp' config options
+		  and instead have a single default refresh rate
+		  and a single max object size?
+		- Don't do TTL calculation whn object is fetched.  Instead
+		  do refresh time calculation when object is requested.
+		  Maybe we can lose StoreEntry->expires?
+		- lose 'max_expire_age' business?
+	- Fix up 'cache_mem' and accounted memory.  Divide accounted
+	  memory into different buckets and have separate config value
+	  for each?
+	- Write Perl script to convert squid-1.0 store to squid-1.1
+	  structure.
+
 Changes to squid-1.1.beta5 (October 7, 1996):
 
 	- Fixed coredump in storeFreeMemory().
