@@ -884,4 +884,8 @@ struct _ErrorState {
     ERCB *callback;
     void *callback_data;
     int flags;
+    struct {
+	char *request;
+	char *reply;
+    } ftp;
 };
