@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.55 1996/10/25 02:15:17 wessels Exp $
+ * $Id: gopher.cc,v 1.56 1996/10/27 07:11:55 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -800,7 +800,7 @@ gopherReadReply(int fd, GopherStateData * data)
 	if (data->conversion != NORMAL)
 	    gopherEndHTML(data);
 	if (!(entry->flag & DELETE_BEHIND))
-	    ttlSet(entry);
+	    timestampsSet(entry);
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	comm_close(fd);

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.117 1996/10/25 16:51:02 wessels Exp $
+ * $Id: cache_cf.cc,v 1.118 1996/10/27 07:11:51 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -125,7 +125,6 @@ struct SquidConfig Config;
 #define DefaultWaisRelayHost	(char *)NULL
 #define DefaultWaisRelayPort	0
 
-#define DefaultExpireAge	(86400 * 7)	/* 1 week */
 #define DefaultReferenceAge	0	/* disabled */
 #define DefaultNegativeTtl	(5 * 60)	/* 5 min */
 #define DefaultNegativeDnsTtl	(2 * 60)	/* 2 min */
@@ -254,7 +253,7 @@ static void parsePidFilenameLine _PARAMS((void));
 static void parseRequestSizeLine _PARAMS((void));
 static void parseStoreLogLine _PARAMS((void));
 static void parseSwapLine _PARAMS((void));
-static void parseTTLPattern _PARAMS((int icase, int force));
+static void parseRefreshPattern _PARAMS((int icase));
 static void parseVisibleHostnameLine _PARAMS((void));
 static void parseWAISRelayLine _PARAMS((void));
 static void parseMinutesLine _PARAMS((int *));
@@ -601,36 +600,25 @@ parseFtpLine(void)
 }
 
 static void
-parseTTLPattern(int icase, int force)
+parseRefreshPattern(int icase)
 {
     char *token;
     char *pattern;
-    time_t abs_ttl = 0;
-    int pct_age = 0;
-    time_t age_max = Config.ageMaxDefault;
+    time_t min = 0;
+    int pct = 0;
+    time_t max = 0;
     int i;
-
     token = strtok(NULL, w_space);	/* token: regex pattern */
     if (token == NULL)
 	self_destruct();
     pattern = xstrdup(token);
-
-    GetInteger(i);		/* token: abs_ttl */
-    abs_ttl = (time_t) (i * 60);	/* convert minutes to seconds */
-
-    token = strtok(NULL, w_space);	/* token: pct_age */
-    if (token != (char *) NULL) {	/* pct_age is optional */
-	if (sscanf(token, "%d", &pct_age) != 1)
-	    self_destruct();
-
-	token = strtok(NULL, w_space);	/* token: age_max */
-	if (token != (char *) NULL) {	/* age_max is optional */
-	    if (sscanf(token, "%d", &i) != 1)
-		self_destruct();
-	    age_max = (time_t) (i * 60);	/* convert minutes to seconds */
-	}
-    }
-    ttlAddToList(pattern, icase, force, abs_ttl, pct_age, age_max);
+    GetInteger(i);		/* token: min */
+    min = (time_t) (i * 60);	/* convert minutes to seconds */
+    GetInteger(i);		/* token: pct */
+    pct = i;
+    GetInteger(i);		/* token: max */
+    max = (time_t) (i * 60);	/* convert minutes to seconds */
+    refreshAddToList(pattern, icase, min, pct, max);
     safe_free(pattern);
 }
 
@@ -1212,14 +1200,10 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "ftp"))
 	    parseFtpLine();
 
-	else if (!strcmp(token, "ttl_pattern"))
-	    parseTTLPattern(0, 0);
-	else if (!strcmp(token, "ttl_pattern/i"))
-	    parseTTLPattern(1, 0);
-	else if (!strcmp(token, "ttl_force_pattern"))
-	    parseTTLPattern(0, 1);
-	else if (!strcmp(token, "ttl_force_pattern/i"))
-	    parseTTLPattern(1, 1);
+	else if (!strcmp(token, "refresh_pattern"))
+	    parseRefreshPattern(0);
+	else if (!strcmp(token, "refresh_pattern/i"))
+	    parseRefreshPattern(1);
 
 	else if (!strcmp(token, "quick_abort"))
 	    parseQuickAbort();
@@ -1236,8 +1220,6 @@ parseConfigFile(char *file_name)
 	    parseMinutesLine(&Config.cleanRate);
 	else if (!strcmp(token, "client_lifetime"))
 	    parseMinutesLine(&Config.lifetimeDefault);
-	else if (!strcmp(token, "expire_age"))
-	    parseMinutesLine(&Config.expireAge);
 	else if (!strcmp(token, "reference_age"))
 	    parseMinutesLine(&Config.referenceAge);
 
@@ -1392,6 +1374,11 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "minimum_direct_hops"))
 	    parseIntegerValue(&Config.minDirectHops);
 
+	else if (!strcmp(token, "store_objects_per_bucket"))
+	    parseIntegerValue(&Config.storeHash.objectsPerBucket);
+	else if (!strcmp(token, "store_avg_object_size"))
+	    parseIntegerValue(&Config.storeHash.avgObjectSize);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
@@ -1500,7 +1487,7 @@ configFreeMemory(void)
     wordlistDestroy(&Config.dns_testname_list);
     ip_acl_destroy(&Config.local_ip_list);
     ip_acl_destroy(&Config.firewall_ip_list);
-    ttlFreeList();
+    refreshFreeMemory();
 }
 
 
@@ -1526,7 +1513,6 @@ configSetFactoryDefaults(void)
     Config.Wais.relayHost = safe_xstrdup(DefaultWaisRelayHost);
     Config.Wais.relayPort = DefaultWaisRelayPort;
 
-    Config.expireAge = DefaultExpireAge;
     Config.referenceAge = DefaultReferenceAge;
     Config.negativeTtl = DefaultNegativeTtl;
     Config.negativeDnsTtl = DefaultNegativeDnsTtl;

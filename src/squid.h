@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.62 1996/10/24 23:29:40 wessels Exp $
+ * $Id: squid.h,v 1.63 1996/10/27 07:12:00 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -256,6 +256,7 @@ typedef int (*QS) (const void *, const void *);
 #include "icmp.h"
 #include "net_db.h"
 #include "client_db.h"
+#include "refresh.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
@@ -300,10 +301,7 @@ extern int objcacheStart _PARAMS((int, char *, StoreEntry *));
 extern void send_announce _PARAMS((void));
 extern int sslStart _PARAMS((int fd, char *, request_t *, char *, int *sz));
 extern char *storeToString _PARAMS((StoreEntry *));
-extern void ttlSet _PARAMS((StoreEntry *));
-extern void ttlFreeList _PARAMS((void));
-extern void ttlAddToList _PARAMS((char *, int, int, time_t, int, time_t));
-extern void ttlAddToForceList _PARAMS((char *, time_t, time_t));
+extern void timestampsSet _PARAMS((StoreEntry *));
 extern int waisStart _PARAMS((int, char *, method_t, char *, StoreEntry *));
 extern void storeDirClean _PARAMS((void));
 extern char dash_str[];
