@@ -1,0 +1,1734 @@
+NAME: http_port ascii_port
+TYPE: ushortlist
+DEFAULT: 3128
+LOC: Config.Port.http
+DOC_START
+	The port number where squid will listen for HTTP client
+	requests.  Default is 3128, for httpd-accel mode use port 80.
+	May be overridden with -a on the command line.
+
+	You may specify multiple ports here, but they MUST all be on
+	a single line.
+
+http_port 3128
+DOC_END
+
+
+NAME: icp_port udp_port
+TYPE: ushort
+DEFAULT: 3130
+LOC: Config.Port.icp
+DOC_START
+	The port number where squid send and receive ICP requests to
+	and from neighbor caches.  Default is 3130.  To disable use
+	"0".  May be overridden with -u on the command line.
+
+icp_port 3130
+DOC_END
+
+
+NAME: mcast_groups
+TYPE: wordlist
+LOC: Config.mcast_group_list
+DEFAULT: NULL
+DOC_START
+	This tag specifies a list of multicast groups which your
+	server should join to receive multicasted ICP requests.
+
+	NOTE!  Be very careful what you put here!  Be sure you
+	understand the difference between an ICP _query_ and an ICP
+	_reply_.  This option is to be set only if you want to RECEIVE
+	multicast queries.  Do NOT set this option to SEND multicast
+	ICP (use cache_host for that).  ICP replies are always sent via
+	unicast, so this option does not affect whether or not you will
+	receive replies from multicast group members.
+
+	You must be very careful to NOT use a multicast address which
+	is already in use by another group of caches.  NLANR has been
+	assigned a block of multicast address space for use in Web
+	Caching.  Plese write to us at nlanr-cache@nlanr.net to receive
+	an address for your own use.
+
+	Usage: mcast_groups 239.128.16.128 224.0.1.20
+
+	By default, squid doesn't listen on any multicast groups.
+
+mcast_groups 239.128.16.128
+DOC_END
+
+
+NAME: tcp_incoming_address bind_address
+TYPE: address
+LOC: Config.Addrs.tcp_incoming
+DEFAULT: INADDR_ANY
+DOC_NONE
+
+NAME: tcp_outgoing_address outbound_address
+TYPE: address
+LOC: Config.Addrs.tcp_outgoing
+DEFAULT: no_addr.s_addr
+DOC_NONE
+
+NAME: udp_incoming_address
+TYPE: address
+LOC:Config.Addrs.udp_incoming
+DEFAULT: INADDR_ANY
+DOC_NONE
+
+NAME: udp_outgoing_address
+TYPE: address
+LOC: Config.Addrs.udp_outgoing
+DEFAULT: no_addr.s_addr
+DOC_START
+	Usage: tcp_incoming_address 10.20.30.40
+	       udp_outgoing_address fully.qualified.domain.name
+
+	These tags have replaced 'bind_address' and 'outbound_address'
+	to provide more control for multihomed hosts.
+
+	tcp_incoming_address	is used for the HTTP socket which accepts
+				connections from clients and other caches.
+	tcp_outgoing_address	is used for connections made to remote
+				servers and other caches.
+	udp_incoming_address	is used for the ICP socket receiving packets
+				from other caches.
+	udp_outgoing_address	is used for ICP packets sent out to other
+				caches.
+
+	The defaults behaviour is to not bind to any specific address.
+
+	NOTE, udp_incoming_address and udp_outgoing_address can not have
+	the same value since they both use port 3130.
+
+tcp_incoming_address 0.0.0.0
+tcp_outgoing_address 0.0.0.0
+udp_incoming_address 0.0.0.0
+udp_outgoing_address 0.0.0.0
+DOC_END
+
+
+# OPTIONS WHICH AFFECT THE NEIGHBOR SELECTION ALGORITHM
+#-----------------------------------------------------------------------------
+
+NAME: cache_host
+TYPE: cachehost
+DOC_START
+	To specify other caches in a hierarchy, use the format:
+
+		hostname type http_port icp_port
+
+   For example,
+
+	#                                        proxy  icp
+	#          hostname             type     port   port  options
+	#          -------------------- -------- ----- -----  -----------
+	cache_host bigserver.usc.edu    parent    3128  3130  [proxy-only]
+	cache_host littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
+	cache_host littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
+
+	      type:  either 'parent', 'sibling', or 'multicast'.
+
+	proxy_port:  The port number where the cache listens for proxy
+		     requests.
+
+	  icp_port:  Used for querying neighbor caches about
+		     objects.  To have a non-ICP neighbor
+		     specify '7' for the ICP port and make sure the
+		     neighbor machine has the UDP echo port
+		     enabled in its /etc/inetd.conf file.
+
+	    options: proxy-only
+		     weight=n
+		     ttl=n
+		     no-query
+		     default
+		     round-robin
+		     multicast-responder
+
+		     use 'proxy-only' to specify that objects fetched
+		     from this cache should not be saved locally.
+
+		     use 'weight=n' to specify a weighted parent.
+		     The weight must be an integer.  The default weight
+		     is 1, larger weights are favored more.
+
+		     use 'ttl=n' to specify a IP multicast TTL to use
+		     when sending an ICP request to this address.
+		     Only useful when sending to a multicast group.
+		     Because we don't accept ICP replies from random
+		     hosts, you must configure other group members as
+		     peers with the 'multicast-responder' option below.
+
+		     use 'no-query' to NOT send ICP queries to this
+		     neighbor.
+
+		     use 'default' if this is a parent cache which can
+		     be used as a "last-resort." You should probably
+		     only use 'default' in situations where you cannot
+		     use ICP with your parent cache(s).
+
+		     use 'round-robin' to define a set of parents which
+		     should be used in a round-robin fashion in the
+		     absence of any ICP queries.
+
+		     'multicast-responder' indicates that the named peer
+		     is a member of a multicast group.  ICP queries will
+		     not be sent directly to the peer, but ICP replies
+		     will be accepted from it.
+
+	NOTE: non-ICP neighbors must be specified as 'parent'.
+
+cache_host hostname type 3128 3130
+DOC_END
+
+
+NAME: cache_host_domain
+TYPE: hostdomain
+DOC_START
+	Use to limit the domains for which a neighbor cache will be queried.
+	Usage:
+
+	cache_host_domain cache-host domain [domain ...]
+	cache_host_domain cache-host !domain
+
+	For example, specifying
+
+		cache_host_domain bigserver.usc.edu	.edu
+
+	has the effect such that UDP query packets are sent to
+	'bigserver' only when the requested object exists on a
+	server in the .edu domain.  Prefixing the domainname
+	with '!' means that the cache will be queried for objects
+	NOT in that domain.
+
+	NOTE:	* Any number of domains may be given for a cache-host,
+		  either on the same or separate lines.
+		* When multiple domains are given for a particular
+		  cache-host, the first matched domain is applied.
+		* Cache hosts with no domain restrictions are queried
+		  for all requests.
+		* There are no defaults.
+		* There is also a 'cache_host_acl' tag in the ACL
+		  section.
+DOC_END
+
+
+NAME: neighbor_type_domain
+TYPE: hostdomaintype
+DOC_START
+	usage: neighbor_type_domain parent|sibling domain domain ...
+
+	Modifying the neighbor type for specific domains is now
+	possible.  You can treat some domains differently than the the
+	default neighbor type specified on the 'cache_host' line.
+	Normally it should only be necessary to list domains which
+	should be treated differently because the default neighbor type
+	applies for hostnames which do not match domains listed here.
+
+EXAMPLE:
+	cache_host  parent cache.foo.org 3128 3130
+	neighbor_type_domain cache.foo.org sibling .com .net
+	neighbor_type_domain cache.foo.org sibling .au .de
+DOC_END
+
+NAME: single_parent_bypass
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.singleParentBypass
+DOC_START
+	This tag specifies that it is okay to bypass the hierarchy
+	"Pinging" when there is only a single parent for a given URL.
+
+	Usage: single_parent_bypass on|off
+
+	Before actually sending ICP "ping" packets to parents and
+	neighbors, we figure out which hosts would be pinged based
+	on the cache_host_domain rules, etc.  Often it may be the
+	case that only a single parent cache would be pinged.
+
+	Since there is only a single parent, there is a very good
+	chance that we will end up fetching the object from that
+	parent.  For this reason, it may be beneficial to avoid
+	the ping and just fetch the object anyway.
+
+	However, if we avoid the ping, we will be assuming that the
+	parent host is reachable and that the cache process is running.
+	By using the ping, we can be reasonably sure that the parent
+	host will be able to handle our request.  If the ping fails then
+	it may be possible to fetch the object directly from the source.
+
+	To favor the resiliency provided by the ping algorithm,
+	single_parent_bypass is 'off' by default.
+
+single_parent_bypass off
+DOC_END
+
+
+NAME: source_ping
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.sourcePing
+DOC_START
+	If source_ping is enabled, then squid will include the source
+	provider site in its selection algorithm.  This is accomplished
+	by sending ICP "HIT" packets to the UDP echo port of the source
+	host.  Note that using source_ping may send a fair amount of UDP
+	traffic out on the Internet and may irritate paranoid network
+	administrators.
+
+	Note that source_ping is incompatible with inside_firewall.
+	For hosts beyond the firewall, source_ping packets will never
+	be sent.
+
+	By default, source_ping is off.
+
+source_ping off
+DOC_END
+
+
+NAME: neighbor_timeout neighbour_timeout
+COMMENT: (seconds)
+DEFAULT: 2
+TYPE: time_sec
+LOC: Config.neighborTimeout
+DOC_START
+	This controls how long to wait for replies from neighbor caches.
+	If none of the parent or neighbor caches reply before this many
+	seconds (due to dropped packets or slow links), then the object
+	request will be satisfied from the default source.  The default
+	timeout is two seconds.
+
+neighbor_timeout 2 seconds
+DOC_END
+
+
+NAME: hierarchy_stoplist
+TYPE: wordlist
+LOC: Config.hierarchy_stoplist
+DOC_START
+	A list of words which, if found in a URL, cause the object to
+	be handled directly by this cache.  In other words, use this
+	to not query neighbor caches for certain objects.  You may
+	list this option multiple times.
+
+	The default is to directly fetch URLs containing 'cgi-bin' or '?'.
+
+hierarchy_stoplist cgi-bin ?
+DOC_END
+
+
+NAME: cache_stoplist
+TYPE: wordlist
+LOC: Config.cache_stoplist
+DOC_START
+	A list of words which, if found in a URL, cause the object to
+	immediately removed from the cache.  In other words, use this
+	to force certain objects to never be cached.  You may list this
+	option multiple times.
+
+	The default is to not cache URLs containing 'cgi-bin' or '?'.
+
+cache_stoplist cgi-bin ?
+DOC_END
+
+
+NAME: cache_stoplist_pattern
+COMMENT: # case sensitive
+TYPE: regexlist
+LOC: Config.cache_stop_relist
+DOC_NONE
+
+NAME: cache_stoplist_pattern/i
+COMMENT: # case insensitive
+TYPE: regexlist_icase
+LOC: Config.cache_stop_relist
+DOC_START
+	Just like 'cache_stoplist' but you can use regular expressions
+	instead of simple string matching.  There is no default.
+
+cache_stoplist_pattern
+DOC_END
+
+
+# OPTIONS WHICH AFFECT THE CACHE SIZE
+#-----------------------------------------------------------------------------
+
+
+NAME: cache_mem
+COMMENT: (in megabytes)
+TYPE: int
+DEFAULT: 8
+LOC: Config.Mem.maxSize
+DOC_START
+	Maximum amout of VM used to store objects in memory.
+	This includes:
+		in-transit objects,
+		negative-cached objects,
+		"hot" objects
+	The value of cache_mem is an upper limit on the size of the
+	"in-memory object data" pool.  This is a pool of 4k pages used
+	to hold object data.
+
+	In-transit objects have priority over the others.  When
+	additional space is needed for incoming data, negative-cached
+	and hot objects will be released.  In other words, the
+	negative-cached and hot objects will fill up any unused space
+	not needed for in-transit objects.
+
+	The values of cache_mem_low and cache_mem_high (below) can be
+	used to tune the use of the memory pool.  When the high mark is
+	reached, in-transit and hot objects will be released to clear
+	space.  When an object transfer is completed, it will remain in
+	memory only if the current memory usage is below the low water
+	mark.
+
+	The default is 8 Megabytes.
+
+cache_mem  8
+DOC_END
+
+
+NAME: cache_swap_low
+COMMENT: (percent, 0-100)
+TYPE: int
+DEFAULT: 90
+LOC: Config.Swap.lowWaterMark
+DOC_NONE
+
+NAME: cache_swap_high
+COMMENT: (percent, 0-100)
+TYPE: int
+DEFAULT: 95
+LOC: Config.Swap.highWaterMark
+DOC_START
+	The low- and high-water marks for cache LRU replacement.
+	LRU replacement begins when the high-water mark is reached
+	and ends when enough objects have been removed and the low-water
+	mark is reached. Defaults are 90% and 95%.
+
+cache_swap_low  90
+cache_swap_high 95
+DOC_END
+
+
+NAME: cache_mem_low
+COMMENT: (in percent, 0-100)
+TYPE: int
+DEFAULT: 75
+LOC: Config.Mem.lowWaterMark
+DOC_NONE
+
+NAME: cache_mem_high
+COMMENT: (in percent, 0-100)
+TYPE: int
+DEFAULT: 95
+LOC: Config.Mem.highWaterMark
+DOC_START
+	The low- and high-water mark for cache memory storage.  When
+	the amount of RAM used by the hot-object RAM cache reaches this
+	point, the cache starts throwing objects out of the RAM cache
+	(but they remain on disk).  Defaults are 75% and 90%.
+
+cache_mem_low  75
+cache_mem_high 90
+DOC_END
+
+
+NAME: maximum_object_size
+TYPE: int
+DEFAULT: 4096
+LOC: Config.Store.maxObjectSize
+DOC_START
+	Objects larger than this size will NOT be saved on disk.  The
+	value is specified in kilobytes, and the default is 4MB.
+
+maximum_object_size 4096
+DOC_END
+
+
+NAME: ipcache_size
+COMMENT: (number of entries)
+TYPE: int
+DEFAULT: 1024
+LOC: Config.ipcache.size
+DOC_NONE
+
+NAME: ipcache_low
+COMMENT: (percent)
+TYPE: int
+DEFAULT: 90
+LOC: Config.ipcache.low
+DOC_NONE
+
+NAME: ipcache_high
+COMMENT: (percent)
+TYPE: int
+DEFAULT: 95
+LOC: Config.ipcache.high
+DOC_START
+	The size, low-, and high-water marks for the IP cache.
+
+ipcache_size 1024
+ipcache_low  90
+ipcache_high 95
+DOC_END
+
+
+# LOGFILE PATHNAMES AND CACHE DIRECTORIES
+#-----------------------------------------------------------------------------
+
+NAME: cache_dir
+TYPE: cachedir
+DOC_START
+	Directory for on-disk cache storage.  The cache will change into
+	this directory when running.  The default is
+	/usr/local/squid/cache.
+
+	You can specify multiple cache_dir lines to spread the
+	cache among different disk partitions.
+
+cache_dir /usr/local/squid/cache 256 16 16
+DOC_END
+
+
+NAME: cache_access_log
+TYPE: string
+DEFAULT: /usr/local/squid/logs/access.log
+LOC: Config.Log.access
+DOC_START
+	Logs the client request activity.  Contains an entry for
+	every HTTP and ICP request received.
+
+cache_access_log /usr/local/squid/logs/access.log
+DOC_END
+
+
+NAME: cache_log
+TYPE: string
+DEFAULT: /usr/local/squid/logs/cache.log
+LOC: Config.Log.log
+DOC_START
+	Cache logging file.  Set logging levels with "debug_options" below.
+
+cache_log /usr/local/squid/logs/cache.log
+DOC_END
+
+
+NAME: cache_store_log
+TYPE: string
+DEFAULT: /usr/local/squid/logs/store.log
+LOC: Config.Log.store
+DOC_START
+	Logs the activities of the storage manager.  Shows which
+	objects are ejected from the cache, and which objects are
+	saved and for how long.  To disable, enter "none".
+
+cache_store_log /usr/local/squid/logs/store.log
+DOC_END
+
+
+NAME: cache_swap_log
+TYPE: string
+LOC: Config.Log.swap
+DOC_START
+	Location for the cache "swap log."  This log file holds the
+	metadata of objects saved on disk.  It is used to rebuild the
+	cache during startup.  Normally this file resides in the first
+	'cache_dir' directory, but you may specify an alternate
+	pathname here.  Note you must give a full filename, not just
+	a directory.
+
+cache_swap_log
+DOC_END
+
+
+NAME: emulate_httpd_log
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.commonLogFormat
+DOC_START
+	The Cache can emulate the log file format which many 'httpd'
+	programs use.  To disable/enable this emulation, set
+	emulate_httpd_log to 'off' or 'on'.  The default
+	is to use the native log format.
+
+emulate_httpd_log off
+DOC_END
+
+
+NAME: mime_table
+TYPE: pathname_check
+DEFAULT: /usr/local/squid/etc/mime.conf
+LOC: Config.mimeTablePathname
+DOC_START
+	Pathname to Squid's MIME table which has the format
+
+	    regex content-type icon content-encoding transfer-mode
+
+mime_table /usr/local/squid/etc/mime.conf
+DOC_END
+
+
+NAME: log_mime_hdrs
+COMMENT: on|off
+TYPE: onoff
+LOC: Config.logMimeHdrs
+DOC_START
+	The Cache can record both the request and the response
+	MIME headers for each HTTP transaction.  The headers are
+	encoded safely and will appear as two bracketed fields
+	at the end of the access log (for either the native
+	or httpd-emulated log formats).  To enable this logging
+	set log_mime_hdrs to 'on'.
+
+	NOTE: support for this may require you to define
+	LOG_FULL_HEADERS before compiling.
+
+log_mime_hdrs off
+DOC_END
+
+
+NAME: useragent_log
+TYPE: string
+LOC: Config.Log.useragent
+DOC_START
+	If compiled with "-DUSE_USERAGENT_LOG=1" Squid will write
+	the User-Agent field from HTTP requests to the filename
+	specified here.  By default useragent_log is disabled.
+
+useragent_log none
+DOC_END
+
+
+NAME: pid_filename
+TYPE: string
+DEFAULT: /usr/local/squid/logs/squid.pid
+LOC: Config.pidFilename
+DOC_START
+       A pathname to write the process-id to.  To disable, enter "none".
+
+pid_filename /usr/local/squid/logs/squid.pid
+DOC_END
+
+
+NAME: debug_options
+TYPE: string_optional
+DEFAULT: ALL,1
+LOC: Config.debugOptions
+DOC_START
+	Logging options are set as section,level where each source file
+	is assigned a unique section.  Lower levels result in less
+	output,  Full debugging (level 9) can result in a very large
+	log file, so be careful.  The magic word "ALL" sets debugging
+	levels for all sections.  We recommend normally running with
+	"ALL,1".
+
+debug_options ALL,1
+DOC_END
+
+
+NAME: ident_lookup
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.identLookup
+DOC_START
+	If you wish to make an RFC931/ident lookup of the client username
+	for each connection, enable this.  It is off by default.
+
+ident_lookup off
+DOC_END
+
+
+NAME: log_fqdn
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.Log.log_fqdn
+DOC_START
+	Turn this on if you wish to log fully qualified domain names
+	in the access.log.
+
+log_fqdn off
+DOC_END
+
+
+NAME: client_netmask
+TYPE: address
+LOC: Config.Addrs.client_netmask
+DOC_START
+	A netmask for client addresses in logfiles and cachemgr output.
+	Change this to protect the privacy of your cache clients.
+
+client_netmask 255.255.255.255
+DOC_END
+
+
+# OPTIONS FOR EXTERNAL SUPPORT PROGRAMS
+#-----------------------------------------------------------------------------
+
+#  TAG: ftpget_program
+#	Where to find the 'ftpget' program that retrieves FTP data (HTTP
+#	and Gopher protocol support are built into the cache).
+#
+#	To disable ftpget and the ability to retrieve FTP objects, set
+#	this to "none".  Note that ftpget is automatically disabled for
+#	http_accel mode.
+#
+#ftpget_program @DEFAULT_FTPGET@
+
+#  TAG: ftpget_options
+#	Options for the 'ftpget' program.  Please run 'ftpget' without
+#	any arguments to see a list of options.  The default is
+#	no options.  An example is
+#
+#	ftpget_options -n 60 -R -W
+#
+#ftpget_options
+
+NAME: ftp_user
+TYPE: string
+DEFAULT: squid@
+LOC: Config.Ftp.anon_user
+DOC_START
+	If you want the anonymous login password to be more informative
+	(and enable the use of picky ftp servers), set this to something
+	resonable for your domain, like wwwuser@somewhere.net
+
+	The reason why this is domainless by default is that the
+	request can be made on the behalf of a user in any domain,
+	depending on how the cache is used.
+	Some ftp server also validate that the email address is valid
+	(for example perl.com).
+
+ftp_user squid@
+DOC_END
+
+
+NAME: cache_dns_program
+TYPE: pathname_check
+DEFAULT: /usr/local/squid/bin/dnsserver
+LOC: Config.Program.dnsserver
+DOC_START
+	Specify the location of the executable for dnslookup process.
+
+cache_dns_program /usr/local/squid/bin/dnsserver
+DOC_END
+
+
+NAME: dns_children
+TYPE: int
+DEFAULT: 5
+LOC: Config.dnsChildren
+DOC_START
+	The number of processes spawn to service DNS name lookups.
+	For heavily loaded caches on large servers, you should
+	probably increase this value to at least 10.  The maximum
+	is 32.  The default is 5.
+
+	To disable dnsservers, set this to 0.  NOTE, this is very
+	strongly discouraged.  If you disable dnsservers your Squid
+	process will BLOCK on DNS lookups!
+
+dns_children 5
+DOC_END
+
+
+NAME: dns_defnames
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.Options.res_defnames
+DOC_START
+	Normally the 'dnsserver' disables the RES_DEFNAMES resolver
+	option (see res_init(3)).  This prevents caches in a hierarchy
+	from interpreting single-component hostnames locally.  To allow
+	dnsserver to handle single-component names, enable this
+	option.
+
+dns_defnames off
+DOC_END
+
+
+NAME: unlinkd_program
+TYPE: pathname_check
+DEFAULT: /usr/local/squid/bin/unlinkd
+LOC: Config.Program.unlinkd
+DOC_START
+	Specify the location of the executable for file deletion process.
+
+unlinkd_program /usr/local/squid/bin/unlinkd
+DOC_END
+
+
+NAME: pinger_program
+TYPE: pathname_check
+DEFAULT: /usr/local/squid/bin/pinger
+LOC: Config.Program.pinger
+DOC_START
+	Specify the location of the executable for the pinger process.
+
+pinger_program /usr/local/squid/bin/pinger
+DOC_END
+
+
+NAME: redirect_program
+TYPE: pathname_check
+LOC: Config.Program.redirect
+DOC_START
+	Specify the location of the executable for the URL redirector.
+	Currently, you must provide your own redirector program.
+	See the Release-Notes for how to write one.
+	By default, the redirector is not used.
+
+redirect_program /bin/false
+DOC_END
+
+
+NAME: redirect_children
+TYPE: int
+DEFAULT: 5
+LOC: Config.redirectChildren
+DOC_START
+	The number of redirector processes to spawn.
+
+redirect_children 5
+DOC_END
+
+
+# OPTIONS FOR TUNING THE CACHE
+#-----------------------------------------------------------------------------
+
+NAME: wais_relay
+TYPE: waisrelay
+DOC_START
+	Relay WAIS request to host (1st arg) at port (2 arg).
+
+wais_relay localhost 8000
+DOC_END
+
+
+NAME: request_size
+TYPE: int
+DEFAULT: 100
+LOC: Config.maxRequestSize
+DOC_START
+	Maximum allowed request size in kilobytes.  If people are using
+	POST to upload files, then set this to the largest acceptable
+	filesize plus a few extra kbytes.
+
+request_size 100
+DOC_END
+
+
+NAME: refresh_pattern
+COMMENT: # case sensitive
+TYPE: refreshpattern
+DOC_NONE
+
+NAME: refresh_pattern/i
+COMMENT: # case insensitive
+TYPE: refreshpattern_icase
+DOC_START
+	usage: refresh_pattern regex min percent max
+
+	min and max are specified in MINUTES.
+	percent is an integer number.
+
+	Please see the file doc/Release-Notes-1.1.txt for a full
+	description of Squid's refresh algorithm.  Basically a
+	cached object is:
+
+		FRESH if age < min
+		STALE if expires < now
+		STALE if age > max
+		FRESH if lm-factor < percent
+
+	The refresh_pattern lines are checked in the order listed here.
+	The first entry which matches is used.  If none of the entries
+	match, then the default will be used.
+
+Default:
+refresh_pattern 	.	0 20% 4320
+DOC_END
+
+
+NAME: reference_age
+TYPE: time_min
+LOC: Config.referenceAge
+DOC_START
+	As a part of normal operation, Squid performs Least Recently
+	Used removal of cached objects.  The LRU age for removal is
+	computed dynamically, based on the amount of disk space in
+	use.  The 'reference_age' value defines the maximum LRU age.
+	For example, setting reference_age to '1 week' will cause
+	objects to be removed if they have not been accessed for a week
+	or more.  If set to zero, LRU removal is disabled, and objects
+	will be removed only when disk usage is over the high water
+	mark.  The default value is one year.
+
+	Specify a number here, followed by units of time.  For example:
+		1 week
+		3.5 days
+		4 months
+		2.2 hours
+
+reference_age 1 year
+DOC_END
+
+
+NAME: quick_abort
+TYPE: quickabort
+DOC_START
+	By default the cache continues to retrieve objects from
+	aborted requests.  This may be undesirable on slow (e.g. SLIP)
+	links and/or very busy caches.  Impatient users may tie up
+	file descriptors by repeatedly aborting and re-requesting
+	non-cachable objects.
+
+	Usage: quick_abort    min-kbytes percent max-kbytes
+
+	When the user aborts a request, Squid will check the
+	quick_abort values to the amount of data transfered until
+	then.
+
+	If the transfer has less than 'min-kbytes' remaining, it
+	will finish the retrieval.  Setting minlength to -1 will
+	disable the quick_abort feature.
+
+	If the transfer has more than 'max-kbytes' remaining, it
+	will abort the retrieval.
+
+	If more than 'percent' of the transfer has completed, it will
+	finish the retrieval.
+
+quick_abort    -1 0 0
+DOC_END
+
+
+NAME: negative_ttl
+COMMENT: (in minutes)
+TYPE: time_sec
+LOC: Config.negativeTtl
+DOC_START
+	Time-to-Live (TTL) for failed requests.  Certain types of
+	failures (such as "connection refused" and "404 Not Found") are
+	negatively-cached for a small amount of time.  The default is 5
+	minutes.  Note that this is different from negative caching of
+	DNS lookups.
+
+negative_ttl 5 minutes
+DOC_END
+
+
+NAME: positive_dns_ttl
+COMMENT: (in minutes)
+TYPE: time_sec
+LOC: Config.positiveDnsTtl
+DOC_START
+	Time-to-Live (TTL) for positive caching of successful DNS lookups.
+	Default is 6 hours (360 minutes).  If you want to minimize the
+	use of Squid's ipcache, set this to 1, not 0.
+
+positive_dns_ttl 360 minutes
+DOC_END
+
+
+NAME: negative_dns_ttl
+COMMENT: (in minutes)
+TYPE: time_sec
+LOC: Config.negativeDnsTtl
+DOC_START
+	Time-to-Live (TTL) for negative caching of failed DNS lookups.
+
+negative_dns_ttl 5 minutes
+DOC_END
+
+
+# TIMEOUTS
+#-----------------------------------------------------------------------------
+
+NAME: connect_timeout
+COMMENT: (in seconds)
+TYPE: time_sec
+LOC: Config.Timeout.connect
+DOC_START
+	Some systems (notably Linux) can not be relied upon to properly
+	time out connect(2) requests.  Therefore the squid process
+	enforces its own timeout on server connections.  This parameter
+	specifies how long to wait for the connect to complete.  The
+	default is two minutes (120 seconds).
+
+connect_timeout 120 seconds
+DOC_END
+
+
+NAME: read_timeout
+COMMENT: (in minutes)
+TYPE: time_sec
+LOC: Config.Timeout.read
+DOC_START
+	The read_timeout is applied on server-side connections.  After
+	each successful read(), the timeout will be extended by this
+	amount.  If no data is read again after this amount of time,
+	the request is aborted and logged with ERR_READ_TIMEOUT.  The
+	default is 15 minutes.
+
+read_timeout 15 minutes
+DOC_END
+
+
+NAME: defer_timeout
+COMMENT: (in minutes)
+TYPE: time_sec
+LOC: Config.Timeout.defer
+DOC_START
+	If your clients are behind slow (e.g. PPP/SLIP) connections,
+	then data may come in from the server-side faster than it can
+	be written to the client-side.  When the server side gets too
+	far ahead of the client-side, subsequent reads will be deferred
+	until the client catches up.  This timeout determines how long
+	to wait while in "deferred read mode." The default is one
+	hour.
+
+defer_timeout 60 minutes
+DOC_END
+
+
+NAME: request_timeout
+TYPE: time_sec
+LOC: Config.Timeout.request
+DOC_START
+	How long to wait for an HTTP request after connection
+	establishment.  For persistent connections, wait this long
+	after the previous request completes.
+
+defer_timeout 30 seconds
+DOC_END
+
+
+NAME: client_lifetime
+COMMENT: (in minutes)
+TYPE: time_sec
+LOC: Config.Timeout.lifetime
+DOC_START
+	The maximum amount of time that a client (browser) is allowed to
+	remain connected to the cache process.  This protects the Cache
+	from having alot of sockets (and hence file descriptors) tied up
+	in a CLOSE_WAIT state from remote clients that go away without
+	properly shutting down (either because of a network failure or
+	because of a poor client implementation).  The default is one
+	day, 1440 minutes.
+
+	NOTE:  The default value is intended to be much larger than any
+	client would ever need to be connected to your cache.  You
+	should probably change client_lifetime only as a last resort.
+	If you seem to have many client connections tying up
+	filedescriptors, we recommend first tuning the read_timeout,
+	defer_timeout, and quick_abort values.
+
+client_lifetime 1 day
+DOC_END
+
+
+NAME: shutdown_lifetime
+COMMENT: (in seconds)
+TYPE: time_sec
+LOC: Config.shutdownLifetime
+DOC_START
+	When SIGTERM or SIGHUP is received, the cache is put into
+	"shutdown pending" mode until all active sockets are closed.
+	This value is the lifetime to set for all open descriptors
+	during shutdown mode.  Any active clients after this many
+	seconds will receive a 'timeout' message.
+
+shutdown_lifetime 30 seconds
+DOC_END
+
+
+# ACCESS CONTROLS
+#-----------------------------------------------------------------------------
+
+NAME: acl
+TYPE: acl
+DOC_START
+	Defining an Access List
+
+	acl aclname acltype string1 ...
+	acl aclname acltype "file" ...
+
+	when using "file", the file should contain one item per line
+
+	acltype is one of src dst srcdomain dstdomain url_pattern
+		urlpath_pattern time port proto method browser user
+
+	acl aclname src      ip-address/netmask ... (clients IP address)
+	acl aclname src      addr1-addr2/netmask ... (range of addresses)
+	acl aclname dst      ip-address/netmask ... (URL host's IP address)
+	acl aclname srcdomain   foo.com ... (taken from reverse DNS lookup)
+	acl aclname dstdomain   foo.com ... (taken from the URL)
+	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
+	    day-abbrevs:
+		S - Sunday
+		M - Monday
+		T - Tuesday
+		W - Wednesday
+		H - Thursday
+		F - Friday
+		A - Saturday
+	    h1:m1 must be less than h2:m2
+	acl aclname url_regex  ^http:// ...	# regex matching on whole URL
+	acl aclname urlpath_regex  \.gif$ ...	# regex matching on URL path only
+	acl aclname port     80 70 21 ...
+	acl aclname proto    HTTP FTP ...
+	acl aclname method   GET POST ...
+	acl aclname browser  regexp
+	acl aclname user     username ...	# string match on ident output.
+						# use REQUIRED to accept any
+						# non-null ident.
+
+acl manager proto cache_object
+acl localhost src 127.0.0.1/255.255.255.255
+acl all src 0.0.0.0/0.0.0.0
+
+acl SSL_ports port 443 563
+acl Dangerous_ports port 7 9 19
+acl CONNECT method CONNECT
+DOC_END
+
+NAME: http_access
+TYPE: acl_access
+LOC: Config.accessList.HTTP
+DOC_START
+	Allowing or Denying access based on defined access lists
+
+	Access to the HTTP port:
+	http_access allow|deny [!]aclname ...
+
+	Access to the ICP port:
+	icp_access  allow|deny [!]aclname ...
+
+	NOTE on default values:
+
+	If there are no "access" lines present, the default is to allow
+	the request.
+
+	If none of the "access" lines cause a match, the default is the
+	opposite of the last line in the list.  If the last line was
+	deny, then the default is allow.  Conversely, if the last line
+	is allow, the default will be deny.  For these reasons, it is a
+	good idea to have an "deny all" or "allow all" entry at the end
+	of your access lists to avoid potential confusion.
+
+
+	Only allow access to the cache manager functions from the local host.
+http_access deny manager !localhost
+http_access deny CONNECT !SSL_ports
+http_access deny Dangerous_ports
+
+	Allow everything else
+http_access allow  all
+DOC_END
+
+
+NAME: icp_access
+TYPE: acl_access
+LOC: Config.accessList.ICP
+DOC_START
+	Reply to all ICP queries we receive
+
+icp_access  allow  all
+DOC_END
+
+
+NAME: miss_access
+TYPE: acl_access
+LOC: Config.accessList.MISS
+DOC_START
+	Use to force your neighbors to use you as a sibling instead of
+	a parent.  For example:
+
+		acl localclients src 172.16.0.0/16
+		miss_access allow localclients
+		miss_access deny  !localclients
+
+	This means that only your local clients are allowed to fetch
+	MISSES and all other clients can only fetch HITS.
+
+	By default, allow all clients who passed the http_access rules
+	to fetch MISSES from us.
+
+miss_access allow  all
+DOC_END
+
+
+NAME: cache_host_acl
+TYPE: hostacl
+DOC_START
+	Just like 'cache_host_domain' but provides more flexibility by
+	using ACL's.
+
+		cache_host_acl cache-host	[!]aclname ...
+
+	NOTE:	* Any number of ACL's may be given for a cache-host,
+		  either on the same or separate lines.
+		* When multiple ACL's are given for a particular
+		  cache-host, the first matched ACL is applied.
+		* Cache hosts with no domain or ACL restrictions are
+		  queried for all requests.
+		* There are no defaults.
+DOC_END
+
+
+# ADMINISTRATIVE PARAMETERS
+#-----------------------------------------------------------------------------
+
+NAME: cache_mgr
+TYPE: string
+DEFAULT: webmaster
+LOC: Config.adminEmail
+DOC_START
+	Email-address of local cache manager who will receive
+	mail if the cache dies.  The default is "webmaster."
+
+cache_mgr webmaster
+DOC_END
+
+
+NAME: cache_effective_user
+TYPE: effectiveuser
+DOC_START
+	If the cache is run as root, it will change its effective/real
+	UID/GID to the UID/GID specified below.  The default is not to
+	change UID/GID.
+
+cache_effective_user nobody nogroup
+DOC_END
+
+
+NAME: visible_hostname
+TYPE: string
+LOC: Config.visibleHostname
+DOC_START
+	If you want to present a special hostname in error messages, etc,
+	then define this.  Otherwise, the return value of gethostname()
+	will be used.
+
+visible_hostname www-cache.foo.org
+DOC_END
+
+
+# OPTIONS FOR THE CACHE REGISTRATION SERVICE
+#-----------------------------------------------------------------------------
+
+#	This section contains parameters for the (optional) cache
+#	announcement service.  This service is provided to help
+#	cache administrators locate one another in order to join or
+#	create cache hierarchies.
+#
+#	An 'announcement' message is sent (via UDP) to the registration
+#	service by Squid.  By default, the annoucement message is NOT
+#	SENT unless you enable it with 'cache_announce' below.
+#
+#	The announcement message includes your hostname, plus the
+#	following information from this configuration file:
+#
+#		http_port
+#		icp_port
+#		cache_mgr
+#
+#	All current information is processed regularly and made
+#	available on the Web at http://www.nlanr.net/Cache/Tracker/.
+
+
+NAME: cache_announce
+TYPE: cacheannounce
+DOC_START
+	This is how frequently to send cache announcements.  The default
+	is `0' which disables sending the announcement messages.
+
+	To enable announcing your cache, just uncomment the line below.
+
+cache_announce 24
+DOC_END
+
+
+NAME: announce_to
+TYPE: announceto
+DOC_START
+	This is the hostname and portnumber where the registration message
+	will be sent.
+
+	Format:	announce_to   host[:port] [filename]
+
+	Hostname will default to 'sd.cache.nlanr.net' and port will default
+	to 3131.  If the 'filename' argument is given, the contents of that
+	file will be included in the announce message.
+
+announce_to sd.cache.nlanr.net:3131
+DOC_END
+
+
+# HTTPD-ACCELERATOR OPTIONS
+#-----------------------------------------------------------------------------
+
+NAME: httpd_accel
+TYPE: httpdaccel
+DOC_START
+	If you want to run squid as an httpd accelerator, define the
+	host name and port number where the real HTTP server is.
+
+	If you want virtual host support then specify the hostname
+	as "virtual".
+
+httpd_accel real_httpd_host real_httpd_port
+DOC_END
+
+
+NAME: httpd_accel_with_proxy
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.Accel.withProxy
+DOC_START
+	If you want to use squid as both a local httpd accelerator
+	and as a proxy, change this to 'on'.
+
+httpd_accel_with_proxy off
+DOC_END
+
+
+NAME: httpd_accel_uses_host_header
+COMMENT: on|off
+TYPE: onoff
+LOC: opt_accel_uses_host
+DOC_START
+	HTTP/1.1 requests include a Host: header which is basically the
+	hostname from the URL.  Squid can be an accelerator for
+	different HTTP servers by looking at this header.  However,
+	Squid does NOT check the value of the Host header, so it opens
+	a big security hole.  We recommend that this option remain
+	disabled unless you are sure of what you are doing.
+
+httpd_accel_uses_host_header off
+DOC_END
+
+
+# MISCELLANEOUS
+#-----------------------------------------------------------------------------
+
+NAME: dns_testnames
+TYPE: wordlist
+LOC: Config.dns_testname_list
+DOC_START
+	The DNS tests exit as soon as the first site is successfully looked up
+
+	If you want to disable DNS tests, do not comment out or delete this
+	list.  Instead use the -D command line option
+
+dns_testnames internic.net usc.edu cs.colorado.edu mit.edu yale.edu
+DOC_END
+
+
+NAME: logfile_rotate
+TYPE: int
+DEFAULT: 10
+LOC: Config.Log.rotateNumber
+DOC_START
+	Specifies the number of logfile rotations to make upon receiving
+	a USR1 signal.  The default is 10, which will rotate with
+	extensions 0 through 9.  Setting logfile_rotate to 0 will
+	disable the rotation, but the logfiles are still closed and
+	re-opened.  This will enable you to rename the logfiles yourself
+	just before sending a USR1 signal to the squid process.
+
+logfile_rotate 10
+DOC_END
+
+
+NAME: append_domain
+TYPE: appenddomain
+DOC_START
+	Appends local domain name to hostnames without any dots in them.
+	append_domain must begin with a period.
+
+append_domain .yourdomain.com
+DOC_END
+
+
+NAME: tcp_recv_bufsize
+TYPE: int
+DEFAULT: 0
+LOC: Config.tcpRcvBufsz
+DOC_START
+	Size of receive buffer to set for TCP sockets.  Probably just
+	as easy to change your kernel's default.  Set to zero to use
+	the default buffer size.
+
+tcp_recv_bufsize 0
+DOC_END
+
+
+NAME: ssl_proxy
+TYPE: proxy
+LOC: Config.sslProxy
+DOC_START
+	Specify the name of a 'cache_host' listed above, or a hostname
+	and port number where all SSL requests should be forwarded to.
+
+	Usage: ssl_proxy cache_host
+	       ssl_proxy host:port
+
+ssl_proxy
+DOC_END
+
+
+NAME: passthrough_proxy
+TYPE: proxy
+LOC: Config.passProxy
+DOC_START
+	Specify the name of a 'cache_host' listed above, or a hostname
+	and port number where all non-GET (i.e. POST, PUT) requests
+	should be forwarded to.
+
+	Usage: passthrough_proxy cache_host
+	       passthrough_proxy host:port
+
+passthrough_proxy
+DOC_END
+
+
+NAME: proxy_auth
+TYPE: proxyauth
+DOC_START
+	Usage: proxy_auth passwd_file [ ignore-domain ]
+
+	'passwd_file' is an apache-style file of passwords for
+	authenticated proxy access Looks like user:password, with the
+	password being standard crypt() format.  Proxy authentication
+	is disabled by default.
+
+	'ignore-domain' is a domain name for which authorization will
+	*not* be required.
+
+	NOTE, proxy_auth support is not compiled into Squid by default.
+	To use this feature you must enable the USE_PROXY_AUTH option
+	near the top of src/Makefile.
+
+proxy_auth /dev/null
+DOC_END
+
+
+NAME: err_html_text
+TYPE: errhtml
+DOC_START
+	HTML text to include in error messages.  Make this a "mailto"
+	URL to your admin address, or maybe just a link to your
+	organizations Web page.
+
+err_html_text
+DOC_END
+
+
+NAME: deny_info
+TYPE: denyinfo
+LOC: Config.denyInfoList
+DOC_START
+	Usage: deny_info URL acl
+
+	This can be used to return a HTTP redirect for requests which
+	do not pass the 'http_access' rules.  A single ACL will cause
+	the http_access check to fail.  If a 'deny_info' line exists
+	for that ACL then Squid returns a redirect to the given URL.
+DOC_END
+
+
+NAME: udp_hit_obj
+COMMENT: on|off
+TYPE: onoff
+LOC: opt_udp_hit_obj
+DOC_START
+	If set, Squid will request UDP_HIT_OBJ replies from its
+	neighbors.  UDP_HIT_OBJ is nice because it saves bandwidth, but
+	it can cause some other problems.  For one it complicates
+	calculating hit rates.  Also, problems arise because the ICP
+	query does not contain any HTTP request headers which may
+	affect the reply.
+
+udp_hit_obj off
+DOC_END
+
+
+NAME: udp_hit_obj_size
+TYPE: int
+LOC: Config.udpMaxHitObjsz
+DOC_START
+	If set, Squid will limit UDP_HIT_OBJ size to be less than
+	this value.  Setting this value to more than SQUID_UDP_SO_SNDBUF
+	will not work as expected.  Set to zero to select the size
+	permited by the socket.
+udp_hit_obj_size     0
+DOC_END
+
+
+NAME: memory_pools
+COMMENT: on|off
+TYPE: onoff
+LOC: opt_mem_pools
+DOC_START
+	If set, Squid will keep pools of allocated (but unused) memory
+	available for future use.  If memory is a premium on your
+	system, disable this.
+
+memory_pools on
+DOC_END
+
+NAME: forwarded_for
+COMMENT: on|off
+TYPE: onoff
+LOC: opt_forwarded_for
+DOC_START
+	If set, Squid will include your system's IP address or name
+	in the HTTP requests it forwards.  By default it looks like
+	this:
+
+		X-Forwarded-For: 192.1.2.3
+
+	If you disable this, it will appear as
+
+		X-Forwarded-For: unknown
+
+forwarded_for on
+DOC_END
+
+NAME: log_icp_queries
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 1
+LOC: Config.Options.log_udp
+DOC_START
+	If set, ICP queries are logged to access.log.  ICP logging
+	is enabled by default, so uncomment and change the line
+	below to disable it.
+
+log_icp_queries on
+DOC_END
+
+
+NAME: minimum_direct_hops
+TYPE: int
+DEFAULT: 4
+LOC: Config.minDirectHops
+DOC_START
+	If using the ICMP pinging stuff, do direct fetches for sites
+	which are no more than this many hops away.
+
+minimum_direct_hops 4
+DOC_END
+
+
+NAME: cachemgr_passwd
+TYPE: cachemgrpasswd
+DOC_START
+	Specify passwords for cachemgr operations.
+
+	Usage: cachemgr_passwd password action action ...
+
+	valid actions are:
+		shutdown *
+		info
+		stats/objects
+		stats/vm_objects
+		stats/utilization
+		stats/ipcache
+		stats/fqdncache
+		stats/dns
+		stats/redirector
+		stats/io
+		stats/reply_headers
+		stats/filedescriptors
+		stats/netdb
+		log/status *
+		log/enable *
+		log/disable *
+		log/clear *
+		log *
+		parameter
+		server_list
+		client_list
+		squid.conf *
+
+	* Indicates actions which will not be performed without a
+	  valid password, others can be performed if not listed here.
+
+	To disable an action, set the password to "disable".
+	To allow performing an action without a password, set the
+	password to "none".
+
+	Use the keyword "all" to set the same password for all actions.
+
+cachemgr_passwd secret shutdown
+cachemgr_passwd lesssssssecret info stats/objects
+cachemgr_passwd disable all
+DOC_END
+
+
+#  TAG: swap_level1_dirs
+#	Number of first-level directories to create for storing cached
+#	objects.  Minimum 1, maximum 256, default 16.
+#
+#swap_level1_dirs 16
+
+#  TAG: swap_level2_dirs
+#       Number of sub-directories to create under each first-level
+#	directory.  Minimum 1, maximum 256, default 256.
+#
+#swap_level2_dirs 256
+
+NAME: store_avg_object_size
+TYPE: int
+DEFAULT: 20
+LOC: Config.Store.avgObjectSize
+DOC_START
+	Average object size, used to estimate number of objects your
+	cache can hold.  See doc/Release-Notes-1.1.txt.  The default is
+	20K.
+
+store_avg_object_size 20
+DOC_END
+
+NAME: store_objects_per_bucket
+TYPE: int
+DEFAULT: 50
+LOC: Config.Store.objectsPerBucket
+DOC_START
+	Target number of objects per bucket in the store hash table.
+	Lowering this value increases the total number of buckets and
+	also the storage maintenance rate.  The default is 20.
+
+store_objects_per_bucket 20
+DOC_END
+
+
+NAME: http_anonymizer
+TYPE: httpanonymizer
+LOC: Config.Options.anonymizer
+DOC_START
+	If you want to filter out certain HTTP request headers for
+	privacy reasons, enable this option.  There are three
+	appropriate settings:
+		'off'		All HTTP request headers are passed.
+		'standard'	Specific headers are removed
+		'paranoid'	Only specific headers are allowed.
+	To see which headers are allowed or denied, please see the
+	http-anon.c source file.
+
+http_anonymizer off
+DOC_END
+
+
+NAME: client_db
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 1
+LOC: Config.Options.client_db
+DOC_START
+	If you want to disable collecting per-client statistics, then
+	turn off client_db here.
+
+client_db on
+DOC_END
+
+
+NAME: netdb_low
+TYPE: int
+DEFAULT: 900
+LOC: Config.Netdb.low
+DOC_NONE
+
+NAME: netdb_high
+TYPE: int
+DEFAULT: 1000
+LOC: Config.Netdb.high
+DOC_START
+	The low and high water marks for the ICMP measurement
+	database.  These are counts, not percents.  The defaults are
+	900 and 1000.  When the high water mark is reached, database
+	entries will be deleted until the low mark is reached.
+
+netdb_low 900
+netdb_high 1000
+DOC_END
+
+
+NAME: netdb_ping_period
+TYPE: time_sec
+LOC: Config.Netdb.period
+DOC_START
+	The minimum period for measuring a site.  There will be at
+	least this much delay between successive pings to the same
+	network.  The default is five minutes.
+
+netdb_ping_period 5 minutes
+DOC_END
+
+
+NAME: query_icmp
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: 0
+LOC: Config.Options.query_icmp
+DOC_START
+	If you want to ask your peers to include ICMP data in their ICP
+	replies, enable this option.
+
+	If your peer has built squid with '-DUSE_ICMP=1' then that peer
+	will send ICMP pings to origin server sites of the URLs it
+	receives.  If you enable this option then the ICP replies from
+	that peer will include the ICMP data (if available).  Then,
+	when choosing a parent cache, Squid will choose the parent with
+	the minimal RTT to the origin server.  When this happens, the
+	hierarchy field of the access.log will be
+	"CLOSEST_PARENT_MISS".  This option is off by default.
+
+query_icmp off
+DOC_END
+
+NAME: clean_rate
+TYPE: time_sec
+LOC: Config.cleanRate
+DOC_START
+	XXX need docs
+DOC_END
+
+NAME: always_direct
+TYPE: acl_access
+LOC: Config.accessList.AlwaysDirect
+DOC_START
+	XXX need docs
+DOC_END
+
+NAME: never_direct
+TYPE: acl_access
+LOC: Config.accessList.NeverDirect
+DOC_START
+	XXX need docs
+DOC_END
+
+NAME: viz_hack_addr
+TYPE: vizhack
+DOC_START
+	XXX need docs
+DOC_END
+
+#NAME: proxy_auth_ignore
+#TYPE: regexplist_icase
+#LOC: Config.proxyAuth.IgnoreDomains
+#DOC_START
+#	XXX need docs
+#DOC_END
+
+EOF
