@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.276 1998/07/21 17:03:50 wessels Exp $
+ * $Id: comm.cc,v 1.277 1998/07/21 17:34:20 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -133,9 +133,6 @@ typedef struct {
 
 /* STATIC */
 static int commBind(int s, struct in_addr, u_short port);
-#if !HAVE_POLL
-static int examine_select(fd_set *, fd_set *);
-#endif
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 static void CommWriteStateCallbackAndFree(int fd, int code);
@@ -831,75 +828,6 @@ comm_init(void)
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
 }
-
-
-#if !HAVE_POLL
-/*
- * examine_select - debug routine.
- *
- * I spend the day chasing this core dump that occurs when both the client
- * and the server side of a cache fetch simultaneoulsy abort the
- * connection.  While I haven't really studied the code to figure out how
- * it happens, the snippet below may prevent the cache from exitting:
- * 
- * Call this from where the select loop fails.
- */
-static int
-examine_select(fd_set * readfds, fd_set * writefds)
-{
-    int fd = 0;
-    fd_set read_x;
-    fd_set write_x;
-    int num;
-    struct timeval tv;
-    close_handler *ch = NULL;
-    fde *F = NULL;
-
-    debug(5, 0) ("examine_select: Examining open file descriptors...\n");
-    for (fd = 0; fd < Squid_MaxFD; fd++) {
-	FD_ZERO(&read_x);
-	FD_ZERO(&write_x);
-	tv.tv_sec = tv.tv_usec = 0;
-	if (FD_ISSET(fd, readfds))
-	    FD_SET(fd, &read_x);
-	else if (FD_ISSET(fd, writefds))
-	    FD_SET(fd, &write_x);
-	else
-	    continue;
-	num = select(Squid_MaxFD, &read_x, &write_x, NULL, &tv);
-	if (num > -1) {
-	    debug(5, 5) ("FD %d is valid.\n", fd);
-	    continue;
-	}
-	F = &fd_table[fd];
-	debug(5, 0) ("FD %d: %s\n", fd, xstrerror());
-	debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
-	debug(5, 0) ("FD %d is a %s called '%s'\n",
-	    fd,
-	    fdTypeStr[fd_table[fd].type],
-	    F->desc);
-	debug(5, 0) ("tmout:%p read:%p write:%p\n",
-	    F->timeout_handler,
-	    F->read_handler,
-	    F->write_handler);
-	for (ch = F->close_handler; ch; ch = ch->next)
-	    debug(5, 0) (" close handler: %p\n", ch->handler);
-	if (F->close_handler) {
-	    commCallCloseHandlers(fd);
-	} else if (F->timeout_handler) {
-	    debug(5, 0) ("examine_select: Calling Timeout Handler\n");
-	    F->timeout_handler(fd, F->timeout_data);
-	}
-	F->close_handler = NULL;
-	F->timeout_handler = NULL;
-	F->read_handler = NULL;
-	F->write_handler = NULL;
-	FD_CLR(fd, readfds);
-	FD_CLR(fd, writefds);
-    }
-    return 0;
-}
-#endif
 
 /* Write to FD. */
 static void
