@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.185 1998/03/28 06:26:44 wessels Exp $
+ * $Id: neighbors.cc,v 1.186 1998/03/28 18:37:07 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -442,10 +442,13 @@ neighborsUdpPing(request_t * request,
 	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText(entry->key));
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
+#if USE_HTCP
 	if (EBIT_TEST(p->options, NEIGHBOR_HTCP)) {
 	    debug(15, 0)("neighborsUdpPing: sending HTCP query\n");
 	    htcpQuery(entry, request, p);
-	} else if (p->icp_port == echo_port) {
+	} else
+#endif
+ if (p->icp_port == echo_port) {
 	    debug(15, 4) ("neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    echo_hdr.reqnum = reqnum;
 	    query = icpCreateMessage(ICP_DECHO, 0, url, reqnum, 0);
@@ -1005,8 +1008,10 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 	storeAppendPrintf(sentry, " multicast-responder");
     if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
 	storeAppendPrintf(sentry, " closest-only");
+#if USE_HTCP
     if (EBIT_TEST(p->options, NEIGHBOR_HTCP))
 	storeAppendPrintf(sentry, " htcp");
+#endif
     if (p->mcast.ttl > 0)
 	storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
     storeAppendPrintf(sentry, "\n");
