@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.54 2003/10/20 12:33:01 robertc Exp $
+ * $Id: external_acl.cc,v 1.55 2003/11/19 17:18:35 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -586,7 +586,8 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 
         key = makeExternalAclKey(ch, acl);
 
-        ch->auth_user_request = NULL;
+        if (acl->def->require_auth)
+            ch->auth_user_request = NULL;
 
         if (!key) {
             /* Not sufficient data to process */
