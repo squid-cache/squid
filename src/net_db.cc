@@ -35,7 +35,7 @@ netdbHashDelete(struct in_addr addr)
 	debug_trap("netdbHashDelete: key not found");
 	return;
     }
-    hash_delete_link(addr_table, hptr);
+    hash_remove_link(addr_table, hptr);
     meta_data.netdb--;
 }
 
@@ -59,10 +59,10 @@ netdbHashUnlink(char *key)
 	debug_trap("netdbHashUnlink: key not found");
 	return;
     }
-    hash_delete(host_table, hptr);
     meta_data.netdb--;
     n = (netdbEntry *) hptr->item;
     n->link_count--;
+    hash_delete_link(host_table, hptr);
 }
 
 static netdbEntry *
