@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.3 2001/10/19 22:34:49 hno Exp $
+ * $Id: win32.cc,v 1.4 2001/11/17 11:09:25 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -49,30 +49,37 @@ GetOSVersion()
 	    WIN32_OS_string = xstrdup("Windows NT");
 	    return _WIN_OS_WINNT;
 	}
+	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) {
+	    WIN32_OS_string = xstrdup("Windows 2000");
+	    return _WIN_OS_WIN2K;
+	}
 	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 1)) {
 	    WIN32_OS_string = xstrdup("Windows XP");
 	    return _WIN_OS_WINXP;
 	}
-	WIN32_OS_string = xstrdup("Windows 2000");
-	return _WIN_OS_WIN2K;
 	break;
     case VER_PLATFORM_WIN32_WINDOWS:
-	if ((osvi.dwMajorVersion > 4) ||
-	    ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion > 0))) {
+	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0)) {
+	    WIN32_OS_string = xstrdup("Windows 95");
+	    return _WIN_OS_WIN95;
+	}
+	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 10)) {
 	    WIN32_OS_string = xstrdup("Windows 98");
 	    return _WIN_OS_WIN98;
 	}
-	WIN32_OS_string = xstrdup("Windows 95");
-	return _WIN_OS_WIN95;
+	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 90)) {
+	    WIN32_OS_string = xstrdup("Windows Me");
+	    return _WIN_OS_WINME;
+	}
 	break;
     case VER_PLATFORM_WIN32s:
 	WIN32_OS_string = xstrdup("Windows 3.1 with WIN32S");
 	return _WIN_OS_WIN32S;
 	break;
     default:
-	return _WIN_OS_UNKNOWN;
+	break;
     }
-    WIN32_OS_string = xstrdup("Unknown");
+    WIN32_OS_string = xstrdup("Unknown Windows system");
     return _WIN_OS_UNKNOWN;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.44 2001/10/24 07:45:34 hno Exp $
+ * $Id: dns_internal.cc,v 1.45 2001/11/17 11:09:24 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -289,6 +289,7 @@ idnsParseWIN32Registry(void)
 	break;
     case _WIN_OS_WIN95:
     case _WIN_OS_WIN98:
+    case _WIN_OS_WINME:
 	/* get nameservers from the Windows 9X registry */
 	if (RegOpenKey(HKEY_LOCAL_MACHINE,
 		"SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP",
