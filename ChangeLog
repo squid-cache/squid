@@ -4,6 +4,17 @@ Changes to squid-1.1.beta3 ():
 	- Fixed 8k page leak in icmpRecv().
 	- Use strerror() if available instead of sys_errlist[].
 	- Misc ANSI-related cleanup.
+	- Added 'cache_stoplist' to specify things which should
+	  never get saved to disk.
+	- Merged some parsing routines into parseWordlist().
+	- Fixed icpHandleIMSReply() bug when HTTP reply headers
+	  received in multiple reads.
+	- Changed all ipcache_nbgethostbyname() handler functions
+	  to be void.
+	- Fixed bug when storeLockObject() fails for UDP_HIT_OBJ
+	  replies.
+	- Simplified storeGet().
+	- Removed meta_data.hash_links member.
 
 Changes to squid-1.1.beta2 (September 16, 1996):
 
