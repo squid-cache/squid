@@ -249,7 +249,7 @@ reply_done(int fd, void *data)
     if (opt_range)
 	; /* skip size checks for now */
     else
-    if (r->bodysize != r->content_length)
+    if (r->bodysize != r->content_length && r->content_length > 0)
 	fprintf(stderr,"ERROR: %s expected %d bytes got %d\n",
 		r->url, r->content_length, r->bodysize);
     else if (r->validsize >= 0) {
