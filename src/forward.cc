@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.82 2001/10/10 15:17:41 adrian Exp $
+ * $Id: forward.cc,v 1.83 2002/02/26 08:13:07 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -796,6 +796,8 @@ fwdReforwardableStatus(http_status s)
 void
 fwdUninit(void)
 {
+    if (NULL == logfile)
+	return;
     logfileClose(logfile);
     logfile = NULL;
 }
