@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.134 1996/10/24 05:12:43 wessels Exp $
+ * $Id: store.cc,v 1.135 1996/10/24 21:52:53 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -565,6 +565,7 @@ storeReleaseRequest(StoreEntry * e)
 	return;
     if (!storeEntryLocked(e)) {
 	debug_trap("Someone called storeReleaseRequest on an unlocked entry");
+	debug(20,0,"  --> '%s'\n", e->url ? e->url : "NULL URL");
 	return;
     }
     debug(20, 3, "storeReleaseRequest: FOR '%s'\n", e->key ? e->key : e->url);
