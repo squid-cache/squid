@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.45 2002/09/07 23:04:50 hno Exp $
+ * $Id: helper.cc,v 1.46 2002/09/07 23:11:04 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -104,6 +104,7 @@ helperOpenServers(helper * hlp)
 	}
 	hlp->n_running++;
 	srv = cbdataAlloc(helper_server);
+	srv->pid = x;
 	srv->flags.alive = 1;
 	srv->index = k;
 	srv->rfd = rfd;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.426 2002/09/01 13:46:56 hno Exp $
+ * $Id: structs.h,v 1.427 2002/09/07 23:11:04 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2035,6 +2035,7 @@ struct _helper_stateful {
 
 struct _helper_server {
     int index;
+    int pid;
     int rfd;
     int wfd;
     char *buf;
