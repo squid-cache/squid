@@ -29,7 +29,7 @@
 #define CURRENT_MIB_VERSION "-- v 1.14 1998/04/03 kostas@nlanr.net"
 #endif
 
-/* Base value for sysDescr */
+/* Base value for sysDescr, this will need to be changed */
 #ifndef SQUID_SYS_DESCR
 #define SQUID_SYS_DESCR "Squid Internet Object Cache"
 #endif
@@ -46,6 +46,9 @@
 
 #define SYSMIB 1, 3, 6, 1, 2, 1, 1	/* basic system vars */
 #define LEN_SYSMIB 7
+
+#define SQUID_OBJ_ID 1,3,6,1,4,1,25,17 /* Object Identifier */
+#define LEN_SQUID_OBJ_ID 8
 
 /* basic groups under .squid */
 
