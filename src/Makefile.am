@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.54 2003/02/05 10:36:48 robertc Exp $
+#  $Id: Makefile.am,v 1.55 2003/02/08 16:16:14 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -243,7 +243,7 @@ squid_SOURCES = \
 	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
-	ssl.cc \
+	tunnel.cc \
 	$(SSLSOURCE) \
 	stat.cc \
 	StatHist.cc \
