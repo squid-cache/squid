@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.211 1997/07/16 20:55:42 wessels Exp $
+ * $Id: cache_cf.cc,v 1.212 1997/07/16 22:56:12 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -464,6 +464,10 @@ free_cachedir(struct _cacheSwap *swap)
     int i;
     for (i = 0; i < swap->n_configured; i++) {
 	s = swap->swapDirs + i;
+	if (s->swaplog_fd > -1) {
+	    file_close(s->swaplog_fd);
+	    s->swaplog_fd = -1;
+	}
 	xfree(s->path);
 	filemapFreeMemory(s->map);
     }
@@ -1076,4 +1080,10 @@ parseNeighborType(const char *s)
 	return PEER_MULTICAST;
     debug(15, 0) ("WARNING: Unknown neighbor type: %s\n", s);
     return PEER_SIBLING;
+}
+
+void
+configFreeMemory(void)
+{
+	free_all();
 }
