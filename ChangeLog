@@ -1,7 +1,13 @@
+Changes to squid-1.1.alpha3:
+
+	- Added Asynchronous Disk I/O routines from Pete Bentley.
+	- Made squid native access log the default format.
+
 Changes to squid-1.1.alpha2:
 
-	- Added Support for RFC931/ident
-	- Added Asynchronous Disk I/O routines from Pete Bentley.
+	- Added support for RFC931/ident
+
+==============================================================================
 
 Changes to squid-1.0.1 (July 8, 1996):
 

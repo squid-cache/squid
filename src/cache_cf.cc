@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.56 1996/07/09 03:41:19 wessels Exp $
+ * $Id: cache_cf.cc,v 1.57 1996/07/09 05:06:17 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -244,7 +244,7 @@ static struct {
 #define DefaultAccelPort	0	/* default off */
 #define DefaultAccelWithProxy	0	/* default off */
 #define DefaultSourcePing	0	/* default off */
-#define DefaultCommonLogFormat	1	/* default on */
+#define DefaultCommonLogFormat	0	/* default off */
 #define DefaultQuickAbort	0	/* default off */
 #define DefaultNeighborTimeout  2	/* 2 seconds */
 #define DefaultStallDelay	1	/* 1 seconds */
