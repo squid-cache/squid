@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.170 2000/07/21 06:06:22 wessels Exp $
+ * $Id: enums.h,v 1.171 2000/09/11 22:10:02 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -220,6 +220,7 @@ typedef enum {
     HDR_MIME_VERSION,
     HDR_PRAGMA,
     HDR_PROXY_AUTHENTICATE,
+    HDR_PROXY_AUTHENTICATION_INFO,
     HDR_PROXY_AUTHORIZATION,
     HDR_PROXY_CONNECTION,
     HDR_PUBLIC,
@@ -236,6 +237,7 @@ typedef enum {
     HDR_VIA,
     HDR_WARNING,
     HDR_WWW_AUTHENTICATE,
+    HDR_AUTHENTICATION_INFO,
     HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,		/* tmp hack, remove later */
     HDR_X_FORWARDED_FOR,
