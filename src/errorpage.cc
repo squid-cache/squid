@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.183 2003/01/27 22:33:25 robertc Exp $
+ * $Id: errorpage.cc,v 1.184 2003/02/09 20:12:19 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -190,27 +190,38 @@ errorTryLoadText(const char *page_name, const char *dir)
 {
     int fd;
     char path[MAXPATHLEN];
-    struct stat sb;
+    char buf[4096];
     char *text;
+    ssize_t len;
+    MemBuf textbuf;
 
     snprintf(path, sizeof(path), "%s/%s", dir, page_name);
     fd = file_open(path, O_RDONLY | O_TEXT);
-    if (fd < 0 || fstat(fd, &sb) < 0) {
+
+    if (fd < 0) {
 	debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
-	if (fd >= 0)
-	    file_close(fd);
 	return NULL;
     }
-    text = (char *)xcalloc(sb.st_size + 2 + 1, 1);	/* 2 == space for %S */
-    if (FD_READ_METHOD(fd, text, sb.st_size) != sb.st_size) {
+    memBufDefInit(&textbuf);
+    while((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
+	memBufAppend(&textbuf, buf, len);
+    }
+    if (len < 0) {
 	debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
 	    path, xstrerror());
-	xfree(text);
+	memBufClean(&textbuf);
 	text = NULL;
     }
     file_close(fd);
-    if (strstr(text, "%s") == NULL)
-	strcat(text, "%S");	/* add signature */
+
+    if (strstr(textbuf.buf, "%s") == NULL)
+	memBufAppend(&textbuf, "%S", 2);	/* add signature */
+
+    /* Shrink memory size down to exact size. MemBuf has a tencendy
+     * to be rather large..
+     */
+    text = xstrdup(textbuf.buf);
+    memBufClean(&textbuf);
     return text;
 }
 
