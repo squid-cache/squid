@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.26 1996/10/11 23:11:10 wessels Exp $
+ * $Id: fqdncache.cc,v 1.27 1996/10/11 23:11:54 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -532,7 +532,7 @@ fqdncache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	    COMM_SELECT_WRITE,
 	    NULL,
 	    NULL,
-	0);
+	    0);
 	comm_close(fd);
 	return 0;
     }

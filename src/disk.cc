@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.34 1996/10/11 23:11:09 wessels Exp $
+ * $Id: disk.cc,v 1.35 1996/10/11 23:11:53 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -286,7 +286,7 @@ diskHandleWrite(int fd, FileEntry * entry)
 		    COMM_SELECT_WRITE,
 		    (PF) diskHandleWrite,
 		    (void *) entry,
-	0);
+		    0);
 		entry->write_daemon = PRESENT;
 		return DISK_OK;
 	    } else {
@@ -441,7 +441,7 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 	    COMM_SELECT_READ,
 	    (PF) diskHandleRead,
 	    (void *) ctrl_dat,
-	0);
+	    0);
 	return DISK_OK;
     } else {
 	/* all data we need is here. */
