@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.157 1996/12/17 07:16:51 wessels Exp $
+ * $Id: cache_cf.cc,v 1.158 1996/12/18 00:02:18 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1345,6 +1345,8 @@ parseConfigFile(const char *file_name)
 	    parseOnOff(&opt_udp_hit_obj);
 	else if (!strcmp(token, "forwarded_for"))
 	    parseOnOff(&opt_forwarded_for);
+	else if (!strcmp(token, "log_icp_queries"))
+	    parseOnOff(&Config.Options.log_udp);
 
 	else if (!strcmp(token, "minimum_direct_hops"))
 	    parseIntegerValue(&Config.minDirectHops);
