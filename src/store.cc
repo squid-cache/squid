@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.210 1997/02/19 17:09:23 wessels Exp $
+ * $Id: store.cc,v 1.211 1997/02/25 00:19:11 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -593,6 +593,7 @@ storeUnlockObject(StoreEntry * e)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
 	debug_trap("storeUnlockObject: Someone unlocked STORE_PENDING object");
+	debug(20,1,"   --> Key '%s'\n", e->key);
 	e->store_status = STORE_ABORTED;
     }
     if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
