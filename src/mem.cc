@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.79 2003/06/19 13:27:50 hno Exp $
+ * $Id: mem.cc,v 1.80 2003/07/11 01:40:36 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -362,6 +362,7 @@ memConfigure(void)
 
 /* XXX make these classes do their own memory management */
 #include "HttpHdrContRange.h"
+#include "HttpRequest.h"
 
 void
 Mem::Init(void)

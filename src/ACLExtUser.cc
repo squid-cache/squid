@@ -1,5 +1,5 @@
 /*
- * $Id: ACLExtUser.cc,v 1.1 2003/06/27 22:32:31 hno Exp $
+ * $Id: ACLExtUser.cc,v 1.2 2003/07/11 01:40:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@
 #include "ACLRegexData.h"
 #include "ACLUserData.h"
 #include "client_side.h"
+#include "HttpRequest.h"
 
 MemPool *ACLExtUser::Pool(NULL);
 void *

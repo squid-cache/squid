@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.2 2003/03/15 04:17:39 robertc Exp $
+ * $Id: client_side.h,v 1.3 2003/07/11 01:40:36 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_CLIENTSIDE_H
 
 #include "StoreIOBuffer.h"
+#include "RefCount.h"
 
 class ConnStateData;
 
@@ -101,7 +102,7 @@ int parsed_ok:
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     void connIsFinished();
-    void removeFromConnectionList(ConnStateData * conn);
+    void removeFromConnectionList(RefCount<ConnStateData> conn);
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData);
     bool multipartRangeRequest() const;
     void packRange(const char **buf,
@@ -117,10 +118,11 @@ private:
     bool connRegistered_;
 };
 
-class ConnStateData
+class ConnStateData : public RefCountable
 {
 
 public:
+    typedef RefCount<ConnStateData> Pointer;
     void * operator new (size_t);
     void operator delete (void *);
     void deleteSelf() const;
@@ -137,6 +139,8 @@ public:
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
+    void close();
+    bool isOpen() const;
 
     int fd;
 
@@ -197,6 +201,7 @@ private:
     CBDATA_CLASS(ConnStateData);
     bool transparent_;
     bool reading_;
+    bool open_;
 };
 
 #endif /* SQUID_CLIENTSIDE_H */

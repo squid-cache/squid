@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.4 2003/07/11 01:40:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
 #include "ACLDomainData.h"
+#include "HttpRequest.h"
 
 MemPool *ACLDestinationDomain::Pool(NULL);
 void *

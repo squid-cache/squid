@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLUrlPort.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLUrlPort.cc,v 1.2 2003/07/11 01:40:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "ACLUrlPort.h"
 #include "ACLIntRange.h"
 #include "ACLChecklist.h"
+#include "HttpRequest.h"
 
 ACL::Prototype ACLUrlPort::RegistryProtoype(&ACLUrlPort::RegistryEntry_, "port");
 ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrategy::Instance(), "port");

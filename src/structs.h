@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.470 2003/07/09 14:14:58 hno Exp $
+ * $Id: structs.h,v 1.471 2003/07/11 01:40:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1672,50 +1672,7 @@ class HttpHdrRange;
 
 class ConnStateData;
 
-class request_t
-{
-
-public:
-    bool multipartRangeRequest() const;
-
-    method_t method;
-    protocol_t protocol;
-    char login[MAX_LOGIN_SZ];
-    char host[SQUIDHOSTNAMELEN + 1];
-    auth_user_request_t *auth_user_request;
-    u_short port;
-    String urlpath;
-    char *canonical;
-    int link_count;		/* free when zero */
-    request_flags flags;
-    HttpHdrCc *cache_control;
-    HttpHdrRange *range;
-    http_version_t http_ver;
-    time_t ims;
-    int imslen;
-    int max_forwards;
-    /* these in_addr's could probably be sockaddr_in's */
-
-    struct in_addr client_addr;
-
-    struct in_addr my_addr;
-    unsigned short my_port;
-    unsigned short client_port;
-    HttpHeader header;
-    ConnStateData *body_connection;	/* used by clientReadBody() */
-    int content_length;
-    HierarchyLogEntry hier;
-    err_type errType;
-    char *peer_login;		/* Configured peer login:password */
-    time_t lastmod;		/* Used on refreshes */
-    const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
-    char *peer_domain;		/* Configured peer forceddomain */
-    String tag;			/* Internal tag for this request */
-    String extacl_user;		/* User name returned by extacl lookup */
-    String extacl_passwd;	/* Password returned by extacl lookup */
-    String extacl_log;		/* String to be used for access.log purposes */
-};
-
+class request_t;
 #endif
 
 struct _cachemgr_passwd

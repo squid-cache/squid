@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.58 2003/06/19 18:56:59 hno Exp $
+ * $Id: authenticate.cc,v 1.59 2003/07/11 01:40:35 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -41,6 +41,7 @@
 #include "authenticate.h"
 #include "ACL.h"
 #include "client_side.h"
+#include "HttpRequest.h"
 
 CBDATA_TYPE(auth_user_ip_t);
 
@@ -536,7 +537,7 @@ authenticateUserAuthenticated(auth_user_request_t * auth_user_request)
  * This is basically a handle approach.
  */
 static void
-authenticateAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData * conn, http_hdr_type type)
+authenticateAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData::Pointer &conn, http_hdr_type type)
 {
     assert(auth_user_request != NULL);
 
@@ -551,11 +552,11 @@ authenticateAuthenticateUser(auth_user_request_t * auth_user_request, request_t 
 }
 
 static auth_user_request_t *
-authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData * conn)
+authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData::Pointer & conn)
 {
     if (*auth_user_request)
         return *auth_user_request;
-    else if (conn)
+    else if (conn.getRaw() != NULL)
         return conn->auth_user_request;
     else
         return NULL;
@@ -582,7 +583,7 @@ authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData * conn)
  */
 auth_acl_t
 
-AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
+AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData::Pointer conn, struct in_addr src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -597,13 +598,13 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
      */
 
     if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(authTryGetUser(auth_user_request,conn))))
-            || (conn && conn->auth_type == AUTH_BROKEN))
+            || (conn.getRaw() != NULL  && conn->auth_type == AUTH_BROKEN))
     {
         /* no header or authentication failed/got corrupted - restart */
         debug(28, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
         /* something wrong with the AUTH credentials. Force a new attempt */
 
-        if (conn) {
+        if (conn.getRaw() != NULL) {
             conn->auth_type = AUTH_UNKNOWN;
 
             if (conn->auth_user_request)
@@ -626,7 +627,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
      * No check for function required in the if: its compulsory for conn based 
      * auth modules
      */
-    if (proxy_auth && conn && conn->auth_user_request &&
+    if (proxy_auth && conn.getRaw() != NULL && conn->auth_user_request &&
             authenticateUserAuthenticated(conn->auth_user_request) &&
             strcmp(proxy_auth, authscheme_list[conn->auth_user_request->auth_user->auth_module - 1].authConnLastHeader(conn->auth_user_request)))
     {
@@ -654,10 +655,10 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
     if (*auth_user_request == NULL)
     {
         debug(28, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
-                      conn ? conn->fd : -1);
+                      conn.getRaw() != NULL ? conn->fd : -1);
 
         if ((!request->auth_user_request)
-                && (!conn || conn->auth_type == AUTH_UNKNOWN)) {
+                && (conn.getRaw() == NULL || conn->auth_type == AUTH_UNKNOWN)) {
             /* beginning of a new request check */
             debug(28, 4) ("authenticateAuthenticate: no connection authentication type\n");
 
@@ -692,7 +693,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
             ;
         } else {
-            assert (conn);
+            assert (conn.getRaw() != NULL);
 
             if (conn->auth_user_request != NULL) {
                 *auth_user_request = conn->auth_user_request;
@@ -792,7 +793,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
 auth_acl_t
 
-AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
+AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData::Pointer conn, struct in_addr src_addr)
 {
     /* If we have already been called, return the cached value */
     auth_user_request_t *t = authTryGetUser (auth_user_request, conn);
@@ -820,7 +821,7 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_use
 
 auth_acl_t
 
-authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
+authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData::Pointer conn, struct in_addr src_addr)
 {
     return AuthUserRequest::tryToAuthenticateAndSetAuthUser (auth_user_request, headertype,request, conn, src_addr);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.31 2003/03/04 01:40:55 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.32 2003/07/11 01:40:42 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -43,6 +43,7 @@
 #include "authenticate.h"
 #include "Store.h"
 #include "client_side.h"
+#include "HttpRequest.h"
 
 extern AUTHSSETUP authSchemeSetup_ntlm;
 
@@ -1063,13 +1064,13 @@ ntlm_request_t::authenticated() const
 }
 
 void
-ntlm_request_t::authenticate(request_t * request, ConnStateData * conn, http_hdr_type type)
+ntlm_request_t::authenticate(request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     fatal ("unusable");
 }
 
 static void
-authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData * conn, http_hdr_type type)
+authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     const char *proxy_auth;
 
@@ -1092,7 +1093,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
-    if (!conn) {
+    if (conn.getRaw() == NULL) {
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
         debug(29, 1) ("authenticateNTLMAuthenticateUser: attempt to perform authentication without a connection!\n");
         return;

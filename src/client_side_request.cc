@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.26 2003/07/10 11:04:06 robertc Exp $
+ * $Id: client_side_request.cc,v 1.27 2003/07/11 01:40:36 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -257,7 +257,7 @@ ClientHttpRequest::~ClientHttpRequest()
      * found the end of the body yet
      */
 
-    if (request && request->body_connection)
+    if (request && request->body_connection.getRaw() != NULL)
         clientAbortBody(request);	/* abort body transter */
 
     /* the ICP check here was erroneous
@@ -396,7 +396,7 @@ clientAccessCheckDone(int answer, void *data)
                   RequestMethodStr[http->request->method], http->uri,
                   answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED",
                   AclMatchedName ? AclMatchedName : "NO ACL's");
-    proxy_auth_msg = authenticateAuthUserRequestMessage((http->getConn()
+    proxy_auth_msg = authenticateAuthUserRequestMessage((http->getConn().getRaw() != NULL
                      && http->getConn()->auth_user_request) ? http->getConn()->
                      auth_user_request : http->request->auth_user_request);
 
@@ -446,8 +446,8 @@ clientAccessCheckDone(int answer, void *data)
         assert (repContext);
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
-                                    http->getConn() ? &http->getConn()->peer.sin_addr : &no_addr, http->request,
-                                    NULL, http->getConn()
+                                    http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr, http->request,
+                                    NULL, http->getConn().getRaw() != NULL
                                     && http->getConn()->auth_user_request ? http->getConn()->
                                     auth_user_request : http->request->auth_user_request);
         node = (clientStreamNode *)http->client_stream.tail->data;
@@ -768,7 +768,7 @@ clientRedirectDone(void *data, char *result)
             authenticateAuthUserRequestLock(new_request->auth_user_request);
         }
 
-        if (old_request->body_connection) {
+        if (old_request->body_connection.getRaw() != NULL) {
             new_request->body_connection = old_request->body_connection;
             old_request->body_connection = NULL;
         }
@@ -788,7 +788,7 @@ clientRedirectDone(void *data, char *result)
 #endif
     /* FIXME PIPELINE: This is innacurate during pipelining */
 
-    if (http->getConn())
+    if (http->getConn().getRaw() != NULL)
         fd_note(http->getConn()->fd, http->uri);
 
     assert(http->uri);

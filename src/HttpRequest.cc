@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.38 2003/07/09 14:14:57 hno Exp $
+ * $Id: HttpRequest.cc,v 1.39 2003/07/11 01:40:34 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -70,7 +70,7 @@ requestDestroy(request_t * req)
 {
     assert(req);
 
-    if (req->body_connection)
+    if (req->body_connection.getRaw() != NULL)
         clientAbortBody(req);
 
     if (req->auth_user_request)

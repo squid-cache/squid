@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.24 2003/02/21 22:50:13 robertc Exp $
+ * $Id: whois.cc,v 1.25 2003/07/11 01:40:37 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "comm.h"
+#include "HttpRequest.h"
 
 #define WHOIS_PORT 43
 

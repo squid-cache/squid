@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.25 2003/05/29 15:54:09 hno Exp $
+ * $Id: auth_basic.cc,v 1.26 2003/07/11 01:40:39 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -182,7 +182,7 @@ authenticateBasiccmpUsername(basic_data * u1, basic_data * u2)
 /* log a basic user in
  */
 static void
-authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData * conn, http_hdr_type type)
+authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     auth_user_t *auth_user;
     basic_data *basic_auth;

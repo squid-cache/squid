@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLRequestHeaderStrategy.h,v 1.4 2003/06/19 13:12:01 robertc Exp $
+ * $Id: ACLRequestHeaderStrategy.h,v 1.5 2003/07/11 01:40:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
 #include "ACL.h"
 #include "ACLData.h"
 #include "ACLStrategy.h"
+#include "HttpRequest.h"
 
 template <http_hdr_type header>
 
