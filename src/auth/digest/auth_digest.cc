@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.40 2004/12/20 19:13:54 robertc Exp $
+ * $Id: auth_digest.cc,v 1.41 2004/12/24 01:03:39 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -1070,7 +1070,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
     /* trim DIGEST from string */
 
-    while (!xisspace(*proxy_auth))
+    while (xisgraph(*proxy_auth))
         proxy_auth++;
 
     /* Trim leading whitespace before decoding */

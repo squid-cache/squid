@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.15 2004/12/21 17:28:27 robertc Exp $
+ * $Id: config.h,v 1.16 2004/12/24 01:03:39 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -362,6 +362,7 @@ typedef union {
 #define xispunct(x) ispunct((unsigned char)x)
 #define xisupper(x) isupper((unsigned char)x)
 #define xisxdigit(x) isxdigit((unsigned char)x)
+#define xisgraph(x) isgraph((unsigned char)x)
 
 #if HAVE_RANDOM
 #define squid_random random
