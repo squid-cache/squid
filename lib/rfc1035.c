@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.16 2000/05/12 00:37:25 wessels Exp $
+ * $Id: rfc1035.c,v 1.17 2000/07/14 17:45:54 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -541,6 +541,20 @@ rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t * szp)
     assert(offset <= sz);
     *szp = (size_t) offset;
     return h.id;
+}
+
+/*
+ * We're going to retry a former query, but we
+ * just need a new ID for it.  Lucky for us ID
+ * is the first field in the message buffer.
+ */
+unsigned short
+rfc1035RetryQuery(char *buf)
+{
+    unsigned short qid = rfc1035Qid();
+    unsigned short s = htons(qid);
+    memcpy(buf, &s, sizeof(s));
+    return qid;
 }
 
 #if DRIVER

@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.2 1999/04/18 05:10:39 wessels Exp $
+ * $Id: rfc1035.h,v 1.3 2000/07/14 17:45:52 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -58,6 +58,7 @@ extern unsigned short rfc1035BuildAQuery(const char *hostname,
 extern unsigned short rfc1035BuildPTRQuery(const struct in_addr,
     char *buf,
     size_t * szp);
+extern unsigned short rfc1035RetryQuery(char *);
 extern int rfc1035AnswersUnpack(const char *buf,
     size_t sz,
     rfc1035_rr ** records,
