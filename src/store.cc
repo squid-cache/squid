@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.360 1997/12/31 05:53:19 wessels Exp $
+ * $Id: store.cc,v 1.361 1998/01/01 00:05:53 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1842,15 +1842,23 @@ storeEntryValidLength(const StoreEntry * e)
 	    storeKeyText(e->key));
 	return 1;
     }
-    diff = hdr_sz + content_length - e->object_len;
-    if (diff != 0) {
-	debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
-	    diff < 0 ? -diff : diff,
-	    diff < 0 ? "small" : "big",
+    if (e->mem_obj->method == METHOD_HEAD) {
+	debug(20, 5) ("storeEntryValidLength: HEAD request: %s\n",
 	    storeKeyText(e->key));
-	return 0;
+	return 1;
     }
-    return 1;
+    if (e->mem_obj->reply->code == HTTP_NOT_MODIFIED)
+	return 1;
+    if (e->mem_obj->reply->code == HTTP_NO_CONTENT)
+	return 1;
+    diff = hdr_sz + content_length - e->object_len;
+    if (diff == 0)
+	return 1;
+    debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
+	diff < 0 ? -diff : diff,
+	diff < 0 ? "small" : "big",
+	storeKeyText(e->key));
+    return 0;
 }
 
 static void
