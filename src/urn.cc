@@ -166,7 +166,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	memFree(MEM_4K_BUF, buf);
 	return;
     }
-    if (urlres_e->store_status == STORE_PENDING) {
+    if (urlres_e->store_status == STORE_PENDING && size < SM_PAGE_SIZE) {
 	storeClientCopy(urlres_e,
 	    size,
 	    0,
