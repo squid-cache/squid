@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.238 1998/10/08 02:40:09 wessels Exp $
+ * $Id: structs.h,v 1.239 1998/10/10 14:57:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -904,6 +904,7 @@ struct _fqdncache_entry {
     char *names[FQDN_MAX_NAMES + 1];
     fqdn_pending *pending_head;
     char *error_message;
+    struct timeval request_time;
     dlink_node lru;
     unsigned char locks;
     fqdncache_status_t status:3;
@@ -1604,3 +1605,53 @@ struct _htcpReplyData {
 };
 
 #endif
+
+
+struct _helper_request {
+    char *buf;
+    HLPCB *callback;
+    void *data;
+};
+
+struct _helper {
+    wordlist *cmdline;
+    dlink_list servers;
+    dlink_list queue;
+    char *id_name;
+    int n_to_start;
+    int n_running;
+    int ipc_type;
+    time_t last_queue_warn;
+    struct {
+	int requests;
+	int replies;
+	int queue_size;
+	int avg_svc_time;
+    } stats;
+};
+
+struct _helper_server {
+    int index;
+    int rfd;
+    int wfd;
+    char *buf;
+    size_t buf_sz;
+    off_t offset;
+    struct timeval dispatch_time;
+    struct timeval answer_time;
+    dlink_node link;
+    helper *parent;
+    helper_request *request;
+    helper_flags flags;
+    struct {
+	int uses;
+    } stats;
+};
+
+/*
+ * use this when you need to pass callback data to a blocking
+ * operation, but you don't want to add that pointer to cbdata
+ */
+struct _generic_cbdata {
+    void *data;
+};
