@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.16 1999/10/04 05:05:09 wessels Exp $
+ * $Id: dns_internal.cc,v 1.17 1999/10/04 19:10:52 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -130,8 +130,8 @@ idnsParseResolvConf(void)
     idnsFreeNameservers();
     while (fgets(buf, 512, fp)) {
 	t = strtok(buf, w_space);
-	if (t == NULL)
-	    continue;;
+	if (NULL == t)
+	    continue;
 	if (strcasecmp(t, "nameserver"))
 	    continue;
 	t = strtok(NULL, w_space);
