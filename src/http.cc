@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.307 1998/08/17 16:44:07 wessels Exp $
+ * $Id: http.cc,v 1.308 1998/08/18 22:42:19 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -433,6 +433,16 @@ httpReadReply(int fd, void *data)
 	if (httpState->reply_hdr_state < 2)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);
+#ifdef OPTIMISTIC_IO
+	if (entry->store_status == STORE_ABORTED) {
+	    /*
+	     * the above storeAppend() call could ABORT this entry,
+	     * in that case, the server FD should already be closed.
+	     * there's nothing for us to do.
+	     */
+	    (void) 0;
+	} else
+#endif
 	if (httpPconnTransferDone(httpState)) {
 	    /* yes we have to clear all these! */
 	    commSetDefer(fd, NULL, NULL);

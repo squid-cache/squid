@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.204 1998/08/18 20:48:52 wessels Exp $
+ * $Id: structs.h,v 1.205 1998/08/18 22:42:23 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -495,6 +495,9 @@ struct _fde {
 	int nolinger:1;
 	int nonblocking:1;
 	int ipc:1;
+#ifdef OPTIMISTIC_IO
+	int calling_io_handler:1;
+#endif
     } flags;
     int bytes_read;
     int bytes_written;
