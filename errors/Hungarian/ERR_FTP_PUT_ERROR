@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>HIBA: FTP feltöltési hiba</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>ERROR</H1>
+<H2>FTP PUT/feltöltés hiba</H2>
+<HR>
+<P>
+Az alábbi URL-re történő PUT műveletnél:
+<A HREF="%U">%U</A>
+<P>
+A Squid az alábbi FTP parancsot küldte:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+és ezt a választ kapta
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Ez azt jelenti, hogy:
+<PRE>
+az elérési út, hozzáférési jogok, rendelkezésre álló diszkterület ellenőrzése után
+próbálja meg újra végrehajtani ezt a műveletet.
+</PRE>
+</P>
+

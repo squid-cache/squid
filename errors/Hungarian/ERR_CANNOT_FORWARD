@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>HIBA</H1>
+<H2>HIBA: A kért URL nem tölthető le</H2>
+<HR>
+<P>
+Az alábbi URL letöltésekor:
+<A HREF="%U">%U</A>
+<P>
+a következő hiba lépett fel:
+<UL>
+<LI>
+<STRONG>
+A kérést jelenleg nem lehet továbbítani.
+</STRONG>
+</UL>
+
+<P>
+A kérés nem továbbítható a forrás, illetve egyik szülő cache szerverhez sem.
+A hiba oka valószínűleg alábbiakban rejlik:
+<UL>
+<LI>A cache adminisztrátor nem engedélyezi a forrás szerverekhez való közvetlen
+    kapcsolat felépítését és
+<LI>minden általunk használt szülő cache szerver nem érhető el jelenleg.
+</UL>
+</P>

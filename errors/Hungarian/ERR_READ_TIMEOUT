@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>HIBA</H1>
+<H2>A kért URL nem tölthető le</H2>
+<HR>
+<P>
+Az alábbi URL letöltésekor:
+<A HREF="%U">%U</A>
+<P>
+a következő hiba lépett fel:
+<UL>
+<LI>
+<STRONG>
+Olvasási időtúllépés
+</STRONG>
+</UL>
+
+<P>
+A rendszer válasza:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Időtúllépés történt mialatt az adatok hálózatról való olvasására várakozott a cache.
+A hálózat vagy a szerver nem elérhető vagy túlterhelt állapotban van. Ismételje meg
+kérését!
+</P>

@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>HIBA</H1>
+<H2>A kért URL nem tölthető le</H2>
+<HR>
+<P>
+Az alábbi kérés feldolgozásakor:
+<PRE>
+%R
+</PRE>
+<P>
+a következő hiba lépett fel:
+<UL>
+<LI>
+<STRONG>
+Érvénytelen kérés
+</STRONG>
+</UL>
+
+<P>
+A HTTP kérés bizonyos szempontból érvénytelen. Lehetséges problémák:
+<UL>
+<LI>Hiányzó vagy nem létező kérési metódus (GET, POST)
+<LI>Hiányzó URL
+<LI>Hiányzó HTTP azonosító (HTTP/1.0)
+<LI>A kérés mérete túl nagy
+<LI>Content-Length hiányzik a POST vagy PUT kérésből
+<LI>A szervernévben nem megengedett karakter található; az aláhúzás karakter például ilyen
+</UL>
+</P>

@@ -1,0 +1,35 @@
+<HTML><HEAD>
+<TITLE>HIBA: Cache vezérlőpult hozzáférés megtagadva</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD>
+<BODY>
+<H1>HIBA</H1>
+<H2>Cache vezérlőpult hozzáférés megtagadva</H2>
+<HR>
+<P>
+Az alábbi URL letöltésekor:
+<A HREF="%U">%U</A>
+<P>
+a következő hiba lépett fel:
+<UL>
+<LI>
+<STRONG>
+Cache vezérlőpult hozzáférés megtagadva.
+</STRONG>
+</UL>
+</P>
+
+<P>
+Sajnos az alábbi URL-t nem töltheti le cache szerverünktől
+<PRE>    %U</PRE>
+amíg nem jelentkezik be rendszerünkbe.
+</P>
+
+<P>
+Netscape 2.0 (vagy magasabb verziószámú) vagy Microsoft Internet Explorer 3.0 vagy
+egyéb HTTP/1.1 kompatibilis böngésző segítségével jelentkezhet be rendszerünkbe.
+Kérjük, forduljon <A HREF="mailto:%w">szolgáltatójához</a> amennyiben nem sikerül
+bejelentkeznie vagy ha <em>Ön</em> a cache adminisztrátor, olvassa el alaposan
+a Squid dokumentáció cache vezérlőpulttal kapcsolatos fejezetét és ellenőrizze a cache
+naplóállományát, ha részletesebb hibaüzenetekre van szüksége a probléma felderítéséhez.
+</P>
+
