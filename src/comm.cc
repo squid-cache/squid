@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.352 2002/10/23 11:24:20 adrian Exp $
+ * $Id: comm.cc,v 1.353 2002/10/24 22:50:59 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -873,7 +873,7 @@ void
 commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
 {
     ConnectStateData *cs;
-    debug(5, 3) ("commConnectStart: FD %d, %s:%d\n", fd, host, (int) port);
+    debug(5, 3) ("commConnectStart: FD %d, data %p, %s:%d\n", fd, data, host, (int) port);
     cs = cbdataAlloc(ConnectStateData);
     cs->fd = fd;
     cs->host = xstrdup(host);
@@ -915,6 +915,7 @@ commConnectCallback(ConnectStateData * cs, comm_err_t status)
     CNCB *callback = cs->callback;
     void *cbdata = cs->data;
     int fd = cs->fd;
+    debug(5, 3) ("commConnectCallback: fd %d, data %p\n", fd, cbdata);
     comm_remove_close_handler(fd, commConnectFree, cs);
     cs->callback = NULL;
     cs->data = NULL;
@@ -922,6 +923,7 @@ commConnectCallback(ConnectStateData * cs, comm_err_t status)
     commConnectFree(fd, cs);
     if (cbdataReferenceValid(cbdata))
 	callback(fd, status, cbdata);
+    cbdataReferenceDone(cbdata);
 }
 
 static void
