@@ -306,6 +306,8 @@ void snmp_timeout (void);
  * Operations are defined below:
  */
 
+extern int snmp_build(struct snmp_session *, struct snmp_pdu *, u_char *, int *, int);
+
 #define RECEIVED_MESSAGE   1
 #define TIMED_OUT	   2
 
