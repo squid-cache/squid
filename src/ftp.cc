@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.235 1998/07/20 17:19:41 wessels Exp $
+ * $Id: ftp.cc,v 1.236 1998/07/20 19:25:31 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -145,9 +145,6 @@ static void ftpLoginParser(const char *, FtpStateData *);
 static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
 static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
-#if OLD_CODE
-static STABH ftpAbort;
-#endif
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpPutStart(FtpStateData *);
 static CWCB ftpPutTransferDone;
@@ -867,11 +864,7 @@ ftpCheckAuth(FtpStateData * ftpState, const HttpHeader * req_hdr)
     if (ftpState->password[0])
 	return 1;		/* passwd with no name? */
     /* URL has name, but no passwd */
-#if OLD_CODE
-    if (!(auth = mime_get_auth(req_hdr, "Basic", NULL)))
-#else
     if (!(auth = httpHeaderGetAuth(req_hdr, HDR_AUTHORIZATION, "Basic")))
-#endif
 	return 0;		/* need auth header */
     orig_user = xstrdup(ftpState->user);
     ftpLoginParser(auth, ftpState);
@@ -982,9 +975,6 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
 	ftpState->request->host, strBuf(ftpState->request->urlpath),
 	ftpState->user, ftpState->password);
     comm_add_close_handler(fd, ftpStateFree, ftpState);
-#if OLD_CODE
-    storeRegisterAbort(entry, ftpAbort, ftpState);
-#endif
     ftpState->state = BEGIN;
     ftpState->ctrl.buf = memAllocate(MEM_4K_BUF);
     ftpState->ctrl.freefunc = memFree4K;
@@ -2222,20 +2212,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     storeTimestampsSet(e);
     storeSetPublicKey(e);
 }
-
-#if OLD_CODE
-static void
-ftpAbort(void *data)
-{
-    FtpStateData *ftpState = data;
-    debug(9, 2) ("ftpAbort: %s\n", storeUrl(ftpState->entry));
-    if (ftpState->data.fd >= 0) {
-	comm_close(ftpState->data.fd);
-	ftpState->data.fd = -1;
-    }
-    comm_close(ftpState->ctrl.fd);
-}
-#endif
 
 static void
 ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)

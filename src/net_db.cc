@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.117 1998/07/20 17:19:56 wessels Exp $
+ * $Id: net_db.cc,v 1.118 1998/07/20 19:25:36 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1052,10 +1052,6 @@ netdbExchangeStart(void *data)
     }
     requestLink(ex->r);
     assert(NULL != ex->r);
-#if OLD_CODE
-    ex->r->headers = xstrdup("\r\n");
-    ex->r->headers_sz = strlen(ex->r->headers);
-#endif
     ex->r->http_ver = 1.0;
     ex->e = storeCreateEntry(uri, uri, 0, METHOD_GET);
     ex->buf_sz = 4096;;

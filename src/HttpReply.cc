@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.27 1998/07/20 17:19:07 wessels Exp $
+ * $Id: HttpReply.cc,v 1.28 1998/07/20 19:26:48 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -243,16 +243,6 @@ httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const cha
 void
 httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
 {
-#if OLD_CODE
-    rep->cache_control = freshRep->cache_control;
-    rep->misc_headers = freshRep->misc_headers;
-    if (freshRep->date > -1)
-	rep->date = freshRep->date;
-    if (freshRep->last_modified > -1)
-	rep->last_modified = freshRep->last_modified;
-    if (freshRep->expires > -1)
-	rep->expires = freshRep->expires;
-#endif
     assert(rep && freshRep);
     /* clean cache */
     httpReplyHdrCacheClean(rep);

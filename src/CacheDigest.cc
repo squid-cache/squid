@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.23 1998/07/20 17:18:59 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.24 1998/07/20 19:25:28 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -296,26 +296,6 @@ cacheDigestCalcMaskSize(int cap, int bpe)
 {
     return (size_t) (cap * bpe + 7) / 8;
 }
-
-#if OLD_CODE
-	/*
-	 * This has byte-order bugs
-	 */
-static void
-cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
-{
-    const int bit_count = cd->mask_size * 8;
-    /* get four hashed values */
-    memcpy(hashed_keys, key, sizeof(hashed_keys));
-    /* wrap */
-    hashed_keys[0] %= bit_count;
-    hashed_keys[1] %= bit_count;
-    hashed_keys[2] %= bit_count;
-    hashed_keys[3] %= bit_count;
-    debug(70, 9) ("cacheDigestHashKey: %s -(%d)-> %d %d %d %d\n",
-	storeKeyText(key), bit_count, hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
-}
-#endif
 
 static void
 cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
