@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.13 2002/10/03 09:47:58 hno Exp $
+ * $Id: client_side_reply.cc,v 1.14 2002/10/12 10:50:55 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1416,12 +1416,18 @@ clientSendMoreData(void *data, StoreIOBuffer result)
      */
     assert(context->reqofs == 0 || context->flags.storelogiccomplete);
 
+#if THIS_DOES_NOT_WORK
+    /* XXX What is the purpose of this code? It overwrites the
+     * previous "packet" completely messing up header processing
+     * when headers are received in more than one chunk..
+     */
     if (buf != result.data) {
 	/* we've got to copy some data */
 	assert(result.length <= next->readBuffer.length);
 	xmemcpy(buf, result.data, result.length);
 	body_buf = buf;
     }
+#endif
     /* We've got the final data to start pushing... */
     context->flags.storelogiccomplete = 1;
 
