@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.6 2000/10/31 23:48:17 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.7 2000/11/01 03:32:03 wessels Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -156,7 +156,7 @@ storeCossDirInit(SwapDir * sd)
 }
 
 void
-storeCossRemove(SwapDir *sd, StoreEntry *e)
+storeCossRemove(SwapDir * sd, StoreEntry * e)
 {
     CossInfo *cs = (CossInfo *) sd->fsdata;
     CossIndexNode *coss_node = e->repl.data;
@@ -167,7 +167,7 @@ storeCossRemove(SwapDir *sd, StoreEntry *e)
 }
 
 void
-storeCossAdd(SwapDir *sd, StoreEntry *e)
+storeCossAdd(SwapDir * sd, StoreEntry * e)
 {
     CossInfo *cs = (CossInfo *) sd->fsdata;
     CossIndexNode *coss_node = memPoolAlloc(coss_index_pool);
@@ -499,7 +499,7 @@ storeCossDirCleanLogNextEntry(SwapDir * sd)
 	return NULL;
     if (!state->current)
 	return NULL;
-    entry = (const StoreEntry *)state->current->data;
+    entry = (const StoreEntry *) state->current->data;
     state->current = state->current->prev;
     return entry;
 }
@@ -508,7 +508,7 @@ storeCossDirCleanLogNextEntry(SwapDir * sd)
  * "write" an entry to the clean log file.
  */
 static void
-storeCossDirWriteCleanEntry(SwapDir *sd, const StoreEntry * e)
+storeCossDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 {
     storeSwapLogData s;
     static size_t ss = sizeof(storeSwapLogData);
@@ -757,7 +757,7 @@ storeCossDirParse(SwapDir * sd, int index, char *path)
     cs->fd = -1;
     cs->swaplog_fd = -1;
     cs->numcollisions = 0;
-    cs->membufs = NULL; /* set when the rebuild completes */
+    cs->membufs = NULL;		/* set when the rebuild completes */
     cs->current_membuf = cs->membufs;
     cs->index.head = NULL;
     cs->index.tail = NULL;
