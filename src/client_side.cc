@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.472 2000/03/25 04:58:39 wessels Exp $
+ * $Id: client_side.cc,v 1.473 2000/03/25 05:00:11 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1698,10 +1698,10 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	mb = httpReplyPack(rep);
 	http->out.offset += rep->hdr_sz;
 	check_size += rep->hdr_sz;
-	httpReplyDestroy(rep);
 #if HEADERS_LOG
 	headersLog(0, 0, http->request->method, rep);
 #endif
+	httpReplyDestroy(rep);
 	rep = NULL;
     } else {
 	memBufDefInit(&mb);
