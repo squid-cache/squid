@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.260 2002/05/03 14:25:29 hno Exp $
+# $Id: cf.data.pre,v 1.261 2002/06/13 17:04:18 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1942,14 +1942,18 @@ DOC_START
 	  # This will be matched when the client's IP address has
 	  # more than <number> HTTP connections established.
 
-	acl aclname max_user_ip
+	acl aclname max_user_ip [-s] number
 	  # This will be matched when the user attempts to log in from more
 	  # than <number> different ip address's. The authenticate_ip_ttl
 	  # parameter controls the timeout on the ip entries.
-	  # NOTE: in acceleration mode, clients may appear to come from
-	  # multiple address's if they are going through proxy farms,
-	  # so a limit of 1 may cause user problems.
-
+	  # If -s is specified then the limit is strict, denying browsing
+	  # from any further IP addresses until the ttl has expired. Without
+	  # -s Squid will just annoy the user by "randomly" deny requests.
+	  # (the counter is then reset each time the limit is reached and a
+	  # request is denied)
+	  # NOTE: in acceleration mode or where there is mesh of child proxies,
+	  # clients may appear to come from multiple address's if they are
+	  # going through proxy farms, so a limit of 1 may cause user problems.
 
 	acl aclname req_mime_type mime-type1 ...
 	  # regex match agains the mime type of the request generated
