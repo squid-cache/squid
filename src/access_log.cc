@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.40 1998/07/24 14:40:51 wessels Exp $
+ * $Id: access_log.cc,v 1.41 1998/08/17 18:48:57 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -52,7 +52,6 @@ const char *log_tags[] =
     "TCP_REFRESH_MISS",
     "TCP_CLIENT_REFRESH_MISS",
     "TCP_IMS_HIT",
-    "TCP_IMS_MISS",
     "TCP_SWAPFAIL_MISS",
     "TCP_NEGATIVE_HIT",
     "TCP_MEM_HIT",

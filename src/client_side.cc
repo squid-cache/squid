@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.380 1998/08/17 16:44:02 wessels Exp $
+ * $Id: client_side.cc,v 1.381 1998/08/17 18:48:59 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1161,7 +1161,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    memFree(MEM_4K_BUF, buf);
 	    clientProcessMiss(http);
 	} else if (modifiedSince(e, http->request)) {
-	    http->log_type = LOG_TCP_IMS_MISS;
+	    http->log_type = LOG_TCP_IMS_HIT;
 	    clientSendMoreData(data, buf, size);
 	} else {
 	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
