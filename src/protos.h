@@ -503,6 +503,7 @@ extern void storeCreateSwapDirectories(void);
 extern int storeVerifyCacheDirs(void);
 extern int storeDirWriteCleanLogs(int reopen);
 extern int storeDirValidFileno(int fn);
+extern int storeFilenoBelongsHere(int, int, int, int);
 
 
 /*
