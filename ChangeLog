@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta7 (Nov 24, 1997):
+
 	- Fixed poll() for Linux (David Luyer).
 	- SHA optimizations (David Luyer).
 	- Fixed errno clashes with macro on Linux (David Luyer).
@@ -6,6 +8,11 @@
 	  no more data to send for objects in STORE_OK state.
 	- Fixed FTP truncation bug when ftpState->size == 0, e.g.
 	  especially directory listings.
+	- Mega FTP fix from Henrik Nordstrom.  A better job of
+	  implementing the '%2f' hack.
+	- Fixed some pipelined request bugs.  storeClientCopy() was
+	  being given the wrong StoreEntry, and we had a race condition
+	  which is now handled by storeClientCopyPending().
 
 Changes to squid-1.2.beta6 (Nov 13, 1997):
 
