@@ -1,0 +1,28 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (X11; I; SunOS 4.1.4 sun4m) [Netscape]">
+   <TITLE>BŁĄD: Żądany URL nie może zostać pobrany</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Żądany URL nie może zostać pobrany</H2>
+
+<HR>
+
+<P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>Dostęp zabroniony.</B></LI>
+
+<BR>&nbsp;</UL>
+Konfiguracja serwera wyklucza Twój dostęp do niego w chwili obecnej. Skontaktuj
+się z Twoim providerem jeśli jest jest to nieprawidłowość.
+</BODY>
+</HTML>

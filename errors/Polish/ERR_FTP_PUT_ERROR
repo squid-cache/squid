@@ -1,0 +1,31 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Nieudany FTP upload </TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Nieudany FTP PUT/upload</H2>
+
+<HR>
+
+<P>Podczas próby przesłania URL-a: <A HREF="%U">%U</A> via FTP&nbsp;komendą
+PUT
+
+<P>Squid wysłał następującą komendę FTP:
+<PRE>
+<B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f</B></PRE>
+i otrzymał odpowiedź
+<PRE>
+<B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %F</B></PRE>
+Oznacz to, że:
+<PRE>należy sprwdzić ścieżkę, prawa dostępu, wolen miejsce na dysku</PRE>
+
+<PRE>i spróbować ponownie.</PRE>
+
+</BODY>
+</HTML>

@@ -1,0 +1,27 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Żądany URL nie może zostać sprowadzony</H2>
+
+<HR>
+
+<P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>błąd odczytu</B></LI>
+</UL>
+System zwrócił wartość:
+<PRE><I>&nbsp;&nbsp;&nbsp; %E</I></PRE>
+Podczas czytania dokumentu z sieci wystąpił błąd. Proszę ponowić żądanie.
+</BODY>
+</HTML>

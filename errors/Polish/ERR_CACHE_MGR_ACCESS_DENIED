@@ -1,0 +1,34 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Dostęp do cache managera zabroniony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Dostęp do cache managera zabroniony</H2>
+
+<HR>
+
+<P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>Dostep do cache managera zabroniony.</B></LI>
+</UL>
+Niestety, nie możesz sprowadzić:
+<PRE>&nbsp;&nbsp;&nbsp; %U</PRE>
+z tego cache managera, dopóki nie dokonałeś autoryzacji
+
+<P>Musisz używać Netscape 2.0 lub nowszej lub Microsoft Internet Explorer
+3.0, lub innej przeglądarki zgodnej z HTTP/1.1. Skontaktuj się z <A HREF="mailto:%w">administratorem
+serwera cache</A> jeśli masz trudności z autoryzacją, jeśli <I>jesteś</I>
+administratorem, przeczytaj w dokumentacji Squida fragment dotyczący cache
+managera i sprawdź log serwera cache w poszukiwaniu bardziej szczegółowych
+komunikatów o błędach.
+</BODY>
+</HTML>

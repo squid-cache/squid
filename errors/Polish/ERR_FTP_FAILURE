@@ -1,0 +1,34 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Żądany URL nie może zostać sprowadzony</H2>
+
+<HR>
+
+<P>Wystąpił błąd protokołu&nbsp; FTP podczas sprowadznia URL-a: <A HREF="%U">%U</A>
+
+<P>Squid wysłał następującą komendę FTP:
+<BLOCKQUOTE>
+<PRE><B>%f</B></PRE>
+</BLOCKQUOTE>
+i otrzymał odpowiedź
+<BLOCKQUOTE>
+<PRE><B>%F</B></PRE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+<PRE><B>%g</B></PRE>
+</BLOCKQUOTE>
+Przyczyną mogł być FTP URL z podaną bezwzględną ścieżką (co nie jest zgodne
+z&nbsp; RFC 1738). Jeśli rzeczywiście tak było, to plik może być znaleziony
+tu: <A HREF="%B">%B</A>.
+</BODY>
+</HTML>

@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Żądany URL nie może zostać sprowadzony</H2>
+
+<HR>
+<BR>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>Przekazanie żądania zabronione.</B></LI>
+</UL>
+Ten serwer cache nie przekaże Twojego żądania ponieważ wymusza ono relację
+typu sibling. Być może klient %i jest błędnie skonfigurowanym serwerem
+cache.
+</BODY>
+</HTML>
