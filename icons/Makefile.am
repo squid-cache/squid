@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.1 2001/08/31 11:19:09 robertc Exp $
+# $Id: Makefile.am,v 1.2 2001/10/29 07:40:56 robertc Exp $
 #
 
 ICON1	=	anthony-binhex.gif
@@ -32,7 +32,7 @@ ICON2 	=	anthony-bomb.gif \
 icondir = $(sysconfdir)/icons
 icon_DATA = $(ICON1) $(ICON2)
 EXTRA_DIST = $(ICON1) $(ICON2) icons.shar
-DISTCLEANFILES = $(EXTRA_DIST)
+DISTCLEANFILES = $(ICON1) $(ICON2)
 
 # The magic with ICON1,2 is to have a single dependency
 # for all of the icons.
