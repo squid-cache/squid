@@ -1,4 +1,6 @@
 Changes to squid-2.6 ():
+	
+	- CARP now plays well with the other peering algorithms
 
 Changes to squid-2.5 ():
 

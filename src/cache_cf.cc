@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.401 2002/03/09 22:43:12 hno Exp $
+ * $Id: cache_cf.cc,v 1.402 2002/04/04 21:03:46 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1438,11 +1438,10 @@ parse_peer(peer ** head)
 	} else if (!strcasecmp(token, "no-netdb-exchange")) {
 	    p->options.no_netdb_exchange = 1;
 #if USE_CARP
-	} else if (!strncasecmp(token, "carp-load-factor=", 17)) {
+	} else if (!strcasecmp(token, "carp")) {
 	    if (p->type != PEER_PARENT)
-		debug(3, 0) ("parse_peer: Ignoring carp-load-factor for non-parent %s/%d\n", p->host, p->http_port);
-	    else
-		p->carp.load_factor = atof(token + 17);
+		fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
+	    p->options.carp = 1;
 #endif
 #if DELAY_POOLS
 	} else if (!strcasecmp(token, "no-delay")) {
@@ -1471,17 +1470,6 @@ parse_peer(peer ** head)
     p->icp.version = ICP_VERSION_CURRENT;
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
     p->test_fd = -1;
-#if USE_CARP
-#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
-    if (p->carp.load_factor) {
-	/* calculate this peers hash for use in CARP */
-	p->carp.hash = 0;
-	for (token = p->host; *token != 0; token++)
-	    p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *token;
-	p->carp.hash += p->carp.hash * 0x62531965;
-	p->carp.hash = ROTATE_LEFT(p->carp.hash, 21);
-    }
-#endif
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest) {
 	p->digest = peerDigestCreate(p);
