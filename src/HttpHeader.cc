@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.3 1998/02/21 18:46:32 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.4 1998/02/22 07:45:15 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -784,6 +784,17 @@ httpHeaderSetStr(HttpHeader *hdr, http_hdr_type id, const char *str)
     httpHeaderSet(hdr, id, value);
 }
 
+void
+httpHeaderSetAuth(HttpHeader *hdr, const char *authScheme, const char *realm)
+{
+    MemBuf mb;
+    assert(hdr && authScheme && realm);
+    memBufDefInit(&mb);
+    memBufPrintf(&mb, "%s realm=\"%s\"", authScheme, realm);
+    httpHeaderSetStr(hdr, HDR_WWW_AUTHENTICATE, mb.buf);
+    memBufClean(&mb);
+}
+
 /* add extension header (these fields are not parsed/analyzed/joined, etc.) */
 void
 httpHeaderAddExt(HttpHeader *hdr, const char *name, const char* value)
@@ -955,6 +966,11 @@ httpHeaderEntryClean(HttpHeaderEntry *e) {
 		httpSccDestroy(e->field.v_pscc);
 	    break;
 	case ftPExtField:
+	    /* tmp check to track a bug @?@ @?@ */
+	    if (e->field.v_int == 1) {
+		debug(55,0) ("BUG: attempt to free an invalid HeaderExtField (%p). Ignored.\n",
+		    e->field.v_pefield);
+	    } else
 	    if (e->field.v_pefield)
 		httpHeaderExtFieldDestroy(e->field.v_pefield);
 	    break;

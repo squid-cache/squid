@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: client.cc,v 1.55 1998/02/11 03:14:37 wessels Exp $
+ * $Id: client.cc,v 1.56 1998/02/22 07:45:18 rousskov Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -124,19 +124,21 @@ static void
 usage(const char *progname)
 {
     fprintf(stderr,
-	"Usage: %s [-ars] [-i IMS] [-h host] [-p port] [-m method] [-t count] [-I ping-interval] url\n"
+	"Usage: %s [-arsv] [-i IMS] [-h host] [-p port] [-m method] [-t count] [-I ping-interval] [-H 'strings'] url\n"
 	"Options:\n"
 	"    -P file      PUT request.\n"
 	"    -a           Do NOT include Accept: header.\n"
 	"    -r           Force cache to reload URL.\n"
 	"    -s           Silent.  Do not print data to stdout.\n"
+	"    -v           Verbose. Print outgoing message to stderr.\n"
 	"    -i IMS       If-Modified-Since time (in Epoch seconds).\n"
 	"    -h host      Retrieve URL from cache on hostname.  Default is localhost.\n"
 	"    -p port      Port number of cache.  Default is %d.\n"
 	"    -m method    Request method, default is GET.\n"
 	"    -t count     Trace count cache-hops\n"
 	"    -g count     Ping mode, \"count\" iterations (0 to loop until interrupted).\n"
-	"    -I interval  Ping interval in seconds (default 1 second).\n",
+	"    -I interval  Ping interval in seconds (default 1 second).\n"
+	"    -H 'string'  Extra headers to send. Use quotes to protect new lines.\n",
 	progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -151,7 +153,9 @@ main(int argc, char *argv[])
     int keep_alive = 0;
     int opt_noaccept = 0;
     int opt_put = 0;
+    int opt_verbose = 0;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ], hostname[BUFSIZ];
+    char extra_hdrs[BUFSIZ];
     const char *method = "GET";
     extern char *optarg;
     time_t ims = 0;
@@ -163,6 +167,7 @@ main(int argc, char *argv[])
 
     /* set the defaults */
     strcpy(hostname, "localhost");
+    extra_hdrs[0] = '\0';
     port = CACHE_HTTP_PORT;
     to_stdout = 1;
     reload = 0;
@@ -176,7 +181,7 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "ah:P:i:km:p:rst:g:p:I:?")) != -1)
+	while ((c = getopt(argc, argv, "ah:P:i:km:p:rsvt:g:p:I:H:?")) != -1)
 	    switch (c) {
 	    case 'a':
 		opt_noaccept = 1;
@@ -220,6 +225,15 @@ main(int argc, char *argv[])
 	    case 'I':
 		if ((ping_int = atoi(optarg) * 1000) <= 0)
 		    usage(argv[0]);
+		break;
+	    case 'H':
+		if (strlen(optarg)) {
+		    strncpy(extra_hdrs, optarg, sizeof(extra_hdrs));
+		}
+		break;
+	    case 'v':
+		/* undocumented: may increase verb-level by giving more -v's */
+		opt_verbose++;
 		break;
 	    case '?':		/* usage */
 	    default:
@@ -272,8 +286,12 @@ main(int argc, char *argv[])
 	    snprintf(buf, BUFSIZ, "Connection: Keep-Alive\r\n");
 	strcat(msg, buf);
     }
+    strcat(msg, extra_hdrs);
     snprintf(buf, BUFSIZ, "\r\n");
     strcat(msg, buf);
+
+    if (opt_verbose)
+	fprintf(stderr, "headers: '%s'\n", msg);
 
     if (ping) {
 #if HAVE_SIGACTION

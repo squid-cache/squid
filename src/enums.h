@@ -44,6 +44,7 @@ typedef enum {
     ERR_URN_RESOLVE,
     ERR_ACCESS_DENIED,
     ERR_CACHE_ACCESS_DENIED,
+    ERR_CACHE_MGR_ACCESS_DENIED,
     ERR_MAX
 } err_type;
 

@@ -293,6 +293,8 @@ extern int ipcacheUnregister(const char *name, void *data);
 extern char *mime_get_header(const char *mime, const char *header);
 extern char *mime_headers_end(const char *mime);
 extern int mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt);
+extern const char *mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field);
+
 extern void mimeInit(char *filename);
 extern char *mimeGetContentEncoding(const char *fn);
 extern char *mimeGetContentType(const char *fn);
@@ -340,7 +342,7 @@ extern int netdbHostHops(const char *host);
 extern int netdbHostRtt(const char *host);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
 
-extern void cachemgrStart(int fd, StoreEntry *);
+extern void cachemgrStart(int fd, request_t *request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int);
 extern void cachemgrInit(void);
 

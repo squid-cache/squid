@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.195 1998/02/21 00:56:55 rousskov Exp $
+ * $Id: ftp.cc,v 1.196 1998/02/22 07:45:19 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -135,7 +135,9 @@ static PF ftpStateFree;
 static PF ftpTimeout;
 static PF ftpReadControlReply;
 static CWCB ftpWriteCommandCallback;
+#if 0
 static char *ftpGetBasicAuth(const char *);
+#endif
 static void ftpLoginParser(const char *, FtpStateData *);
 static wordlist *ftpParseControlReply(char *buf, size_t len, int *code);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
@@ -814,6 +816,7 @@ ftpDataRead(int fd, void *data)
     }
 }
 
+#if 0 /* moved to mime.c because cachemgr needs it too */
 static char *
 ftpGetBasicAuth(const char *req_hdr)
 {
@@ -831,6 +834,7 @@ ftpGetBasicAuth(const char *req_hdr)
 	return NULL;
     return base64_decode(t);
 }
+#endif
 
 /*
  * ftpCheckAuth
@@ -842,7 +846,7 @@ static int
 ftpCheckAuth(FtpStateData * ftpState, char *req_hdr)
 {
     char *orig_user;
-    char *auth;
+    const char *auth;
     ftpLoginParser(ftpState->request->login, ftpState);
     if (ftpState->user[0] && ftpState->password[0])
 	return 1;		/* name and passwd both in URL */
@@ -851,7 +855,7 @@ ftpCheckAuth(FtpStateData * ftpState, char *req_hdr)
     if (ftpState->password[0])
 	return 1;		/* passwd with no name? */
     /* URL has name, but no passwd */
-    if ((auth = ftpGetBasicAuth(req_hdr)) == NULL)
+    if (!(auth = mime_get_auth(req_hdr, "Basic", NULL)))
 	return 0;		/* need auth header */
     orig_user = xstrdup(ftpState->user);
     ftpLoginParser(auth, ftpState);
@@ -950,6 +954,7 @@ ftpStart(request_t * request, StoreEntry * entry)
 	storeAppend(entry, response, strlen(response));
 	httpParseReplyHeaders(response, entry->mem_obj->reply);
 #else
+	/* create reply */
 	{
 	    HttpReply *reply = entry->mem_obj->reply;
 	    assert(reply);
@@ -2063,18 +2068,17 @@ ftpAuthRequired(const request_t * request, const char *realm)
 #endif
 
 static void
-ftpAuthRequired(HttpReply *reply, request_t *request, const char *realm)
+ftpAuthRequired(HttpReply *old_reply, request_t *request, const char *realm)
 {
     ErrorState *err = errorCon(ERR_ACCESS_DENIED, HTTP_UNAUTHORIZED);
     HttpReply *rep;
     err->request = requestLink(request);
     rep = errorBuildReply(err);
-    /* add Authenticate header */
-    httpHeaderSetStr(&rep->hdr, HDR_WWW_AUTHENTICATE, realm);
     errorStateFree(err);
-    /* substitute, should be OK because we clean it @?@ */
-    httpReplyClean(reply);
-    *reply = *rep; /* @?@ warning is generated due to hdr_sz being constant */
+    /* add Authenticate header */
+    httpHeaderSetAuth(&rep->hdr, "Basic", realm);
+    /* move new reply to the old one */
+    httpReplyAbsorb(old_reply, rep);
 }
 
 char *

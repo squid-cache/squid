@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.3 1998/02/21 00:56:50 rousskov Exp $
+ * $Id: cache_manager.cc,v 1.4 1998/02/22 07:45:17 rousskov Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 typedef struct {
     StoreEntry *entry;
     char *action;
+    char *user_name;
     char *passwd;
 } cachemgrStateData;
 
@@ -48,7 +49,12 @@ typedef struct _action_table {
 } action_table;
 
 static action_table * cachemgrFindAction(const char *action);
+#if 0
 static cachemgrStateData *cachemgrParse(const char *url);
+#else
+static cachemgrStateData *cachemgrParseUrl(const char *url);
+#endif
+static void cachemgrParseHeaders(cachemgrStateData *mgr, const request_t *request);
 static int cachemgrCheckPassword(cachemgrStateData *);
 static void cachemgrStateFree(cachemgrStateData *mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
@@ -88,7 +94,7 @@ cachemgrFindAction(const char *action)
 }
 
 static cachemgrStateData *
-cachemgrParse(const char *url)
+cachemgrParseUrl(const char *url)
 {
     int t;
     LOCAL_ARRAY(char, host, MAX_URL);
@@ -100,13 +106,45 @@ cachemgrParse(const char *url)
     if (t < 2) {
 	xstrncpy(request, "menu", MAX_URL);
     } else if ((a = cachemgrFindAction(request)) == NULL) {
-	debug(16, 0) ("cachemgrParse: action '%s' not found\n", request);
+	debug(16, 0) ("cachemgrParseUrl: action '%s' not found\n", request);
 	return NULL;
     }
+    /* set absent entries to NULL so we can test if they are present later */
     mgr = xcalloc(1, sizeof(cachemgrStateData));
-    mgr->passwd = xstrdup(t == 3 ? password : "nopassword");
+    mgr->user_name = NULL;
+    mgr->passwd = t == 3 ? xstrdup(password) : NULL;
     mgr->action = xstrdup(request);
     return mgr;
+}
+
+static void
+cachemgrParseHeaders(cachemgrStateData *mgr, const request_t *request)
+{
+    const char *basic_cookie; /* base 64 _decoded_ user:passwd pair */
+    const char *authField;
+    const char *passwd_del;
+    assert(mgr && request);
+    /* this parsing will go away when hdrs are added to request_t @?@ */
+    basic_cookie = mime_get_auth(request->headers, "Basic", &authField);
+    debug(16,9) ("cachemgrParseHeaders: got auth: '%s'\n", authField ? authField:"<none>");
+    if (!authField)
+	return;
+    if (!basic_cookie) {
+	debug(16, 1) ("cachemgrParseHeaders: unknown auth format in '%s'\n", authField);
+	return;
+    }
+    if (!(passwd_del = strchr(basic_cookie, ':'))) {
+	debug(16, 1) ("cachemgrParseHeaders: unknown basic_cookie '%s' format in '%s'\n", basic_cookie, authField);
+	return;
+    }
+    /* found user:password pair, reset old values */
+    safe_free(mgr->user_name);
+    safe_free(mgr->passwd);
+    mgr->user_name = xstrdup(basic_cookie); 
+    mgr->user_name[passwd_del - basic_cookie] = '\0';
+    mgr->passwd = xstrdup(passwd_del+1);
+    /* warning: this prints decoded password which maybe not what you want to do @?@ @?@ */
+    debug(16,9) ("cachemgrParseHeaders: got user: '%s' passwd: '%s'\n", mgr->user_name, mgr->passwd);
 }
 
 /*
@@ -124,6 +162,8 @@ cachemgrCheckPassword(cachemgrStateData * mgr)
 	return 1;
     if (strcmp(pwd, "none") == 0)
 	return 0;
+    if (!mgr->passwd)
+	return 1;
     return strcmp(pwd, mgr->passwd);
 }
 
@@ -131,21 +171,19 @@ static void
 cachemgrStateFree(cachemgrStateData *mgr)
 {
 	safe_free(mgr->action);
+	safe_free(mgr->user_name);
 	safe_free(mgr->passwd);
 	xfree(mgr);
 }
 
 void
-cachemgrStart(int fd, StoreEntry * entry)
+cachemgrStart(int fd, request_t *request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
-#if 0
-    char *hdr;
-#endif
     action_table *a;
     debug(16, 3) ("objectcacheStart: '%s'\n", storeUrl(entry));
-    if ((mgr = cachemgrParse(storeUrl(entry))) == NULL) {
+    if ((mgr = cachemgrParseUrl(storeUrl(entry))) == NULL) {
 	err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND);
 	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
@@ -154,14 +192,42 @@ cachemgrStart(int fd, StoreEntry * entry)
     }
     mgr->entry = entry;
     entry->expires = squid_curtime;
-    debug(16, 1) ("CACHEMGR: %s requesting '%s'\n",
+    debug(16, 5) ("CACHEMGR: %s requesting '%s'\n",
 	fd_table[fd].ipaddr, mgr->action);
+    /* get additional info from request headers */
+    cachemgrParseHeaders(mgr, request);
+    debug(16, 1) ("CACHEMGR: %s (user: %s) requesting '%s'\n",
+	fd_table[fd].ipaddr, mgr->user_name ? mgr->user_name : "<unknown>", 
+	mgr->action);
     /* Check password */
     if (cachemgrCheckPassword(mgr) != 0) {
+#if 0 /* old response, we ask for authentication now */
 	cachemgrStateFree(mgr);
 	debug(16, 1) ("WARNING: Incorrect Cachemgr Password!\n");
 	err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND);
 	errorAppendEntry(entry, err);
+#else
+	/* build error message */
+	ErrorState *err = errorCon(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED);
+	HttpReply *rep;
+	/* warn if user specified incorrect password */
+	if (mgr->passwd)
+	    debug(16, 1) ("WARNING: CACHEMGR: Incorrect Password (user: %s, action: %s)!\n",
+	        mgr->user_name ? mgr->user_name : "<unknown>", mgr->action);
+	else
+	    debug(16, 3) ("CACHEMGR: requesting authentication for action: '%s'.\n",
+		mgr->action);
+        err->request = requestLink(request);
+	rep = errorBuildReply(err);
+	errorStateFree(err);
+	/* add Authenticate header, use 'action' as a realm because password depends on action */
+	httpHeaderSetAuth(&rep->hdr, "Basic", mgr->action);
+	/* move info to the mem_obj->reply */
+	httpReplyAbsorb(entry->mem_obj->reply, rep);
+	/* store the reply */
+	httpReplySwapOut(entry->mem_obj->reply, entry);
+	cachemgrStateFree(mgr);
+#endif
 	entry->expires = squid_curtime;
 	storeComplete(entry);
 	return;
