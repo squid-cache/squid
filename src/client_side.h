@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.4 2003/07/11 02:11:47 robertc Exp $
+ * $Id: client_side.h,v 1.5 2003/07/12 12:39:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,14 +80,16 @@ int parsed_ok:
                      this, aBool);
     }
 
-    struct
+    class DeferredParams
     {
+
+    public:
         clientStreamNode *node;
         HttpReply *rep;
         StoreIOBuffer queuedBuffer;
-    }
+    };
 
-    deferredparams;
+    DeferredParams deferredparams;
     off_t writtenToSocket;
     void pullData();
     off_t getNextRangeOffset() const;
