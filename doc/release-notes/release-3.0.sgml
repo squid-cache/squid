@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.1 2003/04/20 03:35:38 robertc Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.2 2003/05/10 10:16:57 robertc Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -111,6 +111,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
   <item>Cleanup of authentication forwarding, and added gatewaying proxy->reverseproxy when the same Squid is acting as both proxy and reverseproxy with authentication. (Henrik Nordstrom)
  <item>The mailto links on Squid's ERR pages now contain data about the cccurred error by default, so that the email will contain this data in its body. This feature can be disabled via the email_err_data directive. (Clemens Löser)
  <item>Disable pipeline_prefetch in HEAD as it is known to be broken due to the store_client_copy() api change (Henrik)
+ <item>Fixup some SNMP variable types for more useful reporting. (Henrik).
 </itemize>
 
 <sect>Changes to squid.conf
