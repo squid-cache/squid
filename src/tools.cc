@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.30 1996/04/11 23:52:01 wessels Exp $ */
+/* $Id: tools.cc,v 1.31 1996/04/15 18:00:27 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -80,7 +80,7 @@ static void dumpMallocStats(f)
     fprintf(f, "   space in ordinary blocks in use  %d\n", mp.uordblks);
     fprintf(f, "   space in free ordinary blocks  %d\n", mp.fordblks);
     fprintf(f, "   cost of enabling keep option  %d\n", mp.keepcost);
-#if LNG_MALLINFO
+#if HAVE_EXT_MALLINFO
     fprintf(f, "   max size of small blocks  %d\n", mp.mxfast);
     fprintf(f, "   number of small blocks in a holding block  %d\n",
 	mp.nlblks);
@@ -91,7 +91,7 @@ static void dumpMallocStats(f)
 	mp.allocated);
     fprintf(f, "   bytes used in maintaining the free tree  %d\n",
 	mp.treeoverhead);
-#endif /* LNG_MALLINFO */
+#endif /* HAVE_EXT_MALLINFO */
 
 #if PRINT_MMAP
     mallocmap();
@@ -165,9 +165,16 @@ void normal_shutdown()
 void shut_down(sig)
      int sig;
 {
+    int i;
+    FD_ENTRY *f;
     debug(21, 1, "Preparing for shutdown...\n");
     serverConnectionsClose();
     ipcacheShutdownServers();
+    for(i=fdstat_biggest_fd(); i >= 0; i--) {
+	f = &fd_table[i];
+	if (f->read_handler || f->write_handler || f->except_handler)
+		comm_set_fd_lifetime(i, 30);
+    }
     shutdown_pending = 1;
     /* reinstall signal handler? */
 }

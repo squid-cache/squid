@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.23 1996/04/14 03:05:50 wessels Exp $ */
+/* $Id: stat.cc,v 1.24 1996/04/15 18:00:28 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -506,7 +506,7 @@ void info_get(obj, sentry)
 	sprintf(line, "{\tcost of enabling keep option:\t%d}\n", mp.keepcost);
 	storeAppend(sentry, line, strlen(line));
     }
-#if LNG_MALLINFO
+#if HAVE_EXT_MALLINFO
     sprintf(line, "{\tmax size of small blocks:\t%d}\n", mp.mxfast);
     storeAppend(sentry, line, strlen(line));
     sprintf(line, "{\tnumber of small blocks in a holding block:\t%d}\n",
@@ -523,7 +523,7 @@ void info_get(obj, sentry)
 	mp.treeoverhead);
     storeAppend(sentry, line, strlen(line));
 
-#endif /* LNG_MALLINFO */
+#endif /* HAVE_EXT_MALLINFO */
 
 #endif /* HAVE_MALLINFO */
 
