@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.28 2001/01/12 00:37:13 wessels Exp $
+ * $Id: rfc1123.c,v 1.29 2001/10/17 19:46:43 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -74,7 +74,7 @@ static const char *const w_space = " \t\r\n";
 static int make_month(const char *s);
 static int make_num(const char *s);
 
-static char *month_names[12] =
+static const char *month_names[12] =
 {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
