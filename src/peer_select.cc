@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.65 1998/06/05 17:34:19 wessels Exp $
+ * $Id: peer_select.cc,v 1.66 1998/06/05 19:02:52 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -314,7 +314,7 @@ peerSelectFoo(ps_state * psstate)
 	    &psstate->icp.timeout);
 	if (psstate->icp.n_sent == 0)
 	    debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
-	debug(44, 3) ("peerSelectFoo: %d ICP replies expected, RTT %f msec\n",
+	debug(44, 3) ("peerSelectFoo: %d ICP replies expected, RTT %d msec\n",
 	    psstate->icp.n_replies_expected, psstate->icp.timeout);
 	if (psstate->icp.n_replies_expected > 0) {
 	    entry->ping_status = PING_WAITING;
