@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.153 1998/06/04 18:57:06 wessels Exp $
+#  $Id: Makefile.in,v 1.154 1998/07/17 00:48:21 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -84,6 +84,7 @@ OBJS	 	= \
 		@ASYNC_OBJS@ \
 		cache_cf.o \
 		CacheDigest.o \
+		carp.o \
 		cbdata.o \
 		client_db.o \
 		client_side.o \
