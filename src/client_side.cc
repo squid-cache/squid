@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.532 2001/03/04 00:54:48 wessels Exp $
+ * $Id: client_side.cc,v 1.533 2001/04/13 14:59:11 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1147,6 +1147,7 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
     HttpHeader *hdr = rep ? &rep->header : 0;
     const char *range_err = NULL;
     request_t *request = http->request;
+    int is_hit = isTcpHit(http->log_type);
     assert(request->range);
     /* check if we still want to do ranges */
     if (!rep)
@@ -1167,6 +1168,8 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	range_err = "too complex range header";
     else if (!request->flags.cachable)	/* from we_do_ranges in http.c */
 	range_err = "non-cachable request";
+    else if (!is_hit && httpHdrRangeOffsetLimit(http->request->range))
+	range_err = "range outside range_offset_limit";
     /* get rid of our range specs on error */
     if (range_err) {
 	debug(33, 3) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
