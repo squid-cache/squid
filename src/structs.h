@@ -173,7 +173,7 @@ struct _SquidConfig {
 	struct in_addr udp_incoming;
 #ifdef SQUID_SNMP
 	struct in_addr snmp_incoming;
-#endif /* SQUID_SNMP */
+#endif				/* SQUID_SNMP */
 	struct in_addr udp_outgoing;
 	struct in_addr client_netmask;
     } Addrs;
@@ -734,7 +734,7 @@ struct _store_client {
     char *copy_buf;
     STCB *callback;
     void *callback_data;
-    MemObject *mem;	/* ptr to the parent structure, argh! */
+    MemObject *mem;		/* ptr to the parent structure, argh! */
     short swapin_fd;
 };
 

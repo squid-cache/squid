@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.32 1997/10/17 05:27:56 wessels Exp $
+ * $Id: util.c,v 1.33 1997/10/20 22:59:42 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -453,7 +453,7 @@ xbstrerror(int err)
 {
     static char xbstrerror_buf[BUFSIZ];
     if (err < 0 || err >= sys_nerr)
-        return ("Unknown");
+	return ("Unknown");
     sprintf(xbstrerror_buf, "(%d) %s", err, strerror(err));
     return xbstrerror_buf;
 }

@@ -66,9 +66,9 @@
 
 #ifdef HAVE_CVT
 
-# define ap_ecvt ecvt
-# define ap_fcvt fcvt
-# define ap_gcvt gcvt
+#define ap_ecvt ecvt
+#define ap_fcvt fcvt
+#define ap_gcvt gcvt
 
 #else
 
@@ -87,7 +87,7 @@
 #define	NDIG	80
 
 static char *
-     ap_cvt(double arg, int ndigits, int *decpt, int *sign, int eflag)
+ap_cvt(double arg, int ndigits, int *decpt, int *sign, int eflag)
 {
     register int r2;
     double fi, fj;
@@ -117,8 +117,7 @@ static char *
 	}
 	while (p1 < &buf[NDIG])
 	    *p++ = *p1++;
-    }
-    else if (arg > 0) {
+    } else if (arg > 0) {
 	while ((fj = arg * 10) < 1) {
 	    arg = fj;
 	    r2--;
@@ -162,13 +161,13 @@ static char *
 }
 
 static char *
-     ap_ecvt(double arg, int ndigits, int *decpt, int *sign)
+ap_ecvt(double arg, int ndigits, int *decpt, int *sign)
 {
     return (ap_cvt(arg, ndigits, decpt, sign, 1));
 }
 
 static char *
-     ap_fcvt(double arg, int ndigits, int *decpt, int *sign)
+ap_fcvt(double arg, int ndigits, int *decpt, int *sign)
 {
     return (ap_cvt(arg, ndigits, decpt, sign, 0));
 }
@@ -179,7 +178,7 @@ static char *
  */
 
 static char *
-     ap_gcvt(double number, int ndigit, char *buf)
+ap_gcvt(double number, int ndigit, char *buf)
 {
     int sign, decpt;
     register char *p1, *p2;
@@ -202,16 +201,14 @@ static char *
 	if (decpt < 0) {
 	    decpt = -decpt;
 	    *p2++ = '-';
-	}
-	else
+	} else
 	    *p2++ = '+';
 	if (decpt / 100 > 0)
 	    *p2++ = decpt / 100 + '0';
 	if (decpt / 10 > 0)
 	    *p2++ = (decpt % 100) / 10 + '0';
 	*p2++ = decpt % 10 + '0';
-    }
-    else {
+    } else {
 	if (decpt <= 0) {
 	    if (*p1 != '0')
 		*p2++ = '.';
@@ -249,9 +246,9 @@ typedef enum {
 #define INT_NULL		((int *)0)
 #define WIDE_INT		long
 
-typedef WIDE_INT		wide_int;
-typedef unsigned WIDE_INT	u_wide_int;
-typedef int			bool_int;
+typedef WIDE_INT wide_int;
+typedef unsigned WIDE_INT u_wide_int;
+typedef int bool_int;
 
 #define S_NULL			"(null)"
 #define S_NULL_LEN		6
@@ -352,8 +349,8 @@ typedef struct buf_area buffy;
  * is declared as buf[ 100 ], buf_end should be &buf[ 100 ])
  */
 static char *
-     conv_10(register wide_int num, register bool_int is_unsigned,
-	  register bool_int * is_negative, char *buf_end, register int *len)
+conv_10(register wide_int num, register bool_int is_unsigned,
+    register bool_int * is_negative, char *buf_end, register int *len)
 {
     register char *p = buf_end;
     register u_wide_int magnitude;
@@ -361,8 +358,7 @@ static char *
     if (is_unsigned) {
 	magnitude = (u_wide_int) num;
 	*is_negative = FALSE;
-    }
-    else {
+    } else {
 	*is_negative = (num < 0);
 
 	/*
@@ -378,8 +374,7 @@ static char *
 	    wide_int t = num + 1;
 
 	    magnitude = ((u_wide_int) - t) + 1;
-	}
-	else
+	} else
 	    magnitude = (u_wide_int) num;
     }
 
@@ -389,7 +384,7 @@ static char *
     do {
 	register u_wide_int new_magnitude = magnitude / 10;
 
-	*--p = (char)(magnitude - new_magnitude * 10 + '0');
+	*--p = (char) (magnitude - new_magnitude * 10 + '0');
 	magnitude = new_magnitude;
     }
     while (magnitude);
@@ -407,8 +402,8 @@ static char *
  * in buf).
  */
 static char *
-     conv_fp(register char format, register double num,
-boolean_e add_dp, int precision, bool_int * is_negative, char *buf, int *len)
+conv_fp(register char format, register double num,
+    boolean_e add_dp, int precision, bool_int * is_negative, char *buf, int *len)
 {
     register char *s = buf;
     register char *p;
@@ -427,7 +422,6 @@ boolean_e add_dp, int precision, bool_int * is_negative, char *buf, int *len)
 	*is_negative = FALSE;
 	return (buf);
     }
-
     if (format == 'f')
 	if (decimal_point <= 0) {
 	    *s++ = '0';
@@ -435,17 +429,14 @@ boolean_e add_dp, int precision, bool_int * is_negative, char *buf, int *len)
 		*s++ = '.';
 		while (decimal_point++ < 0)
 		    *s++ = '0';
-	    }
-	    else if (add_dp)
+	    } else if (add_dp)
 		*s++ = '.';
-	}
-	else {
+	} else {
 	    while (decimal_point-- > 0)
 		*s++ = *p++;
 	    if (precision > 0 || add_dp)
 		*s++ = '.';
-	}
-    else {
+    } else {
 	*s++ = *p++;
 	if (precision > 0 || add_dp)
 	    *s++ = '.';
@@ -466,7 +457,7 @@ boolean_e add_dp, int precision, bool_int * is_negative, char *buf, int *len)
 	decimal_point--;
 	if (decimal_point != 0) {
 	    p = conv_10((wide_int) decimal_point, FALSE, &exponent_is_negative,
-			&temp[EXPONENT_LENGTH], &t_len);
+		&temp[EXPONENT_LENGTH], &t_len);
 	    *s++ = exponent_is_negative ? '-' : '+';
 
 	    /*
@@ -476,14 +467,12 @@ boolean_e add_dp, int precision, bool_int * is_negative, char *buf, int *len)
 		*s++ = '0';
 	    while (t_len--)
 		*s++ = *p++;
-	}
-	else {
+	} else {
 	    *s++ = '+';
 	    *s++ = '0';
 	    *s++ = '0';
 	}
     }
-
     *len = s - buf;
     return (buf);
 }
@@ -500,8 +489,8 @@ boolean_e add_dp, int precision, bool_int * is_negative, char *buf, int *len)
  * is declared as buf[ 100 ], buf_end should be &buf[ 100 ])
  */
 static char *
-     conv_p2(register u_wide_int num, register int nbits,
-	     char format, char *buf_end, register int *len)
+conv_p2(register u_wide_int num, register int nbits,
+    char format, char *buf_end, register int *len)
 {
     register int mask = (1 << nbits) - 1;
     register char *p = buf_end;
@@ -523,8 +512,9 @@ static char *
 /*
  * Do format conversion placing the output in buffer
  */
-static int format_converter(register buffy * odp, const char *fmt,
-			      va_list ap)
+static int 
+format_converter(register buffy * odp, const char *fmt,
+    va_list ap)
 {
     register char *sp;
     register char *bep;
@@ -567,8 +557,7 @@ static int format_converter(register buffy * odp, const char *fmt,
     while (*fmt) {
 	if (*fmt != '%') {
 	    INS_CHAR(*fmt, sp, bep, cc);
-	}
-	else {
+	} else {
 	    /*
 	     * Default variable settings
 	     */
@@ -607,8 +596,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 		if (isdigit(*fmt)) {
 		    STR_TO_DEC(fmt, min_width);
 		    adjust_width = YES;
-		}
-		else if (*fmt == '*') {
+		} else if (*fmt == '*') {
 		    min_width = va_arg(ap, int);
 		    fmt++;
 		    adjust_width = YES;
@@ -616,8 +604,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 			adjust = LEFT;
 			min_width = -min_width;
 		    }
-		}
-		else
+		} else
 		    adjust_width = NO;
 
 		/*
@@ -632,20 +619,16 @@ static int format_converter(register buffy * odp, const char *fmt,
 		    fmt++;
 		    if (isdigit(*fmt)) {
 			STR_TO_DEC(fmt, precision);
-		    }
-		    else if (*fmt == '*') {
+		    } else if (*fmt == '*') {
 			precision = va_arg(ap, int);
 			fmt++;
 			if (precision < 0)
 			    precision = 0;
-		    }
-		    else
+		    } else
 			precision = 0;
-		}
-		else
+		} else
 		    adjust_precision = NO;
-	    }
-	    else
+	    } else
 		adjust_precision = adjust_width = NO;
 
 	    /*
@@ -654,8 +637,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 	    if (*fmt == 'l') {
 		is_long = YES;
 		fmt++;
-	    }
-	    else
+	    } else
 		is_long = NO;
 
 	    /*
@@ -691,7 +673,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 			i_num = (wide_int) va_arg(ap, int);
 		};
 		s = conv_10(i_num, (*fmt) == 'u', &is_negative,
-			    &num_buf[NUM_BUF_SIZE], &s_len);
+		    &num_buf[NUM_BUF_SIZE], &s_len);
 		FIX_PRECISION(adjust_precision, precision, s, s_len);
 
 		if (*fmt != 'u') {
@@ -711,7 +693,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 		else
 		    ui_num = (u_wide_int) va_arg(ap, unsigned int);
 		s = conv_p2(ui_num, 3, *fmt,
-			    &num_buf[NUM_BUF_SIZE], &s_len);
+		    &num_buf[NUM_BUF_SIZE], &s_len);
 		FIX_PRECISION(adjust_precision, precision, s, s_len);
 		if (alternate_form && *s != '0') {
 		    *--s = '0';
@@ -727,7 +709,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 		else
 		    ui_num = (u_wide_int) va_arg(ap, unsigned int);
 		s = conv_p2(ui_num, 4, *fmt,
-			    &num_buf[NUM_BUF_SIZE], &s_len);
+		    &num_buf[NUM_BUF_SIZE], &s_len);
 		FIX_PRECISION(adjust_precision, precision, s, s_len);
 		if (alternate_form && i_num != 0) {
 		    *--s = *fmt;	/* 'x' or 'X' */
@@ -743,8 +725,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 		    s_len = strlen(s);
 		    if (adjust_precision && precision < s_len)
 			s_len = precision;
-		}
-		else {
+		} else {
 		    s = S_NULL;
 		    s_len = S_NULL_LEN;
 		}
@@ -758,8 +739,8 @@ static int format_converter(register buffy * odp, const char *fmt,
 		fp_num = va_arg(ap, double);
 
 		s = conv_fp(*fmt, fp_num, alternate_form,
-			(adjust_precision == NO) ? FLOAT_DIGITS : precision,
-			    &is_negative, &num_buf[1], &s_len);
+		    (adjust_precision == NO) ? FLOAT_DIGITS : precision,
+		    &is_negative, &num_buf[1], &s_len);
 		if (is_negative)
 		    prefix_char = '-';
 		else if (print_sign)
@@ -828,7 +809,7 @@ static int format_converter(register buffy * odp, const char *fmt,
 
 		if (sizeof(char *) <= sizeof(u_wide_int))
 		         s = conv_p2(ui_num, 4, 'x',
-				     &num_buf[NUM_BUF_SIZE], &s_len);
+			&num_buf[NUM_BUF_SIZE], &s_len);
 		else {
 		    s = "%p";
 		    s_len = 2;
@@ -868,7 +849,6 @@ static int format_converter(register buffy * odp, const char *fmt,
 		*--s = prefix_char;
 		s_len++;
 	    }
-
 	    if (adjust_width && adjust == RIGHT && min_width > s_len) {
 		if (pad_char == '0' && prefix_char != NUL) {
 		    INS_CHAR(*s, sp, bep, cc)
@@ -878,7 +858,6 @@ static int format_converter(register buffy * odp, const char *fmt,
 		}
 		PAD(min_width, s_len, pad_char);
 	    }
-
 	    /*
 	     * Print the string s. 
 	     */
@@ -900,8 +879,9 @@ static int format_converter(register buffy * odp, const char *fmt,
 /*
  * This is the general purpose conversion function.
  */
-static void strx_printv(int *ccp, char *buf, size_t len, const char *format,
-			va_list ap)
+static void 
+strx_printv(int *ccp, char *buf, size_t len, const char *format,
+    va_list ap)
 {
     buffy od;
     int cc;
@@ -925,7 +905,8 @@ static void strx_printv(int *ccp, char *buf, size_t len, const char *format,
 }
 
 
-int snprintf(char *buf, size_t len, const char *format,...)
+int 
+snprintf(char *buf, size_t len, const char *format,...)
 {
     int cc;
     va_list ap;
@@ -937,8 +918,9 @@ int snprintf(char *buf, size_t len, const char *format,...)
 }
 
 
-int vsnprintf(char *buf, size_t len, const char *format,
-			     va_list ap)
+int 
+vsnprintf(char *buf, size_t len, const char *format,
+    va_list ap)
 {
     int cc;
 
@@ -946,4 +928,4 @@ int vsnprintf(char *buf, size_t len, const char *format,
     return (cc);
 }
 
-#endif	/* HAVE_SNPRINTF */
+#endif /* HAVE_SNPRINTF */
