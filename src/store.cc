@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.138 1996/10/25 00:22:25 wessels Exp $
+ * $Id: store.cc,v 1.139 1996/10/25 03:44:53 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1832,8 +1832,7 @@ storePurgeOld(void)
 	if ((n & 0xFFF) == 0)
 	    debug(20, 2, "storeWalkThrough: %7d objects so far.\n", n);
 	if (storeCheckExpired(e))
-	    if (storeRelease(e) == 0)
-		count++;
+	    count += storeRelease(e);
     }
     return count;
 }
@@ -1901,8 +1900,7 @@ storeGetMemSpace(int size)
 	    n_purged++;
 	} else if (!storeEntryLocked(e)) {
 	    /* These will be neg-cached objects */
-	    storeRelease(e);
-	    n_released++;
+	    n_released += storeRelease(e);
 	} else {
 	    debug_trap("storeGetMemSpace: Bad Entry in LRU list");
 	}
@@ -2020,8 +2018,7 @@ storeGetSwapSpace(int size)
 	    e = (StoreEntry *) link_ptr;
 	    if (storeCheckExpired(e)) {
 		debug(20, 3, "storeGetSwapSpace: Expired '%s'\n", e->url);
-		++expired_in_one_bucket;
-		storeRelease(e);
+		expired_in_one_bucket += storeRelease(e);
 	    } else if (!storeEntryLocked(e)) {
 		*(LRU_list + list_count) = e;
 		list_count++;
@@ -2078,11 +2075,8 @@ storeGetSwapSpace(int size)
 	LRU_list->index);
 #endif /* LOTSA_DEBUGGING */
 
-    /* Kick LRU out until we have enough swap space */
-    for (i = 0; i < list_count; i++) {
-	if (storeRelease(*(LRU_list + i)) == 0)
-	    removed++;
-    }
+    for (i = 0; i < list_count; i++)
+	removed += storeRelease(*(LRU_list + i));
     if (store_swap_size + kb_size <= store_swap_low)
 	fReduceSwap = 0;
     debug(20, 2, "storeGetSwapSpace: After Freeing Size:   %7d kbytes\n",
@@ -2114,14 +2108,14 @@ storeGetSwapSpace(int size)
 
 
 /* release an object from a cache */
-/* return 0 when success. */
+/* return number of objects released. */
 int
 storeRelease(StoreEntry * e)
 {
     StoreEntry *result = NULL;
-    StoreEntry *head_result = NULL;
+    StoreEntry *hentry = NULL;
     hash_link *hptr = NULL;
-    hash_link *head_table_entry = NULL;
+    char *hkey;
 
     debug(20, 3, "storeRelease: Releasing: '%s'\n", e->key);
 
@@ -2131,14 +2125,14 @@ storeRelease(StoreEntry * e)
 	storeExpireNow(e);
 	debug(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit\n");
 	storeReleaseRequest(e);
-	return -1;
+	return 0;
     }
     if (e->key != NULL) {
 	if ((hptr = hash_lookup(store_table, e->key)) == NULL) {
 	    debug(20, 0, "storeRelease: Not Found: '%s'\n", e->key);
 	    debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
 	    debug_trap("storeRelease: Invalid Entry");
-	    return -1;
+	    return 0;
 	}
 	result = (StoreEntry *) hptr;
 	if (result != e) {
@@ -2147,27 +2141,21 @@ storeRelease(StoreEntry * e)
 	    debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
 	    debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
 	    debug_trap("storeRelease: Duplicate Entry");
-	    return -1;
+	    return 0;
 	}
     }
+    /* check if coresponding HEAD object exists. */
     if (e->method == METHOD_GET) {
-	/* check if coresponding HEAD object exists. */
-	head_table_entry = hash_lookup(store_table,
-	    storeGeneratePublicKey(e->url, METHOD_HEAD));
-	if (head_table_entry) {
-	    head_result = (StoreEntry *) head_table_entry;
-	    if (head_result) {
-		/* recursive call here to free up /head/ */
-		storeRelease(head_result);
-	    }
-	}
+	hkey = storeGeneratePublicKey(e->url, METHOD_HEAD);
+	if ((hentry = (StoreEntry *) hash_lookup(store_table, hkey)))
+		storeExpireNow(hentry);
     }
     if (store_rebuilding == STORE_REBUILDING_FAST) {
 	debug(20, 2, "storeRelease: Delaying release until store is rebuilt: '%s'\n",
 	    e->key ? e->key : e->url ? e->url : "NO URL");
 	storeExpireNow(e);
 	storeSetPrivateKey(e);
-	return -1;
+	return 0;
     }
     if (e->key)
 	debug(20, 5, "storeRelease: Release object key: %s\n", e->key);
@@ -2186,7 +2174,7 @@ storeRelease(StoreEntry * e)
     storeHashDelete(e);
     storeLog(STORE_LOG_RELEASE, e);
     destroy_StoreEntry(e);
-    return 0;
+    return 1;
 }
 
 
@@ -2654,15 +2642,14 @@ storeMaintainSwapSpace(void)
 		debug(20, 1, "Completed %d full expiration scans of store table\n",
 		    scan_revolutions);
 	    }
-	    link_ptr = hash_get_bucket(store_table, bucket++);
-	    for (; link_ptr; link_ptr = next) {
+	    next = hash_get_bucket(store_table, bucket++);
+	    while ((link_ptr = next)) {
 		scan_obj++;
 		next = link_ptr->next;
 		e = (StoreEntry *) link_ptr;
 		if (!storeCheckExpired(e))
 		    continue;
-		storeRelease(e);
-		++rm_obj;
+		rm_obj += storeRelease(e);
 	    }
 	}
     }
