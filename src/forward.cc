@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.8 1998/06/09 23:34:26 wessels Exp $
+ * $Id: forward.cc,v 1.9 1998/06/26 21:24:55 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -46,9 +46,20 @@ fwdStateFree(FwdState * fwdState)
 {
     FwdServer *s;
     FwdServer *n = fwdState->servers;
+    StoreEntry *e = fwdState->entry;
+    ErrorState *err;
     int sfd;
     static int loop_detect = 0;
     assert(loop_detect++ == 0);
+    assert(e->mem_obj);
+    if (e->mem_obj->inmem_hi == 0) {
+	assert(fwdState->fail.err_code);
+	err = errorCon(fwdState->fail.err_code, fwdState->fail.http_code);
+	err->request = requestLink(fwdState->request);
+	errorAppendEntry(e, err);
+    } else if (e->store_status == STORE_PENDING) {
+	storeAbort(e, 0);
+    }
     while ((s = n)) {
 	n = s->next;
 	xfree(s->host);
@@ -57,8 +68,8 @@ fwdStateFree(FwdState * fwdState)
     fwdState->servers = NULL;
     requestUnlink(fwdState->request);
     fwdState->request = NULL;
-    storeUnregisterAbort(fwdState->entry);
-    storeUnlockObject(fwdState->entry);
+    storeUnregisterAbort(e);
+    storeUnlockObject(e);
     fwdState->entry = NULL;
     sfd = fwdState->server_fd;
     if (sfd > -1) {
@@ -75,11 +86,19 @@ static void
 fwdServerClosed(int fd, void *data)
 {
     FwdState *fwdState = data;
-    debug(17, 3) ("fwdServerClosed: FD %d %s\n", fd,
-	storeUrl(fwdState->entry));
+    StoreEntry *e = fwdState->entry;
+    debug(17, 3) ("fwdServerClosed: FD %d %s\n", fd, storeUrl(e));
     assert(fwdState->server_fd == fd);
     fwdState->server_fd = -1;
-    fwdStateFree(fwdState);
+    if (e->mem_obj->inmem_hi > 0) {
+	/* someone already stuffed some data into the entry */
+	fwdStateFree(fwdState);
+    } else if (squid_curtime - fwdState->start < 120) {
+	debug(17, 3) ("fwdServerClosed: re-forwarding\n");
+	fwdConnectStart(fwdState);
+    } else {
+	fwdStateFree(fwdState);
+    }
 }
 
 static void
@@ -279,6 +298,7 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     fwdState->client_fd = fd;
     fwdState->server_fd = -1;
     fwdState->request = requestLink(request);
+    fwdState->start = squid_curtime;
     storeLockObject(entry);
     switch (request->protocol) {
     case PROTO_CACHEOBJ:
