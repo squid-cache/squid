@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.152 1999/05/04 21:58:18 wessels Exp $
+# $Id: cf.data.pre,v 1.153 1999/05/10 19:33:20 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1027,17 +1027,50 @@ wais_relay_port 8000
 DOC_END
 
 
-NAME: request_size
+NAME: request_header_max_size
+COMMENT: (KB)
+TYPE: b_size_t
+DEFAULT: 10 KB
+LOC: Config.maxRequestHeaderSize
+DOC_START
+	This specifies the maximum size for HTTP headers in a request.
+	Request headers are usually relatively small (about 512 bytes).
+	Placing a limit on the request header size will catch certain
+	bugs (for example with persistent connections) and possibly
+	buffer-overflow or denial-of-service attacks.
+request_header_max_size 10 KB
+DOC_END
+
+NAME: request_body_max_size
 COMMENT: (KB)
 TYPE: b_size_t
 DEFAULT: 100 KB
-LOC: Config.maxRequestSize
+LOC: Config.maxRequestBodySize
 DOC_START
-	Maximum allowed request size in kilobytes.  If people are using
-	POST to upload files, then set this to the largest acceptable
-	filesize plus a few extra kbytes.
+	This specifies the maximum size for an HTTP request body.
+	In other words, the maximum size of a PUT/POST request.
+	A user who attempts to send a request with a body larger
+	than this limit receives an "Invalid Request" error message.
+	If you set this parameter to a zero, there will be no limit
+	imposed.
+request_body_max_size 100 KB
+DOC_END
 
-request_size 100 KB
+NAME: reply_body_max_size
+COMMENT: (KB)
+TYPE: b_size_t
+DEFAULT: 0
+LOC: Config.maxReplyBodySize
+DOC_START
+	This specifies the maximum size for an HTTP reply body.
+	This can be used to restrict users from downloading very
+	large files.  If the reply headers include a content-length
+	value, then we can recognize large reply bodies early and
+	avoid downloading any of it.  If not, we will download as
+	much data up to this limit and then ungraciously terminate
+	the transfer.  If you set this parameter to zero, there
+	will be no limit imposed.
+reply_body_max_size 0
 DOC_END
 
 
