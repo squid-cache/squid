@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.102 2003/05/17 17:35:06 hno Exp $
+ * $Id: forward.cc,v 1.103 2003/06/19 13:47:25 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -553,6 +553,7 @@ fwdConnectStart(void *data)
     FwdServer *fs = fwdState->servers;
     const char *host;
     unsigned short port;
+    const char *domain = NULL;
     time_t ctimeout;
 
     struct in_addr outgoing;
@@ -562,10 +563,13 @@ fwdConnectStart(void *data)
     debug(17, 3) ("fwdConnectStart: %s\n", url);
 
     if (fs->_peer) {
-        host = fs->_peer->host;
+        host = fs->_peer->name;
         port = fs->_peer->http_port;
         ctimeout = fs->_peer->connect_timeout > 0 ? fs->_peer->connect_timeout
                    : Config.Timeout.peer_connect;
+
+        if (fs->_peer->options.originserver)
+            domain = fwdState->request->host;
     } else {
         host = fwdState->request->host;
         port = fwdState->request->port;
@@ -573,7 +577,7 @@ fwdConnectStart(void *data)
     }
 
     if (fwdCheckRetriable(fwdState)) {
-        if ((fd = pconnPop(host, port)) >= 0) {
+        if ((fd = pconnPop(host, port, domain)) >= 0) {
             debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
             fwdState->server_fd = fd;
             fwdState->n_tries++;

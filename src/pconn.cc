@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.36 2003/02/21 22:50:10 robertc Exp $
+ * $Id: pconn.cc,v 1.37 2003/06/19 13:47:25 hno Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -55,7 +55,7 @@ int server_pconn_hist[PCONN_HIST_SZ];
 
 static IOCB pconnRead;
 static PF pconnTimeout;
-static const char *pconnKey(const char *host, u_short port);
+static const char *pconnKey(const char *host, u_short port, const char *domain);
 static hash_table *table = NULL;
 
 static struct _pconn *pconnNew(const char *key);
@@ -70,10 +70,15 @@ CBDATA_TYPE(pconn);
 
 
 static const char *
-pconnKey(const char *host, u_short port)
+pconnKey(const char *host, u_short port, const char *domain)
 {
-    LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN + 10);
-    snprintf(buf, SQUIDHOSTNAMELEN + 10, "%s.%d", host, (int) port);
+    LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 2 + 10);
+
+    if (domain)
+        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d/%s", host, (int) port, domain);
+    else
+        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d", host, (int) port);
+
     return buf;
 }
 
@@ -238,7 +243,7 @@ pconnInit(void)
 }
 
 void
-pconnPush(int fd, const char *host, u_short port)
+pconnPush(int fd, const char *host, u_short port, const char *domain)
 {
 
     struct _pconn *p;
@@ -256,7 +261,7 @@ pconnPush(int fd, const char *host, u_short port)
     }
 
     assert(table != NULL);
-    strcpy(key, pconnKey(host, port));
+    strcpy(key, pconnKey(host, port, domain));
 
     p = (struct _pconn *) hash_lookup(table, key);
 
@@ -295,7 +300,7 @@ pconnPush(int fd, const char *host, u_short port)
  * quite a bit of CPU. Just keep it in mind.
  */
 int
-pconnPop(const char *host, u_short port)
+pconnPop(const char *host, u_short port, const char *domain)
 {
 
     struct _pconn *p;
@@ -303,7 +308,7 @@ pconnPop(const char *host, u_short port)
     int fd = -1;
     LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     assert(table != NULL);
-    strcpy(key, pconnKey(host, port));
+    strcpy(key, pconnKey(host, port, domain));
     hptr = (hash_link *)hash_lookup(table, key);
 
     if (hptr != NULL) {
