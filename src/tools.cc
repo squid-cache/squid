@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.137 1998/01/01 18:42:57 wessels Exp $
+ * $Id: tools.cc,v 1.138 1998/01/01 18:45:58 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -229,6 +229,7 @@ squid_getrusage(struct rusage *r)
     getrusage(RUSAGE_SELF, r);
 #ifdef _SQUID_SOLARIS_
     leave_suid();
+#endif
 #endif
 }
 
