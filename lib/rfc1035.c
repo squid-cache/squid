@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.12 2000/01/24 21:57:49 wessels Exp $
+ * $Id: rfc1035.c,v 1.13 2000/02/01 05:15:26 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -424,7 +424,7 @@ rfc1035AnswersUnpack(const char *buf,
 	    }
 	} while (l > 0);	/* a zero-length label terminates */
 	off += 4;		/* qtype, qclass */
-	assert (off <= sz);
+	assert(off <= sz);
     }
     i = (int) hdr.ancount;
     if (i == 0)
@@ -491,12 +491,12 @@ rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t * szp)
     static char rev[32];
     unsigned int i;
     memset(&h, '\0', sizeof(h));
-    i = (unsigned int) addr.s_addr;
-    snprintf(rev, 32, "%u.%u.%u.%u.in-addr.arpa",
-	(i >> 24) & 255,
-	(i >> 16) & 255,
+    i = (unsigned int) ntohl(addr.s_addr);
+    snprintf(rev, 32, "%u.%u.%u.%u.in-addr.arpa.",
+	i & 255,
 	(i >> 8) & 255,
-	i & 255);
+	(i >> 16) & 255,
+	(i >> 24) & 255);
     h.id = rfc1035Qid();
     h.qr = 0;
     h.rd = 1;
