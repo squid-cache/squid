@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.369 2001/01/12 00:37:14 wessels Exp $
+ * $Id: cache_cf.cc,v 1.370 2001/01/25 22:54:52 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -386,9 +386,10 @@ configDoConfigure(void)
     }
     if (aclPurgeMethodInUse(Config.accessList.http))
 	Config2.onoff.enable_purge = 1;
-    if (NULL != Config.effectiveUser) {
-	struct passwd *pwd = getpwnam(Config.effectiveUser);
-	if (NULL == pwd)
+    if (geteuid() == 0) {
+	if (NULL != Config.effectiveUser) {
+    	    struct passwd *pwd = getpwnam(Config.effectiveUser);
+    	    if (NULL == pwd)
 	    /*
 	     * Andres Kroonmaa <andre@online.ee>:
 	     * Some getpwnam() implementations (Solaris?) require
@@ -398,10 +399,15 @@ configDoConfigure(void)
 	     * This should be safe at startup, but might still fail
 	     * during reconfigure.
 	     */
-	    fatalf("getpwnam failed to find userid for effective user '%s'",
-		Config.effectiveUser,
-		xstrerror());
-	Config2.effectiveUserID = pwd->pw_uid;
+    		fatalf("getpwnam failed to find userid for effective user '%s'",
+    		    Config.effectiveUser,
+    		    xstrerror());
+    	    Config2.effectiveUserID = pwd->pw_uid;
+	    Config2.effectiveGroupID = pwd->pwd_gid;
+       	}
+    } else {
+	Config2.effectiveUserID = geteuid();
+	Config2.effectiveGroupID = getegid();
     }
     if (NULL != Config.effectiveGroup) {
 	struct group *grp = getgrnam(Config.effectiveGroup);
