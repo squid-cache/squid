@@ -152,11 +152,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     StoreEntry *e = urnState->entry;
     StoreEntry *urlres_e = urnState->urlres_e;
     char *s = NULL;
-#if 0
-    char *hdr;
-#else
     HttpReply *rep;
-#endif
     wordlist *w;
     wordlist *urls;
     wordlist *min_w;
@@ -245,24 +241,6 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	"</ADDRESS>\n",
 	appname, version_string, getMyHostname());
     stringAppend(S, line, l);
-#if 0				/* use new interface */
-    hdr = httpReplyHeader(1.0,
-	HTTP_MOVED_TEMPORARILY,
-	"text/html",
-	stringLength(S),
-	0,
-	squid_curtime);
-    storeAppend(e, hdr, strlen(hdr));
-    httpParseReplyHeaders(hdr, e->mem_obj->reply);
-    if (EBIT_TEST(urnState->flags, URN_FORCE_MENU)) {
-	debug(52, 3) ("urnHandleReply: forcing menu\n");
-    } else if (min_w) {
-	l = snprintf(line, 4096, "Location: %s\r\n", min_w->key);
-	storeAppend(e, line, l);
-    }
-    storeAppend(e, "\r\n", 2);
-    storeAppend(e, S->buf, stringLength(S));
-#else
     rep = e->mem_obj->reply;
     httpReplyReset(rep);
     httpReplySetHeaders(rep, 1.0, HTTP_MOVED_TEMPORARILY, NULL,
@@ -274,7 +252,6 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     }
     httpBodySet(&rep->body, S->buf, stringLength(S) + 1, NULL);
     httpReplySwapOut(rep, e);
-#endif
     storeComplete(e);
     memFree(MEM_4K_BUF, buf);
     wordlistDestroy(&urls);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.247 1998/03/06 05:43:37 kostas Exp $
+ * $Id: http.cc,v 1.248 1998/03/06 23:22:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -113,21 +113,6 @@
 
 static const char *const crlf = "\r\n";
 
-#if 0				/* moved to HttpHeader */
-typedef enum {
-    SCC_PUBLIC,
-    SCC_PRIVATE,
-    SCC_NOCACHE,
-    SCC_NOSTORE,
-    SCC_NOTRANSFORM,
-    SCC_MUSTREVALIDATE,
-    SCC_PROXYREVALIDATE,
-    SCC_MAXAGE,
-    SCC_ENUM_END
-} http_server_cc_t;
-
-#endif
-
 enum {
     CCC_NOCACHE,
     CCC_NOSTORE,
@@ -137,72 +122,6 @@ enum {
     CCC_ONLYIFCACHED,
     CCC_ENUM_END
 };
-
-#if 0				/* moved to HttpHeader.h */
-typedef enum {
-    HDR_ACCEPT,
-    HDR_AGE,
-    HDR_CONTENT_LENGTH,
-    HDR_CONTENT_MD5,
-    HDR_CONTENT_TYPE,
-    HDR_DATE,
-    HDR_ETAG,
-    HDR_EXPIRES,
-    HDR_HOST,
-    HDR_IMS,
-    HDR_LAST_MODIFIED,
-    HDR_MAX_FORWARDS,
-    HDR_PUBLIC,
-    HDR_RETRY_AFTER,
-    HDR_SET_COOKIE,
-    HDR_UPGRADE,
-    HDR_WARNING,
-    HDR_PROXY_KEEPALIVE,
-    HDR_MISC_END
-} http_hdr_misc_t;
-
-static char *HttpServerCCStr[] =
-{
-    "public",
-    "private",
-    "no-cache",
-    "no-store",
-    "no-transform",
-    "must-revalidate",
-    "proxy-revalidate",
-    "max-age",
-    "NONE"
-};
-
-static char *HttpHdrMiscStr[] =
-{
-    "Accept",
-    "Age",
-    "Content-Length",
-    "Content-MD5",
-    "Content-Type",
-    "Date",
-    "Etag",
-    "Expires",
-    "Host",
-    "If-Modified-Since",
-    "Last-Modified",
-    "Max-Forwards",
-    "Public",
-    "Retry-After",
-    "Set-Cookie",
-    "Upgrade",
-    "Warning",
-    "NONE"
-};
-
-static struct {
-    int parsed;
-    int misc[HDR_MISC_END];
-    int cc[SCC_ENUM_END];
-} ReplyHeaderStats;
-
-#endif /* if 0 */
 
 static CNCB httpConnectDone;
 static CWCB httpSendComplete;
@@ -217,9 +136,6 @@ static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, si
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
-#if 0				/* moved to HttpResponse */
-static char *httpStatusString(int status);
-#endif
 static STABH httpAbort;
 static HttpStateData *httpBuildState(int, StoreEntry *, request_t *, peer *);
 static int httpSocketOpen(StoreEntry *, request_t *);
@@ -299,140 +215,6 @@ httpCacheNegatively(StoreEntry * entry)
     if (EBIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
 }
-
-
-#if 0
-/* Build a reply structure from HTTP reply headers */
-void
-httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
-{
-    char *headers = memAllocate(MEM_4K_BUF);
-    char *line;
-    char *end;
-    char *s = NULL;
-    char *t;
-    time_t delta;
-    size_t l;
-
-    assert(reply != NULL);
-    reply->code = 600;
-    ReplyHeaderStats.parsed++;
-    xstrncpy(headers, buf, 4096);
-    end = mime_headers_end(headers);
-    if (end == NULL) {
-	t = headers;
-	if (!strncasecmp(t, "HTTP/", 5)) {
-	    reply->version = atof(t + 5);
-	    if ((t = strchr(t, ' ')))
-		reply->code = atoi(++t);
-	}
-	memFree(MEM_4K_BUF, headers);
-	return;
-    }
-    reply->hdr_sz = end - headers;
-    line = memAllocate(MEM_4K_BUF);
-    for (s = headers; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
-	l = strcspn(s, crlf) + 1;
-	if (l > 4096)
-	    l = 4096;
-	xstrncpy(line, s, l);
-	t = line;
-	debug(11, 3) ("httpParseReplyHeaders: %s\n", t);
-	if (!strncasecmp(t, "HTTP/", 5)) {
-	    reply->version = atof(t + 5);
-	    if ((t = strchr(t, ' ')))
-		reply->code = atoi(++t);
-	} else if (!strncasecmp(t, "Content-type:", 13)) {
-	    for (t += 13; isspace(*t); t++);
-	    if ((l = strcspn(t, ";\t ")) > 0)
-		*(t + l) = '\0';
-	    xstrncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ);
-	    ReplyHeaderStats.misc[HDR_CONTENT_TYPE]++;
-	} else if (!strncasecmp(t, "Content-length:", 15)) {
-	    for (t += 15; isspace(*t); t++);
-	    reply->content_length = atoi(t);
-	    ReplyHeaderStats.misc[HDR_CONTENT_LENGTH]++;
-	} else if (!strncasecmp(t, "Date:", 5)) {
-	    for (t += 5; isspace(*t); t++);
-	    reply->date = parse_rfc1123(t);
-	    ReplyHeaderStats.misc[HDR_DATE]++;
-	} else if (!strncasecmp(t, "Expires:", 8)) {
-	    for (t += 8; isspace(*t); t++);
-	    reply->expires = parse_rfc1123(t);
-	    /*
-	     * The HTTP/1.0 specs says that robust implementations
-	     * should consider bad or malformed Expires header as
-	     * equivalent to "expires immediately."
-	     */
-	    if (reply->expires == -1)
-		reply->expires = squid_curtime;
-	    ReplyHeaderStats.misc[HDR_EXPIRES]++;
-	} else if (!strncasecmp(t, "Last-Modified:", 14)) {
-	    for (t += 14; isspace(*t); t++);
-	    reply->last_modified = parse_rfc1123(t);
-	    ReplyHeaderStats.misc[HDR_LAST_MODIFIED]++;
-	} else if (!strncasecmp(t, "Accept:", 7)) {
-	    ReplyHeaderStats.misc[HDR_ACCEPT]++;
-	} else if (!strncasecmp(t, "Age:", 4)) {
-	    ReplyHeaderStats.misc[HDR_AGE]++;
-	} else if (!strncasecmp(t, "Content-MD5:", 12)) {
-	    ReplyHeaderStats.misc[HDR_CONTENT_MD5]++;
-	} else if (!strncasecmp(t, "ETag:", 5)) {
-	    ReplyHeaderStats.misc[HDR_ETAG]++;
-	} else if (!strncasecmp(t, "Max-Forwards:", 13)) {
-	    ReplyHeaderStats.misc[HDR_MAX_FORWARDS]++;
-	} else if (!strncasecmp(t, "Public:", 7)) {
-	    ReplyHeaderStats.misc[HDR_PUBLIC]++;
-	} else if (!strncasecmp(t, "Retry-After:", 12)) {
-	    ReplyHeaderStats.misc[HDR_RETRY_AFTER]++;
-	} else if (!strncasecmp(t, "Upgrade:", 8)) {
-	    ReplyHeaderStats.misc[HDR_UPGRADE]++;
-	} else if (!strncasecmp(t, "Warning:", 8)) {
-	    ReplyHeaderStats.misc[HDR_WARNING]++;
-	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
-	    for (t += 14; isspace(*t); t++);
-	    if (!strncasecmp(t, "public", 6)) {
-		EBIT_SET(reply->cache_control, SCC_PUBLIC);
-		ReplyHeaderStats.cc[SCC_PUBLIC]++;
-	    } else if (!strncasecmp(t, "private", 7)) {
-		EBIT_SET(reply->cache_control, SCC_PRIVATE);
-		ReplyHeaderStats.cc[SCC_PRIVATE]++;
-	    } else if (!strncasecmp(t, "no-cache", 8)) {
-		EBIT_SET(reply->cache_control, SCC_NOCACHE);
-		ReplyHeaderStats.cc[SCC_NOCACHE]++;
-	    } else if (!strncasecmp(t, "no-store", 8)) {
-		EBIT_SET(reply->cache_control, SCC_NOSTORE);
-		ReplyHeaderStats.cc[SCC_NOSTORE]++;
-	    } else if (!strncasecmp(t, "no-transform", 12)) {
-		EBIT_SET(reply->cache_control, SCC_NOTRANSFORM);
-		ReplyHeaderStats.cc[SCC_NOTRANSFORM]++;
-	    } else if (!strncasecmp(t, "must-revalidate", 15)) {
-		EBIT_SET(reply->cache_control, SCC_MUSTREVALIDATE);
-		ReplyHeaderStats.cc[SCC_MUSTREVALIDATE]++;
-	    } else if (!strncasecmp(t, "proxy-revalidate", 16)) {
-		EBIT_SET(reply->cache_control, SCC_PROXYREVALIDATE);
-		ReplyHeaderStats.cc[SCC_PROXYREVALIDATE]++;
-	    } else if (!strncasecmp(t, "max-age", 7)) {
-		if ((t = strchr(t, '='))) {
-		    delta = (time_t) atoi(++t);
-		    reply->expires = squid_curtime + delta;
-		    EBIT_SET(reply->cache_control, SCC_MAXAGE);
-		    ReplyHeaderStats.cc[SCC_MAXAGE]++;
-		}
-	    }
-	} else if (!strncasecmp(t, "Set-Cookie:", 11)) {
-	    EBIT_SET(reply->misc_headers, HDR_SET_COOKIE);
-	    ReplyHeaderStats.misc[HDR_SET_COOKIE]++;
-	} else if (!strncasecmp(t, "Proxy-Connection:", 17)) {
-	    for (t += 17; isspace(*t); t++);
-	    if (!strcasecmp(t, "Keep-Alive"))
-		EBIT_SET(reply->misc_headers, HDR_PROXY_KEEPALIVE);
-	}
-    }
-    memFree(MEM_4K_BUF, headers);
-    memFree(MEM_4K_BUF, line);
-}
-#endif /* 0 */
 
 static int
 httpCachableReply(HttpStateData * httpState)
@@ -1150,31 +932,6 @@ httpConnectDone(int fd, int status, void *data)
     }
 }
 
-#if 0				/* moved to httpHeader */
-void
-httpReplyHeaderStats(StoreEntry * entry)
-{
-    http_server_cc_t i;
-    http_hdr_misc_t j;
-    storeAppendPrintf(entry, "HTTP Reply Headers:\n");
-    storeAppendPrintf(entry, "       Headers parsed: %d\n",
-	ReplyHeaderStats.parsed);
-    for (j = HDR_AGE; j < HDR_MISC_END; j++)
-	storeAppendPrintf(entry, "%21.21s: %d\n",
-	    HttpHdrMiscStr[j],
-	    ReplyHeaderStats.misc[j]);
-    for (i = CC_PUBLIC; i < CC_ENUM_END; i++)
-	storeAppendPrintf(entry, "Cache-Control %s: %d\n",
-	    HttpServerCCStr[i],
-	    ReplyHeaderStats.cc[i]);
-}
-#endif
-
-void
-httpInit(void)
-{
-}
-
 static void
 httpAbort(void *data)
 {
@@ -1182,162 +939,6 @@ httpAbort(void *data)
     debug(11, 2) ("httpAbort: %s\n", storeUrl(httpState->entry));
     comm_close(httpState->fd);
 }
-
-#if 0				/* moved to httpResponse.c */
-static char *
-httpStatusString(int status)
-{
-    char *p = NULL;
-    switch (status) {
-    case 100:
-	p = "Continue";
-	break;
-    case 101:
-	p = "Switching Protocols";
-	break;
-    case 200:
-	p = "OK";
-	break;
-    case 201:
-	p = "Created";
-	break;
-    case 202:
-	p = "Accepted";
-	break;
-    case 203:
-	p = "Non-Authoritative Information";
-	break;
-    case 204:
-	p = "No Content";
-	break;
-    case 205:
-	p = "Reset Content";
-	break;
-    case 206:
-	p = "Partial Content";
-	break;
-    case 300:
-	p = "Multiple Choices";
-	break;
-    case 301:
-	p = "Moved Permanently";
-	break;
-    case 302:
-	p = "Moved Temporarily";
-	break;
-    case 303:
-	p = "See Other";
-	break;
-    case 304:
-	p = "Not Modified";
-	break;
-    case 305:
-	p = "Use Proxy";
-	break;
-    case 400:
-	p = "Bad Request";
-	break;
-    case 401:
-	p = "Unauthorized";
-	break;
-    case 402:
-	p = "Payment Required";
-	break;
-    case 403:
-	p = "Forbidden";
-	break;
-    case 404:
-	p = "Not Found";
-	break;
-    case 405:
-	p = "Method Not Allowed";
-	break;
-    case 406:
-	p = "Not Acceptable";
-	break;
-    case 407:
-	p = "Proxy Authentication Required";
-	break;
-    case 408:
-	p = "Request Time-out";
-	break;
-    case 409:
-	p = "Conflict";
-	break;
-    case 410:
-	p = "Gone";
-	break;
-    case 411:
-	p = "Length Required";
-	break;
-    case 412:
-	p = "Precondition Failed";
-	break;
-    case 413:
-	p = "Request Entity Too Large";
-	break;
-    case 414:
-	p = "Request-URI Too Large";
-	break;
-    case 415:
-	p = "Unsupported Media Type";
-	break;
-    case 500:
-	p = "Internal Server Error";
-	break;
-    case 501:
-	p = "Not Implemented";
-	break;
-    case 502:
-	p = "Bad Gateway";
-	break;
-    case 503:
-	p = "Service Unavailable";
-	break;
-    case 504:
-	p = "Gateway Time-out";
-	break;
-    case 505:
-	p = "HTTP Version not supported";
-	break;
-    default:
-	p = "Unknown";
-	debug(11, 0) ("Unknown HTTP status code: %d\n", status);
-	break;
-    }
-    return p;
-}
-#endif
-
-#if 0				/* moved to HttpResponse.c */
-char *
-httpReplyHeader(double ver,
-    http_status status,
-    char *ctype,
-    int clen,
-    time_t lmt,
-    time_t expires)
-{
-    LOCAL_ARRAY(char, buf, HTTP_REPLY_BUF_SZ);
-    int l = 0;
-    int s = HTTP_REPLY_BUF_SZ;
-    l += snprintf(buf + l, s - l, "HTTP/%3.1f %d %s\r\n",
-	ver,
-	(int) status,
-	httpStatusString(status));
-    l += snprintf(buf + l, s - l, "Server: Squid/%s\r\n", SQUID_VERSION);
-    l += snprintf(buf + l, s - l, "Date: %s\r\n", mkrfc1123(squid_curtime));
-    if (expires >= 0)
-	l += snprintf(buf + l, s - l, "Expires: %s\r\n", mkrfc1123(expires));
-    if (lmt)
-	l += snprintf(buf + l, s - l, "Last-Modified: %s\r\n", mkrfc1123(lmt));
-    if (clen > 0)
-	l += snprintf(buf + l, s - l, "Content-Length: %d\r\n", clen);
-    if (ctype)
-	l += snprintf(buf + l, s - l, "Content-Type: %s\r\n", ctype);
-    return buf;
-}
-#endif
 
 static void
 httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void  *data)

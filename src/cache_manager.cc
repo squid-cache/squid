@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.7 1998/02/26 18:00:37 wessels Exp $
+ * $Id: cache_manager.cc,v 1.8 1998/03/06 23:22:24 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -49,11 +49,7 @@ typedef struct _action_table {
 } action_table;
 
 static action_table *cachemgrFindAction(const char *action);
-#if 0
-static cachemgrStateData *cachemgrParse(const char *url);
-#else
 static cachemgrStateData *cachemgrParseUrl(const char *url);
-#endif
 static void cachemgrParseHeaders(cachemgrStateData * mgr, const request_t * request);
 static int cachemgrCheckPassword(cachemgrStateData *);
 static void cachemgrStateFree(cachemgrStateData * mgr);
@@ -212,33 +208,6 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	    fd_table[fd].ipaddr, mgr->action);
     /* Check password */
     if (cachemgrCheckPassword(mgr) != 0) {
-#if 0				/* old response, we ask for authentication now */
-	cachemgrStateFree(mgr);
-	debug(16, 1) ("WARNING: Incorrect Cachemgr Password!\n");
-	err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND);
-	errorAppendEntry(entry, err);
-#else
-	/* build error message */
-	ErrorState *err = errorCon(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED);
-	HttpReply *rep;
-	/* warn if user specified incorrect password */
-	if (mgr->passwd)
-	    debug(16, 1) ("WARNING: CACHEMGR: Incorrect Password (user: %s, action: %s)!\n",
-		mgr->user_name ? mgr->user_name : "<unknown>", mgr->action);
-	else
-	    debug(16, 3) ("CACHEMGR: requesting authentication for action: '%s'.\n",
-		mgr->action);
-	err->request = requestLink(request);
-	rep = errorBuildReply(err);
-	errorStateFree(err);
-	/* add Authenticate header, use 'action' as a realm because password depends on action */
-	httpHeaderSetAuth(&rep->hdr, "Basic", mgr->action);
-	/* move info to the mem_obj->reply */
-	httpReplyAbsorb(entry->mem_obj->reply, rep);
-	/* store the reply */
-	httpReplySwapOut(entry->mem_obj->reply, entry);
-	cachemgrStateFree(mgr);
-#endif
 	entry->expires = squid_curtime;
 	storeComplete(entry);
 	return;
@@ -254,16 +223,6 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	httpReplySwapOut(rep, entry);
 	httpReplyDestroy(rep);
     }
-#if 0
-    hdr = httpReplyHeader((double) 1.0,
-	HTTP_OK,
-	"text/plain",
-	-1,			/* Content-Length */
-	squid_curtime,		/* LMT */
-	squid_curtime);
-    storeAppend(entry, hdr, strlen(hdr));
-    storeAppend(entry, "\r\n", 2);
-#endif
     a->handler(entry);
     storeBufferFlush(entry);
     storeComplete(entry);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.202 1998/03/06 05:43:36 kostas Exp $
+ * $Id: ftp.cc,v 1.203 1998/03/06 23:22:27 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1746,8 +1746,9 @@ ftpReadStor(FtpStateData * ftpState)
       debug(9, 3) ("ftpReadStor: writing data channel\n");
       ftpState->state = WRITING_DATA;
     }
-    else if (code==553) { /* directory does not exist, have to create, sigh */
-#if 0
+    else if (code==553) {
+	/* directory does not exist, have to create, sigh */
+#if WORK_IN_PROGRESS
 	ftpTraverseDirectory(ftpState);
 #endif
 	ftpSendReply(ftpState);

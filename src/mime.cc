@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.53 1998/03/03 00:31:10 rousskov Exp $
+ * $Id: mime.cc,v 1.54 1998/03/06 23:22:30 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -418,9 +418,6 @@ mimeLoadIconFile(const char *icon)
 {
     int fd;
     int n;
-#if 0
-    int l;
-#endif
     int flags;
     struct stat sb;
     StoreEntry *e;
@@ -453,27 +450,12 @@ mimeLoadIconFile(const char *icon)
 	METHOD_GET);
     assert(e != NULL);
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
-#if 0				/* use new interface */
-    buf = memAllocate(MEM_4K_BUF);
-    l = 0;
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "HTTP/1.0 200 OK\r\n");
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Date: %s\r\n", mkrfc1123(squid_curtime));
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Server: Squid/%s\r\n", version_string);
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Content-Type: %s\r\n", type);
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Content-Length: %d\r\n", (int) sb.st_size);
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Last-Modified: %s\r\n", mkrfc1123(sb.st_mtime));
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "Expires: %s\r\n", mkrfc1123(squid_curtime + 86400));
-    l += snprintf(buf + l, SM_PAGE_SIZE - l, "\r\n");
-    httpParseReplyHeaders(buf, e->mem_obj->reply);
-    storeAppend(e, buf, l);
-#else
     httpReplyReset(e->mem_obj->reply);
     httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, NULL,
 	type, (int) sb.st_size, sb.st_mtime, squid_curtime + 86400);
     httpReplySwapOut(e->mem_obj->reply, e);
     /* read the file into the buffer and append it to store */
     buf = memAllocate(MEM_4K_BUF);
-#endif
     while ((n = read(fd, buf, 4096)) > 0)
 	storeAppend(e, buf, n);
     file_close(fd);

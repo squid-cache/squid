@@ -274,9 +274,6 @@ community_check(char *b, oid * name, int namelen)
     print_oid(name, namelen);
     for (cp = Config.Snmp.communities; cp; cp = cp->next)
 	if (!strcmp(b, cp->name)) {
-#if 0
-	    debug(49, 6) ("community_check: found %s, comparing with\n", cp->name);
-#endif
 	    return in_view(name, namelen, cp->readView);
 	}
     return 0;

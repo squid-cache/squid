@@ -67,21 +67,20 @@
 /*  
  *  Here are some good prime number choices.  It's important not to
  *  choose a prime number that is too close to exact powers of 2.
+ *
+ *  HASH_SIZE 103		// prime number < 128
+ *  HASH_SIZE 229		// prime number < 256
+ *  HASH_SIZE 467		// prime number < 512
+ *  HASH_SIZE 977		// prime number < 1024
+ *  HASH_SIZE 1979		// prime number < 2048
+ *  HASH_SIZE 4019		// prime number < 4096
+ *  HASH_SIZE 6037		// prime number < 6144
+ *  HASH_SIZE 7951		// prime number < 8192
+ *  HASH_SIZE 12149		// prime number < 12288
+ *  HASH_SIZE 16231		// prime number < 16384
+ *  HASH_SIZE 33493		// prime number < 32768
+ *  HASH_SIZE 65357		// prime number < 65536
  */
-#if 0
-#undef  HASH_SIZE 103		/* prime number < 128 */
-#undef  HASH_SIZE 229		/* prime number < 256 */
-#undef  HASH_SIZE 467		/* prime number < 512 */
-#undef  HASH_SIZE 977		/* prime number < 1024 */
-#undef  HASH_SIZE 1979		/* prime number < 2048 */
-#undef  HASH_SIZE 4019		/* prime number < 4096 */
-#undef  HASH_SIZE 6037		/* prime number < 6144 */
-#undef  HASH_SIZE 7951		/* prime number < 8192 */
-#undef  HASH_SIZE 12149		/* prime number < 12288 */
-#undef  HASH_SIZE 16231		/* prime number < 16384 */
-#undef  HASH_SIZE 33493		/* prime number < 32768 */
-#undef  HASH_SIZE 65357		/* prime number < 65536 */
-#endif
 
 #define  DEFAULT_HASH_SIZE 7951	/* prime number < 8192 */
 

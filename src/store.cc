@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.391 1998/03/06 22:19:42 wessels Exp $
+ * $Id: store.cc,v 1.392 1998/03/06 23:22:35 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -970,14 +970,6 @@ storeTimestampsSet(StoreEntry * entry)
 {
     time_t served_date = -1;
     HttpReply *reply = entry->mem_obj->reply;
-#if 0				/* new interface */
-    served_date = reply->date > -1 ? reply->date : squid_curtime;
-    entry->expires = reply->expires;
-    if (reply->last_modified > -1)
-	entry->lastmod = reply->last_modified;
-    else
-	entry->lastmod = served_date;
-#else
     served_date = httpHeaderGetTime(&reply->hdr, HDR_DATE);
     if (served_date < 0)
 	served_date = squid_curtime;
@@ -985,7 +977,6 @@ storeTimestampsSet(StoreEntry * entry)
     entry->lastmod = httpHeaderGetTime(&reply->hdr, HDR_LAST_MODIFIED);
     if (entry->lastmod < 0)
 	entry->lastmod = served_date;
-#endif
     entry->timestamp = served_date;
 
 }
@@ -1093,23 +1084,6 @@ storeCreateMemObject(StoreEntry * e, const char *url, const char *log_url)
 	return;
     e->mem_obj = new_MemObject(url, log_url);
 }
-
-#if 0				/* moved to HttpReply.c (has nothing to do with store.c) */
-void
-storeCopyNotModifiedReplyHeaders(MemObject * oldmem, MemObject * newmem)
-{
-    http_reply *oldreply = oldmem->reply;
-    http_reply *newreply = newmem->reply;
-    oldreply->cache_control = newreply->cache_control;
-    oldreply->misc_headers = newreply->misc_headers;
-    if (newreply->date > -1)
-	oldreply->date = newreply->date;
-    if (newreply->last_modified > -1)
-	oldreply->last_modified = newreply->last_modified;
-    if (newreply->expires > -1)
-	oldreply->expires = newreply->expires;
-}
-#endif
 
 /* this just sets DELAY_SENDING */
 void
