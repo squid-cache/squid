@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.82 2003/07/15 11:33:22 robertc Exp $
+ * $Id: mem.cc,v 1.83 2003/09/14 22:41:24 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -337,12 +337,12 @@ Mem::CleanIdlePools(void *unused)
     eventAdd("memPoolCleanIdlePools", CleanIdlePools, NULL, clean_interval, 1);
 }
 
-static int mem_idle_limit = 0;
+static unsigned int mem_idle_limit = 0;
 
 void
 memConfigure(void)
 {
-    int new_pool_limit;
+    unsigned int new_pool_limit;
     /* set to configured value first */
 
     if (!Config.onoff.mem_pools)
