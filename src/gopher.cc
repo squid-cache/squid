@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.68 1996/11/15 17:26:20 wessels Exp $
+ * $Id: gopher.cc,v 1.69 1996/11/30 23:09:51 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -1029,7 +1029,7 @@ gopherConnectDone(int fd, int status, void *data)
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
 	(void *) gopherState, 0);
-    if (Config.vizHackAddr.sin_port)
+    if (vizSock > -1)
 	vizHackSendPkt(&gopherState->connectState.S, 2);
 }
 

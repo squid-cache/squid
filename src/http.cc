@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.120 1996/11/30 22:01:47 wessels Exp $
+ * $Id: http.cc,v 1.121 1996/11/30 23:09:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -893,7 +893,7 @@ httpConnectDone(int fd, int status, void *data)
 	    httpLifetimeExpire, (void *) httpState, 0);
 	commSetSelect(fd, COMM_SELECT_WRITE,
 	    httpSendRequest, (void *) httpState, 0);
-	if (Config.vizHackAddr.sin_port)
+	if (vizSock > -1)
 	    vizHackSendPkt(&httpState->connectState.S, 2);
     }
 }
