@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.573 2002/04/13 23:07:49 hno Exp $
+ * $Id: client_side.cc,v 1.574 2002/04/14 13:58:01 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -213,7 +213,7 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     h->sc = storeClientListAdd(e, h);
 #if DELAY_POOLS
-    delaySetStoreClient(h->sc, delayClient(h->request));
+    delaySetStoreClient(h->sc, delayClient(h));
 #endif
     h->reqofs = 0;
     h->reqsize = 0;
@@ -402,7 +402,7 @@ clientProcessExpired(void *data)
     http->sc = storeClientListAdd(entry, http);
 #if DELAY_POOLS
     /* delay_id is already set on original store client */
-    delaySetStoreClient(http->sc, delayClient(http->request));
+    delaySetStoreClient(http->sc, delayClient(http));
 #endif
     http->request->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %ld\n", (long int) entry->lastmod);
@@ -1966,7 +1966,7 @@ clientProcessRequest(clientHttpRequest * http)
 	http->entry->mem_obj->method = r->method;
 	http->sc = storeClientListAdd(http->entry, http);
 #if DELAY_POOLS
-	delaySetStoreClient(http->sc, delayClient(r));
+	delaySetStoreClient(http->sc, delayClient(http));
 #endif
 	assert(http->log_type == LOG_TCP_HIT);
 	http->reqofs = 0;
