@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.67 2002/06/26 09:55:58 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.68 2002/07/20 23:51:06 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -515,7 +515,7 @@ storeDiskdDirCallback(SwapDir * SD)
 	if (x < 0)
 	    break;
 	else if (x != msg_snd_rcv_sz) {
-	    debug(81, 1) ("storeDiskdDirCallback: msgget returns %d\n",
+	    debug(79, 1) ("storeDiskdDirCallback: msgget returns %d\n",
 		x);
 	    break;
 	}
@@ -1981,6 +1981,6 @@ storeFsSetup_diskd(storefs_entry_t * storefs)
     diskd_state_pool = memPoolCreate("DISKD IO State data", sizeof(diskdstate_t));
     memset(&diskd_stats, '\0', sizeof(diskd_stats));
     cachemgrRegister("diskd", "DISKD Stats", storeDiskdStats, 0, 1);
-    debug(81, 1) ("diskd started\n");
+    debug(79, 1) ("diskd started\n");
     diskd_initialised = 1;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.65 2002/04/13 23:07:50 hno Exp $
+ * $Id: mem.cc,v 1.66 2002/07/20 23:51:03 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -314,7 +314,7 @@ memConfigure(void)
 	new_pool_limit = mem_unlimited_size;
 
     if (mem_idle_limit > new_pool_limit)
-	debug(63, 1) ("Shrinking idle mem pools to %.2f MB\n", toMB(new_pool_limit));
+	debug(13, 1) ("Shrinking idle mem pools to %.2f MB\n", toMB(new_pool_limit));
     memPoolSetIdleLimit(new_pool_limit);
     mem_idle_limit = new_pool_limit;
 }
@@ -324,7 +324,7 @@ memInit(void)
 {
     int i;
 
-    debug(63, 1) ("Memory pools are '%s'; limit: %.2f MB\n",
+    debug(13, 1) ("Memory pools are '%s'; limit: %.2f MB\n",
 	(Config.onoff.mem_pools ? "on" : "off"), toMB(mem_idle_limit));
 
     /* set all pointers to null */
@@ -426,7 +426,7 @@ static void
 memPoolDescribe(const MemPool * pool)
 {
     assert(pool);
-    debug(63, 2) ("%-20s: %6d x %4d bytes = %5d KB\n",
+    debug(13, 2) ("%-20s: %6d x %4d bytes = %5d KB\n",
 	pool->label, memPoolInUseCount(pool), pool->obj_size,
 	toKB(pool->obj_size * pool->meter.inuse.level));
 }
@@ -441,7 +441,7 @@ memClean(void)
     memPoolClean(0);
     memPoolGetGlobalStats(&stats);
     if (stats.tot_items_inuse)
-	debug(63, 2) ("memCleanModule: %d items in %d chunks and %d pools are left dirty\n", stats.tot_items_inuse,
+	debug(13, 2) ("memCleanModule: %d items in %d chunks and %d pools are left dirty\n", stats.tot_items_inuse,
 	    stats.tot_chunks_inuse, stats.tot_pools_inuse);
 }
 

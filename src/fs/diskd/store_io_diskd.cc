@@ -1,8 +1,8 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.23 2002/04/13 23:07:56 hno Exp $
+ * $Id: store_io_diskd.cc,v 1.24 2002/07/20 23:51:06 hno Exp $
  *
- * DEBUG: section 81    Squid-side DISKD I/O functions.
+ * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,12 +61,12 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     diskdstate_t *diskdstate;
     off_t shm_offset;
     diskdinfo_t *diskdinfo = SD->fsdata;
-    debug(81, 3) ("storeDiskdOpen: fileno %08X\n", f);
+    debug(79, 3) ("storeDiskdOpen: fileno %08X\n", f);
     /*
      * Fail on open() if there are too many requests queued.
      */
     if (diskdinfo->away > diskdinfo->magic1) {
-	debug(81, 3) ("storeDiskdOpen: FAILING, too many requests away\n");
+	debug(79, 3) ("storeDiskdOpen: FAILING, too many requests away\n");
 	diskd_stats.open_fail_queue_len++;
 	return NULL;
     }
@@ -126,7 +126,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     }
     /* Allocate a number */
     f = storeDiskdDirMapBitAllocate(SD);
-    debug(81, 3) ("storeDiskdCreate: fileno %08X\n", f);
+    debug(79, 3) ("storeDiskdCreate: fileno %08X\n", f);
 
     CBDATA_INIT_TYPE_FREECB(storeIOState, storeDiskdIOFreeEntry);
     sio = cbdataAlloc(storeIOState);
@@ -171,7 +171,7 @@ storeDiskdClose(SwapDir * SD, storeIOState * sio)
 {
     int x;
     diskdstate_t *diskdstate = sio->fsstate;
-    debug(81, 3) ("storeDiskdClose: dirno %d, fileno %08X\n", SD->index,
+    debug(79, 3) ("storeDiskdClose: dirno %d, fileno %08X\n", SD->index,
 	sio->swap_filen);
     x = storeDiskdSend(_MQD_CLOSE,
 	SD,
@@ -195,12 +195,12 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     off_t shm_offset;
     char *rbuf;
     diskdstate_t *diskdstate = sio->fsstate;
-    debug(81, 3) ("storeDiskdRead: dirno %d, fileno %08X\n", sio->swap_dirn, sio->swap_filen);
+    debug(79, 3) ("storeDiskdRead: dirno %d, fileno %08X\n", sio->swap_dirn, sio->swap_filen);
     assert(!diskdstate->flags.close_request);
     if (!cbdataReferenceValid(sio))
 	return;
     if (diskdstate->flags.reading) {
-	debug(81, 1) ("storeDiskdRead: already reading!\n");
+	debug(79, 1) ("storeDiskdRead: already reading!\n");
 	return;
     }
     assert(sio->read.callback == NULL);
@@ -234,7 +234,7 @@ storeDiskdWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t 
     char *sbuf;
     off_t shm_offset;
     diskdstate_t *diskdstate = sio->fsstate;
-    debug(81, 3) ("storeDiskdWrite: dirno %d, fileno %08X\n", SD->index, sio->swap_filen);
+    debug(79, 3) ("storeDiskdWrite: dirno %d, fileno %08X\n", SD->index, sio->swap_filen);
     assert(!diskdstate->flags.close_request);
     if (!cbdataReferenceValid(sio)) {
 	free_func(buf);
@@ -268,7 +268,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
     char *buf;
     diskdinfo_t *diskdinfo = SD->fsdata;
 
-    debug(81, 3) ("storeDiskdUnlink: dirno %d, fileno %08X\n", SD->index,
+    debug(79, 3) ("storeDiskdUnlink: dirno %d, fileno %08X\n", SD->index,
 	e->swap_filen);
     storeDiskdDirReplRemove(e);
     storeDiskdDirMapBitReset(SD, e->swap_filen);
@@ -304,7 +304,7 @@ storeDiskdOpenDone(diomsg * M)
 {
     storeIOState *sio = M->callback_data;
     statCounter.syscalls.disk.opens++;
-    debug(81, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
+    debug(79, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
 	sio->mode == O_RDONLY ? diskd_stats.open.fail++ : diskd_stats.create.fail++;
@@ -319,7 +319,7 @@ storeDiskdCloseDone(diomsg * M)
 {
     storeIOState *sio = M->callback_data;
     statCounter.syscalls.disk.closes++;
-    debug(81, 3) ("storeDiskdCloseDone: dirno %d, fileno %08x status %d\n",
+    debug(79, 3) ("storeDiskdCloseDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
 	diskd_stats.close.fail++;
@@ -344,7 +344,7 @@ storeDiskdReadDone(diomsg * M)
     size_t len;
     statCounter.syscalls.disk.reads++;
     diskdstate->flags.reading = 0;
-    debug(81, 3) ("storeDiskdReadDone: dirno %d, fileno %08x status %d\n",
+    debug(79, 3) ("storeDiskdReadDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
 	diskd_stats.read.fail++;
@@ -377,7 +377,7 @@ storeDiskdWriteDone(diomsg * M)
     diskdstate_t *diskdstate = sio->fsstate;
     statCounter.syscalls.disk.writes++;
     diskdstate->flags.writing = 0;
-    debug(81, 3) ("storeDiskdWriteDone: dirno %d, fileno %08x status %d\n",
+    debug(79, 3) ("storeDiskdWriteDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
 	diskd_stats.write.fail++;
@@ -391,7 +391,7 @@ storeDiskdWriteDone(diomsg * M)
 static void
 storeDiskdUnlinkDone(diomsg * M)
 {
-    debug(81, 3) ("storeDiskdUnlinkDone: fileno %08x status %d\n",
+    debug(79, 3) ("storeDiskdUnlinkDone: fileno %08x status %d\n",
 	M->id, M->status);
     statCounter.syscalls.disk.unlinks++;
     if (M->status < 0)
@@ -425,7 +425,7 @@ storeDiskdHandle(diomsg * M)
 	    break;
 	}
     } else {
-	debug(81, 3) ("storeDiskdHandle: Invalid callback_data %p\n",
+	debug(79, 3) ("storeDiskdHandle: Invalid callback_data %p\n",
 	    M->callback_data);
 	/*
 	 * The read operation has its own callback.  If we don't
@@ -449,7 +449,7 @@ storeDiskdIOCallback(storeIOState * sio, int errflag)
 {
     void *cbdata;
     STIOCB *callback = sio->callback;
-    debug(81, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
+    debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
     sio->callback = NULL;
     if (cbdataReferenceValidDone(sio->callback_data, &cbdata))
 	callback(cbdata, errflag, sio);
@@ -474,7 +474,7 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
     M.id = id;
     M.seq_no = ++seq_no;
     if (M.seq_no < last_seq_no)
-	debug(81, 1) ("WARNING: sequencing out of order\n");
+	debug(79, 1) ("WARNING: sequencing out of order\n");
     x = msgsnd(diskdinfo->smsgid, &M, msg_snd_rcv_sz, IPC_NOWAIT);
     last_seq_no = M.seq_no;
     if (0 == x) {
