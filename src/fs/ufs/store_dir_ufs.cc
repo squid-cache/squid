@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.18 2000/12/09 00:35:05 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.19 2000/12/09 01:47:23 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -117,7 +117,6 @@ static EVH storeUfsDirCleanEvent;
 static int storeUfsDirIs(SwapDir * sd);
 static int storeUfsFilenoBelongsHere(int fn, int F0, int F1, int F2);
 static int storeUfsCleanupDoubleCheck(SwapDir *, StoreEntry *);
-static int storeUfsCheckFile(SwapDir * sd, sfileno filn, size_t swap_file_sz);
 static void storeUfsDirStats(SwapDir *, StoreEntry *);
 static void storeUfsDirInitBitmap(SwapDir *);
 static int storeUfsDirValidFileno(SwapDir *, sfileno, int);
@@ -476,7 +475,6 @@ storeUfsDirRebuildFromDirectory(void *data)
 	    debug(20, 1) ("storeUfsDirRebuildFromDirectory: SIZE MISMATCH %d!=%d\n",
 		tmpe.swap_file_sz, (int) sb.st_size);
 	    storeUfsDirUnlinkFile(SD, sfileno);
-	    rb->counts.filesizemismatchcount++;
 	    continue;
 	}
 	if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
@@ -524,7 +522,6 @@ storeUfsDirRebuildFromSwapLog(void *data)
     int count;
     int used;			/* is swapfile already in use? */
     int disk_entry_newer;	/* is the log entry newer than current entry? */
-    int file_bad;
     double x;
     assert(rb != NULL);
     /* load a number of objects per invocation */
@@ -610,21 +607,7 @@ storeUfsDirRebuildFromSwapLog(void *data)
 	 * appear to have a newer entry?  Compare 'lastref' from the
 	 * swap log to e->lastref. */
 	disk_entry_newer = e ? (s.lastref > e->lastref ? 1 : 0) : 0;
-	if (!used && (rb->flags.need_to_validate ||
-		(opt_store_doublecheck != DBLCHECK_NONE))) {
-	    file_bad = storeUfsCheckFile(SD, s.swap_filen, s.swap_file_sz);
-	} else
-	    file_bad = 0;
-	if (file_bad) {
-	    if (file_bad == -2) {
-		if (opt_store_doublecheck == DBLCHECK_FORCE)
-		    storeUfsDirUnlinkFile(SD, s.swap_filen);
-		rb->counts.filesizemismatchcount++;
-		continue;
-	    }
-	    rb->counts.missingcount++;
-	    continue;
-	} else if (used && !disk_entry_newer) {
+	if (used && !disk_entry_newer) {
 	    /* log entry is old, ignore it */
 	    rb->counts.clashcount++;
 	    continue;
@@ -687,19 +670,19 @@ storeUfsDirRebuildFromSwapLog(void *data)
 	    /* load new */
 	    (void) 0;
 	}
-	/* update store_swap_size */
-	rb->counts.objcount++;
-	e = storeUfsDirAddDiskRestore(SD, s.key,
-	    s.swap_filen,
-	    s.swap_file_sz,
-	    s.expires,
-	    s.timestamp,
-	    s.lastref,
-	    s.lastmod,
-	    s.refcount,
-	    s.flags,
-	    (int) rb->flags.clean);
-	storeDirSwapLog(e, SWAP_LOG_ADD);
+       /* update store_swap_size */
+       rb->counts.objcount++;
+       e = storeUfsDirAddDiskRestore(SD, s.key,
+           s.swap_filen,
+           s.swap_file_sz,
+           s.expires,
+           s.timestamp,
+           s.lastref,
+           s.lastmod,
+           s.refcount,
+           s.flags,
+           (int) rb->flags.clean);
+       storeDirSwapLog(e, SWAP_LOG_ADD);
     }
     eventAdd("storeRebuild", storeUfsDirRebuildFromSwapLog, rb, 0.0, 1);
 }
@@ -1596,40 +1579,27 @@ storeUfsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath)
 static int
 storeUfsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 {
-    int rv = storeUfsCheckFile(sd, e->swap_filen, e->swap_file_sz);
-    if (rv)
-	storeEntryDump(e, 0);
-    return rv;
-}
-
-/*
- * storeUfsCheckFile
- *
- * This is called by storerebuildFromSwapLog if -S was given on the command line. or a Dirty state is found
- */
-static int
-storeUfsCheckFile(SwapDir * sd, sfileno filen, size_t swap_file_sz)
-{
     struct stat sb;
-
-    if (stat(storeUfsDirFullPath(sd, filen, NULL), &sb) < 0) {
-	debug(20, 1) ("storeUfsCheckFile: MISSING SWAP FILE\n");
-	debug(20, 1) ("storeUfsCheckFile: FILENO %08X\n", filen);
-	debug(20, 1) ("storeUfsCheckFile: PATH %s\n", storeUfsDirFullPath(sd, filen, NULL));
-
+    if (stat(storeUfsDirFullPath(sd, e->swap_filen, NULL), &sb) < 0) {
+	debug(20, 0) ("storeUfsCleanupDoubleCheck: MISSING SWAP FILE\n");
+	debug(20, 0) ("storeUfsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
+	debug(20, 0) ("storeUfsCleanupDoubleCheck: PATH %s\n",
+	    storeUfsDirFullPath(sd, e->swap_filen, NULL));
+	storeEntryDump(e, 0);
 	return -1;
     }
-    if (swap_file_sz != sb.st_size) {
-	debug(20, 1) ("storeUfsCheckFile: SIZE MISMATCH\n");
-	debug(20, 1) ("storeUfsCheckFile: FILENO %08X\n", filen);
-	debug(20, 1) ("storeUfsCheckFile: PATH %s\n", storeUfsDirFullPath(sd, filen, NULL));
-	debug(20, 1) ("storeUfsCheckFile: ENTRY SIZE: %d, FILE SIZE: %d\n", swap_file_sz, (int) sb.st_size);
-	return -2;
+    if (e->swap_file_sz != sb.st_size) {
+	debug(20, 0) ("storeUfsCleanupDoubleCheck: SIZE MISMATCH\n");
+	debug(20, 0) ("storeUfsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
+	debug(20, 0) ("storeUfsCleanupDoubleCheck: PATH %s\n",
+	    storeUfsDirFullPath(sd, e->swap_filen, NULL));
+	debug(20, 0) ("storeUfsCleanupDoubleCheck: ENTRY SIZE: %d, FILE SIZE: %d\n",
+	    e->swap_file_sz, (int) sb.st_size);
+	storeEntryDump(e, 0);
+	return -1;
     }
     return 0;
 }
-
-
 
 /*
  * storeUfsDirParse

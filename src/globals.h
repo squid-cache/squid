@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.98 2000/11/10 09:04:51 adrian Exp $
+ * $Id: globals.h,v 1.99 2000/12/09 01:47:18 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -87,7 +87,7 @@ extern int opt_reload_hit_only;	/* 0 */
 extern int opt_syslog_enable;	/* 0 */
 extern int opt_udp_hit_obj;	/* 0 */
 extern int opt_create_swap_dirs;	/* 0 */
-extern dblcheck_t opt_store_doublecheck;	/* DBLCHECK_NONE */
+extern int opt_store_doublecheck;	/* 0 */
 extern int syslog_enable;	/* 0 */
 extern int theInIcpConnection;	/* -1 */
 extern int theOutIcpConnection;	/* -1 */
