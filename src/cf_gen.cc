@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.43 2001/10/17 19:43:39 hno Exp $
+ * $Id: cf_gen.cc,v 1.44 2002/07/17 15:15:21 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -92,8 +92,14 @@ typedef struct Line {
     struct Line *next;
 } Line;
 
+typedef struct EntryAlias {
+    struct EntryAlias *next;
+    char *name;
+} EntryAlias;
+
 typedef struct Entry {
     char *name;
+    EntryAlias *alias;
     char *type;
     char *loc;
     char *default_value;
@@ -170,13 +176,19 @@ main(int argc, char *argv[])
 		/* ignore empty and comment lines */
 		(void) 0;
 	    } else if (!strncmp(buff, "NAME:", 5)) {
-		char *name;
+		char *name, *aliasname;
 		if ((name = strtok(buff + 5, WS)) == NULL) {
 		    printf("Error in input file\n");
 		    exit(1);
 		}
 		curr = calloc(1, sizeof(Entry));
 		curr->name = xstrdup(name);
+		while((aliasname = strtok(NULL, WS)) != NULL) {
+		    EntryAlias *alias = calloc(1, sizeof(EntryAlias));
+		    alias->next = curr->alias;
+		    alias->name = xstrdup(aliasname);
+		    curr->alias = alias;
+		}
 		state = s1;
 	    } else if (!strcmp(buff, "EOF")) {
 		state = sEXIT;
@@ -463,6 +475,8 @@ static void
 gen_parse(Entry * head, FILE * fp)
 {
     Entry *entry;
+    char *name;
+    EntryAlias *alias;
 
     fprintf(fp,
 	"static int\n"
@@ -480,9 +494,10 @@ gen_parse(Entry * head, FILE * fp)
 	    continue;
 	if (entry->ifdef)
 	    fprintf(fp, "#if %s\n", entry->ifdef);
-	fprintf(fp, "\telse if (!strcmp(token, \"%s\"))\n",
-	    entry->name
-	    );
+	name = entry->name;
+	alias = entry->alias;
+next_alias:
+	fprintf(fp, "\telse if (!strcmp(token, \"%s\"))\n", name);
 	assert(entry->loc);
 	if (strcmp(entry->loc, "none") == 0) {
 	    fprintf(fp,
@@ -495,6 +510,11 @@ gen_parse(Entry * head, FILE * fp)
 		entry->type, entry->loc,
 		entry->array_flag ? "[0]" : ""
 		);
+	}
+	if (alias) {
+	    name = alias->name;
+	    alias = alias->next;
+	    goto next_alias;
 	}
 	if (entry->ifdef)
 	    fprintf(fp, "#endif\n");
