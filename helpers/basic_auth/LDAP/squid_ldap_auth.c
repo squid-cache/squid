@@ -10,9 +10,9 @@
  * CISTI
  * National Research Council
  * 
- * Usage: squid_ldap_auth [-b basedn] [-s searchscope]
+ * Usage: squid_ldap_auth -b basedn [-s searchscope]
  *			  [-f searchfilter] [-D binddn -w bindpasswd]
- *                        [-p] [-R] <ldap_server_name>
+ *                        [-u attr] [-p] [-R] <ldap_server_name>
  * 
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org
@@ -31,6 +31,8 @@
  * 2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added -R to disable referrals
  *             - Added -a to control alias dereferencing
+ * 2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Added -u, DN username attribute name
  */
 
 #include <stdio.h>
@@ -41,10 +43,11 @@
 #include <ldap.h>
 
 /* Change this to your search base */
-static char *basedn = "ou=people,o=nrc.ca";
+static char *basedn;
 static char *searchfilter = NULL;
 static char *binddn = NULL;
 static char *bindpasswd = NULL;
+static char *userattr = NULL;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
@@ -89,6 +92,9 @@ main(int argc, char **argv)
 	case 'f':
 		searchfilter = value;
 		break;
+	case 'u':
+		userattr = value;
+		break;
 	case 's':
 		if (strcmp(value, "base") == 0)
 		    searchscope = LDAP_SCOPE_BASE;
@@ -132,11 +138,12 @@ main(int argc, char **argv)
 		exit(1);
 	}
     }
-	
-    if (argc != 2) {
+
+    if (!basedn || argc != 2) {
 	fprintf(stderr, "Usage: squid_ldap_auth [options] ldap_server_name\n\n");
-	fprintf(stderr, "\t-b basedn\t\tbase dn under which to search\n");
+	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under which to search\n");
 	fprintf(stderr, "\t-f filter\t\tsearch filter to locate user DN\n");
+	fprintf(stderr, "\t-u userattr\t\tusername DN attribute\n");
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
@@ -144,7 +151,7 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "\tIf no search filter is specified, then the dn uid=user,basedn will\n\tbe used (same as specifying a search filter of 'uid=', but quicker\n\tas as there is no need to search for the user DN)\n\n");
+	fprintf(stderr, "\tIf no search filter is specified, then the dn <userattr>=user,basedn\n\twill be used (same as specifying a search filter of '<userattr>=',\n\tbut quicker as as there is no need to search for the user DN)\n\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
 	exit(1);
     }
@@ -247,7 +254,7 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 	free(userdn);
 	ldap_msgfree(res);
     } else {
-	snprintf(dn, sizeof(dn), "uid=%s,%s", userid, basedn);
+	snprintf(dn, sizeof(dn), "%s=%s,%s", userattr, userid, basedn);
     }
 
     if (ldap_simple_bind_s(ld, dn, password) != LDAP_SUCCESS)
