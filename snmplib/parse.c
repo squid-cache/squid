@@ -226,7 +226,7 @@ static int parseQuoteString();
 static int tossObjectIdentifier();
 
 static void
-hash_init()
+hash_init(void)
 {
     struct tok *tp;
     char *cp;
@@ -250,8 +250,7 @@ hash_init()
 struct node *nbuckets[NHASHSIZE];
 
 void
-init_node_hash(nodes)
-     struct node *nodes;
+init_node_hash(struct node *nodes)
 {
     struct node *np, *nextp;
     char *cp;
@@ -270,8 +269,7 @@ init_node_hash(nodes)
 }
 
 static char *
-Malloc(num)
-     unsigned num;
+Malloc(unsigned int num)
 {
     /* this is to fix (what seems to be) a problem with the IBM RT C
      * library malloc */
@@ -281,10 +279,7 @@ Malloc(num)
 }
 
 static void
-print_error(string, token, type)
-     char *string;
-     char *token;
-     int type;
+print_error(char *string, char *token, int type)
 {
     if (type == ENDOFFILE)
 	fprintf(stderr, "%s(EOF): On or around line %d\n", string, Line);
@@ -295,9 +290,7 @@ print_error(string, token, type)
 }
 
 #ifdef TEST
-print_subtree(tree, count)
-     struct tree *tree;
-     int count;
+print_subtree(struct tree *tree, int count)
 {
     struct tree *tp;
     int i;
@@ -320,7 +313,7 @@ print_subtree(tree, count)
 int translation_table[256];
 
 void
-build_translation_table()
+build_translation_table(void)
 {
     int count;
 
@@ -376,8 +369,7 @@ build_translation_table()
 }
 
 static struct tree *
-build_tree(nodes)
-     struct node *nodes;
+build_tree(struct node *nodes)
 {
     struct node *np;
     struct tree *tp, *lasttp;
@@ -457,9 +449,7 @@ build_tree(nodes)
  * tree and out of the nodes list.
  */
 static void
-do_subtree(root, nodes)
-     struct tree *root;
-     struct node **nodes;
+do_subtree(struct tree *root, struct node **nodes)
 {
     struct tree *tp;
     struct tree *peer = NULL;
@@ -549,10 +539,7 @@ do_subtree(root, nodes)
  * Returns NULL on error.
  */
 static int
-getoid(fp, oid, length)
-     FILE *fp;
-     struct subid *oid;		/* an array of subids */
-     int length;		/* the length of the array */
+getoid(FILE * fp, struct subid *oid, int length)
 {
     int count;
     int type;
@@ -606,8 +593,7 @@ getoid(fp, oid, length)
 }
 
 static void
-free_node(np)
-     struct node *np;
+free_node(struct node *np)
 {
     struct enum_list *ep, *tep;
 
@@ -627,9 +613,7 @@ free_node(np)
  * Returns 0 on error.
  */
 static struct node *
-parse_objectid(fp, name)
-     FILE *fp;
-     char *name;
+parse_objectid(FILE * fp, char *name)
 {
     int type;
     char token[MAXTOKEN];
@@ -713,9 +697,7 @@ parse_objectid(fp, name)
 }
 
 static int
-get_tc(descriptor, ep)
-     char *descriptor;
-     struct enum_list **ep;
+get_tc(char *descriptor, struct enum_list **ep)
 {
     int i;
 
@@ -735,11 +717,7 @@ get_tc(descriptor, ep)
  * Returns NULL on error.
  */
 static int
-parse_asntype(fp, name, ntype, ntoken)
-     FILE *fp;
-     char *name;
-     int *ntype;
-     char *ntoken;
+parse_asntype(FILE * fp, char *name, int *ntype, char *ntoken)
 {
     int type, i;
     char token[MAXTOKEN];
@@ -850,9 +828,7 @@ parse_asntype(fp, name, ntype, ntoken)
  * Returns 0 on error.
  */
 static struct node *
-parse_objecttype(fp, name)
-     FILE *fp;
-     char *name;
+parse_objecttype(FILE * fp, char *name)
 {
     int type;
     char token[MAXTOKEN];
@@ -1166,9 +1142,7 @@ parse_objecttype(fp, name)
  * Returns 0 on error.
  */
 static struct node *
-parse_objectgroup(fp, name)
-     FILE *fp;
-     char *name;
+parse_objectgroup(FILE * fp, char *name)
 {
     int type;
     char token[MAXTOKEN];
@@ -1233,9 +1207,7 @@ parse_objectgroup(fp, name)
  * Returns 0 on error.
  */
 static struct node *
-parse_notificationDefinition(fp, name)
-     FILE *fp;
-     char *name;
+parse_notificationDefinition(FILE * fp, char *name)
 {
     int type;
     char token[MAXTOKEN];
@@ -1300,9 +1272,7 @@ parse_notificationDefinition(fp, name)
  * Returns 0 on error.
  */
 static struct node *
-parse_compliance(fp, name)
-     FILE *fp;
-     char *name;
+parse_compliance(FILE * fp, char *name)
 {
     int type;
     char token[MAXTOKEN];
@@ -1350,9 +1320,7 @@ parse_compliance(fp, name)
  * Returns 0 on error.
  */
 static struct node *
-parse_moduleIdentity(fp, name)
-     FILE *fp;
-     char *name;
+parse_moduleIdentity(FILE * fp, char *name)
 {
     int type;
     char token[MAXTOKEN];
@@ -1394,9 +1362,7 @@ parse_moduleIdentity(fp, name)
 }
 
 int
-parse_mib_header(fp, name)
-     FILE *fp;
-     char *name;
+parse_mib_header(FILE * fp, char *name)
 {
     int type = DEFINITIONS;
     char token[MAXTOKEN];
@@ -1421,8 +1387,7 @@ parse_mib_header(fp, name)
  * Returns NULL on error.
  */
 static struct node *
-parse(fp)
-     FILE *fp;
+parse(FILE * fp)
 {
     char token[MAXTOKEN];
     char name[MAXTOKEN];
@@ -1621,9 +1586,7 @@ parse(fp)
  * and the text is placed in the string pointed to by token.
  */
 static int
-get_token(fp, token)
-     FILE *fp;
-     char *token;
+get_token(FILE * fp, char *token)
 {
     static char last = ' ';
     int ch;
@@ -1723,9 +1686,7 @@ read_mib(const char *filename)
 
 
 #ifdef TEST
-main(argc, argv)
-     int argc;
-     char *argv[];
+main(int argc, char *argv[])
 {
     FILE *fp;
     struct node *nodes;
@@ -1745,9 +1706,7 @@ main(argc, argv)
 #endif /* TEST */
 
 static int
-parseQuoteString(fp, token)
-     FILE *fp;
-     char *token;
+parseQuoteString(FILE * fp, char *token)
 {
     int ch;
 
@@ -1771,8 +1730,7 @@ parseQuoteString(fp, token)
  * it is well formed, and NULL if not.
  */
 static int
-tossObjectIdentifier(fp)
-     FILE *fp;
+tossObjectIdentifier(FILE * fp)
 {
     int ch;
 
