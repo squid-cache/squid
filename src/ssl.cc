@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.81 1998/06/09 21:18:53 wessels Exp $
+ * $Id: ssl.cc,v 1.82 1998/07/16 22:22:53 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -177,7 +177,9 @@ sslReadClient(int fd, void *data)
 	}
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
+#if DONT
 	sslClose(sslState);
+#endif
     } else {
 	sslState->client.offset = 0;
 	sslState->client.len = len;

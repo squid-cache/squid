@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.68 1998/06/30 07:11:11 wessels Exp $
+ * $Id: peer_select.cc,v 1.69 1998/07/16 22:22:50 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -203,7 +203,7 @@ peerSelectCallbackFail(ps_state * psstate)
 {
     request_t *request = psstate->request;
     void *data = psstate->callback_data;
-    const char *url = psstate->entry ? storeUrl(psstate->entry) : urlCanonical(request, NULL);
+    const char *url = psstate->entry ? storeUrl(psstate->entry) : urlCanonical(request);
     debug(44, 1) ("Failed to select source for '%s'\n", url);
     debug(44, 1) ("  always_direct = %d\n", psstate->always_direct);
     debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.98 1998/07/15 23:56:24 wessels Exp $
+ * $Id: url.cc,v 1.99 1998/07/16 22:22:55 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -103,7 +103,6 @@ url_convert_hex(char *org_url, int allocate)
 void
 urlInitialize(void)
 {
-    int i;
     debug(23, 5) ("urlInitialize: Initializing...\n");
     assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
 }
@@ -263,24 +262,24 @@ urnParse(method_t method, char *urn)
 }
 
 char *
-urlCanonical(const request_t * request, char *buf)
+urlCanonical(const request_t * request)
 {
-    LOCAL_ARRAY(char, urlbuf, MAX_URL);
     LOCAL_ARRAY(char, portbuf, 32);
-    if (buf == NULL)
-	buf = urlbuf;
+    LOCAL_ARRAY(char, urlbuf, MAX_URL);
+    if (request->canonical)
+	return request->canonical;
     if (request->protocol == PROTO_URN) {
-	snprintf(buf, MAX_URL, "urn:%s", strBuf(request->urlpath));
-    } else
+	snprintf(urlbuf, MAX_URL, "urn:%s", strBuf(request->urlpath));
+    } else {
 	switch (request->method) {
 	case METHOD_CONNECT:
-	    snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
+	    snprintf(urlbuf, MAX_URL, "%s:%d", request->host, request->port);
 	    break;
 	default:
 	    portbuf[0] = '\0';
 	    if (request->port != urlDefaultPort(request->protocol))
 		snprintf(portbuf, 32, ":%d", request->port);
-	    snprintf(buf, MAX_URL, "%s://%s%s%s%s%s",
+	    snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s%s",
 		ProtocolStr[request->protocol],
 		request->login,
 		*request->login ? "@" : null_string,
@@ -289,7 +288,8 @@ urlCanonical(const request_t * request, char *buf)
 		strBuf(request->urlpath));
 	    break;
 	}
-    return buf;
+    }
+    return request->canonical = xstrdup(urlbuf);
 }
 
 char *
@@ -357,6 +357,7 @@ requestUnlink(request_t * request)
 #endif
     safe_free(request->body);
     stringClean(&request->urlpath);
+    safe_free(request->canonical);
     memFree(MEM_REQUEST_T, request);
 }
 #endif

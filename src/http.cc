@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.290 1998/06/29 19:29:01 wessels Exp $
+ * $Id: http.cc,v 1.291 1998/07/16 22:22:49 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -691,7 +691,7 @@ httpBuildRequestHeader(request_t * request,
 	if (!cc)
 	    cc = httpHdrCcCreate();
 	if (!EBIT_TEST(cc->mask, CC_MAX_AGE)) {
-	    const char *url = entry ? storeUrl(entry) : urlCanonical(orig_request, NULL);
+	    const char *url = entry ? storeUrl(entry) : urlCanonical(orig_request);
 	    httpHdrCcSetMaxAge(cc, getMaxAge(url));
 	    if (strLen(request->urlpath))
 		assert(strstr(url, strBuf(request->urlpath)));
