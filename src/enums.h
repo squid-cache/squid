@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.122 1998/08/21 03:15:16 wessels Exp $
+ * $Id: enums.h,v 1.123 1998/08/25 04:11:36 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -512,6 +512,7 @@ typedef enum {
     MEM_2K_BUF,
     MEM_4K_BUF,
     MEM_8K_BUF,
+    MEM_CLIENT_SOCK_BUF,
     MEM_ACL_IP_DATA,
     MEM_ACL_TIME_DATA,
     MEM_ACL_NAME_LIST,

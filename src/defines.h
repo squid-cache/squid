@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.64 1998/08/17 23:00:37 wessels Exp $
+ * $Id: defines.h,v 1.65 1998/08/25 04:11:36 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -260,3 +260,5 @@
  * peer as DEAD
  */
 #define PEER_TCP_MAGIC_COUNT 10
+
+#define CLIENT_SOCK_SZ 4096

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.31 1998/08/14 19:25:23 wessels Exp $
+ * $Id: mem.cc,v 1.32 1998/08/25 04:11:37 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -190,6 +190,7 @@ memInit(void)
     memDataInit(MEM_2K_BUF, "2K Buffer", 2048, 10);
     memDataInit(MEM_4K_BUF, "4K Buffer", 4096, 10);
     memDataInit(MEM_8K_BUF, "8K Buffer", 8192, 10);
+    memDataInit(MEM_CLIENT_SOCK_BUF, "Client Socket Buffer", CLIENT_SOCK_SZ, 0);
     memDataInit(MEM_ACCESSLOGENTRY, "AccessLogEntry",
 	sizeof(AccessLogEntry), 10);
     memDataInit(MEM_ACL, "acl", sizeof(acl), 0);
