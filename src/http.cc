@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.117 1996/11/25 19:41:00 wessels Exp $
+ * $Id: http.cc,v 1.118 1996/11/28 07:11:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -611,6 +611,7 @@ httpSendRequest(int fd, void *data)
     char *ybuf = NULL;
     char *buf = NULL;
     char *viabuf = NULL;
+    char *fwdbuf = NULL;
     char *t = NULL;
     char *s = NULL;
     const char *const crlf = "\r\n";
@@ -621,9 +622,8 @@ httpSendRequest(int fd, void *data)
     const char *Method = RequestMethodStr[req->method];
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
-    int saw_host = 0;
-    int did_ims = 0;
-    int saw_max_age = 0;
+    int hdr_flags = 0;
+    int cfd;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     orig_req = httpState->orig_request ? httpState->orig_request : req;
@@ -659,7 +659,7 @@ httpSendRequest(int fd, void *data)
 	len += strlen(ybuf);
 	put_free_4k_page(ybuf);
 	ybuf = NULL;
-	did_ims = 1;
+	EBIT_SET(hdr_flags, HDR_IMS);
     }
     if (httpState->req_hdr) {	/* we have to parse the request header */
 	xbuf = xstrdup(httpState->req_hdr);
@@ -669,11 +669,11 @@ httpSendRequest(int fd, void *data)
 	    if (strncasecmp(t, "Connection:", 11) == 0)
 		continue;
 	    if (strncasecmp(t, "Host:", 5) == 0)
-		saw_host = 1;
+		EBIT_SET(hdr_flags, HDR_HOST);
 	    if (strncasecmp(t, "Cache-Control:", 14) == 0) {
 		for (s = t + 14; *s && isspace(*s); s++);
 		if (strncasecmp(s, "Max-age=", 8) == 0)
-		    saw_max_age = 1;
+		    EBIT_SET(hdr_flags, HDR_MAXAGE);
 	    }
 	    if (strncasecmp(t, "Via:", 4) == 0) {
 		viabuf = get_free_4k_page();
@@ -681,8 +681,15 @@ httpSendRequest(int fd, void *data)
 		strcat(viabuf, ", ");
 		continue;
 	    }
-	    if (did_ims && !strncasecmp(t, "If-Modified-Since:", 18))
+	    if (strncasecmp(t, "X-Forwarded-For:", 16) == 0) {
+		fwdbuf = get_free_4k_page();
+		xstrncpy(fwdbuf, t, 4096);
+		strcat(fwdbuf, ", ");
 		continue;
+	    }
+	    if (EBIT_TEST(hdr_flags, HDR_IMS))
+	        if (!strncasecmp(t, "If-Modified-Since:", 18))
+		    continue;
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
 	    strcat(buf, t);
@@ -709,14 +716,34 @@ httpSendRequest(int fd, void *data)
     put_free_4k_page(ybuf);
     viabuf = ybuf = NULL;
 
-    if (!saw_host) {
+    /* Append to X-Forwarded-For: */
+    if (fwdbuf == NULL) {
+        fwdbuf = get_free_4k_page();
+        strcpy(fwdbuf, "X-Forwarded-For: ");
+    }
+    ybuf = get_free_4k_page();
+    if (!opt_forwarded_for)
+	strcat(fwdbuf, "unknown");
+    else if (entry->mem_obj == NULL)
+	strcat(fwdbuf, "unknown");
+    else if ((cfd = storeFirstClientFD(entry->mem_obj)) < 0)
+	strcat(fwdbuf, "unknown");
+    else
+	strcat(fwdbuf, fd_table[cfd].ipaddr);
+    strcat(fwdbuf, ybuf);
+    len += strlen(fwdbuf);
+    put_free_4k_page(fwdbuf);
+    put_free_4k_page(ybuf);
+    fwdbuf = ybuf = NULL;
+
+    if (EBIT_TEST(hdr_flags, HDR_HOST)) {
 	ybuf = get_free_4k_page();
 	sprintf(ybuf, "Host: %s\r\n", orig_req->host);
 	strcat(buf, ybuf);
 	len += strlen(ybuf);
 	put_free_4k_page(ybuf);
     }
-    if (!saw_max_age) {
+    if (!EBIT_TEST(hdr_flags, HDR_MAXAGE)) {
 	ybuf = get_free_4k_page();
 	sprintf(ybuf, "Cache-control: Max-age=%d\r\n",
 	    (int) getMaxAge(entry->url));
