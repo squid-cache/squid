@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.18 2002/10/14 10:53:15 adrian Exp $
+ * $Id: client_side_reply.cc,v 1.19 2002/10/15 13:12:00 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1353,9 +1353,9 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 	ipcacheInvalidate(r->host);
 #endif
 #if USE_CACHE_DIGESTS
-    lookup_type = e ? "HIT" : "MISS";
+    lookup_type = http->entry ? "HIT" : "MISS";
 #endif
-    if (NULL == e) {
+    if (NULL == http->entry) {
 	/* this object isn't in the cache */
 	debug(85, 3) ("clientProcessRequest2: storeGet() MISS\n");
 	http->logType = LOG_TCP_MISS;
@@ -1364,7 +1364,6 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
     if (Config.onoff.offline) {
 	debug(85, 3) ("clientProcessRequest2: offline HIT\n");
-	http->entry = e;
 	http->logType = LOG_TCP_HIT;
 	doGetMoreData();
 	return;
@@ -1386,16 +1385,15 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
 	/* Special entries are always hits, no matter what the client says */
 	debug(85, 3) ("clientProcessRequest2: ENTRY_SPECIAL HIT\n");
-	http->entry = e;
 	http->logType = LOG_TCP_HIT;
 	doGetMoreData();
 	return;
     }
 #if HTTP_VIOLATIONS
-    if (e->store_status == STORE_PENDING) {
+    if (http->entry->store_status == STORE_PENDING) {
 	if (r->flags.nocache || r->flags.nocache_hack) {
 	    debug(85, 3) ("Clearing no-cache for STORE_PENDING request\n\t%s\n",
-		storeUrl(e));
+		storeUrl(http->entry));
 	    r->flags.nocache = 0;
 	    r->flags.nocache_hack = 0;
 	}
@@ -1416,7 +1414,6 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 	return;
     }
     debug(85, 3) ("clientProcessRequest2: default HIT\n");
-    http->entry = e;
     http->logType = LOG_TCP_HIT;
     doGetMoreData();
 }
