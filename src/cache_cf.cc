@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.440 2003/04/24 06:35:04 hno Exp $
+ * $Id: cache_cf.cc,v 1.441 2003/05/17 17:35:05 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -124,6 +124,7 @@ static void free_https_port_list(https_port_list **);
 static int check_null_https_port_list(const https_port_list *);
 #endif
 #endif /* USE_SSL */
+static void parse_b_size_t(size_t * var);
 
 void
 self_destruct(void)
@@ -667,6 +668,11 @@ parseBytesLine(size_t * bptr, const char *units)
     if ((token = strtok(NULL, w_space)) == NULL)
         self_destruct();
 
+    if (strcmp(token, "none")) {
+        *bptr = static_cast<size_t>(1);
+        return;
+    }
+
     d = xatof(token);
 
     m = u;			/* default to 'units' if none specified */
@@ -931,6 +937,63 @@ free_acl_tos(acl_tos ** head)
 {
     while (*head) {
         acl_tos *l = *head;
+        *head = l->next;
+        l->next = NULL;
+        cbdataFree(l);
+    }
+}
+
+CBDATA_TYPE(acl_size_t);
+
+static void
+dump_acl_b_size_t(StoreEntry * entry, const char *name, acl_size_t * head)
+{
+    acl_size_t *l;
+
+    for (l = head; l; l = l->next) {
+        if (l->size != static_cast<size_t>(-1))
+            storeAppendPrintf(entry, "%s %d %s\n", name, (int) l->size, B_BYTES_STR);
+        else
+            storeAppendPrintf(entry, "%s none", name);
+
+        dump_acl_list(entry, l->aclList);
+
+        storeAppendPrintf(entry, "\n");
+    }
+}
+
+static void
+freed_acl_b_size_t(void *data)
+{
+    acl_size_t *l = static_cast<acl_size_t *>(data);
+    aclDestroyAclList(&l->aclList);
+}
+
+static void
+parse_acl_b_size_t(acl_size_t ** head)
+{
+    acl_size_t *l;
+    acl_size_t **tail = head;	/* sane name below */
+
+    CBDATA_INIT_TYPE_FREECB(acl_size_t, freed_acl_b_size_t);
+
+    l = cbdataAlloc(acl_size_t);
+
+    parse_b_size_t(&l->size);
+
+    aclParseAclList(&l->aclList);
+
+    while (*tail)
+        tail = &(*tail)->next;
+
+    *tail = l;
+}
+
+static void
+free_acl_b_size_t(acl_size_t ** head)
+{
+    while (*head) {
+        acl_size_t *l = *head;
         *head = l->next;
         l->next = NULL;
         cbdataFree(l);
@@ -2330,71 +2393,6 @@ parse_b_size_t(size_t * var)
 {
     parseBytesLine(var, B_BYTES_STR);
 }
-
-CBDATA_TYPE(body_size);
-
-static void
-parse_body_size_t(dlink_list * bodylist)
-{
-    body_size *bs;
-    CBDATA_INIT_TYPE(body_size);
-    bs = cbdataAlloc(body_size);
-    parse_size_t(&bs->maxsize);
-    aclParseAccessLine(&bs->access_list);
-
-    dlinkAddTail(bs, &bs->node, bodylist);
-}
-
-static void
-dump_body_size_t(StoreEntry * entry, const char *name, dlink_list bodylist)
-{
-    body_size *bs;
-    bs = (body_size *) bodylist.head;
-
-    while (bs) {
-        acl_list *l;
-        acl_access *head = bs->access_list;
-
-        while (head != NULL) {
-            storeAppendPrintf(entry, "%s %ld %s", name, (long int) bs->maxsize,
-                              head->allow ? "Allow" : "Deny");
-
-            for (l = head->aclList; l != NULL; l = l->next) {
-                storeAppendPrintf(entry, " %s%s",
-                                  l->op ? null_string : "!",
-                                  l->_acl->name);
-            }
-
-            storeAppendPrintf(entry, "\n");
-            head = head->next;
-        }
-
-        bs = (body_size *) bs->node.next;
-    }
-}
-
-static void
-free_body_size_t(dlink_list * bodylist)
-{
-    body_size *bs, *tempnode;
-    bs = (body_size *) bodylist->head;
-
-    while (bs) {
-        bs->maxsize = 0;
-        aclDestroyAccessList(&bs->access_list);
-        tempnode = (body_size *) bs->node.next;
-        dlinkDelete(&bs->node, bodylist);
-        cbdataFree(bs);
-        bs = tempnode;
-    }
-}
-
-static int
-check_null_body_size_t(dlink_list bodylist)
-{
-    return bodylist.head == NULL;
-}
-
 
 static void
 parse_kb_size_t(size_t * var)

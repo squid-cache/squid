@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.2 2003/05/10 10:16:57 robertc Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.3 2003/05/17 17:35:03 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -126,6 +126,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
 <tag>header_replace</tag>This is now dependent on --disable-http-violations (Henrik Nordstrom) 
 <tag>email_err_data</tag>Allow disabling the data now embedded in the mailto links on Squid's ERR pages.
 <tag>refresh_pattern</tag>Make the default refresh_pattern merely a suggested default. This is consistent with older Squid versions due to a bug in the "DEFAULT-IF-NONE" processing of refresh_pattern.  (Henrik)
+<tag>reply_body_max_size</tag>No longer uses allow/deny. Instead it is specified as a size followed by acl elements. The size "none" can be used for no limit (the default)
 </descrip>
 
 <sect>Known limitations

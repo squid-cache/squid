@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.462 2003/05/11 13:53:03 hno Exp $
+ * $Id: structs.h,v 1.463 2003/05/17 17:35:06 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -132,6 +132,13 @@ struct _acl_tos
     acl_tos *next;
     acl_list *aclList;
     int tos;
+};
+
+struct _acl_size_t
+{
+    acl_size_t *next;
+    acl_list *aclList;
+    size_t size;
 };
 
 struct _wordlist
@@ -288,7 +295,7 @@ struct _SquidConfig
     Timeout;
     size_t maxRequestHeaderSize;
     size_t maxRequestBodySize;
-    dlink_list ReplyBodySize;
+    acl_size_t *ReplyBodySize;
 
     struct
     {
