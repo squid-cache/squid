@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.14 2002/04/13 23:07:56 hno Exp $
+ * $Id: store_io_coss.cc,v 1.15 2002/06/26 09:55:57 hno Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -465,7 +465,7 @@ storeCossSync(SwapDir * SD)
 	    sleep(5);		/* XXX EEEWWW! */
 	lseek(cs->fd, t->diskstart, SEEK_SET);
 	end = (t == cs->current_membuf) ? cs->current_offset : t->diskend;
-	write(cs->fd, t->buffer, end - t->diskstart);
+	FD_WRITE_METHOD(cs->fd, t->buffer, end - t->diskstart);
     }
 }
 
