@@ -1,6 +1,7 @@
 
+
 /*
- * $Id: structs.h,v 1.230 1998/09/15 19:38:04 wessels Exp $
+ * $Id: structs.h,v 1.231 1998/09/19 17:06:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1214,54 +1215,6 @@ struct _MemObject {
     size_t swap_hdr_sz;
 };
 
-struct _store_flags {
-    /*
-     * These are for StoreEntry->flag, which is defined as a SHORT
-     *
-     * NOTE: These flags are written to swap.state, so think very carefully
-     * about deleting or re-assigning!
-     */
-#if WORDS_BIGENDIAN
-    unsigned short entry_unused_15:1;
-    unsigned short entry_unused_14:1;
-    unsigned short entry_unused_13:1;
-    unsigned short entry_unused_12:1;
-    unsigned short entry_bad_length:1;
-    unsigned short entry_validated:1;
-    unsigned short entry_negcached:1;
-#ifndef PPNR_WIP
-    unsigned short entry_unused_08:1;
-#else
-    unsigned short entry_fwd_hdr_wait:1;
-#endif				/* PPNR_WIP */
-    unsigned short key_private:1;
-    unsigned short entry_dispatched:1;
-    unsigned short entry_cachable:1;
-    unsigned short refresh_request:1;
-    unsigned short release_request:1;
-    unsigned short delay_sending:1;
-    unsigned short entry_revalidate:1;
-    unsigned short entry_special:1;
-#else				/* ENDIAN */
-    unsigned short entry_special:1;
-    unsigned short entry_revalidate:1;
-    unsigned short delay_sending:1;
-    unsigned short release_request:1;
-    unsigned short refresh_request:1;
-    unsigned short entry_cachable:1;
-    unsigned short entry_dispatched:1;
-    unsigned short key_private:1;
-#ifndef PPNR_WIP
-    unsigned short entry_unused_08:1;
-#else
-    unsigned short entry_fwd_hdr_wait:1;
-#endif				/* PPNR_WIP */
-    unsigned short entry_negcached:1;
-    unsigned short entry_validated:1;
-    unsigned short entry_bad_length:1;
-#endif				/* ENDIAN */
-};
-
 struct _StoreEntry {
     /* first two items must be same as hash_link */
     const cache_key *key;
@@ -1273,7 +1226,7 @@ struct _StoreEntry {
     time_t lastmod;
     size_t swap_file_sz;
     u_short refcount;
-    store_flags flags;
+    u_short flags;
     int swap_file_number;
     dlink_node lru;
     u_short lock_count;		/* Assume < 65536! */
@@ -1551,7 +1504,7 @@ struct _storeSwapLogData {
     time_t lastmod;
     size_t swap_file_sz;
     u_short refcount;
-    store_flags flags;
+    u_short flags;
     unsigned char key[MD5_DIGEST_CHARS];
 };
 

@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.27 1998/09/14 21:28:13 wessels Exp $
+ * $Id: store_digest.cc,v 1.28 1998/09/19 17:06:13 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -139,7 +139,7 @@ storeDigestDel(const StoreEntry * entry)
     assert(entry && store_digest);
     debug(71, 6) ("storeDigestDel: checking entry, key: %s\n",
 	storeKeyText(entry->key));
-    if (!entry->flags.key_private) {
+    if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
 	if (!cacheDigestTest(store_digest, entry->key)) {
 	    sd_stats.del_lost_count++;
 	    debug(71, 6) ("storeDigestDel: lost entry, key: %s url: %s\n",
@@ -188,7 +188,7 @@ storeDigestAdd(const StoreEntry * entry)
     debug(71, 6) ("storeDigestAdd: checking entry, key: %s\n",
 	storeKeyText(entry->key));
     /* only public entries are digested */
-    if (!entry->flags.key_private) {
+    if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
 	const time_t refresh = refreshWhen(entry);
 	debug(71, 6) ("storeDigestAdd: entry expires in %d secs\n",
 	    (int) (refresh - squid_curtime));
@@ -326,7 +326,7 @@ storeDigestRewriteResume(void)
     assert(sd_state.rewrite_lock);
     assert(!sd_state.rebuild_lock);
     sd_state.rewrite_offset = 0;
-    e->flags.entry_special = 1;
+    EBIT_SET(e->flags, ENTRY_SPECIAL);
     /* setting public key will purge old digest entry if any */
     storeSetPublicKey(e);
     /* fake reply */

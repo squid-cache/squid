@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.321 1998/09/15 22:05:09 wessels Exp $
+ * $Id: http.cc,v 1.322 1998/09/19 17:06:05 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -106,7 +106,7 @@ httpTimeout(int fd, void *data)
 static void
 httpMakePublic(StoreEntry * entry)
 {
-    if (entry->flags.entry_cachable)
+    if (EBIT_TEST(entry->flags, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
 }
 
@@ -124,7 +124,7 @@ static void
 httpCacheNegatively(StoreEntry * entry)
 {
     storeNegativeCache(entry);
-    if (entry->flags.entry_cachable)
+    if (EBIT_TEST(entry->flags, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
 }
 
@@ -134,7 +134,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     int remove = 0;
     const cache_key *key;
     StoreEntry *pe;
-    if (!e->flags.key_private)
+    if (!EBIT_TEST(e->flags, KEY_PRIVATE))
 	return;
     switch (status) {
     case HTTP_OK:
@@ -327,9 +327,9 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	}
 	if (reply->cache_control) {
 	    if (EBIT_TEST(reply->cache_control->mask, CC_PROXY_REVALIDATE))
-		entry->flags.entry_revalidate = 1;
+		EBIT_SET(entry->flags, ENTRY_REVALIDATE);
 	    else if (EBIT_TEST(reply->cache_control->mask, CC_MUST_REVALIDATE))
-		entry->flags.entry_revalidate = 1;
+		EBIT_SET(entry->flags, ENTRY_REVALIDATE);
 	}
 	if (httpState->flags.keepalive)
 	    if (httpState->peer)

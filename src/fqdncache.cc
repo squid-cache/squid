@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.116 1998/09/15 22:29:30 wessels Exp $
+ * $Id: fqdncache.cc,v 1.117 1998/09/19 17:06:02 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -481,8 +481,8 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
 	}
 	return;
     } else {
-	debug(35,1)("fqdncache_nbgethostbyaddr: BAD status %d",
-		(int) f->status);
+	debug(35, 1) ("fqdncache_nbgethostbyaddr: BAD status %d",
+	    (int) f->status);
 	assert(0);
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.13 1998/09/14 21:28:16 wessels Exp $
+ * $Id: store_swapin.cc,v 1.14 1998/09/19 17:06:16 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -50,7 +50,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
     assert(e->mem_status == NOT_IN_MEMORY);
-    if (!e->flags.entry_validated) {
+    if (!EBIT_TEST(e->flags, ENTRY_VALIDATED)) {
 	/* We're still reloading and haven't validated this entry yet */
 	callback(-1, callback_data);
 	return;
@@ -64,7 +64,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     ctrlp->e = e;
     ctrlp->callback = callback;
     ctrlp->callback_data = callback_data;
-    if (e->flags.entry_validated)
+    if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
 	storeSwapInValidateComplete(ctrlp, 0, 0);
     else
 	storeValidate(e, storeSwapInValidateComplete, ctrlp, callback_data);
@@ -81,7 +81,7 @@ storeSwapInValidateComplete(void *data, int retcode, int errcode)
     }
     e = ctrlp->e;
     assert(e->mem_status == NOT_IN_MEMORY);
-    if (!e->flags.entry_validated) {
+    if (!EBIT_TEST(e->flags, ENTRY_VALIDATED)) {
 	/* Invoke a store abort that should free the memory object */
 	(ctrlp->callback) (-1, ctrlp->callback_data);
 	xfree(ctrlp);
