@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.96 2003/03/06 11:51:56 robertc Exp $
+ * $Id: peer_digest.cc,v 1.97 2003/07/16 20:22:26 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -907,7 +907,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
 
     if (fetch->old_entry) {
         debug(72, 2) ("peerDigestFetchFinish: deleting old entry\n");
-        storeUnregister(fetch->sc, fetch->old_entry, fetch);
+        storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
         storeReleaseRequest(fetch->old_entry);
         storeUnlockObject(fetch->old_entry);
         fetch->old_entry = NULL;
