@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.64 1996/07/20 03:16:51 wessels Exp $
+ * $Id: http.cc,v 1.65 1996/07/20 04:22:25 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -443,7 +443,7 @@ static void httpReadReply(fd, httpState)
     debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
     comm_set_fd_lifetime(fd, 86400);	/* extend after good read */
     if (len > 0) {
-        IOStats.Http.reads++;
+	IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
 	IOStats.Http.read_hist[bin]++;

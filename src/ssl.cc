@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.7 1996/07/20 03:16:55 wessels Exp $
+ * $Id: ssl.cc,v 1.8 1996/07/20 04:22:27 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -371,7 +371,7 @@ static int sslConnect(fd, hp, sslState)
 	    30,
 	    sslErrorComplete,
 	    (void *) sslState,
-		xfree);
+	    xfree);
 	return COMM_ERROR;
     }
     debug(26, 5, "sslConnect: client=%d server=%d\n",
@@ -452,7 +452,7 @@ int sslStart(fd, url, request, mime_hdr, size_ptr)
 	    30,
 	    sslErrorComplete,
 	    (void *) sslState,
-		xfree);
+	    xfree);
 	return COMM_ERROR;
     }
     sslState = xcalloc(1, sizeof(SslStateData));

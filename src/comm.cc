@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.42 1996/07/20 03:37:43 wessels Exp $
+ * $Id: comm.cc,v 1.43 1996/07/20 04:22:23 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -129,7 +129,7 @@ struct _RWStateData {
     rw_complete_handler *handler;
     void *handler_data;
     int handle_immed;
-    void (*free)(void *);
+    void (*free) (void *);
 };
 
 /* GLOBAL */
@@ -495,8 +495,8 @@ void comm_close(fd)
     conn->openned = 0;
     RWStateCallbackAndFree(fd, conn->rwstate, COMM_ERROR);
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
-    fdstat_close(fd);			/* update fdstat */
-    while ((ch = conn->close_handler)) { /* Call close handlers */
+    fdstat_close(fd);		/* update fdstat */
+    while ((ch = conn->close_handler)) {	/* Call close handlers */
 	conn->close_handler = ch->next;
 	ch->handler(fd, ch->data);
 	safe_free(ch);
@@ -1233,7 +1233,7 @@ static int commHandleRead(fd, state)
 	     * called by comm_select(). */
 	    debug(5, len == 0 ? 2 : 1, "commHandleRead: FD %d: read failure: %s\n",
 		fd, len == 0 ? "connection closed" : xstrerror());
-	    fd_table[fd].rwstate = NULL; /* handler may issue new read */
+	    fd_table[fd].rwstate = NULL;	/* handler may issue new read */
 	    RWStateCallbackAndFree(fd, state, COMM_ERROR);
 	    return COMM_ERROR;
 	}
@@ -1354,7 +1354,7 @@ void comm_write(fd, buf, size, timeout, handler, handler_data, free)
      int timeout;
      rw_complete_handler *handler;
      void *handler_data;
-     void (*free)(void *);
+     void (*free) (void *);
 {
     RWStateData *state = NULL;
 
