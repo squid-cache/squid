@@ -1,3 +1,10 @@
+Changes to squid-1.1.alpha15:
+
+	- Removed 'bad swap_status' trap in icpHandleIcpV2.
+	  Now skip ICP replies for StoreEntry's with ping_status
+	  != PING_WAITING.
+	- Fixed numerous compiler problems.
+
 Changes to squid-1.1.alpha14:
 
 	- Fixed ENTRY_DISPATCHED bug.  ENTRY_DISPATCHED was not always
