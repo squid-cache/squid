@@ -3,12 +3,15 @@
 #define _MEM_POOLS_H_
 
 #include "config.h"
-#include "Array.h"
 #include "util.h"
 #ifdef __cplusplus
+
 template <class V>
+
 class SplayNode;
+
 typedef SplayNode<void *> splayNode;
+
 #else
 #include "splay.h"
 #endif
@@ -46,25 +49,37 @@ typedef SplayNode<void *> splayNode;
 #define MEM_MAX_FREE  65535	/* ushort is max number of items per chunk */
 
 typedef struct _MemPoolMeter MemPoolMeter;
+
 typedef struct _MemPool MemPool;
+
 typedef struct _MemChunk MemChunk;
+
 typedef struct _MemPoolStats MemPoolStats;
+
 typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
+
 typedef struct _MemPoolIterator MemPoolIterator;
 
-struct _MemPoolIterator {
+struct _MemPoolIterator
+{
     MemPool *pool;
     MemPoolIterator * next;
 };
 
 /* object to track per-pool cumulative counters */
-typedef struct {
+
+typedef struct
+{
     double count;
     double bytes;
-} mgb_t;
+}
+
+mgb_t;
 
 /* object to track per-pool memory usage (alloc = inuse+idle) */
-struct _MemPoolMeter {
+
+struct _MemPoolMeter
+{
     MemMeter alloc;
     MemMeter inuse;
     MemMeter idle;
@@ -74,7 +89,9 @@ struct _MemPoolMeter {
 };
 
 /* a pool is a [growing] space for objects of the same size */
-struct _MemPool {
+
+struct _MemPool
+{
     const char *label;
     size_t obj_size;
     size_t chunk_size;
@@ -93,7 +110,8 @@ struct _MemPool {
     MemPool *next;
 };
 
-struct _MemChunk {
+struct _MemChunk
+{
     void *freeList;
     void *objCache;
     int inuse_count;
@@ -102,7 +120,8 @@ struct _MemChunk {
     time_t lastref;
 };
 
-struct _MemPoolStats {
+struct _MemPoolStats
+{
     MemPool *pool;
     const char *label;
     MemPoolMeter *meter;
@@ -122,7 +141,8 @@ struct _MemPoolStats {
     int overhead;
 };
 
-struct _MemPoolGlobalStats {
+struct _MemPoolGlobalStats
+{
     MemPoolMeter *TheMeter;
 
     int tot_pools_alloc;
