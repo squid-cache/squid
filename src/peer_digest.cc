@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.10 1998/04/09 23:43:27 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.11 1998/04/09 23:51:41 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -51,7 +51,6 @@ static STCB peerDigestSwapInMask;
 static int peerDigestFetchedEnough(DigestFetchState *fetch, char *buf, ssize_t size, const char *step_name);
 static void peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg);
 static int peerDigestSetCBlock(peer *p, const char *buf);
-static int peerDigestUpdateMask(peer *peer, int offset, const char *buf, int size);
 #define max_delay(t1,t2) ((t1) >= (t2) ? (t1) : (t2))
 
 
@@ -601,6 +600,8 @@ peerDigestSetCBlock(peer *peer, const char *buf)
     return 1;
 }
 
+#if OLD_CODE
+
 /* updates current mask. checks for overflows */
 static int
 peerDigestUpdateMask(peer *peer, int offset, const char *buf, int size)
@@ -617,5 +618,7 @@ peerDigestUpdateMask(peer *peer, int offset, const char *buf, int size)
     }
     return 1;
 }
+
+#endif
 		
 #endif
