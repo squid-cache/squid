@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.400 1998/09/22 21:16:28 wessels Exp $
+ * $Id: client_side.cc,v 1.401 1998/09/22 23:14:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2312,7 +2312,7 @@ CheckQuickAbort2(const clientHttpRequest * http)
 	return 1;
     expectlen = http->entry->mem_obj->reply->content_length;
     curlen = (int) http->entry->mem_obj->inmem_hi;
-    minlen = (int) Config.quickAbort.min;
+    minlen = (int) Config.quickAbort.min << 10;
     if (minlen < 0)
 	/* disabled */
 	return 0;
@@ -2322,7 +2322,7 @@ CheckQuickAbort2(const clientHttpRequest * http)
     if ((expectlen - curlen) < minlen)
 	/* only little more left */
 	return 0;
-    if ((expectlen - curlen) > Config.quickAbort.max)
+    if ((expectlen - curlen) > (Config.quickAbort.max << 10))
 	/* too much left to go */
 	return 1;
     if (expectlen < 100)
@@ -2350,6 +2350,7 @@ CheckQuickAbort(clientHttpRequest * http)
     if (CheckQuickAbort2(http) == 0)
 	return;
     debug(33, 3) ("CheckQuickAbort: ABORTING %s\n", storeUrl(entry));
+    Counter.aborted_requests++;
     storeAbort(entry, 1);
 }
 
