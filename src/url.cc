@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.70 1997/12/06 18:58:37 wessels Exp $
+ * $Id: url.cc,v 1.71 1997/12/06 19:25:42 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -300,7 +300,9 @@ urlCanonical(const request_t * request, char *buf)
     LOCAL_ARRAY(char, portbuf, 32);
     if (buf == NULL)
 	buf = urlbuf;
-    switch (request->method) {
+    if (request->protocol == PROTO_URN) {
+	snprintf(buf, MAX_URL, "urn:%s", request->urlpath);
+    } else switch (request->method) {
     case METHOD_CONNECT:
 	snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
 	break;
