@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.375 2003/05/18 00:03:55 robertc Exp $
+ * $Id: comm.cc,v 1.376 2003/06/23 10:39:52 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -205,6 +205,8 @@ public:
     void operator delete(void *);
     virtual void deleteSelf() const;
     CommCallbackData(CommCommonCallback const &);
+    virtual ~CommCallbackData() {}
+
     virtual comm_callback_t getType() const { return COMM_CB_DERIVED; }
 
     void callACallback();
@@ -559,11 +561,11 @@ comm_calliocallback(void)
 {
     CommCallbackData *cio;
     dlink_node *node;
-    int oldseqnum = CommCallbackSeqnum;
+    int oldseqnum = CommCallbackSeqnum++;
 
     /* Call our callbacks until we hit NULL or the seqnum changes */
 
-    while (CommCallbackList.head != NULL && oldseqnum != ((CommCallbackData *)CommCallbackList.head)->result.seqnum) {
+    while (CommCallbackList.head != NULL && oldseqnum != ((CommCallbackData *)CommCallbackList.head->data)->result.seqnum) {
 
         node = (dlink_node *)CommCallbackList.head;
         cio = (CommCallbackData *)node->data;
