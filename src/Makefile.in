@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.51 1996/10/27 07:11:50 wessels Exp $
+#  $Id: Makefile.in,v 1.52 1996/11/01 07:53:00 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -158,7 +158,7 @@ install: all install-mkdirs
 		$(INSTALL_BIN) $$f $(bindir); \
 		if test -f $(bindir)/-$$f; then \
 			echo $(RM) -f $(bindir)/-$$f; \
-			$(RM) $(bindir)/-$$f; \
+			$(RM) -f $(bindir)/-$$f; \
 		fi; \
 	done
 	@for f in $(UTILS); do \
@@ -170,7 +170,7 @@ install: all install-mkdirs
 		$(INSTALL_BIN) $$f $(libexecdir); \
 		if test -f $(libexecdir)/-$$f; then \
 			echo $(RM) -f $(libexecdir)/-$$f; \
-			$(RM) $(libexecdir)/-$$f; \
+			$(RM) -f $(libexecdir)/-$$f; \
 		fi; \
 	done
 	@for f in $(CGIPROGS); do \
@@ -182,7 +182,7 @@ install: all install-mkdirs
 		$(INSTALL_BIN) $$f $(libexecdir); \
 		if test -f $(libexecdir)/-$$f; then \
 			echo $(RM) -f $(libexecdir)/-$$f; \
-			$(RM) $(libexecdir)/-$$f; \
+			$(RM) -f $(libexecdir)/-$$f; \
 		fi; \
 	done
 	$(INSTALL_FILE) squid.conf $(sysconfdir)/squid.conf.default
