@@ -1,0 +1,37 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Invalid URL
+<BR>
+无效的网址
+</STRONG>
+</UL>
+
+<P>
+Some aspect of the requested URL is incorrect.  Possible problems:
+<BR>
+输入网址的某些地方有误，可能是因为：
+<UL>
+<LI>Missing or incorrect access protocol (should be `http://'' or similar)
+<BR>缺少或不正确的通讯协议（应该如 `http://''或类似的开头）
+<LI>Missing hostname
+<BR>缺少欲连结的主机名称
+<LI>Illegal double-escape in the URL-Path
+<BR>网址路径中有不合法双重转义符
+<LI>Illegal character in hostname; underscores are not allowed
+<BR>主机名称中包含不合法的字符；下划线是不允许的。
+</UL>
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

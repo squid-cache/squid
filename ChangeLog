@@ -66,6 +66,105 @@ Changes to Squid-2.4.DEVEL2 ():
 
 Changes to Squid-2.4.DEVEL1 ():
 
+Changes to Squid-2.3.STABLE3 (May 15, 2000):
+
+	- Fixed malloc linking problems on Solaris.  The configure
+	  script incorrectly set options for dlmalloc.
+	- Added a configure check to remove compiler optimization
+	  for GCC 2.95.x.
+	- Updated MSNT authenticator module.
+	- Updated Estonian error pages.
+	- Updated Japanese error pages.
+	- Fixed expires bug in httpReplyHdrCacheInit.  It was
+	  incorrectly setting expires based on max-age.  It was using
+	  the current time as a basis, instead of the response date.
+	- Fixed "USE_DNSSERVER" typos.
+	- Added a workaround for getpwnam() problems on Solaris.
+	  getpwnam() could fail if there are fewer than 256 FDs
+	  available.  This causes root to own some disk files.
+	- Added an 'offline_toggle' option via the cache manager.
+	- Added a 'minimum_object_size' option.  Files smaller than
+	  this size are not stored.
+	- Added 'passive_ftp' option to disable passive FTP transfers.
+	- Added 'wccp_version' option because some Cisco IOS versions
+	  require WCCP version 3.
+	- The 'client' program in ping mode (-g) now prints transfer
+	  throughput.
+	- Fixed logging of proxy auth username for redirected
+	  requests.
+	- Fixed bogus Age values for IMS requests.
+	- Fixed persistent connection timeout for client-side
+	  connections.  It was hard-coded to 15 seconds, now uses
+	  the 'pconn_timeout' value.
+	- Fixed up httpAcceptDefer.  It wasn't being used properly
+	  and caused high CPU usage when Squid gets close to the FD
+	  limit.
+	- Numerous delay_pools fixes and checks.
+	- Fixed SNMP coredumps from running snmpwalk.
+	- Added a check for errno == EPIPE in icmp.c when pinger uses
+	  a Unix socket instead of a UDP socket.
+	- Fixed ACL checklist memory initialization bugs.
+	- Cleaned up the MIB file.  Replaced contact information and
+	  checked description fields.
+	- Removed LRU reference_age hard-coded upper limit.
+	- Fixed async I/O FD leak.
+	- Made getMyHostname() more robust.
+	- Fixed domain list matching bug.  "x-foo.com" wasn't properly
+	  compared to ".foo.com" and confused splay tree ordering.
+	- Added a check for whitespace in hostnames and optionally
+	  strip whitespace if 'uri_whitespace' setting allows.
+	- Added status code and checking to ASN/whois queries.
+
+Changes to Squid-2.3.STABLE2 (Mar 2, 2000):
+
+	- Changed Copyright text.
+	- Changed configure so that some IRIX-6.4 hacks apply to
+	  all IRIX-6.* versions.
+	- Cleaned up HTML bugs in error pages.
+	- Told configure to check for netinet/if_ether.h, which
+	  is used in ARP ACL code, but might not be required.
+	- Added "Cookie" to known HTTP headers so it can be
+	  used in anonymizer configuration.
+	- Added optional TCP_REDIRECT log code for logging
+	  of 301/302 responses returned by Squid.
+	- Added a check for a currently running Squid process.
+	  If the pid file exists, and the pid is running,
+	  Squid complains and refuses to start another instance.
+	- Changed async I/O scope to PTHREAD_SCOPE_PROCESS for
+	  IRIX.
+	- Fixed a bug with the PURGE method.  The purge enable
+	  flag was not getting cleared during reconfigure.
+	  Also required PURGE method to be used in http_access
+	  list before enabling.
+	- Fixed async I/O assertions for file open errors.
+	- Fixed internal DNS assertion when unpacking truncated
+	  messages.
+	- Fixed anonymize_headers bug that caused all headers
+	  to be allowed after a reconfigure.
+	- Fixed an access denied bug for accelerator-only installations.
+	- Fixed internal DNS initialization so that it uses
+	  'dns_nameservers' settings in squid.conf if set.
+	- Fixed 'maxconn' ACL bug that caused it to work backwards
+	  (Pedro Ribeiro).
+	- Fixed syslog bug for daemon mode on Linux.
+	- Fixed 'http_port' parsing bugs.
+	- Fixed internal DNS byte ordering bugs for PTR queries.
+	- Fixed internal DNS queue getting stuck during periods
+	  of low activity (Henrik).
+	- Fixed byte ordering bugs for parsing EPLF FTP listings
+	  on 64-bit systems.
+	- Fixed 'request_body_max_size' bug that caused all
+	  POST, PUT requests to be denied if max size is set
+	  to zero.
+	- Fixed 'redirector_access' bug when using 'myport' ACLs.
+	- Fixed CARP neighbor selection bugs for down peers.
+	- Added 'client_persistent_connections' and
+	  'server_persistent_connections' flags to disable persistent
+	  connections for clients and servers.
+	- Fixed access logging bug that caused many requests to be
+	  logged as TCP_MISS.
+	- Added some bounds checking to delay pools code.
+
 Changes to Squid-2.3.STABLE1 (Jan 9, 2000):
 
 	- Updated PAM authentication module from Henrik Nordstrom.
@@ -296,7 +395,7 @@ Changes to Squid-2.3.DEVEL1 ():
 	- Added 'peer_connect_timeout' squid.conf option.
 	- Added 'redirector_bypass' squid.conf option.
 	- Added RFC 2518 (WEBDAV) request methods.
-
+	
 Changes to Squid-2.2 (April 19, 1999):
 
 	- Removed all SNMP specific ACL code

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.360 2000/05/12 00:29:07 wessels Exp $
+ * $Id: http.cc,v 1.361 2000/05/16 07:06:04 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -342,17 +342,9 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     t = httpState->reply_hdr + hdr_len;
     /* headers can be incomplete only if object still arriving */
     if (!httpState->eof) {
-	size_t k = headersEnd(httpState->reply_hdr, hdr_len);
-	if (0 == k) {
-	    if (hdr_len >= 8191 || room == 0) {
-		debug(11, 3) ("httpProcessReplyHeader: Too large HTTP header: '%s'\n", httpState->reply_hdr);
-		httpState->reply_hdr_state += 2;
-		reply->sline.status = HTTP_INVALID_HEADER;
-		return;
-	    } else {
-		return;		/* headers not complete */
-	    }
-	}
+	size_t k = headersEnd(httpState->reply_hdr, 8192);
+	if (0 == k)
+	    return;		/* headers not complete */
 	t = httpState->reply_hdr + k;
     }
     *t = '\0';

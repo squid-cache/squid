@@ -1,26 +1,25 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>IGA: P&auml;ring URLile ei saa vastust</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>Viga</H1>
+<H2>P&auml;ring URLile ei saa vastust</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+Sooritades p&auml;ringut URLile
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+tekkis j&auml;rgnev viga:
 <UL>
 <LI>
 <STRONG>
-The request or reply is too large.
+Päring või vastus on liiga suur.
 </STRONG>
 <P>
-If you are making a POST or PUT request, then your request body
-(the thing you are trying to upload) is too large.  If you are 
-making a GET request, then the reply body (what you are trying
-to download) is too large.   These limits have been established
-by the Internet Service Provider who operates this cache.  Please
-contact them directly if you feel this is an error.
+Kui te sooritate POST või PUT päringut, siis teie päringu keha
+(see asi, mida te serverisse laete) on liiga suur. Kui te
+sooritate GET päringut, siis on vastuse keha (asi, mida te serverist
+laete) liiga suur. Need piirangus on seadnud teie teenusepakkuja, kes
+haldab seda vahemälu serverit. Kui te arvate, et tegemist on veaga,
+kontakteeruge palun otse oma teenusepakkujaga.
 </UL>
-<P>
-Your cache administrator is <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.

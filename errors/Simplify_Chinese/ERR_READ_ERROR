@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Read Error
+<BR>
+读取错误
+</STRONG>
+</UL>
+
+<P>
+系统回应：
+<PRE><I>    %E</I></PRE>
+
+<P>
+An error condition occurred while reading data from the network.  Please
+retry your request.
+<BR>
+正在通过网络读取数据时发生了错误，请重新尝试。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

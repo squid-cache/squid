@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.70 2000/03/06 16:23:32 wessels Exp $
+ * $Id: icmp.cc,v 1.71 2000/05/16 07:06:05 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -56,6 +56,7 @@ icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
     static pingerEchoData pecho;
     if (payload && len == 0)
 	len = strlen(payload);
+    assert(len <= PINGER_PAYLOAD_SZ);
     pecho.to = to;
     pecho.opcode = (unsigned char) opcode;
     pecho.psize = len;
@@ -112,10 +113,12 @@ icmpSend(pingerEchoData * pkt, int len)
     int x;
     if (icmp_sock < 0)
 	return;
+    debug(37, 2) ("icmpSend: to %s, opcode %d, len %d\n",
+	inet_ntoa(pkt->to), (int) pkt->opcode, pkt->psize);
     x = send(icmp_sock, (char *) pkt, len, 0);
     if (x < 0) {
 	debug(50, 1) ("icmpSend: send: %s\n", xstrerror());
-	if (errno == ECONNREFUSED) {
+	if (errno == ECONNREFUSED || errno == EPIPE) {
 	    icmpClose();
 	    return;
 	}

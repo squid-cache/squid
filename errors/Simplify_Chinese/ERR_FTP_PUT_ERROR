@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：文件上传失败</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>文件上传（FTP PUT）操作失败</H2>
+<HR>
+<P>
+当尝试上传（PUT）到以下位置时：
+<A HREF="%U">%U</A>
+<P>
+本缓存服务器发出以下 FTP 命令：
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+然后收到如下回应：
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+<PRE>
+请检查上传路径，上传位置读写权限，可用磁盘空间后再进行尝试。
+</PRE>
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

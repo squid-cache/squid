@@ -28,4 +28,4 @@ M&otilde;ni osa HTTP p&auml;ringust on vigane. V&otilde;imalikud probleemid:
 <LI>POST v&otilde;i PUT p&auml;ringutel puudub Content-Length
 <LI>keelatud s&uuml;mbolid hosti nimes; alakriipsud pole lubatud
 </UL>
-</P>
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.

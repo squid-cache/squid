@@ -1,5 +1,5 @@
 /*
- * $Id: carp.cc,v 1.7 2000/03/06 16:23:29 wessels Exp $
+ * $Id: carp.cc,v 1.8 2000/05/16 07:06:03 wessels Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -84,6 +84,7 @@ carpInit(void)
 peer *
 carpSelectParent(request_t * request)
 {
+#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> ((size(u_long)*8)-(n))))
     const char *c;
     peer *p = NULL;
     peer *tp;
@@ -94,7 +95,7 @@ carpSelectParent(request_t * request)
     /* calculate url hash */
     debug(39, 2) ("carpSelectParent: CARP Calculating hash for %s\n", url);
     for (c = url; *c != 0; c++)
-	url_hash += (url_hash << 19) + *c;
+	url_hash += ROTATE_LEFT(url_hash, 19) + *c;
     /* select peer */
     for (tp = Config.peers; tp; tp = tp->next) {
 	if (0.0 == tp->carp.load_factor)
@@ -104,7 +105,7 @@ carpSelectParent(request_t * request)
 	assert(tp->type == PEER_PARENT);
 	combined_hash = (url_hash ^ tp->carp.hash);
 	combined_hash += combined_hash * 0x62531965;
-	combined_hash = combined_hash << 21;
+	combined_hash = ROTATE_LEFT(combined_hash, 21);
 	combined_hash = combined_hash * tp->carp.load_multiplier;
 	debug(39, 3) ("carpSelectParent: %s combined_hash %d\n",
 	    tp->host, combined_hash);

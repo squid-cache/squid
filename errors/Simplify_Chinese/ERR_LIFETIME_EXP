@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Connection Lifetime Expired
+<BR>
+连接超时
+</STRONG>
+</UL>
+
+<P>
+Squid has terminated the request because it has exceeded the maximum
+connection lifetime.
+<BR>
+缓存服务器已终止您的连接请求，因为已经超过了最大连接等待时间。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

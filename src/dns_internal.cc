@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.25 2000/05/12 00:29:07 wessels Exp $
+ * $Id: dns_internal.cc,v 1.26 2000/05/16 07:06:04 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -87,6 +87,11 @@ static void idnsTickleQueue(void);
 static void
 idnsAddNameserver(const char *buf)
 {
+    struct in_addr A;
+    if (!safe_inet_addr(buf, &A)) {
+	debug(78, 0) ("WARNING: rejecting '%s' as a name server, because it is not a numeric IP address\n", buf);
+	return;
+    }
     if (nns == nns_alloc) {
 	int oldalloc = nns_alloc;
 	ns *oldptr = nameservers;
@@ -103,7 +108,7 @@ idnsAddNameserver(const char *buf)
     assert(nns < nns_alloc);
     nameservers[nns].S.sin_family = AF_INET;
     nameservers[nns].S.sin_port = htons(DOMAIN_PORT);
-    nameservers[nns].S.sin_addr.s_addr = inet_addr(buf);
+    nameservers[nns].S.sin_addr.s_addr = A.s_addr;
     debug(78, 3) ("idnsAddNameserver: Added nameserver #%d: %s\n",
 	nns, inet_ntoa(nameservers[nns].S.sin_addr));
     nns++;
@@ -141,13 +146,13 @@ idnsParseResolvConf(void)
 	t = strtok(buf, w_space);
 	if (NULL == t)
 	    continue;
-	if (strcasecmp(t, "nameserver") == 0) {
-	    t = strtok(NULL, w_space);
-	    if (t == NULL)
-		continue;;
-	    debug(78, 1) ("Adding nameserver %s from %s\n", t, _PATH_RESOLV_CONF);
-	    idnsAddNameserver(t);
-	}
+	if (strcasecmp(t, "nameserver"))
+	    continue;
+	t = strtok(NULL, w_space);
+	if (t == NULL)
+	    continue;
+	debug(78, 1) ("Adding nameserver %s from %s\n", t, _PATH_RESOLV_CONF);
+	idnsAddNameserver(t);
     }
     fclose(fp);
 }

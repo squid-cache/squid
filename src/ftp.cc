@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.292 2000/05/02 20:41:22 hno Exp $
+ * $Id: ftp.cc,v 1.293 2000/05/16 07:06:04 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -422,11 +422,10 @@ ftpListingFinish(FtpStateData * ftpState)
     }
     storeAppendPrintf(e, "<HR>\n");
     storeAppendPrintf(e, "<ADDRESS>\n");
-    storeAppendPrintf(e, "Generated %s by %s (<a href=\"http://squid.nlanr.net/Squid/\">%s</a>)\n",
+    storeAppendPrintf(e, "Generated %s by %s (%s)\n",
 	mkrfc1123(squid_curtime),
 	getMyHostname(),
-	full_appname_string,
-	version_string);
+	full_appname_string);
     storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
     storeBufferFlush(e);
 }
@@ -1052,7 +1051,12 @@ ftpStart(FwdState * fwd)
     ftpState->data.fd = -1;
     ftpState->size = -1;
     ftpState->mdtm = -1;
-    ftpState->flags.pasv_supported = !fwd->flags.ftp_pasv_failed;
+    if (!Config.Ftp.passive)
+	ftpState->flags.rest_supported = 0;
+    else if (fwd->flags.ftp_pasv_failed)
+	ftpState->flags.pasv_supported = 0;
+    else
+	ftpState->flags.pasv_supported = 1;
     ftpState->flags.rest_supported = 1;
     ftpState->fwd = fwd;
     comm_add_close_handler(fd, ftpStateFree, ftpState);
@@ -1819,7 +1823,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 	return -1;
     }
     ftpState->data.fd = fd;
-    ftpState->data.port = comm_local_port(fd);;
+    ftpState->data.port = comm_local_port(fd);
     ftpState->data.host = NULL;
     return fd;
 }
@@ -1869,10 +1873,10 @@ static void
 ftpAcceptDataConnection(int fd, void *data)
 {
     FtpStateData *ftpState = data;
-    struct sockaddr_in peer, me;
+    struct sockaddr_in my_peer, me;
     debug(9, 3) ("ftpAcceptDataConnection\n");
 
-    fd = comm_accept(fd, &peer, &me);
+    fd = comm_accept(fd, &my_peer, &me);
     if (fd < 0) {
 	debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", fd, xstrerror());
 	/* XXX Need to set error message */
@@ -1883,8 +1887,8 @@ ftpAcceptDataConnection(int fd, void *data)
     comm_close(ftpState->data.fd);
     debug(9, 3) ("ftpAcceptDataConnection: Connected data socket on FD %d\n", fd);
     ftpState->data.fd = fd;
-    ftpState->data.port = ntohs(peer.sin_port);
-    ftpState->data.host = xstrdup(inet_ntoa(peer.sin_addr));
+    ftpState->data.port = ntohs(my_peer.sin_port);
+    ftpState->data.host = xstrdup(inet_ntoa(my_peer.sin_addr));
     commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
     commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout,
 	ftpState);
@@ -2341,8 +2345,8 @@ ftpFailedErrorMessage(FtpStateData * ftpState, err_type error)
 	err = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY);
     err->xerrno = errno;
     err->request = requestLink(ftpState->request);
-    err->ftp.server_msg = ftpState->cwd_message;
-    ftpState->cwd_message = NULL;
+    err->ftp.server_msg = ftpState->ctrl.message;
+    ftpState->ctrl.message = NULL;
     if (ftpState->old_request)
 	command = ftpState->old_request;
     else

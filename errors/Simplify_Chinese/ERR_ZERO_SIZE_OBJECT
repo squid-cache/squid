@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Zero Sized Reply
+<BR>
+响应内容长度为零
+</STRONG>
+</UL>
+
+<P>
+Squid did not receive any data for this request.
+<BR>
+本缓存服务器从被连接的服务器上没有收到任何数据。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

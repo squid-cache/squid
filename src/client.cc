@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.87 2000/03/06 16:23:29 wessels Exp $
+ * $Id: client.cc,v 1.88 2000/05/16 07:06:03 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -253,6 +253,7 @@ main(int argc, char *argv[])
     }
     loops = ping ? pcount : 1;
     for (i = 0; loops == 0 || i < loops; i++) {
+	int fsize = 0;
 	/* Connect to the server */
 	if ((conn = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 	    perror("client: socket");
@@ -297,6 +298,7 @@ main(int argc, char *argv[])
 	/* Read the data */
 
 	while ((len = read(conn, buf, sizeof(buf))) > 0) {
+	    fsize += len;
 	    if (to_stdout)
 		fwrite(buf, len, 1, stdout);
 	}
@@ -314,10 +316,11 @@ main(int argc, char *argv[])
 	    elapsed_msec = tvSubMsec(tv1, tv2);
 	    t2s = tv2.tv_sec;
 	    tmp = localtime(&t2s);
-	    fprintf(stderr, "%d-%02d-%02d %02d:%02d:%02d [%d]: %ld.%03ld secs\n",
+	    fprintf(stderr, "%d-%02d-%02d %02d:%02d:%02d [%d]: %ld.%03ld secs, %f KB/s\n",
 		tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
 		tmp->tm_hour, tmp->tm_min, tmp->tm_sec, i + 1,
-		elapsed_msec / 1000, elapsed_msec % 1000);
+		elapsed_msec / 1000, elapsed_msec % 1000,
+		elapsed_msec ? (double) fsize / elapsed_msec : -1.0);
 	    if (i == 0 || elapsed_msec < ping_min)
 		ping_min = elapsed_msec;
 	    if (i == 0 || elapsed_msec > ping_max)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.344 2000/05/12 00:29:06 wessels Exp $
+ * $Id: cache_cf.cc,v 1.345 2000/05/16 07:06:03 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -394,6 +394,31 @@ configDoConfigure(void)
     }
     if (aclPurgeMethodInUse(Config.accessList.http))
 	Config2.onoff.enable_purge = 1;
+    if (NULL != Config.effectiveUser) {
+	struct passwd *pwd = getpwnam(Config.effectiveUser);
+	if (NULL == pwd)
+	    /*
+	     * Andres Kroonmaa <andre@online.ee>:
+	     * Some getpwnam() implementations (Solaris?) require
+	     * an available FD < 256 for opening a FILE* to the
+	     * passwd file.
+	     * DW:
+	     * This should be safe at startup, but might still fail
+	     * during reconfigure.
+	     */
+	    fatalf("getpwnam failed to find userid for effective user '%s'",
+		Config.effectiveUser,
+		xstrerror());
+	Config2.effectiveUserID = pwd->pw_uid;
+    }
+    if (NULL != Config.effectiveGroup) {
+	struct group *grp = getgrnam(Config.effectiveGroup);
+	if (NULL == grp)
+	    fatalf("getgrnam failed to find groupid for effective group '%s'",
+		Config.effectiveGroup,
+		xstrerror());
+	Config2.effectiveGroupID = grp->gr_gid;
+    }
 }
 
 /* Parse a time specification from the config file.  Store the
@@ -1092,11 +1117,14 @@ parse_peer(peer ** head)
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
     p->test_fd = -1;
 #if USE_CARP
+#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> ((sizeof(u_long)*8)-(n))))
     if (p->carp.load_factor) {
 	/* calculate this peers hash for use in CARP */
 	p->carp.hash = 0;
 	for (token = p->host; *token != 0; token++)
-	    p->carp.hash += (p->carp.hash << 19) + *token;
+	    p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + *token;
+	p->carp.hash += p->carp.hash * 0x62531965;
+	p->carp.hash += ROTATE_LEFT(p->carp.hash, 21);
     }
 #endif
     /* This must preceed peerDigestCreate */

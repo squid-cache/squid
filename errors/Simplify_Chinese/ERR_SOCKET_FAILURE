@@ -1,0 +1,33 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Socket Failure
+<BR>
+Socket 建立失败
+</STRONG>
+</UL>
+
+<P>
+系统回应：
+<PRE><I>    %E</I></PRE>
+
+<P>
+Squid is unable to create a TCP socket, presumably due to excessive load.
+Please retry your request.
+<BR>
+Squid （缓存服务器）无法建立 TCP socket（无法向系统申请建立新的网络连接），
+可能是因为负荷过重，请重新尝试。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

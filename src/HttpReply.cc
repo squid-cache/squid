@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.41 2000/04/16 21:59:45 wessels Exp $
+ * $Id: HttpReply.cc,v 1.42 2000/05/16 07:06:02 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -56,6 +56,7 @@ static void httpReplyHdrCacheClean(HttpReply * rep);
 static int httpReplyParseStep(HttpReply * rep, const char *parse_start, int atEnd);
 static int httpReplyParseError(HttpReply * rep);
 static int httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end);
+static time_t httpReplyHdrExpirationTime(const HttpReply * rep);
 
 
 /* module initialization */
@@ -292,6 +293,39 @@ httpReplyDoDestroy(HttpReply * rep)
     memFree(rep, MEM_HTTP_REPLY);
 }
 
+static time_t
+httpReplyHdrExpirationTime(const HttpReply * rep)
+{
+    /* The s-maxage and max-age directive takes priority over Expires */
+    if (rep->cache_control) {
+	if (rep->date >= 0) {
+	    if (rep->cache_control->s_maxage >= 0)
+		return rep->date + rep->cache_control->s_maxage;
+	    if (rep->cache_control->max_age >= 0)
+		return rep->date + rep->cache_control->max_age;
+	} else {
+	    /*
+	     * Conservatively handle the case when we have a max-age
+	     * header, but no Date for reference?
+	     */
+	    if (rep->cache_control->s_maxage >= 0)
+		return squid_curtime;
+	    if (rep->cache_control->max_age >= 0)
+		return squid_curtime;
+	}
+    }
+    if (httpHeaderHas(&rep->header, HDR_EXPIRES)) {
+	const time_t e = httpHeaderGetTime(&rep->header, HDR_EXPIRES);
+	/*
+	 * HTTP/1.0 says that robust implementations should consider
+	 * bad or malformed Expires header as equivalent to "expires
+	 * immediately."
+	 */
+	return e < 0 ? squid_curtime : e;
+    }
+    return -1;
+}
+
 /* sync this routine when you update HttpReply struct */
 static void
 httpReplyHdrCacheInit(HttpReply * rep)
@@ -301,7 +335,6 @@ httpReplyHdrCacheInit(HttpReply * rep)
     rep->content_length = httpHeaderGetInt(hdr, HDR_CONTENT_LENGTH);
     rep->date = httpHeaderGetTime(hdr, HDR_DATE);
     rep->last_modified = httpHeaderGetTime(hdr, HDR_LAST_MODIFIED);
-    rep->expires = httpHeaderGetTime(hdr, HDR_EXPIRES);
     str = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE);
     if (str)
 	stringLimitInit(&rep->content_type, str, strcspn(str, ";\t "));
@@ -310,19 +343,8 @@ httpReplyHdrCacheInit(HttpReply * rep)
     rep->cache_control = httpHeaderGetCc(hdr);
     rep->content_range = httpHeaderGetContRange(hdr);
     rep->keep_alive = httpMsgIsPersistent(rep->sline.version, &rep->header);
-    /* final adjustments */
-    /* The s-maxage and max-age directive takes priority over Expires */
-    if (rep->cache_control && rep->cache_control->s_maxage >= 0)
-	rep->expires = squid_curtime + rep->cache_control->s_maxage;
-    else if (rep->cache_control && rep->cache_control->max_age >= 0)
-	rep->expires = squid_curtime + rep->cache_control->max_age;
-    else
-	/*
-	 * The HTTP/1.0 specs says that robust implementations should consider bad
-	 * or malformed Expires header as equivalent to "expires immediately."
-	 */
-    if (rep->expires < 0 && httpHeaderHas(hdr, HDR_EXPIRES))
-	rep->expires = squid_curtime;
+    /* be sure to set expires after date and cache-control */
+    rep->expires = httpReplyHdrExpirationTime(rep);
 }
 
 /* sync this routine when you update HttpReply struct */

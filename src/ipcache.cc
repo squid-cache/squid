@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.219 2000/03/06 16:23:32 wessels Exp $
+ * $Id: ipcache.cc,v 1.220 2000/05/16 07:06:05 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -730,7 +730,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
 	if (++ia->cur == ia->count)
 	    ia->cur = 0;
 	if (!ia->bad_mask[ia->cur])
-	    break;;
+	    break;
     }
     if (k == ia->count) {
 	/* All bad, reset to All good */
@@ -837,21 +837,10 @@ ipcacheChangeKey(ipcache_entry * i)
     hash_join(ip_table, (hash_link *) i);
 }
 
-/* call during reconfigure phase to clear out all the 
- * pending and dispatched reqeusts that got lost */
+/* Recalculate IP cache size upon reconfigure */
 void
 ipcache_restart(void)
 {
-    ipcache_entry *this;
-    assert(ip_table != NULL);
-    hash_first(ip_table);
-    while ((this = (ipcache_entry *) hash_next(ip_table))) {
-	if (this->status == IP_CACHED)
-	    continue;
-	if (this->status == IP_NEGATIVE_CACHED)
-	    continue;
-    }
-    /* recalculate these while we're at it */
     ipcache_high = (long) (((float) Config.ipcache.size *
 	    (float) Config.ipcache.high) / (float) 100);
     ipcache_low = (long) (((float) Config.ipcache.size *

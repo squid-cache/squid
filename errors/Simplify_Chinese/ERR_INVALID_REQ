@@ -1,0 +1,43 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试进行以下请求时：
+<PRE>
+%R
+</PRE>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Invalid Request
+<BR>
+无效的请求
+</STRONG>
+</UL>
+
+<P>
+Some aspect of the HTTP Request is invalid.  Possible problems:
+<BR>
+HTTP 请求的某些方面是无效的。可能是下列问题：
+<UL>
+<LI>Missing or unknown request method
+<BR>缺少请求方式或未知的请求方式
+<LI>Missing URL
+<BR>缺少网址
+<LI>Missing HTTP Identifier (HTTP/1.0)
+<BR>缺少 HTTP 标识（HTTP/1.0）
+<LI>Request is too large
+<BR>请求命令过长
+<LI>Content-Length missing for POST or PUT requests
+<BR>POST 或 PUT 请求缺少内容长度
+<LI>Illegal character in hostname; underscores are not allowed
+<BR>主机名称中包含不合法的字符；下划线是不允许的。
+</UL>
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>. 

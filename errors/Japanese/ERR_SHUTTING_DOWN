@@ -1,17 +1,18 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=EUC-JP">
+<TITLE>エラー: リクエストされた URL は取得できませんでした</TITLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H2>リクエストされた URL は取得できませんでした</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+以下の URL を取得した際に:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+次のエラーが発生しました:
 <UL>
 <P>
-This cache is in the process of shutting down and can not
-service your request at this time.  Please retry your
-request again soon.
+このキャッシュは稼働停止の処理に入っていて、
+現在あなたのリクエストへのサービスを提供できません。
+後で再度リクエストしてください．
 </P>

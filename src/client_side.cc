@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.484 2000/05/12 03:43:00 wessels Exp $
+ * $Id: client_side.cc,v 1.485 2000/05/16 07:06:03 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -105,7 +105,7 @@ static void clientProcessOnlyIfCachedMiss(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static int clientCheckContentLength(request_t * r);
-static int httpAcceptDefer(void);
+static DEFER httpAcceptDefer;
 static log_type clientProcessRequest2(clientHttpRequest * http);
 static int clientReplyBodyTooLarge(int clen);
 static int clientRequestBodyTooLarge(int clen);
@@ -289,6 +289,9 @@ clientRedirectDone(void *data, char *result)
 	new_request->my_addr = old_request->my_addr;
 	new_request->my_port = old_request->my_port;
 	new_request->flags.redirected = 1;
+	if (old_request->user_ident[0])
+	    xstrncpy(new_request->user_ident, old_request->user_ident,
+		USER_IDENT_SZ);
 	if (old_request->body) {
 	    new_request->body = xmalloc(old_request->body_sz);
 	    xmemcpy(new_request->body, old_request->body, old_request->body_sz);
@@ -564,7 +567,7 @@ clientPurgeRequest(clientHttpRequest * http)
     StoreEntry *entry;
     ErrorState *err = NULL;
     HttpReply *r;
-    debug(33, 1) ("Config2.onoff.enable_purge = %d\n", Config2.onoff.enable_purge);
+    debug(33, 3) ("Config2.onoff.enable_purge = %d\n", Config2.onoff.enable_purge);
     if (!Config2.onoff.enable_purge) {
 	http->log_type = LOG_TCP_DENIED;
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
@@ -1220,9 +1223,10 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	 * the objects age, so a Age: 0 header does not add any useful
 	 * information to the reply in any case.
 	 */
-	if (http->entry->timestamp < squid_curtime)
-	    httpHeaderPutInt(hdr, HDR_AGE,
-		squid_curtime - http->entry->timestamp);
+	if (http->entry->timestamp > -1)
+	    if (http->entry->timestamp < squid_curtime)
+		httpHeaderPutInt(hdr, HDR_AGE,
+		    squid_curtime - http->entry->timestamp);
     }
     /* Append X-Cache */
     httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
@@ -1411,12 +1415,18 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    http->log_type = LOG_TCP_IMS_HIT;
 	    clientSendMoreData(data, buf, size);
 	} else {
+	    time_t timestamp = e->timestamp;
 	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
 	    http->log_type = LOG_TCP_IMS_HIT;
 	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    storeUnregister(http->sc, e, http);
 	    storeUnlockObject(e);
 	    e = clientCreateStoreEntry(http, http->request->method, null_request_flags);
+	    /*
+	     * Copy timestamp from the original entry so the 304
+	     * reply has a meaningful Age: header.
+	     */
+	    e->timestamp = timestamp;
 	    http->entry = e;
 	    httpReplyParse(e->mem_obj->reply, mb.buf, mb.size);
 	    storeAppend(e, mb.buf, mb.size);
@@ -2065,8 +2075,11 @@ clientProcessMiss(clientHttpRequest * http)
      * or IMS request.
      */
     if (http->entry) {
-	if (EBIT_TEST(http->entry->flags, ENTRY_SPECIAL))
+	if (EBIT_TEST(http->entry->flags, ENTRY_SPECIAL)) {
 	    debug(33, 0) ("clientProcessMiss: miss on a special object (%s).\n", url);
+	    debug(33, 0) ("\tlog_type = %s\n", log_tags[http->log_type]);
+	    storeEntryDump(http->entry, 1);
+	}
 	storeUnregister(http->sc, http->entry, http);
 	storeUnlockObject(http->entry);
 	http->entry = NULL;
@@ -2652,7 +2665,7 @@ requestTimeout(int fd, void *data)
 }
 
 static int
-httpAcceptDefer(void)
+httpAcceptDefer(int fdunused, void *dataunused)
 {
     static time_t last_warn = 0;
     if (fdNFree() >= RESERVED_FD)
@@ -2678,7 +2691,7 @@ httpAccept(int sock, void *data)
     static aclCheck_t identChecklist;
 #endif
     commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
-    while (max-- && !httpAcceptDefer()) {
+    while (max-- && !httpAcceptDefer(sock, NULL)) {
 	memset(&peer, '\0', sizeof(struct sockaddr_in));
 	memset(&me, '\0', sizeof(struct sockaddr_in));
 	if ((fd = comm_accept(sock, &peer, &me)) < 0) {
@@ -2859,7 +2872,11 @@ clientHttpConnectionsOpen(void)
 	    continue;
 	comm_listen(fd);
 	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
-	/*commSetDefer(fd, httpAcceptDefer, NULL); */
+	/*
+	 * We need to set a defer handler here so that we don't
+	 * peg the CPU with select() when we hit the FD limit.
+	 */
+	commSetDefer(fd, httpAcceptDefer, NULL);
 	debug(1, 1) ("Accepting HTTP connections at %s, port %d, FD %d.\n",
 	    inet_ntoa(s->s.sin_addr),
 	    (int) ntohs(s->s.sin_port),

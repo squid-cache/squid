@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.333 2000/05/12 03:43:00 wessels Exp $
+ * $Id: structs.h,v 1.334 2000/05/16 07:06:07 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -286,6 +286,7 @@ struct _SquidConfig {
 	struct in_addr router;
 	struct in_addr incoming;
 	struct in_addr outgoing;
+	int version;
     } Wccp;
 #endif
     char *as_whois_server;
@@ -372,6 +373,7 @@ struct _SquidConfig {
 	int objectsPerBucket;
 	size_t avgObjectSize;
 	size_t maxObjectSize;
+	size_t minObjectSize;
     } Store;
     struct {
 	int high;
@@ -441,6 +443,7 @@ struct _SquidConfig {
 	size_t list_width;
 	int list_wrap;
 	char *anon_user;
+	int passive;
     } Ftp;
     refresh_t *Refresh;
     struct _cacheSwap {
@@ -504,6 +507,8 @@ struct _SquidConfig2 {
     struct {
 	int enable_purge;
     } onoff;
+    uid_t effectiveUserID;
+    gid_t effectiveGroupID;
 };
 
 struct _close_handler {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.62 2000/03/06 16:23:32 wessels Exp $
+ * $Id: icp_v2.cc,v 1.63 2000/05/16 07:06:05 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -223,6 +223,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
 	    break;
 	}
+	memset(&checklist, '\0', sizeof(checklist));
 	checklist.src_addr = from.sin_addr;
 	checklist.my_addr = no_addr;
 	checklist.request = icp_request;

@@ -1,0 +1,42 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：网络缓存服务器拒绝访问</TITLE>
+</HEAD>
+<BODY>
+<H1>错误</H1>
+<H2>网络缓存服务器拒绝访问</H2>
+<HR>
+<P>
+当尝试读取下面的网址（URL）时： 
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误： 
+<UL>
+<LI>
+<STRONG>
+Cache Access Denied.
+<BR>
+缓存服务器拒绝访问
+</STRONG>
+</UL>
+</P>
+
+<P>
+抱歉，您不被允许通过本网络缓存服务器访问下列位置：
+<BR>    %U<BR>
+除非您通过了我们的身份验证。
+</P>
+
+<P>
+You need to use Netscape version 2.0 or greater, or Microsoft Internet
+Explorer 3.0, or an HTTP/1.1 compliant browser for this to work.  Please
+contact the <A HREF="mailto:%w">cache administrator</a> if you have
+difficulties authenticating yourself or 
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">change</a> your default password.
+<BR>
+您需要使用 Netscape version 2.0 或更新的版本，或是使用 Microsoft Internet 
+Explorer 3.0，或是一个 HTTP/1.1 相容的浏览器来进行工作。如果您在身份验证上
+发生困难，请与 <A HREF="mailto:%w">管理者</a> 联系。
+或是<A HREF="http://%h/cgi-bin/chpasswd.cgi\">更改</a>您的密码。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.124 2000/05/12 00:29:10 wessels Exp $
+ * $Id: url.cc,v 1.125 2000/05/16 07:06:08 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -127,7 +127,7 @@ urlInitialize(void)
      * way we expect it to.
      */
     assert(0 == matchDomainName("foo.com", "foo.com"));
-    assert(0 < matchDomainName(".foo.com", "foo.com"));
+    assert(0 == matchDomainName(".foo.com", "foo.com"));
     assert(0 == matchDomainName("foo.com", ".foo.com"));
     assert(0 == matchDomainName(".foo.com", ".foo.com"));
     assert(0 == matchDomainName("x.foo.com", ".foo.com"));
@@ -142,6 +142,7 @@ urlInitialize(void)
     assert(0 == matchDomainName("FOO.com", "foo.COM"));
     assert(0 < matchDomainName("bfoo.com", "afoo.com"));
     assert(0 > matchDomainName("afoo.com", "bfoo.com"));
+    assert(0 < matchDomainName("x-foo.com", ".foo.com"));
     /* more cases? */
 }
 
@@ -256,6 +257,17 @@ urlParse(method_t method, char *url)
     }
     for (t = host; *t; t++)
 	*t = xtolower(*t);
+    if (stringHasWhitespace(host)) {
+	if (URI_WHITESPACE_STRIP == Config.uri_whitespace) {
+	    t = q = host;
+	    while (*t) {
+		if (!xisspace(*t))
+		    *q++ = *t;
+		t++;
+	    }
+	    *q = '\0';
+	}
+    }
     if (strspn(host, valid_hostname_chars) != strlen(host)) {
 	debug(23, 1) ("urlParse: Illegal character in hostname '%s'\n", host);
 	return NULL;
@@ -399,11 +411,14 @@ urlCanonicalClean(const request_t * request)
  *    HOST          DOMAIN        MATCH?
  * ------------- -------------    ------
  *    foo.com       foo.com         YES
- *   .foo.com       foo.com          NO
+ *   .foo.com       foo.com         YES
  *  x.foo.com       foo.com          NO
  *    foo.com      .foo.com         YES
  *   .foo.com      .foo.com         YES
  *  x.foo.com      .foo.com         YES
+ *
+ *  We strip leading dots on hosts (but not domains!) so that
+ *  ".foo.com" is is always the same as "foo.com".
  *
  *  Return values:
  *     0 means the host matches the domain
@@ -416,6 +431,8 @@ matchDomainName(const char *h, const char *d)
 {
     int dl;
     int hl;
+    while ('.' == *h)
+	h++;
     hl = strlen(h);
     dl = strlen(d);
     /*
@@ -458,6 +475,15 @@ matchDomainName(const char *h, const char *d)
     /*
      * We found different characters in the same position (from the end).
      */
+    /*
+     * If one of those character is '.' then its special.  In order
+     * for splay tree sorting to work properly, "x-foo.com" must
+     * be greater than ".foo.com" even though '-' is less than '.'.
+     */
+    if ('.' == d[dl])
+	return 1;
+    if ('.' == h[hl])
+	return -1;
     return (xtolower(h[hl]) - xtolower(d[dl]));
 }
 

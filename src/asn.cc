@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.61 2000/05/12 00:29:06 wessels Exp $
+ * $Id: asn.cc,v 1.62 2000/05/16 07:06:03 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -234,6 +234,12 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	return;
     } else if (size < 0) {
 	debug(53, 1) ("asHandleReply: Called with size=%d\n", size);
+	memFree(buf, MEM_4K_BUF);
+	asStateFree(asState);
+	return;
+    } else if (HTTP_OK != e->mem_obj->reply->sline.status) {
+	debug(53, 1) ("WARNING: AS %d whois request failed\n",
+	    asState->as_number);
 	memFree(buf, MEM_4K_BUF);
 	asStateFree(asState);
 	return;

@@ -18,10 +18,10 @@ P&auml;ringu edastamine eba&otilde;nnestus.
 
 <P>
 P&auml;ringut ei &otilde;nnestunud edastada ei originaali serverile ega
-&uuml;helegi vanem cache serverile. Ilmselt on p&otilde;hjus:
+&uuml;helegi vanem vahemälu serverile. Ilmselt on p&otilde;hjus:
 <UL>
-<LI>Cache administraator ei v&otilde;imalda teha otseseid p&auml;ringuid
+<LI>Vahemälu serveri administraator ei v&otilde;imalda teha otseseid p&auml;ringuid
 originaali serverile ja
-<LI>K&otilde;ik kirjeldatud vanem vanem cached on hetkel k&auml;ttesaamatud.
+<LI>K&otilde;ik kirjeldatud vanem vahemälu serverid on hetkel k&auml;ttesaamatud.
 </UL>
-</P>
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.

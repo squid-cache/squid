@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<BLOCKQUOTE>
+无法将您输入的主机名称：<I>%H</I>转换成 IP 地址
+</BLOCKQUOTE>
+</UL>
+
+<P>
+域名服务器返回以下讯息：
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+这表示：
+<PRE>
+ The cache was not able to resolve the hostname presented in the URL. 
+ Check if the address is correct. 
+ 缓存服务器无法解析您输入网址（URL）中的主机名称，
+ 请检查该名称是否正确。
+</PRE>
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
