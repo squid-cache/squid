@@ -74,6 +74,7 @@ DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@
 ERR_LANGUAGES = @ERR_LANGUAGES@
 EXEEXT = @EXEEXT@
+EXTERNAL_ACL_HELPERS = @EXTERNAL_ACL_HELPERS@
 FALSE = @FALSE@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LIBDLMALLOC = @LIBDLMALLOC@
@@ -114,7 +115,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-SUBDIRS = basic_auth ntlm_auth digest_auth
+SUBDIRS = basic_auth ntlm_auth digest_auth external_acl
 subdir = helpers
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h

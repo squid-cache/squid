@@ -14,9 +14,9 @@
 @SET_MAKE@
 
 #
-#  Makefile for the Squid SASL authentication helper
+#  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.in,v 1.12 2002/07/06 12:24:34 hno Exp $
+#  $Id: Makefile.in,v 1.1 2002/07/06 12:28:43 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -123,25 +123,41 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
+libexec_PROGRAMS = ip_user_check
+
+ip_user_check_SOURCES = \
+	dict.c \
+	ip_user.h \
+	main.c \
+	match.c
+
+
+EXTRA_DIST = \
+	example.conf \
+	example-deny_all_but.conf \
+	license \
+	README
+
+
+
+# sysconf_DATA = \
+LDADD = @XTRA_LIBS@
+
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		  -I$(top_srcdir)/src/
+		-I$(top_srcdir)/src/
 
-
-libexec_PROGRAMS = sasl_auth
-LDADD = -lsasl $(XTRA_LIBS)
-EXTRA_DIST = squid_sasl_auth squid_sasl_auth.conf
-subdir = helpers/basic_auth/SASL
+subdir = helpers/external_acl/ip_user
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
-libexec_PROGRAMS = sasl_auth$(EXEEXT)
+libexec_PROGRAMS = ip_user_check$(EXEEXT)
 PROGRAMS = $(libexec_PROGRAMS)
 
-sasl_auth_SOURCES = sasl_auth.c
-sasl_auth_OBJECTS = sasl_auth.$(OBJEXT)
-sasl_auth_LDADD = $(LDADD)
-sasl_auth_DEPENDENCIES =
-sasl_auth_LDFLAGS =
+am_ip_user_check_OBJECTS = dict.$(OBJEXT) main.$(OBJEXT) match.$(OBJEXT)
+ip_user_check_OBJECTS = $(am_ip_user_check_OBJECTS)
+ip_user_check_LDADD = $(LDADD)
+ip_user_check_DEPENDENCIES =
+ip_user_check_LDFLAGS =
 
 DEFS = @DEFS@
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
@@ -149,15 +165,16 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/sasl_auth.Po
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/dict.Po $(DEPDIR)/main.Po \
+@AMDEP_TRUE@	$(DEPDIR)/match.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = sasl_auth.c
+DIST_SOURCES = $(ip_user_check_SOURCES)
 DIST_COMMON = README Makefile.am Makefile.in
-SOURCES = sasl_auth.c
+SOURCES = $(ip_user_check_SOURCES)
 
 all: all-am
 
@@ -165,7 +182,7 @@ all: all-am
 .SUFFIXES: .c .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  helpers/basic_auth/SASL/Makefile
+	  $(AUTOMAKE) --foreign  helpers/external_acl/ip_user/Makefile
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
@@ -193,9 +210,9 @@ uninstall-libexecPROGRAMS:
 
 clean-libexecPROGRAMS:
 	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
-sasl_auth$(EXEEXT): $(sasl_auth_OBJECTS) $(sasl_auth_DEPENDENCIES) 
-	@rm -f sasl_auth$(EXEEXT)
-	$(LINK) $(sasl_auth_LDFLAGS) $(sasl_auth_OBJECTS) $(sasl_auth_LDADD) $(LIBS)
+ip_user_check$(EXEEXT): $(ip_user_check_OBJECTS) $(ip_user_check_DEPENDENCIES) 
+	@rm -f ip_user_check$(EXEEXT)
+	$(LINK) $(ip_user_check_LDFLAGS) $(ip_user_check_OBJECTS) $(ip_user_check_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -203,7 +220,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/sasl_auth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dict.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/match.Po@am__quote@
 
 distclean-depend:
 	-rm -rf $(DEPDIR)
