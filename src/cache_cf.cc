@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.71 1996/08/26 22:00:04 wessels Exp $
+ * $Id: cache_cf.cc,v 1.72 1996/08/26 22:47:49 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -145,6 +145,10 @@ struct SquidConfig Config;
 #define DefaultCacheLogFile	DEFAULT_CACHE_LOG
 #define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
 #define DefaultStoreLogFile	DEFAULT_STORE_LOG
+#if USE_PROXY_AUTH
+#define DefaultProxyAuthFile    (char *)NULL	/* default NONE */
+#define DefaultProxyAuthIgnoreDomain "none-at-all"
+#endif /* USE_PROXY_AUTH */
 #define DefaultLogRotateNumber  10
 #define DefaultAdminEmail	"webmaster"
 #define DefaultFtpgetProgram	DEFAULT_FTPGET
@@ -666,6 +670,22 @@ static void parseDirLine()
 	self_destruct();
     wordlistAdd(&Config.cache_dirs, token);
 }
+
+#if USE_PROXY_AUTH
+static void parseProxyAuthLine()
+{
+    char *token;
+
+    token = strtok(NULL, w_space);
+    if (token == NULL)
+        self_destruct();
+    safe_free(Config.proxyAuthFile);
+    safe_free(Config.proxyAuthIgnoreDomain);
+    Config.proxyAuthFile = xstrdup(token);
+    if ((token = strtok(NULL, w_space)))
+        Config.proxyAuthIgnoreDomain = xstrdup(token);
+}
+#endif /* USE_PROXY_AUTH */
 
 static void parseHttpdAccelLine()
 {
@@ -1196,6 +1216,11 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "redirect_children"))
 	    parseIntegerValue(&Config.redirectChildren);
 
+#if USE_PROXY_AUTH
+         else if (!strcmp(token, "proxy_authentication"))
+             parseProxyAuthLine();
+#endif /* USE_PROXY_AUTH */
+
 	else if (!strcmp(token, "source_ping"))
 	    parseOnOff(&Config.sourcePing);
 
@@ -1386,6 +1411,10 @@ static void configFreeMemory()
     safe_free(Config.pidFilename);
     safe_free(Config.visibleHostname);
     safe_free(Config.ftpUser);
+#if USE_PROXY_AUTH
+    safe_free(Config.proxyAuthFile);
+    safe_free(Config.proxyAuthIgnoreDomain);
+#endif /* USE_PROXY_AUTH */
     safe_free(Config.Announce.host);
     safe_free(Config.Announce.file);
     safe_free(Config.errHtmlText);
@@ -1463,6 +1492,10 @@ static void configSetFactoryDefaults()
     Config.Accel.withProxy = DefaultAccelWithProxy;
     Config.pidFilename = safe_xstrdup(DefaultPidFilename);
     Config.visibleHostname = safe_xstrdup(DefaultVisibleHostname);
+#if USE_PROXY_AUTH
+    Config.proxyAuthFile = safe_xstrdup(DefaultProxyAuthFile);
+    Config.proxyAuthIgnoreDomain = safe_xstrdup(DefaultProxyAuthIgnoreDomain);
+#endif /* USE_PROXY_AUTH */
     Config.ftpUser = safe_xstrdup(DefaultFtpUser);
     Config.Announce.host = safe_xstrdup(DefaultAnnounceHost);
     Config.Announce.port = DefaultAnnouncePort;

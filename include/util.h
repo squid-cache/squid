@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.9 1996/08/26 19:56:59 wessels Exp $
+ * $Id: util.h,v 1.10 1996/08/26 22:47:46 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -198,5 +198,7 @@ extern void errorlog();
 #endif /* __STRICT_ANSI__ */
 
 extern void Tolower _PARAMS((char *));
+
+extern char *uudecode _PARAMS((char *));
 
 #endif /* ndef _UTIL_H_ */

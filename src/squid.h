@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.40 1996/08/26 22:00:07 wessels Exp $
+ * $Id: squid.h,v 1.41 1996/08/26 22:47:56 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -293,3 +293,4 @@ extern void ttlAddToList _PARAMS((char *, time_t, int, time_t));
 extern void ttlAddToForceList _PARAMS((char *, time_t, time_t));
 extern int waisStart _PARAMS((int, char *, method_t, char *, StoreEntry *));
 extern void storeDirClean _PARAMS((void));
+extern char *dash_str;

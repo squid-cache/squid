@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.53 1996/08/14 21:58:03 wessels Exp $
+ * $Id: stat.cc,v 1.54 1996/08/26 22:47:57 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -882,10 +882,9 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 {
     LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
     int x;
-    static char *dash = "-";
     char *client = NULL;
     hier_code hier_code = HIER_NONE;
-    char *hier_host = dash;
+    char *hier_host = dash_str;
     int hier_timeout = 0;
 
     if (Config.Log.log_fqdn)
@@ -896,14 +895,14 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
     getCurrentTime();
 
     if (!method)
-	method = dash;
+	method = dash_str;
     if (!url)
-	url = dash;
+	url = dash_str;
     if (!ident || ident[0] == '\0')
-	ident = dash;
+	ident = dash_str;
     if (hierData) {
 	hier_code = hierData->code;
-	hier_host = hierData->host ? hierData->host : dash;
+	hier_host = hierData->host ? hierData->host : dash_str;
 	hier_timeout = hierData->timeout;
     }
     if (obj->logfile_status == LOG_ENABLE) {
