@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.148 1999/04/23 02:57:19 wessels Exp $
+# $Id: cf.data.pre,v 1.149 1999/04/26 20:44:07 glenn Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2496,6 +2496,47 @@ DOC_START
 	WHOIS server to query for AS numbers.  NOTE: AS numbers are
 	queried only when Squid starts up, not for every request.
 DOC_END
+
+NAME: wccp_router
+TYPE: address
+LOC: Config.Wccp.router
+DEFAULT: 0.0.0.0
+IFDEF: WCCP
+DOC_START
+	Specifies the router that will manage WCCP for this
+	cache.
+
+wccp_router 10.0.0.1
+DOC_END
+
+NAME: wccp_incoming_address
+TYPE: address
+LOC: Config.Addrs.wccp_outgoing
+DEFAULT: 0.0.0.0
+IFDEF: WCCP
+DOC_NONE
+NAME: wccp_outgoing_address
+TYPE: address
+LOC: Config.Addrs.wccp_outgoing
+DEFAULT: 255.255.255.255
+IFDEF: WCCP
+DOC_START
+        Just like 'udp_incoming_address' above, but for the WCCP port.
+
+        wccp_incoming_address   is used for the WCCP socket receiving
+                                messages from WCCP routers.
+        wccp_outgoing_address   is used for WCCP packets returned to WCCP
+                                routers.
+
+        The default behaviour is to not bind to any specific address.
+
+        NOTE, wccp_incoming_address and wccp_outgoing_address can not have
+        the same value since they both use port 2048.
+
+wccp_incoming_address 0.0.0.0
+wccp_outgoing_address 0.0.0.0
+DOC_END
+
 
 COMMENT_START
  DELAY POOL PARAMETERS (all require DELAY_POOLS compilation option)

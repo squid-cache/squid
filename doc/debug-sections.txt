@@ -84,3 +84,4 @@ section 76    Internal Squid Object handling
 section 77    Delay Pools
 section 78    HTTP Connection Header
 section 79    HTTP Meter Header
+section 80    WCCP

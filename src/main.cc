@@ -1,7 +1,7 @@
 
 /*
- * $Id: main.cc,v 1.295 1999/04/23 02:57:24 wessels Exp $
- * $Id: main.cc,v 1.295 1999/04/23 02:57:24 wessels Exp $
+ * $Id: main.cc,v 1.296 1999/04/26 20:44:09 glenn Exp $
+ * $Id: main.cc,v 1.296 1999/04/26 20:44:09 glenn Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -281,6 +281,9 @@ serverConnectionsOpen(void)
 #ifdef SQUID_SNMP
     snmpConnectionOpen();
 #endif
+#ifdef WCCP
+    wccpConnectionOpen();
+#endif
     clientdbInit();
     icmpOpen();
     netdbInit();
@@ -304,6 +307,9 @@ serverConnectionsClose(void)
 #ifdef SQUID_SNMP
     snmpConnectionShutdown();
 #endif
+#ifdef WCCP
+    wccpConnectionShutdown();
+#endif
     asnFreeMemory();
 }
 
@@ -320,6 +326,9 @@ mainReconfigure(void)
 #endif
 #ifdef SQUID_SNMP
     snmpConnectionClose();
+#endif
+#ifdef WCCP
+    wccpConnectionClose();
 #endif
     dnsShutdown();
     idnsShutdown();
@@ -452,7 +461,9 @@ mainInitialize(void)
 #ifdef SQUID_SNMP
     snmpInit();
 #endif
-
+#ifdef WCCP
+    wccpInit();
+#endif
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);
 #endif
@@ -508,6 +519,10 @@ mainInitialize(void)
 	    eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
 	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15.0, 1);
+#ifdef WCCP
+	if(Config.Wccp.router.s_addr != inet_addr("0.0.0.0"))
+	    eventAdd("wccpHereIam", wccpHereIam, NULL, 10.0, 1);
+#endif
     }
     configured_once = 1;
 }
@@ -772,6 +787,9 @@ SquidShutdown(void *unused)
 #endif
 #ifdef SQUID_SNMP
     snmpConnectionClose();
+#endif
+#ifdef WCCP
+    wccpConnectionClose();
 #endif
     releaseServerSockets();
     commCloseAllSockets();
