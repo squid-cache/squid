@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.102 2000/01/05 06:26:41 wessels Exp $
+ * $Id: store_dir.cc,v 1.103 2000/01/11 06:01:08 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,9 @@
  */
 
 #include "squid.h"
+
+static void storeDirLRUWalkInitHead(SwapDir * sd);
+static void *storeDirLRUWalkNext(SwapDir * sd);
 
 const char *SwapDirType[] =
 {
@@ -75,13 +78,49 @@ storeCreateSwapDirectories(void)
     } while (pid > 0 || (pid < 0 && errno == EINTR));
 }
 
+/*
+ * This new selection scheme simply does round-robin on all SwapDirs.
+ * A SwapDir is skipped if it is over the max_size (100%) limit.  If
+ * all SwapDir's are above the limit, then the first dirn that we
+ * checked is returned.  Note that 'dirn' is guaranteed to advance even
+ * if all SwapDirs are full.
+ * 
+ * XXX This function does NOT account for the read_only flag!
+ */
+static int
+storeDirSelectSwapDir(void)
+{
+    static int dirn = 0;
+    int i;
+    SwapDir *sd;
+    /*
+     * yes, the '<=' is intentional.  If all dirs are full we want to
+     * make sure 'dirn' advances every time this gets called, otherwise
+     * we get stuck on one dir.
+     */
+    for (i = 0; i <= Config.cacheSwap.n_configured; i++) {
+	if (++dirn >= Config.cacheSwap.n_configured)
+	    dirn = 0;
+	sd = &Config.cacheSwap.swapDirs[dirn];
+	if (sd->cur_size > sd->max_size)
+	    continue;
+	return dirn;
+    }
+    return dirn;
+}
 
+#if USE_DISKD && EXPERIMENTAL
+/*
+ * This fileno selection function returns a fileno on the least
+ * busy SwapDir.  Ties are broken by selecting the SwapDir with
+ * the most free space.
+ */
 static int
 storeDirSelectSwapDir(void)
 {
     SwapDir *SD;
     int min_away = 10000;
-    int min_size = 1<<30;
+    int min_size = 1 << 30;
     int dirn = 0;
     int i;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
@@ -100,9 +139,11 @@ storeDirSelectSwapDir(void)
     }
     return dirn;
 }
+#endif
 
 #if OLD
 /*
+ * This is Stew Forster's selection algorithm.
  * Spread load across least 3/4 of the store directories
  */
 static int
@@ -349,6 +390,8 @@ storeDirConfigure(void)
 	Config.Swap.maxSize += SD->max_size;
 	if (NULL == SD->map)
 	    SD->map = file_map_create();
+	SD->high_size = (int) (((float) SD->max_size *
+		(float) Config.Swap.highWaterMark) / 100.0);
     }
 }
 
@@ -404,7 +447,7 @@ storeDirWriteCleanLogs(int reopen)
 #if HEAP_REPLACEMENT
     int node;
 #else
-    dlink_node *m;
+    int j;
 #endif
     if (store_dirs_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
@@ -420,20 +463,15 @@ storeDirWriteCleanLogs(int reopen)
 	    debug(20, 1) ("log.clean.open() failed for dir #%d\n", sd->index);
 	    continue;
 	}
+#if !HEAP_REPLACEMENT
+	storeDirLRUWalkInitHead(sd);
+#endif
     }
 #if HEAP_REPLACEMENT
     if (NULL == store_heap)
 	return 0;
-    for (node = 0; node < heap_nodes(store_heap); node++)
-#else
-    for (m = store_list.tail; m; m = m->prev)
-#endif
-    {
-#if HEAP_REPLACEMENT
+    for (node = 0; node < heap_nodes(store_heap); node++) {
 	e = (StoreEntry *) heap_peep(store_heap, node);
-#else
-	e = m->data;
-#endif
 	if (e->swap_file_number < 0)
 	    continue;
 	if (e->swap_status != SWAPOUT_DONE)
@@ -463,6 +501,39 @@ storeDirWriteCleanLogs(int reopen)
 	    continue;
 	sd->log.clean.write(NULL, sd);
     }
+#else
+    do {
+	j = 0;
+	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	    sd = &Config.cacheSwap.swapDirs[dirn];
+	    if (NULL == sd->log.clean.write)
+		continue;
+	    e = storeDirLRUWalkNext(sd);
+	    if (NULL == e) {
+		sd->log.clean.write(NULL, sd);
+		continue;
+	    }
+	    j++;
+	    if (e->swap_file_number < 0)
+		continue;
+	    if (e->swap_status != SWAPOUT_DONE)
+		continue;
+	    if (e->swap_file_sz <= 0)
+		continue;
+	    if (EBIT_TEST(e->flags, RELEASE_REQUEST))
+		continue;
+	    if (EBIT_TEST(e->flags, KEY_PRIVATE))
+		continue;
+	    if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
+		continue;
+	    sd->log.clean.write(e, sd);
+	    if ((++n & 0xFFFF) == 0) {
+		getCurrentTime();
+		debug(20, 1) ("  %7d entries written so far.\n", n);
+	    }
+	}
+    } while (j > 0);
+#endif
     if (reopen)
 	storeDirOpenSwapLogs();
     getCurrentTime();
@@ -473,3 +544,40 @@ storeDirWriteCleanLogs(int reopen)
     return n;
 }
 #undef CLEAN_BUF_SZ
+
+void
+storeDirLRUDelete(StoreEntry * e)
+{
+    SwapDir *sd;
+    if (e->swap_file_number < 0)
+	return;
+    sd = &Config.cacheSwap.swapDirs[e->swap_file_number >> SWAP_DIR_SHIFT];
+    dlinkDelete(&e->lru, &sd->lru_list);
+}
+
+void
+storeDirLRUAdd(StoreEntry * e)
+{
+    SwapDir *sd;
+    if (e->swap_file_number < 0)
+	return;
+    sd = &Config.cacheSwap.swapDirs[e->swap_file_number >> SWAP_DIR_SHIFT];
+    dlinkAdd(e, &e->lru, &sd->lru_list);
+}
+
+static void
+storeDirLRUWalkInitHead(SwapDir * sd)
+{
+    sd->lru_walker = sd->lru_list.head;
+}
+
+static void *
+storeDirLRUWalkNext(SwapDir * sd)
+{
+    void *p;
+    if (NULL == sd->lru_walker)
+	return NULL;
+    p = sd->lru_walker->data;
+    sd->lru_walker = sd->lru_walker->next;
+    return p;
+}
