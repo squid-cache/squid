@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.18 1997/12/02 05:06:41 wessels Exp $
+ * $Id: cf_gen.cc,v 1.19 1997/12/03 01:30:39 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -63,7 +63,6 @@
 
 #if SQUID_SNMP
 #include "snmp.h"
-#include "snmp_config.h"
 #endif
 
 #define MAX_LINE	1024	/* longest configuration line */
