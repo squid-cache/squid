@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.71 2001/03/03 10:39:30 hno Exp $
+ * $Id: asn.cc,v 1.72 2001/10/17 10:59:08 adrian Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -40,7 +40,7 @@
 /* BEGIN of definitions for radix tree entries */
 
 /* int in memory with length */
-typedef u_char m_int[1 + sizeof(unsigned int)];
+typedef u_char m_int[1 + sizeof (unsigned int)];
 #define store_m_int(i, m) \
     (i = htonl(i), m[0] = sizeof(m_int), xmemcpy(m+1, &i, sizeof(unsigned int)))
 #define get_m_int(i, m) \
@@ -56,251 +56,274 @@ struct radix_node_head *AS_tree_head;
  * an intlist but it's coded as a structure for future
  * enhancements (e.g. expires)
  */
-struct _as_info {
+struct _as_info
+  {
     intlist *as_number;
     time_t expires;		/* NOTUSED */
-};
+  };
 
-struct _ASState {
+struct _ASState
+  {
     StoreEntry *entry;
     store_client *sc;
     request_t *request;
     int as_number;
     off_t seen;
     off_t offset;
-};
+  };
 
 typedef struct _ASState ASState;
 typedef struct _as_info as_info;
 
 /* entry into the radix tree */
-struct _rtentry {
+struct _rtentry
+  {
     struct radix_node e_nodes[2];
     as_info *e_info;
     m_int e_addr;
     m_int e_mask;
-};
+  };
 
 typedef struct _rtentry rtentry;
 
-static int asnAddNet(char *, int);
-static void asnCacheStart(int as);
+static int asnAddNet (char *, int);
+static void asnCacheStart (int as);
 static STCB asHandleReply;
-static int destroyRadixNode(struct radix_node *rn, void *w);
-static int printRadixNode(struct radix_node *rn, void *w);
-static void asnAclInitialize(acl * acls);
-static void asStateFree(void *data);
-static void destroyRadixNodeInfo(as_info *);
+static int destroyRadixNode (struct radix_node *rn, void *w);
+static int printRadixNode (struct radix_node *rn, void *w);
+static void asnAclInitialize (acl * acls);
+static void asStateFree (void *data);
+static void destroyRadixNodeInfo (as_info *);
 static OBJH asnStats;
 
 /* PUBLIC */
 
 int
-asnMatchIp(void *data, struct in_addr addr)
+asnMatchIp (void *data, struct in_addr addr)
 {
-    unsigned long lh;
-    struct radix_node *rn;
-    as_info *e;
-    m_int m_addr;
-    intlist *a = NULL;
-    intlist *b = NULL;
-    lh = ntohl(addr.s_addr);
-    debug(53, 3) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
+  unsigned long lh;
+  struct radix_node *rn;
+  as_info *e;
+  m_int m_addr;
+  intlist *a = NULL;
+  intlist *b = NULL;
+  lh = ntohl (addr.s_addr);
+  debug (53, 3) ("asnMatchIp: Called for %s.\n", inet_ntoa (addr));
 
-    if (AS_tree_head == NULL)
-	return 0;
-    if (addr.s_addr == no_addr.s_addr)
-	return 0;
-    if (addr.s_addr == any_addr.s_addr)
-	return 0;
-    store_m_int(lh, m_addr);
-    rn = rn_match(m_addr, AS_tree_head);
-    if (rn == NULL) {
-	debug(53, 3) ("asnMatchIp: Address not in as db.\n");
-	return 0;
-    }
-    debug(53, 3) ("asnMatchIp: Found in db!\n");
-    e = ((rtentry *) rn)->e_info;
-    assert(e);
-    for (a = (intlist *) data; a; a = a->next)
-	for (b = e->as_number; b; b = b->next)
-	    if (a->i == b->i) {
-		debug(53, 5) ("asnMatchIp: Found a match!\n");
-		return 1;
-	    }
-    debug(53, 5) ("asnMatchIp: AS not in as db.\n");
+  if (AS_tree_head == NULL)
     return 0;
+  if (addr.s_addr == no_addr.s_addr)
+    return 0;
+  if (addr.s_addr == any_addr.s_addr)
+    return 0;
+  store_m_int (lh, m_addr);
+  rn = rn_match (m_addr, AS_tree_head);
+  if (rn == NULL)
+    {
+      debug (53, 3) ("asnMatchIp: Address not in as db.\n");
+      return 0;
+    }
+  debug (53, 3) ("asnMatchIp: Found in db!\n");
+  e = ((rtentry *) rn)->e_info;
+  assert (e);
+  for (a = (intlist *) data; a; a = a->next)
+    for (b = e->as_number; b; b = b->next)
+      if (a->i == b->i)
+	{
+	  debug (53, 5) ("asnMatchIp: Found a match!\n");
+	  return 1;
+	}
+  debug (53, 5) ("asnMatchIp: AS not in as db.\n");
+  return 0;
 }
 
 static void
-asnAclInitialize(acl * acls)
+asnAclInitialize (acl * acls)
 {
-    acl *a;
-    intlist *i;
-    debug(53, 3) ("asnAclInitialize\n");
-    for (a = acls; a; a = a->next) {
-	if (a->type != ACL_DST_ASN && a->type != ACL_SRC_ASN)
-	    continue;
-	for (i = a->data; i; i = i->next)
-	    asnCacheStart(i->i);
+  acl *a;
+  intlist *i;
+  debug (53, 3) ("asnAclInitialize\n");
+  for (a = acls; a; a = a->next)
+    {
+      if (a->type != ACL_DST_ASN && a->type != ACL_SRC_ASN)
+	continue;
+      for (i = a->data; i; i = i->next)
+	asnCacheStart (i->i);
     }
 }
 
 /* initialize the radix tree structure */
 
-CBDATA_TYPE(ASState);
+CBDATA_TYPE (ASState);
 void
-asnInit(void)
+asnInit (void)
 {
-    extern int max_keylen;
-    static int inited = 0;
-    max_keylen = 40;
-    CBDATA_INIT_TYPE(ASState);
-    if (0 == inited++)
-	rn_init();
-    rn_inithead((void **) &AS_tree_head, 8);
-    asnAclInitialize(Config.aclList);
-    cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
+  extern int max_keylen;
+  static int inited = 0;
+  max_keylen = 40;
+  CBDATA_INIT_TYPE (ASState);
+  if (0 == inited++)
+    rn_init ();
+  rn_inithead ((void **) &AS_tree_head, 8);
+  asnAclInitialize (Config.aclList);
+  cachemgrRegister ("asndb", "AS Number Database", asnStats, 0, 1);
 }
 
 void
-asnFreeMemory(void)
+asnFreeMemory (void)
 {
-    rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
-    destroyRadixNode((struct radix_node *) 0, (void *) AS_tree_head);
+  rn_walktree (AS_tree_head, destroyRadixNode, AS_tree_head);
+  destroyRadixNode ((struct radix_node *) 0, (void *) AS_tree_head);
 }
 
 static void
-asnStats(StoreEntry * sentry)
+asnStats (StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "Address    \tAS Numbers\n");
-    rn_walktree(AS_tree_head, printRadixNode, sentry);
+  storeAppendPrintf (sentry, "Address    \tAS Numbers\n");
+  rn_walktree (AS_tree_head, printRadixNode, sentry);
 }
 
 /* PRIVATE */
 
 
 static void
-asnCacheStart(int as)
+asnCacheStart (int as)
 {
-    LOCAL_ARRAY(char, asres, 4096);
-    StoreEntry *e;
-    request_t *req;
-    ASState *asState;
-    asState = cbdataAlloc(ASState);
-    debug(53, 3) ("asnCacheStart: AS %d\n", as);
-    snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
-    asState->as_number = as;
-    req = urlParse(METHOD_GET, asres);
-    assert(NULL != req);
-    asState->request = requestLink(req);
-    if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
-	e = storeCreateEntry(asres, asres, null_request_flags, METHOD_GET);
-	asState->sc = storeClientListAdd(e, asState);
-	fwdStart(-1, e, asState->request);
-    } else {
-	storeLockObject(e);
-	asState->sc = storeClientListAdd(e, asState);
+  LOCAL_ARRAY (char, asres, 4096);
+  StoreEntry *e;
+  request_t *req;
+  ASState *asState;
+  asState = cbdataAlloc (ASState);
+  debug (53, 3) ("asnCacheStart: AS %d\n", as);
+  snprintf (asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
+  asState->as_number = as;
+  req = urlParse (METHOD_GET, asres);
+  assert (NULL != req);
+  asState->request = requestLink (req);
+  if ((e = storeGetPublic (asres, METHOD_GET)) == NULL)
+    {
+      e = storeCreateEntry (asres, asres, null_request_flags, METHOD_GET);
+      asState->sc = storeClientListAdd (e, asState);
+      fwdStart (-1, e, asState->request);
     }
-    asState->entry = e;
-    asState->seen = 0;
-    asState->offset = 0;
-    storeClientCopy(asState->sc,
-	e,
-	asState->seen,
-	asState->offset,
-	4096,
-	memAllocate(MEM_4K_BUF),
-	asHandleReply,
-	asState);
+  else
+    {
+      storeLockObject (e);
+      asState->sc = storeClientListAdd (e, asState);
+    }
+  asState->entry = e;
+  asState->seen = 0;
+  asState->offset = 0;
+  storeClientCopy (asState->sc,
+		   e,
+		   asState->seen,
+		   asState->offset,
+		   4096,
+		   memAllocate (MEM_4K_BUF),
+		   asHandleReply,
+		   asState);
 }
 
 static void
-asHandleReply(void *data, char *buf, ssize_t size)
+asHandleReply (void *data, char *buf, ssize_t size)
 {
-    ASState *asState = data;
-    StoreEntry *e = asState->entry;
-    char *s;
-    char *t;
-    debug(53, 3) ("asHandleReply: Called with size=%d\n", size);
-    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
-	memFree(buf, MEM_4K_BUF);
-	asStateFree(asState);
-	return;
+  ASState *asState = data;
+  StoreEntry *e = asState->entry;
+  char *s;
+  char *t;
+  debug (53, 3) ("asHandleReply: Called with size=%d\n", size);
+  if (EBIT_TEST (e->flags, ENTRY_ABORTED))
+    {
+      memFree (buf, MEM_4K_BUF);
+      asStateFree (asState);
+      return;
     }
-    if (size == 0 && e->mem_obj->inmem_hi > 0) {
-	memFree(buf, MEM_4K_BUF);
-	asStateFree(asState);
-	return;
-    } else if (size < 0) {
-	debug(53, 1) ("asHandleReply: Called with size=%d\n", size);
-	memFree(buf, MEM_4K_BUF);
-	asStateFree(asState);
-	return;
-    } else if (HTTP_OK != e->mem_obj->reply->sline.status) {
-	debug(53, 1) ("WARNING: AS %d whois request failed\n",
-	    asState->as_number);
-	memFree(buf, MEM_4K_BUF);
-	asStateFree(asState);
-	return;
+  if (size == 0 && e->mem_obj->inmem_hi > 0)
+    {
+      memFree (buf, MEM_4K_BUF);
+      asStateFree (asState);
+      return;
     }
-    s = buf;
-    while (s - buf < size && *s != '\0') {
-	while (*s && xisspace(*s))
-	    s++;
-	for (t = s; *t; t++) {
-	    if (xisspace(*t))
-		break;
-	}
-	if (*t == '\0') {
-	    /* oof, word should continue on next block */
+  else if (size < 0)
+    {
+      debug (53, 1) ("asHandleReply: Called with size=%d\n", size);
+      memFree (buf, MEM_4K_BUF);
+      asStateFree (asState);
+      return;
+    }
+  else if (HTTP_OK != e->mem_obj->reply->sline.status)
+    {
+      debug (53, 1) ("WARNING: AS %d whois request failed\n",
+		     asState->as_number);
+      memFree (buf, MEM_4K_BUF);
+      asStateFree (asState);
+      return;
+    }
+  s = buf;
+  while (s - buf < size && *s != '\0')
+    {
+      while (*s && xisspace (*s))
+	s++;
+      for (t = s; *t; t++)
+	{
+	  if (xisspace (*t))
 	    break;
 	}
-	*t = '\0';
-	debug(53, 3) ("asHandleReply: AS# %s (%d)\n", s, asState->as_number);
-	asnAddNet(s, asState->as_number);
-	s = t + 1;
+      if (*t == '\0')
+	{
+	  /* oof, word should continue on next block */
+	  break;
+	}
+      *t = '\0';
+      debug (53, 3) ("asHandleReply: AS# %s (%d)\n", s, asState->as_number);
+      asnAddNet (s, asState->as_number);
+      s = t + 1;
     }
-    asState->seen = asState->offset + size;
-    asState->offset += (s - buf);
-    debug(53, 3) ("asState->seen = %d, asState->offset = %d\n",
-	asState->seen, asState->offset);
-    if (e->store_status == STORE_PENDING) {
-	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
-	storeClientCopy(asState->sc,
-	    e,
-	    asState->seen,
-	    asState->offset,
-	    4096,
-	    buf,
-	    asHandleReply,
-	    asState);
-    } else if (asState->seen < e->mem_obj->inmem_hi) {
-	debug(53, 3) ("asHandleReply: asState->seen < e->mem_obj->inmem_hi %s\n", storeUrl(e));
-	storeClientCopy(asState->sc,
-	    e,
-	    asState->seen,
-	    asState->offset,
-	    4096,
-	    buf,
-	    asHandleReply,
-	    asState);
-    } else {
-	debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
-	memFree(buf, MEM_4K_BUF);
-	asStateFree(asState);
+  asState->seen = asState->offset + size;
+  asState->offset += (s - buf);
+  debug (53, 3) ("asState->seen = %d, asState->offset = %d\n",
+		 asState->seen, asState->offset);
+  if (e->store_status == STORE_PENDING)
+    {
+      debug (53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl (e));
+      storeClientCopy (asState->sc,
+		       e,
+		       asState->seen,
+		       asState->offset,
+		       4096,
+		       buf,
+		       asHandleReply,
+		       asState);
+    }
+  else if (asState->seen < e->mem_obj->inmem_hi)
+    {
+      debug (53, 3) ("asHandleReply: asState->seen < e->mem_obj->inmem_hi %s\n", storeUrl (e));
+      storeClientCopy (asState->sc,
+		       e,
+		       asState->seen,
+		       asState->offset,
+		       4096,
+		       buf,
+		       asHandleReply,
+		       asState);
+    }
+  else
+    {
+      debug (53, 3) ("asHandleReply: Done: %s\n", storeUrl (e));
+      memFree (buf, MEM_4K_BUF);
+      asStateFree (asState);
     }
 }
 
 static void
-asStateFree(void *data)
+asStateFree (void *data)
 {
-    ASState *asState = data;
-    debug(53, 3) ("asnStateFree: %s\n", storeUrl(asState->entry));
-    storeUnregister(asState->sc, asState->entry, asState);
-    storeUnlockObject(asState->entry);
-    requestUnlink(asState->request);
-    cbdataFree(asState);
+  ASState *asState = data;
+  debug (53, 3) ("asnStateFree: %s\n", storeUrl (asState->entry));
+  storeUnregister (asState->sc, asState->entry, asState);
+  storeUnlockObject (asState->entry);
+  requestUnlink (asState->request);
+  cbdataFree (asState);
 }
 
 
@@ -308,137 +331,148 @@ asStateFree(void *data)
  * number */
 
 static int
-asnAddNet(char *as_string, int as_number)
+asnAddNet (char *as_string, int as_number)
 {
-    rtentry *e = xmalloc(sizeof(rtentry));
-    struct radix_node *rn;
-    char dbg1[32], dbg2[32];
-    intlist **Tail = NULL;
-    intlist *q = NULL;
-    as_info *asinfo = NULL;
-    struct in_addr in_a, in_m;
-    long mask, addr;
-    char *t;
-    int bitl;
+  rtentry *e = xmalloc (sizeof (rtentry));
+  struct radix_node *rn;
+  char dbg1[32], dbg2[32];
+  intlist **Tail = NULL;
+  intlist *q = NULL;
+  as_info *asinfo = NULL;
+  struct in_addr in_a, in_m;
+  long mask, addr;
+  char *t;
+  int bitl;
 
-    t = strchr(as_string, '/');
-    if (t == NULL) {
-	debug(53, 3) ("asnAddNet: failed, invalid response from whois server.\n");
-	return 0;
+  t = strchr (as_string, '/');
+  if (t == NULL)
+    {
+      debug (53, 3) ("asnAddNet: failed, invalid response from whois server.\n");
+      return 0;
     }
-    *t = '\0';
-    addr = inet_addr(as_string);
-    bitl = atoi(t + 1);
-    if (bitl < 0)
-	bitl = 0;
-    if (bitl > 32)
-	bitl = 32;
-    mask = bitl ? 0xfffffffful << (32 - bitl) : 0;
+  *t = '\0';
+  addr = inet_addr (as_string);
+  bitl = atoi (t + 1);
+  if (bitl < 0)
+    bitl = 0;
+  if (bitl > 32)
+    bitl = 32;
+  mask = bitl ? 0xfffffffful << (32 - bitl) : 0;
 
-    in_a.s_addr = addr;
-    in_m.s_addr = mask;
-    xstrncpy(dbg1, inet_ntoa(in_a), 32);
-    xstrncpy(dbg2, inet_ntoa(in_m), 32);
-    addr = ntohl(addr);
-    /*mask = ntohl(mask); */
-    debug(53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
-    memset(e, '\0', sizeof(rtentry));
-    store_m_int(addr, e->e_addr);
-    store_m_int(mask, e->e_mask);
-    rn = rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
-    if (rn != NULL) {
-	asinfo = ((rtentry *) rn)->e_info;
-	if (intlistFind(asinfo->as_number, as_number)) {
-	    debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
-		dbg1, bitl, as_number);
-	} else {
-	    debug(53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
-	    for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next);
-	    q = xcalloc(1, sizeof(intlist));
-	    q->i = as_number;
-	    *(Tail) = q;
-	    e->e_info = asinfo;
+  in_a.s_addr = addr;
+  in_m.s_addr = mask;
+  xstrncpy (dbg1, inet_ntoa (in_a), 32);
+  xstrncpy (dbg2, inet_ntoa (in_m), 32);
+  addr = ntohl (addr);
+  /*mask = ntohl(mask); */
+  debug (53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
+  memset (e, '\0', sizeof (rtentry));
+  store_m_int (addr, e->e_addr);
+  store_m_int (mask, e->e_mask);
+  rn = rn_lookup (e->e_addr, e->e_mask, AS_tree_head);
+  if (rn != NULL)
+    {
+      asinfo = ((rtentry *) rn)->e_info;
+      if (intlistFind (asinfo->as_number, as_number))
+	{
+	  debug (53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
+			 dbg1, bitl, as_number);
 	}
-    } else {
-	q = xcalloc(1, sizeof(intlist));
-	q->i = as_number;
-	asinfo = xmalloc(sizeof(asinfo));
-	asinfo->as_number = q;
-	rn = rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
-	rn = rn_match(e->e_addr, AS_tree_head);
-	assert(rn != NULL);
-	e->e_info = asinfo;
+      else
+	{
+	  debug (53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
+	  for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next);
+	  q = xcalloc (1, sizeof (intlist));
+	  q->i = as_number;
+	  *(Tail) = q;
+	  e->e_info = asinfo;
+	}
     }
-    if (rn == 0) {
-	xfree(e);
-	debug(53, 3) ("asnAddNet: Could not add entry.\n");
-	return 0;
+  else
+    {
+      q = xcalloc (1, sizeof (intlist));
+      q->i = as_number;
+      asinfo = xmalloc (sizeof (asinfo));
+      asinfo->as_number = q;
+      rn = rn_addroute (e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
+      rn = rn_match (e->e_addr, AS_tree_head);
+      assert (rn != NULL);
+      e->e_info = asinfo;
     }
-    e->e_info = asinfo;
-    return 1;
+  if (rn == 0)
+    {
+      xfree (e);
+      debug (53, 3) ("asnAddNet: Could not add entry.\n");
+      return 0;
+    }
+  e->e_info = asinfo;
+  return 1;
 }
 
 static int
-destroyRadixNode(struct radix_node *rn, void *w)
+destroyRadixNode (struct radix_node *rn, void *w)
 {
-    struct radix_node_head *rnh = (struct radix_node_head *) w;
+  struct radix_node_head *rnh = (struct radix_node_head *) w;
 
-    if (rn && !(rn->rn_flags & RNF_ROOT)) {
-	rtentry *e = (rtentry *) rn;
-	rn = rn_delete(rn->rn_key, rn->rn_mask, rnh);
-	if (rn == 0)
-	    debug(53, 3) ("destroyRadixNode: internal screwup\n");
-	destroyRadixNodeInfo(e->e_info);
-	xfree(rn);
+  if (rn && !(rn->rn_flags & RNF_ROOT))
+    {
+      rtentry *e = (rtentry *) rn;
+      rn = rn_delete (rn->rn_key, rn->rn_mask, rnh);
+      if (rn == 0)
+	debug (53, 3) ("destroyRadixNode: internal screwup\n");
+      destroyRadixNodeInfo (e->e_info);
+      xfree (rn);
     }
-    return 1;
+  return 1;
 }
 
 static void
-destroyRadixNodeInfo(as_info * e_info)
+destroyRadixNodeInfo (as_info * e_info)
 {
-    intlist *prev = NULL;
-    intlist *data = e_info->as_number;
-    while (data) {
-	prev = data;
-	data = data->next;
-	xfree(prev);
+  intlist *prev = NULL;
+  intlist *data = e_info->as_number;
+  while (data)
+    {
+      prev = data;
+      data = data->next;
+      xfree (prev);
     }
-    xfree(data);
+  xfree (data);
 }
 
 static int
-mask_len(int mask)
+mask_len (u_long mask)
 {
-    int len = 32;
-    if (mask == 0)
-	return 0;
-    while ((mask & 1) == 0) {
-	len--;
-	mask >>= 1;
-    }
-    return len;
-}
-
-static int
-printRadixNode(struct radix_node *rn, void *w)
-{
-    StoreEntry *sentry = w;
-    rtentry *e = (rtentry *) rn;
-    intlist *q;
-    as_info *asinfo;
-    struct in_addr addr;
-    struct in_addr mask;
-    assert(e);
-    assert(e->e_info);
-    (void) get_m_int(addr.s_addr, e->e_addr);
-    (void) get_m_int(mask.s_addr, e->e_mask);
-    storeAppendPrintf(sentry, "%15s/%d\t",
-	inet_ntoa(addr), mask_len(ntohl(mask.s_addr)));
-    asinfo = e->e_info;
-    assert(asinfo->as_number);
-    for (q = asinfo->as_number; q; q = q->next)
-	storeAppendPrintf(sentry, " %d", q->i);
-    storeAppendPrintf(sentry, "\n");
+  int len = 32;
+  if (mask == 0)
     return 0;
+  while ((mask & 1) == 0)
+    {
+      len--;
+      mask >>= 1;
+    }
+  return len;
+}
+
+static int
+printRadixNode (struct radix_node *rn, void *w)
+{
+  StoreEntry *sentry = w;
+  rtentry *e = (rtentry *) rn;
+  intlist *q;
+  as_info *asinfo;
+  struct in_addr addr;
+  struct in_addr mask;
+  assert (e);
+  assert (e->e_info);
+  (void) get_m_int (addr.s_addr, e->e_addr);
+  (void) get_m_int (mask.s_addr, e->e_mask);
+  storeAppendPrintf (sentry, "%15s/%d\t",
+		     inet_ntoa (addr), mask_len (ntohl (mask.s_addr)));
+  asinfo = e->e_info;
+  assert (asinfo->as_number);
+  for (q = asinfo->as_number; q; q = q->next)
+    storeAppendPrintf (sentry, " %d", q->i);
+  storeAppendPrintf (sentry, "\n");
+  return 0;
 }
