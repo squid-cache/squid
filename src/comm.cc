@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.230 1998/02/21 00:56:52 rousskov Exp $
+ * $Id: comm.cc,v 1.231 1998/02/25 20:13:47 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -287,13 +287,13 @@ comm_open(int sock_type,
     return new_socket;
 }
 
-   /*
-    * NOTE: set the listen queue to Squid_MaxFD/4 and rely on the kernel to      
-    * impose an upper limit.  Solaris' listen(3n) page says it has   
-    * no limit on this parameter, but sys/socket.h sets SOMAXCONN 
-    * to 5.  HP-UX currently has a limit of 20.  SunOS is 5 and
-    * OSF 3.0 is 8.
-    */
+/*
+ * NOTE: set the listen queue to Squid_MaxFD/4 and rely on the kernel to      
+ * impose an upper limit.  Solaris' listen(3n) page says it has   
+ * no limit on this parameter, but sys/socket.h sets SOMAXCONN 
+ * to 5.  HP-UX currently has a limit of 20.  SunOS is 5 and
+ * OSF 3.0 is 8.
+ */
 int
 comm_listen(int sock)
 {
