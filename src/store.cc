@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.529 2000/07/18 06:16:41 wessels Exp $
+ * $Id: store.cc,v 1.530 2000/07/20 16:10:41 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -528,7 +528,7 @@ storeCheckTooSmall(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
-	return 1;
+	return 0;
     if (STORE_OK == e->store_status)
 	if (mem->object_sz < Config.Store.minObjectSize)
 	    return 1;
