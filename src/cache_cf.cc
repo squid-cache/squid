@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.388 2001/08/16 00:16:15 hno Exp $
+ * $Id: cache_cf.cc,v 1.389 2001/08/19 16:28:33 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -294,7 +294,7 @@ configDoConfigure(void)
 	/* people might want a zero-sized cache on purpose */
 	(void) 0;
     else if (Config.Swap.maxSize < (Config.memMaxSize >> 10))
-	fatal("cache_swap is lower than cache_mem");
+	debug(3, 0) ("WARNING cache_mem is larger than total disk cache space!\n");
     if (Config.Announce.period > 0) {
 	Config.onoff.announce = 1;
     } else if (Config.Announce.period < 1) {
