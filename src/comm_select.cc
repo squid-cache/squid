@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.14 1998/10/02 05:02:29 wessels Exp $
+ * $Id: comm_select.cc,v 1.15 1998/10/03 03:39:46 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -531,7 +531,6 @@ comm_select(int msec)
     fd_set writefds;
     PF *hdl = NULL;
     int fd;
-    int i;
     int maxfd;
     int num;
     int callicp = 0, callhttp = 0;
