@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.17 1997/07/07 05:29:51 wessels Exp $
+ * $Id: peer_select.cc,v 1.18 1997/07/14 05:57:55 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -166,7 +166,7 @@ peerCheckAlwaysDirectDone(int answer, void *data)
     ps_state *psstate = data;
     psstate->acl_checklist = NULL;
     debug(44, 3) ("peerCheckAlwaysDirectDone: %d\n", answer);
-    psstate->always_direct = answer ? 1 : -1;
+    psstate->always_direct = answer ? -1 : 1;
     peerSelectFoo(psstate);
 }
 

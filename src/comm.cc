@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.173 1997/07/14 03:33:35 wessels Exp $
+ * $Id: comm.cc,v 1.174 1997/07/14 05:57:53 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -578,7 +578,7 @@ comm_close(int fd)
     if (!fde->open)
 	return;
     assert(fde->type != FD_FILE);
-    fde->open = 0;
+    memset(fde, '\0', sizeof(fde));
     CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     commCallCloseHandlers(fd);
     fd_close(fd);		/* update fdstat */
@@ -857,7 +857,6 @@ comm_poll(time_t sec)
 	aioCheckCallbacks();
 #endif
 	for (;;) {
-	    poll_time = sec > 0 ? 1000 : 0;
 	    num = poll(pfds, nfds, poll_time);
 	    select_loops++;
 	    if (num >= 0)
@@ -1072,7 +1071,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
     fde *fde;
     assert(fd >= 0);
     fde = &fd_table[fd];
-    debug(5, 5) ("commSetSelect: FD %d, handler=%p, data=%p\n", fd, handler, client_data);
+    debug(5, 5) ("commSetSelect: FD %d, type=%d, handler=%p, data=%p\n", fd, type, handler, client_data);
     if (type & COMM_SELECT_READ) {
 	fde->read_handler = handler;
 	fde->read_data = client_data;

@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.46 1997/07/14 03:33:36 wessels Exp $
+ * $Id: debug.cc,v 1.47 1997/07/14 05:57:54 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -107,7 +107,6 @@
 
 static char *debug_log_file = NULL;
 static char *accessLogTime _PARAMS((time_t));
-extern int opt_debug_stderr;
 
 #ifdef __STDC__
 void
