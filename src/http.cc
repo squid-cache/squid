@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.294 1998/07/18 07:43:04 wessels Exp $
+ * $Id: http.cc,v 1.295 1998/07/20 16:27:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -818,6 +818,7 @@ httpStart(FwdState * fwdState, int fd)
 	    PROTO_NONE, storeUrl(httpState->entry));
 	xstrncpy(proxy_req->host, httpState->peer->host, SQUIDHOSTNAMELEN);
 	proxy_req->port = httpState->peer->http_port;
+	proxy_req->flags = orig_req->flags;
 	httpState->request = requestLink(proxy_req);
 	httpState->peer = httpState->peer;
 	httpState->orig_request = requestLink(orig_req);
