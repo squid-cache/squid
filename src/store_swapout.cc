@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.22 1998/07/22 20:54:04 wessels Exp $
+ * $Id: store_swapout.cc,v 1.23 1998/08/19 04:32:14 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -281,8 +281,8 @@ storeSwapOutFileOpened(void *data, int fd, int errcode)
     }
     assert(e->swap_status == SWAPOUT_OPENING);
     if (fd < 0) {
-	debug(20, 0) ("storeSwapOutFileOpened: Unable to open swapfile: %s\n",
-	    ctrlp->swapfilename);
+	debug(20, 0) ("storeSwapOutFileOpened: Unable to open swapfile: %s\n\t%s\n",
+	    ctrlp->swapfilename, xstrerror());
 	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
 	e->swap_status = ctrlp->oldswapstatus;
