@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.37 2002/02/20 14:16:07 hno Exp $
+ * $Id: authenticate.cc,v 1.38 2002/06/12 11:47:59 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -197,10 +197,7 @@ authenticateAuthUserRequestNew(void)
 	auth_user_request_pool = memPoolCreate("Authenticate Request Data", sizeof(auth_user_request_t));
     temp_request = memPoolAlloc(auth_user_request_pool);
     assert(temp_request != NULL);
-    temp_request->auth_user = NULL;
-    temp_request->message = NULL;
-    temp_request->scheme_data = NULL;
-    temp_request->references = 0;
+    memset(temp_request, '\0', sizeof(auth_user_request_t));
     return temp_request;
 }
 
