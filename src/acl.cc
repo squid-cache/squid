@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.36 1996/09/15 05:04:11 wessels Exp $
+ * $Id: acl.cc,v 1.37 1996/09/15 08:04:57 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -832,7 +832,7 @@ aclCheck(struct _acl_access *A, aclCheck_t * checklist)
 static void
 aclDestroyIpList(struct _acl_ip_data *data)
 {
-    struct _acl_ip_data *next;
+    struct _acl_ip_data *next = NULL;
     for (; data; data = next) {
 	next = data->next;
 	safe_free(data);
@@ -842,7 +842,7 @@ aclDestroyIpList(struct _acl_ip_data *data)
 static void
 aclDestroyTimeList(struct _acl_time_data *data)
 {
-    struct _acl_time_data *next;
+    struct _acl_time_data *next = NULL;
     for (; data; data = next) {
 	next = data->next;
 	safe_free(data);
@@ -852,7 +852,7 @@ aclDestroyTimeList(struct _acl_time_data *data)
 static void
 aclDestroyRegexList(struct _relist *data)
 {
-    struct _relist *next;
+    struct _relist *next = NULL;
     for (; data; data = next) {
 	next = data->next;
 	regfree(&data->regex);
