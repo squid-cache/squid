@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.c,v 1.19 2004/12/20 16:30:30 robertc Exp $
+ * $Id: GNUregex.c,v 1.20 2005/01/06 10:55:34 serassio Exp $
  */
 
 /* Extended regular expression matching and search library,
@@ -4355,11 +4355,7 @@ regexec(preg, string, nmatch, pmatch, eflags)
  * from either regcomp or regexec.   We don't use PREG here.  */
 
 size_t
-regerror(errcode, preg, errbuf, errbuf_size)
-     int errcode;
-     const regex_t *preg;
-     char *errbuf;
-     size_t errbuf_size;
+regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 {
     const char *msg;
     size_t msg_size;
