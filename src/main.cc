@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.187 1997/11/03 20:04:44 wessels Exp $
+ * $Id: main.cc,v 1.188 1997/11/04 23:29:36 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -462,6 +462,7 @@ mainReconfigure(void)
 {
     debug(1, 0) ("Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
+    storeDirCloseSwapLogs();
     parseConfigFile(ConfigFile);
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
@@ -471,6 +472,7 @@ mainReconfigure(void)
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.onoff.accel_with_proxy))
 	neighbors_open(theOutIcpConnection);
+    storeDirOpenSwapLogs();
     debug(1, 0) ("Ready to serve requests.\n");
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.228 1997/10/28 21:53:35 wessels Exp $
+ * $Id: cache_cf.cc,v 1.229 1997/11/04 23:29:35 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -476,7 +476,6 @@ parse_cachedir(struct _cacheSwap *swap)
 	xfree(swap->swapDirs);
 	swap->swapDirs = tmp;
     }
-    debug(20, 1) ("Creating Swap Dir #%d in %s\n", swap->n_configured + 1, path);
     tmp = swap->swapDirs + swap->n_configured;
     tmp->path = xstrdup(path);
     tmp->max_size = size;
