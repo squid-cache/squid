@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.101 1996/09/11 22:40:15 wessels Exp $
+ * $Id: store.cc,v 1.102 1996/09/11 22:41:14 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1861,7 +1861,7 @@ int storeGetMemSpace(size, check_vm_number)
 	} else if (storeCheckPurgeMem(e)) {
 	    *(list + list_count) = e;
 	    list_count++;
- 	} else if (!storeEntryLocked(e)) {
+	} else if (!storeEntryLocked(e)) {
 	    *(list + list_count) = e;
 	    list_count++;
 	} else {
@@ -1889,13 +1889,13 @@ int storeGetMemSpace(size, check_vm_number)
 		break;
 	e = *(list + i);
 	if (storeCheckPurgeMem(e)) {
-		storePurgeMem(e);
-		n_purged++;
+	    storePurgeMem(e);
+	    n_purged++;
 	} else if (!storeEntryLocked(e)) {
-		storeRelease(e);
-		n_released++;
+	    storeRelease(e);
+	    n_released++;
 	} else {
-		fatal_dump("storeGetMemSpace: Bad Entry in LRU list");
+	    fatal_dump("storeGetMemSpace: Bad Entry in LRU list");
 	}
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.19 1996/09/11 22:39:50 wessels Exp $
+ * $Id: dnsserver.cc,v 1.20 1996/09/11 22:41:12 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -224,7 +224,7 @@ int do_debug = 0;
 
 /* error messages from gethostbyname() */
 static char *my_h_msgs(x)
-	int x;
+     int x;
 {
     if (x == HOST_NOT_FOUND)
 	return "Host not found (authoritative)";
