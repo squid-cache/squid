@@ -52,7 +52,6 @@ extern int parseConfigFile _PARAMS((const char *file_name));
 extern void intlistDestroy _PARAMS((intlist **));
 extern void wordlistDestroy _PARAMS((wordlist **));
 extern void configFreeMemory _PARAMS((void));
-extern void dump_all _PARAMS((void));
 
 extern void cbdataInit _PARAMS((void));
 extern void cbdataAdd _PARAMS((void *p));
@@ -553,7 +552,7 @@ extern OBJH statFiledescriptors;
 extern OBJH log_enable;
 extern OBJH info_get;
 extern OBJH server_list;
-extern OBJH parameter_get;
+extern OBJH dump_config;
 extern OBJH storeDirStats;
 extern OBJH pconnHistDump;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.7 1997/07/14 21:11:01 wessels Exp $
+ * $Id: cf_gen.cc,v 1.8 1997/08/25 03:51:48 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -34,9 +34,9 @@
  *
  *		The output files are as follows:
  *		cf_parser.c - this file contains, default_all() which
- *			  initializes
- *			  variables with the default values, parse_line() that
- *			  parses line from squid.conf, dump_all that dumps the
+ *			  initializes variables with the default
+ *			  values, parse_line() that parses line from
+ *			  squid.conf, dump_config that dumps the
  *			  current the values of the variables.
  *		squid.conf - default configuration file given to the server
  *			 administrator.
@@ -69,6 +69,7 @@ typedef struct Entry {
     char *type;
     char *loc;
     char *default_value;
+    char *default_if_none;
     char *comment;
     Line *doc;
     struct Entry *next;
@@ -82,6 +83,7 @@ static void gen_parse(Entry *, FILE *);
 static void gen_dump(Entry *, FILE *);
 static void gen_free(Entry *, FILE *);
 static void gen_conf(Entry *, FILE *);
+static void gen_default_if_none(Entry *, FILE *);
 
 int
 main(int argc, char *argv[])
@@ -151,6 +153,11 @@ main(int argc, char *argv[])
 		while (isspace(*ptr))
 		    ptr++;
 		curr->default_value = strdup(ptr);
+	    } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
+		ptr = buff + 16;
+		while (isspace(*ptr))
+		    ptr++;
+		curr->default_if_none = strdup(ptr);
 	    } else if (!strncmp(buff, "LOC:", 4)) {
 		if ((ptr = strtok(buff + 4, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
@@ -232,7 +239,7 @@ main(int argc, char *argv[])
     /*-------------------------------------------------------------------*
      * Generate default_all()
      * Generate parse_line()
-     * Generate dump_all()
+     * Generate dump_config()
      * Generate free_all()
      * Generate example squid.conf file
      *-------------------------------------------------------------------*/
@@ -253,6 +260,7 @@ main(int argc, char *argv[])
 	input_filename, argv[0]
 	);
     rc = gen_default(entries, fp);
+    gen_default_if_none(entries, fp);
     gen_parse(entries, fp);
     gen_dump(entries, fp);
     gen_free(entries, fp);
@@ -285,7 +293,6 @@ gen_default(Entry * head, FILE * fp)
 	"\tparse_line(tmp_line);\n"
 	"}\n"
 	);
-
     fprintf(fp,
 	"void\n"
 	"default_all(void)\n"
@@ -317,6 +324,31 @@ gen_default(Entry * head, FILE * fp)
     fprintf(fp, "\tcfg_filename = NULL;\n");
     fprintf(fp, "}\n\n");
     return rc;
+}
+
+static void
+gen_default_if_none(Entry * head, FILE * fp)
+{
+    Entry *entry;
+    fprintf(fp,
+	"void\n"
+	"defaults_if_none(void)\n"
+	"{\n"
+	);
+    for (entry = head; entry != NULL; entry = entry->next) {
+	assert(entry->name);
+	assert(entry->loc);
+	if (entry->default_if_none == NULL)
+	    continue;
+	fprintf(fp,
+	    "\tif (check_null_%s(%s))\n"
+	    "\t\tdefault_line(\"%s %s\");\n",
+	    entry->type,
+	    entry->loc,
+	    entry->name,
+	    entry->default_if_none);
+    }
+    fprintf(fp, "}\n\n");
 }
 
 static void
@@ -369,16 +401,17 @@ gen_dump(Entry * head, FILE * fp)
     Entry *entry;
     fprintf(fp,
 	"void\n"
-	"dump_all(void)\n"
+	"dump_config(StoreEntry *entry)\n"
 	"{\n"
 	);
     for (entry = head; entry != NULL; entry = entry->next) {
 	assert(entry->loc);
 	if (strcmp(entry->loc, "none") == 0)
 	    continue;
-	fprintf(fp, "\tprintf(\"%s = \");\n", entry->loc);
-	fprintf(fp, "\tdump_%s(%s);\n", entry->type, entry->loc);
-	fprintf(fp, "\tprintf(\"\\n\");\n");
+	fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
+		entry->type,
+		entry->name,
+		entry->loc);
     }
     fprintf(fp, "}\n\n");
 }

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.85 1997/08/10 04:42:32 wessels Exp $
+#  $Id: Makefile.in,v 1.86 1997/08/25 03:51:46 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -132,8 +132,7 @@ OBJS	 	= \
 		$(XTRA_OBJS)
 
 DEFAULTS        = \
-	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
-	-DDEFAULT_SWAP_DIR=\"$(DEFAULT_SWAP_DIR)\"
+	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
 all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 

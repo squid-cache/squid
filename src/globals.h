@@ -17,7 +17,6 @@ extern char ThisCache[SQUIDHOSTNAMELEN << 1];
 extern char config_input_line[BUFSIZ];
 extern const char *AclMatchedName;	/* NULL */
 extern const char *DefaultConfigFile;	/* DEFAULT_CONFIG_FILE */
-extern const char *DefaultSwapDir;	/* DEFAULT_SWAP_DIR */
 extern const char *RequestMethodStr[];
 extern const char *ProtocolStr[];
 extern const char *cfg_filename;	/* NULL */

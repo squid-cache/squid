@@ -1,6 +1,7 @@
 NAME: http_port ascii_port
 TYPE: ushortlist
-DEFAULT: 3128
+DEFAULT: none
+DEFAULT_IF_NONE: 3128
 LOC: Config.Port.http
 DOC_START
 	The port number where squid will listen for HTTP client
@@ -488,6 +489,7 @@ DOC_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
+DEFAULT_IF_NONE: @DEFAULT_SWAP_DIR@ 100 256 16
 LOC: Config.cacheSwap
 DOC_START
 	Directory for on-disk cache storage.  The cache will change into
