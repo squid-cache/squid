@@ -1,10 +1,7 @@
-#ifndef _SNMP_H_
-#define _SNMP_H_
+/* -*- c++ -*- */
+#ifndef _SNMP_MSG_H_
+#define _SNMP_MSG_H_
 
-/*
- * Definitions for the Simple Network Management Protocol (RFC 1067).
- *
- */
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
@@ -27,53 +24,26 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.9 1998/02/22 11:48:42 kostas Exp $
+ * Author: Ryan Troll <ryan+@andrew.cmu.edu>
+ * 
+ * $Id: snmp_msg.h,v 1.1 1998/02/22 11:48:47 kostas Exp $
  * 
  **********************************************************************/
 
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
+#define SNMP_VERSION_1	    0 /* RFC 1157 */
+#define SNMP_VERSION_2	    1 /* RFC 1901 */
+
+#ifdef __cplusplus
+extern "C" {
 #endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
+
+u_char *snmp_msg_Encode(u_char *, int *, u_char *, 
+			int, int, struct snmp_pdu *);
+u_char *snmp_msg_Decode(u_char *, int *, u_char *, 
+			int *, int *, struct snmp_pdu *);
+
+#ifdef __cplusplus
+}
 #endif
 
-/* These come first */
-#include "asn1.h"
-#include "snmp_error.h"
-#include "mibii.h"
-#include "snmp_extra.h"
-#include "snmp_dump.h"
-
-/* I didn't touch this */
-#include "snmp_session.h"
-
-/* The various modules */
-#include <snmp_vars.h>
-#include <snmp_pdu.h>
-#include <snmp_msg.h>
-
-/* Other functions */
-#include <snmp_coexist.h>
-#include <version.h>
-#include <snmp_error.h>
-#include <snmp_api_error.h>
-#include <mini-client.h>
-
-/* Other stuff I didn't touch */
-#include <snmp_impl.h>
-#include <snmp_api.h>
-#include <snmp_client.h>
-#include <snmp-internal.h>
-#include <mib.h>
-#include <parse.h>
-#include <snmp_compat.h>
-
-#ifndef SQUID_H
-#ifdef __STDC__
-void (*snmplib_debug) (int,char *, ...); 
-#else
-void (*snmplib_debug) (va_alist));
-#endif
-#endif
-#endif /* _SNMP_H_ */
+#endif /* _SNMP_MSG_H_ */

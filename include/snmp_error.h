@@ -1,10 +1,7 @@
-#ifndef _SNMP_H_
-#define _SNMP_H_
+/* -*- c++ -*- */
+#ifndef _SNMP_ERROR_H_
+#define _SNMP_ERROR_H_
 
-/*
- * Definitions for the Simple Network Management Protocol (RFC 1067).
- *
- */
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
@@ -27,53 +24,45 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.9 1998/02/22 11:48:42 kostas Exp $
+ * $Id: snmp_error.h,v 1.1 1998/02/22 11:48:46 kostas Exp $
  * 
  **********************************************************************/
 
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
+/*
+ * RFC 1905: Protocol Operations for SNMPv2
+ *
+ * PDU : Error Status Values
+ */
+
+#define SNMP_ERR_NOERROR             (0x0)
+#define SNMP_ERR_TOOBIG              (0x1)
+#define SNMP_ERR_NOSUCHNAME          (0x2)
+#define SNMP_ERR_BADVALUE            (0x3)
+#define SNMP_ERR_READONLY            (0x4)
+#define SNMP_ERR_GENERR              (0x5)
+#define SNMP_ERR_NOACCESS            (0x6)
+#define SNMP_ERR_WRONGTYPE           (0x7)
+#define SNMP_ERR_WRONGLENGTH         (0x8)
+#define SNMP_ERR_WRONGENCODING       (0x9)
+#define SNMP_ERR_WRONGVALUE          (0x10)
+#define SNMP_ERR_NOCREATION          (0x11)
+#define SNMP_ERR_INCONSISTENTVALUE   (0x12)
+#define SNMP_ERR_RESOURCEUNAVAILABLE (0x13)
+#define SNMP_ERR_COMMITFAILED        (0x14)
+#define SNMP_ERR_UNDOFAILED          (0x15)
+#define SNMP_ERR_AUTHORIZATIONERROR  (0x16)
+#define SNMP_ERR_NOTWRITABLE         (0x17)
+#define SNMP_ERR_INCONSISTENTNAME    (0x18)
+
+#ifdef __cplusplus
+
+extern "C" {
 #endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
+
+  char *snmp_errstring(int);
+
+#ifdef __cplusplus
+}
 #endif
 
-/* These come first */
-#include "asn1.h"
-#include "snmp_error.h"
-#include "mibii.h"
-#include "snmp_extra.h"
-#include "snmp_dump.h"
-
-/* I didn't touch this */
-#include "snmp_session.h"
-
-/* The various modules */
-#include <snmp_vars.h>
-#include <snmp_pdu.h>
-#include <snmp_msg.h>
-
-/* Other functions */
-#include <snmp_coexist.h>
-#include <version.h>
-#include <snmp_error.h>
-#include <snmp_api_error.h>
-#include <mini-client.h>
-
-/* Other stuff I didn't touch */
-#include <snmp_impl.h>
-#include <snmp_api.h>
-#include <snmp_client.h>
-#include <snmp-internal.h>
-#include <mib.h>
-#include <parse.h>
-#include <snmp_compat.h>
-
-#ifndef SQUID_H
-#ifdef __STDC__
-void (*snmplib_debug) (int,char *, ...); 
-#else
-void (*snmplib_debug) (va_alist));
-#endif
-#endif
-#endif /* _SNMP_H_ */
+#endif /* _SNMP_ERROR_H_ */
