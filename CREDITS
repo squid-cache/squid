@@ -1,0 +1,12 @@
+#
+# Credits for the great code that we have recycled/adopted/borrowed/copied
+#
+
+#
+# What / From where / Major modifications if any
+#
+
+base64.c::base64_encode
+	adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c
+	modified to work with strings instead of files
+
