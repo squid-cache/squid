@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.159 2003/03/08 09:35:16 robertc Exp $
+ * $Id: typedefs.h,v 1.160 2003/03/11 23:05:23 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -355,7 +355,7 @@ typedef ssize_t mb_size_t;
 typedef ssize_t HttpHeaderPos;
 
 /* big mask for http headers */
-typedef char HttpHeaderMask[8];
+typedef char HttpHeaderMask[12];
 
 /* a common objPackInto interface; used by debugObj */
 typedef void (*ObjPackMethod) (void *obj, Packer * p);
