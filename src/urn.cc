@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.26 1998/04/06 22:21:38 wessels Exp $
+ * $Id: urn.cc,v 1.27 1998/04/09 17:54:23 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -44,6 +44,7 @@ typedef struct {
     StoreEntry *entry;
     StoreEntry *urlres_e;
     request_t *request;
+    request_t *urlres_r;
     int flags;
 } UrnState;
 
@@ -146,6 +147,7 @@ urnStart(request_t * r, StoreEntry * e)
 	storeClientListAdd(urlres_e, urnState);
     }
     urnState->urlres_e = urlres_e;
+    urnState->urlres_r = requestLink(urlres_r);
     storeClientCopy(urlres_e,
 	0,
 	0,
@@ -268,6 +270,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     storeUnlockObject(urlres_e);
     storeUnlockObject(urnState->entry);
     requestUnlink(urnState->request);
+    requestUnlink(urnState->urlres_r);
     cbdataFree(urnState);
 }
 
