@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.h,v 1.11 2003/05/12 18:49:11 hno Exp $
+ * $Id: ntlmauth.h,v 1.12 2003/08/05 21:40:04 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -57,24 +57,7 @@
 #include "config.h"
 
 /* All of this cruft is little endian */
-#ifdef WORDS_BIGENDIAN
-#define SSWAP(x)	(bswap16((x)))
-#define WSWAP(x)	(bswap32((x)))
-#else
-#define SSWAP(x)	(x)
-#define WSWAP(x)	(x)
-#endif
-
-#ifdef HAVE_BYTESWAP_H
-#include <byteswap.h>
-#define bswap16(x) bswap_16(x)
-#define bswap32(x) bswap_32(x)
-#else	 /* HAVE_BISTWAP_H */
-#define bswap16(x) (((((u_int16_t)x) >> 8) & 0xff) | ((((u_int16_t)x) & 0xff) << 8))
-#define bswap32(x) \
-    (((((u_int32_t)x) & 0xff000000) >> 24) | ((((u_int32_t)x) & 0x00ff0000) >>  8) | \
-     ((((u_int32_t)x) & 0x0000ff00) <<  8) | ((((u_int32_t)x) & 0x000000ff) << 24))
-#endif /* HAVE_BITSWAP_H */
+#include "squid_endian.h"
 
 /* Used internally. Microsoft seems to think this is right, I believe them.
  * Right. */

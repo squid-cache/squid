@@ -1,5 +1,5 @@
 /*
- * $Id: ntlm.h,v 1.5 2003/01/23 00:36:35 robertc Exp $
+ * $Id: ntlm.h,v 1.6 2003/08/05 21:40:02 robertc Exp $
  *
  * AUTHOR: Andrew Doran <ad@interlude.eu.org>
  *
@@ -41,13 +41,7 @@
 #include <sys/types.h>
 
 /* All of this cruft is little endian */
-#ifdef WORDS_BIGENDIAN
-#define SSWAP(x)	(bswap16((x)))
-#define WSWAP(x)	(bswap32((x)))
-#else
-#define SSWAP(x)	(x)
-#define WSWAP(x)	(x)
-#endif
+#include "squid_endian.h"
 
 /* NTLM request types that we know about */
 #define NTLM_NEGOTIATE		1

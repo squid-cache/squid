@@ -82,6 +82,12 @@
 /* Define to 1 if you have the <bstring.h> header file. */
 #undef HAVE_BSTRING_H
 
+/* Define to 1 if you have the `bswap16' function. */
+#undef HAVE_BSWAP16
+
+/* Define to 1 if you have the `bswap32' function. */
+#undef HAVE_BSWAP32
+
 /* Define to 1 if you have the `bswap_16' function. */
 #undef HAVE_BSWAP_16
 
@@ -151,6 +157,12 @@
 
 /* Define to 1 if you have the <grp.h> header file. */
 #undef HAVE_GRP_H
+
+/* Define to 1 if you have the `htobe16' function. */
+#undef HAVE_HTOBE16
+
+/* Define to 1 if you have the `htole16' function. */
+#undef HAVE_HTOLE16
 
 /* int is defined in system headers */
 #undef HAVE_INT
@@ -510,9 +522,15 @@
 /* Define to 1 if you have the <sys/bitypes.h> header file. */
 #undef HAVE_SYS_BITYPES_H
 
+/* Define to 1 if you have the <sys/bswap.h> header file. */
+#undef HAVE_SYS_BSWAP_H
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_DIR_H
+
+/* Define to 1 if you have the <sys/endian.h> header file. */
+#undef HAVE_SYS_ENDIAN_H
 
 /* Define to 1 if you have the <sys/file.h> header file. */
 #undef HAVE_SYS_FILE_H

@@ -18,6 +18,7 @@
 #include "config.h"
 #include "ntlmauth.h"
 #include "ntlm.h"
+#include "squid_endian.h"
 #include "util.h"
 #include "smbval/smblib-common.h"
 #include "smbval/rfcnb-error.h"
@@ -308,7 +309,7 @@ manage_request()
 	    SEND("NA Broken authentication packet");
 	    return;
 	}
-	switch WSWAP(fast_header->type) {
+	switch le32toh(fast_header->type) {
 	case NTLM_NEGOTIATE:
 	    SEND("NA Invalid negotiation request received");
 	    return;
