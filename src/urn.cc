@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.68 2001/10/24 08:19:09 hno Exp $
+ * $Id: urn.cc,v 1.69 2002/02/26 15:48:16 adrian Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -35,6 +35,8 @@
 
 #include "squid.h"
 
+#define	URN_REQBUF_SZ	4096
+
 typedef struct {
     StoreEntry *entry;
     store_client *sc;
@@ -44,6 +46,8 @@ typedef struct {
     struct {
 	unsigned int force_menu:1;
     } flags;
+    char reqbuf[URN_REQBUF_SZ];
+    int reqofs;
 } UrnState;
 
 typedef struct {
@@ -146,11 +150,11 @@ urnStart(request_t * r, StoreEntry * e)
     }
     urnState->urlres_e = urlres_e;
     urnState->urlres_r = requestLink(urlres_r);
+    urnState->reqofs = 0;
     storeClientCopy(urnState->sc, urlres_e,
 	0,
-	0,
-	4096,
-	memAllocate(MEM_4K_BUF),
+	URN_REQBUF_SZ,
+	urnState->reqbuf,
 	urnHandleReply,
 	urnState);
 }
@@ -171,7 +175,7 @@ url_entry_sort(const void *A, const void *B)
 }
 
 static void
-urnHandleReply(void *data, char *buf, ssize_t size)
+urnHandleReply(void *data, char *unused_buf, ssize_t size)
 {
     UrnState *urnState = data;
     StoreEntry *e = urnState->entry;
@@ -187,35 +191,42 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     int i;
     int urlcnt = 0;
     http_version_t version;
+    char *buf = urnState->reqbuf;
 
     debug(52, 3) ("urnHandleReply: Called with size=%d.\n", (int) size);
     if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED)) {
-	memFree(buf, MEM_4K_BUF);
-	return;
+	goto error;
     }
     if (size == 0) {
-	memFree(buf, MEM_4K_BUF);
-	return;
+	goto error;
     } else if (size < 0) {
-	memFree(buf, MEM_4K_BUF);
-	return;
+	goto error;
     }
-    if (urlres_e->store_status == STORE_PENDING && size < SM_PAGE_SIZE) {
+    /* Update reqofs to point to where in the buffer we'd be */
+    urnState->reqofs += size;
+
+    /* Handle reqofs being bigger than normal */
+    if (urnState->reqofs >= URN_REQBUF_SZ) {
+        goto error;
+    }
+
+    /* If we haven't received the entire object (urn), copy more */
+    if (urlres_e->store_status == STORE_PENDING &&
+      urnState->reqofs < URN_REQBUF_SZ) {
 	storeClientCopy(urnState->sc, urlres_e,
-	    size,
-	    0,
-	    SM_PAGE_SIZE,
-	    buf,
+	    urnState->reqofs,
+	    URN_REQBUF_SZ,
+	    urnState->reqbuf + urnState->reqofs,
 	    urnHandleReply,
 	    urnState);
 	return;
     }
     /* we know its STORE_OK */
-    k = headersEnd(buf, size);
+    k = headersEnd(buf, urnState->reqofs);
     if (0 == k) {
 	debug(52, 1) ("urnHandleReply: didn't find end-of-headers for %s\n",
 	    storeUrl(e));
-	return;
+	goto error;
     }
     s = buf + k;
     assert(urlres_e->mem_obj->reply);
@@ -228,7 +239,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	err->request = requestLink(urnState->request);
 	err->url = xstrdup(storeUrl(e));
 	errorAppendEntry(e, err);
-	return;
+	goto error;
     }
     while (xisspace(*s))
 	s++;
@@ -242,7 +253,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	err->request = requestLink(urnState->request);
 	err->url = xstrdup(storeUrl(e));
 	errorAppendEntry(e, err);
-	return;
+	goto error;
     }
     min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
     qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
@@ -285,7 +296,6 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     httpBodySet(&rep->body, &mb);
     httpReplySwapOut(rep, e);
     storeComplete(e);
-    memFree(buf, MEM_4K_BUF);
     for (i = 0; i < urlcnt; i++) {
 	safe_free(urls[i].url);
 	safe_free(urls[i].host);
@@ -293,6 +303,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     safe_free(urls);
     /* mb was absorbed in httpBodySet call, so we must not clean it */
     storeUnregister(urnState->sc, urlres_e, urnState);
+error:
     storeUnlockObject(urlres_e);
     storeUnlockObject(urnState->entry);
     requestUnlink(urnState->request);

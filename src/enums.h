@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.204 2002/02/13 19:34:01 hno Exp $
+ * $Id: enums.h,v 1.205 2002/02/26 15:48:14 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -574,7 +574,6 @@ typedef enum {
     MEM_CACHE_DIGEST,
 #endif
     MEM_CLIENT_INFO,
-    MEM_CLIENT_SOCK_BUF,
     MEM_LINK_LIST,
     MEM_DLINK_NODE,
     MEM_DONTFREE,
@@ -720,6 +719,18 @@ enum {
     VARY_OTHER,
     VARY_CANCEL
 };
+
+/*
+ * Store digest state enum
+ */
+typedef enum {
+	DIGEST_READ_NONE,
+	DIGEST_READ_REPLY,
+	DIGEST_READ_HEADERS,
+	DIGEST_READ_CBLOCK,
+	DIGEST_READ_MASK,
+	DIGEST_READ_DONE
+} digest_read_state_t;
 
 /* CygWin & Windows NT Port */
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)

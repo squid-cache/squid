@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.105 2001/10/24 08:19:09 hno Exp $
+ * $Id: store_client.cc,v 1.106 2002/02/26 15:48:15 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -136,8 +136,8 @@ storeClientListAdd(StoreEntry * e, void *data)
     sc = cbdataAlloc(store_client);
     cbdataLock(data);		/* locked while we point to it */
     sc->callback_data = data;
-    sc->seen_offset = 0;
     sc->copy_offset = 0;
+    sc->cmp_offset = 0;
     sc->flags.disk_io_pending = 0;
     sc->entry = e;
     sc->type = storeClientType(e);
@@ -158,6 +158,7 @@ storeClientCallback(store_client * sc, ssize_t sz)
     STCB *callback = sc->callback;
     char *buf = sc->copy_buf;
     assert(sc->callback);
+    sc->cmp_offset = sc->copy_offset + sz;
     sc->callback = NULL;
     sc->copy_buf = NULL;
     if (cbdataValid(sc->callback_data))
@@ -175,11 +176,19 @@ storeClientCopyEvent(void *data)
     storeClientCopy2(sc->entry, sc);
 }
 
+void
+storeClientCopyOld(store_client *sc, StoreEntry *e, off_t seen_offset,
+   off_t copy_offset, size_t size, char *buf, STCB *callback, void *data)
+{
+    /* OLD API -- adrian */
+    fatal("storeClientCopyOld() has been called!\n");
+}
+
+
 /* copy bytes requested by the client */
 void
 storeClientCopy(store_client * sc,
     StoreEntry * e,
-    off_t seen_offset,
     off_t copy_offset,
     size_t size,
     char *buf,
@@ -187,9 +196,8 @@ storeClientCopy(store_client * sc,
     void *data)
 {
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
-    debug(20, 3) ("storeClientCopy: %s, seen %d, want %d, size %d, cb %p, cbdata %p\n",
+    debug(20, 3) ("storeClientCopy: %s, want %d, size %d, cb %p, cbdata %p\n",
 	storeKeyText(e->hash.key),
-	(int) seen_offset,
 	(int) copy_offset,
 	(int) size,
 	callback,
@@ -200,12 +208,13 @@ storeClientCopy(store_client * sc,
 #endif
     assert(sc->callback == NULL);
     assert(sc->entry == e);
+    assert(sc->cmp_offset == copy_offset);
     sc->copy_offset = copy_offset;
-    sc->seen_offset = seen_offset;
     sc->callback = callback;
     sc->copy_buf = buf;
     sc->copy_size = size;
     sc->copy_offset = copy_offset;
+
     storeClientCopy2(e, sc);
 }
 
@@ -268,16 +277,20 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
     MemObject *mem = e->mem_obj;
     size_t sz;
 
+    debug(33, 5) ("co: %d, hi: %d\n", sc->copy_offset, mem->inmem_hi);
+
     if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 	storeClientCallback(sc, 0);
 	return;
     }
-    if (e->store_status == STORE_PENDING && sc->seen_offset >= mem->inmem_hi) {
-	/* client has already seen this, wait for more */
-	debug(20, 3) ("storeClientCopy3: Waiting for more\n");
-	return;
+
+    /* Check that we actually have data */
+    if (e->store_status == STORE_PENDING && sc->copy_offset >= mem->inmem_hi) {
+        debug(20, 3) ("storeClientCopy3: Waiting for more\n");
+        return;
     }
+
     /*
      * Slight weirdness here.  We open a swapin file for any
      * STORE_DISK_CLIENT, even if we can copy the requested chunk
@@ -289,6 +302,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
      * is clientCacheHit) so that we can fall back to a cache miss
      * if needed.
      */
+    
     if (STORE_DISK_CLIENT == sc->type && NULL == sc->swapin_sio) {
 	debug(20, 3) ("storeClientCopy3: Need to open swap in file\n");
 	/* gotta open the swapin file */
@@ -314,11 +328,12 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
     }
     if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
 	/* What the client wants is in memory */
-	debug(20, 3) ("storeClientCopy3: Copying from memory\n");
-	sz = stmemCopy(&mem->data_hdr,
-	    sc->copy_offset, sc->copy_buf, sc->copy_size);
-	storeClientCallback(sc, sz);
-	return;
+        /* Old style */
+        debug(20, 3) ("storeClientCopy3: Copying normal from memory\n");
+        sz = stmemCopy(&mem->data_hdr, sc->copy_offset, sc->copy_buf,
+          sc->copy_size);
+        storeClientCallback(sc, sz);
+        return;
     }
     /* What the client wants is not in memory. Schedule a disk read */
     assert(STORE_DISK_CLIENT == sc->type);
@@ -331,6 +346,7 @@ static void
 storeClientFileRead(store_client * sc)
 {
     MemObject *mem = sc->entry->mem_obj;
+
     assert(sc->callback != NULL);
     assert(!sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 1;
