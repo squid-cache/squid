@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.10 1996/07/16 01:49:52 wessels Exp $
+ * $Id: util.c,v 1.11 1996/07/22 16:40:58 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -113,6 +113,9 @@
 #endif
 #if HAVE_STRING_H
 #include <string.h>
+#endif
+#if HAVE_CTYPE_H
+#include <ctype.h>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -465,4 +468,14 @@ void xmemcpy(from, to, len)
 #else
     (void) memcpy(from, to, len);
 #endif
+}
+
+void Tolower(q)
+     char *q;
+{
+    char *s = q;
+    while (*s) {
+        *s = tolower((unsigned char) *s);
+        s++;
+    }
 }
