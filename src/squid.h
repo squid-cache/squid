@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.158 1998/02/20 21:04:06 wessels Exp $
+ * $Id: squid.h,v 1.159 1998/02/22 11:59:59 kostas Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -308,9 +308,6 @@ struct rusage {
 #include "md5.h"
 
 #ifdef SQUID_SNMP
-#include "snmp.h"
-#include "snmp_impl.h"
-#include "snmp_vars.h"
 #include "cache_snmp.h"
 #endif
 
