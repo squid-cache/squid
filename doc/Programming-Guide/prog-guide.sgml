@@ -733,7 +733,7 @@ Squid consists of the following major components
 	information.
 
 	<em/storeIOState/ structures are allocated by calling
-	<tt/storeOpen()/, and are will be deallocated by the
+	<tt/storeOpen()/, and will be deallocated by the
 	filesystem layer after
 	<tt/storeClose()/ is called.
 
