@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.190 1998/02/03 04:21:24 wessels Exp $
+ * $Id: stat.cc,v 1.191 1998/02/04 23:36:19 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -511,8 +511,6 @@ info_get(StoreEntry * sentry)
 	(double) storeExpiredReferenceAge() / 86400.0);
     storeAppendPrintf(sentry, "{\tRequests given to unlinkd:\t%d}\n",
 	Counter.unlink.requests);
-    storeAppendPrintf(sentry, "{\tUnused fileno stack count:\t%d}\n",
-	fileno_stack_count);
 
     squid_getrusage(&rusage);
     cputime = rusage_cputime(&rusage);

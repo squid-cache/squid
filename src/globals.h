@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.32 1998/02/04 00:18:01 wessels Exp $
+ * $Id: globals.h,v 1.33 1998/02/04 23:34:28 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -84,7 +84,6 @@ extern struct timeval squid_start;
 extern time_t squid_curtime;	/* 0 */
 extern volatile int reconfigure_pending;	/* 0 */
 extern volatile int shutdown_pending;	/* 0 */
-extern int fileno_stack_count;	/* 0 */
 extern int store_rebuilding;	/* 1 */
 extern int store_swap_size;	/* 0 */
 extern int client_info_sz;	/* 0 */
