@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.13 1998/04/01 08:15:45 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.14 1998/04/01 17:53:59 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -439,8 +439,9 @@ accessLogReader(FileIterator * fi)
     *strchr(hier, '/') = '\0';
     /*fprintf(stdout, "%s:%d: %s %s %s\n",
      * fname, count, method, url, hier); */
-    entry->use_icp =  /* no ICP lookup for these status codes */
-	strcmp(hier, "NONE") &&
+    entry->use_icp =  strcmp(hier, "NONE");
+	/* no ICP lookup for these status codes */
+/*	strcmp(hier, "NONE") &&
 	strcmp(hier, "DIRECT") &&
 	strcmp(hier, "FIREWALL_IP_DIRECT") &&
 	strcmp(hier, "LOCAL_IP_DIRECT") &&
@@ -450,6 +451,7 @@ accessLogReader(FileIterator * fi)
 	strcmp(hier, "PASSTHROUGH_PARENT") &&
 	strcmp(hier, "SSL_PARENT_MISS") &&
 	strcmp(hier, "DEFAULT_PARENT");
+*/
     memcpy(entry->key, storeKeyPublic(url, method_id), sizeof(entry->key));
     /*fprintf(stdout, "%s:%d: %s %s %s %s\n",
 	fname, count, method, storeKeyText(entry->key), url, hier); */
@@ -532,10 +534,11 @@ main(int argc, char *argv[])
     fis = xcalloc(fi_count, sizeof(FileIterator *));
     /* init iterators with files */
     fis[0] = fileIteratorCreate(argv[1], accessLogReader);
-    for (i = 2; i < argc; ++i) {
+    for (i = 2; i < argc; ++i)
 	fis[i-1] = fileIteratorCreate(argv[i], swapStateReader);
-	if (!fis[i-1]) return -2;
-    }
+    /* check that all files were found */
+    for (i = 0; i < fi_count; ++i)
+	if (fis[i]) return -2;
     /* read prefix to get start-up contents of the peer cache */
     ready_time = -1;
     for (i = 1; i < fi_count; ++i) {
