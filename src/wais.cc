@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.41 1996/09/15 05:04:49 wessels Exp $
+ * $Id: wais.cc,v 1.42 1996/09/16 21:11:17 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -385,7 +385,12 @@ waisStart(int unusedfd, char *url, method_t method, char *mime_hdr, StoreEntry *
 	squid_error_entry(entry, ERR_NO_RELAY, NULL);
 	return COMM_ERROR;
     }
-    fd = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
+    fd = comm_open(SOCK_STREAM,
+	0,
+	Config.Addrs.tcp_outgoing,
+	0,
+	COMM_NONBLOCKING,
+	url);
     if (fd == COMM_ERROR) {
 	debug(24, 4, "waisStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());

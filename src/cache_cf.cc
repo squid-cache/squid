@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.88 1996/09/15 05:04:13 wessels Exp $
+ * $Id: cache_cf.cc,v 1.89 1996/09/16 21:11:03 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -878,7 +878,7 @@ parseAddressLine(struct in_addr *addr)
     if (inet_addr(token) != INADDR_NONE)
 	(*addr).s_addr = inet_addr(token);
     else if ((hp = gethostbyname(token)))
-	xmemcpy(addr, hp->h_addr, hp->h_length);
+	*addr = inaddrFromHostent(hp);
     else
 	self_destruct();
 }

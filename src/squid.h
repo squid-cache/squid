@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.48 1996/09/16 17:31:51 wessels Exp $
+ * $Id: squid.h,v 1.49 1996/09/16 21:11:14 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -249,6 +249,7 @@ typedef int (*QS) (const void *, const void *);
 #include "async_io.h"
 #include "redirect.h"
 #include "client_side.h"
+#include "icmp.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

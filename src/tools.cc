@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.57 1996/09/14 08:46:34 wessels Exp $
+ * $Id: tools.cc,v 1.58 1996/09/16 21:11:16 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -620,4 +620,12 @@ accessLogTime(time_t t)
 	last_t = t;
     }
     return buf;
+}
+
+struct in_addr
+inaddrFromHostent(struct hostent *hp)
+{
+	struct in_addr s;
+	memcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));
+	return s;
 }

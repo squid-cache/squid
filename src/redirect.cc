@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.15 1996/09/15 05:04:40 wessels Exp $
+ * $Id: redirect.cc,v 1.16 1996/09/16 21:11:13 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -96,9 +96,11 @@ redirectCreateRedirector(char *command)
     int len;
     int fd;
     struct timeval slp;
-    cfd = comm_open(COMM_NOCLOEXEC,
+    cfd = comm_open(SOCK_STREAM,
+	0,
 	local_addr,
 	0,
+	COMM_NOCLOEXEC,
 	"socket to redirector");
     if (cfd == COMM_ERROR) {
 	debug(29, 0, "redirect_create_redirector: Failed to create redirector\n");
@@ -121,7 +123,12 @@ redirectCreateRedirector(char *command)
     if (pid > 0) {		/* parent */
 	comm_close(cfd);	/* close shared socket with child */
 	/* open new socket for parent process */
-	sfd = comm_open(0, local_addr, 0, NULL);	/* blocking! */
+	sfd = comm_open(SOCK_STREAM,
+		0,
+		local_addr,
+		0,
+		0,
+		NULL);	/* blocking! */
 	if (sfd == COMM_ERROR)
 	    return -1;
 	if (comm_connect(sfd, localhost, port) == COMM_ERROR) {

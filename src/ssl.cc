@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.15 1996/09/15 05:04:42 wessels Exp $
+ * $Id: ssl.cc,v 1.16 1996/09/16 21:11:15 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -434,7 +434,12 @@ sslStart(int fd, char *url, request_t * request, char *mime_hdr, int *size_ptr)
 	RequestMethodStr[request->method], url);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
+    sock = comm_open(SOCK_STREAM,
+	0,
+	Config.Addrs.tcp_outgoing,
+	0,
+	COMM_NONBLOCKING,
+	url);
     if (sock == COMM_ERROR) {
 	debug(26, 4, "sslStart: Failed because we're out of sockets.\n");
 	buf = squid_error_url(url,

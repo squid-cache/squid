@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.52 1996/09/15 05:04:37 wessels Exp $
+ * $Id: neighbors.cc,v 1.53 1996/09/16 21:11:12 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -506,18 +506,22 @@ neighborsUdpPing(protodispatch_data * proto)
 	} else if ((hep = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
 		host, url);
-	    to_addr.sin_family = AF_INET;
-	    xmemcpy(&to_addr.sin_addr, hep->h_addr, hep->h_length);
-	    to_addr.sin_port = htons(echo_port);
 	    echo_hdr.reqnum = reqnum;
-	    icpUdpSend(theOutIcpConnection,
-		url,
-		&echo_hdr,
-		&to_addr,
-		entry->flag,
-		ICP_OP_SECHO,
-		LOG_TAG_NONE,
-		PROTO_NONE);
+	    if (icmp_sock != -1) {
+		icmpSourcePing(inaddrFromHostent(hep), &echo_hdr, url);
+	    } else {
+		to_addr.sin_family = AF_INET;
+		to_addr.sin_addr = inaddrFromHostent(hep);
+		to_addr.sin_port = htons(echo_port);
+		icpUdpSend(theOutIcpConnection,
+		    url,
+		    &echo_hdr,
+		    &to_addr,
+		    entry->flag,
+		    ICP_OP_SECHO,
+		    LOG_TAG_NONE,
+		    PROTO_NONE);
+	    }
 	} else {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: unknown host: %s\n",
 		host);

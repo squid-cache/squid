@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.70 1996/09/15 08:06:29 wessels Exp $
+ * $Id: comm.cc,v 1.71 1996/09/16 21:11:05 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -224,15 +224,19 @@ commBind(int s, struct in_addr in_addr, u_short port)
 /* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in comm.h. */
 int
-comm_open(unsigned int io_type, struct in_addr addr, u_short port, char *note)
+comm_open(int sock_type,
+	int proto,
+	struct in_addr addr,
+	u_short port,
+	int flags,
+	char *note)
 {
     int new_socket;
     FD_ENTRY *conn = NULL;
-    int sock_type = io_type & COMM_DGRAM ? SOCK_DGRAM : SOCK_STREAM;
     int tcp_rcv_bufsz = Config.tcpRcvBufsz;
 
     /* Create socket for accepting new connections. */
-    if ((new_socket = socket(AF_INET, sock_type, 0)) < 0) {
+    if ((new_socket = socket(AF_INET, sock_type, proto)) < 0) {
 	/* Increase the number of reserved fd's if calls to socket()
 	 * are failing because the open file table is full.  This
 	 * limits the number of simultaneous clients */
@@ -256,7 +260,7 @@ comm_open(unsigned int io_type, struct in_addr addr, u_short port, char *note)
 	fd_note(new_socket, note);
     conn->openned = 1;
 
-    if (!(io_type & COMM_NOCLOEXEC))
+    if (!BIT_TEST(flags, COMM_NOCLOEXEC))
 	commSetCloseOnExec(new_socket);
     if (port > (u_short) 0) {
 	commSetNoLinger(new_socket);
@@ -268,7 +272,7 @@ comm_open(unsigned int io_type, struct in_addr addr, u_short port, char *note)
 	    return COMM_ERROR;
     conn->local_port = port;
 
-    if (io_type & COMM_NONBLOCKING)
+    if (BIT_TEST(flags, COMM_NONBLOCKING))
 	if (commSetNonBlocking(new_socket) == COMM_ERROR)
 	    return COMM_ERROR;
 #ifdef TCP_NODELAY
@@ -277,7 +281,7 @@ comm_open(unsigned int io_type, struct in_addr addr, u_short port, char *note)
 #endif
     if (tcp_rcv_bufsz > 0 && sock_type == SOCK_STREAM)
 	commSetTcpRcvbuf(new_socket, tcp_rcv_bufsz);
-    conn->comm_type = io_type;
+    conn->comm_type = sock_type;
     return new_socket;
 }
 
@@ -315,7 +319,7 @@ comm_connect(int sock, char *dest_host, u_short dest_port)
 	debug(5, 3, "comm_connect: Failure to lookup host: %s.\n", dest_host);
 	return (COMM_ERROR);
     }
-    xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
+    to_addr.sin_addr = inaddrFromHostent(hp);
     to_addr.sin_port = htons(dest_port);
     if (Config.Log.log_fqdn)
 	fqdncache_gethostbyaddr(to_addr.sin_addr, FQDN_LOOKUP_IF_MISS);
@@ -526,7 +530,7 @@ comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
 	    host, xstrerror());
 	return (COMM_ERROR);
     }
-    xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
+    to_addr.sin_addr = inaddrFromHostent(hp);
     to_addr.sin_port = htons(port);
     if ((bytes_sent = sendto(fd, buf, len, 0, (struct sockaddr *) &to_addr,
 		sizeof(to_addr))) < 0) {

@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.46 1996/09/15 05:04:28 wessels Exp $
+ * $Id: gopher.cc,v 1.47 1996/09/16 21:11:07 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -977,7 +977,12 @@ gopherStart(int unusedfd, char *url, StoreEntry * entry)
 	return COMM_ERROR;
     }
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
+    sock = comm_open(SOCK_STREAM,
+	0,
+	Config.Addrs.tcp_outgoing,
+	0,
+	COMM_NONBLOCKING,
+	url);
     if (sock == COMM_ERROR) {
 	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
