@@ -78,17 +78,17 @@
 #define PROGRAM_NAME "squid_ldap_auth"
 
 /* Global options */
-static char *basedn;
-static char *searchfilter = NULL;
-static char *binddn = NULL;
-static char *bindpasswd = NULL;
-static char *userattr = "uid";
+static const char *basedn;
+static const char *searchfilter = NULL;
+static const char *binddn = NULL;
+static const char *bindpasswd = NULL;
+static const char *userattr = "uid";
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
 #if defined(NETSCAPE_SSL)
-static char *sslpath = NULL;
+static const char *sslpath = NULL;
 static int sslinit = 0;
 #endif
 static int connect_timeout = 0;
@@ -98,8 +98,8 @@ static int timelimit = LDAP_NO_LIMIT;
 static int use_tls = 0;
 static int version = -1;
 
-static int checkLDAP(LDAP * ld, char *userid, char *password);
-static int readSecret(char *filename);
+static int checkLDAP(LDAP * ld, const char *userid, const char *password);
+static int readSecret(const char *filename);
 
 /* Yuck.. we need to glue to different versions of the API */
 
@@ -199,7 +199,7 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
 
     while (argc > 1 && argv[1][0] == '-') {
-	char *value = "";
+	const char *value = "";
 	char option = argv[1][1];
 	switch (option) {
 	case 'P':
@@ -352,7 +352,7 @@ main(int argc, char **argv)
 	argv++;
     }
     if (!ldapServer)
-	ldapServer = "localhost";
+	ldapServer = strdup("localhost");
 
     if (!basedn) {
 	fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn [options] [ldap_server_name[:port]]...\n\n");
@@ -476,7 +476,7 @@ main(int argc, char **argv)
 }
 
 static int
-checkLDAP(LDAP * ld, char *userid, char *password)
+checkLDAP(LDAP * ld, const char *userid, const char *password)
 {
     char dn[256];
 
@@ -545,11 +545,12 @@ checkLDAP(LDAP * ld, char *userid, char *password)
     return 0;
 }
 
-int readSecret(char *filename)
+int readSecret(const char *filename)
 {
   char  buf[BUFSIZ];
-  char  *e=0;
+  char  *e = NULL;
   FILE  *f;
+  char  *passwd = NULL;
 
   if(!(f=fopen(filename, "r"))) {
     fprintf(stderr, PROGRAM_NAME " ERROR: Can not read secret file %s\n", filename);
@@ -566,12 +567,13 @@ int readSecret(char *filename)
   if((e = strrchr(buf, '\n'))) *e = 0;
   if((e = strrchr(buf, '\r'))) *e = 0;
 
-  bindpasswd = (char *) calloc(sizeof(char), strlen(buf)+1);
-  if (bindpasswd) {
-    strcpy(bindpasswd, buf);
-  } else {
+  passwd = (char *) calloc(sizeof(char), strlen(buf)+1);
+  if (!passwd) {
     fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n"); 
+    exit(1);
   }
+  strcpy(passwd, buf);
+  bindpasswd = passwd;
 
   fclose(f);
 
