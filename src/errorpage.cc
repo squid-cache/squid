@@ -1,5 +1,5 @@
 /*
- * $Id: errorpage.cc,v 1.24 1996/07/15 23:57:49 wessels Exp $
+ * $Id: errorpage.cc,v 1.25 1996/07/16 01:51:23 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -120,6 +120,7 @@ char *tmp_error_buf;
 
 /* LOCAL */
 static char *tbuf = NULL;
+static char *auth_msg = NULL;
 
 void errorInitialize()
 {
