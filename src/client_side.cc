@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.105 1997/05/22 22:16:52 wessels Exp $
+ * $Id: client_side.cc,v 1.106 1997/05/22 22:53:59 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -341,8 +341,8 @@ icpProcessExpired(int fd, void *data)
 	http->request->flags,
 	http->request->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
-    storeClientListAdd(entry, http, 0);
-    storeClientListAdd(http->old_entry, http, 0);
+    storeClientListAdd(entry, http);
+    storeClientListAdd(http->old_entry, http);
 
     entry->lastmod = http->old_entry->lastmod;
     debug(33, 5, "icpProcessExpired: setting lmt = %d\n",
@@ -354,6 +354,7 @@ icpProcessExpired(int fd, void *data)
     protoDispatch(fd, http->entry, http->request);
     /* Register with storage manager to receive updates when data comes in. */
     storeClientCopy(entry,
+	http->out.offset,
 	http->out.offset,
 	4096,
 	get_free_4k_page(),
@@ -413,6 +414,7 @@ icpHandleIMSReply(void *data, char *buf, size_t size)
 	debug(33, 3, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
 	storeClientCopy(entry,
+	    http->out.offset + size,
 	    http->out.offset,
 	    4096,
 	    get_free_4k_page(),
@@ -458,6 +460,7 @@ icpHandleIMSReply(void *data, char *buf, size_t size)
     }
     http->old_entry = NULL;	/* done with old_entry */
     storeClientCopy(entry,
+	http->out.offset,
 	http->out.offset,
 	4096,
 	get_free_4k_page(),
