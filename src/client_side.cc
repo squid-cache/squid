@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.418 1998/10/19 04:40:30 wessels Exp $
+ * $Id: client_side.cc,v 1.419 1998/10/19 05:31:13 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -721,7 +721,7 @@ connStateFree(int fd, void *data)
     /* prevent those nasty RST packets */
     {
 	char buf[SQUID_TCP_SO_RCVBUF];
-    	while (read(fd, buf, SQUID_TCP_SO_RCVBUF) > 0);
+	while (read(fd, buf, SQUID_TCP_SO_RCVBUF) > 0);
     }
 #endif
 }
@@ -1205,6 +1205,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    http->log_type = LOG_TCP_MEM_HIT;
 	clientSendMoreData(data, buf, size);
     } else if (refreshCheckHTTP(e, r) && !http->flags.internal) {
+	debug(0, 0) ("clientCacheHit: in refreshCheck() block\n");
 	/*
 	 * We hold a stale copy; it needs to be validated
 	 */
@@ -1694,10 +1695,13 @@ clientProcessRequest2(clientHttpRequest * http)
 	ipcacheReleaseInvalid(r->host);
 	/* continue! */
     }
-    if (r->flags.nocache && e->store_status == STORE_PENDING) {
-	debug(33, 3) ("Clearing no-cache for STORE_PENDING request\n\t%s\n",
-	    storeUrl(e));
-	r->flags.nocache = 0;
+    if (e->store_status == STORE_PENDING) {
+	if (r->flags.nocache || r->flags.nocache_hack) {
+	    debug(33, 3) ("Clearing no-cache for STORE_PENDING request\n\t%s\n",
+		storeUrl(e));
+	    r->flags.nocache = 0;
+	    r->flags.nocache_hack = 0;
+	}
     }
 #endif
     if (r->flags.nocache) {
