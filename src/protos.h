@@ -782,7 +782,6 @@ extern EVH storeDirClean;
 extern void storeDigestInit();
 extern void storeDigestNoteStoreReady();
 extern void storeDigestScheduleRebuild();
-extern void storeDigestAdd(const StoreEntry * entry);
 extern void storeDigestDel(const StoreEntry * entry);
 extern void storeDigestReport();
 
