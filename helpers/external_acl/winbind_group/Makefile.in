@@ -16,7 +16,7 @@
 #
 #  Makefile for the wb_group external_acl helper
 #
-#  $Id: Makefile.in,v 1.1 2002/07/07 21:34:16 hno Exp $
+#  $Id: Makefile.in,v 1.2 2002/09/02 00:22:35 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -93,6 +93,7 @@ MKDIR = @MKDIR@
 MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
+OPT_DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
 OPT_DISKD_EXE = @OPT_DISKD_EXE@
 OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
 OPT_PINGER = @OPT_PINGER@
