@@ -24,7 +24,7 @@ static void netdbPurgeLRU _PARAMS((void));
 static void
 netdbHashInsert(netdbEntry * n, struct in_addr addr)
 {
-    xstrncpy(n->network, inet_ntoa(networkFromInaddr(addr)), 15);
+    xstrncpy(n->network, inet_ntoa(networkFromInaddr(addr)), 16);
     n->key = n->network;
     hash_join(addr_table, (hash_link *) n);
     meta_data.netdb_addrs++;

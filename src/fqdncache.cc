@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.34 1996/11/14 19:02:16 wessels Exp $
+ * $Id: fqdncache.cc,v 1.35 1996/11/15 00:36:17 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -858,7 +858,7 @@ fqdnFromAddr(struct in_addr addr)
     static char buf[32];
     if (Config.Log.log_fqdn && (n = fqdncache_gethostbyaddr(addr, 0)))
 	return n;
-    xstrncpy(buf, inet_ntoa(addr), 31);
+    xstrncpy(buf, inet_ntoa(addr), 32);
     return buf;
 }
 

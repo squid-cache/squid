@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.165 1996/11/14 19:02:23 wessels Exp $
+ * $Id: store.cc,v 1.166 1996/11/15 00:36:23 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -265,8 +265,8 @@ static int storelog_fd = -1;
 
 /* key temp buffer */
 static char key_temp_buffer[MAX_URL + 100];
-static char swaplog_file[SQUID_MAXPATHLEN + 1];
-static char tmp_filename[SQUID_MAXPATHLEN + 1];
+static char swaplog_file[SQUID_MAXPATHLEN];
+static char tmp_filename[SQUID_MAXPATHLEN];
 
 /* patch cache_dir to accomodate multiple disk storage */
 static char **CacheDirs = NULL;
@@ -1053,7 +1053,7 @@ swappath(int n)
 static char *
 storeSwapFullPath(int fn, char *fullpath)
 {
-    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN + 1);
+    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
@@ -1211,7 +1211,7 @@ storeSwapLog(const StoreEntry * e)
 static void
 storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 {
-    LOCAL_ARRAY(char, filename, SQUID_MAXPATHLEN + 1);
+    LOCAL_ARRAY(char, filename, SQUID_MAXPATHLEN);
     MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
@@ -1296,7 +1296,7 @@ storeSwapOutStart(StoreEntry * e)
 {
     int fd;
     int x;
-    LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN + 1);
+    LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN);
     MemObject *mem = e->mem_obj;
     /* Suggest a new swap file number */
     swapfileno = (swapfileno + 1) % (MAX_SWAP_FILE);
@@ -1352,7 +1352,7 @@ storeDoRebuildFromDisk(void *data)
 {
     struct storeRebuild_data *rebuildData = data;
     LOCAL_ARRAY(char, swapfile, MAXPATHLEN);
-    LOCAL_ARRAY(char, url, MAX_URL + 1);
+    LOCAL_ARRAY(char, url, MAX_URL);
     StoreEntry *e = NULL;
     time_t expires;
     time_t timestamp;

@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.66 1996/11/14 19:02:17 wessels Exp $
+ * $Id: gopher.cc,v 1.67 1996/11/15 00:36:18 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -151,7 +151,7 @@ typedef struct gopher_ds {
     int HTML_header_added;
     int port;
     char type_id;
-    char request[MAX_URL + 1];
+    char request[MAX_URL];
     int data_in;
     int cso_recno;
     int len;
@@ -201,7 +201,7 @@ gopherStateFree(int fd, GopherStateData * gopherState)
 static void
 gopher_mime_content(char *buf, const char *name, const char *def)
 {
-    LOCAL_ARRAY(char, temp, MAX_URL + 1);
+    LOCAL_ARRAY(char, temp, MAX_URL);
     char *ext1 = NULL;
     char *ext2 = NULL;
     const char *str = NULL;

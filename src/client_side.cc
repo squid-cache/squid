@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.65 1996/11/14 19:02:13 wessels Exp $
+ * $Id: client_side.cc,v 1.66 1996/11/15 00:36:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -92,7 +92,6 @@ clientProxyAuthCheck(icpStateData * icpState)
 	    return 1;
     proxy_user = proxyAuthenticate(icpState->request_hdr);
     xstrncpy(icpState->ident.ident, proxy_user, ICP_IDENT_SZ);
-    icpState->ident.ident[ICP_IDENT_SZ - 1] = '\0';
     debug(33, 6, "jrmt: user = %s\n", icpState->ident.ident);
 
     if (strcmp(icpState->ident.ident, dash_str) == 0)

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.106 1996/11/14 19:02:17 wessels Exp $
+ * $Id: http.cc,v 1.107 1996/11/15 00:36:19 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -267,7 +267,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	} else if (!strncasecmp(t, "Content-type:", 13)) {
 	    if ((t = strchr(t, ' '))) {
 		t++;
-		xstrncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ - 1);
+		xstrncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ);
 		ReplyHeaderStats.ctype++;
 	    }
 	} else if (!strncasecmp(t, "Content-length:", 15)) {
@@ -279,19 +279,19 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	} else if (!strncasecmp(t, "Date:", 5)) {
 	    if ((t = strchr(t, ' '))) {
 		t++;
-		xstrncpy(reply->date, t, HTTP_REPLY_FIELD_SZ - 1);
+		xstrncpy(reply->date, t, HTTP_REPLY_FIELD_SZ);
 		ReplyHeaderStats.date++;
 	    }
 	} else if (!strncasecmp(t, "Expires:", 8)) {
 	    if ((t = strchr(t, ' '))) {
 		t++;
-		xstrncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ - 1);
+		xstrncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ);
 		ReplyHeaderStats.exp++;
 	    }
 	} else if (!strncasecmp(t, "Last-Modified:", 14)) {
 	    if ((t = strchr(t, ' '))) {
 		t++;
-		xstrncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ - 1);
+		xstrncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ);
 		ReplyHeaderStats.lm++;
 	    }
 	} else if (!strncasecmp(t, "Cache-Control:", 14)) {

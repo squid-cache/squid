@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.42 1996/11/14 19:02:15 wessels Exp $
+ * $Id: disk.cc,v 1.43 1996/11/15 00:36:17 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -535,7 +535,6 @@ diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
 	if (walk_dat->buf[end_pos] == '\n') {
 	    /* new line found */
 	    xstrncpy(temp_line, walk_dat->buf + st_pos, end_pos - st_pos);
-	    temp_line[end_pos - st_pos] = '\0';
 	    used_bytes += end_pos - st_pos + 1;
 
 	    /* invoke line handler */

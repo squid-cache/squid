@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.36 1996/11/06 23:14:26 wessels Exp $
+ * $Id: debug.cc,v 1.37 1996/11/15 00:36:16 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -111,7 +111,7 @@ volatile int _db_line = 0;
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
 
-#define MAX_DEBUG_SECTIONS 50
+#define MAX_DEBUG_SECTIONS 100
 static int debugLevels[MAX_DEBUG_SECTIONS];
 
 static char *accessLogTime _PARAMS((time_t));

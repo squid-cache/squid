@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.137 1996/11/14 18:38:39 wessels Exp $
+ * $Id: cache_cf.cc,v 1.138 1996/11/15 00:36:14 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1400,17 +1400,6 @@ parseConfigFile(const char *file_name)
     fclose(fp);
     configDoConfigure();
     return 0;
-}
-
-u_short
-setHttpPortNum(u_short port)
-{
-    return (Config.Port.http = port);
-}
-u_short
-setIcpPortNum(u_short port)
-{
-    return (Config.Port.icp = port);
 }
 
 static char *
