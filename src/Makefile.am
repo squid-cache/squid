@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.72 2003/05/01 22:03:58 hno Exp $
+#  $Id: Makefile.am,v 1.73 2003/05/01 22:19:47 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -111,7 +111,8 @@ SSL_ALL_SOURCE = \
 	ACLCertificateData.h  \
 	ACLCertificate.cc \
 	ACLCertificate.h  \
-	ssl_support.cc
+	ssl_support.cc \
+	ssl_support.h
 if ENABLE_SSL
 SSL_SOURCE = $(SSL_ALL_SOURCE)
 else
