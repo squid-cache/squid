@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.97 1997/10/17 00:00:37 wessels Exp $
+ * $Id: gopher.cc,v 1.98 1997/10/20 19:09:00 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -886,7 +886,6 @@ gopherStart(StoreEntry * entry)
 	err->http_status = HTTP_BAD_REQUEST;
 	err->url = url;
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
 	return;
@@ -908,30 +907,12 @@ gopherStart(StoreEntry * entry)
 	if (entry && entry->url)
 	    err->url = entry->url;
 	errorAppendEntry(entry, err);
-
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
 	return;
     }
     comm_add_close_handler(fd, gopherStateFree, gopherState);
     storeRegisterAbort(entry, gopherAbort, gopherState);
-
-    /* check if IP is already in cache. It must be. 
-     * It should be done before this route is called. 
-     * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(gopherState->host, 0)) {
-	debug(10, 4) ("gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
-	/* was assert */
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_DNS_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->dnsserver_msg = xstrdup(dns_error_message);
-	err->url = entry->url;
-	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
-	comm_close(fd);
-	return;
-    }
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
 	&& (strchr(gopherState->request, '?') == NULL)) {
 	/* Index URL without query word */
