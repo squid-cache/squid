@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.96 1996/10/15 04:57:54 wessels Exp $
+ * $Id: main.cc,v 1.97 1996/10/18 20:36:24 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -541,7 +541,7 @@ mainInitialize(void)
 	next_cleaning = squid_curtime + Config.cleanRate;
 	next_maintain = squid_curtime + 0;
 	next_dirclean = squid_curtime + 15;
-	next_announce = squid_curtime + Config.Announce.rate;
+	next_announce = squid_curtime + 3600;
 	next_ip_purge = squid_curtime + 10;
     }
     first_time = 0;

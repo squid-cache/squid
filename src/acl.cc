@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.51 1996/10/15 04:58:23 wessels Exp $
+ * $Id: acl.cc,v 1.52 1996/10/18 20:36:21 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -262,7 +262,8 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 static struct _acl_ip_data *
 aclParseIpList(void)
 {
-    char *t = NULL, *p = NULL;
+    char *t = NULL;
+    char *p = NULL;
     struct _acl_ip_data *head = NULL;
     struct _acl_ip_data **Tail = &head;
     struct _acl_ip_data *q = NULL;
@@ -283,11 +284,11 @@ aclParseIpList(void)
 	    memset(mask, 0, sizeof(mask));
 
 	    /* Split the adress in addr1-addr2/mask */
-	    strncpy(addr1, p, strcspn(t, "-/"));
-	    p += strcspn(t, "-/");
+	    strncpy(addr1, p, strcspn(p, "-/"));
+	    p += strcspn(p, "-/");
 	    if (*p == '-') {
 		p++;
-		strncpy(addr2, p, strcspn(t, "/"));
+		strncpy(addr2, p, strcspn(p, "/"));
 		p += strcspn(p, "/");
 	    }
 	    if (*p == '/') {
@@ -306,7 +307,7 @@ aclParseIpList(void)
 	    if (*addr2 && !decode_addr(addr2, &q->addr2, &q->mask)) {
 		debug(28, 0, "%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr1);
+		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
 		safe_free(q);
 		continue;
 	    }
