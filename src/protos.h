@@ -559,9 +559,9 @@ void statHistEnumInit(StatHist * H, int last_enum);
 /* MemMeter */
 #define memMeterCheckHWater(m) { if ((m).hwater < (m).level) (m).hwater = (m).level; }
 #define memMeterInc(m) { (m).level++; memMeterCheckHWater(m); }
-#define memMeterDec(m) { (m).level--; memMeterCheckHWater(m); }
+#define memMeterDec(m) { (m).level--; }
 #define memMeterAdd(m, sz) { (m).level += (sz); memMeterCheckHWater(m); }
-#define memMeterDel(m, sz) { (m).level -= (sz); memMeterCheckHWater(m); }
+#define memMeterDel(m, sz) { (m).level -= (sz); }
 
 /* mem */
 extern void memInit(void);
