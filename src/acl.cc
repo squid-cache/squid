@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.308 2003/07/14 08:21:56 robertc Exp $
+ * $Id: acl.cc,v 1.309 2003/07/16 05:27:17 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -345,7 +345,7 @@ aclParseAclList(acl_list ** head)
      * by '!' for negation */
 
     while ((t = strtok(NULL, w_space))) {
-        acl_list *L (new ACLList);
+        acl_list *L = new ACLList;
 
         if (*t == '!') {
             L->negated (true);

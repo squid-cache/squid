@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.15 2003/07/14 15:07:22 robertc Exp $
+#  $Id: Makefile.am,v 1.16 2003/07/16 05:27:17 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -25,6 +25,7 @@ endif
 ## Sort by dependencies - test lowest layers first
 TESTS = debug \
 	syntheticoperators \
+	VirtualDeleteOperator \
 	StackTest \
 	rfc1738 \
 	refcount\
@@ -46,7 +47,8 @@ check_PROGRAMS= debug \
 		rfc1738\
 		splay \
 		StackTest \
-		syntheticoperators
+		syntheticoperators \
+		VirtualDeleteOperator
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 DEBUG_SOURCE = test_tools.cc
@@ -79,6 +81,7 @@ splay_SOURCES = splay.cc
 StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
 
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
+VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
 
 rfc1738_SOURCES = rfc1738.cc
 
