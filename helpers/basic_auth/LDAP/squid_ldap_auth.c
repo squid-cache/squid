@@ -147,8 +147,7 @@ recover:
 		exit(1);
 	    }
 	}
-	rc = checkLDAP(ld, user, passwd);
-	if (rc != LDAP_SUCCESS) {
+	if (checkLDAP(ld, user, passwd) != 0) {
 	    if (tryagain && ld->ld_errno != LDAP_INVALID_CREDENTIALS) {
 		tryagain = 0;
 		ldap_unbind(ld);
