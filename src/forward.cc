@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.19 1998/07/21 17:26:28 wessels Exp $
+ * $Id: forward.cc,v 1.20 1998/07/21 17:38:28 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ fwdStateFree(FwdState * fwdState)
     if (sfd > -1) {
 	comm_remove_close_handler(sfd, fwdServerClosed, fwdState);
 	fwdState->server_fd = -1;
-	debug(17, 1) ("fwdStateFree: closing FD %d\n", sfd);
+	debug(17, 3) ("fwdStateFree: closing FD %d\n", sfd);
 	comm_close(sfd);
     }
     cbdataFree(fwdState);
@@ -111,7 +111,7 @@ fwdServerClosed(int fd, void *data)
     assert(fwdState->server_fd == fd);
     fwdState->server_fd = -1;
     if (fwdCheckRetry(fwdState)) {
-	debug(17, 1) ("fwdServerClosed: re-forwarding (%d tries, %d secs)\n",
+	debug(17, 3) ("fwdServerClosed: re-forwarding (%d tries, %d secs)\n",
 	    fwdState->n_tries,
 	    (int) (squid_curtime - fwdState->start));
 	fwdConnectStart(fwdState);
@@ -398,7 +398,7 @@ fwdCheckDeferRead(int fdnotused, void *data)
 void
 fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
 {
-    debug(17, 1) ("fwdFail: %s \"%s\"\n\t%s\n",
+    debug(17, 3) ("fwdFail: %s \"%s\"\n\t%s\n",
 	err_type_str[err_code],
 	httpStatusString(http_code),
 	storeUrl(fwdState->entry));
@@ -414,7 +414,7 @@ void
 fwdAbort(void *data)
 {
     FwdState *fwdState = data;
-    debug(17, 1) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
+    debug(17, 3) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
     fwdStateFree(fwdState);
 }
 
