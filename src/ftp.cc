@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.237 1998/07/20 19:30:26 wessels Exp $
+ * $Id: ftp.cc,v 1.238 1998/07/20 22:16:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1088,8 +1088,8 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
 	*tail = list;
 	tail = &list->next;
     }
-    safe_free(sbuf);
     *used = (int) (s - sbuf);
+    safe_free(sbuf);
     if (!complete)
 	wordlistDestroy(&head);
     if (codep)
