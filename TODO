@@ -8,15 +8,14 @@ Our Todo List
     doubly-linked list.
 (1) Send full HTTP requests in ICP messages
 
-(2) copy over new -z semantics; don't automatically wipeout cache
+(2) copy over -z semantics from 1.1; don't automatically wipeout cache
+(2) copy over 'test_reachability' from 1.1
 (2) we don't properly handle the HTTP/1.1 'Connection' header
 (2) be more persistent in forwarding requests; return fewer error pages
-(2) SNMP interface
 (2) Fix some problems with peer-selection.
 	- Allow for 'backup' parents
 	- An orderd list of siblings to try.
 	- Hash function load balancing
-(2) Write src/store_key_md5.c and lib/md5.c
 
 (3) request-range
 (3) hit metering
@@ -36,6 +35,8 @@ Our Todo List
 (3) SIGHUP should reread error text files
 (3) Make swap.state binary with fixed-size cache keys
 (3) Make checkFailureRatio() work again.
+(3) LDAP support.  See http://miso.wwa.com/~donley/ and
+    Clayton Donley <qa1049@ilms04.cig.mot.com>
 
 (4) support ftp://host/pub;type=d
 (4) FTP PUT
@@ -54,23 +55,9 @@ Our Todo List
 (5) For _popular_ objects, return hits if known to be stale, but then
     initiate an IMS/refresh in the background.
 (5) #ifdefs to disable IP caching
-(5) convert ipcache/fqdncache to double-linked list
-    and lose qsort() calls.
 (5) REST for failed ftp transfers.
 (5) Customizable access logging.
 (5) Inline DNS queries with native resolver calls.
-
-BUGS:
-
-	In a stream of pipelined requests, if one of the latter
-	requests causes us to want to write to the client socket
-	directly (e.g errorSend(), perhaps due to not passing the
-	access rules, or maybe a Not Modified reply), then we fail this
-	assertion in comm_write:
-		assert(fd_table[fd].rwstate == NULL);
-	Either we'll have to use storeClientCopy and StoreEntry's for
-	everything, or attach some pending-outgoing-buf to the
-	clientHttpRequest struct.
 
 
 DONE:
@@ -86,3 +73,7 @@ DONE:
 (1) reconfigure (SIGHUP) causes problems with Config.cacheSwap.swapDirs[].
 (1) I think we're assuming persistent connections and not looking at
     the reply headers.
+(2) Write src/store_key_md5.c and lib/md5.c
+(2) SNMP interface
+(5) convert ipcache/fqdncache to double-linked list
+    and lose qsort() calls.
