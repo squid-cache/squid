@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.331 2002/10/14 08:16:58 robertc Exp $
+ * $Id: ftp.cc,v 1.332 2002/10/14 08:43:46 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -920,7 +920,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
 	    /* XXX what about Config.Timeout.read? */
 	    read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-	    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+	    read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
 	    comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);
 	} else {
@@ -940,7 +940,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
     /* XXX what about Config.Timeout.read? */
 	read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-	read_sz = delayBytesWanted(delay_id, 1, read_sz);
+	read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
 	comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);}
 }
@@ -2139,7 +2139,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	/* XXX what about Config.Timeout.read? */
 	size_t read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-	read_sz = delayBytesWanted(delay_id, 1, read_sz);
+	read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
 	comm_read(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset,
 		  read_sz, ftpDataRead, ftpState);
