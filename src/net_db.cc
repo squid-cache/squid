@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.58 1998/01/06 22:44:03 wessels Exp $
+ * $Id: net_db.cc,v 1.59 1998/01/09 08:06:32 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -96,14 +96,21 @@ static void
 netdbHashUnlink(const char *key)
 {
     netdbEntry *n;
+    net_db_name *x;
+    net_db_name **X;
     hash_link *hptr = hash_lookup(host_table, key);
-    if (hptr == NULL) {
-	debug_trap("netdbHashUnlink: key not found");
-	return;
-    }
+    assert(hptr != NULL);
     n = (netdbEntry *) hptr->item;
-    n->link_count--;
+    for (X = &n->hosts; (x = *X) != NULL; X = &x->next) {
+	if (strcmp(x->name, key) == 0)
+	    break;
+    }
+    assert(x != NULL);
+    *X = x->next;
+    safe_free(x->name);
+    safe_free(x);
     hash_delete_link(host_table, hptr);
+    n->link_count--;
     meta_data.netdb_hosts--;
 }
 
@@ -163,7 +170,7 @@ netdbPurgeLRU(void)
 	assert(list_count < meta_data.netdb_addrs);
 	*(list + list_count) = n;
 	list_count++;
-        n = (netdbEntry *) hash_next(addr_table);
+	n = (netdbEntry *) hash_next(addr_table);
     }
     qsort((char *) list,
 	list_count,
@@ -205,14 +212,27 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     struct in_addr addr;
     char *hostname = data;
     netdbEntry *n;
+    netdbEntry *na;
     cbdataUnlock(hostname);
     if (ia == NULL) {
 	cbdataFree(hostname);
 	return;
     }
     addr = ia->in_addrs[ia->cur];
-    if ((n = netdbLookupHost(hostname)) == NULL)
+    if ((n = netdbLookupHost(hostname)) == NULL) {
 	n = netdbAdd(addr, hostname);
+    } else if ((na = netdbLookupAddr(addr)) != n) {
+	/*
+	 *hostname moved from 'network n' to 'network na'!
+	 */
+	if (na == NULL)
+	    na = netdbAdd(addr, hostname);
+	debug(37, 1) ("netdbSendPing: NOTE: %s moved from %s to %s\n",
+	    hostname, n->network, na->network);
+	netdbHashUnlink(hostname);
+	netdbHashLink(na, hostname);
+	n = na;
+    }
     debug(37, 3) ("netdbSendPing: pinging %s\n", hostname);
     icmpDomainPing(addr, hostname);
     n->pings_sent++;
@@ -567,7 +587,7 @@ netdbDump(StoreEntry * sentry)
     n = (netdbEntry *) hash_first(addr_table);
     while (n != NULL) {
 	*(list + i++) = n;
-        n = (netdbEntry *) hash_next(addr_table);
+	n = (netdbEntry *) hash_next(addr_table);
     }
     if (i != meta_data.netdb_addrs)
 	debug(37, 0) ("WARNING: netdb_addrs count off, found %d, expected %d\n",
@@ -686,7 +706,7 @@ var_netdb_entry(struct variable *vp, oid * name, int *length, int exact, int *va
 	    debug(49, 5) ("snmp var_netdb_entry: yup, a match.\n");
 	    break;
 	}
-	n = hash_next(addr_table);
+	n = (netdbEntry *) hash_next(addr_table);
     }
 #endif
     if (n == NULL)
