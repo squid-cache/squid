@@ -97,8 +97,10 @@ netdbSendPing(int fdunused, struct hostent *hp, void *data)
     struct in_addr addr;
     char *hostname = data;
     netdbEntry *n;
-    if (hp == NULL)
+    if (hp == NULL) {
+	xfree(hostname);
 	return;
+    }
     addr = inaddrFromHostent(hp);
     if ((n = netdbLookupHost(hostname)) == NULL)
 	n = netdbAdd(addr, hostname);
