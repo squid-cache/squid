@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.100 1996/11/06 23:14:24 wessels Exp $
+ * $Id: comm.cc,v 1.101 1996/11/11 22:00:45 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -865,7 +865,7 @@ comm_add_close_handler(int fd, PF handler, void *data)
 {
     struct close_handler *new = xmalloc(sizeof(*new));
 
-    debug(5, 5, "comm_add_close_handler: fd=%d handler=0x%p data=0x%p\n", fd, handler, data);
+    debug(5, 5, "comm_add_close_handler: fd=%d handler=%p data=%p\n", fd, handler, data);
 
     new->handler = handler;
     new->data = data;
