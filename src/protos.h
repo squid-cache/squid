@@ -106,9 +106,9 @@ extern int comm_listen(int sock);
 extern int comm_open(int, int, struct in_addr, u_short port, int, const char *note);
 extern u_short comm_local_port(int fd);
 #if HAVE_POLL
-extern int comm_poll(time_t);
+extern int comm_poll(int);
 #else
-extern int comm_select(time_t);
+extern int comm_select(int);
 #endif
 extern void commSetSelect(int, unsigned int, PF *, void *, time_t);
 extern void comm_add_close_handler(int fd, PF *, void *);
@@ -165,8 +165,8 @@ extern dnsserver_t *dnsGetFirstAvailable(void);
 extern void dnsStats(StoreEntry *);
 extern void dnsFreeMemory(void);
 
-extern void eventAdd(const char *name, EVH * func, void *arg, time_t when, int);
-extern void eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish, int);
+extern void eventAdd(const char *name, EVH * func, void *arg, double when, int);
+extern void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
 extern void eventRun(void);
 extern time_t eventNextTime(void);
 extern void eventDelete(EVH * func, void *arg);
@@ -232,7 +232,7 @@ extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
 extern size_t httpBuildRequestPrefix(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
-    MemBuf *mb,
+    MemBuf * mb,
     int cfd,
     int flags);
 extern void httpAnonInitModule();
@@ -271,7 +271,7 @@ extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 extern void httpHdrCcInitModule();
 extern void httpHdrCcCleanModule();
 extern HttpHdrCc *httpHdrCcCreate();
-extern HttpHdrCc *httpHdrCcParseCreate(const String *str);
+extern HttpHdrCc *httpHdrCcParseCreate(const String * str);
 extern void httpHdrCcDestroy(HttpHdrCc * cc);
 extern HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
 extern void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
@@ -281,9 +281,9 @@ extern void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 /* Http Range Header Field */
-extern HttpHdrRange *httpHdrRangeParseCreate(const String *range_spec);
+extern HttpHdrRange *httpHdrRangeParseCreate(const String * range_spec);
 /* returns true if ranges are valid; inits HttpHdrRange */
-extern int httpHdrRangeParseInit(HttpHdrRange * range, const String *range_spec);
+extern int httpHdrRangeParseInit(HttpHdrRange * range, const String * range_spec);
 extern void httpHdrRangeDestroy(HttpHdrRange * range);
 extern HttpHdrRange *httpHdrRangeDup(const HttpHdrRange * range);
 extern void httpHdrRangePackInto(const HttpHdrRange * range, Packer * p);
@@ -304,10 +304,10 @@ extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
 extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
 extern void httpHeaderMaskInit(HttpHeaderMask * mask);
 extern void httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count);
-extern int httpHeaderHasConnDir(const HttpHeader *hdr, const char *directive);
-extern void strListAdd(String *str, const char *item, char del);
-extern int strListIsMember(const String *str, const char *item, char del);
-extern int strListGetItem(const String *str, char del, const char **item, int *ilen, const char **pos);
+extern int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
+extern void strListAdd(String * str, const char *item, char del);
+extern int strListIsMember(const String * str, const char *item, char del);
+extern int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
 extern int httpHeaderParseSize(const char *start, size_t * sz);
@@ -329,7 +329,7 @@ extern void httpHeaderPutInt(HttpHeader * hdr, http_hdr_type type, int number);
 extern void httpHeaderPutTime(HttpHeader * hdr, http_hdr_type type, time_t time);
 extern void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
 extern void httpHeaderPutAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
-extern void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc *cc);
+extern void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc);
 extern void httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value);
 extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
@@ -351,7 +351,7 @@ extern void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 extern void httpHeaderStoreReport(StoreEntry * e);
 
 /* Http Msg (currently in HttpReply.c @?@ ) */
-extern int httpMsgIsPersistent(float http_ver, const HttpHeader *hdr);
+extern int httpMsgIsPersistent(float http_ver, const HttpHeader * hdr);
 extern int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
 
 /* Http Reply */
@@ -392,9 +392,9 @@ extern request_t *requestCreate(method_t, protocol_t, const char *urlpath);
 extern void requestDestroy(request_t *);
 extern request_t *requestLink(request_t *);
 extern void requestUnlink(request_t *);
-extern int httpRequestParseHeader(request_t *req, const char *parse_start);
+extern int httpRequestParseHeader(request_t * req, const char *parse_start);
 extern void httpRequestSetHeaders(request_t *, method_t, const char *uri, const char *header_str);
-extern int httpRequestHdrAllowed(const HttpHeaderEntry *e, String *strConnection);
+extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 
 extern void icmpOpen(void);
 extern void icmpClose(void);
@@ -505,7 +505,8 @@ extern int neighborsUdpPing(request_t *,
     StoreEntry *,
     IRCB * callback,
     void *data,
-    int *exprep);
+    int *exprep,
+    double *exprtt);
 extern void neighborAddAcl(const char *, const char *);
 extern void neighborsUdpAck(const cache_key *, icp_common_t *, const struct sockaddr_in *);
 extern void neighborAdd(const char *, const char *, int, int, int, int, int);

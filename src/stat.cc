@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.247 1998/05/14 20:48:12 wessels Exp $
+ * $Id: stat.cc,v 1.248 1998/05/15 15:16:33 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -750,7 +750,7 @@ statInit(void)
     for (i = 0; i < N_COUNT_HOUR_HIST; i++)
 	statCountersInit(&CountHourHist[i]);
     statCountersInit(&Counter);
-    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
     cachemgrRegister("info",
 	"General Runtime Information",
 	info_get, 0);

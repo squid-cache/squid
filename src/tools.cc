@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.153 1998/04/08 00:34:20 wessels Exp $
+ * $Id: tools.cc,v 1.154 1998/05/15 15:16:39 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -718,6 +718,8 @@ getCurrentTime(void)
 #else
     gettimeofday(&current_time, NULL);
 #endif
+    current_dtime = (double) current_time.tv_sec +
+	(double) current_time.tv_usec / 1000000.0;
     return squid_curtime = current_time.tv_sec;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.101 1998/05/14 20:48:00 wessels Exp $
+ * $Id: fqdncache.cc,v 1.102 1998/05/15 15:16:21 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ fqdncache_purgelru(void *notused)
     dlink_node *prev = NULL;
     fqdncache_entry *f;
     int removed = 0;
-    eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 10, 1);
+    eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 10.0, 1);
     for (m = lru_list.tail; m; m = prev) {
 	if (memInUse(MEM_FQDNCACHE_ENTRY) < fqdncache_low)
 	    break;

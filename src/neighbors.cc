@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.209 1998/05/14 20:48:05 wessels Exp $
+ * $Id: neighbors.cc,v 1.210 1998/05/15 15:16:27 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -413,7 +413,8 @@ neighborsUdpPing(request_t * request,
     StoreEntry * entry,
     IRCB * callback,
     void *callback_data,
-    int *exprep)
+    int *exprep,
+    double *exprtt)
 {
     const char *url = storeUrl(entry);
     MemObject *mem = entry->mem_obj;
@@ -433,6 +434,7 @@ neighborsUdpPing(request_t * request,
     mem->start_ping = current_time;
     mem->icp_reply_callback = callback;
     mem->ircb_data = callback_data;
+    *exprtt = 0.0;
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	if (p == NULL)
 	    p = Config.peers;
@@ -494,6 +496,7 @@ neighborsUdpPing(request_t * request,
 	} else if (neighborUp(p)) {
 	    /* its alive, expect a reply from it */
 	    (*exprep)++;
+	    (*exprtt) += (double) p->stats.rtt;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
@@ -544,6 +547,13 @@ neighborsUdpPing(request_t * request,
     request->hierarchy.n_sent = peers_pinged;
     request->hierarchy.n_expect = *exprep;
 #endif
+    /*
+     * Average out the expected RTT and then double it
+     */
+    if (*exprep > 0)
+	(*exprtt) = 2.0 * (*exprtt) / (double) (*exprep);
+    else
+	*exprtt = Config.neighborTimeout;
     return peers_pinged;
 }
 
@@ -570,7 +580,7 @@ peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
 	debug(15, 5) ("peerDigestLookup: !initialized\n");
 	if (!EBIT_TEST(p->digest.flags, PD_INIT_PENDING)) {
 	    EBIT_SET(p->digest.flags, PD_INIT_PENDING);
-	    eventAdd("peerDigestInit", peerDigestInit, p, 0);
+	    eventAdd("peerDigestInit", peerDigestInit, p, 0.0, 1);
 	}
 	return LOOKUP_NONE;
     } else {
@@ -939,7 +949,7 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     ap->sin_port = htons(p->icp_port);
     if (p->type == PEER_MULTICAST)
 	peerCountMcastPeersSchedule(p, 10);
-    eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30, 1);
+    eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
 }
 
 static void
@@ -954,7 +964,7 @@ peerRefreshDNS(void *datanotused)
 	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     }
     /* Reconfigure the peers every hour */
-    eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600, 1);
+    eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600.0, 1);
 }
 
 /*
@@ -994,7 +1004,7 @@ peerCheckConnectDone(int fd, int status, void *data)
 	debug(15, 0) ("TCP connection to %s/%d succeeded\n",
 	    p->host, p->http_port);
     } else {
-	eventAdd("peerCheckConnect", peerCheckConnect, p, 80, 1);
+	eventAdd("peerCheckConnect", peerCheckConnect, p, 80.0, 1);
     }
     comm_close(fd);
     return;
@@ -1008,7 +1018,7 @@ peerCheckConnectStart(peer * p)
     debug(15, 0) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
     p->tcp_up = 0;
     p->last_fail_time = squid_curtime;
-    eventAdd("peerCheckConnect", peerCheckConnect, p, 80, 1);
+    eventAdd("peerCheckConnect", peerCheckConnect, p, 80.0, 1);
 }
 
 static void
@@ -1019,7 +1029,7 @@ peerCountMcastPeersSchedule(peer * p, time_t when)
     eventAdd("peerCountMcastPeersStart",
 	peerCountMcastPeersStart,
 	p,
-	when, 1);
+	(double) when, 1);
     p->mcast.flags |= PEER_COUNT_EVENT_PENDING;
 }
 
@@ -1059,7 +1069,7 @@ peerCountMcastPeersStart(void *data)
     eventAdd("peerCountMcastPeersDone",
 	peerCountMcastPeersDone,
 	psstate,
-	Config.neighborTimeout, 1);
+	(double) Config.neighborTimeout, 1);
     p->mcast.flags |= PEER_COUNTING;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }
