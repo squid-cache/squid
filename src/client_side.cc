@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.609 2002/12/06 23:19:14 hno Exp $
+ * $Id: client_side.cc,v 1.610 2002/12/19 09:57:09 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -86,26 +86,33 @@
  * data flow.
  */
 
+typedef class ClientSocketContext clientSocketContext;
 /* our socket-related context */
-typedef struct _clientSocketContext {
+class ClientSocketContext {
+public:
     clientHttpRequest *http;	/* we own this */
     char reqbuf[HTTP_REQBUF_SZ];
-    struct _clientSocketContext *next;
+    ClientSocketContext *next;
     struct {
 	int deferred:1;		/* This is a pipelined request waiting for the
 				 * current object to complete */
 	int parsed_ok:1;        /* Was this parsed correctly? */
-	int mayUseConnection:1; /* This request may use the connection -
-				 * don't read anymore requests for now
-				 */
     } flags;
+    bool mayUseConnection() const {return mayUseConnection_;}
+    void mayUseConnection(bool aBool) {mayUseConnection_ = aBool;
+    debug (33,3)("ClientSocketContext::mayUseConnection: This %p marked %d\n",
+		 this, aBool);}
     struct {
 	clientStreamNode *node;
 	HttpReply *rep;
 	StoreIOBuffer queuedBuffer;
     } deferredparams;
     off_t writtenToSocket;
-} clientSocketContext;
+private:
+    bool mayUseConnection_; /* This request may use the connection -
+			     * don't read anymore requests for now
+			     */
+};
 
 CBDATA_TYPE(clientSocketContext);
 
@@ -202,6 +209,9 @@ getClientReplyContext(clientSocketContext * context)
 void
 clientReadSomeData(ConnStateData *conn)
 {
+    if (conn->reading)
+	return;
+    conn->reading = true;
     size_t len;
     
     debug(33, 4) ("clientReadSomeData: FD %d: reading request...\n", conn->fd);
@@ -209,6 +219,9 @@ clientReadSomeData(ConnStateData *conn)
     connMakeSpaceAvailable(conn);
     len = connGetAvailableBufferLength(conn) - 1;
     
+    /* Make sure we are not still reading from the client side! */
+    /* XXX this could take a bit of CPU time! aiee! -- adrian */
+    assert(!comm_has_pending_read(conn->fd));
     comm_read(conn->fd, conn->in.buf + conn->in.notYetUsed, len, clientReadRequest, conn);
 }
       
@@ -730,10 +743,7 @@ connReadNextRequest(ConnStateData * conn)
     commSetTimeout(conn->fd, Config.Timeout.persistent_request,
 	requestTimeout, conn);
     conn->defer.until = 0;	/* Kick it to read a new request */
-    /* Make sure we're still reading from the client side! */
-    /* XXX this could take a bit of CPU time! aiee! -- adrian */
-    assert(comm_has_pending_read(conn->fd));
-    /* clientReadSomeData(conn); */
+    clientReadSomeData(conn);
     /* Please don't do anything with the FD past here! */
 }
 
@@ -1421,11 +1431,12 @@ clientProcessRequest(ConnStateData *conn, clientSocketContext *context, method_t
            conn->flags.readMoreRequests = 0;
            return;
        }
+       context->mayUseConnection(true);
     }
 
     /* If this is a CONNECT, don't schedule a read - ssl.c will handle it */
     if (http->request->method == METHOD_CONNECT)
-       context->flags.mayUseConnection = 1;
+       context->mayUseConnection(true);
     clientAccessCheck(http);
 }
 
@@ -1463,6 +1474,8 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
+    assert (conn->reading);
+    conn->reading = false;
     method_t method;
     char *prefix = NULL;
     clientSocketContext *context;
@@ -1558,8 +1571,10 @@ void *data)
                conn->flags.readMoreRequests = 1;
 		break;
 	    }
-	    if (context->flags.mayUseConnection)
+	    if (context->mayUseConnection()) {
+		debug (33, 3) ("clientReadRequest: Not reading, as this request may need the connection\n");
 		do_next_read = 0;
+	    }
 	    continue;		/* while offset > 0 && body.size_left == 0 */
 	}
     }				/* while offset > 0 && conn->body.size_left == 0 */
