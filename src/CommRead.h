@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.2 2003/03/08 09:35:15 robertc Exp $
+ * $Id: CommRead.h,v 1.3 2003/06/23 12:03:07 robertc Exp $
  *
  * DEBUG: section 5    Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -51,9 +51,40 @@ class CallBack
 public:
     CallBack() : handler(NULL), data(NULL){}
 
-    CallBack(C *aHandler, void *someData) : handler(aHandler), data(someData){}
+    CallBack(C *aHandler, void *someData) : handler(aHandler), data (NULL)
+    {
+        if (someData)
+            data = cbdataReference(someData);
+    }
 
-    bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rhs.data;}
+    CallBack(CallBack const &old) : handler(old.handler)
+    {
+        if (old.data)
+            data = cbdataReference (old.data);
+        else
+            data = NULL;
+    }
+
+    ~CallBack()
+    {
+        if (data)
+            cbdataReferenceDone(data);
+    }
+
+    CallBack &operator = (CallBack const & rhs)
+    {
+        handler = rhs.handler;
+
+        if (rhs.data)
+            data = cbdataReference (rhs.data);
+        else
+            data = NULL;
+
+        return *this;
+    }
+
+
+bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rhs.data;}
 
 #if 0
     // twould be nice - RBC 20030307
