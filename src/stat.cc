@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.84 1996/10/13 06:19:51 wessels Exp $
+ * $Id: stat.cc,v 1.85 1996/10/14 21:29:32 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -790,6 +790,10 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 	(int) sizeof(StoreEntry),
 	(int) (meta_data.store_entries * sizeof(StoreEntry) >> 10));
 
+    storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
+	"URL strings",
+	meta_data.url_strings >> 10);
+
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
 	"IPCacheEntry",
 	meta_data.ipcache_count,
@@ -807,10 +811,6 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 	hash_links_allocated,
 	(int) sizeof(hash_link),
 	(int) (hash_links_allocated * sizeof(hash_link) >> 10));
-
-    storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
-	"URL strings",
-	meta_data.url_strings >> 10);
 
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB (%6d free)}\n",
 	"Pool MemObject structures",
