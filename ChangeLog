@@ -47,8 +47,9 @@ Changes to squid-2.5 ():
 	- Squid now sanity checks FTP data connections to ensure the
  	  connection is from the requested server. Can be disabled if
 	  needed by turning off the ftp_sanitycheck option.
-	- external ACL processing capabilities using helpers
-	  see the external_acl_type and acl external directives
+	- external acl support. A mechanism where flexible ACL checks
+	  can be driven by external helpers. See the external_acl_type
+	  and acl external directives.
 	- Countless other small things and fixes
 
 Changes to Squid-2.4.STABLE6 (March 19, 2002):
