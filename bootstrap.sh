@@ -71,7 +71,7 @@ do
 	if (
 	echo "Bootstrapping $dir"
 	cd ./$dir
-	if [ -f bootstrap.sh ]; then
+	if [ -n "$dir" ] && [ -f bootstrap.sh ]; then
 	    ./bootstrap.sh
 	else
 	    # Bootstrap the autotool subsystems
