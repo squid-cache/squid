@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.144 1998/12/05 00:54:23 wessels Exp $
+ * $Id: errorpage.cc,v 1.145 1999/01/11 22:54:19 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -51,6 +51,8 @@ typedef struct {
 } ErrorDynamicPageInfo;
 
 /* local constant and vars */
+
+static const char *const proxy_auth_challenge_fmt = "Basic realm=\"%s\"";
 
 /*
  * note: hard coded error messages are not appended with %S automagically
@@ -268,6 +270,22 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     assert(mem->inmem_hi == 0);
     storeBuffer(entry);
     rep = errorBuildReply(err);
+    /* Add authentication header */
+    switch (err->http_status) {
+    case HTTP_PROXY_AUTHENTICATION_REQUIRED:
+	/* Proxy authorisation needed */
+	httpHeaderPutStrf(&rep->header, HDR_PROXY_AUTHENTICATE,
+	    proxy_auth_challenge_fmt, Config.proxyAuthRealm);
+	break;
+    case HTTP_UNAUTHORIZED:
+	/* WWW Authorisation needed */
+	httpHeaderPutStrf(&rep->header, HDR_WWW_AUTHENTICATE,
+	    proxy_auth_challenge_fmt, Config.proxyAuthRealm);
+	break;
+    default:
+	/* Keep GCC happy */
+	break;
+    }
     httpReplySwapOut(rep, entry);
     httpReplyDestroy(rep);
     mem->reply->sline.status = err->http_status;

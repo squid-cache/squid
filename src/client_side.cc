@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.428 1999/01/11 20:16:04 wessels Exp $
+ * $Id: client_side.cc,v 1.429 1999/01/11 22:54:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -53,7 +53,6 @@
 #endif
 
 static const char *const crlf = "\r\n";
-static const char *const proxy_auth_challenge_fmt = "Basic realm=\"%s\"";
 
 #define REQUEST_BUF_SIZE 4096
 #define FAILURE_MODE_TIME 300
@@ -83,7 +82,6 @@ static void clientInterpretRequestHeaders(clientHttpRequest *);
 static void clientProcessRequest(clientHttpRequest *);
 static void clientProcessExpired(void *data);
 static void clientProcessOnlyIfCachedMiss(clientHttpRequest * http);
-static HttpReply *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static int clientCheckContentLength(request_t * r);
@@ -142,35 +140,6 @@ clientOnlyIfCached(clientHttpRequest * http)
 	EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED);
 }
 
-static HttpReply *
-clientConstructProxyAuthReply(clientHttpRequest * http)
-{
-    ErrorState *err;
-    HttpReply *rep;
-    if (!http->flags.accel) {
-	/* Proxy authorisation needed */
-	err = errorCon(ERR_CACHE_ACCESS_DENIED,
-	    HTTP_PROXY_AUTHENTICATION_REQUIRED);
-    } else {
-	/* WWW authorisation needed */
-	err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED);
-    }
-    err->request = requestLink(http->request);
-    rep = errorBuildReply(err);
-    errorStateFree(err);
-    /* add Authenticate header */
-    if (!http->flags.accel) {
-	/* Proxy authorisation needed */
-	httpHeaderPutStrf(&rep->header, HDR_PROXY_AUTHENTICATE,
-	    proxy_auth_challenge_fmt, Config.proxyAuthRealm);
-    } else {
-	/* WWW Authorisation needed */
-	httpHeaderPutStrf(&rep->header, HDR_WWW_AUTHENTICATE,
-	    proxy_auth_challenge_fmt, Config.proxyAuthRealm);
-    }
-    return rep;
-}
-
 StoreEntry *
 clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
 {
@@ -191,12 +160,12 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
     return e;
 }
 
-
 void
 clientAccessCheckDone(int answer, void *data)
 {
     clientHttpRequest *http = data;
     int page_id = -1;
+    http_status status;
     ErrorState *err = NULL;
     debug(33, 5) ("clientAccessCheckDone: '%s' answer=%d\n", http->uri, answer);
     http->acl_checklist = NULL;
@@ -206,14 +175,6 @@ clientAccessCheckDone(int answer, void *data)
 	assert(http->redirect_state == REDIRECT_NONE);
 	http->redirect_state = REDIRECT_PENDING;
 	redirectStart(http, clientRedirectDone, http);
-    } else if (answer == ACCESS_REQ_PROXY_AUTH) {
-	http->log_type = LOG_TCP_DENIED;
-	http->entry = clientCreateStoreEntry(http, http->request->method,
-	    null_request_flags);
-	/* create appropriate response */
-	http->entry->mem_obj->reply = clientConstructProxyAuthReply(http);
-	httpReplySwapOut(http->entry->mem_obj->reply, http->entry);
-	storeComplete(http->entry);
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
 	debug(33, 5) ("AclMatchedName = %s\n",
@@ -222,13 +183,24 @@ clientAccessCheckDone(int answer, void *data)
 	http->entry = clientCreateStoreEntry(http, http->request->method,
 	    null_request_flags);
 	page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
-	/* NOTE: don't use HTTP_UNAUTHORIZED because then the
-	 * stupid browser wants us to authenticate */
-	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
+	if (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName)) {
+	    if (!http->flags.accel) {
+		/* Proxy authorisation needed */
+		status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
+	    } else {
+		/* WWW authorisation needed */
+		status = HTTP_UNAUTHORIZED;
+	    }
+	    if (page_id <= 0)
+		page_id = ERR_CACHE_ACCESS_DENIED;
+	} else {
+	    status = HTTP_FORBIDDEN;
+	    if (page_id <= 0)
+		page_id = ERR_ACCESS_DENIED;
+	}
+	err = errorCon(page_id, status);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
-	if (page_id > 0)
-	    err->page_id = page_id;
 	errorAppendEntry(http->entry, err);
     }
 }

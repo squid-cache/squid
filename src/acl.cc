@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.191 1998/12/05 00:54:13 wessels Exp $
+ * $Id: acl.cc,v 1.192 1999/01/11 22:54:15 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -53,6 +53,7 @@ static void aclDestroyAclList(acl_list * list);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
 static FREE aclFreeProxyAuthUser;
+static struct _acl *aclFindByName(const char *name);
 static int aclMatchAcl(struct _acl *, aclCheck_t *);
 static int aclMatchIntegerRange(intrange * data, int i);
 static int aclMatchTime(acl_time_data * data, time_t when);
@@ -246,7 +247,7 @@ aclTypeToStr(squid_acl type)
     return "ERROR";
 }
 
-acl *
+static acl *
 aclFindByName(const char *name)
 {
     acl *a;
@@ -761,6 +762,17 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
     return -1;
 }
 
+/* does name lookup, returns if it is a proxy_auth acl */
+int
+aclIsProxyAuth(const char *name)
+{
+    acl *a = aclFindByName(name);
+    if (a) 
+	return a->type == ACL_PROXY_AUTH;
+    return 0;
+}
+
+
 /* maex@space.net (05.09.96)
  *    get the info for redirecting "access denied" to info pages
  *      TODO (probably ;-)
@@ -989,14 +1001,15 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
 }
 
 /* aclMatchProxyAuth can return three exit codes:
- * 0 : No such user; invalid Proxy-authorization: header;
- * ask for Proxy-Authorization: header
+ * 0 : user denied access
  * 1 : user validated OK
  * -1 : check the password for this user via an external authenticator
+ * -2 : invalid Proxy-authorization: header;
+ * ask for Proxy-Authorization: header
  */
 
 static int
-aclMatchProxyAuth(const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist)
+aclMatchProxyAuth(wordlist * data, const char * proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist)
 {
     /* checklist is used to register user name when identified, nothing else */
     LOCAL_ARRAY(char, login_buf, USER_IDENT_SZ);
@@ -1004,56 +1017,66 @@ aclMatchProxyAuth(const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCh
 
     if (!aclDecodeProxyAuth(proxy_auth, &user, &password, login_buf, sizeof(login_buf)))
 	/* No or invalid Proxy-Auth header */
-	return 0;
+	return -2;
 
     debug(28, 5) ("aclMatchProxyAuth: checking user '%s'\n", user);
 
-    if (!auth_user) {
-	/* see if we already know this user */
-	auth_user = hash_lookup(proxy_auth_cache, user);
-	if (!auth_user) {
-	    /* user not yet known, ask external authenticator */
-	    debug(28, 4) ("aclMatchProxyAuth: user '%s' not yet known\n", user);
-	    return -1;
-	} else if ((0 == strcmp(auth_user->passwd, password)) &&
-	    (auth_user->expiretime > current_time.tv_sec)) {
-	    /* user already known and valid */
-	    debug(28, 5) ("aclMatchProxyAuth: user '%s' previously validated\n",
+    if (auth_user) {
+	/* This should be optimized to a boolean argument indicating that the
+	 * password is invalid, instead of passing full acl_proxy_auth_user
+	 * structures, and all messing with checklist->proxy_auth should
+	 * be restricted the functions that deal with the authenticator.
+	 */
+	assert(auth_user == checklist->auth_user);
+	checklist->auth_user = NULL; /* get rid of that special reference */
+	/* Check result from external validation */
+	if (auth_user->passwd_ok != 1) {
+	    /* password was checked but did not match */
+	    assert(auth_user->passwd_ok == 0);
+	    debug(28, 4) ("aclMatchProxyAuth: authentication failed for user '%s'\n",
 		user);
-	    /* copy username to request for logging on client-side */
-	    xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	    return 1;
-	} else {
-	    /* password mismatch/timeout */
-	    debug(28, 4) ("aclMatchProxyAuth: user '%s' password mismatch/timeout\n",
-		user);
-	    /* remove this user from the hash, making him unknown */
-	    hash_remove_link(proxy_auth_cache, (hash_link *) auth_user);
 	    aclFreeProxyAuthUser(auth_user);
 	    /* copy username to request for logging on client-side unless ident
 	     * is known (do not override ident with false proxy auth names) */
 	    if (!*checklist->request->user_ident)
 		xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	    return -1;
+	    return -2;
+	} else {
+	    /* password was checked and did match */
+	    debug(28, 4) ("aclMatchProxyAuth: user '%s' validated OK\n", user);
+	    /* store validated user in hash, after filling in expiretime */
+	    auth_user->expiretime = current_time.tv_sec + Config.authenticateTTL;
+	    hash_join(proxy_auth_cache, (hash_link *) auth_user);
+	    /* Continue checking below, as normal */
 	}
-	/* NOTREACHED */
-    } else {
-	/* Check result from external validation */
-	if (checklist->auth_user->passwd_ok != 1) {
-	    /* password was checked but did not match */
-	    assert(checklist->auth_user->passwd_ok == 0);
-	    debug(28, 4) ("aclMatchProxyAuth: authentication failed for user '%s'\n",
-		user);
-	    return 0;
-	}
-	debug(28, 4) ("aclMatchProxyAuth: user '%s' validated OK\n", user);
-	/* store validated user in hash, after filling in expiretime */
-	checklist->auth_user->expiretime = current_time.tv_sec + Config.authenticateTTL;
-	hash_join(proxy_auth_cache, (hash_link *) checklist->auth_user);
-
-	return 1;
     }
 
+    /* see if we already know this user */
+    auth_user = hash_lookup(proxy_auth_cache, user);
+
+    if (!auth_user) {
+	/* user not yet known, ask external authenticator */
+	debug(28, 4) ("aclMatchProxyAuth: user '%s' not yet known\n", user);
+	return -1;
+    } else if ((0 == strcmp(auth_user->passwd, password)) &&
+	    (auth_user->expiretime > current_time.tv_sec)) {
+	/* user already known and valid */
+	debug(28, 5) ("aclMatchProxyAuth: user '%s' previously validated\n",
+	    user);
+	/* copy username to request for logging on client-side */
+	xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
+	return aclMatchUser(data, user);
+    } else {
+	/* password mismatch/timeout */
+	debug(28, 4) ("aclMatchProxyAuth: user '%s' password mismatch/timeout\n",
+	    user);
+	/* remove this user from the hash, making him unknown */
+	hash_remove_link(proxy_auth_cache, (hash_link *) auth_user);
+	aclFreeProxyAuthUser(auth_user);
+	/* ask the external authenticator in case the password is changed */
+	/* wrong password will be trapped above so this does not loop */
+	return -1;
+    }
     /* NOTREACHED */
 
 }
@@ -1188,6 +1211,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     const ipcache_addrs *ia = NULL;
     const char *fqdn = NULL;
     char *esc_buf;
+    const char *header;
     int k;
     if (!ae)
 	return 0;
@@ -1300,29 +1324,39 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     case ACL_PROXY_AUTH:
 	if (!r->flags.accelerated) {
 	    /* Proxy authorization on proxy requests */
-	    k = aclMatchProxyAuth(httpHeaderGetStr(&checklist->request->header,
-		    HDR_PROXY_AUTHORIZATION),
-		checklist->auth_user,
-		checklist);
+	    header = httpHeaderGetStr(&checklist->request->header,
+		    HDR_PROXY_AUTHORIZATION);
 	} else if (r->flags.internal) {
 	    /* WWW authorization on accelerated internal requests */
-	    k = aclMatchProxyAuth(httpHeaderGetStr(&checklist->request->header,
-		    HDR_AUTHORIZATION),
-		checklist->auth_user,
-		checklist);
+	    header = httpHeaderGetStr(&checklist->request->header,
+		    HDR_AUTHORIZATION);
 	} else {
 #if AUTH_ON_ACCELERATION
 	    /* WWW authorization on accelerated requests */
-	    k = aclMatchProxyAuth(httpHeaderGetStr(&checklist->request->header,
-		    HDR_AUTHORIZATION),
-		checklist->auth_user,
-		checklist);
+	    header = httpHeaderGetStr(&checklist->request->header,
+		    HDR_AUTHORIZATION);
 #else
 	    debug(28, 1) ("aclMatchAcl: proxy_auth %s not applicable on accelerated requests.\n", ae->name);
 	    return -1;
 #endif
 	}
-	if (k == 0) {
+	/*
+	 * Register that we used the proxy authentication header so that
+	 * it is not forwarded to the next proxy
+	 */
+	r->flags.used_proxy_auth = 1;
+	/* Check the password */
+	switch (aclMatchProxyAuth(ae->data, 
+		    header,
+		    checklist->auth_user,
+		    checklist)) {
+	case 0:
+	    /* Correct password, but was not allowed in this ACL */
+	    return 0;
+	case 1:
+	    /* user validated OK */
+	    return 1;
+	case -2:
 	    /* no such user OR we need a proxy authentication header */
 	    checklist->state[ACL_PROXY_AUTH] = ACL_PROXY_AUTH_NEEDED;
 	    /*
@@ -1330,15 +1364,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	     * return codes here
 	     */
 	    return 0;
-	} else if (k == 1) {
-	    /*
-	     * Authentication successful. Register that we used the proxy
-	     * authentication header so that it is not forwarded to the
-	     * next proxy
-	     */
-	    r->flags.used_proxy_auth = 1;
-	    return 1;
-	} else if (k == -1) {
+	case -1:
 	    /*
 	     * we need to validate the password
 	     */
