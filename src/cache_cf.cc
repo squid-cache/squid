@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.76 1996/08/28 17:44:28 wessels Exp $
+ * $Id: cache_cf.cc,v 1.77 1996/08/28 20:11:30 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1353,14 +1353,10 @@ int parseConfigFile(file_name)
 	printf("         Change your configuration file.\n");
 	fflush(stdout);		/* print message */
     }
-    if (Config.cleanRate > -1 && Config.cleanRate < 60) {
-	Config.cleanRate = (30 * 60);
-	printf("WARNING: clean_rate is less than one minute.\n");
-	printf("         This will cause serious problems with your cache!!!\n");
-	printf("         Change your configuration file.\n");
-	printf("         For this run, however, %s will use %d minutes for clean_rate.\n", appname, (int) (Config.cleanRate / 60));
-	fflush(stdout);		/* print message */
-    }
+    if (Config.cleanRate < 1)
+	Config.cleanRate = 86400 * 365;	/* one year */
+    if (Config.Announce.rate < 1)
+	Config.Announce.rate = 86400 * 365;	/* one year */
     if (Config.dnsChildren < 1) {
 	printf("WARNING: dns_children was set to a bad value: %d\n",
 	    Config.dnsChildren);
