@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.612 2003/01/23 00:37:17 robertc Exp $
+ * $Id: client_side.cc,v 1.613 2003/01/27 08:06:57 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -353,11 +353,16 @@ void
 clientUpdateHierCounters(HierarchyLogEntry * someEntry)
 {
     ping_data *i;
-    switch (someEntry->alg) {
-    case PEER_SA_DIGEST:
+    switch (someEntry->code) {
+#if USE_CACHE_DIGESTS
+    case CD_PARENT_HIT:
 	statCounter.cd.times_used++;
 	break;
-    case PEER_SA_ICP:
+#endif
+    case SIBLING_HIT:
+    case PARENT_HIT:
+    case FIRST_PARENT_MISS:
+    case CLOSEST_PARENT_MISS:
 	statCounter.icp.times_used++;
 	i = &someEntry->ping;
 	if (clientPingHasFinished(i))
@@ -366,7 +371,8 @@ clientUpdateHierCounters(HierarchyLogEntry * someEntry)
 	if (i->timeout)
 	    statCounter.icp.query_timeouts++;
 	break;
-    case PEER_SA_NETDB:
+    case CLOSEST_PARENT:
+    case CLOSEST_DIRECT:
 	statCounter.netdb.times_used++;
 	break;
     default:
