@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.131 2001/09/28 20:02:40 wessels Exp $
+ * $Id: url.cc,v 1.132 2001/11/16 15:59:07 hno Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -57,6 +57,7 @@ const char *RequestMethodStr[] =
     "BMOVE",
     "BDELETE",
     "BPROPFIND",
+    "SEARCH",
     "%EXT00",
     "%EXT01",
     "%EXT02",
