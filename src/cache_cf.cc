@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.165 1997/01/19 08:32:10 wessels Exp $
+ * $Id: cache_cf.cc,v 1.166 1997/01/21 02:53:34 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -400,8 +400,7 @@ addToIPACL(ip_acl ** list, const char *ip_str, ip_access_type access)
 	}
     }
 
-    if (inv)
-	q->access = (access == IP_ALLOW) ? IP_DENY : IP_ALLOW;
+    q->access = inv ? (access == IP_ALLOW ? IP_DENY : IP_ALLOW) : access;
     q->addr.s_addr = htonl(a1 * 0x1000000 + a2 * 0x10000 + a3 * 0x100 + a4);
     q->mask.s_addr = lmask.s_addr;
 }
