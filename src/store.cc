@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.172 1996/12/01 07:33:43 wessels Exp $
+ * $Id: store.cc,v 1.173 1996/12/02 03:32:03 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2323,7 +2323,8 @@ storeVerifySwapDirs(int clean)
 	if (clean && opt_unlink_on_reload) {
 	    debug(20, 1, "storeVerifySwapDirs: Zapping all objects on disk storage.\n");
 	    cmdbuf = xcalloc(1, BUFSIZ);
-	    sprintf(cmdbuf, "cd %s; /bin/rm -rf log 0[0-9A-F]", path);
+	    sprintf(cmdbuf, "cd %s; /bin/rm -rf %s [0-9A-F][0-9A-F]",
+		path, swaplog_file);
 	    debug(20, 1, "storeVerifySwapDirs: Running '%s'\n", cmdbuf);
 	    system(cmdbuf);	/* XXX should avoid system(3) */
 	    xfree(cmdbuf);
