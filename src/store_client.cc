@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.126 2003/03/11 08:24:43 robertc Exp $
+ * $Id: store_client.cc,v 1.127 2003/05/19 23:16:48 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -611,12 +611,12 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
         return 0;
     }
 
-    if (mem->clients.head == NULL) {
+    if (mem->clientCount() == 0) {
         debug(90, 3) ("storeUnregister: Consistency failure - store client being unregistered is not in the mem object's list for '%s'\n", e->getMD5Text());
         return 0;
     }
 
-    if (sc == mem->clients.head->data) {
+    if (mem->clientIsFirst(sc)) {
         /*
          * If we are unregistering the _first_ client for this
          * entry, then we have to reset the client FD to -1.
@@ -727,8 +727,13 @@ CheckQuickAbort2(StoreEntry * entry)
     }
 
     expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
-    assert (entry->getReply()->content_length + entry->getReply()->hdr_sz >= 0);
+
+    if (expectlen < 0)
+        /* expectlen is < 0 if *no* information about the object has been recieved */
+        return 1;
+
     curlen = (size_t) mem->endOffset ();
+
     minlen = (size_t) Config.quickAbort.min << 10;
 
     if (minlen < 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.4 2003/03/04 01:40:25 robertc Exp $
+ * $Id: MemObject.h,v 1.5 2003/05/19 23:16:48 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,6 +93,11 @@ public:
     mem_hdr data_hdr;
     off_t inmem_lo;
     dlink_list clients;
+    /* TODO: move into .cc or .cci */
+    size_t clientCount() const {return nclients;}
+
+    bool clientIsFirst(void *sc) const {return (clients.head && sc == clients.head->data);}
+
     int nclients;
 
     struct
