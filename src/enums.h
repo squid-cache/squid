@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.196 2001/10/08 16:18:32 hno Exp $
+ * $Id: enums.h,v 1.197 2001/10/17 10:59:08 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,7 +34,8 @@
 #ifndef SQUID_ENUMS_H
 #define SQUID_ENUMS_H
 
-typedef enum {
+typedef enum
+  {
     LOG_TAG_NONE,
     LOG_TCP_HIT,
     LOG_TCP_MISS,
@@ -58,9 +59,11 @@ typedef enum {
     LOG_UDP_MISS_NOFETCH,
     LOG_ICP_QUERY,
     LOG_TYPE_MAX
-} log_type;
+  }
+log_type;
 
-typedef enum {
+typedef enum
+  {
     ERR_NONE,
     ERR_READ_TIMEOUT,
     ERR_LIFETIME_EXP,
@@ -93,9 +96,11 @@ typedef enum {
     ERR_ONLY_IF_CACHED_MISS,	/* failure to satisfy only-if-cached request */
     ERR_TOO_BIG,
     ERR_MAX
-} err_type;
+  }
+err_type;
 
-typedef enum {
+typedef enum
+  {
     ACL_NONE,
     ACL_SRC_IP,
     ACL_DST_IP,
@@ -134,52 +139,64 @@ typedef enum {
     ACL_REP_MIME_TYPE,
     ACL_MAX_USER_IP,
     ACL_ENUM_MAX
-} squid_acl;
+  }
+squid_acl;
 
-typedef enum {
+typedef enum
+  {
     ACL_LOOKUP_NONE,
     ACL_LOOKUP_NEEDED,
     ACL_LOOKUP_PENDING,
     ACL_LOOKUP_DONE,
-    ACL_PROXY_AUTH_NEEDED,
-} acl_lookup_state;
+    ACL_PROXY_AUTH_NEEDED
+  }
+acl_lookup_state;
 
-enum {
+enum
+  {
     FD_NONE,
     FD_LOG,
     FD_FILE,
     FD_SOCKET,
     FD_PIPE,
     FD_UNKNOWN
-};
+  };
 
-enum {
+enum
+  {
     FD_READ,
     FD_WRITE
-};
+  };
 
-typedef enum {
+typedef enum
+  {
     PEER_NONE,
     PEER_SIBLING,
     PEER_PARENT,
     PEER_MULTICAST
-} peer_t;
+  }
+peer_t;
 
-typedef enum {
+typedef enum
+  {
     PEER_SA_NONE,
     PEER_SA_DIGEST,
     PEER_SA_ICP,
     PEER_SA_NETDB
-} peer_select_alg_t;
+  }
+peer_select_alg_t;
 
-typedef enum {
+typedef enum
+  {
     LOOKUP_NONE,
     LOOKUP_HIT,
     LOOKUP_MISS
-} lookup_t;
+  }
+lookup_t;
 
 /* recognized or "known" header fields; @?@ add more! */
-typedef enum {
+typedef enum
+  {
     HDR_ACCEPT,
     HDR_ACCEPT_CHARSET,
     HDR_ACCEPT_ENCODING,
@@ -244,9 +261,11 @@ typedef enum {
 #endif
     HDR_OTHER,
     HDR_ENUM_END
-} http_hdr_type;
+  }
+http_hdr_type;
 
-typedef enum {
+typedef enum
+  {
     CC_PUBLIC,
     CC_PRIVATE,
     CC_NO_CACHE,
@@ -260,10 +279,12 @@ typedef enum {
     CC_ONLY_IF_CACHED,
     CC_OTHER,
     CC_ENUM_END
-} http_hdr_cc_type;
+  }
+http_hdr_cc_type;
 
 /* possible types for http header fields */
-typedef enum {
+typedef enum
+  {
     ftInvalid = HDR_ENUM_END,	/* to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
     ftStr,
@@ -273,19 +294,23 @@ typedef enum {
     ftPContRange,
     ftPRange,
     ftDate_1123_or_ETag
-} field_type;
+  }
+field_type;
 
 /* possible owners of http header */
-typedef enum {
+typedef enum
+  {
     hoNone,
 #if USE_HTCP
     hoHtcpReply,
 #endif
     hoRequest,
     hoReply
-} http_hdr_owner_type;
+  }
+http_hdr_owner_type;
 
-typedef enum {
+typedef enum
+  {
     HIER_NONE,
     DIRECT,
     SIBLING_HIT,
@@ -309,9 +334,11 @@ typedef enum {
 #endif
     ANY_OLD_PARENT,
     HIER_MAX
-} hier_code;
+  }
+hier_code;
 
-typedef enum {
+typedef enum
+  {
     ICP_INVALID,
     ICP_QUERY,
     ICP_HIT,
@@ -337,37 +364,45 @@ typedef enum {
     ICP_DENIED,
     ICP_HIT_OBJ,
     ICP_END
-} icp_opcode;
+  }
+icp_opcode;
 
-enum {
+enum
+  {
     NOT_IN_MEMORY,
     IN_MEMORY
-};
+  };
 
-enum {
+enum
+  {
     PING_NONE,
     PING_WAITING,
     PING_DONE
-};
+  };
 
-enum {
+enum
+  {
     STORE_OK,
     STORE_PENDING
-};
+  };
 
-enum {
+enum
+  {
     SWAPOUT_NONE,
     SWAPOUT_WRITING,
     SWAPOUT_DONE
-};
+  };
 
-typedef enum {
+typedef enum
+  {
     STORE_NON_CLIENT,
     STORE_MEM_CLIENT,
     STORE_DISK_CLIENT
-} store_client_t;
+  }
+store_client_t;
 
-enum {
+enum
+  {
     METHOD_NONE,		/* 000 */
     METHOD_GET,			/* 001 */
     METHOD_POST,		/* 010 */
@@ -409,10 +444,11 @@ enum {
     METHOD_EXT18,
     METHOD_EXT19,
     METHOD_ENUM_END
-};
+  };
 typedef unsigned int method_t;
 
-typedef enum {
+typedef enum
+  {
     PROTO_NONE,
     PROTO_HTTP,
     PROTO_FTP,
@@ -428,9 +464,11 @@ typedef enum {
     PROTO_INTERNAL,
     PROTO_HTTPS,
     PROTO_MAX
-} protocol_t;
+  }
+protocol_t;
 
-typedef enum {
+typedef enum
+  {
     HTTP_STATUS_NONE = 0,
     HTTP_CONTINUE = 100,
     HTTP_SWITCHING_PROTOCOLS = 101,
@@ -476,7 +514,8 @@ typedef enum {
     HTTP_HTTP_VERSION_NOT_SUPPORTED = 505,
     HTTP_INSUFFICIENT_STORAGE = 507,	/* RFC2518 section 10.6 */
     HTTP_INVALID_HEADER = 600	/* Squid header parsing error */
-} http_status;
+  }
+http_status;
 
 /*
  * These are for StoreEntry->flag, which is defined as a SHORT
@@ -484,7 +523,8 @@ typedef enum {
  * NOTE: These flags are written to swap.state, so think very carefully
  * about deleting or re-assigning!
  */
-enum {
+enum
+  {
     ENTRY_SPECIAL,
     ENTRY_REVALIDATE,
     DELAY_SENDING,
@@ -501,63 +541,77 @@ enum {
 #if UNUSED_CODE
     ENTRY_DONT_LOG
 #endif
-};
+  };
 
-typedef enum {
+typedef enum
+  {
     ACCESS_DENIED,
     ACCESS_ALLOWED,
     ACCESS_REQ_PROXY_AUTH
-} allow_t;
+  }
+allow_t;
 
-typedef enum {
+typedef enum
+  {
     AUTH_ACL_CHALLENGE = -2,
     AUTH_ACL_HELPER = -1,
     AUTH_ACL_CANNOT_AUTHENTICATE = 0,
-    AUTH_AUTHENTICATED = 1,
-} auth_acl_t;
+    AUTH_AUTHENTICATED = 1
+  }
+auth_acl_t;
 
-typedef enum {
+typedef enum
+  {
     AUTH_UNKNOWN,		/* default */
     AUTH_BASIC,
     AUTH_NTLM,
     AUTH_DIGEST,
     AUTH_BROKEN			/* known type, but broken data */
-} auth_type_t;
+  }
+auth_type_t;
 
-typedef enum {
+typedef enum
+  {
     AUTHENTICATE_STATE_NONE,
     AUTHENTICATE_STATE_NEGOTIATE,
     AUTHENTICATE_STATE_CHALLENGE,
     AUTHENTICATE_STATE_RESPONSE,
     AUTHENTICATE_STATE_DONE
-} auth_state_t;			/* connection level auth state */
+  }
+auth_state_t;			/* connection level auth state */
 
 /* stateful helper callback response codes */
-typedef enum {
+typedef enum
+  {
     S_HELPER_UNKNOWN,
     S_HELPER_RESERVE,
     S_HELPER_RELEASE,
     S_HELPER_DEFER
-} stateful_helper_callback_t;
+  }
+stateful_helper_callback_t;
 
 /* stateful helper reservation info */
-typedef enum {
+typedef enum
+  {
     S_HELPER_FREE,		/* available for requests */
     S_HELPER_RESERVED,		/* in a reserved state - no active request, but state data in the helper shouldn't be disturbed */
     S_HELPER_DEFERRED		/* available for requests, and at least one more will come from a previous caller with the server pointer */
-} stateful_helper_reserve_t;
+  }
+stateful_helper_reserve_t;
 
 
 #if SQUID_SNMP
-enum {
+enum
+  {
     SNMP_C_VIEW,
     SNMP_C_USER,
     SNMP_C_COMMUNITY
-};
+  };
 
 #endif
 
-typedef enum {
+typedef enum
+  {
     MEM_NONE,
     MEM_2K_BUF,
     MEM_4K_BUF,
@@ -618,12 +672,14 @@ typedef enum {
     MEM_SWAP_LOG_DATA,
     MEM_CLIENT_REQ_BUF,
     MEM_MAX
-} mem_type;
+  }
+mem_type;
 
 /*
  * NOTE!  We must preserve the order of this list!
  */
-enum {
+enum
+  {
     STORE_META_VOID,		/* should not come up */
     STORE_META_KEY_URL,		/* key w/ keytype */
     STORE_META_KEY_SHA,
@@ -634,34 +690,40 @@ enum {
     STORE_META_VALID,
     STORE_META_VARY_HEADERS,	/* Stores Vary request headers */
     STORE_META_END
-};
+  };
 
-enum {
+enum
+  {
     STORE_LOG_CREATE,
     STORE_LOG_SWAPIN,
     STORE_LOG_SWAPOUT,
     STORE_LOG_RELEASE,
     STORE_LOG_SWAPOUTFAIL
-};
+  };
 
-typedef enum {
+typedef enum
+  {
     SWAP_LOG_NOP,
     SWAP_LOG_ADD,
     SWAP_LOG_DEL,
     SWAP_LOG_MAX
-} swap_log_op;
+  }
+swap_log_op;
 
 
 /* parse state of HttpReply or HttpRequest */
-typedef enum {
+typedef enum
+  {
     psReadyToParseStartLine = 0,
     psReadyToParseHeaders,
     psParsed,
     psError
-} HttpMsgParseState;
+  }
+HttpMsgParseState;
 
 
-enum {
+enum
+  {
     MEDIAN_HTTP,
     MEDIAN_ICP_QUERY,
     MEDIAN_DNS,
@@ -670,22 +732,24 @@ enum {
     MEDIAN_NM,
     MEDIAN_NH,
     MEDIAN_ICP_REPLY
-};
+  };
 
-enum {
+enum
+  {
     SENT,
     RECV
-};
+  };
 
 /*
  * These are field indicators for raw cache-cache netdb transfers
  */
-enum {
+enum
+  {
     NETDB_EX_NONE,
     NETDB_EX_NETWORK,
     NETDB_EX_RTT,
     NETDB_EX_HOPS
-};
+  };
 
 /*
  * cbdata types. similar to the MEM_* types above, but managed
@@ -693,7 +757,8 @@ enum {
  * allocated. This list is only a list of predefined types. Other types
  * are added runtime
  */
-typedef enum {
+typedef enum
+  {
     CBDATA_UNKNOWN = 0,
     CBDATA_UNDEF = 0,
     CBDATA_acl_access,
@@ -715,16 +780,18 @@ typedef enum {
     CBDATA_RemovalPurgeWalker,
     CBDATA_store_client,
     CBDATA_FIRST_CUSTOM_TYPE = 1000
-} cbdata_type;
+  }
+cbdata_type;
 
 /*
  * Return codes from checkVary(request)
  */
-enum {
+enum
+  {
     VARY_NONE,
     VARY_MATCH,
     VARY_OTHER,
     VARY_CANCEL
-};
+  };
 
 #endif /* SQUID_ENUMS_H */
