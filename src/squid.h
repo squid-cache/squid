@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.152 1998/01/06 00:28:01 wessels Exp $
+ * $Id: squid.h,v 1.153 1998/02/02 21:16:31 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -234,6 +234,7 @@ struct rusage {
     int ru_maxrss;
     int ru_majflt;
 };
+
 #endif
 
 #if !defined(HAVE_GETPAGESIZE) && defined(_SQUID_HPUX_)

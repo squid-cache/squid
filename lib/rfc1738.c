@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.14 1998/01/05 00:57:54 wessels Exp $
+ * $Id: rfc1738.c,v 1.15 1998/02/02 21:16:13 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -182,7 +182,7 @@ rfc1738_escape(const char *url)
 	}
 	/* Do the triplet encoding, or just copy the char */
 	/* note: we do not need snprintf here as q is appropriately
-           allocated - KA */
+	 * allocated - KA */
 
 	if (do_escape == 1) {
 	    (void) sprintf(q, "%%%02x", (unsigned char) *p);

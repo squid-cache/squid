@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.188 1998/02/02 19:50:10 wessels Exp $
+ * $Id: ftp.cc,v 1.189 1998/02/02 21:16:25 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -346,7 +346,7 @@ ftpListingFinish(FtpStateData * ftpState)
     storeAppendPrintf(e, "</PRE>\n");
     if (EBIT_TEST(ftpState->flags, FTP_LISTFORMAT_UNKNOWN) && !EBIT_TEST(ftpState->flags, FTP_TRIED_NLST)) {
 	storeAppendPrintf(e, "<A HREF=\"./;type=d\">[As plain directory]</A>\n");
-    } else if (ftpState->typecode=='D') {
+    } else if (ftpState->typecode == 'D') {
 	storeAppendPrintf(e, "<A HREF=\"./\">[As extended directory]</A>\n");
     }
     storeAppendPrintf(e, "<HR>\n");
@@ -416,8 +416,8 @@ ftpListParseParts(const char *buf, int flags)
     xbuf = xstrdup(buf);
     if (EBIT_TEST(flags, FTP_TRIED_NLST)) {
 	/* Machine readable format, one name per line */
-	p->name=xbuf;
-	p->type='\0'; 
+	p->name = xbuf;
+	p->type = '\0';
 	return p;
     }
     for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space))
@@ -553,9 +553,9 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	return html;
     }
     if ((parts = ftpListParseParts(line, flags)) == NULL) {
-        char *p;
+	char *p;
 	snprintf(html, 8192, "%s\n", line);
-	for(p=line;*p && isspace(*p);p++);
+	for (p = line; *p && isspace(*p); p++);
 	if (*p && !isspace(*p))
 	    EBIT_SET(ftpState->flags, FTP_LISTFORMAT_UNKNOWN);
 	return html;

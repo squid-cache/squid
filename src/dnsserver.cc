@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.40 1998/01/31 05:31:56 wessels Exp $
+ * $Id: dnsserver.cc,v 1.41 1998/02/02 21:16:23 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -313,9 +313,9 @@ main(int argc, char *argv[])
 
 	/* read from ipcache */
 	if (fgets(request, REQ_SZ, stdin) == NULL) {
-fprintf(stderr, "dnsserver %d got EOF\n", (int) getpid());
+	    fprintf(stderr, "dnsserver %d got EOF\n", (int) getpid());
 	    exit(1);
-        }
+	}
 	t = strrchr(request, '\n');
 	if (t == NULL)		/* Ignore if no newline */
 	    continue;

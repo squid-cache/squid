@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.18 1998/02/02 21:15:01 wessels Exp $
+ * $Id: fd.cc,v 1.19 1998/02/02 21:16:24 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -41,13 +41,13 @@ fdUpdateBiggest(int fd, unsigned int status)
     assert(fd < Squid_MaxFD);
     if (fd > Biggest_FD) {
 	if (status != FD_OPEN)
-	    debug(51,1) ("fdUpdateBiggest: status != FD_OPEN\n");
+	    debug(51, 1) ("fdUpdateBiggest: status != FD_OPEN\n");
 	Biggest_FD = fd;
 	return;
     }
     /* if we are here, then fd == Biggest_FD */
     if (status != FD_CLOSE)
-	debug(51,1) ("fdUpdateBiggest: status != FD_CLOSE\n");
+	debug(51, 1) ("fdUpdateBiggest: status != FD_CLOSE\n");
     while (fd_table[Biggest_FD].open != FD_OPEN)
 	Biggest_FD--;
 }
@@ -71,7 +71,7 @@ fd_open(int fd, unsigned int type, const char *desc)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
-    if(F->open != 0) {
+    if (F->open != 0) {
 	debug(51, 1) ("WARNING: Closing open FD %4d\n", fd);
 	fd_close(fd);
     }

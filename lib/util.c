@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.39 1998/01/06 00:27:53 wessels Exp $
+ * $Id: util.c,v 1.40 1998/02/02 21:16:15 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -260,9 +260,9 @@ static void
 xmalloc_count(void *p, int sign)
 {
     int statMemoryAccounted();
-    static size_t last_total=0,last_accounted=0,last_mallinfo=0;
-    struct mallinfo mp=mallinfo();
-    size_t accounted=statMemoryAccounted();
+    static size_t last_total = 0, last_accounted = 0, last_mallinfo = 0;
+    struct mallinfo mp = mallinfo();
+    size_t accounted = statMemoryAccounted();
     size_t mi = mp.uordblks + mp.usmblks + mp.hblkhd;
     size_t sz;
     static size_t total = 0;
@@ -272,9 +272,9 @@ xmalloc_count(void *p, int sign)
 	(int) total - last_total, (int) total,
 	(int) accounted - last_accounted, (int) accounted,
 	(int) mi - last_mallinfo, (int) mi);
-    last_total=total;
-    last_accounted=accounted;
-    last_mallinfo=mi;
+    last_total = total;
+    last_accounted = accounted;
+    last_mallinfo = mi;
 }
 
 #endif /* XMALLOC_COUNT */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.1 1998/01/31 05:34:57 wessels Exp $
+ * $Id: ipc.cc,v 1.2 1998/02/02 21:16:26 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -148,12 +148,11 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     }
     if (type == IPC_TCP_SOCKET) {
 	if (listen(crfd, 1) < 0) {
-	    debug(50,1)("ipcCreate: listen FD %d: %s\n", crfd, xstrerror());
+	    debug(50, 1) ("ipcCreate: listen FD %d: %s\n", crfd, xstrerror());
 	    return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
 	}
 	debug(54, 3) ("ipcCreate: FD %d listening...\n", crfd);
     }
-
     /* flush or else we get dup data if unbuffered_logs is set */
     logsFlush();
     if ((pid = fork()) < 0) {
@@ -211,10 +210,9 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
 	close(crfd);
 	cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
-	    if (comm_connect_addr(crfd, &PS) == COMM_ERROR)
-		return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
+	if (comm_connect_addr(crfd, &PS) == COMM_ERROR)
+	    return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
-
     if (type == IPC_UDP_SOCKET) {
 	x = send(cwfd, hello_string, strlen(hello_string), 0);
 	if (x < 0) {

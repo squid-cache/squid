@@ -1,6 +1,7 @@
 /* Stub function for programs not implementing statMemoryAccounted */
 #include <config.h>
-int statMemoryAccounted(void)
+int 
+statMemoryAccounted(void)
 {
-  return -1;
+    return -1;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.187 1998/02/02 19:50:12 wessels Exp $
+ * $Id: stat.cc,v 1.188 1998/02/02 21:16:32 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -133,7 +133,7 @@ static int NCountHist = 0;
 void
 stat_utilization_get(StoreEntry * e)
 {
-	/* MAKE SOMETHING UP */
+    /* MAKE SOMETHING UP */
 }
 
 void
@@ -686,7 +686,7 @@ statCountersDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "cpu_time = %f\n",
 	f->cputime);
     storeAppendPrintf(sentry, "wall_time = %f\n",
-        tvSubDsec(f->timestamp, current_time));
+	tvSubDsec(f->timestamp, current_time));
 }
 
 #define XAVG(X) (dt ? (double) (f->X - l->X) / dt : 0.0)
@@ -700,8 +700,8 @@ statAvgDump(StoreEntry * sentry, int minutes)
     assert(N_COUNT_HIST > 1);
     assert(minutes > 0);
     f = &CountHist[0];
-    if (minutes > N_COUNT_HIST-1)
-	minutes = N_COUNT_HIST-1;
+    if (minutes > N_COUNT_HIST - 1)
+	minutes = N_COUNT_HIST - 1;
     l = &CountHist[minutes];
     dt = tvSubDsec(l->timestamp, f->timestamp);
     ct = f->cputime - l->cputime;
@@ -731,7 +731,7 @@ statAvgDump(StoreEntry * sentry, int minutes)
 	XAVG(select_loops));
     storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
     storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
-    storeAppendPrintf(sentry, "cpu_usage = %f%%\n",dpercent(ct,dt));
+    storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
 }
 
 void
@@ -744,7 +744,7 @@ statInit(void)
 	server_pconn_hist[i] = 0;
     }
     memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
-    for (i=0; i<N_COUNT_HIST; i++)
+    for (i = 0; i < N_COUNT_HIST; i++)
 	CountHist[i].timestamp = current_time;
     Counter.timestamp = current_time;
     eventAdd("statAvgTick", statAvgTick, NULL, 60);
@@ -811,21 +811,21 @@ statAvgTick(void *notused)
 }
 
 void
-statAvg5min(StoreEntry *e)
+statAvg5min(StoreEntry * e)
 {
 #if NOT_YET
-	statCountersDump(e);
-	storeAppendPrintf(e, "\n");
+    statCountersDump(e);
+    storeAppendPrintf(e, "\n");
 #endif
-	statAvgDump(e, 5);
+    statAvgDump(e, 5);
 }
 
 void
-statAvg60min(StoreEntry *e)
+statAvg60min(StoreEntry * e)
 {
 #if NOT_YET
-	statCountersDump(e);
-	storeAppendPrintf(e, "\n");
+    statCountersDump(e);
+    storeAppendPrintf(e, "\n");
 #endif
-	statAvgDump(e, 60);
+    statAvgDump(e, 60);
 }

@@ -2483,7 +2483,7 @@ re_compile_fastmap(bufp)
     assert(fastmap != NULL && p != NULL);
 
     INIT_FAIL_STACK();
-    memset(fastmap, 0,  1 << BYTEWIDTH);	/* Assume nothing's valid.  */
+    memset(fastmap, 0, 1 << BYTEWIDTH);		/* Assume nothing's valid.  */
     bufp->fastmap_accurate = 1;	/* It will be when we're done.  */
     bufp->can_be_null = 0;
 
