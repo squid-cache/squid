@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.16 2002/10/13 20:35:00 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.17 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -526,7 +526,7 @@ clientCacheHit(void *data, StoreIOBuffer result)
     StoreEntry *e = http->entry;
     MemObject *mem;
     request_t *r = http->request;
-    debug(88, 3) ("clientCacheHit: %s, %ud bytes\n", http->uri, result.length);
+    debug(88, 3) ("clientCacheHit: %s, %ud bytes\n", http->uri, (unsigned int)result.length);
     if (http->entry == NULL) {
 	debug(88, 3) ("clientCacheHit: request aborted\n");
 	return;
@@ -1566,7 +1566,7 @@ clientSendMoreData(void *data, StoreIOBuffer result)
     context->flags.storelogiccomplete = 1;
 
     debug(88, 5) ("clientSendMoreData: %s, %d bytes (%u new bytes)\n",
-	http->uri, (int) size, result.length);
+	http->uri, (int) size, (unsigned int)result.length);
     assert(size <= HTTP_REQBUF_SZ || context->flags.headersSent);
     assert(http->request != NULL);
     /* ESI TODO: remove this assert once everything is stable */

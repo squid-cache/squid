@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.330 2002/10/14 07:35:45 hno Exp $
+ * $Id: ftp.cc,v 1.331 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -147,12 +147,12 @@ typedef void (FTPSM) (FtpStateData *);
 
 /* Local functions */
 static CNCB ftpPasvCallback;
-static PF ftpDataRead;
+static IOCB ftpDataRead;
 static PF ftpDataWrite;
 static CWCB ftpDataWriteCallback;
 static PF ftpStateFree;
 static PF ftpTimeout;
-static PF ftpReadControlReply;
+static IOCB ftpReadControlReply;
 static CWCB ftpWriteCommandCallback;
 static void ftpLoginParser(const char *, FtpStateData *, int escaped);
 static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
@@ -873,10 +873,9 @@ ftpDataComplete(FtpStateData * ftpState)
 }
 
 static void
-ftpDataRead(int fd, void *data)
+ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
-    int len;
     int j;
     int bin;
     StoreEntry *entry = ftpState->entry;
@@ -886,20 +885,18 @@ ftpDataRead(int fd, void *data)
     delay_id delayId = delayMostBytesAllowed(mem);
 #endif
     assert(fd == ftpState->data.fd);
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
+     */
+    if (flag == COMM_ERR_CLOSING) {
+	return;
+    }
+    
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(ftpState->ctrl.fd);
 	return;
     }
-    errno = 0;
-    read_sz = ftpState->data.size - ftpState->data.offset;
-#if DELAY_POOLS
-    read_sz = delayBytesWanted(delayId, 1, read_sz);
-#endif
-    memset(ftpState->data.buf + ftpState->data.offset, '\0', read_sz);
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, ftpState->data.buf + ftpState->data.offset, read_sz);
-    if (len > 0) {
-	fd_bytes(fd, len, FD_READ);
+
+    if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
 	delayBytesIn(delayId, len);
 #endif
@@ -907,8 +904,8 @@ ftpDataRead(int fd, void *data)
 	kb_incr(&statCounter.server.ftp.kbytes_in, len);
 	ftpState->data.offset += len;
     }
-    debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, len);
-    if (len > 0) {
+    debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, (unsigned int)len);
+    if (flag == COMM_OK && len > 0) {
 	IOStats.Ftp.reads++;
 	for (j = len - 1, bin = 0; j; bin++)
 	    j >>= 1;
@@ -917,14 +914,15 @@ ftpDataRead(int fd, void *data)
     if (ftpState->flags.isdir && !ftpState->flags.html_header_sent && len >= 0) {
 	ftpListingStart(ftpState);
     }
-    if (len < 0) {
+    if (flag != COMM_OK || len < 0) {
 	debug(50, ignoreErrno(errno) ? 3 : 1) ("ftpDataRead: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
-	    commSetSelect(fd,
-		COMM_SELECT_READ,
-		ftpDataRead,
-		ftpState,
-		Config.Timeout.read);
+	    /* XXX what about Config.Timeout.read? */
+	    read_sz = ftpState->data.size - ftpState->data.offset;
+#if DELAY_POOLS
+	    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+#endif
+	    comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);
 	} else {
 	    ftpFailed(ftpState, ERR_READ_ERROR);
 	    /* ftpFailed closes ctrl.fd and frees ftpState */
@@ -939,12 +937,12 @@ ftpDataRead(int fd, void *data)
 	    storeAppend(entry, ftpState->data.buf, len);
 	    ftpState->data.offset = 0;
 	}
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    ftpDataRead,
-	    ftpState,
-	    Config.Timeout.read);
-    }
+    /* XXX what about Config.Timeout.read? */
+	read_sz = ftpState->data.size - ftpState->data.offset;
+#if DELAY_POOLS
+	read_sz = delayBytesWanted(delay_id, 1, read_sz);
+#endif
+	comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);}
 }
 
 /*
@@ -1222,11 +1220,8 @@ ftpScheduleReadControlReply(FtpStateData * ftpState, int buffered_ok)
 	/* We've already read some reply data */
 	ftpHandleControlReply(ftpState);
     } else {
-	commSetSelect(ftpState->ctrl.fd,
-	    COMM_SELECT_READ,
-	    ftpReadControlReply,
-	    ftpState,
-	    Config.Timeout.read);
+	/* XXX What about Config.Timeout.read? */
+	comm_read(ftpState->ctrl.fd, ftpState->ctrl.buf + ftpState->ctrl.offset,            ftpState->ctrl.size - ftpState->ctrl.offset, ftpReadControlReply, ftpState);
 	/*
 	 * Cancel the timeout on the Data socket (if any) and
 	 * establish one on the control socket.
@@ -1239,28 +1234,30 @@ ftpScheduleReadControlReply(FtpStateData * ftpState, int buffered_ok)
 }
 
 static void
-ftpReadControlReply(int fd, void *data)
+ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     StoreEntry *entry = ftpState->entry;
-    size_t len;
     debug(9, 5) ("ftpReadControlReply\n");
+
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
+*/
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+    
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(ftpState->ctrl.fd);
 	return;
     }
     assert(ftpState->ctrl.offset < (off_t)ftpState->ctrl.size);
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd,
-	ftpState->ctrl.buf + ftpState->ctrl.offset,
-	ftpState->ctrl.size - ftpState->ctrl.offset);
-    if (len > 0) {
+    if (flag == COMM_OK && len > 0) {
 	fd_bytes(fd, len, FD_READ);
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.ftp.kbytes_in, len);
     }
-    debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
-    if (len < 0) {
+    debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, (int)len);
+    if (flag != COMM_OK || len < 0) {
 	debug(50, ignoreErrno(errno) ? 3 : 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
 	    ftpScheduleReadControlReply(ftpState, 0);
@@ -1894,42 +1891,39 @@ ftpReadPort(FtpStateData * ftpState)
 
 /* "read" handler to accept data connection */
 static void
-ftpAcceptDataConnection(int fd, void *data)
+ftpAcceptDataConnection(int fd, int newfd, struct sockaddr_in *me, struct sockaddr_in *my_peer,
+  comm_err_t flag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
-    struct sockaddr_in my_peer, me;
     debug(9, 3) ("ftpAcceptDataConnection\n");
 
     if (EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED)) {
 	comm_close(ftpState->ctrl.fd);
 	return;
     }
-    fd = comm_accept(fd, &my_peer, &me);
+
     if (Config.Ftp.sanitycheck) {
-	char *ipaddr = inet_ntoa(my_peer.sin_addr);
+	char *ipaddr = inet_ntoa(my_peer->sin_addr);
 	if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
-	    debug(9, 1) ("FTP data connection from unexpected server (%s:%d), expecting %s\n", ipaddr, (int) ntohs(my_peer.sin_port), fd_table[ftpState->ctrl.fd].ipaddr);
-	    comm_close(fd);
-	    commSetSelect(ftpState->data.fd,
-		COMM_SELECT_READ,
-		ftpAcceptDataConnection,
-		ftpState,
-		0);
+	    debug(9, 1) ("FTP data connection from unexpected server (%s:%d), expecting %s\n", ipaddr, (int) ntohs(my_peer->sin_port), fd_table[ftpState->ctrl.fd].ipaddr);
+	    comm_close(newfd);
+	    comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
 	    return;
 	}
     }
-    if (fd < 0) {
-	debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", fd, xstrerror());
+    if (flag != COMM_OK) {
+        errno = xerrno;
+	debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", newfd, xstrerror());
 	/* XXX Need to set error message */
 	ftpFail(ftpState);
 	return;
     }
     /* Replace the Listen socket with the accepted data socket */
     comm_close(ftpState->data.fd);
-    debug(9, 3) ("ftpAcceptDataConnection: Connected data socket on FD %d\n", fd);
-    ftpState->data.fd = fd;
-    ftpState->data.port = ntohs(my_peer.sin_port);
-    ftpState->data.host = xstrdup(inet_ntoa(my_peer.sin_addr));
+    debug(9, 3) ("ftpAcceptDataConnection: Connected data socket on FD %d\n", newfd);
+    ftpState->data.fd = newfd;
+    ftpState->data.port = ntohs(my_peer->sin_port);
+    ftpState->data.host = xstrdup(inet_ntoa(my_peer->sin_addr));
     commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
     commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout,
 	ftpState);
@@ -2008,11 +2002,7 @@ ftpReadStor(FtpStateData * ftpState)
     } else if (code == 150) {
 	/* Accept data channel */
 	debug(9, 3) ("ftpReadStor: accepting data channel\n");
-	commSetSelect(ftpState->data.fd,
-	    COMM_SELECT_READ,
-	    ftpAcceptDataConnection,
-	    ftpState,
-	    0);
+	comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
     } else {
 	debug(9, 3) ("ftpReadStor: Unexpected reply code %03d\n", code);
 	ftpFail(ftpState);
@@ -2098,11 +2088,9 @@ ftpReadList(FtpStateData * ftpState)
     if (code == 125 || (code == 150 && ftpState->data.host)) {
 	/* Begin data transfer */
 	ftpAppendSuccessHeader(ftpState);
-	commSetSelect(ftpState->data.fd,
-	    COMM_SELECT_READ,
-	    ftpDataRead,
-	    ftpState,
-	    Config.Timeout.read);
+	/* XXX what about Config.Timeout.read? */
+	assert(ftpState->data.offset == 0);
+	comm_read(ftpState->data.fd, ftpState->data.buf, ftpState->data.size, ftpDataRead, ftpState);
 	commSetDefer(ftpState->data.fd, fwdCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	/*
@@ -2114,11 +2102,7 @@ ftpReadList(FtpStateData * ftpState)
 	return;
     } else if (code == 150) {
 	/* Accept data channel */
-	commSetSelect(ftpState->data.fd,
-	    COMM_SELECT_READ,
-	    ftpAcceptDataConnection,
-	    ftpState,
-	    0);
+	comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
 	/*
 	 * Cancel the timeout on the Control socket and establish one
 	 * on the data socket
@@ -2152,11 +2136,13 @@ ftpReadRetr(FtpStateData * ftpState)
 	/* Begin data transfer */
 	debug(9, 3) ("ftpReadRetr: reading data channel\n");
 	ftpAppendSuccessHeader(ftpState);
-	commSetSelect(ftpState->data.fd,
-	    COMM_SELECT_READ,
-	    ftpDataRead,
-	    ftpState,
-	    Config.Timeout.read);
+	/* XXX what about Config.Timeout.read? */
+	size_t read_sz = ftpState->data.size - ftpState->data.offset;
+#if DELAY_POOLS
+	read_sz = delayBytesWanted(delay_id, 1, read_sz);
+#endif
+	comm_read(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset,
+		  read_sz, ftpDataRead, ftpState);
 	commSetDefer(ftpState->data.fd, fwdCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	/*
@@ -2168,11 +2154,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	    ftpState);
     } else if (code == 150) {
 	/* Accept data channel */
-	commSetSelect(ftpState->data.fd,
-	    COMM_SELECT_READ,
-	    ftpAcceptDataConnection,
-	    ftpState,
-	    0);
+	comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
 	/*
 	 * Cancel the timeout on the Control socket and establish one
 	 * on the data socket

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.139 2002/10/13 20:35:06 robertc Exp $
+ * $Id: typedefs.h,v 1.140 2002/10/14 08:16:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -198,6 +198,9 @@ typedef struct _delaySpec delaySpec;
 
 typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);
 typedef void CNCB(int fd, comm_err_t status, void *);
+typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
+typedef void IOACB(int fd, int nfd, struct sockaddr_in *me, struct sockaddr_in
+		   *pn, comm_err_t flag, int xerrno, void *data);
 
 typedef void FREE(void *);
 typedef void CBDUNL(void *);

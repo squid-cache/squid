@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.76 2002/10/13 20:35:06 robertc Exp $
+ * $Id: urn.cc,v 1.77 2002/10/14 08:16:59 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -279,7 +279,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     char *buf = urnState->reqbuf;
     StoreIOBuffer tempBuffer;
 
-    debug(52, 3) ("urnHandleReply: Called with size=%u.\n", result.length);
+    debug(52, 3) ("urnHandleReply: Called with size=%u.\n", (unsigned int)result.length);
     if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED)) {
 	goto error;
     }

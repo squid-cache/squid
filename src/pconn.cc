@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.33 2002/10/13 20:35:02 robertc Exp $
+ * $Id: pconn.cc,v 1.34 2002/10/14 08:16:58 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -35,12 +35,14 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "comm.h"
 
 struct _pconn {
     hash_link hash;		/* must be first */
     int *fds;
     int nfds_alloc;
     int nfds;
+    char buf[4096];
 };
 typedef struct _pconn pconn;
 
@@ -49,7 +51,7 @@ typedef struct _pconn pconn;
 int client_pconn_hist[PCONN_HIST_SZ];
 int server_pconn_hist[PCONN_HIST_SZ];
 
-static PF pconnRead;
+static IOCB pconnRead;
 static PF pconnTimeout;
 static const char *pconnKey(const char *host, u_short port);
 static hash_table *table = NULL;
@@ -97,18 +99,37 @@ pconnDelete(struct _pconn *p)
     cbdataFree(p);
 }
 
+static int
+pconnFindFDIndex (struct _pconn *p, int fd)
+{
+    int result;
+    for (result = 0; result < p->nfds; ++result) {
+	if (p->fds[result] == fd)
+	    return result;
+    }
+    return p->nfds;
+}
+
+static void
+pconnRemoveFDByIndex (struct _pconn *p, int index)
+{
+    for (; index < p->nfds - 1; index++)
+	p->fds[index] = p->fds[index + 1];
+}
+
+static void
+pconnPreventHandingOutFD(struct _pconn *p, int fd)
+{
+    int i = pconnFindFDIndex (p, fd);
+    assert(i < p->nfds);
+    debug(48, 3) ("pconnRemoveFD: found FD %d at index %d\n", fd, i);
+    pconnRemoveFDByIndex(p, i);
+}
+
 static void
 pconnRemoveFD(struct _pconn *p, int fd)
 {
-    int i;
-    for (i = 0; i < p->nfds; i++) {
-	if (p->fds[i] == fd)
-	    break;
-    }
-    assert(i < p->nfds);
-    debug(48, 3) ("pconnRemoveFD: found FD %d at index %d\n", fd, i);
-    for (; i < p->nfds - 1; i++)
-	p->fds[i] = p->fds[i + 1];
+    pconnPreventHandingOutFD(p, fd);
     if (--p->nfds == 0)
 	pconnDelete(p);
 }
@@ -124,15 +145,16 @@ pconnTimeout(int fd, void *data)
 }
 
 static void
-pconnRead(int fd, void *data)
+pconnRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
-    LOCAL_ARRAY(char, buf, 256);
     struct _pconn *p = (_pconn *)data;
-    int n;
     assert(table != NULL);
-    statCounter.syscalls.sock.reads++;
-    n = FD_READ_METHOD(fd, buf, 256);
-    debug(48, 3) ("pconnRead: %d bytes from FD %d, %s\n", n, fd,
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    if (flag == COMM_ERR_CLOSING) {
+	return;
+    }
+
+    debug(48, 3) ("pconnRead: %d bytes from FD %d, %s\n", (int) len, fd,
 	hashKeyStr(&p->hash));
     pconnRemoveFD(p, fd);
     comm_close(fd);
@@ -220,13 +242,23 @@ pconnPush(int fd, const char *host, u_short port)
 	    xfree(old);
     }
     p->fds[p->nfds++] = fd;
-    commSetSelect(fd, COMM_SELECT_READ, pconnRead, p, 0);
+    comm_read(fd, p->buf, BUFSIZ, pconnRead, p);
     commSetTimeout(fd, Config.Timeout.pconn, pconnTimeout, p);
     snprintf(desc, FD_DESC_SZ, "%s idle connection", host);
     fd_note(fd, desc);
     debug(48, 3) ("pconnPush: pushed FD %d for %s\n", fd, key);
 }
 
+/*
+ * return a pconn fd for host:port, or -1 if none are available
+ * 
+ * XXX this routine isn't terribly efficient - if there's a pending
+ * read event (which signifies the fd will close in the next IO loop!)
+ * we ignore the FD and move onto the next one. This means, as an example,
+ * if we have a lot of FDs open to a very popular server and we get a bunch
+ * of requests JUST as they timeout (say, it shuts down) we'll be wasting
+ * quite a bit of CPU. Just keep it in mind.
+ */
 int
 pconnPop(const char *host, u_short port)
 {
@@ -240,11 +272,18 @@ pconnPop(const char *host, u_short port)
     if (hptr != NULL) {
 	p = (struct _pconn *) hptr;
 	assert(p->nfds > 0);
-	fd = p->fds[0];
-	pconnRemoveFD(p, fd);
-	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-	commSetTimeout(fd, -1, NULL, NULL);
+	for (int i = 0; i < p->nfds; i++) {
+	    fd = p->fds[0];
+	    /* If there are pending read callbacks - we're about to close it, so don't issue it! */
+	    if (!comm_has_pending_read_callback(fd)) {
+		pconnRemoveFD(p, fd);
+		comm_read_cancel(fd, pconnRead, p);
+		commSetTimeout(fd, -1, NULL, NULL);
+		return fd;
+	    }
+	}
     }
+    /* Nothing (valid!) found */
     return fd;
 }
 

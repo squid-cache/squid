@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.19 2002/10/13 20:35:06 robertc Exp $
+ * $Id: whois.cc,v 1.20 2002/10/14 08:16:59 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -42,11 +42,12 @@ typedef struct {
     StoreEntry *entry;
     request_t *request;
     FwdState *fwd;
+    char buf[BUFSIZ];
 } WhoisState;
 
 static PF whoisClose;
 static PF whoisTimeout;
-static PF whoisReadReply;
+static IOCB whoisReadReply;
 
 /* PUBLIC */
 
@@ -70,7 +71,7 @@ whoisStart(FwdState * fwd)
     buf = (char *)xmalloc(l);
     snprintf(buf, l, "%s\r\n", strBuf(p->request->urlpath) + 1);
     comm_write(fd, buf, strlen(buf), NULL, p, xfree);
-    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, 0);
+    comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);
     commSetTimeout(fd, Config.Timeout.read, whoisTimeout, p);
 }
 
@@ -85,39 +86,43 @@ whoisTimeout(int fd, void *data)
 }
 
 static void
-whoisReadReply(int fd, void *data)
+whoisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     WhoisState *p = (WhoisState *)data;
     StoreEntry *entry = p->entry;
-    char *buf = (char *)memAllocate(MEM_4K_BUF);
     MemObject *mem = entry->mem_obj;
-    int len;
-    statCounter.syscalls.sock.reads++;
-    len = FD_READ_METHOD(fd, buf, 4095);
+    int do_next_read = 0;
+
+    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    if (flag == COMM_ERR_CLOSING) {
+        return;
+    }
+
     buf[len] = '\0';
-    debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
+    debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, (int)len);
     debug(75, 5) ("{%s}\n", buf);
-    if (len > 0) {
+    if (flag == COMM_OK && len > 0) {
 	if (0 == mem->inmem_hi)
 	    mem->reply->sline.status = HTTP_OK;
-	fd_bytes(fd, len, FD_READ);
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.http.kbytes_in, len);
 	storeAppend(entry, buf, len);
-	commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
-    } else if (len < 0) {
+        do_next_read = 1;
+    } else if (flag != COMM_OK || len < 0) {
 	debug(50, 2) ("whoisReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
 	if (ignoreErrno(errno)) {
-	    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
+            do_next_read = 1;
 	} else if (mem->inmem_hi == 0) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;
 	    fwdFail(p->fwd, err);
 	    comm_close(fd);
+            do_next_read = 0;
 	} else {
 	    comm_close(fd);
+            do_next_read = 0;
 	}
     } else {
 	storeTimestampsSet(entry);
@@ -127,8 +132,10 @@ whoisReadReply(int fd, void *data)
 	fwdComplete(p->fwd);
 	debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
 	comm_close(fd);
+        do_next_read = 0;
     }
-    memFree(buf, MEM_4K_BUF);
+    if (do_next_read)
+        comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);
 }
 
 static void
