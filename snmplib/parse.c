@@ -1102,18 +1102,18 @@ read_mib(filename)
     while ( (p=fgets(mbuf, 256, fp)) && strncmp(&mbuf[4], CURRENT_MIB_VERSION,
 		strlen(CURRENT_MIB_VERSION)));
     if (!p) {
-        snmplib_debug(0, "Bad MIB version or tag missing,install original!\n");
-        exit(1);
+        snmplib_debug(0, "Bad MIB version or tag missing, install original!\n");
+        return NULL;
     }
 
     if (!strcmp(mbuf, CURRENT_MIB_VERSION)) {
 	snmplib_debug(0, "You need to update your MIB!\n");	
-	exit(1);
+	return NULL;
     }
     nodes = parse(fp);
     if (!nodes){
 	snmplib_debug(0, "Mib table is bad.  Exiting\n");
-	exit(1);
+	return NULL;
     }
     tree = build_tree(nodes);
     fclose(fp);
