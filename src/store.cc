@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.255 1997/06/17 04:54:12 wessels Exp $
+ * $Id: store.cc,v 1.256 1997/06/17 18:04:46 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -215,7 +215,7 @@ typedef struct storeCleanList {
     struct storeCleanList *next;
 } storeCleanList;
 
-typedef void (VCB) _PARAMS((void *, int));
+typedef void (VCB) _PARAMS((void *));
 
 typedef struct valid_ctrl_t {
     struct stat *sb;
@@ -302,9 +302,9 @@ static int storeGetUnusedFileno _PARAMS((void));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
-static hash_table * store_table = NULL;
+static hash_table *store_table = NULL;
 /* hash table for in-memory-only objects */
-static hash_table * in_mem_table = NULL;
+static hash_table *in_mem_table = NULL;
 
 /* current memory storage size */
 unsigned long store_mem_size = 0;
@@ -426,7 +426,7 @@ destroy_MemObjectData(MemObject * mem)
  */
 
 static void
-storeCreateHashTable(HASHCMP *cmp_func)
+storeCreateHashTable(HASHCMP * cmp_func)
 {
     store_table = hash_create(cmp_func, store_buckets, hash4);
     in_mem_table = hash_create(cmp_func, STORE_IN_MEM_BUCKETS, hash4);
@@ -1067,14 +1067,14 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     ctrlp->callback = callback;
     ctrlp->callback_data = callback_data;
     if (BIT_TEST(e->flag, ENTRY_VALIDATED))
-	storeSwapInValidateComplete(ctrlp, 0);
+	storeSwapInValidateComplete(ctrlp);
     else
 	storeValidate(e, storeSwapInValidateComplete, ctrlp);
 }
 
 
 static void
-storeSwapInValidateComplete(void *data, int status)
+storeSwapInValidateComplete(void *data)
 {
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
     StoreEntry *e;
@@ -1431,7 +1431,6 @@ storeDoRebuildFromDisk(void *data)
     eventAdd("storeRebuild", storeDoRebuildFromDisk, RB, 0);
 }
 
-
 static void
 storeCleanup(void *data)
 {
@@ -1451,6 +1450,10 @@ storeCleanup(void *data)
 	link_ptr = hash_get_bucket(store_table, bucketnum);
 	for (; link_ptr; link_ptr = link_ptr->next) {
 	    e = (StoreEntry *) link_ptr;
+	    if (BIT_TEST(e->flag, ENTRY_VALIDATED))
+		continue;
+	    if (BIT_TEST(e->flag, RELEASE_REQUEST))
+		continue;
 	    curr = xcalloc(1, sizeof(storeCleanList));
 	    curr->key = xstrdup(e->key);
 	    curr->next = list;
@@ -1464,16 +1467,12 @@ storeCleanup(void *data)
     curr = list;
     list = list->next;
     e = (StoreEntry *) hash_lookup(store_table, curr->key);
-    if (e == NULL) {
-	xfree(curr->key);
-	xfree(curr);
-	eventAdd("storeCleanup", storeCleanup, NULL, 0);
-	return;
-    }
-    if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
+    if (e != NULL) {
+	assert(!BIT_TEST(e->flag, ENTRY_VALIDATED));
 	storeValidate(e, storeCleanupComplete, e);
 	if ((++validnum & 0xFFF) == 0)
 	    debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
+	assert(validnum <= meta_data.store_entries);
     }
     xfree(curr->key);
     xfree(curr);
@@ -1481,9 +1480,10 @@ storeCleanup(void *data)
 }
 
 static void
-storeCleanupComplete(void *data, int status)
+storeCleanupComplete(void *data)
 {
     StoreEntry *e = data;
+    storeUnlockObject(e);
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
 	storeRelease(e);
 }
@@ -1500,7 +1500,7 @@ storeValidate(StoreEntry * e, VCB callback, void *callback_data)
     assert(!BIT_TEST(e->flag, ENTRY_VALIDATED));
     if (e->swap_file_number < 0) {
 	BIT_RESET(e->flag, ENTRY_VALIDATED);
-	callback(callback_data, -1);
+	callback(callback_data);
 	return;
     }
     path = storeSwapFullPath(e->swap_file_number, NULL);
@@ -1540,7 +1540,7 @@ storeValidateComplete(void *data, int retcode, int errcode)
 	storeDirMapBitSet(e->swap_file_number);
     }
     errno = errcode;
-    (ctrlp->callback) (ctrlp->callback_data, retcode);
+    ctrlp->callback(ctrlp->callback_data);
     xfree(sb);
     xfree(ctrlp);
 }
@@ -1562,7 +1562,6 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
     debug(20, 1) ("  Took %d seconds (%6.1lf objects/sec).\n",
 	r > 0 ? r : 0, (double) data->objcount / (r > 0 ? r : 1));
     debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
-debug(0,0)("meta_data.store_entries=%d\n", meta_data.store_entries);
     if (data->need_to_validate) {
 	debug(20, 1) ("Beginning Validation Procedure\n");
 	eventAdd("storeCleanup", storeCleanup, NULL, 0);
@@ -2054,6 +2053,7 @@ storeRelease(StoreEntry * e)
 	    e->key ? e->key : e->url ? e->url : "NO URL");
 	storeExpireNow(e);
 	storeSetPrivateKey(e);
+	BIT_SET(e->flag, RELEASE_REQUEST);
 	return 0;
     }
     if (e->swap_status == SWAP_OK && (e->swap_file_number > -1)) {
