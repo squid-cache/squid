@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.9 1997/11/28 08:01:03 wessels Exp $
+ * $Id: cbdata.cc,v 1.10 1997/11/29 17:00:43 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -71,6 +71,10 @@ typedef struct _cbdata {
     struct _cbdata *next;
     int valid;
     int locks;
+#if CBDATA_DEBUG
+    const char *file;
+    int line;
+#endif
 } cbdata;
 
 static HASHCMP cbdata_cmp;
@@ -97,7 +101,11 @@ cbdataInit(void)
 }
 
 void
+#if CBDATA_DEBUG
+cbdataAddDbg(void *p, const char *file, int line)
+#else
 cbdataAdd(void *p)
+#endif
 {
     cbdata *c;
     assert(p);
@@ -107,6 +115,10 @@ cbdataAdd(void *p)
     c = xcalloc(1, sizeof(cbdata));
     c->key = p;
     c->valid = 1;
+#if CBDATA_DEBUG
+    c->file = file;
+    c->line = line;
+#endif
     hash_join(htable, (hash_link *) c);
     cbdataCount++;
 }
@@ -185,9 +197,17 @@ cbdataDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
     for (hptr = hash_first(htable); hptr; hptr = hash_next(htable)) {
 	c = (cbdata *) hptr;
+#if CBDATA_DEBUG
+	storeAppendPrintf(sentry, "%20p %10s %d locks %s:%d\n",
+	    c->key,
+	    c->valid ? "VALID" : "NOT VALID",
+	    c->locks,
+	    c->file, c->line);
+#else
 	storeAppendPrintf(sentry, "%20p %10s %d locks\n",
 	    c->key,
 	    c->valid ? "VALID" : "NOT VALID",
 	    c->locks);
+#endif
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.135 1997/11/14 04:55:08 wessels Exp $
+ * $Id: squid.h,v 1.136 1997/11/29 17:00:45 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -243,6 +243,10 @@
                 ( local_##name = (type *)xcalloc(size, sizeof(type)) )
 #else
 #define LOCAL_ARRAY(type,name,size) static type name[size]
+#endif
+
+#if CBDATA_DEBUG
+#define cbdataAdd(a)	cbdataAddDbg(a,__FILE__,__LINE__)
 #endif
 
 #ifdef USE_GNUREGEX
