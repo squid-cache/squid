@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.19 1996/07/20 03:06:46 wessels Exp $
+ * $Id: acl.cc,v 1.20 1996/07/20 04:21:54 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,7 +41,7 @@ static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
 static void aclDestroyRegexList _PARAMS((struct _relist * data));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
-static int aclMatchAclList _PARAMS((struct _acl_list *, struct in_addr, method_t, protocol_t, char *host, int port, char *request));
+static int aclMatchAclList _PARAMS((struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
 static int aclMatchRegex _PARAMS((relist * data, char *word));
@@ -625,60 +625,57 @@ static int aclMatchTime(data, when)
     return data->weekbits & (1 << tm.tm_wday) ? 1 : 0;
 }
 
-int aclMatchAcl(acl, c, m, pr, h, po, r)
+int aclMatchAcl(acl, checklist)
      struct _acl *acl;
-     struct in_addr c;
-     method_t m;
-     protocol_t pr;
-     char *h;
-     int po;
-     char *r;
+      aclCheck_t *checklist;
 {
+    request_t *r = checklist->request;
     struct hostent *hp = NULL;
-    struct in_addr dst;
     int k;
     if (!acl)
 	return 0;
     debug(28, 3, "aclMatchAcl: checking '%s'\n", acl->cfgline);
     switch (acl->type) {
     case ACL_SRC_IP:
-	return aclMatchIp(acl->data, c);
+	return aclMatchIp(acl->data, checklist->src_addr);
 	/* NOTREACHED */
     case ACL_DST_IP:
-	if ((hp = ipcache_gethostbyname(h, IP_LOOKUP_IF_MISS)) == NULL) {
+	if ((hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS)) == NULL) {
 	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		acl->name, h);
+		acl->name, r->host);
 	    return 0;		/* cant check, return no match */
 	}
 	for (k = 0; *(hp->h_addr_list + k); k++) {
-	    xmemcpy(&dst.s_addr, *(hp->h_addr_list + k), hp->h_length);
-	    if (aclMatchIp(acl->data, dst))
+	    xmemcpy(&checklist->dst_addr.s_addr,
+		*(hp->h_addr_list + k),
+	  	hp->h_length);
+	    if (aclMatchIp(acl->data, checklist->dst_addr))
 		return 1;
 	}
 	return 0;
 	/* NOTREACHED */
     case ACL_DST_DOMAIN:
 	/* XXX This probably needs to use matchDomainName() */
-	return aclMatchEndOfWord(acl->data, h);
+	return aclMatchEndOfWord(acl->data, r->host);
 	/* NOTREACHED */
     case ACL_TIME:
 	return aclMatchTime(acl->data, squid_curtime);
 	/* NOTREACHED */
     case ACL_URL_REGEX:
-	return aclMatchRegex(acl->data, r);
+	return aclMatchRegex(acl->data, r->urlpath);
 	/* NOTREACHED */
     case ACL_URL_PORT:
-	return aclMatchInteger(acl->data, po);
+	return aclMatchInteger(acl->data, r->port);
 	/* NOTREACHED */
     case ACL_USER:
 	debug(28, 0, "aclMatchAcl: ACL_USER unimplemented\n");
 	return 0;
 	/* NOTREACHED */
     case ACL_PROTO:
-	return aclMatchInteger(acl->data, pr);
+	return aclMatchInteger(acl->data, r->protocol);
 	/* NOTREACHED */
     case ACL_METHOD:
-	return aclMatchInteger(acl->data, m);
+	return aclMatchInteger(acl->data, r->method);
 	/* NOTREACHED */
     case ACL_NONE:
     default:
@@ -689,18 +686,13 @@ int aclMatchAcl(acl, c, m, pr, h, po, r)
     /* NOTREACHED */
 }
 
-static int aclMatchAclList(list, c, m, pr, h, po, r)
+static int aclMatchAclList(list, checklist)
      struct _acl_list *list;
-     struct in_addr c;
-     method_t m;
-     protocol_t pr;
-     char *h;
-     int po;
-     char *r;
+     aclCheck_t *checklist;
 {
     debug(28, 3, "aclMatchAclList: list=%p  op=%d\n", list, list->op);
     while (list) {
-	if (aclMatchAcl(list->acl, c, m, pr, h, po, r) != list->op) {
+	if (aclMatchAcl(list->acl, checklist) != list->op) {
 	    debug(28, 3, "aclMatchAclList: returning 0\n");
 	    return 0;
 	}
@@ -710,28 +702,16 @@ static int aclMatchAclList(list, c, m, pr, h, po, r)
     return 1;
 }
 
-int aclCheck(A, cli_addr, method, proto, host, port, request)
+int aclCheck(A, checklist)
      struct _acl_access *A;
-     struct in_addr cli_addr;
-     method_t method;
-     protocol_t proto;
-     char *host;
-     int port;
-     char *request;
+     aclCheck_t *checklist;
 {
     int allow = 0;
-
-    debug(28, 3, "aclCheck: cli_addr=%s\n", inet_ntoa(cli_addr));
-    debug(28, 3, "aclCheck: method=%d\n", method);
-    debug(28, 3, "aclCheck: proto=%d\n", proto);
-    debug(28, 3, "aclCheck: host=%s\n", host ? host : "<NULL>");
-    debug(28, 3, "aclCheck: port=%d\n", port);
-    debug(28, 3, "aclCheck: request=%s\n", request ? request : "<NULL>");
 
     while (A) {
 	debug(28, 3, "aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
-	if (aclMatchAclList(A->acl_list, cli_addr, method, proto, host, port, request)) {
+	if (aclMatchAclList(A->acl_list, checklist)) {
 	    debug(28, 3, "aclCheck: match found, returning %d\n", allow);
 	    return allow;
 	}
