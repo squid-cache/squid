@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.49 2003/01/25 21:16:42 robertc Exp $
+#  $Id: Makefile.am,v 1.50 2003/01/26 10:46:24 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -178,6 +178,7 @@ squid_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
+	HttpRequest.h \
 	icmp.cc \
 	ICP.h \
 	icp_v2.cc \
