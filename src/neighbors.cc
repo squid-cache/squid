@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.41 1996/08/14 22:57:12 wessels Exp $
+ * $Id: neighbors.cc,v 1.42 1996/08/23 21:18:56 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -422,6 +422,8 @@ int neighborsUdpPing(proto)
 	return 0;
 
     for (i = 0, e = friends->first_ping; i++ < friends->n; e = e->next) {
+	if (entry->swap_status != NO_SWAP)
+		fatal_dump("neighborsUdpPing: bad swap_status");
 	if (e == (edge *) NULL)
 	    e = friends->edges_head;
 	debug(15, 5, "neighborsUdpPing: Edge %s\n", e->host);
