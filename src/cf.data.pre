@@ -3,9 +3,9 @@ COMMENT_START
 	WELCOME TO SQUID 1.2
 	--------------------
 
-	This is the default squid configuration file. You may wish
-	to look at http://cache.is.co.za/squid/ for documentation,
-	or the squid home page (http://squid.nlanr.net/) for the FAQ
+	This is the default Squid configuration file. You may wish
+	to look at http://cache.is.co.za/Squid/ for documentation,
+	or the Squid home page (http://Squid.nlanr.net/) for the FAQ.
 
 COMMENT_END
 
@@ -20,7 +20,7 @@ DEFAULT: none
 DEFAULT_IF_NONE: 3128
 LOC: Config.Port.http
 DOC_START
-	The port number where squid will listen for HTTP client
+	The port number where Squid will listen for HTTP client
 	requests.  Default is 3128, for httpd-accel mode use port 80.
 	May be overridden with -a on the command line.
 
@@ -36,7 +36,7 @@ TYPE: ushort
 DEFAULT: 3130
 LOC: Config.Port.icp
 DOC_START
-	The port number where squid send and receive ICP requests to
+	The port number where Squid send and receive ICP requests to
 	and from neighbor caches.  Default is 3130.  To disable use
 	"0".  May be overridden with -u on the command line.
 
@@ -49,8 +49,8 @@ TYPE: wordlist
 LOC: Config.mcast_group_list
 DEFAULT: none
 DOC_START
-	This tag specifies a list of multicast groups which your
-	server should join to receive multicasted ICP requests.
+	This tag specifies a list of multicast groups which your server
+	should join to receive multicasted ICP requests.
 
 	NOTE!  Be very careful what you put here!  Be sure you
 	understand the difference between an ICP _query_ and an ICP
@@ -66,9 +66,12 @@ DOC_START
 	Caching.  Plese write to us at nlanr-cache@nlanr.net to receive
 	an address for your own use.
 
+	If you are unsure about multicast, please read the Multicast
+	chapter in the Squid FAQ (http://squid.nlanr.net/Squid/FAQ/).
+
 	Usage: mcast_groups 239.128.16.128 224.0.1.20
 
-	By default, squid doesn't listen on any multicast groups.
+	By default, Squid doesn't listen on any multicast groups.
 
 mcast_groups 239.128.16.128
 DOC_END
@@ -139,9 +142,9 @@ DOC_START
 	#                                        proxy  icp
 	#          hostname             type     port   port  options
 	#          -------------------- -------- ----- -----  -----------
-	cache_peer bigserver.usc.edu    parent    3128  3130  [proxy-only]
-	cache_peer littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
-	cache_peer littleguy1.usc.edu   sibling   3128  3130  [proxy-only]
+	cache_peer parent.foo.net       parent    3128  3130  [proxy-only]
+	cache_peer sib1.foo.net         sibling   3128  3130  [proxy-only]
+	cache_peer sib2.foo.net         sibling   3128  3130  [proxy-only]
 
 	      type:  either 'parent', 'sibling', or 'multicast'.
 
@@ -209,15 +212,15 @@ TYPE: hostdomain
 DEFAULT: none
 LOC: none
 DOC_START
-	Use to limit the domains for which a neighbor cache will be queried.
-	Usage:
+	Use to limit the domains for which a neighbor cache will be
+	queried.  Usage:
 
 	cache_host_domain cache-host domain [domain ...]
 	cache_host_domain cache-host !domain
 
 	For example, specifying
 
-		cache_host_domain bigserver.usc.edu	.edu
+		cache_host_domain parent.foo.net	.edu
 
 	has the effect such that UDP query packets are sent to
 	'bigserver' only when the requested object exists on a
@@ -297,7 +300,7 @@ TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.source_ping
 DOC_START
-	If source_ping is enabled, then squid will include the source
+	If source_ping is enabled, then Squid will include the source
 	provider site in its selection algorithm.  This is accomplished
 	by sending ICP "HIT" packets to the UDP echo port of the source
 	host.  Note that using source_ping may send a fair amount of UDP
@@ -442,10 +445,12 @@ TYPE: int
 DEFAULT: 95
 LOC: Config.Swap.highWaterMark
 DOC_START
-	The low- and high-water marks for cache LRU replacement.
-	LRU replacement begins when the high-water mark is reached
-	and ends when enough objects have been removed and the low-water
-	mark is reached. Defaults are 90% and 95%.
+	The low- and high-water marks for cache LRU replacement.  LRU
+	replacement begins when the high-water mark is reached and ends
+	when enough objects have been removed and the low-water mark is
+	reached. Defaults are 90% and 95%. If you have a large cache, 5%
+	could be hundreds of MB. If this is the case you may wish to
+	set these numbers closer together.
 
 cache_swap_low  90
 cache_swap_high 95
@@ -482,7 +487,11 @@ DEFAULT: 4096 KB
 LOC: Config.Store.maxObjectSize
 DOC_START
 	Objects larger than this size will NOT be saved on disk.  The
-	value is specified in kilobytes, and the default is 4MB.
+	value is specified in kilobytes, and the default is 4MB.  If
+	you wish to get a high BYTES hit ratio, you should probably
+	increase this (one 32 MB object hit counts for 3200 10KB
+	hits).  If you wish to increase speed more than your want to
+	save bandwidth you should leave this low.
 
 maximum_object_size 4096 KB
 DOC_END
@@ -526,12 +535,32 @@ DEFAULT: none
 DEFAULT_IF_NONE: @DEFAULT_SWAP_DIR@ 100 16 256
 LOC: Config.cacheSwap
 DOC_START
-	Directory for on-disk cache storage.  The cache will change into
-	this directory when running.  The default is
-	@DEFAULT_SWAP_DIR@.
+	Usage:
+	
+	cache_dir Directory-Name Mbytes Level-1 Level2
 
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
+
+	'Directory' is a top-level directory where cache swap
+	files will be stored.  If you want to use an entire disk
+	for caching, then this can be the mount-point directory.
+	The directory must exist and be writable by the Squid
+	process.  Squid will NOT create this directory for you.
+
+	If no 'cache_dir' lines are specified, the following
+	default will be used: @DEFAULT_SWAP_DIR@.
+
+	'Mbytes' is the amount of disk space (MB) to use under this
+	directory.  The default is 100 MB.  Change this to suit your
+	configuration.
+
+	'Level-1' is the number of first-level subdirectories which
+	will be created under the 'Directory'.  The default is 16.
+
+	'Level-2' is the number of second-level subdirectories which
+	will be created under each first-level directory.  The default
+	is 256.
 
 cache_dir @DEFAULT_SWAP_DIR@ 100 16 256
 DOC_END
@@ -554,7 +583,9 @@ TYPE: string
 DEFAULT: @DEFAULT_CACHE_LOG@
 LOC: Config.Log.log
 DOC_START
-	Cache logging file.  Set logging levels with "debug_options" below.
+	Cache logging file. This is where general information about
+	your cache's behaviour goes. You can increase the amount of data
+	logged to this file with the "debug_options" tag below.
 
 cache_log @DEFAULT_CACHE_LOG@
 DOC_END
@@ -567,7 +598,9 @@ LOC: Config.Log.store
 DOC_START
 	Logs the activities of the storage manager.  Shows which
 	objects are ejected from the cache, and which objects are
-	saved and for how long.  To disable, enter "none".
+	saved and for how long.  To disable, enter "none". There are
+	not really utilities to analyse this data, so you can safely
+	disable it.
 
 cache_store_log @DEFAULT_STORE_LOG@
 DOC_END
@@ -583,7 +616,8 @@ DOC_START
 	cache during startup.  Normally this file resides in the first
 	'cache_dir' directory, but you may specify an alternate
 	pathname here.  Note you must give a full filename, not just
-	a directory.
+	a directory. Since this is the index for the whole object
+	list you CANNOT periodically rotate it!
 
 cache_swap_log
 DOC_END
@@ -598,7 +632,8 @@ DOC_START
 	The Cache can emulate the log file format which many 'httpd'
 	programs use.  To disable/enable this emulation, set
 	emulate_httpd_log to 'off' or 'on'.  The default
-	is to use the native log format.
+	is to use the native log format since it includes useful
+	information that Squid-specific log analysers use.
 
 emulate_httpd_log off
 DOC_END
@@ -609,9 +644,9 @@ TYPE: string
 DEFAULT: @DEFAULT_MIME_TABLE@
 LOC: Config.mimeTablePathname
 DOC_START
-	Pathname to Squid's MIME table which has the format
-
-	    regex content-type icon content-encoding transfer-mode
+	Pathname to Squid's MIME table. You shouldn't need to change
+	this, but the default file contains examples and formatting
+	information if you do.
 
 mime_table @DEFAULT_MIME_TABLE@
 DOC_END
@@ -623,15 +658,11 @@ TYPE: onoff
 LOC: Config.onoff.log_mime_hdrs
 DEFAULT: off
 DOC_START
-	The Cache can record both the request and the response
-	MIME headers for each HTTP transaction.  The headers are
-	encoded safely and will appear as two bracketed fields
-	at the end of the access log (for either the native
-	or httpd-emulated log formats).  To enable this logging
-	set log_mime_hdrs to 'on'.
-
-	NOTE: support for this may require you to define
-	LOG_FULL_HEADERS before compiling.
+	The Cache can record both the request and the response MIME
+	headers for each HTTP transaction.  The headers are encoded
+	safely and will appear as two bracketed fields at the end of
+	the access log (for either the native or httpd-emulated log
+	formats).  To enable this logging set log_mime_hdrs to 'on'.
 
 log_mime_hdrs off
 DOC_END
@@ -642,9 +673,10 @@ TYPE: string
 LOC: Config.Log.useragent
 DEFAULT: none
 DOC_START
-	If compiled with "-DUSE_USERAGENT_LOG=1" Squid will write
-	the User-Agent field from HTTP requests to the filename
-	specified here.  By default useragent_log is disabled.
+	If configured with the "--enable-useragent_log" configure
+	option, Squid will write the User-Agent field from HTTP
+	requests to the filename specified here.  By default
+	useragent_log is disabled.
 
 useragent_log none
 DOC_END
@@ -655,7 +687,7 @@ TYPE: string
 DEFAULT: @DEFAULT_PID_FILE@
 LOC: Config.pidFilename
 DOC_START
-       A pathname to write the process-id to.  To disable, enter "none".
+       A filename to write the process-id to.  To disable, enter "none".
 
 pid_filename @DEFAULT_PID_FILE@
 DOC_END
@@ -683,8 +715,9 @@ TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.ident_lookup
 DOC_START
-	If you wish to make an RFC931/ident lookup of the client username
-	for each connection, enable this.  It is off by default.
+	If you wish to make an RFC931/ident lookup of the client
+	username for each connection, enable this.  It is off by
+	default.
 
 ident_lookup off
 DOC_END
@@ -697,7 +730,10 @@ DEFAULT: off
 LOC: Config.onoff.log_fqdn
 DOC_START
 	Turn this on if you wish to log fully qualified domain names
-	in the access.log.
+	in the access.log. To do this Squid does a DNS lookup of all
+	IP's connecting to it. This can (in some situations) increase
+	latency, which makes your cache seem slower for interactive
+	browsing. 
 
 log_fqdn off
 DOC_END
@@ -710,6 +746,8 @@ DEFAULT: 255.255.255.255
 DOC_START
 	A netmask for client addresses in logfiles and cachemgr output.
 	Change this to protect the privacy of your cache clients.
+	A netmask of 255.255.255.0 will log all IP's in that range with
+	the last digit set to '0'.
 
 client_netmask 255.255.255.255
 DOC_END
@@ -741,7 +779,7 @@ COMMENT_END
 
 NAME: ftp_user
 TYPE: string
-DEFAULT: squid@
+DEFAULT: Squid@
 LOC: Config.Ftp.anon_user
 DOC_START
 	If you want the anonymous login password to be more informative
@@ -754,7 +792,7 @@ DOC_START
 	Some ftp server also validate that the email address is valid
 	(for example perl.com).
 
-ftp_user squid@
+ftp_user Squid@
 DOC_END
 
 NAME: ftp_list_width
@@ -762,6 +800,10 @@ TYPE: size_t
 DEFAULT: 32
 LOC: Config.Ftp.list_width
 DOC_START
+	Sets the width of ftp listings. This should be set to fit in
+	the width of a standard browser. Setting this too small
+	can cut off long filenames when browsing ftp sites.
+
 ftp_list_width 32
 DOC_END
 
@@ -815,6 +857,8 @@ DEFAULT: @DEFAULT_UNLINKD@
 LOC: Config.Program.unlinkd
 DOC_START
 	Specify the location of the executable for file deletion process.
+	This isn't needed if you are using async-io since it's handled by
+	a thread.
 
 unlinkd_program @DEFAULT_UNLINKD@
 DOC_END
@@ -826,6 +870,8 @@ DEFAULT: @DEFAULT_PINGER@
 LOC: Config.Program.pinger
 DOC_START
 	Specify the location of the executable for the pinger process.
+	This is only useful if you configured Squid (during compliation)
+	with the '--enable-icmp' option.
 
 pinger_program @DEFAULT_PINGER@
 DOC_END
@@ -837,9 +883,9 @@ LOC: Config.Program.redirect
 DEFAULT: none
 DOC_START
 	Specify the location of the executable for the URL redirector.
-	Currently, you must provide your own redirector program.
-	See the Release-Notes for how to write one.
-	By default, the redirector is not used.
+	Since they can perform almost any function there isn't one included.
+	See the Release-Notes for information on how to write one.
+	By default, a redirector is not used.
 
 redirect_program none
 DOC_END
@@ -850,7 +896,10 @@ TYPE: int
 DEFAULT: 5
 LOC: Config.redirectChildren
 DOC_START
-	The number of redirector processes to spawn.
+	The number of redirector processes to spawn. If you start
+	too few Squid will have to wait for them to process a backlog of
+	URLs, slowing it down. If you start too many they will use RAM
+	and other system resources.
 
 redirect_children 5
 DOC_END
@@ -933,7 +982,7 @@ DOC_START
 	objects to be removed if they have not been accessed for a week
 	or more.  If set to zero, LRU removal is disabled, and objects
 	will be removed only when disk usage is over the high water
-	mark.  The default value is one year.
+	mark.  The default value is one month.
 
 	Specify a number here, followed by units of time.  For example:
 		1 week
@@ -965,31 +1014,29 @@ TYPE: kb_size_t
 DEFAULT: 0 kb
 LOC: Config.quickAbort.max
 DOC_START
-	By default the cache continues to retrieve objects from
-	aborted requests.  This may be undesirable on slow (e.g. SLIP)
-	links and/or very busy caches.  Impatient users may tie up
-	file descriptors by repeatedly aborting and re-requesting
-	non-cachable objects.
-
-	Usage: quick_abort    min-kbytes percent max-kbytes
+	The cache can be configured to continue downloading aborted
+	requests.  This may be undesirable on slow (e.g. SLIP) links
+	and/or very busy caches.  Impatient users may tie up file
+	descriptors and bandwidth by repeatedly requesting and
+	immediately aborting downloads.
 
 	When the user aborts a request, Squid will check the
 	quick_abort values to the amount of data transfered until
 	then.
 
-	If the transfer has less than 'min-kbytes' remaining, it
-	will finish the retrieval.  Setting minlength to -1 will
-	disable the quick_abort feature.
+	If the transfer has less than 'quick_abort_min' KB remaining,
+	it will finish the retrieval.  Setting 'quick_abort_min' to -1
+	will disable the quick_abort feature.
 
-	If the transfer has more than 'max-kbytes' remaining, it
-	will abort the retrieval.
+	If more than 'quick_abort_pct' of the transfer has completed,
+	it will finish the retrieval.
 
-	If more than 'percent' of the transfer has completed, it will
-	finish the retrieval.
+	If the transfer has more than 'quick_abort_max' KB remaining,
+	it will abort the retrieval.
 
-quick_abort_min -1
+quick_abort_min -1 KB
 quick_abort_pct 0
-quick_abort_max 0
+quick_abort_max 0 KB
 DOC_END
 
 
@@ -1001,9 +1048,9 @@ DEFAULT: 5 minutes
 DOC_START
 	Time-to-Live (TTL) for failed requests.  Certain types of
 	failures (such as "connection refused" and "404 Not Found") are
-	negatively-cached for a small amount of time.  The default is 5
-	minutes.  Note that this is different from negative caching of
-	DNS lookups.
+	negatively-cached for a configurable amount of time.  The
+	default is 5 minutes.  Note that this is different from
+	negative caching of DNS lookups.
 
 negative_ttl 5 minutes
 DOC_END
@@ -1046,7 +1093,7 @@ LOC: Config.Timeout.connect
 DEFAULT: 2 minutes
 DOC_START
 	Some systems (notably Linux) can not be relied upon to properly
-	time out connect(2) requests.  Therefore the squid process
+	time out connect(2) requests.  Therefore the Squid process
 	enforces its own timeout on server connections.  This parameter
 	specifies how long to wait for the connect to complete.  The
 	default is two minutes (120 seconds).
@@ -1113,7 +1160,7 @@ DOC_START
 	should probably change client_lifetime only as a last resort.
 	If you seem to have many client connections tying up
 	filedescriptors, we recommend first tuning the read_timeout,
-	defer_timeout, and quick_abort values.
+	defer_timeout, pconn_timeout and quick_abort values.
 
 client_lifetime 1 day
 DOC_END
@@ -1351,7 +1398,9 @@ DEFAULT: none
 DOC_START
 	If you want to present a special hostname in error messages, etc,
 	then define this.  Otherwise, the return value of gethostname()
-	will be used.
+	will be used. If you have multiple caches in a cluster and
+	get errors about IP-forwarding you must set them to have individual
+	names with this setting.
 
 visible_hostname www-cache.foo.org
 DOC_END
@@ -1400,15 +1449,19 @@ DEFAULT: sd.cache.nlanr.net
 LOC: Config.Announce.host
 DOC_NONE
 
+NAME: announce_file
+TYPE: string
+DEFAULT: /dev/null
+LOC: Config.Announce.file
+DOC_NONE
+
 NAME: announce_port
 TYPE: ushort
 DEFAULT: 3131
 LOC: Config.Announce.port
 DOC_START
-	This is the hostname and portnumber where the registration message
-	will be sent.
-
-	Format:	announce_to   host[:port] [filename]
+	announce_host and announce_port set the hostname and portnumber where
+	the registration message will be sent.
 
 	Hostname will default to 'sd.cache.nlanr.net' and port will default
 	to 3131.  If the 'filename' argument is given, the contents of that
@@ -1416,13 +1469,8 @@ DOC_START
 
 announce_host sd.cache.nlanr.net
 announce_port 3131
+announce_file /dev/null
 DOC_END
-
-NAME: announce_file
-TYPE: string
-DEFAULT: /dev/null
-LOC: Config.Announce.file
-DOC_NONE
 
 COMMENT_START
  HTTPD-ACCELERATOR OPTIONS
@@ -1440,7 +1488,7 @@ TYPE: ushort
 LOC: Config.Accel.port
 DEFAULT: 80
 DOC_START
-	If you want to run squid as an httpd accelerator, define the
+	If you want to run Squid as an httpd accelerator, define the
 	host name and port number where the real HTTP server is.
 
 	If you want virtual host support then specify the hostname
@@ -1457,7 +1505,7 @@ TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.accel_with_proxy
 DOC_START
-	If you want to use squid as both a local httpd accelerator
+	If you want to use Squid as both a local httpd accelerator
 	and as a proxy, change this to 'on'.
 
 httpd_accel_with_proxy off
@@ -1495,7 +1543,7 @@ DOC_START
 	If you want to disable DNS tests, do not comment out or delete this
 	list.  Instead use the -D command line option
 
-dns_testnames internic.net usc.edu cs.colorado.edu mit.edu yale.edu
+dns_testnames netscape.com internic.net nlanr.net microsoft.com
 DOC_END
 
 
@@ -1504,12 +1552,13 @@ TYPE: int
 DEFAULT: 10
 LOC: Config.Log.rotateNumber
 DOC_START
-	Specifies the number of logfile rotations to make upon receiving
-	a USR1 signal.  The default is 10, which will rotate with
-	extensions 0 through 9.  Setting logfile_rotate to 0 will
+	Specifies the number of logfile rotations to make upon
+	receiving a USR1 signal.  The default is 10, which will rotate
+	with extensions 0 through 9.  Setting logfile_rotate to 0 will
 	disable the rotation, but the logfiles are still closed and
-	re-opened.  This will enable you to rename the logfiles yourself
-	just before sending a USR1 signal to the squid process.
+	re-opened.  This will enable you to rename the logfiles
+	yourself just before sending a USR1 signal to the Squid
+	process.
 
 logfile_rotate 10
 DOC_END
@@ -1520,8 +1569,8 @@ TYPE: string
 LOC:  Config.appendDomain
 DEFAULT: none
 DOC_START
-	Appends local domain name to hostnames without any dots in them.
-	append_domain must begin with a period.
+	Appends local domain name to hostnames without any dots in
+	them.  append_domain must begin with a period.
 
 append_domain .yourdomain.com
 DOC_END
@@ -1564,6 +1613,10 @@ DOC_START
 	do not pass the 'http_access' rules.  A single ACL will cause
 	the http_access check to fail.  If a 'deny_info' line exists
 	for that ACL then Squid returns a redirect to the given URL.
+
+	Be sure to make an exception for the site you are referring
+	people to with the 'acl dstdomain' function, otherwise they
+	are going to be refused access to the redirected URL too.
 DOC_END
 
 NAME: memory_pools
@@ -1604,9 +1657,9 @@ TYPE: onoff
 DEFAULT: on
 LOC: Config.onoff.log_udp
 DOC_START
-	If set, ICP queries are logged to access.log.  ICP logging
-	is enabled by default, so uncomment and change the line
-	below to disable it.
+	If set, ICP queries are logged to access.log. You may wish
+	do disable this if your ICP load is VERY high to speed things
+	up or to simplify log analysis.
 
 log_icp_queries on
 DOC_END
@@ -1651,26 +1704,20 @@ DOC_START
 	valid actions are:
 		shutdown *
 		info
-		stats/objects
-		stats/vm_objects
-		stats/utilization
-		stats/ipcache
-		stats/fqdncache
-		stats/dns
-		stats/redirector
-		stats/io
-		stats/reply_headers
-		stats/filedescriptors
-		stats/netdb
-		log/status *
-		log/enable *
-		log/disable *
-		log/clear *
-		log *
-		parameter
+		objects
+		vm_objects
+		utilization
+		ipcache
+		fqdncache
+		dns
+		redirector
+		io
+		reply_headers
+		filedescriptors
+		netdb
 		server_list
 		client_list
-		squid.conf *
+		config *
 
 	* Indicates actions which will not be performed without a
 	  valid password, others can be performed if not listed here.
@@ -1685,19 +1732,6 @@ cachemgr_passwd secret shutdown
 cachemgr_passwd lesssssssecret info stats/objects
 cachemgr_passwd disable all
 DOC_END
-
-
-#  TAG: swap_level1_dirs
-#	Number of first-level directories to create for storing cached
-#	objects.  Minimum 1, maximum 256, default 16.
-#
-#swap_level1_dirs 16
-
-#  TAG: swap_level2_dirs
-#       Number of sub-directories to create under each first-level
-#	directory.  Minimum 1, maximum 256, default 256.
-#
-#swap_level2_dirs 256
 
 NAME: store_avg_object_size
 COMMENT: (kbytes)
@@ -1799,11 +1833,11 @@ DOC_START
 	If you want to ask your peers to include ICMP data in their ICP
 	replies, enable this option.
 
-	If your peer has built squid with '-DUSE_ICMP=1' then that peer
-	will send ICMP pings to origin server sites of the URLs it
-	receives.  If you enable this option then the ICP replies from
-	that peer will include the ICMP data (if available).  Then,
-	when choosing a parent cache, Squid will choose the parent with
+	If your peer has configured Squid (during compilation) with
+	'--enable-icmp' then that peer will send ICMP pings to origin server
+	sites of the URLs it receives.  If you enable this option then the
+	ICP replies from that peer will include the ICMP data (if available).
+	Then, when choosing a parent cache, Squid will choose the parent with
 	the minimal RTT to the origin server.  When this happens, the
 	hierarchy field of the access.log will be
 	"CLOSEST_PARENT_MISS".  This option is off by default.
@@ -1819,7 +1853,9 @@ LOC: Config.onoff.buffered_logs
 DOC_START
 	Some log files (cache.log, useragent.log) are written with
 	stdio functions, and as such they can be buffered or
-	unbuffered.  By default they will be unbuffered.
+	unbuffered.  By default they will be unbuffered. Buffering them
+	can speed up the writing slightly (though you are unlikely to
+	need to worry).
 buffered_logs off
 DOC_END
 
@@ -1867,15 +1903,8 @@ TYPE: string
 LOC: Config.icons.directory
 DEFAULT: @DEFAULT_ICON_DIR@
 DOC_START
-	XXX
-DOC_END
-
-NAME: error_directory
-TYPE: string
-LOC: Config.errorDirectory
-DEFAULT: @DEFAULT_ERROR_DIR@
-DOC_START
-	XXX
+	Where the icons are stored. These are normally kept in
+	@DEFAULT_ICON_DIR@
 DOC_END
 
 NAME: icon_content_type
@@ -1883,7 +1912,20 @@ TYPE: string
 LOC: Config.icons.content_type
 DEFAULT: image/gif
 DOC_START
-	XXX
+	The default Squid icons that come with Squid (and are used in
+	FTP and gopher listings) are in GIF format. If you want to
+	use JPG format icons you would have to change this. 
+DOC_END
+
+NAME: error_directory
+TYPE: string
+LOC: Config.errorDirectory
+DEFAULT: @DEFAULT_ERROR_DIR@
+DOC_START
+	If you wish to create your own versions of the default
+	(English) error files, either to customise them to suit your
+	language or company copy the template english files to anther
+	directory and point this tag at them.
 DOC_END
 
 NAME: minimum_retry_timeout
@@ -1896,18 +1938,18 @@ DOC_START
 	connect timeout is reduced to compensate for the availability
 	of multiple IP addresses.
 
-	When a connection to a host is initiated, and that host
-	has several IP addresses, the default connection timeout
-	is reduced by dividing it by the number of addresses.  So,
-	a site with 15 addresses would then have a timeout of 8
-	seconds for each address attempted.  To avoid having the
-	timeout reduced to the point where even a working host
-	would not have a chance to respond, this setting is provided.
-	The default, and the minimum value, is five seconds, and
-	the maximum value is sixty seconds, or half of connect_timeout,
-	whichever is greater and less than connect_timeout.
+	When a connection to a host is initiated, and that host has
+	several IP addresses, the default connection timeout is reduced
+	by dividing it by the number of addresses.  So, a site with 15
+	addresses would then have a timeout of 8 seconds for each
+	address attempted.  To avoid having the timeout reduced to the
+	point where even a working host would not have a chance to
+	respond, this setting is provided.  The default, and the
+	minimum value, is five seconds, and the maximum value is sixty
+	seconds, or half of connect_timeout, whichever is greater and
+	less than connect_timeout.
 
-minimum_retry_timeout 5
+minimum_retry_timeout 5 seconds
 DOC_END
 
 NAME: maximum_single_addr_tries
@@ -1932,7 +1974,12 @@ LOC: Config.Port.snmp
 DEFAULT: 3401
 IFDEF: SQUID_SNMP
 DOC_START
-	Port for snmp. <=0 to disable.
+	Squid can now serve statistics and status information via SNMP.
+	By default it listens to port 3401 on the machine. If you don't
+	wish to use SNMP, set this to '-1'.
+
+	NOTE: SNMP support requires use the --enable-snmp configure
+	command line option.
 DOC_END
 
 NAME: snmp_config_file
@@ -1941,7 +1988,9 @@ LOC: Config.Snmp.configFile
 DEFAULT: @DEFAULT_SNMP_CONF@
 IFDEF: SQUID_SNMP
 DOC_START
-	External snmp configuration file, CMU-snmpd style.
+	SNMP is configured by a file in the same format as the
+	CMU-snmpd config file. This tag should contain a path to this
+	file.
 DOC_END
 
 NAME: snmp_do_queueing
@@ -1950,9 +1999,10 @@ LOC: Config.Snmp.do_queueing
 DEFAULT: on
 IFDEF: SQUID_SNMP
 DOC_START
-	If disabled, snmp packets will not be queued but delivered 
-	immediately. This could be performant when you want to monitor
-	a cache in trouble, but this could also bring squid to block.
+	If disabled, snmp packets will not be queued but delivered
+	immediately. This could be useful when you want to monitor a
+	cache in trouble, but this could also make Squid block, slowing
+	connections and possibly worsening the cache status.
 DOC_END
 
 NAME: forward_snmpd_port
@@ -1962,17 +2012,17 @@ DEFAULT: 0
 IFDEF: SQUID_SNMP
 DOC_START
 	This configures whether we should be forwarding SNMP requests
-	to another snmpd. The reason for putting this piece of functionality
-	into squid was to enable access to the system's installed
-	snmpd with minimal changes.
-	This option is turned off by default, check with your /etc/services
-	for your system's snmp port (usually 161).
-	We do not use getservbyname() to allow you to set squid into port 161
-	and your system's snmpd to another port by changing /etc/services.
+	to another snmpd. The reason for putting this piece of
+	functionality into Squid was to enable access to the system's
+	installed snmpd with minimal changes.  This option is turned
+	off by default, check with your /etc/services for your system's
+	snmp port (usually 161).  We do not use getservbyname() to
+	allow you to set Squid into port 161 and your system's snmpd to
+	another port by changing /etc/services.
 
-        WARNING: Because of squid acting as a proxy snmpd for system  
+        WARNING: Because of Squid acting as a proxy snmpd for system  
         you have to do security checks on THIS snmpd for all objects.
-        Check your snmp_config_file
+        Check your snmp_config_file.
 DOC_END
 
 NAME: snmp_mib_path
@@ -1981,7 +2031,7 @@ LOC: Config.Snmp.mibPath
 DEFAULT: @DEFAULT_MIB_PATH@
 IFDEF: SQUID_SNMP
 DOC_START
-	The location of squid's mib.
+	The location of Squid's mib.
 DOC_END
 
 NAME: trap_sink
@@ -1999,7 +2049,7 @@ LOC: Config.Snmp.trap_community
 DEFAULT: public
 IFDEF: SQUID_SNMP
 DOC_START
-	Community name for traps
+	Community name for traps.
 DOC_END
 
 NAME: snmp_enable_authen_traps
@@ -2008,7 +2058,7 @@ LOC: Config.Snmp.conf_authtraps
 DEFAULT: off
 IFDEF: SQUID_SNMP
 DOC_START
-	Enable SNMP authenticated traps
+	Enable SNMP authenticated traps. Set to 'off' or 'on'.
 DOC_END
 
 NAME: snmp_agent_conf
@@ -2033,7 +2083,8 @@ LOC: Config.as_whois_server
 DEFAULT: whois.ra.net
 DEFAULT_IF_NONE: whois.ra.net
 DOC_START
-	WHOIS server to query for AS numbers.
+	WHOIS server to query for AS numbers.  NOTE: AS numbers are
+	queried only when Squid starts up, not for every request.
 DOC_END
 
 EOF
