@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.242 1998/07/25 00:16:28 wessels Exp $
+ * $Id: protos.h,v 1.243 1998/07/25 04:47:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -983,6 +983,7 @@ extern int asnMatchIp(void *, struct in_addr);
 extern void asnInit(void);
 extern void asnFreeMemory(void);
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
+extern void dlinkAddTail(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
 extern void kb_incr(kb_t *, size_t);
 extern double gb_to_double(const gb_t *);
