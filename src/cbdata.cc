@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.27 1998/12/05 00:54:17 wessels Exp $
+ * $Id: cbdata.cc,v 1.28 1999/09/28 23:48:46 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -167,7 +167,11 @@ cbdataFree(void *p)
 }
 
 void
+#if CBDATA_DEBUG
+cbdataLockDbg(const void *p, const char *file, int line)
+#else
 cbdataLock(const void *p)
+#endif
 {
     cbdata *c;
     if (p == NULL)
@@ -176,10 +180,18 @@ cbdataLock(const void *p)
     debug(45, 3) ("cbdataLock: %p\n", p);
     assert(c != NULL);
     c->locks++;
+#if CBDATA_DEBUG
+    c->file = file;
+    c->line = line;
+#endif
 }
 
 void
+#if CBDATA_DEBUG
+cbdataUnlockDbg(const void *p, const char *file, int line)
+#else
 cbdataUnlock(const void *p)
+#endif
 {
     cbdata *c;
     if (p == NULL)
@@ -189,6 +201,10 @@ cbdataUnlock(const void *p)
     assert(c != NULL);
     assert(c->locks > 0);
     c->locks--;
+#if CBDATA_DEBUG
+    c->file = file;
+    c->line = line;
+#endif
     if (c->valid || c->locks)
 	return;
     cbdataReallyFree(c);
