@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.101 1996/12/19 23:13:31 wessels Exp $
+ * $Id: neighbors.cc,v 1.102 1996/12/20 23:20:56 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -321,6 +321,7 @@ neighborRemove(edge * target)
 	safe_free(e);
 	friends.n--;
     }
+    friends.first_ping = friends.edges_head;
 }
 
 void
@@ -441,10 +442,10 @@ neighborsUdpPing(protodispatch_data * proto)
 	debug(15, 0, "Check 'icp_port' in your config file\n");
 	fatal_dump(NULL);
     }
+    if (entry->swap_status != NO_SWAP)
+        fatal_dump("neighborsUdpPing: bad swap_status");
     for (i = 0, e = friends.first_ping; i++ < friends.n; e = e->next) {
-	if (entry->swap_status != NO_SWAP)
-	    fatal_dump("neighborsUdpPing: bad swap_status");
-	if (e == (edge *) NULL)
+	if (e == NULL)
 	    e = friends.edges_head;
 	debug(15, 5, "neighborsUdpPing: Edge %s\n", e->host);
 
@@ -515,8 +516,9 @@ neighborsUdpPing(protodispatch_data * proto)
 		    e->host, e->http_port, e->icp_port);
 	    }
 	}
-	friends.first_ping = e->next;
     }
+    if ((friends.first_ping = friends.first_ping->next) == NULL)
+	friends.first_ping = friends.edges_head;
 
     /* only do source_ping if we have neighbors */
     if (friends.n) {
@@ -774,6 +776,8 @@ neighborAdd(const char *host,
 	friends.edges_tail->next = e;
     friends.edges_tail = e;
     friends.n++;
+    if (!friends.first_ping)
+	friends.first_ping = e;
 }
 
 void
