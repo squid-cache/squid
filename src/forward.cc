@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.2 1998/06/05 21:24:57 rousskov Exp $
+ * $Id: forward.cc,v 1.3 1998/06/09 05:22:04 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -32,30 +32,20 @@
 
 #include "squid.h"
 
-struct _server {
-    char *host;
-    u_short port;
-    peer *peer;
-    struct _server *next;
-};
-
-typedef struct {
-    int fd;
-    StoreEntry *entry;
-    request_t *request;
-    struct _server *servers;
-} FwdState;
-
 static void fwdStartComplete(peer * p, void *data);
 static void fwdStartFail(peer * p, void *data);
 static void fwdDispatch(FwdState *, int server_fd);
+static void fwdConnectStart(FwdState * fwdState);
+static void fwdStateFree(FwdState * fwdState);
+static PF fwdConnectTimeout;
+static PF fwdServerClosed;
+static CNCB fwdConnectDone;
 
 static void
-fwdStateFree(void *data)
+fwdStateFree(FwdState *fwdState)
 {
-    FwdState *fwdState = data;
-    struct _server *s;
-    struct _server *n = fwdState->servers;
+    FwdServer *s;
+    FwdServer *n = fwdState->servers;
     while ((s = n)) {
 	n = s->next;
 	xfree(s->host);
@@ -64,6 +54,15 @@ fwdStateFree(void *data)
     fwdState->servers = NULL;
     requestUnlink(fwdState->request);
     cbdataFree(fwdState);
+}
+
+static void
+fwdServerClosed(int fd, void *data)
+{
+	FwdState *fwdState = data;
+	debug(17,3)("fwdServerClosed: FD %d %s\n", fd,
+		storeUrl(fwdState->entry));
+	fwdStateFree(fwdState);
 }
 
 static void
@@ -95,7 +94,6 @@ fwdConnectDone(int server_fd, int status, void *data)
 	fd_table[server_fd].uses++;
 	fwdDispatch(fwdState, server_fd);
     }
-    fwdStateFree(fwdState);
 }
 
 static void
@@ -121,11 +119,12 @@ fwdConnectStart(FwdState * fwdState)
     const char *url = storeUrl(fwdState->entry);
     int fd;
     ErrorState *err;
-    struct _server *srv = fwdState->servers;
+    FwdServer *srv = fwdState->servers;
     assert(srv);
     debug(17, 3) ("fwdConnectStart: %s\n", url);
     if ((fd = pconnPop(srv->host, srv->port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
+	comm_add_close_handler(fd, fwdServerClosed, fwdState);
 	fwdConnectDone(fd, COMM_OK, fwdState);
 	return;
     }
@@ -141,8 +140,10 @@ fwdConnectStart(FwdState * fwdState)
 	err->xerrno = errno;
 	err->request = requestLink(fwdState->request);
 	errorAppendEntry(fwdState->entry, err);
+	fwdStateFree(fwdState);
 	return;
     }
+    comm_add_close_handler(fd, fwdServerClosed, fwdState);
     commSetTimeout(fd,
 	Config.Timeout.connect,
 	fwdConnectTimeout,
@@ -158,9 +159,11 @@ static void
 fwdStartComplete(peer * p, void *data)
 {
     FwdState *fwdState = data;
-    struct _server *s;
-    if (!storeUnlockObject(fwdState->entry))
+    FwdServer *s;
+    if (!storeUnlockObject(fwdState->entry)) {
+	fwdStateFree(fwdState);
 	return;
+    }
     s = xcalloc(1, sizeof(*s));
     if (NULL != p) {
 	s->host = xstrdup(p->host);
@@ -179,14 +182,17 @@ fwdStartFail(peer * peernotused, void *data)
 {
     FwdState *fwdState = data;
     ErrorState *err;
-    if (!storeUnlockObject(fwdState->entry))
+    if (!storeUnlockObject(fwdState->entry)) {
+	fwdStateFree(fwdState);
 	return;
+    }
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(fwdState->request);
     errorAppendEntry(fwdState->entry, err);
     requestUnlink(fwdState->request);
-    cbdataFree(fwdState);
+    fwdStateFree(fwdState);
 }
+
 static void
 fwdDispatch(FwdState * fwdState, int server_fd)
 {
@@ -194,7 +200,7 @@ fwdDispatch(FwdState * fwdState, int server_fd)
     request_t *request = fwdState->request;
     StoreEntry *entry = fwdState->entry;
     debug(17, 5) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
-	fwdState->fd,
+	fwdState->client_fd,
 	RequestMethodStr[request->method],
 	storeUrl(entry));
     assert(!EBIT_TEST(entry->flag, ENTRY_DISPATCHED));
@@ -203,11 +209,11 @@ fwdDispatch(FwdState * fwdState, int server_fd)
     netdbPingSite(request->host);
     if (fwdState->servers && (p = fwdState->servers->peer)) {
 	p->stats.fetches++;
-	httpStart(request, entry, p, server_fd);
+	httpStart(fwdState, server_fd);
     } else {
 	switch (request->protocol) {
 	case PROTO_HTTP:
-	    httpStart(request, entry, NULL, server_fd);
+	    httpStart(fwdState, server_fd);
 	    break;
 	case PROTO_GOPHER:
 	    gopherStart(entry, server_fd);
@@ -219,7 +225,7 @@ fwdDispatch(FwdState * fwdState, int server_fd)
 	    waisStart(request, entry, server_fd);
 	    break;
 	case PROTO_CACHEOBJ:
-	    cachemgrStart(fwdState->fd, request, entry);
+	    cachemgrStart(fwdState->client_fd, request, entry);
 	    break;
 	case PROTO_URN:
 	    urnStart(request, entry);
@@ -278,7 +284,7 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     fwdState = xcalloc(1, sizeof(FwdState));
     cbdataAdd(fwdState, MEM_NONE);
     fwdState->entry = entry;
-    fwdState->fd = fd;
+    fwdState->client_fd = fd;
     fwdState->request = requestLink(request);
     switch (request->protocol) {
     case PROTO_CACHEOBJ:
@@ -332,4 +338,16 @@ fwdCheckDeferRead(int fdnotused, void *data)
     if (mem->inmem_hi - storeLowestMemReaderOffset(e) < READ_AHEAD_GAP)
 	return 0;
     return 1;
+}
+
+void
+fwdFail(FwdState *fwdState, int err_code, http_status http_code, int xerrno)
+{
+	debug(17, 1)("fwdFail: %s \"%s\"\n\t%s\n",
+		err_type_str[err_code],
+		httpStatusString(http_code),
+		storeUrl(fwdState->entry));
+	fwdState->fail.err_code = err_code;
+	fwdState->fail.http_code = http_code;
+	fwdState->fail.xerrno = xerrno;
 }

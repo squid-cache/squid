@@ -121,6 +121,8 @@ typedef struct _ClientInfo ClientInfo;
 typedef struct _cd_guess_stats cd_guess_stats;
 typedef struct _CacheDigest CacheDigest;
 typedef struct _Version Version;
+typedef struct _FwdState FwdState;
+typedef struct _FwdServer FwdServer;
 
 #if SQUID_SNMP
 typedef struct _snmp_request_t snmp_request_t;
