@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.278 1999/01/24 02:26:23 wessels Exp $
+ * $Id: ftp.cc,v 1.279 1999/01/29 17:22:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -531,7 +531,23 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 	}
 	snprintf(sbuf, 128, "%s %s", tokens[0], tokens[1]);
 	p->date = xstrdup(sbuf);
-	p->name = xstrdup(tokens[3]);
+	if (p->type == 'd') {
+	    /* Directory.. name begins with first printable after <dir> */
+	    ct = strstr(buf, tokens[2]);
+	    ct += strlen(tokens[2]);
+	    while (isspace(*t))
+		ct++;
+	    if (!*t)
+		ct = NULL;
+	} else {
+	    /* A file. Name begins after size, with a space in between */
+	    snprintf(sbuf, 128, " %s %s", tokens[2], tokens[3]);
+	    ct = strstr(buf, sbuf);
+	    if (ct) {
+		ct += strlen(tokens[2]) + 2;
+	    }
+	}
+	p->name = xstrdup(ct ? ct : tokens[3]);
     }
     /* Try EPLF format; carson@lehman.com */
     if (p->name == NULL && buf[0] == '+') {
