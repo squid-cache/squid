@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.37 1996/07/26 16:58:46 wessels Exp $
+ * $Id: neighbors.cc,v 1.38 1996/07/26 19:28:50 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -107,6 +107,7 @@
 
 static int edgeWouldBePinged _PARAMS((edge *, request_t *));
 static void neighborRemove _PARAMS((edge *));
+static edge *whichEdge _PARAMS((icp_common_t *, struct sockaddr_in *));
 
 static neighbors *friends = NULL;
 static struct neighbor_cf *Neighbor_cf = NULL;
@@ -135,7 +136,7 @@ char *hier_strings[] =
 };
 
 
-edge *whichEdge(header, from)
+static edge *whichEdge(header, from)
      icp_common_t *header;
      struct sockaddr_in *from;
 {
@@ -936,4 +937,15 @@ void neighbors_rotate_log()
 	rename(fname, to);
     }
     neighborsOpenLog(fname);
+}
+
+edge *neighborFindByName(name)
+     char *name;
+{
+    edge *e = NULL;
+    for (e = friends->edges_head; e; e = e->next) {
+	if (!strcasecmp(name, e->host))
+	    break;
+    }
+    return e;
 }
