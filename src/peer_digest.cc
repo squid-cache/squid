@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.26 1998/05/12 20:29:24 wessels Exp $
+ * $Id: peer_digest.cc,v 1.27 1998/05/12 22:07:36 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -73,13 +73,14 @@ peerDigestInit(peer * p)
     assert(!p->digest.flags);
     assert(!p->digest.cd);
     assert(SM_PAGE_SIZE == 4096);	/* we use MEM_4K_BUF */
+    /* set "init" flag here so we are not called after peerDigestValidate */
+    EBIT_SET(p->digest.flags, PD_INITED);
     if (EBIT_TEST(p->options, NEIGHBOR_NO_DIGEST)) {
 	peerDigestDisable(p);
     } else {
 	cbdataLock(p);
 	peerDigestValidate(p);
     }
-    EBIT_SET(p->digest.flags, PD_INITED);
 }
 
 /* no pending events or requests should exist when you call this */
