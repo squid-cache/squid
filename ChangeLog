@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta13 ():
+
 	- Combined various interprocess communication setup functions
 	  into ipcCreate().
 	- Removed some leftover ICP_HIT_OBJ things.
@@ -69,6 +71,10 @@
 	  the callbacks were changing the state of the read/write
 	  handlers prior to the poll/select() calls (SLF).
 	- Fixed ARP ACL memory leaks (Dale).
+	- Eliminated URL and SHA cache keys.  Cache keys will always
+	  be MD5's now.
+	- Fixed up store swap meta data.
+	- Changed swap.state logs to a binary format.
 
 Changes to squid-1.2.beta12 (Jan 30, 1998):
 
