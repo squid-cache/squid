@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.431 2003/02/17 07:01:35 robertc Exp $
+ * $Id: cache_cf.cc,v 1.432 2003/02/17 08:39:43 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1293,7 +1293,6 @@ free_cachedir(_SquidConfig::_cacheSwap * swap)
     swap->n_configured = 0;
 }
 
-#if 0
 static const char *
 peer_type_str(const peer_t type)
 {
@@ -1520,7 +1519,6 @@ free_peer(peer ** P)
     }
     Config.npeers = 0;
 }
-#endif
 
 static void
 dump_cachemgrpasswd(StoreEntry * entry, const char *name, cachemgr_passwd * list)
@@ -1640,7 +1638,6 @@ parse_peer_access(void)
     aclParseAccessLine(&p->access);
 }
 
-#if 0
 static void
 parse_hostdomain(void)
 {
@@ -1695,7 +1692,6 @@ parse_hostdomaintype(void)
 	*L = l;
     }
 }
-#endif
 
 #if UNUSED_CODE
 static void
