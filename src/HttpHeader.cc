@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.69 2001/01/12 00:37:13 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.70 2001/04/14 00:25:17 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -124,6 +124,10 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
     {"X-Request-URI", HDR_X_REQUEST_URI, ftStr},
     {"X-Squid-Error", HDR_X_SQUID_ERROR, ftStr},
+    {"Negotiate", HDR_NEGOTIATE, ftStr},
+#if X_ACCELERATOR_VARY
+    {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
+#endif
     {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
 };
 static HttpHeaderFieldInfo *Headers = NULL;
@@ -154,6 +158,9 @@ static http_hdr_type ListHeadersArr[] =
     HDR_AUTHENTICATION_INFO,
     HDR_PROXY_AUTHENTICATION_INFO,
     /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
+#if X_ACCELERATOR_VARY
+    HDR_X_ACCELERATOR_VARY,
+#endif
     HDR_X_FORWARDED_FOR
 };
 
@@ -187,6 +194,9 @@ static http_hdr_type ReplyHeadersArr[] =
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,
     HDR_X_REQUEST_URI,
+#if X_ACCELERATOR_VARY
+    HDR_X_ACCELERATOR_VARY,
+#endif
     HDR_X_SQUID_ERROR
 };
 
@@ -606,6 +616,51 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
     return s;
 }
 
+/* return a string or list of entries with the same id separated by ',' and ws */
+String
+httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id)
+{
+    const char *str;
+    String s;
+
+    if (CBIT_TEST(ListHeadersMask, id))
+	s = httpHeaderGetList(hdr, id);
+    else {
+	str = httpHeaderGetStr(hdr, id);
+	stringInit(&s, str);
+    }
+    return s;
+}
+
+/*
+ * returns a pointer to a specified entry if any 
+ * note that we return one entry so it does not make much sense to ask for
+ * "list" headers
+ */
+String
+httpHeaderGetByName(const HttpHeader * hdr, const char *name)
+{
+    http_hdr_type id;
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    HttpHeaderEntry *e;
+    String result = StringNull;
+
+    assert(hdr);
+    assert(name);
+
+    /* First try the quick path */
+    id = httpHeaderIdByNameDef(name, strlen(name));
+    if (id != -1)
+	return httpHeaderGetStrOrList(hdr, id);
+
+    /* Sorry, an unknown header name. Do linear search */
+    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+	if (e->id == HDR_OTHER && strCaseCmp(e->name, name) == 0) {
+	    strListAdd(&result, strBuf(e->value), ',');
+	}
+    }
+    return result;
+}
 
 /* test if a field is present */
 int

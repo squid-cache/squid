@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.114 2001/03/03 10:39:33 hno Exp $
+ * $Id: peer_select.cc,v 1.115 2001/04/14 00:25:18 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -326,7 +326,7 @@ peerGetSomeNeighbor(ps_state * ps)
 	return;
     }
 #if USE_CACHE_DIGESTS
-    if ((p = neighborsDigestSelect(request, entry))) {
+    if ((p = neighborsDigestSelect(request))) {
 	if (neighborType(p, request) == PEER_PARENT)
 	    code = CD_PARENT_HIT;
 	else

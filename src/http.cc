@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.379 2001/04/14 00:03:23 hno Exp $
+ * $Id: http.cc,v 1.380 2001/04/14 00:25:18 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -167,7 +167,11 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     if (!remove && !forbidden)
 	return;
     assert(e->mem_obj);
-    if ((pe = storeGetPublic(e->mem_obj->url, e->mem_obj->method)) != NULL) {
+    if (e->mem_obj->request)
+	pe = storeGetPublicByRequest(e->mem_obj->request);
+    else
+	pe = storeGetPublic(e->mem_obj->url, e->mem_obj->method);
+    if (pe != NULL) {
 	assert(e != pe);
 	storeRelease(pe);
     }
@@ -175,7 +179,11 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
      * Also remove any cached HEAD response in case the object has
      * changed.
      */
-    if ((pe = storeGetPublic(e->mem_obj->url, METHOD_HEAD)) != NULL) {
+    if (e->mem_obj->request)
+	pe = storeGetPublicByRequestMethod(e->mem_obj->request, METHOD_HEAD);
+    else
+	pe = storeGetPublic(e->mem_obj->url, METHOD_HEAD);
+    if (pe != NULL) {
 	assert(e != pe);
 	storeRelease(pe);
     }
@@ -193,7 +201,11 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 	 * Remove any cached GET object if it is beleived that the
 	 * object may have changed as a result of other methods
 	 */
-	if ((pe = storeGetPublic(e->mem_obj->url, METHOD_GET)) != NULL) {
+	if (e->mem_obj->request)
+	    pe = storeGetPublicByRequestMethod(e->mem_obj->request, METHOD_GET);
+	else
+	    pe = storeGetPublic(e->mem_obj->url, METHOD_GET);
+	if (pe != NULL) {
 	    assert(e != pe);
 	    storeRelease(pe);
 	}
@@ -223,12 +235,6 @@ httpCachableReply(HttpStateData * httpState)
 	if (!EBIT_TEST(cc_mask, CC_PUBLIC))
 	    return 0;
     }
-    /*
-     * We don't properly deal with Vary features yet, so we can't
-     * cache these
-     */
-    if (httpHeaderHas(hdr, HDR_VARY))
-	return 0;
     /* Pragma: no-cache in _replies_ is not documented in HTTP,
      * but servers like "Active Imaging Webcast/2.0" sure do use it */
     if (httpHeaderHas(hdr, HDR_PRAGMA)) {
@@ -313,6 +319,66 @@ httpCachableReply(HttpStateData * httpState)
     /* NOTREACHED */
 }
 
+/*
+ * For Vary, store the relevant request headers as 
+ * virtual headers in the reply
+ * Returns false if the variance cannot be stored
+ */
+const char *
+httpMakeVaryMark(request_t * request, HttpReply * reply)
+{
+    int ok = 1;
+    String vary, hdr;
+    const char *pos = NULL;
+    const char *item;
+    const char *value;
+    int ilen;
+    static String vstr =
+    {0, 0, NULL};
+
+    stringClean(&vstr);
+    vary = httpHeaderGetList(&reply->header, HDR_VARY);
+    while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
+	char *name = xmalloc(ilen + 1);
+	xstrncpy(name, item, ilen + 1);
+	Tolower(name);
+	strListAdd(&vstr, name, ',');
+	hdr = httpHeaderGetByName(&request->header, name);
+	safe_free(name);
+	value = strBuf(hdr);
+	if (value) {
+	    value = rfc1738_escape(value);
+	    stringAppend(&vstr, "=\"", 2);
+	    stringAppend(&vstr, value, strlen(value));
+	    stringAppend(&vstr, "\"", 1);
+	}
+	stringClean(&hdr);
+    }
+    stringClean(&vary);
+#if X_ACCELERATOR_VARY
+    vary = httpHeaderGetList(&reply->header, HDR_X_ACCELERATOR_VARY);
+    while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
+	char *name = xmalloc(ilen + 1);
+	xstrncpy(name, item, ilen + 1);
+	Tolower(name);
+	strListAdd(&vstr, name, ',');
+	hdr = httpHeaderGetByName(&request->header, name);
+	safe_free(name);
+	value = strBuf(hdr);
+	if (value) {
+	    value = rfc1738_escape(value);
+	    stringAppend(&vstr, "=\"", 2);
+	    stringAppend(&vstr, value, strlen(value));
+	    stringAppend(&vstr, "\"", 1);
+	}
+	stringClean(&hdr);
+    }
+    stringClean(&vary);
+#endif
+    debug(11, 0) ("httpMakeVaryMark: %d / %s\n", ok, strBuf(vstr));
+    return strBuf(vstr);
+}
+
 /* rewrite this later using new interfaces @?@ */
 void
 httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
@@ -365,7 +431,22 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	httpMaybeRemovePublic(entry, reply->sline.status);
     switch (httpCachableReply(httpState)) {
     case 1:
-	httpMakePublic(entry);
+	if (httpHeaderHas(&reply->header, HDR_VARY)
+#if X_ACCELERATOR_VARY
+	    || httpHeaderHas(&reply->header, HDR_X_ACCELERATOR_VARY)
+#endif
+	    ) {
+	    const char *vary = httpMakeVaryMark(httpState->request, reply);
+	    if (vary) {
+		entry->mem_obj->vary_headers = xstrdup(vary);
+		/* Kill the old base object if a change in variance is detected */
+		httpMakePublic(entry);
+	    } else {
+		httpMakePrivate(entry);
+	    }
+	} else {
+	    httpMakePublic(entry);
+	}
 	break;
     case 0:
 	httpMakePrivate(entry);

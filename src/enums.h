@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.190 2001/04/09 22:26:00 hno Exp $
+ * $Id: enums.h,v 1.191 2001/04/14 00:25:18 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -234,6 +234,10 @@ typedef enum {
     HDR_X_FORWARDED_FOR,
     HDR_X_REQUEST_URI,		/* appended if ADD_X_REQUEST_URI is #defined */
     HDR_X_SQUID_ERROR,
+    HDR_NEGOTIATE,
+#if X_ACCELERATOR_VARY
+    HDR_X_ACCELERATOR_VARY,
+#endif
     HDR_OTHER,
     HDR_ENUM_END
 } http_hdr_type;
@@ -668,6 +672,7 @@ enum {
     STORE_META_STD,		/* standard metadata */
     STORE_META_HITMETERING,	/* reserved for hit metering */
     STORE_META_VALID,
+    STORE_META_VARY_HEADERS,	/* Stores Vary request headers */
     STORE_META_END
 };
 
@@ -751,3 +756,13 @@ typedef enum {
     CBDATA_store_client,
     CBDATA_FIRST_CUSTOM_TYPE = 1000
 } cbdata_type;
+
+/*
+ * Return codes from checkVary(request)
+ */
+enum {
+    VARY_NONE,
+    VARY_MATCH,
+    VARY_OTHER,
+    VARY_CANCEL
+};

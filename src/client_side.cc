@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.534 2001/04/14 00:03:21 hno Exp $
+ * $Id: client_side.cc,v 1.535 2001/04/14 00:25:17 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -586,7 +586,7 @@ clientPurgeRequest(clientHttpRequest * http)
     StoreEntry *entry;
     ErrorState *err = NULL;
     HttpReply *r;
-    http_status status;
+    http_status status = HTTP_NOT_FOUND;
     http_version_t version;
     debug(33, 3) ("Config2.onoff.enable_purge = %d\n", Config2.onoff.enable_purge);
     if (!Config2.onoff.enable_purge) {
@@ -598,17 +598,66 @@ clientPurgeRequest(clientHttpRequest * http)
 	errorAppendEntry(http->entry, err);
 	return;
     }
-    http->log_type = LOG_TCP_MISS;
-    /* Release both IP and object cache entries */
+    /* Release both IP cache */
     ipcacheInvalidate(http->request->host);
-    if ((entry = storeGetPublic(http->uri, METHOD_GET)) == NULL) {
-	status = HTTP_NOT_FOUND;
-    } else {
+
+    if (!http->flags.purging) {
+	/* Try to find a base entry */
+	http->flags.purging = 1;
+	entry = storeGetPublicByRequestMethod(http->request, METHOD_GET);
+	if (!entry)
+	    entry = storeGetPublicByRequestMethod(http->request, METHOD_HEAD);
+	if (entry) {
+	    /* Swap in the metadata */
+	    http->entry = entry;
+	    storeLockObject(http->entry);
+	    storeCreateMemObject(http->entry, http->uri, http->log_uri);
+	    http->entry->mem_obj->method = http->request->method;
+	    http->sc = storeClientListAdd(http->entry, http);
+	    http->log_type = LOG_TCP_HIT;
+	    storeClientCopy(http->sc, http->entry,
+		http->out.offset,
+		http->out.offset,
+		CLIENT_SOCK_SZ,
+		memAllocate(MEM_CLIENT_SOCK_BUF),
+		clientCacheHit,
+		http);
+	    return;
+	}
+    }
+    http->log_type = LOG_TCP_MISS;
+    /* Release the cached URI */
+    entry = storeGetPublicByRequestMethod(http->request, METHOD_GET);
+    if (entry) {
+	debug(33, 4) ("clientPurgeRequest: GET '%s'\n",
+	    storeUrl(entry));
 	storeRelease(entry);
 	status = HTTP_OK;
     }
-    debug(33, 4) ("clientPurgeRequest: Not modified '%s'\n",
-	storeUrl(entry));
+    entry = storeGetPublicByRequestMethod(http->request, METHOD_HEAD);
+    if (entry) {
+	debug(33, 4) ("clientPurgeRequest: HEAD '%s'\n",
+	    storeUrl(entry));
+	storeRelease(entry);
+	status = HTTP_OK;
+    }
+    /* And for Vary, release the base URI if none of the headers was included in the request */
+    if (http->request->vary_headers && !strstr(http->request->vary_headers, "=")) {
+	entry = storeGetPublic(urlCanonical(http->request), METHOD_GET);
+	if (entry) {
+	    debug(33, 4) ("clientPurgeRequest: Vary GET '%s'\n",
+		storeUrl(entry));
+	    storeRelease(entry);
+	    status = HTTP_OK;
+	}
+	entry = storeGetPublic(urlCanonical(http->request), METHOD_HEAD);
+	if (entry) {
+	    debug(33, 4) ("clientPurgeRequest: Vary HEAD '%s'\n",
+		storeUrl(entry));
+	    storeRelease(entry);
+	    status = HTTP_OK;
+	}
+    }
     /*
      * Make a new entry to hold the reply to be written
      * to the client.
@@ -1414,6 +1463,45 @@ clientCacheHit(void *data, char *buf, ssize_t size)
      * Got the headers, now grok them
      */
     assert(http->log_type == LOG_TCP_HIT);
+    switch (varyEvaluateMatch(e, r)) {
+    case VARY_NONE:
+	/* No variance detected. Continue as normal */
+	break;
+    case VARY_MATCH:
+	/* This is the correct entity for this request. Continue */
+	debug(33, 2) ("clientProcessHit: Vary MATCH!\n");
+	break;
+    case VARY_OTHER:
+	/* This is not the correct entity for this request. We need
+	 * to requery the cache.
+	 */
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
+	http->entry = NULL;
+	storeUnregister(http->sc, e, http);
+	http->sc = NULL;
+	storeUnlockObject(e);
+	/* Note: varyEvalyateMatch updates the request with vary information
+	 * so we only get here once. (it also takes care of cancelling loops)
+	 */
+	debug(33, 2) ("clientProcessHit: Vary detected!\n");
+	clientProcessRequest(http);
+	return;
+    case VARY_CANCEL:
+	/* varyEvaluateMatch found a object loop. Process as miss */
+	debug(33, 1) ("clientProcessHit: Vary object loop!\n");
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
+	clientProcessMiss(http);
+	return;
+    }
+    if (r->method == METHOD_PURGE) {
+	memFree(buf, MEM_CLIENT_SOCK_BUF);
+	http->entry = NULL;
+	storeUnregister(http->sc, e, http);
+	http->sc = NULL;
+	storeUnlockObject(e);
+	clientPurgeRequest(http);
+	return;
+    }
     if (checkNegativeHit(e)) {
 	http->log_type = LOG_TCP_NEGATIVE_HIT;
 	clientSendMoreData(data, buf, size);
@@ -2098,11 +2186,7 @@ clientProcessRequest2(clientHttpRequest * http)
 {
     request_t *r = http->request;
     StoreEntry *e;
-    e = http->entry = storeGetPublic(http->uri, r->method);
-    if (r->method == METHOD_HEAD && e == NULL) {
-	/* We can generate a HEAD reply from a cached GET object */
-	e = http->entry = storeGetPublic(http->uri, METHOD_GET);
-    }
+    e = http->entry = storeGetPublicByRequest(r);
     /* Release negatively cached IP-cache entries on reload */
     if (r->flags.nocache)
 	ipcacheInvalidate(r->host);
@@ -2265,6 +2349,10 @@ clientProcessMiss(clientHttpRequest * http)
 	http->sc = NULL;
 	storeUnlockObject(http->entry);
 	http->entry = NULL;
+    }
+    if (r->method == METHOD_PURGE) {
+	clientPurgeRequest(http);
+	return;
     }
     if (clientOnlyIfCached(http)) {
 	clientProcessOnlyIfCachedMiss(http);
@@ -3415,4 +3503,55 @@ clientHttpConnectionsClose(void)
 	}
     }
     NHttpSockets = 0;
+}
+
+int
+varyEvaluateMatch(StoreEntry * entry, request_t * request)
+{
+    const char *vary = request->vary_headers;
+    int has_vary = httpHeaderHas(&entry->mem_obj->reply->header, HDR_VARY);
+#if X_ACCELERATOR_VARY
+    has_vary |= httpHeaderHas(&entry->mem_obj->reply->header, HDR_X_ACCELERATOR_VARY);
+#endif
+    if (!has_vary || !entry->mem_obj->vary_headers) {
+	if (vary) {
+	    /* Oops... something odd is going on here.. */
+	    debug(33, 1) ("varyEvaluateMatch: Oops. Not a Vary object on second attempt, '%s' '%s'\n",
+		entry->mem_obj->url, vary);
+	    safe_free(request->vary_headers);
+	    return VARY_CANCEL;
+	}
+	if (!has_vary) {
+	    /* This is not a varying object */
+	    return VARY_NONE;
+	}
+	/* virtual "vary" object found. Calculate the vary key and
+	 * continue the search
+	 */
+	vary = request->vary_headers = xstrdup(httpMakeVaryMark(request, entry->mem_obj->reply));
+	if (vary)
+	    return VARY_OTHER;
+	else {
+	    /* Ouch.. we cannot handle this kind of variance */
+	    /* XXX This cannot really happen, but just to be complete */
+	    return VARY_CANCEL;
+	}
+    } else {
+	if (!vary)
+	    vary = request->vary_headers = xstrdup(httpMakeVaryMark(request, entry->mem_obj->reply));
+	if (!vary) {
+	    /* Ouch.. we cannot handle this kind of variance */
+	    /* XXX This cannot really happen, but just to be complete */
+	    return VARY_CANCEL;
+	} else if (strcmp(vary, entry->mem_obj->vary_headers) == 0) {
+	    return VARY_MATCH;
+	} else {
+	    /* Oops.. we have already been here and still haven't
+	     * found the requested variant. Bail out
+	     */
+	    debug(33, 1) ("varyEvaluateMatch: Oops. Not a Vary match on second attempt, '%s' '%s'\n",
+		entry->mem_obj->url, vary);
+	    return VARY_CANCEL;
+	}
+    }
 }

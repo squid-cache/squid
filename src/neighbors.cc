@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.294 2001/03/25 18:08:25 adrian Exp $
+ * $Id: neighbors.cc,v 1.295 2001/04/14 00:25:18 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -558,10 +558,10 @@ neighborsUdpPing(request_t * request,
 
 /* lookup the digest of a given peer */
 lookup_t
-peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
+peerDigestLookup(peer * p, request_t * request)
 {
 #if USE_CACHE_DIGESTS
-    const cache_key *key = request ? storeKeyPublic(storeUrl(entry), request->method) : NULL;
+    const cache_key *key = request ? storeKeyPublicByRequest(request) : NULL;
     assert(p);
     assert(request);
     debug(15, 5) ("peerDigestLookup: peer %s\n", p->host);
@@ -597,7 +597,7 @@ peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
 
 /* select best peer based on cache digests */
 peer *
-neighborsDigestSelect(request_t * request, StoreEntry * entry)
+neighborsDigestSelect(request_t * request)
 {
     peer *best_p = NULL;
 #if USE_CACHE_DIGESTS
@@ -610,14 +610,14 @@ neighborsDigestSelect(request_t * request, StoreEntry * entry)
     int i;
     if (!request->flags.hierarchical)
 	return NULL;
-    key = storeKeyPublic(storeUrl(entry), request->method);
+    key = storeKeyPublicByRequest(request);
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	lookup_t lookup;
 	if (!p)
 	    p = Config.peers;
 	if (i == 1)
 	    first_ping = p;
-	lookup = peerDigestLookup(p, request, entry);
+	lookup = peerDigestLookup(p, request);
 	if (lookup == LOOKUP_NONE)
 	    continue;
 	choice_count++;

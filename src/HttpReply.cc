@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.45 2001/01/12 00:37:14 wessels Exp $
+ * $Id: HttpReply.cc,v 1.46 2001/04/14 00:25:17 hno Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -315,6 +315,13 @@ httpReplyHdrExpirationTime(const HttpReply * rep)
 	    if (rep->cache_control->max_age >= 0)
 		return squid_curtime;
 	}
+    }
+    if (Config.onoff.vary_ignore_expire &&
+	httpHeaderHas(&rep->header, HDR_VARY)) {
+	const time_t d = httpHeaderGetTime(&rep->header, HDR_DATE);
+	const time_t e = httpHeaderGetTime(&rep->header, HDR_EXPIRES);
+	if (d == e)
+	    return -1;
     }
     if (httpHeaderHas(&rep->header, HDR_EXPIRES)) {
 	const time_t e = httpHeaderGetTime(&rep->header, HDR_EXPIRES);

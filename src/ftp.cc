@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.309 2001/04/14 00:03:22 hno Exp $
+ * $Id: ftp.cc,v 1.310 2001/04/14 00:25:18 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2474,9 +2474,9 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     const char *filename = NULL;
     const char *t = NULL;
     StoreEntry *e = ftpState->entry;
-    StoreEntry *pe = NULL;
     http_reply *reply = e->mem_obj->reply;
     http_version_t version;
+
     if (ftpState->flags.http_header_sent)
 	return;
     ftpState->flags.http_header_sent = 1;
@@ -2527,12 +2527,8 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     storeTimestampsSet(e);
     if (ftpState->flags.authenticated) {
 	/*
-	 * Authenticated requests can't be cached. Eject any old cached
-	 * object
+	 * Authenticated requests can't be cached.
 	 */
-	pe = storeGetPublic(e->mem_obj->url, e->mem_obj->method);
-	if (pe)
-	    storeRelease(pe);
 	storeRelease(e);
     } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !ftpState->restarted_offset) {
 	storeSetPublicKey(e);
