@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.6 1996/03/25 19:05:49 wessels Exp $ */
+/* $Id: gopher.cc,v 1.7 1996/03/26 05:17:21 wessels Exp $ */
 
 #include "config.h"
 #include <errno.h>
@@ -660,6 +660,7 @@ int gopherReadReply(fd, data)
 		    (caddr_t) NULL,
 		    (time_t) 0);
 #endif
+		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
 		return 0;
 	    }
 	} else {
