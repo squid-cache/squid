@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.225 1997/04/29 22:13:09 wessels Exp $
+ * $Id: store.cc,v 1.226 1997/04/30 16:18:44 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2606,6 +2606,7 @@ storeWriteCleanLogs(void)
 	    debug(50, 0, "storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 	    continue;
 	}
+	fd_open(fd[dirn], FD_FILE, new[dirn]);
 #if HAVE_FCHMOD
 	if (stat(cur[dirn], &sb) == 0)
 	    fchmod(fd[dirn], sb.st_mode);

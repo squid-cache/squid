@@ -31,7 +31,8 @@ void
 fd_close (int fd)
 {
     FD_ENTRY *fde = &fd_table[fd];
-    fdUpdateBiggest(fd, FD_CLOSE);
+    debug(7, 1, "fd_close: FD %3d\n", fd);
+    fdUpdateBiggest(fd, fde->open = FD_CLOSE);
     memset(fde, '\0', sizeof(FD_ENTRY));
     fde->timeout = 0;
 }
@@ -40,6 +41,10 @@ void
 fd_open(int fd, unsigned int type, const char *desc)
 {
     FD_ENTRY *fde = &fd_table[fd];
+    debug(7, 1, "fd_open : FD %3d, %8.8s, %s\n",
+	fd,
+	fdstatTypeStr[type],
+	desc ? desc : "N/A");
     fde->type = type;
     fdUpdateBiggest(fd, fde->open = FD_OPEN);
     if (desc)
