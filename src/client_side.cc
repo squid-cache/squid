@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.331 1998/06/04 20:25:04 rousskov Exp $
+ * $Id: client_side.cc,v 1.332 1998/06/05 17:34:16 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -747,8 +747,12 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 #endif
     if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
-	if (strListIsMember(&s, "no-cache", ','))
-	    EBIT_SET(request->flags, REQ_NOCACHE);
+	if (strListIsMember(&s, "no-cache", ',')) {
+	    if (!Config.onoff.reload_into_ims)
+	        EBIT_SET(request->flags, REQ_NOCACHE);
+	    else
+	        EBIT_SET(request->flags, REQ_NOCACHE_HACK);
+	}
 	stringClean(&s);
     }
 #if OLD_CODE
@@ -1910,6 +1914,11 @@ clientProcessRequest2(clientHttpRequest * http)
     } else if (EBIT_TEST(r->flags, REQ_IMS)) {
 	/* User-initiated IMS request for something we think is valid */
 	return LOG_TCP_IMS_MISS;
+    } else if (EBIT_TEST(r->flags, REQ_NOCACHE_HACK)) {
+        if (r->protocol == PROTO_HTTP)
+            return LOG_TCP_REFRESH_MISS;
+        else
+            return LOG_TCP_MISS;  /* XXX zoinks */
     } else if (e->mem_status == IN_MEMORY) {
 	return LOG_TCP_MEM_HIT;
     } else {

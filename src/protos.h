@@ -537,7 +537,7 @@ extern int neighborsUdpPing(request_t *,
     IRCB * callback,
     void *data,
     int *exprep,
-    double *exprtt);
+    int *timeout);
 extern void neighborAddAcl(const char *, const char *);
 extern void neighborsUdpAck(const cache_key *, icp_common_t *, const struct sockaddr_in *);
 extern void neighborAdd(const char *, const char *, int, int, int, int, int);

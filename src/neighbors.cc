@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.220 1998/06/03 20:34:44 wessels Exp $
+ * $Id: neighbors.cc,v 1.221 1998/06/05 17:34:19 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -408,7 +408,7 @@ neighborsUdpPing(request_t * request,
     IRCB * callback,
     void *callback_data,
     int *exprep,
-    double *exprtt)
+    int *timeout)
 {
     const char *url = storeUrl(entry);
     MemObject *mem = entry->mem_obj;
@@ -428,7 +428,7 @@ neighborsUdpPing(request_t * request,
     mem->start_ping = current_time;
     mem->icp_reply_callback = callback;
     mem->ircb_data = callback_data;
-    *exprtt = 0.0;
+    *timeout = 0.0;
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	if (p == NULL)
 	    p = Config.peers;
@@ -490,7 +490,7 @@ neighborsUdpPing(request_t * request,
 	} else if (neighborUp(p)) {
 	    /* its alive, expect a reply from it */
 	    (*exprep)++;
-	    (*exprtt) += (double) p->stats.rtt;
+	    (*timeout) += p->stats.rtt;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
@@ -537,17 +537,15 @@ neighborsUdpPing(request_t * request,
 	}
     }
 #endif
-#if LOG_ICP_NUMBERS
-    request->hierarchy.n_sent = peers_pinged;
-    request->hierarchy.n_expect = *exprep;
-#endif
     /*
-     * Average out the expected RTT and then double it
+     * If there is a configured timeout, use it
      */
-    if (*exprep > 0)
-	(*exprtt) = 2.0 * (*exprtt) / (double) (*exprep);
+    if (Config.Timeout.icp_query)
+	*timeout = Config.Timeout.icp_query * 1000;
+    else if (*exprep > 0)
+	(*timeout) = 2 * (*timeout) / (*exprep);
     else
-	*exprtt = Config.neighborTimeout;
+	*timeout = 2000;		/* 2 seconds */
     return peers_pinged;
 }
 
@@ -1059,7 +1057,7 @@ peerCountMcastPeersStart(void *data)
     eventAdd("peerCountMcastPeersDone",
 	peerCountMcastPeersDone,
 	psstate,
-	(double) Config.neighborTimeout, 1);
+	(double) Config.Timeout.mcast_icp_query, 1);
     p->mcast.flags |= PEER_COUNTING;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }

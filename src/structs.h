@@ -192,7 +192,6 @@ struct _SquidConfig {
     time_t negativeDnsTtl;
     time_t positiveDnsTtl;
     time_t shutdownLifetime;
-    time_t neighborTimeout;
     struct {
 	time_t read;
 	time_t lifetime;
@@ -201,6 +200,8 @@ struct _SquidConfig {
 	time_t pconn;
 	time_t siteSelect;
 	time_t deadPeer;
+        int icp_query;			/* msec */
+        int mcast_icp_query;		/* msec */
     } Timeout;
     size_t maxRequestSize;
     struct {
@@ -321,6 +322,7 @@ struct _SquidConfig {
 	int mem_pools;
 	int test_reachability;
 	int half_closed_clients;
+	int reload_into_ims;
     } onoff;
     acl *aclList;
     struct {
@@ -640,7 +642,8 @@ struct _icp_ping_data {
     int n_sent;
     int n_recv;
     int n_replies_expected;
-    int timeout;
+    int timeout;	/* msec */
+    int timedout;
     int w_rtt;
     int p_rtt;
 };
