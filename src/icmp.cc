@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.73 2001/01/12 00:37:18 wessels Exp $
+ * $Id: icmp.cc,v 1.74 2002/03/31 14:50:21 hno Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -190,7 +190,7 @@ void
 icmpOpen(void)
 {
 #if USE_ICMP
-    char *args[2];
+    const char *args[2];
     int x;
     int rfd;
     int wfd;
