@@ -293,29 +293,6 @@ DOC_START
 single_parent_bypass off
 DOC_END
 
-NAME: source_ping
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-IFDEF: ALLOW_SOURCE_PING
-LOC: Config.onoff.source_ping
-DOC_START
-	If source_ping is enabled, then Squid will include the source
-	provider site in its selection algorithm.  This is accomplished
-	by sending ICP "HIT" packets to the UDP echo port of the source
-	host.  Note that using source_ping may send a fair amount of UDP
-	traffic out on the Internet and may irritate paranoid network
-	administrators.
-
-	Note that source_ping is incompatible with 'never_direct'.  For
-	requests matching the 'never_direct' rules, source_ping packets
-	will never be sent.
-
-	By default, source_ping is off.
-
-source_ping off
-DOC_END
-
 NAME: neighbor_timeout neighbour_timeout
 COMMENT: (seconds)
 DEFAULT: 2 seconds
