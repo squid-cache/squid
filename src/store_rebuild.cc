@@ -216,8 +216,10 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 		storeExpireNow(e);
 		storeSetPrivateKey(e);
 		EBIT_SET(e->flag, RELEASE_REQUEST);
-		storeDirMapBitReset(e->swap_file_number);
-		e->swap_file_number = -1;
+		if (e->swap_file_number > -1) {
+		    storeDirMapBitReset(e->swap_file_number);
+		    e->swap_file_number = -1;
+		}
 		RebuildState.objcount--;
 		RebuildState.cancelcount++;
 	    }
