@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.129 1996/11/05 17:07:59 wessels Exp $
+ * $Id: cache_cf.cc,v 1.130 1996/11/06 08:16:42 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -193,6 +193,9 @@ struct SquidConfig Config;
 #define DefaultMaxObjectSize	(4<<20)		/* 4Mb */
 #define DefaultAvgObjectSize	20	/* 20k */
 #define DefaultObjectsPerBucket	50
+
+#define DefaultLevelOneDirs	16
+#define DefaultLevelTwoDirs	256
 
 int httpd_accel_mode = 0;	/* for fast access */
 const char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -1329,6 +1332,11 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "viz_hack_addr"))
 	    parseVizHackLine();
 
+	else if (!strcmp(token, "swap_level1_dirs"))
+	    parseIntegerValue(&Config.levelOneDirs);
+	else if (!strcmp(token, "swap_level2_dirs"))
+	    parseIntegerValue(&Config.levelTwoDirs);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
@@ -1531,6 +1539,8 @@ configSetFactoryDefaults(void)
     Config.Store.maxObjectSize = DefaultMaxObjectSize;
     Config.Store.avgObjectSize = DefaultAvgObjectSize;
     Config.Store.objectsPerBucket = DefaultObjectsPerBucket;
+    Config.levelOneDirs = DefaultLevelOneDirs;
+    Config.levelTwoDirs = DefaultLevelTwoDirs;
 }
 
 static void
