@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.14 1996/09/14 08:46:21 wessels Exp $
+ * $Id: redirect.cc,v 1.15 1996/09/15 05:04:40 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -70,12 +70,12 @@ struct redirectQueueData {
     redirectStateData *redirectState;
 };
 
-static redirector_t *GetFirstAvailable(void);
-static int redirectCreateRedirector(char *command);
-static int redirectHandleRead(int, redirector_t *);
-static redirectStateData *Dequeue();
-static void Enqueue(redirectStateData *);
-static void redirectDispatch(redirector_t *, redirectStateData *);
+static redirector_t *GetFirstAvailable __P((void));
+static int redirectCreateRedirector __P((char *command));
+static int redirectHandleRead __P((int, redirector_t *));
+static redirectStateData *Dequeue __P((void));
+static void Enqueue __P((redirectStateData *));
+static void redirectDispatch __P((redirector_t *, redirectStateData *));
 
 
 static redirector_t **redirect_child_table = NULL;

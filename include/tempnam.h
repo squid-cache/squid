@@ -17,5 +17,5 @@
 
 #ifndef _TEMPNAM_H
 #define _TEMPNAM_H
-extern char *tempnam(const char *, const char *);
+extern char *tempnam __P((const char *, const char *));
 #endif /* _TEMPNAM_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.21 1996/09/14 16:54:49 wessels Exp $
+ * $Id: cachemgr.cc,v 1.22 1996/09/15 05:04:14 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -268,7 +268,7 @@ int hasTables = FALSE;
 char *script_name = "/cgi-bin/cachemgr.cgi";
 char *progname = NULL;
 
-static int client_comm_connect(int sock, char *dest_host, u_short dest_port);
+static int client_comm_connect __P((int sock, char *dest_host, u_short dest_port));
 
 void
 print_trailer(void)

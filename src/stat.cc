@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.67 1996/09/14 08:46:26 wessels Exp $
+ * $Id: stat.cc,v 1.68 1996/09/15 05:04:43 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -135,33 +135,33 @@ char *diskFileName();
 char *open_bracket = "{\n";
 char *close_bracket = "}\n";
 
-static void dummyhandler(cacheinfo *, StoreEntry *);
-static void info_get(cacheinfo *, StoreEntry *);
-static void info_get_mallstat(int, int, StoreEntry *);
-static void logReadEndHandler(int, int, log_read_data_t *);
-static void log_clear(cacheinfo *, StoreEntry *);
-static void log_disable(cacheinfo *, StoreEntry *);
-static void log_enable(cacheinfo *, StoreEntry *);
-static void log_get_start(cacheinfo *, StoreEntry *);
-static void log_status_get(cacheinfo *, StoreEntry *);
-static void parameter_get(cacheinfo *, StoreEntry *);
-static void proto_count(cacheinfo *, protocol_t, log_type);
-static void proto_newobj(cacheinfo *, protocol_t, int, int);
-static void proto_purgeobj(cacheinfo *, protocol_t, int);
-static void proto_touchobj(cacheinfo *, protocol_t, int);
-static void server_list(cacheinfo *, StoreEntry *);
-static void squidReadEndHandler(int, int, squid_read_data_t *);
-static void squid_get_start(cacheinfo *, StoreEntry *);
-static void statFiledescriptors(StoreEntry *);
-static void stat_get(cacheinfo *, char *req, StoreEntry *);
-static void stat_io_get(StoreEntry *);
-static void stat_obj(cacheinfo *, StoreEntry *, int vm_or_not);
-static void stat_utilization_get(cacheinfo *, StoreEntry *, char *desc);
-static int cache_size_get(cacheinfo *);
-static int logReadHandler(int, char *, int, log_read_data_t *);
-static int squidReadHandler(int, char *, int, squid_read_data_t *);
-static int memoryAccounted(void);
-static int mallinfoTotal(void);
+static void dummyhandler __P((cacheinfo *, StoreEntry *));
+static void info_get __P((cacheinfo *, StoreEntry *));
+static void info_get_mallstat __P((int, int, StoreEntry *));
+static void logReadEndHandler __P((int, int, log_read_data_t *));
+static void log_clear __P((cacheinfo *, StoreEntry *));
+static void log_disable __P((cacheinfo *, StoreEntry *));
+static void log_enable __P((cacheinfo *, StoreEntry *));
+static void log_get_start __P((cacheinfo *, StoreEntry *));
+static void log_status_get __P((cacheinfo *, StoreEntry *));
+static void parameter_get __P((cacheinfo *, StoreEntry *));
+static void proto_count __P((cacheinfo *, protocol_t, log_type));
+static void proto_newobj __P((cacheinfo *, protocol_t, int, int));
+static void proto_purgeobj __P((cacheinfo *, protocol_t, int));
+static void proto_touchobj __P((cacheinfo *, protocol_t, int));
+static void server_list __P((cacheinfo *, StoreEntry *));
+static void squidReadEndHandler __P((int, int, squid_read_data_t *));
+static void squid_get_start __P((cacheinfo *, StoreEntry *));
+static void statFiledescriptors __P((StoreEntry *));
+static void stat_get __P((cacheinfo *, char *req, StoreEntry *));
+static void stat_io_get __P((StoreEntry *));
+static void stat_obj __P((cacheinfo *, StoreEntry *, int vm_or_not));
+static void stat_utilization_get __P((cacheinfo *, StoreEntry *, char *desc));
+static int cache_size_get __P((cacheinfo *));
+static int logReadHandler __P((int, char *, int, log_read_data_t *));
+static int squidReadHandler __P((int, char *, int, squid_read_data_t *));
+static int memoryAccounted __P((void));
+static int mallinfoTotal __P((void));
 
 /* process utilization information */
 static void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.68 1996/09/14 16:54:51 wessels Exp $
+ * $Id: comm.cc,v 1.69 1996/09/15 05:04:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -137,19 +137,19 @@ struct _RWStateData {
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
-static void checkTimeouts(void);
-static void checkLifetimes(void);
-static void Reserve_More_FDs(void);
-static void commSetReuseAddr(int);
-static int examine_select(fd_set *, fd_set *, fd_set *);
-static void commSetNoLinger(int);
-static void comm_select_incoming(void);
-static int commBind(int s, struct in_addr, u_short port);
-static void RWStateCallbackAndFree(int fd, int code);
+static void checkTimeouts __P((void));
+static void checkLifetimes __P((void));
+static void Reserve_More_FDs __P((void));
+static void commSetReuseAddr __P((int));
+static int examine_select __P((fd_set *, fd_set *, fd_set *));
+static void commSetNoLinger __P((int));
+static void comm_select_incoming __P((void));
+static int commBind __P((int s, struct in_addr, u_short port));
+static void RWStateCallbackAndFree __P((int fd, int code));
 #ifdef TCP_NODELAY
-static void commSetTcpNoDelay(int);
+static void commSetTcpNoDelay __P((int));
 #endif
-static void commSetTcpRcvbuf(int, int);
+static void commSetTcpRcvbuf __P((int, int));
 
 static int *fd_lifetime = NULL;
 static struct timeval zero_tv;

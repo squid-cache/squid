@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.7 1996/09/14 08:45:48 wessels Exp $
+ * $Id: dns.cc,v 1.8 1996/09/15 05:04:20 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -110,7 +110,7 @@ struct dnsQueueData {
     void *data;
 };
 
-static int dnsOpenServer(char *command);
+static int dnsOpenServer __P((char *command));
 
 static dnsserver_t **dns_child_table = NULL;
 static int NDnsServersAlloc = 0;

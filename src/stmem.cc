@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.21 1996/09/14 16:05:49 wessels Exp $
+ * $Id: stmem.cc,v 1.22 1996/09/15 05:04:44 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -116,8 +116,8 @@ stmem_stats mem_obj_pool;
 #define USE_MEMALIGN 0
 #endif
 
-static void *get_free_thing(stmem_stats * thing);
-static void put_free_thing(stmem_stats * thing, void *p);
+static void *get_free_thing __P((stmem_stats * thing));
+static void put_free_thing __P((stmem_stats * thing, void *p));
 
 
 void

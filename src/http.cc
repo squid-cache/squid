@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.74 1996/09/14 08:46:05 wessels Exp $
+ * $Id: http.cc,v 1.75 1996/09/15 05:04:31 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -116,17 +116,17 @@ struct {
     int ctype;
 } ReplyHeaderStats;
 
-static int httpStateFree(int fd, HttpStateData *);
-static void httpReadReplyTimeout(int fd, HttpStateData *);
-static void httpLifetimeExpire(int fd, HttpStateData *);
-static void httpMakePublic(StoreEntry *);
-static void httpMakePrivate(StoreEntry *);
-static void httpCacheNegatively(StoreEntry *);
-static void httpReadReply(int fd, HttpStateData *);
-static void httpSendComplete(int fd, char *, int, int, void *);
-static void httpSendRequest(int fd, HttpStateData *);
-static void httpConnInProgress(int fd, HttpStateData *);
-static int httpConnect(int fd, struct hostent *, void *);
+static int httpStateFree __P((int fd, HttpStateData *));
+static void httpReadReplyTimeout __P((int fd, HttpStateData *));
+static void httpLifetimeExpire __P((int fd, HttpStateData *));
+static void httpMakePublic __P((StoreEntry *));
+static void httpMakePrivate __P((StoreEntry *));
+static void httpCacheNegatively __P((StoreEntry *));
+static void httpReadReply __P((int fd, HttpStateData *));
+static void httpSendComplete __P((int fd, char *, int, int, void *));
+static void httpSendRequest __P((int fd, HttpStateData *));
+static void httpConnInProgress __P((int fd, HttpStateData *));
+static int httpConnect __P((int fd, struct hostent *, void *));
 
 static int
 httpStateFree(int fd, HttpStateData * httpState)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.55 1996/09/14 08:45:59 wessels Exp $
+ * $Id: ftp.cc,v 1.56 1996/09/15 05:04:26 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -127,11 +127,11 @@ typedef struct _Ftpdata {
 } FtpData;
 
 /* Local functions */
-static int ftpStateFree(int fd, FtpData * ftpState);
-static void ftpProcessReplyHeader(FtpData * data, char *buf, int size);
-static void ftpServerClosed(int fd, void *nodata);
-static void ftp_login_parser(char *login, FtpData * data);
-static char *ftpTransferMode(char *urlpath);
+static int ftpStateFree __P((int fd, FtpData * ftpState));
+static void ftpProcessReplyHeader __P((FtpData * data, char *buf, int size));
+static void ftpServerClosed __P((int fd, void *nodata));
+static void ftp_login_parser __P((char *login, FtpData * data));
+static char *ftpTransferMode __P((char *urlpath));
 
 /* Global functions not declared in ftp.h */
 void ftpLifetimeExpire(int fd, FtpData * data);
@@ -142,7 +142,7 @@ void ftpConnInProgress(int fd, FtpData * data);
 void ftpServerClose(void);
 
 /* External functions */
-extern char *base64_decode(char *coded);
+extern char *base64_decode __P((char *coded));
 
 static int
 ftpStateFree(int fd, FtpData * ftpState)

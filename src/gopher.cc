@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.45 1996/09/14 16:54:53 wessels Exp $
+ * $Id: gopher.cc,v 1.46 1996/09/15 05:04:28 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -158,26 +158,26 @@ typedef struct gopher_ds {
     char *buf;			/* pts to a 4k page */
 } GopherStateData;
 
-static int gopherStateFree(int fd, GopherStateData *);
-static void gopher_mime_content(char *buf, char *name, char *def);
-static void gopherMimeCreate(GopherStateData *);
+static int gopherStateFree __P((int fd, GopherStateData *));
+static void gopher_mime_content __P((char *buf, char *name, char *def));
+static void gopherMimeCreate __P((GopherStateData *));
 static int gopher_url_parser(char *url,
     char *host,
     int *port,
     char *type_id,
     char *request);
-static void gopherEndHTML(GopherStateData *);
-static void gopherToHTML(GopherStateData *, char *inbuf, int len);
-static int gopherReadReplyTimeout(int fd, GopherStateData *);
-static void gopherLifetimeExpire(int fd, GopherStateData *);
-static void gopherReadReply(int fd, GopherStateData *);
+static void gopherEndHTML __P((GopherStateData *));
+static void gopherToHTML __P((GopherStateData *, char *inbuf, int len));
+static int gopherReadReplyTimeout __P((int fd, GopherStateData *));
+static void gopherLifetimeExpire __P((int fd, GopherStateData *));
+static void gopherReadReply __P((int fd, GopherStateData *));
 static void gopherSendComplete(int fd,
     char *buf,
     int size,
     int errflag,
     void *data);
-static void gopherSendRequest(int fd, GopherStateData *);
-static GopherStateData *CreateGopherStateData(void);
+static void gopherSendRequest __P((int fd, GopherStateData *));
+static GopherStateData *CreateGopherStateData __P((void));
 
 static char def_gopher_bin[] = "www/unknown";
 static char def_gopher_text[] = "text/plain";

@@ -1,5 +1,5 @@
 /*
- * $Id: recv-announce.cc,v 1.7 1996/09/14 08:46:20 wessels Exp $
+ * $Id: recv-announce.cc,v 1.8 1996/09/15 05:04:40 wessels Exp $
  *
  * DEBUG: section 0     Announement Server
  * AUTHOR: Harvest Derived
@@ -117,7 +117,7 @@
 
 #define RECV_BUF_SIZE 8192
 
-extern void xmemcpy(void *from, void *to, int len);
+extern void xmemcpy __P((void *from, void *to, int len));
 
 /*
  * This program must be run from inetd.  First add something like this

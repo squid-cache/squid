@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.25 1996/09/14 16:54:50 wessels Exp $
+ * $Id: client_side.cc,v 1.26 1996/09/15 05:04:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -31,8 +31,8 @@
 
 #include "squid.h"
 
-static void clientRedirectDone(void *data, char *result);
-static int icpHandleIMSReply(int fd, StoreEntry * entry, void *data);
+static void clientRedirectDone __P((void *data, char *result));
+static int icpHandleIMSReply __P((int fd, StoreEntry * entry, void *data));
 
 
 static int
