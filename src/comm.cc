@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.341 2002/10/21 05:38:32 adrian Exp $
+ * $Id: comm.cc,v 1.342 2002/10/21 05:47:25 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -559,6 +559,12 @@ comm_recvfrom(int fd, void *buf, size_t len, int flags,
 {
 	statCounter.syscalls.sock.recvfroms++;     
 	return recvfrom(fd, buf, len, flags, from, fromlen);
+}
+
+int
+comm_recv(int fd, void *buf, size_t len, int flags)
+{
+	return comm_recvfrom(fd, buf, len, flags, NULL, 0);
 }
 
 
