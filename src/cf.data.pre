@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.312 2003/04/27 00:34:12 hno Exp $
+# $Id: cf.data.pre,v 1.313 2003/05/17 17:35:06 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1991,7 +1991,7 @@ NAME: range_offset_limit
 COMMENT: (bytes)
 TYPE: b_size_t
 LOC: Config.rangeOffsetLimit
-DEFAULT: 0 KB
+DEFAULT: none
 DOC_START
 	Sets a upper limit on how far into the the file a Range request
 	may be to cause Squid to prefetch the whole file. If beyond this
@@ -2535,17 +2535,18 @@ DOC_START
 DOC_END
 
 NAME: reply_body_max_size
-COMMENT: bytes allow|deny acl acl...
-TYPE: body_size_t
+COMMENT: size [acl acl...]
+TYPE: acl_b_size_t
 DEFAULT: none
-DEFAULT_IF_NONE: 0 allow all
 LOC: Config.ReplyBodySize
 DOC_START
-        This option specifies the maximum size of a reply body in bytes.
-	It can be used to prevent users from downloading very large files,
-	such as MP3's and movies. When the reply headers are recieved,
-	the reply_body_max_size lines are processed, and the first line with
-	a result of "allow" is used as the maximum body size for this reply.
+        This option specifies the maximum size of a reply body. It can be
+	used to prevent users from downloading very large files, such as
+	MP3's and movies. When the reply headers are recieved, the
+	reply_body_max_size lines are processed, and the first line where
+	all (if any) listed acls are true is used as the maximum body size
+	for this reply.
+
 	This size is then checked twice. First when we get the reply headers,
 	we check the content-length value.  If the content length value exists
 	and is larger than the allowed size, the request is denied and the
@@ -2564,7 +2565,7 @@ DOC_START
 	non-zero value you use is greater that the maximum header size plus
 	the size of your largest error page.
 
-	If you set this parameter to zero (the default), there will be
+	If you set this parameter none (the default), there will be
 	no limit imposed.
 DOC_END
 

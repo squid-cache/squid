@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.73 2003/05/01 22:19:47 hno Exp $
+#  $Id: Makefile.am,v 1.74 2003/05/17 17:35:03 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -266,6 +266,7 @@ squid_SOURCES = \
 	acl.cc \
 	ACL.h \
 	ACLChecklist.cc \
+	ACLChecklist.cci \
 	ACLChecklist.h \
 	$(squid_ACLSOURCES) \
 	asn.cc \

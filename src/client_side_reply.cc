@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.50 2003/05/11 13:53:03 hno Exp $
+ * $Id: client_side_reply.cc,v 1.51 2003/05/17 17:35:06 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1813,26 +1813,26 @@ clientReplyContext::holdReply(HttpReply *aReply)
 void
 clientReplyContext::buildMaxBodySize(HttpReply * reply)
 {
-    body_size *bs;
-    ACLChecklist *checklist;
-    bs = (body_size *) Config.ReplyBodySize.head;
+    acl_size_t *l = Config.ReplyBodySize;
+    ACLChecklist *ch;
 
-    while (bs) {
-        checklist = clientAclChecklistCreate(bs->access_list, http);
-        checklist->reply = reply;
+    ch = clientAclChecklistCreate(NULL, http);
+    ch->reply = reply;
 
-        if (1 != aclCheckFast(bs->access_list, checklist)) {
-            /* deny - skip this entry */
-            bs = (body_size *) bs->node.next;
-        } else {
-            /* Allow - use this entry */
-            http->maxReplyBodySize(bs->maxsize);
-            bs = NULL;
+    for (l = Config.ReplyBodySize; l; l = l -> next) {
+        ch->matchAclListFast(l->aclList);
+
+        if (ch->finished()) {
+            if (l->size != static_cast<size_t>(-1))
+                http->maxReplyBodySize(l->size);
+
             debug(58, 3) ("httpReplyBodyBuildSize: Setting maxBodySize to %ld\n", (long int) http->maxReplyBodySize());
-        }
 
-        delete checklist;
+            break;
+        }
     }
+
+    delete ch;
 }
 
 void

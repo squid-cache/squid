@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.306 2003/02/25 12:24:33 robertc Exp $
+ * $Id: acl.cc,v 1.307 2003/05/17 17:35:05 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -488,7 +488,7 @@ aclCheckFast(const acl_access * A, ACLChecklist * checklist)
 
     while (A) {
         allow = A->allow;
-        checklist->matchAclList(A->aclList, true);
+        checklist->matchAclListFast(A->aclList);
 
         if (checklist->finished()) {
             PROF_stop(aclCheckFast);
@@ -526,7 +526,9 @@ ACLChecklist *
 aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
 {
     ACLChecklist *checklist = new ACLChecklist;
-    checklist->accessList = cbdataReference(A);
+
+    if (A)
+        checklist->accessList = cbdataReference(A);
 
     if (request != NULL) {
         checklist->request = requestLink(request);

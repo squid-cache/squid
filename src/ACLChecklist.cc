@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.10 2003/03/04 01:40:25 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.11 2003/05/17 17:35:03 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -198,7 +198,7 @@ ACLChecklist::checkAccessList()
     /* what is our result on a match? */
     currentAnswer(accessList->allow);
     /* does the current AND clause match */
-    matchAclList(accessList->aclList);
+    matchAclListSlow(accessList->aclList);
 }
 
 void
@@ -431,3 +431,7 @@ ACLChecklist::checking (bool const newValue)
 {
     checking_ = newValue;
 }
+
+#ifndef _USE_INLINE_
+#include "ACLChecklist.cci"
+#endif
