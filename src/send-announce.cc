@@ -1,4 +1,4 @@
-/* $Id: send-announce.cc,v 1.3 1996/02/29 07:23:20 wessels Exp $ */
+/* $Id: send-announce.cc,v 1.4 1996/03/27 01:46:18 wessels Exp $ */
 
 #include "config.h"
 
@@ -13,6 +13,7 @@
 #include <netdb.h>
 
 #include "util.h"
+
 
 char *databuf = NULL;
 int quiet = 0;

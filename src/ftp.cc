@@ -1,28 +1,6 @@
-/* $Id: ftp.cc,v 1.11 1996/03/26 05:17:20 wessels Exp $ */
+/* $Id: ftp.cc,v 1.12 1996/03/27 01:46:04 wessels Exp $ */
 
-#include "config.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>		/* for WNOHANG */
-#include <unistd.h>
-#include <errno.h>
-
-#include "ansihelp.h"
-#include "comm.h"
-#include "store.h"
-#include "stat.h"
-#include "url.h"
-#include "mime.h"
-#include "fdstat.h"
-#include "cache_cf.h"
-#include "ttl.h"
-#include "util.h"
-#include "icp.h"
-#include "cached_error.h"
+#include "squid.h"
 
 #define FTP_DELETE_GAP  (64*1024)
 #define READBUFSIZ	4096
@@ -50,9 +28,6 @@ typedef struct _Ftpdata {
 				 * icpReadWriteData */
     int got_marker;		/* denotes end of successful request */
 } FtpData;
-
-extern char *tmp_error_buf;
-extern time_t cached_curtime;
 
 /* XXX: this does not support FTP on a different port! */
 int ftp_url_parser(url, data)
@@ -370,7 +345,7 @@ void ftpSendRequest(fd, data)
     strcat(buf, data->password);
     strcat(buf, space);
     debug(5, "ftpSendRequest: FD %d: buf '%s'\n", fd, buf);
-    data->icp_rwd_ptr = icpWrite(fd, buf, strlen(buf), 30, ftpSendComplete, data);
+    data->icp_rwd_ptr = icpWrite(fd, buf, strlen(buf), 30, ftpSendComplete, (caddr_t) data);
 }
 
 void ftpConnInProgress(fd, data)

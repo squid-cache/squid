@@ -1,33 +1,12 @@
-/* $Id: stat.cc,v 1.6 1996/02/29 08:08:05 wessels Exp $ */
+/* $Id: stat.cc,v 1.7 1996/03/27 01:46:20 wessels Exp $ */
 
-#include "config.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>		/* for lseek. should be removed later. */
-#include <fcntl.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <malloc.h>
+#include "squid.h"
 
 #ifdef _SQUID_HPUX_
 #include <sys/syscall.h>
 #define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
 #define getpagesize( )   sysconf(_SC_PAGE_SIZE)
 #endif /* _SQUID_HPUX_ */
-
-#include "comm.h"
-#include "store.h"
-#include "stat.h"
-#include "disk.h"
-#include "ipcache.h"
-#include "cache_cf.h"
-#include "hash.h"
-#include "util.h"
-#include "neighbors.h"
-#include "fdstat.h"
 
 extern int emulate_httpd_log;
 
@@ -47,22 +26,6 @@ typedef struct _cached_read_data_t {
 /* GLOBALS */
 Meta_data meta_data;
 unsigned long nconn = 0;
-
-extern int getMaxFD(), fdstat_biggest_fd();
-extern int RESERVED_FD;
-extern char *mkrfc850();
-extern time_t cached_curtime;
-extern time_t cached_starttime;
-extern time_t next_cleaning;
-extern int httpd_accel_mode;
-extern int debug_level;
-extern int hash_links_allocated;
-extern void stat_ipcache_get _PARAMS((StoreEntry * e, cacheinfo * obj));
-extern int fdstat_are_n_free_fd _PARAMS((int));
-extern int comm_get_fd_timeout _PARAMS((int));
-extern int file_write_lock _PARAMS((int));
-extern void fatal _PARAMS((char *));
-extern void fatal_dump _PARAMS((char *));
 
 char *stat_describe();
 char *mem_describe();

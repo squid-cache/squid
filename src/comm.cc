@@ -1,32 +1,8 @@
 
-/* $Id: comm.cc,v 1.7 1996/03/26 05:16:20 wessels Exp $ */
+/* $Id: comm.cc,v 1.8 1996/03/27 01:45:57 wessels Exp $ */
 
-#include "config.h"
+#include "squid.h"
 
-#include <signal.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#if HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
-
-#if HAVE_BSTRING_H
-#include <bstring.h>
-#endif
-
-#include "debug.h"
-#include "comm.h"
-#include "ipcache.h"
-#include "cache_cf.h"
-#include "fdstat.h"
-#include "util.h"
 
 /* Block processing new client requests (accepts on ascii port) when we start
  * running shy of free file descriptors.  For example, under SunOS, we'll keep
@@ -61,55 +37,14 @@ extern int getMaxFD();
 extern int theAsciiConnection;
 extern int theUdpConnection;
 extern int getConnectTimeout();
-extern int fdstat_are_n_free_fd _PARAMS((int));
-extern void fatal_dump _PARAMS((char *));
+
 extern int fd_of_first_client _PARAMS((StoreEntry *));
-char *fd_note();
 
 void comm_handler()
 {
     /* Call application installed handler. */
     debug(5, "comm_handler:\n");
     app_handler();
-}
-
-char *comm_hostname()
-{
-    static char host[SQUIDHOSTNAMELEN + 1];
-    static int present = 0;
-    struct hostent *h = NULL;
-
-    /* Get the host name and store it in host to return */
-    if (!present) {
-	host[0] = '\0';
-	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
-	    debug(1, "comm_hostname: gethostname failed: %s\n",
-		xstrerror());
-	    return NULL;
-	} else {
-	    if ((h = ipcache_gethostbyname(host)) != NULL) {
-		/* DNS lookup successful */
-		/* use the official name from DNS lookup */
-		strcpy(host, h->h_name);
-	    }
-	    present = 1;
-	}
-    }
-    return host;
-}
-
-char *comm_hostname_direct()
-{
-    static char temp_host[SQUIDHOSTNAMELEN + 1];
-
-    temp_host[0] = '\0';
-    if (gethostname(temp_host, SQUIDHOSTNAMELEN) == -1) {
-	debug(1, "comm_hostname_direct: gethostname failed: %s\n",
-	    xstrerror());
-	return NULL;
-    } else {
-	return temp_host;
-    }
 }
 
 /* Return the local port associated with fd. */

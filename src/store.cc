@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.9 1996/03/26 05:19:10 wessels Exp $ */
+/* $Id: store.cc,v 1.10 1996/03/27 01:46:23 wessels Exp $ */
 
 /* 
  * Here is a summary of the routines which change mem_status and swap_status:
@@ -26,44 +26,7 @@
  *
  */
 
-#include "config.h"		/* goes first */
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <syslog.h>
-
-#include "ansihelp.h"		/* goes secound */
-#include "comm.h"
-#include "proto.h"
-#include "url.h"
-#include "stat.h"
-#include "disk.h"
-#include "store.h"
-#include "cache_cf.h"
-#include "hash.h"
-#include "debug.h"
-#include "dynamic_array.h"
-#include "util.h"
-#include "filemap.h"
-#include "stmem.h"
-#include "mime.h"
-#include "cached_error.h"
-
-extern time_t cached_curtime;
-extern char *storeToString _PARAMS((StoreEntry * e));
-extern int proto_url_to_id _PARAMS((char *url));
-extern int file_write_lock _PARAMS((int));
-extern void fatal_dump _PARAMS((char *));
-extern void fatal _PARAMS((char *));
-extern void death();
-char *tmp_error_buf;
+#include "squid.h"		/* goes first */
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 #define MAX_SWAP_FILE		(1<<21)
@@ -79,12 +42,6 @@ char *tmp_error_buf;
 
 #define STORE_BUCKETS		(7921)
 #define STORE_IN_MEM_BUCKETS	(143)
-
-int urlcmp _PARAMS((char *s1, char *s2));
-int safeunlink _PARAMS((char *, int));
-int swapInError _PARAMS((int fd_unused, StoreEntry * entry));
-int storeSwapInStart _PARAMS((StoreEntry * e));
-int storeCopy _PARAMS((StoreEntry * e, int stateoffset, int maxSize, char *buf, int *size));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -2451,18 +2408,6 @@ int storeMaintainSwapSpace()
 	}
     }
     return rm_obj;
-}
-
-int safeunlink(s, quiet)
-     char *s;
-     int quiet;
-{
-    int err;
-
-    if ((err = unlink(s)) < 0)
-	if (!quiet)
-	    debug(1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
-    return (err);
 }
 
 

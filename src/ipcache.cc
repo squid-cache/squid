@@ -1,37 +1,7 @@
-/* $Id: ipcache.cc,v 1.7 1996/03/22 20:58:11 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.8 1996/03/27 01:46:11 wessels Exp $ */
 
-#include "config.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <netdb.h>
-#include <memory.h>
-#include <fcntl.h>
-#include <errno.h>
+#include "squid.h"
 
-#include <time.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <sys/un.h>
-
-#include "ansihelp.h"		/* goes first */
-#include "debug.h"
-#include "comm.h"
-#include "fdstat.h"
-#include "icp.h"
-#include "cache_cf.h"
-#include "ipcache.h"
-#include "autoconf.h"
-#include "stat.h"
-#include "hash.h"
-#include "disk.h"
-#include "util.h"
-
-struct hostent *gethostbyname();
-int urlcmp _PARAMS((char *s1, char *s2));
 
 #define MAX_LINELEN (4096)
 char ipcache_status_char _PARAMS((ipcache_entry *));
@@ -104,7 +74,6 @@ char *dns_error_message = NULL;	/* possible error message */
 HashID ip_table = 0;
 
 extern int do_dns_test;
-extern time_t cached_curtime;
 extern int getMaxFD();
 extern int getDnsChildren();
 extern void fatal_dump _PARAMS((char *));

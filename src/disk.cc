@@ -1,25 +1,6 @@
-/* $Id: disk.cc,v 1.3 1996/03/23 00:01:51 wessels Exp $ */
+/* $Id: disk.cc,v 1.4 1996/03/27 01:45:59 wessels Exp $ */
 
-#include "config.h"
-
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "ansihelp.h"
-#include "comm.h"
-#include "disk.h"
-#include "fdstat.h"
-#include "cache_cf.h"
-#include "util.h"
-#include "debug.h"
+#include "squid.h"
 
 #define DISK_LINE_LEN  1024
 #define MAX_FILE_NAME_LEN 256

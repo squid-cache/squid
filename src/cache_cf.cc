@@ -1,25 +1,7 @@
-/* $Id: cache_cf.cc,v 1.4 1996/03/26 21:58:41 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.5 1996/03/27 01:45:54 wessels Exp $ */
 
-#include "config.h"
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <stdlib.h>
-#include <sys/param.h>
-#include <malloc.h>
-#include <pwd.h>
-#include <grp.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "squid.h"
 
-#include "debug.h"
-#include "comm.h"
-#include "cache_cf.h"
-#include "proto.h"
-#include "store.h"
-#include "ttl.h"
-#include "util.h"
 
 static struct {
     struct {

@@ -1,12 +1,6 @@
-/* $Id: filemap.cc,v 1.4 1996/03/22 17:48:16 wessels Exp $ */
+/* $Id: filemap.cc,v 1.5 1996/03/27 01:46:03 wessels Exp $ */
 
-#include "config.h"
-#include <stdlib.h>
-
-#include "ansihelp.h"
-#include "filemap.h"
-#include "util.h"
-#include "debug.h"
+#include "squid.h"
 
 /* Number of bits in a long */
 #if SIZEOF_LONG == 8

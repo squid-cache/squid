@@ -1,14 +1,7 @@
-/* $Id: errorpage.cc,v 1.2 1996/03/26 21:58:42 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.3 1996/03/27 01:45:55 wessels Exp $ */
 
-#include "config.h"
-#include <strings.h>
+#include "squid.h"
 
-
-#include "ansihelp.h"
-#include "comm.h"
-#include "store.h"
-#include "stat.h"
-#include "cached_error.h"
 
 
 #define CACHED_ERROR_MSG_P1 "\
@@ -99,7 +92,10 @@ error_data ErrorData[] =
 	""}
 };
 
-static char tmp_error_buf[BUFSIZ];
+/* GLOBAL */
+char tmp_error_buf[BUFSIZ];
+
+/* LOCAL */
 static char tbuf[BUFSIZ];
 
 int log_errors = 1;
@@ -124,7 +120,7 @@ void cached_error_entry(entry, type, msg)
     sprintf(tbuf, CACHED_ERROR_MSG_P3,
 	ErrorData[type].lng,
 	SQUID_VERSION,
-	comm_hostname());
+	getMyHostname());
     strcat(tmp_error_buf, tbuf);
     storeAbort(entry, tmp_error_buf);
     if (!log_errors)
@@ -160,7 +156,7 @@ char *cached_error_url(url, type, msg)
     sprintf(tbuf, CACHED_ERROR_MSG_P3,
 	ErrorData[type].lng,
 	SQUID_VERSION,
-	comm_hostname());
+	getMyHostname());
     if (!log_errors)
 	return tmp_error_buf;
     CacheInfo->log_append(CacheInfo,

@@ -1,19 +1,6 @@
-/* $Id: cachemgr.cc,v 1.3 1996/02/29 07:23:06 wessels Exp $ */
+/* $Id: cachemgr.cc,v 1.4 1996/03/27 01:45:56 wessels Exp $ */
 
-#include "config.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <time.h>
-#include <netdb.h>
-
-#include "util.h"
+#include "squid.h"
 
 static int client_comm_connect();
 

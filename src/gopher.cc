@@ -1,29 +1,8 @@
-/* $Id: gopher.cc,v 1.7 1996/03/26 05:17:21 wessels Exp $ */
+/* $Id: gopher.cc,v 1.8 1996/03/27 01:46:06 wessels Exp $ */
 
-#include "config.h"
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-
-#include "ansihelp.h"
-#include "comm.h"
-#include "store.h"
-#include "stat.h"
-#include "url.h"
-#include "mime.h"
-#include "cache_cf.h"
-#include "ttl.h"
-#include "util.h"
-#include "stmem.h"
-#include "ipcache.h"
-#include "icp.h"
-#include "cached_error.h"
+#include "squid.h"
 
 extern char *dns_error_message;
-extern time_t cached_curtime;
-extern char *tmp_error_buf;
 
 /* gopher type code from rfc. Anawat. */
 #define GOPHER_FILE         '0'
@@ -736,7 +715,7 @@ int gopherReadReply(fd, data)
 
 /* This will be called when request write is complete. Schedule read of
  * reply. */
-int gopherSendComplete(fd, buf, size, errflag, data)
+void gopherSendComplete(fd, buf, size, errflag, data)
      int fd;
      char *buf;
      int size;
@@ -753,7 +732,7 @@ int gopherSendComplete(fd, buf, size, errflag, data)
 	freeGopherData(data);
 	if (buf)
 	    put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
-	return 0;
+	return;
     }
     /* 
      * OK. We successfully reach remote site.  Start MIME typing
@@ -808,7 +787,6 @@ int gopherSendComplete(fd, buf, size, errflag, data)
 	put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
     data->icp_page_ptr = NULL;
     data->icp_rwd_ptr = NULL;
-    return 0;
 }
 
 /* This will be called when connect completes. Write request. */
@@ -841,7 +819,12 @@ int gopherSendRequest(fd, data)
     }
 
     debug(5, "gopherSendRequest - fd: %d\n", fd);
-    data->icp_rwd_ptr = icpWrite(fd, buf, len, 30, gopherSendComplete, data);
+    data->icp_rwd_ptr = icpWrite(fd,
+	buf,
+	len,
+	30,
+	gopherSendComplete,
+	(caddr_t) data);
     return 0;
 }
 

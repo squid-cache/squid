@@ -1,38 +1,15 @@
-/* $Id: main.cc,v 1.6 1996/03/22 21:13:16 wessels Exp $ */
+/* $Id: main.cc,v 1.7 1996/03/27 01:46:12 wessels Exp $ */
 
-#include "config.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <malloc.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <sys/param.h>
-#include <sys/resource.h>
-#include <signal.h>
-#include <string.h>
-#include <memory.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include "squid.h"
 
-#include "ansihelp.h"
-#include "cache_cf.h"
-#include "debug.h"
-#include "comm.h"
-#include "icp.h"
-#include "stat.h"
-#include "stack.h"
-#include "fdstat.h"
-#include "ipcache.h"
-#include "util.h"
 
 /* WRITE_PID_FILE - tries to write a cached.pid file on startup */
 #ifndef WRITE_PID_FILE
 #define WRITE_PID_FILE
 #endif
 
-time_t cached_starttime = (time_t) 0;
-time_t next_cleaning = (time_t) 0;
+time_t cached_starttime = 0;
+time_t next_cleaning = 0;
 int theAsciiConnection = -1;
 int theBinaryConnection = -1;
 int theUdpConnection = -1;
@@ -40,14 +17,11 @@ int do_reuse = 1;
 int debug_level = 0;
 int catch_signals = 1;
 int do_dns_test = 1;
-char *tmp_error_buf = NULL;
 char *config_file = NULL;
 int vhost_mode = 0;
 int unbuffered_logs = 0;	/* debug and hierarhcy buffered by default */
 
-extern time_t cached_curtime;
 extern void (*failure_notify) ();	/* for error reporting from xmalloc */
-extern int do_mallinfo;
 extern void hash_init _PARAMS((int));
 extern int disk_init();
 extern void stmemInit();
@@ -130,9 +104,7 @@ int main(argc, argv)
     mallopt(M_NLBLKS, 100);
 #endif
 
-    /* allocate storage for error messages */
-    tmp_error_buf = (char *) xcalloc(1, 8192);
-/*init comm module */
+    /*init comm module */
     comm_init();
 
 #ifdef DAEMON

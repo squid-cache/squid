@@ -1,25 +1,13 @@
-/* $Id: stmem.cc,v 1.2 1996/02/29 07:23:22 wessels Exp $ */
+/* $Id: stmem.cc,v 1.3 1996/03/27 01:46:22 wessels Exp $ */
 
-#include "config.h"
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include "squid.h"
 
-#include "stmem.h"
-#include "util.h"
 
 #define min(x,y) ((x)<(y)? (x) : (y))
 
 #ifndef USE_MEMALIGN
 #define USE_MEMALIGN 0
 #endif
-
-extern int getCacheMemMax();
-extern int empty_stack _PARAMS((Stack * stack));
-extern int full_stack _PARAMS((Stack * stack));
-extern void push _PARAMS((Stack * stack, generic_ptr data));
-extern void init_stack _PARAMS((Stack * stack, int size));
-extern void fatal_dump _PARAMS((char *));
 
 void memFree(mem)
      mem_ptr mem;
@@ -328,8 +316,7 @@ void put_free_4k_page(page)
     push(&sm_stats.free_page_stack, page);
 }
 
-char *
-     get_free_8k_page()
+char *get_free_8k_page()
 {
     char *page = NULL;
 

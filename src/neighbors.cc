@@ -1,37 +1,8 @@
-/* $Id: neighbors.cc,v 1.3 1996/02/29 07:23:17 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.4 1996/03/27 01:46:14 wessels Exp $ */
 
-#include "config.h"
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netdb.h>
-#include <fcntl.h>
-
-#include "ansihelp.h"
-#include "comm.h"
-#include "store.h"
-#include "icp.h"
-#include "proto.h"
-#include "neighbors.h"
-#include "ipcache.h"
-#include "cache_cf.h"
-#include "util.h"
-#include "disk.h"
+#include "squid.h"
 
 static neighbors *friends = NULL;
-
-extern time_t cached_curtime;
-extern int unbuffered_logs;	/* main.c */
-extern char *tmp_error_buf;	/* main.c */
-extern int icpUdpSend _PARAMS((int, char *, icp_common_t *, struct sockaddr_in *, icp_opcode));
-extern int getFromOrgSource _PARAMS((int fd, StoreEntry * entry));
-extern int getFromCache _PARAMS((int fd, StoreEntry * entry, edge * e));
-extern int getFromDefaultSource _PARAMS((int fd, StoreEntry * entry));
-extern void fatal_dump _PARAMS((char *));
-extern void fatal _PARAMS((char *));
 
 static struct neighbor_cf *Neighbor_cf = NULL;
 
@@ -709,7 +680,7 @@ void neighbors_init()
 
     for (t = Neighbor_cf; t; t = next) {
 	next = t->next;
-	if (strncmp(t->host, comm_hostname(), SQUIDHOSTNAMELEN) ||
+	if (strncmp(t->host, getMyHostname(), SQUIDHOSTNAMELEN) ||
 	    t->ascii_port != getAsciiPortNum()) {
 	    neighbors_install(t->host, t->type,
 		t->ascii_port, t->udp_port, t->proxy_only,

@@ -1,7 +1,7 @@
 /*
  *  Darren Hardy, hardy@cs.colorado.edu, April 1994
  *
- *  $Id: util.h,v 1.3 1996/03/19 01:28:48 wessels Exp $
+ *  $Id: util.h,v 1.4 1996/03/27 01:46:40 wessels Exp $
  *
  *  ----------------------------------------------------------------------
  *  Copyright (c) 1994, 1995.  All rights reserved.
@@ -180,6 +180,7 @@ void  dump_host_cache _PARAMS((int, int));
 
 char *mkhttpdlogtime _PARAMS((time_t *));
 extern char *mkrfc850 _PARAMS((time_t *));
+extern time_t parse_rfc850 _PARAMS((char *str));
 extern void init_log3 _PARAMS((char *pn, FILE *a, FILE *b));
 extern void debug_init();
 extern void log_errno2 _PARAMS((char *, int, char *));
