@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.348 2002/10/21 15:13:23 adrian Exp $
+ * $Id: comm.cc,v 1.349 2002/10/23 09:17:34 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -87,7 +87,7 @@ struct _fdc_t {
 		void *handler_data;
 	} read;
 	struct {
-		char *buf;
+		const char *buf;
 		int size;
 		int curofs;
 		IOCB *handler;
@@ -665,7 +665,7 @@ comm_write_try(int fd, void *data)
  * completes, on error, or on file descriptor close.
  */
 void
-comm_write(int fd, char *buf, size_t size, IOWCB *handler, void *handler_data)
+comm_write(int fd, const char *buf, size_t size, IOWCB *handler, void *handler_data)
 {
 	/* Make sure we're not writing anything and we're not closing */
 	assert(fdc_table[fd].active == 1);
