@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.70 2003/07/06 12:03:40 hno Exp $
+ * $Id: comm_select.cc,v 1.71 2003/07/06 14:16:57 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -466,6 +466,9 @@ comm_select(int msec)
 
         if (msec > MAX_POLL_TIME)
             msec = MAX_POLL_TIME;
+
+        if (comm_iocallbackpending())
+            pending++;
 
         if (pending)
             msec = 0;
