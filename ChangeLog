@@ -16,7 +16,7 @@ Changes to squid-1.2.beta8 (Dec 2, 1997):
 	- Fixed 'client' to send 'Connection' instead of 'Proxy-Connection'
 	  for simulated keep-alive requests.
 	- Removed 'fd' arg from clientProcess* functions.
-	- Fixed bug from using errorSend() on persistent/pipelined
+	- Fixed bugs from using errorSend() on persistent/pipelined
 	  client connections.  A latter request should not be allowed to
 	  write to the client fd until the current request completes.
 	  Now use errorAppendEntry() for such situations.
@@ -38,8 +38,9 @@ Changes to squid-1.2.beta8 (Dec 2, 1997):
 	  to comm_select_incoming().  Now we make sure
 	  comm_select_incoming() gets called if select returns less
 	  than 7 ready FD's.
-	- Added errorpage '%B' token to generate FTP URLs with a '%2f' inserted
-	  at the start of the url-path.  calls ftpUrlWith2f().
+	- Added errorpage '%B' token to generate FTP URLs with a '%2f'
+	  inserted at the start of the url-path.  calls ftpUrlWith2f().
+	  (Henrik Nordstrom).
 	- Changed fqdncache.c to use LRU double-linked list instead of qsort()
 	  for replacement and cachemgr output.
 	- Changed ipcache.c to use LRU double-linked list instead of qsort()
