@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.394 2001/01/09 00:18:44 wessels Exp $
+ * $Id: protos.h,v 1.395 2001/01/10 23:42:06 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -744,9 +744,6 @@ extern FREE authenticateFreeProxyAuthUser;
 extern void authenticateFreeProxyAuthUserACLResults(void *data);
 extern void authenticateProxyUserCacheCleanup(void *);
 extern void authenticateInitUserCache();
-#if 0
-extern void authenticateProxyAuthCacheAddLink(const char *key, auth_user_t *);
-#endif
 extern int authenticateActiveSchemeCount();
 extern int authenticateSchemeCount();
 extern void authenticateUserNameCacheAdd(auth_user_t * auth_user);
