@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.70 1998/07/20 22:42:23 wessels Exp $
+ * $Id: mime.cc,v 1.71 1998/07/20 22:50:38 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -115,6 +115,7 @@ typedef struct _mime_entry {
     char *content_type;
     char *content_encoding;
     char transfer_mode;
+    unsigned int view_option:1,download_option:1;
     struct _mime_entry *next;
 } mimeEntry;
 
@@ -288,16 +289,34 @@ mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field)
     return base64_decode(t);
 }
 
+static mimeEntry *
+mimeGetEntry(const char *fn, int skip_encodings)
+{
+    mimeEntry *m;
+    char *t;
+    char *name = xstrdup(fn);
+try_again:
+    for (m = MimeTable; m; m = m->next) {
+	if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
+	    break;
+    }
+    if (skip_encodings && m != NULL && !strcmp(m->content_type, dash_str)) {
+	/* Assume we matched /\.\w$/ and cut off the last extension */
+	if ((t = strrchr(name, '.'))) {
+	    *t = '\0';
+	    goto try_again;
+	}
+	/* What? A encoding without a extension? */
+	m=NULL;
+    }
+    xfree(name);
+    return m;
+}
+
 char *
 mimeGetIcon(const char *fn)
 {
-    mimeEntry *m;
-    for (m = MimeTable; m; m = m->next) {
-	if (m->icon == NULL)
-	    continue;
-	if (regexec(&m->compiled_pattern, fn, 0, 0, 0) == 0)
-	    break;
-    }
+    mimeEntry *m = mimeGetEntry(fn, 1);
     if (m == NULL)
 	return NULL;
     if (!strcmp(m->icon, dash_str))
@@ -317,25 +336,7 @@ mimeGetIconURL(const char *fn)
 char *
 mimeGetContentType(const char *fn)
 {
-    mimeEntry *m;
-    char *name = xstrdup(fn);
-    char *t;
-try_again:
-    for (m = MimeTable; m; m = m->next) {
-	if (m->content_type == NULL)
-	    continue;
-	if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
-	    break;
-    }
-    if (!strcmp(m->content_type, dash_str)) {
-	/* Assume we matched /\.\w$/ and cut off the last extension */
-	if ((t = strrchr(name, '.'))) {
-	    *t = '\0';
-	    goto try_again;
-	}
-	/* What? A encoding without a extension? */
-    }
-    xfree(name);
+    mimeEntry *m = mimeGetEntry(fn, 1);
     if (m == NULL)
 	return NULL;
     if (!strcmp(m->content_type, dash_str))
@@ -346,13 +347,7 @@ try_again:
 char *
 mimeGetContentEncoding(const char *fn)
 {
-    mimeEntry *m;
-    for (m = MimeTable; m; m = m->next) {
-	if (m->content_encoding == NULL)
-	    continue;
-	if (regexec(&m->compiled_pattern, fn, 0, 0, 0) == 0)
-	    break;
-    }
+    mimeEntry *m = mimeGetEntry(fn, 0);
     if (m == NULL)
 	return NULL;
     if (!strcmp(m->content_encoding, dash_str))
@@ -363,12 +358,22 @@ mimeGetContentEncoding(const char *fn)
 char
 mimeGetTransferMode(const char *fn)
 {
-    mimeEntry *m;
-    for (m = MimeTable; m; m = m->next) {
-	if (regexec(&m->compiled_pattern, fn, 0, 0, 0) == 0)
-	    break;
-    }
+    mimeEntry *m = mimeGetEntry(fn, 0);
     return m ? m->transfer_mode : 'I';
+}
+
+int
+mimeGetDownloadOption(const char *fn)
+{
+    mimeEntry *m = mimeGetEntry(fn, 1);
+    return m ? m->download_option : 0;
+}
+
+int
+mimeGetViewOption(const char *fn)
+{
+    mimeEntry *m = mimeGetEntry(fn, 0);
+    return m ? m->view_option : 0;
 }
 
 void
@@ -383,6 +388,9 @@ mimeInit(char *filename)
     char *type;
     char *encoding;
     char *mode;
+    char *option;
+    int view_option;
+    int download_option;
     regex_t re;
     mimeEntry *m;
     int re_flags = REG_EXTENDED | REG_NOSUB | REG_ICASE;
@@ -424,6 +432,16 @@ mimeInit(char *filename)
 	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
 	    continue;
 	}
+	download_option=0;
+	view_option=0;
+	while ((option = strtok(NULL, w_space)) != NULL) {
+	    if (!strcmp(option,"+download"))
+		download_option = 1;
+	    else if (!strcmp(option,"+view"))
+		view_option = 1;
+	    else 
+		debug(25, 1) ("mimeInit: unknown option: '%s' (%s)\n", buf, option);
+	}
 	if (regcomp(&re, pattern, re_flags) != 0) {
 	    debug(25, 1) ("mimeInit: regcomp error: '%s'\n", buf);
 	    continue;
@@ -440,6 +458,8 @@ mimeInit(char *filename)
 	    m->transfer_mode = 'A';
 	else
 	    m->transfer_mode = 'I';
+	m->view_option = view_option;
+	m->download_option = download_option;
 	*MimeTableTail = m;
 	MimeTableTail = &m->next;
 	debug(25, 5) ("mimeInit: added '%s'\n", buf);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.238 1998/07/20 22:16:35 wessels Exp $
+ * $Id: ftp.cc,v 1.239 1998/07/20 22:50:37 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -564,47 +564,53 @@ dots_fill(size_t len)
 static char *
 ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 {
-    LOCAL_ARRAY(char, link, 2048 + 40);
-    LOCAL_ARRAY(char, link2, 2048 + 40);
     LOCAL_ARRAY(char, icon, 2048);
+    LOCAL_ARRAY(char, href, 2048 + 40);
+    LOCAL_ARRAY(char, text, 2048);
+    LOCAL_ARRAY(char, size, 2048);
+    LOCAL_ARRAY(char, chdir, 2048 + 40);
+    LOCAL_ARRAY(char, view, 2048 + 40);
+    LOCAL_ARRAY(char, download, 2048 + 40);
+    LOCAL_ARRAY(char, link, 2048 + 40);
     LOCAL_ARRAY(char, html, 8192);
     size_t width = Config.Ftp.list_width;
     ftpListParts *parts;
+    *icon=*href=*text=*size=*chdir=*view=*download=*link=*html='\0';
     if ((int) strlen(line) > 1024) {
 	snprintf(html, 8192, "%s\n", line);
 	return html;
     }
     /* Handle builtin <dirup> */
     if (!strcmp(line, "<internal-dirup>")) {
+	/* <A HREF="{href}">{icon}</A> <A HREF="{href}">{text}</A> {link} */
 	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
 	    mimeGetIconURL("internal-dirup"),
 	    "[DIRUP]");
 	if (!ftpState->flags.no_dotdot && !ftpState->flags.root_dir) {
 	    /* Normal directory */
-	    snprintf(link, 2048, "<A HREF=\"%s\">%s</A>",
-		"../",
-		"Parent Directory");
+	    strcpy(href, "../");
+	    strcpy(text, "Parent Directory");
 	} else if (!ftpState->flags.no_dotdot && ftpState->flags.root_dir) {
 	    /* "Top level" directory */
-	    snprintf(link, 2048, "<A HREF=\"%s\">%s</A> (<A HREF=\"%s\">%s</A>)",
-		"%2e%2e/",
-		"Parent Directory",
+	    strcpy(href, "%2e%2e/");
+	    strcpy(text, "Parent Directory");
+	    snprintf(link, 2048, "(<A HREF=\"%s\">%s</A>)",
 		"%2f/",
 		"Root Directory");
 	} else if (ftpState->flags.no_dotdot && !ftpState->flags.root_dir) {
 	    /* Normal directory where last component is / or ..  */
-	    snprintf(link, 2048, "<A HREF=\"%s\">%s</A> (<A HREF=\"%s\">%s</A>)",
-		"%2e%2e/",
-		"Parent Directory",
+	    strcpy(href, "%2e%2e/");
+	    strcpy(text, "Parent Directory");
+	    snprintf(link, 2048, "(<A HREF=\"%s\">%s</A>)",
 		"../",
-		"Up");
+		"Back");
 	} else {		/* NO_DOTDOT && ROOT_DIR */
 	    /* "UNIX Root" directory */
-	    snprintf(link, 2048, "<A HREF=\"%s\">%s</A>",
-		"../",
-		"Home Directory");
+	    strcpy(href, "../");
+	    strcpy(text, "Home Directory");
 	}
-	snprintf(html, 8192, "%s %s\n", icon, link);
+	snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A> %s\n",
+		href, icon, href, text, link);
 	return html;
     }
     if ((parts = ftpListParseParts(line, ftpState->flags)) == NULL) {
@@ -629,68 +635,67 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	    *(parts->showname + width - 0) = '\0';
 	}
     }
+    /* {icon} {text} . . . {date}{size}{chdir}{view}{download}{link}\n  */
+    xstrncpy(href,rfc1738_escape(parts->name),2048);
+    xstrncpy(text, parts->showname, 2048);
     switch (parts->type) {
     case 'd':
-	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
 	    mimeGetIconURL("internal-dir"),
 	    "[DIR]");
-	snprintf(link, 2048, "<A HREF=\"%s/\">%s</A>%s",
-	    rfc1738_escape(parts->name),
-	    parts->showname,
-	    dots_fill(strlen(parts->showname)));
-	snprintf(html, 8192, "%s %s  [%s]\n",
-	    icon,
-	    link,
-	    parts->date);
+	strncat(href, "/", 2048);
 	break;
     case 'l':
-	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
 	    mimeGetIconURL("internal-link"),
 	    "[LINK]");
-	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
-	    rfc1738_escape(parts->name),
-	    parts->showname,
-	    dots_fill(strlen(parts->showname)));
 	/* sometimes there is an 'l' flag, but no "->" link */
 	if (parts->link)
-	    snprintf(link2, 2048, "<A HREF=\"%s\">%s</A>",
+	    snprintf(link, 2048, " -> <A HREF=\"%s\">%s</A>",
 		rfc1738_escape(parts->link),
 		parts->link);
-	snprintf(html, 8192, "%s %s  [%s] -> %s\n",
-	    icon,
-	    link,
-	    parts->date,
-	    link2);
 	break;
     case '\0':
-	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
 	    mimeGetIconURL(parts->name),
 	    "[UNKNOWN]");
-	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>",
+	snprintf(chdir, 2048, " <A HREF=\"%s/;type=d\"><IMG BORDER=0 SRC=\"%s\" "
+				"ALT=\"[DIR]\"></A>",
 	    rfc1738_escape(parts->name),
-	    parts->name);
-	snprintf(link2, 2048, "(<A HREF=\"%s/;type=d\">chdir</A>)",
-	    rfc1738_escape(parts->name));
-	snprintf(html, 8192, "%s %s %s\n",
-	    icon,
-	    link,
-	    link2);
+	    mimeGetIconURL("internal-dir"));
 	break;
     case '-':
     default:
-	snprintf(icon, 2048, "<IMG SRC=\"%s\" ALT=\"%-6s\">",
+	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
 	    mimeGetIconURL(parts->name),
 	    "[FILE]");
-	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
-	    rfc1738_escape(parts->name),
-	    parts->showname,
-	    dots_fill(strlen(parts->showname)));
-	snprintf(html, 8192, "%s %s  [%s] %6dk\n",
-	    icon,
-	    link,
-	    parts->date,
-	    parts->size);
+	snprintf(size, 2048, " %6dk", parts->size);
 	break;
+    }
+    if (parts->type != 'd') {
+	if (mimeGetViewOption(parts->name)) {
+	    snprintf(view, 2048, " <A HREF=\"%s;type=a\"><IMG BORDER=0 SRC=\"%s\" "
+				    "ALT=\"[VIEW]\"></A>",
+		href, mimeGetIconURL("internal-view"));
+	}
+	if (mimeGetDownloadOption(parts->name)) {
+	    snprintf(download, 2048, " <A HREF=\"%s;type=i\"><IMG BORDER=0 SRC=\"%s\" "
+				    "ALT=\"[DOWNLOAD]\"></A>",
+		href, mimeGetIconURL("internal-download"));
+	}
+    }
+    /* <A HREF="{href}">{icon}</A> <A HREF="{href}">{text}</A> . . . {date}{size}{chdir}{view}{download}{link}\n  */
+    if (parts->type != '\0') {
+	snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A>%s "
+	    			"%s%8s%s%s%s%s\n",
+	    href, icon, href, text, dots_fill(strlen(text)),
+	    parts->date, size, chdir, view, download, link);
+    } else {
+	/* Plain listing. {icon} {text} ... {chdir}{view}{download} */
+	snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A>%s "
+	    			"%s%s%s%s\n",
+	    href, icon, href, text, dots_fill(strlen(text)),
+	    chdir, view, download, link);
     }
     ftpListPartsFree(&parts);
     return html;
@@ -2074,8 +2079,10 @@ ftpFail(FtpStateData * ftpState)
     ErrorState *err;
     debug(9, 3) ("ftpFail\n");
     /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
-    if (!ftpState->flags.isdir &&
-	!ftpState->flags.try_slash_hack) {
+    if (!ftpState->flags.isdir &&			/* Not a directory */
+	!ftpState->flags.try_slash_hack &&		/* Not in slash hack */
+	ftpState->mdtm <= 0 && ftpState->size < 0 &&	/* Not known as a file */
+	!strNCaseCmp(ftpState->request->urlpath, "/%2f", 4)) { /* No slash encoded */
 	switch (ftpState->state) {
 	case SENT_CWD:
 	case SENT_RETR:
