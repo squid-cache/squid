@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.56 1997/12/30 02:47:42 wessels Exp $
+ * $Id: net_db.cc,v 1.57 1998/01/02 21:55:05 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -114,18 +114,6 @@ netdbLookupHost(const char *key)
     return hptr ? (netdbEntry *) hptr->item : NULL;
 }
 
-static netdbEntry *
-netdbGetFirst(hash_table * table)
-{
-    return (netdbEntry *) hash_first(table);
-}
-
-static netdbEntry *
-netdbGetNext(hash_table * table)
-{
-    return (netdbEntry *) hash_next(table);
-}
-
 static void
 netdbRelease(netdbEntry * n)
 {
@@ -170,7 +158,7 @@ netdbPurgeLRU(void)
     int list_count = 0;
     int removed = 0;
     list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
-    for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table)) {
+    for (n = hash_first(addr_table); n; n = hash_next(addr_table)) {
 	*(list + list_count) = n;
 	list_count++;
 	if (list_count > meta_data.netdb_addrs)
@@ -575,7 +563,7 @@ netdbDump(StoreEntry * sentry)
 	"Hostnames");
     list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
     i = 0;
-    for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table))
+    for (n = hash_first(addr_table); n; n = hash_next(addr_table))
 	*(list + i++) = n;
     if (i != meta_data.netdb_addrs)
 	debug(37, 0) ("WARNING: netdb_addrs count off, found %d, expected %d\n",
@@ -686,7 +674,7 @@ var_netdb_entry(struct variable *vp, oid * name, int *length, int exact, int *va
 
     debug(49, 5) ("snmp var_netdb_entry: hey, here we are.\n");
 #ifdef USE_ICMP
-    n = netdbGetFirst(addr_table);
+    n = hash_first(addr_table);
 
     while (n != NULL) {
 	newname[vp->namelen] = cnt++;
@@ -695,7 +683,7 @@ var_netdb_entry(struct variable *vp, oid * name, int *length, int exact, int *va
 	    debug(49, 5) ("snmp var_netdb_entry: yup, a match.\n");
 	    break;
 	}
-	n = netdbGetNext(addr_table);
+	n = hash_next(addr_table);
     }
 #endif
     if (n == NULL)
