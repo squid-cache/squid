@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.89 2003/07/16 08:24:45 hno Exp $
+ * $Id: access_log.cc,v 1.90 2003/07/18 12:18:56 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1069,16 +1069,16 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
     for (format = definitions; format; format = format->next) {
         debug(46, 0) ("Dumping logformat definition for %s\n", format->name);
         storeAppendPrintf(entry, "logformat %s ", format->name);
-        t = format->format;
 
-        while (t != NULL) {
+        for (t = format->format; t; t = t->next) {
             if (t->type == LFT_STRING)
                 storeAppendPrintf(entry, "%s", t->data.string);
             else {
-                char arg[256];
-                arg[0] = '\0';
+                char argbuf[256];
+                char *arg = NULL;
+                logformat_bcode_t type = t->type;
 
-                switch (t->type) {
+                switch (type) {
                     /* special cases */
 
                 case LFT_STRING:
@@ -1089,13 +1089,31 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 case LFT_REPLY_HEADER_ELEM:
 
                     if (t->data.header.separator != ',')
-                        snprintf(arg, sizeof(arg), "%s:%c%s", t->data.header.header, t->data.header.separator, t->data.header.element);
+                        snprintf(argbuf, sizeof(argbuf), "%s:%c%s", t->data.header.header, t->data.header.separator, t->data.header.element);
                     else
-                        snprintf(arg, sizeof(arg), "%s:%s", t->data.header.header, t->data.header.element);
+                        snprintf(argbuf, sizeof(argbuf), "%s:%s", t->data.header.header, t->data.header.element);
+
+                    arg = argbuf;
+
+                    type = (type == LFT_REQUEST_HEADER_ELEM) ?
+                           LFT_REQUEST_HEADER :
+                           LFT_REPLY_HEADER;
+
+                    break;
+
+                case LFT_REQUEST_ALL_HEADERS:
+
+                case LFT_REPLY_ALL_HEADERS:
+
+                    type = (type == LFT_REQUEST_ALL_HEADERS) ?
+                           LFT_REQUEST_HEADER :
+                           LFT_REPLY_HEADER;
+
+                    break;
 
                 default:
                     if (t->data.string)
-                        xstrncpy(arg, t->data.string, sizeof(arg));
+                        arg = t->data.string;
 
                     break;
                 }
@@ -1127,13 +1145,16 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 if (t->left)
                     storeAppend(entry, "-", 1);
 
+                if (t->zero)
+                    storeAppend(entry, "0", 1);
+
                 if (t->width)
                     storeAppendPrintf(entry, "%d", (int) t->width);
 
                 if (t->precision)
                     storeAppendPrintf(entry, ".%d", (int) t->precision);
 
-                if (*arg)
+                if (arg)
                     storeAppendPrintf(entry, "{%s}", arg);
 
                 for (te = logformat_token_table; te->config != NULL; te++) {
@@ -1143,11 +1164,15 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                     }
                 }
 
+                if (t->space)
+                    storeAppend(entry, " ", 1);
+
                 assert(te->config != NULL);
-                break;
             }
         }
     }
+
+    storeAppend(entry, "\n", 1);
 }
 
 void
