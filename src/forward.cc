@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.35 1998/12/11 23:45:10 wessels Exp $
+ * $Id: forward.cc,v 1.36 1998/12/14 05:01:09 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -486,6 +486,7 @@ fwdComplete(FwdState * fwdState)
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
 	debug(17, 3) ("ENTRY_FWD_HDR_WAIT not set, calling storeComplete\n");
 	storeComplete(e);
+	fwdStateFree(fwdState);
     } else if (fwdReforward(fwdState)) {
 	debug(0, 0) ("fwdComplete: re-forwarding %d %s\n",
 	    e->mem_obj->reply->sline.status,
@@ -497,5 +498,6 @@ fwdComplete(FwdState * fwdState)
     } else {
 	EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
 	storeComplete(e);
+	fwdStateFree(fwdState);
     }
 }
