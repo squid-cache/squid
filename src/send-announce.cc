@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.62 2001/04/14 00:03:23 hno Exp $
+ * $Id: send-announce.cc,v 1.63 2002/04/04 21:33:27 hno Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ send_announce(const ipcache_addrs * ia, void *junk)
     assert(Config.Sockaddr.http);
     snprintf(tbuf, 256, "Running on %s %d %d\n",
 	getMyHostname(),
-	(int) ntohs(Config.Sockaddr.http->s.sin_port),
+	getMyPort(),
 	(int) Config.Port.icp);
     strcat(sndbuf, tbuf);
     if (Config.adminEmail) {

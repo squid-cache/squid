@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.214 2002/03/30 16:29:51 hno Exp $
+ * $Id: tools.cc,v 1.215 2002/04/04 21:33:27 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1020,4 +1020,17 @@ parseEtcHosts(void)
       skip:
 	wordlistDestroy(&hosts);
     }
+}
+
+int
+getMyPort(void)
+{
+#if USE_SSL
+    if (Config.Sockaddr.http)
+	return Config.Sockaddr.http->s.sin_port;
+    else
+	return Config.Sockaddr.https->s.sin_port;
+#else
+    return Config.Sockaddr.http->s.sin_port;
+#endif
 }
