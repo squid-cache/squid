@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.438 2004/12/11 22:07:31 hno Exp $
+ * $Id: http.cc,v 1.439 2004/12/20 14:52:27 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived

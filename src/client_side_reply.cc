@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.76 2004/12/10 00:51:33 hno Exp $
+ * $Id: client_side_reply.cc,v 1.77 2004/12/20 14:52:27 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)

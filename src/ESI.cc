@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.9 2004/11/06 22:24:22 hno Exp $
+ * $Id: ESI.cc,v 1.10 2004/12/20 14:52:25 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

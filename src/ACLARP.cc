@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.7 2004/11/06 21:57:53 hno Exp $
+ * $Id: ACLARP.cc,v 1.8 2004/12/20 14:52:24 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

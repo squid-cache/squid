@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.166 2004/11/06 21:37:59 hno Exp $
+ * $Id: disk.cc,v 1.167 2004/12/20 14:52:27 robertc Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived

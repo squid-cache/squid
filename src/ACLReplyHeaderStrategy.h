@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLReplyHeaderStrategy.h,v 1.6 2004/11/07 23:29:50 hno Exp $
+ * $Id: ACLReplyHeaderStrategy.h,v 1.7 2004/12/20 14:52:24 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

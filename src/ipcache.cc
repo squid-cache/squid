@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.247 2004/12/10 00:54:04 hno Exp $
+ * $Id: ipcache.cc,v 1.248 2004/12/20 14:52:27 robertc Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived

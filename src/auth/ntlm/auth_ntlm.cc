@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.42 2004/09/03 21:23:10 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.43 2004/12/20 14:52:30 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins

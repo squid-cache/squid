@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.26 2004/11/07 23:29:51 hno Exp $
+ * $Id: store_io_ufs.cc,v 1.27 2004/12/20 14:52:32 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels

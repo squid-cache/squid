@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.245 2004/11/07 14:49:44 hno Exp $
+ * $Id: tools.cc,v 1.246 2004/12/20 14:52:28 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.499 2004/12/08 00:24:42 hno Exp $
+ * $Id: protos.h,v 1.500 2004/12/20 14:52:27 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

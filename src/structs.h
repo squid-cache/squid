@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.496 2004/12/08 00:24:42 hno Exp $
+ * $Id: structs.h,v 1.497 2004/12/20 14:52:28 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

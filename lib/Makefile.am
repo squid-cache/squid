@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.14 2004/08/30 05:12:30 robertc Exp $
+#  $Id: Makefile.am,v 1.15 2004/12/20 14:52:24 robertc Exp $
 #
 
 DIST_SUBDIRS = libTrie cppunit-1.10.0
@@ -79,7 +79,9 @@ INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=tests/testAll
 
-tests_testAll_SOURCES= tests/testArray.cc tests/testMain.cc  tests/testArray.h
+tests_testAll_SOURCES= tests/testArray.cc tests/testMain.cc  tests/testArray.h \
+	$(XPROF_STATS_SOURCE) \
+	util.c
 
 tests_testAll_LDADD= @SQUID_CPPUNIT_LA@
 
