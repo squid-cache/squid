@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.399 2001/09/07 18:02:48 adrian Exp $
+ * $Id: structs.h,v 1.400 2001/09/27 21:59:22 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -664,6 +664,7 @@ struct _SquidConfig {
 	size_t high_memory;
     } warnings;
     char *store_dir_select_algorithm;
+    int sleep_after_fork;	/* microseconds */
 };
 
 struct _SquidConfig2 {
