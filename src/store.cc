@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.188 1997/01/04 08:35:04 wessels Exp $
+ * $Id: store.cc,v 1.189 1997/01/07 03:37:42 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1067,8 +1067,8 @@ storeSwapFullPath(int fn, char *fullpath)
     fullpath[0] = '\0';
     sprintf(fullpath, "%s/%02X/%02X/%08X",
 	swappath(fn),
-	(fn / ncache_dirs) % SWAP_DIRECTORIES_L1,
-	(fn / ncache_dirs) / SWAP_DIRECTORIES_L1 % SWAP_DIRECTORIES_L2,
+	(fn / ncache_dirs) % Config.levelOneDirs,
+	(fn / ncache_dirs) / Config.levelOneDirs % Config.levelTwoDirs,
 	fn);
     return fullpath;
 }
@@ -2356,7 +2356,7 @@ storeCreateSwapSubDirs(void)
     int i, j, k;
     LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (j = 0; j < ncache_dirs; j++) {
-	for (i = 0; i < SWAP_DIRECTORIES_L1; i++) {
+	for (i = 0; i < Config.levelOneDirs; i++) {
 	    sprintf(name, "%s/%02X", swappath(j), i);
 	    debug(20, 1, "Making directories in %s\n", name);
 	    if (mkdir(name, 0755) < 0) {
@@ -2367,7 +2367,7 @@ storeCreateSwapSubDirs(void)
 		    fatal(tmp_error_buf);
 		}
 	    }
-	    for (k = 0; k < SWAP_DIRECTORIES_L2; k++) {
+	    for (k = 0; k < Config.levelTwoDirs; k++) {
 		sprintf(name, "%s/%02X/%02X", swappath(j), i, k);
 		if (mkdir(name, 0755) < 0) {
 		    if (errno != EEXIST) {
@@ -2484,7 +2484,7 @@ storeSanityCheck(void)
     if (ncache_dirs < 1)
 	storeAddSwapDisk(DefaultSwapDir);
 
-    for (i = 0; i < SWAP_DIRECTORIES_L1; i++) {
+    for (i = 0; i < Config.levelOneDirs; i++) {
 	sprintf(name, "%s/%02X", swappath(i), i);
 	errno = 0;
 	if (access(name, W_OK)) {
