@@ -1,5 +1,5 @@
 #******************************************************************************
-# $Id: mk-string-arrays.pl,v 1.3 1998/02/12 23:37:27 wessels Exp $
+# $Id: mk-string-arrays.pl,v 1.4 1998/04/07 23:31:51 rousskov Exp $
 #
 # File:		mk-strs.pl
 #
@@ -15,6 +15,7 @@
 $pat{'err_type'} = "err_type_str";
 $pat{'icp_opcode'} = "icp_opcode_str";
 $pat{'swap_log_op'} = "swap_log_op_str";
+$pat{'lookup_t'} = "lookup_t_str";
 
 $state = 0;	# start state
 while (<>) {
