@@ -1,4 +1,4 @@
-$Id: CREDITS,v 1.3 1998/10/07 19:34:51 wessels Exp $
+$Id: CREDITS,v 1.4 1998/12/11 20:09:33 wessels Exp $
 
 ==============================================================================
 
@@ -246,5 +246,11 @@ lib/tempnam.c:
 lib/drand48.c:
 
 From Linux libc-5.4.46.
+
+==============================================================================
+
+mcast_encode() in src/access_log.c is derived from Mark Atkinson's
+(mark_a@cix.compulink.co.uk) "Tiny Encryption Algorithm".
+http://www.io.com/~paulhart/game/algorithms/tea.html
 
 ==============================================================================
