@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.41 1998/10/18 21:09:52 rousskov Exp $
+ * $Id: refresh.cc,v 1.42 1998/10/18 21:19:03 rousskov Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -59,6 +59,9 @@ static struct RefreshCounts {
     int response_lmt_now_stale;
     int conf_min_age_fresh;
     int default_stale;
+    /* maybe-counters -- intermediate decisions that may affect the result */
+    int request_reload_ignore_maybe;
+    int response_lmt_future_maybe;
 } refreshCounts[rcCount];
 
 /*
@@ -162,6 +165,7 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
 	    if (ignore_reload) {
 		/* The clients no-cache header is ignored */
 		debug(22, 3) ("refreshCheck: MAYBE: ignore-reload\n");
+		rc->request_reload_ignore_maybe++;
 	    } else if (reload_into_ims) {
 		/* The clients no-cache header is changed into a IMS query */
 		debug(22, 3) ("refreshCheck: YES: reload-into-ims\n");
@@ -232,6 +236,7 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
 	return 1;
     } else if (entry->lastmod > -1 && entry->timestamp < entry->lastmod) {
 	debug(22, 3) ("refreshCheck: MAYBE: last-modified in the future\n");
+	rc->response_lmt_future_maybe++;
     }
     
     if (age <= min) {
@@ -304,6 +309,9 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
     refreshCountsStatsEntry(default_stale);
     tot = sum; /* paranoid: "total" line shows 100% if we forgot nothing */
     refreshCountsStatsEntry(total);
+    /* maybe counters */
+    refreshCountsStatsEntry(request_reload_ignore_maybe);
+    refreshCountsStatsEntry(response_lmt_future_maybe);
 }
 
 static void
