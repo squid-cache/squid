@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.30 1996/08/27 17:55:34 wessels Exp $
+ * $Id: url.cc,v 1.31 1996/08/30 23:23:36 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -307,4 +307,25 @@ int matchDomainName(domain, host)
     if (offset == 0)
 	return 1;
     return 0;
+}
+
+int urlCheckRequest(r)
+     request_t *r;
+{
+    int rc = 0;
+    switch (r->protocol) {
+    case PROTO_HTTP:
+    case PROTO_CACHEOBJ:
+	rc = 1;
+	break;
+    case PROTO_FTP:
+    case PROTO_GOPHER:
+    case PROTO_WAIS:
+	if (r->method == METHOD_GET)
+	    rc = 1;
+	break;
+    default:
+	break;
+    }
+    return rc;
 }

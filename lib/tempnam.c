@@ -26,11 +26,11 @@
 #ifndef _POSIX_SOURCE
 #define _POSIX_SOURCE
 #endif /* _POSIX_SOURCE_ */
+#endif /* __NeXT__ */
+
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#endif /* __NeXT__ */
-
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
@@ -56,6 +56,10 @@
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifndef FILENAME_MAX
+#define FILENAME_MAX 1024
 #endif
 
 #define P_tmpdir      "/tmp"
