@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.27 2004/12/20 14:52:32 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.28 2004/12/20 16:30:45 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -34,50 +34,53 @@
  */
 
 #include "squid.h"
-#include "store_ufs.h"
 #include "Store.h"
 #include "ufscommon.h"
+#include "Generic.h"
+#include "DiskIO/DiskFile.h"
+#include "DiskIO/DiskIOStrategy.h"
+#include "DiskIO/ReadRequest.h"
+#include "DiskIO/WriteRequest.h"
 
 #include "SwapDir.h"
 
-UfsIO UfsIO::Instance;
 bool
-UfsIO::shedLoad()
+UFSStrategy::shedLoad()
 {
-    return false;
+    return io->shedLoad();
 }
 
 int
-UfsIO::load()
+UFSStrategy::load()
 {
-    /* Return 999 (99.9%) constant load */
-    return 999;
+    return io->load();
+}
+
+UFSStrategy::UFSStrategy (DiskIOStrategy *anIO) : io(anIO)
+{}
+
+UFSStrategy::~UFSStrategy ()
+{
+    delete io;
 }
 
 StoreIOState::Pointer
-UfsIO::createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const
+UFSStrategy::createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const
 {
     return new UFSStoreState (SD, e, callback, callback_data);
 }
 
 DiskFile::Pointer
-UfsIO::newFile (char const *path)
+UFSStrategy::newFile (char const *path)
 {
-    return new UFSFile (path);
+    return io->newFile(path);
 }
 
+
 void
-UfsIO::unlinkFile(char const *path)
+UFSStrategy::unlinkFile(char const *path)
 {
-#if USE_UNLINKD
-    unlinkdUnlink(path);
-#elif USE_TRUNCATE
-
-    truncate(path, 0);
-#else
-
-    ::unlink(path);
-#endif
+    io->unlinkFile(path);
 }
 
 CBDATA_CLASS_INIT(UFSStoreState);
@@ -93,105 +96,6 @@ void
 UFSStoreState::operator delete (void *address)
 {
     cbdataFree(address);
-}
-
-CBDATA_CLASS_INIT(UFSFile);
-void *
-UFSFile::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(UFSFile);
-    UFSFile *result = cbdataAlloc(UFSFile);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return cbdataReference(result);
-}
-
-void
-UFSFile::operator delete (void *address)
-{
-    UFSFile *t = static_cast<UFSFile *>(address);
-    cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
-}
-
-UFSFile::UFSFile (char const *aPath) : fd (-1), closed (true), error_(false)
-{
-    assert (aPath);
-    debug (79,3)("UFSFile::UFSFile: %s\n", aPath);
-    path_ = xstrdup (aPath);
-}
-
-UFSFile::~UFSFile()
-{
-    safe_free (path_);
-    doClose();
-}
-
-void
-UFSFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
-{
-    /* Simulate async calls */
-    fd = file_open(path_ , flags);
-    ioRequestor = callback;
-
-    if (fd < 0) {
-        debug(79, 1) ("UFSFile::open: Failed to open %s (%s)\n", path_, xstrerror());
-        error(true);
-    } else {
-        closed = false;
-        store_open_disk_fd++;
-        debug(79, 3) ("UFSFile::open: opened FD %d\n", fd);
-    }
-
-    callback->ioCompletedNotification();
-}
-
-void
-UFSFile::create (int flags, mode_t mode, IORequestor::Pointer callback)
-{
-    /* We use the same logic path for open */
-    open(flags, mode, callback);
-}
-
-
-void UFSFile::doClose()
-{
-    if (fd > -1) {
-        closed = true;
-        file_close(fd);
-        store_open_disk_fd--;
-        fd = -1;
-    }
-}
-
-void
-UFSFile::close ()
-{
-    debug (79,3)("UFSFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
-    doClose();
-    assert (ioRequestor.getRaw());
-    ioRequestor->closeCompleted();
-}
-
-bool
-UFSFile::canRead() const
-{
-    return fd > -1;
-}
-
-bool
-UFSFile::error() const
-{
-    if ((fd < 0 && !closed) || error_)
-        return true;
-
-    return false;
-}
-
-void UFSFile::error(bool const &aBool)
-{
-    error_ = aBool;
 }
 
 void
@@ -293,37 +197,9 @@ UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * callback, voi
     offset_ = offset;
     read_buf = buf;
     reading = true;
-    theFile->read(buf, offset, size);
+    theFile->read(new ReadRequest(buf,offset,size));
 }
 
-void
-UFSFile::read(char *buf, off_t offset, size_t size)
-{
-    assert (fd > -1);
-    assert (ioRequestor.getRaw());
-    file_read(fd, buf, size, offset, ReadDone, this);
-}
-
-void
-UFSFile::ReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
-{
-    UFSFile *myFile = static_cast<UFSFile *>(my_data);
-    assert (myFile);
-    myFile->readDone (fd, buf, len, errflag);
-}
-
-void
-UFSFile::write(char const *buf, size_t size, off_t offset, FREE *free_func)
-{
-    debug(79, 3) ("storeUfsWrite: FD %d\n",fd);
-    file_write(fd,
-               offset,
-               (char *)buf,
-               size,
-               WriteDone,
-               this,
-               free_func);
-}
 
 void
 UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
@@ -337,42 +213,13 @@ UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_fun
     }
 
     writing = true;
-    theFile->write(buf,size,offset,free_func);
-}
-
-bool
-UFSFile::ioInProgress()const
-{
-    /* IO is never pending with UFS */
-    return false;
-}
-
-/*  === STATIC =========================================================== */
-
-void
-UFSFile::readDone(int rvfd, const char *buf, int len, int errflag)
-{
-    debug (79,3)("UFSFile::readDone: FD %d\n",rvfd);
-    assert (fd == rvfd);
-
-    ssize_t rlen;
-
-    if (errflag) {
-        debug(79, 3) ("UFSFile::readDone: got failure (%d)\n", errflag);
-        rlen = -1;
-    } else {
-        rlen = (ssize_t) len;
-    }
-
-    if (errflag == DISK_EOF)
-        errflag = DISK_OK;	/* EOF is signalled by len == 0, not errors... */
-
-    ioRequestor->readCompleted(buf, rlen, errflag);
+    theFile->write(new WriteRequest(buf, offset, size, free_func));
 }
 
 void
-UFSStoreState::readCompleted(const char *buf, int len, int errflag)
+UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest> result)
 {
+    assert (result.getRaw());
     reading = false;
     debug(79, 3) ("storeDiskdReadDone: dirno %d, fileno %08x len %d\n",
                   swap_dirn, swap_filen, len);
@@ -410,31 +257,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag)
 }
 
 void
-UFSFile::WriteDone (int fd, int errflag, size_t len, void *me)
-{
-    UFSFile *aFile = static_cast<UFSFile *>(me);
-    aFile->writeDone (fd, errflag, len);
-}
-
-void
-UFSFile::writeDone(int rvfd, int errflag, size_t len)
-{
-    assert (rvfd == fd);
-    debug(79, 3) ("storeUfsWriteDone: FD %d, len %ld\n",
-                  fd, (long int) len);
-
-    if (errflag) {
-        debug(79, 0) ("storeUfsWriteDone: got failure (%d)\n", errflag);
-        doClose();
-        ioRequestor->writeCompleted (DISK_ERROR,0);
-        return;
-    }
-
-    ioRequestor->writeCompleted(DISK_OK, len);
-}
-
-void
-UFSStoreState::writeCompleted(int errflag, size_t len)
+UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
 {
     debug(79, 3) ("storeUfsWriteDone: dirno %d, fileno %08X, len %ld\n",
                   swap_dirn, swap_filen, (long int) len);
@@ -589,11 +412,6 @@ UFSStrategy::open(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     assert (((UFSSwapDir *)SD)->IO == this);
     debug(79, 3) ("UFSStrategy::open: fileno %08X\n", e->swap_filen);
 
-    if (shedLoad()) {
-        openFailed();
-        return NULL;
-    }
-
     /* to consider: make createstate a private UFSStrategy call */
     StoreIOState::Pointer sio = createState (SD, e, callback, callback_data);
 
@@ -606,6 +424,9 @@ UFSStrategy::open(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     char *path = ((UFSSwapDir *)SD)->fullPath(e->swap_filen, NULL);
 
     DiskFile::Pointer myFile = newFile (path);
+
+    if (myFile.getRaw() == NULL)
+        return NULL;
 
     state->theFile = myFile;
 
@@ -628,12 +449,6 @@ UFSStrategy::create(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     sfileno filn = ((UFSSwapDir *)SD)->mapBitAllocate();
     debug(79, 3) ("UFSStrategy::create: fileno %08X\n", filn);
 
-    if (shedLoad()) {
-        openFailed();
-        ((UFSSwapDir *)SD)->mapBitReset (filn);
-        return NULL;
-    }
-
     /* Shouldn't we handle a 'bitmap full' error here? */
 
     StoreIOState::Pointer sio = createState (SD, e, callback, callback_data);
@@ -649,6 +464,11 @@ UFSStrategy::create(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     char *path = ((UFSSwapDir *)SD)->fullPath(filn, NULL);
 
     DiskFile::Pointer myFile = newFile (path);
+
+    if (myFile.getRaw() == NULL) {
+        ((UFSSwapDir *)SD)->mapBitReset (filn);
+        return NULL;
+    }
 
     state->theFile = myFile;
 
@@ -667,27 +487,27 @@ UFSStrategy::create(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     return sio;
 }
 
-UfsIOModule &
-UfsIOModule::GetInstance()
+int
+UFSStrategy::callback()
 {
-    if (!Instance)
-        Instance = new UfsIOModule;
-
-    return *Instance;
+    return io->callback();
 }
 
 void
-UfsIOModule::init()
-{}
-
-void
-UfsIOModule::shutdown()
-{}
-
-UFSStrategy *
-UfsIOModule::createSwapDirIOStrategy()
+UFSStrategy::init()
 {
-    return new InstanceToSingletonAdapter<UfsIO>(&UfsIO::Instance);
+    io->init();
 }
 
-UfsIOModule *UfsIOModule::Instance = NULL;
+void
+UFSStrategy::sync()
+{
+    io->sync();
+}
+
+void
+UFSStrategy::statfs(StoreEntry & sentry)const
+{
+    io->statfs(sentry);
+}
+

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.395 2004/12/20 14:52:27 robertc Exp $
+ * $Id: main.cc,v 1.396 2004/12/20 16:30:36 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -44,6 +44,7 @@
 #include "ACL.h"
 #include "htcp.h"
 #include "StoreFileSystem.h"
+#include "DiskIO/DiskIOModule.h"
 #include "comm.h"
 
 #if USE_WIN32_SERVICE
@@ -988,6 +989,9 @@ main(int argc, char **argv)
 
         storeFsInit();		/* required for config parsing */
 
+        /* May not be needed for parsing, have not audited for such */
+        DiskIOModule::SetupAllModules();
+
         /* Shouldn't be needed for config parsing, but have not audited for such */
         StoreFileSystem::SetupAllFs();
 
@@ -1505,6 +1509,7 @@ SquidShutdown(void *unused)
 
     storeDirSync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
+    DiskIOModule::FreeAllModules();
 #if PURIFY || XMALLOC_TRACE
 
     configFreeMemory();

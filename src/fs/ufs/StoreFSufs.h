@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFSufs.h,v 1.2 2004/11/07 23:29:51 hno Exp $
+ * $Id: StoreFSufs.h,v 1.3 2004/12/20 16:30:45 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -35,8 +35,9 @@
 #define SQUID_STOREFSUFS_H
 
 #include "squid.h"
+#include "ufscommon.h"
 
-#include "fs/ufs/IOModule.h"
+class DiskIOModule;
 
 template <class TheSwapDir>
 
@@ -45,7 +46,7 @@ class StoreFSufs : public StoreFileSystem
 
 public:
     static StoreFileSystem &GetInstance();
-    StoreFSufs(IOModule &, char const *label);
+    StoreFSufs(char const *DefaultModuleType, char const *label);
     virtual ~StoreFSufs() {}
 
     virtual char const *type() const;
@@ -57,12 +58,16 @@ public:
     StoreFSufs &operator=(StoreFSufs const &);
 
 protected:
-    IOModule &IO;
+    DiskIOModule *IO;
+    char const *moduleName;
     char const *label;
+
+private:
+    void checkIO();
 };
 
 template <class C>
-StoreFSufs<C>::StoreFSufs(IOModule &anIO, char const *aLabel) : IO(anIO), label(aLabel)
+StoreFSufs<C>::StoreFSufs(char const *defaultModuleName, char const *aLabel) : IO(NULL), moduleName(defaultModuleName), label(aLabel)
 {
     FsAdd(*this);
 }
@@ -78,8 +83,9 @@ template <class C>
 SwapDir *
 StoreFSufs<C>::createSwapDir()
 {
-    C *result = new C(type());
-    result->IO = IO.createSwapDirIOStrategy();
+    C *result = new C(type(), moduleName);
+    checkIO();
+    result->IO = new UFSStrategy(IO->createStrategy());
     return result;
 }
 
@@ -87,7 +93,6 @@ template <class C>
 void
 StoreFSufs<C>::done()
 {
-    IO.shutdown();
     initialised = false;
 }
 
@@ -97,7 +102,16 @@ StoreFSufs<C>::setup()
 {
     assert(!initialised);
     initialised = true;
-    IO.init();
+}
+
+template <class C>
+void
+StoreFSufs<C>::checkIO()
+{
+    if (IO)
+        return;
+
+    IO = DiskIOModule::Find(moduleName);
 }
 
 #endif /* SQUID_STOREFSUFS_H */

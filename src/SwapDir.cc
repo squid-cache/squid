@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.5 2003/08/31 21:20:08 robertc Exp $
+ * $Id: SwapDir.cc,v 1.6 2004/12/20 16:30:34 robertc Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -37,6 +37,7 @@
 #include "SwapDir.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
+#include "ConfigOption.h"
 
 SwapDir::~SwapDir()
 {
@@ -131,12 +132,12 @@ SwapDir::type() const
 /* NOT performance critical. Really. Don't bother optimising for speed
  * - RBC 20030718 
  */
-SwapDirOption *
+ConfigOption *
 SwapDir::getOptionTree() const
 {
-    SwapDirOptionVector *result = new SwapDirOptionVector;
-    result->options.push_back(new SwapDirOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::optionReadOnlyParse, &SwapDir::optionReadOnlyDump));
-    result->options.push_back(new SwapDirOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::optionMaxSizeParse, &SwapDir::optionMaxSizeDump));
+    ConfigOptionVector *result = new ConfigOptionVector;
+    result->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::optionReadOnlyParse, &SwapDir::optionReadOnlyDump));
+    result->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::optionMaxSizeParse, &SwapDir::optionMaxSizeDump));
     return result;
 }
 
@@ -146,7 +147,7 @@ SwapDir::parseOptions(int reconfiguring)
     unsigned int old_read_only = flags.read_only;
     char *name, *value;
 
-    SwapDirOption *newOption = getOptionTree();
+    ConfigOption *newOption = getOptionTree();
 
     while ((name = strtok(NULL, w_space)) != NULL) {
         value = strchr(name, '=');
@@ -180,7 +181,7 @@ SwapDir::parseOptions(int reconfiguring)
 void
 SwapDir::dumpOptions(StoreEntry * entry) const
 {
-    SwapDirOption *newOption = getOptionTree();
+    ConfigOption *newOption = getOptionTree();
 
     if (newOption)
         newOption->dump(entry);
@@ -237,35 +238,4 @@ SwapDir::optionMaxSizeDump(StoreEntry * e) const
 {
     if (max_objsize != -1)
         storeAppendPrintf(e, " max-size=%ld", (long int) max_objsize);
-}
-
-SwapDirOptionVector::~SwapDirOptionVector()
-{
-    while (options.size()) {
-        delete options.back();
-        options.pop_back();
-    }
-}
-
-bool
-SwapDirOptionVector::parse(char const *option, const char *value, int reconfiguring)
-{
-    Vector<SwapDirOption *>::iterator i = options.begin();
-
-    while (i != options.end()) {
-        if ((*i)->parse(option,value, reconfiguring))
-            return true;
-
-        ++i;
-    }
-
-    return false;
-}
-
-void
-SwapDirOptionVector::dump(StoreEntry * e) const
-{
-    for(Vector<SwapDirOption *>::const_iterator i = options.begin();
-            i != options.end(); ++i)
-        (*i)->dump(e);
 }

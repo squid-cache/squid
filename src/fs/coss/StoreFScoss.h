@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFScoss.h,v 1.1 2003/07/22 15:23:10 robertc Exp $
+ * $Id: StoreFScoss.h,v 1.2 2004/12/20 16:30:41 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,13 +34,44 @@
 #ifndef SQUID_STOREFSCOSS_H
 #define SQUID_STOREFSCOSS_H
 
-#include "squid.h"
+#include "StoreFileSystem.h"
+
+class CossStats
+{
+
+public:
+    void stat(StoreEntry * sentry);
+    int stripes;
+
+    struct
+    {
+        int alloc;
+        int realloc;
+        int collisions;
+    }
+
+    alloc;
+    int disk_overflows;
+    int stripe_overflows;
+    int open_mem_hits;
+    int open_mem_misses;
+
+    struct
+    {
+        int ops;
+        int success;
+        int fail;
+    }
+
+    open, create, close, unlink, read, write, stripe_write;
+};
 
 class StoreFScoss : public StoreFileSystem
 {
 
 public:
-    static StoreFileSystem &GetInstance();
+    static StoreFScoss &GetInstance();
+    static void Stats(StoreEntry * sentry);
     StoreFScoss();
     virtual ~StoreFScoss() {}
 
@@ -51,6 +82,8 @@ public:
     /* Not implemented */
     StoreFScoss (StoreFScoss const &);
     StoreFScoss &operator=(StoreFScoss const &);
+    void stat(StoreEntry * sentry);
+    CossStats stats;
 
 private:
     static StoreFScoss _instance;

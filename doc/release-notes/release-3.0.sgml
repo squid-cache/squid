@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.18 2004/12/20 14:52:11 robertc Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.19 2004/12/20 16:30:15 robertc Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.

@@ -16,11 +16,10 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.50 2004/12/20 14:52:30 robertc Exp $
+#  $Id: Makefile.in,v 1.51 2004/12/20 16:30:40 robertc Exp $
 #
 
-
-SOURCES = $(libaufs_a_SOURCES) $(libcoss_a_SOURCES) $(libdiskd_a_SOURCES) $(libnull_a_SOURCES) $(libufs_a_SOURCES) $(diskd_diskd_SOURCES)
+SOURCES = $(libcoss_a_SOURCES) $(libnull_a_SOURCES) $(libufs_a_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -44,8 +43,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-EXTRA_PROGRAMS = diskd/diskd$(EXEEXT)
-libexec_PROGRAMS = @STORE_PROGRAMS@
 subdir = src/fs
 SUBDIRS =
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -59,22 +56,12 @@ CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
-libaufs_a_AR = $(AR) $(ARFLAGS)
-libaufs_a_LIBADD =
-am__dirstamp = $(am__leading_dot)dirstamp
-am_libaufs_a_OBJECTS = aufs/aiops.$(OBJEXT) aufs/async_io.$(OBJEXT) \
-	aufs/store_io_aufs.$(OBJEXT)
-libaufs_a_OBJECTS = $(am_libaufs_a_OBJECTS)
 libcoss_a_AR = $(AR) $(ARFLAGS)
 libcoss_a_LIBADD =
+am__dirstamp = $(am__leading_dot)dirstamp
 am_libcoss_a_OBJECTS = coss/store_io_coss.$(OBJEXT) \
-	coss/store_dir_coss.$(OBJEXT) coss/async_io.$(OBJEXT)
+	coss/store_dir_coss.$(OBJEXT)
 libcoss_a_OBJECTS = $(am_libcoss_a_OBJECTS)
-libdiskd_a_AR = $(AR) $(ARFLAGS)
-libdiskd_a_LIBADD =
-am_libdiskd_a_OBJECTS = diskd/diskd.$(OBJEXT) \
-	diskd/store_io_diskd.$(OBJEXT)
-libdiskd_a_OBJECTS = $(am_libdiskd_a_OBJECTS)
 libnull_a_AR = $(AR) $(ARFLAGS)
 libnull_a_LIBADD =
 am_libnull_a_OBJECTS = null/store_null.$(OBJEXT)
@@ -82,14 +69,8 @@ libnull_a_OBJECTS = $(am_libnull_a_OBJECTS)
 libufs_a_AR = $(AR) $(ARFLAGS)
 libufs_a_LIBADD =
 am_libufs_a_OBJECTS = ufs/store_dir_ufs.$(OBJEXT) \
-	ufs/store_io_ufs.$(OBJEXT)
+	ufs/store_io_ufs.$(OBJEXT) ufs/ufscommon.$(OBJEXT)
 libufs_a_OBJECTS = $(am_libufs_a_OBJECTS)
-am__installdirs = "$(DESTDIR)$(libexecdir)"
-libexecPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(libexec_PROGRAMS)
-am_diskd_diskd_OBJECTS = diskd/diskd.$(OBJEXT)
-diskd_diskd_OBJECTS = $(am_diskd_diskd_OBJECTS)
-diskd_diskd_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
@@ -109,12 +90,10 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libaufs_a_SOURCES) $(libcoss_a_SOURCES) \
-	$(libdiskd_a_SOURCES) $(libnull_a_SOURCES) $(libufs_a_SOURCES) \
-	$(diskd_diskd_SOURCES)
-DIST_SOURCES = $(libaufs_a_SOURCES) $(libcoss_a_SOURCES) \
-	$(libdiskd_a_SOURCES) $(libnull_a_SOURCES) $(libufs_a_SOURCES) \
-	$(diskd_diskd_SOURCES)
+SOURCES = $(libcoss_a_SOURCES) $(libnull_a_SOURCES) \
+	$(libufs_a_SOURCES)
+DIST_SOURCES = $(libcoss_a_SOURCES) $(libnull_a_SOURCES) \
+	$(libufs_a_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -155,6 +134,9 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
+DISK_LIBS = @DISK_LIBS@
+DISK_LINKOBJS = @DISK_LINKOBJS@
+DISK_PROGRAMS = @DISK_PROGRAMS@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -242,9 +224,7 @@ SQUID_CXXFLAGS = @SQUID_CXXFLAGS@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_LINKOBJS = @STORE_LINKOBJS@
-STORE_MODULE_SUBDIRS = @STORE_MODULE_SUBDIRS@
 STORE_OBJS = @STORE_OBJS@
-STORE_PROGRAMS = @STORE_PROGRAMS@
 STRIP = @STRIP@
 TRUE = @TRUE@
 USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@
@@ -308,29 +288,23 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
-DIST_SUBDIRS = aufs coss diskd null ufs
-EXTRA_LIBRARIES = libaufs.a libcoss.a libdiskd.a libnull.a libufs.a
+DIST_SUBDIRS = coss null ufs
+EXTRA_LIBRARIES = libcoss.a libnull.a libufs.a
 noinst_LIBRARIES = @STORE_LIBS@
-libaufs_a_SOURCES = aufs/aiops.cc aufs/async_io.cc aufs/store_asyncufs.h \
-	aufs/store_io_aufs.cc
-
-libcoss_a_SOURCES = coss/store_coss.h   coss/store_io_coss.cc coss/store_dir_coss.cc \
-	coss/async_io.cc coss/async_io.h
-
-libdiskd_a_SOURCES = diskd/diskd.cc \
-	diskd/store_diskd.h \
-	diskd/store_io_diskd.cc
-
-diskd_diskd_SOURCES = diskd/diskd.cc diskd/dio.h
-diskd_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a @XTRA_LIBS@
-diskd_diskd_INCLUDES = -Idiskd -I$(top_builddir)/include \
-	-I$(top_srcdir)/include -I$(top_srcdir)/src/
+libcoss_a_SOURCES = \
+	coss/store_coss.h \
+	coss/store_io_coss.cc \
+	coss/store_dir_coss.cc \
+	coss/CossSwapDir.h
 
 libnull_a_SOURCES = null/store_null.cc null/store_null.h
-libufs_a_SOURCES = ufs/store_dir_ufs.cc ufs/store_io_ufs.cc ufs/store_ufs.h
+libufs_a_SOURCES = ufs/store_dir_ufs.cc ufs/store_io_ufs.cc \
+	ufs/ufscommon.cci \
+	ufs/ufscommon.cc \
+	ufs/ufscommon.h 
+
 EXTRA_DIST = \
 	coss/coss-notes.txt \
-	ufs/IOModule.h \
 	coss/StoreFScoss.h \
 	ufs/StoreFSufs.h \
 	null/StoreFSnull.h
@@ -374,22 +348,6 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-aufs/$(am__dirstamp):
-	@$(mkdir_p) aufs
-	@: > aufs/$(am__dirstamp)
-aufs/$(DEPDIR)/$(am__dirstamp):
-	@$(mkdir_p) aufs/$(DEPDIR)
-	@: > aufs/$(DEPDIR)/$(am__dirstamp)
-aufs/aiops.$(OBJEXT): aufs/$(am__dirstamp) \
-	aufs/$(DEPDIR)/$(am__dirstamp)
-aufs/async_io.$(OBJEXT): aufs/$(am__dirstamp) \
-	aufs/$(DEPDIR)/$(am__dirstamp)
-aufs/store_io_aufs.$(OBJEXT): aufs/$(am__dirstamp) \
-	aufs/$(DEPDIR)/$(am__dirstamp)
-libaufs.a: $(libaufs_a_OBJECTS) $(libaufs_a_DEPENDENCIES) 
-	-rm -f libaufs.a
-	$(libaufs_a_AR) libaufs.a $(libaufs_a_OBJECTS) $(libaufs_a_LIBADD)
-	$(RANLIB) libaufs.a
 coss/$(am__dirstamp):
 	@$(mkdir_p) coss
 	@: > coss/$(am__dirstamp)
@@ -400,26 +358,10 @@ coss/store_io_coss.$(OBJEXT): coss/$(am__dirstamp) \
 	coss/$(DEPDIR)/$(am__dirstamp)
 coss/store_dir_coss.$(OBJEXT): coss/$(am__dirstamp) \
 	coss/$(DEPDIR)/$(am__dirstamp)
-coss/async_io.$(OBJEXT): coss/$(am__dirstamp) \
-	coss/$(DEPDIR)/$(am__dirstamp)
 libcoss.a: $(libcoss_a_OBJECTS) $(libcoss_a_DEPENDENCIES) 
 	-rm -f libcoss.a
 	$(libcoss_a_AR) libcoss.a $(libcoss_a_OBJECTS) $(libcoss_a_LIBADD)
 	$(RANLIB) libcoss.a
-diskd/$(am__dirstamp):
-	@$(mkdir_p) diskd
-	@: > diskd/$(am__dirstamp)
-diskd/$(DEPDIR)/$(am__dirstamp):
-	@$(mkdir_p) diskd/$(DEPDIR)
-	@: > diskd/$(DEPDIR)/$(am__dirstamp)
-diskd/diskd.$(OBJEXT): diskd/$(am__dirstamp) \
-	diskd/$(DEPDIR)/$(am__dirstamp)
-diskd/store_io_diskd.$(OBJEXT): diskd/$(am__dirstamp) \
-	diskd/$(DEPDIR)/$(am__dirstamp)
-libdiskd.a: $(libdiskd_a_OBJECTS) $(libdiskd_a_DEPENDENCIES) 
-	-rm -f libdiskd.a
-	$(libdiskd_a_AR) libdiskd.a $(libdiskd_a_OBJECTS) $(libdiskd_a_LIBADD)
-	$(RANLIB) libdiskd.a
 null/$(am__dirstamp):
 	@$(mkdir_p) null
 	@: > null/$(am__dirstamp)
@@ -442,70 +384,31 @@ ufs/store_dir_ufs.$(OBJEXT): ufs/$(am__dirstamp) \
 	ufs/$(DEPDIR)/$(am__dirstamp)
 ufs/store_io_ufs.$(OBJEXT): ufs/$(am__dirstamp) \
 	ufs/$(DEPDIR)/$(am__dirstamp)
+ufs/ufscommon.$(OBJEXT): ufs/$(am__dirstamp) \
+	ufs/$(DEPDIR)/$(am__dirstamp)
 libufs.a: $(libufs_a_OBJECTS) $(libufs_a_DEPENDENCIES) 
 	-rm -f libufs.a
 	$(libufs_a_AR) libufs.a $(libufs_a_OBJECTS) $(libufs_a_LIBADD)
 	$(RANLIB) libufs.a
-install-libexecPROGRAMS: $(libexec_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(libexecdir)" || $(mkdir_p) "$(DESTDIR)$(libexecdir)"
-	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
-	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  if test -f $$p \
-	     || test -f $$p1 \
-	  ; then \
-	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(libexecPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(libexecdir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(libexecPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(libexecdir)/$$f" || exit 1; \
-	  else :; fi; \
-	done
-
-uninstall-libexecPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f '$(DESTDIR)$(libexecdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(libexecdir)/$$f"; \
-	done
-
-clean-libexecPROGRAMS:
-	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
-	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  echo " rm -f $$p $$f"; \
-	  rm -f $$p $$f ; \
-	done
-diskd/diskd$(EXEEXT): $(diskd_diskd_OBJECTS) $(diskd_diskd_DEPENDENCIES) diskd/$(am__dirstamp)
-	@rm -f diskd/diskd$(EXEEXT)
-	$(CXXLINK) $(diskd_diskd_LDFLAGS) $(diskd_diskd_OBJECTS) $(diskd_diskd_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f aufs/aiops.$(OBJEXT)
-	-rm -f aufs/async_io.$(OBJEXT)
-	-rm -f aufs/store_io_aufs.$(OBJEXT)
-	-rm -f coss/async_io.$(OBJEXT)
 	-rm -f coss/store_dir_coss.$(OBJEXT)
 	-rm -f coss/store_io_coss.$(OBJEXT)
-	-rm -f diskd/diskd.$(OBJEXT)
-	-rm -f diskd/store_io_diskd.$(OBJEXT)
 	-rm -f null/store_null.$(OBJEXT)
 	-rm -f ufs/store_dir_ufs.$(OBJEXT)
 	-rm -f ufs/store_io_ufs.$(OBJEXT)
+	-rm -f ufs/ufscommon.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@aufs/$(DEPDIR)/aiops.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@aufs/$(DEPDIR)/async_io.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@aufs/$(DEPDIR)/store_io_aufs.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/async_io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/store_dir_coss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/store_io_coss.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@diskd/$(DEPDIR)/diskd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@diskd/$(DEPDIR)/store_io_diskd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@null/$(DEPDIR)/store_null.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ufs/$(DEPDIR)/store_dir_ufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ufs/$(DEPDIR)/store_io_ufs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ufs/$(DEPDIR)/ufscommon.Po@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
@@ -706,12 +609,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LIBRARIES) $(PROGRAMS)
+all-am: Makefile $(LIBRARIES)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libexecdir)"; do \
-	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
-	done
 install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
@@ -732,12 +632,8 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-rm -f aufs/$(DEPDIR)/$(am__dirstamp)
-	-rm -f aufs/$(am__dirstamp)
 	-rm -f coss/$(DEPDIR)/$(am__dirstamp)
 	-rm -f coss/$(am__dirstamp)
-	-rm -f diskd/$(DEPDIR)/$(am__dirstamp)
-	-rm -f diskd/$(am__dirstamp)
 	-rm -f null/$(DEPDIR)/$(am__dirstamp)
 	-rm -f null/$(am__dirstamp)
 	-rm -f ufs/$(DEPDIR)/$(am__dirstamp)
@@ -748,11 +644,11 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libexecPROGRAMS clean-libtool \
-	clean-noinstLIBRARIES mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
+	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf aufs/$(DEPDIR) coss/$(DEPDIR) diskd/$(DEPDIR) null/$(DEPDIR) ufs/$(DEPDIR)
+	-rm -rf coss/$(DEPDIR) null/$(DEPDIR) ufs/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -769,7 +665,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am: install-libexecPROGRAMS
+install-exec-am:
 
 install-info: install-info-recursive
 
@@ -778,7 +674,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf aufs/$(DEPDIR) coss/$(DEPDIR) diskd/$(DEPDIR) null/$(DEPDIR) ufs/$(DEPDIR)
+	-rm -rf coss/$(DEPDIR) null/$(DEPDIR) ufs/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -795,33 +691,27 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS
+uninstall-am: uninstall-info-am
 
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
-	clean clean-generic clean-libexecPROGRAMS clean-libtool \
-	clean-noinstLIBRARIES clean-recursive ctags ctags-recursive \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-recursive distclean-tags distdir \
-	dvi dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-libexecPROGRAMS \
-	install-man install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
+	clean clean-generic clean-libtool clean-noinstLIBRARIES \
+	clean-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-recursive distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic maintainer-clean-recursive \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am uninstall-info-am \
-	uninstall-libexecPROGRAMS
+	tags tags-recursive uninstall uninstall-am uninstall-info-am
 
 
-aufs/all: libaufs.a
-aufs/clean: clean
 coss/all: libcoss.a
 coss/clean: clean
-diskd/all: libdiskd.a
-diskd/clean: clean
 null/all: libnull.a
 null/clean: clean
 ufs/all: libufs.a

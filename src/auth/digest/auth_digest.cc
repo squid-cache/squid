@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.37 2004/12/20 15:39:56 robertc Exp $
+ * $Id: auth_digest.cc,v 1.38 2004/12/20 16:30:40 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins

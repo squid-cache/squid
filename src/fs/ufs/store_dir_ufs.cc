@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.66 2004/12/20 14:52:32 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.67 2004/12/20 16:30:45 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -36,9 +36,11 @@
 #include "squid.h"
 #include "Store.h"
 #include "fde.h"
-#include "store_ufs.h"
 #include "ufscommon.h"
 #include "StoreSwapLogData.h"
+#include "ConfigOption.h"
+#include "DiskIO/DiskIOStrategy.h"
+#include "DiskIO/DiskIOModule.h"
 
 #include "SwapDir.h"
 int UFSSwapDir::NumberOfUFSDirs = 0;
@@ -130,22 +132,70 @@ UFSSwapDir::parse (int anIndex, char *aPath)
     parseOptions(0);
 }
 
-SwapDirOption *
+void
+UFSSwapDir::changeIO(DiskIOModule *module)
+{
+    DiskIOStrategy *anIO = module->createStrategy();
+    safe_free(ioType);
+    ioType = xstrdup(module->type());
+
+    delete IO->io;
+    IO->io = anIO;
+    /* Change the IO Options */
+
+    if (currentIOOptions->options.size() > 2)
+        delete currentIOOptions->options.pop_back();
+
+    /* TODO: factor out these 4 lines */
+    ConfigOption *ioOptions = IO->io->getOptionTree();
+
+    if (ioOptions)
+        currentIOOptions->options.push_back(ioOptions);
+}
+
+bool
+UFSSwapDir::optionIOParse(char const *option, const char *value, int reconfiguring)
+{
+    if (strcmp(option, "IOEngine") != 0)
+        return false;
+
+    if (reconfiguring)
+        /* silently ignore this */
+        return true;
+
+    if (!value)
+        self_destruct();
+
+    DiskIOModule *module = DiskIOModule::Find(value);
+
+    if (!module)
+        self_destruct();
+
+    changeIO(module);
+
+    return true;
+}
+
+void
+UFSSwapDir::optionIODump(StoreEntry * e) const
+{
+    storeAppendPrintf(e, " IOEngine=%s", ioType);
+}
+
+ConfigOption *
 UFSSwapDir::getOptionTree() const
 {
-    SwapDirOption *parentResult = SwapDir::getOptionTree();
-    SwapDirOption *ioOptions = IO->getOptionTree();
+    ConfigOption *parentResult = SwapDir::getOptionTree();
 
-    if (!ioOptions)
-        return parentResult;
+    currentIOOptions->options.push_back(parentResult);
+    currentIOOptions->options.push_back(new ConfigOptionAdapter<UFSSwapDir>(*const_cast<UFSSwapDir *>(this), &UFSSwapDir::optionIOParse, &UFSSwapDir::optionIODump));
 
-    SwapDirOptionVector *result = new SwapDirOptionVector();
+    ConfigOption *ioOptions  = IO->io->getOptionTree();
 
-    result->options.push_back(parentResult);
+    if (ioOptions)
+        currentIOOptions->options.push_back(ioOptions);
 
-    result->options.push_back(ioOptions);
-
-    return result;
+    return currentIOOptions;
 }
 
 /*
@@ -154,6 +204,8 @@ UFSSwapDir::getOptionTree() const
 void
 UFSSwapDir::init()
 {
+    /* Parsing is finished - force to NULL, don't delete */
+    currentIOOptions = NULL;
     static int started_clean_event = 0;
     static const char *errmsg =
         "\tFailed to verify one of the swap directories, Check cache.log\n"
@@ -185,7 +237,7 @@ UFSSwapDir::newFileSystem()
     createSwapSubDirs();
 }
 
-UFSSwapDir::UFSSwapDir(char const *aType) : SwapDir(aType), IO(NULL), map(NULL), suggest(0), swaplog_fd (-1) {}
+UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(NULL), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType)) {}
 
 UFSSwapDir::~UFSSwapDir()
 {
@@ -200,6 +252,8 @@ UFSSwapDir::~UFSSwapDir()
         delete IO;
 
     IO = NULL;
+
+    safe_free(ioType);
 }
 
 void

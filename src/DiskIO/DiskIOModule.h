@@ -1,6 +1,6 @@
 
 /*
- * $Id: IOModule.h,v 1.1 2003/07/22 15:23:14 robertc Exp $
+ * $Id: DiskIOModule.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -31,23 +31,44 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_IOMODULE_H
-#define SQUID_IOMODULE_H
+#ifndef SQUID_DISKIOMODULE_H
+#define SQUID_DISKIOMODULE_H
 
 #include "squid.h"
+#include "Array.h"
 
-class UFSStrategy;
+class DiskIOStrategy;
 
-class IOModule
+class DiskIOModule
 {
 
 public:
-    virtual ~IOModule(){}
+    static void SetupAllModules();
+    static void ModuleAdd(DiskIOModule &);
+    static void FreeAllModules();
+    static DiskIOModule *Find(char const *type);
+    static Vector<DiskIOModule*> const &Modules();
+    typedef Vector<DiskIOModule*>::iterator iterator;
+    typedef Vector<DiskIOModule*>::const_iterator const_iterator;
+    DiskIOModule();
+    virtual ~DiskIOModule(){}
 
     virtual void init() = 0;
     virtual void shutdown() = 0;
-    virtual UFSStrategy *createSwapDirIOStrategy() = 0;
+    virtual DiskIOStrategy *createStrategy() = 0;
+
+    virtual char const *type () const = 0;
+    // Not implemented
+    DiskIOModule(DiskIOModule const &);
+    DiskIOModule &operator=(DiskIOModule const&);
+
+protected:
+    //bool initialised;
+
+private:
+    static Vector<DiskIOModule*> &GetModules();
+    static Vector<DiskIOModule*> *_Modules;
 };
 
 
-#endif /* SQUID_IOMODULE_H */
+#endif /* SQUID_DISKIOMODULE_H */

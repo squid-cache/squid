@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.19 2004/12/20 14:52:28 robertc Exp $
+ * $Id: ssl_support.cc,v 1.20 2004/12/20 16:30:36 robertc Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFSaufs.cc,v 1.1 2003/07/22 15:23:10 robertc Exp $
+ * $Id: StoreFSaufs.cc,v 1.2 2004/12/20 16:30:40 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -37,6 +37,6 @@
 #include "squid.h"
 #include "StoreFileSystem.h"
 #include "fs/ufs/StoreFSufs.h"
-#include "fs/aufs/store_asyncufs.h"
+#include "DiskIO/DiskIOModule.h"
 
-static StoreFSufs<UFSSwapDir> AufsInstance(AufsIOModule::GetInstance(), "aufs");
+static StoreFSufs<UFSSwapDir> AufsInstance("DiskThreads", "aufs");

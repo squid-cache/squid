@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.497 2004/12/20 14:52:28 robertc Exp $
+ * $Id: structs.h,v 1.498 2004/12/20 16:30:36 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1359,8 +1359,12 @@ struct _iostats
 
 /* Removal policies */
 
-struct _RemovalPolicyNode
+class RemovalPolicyNode
 {
+
+public:
+    RemovalPolicyNode() : data(NULL) {}
+
     void *data;
 };
 

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: StoreFSufs.cc,v 1.1 2003/07/22 15:23:14 robertc Exp $
+ * $Id: StoreFSufs.cc,v 1.2 2004/12/20 16:30:45 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -38,7 +38,7 @@
 
 #include "StoreFileSystem.h"
 #include "fs/ufs/StoreFSufs.h"
-#include "fs/ufs/store_ufs.h"
+#include "DiskIO/DiskIOModule.h"
 
-static StoreFSufs<UFSSwapDir> UfsInstance(UfsIOModule::GetInstance(), "ufs");
+static StoreFSufs<UFSSwapDir> UfsInstance("Blocking", "ufs");
 

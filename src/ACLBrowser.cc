@@ -1,5 +1,5 @@
 /*
- * $Id: ACLBrowser.cc,v 1.4 2004/12/20 14:52:24 robertc Exp $
+ * $Id: ACLBrowser.cc,v 1.5 2004/12/20 16:30:32 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

@@ -1,8 +1,6 @@
+
 /*
- * $Id: ufscommon.cci,v 1.2 2003/01/23 20:59:10 robertc Exp $
- *
- * DEBUG: section 47    Store Directory Routines
- * AUTHOR: Duane Wessels
+ * $Id: DiskIOBlocking.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,7 +28,5 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003 Robert Collins <robertc@squid-cache.org>
  */
-
-RebuildState::RebuildState () : e(NULL){}
-

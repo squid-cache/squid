@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.73 2004/12/20 14:52:27 robertc Exp $
+ * $Id: comm_select.cc,v 1.74 2004/12/20 16:30:35 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
