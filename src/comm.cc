@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.37 1996/07/11 17:42:38 wessels Exp $
+ * $Id: comm.cc,v 1.38 1996/07/15 23:12:06 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -455,21 +455,17 @@ int comm_close(fd)
 {
     FD_ENTRY *conn = NULL;
     struct close_handler *ch = NULL;
-
+    debug(5, 5, "comm_close: FD %d\n", fd);
     if (fd < 0)
 	return -1;
-
     if (fdstatGetType(fd) == FD_FILE) {
 	debug(5, 0, "FD %d: Someone called comm_close() on a File\n", fd);
 	fatal_dump(NULL);
     }
     conn = &fd_table[fd];
-
     safe_free(conn->rstate);
     safe_free(conn->wstate);
-
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
-    debug(5, 5, "comm_close: FD %d\n", fd);
     /* update fdstat */
     fdstat_close(fd);
     /* Call close handlers */
