@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.196 1998/07/29 03:57:39 wessels Exp $
+ * $Id: ipcache.cc,v 1.197 1998/07/31 20:52:57 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -546,7 +546,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     char *buf = NULL;
     assert(EBIT_TEST(dns->flags, HELPER_ALIVE));
     if (!ipcacheHasPending(i)) {
-	debug(14, 0) ("Skipping lookup of '%s' because client(s) disappeared.\n",
+	debug(14, 3) ("Skipping lookup of '%s' because client(s) disappeared.\n",
 	    i->name);
 	i->status = IP_NEGATIVE_CACHED;
 	ipcache_release(i);
