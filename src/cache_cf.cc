@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.60 1996/07/15 23:11:54 wessels Exp $
+ * $Id: cache_cf.cc,v 1.61 1996/07/18 20:25:37 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -183,6 +183,7 @@ static struct {
 	struct in_addr tcp_outgoing;
 	struct in_addr udp_incoming;
 	struct in_addr udp_outgoing;
+	struct in_addr client_netmask;
     } Addrs;
     wordlist *cache_dirs;
     wordlist *http_stoplist;
@@ -266,6 +267,7 @@ static struct {
 #define DefaultTcpOutgoingAddr	INADDR_NONE
 #define DefaultUdpIncomingAddr	INADDR_ANY
 #define DefaultUdpOutgoingAddr	INADDR_NONE
+#define DefaultClientNetmask	0xFFFFFFFF;
 
 ip_acl *local_ip_list = NULL;
 ip_acl *firewall_ip_list = NULL;
@@ -787,7 +789,7 @@ static void parseDirLine()
 static void parseHttpdAccelLine()
 {
     char *token;
-    static char buf[BUFSIZ];
+    LOCAL_ARRAY(char, buf, BUFSIZ);
     int i;
 
     token = strtok(NULL, w_space);
@@ -1008,7 +1010,7 @@ static void parseAddressLine(addr)
 static void parseLocalDomainFile(fname)
      char *fname;
 {
-    static char tmp_line[BUFSIZ];
+    LOCAL_ARRAY(char, tmp_line, BUFSIZ);
     FILE *fp = NULL;
     char *t = NULL;
 
@@ -1167,7 +1169,7 @@ int parseConfigFile(file_name)
 {
     FILE *fp = NULL;
     char *token = NULL;
-    static char tmp_line[BUFSIZ];
+    LOCAL_ARRAY(char, tmp_line, BUFSIZ);
 
     configFreeMemory();
     configSetFactoryDefaults();
@@ -1418,6 +1420,9 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "udp_outgoing_address"))
 	    parseAddressLine(&Config.Addrs.udp_outgoing);
+
+	else if (!strcmp(token, "client_netmask"))
+	    parseAddressLine(&Config.Addrs.client_netmask);
 
 	else if (!strcmp(token, "bind_address"))
 	    parseAddressLine(&Config.Addrs.tcp_incoming);
@@ -1796,6 +1801,10 @@ struct in_addr getUdpOutgoingAddr()
 {
     return Config.Addrs.udp_outgoing;
 }
+struct in_addr getClientNetmask()
+{
+    return Config.Addrs.client_netmask;
+}
 
 u_short setHttpPortNum(port)
      u_short port;
@@ -1920,6 +1929,7 @@ static void configSetFactoryDefaults()
     Config.Addrs.tcp_incoming.s_addr = DefaultTcpIncomingAddr;
     Config.Addrs.udp_outgoing.s_addr = DefaultUdpOutgoingAddr;
     Config.Addrs.udp_incoming.s_addr = DefaultUdpIncomingAddr;
+    Config.Addrs.client_netmask.s_addr = DefaultClientNetmask;
 }
 
 static void configDoConfigure()
