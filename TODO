@@ -16,7 +16,6 @@ Our Todo List
 		- Hash function load balancing
 (2)     Use storeBuffer/Flush where needed, consider supporting nested calls
 
-(3) **	request-range (AR)
 (3)	hit metering
 (3)	ETag support (makes metadata bigger--ack!)
 (3)	Efficient public peer access control *without ACLs*
@@ -38,7 +37,6 @@ Our Todo List
 
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
 	stoplist_pattern, refresh_pattern, ...  (DW)
-(4) **  Double check that MemBuf.size is used correctly everywhere (AR)
 (4)	Refresh based on content types.  This means we'll need an enum of
 	known content types added to StoreEntry.  Unknown types will lose.
 (4)	Write binary headers as metadata?
@@ -55,6 +53,7 @@ Our Todo List
 (5)	return "ERR_TOO_LARGE" messages for replies with
 	content-lengths larger than some limit.
 (5)	Bind HTTP/ICP sockets to multiple interfaces
+(5) 	multirange requests with out-of-order ranges (AR)
 
 DONE:
 + s/sprintf/snprintf/g
@@ -103,3 +102,5 @@ DONE:
 (3)     HTTP Header todo list (AR)
 (5)     replace "for" loops in md5.c with memcpy and memset
 (3) **  shrink-able memory pools (AR)
+(3) **	request-range (AR)
+(4) **  Double check that MemBuf.size is used correctly everywhere (AR)
