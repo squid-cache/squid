@@ -405,7 +405,7 @@ icpConnectionShutdown(void)
     if (theInIcpConnection < 0)
 	return;
     if (theInIcpConnection != theOutIcpConnection) {
-        debug(12, 1) ("FD %d Closing ICP connection\n", theInIcpConnection);
+	debug(12, 1) ("FD %d Closing ICP connection\n", theInIcpConnection);
 	comm_close(theInIcpConnection);
     }
     /*
@@ -430,7 +430,7 @@ icpConnectionClose(void)
 {
     icpConnectionShutdown();
     if (theOutIcpConnection > -1) {
-        debug(12, 1) ("FD %d Closing ICP connection\n", theOutIcpConnection);
+	debug(12, 1) ("FD %d Closing ICP connection\n", theOutIcpConnection);
 	comm_close(theOutIcpConnection);
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.138 1998/02/08 17:43:03 wessels Exp $
+ * $Id: acl.cc,v 1.139 1998/02/11 03:14:36 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -68,7 +68,7 @@ static wordlist *aclDumpWordList(wordlist * data);
 static wordlist *aclDumpProtoList(void *data);
 static wordlist *aclDumpMethodList(void *data);
 static wordlist *aclDumpProxyAuth(void *data);
-static wordlist * aclDumpUnimplemented(void);
+static wordlist *aclDumpUnimplemented(void);
 
 #if USE_ARP_ACL
 static int checkARP(u_long ip, char *eth);
