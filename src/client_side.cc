@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.313 1998/05/22 23:44:00 wessels Exp $
+ * $Id: client_side.cc,v 1.314 1998/05/26 16:34:19 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -763,11 +763,9 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	String s = httpHeaderGetList(req_hdr, HDR_VIA);
 	/* ThisCache cannot be a member of Via header, "1.0 ThisCache" can */
 	if (strListIsSubstr(&s, ThisCache, ',')) {
-	    if (!http->flags.accel) {
-		debug(33, 1) ("WARNING: Forwarding loop detected for '%s'\n",
-		    http->uri);
-		debug(33, 1) ("--> %s\n", strBuf(s));
-	    }
+	    debug(33, 1) ("WARNING: Forwarding loop detected for '%s'\n",
+		http->uri);
+	    debug(33, 1) ("--> %s\n", strBuf(s));
 	    EBIT_SET(request->flags, REQ_LOOPDETECT);
 	}
 #if FORW_VIA_DB
@@ -1627,6 +1625,18 @@ clientProcessMiss(clientHttpRequest * http)
     }
     if (clientOnlyIfCached(http)) {
 	clientProcessOnlyIfCachedMiss(http);
+	return;
+    }
+    /*
+     * Deny loops when running in accelerator/transproxy mode.
+     */
+    if (http->flags.accel && EBIT_TEST(r->flags, REQ_LOOPDETECT)) {
+	http->al.http.code = HTTP_FORBIDDEN;
+	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
+	err->request = requestLink(r);
+	err->src_addr = http->conn->peer.sin_addr;
+	http->entry = clientCreateStoreEntry(http, r->method, 0);
+	errorAppendEntry(http->entry, err);
 	return;
     }
     /*
