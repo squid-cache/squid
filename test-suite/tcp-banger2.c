@@ -124,7 +124,7 @@ fd_close(int fd)
     FD[fd].data = NULL;
     nfds--;
     if (fd == maxfd) {
-	while (FD[fd].cb == NULL)
+	while (fd > 0 && FD[fd].cb == NULL)
 	    fd--;
 	maxfd = fd;
     }
@@ -292,6 +292,7 @@ main(argc, argv)
 	    FD_SET(i, &R);
 	}
 	if (select(maxfd + 1, &R, NULL, NULL, &to) < 0) {
+    	    printf("maxfd=%d\n", maxfd);
 	    if (errno != EINTR)
 		perror("select");
 	    continue;
