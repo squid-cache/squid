@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.447 2003/07/22 15:23:01 robertc Exp $
+ * $Id: cache_cf.cc,v 1.448 2003/08/13 16:05:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -92,7 +92,7 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
-#ifdef HTTP_VIOLATIONS
+#if HTTP_VIOLATIONS
 static void dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[]);
 static void parse_http_header_access(header_mangler header[]);
 static void free_http_header_access(header_mangler header[]);
@@ -1055,7 +1055,7 @@ parse_delay_pool_access(DelayConfig * cfg)
 
 #endif
 
-#ifdef HTTP_VIOLATIONS
+#if HTTP_VIOLATIONS
 static void
 dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
 {
