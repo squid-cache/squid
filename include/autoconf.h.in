@@ -112,6 +112,9 @@
 /* Define if you have the mktime function.  */
 #undef HAVE_MKTIME
 
+/* Define if you have the pw_encrypt function.  */
+#undef HAVE_PW_ENCRYPT
+
 /* Define if you have the regcomp function.  */
 #undef HAVE_REGCOMP
 
