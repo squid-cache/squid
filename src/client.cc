@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.106 2003/04/24 06:35:08 hno Exp $
+ * $Id: client.cc,v 1.107 2004/04/03 15:10:56 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -334,7 +334,7 @@ main(int argc, char *argv[])
         }
 
         snprintf(buf, BUFSIZ, "%s:%s", user, password);
-        snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %s\n", base64_encode(buf));
+        snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %s\r\n", base64_encode(buf));
         strcat(msg, buf);
     }
 
@@ -354,7 +354,7 @@ main(int argc, char *argv[])
         }
 
         snprintf(buf, BUFSIZ, "%s:%s", user, password);
-        snprintf(buf, BUFSIZ, "Authorization: Basic %s\n", base64_encode(buf));
+        snprintf(buf, BUFSIZ, "Authorization: Basic %s\r\n", base64_encode(buf));
         strcat(msg, buf);
     }
 
