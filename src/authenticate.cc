@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.25 2001/08/03 15:13:03 adrian Exp $
+ * $Id: authenticate.cc,v 1.26 2001/08/07 12:35:26 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -247,19 +247,23 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
     auth_user_ip_t *ipdata, *tempnode;
     auth_user_t *auth_user;
     char *ip1;
+    int found = 0;
     CBDATA_INIT_TYPE(auth_user_ip_t);
     if (!auth_user_request->auth_user)
 	return;
     auth_user = auth_user_request->auth_user;
     ipdata = (auth_user_ip_t *) auth_user->ip_list.head;
-    /* we walk the entire list to prevent the first item in the list preventing
-     * old entries being flushed and locking a user out after a timeout+reconfigure
+    /*
+     * we walk the entire list to prevent the first item in the list
+     * preventing old entries being flushed and locking a user out after
+     * a timeout+reconfigure
      */
     while (ipdata) {
 	tempnode = (auth_user_ip_t *) ipdata->node.next;
 	/* walk the ip list */
 	if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
 	    /* This ip has alreadu been seen. */
+	    found = 1;
 	    /* update IP ttl */
 	    ipdata->ip_expiretime = squid_curtime;
 	} else if (ipdata->ip_expiretime + Config.authenticateIpTTL < squid_curtime) {
@@ -272,6 +276,9 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
 	}
 	ipdata = tempnode;
     }
+
+    if (!found)
+	return;
 
     /* This ip is not in the seen list */
     ipdata = cbdataAlloc(auth_user_ip_t);
