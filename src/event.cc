@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.17 1998/05/15 15:16:20 wessels Exp $
+ * $Id: event.cc,v 1.18 1998/05/26 17:37:23 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -49,6 +49,7 @@ eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
 {
     struct ev_entry *event = xcalloc(1, sizeof(struct ev_entry));
     struct ev_entry **E;
+    assert(when > 0.0);
     event->func = func;
     event->arg = arg;
     event->name = name;
