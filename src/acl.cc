@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.263 2001/10/17 12:41:49 hno Exp $
+ * $Id: acl.cc,v 1.264 2001/10/17 19:43:39 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -348,10 +348,12 @@ aclParseProtoList(void *curlist)
     intlist **Tail;
     intlist *q = NULL;
     char *t = NULL;
+    protocol_t protocol;
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
+	protocol = urlParseProtocol(t);
 	q = memAllocate(MEM_INTLIST);
-	q->i = (int) urlParseProtocol(t);
+	q->i = (int) protocol;
 	*(Tail) = q;
 	Tail = &q->next;
     }

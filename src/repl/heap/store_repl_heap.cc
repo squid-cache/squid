@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.7 2001/03/14 22:28:44 wessels Exp $
+ * $Id: store_repl_heap.cc,v 1.8 2001/10/17 19:43:41 hno Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -255,7 +255,7 @@ createRemovalPolicy_heap(wordlist * args)
 {
     RemovalPolicy *policy;
     HeapPolicyData *heap_data;
-    char *keytype;
+    const char *keytype;
     /* Allocate the needed structures */
     policy = cbdataAlloc(RemovalPolicy);
     heap_data = xcalloc(1, sizeof(*heap_data));

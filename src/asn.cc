@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.73 2001/10/17 12:41:49 hno Exp $
+ * $Id: asn.cc,v 1.74 2001/10/17 19:43:39 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -148,11 +148,12 @@ asnAclInitialize(acl * acls)
 
 /* initialize the radix tree structure */
 
+extern int max_keylen;		/* yuck.. this is in lib/radix.c */
+
 CBDATA_TYPE(ASState);
 void
 asnInit(void)
 {
-    extern int max_keylen;
     static int inited = 0;
     max_keylen = 40;
     CBDATA_INIT_TYPE(ASState);

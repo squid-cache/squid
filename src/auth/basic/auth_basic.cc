@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.12 2001/10/17 12:41:50 hno Exp $
+ * $Id: auth_basic.cc,v 1.13 2001/10/17 19:43:40 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -361,7 +361,7 @@ authenticateBasicUsername(auth_user_t * auth_user)
 }
 
 static basic_data *
-authBasicDataNew()
+authBasicDataNew(void)
 {
     basic_data *temp;
     temp = memPoolAlloc(basic_data_pool);
