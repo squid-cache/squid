@@ -9,11 +9,7 @@ TODO LIST before official squid-1.1:
 		  and a single max object size?
 		- Don't do TTL calculation whn object is fetched.  Instead
 		  do refresh time calculation when object is requested.
-		  Maybe we can lose StoreEntry->expires?
 		- lose 'max_expire_age' business?
-	- Fix up 'cache_mem' and accounted memory.  Divide accounted
-	  memory into different buckets and have separate config value
-	  for each?
 	- Write Perl script to convert squid-1.0 store to squid-1.1
 	  structure.
 
@@ -21,6 +17,16 @@ Changes to squid-1.1.beta6 ():
 
 	- Fixed lots of function prototypes, etc (Ed Knowles).
 	- Added multicast patch (Martin Hamilton).
+	- Replaced 'struct hostent' with 'struct ipcache_addrs' in IP cache.
+	- Added ipcacheCycleAddrs() to round-robin IP addresses.
+	- Added ipcacheRemoveBadAddr() to remove addresses from failed connect()'s.
+	- Changed comm_connect() to comm_nbconnect() and removed other nonblocking
+	  connection handling code from other modules.
+	- Improved cache memory usage.  Now cache_mem specifies the size
+	  of the in-memory data pool.  Hot objects use whatever space is
+	  not used by in-transit objects.
+	- Removed 'max_hot_object_size' config option.
+	- Fixed virtual-host coredump bug (Aaron Hopkins).
 
 Changes to squid-1.1.beta5 (October 7, 1996):
 
