@@ -1,5 +1,5 @@
 /*
- * $Id: snprintf.c,v 1.15 1998/09/23 17:14:23 wessels Exp $
+ * $Id: snprintf.c,v 1.16 1998/09/29 16:47:53 wessels Exp $
  */
 
 /* ====================================================================
@@ -894,12 +894,12 @@ strx_printv(int *ccp, char *buf, size_t len, const char *format,
     buffy od;
     int cc;
 
+#if OLD_CODE
     /*
      * First initialize the descriptor
      * Notice that if no length is given, we initialize buf_end to the
      * highest possible address.
      */
-#if OLD_CODE
     od.buf_end = len ? &buf[len] : (char *) ~0;
 #else
     od.buf_end = &buf[len];
@@ -918,31 +918,30 @@ strx_printv(int *ccp, char *buf, size_t len, const char *format,
 #endif
 
 #if !HAVE_SNPRINTF
+/*
+ * if len == 0, silently return
+ */
 int
 snprintf(char *buf, size_t len, const char *format,...)
 {
-    int cc;
+    int cc = 0;
     va_list ap;
     va_start(ap, format);
-    cc = vsnprintf(buf, len, format, ap);
+    if (len > 0)
+	strx_printv(&cc, buf, (len - 1), format, ap);
     va_end(ap);
     return (cc);
 }
 #endif
 
 #if !HAVE_VSNPRINTF
+/*
+ * if len == 0, silently return
+ */
 int
-vsnprintf(char *buf, size_t len, const char *format,
-    va_list ap)
+vsnprintf(char *buf, size_t len, const char *format, va_list ap)
 {
     int cc = 0;
-    assert(len >= 0);
-    /*
-     * If someone calls snprintf(buf, 0, ...), then len becomes "(size_t)-1" in
-     * strx_printhv.  Previously this code would assume an "unlimited" buffer
-     * size, thereby emulating sprintf().  Now we silently do nothing and hope
-     * the caller doesn't expect us to terminate the buffer!
-     */
     if (len > 0)
 	strx_printv(&cc, buf, (len - 1), format, ap);
     return (cc);
