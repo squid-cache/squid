@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.663 2003/10/16 20:47:58 robertc Exp $
+ * $Id: client_side.cc,v 1.664 2003/10/21 09:22:59 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1073,8 +1073,6 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "canonization failed";
     else if (http->request->range->isComplex())
         range_err = "too complex range header";
-    else if (!request->flags.cachable)	/* from we_do_ranges in http.c */
-        range_err = "non-cachable request";
 
 #if 0
 
