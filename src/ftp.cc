@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.355 2003/09/07 16:53:37 hno Exp $
+ * $Id: ftp.cc,v 1.356 2004/04/04 14:47:06 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2716,6 +2716,9 @@ static void
 ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t err, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *) data;
+
+    if (err == COMM_ERR_CLOSING)
+        return;
 
     if (!err) {
         /* Shedule the rest of the request */
