@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.88 2003/07/15 20:45:45 wessels Exp $
+ * $Id: access_log.cc,v 1.89 2003/07/16 08:24:45 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -403,8 +403,7 @@ struct _logformat_token
     unsigned char width;
     unsigned char precision;
 
-enum log_quote quote:
-    3;
+    enum log_quote quote;
 
 unsigned int left:
     1;
