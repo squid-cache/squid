@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
 <TITLE>KLAIDA: Kešo menedžerio priėjimas uždraustas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD>
@@ -20,7 +20,7 @@ Kešo menedžerio priėjimas uždraustas.
 </UL>
 </P>
 
-<P>Atsiprašiau, bet jūs negalite vykdyti užklausimo:
+<P>Atsiprašome, bet jūs negalite vykdyti užklausos:
 <PRE>    %U</PRE>
 šiam kešo menedžeriui, kol jūs neprisistatysite.
 </P>
@@ -28,7 +28,7 @@ Kešo menedžerio priėjimas uždraustas.
 <P> 
 Jums reikia Netscape v2.0 ar naujesnio, arba Microsoft Internet
 Explorer 3.0 ar naujesnio, arba kitos HTTP/1.1 suprantančios peržiūros
-programos. Prašau susisiekti su <A HREF="mailto:%w%W">administratoriumi</a>, 
+programos. Prašome susisiekti su <A HREF="mailto:%w%W">administratoriumi</a>, 
 jei jums iškilo problemos prisistatant arba, jei jūs <em>esate</em> 
 administratorius, perskaitykite Squid documentaciją dėl kešo menedžerio 
 interfeiso ir patikrinkite kešo žurnalą dėl detalesnių pranešimų apie

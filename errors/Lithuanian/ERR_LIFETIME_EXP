@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
 <TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
@@ -19,6 +19,6 @@ Ryšio trukmės laiko pabaiga
 </UL>
 
 <P>
-Squid nutraukė užklausimą, kadangi jis viršijo maksimalią
+Squid nutraukė užklausą, kadangi ji viršijo maksimalią
 ryšio trukmės reikšmę.
 </P>

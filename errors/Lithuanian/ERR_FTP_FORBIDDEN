@@ -7,22 +7,12 @@
 <H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
 <HR noshade size="1px">
 <P>
-Bandant atsiøsti puslapá:
+Nepavyko FTP prisistatymas bandant atsiøsti puslapá:
 <A HREF="%U">%U</A>
 <P>
-Gautas klaidos praneðimas:
-<UL>
-<LI>
-<STRONG>
-Raðymo klaida
-</STRONG>
-</UL>
-
-<P>
-Sistema atsakë:
-<PRE><I>    %E</I></PRE>
-
-<P>
-Ávyko klaida bandant raðyti tinkle. 
-Praðome pakartoti savo uþklausà.
+Squid nusiuntë ðià FTP komandà:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+ir gavo ðá atsakymà:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>

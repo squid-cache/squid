@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
 <TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
@@ -8,7 +8,7 @@
 <HR noshade size="1px">
 <P>
 Įvyko FTP protokolo klaida
-bandant atsiusti puslapį:
+bandant atsiųsti puslapį:
 <A HREF="%U">%U</A>
 <P>
 Squid nusiuntė šią FTP komandą:
@@ -16,9 +16,4 @@ Squid nusiuntė šią FTP komandą:
 ir gavo šį atsakymą:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
-<P>
-Tai gali būti sąlygota FTP adreso su pilnu keliu (kuris neatitinka
-RFC 1738 standarto). Jei taip atsitiko, tada duomenys gali būti
-rasti <A HREF="%B">%B</A> adresu.
 </P>
-
