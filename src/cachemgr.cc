@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.13 1996/07/25 07:10:29 wessels Exp $
+ * $Id: cachemgr.cc,v 1.14 1996/08/20 15:45:46 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -218,6 +218,7 @@ typedef enum {
     STATS_I,
     STATS_F,
     STATS_D,
+    STATS_R,
     STATS_O,
     STATS_VM,
     STATS_U,
@@ -242,6 +243,7 @@ static char *op_cmds[] =
     "stats/ipcache",
     "stats/fqdncache",
     "stats/dns",
+    "stats/redirector",
     "stats/objects",
     "stats/vm_objects",
     "stats/utilization",
@@ -322,6 +324,7 @@ void noargs_html()
     printf("<OPTION VALUE=\"stats/ipcache\">IP Cache Contents\n");
     printf("<OPTION VALUE=\"stats/fqdncache\">FQDN Cache Contents\n");
     printf("<OPTION VALUE=\"stats/dns\">DNS Server Statistics\n");
+    printf("<OPTION VALUE=\"stats/redirector\">Redirector Statistics\n");
     printf("<OPTION VALUE=\"shutdown\">Shutdown Cache (password required)\n");
     printf("<OPTION VALUE=\"refresh\">Refresh Object (URL required)\n");
 #ifdef REMOVE_OBJECT
@@ -609,6 +612,9 @@ int main(int argc, char *argv[])
     } else if (!strcmp(operation, "stats/dns") ||
 	!strcmp(operation, "DNS Server Stats")) {
 	op = STATS_D;
+    } else if (!strcmp(operation, "stats/redirector") ||
+      !strcmp(operation, "Redirection Server Stats")) {
+      op = STATS_R;
     } else if (!strcmp(operation, "stats/vm_objects") ||
 	!strcmp(operation, "VM_Objects")) {
 	op = STATS_VM;
@@ -649,6 +655,7 @@ int main(int argc, char *argv[])
     case STATS_I:
     case STATS_F:
     case STATS_D:
+    case STATS_R:
     case STATS_O:
     case STATS_VM:
     case STATS_U:
@@ -702,6 +709,7 @@ int main(int argc, char *argv[])
     printf("<OPTION VALUE=\"stats/ipcache\">IP Cache Contents\n");
     printf("<OPTION VALUE=\"stats/fqdncache\">FQDN Cache Contents\n");
     printf("<OPTION VALUE=\"stats/dns\">DNS Server Statistics\n");
+    printf("<OPTION VALUE=\"stats/redirector\">Redirector Statistics\n");
     printf("</SELECT>");
     printf("<INPUT TYPE=\"hidden\" NAME=\"host\" VALUE=\"%s\">\n", hostname);
     printf("<INPUT TYPE=\"hidden\" NAME=\"port\" VALUE=\"%d\">\n", portnum);
@@ -742,6 +750,7 @@ int main(int argc, char *argv[])
     case STATS_I:
     case STATS_F:
     case STATS_D:
+    case STATS_R:
     case STATS_O:
     case STATS_VM:
     case STATS_IO:
@@ -811,6 +820,7 @@ int main(int argc, char *argv[])
 		case STATS_I:
 		case STATS_F:
 		case STATS_D:
+		case STATS_R:
 		case STATS_IO:
 		case STATS_HDRS:
 		case STATS_FDS:
