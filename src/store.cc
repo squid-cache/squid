@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.14 1996/03/28 06:02:19 wessels Exp $ */
+/* $Id: store.cc,v 1.15 1996/03/29 01:07:38 wessels Exp $ */
 
 /* 
  * Here is a summary of the routines which change mem_status and swap_status:
@@ -430,7 +430,11 @@ char *storeGenerateKey(url, request_type_id)
     return url;
 }
 
-/* Add a new object to the cache. */
+/*
+ * Add a new object to the cache.
+ * 
+ * storeAdd() is only called by icpProcessMISS()
+ */
 StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, request_type_id)
      char *url;
      char *type_notused;
@@ -519,6 +523,12 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
 	storeCreateHashTable(urlcmp);
     }
     storeHashInsert(e);
+
+    /* Change the key to something private until we know it is safe
+     * to share */
+    if (!strncmp(url, "http", 4))
+	storeChangeKey(e);
+
     return e;
 }
 
@@ -1909,6 +1919,7 @@ void storeChangeKey(e)
 {
     StoreEntry *result = NULL;
     static char key[MAX_URL + 32];
+    hash_link *table_entry = NULL;
 
     if (!e)
 	return;
@@ -1917,26 +1928,65 @@ void storeChangeKey(e)
 	debug(0, 0, "storeChangeKey: NULL key for %s\n", e->url);
 	return;
     }
-    if (table != (HashID) 0) {
-	hash_link *table_entry = hash_lookup(table, e->key);
-	if (table_entry)
-	    result = (StoreEntry *) table_entry;
-	if (result == e) {
-	    storeHashDelete(table_entry);
+    if (table == (HashID) 0)
+	fatal_dump("storeUnChangeKey: Hash table 'table' is zero!\n");
 
-	    key[0] = '\0';
-	    sprintf(key, "/x%d/%s", keychange_count++, e->key);
-	    if (!(result->flag & KEY_URL))
-		safe_free(result->key);
-	    result->key = xstrdup(key);
-
-	    storeHashInsert(e);
-	    BIT_SET(result->flag, KEY_CHANGE);
-	    BIT_RESET(result->flag, KEY_URL);
-	} else {
-	    debug(0, 1, "storeChangeKey: Key is not unique for key: %s\n", e->key);
-	}
+    if ((table_entry = hash_lookup(table, e->key)))
+	result = (StoreEntry *) table_entry;
+    if (result != e) {
+	debug(0, 1, "storeChangeKey: Key is not unique for key: %s\n", e->key);
+	return;
     }
+    storeHashDelete(table_entry);
+    key[0] = '\0';
+    sprintf(key, "/x%d/%s", keychange_count++, e->key);
+    if (!(result->flag & KEY_URL))
+	safe_free(result->key);
+    result->key = xstrdup(key);
+    storeHashInsert(e);
+    BIT_SET(result->flag, KEY_CHANGE);
+    BIT_RESET(result->flag, KEY_URL);
+}
+
+void storeUnChangeKey(e)
+     StoreEntry *e;
+{
+    StoreEntry *result = NULL;
+    static char key[MAX_URL + 32];
+    hash_link *table_entry = NULL;
+    char *t = NULL;
+
+    if (!e)
+	return;
+
+    if (e->key == NULL) {
+	debug(0, 0, "storeUnChangeKey: NULL key for %s\n", e->url);
+	return;
+    }
+    if (table == (HashID) 0)
+	fatal_dump("storeUnChangeKey: Hash table 'table' is zero!\n");
+
+    if ((table_entry = hash_lookup(table, e->key)))
+	result = (StoreEntry *) table_entry;
+    if (result != e) {
+	debug(0, 1, "storeUnChangeKey: Key is not unique for key: %s\n",
+	    e->key);
+	return;
+    }
+    storeHashDelete(table_entry);
+    key[0] = '\0';
+    /* find second slash */
+    t = strchr(e->key + 1, '/');
+    if (t == NULL)
+	fatal_dump("storeUnChangeKey: Can't find a second slash.\n");
+    strcpy(key, t + 1);
+    if (!(result->flag & KEY_URL))
+	safe_free(result->key);
+    result->key = xstrdup(key);
+    storeHashInsert(e);
+    BIT_RESET(result->flag, KEY_CHANGE);
+    BIT_SET(result->flag, KEY_URL);
+    debug(0, 0, "storeUnChangeKey: Changed back to '%s'\n", key);
 }
 
 /* return if the current key is the original one. */
@@ -1945,7 +1995,6 @@ int storeOriginalKey(e)
 {
     if (!e)
 	return 1;
-
     return !(e->flag & KEY_CHANGE);
 }
 

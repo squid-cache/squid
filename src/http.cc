@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.13 1996/03/28 23:11:20 wessels Exp $ */
+/* $Id: http.cc,v 1.14 1996/03/29 01:07:36 wessels Exp $ */
 
 #include "squid.h"
 
@@ -14,7 +14,7 @@ typedef struct _httpdata {
     char host[SQUIDHOSTNAMELEN + 1];
     int port;
     char *type;
-    char *mime_hdr;
+    char *req_hdr;
     char type_id;
     char request[MAX_URL + 1];
     char *icp_page_ptr;		/* Used to send proxy-http request: 
@@ -23,10 +23,28 @@ typedef struct _httpdata {
     char *icp_rwd_ptr;		/* When a lifetime expires during the
 				 * middle of an icpwrite, don't lose the
 				 * icpReadWriteData */
+    char *reply_hdr;
+    int reply_hdr_state;
+    int content_length;
+    int http_code;
+    char content_type[128];
 } HttpData;
 
 char *HTTP_OPS[] =
 {"GET", "POST", "HEAD", ""};
+
+void httpCloseAndFree(fd, data)
+     int fd;
+     HttpData *data;
+{
+    if (fd > 0)
+	comm_close(fd);
+    if (data) {
+	if (data->reply_hdr)
+	    xfree(data->reply_hdr);
+	xfree(data);
+    }
+}
 
 int http_url_parser(url, host, port, request)
      char *url;
@@ -53,10 +71,10 @@ int http_url_parser(url, host, port, request)
     return 0;
 }
 
-int httpCachable(url, type, mime_hdr)
+int httpCachable(url, type, req_hdr)
      char *url;
      char *type;
-     char *mime_hdr;
+     char *req_hdr;
 {
     stoplist *p = NULL;
 
@@ -66,7 +84,7 @@ int httpCachable(url, type, mime_hdr)
 	return 0;
 
     /* url's requiring authentication are uncachable */
-    if (mime_hdr && (strstr(mime_hdr, "Authorization")))
+    if (req_hdr && (strstr(req_hdr, "Authorization")))
 	return 0;
 
     /* scan stop list */
@@ -98,8 +116,7 @@ void httpReadReplyTimeout(fd, data)
 	data->icp_page_ptr = NULL;
     }
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
-    comm_close(fd);
-    safe_free(data);
+    httpCloseAndFree(fd, data);
 }
 
 /* This will be called when socket lifetime is expired. */
@@ -120,14 +137,84 @@ void httpLifetimeExpire(fd, data)
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
-    comm_close(fd);
-    safe_free(data);
+    httpCloseAndFree(fd, data);
 }
 
+
+void httpProcessReplyHeader(data, buf)
+     HttpData *data;
+     char *buf;			/* chunk just read by httpReadReply() */
+{
+    char *t = NULL;
+    StoreEntry *entry = data->entry;
+
+    if (data->reply_hdr == NULL) {
+	data->reply_hdr = get_free_8k_page();
+	memset(data->reply_hdr, '\0', 8192);
+    }
+    if (data->reply_hdr_state == 0) {
+	strncat(data->reply_hdr, buf, 8191 - strlen(data->reply_hdr));
+	if ((t = strstr(data->reply_hdr, "\r\n\r\n"))) {
+	    data->reply_hdr_state++;
+	    t += 2;
+	    *t = '\0';
+	} else if ((t = strstr(data->reply_hdr, "\n\n"))) {
+	    data->reply_hdr_state++;
+	    t++;
+	    *t = '\0';
+	}
+    }
+    if (data->reply_hdr_state == 1) {
+	data->reply_hdr_state++;
+	debug(0, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
+	    data->reply_hdr);
+	t = strtok(data->reply_hdr, "\r\n");
+	while (t) {
+	    if (!strncasecmp(t, "HTTP", 4)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    data->http_code = atoi(t);
+		}
+	    } else if (!strncasecmp(t, "Content-type:", 13)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(data->content_type, t, 127);
+		}
+	    } else if (!strncasecmp(t, "Content-length:", 15)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    data->content_length = atoi(t);
+		}
+	    }
+	    t = strtok(NULL, "\r\n");
+	}
+	if (data->http_code)
+	    debug(0, 0, "httpReadReply: HTTP CODE: %d\n", data->http_code);
+	if (data->content_length)
+	    debug(0, 0, "httpReadReply: Content Length: %d\n", data->content_length);
+	/* If we know this is cachable we can unchange the key */
+	switch (data->http_code) {
+	case 200:		/* OK */
+	case 203:		/* ? */
+	case 300:		/* ? */
+	case 301:		/* Moved Permanently */
+	case 302:		/* Moved Temporarily */
+	case 410:		/* ? */
+	    /* cachable, make the key public */
+	    storeUnChangeKey(entry);
+	    break;
+	default:
+	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_SET(entry->flag, RELEASE_REQUEST);
+	    break;
+	}
+    }
+}
 
 
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
+/* XXX this function is too long! */
 void httpReadReply(fd, data)
      int fd;
      HttpData *data;
@@ -173,8 +260,7 @@ void httpReadReply(fd, data)
 	} else {
 	    /* we can terminate connection right now */
 	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    comm_close(fd);
-	    safe_free(data);
+	    httpCloseAndFree(fd, data);
 	    return;
 	}
     }
@@ -194,8 +280,7 @@ void httpReadReply(fd, data)
 	    sprintf(tmp_error_buf, "\n<p>Warning: The Remote Server sent RESET at the end of transmission.\n");
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
-	    comm_close(fd);
-	    safe_free(data);
+	    httpCloseAndFree(fd, data);
 	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
@@ -205,16 +290,14 @@ void httpReadReply(fd, data)
 		(PF) httpReadReplyTimeout, (caddr_t) data, getReadTimeout());
 	} else {
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
-	    comm_close(fd);
-	    safe_free(data);
+	    httpCloseAndFree(fd, data);
 	}
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	if (!(entry->flag & DELETE_BEHIND))
 	    entry->expires = cached_curtime + ttlSet(entry);
 	storeComplete(entry);
-	comm_close(fd);
-	safe_free(data);
+	httpCloseAndFree(fd, data);
     } else if (((entry->mem_obj->e_current_len + len) > getHttpMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
@@ -230,10 +313,11 @@ void httpReadReply(fd, data)
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
 	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	comm_close(fd);
-	safe_free(data);
+	httpCloseAndFree(fd, data);
     } else {
 	storeAppend(entry, buf, len);
+	if (data->reply_hdr_state < 2)
+	    httpProcessReplyHeader(data, buf);
 	comm_set_select_handler(fd, COMM_SELECT_READ,
 	    (PF) httpReadReply, (caddr_t) data);
 	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
@@ -265,8 +349,7 @@ void httpSendComplete(fd, buf, size, errflag, data)
 
     if (errflag) {
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	comm_close(fd);
-	safe_free(data);
+	httpCloseAndFree(fd, data);
 	return;
     } else {
 	/* Schedule read reply. */
@@ -296,12 +379,12 @@ void httpSendRequest(fd, data)
 
     debug(0, 5, "httpSendRequest: FD %d: data %p.\n", fd, data);
     buflen = strlen(data->type) + strlen(data->request);
-    if (data->mime_hdr)
-	buflen += strlen(data->mime_hdr);
+    if (data->req_hdr)
+	buflen += strlen(data->req_hdr);
     buflen += 512;		/* lots of extra */
 
-    if (!strcasecmp(data->type, "POST") && data->mime_hdr) {
-	if ((t = strstr(data->mime_hdr, "\r\n\r\n"))) {
+    if (!strcasecmp(data->type, "POST") && data->req_hdr) {
+	if ((t = strstr(data->req_hdr, "\r\n\r\n"))) {
 	    post_buf = xstrdup(t + 4);
 	    *(t + 4) = '\0';
 	}
@@ -317,8 +400,8 @@ void httpSendRequest(fd, data)
 
     sprintf(buf, "%s %s ", data->type, data->request);
     len = strlen(buf);
-    if (data->mime_hdr) {	/* we have to parse the MIME header */
-	xbuf = xstrdup(data->mime_hdr);
+    if (data->req_hdr) {	/* we have to parse the request header */
+	xbuf = xstrdup(data->req_hdr);
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
 	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
 		ybuf = (char *) get_free_4k_page();
@@ -326,8 +409,10 @@ void httpSendRequest(fd, data)
 		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, SQUID_VERSION);
 		t = ybuf;
 	    }
+#ifdef 0
 	    if (strncasecmp(t, "If-Modified-Since:", 18) == 0)
 		continue;
+#endif
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
 	    strcat(buf, t);
@@ -370,9 +455,8 @@ void httpConnInProgress(fd, data)
 	case EISCONN:
 	    break;		/* cool, we're connected */
 	default:
-	    comm_close(fd);
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    safe_free(data);
+	    httpCloseAndFree(fd, data);
 	    return;
 	}
     /* Call the real write handler, now that we're fully connected */
@@ -385,22 +469,21 @@ int proxyhttpStart(e, url, entry)
      char *url;
      StoreEntry *entry;
 {
-
-    /* Create state structure. */
-    int sock, status;
-    HttpData *data = (HttpData *) xmalloc(sizeof(HttpData));
+    int sock;
+    int status;
+    HttpData *data = NULL;
 
     debug(0, 3, "proxyhttpStart: <URL:%s>\n", url);
     debug(0, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
 
-    memset(data, '\0', sizeof(HttpData));
+    data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
 
     strncpy(data->request, url, sizeof(data->request) - 1);
     data->type = HTTP_OPS[entry->type_id];
     data->port = e->ascii_port;
-    data->mime_hdr = entry->mem_obj->mime_hdr;
+    data->req_hdr = entry->mem_obj->mime_hdr;
     strncpy(data->host, e->host, sizeof(data->host) - 1);
 
     if (e->proxy_only)
@@ -419,17 +502,15 @@ int proxyhttpStart(e, url, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
 	debug(0, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
-	comm_close(sock);
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	safe_free(data);
+	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
-	    comm_close(sock);
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    safe_free(data);
+	    httpCloseAndFree(sock, data);
 	    e->last_fail_time = cached_curtime;
 	    e->neighbor_up = 0;
 	    return COMM_ERROR;
@@ -452,24 +533,24 @@ int proxyhttpStart(e, url, entry)
 
 }
 
-int httpStart(unusedfd, url, type, mime_hdr, entry)
+int httpStart(unusedfd, url, type, req_hdr, entry)
      int unusedfd;
      char *url;
      char *type;
-     char *mime_hdr;
+     char *req_hdr;
      StoreEntry *entry;
 {
     /* Create state structure. */
     int sock, status;
-    HttpData *data = (HttpData *) xmalloc(sizeof(HttpData));
+    HttpData *data = NULL;
 
     debug(0, 3, "httpStart: %s <URL:%s>\n", type, url);
-    debug(0, 10, "httpStart: mime_hdr '%s'\n", mime_hdr);
+    debug(0, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
-    memset(data, '\0', sizeof(HttpData));
+    data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
     data->type = type;
-    data->mime_hdr = mime_hdr;
+    data->req_hdr = req_hdr;
 
     /* Parse url. */
     if (http_url_parser(url, data->host, &data->port, data->request)) {
@@ -490,17 +571,15 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
 	debug(0, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
-	comm_close(sock);
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	safe_free(data);
+	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
-	    comm_close(sock);
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    safe_free(data);
+	    httpCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {
 	    debug(0, 5, "httpStart: FD %d: EINPROGRESS.\n", sock);

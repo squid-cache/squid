@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.4 1996/03/28 05:42:48 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.5 1996/03/29 01:07:35 wessels Exp $ */
 
 #include "squid.h"
 
@@ -112,7 +112,6 @@ void cached_error_entry(entry, type, msg)
 	entry->url,
 	entry->url,
 	ErrorData[type].shrt);
-
     if (msg) {
 	sprintf(tbuf, CACHED_ERROR_MSG_P2, msg);
 	strcat(tmp_error_buf, tbuf);
