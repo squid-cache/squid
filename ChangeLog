@@ -1,4 +1,4 @@
-Changes to squid-1.1.beta26 ():
+Changes to squid-1.1.beta26 (December 3, 1996):
 
 	- Another 'rm -rf' fix for store.c (Bernd Ernesti).
 	- Use of the Host: header for httpd_accel requests is now
