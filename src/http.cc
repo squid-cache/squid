@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.29 1996/04/05 16:57:26 wessels Exp $ */
+/* $Id: http.cc,v 1.30 1996/04/05 17:22:20 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -119,14 +119,6 @@ static void httpReadReplyTimeout(fd, data)
     entry = data->entry;
     debug(11, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
     cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
-#ifdef NOW_DONE_IN_CLOSE_AND_FREE
-    if (data->icp_rwd_ptr)
-	safe_free(data->icp_rwd_ptr);
-    if (data->icp_page_ptr) {
-	put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
-	data->icp_page_ptr = NULL;
-    }
-#endif
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     httpCloseAndFree(fd, data);
 }
@@ -142,14 +134,6 @@ static void httpLifetimeExpire(fd, data)
     debug(11, 4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-#ifdef NOW_DONE_IN_CLOSE_AND_FREE
-    if (data->icp_page_ptr) {
-	put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
-	data->icp_page_ptr = NULL;
-    }
-    if (data->icp_rwd_ptr)
-	safe_free(data->icp_rwd_ptr);
-#endif
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     httpCloseAndFree(fd, data);
 }
@@ -298,21 +282,14 @@ static void httpReadReply(fd, data)
 		    COMM_SELECT_READ,
 		    (PF) httpReadReply,
 		    (caddr_t) data);
-/* don't install read timeout until we are below the GAP */
-#ifdef INSTALL_READ_TIMEOUT_ABOVE_GAP
-		comm_set_select_handler_plus_timeout(fd,
-		    COMM_SELECT_TIMEOUT,
-		    (PF) httpReadReplyTimeout,
-		    (caddr_t) data,
-		    getReadTimeout());
-#else
+		/* don't install read timeout until we are below the GAP */
 		comm_set_select_handler_plus_timeout(fd,
 		    COMM_SELECT_TIMEOUT,
 		    (PF) NULL,
 		    (caddr_t) NULL,
 		    (time_t) 0);
-#endif
-		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
+		/* dont try reading again for a while */
+		comm_set_stall(fd, getStallDelay());
 		return;
 	    }
 	} else {
@@ -494,7 +471,12 @@ static void httpSendRequest(fd, data)
 	xfree(post_buf);
     }
     debug(11, 6, "httpSendRequest: FD %d: buf '%s'\n", fd, buf);
-    data->icp_rwd_ptr = icpWrite(fd, buf, len, 30, httpSendComplete, (caddr_t) data);
+    data->icp_rwd_ptr = icpWrite(fd,
+	buf,
+	len,
+	30,
+	httpSendComplete,
+	(caddr_t) data);
 }
 
 static void httpConnInProgress(fd, data)
