@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.54 1998/08/26 05:36:42 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.55 1998/09/15 19:37:41 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -243,7 +243,7 @@ httpHeaderInitModule()
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) GeneralHeadersArr, countof(GeneralHeadersArr));
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) EntityHeadersArr, countof(EntityHeadersArr));
     /* init header stats */
-    assert(HttpHeaderStatCount == hoReply+1);
+    assert(HttpHeaderStatCount == hoReply + 1);
     for (i = 0; i < HttpHeaderStatCount; i++)
 	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
     HttpHeaderStats[hoRequest].owner_mask = &RequestHeadersMask;

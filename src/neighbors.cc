@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.248 1998/09/14 22:17:59 wessels Exp $
+ * $Id: neighbors.cc,v 1.249 1998/09/15 19:37:52 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -752,7 +752,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	opcode_d, storeKeyText(key), p ? p->host : "source");
     if (p) {
 	ntype = neighborType(p, mem->request);
-        neighborUpdateRtt(p, mem);
+	neighborUpdateRtt(p, mem);
     }
     if (ignoreMulticastReply(p, mem)) {
 	neighborCountIgnored(p);
@@ -1040,7 +1040,7 @@ peerCountMcastPeersDone(void *data)
 }
 
 static void
-peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void * hdrnotused, void *data)
+peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void *hdrnotused, void *data)
 {
     ps_state *psstate = data;
     StoreEntry *fake = psstate->entry;
@@ -1147,16 +1147,16 @@ dump_peers(StoreEntry * sentry, peer * peers)
 		percent(e->htcp.counts[1], e->stats.pings_acked));
 	} else {
 #endif
-	for (op = ICP_INVALID; op < ICP_END; op++) {
-	    if (e->icp.counts[op] == 0)
-		continue;
-	    storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
-		icp_opcode_str[op],
-		e->icp.counts[op],
-		percent(e->icp.counts[op], e->stats.pings_acked));
-	}
+	    for (op = ICP_INVALID; op < ICP_END; op++) {
+		if (e->icp.counts[op] == 0)
+		    continue;
+		storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
+		    icp_opcode_str[op],
+		    e->icp.counts[op],
+		    percent(e->icp.counts[op], e->stats.pings_acked));
+	    }
 #if USE_HTCP
-}
+	}
 #endif
 	if (e->last_fail_time) {
 	    storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
@@ -1165,8 +1165,8 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	if (e->pinglist != NULL) {
 	    storeAppendPrintf(sentry, "DOMAIN LIST: ");
 	    for (d = e->pinglist; d; d = d->next) {
-		    storeAppendPrintf(sentry, "%s%s ",
-			d->do_ping ? null_string : "!", d->domain);
+		storeAppendPrintf(sentry, "%s%s ",
+		    d->do_ping ? null_string : "!", d->domain);
 	    }
 	    storeAppendPrintf(sentry, "\n");
 	}

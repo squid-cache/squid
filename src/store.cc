@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.459 1998/09/15 04:23:39 wessels Exp $
+ * $Id: store.cc,v 1.460 1998/09/15 19:38:00 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -569,6 +569,7 @@ storePPNR(StoreEntry * e)
     assert(e->flags.entry_fwd_hdr_wait);
     e->flags.entry_fwd_hdr_wait = 0;
 }
+
 #endif /* PPNR_WIP */
 
 /*

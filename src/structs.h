@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.229 1998/09/15 06:35:24 wessels Exp $
+ * $Id: structs.h,v 1.230 1998/09/15 19:38:04 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1233,7 +1233,7 @@ struct _store_flags {
     unsigned short entry_unused_08:1;
 #else
     unsigned short entry_fwd_hdr_wait:1;
-#endif                          /* PPNR_WIP */
+#endif				/* PPNR_WIP */
     unsigned short key_private:1;
     unsigned short entry_dispatched:1;
     unsigned short entry_cachable:1;
@@ -1242,7 +1242,7 @@ struct _store_flags {
     unsigned short delay_sending:1;
     unsigned short entry_revalidate:1;
     unsigned short entry_special:1;
-#else	/* ENDIAN */
+#else				/* ENDIAN */
     unsigned short entry_special:1;
     unsigned short entry_revalidate:1;
     unsigned short delay_sending:1;
@@ -1259,7 +1259,7 @@ struct _store_flags {
     unsigned short entry_negcached:1;
     unsigned short entry_validated:1;
     unsigned short entry_bad_length:1;
-#endif	/* ENDIAN */
+#endif				/* ENDIAN */
 };
 
 struct _StoreEntry {

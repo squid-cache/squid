@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.67 1998/09/09 20:05:49 wessels Exp $
+ * $Id: globals.h,v 1.68 1998/09/15 19:37:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -142,4 +142,4 @@ extern time_t delay_pools_last_update;	/* 0 */
 extern int refresh_nocache_hack;	/* 0 */
 #endif
 extern request_flags null_request_flags;
-extern int open_disk_fd;		/* 0 */
+extern int open_disk_fd;	/* 0 */

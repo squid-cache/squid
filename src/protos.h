@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.266 1998/09/15 06:34:56 wessels Exp $
+ * $Id: protos.h,v 1.267 1998/09/15 19:37:56 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -491,8 +491,8 @@ extern int icpCheckUdpHit(StoreEntry *, request_t * request);
 extern void icpConnectionsOpen(void);
 extern void icpConnectionShutdown(void);
 extern void icpConnectionClose(void);
-extern int icpSetCacheKey(const cache_key *key);
-extern const cache_key * icpGetCacheKey(const char *url, int reqnum);
+extern int icpSetCacheKey(const cache_key * key);
+extern const cache_key *icpGetCacheKey(const char *url, int reqnum);
 
 extern void ipcache_nbgethostbyname(const char *name,
     IPH * handler,
