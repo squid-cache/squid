@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.46 2001/01/12 00:37:20 wessels Exp $
+ * $Id: pinger.cc,v 1.47 2002/10/06 02:05:23 robertc Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -224,15 +224,15 @@ pingerRecv(void)
 #endif
     debug(42, 9) ("pingerRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
     ip = (struct iphdr *) (void *) pkt;
-#if HAVE_IP_HL
+#if HAVE_STRUCT_IPHDR_IP_HL
     iphdrlen = ip->ip_hl << 2;
-#else /* HAVE_IP_HL */
+#else /* HAVE_STRUCT_IPHDR_IP_HL */
 #if WORDS_BIGENDIAN
     iphdrlen = (ip->ip_vhl >> 4) << 2;
 #else
     iphdrlen = (ip->ip_vhl & 0xF) << 2;
 #endif
-#endif /* HAVE_IP_HL */
+#endif /* HAVE_STRUCT_IPHDR_IP_HL */
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
     if (icmp->icmp_type != ICMP_ECHOREPLY)
 	return;

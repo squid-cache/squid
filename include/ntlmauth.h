@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.h,v 1.8 2001/11/13 21:12:36 hno Exp $
+ * $Id: ntlmauth.h,v 1.9 2002/10/06 02:05:22 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -54,7 +54,7 @@
 #define SQUID_NTLMAUTH_H
 
 /* int*_t */
-#include "squid_types.h"
+#include "config.h"
 
 /* All of this cruft is little endian */
 #ifdef WORDS_BIGENDIAN

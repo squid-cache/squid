@@ -26,7 +26,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "squid_types.h"
+#include "config.h"
 #define BOOL int16_t
 #define int16 int16_t
 #define uint16 u_int16_t
