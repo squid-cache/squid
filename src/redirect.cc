@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.32 1997/01/13 23:08:52 wessels Exp $
+ * $Id: redirect.cc,v 1.33 1997/01/23 18:31:23 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -263,8 +263,11 @@ GetFirstAvailable(void)
     redirector_t *redirect = NULL;
     for (k = 0; k < NRedirectors; k++) {
 	redirect = *(redirect_child_table + k);
-	if (!(redirect->flags & REDIRECT_FLAG_BUSY))
-	    return redirect;
+	if (BIT_TEST(redirect->flags, REDIRECT_FLAG_BUSY))
+	    continue;
+	if (!BIT_TEST(redirect->flags, REDIRECT_FLAG_ALIVE))
+	    continue;
+	return redirect;
     }
     return NULL;
 }
