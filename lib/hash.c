@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.7 1999/01/24 04:07:01 wessels Exp $
+ * $Id: hash.c,v 1.8 1999/05/04 21:20:38 wessels Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -309,7 +309,7 @@ hashFreeMemory(hash_table * hid)
 {
     assert(hid);
     if (hid->buckets)
-        xfree(hid->buckets);
+	xfree(hid->buckets);
     xfree(hid);
 }
 
