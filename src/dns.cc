@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.88 2002/10/13 20:35:00 robertc Exp $
+ * $Id: dns.cc,v 1.89 2002/11/15 13:28:33 hno Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -98,7 +98,7 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
 	if (squid_curtime - first_warn > 3 * 60)
 	    fatal("DNS servers not responding for 3 minutes");
 	debug(34, 1) ("dnsSubmit: queue overload, rejecting %s\n", lookup);
-	callback(data, "$fail temporary network problem, pleas retry later");
+	callback(data, "$fail Temporary network problem, please retry later");
 	return;
     }
     first_warn = 0;
