@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.2 2002/09/02 00:22:22 hno Exp $
+#  $Id: Makefile.in,v 1.3 2002/09/07 23:05:35 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -125,9 +125,9 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 libexec_PROGRAMS = squid_ldap_group
-#man_MANS 		= squid_ldap_group.8
-#EXTRA_DIST		= squid_ldap_group.8
-squid_ldap_group_SOURCES = squid_ldap_match.c
+man_MANS = squid_ldap_group.8
+EXTRA_DIST = squid_ldap_group.8
+squid_ldap_group_SOURCES = squid_ldap_group.c
 
 LDADD = -lldap -llber
 subdir = helpers/external_acl/ldap_group
@@ -137,7 +137,7 @@ CONFIG_CLEAN_FILES =
 libexec_PROGRAMS = squid_ldap_group$(EXEEXT)
 PROGRAMS = $(libexec_PROGRAMS)
 
-am_squid_ldap_group_OBJECTS = squid_ldap_match.$(OBJEXT)
+am_squid_ldap_group_OBJECTS = squid_ldap_group.$(OBJEXT)
 squid_ldap_group_OBJECTS = $(am_squid_ldap_group_OBJECTS)
 squid_ldap_group_LDADD = $(LDADD)
 squid_ldap_group_DEPENDENCIES =
@@ -149,13 +149,16 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/squid_ldap_match.Po
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/squid_ldap_group.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(squid_ldap_group_SOURCES)
+
+NROFF = nroff
+MANS = $(man_MANS)
 DIST_COMMON = Makefile.am Makefile.in
 SOURCES = $(squid_ldap_group_SOURCES)
 
@@ -203,7 +206,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/squid_ldap_match.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/squid_ldap_group.Po@am__quote@
 
 distclean-depend:
 	-rm -rf $(DEPDIR)
@@ -221,6 +224,45 @@ distclean-depend:
 	$(COMPILE) -c `cygpath -w $<`
 CCDEPMODE = @CCDEPMODE@
 uninstall-info-am:
+
+man8dir = $(mandir)/man8
+install-man8: $(man8_MANS) $(man_MANS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(man8dir)
+	@list='$(man8_MANS) $(dist_man8_MANS) $(nodist_man8_MANS)'; \
+	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
+	for i in $$l2; do \
+	  case "$$i" in \
+	    *.8*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	  else file=$$i; fi; \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man8dir)/$$inst"; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(man8dir)/$$inst; \
+	done
+uninstall-man8:
+	@$(NORMAL_UNINSTALL)
+	@list='$(man8_MANS) $(dist_man8_MANS) $(nodist_man8_MANS)'; \
+	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
+	for i in $$l2; do \
+	  case "$$i" in \
+	    *.8*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f $(DESTDIR)$(man8dir)/$$inst"; \
+	  rm -f $(DESTDIR)$(man8dir)/$$inst; \
+	done
 
 tags: TAGS
 
@@ -277,10 +319,10 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(MANS)
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir) $(DESTDIR)$(man8dir)
 
 install: install-am
 install-exec: install-exec-am
@@ -322,13 +364,13 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-man
 
 install-exec-am: install-libexecPROGRAMS
 
 install-info: install-info-am
 
-install-man:
+install-man: install-man8
 
 installcheck-am:
 
@@ -340,7 +382,9 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
-uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS
+uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS uninstall-man
+
+uninstall-man: uninstall-man8
 
 .PHONY: GTAGS all all-am check check-am clean clean-generic \
 	clean-libexecPROGRAMS distclean distclean-compile \
@@ -348,10 +392,11 @@ uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS
 	dvi-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
 	install-info-am install-libexecPROGRAMS install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic tags uninstall \
-	uninstall-am uninstall-info-am uninstall-libexecPROGRAMS
+	install-man8 install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic tags \
+	uninstall uninstall-am uninstall-info-am \
+	uninstall-libexecPROGRAMS uninstall-man uninstall-man8
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
