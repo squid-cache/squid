@@ -1,7 +1,7 @@
 /*
- * $Id: ident.cc,v 1.7 1996/07/25 07:10:36 wessels Exp $
+ * $Id: ident.cc,v 1.8 1996/08/17 05:08:37 wessels Exp $
  *
- * DEBUG: section 31    Ident (RFC 931)
+ * DEBUG: section 30	Ident (RFC 931)
  * AUTHOR: Duane Wessels
  *
  * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
