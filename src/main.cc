@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.18 1996/04/04 01:30:48 wessels Exp $ */
+/* $Id: main.cc,v 1.19 1996/04/04 22:01:54 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -56,10 +56,10 @@ int main(argc, argv)
     cached_starttime = getCurrentTime();
     failure_notify = fatal_dump;
 
+    setMaxFD();
+
     for (n = getMaxFD(); n > 2; n--)
 	close(n);
-
-    setMaxFD();
 
 #if HAVE_MALLOPT
     /* set malloc option */
