@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: cachemgr.cc,v 1.57 1997/08/25 05:29:55 wessels Exp $
+ * $Id: cachemgr.cc,v 1.58 1997/08/25 15:55:22 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -235,6 +235,7 @@ typedef enum {
     STATS_NETDB,
     SHUTDOWN,
     REFRESH,
+    PCONN,
 #ifdef REMOVE_OBJECT
     REMOVE,
 #endif
@@ -262,6 +263,7 @@ static const char *const op_cmds[] =
     "netdb",
     "shutdown",
     "refresh",
+    "pconn",
 #ifdef REMOVE_OBJECT
     "remove",
 #endif
@@ -289,6 +291,7 @@ static const char *const op_cmds_descr[] =
     "Network Probe Database",
     "Shutdown Cache",
     "Refresh Object (URL required)",
+    "Persistant Connection Statistics",
 #ifdef REMOVE_OBJECT
     "Remove Object (URL required)",
 #endif
@@ -383,6 +386,7 @@ noargs_html(char *host, int port, char *url, char *password)
     print_option(op, STATS_R);
     print_option(op, SHUTDOWN);
     print_option(op, REFRESH);
+    print_option(op, PCONN);
 #ifdef REMOVE_OBJECT
     print_option(op, REMOVE);
 #endif
@@ -744,6 +748,7 @@ main(int argc, char *argv[])
     case STATS_HDRS:
     case STATS_FDS:
     case STATS_NETDB:
+    case PCONN:
     case SHUTDOWN:
 	sprintf(msg, "GET cache_object://%s/%s@%s HTTP/1.0\r\n\r\n",
 	    hostname, op_cmds[op], password);
@@ -791,6 +796,7 @@ main(int argc, char *argv[])
     print_option(op, STATS_F);
     print_option(op, STATS_D);
     print_option(op, STATS_R);
+    print_option(op, PCONN);
     printf("</SELECT>\n");
     printf("<INPUT TYPE=\"hidden\" NAME=\"host\" VALUE=\"%s\">\n", hostname);
     printf("<INPUT TYPE=\"hidden\" NAME=\"port\" VALUE=\"%d\">\n", portnum);
@@ -841,6 +847,7 @@ main(int argc, char *argv[])
     case STATS_NETDB:
     case SHUTDOWN:
     case REFRESH:
+    case PCONN:
 	break;
     case PARAM:
 	if (hasTables) {
@@ -926,6 +933,7 @@ main(int argc, char *argv[])
 		case STATS_FDS:
 		case STATS_NETDB:
 		case SHUTDOWN:
+		case PCONN:
 		    p_state = 1;
 		    printf("%s", reserve);
 		    break;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.4 1997/07/26 04:48:21 wessels Exp $
+ * $Id: access_log.cc,v 1.5 1997/08/25 15:55:21 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -261,12 +261,12 @@ void
 hierarchyNote(HierarchyLogEntry * hl,
     hier_code code,
     icp_ping_data * icpdata,
-    const char *cache_host)
+    const char *cache_peer)
 {
     assert(hl != NULL);
     hl->code = code;
     if (icpdata)
 	hl->icp = *icpdata;
-    xstrncpy(hl->host, cache_host, SQUIDHOSTNAMELEN);
+    xstrncpy(hl->host, cache_peer, SQUIDHOSTNAMELEN);
     hl->icp.stop = current_time;
 }
