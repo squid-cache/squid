@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.271 1998/06/10 05:47:09 wessels Exp $
+ * $Id: comm.cc,v 1.272 1998/06/26 04:23:33 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -770,6 +770,9 @@ comm_incoming(void)
     int j;
     incame = 0;
     io_events = 0;
+#if !ALARM_UPDATES_TIME
+    getCurrentTime();
+#endif
     if (theInIcpConnection > 0) {
 	icpHandleUdp(theInIcpConnection, &incame);
 	if (theInIcpConnection != theOutIcpConnection)
