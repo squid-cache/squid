@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.387 2002/02/26 15:48:14 adrian Exp $
+ * $Id: http.cc,v 1.388 2002/06/06 15:11:31 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -43,7 +43,7 @@
 static const char *const crlf = "\r\n";
 
 static CWCB httpSendComplete;
-static CWCB httpSendRequestEntry;
+static CWCB httpSendRequestEntity;
 
 static PF httpReadReply;
 static void httpSendRequest(HttpStateData *);
@@ -931,7 +931,7 @@ httpSendRequest(HttpStateData * httpState)
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd, httpState);
 
     if (httpState->orig_request->body_connection)
-	sendHeaderDone = httpSendRequestEntry;
+	sendHeaderDone = httpSendRequestEntity;
     else
 	sendHeaderDone = httpSendComplete;
 
@@ -1030,22 +1030,22 @@ httpStart(FwdState * fwd)
 }
 
 static void
-httpSendRequestEntryDone(int fd, void *data)
+httpSendRequestEntityDone(int fd, void *data)
 {
     HttpStateData *httpState = data;
     aclCheck_t ch;
-    debug(11, 5) ("httpSendRequestEntryDone: FD %d\n",
+    debug(11, 5) ("httpSendRequestEntityDone: FD %d\n",
 	fd);
     memset(&ch, '\0', sizeof(ch));
     ch.request = httpState->request;
     if (!Config.accessList.brokenPosts) {
-	debug(11, 5) ("httpSendRequestEntryDone: No brokenPosts list\n");
+	debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
 	httpSendComplete(fd, NULL, 0, 0, data);
     } else if (!aclCheckFast(Config.accessList.brokenPosts, &ch)) {
-	debug(11, 5) ("httpSendRequestEntryDone: didn't match brokenPosts\n");
+	debug(11, 5) ("httpSendRequestEntityDone: didn't match brokenPosts\n");
 	httpSendComplete(fd, NULL, 0, 0, data);
     } else {
-	debug(11, 2) ("httpSendRequestEntryDone: matched brokenPosts\n");
+	debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
 	comm_write(fd, "\r\n", 2, httpSendComplete, data, NULL);
     }
 }
@@ -1055,11 +1055,11 @@ httpRequestBodyHandler(char *buf, size_t size, void *data)
 {
     HttpStateData *httpState = (HttpStateData *) data;
     if (size > 0) {
-	comm_write(httpState->fd, buf, size, httpSendRequestEntry, data, memFree8K);
+	comm_write(httpState->fd, buf, size, httpSendRequestEntity, data, memFree8K);
     } else if (size == 0) {
 	/* End of body */
 	memFree8K(buf);
-	httpSendRequestEntryDone(httpState->fd, data);
+	httpSendRequestEntityDone(httpState->fd, data);
     } else {
 	/* Failed to get whole body, probably aborted */
 	memFree8K(buf);
@@ -1068,12 +1068,12 @@ httpRequestBodyHandler(char *buf, size_t size, void *data)
 }
 
 static void
-httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void *data)
+httpSendRequestEntity(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
     ErrorState *err;
-    debug(11, 5) ("httpSendRequestEntry: FD %d: size %d: errflag %d.\n",
+    debug(11, 5) ("httpSendRequestEntity: FD %d: size %d: errflag %d.\n",
 	fd, (int) size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
