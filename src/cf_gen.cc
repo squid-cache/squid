@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.13 1997/10/26 02:35:28 wessels Exp $
+ * $Id: cf_gen.cc,v 1.14 1997/11/04 23:21:12 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -120,10 +120,8 @@ main(int argc, char *argv[])
 	case sSTART:
 	    if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
 		/* ignore empty and comment lines */
-
 	    } else if (!strncmp(buff, "NAME:", 5)) {
 		char *name;
-
 		if ((name = strtok(buff + 5, WS)) == NULL) {
 		    printf("Error in input file\n");
 		    exit(1);
@@ -131,10 +129,13 @@ main(int argc, char *argv[])
 		curr = calloc(1, sizeof(Entry));
 		curr->name = strdup(name);
 		state = s1;
-
 	    } else if (!strcmp(buff, "EOF")) {
 		state = sEXIT;
-
+	    } else if (!strcmp(buff, "COMMENT_START")) {
+		curr = calloc(1, sizeof(Entry));
+		curr->name = strdup("comment");
+		curr->loc = strdup("none");
+		state = sDOC;
 	    } else {
 		printf("Error on line %d\n", linenum);
 		exit(1);
@@ -185,10 +186,9 @@ main(int argc, char *argv[])
 	    break;
 
 	case sDOC:
-	    if (!strcmp(buff, "DOC_END")) {
+	    if (!strcmp(buff, "DOC_END") || !strcmp(buff, "COMMENT_END")) {
 		Line *head = NULL;
 		Line *line = curr->doc;
-
 		/* reverse order of doc lines */
 		while (line != NULL) {
 		    Line *tmp;
@@ -198,15 +198,12 @@ main(int argc, char *argv[])
 		    line = tmp;
 		}
 		curr->doc = head;
-
 		/* add to list of entries */
 		curr->next = entries;
 		entries = curr;
-
 		state = sSTART;
 	    } else {
 		Line *line = calloc(1, sizeof(Line));
-
 		line->data = strdup(buff);
 		line->next = curr->doc;
 		curr->doc = line;
@@ -304,7 +301,7 @@ gen_default(Entry * head, FILE * fp)
     for (entry = head; entry != NULL; entry = entry->next) {
 	assert(entry->name);
 
-	if (!strcmp(entry->name, "arbtext"))
+	if (!strcmp(entry->name, "comment"))
 	    continue;
 	if (entry->loc == NULL) {
 	    fprintf(stderr, "NO LOCATION FOR %s\n", entry->name);
@@ -372,6 +369,8 @@ gen_parse(Entry * head, FILE * fp)
 	);
 
     for (entry = head; entry != NULL; entry = entry->next) {
+	if (strcmp(entry->name, "comment") == 0)
+	    continue;
 	fprintf(fp,
 	    "\t} else if (!strcmp(token, \"%s\")) {\n",
 	    entry->name
@@ -382,7 +381,7 @@ gen_parse(Entry * head, FILE * fp)
 		"\t\tparse_%s();\n",
 		entry->type
 		);
-	} else if (strcmp(entry->loc, "arbtext")) {
+	} else {
 	    fprintf(fp,
 		"\t\tparse_%s(&%s);\n",
 		entry->type, entry->loc
@@ -412,7 +411,7 @@ gen_dump(Entry * head, FILE * fp)
 	assert(entry->loc);
 	if (strcmp(entry->loc, "none") == 0)
 	    continue;
-	if (strcmp(entry->name, "arbtext") == 0)
+	if (strcmp(entry->name, "comment") == 0)
 	    continue;
 	fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
 	    entry->type,
@@ -435,7 +434,7 @@ gen_free(Entry * head, FILE * fp)
 	assert(entry->loc);
 	if (strcmp(entry->loc, "none") == 0)
 	    continue;
-	if (strcmp(entry->name, "arbtext") == 0)
+	if (strcmp(entry->name, "comment") == 0)
 	    continue;
 	fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
     }
@@ -450,7 +449,7 @@ gen_conf(Entry * head, FILE * fp)
     for (entry = head; entry != NULL; entry = entry->next) {
 	Line *line;
 
-	if (strcmp(entry->name, "arbtext"))
+	if (strcmp(entry->name, "comment"))
 	    fprintf(fp, "#  TAG: %s", entry->name);
 	if (entry->comment)
 	    fprintf(fp, "\t%s", entry->comment);
