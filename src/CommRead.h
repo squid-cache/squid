@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.5 2003/07/10 09:37:56 robertc Exp $
+ * $Id: CommRead.h,v 1.6 2004/02/18 01:58:59 adrian Exp $
  *
  * DEBUG: section 5    Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -79,6 +79,10 @@ public:
         return *this;
     }
 
+    bool dataValid()
+    {
+        return cbdataReferenceValid(data);
+    }
 
     bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rhs.data;}
 
