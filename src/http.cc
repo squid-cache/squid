@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.203 1997/10/27 22:49:49 wessels Exp $
+ * $Id: http.cc,v 1.204 1997/10/27 22:53:10 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -456,14 +456,6 @@ httpCheckPublic(struct _http_reply *reply, HttpStateData * httpState)
 	    return 1;
 	if (reply->expires > -1)
 	    return 1;
-#ifdef OLD_CODE
-	if (entry->mem_obj->request->protocol != PROTO_HTTP)
-	    /* XXX Remove this check after a while.  DW 8/21/96
-	     * We won't keep some FTP objects from neighbors running
-	     * 1.0.8 or earlier because their ftpget's don't 
-	     * add a Date: field */
-	    return 1;
-#endif
 	else
 	    return 0;
 	break;

@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.87 1997/10/25 17:22:38 wessels Exp $
+ * $Id: disk.cc,v 1.88 1997/10/27 22:53:09 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -119,30 +119,11 @@ typedef struct open_ctrl_t {
     char *path;
 } open_ctrl_t;
 
-#if UNUSED_CODE
-typedef struct _dwalk_ctrl {
-    int fd;
-    off_t offset;
-    int cur_len;
-    char *buf;			/* line buffer */
-    FILE_WALK_HD *handler;
-    void *client_data;
-    FILE_WALK_LHD *line_handler;
-    void *line_data;
-} dwalk_ctrl;
-
-#endif
-
 static AIOCB diskHandleWriteComplete;
 static AIOCB diskHandleReadComplete;
 static PF diskHandleRead;
 static PF diskHandleWrite;
 static void file_open_complete(void *, int, int);
-
-#if UNUSED_CODE
-static AIOCB diskHandleWalkComplete;
-static PF diskHandleWalk;
-#endif
 
 /* initialize table */
 int
@@ -481,121 +462,6 @@ file_read(int fd, char *buf, int req_len, int offset, DRCB * handler, void *clie
 #endif
     return DISK_OK;
 }
-
-
-#if UNUSED_CODE
-/* Read from FD and pass a line to routine. Walk to EOF. */
-static void
-diskHandleWalk(int fd, void *data)
-{
-    dwalk_ctrl *walk_dat = data;
-#if !USE_ASYNC_IO
-    int len;
-#endif
-    disk_ctrl_t *ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
-    ctrlp->fd = fd;
-    ctrlp->data = walk_dat;
-#if USE_ASYNC_IO
-    aioRead(fd,
-	walk_dat->buf,
-	DISK_LINE_LEN - 1,
-	diskHandleWalkComplete,
-	ctrlp);
-#else
-    len = read(fd, walk_dat->buf, DISK_LINE_LEN - 1);
-    diskHandleWalkComplete(ctrlp, len, errno);
-#endif
-}
-#endif
-
-#if UNUSED_CODE
-static void
-diskHandleWalkComplete(void *data, int retcode, int errcode)
-{
-    disk_ctrl_t *ctrlp = (disk_ctrl_t *) data;
-    dwalk_ctrl *walk_dat;
-    int fd;
-    int len;
-    LOCAL_ARRAY(char, temp_line, DISK_LINE_LEN);
-    int end_pos;
-    int st_pos;
-    int used_bytes;
-    walk_dat = (dwalk_ctrl *) ctrlp->data;
-    fd = ctrlp->fd;
-    len = retcode;
-    errno = errcode;
-    xfree(data);
-    if (len < 0) {
-	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk, walk_dat, 0);
-	    return;
-	}
-	debug(50, 1) ("diskHandleWalk: FD %d: error readingd: %s\n",
-	    fd, xstrerror());
-	walk_dat->handler(fd, DISK_ERROR, walk_dat->client_data);
-	safe_free(walk_dat->buf);
-	safe_free(walk_dat);
-	return;
-    } else if (len == 0) {
-	/* EOF */
-	walk_dat->handler(fd, DISK_EOF, walk_dat->client_data);
-	safe_free(walk_dat->buf);
-	safe_free(walk_dat);
-	return;
-    }
-    /* emulate fgets here. Cut the into separate line. newline is excluded */
-    /* it throws last partial line, if exist, away. */
-    used_bytes = st_pos = end_pos = 0;
-    while (end_pos < len) {
-	if (walk_dat->buf[end_pos] == '\n') {
-	    /* new line found */
-	    xstrncpy(temp_line, walk_dat->buf + st_pos, end_pos - st_pos + 1);
-	    used_bytes += end_pos - st_pos + 1;
-	    /* invoke line handler */
-	    walk_dat->line_handler(fd, temp_line, strlen(temp_line),
-		walk_dat->line_data);
-	    /* skip to next line */
-	    st_pos = end_pos + 1;
-	}
-	end_pos++;
-    }
-    /* update file pointer to the next to be read character */
-    walk_dat->offset += used_bytes;
-    /* reschedule it for next line. */
-    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk, walk_dat, 0);
-}
-#endif
-
-#if UNUSED_CODE
-/* start walk through whole file operation 
- * read one block and chop it to a line and pass it to provided 
- * handler one line at a time.
- * call a completion handler when done. */
-int
-file_walk(int fd,
-    FILE_WALK_HD * handler,
-    void *client_data,
-    FILE_WALK_LHD * line_handler,
-    void *line_data)
-{
-    dwalk_ctrl *walk_dat;
-    walk_dat = xcalloc(1, sizeof(dwalk_ctrl));
-    walk_dat->fd = fd;
-    walk_dat->offset = 0;
-    walk_dat->buf = xcalloc(1, DISK_LINE_LEN);
-    walk_dat->cur_len = 0;
-    walk_dat->handler = handler;
-    walk_dat->client_data = client_data;
-    walk_dat->line_handler = line_handler;
-    walk_dat->line_data = line_data;
-#if USE_ASYNC_IO
-    diskHandleWalk(fd, walk_dat);
-#else
-    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk, walk_dat, 0);
-#endif
-    return DISK_OK;
-}
-#endif
 
 int
 diskWriteIsComplete(int fd)

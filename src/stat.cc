@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.162 1997/10/25 17:22:59 wessels Exp $
+ * $Id: stat.cc,v 1.163 1997/10/27 22:53:12 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -337,9 +337,6 @@ statObjects(StoreEntry * sentry, int vm_or_not)
     int N = 0;
     int i;
     struct _store_client *sc;
-#if OLD_CODE
-    storeAppendPrintf(sentry, open_bracket);
-#endif
     for (entry = storeGetFirst(); entry != NULL; entry = storeGetNext()) {
 	mem = entry->mem_obj;
 	if (vm_or_not && mem == NULL)
@@ -347,17 +344,6 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	if ((++N & 0xFF) == 0) {
 	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
 	}
-#if OLD_CODE
-	storeAppendPrintf(sentry, "{%s %dL %-25s %s %3d %2d %8d %s}\n",
-	    describeStatuses(entry),
-	    (int) entry->lock_count,
-	    describeFlags(entry),
-	    describeTimestamps(entry),
-	    (int) entry->refcount,
-	    storePendingNClients(entry),
-	    mem ? mem->inmem_hi : entry->object_len,
-	    entry->url);
-#else
 	storeAppendPrintf(sentry, "%s %s\n",
 	    RequestMethodStr[entry->method], entry->url);
 	storeAppendPrintf(sentry, "\t%s\n", describeStatuses(entry));
@@ -391,11 +377,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    storeAppendPrintf(sentry, "\t\tswapin_fd: %d\n",
 		(int) sc->swapin_fd);
 	}
-#endif
     }
-#if OLD_CODE
-    storeAppendPrintf(sentry, close_bracket);
-#endif
 }
 
 void
