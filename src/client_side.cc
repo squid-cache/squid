@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.181 1997/12/31 23:55:12 wessels Exp $
+ * $Id: client_side.cc,v 1.182 1997/12/31 23:57:16 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1538,7 +1538,6 @@ clientReadRequest(int fd, void *data)
     int parser_return_code = 0;
     int k;
     request_t *request = NULL;
-    char *tmp;
     int size;
     method_t method;
     clientHttpRequest *http = NULL;
