@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.78 1996/12/18 00:05:26 wessels Exp $
+ * $Id: client_side.cc,v 1.79 1996/12/18 18:35:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -200,10 +200,10 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
 	    ch->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;	/* first */
 	    ia = ipcacheCheckNumeric(icpState->request->host);
 	    if (ia != NULL)
-	    fqdncache_nbgethostbyaddr(ia->in_addrs[0],
-		icpState->fd,
-		clientLookupDstFQDNDone,
-		icpState);
+		fqdncache_nbgethostbyaddr(ia->in_addrs[0],
+		    icpState->fd,
+		    clientLookupDstFQDNDone,
+		    icpState);
 	    return;
 	}
     }
