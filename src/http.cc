@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.248 1998/03/06 23:22:28 wessels Exp $
+ * $Id: http.cc,v 1.249 1998/03/07 05:48:38 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -729,9 +729,9 @@ httpSendRequest(int fd, void *data)
     buflen += 512;		/* lots of extra */
 
     if ((req->method == METHOD_POST || req->method == METHOD_PUT))
-           sendHeaderDone= httpSendRequestEntry;
-       else
-           sendHeaderDone= httpSendComplete;
+	sendHeaderDone = httpSendRequestEntry;
+    else
+	sendHeaderDone = httpSendComplete;
 
     if (buflen < DISK_PAGE_SIZE) {
 	buf = memAllocate(MEM_8K_BUF);
@@ -941,28 +941,27 @@ httpAbort(void *data)
 }
 
 static void
-httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void  *data)
+httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
     ErrorState *err;
     debug(11, 5) ("httpSendRequestEntry: FD %d: size %d: errflag %d.\n",
-        fd, size, errflag);
+	fd, size, errflag);
     if (size > 0) {
-        fd_bytes(fd, size, FD_WRITE);
+	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&Counter.server.all.kbytes_out, size);
 	kb_incr(&Counter.server.http.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
-        return;
+	return;
     if (errflag) {
-        err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
-        err->xerrno = errno;
-        err->request = requestLink(httpState->orig_request);
-        errorAppendEntry(entry, err);
-        comm_close(fd);
-        return;
-    } else {
-	pumpStart(fd, entry, httpState->orig_request , httpSendComplete, httpState);
+	err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+	err->xerrno = errno;
+	err->request = requestLink(httpState->orig_request);
+	errorAppendEntry(entry, err);
+	comm_close(fd);
+	return;
     }
+    pumpStart(fd, entry, httpState->orig_request, httpSendComplete, httpState);
 }
