@@ -118,6 +118,9 @@ static u_num32 msg_id_counter = 0;
 static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 
+static size_t htcpBuildDetail(char *, size_t, htcpStuff *);
+static void htcpTstReply(StoreEntry *, htcpSpecifier *, peer *);
+
 /*
  * STUFF FOR SENDING HTCP MESSAGES
  */
@@ -181,7 +184,15 @@ htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
 ssize_t
 htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
-    return htcpBuildSpecifier(buf, buflen, stuff);
+    switch(stuff->rr) {
+    case RR_REQUEST:
+        return htcpBuildSpecifier(buf, buflen, stuff);
+    case RR_RESPONSE:
+        return htcpBuildDetail(buf, buflen, stuff);
+    default:
+	fatal_dump("htcpBuildTstOpData: bad RR value");
+   }
+   return 0;
 }
 
 ssize_t
@@ -275,6 +286,9 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     ssize_t pktlen;
     char vbuf[32];
     htcpStuff stuff;
+        HttpHeader hdr; 
+        Packer pa;
+    MemBuf mb;
     snprintf(vbuf, sizeof(vbuf), "%3.1f", req->http_ver);
     stuff.op = HTCP_TST;
     stuff.rr = RR_REQUEST;
@@ -283,7 +297,13 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     stuff.method = RequestMethodStr[req->method];
     stuff.uri = storeUrl(e);
     stuff.version = vbuf;
-    stuff.req_hdrs = req->headers;
+        httpBuildRequestHeader(req, req, e, &hdr, -1, 0);
+        memBufDefInit(&mb);
+        packerToMemInit(&pa, &mb);
+        httpHeaderPackInto(&hdr, &pa);
+        httpHeaderClean(&hdr);
+        packerClean(&pa);
+    stuff.req_hdrs = mb.buf;
     pkt = htcpBuildPacket(&stuff, &pktlen);
     if (pkt == NULL) {
 	debug(31, 0) ("htcpQuery: htcpBuildPacket() failed\n");
@@ -380,16 +400,19 @@ htcpUnpackSpecifier(char *buf, int sz)
 }
 
 static void
-htcpHandleNop(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleNop(char *buf, int sz, peer *p)
 {
     debug(31, 1) ("htcpHandleNop: Unimplemented\n");
 }
 
 static void
-htcpHandleTst(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleTst(char *buf, int sz, peer *p)
 {
     /* buf should be a SPECIFIER */
     htcpSpecifier *s = htcpUnpackSpecifier(buf, sz);
+    StoreEntry *e;
+    const cache_key *key;
+    method_t m;
     if (NULL == s) {
 	debug(31, 1) ("htcpHandleTst: htcpUnpackSpecifier failed\n");
 	return;
@@ -398,23 +421,60 @@ htcpHandleTst(char *buf, int sz, struct sockaddr_in *from)
 	s->method,
 	s->uri,
 	s->version);
+    m = urlParseMethod(s->method);
     debug(31, 1) ("htcpHandleTst: %s\n", s->req_hdrs);
+    key = storeKeyPublic(s->uri, m);
+    e = storeGet(key);
+    if (NULL == e) {
+	/* cache miss */
+	htcpTstReply(NULL, NULL, p);
+#if WIP
+    } else if (!checkHeaders()) {
+	/* refresh/other miss */
+	htcpTstReply(NULL, NULL, p);
+#endif
+    } else {
+	/* hit */
+	htcpTstReply(e, s, p);
+    }
 }
 
 static void
-htcpHandleMon(char *buf, int sz, struct sockaddr_in *from)
+htcpTstReply(StoreEntry *e, htcpSpecifier *spec, peer *p)
+{
+    htcpStuff stuff;
+    char *pkt;
+    ssize_t pktlen;
+    stuff.op = HTCP_TST;
+    stuff.rr = RR_RESPONSE;
+    stuff.f1 = e ? 0 : 1;
+    stuff.method = spec->method;
+    stuff.uri = spec->uri;
+    stuff.version = spec->version;
+    stuff.req_hdrs = spec->req_hdrs;
+    pkt = htcpBuildPacket(&stuff, &pktlen);
+    if (pkt == NULL) {
+	debug(31, 0) ("htcpTstReply: htcpBuildPacket() failed\n");
+	return;
+    }
+    htcpSend(pkt, (int) pktlen, p);
+    xfree(pkt);
+}
+
+static void
+htcpHandleMon(char *buf, int sz, peer *p)
 {
     debug(31, 1) ("htcpHandleMon: Unimplemented\n");
 }
 
 static void
-htcpHandleSet(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleSet(char *buf, int sz, peer *p)
 {
     debug(31, 1) ("htcpHandleSet: Unimplemented\n");
 }
 
 static void
-htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleData(char *buf, int sz, peer *p)
 {
     htcpDataHeader hdr;
     if (sz < sizeof(htcpDataHeader)) {
@@ -444,16 +504,16 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
     sz -= sizeof(htcpDataHeader);
     switch (hdr.opcode) {
     case HTCP_NOP:
-	htcpHandleNop(buf, sz, from);
+	htcpHandleNop(buf, sz, p);
 	break;
     case HTCP_TST:
-	htcpHandleTst(buf, sz, from);
+	htcpHandleTst(buf, sz, p);
 	break;
     case HTCP_MON:
-	htcpHandleMon(buf, sz, from);
+	htcpHandleMon(buf, sz, p);
 	break;
     case HTCP_SET:
-	htcpHandleSet(buf, sz, from);
+	htcpHandleSet(buf, sz, p);
 	break;
     default:
 	assert(0);
@@ -465,6 +525,13 @@ static void
 htcpHandle(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpHeader htcpHdr;
+    peer *p;
+    p = whichPeer(from);
+    if (NULL == p) {
+        debug(31,1)("htcpHandle: HTCP message from non-peer: %s:%d\n",
+		inet_ntoa(from->sin_addr), (int) ntohs(from->sin_port));
+	return;
+    }
     if (sz < sizeof(htcpHeader)) {
 	debug(31, 0) ("htcpHandle: msg size less than htcpHeader size\n");
 	return;
@@ -480,7 +547,7 @@ htcpHandle(char *buf, int sz, struct sockaddr_in *from)
     }
     buf += sizeof(htcpHeader);
     sz -= sizeof(htcpHeader);
-    htcpHandleData(buf, sz, from);
+    htcpHandleData(buf, sz, p);
 }
 
 void
