@@ -1632,32 +1632,30 @@ NAME: memory_pools_limit
 COMMENT: (bytes)
 TYPE: b_size_t
 DEFAULT: none
-LOC: Config.onoff.mem_pools
+LOC: Config.MemPools.limit
 DOC_START
-	Used only with memory_pools on.
+	Used only with memory_pools on:
+	memory_pools_limit 50 MB
 
-	If set to a non-zero value, Squid will allocate at most the specified
-	limit for memory pools. All requests for memory that exceed this limit
-	will be handled by your malloc library. Squid does not allocate all
-	pools at once, but does it on-demand. Thus, it is safe to set
+	If set to a non-zero value, Squid will keep at most the specified
+	limit of allocated (but unused) memory in memory pools. All free()
+	requests that exceed this limit will be handled by your malloc
+	library. Squid does not pre-allocate any memory, just safe-keeps
+	objects that otherwise would be free()d. Thus, it is safe to set
 	memory_pools_limit to a reasonably high value even if your
-	configuration will use less memory. High value of memory_pools_limit
-	allows Squid to start allocation with larger memory chunks which is
-	more efficient.
+	configuration will use less memory.
 
-	If not set or set to zero, Squid will allocate memory for pools by
-	small chunks.  There will be no limit on the amount of memory it can
-	allocate.  No-limit mode is less efficient because Squid has more
-	memory chunks to maintain. However, this mode is useful when it is the
-	first time you run your configuration with mem_pools "on" and do not
-	want to guess the limit value.  Squid logs the actual amount of memory
-	used in cache log. Next time you run Squid, set memory_pools_limit
-	close to the value reported in the log.
+	If not set (default) or set to zero, Squid will keep all memory it
+	can. That is, there will be no limit on the total amount of memory
+	used for safe-keeping.
 
 	To disable memory allocation optimization, do not set
 	memory_pools_limit to 0. Set memory_pools to "off" instead.
 
-memory_pools_limit 50 MB
+	An overhead for maintaining memory pools is not taken into account
+	when the limit is checked. This overhead is close to four bytes per
+	object kept. However, pools may actually _save_ memory because of
+	reduced memory thrashing in your malloc library.
 DOC_END
 
 NAME: forwarded_for
