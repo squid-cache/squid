@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.46 2003/07/22 15:23:10 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.47 2003/08/10 07:43:42 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -698,6 +698,13 @@ CossSwapDir::writeCleanDone()
     cleanLog = NULL;
 }
 
+static void
+FreeObject(void *address)
+{
+    StoreSwapLogData *anObject = static_cast <StoreSwapLogData *>(address);
+    delete anObject;
+}
+
 void
 CossSwapDir::logEntry(const StoreEntry & e, int op) const
 {
@@ -718,7 +725,7 @@ CossSwapDir::logEntry(const StoreEntry & e, int op) const
                sizeof(StoreSwapLogData),
                NULL,
                NULL,
-               &FreeObject<StoreSwapLogData>);
+               &FreeObject);
 }
 
 void
