@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.227 2001/10/01 18:28:04 hno Exp $
+# $Id: cf.data.pre,v 1.228 2001/10/03 22:56:20 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1579,14 +1579,20 @@ DOC_START
 	then.
 
 	If the transfer has less than 'quick_abort_min' KB remaining,
-	it will finish the retrieval.  Setting 'quick_abort_min' to -1
-	will disable the quick_abort feature.
+	it will finish the retrieval.
 
 	If the transfer has more than 'quick_abort_max' KB remaining,
 	it will abort the retrieval.
 
 	If more than 'quick_abort_pct' of the transfer has completed,
 	it will finish the retrieval.
+
+	If you do not want any requests to continue after the client
+	has aborted, set both 'quick_abort_min' and 'quick_abort_max'
+	to '0 KB'.
+
+	If you want downloads to always continue if they are being
+	cached then set 'quick_abort_min' to '-1 KB'.
 DOC_END
 
 
