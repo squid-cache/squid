@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.83 1996/09/20 06:28:56 wessels Exp $
+ * $Id: main.cc,v 1.84 1996/09/20 20:27:49 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -344,12 +344,14 @@ serverConnectionsOpen(void)
 
     if (!httpd_accel_mode || Config.Accel.withProxy) {
 	if ((port = Config.Port.icp) > (u_short) 0) {
+	    enter_suid();
 	    theInIcpConnection = comm_open(SOCK_DGRAM,
 		0,
 		Config.Addrs.udp_incoming,
 		port,
 		COMM_NONBLOCKING,
 		"ICP Port");
+	    leave_suid();
 	    if (theInIcpConnection < 0)
 		fatal("Cannot open ICP Port");
 	    fd_note(theInIcpConnection, "ICP socket");
@@ -361,12 +363,14 @@ serverConnectionsOpen(void)
 		theInIcpConnection);
 
 	    if ((addr = Config.Addrs.udp_outgoing).s_addr != INADDR_NONE) {
+		enter_suid();
 		theOutIcpConnection = comm_open(SOCK_DGRAM,
 		    0,
 		    addr,
 		    port,
 		    COMM_NONBLOCKING,
 		    "ICP Port");
+	        leave_suid();
 		if (theOutIcpConnection < 0)
 		    fatal("Cannot open Outgoing ICP Port");
 		comm_set_select_handler(theOutIcpConnection,
