@@ -29,6 +29,6 @@ Internet Explorer version 3.0 eller bedre, eller en browser der
 opfylder HTTP/1.1 standarden. Kontakt 
 <A HREF="mailto:%w">cache administratoren</a> hvis du har problemer 
 med at autenticiere dig eller 
-<A HREF="http://%h/cgi-bin/chpasswd.cgi\">skift</a> dit
+<A HREF="http://%h/cgi-bin/chpasswd.cgi">skift</a> dit
 password.
 </P>
