@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.116 2001/01/07 23:36:41 hno Exp $
+ * $Id: typedefs.h,v 1.117 2001/01/08 19:36:27 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -61,7 +61,6 @@ typedef struct _acl_ip_data acl_ip_data;
 typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
-typedef struct _acl_proxy_auth acl_proxy_auth;
 typedef struct _auth_user_t auth_user_t;
 typedef struct _auth_user_request_t auth_user_request_t;
 typedef struct _auth_user_hash_pointer auth_user_hash_pointer;
@@ -353,4 +352,4 @@ typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
 typedef int STDIRSELECT(const StoreEntry *);
 
-#endif /* _TYPEDEFS_H_ */
+#endif				/* _TYPEDEFS_H_ */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.236 2001/01/07 23:36:37 hno Exp $
+ * $Id: acl.cc,v 1.237 2001/01/08 19:36:26 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -641,12 +641,13 @@ aclParseUserList(void **current)
     acl_user_data *data;
     splayNode *Top = NULL;
 
-    debug(28, 2) ("aclParseUserList: parsing authlist\n");
+    debug(28, 2) ("aclParseUserList: parsing user list\n");
     if (*current == NULL) {
 	debug(28, 3) ("aclParseUserList: current is null. Creating\n");
-	*current = memAllocate(MEM_ACL_USER_DATA);	/*we rely on mA. zeroing */
+	*current = memAllocate(MEM_ACL_USER_DATA);
     }
     data = *current;
+    Top = data->names;
     if ((t = strtokFile())) {
 	debug(28, 5) ("aclParseUserList: First token is %s\n", t);
 	if (strcmp("-i", t) == 0) {
@@ -665,7 +666,7 @@ aclParseUserList(void **current)
 	data->flags.case_insensitive);
     /* we might inherit from a previous declaration */
 
-    debug(28, 4) ("aclParseUserList: parsing proxy-auth list\n");
+    debug(28, 4) ("aclParseUserList: parsing user list\n");
     while ((t = strtokFile())) {
 	debug(28, 6) ("aclParseUserList: Got token: %s\n", t);
 	if (data->flags.case_insensitive)
@@ -1977,7 +1978,8 @@ static void
 aclFreeUserData(void *data)
 {
     acl_user_data *d = data;
-    splay_destroy(d->names, xfree);
+    if (d->names)
+	splay_destroy(d->names, xfree);
     memFree(d, MEM_ACL_USER_DATA);
 }
 
@@ -2802,4 +2804,4 @@ aclDumpArpList(void *data)
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */
-#endif /* USE_ARP_ACL */
+#endif				/* USE_ARP_ACL */
