@@ -279,7 +279,6 @@ struct _SquidConfig {
     wordlist *mcast_group_list;
     wordlist *dns_testname_list;
     wordlist *dns_nameservers;
-    relist *cache_stop_relist;
     peer *peers;
     int npeers;
     struct {
