@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.535 2001/04/14 00:25:17 hno Exp $
+ * $Id: client_side.cc,v 1.536 2001/04/17 22:43:10 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2637,11 +2637,13 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		    snprintf(http->uri, url_sz, "http://%s:%d%s",
 			inet_ntoa(http->conn->me.sin_addr),
 			vport, url);
-	    } else if (vport_mode)
-		vport = natLookup.nl_realport;
-	    snprintf(http->uri, url_sz, "http://%s:%d%s",
-		inet_ntoa(natLookup.nl_realip),
-		vport, url);
+	    } else {
+		if (vport_mode)
+		    vport = natLookup.nl_realport;
+		snprintf(http->uri, url_sz, "http://%s:%d%s",
+		    inet_ntoa(natLookup.nl_realip),
+		    vport, url);
+	    }
 #else
 #if LINUX_NETFILTER
 	    /* If the call fails the address structure will be unchanged */
