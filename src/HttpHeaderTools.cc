@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.4 1998/03/12 00:28:53 rousskov Exp $
+ * $Id: HttpHeaderTools.cc,v 1.5 1998/03/15 04:25:28 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -192,6 +192,8 @@ void httpHeaderTestParser(const char *hstr)
     Packer p;
     MemBuf mb;
     assert(hstr);
+    /* disabled for now */
+    return;
     /* do not print too much, kludge */
     if (bug_count > 50 && (lrand48() % bug_count) > 25L)
 	return;
