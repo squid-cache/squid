@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.59 1998/03/31 20:36:04 wessels Exp $
+ * $Id: store_dir.cc,v 1.60 1998/04/01 19:39:18 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -528,6 +528,7 @@ storeDirWriteCleanLogs(int reopen)
     char **new;
     char **cln;
     int dirn;
+    int N = Config.cacheSwap.n_configured;
     dlink_node *m;
     char **outbuf;
     off_t *outbufoffset;
@@ -547,11 +548,11 @@ storeDirWriteCleanLogs(int reopen)
     }
     debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");
     start = squid_curtime;
-    fd = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
-    cur = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    new = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    cln = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+    fd = xcalloc(N, sizeof(int));
+    cur = xcalloc(N, sizeof(char *));
+    new = xcalloc(N, sizeof(char *));
+    cln = xcalloc(N, sizeof(char *));
+    for (dirn = 0; dirn < N; dirn++) {
 	fd[dirn] = -1;
 	cur[dirn] = xstrdup(storeDirSwapLogFile(dirn, NULL));
 	new[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".clean"));
@@ -574,10 +575,10 @@ storeDirWriteCleanLogs(int reopen)
 	    fchmod(fd[dirn], sb.st_mode);
 #endif
     }
-    outbuf = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    outbufoffset = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	outbuf[dirn] = xcalloc(Config.cacheSwap.n_configured, CLEAN_BUF_SZ);
+    outbuf = xcalloc(N, sizeof(char *));
+    outbufoffset = xcalloc(N, sizeof(*outbufoffset));
+    for (dirn = 0; dirn < N; dirn++) {
+	outbuf[dirn] = xcalloc(CLEAN_BUF_SZ, 1);
 	outbufoffset[dirn] = 0;
     }
     for (m = store_list.tail; m; m = m->prev) {
@@ -595,7 +596,7 @@ storeDirWriteCleanLogs(int reopen)
 	if (EBIT_TEST(e->flag, ENTRY_SPECIAL))
 	    continue;
 	dirn = storeDirNumber(e->swap_file_number);
-	assert(dirn < Config.cacheSwap.n_configured);
+	assert(dirn < N);
 	if (fd[dirn] < 0)
 	    continue;
 	memset(&s, '\0', ss);
@@ -630,7 +631,7 @@ storeDirWriteCleanLogs(int reopen)
 	}
     }
     /* flush */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+    for (dirn = 0; dirn < N; dirn++) {
 	if (outbufoffset[dirn] == 0)
 	    continue;
 	if (fd[dirn] < 0)
@@ -649,7 +650,7 @@ storeDirWriteCleanLogs(int reopen)
     safe_free(outbuf);
     safe_free(outbufoffset);
     /* rename */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+    for (dirn = 0; dirn < N; dirn++) {
 	if (fd[dirn] < 0)
 	    continue;
 	if (rename(new[dirn], cur[dirn]) < 0) {
@@ -668,7 +669,7 @@ storeDirWriteCleanLogs(int reopen)
 	(double) n / (r > 0 ? r : 1));
     /* touch a timestamp file if we're not still validating */
     if (!store_rebuilding) {
-	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	for (dirn = 0; dirn < N; dirn++) {
 	    if (fd[dirn] < 0)
 		continue;
 	    file_close(file_open(cln[dirn],
@@ -676,7 +677,7 @@ storeDirWriteCleanLogs(int reopen)
 	}
     }
     /* close */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+    for (dirn = 0; dirn < N; dirn++) {
 	safe_free(cur[dirn]);
 	safe_free(new[dirn]);
 	safe_free(cln[dirn]);
