@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.155 1998/05/30 19:43:20 rousskov Exp $
+ * $Id: tools.cc,v 1.156 1998/06/02 04:12:33 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -112,7 +112,7 @@ The Squid Cache (version %s) died.\n\
 You've encountered a fatal error in the Squid Cache version %s.\n\
 If a core file was created (possibly in the swap directory),\n\
 please execute 'gdb squid core' or 'dbx squid core', then type 'where',\n\
-and report the trace back to squid-bugs@nlanr.net.\n\
+and report the trace back to squid-bugs@ircache.net.\n\
 \n\
 Thanks!\n"
 
