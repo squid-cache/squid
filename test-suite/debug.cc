@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.1 2003/07/07 22:44:28 robertc Exp $
+ * $Id: debug.cc,v 1.2 2003/07/08 22:38:50 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -42,7 +42,7 @@
 class StreamTest {
   public:
     std::ostream &serialise(std::ostream &);
-    char const *getAnInt() const;
+    int const getAnInt() const;
     char const *getACString() const;
 };
 
@@ -58,10 +58,10 @@ StreamTest::serialise(std::ostream &aStream)
     return aStream;
 }
 
-char const *
+int const
 StreamTest::getAnInt() const
 {
-    return "5";
+    return 5;
 }
 
 char const *
