@@ -1,3 +1,5 @@
+Changes to squid-1.1.beta21 (November 22, 1996):
+
 	- Fixed setting entry->timestamp for NOT MODIFIED replies.
 	- Changed old HTTP/1.1 Forwarded: header to new Via:.
 	- Changed urlCheckRequest() to allow all FTP requests, including
