@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.50 2001/05/04 13:37:42 hno Exp $
+ * $Id: comm_select.cc,v 1.51 2001/10/19 22:34:49 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -317,6 +317,7 @@ comm_poll(int msec)
     int i;
     int maxfd;
     unsigned long nfds;
+    unsigned long npending;
     int num;
     int callicp = 0, callhttp = 0;
     int calldns = 0;
@@ -341,6 +342,7 @@ comm_poll(int msec)
 	    comm_poll_http_incoming();
 	callicp = calldns = callhttp = 0;
 	nfds = 0;
+	npending = 0;
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
 	    int events;
@@ -370,19 +372,23 @@ comm_poll(int msec)
 		pfds[nfds].events = events;
 		pfds[nfds].revents = 0;
 		nfds++;
+		if ((events & POLLRDNORM) && fd_table[i].flags.read_pending)
+		    npending++;
 	    }
 	}
 	if (nfds == 0) {
 	    assert(shutting_down);
 	    return COMM_SHUTDOWN;
 	}
+	if (npending)
+	    msec = 0;
 	if (msec > MAX_POLL_TIME)
 	    msec = MAX_POLL_TIME;
 	for (;;) {
 	    statCounter.syscalls.polls++;
 	    num = poll(pfds, nfds, msec);
 	    statCounter.select_loops++;
-	    if (num >= 0)
+	    if (num >= 0 || npending >= 0)
 		break;
 	    if (ignoreErrno(errno))
 		continue;
@@ -391,22 +397,27 @@ comm_poll(int msec)
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
-	debug(5, num ? 5 : 8) ("comm_poll: %d FDs ready\n", num);
+	debug(5, num ? 5 : 8) ("comm_poll: %d+%d FDs ready\n", num, npending);
 	statHistCount(&statCounter.select_fds_hist, num);
 	/* Check timeout handlers ONCE each second. */
 	if (squid_curtime > last_timeout) {
 	    last_timeout = squid_curtime;
 	    checkTimeouts();
 	}
-	if (num == 0)
+	if (num == 0 && npending == 0)
 	    continue;
 	/* scan each socket but the accept socket. Poll this 
 	 * more frequently to minimize losses due to the 5 connect 
 	 * limit in SunOS */
 	for (i = 0; i < nfds; i++) {
 	    fde *F;
-	    int revents;
-	    if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
+	    int revents = pfds[i].revents;
+	    fd = pfds[i].fd;
+	    if (fd == -1)
+		continue;
+	    if (fd_table[fd].flags.read_pending)
+		revents |= POLLIN;
+	    if (revents == 0)
 		continue;
 	    if (fdIsIcp(fd)) {
 		callicp = 1;
@@ -632,6 +643,7 @@ int
 comm_select(int msec)
 {
     fd_set readfds;
+    fd_set pendingfds;
     fd_set writefds;
 #if DELAY_POOLS
     fd_set slowfds;
@@ -640,6 +652,7 @@ comm_select(int msec)
     int fd;
     int maxfd;
     int num;
+    int pending;
     int callicp = 0, callhttp = 0;
     int calldns = 0;
     int maxindex;
@@ -649,6 +662,7 @@ comm_select(int msec)
     int i;
 #endif
     fd_mask *fdsp;
+    fd_mask *pfdsp;
     fd_mask tmask;
     static time_t last_timeout = 0;
     struct timeval poll_time;
@@ -675,7 +689,8 @@ comm_select(int msec)
 	    howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
 	xmemcpy(&writefds, &global_writefds,
 	    howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
-	/* remove stalled FDs */
+	/* remove stalled FDs, and deal with pending descriptors */
+	pending = 0;
 	maxindex = howmany(maxfd, FD_MASK_BITS);
 	fdsp = (fd_mask *) & readfds;
 	for (j = 0; j < maxindex; j++) {
@@ -699,6 +714,10 @@ comm_select(int msec)
 #endif
 		default:
 		    fatalf("bad return value from commDeferRead(FD %d)\n", fd);
+		}
+		if (FD_ISSET(fd, &readfds) && fd_table[fd].flags.read_pending) {
+		    FD_SET(fd, &pendingfds);
+		    pending++;
 		}
 	    }
 	}
@@ -727,13 +746,15 @@ comm_select(int msec)
 	if (msec < 0)
 	    msec = MAX_POLL_TIME;
 #endif
+	if (pending)
+	    msec = 0;
 	for (;;) {
 	    poll_time.tv_sec = msec / 1000;
 	    poll_time.tv_usec = (msec % 1000) * 1000;
 	    statCounter.syscalls.selects++;
 	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
 	    statCounter.select_loops++;
-	    if (num >= 0)
+	    if (num >= 0 || pending > 0)
 		break;
 	    if (ignoreErrno(errno))
 		break;
@@ -743,10 +764,10 @@ comm_select(int msec)
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
-	if (num < 0)
+	if (num < 0 && !pending)
 	    continue;
-	debug(5, num ? 5 : 8) ("comm_select: %d FDs ready at %d\n",
-	    num, (int) squid_curtime);
+	debug(5, num ? 5 : 8) ("comm_select: %d+%d FDs ready at %d\n",
+	    num, pending, (int) squid_curtime);
 	statHistCount(&statCounter.select_fds_hist, num);
 	/* Check lifetime and timeout handlers ONCE each second.
 	 * Replaces brain-dead check every time through the loop! */
@@ -754,13 +775,14 @@ comm_select(int msec)
 	    last_timeout = squid_curtime;
 	    checkTimeouts();
 	}
-	if (num == 0)
+	if (num == 0 && pending == 0)
 	    continue;
 	/* Scan return fd masks for ready descriptors */
 	fdsp = (fd_mask *) & readfds;
+	pfdsp = (fd_mask *) & pendingfds;
 	maxindex = howmany(maxfd, FD_MASK_BITS);
 	for (j = 0; j < maxindex; j++) {
-	    if ((tmask = fdsp[j]) == 0)
+	    if ((tmask = (fdsp[j] | pfdsp[j])) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < FD_MASK_BITS; k++) {
 		if (tmask == 0)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.405 2001/10/17 20:25:03 hno Exp $
+ * $Id: structs.h,v 1.406 2001/10/19 22:34:49 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -330,6 +330,9 @@ struct _https_port_list {
     struct sockaddr_in s;
     char *cert;
     char *key;
+    int version;
+    char *cipher;
+    char *options;
 };
 
 #endif
@@ -668,9 +671,7 @@ struct _SquidConfig {
 #endif
 #if USE_SSL
     struct {
-	char *certificate;
-	char *key;
-	int version;
+	int unclean_shutdown;
     } SSL;
 #endif
     wordlist *ext_methods;
@@ -762,6 +763,7 @@ struct _fde {
 	unsigned int called_connect:1;
 	unsigned int nodelay:1;
 	unsigned int close_on_exec:1;
+	unsigned int read_pending:1;
     } flags;
     int bytes_read;
     int bytes_written;
@@ -789,6 +791,7 @@ struct _fde {
     WRITE_HANDLER *write_method;
 #if USE_SSL
     SSL *ssl;
+    int ssl_shutdown:1;
 #endif
 };
 

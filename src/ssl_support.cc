@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.3 2001/08/26 22:02:19 hno Exp $
+ * $Id: ssl_support.cc,v 1.4 2001/10/19 22:34:49 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 81     SSL accelerator support
@@ -86,8 +86,147 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     return ok;
 }
 
+static struct ssl_option {
+    const char *name;
+    long value;
+} ssl_options[] = {
+
+    {
+	"MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
+    },
+    {
+	"NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
+    },
+    {
+	"NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+    },
+    {
+	"SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
+    },
+    {
+	"MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
+    },
+    {
+	"MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
+    },
+    {
+	"SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
+    },
+    {
+	"TLS_D5_BUG", SSL_OP_TLS_D5_BUG
+    },
+    {
+	"TLS_BLOCK_PADDING_BUG", SSL_OP_TLS_BLOCK_PADDING_BUG
+    },
+    {
+	"TLS_ROLLBACK_BUG", SSL_OP_TLS_ROLLBACK_BUG
+    },
+    {
+	"SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE
+    },
+    {
+	"EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA
+    },
+    {
+	"PKCS1_CHECK_1", SSL_OP_PKCS1_CHECK_1
+    },
+    {
+	"PKCS1_CHECK_2", SSL_OP_PKCS1_CHECK_2
+    },
+    {
+	"NETSCAPE_CA_DN_BUG", SSL_OP_NETSCAPE_CA_DN_BUG
+    },
+    {
+	"NON_EXPORT_FIRST", SSL_OP_NON_EXPORT_FIRST
+    },
+    {
+	"NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+    },
+    {
+	"ALL", SSL_OP_ALL
+    },
+    {
+	"NO_SSLv2", SSL_OP_NO_SSLv2
+    },
+    {
+	"NO_SSLv3", SSL_OP_NO_SSLv3
+    },
+    {
+	"NO_TLSv1", SSL_OP_NO_TLSv1
+    },
+    {
+	"", 0
+    },
+    {
+	NULL, 0
+    }
+};
+
+static long 
+ssl_parse_options(const char *options)
+{
+    long op = SSL_OP_ALL;
+    char *tmp;
+    char *option;
+
+    if (!options)
+	goto no_options;
+
+    tmp = xstrdup(options);
+    option = strtok(tmp, ":,");
+    while (option) {
+	struct ssl_option *opt = NULL, *opttmp;
+	long value = 0;
+	enum {
+	    MODE_ADD, MODE_REMOVE
+	} mode;
+	switch (*option) {
+	case '!':
+	case '-':
+	    mode = MODE_REMOVE;
+	    option++;
+	    break;
+	case '+':
+	    mode = MODE_ADD;
+	    option++;
+	    break;
+	default:
+	    mode = MODE_ADD;
+	    break;
+	}
+	for (opttmp = ssl_options; opttmp->name; opttmp++) {
+	    if (strcmp(opttmp->name, option) == 0) {
+		opt = opttmp;
+		break;
+	    }
+	}
+	if (opt)
+	    value = opt->value;
+	else if (strncmp(option, "0x", 2) == 0) {
+	    /* Special case.. hex specification */
+	    value = strtol(option + 2, NULL, 16);
+	} else {
+	    fatalf("Unknown SSL option '%s'", option);
+	    value = 0;		/* Keep GCC happy */
+	}
+	switch (mode) {
+	case MODE_ADD:
+	    op |= value;
+	    break;
+	case MODE_REMOVE:
+	    op &= ~value;
+	    break;
+	}
+	option = strtok(NULL, ":,");
+    }
+
+    safe_free(tmp);
+  no_options:
+    return op;
+}
+
 SSL_CTX *
-sslLoadCert(const char *certfile, const char *keyfile)
+sslCreateContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options)
 {
     int ssl_error;
     SSL_METHOD *method;
@@ -104,7 +243,7 @@ sslLoadCert(const char *certfile, const char *keyfile)
 	certfile = keyfile;
 
     debug(81, 1) ("Initialising SSL.\n");
-    switch (Config.SSL.version) {
+    switch (version) {
     case 2:
 	debug(81, 5) ("Using SSLv2.\n");
 	method = SSLv2_server_method();
@@ -130,8 +269,16 @@ sslLoadCert(const char *certfile, const char *keyfile)
 	fatalf("Failed to allocate SSL context: %s\n",
 	    ERR_error_string(ssl_error, NULL));
     }
-    SSL_CTX_set_options(sslContext, SSL_OP_ALL);
+    SSL_CTX_set_options(sslContext, ssl_parse_options(options));
 
+    if (cipher) {
+	debug(81, 5) ("Using chiper suite %s.\n", cipher);
+	if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
+	    ssl_error = ERR_get_error();
+	    fatalf("Failed to set SSL cipher suite: %s\n",
+		ERR_error_string(ssl_error, NULL));
+	}
+    }
     debug(81, 1) ("Using certificate in %s\n", certfile);
     if (!SSL_CTX_use_certificate_file(sslContext, certfile, SSL_FILETYPE_PEM)) {
 	ssl_error = ERR_get_error();
@@ -172,7 +319,17 @@ ssl_read_method(fd, buf, len)
      char *buf;
      int len;
 {
-    return (SSL_read(fd_table[fd].ssl, buf, len));
+    int i;
+
+    i = SSL_read(fd_table[fd].ssl, buf, len);
+
+    if (i > 0 && SSL_pending(fd_table[fd].ssl) > 0) {
+	debug(81, 2) ("SSL fd %d is pending\n", fd);
+	fd_table[fd].flags.read_pending = 1;
+    } else
+	fd_table[fd].flags.read_pending = 0;
+
+    return i;
 }
 
 int
@@ -182,4 +339,18 @@ ssl_write_method(fd, buf, len)
      int len;
 {
     return (SSL_write(fd_table[fd].ssl, buf, len));
+}
+
+void
+ssl_shutdown_method(fd)
+{
+    SSL *ssl = fd_table[fd].ssl;
+    if (!fd_table[fd].ssl_shutdown) {
+	fd_table[fd].ssl_shutdown = 1;
+	if (Config.SSL.unclean_shutdown)
+	    SSL_set_shutdown(ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+	else
+	    SSL_set_shutdown(ssl, SSL_RECEIVED_SHUTDOWN);
+    }
+    SSL_shutdown(ssl);
 }

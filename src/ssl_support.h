@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.3 2001/10/08 16:18:33 hno Exp $
+ * $Id: ssl_support.h,v 1.4 2001/10/19 22:34:49 hno Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -43,8 +43,9 @@
 #include <openssl/err.h>
 #endif
 
-SSL_CTX *sslLoadCert(const char *certfile, const char *keyfile);
+SSL_CTX *sslCreateContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options);
 int ssl_read_method(int, char *, int);
 int ssl_write_method(int, const char *, int);
+void ssl_shutdown_method(int);
 
 #endif /* SQUID_SSL_SUPPORT_H */

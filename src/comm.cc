@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.322 2001/10/17 20:25:01 hno Exp $
+ * $Id: comm.cc,v 1.323 2001/10/19 22:34:49 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -602,7 +602,7 @@ comm_lingering_close(int fd)
 {
 #if USE_SSL
     if (fd_table[fd].ssl)
-	SSL_shutdown(fd_table[fd].ssl);
+	ssl_shutdown_method(fd);
 #endif
     if (shutdown(fd, 1) < 0) {
 	comm_close(fd);
@@ -633,7 +633,7 @@ comm_close(int fd)
     F->flags.closing = 1;
 #if USE_SSL
     if (F->ssl)
-	SSL_shutdown(F->ssl);
+	ssl_shutdown_method(fd);
 #endif
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
     commCallCloseHandlers(fd);
