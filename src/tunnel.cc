@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.129 2002/10/21 15:13:40 adrian Exp $
+ * $Id: tunnel.cc,v 1.130 2002/10/21 15:18:32 adrian Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -307,7 +307,7 @@ sslTimeout(int fd, void *data)
 }
 
 static void
-sslConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, void *data)
+sslConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
 	SslStateData *sslState = (SslStateData *)data;
 	if (flag != COMM_OK) {
@@ -350,8 +350,8 @@ sslConnected(int fd, void *data)
     SslStateData *sslState = (SslStateData *)data;
     debug(26, 3) ("sslConnected: FD %d sslState=%p\n", fd, sslState);
     *sslState->status_ptr = HTTP_OK;
-    comm_old_write(sslState->client.fd, conn_established, strlen(conn_established),
-      sslConnectedWriteDone, sslState, NULL);
+    comm_write(sslState->client.fd, conn_established, strlen(conn_established),
+      sslConnectedWriteDone, sslState);
 }
 
 static void
