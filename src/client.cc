@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.91 2001/01/12 00:37:15 wessels Exp $
+ * $Id: client.cc,v 1.92 2001/02/07 19:10:12 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -46,7 +46,7 @@ static void usage(const char *progname);
 static int Now(struct timeval *);
 static SIGHDLR catch;
 static SIGHDLR pipe_handler;
-static void set_our_signal();
+static void set_our_signal(void);
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
 static int put_fd;
