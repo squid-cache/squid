@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.287 1998/11/13 06:00:31 wessels Exp $
+ * $Id: protos.h,v 1.288 1998/11/13 20:50:55 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -827,7 +827,6 @@ extern void storeKeyFree(const cache_key *);
 extern const cache_key *storeKeyScan(const char *);
 extern const char *storeKeyText(const cache_key *);
 extern const cache_key *storeKeyPublic(const char *, const method_t);
-extern const cache_key *storeKeyPublicOld(const char *, method_t);
 extern const cache_key *storeKeyPrivate(const char *, method_t, int);
 extern int storeKeyHashBuckets(int);
 extern int storeKeyNull(const cache_key *);

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.44 1998/11/12 06:28:23 wessels Exp $
+ * $Id: refresh.cc,v 1.45 1998/11/13 20:50:56 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -51,6 +51,7 @@ static struct RefreshCounts {
     int request_max_age_stale;
     int request_reload2ims_stale;
     int request_reload_stale;
+    int negative_age_stale;
     int min_age_override_exp_fresh;
     int min_age_override_lmt_fresh;
     int response_expires_stale;
@@ -181,6 +182,11 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
 	    }
 	}
 #endif
+	if (age < 0) {
+	    debug(22, 3) ("refreshCheck: YES: age < 0\n");
+	    rc->negative_age_stale++;
+	    return 1;
+	}
 	if (request->max_age > -1) {
 	    if (age > request->max_age) {
 		debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
