@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.61 2001/10/08 16:18:31 hno Exp $
+ * $Id: util.h,v 1.62 2001/10/17 01:36:07 hno Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -75,7 +75,7 @@ extern double tvSubDsec(struct timeval, struct timeval);
 extern char *xstrncpy(char *, const char *, size_t);
 extern size_t xcountws(const char *str);
 extern time_t parse_rfc1123(const char *str);
-extern void *xcalloc(int, size_t);
+extern void *xcalloc(size_t, size_t);
 extern void *xmalloc(size_t);
 extern void *xrealloc(void *, size_t);
 extern void Tolower(char *);
