@@ -1,7 +1,12 @@
+Changes to squid-1.1.alpha12:
+
 	- Added debugging output for error pages
 	- Rewrote storeGetMemSpace()
 	- Fixed hot_vm accounting.
 	- Changed protoUndispatch() to never call squid_error_entry().
+	- report all error pages to the debug log
+	- Added -i option which forces IP cache entry to be invalidated
+	  just after an object retrieval begins.
 
 Changes to squid-1.1.alpha11:
 
