@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.4 1998/07/22 20:36:48 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.5 1998/08/17 21:19:42 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -40,39 +40,50 @@
 int
 httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end)
 {
-    /* adopted with mods from mime_headers_end() */
-    const char *p1 = strstr(*parse_start, "\n\r\n");
-    const char *p2 = strstr(*parse_start, "\n\n");
-    const char *end = NULL;
-
-    if (p1 && p2)
-	end = p1 < p2 ? p1 : p2;
-    else
-	end = p1 ? p1 : p2;
-
+    /*
+     * parse_start points to the first line of HTTP message *headers*,
+     * not including the request or status lines
+     */
+    size_t l = strlen(*parse_start);
+    size_t end = headersEnd(*parse_start, l);
+    int nnl;
     if (end) {
 	*blk_start = *parse_start;
-	*blk_end = end + 1;
-	*parse_start = end + (end == p1 ? 3 : 2);
+	*blk_end = *parse_start + end - 1;
+	/*
+	 * leave blk_end pointing to the first character after the
+	 * first newline which terminates the headers
+	 */
+	assert(**blk_end == '\n');
+	while (*(*blk_end - 1) == '\r')
+	    (*blk_end)--;
+	assert(*(*blk_end - 1) == '\n');
+	*parse_start += end;
 	return 1;
     }
-    /* no headers, case 1 */
-    if ((*parse_start)[0] == '\r' && (*parse_start)[1] == '\n') {
-	*blk_start = *parse_start;
-	*blk_end = *blk_start;
-	*parse_start += 2;
-	return 1;
+    /*
+     * If we didn't find the end of headers, and parse_start does
+     * NOT point to a CR or NL character, then return failure
+     */
+    if (**parse_start != '\r' && **parse_start != '\n')
+	return 0;		/* failure */
+    /*
+     * If we didn't find the end of headers, and parse_start does point
+     * to an empty line, then we have empty headers.  Skip all CR and
+     * NL characters up to the first NL.  Leave parse_start pointing at
+     * the first character after the first NL.
+     */
+    *blk_start = *parse_start;
+    *blk_end = *blk_start;
+    for (nnl = 0; nnl == 0; *parse_start++) {
+	if (**parse_start == '\r')
+	    (void) 0;
+	else if (**parse_start == '\n')
+	    nnl++;
+	else
+	    break;
     }
-    /* no headers, case 2 */
-    if ((*parse_start)[0] == '\n') {
-	/* no headers */
-	*blk_start = *parse_start;
-	*blk_end = *blk_start;
-	*parse_start += 1;
-	return 1;
-    }
-    /* failure */
-    return 0;
+    return 1;
 }
 
 /* returns true if connection should be "persistent" 
