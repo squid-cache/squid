@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.47 1998/02/06 17:47:11 wessels Exp $
+ * $Id: store_dir.cc,v 1.48 1998/02/06 18:54:10 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -203,11 +203,13 @@ storeDirValidFileno(int fn)
 {
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
-    SwapDir *SD;
     if (dirn > Config.cacheSwap.n_configured)
 	return 0;
-    SD = &Config.cacheSwap.swapDirs[dirn];
-    if (filn > SD->map->max_n_files)
+    if (dirn < 0)
+	return 0;
+    if (filn < 0)
+	return 0;
+    if (filn > Config.cacheSwap.swapDirs[dirn].map->max_n_files)
 	return 0;
     return 1;
 }

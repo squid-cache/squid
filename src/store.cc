@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.377 1998/02/06 17:47:09 wessels Exp $
+ * $Id: store.cc,v 1.378 1998/02/06 18:54:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -230,7 +230,7 @@ destroy_StoreEntry(StoreEntry * e)
 	destroy_MemObject(e);
     storeHashDelete(e);
     assert(e->key == NULL);
-    xfree(e);
+    memFree(MEM_STOREENTRY, e);
 }
 
 static void
