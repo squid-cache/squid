@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.4 1996/07/11 17:25:24 wessels Exp $
+ * $Id: ident.cc,v 1.5 1996/07/18 20:27:04 wessels Exp $
  *
  * DEBUG: section 31    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -49,7 +49,7 @@ void identStart(sock, icpState)
 {
     char *host;
     u_short port;
-    static char reqbuf[BUFSIZ];
+    LOCAL_ARRAY(char, reqbuf, BUFSIZ);
     int status;
 
     host = inet_ntoa(icpState->peer.sin_addr);
@@ -104,7 +104,7 @@ static void identReadReply(fd, icpState)
      int fd;
      icpStateData *icpState;
 {
-    static char buf[BUFSIZ];
+    LOCAL_ARRAY(char, buf, BUFSIZ);
     char *t = NULL;
     int len = -1;
 

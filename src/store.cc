@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.69 1996/07/17 17:10:00 wessels Exp $
+ * $Id: store.cc,v 1.70 1996/07/18 20:27:10 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -387,7 +387,7 @@ void storeSetMemStatus(e, status)
 static char *time_describe(t)
      time_t t;
 {
-    static char buf[128];
+    LOCAL_ARRAY(char, buf, 128);
 
     if (t < 60) {
 	sprintf(buf, "%ds", (int) t);
@@ -1024,7 +1024,7 @@ void storeAppend(e, data, len)
 void storeAppendPrintf(StoreEntry * e, char *fmt,...)
 {
     va_list args;
-    static char buf[4096];
+    LOCAL_ARRAY(char, buf, 4096);
     va_start(args, fmt);
 #else
 void storeAppendPrintf(va_alist)
@@ -1033,7 +1033,7 @@ void storeAppendPrintf(va_alist)
     va_list args;
     StoreEntry *e = NULL;
     char *fmt = NULL;
-    static char buf[4096];
+    LOCAL_ARRAY(char, buf, 4096);
     va_start(args);
     e = va_arg(args, StoreEntry *);
     fmt = va_arg(args, char *);
@@ -1069,7 +1069,7 @@ char *storeSwapFullPath(fn, fullpath)
      int fn;
      char *fullpath;
 {
-    static char fullfilename[MAX_FILE_NAME_LEN];
+    LOCAL_ARRAY(char, fullfilename, MAX_FILE_NAME_LEN);
 
     if (fullpath) {
 	sprintf(fullpath, "%s/%02d/%d",
@@ -1209,7 +1209,7 @@ void storeSwapOutHandle(fd, flag, e)
      int flag;
      StoreEntry *e;
 {
-    static char filename[MAX_FILE_NAME_LEN];
+    LOCAL_ARRAY(char, filename, MAX_FILE_NAME_LEN);
     MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
@@ -1306,7 +1306,7 @@ static int storeSwapOutStart(e)
      StoreEntry *e;
 {
     int fd;
-    static char swapfilename[MAX_FILE_NAME_LEN];
+    LOCAL_ARRAY(char, swapfilename, MAX_FILE_NAME_LEN);
     int x;
     MemObject *mem = e->mem_obj;
     /* Suggest a new swap file number */
@@ -1361,9 +1361,9 @@ static int storeSwapOutStart(e)
 static int storeDoRebuildFromDisk(data)
      struct storeRebuild_data *data;
 {
-    static char log_swapfile[MAXPATHLEN];
-    static char swapfile[MAXPATHLEN];
-    static char url[MAX_URL + 1];
+    LOCAL_ARRAY(char, log_swapfile, MAXPATHLEN);
+    LOCAL_ARRAY(char, swapfile, MAXPATHLEN);
+    LOCAL_ARRAY(char, url, MAX_URL + 1);
     char *t = NULL;
     StoreEntry *e = NULL;
     time_t expires;
@@ -1682,8 +1682,8 @@ int storeAbort(e, msg)
      StoreEntry *e;
      char *msg;
 {
-    static char mime_hdr[300];
-    static char abort_msg[2000];
+    LOCAL_ARRAY(char, mime_hdr, 300);
+    LOCAL_ARRAY(char, abort_msg, 2000);
 
     debug(20, 6, "storeAbort: '%s'\n", e->key);
     e->expires = squid_curtime + getNegativeTTL();
@@ -2598,7 +2598,7 @@ static int storeVerifySwapDirs(clean)
 static void storeCreateSwapSubDirs()
 {
     int i, j;
-    static char name[MAXPATHLEN];
+    LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (j = 0; j < ncache_dirs; j++) {
 	for (i = 0; i < SWAP_DIRECTORIES; i++) {
 	    sprintf(name, "%s/%02d", swappath(j), i);
@@ -2680,7 +2680,7 @@ int storeInit()
  */
 void storeSanityCheck()
 {
-    static char name[4096];
+    LOCAL_ARRAY(char, name, 4096);
     int i;
 
     if (ncache_dirs < 1)
@@ -2772,7 +2772,7 @@ int storeMaintainSwapSpace()
 int storeWriteCleanLog()
 {
     StoreEntry *e = NULL;
-    static char swapfilename[MAX_FILE_NAME_LEN];
+    LOCAL_ARRAY(char, swapfilename, MAX_FILE_NAME_LEN);
     FILE *fp = NULL;
     int n = 0;
     int x = 0;
@@ -2877,8 +2877,8 @@ void storeRotateLog()
 {
     char *fname = NULL;
     int i;
-    static char from[MAXPATHLEN];
-    static char to[MAXPATHLEN];
+    LOCAL_ARRAY(char, from, MAXPATHLEN);
+    LOCAL_ARRAY(char, to, MAXPATHLEN);
 
     if (storelog_fd > -1) {
 	file_close(storelog_fd);

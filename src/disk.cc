@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.19 1996/07/17 16:59:59 wessels Exp $
+ * $Id: disk.cc,v 1.20 1996/07/18 20:27:00 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -519,7 +519,7 @@ int diskHandleWalk(fd, walk_dat)
     int end_pos;
     int st_pos;
     int used_bytes;
-    static char temp_line[DISK_LINE_LEN];
+    LOCAL_ARRAY(char, temp_line, DISK_LINE_LEN);
 
     lseek(fd, walk_dat->offset, SEEK_SET);
     file_table[fd].at_eof = NO;

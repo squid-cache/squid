@@ -1,5 +1,5 @@
 /*
- * $Id: url.cc,v 1.23 1996/07/15 23:13:34 wessels Exp $
+ * $Id: url.cc,v 1.24 1996/07/18 20:27:12 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -188,10 +188,10 @@ request_t *urlParse(method, url)
      method_t method;
      char *url;
 {
-    static char proto[MAX_URL + 1];
-    static char login[MAX_URL + 1];
-    static char host[MAX_URL + 1];
-    static char urlpath[MAX_URL + 1];
+    LOCAL_ARRAY(char, proto, MAX_URL + 1);
+    LOCAL_ARRAY(char, login, MAX_URL + 1);
+    LOCAL_ARRAY(char, host, MAX_URL + 1);
+    LOCAL_ARRAY(char, urlpath, MAX_URL + 1);
     request_t *request = NULL;
     char *t = NULL;
     int port;
@@ -240,8 +240,8 @@ char *urlCanonical(request, buf)
      request_t *request;
      char *buf;
 {
-    static char urlbuf[MAX_URL + 1];
-    static char portbuf[32];
+    LOCAL_ARRAY(char, urlbuf, MAX_URL + 1);
+    LOCAL_ARRAY(char, portbuf, 32);
     if (buf == NULL)
 	buf = urlbuf;
     switch (request->method) {

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.61 1996/07/15 23:15:16 wessels Exp $
+ * $Id: http.cc,v 1.62 1996/07/18 20:27:02 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -400,7 +400,7 @@ static void httpReadReply(fd, httpState)
      int fd;
      HttpStateData *httpState;
 {
-    static char buf[SQUID_TCP_SO_RCVBUF];
+    LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     int len;
     int bin;
     int clen;

@@ -1,5 +1,6 @@
+
 /*
- * $Id: ssl.cc,v 1.5 1996/07/11 17:42:53 wessels Exp $
+ * $Id: ssl.cc,v 1.6 1996/07/18 20:27:09 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels

@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.13 1996/07/09 03:41:33 wessels Exp $
+ * $Id: mime.cc,v 1.14 1996/07/18 20:27:05 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -110,7 +110,7 @@
 
 char *mime_get_header(char *mime, char *name)
 {
-    static char header[GET_HDR_SZ];
+    LOCAL_ARRAY(char, header, GET_HDR_SZ);
     char *p = NULL;
     char *q = NULL;
     char got = 0;
@@ -187,7 +187,7 @@ ext_table_entry *mime_ext_to_type(extension)
     int low;
     int high;
     int comp;
-    static char ext[16];
+    LOCAL_ARRAY(char, ext, 16);
     char *cp = NULL;
 
     if (!extension || strlen(extension) >= (sizeof(ext) - 1))
@@ -229,10 +229,10 @@ int mk_mime_hdr(result, ttl, size, lmt, type)
 {
     time_t expiretime;
     time_t t;
-    static char date[100];
-    static char expires[100];
-    static char last_modified[100];
-    static char content_length[100];
+    LOCAL_ARRAY(char, date, 100);
+    LOCAL_ARRAY(char, expires, 100);
+    LOCAL_ARRAY(char, last_modified, 100);
+    LOCAL_ARRAY(char, content_length, 100);
 
     if (result == NULL)
 	return 1;
