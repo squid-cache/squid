@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.186 1997/05/15 01:18:42 wessels Exp $
+ * $Id: cache_cf.cc,v 1.187 1997/05/15 01:27:09 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1372,7 +1372,6 @@ configSetFactoryDefaults(void)
     Config.appendDomain = safe_xstrdup(DefaultAppendDomain);
     Config.errHtmlText = safe_xstrdup(DefaultErrHtmlText);
     Config.Port.n_http = 0;
-    Config.Port.http[0] = DefaultHttpPortNum;
     Config.Port.icp = DefaultIcpPortNum;
     Config.Log.log_fqdn = DefaultLogLogFqdn;
     Config.Log.log = safe_xstrdup(DefaultCacheLogFile);
@@ -1453,6 +1452,8 @@ configDoConfigure(void)
 	Config.appendDomainLen = strlen(Config.appendDomain);
     else
 	Config.appendDomainLen = 0;
+    if (Config.Port.n_http == 0)
+	Config.Port.http[Config.Port.n_http++] = DefaultHttpPort;
 }
 
 /* Parse a time specification from the config file.  Store the
