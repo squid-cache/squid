@@ -64,7 +64,7 @@ storeSwapInValidateComplete(void *data, int retcode, int errcode)
 void
 storeSwapInFileOpened(void *data, int fd, int errcode)
 {
-    swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
+    swapin_ctrl_t *ctrlp = data;
     StoreEntry *e = ctrlp->e;
     MemObject *mem = e->mem_obj;
     struct stat sb;
@@ -77,25 +77,27 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     assert(e->mem_status == NOT_IN_MEMORY);
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
     if (fd < 0) {
-	debug(20, 0) ("storeSwapInFileOpened: Failed\n"
+	debug(20, 3) ("storeSwapInFileOpened: Failed\n"
 	    "\tFile:\t'%s'\n\t URL:\t'%s'\n",
 	    ctrlp->path, storeUrl(e));
-	storeEntryDump(e, 0);
-	/* Invoke a store abort that should free the memory object */
-	(ctrlp->callback) (-1, ctrlp->callback_data);
-	xfree(ctrlp->path);
-	xfree(ctrlp);
-	return;
+	storeEntryDump(e, 3);
+    } else if (e->swap_status != SWAPOUT_DONE) {
+	(void) 0;
+    } else if (fstat(fd, &sb) < 0) {
+	debug(20, 0) ("storeSwapInFileOpened: fstat() FD %d: %s\n", fd, xstrerror());
+	file_close(fd);
+	fd = -1;
+    } else if (sb.st_size == 0 || sb.st_size != e->swap_file_sz) {
+	debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, (int) sb.st_size, e->swap_file_sz);
+	file_close(fd);
+	fd = -1;
     }
-    if (e->swap_status == SWAPOUT_DONE && fstat(fd, &sb) == 0) {
-	if (sb.st_size == 0 || sb.st_size != e->swap_file_sz) {
-	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, (int) sb.st_size, e->swap_file_sz);
-	    file_close(fd);
-	    fd = -1;
-	}
+    if (fd < 0) {
+	storeReleaseRequest(e);
+    } else {
+        debug(20, 5) ("storeSwapInFileOpened: initialized '%s' for '%s'\n",
+	    ctrlp->path, storeUrl(e));
     }
-    debug(20, 5) ("storeSwapInFileOpened: initialized '%s' for '%s'\n",
-	ctrlp->path, storeUrl(e));
     (ctrlp->callback) (fd, ctrlp->callback_data);
     xfree(ctrlp->path);
     xfree(ctrlp);
