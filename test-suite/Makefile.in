@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.2 2002/11/22 14:25:38 robertc Exp $
+#  $Id: Makefile.in,v 1.3 2002/12/27 10:30:15 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -119,6 +119,8 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 AM_CFLAGS = -Werror -Wall
 AM_CXXFLAGS = -Werror -Wall
 
@@ -219,13 +221,13 @@ distclean-depend:
 @AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+	$(COMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
 
 .c.obj:
 @AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(COMPILE) -c `cygpath -w $<`
+	$(COMPILE) -c -o $@ `cygpath -w $<`
 CCDEPMODE = @CCDEPMODE@
 
 .cc.o:
