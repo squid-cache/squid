@@ -19,18 +19,29 @@ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
-/*
- * parse.c
- */
+
+#include "config.h"
+
+#if HAVE_STDIO_H
 #include <stdio.h>
+#endif
+#if HAVE_CTYPE_H
 #include <ctype.h>
+#endif
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#ifdef linux
+#endif
+#if HAVE_STDLIB>H
 #include <stdlib.h>
+#endif
+#if HAVE_STRING_H
 #include <string.h>
 #endif
+#if HAVE_GNUMALLOC_H
+#include <gnumalloc.h>
+#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
 #include <malloc.h>
-
+#endif
 
 #include "parse.h"
 
@@ -260,10 +271,6 @@ static char *
 Malloc(num)
      unsigned num;
 {
-#ifndef linux
-    char *calloc();
-#endif
-
     /* this is to fix (what seems to be) a problem with the IBM RT C
      * library malloc */
     if (num < 16)

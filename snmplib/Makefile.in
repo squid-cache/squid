@@ -21,7 +21,7 @@ OBJS=	snmp_client.o snmp.o snmp_auth.o asn1.o mib.o parse.o snmp_api.o \
 
 CC= @CC@
 FLAGS= 
-DEFS= -DBSD4_3 -DSQUID_SNMP
+DEFS= -DBSD4_3 -DSQUID_SNMP=1
 INCLUDE= -I../include -I./../include -I../src -I./../src
 MIBDEFS= -DMIBFILEPATH=\"$(prefix)/lib\"
 # CFLAGS=-O -DDEBUG -DBSD4_3
