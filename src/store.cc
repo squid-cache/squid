@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.81 1996/08/14 22:57:16 wessels Exp $
+ * $Id: store.cc,v 1.82 1996/08/17 05:10:28 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -211,6 +211,7 @@ static StoreEntry *new_StoreEntry _PARAMS((int mem_obj_flag));
 static int storeCheckPurgeMem _PARAMS((StoreEntry * e));
 static void storeSwapLog _PARAMS((StoreEntry *));
 static int storeHashDelete _PARAMS((StoreEntry *));
+static char *storeDescribeStatus _PARAMS((StoreEntry *));
 
 
 /* Now, this table is inaccessible to outsider. They have to use a method
@@ -506,14 +507,17 @@ int storeLockObject(e, handler, data)
     e->lock_count++;
     debug(20, 3, "storeLockObject: locks %d: '%s'\n", e->lock_count, e->key);
 
-    if ((e->mem_status == NOT_IN_MEMORY) &&	/* Not in memory */
-	(e->swap_status != SWAP_OK) &&	/* Not on disk */
-	(e->store_status != STORE_PENDING)	/* Not being fetched */
-	) {
-	debug(20, 0, "storeLockObject: NOT_IN_MEMORY && !SWAP_OK && !STORE_PENDING conflict: <URL:%s>. aborting...\n", e->url);
-	/* If this sanity check fails, we should just ... */
-	fatal_dump(NULL);
-    }
+    if (e->mem_status != NOT_IN_MEMORY)
+	/* ok, its either IN_MEMORY or SWAPPING_IN */
+	debug(20,5,"storeLockObject: OK: mem_status is %s\n", memStatusStr[e->mem_status]);
+    else if (e->swap_status == SWAP_OK)
+	/* ok, its NOT_IN_MEMORY, but its swapped out */
+	debug(20,5,"storeLockObject: OK: swap_status is %s\n", swapStatusStr[e->swap_status]);
+    else if (e->store_status == STORE_PENDING)
+	/* ok, we're reading it in right now */
+	debug(20,5,"storeLockObject: OK: store_status is %s\n", storeStatusStr[e->store_status]);
+    else 
+	fatal_dump(storeDescribeStatus(e));
     e->lastref = squid_curtime;
 
     /* If the object is NOT_IN_MEMORY, fault it in. */
@@ -566,7 +570,7 @@ int storeUnlockObject(e)
     debug(20, 3, "storeUnlockObject: key '%s' count=%d\n", e->key, e->lock_count);
 
     if (e->lock_count)
-	return e->lock_count;
+	return (int) e->lock_count;
 
     /* Prevent UMR if we end up freeing the entry */
     lock_count = (int) e->lock_count;
@@ -1263,12 +1267,11 @@ void storeSwapOutHandle(fd, flag, e)
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
     if (mem == NULL) {
-	debug(20,0,"HELP! Someone is swapping out a bad entry:\n");
-	debug(20,0,"%s\n", storeToString(e));
-	storeRelease(e);
+	debug(20, 0, "HELP! Someone is swapping out a bad entry:\n");
+	debug(20, 0, "%s\n", storeToString(e));
+	fatal_dump(NULL);
 	return;
     }
-
     e->timestamp = squid_curtime;
     storeSwapFullPath(e->swap_file_number, filename);
 
@@ -1336,7 +1339,6 @@ void storeSwapOutHandle(fd, flag, e)
 	e,
 	NULL);
     return;
-
 }
 
 
@@ -1380,7 +1382,7 @@ static int storeSwapOutStart(e)
 	0,
 	SWAP_BUF,
 	mem->e_swap_buf,
-	&(mem->e_swap_buf_len));
+	&mem->e_swap_buf_len);
     /* start swapping daemon */
     x = file_write(mem->swapout_fd,
 	mem->e_swap_buf,
@@ -1751,6 +1753,7 @@ int storeAbort(e, msg)
 	    debug(20, 0, "storeAbort: WARNING: Must increase msg length!");
 	}
 	storeAppend(e, abort_msg, strlen(abort_msg));
+	safe_free(mem->e_abort_msg);
 	mem->e_abort_msg = xstrdup(abort_msg);
 	/* Set up object for negative caching */
 	BIT_SET(e->flag, ABORT_MSG_PENDING);
@@ -1893,13 +1896,12 @@ int storeGetMemSpace(size, check_vm_number)
     int n_deleted_behind = 0;
     int n_scanned = 0;
     int n_expired = 0;
-    int n_aborted = 0;
     int n_purged = 0;
     int n_released = 0;
     int i;
     int n_inmem = 0;		/* extra debugging */
-    int n_cantpurge = 0;	/* extra debugging */
-    int mem_cantpurge = 0;	/* extra debugging */
+    int n_locked = 0;		/* extra debugging */
+    int locked_bytes = 0;	/* extra debugging */
     int compareLastRef();
     int compareSize();
 
@@ -1933,23 +1935,13 @@ int storeGetMemSpace(size, check_vm_number)
 	    debug(20, 2, "storeGetMemSpace: '%s' expires with Negative TTL time\n", e->url);
 	    continue;
 	}
-	if ((e->swap_status == SWAP_OK) && (e->mem_status != SWAPPING_IN) &&
-	    (e->lock_count == 0)) {
-	    insert_dynamic_array(LRU_list, e);
-	} else if (((e->store_status == STORE_ABORTED) ||
-		    (e->swap_status == NO_SWAP)) &&
-	    (e->lock_count == 0)) {
-	    n_aborted++;
+	if (!storeEntryLocked(e)) {
 	    insert_dynamic_array(LRU_list, e);
 	} else {
-	    n_cantpurge++;
-	    mem_cantpurge += e->mem_obj->e_current_len;
-	    debug(20, 5, "storeGetMemSpace: Can't purge %7d bytes: %s\n",
-		e->mem_obj->e_current_len, e->url);
-	    if (e->swap_status != SWAP_OK)
-		debug(20, 5, "storeGetMemSpace: --> e->swap_status != SWAP_OK\n");
-	    if (e->lock_count)
-		debug(20, 5, "storeGetMemSpace: --> e->lock_count %d\n", e->lock_count);
+	    n_locked++;
+	    locked_bytes += e->mem_obj->e_current_len;
+	    debug(20, 5, "storeGetMemSpace: Locked: %s\n",
+		storeDescribeStatus(e));
 	}
     }
 #ifdef EXTRA_DEBUGGING
@@ -1961,9 +1953,8 @@ int storeGetMemSpace(size, check_vm_number)
     debug(20, 5, "storeGetMemSpace: In memory:        %7d items\n", n_inmem);
     debug(20, 5, "storeGetMemSpace: Hot vm count:     %7d items\n", meta_data.hot_vm);
     debug(20, 5, "storeGetMemSpace: Expired:          %7d items\n", n_expired);
-    debug(20, 5, "storeGetMemSpace: Negative Cached:  %7d items\n", n_aborted);
-    debug(20, 5, "storeGetMemSpace: Can't purge:      %7d items\n", n_cantpurge);
-    debug(20, 5, "storeGetMemSpace: Can't purge size: %7d bytes\n", mem_cantpurge);
+    debug(20, 5, "storeGetMemSpace: Can't purge:      %7d items\n", n_locked);
+    debug(20, 5, "storeGetMemSpace: Can't purge size: %7d bytes\n", locked_bytes);
     debug(20, 5, "storeGetMemSpace: Sorting LRU_list: %7d items\n", LRU_list->index);
 #endif
     qsort((char *) LRU_list->collection, LRU_list->index, sizeof(e), (int (*)(const void *, const void *)) compareLastRef);
@@ -2157,10 +2148,7 @@ int storeGetSwapSpace(size)
 	    e = (StoreEntry *) link_ptr;
 
 	    /* Identify objects that aren't locked, for replacement */
-	    if ((e->store_status != STORE_PENDING) &&	/* We're still fetching the object */
-		(e->swap_status == SWAP_OK) &&	/* Only release it if it is on disk */
-		(e->lock_count == 0) &&		/* Be overly cautious */
-		(e->mem_status != SWAPPING_IN)) {	/* Not if it's being faulted into memory */
+	    if (!storeEntryLocked(e)) {
 		if (squid_curtime > e->expires) {
 		    debug(20, 2, "storeGetSwapSpace: Expired: <URL:%s>\n", e->url);
 		    /* just call release. don't have to check for lock status.
@@ -2174,14 +2162,6 @@ int storeGetSwapSpace(size)
 		    ++scan_in_objs;
 		}
 	    } else {
-		debug(20, 2, "storeGetSwapSpace: Can't purge %7d bytes: <URL:%s>\n",
-		    e->object_len, e->url);
-		if (e->lock_count) {
-		    debug(20, 2, "\t\te->lock_count %d\n", e->lock_count);
-		}
-		if (e->swap_status == SWAPPING_OUT) {
-		    debug(20, 2, "\t\te->swap_status == SWAPPING_OUT\n");
-		}
 		locked++;
 		locked_size += e->mem_obj->e_current_len;
 	    }
@@ -2376,6 +2356,8 @@ int storeEntryLocked(e)
     if (e->swap_status == SWAPPING_OUT)
 	return 1;
     if (e->mem_status == SWAPPING_IN)
+	return 1;
+    if (e->store_status == STORE_PENDING)
 	return 1;
     return 0;
 }
@@ -2983,4 +2965,18 @@ static int storeCheckPurgeMem(e)
     if (store_hotobj_high)
 	return 0;
     return 1;
+}
+
+static char *storeDescribeStatus(e)
+     StoreEntry *e;
+{
+    static char buf[MAX_URL << 1];
+    sprintf(buf, "mem:%13s ping:%12s store:%13s swap:%12s locks:%d %s\n",
+	memStatusStr[e->mem_status],
+	pingStatusStr[e->ping_status],
+	storeStatusStr[e->store_status],
+	swapStatusStr[e->swap_status],
+	(int) e->lock_count,
+	e->url);
+    return buf;
 }
