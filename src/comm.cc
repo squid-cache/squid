@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.214 1997/12/30 02:47:40 wessels Exp $
+ * $Id: comm.cc,v 1.215 1997/12/31 05:01:46 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -882,7 +882,7 @@ comm_poll(time_t sec)
 	    debug(5, 2) ("comm_poll: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
-	poll_time = sec > 0 ? 1000 : 0;
+	poll_time = sec > 0 ? 50 : 0;
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
 #endif
