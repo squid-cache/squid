@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.136 1998/06/02 04:18:19 wessels Exp $
+ * $Id: errorpage.cc,v 1.137 1998/06/02 21:50:21 rousskov Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -393,14 +393,14 @@ errorConvert(char token, ErrorState * err)
 	if (err->ftp.request)
 	    p = err->ftp.request;
 	else
-	    p = "<none>";
+	    p = "nothing";
 	break;
     case 'F':
 	/* FTP REPLY LINE */
 	if (err->ftp.request)
 	    p = err->ftp.reply;
 	else
-	    p = "<none>";
+	    p = "nothing";
 	break;
     case 'g':
 	/* FTP SERVER MESSAGE */
