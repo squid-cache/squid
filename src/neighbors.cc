@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.110 1997/02/06 18:44:25 wessels Exp $
+ * $Id: neighbors.cc,v 1.111 1997/02/06 20:20:47 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -924,6 +924,8 @@ parseNeighborType(const char *s)
 	return PEER_SIBLING;
     if (!strcasecmp(s, "sibling"))
 	return PEER_SIBLING;
+    if (!strcasecmp(s, "multicast"))
+	return PEER_MULTICAST;
     debug(15, 0, "WARNING: Unknown neighbor type: %s\n", s);
     return PEER_SIBLING;
 }
