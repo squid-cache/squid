@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.92 2001/04/20 12:40:25 hno Exp $
+ * $Id: defines.h,v 1.93 2001/05/05 17:49:54 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -291,4 +291,15 @@
 #endif
 #ifndef O_BINARY
 #define O_BINARY 0
+#endif
+
+/* CygWin & Windows NT Port */
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#define _WIN_OS_UNKNOWN	0
+#define _WIN_OS_WIN32S	1
+#define _WIN_OS_WIN95	2
+#define _WIN_OS_WIN98	3
+#define _WIN_OS_WINNT	4
+#define _WIN_OS_WIN2K	5
+#define _WIN_OS_STRING_SZ 80
 #endif
