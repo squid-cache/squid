@@ -1838,7 +1838,7 @@ DOC_START
 query_icmp off
 DOC_END
 
-NAME: test_rechability
+NAME: test_reachability
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
