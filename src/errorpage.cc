@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.182 2003/01/23 00:37:20 robertc Exp $
+ * $Id: errorpage.cc,v 1.183 2003/01/27 22:33:25 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -81,7 +81,7 @@ static const struct {
     }
 };
 
-static Stack ErrorDynamicPages;
+static Vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
 /* local prototypes */
 
@@ -105,6 +105,11 @@ err_type &operator++ (err_type &anErr)
     anErr = (err_type)(++(int)anErr);
     return anErr;
 }
+
+int operator - (err_type const &anErr, err_type const &anErr2) {
+    return (int)anErr - (int)anErr2;
+}
+
 /*
  * Function:  errorInitialize
  *
@@ -119,7 +124,7 @@ errorInitialize(void)
 {
     err_type i;
     const char *text;
-    error_page_count = ERR_MAX + ErrorDynamicPages.count;
+    error_page_count = ERR_MAX + ErrorDynamicPages.size();
     error_text = static_cast<char **>(xcalloc(error_page_count, sizeof(char *)));
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
 	safe_free(error_text[i]);
@@ -131,7 +136,7 @@ errorInitialize(void)
 	    error_text[i] = errorLoadText(err_type_str[i]);
 	} else {
 	    /* dynamic */
-	    ErrorDynamicPageInfo *info = static_cast<ErrorDynamicPageInfo *>(ErrorDynamicPages.items[i - ERR_MAX]);
+	    ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
 	    assert(info && info->id == i && info->page_name);
 	    if (strchr(info->page_name, ':') == NULL) {
 		/* Not on redirected errors... */
@@ -150,8 +155,8 @@ errorClean(void)
 	    safe_free(error_text[i]);
 	safe_free(error_text);
     }
-    while (ErrorDynamicPages.count)
-	errorDynamicPageInfoDestroy(static_cast<ErrorDynamicPageInfo *>(stackPop(&ErrorDynamicPages)));
+    while (ErrorDynamicPages.size())
+	errorDynamicPageInfoDestroy(ErrorDynamicPages.pop_back());
     error_page_count = 0;
 }
 
@@ -212,7 +217,7 @@ errorTryLoadText(const char *page_name, const char *dir)
 static ErrorDynamicPageInfo *
 errorDynamicPageInfoCreate(int id, const char *page_name)
 {
-    ErrorDynamicPageInfo *info = static_cast<ErrorDynamicPageInfo *>(xcalloc(1, sizeof(ErrorDynamicPageInfo)));
+    ErrorDynamicPageInfo *info = new ErrorDynamicPageInfo;
     info->id = id;
     info->page_name = xstrdup(page_name);
     return info;
@@ -223,7 +228,7 @@ errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
 {
     assert(info);
     xfree(info->page_name);
-    xfree(info);
+    delete info;
 }
 
 static int
@@ -233,8 +238,8 @@ errorPageId(const char *page_name)
 	if (strcmp(err_type_str[i], page_name) == 0)
 	    return i;
     }
-    for (size_t i = 0; i < ErrorDynamicPages.count; i++) {
-	if (strcmp(((ErrorDynamicPageInfo *) ErrorDynamicPages.items[i])->page_name, page_name) == 0)
+    for (size_t i = 0; i < ErrorDynamicPages.size(); i++) {
+	if (strcmp(ErrorDynamicPages.items[i]->page_name, page_name) == 0)
 	    return i + ERR_MAX;
     }
     return ERR_NONE;
@@ -246,8 +251,8 @@ errorReservePageId(const char *page_name)
     ErrorDynamicPageInfo *info;
     int id = errorPageId(page_name);
     if (id == ERR_NONE) {
-	info = errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.count, page_name);
-	stackPush(&ErrorDynamicPages, info);
+	info = errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.size(), page_name);
+	ErrorDynamicPages.push_back(info);
 	id = info->id;
     }
     return (err_type)id;
@@ -258,9 +263,8 @@ errorPageName(int pageId)
 {
     if (pageId >= ERR_NONE && pageId < ERR_MAX)		/* common case */
 	return err_type_str[pageId];
-    if (pageId >= ERR_MAX && pageId - ERR_MAX < (ssize_t)ErrorDynamicPages.count)
-	return ((ErrorDynamicPageInfo *) ErrorDynamicPages.
-	    items[pageId - ERR_MAX])->page_name;
+    if (pageId >= ERR_MAX && pageId - ERR_MAX < (ssize_t)ErrorDynamicPages.size())
+	return ErrorDynamicPages.items[pageId - ERR_MAX]->page_name;
     return "ERR_UNKNOWN";	/* should not happen */
 }
 
