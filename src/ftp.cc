@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.222 1998/04/25 07:25:41 wessels Exp $
+ * $Id: ftp.cc,v 1.223 1998/05/04 17:13:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1093,7 +1093,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
 {
     char *s;
     int complete = 0;
-    wordlist *head;
+    wordlist *head = NULL;
     wordlist *list;
     wordlist **tail = &head;
     off_t offset;
