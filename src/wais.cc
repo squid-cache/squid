@@ -1,4 +1,4 @@
-/* $Id */
+/* $Id: wais.cc,v 1.5 1996/03/22 06:38:29 wessels Exp $ */
 
 #include "config.h"
 #if USE_WAIS_RELAY
