@@ -1,8 +1,8 @@
 
 /*
- * $Id: mem.cc,v 1.2 1998/01/31 05:32:00 wessels Exp $
+ * $Id: mem.cc,v 1.3 1998/02/10 22:17:54 wessels Exp $
  *
- * DEBUG: section 19    Memory Primitives
+ * DEBUG: section 13    Memory Pool Management
  * AUTHOR: Harvest Derived
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

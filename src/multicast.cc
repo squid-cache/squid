@@ -1,8 +1,8 @@
 
 /*
- * $Id: multicast.cc,v 1.4 1997/11/05 05:29:31 wessels Exp $
+ * $Id: multicast.cc,v 1.5 1998/02/10 22:17:54 wessels Exp $
  *
- * DEBUG: section 5     Socket Functions
+ * DEBUG: section 7     Multicast
  * AUTHOR: Martin Hamilton
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -53,22 +53,22 @@ mcastJoinGroups(const ipcache_addrs * ia, void *datanotused)
     int x;
     char c = 0;
     if (ia == NULL) {
-	debug(5, 0) ("comm_join_mcast_groups: Unknown host\n");
+	debug(7, 0) ("comm_join_mcast_groups: Unknown host\n");
 	return;
     }
     for (i = 0; i < (int) ia->count; i++) {
-	debug(5, 10) ("Listening for ICP requests on %s\n",
+	debug(7, 10) ("Listening for ICP requests on %s\n",
 	    inet_ntoa(*(ia->in_addrs + i)));
 	mr.imr_multiaddr.s_addr = (ia->in_addrs + i)->s_addr;
 	mr.imr_interface.s_addr = INADDR_ANY;
 	x = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 	    (char *) &mr, sizeof(struct ip_mreq));
 	if (x < 0)
-	    debug(5, 1) ("comm_join_mcast_groups: FD %d, [%s]\n",
+	    debug(7, 1) ("comm_join_mcast_groups: FD %d, [%s]\n",
 		fd, inet_ntoa(*(ia->in_addrs + i)));
 	x = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1);
 	if (x < 0)
-	    debug(5, 1) ("Can't disable multicast loopback: %s\n", xstrerror());
+	    debug(7, 1) ("Can't disable multicast loopback: %s\n", xstrerror());
     }
 #endif
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.3 1998/02/10 00:58:42 wessels Exp $
+ * $Id: ipc.cc,v 1.4 1998/02/10 22:17:53 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -179,8 +179,8 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
 	    debug(50, 0) ("--> read: %s\n", xstrerror());
 	    return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
 	} else if (strcmp(hello_buf, hello_string)) {
-	    debug(50, 0) ("ipcCreate: PARENT: hello read test failed\n");
-	    debug(50, 0) ("--> got '%s'\n", rfc1738_escape(hello_buf));
+	    debug(54, 0) ("ipcCreate: PARENT: hello read test failed\n");
+	    debug(54, 0) ("--> got '%s'\n", rfc1738_escape(hello_buf));
 	    return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
 	}
 	commSetTimeout(prfd, -1, NULL, NULL);

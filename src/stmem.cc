@@ -1,8 +1,8 @@
 
 /*
- * $Id: stmem.cc,v 1.57 1998/02/02 21:16:33 wessels Exp $
+ * $Id: stmem.cc,v 1.58 1998/02/10 22:17:55 wessels Exp $
  *
- * DEBUG: section 19    Memory Primitives
+ * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
