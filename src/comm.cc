@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.256 1998/05/15 18:57:42 wessels Exp $
+ * $Id: comm.cc,v 1.257 1998/05/20 21:47:44 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -665,8 +665,7 @@ comm_close(int fd)
 {
     fde *F = NULL;
 #if USE_ASYNC_IO
-    int flags;
-    int dummy = 0;
+    int doaioclose = 1;
 #endif
     debug(5, 5) ("comm_close: FD %d\n", fd);
     assert(fd >= 0);
@@ -678,6 +677,11 @@ comm_close(int fd)
 	return;
     assert(F->open);
     assert(F->type != FD_FILE);
+#ifdef USE_ASYNC_IO
+    if (EBIT_TEST(F->flags, FD_NOLINGER))
+	if (EBIT_TEST(F->flags, FD_NONBLOCKING))
+	    doaioclose = 0;
+#endif
     EBIT_SET(F->flags, FD_CLOSING);
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
     commCallCloseHandlers(fd);
@@ -691,13 +695,10 @@ comm_close(int fd)
      */
     close(fd);
 #elif USE_ASYNC_IO
-    /* slf@connect.com.au */
-    if ((flags = fcntl(fd, F_GETFL, dummy)) < 0)
+    if (doaioclose)
 	aioClose(fd);
-    else if (flags & SQUID_NONBLOCK)
-	close(fd);
     else
-	aioClose(fd);
+	close(fd);
 #else
     close(fd);
 #endif
@@ -1236,6 +1237,7 @@ commSetNoLinger(int fd)
     L.l_linger = 0;
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
 	debug(50, 0) ("commSetNoLinger: FD %d: %s\n", fd, xstrerror());
+    EBIT_SET(fd_table[fd].flags, FD_NOLINGER);
 }
 
 static void
@@ -1267,6 +1269,7 @@ commSetNonBlocking(int fd)
 	debug(50, 0) ("commSetNonBlocking: FD %d: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
+    EBIT_SET(fd_table[fd].flags, FD_NONBLOCKING);
     return 0;
 }
 
