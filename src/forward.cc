@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.100 2003/03/02 23:13:49 hno Exp $
+ * $Id: forward.cc,v 1.101 2003/03/19 18:06:45 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -171,6 +171,41 @@ fwdCheckRetry(FwdState * fwdState)
 
     if (fwdState->request->flags.body_sent)
         return 0;
+
+    return 1;
+}
+
+static int
+fwdCheckRetriable(FwdState * fwdState)
+{
+    /* If there is a request body then Squid can only try once
+     * even if the method is indempotent
+     */
+
+    if (fwdState->request->body_connection)
+        return 0;
+
+    /* RFC2616 9.1 Safe and Idempotent Methods */
+    switch (fwdState->request->method) {
+        /* 9.1.1 Safe Methods */
+
+    case METHOD_GET:
+
+    case METHOD_HEAD:
+        /* 9.1.2 Indepontent Methods */
+
+    case METHOD_PUT:
+
+    case METHOD_DELETE:
+
+    case METHOD_OPTIONS:
+
+    case METHOD_TRACE:
+        break;
+
+    default:
+        return 0;
+    }
 
     return 1;
 }
@@ -513,7 +548,7 @@ fwdConnectStart(void *data)
 {
     FwdState *fwdState = (FwdState *)data;
     const char *url = storeUrl(fwdState->entry);
-    int fd;
+    int fd = -1;
     ErrorState *err;
     FwdServer *fs = fwdState->servers;
     const char *host;
@@ -537,13 +572,15 @@ fwdConnectStart(void *data)
         ctimeout = Config.Timeout.connect;
     }
 
-    if ((fd = pconnPop(host, port)) >= 0) {
-        debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
-        fwdState->server_fd = fd;
-        fwdState->n_tries++;
-        comm_add_close_handler(fd, fwdServerClosed, fwdState);
-        fwdDispatch(fwdState);
-        return;
+    if (fwdCheckRetriable(fwdState)) {
+        if ((fd = pconnPop(host, port)) >= 0) {
+            debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
+            fwdState->server_fd = fd;
+            fwdState->n_tries++;
+            comm_add_close_handler(fd, fwdServerClosed, fwdState);
+            fwdDispatch(fwdState);
+            return;
+        }
     }
 
 #if URL_CHECKSUM_DEBUG
