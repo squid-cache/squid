@@ -2143,13 +2143,13 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-echo $ac_n "checking for -lmalloc""... $ac_c" 1>&6
-ac_lib_var=`echo malloc'_'main | tr './+\055' '__p_'`
+echo $ac_n "checking for -lgnumalloc""... $ac_c" 1>&6
+ac_lib_var=`echo gnumalloc'_'main | tr './+\055' '__p_'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-lmalloc  $LIBS"
+LIBS="-lgnumalloc  $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 2155 "configure"
 #include "confdefs.h"
@@ -2172,11 +2172,69 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  HAVE_LIBMALLOC="yes"; LIBS="$LIBS -lmalloc"
+    ac_tr_lib=HAVE_LIB`echo gnumalloc | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_lib 1
+EOF
+
+  LIBS="-lgnumalloc $LIBS"
+
 else
   echo "$ac_t""no" 1>&6
 fi
 
+if test $ac_cv_lib_gnumalloc = no; then
+	case "$host" in
+		*-sun-solaris*)
+        		echo "skipping libmalloc check for $host"
+			;;
+		i386-*-freebsd*)
+        		echo "skipping libmalloc check for $host"
+			;;
+		*)
+			echo $ac_n "checking for -lmalloc""... $ac_c" 1>&6
+ac_lib_var=`echo malloc'_'main | tr './+\055' '__p_'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-lmalloc  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 2204 "configure"
+#include "confdefs.h"
+
+int main() { return 0; }
+int t() {
+main()
+; return 0; }
+EOF
+if { (eval echo configure:2212: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_lib=HAVE_LIB`echo malloc | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_lib 1
+EOF
+
+  LIBS="-lmalloc $LIBS"
+
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+			;;
+	esac
+fi
 echo $ac_n "checking for -lresolv""... $ac_c" 1>&6
 ac_lib_var=`echo resolv'_'main | tr './+\055' '__p_'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
@@ -2185,7 +2243,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2189 "configure"
+#line 2247 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2193,7 +2251,7 @@ int t() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2197: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2255: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2225,7 +2283,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lbsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2229 "configure"
+#line 2287 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2233,7 +2291,7 @@ int t() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2237: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2295: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2265,7 +2323,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lregex  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2269 "configure"
+#line 2327 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2273,7 +2331,7 @@ int t() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2277: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2335: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2300,7 +2358,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-l44bsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2304 "configure"
+#line 2362 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -2312,7 +2370,7 @@ int t() {
 inet_aton()
 ; return 0; }
 EOF
-if { (eval echo configure:2316: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2374: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2325,7 +2383,13 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  HAVE_LIB44BSD="yes"
+    ac_tr_lib=HAVE_LIB`echo 44bsd | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_lib 1
+EOF
+
+  LIBS="-l44bsd $LIBS"
+
 else
   echo "$ac_t""no" 1>&6
 fi
@@ -2338,7 +2402,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2342 "configure"
+#line 2406 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -2350,7 +2414,7 @@ int t() {
 inet_aton()
 ; return 0; }
 EOF
-if { (eval echo configure:2354: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2418: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2363,7 +2427,50 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  if test "$HAVE_LIB44BSD" = "yes"; then LIBS="$LIBS -l44bsd"; fi
+  echo $ac_n "checking for -l44bsd""... $ac_c" 1>&6
+ac_lib_var=`echo 44bsd'_'inet_aton | tr './+\055' '__p_'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-l44bsd  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 2439 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char inet_aton();
+
+int main() { return 0; }
+int t() {
+inet_aton()
+; return 0; }
+EOF
+if { (eval echo configure:2451: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_lib=HAVE_LIB`echo 44bsd | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_lib 1
+EOF
+
+  LIBS="-l44bsd $LIBS"
+
+else
+  echo "$ac_t""no" 1>&6
+fi
+
 else
   echo "$ac_t""no" 1>&6
 fi
@@ -2377,7 +2484,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2381 "configure"
+#line 2488 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -2389,7 +2496,7 @@ int t() {
 crypt()
 ; return 0; }
 EOF
-if { (eval echo configure:2393: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2500: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2417,7 +2524,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lshadow  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2421 "configure"
+#line 2528 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2425,7 +2532,7 @@ int t() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2429: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2536: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2459,7 +2566,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-labi  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2463 "configure"
+#line 2570 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2467,7 +2574,7 @@ int t() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2471: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2578: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2493,7 +2600,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lposix4  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2497 "configure"
+#line 2604 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2501,7 +2608,7 @@ int t() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2505: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2612: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2534,21 +2641,11 @@ esac
 
 
 case "$host" in
-	*-sun-solaris*)
-        	echo "Removing -lmalloc for Solaris..."
-        	LIBS=`echo $LIBS | sed -e s/-lmalloc//`
-        	HAVE_LIBMALLOC="no"
-		;;
 	i386-*-solaris2.?)
     		if test "$GCC" = "yes"; then
 			echo "Removing -O for gcc on $host"
 			CFLAGS="`echo $CFLAGS | sed -e s/-O//`"
 		fi
-		;;
-	i386-*-freebsd*)
-        	echo "Removing -lmalloc for FreeBSD..."
-        	LIBS=`echo $LIBS | sed -e s/-lmalloc//`
-        	HAVE_LIBMALLOC="no"
 		;;
 	*-sgi-irix*)
         	echo "Removing -lsocket for IRIX..."
@@ -2614,7 +2711,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2618 "configure"
+#line 2715 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2638,7 +2735,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:2642: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2739: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -2689,7 +2786,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2693 "configure"
+#line 2790 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2713,7 +2810,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:2717: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2814: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -2739,7 +2836,7 @@ if test "$cross_compiling" = yes; then
   SQUID_MAXFD=256
 else
 cat > conftest.$ac_ext <<EOF
-#line 2743 "configure"
+#line 2840 "configure"
 #include "confdefs.h"
 
 #include <unistd.h>
@@ -2790,7 +2887,7 @@ main() {
 }
 
 EOF
-{ (eval echo configure:2794: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2891: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_MAXFD=`cat conftestval`
 else
@@ -2809,7 +2906,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2813 "configure"
+#line 2910 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2826,7 +2923,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2830: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2927: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_UDP_SO_SNDBUF=`cat conftestval`
 else
@@ -2845,7 +2942,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2849 "configure"
+#line 2946 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2862,7 +2959,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2866: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2963: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_UDP_SO_RCVBUF=`cat conftestval`
 else
@@ -2881,7 +2978,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2885 "configure"
+#line 2982 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2898,7 +2995,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2902: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2999: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_TCP_SO_SNDBUF=`cat conftestval`
 else
@@ -2917,7 +3014,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2921 "configure"
+#line 3018 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2934,7 +3031,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2938: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:3035: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_TCP_SO_RCVBUF=`cat conftestval`
 else
@@ -2950,7 +3047,7 @@ EOF
 
 echo $ac_n "checking if sys_errlist is already defined""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2954 "configure"
+#line 3051 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 int main() { return 0; }
@@ -2958,7 +3055,7 @@ int t() {
 char *s = sys_errlist[0];
 ; return 0; }
 EOF
-if { (eval echo configure:2962: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:3059: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -2974,7 +3071,7 @@ rm -f conftest*
 
 echo $ac_n "checking for libresolv _dns_ttl_ hack""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2978 "configure"
+#line 3075 "configure"
 #include "confdefs.h"
 extern int _dns_ttl_;
 int main() { return 0; }
@@ -2982,7 +3079,7 @@ int t() {
 return _dns_ttl_;
 ; return 0; }
 EOF
-if { (eval echo configure:2986: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:3083: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 cat >> confdefs.h <<\EOF
@@ -2997,7 +3094,7 @@ rm -f conftest*
 
 
 XTRA_OBJS=''
-if test "$HAVE_LIBMALLOC" = "yes" ; then
+if test $ac_cv_lib_malloc = yes ; then
 	if test -r /usr/lib/debug/malloc.o ; then
 		XTRA_OBJS="$XTRA_OBJS /usr/lib/debug/malloc.o"
 	fi

@@ -313,8 +313,17 @@
 /* Define if you have the <varargs.h> header file.  */
 #undef HAVE_VARARGS_H
 
+/* Define if you have the 44bsd library (-l44bsd).  */
+#undef HAVE_LIB44BSD
+
 /* Define if you have the bsd library (-lbsd).  */
 #undef HAVE_LIBBSD
+
+/* Define if you have the gnumalloc library (-lgnumalloc).  */
+#undef HAVE_LIBGNUMALLOC
+
+/* Define if you have the malloc library (-lmalloc).  */
+#undef HAVE_LIBMALLOC
 
 /* Define if you have the nsl library (-lnsl).  */
 #undef HAVE_LIBNSL
