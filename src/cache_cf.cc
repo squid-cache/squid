@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.303 1998/08/26 19:08:54 wessels Exp $
+ * $Id: cache_cf.cc,v 1.304 1998/09/01 22:12:06 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1183,7 +1183,7 @@ parse_refreshpattern(refresh_t ** head)
 #if HTTP_VIOLATIONS
 	if (!strcmp(token, "override-expire"))
 	    override_expire = 1;
-	else if (!strcmp(token, "override-expire"))
+	else if (!strcmp(token, "override-lastmod"))
 	    override_lastmod = 1;
 	else if (!strcmp(token, "reload-into-ims")) {
 	    reload_into_ims = 1;
