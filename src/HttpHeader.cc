@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.43 1998/06/03 22:32:58 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.44 1998/06/05 19:45:17 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -49,19 +49,6 @@
  * HttpHeader is implemented as a collection of header "entries".
  * An entry is a (field_id, field_name, field_value) triplet.
  */
-
-
-/*
- * local types
- */
-
-/* per header statistics */
-typedef struct {
-    const char *label;
-    StatHist hdrUCountDistr;
-    StatHist fieldTypeDistr;
-    StatHist ccTypeDistr;
-} HttpHeaderStat;
 
 
 /*
@@ -208,10 +195,6 @@ static HttpHeaderStat HttpHeaderStats[] =
 };
 static int HttpHeaderStatCount = countof(HttpHeaderStats);
 
-/* global counters */
-static int HeaderParsedCount = 0;
-static int HeaderDestroyedCount = 0;
-static int NonEmptyHeaderDestroyedCount = 0;
 static int HeaderEntryParsedCount = 0;
 
 /*
@@ -255,7 +238,11 @@ httpHeaderInitModule()
     /* init header stats */
     for (i = 0; i < HttpHeaderStatCount; i++)
 	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
+    HttpHeaderStats[hoRequest].owner_mask = &RequestHeadersMask;
+    HttpHeaderStats[hoReply].owner_mask = &ReplyHeadersMask;
+    /* init dependent modules */
     httpHdrCcInitModule();
+    /* register with cache manager */
     cachemgrRegister("http_headers",
 	"HTTP Header Statistics", httpHeaderStoreReport, 0);
 }
@@ -273,6 +260,7 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
 {
     assert(hs);
     assert(label);
+    memset(hs, 0, sizeof(HttpHeaderStat));
     hs->label = label;
     statHistEnumInit(&hs->hdrUCountDistr, 32);	/* not a real enum */
     statHistEnumInit(&hs->fieldTypeDistr, HDR_ENUM_END);
@@ -302,12 +290,10 @@ httpHeaderClean(HttpHeader * hdr)
     assert(hdr && (hdr->owner == hoRequest || hdr->owner == hoReply));
     debug(55, 7) ("cleaning hdr: %p owner: %d\n", hdr, hdr->owner);
 
-    statHistCount(&HttpHeaderStats[0].hdrUCountDistr, hdr->entries.count);
     statHistCount(&HttpHeaderStats[hdr->owner].hdrUCountDistr, hdr->entries.count);
-    HeaderDestroyedCount++;
-    NonEmptyHeaderDestroyedCount += hdr->entries.count > 0;
+    HttpHeaderStats[hdr->owner].destroyedCount++;
+    HttpHeaderStats[hdr->owner].busyDestroyedCount += hdr->entries.count > 0;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
 	statHistCount(&HttpHeaderStats[hdr->owner].fieldTypeDistr, e->id);
 	/* tmp hack to avoid coredumps */
 	if (e->id < 0 || e->id >= HDR_ENUM_END)
@@ -376,7 +362,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
     assert(hdr);
     assert(header_start && header_end);
     debug(55, 7) ("parsing hdr: (%p)\n%s\n", hdr, getStringPrefix(header_start, header_end));
-    HeaderParsedCount++;
+    HttpHeaderStats[hdr->owner].parsedCount++;
     /* commonn format headers are "<name>:[ws]<value>" lines delimited by <CRLF> */
     while (field_start < header_end) {
 	const char *field_end = field_start + strcspn(field_start, "\r\n");
@@ -769,10 +755,9 @@ httpHeaderGetCc(const HttpHeader * hdr)
 	return NULL;
     s = httpHeaderGetList(hdr, HDR_CACHE_CONTROL);
     cc = httpHdrCcParseCreate(&s);
-    if (cc) {
-	httpHdrCcUpdateStats(cc, &HttpHeaderStats[0].ccTypeDistr);
+    HttpHeaderStats[hdr->owner].ccParsedCount++;
+    if (cc)
 	httpHdrCcUpdateStats(cc, &HttpHeaderStats[hdr->owner].ccTypeDistr);
-    }
     httpHeaderNoteParsedEntry(HDR_CACHE_CONTROL, s, !cc);
     stringClean(&s);
     return cc;
@@ -969,15 +954,24 @@ httpHeaderNoteParsedEntry(http_hdr_type id, String context, int error)
  * Reports
  */
 
+/* tmp variable used to pass stat info to dumpers */
+extern const HttpHeaderStat *dump_stat; /* argh! */
+const HttpHeaderStat *dump_stat = NULL;
+
 static void
 httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     const int id = (int) val;
     const int valid_id = id >= 0 && id < HDR_ENUM_END;
     const char *name = valid_id ? strBuf(Headers[id].name) : "INVALID";
-    if (count || valid_id)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-	    id, name, count, xdiv(count, NonEmptyHeaderDestroyedCount));
+    int visible = count > 0;
+    /* for entries with zero count, list only those that belong to current type of message */
+    if (!visible && valid_id && dump_stat->owner_mask)
+	visible = CBIT_TEST(*dump_stat->owner_mask, id);
+    if (visible)
+	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\t %d\n",
+	    id, name, count, xdiv(count, dump_stat->busyDestroyedCount),
+	    visible);
 }
 
 static void
@@ -986,7 +980,7 @@ httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size
     if (count)
 	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
 	    idx, (int) val, count,
-	    xpercent(count, HeaderDestroyedCount));
+	    xpercent(count, dump_stat->destroyedCount));
 }
 
 
@@ -995,6 +989,7 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
 {
     assert(hs && e);
 
+    dump_stat = hs;
     storeAppendPrintf(e, "\n<h3>Header Stats: %s</h3>\n", hs->label);
     storeAppendPrintf(e, "<h3>Field type distribution</h3>\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
@@ -1008,6 +1003,7 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
 	"id", "#flds", "count", "%total");
     statHistDump(&hs->hdrUCountDistr, e, httpHeaderFldsPerHdrDumper);
+    dump_stat = NULL;
 }
 
 void
@@ -1016,6 +1012,15 @@ httpHeaderStoreReport(StoreEntry * e)
     int i;
     http_hdr_type ht;
     assert(e);
+
+    HttpHeaderStats[0].parsedCount =
+	HttpHeaderStats[hoRequest].parsedCount + HttpHeaderStats[hoReply].parsedCount;
+    HttpHeaderStats[0].ccParsedCount =
+	HttpHeaderStats[hoRequest].ccParsedCount + HttpHeaderStats[hoReply].ccParsedCount;
+    HttpHeaderStats[0].destroyedCount =
+	HttpHeaderStats[hoRequest].destroyedCount + HttpHeaderStats[hoReply].destroyedCount;
+    HttpHeaderStats[0].busyDestroyedCount =
+	HttpHeaderStats[hoRequest].busyDestroyedCount + HttpHeaderStats[hoReply].busyDestroyedCount;
 
     for (i = 1; i < HttpHeaderStatCount; i++) {
 	httpHeaderStatDump(HttpHeaderStats + i, e);
@@ -1032,6 +1037,9 @@ httpHeaderStoreReport(StoreEntry * e)
 	    xpercent(f->stat.errCount, f->stat.parsCount),
 	    xpercent(f->stat.repCount, f->stat.seenCount));
     }
-    storeAppendPrintf(e, "Headers Parsed: %d\n", HeaderParsedCount);
+    storeAppendPrintf(e, "Headers Parsed: %d + %d = %d\n",
+	HttpHeaderStats[hoRequest].parsedCount,
+	HttpHeaderStats[hoReply].parsedCount,
+	HttpHeaderStats[0].parsedCount);
     storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
 }

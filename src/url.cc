@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.95 1998/06/05 00:25:58 wessels Exp $
+ * $Id: url.cc,v 1.96 1998/06/05 19:45:20 rousskov Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -161,10 +161,13 @@ urlParseMethod(const char *s)
 protocol_t
 urlParseProtocol(const char *s)
 {
+    /* test common stuff first */
     if (strcasecmp(s, "http") == 0)
 	return PROTO_HTTP;
     if (strcasecmp(s, "ftp") == 0)
 	return PROTO_FTP;
+    if (strcasecmp(s, "https") == 0)
+	return PROTO_HTTPS;
     if (strcasecmp(s, "file") == 0)
 	return PROTO_FTP;
     if (strcasecmp(s, "gopher") == 0)
@@ -179,8 +182,6 @@ urlParseProtocol(const char *s)
 	return PROTO_WHOIS;
     if (strcasecmp(s, "internal") == 0)
 	return PROTO_INTERNAL;
-    if (strcasecmp(s, "https") == 0)
-	return PROTO_HTTPS;
     return PROTO_NONE;
 }
 
