@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.166 2000/03/06 16:23:29 wessels Exp $
+# $Id: cf.data.pre,v 1.167 2000/03/14 22:54:32 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3180,7 +3180,6 @@ DOC_START
 	port less than 1024 and try to reconfigure, you will get an
 	error.
 DOC_END
-EOF
 
 NAME: client_persistent_connections
 TYPE: onoff
@@ -3200,5 +3199,6 @@ DOC_START
 client_persistent_connections on
 server_persistent_connections on
 DOC_END
+
 EOF
 
