@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ ! -f configure ]; then
+  echo You need to run this script from the directory where the \"configure\" script resides
+  exit
+fi
+
+cp configure configure~
+sed -e s/IFS=\"\${IFS}:\"/IFS=\"\${IFS}\;\"/g -e s/\$ac_dir\\/\$ac_word/\$ac_dir\\/\$ac_word.exe/g < configure~ > configure
+
+rm configure~
+
