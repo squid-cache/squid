@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.165 1997/12/02 22:12:56 wessels Exp $
+ * $Id: client_side.cc,v 1.166 1997/12/02 23:55:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -42,7 +42,9 @@ static const char *const proxy_auth_line =
 
 static CWCB icpHandleIMSComplete;
 static CWCB clientWriteComplete;
+#if UNUSED_CODE
 static CWCB clientShortWriteComplete;
+#endif
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
@@ -62,7 +64,9 @@ static RH clientRedirectDone;
 static STCB icpHandleIMSReply;
 static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
 static int checkAccelOnly(clientHttpRequest *);
+#if UNUSED_CODE
 static ERCB clientErrorComplete;
+#endif
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
 static void clientParseRequestHeaders(clientHttpRequest *);
@@ -71,6 +75,7 @@ static void clientProcessExpired(void *data);
 static char *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
+static StoreEntry *clientCreateStoreEntry(clientHttpRequest *, int);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -160,12 +165,21 @@ clientConstructProxyAuthReply(clientHttpRequest * http)
     return buf;
 }
 
+static StoreEntry *
+clientCreateStoreEntry(clientHttpRequest * h, int flags)
+{
+    StoreEntry *e;
+    e = storeCreateEntry(h->url, h->log_url, 0, h->request->method);
+    storeClientListAdd(e, h);
+    storeClientCopy(e, 0, 0, 4096, get_free_4k_page(), clientSendMoreData, h);
+    return e;
+}
+
+
 void
 clientAccessCheckDone(int answer, void *data)
 {
     clientHttpRequest *http = data;
-    ConnStateData *conn = http->conn;
-    int fd = conn->fd;
     char *redirectUrl = NULL;
     char *buf;
     ErrorState *err = NULL;
@@ -180,29 +194,26 @@ clientAccessCheckDone(int answer, void *data)
 	http->al.http.code = HTTP_PROXY_AUTHENTICATION_REQUIRED;
 	http->log_type = LOG_TCP_DENIED;
 	buf = clientConstructProxyAuthReply(http);
-	comm_write(fd,
-	    xstrdup(buf),
-	    strlen(buf),
-	    clientShortWriteComplete,
-	    http,
-	    xfree);
+	http->entry = clientCreateStoreEntry(http, 0);
+	storeAppend(http->entry, buf, strlen(buf));
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->url);
 	http->log_type = LOG_TCP_DENIED;
+	http->entry = clientCreateStoreEntry(http, 0);
 	redirectUrl = aclGetDenyInfoUrl(&Config.denyInfoList, AclMatchedName);
 	if (redirectUrl) {
 	    err = errorCon(ERR_ACCESS_DENIED, HTTP_MOVED_TEMPORARILY);
 	    err->request = requestLink(http->request);
 	    err->src_addr = http->conn->peer.sin_addr;
 	    err->redirect_url = xstrdup(redirectUrl);
-	    errorSend(fd, err);
+	    errorAppendEntry(http->entry, err);
 	} else {
 	    /* NOTE: don't use HTTP_UNAUTHORIZED because then the
 	     * stupid browser wants us to authenticate */
 	    err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	    err->request = requestLink(http->request);
 	    err->src_addr = http->conn->peer.sin_addr;
-	    errorSend(fd, err);
+	    errorAppendEntry(http->entry, err);
 	}
     }
 }
@@ -308,7 +319,7 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
-    debug(33, 3) ("icpHandleIMSReply: %d '%s'\n", url);
+    debug(33, 3) ("icpHandleIMSReply: %s\n", url);
     put_free_4k_page(buf);
     buf = NULL;
     /* unregister this handler */
@@ -453,7 +464,8 @@ clientPurgeRequest(clientHttpRequest * http)
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
-	errorSend(fd, err);
+	http->entry = clientCreateStoreEntry(http, 0);
+	errorAppendEntry(http->entry, err);
 	return;
     }
     http->log_type = LOG_TCP_MISS;
@@ -721,6 +733,7 @@ clientHierarchical(clientHttpRequest * http)
     return 1;
 }
 
+#if UNUSED_CODE
 static void
 clientErrorComplete(int fd, void *data, size_t size)
 {
@@ -729,6 +742,7 @@ clientErrorComplete(int fd, void *data, size_t size)
 	http->out.size += size;
     comm_close(fd);
 }
+#endif
 
 int
 isTcpHit(log_type code)
@@ -1101,6 +1115,7 @@ icpHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *data
 	comm_close(fd);
 }
 
+#if UNUSED_CODE
 static void
 clientShortWriteComplete(int fd, char *bufnotused, size_t size, int flag, void *data)
 {
@@ -1109,6 +1124,7 @@ clientShortWriteComplete(int fd, char *bufnotused, size_t size, int flag, void *
     if (flag != COMM_ERR_CLOSING)
 	comm_close(fd);
 }
+#endif
 
 static log_type
 clientProcessRequest2(clientHttpRequest * http)
@@ -1249,15 +1265,24 @@ clientProcessMiss(clientHttpRequest * http)
 {
     char *url = http->url;
     char *request_hdr = http->request->headers;
-    StoreEntry *entry = NULL;
     aclCheck_t ch;
     int answer;
     ErrorState *err = NULL;
     debug(12, 4) ("clientProcessMiss: '%s %s'\n",
 	RequestMethodStr[http->request->method], url);
     debug(12, 10) ("clientProcessMiss: request_hdr:\n%s\n", request_hdr);
-
-    /* Check if this host is allowed to fetch MISSES from us */
+    /*
+     * We might have a left-over StoreEntry from a failed cache hit
+     * or IMS request.
+     */
+    if (http->entry) {
+	storeUnregister(http->entry, http);
+	storeUnlockObject(http->entry);
+	http->entry = NULL;
+    }
+    /*
+     * Check if this host is allowed to fetch MISSES from us (miss_access)
+     */
     memset(&ch, '\0', sizeof(aclCheck_t));
     ch.src_addr = http->conn->peer.sin_addr;
     ch.request = http->request;
@@ -1267,37 +1292,14 @@ clientProcessMiss(clientHttpRequest * http)
 	err = errorCon(ERR_CANNOT_FORWARD, HTTP_FORBIDDEN);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
-	err->callback = clientErrorComplete;
-	err->callback_data = http;
-	errorSend(http->conn->fd, err);
+	http->entry = clientCreateStoreEntry(http, 0);
+	errorAppendEntry(http->entry, err);
 	return;
     }
-    /* Get rid of any references to a StoreEntry (if any) */
-    if (http->entry) {
-	storeUnregister(http->entry, http);
-	storeUnlockObject(http->entry);
-	http->entry = NULL;
-    }
-    entry = storeCreateEntry(url,
-	http->log_url,
-	http->request->flags,
-	http->request->method);
-    /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
-    storeClientListAdd(entry, http);
-    entry->mem_obj->fd = http->conn->fd;
-    entry->refcount++;		/* MISS CASE */
-    http->entry = entry;
-    http->out.offset = 0;
-    /* Register with storage manager to receive updates when data comes in. */
-    storeClientCopy(entry,
-	http->out.offset,
-	http->out.offset,
-	SM_PAGE_SIZE,
-	get_free_4k_page(),
-	clientSendMoreData,
-	http);
-    /* protoDispatch() needs to go after storeClientCopy() at least
-     * for OBJCACHE requests */
+    assert(http->out.offset == 0);
+    http->entry = clientCreateStoreEntry(http, http->request->flags);
+    http->entry->mem_obj->fd = http->conn->fd;
+    http->entry->refcount++;
     protoDispatch(http->conn->fd, http->entry, http->request);
 }
 
@@ -1537,11 +1539,10 @@ clientReadRequest(int fd, void *data)
 		debug(12, 5) ("Invalid URL: %s\n", http->url);
 		err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
 		err->src_addr = conn->peer.sin_addr;
-		err->callback = clientErrorComplete;
-		err->callback_data = http;
 		err->url = xstrdup(http->url);
 		http->al.http.code = err->http_status;
-		errorSend(fd, err);
+		http->entry = clientCreateStoreEntry(http, 0);
+		errorAppendEntry(http->entry, err);
 		safe_free(headers);
 		break;
 	    }
@@ -1554,11 +1555,10 @@ clientReadRequest(int fd, void *data)
 	    if (!urlCheckRequest(request)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);
 		err->src_addr = conn->peer.sin_addr;
-		err->callback = clientErrorComplete;
-		err->callback_data = http;
 		err->request = requestLink(request);
 		http->al.http.code = err->http_status;
-		errorSend(fd, err);
+		http->entry = clientCreateStoreEntry(http, 0);
+		errorAppendEntry(http->entry, err);
 		return;
 	    }
 	    http->request = requestLink(request);
@@ -1591,9 +1591,8 @@ clientReadRequest(int fd, void *data)
 		    debug(12, 0) ("This request = %d bytes.\n",
 			conn->in.offset);
 		    err = errorCon(ERR_INVALID_REQ, HTTP_REQUEST_ENTITY_TOO_LARGE);
-		    err->callback = clientErrorComplete;
-		    err->callback_data = NULL;
-		    errorSend(fd, err);
+		    http->entry = clientCreateStoreEntry(http, 0);
+		    errorAppendEntry(http->entry, err);
 		    return;
 		}
 		/* Grow the request memory area to accomodate for a large request */
@@ -1610,10 +1609,9 @@ clientReadRequest(int fd, void *data)
 	    Counter.client_http.requests++;
 	    debug(12, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
 	    err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
-	    err->callback = clientErrorComplete;
-	    err->callback_data = NULL;
 	    err->request_hdrs = xstrdup(conn->in.buf);
-	    errorSend(fd, err);
+	    http->entry = clientCreateStoreEntry(http, 0);
+	    errorAppendEntry(http->entry, err);
 	    return;
 	}
     }
@@ -1627,18 +1625,32 @@ requestTimeout(int fd, void *data)
     ErrorState *err;
     debug(12, 2) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
     if (fd_table[fd].rwstate) {
-	/* Some data has been sent to the client, just close the FD */
+	/*
+	 * Some data has been sent to the client, just close the FD
+	 */
 	comm_close(fd);
     } else if (conn->nrequests) {
-	/* assume its a persistent connection; just close it */
+	/*
+	 * assume its a persistent connection; just close it
+	 */
 	comm_close(fd);
     } else {
-	/* Generate an error */
+	/*
+	 * Generate an error
+	 */
 	err = errorCon(ERR_LIFETIME_EXP, HTTP_REQUEST_TIMEOUT);
-	err->callback = clientErrorComplete;
 	err->url = xstrdup("N/A");
+	/*
+	 * Normally we shouldn't call errorSend() in client_side.c, but
+	 * it should be okay in this case.  Presumably if we get here
+	 * this is the first request for the connection, and no data
+	 * has been written yet
+	 */
+	assert(conn->chr == NULL);
 	errorSend(fd, err);
-	/* if we don't close() here, we still need a timeout handler! */
+	/*
+	 * if we don't close() here, we still need a timeout handler!
+	 */
 	commSetTimeout(fd, 30, requestTimeout, conn);
     }
 }

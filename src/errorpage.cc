@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.107 1997/12/02 00:17:33 wessels Exp $
+ * $Id: errorpage.cc,v 1.108 1997/12/02 23:55:06 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -102,7 +102,10 @@ errorCon(err_type type, http_status status)
  *            by 'err' and then stores the text in the specified store
  *            entry.  This function should only be called by ``server
  *            side routines'' which need to communicate errors to the
- *            client side.  The client side should call errorSend().
+ *            client side.  It should also be called from client_side.c
+ *            because we now support persistent connections, and
+ *            cannot assume that we can immediately write to the socket
+ *            for an error.
  */
 void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
@@ -133,6 +136,12 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
  *            errorSendComplete() deallocates 'err'.  We need to add
  *            'err' to the cbdata because comm_write() requires it
  *            for all callback data pointers.
+ *
+ *            Note, normally errorSend() should only be called from
+ *            routines in ssl.c and pass.c, where we don't have any
+ *            StoreEntry's.  In client_side.c we must allocate a StoreEntry
+ *            for errors and use errorAppendEntry() to account for
+ *            persistent/pipeline connections.
  */
 void
 errorSend(int fd, ErrorState * err)
