@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.244 1997/05/23 19:48:06 wessels Exp $
+ * $Id: store.cc,v 1.245 1997/05/23 20:45:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2207,8 +2207,10 @@ storeClientCopy(StoreEntry * e,
     size_t sz;
     MemObject *mem = e->mem_obj;
     struct _store_client *sc;
+    static int recurse_detect = 0;
     assert(seen_offset <= mem->e_current_len);
     assert(copy_offset >= mem->e_lowest_offset);
+    assert(recurse_detect == 0);
     if ((ci = storeClientListSearch(mem, data)) < 0)
 	fatal_dump("storeClientCopy: Unregistered client");
     sc = &mem->clients[ci];
@@ -2223,7 +2225,9 @@ storeClientCopy(StoreEntry * e,
 	return;
     }
     sz = memCopy(mem->data, copy_offset, buf, size);
+    recurse_detect = 1;
     callback(data, buf, sz);
+    recurse_detect = 0;
     /* see if we can get rid of some data if we are in "delete behind" mode . */
     if (BIT_TEST(e->flag, DELETE_BEHIND))
 	storeDeleteBehind(e);
