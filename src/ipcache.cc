@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.31 1996/07/12 17:39:51 wessels Exp $
+ * $Id: ipcache.cc,v 1.32 1996/07/15 23:10:54 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -309,7 +309,7 @@ static void ipcache_release(i)
     }
     if (result->status == IP_CACHED) {
 	for (k = 0; k < (int) result->addr_count; k++)
-	    safe_free(result->entry.h_addr_list[k]);
+	    safe_free(*(result->entry.h_addr_list + k));
 	safe_free(result->entry.h_addr_list);
 	for (k = 0; k < (int) result->alias_count; k++)
 	    safe_free(result->entry.h_aliases[k]);
@@ -488,7 +488,7 @@ static void ipcache_add(name, i, hp, cached)
     if (cached) {
 	/* count for IPs */
 	addr_count = 0;
-	while ((addr_count < 255) && hp->h_addr_list[addr_count])
+	while ((addr_count < 255) && *(hp->h_addr_list + addr_count))
 	    ++addr_count;
 
 	i->addr_count = addr_count;
@@ -504,8 +504,8 @@ static void ipcache_add(name, i, hp, cached)
 	/* copy ip addresses information */
 	i->entry.h_addr_list = xcalloc(addr_count + 1, sizeof(char *));
 	for (k = 0; k < addr_count; k++) {
-	    i->entry.h_addr_list[k] = xcalloc(1, hp->h_length);
-	    xmemcpy(i->entry.h_addr_list[k], hp->h_addr_list[k], hp->h_length);
+	    *(i->entry.h_addr_list + k) = xcalloc(1, hp->h_length);
+	    xmemcpy(*(i->entry.h_addr_list + k), *(hp->h_addr_list + k), hp->h_length);
 	}
 
 	if (alias_count) {
@@ -743,8 +743,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 				debug(14, 1, "ipcache_parsebuffer: DNS record in invalid format? No $ipcount data.\n");
 				break;
 			    }
-			    i->entry.h_addr_list[k] = xcalloc(1, i->entry.h_length);
-			    *((u_num32 *) (void *) i->entry.h_addr_list[k]) = inet_addr(line_cur->line);
+			    *(i->entry.h_addr_list + k) = xcalloc(1, i->entry.h_length);
+			    *((u_num32 *) (void *) *(i->entry.h_addr_list + k)) = inet_addr(line_cur->line);
 			    line_cur = line_cur->next;
 			    k++;
 			}
@@ -1101,13 +1101,12 @@ void ipcache_init()
 	debug(14, 1, "Successful DNS name lookup tests...\n");
     }
 
-    ip_table = hash_create(urlcmp, 229);	/* small hash table */
+    ip_table = hash_create(urlcmp, 229, hash_string);	/* small hash table */
     /* init static area */
     static_result = xcalloc(1, sizeof(struct hostent));
     static_result->h_length = 4;
-    /* Need a terminating NULL address (h_addr_list[1]) */
     static_result->h_addr_list = xcalloc(2, sizeof(char *));
-    static_result->h_addr_list[0] = xcalloc(1, 4);
+    *(static_result->h_addr_list + 0) = xcalloc(1, 4);
     static_result->h_name = xcalloc(1, MAX_HOST_NAME + 1);
 
     ipcacheOpenServers();
@@ -1172,7 +1171,7 @@ struct hostent *ipcache_gethostbyname(name, flags)
     IpcacheStats.misses++;
     /* check if it's already a IP address in text form. */
     if ((ip = inet_addr(name)) != INADDR_NONE) {
-	*((u_num32 *) (void *) static_result->h_addr_list[0]) = ip;
+	*((u_num32 *) (void *) (*static_result->h_addr_list + 0)) = ip;
 	strncpy(static_result->h_name, name, MAX_HOST_NAME);
 	return static_result;
     }
@@ -1251,7 +1250,7 @@ void stat_ipcache_get(sentry)
 	    i->addr_count);
 	for (k = 0; k < (int) i->addr_count; k++) {
 	    struct in_addr addr;
-	    xmemcpy(&addr, i->entry.h_addr_list[k], i->entry.h_length);
+	    xmemcpy(&addr, *(i->entry.h_addr_list + k), i->entry.h_length);
 	    storeAppendPrintf(sentry, " %15s", inet_ntoa(addr));
 	}
 	for (k = 0; k < (int) i->alias_count; k++) {
