@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.338 1999/01/12 23:37:46 wessels Exp $
+ * $Id: http.cc,v 1.339 1999/01/13 05:54:48 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -503,7 +503,6 @@ httpReadReply(int fd, void *data)
 	    }
 	}
 	storeAppend(entry, buf, len);
-#ifdef OPTIMISTIC_IO
 	if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	    /*
 	     * the above storeAppend() call could ABORT this entry,
@@ -511,9 +510,7 @@ httpReadReply(int fd, void *data)
 	     * there's nothing for us to do.
 	     */
 	    (void) 0;
-	} else
-#endif
-	if (httpPconnTransferDone(httpState)) {
+	} else if (httpPconnTransferDone(httpState)) {
 	    /* yes we have to clear all these! */
 	    commSetDefer(fd, NULL, NULL);
 	    commSetTimeout(fd, -1, NULL, NULL);
