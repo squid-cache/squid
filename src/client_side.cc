@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.230 1998/03/17 04:00:12 wessels Exp $
+ * $Id: client_side.cc,v 1.231 1998/03/20 05:07:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1281,6 +1281,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    return;
 	}
 	/* yes, continue */
+	http->log_type = LOG_TCP_MISS;
     } else if (pumpMethod(r->method)) {
 	http->log_type = LOG_TCP_MISS;
 	/* XXX oof, POST can be cached! */
@@ -1288,7 +1289,6 @@ clientProcessRequest(clientHttpRequest * http)
     } else {
 	http->log_type = clientProcessRequest2(http);
     }
-    http->log_type = clientProcessRequest2(http);
     debug(33, 4) ("clientProcessRequest: %s for '%s'\n",
 	log_tags[http->log_type],
 	http->uri);
