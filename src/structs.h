@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.219 1998/09/09 20:05:54 wessels Exp $
+ * $Id: structs.h,v 1.220 1998/09/11 17:07:50 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -995,7 +995,7 @@ struct _peer {
 	int n_times_counted;
 	int n_replies_expected;
 	int ttl;
-	u_num32 reqnum;
+	int id;
 	int flags;
     } mcast;
     PeerDigest digest;
@@ -1167,7 +1167,7 @@ struct _MemObject {
     } abort;
     char *log_url;
     dlink_node lru;
-    u_num32 reqnum;
+    int id;
     ssize_t object_sz;
     size_t swap_hdr_sz;
 };

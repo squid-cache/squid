@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.50 1998/09/04 23:04:52 wessels Exp $
+ * $Id: icp_v2.cc,v 1.51 1998/09/11 17:07:43 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -191,7 +191,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     icp_common_t *reply;
     int src_rtt = 0;
     u_num32 flags = 0;
-    method_t method;
     int rtt = 0;
     int hops = 0;
     xmemcpy(&header, buf, sizeof(icp_common_t));
@@ -203,10 +202,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     header.flags = ntohl(header.flags);
     header.pad = ntohl(header.pad);
 
-    method = header.reqnum >> 24;
-    /* Squid-1.1 doesn't use the "method bits" for METHOD_GET */
-    if (METHOD_NONE == method || METHOD_ENUM_END <= method)
-	method = METHOD_GET;
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
@@ -217,7 +212,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
 	    break;
 	}
-	if ((icp_request = urlParse(method, url)) == NULL) {
+	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
 	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
 	    break;
@@ -248,7 +243,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 		flags |= ICP_FLAG_SRC_RTT;
 	}
 	/* The peer is allowed to use this cache */
-	key = storeKeyPublic(url, method);
+	key = storeKeyPublic(url, METHOD_GET);
 	entry = storeGet(key);
 	debug(12, 5) ("icpHandleIcpV2: OPCODE %s\n", icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
@@ -293,10 +288,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    icp_opcode_str[header.opcode],
 	    inet_ntoa(from.sin_addr),
 	    url);
-	if (neighbors_do_private_keys && header.reqnum)
-	    key = storeKeyPrivate(url, method, header.reqnum);
-	else
-	    key = storeKeyPublic(url, method);
+	key = icpGetCacheKey(url, (int) header.reqnum);
 	/* call neighborsUdpAck even if ping_status != PING_WAITING */
 	neighborsUdpAck(key, &header, &from);
 	break;
@@ -538,4 +530,26 @@ icpCount(void *buf, int which, size_t len, int delay)
 	if (ICP_HIT == icp->opcode)
 	    Counter.icp.hits_recv++;
     }
+}
+
+#define N_QUERIED_KEYS 8192
+#define N_QUERIED_KEYS_MASK 8191
+static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
+
+int
+icpSetCacheKey(const cache_key *key)
+{
+    static int reqnum = 0;
+    if (++reqnum < 0)
+	reqnum = 1;
+    storeKeyCopy(queried_keys[reqnum & N_QUERIED_KEYS_MASK], key);
+    return reqnum;
+}
+
+const cache_key *
+icpGetCacheKey(const char *url, int reqnum)
+{
+    if (neighbors_do_private_keys && reqnum)
+	return queried_keys[reqnum & N_QUERIED_KEYS_MASK];
+    return storeKeyPublic(url, METHOD_GET);
 }
