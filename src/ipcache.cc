@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.148 1997/12/02 00:17:38 wessels Exp $
+ * $Id: ipcache.cc,v 1.149 1997/12/02 03:32:22 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -133,10 +133,6 @@ static struct {
 dlink_list lru_list;
 
 static int ipcache_testname(void);
-#if OLD_CODE
-static QS ipcache_compareLastRef;
-static QS ipcache_reverseLastRef;
-#endif
 static PF ipcache_dnsHandleRead;
 static ipcache_entry *ipcache_parsebuffer(const char *buf, dnsserver_t *);
 static void ipcache_release(ipcache_entry *);
@@ -276,34 +272,6 @@ ipcache_get(const char *name)
     return (ipcache_entry *) hash_lookup(ip_table, name);
 }
 
-#if OLD_CODE
-static int
-ipcache_compareLastRef(const void *A, const void *B)
-{
-    const ipcache_entry *const *e1 = A;
-    const ipcache_entry *const *e2 = B;
-    assert(e1 != NULL && e2 != NULL);
-    if ((*e1)->lastref > (*e2)->lastref)
-	return (1);
-    if ((*e1)->lastref < (*e2)->lastref)
-	return (-1);
-    return (0);
-}
-
-static int
-ipcache_reverseLastRef(const void *A, const void *B)
-{
-    const ipcache_entry *const *e1 = A;
-    const ipcache_entry *const *e2 = B;
-    assert(e1 != NULL && e2 != NULL);
-    if ((*e1)->lastref < (*e2)->lastref)
-	return (1);
-    if ((*e1)->lastref > (*e2)->lastref)
-	return (-1);
-    return (0);
-}
-#endif
-
 static int
 ipcacheExpiredEntry(ipcache_entry * i)
 {
@@ -319,7 +287,6 @@ ipcacheExpiredEntry(ipcache_entry * i)
 	return 0;
     return 1;
 }
-
 
 void
 ipcache_purgelru(void *voidnotused)
@@ -344,58 +311,6 @@ ipcache_purgelru(void *voidnotused)
     }
     debug(14, 3) ("ipcache_purgelru: removed %d entries\n", removed);
 }
-
-#if OLD_CODE
-/* finds the LRU and deletes */
-void
-ipcache_purgelru(void *voidnotused)
-{
-    ipcache_entry *i = NULL;
-    ipcache_entry *next;
-    int local_ip_notpending_count = 0;
-    int removed = 0;
-    int k;
-    ipcache_entry **LRU_list = NULL;
-    int LRU_list_count = 0;
-    eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
-    LRU_list = xcalloc(meta_data.ipcache_count, sizeof(ipcache_entry *));
-    next = (ipcache_entry *) hash_first(ip_table);
-    while ((i = next) != NULL) {
-	next = (ipcache_entry *) hash_next(ip_table);
-	if (ipcacheExpiredEntry(i)) {
-	    ipcache_release(i);
-	    removed++;
-	    continue;
-	}
-	if (LRU_list_count == meta_data.ipcache_count)
-	    break;
-	if (i->status == IP_PENDING)
-	    continue;
-	if (i->status == IP_DISPATCHED)
-	    continue;
-	if (i->locks != 0)
-	    continue;
-	local_ip_notpending_count++;
-	LRU_list[LRU_list_count++] = i;
-    }
-    /* sort LRU candidate list */
-    qsort((char *) LRU_list,
-	LRU_list_count,
-	sizeof(ipcache_entry *),
-	ipcache_compareLastRef);
-    for (k = 0; k < LRU_list_count; k++) {
-	if (meta_data.ipcache_count < ipcache_low)
-	    break;
-	if (LRU_list[k] == NULL)
-	    break;
-	ipcache_release(LRU_list[k]);
-	removed++;
-    }
-    assert(meta_data.ipcache_count <= ipcache_low);
-    debug(14, 3) ("ipcache_purgelru: removed %d entries\n", removed);
-    safe_free(LRU_list);
-}
-#endif
 
 /* create blank ipcache_entry */
 static ipcache_entry *
