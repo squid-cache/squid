@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.61 1996/09/12 16:39:55 wessels Exp $
+ * $Id: stat.cc,v 1.62 1996/09/12 16:59:57 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -594,6 +594,8 @@ static void statFiledescriptors(sentry)
 		lft = (lft - squid_curtime) / 60;
 	    if (to > 0)
 		to = (to - squid_curtime) / 60;
+	    if (fd_table[i].timeout_handler == NULL)
+		to = 0;
 	    storeAppendPrintf(sentry, "%4d %4d %-21s %s}\n",
 		lft,
 		to,
