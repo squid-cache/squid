@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.39 2003/09/06 12:47:36 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.40 2004/11/07 23:29:51 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -233,11 +233,10 @@ DiskdFile::operator new (size_t)
 {
     CBDATA_INIT_TYPE(DiskdFile);
     DiskdFile *result = cbdataAlloc(DiskdFile);
+    debug (79,3)("diskdFile with base %p allocating\n", result);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
-    debug (79,3)("diskdFile with base %p allocating\n", result);
-    return result;
+    return cbdataReference(result);
 }
 
 void

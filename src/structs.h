@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.494 2004/11/06 22:20:48 hno Exp $
+ * $Id: structs.h,v 1.495 2004/11/07 23:29:50 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -911,7 +911,6 @@ public:
 /* bah. remove this when HttpHeaderEntry is moved
  * out
  */
-extern void xassert(const char *, const char *, int);
 MEMPROXY_CLASS_INLINE(HttpHeaderEntry)
 
 /* http surogate control header field */

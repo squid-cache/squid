@@ -1,5 +1,5 @@
 /*
- * $Id: ACLBrowser.cc,v 1.2 2003/10/20 12:33:01 robertc Exp $
+ * $Id: ACLBrowser.cc,v 1.3 2004/11/07 23:29:50 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,8 +35,8 @@
  */
 
 #include "squid.h"
-#include "ACLBrowser.h"
 #include "ACLChecklist.h"
+#include "ACLBrowser.h"
 #include "ACLRegexData.h"
 
 /* explicit template instantiation required for some systems */

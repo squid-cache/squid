@@ -111,8 +111,7 @@ AUFSFile::operator new (size_t)
     AUFSFile *result = cbdataAlloc(AUFSFile);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
-    return result;
+    return cbdataReference(result);
 }
 
 void

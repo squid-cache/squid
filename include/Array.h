@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.16 2003/09/22 08:50:51 robertc Exp $
+ * $Id: Array.h,v 1.17 2004/11/07 23:29:50 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -33,6 +33,9 @@
 
 #ifndef SQUID_ARRAY_H
 #define SQUID_ARRAY_H
+
+#include "fatal.h"
+#include "util.h"
 
 /* iterator support */
 
@@ -213,7 +216,7 @@ Vector<E>::preAppend(int app_count)
 }
 
 template<class E>
-Vector<E>::Vector<E> (Vector const &rhs)
+Vector<E>::Vector<E> (Vector<E> const &rhs)
 {
     items = NULL;
     capacity = 0;
@@ -226,7 +229,7 @@ Vector<E>::Vector<E> (Vector const &rhs)
 
 template<class E>
 Vector<E> &
-Vector<E>::operator = (Vector const &old)
+Vector<E>::operator = (Vector<E> const &old)
 {
     clean();
     reserve (old.size());
@@ -292,14 +295,14 @@ template<class C>
 VectorIteratorBase<C>::VectorIteratorBase(size_t aPos, C &container) : pos(aPos), theVector(&container) {}
 
 template<class C>
-bool VectorIteratorBase<C>:: operator != (VectorIteratorBase const &rhs)
+bool VectorIteratorBase<C>:: operator != (VectorIteratorBase<C> const &rhs)
 {
     assert (theVector);
     return pos != rhs.pos;
 }
 
 template<class C>
-bool VectorIteratorBase<C>:: operator == (VectorIteratorBase const &rhs)
+bool VectorIteratorBase<C>:: operator == (VectorIteratorBase<C> const &rhs)
 {
     assert (theVector);
     return pos == rhs.pos;
@@ -336,7 +339,7 @@ VectorIteratorBase<C> VectorIteratorBase<C>:: operator ++(int)
 
 template<class C>
 VectorIteratorBase<C>&
-VectorIteratorBase<C>::operator =(VectorIteratorBase const &old)
+VectorIteratorBase<C>::operator =(VectorIteratorBase<C> const &old)
 {
     pos = old.pos;
     theVector = old.theVector;
@@ -345,7 +348,7 @@ VectorIteratorBase<C>::operator =(VectorIteratorBase const &old)
 
 template<class C>
 ssize_t
-VectorIteratorBase<C>::operator - (VectorIteratorBase const &rhs) const
+VectorIteratorBase<C>::operator - (VectorIteratorBase<C> const &rhs) const
 {
     assert(theVector == rhs.theVector);
     return pos - rhs.pos;

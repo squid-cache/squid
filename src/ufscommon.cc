@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.11 2003/08/04 22:14:42 robertc Exp $
+ * $Id: ufscommon.cc,v 1.12 2004/11/07 23:29:50 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -52,8 +52,7 @@ RebuildState::operator new (size_t size)
     RebuildState *result = cbdataAlloc(RebuildState);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
-    return result;
+    return cbdataReference(result);
 }
 
 void

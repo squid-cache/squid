@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.39 2004/10/20 22:48:52 hno Exp $
+ * $Id: client_side_request.cc,v 1.40 2004/11/07 23:29:50 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -93,8 +93,7 @@ ClientRequestContext::operator new (size_t size)
     ClientRequestContext *result = cbdataAlloc(ClientRequestContext);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
-    return result;
+    return cbdataReference(result);
 }
 
 void
@@ -146,8 +145,7 @@ ClientHttpRequest::operator new (size_t size)
     ClientHttpRequest *result = cbdataAlloc(ClientHttpRequest);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    cbdataReference(result);
-    return result;
+    return cbdataReference(result);
 }
 
 void
