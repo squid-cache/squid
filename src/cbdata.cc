@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.45 2002/10/13 20:34:59 robertc Exp $
+ * $Id: cbdata.cc,v 1.46 2002/10/14 08:26:30 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -304,7 +304,7 @@ cbdataDump(StoreEntry * sentry)
 #if CBDATA_DEBUG
     storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
     for (n = cbdataEntries.head; n; n = n->next) {
-	p = n->data;
+	p = (cbdata *)n->data;
 	storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", p->valid ? ' ' : '!', &p->data, p->type, p->locks, p->file, p->line);
     }
     storeAppendPrintf(sentry, "\n");
