@@ -1,98 +1,387 @@
+# Makefile.in generated automatically by automake 1.4s from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+@SET_MAKE@
+
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.2 2001/01/16 21:11:26 hno Exp $
+#  $Id: Makefile.in,v 1.3 2001/08/31 11:19:16 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 
-prefix		= @prefix@
-exec_prefix	= @exec_prefix@
-exec_suffix	= @exec_suffix@
-cgi_suffix	= @cgi_suffix@
-top_srcdir	= @top_srcdir@
-bindir		= @bindir@
-libexecdir      = @libexecdir@
-sysconfdir	= @sysconfdir@
-localstatedir   = @localstatedir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+SHELL = @SHELL@
 
-# Gotta love the DOS legacy
-#
-AUTH_EXE	= msnt_auth$(exec_suffix)
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
-CC		= @CC@
-MAKEDEPEND	= @MAKEDEPEND@
-INSTALL		= @INSTALL@
-INSTALL_BIN 	= @INSTALL_PROGRAM@
-INSTALL_FILE 	= @INSTALL_DATA@
-INSTALL_SUID	= @INSTALL_PROGRAM@ -o root -m 4755
-RANLIB		= @RANLIB@
-LN_S		= @LN_S@
-PERL            = @PERL@
-CRYPTLIB	= @CRYPTLIB@
-REGEXLIB	= @REGEXLIB@
-PTHREADLIB	= @PTHREADLIB@
-SNMPLIB		= @SNMPLIB@
-MALLOCLIB	= @LIB_MALLOC@
-AC_CFLAGS	= @CFLAGS@
-LDFLAGS		= @LDFLAGS@
-XTRA_LIBS	= @XTRA_LIBS@
-XTRA_OBJS 	= @XTRA_OBJS@
-MV		= @MV@
-RM		= @RM@
-SHELL		= /bin/sh
-DEFINES		= 
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = ../../../../..
 
-INCLUDE		= -I. -I../../../../../include -I$(top_srcdir)/include
-CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-AUTH_LIBS	= $(XTRA_LIBS)
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
 
-LIBPROGS        = $(AUTH_EXE)
-OBJS            = md4.o rfcnb-io.o rfcnb-util.o session.o msntauth.o \
-		  smbdes.o smbencrypt.o smblib-util.o smblib.o \
-		  valid.o denyusers.o allowusers.o confload.o
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AIOLIB = @AIOLIB@
+AMTAR = @AMTAR@
+AR = @AR@
+AR_R = @AR_R@
+AUTH_LIBS = @AUTH_LIBS@
+AUTH_MODULES = @AUTH_MODULES@
+AUTH_OBJS = @AUTH_OBJS@
+AWK = @AWK@
+BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
+CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
+CACHE_ICP_PORT = @CACHE_ICP_PORT@
+CC = @CC@
+CPP = @CPP@
+CRYPTLIB = @CRYPTLIB@
+DEPDIR = @DEPDIR@
+DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
+DLLIB = @DLLIB@
+ERR_LANGUAGE = @ERR_LANGUAGE@
+EXEEXT = @EXEEXT@
+FALSE = @FALSE@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LIBDLMALLOC = @LIBDLMALLOC@
+LIBREGEX = @LIBREGEX@
+LIB_MALLOC = @LIB_MALLOC@
+LN = @LN@
+LN_S = @LN_S@
+MKDIR = @MKDIR@
+MV = @MV@
+NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
+OBJEXT = @OBJEXT@
+OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
+OPT_PINGER_EXE = @OPT_PINGER_EXE@
+PACKAGE = @PACKAGE@
+PERL = @PERL@
+PTHREADLIB = @PTHREADLIB@
+RANLIB = @RANLIB@
+REGEXLIB = @REGEXLIB@
+REPL_LIBS = @REPL_LIBS@
+REPL_OBJS = @REPL_OBJS@
+REPL_POLICIES = @REPL_POLICIES@
+RM = @RM@
+SH = @SH@
+SNMPLIB = @SNMPLIB@
+SQUID_AIO_LIB = @SQUID_AIO_LIB@
+SQUID_PTHREAD_LIB = @SQUID_PTHREAD_LIB@
+SSLINC = @SSLINC@
+SSLLIB = @SSLLIB@
+STORE_LIBS = @STORE_LIBS@
+STORE_MODULES = @STORE_MODULES@
+STORE_MODULE_SUBDIRS = @STORE_MODULE_SUBDIRS@
+STORE_OBJS = @STORE_OBJS@
+TRUE = @TRUE@
+VERSION = @VERSION@
+XTRA_LIBS = @XTRA_LIBS@
+XTRA_OBJS = @XTRA_OBJS@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
+makesnmplib = @makesnmplib@
 
-all:    $(AUTH_EXE)
+libexec_PROGRAMS = msnt_auth
 
-$(AUTH_EXE): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(AUTH_LIBS)
+msnt_auth_SOURCES = md4.c rfcnb-io.c rfcnb-util.c session.c msntauth.c \
+		smbdes.c smbencrypt.c smblib-util.c smblib.c \
+		valid.c denyusers.c allowusers.c confload.c
 
-install-mkdirs:
-	-@if test ! -d $(prefix); then \
-		echo "mkdir $(prefix)"; \
-		mkdir -p $(prefix); \
-	fi
-	-@if test ! -d $(libexecdir); then \
-		echo "mkdir $(libexecdir)"; \
-		mkdir -p $(libexecdir); \
-	fi
 
-# Michael Lupp <mike@nemesis.saar.de> wants to know about additions
-# to the install target.
-install: all install-mkdirs
-	@for f in $(LIBPROGS); do \
-		if test -f $(libexecdir)/$$f; then \
-			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-		fi; \
-		echo $(INSTALL_BIN) $$f $(libexecdir); \
-		$(INSTALL_BIN) $$f $(libexecdir); \
-		if test -f $(libexecdir)/-$$f; then \
-			echo $(RM) -f $(libexecdir)/-$$f; \
-			$(RM) -f $(libexecdir)/-$$f; \
-		fi; \
+LDADD = @XTRA_LIBS@
+
+INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
+		-I$(top_srcdir)/src/
+
+subdir = src/auth/basic/helpers/MSNT
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
+CONFIG_HEADER = $(top_builddir)/include/autoconf.h
+CONFIG_CLEAN_FILES =
+libexec_PROGRAMS = msnt_auth$(EXEEXT)
+PROGRAMS = $(libexec_PROGRAMS)
+
+am_msnt_auth_OBJECTS = md4.$(OBJEXT) rfcnb-io.$(OBJEXT) \
+	rfcnb-util.$(OBJEXT) session.$(OBJEXT) msntauth.$(OBJEXT) \
+	smbdes.$(OBJEXT) smbencrypt.$(OBJEXT) smblib-util.$(OBJEXT) \
+	smblib.$(OBJEXT) valid.$(OBJEXT) denyusers.$(OBJEXT) \
+	allowusers.$(OBJEXT) confload.$(OBJEXT)
+msnt_auth_OBJECTS = $(am_msnt_auth_OBJECTS)
+msnt_auth_LDADD = $(LDADD)
+msnt_auth_DEPENDENCIES =
+msnt_auth_LDFLAGS =
+
+DEFS = @DEFS@
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/allowusers.Po $(DEPDIR)/confload.Po \
+@AMDEP_TRUE@	$(DEPDIR)/denyusers.Po $(DEPDIR)/md4.Po \
+@AMDEP_TRUE@	$(DEPDIR)/msntauth.Po $(DEPDIR)/rfcnb-io.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rfcnb-util.Po $(DEPDIR)/session.Po \
+@AMDEP_TRUE@	$(DEPDIR)/smbdes.Po $(DEPDIR)/smbencrypt.Po \
+@AMDEP_TRUE@	$(DEPDIR)/smblib-util.Po $(DEPDIR)/smblib.Po \
+@AMDEP_TRUE@	$(DEPDIR)/valid.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+DIST_SOURCES = $(msnt_auth_SOURCES)
+DIST_COMMON = Makefile.am Makefile.in
+SOURCES = $(msnt_auth_SOURCES)
+
+all: all-am
+
+.SUFFIXES:
+.SUFFIXES: .c .o .obj
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --foreign  src/auth/basic/helpers/MSNT/Makefile
+Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
+install-libexecPROGRAMS: $(libexec_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
+	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	  ; then \
+	    f=`echo $$p1|sed '$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/$$f"; \
+	   $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/$$f; \
+	  else :; fi; \
 	done
 
-clean: 
-	-rm -rf *.o *.a *pure_* core $(LIBPROGS)
+uninstall-libexecPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f $(DESTDIR)$(libexecdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libexecdir)/$$f; \
+	done
 
-distclean:	clean
-	-rm -f Makefile
+clean-libexecPROGRAMS:
+	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
+msnt_auth$(EXEEXT): $(msnt_auth_OBJECTS) $(msnt_auth_DEPENDENCIES) 
+	@rm -f msnt_auth$(EXEEXT)
+	$(LINK) $(msnt_auth_LDFLAGS) $(msnt_auth_OBJECTS) $(msnt_auth_LDADD) $(LIBS)
 
-tags:
-	ctags *.[ch]
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
 
-depend:
-	$(MAKEDEPEND) -fMakefile *.c
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/allowusers.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/confload.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/denyusers.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/md4.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/msntauth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rfcnb-io.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rfcnb-util.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/session.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/smbdes.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/smbencrypt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/smblib-util.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/smblib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/valid.Po@am__quote@
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `cygpath -w $<`
+CCDEPMODE = @CCDEPMODE@
+uninstall-info-am:
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = ../../../../..
+distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+check-am: all-am
+check: check-am
+all-am: Makefile $(PROGRAMS)
+
+installdirs:
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
+
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
+clean-am: clean-generic clean-libexecPROGRAMS mostlyclean-am
+
+distclean: distclean-am
+
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-tags
+
+dvi: dvi-am
+
+dvi-am:
+
+info: info-am
+
+info-am:
+
+install-data-am:
+
+install-exec-am: install-libexecPROGRAMS
+
+install-info: install-info-am
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-am
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-am
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic
+
+uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS
+
+.PHONY: GTAGS all all-am check check-am clean clean-generic \
+	clean-libexecPROGRAMS distclean distclean-compile \
+	distclean-depend distclean-generic distclean-tags distdir dvi \
+	dvi-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-libexecPROGRAMS install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic tags uninstall \
+	uninstall-am uninstall-info-am uninstall-libexecPROGRAMS
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

@@ -1,252 +1,879 @@
+# Makefile.in generated automatically by automake 1.4s from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+@SET_MAKE@
+
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.207 2001/08/24 14:29:34 hno Exp $
+#  $Id: Makefile.in,v 1.208 2001/08/31 11:19:12 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 
-prefix		= @prefix@
-exec_prefix	= @exec_prefix@
-exec_suffix	= @exec_suffix@
-cgi_suffix	= @cgi_suffix@
-top_srcdir	= @top_srcdir@
-bindir		= @bindir@
-libexecdir      = @libexecdir@
-sysconfdir	= @sysconfdir@
-localstatedir   = @localstatedir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+SHELL = @SHELL@
 
-SUBDIRS		= fs repl auth
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
-# Gotta love the DOS legacy
-#
-SQUID_EXE	= squid$(exec_suffix)
-CLIENT_EXE	= client$(exec_suffix)
-OPT_DNSSERVER_EXE = dnsserver$(exec_suffix)
-DNSSERVER_EXE	= @OPT_DNSSERVER_EXE@
-OPT_UNLINKD_EXE	= unlinkd$(exec_suffix)
-UNLINKD_EXE	= @OPT_UNLINKD_EXE@
-OPT_PINGER_EXE	= pinger$(exec_suffix)
-PINGER_EXE	= @OPT_PINGER_EXE@
-CACHEMGR_EXE	= cachemgr$(cgi_suffix)
-DISKD_EXE	= diskd$(exec_suffix)
+bindir = @bindir@
+sbindir = @sbindir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = ..
 
-DEFAULT_PREFIX		= $(prefix)
-DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
-DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
-DEFAULT_DNSSERVER       = $(libexecdir)/$(DNSSERVER_EXE)
-DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
-DEFAULT_ACCESS_LOG      = $(localstatedir)/logs/access.log
-DEFAULT_STORE_LOG       = $(localstatedir)/logs/store.log
-DEFAULT_PID_FILE        = $(localstatedir)/logs/squid.pid
-DEFAULT_SWAP_DIR        = $(localstatedir)/cache
-DEFAULT_PINGER		= $(libexecdir)/$(PINGER_EXE)
-DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
-DEFAULT_DISKD		= $(libexecdir)/$(DISKD_EXE)
-DEFAULT_ICON_DIR	= $(sysconfdir)/icons
-DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
-DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
 
-AUTH_OBJS	= @AUTH_OBJS@
-AUTH_MODULES	= @AUTH_MODULES@
-CC		= @CC@
-MAKEDEPEND	= @MAKEDEPEND@
-INSTALL		= @INSTALL@
-INSTALL_BIN 	= @INSTALL_PROGRAM@
-INSTALL_FILE 	= @INSTALL_DATA@
-INSTALL_SUID	= @INSTALL_PROGRAM@ -o root -m 4755
-RANLIB		= @RANLIB@
-LN_S		= @LN_S@
-PERL            = @PERL@
-CRYPTLIB	= @CRYPTLIB@
-REGEXLIB	= @REGEXLIB@
-PTHREADLIB	= @PTHREADLIB@
-AIOLIB		= @AIOLIB@
-SNMPLIB		= @SNMPLIB@
-MALLOCLIB	= @LIB_MALLOC@
-SSLLIB		= @SSLLIB@
-AC_CFLAGS	= @CFLAGS@
-LDFLAGS		= @LDFLAGS@
-XTRA_LIBS	= @XTRA_LIBS@
-XTRA_OBJS 	= @XTRA_OBJS@
-STORE_OBJS	= @STORE_OBJS@
-STORE_MODULES	= @STORE_MODULES@
-REPL_OBJS	= @REPL_OBJS@
-REPL_POLICIES	= @REPL_POLICIES@
-MV		= @MV@
-RM		= @RM@
-SHELL		= /bin/sh
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AIOLIB = @AIOLIB@
+AMTAR = @AMTAR@
+AR = @AR@
+AR_R = @AR_R@
+AUTH_LIBS = @AUTH_LIBS@
+AUTH_MODULES = @AUTH_MODULES@
+AUTH_OBJS = @AUTH_OBJS@
+AWK = @AWK@
+BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
+CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
+CACHE_ICP_PORT = @CACHE_ICP_PORT@
+CC = @CC@
+CPP = @CPP@
+CRYPTLIB = @CRYPTLIB@
+DEPDIR = @DEPDIR@
+DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
+DLLIB = @DLLIB@
+ERR_LANGUAGE = @ERR_LANGUAGE@
+EXEEXT = @EXEEXT@
+FALSE = @FALSE@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LIBDLMALLOC = @LIBDLMALLOC@
+LIBREGEX = @LIBREGEX@
+LIB_MALLOC = @LIB_MALLOC@
+LN = @LN@
+LN_S = @LN_S@
+MKDIR = @MKDIR@
+MV = @MV@
+NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
+OBJEXT = @OBJEXT@
+OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
+OPT_PINGER_EXE = @OPT_PINGER_EXE@
+PACKAGE = @PACKAGE@
+PERL = @PERL@
+PTHREADLIB = @PTHREADLIB@
+RANLIB = @RANLIB@
+REGEXLIB = @REGEXLIB@
+REPL_LIBS = @REPL_LIBS@
+REPL_OBJS = @REPL_OBJS@
+REPL_POLICIES = @REPL_POLICIES@
+RM = @RM@
+SH = @SH@
+SNMPLIB = @SNMPLIB@
+SQUID_AIO_LIB = @SQUID_AIO_LIB@
+SQUID_PTHREAD_LIB = @SQUID_PTHREAD_LIB@
+SSLINC = @SSLINC@
+SSLLIB = @SSLLIB@
+STORE_LIBS = @STORE_LIBS@
+STORE_MODULES = @STORE_MODULES@
+STORE_MODULE_SUBDIRS = @STORE_MODULE_SUBDIRS@
+STORE_OBJS = @STORE_OBJS@
+TRUE = @TRUE@
+VERSION = @VERSION@
+XTRA_LIBS = @XTRA_LIBS@
+XTRA_OBJS = @XTRA_OBJS@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
+makesnmplib = @makesnmplib@
+#look into pkgsbin..
+libexecdir = ${prefix}/libexec/squid
 
-INCLUDE		= -I. -I../include -I$(top_srcdir)/include
-CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_AIO_LIB@ @SQUID_PTHREAD_LIB@ \
-		  $(SNMPLIB) $(MALLOCLIB) $(SSLLIB) -lmiscutil $(XTRA_LIBS)
-CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
-DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
-PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
-STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
+@USE_DNSSERVER_TRUE@DNSSOURCE = dns.c
+@USE_DNSSERVER_FALSE@DNSSOURCE = dns_internal.c
+@USE_DNSSERVER_TRUE@DNSSERVER = dnsserver
 
-PROGS           = $(SQUID_EXE) $(CLIENT_EXE)
-UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE)
-SUID_UTILS	= $(PINGER_EXE)
-CGIPROGS	= $(CACHEMGR_EXE)
-OBJS	 	= \
-		access_log.o \
-		acl.o \
-		asn.o \
-		auth_modules.o \
-		authenticate.o \
-		cache_cf.o \
-		CacheDigest.o \
-		cache_manager.o \
-		carp.o \
-		cbdata.o \
-		client_db.o \
-		client_side.o \
-		comm.o \
-		comm_select.o \
-		debug.o \
-		@DELAY_OBJS@ \
-		disk.o \
-		@DNS_OBJS@ \
-		errorpage.o \
-		ETag.o \
-		event.o \
-		fd.o \
-		filemap.o \
-		forward.o \
-		fqdncache.o \
-		ftp.o \
-		globals.o \
-		gopher.o \
-		helper.o \
-		@HTCP_OBJS@ \
-		http.o \
-		HttpStatusLine.o \
-		HttpHdrCc.o \
-		HttpHdrRange.o \
-		HttpHdrContRange.o \
-		HttpHeader.o \
-		HttpHeaderTools.o \
-		HttpBody.o \
-		HttpMsg.o \
-		HttpReply.o \
-		HttpRequest.o \
-		icmp.o \
-		icp_v2.o \
-		icp_v3.o \
-		ident.o \
-		internal.o \
-		ipc.o \
-		ipcache.o \
-		@LEAKFINDER_OBJS@ \
-		logfile.o \
-		main.o \
-		mem.o \
-		MemPool.o \
-		MemBuf.o \
-		mime.o \
-		multicast.o \
-		neighbors.o \
-		net_db.o \
-		Packer.o \
-		pconn.o \
-		peer_digest.o \
-		peer_select.o \
-		redirect.o \
-		referer.o \
-		refresh.o \
-		repl_modules.o \
-		send-announce.o \
-		@SNMP_OBJS@ \
-		ssl.o \
-		@SSL_OBJS@ \
-		stat.o \
-		StatHist.o \
-		String.o \
-		stmem.o \
-		store.o \
-		store_io.o \
-		store_client.o \
-		store_digest.o \
-		store_dir.o \
-		store_key_md5.o \
-		store_log.o \
-		store_modules.o \
-		store_rebuild.o \
-		store_swapin.o \
-		store_swapmeta.o \
-		store_swapout.o \
-		string_arrays.o \
-		tools.o \
-		@UNLINKD_OBJS@ \
-		url.o \
-		urn.o \
-		useragent.o \
-		wais.o \
-		wccp.o \
-		whois.o \
-		@WIN32_OBJS@ \
-		$(XTRA_OBJS)
+@USE_SNMP_TRUE@SNMPSOURCE = snmp_core.c snmp_agent.c
+@USE_SNMP_FALSE@SNMPSOURCE = 
 
-SNMP_OBJS	= \
-		snmp_core.o \
-		snmp_agent.o
+@USE_DELAY_POOLS_TRUE@DELAY_POOL_SOURCE = delay_pools.c
+@USE_DELAY_POOLS_FALSE@DELAY_POOL_SOURCE = 
 
-HTCP_OBJS	= htcp.o
+@ENABLE_HTCP_TRUE@HTCPSOURCE = htcp.c
 
-DELAY_OBJS	= delay_pools.o
+@MAKE_LEAKFINDER_TRUE@LEAKFINDERSOURCE = leakfinder.c
+@MAKE_LEAKFINDER_FALSE@LEAKFINDERSOURCE = 
 
-LEAKFINDER_OBJS	= \
-		leakfinder.o
+@ENABLE_UNLINKD_TRUE@UNLINKDSOURCE = unlinkd.c
+@ENABLE_UNLINKD_FALSE@UNLINKDSOURCE = 
+@ENABLE_UNLINKD_TRUE@UNLINKD = unlinkd
+@ENABLE_UNLINKD_FALSE@UNLINKD = 
 
-SSL_OBJS 	= ssl_support.o
+@ENABLE_SSL_TRUE@SSLSOURCE = ssl_support.c
+@ENABLE_SSL_FALSE@SSLSOURCE = 
 
-DEFAULTS        = \
-	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
+@ENABLE_WIN32SPECIFIC_TRUE@WIN32SOURCE = win32.c
+@ENABLE_WIN32SPECIFIC_FALSE@WIN32SOURCE = 
 
-all:    squid.conf.default
-	@for dir in $(SUBDIRS); do \
-		echo "Making $@ in $$dir..."; \
-		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
+SUBDIRS = fs repl auth
+
+INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include
+
+EXTRA_PROGRAMS = unlinkd pinger dnsserver
+noinst_PROGRAMS = cf_gen
+bin_PROGRAMS = squid client
+libexec_PROGRAMS = @OPT_PINGER_EXE@ $(DNSSERVER) $(UNLINKD) cachemgr
+
+cf_gen_SOURCES = cf_gen.c defines.h
+nodist_cf_gen_HEADER = cf_gen_defines.h
+
+EXTRA_squid_SOURCES = delay_pools.c dns.c dnsserver.c dns_internal.c htcp.c \
+leakfinder.c snmp_core.c snmp_agent.c unlinkd.c ssl_support.c win32.c
+
+squid_SOURCES = \
+access_log.c acl.c asn.c authenticate.c cache_cf.c \
+CacheDigest.c cache_manager.c carp.c cbdata.c client_db.c client_side.c \
+comm.c comm_select.c debug.c defines.h $(DELAY_POOL_SOURCE) disk.c $(DNSSOURCE) enums.h \
+errorpage.c ETag.c event.c fd.c filemap.c forward.c fqdncache.c ftp.c \
+globals.h gopher.c helper.c $(HTCPSOURCE) http.c HttpStatusLine.c HttpHdrCc.c \
+HttpHdrRange.c HttpHdrContRange.c HttpHeader.c HttpHeaderTools.c HttpBody.c \
+HttpMsg.c HttpReply.c HttpRequest.c icmp.c icp_v2.c icp_v3.c ident.c internal.c \
+ipc.c ipcache.c $(LEAKFINDERSOURCE) logfile.c main.c mem.c MemPool.c MemBuf.c \
+mime.c multicast.c neighbors.c net_db.c Packer.c pconn.c peer_digest.c \
+peer_select.c protos.h redirect.c referer.c refresh.c send-announce.c $(SNMPSOURCE) \
+squid.h ssl.c $(SSLSOURCE) stat.c StatHist.c String.c stmem.c store.c store_io.c \
+store_client.c store_digest.c store_dir.c store_key_md5.c store_log.c store_rebuild.c \
+store_swapin.c store_swapmeta.c store_swapout.c structs.h tools.c typedefs.h \
+$(UNLINKDSOURCE) url.c urn.c useragent.c wais.c wccp.c whois.c $(WIN32SOURCE)
+
+nodist_squid_SOURCES = repl_modules.c auth_modules.c store_modules.c \
+	cf_parser.h globals.c string_arrays.c
+
+squid_LDADD = @XTRA_OBJS@ @REPL_OBJS@ @STORE_OBJS@ @AUTH_OBJS@ \
+	@CRYPTLIB@ @REGEXLIB@ @SQUID_AIO_LIB@ @SQUID_PTHREAD_LIB@ \
+	@SNMPLIB@ @LIB_MALLOC@ @SSLLIB@ ../lib/libmiscutil.a @XTRA_LIBS@
+
+
+unlinkd_SOURCES = 
+unlinkd_LDADD = unlinkd-daemon.o
+
+pinger_SOURCES = pinger.c debug.c globals.c
+
+BUILT_SOURCES = cf_gen_defines.h cf_parser.h globals.c string_arrays.c \
+	 repl_modules.c auth_modules.c store_modules.c 
+
+
+sysconf_DATA = squid.conf.default mib.txt mime.conf.default
+
+LDADD = ../lib/libmiscutil.a @XTRA_LIBS@
+
+EXTRA_DIST = cf_gen_defines cf.data.pre mk-globals-c.pl mk-string-arrays.pl \
+	auth_modules.sh store_modules.sh repl_modules.sh mib.txt mime.conf.default
+
+
+DEFAULT_PREFIX = $(prefix)
+DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
+DEFAULT_MIME_TABLE = $(sysconfdir)/mime.conf
+DEFAULT_DNSSERVER = $(libexecdir)/$(DNSSERVER_EXE)
+DEFAULT_CACHE_LOG = $(localstatedir)/logs/cache.log
+DEFAULT_ACCESS_LOG = $(localstatedir)/logs/access.log
+DEFAULT_STORE_LOG = $(localstatedir)/logs/store.log
+DEFAULT_PID_FILE = $(localstatedir)/logs/squid.pid
+DEFAULT_SWAP_DIR = $(localstatedir)/cache
+DEFAULT_PINGER = $(libexecdir)/$(PINGER_EXE)
+DEFAULT_UNLINKD = $(libexecdir)/$(UNLINKD_EXE)
+DEFAULT_DISKD = $(libexecdir)/$(DISKD_EXE)
+DEFAULT_ICON_DIR = $(sysconfdir)/icons
+DEFAULT_ERROR_DIR = $(sysconfdir)/errors
+DEFAULT_MIB_PATH = $(sysconfdir)/mib.txt
+
+DEFS = -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
+
+DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
+	globals.c string_arrays.c repl_modules.c auth_modules.c store_modules.c
+
+subdir = src
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
+CONFIG_HEADER = $(top_builddir)/include/autoconf.h
+CONFIG_CLEAN_FILES =
+EXTRA_PROGRAMS = unlinkd$(EXEEXT) pinger$(EXEEXT) dnsserver$(EXEEXT)
+bin_PROGRAMS = squid$(EXEEXT) client$(EXEEXT)
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@libexec_PROGRAMS = \
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	@OPT_PINGER_EXE@ \
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	dnsserver$(EXEEXT) \
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	cachemgr$(EXEEXT)
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_FALSE@libexec_PROGRAMS = \
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_FALSE@	@OPT_PINGER_EXE@ \
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_FALSE@	cachemgr$(EXEEXT)
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@libexec_PROGRAMS = \
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	@OPT_PINGER_EXE@ \
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	dnsserver$(EXEEXT) \
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	unlinkd$(EXEEXT) \
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	cachemgr$(EXEEXT)
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@libexec_PROGRAMS = \
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	@OPT_PINGER_EXE@ \
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	unlinkd$(EXEEXT) \
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	cachemgr$(EXEEXT)
+noinst_PROGRAMS = cf_gen$(EXEEXT)
+PROGRAMS = $(bin_PROGRAMS) $(libexec_PROGRAMS) $(noinst_PROGRAMS)
+
+cachemgr_SOURCES = cachemgr.c
+cachemgr_OBJECTS = cachemgr.$(OBJEXT)
+cachemgr_LDADD = $(LDADD)
+cachemgr_DEPENDENCIES = ../lib/libmiscutil.a
+cachemgr_LDFLAGS =
+am_cf_gen_OBJECTS = cf_gen.$(OBJEXT)
+cf_gen_OBJECTS = $(am_cf_gen_OBJECTS)
+cf_gen_LDADD = $(LDADD)
+cf_gen_DEPENDENCIES = ../lib/libmiscutil.a
+cf_gen_LDFLAGS =
+client_SOURCES = client.c
+client_OBJECTS = client.$(OBJEXT)
+client_LDADD = $(LDADD)
+client_DEPENDENCIES = ../lib/libmiscutil.a
+client_LDFLAGS =
+dnsserver_SOURCES = dnsserver.c
+dnsserver_OBJECTS = dnsserver.$(OBJEXT)
+dnsserver_LDADD = $(LDADD)
+dnsserver_DEPENDENCIES = ../lib/libmiscutil.a
+dnsserver_LDFLAGS =
+am_pinger_OBJECTS = pinger.$(OBJEXT) debug.$(OBJEXT) globals.$(OBJEXT)
+pinger_OBJECTS = $(am_pinger_OBJECTS)
+pinger_LDADD = $(LDADD)
+pinger_DEPENDENCIES = ../lib/libmiscutil.a
+pinger_LDFLAGS =
+@USE_DELAY_POOLS_FALSE@am__objects_1 =
+@USE_DELAY_POOLS_TRUE@am__objects_1 = delay_pools.$(OBJEXT)
+@USE_DNSSERVER_TRUE@am__objects_2 = dns.$(OBJEXT)
+@USE_DNSSERVER_FALSE@am__objects_2 = dns_internal.$(OBJEXT)
+@ENABLE_HTCP_TRUE@am__objects_3 = htcp.$(OBJEXT)
+@MAKE_LEAKFINDER_FALSE@am__objects_4 =
+@MAKE_LEAKFINDER_TRUE@am__objects_4 = leakfinder.$(OBJEXT)
+@USE_SNMP_TRUE@am__objects_5 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_FALSE@am__objects_5 =
+@ENABLE_SSL_TRUE@am__objects_6 = ssl_support.$(OBJEXT)
+@ENABLE_SSL_FALSE@am__objects_6 =
+@ENABLE_UNLINKD_FALSE@am__objects_7 =
+@ENABLE_UNLINKD_TRUE@am__objects_7 = unlinkd.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_8 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_8 = win32.$(OBJEXT)
+am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
+	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
+	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
+	client_db.$(OBJEXT) client_side.$(OBJEXT) comm.$(OBJEXT) \
+	comm_select.$(OBJEXT) debug.$(OBJEXT) $(am__objects_1) \
+	disk.$(OBJEXT) $(am__objects_2) errorpage.$(OBJEXT) \
+	ETag.$(OBJEXT) event.$(OBJEXT) fd.$(OBJEXT) filemap.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_3) \
+	http.$(OBJEXT) HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
+	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
+	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
+	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
+	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_4) \
+	logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
+	MemPool.$(OBJEXT) MemBuf.$(OBJEXT) mime.$(OBJEXT) \
+	multicast.$(OBJEXT) neighbors.$(OBJEXT) net_db.$(OBJEXT) \
+	Packer.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_5) \
+	ssl.$(OBJEXT) $(am__objects_6) stat.$(OBJEXT) \
+	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
+	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	tools.$(OBJEXT) $(am__objects_7) url.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_8)
+nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
+	store_modules.$(OBJEXT) globals.$(OBJEXT) \
+	string_arrays.$(OBJEXT)
+squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
+squid_DEPENDENCIES = ../lib/libmiscutil.a
+squid_LDFLAGS =
+am_unlinkd_OBJECTS =
+unlinkd_OBJECTS = $(am_unlinkd_OBJECTS)
+unlinkd_DEPENDENCIES = unlinkd-daemon.o
+unlinkd_LDFLAGS =
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/CacheDigest.Po $(DEPDIR)/ETag.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpBody.Po $(DEPDIR)/HttpHdrCc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpHdrContRange.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpHdrRange.Po $(DEPDIR)/HttpHeader.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpHeaderTools.Po $(DEPDIR)/HttpMsg.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpReply.Po $(DEPDIR)/HttpRequest.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po $(DEPDIR)/MemBuf.Po \
+@AMDEP_TRUE@	$(DEPDIR)/MemPool.Po $(DEPDIR)/Packer.Po \
+@AMDEP_TRUE@	$(DEPDIR)/StatHist.Po $(DEPDIR)/String.Po \
+@AMDEP_TRUE@	$(DEPDIR)/access_log.Po $(DEPDIR)/acl.Po \
+@AMDEP_TRUE@	$(DEPDIR)/asn.Po $(DEPDIR)/auth_modules.Po \
+@AMDEP_TRUE@	$(DEPDIR)/authenticate.Po $(DEPDIR)/cache_cf.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cache_manager.Po $(DEPDIR)/cachemgr.Po \
+@AMDEP_TRUE@	$(DEPDIR)/carp.Po $(DEPDIR)/cbdata.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cf_gen.Po $(DEPDIR)/client.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client_db.Po $(DEPDIR)/client_side.Po \
+@AMDEP_TRUE@	$(DEPDIR)/comm.Po $(DEPDIR)/comm_select.Po \
+@AMDEP_TRUE@	$(DEPDIR)/debug.Po $(DEPDIR)/delay_pools.Po \
+@AMDEP_TRUE@	$(DEPDIR)/disk.Po $(DEPDIR)/dns.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dns_internal.Po $(DEPDIR)/dnsserver.Po \
+@AMDEP_TRUE@	$(DEPDIR)/errorpage.Po $(DEPDIR)/event.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fd.Po $(DEPDIR)/filemap.Po \
+@AMDEP_TRUE@	$(DEPDIR)/forward.Po $(DEPDIR)/fqdncache.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ftp.Po $(DEPDIR)/globals.Po \
+@AMDEP_TRUE@	$(DEPDIR)/gopher.Po $(DEPDIR)/helper.Po \
+@AMDEP_TRUE@	$(DEPDIR)/htcp.Po $(DEPDIR)/http.Po \
+@AMDEP_TRUE@	$(DEPDIR)/icmp.Po $(DEPDIR)/icp_v2.Po \
+@AMDEP_TRUE@	$(DEPDIR)/icp_v3.Po $(DEPDIR)/ident.Po \
+@AMDEP_TRUE@	$(DEPDIR)/internal.Po $(DEPDIR)/ipc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ipcache.Po $(DEPDIR)/leakfinder.Po \
+@AMDEP_TRUE@	$(DEPDIR)/logfile.Po $(DEPDIR)/main.Po \
+@AMDEP_TRUE@	$(DEPDIR)/mem.Po $(DEPDIR)/mime.Po \
+@AMDEP_TRUE@	$(DEPDIR)/multicast.Po $(DEPDIR)/neighbors.Po \
+@AMDEP_TRUE@	$(DEPDIR)/net_db.Po $(DEPDIR)/pconn.Po \
+@AMDEP_TRUE@	$(DEPDIR)/peer_digest.Po $(DEPDIR)/peer_select.Po \
+@AMDEP_TRUE@	$(DEPDIR)/pinger.Po $(DEPDIR)/redirect.Po \
+@AMDEP_TRUE@	$(DEPDIR)/referer.Po $(DEPDIR)/refresh.Po \
+@AMDEP_TRUE@	$(DEPDIR)/repl_modules.Po \
+@AMDEP_TRUE@	$(DEPDIR)/send-announce.Po $(DEPDIR)/snmp_agent.Po \
+@AMDEP_TRUE@	$(DEPDIR)/snmp_core.Po $(DEPDIR)/ssl.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ssl_support.Po $(DEPDIR)/stat.Po \
+@AMDEP_TRUE@	$(DEPDIR)/stmem.Po $(DEPDIR)/store.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_client.Po $(DEPDIR)/store_digest.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_dir.Po $(DEPDIR)/store_io.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_key_md5.Po $(DEPDIR)/store_log.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_modules.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_rebuild.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_swapin.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_swapmeta.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_swapout.Po \
+@AMDEP_TRUE@	$(DEPDIR)/string_arrays.Po $(DEPDIR)/tools.Po \
+@AMDEP_TRUE@	$(DEPDIR)/unlinkd.Po $(DEPDIR)/url.Po \
+@AMDEP_TRUE@	$(DEPDIR)/urn.Po $(DEPDIR)/useragent.Po \
+@AMDEP_TRUE@	$(DEPDIR)/wais.Po $(DEPDIR)/wccp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/whois.Po $(DEPDIR)/win32.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+DIST_SOURCES = cachemgr.c $(cf_gen_SOURCES) client.c dnsserver.c \
+	$(pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) \
+	$(unlinkd_SOURCES)
+DATA = $(sysconf_DATA)
+
+
+RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
+	uninstall-info-recursive all-recursive install-data-recursive \
+	install-exec-recursive installdirs-recursive install-recursive \
+	uninstall-recursive check-recursive installcheck-recursive
+DIST_COMMON = Makefile.am Makefile.in
+DIST_SUBDIRS = $(SUBDIRS)
+SOURCES = cachemgr.c $(cf_gen_SOURCES) client.c dnsserver.c $(pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) $(nodist_squid_SOURCES) $(unlinkd_SOURCES)
+
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+
+.SUFFIXES:
+.SUFFIXES: .c .o .obj
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --foreign  src/Makefile
+Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	  ; then \
+	    f=`echo $$p1|sed '$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f"; \
+	   $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f; \
+	  else :; fi; \
 	done
-	@$(MAKE) $(MFLAGS) $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f $(DESTDIR)$(bindir)/$$f"; \
+	  rm -f $(DESTDIR)$(bindir)/$$f; \
+	done
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+install-libexecPROGRAMS: $(libexec_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
+	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	  ; then \
+	    f=`echo $$p1|sed '$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/$$f"; \
+	   $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/$$f; \
+	  else :; fi; \
+	done
+
+uninstall-libexecPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f $(DESTDIR)$(libexecdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libexecdir)/$$f; \
+	done
+
+clean-libexecPROGRAMS:
+	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+cachemgr$(EXEEXT): $(cachemgr_OBJECTS) $(cachemgr_DEPENDENCIES) 
+	@rm -f cachemgr$(EXEEXT)
+	$(LINK) $(cachemgr_LDFLAGS) $(cachemgr_OBJECTS) $(cachemgr_LDADD) $(LIBS)
+cf_gen$(EXEEXT): $(cf_gen_OBJECTS) $(cf_gen_DEPENDENCIES) 
+	@rm -f cf_gen$(EXEEXT)
+	$(LINK) $(cf_gen_LDFLAGS) $(cf_gen_OBJECTS) $(cf_gen_LDADD) $(LIBS)
+client$(EXEEXT): $(client_OBJECTS) $(client_DEPENDENCIES) 
+	@rm -f client$(EXEEXT)
+	$(LINK) $(client_LDFLAGS) $(client_OBJECTS) $(client_LDADD) $(LIBS)
+dnsserver$(EXEEXT): $(dnsserver_OBJECTS) $(dnsserver_DEPENDENCIES) 
+	@rm -f dnsserver$(EXEEXT)
+	$(LINK) $(dnsserver_LDFLAGS) $(dnsserver_OBJECTS) $(dnsserver_LDADD) $(LIBS)
+pinger$(EXEEXT): $(pinger_OBJECTS) $(pinger_DEPENDENCIES) 
+	@rm -f pinger$(EXEEXT)
+	$(LINK) $(pinger_LDFLAGS) $(pinger_OBJECTS) $(pinger_LDADD) $(LIBS)
+squid$(EXEEXT): $(squid_OBJECTS) $(squid_DEPENDENCIES) 
+	@rm -f squid$(EXEEXT)
+	$(LINK) $(squid_LDFLAGS) $(squid_OBJECTS) $(squid_LDADD) $(LIBS)
+unlinkd$(EXEEXT): $(unlinkd_OBJECTS) $(unlinkd_DEPENDENCIES) 
+	@rm -f unlinkd$(EXEEXT)
+	$(LINK) $(unlinkd_LDFLAGS) $(unlinkd_OBJECTS) $(unlinkd_LDADD) $(LIBS)
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/CacheDigest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ETag.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpBody.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrCc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrContRange.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrRange.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHeader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHeaderTools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpMsg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpReply.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpRequest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpStatusLine.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemBuf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemPool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Packer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StatHist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/String.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/access_log.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/acl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/asn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/auth_modules.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/authenticate.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cache_cf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cache_manager.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cachemgr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/carp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cbdata.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cf_gen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_db.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_side.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm_select.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/debug.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/delay_pools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/disk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dns.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dns_internal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dnsserver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/errorpage.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/event.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/filemap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/forward.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fqdncache.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ftp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/globals.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/gopher.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/helper.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/htcp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/http.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icmp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icp_v2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icp_v3.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ident.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/internal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ipc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ipcache.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/leakfinder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/logfile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mem.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mime.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/multicast.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/neighbors.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/net_db.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/pconn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/peer_digest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/peer_select.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/pinger.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/redirect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/referer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/refresh.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/repl_modules.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/send-announce.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snmp_agent.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snmp_core.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ssl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ssl_support.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stmem.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_digest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_dir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_io.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_key_md5.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_log.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_modules.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_rebuild.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_swapin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_swapmeta.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_swapout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/string_arrays.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unlinkd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/url.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/urn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/useragent.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wais.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wccp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/whois.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/win32.Po@am__quote@
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `cygpath -w $<`
+CCDEPMODE = @CCDEPMODE@
+uninstall-info-am:
+install-sysconfDATA: $(sysconf_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(sysconfdir)
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(sysconfdir)/$$f"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(sysconfdir)/$$f; \
+	done
+
+uninstall-sysconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(sysconfdir)/$$f"; \
+	  rm -f $(DESTDIR)$(sysconfdir)/$$f; \
+	done
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+$(RECURSIVE_TARGETS):
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	rev=''; for subdir in $$list; do \
+	  if test "$$subdir" = "."; then :; else \
+	    rev="$$subdir $$rev"; \
+	  fi; \
+	done; \
+	rev="$$rev ."; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = ..
+distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$(top_distdir)" \
+	        distdir=../$(distdir)/$$subdir \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
+check-am: all-am
+check: check-recursive
+all-am: Makefile $(PROGRAMS) $(DATA)
+installdirs: installdirs-recursive
+installdirs-am:
+	$(mkinstalldirs) $(DESTDIR)$(bindir) $(DESTDIR)$(libexecdir) $(DESTDIR)$(sysconfdir)
+
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-recursive
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
+clean: clean-recursive
+
+clean-am: clean-binPROGRAMS clean-generic clean-libexecPROGRAMS \
+	clean-noinstPROGRAMS mostlyclean-am
+
+distclean: distclean-recursive
+
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-tags
+
+dvi: dvi-recursive
+
+dvi-am:
+
+info: info-recursive
+
+info-am:
+
+install-data-am: install-data-local
+
+install-exec-am: install-binPROGRAMS install-libexecPROGRAMS \
+	install-sysconfDATA
+
+install-info: install-info-recursive
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-recursive
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-recursive
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic
+
+uninstall-am: uninstall-binPROGRAMS uninstall-info-am \
+	uninstall-libexecPROGRAMS uninstall-local uninstall-sysconfDATA
+
+uninstall-info: uninstall-info-recursive
+
+.PHONY: $(RECURSIVE_TARGETS) GTAGS all all-am check check-am clean \
+	clean-binPROGRAMS clean-generic clean-libexecPROGRAMS \
+	clean-noinstPROGRAMS clean-recursive distclean \
+	distclean-compile distclean-depend distclean-generic \
+	distclean-recursive distclean-tags distdir dvi dvi-am \
+	dvi-recursive info info-am info-recursive install install-am \
+	install-binPROGRAMS install-data install-data-am \
+	install-data-local install-data-recursive install-exec \
+	install-exec-am install-exec-recursive install-info \
+	install-info-am install-info-recursive install-libexecPROGRAMS \
+	install-man install-recursive install-strip install-sysconfDATA \
+	installcheck installcheck-am installdirs installdirs-am \
+	installdirs-recursive maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive tags tags-recursive \
+	uninstall uninstall-am uninstall-binPROGRAMS uninstall-info-am \
+	uninstall-info-recursive uninstall-libexecPROGRAMS \
+	uninstall-local uninstall-recursive uninstall-sysconfDATA
+
+cf_gen.$(OBJEXT): cf_gen_defines.h
+unlinkd-daemon.o: unlinkd.c
+	$(COMPILE) -DUNLINK_DAEMON -c $(srcdir)/unlinkd.c -o $@
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
-$(SNMP_OBJS): ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
-
-$(SQUID_EXE): $(OBJS) $(STORE_OBJS) $(REPL_OBJS) $(AUTH_OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(STORE_OBJS) $(REPL_OBJS) $(AUTH_OBJS) $(SQUID_LIBS)
-
-globals.o: globals.c Makefile
-	$(CC) -c globals.c $(CFLAGS) -I$(srcdir) $(DEFAULTS)
+snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
 globals.c: globals.h mk-globals-c.pl
 	$(PERL) $(srcdir)/mk-globals-c.pl < $(srcdir)/globals.h > $@
 
 string_arrays.c: enums.h mk-string-arrays.pl
 	$(PERL) $(srcdir)/mk-string-arrays.pl < $(srcdir)/enums.h > $@
-
-$(CLIENT_EXE): client.o
-	$(CC) -o $@ $(LDFLAGS) client.o $(CLIENT_LIBS)
-
-$(DNSSERVER_EXE): dnsserver.o
-	$(CC) -o $@ $(LDFLAGS) dnsserver.o $(DNSSERVER_LIBS)
-
-$(CACHEMGR_EXE): cachemgr.o
-	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
-
-$(PINGER_EXE): pinger.o debug.o globals.o
-	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o globals.o $(PINGER_LIBS)
-
-$(UNLINKD_EXE): unlinkd-daemon.o
-	$(CC) $(LDFLAGS) unlinkd-daemon.o -o $@
-
-unlinkd-daemon.o: unlinkd.c
-	$(CC) -c $(CFLAGS) -DUNLINK_DAEMON $(srcdir)/unlinkd.c -o $@
 
 cache_diff: cache_diff.o debug.o globals.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
@@ -257,15 +884,10 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 cache_cf.o: cf_parser.h
 
 squid.conf.default: cf_parser.h
-	@sh -c "test -f squid.conf.default || ./cf_gen cf.data"
+	$(SHELL) -c "test -f squid.conf.default || ./cf_gen cf.data"
 
-cf_parser.h: cf.data cf_gen
-	./cf_gen cf.data
-
-cf_gen: cf_gen.o
-	$(CC) -o $@ $(LDFLAGS) cf_gen.o $(STD_APP_LIBS)
-
-cf_gen.o: cf_gen.c cf_gen_defines.h Makefile defines.h ../include/autoconf.h
+cf_parser.h: cf.data cf_gen$(EXEEXT)
+	./cf_gen cf.data 
 
 cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
 	awk -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >cf_gen_defines.h
@@ -288,161 +910,38 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
-store_modules.c: store_modules.sh Makefile 
-	sh $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
+store_modules.c: store_modules.sh
+	$(SHELL) $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
 
-store_modules.o: store_modules.c
-	$(CC) -c store_modules.c $(CFLAGS) -I$(srcdir)
+repl_modules.c: repl_modules.sh 
+	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.c
 
-$(STORE_OBJS):
-	@sh -c "cd `dirname $@` && $(MAKE) $(MFLAGS) `basename $@`"
+auth_modules.c: auth_modules.sh
+	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
 
-repl_modules.c: repl_modules.sh Makefile 
-	sh $(srcdir)/repl_modules.sh $(REPL_POLICIES) >repl_modules.c
-
-repl_modules.o: repl_modules.c
-	$(CC) -c repl_modules.c $(CFLAGS) -I$(srcdir)
-
-$(REPL_OBJS):
-	@sh -c "cd `dirname $@` && $(MAKE) $(MFLAGS) `basename $@`"
-
-repl_modules repl/stamp:
-	@sh -c "cd repl && $(MAKE) all"
-
-auth_modules.c: auth_modules.sh Makefile
-	sh $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
-
-auth_modules.o: auth_modules.c
-	$(CC) -c auth_modules.c $(CFLAGS) -I$(srcdir)
-
-$(AUTH_OBJS):
-	@sh -c "cd `dirname $@` && $(MAKE) $(MFLAGS) `basename $@`"
-
-install-mkdirs:
-	-@if test ! -d $(prefix); then \
-		echo "mkdir $(prefix)"; \
-		mkdir -p $(prefix); \
-	fi
-	-@if test ! -d $(exec_prefix); then \
-		echo "mkdir $(exec_prefix)"; \
-		mkdir -p $(exec_prefix); \
-	fi
-	-@if test ! -d $(bindir); then \
-		echo "mkdir $(bindir)"; \
-		mkdir -p $(bindir); \
-	fi
-	-@if test ! -d $(libexecdir); then \
-		echo "mkdir $(libexecdir)"; \
-		mkdir -p $(libexecdir); \
-	fi
-	-@if test ! -d $(sysconfdir); then \
-		echo "mkdir $(sysconfdir)"; \
-		mkdir -p $(sysconfdir); \
-	fi
-	-@if test ! -d $(localstatedir); then \
-		echo "mkdir $(localstatedir)"; \
-		mkdir -p $(localstatedir); \
-	fi
-	-@if test ! -d $(localstatedir)/logs; then \
-		echo "mkdir $(localstatedir)/logs"; \
-		mkdir -p $(localstatedir)/logs; \
-	fi
-
-# Michael Lupp <mike@nemesis.saar.de> wants to know about additions
-# to the install target.
-install: all install-mkdirs
-	@for dir in $(SUBDIRS); do \
-		echo "Making $@ in $$dir..."; \
-		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
-	done
-	@for f in $(PROGS); do \
-		if test -f $(bindir)/$$f; then \
-			echo $(MV) $(bindir)/$$f $(bindir)/-$$f; \
-			$(MV) $(bindir)/$$f $(bindir)/-$$f; \
-		fi; \
-		echo $(INSTALL_BIN) $$f $(bindir); \
-		$(INSTALL_BIN) $$f $(bindir); \
-		if test -f $(bindir)/-$$f; then \
-			echo $(RM) -f $(bindir)/-$$f; \
-			$(RM) -f $(bindir)/-$$f; \
-		fi; \
-	done
-	@if test -n "$(UTILS)"; then \
-	    for f in $(UTILS); do \
-		if test -f $(libexecdir)/$$f; then \
-			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-		fi; \
-		echo $(INSTALL_BIN) $$f $(libexecdir); \
-		$(INSTALL_BIN) $$f $(libexecdir); \
-		if test -f $(libexecdir)/-$$f; then \
-			echo $(RM) -f $(libexecdir)/-$$f; \
-			$(RM) -f $(libexecdir)/-$$f; \
-		fi; \
-	    done; \
-	fi
-	@for f in $(CGIPROGS); do \
-		if test -f $(libexecdir)/$$f; then \
-			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-		fi; \
-		echo $(INSTALL_BIN) $$f $(libexecdir); \
-		$(INSTALL_BIN) $$f $(libexecdir); \
-		if test -f $(libexecdir)/-$$f; then \
-			echo $(RM) -f $(libexecdir)/-$$f; \
-			$(RM) -f $(libexecdir)/-$$f; \
-		fi; \
-	done
-	$(INSTALL_FILE) $(srcdir)/mib.txt $(DEFAULT_MIB_PATH)
-	$(INSTALL_FILE) squid.conf.default $(sysconfdir)
-	@if test -f $(sysconfdir)/squid.conf ; then \
-		echo "$@ will not overwrite existing $(sysconfdir)/squid.conf" ; \
+install-data-local:
+	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
+	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/mime.conf" ; \
 	else \
-		echo "$(INSTALL_FILE) squid.conf.default $(sysconfdir)/squid.conf"; \
-		$(INSTALL_FILE) squid.conf.default $(sysconfdir)/squid.conf; \
+	        echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(sysconfdir)/mime.conf" ;\
+	        $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(sysconfdir)/mime.conf; \
 	fi
-
-	$(INSTALL_FILE) $(srcdir)/mime.conf.default $(sysconfdir)
-	@if test -f $(sysconfdir)/mime.conf ; then \
-		echo "$@ will not overwrite existing $(sysconfdir)/mime.conf" ; \
+	@if test -f $(DESTDIR)$(sysconfdir)/squid.conf ; then \
+	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/squid.conf" ; \
 	else \
-		echo "$(INSTALL_FILE) $(srcdir)/mime.conf.default $(sysconfdir)/mime.conf"; \
-		$(INSTALL_FILE) $(srcdir)/mime.conf.default $(sysconfdir)/mime.conf; \
+	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(sysconfdir)/squid.conf"; \
+	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(sysconfdir)/squid.conf; \
 	fi
 
-install-pinger:
-	@f=$(PINGER_EXE); \
-	if test -f $(libexecdir)/$$f; then \
-		echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-		$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-	fi; \
-	echo $(INSTALL_SUID) $$f $(libexecdir); \
-	$(INSTALL_SUID) $$f $(libexecdir) || exit 1; \
-	if test -f $(libexecdir)/-$$f; then \
-		echo $(RM) -f $(libexecdir)/-$$f; \
-		$(RM) -f $(libexecdir)/-$$f; \
+uninstall-local:
+	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
+		echo "rm -f $(DESTDIR)$(sysconfdir)/mime.conf"; \
+		$(RM) -f $(DESTDIR)$(sysconfdir)/mime.conf; \
 	fi
-
-clean: 
-	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
-	-rm -f cf_gen cf_gen_defines.h cf_parser.h cf.data globals.c string_arrays.c
-	-rm -f store_modules.c repl_modules.c auth_modules.c squid.conf.default
-	@for dir in $(SUBDIRS); do \
-		echo "Making $@ in $$dir..."; \
-		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
-	done
-
-distclean:	clean
-	-rm -f Makefile
-	-rm -f Makefile.bak
-	-rm -f tags
-	@for dir in $(SUBDIRS); do \
-		echo "Making $@ in $$dir..."; \
-		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
-	done
-
-tags:
-	ctags *.[ch] ../include/*.h ../lib/*.[ch]
-
-depend: cf_parser.h
-	$(MAKEDEPEND) $(INCLUDE) -fMakefile $(srcdir)/*.c
+	@if test -f $(DESTDIR)$(sysconfdir)/squid.conf ; then \
+		echo "rm -f $(DESTDIR)$(sysconfdir)/squid.conf"; \
+		$(RM) -f $(DESTDIR)$(sysconfdir)/squid.conf; \
+	fi
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.105 2001/08/16 00:16:16 hno Exp $
+ * $Id: globals.h,v 1.106 2001/08/31 11:19:12 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,8 +52,8 @@ extern const char *const appname;	/* "squid" */
 extern const char *const dash_str;	/* "-" */
 extern const char *const localhost;	/* "127.0.0.1" */
 extern const char *const null_string;	/* "" */
-extern const char *const version_string;	/* SQUID_VERSION */
-extern const char *const full_appname_string;	/* "Squid/" SQUID_VERSION */
+extern const char *const version_string;	/* VERSION */
+extern const char *const full_appname_string;	/* PACKAGE "/" VERSION */
 extern const char *const w_space;	/* " \t\n\r" */
 extern const char *fdTypeStr[];
 extern const char *hier_strings[];

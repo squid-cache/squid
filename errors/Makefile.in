@@ -1,49 +1,273 @@
-# $Id: Makefile.in,v 1.7 2001/01/16 21:11:23 hno Exp $
+# Makefile.in generated automatically by automake 1.4s from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+@SET_MAKE@
+
 #
-prefix		= @prefix@
-exec_prefix	= @exec_prefix@
-top_srcdir	= @top_srcdir@
-bindir		= @bindir@
-libexecdir      = @libexecdir@
-sysconfdir	= @sysconfdir@
-localstatedir   = @localstatedir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-SH		= @SH@
-RM		= @RM@
-SHELL		= @SH@
+# $Id: Makefile.in,v 1.8 2001/08/31 11:19:08 robertc Exp $
+#
 
-INSTALL         	= @INSTALL@
-INSTALL_FILE    	= @INSTALL_DATA@
-DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
+SHELL = @SHELL@
 
-LANGUAGE		= @ERR_LANGUAGE@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
-all:
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = ..
 
-install: install-mkdirs
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AIOLIB = @AIOLIB@
+AMTAR = @AMTAR@
+AR = @AR@
+AR_R = @AR_R@
+AUTH_LIBS = @AUTH_LIBS@
+AUTH_MODULES = @AUTH_MODULES@
+AUTH_OBJS = @AUTH_OBJS@
+AWK = @AWK@
+BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
+CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
+CACHE_ICP_PORT = @CACHE_ICP_PORT@
+CC = @CC@
+CPP = @CPP@
+CRYPTLIB = @CRYPTLIB@
+DEPDIR = @DEPDIR@
+DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
+DLLIB = @DLLIB@
+ERR_LANGUAGE = @ERR_LANGUAGE@
+EXEEXT = @EXEEXT@
+FALSE = @FALSE@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LIBDLMALLOC = @LIBDLMALLOC@
+LIBREGEX = @LIBREGEX@
+LIB_MALLOC = @LIB_MALLOC@
+LN = @LN@
+LN_S = @LN_S@
+MKDIR = @MKDIR@
+MV = @MV@
+NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
+OBJEXT = @OBJEXT@
+OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
+OPT_PINGER_EXE = @OPT_PINGER_EXE@
+PACKAGE = @PACKAGE@
+PERL = @PERL@
+PTHREADLIB = @PTHREADLIB@
+RANLIB = @RANLIB@
+REGEXLIB = @REGEXLIB@
+REPL_LIBS = @REPL_LIBS@
+REPL_OBJS = @REPL_OBJS@
+REPL_POLICIES = @REPL_POLICIES@
+RM = @RM@
+SH = @SH@
+SNMPLIB = @SNMPLIB@
+SQUID_AIO_LIB = @SQUID_AIO_LIB@
+SQUID_PTHREAD_LIB = @SQUID_PTHREAD_LIB@
+SSLINC = @SSLINC@
+SSLLIB = @SSLLIB@
+STORE_LIBS = @STORE_LIBS@
+STORE_MODULES = @STORE_MODULES@
+STORE_MODULE_SUBDIRS = @STORE_MODULE_SUBDIRS@
+STORE_OBJS = @STORE_OBJS@
+TRUE = @TRUE@
+VERSION = @VERSION@
+XTRA_LIBS = @XTRA_LIBS@
+XTRA_OBJS = @XTRA_OBJS@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
+makesnmplib = @makesnmplib@
+
+errordir = $(sysconfdir)/errors
+
+DEFAULT_ERROR_DIR = $(errordir)
+
+LANGUAGE = @ERR_LANGUAGE@
+LANGUAGES = Bulgarian Czech Danish Dutch English Estonian Finnish French \
+		  German Hungarian Italian Japanese Korean Polish Portuguese \
+		  Romanian Russian-1251 Russian-koi8-r Serbian Simplify_Chinese \
+		  Slovak Spanish Swedish Traditional_Chinese Turkish
+
+subdir = errors
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
+CONFIG_HEADER = $(top_builddir)/include/autoconf.h
+CONFIG_CLEAN_FILES =
+DIST_SOURCES =
+DIST_COMMON = Makefile.am Makefile.in
+all: all-am
+
+.SUFFIXES:
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --foreign  errors/Makefile
+Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
+uninstall-info-am:
+tags: TAGS
+TAGS:
+
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = ..
+distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="${top_distdir}" distdir="$(distdir)" \
+	  dist-hook
+check-am: all-am
+check: check-am
+all-am: Makefile
+
+installdirs:
+
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
+clean-am: clean-generic mostlyclean-am
+
+distclean: distclean-am
+
+distclean-am: clean-am distclean-generic
+
+dvi: dvi-am
+
+dvi-am:
+
+info: info-am
+
+info-am:
+
+install-data-am: install-data-local
+
+install-exec-am:
+
+install-info: install-info-am
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-am
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-am
+
+mostlyclean-am: mostlyclean-generic
+
+uninstall-am: uninstall-info-am uninstall-local
+
+.PHONY: all all-am check check-am clean clean-generic distclean \
+	distclean-generic distdir dvi dvi-am info info-am install \
+	install-am install-data install-data-am install-data-local \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic uninstall uninstall-am \
+	uninstall-info-am uninstall-local
+
+
+install-data-local: 
+	-@$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)
 	@for f in $(srcdir)/$(LANGUAGE)/ERR_*; do \
-		if test -f $(DEFAULT_ERROR_DIR)/$$f ; then \
+		if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$f ; then \
 			:; \
 		else \
-			echo "$(INSTALL_FILE) $$f $(DEFAULT_ERROR_DIR)"; \
-			$(INSTALL_FILE) $$f $(DEFAULT_ERROR_DIR); \
+			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)"; \
+			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR); \
 		fi; \
 	done
 
-install-mkdirs:
-	-@if test ! -d $(prefix); then \
-		echo "mkdir $(prefix)"; \
-		mkdir -p $(prefix); \
-	fi
-	-@if test ! -d $(sysconfdir); then \
-		echo "mkdir $(sysconfdir)"; \
-		mkdir -p $(sysconfdir); \
-	fi
-	-@if test ! -d $(DEFAULT_ERROR_DIR); then \
-		echo "mkdir $(DEFAULT_ERROR_DIR)"; \
-		mkdir -p $(DEFAULT_ERROR_DIR); \
-	fi
+uninstall-local:
+	@for f in $(srcdir)/$(LANGUAGE)/ERR_*; do \
+	        if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/`echo $$f | echo "$$f" | sed -e "s/.*\///;"` ; then \
+	                rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/`echo $$f | echo "$$f" | sed -e "s/.*\///;"`; \
+	        fi; \
+	done
 
 # undocumented hack.  You can use this target to create multi-lingual
 # error pages.  For example:
@@ -64,7 +288,16 @@ addlang: all
 	done; \
 	fi
 
-clean:
-
-distclean: clean
-	-rm -f Makefile
+dist-hook:
+	@ for lang in $(LANGUAGES); do \
+	  if test "$$lang" = .; then :; else \
+	    test -d $(distdir)/$$lang \
+	    || mkdir $(distdir)/$$lang \
+	    || exit 1; \
+	    cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
+	      || exit 1; \
+	  fi; \
+	done		
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

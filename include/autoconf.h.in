@@ -1,4 +1,4 @@
-/* include/autoconf.h.in.  Generated automatically from configure.in by autoheader.  */
+/* include/autoconf.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
 /* 
  * All configurable options are enabled by using --enable-....
  * when running configure. See configure --help for a list
@@ -42,6 +42,9 @@
 
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef mode_t
+
+/* Define if your C compiler doesn't accept -c and -o together.  */
+#undef NO_MINUS_C_MINUS_O
 
 /* Define to `long' if <sys/types.h> doesn't define.  */
 #undef off_t
@@ -809,5 +812,12 @@
 
 /* Define if you have the socket library (-lsocket).  */
 #undef HAVE_LIBSOCKET
+
+/* Name of package */
+#undef PACKAGE
+
+/* Version number of package */
+#undef VERSION
+
 
 #endif /* __CONFIGURE_H__ */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.88 2001/01/12 00:37:15 wessels Exp $
+ * $Id: cachemgr.cc,v 1.89 2001/08/31 11:19:12 robertc Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -221,7 +221,7 @@ print_trailer(void)
     printf("<HR>\n");
     printf("<ADDRESS>\n");
     printf("Generated %s, by %s/%s@%s\n",
-	mkrfc1123(now), progname, SQUID_VERSION, getfullhostname());
+	mkrfc1123(now), progname, VERSION, getfullhostname());
     printf("</ADDRESS></BODY></HTML>\n");
 }
 
