@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.161 1997/10/30 06:18:55 wessels Exp $
+ * $Id: ftp.cc,v 1.162 1997/11/03 16:05:23 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1158,6 +1158,7 @@ ftpReadType(FtpStateData * ftpState)
 	    path = xstrdup(ftpState->request->urlpath);
 	    T = &ftpState->pathcomps;
 	    for (d = strtok(path, "/"); d; d = strtok(NULL, "/")) {
+		rfc1738_unescape(d);
 		w = xcalloc(1, sizeof(wordlist));
 		w->key = xstrdup(d);
 		*T = w;
