@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.196 1997/01/19 08:32:14 wessels Exp $
+ * $Id: store.cc,v 1.197 1997/01/20 18:27:15 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -209,6 +209,7 @@ static char *storeSwapFullPath _PARAMS((int, char *));
 static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
+static int compareRandom _PARAMS((int *a, int *b));
 static int storeAddSwapDisk _PARAMS((const char *));
 static int storeCheckExpired _PARAMS((const StoreEntry *));
 static int storeCheckPurgeMem _PARAMS((const StoreEntry *));
@@ -283,6 +284,7 @@ static int store_buckets;
 int store_maintain_rate;
 static int store_maintain_buckets;
 int scan_revolutions;
+static unsigned int *MaintBucketsOrder;
 
 static MemObject *
 new_MemObject(void)
@@ -1881,6 +1883,18 @@ compareLastRef(StoreEntry ** e1, StoreEntry ** e2)
     return (0);
 }
 
+static int
+compareRandom(int *a, int *b)
+{
+#if HAVE_RANDOM
+    return random() - random();
+#elif HAVE_LRAND48
+    return lrand48() - lrand48();
+#else
+    return rand() - rand();
+#endif
+}
+
 /* returns the bucket number to work on,
  * pointer to next bucket after each calling
  */
@@ -2409,9 +2423,13 @@ storeInitHashValues(void)
     else
 	store_buckets = 65357, store_maintain_rate = 1;
     store_maintain_buckets = 1;
-#ifdef ONE_BUCKET_PER_SEC
-    store_maintain_rate = 1;
-#endif
+    MaintBucketsOrder = xcalloc(store_buckets, sizeof(unsigned int));
+    for (i = 0; i < store_buckets; i++)
+	*(MaintBucketsOrder + i) = (unsigned int) i;
+    qsort((char *) MaintBucketsOrder,
+	store_buckets,
+	sizeof(unsigned int),
+	    (QS) compareRandom);
     debug(20, 1, "Using %d Store buckets, maintain %d bucket%s every %d second%s\n",
 	store_buckets,
 	store_maintain_buckets,
@@ -2530,7 +2548,8 @@ void
 storeMaintainSwapSpace(void *unused)
 {
     static time_t last_time = 0;
-    static unsigned int bucket = 0;
+    static int bucket_index = 0;
+    static unsigned int bucket;
     hash_link *link_ptr = NULL, *next = NULL;
     StoreEntry *e = NULL;
     int rm_obj = 0;
@@ -2550,13 +2569,15 @@ storeMaintainSwapSpace(void *unused)
 	    if (++scan_buckets > 100)
 		break;
 	    last_time = squid_curtime;
-	    if (bucket >= store_buckets) {
-		bucket = 0;
+	    if (bucket_index >= store_buckets) {
+		bucket_index = 0;
 		scan_revolutions++;
 		debug(20, 1, "Completed %d full expiration scans of store table\n",
 		    scan_revolutions);
 	    }
-	    next = hash_get_bucket(store_table, bucket++);
+	    bucket = *(MaintBucketsOrder + bucket_index);
+	    bucket_index++;
+	    next = hash_get_bucket(store_table, bucket);
 	    while ((link_ptr = next)) {
 		scan_obj++;
 		next = link_ptr->next;
@@ -2567,7 +2588,8 @@ storeMaintainSwapSpace(void *unused)
 	    }
 	}
     }
-    debug(20, rm_obj ? 1 : 2, "Scanned %d objects, Removed %d expired objects\n", scan_obj, rm_obj);
+    debug(20, rm_obj ? 1 : 2, "Removed %d of %d objects from bucket %d\n",
+	rm_obj, scan_obj, (int) bucket);
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */
     storeGetSwapSpace(0);
