@@ -73,7 +73,6 @@ extern void clientdbDump(StoreEntry *);
 
 extern void clientAccessCheck(void *);
 extern void clientAccessCheckDone(int, void *);
-extern void icpProcessExpired(int fd, void *);
 extern int modifiedSince(StoreEntry *, request_t *);
 extern char *clientConstructTraceEcho(clientHttpRequest *);
 extern void clientPurgeRequest(clientHttpRequest *);
@@ -253,11 +252,6 @@ extern void snmpConnectionOpen(void);
 extern void snmpConnectionClose(void);
 #endif /* SQUID_SNMP */
 
-extern void icpSendERROR(int fd,
-    log_type errorCode,
-    const char *text,
-    clientHttpRequest *,
-    int httpCode);
 extern void AppendUdp(icpUdpData *);
 extern PF icpUdpReply;
 extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
