@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.652 2003/08/04 22:14:41 robertc Exp $
+ * $Id: client_side.cc,v 1.653 2003/08/10 03:59:19 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -753,8 +753,10 @@ ClientSocketContext::startOfOutput() const
 }
 
 size_t
-ClientSocketContext::lengthToSend(size_t maximum)
+ClientSocketContext::lengthToSend(Range<size_t> const &available)
 {
+    size_t maximum = available.size();
+
     if (!http->request->range)
         return maximum;
 
@@ -764,6 +766,10 @@ ClientSocketContext::lengthToSend(size_t maximum)
         return maximum;
 
     assert (http->range_iter.debt() > 0);
+
+    /* TODO this + the last line could be a range intersection calculation */
+    if ((ssize_t)available.start < http->range_iter.currentSpec()->offset)
+        return 0;
 
     return XMIN(http->range_iter.debt(), (ssize_t)maximum);
 }
@@ -803,7 +809,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
     assert(rep == NULL);
 
     if (!multipartRangeRequest()) {
-        size_t length = lengthToSend(bodyData.length);
+        size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
         comm_write(fd(), bodyData.data, length,
                    clientWriteBodyComplete, this);
@@ -812,11 +818,13 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 
     MemBuf mb;
     memBufDefInit(&mb);
-    char const *t = bodyData.data;
-    packRange(&t, bodyData.length, &mb);
-    /* write */
-    comm_old_write_mbuf(fd(), mb, clientWriteComplete, this);
-    return;
+    packRange(bodyData, &mb);
+
+    if (mb.size)
+        /* write */
+        comm_old_write_mbuf(fd(), mb, clientWriteComplete, this);
+    else
+        writeComplete(fd(), NULL, 0, COMM_OK);
 }
 
 /* put terminating boundary for multiparts */
@@ -865,56 +873,58 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
  * all offsets and such.
  */
 void
-ClientSocketContext::packRange(const char **buf,
-                               size_t size,
-                               MemBuf * mb)
+ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 {
     HttpHdrRangeIter * i = &http->range_iter;
-    size_t available = size;
+    Range<size_t> available (source.range());
+    char const *buf (source.data);
 
-    while (i->currentSpec() && available) {
+    while (i->currentSpec() && available.size()) {
         const size_t copy_sz = lengthToSend(available);
-        /*
-         * intersection of "have" and "need" ranges must not be empty
-         */
-        assert(http->out.offset < i->currentSpec()->offset + i->currentSpec()->length);
-        assert(http->out.offset + available > (size_t)i->currentSpec()->offset);
 
-        /*
-         * put boundary and headers at the beginning of a range in a
-         * multi-range
-         */
+        if (copy_sz) {
+            /*
+             * intersection of "have" and "need" ranges must not be empty
+             */
+            assert(http->out.offset < i->currentSpec()->offset + i->currentSpec()->length);
+            assert(http->out.offset + available.size() > (size_t)i->currentSpec()->offset);
 
-        if (http->multipartRangeRequest() && i->debt() == i->currentSpec()->length) {
-            assert(http->memObject());
-            clientPackRangeHdr(
-                http->memObject()->getReply(),	/* original reply */
-                i->currentSpec(),		/* current range */
-                i->boundary,	/* boundary, the same for all */
-                mb);
+            /*
+             * put boundary and headers at the beginning of a range in a
+             * multi-range
+             */
+
+            if (http->multipartRangeRequest() && i->debt() == i->currentSpec()->length) {
+                assert(http->memObject());
+                clientPackRangeHdr(
+                    http->memObject()->getReply(),	/* original reply */
+                    i->currentSpec(),		/* current range */
+                    i->boundary,	/* boundary, the same for all */
+                    mb);
+            }
+
+            /*
+             * append content
+             */
+            debug(33, 3) ("clientPackRange: appending %ld bytes\n", (long int) copy_sz);
+
+            noteSentBodyBytes (copy_sz);
+
+            memBufAppend(mb, buf, copy_sz);
+
+            /*
+             * update offsets
+             */
+            available.start += copy_sz;
+
+            buf += copy_sz;
+
         }
-
-        /*
-         * append content
-         */
-        debug(33, 3) ("clientPackRange: appending %ld bytes\n", (long int) copy_sz);
-
-        noteSentBodyBytes (copy_sz);
-
-        memBufAppend(mb, *buf, copy_sz);
-
-        /*
-         * update offsets
-         */
-        available -= copy_sz;
-
-        //body_off += copy_sz;
-        *buf += copy_sz;
 
         /*
          * paranoid check
          */
-        assert(available >= 0 && i->debt() >= 0 || i->debt() == -1);
+        assert(available.size() >= 0 && i->debt() >= 0 || i->debt() == -1);
 
         if (!canPackMoreRanges()) {
             debug(33, 3) ("clientPackRange: Returning because !canPackMoreRanges.\n");
@@ -932,12 +942,18 @@ ClientSocketContext::packRange(const char **buf,
 
         size_t skip = next - http->out.offset;
 
-        if (available <= skip)
+        /* adjust for not to be transmitted bytes */
+        http->out.offset = next;
+
+        if (available.size() <= skip)
             return;
 
-        available -= skip;
+        available.start += skip;
 
-        *buf += skip;
+        buf += skip;
+
+        if (copy_sz == 0)
+            return;
     }
 }
 
@@ -1125,6 +1141,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
             /* Content-Length is not required in multipart responses
              * but it is always nice to have one */
             actual_clen = http->mRangeCLen();
+            /* http->out needs to start where we want data at */
+            http->out.offset = http->range_iter.currentSpec()->offset;
         }
 
         /* replace Content-Length header */
@@ -1164,15 +1182,12 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
 
     if (bodyData.data && bodyData.length) {
         if (!multipartRangeRequest()) {
-            size_t length = lengthToSend(bodyData.length);
+            size_t length = lengthToSend(bodyData.range());
             noteSentBodyBytes (length);
 
             memBufAppend(&mb, bodyData.data, length);
         } else {
-            char const *t = bodyData.data;
-            packRange(&t,
-                      bodyData.length,
-                      &mb);
+            packRange(bodyData, &mb);
         }
     }
 
@@ -1371,13 +1386,6 @@ ClientSocketContext::getNextRangeOffset() const
 
             return start;
         }
-
-#if 0
-
-    } else if (http->request->range->specs.count > 1) {
-        /* put terminating boundary for multiparts */
-        clientPackTermBound(i->boundary, mb);
-#endif
 
     }
 
