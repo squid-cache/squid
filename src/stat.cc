@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.228 1998/04/09 00:18:21 rousskov Exp $
+ * $Id: stat.cc,v 1.229 1998/04/09 20:42:07 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -651,6 +651,14 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
 	x / 1000.0);
 #if SQUID_PEER_DIGEST
+    storeAppendPrintf(sentry, "cd.msgs_sent = %f/sec\n",
+	XAVG(cd.msgs_sent));
+    storeAppendPrintf(sentry, "cd.msgs_recv = %f/sec\n",
+	XAVG(cd.msgs_recv));
+    storeAppendPrintf(sentry, "cd.kbytes_sent = %f/sec\n",
+	XAVG(cd.kbytes_sent.kb));
+    storeAppendPrintf(sentry, "cd.kbytes_recv = %f/sec\n",
+	XAVG(cd.kbytes_recv.kb));
     x = statHistDeltaMedian(&l->cd.client_svc_time,
 	&f->cd.client_svc_time);
     storeAppendPrintf(sentry, "cd.client_median_svc_time = %f seconds\n",
@@ -983,6 +991,21 @@ statCountersDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
 	(int) f->icp.kbytes_recv.kb);
 
+#if SQUID_PEER_DIGEST
+    storeAppendPrintf(sentry, "cd.msgs_sent = %d\n",
+	f->cd.msgs_sent);
+    storeAppendPrintf(sentry, "cd.msgs_recv = %d\n",
+	f->cd.msgs_recv);
+    storeAppendPrintf(sentry, "cd.memory = %d\n",
+	(int)f->cd.memory.kb);
+    storeAppendPrintf(sentry, "cd.local_memory = %d\n",
+	store_digest ? store_digest->mask_size/1024 : 0);
+    storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
+	(int) f->cd.kbytes_sent.kb);
+    storeAppendPrintf(sentry, "cd.kbytes_recv = %d\n",
+	(int) f->cd.kbytes_recv.kb);
+#endif
+
 #if TOO_MUCH_OUTPUT
     storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
     statHistDump(&f->icp.query_svc_time, sentry, NULL);
@@ -1095,6 +1118,10 @@ statDigestBlob(StoreEntry * sentry)
 	(int) f->icp.kbytes_recv.kb);
     storeAppendPrintf(sentry, "cd.times_used = %d\n",
 	f->cd.times_used);
+    storeAppendPrintf(sentry, "cd.msgs_sent = %d\n",
+	f->cd.msgs_sent);
+    storeAppendPrintf(sentry, "cd.msgs_recv = %d\n",
+	f->cd.msgs_recv);
     storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
 	(int) f->cd.kbytes_sent.kb);
     storeAppendPrintf(sentry, "cd.kbytes_recv = %d\n",

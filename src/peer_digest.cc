@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.6 1998/04/09 11:42:36 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.7 1998/04/09 20:42:06 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -38,6 +38,7 @@
 /* local prototypes */
 static void peerDigestClean(peer *p);
 static time_t peerDigestNextDisDelay(const peer *p);
+static time_t peerDigestExpiresDelay(const peer *p, const StoreEntry *e);
 static void peerDigestDisable(peer *p);
 static void peerDigestDelay(peer *p, int disable, time_t delay);
 static void peerDigestValidate(peer *p);
@@ -87,7 +88,7 @@ static void
 peerDigestClean(peer *p)
 {
     if (!cbdataValid(p))
-	debug(72, 2) ("peerDigest: note: peer %s was reset or deleted\n", p->host);
+	debug(72, 2) ("peerDigest: note: peer '%s' was reset or deleted\n", p->host);
     assert(!EBIT_TEST(p->digest.flags, PD_REQUESTED));
     peerDigestDisable(p);
     cbdataUnlock(p);
@@ -100,6 +101,7 @@ peerDigestDisable(peer *p)
     peerDigestDelay(p, 1, -1);
 }
 
+/* next delay for a disabled entry */
 static time_t
 peerDigestNextDisDelay(const peer *p)
 {
@@ -108,6 +110,19 @@ peerDigestNextDisDelay(const peer *p)
 	2 * p->digest.last_dis_delay : /* exponential backoff */
 	PeerDigestRequestMinGap;       /* minimal delay */
 }
+
+/* artificially increases expires to avoid race conditions */
+static time_t
+peerDigestExpiresDelay(const peer *p, const StoreEntry *e)
+{
+    assert(p);
+    if (!e)
+	return 0;
+    if (e->expires > 0)
+	return e->expires + PeerDigestRequestMinGap - squid_curtime;
+    return PeerDigestRequestMinGap;
+}
+
 
 /* delays/disables digest for a psecified delay (disables forever if negative delay) */
 static void
@@ -159,11 +174,13 @@ peerDigestValidate(peer *p)
 	    e ? "has" : "no", storeKeyText(key), mkrfc1123(e ? e->expires : 0));
     }
     /* currently we rely on entry->expire information */
-    do_request = !e || e->expires <= squid_curtime;
-    /* artificially increase expires to avoid race conditions */
-    req_time = e ? e->expires+PeerDigestRequestMinGap : squid_curtime;
-    if (req_time < squid_curtime)
-	req_time = squid_curtime;
+    {
+	const time_t exp_delay = peerDigestExpiresDelay(p, e);
+	do_request = exp_delay <= 0;
+	req_time = squid_curtime + exp_delay;
+	if (req_time < squid_curtime)
+	    req_time = squid_curtime;
+    }
     /* do not request too often from one peer */
     if (req_time - p->digest.last_req_timestamp < PeerDigestRequestMinGap) {
 	if (do_request) {
@@ -474,7 +491,8 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	/* disable for a while */
 	EBIT_CLR(peer->digest.flags, PD_USABLE);
 	peerDigestDelay(peer, 1, 
-	    max_delay(expires - squid_curtime, 
+	    max_delay(
+		peerDigestExpiresDelay(peer, fetch->entry),
 		peerDigestNextDisDelay(peer)));
 	/* release buggy entry */
 	storeReleaseRequest(fetch->entry);
@@ -483,7 +501,8 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	EBIT_SET(peer->digest.flags, PD_USABLE);
 	EBIT_CLR(peer->digest.flags, PD_DISABLED);
 	peer->digest.last_dis_delay = 0;
-	peerDigestDelay(peer, 0, max_delay(expires - squid_curtime, 0));
+	peerDigestDelay(peer, 0,
+	    max_delay(peerDigestExpiresDelay(peer, fetch->entry), 0));
     }
     storeUnregister(fetch->entry, fetch);
     storeUnlockObject(fetch->entry);
@@ -496,7 +515,9 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
     peer->digest.last_req_timestamp = squid_curtime;
     peer->digest.last_fetch_resp_time = fetch_resp_time;
     EBIT_CLR(peer->digest.flags, PD_REQUESTED);
+    /* update stats */
     kb_incr(&Counter.cd.kbytes_recv, (size_t)b_read);
+    Counter.cd.msgs_recv++;
     debug(72, 2) ("peerDigestFetchFinish: %s done; took: %d secs; expires: %s\n",
 	peer->host, fetch_resp_time, mkrfc1123(expires));
 }
