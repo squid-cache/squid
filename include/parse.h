@@ -1,5 +1,5 @@
 /*
- * $Id: parse.h,v 1.10 2001/10/08 16:18:31 hno Exp $
+ * $Id: parse.h,v 1.11 2001/10/17 19:05:37 hno Exp $
  */
 
 #ifndef SQUID_PARSE_H
@@ -50,7 +50,7 @@ struct snmp_mib_tree {
     u_int subid;		/* This node's integer subidentifier */
     int type;			/* This node's object type */
     struct enum_list *enums;	/* (optional) list of enumerated integers (otherwise NULL) */
-    void (*printer) ();		/* Value printing function */
+    void (*printer) (char *buf, variable_list *var, void *foo, int quiet);		/* Value printing function */
 };
 
 /* non-aggregate types for tree end nodes */

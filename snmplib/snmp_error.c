@@ -33,7 +33,7 @@
 #include "snmp_error.h"
 
 
-static char *error_string[19] =
+static const char *error_string[19] =
 {
     "No Error",
     "Response message would have been too large.",
@@ -59,7 +59,7 @@ static char *error_string[19] =
 
 };
 
-char *
+const char *
 snmp_errstring(int errstat)
 {
     if ((errstat <= (SNMP_ERR_INCONSISTENTNAME)) &&
