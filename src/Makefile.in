@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 1996/02/22 06:23:53 wessels Exp $
+#  $Id: Makefile.in,v 1.2 1996/02/23 04:12:51 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -63,12 +63,9 @@ OBJS	 	= comm.o cache_cf.o debug.o disk.o dynamic_array.o \
 		  proto.o stack.o stat.o stmem.o store.o storetoString.o \
 		  tools.o ttl.o url.o wais.o $(XTRA_OBJS)
 
-MK_TABLE_H	= ../url/mk-mime-table-h.pl
-MIME_TABLE	= ../url/mime.table
-
 all:	$(PROGS) $(UTILS) $(CGIPROGS)
 
-cached:	../include/mime_table.h main.o $(OBJS)
+cached:	main.o $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) main.o $(LIBS)
 
 client:	client.o
@@ -79,9 +76,6 @@ dnsserver: dnsserver.o
 
 cachemgr.cgi:	cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
-
-../include/mime_table.h: $(MK_TABLE_H) $(MIME_TABLE)
-	$(PERL) $(MK_TABLE_H) < $(MIME_TABLE) > $@
 
 install: all
 	@for f in $(PROGS); do \
@@ -101,7 +95,7 @@ clean:
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS)
 
 realclean:	clean
-	-rm -f Makefile ../include/mime_table.h
+	-rm -f Makefile
 
 tar:
 	-rm -f cache.tar
