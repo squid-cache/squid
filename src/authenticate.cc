@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.56 2003/03/04 01:40:25 robertc Exp $
+ * $Id: authenticate.cc,v 1.57 2003/06/19 18:20:51 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -649,7 +649,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
     /* we have a proxy auth header and as far as we know this connection has
      * not had bungled connection oriented authentication happen on it. */
-    debug(28, 9) ("authenticateAuthenticate: header %s.\n", proxy_auth);
+    debug(28, 9) ("authenticateAuthenticate: header %s.\n", proxy_auth ? proxy_auth : "-");
 
     if (*auth_user_request == NULL)
     {
