@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.12 1996/09/14 08:50:43 wessels Exp $
+ * $Id: util.h,v 1.13 1996/09/14 16:14:25 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -121,25 +121,17 @@
 #endif
 #endif
 
-#ifndef _PARAMS
-#if defined(__STDC__) || defined(__cplusplus) || defined(__STRICT_ANSI__)
-#define _PARAMS(ARGS) ARGS
-#else /* Traditional C */
-#define _PARAMS(ARGS) ()
-#endif /* __STDC__ */
-#endif /* _PARAMS */
-
 #if !HAVE_STRDUP
 extern char *strdup(char *);
 #endif
-extern char *xstrdup _PARAMS((char *));		/* Duplicate a string */
+extern char *xstrdup (char *);		/* Duplicate a string */
 
 /* from xmalloc.c */
-void *xmalloc _PARAMS((size_t));	/* Wrapper for malloc(3) */
-void *xrealloc _PARAMS((void *, size_t));	/* Wrapper for realloc(3) */
-void *xcalloc _PARAMS((int, size_t));	/* Wrapper for calloc(3) */
-void xfree _PARAMS((void *));	/* Wrapper for free(3) */
-void xxfree _PARAMS((void *));	/* Wrapper for free(3) */
+void *xmalloc (size_t);	/* Wrapper for malloc(3) */
+void *xrealloc (void *, size_t);	/* Wrapper for realloc(3) */
+void *xcalloc (int, size_t);	/* Wrapper for calloc(3) */
+void xfree (void *);	/* Wrapper for free(3) */
+void xxfree (void *);	/* Wrapper for free(3) */
 char *xstrdup(char *);
 char *xstrerror(void);
 char *getfullhostname(void);
