@@ -101,6 +101,10 @@
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
+#if HAVE_ASSERT_H
+#include <assert.h>
+#endif
+
 #include "util.h"
 
 #include "radix.h"
@@ -876,9 +880,13 @@ rn_delete(v_arg, netmask_arg, head)
 			MKFree(m);
 		    m = mm;
 		}
+#if RN_DEBUG
 	    if (m)
 		fprintf(stderr, "%s %x at %x\n",
 		    "rn_delete: Orphaned Mask", (int) m, (int) x);
+#else
+	    assert(m == NULL);
+#endif
 	}
     }
     /*
