@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.3 2003/07/11 01:40:36 robertc Exp $
+ * $Id: client_side.h,v 1.4 2003/07/11 02:11:47 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -201,7 +201,7 @@ private:
     CBDATA_CLASS(ConnStateData);
     bool transparent_;
     bool reading_;
-    bool open_;
+    Pointer openReference;
 };
 
 #endif /* SQUID_CLIENTSIDE_H */

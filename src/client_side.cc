@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.648 2003/07/11 01:40:36 robertc Exp $
+ * $Id: client_side.cc,v 1.649 2003/07/11 02:11:47 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -611,7 +611,7 @@ void
 ConnStateData::close()
 {
     debug(33, 3) ("ConnStateData::close: FD %d\n", fd);
-    open_ = false;
+    openReference = NULL;
     clientdbEstablished(peer.sin_addr, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
@@ -621,7 +621,7 @@ ConnStateData::close()
 bool
 ConnStateData::isOpen() const
 {
-    return open_;
+    return openReference.getRaw() != NULL;
 }
 
 ConnStateData::~ConnStateData()
@@ -3078,7 +3078,7 @@ ConnStateData::deleteSelf () const
     delete this;
 }
 
-ConnStateData::ConnStateData() : transparent_ (false), reading_ (false), open_(true)
+ConnStateData::ConnStateData() : transparent_ (false), reading_ (false), openReference (this)
 {}
 
 bool
