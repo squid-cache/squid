@@ -220,6 +220,9 @@
 /* Define if you have the <malloc.h> header file.  */
 #undef HAVE_MALLOC_H
 
+/* Define if you have the <math.h> header file.  */
+#undef HAVE_MATH_H
+
 /* Define if you have the <memory.h> header file.  */
 #undef HAVE_MEMORY_H
 
@@ -330,6 +333,9 @@
 
 /* Define if you have the gnumalloc library (-lgnumalloc).  */
 #undef HAVE_LIBGNUMALLOC
+
+/* Define if you have the m library (-lm).  */
+#undef HAVE_LIBM
 
 /* Define if you have the malloc library (-lmalloc).  */
 #undef HAVE_LIBMALLOC
