@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.28 1998/09/19 17:06:01 wessels Exp $
+ * $Id: forward.cc,v 1.29 1998/09/21 20:53:37 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -290,10 +290,8 @@ fwdDispatch(FwdState * fwdState)
 	    break;
 	case PROTO_CACHEOBJ:
 	case PROTO_INTERNAL:
-	    fatal_dump("Should never get here");
-	    break;
 	case PROTO_URN:
-	    urnStart(request, entry);
+	    fatal_dump("Should never get here");
 	    break;
 	case PROTO_WHOIS:
 	    whoisStart(fwdState, fwdState->server_fd);
@@ -351,6 +349,9 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr peer_addr)
 	return;
     case PROTO_CACHEOBJ:
 	cachemgrStart(fd, r, e);
+	return;
+    case PROTO_URN:
+	urnStart(r, e);
 	return;
     default:
 	break;
