@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.110 2002/04/16 22:45:25 wessels Exp $
+ * $Id: store_client.cc,v 1.111 2002/04/21 21:52:47 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -49,22 +49,6 @@ static EVH storeClientCopyEvent;
 static store_client_t storeClientType(StoreEntry *);
 static int CheckQuickAbort2(StoreEntry * entry);
 static void CheckQuickAbort(StoreEntry * entry);
-
-/* check if there is any client waiting for this object at all */
-/* return 1 if there is at least one client */
-int
-storeClientWaiting(const StoreEntry * e)
-{
-    MemObject *mem = e->mem_obj;
-    dlink_node *node;
-    store_client *sc;
-    for (node = mem->clients.head; node; node = node->next) {
-	sc = node->data;
-	if (sc->callback_data != NULL)
-	    return 1;
-    }
-    return 0;
-}
 
 #if STORE_CLIENT_LIST_DEBUG
 static store_client *
