@@ -3,7 +3,7 @@
 #define _MEM_POOLS_H_
 
 #include "config.h"
-#include "Stack.h"
+#include "Array.h"
 #include "util.h"
 #include "splay.h"
 #include "memMeter.h"
