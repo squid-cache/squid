@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.75 2000/11/01 04:03:14 wessels Exp $
+ * $Id: forward.cc,v 1.76 2000/12/05 06:24:00 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -49,6 +49,7 @@ static void fwdStartFail(FwdState *);
 static void fwdLogReplyStatus(int tries, http_status status);
 static OBJH fwdStats;
 static STABH fwdAbort;
+static peer *fwdStateServerPeer(FwdState *);
 
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
@@ -57,6 +58,16 @@ static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
 static void fwdLog(FwdState * fwdState);
 static Logfile *logfile = NULL;
 #endif
+
+static peer *
+fwdStateServerPeer(FwdState * fwdState)
+{
+    if (NULL == fwdState)
+	return NULL;
+    if (NULL == fwdState->servers)
+	return NULL;
+    return fwdState->servers->peer;
+}
 
 static void
 fwdServerFree(FwdServer * fs)
@@ -71,6 +82,7 @@ fwdStateFree(FwdState * fwdState)
 {
     StoreEntry *e = fwdState->entry;
     int sfd;
+    peer *p;
     debug(17, 3) ("fwdStateFree: %p\n", fwdState);
     assert(e->mem_obj);
 #if URL_CHECKSUM_DEBUG
@@ -92,6 +104,7 @@ fwdStateFree(FwdState * fwdState)
     }
     if (storePendingNClients(e) > 0)
 	assert(!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT));
+    p = fwdStateServerPeer(fwdState);
     fwdServersFree(&fwdState->servers);
     requestUnlink(fwdState->request);
     fwdState->request = NULL;
@@ -106,6 +119,8 @@ fwdStateFree(FwdState * fwdState)
 	fwdState->server_fd = -1;
 	debug(17, 3) ("fwdStateFree: closing FD %d\n", sfd);
 	comm_close(sfd);
+	if (p)
+	    p->stats.conn_open--;
     }
     cbdataFree(fwdState);
 }
@@ -188,6 +203,8 @@ fwdConnectDone(int server_fd, int status, void *data)
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(request);
 	fwdFail(fwdState, err);
+	if (fs->peer)
+	    fs->peer->stats.conn_open--;
 	comm_close(server_fd);
     } else if (status != COMM_OK) {
 	assert(fs);
@@ -202,8 +219,10 @@ fwdConnectDone(int server_fd, int status, void *data)
 	}
 	err->request = requestLink(request);
 	fwdFail(fwdState, err);
-	if (fs->peer)
+	if (fs->peer) {
 	    peerConnectFailed(fs->peer);
+	    fs->peer->stats.conn_open--;
+	}
 	comm_close(server_fd);
     } else {
 	debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(fwdState->entry));
@@ -228,6 +247,7 @@ fwdConnectTimeout(int fd, void *data)
     FwdState *fwdState = data;
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
+    peer *p = fwdStateServerPeer(fwdState);
     debug(17, 2) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(fd == fwdState->server_fd);
     if (entry->mem_obj->inmem_hi == 0) {
@@ -242,6 +262,8 @@ fwdConnectTimeout(int fd, void *data)
 	    if (fwdState->servers->peer)
 		peerConnectFailed(fwdState->servers->peer);
     }
+    if (p)
+	p->stats.conn_open--;
     comm_close(fd);
 }
 
@@ -302,6 +324,14 @@ fwdConnectStart(void *data)
     }
     fwdState->server_fd = fd;
     fwdState->n_tries++;
+    /*
+     * stats.conn_open is used to account for the number of
+     * connections that we have open to the peer, so we can limit
+     * based on the max-conn option.  We need to increment here,
+     * even if the connection may fail.
+     */
+    if (fs->peer)
+	fs->peer->stats.conn_open++;
     comm_add_close_handler(fd, fwdServerClosed, fwdState);
     commSetTimeout(fd,
 	ctimeout,
@@ -338,7 +368,7 @@ fwdStartFail(FwdState * fwdState)
 static void
 fwdDispatch(FwdState * fwdState)
 {
-    peer *p;
+    peer *p = NULL;
     request_t *request = fwdState->request;
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
@@ -400,6 +430,11 @@ fwdDispatch(FwdState * fwdState)
 	     * transient (network) error; its a bug.
 	     */
 	    fwdState->flags.dont_retry = 1;
+	    /*
+	     * this assertion exists because if we are connected to
+	     * a peer, then we need to decrement p->stats.conn_open.
+	     */
+	    assert(NULL == p);
 	    comm_close(fwdState->server_fd);
 	    break;
 	}
