@@ -1,8 +1,6 @@
 
-
-
 /*
- * $Id: structs.h,v 1.237 1998/09/30 02:53:19 wessels Exp $
+ * $Id: structs.h,v 1.238 1998/10/08 02:40:09 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1266,6 +1264,7 @@ struct _request_flags {
     unsigned int refresh:1;
     unsigned int used_proxy_auth:1;
     unsigned int redirected:1;
+    unsigned int need_validation:1;
 #if HTTP_VIOLATIONS
     unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.13 1998/10/03 03:56:51 wessels Exp $
+ * $Id: StatHist.cc,v 1.14 1998/10/08 02:40:04 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -218,12 +218,13 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
 static double
 Log(double x)
 {
-    return log(x + 1);
+    assert((x + 1.0) >= 0.0);
+    return log(x + 1.0);
 }
 static double
 Exp(double x)
 {
-    return exp(x) - 1;
+    return exp(x) - 1.0;
 }
 void
 statHistLogInit(StatHist * H, int capacity, double min, double max)

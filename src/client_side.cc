@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.406 1998/10/03 03:56:52 wessels Exp $
+ * $Id: client_side.cc,v 1.407 1998/10/08 02:40:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -832,6 +832,8 @@ clientHierarchical(clientHttpRequest * http)
 	return 1;
     if (method != METHOD_GET)
 	return 0;
+    if (method != METHOD_CONNECT)
+	return 0;
     /* scan hierarchy_stoplist */
     for (p = Config.hierarchy_stoplist; p; p = p->next)
 	if (strstr(url, p->key))
@@ -1157,6 +1159,14 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	/*
 	 * We hold a stale copy; it needs to be validated
 	 */
+	/*
+	 * The 'need_validation' flag is used to prevent forwarding
+	 * loops between siblings.  If our copy of the object is stale,
+	 * then we should probably only use parents for the validation
+	 * request.  Otherwise two siblings could generate a loop if
+	 * both have a stale version of the object.
+	 */
+	r->flags.need_validation = 1;
 	if (e->lastmod < 0) {
 	    /*
 	     * Previous reply didn't have a Last-Modified header,
