@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.364 2001/01/04 21:09:00 wessels Exp $
+ * $Id: cache_cf.cc,v 1.365 2001/01/05 03:58:18 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1017,7 +1017,6 @@ parse_cachedir(cacheSwap * swap)
     sd->max_objsize = maxobjsize;
     /* defaults in case fs implementation fails to set these */
     sd->fs.blksize = 1024;
-    sd->fs.kperblk = 1;
     swap->n_configured++;
     /* Update the max object size */
     update_maxobjsize();
