@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.82 1996/11/08 00:02:20 wessels Exp $
+ * $Id: neighbors.cc,v 1.83 1996/11/08 03:45:44 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -111,6 +111,7 @@ static edge *whichEdge _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((edge *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((edge * e, icp_opcode op_unused));
 static neighbor_t parseNeighborType _PARAMS((const char *s));
+static void neighbors_init _PARAMS((void));
 
 static neighbors *friends = NULL;
 static icp_common_t echo_hdr;
@@ -334,7 +335,8 @@ neighbors_open(int fd)
     while ((e = next)) {
 	getCurrentTime();
 	next = e->next;
-	debug(15, 2, "Finding IP addresses for '%s'\n", e->host);
+	debug(15, 1, "Configuring neighbor %s/%d/%d\n",
+		e->host, e->http_port, e->icp_port);
 	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
 	    debug(0, 0, "WARNING!!: DNS lookup for '%s' failed!\n", e->host);
 	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
@@ -729,6 +731,8 @@ neighborAdd(const char *host,
 {
 	edge *e = NULL;
         const char *me = getMyHostname();
+	if (friends == NULL)
+		neighbors_init();
 	if (!strcmp(host, me) && http_port == Config.Port.http) {
 	    debug(15, 0, "neighbors_init: skipping cache_host %s %s/%d/%d\n",
 		type, host, http_port, icp_port);
@@ -843,7 +847,7 @@ neighborAddAcl(const char *host, const char *aclname)
     *Tail = L;
 }
 
-void
+static void
 neighbors_init(void)
 {
     debug(15, 1, "neighbors_init: Initializing Neighbors...\n");

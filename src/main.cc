@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.108 1996/11/08 00:02:19 wessels Exp $
+ * $Id: main.cc,v 1.109 1996/11/08 03:45:43 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -441,7 +441,6 @@ mainReinitialize(void)
     neighborsDestroy();
     parseConfigFile(ConfigFile);
     _db_init(Config.Log.log, Config.debugOptions);
-    neighbors_init();
     dnsOpenServers();
     redirectOpenServers();
     serverConnectionsOpen();
@@ -642,7 +641,6 @@ main(int argc, char **argv)
     /* preinit for debug module */
     debug_log = stderr;
     hash_init(0);
-    neighbors_init();
 
     mainInitialize();
 
