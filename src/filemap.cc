@@ -1,21 +1,21 @@
 
 /*
- * $Id: filemap.cc,v 1.37 2001/01/09 14:11:15 hno Exp $
+ * $Id: filemap.cc,v 1.38 2001/01/12 00:37:17 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
- *  Squid is the result of efforts by numerous individuals from the
- *  Internet community.  Development is led by Duane Wessels of the
- *  National Laboratory for Applied Network Research and funded by the
- *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  the Regents of the University of California.  Please see the
- *  COPYRIGHT file for full details.  Squid incorporates software
- *  developed and/or copyrighted by other sources.  Please see the
- *  CREDITS file for full details.
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ file_map_grow(fileMap * fm)
     int old_sz = fm->nwords * sizeof(*fm->file_map);
     void *old_map = fm->file_map;
     fm->max_n_files <<= 1;
-    assert(fm->max_n_files <= (1 << 24)); /* swap_filen is 25 bits, signed */
+    assert(fm->max_n_files <= (1 << 24));	/* swap_filen is 25 bits, signed */
     fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
     debug(8, 3) ("file_map_grow: creating space for %d files\n", fm->max_n_files);
     fm->file_map = xcalloc(fm->nwords, sizeof(*fm->file_map));

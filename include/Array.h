@@ -1,15 +1,19 @@
 /*
- * $Id: Array.h,v 1.3 2001/01/07 09:55:21 hno Exp $
+ * $Id: Array.h,v 1.4 2001/01/12 00:37:12 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
- * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
- * --------------------------------------------------------
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
+ * ----------------------------------------------------------
  *
- *  Squid is the result of efforts by numerous individuals from the
- *  Internet community.  Development is led by Duane Wessels of the
- *  National Laboratory for Applied Network Research and funded by
- *  the National Science Foundation.
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

@@ -1,19 +1,19 @@
 
 #
-# $Id: cf.data.pre,v 1.206 2001/01/09 14:41:33 hno Exp $
+# $Id: cf.data.pre,v 1.207 2001/01/12 00:37:15 wessels Exp $
 #
 #
-# SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+# SQUID Web Proxy Cache          http://www.squid-cache.org/
 # ----------------------------------------------------------
 #
-#  Squid is the result of efforts by numerous individuals from the
-#  Internet community.  Development is led by Duane Wessels of the
-#  National Laboratory for Applied Network Research and funded by the
-#  National Science Foundation.  Squid is Copyrighted (C) 1998 by
-#  the Regents of the University of California.  Please see the
-#  COPYRIGHT file for full details.  Squid incorporates software
-#  developed and/or copyrighted by other sources.  Please see the
-#  CREDITS file for full details.
+#  Squid is the result of efforts by numerous individuals from
+#  the Internet community; see the CONTRIBUTORS file for full
+#  details.   Many organizations have provided support for Squid's
+#  development; see the SPONSORS file for full details.  Squid is
+#  Copyrighted (C) 2000 by the Regents of the University of
+#  California; see the COPYRIGHT file for full details.  Squid
+#  incorporates software developed and/or copyrighted by other
+#  sources; see the CREDITS file for full details.
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ COMMENT_START
 	------------------
 
 	This is the default Squid configuration file. You may wish
-	to look at the Squid home page (http://squid.nlanr.net/)
+	to look at the Squid home page (http://www.squid-cache.org/)
 	for the FAQ and other documentation.
 
 	The default Squid config file shows what the defaults for
@@ -130,7 +130,7 @@ DOC_START
 	is already in use by another group of caches.
 
 	If you are unsure about multicast, please read the Multicast
-	chapter in the Squid FAQ (http://squid.nlanr.net/Squid/FAQ/).
+	chapter in the Squid FAQ (http://www.squid-cache.org/FAQ/).
 
 	Usage: mcast_groups 239.128.16.128 224.0.1.20
 
@@ -1923,7 +1923,7 @@ DOC_START
 
 	The syntax is identical to 'http_access' and the other lists of
 	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://squid.nlanr.net/Squid/FAQ/FAQ-10.html).
+	the Squid FAQ (http://www.squid-cache.org/FAQ/FAQ-10.html).
 DOC_END
 
 NAME: ident_lookup_access
@@ -2042,7 +2042,7 @@ COMMENT_START
 		cache_mgr
 
 	All current information is processed regularly and made
-	available on the Web at http://ircache.nlanr.net/Cache/Tracker/.
+	available on the Web at http://www.ircache.net/Cache/Tracker/.
 COMMENT_END
 
 NAME: announce_period
