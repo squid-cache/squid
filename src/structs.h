@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.467 2003/07/01 20:42:28 wessels Exp $
+ * $Id: structs.h,v 1.468 2003/07/06 21:43:36 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1694,6 +1694,7 @@ public:
 
     struct in_addr my_addr;
     unsigned short my_port;
+    unsigned short client_port;
     HttpHeader header;
     ConnStateData *body_connection;	/* used by clientReadBody() */
     int content_length;

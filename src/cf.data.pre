@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.327 2003/07/01 20:42:27 wessels Exp $
+# $Id: cf.data.pre,v 1.328 2003/07/06 21:43:36 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1767,17 +1767,23 @@ DOC_START
 			helpers who can only process a single request at a
 			time.
 	  cache=n	result cache size, 0 is unbounded (default)
+	  grace=n	Percentage remaining of TTL where a refresh of a
+			cached entry should be initiated without needing to
+			wait for a new reply. (default 0 for no grace period)
 	
 	FORMAT specifications
 
 	  %LOGIN	Authenticated user login name
 	  %IDENT	Ident user name
 	  %SRC		Client IP
+	  %SRCPORT	Client source port
 	  %DST		Requested host
 	  %PROTO	Requested protocol
 	  %PORT		Requested port
 	  %PATH		Requested URL path
 	  %METHOD	Request method
+	  %MYADDR	Squid interface address
+	  %MYPORT	Squid http_port number
 	  %USER_CERT_xx	SSL User certificate attribute xx
 	  %USER_CA_xx	SSL User certificate CA attribute xx
 	  %{Header}	HTTP request header
