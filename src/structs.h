@@ -883,4 +883,5 @@ struct _ErrorState {
     char *redirect_url;
     ERCB *callback;
     void *callback_data;
+    int flags;
 };
