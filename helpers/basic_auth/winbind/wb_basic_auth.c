@@ -53,7 +53,7 @@ void do_authenticate(char *user, char *pass) {
 																		 &request, &response);
 	debug("winbindd result: %d\n",winbindd_result);
 
-	if (winbindd_result==WINBINDD_OK) {
+	if (winbindd_result==NSS_STATUS_SUCCESS) {
 		SEND("OK");
 	} else {
 		SEND("ERR");

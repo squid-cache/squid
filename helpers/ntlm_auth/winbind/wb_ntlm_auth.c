@@ -247,7 +247,7 @@ do_authenticate(ntlm_authenticate * auth, int auth_length)
 	&request, &response);
     debug("winbindd result: %d\n", winbindd_result);
 
-    if (winbindd_result == WINBINDD_OK) {
+    if (winbindd_result == NSS_STATUS_SUCCESS) {
 	lc(domain);
 	lc(user);
 	authok(domain, user);
@@ -380,7 +380,7 @@ check_winbindd()
     struct winbindd_request request;
     struct winbindd_response response;
     r = winbindd_request(WINBINDD_INTERFACE_VERSION, &request, &response);
-    if (r != WINBINDD_OK) {
+    if (r != NSS_STATUS_SUCCESS) {
 	warn("Can't contact winbindd. Dying\n");
 	exit(1);
     }
