@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.157 1996/11/07 20:55:14 wessels Exp $
+ * $Id: store.cc,v 1.158 1996/11/08 00:02:24 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2666,11 +2666,10 @@ storePendingNClients(const StoreEntry * e)
     int i;
     if (mem == NULL)
 	return 0;
-    for (i = 0; i < (int) mem->nclients; i++) {
+    for (i = 0; i < mem->nclients; i++) {
 	if (mem->clients[i].fd == -1)
 	    continue;
-	if (mem->clients[i].callback)
-	    npend++;
+	npend++;
     }
     return npend;
 }
