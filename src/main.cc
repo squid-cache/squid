@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.14 1996/03/28 02:34:04 wessels Exp $ */
+/* $Id: main.cc,v 1.15 1996/03/28 03:02:10 wessels Exp $ */
 
 #include "squid.h"
 
@@ -14,15 +14,6 @@ int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 
 extern void (*failure_notify) ();	/* for error reporting from xmalloc */
-extern void hash_init _PARAMS((int));
-extern int disk_init();
-extern void stmemInit();
-extern int storeMaintainSwapSpace();
-extern void fatal_dump _PARAMS((char *));
-extern void fatal _PARAMS((char *));
-extern void kill_zombie();
-extern int ftpInitialize _PARAMS((void));
-extern int getMaxFD _PARAMS((void));
 
 static int asciiPortNumOverride = 0;
 static int udpPortNumOverride = 0;
