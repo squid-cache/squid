@@ -64,6 +64,10 @@ Changes to squid-2.5 ():
 	- Login and password send to Basic auth helpers is now URL escaped
 	  to allow for spaces and other "odd" characters in logins and
 	  passwords
+	- Proxy Authentication is no longer blindly forwarded to peer
+	  caches if not used locally. If forwarding of proxy authentication
+	  is desired then it must now be configured with the login=PASS
+	  cache_peer option.
         - Responses with Vary: in the header are now cached by squid.
 	  (Henrik Nordstrom).
 
