@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.29 2003/01/23 00:37:01 robertc Exp $
+ * $Id: rfc1035.c,v 1.30 2003/04/25 12:19:59 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -345,7 +345,10 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, char *name, size_t ns
 	    *(name + (no++)) = '.';
 	}
     } while (c > 0 && no < ns);
-    *(name + no - 1) = '\0';
+    if (no)
+	*(name + no - 1) = '\0';
+    else
+	*name = '\0';
     /* make sure we didn't allow someone to overflow the name buffer */
     assert(no <= ns);
     return 0;
