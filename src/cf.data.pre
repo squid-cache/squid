@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.349 2004/04/11 20:32:25 hno Exp $
+# $Id: cf.data.pre,v 1.350 2004/04/30 20:38:47 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1082,6 +1082,12 @@ DOC_START
 	Q2 specifies the number of unacknowledged messages when Squid
 	starts blocking.  If this many messages are in the queues,
 	Squid blocks until it recevies some replies. Default is 72
+
+	When Q1 < Q2 (the default), the cache directory is optimized
+	for lower response time at the expense of a decrease in hit
+	ratio.  If Q1 > Q2, the cache directory is optimized for
+	higher hit ratio at the expense of an increase in response
+	time.
 
 	The coss store type:
 
