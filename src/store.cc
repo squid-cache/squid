@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.396 1998/03/20 18:06:47 rousskov Exp $
+ * $Id: store.cc,v 1.397 1998/03/27 04:45:21 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -721,7 +721,8 @@ storeRelease(StoreEntry * e)
     if (e->swap_file_number > -1) {
 	storeUnlinkFileno(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
-	    storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, -1);
+	    if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
+		storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, -1);
 	if (!EBIT_TEST(e->flag, KEY_PRIVATE))
 	    storeDirSwapLog(e, SWAP_LOG_DEL);
     }
