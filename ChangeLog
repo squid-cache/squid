@@ -53,6 +53,7 @@
 	  function (Henrik Nordstrom).
 	- Removed top-level Makefile.  People must now run 'configure'
 	  before 'make'.
+	- Fixed checkFailureRatio() implementation.
 
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
