@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.172 1997/06/18 01:43:44 wessels Exp $
+ * $Id: http.cc,v 1.173 1997/06/18 04:04:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -898,7 +898,6 @@ httpConnectDone(int fd, int status, void *data)
 	if (opt_no_ipcache)
 	    ipcacheInvalidate(request->host);
 	fd_note(fd, entry->url);
-	storeRegisterAbort(entry, httpAbort, httpState);
 	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
     }
 }
@@ -931,6 +930,7 @@ httpStart(request_t * request, StoreEntry * entry)
     comm_add_close_handler(httpState->fd,
 	httpStateFree,
 	httpState);
+    storeRegisterAbort(entry, httpAbort, httpState);
     commSetTimeout(fd, Config.Timeout.connect, httpTimeout, httpState);
     commConnectStart(httpState->fd,
 	request->host,

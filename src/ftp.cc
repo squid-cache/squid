@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.123 1997/06/18 01:43:42 wessels Exp $
+ * $Id: ftp.cc,v 1.124 1997/06/18 04:04:13 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -858,6 +858,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     }
     ftpState->ctrl.fd = fd;
     comm_add_close_handler(fd, ftpStateFree, ftpState);
+    storeRegisterAbort(entry, ftpAbort, ftpState);
     commSetTimeout(fd, Config.Timeout.connect, ftpTimeout, ftpState);
     commConnectStart(ftpState->ctrl.fd,
 	request->host,
@@ -884,7 +885,6 @@ ftpConnectDone(int fd, int status, void *data)
     ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     ftpState->data.size = SQUID_TCP_SO_RCVBUF;
     ftpState->data.freefunc = xfree;
-    storeRegisterAbort(ftpState->entry, ftpAbort, ftpState);
     commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
 }
 
