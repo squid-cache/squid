@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.397 1998/09/15 22:05:10 wessels Exp $
+ * $Id: client_side.cc,v 1.398 1998/09/19 17:05:59 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -485,7 +485,7 @@ clientPurgeRequest(clientHttpRequest * http)
 int
 checkNegativeHit(StoreEntry * e)
 {
-    if (!e->flags.entry_negcached)
+    if (!EBIT_TEST(e->flags, ENTRY_NEGCACHED))
 	return 0;
     if (e->expires <= squid_curtime)
 	return 0;
@@ -1531,7 +1531,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	} else if (!done) {
 	    debug(33, 5) ("clientWriteComplete: closing, !done\n");
 	    comm_close(fd);
-	} else if (entry->flags.entry_bad_length) {
+	} else if (EBIT_TEST(entry->flags, ENTRY_BAD_LENGTH)) {
 	    debug(33, 5) ("clientWriteComplete: closing, ENTRY_BAD_LENGTH\n");
 	    comm_close(fd);
 	} else if (http->request->flags.proxy_keepalive) {
@@ -1599,7 +1599,7 @@ clientProcessRequest2(clientHttpRequest * http)
     } else if (!storeEntryValidToSend(e)) {
 	http->entry = NULL;
 	return LOG_TCP_MISS;
-    } else if (e->flags.entry_special) {
+    } else if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
 	/* Special entries are always hits, no matter what the client says */
 	http->entry = e;
 	return LOG_TCP_HIT;
@@ -1701,7 +1701,7 @@ clientProcessMiss(clientHttpRequest * http)
      * or IMS request.
      */
     if (http->entry) {
-	if (http->entry->flags.entry_special)
+	if (EBIT_TEST(http->entry->flags, ENTRY_SPECIAL))
 	    debug(33, 0) ("clientProcessMiss: miss on a special object (%s).\n", url);
 	storeUnregister(http->entry, http);
 	storeUnlockObject(http->entry);
@@ -2265,7 +2265,7 @@ CheckQuickAbort2(const clientHttpRequest * http)
 
     if (!http->request->flags.cachable)
 	return 1;
-    if (http->entry->flags.key_private)
+    if (EBIT_TEST(http->entry->flags, KEY_PRIVATE))
 	return 1;
     if (http->entry->mem_obj == NULL)
 	return 1;

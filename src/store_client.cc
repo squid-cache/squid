@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.42 1998/09/19 16:39:15 wessels Exp $
+ * $Id: store_client.cc,v 1.43 1998/09/19 17:06:13 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -179,7 +179,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     if (sc->flags.copy_event_pending)
 	return;
 #ifdef PPNR_WIP
-    if (e->flags.entry_fwd_hdr_wait)
+    if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
 	return;
 #endif /* PPNR_WIP */
     if (sc->flags.store_copying) {

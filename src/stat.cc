@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.289 1998/09/15 19:37:58 wessels Exp $
+ * $Id: stat.cc,v 1.290 1998/09/19 17:06:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -201,27 +201,27 @@ storeEntryFlags(const StoreEntry * entry)
     LOCAL_ARRAY(char, buf, 256);
     char *t;
     buf[0] = '\0';
-    if (entry->flags.entry_special)
+    if (EBIT_TEST(entry->flags, ENTRY_SPECIAL))
 	strcat(buf, "SPECIAL,");
-    if (entry->flags.entry_revalidate)
+    if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE))
 	strcat(buf, "REVALIDATE,");
-    if (entry->flags.delay_sending)
+    if (EBIT_TEST(entry->flags, DELAY_SENDING))
 	strcat(buf, "DELAY_SENDING,");
-    if (entry->flags.release_request)
+    if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
 	strcat(buf, "RELEASE_REQUEST,");
-    if (entry->flags.refresh_request)
+    if (EBIT_TEST(entry->flags, REFRESH_REQUEST))
 	strcat(buf, "REFRESH_REQUEST,");
-    if (entry->flags.entry_cachable)
+    if (EBIT_TEST(entry->flags, ENTRY_CACHABLE))
 	strcat(buf, "CACHABLE,");
-    if (entry->flags.entry_dispatched)
+    if (EBIT_TEST(entry->flags, ENTRY_DISPATCHED))
 	strcat(buf, "DISPATCHED,");
-    if (entry->flags.key_private)
+    if (EBIT_TEST(entry->flags, KEY_PRIVATE))
 	strcat(buf, "PRIVATE,");
-    if (entry->flags.entry_negcached)
+    if (EBIT_TEST(entry->flags, ENTRY_NEGCACHED))
 	strcat(buf, "NEGCACHED,");
-    if (entry->flags.entry_validated)
+    if (EBIT_TEST(entry->flags, ENTRY_VALIDATED))
 	strcat(buf, "VALIDATED,");
-    if (entry->flags.entry_bad_length)
+    if (EBIT_TEST(entry->flags, ENTRY_BAD_LENGTH))
 	strcat(buf, "BAD_LENGTH,");
     if ((t = strrchr(buf, ',')))
 	*t = '\0';

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.250 1998/09/18 15:25:41 wessels Exp $
+ * $Id: neighbors.cc,v 1.251 1998/09/19 17:06:07 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -612,7 +612,7 @@ neighborUpdateRtt(peer * p, MemObject * mem)
     if (rtt < 1 || rtt > 10000)
 	return;
     p->stats.rtt = intAverage(p->stats.rtt, rtt,
-        p->stats.pings_acked, RTT_AV_FACTOR);
+	p->stats.pings_acked, RTT_AV_FACTOR);
 }
 
 #if USE_HTCP
@@ -726,7 +726,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	return;
     }
     /* check if someone is already fetching it */
-    if (entry->flags.entry_dispatched) {
+    if (EBIT_TEST(entry->flags, ENTRY_DISPATCHED)) {
 	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n",
 	    storeKeyText(key));
 	neighborCountIgnored(p);
@@ -1198,7 +1198,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct soc
 	return;
     }
     /* check if someone is already fetching it */
-    if (e->flags.entry_dispatched) {
+    if (EBIT_TEST(e->flags, ENTRY_DISPATCHED)) {
 	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n",
 	    storeKeyText(key));
 	neighborCountIgnored(p);

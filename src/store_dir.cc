@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.78 1998/09/18 15:14:42 wessels Exp $
+ * $Id: store_dir.cc,v 1.79 1998/09/19 17:06:14 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -390,12 +390,12 @@ storeDirSwapLog(const StoreEntry * e, int op)
     int dirn;
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
-    assert(!e->flags.key_private);
+    assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
     assert(e->swap_file_number >= 0);
     /*
      * icons and such; don't write them to the swap log
      */
-    if (e->flags.entry_special)
+    if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
 	return;
     assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
     debug(20, 3) ("storeDirSwapLog: %s %s %08X\n",
@@ -674,11 +674,11 @@ storeDirWriteCleanLogs(int reopen)
 	    continue;
 	if (e->swap_file_sz <= 0)
 	    continue;
-	if (e->flags.release_request)
+	if (EBIT_TEST(e->flags, RELEASE_REQUEST))
 	    continue;
-	if (e->flags.key_private)
+	if (EBIT_TEST(e->flags, KEY_PRIVATE))
 	    continue;
-	if (e->flags.entry_special)
+	if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
 	    continue;
 	dirn = storeDirNumber(e->swap_file_number);
 	assert(dirn < N);
