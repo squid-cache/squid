@@ -306,7 +306,7 @@ icpHandleUdp(int sock, void *data)
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
     int icp_version;
-    int max = 16;
+    int max = INCOMING_ICP_MAX;
     commSetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
     while (max--) {
 	from_len = sizeof(from);

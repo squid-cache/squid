@@ -221,3 +221,14 @@
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
+
+/*
+ * Max number of ICP messages to receive per call to icpHandleUdp
+ */
+#define INCOMING_ICP_MAX 15
+/*
+ * Max number of HTTP connections to accept per call to httpAccept
+ * and PER HTTP PORT
+ */
+#define INCOMING_HTTP_MAX 10
+#define INCOMING_TOTAL_MAX (INCOMING_ICP_MAX+INCOMING_HTTP_MAX)
