@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.10 1999/04/19 05:13:41 wessels Exp $
+ * $Id: dns_internal.cc,v 1.11 1999/04/19 07:06:14 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -256,7 +256,7 @@ idnsGrokReply(const char *buf, size_t sz)
     }
     dlinkDelete(&q->lru, &lru_list);
     if (n < 0)
-	debug(78, 1) ("idnsGrokReply: error %d\n", rfc1035_errno);
+	debug(78, 3) ("idnsGrokReply: error %d\n", rfc1035_errno);
     valid = cbdataValid(q->callback_data);
     cbdataUnlock(q->callback_data);
     if (valid)
