@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.31 1996/05/01 22:36:38 wessels Exp $ */
+/* $Id: stat.cc,v 1.32 1996/05/01 22:37:13 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -395,7 +395,7 @@ void info_get(obj, sentry)
 	float f;
 	f = squid_curtime - squid_starttime;
 	storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n",
-		f == 0.0 ? 0.0 :
+	    f == 0.0 ? 0.0 :
 	    ((ntcpconn + nudpconn) / (f / 3600)));
     }
 
