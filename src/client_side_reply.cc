@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.72 2004/09/26 16:38:01 hno Exp $
+ * $Id: client_side_reply.cc,v 1.73 2004/10/14 23:32:45 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1868,14 +1868,25 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
          * to tell if this is a squid generated error page, or one from
          *  upstream at this point. */
         ErrorState *err;
+        err_type page_id;
+        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
+
+        if (page_id == ERR_NONE)
+            page_id = ERR_ACCESS_DENIED;
+
         err =
-            clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
+            clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
                              http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
                              http->request);
+
         removeClientStoreReference(&sc, http);
+
         startError(err);
+
         httpReplyDestroy(rep);
+
         http->logType = LOG_TCP_DENIED_REPLY;
+
         return;
     }
 
