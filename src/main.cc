@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.225 1998/02/21 00:56:57 rousskov Exp $
+ * $Id: main.cc,v 1.226 1998/02/23 03:07:03 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -139,7 +139,7 @@ usage(void)
     fprintf(stderr,
 	"Usage: %s [-dhsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal]\n"
 	"       -a port   Specify HTTP port number (default: %d).\n"
-	"       -d        Write debugging to stderr also.\n"
+	"       -d level  Write debugging to stderr also.\n"
 	"       -f file   Use given config-file instead of\n"
 	"                 %s\n"
 	"       -h        Print help message.\n"
