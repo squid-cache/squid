@@ -341,7 +341,6 @@ enum {
 enum {
     FD_CLOSE_REQUEST,
     FD_WRITE_DAEMON,
-    FD_WRITE_PENDING,
     FD_CLOSING,
     FD_SOCKET_EOF
 };
