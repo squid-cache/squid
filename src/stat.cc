@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.270 1998/07/25 04:39:04 wessels Exp $
+ * $Id: stat.cc,v 1.271 1998/07/25 04:59:11 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -307,7 +307,7 @@ statObjects(void *data)
     StoreEntry *e;
     hash_link *link_ptr = NULL;
     hash_link *link_next = NULL;
-    if (++state->bucket >= store_hash_buckets) {
+    if (state->bucket >= store_hash_buckets) {
 	storeComplete(state->sentry);
 	storeUnlockObject(state->sentry);
 	cbdataFree(state);
@@ -330,6 +330,7 @@ statObjects(void *data)
 	    continue;
 	statStoreEntry(state->sentry, e);
     }
+    state->bucket++;
     eventAdd("statObjects", statObjects, state, 0.0, 1);
     storeBufferFlush(state->sentry);
 }
