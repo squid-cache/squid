@@ -67,3 +67,4 @@
 	- Fixed reqnum bug (was using ntohs instead of ntohl).
 	- Fixed double free() bug caused by setting flag=0 in
 	  storeAddFromDisk().
+	- Fixed memory leaks.
