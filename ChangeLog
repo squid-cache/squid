@@ -8,6 +8,7 @@ Changes to squid-1.1.beta5 (October 7, 1996):
 	  not as a parent.
 	- Added browser ACL patch (Carson Gaspar).
 	- Added reading ACLs from file patch (Arjan de Vet).
+	- Squid-1.0 changes up to 1.0.18.
 
 Changes to squid-1.1.beta4 (September 26, 1996):
 
@@ -328,6 +329,12 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+
+Changes to squid-1.0.18 (October 7, 1996):
+
+	- Added INADDR_NONE to cachemgr.c for Solaris.
+	- Added checks to deal with Harvest Cached neighbors which don't
+	  handle Squid's ICP version 2.
 
 Changes to squid-1.0.17 (September 24, 1996):
 
