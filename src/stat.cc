@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.299 1998/11/13 21:02:10 rousskov Exp $
+ * $Id: stat.cc,v 1.300 1998/11/18 00:16:40 glenn Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -76,8 +76,6 @@ static OBJH statAvg5min;
 static OBJH statAvg60min;
 static OBJH statUtilization;
 static OBJH statCountersHistograms;
-static double statRequestHitRatio(int minutes);
-static double statByteHitRatio(int minutes);
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -1253,7 +1251,7 @@ statCPUUsage(int minutes)
 	tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
 }
 
-static double
+extern double
 statRequestHitRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
@@ -1263,7 +1261,7 @@ statRequestHitRatio(int minutes)
 	CountHist[minutes].client_http.requests);
 }
 
-static double
+extern double
 statByteHitRatio(int minutes)
 {
     size_t s;
