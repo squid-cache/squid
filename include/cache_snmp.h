@@ -1,5 +1,5 @@
 /*
- * $Id: cache_snmp.h,v 1.18 1998/11/11 20:10:00 glenn Exp $
+ * $Id: cache_snmp.h,v 1.19 1998/11/17 23:16:46 glenn Exp $
  */
 
 #ifdef SQUID_SNMP
@@ -143,7 +143,6 @@ enum {
     IP_MISS,
     IP_GHBN,
     IP_LOC,
-    IP_LENG,
     IP_END
 };
 
@@ -156,7 +155,6 @@ enum {
     FQDN_NEGHIT,
     FQDN_MISS,
     FQDN_GHBN,
-    FQDN_LENG,
     FQDN_END
 };
 

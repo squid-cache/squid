@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.206 1998/11/12 06:28:13 wessels Exp $
+ * $Id: ipcache.cc,v 1.207 1998/11/17 23:16:48 glenn Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -825,12 +825,6 @@ snmp_netIpFn(variable_list * Var, snint * ErrP)
     case IP_LOC:
 	*(Answer->val.integer) = IpcacheStats.release_locked;
 	break;
-#if DELETE_ME
-    case IP_LENG:
-	*(Answer->val.integer) = queue_length;
-	Answer->type = SMI_GAUGE32;
-	break;
-#endif
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);

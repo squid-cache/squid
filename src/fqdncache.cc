@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.122 1998/11/12 06:28:06 wessels Exp $
+ * $Id: fqdncache.cc,v 1.123 1998/11/17 23:16:47 glenn Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -658,12 +658,6 @@ snmp_netFqdnFn(variable_list * Var, snint * ErrP)
     case FQDN_GHBN:
 	*(Answer->val.integer) = FqdncacheStats.ghba_calls;
 	break;
-#if DELETE_ME
-    case FQDN_LENG:
-	*(Answer->val.integer) = queue_length;
-	Answer->type = SMI_GAUGE32;
-	break;
-#endif
     default:
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
