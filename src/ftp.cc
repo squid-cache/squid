@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.315 2001/10/24 07:45:34 hno Exp $
+ * $Id: ftp.cc,v 1.316 2001/11/09 07:05:00 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2543,7 +2543,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 static void
 ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)
 {
-    ErrorState *err = errorCon(ERR_ACCESS_DENIED, HTTP_UNAUTHORIZED);
+    ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED);
     HttpReply *rep;
     err->request = requestLink(request);
     rep = errorBuildReply(err);
