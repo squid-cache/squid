@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.86 1997/02/03 23:03:05 wessels Exp $
+ * $Id: client_side.cc,v 1.87 1997/02/04 19:10:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -626,7 +626,7 @@ debug(0,0,"Config.Options.enable_purge = %d\n", Config.Options.enable_purge);
 	icpSendERROR(fd, LOG_TCP_DENIED, buf, icpState, icpState->http_code);
 	return;
     }
-    icpState->log_type = TCP_MISS;
+    icpState->log_type = LOG_TCP_MISS;
     if ((entry = storeGet(icpState->url)) == NULL) {
 	sprintf(msg, "HTTP/1.0 404 Not Found\r\n");
 	icpState->http_code = 404;
