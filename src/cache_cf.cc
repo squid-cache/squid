@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.422 2002/12/06 23:19:13 hno Exp $
+ * $Id: cache_cf.cc,v 1.423 2002/12/07 01:55:22 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2468,6 +2468,8 @@ parse_https_port_list(https_port_list ** head)
     while (*head)
 	head = &(*head)->next;
     s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath);
+    if (!s->sslContext)
+	self_destruct();
     *head = s;
 }
 
