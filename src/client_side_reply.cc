@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.11 2002/09/29 11:29:41 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.12 2002/10/03 06:45:53 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1504,10 +1504,8 @@ clientSendMoreData(void *data, StoreIOBuffer result)
 	    3)
 	    ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
 	    (int) body_size, rep->hdr_sz);
-	ch = aclChecklistCreate(Config.accessList.reply, http->request, NULL);
+	ch = clientAclChecklistCreate(Config.accessList.reply, http->request, NULL);
 	ch->reply = rep;
-	if (http->conn)
-	    ch->conn = cbdataReference(http->conn);	/* acl.c frees */
 	rv = aclCheckFast(Config.accessList.reply, ch);
 	aclChecklistFree(ch);
 	ch = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.448 2002/09/26 13:33:08 robertc Exp $
+ * $Id: protos.h,v 1.449 2002/10/03 06:45:53 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -136,13 +136,15 @@ extern void clientdbDump(StoreEntry *);
 extern void clientdbFreeMemory(void);
 extern int clientdbEstablished(struct in_addr, int);
 
-extern void clientAccessCheck(void *);
 extern char *clientConstructTraceEcho(clientHttpRequest *);
 extern void clientOpenListenSockets(void);
 extern void clientHttpConnectionsClose(void);
 extern void clientReadBody(request_t * req, char *buf, size_t size, CBCB * callback, void *data);
 extern int clientAbortBody(request_t * req);
 extern void httpRequestFree(void *);
+
+extern void clientAccessCheck(void *);
+extern aclCheck_t * clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http);
 
 /* client_side_reply.c - client side reply related routines (pure logic, no comms) */
 extern void *clientReplyNewContext(clientHttpRequest *);
