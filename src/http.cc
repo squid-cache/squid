@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.280 1998/06/02 21:46:02 rousskov Exp $
+ * $Id: http.cc,v 1.281 1998/06/03 22:33:02 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -658,6 +658,7 @@ httpBuildRequestHeader(request_t * request,
 	    }
 	    break;
 	case HDR_RANGE:
+	case HDR_IF_RANGE:
 	    if (!filter_range)
 		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;

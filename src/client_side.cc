@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.327 1998/06/02 23:29:03 rousskov Exp $
+ * $Id: client_side.cc,v 1.328 1998/06/03 22:33:00 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1057,6 +1057,36 @@ clientBuildReplyHeader(clientHttpRequest * http,
 }
 #endif
 
+/* returns true if If-Range specs match reply, false otherwise */
+static int
+clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
+{
+    const TimeOrTag spec = httpHeaderGetTimeOrTag(&http->request->header, HDR_IF_RANGE);
+    /* check for parsing falure */
+    if (!spec.valid)
+	return 0;
+    /* got an ETag? */
+    if (spec.tag.str) {
+	ETag rep_tag = httpHeaderGetETag(&rep->header, HDR_ETAG);
+	debug(33,3) ("clientIfRangeMatch: ETags: %s and %s\n",
+	    spec.tag.str, rep_tag.str ? rep_tag.str : "<none>");
+	if (!rep_tag.str)
+	    return 0; /* entity has no etag to compare with! */
+	if (spec.tag.weak || rep_tag.weak) {
+	    debug(33,1) ("clientIfRangeMatch: Weak ETags are not in If-Range: %s ? %s\n",
+		spec.tag.str, rep_tag.str);
+	    return 0; /* must use strong validator for sub-range requests */
+	}
+	return etagIsEqual(&rep_tag, &spec.tag);
+    }
+    /* got modification time? */
+    if (spec.time >= 0) {
+	return http->entry->lastmod <= spec.time;
+    }
+    assert(0); /* should not happen */
+    return 0;
+}
+
 /* adds appropriate Range headers if needed */
 static void
 clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
@@ -1077,6 +1107,8 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
     if (rep->content_length != http->entry->mem_obj->reply->content_length)
 	range_err = "INCONSISTENT length"; /* a bug? */
     else
+    if (httpHeaderHas(&http->request->header, HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
+	range_err = "If-Range match failed";
     if (!httpHdrRangeCanonize(http->request->range, rep->content_length))
 	range_err = "canonization failed";
     else
@@ -1092,6 +1124,8 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	debug(33, 2) ("clientBuildRangeHeader: range spec count: %d clen: %d\n",
 	    spec_count, rep->content_length);
 	assert(spec_count > 0);
+	/* ETags should not be returned with Partial Content replies? */
+	httpHeaderDelById(hdr, HDR_ETAG);
 	/* append appropriate header(s) */ 
 	if (spec_count == 1) {
 	    HttpHdrRangePos pos = HttpHdrRangeInitPos;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.42 1998/06/03 15:52:15 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.43 1998/06/03 22:32:58 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -94,12 +94,12 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
     {"Content-Type", HDR_CONTENT_TYPE, ftStr},
     {"Date", HDR_DATE, ftDate_1123},
-    {"ETag", HDR_ETAG, ftStr},	/* for now */
+    {"ETag", HDR_ETAG, ftETag},
     {"Expires", HDR_EXPIRES, ftDate_1123},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
     {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
-    {"If-Range", HDR_IF_RANGE, ftDate_1123}, /* for now (ftDate_1123 or ftStr!) */
+    {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
     {"Link", HDR_LINK, ftStr},
     {"Location", HDR_LOCATION, ftStr},
@@ -822,6 +822,41 @@ httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *authSche
     if (!*field)		/* no authorization cookie */
 	return NULL;
     return base64_decode(field);
+}
+
+ETag
+httpHeaderGetETag(const HttpHeader * hdr, http_hdr_type id)
+{
+    ETag etag = { NULL, -1 };
+    HttpHeaderEntry *e;
+    assert(Headers[id].type == ftETag);  /* must be of an appropriate type */
+    if ((e = httpHeaderFindEntry(hdr, id)))
+	etagParseInit(&etag, strBuf(e->value));
+    return etag;
+}
+
+TimeOrTag
+httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id)
+{
+    TimeOrTag tot;
+    HttpHeaderEntry *e;
+    assert(Headers[id].type == ftDate_1123_or_ETag);  /* must be of an appropriate type */
+    memset(&tot, 0, sizeof(tot));
+    if ((e = httpHeaderFindEntry(hdr, id))) {
+	const char *str = strBuf(e->value);
+	/* try as an ETag */
+	if (etagParseInit(&tot.tag, str)) {
+	    tot.valid = tot.tag.str != NULL;
+	    tot.time = -1;
+	} else {
+	    /* or maybe it is time? */
+	    tot.time = parse_rfc1123(str);
+	    tot.valid = tot.time >= 0;
+	    tot.tag.str = NULL;
+	}
+    }
+    assert(tot.time < 0 || !tot.tag.str); /* paranoid */
+    return tot;
 }
 
 /*
