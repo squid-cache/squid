@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.218 1997/11/06 18:29:31 wessels Exp $
+ * $Id: http.cc,v 1.219 1997/11/10 21:32:00 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -427,6 +427,9 @@ httpCachableReply(HttpStateData * httpState)
 	return 0;
     if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
 	return 0;
+    if (BIT_TEST(httpState->request->flags, REQ_AUTH))
+	if (!EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
+	    return 0;
     /*
      * Dealing with cookies is quite a bit more complicated
      * than this.  Ideally we should strip the cookie
