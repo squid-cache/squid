@@ -384,7 +384,14 @@ extern void identStart(int, ConnStateData *, IDCB * callback);
 extern void statInit(void);
 extern void pconnHistCount(int, int);
 extern int statMemoryAccounted(void);
-extern void statLogHistCount(StatLogHist * H, double val);
+
+void statHistClean(StatHist * H);
+void statHistCount(StatHist * H, double val);
+void statHistCopy(StatHist * Dest, const StatHist * Orig);
+double statHistDeltaMedian(const StatHist * A, const StatHist * B);
+void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd);
+void statHistLogInit(StatHist * H, int capacity, double min, double max);
+void statHistEnumInit(StatHist * H, int last_enum);
 
 
 extern void memInit(void);

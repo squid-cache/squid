@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.241 1998/02/24 21:17:05 wessels Exp $
+ * $Id: http.cc,v 1.242 1998/02/25 09:53:58 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1165,9 +1165,6 @@ httpReplyHeaderStats(StoreEntry * entry)
 void
 httpInit(void)
 {
-    cachemgrRegister("reply_headers",
-	"HTTP Reply Header Histograms",
-	httpHeaderStoreRepReport, 0);
 }
 
 static void

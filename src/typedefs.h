@@ -84,7 +84,7 @@ typedef struct _StatCounters StatCounters;
 typedef struct _tlv tlv;
 typedef struct _storeSwapLogData storeSwapLogData;
 typedef struct _cacheSwap cacheSwap;
-typedef struct _StatLogHist StatLogHist;
+typedef struct _StatHist StatHist;
 
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);
@@ -116,6 +116,8 @@ typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
 
+typedef double (*hbase_f)(double);
+typedef void (*StatHistBinDumper)(StoreEntry *, int idx, double val, double size, int count);
 /* MD5 cache keys */
 typedef unsigned char cache_key;
 

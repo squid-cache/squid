@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.159 1998/02/23 21:07:13 kostas Exp $
+ * $Id: ipcache.cc,v 1.160 1998/02/25 09:53:59 rousskov Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -518,7 +518,7 @@ ipcache_dnsHandleRead(int fd, void *data)
     assert(i->status == IP_DISPATCHED);
     if (strstr(dnsData->ip_inbuf, "$end\n")) {
 	/* end of record found */
-	statLogHistCount(&Counter.dns.svc_time,
+	statHistCount(&Counter.dns.svc_time,
 	    tvSubMsec(dnsData->dispatch_time, current_time));
 	if ((x = ipcache_parsebuffer(dnsData->ip_inbuf, dnsData)) == NULL) {
 	    debug(14, 0) ("ipcache_dnsHandleRead: ipcache_parsebuffer failed?!\n");

@@ -1,3 +1,6 @@
+	- Added rudimental statistics for HTTP headers.
+	- Adjusted StatLogHist to a more "generic"/flexible StatHist.
+	  Moved StatHist implementation into a separate file.
 	- Added FTP support for PORT if PASV fails, also try the
 	  default FTP data port (Henrik Nordstrom).
 	- Fixed NULL pointer bug in clientGetHeadersForIMS when a

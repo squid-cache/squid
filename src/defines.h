@@ -206,4 +206,6 @@
 
 #define SKIP_BASIC_SZ ((size_t) 6)
 
+#if 0
 #define STAT_LOG_HIST_BINS 300
+#endif

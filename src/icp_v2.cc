@@ -52,7 +52,7 @@ icpUdpReply(int fd, void *data)
 	UdpQueueHead = queue->next;
 	if (queue->logcode) {
 	    icpLogIcp(queue);
-	    statLogHistCount(&Counter.icp.reply_svc_time,
+	    statHistCount(&Counter.icp.reply_svc_time,
 		tvSubUsec(queue->start, current_time));
 	}
 	safe_free(queue->msg);

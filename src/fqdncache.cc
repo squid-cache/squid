@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.84 1998/02/23 21:07:12 kostas Exp $
+ * $Id: fqdncache.cc,v 1.85 1998/02/25 09:53:57 rousskov Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -468,7 +468,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
 	fatal_dump("fqdncache_dnsHandleRead: bad status");
     if (strstr(dnsData->ip_inbuf, "$end\n")) {
 	/* end of record found */
-	statLogHistCount(&Counter.dns.svc_time,
+	statHistCount(&Counter.dns.svc_time,
 	    tvSubMsec(dnsData->dispatch_time, current_time));
 	if ((x = fqdncache_parsebuffer(dnsData->ip_inbuf, dnsData)) == NULL) {
 	    debug(35, 0) ("fqdncache_dnsHandleRead: fqdncache_parsebuffer failed?!\n");

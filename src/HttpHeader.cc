@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.6 1998/02/23 20:27:17 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.7 1998/02/25 09:53:53 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -83,32 +83,41 @@ struct _HttpHeaderEntry {
     http_hdr_type id;
 };
 
+
+/* counters and size accumulators for stat objects */
+typedef int StatCount;
+typedef size_t StatSize;
+
+/* per field statistics */
+typedef struct {
+    StatCount aliveCount;  /* created but not destroyed (count)*/
+    StatCount parsCount;   /* #parsing attempts */
+    StatCount errCount;    /* #pasring errors */
+    StatCount repCount;    /* #repetitons */
+} HttpHeaderFieldStat;
+
+/* per header statistics */
+typedef struct {
+    const char *label;
+    StatHist hdrUCountDistr;
+    StatHist fieldTypeDistr;
+    StatHist ccTypeDistr;
+} HttpHeaderStat;
+
+
 /* constant attributes of fields */
 typedef struct {
     const char *name;
     http_hdr_type id;
     field_type type;
     int name_len;
+    HttpHeaderFieldStat stat;
 } field_attrs_t;
 
 /* use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
 /* use this and only this to initialize HttpHeaderPos */
 #define HttpHeaderInitPos (-1)
-
-
-#if 0 /* moved to HttpHeader.h */
-typedef struct _HttpHeaderEntry HttpHeaderEntry;
-struct _HttpHeader {
-    /* public, read only */
-    int emask;           /* bits set for present entries */
-
-    /* protected, do not use these, use interface functions instead */
-    int capacity;        /* max #entries before we have to grow */
-    int ucount;          /* #entries used, including holes */
-    HttpHeaderEntry *entries;
-};
-#endif
 
 
 /*
@@ -197,59 +206,50 @@ static http_hdr_type RequestHeaders[] = {
     HDR_OTHER
 };
 
-static const char *KnownSplitableFields[] = {
-    "Connection", "Range"
-};
-/* if you must have KnownSplitableFields empty, set KnownSplitableFieldCount to 0 */
-static const int KnownSplitableFieldCount = sizeof(KnownSplitableFields)/sizeof(*KnownSplitableFields);
-
-/* headers accounting */
+/* when first field is added, this is how much entries we allocate */
 #define INIT_FIELDS_PER_HEADER 8
-static u_num32 shortHeadersCount = 0;
-static u_num32 longHeadersCount = 0;
 
-typedef struct {
-    const char *label;
-    int parsed;
-    int misc[HDR_ENUM_END];
-} HttpHeaderStats;
-
-#if 0 /* not used, add them later @?@ */
-static struct {
-    int parsed;
-    int misc[HDR_MISC_END];
-    int cc[SCC_ENUM_END];
-} ReplyHeaderStats;
-
-#endif /* if 0 */
-
-/* recycle bin for short strings (32KB only) */
+/* recycle bin for short strings (32KB total only) */
 static const size_t shortStrSize = 32; /* max size of a recyclable string */
 static const size_t shortStrPoolCount = (32*1024)/32; /* sync this with shortStrSize */
 static MemPool *shortStrings = NULL;
 
+/* header accounting */
+static HttpHeaderStat HttpHeaderStats[] = {
+    { "reply" },
+    { "request" },
+    { "all" }
+};
+static int HttpHeaderStatCount = sizeof(HttpHeaderStats)/sizeof(*HttpHeaderStats);
+
+/* global counters */
+static StatCount HeaderParsedCount = 0;
+static StatCount CcPasredCount = 0;
+static StatCount HeaderEntryParsedCount = 0;
+
 /* long strings accounting */
-static u_num32 longStrAllocCount = 0;
-static u_num32 longStrFreeCount = 0;
-static u_num32 longStrHighWaterCount = 0;
-static size_t longStrAllocSize = 0;
-static size_t longStrFreeSize = 0;
-static size_t longStrHighWaterSize = 0;
+static StatCount longStrAliveCount = 0;
+static StatCount longStrHighWaterCount = 0;
+static StatSize longStrAliveSize = 0;
+static StatSize longStrHighWaterSize = 0;
 
 
-/* local routines */
+/*
+ * local routines
+ */
 
 #define assert_eid(id) assert((id) >= 0 && (id) < HDR_ENUM_END)
 
 static void httpHeaderInitAttrTable(field_attrs_t *table, int count);
 static int httpHeaderCalcMask(const int *enums, int count);
+static void httpHeaderStatInit(HttpHeaderStat *hs, const char *label);
+
 static HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader *hdr, HttpHeaderPos *pos);
 static void httpHeaderDelAt(HttpHeader *hdr, HttpHeaderPos pos);
 static void httpHeaderAddParsedEntry(HttpHeader *hdr, HttpHeaderEntry *e);
 static void httpHeaderAddNewEntry(HttpHeader *hdr, const HttpHeaderEntry *e);
 static void httpHeaderSet(HttpHeader *hdr, http_hdr_type id, const field_store value);
 static void httpHeaderSyncMasks(HttpHeader *hdr, const HttpHeaderEntry *e, int add);
-static void httpHeaderSyncStats(HttpHeader *hdr, const HttpHeaderEntry *e);
 static int httpHeaderIdByName(const char *name, int name_len, const field_attrs_t *attrs, int end, int mask);
 static void httpHeaderGrow(HttpHeader *hdr);
 
@@ -274,6 +274,8 @@ static HttpScc *httpSccParseCreate(const char *str);
 static void httpSccParseInit(HttpScc *scc, const char *str);
 static void httpSccDestroy(HttpScc *scc);
 static HttpScc *httpSccDup(HttpScc *scc);
+static void httpSccUpdateStats(const HttpScc *scc, StatHist *hist);
+
 static void httpSccPackValueInto(HttpScc *scc, Packer *p);
 static void httpSccJoinWith(HttpScc *scc, HttpScc *new_scc);
 
@@ -282,26 +284,8 @@ static HttpHeaderExtField *httpHeaderExtFieldParseCreate(const char *field_start
 static void httpHeaderExtFieldDestroy(HttpHeaderExtField *f);
 static HttpHeaderExtField *httpHeaderExtFieldDup(HttpHeaderExtField *f);
 
-static void httpHeaderStoreAReport(StoreEntry *e, void (*reportPacker)(Packer *p));
-static void httpHeaderPackReport(Packer *p);
-static void httpHeaderPackReqReport(Packer *p);
-static void httpHeaderPackRepReport(Packer *p);
-
-
-#if 0
-static void httpHeaderAddField(HttpHeader *hdr, HttpHeaderField *fld);
-static void httpHeaderAddSingleField(HttpHeader *hdr, HttpHeaderField *fld);
-static void httpHeaderAddListField(HttpHeader *hdr, HttpHeaderField *fld);
-static void httpHeaderCountField(HttpHeader *hdr, HttpHeaderField *fld);
-static void httpHeaderCountSCCField(HttpHeader *hdr, HttpHeaderField *fld);
-static int httpHeaderFindFieldType(HttpHeaderField *fld, const field_attrs_t *attrs, int end, int mask);
-static HttpHeaderField *httpHeaderFieldCreate(const char *name, const char *value);
-static HttpHeaderField *httpHeaderFieldParseCreate(const char *field_start, const char *field_end);
-static void httpHeaderFieldDestroy(HttpHeaderField *f);
-static size_t httpHeaderFieldBufSize(const HttpHeaderField *fld);
-static int httpHeaderFieldIsList(const HttpHeaderField *fld);
-static void httpHeaderStoreAReport(Packer *p, HttpHeaderStats *stats);
-#endif
+static void httpHeaderStatDump(const HttpHeaderStat *hs, StoreEntry *e);
+static void shortStringStatDump(StoreEntry *e);
 
 static char *dupShortStr(const char *str);
 static char *dupShortBuf(const char *str, size_t len);
@@ -311,6 +295,8 @@ static void freeShortString(char *str);
 
 static int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 static const char *getStringPrefix(const char *str);
+static double xpercent(double part, double whole);
+static double xdiv(double nom, double denom);
 
 
 /* delete this when everybody remembers that ':' is not a part of a name */
@@ -326,6 +312,7 @@ static const char *getStringPrefix(const char *str);
 void
 httpHeaderInitModule()
 {
+    int i;
     /* paranoid check if smbd put a big object into field_store */
     assert(sizeof(field_store) == sizeof(char*));
     /* have to force removal of const here */
@@ -337,6 +324,11 @@ httpHeaderInitModule()
     RequestHeadersMask = httpHeaderCalcMask((const int*)RequestHeaders, countof(RequestHeaders));
     /* create a pool of short strings @?@ we never destroy it! */
     shortStrings = memPoolCreate(shortStrPoolCount, shortStrPoolCount/10, shortStrSize, "shortStr");
+    /* init header stats */
+    for (i = 0; i < HttpHeaderStatCount; i++)
+	httpHeaderStatInit(HttpHeaderStats+i, HttpHeaderStats[i].label);
+    cachemgrRegister("http_headers",
+	"HTTP Header Statistics", httpHeaderStoreReport, 0);
 }
 
 static void
@@ -360,13 +352,26 @@ httpHeaderInitAttrTable(field_attrs_t *table, int count)
 	    i++; /* make progress */
     }
 
-    /* calculate name lengths */
+    /* calculate name lengths and init stats */
     for (i = 0; i < count; ++i) {
 	assert(table[i].name);
 	table[i].name_len = strlen(table[i].name);
 	debug(55,5) ("hdr table entry[%d]: %s (%d)\n", i, table[i].name, table[i].name_len);
 	assert(table[i].name_len);
+	/* init stats */
+	memset(&table[i].stat, 0, sizeof(table[i].stat));
     }
+}
+
+static void
+httpHeaderStatInit(HttpHeaderStat *hs, const char *label)
+{
+    assert(hs);
+    assert(label);
+    hs->label = label;
+    statHistEnumInit(&hs->hdrUCountDistr, 32); /* not a real enum */
+    statHistEnumInit(&hs->fieldTypeDistr, HDR_ENUM_END);
+    statHistEnumInit(&hs->ccTypeDistr, SCC_ENUM_END);
 }
 
 /* calculates a bit mask of a given array (move this to lib/uitils) @?@ */
@@ -413,17 +418,19 @@ void
 httpHeaderClean(HttpHeader *hdr)
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
+    HttpHeaderEntry *e;
 
     debug(55, 7) ("cleaning hdr: %p\n", hdr);
     assert(hdr);
 
-    if (hdr->capacity > INIT_FIELDS_PER_HEADER)
-	longHeadersCount++;
-    else
-	shortHeadersCount++;
-
-    while (httpHeaderGetEntry(hdr, &pos))
+    statHistCount(&HttpHeaderStats[0].hdrUCountDistr, hdr->ucount);
+    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+	/* fix this (for scc too) for req headers @?@ */
+	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
+	if (e->id == HDR_CACHE_CONTROL)
+	    httpSccUpdateStats(e->field.v_pscc, &HttpHeaderStats[0].ccTypeDistr);
 	httpHeaderDelAt(hdr, pos);
+    }
     xfree(hdr->entries);
     hdr->emask = 0;
     hdr->entries = NULL;
@@ -643,8 +650,10 @@ httpHeaderAddParsedEntry(HttpHeader *hdr, HttpHeaderEntry *e)
     if (olde) {
 	if (EBIT_TEST(ListHeadersMask, e->id))
 	    httpHeaderEntryJoinWith(olde, e);
-	else
-	    debug(55, 1) ("ignoring duplicate header: %s\n", httpHeaderEntryName(e));
+	else {
+	    debug(55, 2) ("ignoring duplicate header: %s\n", httpHeaderEntryName(e));
+	    Headers[e->id].stat.repCount++;
+	}
 	httpHeaderEntryClean(e);
     } else {
 	/* actual add */
@@ -661,16 +670,16 @@ static void
 httpHeaderAddNewEntry(HttpHeader *hdr, const HttpHeaderEntry *e)
 {
     assert(hdr && e);
-    if (hdr->ucount >= hdr->capacity)
-	httpHeaderGrow(hdr);
     debug(55,8) ("%p adding entry: %d at %d, (%p:%p)\n", 
 	hdr, e->id, hdr->ucount, 
 	hdr->entries, hdr->entries + hdr->ucount);
+    if (!hdr->ucount)
+	HeaderParsedCount++;
+    if (hdr->ucount >= hdr->capacity)
+	httpHeaderGrow(hdr);
     hdr->entries[hdr->ucount++] = *e;
     /* sync masks */
     httpHeaderSyncMasks(hdr, e, 1);
-    /* sync accounting */
-    httpHeaderSyncStats(hdr, e);
 }
 
 #if 0 /* save for parts */
@@ -861,44 +870,6 @@ httpHeaderSyncMasks(HttpHeader *hdr, const HttpHeaderEntry *e, int add)
     add ? EBIT_SET(hdr->emask, e->id) : EBIT_CLR(hdr->emask, e->id);
 }
 
-/* updates header stats */
-static void
-httpHeaderSyncStats(HttpHeader *hdr, const HttpHeaderEntry *e)
-{
-#if 0 /* implement it @?@ */
-    assert(0); /* implement it */
-    /* add Req/Pep detection here @?@ */
-    int type = httpHeaderFindFieldType(fld,
-	HdrFieldAttrs, HDR_ENUM_END,
-	(1) ? ReplyHeadersMask : RequestHeadersMask);
-    /* exception */
-    if (type == HDR_PROXY_KEEPALIVE && strcasecmp("Keep-Alive", fld->value))
-	type = -1;
-    if (type < 0)
-	type = HDR_OTHER;
-    /* @?@ update stats for req/resp:type @?@ */
-    /* process scc @?@ check if we need to do that for requests or not */
-    if (1 && type == HDR_CACHE_CONTROL)
-	httpHeaderCountSCCField(hdr, fld);
-#endif
-}
-
-#if 0 /* move it */
-/* updates scc mask and stats for an scc field */
-static void
-httpHeaderCountSCCField(HttpHeader *hdr, HttpHeaderField *fld)
-{
-    int type = httpHeaderFindFieldType(fld,
-	SccFieldAttrs, SCC_ENUM_END, -1);
-    if (type < 0)
-	type = SCC_OTHER;
-    /* update mask */
-    EBIT_SET(hdr->scc_mask, type);
-    /* @?@ update stats for scc @?@ */
-    SccFieldAttrs[type].dummy.test1++;
-}
-#endif
-
 static int
 httpHeaderIdByName(const char *name, int name_len, const field_attrs_t *attrs, int end, int mask)
 {
@@ -945,6 +916,7 @@ httpHeaderEntryInit(HttpHeaderEntry *e, http_hdr_type id, field_store field)
     assert_eid(id);
     e->id = id;
     e->field = field;
+    Headers[id].stat.aliveCount++;
 }
 
 static void
@@ -972,6 +944,7 @@ httpHeaderEntryClean(HttpHeaderEntry *e) {
 	default:
 	    assert(0); /* somebody added a new type? */
     }
+    Headers[e->id].stat.aliveCount--;
     /* we have to do that so entry will be _invlaid_ */
     e->id = -1;
     e->field.v_pchar = NULL;
@@ -985,16 +958,18 @@ httpHeaderEntryParseInit(HttpHeaderEntry *e, const char *field_start, const char
     int id;
     int result;
 
+    HeaderEntryParsedCount++;
     /* paranoid reset */
     e->id = -1;
     e->field.v_pchar = NULL;
     /* first assume it is just an extension field */
     f = httpHeaderExtFieldParseCreate(field_start, field_end);
-    if (!f) /* parsing failure */
+    if (!f) /* total parsing failure */
 	return 0;
     id = httpHeaderIdByName(f->name, -1, Headers, countof(Headers), mask);
     if (id < 0)
 	id = HDR_OTHER;
+    Headers[id].stat.parsCount++;
     if (id == HDR_OTHER) {
 	/* hm.. it is an extension field indeed */
 	httpHeaderEntryInit(e, id, f);
@@ -1012,7 +987,7 @@ httpHeaderEntryParseExtFieldInit(HttpHeaderEntry *e, int id, const HttpHeaderExt
 {
     assert(e && f);
     assert_eid(id);
-    e->id = id;
+    e->id = -1;
     /*
      * check for exceptions first (parsing is not determined by value type)
      * then parse using value type if needed
@@ -1020,7 +995,7 @@ httpHeaderEntryParseExtFieldInit(HttpHeaderEntry *e, int id, const HttpHeaderExt
     switch (id) {
 	case HDR_PROXY_KEEPALIVE:
 	    /*  we treat Proxy-Connection as "keep alive" only if it says so */
-            e->field.v_int = !strcasecmp(f->value, "Keep-Alive");
+	    httpHeaderEntryInit(e, id, (int)!strcasecmp(f->value, "Keep-Alive"));
 	    break;
 	default:
 	    /* if we got here, it is something that can be parsed based on value type */
@@ -1069,6 +1044,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry *e, int id, const HttpHeaderExtFi
 	    if (!field.v_int && !isdigit(*f->value)) {
 		debug(55, 1) ("cannot parse an int header field: id: %d, field: '%s: %s'\n",
 		    id, f->name, f->value);
+		Headers[id].stat.errCount++;
 		return 0;
 	    }
 	    break;
@@ -1079,6 +1055,8 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry *e, int id, const HttpHeaderExtFi
 
 	case ftDate_1123:
 	    field.v_time = parse_rfc1123(f->value);
+	    if (field.v_time <= 0)
+		Headers[id].stat.errCount++;
 	    /*
 	     * if parse_rfc1123 fails we fall through anyway so upper levels
 	     * will notice invalid date
@@ -1090,6 +1068,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry *e, int id, const HttpHeaderExtFi
 	    if (!field.v_pscc) {
 		debug(55, 0) ("failed to parse scc hdr: id: %d, field: '%s: %s'\n",
 		    id, f->name, f->value);
+		Headers[id].stat.errCount++;
 		return 0;
 	    }
 	    break;
@@ -1097,7 +1076,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry *e, int id, const HttpHeaderExtFi
 	default:
 	    debug(55, 0) ("something went wrong with hdr field type analysis: id: %d, type: %d, field: '%s: %s'\n", 
 		id, type, f->name, f->value);
-	    return 0;
+	    assert(0);
     }
     /* success, do actual init */
     httpHeaderEntryInit(e, id, field);
@@ -1324,6 +1303,7 @@ httpSccParseInit(HttpScc *scc, const char *str)
     int ilen;
     assert(scc && str);
 
+    CcPasredCount++;
     /* iterate through comma separated list */
     while(strListGetItem(str, ',', &item, &ilen, &pos)) {
 	/* strip '=' statements @?@ */
@@ -1338,6 +1318,7 @@ httpSccParseInit(HttpScc *scc, const char *str)
 	}
 	if (EBIT_TEST(scc->mask, type)) {
 	    debug(55, 0) ("cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
+	    SccAttrs[type].stat.repCount++;
 	    continue;
 	}
 	/* update mask */
@@ -1406,7 +1387,15 @@ httpSccJoinWith(HttpScc *scc, HttpScc *new_scc)
     scc->mask |= new_scc->mask;
 }
 
-
+static void
+httpSccUpdateStats(const HttpScc *scc, StatHist *hist)
+{
+    http_scc_type c;
+    assert(scc);
+    for (c = 0; c < SCC_ENUM_END; c++)
+	if (EBIT_TEST(scc->mask, c))
+	    statHistCount(hist, c);
+}
 
 /*
  * HttpHeaderExtField
@@ -1471,126 +1460,108 @@ httpHeaderExtFieldDup(HttpHeaderExtField *f)
     return httpHeaderExtFieldCreate(f->name, f->value);
 }
 
-#if 0 /* save for parts */
-
 /*
- * returns the space requred to put a field (and terminating <CRLF>!) into a
- * buffer
+ * Reports
  */
-static size_t
-httpHeaderFieldBufSize(const HttpHeaderExtField *fld)
-{
-    return strlen(fld->name)+2+strlen(fld->value)+2;
-}
-
-/*
- * returns true if fld.name is a "known" splitable field; 
- * always call this function to check because the detection algortihm may change
- */
-static int
-httpHeaderFieldIsList(const HttpHeaderExtField *fld) {
-    int i;
-    assert(fld);
-    /* "onten" should not match "Content"! */
-    for (i = 0; i < KnownSplitableFieldCount; ++i)
-	if (strcasecmp(KnownSplitableFields[i], fld->name))
-	    return 1;
-    return 0;
-}
-
-#endif
 
 static void
-httpHeaderStoreAReport(StoreEntry *e, void (*reportPacker)(Packer *p))
+httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
-    Packer p;
-    assert(e);
-    packerToStoreInit(&p, e);
-    (*reportPacker)(&p);
-    packerClean(&p);
+    const int id = (int) val;
+    const int valid_id = id >= 0 && id < HDR_ENUM_END;
+    const char *name = valid_id ? Headers[id].name : "INVALID";
+    if (count || valid_id)
+	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+	    id, name, count, xdiv(count, HeaderParsedCount));
+}
+
+static void
+httpHeaderCCStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+{
+    const int id = (int) val;
+    const int valid_id = id >= 0 && id < SCC_ENUM_END;
+    const char *name = valid_id ? SccAttrs[id].name : "INVALID";
+    if (count || valid_id)
+	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+	    id, name, count, xdiv(count, CcPasredCount));
+}
+
+
+static void
+httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+{
+    if (count)
+	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
+	    idx, ((int)(val+size)), count, xpercent(count, HeaderEntryParsedCount));
+}
+
+
+static void
+httpHeaderStatDump(const HttpHeaderStat *hs, StoreEntry *e)
+{
+    assert(hs && e);
+
+    storeAppendPrintf(e, "\n<h3>Header Stats: %s</h3>\n", hs->label);
+    storeAppendPrintf(e, "\t<h3>Field type distribution</h3>\n");
+    storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
+	"id", "name", "count", "#/header");
+    statHistDump(&hs->fieldTypeDistr, e, httpHeaderFieldStatDumper);
+    storeAppendPrintf(e, "\t<h3>Cache-control directives distribution</h3>\n");
+    storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
+	"id", "name", "count", "#/cc_field");
+    statHistDump(&hs->ccTypeDistr, e, httpHeaderCCStatDumper);
+    storeAppendPrintf(e, "\t<h3>Number of fields per header distribution (init size: %d)</h3>\n",
+	INIT_FIELDS_PER_HEADER);
+    storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
+	"id", "#flds", "count", "%total");
+    statHistDump(&hs->hdrUCountDistr, e, httpHeaderFldsPerHdrDumper);
+}
+
+static void
+shortStringStatDump(StoreEntry *e)
+{
+    storeAppendPrintf(e, "<h3>Short String Stats</h3>\n<p>%s\n</p>\n",
+	memPoolReport(shortStrings));
+    storeAppendPrintf(e, "<br><h3>Long String Stats</h3>\n");
+    storeAppendPrintf(e, "\talive: %3d (%5.1f KB) high-water:  %3d (%5.1f KB)\n",
+	longStrAliveCount, longStrAliveSize/1024.,
+	longStrHighWaterCount, longStrHighWaterSize/1024.);
 }
 
 void
 httpHeaderStoreReport(StoreEntry *e)
 {
-    httpHeaderStoreAReport(e, &httpHeaderPackReport); 
+    int i;
+    http_hdr_type ht;
+    assert(e);
+
+    /* fix this (including summing for totals) for req hdrs @?@ */
+    for (i = 0; i < 1 /*HttpHeaderStatCount*/; i++) {
+	httpHeaderStatDump(HttpHeaderStats+i, e);
+	storeAppendPrintf(e, "%s\n", "<br>");
+    }
+    storeAppendPrintf(e, "%s\n", "<hr size=1 noshade>");
+    /* field stats */
+    storeAppendPrintf(e, "<h3>Http Fields Stats (replies and requests)</h3>\n");
+    storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\t %6s\n",
+	"id", "name", "#alive", "%err", "%repeat");
+    for (ht = 0; ht < HDR_ENUM_END; ht++) {
+	field_attrs_t *f = Headers+ht;
+	storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3f\t %6.3f\n",
+	    f->id, f->name, f->stat.aliveCount,
+	    xpercent(f->stat.errCount, f->stat.parsCount), 
+	    xpercent(f->stat.repCount, f->stat.parsCount));
+    }
+    storeAppendPrintf(e, "%s\n", "<hr size=1 noshade>");
+    /* short strings */
+    shortStringStatDump(e);
 }
 
-void
-httpHeaderStoreReqReport(StoreEntry *e)
-{
-    httpHeaderStoreAReport(e, &httpHeaderPackReqReport); 
-}
 
-void
-httpHeaderStoreRepReport(StoreEntry *e)
-{
-    httpHeaderStoreAReport(e, &httpHeaderPackRepReport); 
-}
+/*
+ * "short string" routines below are trying to recycle memory for short strings
+ */
 
-
-static void
-httpHeaderPackReport(Packer *p)
-{
-    assert(p);
-
-    httpHeaderPackRepReport(p);
-    httpHeaderPackReqReport(p);
-
-    /* low level totals; reformat this? @?@ */
-    packerPrintf(p,
-	"hdrs totals: %uld+%uld %s lstr: +%uld-%uld<(%uld=%uld)\n",
-	shortHeadersCount,
-	longHeadersCount,
-	memPoolReport(shortStrings),
-	longStrAllocCount,
-	longStrFreeCount,
-	longStrHighWaterCount,
-	longStrHighWaterSize);
-}
-
-static void
-httpHeaderPackRepReport(Packer *p)
-{
-    assert(p);
-#if 0 /* implement this */
-    httpHeaderPackAReport(p, &ReplyHeaderStats);
-    for (i = SCC_PUBLIC; i < SCC_ENUM_END; i++)
-	storeAppendPrintf(entry, "Cache-Control %s: %d\n",
-	    HttpServerCCStr[i],
-	    ReplyHeaderStats.cc[i]);
-#endif
-}
-
-static void
-httpHeaderPackReqReport(Packer *p)
-{
-    assert(p);
-#if 0 /* implement this */
-    httpHeaderPackAReport(p, &RequestHeaderStats);
-#endif
-}
-
-#if 0 /* implement this */
-static void
-httpHeaderPackAReport(Packer *p, HttpHeaderStats *stats)
-{
-    assert(p);
-    assert(stats);
-    assert(0);
-    http_server_cc_t i;
-    http_hdr_misc_t j;
-    storeAppendPrintf(entry, "HTTP Reply Headers:\n");
-    storeAppendPrintf(entry, "       Headers parsed: %d\n",
-	ReplyHeaderStats.parsed);
-    for (j = HDR_AGE; j < HDR_MISC_END; j++)
-	storeAppendPrintf(entry, "%21.21s: %d\n",
-	    HttpHdrMiscStr[j],
-	    ReplyHeaderStats.misc[j]);
-}
-#endif
-
-/* "short string" routines below are trying to recycle memory for short strings */
 static char *
 dupShortStr(const char *str)
 {
@@ -1630,12 +1601,12 @@ allocShortBuf(size_t sz)
     /* tmp_debug(here) ("allocating short buffer of size %d (max: %d)\n", sz, shortStrings->obj_size); @?@ */
     if (sz > shortStrings->obj_size) {
 	buf = xmalloc(sz);
-	longStrAllocCount++;
-	longStrAllocSize += sz;
-	if (longStrHighWaterCount < longStrAllocCount - longStrFreeCount)
-	    longStrHighWaterCount = longStrAllocCount - longStrFreeCount;
-	if (longStrHighWaterSize < longStrAllocSize - longStrFreeSize)
-	    longStrHighWaterSize = longStrAllocSize - longStrFreeSize;
+	longStrAliveCount++;
+	longStrAliveSize += sz;
+	if (longStrHighWaterCount < longStrAliveCount)
+	    longStrHighWaterCount = longStrAliveCount;
+	if (longStrHighWaterSize < longStrAliveSize)
+	    longStrHighWaterSize = longStrAliveSize;
     } else
 	buf = memPoolGetObj(shortStrings);
     return buf;
@@ -1650,9 +1621,10 @@ freeShortString(char *str)
         debug(55,9) ("freeing short str of size %d (max: %d) '%s' (%p)\n", sz, shortStrings->obj_size, str, str);
 	if (sz > shortStrings->obj_size) {
 	    debug(55,9) ("LONG short string[%d>%d]: %s\n", sz, shortStrings->obj_size, str);
+	    assert(longStrAliveCount);
 	    xfree(str);
-	    longStrFreeCount++;
-	    longStrFreeSize += sz;
+	    longStrAliveCount--;
+	    longStrAliveSize -= sz;
 	} else
 	    memPoolPutObj(shortStrings, str);
     }
@@ -1706,3 +1678,18 @@ getStringPrefix(const char *str) {
     xstrncpy(buf, str, SHORT_PREFIX_SIZE);
     return buf;
 }
+
+/* safe percent calculation */
+static double
+xpercent(double part, double whole)
+{
+    return xdiv(100*part, whole);
+}
+
+/* safe division */
+static double
+xdiv(double nom, double denom)
+{
+    return (denom != 0.0) ? nom/denom : -1;
+}
+

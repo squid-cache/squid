@@ -943,13 +943,24 @@ struct _ErrorState {
     char *request_hdrs;
 };
 
-struct _StatLogHist {
-    int bins[STAT_LOG_HIST_BINS];
+/*
+ * "very generic" histogram; 
+ * see important comments on hbase_f restrictions in StatHist.c
+ */
+struct _StatHist {
+    int *bins;
+    int capacity;
     double min;
     double max;
     double scale;
+    hbase_f val_in;   /* e.g., log() for log-based histogram */
+    hbase_f val_out;  /* e.g., exp() for log based histogram */
 };
 
+/*
+ * if you add a field to StatCounters, 
+ * you MUST sync statCountersInit, statCountersClean, and statCountersCopy
+ */
 struct _StatCounters {
     struct {
 	int requests;
@@ -958,10 +969,10 @@ struct _StatCounters {
 	kb_t kbytes_in;
 	kb_t kbytes_out;
 	kb_t hit_kbytes_out;
-	StatLogHist miss_svc_time;
-	StatLogHist nm_svc_time;
-	StatLogHist hit_svc_time;
-	StatLogHist all_svc_time;
+	StatHist miss_svc_time;
+	StatHist nm_svc_time;
+	StatHist hit_svc_time;
+	StatHist all_svc_time;
     } client_http;
     struct {
 	int requests;
@@ -976,14 +987,14 @@ struct _StatCounters {
 	int hits_recv;
 	kb_t kbytes_sent;
 	kb_t kbytes_recv;
-	StatLogHist query_svc_time;
-	StatLogHist reply_svc_time;
+	StatHist query_svc_time;
+	StatHist reply_svc_time;
     } icp;
     struct {
 	int requests;
     } unlink;
     struct {
-	StatLogHist svc_time;
+	StatHist svc_time;
     } dns;
     int page_faults;
     int select_loops;
