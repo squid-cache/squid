@@ -682,7 +682,7 @@ Squid consists of the following major components
 
 	<P>
 	Every cache object that is ``opened'' for reading or writing
-	will have an <em/storeIOState/ data structure associated with
+	will have a <em/storeIOState/ data structure associated with
 	it.  Currently, this structure looks like:
 <verb>
         struct _storeIOState {
