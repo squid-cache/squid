@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.44 1999/04/15 06:15:49 wessels Exp $
+ * $Id: client_db.cc,v 1.45 1999/06/17 20:23:08 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -256,18 +256,18 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     case MESH_CTBL_ADDR:
 	Answer->type = SMI_IPADDRESS;
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	*(Answer->val.integer) = (snint) c->addr.s_addr;
 	break;
     case MESH_CTBL_HTBYTES:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Http.kbytes_out.kb;
 	break;
     case MESH_CTBL_HTREQ:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Http.n_requests;
 	break;
@@ -278,38 +278,38 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 		aggr += c->Http.result_hist[l];
 	}
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) aggr;
 	break;
     case MESH_CTBL_HTHITBYTES:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Http.hit_kbytes_out.kb;
 	break;
     case MESH_CTBL_ICPBYTES:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Icp.kbytes_out.kb;
 	break;
     case MESH_CTBL_ICPREQ:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Icp.n_requests;
 	break;
     case MESH_CTBL_ICPHITS:
 	aggr = c->Icp.result_hist[LOG_UDP_HIT];
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) aggr;
 	break;
     case MESH_CTBL_ICPHITBYTES:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = (snint) c->Icp.hit_kbytes_out.kb;
 	break;

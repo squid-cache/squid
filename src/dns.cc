@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.77 1999/05/25 06:53:40 wessels Exp $
+ * $Id: dns.cc,v 1.78 1999/06/17 20:23:09 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -112,7 +112,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
     Answer->val_len = sizeof(snint);
-    Answer->val.integer = xmalloc(Answer->val_len);
+    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
     Answer->type = SMI_COUNTER32;
     switch (Var->name[LEN_SQ_NET + 1]) {
     case DNS_REQ:
