@@ -27,6 +27,7 @@ Changes to squid-1.1.beta16 ():
 	  may cause noticable delay while waiting for the ident
 	  lookup.
 	- Fixed storeSwapOutHandle() FMR bug.
+	- Stopeed inserting incorrect Host: header for proxy-HTTP requests.
 
 Changes to squid-1.1.beta15 ():
 
