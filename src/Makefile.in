@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.154 1998/07/17 00:48:21 wessels Exp $
+#  $Id: Makefile.in,v 1.155 1998/07/21 17:03:48 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -89,6 +89,7 @@ OBJS	 	= \
 		client_db.o \
 		client_side.o \
 		comm.o \
+		comm_select.o \
 		debug.o \
 		disk.o \
 		dns.o \
