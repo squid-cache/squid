@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.101 2004/12/21 17:28:29 robertc Exp $
+#  $Id: Makefile.am,v 1.102 2004/12/21 18:20:19 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -562,6 +562,20 @@ pinger_SOURCES = \
 dnsserver_SOURCES = dnsserver.cc SquidNew.cc
 recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 
+## What requires what..
+## many things want ACLChecklist.cc
+## ACLChecklist.cc wants AuthUserRequest.cc
+## ACLChecklist.cc wants AuthScheme.cc
+## ACLChecklist.cc wants ACLProxyAuth.cc directly
+## ACLProxyAuth.cc wants ACLUserData
+## ACLProxyAuth.cc wants ACLRegexData
+## cache_cf.cc wants AuthConfig
+## cache_cf.cc wants Swapdir
+## client_side wants client_db
+## client_db wants SNMP_SOURCE
+## snmp_core wants ACLStringData
+## SwapDir wants ConfigOption
+
 ufsdump_SOURCES = debug.cc \
 	int.cc \
 	ufsdump.cc \
@@ -584,10 +598,15 @@ ufsdump_SOURCES = debug.cc \
 	access_log.cc \
 	acl.cc \
 	ACLChecklist.cc \
-	$(squid_ACLSOURCES) \
-	asn.cc \
+	ACLProxyAuth.cc \
+	ACLUserData.cc \
+	ACLRegexData.cc \
+	ACLStringData.cc \
 	authenticate.cc \
 	AuthUser.cc \
+	AuthUserRequest.cc \
+	AuthScheme.cc \
+	AuthConfig.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
 	cache_manager.cc \
@@ -605,6 +624,7 @@ ufsdump_SOURCES = debug.cc \
 	comm_select.cc \
 	comm_poll.cc \
 	comm_kqueue.cc \
+	ConfigOption.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
