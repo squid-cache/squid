@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.36 2001/04/01 16:52:31 wessels Exp $
+ * $Id: htcp.cc,v 1.37 2001/04/14 00:25:18 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -614,16 +614,8 @@ htcpCheckHit(const htcpSpecifier * s)
 {
     request_t *request;
     method_t m = urlParseMethod(s->method);
-    StoreEntry *e = storeGetPublic(s->uri, m);
+    StoreEntry *e = NULL, *hit = NULL;
     char *blk_end;
-    if (NULL == e) {
-	debug(31, 3) ("htcpCheckHit: NO; public object not found\n");
-	return NULL;
-    }
-    if (!storeEntryValidToSend(e)) {
-	debug(31, 3) ("htcpCheckHit: NO; entry not valid to send\n");
-	return NULL;
-    }
     request = urlParse(m, s->uri);
     if (NULL == request) {
 	debug(31, 3) ("htcpCheckHit: NO; failed to parse URL\n");
@@ -632,15 +624,26 @@ htcpCheckHit(const htcpSpecifier * s)
     blk_end = s->req_hdrs + strlen(s->req_hdrs);
     if (!httpHeaderParse(&request->header, s->req_hdrs, blk_end)) {
 	debug(31, 3) ("htcpCheckHit: NO; failed to parse request headers\n");
-	e = NULL;
-    } else if (refreshCheckHTCP(e, request)) {
-	debug(31, 3) ("htcpCheckHit: NO; cached response is stale\n");
-	e = NULL;
-    } else {
-	debug(31, 3) ("htcpCheckHit: YES!?\n");
+	goto miss;
     }
+    e = storeGetPublicByRequest(request);
+    if (NULL == e) {
+	debug(31, 3) ("htcpCheckHit: NO; public object not found\n");
+	goto miss;
+    }
+    if (!storeEntryValidToSend(e)) {
+	debug(31, 3) ("htcpCheckHit: NO; entry not valid to send\n");
+	goto miss;
+    }
+    if (refreshCheckHTCP(e, request)) {
+	debug(31, 3) ("htcpCheckHit: NO; cached response is stale\n");
+	goto miss;
+    }
+    debug(31, 3) ("htcpCheckHit: YES!?\n");
+    hit = e;
+  miss:
     requestDestroy(request);
-    return e;
+    return hit;
 }
 
 static void

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.217 2001/04/14 00:03:21 hno Exp $
+# $Id: cf.data.pre,v 1.218 2001/04/14 00:25:17 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3646,6 +3646,21 @@ DOC_START
 	the old Squid behavior, which is better for hit ratios but
 	worse for clients using IE, if they need to be able to
 	force fresh content.
+DOC_END
+
+NAME: vary_ignore_expire
+COMMENT: on|off
+TYPE: onoff
+LOC: Config.onoff.vary_ignore_expire
+DEFAULT: off
+DOC_START
+	Many HTTP servers supporting Vary gives such objects
+	immediate expiry time with no cache-control header
+	when requested by a HTTP/1.0 client. This option
+	enables Squid to ignore such expiry times until
+	HTTP/1.1 is fully implemented.
+	WARNING: This may eventually cause some varying
+	objects not intended for caching to get cached.
 DOC_END
 
 EOF

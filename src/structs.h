@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.386 2001/04/14 00:03:23 hno Exp $
+ * $Id: structs.h,v 1.387 2001/04/14 00:25:19 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -540,6 +540,7 @@ struct _SquidConfig {
 	int log_ip_on_direct;
 	int authenticateIpTTLStrict;
 	int ie_refresh;
+	int vary_ignore_expire;
 	int pipeline_prefetch;
     } onoff;
     acl *aclList;
@@ -1023,6 +1024,7 @@ struct _clientHttpRequest {
 	unsigned int accel:1;
 	unsigned int internal:1;
 	unsigned int done_copying:1;
+	unsigned int purging:1;
     } flags;
     struct {
 	http_status status;
@@ -1450,6 +1452,7 @@ struct _MemObject {
 #if URL_CHECKSUM_DEBUG
     unsigned int chksum;
 #endif
+    const char *vary_headers;
 };
 
 struct _StoreEntry {
@@ -1602,6 +1605,7 @@ struct _request_t {
     err_type err_type;
     char *peer_login;		/* Configured peer login:password */
     time_t lastmod;		/* Used on refreshes */
+    char *vary_headers;		/* Used when varying entities are detected. Changes how the store key is calculated */
 };
 
 struct _cachemgr_passwd {

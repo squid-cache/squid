@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.80 2001/04/09 21:55:50 hno Exp $
+ * $Id: peer_digest.cc,v 1.81 2001/04/14 00:25:18 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -285,10 +285,10 @@ peerDigestRequest(PeerDigest * pd)
 	url = internalRemoteUri(p->host, p->http_port,
 	    "/squid-internal-periodic/", StoreDigestFileName);
 
-    key = storeKeyPublic(url, METHOD_GET);
-    debug(72, 2) ("peerDigestRequest: %s key: %s\n", url, storeKeyText(key));
     req = urlParse(METHOD_GET, url);
     assert(req);
+    key = storeKeyPublicByRequest(req);
+    debug(72, 2) ("peerDigestRequest: %s key: %s\n", url, storeKeyText(key));
 
     /* add custom headers */
     assert(!req->header.len);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.401 2001/03/20 01:10:25 hno Exp $
+ * $Id: protos.h,v 1.402 2001/04/14 00:25:18 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -304,6 +304,7 @@ extern int httpAnonHdrAllowed(http_hdr_type hdr_id);
 extern int httpAnonHdrDenied(http_hdr_type hdr_id);
 extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, http_state_flags);
 extern void httpBuildVersion(http_version_t * version, unsigned int major, unsigned int minor);
+extern const char *httpMakeVaryMark(request_t * request, HttpReply * reply);
 
 /* ETag */
 extern int etagParseInit(ETag * etag, const char *str);
@@ -440,6 +441,8 @@ extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
 extern const char *httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id);
 extern const char *httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *authScheme);
 extern String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id);
+extern String httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id);
+extern String httpHeaderGetByName(const HttpHeader * hdr, const char *name);
 extern int httpHeaderDelByName(HttpHeader * hdr, const char *name);
 extern int httpHeaderDelById(HttpHeader * hdr, http_hdr_type id);
 extern void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
@@ -649,8 +652,8 @@ extern peer *getDefaultParent(request_t * request);
 extern peer *getRoundRobinParent(request_t * request);
 EVH peerClearRR;
 extern peer *getAnyParent(request_t * request);
-extern lookup_t peerDigestLookup(peer * p, request_t * request, StoreEntry * entry);
-extern peer *neighborsDigestSelect(request_t * request, StoreEntry * entry);
+extern lookup_t peerDigestLookup(peer * p, request_t * request);
+extern peer *neighborsDigestSelect(request_t * request);
 extern void peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup);
 extern void peerNoteDigestGone(peer * p);
 extern int neighborUp(const peer * e);
@@ -866,6 +869,8 @@ extern void stmemFreeData(mem_hdr *);
 extern StoreEntry *new_StoreEntry(int, const char *, const char *);
 extern StoreEntry *storeGet(const cache_key *);
 extern StoreEntry *storeGetPublic(const char *uri, const method_t method);
+extern StoreEntry *storeGetPublicByRequest(request_t * request);
+extern StoreEntry *storeGetPublicByRequestMethod(request_t * request, const method_t method);
 extern StoreEntry *storeCreateEntry(const char *, const char *, request_flags, method_t);
 extern void storeSetPublicKey(StoreEntry *);
 extern void storeComplete(StoreEntry *);
@@ -952,6 +957,8 @@ extern void storeKeyFree(const cache_key *);
 extern const cache_key *storeKeyScan(const char *);
 extern const char *storeKeyText(const cache_key *);
 extern const cache_key *storeKeyPublic(const char *, const method_t);
+extern const cache_key *storeKeyPublicByRequest(request_t *);
+extern const cache_key *storeKeyPublicByRequestMethod(request_t *, const method_t);
 extern const cache_key *storeKeyPrivate(const char *, method_t, int);
 extern int storeKeyHashBuckets(int);
 extern int storeKeyNull(const cache_key *);
@@ -1293,3 +1300,6 @@ extern unsigned int url_checksum(const char *url);
  * hack to allow snmp access to the statistics counters
  */
 extern StatCounters *snmpStatGet(int);
+
+/* Vary support functions */
+int varyEvaluateMatch(StoreEntry * entry, request_t * req);
