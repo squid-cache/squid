@@ -6,6 +6,8 @@
 	- Fixed FTP directory parsing again.
 	- Made FTP directory listing "Generated" tagline like
 	  the one for error pages.
+	- Fixed an assertion coredump in statHistCopy from 
+   	  reconfiguring with different #peers in squid.conf
 	- Ignore leading whitespace on requests (and replies).  RFC
 	  2068 section 4.1, robustness (Henrik Nordstrom)
 	- Fixed keep_alive bug.  We did not always honour reply
@@ -60,6 +62,8 @@
 	  list.
 	- Changed clientReadRequest() to locally handle any
 	  "squid-internal-static" URL for any host.
+	- Disable persistent connections for client connections
+	  from broken Netscape User-Agent, version 3.* (Stewart Forster)
 
 Changes to squid-1.2.beta20 (April 24, 1998):
 
