@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.40 1996/04/17 23:47:19 wessels Exp $ */
+/* $Id: tools.cc,v 1.41 1996/04/18 20:28:56 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -168,7 +168,7 @@ void shut_down(sig)
     int i;
     int lft = getShutdownLifetime();
     FD_ENTRY *f;
-    debug(21, 1, "Preparing for shutdown after %d connections\n", nconn);
+    debug(21, 1, "Preparing for shutdown after %d connections\n", ntcpconn);
     serverConnectionsClose();
     ipcacheShutdownServers();
     for (i = fdstat_biggest_fd(); i >= 0; i--) {

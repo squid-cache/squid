@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.29 1996/04/18 20:02:03 wessels Exp $ */
+/* $Id: stat.cc,v 1.30 1996/04/18 20:28:55 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -29,7 +29,8 @@ typedef struct _squid_read_data_t {
 
 /* GLOBALS */
 Meta_data meta_data;
-unsigned long nconn = 0;
+unsigned long ntcpconn = 0;
+unsigned long nudpconn = 0;
 
 char *stat_describe();
 char *mem_describe();
@@ -382,9 +383,14 @@ void info_get(obj, sentry)
 
     /* -------------------------------------------------- */
 
-    storeAppendPrintf(sentry, "{Connection information for %s:}\n", appname);
+    sprintf(line, "{Connection information for %s:}\n", appname);
+    storeAppend(sentry, line, strlen(line));
 
-    storeAppendPrintf(sentry, "{\tNumber of connections:\t%lu}\n", nconn);
+    sprintf(line, "{\tNumber of TCP connections:\t%lu}\n", ntcpconn);
+    storeAppend(sentry, line, strlen(line));
+
+    sprintf(line, "{\tNumber of UDP connections:\t%lu}\n", ndupconn);
+    storeAppend(sentry, line, strlen(line));
 
     {
 	float f;
