@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.302 1998/05/11 20:56:07 rousskov Exp $
+ * $Id: client_side.cc,v 1.303 1998/05/11 21:34:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -30,6 +30,10 @@
  */
 
 #include "squid.h"
+
+#if LINGERING_CLOSE
+#define comm_close comm_lingering_close
+#endif
 
 static const char *const crlf = "\r\n";
 static const char *const proxy_auth_challenge =
