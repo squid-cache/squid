@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.8 2001/01/12 00:37:19 wessels Exp $
+ * $Id: logfile.cc,v 1.9 2001/04/17 20:34:53 wessels Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -128,6 +128,7 @@ logfileWrite(Logfile * lf, void *buf, size_t len)
     if (len > lf->bufsz) {
 	/* too big to fit in buffer */
 	logfileWriteWrapper(lf, buf, len);
+	return;
     }
     /* buffer it */
     xmemcpy(lf->buf + lf->offset, buf, len);
