@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.80 2003/08/04 22:14:42 robertc Exp $
+ * $Id: stmem.cc,v 1.81 2003/09/06 12:47:35 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -112,8 +112,7 @@ mem_hdr::writeAvailable(mem_node *aNode, size_t location, size_t amount, char co
     assert (aNode->canAccept (location));
 
     /* these two can go I think */
-    size_t copyOffset = location - aNode->nodeBuffer.offset;
-    assert (copyOffset == aNode->nodeBuffer.length);
+    assert (location - aNode->nodeBuffer.offset == aNode->nodeBuffer.length);
     size_t copyLen = XMIN (amount, aNode->space());
 
     xmemcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.38 2003/08/23 12:33:04 robertc Exp $
+ * $Id: store_io_diskd.cc,v 1.39 2003/09/06 12:47:36 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -334,8 +334,7 @@ DiskdFile::read(char *buf, off_t offset, size_t size)
 {
     assert (ioRequestor.getRaw() != NULL);
     off_t shm_offset;
-    char *rbuf = (char *)IO->shm.get(&shm_offset);
-    assert(rbuf);
+    IO->shm.get(&shm_offset);
     ioAway();
     int x = storeDiskdSend(_MQD_READ,
                            IO,
@@ -691,7 +690,10 @@ storeDiskdSend(int mtype, DiskdIO *IO, int id, DiskdFile *theFile, int size, int
     } else {
         debug(79, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
         cbdataReferenceDone(M.callback_data);
-        assert(++send_errors < 100);
+
+        if (++send_errors > 100)
+            fatal ("over 100 errors sending to the daemon - aborting\n");
+
         IO->shm.put (shm_offset);
     }
 
@@ -751,7 +753,9 @@ storeDiskdSend(int mtype, DiskdIO *IO, int id, StoreIOState::Pointer sio, int si
     } else {
         debug(79, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
         cbdataReferenceDone(M.callback_data);
-        assert(++send_errors < 100);
+
+        if (++send_errors > 100)
+            fatal ("over 100 errors sending to the daemon - aborting\n");
     }
 
     /*

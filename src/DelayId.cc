@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.13 2003/08/10 11:00:40 robertc Exp $
+ * $Id: DelayId.cc,v 1.14 2003/09/06 12:47:34 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -171,9 +171,7 @@ DelayId::bytesIn(int qty)
     if (markedAsNoDelay)
         return;
 
-    unsigned short tempPool = pool() - 1;
-
-    assert (tempPool != 0xFFFF);
+    assert ((unsigned short)(pool() - 1) != 0xFFFF);
 
     if (compositeId.getRaw())
         compositeId->bytesIn(qty);

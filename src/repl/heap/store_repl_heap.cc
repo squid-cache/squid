@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.13 2003/02/21 22:50:50 robertc Exp $
+ * $Id: store_repl_heap.cc,v 1.14 2003/09/06 12:47:36 robertc Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -298,7 +298,7 @@ heap_free(RemovalPolicy * policy)
     assert(heap->nwalkers);
     assert(heap->count);
     /* Ok, time to destroy this policy */
-    safe_free(policy->_data);
+    safe_free(heap);
     memset(policy, 0, sizeof(*policy));
     cbdataFree(policy);
 }

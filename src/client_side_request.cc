@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.33 2003/09/01 03:49:38 robertc Exp $
+ * $Id: client_side_request.cc,v 1.34 2003/09/06 12:47:34 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -800,7 +800,11 @@ void
 ClientRequestContext::CheckNoCacheDone(int answer, void *data)
 {
     void *temp;
-    bool valid = cbdataReferenceValidDone(data, &temp);
+#ifndef PURIFY
+
+    bool valid =
+#endif
+        cbdataReferenceValidDone(data, &temp);
     /* acl NB calls cannot invalidate cbdata in the normal course of things */
     assert (valid);
     ClientRequestContext *context = (ClientRequestContext *)temp;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.388 2003/08/31 01:22:05 robertc Exp $
+ * $Id: comm.cc,v 1.389 2003/09/06 12:47:34 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -713,9 +713,7 @@ comm_fill_read(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 
     fill->amountDone += len;
 
-    StoreIOBuffer *sb = &fdc_table[fd].fill.requestedData;
-
-    assert(fill->amountDone <= sb->length);
+    assert(fill->amountDone <= fdc_table[fd].fill.requestedData.length);
 
     comm_add_fill_callback(fd, fill->amountDone, COMM_OK, 0);
 }
