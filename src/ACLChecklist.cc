@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.5 2003/02/18 10:15:27 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.6 2003/02/21 12:02:30 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -99,6 +99,8 @@ ACLChecklist::currentAnswer(allow_t const newAnswer)
 void
 ACLChecklist::check()
 {
+    if (checking())
+	return;
     /* deny if no rules present */
     currentAnswer(ACCESS_DENIED);
     /* NOTE: This holds a cbdata reference to the current access_list
@@ -112,19 +114,23 @@ ACLChecklist::check()
 	 */
 	if (!cbdataReferenceValid(accessList)) {
 	    cbdataReferenceDone(accessList);
-	    break;
+	    debug (28,4)("ACLChecklist::check: %p accessList is invalid\n", this);
+	    continue;
 	}
 
+	checking (true);
 	checkAccessList();
-	if (asyncInProgress())
+	checking (false);
+	if (asyncInProgress()) {
 	    return;
+	}
 
 	if (finished()) {
 	    /*
 	     * We are done.  Either the request
 	     * is allowed, denied, requires authentication.
 	     */
-	    debug(28, 3) ("ACLChecklist::check: match found, calling back with %d\n", currentAnswer());
+	    debug(28, 3) ("ACLChecklist::check: %p match found, calling back with %d\n", this, currentAnswer());
 	    cbdataReferenceDone(accessList); /* A */
 	    checkCallback(currentAnswer());
 	    /* From here on in, this may be invalid */
@@ -134,11 +140,12 @@ ACLChecklist::check()
 	 * Reference the next access entry
 	 */
 	const acl_access *A = accessList;
-	accessList = cbdataReference(accessList->next);
+	assert (A);
+	accessList = cbdataReference(A->next);
 	cbdataReferenceDone(A);
     }
     /* dropped off the end of the list */
-    debug(28, 3) ("ACLChecklist::check: NO match found, returning %d\n", 
+    debug(28, 3) ("ACLChecklist::check: %p NO match found, returning %d\n", this,
 		  currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
     checkCallback(currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
 }
@@ -154,7 +161,7 @@ ACLChecklist::asyncInProgress(bool const newAsync)
 {
     assert (!finished() && !(asyncInProgress() && newAsync));
     async_ = newAsync;
-    debug (28,3)("ACLChecklist::asyncInProgress: async set to %d\n",async_);
+    debug (28,3)("ACLChecklist::asyncInProgress: %p async set to %d\n", this, async_);
 }
 
 bool
@@ -168,13 +175,13 @@ ACLChecklist::markFinished()
 {
     assert (!finished() && !asyncInProgress());
     finished_ = true;
-    debug (28,3)("checklist processing finished\n");
+    debug (28,3)("ACLChecklist::markFinished: %p checklist processing finished\n", this);
 }
 
 void
 ACLChecklist::checkAccessList()
 {
-    debug(28, 3) ("ACLChecklist::checkAccessList: checking '%s'\n", accessList->cfgline);
+    debug(28, 3) ("ACLChecklist::checkAccessList: %p checking '%s'\n", this, accessList->cfgline);
     /* what is our result on a match? */
     currentAnswer(accessList->allow);
     /* does the current AND clause match */
@@ -196,7 +203,7 @@ ACLChecklist::checkCallback(allow_t answer)
 {
     PF *callback_;
     void *cbdata_;
-    debug(28, 3) ("ACLChecklist::checkCallback: answer=%d\n", answer);
+    debug(28, 3) ("ACLChecklist::checkCallback: %p answer=%d\n", this, answer);
     /* During reconfigure, we can end up not finishing call
      * sequences into the auth code */
     if (auth_user_request) {
@@ -224,13 +231,13 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
 	if (fast)
 	    changeState(NullState::Instance());
 	if (!nodeMatched || state_ != NullState::Instance()) {
-	    debug(28, 3) ("aclmatchAclList: returning false (AND list entry failed to match)\n");
+	    debug(28, 3) ("aclmatchAclList: %p returning false (AND list entry failed to match)\n", this);
 	    PROF_stop(aclMatchAclList);
 	    return false;
 	}
 	node = node->next;
     }
-    debug(28, 3) ("aclmatchAclList: returning true (AND list satisfied)\n");
+    debug(28, 3) ("aclmatchAclList: %p returning true (AND list satisfied)\n", this);
     PROF_stop(aclMatchAclList);
     return true;
 }
@@ -298,6 +305,7 @@ ACLChecklist::~ACLChecklist()
     request = NULL;
     cbdataReferenceDone(conn_);
     cbdataReferenceDone(accessList);
+    debug (28,4)("ACLChecklist::~ACLChecklist: destroyed %p\n", this);
 }
 
 
@@ -383,4 +391,16 @@ ACLChecklist::markSourceDomainChecked()
 {
     assert (!finished() && !sourceDomainChecked());
     sourceDomainChecked_ = true;
+}
+
+bool
+ACLChecklist::checking() const
+{
+    return checking_;
+}
+
+void
+ACLChecklist::checking (bool const newValue)
+{
+    checking_ = newValue;
 }
