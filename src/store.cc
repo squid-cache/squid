@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.234 1997/05/15 06:55:50 wessels Exp $
+ * $Id: store.cc,v 1.235 1997/05/16 00:19:30 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -240,14 +240,12 @@ typedef struct swapout_ctrl_t {
     char *swapfilename;
     int oldswapstatus;
     StoreEntry *e;
-    int swapfileno;
 } swapout_ctrl_t;
 
 /* initializtion flag */
 int store_rebuilding = STORE_REBUILDING_DIRTY;
 
 /* Static Functions */
-static const char *storeDescribeStatus _PARAMS((const StoreEntry *));
 static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
@@ -256,14 +254,12 @@ static int storeCheckExpired _PARAMS((const StoreEntry *, int flag));
 static int storeCheckPurgeMem _PARAMS((const StoreEntry *));
 static int storeClientListSearch _PARAMS((const MemObject *, void *));
 static int storeCopy _PARAMS((const StoreEntry *, int, int, char *, int *));
-static void storeLockObjectComplete _PARAMS((void *, int));
 static int storeEntryLocked _PARAMS((const StoreEntry *));
 static int storeEntryValidLength _PARAMS((const StoreEntry *));
 static void storeGetMemSpace _PARAMS((int));
 static int storeHashDelete _PARAMS((StoreEntry *));
 static int storeShouldPurgeMem _PARAMS((const StoreEntry *));
 static FILE_READ_HD storeSwapInHandle;
-static int storeSwapInStart _PARAMS((StoreEntry *, SIH *, void *));
 static void storeSwapInValidateComplete _PARAMS((void *, int));
 static void storeSwapInStartComplete _PARAMS((void *, int));
 static int swapInError _PARAMS((int, StoreEntry *));
@@ -316,7 +312,6 @@ static int store_pages_high = 0;
 static int store_pages_low = 0;
 
 /* current file name, swap file, use number as a filename */
-static int swapfileno = 0;
 int store_swap_size = 0;	/* kilobytes !! */
 static int store_swap_high = 0;
 static int store_swap_low = 0;
@@ -542,53 +537,13 @@ storePurgeMem(StoreEntry * e)
     e->mem_obj = NULL;
 }
 
-/* lock the object for reading, start swapping in if necessary */
-/* Called by:
- * icpProcessRequest()
- * storeAbort()
- * {http,ftp,gopher,wais}Start()
- */
 void
-storeLockObject(StoreEntry * e, SIH * callback, void *callback_data)
+storeLockObject(StoreEntry * e)
 {
-    lock_ctrl_t *ctrlp;
     e->lock_count++;
     debug(20, 3, "storeLockObject: key '%s' count=%d\n",
 	e->key, (int) e->lock_count);
-    if (e->mem_status != NOT_IN_MEMORY)
-	(void) 0;
-    else if (e->swap_status == SWAP_OK)
-	(void) 0;
-    else if (e->store_status == STORE_PENDING)
-	(void) 0;
-    else
-	fatal_dump(storeDescribeStatus(e));
     e->lastref = squid_curtime;
-    /* If the object is NOT_IN_MEMORY, fault it in. */
-    if (e->mem_status == NOT_IN_MEMORY && e->swap_status == SWAP_OK) {
-	/* object is in disk and no swapping daemon running. Bring it in. */
-	if (callback == NULL)
-	    debug_trap("storeLockObject: NULL callback\n");
-	ctrlp = xmalloc(sizeof(lock_ctrl_t));
-	ctrlp->callback = callback;
-	ctrlp->callback_data = callback_data;
-	ctrlp->e = e;
-	storeSwapInStart(e, storeLockObjectComplete, ctrlp);
-    } else {
-	if (callback)
-	    (callback) (callback_data, 0);
-    }
-}
-
-static void
-storeLockObjectComplete(void *data, int status)
-{
-    lock_ctrl_t *ctrlp = (lock_ctrl_t *) data;
-    if (status < 0)
-	ctrlp->e->lock_count--;
-    if (ctrlp->callback)
-	(ctrlp->callback) (ctrlp->callback_data, status);
-    xfree(ctrlp);
 }
 
 void
@@ -900,9 +855,9 @@ storeRegister(StoreEntry * e, STCB * callback, void *data, off_t offset)
     sc->callback = callback;
     sc->callback_data = data;
     if (offset < e->object_len) {
-        sc->callback = NULL;
+	sc->callback = NULL;
 	/* Don't NULL the callback_data, its used to identify the client */
-        callback(data);
+	callback(data);
     }
 }
 
@@ -1129,31 +1084,25 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
 }
 
 /* start swapping in */
-static int
+void
 storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
-    /* sanity check! */
-    if (e->swap_status != SWAP_OK) {
-	debug_trap("storeSwapInStart: bad swap_status");
-	return -1;
-    } else if (e->swap_file_number < 0) {
-	debug_trap("storeSwapInStart: bad swap_file_number");
-	return -1;
-    } else if (e->mem_obj) {
-	debug_trap("storeSwapInStart: mem_obj already present");
-	return -1;
+    if (e->mem_status != NOT_IN_MEMORY) {
+	callback(callback_data, 0);
+	return;
     }
+    assert(e->swap_status == SWAP_OK);
+    assert(e->swap_file_number >= 0);
+    assert(e->mem_obj == NULL);
     ctrlp = xmalloc(sizeof(swapin_ctrl_t));
     ctrlp->e = e;
     ctrlp->callback = callback;
     ctrlp->callback_data = callback_data;
-    if (BIT_TEST(e->flag, ENTRY_VALIDATED)) {
+    if (BIT_TEST(e->flag, ENTRY_VALIDATED))
 	storeSwapInValidateComplete(ctrlp, 0);
-	return 0;
-    }
-    storeValidate(e, storeSwapInValidateComplete, ctrlp);
-    return 0;
+    else
+	storeValidate(e, storeSwapInValidateComplete, ctrlp);
 }
 
 
@@ -1161,19 +1110,17 @@ static void
 storeSwapInValidateComplete(void *data, int status)
 {
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
-    char *path;
     StoreEntry *e;
     e = ctrlp->e;
+    assert(e->mem_status == NOT_IN_MEMORY);
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
-	storeSetMemStatus(e, NOT_IN_MEMORY);
 	/* Invoke a store abort that should free the memory object */
 	(ctrlp->callback) (ctrlp->callback_data, -1);
 	xfree(ctrlp);
 	return;
     }
-    path = storeSwapFullPath(e->swap_file_number, NULL);
-    ctrlp->path = xstrdup(path);
-    file_open(path, O_RDONLY, storeSwapInStartComplete, ctrlp);
+    ctrlp->path = xstrdup(storeSwapFullPath(e->swap_file_number, NULL));
+    file_open(ctrlp->path, O_RDONLY, storeSwapInStartComplete, ctrlp);
 }
 
 static void
@@ -1182,20 +1129,17 @@ storeSwapInStartComplete(void *data, int fd)
     MemObject *mem = NULL;
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
     StoreEntry *e = ctrlp->e;
+    assert(e->mem_obj == NULL);
+    assert(e->mem_status == NOT_IN_MEMORY);
+    assert(e->swap_status == SWAP_OK);
     if (fd < 0) {
 	debug(20, 0, "storeSwapInStartComplete: Failed for '%s'\n", e->url);
-	if (!e->mem_obj)
-	    storeSetMemStatus(e, NOT_IN_MEMORY);
 	/* Invoke a store abort that should free the memory object */
 	(ctrlp->callback) (ctrlp->callback_data, -1);
 	xfree(ctrlp->path);
 	xfree(ctrlp);
 	return;
     }
-    if (e->mem_obj)
-	fatal_dump("storeSwapInStartComplete already exists");
-    if (e->swap_status != SWAP_OK)
-	fatal_dump("storeSwapInStartComplete: bad swap_status");
     storeSetMemStatus(e, SWAPPING_IN);
     mem = e->mem_obj = new_MemObject();
     mem->swapin_fd = (short) fd;
@@ -1303,14 +1247,13 @@ storeSwapOutStart(StoreEntry * e)
 {
     swapout_ctrl_t *ctrlp;
     LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN);
-    if ((swapfileno = storeGetUnusedFileno()) < 0)
-	swapfileno = storeDirMapAllocate();
-    storeSwapFullPath(swapfileno, swapfilename);
+    if ((e->swap_file_number = storeGetUnusedFileno()) < 0)
+	e->swap_file_number = storeDirMapAllocate();
+    storeSwapFullPath(e->swap_file_number, swapfilename);
     ctrlp = xmalloc(sizeof(swapout_ctrl_t));
     ctrlp->swapfilename = xstrdup(swapfilename);
     ctrlp->e = e;
     ctrlp->oldswapstatus = e->swap_status;
-    ctrlp->swapfileno = swapfileno;
     e->swap_status = SWAPPING_OUT;
     file_open(swapfilename,
 	O_WRONLY | O_CREAT | O_TRUNC,
@@ -1325,14 +1268,13 @@ storeSwapOutStartComplete(void *data, int fd)
     int oldswapstatus = ctrlp->oldswapstatus;
     char *swapfilename = ctrlp->swapfilename;
     StoreEntry *e = ctrlp->e;
-    int swapno = ctrlp->swapfileno;
     int x;
     MemObject *mem;
     xfree(ctrlp);
     if (fd < 0) {
 	debug(20, 0, "storeSwapOutStart: Unable to open swapfile: %s\n",
 	    swapfilename);
-	storeDirMapBitReset(swapno);
+	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
 	if (e->swap_status == SWAPPING_OUT)
 	    e->swap_status = oldswapstatus;
@@ -1343,8 +1285,7 @@ storeSwapOutStartComplete(void *data, int fd)
     mem->swapout_fd = (short) fd;
     debug(20, 5, "storeSwapOutStart: Begin SwapOut '%s' to FD %d FILE %s.\n",
 	e->url, fd, swapfilename);
-    e->swap_file_number = swapno;
-    debug(20,5, "swap_file_number=%08X\n", e->swap_file_number);
+    debug(20, 5, "swap_file_number=%08X\n", e->swap_file_number);
     e->swap_status = SWAPPING_OUT;
     mem->swap_offset = 0;
     mem->e_swap_buf = get_free_8k_page();
@@ -1562,11 +1503,12 @@ storeCleanup(void *data)
 	eventAdd("storeCleanup", storeCleanup, NULL, 0);
 	return;
     }
-    validnum++;
     if ((validnum % 4096) == 0)
 	debug(20, 1, "  %7d Entries Validated so far.\n", validnum);
-    if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
+    if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	storeValidate(e, storeCleanupComplete, e);
+        validnum++;
+    }
     xfree(curr->key);
     xfree(curr);
     eventAdd("storeCleanup", storeCleanup, NULL, 0);
@@ -1586,6 +1528,7 @@ storeValidate(StoreEntry * e, VCB callback, void *callback_data)
     valid_ctrl_t *ctrlp;
     char *path;
     struct stat *sb;
+    int x;
     if (e->swap_file_number < 0) {
 	BIT_RESET(e->flag, ENTRY_VALIDATED);
 	(callback) (callback_data, -1);
@@ -1601,7 +1544,11 @@ storeValidate(StoreEntry * e, VCB callback, void *callback_data)
 #if USE_ASYNC_IO
     aioStat(path, sb, storeValidateComplete, ctrlp);
 #else
-    storeValidateComplete(ctrlp, stat(path, sb), errno);
+    /* When evaluating the actual arguments in a function call, the order
+     * in which the arguments and the function expression are evaluated is
+     * not specified; */
+    x = stat(path, sb);
+    storeValidateComplete(ctrlp, x, errno);
 #endif
     return;
 }
@@ -1772,9 +1719,7 @@ storeAbort(StoreEntry * e, const char *msg)
      * dispatched already.
      */
     BIT_SET(e->flag, ENTRY_DISPATCHED);
-
-    storeLockObject(e, NULL, NULL);
-
+    storeLockObject(e);
     /* Count bytes faulted through cache but not moved to disk */
     HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
 	mem->request ? mem->request->protocol : PROTO_NONE,
@@ -2564,7 +2509,6 @@ storeWriteCleanLogs(void)
 	    debug(50, 0, "storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 	    continue;
 	}
-	fd_open(fd[dirn], FD_FILE, new[dirn]);
 #if HAVE_FCHMOD
 	if (stat(cur[dirn], &sb) == 0)
 	    fchmod(fd[dirn], sb.st_mode);
@@ -2780,20 +2724,6 @@ storeExpiredReferenceAge(void)
     else if (age > 31536000)
 	age = 31536000;
     return age;
-}
-
-static const char *
-storeDescribeStatus(const StoreEntry * e)
-{
-    static char buf[MAX_URL << 1];
-    sprintf(buf, "mem:%s ping:%s store:%s swap:%s locks:%d %s\n",
-	memStatusStr[e->mem_status],
-	pingStatusStr[e->ping_status],
-	storeStatusStr[e->store_status],
-	swapStatusStr[e->swap_status],
-	(int) e->lock_count,
-	e->url);
-    return buf;
 }
 
 void
