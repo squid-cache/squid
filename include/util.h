@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.11 1996/09/04 22:51:13 wessels Exp $
+ * $Id: util.h,v 1.12 1996/09/14 08:50:43 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -130,7 +130,7 @@
 #endif /* _PARAMS */
 
 #if !HAVE_STRDUP
-extern char *strdup _PARAMS((char *));
+extern char *strdup(char *);
 #endif
 extern char *xstrdup _PARAMS((char *));		/* Duplicate a string */
 
@@ -140,13 +140,13 @@ void *xrealloc _PARAMS((void *, size_t));	/* Wrapper for realloc(3) */
 void *xcalloc _PARAMS((int, size_t));	/* Wrapper for calloc(3) */
 void xfree _PARAMS((void *));	/* Wrapper for free(3) */
 void xxfree _PARAMS((void *));	/* Wrapper for free(3) */
-char *xstrdup _PARAMS((char *));
-char *xstrerror _PARAMS((void));
-char *getfullhostname _PARAMS((void));
-void xmemcpy _PARAMS((void *, void*, int));
+char *xstrdup(char *);
+char *xstrerror(void);
+char *getfullhostname(void);
+void xmemcpy(void *, void *, int);
 
 #if XMALLOC_STATISTICS
-void malloc_statistics _PARAMS((void (*)(int, int, void *), void *));
+void malloc_statistics(void (*)(int, int, void *), void *);
 #endif
 
 /* from debug.c */
@@ -180,25 +180,25 @@ extern int Harvest_debug_levels[];
         {if (debug_ok_fast((section),(level))) {Log X;}}
 #endif
 
-void debug_flag _PARAMS((char *));
+void debug_flag(char *);
 
-char *mkhttpdlogtime _PARAMS((time_t *));
-extern char *mkrfc850 _PARAMS((time_t));
-extern time_t parse_rfc850 _PARAMS((char *str));
-extern void init_log3 _PARAMS((char *pn, FILE * a, FILE * b));
+char *mkhttpdlogtime(time_t *);
+extern char *mkrfc850(time_t);
+extern time_t parse_rfc850(char *str);
+extern void init_log3(char *pn, FILE * a, FILE * b);
 extern void debug_init();
-extern void log_errno2 _PARAMS((char *, int, char *));
+extern void log_errno2(char *, int, char *);
 
 #if defined(__STRICT_ANSI__)
-extern void Log _PARAMS((char *,...));
-extern void errorlog _PARAMS((char *,...));
+extern void Log(char *,...);
+extern void errorlog(char *,...);
 #else
 extern void Log();
 extern void errorlog();
 #endif /* __STRICT_ANSI__ */
 
-extern void Tolower _PARAMS((char *));
+extern void Tolower(char *);
 
-extern char *uudecode _PARAMS((char *));
+extern char *uudecode(char *);
 
 #endif /* ndef _UTIL_H_ */

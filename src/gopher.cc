@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.42 1996/09/12 16:39:53 wessels Exp $
+ * $Id: gopher.cc,v 1.43 1996/09/14 08:46:02 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -158,33 +158,32 @@ typedef struct gopher_ds {
     char *buf;			/* pts to a 4k page */
 } GopherStateData;
 
-static int gopherStateFree _PARAMS((int fd, GopherStateData *));
-static void gopher_mime_content _PARAMS((char *buf, char *name, char *def));
-static void gopherMimeCreate _PARAMS((GopherStateData *));
+static int gopherStateFree(int fd, GopherStateData *);
+static void gopher_mime_content(char *buf, char *name, char *def);
+static void gopherMimeCreate(GopherStateData *);
 static int gopher_url_parser _PARAMS((char *url,
 	char *host,
 	int *port,
 	char *type_id,
 	char *request));
-static void gopherEndHTML _PARAMS((GopherStateData *));
-static void gopherToHTML _PARAMS((GopherStateData *, char *inbuf, int len));
-static int gopherReadReplyTimeout _PARAMS((int fd, GopherStateData *));
-static void gopherLifetimeExpire _PARAMS((int fd, GopherStateData *));
-static void gopherReadReply _PARAMS((int fd, GopherStateData *));
+static void gopherEndHTML(GopherStateData *);
+static void gopherToHTML(GopherStateData *, char *inbuf, int len);
+static int gopherReadReplyTimeout(int fd, GopherStateData *);
+static void gopherLifetimeExpire(int fd, GopherStateData *);
+static void gopherReadReply(int fd, GopherStateData *);
 static void gopherSendComplete _PARAMS((int fd,
 	char *buf,
 	int size,
 	int errflag,
 	void *data));
-static void gopherSendRequest _PARAMS((int fd, GopherStateData *));
-static GopherStateData *CreateGopherStateData _PARAMS((void));
+static void gopherSendRequest(int fd, GopherStateData *);
+static GopherStateData *CreateGopherStateData(void);
 
 static char def_gopher_bin[] = "www/unknown";
 static char def_gopher_text[] = "text/plain";
 
-static int gopherStateFree(fd, gopherState)
-     int fd;
-     GopherStateData *gopherState;
+static int
+gopherStateFree(int fd, GopherStateData * gopherState)
 {
     if (gopherState == NULL)
 	return 1;
@@ -197,10 +196,8 @@ static int gopherStateFree(fd, gopherState)
 
 
 /* figure out content type from file extension */
-static void gopher_mime_content(buf, name, def)
-     char *buf;
-     char *name;
-     char *def;
+static void
+gopher_mime_content(char *buf, char *name, char *def)
 {
     LOCAL_ARRAY(char, temp, MAX_URL + 1);
     char *ext1 = NULL;
@@ -249,8 +246,8 @@ static void gopher_mime_content(buf, name, def)
 
 
 /* create MIME Header for Gopher Data */
-static void gopherMimeCreate(data)
-     GopherStateData *data;
+static void
+gopherMimeCreate(GopherStateData * data)
 {
     LOCAL_ARRAY(char, tempMIME, MAX_MIME);
 
@@ -300,12 +297,8 @@ MIME-version: 1.0\r\n", version_string);
 }
 
 /* Parse a gopher url into components.  By Anawat. */
-static int gopher_url_parser(url, host, port, type_id, request)
-     char *url;
-     char *host;
-     int *port;
-     char *type_id;
-     char *request;
+static int
+gopher_url_parser(char *url, char *host, int *port, char *type_id, char *request)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, hostbuf, MAX_URL);
@@ -337,8 +330,8 @@ static int gopher_url_parser(url, host, port, type_id, request)
     return 0;
 }
 
-int gopherCachable(url)
-     char *url;
+int
+gopherCachable(char *url)
 {
     GopherStateData *data = NULL;
     int cachable = 1;
@@ -364,8 +357,8 @@ int gopherCachable(url)
     return cachable;
 }
 
-static void gopherEndHTML(data)
-     GopherStateData *data;
+static void
+gopherEndHTML(GopherStateData * data)
 {
     LOCAL_ARRAY(char, tmpbuf, TEMP_BUF_SIZE);
 
@@ -380,10 +373,8 @@ static void gopherEndHTML(data)
 
 /* Convert Gopher to HTML */
 /* Borrow part of code from libwww2 came with Mosaic distribution */
-static void gopherToHTML(data, inbuf, len)
-     GopherStateData *data;
-     char *inbuf;
-     int len;
+static void
+gopherToHTML(GopherStateData * data, char *inbuf, int len)
 {
     char *pos = inbuf;
     char *lpos = NULL;
@@ -682,9 +673,8 @@ static void gopherToHTML(data, inbuf, len)
     return;
 }
 
-static int gopherReadReplyTimeout(fd, data)
-     int fd;
-     GopherStateData *data;
+static int
+gopherReadReplyTimeout(int fd, GopherStateData * data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
@@ -695,9 +685,8 @@ static int gopherReadReplyTimeout(fd, data)
 }
 
 /* This will be called when socket lifetime is expired. */
-static void gopherLifetimeExpire(fd, data)
-     int fd;
-     GopherStateData *data;
+static void
+gopherLifetimeExpire(int fd, GopherStateData * data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
@@ -715,9 +704,8 @@ static void gopherLifetimeExpire(fd, data)
 
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
-static void gopherReadReply(fd, data)
-     int fd;
-     GopherStateData *data;
+static void
+gopherReadReply(int fd, GopherStateData * data)
 {
     char *buf = NULL;
     int len;
@@ -866,12 +854,8 @@ static void gopherReadReply(fd, data)
 
 /* This will be called when request write is complete. Schedule read of
  * reply. */
-static void gopherSendComplete(fd, buf, size, errflag, data)
-     int fd;
-     char *buf;
-     int size;
-     int errflag;
-     void *data;
+static void
+gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = NULL;
@@ -939,9 +923,8 @@ static void gopherSendComplete(fd, buf, size, errflag, data)
 }
 
 /* This will be called when connect completes. Write request. */
-static void gopherSendRequest(fd, data)
-     int fd;
-     GopherStateData *data;
+static void
+gopherSendRequest(int fd, GopherStateData * data)
 {
     int len;
     LOCAL_ARRAY(char, query, MAX_URL);
@@ -975,10 +958,8 @@ static void gopherSendRequest(fd, data)
 	storeSetPublicKey(data->entry);		/* Make it public */
 }
 
-int gopherStart(unusedfd, url, entry)
-     int unusedfd;
-     char *url;
-     StoreEntry *entry;
+int
+gopherStart(int unusedfd, char *url, StoreEntry * entry)
 {
     /* Create state structure. */
     int sock, status;
@@ -1062,7 +1043,8 @@ int gopherStart(unusedfd, url, entry)
 }
 
 
-static GopherStateData *CreateGopherStateData()
+static GopherStateData *
+CreateGopherStateData()
 {
     GopherStateData *gd = xcalloc(1, sizeof(GopherStateData));
     gd->buf = get_free_4k_page();

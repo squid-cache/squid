@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.22 1996/09/12 03:24:01 wessels Exp $
+ * $Id: client_side.cc,v 1.23 1996/09/14 08:45:41 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -31,14 +31,12 @@
 
 #include "squid.h"
 
-static void clientRedirectDone _PARAMS((void *data, char *result));
-static int icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
+static void clientRedirectDone(void *data, char *result);
+static int icpHandleIMSReply(int fd, StoreEntry * entry, void *data);
 
 
-static int clientLookupDstIPDone(fd, hp, data)
-     int fd;
-     struct hostent *hp;
-     void *data;
+static int
+clientLookupDstIPDone(int fd, struct hostent *hp, void *data)
 {
     icpStateData *icpState = data;
     debug(33, 5, "clientLookupDstIPDone: FD %d, '%s'\n",
@@ -57,10 +55,8 @@ static int clientLookupDstIPDone(fd, hp, data)
     return 1;
 }
 
-static void clientLookupSrcFQDNDone(fd, fqdn, data)
-     int fd;
-     char *fqdn;
-     void *data;
+static void
+clientLookupSrcFQDNDone(int fd, char *fqdn, void *data)
 {
     icpStateData *icpState = data;
     debug(33, 5, "clientLookupSrcFQDNDone: FD %d, '%s', FQDN %s\n",
@@ -72,8 +68,8 @@ static void clientLookupSrcFQDNDone(fd, fqdn, data)
 }
 
 #ifdef UNUSED_CODE
-static void clientLookupIdentDone(data)
-     void *data;
+static void
+clientLookupIdentDone(void *data)
 {
 }
 
@@ -81,8 +77,8 @@ static void clientLookupIdentDone(data)
 
 #if USE_PROXY_AUTH
 /* return 1 if allowed, 0 if denied */
-static int clientProxyAuthCheck(icpState)
-     icpStateData *icpState;
+static int
+clientProxyAuthCheck(icpStateData * icpState)
 {
     char *proxy_user;
 
@@ -106,9 +102,8 @@ static int clientProxyAuthCheck(icpState)
 }
 #endif /* USE_PROXY_AUTH */
 
-void clientAccessCheck(icpState, handler)
-     icpStateData *icpState;
-     void (*handler) _PARAMS((icpStateData *, int));
+void
+clientAccessCheck(icpStateData * icpState, void (*handler) _PARAMS((icpStateData *, int)))
 {
     int answer = 1;
     request_t *r = icpState->request;
@@ -166,9 +161,8 @@ void clientAccessCheck(icpState, handler)
     handler(icpState, answer);
 }
 
-void clientAccessCheckDone(icpState, answer)
-     icpStateData *icpState;
-     int answer;
+void
+clientAccessCheckDone(icpStateData * icpState, int answer)
 {
     int fd = icpState->fd;
     char *buf = NULL;
@@ -198,9 +192,8 @@ void clientAccessCheckDone(icpState, answer)
     }
 }
 
-static void clientRedirectDone(data, result)
-     void *data;
-     char *result;
+static void
+clientRedirectDone(void *data, char *result)
 {
     icpStateData *icpState = data;
     int fd = icpState->fd;
@@ -231,7 +224,8 @@ static void clientRedirectDone(data, result)
  */
 #define CHECK_PROXY_FILE_TIME 300
 
-char *proxyAuthenticate(char *headers)
+char *
+proxyAuthenticate()
 {
     /* Keep the time measurements and the hash
      * table of users and passwords handy */
@@ -363,9 +357,8 @@ char *proxyAuthenticate(char *headers)
 #endif /* USE_PROXY_AUTH */
 }
 
-int icpProcessExpired(fd, icpState)
-     int fd;
-     icpStateData *icpState;
+int
+icpProcessExpired(int fd, icpStateData * icpState)
 {
     char *url = icpState->url;
     char *request_hdr = icpState->request_hdr;
@@ -394,10 +387,8 @@ int icpProcessExpired(fd, icpState)
 }
 
 
-static int icpHandleIMSReply(fd, entry, data)
-     int fd;
-     StoreEntry *entry;
-     void *data;
+static int
+icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 {
     icpStateData *icpState = data;
     MemObject *mem = entry->mem_obj;

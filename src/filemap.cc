@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.8 1996/07/09 03:41:24 wessels Exp $
+ * $Id: filemap.cc,v 1.9 1996/09/14 08:45:56 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -123,13 +123,13 @@
 #define ALL_ONES (unsigned long) 0xFFFFFFFF
 #endif
 
-extern int storeGetSwapSpace _PARAMS((int));
-extern void fatal_dump _PARAMS((char *));
+extern int storeGetSwapSpace(int);
+extern void fatal_dump(char *);
 
 static fileMap *fm = NULL;
 
-fileMap *file_map_create(n)
-     int n;			/* Number of files */
+fileMap *
+file_map_create(int n)
 {
     fm = xcalloc(1, sizeof(fileMap));
     fm->max_n_files = n;
@@ -142,8 +142,8 @@ fileMap *file_map_create(n)
     return (fm);
 }
 
-int file_map_bit_set(file_number)
-     int file_number;
+int
+file_map_bit_set(int file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
 
@@ -166,8 +166,8 @@ int file_map_bit_set(file_number)
     return (file_number);
 }
 
-void file_map_bit_reset(file_number)
-     int file_number;
+void
+file_map_bit_reset(int file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
 
@@ -175,16 +175,16 @@ void file_map_bit_reset(file_number)
     fm->n_files_in_map--;
 }
 
-int file_map_bit_test(file_number)
-     int file_number;
+int
+file_map_bit_test(int file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
     /* be sure the return value is an int, not a u_long */
     return (fm->file_map[file_number >> LONG_BIT_SHIFT] & bitmask ? 1 : 0);
 }
 
-int file_map_allocate(suggestion)
-     int suggestion;
+int
+file_map_allocate(int suggestion)
 {
     int word;
     int bit;

@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.66 1996/09/13 23:16:42 wessels Exp $
+ * $Id: stat.cc,v 1.67 1996/09/14 08:46:26 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -135,39 +135,37 @@ char *diskFileName();
 char *open_bracket = "{\n";
 char *close_bracket = "}\n";
 
-static void dummyhandler _PARAMS((cacheinfo *, StoreEntry *));
-static void info_get _PARAMS((cacheinfo *, StoreEntry *));
-static void info_get_mallstat _PARAMS((int, int, StoreEntry *));
-static void logReadEndHandler _PARAMS((int, int, log_read_data_t *));
-static void log_clear _PARAMS((cacheinfo *, StoreEntry *));
-static void log_disable _PARAMS((cacheinfo *, StoreEntry *));
-static void log_enable _PARAMS((cacheinfo *, StoreEntry *));
-static void log_get_start _PARAMS((cacheinfo *, StoreEntry *));
-static void log_status_get _PARAMS((cacheinfo *, StoreEntry *));
-static void parameter_get _PARAMS((cacheinfo *, StoreEntry *));
-static void proto_count _PARAMS((cacheinfo *, protocol_t, log_type));
-static void proto_newobj _PARAMS((cacheinfo *, protocol_t, int, int));
-static void proto_purgeobj _PARAMS((cacheinfo *, protocol_t, int));
-static void proto_touchobj _PARAMS((cacheinfo *, protocol_t, int));
-static void server_list _PARAMS((cacheinfo *, StoreEntry *));
-static void squidReadEndHandler _PARAMS((int, int, squid_read_data_t *));
-static void squid_get_start _PARAMS((cacheinfo *, StoreEntry *));
-static void statFiledescriptors _PARAMS((StoreEntry *));
-static void stat_get _PARAMS((cacheinfo *, char *req, StoreEntry *));
-static void stat_io_get _PARAMS((StoreEntry *));
-static void stat_obj _PARAMS((cacheinfo *, StoreEntry *, int vm_or_not));
-static void stat_utilization_get _PARAMS((cacheinfo *, StoreEntry *, char *desc));
-static int cache_size_get _PARAMS((cacheinfo *));
-static int logReadHandler _PARAMS((int, char *, int, log_read_data_t *));
-static int squidReadHandler _PARAMS((int, char *, int, squid_read_data_t *));
-static int memoryAccounted _PARAMS((void));
-static int mallinfoTotal _PARAMS((void));
+static void dummyhandler(cacheinfo *, StoreEntry *);
+static void info_get(cacheinfo *, StoreEntry *);
+static void info_get_mallstat(int, int, StoreEntry *);
+static void logReadEndHandler(int, int, log_read_data_t *);
+static void log_clear(cacheinfo *, StoreEntry *);
+static void log_disable(cacheinfo *, StoreEntry *);
+static void log_enable(cacheinfo *, StoreEntry *);
+static void log_get_start(cacheinfo *, StoreEntry *);
+static void log_status_get(cacheinfo *, StoreEntry *);
+static void parameter_get(cacheinfo *, StoreEntry *);
+static void proto_count(cacheinfo *, protocol_t, log_type);
+static void proto_newobj(cacheinfo *, protocol_t, int, int);
+static void proto_purgeobj(cacheinfo *, protocol_t, int);
+static void proto_touchobj(cacheinfo *, protocol_t, int);
+static void server_list(cacheinfo *, StoreEntry *);
+static void squidReadEndHandler(int, int, squid_read_data_t *);
+static void squid_get_start(cacheinfo *, StoreEntry *);
+static void statFiledescriptors(StoreEntry *);
+static void stat_get(cacheinfo *, char *req, StoreEntry *);
+static void stat_io_get(StoreEntry *);
+static void stat_obj(cacheinfo *, StoreEntry *, int vm_or_not);
+static void stat_utilization_get(cacheinfo *, StoreEntry *, char *desc);
+static int cache_size_get(cacheinfo *);
+static int logReadHandler(int, char *, int, log_read_data_t *);
+static int squidReadHandler(int, char *, int, squid_read_data_t *);
+static int memoryAccounted(void);
+static int mallinfoTotal(void);
 
 /* process utilization information */
-static void stat_utilization_get(obj, sentry, desc)
-     cacheinfo *obj;
-     StoreEntry *sentry;
-     char *desc;
+static void
+stat_utilization_get(cacheinfo * obj, StoreEntry * sentry, char *desc)
 {
     protocol_t proto_id;
     proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
@@ -222,8 +220,8 @@ static void stat_utilization_get(obj, sentry, desc)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-static void stat_io_get(sentry)
-     StoreEntry *sentry;
+static void
+stat_io_get(StoreEntry * sentry)
 {
     int i;
 
@@ -294,8 +292,8 @@ static void stat_io_get(sentry)
 /* return total bytes of all registered and known objects.
  * may not reflect the retrieving object....
  * something need to be done here to get more accurate cache size */
-static int cache_size_get(obj)
-     cacheinfo *obj;
+static int
+cache_size_get(cacheinfo * obj)
 {
     int size = 0;
     protocol_t proto_id;
@@ -306,10 +304,8 @@ static int cache_size_get(obj)
 }
 
 /* process objects list */
-static void stat_objects_get(obj, sentry, vm_or_not)
-     cacheinfo *obj;
-     StoreEntry *sentry;
-     int vm_or_not;
+static void
+stat_objects_get(cacheinfo * obj, StoreEntry * sentry, int vm_or_not)
 {
     LOCAL_ARRAY(char, space, 40);
     LOCAL_ARRAY(char, space2, 40);
@@ -351,10 +347,8 @@ static void stat_objects_get(obj, sentry, vm_or_not)
 
 
 /* process a requested object into a manager format */
-static void stat_get(obj, req, sentry)
-     cacheinfo *obj;
-     char *req;
-     StoreEntry *sentry;
+static void
+stat_get(cacheinfo * obj, char *req, StoreEntry * sentry)
 {
 
     if (strcmp(req, "objects") == 0) {
@@ -383,9 +377,8 @@ static void stat_get(obj, req, sentry)
 
 
 /* generate logfile status information */
-static void log_status_get(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+log_status_get(cacheinfo * obj, StoreEntry * sentry)
 {
     if (obj->logfile_status == LOG_ENABLE) {
 	storeAppendPrintf(sentry, "{\"Logfile is Enabled. Filename: %s\"}\n",
@@ -399,11 +392,8 @@ static void log_status_get(obj, sentry)
 
 /* log convert handler */
 /* call for each line in file, use fileWalk routine */
-static int logReadHandler(fd_unused, buf, size_unused, data)
-     int fd_unused;
-     char *buf;
-     int size_unused;
-     log_read_data_t *data;
+static int
+logReadHandler(int fd_unused, char *buf, int size_unused, log_read_data_t * data)
 {
     storeAppendPrintf(data->sentry, "{%s}\n", buf);
     return 0;
@@ -411,10 +401,8 @@ static int logReadHandler(fd_unused, buf, size_unused, data)
 
 /* log convert end handler */
 /* call when a walk is completed or error. */
-static void logReadEndHandler(fd, errflag_unused, data)
-     int fd;
-     int errflag_unused;
-     log_read_data_t *data;
+static void
+logReadEndHandler(int fd, int errflag_unused, log_read_data_t * data)
 {
     storeAppendPrintf(data->sentry, close_bracket);
     storeComplete(data->sentry);
@@ -425,9 +413,8 @@ static void logReadEndHandler(fd, errflag_unused, data)
 
 
 /* start converting logfile to processed format */
-static void log_get_start(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+log_get_start(cacheinfo * obj, StoreEntry * sentry)
 {
     log_read_data_t *data = NULL;
     int fd;
@@ -458,11 +445,8 @@ static void log_get_start(obj, sentry)
 
 /* squid convert handler */
 /* call for each line in file, use fileWalk routine */
-static int squidReadHandler(fd_unused, buf, size_unused, data)
-     int fd_unused;
-     char *buf;
-     int size_unused;
-     squid_read_data_t *data;
+static int
+squidReadHandler(int fd_unused, char *buf, int size_unused, squid_read_data_t * data)
 {
     storeAppendPrintf(data->sentry, "{\"%s\"}\n", buf);
     return 0;
@@ -470,10 +454,8 @@ static int squidReadHandler(fd_unused, buf, size_unused, data)
 
 /* squid convert end handler */
 /* call when a walk is completed or error. */
-static void squidReadEndHandler(fd_unused, errflag_unused, data)
-     int fd_unused;
-     int errflag_unused;
-     squid_read_data_t *data;
+static void
+squidReadEndHandler(int fd_unused, int errflag_unused, squid_read_data_t * data)
 {
     storeAppendPrintf(data->sentry, close_bracket);
     storeComplete(data->sentry);
@@ -483,9 +465,8 @@ static void squidReadEndHandler(fd_unused, errflag_unused, data)
 
 
 /* start convert squid.conf file to processed format */
-static void squid_get_start(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+squid_get_start(cacheinfo * obj, StoreEntry * sentry)
 {
     squid_read_data_t *data;
 
@@ -498,16 +479,14 @@ static void squid_get_start(obj, sentry)
 }
 
 
-static void dummyhandler(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+dummyhandler(cacheinfo * obj, StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "{ \"Not_Implemented_yet.\"}\n");
 }
 
-static void server_list(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+server_list(cacheinfo * obj, StoreEntry * sentry)
 {
     edge *e = NULL;
     dom_list *d = NULL;
@@ -563,26 +542,24 @@ static void server_list(obj, sentry)
 }
 
 #if XMALLOC_STATISTICS
-static void info_get_mallstat(size, number, sentry)
-     int size, number;
-     StoreEntry *sentry;
+static void
+info_get_mallstat(int size, number, StoreEntry * sentry)
 {
     if (number > 0)
 	storeAppendPrintf(sentry, "{\t%d = %d}\n", size, number);
 }
 #endif
 
-static char *host_port_fmt(host, port)
-     char *host;
-     u_short port;
+static char *
+host_port_fmt(char *host, u_short port)
 {
     LOCAL_ARRAY(char, buf, 32);
     sprintf(buf, "%s.%d", host, (int) port);
     return buf;
 }
 
-static void statFiledescriptors(sentry)
-     StoreEntry *sentry;
+static void
+statFiledescriptors(StoreEntry * sentry)
 {
     int i;
     int j;
@@ -644,7 +621,8 @@ static void statFiledescriptors(sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-static int memoryAccounted()
+static int
+memoryAccounted()
 {
     return (int)
 	meta_data.store_entries * sizeof(StoreEntry) +
@@ -659,7 +637,8 @@ static int memoryAccounted()
 	meta_data.misc;
 }
 
-static int mallinfoTotal()
+static int
+mallinfoTotal()
 {
     int total = 0;
 #if HAVE_MALLINFO
@@ -670,9 +649,8 @@ static int mallinfoTotal()
     return total;
 }
 
-static void info_get(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+info_get(cacheinfo * obj, StoreEntry * sentry)
 {
     char *tod = NULL;
     float f;
@@ -862,9 +840,8 @@ static void info_get(obj, sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-static void parameter_get(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+parameter_get(cacheinfo * obj, StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, open_bracket);
     storeAppendPrintf(sentry,
@@ -945,8 +922,8 @@ static char c2x[] =
 
 /* log_quote -- URL-style encoding on MIME headers. */
 
-char *log_quote(header)
-     char *header;
+char *
+log_quote(char *header)
 {
     int c, i;
     char *buf, *buf_cursor;
@@ -996,25 +973,24 @@ char *log_quote(header)
 #endif /* LOG_FULL_HEADERS */
 
 
-#if LOG_FULL_HEADERS
-static void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData, request_hdr, reply_hdr)
+static void
+log_append(cacheinfo * obj,
+    char *url,
+    struct in_addr caddr,
+    int size,
+    char *action,
+    char *method,
+    int http_code,
+    int msec,
+    char *ident,
+#if !LOG_FULL_HEADERS
+    struct _hierarchyLogData *hierData
 #else
-static void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData)
+    struct _hierarchyLogData *hierData,
+    char *request_hdr,
+    char *reply_hdr
 #endif				/* LOG_FULL_HEADERS */
-     cacheinfo *obj;
-     char *url;
-     struct in_addr caddr;
-     int size;
-     char *action;
-     char *method;
-     int http_code;
-     int msec;
-     char *ident;
-     struct _hierarchyLogData *hierData;
-#if LOG_FULL_HEADERS
-     char *request_hdr;
-     char *reply_hdr;
-#endif /* LOG_FULL_HEADERS */
+)
 {
 #if LOG_FULL_HEADERS
     LOCAL_ARRAY(char, tmp, 10000);	/* MAX_URL is 4096 */
@@ -1096,9 +1072,8 @@ static void log_append(obj, url, caddr, size, action, method, http_code, msec, i
     }
 }
 
-static void log_enable(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+log_enable(cacheinfo * obj, StoreEntry * sentry)
 {
     if (obj->logfile_status == LOG_DISABLE) {
 	obj->logfile_status = LOG_ENABLE;
@@ -1116,9 +1091,8 @@ static void log_enable(obj, sentry)
     storeAppendPrintf(sentry, " ");
 }
 
-static void log_disable(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+log_disable(cacheinfo * obj, StoreEntry * sentry)
 {
     if (obj->logfile_status == LOG_ENABLE)
 	file_close(obj->logfile_fd);
@@ -1130,9 +1104,8 @@ static void log_disable(obj, sentry)
 
 
 
-static void log_clear(obj, sentry)
-     cacheinfo *obj;
-     StoreEntry *sentry;
+static void
+log_clear(cacheinfo * obj, StoreEntry * sentry)
 {
     /* what should be done here. Erase file ??? or move it to another name?  At the moment, just erase it.  bug here need to be fixed. what if there are still data in memory. Need flush here */
     if (obj->logfile_status == LOG_ENABLE)
@@ -1152,11 +1125,8 @@ static void log_clear(obj, sentry)
 
 
 
-static void proto_newobject(obj, proto_id, size, restart)
-     cacheinfo *obj;
-     protocol_t proto_id;
-     int size;
-     int restart;
+static void
+proto_newobject(cacheinfo * obj, protocol_t proto_id, int size, int restart)
 {
     proto_stat *p = &obj->proto_stat_data[proto_id];
 
@@ -1172,10 +1142,8 @@ static void proto_newobject(obj, proto_id, size, restart)
 }
 
 
-static void proto_purgeobject(obj, proto_id, size)
-     cacheinfo *obj;
-     protocol_t proto_id;
-     int size;
+static void
+proto_purgeobject(cacheinfo * obj, protocol_t proto_id, int size)
 {
     proto_stat *p = &obj->proto_stat_data[proto_id];
 
@@ -1189,19 +1157,15 @@ static void proto_purgeobject(obj, proto_id, size)
 }
 
 /* update stat for each particular protocol when an object is fetched */
-static void proto_touchobject(obj, proto_id, size)
-     cacheinfo *obj;
-     protocol_t proto_id;
-     int size;
+static void
+proto_touchobject(cacheinfo * obj, protocol_t proto_id, int size)
 {
     obj->proto_stat_data[proto_id].refcount++;
     obj->proto_stat_data[proto_id].transferbyte += (1023 + size) >> 10;
 }
 
-static void proto_count(obj, proto_id, type)
-     cacheinfo *obj;
-     protocol_t proto_id;
-     log_type type;
+static void
+proto_count(cacheinfo * obj, protocol_t proto_id, log_type type)
 {
     switch (type) {
     case LOG_TCP_HIT:
@@ -1218,9 +1182,8 @@ static void proto_count(obj, proto_id, type)
 }
 
 
-void stat_init(object, logfilename)
-     cacheinfo **object;
-     char *logfilename;
+void
+stat_init(cacheinfo ** object, char *logfilename)
 {
     cacheinfo *obj = NULL;
     int i;
@@ -1296,8 +1259,8 @@ void stat_init(object, logfilename)
     *object = obj;
 }
 
-char *stat_describe(entry)
-     StoreEntry *entry;
+char *
+stat_describe(StoreEntry * entry)
 {
     LOCAL_ARRAY(char, state, 256);
 
@@ -1308,8 +1271,8 @@ char *stat_describe(entry)
     return (state);
 }
 
-char *mem_describe(entry)
-     StoreEntry *entry;
+char *
+mem_describe(StoreEntry * entry)
 {
     LOCAL_ARRAY(char, where, 100);
 
@@ -1322,8 +1285,8 @@ char *mem_describe(entry)
 }
 
 
-char *ttl_describe(entry)
-     StoreEntry *entry;
+char *
+ttl_describe(StoreEntry * entry)
 {
     int hh, mm, ss;
     LOCAL_ARRAY(char, TTL, 60);
@@ -1347,10 +1310,8 @@ char *ttl_describe(entry)
     return (TTL);
 }
 
-char *elapsed_time(entry, since, TTL)
-     StoreEntry *entry;
-     int since;
-     char *TTL;
+char *
+elapsed_time(StoreEntry * entry, int since, char *TTL)
 {
     int hh, mm, ss, ttl;
 
@@ -1373,8 +1334,8 @@ char *elapsed_time(entry, since, TTL)
 }
 
 
-char *flags_describe(entry)
-     StoreEntry *entry;
+char *
+flags_describe(StoreEntry * entry)
 {
     LOCAL_ARRAY(char, FLAGS, 32);
     char LOCK_CNT[32];
@@ -1403,7 +1364,8 @@ char *flags_describe(entry)
     return (FLAGS);
 }
 
-void stat_rotate_log()
+void
+stat_rotate_log()
 {
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
@@ -1439,7 +1401,8 @@ void stat_rotate_log()
     HTTPCacheInfo->logfile_access = file_write_lock(HTTPCacheInfo->logfile_fd);
 }
 
-void statCloseLog()
+void
+statCloseLog()
 {
     file_close(HTTPCacheInfo->logfile_fd);
 }

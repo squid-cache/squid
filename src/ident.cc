@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.10 1996/08/31 06:40:19 wessels Exp $
+ * $Id: ident.cc,v 1.11 1996/09/14 08:46:09 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -32,20 +32,19 @@
 
 #define IDENT_PORT 113
 
-static void identRequestComplete _PARAMS((int, char *, int, int, void *));
-static void identReadReply _PARAMS((int, icpStateData *));
-static void identClose _PARAMS((int, icpStateData *));
+static void identRequestComplete(int, char *, int, int, void *);
+static void identReadReply(int, icpStateData *);
+static void identClose(int, icpStateData *);
 
-static void identClose(fd, icpState)
-     int fd;
-     icpStateData *icpState;
+static void
+identClose(int fd, icpStateData * icpState)
 {
     icpState->ident_fd = -1;
 }
 
 /* start a TCP connection to the peer host on port 113 */
-void identStart(sock, icpState)
-     icpStateData *icpState;
+void
+identStart(int sock, icpStateData * icpState)
 {
     char *host;
     u_short port;
@@ -91,19 +90,14 @@ void identStart(sock, icpState)
 	(void *) icpState);
 }
 
-static void identRequestComplete(fd, buf, size, errflag, data)
-     int fd;
-     char *buf;
-     int size;
-     int errflag;
-     void *data;
+static void
+identRequestComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     debug(30, 5, "identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
 }
 
-static void identReadReply(fd, icpState)
-     int fd;
-     icpStateData *icpState;
+static void
+identReadReply(int fd, icpStateData * icpState)
 {
     LOCAL_ARRAY(char, buf, BUFSIZ);
     char *t = NULL;

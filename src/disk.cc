@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.22 1996/08/30 22:36:28 wessels Exp $
+ * $Id: disk.cc,v 1.23 1996/09/14 08:45:47 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -112,9 +112,9 @@ typedef struct _dwalk_ctrl {
     off_t offset;
     char *buf;			/* line buffer */
     int cur_len;		/* line len */
-    int (*handler) _PARAMS((int fd, int errflag, void *data));
+    int (*handler) (int fd, int errflag, void *data);
     void *client_data;
-    int (*line_handler) _PARAMS((int fd, char *buf, int size, void *line_data));
+    int (*line_handler) (int fd, char *buf, int size, void *line_data);
     void *line_data;
 } dwalk_ctrl;
 
@@ -122,7 +122,8 @@ typedef struct _dwalk_ctrl {
 FileEntry *file_table;
 
 /* initialize table */
-int disk_init()
+int
+disk_init()
 {
     int fd;
 
@@ -143,10 +144,8 @@ int disk_init()
 }
 
 /* Open a disk file. Return a file descriptor */
-int file_open(path, handler, mode)
-     char *path;		/* path to file */
-     int (*handler) ();		/* Interrupt handler. */
-     int mode;
+int 
+file_open(char *path, int (*handler) (), int mode)
 {
     FD_ENTRY *conn;
     int fd;
@@ -187,10 +186,8 @@ int file_open(path, handler, mode)
 }
 
 #ifdef UNUSED_CODE
-int file_update_open(fd, path)
-     int fd;
-     char *path;		/* path to file */
-{
+int file_update_open(int fd, char *path;	/* path to file */
+) {
     FD_ENTRY *conn;
 
     /* update fdstat */
@@ -216,8 +213,8 @@ int file_update_open(fd, path)
 
 
 /* close a disk file. */
-int file_close(fd)
-     int fd;			/* file descriptor */
+int 
+file_close(int fd)
 {
     FD_ENTRY *conn = NULL;
 
@@ -257,8 +254,8 @@ int file_close(fd)
 }
 
 /* grab a writing lock for file */
-int file_write_lock(fd)
-     int fd;
+int
+file_write_lock(int fd)
 {
     if (file_table[fd].write_lock == LOCK) {
 	debug(6, 0, "trying to lock a locked file\n");
@@ -273,9 +270,8 @@ int file_write_lock(fd)
 
 
 /* release a writing lock for file */
-int file_write_unlock(fd, access_code)
-     int fd;
-     int access_code;
+int
+file_write_unlock(int fd, int access_code)
 {
     if (file_table[fd].access_code == access_code) {
 	file_table[fd].write_lock = UNLOCK;
@@ -288,9 +284,8 @@ int file_write_unlock(fd, access_code)
 
 
 /* write handler */
-int diskHandleWrite(fd, entry)
-     int fd;
-     FileEntry *entry;
+int
+diskHandleWrite(int fd, FileEntry * entry)
 {
     int len;
     dwrite_q *q = NULL;
@@ -362,14 +357,8 @@ int diskHandleWrite(fd, entry)
 /* write block to a file */
 /* write back queue. Only one writer at a time. */
 /* call a handle when writing is complete. */
-int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data, free)
-     int fd;
-     char *ptr_to_buf;
-     int len;
-     int access_code;
-     void (*handle) ();
-     void *handle_data;
-     void (*free) _PARAMS((void *));
+int
+file_write(int fd, char *ptr_to_buf, int len, int access_code, void (*handle) (), void *handle_data, void (*free) _PARAMS((void *)))
 {
     dwrite_q *wq = NULL;
 
@@ -418,9 +407,8 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data, free)
 
 
 /* Read from FD */
-int diskHandleRead(fd, ctrl_dat)
-     int fd;
-     dread_ctrl *ctrl_dat;
+int
+diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 {
     int len;
 
@@ -484,13 +472,8 @@ int diskHandleRead(fd, ctrl_dat)
 /* buffer must be allocated from the caller. 
  * It must have at least req_len space in there. 
  * call handler when a reading is complete. */
-int file_read(fd, buf, req_len, offset, handler, client_data)
-     int fd;
-     char *buf;
-     int req_len;
-     int offset;
-     FILE_READ_HD handler;
-     void *client_data;
+int
+file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
 
@@ -517,9 +500,8 @@ int file_read(fd, buf, req_len, offset, handler, client_data)
 
 
 /* Read from FD and pass a line to routine. Walk to EOF. */
-int diskHandleWalk(fd, walk_dat)
-     int fd;
-     dwalk_ctrl *walk_dat;
+int
+diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
 {
     int len;
     int end_pos;
@@ -586,13 +568,12 @@ int diskHandleWalk(fd, walk_dat)
  * read one block and chop it to a line and pass it to provided 
  * handler one line at a time.
  * call a completion handler when done. */
-int file_walk(fd, handler, client_data, line_handler, line_data)
-     int fd;
-     FILE_WALK_HD handler;
-     void *client_data;
-     FILE_WALK_LHD line_handler;
-     void *line_data;
-
+int
+file_walk(int fd,
+    FILE_WALK_HD handler,
+    void *client_data,
+    FILE_WALK_LHD line_handler,
+    void *line_data)
 {
     dwalk_ctrl *walk_dat;
 
@@ -611,8 +592,8 @@ int file_walk(fd, handler, client_data, line_handler, line_data)
     return DISK_OK;
 }
 
-char *diskFileName(fd)
-     int fd;
+char *
+diskFileName(int fd)
 {
     if (file_table[fd].filename[0])
 	return (file_table[fd].filename);
@@ -620,7 +601,8 @@ char *diskFileName(fd)
 	return (0);
 }
 
-int diskWriteIsComplete(fd)
+int
+diskWriteIsComplete(int fd)
 {
     return file_table[fd].write_q ? 0 : 1;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.50 1996/09/13 23:20:49 wessels Exp $
+ * $Id: neighbors.cc,v 1.51 1996/09/14 08:46:15 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -105,9 +105,9 @@
 
 #include "squid.h"
 
-static int edgeWouldBePinged _PARAMS((edge *, request_t *));
-static void neighborRemove _PARAMS((edge *));
-static edge *whichEdge _PARAMS((icp_common_t *, struct sockaddr_in *));
+static int edgeWouldBePinged(edge *, request_t *);
+static void neighborRemove(edge *);
+static edge *whichEdge(icp_common_t *, struct sockaddr_in *);
 
 static neighbors *friends = NULL;
 static struct neighbor_cf *Neighbor_cf = NULL;
@@ -134,9 +134,8 @@ char *hier_strings[] =
 };
 
 
-static edge *whichEdge(header, from)
-     icp_common_t *header;
-     struct sockaddr_in *from;
+static edge *
+whichEdge(icp_common_t * header, struct sockaddr_in *from)
 {
     int j;
     u_short port;
@@ -158,11 +157,8 @@ static edge *whichEdge(header, from)
     return (NULL);
 }
 
-void hierarchyNote(request, code, timeout, cache_host)
-     request_t *request;
-     hier_code code;
-     int timeout;
-     char *cache_host;
+void
+hierarchyNote(request_t * request, hier_code code, int timeout, char *cache_host)
 {
     if (request) {
 	request->hierarchy.code = code;
@@ -171,9 +167,8 @@ void hierarchyNote(request, code, timeout, cache_host)
     }
 }
 
-static int edgeWouldBePinged(e, request)
-     edge *e;
-     request_t *request;
+static int
+edgeWouldBePinged(edge * e, request_t * request)
 {
     dom_list *d = NULL;
     int do_ping = 1;
@@ -198,9 +193,8 @@ static int edgeWouldBePinged(e, request)
     return do_ping;
 }
 
-edge *getSingleParent(request, n)
-     request_t *request;
-     int *n;
+edge *
+getSingleParent(request_t * request, int *n)
 {
     edge *p = NULL;
     edge *e = NULL;
@@ -237,8 +231,8 @@ edge *getSingleParent(request, n)
     return NULL;
 }
 
-edge *getFirstUpParent(request)
-     request_t *request;
+edge *
+getFirstUpParent(request_t * request)
 {
     edge *e = NULL;
     if (friends->n_parent < 1)
@@ -254,18 +248,20 @@ edge *getFirstUpParent(request)
     return NULL;
 }
 
-edge *getNextEdge(edge * e)
+edge *
+getNextEdge(edge * e)
 {
     return e->next;
 }
 
-edge *getFirstEdge()
+edge *
+getFirstEdge(void)
 {
     return friends->edges_head;
 }
 
-static void neighborRemove(target)
-     edge *target;
+static void
+neighborRemove(edge * target)
 {
     edge *e = NULL;
     edge **E = NULL;
@@ -285,7 +281,8 @@ static void neighborRemove(target)
     }
 }
 
-void neighborsDestroy()
+void
+neighborsDestroy()
 {
     edge *e = NULL;
     edge *next = NULL;
@@ -302,8 +299,8 @@ void neighborsDestroy()
     friends = NULL;
 }
 
-void neighbors_open(fd)
-     int fd;
+void
+neighbors_open(int fd)
 {
     int j;
     struct sockaddr_in name;
@@ -398,8 +395,8 @@ void neighbors_open(fd)
 }
 
 
-int neighborsUdpPing(proto)
-     protodispatch_data *proto;
+int
+neighborsUdpPing(protodispatch_data * proto)
 {
     char *host = proto->request->host;
     char *url = proto->url;
@@ -536,14 +533,8 @@ int neighborsUdpPing(proto)
  * 
  * If a hit process is already started, then sobeit
  */
-void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
-     int fd;
-     char *url;
-     icp_common_t *header;
-     struct sockaddr_in *from;
-     StoreEntry *entry;
-     char *data;
-     int data_sz;
+void
+neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *from, StoreEntry * entry, char *data, int data_sz)
 {
     edge *e = NULL;
     MemObject *mem = entry->mem_obj;
@@ -612,8 +603,8 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	} else if (entry->object_len != 0) {
 	    debug(15, 1, "Too late UDP_HIT_OBJ '%s'?\n", entry->url);
 	} else {
-            if (e->options & NEIGHBOR_PROXY_ONLY)
-                storeReleaseRequest(entry);
+	    if (e->options & NEIGHBOR_PROXY_ONLY)
+		storeReleaseRequest(entry);
 	    protoCancelTimeout(0, entry);
 	    entry->ping_status = PING_DONE;
 	    httpState = xcalloc(1, sizeof(HttpStateData));
@@ -695,13 +686,8 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
     }
 }
 
-void neighbors_cf_add(host, type, http_port, icp_port, options, weight)
-     char *host;
-     char *type;
-     int http_port;
-     int icp_port;
-     int options;
-     int weight;
+void
+neighbors_cf_add(char *host, char *type, int http_port, int icp_port, int options, int weight)
 {
     struct neighbor_cf *t, *u;
 
@@ -722,9 +708,8 @@ void neighbors_cf_add(host, type, http_port, icp_port, options, weight)
     }
 }
 
-void neighbors_cf_domain(host, domain)
-     char *host;
-     char *domain;
+void
+neighbors_cf_domain(char *host, char *domain)
 {
     struct neighbor_cf *t = NULL;
     dom_list *l = NULL;
@@ -751,9 +736,8 @@ void neighbors_cf_domain(host, domain)
     *L = l;
 }
 
-void neighbors_cf_acl(host, aclname)
-     char *host;
-     char *aclname;
+void
+neighbors_cf_acl(char *host, char *aclname)
 {
     struct neighbor_cf *t = NULL;
     struct _acl_list *L = NULL;
@@ -796,7 +780,8 @@ void neighbors_cf_acl(host, aclname)
     *Tail = L;
 }
 
-void neighbors_init()
+void
+neighbors_init()
 {
     struct neighbor_cf *t = NULL;
     struct neighbor_cf *next = NULL;
@@ -850,8 +835,8 @@ void neighbors_init()
     any_addr.s_addr = inet_addr("0.0.0.0");
 }
 
-edge *neighborFindByName(name)
-     char *name;
+edge *
+neighborFindByName(char *name)
 {
     edge *e = NULL;
     for (e = friends->edges_head; e; e = e->next) {

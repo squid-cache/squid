@@ -1,5 +1,5 @@
 /*
- * $Id: recv-announce.cc,v 1.6 1996/07/19 17:35:36 wessels Exp $
+ * $Id: recv-announce.cc,v 1.7 1996/09/14 08:46:20 wessels Exp $
  *
  * DEBUG: section 0     Announement Server
  * AUTHOR: Harvest Derived
@@ -117,7 +117,7 @@
 
 #define RECV_BUF_SIZE 8192
 
-extern void xmemcpy _PARAMS((void *from, void *to, int len));
+extern void xmemcpy(void *from, void *to, int len);
 
 /*
  * This program must be run from inetd.  First add something like this
@@ -140,7 +140,8 @@ extern void xmemcpy _PARAMS((void *from, void *to, int len));
  * usage: recv-announce logfile
  */
 
-void sig_handle()
+void
+sig_handle()
 {
     fflush(stdout);
     close(2);
@@ -150,9 +151,8 @@ void sig_handle()
 }
 
 
-int main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     char buf[RECV_BUF_SIZE];
     struct sockaddr_in R;

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.72 1996/09/13 23:16:39 wessels Exp $
+ * $Id: main.cc,v 1.73 1996/09/14 08:46:12 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -130,7 +130,7 @@ struct in_addr local_addr;
 char *dash_str = "-";
 
 /* for error reporting from xmalloc and friends */
-extern void (*failure_notify) _PARAMS((char *));
+extern void (*failure_notify) (char *);
 
 static int rotate_pending = 0;	/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
@@ -145,16 +145,17 @@ static time_t next_dirclean;
 static time_t next_announce;
 static time_t next_ip_purge;
 
-static void rotate_logs _PARAMS((int));
-static void reconfigure _PARAMS((int));
-static void mainInitialize _PARAMS((void));
-static void mainReinitialize _PARAMS((void));
-static time_t mainMaintenance _PARAMS((void));
-static void usage _PARAMS((void));
-static void mainParseOptions _PARAMS((int, char **));
-static void sendSignal _PARAMS((void));
+static void rotate_logs(int);
+static void reconfigure(int);
+static void mainInitialize(void);
+static void mainReinitialize(void);
+static time_t mainMaintenance(void);
+static void usage(void);
+static void mainParseOptions(int, char **);
+static void sendSignal(void);
 
-static void usage()
+static void
+usage()
 {
     fprintf(stderr, "\
 Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n\
@@ -180,9 +181,8 @@ Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n\
     exit(1);
 }
 
-static void mainParseOptions(argc, argv)
-     int argc;
-     char *argv[];
+static void
+mainParseOptions(int argc, char *argv[])
 {
     extern char *optarg;
     int c;
@@ -275,8 +275,8 @@ static void mainParseOptions(argc, argv)
     }
 }
 
-static void rotate_logs(sig)
-     int sig;
+static void
+rotate_logs(int sig)
 {
     debug(21, 1, "rotate_logs: SIGUSR1 received.\n");
     rotate_pending = 1;
@@ -285,8 +285,8 @@ static void rotate_logs(sig)
 #endif
 }
 
-static void reconfigure(sig)
-     int sig;
+static void
+reconfigure(int sig)
 {
     debug(21, 1, "reconfigure: SIGHUP received\n");
     debug(21, 1, "Waiting %d seconds for active connections to finish\n",
@@ -297,8 +297,8 @@ static void reconfigure(sig)
 #endif
 }
 
-void shut_down(sig)
-     int sig;
+void
+shut_down(int sig)
 {
     debug(21, 1, "Preparing for shutdown after %d connections\n",
 	ntcpconn + nudpconn);
@@ -311,7 +311,8 @@ void shut_down(sig)
 #endif
 }
 
-void serverConnectionsOpen()
+void
+serverConnectionsOpen()
 {
     struct in_addr addr;
     u_short port;
@@ -374,7 +375,8 @@ void serverConnectionsOpen()
     }
 }
 
-void serverConnectionsClose()
+void
+serverConnectionsClose()
 {
     /* NOTE, this function will be called repeatedly while shutdown
      * is pending */
@@ -408,7 +410,8 @@ void serverConnectionsClose()
     }
 }
 
-static void mainReinitialize()
+static void
+mainReinitialize()
 {
     debug(1, 0, "Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
@@ -425,7 +428,8 @@ static void mainReinitialize()
     debug(1, 0, "Ready to serve requests.\n");
 }
 
-static void mainInitialize()
+static void
+mainInitialize()
 {
     static int first_time = 1;
     if (opt_catch_signals) {
@@ -520,7 +524,8 @@ static void mainInitialize()
     first_time = 0;
 }
 
-static time_t mainMaintenance()
+static time_t
+mainMaintenance()
 {
     time_t next;
     int n;
@@ -556,9 +561,8 @@ static time_t mainMaintenance()
     return next - squid_curtime;
 }
 
-int main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     int errcount = 0;
     int n;			/* # of GC'd objects */
@@ -673,7 +677,8 @@ int main(argc, argv)
     return 0;
 }
 
-static void sendSignal()
+static void
+sendSignal()
 {
     int pid;
     debug_log = stderr;

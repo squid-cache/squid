@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.56 1996/09/12 22:18:01 wessels Exp $
+ * $Id: tools.cc,v 1.57 1996/09/14 08:46:34 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -120,14 +120,16 @@ and report the trace back to squid-bugs@nlanr.net.\n\
 \n\
 Thanks!\n"
 
-static char *dead_msg()
+static char *
+dead_msg()
 {
     LOCAL_ARRAY(char, msg, 1024);
     sprintf(msg, DEAD_MSG, version_string, version_string);
     return msg;
 }
 
-void mail_warranty()
+void
+mail_warranty()
 {
     FILE *fp = NULL;
     char *filename;
@@ -145,8 +147,8 @@ void mail_warranty()
     unlink(filename);
 }
 
-static void dumpMallocStats(f)
-     FILE *f;
+static void
+dumpMallocStats(FILE * f)
 {
 #if HAVE_MALLINFO
     struct mallinfo mp;
@@ -197,9 +199,8 @@ static void dumpMallocStats(f)
 #endif /* HAVE_MALLINFO */
 }
 
-static int PrintRusage(f, lf)
-     void (*f) ();
-     FILE *lf;
+static int
+PrintRusage(void (*f) (), FILE * lf)
 {
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     struct rusage rusage;
@@ -217,8 +218,8 @@ static int PrintRusage(f, lf)
     return 0;
 }
 
-void death(sig)
-     int sig;
+void
+death(int sig)
 {
     if (sig == SIGSEGV)
 	fprintf(debug_log, "FATAL: Received Segment Violation...dying.\n");
@@ -244,8 +245,8 @@ void death(sig)
 }
 
 
-void sigusr2_handle(sig)
-     int sig;
+void
+sigusr2_handle(int sig)
 {
     static int state = 0;
     debug(21, 1, "sigusr2_handle: SIGUSR2 received.\n");
@@ -261,7 +262,8 @@ void sigusr2_handle(sig)
 #endif
 }
 
-void setSocketShutdownLifetimes()
+void
+setSocketShutdownLifetimes()
 {
     FD_ENTRY *f = NULL;
     int lft = Config.lifetimeShutdown;
@@ -280,7 +282,8 @@ void setSocketShutdownLifetimes()
     }
 }
 
-void normal_shutdown()
+void
+normal_shutdown()
 {
     debug(21, 1, "Shutting down...\n");
     if (Config.pidFilename) {
@@ -298,8 +301,8 @@ void normal_shutdown()
     exit(0);
 }
 
-void fatal_common(message)
-     char *message;
+void
+fatal_common(char *message)
 {
 #if HAVE_SYSLOG
     if (opt_syslog_enable)
@@ -313,16 +316,16 @@ void fatal_common(message)
 }
 
 /* fatal */
-void fatal(message)
-     char *message;
+void
+fatal(char *message)
 {
     fatal_common(message);
     exit(1);
 }
 
 /* fatal with dumping core */
-void fatal_dump(message)
-     char *message;
+void
+fatal_dump(char *message)
 {
     if (message)
 	fatal_common(message);
@@ -332,16 +335,16 @@ void fatal_dump(message)
 }
 
 /* fatal with dumping core */
-void _debug_trap(message)
-     char *message;
+void
+_debug_trap(char *message)
 {
     if (opt_catch_signals)
 	fatal_dump(message);
     _db_print(0, 0, "WARNING: %s\n", message);
 }
 
-void sig_child(sig)
-     int sig;
+void
+sig_child(int sig)
 {
 #ifdef _SQUID_NEXT_
     union wait status;
@@ -365,7 +368,8 @@ void sig_child(sig)
 #endif
 }
 
-char *getMyHostname()
+char *
+getMyHostname()
 {
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
@@ -394,9 +398,8 @@ char *getMyHostname()
     return host;
 }
 
-int safeunlink(s, quiet)
-     char *s;
-     int quiet;
+int
+safeunlink(char *s, int quiet)
 {
     int err;
     if ((err = unlink(s)) < 0)
@@ -410,7 +413,8 @@ int safeunlink(s, quiet)
  * and leave_suid()
  * To give upp all posibilites to gain privilegies use no_suid()
  */
-void leave_suid()
+void
+leave_suid()
 {
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
@@ -439,7 +443,8 @@ void leave_suid()
 }
 
 /* Enter a privilegied section */
-void enter_suid()
+void
+enter_suid()
 {
     debug(21, 3, "enter_suid: PID %d taking root priveleges\n", getpid());
 #if HAVE_SETRESUID
@@ -452,7 +457,8 @@ void enter_suid()
 /* Give up the posibility to gain privilegies.
  * this should be used before starting a sub process
  */
-void no_suid()
+void
+no_suid()
 {
     uid_t uid;
     leave_suid();
@@ -466,7 +472,8 @@ void no_suid()
 #endif
 }
 
-void writePidFile()
+void
+writePidFile()
 {
     FILE *pid_fp = NULL;
     char *f = NULL;
@@ -486,7 +493,8 @@ void writePidFile()
 }
 
 
-int readPidFile()
+int
+readPidFile()
 {
     FILE *pid_fp = NULL;
     char *f = NULL;
@@ -512,7 +520,8 @@ int readPidFile()
 }
 
 
-void setMaxFD()
+void
+setMaxFD()
 {
 #if HAVE_SETRLIMIT
     /* try to use as many file descriptors as possible */
@@ -560,7 +569,8 @@ void setMaxFD()
 #endif /* RLIMIT_DATA */
 }
 
-time_t getCurrentTime()
+time_t
+getCurrentTime()
 {
 #if GETTIMEOFDAY_NO_TZP
     gettimeofday(&current_time);
@@ -570,25 +580,21 @@ time_t getCurrentTime()
     return squid_curtime = current_time.tv_sec;
 }
 
-int tvSubMsec(t1, t2)
-     struct timeval t1;
-     struct timeval t2;
+int
+tvSubMsec(struct timeval t1, struct timeval t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000 +
 	(t2.tv_usec - t1.tv_usec) / 1000;
 }
 
-int percent(a, b)
-     int a;
-     int b;
+int
+percent(int a, int b)
 {
     return b ? ((int) (100.0 * a / b + 0.5)) : 0;
 }
 
-void squid_signal(sig, func, flags)
-     int sig;
-     void (*func) ();
-     int flags;
+void
+squid_signal(int sig, void (*func) (), int flags)
 {
 #if HAVE_SIGACTION
     struct sigaction sa;
@@ -602,8 +608,8 @@ void squid_signal(sig, func, flags)
 #endif
 }
 
-char *accessLogTime(t)
-     time_t t;
+char *
+accessLogTime(time_t t)
 {
     struct tm *tm;
     static char buf[128];

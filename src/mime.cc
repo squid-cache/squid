@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.15 1996/09/04 22:03:27 wessels Exp $
+ * $Id: mime.cc,v 1.16 1996/09/14 08:46:13 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -108,7 +108,8 @@
 
 #define GET_HDR_SZ 1024
 
-char *mime_get_header(char *mime, char *name)
+char *
+mime_get_header(char *mime, char *name)
 {
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     char *p = NULL;
@@ -150,7 +151,8 @@ char *mime_get_header(char *mime, char *name)
 
 /* need to take the lowest, non-zero pointer to the end of the headers.
  * The headers end at the first empty line */
-char *mime_headers_end(char *mime)
+char *
+mime_headers_end(char *mime)
 {
     char *p1, *p2;
     char *end = NULL;
@@ -168,7 +170,8 @@ char *mime_headers_end(char *mime)
     return end;
 }
 
-int mime_headers_size(char *mime)
+int
+mime_headers_size(char *mime)
 {
     char *end;
 
@@ -180,8 +183,8 @@ int mime_headers_size(char *mime)
 	return 0;
 }
 
-ext_table_entry *mime_ext_to_type(extension)
-     char *extension;
+ext_table_entry *
+mime_ext_to_type(char *extension)
 {
     int i;
     int low;
@@ -220,12 +223,8 @@ ext_table_entry *mime_ext_to_type(extension)
  *  Returns the MIME header in the provided 'result' buffer, and
  *  returns non-zero on error, or 0 on success.
  */
-int mk_mime_hdr(result, ttl, size, lmt, type)
-     char *result;
-     char *type;
-     int size;
-     time_t ttl;
-     time_t lmt;
+int
+mk_mime_hdr(char *result, char *type, int size, time_t ttl, time_t lmt)
 {
     time_t expiretime;
     time_t t;

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.73 1996/09/12 16:39:54 wessels Exp $
+ * $Id: http.cc,v 1.74 1996/09/14 08:46:05 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -116,21 +116,20 @@ struct {
     int ctype;
 } ReplyHeaderStats;
 
-static int httpStateFree _PARAMS((int fd, HttpStateData *));
-static void httpReadReplyTimeout _PARAMS((int fd, HttpStateData *));
-static void httpLifetimeExpire _PARAMS((int fd, HttpStateData *));
-static void httpMakePublic _PARAMS((StoreEntry *));
-static void httpMakePrivate _PARAMS((StoreEntry *));
-static void httpCacheNegatively _PARAMS((StoreEntry *));
-static void httpReadReply _PARAMS((int fd, HttpStateData *));
-static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
-static void httpSendRequest _PARAMS((int fd, HttpStateData *));
-static void httpConnInProgress _PARAMS((int fd, HttpStateData *));
-static int httpConnect _PARAMS((int fd, struct hostent *, void *));
+static int httpStateFree(int fd, HttpStateData *);
+static void httpReadReplyTimeout(int fd, HttpStateData *);
+static void httpLifetimeExpire(int fd, HttpStateData *);
+static void httpMakePublic(StoreEntry *);
+static void httpMakePrivate(StoreEntry *);
+static void httpCacheNegatively(StoreEntry *);
+static void httpReadReply(int fd, HttpStateData *);
+static void httpSendComplete(int fd, char *, int, int, void *);
+static void httpSendRequest(int fd, HttpStateData *);
+static void httpConnInProgress(int fd, HttpStateData *);
+static int httpConnect(int fd, struct hostent *, void *);
 
-static int httpStateFree(fd, httpState)
-     int fd;
-     HttpStateData *httpState;
+static int
+httpStateFree(int fd, HttpStateData * httpState)
 {
     if (httpState == NULL)
 	return 1;
@@ -144,9 +143,8 @@ static int httpStateFree(fd, httpState)
     return 0;
 }
 
-int httpCachable(url, method)
-     char *url;
-     int method;
+int
+httpCachable(char *url, int method)
 {
     /* GET and HEAD are cachable. Others are not. */
     if (method != METHOD_GET && method != METHOD_HEAD)
@@ -156,9 +154,8 @@ int httpCachable(url, method)
 }
 
 /* This will be called when timeout on read. */
-static void httpReadReplyTimeout(fd, httpState)
-     int fd;
-     HttpStateData *httpState;
+static void
+httpReadReplyTimeout(int fd, HttpStateData * httpState)
 {
     StoreEntry *entry = NULL;
 
@@ -170,9 +167,8 @@ static void httpReadReplyTimeout(fd, httpState)
 }
 
 /* This will be called when socket lifetime is expired. */
-static void httpLifetimeExpire(fd, httpState)
-     int fd;
-     HttpStateData *httpState;
+static void
+httpLifetimeExpire(int fd, HttpStateData * httpState)
 {
     StoreEntry *entry = NULL;
 
@@ -185,8 +181,8 @@ static void httpLifetimeExpire(fd, httpState)
 }
 
 /* This object can be cached for a long time */
-static void httpMakePublic(entry)
-     StoreEntry *entry;
+static void
+httpMakePublic(StoreEntry * entry)
 {
     ttlSet(entry);
     if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
@@ -194,8 +190,8 @@ static void httpMakePublic(entry)
 }
 
 /* This object should never be cached at all */
-static void httpMakePrivate(entry)
-     StoreEntry *entry;
+static void
+httpMakePrivate(StoreEntry * entry)
 {
     storeSetPrivateKey(entry);
     storeExpireNow(entry);
@@ -204,8 +200,8 @@ static void httpMakePrivate(entry)
 }
 
 /* This object may be negatively cached */
-static void httpCacheNegatively(entry)
-     StoreEntry *entry;
+static void
+httpCacheNegatively(StoreEntry * entry)
 {
     storeNegativeCache(entry);
     if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
@@ -214,9 +210,8 @@ static void httpCacheNegatively(entry)
 
 
 /* Build a reply structure from HTTP reply headers */
-void httpParseHeaders(buf, reply)
-     char *buf;
-     struct _http_reply *reply;
+void
+httpParseHeaders(char *buf, struct _http_reply *reply)
 {
     char *headers = NULL;
     char *t = NULL;
@@ -279,10 +274,8 @@ void httpParseHeaders(buf, reply)
 }
 
 
-void httpProcessReplyHeader(httpState, buf, size)
-     HttpStateData *httpState;
-     char *buf;			/* chunk just read by httpReadReply() */
-     int size;
+void
+httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 {
     char *t = NULL;
     StoreEntry *entry = httpState->entry;
@@ -393,9 +386,8 @@ void httpProcessReplyHeader(httpState, buf, size)
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 /* XXX this function is too long! */
-static void httpReadReply(fd, httpState)
-     int fd;
-     HttpStateData *httpState;
+static void
+httpReadReply(int fd, HttpStateData * httpState)
 {
     LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     int len;
@@ -517,12 +509,8 @@ static void httpReadReply(fd, httpState)
 
 /* This will be called when request write is complete. Schedule read of
  * reply. */
-static void httpSendComplete(fd, buf, size, errflag, data)
-     int fd;
-     char *buf;
-     int size;
-     int errflag;
-     void *data;
+static void
+httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = NULL;
@@ -551,9 +539,8 @@ static void httpSendComplete(fd, buf, size, errflag, data)
 }
 
 /* This will be called when connect completes. Write request. */
-static void httpSendRequest(fd, httpState)
-     int fd;
-     HttpStateData *httpState;
+static void
+httpSendRequest(int fd, HttpStateData * httpState)
 {
     char *xbuf = NULL;
     char *ybuf = NULL;
@@ -648,9 +635,8 @@ static void httpSendRequest(fd, httpState)
 	buftype == BUF_TYPE_8K ? put_free_8k_page : xfree);
 }
 
-static void httpConnInProgress(fd, httpState)
-     int fd;
-     HttpStateData *httpState;
+static void
+httpConnInProgress(int fd, HttpStateData * httpState)
 {
     StoreEntry *entry = httpState->entry;
     request_t *req = httpState->request;
@@ -681,10 +667,8 @@ static void httpConnInProgress(fd, httpState)
 	(PF) httpSendRequest, (void *) httpState);
 }
 
-int proxyhttpStart(e, url, entry)
-     edge *e;
-     char *url;
-     StoreEntry *entry;
+int
+proxyhttpStart(edge * e, char *url, StoreEntry * entry)
 {
     int sock;
     HttpStateData *httpState = NULL;
@@ -727,10 +711,8 @@ int proxyhttpStart(e, url, entry)
     return COMM_OK;
 }
 
-static int httpConnect(fd, hp, data)
-     int fd;
-     struct hostent *hp;
-     void *data;
+static int
+httpConnect(int fd, struct hostent *hp, void *data)
 {
     HttpStateData *httpState = data;
     request_t *request = httpState->request;
@@ -773,12 +755,8 @@ static int httpConnect(fd, hp, data)
     return COMM_OK;
 }
 
-int httpStart(unusedfd, url, request, req_hdr, entry)
-     int unusedfd;
-     char *url;
-     request_t *request;
-     char *req_hdr;
-     StoreEntry *entry;
+int
+httpStart(int unusedfd, char *url, request_t * request, char *req_hdr, StoreEntry * entry)
 {
     /* Create state structure. */
     int sock;
@@ -810,8 +788,8 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
     return COMM_OK;
 }
 
-void httpReplyHeaderStats(entry)
-     StoreEntry *entry;
+void
+httpReplyHeaderStats(StoreEntry * entry)
 {
     storeAppendPrintf(entry, open_bracket);
     storeAppendPrintf(entry, "{HTTP Reply Headers}\n");

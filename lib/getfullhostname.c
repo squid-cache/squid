@@ -1,5 +1,6 @@
+
 /*
- * $Id: getfullhostname.c,v 1.5 1996/07/09 03:41:11 wessels Exp $
+ * $Id: getfullhostname.c,v 1.6 1996/09/14 08:50:47 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -27,7 +28,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *  
  */
- 
+
 
 /*
  * Copyright (c) 1994, 1995.  All rights reserved.
@@ -142,7 +143,8 @@
  *  host, or NULL on error.  Pointer is only valid until the next call
  *  to the gethost*() functions.
  */
-char *getfullhostname()
+char *
+getfullhostname()
 {
     struct hostent *hp = NULL;
     static char buf[SQUIDHOSTNAMELEN + 1];

@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.13 1996/08/30 22:44:11 wessels Exp $
+ * $Id: redirect.cc,v 1.14 1996/09/14 08:46:21 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -70,12 +70,12 @@ struct redirectQueueData {
     redirectStateData *redirectState;
 };
 
-static redirector_t *GetFirstAvailable _PARAMS((void));
-static int redirectCreateRedirector _PARAMS((char *command));
-static int redirectHandleRead _PARAMS((int, redirector_t *));
-static redirectStateData *Dequeue _PARAMS(());
-static void Enqueue _PARAMS((redirectStateData *));
-static void redirectDispatch _PARAMS((redirector_t *, redirectStateData *));
+static redirector_t *GetFirstAvailable(void);
+static int redirectCreateRedirector(char *command);
+static int redirectHandleRead(int, redirector_t *);
+static redirectStateData *Dequeue();
+static void Enqueue(redirectStateData *);
+static void redirectDispatch(redirector_t *, redirectStateData *);
 
 
 static redirector_t **redirect_child_table = NULL;
@@ -84,8 +84,8 @@ static int NRedirectorsOpen = 0;
 static struct redirectQueueData *redirectQueueHead = NULL;
 static struct redirectQueueData **redirectQueueTailP = &redirectQueueHead;
 
-static int redirectCreateRedirector(command)
-     char *command;
+static int
+redirectCreateRedirector(char *command)
 {
     int pid;
     u_short port;
@@ -155,9 +155,8 @@ static int redirectCreateRedirector(command)
     return 0;
 }
 
-static int redirectHandleRead(fd, redirector)
-     int fd;
-     redirector_t *redirector;
+static int
+redirectHandleRead(int fd, redirector_t * redirector)
 {
     int len;
     redirectStateData *r = redirector->redirectState;
@@ -216,8 +215,8 @@ static int redirectHandleRead(fd, redirector)
     return 0;
 }
 
-static void Enqueue(r)
-     redirectStateData *r;
+static void
+Enqueue(redirectStateData * r)
 {
     struct redirectQueueData *new = xcalloc(1, sizeof(struct redirectQueueData));
     new->redirectState = r;
@@ -226,7 +225,8 @@ static void Enqueue(r)
     RedirectStats.queue_size++;
 }
 
-static redirectStateData *Dequeue()
+static redirectStateData *
+Dequeue()
 {
     struct redirectQueueData *old = NULL;
     redirectStateData *r = NULL;
@@ -242,7 +242,8 @@ static redirectStateData *Dequeue()
     return r;
 }
 
-static redirector_t *GetFirstAvailable()
+static redirector_t *
+GetFirstAvailable()
 {
     int k;
     redirector_t *redirect = NULL;
@@ -255,9 +256,8 @@ static redirector_t *GetFirstAvailable()
 }
 
 
-static void redirectDispatch(redirect, r)
-     redirector_t *redirect;
-     redirectStateData *r;
+static void
+redirectDispatch(redirector_t * redirect, redirectStateData * r)
 {
     char *buf = NULL;
     char *fqdn = NULL;
@@ -298,11 +298,8 @@ static void redirectDispatch(redirect, r)
 /**** PUBLIC FUNCTIONS ****/
 
 
-void redirectStart(cfd, icpState, handler, data)
-     int cfd;
-     icpStateData *icpState;
-     RH handler;
-     void *data;
+void
+redirectStart(int cfd, icpStateData * icpState, RH handler, void *data)
 {
     redirectStateData *r = NULL;
     redirector_t *redirector = NULL;
@@ -332,7 +329,8 @@ void redirectStart(cfd, icpState, handler, data)
 	Enqueue(r);
 }
 
-void redirectOpenServers()
+void
+redirectOpenServers()
 {
     char *prg = Config.Program.redirect;
     int k;
@@ -384,7 +382,8 @@ void redirectOpenServers()
     }
 }
 
-void redirectShutdownServers()
+void
+redirectShutdownServers()
 {
     redirector_t *redirect = NULL;
     redirectStateData *r = NULL;
@@ -412,9 +411,8 @@ void redirectShutdownServers()
 }
 
 
-int redirectUnregister(url, fd)
-     char *url;
-     int fd;
+int
+redirectUnregister(char *url, int fd)
 {
     redirector_t *redirect = NULL;
     redirectStateData *r = NULL;
@@ -451,8 +449,8 @@ int redirectUnregister(url, fd)
     return n;
 }
 
-void redirectStats(sentry)
-     StoreEntry *sentry;
+void
+redirectStats(StoreEntry * sentry)
 {
     int k;
     storeAppendPrintf(sentry, open_bracket);

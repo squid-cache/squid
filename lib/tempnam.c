@@ -70,7 +70,9 @@ static const char letters[] =
 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 /* Return nonzero if DIR is an existent directory.  */
-static int diraccess (const char *dir) {
+static int
+diraccess(const char *dir)
+{
     struct stat buf;
     uid_t euid;
 
@@ -95,7 +97,9 @@ static int diraccess (const char *dir) {
 }
 
 /* Return nonzero if FILE exists.  */
-static int exists(const char *file) {
+static int
+exists(const char *file)
+{
     /* We can stat the file even if we can't read its data.  */
     struct stat st;
     int save = errno;
@@ -119,28 +123,30 @@ static int exists(const char *file) {
 
 
 /* Generate a temporary filename and return it (in a static buffer).  If
-  STREAMPTR is not NULL, open a stream "w+b" on the file and set
-  *STREAMPTR to it.  If DIR_SEARCH is nonzero, DIR and PFX are used as
-  described for tempnam.  If not, a temporary filename in P_tmpdir with
-  no special prefix is generated.  If LENPTR is not NULL, *LENPTR is
-  set the to length (including the terminating '\0') of the resultant
-  filename, which is returned.  This goes through a cyclic pattern of
-  all possible filenames consisting of five decimal digits of the
-  current pid and three of the characters in `letters'.  Data for
-  tempnam and tmpnam is kept separate, but when tempnam is using
-  P_tmpdir and no prefix (i.e, it is identical to tmpnam), the same
-  data is used.  Each potential filename is tested for an
-  already-existing file of the same name, and no name of an existing
-  file will be returned.  When the cycle reaches its end (12345ZZZ),
-  NULL is returned. */
+ * STREAMPTR is not NULL, open a stream "w+b" on the file and set
+ * *STREAMPTR to it.  If DIR_SEARCH is nonzero, DIR and PFX are used as
+ * described for tempnam.  If not, a temporary filename in P_tmpdir with
+ * no special prefix is generated.  If LENPTR is not NULL, *LENPTR is
+ * set the to length (including the terminating '\0') of the resultant
+ * filename, which is returned.  This goes through a cyclic pattern of
+ * all possible filenames consisting of five decimal digits of the
+ * current pid and three of the characters in `letters'.  Data for
+ * tempnam and tmpnam is kept separate, but when tempnam is using
+ * P_tmpdir and no prefix (i.e, it is identical to tmpnam), the same
+ * data is used.  Each potential filename is tested for an
+ * already-existing file of the same name, and no name of an existing
+ * file will be returned.  When the cycle reaches its end (12345ZZZ),
+ * NULL is returned. */
 
-static char *gen_tempname (
+static char *
+gen_tempname(
     const char *dir,
     const char *pfx,
     int dir_search,
     size_t * lenptr,
     FILE ** streamptr
-) {
+)
+{
     int saverrno = errno;
     static const char tmpdir[] = P_tmpdir;
     static struct {
@@ -240,7 +246,9 @@ static char *gen_tempname (
     return buf;
 }
 
-char *tempnam(const char *dir, const char *pfx) {
+char *
+tempnam(const char *dir, const char *pfx)
+{
     size_t len;
     register char *s;
     register char *t = gen_tempname(dir, pfx, 1, &len, (FILE **)
