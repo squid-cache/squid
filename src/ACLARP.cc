@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLARP.cc,v 1.2 2003/03/01 11:04:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -33,6 +33,25 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
+
+#include "config.h"
+
+#ifdef _SQUID_SOLARIS_
+#include <sys/sockio.h>
+#else
+#include <sys/sysctl.h>
+#endif
+#ifdef _SQUID_LINUX_
+#include <net/if_arp.h>
+#include <sys/ioctl.h>
+#else
+#include <net/if_dl.h>
+#endif
+#include <net/route.h>
+#include <net/if.h>
+#if HAVE_NETINET_IF_ETHER_H
+#include <netinet/if_ether.h>
+#endif
 
 #include "squid.h"
 #include "ACLARP.h"
@@ -133,23 +152,6 @@ ACLARP::valid () const
  *       Original (BSD-specific) code no longer works.
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
-
-#ifdef _SQUID_SOLARIS_
-#include <sys/sockio.h>
-#else
-#include <sys/sysctl.h>
-#endif
-#ifdef _SQUID_LINUX_
-#include <net/if_arp.h>
-#include <sys/ioctl.h>
-#else
-#include <net/if_dl.h>
-#endif
-#include <net/route.h>
-#include <net/if.h>
-#if HAVE_NETINET_IF_ETHER_H
-#include <netinet/if_ether.h>
-#endif
 
 /*
  * Decode an ascii representation (asc) of an ethernet adress, and place
