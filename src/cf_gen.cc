@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.47 2002/10/13 20:34:59 robertc Exp $
+ * $Id: cf_gen.cc,v 1.48 2002/12/01 21:47:43 robertc Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -116,6 +116,8 @@ typedef struct Entry {
 static const char WS[] = " \t";
 static int gen_default(Entry *, FILE *);
 static void gen_parse(Entry *, FILE *);
+static void gen_parse_entry(Entry *entry, FILE *fp);
+static void gen_parse_alias(char *, EntryAlias *, Entry *, FILE *);
 static void gen_dump(Entry *, FILE *);
 static void gen_free(Entry *, FILE *);
 static void gen_conf(Entry *, FILE *);
@@ -471,34 +473,10 @@ gen_default_if_none(Entry * head, FILE * fp)
     fprintf(fp, "}\n\n");
 }
 
-static void
-gen_parse(Entry * head, FILE * fp)
+void
+gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, FILE *fp)
 {
-    Entry *entry;
-    char *name;
-    EntryAlias *alias;
-
-    fprintf(fp,
-	"static int\n"
-	"parse_line(char *buff)\n"
-	"{\n"
-	"\tint\tresult = 1;\n"
-	"\tchar\t*token;\n"
-	"\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
-	"\tif ((token = strtok(buff, w_space)) == NULL)\n"
-	"\t\t(void) 0;\t/* ignore empty lines */\n"
-	);
-
-    for (entry = head; entry != NULL; entry = entry->next) {
-	if (strcmp(entry->name, "comment") == 0)
-	    continue;
-	if (entry->ifdef)
-	    fprintf(fp, "#if %s\n", entry->ifdef);
-	name = entry->name;
-	alias = entry->alias;
-      next_alias:
-	fprintf(fp, "\telse if (!strcmp(token, \"%s\"))\n", name);
-	assert(entry->loc);
+	fprintf(fp, "\tif (!strcmp(token, \"%s\")) {\n", name);
 	if (strcmp(entry->loc, "none") == 0) {
 	    fprintf(fp,
 		"\t\tparse_%s();\n",
@@ -511,19 +489,52 @@ gen_parse(Entry * head, FILE * fp)
 		entry->array_flag ? "[0]" : ""
 		);
 	}
-	if (alias) {
-	    name = alias->name;
-	    alias = alias->next;
-	    goto next_alias;
-	}
+	fprintf(fp,"\t\treturn 1;\n");
+	fprintf(fp,"\t};\n");
+}
+
+void
+gen_parse_entry(Entry *entry, FILE *fp)
+{
+	if (strcmp(entry->name, "comment") == 0)
+	    return;
+	if (entry->ifdef)
+	    fprintf(fp, "#if %s\n", entry->ifdef);
+	char *name = entry->name;
+	EntryAlias *alias = entry->alias;
+	assert (entry->loc);
+	bool more;
+	do {
+	    gen_parse_alias (name, alias,entry, fp);
+	    more = false;
+	    if (alias) {
+		name = alias->name;
+		alias = alias->next;
+		more = true;
+	    }
+	} while (more);
 	if (entry->ifdef)
 	    fprintf(fp, "#endif\n");
-    }
+}
+
+static void
+gen_parse(Entry * head, FILE * fp)
+{
+    fprintf(fp,
+	"static int\n"
+	"parse_line(char *buff)\n"
+	"{\n"
+	"\tchar\t*token;\n"
+	"\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
+	"\tif ((token = strtok(buff, w_space)) == NULL) \n"
+	"\t\treturn 1;\t/* ignore empty lines */\n"
+	);
+
+    for (Entry *entry = head; entry != NULL; entry = entry->next)
+	gen_parse_entry (entry, fp);
 
     fprintf(fp,
-	"\telse\n"
-	"\t\tresult = 0; /* failure */\n"
-	"\treturn(result);\n"
+	"\treturn 0; /* failure */\n"
 	"}\n\n"
 	);
 }
