@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.151 2003/02/14 13:59:50 robertc Exp $
+ * $Id: typedefs.h,v 1.152 2003/02/21 19:53:02 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -71,6 +71,7 @@ typedef struct _intrange intrange;
 typedef struct _ushortlist ushortlist;
 typedef struct _relist relist;
 typedef struct _sockaddr_in_list sockaddr_in_list;
+typedef struct _http_port_list http_port_list;
 typedef struct _https_port_list https_port_list;
 typedef struct _SquidConfig SquidConfig;
 typedef struct _SquidConfig2 SquidConfig2;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.315 2003/02/15 18:13:36 hno Exp $
+ * $Id: neighbors.cc,v 1.316 2003/02/21 19:53:02 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -421,7 +421,7 @@ neighbors_init(void)
 	if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	    debug(15, 1) ("getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
 	for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
-	    sockaddr_in_list *s;
+	    http_port_list *s;
 	    next = thisPeer->next;
 	    if (0 != strcmp(thisPeer->host, me))
 		continue;
@@ -1120,7 +1120,7 @@ peerProbeConnect(peer * p)
     int fd;
     if (p->test_fd != -1)
 	return;			/* probe already running */
-    if (squid_curtime - p->stats.last_connect_probe < Config.Timeout.connect)
+    if (squid_curtime - p->stats.last_connect_probe < 1)
 	return;			/* don't probe to often */
     fd = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL),
 	0, COMM_NONBLOCKING, p->host);

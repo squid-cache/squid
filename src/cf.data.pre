@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.303 2003/02/16 20:53:34 hno Exp $
+# $Id: cf.data.pre,v 1.304 2003/02/21 19:53:01 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,13 +54,13 @@ COMMENT_START
 COMMENT_END
 
 NAME: http_port ascii_port
-TYPE: sockaddr_in_list
+TYPE: http_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.http
 DOC_START
-	Usage:	port
-		hostname:port
-		1.2.3.4:port
+	Usage:	port [options]
+		hostname:port [options]
+		1.2.3.4:port [options]
 
 	The socket addresses where Squid will listen for HTTP client
 	requests.  You may specify multiple socket addresses.
@@ -80,11 +80,22 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines.
 
+	options are:
+		accel		Accelerator mode
+		transparent	Support for transparent proxies
+		vhost		Accelerator using Host directive
+		vport		Accelerator with IP virtual host support
+		vport=NN	As above, but uses specified port number
+				rather than the http_port number.
+		defaultsite=xx	Main web site name for accelerators.
+				also implies accel
+		protocol=	Protocol to reconstruct accelerated
+				requests with. Defaults to http.
+
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface then we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
-
 NOCOMMENT_START
 # Squid normally listens to port 3128
 http_port 3128
@@ -110,6 +121,12 @@ DOC_START
 	each with their own SSL certificate and/or options.
 			      
 	Options:
+
+	   defaultsite=	The name of the https site presented on
+	   		this port.
+
+	   protocol=	Protocol to reconstruct accelerated requests
+	   		with. Defaults to https.
 
 	   cert=	Path to SSL certificate (PEM format)
 		
@@ -2678,90 +2695,6 @@ DOC_START
 	default default to 3131.  If the 'filename' argument is given,
 	the contents of that file will be included in the announce
 	message.
-DOC_END
-
-COMMENT_START
- HTTPD-ACCELERATOR OPTIONS
- -----------------------------------------------------------------------------
-COMMENT_END
-
-NAME: httpd_accel_host
-TYPE: string
-LOC: Config.Accel.host
-DEFAULT: none
-DOC_NONE
-
-NAME: httpd_accel_port
-TYPE: ushort
-LOC: Config.Accel.port
-DEFAULT: 80
-DOC_START
-	If you want to run Squid as an httpd accelerator, define the
-	host name and port number where the real HTTP server is.
-
-	If you want IP based virtual host support then specify the
-	hostname as "virtual". This will make Squid use the IP address
-	where it accepted the request as hostname in the URL.
-
-	If you want virtual port support then specify the port as "0".
-DOC_END
-
-NAME: httpd_accel_single_host
-COMMENT: on|off
-TYPE: onoff
-LOC: Config.Accel.single_host
-DEFAULT: off
-DOC_START
-	If you are running Squid as an accelerator and have a single backend
-	server then set this to on. This causes Squid to forward the request
-	to this server irregardles of what any redirectors or Host headers
-	says.
-
-	Leave this at off if you have multiple backend servers, and use a
-	redirector (or host table or private DNS) to map the requests to the
-	appropriate backend servers. Note that the mapping needs to be a
-	1-1 mapping between requested and backend (from redirector) domain
-	names or caching will fail, as cacing is performed using the
-	URL returned from the redirector.
-
-	See also redirect_rewrites_host_header.
-DOC_END
-
-NAME: httpd_accel_with_proxy
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: Config.onoff.accel_with_proxy
-DOC_START
-	If you want to use Squid as both a local httpd accelerator
-	and as a proxy, change this to 'on'. Note however that your
-	proxy users may have trouble to reach the accelerated domains
-	unless their browsers are configured not to use this proxy for
-	those domains (for example via the no_proxy browser configuration
-	setting)
-DOC_END
-
-NAME: httpd_accel_uses_host_header
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: opt_accel_uses_host
-DOC_START
-	HTTP/1.1 requests include a Host: header which is basically the
-	hostname from the URL.  The Host: header is used for domain based
-	virutal hosts. If your accelerator needs to provide domain based
-	virtual hosts on the same IP address then you will need to turn this
-	on.
-
-	Note that Squid does NOT check the value of the Host header matches
-	any of your accelerated server, so it may open a big security hole
-	unless you take care to set up access controls proper.  We recommend
-	that this option remain disabled unless you are sure of what you
-	are doing.
-
-	However, you will need to enable this option if you run Squid
-	as a transparent proxy.  Otherwise, virtual servers which
-	require the Host: header will not be properly cached.
 DOC_END
 
 COMMENT_START

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.366 2003/02/15 18:13:35 hno Exp $
+ * $Id: main.cc,v 1.367 2003/02/21 19:53:01 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -137,7 +137,14 @@ mainParseOptions(int argc, char *argv[])
 	    opt_store_doublecheck = 1;
 	    break;
 	case 'V':
-	    vhost_mode = 1;
+	    if (Config.Sockaddr.http)
+		Config.Sockaddr.http->vhost = 1;
+#if USE_SSL
+	    else if (Config.Sockaddr.https)
+		Config.Sockaddr.https->http.vhost = 1;
+#endif
+	    else
+		fatal("No http_port specified\n");
 	    break;
 	case 'X':
 	    /* force full debugging */
@@ -147,7 +154,7 @@ mainParseOptions(int argc, char *argv[])
 	    opt_reload_hit_only = 1;
 	    break;
 	case 'a':
-	    parse_sockaddr_in_list_token(&Config.Sockaddr.http, optarg);
+	    add_http_port(optarg);
 	    break;
 	case 'd':
 	    opt_debug_stderr = atoi(optarg);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.118 2003/01/23 00:37:21 robertc Exp $
+ * $Id: globals.h,v 1.119 2003/02/21 19:53:01 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -100,8 +100,6 @@ extern int theInSnmpConnection;	/* -1 */
 extern int theOutSnmpConnection;	/* -1 */
 extern char *snmp_agentinfo;
 #endif
-extern int vhost_mode;		/* 0 */
-extern int vport_mode;		/* 0 */
 extern int n_disk_objects;	/* 0 */
 extern iostats IOStats;
 extern struct _acl_deny_info_list *DenyInfoList;	/* NULL */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.622 2003/02/20 00:13:04 hno Exp $
+ * $Id: client_side.cc,v 1.623 2003/02/21 19:53:01 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -177,16 +177,14 @@ static void connReadNextRequest(ConnStateData * conn);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext * deferredRequest, ConnStateData * conn);
 static void clientUpdateSocketStats(log_type logType, size_t size);
 
-static ClientSocketContext *clientCheckRequestLineIsParseable(char *inbuf, size_t req_sz, ConnStateData * conn);
 static ClientSocketContext *clientParseRequestMethod(char *inbuf, method_t * method_p, ConnStateData * conn);
 static char *skipLeadingSpace(char *aString);
 static char *findTrailingHTTPVersion(char *uriAndHTTPVersion);
+#if UNUSED_CODE
 static void trimTrailingSpaces(char *aString, size_t len);
-static ClientSocketContext *parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p, ConnStateData * conn);
+#endif
+static ClientSocketContext *parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p, ConnStateData * conn, char *http_version_str);
 static void setLogUri(clientHttpRequest * http, char const *uri);
-static void prepareInternalUrl(clientHttpRequest * http, char *url);
-static void prepareForwardProxyUrl(clientHttpRequest * http, char *url);
-static void prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr);
 static int connGetAvailableBufferLength(ConnStateData const *conn);
 static void connMakeSpaceAvailable(ConnStateData * conn);
 static void connAddContextToQueue(ConnStateData * conn, ClientSocketContext * context);
@@ -196,7 +194,7 @@ static int connFinishedWithConn(ConnStateData * conn, int size);
 static void connNoteUseOfBuffer(ConnStateData * conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
-static ConnStateData *connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd);
+static ConnStateData *connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_port_list *port);
 static int connAreAllContextsForThisConnection(ConnStateData * connState);
 static void connFreeAllContexts(ConnStateData * connState);
 
@@ -1289,22 +1287,12 @@ parseHttpRequestAbort(ConnStateData * conn, const char *uri)
 }
 
 ClientSocketContext *
-clientCheckRequestLineIsParseable(char *inbuf, size_t req_sz, ConnStateData * conn)
-{
-    if (strlen(inbuf) != req_sz) {
-	debug(33, 1) ("clientCheckRequestLineIsParseable: Requestheader contains NULL characters\n");
-	return parseHttpRequestAbort(conn, "error:invalid-request");
-    }
-    return NULL;
-}
-
-ClientSocketContext *
 clientParseRequestMethod(char *inbuf, method_t * method_p, ConnStateData * conn)
 {
     char *mstr = NULL;
     if ((mstr = strtok(inbuf, "\t ")) == NULL) {
 	debug(33, 1) ("clientParseRequestMethod: Can't get request method\n");
-	return parseHttpRequestAbort(conn, "error:invalid-request-method");
+	return parseHttpRequestAbort(conn, "error:invalid-request");
     }
     *method_p = urlParseMethod(mstr);
     if (*method_p == METHOD_NONE) {
@@ -1324,19 +1312,25 @@ skipLeadingSpace(char *aString)
     return result;
 }
 
-char *
+static char *
 findTrailingHTTPVersion(char *uriAndHTTPVersion)
 {
-    char *token = uriAndHTTPVersion + strlen(uriAndHTTPVersion);
-    assert(*token == '\0');
-    while (token > uriAndHTTPVersion) {
-	--token;
-	if (xisspace(*token) && !strncmp(token + 1, "HTTP/", 5))
-	    return token + 1;
+    char *token;
+    
+    for (token = strchr(uriAndHTTPVersion, '\n'); token > uriAndHTTPVersion; token--) {
+	if (*token == '\n' || *token == '\r')
+	    continue;
+	if (xisspace(*token)) {
+	    if (strncasecmp(token + 1, "HTTP/", 5) == 0)
+		return token + 1;
+	    else
+		break;
+	}
     }
-    return uriAndHTTPVersion;
+    return NULL;
 }
 
+#if UNUSED_CODE
 void
 trimTrailingSpaces(char *aString, size_t len)
 {
@@ -1344,52 +1338,58 @@ trimTrailingSpaces(char *aString, size_t len)
     while (endPointer > aString && xisspace(*endPointer))
 	*(endPointer--) = '\0';
 }
+#endif
 
-ClientSocketContext *
+static ClientSocketContext *
 parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p,
-    ConnStateData * conn)
+    ConnStateData * conn, char *http_version_str)
 {
     char *url;
-    char *token;
-    /* look for URL+HTTP/x.x */
+    char *t;
+    /* look for URL (strtok initiated by clientParseRequestMethod) */
     if ((url = strtok(NULL, "\n")) == NULL) {
 	debug(33, 1) ("parseHttpRequest: Missing URL\n");
 	return parseHttpRequestAbort(conn, "error:missing-url");
     }
     url = skipLeadingSpace(url);
-    token = findTrailingHTTPVersion(url);
-    trimTrailingSpaces(url, token - url - 1);
 
+    if (!*url || (http_version_str && http_version_str <= url+1)) {
+	debug(33, 1) ("parseHttpRequest: Missing URL\n");
+	return parseHttpRequestAbort(conn, "error:missing-url");
+    }
+    /* Terminate URL just before HTTP version (or at end of line) */
+    if (http_version_str)
+	http_version_str[-1] = '\0';
+    else {
+	t = url + strlen(url) - 1;
+	while (t > url && *t == '\r')
+	    *t-- = '\0';
+    }
     debug(33, 5) ("parseHttpRequest: URI is '%s'\n", url);
     *url_p = url;
-    if (token == NULL) {
-	debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
-#if RELAXED_HTTP_PARSER
-	httpBuildVersion(http_ver_p, 0, 9);	/* wild guess */
-#else
-	return parseHttpRequestAbort(conn, "error:missing-http-ident");
-#endif
-    } else {
-	if (sscanf(token + 5, "%d.%d", &http_ver_p->major,
+    if (http_version_str) {
+	if (sscanf(http_version_str + 5, "%d.%d", &http_ver_p->major,
 		&http_ver_p->minor) != 2) {
 	    debug(33, 3) ("parseHttpRequest: Invalid HTTP identifier.\n");
 	    return parseHttpRequestAbort(conn, "error:invalid-http-ident");
 	}
 	debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n",
 	    http_ver_p->major, http_ver_p->minor);
+    } else {
+	httpBuildVersion(http_ver_p, 0, 9);	/* wild guess */
     }
     return NULL;
 }
 
 /* Utility function to perform part of request parsing */
 static ClientSocketContext *
-clientParseHttpRequestLine(char *inbuf, size_t req_sz, ConnStateData * conn,
-    method_t * method_p, char **url_p, http_version_t * http_ver_p)
+clientParseHttpRequestLine(char *reqline, ConnStateData * conn,
+    method_t * method_p, char **url_p, http_version_t * http_ver_p, char * http_version_str)
 {
     ClientSocketContext *result = NULL;
-    if ((result = clientCheckRequestLineIsParseable(inbuf, req_sz, conn))
-	|| (result = clientParseRequestMethod(inbuf, method_p, conn))
-	|| (result = parseURIandHTTPVersion(url_p, http_ver_p, conn)))
+    /* XXX: This sequence relies on strtok() */
+    if ((result = clientParseRequestMethod(reqline, method_p, conn))
+	    || (result = parseURIandHTTPVersion(url_p, http_ver_p, conn, http_version_str)))
 	return result;
 
     return NULL;
@@ -1405,84 +1405,102 @@ setLogUri(clientHttpRequest * http, char const *uri)
 	http->log_uri = xstrndup(rfc1738_escape_unescaped(uri), MAX_URL);
 }
 
-void
-prepareInternalUrl(clientHttpRequest * http, char *url)
-{
-    http->uri = xstrdup(internalLocalUri(NULL, url));
-    http->flags.internal = 1;
+static void
+prepareAcceleratedURL(ConnStateData * conn, clientHttpRequest *http, char *url, const char *req_hdr) {
+    int vhost = conn->port->vhost;
+    int vport = conn->port->vport;
+    char *host;
+
     http->flags.accel = 1;
-}
 
-void
-prepareForwardProxyUrl(clientHttpRequest * http, char *url)
-{
-    size_t url_sz;
-    /* URL may be rewritten later, so make extra room */
-    url_sz = strlen(url) + Config.appendDomainLen + 5;
-    http->uri = (char *)xcalloc(url_sz, 1);
-    strcpy(http->uri, url);
-    http->flags.accel = 0;
-}
+    /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-void
-prepareAcceleratedUrl(clientHttpRequest * http, char *url, char *req_hdr)
-{
-    size_t url_sz;
-    char *t;
-    /* prepend the accel prefix */
-    if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
-	int vport;
-	char *q;
-	const char *protocol_name = "http";
-	if (vport_mode)
-	    vport = (int) ntohs(http->conn->me.sin_port);
-	else
-	    vport = (int) Config.Accel.port;
-	/* If a Host: header was specified, use it to build the URL 
-	 * instead of the one in the Config file. */
-	/*
-	 * XXX Use of the Host: header here opens a potential
-	 * security hole.  There are no checks that the Host: value
-	 * corresponds to one of your servers.  It might, for example,
-	 * refer to www.playboy.com.  The 'dst' and/or 'dst_domain' ACL 
-	 * types should be used to prevent httpd-accelerators 
-	 * handling requests for non-local servers */
-	strtok(t, " /;@");
-	if ((q = strchr(t, ':'))) {
-	    *q++ = '\0';
-	    if (vport_mode)
-		vport = atoi(q);
-	}
-	url_sz = strlen(url) + 32 + Config.appendDomainLen + strlen(t);
-	http->uri = (char *)xcalloc(url_sz, 1);
-
-#if SSL_FORWARDING_NOT_YET_DONE
-	if (Config.Sockaddr.https->s.sin_port == http->conn->me.sin_port) {
-	    protocol_name = "https";
-	    vport = ntohs(http->conn->me.sin_port);
-	}
+    if (*url != '/') {
+	if (conn->port->vhost)
+	    return; /* already in good shape */
+	/* else we need to ignore the host name */
+	url = strstr(url, "//");
+#if SHOULD_REJECT_UNKNOWN_URLS
+	if (!url)
+	    return parseHttpRequestAbort(conn, "error:invalid-request");
 #endif
-	snprintf(http->uri, url_sz, "%s://%s:%d%s",
-	    protocol_name, t, vport, url);
-    } else if (vhost_mode) {
-	int vport;
-	/* Put the local socket IP address as the hostname */
-	url_sz = strlen(url) + 32 + Config.appendDomainLen;
-	http->uri = (char *)xcalloc(url_sz, 1);
-	if (vport_mode)
-	    vport = (int) ntohs(http->conn->me.sin_port);
-	else
-	    vport = (int) Config.Accel.port;
-	rewriteURIwithInterceptedDetails(url, http->uri, url_sz, http->conn->fd,
-	    http->conn->me, http->conn->peer, vport);
-	debug(33, 5) ("VHOST REWRITE: '%s'\n", http->uri);
-    } else {
-	url_sz = strlen(Config2.Accel.prefix) + strlen(url) +
-	    Config.appendDomainLen + 1;
-	http->uri = (char *)xcalloc(url_sz, 1);
-	snprintf(http->uri, url_sz, "%s%s", Config2.Accel.prefix, url);
+	if (url)
+	    url = strchr(url + 2, '/');
+	if (!url)
+	    url = (char *) "/";
     }
+
+    if (internalCheck(url)) {
+	/* prepend our name & port */
+	http->uri = xstrdup(internalLocalUri(NULL, url));
+	http->flags.internal = 1;
+    } else if (vhost && (host = mime_get_header(req_hdr, "Host")) != NULL) {
+	int url_sz = strlen(url) + 32 + Config.appendDomainLen +
+	    strlen(host);
+	http->uri = (char *)xcalloc(url_sz, 1);
+	snprintf(http->uri, url_sz, "%s://%s%s",
+		conn->port->protocol, host, url);
+	debug(33, 5) ("ACCEL VHOST REWRITE: '%s'\n", http->uri);
+    } else if (conn->port->defaultsite) {
+	int url_sz = strlen(url) + 32 + Config.appendDomainLen +
+	    strlen(conn->port->defaultsite);
+	http->uri = (char *)xcalloc(url_sz, 1);
+	snprintf(http->uri, url_sz, "%s://%s%s",
+		conn->port->protocol, conn->port->defaultsite, url);
+	debug(33, 5) ("ACCEL DEFAULTSITE REWRITE: '%s'\n", http->uri);
+    } else if (vport == -1) {
+	/* Put the local socket IP address as the hostname.  */
+	int url_sz = strlen(url) + 32 + Config.appendDomainLen;
+	http->uri = (char *)xcalloc(url_sz, 1);
+	snprintf(http->uri, url_sz, "%s://%s:%d%s",
+		http->conn->port->protocol,
+		inet_ntoa(http->conn->me.sin_addr),
+		ntohs(http->conn->me.sin_port), url);
+	debug(33, 5) ("ACCEL VPORT REWRITE: '%s'\n", http->uri);
+    } else if (vport > 0) {
+	/* Put the local socket IP address as the hostname, but static port  */
+	int url_sz = strlen(url) + 32 + Config.appendDomainLen;
+	http->uri = (char *)xcalloc(url_sz, 1);
+	snprintf(http->uri, url_sz, "%s://%s:%d%s",
+		http->conn->port->protocol,
+		inet_ntoa(http->conn->me.sin_addr),
+		vport, url);
+	debug(33, 5) ("ACCEL VPORT REWRITE: '%s'\n", http->uri);
+    }
+}
+
+static void
+prepareTransparentURL(ConnStateData * conn, clientHttpRequest *http, char *url, const char *req_hdr) {
+    char *host;
+
     http->flags.accel = 1;
+
+    if (*url != '/')
+	return; /* already in good shape */
+
+    /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
+
+    if (internalCheck(url)) {
+	/* prepend our name & port */
+	http->uri = xstrdup(internalLocalUri(NULL, url));
+	http->flags.internal = 1;
+    } else if ((host = mime_get_header(req_hdr, "Host")) != NULL) {
+	int url_sz = strlen(url) + 32 + Config.appendDomainLen +
+	    strlen(host);
+	http->uri = (char *)xcalloc(url_sz, 1);
+	snprintf(http->uri, url_sz, "%s://%s%s",
+		conn->port->protocol, host, url);
+	debug(33, 5) ("TRANSPARENT HOST REWRITE: '%s'\n", http->uri);
+    } else {
+	/* Put the local socket IP address as the hostname.  */
+	int url_sz = strlen(url) + 32 + Config.appendDomainLen;
+	http->uri = (char *)xcalloc(url_sz, 1);
+	snprintf(http->uri, url_sz, "%s://%s:%d%s",
+		http->conn->port->protocol,
+		inet_ntoa(http->conn->me.sin_addr),
+		ntohs(http->conn->me.sin_port), url);
+	debug(33, 5) ("TRANSPARENT REWRITE: '%s'\n", http->uri);
+    }
 }
 
 /*
@@ -1501,6 +1519,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
     char *inbuf = NULL;
     char *url = NULL;
     char *req_hdr = NULL;
+    char *t;
     http_version_t http_ver;
     char *end;
     size_t header_sz;		/* size of headers, not including first line */
@@ -1509,25 +1528,49 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
     clientHttpRequest *http;
     ClientSocketContext *result;
     StoreIOBuffer tempBuffer;
+    char *http_version;
 
     /* pre-set these values to make aborting simpler */
     *prefix_p = NULL;
     *method_p = METHOD_NONE;
 
-    if ((req_sz = headersEnd(conn->in.buf, conn->in.notYetUsed)) == 0) {
-	debug(33, 5) ("Incomplete request, waiting for end of headers\n");
+    /* Read the HTTP message. HTTP/0.9 is detected by the absence of a HTTP signature */
+    if ((t = (char *)memchr(conn->in.buf, '\n', conn->in.notYetUsed)) == NULL) {
+	debug(33, 5) ("Incomplete request, waiting for end of request line\n");
 	return NULL;
     }
+    *req_line_sz_p = t - conn->in.buf + 1;
+    http_version = findTrailingHTTPVersion(conn->in.buf);
+    if (http_version) {
+	if ((req_sz = headersEnd(conn->in.buf, conn->in.notYetUsed)) == 0) {
+	    debug(33, 5) ("Incomplete request, waiting for end of headers\n");
+	    return NULL;
+	}
+    } else {
+	debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
+	req_sz = t - conn->in.buf + 1;	/* HTTP/0.9 requests */
+    }
+
     assert(req_sz <= conn->in.notYetUsed);
     /* Use memcpy, not strdup! */
     inbuf = (char *)xmalloc(req_sz + 1);
     xmemcpy(inbuf, conn->in.buf, req_sz);
     *(inbuf + req_sz) = '\0';
+    /* and adjust http_version to point into the new copy */
+    if (http_version)
+	http_version = inbuf + (http_version - conn->in.buf);
+
+    /* Barf on NULL characters in the headers */
+    if (strlen(inbuf) != req_sz) {
+	debug(33, 1) ("parseHttpRequest: Requestheader contains NULL characters\n");
+#if TRY_TO_IGNORE_THIS
+	return parseHttpRequestAbort(conn, "error:invalid-request");
+#endif
+    }
 
     /* Is there a legitimate first line to the headers ? */
-    if ((result =
-	    clientParseHttpRequestLine(inbuf, req_sz, conn, method_p, &url,
-		&http_ver))) {
+    if ((result = clientParseHttpRequestLine(inbuf, conn, method_p, &url,
+			&http_ver, http_version))) {
 	/* something wrong, abort */
 	xfree(inbuf);
 	return result;
@@ -1536,20 +1579,13 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
      * Process headers after request line
      * TODO: Use httpRequestParse here.
      */
-    req_hdr = strtok(NULL, null_string);
-    header_sz = req_sz - (req_hdr - inbuf);
-    if (0 == header_sz) {
-	debug(33, 3) ("parseHttpRequest: header_sz == 0\n");
-	xfree(inbuf);
-	return NULL;
-    }
-    assert(header_sz > 0);
+    req_hdr = inbuf + *req_line_sz_p;
+    header_sz = req_sz - *req_line_sz_p;
     debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
     end = req_hdr + header_sz;
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
 
     prefix_sz = end - inbuf;
-    *req_line_sz_p = req_hdr - inbuf;
     debug(33, 3) ("parseHttpRequest: prefix_sz = %d, req_line_sz = %d\n",
 	(int) prefix_sz, (int) *req_line_sz_p);
     assert(prefix_sz <= conn->in.notYetUsed);
@@ -1570,26 +1606,35 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
     *(*prefix_p + prefix_sz) = '\0';
     dlinkAdd(http, &http->active, &ClientActiveRequests);
 
-    /* XXX this function is still way to long. here is a natural point for further simplification */
-
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n",
 	(*prefix_p) + *req_line_sz_p);
+
 #if THIS_VIOLATES_HTTP_SPECS_ON_URL_TRANSFORMATION
     if ((t = strchr(url, '#')))	/* remove HTML anchors */
 	*t = '\0';
 #endif
 
-    if (internalCheck(url))
-	prepareInternalUrl(http, url);
-    else if (Config2.Accel.on && *url == '/')
-	prepareAcceleratedUrl(http, url, req_hdr);
-    else
-	prepareForwardProxyUrl(http, url);
+    /* Rewrite the URL in transparent or accelerator mode */
+    if (conn->transparent) {
+	prepareTransparentURL(conn, http, url, req_hdr);
+    } else if (conn->port->accel) {
+	prepareAcceleratedURL(conn, http, url, req_hdr);
+    }
+
+    if (!http->uri) {
+	/* No special rewrites have been applied above, use the
+	 * requested url. may be rewritten later, so make extra room */
+	int url_sz = strlen(url) + Config.appendDomainLen + 5;
+	http->uri = (char *)xcalloc(url_sz, 1);
+	strcpy(http->uri, url);
+    }
+    
     setLogUri(http, http->uri);
     debug(33, 5) ("parseHttpRequest: Complete request received\n");
     xfree(inbuf);
     result->flags.parsed_ok = 1;
     return result;
+
 }
 
 static int
@@ -1778,7 +1823,8 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
     /* compile headers */
     /* we should skip request line! */
     if (!httpRequestParseHeader(request, prefix + req_line_sz))
-        debug(33, 1) ("Failed to parse request headers: %s\n%s\n",
+	if (http->http_ver.major >= 1)
+	    debug(33, 1) ("Failed to parse request headers: %s\n%s\n",
                       http->uri, prefix);
     /* continue anyway? */
 
@@ -2059,12 +2105,15 @@ clientProcessBody(ConnStateData * conn)
 	conn->body.buf = NULL;
 	conn->body.bufsize = 0;
 	/* Remember that we have touched the body, not restartable */
-	if (request != NULL)
+	if (request != NULL) {
 	    request->flags.body_sent = 1;
+	    conn->body.request = NULL;
+	}
 	/* Invoke callback function */
 	callback(buf, size, cbdata);
-	if (request != NULL)
+	if (request != NULL) {
 	    requestUnlink(request);	/* Linked in clientReadBody */
+	}
 	debug(33, 2) ("clientProcessBody: end fd=%d size=%lu body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
 	    conn->fd, (unsigned long int)size, (unsigned long int) conn->body.size_left,
 	    (unsigned long) conn->in.notYetUsed, callback, request);
@@ -2203,7 +2252,7 @@ httpAcceptDefer(int fdunused, void *dataunused)
 }
 
 ConnStateData *
-connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd)
+connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_port_list *port)
 {
     ConnStateData *result = cbdataAlloc(ConnStateData);
     result->peer = *peer;
@@ -2212,6 +2261,14 @@ connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd)
     result->me = *me;
     result->fd = fd;
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
+    result->port = cbdataReference(port);
+    if (port->transparent) {
+	struct sockaddr_in dst;
+	if (clientNatLookup(fd, *me, *peer, &dst) == 0) {
+	    result->me = dst; /* XXX This should be moved to another field */
+	    result->transparent = 1;
+	}
+    }
     result->flags.readMoreRequests = 1;
     return result;
 }
@@ -2221,7 +2278,7 @@ void
 httpAccept(int sock, int newfd, ConnectionDetail *details,
   comm_err_t flag, int xerrno, void *data)
 {
-    int *N = &incoming_sockets_accepted;
+    http_port_list *s = (http_port_list *)data;
     ConnStateData *connState = NULL;
 
     if (flag == COMM_ERR_CLOSING) {
@@ -2229,7 +2286,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     }
 
     /* kick off another one for later */
-    comm_accept(sock, httpAccept, NULL);
+    comm_accept(sock, httpAccept, data);
 
     /* XXX we're not considering httpAcceptDefer yet! */
 
@@ -2241,7 +2298,9 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 	}
 	
 	debug(33, 4) ("httpAccept: FD %d: accepted\n", newfd);
-	connState = connStateCreate(&details->peer, &details->me, newfd);
+	fd_note(newfd, "client http connect");
+	connState = connStateCreate(&details->peer, &details->me, newfd, s);
+	connState->port = cbdataReference(s);
 	comm_add_close_handler(newfd, connStateFree, connState);
 	if (Config.onoff.log_fqdn)
 	    fqdncache_gethostbyaddr(details->peer.sin_addr, FQDN_LOOKUP_IF_MISS);
@@ -2257,8 +2316,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 	clientReadSomeData(connState);
 	commSetDefer(newfd, clientReadDefer, connState);
 	clientdbEstablished(details->peer.sin_addr, 1);
-	assert(N);
-	(*N)++;
+	incoming_sockets_accepted++;
 }
 
 #if USE_SSL
@@ -2308,20 +2366,13 @@ clientNegotiateSSL(int fd, void *data)
     clientReadSomeData(conn);
 }
 
-struct _https_port_data {
-    SSL_CTX *sslContext;
-};
-typedef struct _https_port_data https_port_data;
-CBDATA_TYPE(https_port_data);
-
 /* handle a new HTTPS connection */
 static void
 httpsAccept(int sock, int newfd, ConnectionDetail *details,
   comm_err_t flag, int xerrno, void *data)
 {
-    int *N = &incoming_sockets_accepted;
-    https_port_data *https_port = (https_port_data *)data;
-    SSL_CTX *sslContext = https_port->sslContext;
+    https_port_list *s = (https_port_list *)data;
+    SSL_CTX *sslContext = s->sslContext;
     ConnStateData *connState = NULL;
     SSL *ssl;
     int ssl_error;
@@ -2349,9 +2400,10 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     fd_table[newfd].read_method = &ssl_read_method;
     fd_table[newfd].write_method = &ssl_write_method;
     debug(50, 5) ("httpsAccept: FD %d accepted, starting SSL negotiation.\n", newfd);
+    fd_note(newfd, "client https connect");
     
-    connState = connStateCreate(&details->peer, &details->me, newfd);
-    /* XXX account connState->in.buf */
+    connState = connStateCreate(&details->peer, &details->me, newfd, (http_port_list *)s);
+    connState->port = (http_port_list *)cbdataReference(s);
     comm_add_close_handler(newfd, connStateFree, connState);
     if (Config.onoff.log_fqdn)
 	fqdncache_gethostbyaddr(details->peer.sin_addr, FQDN_LOOKUP_IF_MISS);
@@ -2367,7 +2419,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     commSetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
     commSetDefer(newfd, clientReadDefer, connState);
     clientdbEstablished(details->peer.sin_addr, 1);
-    (*N)++;
+    incoming_sockets_accepted++;
 }
 
 #endif /* USE_SSL */
@@ -2376,7 +2428,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 static void
 clientHttpConnectionsOpen(void)
 {
-    sockaddr_in_list *s;
+    http_port_list *s;
     int fd;
     for (s = Config.Sockaddr.http; s; s = s->next) {
 	if (MAXHTTPPORTS == NHttpSockets) {
@@ -2393,7 +2445,7 @@ clientHttpConnectionsOpen(void)
 	if (fd < 0)
 	    continue;
 	comm_listen(fd);
-	comm_accept(fd, httpAccept, NULL);
+	comm_accept(fd, httpAccept, s);
 	/*
 	 * We need to set a defer handler here so that we don't
 	 * peg the CPU with select() when we hit the FD limit.
@@ -2410,9 +2462,8 @@ static void
 clientHttpsConnectionsOpen(void)
 {
     https_port_list *s;
-    https_port_data *https_port;
     int fd;
-    for (s = Config.Sockaddr.https; s; s = s->next) {
+    for (s = Config.Sockaddr.https; s; s = (https_port_list *)s->http.next) {
 	if (MAXHTTPPORTS == NHttpSockets) {
 	    debug(1, 1) ("WARNING: You have too many 'https_port' lines.\n");
 	    debug(1, 1) ("         The limit is %d\n", MAXHTTPPORTS);
@@ -2421,19 +2472,16 @@ clientHttpsConnectionsOpen(void)
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
 	    0,
-	    s->s.sin_addr,
-	    ntohs(s->s.sin_port), COMM_NONBLOCKING, "HTTPS Socket");
+	    s->http.s.sin_addr,
+	    ntohs(s->http.s.sin_port), COMM_NONBLOCKING, "HTTPS Socket");
 	leave_suid();
 	if (fd < 0)
 	    continue;
-	CBDATA_INIT_TYPE(https_port_data);
-	https_port = cbdataAlloc(https_port_data);
-	https_port->sslContext = s->sslContext;
 	comm_listen(fd);
-	comm_accept(fd, httpsAccept, https_port);
+	comm_accept(fd, httpsAccept, s);
 	commSetDefer(fd, httpAcceptDefer, NULL);
 	debug(1, 1) ("Accepting HTTPS connections at %s, port %d, FD %d.\n",
-	    inet_ntoa(s->s.sin_addr), (int) ntohs(s->s.sin_port), fd);
+	    inet_ntoa(s->http.s.sin_addr), (int) ntohs(s->http.s.sin_port), fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
 }
