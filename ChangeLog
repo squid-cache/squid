@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta12 (Jan 30, 1998):
+
 	- -D_REENTRANT when linking with -lpthreads (Henrik Nordstrom)
 	- Show symlink destinations as a hyperlink in FTP listings
 	  (Henrik Nordstrom)
