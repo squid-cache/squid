@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.318 1998/05/28 05:12:58 rousskov Exp $
+ * $Id: client_side.cc,v 1.319 1998/05/28 15:25:18 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1849,6 +1849,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if ((t = strchr(conn->in.buf, '\n')) == NULL) {
 	debug(33, 5) ("Incomplete request line, waiting for more data\n");
 	*status = 0;
+	*prefix_p = NULL;
+	*method_p = METHOD_NONE;
 	return NULL;
     }
     *req_line_sz_p = t - conn->in.buf;
@@ -2027,7 +2029,7 @@ clientReadRequest(int fd, void *data)
     method_t method;
     clientHttpRequest *http = NULL;
     clientHttpRequest **H = NULL;
-    char *prefix;
+    char *prefix = NULL;
     ErrorState *err = NULL;
     fde *F = &fd_table[fd];
     int len = conn->in.size - conn->in.offset - 1;
