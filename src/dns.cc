@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.16 1996/09/26 19:19:14 wessels Exp $
+ * $Id: dns.cc,v 1.17 1996/10/07 14:59:17 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -178,6 +178,7 @@ dnsOpenServer(char *command)
 	memset(buf, '\0', 128);
 	if (read(sfd, buf, 128) < 0 || strcmp(buf, "$alive\n$end\n")) {
 	    debug(34, 0, "dnsOpenServer: $hello read test failed\n");
+	    debug(34, 0, "--> read: %s\n", xstrerror());
 	    comm_close(sfd);
 	    return -1;
 	}
