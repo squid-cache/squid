@@ -1,4 +1,4 @@
-Changes to squid-1.1.1 ():
+Changes to squid-1.1.1 (December 15, 1996):
 
 	- Fixed announcement bug.  Announcements were always off unless
 	  a file was specified.
@@ -15,7 +15,7 @@ Changes to squid-1.1.1 ():
 	  neighbors.
 	- Ensure pid file is world-readable if umask is set otherwise
 	  (Doug Urner).
-	- Collect statistics on a few more HTTP headers.
+	- Collect statistics on a few more HTTP headers (Ed Knowles).
 
 Changes to squid-1.1.0 (December 6, 1996):
 
