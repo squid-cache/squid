@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.39 1999/01/21 23:15:37 wessels Exp $
+ * $Id: mem.cc,v 1.40 1999/04/14 05:16:17 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -291,6 +291,8 @@ memInit(void)
 	sizeof(helper_request), 0);
     memDataInit(MEM_HELPER_SERVER, "helper_server",
 	sizeof(helper_server), 0);
+    memDataInit(MEM_IDNS_QUERY, "idns_query",
+	sizeof(idns_query), 0);
     /* test that all entries are initialized */
     for (t = MEM_NONE, t++; t < MEM_MAX; t++) {
 	if (MEM_DONTFREE == t)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.74 1999/01/17 19:46:28 wessels Exp $
+ * $Id: dns.cc,v 1.75 1999/04/14 05:16:14 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -47,6 +47,7 @@ dnsStats(StoreEntry * sentry)
 void
 dnsInit(void)
 {
+#if USE_DNSSERVERS
     static int init = 0;
     wordlist *w;
     if (!Config.Program.dnsserver)
@@ -70,6 +71,7 @@ dnsInit(void)
 	    dnsStats, 0, 1);
     }
     init++;
+#endif
 }
 
 void
