@@ -66,7 +66,7 @@ section 59    auto-growing Memory Buffer with printf
 section 60    Packer: A uniform interface to store-like modules
 section 61    Redirector
 section 62    Generic Histogram
-section 63    Low Level Memory Pool Management
+section 63    -
 section 64    HTTP Range Header
 section 65    HTTP Cache Control Header
 section 66    HTTP Header Tools
