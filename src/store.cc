@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.170 1996/11/28 07:31:04 wessels Exp $
+ * $Id: store.cc,v 1.171 1996/11/30 22:00:46 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -252,7 +252,6 @@ unsigned long store_mem_size = 0;
 
 static int store_pages_high = 0;
 static int store_pages_low = 0;
-static int store_pages_over_high = 0;
 
 /* current file name, swap file, use number as a filename */
 static int swapfileno = 0;
@@ -979,7 +978,7 @@ storeAppend(StoreEntry * e, const char *data, int len)
     if (len) {
 	debug(20, 5, "storeAppend: appending %d bytes for '%s'\n", len, e->key);
 	storeGetMemSpace(len);
-	if (store_pages_over_high) {
+	if (sm_stats.n_pages_in_use > store_pages_low) {
 	    if (mem->e_current_len > Config.Store.maxObjectSize)
 		storeStartDeleteBehind(e);
 	}
@@ -1822,7 +1821,6 @@ storeGetMemSpace(int size)
 
     i = 3;
     if (sm_stats.n_pages_in_use + pages_needed > store_pages_high) {
-	store_pages_over_high = 1;
 	if (squid_curtime - last_warning > 600) {
 	    debug(20, 0, "WARNING: Over store_pages high-water mark (%d > %d)\n",
 		sm_stats.n_pages_in_use + pages_needed, store_pages_high);
@@ -1830,8 +1828,6 @@ storeGetMemSpace(int size)
 	    debug(20, 0, "Perhaps you should increase cache_mem?\n");
 	    i = 0;
 	}
-    } else {
-	store_pages_over_high = 0;
     }
     debug(20, i, "storeGetMemSpace stats:\n");
     debug(20, i, "  %6d objects locked in memory\n", n_locked);
