@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.241 1998/03/31 04:45:24 wessels Exp $
+ * $Id: main.cc,v 1.242 1998/03/31 05:34:48 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -118,6 +118,7 @@ static int malloc_debug_level = 0;
 #endif
 static volatile int do_reconfigure = 0;
 static volatile int do_rotate = 0;
+static volatile int do_shutdown = 0;
 
 static void mainRotate(void);
 static void mainReconfigure(void);
@@ -312,7 +313,7 @@ reconfigure(int sig)
 void
 shut_down(int sig)
 {
-    shutdown_pending = sig == SIGINT ? -1 : 1;
+    do_shutdown = sig == SIGINT ? -1 : 1;
 #ifdef KILL_PARENT_OPT
     if (getppid() > 1) {
 	debug(1, 1) ("Killing RunCache, pid %d\n", getppid());
@@ -609,11 +610,13 @@ main(int argc, char **argv)
 	} else if (do_rotate) {
 	    mainRotate();
 	    do_rotate = 0;
-	} else if (shutdown_pending) {
+	} else if (do_shutdown) {
 	    debug(1, 1) ("Preparing for shutdown after %d requests\n",
 		Counter.client_http.requests);
 	    debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
-		shutdown_pending > 0 ? (int) Config.shutdownLifetime : 0);
+		do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
+	    do_shutdown = 0;
+	    shutting_down = 1;
 	}
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
@@ -641,10 +644,10 @@ main(int argc, char **argv)
 #ifdef SQUID_SNMP
 	    snmpConnectionClose();
 #endif
-	    if (shutdown_pending) {
+	    if (shutting_down) {
 		normal_shutdown();
 	    } else {
-		fatal_dump("MAIN: SHUTDOWN from comm_select, but nothing pending.");
+		fatal_dump("MAIN: Unexpected SHUTDOWN from comm_select.");
 	    }
 	    break;
 	case COMM_TIMEOUT:

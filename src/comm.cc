@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.240 1998/03/31 04:09:49 wessels Exp $
+ * $Id: comm.cc,v 1.241 1998/03/31 05:34:46 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -482,7 +482,7 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 	F->timeout_data = NULL;
 	return F->timeout = 0;
     }
-    if (shutdown_pending) {
+    if (shutting_down) {
 	/* don't increase the timeout if something pending */
 	if (F->timeout > 0 && (int) (F->timeout - squid_curtime) < timeout)
 	    return F->timeout;
@@ -633,7 +633,7 @@ comm_close(int fd)
     F = &fd_table[fd];
     if (EBIT_TEST(F->flags, FD_CLOSING))
 	return;
-    if (shutdown_pending && (!F->open || F->type == FD_FILE))
+    if (shutting_down && (!F->open || F->type == FD_FILE))
 	return;
     assert(F->open);
     assert(F->type != FD_FILE);
@@ -881,14 +881,14 @@ comm_poll(time_t sec)
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
 #endif
-	if (shutdown_pending) {
+	if (shutting_down) {
 	    serverConnectionsClose();
 	    dnsShutdownServers();
 	    redirectShutdownServers();
-	    /* shutdown_pending will be set to
+	    /* shutting_down will be set to
 	     * +1 for SIGTERM
 	     * -1 for SIGINT */
-	    if (shutdown_pending > 0)
+	    if (shutting_down > 0)
 		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
 		setSocketShutdownLifetimes(1);
@@ -914,7 +914,7 @@ comm_poll(time_t sec)
 		nfds++;
 	    }
 	}
-	if (shutdown_pending)
+	if (shutting_down)
 	    debug(5, 2) ("comm_poll: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
@@ -1039,14 +1039,14 @@ comm_select(time_t sec)
 
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
-	if (shutdown_pending) {
+	if (shutting_down) {
 	    serverConnectionsClose();
 	    dnsShutdownServers();
 	    redirectShutdownServers();
-	    /* shutdown_pending will be set to
+	    /* shutting_down will be set to
 	     * +1 for SIGTERM
 	     * -1 for SIGINT */
-	    if (shutdown_pending > 0)
+	    if (shutting_down > 0)
 		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
 		setSocketShutdownLifetimes(1);
@@ -1065,7 +1065,7 @@ comm_select(time_t sec)
 		FD_SET(i, &writefds);
 	    }
 	}
-	if (shutdown_pending)
+	if (shutting_down)
 	    debug(5, 2) ("comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
