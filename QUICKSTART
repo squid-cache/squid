@@ -14,7 +14,7 @@ Uncomment and edit the following lines in /usr/local/squid/etc/squid.conf:
 
 ==============================================================================
 
-cache_host
+cache_peer
 
     If you have a parent cache, put it here.  The administrators of the
     parent cache typically provided you with instructions.  You should
@@ -26,10 +26,10 @@ cache_mem
     Warning: Squid uses much more than this value.  Rule of thumb: if
     you have N megabytes free for Squid, put N/3 here.
 
-cache_swap
+cache_dir /usr/local/squid/cache 100 16 256
 
-    Add here the amount of hard disk space (in megabytes) to devote to 
-    caching:
+    Add here (first number, here 100) the amount of hard disk space 
+    (in megabytes) to devote to caching:
 
 acl, http_access, icp_access
 
@@ -67,9 +67,11 @@ visible_hostname
 
 ==============================================================================
 
-After editing squid.conf to your liking, run Squid from the command line:
+After editing squid.conf to your liking, run Squid from the command
+line TWICE:
 
-    % /usr/local/squid/bin/squid
+    % /usr/local/squid/bin/squid -z
+    % /usr/local/squid/bin/squid 
 
 Check in the cache.log (/usr/local/squid/logs/cache.log) that
 everything is all right.  Note that "WARNING: Cannot write to swap
