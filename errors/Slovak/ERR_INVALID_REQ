@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+While trying to process the request:
+<PRE>
+%R
+</PRE>
+<P>
+došlo k nasledovnej chybe:
+<UL>
+<LI>
+<STRONG>
+Invalid Request
+</STRONG>
+</UL>
+
+<P>
+Časť HTTP požiadavky nie je chybná. Možné problémy"
+<UL>
+<LI>Chýbajúca alebo neznáma metóda (POST, GET)
+<LI>Chýbajúce URL
+<LI>Chýbajúci identifikátor HTTP (HTTP/1.0)
+<LI>Požiadavka je príliš dlhá
+<LI>Chýbajúca položka Content-Length pre požiadavky POST or PUT
+<LI>Zakázaný znak v názve serveru; podtrhovník nie je povolený
+</UL>
+</P>

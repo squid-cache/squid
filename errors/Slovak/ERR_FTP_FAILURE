@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Pri pokuse o prístup k"
+<A HREF="%U">%U</A>
+sa vyskytla chyba FTP.
+<P>
+Squid odoslal nasledujúci FTP príkaz:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+a obdržal túto odpoveď:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+To môže byť spôsobené uvedením absolútnej cesty v FTP URL (čo odporuje RFC
+1738). V tomto prípade by ste dokument mohli nájsť na <A HREF="%B">%B</A>.
+</P>
+

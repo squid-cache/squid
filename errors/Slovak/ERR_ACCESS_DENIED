@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Pri pokuse o prístup k:
+<A HREF="%U">%U</A>
+<P>
+došlo k nasledovnej chybe:
+<UL>
+<LI>
+<STRONG>
+Access Denied.
+</STRONG>
+<P>
+Pístup k dokumentu Vám teraz nebol umožnený v dôsledku nedostatočných
+prístupových práv. Ak si myslíte, že je to chyba, kontaktujte prosím správcu
+daného systému.
+</UL>
+</P>
+

@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR>
+<P>
+Pri pokuse o prístup k:
+<A HREF="%U">%U</A>
+<P>
+došlo k nasledovnej chybe:
+<UL>
+<LI>
+<STRONG>
+Vami požadovaný dokument sa nenachádza v cachi pričom bola špecifikovaná
+direktíva <code>only-if-cached</code>.
+</STRONG>
+</UL>
+
+<P>
+
+Vyslali ste požiadavku s direktívou <code>only-if-cached</code> na riadenie
+činnosti cache. Požadovaný dokument nebol nájdený v cachi <em>alebo</em>
+tento dokument vyžaduje aktualizáciu pričom toto je direktívou
+<code>only-if-cached</code> obmedzené.
+
+</P>

@@ -1,0 +1,34 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Cache Manager Access Denied</TITLE>
+</HEAD>
+<BODY>
+<H1>CHYBA</H1>
+<H2>Cache Manager Access Denied</H2>
+<HR>
+<P>
+Pri pokuse o prístup k:
+<A HREF="%U">%U</A>
+<P>
+došlo k nasledovnej chybe:
+<UL>
+<LI>
+<STRONG>
+Cache Manager Access Denied.
+</STRONG>
+</UL>
+</P>
+
+<P>Prístup k dokumentu:
+<PRE>    %U</PRE>
+Vám bude povolený až po Vašej autentifikácii.
+</P>
+
+<P>Na to, aby ste boli schopný sa autentifikovať potrebujete prehliadač
+Netscape verzia 2.0 alebo vyššiu, Microsoft Internet Explorer 3.0 alebo
+prehliadač podporujúci protokol HTTP/1.1. Ak máte problém pri
+autentifikácii, kontaktujte prosím <A HREF="mailto:%w">cache administrátora</A>.
+Ak Vy sám <em>ste</em> administrátor, prečítajte si prosím dokumentáciu k
+rozhraniu cache manažéra a prezrite si detailnejšie chybové hlásenie v cache
+logu.</P>
+
