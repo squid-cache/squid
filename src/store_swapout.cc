@@ -71,7 +71,10 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
     assert(mem != NULL);
 #endif
     mem->swapout.done_offset += len;
-    if (e->store_status == STORE_PENDING || mem->swapout.done_offset < e->object_len + mem->swapout.meta_len) {
+    if (e->store_status == STORE_PENDING) {
+	storeCheckSwapOut(e);
+	return;
+    } else if (mem->swapout.done_offset < e->object_len + mem->swapout.hdr_len) {
 	storeCheckSwapOut(e);
 	return;
     }
@@ -82,9 +85,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
     storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
     if (storeCheckCachable(e)) {
 	storeLog(STORE_LOG_SWAPOUT, e);
-#if 0
 	storeDirSwapLog(e);
-#endif
     }
     /* Note, we don't otherwise call storeReleaseRequest() here because
      * storeCheckCachable() does it for is if necessary */
@@ -169,16 +170,27 @@ storeCheckSwapOut(StoreEntry * e)
 	return;
     assert(mem->swapout.fd > -1);
     swap_buf = memAllocate(MEM_DISK_BUF, 1);
-    if (mem->swapout.queue_offset == 0)
-	hdr_len = storeBuildMetaData(e, swap_buf);
 
+#if USE_SWAP_HEADER
+	/* XXX: BROKEN */
+    if (mem->swapout.queue_offset == 0) {
+	tlv = storeSwapMetaBuild(e);
+	hdr_buf = storeSwapMetaPack(tlv, &hdr_len);
+    }
     if (swapout_size > STORE_SWAP_BUF - hdr_len)
 	swapout_size = STORE_SWAP_BUF - hdr_len;
-
     swap_buf_len = stmemCopy(mem->data,
 	mem->swapout.queue_offset,
 	swap_buf + hdr_len,
 	swapout_size) + hdr_len;
+#else
+    if (swapout_size > STORE_SWAP_BUF)
+	swapout_size = STORE_SWAP_BUF;
+    swap_buf_len = stmemCopy(mem->data,
+        mem->swapout.queue_offset,
+        swap_buf,
+        swapout_size);
+#endif
 
     if (swap_buf_len < 0) {
 	debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));

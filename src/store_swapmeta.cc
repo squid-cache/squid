@@ -1,114 +1,109 @@
 #include "squid.h"
 
-#define squid_key_size MD5_DIGEST_CHARS
-
-/* build swapfile header */
-int
-storeBuildMetaData(StoreEntry * e, char *swap_buf_c)
+static tlv **
+storeSwapTLVAdd(int type, const void *ptr, size_t len, tlv ** tail)
 {
-    MemObject *mem;
-    int a = STORE_META_TLD_START;
-    char *meta_buf;
-    mem = e->mem_obj;
-    meta_buf = mem->swapout.meta_buf;
-    debug(20, 3) ("storeBuildSwapFileHeader: called.\n");
-    assert(e->swap_status == SWAPOUT_WRITING);
-    if (!meta_buf)
-	meta_buf = mem->swapout.meta_buf = xmalloc(1024);
-    /* construct header */
-    /* add Length(int)-Type(char)-Data encoded info  */
-    meta_buf[0] = META_OK;
-    xmemcpy(&meta_buf[1], &a, sizeof(int));
-    mem->swapout.meta_len = STORE_META_TLD_START;
-    addSwapHdr(STORE_META_KEY, squid_key_size, (void *) e->key,
-	mem->swapout.meta_buf, &mem->swapout.meta_len);
-    addSwapHdr(STORE_META_STD, STORE_HDR_METASIZE, (void *) &e->timestamp,
-	mem->swapout.meta_buf, &mem->swapout.meta_len);
-    debug(20, 3) ("storeBuildSwapFileHeader: len=%d.\n", mem->swapout.meta_len);
-    if (swap_buf_c)
-	xmemcpy(swap_buf_c, mem->swapout.meta_buf, mem->swapout.meta_len);
-    return mem->swapout.meta_len;
-}
-
-int
-getSwapHdr(int *type, int *len, void *dst, char *write_buf, int hdr_len)
-{
-    static int cur = 0;
-    static char *curptr;
-    char *tmp_buf;
-    if (cur == 0 || curptr != write_buf) {	/* first call or rewind ! */
-	cur = STORE_META_TLD_START;
-	curptr = write_buf;
-    }
-    if (cur + STORE_META_TLD_START > hdr_len) {
-	debug(20, 3) ("getSwapHdr: overflow, %d %d.\n", cur, hdr_len);
-	cur = 0;
-	return -1;
-    }
-    tmp_buf = &write_buf[cur];	/* position ourselves */
-    xmemcpy(len, SwapMetaSize(tmp_buf), sizeof(int));	/* length */
-    *type = SwapMetaType(tmp_buf);	/* type */
-    xmemcpy(dst, SwapMetaData(tmp_buf), *len);	/* data */
-    cur += STORE_META_TLD_START + *len;	/* advance position */
-    debug(20, 4) ("getSwapHdr: t=%d l=%d (cur=%d hdr_len=%d) (%p)\n",
-	*type, *len, cur, hdr_len, dst);
-    if (cur == hdr_len) {
-	debug(20, 4) ("getSwapHdr: finished with this.\n");
-	cur = 0;
-	return 1;
-    }
-    return 1;			/* ok ! */
+    tlv *t = xcalloc(1, sizeof(tlv));
+    t->type = (char) type;
+    t->length = (int) len;
+    t->value = xmalloc(len);
+    xmemcpy(t->value, ptr, len);
+    *tail = t;
+    return &t->next;		/* return new tail pointer */
 }
 
 void
-addSwapHdr(int type, int len, void *src, char *write_buf, int *write_len)
+storeSwapTLVFree(tlv * n)
 {
-    int hdr_len = *write_len;
-    char *base = &write_buf[hdr_len];
-    debug(20, 3) ("addSwapHdr: at %d\n", hdr_len);
-    base[0] = (char) type;
-    xmemcpy(&base[1], &len, sizeof(int));
-    xmemcpy(SwapMetaData(base), src, len);
-    hdr_len += STORE_META_TLD_START + len;
-    /* now we know length */
-    debug(20, 3) ("addSwapHdr: added type=%d len=%d data=%p. hdr_len=%d\n",
-	type, len, src, hdr_len);
-    /* update header */
-    xmemcpy(&write_buf[1], &hdr_len, sizeof(int));
-    *write_len = hdr_len;
-}
-
-int
-storeGetMetaBuf(const char *buf, MemObject * mem)
-{
-    int hdr_len;
-    assert(mem != NULL);
-    /* the key */
-    if (SwapMetaType(buf) != META_OK) {
-	debug(20, 1) ("storeGetMetaBuf:Found an old-style object, damn.\n");
-	return -1;
+    tlv *t;
+    while ((t = n) != NULL) {
+	n = t->next;
+	xfree(t->value);
+	xfree(t);
     }
-    xmemcpy(&hdr_len, SwapMetaSize(buf), sizeof(int));
-    mem->swapout.meta_len = hdr_len;
-    mem->swapout.meta_buf = xmalloc(hdr_len);
-    xmemcpy(mem->swapout.meta_buf, buf, hdr_len);
-    debug(20, 3) (" header size %d\n", hdr_len);
-    return hdr_len;
 }
 
-#if OLD_CODE
-static int
-storeParseMetaBuf(StoreEntry * e)
+/*
+ * Build a TLV list for a StoreEntry
+ */
+tlv *
+storeSwapMetaBuild(StoreEntry * e)
 {
-    static char mbuf[1024];
-    int myt, myl;
     MemObject *mem = e->mem_obj;
-    assert(e && e->mem_obj && e->key);
-    getSwapHdr(&myt, &myl, mbuf, mem->swapout.meta_buf, mem->swapout.meta_len);
-    mbuf[myl] = 0;
-    debug(20, 3) ("storeParseMetaBuf: key=%s\n", mbuf);
-    e->key = xstrdup(storeKeyScan(mbuf));
-    getSwapHdr(&myt, &myl, &e->timestamp, mem->swapout.meta_buf, mem->swapout.meta_len);
-    return 1;
+    tlv *TLV = NULL;		/* we'll return this */
+    tlv **T = &TLV;
+    const char *url;
+    assert(mem != NULL);
+    assert(e->swap_status == SWAPOUT_WRITING);
+    url = storeUrl(e);
+    debug(20, 3) ("storeSwapMetaBuild: %s\n", url);
+    T = storeSwapTLVAdd(STORE_META_KEY, e->key, cacheKeySize, T);
+    T = storeSwapTLVAdd(STORE_META_STD, &e->timestamp, STORE_HDR_METASIZE, T);
+    T = storeSwapTLVAdd(STORE_META_URL, url, strlen(url), T);
+    return TLV;
 }
-#endif
+
+char *
+storeSwapMetaPack(tlv * tlv_list, int *length)
+{
+    size_t buflen = 0;
+    int i;
+    tlv *t;
+    off_t j = 0;
+    char *buf;
+    assert(length != NULL);
+    buflen++;			/* STORE_META_OK */
+    buflen += sizeof(int);	/* size of header to follow */
+    for (t = tlv_list; t; t = t->next)
+	buflen += t->length + sizeof(char) + sizeof(int);
+    buflen++;			/* STORE_META_END */
+    buf = xmalloc(buflen);
+    buf[j++] = (char) STORE_META_OK;
+    i = (int) buflen - (sizeof(char) + sizeof(int));
+    xmemcpy(&buf[j], &i, sizeof(int));
+    for (t = tlv_list; t; t = t->next) {
+	buf[j++] = (char) t->type;
+	xmemcpy(&buf[j], &t->length, sizeof(int));
+	j += sizeof(int);
+	xmemcpy(&buf[j], t->value, t->length);
+	j += t->length;
+    }
+    buf[j++] = (char) STORE_META_END;
+    assert(j == buflen);
+    *length = (int) buflen;
+    return buf;
+}
+
+tlv *
+storeSwapMetaUnpack(const char *buf, int *hdr_len)
+{
+    tlv *TLV;			/* we'll return this */
+    tlv **T = &TLV;
+    char type;
+    int length;
+    int buflen;
+    off_t j = 0;
+    assert(buflen > (sizeof(char) + sizeof(int)));
+    assert(buf != NULL);
+    assert(hdr_len != NULL);
+    if (buf[j++] != (char) STORE_META_OK)
+	return NULL;
+    xmemcpy(&buflen, &buf[j], sizeof(int));
+    j += sizeof(int);
+    assert(buflen > 0);
+    while (buflen - j > (sizeof(char) + sizeof(int))) {
+	type = buf[j++];
+	xmemcpy(&length, &buf[j], sizeof(int));
+	j += sizeof(int);
+	if (j + length > buflen) {
+	    debug(20, 0) ("storeSwapMetaUnpack: overflow!\n");
+	    debug(20, 0) ("\ttype=%d, length=%d, buflen=%d, offset=%d\n",
+		type, length, buflen, (int) j);
+	    break;
+	}
+	T = storeSwapTLVAdd(type, &buf[j], (size_t) length, T);
+	j += length;
+    }
+    *hdr_len = buflen + sizeof(char) + sizeof(int);
+    return TLV;
+}

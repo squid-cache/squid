@@ -1,8 +1,5 @@
 
 
-
-
-
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -807,8 +804,7 @@ struct _MemObject {
 	off_t queue_offset;
 	off_t done_offset;
 	int fd;
-	int meta_len;
-	char *meta_buf;
+	size_t hdr_len;		/* size of the swapfile header */
     } swapout;
     struct _http_reply *reply;
     request_t *request;
@@ -952,4 +948,11 @@ struct _StatCounters {
     int select_loops;
     double cputime;
     struct timeval timestamp;
+};
+
+struct _tlv {
+	char type;
+	int length;
+	void *value;
+	struct _tlv *next;
 };

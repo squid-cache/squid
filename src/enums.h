@@ -449,6 +449,9 @@ typedef enum {
     MEM_MAX
 } mem_type;
 
+/*
+ * NOTE!  We must preserve the order of this list!
+ */
 enum {
     STORE_META_VOID,		/* should not come up */
     STORE_META_KEY_URL,		/* key w/ keytype */
@@ -457,7 +460,8 @@ enum {
     STORE_META_URL,		/* the url , if not in the header */
     STORE_META_STD,		/* standard metadata */
     STORE_META_HITMETERING,	/* reserved for hit metering */
-    STORE_META_VALID
+    STORE_META_VALID,
+    STORE_META_END
 };
 
 enum {

@@ -1,5 +1,10 @@
 #include "squid.h"
 
+/*
+ * Size of a cache_key in bytes
+ */
+size_t cacheKeySize = MD5_DIGEST_CHARS;
+
 const char *
 storeKeyText(const unsigned char *key)
 {

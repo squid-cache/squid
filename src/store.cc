@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.372 1998/02/03 03:08:51 wessels Exp $
+ * $Id: store.cc,v 1.373 1998/02/03 07:35:28 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -232,7 +232,6 @@ destroy_MemObject(StoreEntry * e)
 	storeUnregister(e, mem->clients->callback_data);
 #endif
     assert(mem->clients == NULL);
-    safe_free(mem->swapout.meta_buf);
     memFree(MEM_HTTP_REPLY, mem->reply);
     safe_free(mem->url);
     safe_free(mem->log_url);
@@ -1452,4 +1451,3 @@ storeBufferFlush(StoreEntry * e)
     EBIT_CLR(e->flag, DELAY_SENDING);
     InvokeHandlers(e);
 }
-
