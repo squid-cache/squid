@@ -4,3 +4,5 @@
 	- Changed ftpget to be a server so cached never forks
 	- Added blocklist patch
 	- Changed #includes and such.
+	- the -d (debug) option is now gone.  Use new "debug" in the
+	  config file instead.  Debugging is section,level.
