@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.145 1997/12/21 11:21:11 kostas Exp $
+ * $Id: squid.h,v 1.146 1997/12/31 04:58:04 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -170,13 +170,19 @@
 #define assert(X) ((void)0)
 #endif
 
-/* With linux, poll.h might not be available, even though poll(2) is */
-/* Oskar Pearson <oskar@is.co.za> */
+/*
+ * With linux and other systems, poll.h might not be available,
+ * even though poll(2) is.
+ *  -- Oskar Pearson <oskar@is.co.za>
+ *  -- Stewart Forster <slf@connect.com.au>
+ */
 #if HAVE_POLL
-#if HAVE_POLL_H && defined(_SQUID_LINUX_)
+#if defined(_SQUID_LINUX_)
+#if HAVE_POLL_H
 #include <poll.h>
-#else
+#else /* HAVE_POLL_H */
 #undef HAVE_POLL
+#endif /* HAVE_POLL_H */
 #endif /* end of Linux workaround */
 #endif /* HAVE_POLL */
 
