@@ -30,13 +30,6 @@ SOFTWARE.
 #define ASN1_H
 
 
-#undef _ANSI_ARGS_
-#if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-#define _ANSI_ARGS_(x) x
-#else
-#define _ANSI_ARGS_(x) ()
-#endif
-
 #include <sys/types.h>
 
 #ifndef EIGHTBIT_SUBIDS
@@ -95,105 +88,105 @@ struct counter64 {
 };
 
 
-extern u_char *asn_parse_int _ANSI_ARGS_((u_char * data,
+extern u_char *asn_parse_int (u_char * data,
 	int *datalength,
 	u_char * type,
 	long *intp,
-	int intsize));
+	int intsize);
 
-extern u_char *asn_build_int _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_int (u_char * data,
 	int *datalength,
 	u_char type,
 	long *intp,
-	int intsize));
+	int intsize);
 
-extern u_char *asn_parse_unsigned_int _ANSI_ARGS_((u_char * data,
+extern u_char *asn_parse_unsigned_int (u_char * data,
 	int *datalength,
 	u_char * type,
 	u_long * intp,
-	int intsize));
+	int intsize);
 
-extern u_char *asn_build_unsigned_int _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_unsigned_int (u_char * data,
 	int *datalength,
 	u_char type,
 	u_long * intp,
-	int intsize));
+	int intsize);
 
-extern u_char *asn_parse_string _ANSI_ARGS_((u_char * data,
+extern u_char *asn_parse_string (u_char * data,
 	int *datalength,
 	u_char * type,
 	u_char * string,
-	int *len));
+	int *len);
 
-extern u_char *asn_build_string _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_string (u_char * data,
 	int *datalength,
 	u_char type,
 	u_char * str,
-	int len));
+	int len);
 
-extern u_char *asn_parse_header _ANSI_ARGS_((u_char * data,
+extern u_char *asn_parse_header (u_char * data,
 	int *datalength,
-	u_char * type));
+	u_char * type);
 
-extern u_char *asn_build_header _ANSI_ARGS_((u_char * data,
-	int *datalength,
-	u_char type,
-	int len));
-
-extern u_char *asn_build_sequence _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_header (u_char * data,
 	int *datalength,
 	u_char type,
-	int len));
+	int len);
 
-extern u_char *asn_parse_length _ANSI_ARGS_((u_char * data,
-	u_long * eln));
-
-extern u_char *asn_build_length _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_sequence (u_char * data,
 	int *datalength,
-	int len));
+	u_char type,
+	int len);
 
-extern u_char *asn_parse_objid _ANSI_ARGS_((
+extern u_char *asn_parse_length (u_char * data,
+	u_long * eln);
+
+extern u_char *asn_build_length (u_char * data,
+	int *datalength,
+	int len);
+
+extern u_char *asn_parse_objid (
 	u_char * data,
 	int *datalength,
 	u_char * type,
 	oid * objid,
-	int *objidlength));
+	int *objidlength);
 
-extern u_char *asn_build_objid _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_objid (u_char * data,
 	int *datalength,
 	u_char type,
 	oid * objid,
-	int objidlength));
+	int objidlength);
 
-extern u_char *asn_parse_null _ANSI_ARGS_((u_char * data,
+extern u_char *asn_parse_null (u_char * data,
 	int *datalength,
-	u_char * type));
+	u_char * type);
 
-extern u_char *asn_build_null _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_null (u_char * data,
 	int *datalength,
-	u_char type));
-extern u_char *asn_parse_bitstring _ANSI_ARGS_((u_char * data,
+	u_char type);
+extern u_char *asn_parse_bitstring (u_char * data,
 	int *datalength,
 	u_char * type,
 	u_char * str,
-	int *len));
+	int *len);
 
-extern u_char *asn_build_bitstring _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_bitstring (u_char * data,
 	int *datalength,
 	u_char type,
 	u_char * str,
-	int len));
+	int len);
 
-extern u_char *asn_parse_unsigned_int64 _ANSI_ARGS_((u_char * data,
+extern u_char *asn_parse_unsigned_int64 (u_char * data,
 	int *datalength,
 	u_char * type,
 	struct counter64 * cp,
-	int cp_size));
+	int cp_size);
 
-extern u_char *asn_build_unsigned_int64 _ANSI_ARGS_((u_char * data,
+extern u_char *asn_build_unsigned_int64 (u_char * data,
 	int *datalength,
 	u_char type,
 	struct counter64 * cp,
-	int cp_size));
+	int cp_size);
 
 #endif

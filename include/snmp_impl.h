@@ -28,23 +28,6 @@ SOFTWARE.
 #ifndef SNMP_IMPL_H
 #define SNMP_IMPL_H
 
-
-#undef _ANSI_ARGS_
-#if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-#define _ANSI_ARGS_(x) x
-#else
-#define _ANSI_ARGS_(x) ()
-#endif
-
-
-#if (defined vax) || (defined (mips))
-/*
- * This is a fairly bogus thing to do, but there seems to be no better way for
- * compilers that don't understand void pointers.
- */
-#define void char
-#endif
-
 /*
  * Error codes:
  */
@@ -106,32 +89,32 @@ SOFTWARE.
 /* from snmp.c */
 extern u_char sid[];		/* size SID_MAX_LEN */
 
-extern u_char *snmp_parse_var_op _ANSI_ARGS_((u_char * data,
+extern u_char *snmp_parse_var_op (u_char * data,
 	oid * var_name,
 	int *var_name_len,
 	u_char * var_val_type,
 	int *var_val_len,
 	u_char ** var_val,
-	int *listlength));
+	int *listlength);
 
-extern u_char *snmp_build_var_op _ANSI_ARGS_((u_char * data,
+extern u_char *snmp_build_var_op (u_char * data,
 	oid * var_name,
 	int *var_name_len,
 	u_char var_val_type,
 	int var_val_len,
 	u_char * var_val,
-	int *listlength));
+	int *listlength);
 
-extern u_char *snmp_auth_parse _ANSI_ARGS_((u_char * data,
+extern u_char *snmp_auth_parse (u_char * data,
 	int *length,
 	u_char * sid,
 	int *slen,
-	long *version));
+	long *version);
 
-extern u_char *snmp_auth_build _ANSI_ARGS_((u_char * data,
+extern u_char *snmp_auth_build (u_char * data,
 	int *length,
 	struct snmp_session * session,
 	int is_agent,
-	int messagelen));
+	int messagelen);
 
 #endif

@@ -28,15 +28,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef SNMPLIB_H
 #define SNMPLIB_H
 
-
-#undef _ANSI_ARGS_
-#if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-#define _ANSI_ARGS_(x) x
-#else
-#define _ANSI_ARGS_(x) ()
-#endif
-
-
 u_char *var_system();
 u_char *var_ifEntry();
 u_char *var_atEntry();

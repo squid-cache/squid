@@ -27,20 +27,9 @@ SOFTWARE.
 #ifndef _PARSE_H
 #define _PARSE_H
 
-
-#undef _ANSI_ARGS_
-#if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-#define _ANSI_ARGS_(x) x
-#else
-#define _ANSI_ARGS_(x) ()
-#endif
-
-
 #define MAXLABEL	64	/* maximum characters in a label */
 #define MAXTOKEN	64	/* maximum characters in a token */
 #define MAXQUOTESTR	512	/* maximum characters in a quoted string */
-
-
 
 /*
  * A linked list of tag-value pairs for enumerated integers.
@@ -98,7 +87,7 @@ struct tree {
 #define TYPE_NSAPADDRESS    13
 #define TYPE_UINTEGER	    14
 
-struct tree *read_mib _ANSI_ARGS_((char *fname));
+struct tree *read_mib (const char *fname);
 
 
 #endif

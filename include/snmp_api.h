@@ -27,15 +27,6 @@ SOFTWARE.
 #ifndef _SNMP_API_H
 #define _SNMP_API_H
 
-
-#undef _ANSI_ARGS_
-#if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-#define _ANSI_ARGS_(x) x
-#else
-#define _ANSI_ARGS_(x) ()
-#endif
-
-
 #include <sys/time.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -189,7 +180,7 @@ struct variable_list {
  * the pointer passed to snmp_open()).  On any error, NULL is returned
  * and snmp_errno is set to the appropriate error code.
  */
-struct snmp_session *snmp_open _ANSI_ARGS_((struct snmp_session * session));
+struct snmp_session *snmp_open (struct snmp_session * session);
 
 /*
  * int snmp_close(session)
@@ -199,7 +190,7 @@ struct snmp_session *snmp_open _ANSI_ARGS_((struct snmp_session * session));
  * dequeues any pending requests, and closes any sockets allocated for
  * the session.  Returns 0 on error, 1 otherwise.
  */
-int snmp_close _ANSI_ARGS_((struct snmp_session * session));
+int snmp_close (struct snmp_session * session);
 
 
 /*
@@ -215,8 +206,8 @@ int snmp_close _ANSI_ARGS_((struct snmp_session * session));
  * On any error, 0 is returned.
  * The pdu is freed by snmp_send() unless a failure occured.
  */
-int snmp_send _ANSI_ARGS_((struct snmp_session * session,
-	struct snmp_pdu * pdu));
+int snmp_send (struct snmp_session * session,
+	struct snmp_pdu * pdu);
 
 
 /*
@@ -267,10 +258,10 @@ void snmp_free_pdu(struct snmp_pdu *pdu);
  *
  * snmp_select_info returns the number of open sockets.  (i.e. The number of sessions open)
  */
-int snmp_select_info _ANSI_ARGS_((int *numfds,
+int snmp_select_info (int *numfds,
 	fd_set * fdset,
 	struct timeval * timeout,
-	int *block));
+	int *block);
 
 /*
  * void snmp_timeout();
@@ -283,7 +274,7 @@ int snmp_select_info _ANSI_ARGS_((int *numfds,
  * resent.  If there are no more retries available, the callback for the session
  * is used to alert the user of the timeout.
  */
-void snmp_timeout _ANSI_ARGS_((void));
+void snmp_timeout (void);
 
 
 /*

@@ -19,13 +19,12 @@ CSRCS=	snmp_client.c snmp.c snmp_auth.c asn1.c mib.c parse.c snmp_api.c \
 OBJS=	snmp_client.o snmp.o snmp_auth.o asn1.o mib.o parse.o snmp_api.o \
 	md5.o usec.o snmpdump.o
 
-CC= @CC@
-FLAGS=  -g
-DEFS= -DBSD4_3 -DSQUID_SNMP=1
-INCLUDE= -I../include -I./../include -I../src -I./../src
-MIBDEFS= -DMIBFILEPATH=\"$(prefix)/lib\"
-# CFLAGS=-O -DDEBUG -DBSD4_3
-CFLAGS=  $(FLAGS) $(DEFS) $(CONFDEFS) $(INCLUDE)
+CC	= @CC@
+FLAGS	= -g
+DEFS	= -DSQUID_SNMP=1
+INCLUDE	= -I../include -I$(srcdir)/../include
+MIBDEFS	= -DMIBFILEPATH=\"$(prefix)/lib\"
+CFLAGS	= $(FLAGS) $(DEFS) $(INCLUDE)
 
 
 all:	$(TARG)
