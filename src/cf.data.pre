@@ -2177,7 +2177,7 @@ DOC_START
 	incoming activity, we check incoming sockets again after
 	processing the next 'incoming_min_rate' I/O events.
 
-incoming_min_rate 2
-incoming_max_rate 16
+incoming_min_rate 16
+incoming_max_rate 2
 DOC_END
 EOF
