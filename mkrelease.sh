@@ -9,6 +9,7 @@ name=${package}-${rev}
 tag=`echo ${name} | tr a-z.- A-Z__`
 startdir=$PWD/
 dst=${2:-$PWD}/
+RELEASE_TIME=`date +%s`
 
 tmpdir=$PWD/${name}-mkrelease
 
@@ -37,6 +38,10 @@ w
 EOS
 ed -s configure <<EOS
 g/${VERSION}-CVS/ s//${VERSION}/
+w
+EOS
+ed -s include/version.h <<EOS
+g/squid_curtime/ s//${RELEASE_TIME}/
 w
 EOS
 
