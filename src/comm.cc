@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.315 2001/01/12 00:37:16 wessels Exp $
+ * $Id: comm.cc,v 1.316 2001/02/23 19:42:36 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -868,7 +868,6 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
 	memPoolFree(comm_write_pool, state);
 	fd_table[fd].rwstate = NULL;
     }
-    assert(state == NULL);
     fd_table[fd].rwstate = state = memPoolAlloc(comm_write_pool);
     state->buf = buf;
     state->size = size;
