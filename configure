@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.21 
+# From configure.in Revision: 1.22 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2022,6 +2022,7 @@ for ac_func in \
 	getdtablesize \
 	getrusage \
 	lrand48 \
+	mallocblksize \
 	mallinfo \
 	mallopt \
 	memmove \
@@ -2049,7 +2050,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2053 "configure"
+#line 2054 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2099,7 +2100,7 @@ if test "$cross_compiling" = yes; then
   SQUID_FD_SETSIZE=256
 else
 cat > conftest.$ac_ext <<EOF
-#line 2103 "configure"
+#line 2104 "configure"
 #include "confdefs.h"
 
 #include <unistd.h>
@@ -2167,7 +2168,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_SNDBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2171 "configure"
+#line 2172 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2203,7 +2204,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_RCVBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2207 "configure"
+#line 2208 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2239,7 +2240,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_SNDBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2243 "configure"
+#line 2244 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2275,7 +2276,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_RCVBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2279 "configure"
+#line 2280 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2308,7 +2309,7 @@ EOF
 
 echo $ac_n "checking if sys_errlist is already defined""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2312 "configure"
+#line 2313 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 int main() { return 0; }
