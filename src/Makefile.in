@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.266 2003/01/17 05:18:27 robertc Exp $
+#  $Id: Makefile.in,v 1.267 2003/01/17 05:39:14 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -270,6 +270,7 @@ squid_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	ident.cc \
+	int.cc \
 	internal.cc \
 	ipc.cc \
 	ipcache.cc \
@@ -537,15 +538,15 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
-	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
-	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
-	$(am__objects_7) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
-	MemBuf.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
-	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
-	$(am__objects_3) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_8) \
-	ssl.$(OBJEXT) $(am__objects_9) stat.$(OBJEXT) \
+	icp_v3.$(OBJEXT) ident.$(OBJEXT) int.$(OBJEXT) \
+	internal.$(OBJEXT) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
+	IPInterception.$(OBJEXT) $(am__objects_7) logfile.$(OBJEXT) \
+	main.$(OBJEXT) mem.$(OBJEXT) MemBuf.$(OBJEXT) mime.$(OBJEXT) \
+	multicast.$(OBJEXT) neighbors.$(OBJEXT) net_db.$(OBJEXT) \
+	Packer.$(OBJEXT) $(am__objects_3) pconn.$(OBJEXT) \
+	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
+	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
+	$(am__objects_8) ssl.$(OBJEXT) $(am__objects_9) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
 	store.$(OBJEXT) store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
 	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
@@ -610,16 +611,17 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/htcp.Po $(DEPDIR)/http.Po \
 @AMDEP_TRUE@	$(DEPDIR)/icmp.Po $(DEPDIR)/icp_v2.Po \
 @AMDEP_TRUE@	$(DEPDIR)/icp_v3.Po $(DEPDIR)/ident.Po \
-@AMDEP_TRUE@	$(DEPDIR)/internal.Po $(DEPDIR)/ipc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ipcache.Po $(DEPDIR)/leakfinder.Po \
-@AMDEP_TRUE@	$(DEPDIR)/logfile.Po $(DEPDIR)/main.Po \
-@AMDEP_TRUE@	$(DEPDIR)/mem.Po $(DEPDIR)/mime.Po \
-@AMDEP_TRUE@	$(DEPDIR)/multicast.Po $(DEPDIR)/neighbors.Po \
-@AMDEP_TRUE@	$(DEPDIR)/net_db.Po $(DEPDIR)/pconn.Po \
-@AMDEP_TRUE@	$(DEPDIR)/peer_digest.Po $(DEPDIR)/peer_select.Po \
-@AMDEP_TRUE@	$(DEPDIR)/pinger.Po $(DEPDIR)/recv-announce.Po \
-@AMDEP_TRUE@	$(DEPDIR)/redirect.Po $(DEPDIR)/referer.Po \
-@AMDEP_TRUE@	$(DEPDIR)/refresh.Po $(DEPDIR)/repl_modules.Po \
+@AMDEP_TRUE@	$(DEPDIR)/int.Po $(DEPDIR)/internal.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ipc.Po $(DEPDIR)/ipcache.Po \
+@AMDEP_TRUE@	$(DEPDIR)/leakfinder.Po $(DEPDIR)/logfile.Po \
+@AMDEP_TRUE@	$(DEPDIR)/main.Po $(DEPDIR)/mem.Po \
+@AMDEP_TRUE@	$(DEPDIR)/mime.Po $(DEPDIR)/multicast.Po \
+@AMDEP_TRUE@	$(DEPDIR)/neighbors.Po $(DEPDIR)/net_db.Po \
+@AMDEP_TRUE@	$(DEPDIR)/pconn.Po $(DEPDIR)/peer_digest.Po \
+@AMDEP_TRUE@	$(DEPDIR)/peer_select.Po $(DEPDIR)/pinger.Po \
+@AMDEP_TRUE@	$(DEPDIR)/recv-announce.Po $(DEPDIR)/redirect.Po \
+@AMDEP_TRUE@	$(DEPDIR)/referer.Po $(DEPDIR)/refresh.Po \
+@AMDEP_TRUE@	$(DEPDIR)/repl_modules.Po \
 @AMDEP_TRUE@	$(DEPDIR)/send-announce.Po $(DEPDIR)/snmp_agent.Po \
 @AMDEP_TRUE@	$(DEPDIR)/snmp_core.Po $(DEPDIR)/ssl.Po \
 @AMDEP_TRUE@	$(DEPDIR)/ssl_support.Po $(DEPDIR)/stat.Po \
@@ -844,6 +846,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icp_v2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icp_v3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ident.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/int.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/internal.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ipc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ipcache.Po@am__quote@
