@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.137 1998/02/06 17:50:17 wessels Exp $
+ * $Id: acl.cc,v 1.138 1998/02/08 17:43:03 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -68,6 +68,7 @@ static wordlist *aclDumpWordList(wordlist * data);
 static wordlist *aclDumpProtoList(void *data);
 static wordlist *aclDumpMethodList(void *data);
 static wordlist *aclDumpProxyAuth(void *data);
+static wordlist * aclDumpUnimplemented(void);
 
 #if USE_ARP_ACL
 static int checkARP(u_long ip, char *eth);
@@ -2052,6 +2053,11 @@ bintreeIpNetworkCompare(void *t1, void *t2)
 static wordlist *
 aclDumpIpList(acl_ip_data * ip)
 {
+#if USE_BIN_TREE
+    return aclDumpUnimplemented();
+#elif USE_SPLAY_TREE
+    return aclDumpUnimplemented();
+#else
     wordlist *W = NULL;
     wordlist **T = &W;
     wordlist *w;
@@ -2071,19 +2077,16 @@ aclDumpIpList(acl_ip_data * ip)
 	ip = ip->next;
     }
     return W;
+#endif
 }
 
 static wordlist *
 aclDumpDomainList(void *data)
 {
 #if USE_BIN_TREE
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
+    return aclDumpUnimplemented();
 #elif USE_SPLAY_TREE
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
+    return aclDumpUnimplemented();
 #else
     return aclDumpWordList(data);
 #endif
@@ -2119,16 +2122,12 @@ aclDumpTimeSpec(acl_time_data * t)
 static wordlist *
 aclDumpRegexList(void *data)
 {
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
+    return aclDumpUnimplemented();
 }
 static wordlist *
 aclDumpIntlist(void *data)
 {
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
+    return aclDumpUnimplemented();
 }
 static wordlist *
 aclDumpWordList(wordlist * data)
@@ -2148,26 +2147,25 @@ aclDumpWordList(wordlist * data)
 static wordlist *
 aclDumpProtoList(void *data)
 {
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
+    return aclDumpUnimplemented();
 }
 static wordlist *
 aclDumpMethodList(void *data)
 {
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
+    return aclDumpUnimplemented();
 }
 static wordlist *
 aclDumpProxyAuth(void *data)
+{
+    return aclDumpUnimplemented();
+}
+static wordlist *
+aclDumpUnimplemented(void)
 {
     wordlist *w = xcalloc(1, sizeof(wordlist));
     w->key = xstrdup("UNIMPLEMENTED");
     return w;
 }
-
-
 
 wordlist *
 aclDumpGeneric(const acl * a)
