@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.55 1998/02/12 23:36:02 wessels Exp $
+ * $Id: store_dir.cc,v 1.56 1998/02/13 18:16:06 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -311,7 +311,7 @@ storeDirProperFileno(int dirn, int fn)
 void
 storeDirSwapLog(const StoreEntry * e, int op)
 {
-    storeSwapLogData *s = xcalloc(1, sizeof(storeSwapLogData));
+    storeSwapLogData *s;
     int dirn;
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
@@ -327,6 +327,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
 	swap_log_op_str[op],
 	storeKeyText(e->key),
 	e->swap_file_number);
+    s = xcalloc(1, sizeof(storeSwapLogData));
     s->op = (char) op;
     s->swap_file_number = e->swap_file_number;
     s->timestamp = e->timestamp;
