@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.63 1998/04/24 07:09:38 wessels Exp $
+ * $Id: mime.cc,v 1.64 1998/05/05 03:49:59 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -334,7 +334,7 @@ mimeGetIconURL(const char *fn)
     char *icon = mimeGetIcon(fn);
     if (icon == NULL)
 	return NULL;
-    return urlInternal("icons", icon);
+    return internalLocalUri("/squid-internal-static/icons/", icon);
 }
 
 char *
@@ -487,7 +487,8 @@ mimeLoadIconFile(const char *icon)
     const char *type = mimeGetContentType(icon);
     if (type == NULL)
 	fatal("Unknown icon format while reading mime.conf\n");
-    xstrncpy(url, urlInternal("icons", icon), MAX_URL);
+    buf = internalLocalUri("/squid-internal-static/icons/", icon);
+    xstrncpy(url, buf, MAX_URL);
     key = storeKeyPublic(url, METHOD_GET);
     if (storeGet(key))
 	return;

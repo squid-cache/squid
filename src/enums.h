@@ -353,6 +353,7 @@ typedef enum {
     PROTO_ICP,
     PROTO_URN,
     PROTO_WHOIS,
+    PROTO_INTERNAL,
     PROTO_MAX
 } protocol_t;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.11 1998/04/24 07:09:47 wessels Exp $
+ * $Id: store_digest.cc,v 1.12 1998/05/05 03:50:01 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -258,7 +258,7 @@ storeDigestRewriteStart(void *datanotused)
     }
     debug(71, 2) ("storeDigestRewrite: start rewrite #%d\n", sd_state.rewrite_count + 1);
     /* make new store entry */
-    url = urlInternal("", StoreDigestUrlPath);
+    url = internalLocalUri(NULL, StoreDigestUrlPath);
     flags = 0;
     EBIT_SET(flags, REQ_CACHABLE);
     sd_state.rewrite_lock = e = storeCreateEntry(url, url, flags, METHOD_GET);

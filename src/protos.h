@@ -511,6 +511,7 @@ extern int netdbHostPeerRtt(const char *host, peer * peer);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
 extern void netdbDeleteAddrNetwork(struct in_addr addr);
 extern int netdbHostPeerRtt(const char *host, peer * peer);
+extern void netdbBinaryExchange(StoreEntry *);
 
 extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int);
@@ -838,8 +839,6 @@ extern method_t urlParseMethod(const char *);
 extern void urlInitialize(void);
 extern request_t *urlParse(method_t, char *);
 extern char *urlCanonical(const request_t *, char *);
-extern char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
-extern char *urlInternal(const char *dir, const char *name);
 extern request_t *requestLink(request_t *);
 extern void requestUnlink(request_t *);
 extern int matchDomainName(const char *d, const char *h);
@@ -926,6 +925,11 @@ extern int cacheDigestBitUtil(const CacheDigest * cd);
 extern void cacheDigestGuessStatsUpdate(cd_guess_stats * stats, int real_hit, int guess_hit);
 extern void cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, const char *label);
 extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
+
+extern void internalStart(request_t *, StoreEntry *);
+extern int internalCheck(const char *urlpath);
+extern char *internalLocalUri(const char *dir, const char *name);
+extern char *internalRemoteUri(const char *, u_short, const char *, const char *);
 
 /*
  * prototypes for system functions missing from system includes

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.297 1998/05/02 06:41:09 wessels Exp $
+ * $Id: client_side.cc,v 1.298 1998/05/05 03:49:57 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -221,7 +221,7 @@ clientRedirectDone(void *data, char *result)
 	/* need to malloc because the URL returned by the redirector might
 	 * not be big enough to append the local domain
 	 * -- David Lamkin drl@net-tel.co.uk */
-	l = strlen(result) + Config.appendDomainLen + 5;
+	l = strlen(result) + Config.appendDomainLen + 64;
 	http->uri = xcalloc(l, 1);
 	xstrncpy(http->uri, result, l);
 	new_request->http_ver = old_request->http_ver;
@@ -1644,9 +1644,7 @@ clientProcessMiss(clientHttpRequest * http)
     ch.src_addr = http->conn->peer.sin_addr;
     ch.request = r;
     answer = aclCheckFast(Config.accessList.miss, &ch);
-    if (answer == 0 || http->flags.internal) {
-	debug(33,1)("clientProcessMiss: Can't forward internal request '%s'\n",
-		r->urlpath);
+    if (answer == 0) {
 	http->al.http.code = HTTP_FORBIDDEN;
 	err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(r);
@@ -1659,6 +1657,8 @@ clientProcessMiss(clientHttpRequest * http)
     http->entry = clientCreateStoreEntry(http, r->method, r->flags);
     http->entry->mem_obj->fd = http->conn->fd;
     http->entry->refcount++;
+    if (http->flags.internal)
+	r->protocol = PROTO_INTERNAL;
     protoDispatch(http->conn->fd, http->entry, r);
 }
 
@@ -1822,9 +1822,9 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*t = '\0';
 
     /* handle internal objects */
-    if (0 == strncmp(url, "/squid-internal/", 16)) {
+    if (internalCheck(url)) {
 	/* prepend our name & port */
-	http->uri = xstrdup(urlInternal(NULL, url + 16));
+	http->uri = xstrdup(internalLocalUri(NULL, url));
 	http->flags.internal = 1;
     }
     /* see if we running in Config2.Accel.on, if so got to convert it to URL */
