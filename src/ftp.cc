@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.139 1997/10/17 00:00:36 wessels Exp $
+ * $Id: ftp.cc,v 1.140 1997/10/20 19:06:02 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -767,6 +767,7 @@ ftpCleanupUrlpath(FtpStateData * ftpState)
 	if (*request->urlpath == '\0') {
 	    xstrncpy(request->urlpath, ".", MAX_URL);
 	    EBIT_SET(ftpState->flags, FTP_ROOT_DIR);
+	    EBIT_SET(ftpState->flags, FTP_ISDIR);
 	    again = 1;
 	} else if ((l >= 1) && (*(request->urlpath + l - 1) == '/')) {
 	    /* remove any trailing slashes from path */
