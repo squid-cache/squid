@@ -18,7 +18,7 @@ $|=1;
 $host=(shift || 'localhost') ;
 $port=(shift || '3128') ;
 
-require "$ENV{'HARVEST_HOME'}/lib/socket.ph";
+require 'sys/socket.ph';
 
 $sockaddr = 'S n a4 x8';
 ($name, $aliases, $proto) = getprotobyname("tcp");
