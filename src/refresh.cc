@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.42 1998/10/18 21:19:03 rousskov Exp $
+ * $Id: refresh.cc,v 1.43 1998/10/19 22:37:02 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -40,7 +40,9 @@
 
 #include "squid.h"
 
-typedef enum { rcHTTP, rcICP, rcCDigest, rcCount } refreshCountsEnum;
+typedef enum {
+    rcHTTP, rcICP, rcCDigest, rcCount
+} refreshCountsEnum;
 
 static struct RefreshCounts {
     const char *proto;
@@ -125,10 +127,9 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
     time_t check_time = squid_curtime + delta;
     if (entry->mem_obj)
 	uri = entry->mem_obj->url;
-    else
-    if (request)
+    else if (request)
 	uri = urlCanonical(request);
-    
+
     debug(22, 3) ("refreshCheck(%s): '%s'\n", rc->proto, uri ? uri : "<none>");
     rc->total++;
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE)) {
@@ -238,7 +239,6 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
 	debug(22, 3) ("refreshCheck: MAYBE: last-modified in the future\n");
 	rc->response_lmt_future_maybe++;
     }
-    
     if (age <= min) {
 	debug(22, 3) ("refreshCheck: NO: age <= min\n");
 	rc->conf_min_age_fresh++;
@@ -253,17 +253,20 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
  * refreshCheck() function above */
 
 int
-refreshCheckHTTP(const StoreEntry * entry, request_t * request) {
+refreshCheckHTTP(const StoreEntry * entry, request_t * request)
+{
     return refreshCheck(entry, request, 0, &refreshCounts[rcHTTP]);
 }
 
 int
-refreshCheckICP(const StoreEntry * entry, request_t * request) {
+refreshCheckICP(const StoreEntry * entry, request_t * request)
+{
     return refreshCheck(entry, request, 30, &refreshCounts[rcICP]);
 }
 
 int
-refreshCheckDigest(const StoreEntry * entry, time_t delta) {
+refreshCheckDigest(const StoreEntry * entry, time_t delta)
+{
     return refreshCheck(entry, NULL, delta, &refreshCounts[rcCDigest]);
 }
 
@@ -307,7 +310,7 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
     refreshCountsStatsEntry(response_lmt_now_stale);
     refreshCountsStatsEntry(conf_min_age_fresh);
     refreshCountsStatsEntry(default_stale);
-    tot = sum; /* paranoid: "total" line shows 100% if we forgot nothing */
+    tot = sum;			/* paranoid: "total" line shows 100% if we forgot nothing */
     refreshCountsStatsEntry(total);
     /* maybe counters */
     refreshCountsStatsEntry(request_reload_ignore_maybe);
@@ -330,7 +333,7 @@ refreshStats(StoreEntry * sentry)
     for (i = 0; i < rcCount; ++i)
 	storeAppendPrintf(sentry, "%10s\t%6d\t%6.2f\n",
 	    refreshCounts[i].proto,
-	    refreshCounts[i].total, 
+	    refreshCounts[i].total,
 	    xpercent(refreshCounts[i].total, total));
 
     /* per protocol histograms */

@@ -1,6 +1,7 @@
 
+
 /*
- * $Id: structs.h,v 1.244 1998/10/19 17:48:29 wessels Exp $
+ * $Id: structs.h,v 1.245 1998/10/19 22:37:05 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

@@ -94,7 +94,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
     helper_request *r = xcalloc(1, sizeof(*r));
     helper_server *srv;
     if (hlp == NULL) {
-	debug(29,3)("helperSubmit: hlp == NULL\n");
+	debug(29, 3) ("helperSubmit: hlp == NULL\n");
 	callback(data, NULL);
 	return;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.74 1998/10/19 17:48:28 wessels Exp $
+ * $Id: redirect.cc,v 1.75 1998/10/19 22:37:02 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -129,7 +129,7 @@ redirectInit(void)
     if (!Config.Program.redirect)
 	return;
     if (redirectors == NULL)
-        redirectors = helperCreate("redirector");
+	redirectors = helperCreate("redirector");
     wordlistAdd(&redirectors->cmdline, Config.Program.redirect);
     redirectors->n_to_start = Config.redirectChildren;
     redirectors->ipc_type = IPC_TCP_SOCKET;

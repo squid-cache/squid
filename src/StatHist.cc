@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.17 1998/10/16 19:20:17 wessels Exp $
+ * $Id: StatHist.cc,v 1.18 1998/10/19 22:36:56 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -48,7 +48,7 @@
 #include "squid.h"
 
 /* Local functions */
-static void statHistInit(StatHist * H, int capacity, hbase_f *val_in, hbase_f *val_out, double min, double max);
+static void statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
 static int statHistBin(const StatHist * H, double v);
 static double statHistVal(const StatHist * H, int bin);
 static StatHistBinDumper statHistBinDumper;
@@ -58,7 +58,7 @@ static hbase_f Null;
 
 /* low level init, higher level functions has less params */
 static void
-statHistInit(StatHist * H, int capacity, hbase_f *val_in, hbase_f *val_out, double min, double max)
+statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max)
 {
     assert(H);
     assert(capacity > 0);
@@ -94,22 +94,22 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
 {
     assert(Dest);
     assert(Orig);
-    debug(62,3)("statHistCopy: Dest=%p, Orig=%p\n", Dest, Orig);
+    debug(62, 3) ("statHistCopy: Dest=%p, Orig=%p\n", Dest, Orig);
     assert(Dest->bins);
     /* better be safe than sorry */
-    debug(62,3)("statHistCopy: capacity %d %d\n",
+    debug(62, 3) ("statHistCopy: capacity %d %d\n",
 	Dest->capacity, Orig->capacity);
     assert(Dest->capacity == Orig->capacity);
-    debug(62,3)("statHistCopy: min %f %f\n", Dest->min, Orig->min);
+    debug(62, 3) ("statHistCopy: min %f %f\n", Dest->min, Orig->min);
     assert(Dest->min == Orig->min);
-    debug(62,3)("statHistCopy: max %f %f\n", Dest->max, Orig->max);
+    debug(62, 3) ("statHistCopy: max %f %f\n", Dest->max, Orig->max);
     assert(Dest->max == Orig->max);
-    debug(62,3)("statHistCopy: scale %f %f\n", Dest->scale, Orig->scale);
+    debug(62, 3) ("statHistCopy: scale %f %f\n", Dest->scale, Orig->scale);
     assert(Dest->scale == Orig->scale);
     assert(Dest->val_in == Orig->val_in);
     assert(Dest->val_out == Orig->val_out);
     /* actual copy */
-    debug(62,3)("statHistCopy: copying %d bytes to %p from %p\n",
+    debug(62, 3) ("statHistCopy: copying %d bytes to %p from %p\n",
 	Dest->capacity * sizeof(*Dest->bins),
 	Dest->bins,
 	Orig->bins);
