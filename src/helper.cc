@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.52 2002/10/21 22:17:32 hno Exp $
+ * $Id: helper.cc,v 1.53 2002/10/22 09:40:29 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -722,6 +722,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     }
     srv->offset += len;
     srv->buf[srv->offset] = '\0';
+    debug(84, 9) ("helperHandleRead: '%s'\n", srv->rbuf);
     r = srv->request;
     if (r == NULL) {
 	/* someone spoke without being spoken to */
