@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.50 2003/02/21 22:50:10 robertc Exp $
+ * $Id: pinger.cc,v 1.51 2003/02/23 00:08:04 robertc Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -37,19 +37,99 @@
 
 #if USE_ICMP
 
+/* Native Windows port doesn't have netinet support, so we emulate it.
+   At this time, Cygwin lacks icmp support in its include files, so we need
+   to use the native Windows port definitions.
+ */
+
+#if !defined(_SQUID_MSWIN_) && !defined(_SQUID_CYGWIN_)
+
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 
+#define PINGER_TIMEOUT 10
+
+static int socket_from_squid = 0;
+static int socket_to_squid = 1;
+
+#else /* _SQUID_MSWIN_ or _SQUID_CYGWIN_ */
+
+#ifdef _SQUID_MSWIN_
+
+#include <winsock2.h>
+#include <process.h>
+
+#define PINGER_TIMEOUT 5
+
+static int socket_to_squid = -1;
+#define socket_from_squid socket_to_squid
+
+#else /* _SQUID_CYGWIN_ */
+
+#include <netinet/in_systm.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+
+#define PINGER_TIMEOUT 10
+
+static int socket_from_squid = 0;
+static int socket_to_squid = 1;
+
+#endif
+
+#define ICMP_ECHO 8
+#define ICMP_ECHOREPLY 0
+
+typedef struct iphdr
+{
+
+u_int8_t  ip_vhl:
+    4;		/* Length of the header in dwords */
+
+u_int8_t  version:
+    4;	/* Version of IP                  */
+    u_int8_t  tos;		/* Type of service                */
+    u_int16_t total_len;	/* Length of the packet in dwords */
+    u_int16_t ident;		/* unique identifier              */
+    u_int16_t flags;		/* Flags                          */
+    u_int8_t  ip_ttl;		/* Time to live                   */
+    u_int8_t  proto;		/* Protocol number (TCP, UDP etc) */
+    u_int16_t checksum;		/* IP checksum                    */
+    u_int32_t source_ip;
+    u_int32_t dest_ip;
+}
+
+iphdr;
+
+/* ICMP header */
+
+typedef struct icmphdr
+{
+    u_int8_t  icmp_type;	/* ICMP packet type                 */
+    u_int8_t  icmp_code;	/* Type sub code                    */
+    u_int16_t icmp_cksum;
+    u_int16_t icmp_id;
+    u_int16_t icmp_seq;
+    u_int32_t timestamp;	/* not part of ICMP, but we need it */
+}
+
+icmphdr;
+
+#endif	/* _SQUID_MSWIN_ */
+
 #ifndef _SQUID_LINUX_
 #ifndef _SQUID_CYGWIN_
+#ifndef _SQUID_MSWIN_
 #define icmphdr icmp
 #define iphdr ip
 #endif
 #endif
+#endif
 
-#if defined (_SQUID_LINUX_) || defined (_SQUID_CYGWIN_)
+#if defined (_SQUID_LINUX_)
 #ifdef icmp_id
 #undef icmp_id
 #endif
@@ -123,12 +203,52 @@ static void pingerRecv(void);
 static void pingerLog(struct icmphdr *, struct in_addr, int, int);
 static int ipHops(int ttl);
 static void pingerSendtoSquid(pingerReplyData * preply);
+static void pingerOpen(void);
+static void pingerClose(void);
 
 void
 pingerOpen(void)
 {
 
     struct protoent *proto = NULL;
+#ifdef _SQUID_MSWIN_
+
+    WSADATA wsaData;
+    WSAPROTOCOL_INFO wpi;
+    char buf[sizeof(wpi)];
+    int x;
+
+    struct sockaddr_in PS;
+
+    WSAStartup(2, &wsaData);
+
+    getCurrentTime();
+    _db_init(NULL, "ALL,1");
+    setmode(0, O_BINARY);
+    setmode(1, O_BINARY);
+    x = read(0, buf, sizeof(wpi));
+
+    if (x < (int)sizeof(wpi)) {
+        getCurrentTime();
+        debug(42, 0) ("pingerOpen: read: FD 0: %s\n", xstrerror());
+        write(1, "ERR\n", 4);
+        exit(1);
+    }
+
+    xmemcpy(&wpi, buf, sizeof(wpi));
+
+    write(1, "OK\n", 3);
+    x = read(0, buf, sizeof(PS));
+
+    if (x < (int)sizeof(PS)) {
+        getCurrentTime();
+        debug(42, 0) ("pingerOpen: read: FD 0: %s\n", xstrerror());
+        write(1, "ERR\n", 4);
+        exit(1);
+    }
+
+    xmemcpy(&PS, buf, sizeof(PS));
+#endif
 
     if ((proto = getprotobyname("icmp")) == 0) {
         debug(42, 0) ("pingerOpen: unknown protocol: icmp\n");
@@ -144,12 +264,60 @@ pingerOpen(void)
 
     icmp_ident = getpid() & 0xffff;
     debug(42, 0) ("pinger: ICMP socket opened\n");
+#ifdef _SQUID_MSWIN_
+
+    socket_to_squid =
+        WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO,
+                  &wpi, 0, 0);
+
+    if (socket_to_squid == -1) {
+        getCurrentTime();
+        debug(42, 0) ("pingerOpen: WSASocket: %s\n", xstrerror());
+        write(1, "ERR\n", 4);
+        exit(1);
+    }
+
+    x = connect(socket_to_squid, (struct sockaddr *) &PS, sizeof(PS));
+
+    if (SOCKET_ERROR == x) {
+        getCurrentTime();
+        debug(42, 0) ("pingerOpen: connect: %s\n", xstrerror());
+        write(1, "ERR\n", 4);
+        exit(1);
+    }
+
+    write(1, "OK\n", 3);
+    memset(buf, 0, sizeof(buf));
+    x = recv(socket_to_squid, buf, sizeof(buf), 0);
+
+    if (x < 3) {
+        debug(42, 0) ("icmpOpen: recv: %s\n", xstrerror());
+        exit(1);
+    }
+
+    x = send(socket_to_squid, buf, strlen(buf), 0);
+
+    if (x < 3 || strncmp("OK\n", buf, 3)) {
+        debug(42, 0) ("icmpOpen: recv: %s\n", xstrerror());
+        exit(1);
+    }
+
+    getCurrentTime();
+    debug(42, 0) ("pinger: Squid socket opened\n");
+#endif
 }
 
 void
 pingerClose(void)
 {
     close(icmp_sock);
+#ifdef _SQUID_MSWIN_
+
+    shutdown(socket_to_squid, SD_BOTH);
+    close(socket_to_squid);
+    socket_to_squid = -1;
+#endif
+
     icmp_sock = -1;
     icmp_ident = 0;
 }
@@ -327,7 +495,7 @@ in_cksum(unsigned short *ptr, int size)
 
     sum = (sum >> 16) + (sum & 0xffff);
     sum += (sum >> 16);
-    answer = ~sum;
+    answer = (unsigned short) ~sum;
     return (answer);
 }
 
@@ -373,7 +541,7 @@ pingerReadRequest(void)
     int n;
     int guess_size;
     memset(&pecho, '\0', sizeof(pecho));
-    n = recv(0, (char *) &pecho, sizeof(pecho), 0);
+    n = recv(socket_from_squid, (char *) &pecho, sizeof(pecho), 0);
 
     if (n < 0)
         return n;
@@ -406,8 +574,9 @@ pingerSendtoSquid(pingerReplyData * preply)
 {
     int len = sizeof(pingerReplyData) - MAX_PKT_SZ + preply->psize;
 
-    if (send(1, (char *) preply, len, 0) < 0) {
+    if (send(socket_to_squid, (char *) preply, len, 0) < 0) {
         debug(50, 0) ("pinger: send: %s\n", xstrerror());
+        pingerClose();
         exit(1);
     }
 }
@@ -453,35 +622,41 @@ main(int argc, char *argv[])
     _db_init(NULL, debug_args);
 
     for (;;) {
-        tv.tv_sec = 10;
+        tv.tv_sec = PINGER_TIMEOUT;
         tv.tv_usec = 0;
         FD_ZERO(&R);
-        FD_SET(0, &R);
+        FD_SET(socket_from_squid, &R);
         FD_SET(icmp_sock, &R);
         x = select(icmp_sock + 1, &R, NULL, NULL, &tv);
         getCurrentTime();
 
-        if (x < 0)
+        if (x < 0) {
+            pingerClose();
             exit(1);
+        }
 
-        if (FD_ISSET(0, &R))
+        if (FD_ISSET(socket_from_squid, &R))
             if (pingerReadRequest() < 0) {
                 debug(42, 0) ("Pinger exiting.\n");
+                pingerClose();
                 exit(1);
             }
 
         if (FD_ISSET(icmp_sock, &R))
             pingerRecv();
 
-        if (10 + last_check_time < squid_curtime) {
-            if (send(1, (char *) &tv, 0, 0) < 0)
+        if (PINGER_TIMEOUT + last_check_time < squid_curtime) {
+            if (send(socket_to_squid, (char *) &tv, 0, 0) < 0) {
+                pingerClose();
                 exit(1);
+            }
 
             last_check_time = squid_curtime;
         }
     }
 
     /* NOTREACHED */
+    return 0;
 }
 
 #else

@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.62 2003/02/21 22:50:10 robertc Exp $
+ * $Id: snmp_core.cc,v 1.63 2003/02/23 00:08:04 robertc Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -363,7 +363,7 @@ snmpConnectionOpen(void)
     if ((port = Config.Port.snmp) > (u_short) 0) {
         enter_suid();
         theInSnmpConnection = comm_open(SOCK_DGRAM,
-                                        0,
+                                        IPPROTO_UDP,
                                         Config.Addrs.snmp_incoming,
                                         port,
                                         COMM_NONBLOCKING,
@@ -381,7 +381,7 @@ snmpConnectionOpen(void)
         if (Config.Addrs.snmp_outgoing.s_addr != no_addr.s_addr) {
             enter_suid();
             theOutSnmpConnection = comm_open(SOCK_DGRAM,
-                                             0,
+                                             IPPROTO_UDP,
                                              Config.Addrs.snmp_outgoing,
                                              port,
                                              COMM_NONBLOCKING,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.317 2003/02/21 22:50:10 robertc Exp $
+ * $Id: neighbors.cc,v 1.318 2003/02/23 00:08:04 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1391,7 +1391,7 @@ peerProbeConnect(peer * p)
     if (squid_curtime - p->stats.last_connect_probe < 1)
         return;			/* don't probe to often */
 
-    fd = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL),
+    fd = comm_open(SOCK_STREAM, IPPROTO_TCP, getOutgoingAddr(NULL),
                    0, COMM_NONBLOCKING, p->host);
 
     if (fd < 0)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.51 2003/02/21 22:50:09 robertc Exp $
+ * $Id: htcp.cc,v 1.52 2003/02/23 00:08:04 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -1149,7 +1149,7 @@ htcpInit(void)
 
     enter_suid();
     htcpInSocket = comm_open(SOCK_DGRAM,
-                             0,
+                             IPPROTO_UDP,
                              Config.Addrs.udp_incoming,
                              Config.Port.htcp,
                              COMM_NONBLOCKING,
@@ -1167,7 +1167,7 @@ htcpInit(void)
     if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr) {
         enter_suid();
         htcpOutSocket = comm_open(SOCK_DGRAM,
-                                  0,
+                                  IPPROTO_UDP,
                                   Config.Addrs.udp_outgoing,
                                   Config.Port.htcp,
                                   COMM_NONBLOCKING,
