@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.506 2005/01/08 22:48:25 hno Exp $
+ * $Id: structs.h,v 1.507 2005/01/08 22:50:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -211,10 +211,10 @@ class RemovalPolicySettings
 {
 
 public:
+    RemovalPolicySettings() : type(NULL), args(NULL) {};
+
     char *type;
     wordlist *args;
-
-    RemovalPolicySettings() : type(NULL), args(NULL) {};
 };
 
 class external_acl;
