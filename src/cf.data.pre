@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.376 2005/02/27 16:36:06 serassio Exp $
+# $Id: cf.data.pre,v 1.377 2005/03/02 20:57:34 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1240,7 +1240,10 @@ DOC_START
 	ALL the acl's specified (which must be defined in acl clauses).
 	If no acl is specified, all requests will be logged to this file.
 
-	To disable logging of a request specify "none".
+	To disable logging of a request use the filepath "none", in which case
+	a logformat name should not be specified.
+
+	To log the request via syslog specify a filepath of "syslog"
 DOC_END
 
 

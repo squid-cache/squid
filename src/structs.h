@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.509 2005/02/27 16:36:07 serassio Exp $
+ * $Id: structs.h,v 1.510 2005/03/02 20:57:35 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2111,12 +2111,13 @@ struct _Logfile
 
     struct
     {
-
-unsigned int fatal:
-        1;
+        unsigned int fatal;
+        unsigned int syslog;
     }
 
     flags;
+
+    int syslog_priority;
 };
 
 struct _logformat
