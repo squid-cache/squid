@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.58 1996/08/12 23:37:24 wessels Exp $
+ * $Id: main.cc,v 1.59 1996/08/14 22:57:11 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -476,6 +476,7 @@ int main(argc, argv)
     int errcount = 0;
     int n;			/* # of GC'd objects */
     time_t last_maintain = 0;
+    time_t last_dirclean = 0;
     time_t last_announce = 0;
     time_t loop_delay;
 
@@ -541,6 +542,13 @@ int main(argc, argv)
 	if (squid_curtime > last_maintain) {
 	    storeMaintainSwapSpace();
 	    last_maintain = squid_curtime;
+	}
+	if (squid_curtime - last_dirclean > 15
+	    && store_rebuilding == STORE_NOT_REBUILDING) {
+	    /* clean a cache directory every 15 seconds */
+	    /* 15 * 16 * 256 = 17 hrs */
+	    storeDirClean();
+	    last_dirclean = squid_curtime;
 	}
 	if (rotate_pending) {
 	    ftpServerClose();

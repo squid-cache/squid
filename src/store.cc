@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.80 1996/08/14 21:57:08 wessels Exp $
+ * $Id: store.cc,v 1.81 1996/08/14 22:57:16 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -133,8 +133,6 @@
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 #define MAX_SWAP_FILE		(1<<21)
 #define SWAP_BUF		DISK_PAGE_SIZE
-#define SWAP_DIRECTORIES_L1	16
-#define SWAP_DIRECTORIES_L2	256
 
 #define WITH_MEMOBJ	1
 #define WITHOUT_MEMOBJ	0

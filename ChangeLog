@@ -1,3 +1,12 @@
+Changes to squid-1.1.alpha9:
+
+	- Fixed parsing of redirected URLs.
+	- Changed URL redirection to pass in client address, ident, and method.
+	- Fixed NULL pointer coredump in log_append().
+	- Don't swap negative-cache objects to disk (storeCheckSwappable())
+	- Only purge MemObject if entry is swapped to disk.
+	- Includes all squid-1.0 changes up to squid-1.0.7
+
 Changes to squid-1.1.alpha8:
 
 	- Removed all references to hierarchy.log.
@@ -80,6 +89,15 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+Changes to squid-1.0.7 (August 14, 1996):
+
+	- Added "store_clean" routines to periodically remove orphaned
+	  swap files.
+	- Increased StoreEntry->method_t from 3 to 4 bits, probably fixes
+	  storeGenerate*Key() coredumps.
+	- Added debugging to examine_select().
+	- Added peer address to debugging for Ignored ICP packets.
+
 Changes to squid-1.0.6 (August 12, 1996):
 
 	- Fixed coredump in icpStateFree() for bad requests.
