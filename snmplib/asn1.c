@@ -70,13 +70,13 @@ SOFTWARE.
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_int(data, datalength, type, intp, intsize)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - asn type of object */
-     long *intp;		/* IN/OUT - pointer to start of output buffer */
-     int intsize;		/* IN - size of output buffer */
-{
+asn_parse_int(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type,		/* OUT - asn type of object */
+    long *intp,			/* IN/OUT - pointer to start of output buffer */
+    int intsize)
+{				/* IN - size of output buffer */
 /*
  * ASN.1 integer ::= 0x02 asnlength byte {byte}*
  */
@@ -123,13 +123,13 @@ asn_parse_int(data, datalength, type, intp, intsize)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_unsigned_int(data, datalength, type, intp, intsize)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - asn type of object */
-     u_long *intp;		/* IN/OUT - pointer to start of output buffer */
-     int intsize;		/* IN - size of output buffer */
-{
+asn_parse_unsigned_int(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type,		/* OUT - asn type of object */
+    u_long * intp,		/* IN/OUT - pointer to start of output buffer */
+    int intsize)
+{				/* IN - size of output buffer */
 /*
  * ASN.1 integer ::= 0x02 asnlength byte {byte}*
  */
@@ -177,13 +177,13 @@ asn_parse_unsigned_int(data, datalength, type, intp, intsize)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_int(data, datalength, type, intp, intsize)
-     u_char *data;		/* IN - pointer to start of output buffer */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - asn type of object */
-     long *intp;		/* IN - pointer to start of long integer */
-     int intsize;		/* IN - size of *intp */
-{
+asn_build_int(
+    u_char * data,		/* IN - pointer to start of output buffer */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - asn type of object */
+    long *intp,			/* IN - pointer to start of long integer */
+    int intsize)
+{				/* IN - size of *intp */
 /*
  * ASN.1 integer ::= 0x02 asnlength byte {byte}*
  */
@@ -236,13 +236,13 @@ asn_build_int(data, datalength, type, intp, intsize)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_unsigned_int(data, datalength, type, intp, intsize)
-     u_char *data;		/* IN - pointer to start of output buffer */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - asn type of object */
-     u_long *intp;		/* IN - pointer to start of long integer */
-     int intsize;		/* IN - size of *intp */
-{
+asn_build_unsigned_int(
+    u_char * data,		/* IN - pointer to start of output buffer */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - asn type of object */
+    u_long * intp,		/* IN - pointer to start of long integer */
+    int intsize)
+{				/* IN - size of *intp */
 /*
  * ASN.1 integer ::= 0x02 asnlength byte {byte}*
  */
@@ -307,13 +307,13 @@ asn_build_unsigned_int(data, datalength, type, intp, intsize)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_string(data, datalength, type, string, strlength)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - asn type of object */
-     u_char *string;		/* IN/OUT - pointer to start of output buffer */
-     int *strlength;		/* IN/OUT - size of output buffer */
-{
+asn_parse_string(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type,		/* OUT - asn type of object */
+    u_char * string,		/* IN/OUT - pointer to start of output buffer */
+    int *strlength)
+{				/* IN/OUT - size of output buffer */
 /*
  * ASN.1 octet string ::= primstring | cmpdstring
  * primstring ::= 0x04 asnlength byte {byte}*
@@ -334,7 +334,7 @@ asn_parse_string(data, datalength, type, string, strlength)
 	ERROR("I don't support such long strings");
 	return NULL;
     }
-    bcopy((char *) bufp, (char *) string, (int) asn_length);
+    xmemcpy(string, bufp, (int) asn_length);
     *strlength = (int) asn_length;
     *datalength -= (int) asn_length + (bufp - data);
     return bufp + asn_length;
@@ -352,13 +352,13 @@ asn_parse_string(data, datalength, type, string, strlength)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_string(data, datalength, type, string, strlength)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - ASN type of string */
-     u_char *string;		/* IN - pointer to start of input buffer */
-     int strlength;		/* IN - size of input buffer */
-{
+asn_build_string(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - ASN type of string */
+    u_char * string,		/* IN - pointer to start of input buffer */
+    int strlength)
+{				/* IN - size of input buffer */
 /*
  * ASN.1 octet string ::= primstring | cmpdstring
  * primstring ::= 0x04 asnlength byte {byte}*
@@ -370,7 +370,7 @@ asn_build_string(data, datalength, type, string, strlength)
 	return NULL;
     if (*datalength < strlength)
 	return NULL;
-    bcopy((char *) string, (char *) data, strlength);
+    xmemcpy(data, string, strlength);
     *datalength -= strlength;
     return data + strlength;
 }
@@ -386,11 +386,11 @@ asn_build_string(data, datalength, type, string, strlength)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_header(data, datalength, type)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - ASN type of object */
-{
+asn_parse_header(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type)
+{				/* OUT - ASN type of object */
     u_char *bufp = data;
     int header_len;
     u_long asn_length;
@@ -430,12 +430,12 @@ asn_parse_header(data, datalength, type)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_header(data, datalength, type, length)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - ASN type of object */
-     int length;		/* IN - length of object */
-{
+asn_build_header(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - ASN type of object */
+    int length)
+{				/* IN - length of object */
     if (*datalength < 1)
 	return NULL;
     *data++ = type;
@@ -458,12 +458,12 @@ asn_build_header(data, datalength, type, length)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_sequence(data, datalength, type, length)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - ASN type of object */
-     int length;		/* IN - length of object */
-{
+asn_build_sequence(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - ASN type of object */
+    int length)
+{				/* IN - length of object */
     assert(*datalength >= 0);
     *datalength -= 4;
     if (*datalength < 0) {
@@ -486,10 +486,10 @@ asn_build_sequence(data, datalength, type, length)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_length(data, length)
-     u_char *data;		/* IN - pointer to start of length field */
-     u_long *length;		/* OUT - value of length field */
-{
+asn_parse_length(
+    u_char * data,		/* IN - pointer to start of length field */
+    u_long * length)
+{				/* OUT - value of length field */
     u_char lengthbyte = *data;
 
     *length = 0;
@@ -503,7 +503,7 @@ asn_parse_length(data, length)
 	    ERROR("we can't support data lengths that long");
 	    return NULL;
 	}
-	bcopy((char *) data + 1, (char *) length, (int) lengthbyte);
+	xmemcpy(length, data + 1, (int) lengthbyte);
 	/* XXX: is this useable on a 64bit platform ? */
 	*length = ntohl(*length);
 	*length >>= (8 * ((sizeof(*length)) - lengthbyte));
@@ -515,11 +515,11 @@ asn_parse_length(data, length)
 }
 
 u_char *
-asn_build_length(data, datalength, length)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     int length;		/* IN - length of object */
-{
+asn_build_length(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    int length)
+{				/* IN - length of object */
     u_char *start_data = data;
 
     /* no indefinite lengths sent */
@@ -563,13 +563,13 @@ asn_build_length(data, datalength, length)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_objid(data, datalength, type, objid, objidlength)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - ASN type of object */
-     oid *objid;		/* IN/OUT - pointer to start of output buffer */
-     int *objidlength;		/* IN/OUT - number of sub-id's in objid */
-{
+asn_parse_objid(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type,		/* OUT - ASN type of object */
+    oid * objid,		/* IN/OUT - pointer to start of output buffer */
+    int *objidlength)
+{				/* IN/OUT - number of sub-id's in objid */
 /*
  * ASN.1 objid ::= 0x06 asnlength subidentifier {subidentifier}*
  * subidentifier ::= {leadingbyte}* lastbyte
@@ -642,13 +642,13 @@ asn_parse_objid(data, datalength, type, objid, objidlength)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_objid(data, datalength, type, objid, objidlength)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - ASN type of object */
-     oid *objid;		/* IN - pointer to start of input buffer */
-     int objidlength;		/* IN - number of sub-id's in objid */
-{
+asn_build_objid(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - ASN type of object */
+    oid * objid,		/* IN - pointer to start of input buffer */
+    int objidlength)
+{				/* IN - number of sub-id's in objid */
 /*
  * ASN.1 objid ::= 0x06 asnlength subidentifier {subidentifier}*
  * subidentifier ::= {leadingbyte}* lastbyte
@@ -702,7 +702,7 @@ asn_build_objid(data, datalength, type, objid, objidlength)
 	return NULL;
     if (*datalength < asnlength)
 	return NULL;
-    bcopy((char *) buf, (char *) data, asnlength);
+    xmemcpy(data, buf, asnlength);
     *datalength -= asnlength;
     return data + asnlength;
 }
@@ -718,11 +718,11 @@ asn_build_objid(data, datalength, type, objid, objidlength)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_null(data, datalength, type)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - ASN type of object */
-{
+asn_parse_null(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type)
+{				/* OUT - ASN type of object */
 /*
  * ASN.1 null ::= 0x05 0x00
  */
@@ -753,11 +753,11 @@ asn_parse_null(data, datalength, type)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_null(data, datalength, type)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - ASN type of object */
-{
+asn_build_null(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type)
+{				/* IN - ASN type of object */
 /*
  * ASN.1 null ::= 0x05 0x00
  */
@@ -777,13 +777,13 @@ asn_build_null(data, datalength, type)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_bitstring(data, datalength, type, string, strlength)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - asn type of object */
-     u_char *string;		/* IN/OUT - pointer to start of output buffer */
-     int *strlength;		/* IN/OUT - size of output buffer */
-{
+asn_parse_bitstring(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type,		/* OUT - asn type of object */
+    u_char * string,		/* IN/OUT - pointer to start of output buffer */
+    int *strlength)
+{				/* IN/OUT - size of output buffer */
 /*
  * bitstring ::= 0x03 asnlength unused {byte}*
  */
@@ -810,7 +810,7 @@ asn_parse_bitstring(data, datalength, type, string, strlength)
 	ERROR("Invalid bitstring");
 	return NULL;
     }
-    bcopy((char *) bufp, (char *) string, (int) asn_length);
+    xmemcpy(string, bufp, (int) asn_length);
     *strlength = (int) asn_length;
     *datalength -= (int) asn_length + (bufp - data);
     return bufp + asn_length;
@@ -829,13 +829,13 @@ asn_parse_bitstring(data, datalength, type, string, strlength)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_bitstring(data, datalength, type, string, strlength)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - ASN type of string */
-     u_char *string;		/* IN - pointer to start of input buffer */
-     int strlength;		/* IN - size of input buffer */
-{
+asn_build_bitstring(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - ASN type of string */
+    u_char * string,		/* IN - pointer to start of input buffer */
+    int strlength)
+{				/* IN - size of input buffer */
 /*
  * ASN.1 bit string ::= 0x03 asnlength unused {byte}*
  */
@@ -848,7 +848,7 @@ asn_build_bitstring(data, datalength, type, string, strlength)
 	return NULL;
     if (*datalength < strlength)
 	return NULL;
-    bcopy((char *) string, (char *) data, strlength);
+    xmemcpy(data, string, strlength);
     *datalength -= strlength;
     return data + strlength;
 }
@@ -866,13 +866,13 @@ asn_build_bitstring(data, datalength, type, string, strlength)
  *  Returns NULL on any error.
  */
 u_char *
-asn_parse_unsigned_int64(data, datalength, type, cp, countersize)
-     u_char *data;		/* IN - pointer to start of object */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char *type;		/* OUT - asn type of object */
-     struct counter64 *cp;	/* IN/OUT -pointer to counter struct */
-     int countersize;		/* IN - size of output buffer */
-{
+asn_parse_unsigned_int64(
+    u_char * data,		/* IN - pointer to start of object */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char * type,		/* OUT - asn type of object */
+    struct counter64 * cp,	/* IN/OUT -pointer to counter struct */
+    int countersize)
+{				/* IN - size of output buffer */
 /*
  * ASN.1 integer ::= 0x02 asnlength byte {byte}*
  */
@@ -926,13 +926,13 @@ asn_parse_unsigned_int64(data, datalength, type, cp, countersize)
  *  Returns NULL on any error.
  */
 u_char *
-asn_build_unsigned_int64(data, datalength, type, cp, countersize)
-     u_char *data;		/* IN - pointer to start of output buffer */
-     int *datalength;		/* IN/OUT - number of valid bytes left in buffer */
-     u_char type;		/* IN - asn type of object */
-     struct counter64 *cp;	/* IN - pointer to counter struct */
-     int countersize;		/* IN - size of *intp */
-{
+asn_build_unsigned_int64(
+    u_char * data,		/* IN - pointer to start of output buffer */
+    int *datalength,		/* IN/OUT - number of valid bytes left in buffer */
+    u_char type,		/* IN - asn type of object */
+    struct counter64 * cp,	/* IN - pointer to counter struct */
+    int countersize)
+{				/* IN - size of *intp */
 /*
  * ASN.1 integer ::= 0x02 asnlength byte {byte}*
  */

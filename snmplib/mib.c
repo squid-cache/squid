@@ -54,6 +54,7 @@ SOFTWARE.
 #include "mib.h"
 
 #include "util.h"
+#include "snprintf.h"
 
 /* fwd: */
 static void sprint_by_type();
@@ -65,9 +66,7 @@ static void sprint_variable();
 static struct tree *get_symbol();
 
 static char *
-uptimeString(timeticks, buf)
-     u_long timeticks;
-     char *buf;
+uptimeString(unsigned long timeticks, char *buf)
 {
     int seconds, minutes, hours, days;
 
@@ -92,10 +91,7 @@ uptimeString(timeticks, buf)
 }
 
 static void
-sprint_hexstring(buf, cp, len)
-     char *buf;
-     u_char *cp;
-     int len;
+sprint_hexstring(char *buf, unsigned char *cp, int len)
 {
 
     for (; len >= 16; len -= 16) {
@@ -114,10 +110,7 @@ sprint_hexstring(buf, cp, len)
 }
 
 static void
-sprint_asciistring(buf, cp, len)
-     char *buf;
-     u_char *cp;
-     int len;
+sprint_asciistring(char *buf, unsigned char *cp, int len)
 {
     int x;
 
@@ -138,10 +131,7 @@ sprint_asciistring(buf, cp, len)
 
 #ifdef UNUSED
 int
-read_rawobjid(input, output, out_len)
-     char *input;
-     oid *output;
-     int *out_len;
+read_rawobjid(char *input, oid * output, int *out_len)
 {
     char buf[12], *cp;
     oid *op = output;
@@ -188,10 +178,7 @@ read_rawobjid(input, output, out_len)
  * 
  */
 static void
-sprint_octet_string(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_octet_string(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     int hex, x;
     u_char *cp;
@@ -226,10 +213,7 @@ sprint_octet_string(buf, var, enums)
 }
 
 static void
-sprint_opaque(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_opaque(char *buf, struct variable_list *var, struct enum_list *enums)
 {
 
     if (var->type != OPAQUE) {
@@ -244,10 +228,7 @@ sprint_opaque(buf, var, enums)
 }
 
 static void
-sprint_object_identifier(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_object_identifier(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     if (var->type != ASN_OBJECT_ID) {
 	sprintf(buf, "Wrong Type (should be OBJECT IDENTIFIER): ");
@@ -261,10 +242,7 @@ sprint_object_identifier(buf, var, enums)
 }
 
 static void
-sprint_timeticks(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_timeticks(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     char timebuf[32];
 
@@ -279,10 +257,7 @@ sprint_timeticks(buf, var, enums)
 }
 
 static void
-sprint_integer(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_integer(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     char *enum_string = NULL;
 
@@ -304,10 +279,7 @@ sprint_integer(buf, var, enums)
 }
 
 static void
-sprint_uinteger(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_uinteger(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     char *enum_string = NULL;
 
@@ -329,10 +301,7 @@ sprint_uinteger(buf, var, enums)
 }
 
 static void
-sprint_gauge(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_gauge(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     if (var->type != GAUGE) {
 	sprintf(buf, "Wrong Type (should be Gauge): ");
@@ -344,10 +313,7 @@ sprint_gauge(buf, var, enums)
 }
 
 static void
-sprint_counter(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_counter(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     if (var->type != COUNTER) {
 	sprintf(buf, "Wrong Type (should be Counter): ");
@@ -359,10 +325,7 @@ sprint_counter(buf, var, enums)
 }
 
 static void
-sprint_networkaddress(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_networkaddress(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     int x, len;
     u_char *cp;
@@ -380,10 +343,7 @@ sprint_networkaddress(buf, var, enums)
 }
 
 static void
-sprint_ipaddress(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_ipaddress(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     u_char *ip;
 
@@ -399,10 +359,7 @@ sprint_ipaddress(buf, var, enums)
 
 #if 0
 static void
-sprint_unsigned_short(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_unsigned_short(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     if (var->type != ASN_INTEGER) {
 	sprintf(buf, "Wrong Type (should be INTEGER): ");
@@ -415,10 +372,7 @@ sprint_unsigned_short(buf, var, enums)
 #endif
 
 static void
-sprint_null(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_null(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     if (var->type != ASN_NULL) {
 	sprintf(buf, "Wrong Type (should be NULL): ");
@@ -430,10 +384,7 @@ sprint_null(buf, var, enums)
 }
 
 static void
-sprint_bitstring(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_bitstring(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     int len, bit;
     u_char *cp;
@@ -472,10 +423,7 @@ sprint_bitstring(buf, var, enums)
 }
 
 static void
-sprint_nsapaddress(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_nsapaddress(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     if (var->type != NSAP) {
 	sprintf(buf, "Wrong Type (should be NsapAddress): ");
@@ -489,10 +437,7 @@ sprint_nsapaddress(buf, var, enums)
 }
 
 static void
-sprint_counter64(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_counter64(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     if (var->type != COUNTER64) {
 	sprintf(buf, "Wrong Type (should be Counter64): ");
@@ -504,38 +449,29 @@ sprint_counter64(buf, var, enums)
     sprintf(buf, "Counter64: ");
     buf += strlen(buf);
 
-    sprint_hexstring(buf, &var->val.counter64->high,
+    sprint_hexstring(buf, (unsigned char *) &var->val.counter64->high,
 	sizeof(var->val.counter64->high));
     buf += strlen(buf);
-    sprint_hexstring(buf, &var->val.counter64->low,
+    sprint_hexstring(buf, (unsigned char *) &var->val.counter64->low,
 	sizeof(var->val.counter64->low));
 }
 
 
 static void
-sprint_unknowntype(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_unknowntype(char *buf, struct variable_list *var, struct enum_list *enums)
 {
 /*    sprintf(buf, "Variable has bad type"); */
     sprint_by_type(buf, var, NULL);
 }
 
 static void
-sprint_badtype(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_badtype(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     sprintf(buf, "Variable has bad type");
 }
 
 static void
-sprint_by_type(buf, var, enums)
-     char *buf;
-     struct variable_list *var;
-     struct enum_list *enums;
+sprint_by_type(char *buf, struct variable_list *var, struct enum_list *enums)
 {
     switch (var->type) {
     case ASN_INTEGER:
@@ -980,9 +916,7 @@ sprint_objid(char *buf, oid * objid, int objidlen)
 }
 
 void
-print_objid(objid, objidlen)
-     oid *objid;
-     int objidlen;		/* number of subidentifiers */
+print_objid(oid * objid, int objidlen)
 {
     char buf[256];
 
@@ -992,10 +926,7 @@ print_objid(objid, objidlen)
 
 
 void
-print_variable(objid, objidlen, variable)
-     oid *objid;
-     int objidlen;
-     struct variable_list *variable;
+print_variable(oid * objid, int objidlen, struct variable_list *variable)
 {
     char buf[2048];
 
@@ -1004,11 +935,7 @@ print_variable(objid, objidlen, variable)
 }
 
 static void
-sprint_variable(buf, objid, objidlen, variable)
-     char *buf;
-     oid *objid;
-     int objidlen;
-     struct variable_list *variable;
+sprint_variable(char *buf, oid * objid, int objidlen, struct variable_list *variable)
 {
     char tempbuf[2048];
     struct tree *subtree = Mib;
@@ -1038,11 +965,7 @@ sprint_variable(buf, objid, objidlen, variable)
 }
 
 void
-sprint_value(buf, objid, objidlen, variable)
-     char *buf;
-     oid *objid;
-     int objidlen;
-     struct variable_list *variable;
+sprint_value(char *buf, oid * objid, int objidlen, struct variable_list *variable)
 {
     char tempbuf[2048];
     struct tree *subtree = Mib;
@@ -1064,10 +987,7 @@ sprint_value(buf, objid, objidlen, variable)
 }
 
 void
-print_value(objid, objidlen, variable)
-     oid *objid;
-     int objidlen;
-     struct variable_list *variable;
+print_value(oid * objid, int objidlen, struct variable_list *variable)
 {
     char tempbuf[2048];
 
@@ -1076,11 +996,7 @@ print_value(objid, objidlen, variable)
 }
 
 static struct tree *
-get_symbol(objid, objidlen, subtree, buf)
-     oid *objid;
-     int objidlen;
-     struct tree *subtree;
-     char *buf;
+get_symbol(oid * objid, int objidlen, struct tree *subtree, char *buf)
 {
     struct tree *return_tree = NULL;
 
@@ -1117,8 +1033,7 @@ get_symbol(objid, objidlen, subtree, buf)
 
 
 static int
-lc_cmp(s1, s2)
-     char *s1, *s2;
+lc_cmp(char *s1, char *s2)
 {
     char c1, c2;
 
@@ -1148,10 +1063,7 @@ lc_cmp(s1, s2)
  * Clone of get_symbol that doesn't take a buffer argument
  */
 static struct tree *
-get_tree(objid, objidlen, subtree)
-     oid *objid;
-     int objidlen;
-     struct tree *subtree;
+get_tree(oid * objid, int objidlen, struct tree *subtree)
 {
     struct tree *return_tree = NULL;
 
@@ -1174,9 +1086,7 @@ get_tree(objid, objidlen, subtree)
 
 #if 0
 static char *
-get_description(objid, objidlen)
-     oid *objid;
-     int objidlen;		/* number of subidentifiers */
+get_description(oid * objid, int objidlen)
 {
     struct tree *subtree = Mib;
 
@@ -1191,9 +1101,7 @@ get_description(objid, objidlen)
 
 #if 0
 static void
-print_description(objid, objidlen)
-     oid *objid;
-     int objidlen;		/* number of subidentifiers */
+print_description(oid * objid, int objidlen)
 {
     char *desc = get_description(objid, objidlen);
 
@@ -1206,9 +1114,7 @@ print_description(objid, objidlen)
 
 
 static struct tree *
-find_node(name, subtree)
-     char *name;
-     struct tree *subtree;
+find_node(char *name, struct tree *subtree)
 {
     struct tree *tp, *ret;
 
@@ -1225,10 +1131,7 @@ find_node(name, subtree)
 
 #if 0
 static int
-get_node(name, objid, objidlen)
-     char *name;
-     oid *objid;
-     int *objidlen;
+get_node(char *name, oid * objid, int *objidlen)
 {
     struct tree *tp;
     oid newname[64], *op;
@@ -1244,7 +1147,7 @@ get_node(name, objid, objidlen)
 	if (newname + 64 - op > *objidlen)
 	    return 0;
 	*objidlen = newname + 64 - op;
-	bcopy(op, objid, (newname + 64 - op) * sizeof(oid));
+	xmemcpy(objid, op, (newname + 64 - op) * sizeof(oid));
 	return 1;
     } else {
 	return 0;

@@ -131,16 +131,11 @@ char *api_errors[4] =
 };
 
 
-void sync_with_agent();
-int parse_app_community_string();
-void snmp_synch_setup();
-int snmp_synch_response();
-void md5Digest(u_char * msg, int length, u_char * key, u_char * digest);
+static void sync_with_agent(struct snmp_session *session);
 
 #if NO_PRINTFS
 static char *
-api_errstring(snmp_errnumber)
-     int snmp_errnumber;
+api_errstring(int snmp_errnumber)
 {
     if (snmp_errnumber <= SNMPERR_BAD_SESSION && snmp_errnumber >= SNMPERR_GENERR) {
 	return api_errors[snmp_errnumber + 4];
@@ -155,7 +150,7 @@ api_errstring(snmp_errnumber)
  * Gets initial request ID for all transactions.
  */
 static void
-init_snmp()
+init_snmp(void)
 {
     struct timeval tv;
 
@@ -171,11 +166,7 @@ init_snmp()
  * Dump snmp packet to stdout:
  */
 static void
-snmp_print_packet(packet, length, addr, code)
-     char *packet;
-     int length;
-     ipaddr addr;
-     int code;
+snmp_print_packet(char *packet, int length, ipaddr addr, int code)
 {
     if (length < 0) {
 	return;
@@ -209,10 +200,7 @@ snmp_print_packet(packet, length, addr, code)
 #define TRACE_RECV   (1)
 #define TRACE_TIMEOUT (2)
 static void
-snmp_print_trace(slp, rp, code)
-     struct session_list *slp;
-     struct request_list *rp;
-     int code;
+snmp_print_trace(struct session_list *slp, struct request_list *rp, int code)
 {
     int reqid = 0, retries = 1;
     if (rp) {
@@ -246,8 +234,7 @@ snmp_print_trace(slp, rp, code)
  * and snmp_errno is set to the appropriate error code.
  */
 struct snmp_session *
-snmp_open(session)
-     struct snmp_session *session;
+snmp_open(struct snmp_session *session)
 {
     struct session_list *slp;
     struct snmp_internal_session *isp;
@@ -265,7 +252,7 @@ snmp_open(session)
     memset(isp, '\0', sizeof(struct snmp_internal_session));
     slp->internal->sd = -1;	/* mark it not set */
     slp->session = xcalloc(1, sizeof(struct snmp_session));
-    bcopy((char *) session, (char *) slp->session, sizeof(struct snmp_session));
+    xmemcpy(slp->session, session, sizeof(struct snmp_session));
     session = slp->session;
     /* now link it in. */
     slp->next = Sessions;
@@ -308,7 +295,7 @@ snmp_open(session)
     } else {
 	session->community_len = strlen(DEFAULT_COMMUNITY);
 	cp = xcalloc(1, (unsigned) session->community_len);
-	bcopy((char *) DEFAULT_COMMUNITY, (char *) cp, session->community_len);
+	xmemcpy(cp, DEFAULT_COMMUNITY, session->community_len);
     }
 
     /* Set up connections */
@@ -328,7 +315,7 @@ snmp_open(session)
 
     if (session->peername != SNMP_DEFAULT_PEERNAME) {
 	if ((addr = inet_addr(session->peername)) != -1) {
-	    bcopy((char *) &addr, (char *) &isp->addr.sin_addr, sizeof(isp->addr.sin_addr));
+	    xmemcpy(&isp->addr.sin_addr, &addr, sizeof(isp->addr.sin_addr));
 	} else {
 	    hp = gethostbyname(session->peername);
 	    if (hp == NULL) {
@@ -344,7 +331,7 @@ snmp_open(session)
 		}
 		return 0;
 	    } else {
-		bcopy((char *) hp->h_addr, (char *) &isp->addr.sin_addr, hp->h_length);
+		xmemcpy(&isp->addr.sin_addr, hp->h_addr, hp->h_length);
 	    }
 	}
 	isp->addr.sin_family = AF_INET;
@@ -390,9 +377,8 @@ snmp_open(session)
     return session;
 }
 
-void
-sync_with_agent(session)
-     struct snmp_session *session;
+static void
+sync_with_agent(struct snmp_session *session)
 {
     struct snmp_pdu *pdu, *response = 0;
     int status;
@@ -436,9 +422,7 @@ sync_with_agent(session)
  * then free it and it's pdu.
  */
 static void
-free_one_request(isp, orp)
-     struct snmp_internal_session *isp;
-     struct request_list *orp;
+free_one_request(struct snmp_internal_session *isp, struct request_list *orp)
 {
     struct request_list *rp;
     if (!orp)
@@ -463,8 +447,7 @@ free_one_request(isp, orp)
  * Free each element in the input request list.
  */
 static void
-free_request_list(rp)
-     struct request_list *rp;
+free_request_list(struct request_list *rp)
 {
     struct request_list *orp;
 
@@ -483,8 +466,7 @@ free_request_list(rp)
  * the session.  Returns 0 on error, 1 otherwise.
  */
 int
-snmp_close(session)
-     struct snmp_session *session;
+snmp_close(struct snmp_session *session)
 {
     struct session_list *slp = NULL, *oslp = NULL;
 
@@ -527,12 +509,12 @@ snmp_close(session)
  * occur, -1 is returned.  If all goes well, 0 is returned.
  */
 int
-snmp_build(session, pdu, packet, out_length, is_agent)
-     struct snmp_session *session;
-     struct snmp_pdu *pdu;
-     u_char *packet;
-     int *out_length;
-     int is_agent;
+snmp_build(
+    struct snmp_session *session,
+    struct snmp_pdu *pdu,
+    u_char * packet,
+    int *out_length,
+    int is_agent)
 {
     u_char buf[PACKET_LENGTH];
     u_char *cp;
@@ -553,7 +535,7 @@ snmp_build(session, pdu, packet, out_length, is_agent)
     cp = asn_build_header(buf, &length, (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR), totallength);
     if (cp == NULL)
 	return -1;
-    bcopy((char *) packet, (char *) cp, totallength);
+    xmemcpy(cp, packet, totallength);
     totallength += cp - buf;
 
     length = *out_length;
@@ -608,7 +590,7 @@ snmp_build(session, pdu, packet, out_length, is_agent)
     }
     if (length < totallength)
 	return -1;
-    bcopy((char *) buf, (char *) cp, totallength);
+    xmemcpy(cp, buf, totallength);
     totallength += cp - packet;
 
     length = PACKET_LENGTH;
@@ -617,7 +599,7 @@ snmp_build(session, pdu, packet, out_length, is_agent)
 	return -1;
     if (length < totallength)
 	return -1;
-    bcopy((char *) packet, (char *) cp, totallength);
+    xmemcpy(cp, packet, totallength);
     totallength += cp - buf;
 
     length = *out_length;
@@ -627,7 +609,7 @@ snmp_build(session, pdu, packet, out_length, is_agent)
 	return -1;
     if ((*out_length - (cp - packet)) < totallength)
 	return -1;
-    bcopy((char *) buf, (char *) cp, totallength);
+    xmemcpy(cp, buf, totallength);
     totallength += cp - packet;
     *out_length = totallength;
 
@@ -644,11 +626,11 @@ snmp_build(session, pdu, packet, out_length, is_agent)
  * are encountered, -1 is returned.  Otherwise, a 0 is returned.
  */
 static int
-snmp_parse(session, pdu, data, length)
-     struct snmp_session *session;
-     struct snmp_pdu *pdu;
-     u_char *data;
-     int length;
+snmp_parse(
+    struct snmp_session *session,
+    struct snmp_pdu *pdu,
+    u_char * data,
+    int length)
 {
     u_char msg_type;
     u_char type;
@@ -704,7 +686,7 @@ snmp_parse(session, pdu, data, length)
 	if (data == NULL)
 	    return -1;
 	pdu->enterprise = xcalloc(1, pdu->enterprise_length * sizeof(oid));
-	bcopy((char *) objid, (char *) pdu->enterprise, pdu->enterprise_length * sizeof(oid));
+	xmemcpy(pdu->enterprise, objid, pdu->enterprise_length * sizeof(oid));
 
 	four = 4;
 	data = asn_parse_string(data, &length, &type, (u_char *) & pdu->agent_addr.sin_addr.s_addr, &four);
@@ -740,7 +722,7 @@ snmp_parse(session, pdu, data, length)
 	if (data == NULL)
 	    return -1;
 	op = xcalloc(1, (unsigned) vp->name_length * sizeof(oid));
-	bcopy((char *) objid, (char *) op, vp->name_length * sizeof(oid));
+	xmemcpy(op, objid, vp->name_length * sizeof(oid));
 	vp->name = op;
 
 	len = PACKET_LENGTH;
@@ -777,7 +759,7 @@ snmp_parse(session, pdu, data, length)
 	    asn_parse_objid(var_val, &len, &vp->type, objid, &vp->val_len);
 	    vp->val_len *= sizeof(oid);
 	    vp->val.objid = xcalloc(1, (unsigned) vp->val_len);
-	    bcopy((char *) objid, (char *) vp->val.objid, vp->val_len);
+	    xmemcpy(vp->val.objid, objid, vp->val_len);
 	    break;
 	case SNMP_NOSUCHOBJECT:
 	case SNMP_NOSUCHINSTANCE:
@@ -804,9 +786,7 @@ snmp_parse(session, pdu, data, length)
  * The pdu is freed by snmp_send() unless a failure occured.
  */
 int
-snmp_send(session, pdu)
-     struct snmp_session *session;
-     struct snmp_pdu *pdu;
+snmp_send(struct snmp_session *session, struct snmp_pdu *pdu)
 {
     struct session_list *slp;
     struct snmp_internal_session *isp = NULL;
@@ -844,7 +824,7 @@ snmp_send(session, pdu)
 	pdu->reqid = 1;		/* give a bogus non-error reqid for traps */
 	if (pdu->enterprise_length == SNMP_DEFAULT_ENTERPRISE_LENGTH) {
 	    pdu->enterprise = xcalloc(1, sizeof(DEFAULT_ENTERPRISE));
-	    bcopy((char *) DEFAULT_ENTERPRISE, (char *) pdu->enterprise, sizeof(DEFAULT_ENTERPRISE));
+	    xmemcpy(pdu->enterprise, DEFAULT_ENTERPRISE, sizeof(DEFAULT_ENTERPRISE));
 	    pdu->enterprise_length = sizeof(DEFAULT_ENTERPRISE) / sizeof(oid);
 	}
 	if (pdu->time == SNMP_DEFAULT_TIME)
@@ -852,7 +832,7 @@ snmp_send(session, pdu)
     }
     if (pdu->address.sin_addr.s_addr == SNMP_DEFAULT_ADDRESS) {
 	if (isp->addr.sin_addr.s_addr != SNMP_DEFAULT_ADDRESS) {
-	    bcopy((char *) &isp->addr, (char *) &pdu->address, sizeof(pdu->address));
+	    xmemcpy(&pdu->address, &isp->addr, sizeof(pdu->address));
 	} else {
 #if NO_PRINTFS
 	    fprintf(stderr, "No remote IP address specified\n");
@@ -946,8 +926,7 @@ snmp_free_pdu(struct snmp_pdu *pdu)
  * routine returns successfully, the pdu and it's request are deleted.
  */
 void
-snmp_read(fdset)
-     fd_set *fdset;
+snmp_read(fd_set * fdset)
 {
     struct session_list *slp;
     struct snmp_session *sp;
@@ -1050,12 +1029,12 @@ snmp_read(fdset)
  * number of sessions open) 
  */
 int
-snmp_select_info(numfds, fdset, timeout, block)
-     int *numfds;
-     fd_set *fdset;
-     struct timeval *timeout;
-     int *block;		/* should the select block until input arrives (i.e. no input) */
-{
+snmp_select_info(
+    int *numfds,
+    fd_set * fdset,
+    struct timeval *timeout,
+    int *block)
+{				/* should the select block until input arrives (i.e. no input) */
     struct session_list *slp;
     struct snmp_internal_session *isp;
     struct request_list *rp;
@@ -1122,7 +1101,7 @@ snmp_select_info(numfds, fdset, timeout, block)
  * the session is used to alert the user of the timeout.
  */
 void
-snmp_timeout()
+snmp_timeout(void)
 {
     struct session_list *slp;
     struct snmp_session *sp;
