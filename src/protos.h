@@ -585,9 +585,10 @@ extern int pconnPop(const char *host, u_short port);
 extern void pconnInit(void);
 
 extern int asnMatchIp(void *, struct in_addr);
-extern void asnCleanup();
+extern void asnCleanup(void);
 extern void asnAclInitialize(acl *);
-extern void asndbInit();
+extern void asnInit(void);
+extern void asnFreeMemory(void);
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
 
