@@ -1083,8 +1083,7 @@ parse(fp)
 }
 
 struct snmp_mib_tree *
-read_mib(filename)
-    char *filename;
+read_mib(char *filename)
 {
     FILE *fp;
     struct node *nodes;
@@ -1094,7 +1093,7 @@ read_mib(filename)
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
-	snmplib_debug(0, "failed to open MIB file: '%s'\n", filename);
+	snmplib_debug(1, "init_mib: %s: %s\n", filename, xstrerror());
 	return(NULL);
     }
 

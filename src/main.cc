@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.236 1998/03/13 05:41:37 wessels Exp $
+ * $Id: main.cc,v 1.237 1998/03/17 05:12:36 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -453,6 +453,9 @@ mainInitialize(void)
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
     errorInitialize();
     accessLogInit();
+#ifdef SQUID_SNMP
+    snmpInit();
+#endif
 
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);
@@ -507,9 +510,6 @@ mainInitialize(void)
 	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15);
     }
     configured_once = 1;
-#ifdef SQUID_SNMP
-    snmpInit();
-#endif
 }
 
 int

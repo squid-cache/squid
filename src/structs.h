@@ -43,7 +43,6 @@ struct _acl_arp_data {
     acl_arp_data *next;
 #endif
 };
-
 #endif
 
 struct _String {
@@ -54,12 +53,6 @@ struct _String {
 };
 
 #if SQUID_SNMP
-struct _snmpconf {
-    char *line;
-    int type;
-    snmpconf *next;
-};
-
 struct _snmp_request_t {
     u_char *buf;
     u_char *outbuf;
@@ -102,7 +95,6 @@ typedef struct _usecEntry {
     int authWriteView;
     struct _usecEntry *next;
 } usecEntry;
-
 #endif
 
 struct _acl {
@@ -216,7 +208,7 @@ struct _SquidConfig {
 	u_short localPort;
 	int do_queueing;
 	int conf_authtraps;
-	struct _snmpconf *snmpconf;
+	wordlist *snmpconf;
 	viewEntry *views;
 	usecEntry *users;
 	communityEntry *communities;

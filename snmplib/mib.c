@@ -697,7 +697,7 @@ int read_objid(input, output, out_len)
     }
 
     if (root == NULL){
-	snmplib_debug(0, "Mib not initialized.  Exiting.\n");
+	snmplib_debug(0, "Mib not initialized.\n");
 	return 0;
     }
     if ((*out_len = parse_subtree(root, input, output, out_len)) == 0)
