@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.100 1997/11/21 05:17:42 wessels Exp $
+#  $Id: Makefile.in,v 1.101 1997/11/21 05:59:31 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -319,7 +319,7 @@ install-pinger:
 
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
-	-rm -f cf_gen cf_parser.c cf.data globals.c
+	-rm -f cf_gen cf_parser.c cf.data globals.c string_arrays.c
 
 distclean:	clean
 	-rm -f Makefile squid.conf squid.conf.pre
