@@ -1,4 +1,4 @@
-.TH pam_auth 8 "15 May 2002" "Squid PAM Auth"
+.TH pam_auth 8 "5 Sep 2003" "Squid PAM Auth"
 .
 .SH NAME
 pam_auth - Squid PAM authentication helper
@@ -17,22 +17,18 @@ Specifies the PAM service name Squid uses, defaults to "squid"
 .
 .TP
 .BI "-t " TTL
-Unless the -1 option is used, this specified for how long
-the connection to the PAM database should be kept open and
-reused for new logins. Defaults to 60 seconds.
+Enables persistent PAM connections where the connection to the PAM
+database is kept open and reused for new logins. The TTL specifies
+how long the connetion will be kept open (in seconds).  Default is
+to not keep PAM connections open. Please note that the use of
+persistent PAM connections is slightly outside the PAM
+specification and may not work with all PAM configurations.
 .
 .TP
 .BI "-o"
 Do not perform the PAM account management group (account
 expiration etc)
 
-.TP
-.BI "-1"
-Specifies "One shot" mode, where a new PAM connection will
-be opened for each new user. This is how PAM is normally
-used and may be required by some backend databases.
-The default is to reuse the PAM connection to maximize
-performance. (see -t above)
 .
 .SH CONFIGURATION
 .
