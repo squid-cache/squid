@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.120 1997/06/04 06:15:54 wessels Exp $
+ * $Id: ftp.cc,v 1.121 1997/06/06 06:16:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -971,7 +971,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
 	list = xcalloc(1, sizeof(wordlist));
 	list->key = xmalloc(linelen - offset);
 	xstrncpy(list->key, s + offset, linelen - offset);
-	debug(9, 7) ("%p: %s\n", list->key, list->key);
+	debug(9, 7) ("%d %s\n", code, list->key);
 	*tail = list;
 	tail = &list->next;
     }
@@ -1149,6 +1149,7 @@ ftpSendCwd(FtpStateData * ftpState)
     if ((w = ftpState->pathcomps) == NULL) {
 	debug(9, 3) ("the final component was a directory\n");
 	EBIT_SET(ftpState->flags, FTP_ISDIR);
+	EBIT_SET(ftpState->flags, FTP_USE_BASE);
 	if (!EBIT_TEST(ftpState->flags, FTP_ROOT_DIR))
 	    strcat(ftpState->title_url, "/");
 	ftpSendPasv(ftpState);
@@ -1205,14 +1206,14 @@ ftpReadMdtm(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadMdtm\n");
     if (code == 213) {
 	ftpState->mdtm = parse_iso3307_time(ftpState->ctrl.last_message);
-	assert(ftpState->filepath != NULL);
-	assert(*ftpState->filepath != '\0');
-	sprintf(cbuf, "SIZE %s\r\n", ftpState->filepath);
-	ftpWriteCommand(cbuf, ftpState);
-	ftpState->state = SENT_SIZE;
     } else if (code < 0) {
 	ftpFail(ftpState);
     }
+    assert(ftpState->filepath != NULL);
+    assert(*ftpState->filepath != '\0');
+    sprintf(cbuf, "SIZE %s\r\n", ftpState->filepath);
+    ftpWriteCommand(cbuf, ftpState);
+    ftpState->state = SENT_SIZE;
 }
 
 static void
@@ -1222,10 +1223,10 @@ ftpReadSize(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadSize\n");
     if (code == 213) {
 	ftpState->size = atoi(ftpState->ctrl.last_message);
-	ftpSendPasv(ftpState);
     } else if (code < 0) {
 	ftpFail(ftpState);
     }
+    ftpSendPasv(ftpState);
 }
 
 static void
