@@ -1,7 +1,8 @@
-
 /*
- * $Id$
+ * $Id: ACLRegexData.cc,v 1.1 2003/02/13 08:07:47 robertc Exp $
  *
+ * DEBUG: section 28    Access Control
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,31 +34,63 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLUSERDATA_H
-#define SQUID_ACLUSERDATA_H
-#include "splay.h"
+#include "squid.h"
+#include "ACLRegexData.h"
+#include "authenticate.h"
+#include "ACLChecklist.h"
 #include "ACL.h"
-#include "ACLData.h"
 
-class ACLUserData : public ACLData {
-  public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
+MemPool *ACLRegexData::Pool(NULL);
+void *
+ACLRegexData::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (ACLRegexData));
+    if (!Pool)
+	Pool = memPoolCreate("ACLRegexData", sizeof (ACLRegexData));
+    return memPoolAlloc(Pool);
+}
 
-    virtual ~ACLUserData();
-    bool match(char const *user);
-    wordlist *dump();
-    void parse();
-    virtual ACLUserData *clone() const;
-    
-    SplayNode<char *> *names;
-    struct {
-	unsigned int case_insensitive:1;
-	unsigned int required:1;
-    } flags;
-  private:
-    static MemPool *Pool;
-};
+void
+ACLRegexData::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
 
-#endif /* SQUID_ACLUSERDATA_H */
+void
+ACLRegexData::deleteSelf() const
+{
+    delete this;
+}
+
+ACLRegexData::~ACLRegexData()
+{
+    aclDestroyRegexList(data);
+} 
+
+bool
+ACLRegexData::match(char const *user)
+{
+    return aclMatchRegex(data, user);
+}
+
+wordlist *
+ACLRegexData::dump()
+{
+    return aclDumpRegexList(data);
+}
+
+void
+ACLRegexData::parse()
+{
+    aclParseRegexList(&data);
+}
+
+
+ACLData *
+ACLRegexData::clone() const
+{
+    /* Regex's don't clone yet. */
+    assert (!data);
+    return new ACLRegexData;
+}

@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLData.h,v 1.1 2003/02/13 08:07:47 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,31 +33,18 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLUSERDATA_H
-#define SQUID_ACLUSERDATA_H
-#include "splay.h"
-#include "ACL.h"
-#include "ACLData.h"
+#ifndef SQUID_ACLDATA_H
+#define SQUID_ACLDATA_H
 
-class ACLUserData : public ACLData {
+class ACLData {
   public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
+    virtual void deleteSelf() const =0;
 
-    virtual ~ACLUserData();
-    bool match(char const *user);
-    wordlist *dump();
-    void parse();
-    virtual ACLUserData *clone() const;
-    
-    SplayNode<char *> *names;
-    struct {
-	unsigned int case_insensitive:1;
-	unsigned int required:1;
-    } flags;
-  private:
-    static MemPool *Pool;
+    virtual ~ACLData() {}
+    virtual bool match(char const *user) =0;
+    virtual wordlist *dump() =0;
+    virtual void parse() =0;
+    virtual ACLData *clone() const =0;
 };
 
-#endif /* SQUID_ACLUSERDATA_H */
+#endif /* SQUID_ACLDATA_H */

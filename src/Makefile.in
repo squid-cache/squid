@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.285 2003/02/12 06:23:39 robertc Exp $
+#  $Id: Makefile.in,v 1.286 2003/02/13 08:07:47 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -237,6 +237,7 @@ EXTRA_squid_SOURCES = \
 
 
 squid_ACLSOURCES = \
+	ACLData.h \
 	ACLDestinationIP.cc \
 	ACLDestinationIP.h \
 	ACLIP.cc \
@@ -245,6 +246,8 @@ squid_ACLSOURCES = \
 	ACLMyIP.h \
 	ACLProxyAuth.cc \
 	ACLProxyAuth.h \
+	ACLRegexData.cc \
+	ACLRegexData.h \
 	ACLSourceIP.cc \
 	ACLSourceIP.h \
 	ACLUserData.cc \
@@ -255,6 +258,7 @@ squid_SOURCES = \
 	access_log.cc \
 	acl.cc \
 	ACL.h \
+	ACLChecklist.cc \
 	ACLChecklist.h \
 	$(squid_ACLSOURCES) \
 	asn.cc \
@@ -289,6 +293,7 @@ squid_SOURCES = \
 	ETag.cc \
 	event.cc \
 	external_acl.cc \
+	ExternalACL.h \
 	fd.cc \
 	fde.cc \
 	fde.h \

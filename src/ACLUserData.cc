@@ -172,3 +172,12 @@ ACLUserData::parse()
 	names = names->insert(xstrdup(t), splaystrcmp);
     }
 }
+
+
+ACLUserData *
+ACLUserData::clone() const
+{
+    /* Splay trees don't clone yet. */
+    assert (!names);
+    return new ACLUserData;
+}

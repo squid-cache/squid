@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.126 2003/02/12 06:11:04 robertc Exp $
+ * $Id: peer_select.cc,v 1.127 2003/02/13 08:07:48 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -251,8 +251,7 @@ peerSelectFoo(ps_state * ps)
 		Config.accessList.AlwaysDirect,
 		request,
 		NULL);		/* ident */
-	    aclNBCheck(ps->acl_checklist,
-		peerCheckAlwaysDirectDone,
+	    ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone,
 		ps);
 	    return;
 	} else if (ps->always_direct > 0) {
@@ -262,8 +261,7 @@ peerSelectFoo(ps_state * ps)
 		Config.accessList.NeverDirect,
 		request,
 		NULL);		/* ident */
-	    aclNBCheck(ps->acl_checklist,
-		peerCheckNeverDirectDone,
+	    ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone,
 		ps);
 	    return;
 	} else if (ps->never_direct > 0) {

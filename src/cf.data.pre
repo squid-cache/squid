@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.298 2003/02/08 14:42:09 hno Exp $
+# $Id: cf.data.pre,v 1.299 2003/02/13 08:07:47 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2167,7 +2167,7 @@ DOC_START
 	  # cache_peer_access mycache.mydomain.net allow asexample
 	  # cache_peer_access mycache_mydomain.net deny all
 
-	acl aclname proxy_auth username ...
+	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...
 	  # list of valid usernames
 	  # use REQUIRED to accept any valid username.

@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLRegexData.h,v 1.1 2003/02/13 08:07:47 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,59 +33,24 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLPROXYAUTH_H
-#define SQUID_ACLPROXYAUTH_H
-#include "ACL.h"
+#ifndef SQUID_ACLREGEXDATA_H
+#define SQUID_ACLREGEXDATA_H
 #include "ACLData.h"
-#include "ACLChecklist.h"
 
-class ProxyAuthLookup : public ACLChecklist::AsyncState {
-  public:
-    static ProxyAuthLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
-  private:
-    static ProxyAuthLookup instance_;
-    static void LookupDone(void *data, char *result);
-};
-
-class ProxyAuthNeeded : public ACLChecklist::AsyncState {
-  public:
-    static ProxyAuthNeeded *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
-  private:
-    static ProxyAuthNeeded instance_;
-};
-
-class ACLProxyAuth : public ACL {
+class ACLRegexData : public ACLData {
   public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
 
-    ~ACLProxyAuth();
-    ACLProxyAuth(ACLData *);
-    ACLProxyAuth (ACLProxyAuth const &);
-    ACLProxyAuth &operator= (ACLProxyAuth const &);
-    
-    virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
+    virtual ~ACLRegexData();
+    virtual bool match(char const *user);
+    virtual wordlist *dump();
     virtual void parse();
-    virtual bool isProxyAuth() const {return true;}
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool valid () const;
-    virtual bool requiresRequest() const {return true;}
-    virtual ACL *clone()const;
-    virtual int matchForCache(ACLChecklist *checklist);
+    virtual ACLData *clone() const;
   private:
     static MemPool *Pool;
-    static Prototype UserRegistryProtoype;
-    static ACLProxyAuth UserRegistryEntry_;
-    static Prototype RegexRegistryProtoype;
-    static ACLProxyAuth RegexRegistryEntry_;
-    int matchProxyAuth(ACLChecklist *);
-    void checkAuthForCaching(ACLChecklist *) const;
-    ACLData *data;
+    relist *data;
 };
 
-#endif /* SQUID_ACLPROXYAUTH_H */
+#endif /* SQUID_ACLREGEXDATA_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.25 2003/02/12 06:11:03 robertc Exp $
+ * $Id: external_acl.cc,v 1.26 2003/02/13 08:07:48 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -41,6 +41,7 @@
  */
 
 #include "squid.h"
+#include "ExternalACL.h"
 #include "authenticate.h"
 #include "Store.h"
 #include "fde.h"
@@ -449,7 +450,7 @@ aclMatchExternal(void *data, ACLChecklist * ch)
 	if (acl->def->require_auth) {
 	    int ti;
 	    /* Make sure the user is authenticated */
-	    if ((ti = aclAuthenticated(ch)) != 1) {
+	    if ((ti = ch->authenticated()) != 1) {
 		debug(82, 2) ("aclMatchExternal: %s user not authenticated (%d)\n", acl->def->name, ti);
 		return ti;
 	    }
@@ -466,6 +467,7 @@ aclMatchExternal(void *data, ACLChecklist * ch)
     if (!entry) {
 	debug(82, 2) ("aclMatchExternal: %s(\"%s\") = lookup needed\n", acl->def->name, key);
 	ch->state[ACL_EXTERNAL] = ACL_LOOKUP_NEEDED;
+	ch->changeState (ExternalACLLookup::Instance());
 	return 0;
     }
     external_acl_cache_touch(acl->def, entry);
@@ -782,10 +784,10 @@ externalAclHandleReply(void *data, char *reply)
 }
 
 void
-externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * callback, void *callback_data)
+ACL::ExternalAclLookup(ACLChecklist * ch, ACL * me, EAH * callback, void *callback_data)
 {
     MemBuf buf;
-    external_acl_data *acl = static_cast<external_acl_data *>(acl_data);
+    external_acl_data *acl = static_cast<external_acl_data *>(me->data);
     external_acl *def = acl->def;
     const char *key = makeExternalAclKey(ch, acl);
     external_acl_entry *entry = static_cast<external_acl_entry *>(hash_lookup(def->cache, key));
@@ -886,4 +888,31 @@ externalAclShutdown(void)
     for (p = Config.externalAclHelperList; p; p = p->next) {
 	helperShutdown(p->theHelper);
     }
+}
+
+ExternalACLLookup ExternalACLLookup::instance_;
+ExternalACLLookup *
+ExternalACLLookup::Instance()
+{
+    return &instance_;
+}
+
+void
+ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
+{
+    assert (checklist->state[ACL_EXTERNAL] == ACL_LOOKUP_NEEDED);
+    acl *acl = ACL::FindByName(AclMatchedName);
+    assert (acl->aclType() == ACL_EXTERNAL);
+    checklist->asyncInProgress(true);
+    ACL::ExternalAclLookup(checklist, acl, LookupDone, checklist);
+}
+
+void
+ExternalACLLookup::LookupDone(void *data, void *result)
+{
+    ACLChecklist *checklist = (ACLChecklist *)data;
+    checklist->state[ACL_EXTERNAL] = ACL_LOOKUP_DONE;
+    checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
+    checklist->asyncInProgress(false);
+    checklist->check();
 }

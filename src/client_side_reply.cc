@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.38 2003/02/08 17:37:36 hno Exp $
+ * $Id: client_side_reply.cc,v 1.39 2003/02/13 08:07:47 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1790,7 +1790,7 @@ clientReplyContext::processReplyAccess ()
 	replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
 	replyChecklist->reply = rep;
 	holdingReply = rep;
-	aclNBCheck(replyChecklist, ProcessReply, this);
+	replyChecklist->nonBlockingCheck(ProcessReply, this);
 }
 
 void
