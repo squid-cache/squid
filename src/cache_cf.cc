@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.164 1997/01/14 19:50:07 wessels Exp $
+ * $Id: cache_cf.cc,v 1.165 1997/01/19 08:32:10 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1161,9 +1161,9 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "cache_stoplist"))
 	    parseWordlist(&Config.cache_stoplist);
 	else if (!strcmp(token, "cache_stoplist_pattern"))
-            aclParseRegexList(&Config.cache_stop_relist, 0);
+	    aclParseRegexList(&Config.cache_stop_relist, 0);
 	else if (!strcmp(token, "cache_stoplist_pattern/i"))
-            aclParseRegexList(&Config.cache_stop_relist, 1);
+	    aclParseRegexList(&Config.cache_stop_relist, 1);
 
 #if DELAY_HACK
 	else if (!strcmp(token, "delay_access"))

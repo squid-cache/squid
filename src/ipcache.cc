@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.96 1997/01/18 06:04:02 wessels Exp $
+ * $Id: ipcache.cc,v 1.97 1997/01/19 08:32:12 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -687,7 +687,7 @@ ipcache_nbgethostbyname(const char *name, int fd, IPH handler, void *handlerData
 	IpcacheStats.pending_hits++;
 	ipcacheAddPending(i, fd, handler, handlerData);
 	if (squid_curtime - i->expires > 60) {
-	    debug(14,0,"ipcache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name, squid_curtime + Config.negativeDnsTtl - i->expires);
+	    debug(14, 0, "ipcache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name, squid_curtime + Config.negativeDnsTtl - i->expires);
 	    ipcache_call_pending(i);
 	    ipcacheChangeKey(i);
 	}
