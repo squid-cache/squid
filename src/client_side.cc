@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.637 2003/05/24 12:09:03 robertc Exp $
+ * $Id: client_side.cc,v 1.638 2003/06/18 12:34:51 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -901,12 +901,15 @@ ClientSocketContext::packRange(const char **buf,
          */
         assert(available >= 0 && i->debt() >= 0 || i->debt() == -1);
 
-        if (i->debt() == 0)
-            /* put terminating boundary for multiparts */
-            clientPackTermBound(i->boundary, mb);
+        if (!canPackMoreRanges()) {
+            debug(33, 3) ("clientPackRange: Returning because !canPackMoreRanges.\n");
 
-        if (!canPackMoreRanges())
+            if (i->debt() == 0)
+                /* put terminating boundary for multiparts */
+                clientPackTermBound(i->boundary, mb);
+
             return;
+        }
 
         off_t next = getNextRangeOffset();
 
