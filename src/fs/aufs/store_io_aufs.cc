@@ -409,12 +409,12 @@ storeAufsIOCallback(storeIOState * sio, int errflag)
     cbdataUnlock(their_data);
     aiostate->fd = -1;
     cbdataFree(sio);
+    store_open_disk_fd--;
     if (fd < 0)
 	return;
     debug(78, 3) ("%s:%d\n", __FILE__, __LINE__);
     aioClose(fd);
     fd_close(fd);
-    store_open_disk_fd--;
     debug(78, 3) ("%s:%d\n", __FILE__, __LINE__);
 }
 
