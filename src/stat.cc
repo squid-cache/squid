@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.224 1998/04/06 22:32:20 wessels Exp $
+ * $Id: stat.cc,v 1.225 1998/04/07 23:58:31 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -128,6 +128,7 @@ static OBJH stat_vmobjects_get;
 static OBJH info_get;
 static OBJH statFiledescriptors;
 static OBJH statCounters;
+static OBJH statPeerSelect;
 static OBJH statAvg5min;
 static OBJH statAvg60min;
 static OBJH statUtilization;
@@ -648,6 +649,16 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	&f->client_http.hit_svc_time);
     storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
 	x / 1000.0);
+#if SQUID_PEER_DIGEST
+    x = statHistDeltaMedian(&l->cd.client_svc_time,
+	&f->cd.client_svc_time);
+    storeAppendPrintf(sentry, "cd.client_median_svc_time = %f seconds\n",
+	x / 1000.0);
+    x = statHistDeltaMedian(&l->icp.client_svc_time,
+	&f->icp.client_svc_time);
+    storeAppendPrintf(sentry, "icp.client_median_svc_time = %f seconds\n",
+	x / 1000.0);
+#endif
 
     storeAppendPrintf(sentry, "server.all.requests = %f/sec\n",
 	XAVG(server.all.requests));
@@ -744,6 +755,9 @@ statInit(void)
     cachemgrRegister("counters",
 	"Traffic and Resource Counters",
 	statCounters, 0);
+    cachemgrRegister("peer_select",
+	"Peer Selection Algorithms",
+	statPeerSelect, 0);
     cachemgrRegister("5min",
 	"5 Minute Average of Counters",
 	statAvg5min, 0);
@@ -819,6 +833,9 @@ statCountersInitSpecial(StatCounters * C)
      */
     statHistLogInit(&C->dns.svc_time, 300, 0.0, 60000.0 * 10.0);
 #if SQUID_PEER_DIGEST
+    /*
+     * Digested and ICPed cvs times in milli-seconds; max of 3 hours.
+     */
     statHistLogInit(&C->cd.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
     statHistLogInit(&C->icp.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
 #endif
@@ -967,6 +984,35 @@ statCountersDump(StoreEntry * sentry)
 	f->cputime);
     storeAppendPrintf(sentry, "wall_time = %f\n",
 	tvSubDsec(f->timestamp, current_time));
+}
+
+static void
+statPeerSelect(StoreEntry * sentry)
+{
+#if SQUID_PEER_DIGEST
+    StatCounters *f = &Counter;
+    peer *peer;
+    const int tot_used = f->cd.times_used + f->icp.times_used;
+
+    /* totals */
+    cacheDigestGuessStatsReport(&f->cd.guess, sentry, "all peers");
+    /* per-peer */
+    storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
+    for (peer = getFirstPeer(); peer; peer = getNextPeer(peer)) {
+	cacheDigestGuessStatsReport(&peer->digest.stats.guess, sentry, peer->host);
+	storeAppendPrintf(sentry, "\n");
+    }
+
+    storeAppendPrintf(sentry, "\nAlgorithm usage:\n");
+    storeAppendPrintf(sentry, "Cache Digest: %7d (%3d%%)\n",
+	f->cd.times_used, xpercentInt(f->cd.times_used, tot_used));
+    storeAppendPrintf(sentry, "Icp:          %7d (%3d%%)\n",
+	f->icp.times_used, xpercentInt(f->icp.times_used, tot_used));
+    storeAppendPrintf(sentry, "Total:        %7d (%3d%%)\n",
+	tot_used, xpercentInt(tot_used, tot_used));
+#else
+    storeAppendPrintf(sentry, "peer digests are disabled; no stats is available.\n");
+#endif
 }
 
 static void
