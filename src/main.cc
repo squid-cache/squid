@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.346 2001/12/24 15:33:43 adrian Exp $
+ * $Id: main.cc,v 1.347 2002/01/15 16:49:19 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -346,7 +346,9 @@ mainReconfigure(void)
     authenticateShutdown();
     storeDirCloseSwapLogs();
     errorClean();
+    enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile);
+    setEffectiveUser();
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
     authenticateUserCacheRestart();	/* clear stuck ACL entries */
