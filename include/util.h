@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.64 2002/10/13 20:34:51 robertc Exp $
+ * $Id: util.h,v 1.65 2002/10/25 01:25:26 adrian Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -92,7 +92,7 @@ SQUIDCEXTERN void rfc1738_unescape(char *);
 SQUIDCEXTERN char *html_quote(const char *);
 
 #if XMALLOC_STATISTICS
-extern void malloc_statistics(void (*)(int, int, int, void *), void *);
+SQUIDCEXTERN void malloc_statistics(void (*)(int, int, int, void *), void *);
 #endif
 
 #if XMALLOC_TRACE
