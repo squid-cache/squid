@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.36 1996/04/16 16:35:31 wessels Exp $ */
+/* $Id: tools.cc,v 1.37 1996/04/16 20:32:53 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -173,7 +173,8 @@ void shut_down(sig)
     for (i = fdstat_biggest_fd(); i >= 0; i--) {
 	f = &fd_table[i];
 	if (f->read_handler || f->write_handler || f->except_handler)
-	    comm_set_fd_lifetime(i, 30);
+	    if (fdstatGetType(i) == Socket)
+	        comm_set_fd_lifetime(i, 30);
     }
     shutdown_pending = 1;
     /* reinstall signal handler? */
@@ -409,11 +410,18 @@ time_t getCurrentTime()
 void reconfigure(sig)
      int sig;
 {
+    int i;
+    FD_ENTRY *f;
     debug(21, 1, "reconfigure: SIGHUP received.\n");
-
     serverConnectionsClose();
     ipcacheShutdownServers();
     reread_pending = 1;
+    for (i = fdstat_biggest_fd(); i >= 0; i--) {
+	f = &fd_table[i];
+	if (f->read_handler || f->write_handler || f->except_handler)
+	    if (fdstatGetType(i) == Socket)
+	        comm_set_fd_lifetime(i, 30);
+    }
 #if defined(_SQUID_SYSV_SIGNALS_)
     signal(sig, reconfigure);
 #endif
