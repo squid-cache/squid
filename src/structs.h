@@ -208,6 +208,7 @@ struct _SquidConfig {
 	int client_db;
 	int query_icmp;
 	int icp_hit_stale;
+	int buffered_logs;
     } Options;
     struct _acl *aclList;
     struct {
@@ -267,8 +268,8 @@ struct _dnsserver_t {
     int inpipe;
     int outpipe;
     time_t answer;
-    unsigned int offset;
-    unsigned int size;
+    off_t offset;
+    size_t size;
     char *ip_inbuf;
     struct timeval dispatch_time;
     void *data;
@@ -283,7 +284,7 @@ struct _dnsStatData {
 struct _dwrite_q {
     char *buf;
     int len;
-    int cur_offset;
+    off_t cur_offset;
     struct _dwrite_q *next;
     void (*free) (void *);
 };
@@ -444,8 +445,8 @@ struct _clientHttpRequest {
     char *log_url;
     struct {
 	char *buf;
-	int offset;
-	int size;
+	off_t offset;
+	size_t size;
     } out;
     size_t req_sz;
     StoreEntry *entry;
@@ -465,8 +466,8 @@ struct _ConnStateData {
     int fd;
     struct {
 	char *buf;
-	int offset;
-	int size;
+	off_t offset;
+	size_t size;
     } in;
     clientHttpRequest *chr;
     struct sockaddr_in peer;
@@ -705,7 +706,7 @@ struct _mem_hdr {
 struct _stmem_stats {
     int max_pages;
     int total_pages_allocated;
-    int page_size;
+    size_t page_size;
     int n_pages_in_use;
     Stack free_page_stack;
 };
@@ -733,10 +734,10 @@ struct _MemObject {
     char *e_abort_msg;
     log_type abort_code;
     int e_current_len;
-    int e_lowest_offset;
+    off_t e_lowest_offset;
     struct _store_client *clients;
     int nclients;
-    u_num32 swap_offset;
+    off_t swap_offset;
     short swapin_fd;
     short swapout_fd;
     struct _http_reply *reply;

@@ -1803,6 +1803,18 @@ DOC_START
 query_icmp off
 DOC_END
 
+NAME: buffered_logs
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.Options.buffered_logs
+DOC_START
+	Some log files (cache.log, useragent.log) are written with
+	stdio functions, and as such they can be buffered or
+	unbuffered.  By default they will be unbuffered.
+buffered_logs off
+DOC_END
+
 NAME: always_direct
 TYPE: acl_access
 LOC: Config.accessList.AlwaysDirect

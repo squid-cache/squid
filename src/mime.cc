@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.35 1997/07/19 07:20:03 wessels Exp $
+ * $Id: mime.cc,v 1.36 1997/07/21 07:20:59 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -431,5 +431,6 @@ mimeLoadIconFile(const char *icon)
     storeTimestampsSet(e);
     BIT_SET(e->flag, ENTRY_SPECIAL);
     debug(25, 1) ("Loaded icon %s\n", url);
+    storeUnlockObject(e);
     put_free_4k_page(buf);
 }

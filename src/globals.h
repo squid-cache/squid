@@ -82,7 +82,6 @@ extern time_t squid_curtime;	/* 0 */
 extern time_t squid_starttime;	/* 0 */
 extern volatile int reconfigure_pending;	/* 0 */
 extern volatile int shutdown_pending;	/* 0 */
-extern volatile int unbuffered_logs;	/* 0 */
 extern volatile unsigned long nudpconn;		/* 0 */
 extern volatile unsigned long ntcpconn;		/* 0 */
 extern int unlinkd_count;	/* 0 */
