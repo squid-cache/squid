@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.172 1998/01/31 05:32:01 wessels Exp $
+ * $Id: neighbors.cc,v 1.173 1998/02/06 23:57:30 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -383,7 +383,6 @@ neighbors_open(int fd)
 	echo_hdr.reqnum = 0;
 	echo_hdr.flags = 0;
 	echo_hdr.pad = 0;
-	/* memset(echo_hdr.auth, '\0', sizeof(u_num32) * ICP_AUTH_SIZE); */
 	echo_hdr.shostid = name.sin_addr.s_addr;
 	sep = getservbyname("echo", "udp");
 	echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
