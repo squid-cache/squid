@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.237 1998/07/22 20:53:59 wessels Exp $
+ * $Id: protos.h,v 1.238 1998/07/22 21:07:36 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -700,7 +700,6 @@ extern void memFree4K(void *);
 extern void memFree8K(void *);
 extern void memFreeDISK(void *);
 extern int memInUse(mem_type);
-extern size_t memTotalAllocated();
 
 /* MemPool */
 extern MemPool *memPoolCreate(const char *label, size_t obj_size);
