@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.53 1998/01/31 05:32:04 wessels Exp $
+ * $Id: redirect.cc,v 1.54 1998/02/02 21:16:29 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -314,14 +314,14 @@ redirectOpenServers(void)
 	NRedirectors, prg);
     for (k = 0; k < NRedirectors; k++) {
 	redirect_child_table[k] = xcalloc(1, sizeof(redirector_t));
-        args[0] = "(redirector)";
-        args[1] = NULL;
-        x = ipcCreate(IPC_TCP_SOCKET,
-		prg,
-		args,
-		"redirector",
-		&redirectsocket,
-		&redirectsocket);
+	args[0] = "(redirector)";
+	args[1] = NULL;
+	x = ipcCreate(IPC_TCP_SOCKET,
+	    prg,
+	    args,
+	    "redirector",
+	    &redirectsocket,
+	    &redirectsocket);
 	if (x < 0) {
 	    debug(29, 1) ("WARNING: Cannot run '%s' process.\n", prg);
 	    EBIT_CLR(redirect_child_table[k]->flags, HELPER_ALIVE);

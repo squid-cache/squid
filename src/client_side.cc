@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.201 1998/02/02 21:14:57 wessels Exp $
+ * $Id: client_side.cc,v 1.202 1998/02/02 21:16:19 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -283,7 +283,7 @@ clientProcessExpired(void *data)
     http->out.offset = 0;
     protoDispatch(http->conn->fd, http->entry, http->request);
     /* Register with storage manager to receive updates when data comes in. */
-    if(entry->store_status == STORE_ABORTED)
+    if (entry->store_status == STORE_ABORTED)
 	debug(33, 0) ("clientProcessExpired: entry->swap_status == STORE_ABORTED\n");
     storeClientCopy(entry,
 	http->out.offset,
@@ -344,7 +344,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	entry->refcount++;
     } else if (mem->reply->code == 0) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
-        if(entry->store_status == STORE_ABORTED)
+	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientHandleIMSReply: entry->swap_status == STORE_ABORTED\n");
 	storeClientCopy(entry,
 	    http->out.offset + size,
@@ -393,7 +393,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     /* use clientCacheHit() here as the callback because we might
      * be swapping in from disk, and the file might not really be
      * there */
-    if(entry->store_status == STORE_ABORTED) {
+    if (entry->store_status == STORE_ABORTED) {
 	debug(33, 0) ("clientHandleIMSReply: IMS swapin failed on aborted object\n");
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
 	clientProcessMiss(http);
@@ -513,17 +513,17 @@ checkNegativeHit(StoreEntry * e)
 }
 
 void
-clientUpdateCounters(clientHttpRequest *http)
+clientUpdateCounters(clientHttpRequest * http)
 {
-	Counter.client_http.requests++;
-	kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
-	kb_incr(&Counter.client_http.kbytes_out, http->out.size);
-        if (isTcpHit(http->log_type)) {
-	    Counter.client_http.hits++;
-	    kb_incr(&Counter.client_http.hit_kbytes_out, http->out.size);
-	}
-	if (http->request->err_type != ERR_NONE)
-	    Counter.client_http.errors++;
+    Counter.client_http.requests++;
+    kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
+    kb_incr(&Counter.client_http.kbytes_out, http->out.size);
+    if (isTcpHit(http->log_type)) {
+	Counter.client_http.hits++;
+	kb_incr(&Counter.client_http.hit_kbytes_out, http->out.size);
+    }
+    if (http->request->err_type != ERR_NONE)
+	Counter.client_http.errors++;
 }
 
 static void
@@ -946,7 +946,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    debug(12, 3) ("clientSendMoreData: Appending %d bytes after headers\n",
 		(int) (size - hdrlen));
 	    if (((size - hdrlen) + l) > 8192) {
-		debug(0,0) ("Size, hdrlen, l %d, %d, %d\n", size, hdrlen, l);
+		debug(0, 0) ("Size, hdrlen, l %d, %d, %d\n", size, hdrlen, l);
 		return;
 	    }
 	    xmemcpy(newbuf + l, buf + hdrlen, size - hdrlen);
@@ -1023,7 +1023,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    if ((http = conn->chr) != NULL) {
 		debug(12, 1) ("clientWriteComplete: FD %d Sending next request\n", fd);
 		if (!storeClientCopyPending(http->entry, http)) {
-		    if(entry->store_status == STORE_ABORTED)
+		    if (entry->store_status == STORE_ABORTED)
 			debug(33, 0) ("clientWriteComplete: entry->swap_status == STORE_ABORTED\n");
 		    storeClientCopy(http->entry,
 			http->out.offset,
@@ -1051,7 +1051,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     } else {
 	/* More data will be coming from primary server; register with 
 	 * storage manager. */
-	if(entry->store_status == STORE_ABORTED)
+	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientWriteComplete 2: entry->swap_status == STORE_ABORTED\n");
 	storeClientCopy(entry,
 	    http->out.offset,
@@ -1085,7 +1085,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    return;
 	}
 	/* All headers are not yet available, wait for more data */
-	if(entry->store_status == STORE_ABORTED)
+	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientGetHeadersForIMS: entry->swap_status == STORE_ABORTED\n");
 	storeClientCopy(entry,
 	    http->out.offset + size,
@@ -1121,7 +1121,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
     http->log_type = LOG_TCP_IMS_HIT;
     entry->refcount++;
     if (modifiedSince(entry, http->request)) {
-	if(entry->store_status == STORE_ABORTED)
+	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientGetHeadersForIMS 2: entry->swap_status == STORE_ABORTED\n");
 	storeClientCopy(entry,
 	    http->out.offset,
@@ -1273,7 +1273,7 @@ clientProcessRequest(clientHttpRequest * http)
     case LOG_TCP_NEGATIVE_HIT:
     case LOG_TCP_MEM_HIT:
 	entry->refcount++;	/* HIT CASE */
-	if(entry->store_status == STORE_ABORTED)
+	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientProcessRequest: entry->swap_status == STORE_ABORTED\n");
 	storeClientCopy(entry,
 	    http->out.offset,
@@ -1284,7 +1284,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    http);
 	break;
     case LOG_TCP_IMS_MISS:
-	if(entry->store_status == STORE_ABORTED)
+	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientProcessRequest 2: entry->swap_status == STORE_ABORTED\n");
 	storeClientCopy(entry,
 	    http->out.offset,

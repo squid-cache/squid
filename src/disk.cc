@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.97 1998/02/02 21:14:59 wessels Exp $
+ * $Id: disk.cc,v 1.98 1998/02/02 21:16:21 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -169,7 +169,7 @@ file_open_complete(void *data, int fd, int errcode)
 {
     open_ctrl_t *ctrlp = (open_ctrl_t *) data;
 
-    if(fd == -2 && errcode == -2) {	/* Cancelled - clean up */
+    if (fd == -2 && errcode == -2) {	/* Cancelled - clean up */
 	if (ctrlp->callback)
 	    (ctrlp->callback) (ctrlp->callback_data, fd, errcode);
 	xfree(ctrlp->path);
@@ -200,7 +200,7 @@ void
 file_close(int fd)
 {
     fde *F = &fd_table[fd];
-    if(fd < 0) {
+    if (fd < 0) {
 	debug(6, 0) ("file_close: FD less than zero: %d\n", fd);
 	return;
     }
@@ -293,7 +293,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (q == NULL)		/* Someone aborted then write completed */
 	return;
 
-    if(len == -2 && errcode == -2) {	/* Write cancelled - cleanup */
+    if (len == -2 && errcode == -2) {	/* Write cancelled - cleanup */
 	do {
 	    fdd->write_q = q->next;
 	    if (q->free)
@@ -302,7 +302,6 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	} while ((q = fdd->write_q));
 	return;
     }
-
     fd_bytes(fd, len, FD_WRITE);
     if (len < 0) {
 	if (!ignoreErrno(errno)) {
@@ -443,12 +442,11 @@ diskHandleReadComplete(void *data, int len, int errcode)
 
     xfree(data);
 
-    if(len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
+    if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
 	cbdataUnlock(ctrl_dat->client_data);
 	safe_free(ctrl_dat);
 	return;
     }
-
     fd_bytes(fd, len, FD_READ);
     if (len < 0) {
 	if (ignoreErrno(errno)) {

@@ -564,7 +564,7 @@ extern void asnInit(void);
 extern void asnFreeMemory(void);
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
-extern void kb_incr (kb_t *, size_t);
+extern void kb_incr(kb_t *, size_t);
 
 /*
  * prototypes for system functions missing from system includes
@@ -577,11 +577,10 @@ int gethostname(char *, int);
 #endif
 
 extern int ipcCreate(int type,
-	const char *prog,
-	char *const args[],
-	const char *name,
-	int *rfd,
-	int *wfd);
+    const char *prog,
+    char *const args[],
+    const char *name,
+    int *rfd,
+    int *wfd);
 
-extern int handleConnectionHeader(int, char * , char * );
-
+extern int handleConnectionHeader(int, char *, char *);

@@ -5,8 +5,8 @@ typedef unsigned int ping_status_t;
 typedef unsigned int swap_status_t;
 
 typedef struct {
-	size_t bytes;
-	size_t kb;
+    size_t bytes;
+    size_t kb;
 } kb_t;
 
 /*

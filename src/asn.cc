@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.15 1998/02/02 21:14:55 wessels Exp $
+ * $Id: asn.cc,v 1.16 1998/02/02 21:16:17 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -215,7 +215,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	memFree(MEM_4K_BUF, buf);
 	return;
     } else if (size < 0) {
- 	debug(50, 1) ("asHandleReply: Called with size=%d.\n", size);
+	debug(50, 1) ("asHandleReply: Called with size=%d.\n", size);
 	memFree(MEM_4K_BUF, buf);
 	return;
     }

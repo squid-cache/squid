@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.15 1998/02/02 21:15:12 wessels Exp $
+ * $Id: unlinkd.cc,v 1.16 1998/02/02 21:16:38 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -83,30 +83,30 @@ static int unlinkdCreate(void);
 static int
 unlinkdCreate(void)
 {
-	int x;
-	int rfd;
-	int wfd;
-	char *args[2];
-	struct timeval slp;
-	args[0] = "(unlinkd)";
-	args[1] = NULL;
-	x = ipcCreate(IPC_FIFO,
-		Config.Program.unlinkd,
-		args,
-		"unlinkd",
-		&rfd,
-		&wfd);
-	if (x < 0)
-		return -1;
-	slp.tv_sec = 0;
-	slp.tv_usec = 250000;
-	select(0, NULL, NULL, NULL, &slp);
-	fd_note(wfd, "squid -> unlinkd");
-	fd_note(rfd, "unlinkd -> squid");
-	commSetTimeout(rfd, -1, NULL, NULL);
-	commSetTimeout(wfd, -1, NULL, NULL);
-	commSetNonBlocking(wfd);
-	return wfd;
+    int x;
+    int rfd;
+    int wfd;
+    char *args[2];
+    struct timeval slp;
+    args[0] = "(unlinkd)";
+    args[1] = NULL;
+    x = ipcCreate(IPC_FIFO,
+	Config.Program.unlinkd,
+	args,
+	"unlinkd",
+	&rfd,
+	&wfd);
+    if (x < 0)
+	return -1;
+    slp.tv_sec = 0;
+    slp.tv_usec = 250000;
+    select(0, NULL, NULL, NULL, &slp);
+    fd_note(wfd, "squid -> unlinkd");
+    fd_note(rfd, "unlinkd -> squid");
+    commSetTimeout(rfd, -1, NULL, NULL);
+    commSetTimeout(wfd, -1, NULL, NULL);
+    commSetNonBlocking(wfd);
+    return wfd;
 }
 
 void

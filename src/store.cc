@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.369 1998/02/02 21:15:08 wessels Exp $
+ * $Id: store.cc,v 1.370 1998/02/02 21:16:34 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -271,7 +271,7 @@ static void storeValidate(StoreEntry *, VCB *, void *, void *);
 static AIOCB storeValidateComplete;
 static void storeRebuiltFromDisk(struct storeRebuildState *data);
 static unsigned int getKeyCounter(void);
-static void storePutUnusedFileno(StoreEntry *e);
+static void storePutUnusedFileno(StoreEntry * e);
 static int storeGetUnusedFileno(void);
 static void storeCheckSwapOut(StoreEntry * e);
 static void storeSwapoutFileOpened(void *data, int fd, int errcode);
@@ -355,7 +355,7 @@ new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
 }
 
 static void
-destroy_MemObject(StoreEntry *e)
+destroy_MemObject(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
@@ -363,7 +363,7 @@ destroy_MemObject(StoreEntry *e)
     destroy_MemObjectData(mem);
     meta_data.misc -= strlen(mem->log_url);
 #if USE_ASYNC_IO
-    while(mem->clients != NULL)
+    while (mem->clients != NULL)
 	storeUnregister(e, mem->clients->callback_data);
 #endif
     assert(mem->clients == NULL);
@@ -768,7 +768,7 @@ storeSwapoutFileOpened(void *data, int fd, int errcode)
     MemObject *mem;
 
     xfree(ctrlp);
-    if(fd == -2 && errcode == -2) {	/* Cancelled - Clean up */
+    if (fd == -2 && errcode == -2) {	/* Cancelled - Clean up */
 	xfree(swapfilename);
 	return;
     }
@@ -828,9 +828,9 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	if (e->swap_file_number > -1) {
 #if MONOTONIC_STORE
 #if USE_ASYNC_IO
-	safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
+	    safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
 #else
-	unlinkdUnlink(storeSwapFullPath(e->swap_file_number, NULL));
+	    unlinkdUnlink(storeSwapFullPath(e->swap_file_number, NULL));
 #endif
 #else
 	    storePutUnusedFileno(e);
@@ -847,7 +847,7 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 	return;
     }
 #if USE_ASYNC_IO
-    if(mem == NULL) {
+    if (mem == NULL) {
 	debug(20, 1) ("storeSwapOutHandle: mem == NULL : Cancelling swapout\n");
 	return;
     }
@@ -905,7 +905,7 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: swapout.done_offset = %d\n",
 	(int) mem->swapout.done_offset);
 #if USE_ASYNC_IO
-    if(mem->inmem_hi < mem->swapout.queue_offset) {
+    if (mem->inmem_hi < mem->swapout.queue_offset) {
 	storeAbort(e, 0);
 	assert(EBIT_TEST(e->flag, RELEASE_REQUEST));
 	storeSwapOutFileClose(e);
@@ -922,7 +922,7 @@ storeCheckSwapOut(StoreEntry * e)
 
     new_mem_lo = lowest_offset;
     if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
-	if(!EBIT_TEST(e->flag, KEY_PRIVATE))
+	if (!EBIT_TEST(e->flag, KEY_PRIVATE))
 	    debug(20, 0) ("storeCheckSwapOut: Attempt to swap out a non-cacheable non-private object!\n");
 	stmemFreeDataUpto(mem->data, new_mem_lo);
 	mem->inmem_lo = new_mem_lo;
@@ -1075,7 +1075,7 @@ storeSwapInValidateComplete(void *data, int retcode, int errcode)
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
     StoreEntry *e;
 
-    if(retcode == -2 && errcode == -2) {
+    if (retcode == -2 && errcode == -2) {
 	xfree(ctrlp);
 	return;
     }
@@ -1100,18 +1100,17 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     MemObject *mem = e->mem_obj;
     struct stat sb;
 
-    if(fd == -2 && errcode == -2) {
+    if (fd == -2 && errcode == -2) {
 	xfree(ctrlp->path);
 	xfree(ctrlp);
 	return;
     }
-
     assert(mem != NULL);
     assert(e->mem_status == NOT_IN_MEMORY);
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
-    if (e->swap_status == SWAPOUT_DONE && (fd>=0) && fstat(fd, &sb) == 0)
-	if(sb.st_size == 0 || sb.st_size != e->object_len) {
-	    debug(20,0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, sb.st_size, e->object_len);
+    if (e->swap_status == SWAPOUT_DONE && (fd >= 0) && fstat(fd, &sb) == 0)
+	if (sb.st_size == 0 || sb.st_size != e->object_len) {
+	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, sb.st_size, e->object_len);
 	    file_close(fd);
 	    fd = -1;
 	}
@@ -1124,7 +1123,6 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
 	xfree(ctrlp);
 	return;
     }
-
     debug(20, 5) ("storeSwapInStart: initialized swap file '%s' for '%s'\n",
 	ctrlp->path, mem->url);
     (ctrlp->callback) (fd, ctrlp->callback_data);
@@ -1223,11 +1221,11 @@ storeDoConvertFromLog(void *data)
 	size = (off_t) scan5;
 
 	if (size < 0) {
-	    if((key = storeKeyScan(keytext)) == NULL)
+	    if ((key = storeKeyScan(keytext)) == NULL)
 		continue;
-	    if((e = storeGet(key)) == NULL)
+	    if ((e = storeGet(key)) == NULL)
 		continue;
-	    if(e->lastref > lastref)
+	    if (e->lastref > lastref)
 		continue;
 	    debug(20, 3) ("storeRebuildFromDisk: Cancelling: '%s'\n", keytext);
 	    storeRelease(e);
@@ -1235,7 +1233,6 @@ storeDoConvertFromLog(void *data)
 	    RB->cancelcount++;
 	    continue;
 	}
-
 	storeSwapFullPath(sfileno, swapfile);
 	if (EBIT_TEST(scan7, KEY_PRIVATE)) {
 	    RB->badflags++;
@@ -1360,7 +1357,7 @@ storeCleanupComplete(void *data, int retcode, int errcode)
     StoreEntry *e = data;
     storeUnlockObject(e);
     outvalid--;
-    if(retcode == -2 && errcode == -2)
+    if (retcode == -2 && errcode == -2)
 	return;
     if (!EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	storeRelease(e);
@@ -1409,7 +1406,7 @@ storeValidateComplete(void *data, int retcode, int errcode)
     StoreEntry *e = ctrlp->e;
     char *path;
 
-    if(retcode == -2 && errcode == -2) {
+    if (retcode == -2 && errcode == -2) {
 	xfree(sb);
 	xfree(ctrlp);
 	ctrlp->callback(ctrlp->callback_data, retcode, errcode);
@@ -1560,7 +1557,7 @@ storeAbort(StoreEntry * e, int cbflag)
 	return;
 #if USE_ASYNC_IO
     /* Need to cancel any pending ASYNC writes right now */
-    if(mem->swapout.fd >= 0)
+    if (mem->swapout.fd >= 0)
 	aioCancel(mem->swapout.fd, NULL);
 #endif
     /* but dont close if a disk write is queued, the handler will close up */
@@ -1682,8 +1679,8 @@ storeMaintainSwapSpace(void *datanotused)
 	if (++scanned > max_scan)
 	    break;
     }
-    if(bigclean)
-       level = 1;
+    if (bigclean)
+	level = 1;
     debug(20, level) ("storeMaintainSwapSpace stats:\n");
     debug(20, level) ("  %6d objects\n", memInUse(MEM_STOREENTRY));
     debug(20, level) ("  %6d were scanned\n", scanned);
@@ -1714,7 +1711,7 @@ storeRelease(StoreEntry * e)
 	return 0;
     }
 #if USE_ASYNC_IO
-    aioCancel(-1, e);	/* Make sure all forgotten async ops are cancelled */
+    aioCancel(-1, e);		/* Make sure all forgotten async ops are cancelled */
 #else
     if (store_rebuilding) {
 	debug(20, 2) ("storeRelease: Delaying release until store is rebuilt: '%s'\n",
@@ -1865,8 +1862,8 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     assert(callback != NULL);
     if (e->store_status == STORE_ABORTED) {
 #if USE_ASYNC_IO
-	if(sc->disk_op_in_progress == 1) {
-	    if(sc->swapin_fd >= 0)
+	if (sc->disk_op_in_progress == 1) {
+	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
 		aioCancel(-1, sc);
@@ -1878,8 +1875,8 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     } else if (e->store_status == STORE_OK && sc->copy_offset == e->object_len) {
 	/* There is no more to send! */
 #if USE_ASYNC_IO
-	if(sc->disk_op_in_progress == 1) {
-	    if(sc->swapin_fd >= 0)
+	if (sc->disk_op_in_progress == 1) {
+	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
 		aioCancel(-1, sc);
@@ -1896,8 +1893,8 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
 	sz = stmemCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
 #if USE_ASYNC_IO
-	if(sc->disk_op_in_progress == 1) {
-	    if(sc->swapin_fd >= 0)
+	if (sc->disk_op_in_progress == 1) {
+	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
 		aioCancel(-1, sc);
@@ -1911,7 +1908,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	assert(sc->type == STORE_DISK_CLIENT);
 	/* gotta open the swapin file */
 	/* assert(sc->copy_offset == 0); */
-	if(sc->disk_op_in_progress == 0) {
+	if (sc->disk_op_in_progress == 0) {
 	    sc->disk_op_in_progress = 1;
 	    storeSwapInStart(e, storeClientCopyFileOpened, sc);
 	} else {
@@ -1921,7 +1918,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy: reading from disk FD %d\n",
 	    sc->swapin_fd);
 	assert(sc->type == STORE_DISK_CLIENT);
-	if(sc->disk_op_in_progress == 0) {
+	if (sc->disk_op_in_progress == 0) {
 	    sc->disk_op_in_progress = 1;
 	    storeClientCopyFileRead(sc);
 	} else {
@@ -2487,7 +2484,7 @@ storeGetUnusedFileno(void)
 }
 
 static void
-storePutUnusedFileno(StoreEntry *e)
+storePutUnusedFileno(StoreEntry * e)
 {
     assert(storeDirMapBitTest(e->swap_file_number));
     storeDirMapBitReset(e->swap_file_number);
@@ -2498,8 +2495,8 @@ storePutUnusedFileno(StoreEntry *e)
     /* event to avoid serving up the wrong data.  This will leave us with */
     /* a URL pointing to no file at all, but that's okay since it'll fail */
     /* and get removed later anyway. */
-    if(store_rebuilding) {
-	if(EBIT_TEST(e->flag, ENTRY_VALIDATED))
+    if (store_rebuilding) {
+	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	    safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
 	return;
     }
@@ -2771,8 +2768,8 @@ storeDoRebuildFromSwapFiles(void *data)
 	fd = storeGetNextFile(&sfileno, &size);
 	if (fd == -2) {
 	    debug(20, 1) ("StoreRebuildFromSwapFiles: done!\n");
-            store_rebuilding = 0;
-            return;
+	    store_rebuilding = 0;
+	    return;
 	} else if (fd == 0) {
 	    continue;
 	}
@@ -2824,8 +2821,6 @@ storeDoRebuildFromSwapFiles(void *data)
 	    safeunlink(storeSwapFullPath(sfileno, NULL), 1);
 	    continue;
 	}
-	
-
 	/* get the standard meta data for the StoreEntry */
 
 	memset(&tmpe, '\0', sizeof(StoreEntry));
@@ -2941,7 +2936,7 @@ getSwapHdr(int *type, int *len, void *dst, char *write_buf, int hdr_len)
 	cur = 0;
 	return -1;
     }
-    tmp_buf = &write_buf[cur];		/* position ourselves */
+    tmp_buf = &write_buf[cur];	/* position ourselves */
 
     xmemcpy(len, SwapMetaSize(tmp_buf), sizeof(int));	/* length */
     *type = SwapMetaType(tmp_buf);	/* type */

@@ -138,4 +138,3 @@ extern int snmp_synch_response(struct snmp_session *ss,
  */
 extern void md5Digest(u_char * msg, int length, u_char * key, u_char * digest);
 extern int parse_app_community_string(struct snmp_session *session);
-

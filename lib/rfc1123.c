@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.13 1998/01/07 22:45:23 wessels Exp $
+ * $Id: rfc1123.c,v 1.14 1998/02/02 21:16:13 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -313,7 +313,7 @@ mkhttpdlogtime(const time_t * t)
 	day_offset = 1;
 
     len = strftime(buf, 127 - 5, "%d/%b/%Y:%H:%M:%S ", lt);
-    snprintf(buf + len, 128-len, "%+03d%02d",
+    snprintf(buf + len, 128 - len, "%+03d%02d",
 	(min_offset / 60) % 24,
 	min_offset % 60);
 #else /* USE_GMT */
