@@ -36,9 +36,6 @@ icpUdpReply(int fd, void *data)
 	    queue->len,
 	    inet_ntoa(queue->address.sin_addr),
 	    ntohs(queue->address.sin_port));
-	Counter.icp.pkts_sent++;
-	if (queue->logcode == LOG_UDP_HIT)
-	    Counter.icp.hits_sent++;
 	x = comm_udp_sendto(fd,
 	    &queue->address,
 	    sizeof(struct sockaddr_in),
@@ -48,6 +45,9 @@ icpUdpReply(int fd, void *data)
 	    if (ignoreErrno(errno))
 		break;		/* don't de-queue */
 	} else {
+	    Counter.icp.pkts_sent++;
+	    if (queue->logcode == LOG_UDP_HIT)
+	        Counter.icp.hits_sent++;
 	    kb_incr(&Counter.icp.kbytes_sent, (size_t) x);
 	}
 	UdpQueueHead = queue->next;
@@ -104,6 +104,7 @@ icpUdpSend(int fd,
     protocol_t proto)
 {
     icpUdpData *data = xcalloc(1, sizeof(icpUdpData));
+    int x;
     debug(12, 4) ("icpUdpSend: Queueing %s for %s\n",
 	icp_opcode_str[msg->opcode],
 	inet_ntoa(to->sin_addr));
@@ -113,8 +114,29 @@ icpUdpSend(int fd,
     data->start = current_time;
     data->logcode = logcode;
     data->proto = proto;
-    AppendUdp(data);
-    commSetSelect(fd, COMM_SELECT_WRITE, icpUdpReply, UdpQueueHead, 0);
+    debug(12, 5) ("icpUdpSend: FD %d sending %d bytes to %s port %d\n",
+	fd,
+	data->len,
+	inet_ntoa(data->address.sin_addr),
+	ntohs(data->address.sin_port));
+    x = comm_udp_sendto(fd,
+	&data->address,
+	sizeof(struct sockaddr_in),
+	data->msg,
+	data->len);
+    if (x < 0) {
+	/* queue it */
+	AppendUdp(data);
+	commSetSelect(fd, COMM_SELECT_WRITE, icpUdpReply, UdpQueueHead, 0);
+	Counter.icp.replies_queued++;
+    } else {
+	Counter.icp.pkts_sent++;
+	if (data->logcode == LOG_UDP_HIT)
+	    Counter.icp.hits_sent++;
+	kb_incr(&Counter.icp.kbytes_sent, (size_t) x);
+	safe_free(data->msg);
+	safe_free(data);
+    }
 }
 
 int
