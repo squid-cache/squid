@@ -465,6 +465,7 @@ extern void mimeInit(char *filename);
 extern char *mimeGetContentEncoding(const char *fn);
 extern char *mimeGetContentType(const char *fn);
 extern char *mimeGetIcon(const char *fn);
+extern char *mimeGetIconURL(const char *fn);
 extern char mimeGetTransferMode(const char *fn);
 
 extern int mcastSetTtl(int, int);

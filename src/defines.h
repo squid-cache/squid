@@ -68,18 +68,18 @@
  *  Here are some good prime number choices.  It's important not to
  *  choose a prime number that is too close to exact powers of 2.
  *
- *  HASH_SIZE 103		// prime number < 128
- *  HASH_SIZE 229		// prime number < 256
- *  HASH_SIZE 467		// prime number < 512
- *  HASH_SIZE 977		// prime number < 1024
- *  HASH_SIZE 1979		// prime number < 2048
- *  HASH_SIZE 4019		// prime number < 4096
- *  HASH_SIZE 6037		// prime number < 6144
- *  HASH_SIZE 7951		// prime number < 8192
- *  HASH_SIZE 12149		// prime number < 12288
- *  HASH_SIZE 16231		// prime number < 16384
- *  HASH_SIZE 33493		// prime number < 32768
- *  HASH_SIZE 65357		// prime number < 65536
+ *  HASH_SIZE 103               // prime number < 128
+ *  HASH_SIZE 229               // prime number < 256
+ *  HASH_SIZE 467               // prime number < 512
+ *  HASH_SIZE 977               // prime number < 1024
+ *  HASH_SIZE 1979              // prime number < 2048
+ *  HASH_SIZE 4019              // prime number < 4096
+ *  HASH_SIZE 6037              // prime number < 6144
+ *  HASH_SIZE 7951              // prime number < 8192
+ *  HASH_SIZE 12149             // prime number < 12288
+ *  HASH_SIZE 16231             // prime number < 16384
+ *  HASH_SIZE 33493             // prime number < 32768
+ *  HASH_SIZE 65357             // prime number < 65536
  */
 
 #define  DEFAULT_HASH_SIZE 7951	/* prime number < 8192 */
@@ -152,10 +152,6 @@
 
 #define PEER_DEAD 0
 #define PEER_ALIVE 1
-
-#define ICON_MENU	"anthony-dir.gif"
-#define ICON_DIRUP	"anthony-dirup.gif"
-#define ICON_LINK	"anthony-link.gif"
 
 #define AUTH_MSG_SZ 4096
 #define HTTP_REPLY_BUF_SZ 4096
