@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.51 2002/10/21 15:26:09 adrian Exp $
+ * $Id: helper.cc,v 1.52 2002/10/21 22:17:32 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -513,18 +513,18 @@ helperShutdown(helper * hlp)
 	srv = (helper_server *)link->data;
 	link = link->next;
 	if (!srv->flags.alive) {
-	    debug(34, 3) ("helperShutdown: %s #%d is NOT ALIVE.\n",
+	    debug(84, 3) ("helperShutdown: %s #%d is NOT ALIVE.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
 	srv->flags.shutdown = 1;	/* request it to shut itself down */
 	if (srv->flags.busy) {
-	    debug(34, 3) ("helperShutdown: %s #%d is BUSY.\n",
+	    debug(84, 3) ("helperShutdown: %s #%d is BUSY.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
 	if (srv->flags.closing) {
-	    debug(34, 3) ("helperShutdown: %s #%d is CLOSING.\n",
+	    debug(84, 3) ("helperShutdown: %s #%d is CLOSING.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
@@ -545,28 +545,28 @@ helperStatefulShutdown(statefulhelper * hlp)
 	srv = (helper_stateful_server *)link->data;
 	link = link->next;
 	if (!srv->flags.alive) {
-	    debug(34, 3) ("helperStatefulShutdown: %s #%d is NOT ALIVE.\n",
+	    debug(84, 3) ("helperStatefulShutdown: %s #%d is NOT ALIVE.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
 	srv->flags.shutdown = 1;	/* request it to shut itself down */
 	if (srv->flags.busy) {
-	    debug(34, 3) ("helperStatefulShutdown: %s #%d is BUSY.\n",
+	    debug(84, 3) ("helperStatefulShutdown: %s #%d is BUSY.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
 	if (srv->flags.closing) {
-	    debug(34, 3) ("helperStatefulShutdown: %s #%d is CLOSING.\n",
+	    debug(84, 3) ("helperStatefulShutdown: %s #%d is CLOSING.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
 	if (srv->flags.reserved != S_HELPER_FREE) {
-	    debug(34, 3) ("helperStatefulShutdown: %s #%d is RESERVED.\n",
+	    debug(84, 3) ("helperStatefulShutdown: %s #%d is RESERVED.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
 	if (srv->deferred_requests) {
-	    debug(34, 3) ("helperStatefulShutdown: %s #%d has DEFERRED requests.\n",
+	    debug(84, 3) ("helperStatefulShutdown: %s #%d has DEFERRED requests.\n",
 		hlp->id_name, srv->index + 1);
 	    continue;
 	}
@@ -651,7 +651,7 @@ helperServerFree(int fd, void *data)
     hlp->n_running--;
     assert(hlp->n_running >= 0);
     if (!srv->flags.shutdown) {
-	debug(34, 0) ("WARNING: %s #%d (FD %d) exited\n",
+	debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
 	    hlp->id_name, srv->index + 1, fd);
 	if (hlp->n_running < hlp->n_to_start / 2)
 	    fatalf("Too few %s processes are running", hlp->id_name);
@@ -685,7 +685,7 @@ helperStatefulServerFree(int fd, void *data)
     hlp->n_running--;
     assert(hlp->n_running >= 0);
     if (!srv->flags.shutdown) {
-	debug(34, 0) ("WARNING: %s #%d (FD %d) exited\n",
+	debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
 	    hlp->id_name, srv->index + 1, fd);
 	if (hlp->n_running < hlp->n_to_start / 2)
 	    fatalf("Too few %s processes are running", hlp->id_name);
@@ -716,7 +716,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 	(int)len, hlp->id_name, srv->index + 1);
     if (flag != COMM_OK || len <= 0) {
 	if (len < 0)
-	    debug(50, 1) ("helperHandleRead: FD %d read: %s\n", fd, xstrerror());
+	    debug(84, 1) ("helperHandleRead: FD %d read: %s\n", fd, xstrerror());
 	comm_close(fd);
 	return;
     }
@@ -778,7 +778,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 	(int)len, hlp->id_name, srv->index + 1);
     if (flag != COMM_OK || len <= 0) {
 	if (len < 0)
-	    debug(50, 1) ("helperStatefulHandleRead: FD %d read: %s\n", fd, xstrerror());
+	    debug(84, 1) ("helperStatefulHandleRead: FD %d read: %s\n", fd, xstrerror());
 	comm_close(fd);
 	return;
     }
