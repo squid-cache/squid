@@ -93,6 +93,7 @@ extern void storeDiskdDirReplRemove(StoreEntry *);
 extern void storeDiskdShmPut(SwapDir *, int);
 extern void *storeDiskdShmGet(SwapDir *, int *);
 extern void storeDiskdHandle(diomsg * M);
+extern void storeDiskdDirCallback(SwapDir *);
 
 
 /*

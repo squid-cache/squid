@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.2 2000/05/12 00:29:20 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.3 2000/05/12 03:32:24 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -135,7 +135,6 @@ static time_t storeDiskdDirExpiredReferenceAge(SwapDir *);
 #endif
 static void storeDiskdStats(StoreEntry * sentry);
 static void storeDiskdDirSync(SwapDir *);
-static void storeDiskdDirCallback(SwapDir *);
 
 
 /*
@@ -473,7 +472,7 @@ storeDiskdDirSync(SwapDir * SD)
  * until the queue is below magic2. Otherwise, we simply return when we
  * don't get a message.
  */
-static void
+void
 storeDiskdDirCallback(SwapDir * SD)
 {
     diomsg M;
