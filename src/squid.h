@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.78 1996/11/30 23:09:56 wessels Exp $
+ * $Id: squid.h,v 1.79 1996/12/02 05:55:09 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -37,13 +37,29 @@
  * On some systems, FD_SETSIZE is set to something lower than the
  * actual number of files which can be opened.  IRIX is one case,
  * NetBSD is another.  So here we increase FD_SETSIZE to our
- * configure-discovered maximum *before* including any system .h
- * files.  If something changes FD_SETSIZE to a lower value, were
- * hosed...
+ * configure-discovered maximum *before* any system includes.
  */
 
+/*
+ * Linux (2.x only?) always defines FD_SETSIZE in <linux/time.h> so
+ * we get in trouble if we try to increase it.  barf.
+ */
+
+#ifndef _SQUID_LINUX_
 #if SQUID_MAXFD > FD_SETSIZE
 #define FD_SETSIZE SQUID_MAXFD
+#endif
+#endif /* _SQUID_LINUX_ */
+
+/*
+ * So if FD_SETSIZE is less than SQUID_MAXFD we'd probably better
+ * shrink SQUID_MAXFD so that select(2) doesn't puke even though
+ * we might really be able to open more than FD_SETSIZE descriptors.
+ * happy happy happy joy joy joy.
+ */
+
+#if FD_SETSIZE < SQUID_MAXFD
+#define SQUID_MAXFD FD_SETSIZE
 #endif
 
 #if HAVE_UNISTD_H
