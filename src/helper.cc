@@ -179,7 +179,8 @@ helperShutdown(helper * hlp)
 	    continue;
 	}
 	srv->flags.closing = 1;
-	comm_close(srv->rfd);
+	comm_close(srv->wfd);
+	srv->wfd = -1;
     }
 }
 
@@ -223,7 +224,7 @@ helperServerFree(int fd, void *data)
 	helperRequestFree(r);
 	srv->request = NULL;
     }
-    if (srv->wfd != srv->rfd)
+    if (srv->wfd != srv->rfd && srv->wfd != -1)
 	comm_close(srv->wfd);
     dlinkDelete(&srv->link, &hlp->servers);
     hlp->n_running--;
@@ -282,9 +283,10 @@ helperHandleRead(int fd, void *data)
 	    intAverage(hlp->stats.avg_svc_time,
 	    tvSubMsec(srv->dispatch_time, current_time),
 	    hlp->stats.replies, REDIRECT_AV_FACTOR);
-	if (srv->flags.shutdown)
+	if (srv->flags.shutdown) {
 	    comm_close(srv->wfd);
-	else
+	    srv->wfd = -1;
+	} else
 	    helperKickQueue(hlp);
     } else {
 	commSetSelect(srv->rfd, COMM_SELECT_READ, helperHandleRead, srv, 0);
