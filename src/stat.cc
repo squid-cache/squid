@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.264 1998/07/22 20:37:52 wessels Exp $
+ * $Id: stat.cc,v 1.265 1998/07/22 21:07:37 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -547,6 +547,9 @@ info_get(StoreEntry * sentry)
 	mp.treeoverhead);
 #endif /* HAVE_EXT_MALLINFO */
 #endif /* HAVE_MALLINFO */
+    storeAppendPrintf(sentry, "Memory accounted for:\n");
+    storeAppendPrintf(sentry, "\tTotal accounted:       %6d KB %d%%\n",
+	memTotalAllocated());
 
     storeAppendPrintf(sentry, "File descriptor usage for %s:\n", appname);
     storeAppendPrintf(sentry, "\tMaximum number of file descriptors:   %4d\n",
