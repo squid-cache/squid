@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
+<HR>
+<P>
+Bandant ávykdyti uþklausimà:
+<PRE>
+%R
+</PRE>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+Neteisingas uþklausimas
+</STRONG>
+</UL>
+
+<P>
+Dalis HTTP uþklausimo yra klaidinga. Galimos problemos:
+<UL>
+<LI>Trûksta arba neþinomas uþklausimo metodas
+<LI>Trûksta adresas
+<LI>Trûksta HTTP identifikatoriaus (HTTP/1.0)
+<LI>Uþklausimas per didelis
+<LI>Trûksta Content-Length parametro POST arba PUT uþklausime
+<LI>Neleistinas simbolis serverio varde; underscore simboliai yra neleistini
+</UL>
+</P>

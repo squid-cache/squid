@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
+<HR>
+<P>
+Bandant atsiøsti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<BLOCKQUOTE>
+Neámanoma nustatyti <I>%H</I> serverio IP adreso
+</BLOCKQUOTE>
+</UL>
+
+<P>
+DNS serveris atsakë:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Tai reiðkia, kad:
+<PRE>
+ Neámanoma aptikti serverio nurodytu adresu. 
+ Patikrinkite, ar teisingai ávedëte adresà. 
+</PRE>
+</P>
+

@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Priëjimas prie keðo uþdraustas</TITLE>
+</HEAD>
+<BODY>
+<H1>KLAIDA</H1>
+<H2>Priëjimas prie keðo uþdraustas</H2>
+<HR>
+<P>
+Bandant atsiøsti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+Priëjimas prie keðo uþdraustas.
+</STRONG>
+</UL>
+</P>
+
+<P>Atsipraðau, bet jûs ðiuo metu negalite vykdyti uþklausimo:
+<PRE>    %U</PRE>
+per ðá serverá, kol jûs neprisistatysite.
+</P>
+
+<P>
+Jums reikia Netscape v2.0 ar naujesnio, arba Microsoft Internet
+Explorer 3.0 ar naujesnio, arba kitos HTTP/1.1 suprantanèios perþiûros
+programos. Praðau susisiekti su <A HREF="mailto:%w">proxy 
+administratoriumi</a>, jei jums kils sunkumai prisistatant arba 
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">pakeisti</a> savo slaptaþodá.
+</P>

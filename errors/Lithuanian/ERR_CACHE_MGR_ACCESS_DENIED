@@ -1,0 +1,34 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Keðo menedþerio priëjimas uþdraustas</TITLE>
+</HEAD>
+<BODY>
+<H1>KLAIDA</H1>
+<H2>Keðo menedþerio priëjimas uþdraustas</H2>
+<HR>
+<P>
+Bandant atsiøsti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+Keðo menedþerio priëjimas uþdraustas.
+</STRONG>
+</UL>
+</P>
+
+<P>Atsipraðiau, bet jûs negalite vykdyti uþklausimo:
+<PRE>    %U</PRE>
+ðiam keðo menedþeriui, kol jûs neprisistatysite.
+</P>
+
+<P> 
+Jums reikia Netscape v2.0 ar naujesnio, arba Microsoft Internet
+Explorer 3.0 ar naujesnio, arba kitos HTTP/1.1 suprantanèios perþiûros
+programos. Praðau susisiekti su <A HREF="mailto:%w">administratoriumi</a>, 
+jei jums iðkilo problemos prisistatant arba, jei jûs <em>esate</em> 
+administratorius, perskaitykite Squid documentacijà dël keðo menedþerio 
+interfeiso ir patikrinkite keðo þurnalà dël detalesniø praneðimø apie
+klaidas.
+</P>
