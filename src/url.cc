@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.9 1996/04/10 05:06:38 wessels Exp $ */
+/* $Id: url.cc,v 1.10 1996/04/11 22:52:32 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -137,3 +137,69 @@ char *the_url(e)
     }
 }
 #endif
+
+char *RequestMethodStr[] =
+{
+    "NONE",
+    "GET",
+    "POST",
+    "HEAD"
+};
+
+char *ProtocolStr[] =
+{
+    "NONE",
+    "http",
+    "ftp",
+    "wais",
+    "cache_object",
+    "TOTAL"
+};
+
+method_t urlParseMethod(s)
+     char *s;
+{
+    if (strcasecmp(s, "GET") == 0) {
+	return METHOD_GET;
+    } else if (strcasecmp(s, "POST") == 0) {
+	return METHOD_POST;
+    } else if (strcasecmp(s, "HEAD") == 0) {
+	return METHOD_HEAD;
+    }
+    return METHOD_NONE;
+}
+
+
+protocol_t urlParseProtocol(s)
+     char *s;
+{
+    if (strncasecmp(s, "http", 4) == 0)
+        return PROTO_HTTP;
+    if (strncasecmp(s, "ftp", 3) == 0)
+        return PROTO_FTP;
+    if (strncasecmp(s, "gopher", 6) == 0)
+        return PROTO_GOPHER;
+    if (strncasecmp(s, "cache_object", 12) == 0)
+        return PROTO_CACHEOBJ;
+    if (strncasecmp(s, "file", 4) == 0)
+        return PROTO_FTP;
+    return PROTO_NONE;
+}
+
+
+int urlDefaultPort(p)
+     protocol_t p;
+{
+    switch (p) {
+    case PROTO_HTTP:
+        return 80;
+    case PROTO_FTP:
+        return 21;
+    case PROTO_GOPHER:
+        return 70;
+    case PROTO_CACHEOBJ:
+        return CACHE_HTTP_PORT;
+    default:
+        return 0;
+    }
+}

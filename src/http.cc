@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.37 1996/04/11 04:47:23 wessels Exp $ */
+/* $Id: http.cc,v 1.38 1996/04/11 22:52:28 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -26,14 +26,6 @@ typedef struct _httpdata {
     char *reply_hdr;
     int reply_hdr_state;
 } HttpData;
-
-char *RequestMethodStr[] =
-{
-    "NONE",
-    "GET",
-    "POST",
-    "HEAD"
-};
 
 static void httpCloseAndFree(fd, data)
      int fd;

@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.7 1996/04/11 19:23:36 wessels Exp $"
+#ident "$Id: acl.cc,v 1.8 1996/04/11 22:52:24 wessels Exp $"
 
 /*
  * DEBUG: Section 28          acl
@@ -6,10 +6,15 @@
 
 #include "squid.h"
 
-static struct _acl_access *AccessList = NULL;
-static struct _acl_access **AccessListTail = &AccessList;
+/* These two should never be referenced directly in this file! */
+struct _acl_access *HTTPAccessList = NULL;
+struct _acl_access *ICPAccessList = NULL;
+
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
+
+static int aclMatchAcl _PARAMS((struct _acl *, struct in_addr, method_t, protocol_t, char *host, int port, char *request));
+static int aclMatchAclList _PARAMS((struct _acl_list *, struct in_addr, method_t, protocol_t, char *host, int port, char *request));
 
 static acl_t aclType(s)
      char *s;
@@ -28,6 +33,8 @@ static acl_t aclType(s)
 	return ACL_USER;
     if (!strcmp(s, "proto"))
 	return ACL_PROTO;
+    if (!strcmp(s, "method"))
+	return ACL_METHOD;
     return ACL_NONE;
 }
 
@@ -65,12 +72,28 @@ intlist *aclParseProtoList()
     char *t = NULL;
     while ((t = strtok(NULL, w_space))) {
 	q = (intlist *) xcalloc(1, sizeof(intlist));
-	q->i = proto_url_to_id(t);
+	q->i = (int) urlParseProtocol(t);
 	*(Tail) = q;
 	Tail = &q->next;
     }
     return head;
 }
+
+intlist *aclParseMethodList()
+{
+    intlist *head = NULL;
+    intlist **Tail = &head;
+    intlist *q = NULL;
+    char *t = NULL;
+    while ((t = strtok(NULL, w_space))) {
+	q = (intlist *) xcalloc(1, sizeof(intlist));
+	q->i = (int) urlParseMethod(t);
+	*(Tail) = q;
+	Tail = &q->next;
+    }
+    return head;
+}
+
 struct _acl_ip_data *aclParseIpList()
 {
     char *t = NULL;
@@ -106,7 +129,8 @@ struct _acl_ip_data *aclParseIpList()
 		break;
 	    case 5:
 		if (m1 < 0 || m1 > 32) {
-		    debug(3, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
+	            debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+		    debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
 		    safe_free(q);
 		    continue;
 		}
@@ -116,7 +140,8 @@ struct _acl_ip_data *aclParseIpList()
 		lmask.s_addr = htonl(m1 * 0x1000000 + m2 * 0x10000 + m3 * 0x100 + m4);
 		break;
 	    default:
-		debug(3, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
+	        debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
 		safe_free(q);
 		continue;
 	    }
@@ -131,7 +156,75 @@ struct _acl_ip_data *aclParseIpList()
 
 struct _acl_time_data *aclParseTimeSpec()
 {
-    return NULL;
+    struct _acl_time_data *data = NULL;
+    int h1, m1, h2, m2;
+    char *t = NULL;
+
+    data = (struct _acl_time_data *) xcalloc(1, sizeof(struct _acl_time_data));
+    while ((t = strtok(NULL, w_space))) {
+	if (*t < '0' || *t > '9') {
+	    /* assume its day-of-week spec */
+	    while (*t) {
+		switch (*t++) {
+		case 'S':
+		    data->weekbits |= ACL_SUNDAY;
+		    break;
+		case 'M':
+		    data->weekbits |= ACL_MONDAY;
+		    break;
+		case 'T':
+		    data->weekbits |= ACL_TUESDAY;
+		    break;
+		case 'W':
+		    data->weekbits |= ACL_WEDNESDAY;
+		    break;
+		case 'H':
+		    data->weekbits |= ACL_THURSDAY;
+		    break;
+		case 'F':
+		    data->weekbits |= ACL_FRIDAY;
+		    break;
+		case 'A':
+		    data->weekbits |= ACL_SATURDAY;
+		    break;
+		default:
+		    debug(28, 0, "cached.conf line %d: %s\n",
+			config_lineno,
+			config_input_line);
+		    debug(28, 0, "aclParseTimeSpec: Bad Day '%c'\n",
+			*t);
+		    break;
+		}
+	    }
+	} else {
+	    /* assume its time-of-day spec */
+	    if (sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) {
+		debug(28, 0, "cached.conf line %d: %s\n",
+		    config_lineno,
+		    config_input_line);
+		debug(28, 0, "aclParseTimeSpec: Bad time range '%s'\n",
+		    t);
+		xfree(&data);
+		return NULL;
+	    }
+	    data->start = h1 * 60 + m1;
+	    data->stop = h2 * 60 + m2;
+	    if (data->start > data->stop) {
+		debug(28, 0, "cached.conf line %d: %s\n",
+		    config_lineno,
+		    config_input_line);
+		debug(28, 0, "aclParseTimeSpec: Reversed time range '%s'\n",
+		    t);
+		xfree(&data);
+		return NULL;
+	    }
+	}
+    }
+    if (data->start == 0 && data->stop == 0)
+	data->stop = 23 * 60 + 59;
+    if (data->weekbits == 0)
+	data->weekbits = ACL_ALLWEEK;
+    return data;
 }
 
 struct _relist *aclParseRegexList()
@@ -143,8 +236,8 @@ struct _relist *aclParseRegexList()
     regex_t comp;
     while ((t = strtok(NULL, w_space))) {
 	if (regcomp(&comp, t, REG_EXTENDED) != REG_NOERROR) {
-	    debug(28, 0, "aclParseRegexList: Invalid regular expression: %s\n",
-		t);
+	    debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	    debug(28, 0, "aclParseRegexList: Invalid regular expression: '%s'\n", t);
 	    continue;
 	}
 	q = (relist *) xcalloc(1, sizeof(relist));
@@ -182,15 +275,23 @@ void aclParseAclLine()
     A = (struct _acl *) xcalloc(1, sizeof(struct _acl));
     /* snarf the ACL name */
     if ((t = strtok(NULL, w_space)) == NULL) {
+	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "aclParseAclLine: missing ACL name.\n");
 	xfree(A);
-	debug(28, 1, "aclParseAclLine: missing ACL name.\n");
+	return;
+    }
+    if (aclFindByName(t)) {
+	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "aclParseAclLine: ACL name '%s' already exists.\n", t);
+	xfree(A);
 	return;
     }
     strncpy(A->name, t, ACL_NAME_SZ);
     /* snarf the ACL type */
     if ((t = strtok(NULL, w_space)) == NULL) {
 	xfree(A);
-	debug(28, 1, "aclParseAclLine: missing ACL type.\n");
+	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "aclParseAclLine: missing ACL type.\n");
 	return;
     }
     switch (A->type = aclType(t)) {
@@ -215,10 +316,14 @@ void aclParseAclLine()
     case ACL_PROTO:
 	A->data = (void *) aclParseProtoList();
 	break;
+    case ACL_METHOD:
+	A->data = (void *) aclParseMethodList();
+	break;
     case ACL_NONE:
     default:
+	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "aclParseAclLine: Invalid ACL type '%s'\n", t);
 	xfree(A);
-	debug(28, 1, "aclParseAclLine: Invalid ACL type '%s'\n", t);
 	return;
 	break;
     }
@@ -227,17 +332,21 @@ void aclParseAclLine()
     AclListTail = &A->next;
 }
 
-void aclParseAccessLine()
+void aclParseAccessLine(head)
+    struct _acl_access **head;
 {
     char *t = NULL;
     struct _acl_access *A = NULL;
+    struct _acl_access *B = NULL;
+    struct _acl_access **T = NULL;
     struct _acl_list *L = NULL;
     struct _acl_list **Tail = NULL;
     struct _acl *a = NULL;
 
     /* first expect either 'allow' or 'deny' */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	debug(28, 1, "aclParseAccessLine: missing 'allow' or 'deny'.\n");
+	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "aclParseAccessLine: missing 'allow' or 'deny'.\n");
 	return;
     }
     A = (struct _acl_access *) xcalloc(1, sizeof(struct _acl_access));
@@ -246,7 +355,8 @@ void aclParseAccessLine()
     else if (!strcmp(t, "deny"))
 	A->allow = 0;
     else {
-	debug(28, 1, "aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
+	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
 	xfree(A);
 	return;
     }
@@ -262,10 +372,10 @@ void aclParseAccessLine()
 	    L->op = 0;
 	    t++;
 	}
-	debug(28, 1, "aclParseAccessLine: looking for ACL name '%s'\n",
-	    t);
+	debug(28, 1, "aclParseAccessLine: looking for ACL name '%s'\n", t);
 	a = aclFindByName(t);
 	if (a == NULL) {
+	    debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
 	    debug(28, 0, "aclParseAccessLine: ACL name '%s' not found.\n", t);
 	    xfree(L);
 	    continue;
@@ -275,14 +385,14 @@ void aclParseAccessLine()
 	Tail = &L->next;
     }
     if (A->acl_list == NULL) {
+	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
 	debug(28, 0, "aclParseAccessLine: Access line contains no ACL's, skipping\n");
-	debug(28, 0, "aclParseAccessLine: '%s'\n", config_input_line);
 	xfree(A);
 	return;
     }
     A->cfgline = xstrdup(config_input_line);
-    *AccessListTail = A;
-    AccessListTail = &A->next;
+    for (B=*head, T=head; B; T=&B->next, B=B->next);	/* find the tail */
+    *T = A;
 }
 
 int aclMatchIp(data, c)
@@ -308,9 +418,9 @@ int aclMatchWord(data, word)
      wordlist *data;
      char *word;
 {
-    debug(28, 1, "aclMatchWord: looking for '%s'\n", word);
+    debug(28, 1, "aclMatchWord: checking '%s'\n", word);
     while (data) {
-	debug(28, 1, "aclMatchWord: checking '%s'\n", data->key);
+	debug(28, 1, "aclMatchWord: looking for '%s'\n", data->key);
 	if (strstr(word, data->key))
 	    return 1;
 	data = data->next;
@@ -321,9 +431,9 @@ int aclMatchRegex(data, word)
      relist *data;
      char *word;
 {
-    debug(28, 1, "aclMatchRegex: looking for '%s'\n", word);
+    debug(28, 1, "aclMatchRegex: checking '%s'\n", word);
     while (data) {
-	debug(28, 1, "aclMatchRegex: checking '%s'\n", data->pattern);
+	debug(28, 1, "aclMatchRegex: looking for '%s'\n", data->pattern);
 	if (regexec(&data->regex, word, 0, 0, 0) == 0)
 	    return 1;
 	data = data->next;
@@ -342,9 +452,32 @@ int aclMatchInteger(data, i)
     return 0;
 }
 
-int aclMatchAcl(acl, c, pr, h, po, r)
+int aclMatchTime(data, when)
+	struct _acl_time_data *data;
+	time_t when;
+{
+	static time_t last_when = 0;
+	static struct tm tm;
+	time_t t;
+
+	if (when != last_when) {
+		last_when = when;
+		memcpy(&tm, localtime(&when), sizeof(struct tm));
+	}
+
+	debug(28, 1, "aclMatchTime: checking %d-%d, weekbits=%x\n",
+		data->start, data->stop, data->weekbits);
+
+	t = (time_t) (tm.tm_hour * 60 + tm.tm_min);
+	if (t < data->start || t > data->stop)
+		return 0;
+	return data->weekbits & tm.tm_wday ? 1 : 0;
+}
+
+static int aclMatchAcl(acl, c, m, pr, h, po, r)
      struct _acl *acl;
      struct in_addr c;
+     method_t m;
      protocol_t pr;
      char *h;
      int po;
@@ -361,7 +494,7 @@ int aclMatchAcl(acl, c, pr, h, po, r)
 	return aclMatchWord(acl->data, h);
 	break;
     case ACL_TIME:
-	debug(28, 0, "aclMatchAcl: ACL_TIME unimplemented\n");
+	return aclMatchTime(acl->data, cached_curtime);
 	return 0;
 	break;
     case ACL_URL_REGEX:
@@ -377,6 +510,9 @@ int aclMatchAcl(acl, c, pr, h, po, r)
     case ACL_PROTO:
 	return aclMatchInteger(acl->data, pr);
 	break;
+    case ACL_METHOD:
+	return aclMatchInteger(acl->data, m);
+	break;
     case ACL_NONE:
     default:
 	debug(28, 0, "aclMatchAcl: '%s' has bad type %d\n",
@@ -387,9 +523,10 @@ int aclMatchAcl(acl, c, pr, h, po, r)
     return 0;
 }
 
-int aclMatchAclList(list, c, pr, h, po, r)
+static int aclMatchAclList(list, c, m, pr, h, po, r)
      struct _acl_list *list;
      struct in_addr c;
+     method_t m;
      protocol_t pr;
      char *h;
      int po;
@@ -397,7 +534,7 @@ int aclMatchAclList(list, c, pr, h, po, r)
 {
     debug(28, 1, "aclMatchAclList: list=%p  op=%d\n", list, list->op);
     while (list) {
-	if (aclMatchAcl(list->acl, c, pr, h, po, r) != list->op) {
+	if (aclMatchAcl(list->acl, c, m, pr, h, po, r) != list->op) {
 	    debug(28, 1, "aclMatchAclList: returning 0\n");
 	    return 0;
 	}
@@ -407,29 +544,128 @@ int aclMatchAclList(list, c, pr, h, po, r)
     return 1;
 }
 
-int aclCheck(cli_addr, proto, host, port, request)
+int aclCheck(A, cli_addr, method, proto, host, port, request)
+     struct _acl_access *A;
      struct in_addr cli_addr;
+     method_t method;
      protocol_t proto;
      char *host;
      int port;
      char *request;
 {
-    struct _acl_access *A = NULL;
     int allow = 0;
 
     debug(28, 1, "aclCheck: cli_addr=%s\n", inet_ntoa(cli_addr));
+    debug(28, 1, "aclCheck: method=%d\n", method);
     debug(28, 1, "aclCheck: proto=%d\n", proto);
     debug(28, 1, "aclCheck: host=%s\n", host);
     debug(28, 1, "aclCheck: port=%d\n", port);
     debug(28, 1, "aclCheck: request=%s\n", request);
 
-    for (A = AccessList; A; A = A->next) {
+    while (A) {
 	debug(28, 1, "aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
-	if (aclMatchAclList(A->acl_list, cli_addr, proto, host, port, request)) {
+	if (aclMatchAclList(A->acl_list, cli_addr, method, proto, host, port, request)) {
 	    debug(28, 1, "aclCheck: match found, returning %d\n", allow);
 	    return allow;
 	}
+	A = A->next;
     }
     return !allow;
 }
+
+static void aclDestroyIpList(data)
+	struct _acl_ip_data *data;
+{
+	struct _acl_ip_data *next;
+	for (; data; data=next) {
+		next = data->next;
+		safe_free(data);
+	}
+}
+
+static void aclDestroyTimeList(data)
+	struct _acl_time_data *data;
+{
+	struct _acl_time_data *next;
+	for (; data; data=next) {
+		next = data->next;
+		safe_free(data);
+	}
+}
+
+static void aclDestroyRegexList(data)
+	struct _relist *data;
+{
+	struct _relist *next;
+	for (; data; data=next) {
+		next = data->next;
+		regfree(&data->regex);
+		safe_free(data->pattern);
+		safe_free(data);
+	}
+}
+
+void aclDestroyAcls() {
+	struct _acl *a = NULL;
+	struct _acl *next = NULL;
+	for (a=AclList; a; a=next) {
+		next = a->next;
+		debug(28,1,"aclDestroyAcls: '%s'\n", a->cfgline);
+		switch(a->type) {
+    		case ACL_SRC_IP:
+			aclDestroyIpList(a->data);
+			break;
+    		case ACL_DST_DOMAIN:
+    		case ACL_USER:
+			wordlistDestroy((wordlist **) &a->data);
+			break;
+    		case ACL_TIME:
+			aclDestroyTimeList(a->data);
+			break;
+    		case ACL_URL_REGEX:
+			aclDestroyRegexList(a->data);
+			break;
+    		case ACL_URL_PORT:
+    		case ACL_PROTO:
+    		case ACL_METHOD:
+			intlistDestroy((intlist **) &a->data);
+			break;
+		case ACL_NONE:
+		default:
+			fatal_dump("aclDestroyAcls: Found ACL_NONE?");
+			break;
+		}
+		safe_free(a->cfgline);
+		safe_free(a);
+	}
+	AclList = NULL;
+        AclListTail = &AclList;
+}
+
+void aclDestroyAclList(list)
+	struct _acl_list *list;
+{
+	struct _acl_list *next = NULL;
+	for (; list ; list=next) {
+		next = list->next;
+		safe_free(list);
+	}
+}
+
+void aclDestroyAccessList(list)
+	struct _acl_access **list;
+{
+	struct _acl_access *l = NULL;
+	struct _acl_access *next = NULL;
+	for (l=*list; l ; l=next) {
+		debug(28,1,"aclDestroyAccessList: '%s'\n", l->cfgline);
+		next = l->next;
+		aclDestroyAclList(l->acl_list);
+		l->acl_list = NULL;
+		safe_free(l->cfgline);
+		safe_free(l);
+	}
+	*list = NULL;
+}
+

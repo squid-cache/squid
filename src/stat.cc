@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.21 1996/04/11 04:48:09 wessels Exp $ */
+/* $Id: stat.cc,v 1.22 1996/04/11 22:52:30 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -946,39 +946,6 @@ void proto_miss(obj, proto_id)
     obj->proto_stat_data[proto_id].miss++;
 }
 
-protocol_t proto_url_to_id(url)
-     char *url;
-{
-    if (strncasecmp(url, "http", 4) == 0)
-	return PROTO_HTTP;
-    if (strncasecmp(url, "ftp", 3) == 0)
-	return PROTO_FTP;
-    if (strncasecmp(url, "gopher", 6) == 0)
-	return PROTO_GOPHER;
-    if (strncasecmp(url, "cache_object", 12) == 0)
-	return PROTO_CACHEOBJ;
-    if (strncasecmp(url, "file", 4) == 0)
-	return PROTO_FTP;
-    return PROTO_NONE;
-}
-
-int proto_default_port(p)
-     protocol_t p;
-{
-    switch (p) {
-    case PROTO_HTTP:
-	return 80;
-    case PROTO_FTP:
-	return 21;
-    case PROTO_GOPHER:
-	return 70;
-    case PROTO_CACHEOBJ:
-	return CACHE_HTTP_PORT;
-    default:
-	return 0;
-    }
-}
-
 
 void stat_init(object, logfilename)
      cacheinfo **object;
@@ -1016,7 +983,7 @@ void stat_init(object, logfilename)
     }
     obj->logfile_access = file_write_lock(obj->logfile_fd);
 
-    obj->proto_id = proto_url_to_id;
+    obj->proto_id = urlParseProtocol;
     obj->proto_newobject = proto_newobject;
     obj->proto_purgeobject = proto_purgeobject;
     obj->proto_touchobject = proto_touchobject;
