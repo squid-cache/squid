@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.266 2002/06/23 21:52:32 hno Exp $
+# $Id: cf.data.pre,v 1.267 2002/06/25 21:16:47 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2501,8 +2501,9 @@ DOC_START
 	If you want to run Squid as an httpd accelerator, define the
 	host name and port number where the real HTTP server is.
 
-	If you want virtual host support then specify the hostname
-	as "virtual".
+	If you want IP based virtual host support then specify the
+	hostname as "virtual". This will make Squid use the IP address
+	where it accepted the request as hostname in the URL.
 
 	If you want virtual port support then specify the port as "0".
 
@@ -2553,11 +2554,16 @@ DEFAULT: off
 LOC: opt_accel_uses_host
 DOC_START
 	HTTP/1.1 requests include a Host: header which is basically the
-	hostname from the URL.  Squid can be an accelerator for
-	different HTTP servers by looking at this header.  However,
-	Squid does NOT check the value of the Host header, so it opens
-	a big security hole.  We recommend that this option remain
-	disabled unless you are sure of what you are doing.
+	hostname from the URL.  The Host: header is used for domain based
+	virutal hosts. If your accelerator needs to provide domain based
+	virtual hosts on the same IP address then you will need to turn this
+	on.
+
+	Note that Squid does NOT check the value of the Host header matches
+	any of your accelerated server, so it may open a big security hole
+	unless you take care to set up access controls proper.  We recommend
+	that this option remain disabled unless you are sure of what you
+	are doing.
 
 	However, you will need to enable this option if you run Squid
 	as a transparent proxy.  Otherwise, virtual servers which
