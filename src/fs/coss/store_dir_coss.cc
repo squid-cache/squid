@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.32 2002/04/06 08:49:43 adrian Exp $
+ * $Id: store_dir_coss.cc,v 1.33 2002/04/07 11:52:33 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -480,7 +480,9 @@ storeCossDirWriteCleanStart(SwapDir * sd)
 {
     CossInfo *cs = (CossInfo *) sd->fsdata;
     struct _clean_state *state = xcalloc(1, sizeof(*state));
+#if HAVE_FCHMOD
     struct stat sb;
+#endif
     state->new = xstrdup(storeCossDirSwapLogFile(sd, ".clean"));
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
     if (state->fd < 0) {
