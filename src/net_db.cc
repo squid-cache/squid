@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.86 1998/05/05 16:11:31 wessels Exp $
+ * $Id: net_db.cc,v 1.87 1998/05/05 16:46:56 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -710,6 +710,32 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 #endif
 }
 
+void
+netdbExchangeUpdatePeer(struct in_addr addr, peer * e, double rtt, double hops)
+{
+#if USE_ICMP
+    netdbEntry *n;
+    net_db_peer *p;
+    debug(37, 1) ("netdbExchangeUpdatePeer: '%s', %0.1f hops, %0.1f rtt\n",
+	inet_ntoa(addr), hops, rtt);
+    n = netdbLookupAddr(addr);
+    if (n == NULL)
+	n = netdbAdd(addr);
+    assert(NULL != n);
+    if ((p = netdbPeerByName(n, e->host)) == NULL)
+	p = netdbPeerAdd(n, e);
+    p->rtt = rtt;
+    p->hops = hops;
+    p->expires = squid_curtime + 3600;	/* XXX ? */
+    if (n->n_peers < 2)
+	return;
+    qsort((char *) n->peers,
+	n->n_peers,
+	sizeof(net_db_peer),
+	sortPeerByRtt);
+#endif
+}
+
 #if SQUID_SNMP
 
 int
@@ -953,7 +979,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	}
     }
     while (size >= rec_sz) {
-	addr.s_addr = 0;
+	addr.s_addr = any_addr.s_addr;
 	hops = rtt = 0.0;
 	for (o = 0; o < rec_sz;) {
 	    switch ((int) *(p + o)) {
@@ -976,7 +1002,8 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 		break;
 	    }
 	}
-	debug(0, 0) ("GOT %s, %f RTT, %f HOPS\n", inet_ntoa(addr), rtt, hops);
+	if (addr.s_addr != any_addr.s_addr && rtt > 0)
+	    netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
 	assert(o == rec_sz);
 	ex->used += rec_sz;
 	size -= rec_sz;
