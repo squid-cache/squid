@@ -17,6 +17,7 @@ Changes to squid-1.2.alpha5 ():
 	  or protos.h, globals.h.  This greatly reduces dependencies
 	  between the various source files.
 	- globals.c is generated from globals.h by a Perl script.
+	- Started customizable error texts.
 
 Changes to squid-1.2.alpha4 ():
 
