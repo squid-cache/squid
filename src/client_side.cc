@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.597 2002/10/03 06:45:53 hno Exp $
+ * $Id: client_side.cc,v 1.598 2002/10/12 13:41:25 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -586,7 +586,7 @@ responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer recievedData)
 int
 contextStartOfOutput(clientSocketContext * context)
 {
-    return context->http->out.offset == 0 ? 1 : 0;
+    return context->http->out.size == 0 ? 1 : 0;
 }
 
 void
