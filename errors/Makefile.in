@@ -1,0 +1,49 @@
+# $Id: Makefile.in,v 1.1 1997/07/28 06:41:16 wessels Exp $
+#
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+libexecdir      = @libexecdir@
+sysconfdir	= @sysconfdir@
+localstatedir   = @localstatedir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+SH		= @SH@
+RM		= @RM@
+SHELL		= @SH@
+
+INSTALL         	= @INSTALL@
+INSTALL_FILE    	= @INSTALL_DATA@
+DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
+
+LANGUAGE		= English
+
+all:
+
+install: install-mkdirs
+	@for f in $(LANGUAGE)/ERR_*; do \
+		if test -f $(DEFAULT_ERROR_DIR)/$$f ; then \
+			:; \
+		else \
+			echo "$(INSTALL_FILE) $$f $(DEFAULT_ERROR_DIR)"; \
+			$(INSTALL_FILE) $$f $(DEFAULT_ERROR_DIR); \
+		fi \
+	done
+
+install-mkdirs:
+	-@if test ! -d $(prefix); then \
+		echo "mkdir $(prefix)"; \
+		mkdir $(prefix); \
+	fi
+	-@if test ! -d $(sysconfdir); then \
+		echo "mkdir $(sysconfdir)"; \
+		mkdir $(sysconfdir); \
+	fi
+	-@if test ! -d $(DEFAULT_ERROR_DIR); then \
+		echo "mkdir $(DEFAULT_ERROR_DIR)"; \
+		mkdir $(DEFAULT_ERROR_DIR); \
+	fi
+
+clean:
+
