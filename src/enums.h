@@ -378,6 +378,7 @@ typedef enum {
     PROTO_URN,
     PROTO_WHOIS,
     PROTO_INTERNAL,
+    PROTO_HTTPS,
     PROTO_MAX
 } protocol_t;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.94 1998/05/22 23:44:34 wessels Exp $
+ * $Id: url.cc,v 1.95 1998/06/05 00:25:58 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -55,6 +55,7 @@ const char *ProtocolStr[] =
     "urn",
     "whois",
     "internal",
+    "https",
     "TOTAL"
 };
 
@@ -160,24 +161,26 @@ urlParseMethod(const char *s)
 protocol_t
 urlParseProtocol(const char *s)
 {
-    if (strncasecmp(s, "http", 4) == 0)
+    if (strcasecmp(s, "http") == 0)
 	return PROTO_HTTP;
-    if (strncasecmp(s, "ftp", 3) == 0)
+    if (strcasecmp(s, "ftp") == 0)
 	return PROTO_FTP;
-    if (strncasecmp(s, "file", 4) == 0)
+    if (strcasecmp(s, "file") == 0)
 	return PROTO_FTP;
-    if (strncasecmp(s, "gopher", 6) == 0)
+    if (strcasecmp(s, "gopher") == 0)
 	return PROTO_GOPHER;
-    if (strncasecmp(s, "wais", 4) == 0)
+    if (strcasecmp(s, "wais") == 0)
 	return PROTO_WAIS;
-    if (strncasecmp(s, "cache_object", 12) == 0)
+    if (strcasecmp(s, "cache_object") == 0)
 	return PROTO_CACHEOBJ;
-    if (strncasecmp(s, "urn", 3) == 0)
+    if (strcasecmp(s, "urn") == 0)
 	return PROTO_URN;
-    if (strncasecmp(s, "whois", 5) == 0)
+    if (strcasecmp(s, "whois") == 0)
 	return PROTO_WHOIS;
-    if (strncasecmp(s, "internal", 8) == 0)
+    if (strcasecmp(s, "internal") == 0)
 	return PROTO_INTERNAL;
+    if (strcasecmp(s, "https") == 0)
+	return PROTO_HTTPS;
     return PROTO_NONE;
 }
 
@@ -187,6 +190,7 @@ urlDefaultPort(protocol_t p)
 {
     switch (p) {
     case PROTO_HTTP:
+    case PROTO_HTTPS:
 	return 80;
     case PROTO_FTP:
 	return 21;
@@ -413,6 +417,7 @@ urlCheckRequest(const request_t * r)
     switch (r->protocol) {
     case PROTO_URN:
     case PROTO_HTTP:
+    case PROTO_HTTPS:
     case PROTO_CACHEOBJ:
 	rc = 1;
 	break;
