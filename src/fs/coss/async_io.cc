@@ -11,7 +11,7 @@
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
  *
- * $Id: async_io.cc,v 1.1 2001/08/12 10:20:41 adrian Exp $
+ * $Id: async_io.cc,v 1.2 2001/08/12 14:02:01 adrian Exp $
  */
 
 #include "squid.h"
@@ -26,13 +26,47 @@
  * with the dequeueing)
  */
 
+
+/* Internal routines */
+
+/*
+ * find a free aio slot.
+ * Return the index, or -1 if we can't find one.
+ */
+static int
+a_file_findslot(async_queue_t *q)
+{
+	int i;
+
+	/* Later we should use something a little more .. efficient :) */
+	for (i = 0; i < MAX_ASYNCOP; i++) {
+		if (q->aq_queue[i].aq_e_state == AQ_ENTRY_FREE)
+			/* Found! */
+			return i;
+	}
+	/* found nothing */
+	return -1;
+}
+
+
+
+
+/* Exported routines */
+
 void
 a_file_read(async_queue_t *q, int fd, void *buf, int req_len, off_t offset,
   DRCB *callback, void *data)
 {
 	assert(q->aq_state == AQ_STATE_SETUP);
 
+#if 0
 	file_read(fd, buf, req_len, offset, callback, data);
+#endif
+	/* Find a free slot */
+		/* No free slot? Callback error, and return */
+
+	/* Mark slot as ours */
+	/* Initiate aio */
 }
 
 
@@ -42,14 +76,35 @@ a_file_write(async_queue_t *q, int fd, off_t offset, void *buf, int len,
 {
 	assert(q->aq_state == AQ_STATE_SETUP);
 
+#if 0
 	file_write(fd, offset, buf, len, callback, data, freefunc);
+#endif
+	/* Find a free slot */
+		/* No free slot? Callback error, and return */
+	/* Mark slot as ours */
+	/* Initiate aio */
 }
 
 
+/*
+ * Note: we grab the state and free the state before calling the callback
+ * because this allows us to cut down the amount of time it'll take
+ * to find a free slot (since if we call the callback first, we're going
+ * to probably be allocated the slot _after_ this one..)
+ *
+ * I'll make it much more optimal later.
+ */
 int
 a_file_callback(async_queue_t *q)
 {
 	assert(q->aq_state == AQ_STATE_SETUP);
+
+	/* Loop through all slots */
+		/* Active, get status */
+			/* Ready? Grab the state locally */
+			/* Free the state */
+			/* Call callback */
+
 
 	return 0;
 }
@@ -76,6 +131,7 @@ a_file_syncqueue(async_queue_t *q)
 {
 	assert(q->aq_state == AQ_STATE_SETUP);
 
+	/* Good point? :-) */
 }
 
 
