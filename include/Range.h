@@ -1,6 +1,6 @@
 
 /*
- * $Id: Range.h,v 1.3 2003/02/25 12:07:41 robertc Exp $
+ * $Id: Range.h,v 1.4 2003/06/09 03:10:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,9 +57,8 @@ template<class C>
 Range<C>::Range (C start_, C end_) : start(start_), end(end_){}
 
 template<class C>
-
-class Range<C>
-            Range<C>::intersection (Range const &rhs)
+Range<C>
+Range<C>::intersection (Range const &rhs)
 {
     Range<C> result (XMAX(start, rhs.start), XMIN(end, rhs.end));
     return result;
