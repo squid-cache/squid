@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.176 1998/02/19 23:28:40 wessels Exp $
+ * $Id: neighbors.cc,v 1.177 1998/03/04 22:07:55 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -978,6 +978,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
     peer *e = NULL;
     struct _domain_ping *d = NULL;
     icp_opcode op;
+    int i;
     if (peers == NULL)
 	storeAppendPrintf(sentry, "There are no neighbors installed.\n");
     for (e = peers; e; e = e->next) {
@@ -987,6 +988,10 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	    e->host,
 	    e->http_port,
 	    e->icp_port);
+	for (i = 0; i < e->n_addresses; i++) {
+	    storeAppendPrintf(sentry, "Address[%d] : %s\n", i,
+		inet_ntoa(e->addresses[i]));
+	}
 	storeAppendPrintf(sentry, "Status     : %s\n",
 	    neighborUp(e) ? "Up" : "Down");
 	storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
