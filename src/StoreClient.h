@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.2 2002/10/13 20:34:57 robertc Exp $
+ * $Id: StoreClient.h,v 1.3 2002/10/14 07:35:00 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -67,7 +67,7 @@ struct _store_client {
 	unsigned int copy_event_pending:1;
     } flags;
 #if DELAY_POOLS
-    delay_id delay_id;
+    delay_id delayId;
 #endif
     dlink_node node;
     /* Below here is private - do no alter outside storeClient calls */
