@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.24 1998/08/17 23:50:16 wessels Exp $
+ * $Id: forward.cc,v 1.25 1998/08/19 06:05:52 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -404,6 +404,9 @@ fwdCheckDeferRead(int fdnotused, void *data)
 void
 fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
 {
+#ifdef PPNR_WIP
+    assert(EBIT_TEST(fwdState->entry->flag, ENTRY_FWD_HDR_WAIT));
+#endif /* PPNR_WIP */
     debug(17, 3) ("fwdFail: %s \"%s\"\n\t%s\n",
 	err_type_str[err_code],
 	httpStatusString(http_code),

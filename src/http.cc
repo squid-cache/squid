@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.308 1998/08/18 22:42:19 wessels Exp $
+ * $Id: http.cc,v 1.309 1998/08/19 06:05:53 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -427,11 +427,23 @@ httpReadReply(int fd, void *data)
 	     * we want to process the reply headers.
 	     */
 	    httpProcessReplyHeader(httpState, buf, len);
+#ifdef PPNR_WIP
+	storePPNR(entry);
+#endif /* PPNR_WIP */
 	storeComplete(entry);	/* deallocates mem_obj->request */
 	comm_close(fd);
     } else {
+#ifndef PPNR_WIP
 	if (httpState->reply_hdr_state < 2)
+#else
+	if (httpState->reply_hdr_state < 2) {
+#endif /* PPNR_WIP */
 	    httpProcessReplyHeader(httpState, buf, len);
+#ifdef PPNR_WIP
+	    if (httpState->reply_hdr_state == 2)
+	        storePPNR(entry);
+	}
+#endif /* PPNR_WIP */
 	storeAppend(entry, buf, len);
 #ifdef OPTIMISTIC_IO
 	if (entry->store_status == STORE_ABORTED) {
