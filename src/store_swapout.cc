@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.47 1999/05/03 21:55:13 wessels Exp $
+ * $Id: store_swapout.cc,v 1.48 1999/05/04 19:22:31 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -98,7 +98,7 @@ storeSwapOut(StoreEntry * e)
     debug(20, 7) ("storeSwapOut: swapout.queue_offset = %d\n",
 	(int) mem->swapout.queue_offset);
     if (mem->swapout.sio)
-        debug(20, 7) ("storeSwapOut: storeOffset() = %d\n",
+	debug(20, 7) ("storeSwapOut: storeOffset() = %d\n",
 	    (int) storeOffset(mem->swapout.sio));
 #if USE_ASYNC_IO
     if (mem->inmem_hi < mem->swapout.queue_offset) {
@@ -271,7 +271,7 @@ storeSwapOutObjectBytesOnDisk(const MemObject * mem)
      * yet.
      */
     off_t nwritten;
-    if(mem->swapout.sio == NULL)
+    if (mem->swapout.sio == NULL)
 	return 0;
     nwritten = storeOffset(mem->swapout.sio);
     if (nwritten <= mem->swap_hdr_sz)

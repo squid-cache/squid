@@ -1,7 +1,7 @@
 
 /*
- * $Id: store.cc,v 1.495 1999/05/04 18:47:28 wessels Exp $
- * $Id: store.cc,v 1.495 1999/05/04 18:47:28 wessels Exp $
+ * $Id: store.cc,v 1.496 1999/05/04 19:22:28 wessels Exp $
+ * $Id: store.cc,v 1.496 1999/05/04 19:22:28 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -637,7 +637,7 @@ storeAbort(StoreEntry * e)
 	if (mem->swapout.fd >= 0)
 	    aioCancel(mem->swapout.fd, NULL);
 #endif
-	    storeSwapOutFileClose(e);
+	storeSwapOutFileClose(e);
     }
     storeUnlockObject(e);	/* unlock */
 }

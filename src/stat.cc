@@ -1,7 +1,7 @@
 
 /*
- * $Id: stat.cc,v 1.315 1999/05/03 21:55:05 wessels Exp $
- * $Id: stat.cc,v 1.315 1999/05/03 21:55:05 wessels Exp $
+ * $Id: stat.cc,v 1.316 1999/05/04 19:22:26 wessels Exp $
+ * $Id: stat.cc,v 1.316 1999/05/04 19:22:26 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -274,7 +274,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	    (int) mem->swapout.queue_offset);
 	if (mem->swapout.sio)
 	    storeAppendPrintf(s, "\tswapout: %d bytes written\n",
-	        (int) storeOffset(mem->swapout.sio));
+		(int) storeOffset(mem->swapout.sio));
 	for (i = 0, sc = &mem->clients[i]; sc != NULL; sc = sc->next, i++) {
 	    if (sc->callback_data == NULL)
 		continue;
