@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.89 1996/11/25 18:50:29 wessels Exp $
+ * $Id: neighbors.cc,v 1.90 1996/11/26 19:06:59 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -121,6 +121,7 @@ static struct {
     edge *edges_tail;
     edge *first_ping;
 } friends = {
+
     0, NULL, NULL, NULL
 };
 
@@ -215,40 +216,32 @@ edgeWouldBePinged(const edge * e, request_t * request)
     return do_ping;
 }
 
+int
+neighborsCount(request_t * request)
+{
+    edge *e = NULL;
+    int count = 0;
+    for (e = friends.edges_head; e; e = e->next)
+	if (edgeWouldBePinged(e, request))
+	    count++;
+    return count;
+}
+
 edge *
-getSingleParent(request_t * request, int *n)
+getSingleParent(request_t * request)
 {
     edge *p = NULL;
     edge *e = NULL;
-    int count = 0;
-
     for (e = friends.edges_head; e; e = e->next) {
 	if (!edgeWouldBePinged(e, request))
 	    continue;
-	count++;
-	if (neighborType(e, request) != EDGE_PARENT) {
-	    /* we matched a neighbor, not a parent.  There
-	     * can be no single parent */
-	    if (n == NULL)
-		return NULL;
-	    continue;
-	}
-	if (p) {
-	    /* already have a parent, this makes the second,
-	     * so there can be no single parent */
-	    if (n == NULL)
-		return NULL;
-	    continue;
-	}
+	if (neighborType(e, request) != EDGE_PARENT)
+	    return NULL;	/* oops, found SIBLING */
+	if (p)
+	    return NULL;	/* oops, found second parent */
 	p = e;
     }
-    /* Ok, all done checking the edges.  If only one parent matched, then
-     * p will already point to it */
-    if (n)
-	*n = count;
-    if (count == 1)
-	return p;
-    return NULL;
+    return p;
 }
 
 edge *
@@ -892,10 +885,10 @@ neighborUp(edge * e)
 }
 
 void
-edgeDestroy(edge *e)
+edgeDestroy(edge * e)
 {
-	if (e == NULL)
-	    return;
-	safe_free(e->host);
-	safe_free(e);
+    if (e == NULL)
+	return;
+    safe_free(e->host);
+    safe_free(e);
 }
