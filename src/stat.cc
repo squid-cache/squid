@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.262 1998/07/20 20:21:09 wessels Exp $
+ * $Id: stat.cc,v 1.263 1998/07/21 17:04:48 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -922,7 +922,8 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashFuncCount);
-    statHistEnumInit(&C->comm_incoming, INCOMING_TOTAL_MAX);
+    statHistEnumInit(&C->comm_icp_incoming, INCOMING_ICP_MAX);
+    statHistEnumInit(&C->comm_http_incoming, INCOMING_HTTP_MAX);
 }
 
 /* add special cases here as they arrive */
@@ -938,7 +939,8 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->icp.reply_svc_time);
     statHistClean(&C->dns.svc_time);
     statHistClean(&C->cd.on_xition_count);
-    statHistClean(&C->comm_incoming);
+    statHistClean(&C->comm_icp_incoming);
+    statHistClean(&C->comm_http_incoming);
 }
 
 /* add special cases here as they arrive */
@@ -960,7 +962,8 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
     statHistCopy(&dest->dns.svc_time, &orig->dns.svc_time);
     statHistCopy(&dest->cd.on_xition_count, &orig->cd.on_xition_count);
-    statHistCopy(&dest->comm_incoming, &orig->comm_incoming);
+    statHistCopy(&dest->comm_icp_incoming, &orig->comm_icp_incoming);
+    statHistCopy(&dest->comm_http_incoming, &orig->comm_http_incoming);
 }
 
 static void
