@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.332 2004/12/21 17:28:29 robertc Exp $
+#  $Id: Makefile.in,v 1.333 2004/12/21 18:20:19 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -339,40 +339,22 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
 	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h \
 	StoreSwapLogData.cc StoreSwapLogData.h access_log.cc acl.cc \
-	ACLChecklist.cc ACLARP.cc ACLARP.h ACLASN.cc ACLASN.h \
-	ACLDestinationASN.h ACLSourceASN.h ACLBrowser.cc ACLBrowser.h \
-	ACLData.h ACLDestinationDomain.cc ACLDestinationDomain.h \
-	ACLDestinationIP.cc ACLDestinationIP.h ACLDomainData.h \
-	ACLDomainData.cc ACLExtUser.h ACLExtUser.cc ACLIntRange.cc \
-	ACLIntRange.h ACLIP.cc ACLIP.h ACLMaxConnection.cc \
-	ACLMaxConnection.h ACLMaxUserIP.cc ACLMaxUserIP.h ACLMethod.cc \
-	ACLMethod.h ACLMethodData.cc ACLMethodData.h ACLMyIP.cc \
-	ACLMyIP.h ACLMyPort.cc ACLMyPort.h ACLProtocol.cc \
-	ACLProtocol.h ACLProtocolData.cc ACLProtocolData.h \
-	ACLProxyAuth.cc ACLProxyAuth.h ACLReferer.cc ACLReferer.h \
-	ACLRegexData.cc ACLRegexData.h ACLReplyHeaderStrategy.h \
-	ACLReplyMIMEType.cc ACLReplyMIMEType.h \
-	ACLRequestHeaderStrategy.h ACLRequestMIMEType.cc \
-	ACLRequestMIMEType.h ACLSourceDomain.cc ACLSourceDomain.h \
-	ACLSourceIP.cc ACLSourceIP.h ACLStrategised.cc \
-	ACLStrategised.h ACLStrategy.h ACLStringData.cc \
-	ACLStringData.h ACLTime.cc ACLTime.h ACLTimeData.cc \
-	ACLTimeData.h ACLUrl.cc ACLUrl.h ACLUrlPath.cc ACLUrlPath.h \
-	ACLUrlPort.cc ACLUrlPort.h ACLUserData.cc ACLUserData.h asn.cc \
-	authenticate.cc AuthUser.cc cache_cf.cc CacheDigest.cc \
-	cache_manager.cc carp.cc cbdata.cc client_db.cc client_side.cc \
-	client_side_reply.cc client_side_request.cc \
+	ACLChecklist.cc ACLProxyAuth.cc ACLUserData.cc ACLRegexData.cc \
+	ACLStringData.cc authenticate.cc AuthUser.cc \
+	AuthUserRequest.cc AuthScheme.cc AuthConfig.cc cache_cf.cc \
+	CacheDigest.cc cache_manager.cc carp.cc cbdata.cc client_db.cc \
+	client_side.cc client_side_reply.cc client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h comm.cc \
-	comm.h comm_select.cc comm_poll.cc comm_kqueue.cc defines.h \
-	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
-	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
-	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
-	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
-	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
-	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
-	dns_internal.cc dns.cc enums.h errorpage.cc ElementList.h \
-	ESI.cc ESI.h ESIAssign.cc ESIAssign.h ESIAttempt.h \
-	ESIContext.cc ESIContext.h ESICustomParser.cc \
+	comm.h comm_select.cc comm_poll.cc comm_kqueue.cc \
+	ConfigOption.cc defines.h CommonPool.h CompositePoolNode.h \
+	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
+	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
+	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
+	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
+	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
+	disk.cc dns_internal.cc dns.cc enums.h errorpage.cc \
+	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
+	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
 	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
 	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
 	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
@@ -406,21 +388,24 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) ACLChecklist.$(OBJEXT) \
-	$(am__objects_3) asn.$(OBJEXT) authenticate.$(OBJEXT) \
-	AuthUser.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
+	ACLProxyAuth.$(OBJEXT) ACLUserData.$(OBJEXT) \
+	ACLRegexData.$(OBJEXT) ACLStringData.$(OBJEXT) \
+	authenticate.$(OBJEXT) AuthUser.$(OBJEXT) \
+	AuthUserRequest.$(OBJEXT) AuthScheme.$(OBJEXT) \
+	AuthConfig.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
-	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) $(am__objects_5) \
-	disk.$(OBJEXT) $(am__objects_6) errorpage.$(OBJEXT) \
-	$(am__objects_10) ETag.$(OBJEXT) event.$(OBJEXT) \
-	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
-	fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
-	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
-	helper.$(OBJEXT) $(am__objects_11) http.$(OBJEXT) \
-	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) \
+	ConfigOption.$(OBJEXT) $(am__objects_5) disk.$(OBJEXT) \
+	$(am__objects_6) errorpage.$(OBJEXT) $(am__objects_10) \
+	ETag.$(OBJEXT) event.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
+	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
+	$(am__objects_11) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
@@ -1185,10 +1170,15 @@ ufsdump_SOURCES = debug.cc \
 	access_log.cc \
 	acl.cc \
 	ACLChecklist.cc \
-	$(squid_ACLSOURCES) \
-	asn.cc \
+	ACLProxyAuth.cc \
+	ACLUserData.cc \
+	ACLRegexData.cc \
+	ACLStringData.cc \
 	authenticate.cc \
 	AuthUser.cc \
+	AuthUserRequest.cc \
+	AuthScheme.cc \
+	AuthConfig.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
 	cache_manager.cc \
@@ -1206,6 +1196,7 @@ ufsdump_SOURCES = debug.cc \
 	comm_select.cc \
 	comm_poll.cc \
 	comm_kqueue.cc \
+	ConfigOption.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
