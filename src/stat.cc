@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.124 1997/02/05 04:53:31 wessels Exp $
+ * $Id: stat.cc,v 1.125 1997/02/07 04:57:16 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -563,7 +563,7 @@ server_list(const cacheinfo * obj, StoreEntry * sentry)
 	if (e->host == NULL)
 	    fatal_dump("Found an peer without a hostname!");
 	storeAppendPrintf(sentry, "\n{%-11.11s: %s/%d/%d}\n",
-	    e->type == PEER_PARENT ? "Parent" : "Sibling",
+	    neighborTypeStr(e),
 	    e->host,
 	    e->http_port,
 	    e->icp_port);
@@ -575,6 +575,9 @@ server_list(const cacheinfo * obj, StoreEntry * sentry)
 	storeAppendPrintf(sentry, "{PINGS ACKED: %8d %3d%%}\n",
 	    e->stats.pings_acked,
 	    percent(e->stats.pings_acked, e->stats.pings_sent));
+	storeAppendPrintf(sentry, "{FETCHES    : %8d %3d%%}\n",
+	    e->stats.fetches,
+	    percent(e->stats.fetches, e->stats.pings_acked));
 	storeAppendPrintf(sentry, "{IGNORED    : %8d %3d%%}\n",
 	    e->stats.ignored_replies,
 	    percent(e->stats.ignored_replies, e->stats.pings_acked));
@@ -582,15 +585,11 @@ server_list(const cacheinfo * obj, StoreEntry * sentry)
 	for (op = ICP_OP_INVALID; op < ICP_OP_END; op++) {
 	    if (e->stats.counts[op] == 0)
 		continue;
-	    storeAppendPrintf(sentry, "{%-10.10s : %8d %3d%%}\n",
+	    storeAppendPrintf(sentry, "{    %12.12s : %8d %3d%%}\n",
 		IcpOpcodeStr[op],
 		e->stats.counts[op],
 		percent(e->stats.counts[op], e->stats.pings_acked));
 	}
-	storeAppendPrintf(sentry, "{FETCHES    : %8d %3d%%}\n",
-	    e->stats.fetches,
-	    percent(e->stats.fetches, e->stats.pings_acked));
-
 	if (e->last_fail_time) {
 	    storeAppendPrintf(sentry, "{Last failed connect() at: %s}\n",
 		mkhttpdlogtime(&(e->last_fail_time)));
@@ -1160,7 +1159,6 @@ log_enable(cacheinfo * obj, StoreEntry * sentry)
 	    debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	    obj->logfile_status = LOG_DISABLE;
 	}
-
     }
     /* at the moment, store one char to make a storage manager happy */
     storeAppendPrintf(sentry, " ");

@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.53 1997/02/05 04:54:44 wessels Exp $
+ * $Id: disk.cc,v 1.54 1997/02/07 04:57:12 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -245,41 +245,41 @@ diskHandleWrite(int fd, FileEntry * entry)
 	if (len < 0) {
 	    if (errno == EAGAIN || errno == EWOULDBLOCK)
 		break;
-		/* disk i/o failure--flushing all outstanding writes  */
-		debug(50, 1, "diskHandleWrite: FD %d: disk write error: %s\n",
-		    fd, xstrerror());
-		entry->write_daemon = NOT_PRESENT;
-		entry->write_pending = NO_WRT_PENDING;
-		/* call finish handler */
-		do {
+	    /* disk i/o failure--flushing all outstanding writes  */
+	    debug(50, 1, "diskHandleWrite: FD %d: disk write error: %s\n",
+		fd, xstrerror());
+	    entry->write_daemon = NOT_PRESENT;
+	    entry->write_pending = NO_WRT_PENDING;
+	    /* call finish handler */
+	    do {
 		entry->write_q = r->next;
 		if (r->free)
 		    (r->free) (r->buf);
 		safe_free(r);
-		} while (entry->write_q);
-		if (entry->wrt_handle) {
-		    entry->wrt_handle(fd,
-			errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR,
+	    } while (entry->write_q);
+	    if (entry->wrt_handle) {
+		entry->wrt_handle(fd,
+		    errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR,
 		    rlen,
-			entry->wrt_handle_data);
-		}
-		return DISK_ERROR;
+		    entry->wrt_handle_data);
 	    }
+	    return DISK_ERROR;
+	}
 	rlen += len;
 	r->cur_offset += len;
 	if (r->cur_offset < r->len)
 	    continue;		/* partial write? */
-	    /* complete write */
+	/* complete write */
 	entry->write_q = r->next;
 	if (r->free)
 	    (r->free) (r->buf);
 	safe_free(r);
     }
     if (entry->write_q == NULL) {
-    /* no more data */
+	/* no more data */
 	entry->write_q_tail = NULL;
-    entry->write_pending = NO_WRT_PENDING;
-    entry->write_daemon = NOT_PRESENT;
+	entry->write_pending = NO_WRT_PENDING;
+	entry->write_daemon = NOT_PRESENT;
     } else {
 	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
@@ -414,7 +414,7 @@ file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void
 {
     dread_ctrl *ctrl_dat;
     if (fd < 0)
-       fatal_dump("file_read: bad FD");
+	fatal_dump("file_read: bad FD");
     ctrl_dat = xcalloc(1, sizeof(dread_ctrl));
     ctrl_dat->fd = fd;
     ctrl_dat->offset = offset;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.208 1997/02/07 04:56:40 wessels Exp $
+ * $Id: store.cc,v 1.209 1997/02/07 04:57:17 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -197,8 +197,8 @@ struct storeRebuild_data {
 };
 
 struct _bucketOrder {
-	unsigned int bucket;
-	int index;
+    unsigned int bucket;
+    int index;
 };
 
 /* initializtion flag */
@@ -2396,7 +2396,7 @@ storeRandomizeBuckets(void)
     qsort((char *) MaintBucketsOrder,
 	store_buckets,
 	sizeof(struct _bucketOrder),
-	(QS) compareBucketOrder);
+	             (QS) compareBucketOrder);
 }
 
 static void
@@ -2666,7 +2666,6 @@ storeWriteCleanLog(void)
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
 	fatal(tmp_error_buf);
     }
-
     stop = getCurrentTime();
     r = stop - start;
     debug(20, 1, "  Finished.  Wrote %d lines.\n", n);
