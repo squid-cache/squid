@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.11 2003/07/08 23:10:59 hno Exp $
+#  $Id: Makefile.am,v 1.12 2003/07/10 01:31:51 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -15,6 +15,7 @@ EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
 
 ## Sort by dependencies - test lowest layers first
 TESTS = debug \
+	syntheticoperators \
 	rfc1738 \
 	refcount\
 	splay\
@@ -31,12 +32,12 @@ check_PROGRAMS= debug \
 		mem_hdr_test \
 		refcount\
 		rfc1738\
-		splay
+		splay \
+		syntheticoperators
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 debug_SOURCES = debug.cc test_tools.cc
-debug_LDADD = $(top_builddir)/lib/Array.o \
-		$(top_builddir)/src/globals.o \
+debug_LDADD = $(top_builddir)/src/globals.o \
 		$(LDADD)
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
@@ -58,6 +59,8 @@ http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 		$(LDADD)
 
 splay_SOURCES = splay.cc
+
+syntheticoperators_SOURCES = syntheticoperators.cc test_tools.cc
 
 rfc1738_SOURCES = rfc1738.cc
 
