@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.129 1996/12/20 23:45:42 wessels Exp $
+ * $Id: main.cc,v 1.130 1997/01/02 07:20:30 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -628,7 +628,7 @@ main(int argc, char **argv)
     any_addr.s_addr = inet_addr("0.0.0.0");
     memset(&no_addr, '\0', sizeof(struct in_addr));
     no_addr.s_addr = inet_addr("255.255.255.255");
-    inaddr_none = inet_addr("X");
+    inaddr_none = inet_addr("255.255.255.255");
 
     errorInitialize();
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.49 1996/12/20 23:45:37 wessels Exp $
+ * $Id: cachemgr.cc,v 1.50 1997/01/02 07:20:28 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -626,7 +626,7 @@ main(int argc, char *argv[])
     int single = TRUE;
     float f1;
 
-    inaddr_none = inet_addr("X");
+    inaddr_none = inet_addr("255.255.255.255");
     now = time(NULL);
     if ((s = strrchr(argv[0], '/')))
 	progname = xstrdup(s + 1);
