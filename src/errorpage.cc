@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.76 1997/10/17 04:00:11 wessels Exp $
+ * $Id: errorpage.cc,v 1.77 1997/10/17 21:22:46 kostas Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -132,12 +132,18 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'E':
 	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->errno, strerror(err->errno));
+	p = buf;
 	break;
     case 'w':
-	snprintf(buf, CVT_BUF_SZ, "%s", Config.adminEmail);
+	if (Config.adminEmail) {
+	    snprintf(buf, CVT_BUF_SZ, "%s", Config.adminEmail);
+	    p = buf;
+	} else
+	    p = "UNKNOWN";
 	break;
     case 'h':
 	snprintf(buf, CVT_BUF_SZ, "%s", getMyHostname());
+	p = buf;
 	break;
 /*
  * e - errno                                  x
