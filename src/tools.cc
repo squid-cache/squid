@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.136 1997/12/30 04:22:08 wessels Exp $
+ * $Id: tools.cc,v 1.137 1998/01/01 18:42:57 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -220,6 +220,7 @@ dumpMallocStats(void)
 void
 squid_getrusage(struct rusage *r)
 {
+    memset(r, '\0', sizeof(struct rusage));
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
 #ifdef _SQUID_SOLARIS_
     /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
@@ -228,9 +229,6 @@ squid_getrusage(struct rusage *r)
     getrusage(RUSAGE_SELF, r);
 #ifdef _SQUID_SOLARIS_
     leave_suid();
-#endif
-#else
-    memset(r, '\0', sizeof(struct rusage));
 #endif
 }
 
