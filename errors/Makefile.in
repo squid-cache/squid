@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.51 2003/05/05 22:56:08 hno Exp $
+# $Id: Makefile.in,v 1.52 2003/06/20 00:13:08 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -227,6 +227,7 @@ LANGUAGES = \
 		Italian \
 		Japanese \
 		Korean \
+		Lithuanian \
 		Polish \
 		Portuguese \
 		Romanian \
