@@ -1,16 +1,19 @@
 -- File: SQUID.MIB
 -- Maintained by: kostas@nlanr.net
 --
--- $Id: mib.txt,v 1.10 1998/02/26 09:01:14 kostas Exp $
 
--- SQUID-MIB DEFINITIONS ::= BEGIN
--- 		IMPORTS
---             	TimeTicks,
---             	Counter                FROM RFC1155-SMI
---            	DisplayString          FROM RFC1158-MIB
---            	mib-2                  FROM RFC1213-MIB
---           	OBJECT-TYPE            FROM RFC-1212
---          	TRAP-TYPE              FROM RFC-1215;
+SQUID-MIB DEFINITIONS ::= BEGIN
+ 		IMPORTS
+             	TimeTicks,
+             	Counter                FROM RFC1155-SMI
+            	DisplayString          FROM RFC1158-MIB
+            	mib-2                  FROM RFC1213-MIB
+           	OBJECT-TYPE            FROM RFC-1212
+          	TRAP-TYPE              FROM RFC-1215;
+
+-- Do NOT remove the following line
+
+-- $Id: mib.txt,v 1.11 1998/02/26 23:16:52 kostas Exp $
 
 -- 
 -- definitions included for standalone agent/managers
@@ -36,11 +39,10 @@
 --
 -- Should contain information not otherwise accessible through
 -- standard MIB's. Where this is not true, we will align as soon
--- with the other MIBs carefully!
+-- as possible!
 -- One reason to keep this information here is for dedicated 
 -- hardware as offered by today's commercial caching solutions
--- (0..2147483647) 
-
+-- 
 
         cacheSysVMsize OBJECT-TYPE
 	        SYNTAX INTEGER 
@@ -955,8 +957,6 @@
 ---  type of accounting inside the caching software. If this agent is
 ---  cascaded by another agent doing this type of accounting, this would
 ---  be the place to add the information
-
-
 
 ---
 --- cacheSecurity group
