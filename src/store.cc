@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.317 1997/10/27 16:33:56 wessels Exp $
+ * $Id: store.cc,v 1.318 1997/10/27 18:26:57 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -795,7 +795,6 @@ InvokeHandlers(StoreEntry * e)
     STCB *callback = NULL;
     store_client *sc;
     store_client *nx = NULL;
-    ssize_t size;
     assert(mem->clients != NULL || mem->nclients == 0);
     debug(20, 3) ("InvokeHandlers: %s\n", e->key);
     /* walk the entire list looking for valid callbacks */
@@ -1669,6 +1668,7 @@ storeGetSwapSpace(int size)
     int max_list_count = SWAP_LRUSCAN_COUNT << 1;
     int i;
     static int DL = 3;
+    static time_t last_warn_time = 0;
     StoreEntry **LRU_list;
     hash_link *link_ptr = NULL, *next = NULL;
     int kb_size = ((size + 1023) >> 10);
@@ -1754,11 +1754,15 @@ storeGetSwapSpace(int size)
     /* free the list */
     safe_free(LRU_list);
 
-    if (removed == 0 && (store_swap_size + kb_size > store_swap_high)) {
-	if (++swap_help > 1) {
-	    debug(20, DL) ("WARNING: Repeated failures to free up disk space!\n");
-	    DL = 1;
+    if (store_swap_size + kb_size > Config.Swap.maxSize) {
+	if (squid_curtime - last_warn_time > 10) {
+	    debug(20, 0) ("WARNING: Disk space over limit: %d KB > %d KB\n",
+		store_swap_size, Config.Swap.maxSize);
+	    last_warn_time = squid_curtime;
 	}
+	if (removed == 0)
+	    swap_help++;
+	DL = swap_help > 2 ? 1 : 3;
 	debug(20, DL) ("storeGetSwapSpace: Disk usage is over high water mark\n");
 	debug(20, DL) ("--> store_swap_high = %d KB\n", store_swap_high);
 	debug(20, DL) ("--> store_swap_size = %d KB\n", store_swap_size);
@@ -1803,7 +1807,6 @@ storeRelease(StoreEntry * e)
 	return 0;
     }
     if (e->swap_file_number > -1) {
-	assert(e->swap_status == SWAPOUT_DONE);
 	if (BIT_TEST(e->flag, ENTRY_VALIDATED))
 	    storePutUnusedFileno(e->swap_file_number);
 	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
