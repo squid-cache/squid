@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.121 1996/11/30 23:09:52 wessels Exp $
+ * $Id: http.cc,v 1.122 1996/12/01 00:18:47 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -661,8 +661,7 @@ httpBuildRequestHeader(request_t * request,
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
 	EBIT_SET(hdr_flags, HDR_IMS);
     }
-    if ((end = mime_headers_end(hdr_in)) == NULL)
-	return 0;
+    end = mime_headers_end(hdr_in);
     in_sz = strlen(hdr_in);
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	hdr_len = t - hdr_in;
