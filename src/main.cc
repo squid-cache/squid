@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.393 2004/08/30 05:12:31 robertc Exp $
+ * $Id: main.cc,v 1.394 2004/11/07 14:49:44 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -863,6 +863,7 @@ main(int argc, char **argv)
     sbrk_start = sbrk(0);
 #endif
 
+    Debug::parseOptions("ALL,1");
     debug_log = stderr;
 
     if (FD_SETSIZE < Squid_MaxFD)
