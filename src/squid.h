@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.1 1996/03/27 01:46:18 wessels Exp $ */
+/* $Id: squid.h,v 1.2 1996/03/27 04:42:09 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <bstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -20,7 +19,6 @@
 #include <signal.h>
 #include <string.h>
 #include <strings.h>
-#include <sys/errno.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/select.h>
@@ -66,12 +64,12 @@ typedef struct icp_common_s icp_common_t;
 typedef struct _cacheinfo cacheinfo;
 
 /* 32 bit integer compatability hack */
-#if SIZEOF_LONG == 4
-typedef long num32;
-typedef unsigned long u_num32;
-#elif SIZEOF_INT == 4
+#if SIZEOF_INT == 4
 typedef int num32;
 typedef unsigned int u_num32;
+#elif SIZEOF_LONG == 4
+typedef long num32;
+typedef unsigned long u_num32;
 #else
 typedef long num32;		/* assume that long's are 32bit */
 typedef unsigned long u_num32;
