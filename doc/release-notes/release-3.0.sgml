@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.10 2003/07/15 20:45:36 wessels Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.11 2003/07/17 22:22:49 wessels Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -125,6 +125,8 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
  <item>external_acl extended with soft timeouts
  <item>external_acl can optionally return information to be logged in access.log
  <item>Requests denied due to 'http_reply_access' are now logged with TCP_DENIED_REPLY.
+ <item>Added counters for HTCP messages sent and received, reported
+       in 'info' cache manager page.
 </itemize>
 
 <sect>Changes to squid.conf
