@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.492 2000/07/13 06:13:42 wessels Exp $
+ * $Id: client_side.cc,v 1.493 2000/07/16 04:24:21 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1092,7 +1092,6 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
     HttpHeader *hdr = rep ? &rep->header : 0;
     const char *range_err = NULL;
     request_t *request = http->request;
-    int is_hit = isTcpHit(http->log_type);
     assert(request->range);
     /* check if we still want to do ranges */
     if (!rep)
@@ -1113,9 +1112,6 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	range_err = "too complex range header";
     else if (!request->flags.cachable)	/* from we_do_ranges in http.c */
 	range_err = "non-cachable request";
-    else if (!is_hit && Config.rangeOffsetLimit < httpHdrRangeFirstOffset(request->range)
-	&& Config.rangeOffsetLimit != -1)	/* from we_do_ranges in http.c */
-	range_err = "range outside range_offset_limit";
     /* get rid of our range specs on error */
     if (range_err) {
 	debug(33, 3) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
@@ -1931,6 +1927,50 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
     errorAppendEntry(http->entry, err);
 }
 
+/* 
+ * Return true if the first range offset is larger than the configured
+ * limit, UNLESS the request is a hit AND the bits we want are in
+ * the cache.
+ */
+static int
+clientCheckRangeOffsetLimit(StoreEntry * entry, HttpHdrRange * range)
+{
+    ssize_t range_start;
+    /*
+     * If the range offset limit is disabled, don't force a miss.
+     */
+    if (-1 == Config.rangeOffsetLimit)
+	return 0;
+    /*
+     * If the first range offset is less than the configured limit
+     * we won't force a cache miss.
+     */
+    range_start = httpHdrRangeFirstOffset(range);
+    if (Config.rangeOffsetLimit >= range_start)
+	return 0;
+    /*
+     * Now we know it's possibly a hit.  If we already have the
+     * whole object cached, we won't force a miss.
+     */
+    if (STORE_OK == entry->store_status)
+	return 0;		/* we have the whole object */
+    /*
+     * Now we have a hit on a PENDING object.  We need to see
+     * if the part we want is already cached.  If so, we don't
+     * force a miss.
+     */
+    assert(NULL != entry->mem_obj);
+    if (range_start <= entry->mem_obj->inmem_hi)
+	return 0;
+    /*
+     * Even though we have a PENDING copy of the object, we
+     * don't want to wait to reach the first range offset,
+     * so we force a miss for a new range request to the
+     * origin.
+     */
+    return 1;
+}
+
 static log_type
 clientProcessRequest2(clientHttpRequest * http)
 {
@@ -1997,6 +2037,12 @@ clientProcessRequest2(clientHttpRequest * http)
 	 */
 	debug(33, 3) ("clientProcessRequest2: complex range MISS\n");
 	http->entry = NULL;
+	r->flags.we_dont_do_ranges = 1;
+	return LOG_TCP_MISS;
+    } else if (clientCheckRangeOffsetLimit(e, r->range)) {
+	debug(33, 1) ("clientProcessRequest2: forcing miss due to range_offset_limit\n");
+	http->entry = NULL;
+	r->flags.we_dont_do_ranges = 1;
 	return LOG_TCP_MISS;
     }
     debug(33, 3) ("clientProcessRequest2: default HIT\n");
