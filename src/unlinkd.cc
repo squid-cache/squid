@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.34 2000/03/06 16:23:36 wessels Exp $
+ * $Id: unlinkd.cc,v 1.35 2000/05/02 20:13:58 hno Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -48,6 +48,8 @@ main(int argc, char *argv[])
     int x;
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
+    close(2);
+    open("/dev/null", O_RDWR);
     while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
 	if ((t = strchr(buf, '\n')))
 	    *t = '\0';
