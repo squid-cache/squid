@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.395 1998/09/15 06:23:05 wessels Exp $
+ * $Id: client_side.cc,v 1.396 1998/09/15 20:24:07 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1574,11 +1574,13 @@ clientProcessRequest2(clientHttpRequest * http)
     const request_t *r = http->request;
     const cache_key *key;
     StoreEntry *e;
-    if (r->method == METHOD_HEAD)
-	key = storeKeyPublic(http->uri, METHOD_GET);
-    else
-	key = storeKeyPublic(http->uri, r->method);
+    key = storeKeyPublic(http->uri, r->method);
     e = http->entry = storeGet(key);
+    if (r->method == METHOD_HEAD && e == NULL) {
+	/* We can generate a HEAD reply from a cached GET object */
+	key = storeKeyPublic(http->uri, METHOD_GET);
+	e = http->entry = storeGet(key);
+    }
 #if USE_CACHE_DIGESTS
     http->lookup_type = e ? "HIT" : "MISS";
 #endif
