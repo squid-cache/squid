@@ -1,5 +1,5 @@
 #******************************************************************************
-# $Id: mk-string-arrays.pl,v 1.1 1997/11/20 08:20:26 wessels Exp $
+# $Id: mk-string-arrays.pl,v 1.2 1997/11/20 17:51:51 wessels Exp $
 #
 # File:		mk-strs.pl
 #
@@ -30,7 +30,7 @@ while (<>) {
 		if (/^} /) {
 			($b, $t) = split(/[ \t;]/, $_);
 			if (defined($pat{$t})) {
-				print "const char *$pat{$t}[] = \n";
+				print "const char *$pat{$t}\[\] = \n";
 				print "{\n";
 				for ($i = 0; $i < $count; $i++) {
 					printf "\t\"%s\"%s\n",
