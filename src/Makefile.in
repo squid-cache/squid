@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.317 2003/08/03 21:38:15 robertc Exp $
+#  $Id: Makefile.in,v 1.318 2003/08/14 21:12:05 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -617,7 +617,6 @@ squid_SOURCES = \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
-	$(STORE_SOURCES) \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
 	structs.h \
@@ -1106,10 +1105,10 @@ am__objects_17 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
 	ssl_support.$(OBJEXT)
 @ENABLE_SSL_TRUE@am__objects_18 = $(am__objects_17)
 @ENABLE_SSL_FALSE@am__objects_18 =
-@ENABLE_UNLINKD_TRUE@am__objects_20 = unlinkd.$(OBJEXT)
-@ENABLE_UNLINKD_FALSE@am__objects_20 =
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_21 = win32.$(OBJEXT)
-@ENABLE_WIN32SPECIFIC_FALSE@am__objects_21 =
+@ENABLE_UNLINKD_TRUE@am__objects_19 = unlinkd.$(OBJEXT)
+@ENABLE_UNLINKD_FALSE@am__objects_19 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_20 = win32.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_20 =
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) $(am__objects_3) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
@@ -1151,10 +1150,10 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	$(am__objects_19) StoreSwapLogData.$(OBJEXT) SwapDir.$(OBJEXT) \
-	tools.$(OBJEXT) ufscommon.$(OBJEXT) $(am__objects_20) \
-	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_21)
+	StoreSwapLogData.$(OBJEXT) SwapDir.$(OBJEXT) tools.$(OBJEXT) \
+	ufscommon.$(OBJEXT) $(am__objects_19) url.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_20)
 am__dirstamp = $(am__leading_dot)dirstamp
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	globals.$(OBJEXT) string_arrays.$(OBJEXT)
@@ -1273,9 +1272,9 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) ufscommon.$(OBJEXT) \
-	$(am__objects_20) url.$(OBJEXT) urn.$(OBJEXT) \
+	$(am__objects_19) url.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_21)
+	whois.$(OBJEXT) $(am__objects_20)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	globals.$(OBJEXT) string_arrays.$(OBJEXT)
 ufsdump_OBJECTS = $(am_ufsdump_OBJECTS) $(nodist_ufsdump_OBJECTS)
