@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.7 1999/01/29 23:39:17 wessels Exp $
+ * $Id: delay_pools.cc,v 1.8 1999/04/15 06:15:52 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -83,8 +83,39 @@ typedef union _delayPool delayPool;
 static delayPool *delay_data = NULL;
 static fd_set delay_no_delay;
 static time_t delay_pools_last_update = 0;
+static hash_table *delay_id_ptr_hash = NULL;
 
 static OBJH delayPoolStats;
+
+static unsigned int
+delayIdPtrHash(const void *key, unsigned int n)
+{
+    /* Hashes actual POINTER VALUE.
+     * Assumes <= 256 hash buckets & even hash size.
+     * Assumes the most variation in pointers to inside
+     * medium size objects occurs in the 2nd and 3rd
+     * least significant bytes.
+     */
+    const char *ptr = (char *) &key;
+#if SIZEOF_VOID_P == 4
+    return (ptr[1] ^ ptr[2]) & (n - 1);
+#elif SIZEOF_VOID_P == 8
+#if WORDS_BIGENDIAN
+    return (ptr[5] ^ ptr[6]) & (n - 1);
+#else
+    return (ptr[1] ^ ptr[2]) & (n - 1);
+#endif
+#else
+#error What kind of a sick architecture are you on anyway?
+#endif
+}
+
+static int
+delayIdPtrHashCmp(const void *a, const void *b)
+{
+    /* Sort by POINTER VALUE. */
+    return b - a;
+}
 
 void
 delayPoolsInit(void)
@@ -97,16 +128,61 @@ delayPoolsInit(void)
 void
 delayInitDelayData(unsigned short pools)
 {
-    if (pools) {
-	delay_data = xcalloc(pools, sizeof(delayPool));
-	eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
-    }
+    if (!pools)
+	return;
+    delay_data = xcalloc(pools, sizeof(delayPool));
+    eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
+    delay_id_ptr_hash = hash_create(delayIdPtrHashCmp, 256, delayIdPtrHash);
+}
+
+static void
+delayIdZero(void *hlink)
+{
+    hash_link *h = hlink;
+    delay_id *id = (delay_id *) h->key;
+    *id = 0;
+    xfree(h);
 }
 
 void
 delayFreeDelayData()
 {
     safe_free(delay_data);
+    if (!delay_id_ptr_hash)
+	return;
+    hashFreeItems(delay_id_ptr_hash, delayIdZero);
+    hashFreeMemory(delay_id_ptr_hash);
+    delay_id_ptr_hash = NULL;
+}
+
+void
+delayRegisterDelayIdPtr(delay_id * loc)
+{
+    hash_link *lnk;
+    if (!delay_id_ptr_hash)
+	return;
+    lnk = xmalloc(sizeof(hash_link));
+    lnk->key = (char *) loc;
+    hash_join(delay_id_ptr_hash, lnk);
+}
+
+void
+delayUnregisterDelayIdPtr(delay_id * loc)
+{
+    hash_link *lnk;
+    if (!delay_id_ptr_hash)
+	return;
+    /*
+     * If we went through a reconfigure, then all the delay_id's
+     * got set to zero, and they were removed from our hash
+     * table.
+     */
+    if (*loc == 0)
+	return;
+    lnk = hash_lookup(delay_id_ptr_hash, loc);
+    assert(lnk);
+    hash_remove_link(delay_id_ptr_hash, lnk);
+    xxfree(lnk);
 }
 
 void
@@ -189,7 +265,7 @@ delayId(unsigned short pool, unsigned short position)
 }
 
 delay_id
-delayClient(request_t *r)
+delayClient(request_t * r)
 {
     aclCheck_t ch;
     int i;

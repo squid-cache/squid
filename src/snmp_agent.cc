@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.65 1999/01/26 06:16:33 glenn Exp $
+ * $Id: snmp_agent.cc,v 1.66 1999/04/15 06:16:07 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -177,13 +177,6 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 	if (p->in_addr.sin_addr.s_addr == laddr->s_addr)
 	    break;
 
-#if SNMP_OLD_INDEX
-    p = Config.peers;
-    cnt = Var->name[LEN_SQ_MESH + 3];
-    debug(49, 5) ("snmp_meshPtblFn: we want .x.%d\n", Var->name[10]);
-    while (--cnt)
-	if (!(p = p->next));
-#endif
     if (p == NULL) {
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	snmp_var_free(Answer);
@@ -477,27 +470,4 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOSUCHNAME;
     snmp_var_free(Answer);
     return (NULL);
-}
-
-void
-addr2oid(struct in_addr addr, oid * Dest)
-{
-    u_char *cp;
-    cp = (u_char *) & (addr.s_addr);
-    Dest[0] = *cp++;
-    Dest[1] = *cp++;
-    Dest[2] = *cp++;
-    Dest[3] = *cp++;
-}
-
-struct in_addr *
-oid2addr(oid * id)
-{
-    static struct in_addr laddr;
-    u_char *cp = (u_char *) & (laddr.s_addr);
-    cp[0] = id[0];
-    cp[1] = id[1];
-    cp[2] = id[2];
-    cp[3] = id[3];
-    return &laddr;
 }

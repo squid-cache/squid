@@ -1,0 +1,20 @@
+<HTML><HEAD>
+<TITLE>VIGA: P&auml;ring URLile ei saa vastust</TITLE>
+</HEAD><BODY>
+<H1>VIGA</H1>
+<H2>P&auml;ring URLile ei saa vastust</H2>
+<HR>
+<P>
+URLi <A HREF="%U">%U</A> ei &otilde;nnestu lugeda:
+<P>
+Squid saatis j&auml;rgneva ftp k&auml;su:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+ja sai sellise vastuse
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+See olukord v&otilde;ib olla tekkinud, kui FTP URL on antud absoluutse
+teega (mis on vastuolus RFC 1738-ga). Kui see on nii, siis saab faili 
+aadressilt <A HREF="%B">%B</A>.
+</P>
+

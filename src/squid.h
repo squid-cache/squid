@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.186 1999/04/14 05:16:19 wessels Exp $
+ * $Id: squid.h,v 1.187 1999/04/15 06:16:09 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -370,11 +370,21 @@ struct rusage {
 /*
  * Squid source files should not call these functions directly
  */
+#ifndef malloc
 #define malloc +
+#endif
+#ifndef free
 #define free +
+#endif
+#ifndef calloc
 #define calloc +
+#endif
+#ifndef sprintf
 #define sprintf +
+#endif
+#ifndef strdup
 #define strdup +
+#endif
 
 #if SQUID_SNMP
 extern struct snmp_mib_tree *Mib;

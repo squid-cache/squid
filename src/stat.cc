@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.311 1999/01/21 21:10:34 wessels Exp $
+ * $Id: stat.cc,v 1.312 1999/04/15 06:16:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -407,7 +407,7 @@ statFiledescriptors(StoreEntry * sentry)
     int i;
     fde *f;
     storeAppendPrintf(sentry, "Active file descriptors:\n");
-    storeAppendPrintf(sentry, "%-4s %-6s %-4s %-7s %-7s %-21s %s\n",
+    storeAppendPrintf(sentry, "%-4s %-6s %-4s %-7s* %-7s* %-21s %s\n",
 	"File",
 	"Type",
 	"Tout",
@@ -415,17 +415,19 @@ statFiledescriptors(StoreEntry * sentry)
 	"Nwrite",
 	"Remote Address",
 	"Description");
-    storeAppendPrintf(sentry, "---- ------ ---- ------- ------- --------------------- ------------------------------\n");
+    storeAppendPrintf(sentry, "---- ------ ---- -------- -------- --------------------- ------------------------------\n");
     for (i = 0; i < Squid_MaxFD; i++) {
 	f = &fd_table[i];
 	if (!f->flags.open)
 	    continue;
-	storeAppendPrintf(sentry, "%4d %-6.6s %4d %7d %7d %-21s %s\n",
+	storeAppendPrintf(sentry, "%4d %-6.6s %4d %7d%c %7d%c %-21s %s\n",
 	    i,
 	    fdTypeStr[f->type],
 	    f->timeout_handler ? (int) (f->timeout - squid_curtime) / 60 : 0,
 	    f->bytes_read,
+	    f->read_handler ? '*' : ' ',
 	    f->bytes_written,
+	    f->write_handler ? '*' : ' ',
 	    fdRemoteAddr(f),
 	    f->desc);
     }
@@ -587,6 +589,8 @@ info_get(StoreEntry * sentry)
 	Biggest_FD);
     storeAppendPrintf(sentry, "\tNumber of file desc currently in use: %4d\n",
 	Number_FD);
+    storeAppendPrintf(sentry, "\tFiles queued for open:                %4d\n",
+	Opening_FD);
     storeAppendPrintf(sentry, "\tAvailable number of file descriptors: %4d\n",
 	fdNFree());
     storeAppendPrintf(sentry, "\tReserved number of file descriptors:  %4d\n",
@@ -874,7 +878,7 @@ statAvgTick(void *notused)
     StatCounters *p = &CountHist[1];
     StatCounters *c = &Counter;
     struct rusage rusage;
-    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
     squid_getrusage(&rusage);
     c->page_faults = rusage_pagefaults(&rusage);
     c->cputime = rusage_cputime(&rusage);

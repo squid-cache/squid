@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.270 1999/01/29 23:01:06 wessels Exp $
+ * $Id: neighbors.cc,v 1.271 1999/04/15 06:16:03 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -132,17 +132,17 @@ peerAllowedToUse(const peer * p, request_t * request)
 	if (request->flags.need_validation)
 	    return 0;
     }
-    if (p->pinglist == NULL && p->access == NULL)
+    if (p->peer_domain == NULL && p->access == NULL)
 	return do_ping;
     do_ping = 0;
-    for (d = p->pinglist; d; d = d->next) {
+    for (d = p->peer_domain; d; d = d->next) {
 	if (matchDomainName(d->domain, request->host)) {
 	    do_ping = d->do_ping;
 	    break;
 	}
 	do_ping = !d->do_ping;
     }
-    if (p->pinglist && 0 == do_ping)
+    if (p->peer_domain && 0 == do_ping)
 	return do_ping;
     if (p->access == NULL)
 	return do_ping;
@@ -318,7 +318,7 @@ neighborRemove(peer * target)
     }
     if (p) {
 	*P = p->next;
-	cbdataUnlock(p);
+	cbdataFree(p);
 	Config.npeers--;
     }
     first_ping = Config.peers;
@@ -888,15 +888,18 @@ peerDestroy(void *data, int unused)
     struct _domain_ping *nl = NULL;
     if (p == NULL)
 	return;
-    for (l = p->pinglist; l; l = nl) {
+    for (l = p->peer_domain; l; l = nl) {
 	nl = l->next;
 	safe_free(l->domain);
 	safe_free(l);
     }
     safe_free(p->host);
 #if USE_CACHE_DIGESTS
-    /* it should be set NULL in free_peer() */
-    assert(p->digest == NULL);
+    if (p->digest) {
+	PeerDigest *pd = p->digest;
+	p->digest = NULL;
+	cbdataUnlock(pd);
+    }
 #endif
     xfree(p);
 }
@@ -1230,9 +1233,9 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	    storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
 		mkhttpdlogtime(&(e->last_fail_time)));
 	}
-	if (e->pinglist != NULL) {
+	if (e->peer_domain != NULL) {
 	    storeAppendPrintf(sentry, "DOMAIN LIST: ");
-	    for (d = e->pinglist; d; d = d->next) {
+	    for (d = e->peer_domain; d; d = d->next) {
 		storeAppendPrintf(sentry, "%s%s ",
 		    d->do_ping ? null_string : "!", d->domain);
 	    }

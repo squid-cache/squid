@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.17 1998/08/14 19:25:12 wessels Exp $
+ * $Id: HttpStatusLine.cc,v 1.18 1999/04/15 06:15:42 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -83,7 +83,7 @@ httpStatusLineParse(HttpStatusLine * sline, const char *start, const char *end)
     if (strncasecmp(start, "HTTP/", 5))
 	return 0;
     start += 5;
-    if (!isdigit(*start))
+    if (!xisdigit(*start))
 	return 0;
     sline->version = atof(start);
     if (!(start = strchr(start, ' ')))

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.76 1999/01/21 21:10:33 wessels Exp $
+ * $Id: globals.h,v 1.77 1999/04/15 06:15:57 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -66,6 +66,7 @@ extern dnsStatData DnsStats;
 extern fde *fd_table;		/* NULL */
 extern int Biggest_FD;		/* -1 */
 extern int Number_FD;		/* 0 */
+extern int Opening_FD;		/* 0 */
 extern int HttpSockets[MAXHTTPPORTS];
 extern int NDnsServersAlloc;	/* 0 */
 extern int NHttpSockets;	/* 0 */

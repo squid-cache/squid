@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.113 1999/01/19 02:24:35 wessels Exp $
+ * $Id: url.cc,v 1.114 1999/04/15 06:16:13 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -233,7 +233,7 @@ urlParse(method_t method, char *url)
 	}
     }
     for (t = host; *t; t++)
-	*t = tolower(*t);
+	*t = xtolower(*t);
     if (strspn(host, valid_hostname_chars) != strlen(host)) {
 	debug(23, 1) ("urlParse: Illegal character in hostname '%s'\n", host);
 	return NULL;

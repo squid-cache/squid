@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.291 1999/04/14 05:16:17 wessels Exp $
+ * $Id: main.cc,v 1.292 1999/04/15 06:16:00 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -70,6 +70,7 @@ extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
 static EVH SquidShutdown;
+static void mainSetCwd(void);
 
 static void
 usage(void)
@@ -376,6 +377,34 @@ setEffectiveUser(void)
 }
 
 static void
+mainSetCwd(void)
+{
+    if (Config.coredump_dir) {
+	if (!chdir(Config.coredump_dir)) {
+	    debug(0, 1) ("Set Current Directory to %s\n", Config.coredump_dir);
+	    return;
+	} else {
+	    debug(50, 0) ("chdir: %s: %s\n", Config.coredump_dir, xstrerror());
+	}
+    }
+    if (!Config.effectiveUser) {
+	char *p = getcwd(NULL, 0);
+	debug(0, 1) ("Current Directory is %s\n", p);
+	xfree(p);
+	return;
+    }
+    /* we were probably started as root, so cd to a swap
+     * directory in case we dump core */
+    if (!chdir(storeSwapDir(0))) {
+	debug(0, 1) ("Set Current Directory to %s\n", storeSwapDir(0));
+	return;
+    } else {
+	debug(50, 0) ("%s: %s\n", storeSwapDir(0), xstrerror());
+	fatal_dump("Cannot cd to swap directory?");
+    }
+}
+
+static void
 mainInitialize(void)
 {
     if (opt_catch_signals) {
@@ -433,14 +462,7 @@ mainInitialize(void)
 	cachemgrInit();
 	statInit();
 	storeInit();
-	if (Config.effectiveUser) {
-	    /* we were probably started as root, so cd to a swap
-	     * directory in case we dump core */
-	    if (chdir(storeSwapDir(0)) < 0) {
-		debug(50, 0) ("%s: %s\n", storeSwapDir(0), xstrerror());
-		fatal_dump("Cannot cd to swap directory?");
-	    }
-	}
+	mainSetCwd();
 	/* after this point we want to see the mallinfo() output */
 	do_mallinfo = 1;
 	mimeInit(Config.mimeTablePathname);

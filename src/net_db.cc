@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.136 1999/01/29 21:28:16 wessels Exp $
+ * $Id: net_db.cc,v 1.137 1999/04/15 06:16:04 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -668,6 +668,8 @@ netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
     N = ++n->pings_recv;
     if (N > 5)
 	N = 5;
+    if (rtt < 1.0)
+	rtt = 1.0;
     n->hops = ((n->hops * (N - 1)) + hops) / N;
     n->rtt = ((n->rtt * (N - 1)) + rtt) / N;
     debug(38, 3) ("netdbHandlePingReply: %s; rtt=%5.1f  hops=%4.1f\n",

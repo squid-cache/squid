@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.84 1999/01/13 23:24:15 wessels Exp $
+ * $Id: store_dir.cc,v 1.85 1999/04/15 06:16:12 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -283,7 +283,7 @@ storeDirSelectSwapDir(void)
 	diru[i] = 1.1;
 	SD = &Config.cacheSwap.swapDirs[i];
 	SD->flags.selected = 0;
-	if (SD->read_only)
+	if (SD->flags.read_only)
 	    continue;
 	u = (double) SD->cur_size / SD->max_size;
 	if (u > high)
@@ -627,6 +627,8 @@ storeDirStats(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "Flags:");
 	if (SD->flags.selected)
 	    storeAppendPrintf(sentry, " SELECTED");
+	if (SD->flags.read_only)
+	    storeAppendPrintf(sentry, " READ-ONLY");
 	storeAppendPrintf(sentry, "\n");
     }
 }

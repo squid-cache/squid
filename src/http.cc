@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.346 1999/01/29 23:39:19 wessels Exp $
+ * $Id: http.cc,v 1.347 1999/04/15 06:15:58 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -42,13 +42,12 @@
 
 static const char *const crlf = "\r\n";
 
-static CNCB httpConnectDone;
 static CWCB httpSendComplete;
 static CWCB httpSendRequestEntry;
 static CWCB httpSendRequestEntryDone;
 
 static PF httpReadReply;
-static PF httpSendRequest;
+static void httpSendRequest(HttpStateData *);
 static PF httpStateFree;
 static PF httpTimeout;
 static void httpCacheNegatively(StoreEntry *);
@@ -385,6 +384,15 @@ httpPconnTransferDone(HttpStateData * httpState)
     /*
      * What does the reply have to say about keep-alive?
      */
+    /*
+     * XXX BUG?
+     * If the origin server (HTTP/1.0) does not send a keep-alive
+     * header, but keeps the connection open anyway, what happens?
+     * We'll return here and http.c waits for an EOF before changing
+     * store_status to STORE_OK.   Combine this with ENTRY_FWD_HDR_WAIT
+     * and an error status code, and we might have to wait until
+     * the server times out the socket.
+     */
     if (!reply->keep_alive)
 	return 0;
     debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
@@ -476,7 +484,7 @@ httpReadReply(int fd, void *data)
     }
     if (!httpState->reply_hdr && len > 0) {
 	/* Skip whitespace */
-	while (len > 0 && isspace(*buf))
+	while (len > 0 && xisspace(*buf))
 	    xmemmove(buf, buf + 1, len--);
 	if (len == 0) {
 	    /* Continue to read... */
@@ -523,10 +531,11 @@ httpReadReply(int fd, void *data)
 	    httpProcessReplyHeader(httpState, buf, len);
 	    if (httpState->reply_hdr_state == 2) {
 		http_status s = entry->mem_obj->reply->sline.status;
-		/* If its "successful" reply, allow the client
-		 * to get it
+		/*
+		 * If its not a reply that we will re-forward, then
+		 * allow the client to get it.
 		 */
-		if (s >= 200 && s < 300)
+		if (!fwdReforwardableStatus(s))
 		    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 	    }
 	}
@@ -582,10 +591,16 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	return;
     } else {
 	/* Schedule read reply. */
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    httpReadReply,
-	    httpState, 0);
+	commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
+	/*
+	 * Set the read timeout here because it hasn't been set yet.
+	 * We only set the read timeout after the request has been
+	 * fully written to the server-side.  If we start the timeout
+	 * after connection establishment, then we are likely to hit
+	 * the timeout for POST/PUT requests that have very large
+	 * request bodies.
+	 */
+	commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
 	commSetDefer(fd, fwdCheckDeferRead, entry);
     }
 }
@@ -789,9 +804,8 @@ httpBuildRequestPrefix(request_t * request,
 }
 /* This will be called when connect completes. Write request. */
 static void
-httpSendRequest(int fd, void *data)
+httpSendRequest(HttpStateData * httpState)
 {
-    HttpStateData *httpState = data;
     MemBuf mb;
     request_t *req = httpState->request;
     StoreEntry *entry = httpState->entry;
@@ -799,7 +813,7 @@ httpSendRequest(int fd, void *data)
     peer *p = httpState->peer;
     CWCB *sendHeaderDone;
 
-    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
+    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd, httpState);
 
     if (pumpMethod(req->method))
 	sendHeaderDone = httpSendRequestEntry;
@@ -834,9 +848,10 @@ httpSendRequest(int fd, void *data)
 	&mb,
 	cfd,
 	httpState->flags);
-    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
-    comm_write_mbuf(fd, mb, sendHeaderDone, httpState);
+    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", httpState->fd, mb.buf);
+    comm_write_mbuf(httpState->fd, mb, sendHeaderDone, httpState);
 }
+
 void
 httpStart(FwdState * fwd)
 {
@@ -886,37 +901,12 @@ httpStart(FwdState * fwd)
     comm_add_close_handler(fd, httpStateFree, httpState);
     Counter.server.all.requests++;
     Counter.server.http.requests++;
-    httpConnectDone(fd, COMM_OK, httpState);
-}
-
-static void
-httpConnectDone(int fd, int status, void *data)
-{
-    HttpStateData *httpState = data;
-    request_t *request = httpState->request;
-    StoreEntry *entry = httpState->entry;
-    ErrorState *err;
-    if (status == COMM_ERR_DNS) {
-	debug(11, 4) ("httpConnectDone: Unknown host: %s\n", request->host);
-	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->dnsserver_msg = xstrdup(dns_error_message);
-	err->request = requestLink(httpState->orig_request);
-	errorAppendEntry(entry, err);
-	comm_close(fd);
-    } else if (status != COMM_OK) {
-	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->host = xstrdup(request->host);
-	err->port = request->port;
-	err->request = requestLink(httpState->orig_request);
-	errorAppendEntry(entry, err);
-	if (httpState->peer)
-	    peerCheckConnectStart(httpState->peer);
-	comm_close(fd);
-    } else {
-	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
-	commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
-    }
+    httpSendRequest(httpState);
+    /*
+     * We used to set the read timeout here, but not any more.
+     * Now its set in httpSendComplete() after the full request,
+     * including request body, has been written to the server.
+     */
 }
 
 static void
@@ -939,6 +929,10 @@ httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void *d
 	err->xerrno = errno;
 	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
+	comm_close(fd);
+	return;
+    }
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
 	return;
     }

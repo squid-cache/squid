@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.22 1999/04/08 07:09:00 wessels Exp $
+ * $Id: rfc1123.c,v 1.23 1999/04/15 06:15:38 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -93,9 +93,9 @@ make_month(const char *s)
     int i;
     char month[3];
 
-    month[0] = toupper(*s);
-    month[1] = tolower(*(s + 1));
-    month[2] = tolower(*(s + 2));
+    month[0] = xtoupper(*s);
+    month[1] = xtolower(*(s + 1));
+    month[2] = xtolower(*(s + 2));
 
     for (i = 0; i < 12; i++)
 	if (!strncmp(month_names[i], month, 3))
@@ -119,7 +119,7 @@ parse_rfc1123(const char *str)
 	s++;			/* or: Thu, 10 Jan 1993 01:29:59 GMT */
 	while (*s == ' ')
 	    s++;
-	if (isdigit(*s) && !isdigit(*(s + 1)))	/* backoff if only one digit */
+	if (xisdigit(*s) && !xisdigit(*(s + 1)))	/* backoff if only one digit */
 	    s--;
 	if (strchr(s, '-')) {	/* First format */
 	    if ((int) strlen(s) < 18)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.24 1999/01/24 02:26:20 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.25 1999/04/15 06:15:41 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -241,7 +241,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
 	*pos = *item + strlen(*item);
     len = *pos - *item;		/* *pos points to del or '\0' */
     /* rtrim */
-    while (len > 0 && isspace((*item)[len - 1]))
+    while (len > 0 && xisspace((*item)[len - 1]))
 	len--;
     if (ilen)
 	*ilen = len;
@@ -268,7 +268,7 @@ httpHeaderParseInt(const char *start, int *value)
 {
     assert(value);
     *value = atoi(start);
-    if (!*value && !isdigit(*start)) {
+    if (!*value && !xisdigit(*start)) {
 	debug(66, 2) ("failed to parse an int header field near '%s'\n", start);
 	return 0;
     }
@@ -308,7 +308,7 @@ httpHeaderTestParser(const char *hstr)
 	    hstr = p + 1;
     }
     /* skip invalid first line if any */
-    if (isspace(*hstr)) {
+    if (xisspace(*hstr)) {
 	const char *p = strchr(hstr, '\n');
 	if (p)
 	    hstr = p + 1;
@@ -353,8 +353,8 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
     if (!strncasecmp(h1, h2, len))
 	return 0;
     while (1) {
-	const char c1 = toupper(h1[len1 += xcountws(h1 + len1)]);
-	const char c2 = toupper(h2[len2 += xcountws(h2 + len2)]);
+	const char c1 = xtoupper(h1[len1 += xcountws(h1 + len1)]);
+	const char c2 = xtoupper(h2[len2 += xcountws(h2 + len2)]);
 	if (c1 < c2)
 	    return -len1;
 	if (c1 > c2)

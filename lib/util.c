@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.65 1998/11/12 06:30:16 wessels Exp $
+ * $Id: util.c,v 1.66 1999/04/15 06:15:39 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -678,7 +678,7 @@ xcountws(const char *str)
 {
     size_t count = 0;
     if (str) {
-	while (isspace(*str)) {
+	while (xisspace(*str)) {
 	    str++;
 	    count++;
 	}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.6 1998/07/22 20:36:44 wessels Exp $
+ * $Id: HttpHdrExtField.cc,v 1.7 1999/04/15 06:15:40 wessels Exp $
  *
  * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov
@@ -73,7 +73,7 @@ httpHdrExtFieldParseCreate(const char *field_start, const char *field_end)
 
     value_start = name_end + 1;	/* skip ':' */
     /* skip white space */
-    while (value_start < field_end && isspace(*value_start))
+    while (value_start < field_end && xisspace(*value_start))
 	value_start++;
 
     return httpHdrExtFieldDoCreate(

@@ -14,9 +14,5 @@ Squid sent the following FTP command:
 and then received this reply
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
-<P>
-This might be caused by an FTP URL with an absolute path (which does
-not comply with RFC 1738).  If this is the cause, then the file
-can be found at <A HREF="%B">%B</A>.
 </P>
 

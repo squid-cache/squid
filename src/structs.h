@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.279 1999/04/15 06:03:50 wessels Exp $
+ * $Id: structs.h,v 1.280 1999/04/15 06:16:13 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -439,6 +439,7 @@ struct _SquidConfig {
     } mcast_miss;
 #endif
     HttpHeaderMask anonymize_headers;
+    char *coredump_dir;
 };
 
 struct _SquidConfig2 {
@@ -1010,7 +1011,7 @@ struct _peer {
     } htcp;
 #endif
     u_short http_port;
-    domain_ping *pinglist;
+    domain_ping *peer_domain;
     domain_type *typelist;
     acl_access *access;
     struct {
@@ -1254,12 +1255,12 @@ struct _SwapDir {
     int l2;
     int cur_size;
     int max_size;
-    int read_only;
     int suggest;
     fileMap *map;
     int swaplog_fd;
     struct {
 	unsigned int selected:1;
+	unsigned int read_only:1;
     } flags;
 };
 

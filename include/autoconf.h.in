@@ -241,11 +241,19 @@
  */
 #define USE_IDENT 1
 
+/*
+ * If your system has statvfs(), and if it actually works!
+ */
+#undef HAVE_STATVFS
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
 /* The number of bytes in a long.  */
 #undef SIZEOF_LONG
+
+/* The number of bytes in a void *.  */
+#undef SIZEOF_VOID_P
 
 /* Define if you have the bcopy function.  */
 #undef HAVE_BCOPY
@@ -264,6 +272,9 @@
 
 /* Define if you have the getpagesize function.  */
 #undef HAVE_GETPAGESIZE
+
+/* Define if you have the getrlimit function.  */
+#undef HAVE_GETRLIMIT
 
 /* Define if you have the getrusage function.  */
 #undef HAVE_GETRUSAGE
@@ -354,9 +365,6 @@
 
 /* Define if you have the srandom function.  */
 #undef HAVE_SRANDOM
-
-/* Define if you have the statvfs function.  */
-#undef HAVE_STATVFS
 
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
