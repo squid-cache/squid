@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.40 1997/04/30 22:46:26 wessels Exp $
+ * $Id: redirect.cc,v 1.41 1997/05/05 03:43:48 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -169,7 +169,6 @@ redirectHandleRead(int fd, void *data)
     redirectStateData *r = redirector->redirectState;
     char *t = NULL;
     int n;
-    int svc_time;
 
     len = read(fd,
 	redirector->inbuf + redirector->offset,
@@ -226,11 +225,10 @@ redirectHandleRead(int fd, void *data)
 	    redirector->flags &= ~REDIRECT_FLAG_BUSY;
 	    redirector->offset = 0;
 	    n = ++RedirectStats.replies;
-	    svc_time = tvSubMsec(redirector->dispatch_time, current_time);
-	    if (n > REDIRECT_AV_FACTOR)
-		n = REDIRECT_AV_FACTOR;
-	    RedirectStats.avg_svc_time
-		= (RedirectStats.avg_svc_time * (n - 1) + svc_time) / n;
+	    RedirectStats.avg_svc_time =
+		intAverage(RedirectStats.avg_svc_time,
+		tvSubMsec(redirector->dispatch_time, current_time),
+		n, REDIRECT_AV_FACTOR);
 	}
     }
     while ((redirector = GetFirstAvailable()) && (r = Dequeue()))

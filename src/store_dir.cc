@@ -190,10 +190,12 @@ storeDirMapBitReset(int fn)
 int
 storeDirMapAllocate(void)
 {
+    int fn;
     int dirn = storeMostFreeSwapDir();
     SwapDir *SD = &SwapDirs[dirn];
     int filn = file_map_allocate(SD->map, SD->suggest);
-    return (dirn << SWAP_DIR_SHIFT) | (filn & SWAP_FILE_MASK);
+    fn = (dirn << SWAP_DIR_SHIFT) | (filn & SWAP_FILE_MASK);
+    return fn;
 }
 
 char *
@@ -314,7 +316,7 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
     if (SD->swaplog_fd >= 0)
 	file_close(SD->swaplog_fd);
     /* open a write-only FD for the new log */
-    fd = file_open(new_path, O_WRONLY | O_CREAT, NULL, NULL);
+    fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL);
     if (fd < 0) {
 	debug(50, 1, "%s: %s\n", new_path, xstrerror());
 	fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");

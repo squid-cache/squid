@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.138 1997/05/01 04:25:41 wessels Exp $
+ * $Id: neighbors.cc,v 1.139 1997/05/05 03:43:47 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -586,11 +586,9 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
     n = ++p->stats.pings_acked;
     if ((icp_opcode) header->opcode <= ICP_OP_END)
 	p->stats.counts[header->opcode]++;
-    if (n > RTT_AV_FACTOR)
-	n = RTT_AV_FACTOR;
     if (mem) {
 	rtt = tvSubMsec(mem->start_ping, current_time);
-	p->stats.rtt = (p->stats.rtt * (n - 1) + rtt) / n;
+	p->stats.rtt = intAverage(p->stats.rtt, rtt, n, RTT_AV_FACTOR);
 	p->icp_version = (int) header->version;
     }
 }
@@ -1090,16 +1088,11 @@ peerCountMcastPeersDone(void *data)
     ps_state *psstate = data;
     peer *p = psstate->callback_data;
     StoreEntry *fake = psstate->entry;
-    double old;
-    double new;
-    double D;
     p->mcast.flags &= ~PEER_COUNTING;
-    D = (double) ++p->mcast.n_times_counted;
-    if (D > 10.0)
-	D = 10.0;
-    old = p->mcast.avg_n_members;
-    new = (double) psstate->icp.n_recv;
-    p->mcast.avg_n_members = (old * (D - 1.0) + new) / D;
+    p->mcast.avg_n_members = doubleAverage(p->mcast.avg_n_members,
+	(double) psstate->icp.n_recv,
+	++p->mcast.n_times_counted,
+	10);
     debug(15, 1, "Group %s: %d replies, %4.1f average\n",
 	p->host,
 	psstate->icp.n_recv,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.103 1997/05/02 21:34:17 wessels Exp $
+ * $Id: tools.cc,v 1.104 1997/05/05 03:43:50 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -174,7 +174,7 @@ mail_warranty(void)
 }
 
 static void
-dumpMallocStats(FILE * f)
+dumpMallocStats()
 {
 #if HAVE_MALLINFO
     struct mallinfo mp;
@@ -182,37 +182,37 @@ dumpMallocStats(FILE * f)
     if (!do_mallinfo)
 	return;
     mp = mallinfo();
-    fprintf(f, "Memory usage for %s via mallinfo():\n", appname);
-    fprintf(f, "\ttotal space in arena:  %6d KB\n",
+    fprintf(debug_log, "Memory usage for %s via mallinfo():\n", appname);
+    fprintf(debug_log, "\ttotal space in arena:  %6d KB\n",
 	mp.arena >> 10);
-    fprintf(f, "\tOrdinary blocks:       %6d KB %6d blks\n",
+    fprintf(debug_log, "\tOrdinary blocks:       %6d KB %6d blks\n",
 	mp.uordblks >> 10, mp.ordblks);
-    fprintf(f, "\tSmall blocks:          %6d KB %6d blks\n",
+    fprintf(debug_log, "\tSmall blocks:          %6d KB %6d blks\n",
 	mp.usmblks >> 10, mp.smblks);
-    fprintf(f, "\tHolding blocks:        %6d KB %6d blks\n",
+    fprintf(debug_log, "\tHolding blocks:        %6d KB %6d blks\n",
 	mp.hblkhd >> 10, mp.hblks);
-    fprintf(f, "\tFree Small blocks:     %6d KB\n",
+    fprintf(debug_log, "\tFree Small blocks:     %6d KB\n",
 	mp.fsmblks >> 10);
-    fprintf(f, "\tFree Ordinary blocks:  %6d KB\n",
+    fprintf(debug_log, "\tFree Ordinary blocks:  %6d KB\n",
 	mp.fordblks >> 10);
     t = mp.uordblks + mp.usmblks + mp.hblkhd;
-    fprintf(f, "\tTotal in use:          %6d KB %d%%\n",
+    fprintf(debug_log, "\tTotal in use:          %6d KB %d%%\n",
 	t >> 10, percent(t, mp.arena));
     t = mp.fsmblks + mp.fordblks;
-    fprintf(f, "\tTotal free:            %6d KB %d%%\n",
+    fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
 	t >> 10, percent(t, mp.arena));
 #if HAVE_EXT_MALLINFO
-    fprintf(f, "\tmax size of small blocks:\t%d\n",
+    fprintf(debug_log, "\tmax size of small blocks:\t%d\n",
 	mp.mxfast);
-    fprintf(f, "\tnumber of small blocks in a holding block:\t%d\n",
+    fprintf(debug_log, "\tnumber of small blocks in a holding block:\t%d\n",
 	mp.nlblks);
-    fprintf(f, "\tsmall block rounding factor:\t%d\n",
+    fprintf(debug_log, "\tsmall block rounding factor:\t%d\n",
 	mp.grain);
-    fprintf(f, "\tspace (including overhead) allocated in ord. blks:\t%d\n",
+    fprintf(debug_log, "\tspace (including overhead) allocated in ord. blks:\t%d\n",
 	mp.uordbytes);
-    fprintf(f, "\tnumber of ordinary blocks allocated:\t%d\n",
+    fprintf(debug_log, "\tnumber of ordinary blocks allocated:\t%d\n",
 	mp.allocated);
-    fprintf(f, "\tbytes used in maintaining the free tree:\t%d\n",
+    fprintf(debug_log, "\tbytes used in maintaining the free tree:\t%d\n",
 	mp.treeoverhead);
 #endif /* HAVE_EXT_MALLINFO */
 #if PRINT_MMAP
@@ -221,8 +221,8 @@ dumpMallocStats(FILE * f)
 #endif /* HAVE_MALLINFO */
 }
 
-static int
-PrintRusage(void (*f) (void), FILE * lf)
+static void
+PrintRusage(void)
 {
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     struct rusage rusage;
@@ -234,21 +234,17 @@ PrintRusage(void (*f) (void), FILE * lf)
 #ifdef _SQUID_SOLARIS_
     leave_suid();
 #endif
-    fprintf(lf, "CPU Usage: user %d sys %d\n",
+    fprintf(debug_log, "CPU Usage: user %d sys %d\n",
 	(int) rusage.ru_utime.tv_sec, (int) rusage.ru_stime.tv_sec);
 #if defined(_SQUID_SGI_) || defined(_SQUID_OSF_) || defined(BSD4_4)
-    fprintf(lf, "Maximum Resident Size: %ld KB\n", rusage.ru_maxrss);
+    fprintf(debug_log, "Maximum Resident Size: %ld KB\n", rusage.ru_maxrss);
 #else /* _SQUID_SGI_ */
-    fprintf(lf, "Maximum Resident Size: %ld KB\n",
+    fprintf(debug_log, "Maximum Resident Size: %ld KB\n",
 	(rusage.ru_maxrss * getpagesize()) >> 10);
 #endif /* _SQUID_SGI_ */
-    fprintf(lf, "Page faults with physical i/o: %ld\n",
+    fprintf(debug_log, "Page faults with physical i/o: %ld\n",
 	rusage.ru_majflt);
 #endif /* HAVE_GETRUSAGE */
-    dumpMallocStats(lf);
-    if (f)
-	f();
-    return 0;
 }
 
 void
@@ -288,7 +284,8 @@ death(int sig)
 #endif
     releaseServerSockets();
     storeWriteCleanLogs();
-    PrintRusage(NULL, debug_log);
+    PrintRusage();
+    dumpMallocStats();
     if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
 	/* skip if more than 10 days old */
 	if (Config.adminEmail)
@@ -356,13 +353,13 @@ normal_shutdown(void)
     releaseServerSockets();
     unlinkdClose();
     storeWriteCleanLogs();
-    PrintRusage(NULL, debug_log);
+    PrintRusage();
+    dumpMallocStats();
     storeCloseLog();
     statCloseLog();
 #if PURIFY
     configFreeMemory();
     storeFreeMemory();
-    fdFreeMemory();
     dnsFreeMemory();
     redirectFreeMemory();
     errorpageFreeMemory();
@@ -371,6 +368,11 @@ normal_shutdown(void)
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
 #endif
+    file_close(0);
+    file_close(1);
+    file_close(2);
+    fdDumpOpen();
+    fdFreeMemory();
     debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     fclose(debug_log);
@@ -388,7 +390,8 @@ fatal_common(const char *message)
     fprintf(debug_log, "Squid Cache (Version %s): Terminated abnormally.\n",
 	version_string);
     fflush(debug_log);
-    PrintRusage(NULL, debug_log);
+    PrintRusage();
+    dumpMallocStats();
 }
 
 /* fatal */
@@ -582,24 +585,27 @@ no_suid(void)
 void
 writePidFile(void)
 {
-    FILE *pid_fp = NULL;
+    int fd;
     const char *f = NULL;
     mode_t old_umask;
-
-    if ((f = Config.pidFilename) == NULL || !strcmp(Config.pidFilename, "none"))
+    char buf[32];
+    if ((f = Config.pidFilename) == NULL)
+	return;
+    if (!strcmp(Config.pidFilename, "none"))
 	return;
     enter_suid();
     old_umask = umask(022);
-    pid_fp = fopen(f, "w");
+    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL);
     umask(old_umask);
     leave_suid();
-    if (pid_fp != NULL) {
-	fprintf(pid_fp, "%d\n", (int) getpid());
-	fclose(pid_fp);
-    } else {
-	debug(50, 0, "WARNING: Could not write pid file\n");
-	debug(50, 0, "         %s: %s\n", f, xstrerror());
+    if (fd < 0) {
+	debug(50, 0, "%s: %s\n", f, xstrerror());
+	debug_trap("Could not write pid file");
+	return;
     }
+    sprintf(buf, "%d\n", (int) getpid());
+    write(fd, buf, strlen(buf));
+    file_close(fd);
 }
 
 
@@ -607,11 +613,11 @@ pid_t
 readPidFile(void)
 {
     FILE *pid_fp = NULL;
-    const char *f = NULL;
+    const char *f = Config.pidFilename;
     pid_t pid = -1;
     int i;
 
-    if ((f = Config.pidFilename) == NULL || !strcmp(Config.pidFilename, "none")) {
+    if (f == NULL || !strcmp(Config.pidFilename, "none")) {
 	fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
 	exit(1);
     }
@@ -730,4 +736,19 @@ inaddrFromHostent(const struct hostent *hp)
     struct in_addr s;
     xmemcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));
     return s;
+}
+double
+doubleAverage(double cur, double new, int n, int max)
+{
+    if (n > max)
+	n = max;
+    return (cur * (n - 1)) + new / n;
+}
+
+int
+intAverage(int cur, int new, int n, int max)
+{
+    if (n > max)
+	n = max;
+    return (cur * (n - 1)) + new / n;
 }

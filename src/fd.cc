@@ -31,6 +31,12 @@ void
 fd_close(int fd)
 {
     FD_ENTRY *fde = &fd_table[fd];
+    if (fde->type == FD_FILE) {
+	if (fde->read_handler)
+	    fatal_dump("file_close: read_handler present");
+	if (fde->write_handler)
+	    fatal_dump("file_close: write_handler present");
+    }
     fdUpdateBiggest(fd, fde->open = FD_CLOSE);
     memset(fde, '\0', sizeof(FD_ENTRY));
     fde->timeout = 0;
@@ -70,5 +76,20 @@ fd_bytes(int fd, int len, unsigned int type)
 void
 fdFreeMemory(void)
 {
-	safe_free(fd_table);
+    safe_free(fd_table);
+}
+
+void
+fdDumpOpen(void)
+{
+    int i;
+    FD_ENTRY *fde;
+    for (i = 0; i < Squid_MaxFD; i++) {
+	fde = &fd_table[i];
+	if (!fde->open)
+	    continue;
+	if (i == fileno(debug_log))
+	    continue;
+	debug(5, 1, "Open FD %4d %s\n", i, fde->desc);
+    }
 }

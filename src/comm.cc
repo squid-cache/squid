@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.149 1997/05/02 21:34:04 wessels Exp $
+ * $Id: comm.cc,v 1.150 1997/05/05 03:43:38 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -753,7 +753,7 @@ comm_select(time_t sec)
 	    if (shutdown_pending > 0 || reread_pending > 0)
 		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
-		setSocketShutdownLifetimes(0);
+		setSocketShutdownLifetimes(1);
 	}
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
@@ -1383,15 +1383,13 @@ commHandleWrite(int fd, void *data)
 /* Select for Writing on FD, until SIZE bytes are sent.  Call
  * * HANDLER when complete. */
 void
-comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE *free_func)
+comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
 {
     CommWriteStateData *state = NULL;
     debug(5, 5, "comm_write: FD %d: sz %d: hndl %p: data %p.\n",
 	fd, size, handler, handler_data);
-    if (fd_table[fd].rwstate) {
-	debug(5, 1, "WARNING: FD %d: A comm_write is already active.\n", fd);
-	CommWriteStateCallbackAndFree(fd, COMM_ERROR);
-    }
+    if (fd_table[fd].rwstate)
+	fatal_dump("comm_write: comm_write is already active");
     state = xcalloc(1, sizeof(CommWriteStateData));
     state->buf = buf;
     state->size = size;

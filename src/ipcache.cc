@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.113 1997/04/30 20:06:31 wessels Exp $
+ * $Id: ipcache.cc,v 1.114 1997/05/05 03:43:46 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -146,7 +146,7 @@ static ipcache_entry *ipcacheAddNew _PARAMS((const char *, const struct hostent 
 static void ipcacheAddHostent _PARAMS((ipcache_entry *, const struct hostent *));
 static int ipcacheHasPending _PARAMS((ipcache_entry *));
 static ipcache_entry *ipcache_get _PARAMS((const char *));
-static void dummy_handler _PARAMS((int, const ipcache_addrs *, void *));
+static IPH dummy_handler;
 static int ipcacheExpiredEntry _PARAMS((ipcache_entry *));
 static void ipcacheAddPending _PARAMS((ipcache_entry *, int fd, IPH *, void *));
 static void ipcacheEnqueue _PARAMS((ipcache_entry *));
@@ -162,6 +162,7 @@ static ipcache_addrs static_addrs;
 static HashID ip_table = 0;
 static struct ipcacheQueueData *ipcacheQueueHead = NULL;
 static struct ipcacheQueueData **ipcacheQueueTailP = &ipcacheQueueHead;
+static int queue_length = 0;
 
 static char ipcache_status_char[] =
 {
@@ -186,6 +187,7 @@ ipcacheEnqueue(ipcache_entry * i)
     new->i = i;
     *ipcacheQueueTailP = new;
     ipcacheQueueTailP = &new->next;
+    queue_length++;
 }
 
 static void *
@@ -200,6 +202,7 @@ ipcacheDequeue(void)
 	if (ipcacheQueueHead == NULL)
 	    ipcacheQueueTailP = &ipcacheQueueHead;
 	safe_free(old);
+	queue_length--;
     }
     if (i && i->status != IP_PENDING)
 	debug_trap("ipcacheDequeue: status != IP_PENDING");
@@ -546,7 +549,6 @@ ipcache_dnsHandleRead(int fd, void *data)
 {
     dnsserver_t *dnsData = data;
     int len;
-    int svc_time;
     int n;
     ipcache_entry *i = NULL;
     ipcache_entry *x = NULL;
@@ -585,11 +587,9 @@ ipcache_dnsHandleRead(int fd, void *data)
 	fatal_dump("ipcache_dnsHandleRead: bad status");
     if (strstr(dnsData->ip_inbuf, "$end\n")) {
 	/* end of record found */
-	svc_time = tvSubMsec(dnsData->dispatch_time, current_time);
-	if (n > IPCACHE_AV_FACTOR)
-	    n = IPCACHE_AV_FACTOR;
-	IpcacheStats.avg_svc_time
-	    = (IpcacheStats.avg_svc_time * (n - 1) + svc_time) / n;
+	IpcacheStats.avg_svc_time = intAverage(IpcacheStats.avg_svc_time,
+	    tvSubMsec(dnsData->dispatch_time, current_time),
+	    n, IPCACHE_AV_FACTOR);
 	if ((x = ipcache_parsebuffer(dnsData->ip_inbuf, dnsData)) == NULL) {
 	    debug(14, 0, "ipcache_dnsHandleRead: ipcache_parsebuffer failed?!\n");
 	} else {
@@ -607,11 +607,6 @@ ipcache_dnsHandleRead(int fd, void *data)
 	dnsData->data = NULL;
 	dnsData->flags &= ~DNS_FLAG_BUSY;
     }
-    /* reschedule */
-    commSetSelect(dnsData->inpipe,
-	COMM_SELECT_READ,
-	ipcache_dnsHandleRead,
-	dnsData, 0);
     ipcacheNudgeQueue();
 }
 
@@ -915,6 +910,7 @@ stat_ipcache_get(StoreEntry * sentry)
 	IpcacheStats.release_locked);
     storeAppendPrintf(sentry, "{dnsserver avg service time: %d msec}\n",
 	IpcacheStats.avg_svc_time);
+    storeAppendPrintf(sentry, "{pending queue length: %d}\n", queue_length);
     storeAppendPrintf(sentry, "}\n\n");
     storeAppendPrintf(sentry, "{IP Cache Contents:\n\n");
     storeAppendPrintf(sentry, " {%-29.29s %5s %6s %6s %1s}\n",

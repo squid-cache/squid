@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.33 1997/04/30 18:30:47 wessels Exp $
+ * $Id: dns.cc,v 1.34 1997/05/05 03:43:40 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -111,6 +111,7 @@ struct dnsQueueData {
 };
 
 static int dnsOpenServer _PARAMS((const char *command));
+static PF dnsShutdownRead;
 
 static dnsserver_t **dns_child_table = NULL;
 
@@ -370,6 +371,27 @@ dnsShutdownServers(void)
 	    NULL,		/* Handler */
 	    NULL,		/* Handler-data */
 	    xfree);
+	commSetSelect(dnsData->inpipe,
+	    COMM_SELECT_READ,
+	    dnsShutdownRead,
+	    dnsData,
+	    0);
 	dnsData->flags |= DNS_FLAG_CLOSING;
     }
+}
+
+static void
+dnsShutdownRead(int fd, void *data)
+{
+    dnsserver_t *dnsData = data;
+    debug(14, dnsData->flags & DNS_FLAG_CLOSING ? 5 : 1,
+	"FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
+	fd,
+	dnsData->id);
+    dnsData->flags = 0;
+    commSetSelect(fd,
+	COMM_SELECT_WRITE,
+	NULL,
+	NULL, 0);
+    comm_close(fd);
 }
