@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.51 1996/07/15 23:48:34 wessels Exp $
+ * $Id: main.cc,v 1.52 1996/07/19 17:35:13 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -206,6 +206,7 @@ static void mainParseOptions(argc, argv)
 	case 'm':
 #if MALLOC_DBG
 	    malloc_debug_level = atoi(optarg);
+	    /* NOTREACHED */
 	    break;
 #else
 	    fatal("Need to add -DMALLOC_DBG when compiling to use -m option");
@@ -389,17 +390,20 @@ static void mainInitialize()
     }
     squid_signal(SIGPIPE, SIG_IGN, SA_RESTART);
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
-#if USE_ASYNC_IO
-    if (first_time)
-	aio_init();
-    squid_signal(SIGIO, aioSigHandler, SA_RESTART);
-#endif
 
     if (ConfigFile == NULL)
 	ConfigFile = xstrdup(DefaultConfigFile);
     parseConfigFile(ConfigFile);
 
     leave_suid();		/* Run as non privilegied user */
+
+#if USE_ASYNC_IO
+#if HAVE_AIO_INIT
+    if (first_time)
+	aio_init();
+#endif
+    squid_signal(SIGIO, aioSigHandler, SA_RESTART);
+#endif
 
     if (httpPortNumOverride != 1)
 	setHttpPortNum((u_short) httpPortNumOverride);
@@ -592,6 +596,5 @@ int main(argc, argv)
 	}
     }
     /* NOTREACHED */
-    exit(0);
     return 0;
 }
