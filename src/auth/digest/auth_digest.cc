@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.30 2003/08/10 07:27:34 hno Exp $
+ * $Id: auth_digest.cc,v 1.31 2003/08/10 11:00:48 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -645,7 +645,7 @@ digest_request_h::authenticated() const
 /* log a digest user in
  */
 void
-digest_request_h::authenticate(request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
+digest_request_h::authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     auth_user_t *auth_user;
     digest_request_h *digest_request;
@@ -840,7 +840,7 @@ authDigestAddTrailer(auth_user_request_t * auth_user_request, HttpReply * rep, i
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-authenticateDigestFixHeader(auth_user_request_t * auth_user_request, HttpReply * rep, http_hdr_type type, request_t * request)
+authenticateDigestFixHeader(auth_user_request_t * auth_user_request, HttpReply * rep, http_hdr_type type, HttpRequest * request)
 {
     if (!digestConfig->authenticate)
         return;

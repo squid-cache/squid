@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.145 2003/06/09 04:41:36 robertc Exp $
+ * $Id: url.cc,v 1.146 2003/08/10 11:00:45 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -106,7 +106,7 @@ const char *ProtocolStr[] =
         "TOTAL"
     };
 
-static request_t *urnParse(method_t method, char *urn);
+static HttpRequest *urnParse(method_t method, char *urn);
 #if CHECK_HOSTNAMES
 static const char *const valid_hostname_chars =
 #if ALLOW_HOSTNAME_UNDERSCORES
@@ -284,14 +284,14 @@ urlDefaultPort(protocol_t p)
     }
 }
 
-request_t *
+HttpRequest *
 urlParse(method_t method, char *url)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
     LOCAL_ARRAY(char, host, MAX_URL);
     LOCAL_ARRAY(char, urlpath, MAX_URL);
-    request_t *request = NULL;
+    HttpRequest *request = NULL;
     char *t = NULL;
     char *q = NULL;
     int port;
@@ -433,7 +433,7 @@ urlParse(method_t method, char *url)
     return request;
 }
 
-static request_t *
+static HttpRequest *
 urnParse(method_t method, char *urn)
 {
     debug(50, 5) ("urnParse: %s\n", urn);
@@ -441,7 +441,7 @@ urnParse(method_t method, char *urn)
 }
 
 const char *
-urlCanonical(request_t * request)
+urlCanonical(HttpRequest * request)
 {
     LOCAL_ARRAY(char, portbuf, 32);
     LOCAL_ARRAY(char, urlbuf, MAX_URL);
@@ -480,7 +480,7 @@ urlCanonical(request_t * request)
 }
 
 char *
-urlCanonicalClean(const request_t * request)
+urlCanonicalClean(const HttpRequest * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
     LOCAL_ARRAY(char, portbuf, 32);
@@ -632,7 +632,7 @@ matchDomainName(const char *h, const char *d)
 }
 
 int
-urlCheckRequest(const request_t * r)
+urlCheckRequest(const HttpRequest * r)
 {
     int rc = 0;
     /* protocol "independent" methods */

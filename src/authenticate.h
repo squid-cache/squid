@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.12 2003/08/04 22:14:41 robertc Exp $
+ * $Id: authenticate.h,v 1.13 2003/08/10 11:00:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -121,7 +121,7 @@ public:
     virtual ~AuthUserRequestState(){}
 
     virtual int authenticated() const = 0;
-    virtual void authenticate(request_t * request, ConnStateData::Pointer conn, http_hdr_type type) = 0;
+    virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type) = 0;
     virtual int direction() = 0;
     virtual void addHeader(HttpReply * rep, int accel) {}}
 
@@ -141,8 +141,8 @@ public:
 
 public:
 
-    static auth_acl_t tryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData::Pointer, struct in_addr);
-    static void addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal);
+    static auth_acl_t tryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, struct in_addr);
+    static void addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     ~AuthUserRequest();
     void *operator new (size_t byteCount);
@@ -161,7 +161,7 @@ public:
 
 private:
 
-    static auth_acl_t authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData::Pointer conn, struct in_addr src_addr);
+    static auth_acl_t authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct in_addr src_addr);
 
     static auth_user_request_t *createAuthUser (const char *proxy_auth);
 
@@ -189,12 +189,12 @@ private:
 /* authenticate.c authenticate scheme routines typedefs */
 typedef int AUTHSACTIVE(void);
 typedef int AUTHSAUTHED(auth_user_request_t *);
-typedef void AUTHSAUTHUSER(auth_user_request_t *, request_t *, ConnStateData::Pointer, http_hdr_type);
+typedef void AUTHSAUTHUSER(auth_user_request_t *, HttpRequest *, ConnStateData::Pointer, http_hdr_type);
 typedef int AUTHSCONFIGURED(void);
 typedef void AUTHSDECODE(auth_user_request_t *, const char *);
 typedef int AUTHSDIRECTION(auth_user_request_t *);
 typedef void AUTHSDUMP(StoreEntry *, const char *, authScheme *);
-typedef void AUTHSFIXERR(auth_user_request_t *, HttpReply *, http_hdr_type, request_t *);
+typedef void AUTHSFIXERR(auth_user_request_t *, HttpReply *, http_hdr_type, HttpRequest *);
 typedef void AUTHSADDTRAILER(auth_user_request_t *, HttpReply *, int);
 typedef void AUTHSFREE(auth_user_t *);
 typedef void AUTHSFREECONFIG(authScheme *);
@@ -216,7 +216,7 @@ extern auth_user_t *authenticateAuthUserNew(const char *);
 /* AuthUserRequest */
 extern void authenticateStart(auth_user_request_t *, RH *, void *);
 
-extern auth_acl_t authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData::Pointer, struct in_addr);
+extern auth_acl_t authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, struct in_addr);
 extern void authenticateSetDenyMessage (auth_user_request_t *, char const *);
 extern size_t authenticateRequestRefCount (auth_user_request_t *);
 extern char const *authenticateAuthUserRequestMessage(auth_user_request_t *);
@@ -225,8 +225,8 @@ extern int authenticateAuthSchemeId(const char *typestr);
 extern void authenticateSchemeInit(void);
 extern void authenticateInit(authConfig *);
 extern void authenticateShutdown(void);
-extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, request_t *, int, int);
-extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, request_t *, int);
+extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, HttpRequest *, int, int);
+extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, HttpRequest *, int);
 extern void authenticateAuthUserUnlock(auth_user_t * auth_user);
 extern void authenticateAuthUserLock(auth_user_t * auth_user);
 extern void authenticateAuthUserRequestUnlock(auth_user_request_t *);

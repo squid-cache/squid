@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.63 2003/08/04 22:14:41 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.64 2003/08/10 11:00:42 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -59,7 +59,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 extern "C" CSS clientReplyStatus;
 extern ErrorState *clientBuildError(err_type, http_status, char const *,
 
-                                        struct in_addr *, request_t *);
+                                        struct in_addr *, HttpRequest *);
 
 /* privates */
 
@@ -88,7 +88,7 @@ void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, method_t method, char const *uri,
 
-    struct in_addr *addr, request_t * failedrequest, char *unparsedrequest,
+    struct in_addr *addr, HttpRequest * failedrequest, char *unparsedrequest,
     auth_user_request_t * auth_user_request)
 {
     ErrorState *errstate =
@@ -561,7 +561,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     StoreEntry *e = http->storeEntry();
 
-    request_t *r = http->request;
+    HttpRequest *r = http->request;
 
     debug(88, 3) ("clientCacheHit: %s, %ud bytes\n", http->uri, (unsigned int)result.length);
 
@@ -762,7 +762,7 @@ void
 clientReplyContext::processMiss()
 {
     char *url = http->uri;
-    request_t *r = http->request;
+    HttpRequest *r = http->request;
     ErrorState *err = NULL;
     debug(88, 4) ("clientProcessMiss: '%s %s'\n",
                   RequestMethodStr[r->method], url);
@@ -1284,7 +1284,7 @@ clientReplyContext::buildReplyHeader()
 {
     HttpHeader *hdr = &holdingReply->header;
     int is_hit = logTypeIsATcpHit(http->logType);
-    request_t *request = http->request;
+    HttpRequest *request = http->request;
 #if DONT_FILTER_THESE
     /* but you might want to if you run Squid as an HTTP accelerator */
     /* httpHeaderDelById(hdr, HDR_ACCEPT_RANGES); */
@@ -1465,7 +1465,7 @@ clientReplyContext::buildReply(const char *buf, size_t size)
 void
 clientReplyContext::identifyStoreObject()
 {
-    request_t *r = http->request;
+    HttpRequest *r = http->request;
 
     if (r->flags.cachable || r->flags.internal) {
         lookingforstore = 5;
@@ -1478,7 +1478,7 @@ void
 clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 {
     StoreEntry *e = newEntry;
-    request_t *r = http->request;
+    HttpRequest *r = http->request;
 
     if (e->isNull()) {
         http->storeEntry(NULL);
@@ -2127,7 +2127,7 @@ clientReplyContext::createStoreEntry(method_t m, request_flags flags)
 ErrorState *
 clientBuildError(err_type page_id, http_status status, char const *url,
 
-                 struct in_addr * src_addr, request_t * request)
+                 struct in_addr * src_addr, HttpRequest * request)
 {
     ErrorState *err = errorCon(page_id, status);
     err->src_addr = *src_addr;

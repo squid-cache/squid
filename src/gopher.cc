@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.183 2003/06/20 01:01:00 robertc Exp $
+ * $Id: gopher.cc,v 1.184 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -92,7 +92,7 @@ typedef struct gopher_ds
     int len;
     char *buf;			/* pts to a 4k page */
     int fd;
-    request_t *req;
+    HttpRequest *req;
     FwdState *fwdState;
     char replybuf[BUFSIZ];
 }
@@ -102,7 +102,7 @@ GopherStateData;
 static PF gopherStateFree;
 static void gopher_mime_content(MemBuf * mb, const char *name, const char *def);
 static void gopherMimeCreate(GopherStateData *);
-static void gopher_request_parse(const request_t * req,
+static void gopher_request_parse(const HttpRequest * req,
                                  char *type_id,
                                  char *request);
 static void gopherEndHTML(GopherStateData *);
@@ -225,7 +225,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 
 /* Parse a gopher request into components.  By Anawat. */
 static void
-gopher_request_parse(const request_t * req, char *type_id, char *request)
+gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
 {
     const char *path = req->urlpath.buf();
 
@@ -250,7 +250,7 @@ gopher_request_parse(const request_t * req, char *type_id, char *request)
 }
 
 int
-gopherCachable(const request_t * req)
+gopherCachable(const HttpRequest * req)
 {
     int cachable = 1;
     char type_id;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.171 2003/04/20 05:28:59 robertc Exp $
+ * $Id: net_db.cc,v 1.172 2003/08/10 11:00:44 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -65,7 +65,7 @@ typedef struct
     peer *p;
     StoreEntry *e;
     store_client *sc;
-    request_t *r;
+    HttpRequest *r;
     off_t used;
     size_t buf_sz;
     char buf[NETDB_REQBUF_SZ];
@@ -1095,7 +1095,7 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 }
 
 void
-netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
+netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -1317,7 +1317,7 @@ netdbExchangeStart(void *data)
 }
 
 peer *
-netdbClosestParent(request_t * request)
+netdbClosestParent(HttpRequest * request)
 {
 #if USE_ICMP
     peer *p = NULL;

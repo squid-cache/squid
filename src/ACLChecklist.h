@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.15 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.16 2003/08/10 11:00:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -118,7 +118,7 @@ class NullState : public AsyncState
 
     struct in_addr my_addr;
     unsigned short my_port;
-    request_t *request;
+    HttpRequest *request;
     /* for acls that look at reply data */
     HttpReply *reply;
     char rfc931[USER_IDENT_SZ];
@@ -152,7 +152,7 @@ private:
 };
 
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
-        request_t *,
+        HttpRequest *,
         const char *ident);
 SQUIDCEXTERN int aclCheckFast(const acl_access *A, ACLChecklist *);
 

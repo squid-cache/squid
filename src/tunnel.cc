@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.144 2003/08/04 22:14:42 robertc Exp $
+ * $Id: tunnel.cc,v 1.145 2003/08/10 11:00:44 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -61,7 +61,7 @@ public:
     char *url;
     char *host;			/* either request->host or proxy host */
     u_short port;
-    request_t *request;
+    HttpRequest *request;
     FwdServer *servers;
 
     class Connection
@@ -489,7 +489,7 @@ static void
 sslConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
-    request_t *request = sslState->request;
+    HttpRequest *request = sslState->request;
     ErrorState *err = NULL;
 
     if (sslState->servers->_peer)
@@ -544,7 +544,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
     ErrorState *err = NULL;
     int answer;
     int fd = http->getConn()->fd;
-    request_t *request = http->request;
+    HttpRequest *request = http->request;
     char *url = http->uri;
     /*
      * client_addr == no_addr indicates this is an "internal" request
@@ -669,7 +669,7 @@ static void
 sslPeerSelectComplete(FwdServer * fs, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
-    request_t *request = sslState->request;
+    HttpRequest *request = sslState->request;
     peer *g = NULL;
 
     if (fs == NULL) {

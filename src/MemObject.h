@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.7 2003/08/10 05:11:22 robertc Exp $
+ * $Id: MemObject.h,v 1.8 2003/08/10 11:00:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -112,7 +112,7 @@ public:
     SwapOut swapout;
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
-    request_t *request;
+    HttpRequest *request;
 
     struct timeval start_ping;
     IRCB *ping_reply_callback;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.43 2003/07/23 10:41:20 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.44 2003/08/10 11:00:40 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -504,7 +504,7 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
  * Returns 1 if the header is allowed.
  */
 static int
-httpHdrMangle(HttpHeaderEntry * e, request_t * request)
+httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request)
 {
     int retval;
 
@@ -536,7 +536,7 @@ httpHdrMangle(HttpHeaderEntry * e, request_t * request)
 
 /* Mangles headers for a list of headers. */
 void
-httpHdrMangleList(HttpHeader * l, request_t * request)
+httpHdrMangleList(HttpHeader * l, HttpRequest * request)
 {
     HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.29 2003/02/21 22:50:06 robertc Exp $
+ * $Id: cache_manager.cc,v 1.30 2003/08/10 11:00:42 robertc Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ action_table;
 
 static action_table *cachemgrFindAction(const char *action);
 static cachemgrStateData *cachemgrParseUrl(const char *url);
-static void cachemgrParseHeaders(cachemgrStateData * mgr, const request_t * request);
+static void cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
 static int cachemgrCheckPassword(cachemgrStateData *);
 static void cachemgrStateFree(cachemgrStateData * mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
@@ -175,7 +175,7 @@ cachemgrParseUrl(const char *url)
 }
 
 static void
-cachemgrParseHeaders(cachemgrStateData * mgr, const request_t * request)
+cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
 {
     const char *basic_cookie;	/* base 64 _decoded_ user:passwd pair */
     const char *passwd_del;
@@ -241,7 +241,7 @@ cachemgrStateFree(cachemgrStateData * mgr)
 }
 
 void
-cachemgrStart(int fd, request_t * request, StoreEntry * entry)
+cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;

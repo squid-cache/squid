@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.189 2003/07/09 14:14:58 hno Exp $
+ * $Id: errorpage.cc,v 1.190 2003/08/10 11:00:42 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -275,9 +275,9 @@ errorPageId(const char *page_name)
             return i;
     }
 
-    for (size_t i = 0; i < ErrorDynamicPages.size(); i++) {
-        if (strcmp(ErrorDynamicPages.items[i]->page_name, page_name) == 0)
-            return i + ERR_MAX;
+    for (size_t j = 0; j < ErrorDynamicPages.size(); j++) {
+        if (strcmp(ErrorDynamicPages.items[j]->page_name, page_name) == 0)
+            return j + ERR_MAX;
     }
 
     return ERR_NONE;
@@ -483,7 +483,7 @@ errorStateFree(ErrorState * err)
 static int
 errorDump(ErrorState * err, MemBuf * mb)
 {
-    request_t *r = err->request;
+    HttpRequest *r = err->request;
     MemBuf str = MemBufNULL;
     const char *p = NULL;	/* takes priority over mb if set */
     memBufReset(&str);
@@ -592,7 +592,7 @@ errorDump(ErrorState * err, MemBuf * mb)
 static const char *
 errorConvert(char token, ErrorState * err)
 {
-    request_t *r = err->request;
+    HttpRequest *r = err->request;
     static MemBuf mb = MemBufNULL;
     const char *p = NULL;	/* takes priority over mb if set */
     int do_quote = 1;

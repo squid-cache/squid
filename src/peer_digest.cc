@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.98 2003/08/04 22:14:42 robertc Exp $
+ * $Id: peer_digest.cc,v 1.99 2003/08/10 11:00:44 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -297,7 +297,7 @@ peerDigestRequest(PeerDigest * pd)
     StoreEntry *e, *old_e;
     char *url;
     const cache_key *key;
-    request_t *req;
+    HttpRequest *req;
     DigestFetchState *fetch = NULL;
     StoreIOBuffer tempBuffer;
 
@@ -534,7 +534,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         /* this "if" is based on clientHandleIMSReply() */
 
         if (status == HTTP_NOT_MODIFIED) {
-            request_t *r = NULL;
+            HttpRequest *r = NULL;
             /* our old entry is fine */
             assert(fetch->old_entry);
 

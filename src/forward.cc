@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.108 2003/08/10 05:11:22 robertc Exp $
+ * $Id: forward.cc,v 1.109 2003/08/10 11:00:43 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -267,7 +267,7 @@ fwdNegotiateSSL(int fd, void *data)
     SSL *ssl = fd_table[fd].ssl;
     int ret;
     ErrorState *err;
-    request_t *request = fwdState->request;
+    HttpRequest *request = fwdState->request;
 
     if ((ret = SSL_connect(ssl)) <= 0) {
         int ssl_error = SSL_get_error(ssl, ret);
@@ -380,7 +380,7 @@ fwdConnectDone(int server_fd, comm_err_t status, int xerrno, void *data)
     FwdState *fwdState = (FwdState *)data;
     FwdServer *fs = fwdState->servers;
     ErrorState *err;
-    request_t *request = fwdState->request;
+    HttpRequest *request = fwdState->request;
     assert(fwdState->server_fd == server_fd);
 
     if (status == COMM_ERR_DNS) {
@@ -510,7 +510,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 struct in_addr
-            getOutgoingAddr(request_t * request)
+            getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
 
@@ -526,7 +526,7 @@ struct in_addr
 }
 
 unsigned long
-getOutgoingTOS(request_t * request)
+getOutgoingTOS(HttpRequest * request)
 {
     ACLChecklist ch;
 
@@ -668,7 +668,7 @@ static void
 fwdDispatch(FwdState * fwdState)
 {
     peer *p = NULL;
-    request_t *request = fwdState->request;
+    HttpRequest *request = fwdState->request;
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
     FwdServer *fs = fwdState->servers;
@@ -833,7 +833,7 @@ fwdServersFree(FwdServer ** FS)
 }
 
 void
-fwdStart(int fd, StoreEntry * e, request_t * r)
+fwdStart(int fd, StoreEntry * e, HttpRequest * r)
 {
     FwdState *fwdState;
     int answer;

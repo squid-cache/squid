@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.130 2003/07/14 14:16:00 robertc Exp $
+ * $Id: peer_select.cc,v 1.131 2003/08/10 11:00:44 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -121,7 +121,7 @@ peerSelectStateFree(ps_state * psstate)
 }
 
 static int
-peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
+peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
 {
     int n;
     assert(entry);
@@ -145,7 +145,7 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
 
 
 void
-peerSelect(request_t * request,
+peerSelect(HttpRequest * request,
            StoreEntry * entry,
            PSC * callback,
            void *callback_data)
@@ -286,7 +286,7 @@ static void
 peerSelectFoo(ps_state * ps)
 {
     StoreEntry *entry = ps->entry;
-    request_t *request = ps->request;
+    HttpRequest *request = ps->request;
     debug(44, 3) ("peerSelectFoo: '%s %s'\n",
                   RequestMethodStr[request->method],
                   request->host);
@@ -380,7 +380,7 @@ static void
 peerGetSomeNeighbor(ps_state * ps)
 {
     StoreEntry *entry = ps->entry;
-    request_t *request = ps->request;
+    HttpRequest *request = ps->request;
     peer *p;
     hier_code code = HIER_NONE;
     assert(entry->ping_status == PING_NONE);
@@ -444,7 +444,7 @@ peerGetSomeNeighbor(ps_state * ps)
 static void
 peerGetSomeNeighborReplies(ps_state * ps)
 {
-    request_t *request = ps->request;
+    HttpRequest *request = ps->request;
     peer *p = NULL;
     hier_code code = HIER_NONE;
     assert(ps->entry->ping_status == PING_WAITING);
@@ -503,7 +503,7 @@ static void
 peerGetSomeParent(ps_state * ps)
 {
     peer *p;
-    request_t *request = ps->request;
+    HttpRequest *request = ps->request;
     hier_code code = HIER_NONE;
     debug(44, 3) ("peerGetSomeParent: %s %s\n",
                   RequestMethodStr[request->method],
@@ -542,7 +542,7 @@ static void
 peerGetAllParents(ps_state * ps)
 {
     peer *p;
-    request_t *request = ps->request;
+    HttpRequest *request = ps->request;
     /* Add all alive parents */
 
     for (p = Config.peers; p; p = p->next) {

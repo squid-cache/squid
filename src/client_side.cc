@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.653 2003/08/10 03:59:19 robertc Exp $
+ * $Id: client_side.cc,v 1.654 2003/08/10 11:00:42 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -132,7 +132,7 @@ static IDCB clientIdentDone;
 static CSCB clientSocketRecipient;
 static CSD clientSocketDetach;
 static void clientSetKeepaliveFlag(clientHttpRequest *);
-static int clientIsContentLengthValid(request_t * r);
+static int clientIsContentLengthValid(HttpRequest * r);
 static bool okToAccept();
 static int clientIsRequestBodyValid(int bodyLength);
 static int clientIsRequestBodyTooLargeForPolicy(size_t bodyLength);
@@ -152,14 +152,14 @@ private:
     ConnStateData::Pointer conn;
     char *buf;
     CBCB *callback;
-    request_t *request;
+    HttpRequest *request;
 };
 
 static void clientUpdateStatHistCounters(log_type logType, int svc_time);
 static void clientUpdateStatCounters(log_type logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
-static void clientPrepareLogWithRequestDetails(request_t *, AccessLogEntry *);
+static void clientPrepareLogWithRequestDetails(HttpRequest *, AccessLogEntry *);
 static int connIsUsable(ConnStateData::Pointer conn);
 static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &recievedData);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData::Pointer & conn);
@@ -457,7 +457,7 @@ ClientHttpRequest::updateCounters()
 }
 
 void
-clientPrepareLogWithRequestDetails(request_t * request, AccessLogEntry * aLogEntry)
+clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
 {
     assert(request);
     assert(aLogEntry);
@@ -645,7 +645,7 @@ ConnStateData::~ConnStateData()
 static void
 clientSetKeepaliveFlag(clientHttpRequest * http)
 {
-    request_t *request = http->request;
+    HttpRequest *request = http->request;
     const HttpHeader *req_hdr = &request->header;
 
     debug(33, 3) ("clientSetKeepaliveFlag: http_ver = %d.%d\n",
@@ -666,7 +666,7 @@ clientSetKeepaliveFlag(clientHttpRequest * http)
 }
 
 static int
-clientIsContentLengthValid(request_t * r)
+clientIsContentLengthValid(HttpRequest * r)
 {
     switch (r->method) {
 
@@ -1059,7 +1059,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 {
     HttpHeader *hdr = rep ? &rep->header : 0;
     const char *range_err = NULL;
-    request_t *request = http->request;
+    HttpRequest *request = http->request;
     assert(request->range);
     /* check if we still want to do ranges */
 
@@ -2091,7 +2091,7 @@ static void
 clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context, method_t method, char *prefix, size_t req_line_sz)
 {
     clientHttpRequest *http = context->http;
-    request_t *request = NULL;
+    HttpRequest *request = NULL;
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
     connNoteUseOfBuffer(conn, http->req_sz);
@@ -2383,7 +2383,7 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 
 /* file_read like function, for reading body content */
 void
-clientReadBody(request_t * request, char *buf, size_t size, CBCB * callback,
+clientReadBody(HttpRequest * request, char *buf, size_t size, CBCB * callback,
                void *cbdata)
 {
     ConnStateData::Pointer conn = request->body_connection;
@@ -2517,7 +2517,7 @@ clientReadBodyAbortHandler(char *buf, ssize_t size, void *data)
 
 /* Abort a body request */
 int
-clientAbortBody(request_t * request)
+clientAbortBody(HttpRequest * request)
 {
     ConnStateData::Pointer conn = request->body_connection;
     char *buf;
@@ -2967,7 +2967,7 @@ clientHttpConnectionsClose(void)
 }
 
 int
-varyEvaluateMatch(StoreEntry * entry, request_t * request)
+varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
     const char *vary = request->vary_headers;
     int has_vary = httpHeaderHas(&entry->getReply()->header, HDR_VARY);

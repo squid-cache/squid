@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.27 2003/07/14 14:16:21 robertc Exp $
+ * $Id: auth_basic.cc,v 1.28 2003/08/10 11:00:48 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -183,7 +183,7 @@ authenticateBasiccmpUsername(basic_data * u1, basic_data * u2)
 /* log a basic user in
  */
 static void
-authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData::Pointer conn, http_hdr_type type)
+authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
 {
     auth_user_t *auth_user;
     basic_data *basic_auth;
@@ -246,7 +246,7 @@ authenticateBasicDirection(auth_user_request_t * auth_user_request)
 }
 
 void
-authenticateBasicFixErrorHeader(auth_user_request_t * auth_user_request, HttpReply * rep, http_hdr_type type, request_t * request)
+authenticateBasicFixErrorHeader(auth_user_request_t * auth_user_request, HttpReply * rep, http_hdr_type type, HttpRequest * request)
 {
     if (basicConfig->authenticate) {
         debug(29, 9) ("authenticateFixErrorHeader: Sending type:%d header: 'Basic realm=\"%s\"'\n", type, basicConfig->basicAuthRealm);

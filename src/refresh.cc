@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.62 2003/07/14 14:16:02 robertc Exp $
+ * $Id: refresh.cc,v 1.63 2003/08/10 11:00:44 robertc Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -237,7 +237,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
  *  note: request maybe null (e.g. for cache digests build)
  */
 static int
-refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
+refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 {
     const refresh_t *R;
     const char *uri = NULL;
@@ -430,7 +430,7 @@ refreshIsCachable(const StoreEntry * entry)
  * refreshCheck() function above */
 
 int
-refreshCheckHTTP(const StoreEntry * entry, request_t * request)
+refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
 {
     int reason = refreshCheck(entry, request, 0);
     refreshCounts[rcHTTP].total++;
@@ -439,7 +439,7 @@ refreshCheckHTTP(const StoreEntry * entry, request_t * request)
 }
 
 int
-refreshCheckICP(const StoreEntry * entry, request_t * request)
+refreshCheckICP(const StoreEntry * entry, HttpRequest * request)
 {
     int reason = refreshCheck(entry, request, 30);
     refreshCounts[rcICP].total++;
@@ -449,7 +449,7 @@ refreshCheckICP(const StoreEntry * entry, request_t * request)
 
 #if USE_HTCP
 int
-refreshCheckHTCP(const StoreEntry * entry, request_t * request)
+refreshCheckHTCP(const StoreEntry * entry, HttpRequest * request)
 {
     int reason = refreshCheck(entry, request, 10);
     refreshCounts[rcHTCP].total++;

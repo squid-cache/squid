@@ -58,7 +58,7 @@ public:
     ~digest_request_h();
 
     int authenticated() const;
-    virtual void authenticate(request_t * request, ConnStateData::Pointer conn, http_hdr_type type);
+    virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
     virtual int direction();
     virtual void addHeader(HttpReply * rep, int accel);
 

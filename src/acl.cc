@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.310 2003/08/04 22:14:41 robertc Exp $
+ * $Id: acl.cc,v 1.311 2003/08/10 11:00:40 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -523,7 +523,7 @@ aclCheckFast(const acl_access * A, ACLChecklist * checklist)
 
 
 ACLChecklist *
-aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
+aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *ident)
 {
     ACLChecklist *checklist = new ACLChecklist;
 
