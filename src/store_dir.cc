@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.51 1998/02/10 18:06:22 wessels Exp $
+ * $Id: store_dir.cc,v 1.52 1998/02/11 03:14:39 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -94,7 +94,7 @@ storeSwapSubSubDir(int fn, char *fullpath)
     return fullpath;
 }
 
-static void 
+static void
 storeCreateDirectory(const char *path, int lvl)
 {
     struct stat st;
