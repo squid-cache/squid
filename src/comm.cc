@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.137 1997/02/19 17:06:51 wessels Exp $
+ * $Id: comm.cc,v 1.138 1997/02/23 06:01:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1158,6 +1158,7 @@ comm_join_mcast_groups(int fd)
     const ipcache_addrs *ia = NULL;
     int i;
     int x;
+    char c = 0;
     for (s = Config.mcast_group_list; s; s = s->next) {
 	debug(5, 10, "comm_join_mcast_groups: joining group %s on FD %d\n",
 	    s->key, fd);
@@ -1174,6 +1175,12 @@ comm_join_mcast_groups(int fd)
 	    if (x < 0)
 		debug(5, 1, "comm_join_mcast_groups: FD %d, addr: %s [%s]\n",
 		    fd, s->key, inet_ntoa(*(ia->in_addrs + i)));
+	    x = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1);
+	    if (x < 0)
+		debug(5, 1,
+		    "comm_join_mcast_groups: can't disable m'cast loopback: %s\n",
+		    xstrerror());
+
 	}
     }
 #endif
