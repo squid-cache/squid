@@ -120,6 +120,7 @@ AUFSFile::~AUFSFile()
 void
 AUFSFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
 {
+    statCounter.syscalls.disk.opens++;
 #if !ASYNC_OPEN
     fd = file_open(path_, flags);
     if (fd < 0) {
@@ -142,6 +143,7 @@ AUFSFile::read(char *buf, off_t offset, size_t size)
 {
     assert (fd > -1);
     assert (ioRequestor.getRaw());
+    statCounter.syscalls.disk.reads++;
 #if ASYNC_READ
     aioRead(fd, offset, size, ReadDone, this);
 #else
@@ -152,6 +154,7 @@ AUFSFile::read(char *buf, off_t offset, size_t size)
 void
 AUFSFile::create (int flags, mode_t mode, IORequestor::Pointer callback)
 {
+    statCounter.syscalls.disk.opens++;
 #if !ASYNC_CREATE
     int fd = file_open(path_, flags);
     if (fd < 0) {
@@ -209,6 +212,7 @@ AUFSFile::openDone(int unused, const char *unused2, int anFD, int errflag)
 void AUFSFile::doClose()
 {
     if (fd > -1) {
+	statCounter.syscalls.disk.closes++;
 	aioClose(fd);
 	fd_close(fd);
 	store_open_disk_fd--;
@@ -260,6 +264,7 @@ void
 AUFSFile::write(char const *buf, size_t size, off_t offset, FREE *free_func)
 {
     debug(79, 3) ("storeAufsWrite: FD %d\n", fd);
+    statCounter.syscalls.disk.writes++;
 #if ASYNC_WRITE
     aioWrite(fd, offset, (char *)buf, size, WriteDone, this,
 	free_func);
@@ -279,6 +284,7 @@ void
 AUFSSwapDir::unlink(StoreEntry & e)
 {
     debug(79, 3) ("storeAufsUnlink: dirno %d, fileno %08X\n", index, e.swap_filen);
+    statCounter.syscalls.disk.unlinks++;
     replacementRemove(&e);
     mapBitReset(e.swap_filen);
     UFSSwapDir::unlinkFile(e.swap_filen);
