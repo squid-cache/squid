@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.34 1998/12/05 00:54:44 wessels Exp $
+ * $Id: store_digest.cc,v 1.35 1999/09/07 22:15:11 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -222,9 +222,19 @@ storeDigestAddable(const StoreEntry * e)
 	    StoreDigestRebuildPeriod);
 	return 0;
     }
-    /* idea: how about also skipping very fresh (thus, potentially unstable) 
-     * entries? Should be configurable through cd_refresh_pattern, of course */
-
+    /*
+     * idea: how about also skipping very fresh (thus, potentially
+     * unstable) entries? Should be configurable through
+     * cd_refresh_pattern, of course.
+     */
+    /*
+     * idea: skip objects that are going to be purged before the next
+     * update.
+     */
+#if !HEAP_REPLACEMENT
+    if ((squid_curtime + StoreDigestRebuildPeriod) - e->lastref > storeExpiredReferenceAge())
+	return 0;
+#endif
     return 1;
 }
 
