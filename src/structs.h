@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.391 2001/06/29 14:37:51 hno Exp $
+ * $Id: structs.h,v 1.392 2001/06/29 14:48:06 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1455,7 +1455,7 @@ struct _MemObject {
 #if URL_CHECKSUM_DEBUG
     unsigned int chksum;
 #endif
-    char *vary_headers;
+    const char *vary_headers;
 };
 
 struct _StoreEntry {
@@ -1608,7 +1608,7 @@ struct _request_t {
     err_type err_type;
     char *peer_login;		/* Configured peer login:password */
     time_t lastmod;		/* Used on refreshes */
-    char *vary_headers;		/* Used when varying entities are detected. Changes how the store key is calculated */
+    const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
 };
 
 struct _cachemgr_passwd {
