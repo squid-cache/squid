@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.326 2004/10/26 00:10:38 hno Exp $
+#  $Id: Makefile.in,v 1.327 2004/12/10 01:10:38 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -285,6 +285,8 @@ ESI_ALL_SOURCE = \
 	ESIInclude.cc \
 	ESIInclude.h \
 	ESILiteral.h \
+	ESILibxml2Parser.cc \
+	ESILibxml2Parser.h \
 	ESIParser.cc \
 	ESIParser.h \
 	ESISegment.cc \
@@ -345,7 +347,7 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 SUBDIRS = fs repl auth
 
-INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
+INCLUDES = -I/usr/include/libxml2 -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 
 EXTRA_PROGRAMS = \
 	unlinkd \
@@ -1094,13 +1096,14 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
 	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
 	ESIExpatParser.h ESIExpression.cc ESIExpression.h ESIInclude.cc \
-	ESIInclude.h ESILiteral.h ESIParser.cc ESIParser.h \
-	ESISegment.cc ESISegment.h ESISequence.cc ESISequence.h \
-	ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc event.cc \
-	external_acl.cc ExternalACL.h ExternalACLEntry.cc \
-	ExternalACLEntry.h fd.cc fde.cc fde.h filemap.cc forward.cc \
-	fqdncache.cc ftp.cc Generic.h globals.h gopher.cc helper.cc \
-	helper.h HierarchyLogEntry.h htcp.cc htcp.h http.cc http.h \
+	ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
+	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
+	ESIVarState.cc ESIVarState.h ETag.cc event.cc external_acl.cc \
+	ExternalACL.h ExternalACLEntry.cc ExternalACLEntry.h fd.cc \
+	fde.cc fde.h filemap.cc forward.cc fqdncache.cc ftp.cc \
+	Generic.h globals.h gopher.cc helper.cc helper.h \
+	HierarchyLogEntry.h htcp.cc htcp.h http.cc http.h \
 	HttpStatusLine.cc HttpStatusLine.h HttpHdrCc.cc HttpHdrRange.cc \
 	HttpHdrSc.cc HttpHdrScTarget.cc HttpHdrContRange.cc \
 	HttpHdrContRange.h HttpHeader.cc HttpHeader.h HttpHeaderRange.h \
@@ -1160,7 +1163,8 @@ am__objects_7 = comm_epoll.$(OBJEXT)
 am__objects_9 = ESI.$(OBJEXT) ESIAssign.$(OBJEXT) ESIContext.$(OBJEXT) \
 	ESICustomParser.$(OBJEXT) ESIExpatParser.$(OBJEXT) \
 	ESIExpression.$(OBJEXT) ESIInclude.$(OBJEXT) \
-	ESIParser.$(OBJEXT) ESISegment.$(OBJEXT) ESISequence.$(OBJEXT) \
+	ESILibxml2Parser.$(OBJEXT) ESIParser.$(OBJEXT) \
+	ESISegment.$(OBJEXT) ESISequence.$(OBJEXT) \
 	ESIVarState.$(OBJEXT)
 @USE_ESI_TRUE@am__objects_10 = $(am__objects_9)
 @USE_ESI_FALSE@am__objects_10 =
@@ -1297,9 +1301,10 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	ESIContext.cc ESIContext.h ESICustomParser.cc ESICustomParser.h \
 	ESIElement.h ESIExcept.h ESIExpatParser.cc ESIExpatParser.h \
 	ESIExpression.cc ESIExpression.h ESIInclude.cc ESIInclude.h \
-	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
-	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
-	ESIVarState.cc ESIVarState.h ETag.cc event.cc external_acl.cc \
+	ESILiteral.h ESILibxml2Parser.cc ESILibxml2Parser.h \
+	ESIParser.cc ESIParser.h ESISegment.cc ESISegment.h \
+	ESISequence.cc ESISequence.h ESIVar.h ESIVarState.cc \
+	ESIVarState.h ETag.cc event.cc external_acl.cc \
 	ExternalACLEntry.cc fd.cc fde.cc fde.h filemap.cc forward.cc \
 	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
 	HttpStatusLine.cc HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc \
@@ -1423,8 +1428,9 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/ESICustomParser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIExpatParser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIExpression.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ESIInclude.Po ./$(DEPDIR)/ESIParser.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ESISegment.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESIInclude.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESILibxml2Parser.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESIParser.Po ./$(DEPDIR)/ESISegment.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESISequence.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIVarState.Po ./$(DEPDIR)/ETag.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ExternalACLEntry.Po \
@@ -1880,6 +1886,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIExpatParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIExpression.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIInclude.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESILibxml2Parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESISegment.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESISequence.Po@am__quote@
