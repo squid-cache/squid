@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.35 1997/01/31 22:30:36 wessels Exp $
+ * $Id: ssl.cc,v 1.36 1997/02/05 04:54:14 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -495,7 +495,7 @@ sslSelectNeighbor(int fd, const ipcache_addrs * ia, void *data)
     if (matchInsideFirewall(request->host)) {
 	hierarchyNote(request, HIER_DIRECT, 0, request->host);
     } else if (fw_ip_match == IP_DENY) {
-	hierarchyNote(request, HIER_DIRECT, 0, request->host);
+	hierarchyNote(request, HIER_FIREWALL_IP_DIRECT, 0, request->host);
     } else if ((e = Config.sslProxy)) {
 	hierarchyNote(request, HIER_SSL_PARENT, 0, e->host);
     } else if ((e = getDefaultParent(request))) {
