@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.233 1998/09/22 23:15:41 wessels Exp $
+ * $Id: structs.h,v 1.234 1998/09/23 15:37:44 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1246,6 +1246,9 @@ struct _SwapDir {
     int suggest;
     fileMap *map;
     int swaplog_fd;
+    struct {
+	unsigned int selected:1;
+    } flags;
 };
 
 struct _request_flags {

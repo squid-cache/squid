@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.82 1998/09/22 19:47:46 wessels Exp $
+ * $Id: store_dir.cc,v 1.83 1998/09/23 15:37:43 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -233,6 +233,8 @@ static int
 storeDirSelectSwapDir(void)
 {
     double least_used = 1.0;
+    double high = (double) Config.Swap.highWaterMark / 100.0;
+    double u;
     int dirn;
     int i, j;
     SwapDir *SD;
@@ -280,10 +282,13 @@ storeDirSelectSwapDir(void)
     for (i = 0; i < nconf; i++) {
 	diru[i] = 1.1;
 	SD = &Config.cacheSwap.swapDirs[i];
+	SD->flags.selected = 0;
 	if (SD->read_only)
 	    continue;
-	diru[i] = (double) SD->cur_size;
-	diru[i] /= SD->max_size;
+	u = (double) SD->cur_size / SD->max_size;
+	if (u > high)
+	    continue;
+	diru[i] = u;
     }
     for (j = 0; j < nleast; j++) {
 	dirq[j] = -1;
@@ -299,6 +304,8 @@ storeDirSelectSwapDir(void)
 	    break;
 	dirq[j] = dirn;
 	diru[dirn] = 1.1;
+	/* set selected flag for debugging/cachemgr only */
+	Config.cacheSwap.swapDirs[dirn].flags.selected = 1;
     }
     /*
      * Setup default return of 0 if no least found
@@ -611,6 +618,10 @@ storeDirStats(StoreEntry * sentry)
 		percent(sfs.f_files - sfs.f_ffree, sfs.f_files));
 	}
 #endif
+	storeAppendPrintf(sentry, "Flags:");
+	if (SD->flags.selected)
+	    storeAppendPrintf(sentry, " SELECTED");
+	storeAppendPrintf(sentry, "\n");
     }
 }
 
