@@ -85,6 +85,7 @@ urnStart(request_t *r, StoreEntry *e)
     request_t *urlres_r = NULL;
     const cache_key *k;
     char *t;
+    char *host;
     UrnState *urnState;
     StoreEntry *urlres_e;
     debug(50, 3) ("urnStart: '%s'\n", storeUrl(e));
@@ -97,12 +98,15 @@ urnStart(request_t *r, StoreEntry *e)
 	return;
     }
     *t = '\0';
+    host = xstrdup(r->urlpath);
+    *t = ':';
     urnState = xcalloc(1, sizeof(UrnState));
     urnState->entry = e;
     urnState->request = requestLink(r);
     cbdataAdd(urnState);
     storeLockObject(urnState->entry);
-    snprintf(urlres, 4096, "http://%s/uri-res/N2L?%s", r->urlpath, t+1);
+    snprintf(urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, r->urlpath);
+    safe_free(host);
     k = storeKeyPublic(urlres, METHOD_GET);
     urlres_r = urlParse(METHOD_GET, urlres);
     urlres_r->headers = xstrdup("Accept: text/plain\r\n\r\n");
