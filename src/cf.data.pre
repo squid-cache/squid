@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.377 2005/03/02 20:57:34 hno Exp $
+# $Id: cf.data.pre,v 1.378 2005/03/06 14:52:49 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -4602,6 +4602,25 @@ DOC_START
         meaningful Last-Modified header however. In ESI environments
 	where page fragments often have short lifetimes, this will
 	often be best set to 0.
+DOC_END
+
+NAME: relaxed_header_parser
+COMMENT: on|off|warn
+TYPE: tristate
+LOC: Config.onoff.relaxed_header_parser
+DEFAULT: on
+DOC_START
+	In the default "on" setting Squid accepts certain forms
+	of non-compliant HTTP messages where it is unambiguous
+	what the sending application intended even if the message
+	is not correctly formatted. The messages is then normalized
+	to the correct form when forwarded by Squid.
+
+	If set to "warn" then a warning will be emitted in cache.log
+	each time such HTTP error is encountered.
+
+	If set to "off" then such HTTP errors will cause the request
+	or response to be rejected.
 DOC_END
 
 EOF
