@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.137 1998/06/02 21:50:21 rousskov Exp $
+ * $Id: errorpage.cc,v 1.138 1998/06/05 21:21:19 rousskov Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -527,8 +527,8 @@ errorBuildReply(ErrorState * err)
      */
     httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d",
 	err_type_str[err->page_id], err->xerrno);
-    httpBodySet(&rep->body, content.buf, content.size + 1, NULL);
-    memBufClean(&content);
+    httpBodySet(&rep->body, &content);
+    /* do not memBufClean() the content, it was absorbed by httpBody */
     return rep;
 }
 

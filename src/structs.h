@@ -483,6 +483,27 @@ struct _hash_table {
     int count;
 };
 
+/* auto-growing memory-resident buffer with printf interface */
+/* note: when updating this struct, update MemBufNULL #define */
+struct _MemBuf {
+    /* public, read-only */
+    char *buf;
+    mb_size_t size;		/* used space, does not count 0-terminator */
+
+    /* private, stay away; use interface function instead */
+    mb_size_t max_capacity;	/* when grows: assert(new_capacity <= max_capacity) */
+    mb_size_t capacity;		/* allocated space */
+    FREE *freefunc;		/* what to use to free the buffer, NULL after memBufFreeFunc() is called */
+};
+
+/* see Packer.c for description */
+struct _Packer {
+    /* protected, use interface functions instead */
+    append_f append;
+    vprintf_f vprintf;
+    void *real_handler;		/* first parameter to real append and vprintf */
+};
+
 /* http status line */
 struct _HttpStatusLine {
     /* public, read only */
@@ -492,14 +513,12 @@ struct _HttpStatusLine {
 };
 
 /*
- * Note: HttpBody is used only for messages with a small text content that is
+ * Note: HttpBody is used only for messages with a small content that is
  * known a priory (e.g., error messages).
  */
 struct _HttpBody {
-    /* private, never dereference these */
-    char *buf;			/* null terminated _text_ buffer, not for binary stuff */
-    FREE *freefunc;		/* used to free() .buf */
-    int size;
+    /* private */
+    MemBuf mb;
 };
 
 /* http header extention field */
@@ -997,28 +1016,6 @@ struct _iostats {
 	int write_hist[16];
     } Http, Ftp, Gopher, Wais;
 };
-
-/* auto-growing memory-resident buffer with printf interface */
-/* note: when updating this struct, update MemBufNULL #define */
-struct _MemBuf {
-    /* public, read-only */
-    char *buf;
-    mb_size_t size;		/* used space, does not count 0-terminator */
-
-    /* private, stay away; use interface function instead */
-    mb_size_t max_capacity;	/* when grows: assert(new_capacity <= max_capacity) */
-    mb_size_t capacity;		/* allocated space */
-    FREE *freefunc;		/* what to use to free the buffer, NULL after memBufFreeFunc() is called */
-};
-
-/* see Packer.c for description */
-struct _Packer {
-    /* protected, use interface functions instead */
-    append_f append;
-    vprintf_f vprintf;
-    void *real_handler;		/* first parameter to real append and vprintf */
-};
-
 
 struct _mem_node {
     char *data;
