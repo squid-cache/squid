@@ -25,6 +25,8 @@
 	- Fixed httpReadReply() to retry failed HTTP requests on
 	  persistent connections when read() returns -1, not only
 	  when it returns 0.
+	- Fixed cbdata memory counting leak.  cbdataUnlock() always
+	  called free(), never memFree().
 
 Changes to squid-1.2.beta18 (Mar 23, 1998):
 
