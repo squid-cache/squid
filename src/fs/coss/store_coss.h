@@ -44,6 +44,7 @@ struct _cossinfo {
     int numcollisions;
     dlink_list index;
     int count;
+    async_queue_t aq;
     dlink_node *walk_current;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.10 2001/08/09 21:41:53 adrian Exp $
+ * $Id: store_io_coss.cc,v 1.11 2001/08/12 10:20:41 adrian Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include <aio.h>
+#include "async_io.h"
 #include "store_coss.h"
 
 static DWCB storeCossWriteMemBufDone;
@@ -291,7 +293,7 @@ storeCossRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t of
     if (cstate->readbuffer == NULL) {
 	p = storeCossMemPointerFromDiskOffset(SD, sio->swap_filen, NULL);
 	/* Remember we need to translate the block offset to a disk offset! */
-	file_read(cs->fd,
+	a_file_read(&cs->aq, cs->fd,
 	    p,
 	    sio->st_size,
 	    cstate->reqdiskoffset,
@@ -453,6 +455,11 @@ storeCossSync(SwapDir * SD)
     CossMemBuf *t;
     dlink_node *m;
     int end;
+
+    /* First, flush pending IO ops */
+    a_file_syncqueue(&cs->aq);
+
+    /* Then, flush any in-memory partial membufs */
     if (!cs->membufs.head)
 	return;
     for (m = cs->membufs.head; m; m = m->next) {
@@ -473,7 +480,7 @@ storeCossWriteMemBuf(SwapDir * SD, CossMemBuf * t)
 	t->diskstart, t->diskend - t->diskstart);
     t->flags.writing = 1;
     /* Remember that diskstart/diskend are block offsets! */
-    file_write(cs->fd, t->diskstart, &t->buffer,
+    a_file_write(&cs->aq, cs->fd, t->diskstart, &t->buffer,
 	t->diskend - t->diskstart, storeCossWriteMemBufDone, t, NULL);
 }
 
