@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.7 1996/03/27 01:46:12 wessels Exp $ */
+/* $Id: main.cc,v 1.8 1996/03/27 02:13:04 wessels Exp $ */
 
 #include "squid.h"
 
@@ -386,9 +386,6 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 		next_cleaning = cached_curtime + getCleanRate();
 	    }
 	    /* house keeping */
-#ifdef THIS_BREAKS_FTP
-	    kill_zombie();
-#endif
 	    break;
 	default:
 	    debug(0, "MAIN: Internal error -- this should never happen.\n");

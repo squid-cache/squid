@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.6 1996/03/27 01:46:26 wessels Exp $ */
+/* $Id: tools.cc,v 1.7 1996/03/27 02:13:04 wessels Exp $ */
 
 #include "squid.h"
 
@@ -228,20 +228,6 @@ void sig_child(sig)
 #if defined(_SQUID_SYSV_SIGNALS_)
     signal(sig, sig_child);
 #endif
-}
-
-#define MAX_ZOMBIES_TO_KILL 20
-void kill_zombie()
-{
-    int status;
-    int i = 0;
-    int pid;
-
-    while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
-	debug(3, "kill_zombie: Ate pid %d\n", pid);
-	if (++i > MAX_ZOMBIES_TO_KILL)
-	    break;
-    }
 }
 
 /*
