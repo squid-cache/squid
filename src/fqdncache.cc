@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.67 1997/11/14 17:21:17 wessels Exp $
+ * $Id: fqdncache.cc,v 1.68 1997/11/23 06:52:38 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -204,26 +204,11 @@ fqdncacheDequeue(void)
 static void
 fqdncache_release(fqdncache_entry * f)
 {
-    hash_link *table_entry = NULL;
     int k;
-
-    if ((table_entry = hash_lookup(fqdn_table, f->name)) == NULL) {
-	debug(35, 0) ("fqdncache_release: Could not find key '%s'\n", f->name);
-	return;
-    }
-    if (f != (fqdncache_entry *) table_entry)
-	fatal_dump("fqdncache_release: f != table_entry!");
-    if (f->status == FQDN_PENDING) {
-	debug(35, 1) ("fqdncache_release: Someone called on a PENDING entry\n");
-	return;
-    }
-    if (f->status == FQDN_DISPATCHED) {
-	debug(35, 1) ("fqdncache_release: Someone called on a DISPATCHED entry\n");
-	return;
-    }
-    if (f->pending_head)
-	fatal_dump("fqdncache_release: still have pending clients");
-    if (hash_remove_link(fqdn_table, table_entry)) {
+    assert(f->status != FQDN_PENDING);
+    assert(f->status != FQDN_DISPATCHED);
+    assert(f->pending_head == NULL);
+    if (hash_remove_link(fqdn_table, (hash_link *) f)) {
 	debug(35, 0) ("fqdncache_release: hash_remove_link() failed for '%s'\n",
 	    f->name);
 	return;
@@ -238,7 +223,6 @@ fqdncache_release(fqdncache_entry * f)
     safe_free(f->error_message);
     safe_free(f);
     --meta_data.fqdncache_count;
-    return;
 }
 
 /* return match for given name */
@@ -406,8 +390,7 @@ static fqdncache_entry *
 fqdncacheAddNew(const char *name, const struct hostent *hp, fqdncache_status_t status)
 {
     fqdncache_entry *f;
-    if (fqdncache_get(name))
-	fatal_dump("fqdncacheAddNew: somebody adding a duplicate!");
+    assert(fqdncache_get(name) == NULL);
     debug(14, 10) ("fqdncacheAddNew: Adding '%s', status=%c\n",
 	name,
 	fqdncache_status_char[status]);
@@ -983,9 +966,15 @@ fqdncache_restart(void)
 	    continue;
 	if (this->status == FQDN_NEGATIVE_CACHED)
 	    continue;
+#if DONT
 	/* else its PENDING or DISPATCHED; there are no dnsservers
 	 * running, so abort it */
 	this->status = FQDN_NEGATIVE_CACHED;
 	fqdncache_release(this);
+#endif
     }
+    fqdncache_high = (long) (((float) MAX_FQDN *
+	    (float) FQDN_HIGH_WATER) / (float) 100);
+    fqdncache_low = (long) (((float) MAX_FQDN *
+	    (float) FQDN_LOW_WATER) / (float) 100);
 }
