@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.151 1996/12/03 20:26:48 wessels Exp $
+ * $Id: cache_cf.cc,v 1.152 1996/12/04 17:51:40 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1585,4 +1585,8 @@ configDoConfigure(void)
     }
     if (httpd_accel_mode && !strcmp(Config.Accel.host, "virtual"))
 	vhost_mode = 1;
+    sprintf(ThisCache, "%s:%d (Squid/%s)",
+	getMyHostname(),
+	(int) Config.Port.http,
+        SQUID_VERSION);
 }
