@@ -1,6 +1,6 @@
 /*
- * $Id: globals.h,v 1.13 1997/10/30 22:42:25 wessels Exp $
-*/
+ * $Id: globals.h,v 1.14 1997/10/31 04:09:07 wessels Exp $
+ */
 
 extern FILE *debug_log;		/* NULL */
 extern FILE *cache_useragent_log;	/* NULL */
