@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.38 1998/06/04 18:57:16 wessels Exp $
+ * $Id: peer_digest.cc,v 1.39 1998/06/30 15:08:10 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -651,7 +651,7 @@ peerDigestSetCBlock(peer * peer, const char *buf)
 	peer->digest.cd = NULL;
     }
     if (!peer->digest.cd) {
-	debug(72, 2) ("cloning %s digest; size: %d (%+d) bytes\n",
+	debug(72, 2) ("creating %s digest; size: %d (%+d) bytes\n",
 	    peer->host, cblock.mask_size, (int) (cblock.mask_size - freed_size));
 	peer->digest.cd = cacheDigestCreate(cblock.capacity, cblock.bits_per_entry);
 	if (cblock.mask_size >= freed_size)

@@ -63,13 +63,13 @@ Special thanks go to people who have volunteered their time, effort, and ideas t
 	Michael Pelletier <mikep@comshare.com>
 	Pedro Lineu Orso <orso@pop.hsbcbamerindus.com.br>
 	Hide Nagaoka <hide@cc.meisei-u.ac.jp>
+	Kostas Anagnostakis <kanag@csi.forth.gr>
 
 Development of this caching software is funded by the National Science
 Foundation (grant NCR-9521745).  Paid staff members on the caching
 project are:
 
 	Duane Wessels <wessels@nlanr.net>
-	Kostas Anagnostakis <kostas@nlanr.net>
 	Alex Rousskov <rousskov@nlanr.net>
 	K Claffy <kc@nlanr.net>
 	Hans-Werner Braun <hwb@nlanr.net>
