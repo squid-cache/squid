@@ -1,4 +1,4 @@
-/* $Id: debug.cc,v 1.7 1996/03/27 18:50:22 wessels Exp $ */
+/* $Id: debug.cc,v 1.8 1996/03/27 18:50:58 wessels Exp $ */
 
 #include "squid.h"
 
@@ -138,7 +138,6 @@ void _db_init(logfile)
 	}
 	xfree(p);
     }
-
     debugOpenLog(logfile);
 
 #if HAVE_SYSLOG
