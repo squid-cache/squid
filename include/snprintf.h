@@ -1,5 +1,5 @@
 /*
- * $Id: snprintf.h,v 1.4 1998/09/23 17:20:05 wessels Exp $
+ * $Id: snprintf.h,v 1.5 2001/01/10 20:16:36 hno Exp $
  */
 
 /* if you have configure you can use this */
@@ -26,7 +26,7 @@
 #define VA_SHIFT(v,t) v = va_arg(ap,t)
 #define VA_END va_end(ap)
 #else
-XX **NO VARARGS ** XX
+#error **NO VARARGS **
 #endif
 #endif
 
