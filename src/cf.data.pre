@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.313 2003/05/17 17:35:06 hno Exp $
+# $Id: cf.data.pre,v 1.314 2003/05/17 19:02:15 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1730,8 +1730,8 @@ DOC_START
 	  negative_ttl=n
 	  		TTL for cached negative lookups (default same
 	  		as ttl)
-	  concurrency=n	Concurrency level / number of processes spawn
-			to service external acl lookups of this type.
+	  children=n	Number of acl helper processes spawn to service
+			external acl lookups of this type.
 	  cache=n	result cache size, 0 is unbounded (default)
 	
 	FORMAT specifications
@@ -1991,7 +1991,7 @@ NAME: range_offset_limit
 COMMENT: (bytes)
 TYPE: b_size_t
 LOC: Config.rangeOffsetLimit
-DEFAULT: none
+DEFAULT: 0 KB
 DOC_START
 	Sets a upper limit on how far into the the file a Range request
 	may be to cause Squid to prefetch the whole file. If beyond this

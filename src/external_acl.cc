@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.39 2003/05/11 10:11:31 hno Exp $
+ * $Id: external_acl.cc,v 1.40 2003/05/17 19:02:15 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -55,8 +55,8 @@
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
 #endif
-#ifndef DEFAULT_EXTERNAL_ACL_CONCURRENCY
-#define DEFAULT_EXTERNAL_ACL_CONCURRENCY 5
+#ifndef DEFAULT_EXTERNAL_ACL_CHILDREN
+#define DEFAULT_EXTERNAL_ACL_CHILDREN 5
 #endif
 
 typedef struct _external_acl_format external_acl_format;
@@ -187,7 +187,7 @@ parse_externalAclHelper(external_acl ** list)
 
     a->ttl = DEFAULT_EXTERNAL_ACL_TTL;
     a->negative_ttl = -1;
-    a->children = DEFAULT_EXTERNAL_ACL_CONCURRENCY;
+    a->children = DEFAULT_EXTERNAL_ACL_CHILDREN;
 
     token = strtok(NULL, w_space);
 
@@ -204,7 +204,7 @@ parse_externalAclHelper(external_acl ** list)
             a->ttl = atoi(token + 4);
         } else if (strncmp(token, "negative_ttl=", 13) == 0) {
             a->negative_ttl = atoi(token + 13);
-        } else if (strncmp(token, "concurrency=", 12) == 0) {
+        } else if (strncmp(token, "children=", 12) == 0) {
             a->children = atoi(token + 12);
         } else if (strncmp(token, "cache=", 6) == 0) {
             a->cache_size = atoi(token + 6);
@@ -349,8 +349,8 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->negative_ttl != node->ttl)
             storeAppendPrintf(sentry, " negative_ttl=%d", node->negative_ttl);
 
-        if (node->children != DEFAULT_EXTERNAL_ACL_CONCURRENCY)
-            storeAppendPrintf(sentry, " concurrency=%d", node->children);
+        if (node->children != DEFAULT_EXTERNAL_ACL_CHILDREN)
+            storeAppendPrintf(sentry, " children=%d", node->children);
 
         for (format = node->format; format; format = format->next) {
             switch (format->type) {
