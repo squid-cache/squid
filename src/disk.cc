@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.109 1998/03/03 22:54:40 wessels Exp $
+ * $Id: disk.cc,v 1.110 1998/03/05 01:03:12 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -220,7 +220,8 @@ file_close(int fd)
 #else
     close(fd);
 #endif
-    debug(6, 2) ("file_close: FD %d, really closing\n", fd);
+    debug(6, EBIT_TEST(F->flags, FD_CLOSE_REQUEST) ? 2 : 5)
+	("file_close: FD %d, really closing\n", fd);
     fd_close(fd);
 }
 
