@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.152 2000/11/13 12:25:12 adrian Exp $
+ * $Id: net_db.cc,v 1.153 2000/11/13 23:30:26 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -929,7 +929,7 @@ netdbBinaryExchange(StoreEntry * s)
     struct in_addr addr;
     storeBuffer(s);
     httpReplyReset(reply);
-    httpBuildVersion(version,1,0);
+    httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(reply, version, HTTP_OK, "OK",
 	NULL, -1, squid_curtime, -2);
     httpReplySwapOut(reply, s);
@@ -972,7 +972,7 @@ netdbBinaryExchange(StoreEntry * s)
     memFree(buf, MEM_4K_BUF);
 #else
     httpReplyReset(reply);
-    httpBuildVersion(&version,1,0);
+    httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(reply, version, HTTP_BAD_REQUEST, "Bad Request",
 	NULL, -1, squid_curtime, -2);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
@@ -1000,7 +1000,7 @@ netdbExchangeStart(void *data)
     }
     requestLink(ex->r);
     assert(NULL != ex->r);
-    ex->r->http_ver = 1.0;
+    httpBuildVersion(&ex->r->http_ver, 1, 0);
     ex->e = storeCreateEntry(uri, uri, null_request_flags, METHOD_GET);
     ex->buf_sz = 4096;
     ex->buf = memAllocate(MEM_4K_BUF);
