@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.75 1999/08/02 06:18:43 wessels Exp $
+ * $Id: store_client.cc,v 1.76 1999/09/29 00:10:33 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -43,6 +43,7 @@
 static STRCB storeClientReadBody;
 static STRCB storeClientReadHeader;
 static void storeClientCopy2(StoreEntry * e, store_client * sc);
+static void storeClientCopy3(StoreEntry * e, store_client * sc);
 static void storeClientFileRead(store_client * sc);
 static EVH storeClientCopyEvent;
 static store_client_t storeClientType(StoreEntry *);
@@ -203,8 +204,6 @@ static void
 storeClientCopy2(StoreEntry * e, store_client * sc)
 {
     STCB *callback = sc->callback;
-    MemObject *mem = e->mem_obj;
-    size_t sz;
     if (sc->flags.copy_event_pending)
 	return;
     if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
@@ -228,54 +227,75 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * if the server-side aborts, we want to give the client(s)
      * everything we got before the abort condition occurred.
      */
+    storeClientCopy3(e, sc);
+    sc->flags.store_copying = 0;
+    cbdataUnlock(sc);		/* ick, allow sc to be freed */
+}
+
+static void
+storeClientCopy3(StoreEntry * e, store_client * sc)
+{
+    STCB *callback = sc->callback;
+    MemObject *mem = e->mem_obj;
+    size_t sz;
     if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
-    } else if (e->store_status == STORE_PENDING && sc->seen_offset >= mem->inmem_hi) {
+	return;
+    }
+    if (e->store_status == STORE_PENDING && sc->seen_offset >= mem->inmem_hi) {
 	/* client has already seen this, wait for more */
-	debug(20, 3) ("storeClientCopy2: Waiting for more\n");
-    } else if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
-	/* What the client wants is in memory */
-	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
-	sz = stmemCopy(&mem->data_hdr, sc->copy_offset, sc->copy_buf, sc->copy_size);
-	sc->flags.disk_io_pending = 0;
-	sc->callback = NULL;
-	callback(sc->callback_data, sc->copy_buf, sz);
-    } else if (sc->swapin_sio == NULL) {
-	debug(20, 3) ("storeClientCopy2: Need to open swap in file\n");
-	assert(sc->type == STORE_DISK_CLIENT);
+	debug(20, 3) ("storeClientCopy3: Waiting for more\n");
+	return;
+    }
+    /*
+     * Slight weirdness here.  We open a swapin file for any
+     * STORE_DISK_CLIENT, even if we can copy the requested chunk
+     * from memory in the next block.  We must try to open the
+     * swapin file before sending any data to the client side.  If
+     * we postpone the open, and then can not open the file later
+     * on, the client loses big time.  Its transfer just gets cut
+     * off.  Better to open it early (while the client side handler
+     * is clientCacheHit) so that we can fall back to a cache miss
+     * if needed.
+     */
+    if (STORE_DISK_CLIENT == sc->type && NULL == sc->swapin_sio) {
+	debug(20, 3) ("storeClientCopy3: Need to open swap in file\n");
 	/* gotta open the swapin file */
 	if (storeTooManyDiskFilesOpen()) {
 	    /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
 	    sc->callback = NULL;
 	    callback(sc->callback_data, sc->copy_buf, -1);
-	} else if (!sc->flags.disk_io_pending) {
-	    sc->flags.disk_io_pending = 1;
-	    storeSwapInStart(sc);
-	    if (NULL == sc->swapin_sio) {
-		sc->flags.disk_io_pending = 0;
-		sc->callback = NULL;
-		callback(sc->callback_data, sc->copy_buf, -1);
-	    } else {
-		storeClientFileRead(sc);
-	    }
-	} else {
-	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
+	    return;
 	}
-    } else {
-	debug(20, 3) ("storeClientCopy: reading from STORE\n");
-	assert(sc->type == STORE_DISK_CLIENT);
-	if (!sc->flags.disk_io_pending) {
-	    sc->flags.disk_io_pending = 1;
-	    storeClientFileRead(sc);
-	} else {
-	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
+	assert(!sc->flags.disk_io_pending);
+	storeSwapInStart(sc);
+	if (NULL == sc->swapin_sio) {
+	    sc->callback = NULL;
+	    callback(sc->callback_data, sc->copy_buf, -1);
+	    return;
 	}
     }
-    sc->flags.store_copying = 0;
-    cbdataUnlock(sc);		/* ick, allow sc to be freed */
+    if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
+	/* What the client wants is in memory */
+	debug(20, 3) ("storeClientCopy3: Copying from memory\n");
+	sz = stmemCopy(&mem->data_hdr,
+	    sc->copy_offset, sc->copy_buf, sc->copy_size);
+	sc->flags.disk_io_pending = 0;
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, sz);
+	return;
+    }
+    assert(STORE_DISK_CLIENT == sc->type);
+    if (sc->flags.disk_io_pending) {
+	debug(20, 1) ("storeClientCopy3: Averted multiple fd operation?\n");
+	return;
+    }
+    debug(20, 3) ("storeClientCopy3: reading from STORE\n");
+    sc->flags.disk_io_pending = 1;
+    storeClientFileRead(sc);
 }
 
 static void
@@ -421,6 +441,7 @@ storeUnregister(StoreEntry * e, void *data)
 	storeSwapOut(e);
     if (sc->swapin_sio) {
 	storeClose(sc->swapin_sio);
+	cbdataUnlock(sc->swapin_sio);
 	sc->swapin_sio = NULL;
     }
     if ((callback = sc->callback) != NULL) {
@@ -451,8 +472,9 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
 	nx = sc->next;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
-	if (sc->type != STORE_MEM_CLIENT)
-	    continue;
+	if (sc->type == STORE_DISK_CLIENT)
+	    if (NULL != sc->swapin_sio)
+		continue;
 	if (sc->copy_offset < lowest)
 	    lowest = sc->copy_offset;
     }
