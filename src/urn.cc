@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.65 2001/02/07 19:04:09 hno Exp $
+ * $Id: urn.cc,v 1.66 2001/02/23 20:59:51 hno Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -42,7 +42,7 @@ typedef struct {
     request_t *request;
     request_t *urlres_r;
     struct {
-	int force_menu:1;
+	unsigned int force_menu:1;
     } flags;
 } UrnState;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.398 2001/02/10 16:40:40 hno Exp $
+ * $Id: protos.h,v 1.399 2001/02/23 20:59:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -59,7 +59,7 @@ extern void aclDestroyAcls(acl **);
 extern void aclParseAccessLine(struct _acl_access **);
 extern void aclParseAclLine(acl **);
 extern int aclIsProxyAuth(const char *name);
-extern int aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
+extern err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
 extern void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 extern void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
 extern void aclDestroyRegexList(struct _relist *data);
@@ -1150,7 +1150,7 @@ extern void htcpSocketClose(void);
 #endif
 
 /* String */
-#define strLen(s)     ((const int)(s).len)
+#define strLen(s)     ((/* const */ int)(s).len)
 #define strBuf(s)     ((const char*)(s).buf)
 #define strChr(s,ch)  ((const char*)strchr(strBuf(s), (ch)))
 #define strRChr(s,ch) ((const char*)strrchr(strBuf(s), (ch)))

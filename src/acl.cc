@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.248 2001/02/18 11:16:51 hno Exp $
+ * $Id: acl.cc,v 1.249 2001/02/23 20:59:50 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -866,7 +866,7 @@ because no authentication schemes are fully configured.\n", A->cfgline);
 }
 
 /* does name lookup, returns page_id */
-int
+err_type
 aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
 {
     acl_deny_info_list *A = NULL;
@@ -874,7 +874,7 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
 
     A = *head;
     if (NULL == *head)		/* empty list */
-	return -1;
+	return ERR_NONE;
     while (A) {
 	L = A->acl_list;
 	if (NULL == L)		/* empty list should never happen, but in case */
@@ -886,7 +886,7 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
 	}
 	A = A->next;
     }
-    return -1;
+    return ERR_NONE;
 }
 
 /* does name lookup, returns if it is a proxy_auth acl */
@@ -1701,16 +1701,16 @@ aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
 int
 aclCheckFast(const acl_access * A, aclCheck_t * checklist)
 {
-    int allow = 0;
+    allow_t allow = ACCESS_DENIED;
     debug(28, 5) ("aclCheckFast: list: %p\n", A);
     while (A) {
 	allow = A->allow;
 	if (aclMatchAclList(A->acl_list, checklist))
-	    return allow;
+	    return allow == ACCESS_ALLOWED;
 	A = A->next;
     }
-    debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", !allow);
-    return !allow;
+    debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", allow == ACCESS_DENIED);
+    return allow == ACCESS_DENIED;
 }
 
 static void
@@ -1813,8 +1813,8 @@ aclCheck(aclCheck_t * checklist)
 	if (A->next)
 	    cbdataLock(A->next);
     }
-    debug(28, 3) ("aclCheck: NO match found, returning %d\n", !allow);
-    aclCheckCallback(checklist, !allow);
+    debug(28, 3) ("aclCheck: NO match found, returning %d\n", allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
+    aclCheckCallback(checklist, allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
 }
 
 void

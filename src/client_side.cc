@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.528 2001/02/20 22:49:23 hno Exp $
+ * $Id: client_side.cc,v 1.529 2001/02/23 20:59:50 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -215,7 +215,7 @@ void
 clientAccessCheckDone(int answer, void *data)
 {
     clientHttpRequest *http = data;
-    int page_id = -1;
+    err_type page_id;
     http_status status;
     ErrorState *err = NULL;
     char *proxy_auth_msg = NULL;
@@ -255,11 +255,11 @@ clientAccessCheckDone(int answer, void *data)
 		/* WWW authorisation needed */
 		status = HTTP_UNAUTHORIZED;
 	    }
-	    if (page_id <= 0)
+	    if (page_id == ERR_NONE)
 		page_id = ERR_CACHE_ACCESS_DENIED;
 	} else {
 	    status = HTTP_FORBIDDEN;
-	    if (page_id <= 0)
+	    if (page_id == ERR_NONE)
 		page_id = ERR_ACCESS_DENIED;
 	}
 	err = errorCon(page_id, status);
@@ -288,8 +288,8 @@ clientRedirectDone(void *data, char *result)
     assert(http->redirect_state == REDIRECT_PENDING);
     http->redirect_state = REDIRECT_DONE;
     if (result) {
-	http_status status = atoi(result);
-	if (status == 301 || status == 302) {
+	http_status status = (http_status)atoi(result);
+	if (status == HTTP_MOVED_PERMANENTLY || status == HTTP_MOVED_TEMPORARILY) {
 	    char *t = result;
 	    if ((t = strchr(result, ':')) != NULL) {
 		http->redirect.status = status;

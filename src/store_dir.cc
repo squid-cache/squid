@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.126 2001/02/10 16:40:40 hno Exp $
+ * $Id: store_dir.cc,v 1.127 2001/02/23 20:59:51 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -367,7 +367,6 @@ storeDirWriteCleanLogs(int reopen)
     struct timeval start;
     double dt;
     SwapDir *sd;
-    RemovalPolicyWalker **walkers;
     int dirn;
     int notdone = 1;
     if (store_dirs_rebuilding) {
@@ -378,7 +377,6 @@ storeDirWriteCleanLogs(int reopen)
     debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");
     getCurrentTime();
     start = current_time;
-    walkers = xcalloc(Config.cacheSwap.n_configured, sizeof *walkers);
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	sd = &Config.cacheSwap.swapDirs[dirn];
 	if (sd->log.clean.start(sd) < 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.25 2001/01/12 00:37:15 wessels Exp $
+ * $Id: cache_manager.cc,v 1.26 2001/02/23 20:59:50 hno Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -49,8 +49,8 @@ typedef struct _action_table {
     char *desc;
     OBJH *handler;
     struct {
-	int pw_req:1;
-	int atomic:1;
+	unsigned int pw_req:1;
+	unsigned int atomic:1;
     } flags;
     struct _action_table *next;
 } action_table;

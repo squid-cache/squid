@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.92 2001/02/07 19:10:12 hno Exp $
+ * $Id: client.cc,v 1.93 2001/02/23 20:59:50 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -89,7 +89,6 @@ main(int argc, char *argv[])
     int ping, pcount;
     int keep_alive = 0;
     int opt_noaccept = 0;
-    int opt_put = 0;
     int opt_verbose = 0;
     char *hostname, *localhost;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ];
@@ -194,8 +193,6 @@ main(int argc, char *argv[])
 	xfree(t);
     }
     if (put_file) {
-	opt_put = 1;
-	/*method = xstrdup("PUT"); */
 	put_fd = open(put_file, O_RDONLY);
 	set_our_signal();
 	if (put_fd < 0) {

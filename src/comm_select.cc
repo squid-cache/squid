@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.48 2001/01/12 00:37:16 wessels Exp $
+ * $Id: comm_select.cc,v 1.49 2001/02/23 20:59:50 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -63,7 +63,9 @@ static int comm_check_incoming_select_handlers(int nfds, int *fds);
 static void comm_select_dns_incoming(void);
 #endif
 
+#if !HAVE_POLL
 static struct timeval zero_tv;
+#endif
 static fd_set global_readfds;
 static fd_set global_writefds;
 static int nreadfds;
@@ -916,8 +918,10 @@ comm_select_dns_incoming(void)
 void
 comm_select_init(void)
 {
+#if !HAVE_POLL
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
+#endif
     cachemgrRegister("comm_incoming",
 	"comm_incoming() stats",
 	commIncomingStats, 0, 1);
