@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.258 2002/04/17 22:09:39 hno Exp $
+# $Id: cf.data.pre,v 1.259 2002/04/21 14:07:05 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1048,6 +1048,18 @@ LOC: Config.Ftp.passive
 DOC_START
 	If your firewall does not allow Squid to use passive
 	connections, then turn off this option.
+DOC_END
+
+NAME: ftp_sanitycheck
+TYPE: onoff
+DEFAULT: on
+LOC: Config.Ftp.sanitycheck
+DOC_START
+	For security and data integrity reasons Squid by default performs
+	sanity checks of the addresses of FTP data connections ensure the
+	data connection is to the requested server. If you need to allow
+	FTP connections to servers using another IP address for the data
+	connection then turn this off.
 DOC_END
 
 NAME: cache_dns_program

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.320 2002/04/13 23:07:50 hno Exp $
+ * $Id: ftp.cc,v 1.321 2002/04/21 14:07:05 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1702,7 +1702,7 @@ ftpReadPasv(FtpStateData * ftpState)
     u_short port;
     int fd = ftpState->data.fd;
     char *buf = ftpState->ctrl.last_reply;
-    LOCAL_ARRAY(char, junk, 1024);
+    LOCAL_ARRAY(char, ipaddr, 1024);
     debug(9, 3) ("This is ftpReadPasv\n");
     if (code != 227) {
 	debug(9, 3) ("PASV not supported by remote end\n");
@@ -1718,16 +1718,16 @@ ftpReadPasv(FtpStateData * ftpState)
     /*  ANSI sez [^0-9] is undefined, it breaks on Watcom cc */
     debug(9, 5) ("scanning: %s\n", buf);
     n = sscanf(buf, "%[^0123456789]%d,%d,%d,%d,%d,%d",
-	junk, &h1, &h2, &h3, &h4, &p1, &p2);
+	ipaddr, &h1, &h2, &h3, &h4, &p1, &p2);
     if (n != 7 || p1 < 0 || p2 < 0 || p1 > 255 || p2 > 255) {
 	debug(9, 3) ("Bad 227 reply\n");
 	debug(9, 3) ("n=%d, p1=%d, p2=%d\n", n, p1, p2);
 	ftpSendPort(ftpState);
 	return;
     }
-    snprintf(junk, 1024, "%d.%d.%d.%d", h1, h2, h3, h4);
-    if (!safe_inet_addr(junk, NULL)) {
-	debug(9, 1) ("unsafe address (%s)\n", junk);
+    snprintf(ipaddr, 1024, "%d.%d.%d.%d", h1, h2, h3, h4);
+    if (!safe_inet_addr(ipaddr, NULL)) {
+	debug(9, 1) ("unsafe PASV address (%s) from %s\n", ipaddr, fd_table[ftpState->ctrl.fd].ipaddr);
 	ftpSendPort(ftpState);
 	return;
     }
@@ -1737,13 +1737,25 @@ ftpReadPasv(FtpStateData * ftpState)
 	ftpSendPort(ftpState);
 	return;
     }
-    debug(9, 5) ("ftpReadPasv: connecting to %s, port %d\n", junk, port);
+    if (Config.Ftp.sanitycheck) {
+	if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
+	    debug(9, 1) ("unsafe PASV address (%s) from %s\n", ipaddr, fd_table[ftpState->ctrl.fd].ipaddr);
+	    ftpSendPort(ftpState); 
+	    return;
+	}
+	if (port < 1024) {
+	    debug(9, 1) ("unsafe PASV port (%d) from %s\n", port, fd_table[ftpState->ctrl.fd].ipaddr);
+	    ftpSendPort(ftpState);
+	    return;
+	}
+    }
+    debug(9, 5) ("ftpReadPasv: connecting to %s, port %d\n", ipaddr, port);
     ftpState->data.port = port;
-    ftpState->data.host = xstrdup(junk);
+    ftpState->data.host = xstrdup(ipaddr);
     safe_free(ftpState->ctrl.last_command);
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_command = xstrdup("Connect to server data port");
-    commConnectStart(fd, junk, port, ftpPasvCallback, ftpState);
+    commConnectStart(fd, ipaddr, port, ftpPasvCallback, ftpState);
 }
 
 static void
@@ -1870,6 +1882,19 @@ ftpAcceptDataConnection(int fd, void *data)
 	return;
     }
     fd = comm_accept(fd, &my_peer, &me);
+    if (Config.Ftp.sanitycheck) {
+	char *ipaddr = inet_ntoa(my_peer.sin_addr);
+	if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
+	    debug(9, 1) ("FTP data connection from unexpected server (%s:%d), expecting %s\n", ipaddr, (int)ntohs(my_peer.sin_port), fd_table[ftpState->ctrl.fd].ipaddr);
+	    comm_close(fd);
+	    commSetSelect(ftpState->data.fd,
+		COMM_SELECT_READ,
+		ftpAcceptDataConnection,
+		ftpState,
+		0);
+	    return;
+	}
+    }
     if (fd < 0) {
 	debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", fd, xstrerror());
 	/* XXX Need to set error message */
