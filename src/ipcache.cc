@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.227 2000/10/31 23:48:13 wessels Exp $
+ * $Id: ipcache.cc,v 1.228 2000/12/30 23:29:06 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -50,6 +50,7 @@ struct _ipcache_entry {
     unsigned short locks;
     struct {
 	unsigned int negcached:1;
+	unsigned int fromhosts:1;
     } flags;
 };
 
@@ -132,6 +133,7 @@ ipcache_get(const char *name)
 static int
 ipcacheExpiredEntry(ipcache_entry * i)
 {
+    /* all static entries are locked, so this takes care of them too */
     if (i->locks != 0)
 	return 0;
     if (i->addrs.count == 0)
@@ -161,6 +163,26 @@ ipcache_purgelru(void *voidnotused)
 	removed++;
     }
     debug(14, 9) ("ipcache_purgelru: removed %d entries\n", removed);
+}
+
+/* purges entries added from /etc/hosts (or whatever). */
+static void
+purge_entries_fromhosts(void)
+{
+    dlink_node *m = lru_list.head;
+    ipcache_entry *i = NULL, *t;
+    while (m) {
+	if (i != NULL) {	/* need to delay deletion */
+	    ipcacheRelease(i);	/* we just override locks */
+	    i = NULL;
+	}
+	t = m->data;
+	if (t->flags.fromhosts)
+	    i = t;
+	m = m->next;
+    }
+    if (i != NULL)
+	ipcacheRelease(i);
 }
 
 /* create blank ipcache_entry */
@@ -491,7 +513,7 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 	hashKeyStr(&i->hash),
 	i->flags.negcached ? 'N' : ' ',
 	(int) (squid_curtime - i->lastref),
-	(int) (i->expires - squid_curtime),
+	(int) ((i->flags.fromhosts ? -1 : i->expires - squid_curtime)),
 	(int) i->addrs.count,
 	(int) i->addrs.badcount);
     for (k = 0; k < (int) i->addrs.count; k++) {
@@ -694,6 +716,46 @@ ipcache_restart(void)
 	    (float) Config.ipcache.high) / (float) 100);
     ipcache_low = (long) (((float) Config.ipcache.size *
 	    (float) Config.ipcache.low) / (float) 100);
+    purge_entries_fromhosts();
+}
+
+/*
+ *  adds a "static" entry from /etc/hosts.  the worldist is to be
+ *  managed by the caller, including pointed-to strings
+ */
+int
+ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
+{
+    ipcache_entry *i;
+    struct in_addr ip;
+    if (!safe_inet_addr(ipaddr, &ip)) {
+	debug(14, 1) ("ipcacheAddEntryFromHosts: bad IP address '%s'\n",
+	    ipaddr);
+	return 1;
+    }
+    if ((i = ipcache_get(name))) {
+	if (1 == i->flags.fromhosts) {
+	    ipcacheUnlockEntry(i);
+	} else if (i->locks > 0) {
+	    debug(35, 1) ("ipcacheAddEntryFromHosts: can't add static entry"
+		" for locked name '%s'\n", name);
+	    return 1;
+	} else {
+	    ipcacheRelease(i);
+	}
+    }
+    i = ipcacheCreateEntry(name);
+    i->addrs.count = 1;
+    i->addrs.cur = 0;
+    i->addrs.badcount = 0;
+    i->addrs.in_addrs = xcalloc(1, sizeof(struct in_addr));
+    i->addrs.bad_mask = xcalloc(1, sizeof(unsigned char));
+    i->addrs.in_addrs[0].s_addr = ip.s_addr;
+    i->addrs.bad_mask[0] = FALSE;
+    i->flags.fromhosts = 1;
+    ipcacheAddEntry(i);
+    ipcacheLockEntry(i);
+    return 0;
 }
 
 #ifdef SQUID_SNMP

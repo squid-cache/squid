@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.324 2000/12/09 01:47:18 wessels Exp $
+ * $Id: main.cc,v 1.325 2000/12/30 23:29:07 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -351,6 +351,7 @@ mainReconfigure(void)
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
     fqdncache_restart();	/* sigh, fqdncache too */
+    parseEtcHosts();
     errorInitialize();		/* reload error pages */
 #if USE_DNSSERVERS
     dnsInit();
@@ -482,6 +483,7 @@ mainInitialize(void)
 	disk_init();		/* disk_init must go before ipcache_init() */
     ipcache_init();
     fqdncache_init();
+    parseEtcHosts();
 #if USE_DNSSERVERS
     dnsInit();
 #else

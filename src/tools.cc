@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.199 2000/12/05 09:16:01 wessels Exp $
+ * $Id: tools.cc,v 1.200 2000/12/30 23:29:08 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -924,4 +924,63 @@ isPowTen(int count)
     if (0.0 != x - (double) (int) x)
 	return 0;
     return 1;
+}
+
+void
+parseEtcHosts(void)
+{
+    FILE *fp;
+    char buf[1024];
+    char buf2[512];
+    char *nt = buf;
+    char *lt = buf;
+    char *addr = buf;
+    char *host = NULL;
+    if (NULL == Config.etcHostsPath)
+	return;
+    if (0 == strcmp(Config.etcHostsPath, "none"))
+	return;
+    fp = fopen(Config.etcHostsPath, "r");
+    if (fp == NULL) {
+	debug(1, 1) ("parseEtcHosts: %s: %s\n",
+	    Config.etcHostsPath, xstrerror());
+	return;
+    }
+    while (fgets(buf, 1024, fp)) {	/* for each line */
+	wordlist *hosts = NULL;
+	if (buf[0] == '#')	/* MS-windows likes to add comments */
+	    continue;
+	lt = buf;
+	addr = buf;
+	debug(1, 5) ("etc_hosts: line is '%s'\n", buf);
+	nt = strpbrk(lt, w_space);
+	if (nt == NULL)		/* empty line */
+	    continue;
+	*nt = '\0';		/* null-terminate the address */
+	debug(1, 5) ("etc_hosts: address is '%s'\n", addr);
+	lt = nt + 1;
+	while ((nt = strpbrk(lt, w_space))) {
+	    if (nt - lt == 1) {	/* multiple spaces */
+		debug(1, 5) ("etc_hosts: multiple spaces, skipping\n");
+		lt = nt + 1;
+		continue;
+	    }
+	    *nt = '\0';
+	    debug(1, 5) ("etc_hosts: got hostname '%s'\n", lt);
+	    if (Config.appendDomain && !strchr(lt, '.')) {
+		/* I know it's ugly, but it's only at reconfig */
+		strncpy(buf2, lt, 512);
+		strncat(buf2, Config.appendDomain, 512 - strlen(lt));
+		host = buf2;
+	    } else {
+		host = lt;
+	    }
+	    wordlistAdd(&hosts, host);
+	    if (ipcacheAddEntryFromHosts(host, addr) != 0)
+		continue;	/* invalid address, continuing is useless */
+	    lt = nt + 1;
+	}
+	fqdncacheAddEntryFromHosts(addr, hosts);
+	wordlistDestroy(&hosts);
+    }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.143 2000/11/30 20:28:32 wessels Exp $
+ * $Id: fqdncache.cc,v 1.144 2000/12/30 23:29:06 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -54,6 +54,7 @@ struct _fqdncache_entry {
     unsigned short locks;
     struct {
 	unsigned int negcached:1;
+	unsigned int fromhosts:1;
     } flags;
 };
 
@@ -125,6 +126,7 @@ fqdncache_get(const char *name)
 static int
 fqdncacheExpiredEntry(const fqdncache_entry * f)
 {
+    /* all static entries are locked, so this takes care of them too */
     if (f->locks != 0)
 	return 0;
     if (f->expires > squid_curtime)
@@ -151,6 +153,26 @@ fqdncache_purgelru(void *notused)
 	removed++;
     }
     debug(35, 9) ("fqdncache_purgelru: removed %d entries\n", removed);
+}
+
+static void
+purge_entries_fromhosts(void)
+{
+    dlink_node *m = lru_list.head;
+    fqdncache_entry *i = NULL;
+    fqdncache_entry *t;
+    while (m) {
+	if (i != NULL) {	/* need to delay deletion */
+	    fqdncacheRelease(i);	/* we just override locks */
+	    i = NULL;
+	}
+	t = m->data;
+	if (t->flags.fromhosts)
+	    i = t;
+	m = m->next;
+    }
+    if (i != NULL)
+	fqdncacheRelease(i);
 }
 
 /* create blank fqdncache_entry */
@@ -455,13 +477,15 @@ fqdnStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Blocking calls to gethostbyaddr(): %d\n",
 	FqdncacheStats.ghba_calls);
     storeAppendPrintf(sentry, "FQDN Cache Contents:\n\n");
-
+    storeAppendPrintf(sentry, "%-15.15s %3s %3s %3s %s\n",
+	"Address", "Flg", "TTL", "Cnt", "Hostnames");
     hash_first(fqdn_table);
     while ((f = (fqdncache_entry *) hash_next(fqdn_table))) {
-	ttl = (f->expires - squid_curtime);
-	storeAppendPrintf(sentry, " %-32.32s %c %6d %d",
+	ttl = (f->flags.fromhosts ? -1 : (f->expires - squid_curtime));
+	storeAppendPrintf(sentry, "%-15.15s  %c%c %3.3d % 3d",
 	    hashKeyStr(&f->hash),
 	    f->flags.negcached ? 'N' : ' ',
+	    f->flags.fromhosts ? 'H' : ' ',
 	    ttl,
 	    (int) f->name_count);
 	for (k = 0; k < (int) f->name_count; k++)
@@ -533,7 +557,43 @@ fqdncache_restart(void)
 	    (float) FQDN_HIGH_WATER) / (float) 100);
     fqdncache_low = (long) (((float) Config.fqdncache.size *
 	    (float) FQDN_LOW_WATER) / (float) 100);
+    purge_entries_fromhosts();
 }
+
+/*
+ *  adds a "static" entry from /etc/hosts.  the worldist is to be
+ *  managed by the caller, including pointed-to strings
+ */
+void
+fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
+{
+    fqdncache_entry *fce;
+    int j = 0;
+    if ((fce = fqdncache_get(addr))) {
+	if (1 == fce->flags.fromhosts) {
+	    fqdncacheUnlockEntry(fce);
+	} else if (fce->locks > 0) {
+	    debug(35, 1) ("fqdncacheAddEntryFromHosts: can't add static entry for locked address '%s'\n", addr);
+	    return;
+	} else {
+	    fqdncacheRelease(fce);
+	}
+    }
+    fce = fqdncacheCreateEntry(addr);
+    while (hostnames) {
+	fce->names[j] = xstrdup(hostnames->key);
+	j++;
+	hostnames = hostnames->next;
+	if (j >= FQDN_MAX_NAMES)
+	    break;
+    }
+    fce->name_count = j;
+    fce->names[j] = NULL;	/* it's safe */
+    fce->flags.fromhosts = 1;
+    fqdncacheAddEntry(fce);
+    fqdncacheLockEntry(fce);
+}
+
 
 #ifdef SQUID_SNMP
 /*
