@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.67 2003/01/23 00:36:48 robertc Exp $
+ * $Id: util.h,v 1.68 2003/01/26 23:23:22 robertc Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -82,19 +82,20 @@ SQUIDCEXTERN void Tolower(char *);
 SQUIDCEXTERN void xfree(void *);
 SQUIDCEXTERN void xxfree(const void *);
 #ifdef __cplusplus
-inline void *operator new(size_t size)
+#include <new>
+inline void *operator new(size_t size) throw (std::bad_alloc)
 {
     return xmalloc(size);
 }
-inline void operator delete (void *address)
+inline void operator delete (void *address) throw()
 {
     xfree (address);
 }
-inline void *operator new[] (size_t size)
+inline void *operator new[] (size_t size) throw (std::bad_alloc)
 {
     return xmalloc(size);
 }
-inline void operator delete[] (void *address)
+inline void operator delete[] (void *address) throw()
 {
     xfree (address);
 }
