@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.112 1998/05/28 04:15:20 wessels Exp $
+ * $Id: net_db.cc,v 1.113 1998/05/28 05:37:39 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -401,7 +401,7 @@ static void
 netdbReloadState(void)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
-    char *buf = memAllocate(MEM_4K_BUF);
+    char *buf;
     char *t;
     FILE *fp;
     netdbEntry *n;
@@ -413,6 +413,7 @@ netdbReloadState(void)
     fp = fopen(path, "r");
     if (fp == NULL)
 	return;
+    buf = memAllocate(MEM_4K_BUF);
     while (fgets(buf, 4095, fp)) {
 	memset(&N, '\0', sizeof(netdbEntry));
 	if ((t = strtok(buf, w_space)) == NULL)
