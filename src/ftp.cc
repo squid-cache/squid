@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.117 1997/06/02 17:19:25 wessels Exp $
+ * $Id: ftp.cc,v 1.118 1997/06/02 19:56:01 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -182,8 +182,8 @@ ftpStateFree(int fd, void *data)
     FtpStateData *ftpState = data;
     if (ftpState == NULL)
 	return;
-    storeUnlockObject(ftpState->entry);
     storeUnregisterAbort(ftpState->entry);
+    storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
 	put_free_8k_page(ftpState->reply_hdr);
 	ftpState->reply_hdr = NULL;

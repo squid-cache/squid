@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.74 1997/06/02 05:39:51 wessels Exp $
+ * $Id: wais.cc,v 1.75 1997/06/02 19:56:04 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -132,8 +132,8 @@ waisStateFree(int fd, void *data)
     WaisStateData *waisState = data;
     if (waisState == NULL)
 	return;
-    storeUnlockObject(waisState->entry);
     storeUnregisterAbort(waisState->entry);
+    storeUnlockObject(waisState->entry);
     xfree(waisState);
 }
 
