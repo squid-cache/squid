@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.70 2003/03/02 22:20:31 hno Exp $
+ * $Id: util.h,v 1.71 2003/07/07 22:44:28 robertc Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -86,23 +86,16 @@ SQUIDCEXTERN void Tolower(char *);
 SQUIDCEXTERN void xfree(void *);
 SQUIDCEXTERN void xxfree(const void *);
 #ifdef __cplusplus
-#include <new>
-inline void *operator new(size_t size) throw (std::bad_alloc)
-{
-    return xmalloc(size);
-}
-inline void operator delete (void *address) throw()
-{
-    xfree (address);
-}
-inline void *operator new[] (size_t size) throw (std::bad_alloc)
-{
-    return xmalloc(size);
-}
-inline void operator delete[] (void *address) throw()
-{
-    xfree (address);
-}
+/* Any code using libstdc++ must have externally resolvable overloads
+ * for void * operator new - which means in the .o for the binary,
+ * or in a shared library. static libs don't propogate the symbol
+ * so, look in the translation unit containing main() in squid
+ * for the extern version in squid
+ */
+#ifndef _SQUID_EXTERNNEW_
+#define _SQUID_EXTERNNEW_ extern inline
+#endif
+#include "SquidNew.h"
 #endif
 
 /* rfc1738.c */
