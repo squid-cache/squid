@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.19 1998/10/18 09:06:52 wessels Exp $
+ * $Id: comm_select.cc,v 1.20 1998/10/18 23:06:47 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -525,7 +525,7 @@ comm_select_http_incoming(void)
     statHistCount(&Counter.comm_http_incoming, nevents);
 }
 
-#define DEBUG_FDBITS 1
+#define DEBUG_FDBITS 0
 /* Select on all sockets; call handlers for those that are ready. */
 int
 comm_select(int msec)
@@ -629,7 +629,6 @@ comm_select(int msec)
 	fdsp = (fd_mask *) & readfds;
 	maxindex = howmany(maxfd, (sizeof(*fdsp) * NBBY));
 	for (j = 0; j < maxindex; j++) {
-	    debug(5,9)("fdsp[%d] = %x\n", j, fdsp[j]);
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
@@ -637,8 +636,8 @@ comm_select(int msec)
 		    continue;
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
-	        debug(5,9)("FD %d bit set for reading\n", fd);
 #if DEBUG_FDBITS
+	        debug(5,9)("FD %d bit set for reading\n", fd);
 		assert(FD_ISSET(fd, &readfds));
 #endif
 		if (fdIsIcp(fd)) {
@@ -656,9 +655,6 @@ comm_select(int msec)
 		    commUpdateReadBits(fd, NULL);
 		    hdl(fd, fd_table[fd].read_data);
 		    Counter.select_fds++;
-		} else {
-		    debug(5, 1)("comm_select: NO READ HANDLER FOR FD %d\n", fd);
-		    debug(5, 1)("comm_select: %s\n", fd_table[fd].desc);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -678,8 +674,8 @@ comm_select(int msec)
 		    continue;
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
-	        debug(5,9)("FD %d bit set for writing\n", fd);
 #if DEBUG_FDBITS
+	        debug(5,9)("FD %d bit set for writing\n", fd);
 		assert(FD_ISSET(fd, &writefds));
 #endif
 		if (fdIsIcp(fd)) {
@@ -697,9 +693,6 @@ comm_select(int msec)
 		    commUpdateWriteBits(fd, NULL);
 		    hdl(fd, fd_table[fd].write_data);
 		    Counter.select_fds++;
-		} else {
-		    debug(5, 1)("comm_select: NO WRITE HANDLER FOR FD %d\n", fd);
-		    debug(5, 1)("comm_select: %s\n", fd_table[fd].desc);
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
