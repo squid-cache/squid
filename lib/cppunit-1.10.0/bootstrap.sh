@@ -69,5 +69,5 @@ if grep m4_regex aclocal.m4 >/dev/null; then
 fi
 bootstrap autoheader$acver
 bootstrap libtoolize$ltver --automake --force --copy
-bootstrap automake$amver --add-missing -f --copy
+bootstrap automake$amver --add-missing -f --copy --foreign
 bootstrap autoconf$acver
