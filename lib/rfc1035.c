@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.c,v 1.6 1999/04/18 05:26:22 wessels Exp $
+ * $Id: rfc1035.c,v 1.7 1999/04/18 05:48:05 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -63,6 +63,7 @@
 #endif
 
 #include "rfc1035.h"
+#include "snprintf.h"
 
 #define RFC1035_MAXLABELSZ 63
 
