@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.36 1998/02/10 21:44:33 wessels Exp $
+ * $Id: globals.h,v 1.37 1998/02/12 23:35:58 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -60,6 +60,7 @@ extern int opt_reload_hit_only;	/* 0 */
 extern int opt_syslog_enable;	/* 0 */
 extern int opt_udp_hit_obj;	/* 0 */
 extern int opt_create_swap_dirs;	/* 0 */
+extern int opt_store_doublecheck;	/* 0 */
 extern int syslog_enable;	/* 0 */
 extern int theInIcpConnection;	/* -1 */
 extern int theOutIcpConnection;	/* -1 */
@@ -92,6 +93,7 @@ extern time_t hit_only_mode_until;	/* 0 */
 extern StatCounters Counter;
 extern char *err_type_str[];
 extern char *icp_opcode_str[];
+extern char *swap_log_op_str[];
 extern struct radix_node_head *AS_tree_head;
 extern double request_failure_ratio;	/* 0.0 */
 extern int store_hash_buckets;	/* 0 */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.380 1998/02/12 16:36:30 wessels Exp $
+ * $Id: store.cc,v 1.381 1998/02/12 23:36:01 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -360,8 +360,11 @@ storeSetPrivateKey(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     if (e->key && EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
-    if (e->key)
+    if (e->key) {
+	if (e->swap_file_number > -1)
+	    storeDirSwapLog(e, SWAP_LOG_DEL);
 	storeHashDelete(e);
+    }
     if (mem != NULL) {
 	mem->reqnum = getKeyCounter();
 	newkey = storeKeyPrivate(mem->url, mem->method, mem->reqnum);
@@ -393,6 +396,8 @@ storeSetPublicKey(StoreEntry * e)
 	storeHashDelete(e);
     storeHashInsert(e, newkey);
     EBIT_CLR(e->flag, KEY_PRIVATE);
+    if (e->swap_file_number > -1)
+	storeDirSwapLog(e, SWAP_LOG_ADD);
 }
 
 StoreEntry *
@@ -665,11 +670,9 @@ storeMaintainSwapSpace(void *datanotused)
 	} else if (bigclean) {
 	    expired++;
 	    storeRelease(e);
-	} else {
-	    if (storeCheckExpired(e, 1)) {
-		expired++;
-		storeRelease(e);
-	    }
+	} else if (storeCheckExpired(e, 1)) {
+	    expired++;
+	    storeRelease(e);
 	}
 	if (expired > max_remove)
 	    break;
@@ -727,7 +730,8 @@ storeRelease(StoreEntry * e)
 	storeUnlinkFileno(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
 	    storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, -1);
-	storeDirSwapLog(e, SWAP_LOG_DEL);
+	if (!EBIT_TEST(e->flag, KEY_PRIVATE))
+	    storeDirSwapLog(e, SWAP_LOG_DEL);
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_StoreEntry(e);
