@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.206 2001/04/14 00:03:24 hno Exp $
+ * $Id: tools.cc,v 1.207 2001/04/27 16:23:48 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -992,7 +992,7 @@ parseEtcHosts(void)
 	debug(1, 5) ("etc_hosts: address is '%s'\n", addr);
 	lt = nt + 1;
 	while ((nt = strpbrk(lt, w_space))) {
-	    if (nt - lt == 1) {	/* multiple spaces */
+	    if (nt == lt) {	/* multiple spaces */
 		debug(1, 5) ("etc_hosts: multiple spaces, skipping\n");
 		lt = nt + 1;
 		continue;
