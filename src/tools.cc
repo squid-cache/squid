@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.132 1997/12/01 22:45:59 wessels Exp $
+ * $Id: tools.cc,v 1.133 1997/12/06 01:26:50 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -119,15 +119,8 @@ Thanks!\n"
 static void fatal_common(const char *);
 static void mail_warranty(void);
 static void shutdownTimeoutHandler(int fd, void *data);
-
 #if USE_ASYNC_IO
 static void safeunlinkComplete(void *data, int retcode, int errcode);
-#endif
-
-#ifdef _SQUID_SOLARIS_
-int getrusage(int, struct rusage *);
-int getpagesize(void);
-int gethostname(char *, int);
 #endif
 
 static void
