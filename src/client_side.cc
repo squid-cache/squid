@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.367 1998/07/30 06:11:53 wessels Exp $
+ * $Id: client_side.cc,v 1.368 1998/07/30 06:14:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1086,7 +1086,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 * we don't have full reply headers yet; either wait for more or
 	 * punt to clientProcessMiss.
 	 */
-	if (e->mem_status == IN_MEMORY || e->store_status == STORE_COMPLETE) {
+	if (e->mem_status == IN_MEMORY || e->store_status == STORE_OK) {
 	    memFree(MEM_4K_BUF, buf);
 	    clientProcessMiss(http);
 	} else if (size == SM_PAGE_SIZE && http->out.offset == 0) {
