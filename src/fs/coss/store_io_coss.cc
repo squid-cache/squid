@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.2 2000/05/12 00:29:19 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.3 2000/05/16 07:09:36 wessels Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -198,7 +198,7 @@ storeCossOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     /* make local copy so we don't have to lock membuf */
     if (p) {
 	cstate->readbuffer = xmalloc(sio->st_size);
-	memcpy(cstate->readbuffer, p, sio->st_size);
+	xmemcpy(cstate->readbuffer, p, sio->st_size);
     } else {
 	/* Do the allocation */
 	/* this is the first time we've been called on a new sio
@@ -303,7 +303,7 @@ storeCossWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     diskoffset = sio->swap_filen + sio->offset;
     dest = storeCossMemPointerFromDiskOffset(SD, diskoffset, &membuf);
     assert(dest != NULL);
-    memcpy(dest, buf, size);
+    xmemcpy(dest, buf, size);
     sio->offset += size;
     if (free_func)
 	(free_func) (buf);
@@ -333,11 +333,11 @@ storeCossReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 	if (cstate->readbuffer == NULL) {
 	    cstate->readbuffer = xmalloc(sio->st_size);
 	    p = storeCossMemPointerFromDiskOffset(SD, sio->swap_filen, NULL);
-	    memcpy(cstate->readbuffer, p, sio->st_size);
+	    xmemcpy(cstate->readbuffer, p, sio->st_size);
 	    storeCossMemBufUnlock(SD, sio);
 	}
 	sio->offset += len;
-	memcpy(cstate->requestbuf, &cstate->readbuffer[cstate->requestoffset],
+	xmemcpy(cstate->requestbuf, &cstate->readbuffer[cstate->requestoffset],
 	    cstate->requestlen);
 	rlen = (size_t) cstate->requestlen;
     }

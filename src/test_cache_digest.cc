@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.24 2000/03/06 16:23:36 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.25 2000/05/16 07:09:34 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -436,7 +436,7 @@ accessLogReader(FileIterator * fi)
  * strcmp(hier, "SSL_PARENT_MISS") &&
  * strcmp(hier, "DEFAULT_PARENT");
  */
-    memcpy(entry->key, storeKeyPublic(url, method_id), sizeof(entry->key));
+    xmemcpy(entry->key, storeKeyPublic(url, method_id), sizeof(entry->key));
     /*fprintf(stdout, "%s:%d: %s %s %s %s\n",
      * fname, count, method, storeKeyText(entry->key), url, hier); */
     return frOk;

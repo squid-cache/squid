@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.23 2000/03/06 16:23:28 wessels Exp $
+ * $Id: MemBuf.cc,v 1.24 2000/05/16 07:09:33 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -332,7 +332,7 @@ memBufGrow(MemBuf * mb, mb_size_t min_cap)
 
     /* copy and free old buffer if needed */
     if (old_mb.buf && old_mb.freefunc) {
-	memcpy(mb->buf, old_mb.buf, old_mb.size);
+	xmemcpy(mb->buf, old_mb.buf, old_mb.size);
 	(*old_mb.freefunc) (old_mb.buf);
     } else {
 	assert(!old_mb.buf && !old_mb.freefunc);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.327 2000/05/12 00:29:08 wessels Exp $
+ * $Id: stat.cc,v 1.328 2000/05/16 07:09:34 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -970,7 +970,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 {
     assert(dest && orig);
     /* this should take care of all the fields, but "special" ones */
-    memcpy(dest, orig, sizeof(*dest));
+    xmemcpy(dest, orig, sizeof(*dest));
     /* prepare space where to copy special entries */
     statCountersInitSpecial(dest);
     /* now handle special cases */
