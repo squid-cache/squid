@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.72 2001/10/24 06:55:43 hno Exp $
+ * $Id: access_log.cc,v 1.73 2002/02/26 08:13:07 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -357,6 +357,8 @@ accessLogRotate(void)
 void
 accessLogClose(void)
 {
+    if (NULL == logfile)
+	return;
     logfileClose(logfile);
     logfile = NULL;
 #if HEADERS_LOG
