@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.37 2001/04/22 15:21:57 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.38 2001/04/22 15:22:51 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -731,7 +731,7 @@ Squid consists of the following major components
 	We want to try out our own, customized filesystems with Squid.
 	In order to do that, we need a well-defined interface
 	for the bits of Squid that access the permanent storage
-	devices. We also require tigther control of the replacement
+	devices. We also require tighter control of the replacement
 	policy by each storage module, rather than a single global
 	replacement policy.
 
