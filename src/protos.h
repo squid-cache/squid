@@ -4,6 +4,7 @@ extern void accessLogLog(AccessLogEntry *);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
 extern void accessLogInit(void);
+extern const char *accessLogTime(time_t);
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, icp_ping_data *, const char *);
 
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,

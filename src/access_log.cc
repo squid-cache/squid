@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.21 1998/02/03 22:08:10 wessels Exp $
+ * $Id: access_log.cc,v 1.22 1998/02/20 18:47:49 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -316,4 +316,18 @@ accessLogInit(void)
 {
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
     accessLogOpen(Config.Log.access);
+}
+
+const char *
+accessLogTime(time_t t)
+{
+    struct tm *tm;
+    static char buf[128];
+    static time_t last_t = 0;
+    if (t != last_t) {
+	tm = localtime(&t);
+	strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
+	last_t = t;
+    }
+    return buf;
 }
