@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.38 1997/04/30 03:12:12 wessels Exp $
+ * $Id: redirect.cc,v 1.39 1997/04/30 18:30:59 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -133,7 +133,7 @@ redirectCreateRedirector(const char *command)
 	    comm_close(sfd);
 	    return -1;
 	}
-        commSetTimeout(sfd, -1, NULL, NULL);
+	commSetTimeout(sfd, -1, NULL, NULL);
 	debug(29, 4, "redirect_create_redirector: FD %d connected to %s #%d.\n",
 	    sfd, command, ++n_redirector);
 	slp.tv_sec = 0;
@@ -173,6 +173,7 @@ redirectHandleRead(int fd, void *data)
     len = read(fd,
 	redirector->inbuf + redirector->offset,
 	redirector->size - redirector->offset);
+    fd_bytes(fd, len, FD_READ);
     debug(29, 5, "redirectHandleRead: %d bytes from Redirector #%d.\n",
 	len, redirector->index + 1);
     if (len <= 0) {
@@ -307,7 +308,6 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
     comm_write(redirect->fd,
 	buf,
 	len,
-	0,			/* timeout */
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	put_free_8k_page);
@@ -376,6 +376,7 @@ redirectOpenServers(void)
     int redirectsocket;
     LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
     static int first_time = 0;
+    char *s;
 
     redirectFreeMemory();
     if (Config.Program.redirect == NULL)
@@ -396,8 +397,12 @@ redirectOpenServers(void)
 	    redirect_child_table[k]->inbuf = get_free_8k_page();
 	    redirect_child_table[k]->size = 8192;
 	    redirect_child_table[k]->offset = 0;
+	    if ((s = strrchr(prg, '/')))
+		s++;
+	    else
+		s = prg;
 	    sprintf(fd_note_buf, "%s #%d",
-		prg,
+		s,
 		redirect_child_table[k]->index + 1);
 	    fd_note(redirect_child_table[k]->fd, fd_note_buf);
 	    commSetNonBlocking(redirect_child_table[k]->fd);

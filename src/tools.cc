@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.101 1997/04/30 03:12:15 wessels Exp $
+ * $Id: tools.cc,v 1.102 1997/04/30 18:31:03 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -330,17 +330,17 @@ setSocketShutdownLifetimes(int to)
     FD_ENTRY *f = NULL;
     int i;
     for (i = Biggest_FD; i >= 0; i--) {
-        f = &fd_table[i];
-        if (!f->read_handler && !f->write_handler)
-            continue;
-        if (f->type != FD_SOCKET)
-            continue;
-        if (f->timeout > 0 && (int) (f->timeout - squid_curtime) <= to)
-            continue;
-        commSetTimeout(i,
-            to,
-            f->timeout_handler ? f->timeout_handler : shutdownTimeoutHandler,
-            f->timeout_data);
+	f = &fd_table[i];
+	if (!f->read_handler && !f->write_handler)
+	    continue;
+	if (f->type != FD_SOCKET)
+	    continue;
+	if (f->timeout > 0 && (int) (f->timeout - squid_curtime) <= to)
+	    continue;
+	commSetTimeout(i,
+	    to,
+	    f->timeout_handler ? f->timeout_handler : shutdownTimeoutHandler,
+	    f->timeout_data);
     }
 }
 
@@ -361,10 +361,8 @@ normal_shutdown(void)
     statCloseLog();
 #if PURIFY
     configFreeMemory();
-    diskFreeMemory();
     storeFreeMemory();
     commFreeMemory();
-    filemapFreeMemory();
     dnsFreeMemory();
     redirectFreeMemory();
     errorpageFreeMemory();

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.98 1997/04/29 22:12:49 wessels Exp $
+ * $Id: client_side.cc,v 1.99 1997/04/30 18:30:44 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -571,7 +571,6 @@ clientPurgeRequest(icpStateData * icpState)
     comm_write(fd,
 	msg,
 	strlen(msg),
-	30,
 	icpSendERRORComplete,
 	icpState,
 	NULL);

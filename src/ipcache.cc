@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.111 1997/04/29 22:13:00 wessels Exp $
+ * $Id: ipcache.cc,v 1.112 1997/04/30 18:30:56 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -554,6 +554,7 @@ ipcache_dnsHandleRead(int fd, void *data)
     len = read(fd,
 	dnsData->ip_inbuf + dnsData->offset,
 	dnsData->size - dnsData->offset);
+    fd_bytes(fd, len, FD_READ);
     debug(14, 5, "ipcache_dnsHandleRead: Result from DNS ID %d (%d bytes)\n",
 	dnsData->id, len);
     if (len <= 0) {
@@ -724,7 +725,6 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     comm_write(dns->outpipe,
 	buf,
 	strlen(buf),
-	0,			/* timeout */
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	xfree);

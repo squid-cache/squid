@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.76 1997/04/30 03:12:06 wessels Exp $
+ * $Id: gopher.cc,v 1.77 1997/04/30 18:30:52 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -178,7 +178,7 @@ static void gopherSendComplete(int fd,
 static void gopherStartComplete _PARAMS((void *datap, int status));
 static PF gopherSendRequest;
 static GopherStateData *CreateGopherStateData _PARAMS((void));
-static CCH gopherConnectDone;
+static CNCB gopherConnectDone;
 
 static char def_gopher_bin[] = "www/unknown";
 static char def_gopher_text[] = "text/plain";
@@ -727,7 +727,7 @@ gopherReadReply(int fd, void *data)
 	    data, 0);
 	/* don't install read timeout until we are below the GAP */
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-            commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
+	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
@@ -740,9 +740,10 @@ gopherReadReply(int fd, void *data)
     errno = 0;
     /* leave one space for \0 in gopherToHTML */
     len = read(fd, buf, TEMP_BUF_SIZE - 1);
+    fd_bytes(fd, len, FD_READ);
     debug(10, 5, "gopherReadReply: FD %d read len=%d\n", fd, len);
     if (len > 0) {
-        commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
+	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Gopher.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -890,7 +891,6 @@ gopherSendRequest(int fd, void *data)
     comm_write(fd,
 	buf,
 	strlen(buf),
-	30,
 	gopherSendComplete,
 	data,
 	put_free_4k_page);

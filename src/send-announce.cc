@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.31 1997/04/28 05:32:48 wessels Exp $
+ * $Id: send-announce.cc,v 1.32 1997/04/30 18:31:00 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -79,6 +79,7 @@ send_announce(int fd, const ipcache_addrs * ia, void *data)
     if ((file = Config.Announce.file)) {
 	fd = file_open(file, NULL, O_RDONLY, NULL, NULL);
 	if (fd > -1 && (n = read(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
+	    fd_bytes(fd, n, FD_READ);
 	    l += n;
 	    sndbuf[l] = '\0';
 	    file_close(fd);

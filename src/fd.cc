@@ -28,10 +28,9 @@ fdUpdateBiggest(int fd, unsigned int status)
 }
 
 void
-fd_close (int fd)
+fd_close(int fd)
 {
     FD_ENTRY *fde = &fd_table[fd];
-    debug(7, 1, "fd_close: FD %3d\n", fd);
     fdUpdateBiggest(fd, fde->open = FD_CLOSE);
     memset(fde, '\0', sizeof(FD_ENTRY));
     fde->timeout = 0;
@@ -41,14 +40,10 @@ void
 fd_open(int fd, unsigned int type, const char *desc)
 {
     FD_ENTRY *fde = &fd_table[fd];
-    debug(7, 1, "fd_open : FD %3d, %8.8s, %s\n",
-	fd,
-	fdstatTypeStr[type],
-	desc ? desc : "N/A");
     fde->type = type;
     fdUpdateBiggest(fd, fde->open = FD_OPEN);
     if (desc)
-        xstrncpy(fde->desc, desc, FD_DESC_SZ);
+	xstrncpy(fde->desc, desc, FD_DESC_SZ);
 }
 
 void
@@ -56,4 +51,18 @@ fd_note(int fd, const char *s)
 {
     FD_ENTRY *fde = &fd_table[fd];
     xstrncpy(fde->desc, s, FD_DESC_SZ);
+}
+
+void
+fd_bytes(int fd, int len, unsigned int type)
+{
+    FD_ENTRY *fde = &fd_table[fd];
+    if (len < 0)
+	return;
+    if (type == FD_READ)
+	fde->bytes_read += len;
+    else if (type == FD_WRITE)
+	fde->bytes_written += len;
+    else
+	fatal_dump("fd_bytes: bad type");
 }

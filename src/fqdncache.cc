@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.49 1997/04/29 22:12:54 wessels Exp $
+ * $Id: fqdncache.cc,v 1.50 1997/04/30 18:30:50 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -534,6 +534,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
     len = read(fd,
 	dnsData->ip_inbuf + dnsData->offset,
 	dnsData->size - dnsData->offset);
+    fd_bytes(fd, len, FD_READ);
     debug(35, 5, "fqdncache_dnsHandleRead: Result from DNS ID %d (%d bytes)\n",
 	dnsData->id, len);
     if (len <= 0) {
@@ -703,7 +704,6 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
     comm_write(dns->outpipe,
 	buf,
 	strlen(buf),
-	0,			/* timeout */
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	xfree);

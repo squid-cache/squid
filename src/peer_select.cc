@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.10 1997/04/29 22:13:04 wessels Exp $
+ * $Id: peer_select.cc,v 1.11 1997/04/30 18:30:58 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -310,7 +310,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_opcode op, void *data)
 	    SOURCE_FASTEST,
 	    &psstate->icp,
 	    request->host);
-	peerSelectCallback(psstate, p);
+	peerSelectCallback(psstate, NULL);
 	return;
     }
     if (psstate->icp.n_recv < psstate->icp.n_replies_expected)

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.134 1997/04/30 16:18:43 wessels Exp $
+ * $Id: neighbors.cc,v 1.135 1997/04/30 18:30:57 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -181,7 +181,7 @@ hierarchyNote(request_t * request,
 	return;
     request->hierarchy.code = code;
     if (icpdata)
-        request->hierarchy.icp = *icpdata;
+	request->hierarchy.icp = *icpdata;
     request->hierarchy.host = xstrdup(cache_host);
     request->hierarchy.icp.stop = current_time;
 }
@@ -540,7 +540,7 @@ neighborsUdpPing(request_t * request,
 
     /* only do source_ping if we have neighbors */
     if (Peers.n) {
-	if (Config.sourcePing) {
+	if (!Config.sourcePing) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, 0))) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
@@ -679,13 +679,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	    /* if we reach here, source-ping reply is the first 'parent',
 	     * so fetch directly from the source */
 	    debug(15, 6, "Source is the first to respond.\n");
-	    hierarchyNote(entry->mem_obj->request,
-		SOURCE_FASTEST,
-		0,
-		fqdnFromAddr(from->sin_addr));
-	    entry->ping_status = PING_DONE;
-	    protoStart(0, entry, NULL, entry->mem_obj->request);
-	    return;
+	    mem->icp_reply_callback(NULL, ntype, opcode, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_MISS) {
 	if (e == NULL) {
@@ -1122,5 +1116,4 @@ peerCountHandleIcpReply(peer * p, peer_t type, icp_opcode op, void *data)
 {
     ps_state *psstate = data;
     psstate->icp.n_recv++;
-    debug(0, 0, "peerCountHandleIcpReply: %d replies\n", psstate->icp.n_recv);
 }

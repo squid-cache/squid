@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.46 1997/04/30 03:12:12 wessels Exp $
+ * $Id: ssl.cc,v 1.47 1997/04/30 18:31:01 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -130,6 +130,7 @@ sslReadServer(int fd, void *data)
     SslStateData *sslState = data;
     int len;
     len = read(sslState->server.fd, sslState->server.buf, SQUID_TCP_SO_RCVBUF);
+    fd_bytes(sslState->server.fd, len, FD_READ);
     debug(26, 5, "sslReadServer FD %d, read %d bytes\n", fd, len);
     if (len < 0) {
 	debug(50, 1, "sslReadServer: FD %d: read failure: %s\n",
@@ -150,8 +151,8 @@ sslReadServer(int fd, void *data)
     } else {
 	sslState->server.offset = 0;
 	sslState->server.len = len;
-        /* extend server read timeout */
-        commSetTimeout(sslState->server.fd, Config.Timeout.read, NULL, NULL);
+	/* extend server read timeout */
+	commSetTimeout(sslState->server.fd, Config.Timeout.read, NULL, NULL);
 	commSetSelect(sslState->client.fd,
 	    COMM_SELECT_WRITE,
 	    sslWriteClient,
@@ -166,6 +167,7 @@ sslReadClient(int fd, void *data)
     SslStateData *sslState = data;
     int len;
     len = read(sslState->client.fd, sslState->client.buf, SQUID_TCP_SO_RCVBUF);
+    fd_bytes(sslState->client.fd, len, FD_READ);
     debug(26, 5, "sslReadClient FD %d, read %d bytes\n",
 	sslState->client.fd, len);
     if (len < 0) {
@@ -333,7 +335,6 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
 	comm_write(sslState->client.fd,
 	    xstrdup(buf),
 	    strlen(buf),
-	    30,
 	    sslErrorComplete,
 	    sslState,
 	    xfree);
@@ -343,9 +344,9 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
 	sslState->client.fd,
 	sslState->server.fd);
     commSetTimeout(sslState->server.fd,
-        Config.Timeout.read,
-        sslTimeout,
-        sslState);
+	Config.Timeout.read,
+	sslTimeout,
+	sslState);
     commConnectStart(fd,
 	sslState->host,
 	sslState->port,
@@ -368,7 +369,6 @@ sslConnectDone(int fd, int status, void *data)
 	comm_write(sslState->client.fd,
 	    xstrdup(buf),
 	    strlen(buf),
-	    30,
 	    sslErrorComplete,
 	    sslState,
 	    xfree);
@@ -409,7 +409,6 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
 	comm_write(fd,
 	    xstrdup(buf),
 	    strlen(buf),
-	    30,
 	    NULL,
 	    NULL,
 	    xfree);
@@ -432,9 +431,9 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
 	sslClientClosed,
 	sslState);
     commSetTimeout(sslState->client.fd,
-        Config.Timeout.lifetime,
-        sslTimeout,
-        sslState);
+	Config.Timeout.lifetime,
+	sslTimeout,
+	sslState);
     peerSelect(request,
 	NULL,
 	sslPeerSelectComplete,

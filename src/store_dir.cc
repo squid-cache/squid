@@ -310,7 +310,7 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
     debug(20, 1, "Rebuilding storage from %s\n", swaplog_path);
     /* close the existing write-only FD */
     if (SD->swaplog_fd >= 0)
-        file_close(SD->swaplog_fd);
+	file_close(SD->swaplog_fd);
     /* open a write-only FD for the new log */
     fd = file_open(new_path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
     if (fd < 0) {
