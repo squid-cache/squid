@@ -3264,7 +3264,7 @@ fi
 
 if test "$GCC" = "yes"; then
    TRIE_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
-   TRIE_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wcomments"
+   TRIE_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
 else
    TRIE_CFLAGS=
    TRIE_CXXFLAGS=
