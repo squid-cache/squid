@@ -1,5 +1,5 @@
 /*
- * $Id: StatHist.cc,v 1.1 1998/02/25 09:55:06 rousskov Exp $
+ * $Id: StatHist.cc,v 1.2 1998/02/25 16:40:06 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -152,18 +152,12 @@ statHistDeltaMedian(const StatHist * A, const StatHist * B)
     xfree(D);
     if (s1 == 0)
 	return 0.0;
-    if (a > h) {
-	debug(0, 0) ("statHistDeltaMedian: a=%d, h=%d\n", a, h);
+    if (a > h)
 	return 0.0;
-    }
-    if (a >= b) {
-	debug(0, 0) ("statHistDeltaMedian: a=%d, b=%d\n", a, b);
+    if (a >= b)
 	return 0.0;
-    }
-    if (I >= J) {
-	debug(0, 0) ("statHistDeltaMedian: I=%d, J=%d\n", I, J);
+    if (I >= J)
 	return 0.0;
-    }
     f = (h - a) / (b - a);
     K = (int) (f * (double) (J - I) + I);
     return statHistVal(A, K);
