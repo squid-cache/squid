@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.210 2001/01/12 00:37:21 wessels Exp $
+ * $Id: squid.h,v 1.211 2001/01/14 14:18:18 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -214,6 +214,10 @@
 
 #if defined(__QNX__)
 #include <unix.h>
+#endif
+
+#if HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
 #endif
 
 /*
@@ -435,9 +439,6 @@ struct rusage {
 #else
 #define SQUID_NONBLOCK O_NDELAY
 #endif
-
-#include <sys/param.h>
-#include <sys/mount.h>
 
 /*
  * I'm sick of having to keep doing this ..
