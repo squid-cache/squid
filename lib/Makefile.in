@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.91 2003/05/05 22:57:20 hno Exp $
+#  $Id: Makefile.in,v 1.92 2003/06/20 00:13:10 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -207,6 +207,9 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 SUBDIRS = libTrie
+
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 @ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = Profiler.c
 @ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
