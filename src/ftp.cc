@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.354 2003/09/01 03:49:38 robertc Exp $
+ * $Id: ftp.cc,v 1.355 2003/09/07 16:53:37 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1135,44 +1135,47 @@ ftpDataComplete(FtpStateData * ftpState)
 }
 
 static void
-ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     int j;
     int bin;
     StoreEntry *entry = ftpState->entry;
     size_t read_sz;
+
+    debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, (unsigned int)len);
+
+    if (len > 0) {
+        kb_incr(&statCounter.server.all.kbytes_in, len);
+        kb_incr(&statCounter.server.ftp.kbytes_in, len);
+    }
+
+    if (errflag == COMM_ERR_CLOSING)
+        return;
+
+    assert(fd == ftpState->data.fd);
+
 #if DELAY_POOLS
 
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
+
 #endif
-
-    assert(fd == ftpState->data.fd);
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
-     */
-
-    if (flag == COMM_ERR_CLOSING) {
-        return;
-    }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         comm_close(ftpState->ctrl.fd);
         return;
     }
 
-    if (flag == COMM_OK && len > 0) {
+    if (errflag == COMM_OK && len > 0) {
 #if DELAY_POOLS
         delayId.bytesIn(len);
 #endif
 
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.ftp.kbytes_in, len);
         ftpState->data.offset += len;
     }
 
-    debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, (unsigned int)len);
 
-    if (flag == COMM_OK && len > 0) {
+    if (errflag == COMM_OK && len > 0) {
         IOStats.Ftp.reads++;
 
         for (j = len - 1, bin = 0; j; bin++)
@@ -1185,7 +1188,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
         ftpListingStart(ftpState);
     }
 
-    if (flag != COMM_OK || len < 0) {
+    if (errflag != COMM_OK || len < 0) {
         debug(50, ignoreErrno(xerrno) ? 3 : 1) ("ftpDataRead: read error: %s\n", xstrerr(xerrno));
 
         if (ignoreErrno(xerrno)) {
@@ -1578,18 +1581,19 @@ ftpScheduleReadControlReply(FtpStateData * ftpState, int buffered_ok)
 }
 
 static void
-ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     StoreEntry *entry = ftpState->entry;
-    debug(9, 5) ("ftpReadControlReply\n");
+    debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, (int)len);
 
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
-    */
-
-    if (flag == COMM_ERR_CLOSING) {
-        return;
+    if (len > 0) {
+        kb_incr(&statCounter.server.all.kbytes_in, len);
+        kb_incr(&statCounter.server.ftp.kbytes_in, len);
     }
+
+    if (errflag == COMM_ERR_CLOSING)
+        return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         comm_close(ftpState->ctrl.fd);
@@ -1598,15 +1602,12 @@ ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, 
 
     assert(ftpState->ctrl.offset < (off_t)ftpState->ctrl.size);
 
-    if (flag == COMM_OK && len > 0) {
+    if (errflag == COMM_OK && len > 0) {
         fd_bytes(fd, len, FD_READ);
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.ftp.kbytes_in, len);
     }
 
-    debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, (int)len);
 
-    if (flag != COMM_OK || len < 0) {
+    if (errflag != COMM_OK || len < 0) {
         debug(50, ignoreErrno(xerrno) ? 3 : 1) ("ftpReadControlReply: read error: %s\n", xstrerr(xerrno));
 
         if (ignoreErrno(xerrno)) {
@@ -2364,9 +2365,8 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
     FtpStateData *ftpState = (FtpStateData *)data;
     debug(9, 3) ("ftpAcceptDataConnection\n");
 
-    if (flag == COMM_ERR_CLOSING) {
+    if (flag == COMM_ERR_CLOSING)
         return;
-    }
 
     if (EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED)) {
         comm_close(ftpState->ctrl.fd);
