@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.36 2001/01/12 00:37:17 wessels Exp $
+ * $Id: dns_internal.cc,v 1.37 2001/02/14 20:58:10 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -97,6 +97,11 @@ idnsAddNameserver(const char *buf)
     if (!safe_inet_addr(buf, &A)) {
 	debug(78, 0) ("WARNING: rejecting '%s' as a name server, because it is not a numeric IP address\n", buf);
 	return;
+    }
+    if (A.s_addr == 0) {
+	debug(78, 0) ("WARNING: Squid does not accept 0.0.0.0 in DNS server specifications.\n");
+	debug(78, 0) ("Will be using 127.0.0.1 instead, assuming you meant that DNS is running on the same machine\n");
+	safe_inet_addr("127.0.0.1", &A);
     }
     if (nns == nns_alloc) {
 	int oldalloc = nns_alloc;
