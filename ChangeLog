@@ -18,6 +18,8 @@
 	  Nordstrom).
 	- Call clientReadRequest() directly instead of commSetSelect()
 	  for pipelined requests (Henrik Nordstrom).
+	- Fixed 4k page leak in icpHandleIMSReply();
+	- Renamed 'icp*' functions to 'client*' names in client_side.c.
 
 Changes to squid-1.2.beta10 (Dec 30, 1997):
 

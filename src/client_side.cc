@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.184 1998/01/01 05:48:38 wessels Exp $
+ * $Id: client_side.cc,v 1.185 1998/01/01 19:29:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -40,7 +40,7 @@ static const char *const proxy_auth_line =
 
 /* Local functions */
 
-static CWCB icpHandleIMSComplete;
+static CWCB clientHandleIMSComplete;
 static CWCB clientWriteComplete;
 #if UNUSED_CODE
 static CWCB clientShortWriteComplete;
@@ -48,10 +48,10 @@ static CWCB clientShortWriteComplete;
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
-static STCB icpGetHeadersForIMS;
-static char *icpConstruct304reply(struct _http_reply *);
+static STCB clientGetHeadersForIMS;
+static char *clientConstruct304reply(struct _http_reply *);
 static int CheckQuickAbort2(const clientHttpRequest *);
-static int icpCheckTransferDone(clientHttpRequest *);
+static int clientCheckTransferDone(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
 #if CHECK_FAILURE_IS_BROKE
 static void checkFailureRatio(log_type, hier_code);
@@ -61,7 +61,7 @@ static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
 size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t *, char *, size_t);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
 static RH clientRedirectDone;
-static STCB icpHandleIMSReply;
+static STCB clientHandleIMSReply;
 static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
 static int checkAccelOnly(clientHttpRequest *);
 #if UNUSED_CODE
@@ -290,7 +290,7 @@ clientProcessExpired(void *data)
 	http->out.offset,
 	4096,
 	get_free_4k_page(),
-	icpHandleIMSReply,
+	clientHandleIMSReply,
 	http);
 }
 
@@ -321,7 +321,7 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
 
 
 static void
-icpHandleIMSReply(void *data, char *buf, ssize_t size)
+clientHandleIMSReply(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
@@ -329,12 +329,12 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
-    debug(33, 3) ("icpHandleIMSReply: %s\n", url);
+    debug(33, 3) ("clientHandleIMSReply: %s\n", url);
     put_free_4k_page(buf);
     buf = NULL;
     /* unregister this handler */
     if (size < 0 || entry->store_status == STORE_ABORTED) {
-	debug(33, 3) ("icpHandleIMSReply: ABORTED '%s'\n", url);
+	debug(33, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
 	/* Its okay to send the old one anyway */
 	http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
@@ -343,13 +343,13 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
 	entry = http->entry = http->old_entry;
 	entry->refcount++;
     } else if (mem->reply->code == 0) {
-	debug(33, 3) ("icpHandleIMSReply: Incomplete headers for '%s'\n", url);
+	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	storeClientCopy(entry,
 	    http->out.offset + size,
 	    http->out.offset,
 	    4096,
 	    get_free_4k_page(),
-	    icpHandleIMSReply,
+	    clientHandleIMSReply,
 	    http);
 	return;
     } else if (clientGetsOldEntry(entry, http->old_entry, http->request)) {
@@ -514,7 +514,7 @@ httpRequestFree(void *data)
     request_t *request = http->request;
     MemObject *mem = NULL;
     debug(12, 3) ("httpRequestFree: %s\n", storeUrl(entry));
-    if (!icpCheckTransferDone(http)) {
+    if (!clientCheckTransferDone(http)) {
 	if (entry)
 	    storeUnregister(entry, http);	/* unregister BEFORE abort */
 	CheckQuickAbort(http);
@@ -565,7 +565,7 @@ httpRequestFree(void *data)
 	storeUnlockObject(entry);
     }
     /* old_entry might still be set if we didn't yet get the reply
-     * code in icpHandleIMSReply() */
+     * code in clientHandleIMSReply() */
     if (http->old_entry) {
 	storeUnregister(http->old_entry, http);
 	storeUnlockObject(http->old_entry);
@@ -990,7 +990,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    urlParseProtocol(storeUrl(entry)),
 	    http->out.size);
 	comm_close(fd);
-    } else if ((done = icpCheckTransferDone(http)) || size == 0) {
+    } else if ((done = clientCheckTransferDone(http)) || size == 0) {
 	debug(12, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
 	/* We're finished case */
 	HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
@@ -1048,23 +1048,23 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 }
 
 static void
-icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
+clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
     MemObject *mem = entry->mem_obj;
     char *reply = NULL;
     assert(size <= SM_PAGE_SIZE);
+    put_free_4k_page(buf);
+    buf = NULL;
     if (size < 0) {
-	debug(12, 1) ("icpGetHeadersForIMS: storeClientCopy failed for '%s'\n",
+	debug(12, 1) ("clientGetHeadersForIMS: storeClientCopy failed for '%s'\n",
 	    storeKeyText(entry->key));
-	put_free_4k_page(buf);
 	clientProcessMiss(http);
 	return;
     }
     if (mem->reply->code == 0) {
 	if (entry->mem_status == IN_MEMORY) {
-	    put_free_4k_page(buf);
 	    clientProcessMiss(http);
 	    return;
 	}
@@ -1073,8 +1073,8 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    http->out.offset + size,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    buf,
-	    icpGetHeadersForIMS,
+	    get_free_4k_page(),
+	    clientGetHeadersForIMS,
 	    http);
 	return;
     }
@@ -1094,42 +1094,40 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 #ifdef CHECK_REPLY_CODE_NOTEQUAL_200
     /* Only objects with statuscode==200 can be "Not modified" */
     if (mem->reply->code != 200) {
-	debug(12, 4) ("icpGetHeadersForIMS: Reply code %d!=200\n",
+	debug(12, 4) ("clientGetHeadersForIMS: Reply code %d!=200\n",
 	    mem->reply->code);
-	put_free_4k_page(buf);
 	clientProcessMiss(http);
 	return;
     }
-    +
 #endif
-	http->log_type = LOG_TCP_IMS_HIT;
+    http->log_type = LOG_TCP_IMS_HIT;
     entry->refcount++;
     if (modifiedSince(entry, http->request)) {
 	storeClientCopy(entry,
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    buf,
+	    get_free_4k_page(),
 	    clientSendMoreData,
 	    http);
 	return;
     }
-    debug(12, 4) ("icpGetHeadersForIMS: Not modified '%s'\n", storeUrl(entry));
-    reply = icpConstruct304reply(mem->reply);
+    debug(12, 4) ("clientGetHeadersForIMS: Not modified '%s'\n", storeUrl(entry));
+    reply = clientConstruct304reply(mem->reply);
     comm_write(http->conn->fd,
 	xstrdup(reply),
 	strlen(reply),
-	icpHandleIMSComplete,
+	clientHandleIMSComplete,
 	http,
 	xfree);
 }
 
 static void
-icpHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *data)
+clientHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *data)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
-    debug(12, 5) ("icpHandleIMSComplete: Not Modified sent '%s'\n", storeUrl(entry));
+    debug(12, 5) ("clientHandleIMSComplete: Not Modified sent '%s'\n", storeUrl(entry));
     HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
 	http->request->protocol,
 	size);
@@ -1192,7 +1190,7 @@ clientProcessRequest2(clientHttpRequest * http)
     } else if (refreshCheck(e, r, 0)) {
 	/* The object is in the cache, but it needs to be validated.  Use
 	 * LOG_TCP_REFRESH_MISS for the time being, maybe change it to
-	 * _HIT later in icpHandleIMSReply() */
+	 * _HIT later in clientHandleIMSReply() */
 	if (r->protocol == PROTO_HTTP)
 	    return LOG_TCP_REFRESH_MISS;
 	else
@@ -1279,7 +1277,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    SM_PAGE_SIZE,
 	    get_free_4k_page(),
-	    icpGetHeadersForIMS,
+	    clientGetHeadersForIMS,
 	    http);
 	break;
     case LOG_TCP_REFRESH_MISS:
@@ -1859,7 +1857,7 @@ CheckQuickAbort(clientHttpRequest * http)
 #define SENDING_BODY 0
 #define SENDING_HDRSONLY 1
 static int
-icpCheckTransferDone(clientHttpRequest * http)
+clientCheckTransferDone(clientHttpRequest * http)
 {
     int sending = SENDING_BODY;
     StoreEntry *entry = http->entry;
@@ -1921,7 +1919,7 @@ icpCheckTransferDone(clientHttpRequest * http)
 }
 
 static char *
-icpConstruct304reply(struct _http_reply *source)
+clientConstruct304reply(struct _http_reply *source)
 {
     LOCAL_ARRAY(char, line, 256);
     LOCAL_ARRAY(char, reply, 8192);
