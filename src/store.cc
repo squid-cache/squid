@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.412 1998/05/09 16:48:41 wessels Exp $
+ * $Id: store.cc,v 1.413 1998/05/10 14:35:51 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -625,7 +625,7 @@ storeGetMemSpace(int size)
 	if (storeEntryLocked(e))
 	    continue;
 	released++;
-	storeRelease(e);
+	storePurgeMem(e);
 	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_low)
 	    break;
     }
