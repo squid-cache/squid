@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.57 1998/01/12 04:30:36 wessels Exp $
+ * $Id: debug.cc,v 1.58 1998/02/20 18:47:22 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -107,7 +107,6 @@
 #include "squid.h"
 
 static char *debug_log_file = NULL;
-static char *accessLogTime(time_t);
 
 #ifdef __STDC__
 void
@@ -280,18 +279,4 @@ _db_rotate_log(void)
      * before HUP'ing us. */
     if (debug_log != stderr)
 	debugOpenLog(Config.Log.log);
-}
-
-static char *
-accessLogTime(time_t t)
-{
-    struct tm *tm;
-    static char buf[128];
-    static time_t last_t = 0;
-    if (t != last_t) {
-	tm = localtime(&t);
-	strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
-	last_t = t;
-    }
-    return buf;
 }
