@@ -8,10 +8,10 @@
 #define __STORE_DISKD_H__
 
 /*
- * MAGIC2 is the point at which we start blocking on msgsnd/msgrcv.
- * If a queue has MAGIC2 (or more) messages away, then we read the
- * queue until the level falls below MAGIC2.  Recommended value
- * is 75% of SHMBUFS. MAGIC1 is the number of messages away which we
+ * magic2 is the point at which we start blocking on msgsnd/msgrcv.
+ * If a queue has magic2 (or more) messages away, then we read the
+ * queue until the level falls below magic2.  Recommended value
+ * is 75% of SHMBUFS. magic1 is the number of messages away which we
  * stop allowing open/create for.
  */
 
@@ -117,15 +117,6 @@ extern STOBJUNLINK storeDiskdUnlink;
  */
 #define SHMBUFS 96
 #define SHMBUF_BLKSZ SM_PAGE_SIZE
-/*
- * MAGIC2 is the point at which we start blocking on msgsnd/msgrcv.
- * If a queue has MAGIC2 (or more) messages away, then we read the
- * queue until the level falls below MAGIC2.  Recommended value
- * is 75% of SHMBUFS.
- */
-#define MAGIC1 Config.diskd.magic1
-#define MAGIC2 Config.diskd.magic2
-
 
 extern diskd_stats_t diskd_stats;
 
