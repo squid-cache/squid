@@ -26,6 +26,7 @@ Changes to squid-1.1.beta10 ():
 	  32-bit ints.
 	- Removed extra "\r\n" for abort error messages.
 	- Numerous hash fixes from Mark Treacy.
+	- Renamed rfc850 to rfc1123.
 
 Changes to squid-1.1.beta9 (October 21, 1996):
 
