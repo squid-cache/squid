@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.42 2000/06/08 18:05:36 hno Exp $
+ * $Id: store_digest.cc,v 1.43 2000/11/01 04:50:25 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -135,17 +135,17 @@ storeDigestDel(const StoreEntry * entry)
     }
     assert(entry && store_digest);
     debug(71, 6) ("storeDigestDel: checking entry, key: %s\n",
-	storeKeyText(entry->key));
+	storeKeyText(entry->hash.key));
     if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-	if (!cacheDigestTest(store_digest, entry->key)) {
+	if (!cacheDigestTest(store_digest, entry->hash.key)) {
 	    sd_stats.del_lost_count++;
 	    debug(71, 6) ("storeDigestDel: lost entry, key: %s url: %s\n",
-		storeKeyText(entry->key), storeUrl(entry));
+		storeKeyText(entry->hash.key), storeUrl(entry));
 	} else {
 	    sd_stats.del_count++;
-	    cacheDigestDel(store_digest, entry->key);
+	    cacheDigestDel(store_digest, entry->hash.key);
 	    debug(71, 6) ("storeDigestDel: deled entry, key: %s\n",
-		storeKeyText(entry->key));
+		storeKeyText(entry->hash.key));
 	}
     }
 #endif
@@ -187,7 +187,7 @@ storeDigestAddable(const StoreEntry * e)
     /* add some stats! XXX */
 
     debug(71, 6) ("storeDigestAddable: checking entry, key: %s\n",
-	storeKeyText(e->key));
+	storeKeyText(e->hash.key));
 
     /* check various entry flags (mimics storeCheckCachable XXX) */
     if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
@@ -245,14 +245,14 @@ storeDigestAdd(const StoreEntry * entry)
 
     if (storeDigestAddable(entry)) {
 	sd_stats.add_count++;
-	if (cacheDigestTest(store_digest, entry->key))
+	if (cacheDigestTest(store_digest, entry->hash.key))
 	    sd_stats.add_coll_count++;
-	cacheDigestAdd(store_digest, entry->key);
+	cacheDigestAdd(store_digest, entry->hash.key);
 	debug(71, 6) ("storeDigestAdd: added entry, key: %s\n",
-	    storeKeyText(entry->key));
+	    storeKeyText(entry->hash.key));
     } else {
 	sd_stats.rej_count++;
-	if (cacheDigestTest(store_digest, entry->key))
+	if (cacheDigestTest(store_digest, entry->hash.key))
 	    sd_stats.rej_coll_count++;
     }
 }
@@ -353,7 +353,7 @@ storeDigestRewriteStart(void *datanotused)
     sd_state.rewrite_lock = e = storeCreateEntry(url, url, flags, METHOD_GET);
     assert(sd_state.rewrite_lock);
     cbdataAdd(sd_state.rewrite_lock, NULL, 0);
-    debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText(e->key));
+    debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText(e->hash.key));
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
     /* wait for rebuild (if any) to finish */
     if (sd_state.rebuild_lock) {

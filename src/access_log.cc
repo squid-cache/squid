@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.60 2000/10/31 23:48:13 wessels Exp $
+ * $Id: access_log.cc,v 1.61 2000/11/01 04:50:25 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -78,8 +78,7 @@ const char *log_tags[] =
 
 #if FORW_VIA_DB
 typedef struct {
-    char *key;
-    void *next;
+    hash_link hash;
     int n;
 } fvdb_entry;
 static hash_table *via_table = NULL;
