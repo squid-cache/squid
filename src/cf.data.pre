@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.367 2004/12/21 17:52:53 robertc Exp $
+# $Id: cf.data.pre,v 1.368 2004/12/22 16:21:33 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2071,6 +2071,7 @@ DOC_START
 		 ignore-no-store
 		 ignore-private
 		 ignore-auth
+                 refresh-ims
 
 		override-expire enforces min age even if the server
 		sent a Expires: header. Doing this VIOLATES the HTTP
@@ -2111,6 +2112,11 @@ DOC_START
                 a server. Doing this VIOLATES the HTTP standard. Enabling
                 this feature could make you liable for problems which
                 it causes.
+
+		refresh-ims causes squid to contact the origin server
+		when a client issues an If-Modified-Since request. This
+		ensures that the client will receive an updated version
+		if one is available.
 
 	Basically a cached object is:
 
@@ -3428,6 +3434,22 @@ DOC_START
 	Buffering it can speed up the writing slightly (though you are
 	unlikely to need to worry unless you run with tons of debugging
 	enabled in which case performance will suffer badly anyway..).
+DOC_END
+
+NAME: refresh_all_ims
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.refresh_all_ims
+DOC_START
+	When you enable this option, squid will always check
+	the origin server for an update when a client sends an
+	If-Modified-Since request.  Many browsers use IMS
+	requests when the user requests a reload, and this
+	ensures those clients receive the latest version.
+
+	By default (off), squid may return a Not Modified response
+	based on the age of the cached version.
 DOC_END
 
 NAME: reload_into_ims

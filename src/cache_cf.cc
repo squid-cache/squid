@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.460 2004/12/20 16:30:34 robertc Exp $
+ * $Id: cache_cf.cc,v 1.461 2004/12/22 16:21:33 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2091,6 +2091,10 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
                           (int) head->min / 60,
                           (int) (100.0 * head->pct + 0.5),
                           (int) head->max / 60);
+
+        if (head->flags.refresh_ims)
+            storeAppendPrintf(entry, " refresh-ims");
+
 #if HTTP_VIOLATIONS
 
         if (head->flags.override_expire)
@@ -2133,6 +2137,7 @@ parse_refreshpattern(refresh_t ** head)
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
+    int refresh_ims = 0;
 #if HTTP_VIOLATIONS
 
     int override_expire = 0;
@@ -2181,9 +2186,11 @@ parse_refreshpattern(refresh_t ** head)
 
     /* Options */
     while ((token = strtok(NULL, w_space)) != NULL) {
+        if (!strcmp(token, "refresh-ims")) {
+            refresh_ims = 1;
 #if HTTP_VIOLATIONS
 
-        if (!strcmp(token, "override-expire"))
+        } else if (!strcmp(token, "override-expire"))
             override_expire = 1;
         else if (!strcmp(token, "override-lastmod"))
             override_lastmod = 1;
@@ -2203,9 +2210,9 @@ parse_refreshpattern(refresh_t ** head)
             ignore_reload = 1;
             refresh_nocache_hack = 1;
             /* tell client_side.c that this is used */
-        } else
 #endif
 
+        } else
             debug(22, 0) ("redreshAddToList: Unknown option '%s': %s\n",
                           pattern, token);
     }
@@ -2231,6 +2238,9 @@ parse_refreshpattern(refresh_t ** head)
 
     if (flags & REG_ICASE)
         t->flags.icase = 1;
+
+    if (refresh_ims)
+        t->flags.refresh_ims = 1;
 
 #if HTTP_VIOLATIONS
 

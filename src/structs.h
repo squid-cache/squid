@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.501 2004/12/22 15:10:37 serassio Exp $
+ * $Id: structs.h,v 1.502 2004/12/22 16:21:33 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -528,6 +528,7 @@ struct _SquidConfig
         int mem_pools;
         int test_reachability;
         int half_closed_clients;
+        int refresh_all_ims;
 #if HTTP_VIOLATIONS
 
         int reload_into_ims;
@@ -1507,6 +1508,9 @@ struct _refresh_t
     {
 
 unsigned int icase:
+        1;
+
+unsigned int refresh_ims:
         1;
 #if HTTP_VIOLATIONS
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.66 2004/12/20 16:30:36 robertc Exp $
+ * $Id: refresh.cc,v 1.67 2004/12/22 16:21:33 serassio Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -283,6 +283,13 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     /* request-specific checks */
     if (request) {
         HttpHdrCc *cc = request->cache_control;
+
+        if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
+            /* The clients no-cache header is changed into a IMS query */
+            debug(22, 3) ("refreshCheck: YES: refresh-ims\n");
+            return STALE_FORCED_RELOAD;
+        }
+
 #if HTTP_VIOLATIONS
 
         if (!request->flags.nocache_hack) {
