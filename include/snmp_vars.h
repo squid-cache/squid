@@ -271,13 +271,16 @@ struct inpcb {
 extern void TCP_Scan_Init();
 extern int TCP_Scan_Next();
 
+typedef struct variable variable;
+typedef int SNMPWM(int, u_char *, u_char, int, u_char *, oid *, int);
+typedef u_char *SNMPFV(variable *, oid *, int *, int, int *, SNMPWM **);
 
 struct variable {
     u_char magic;		/* passed to function as a hint */
     char type;			/* type of variable */
 /* See important comment in snmp_vars.c relating to acl */
     u_short acl;		/* access control list for variable */
-    u_char *(*findVar) ();	/* function that finds variable */
+    SNMPFV *findVar;		/* function that finds variable */
     u_char namelen;		/* length of above */
     oid name[32];		/* object identifier of variable */
 };
