@@ -3,13 +3,13 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.116 1998/04/08 07:24:49 wessels Exp $
+dnl  $Id: configure.in,v 1.117 1998/04/08 22:03:28 wessels Exp $
 dnl
 dnl
 dnl
 AC_INIT(src/main.c)
 AC_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.116 $)dnl
+AC_REVISION($Revision: 1.117 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AC_CONFIG_AUX_DIR(cfgaux)
 
@@ -341,6 +341,22 @@ AC_ARG_ENABLE(forw-via-db,
 [ if test "$enableval" = "yes" ; then
     echo "FORW-VIA enabled"
     AC_DEFINE(FORW_VIA_DB)
+  fi
+])
+
+AC_ARG_ENABLE(cache-digest,
+[  --enable-cache-digest   Maintain a digest of our cache ],
+[ if test "$enableval" = "yes" ; then
+    echo "SQUID_MAINTAIN_CACHE_DIGEST enabled"
+    AC_DEFINE(SQUID_MAINTAIN_CACHE_DIGEST)
+  fi
+])
+
+AC_ARG_ENABLE(peer-digests,
+[  --enable-peer-digests   Query peers for their cache digests],
+[ if test "$enableval" = "yes" ; then
+    echo "SQUID_PEER_DIGEST enabled"
+    AC_DEFINE(SQUID_PEER_DIGEST)
   fi
 ])
 

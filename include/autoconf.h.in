@@ -154,6 +154,19 @@
  */
 #undef USE_HTCP
 
+/*
+ * maintain a digest of cache contents and send the digest to neighbors
+ * upon request; if disabled we still can request digests from other
+ * caches
+ */
+#undef SQUID_MAINTAIN_CACHE_DIGEST
+
+/*
+ * ask peers about their digests and use them
+ * must be set before including structs.h
+ */
+#undef SQUID_PEER_DIGEST
+
 /* Define if struct tm has tm_gmtoff member */
 #undef HAVE_TM_GMTOFF
 

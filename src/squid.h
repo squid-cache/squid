@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.172 1998/04/08 19:28:49 wessels Exp $
+ * $Id: squid.h,v 1.173 1998/04/08 22:03:31 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -321,18 +321,6 @@ struct rusage {
 #ifdef SQUID_SNMP
 #include "cache_snmp.h"
 #endif
-
-/*
- * maintain a digest of cache contents and send the digest to neighbors upon
- * request; if disabled we still can request digests from other caches
- */
-#define SQUID_MAINTAIN_CACHE_DIGEST 1
-
-/*
- * ask peers about their digests and use them
- * must be set before including structs.h
- */
-#define SQUID_PEER_DIGEST 1
 
 #include "defines.h"
 #include "enums.h"
