@@ -15,6 +15,9 @@ Changes to squid-1.1.7 (February @@@, 1997):
 	- Moved 'append_domain' operation to urlParse().
 	- Fixed too many arguments bug in diskHandleWrite, caused
 	  coredumps when write fails (due to full disk).
+	- Fixed extra unlocking on partial reads from dnsservers.
+	- Fixes for 'Splay' trees in acl.c (Ed Knowles)
+	- Support for balanced binary trees in acl.c (Arjan de Vet).
 
 Changes to squid-1.novm.6 (February 7, 1997):
 
