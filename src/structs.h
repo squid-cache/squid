@@ -737,6 +737,7 @@ struct _clientHttpRequest {
     struct {
 	int accel:1;
 	int internal:1;
+	int done_copying:1;
     } flags;
 };
 

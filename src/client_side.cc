@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.339 1998/06/29 15:26:49 wessels Exp $
+ * $Id: client_side.cc,v 1.340 1998/07/04 00:17:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -106,11 +106,7 @@ clientAccessCheck(void *data)
 	clientAccessCheckDone(0, http);
 	return;
     }
-#if OLD_CODE
-    browser = mime_get_header(http->request->headers, "User-Agent");
-#else
     browser = httpHeaderGetStr(&http->request->header, HDR_USER_AGENT);
-#endif
     http->acl_checklist = aclChecklistCreate(Config.accessList.http,
 	http->request,
 	conn->peer.sin_addr,
@@ -225,12 +221,7 @@ clientRedirectDone(void *data, char *result)
 	http->uri = xcalloc(l, 1);
 	xstrncpy(http->uri, result, l);
 	new_request->http_ver = old_request->http_ver;
-#if OLD_CODE
-	new_request->headers = xstrdup(old_request->headers);
-	new_request->headers_sz = old_request->headers_sz;
-#else
 	httpHeaderAppend(&new_request->header, &old_request->header);
-#endif
 	new_request->client_addr = old_request->client_addr;
 	EBIT_SET(new_request->flags, REQ_REDIRECTED);
 	if (old_request->body) {
@@ -1406,18 +1397,10 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     StoreEntry *entry = http->entry;
     ConnStateData *conn = http->conn;
     int fd = conn->fd;
-#if OLD_CODE
-    size_t hdrlen;
-    size_t l = 0;
-    size_t writelen;
-    char *newbuf;
-    FREE *freefunc = memFree4K;
-#else
     HttpReply *rep = NULL;
-    FREE *freefunc = memFree4K;
     const char *body_buf = buf;
     ssize_t body_size = size;
-#endif
+    MemBuf mb;
     debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
     assert(http->request != NULL);
@@ -1426,27 +1409,24 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
 	debug(0, 0) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
-	freefunc(buf);
+	memFree4K(buf);
 	return;
     } else if (entry && entry->store_status == STORE_ABORTED) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	freefunc(buf);
+	memFree4K(buf);
 	return;
     } else if (size < 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	freefunc(buf);
+	memFree4K(buf);
 	return;
     } else if (size == 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
-	freefunc(buf);
+	memFree4K(buf);
 	return;
     }
-#if OLD_CODE
-    writelen = size;
-#endif
     if (http->out.offset == 0) {
 	if (Config.onoff.log_mime_hdrs) {
 	    size_t k;
@@ -1456,31 +1436,6 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		xstrncpy(http->al.headers.reply, buf, k);
 	    }
 	}
-#if OLD_CODE
-	newbuf = memAllocate(MEM_8K_BUF);
-	hdrlen = 0;
-	l = clientBuildReplyHeader(http, buf, size, &hdrlen, newbuf, 8192);
-	if (l != 0) {
-	    writelen = l + size - hdrlen;
-	    assert(writelen <= 8192);
-	    /*
-	     * l is the length of the new headers in newbuf
-	     * hdrlen is the length of the old headers in buf
-	     * size - hdrlen is the amount of body in buf
-	     */
-	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after headers\n",
-		(int) (size - hdrlen));
-	    if (((size - hdrlen) + l) > 8192) {
-		debug(0, 0) ("Size, hdrlen, l %d, %d, %d\n", size, hdrlen, l);
-		return;
-	    }
-	    xmemcpy(newbuf + l, buf + hdrlen, size - hdrlen);
-	    /* replace buf with newbuf */
-	    freefunc(buf);
-	    buf = newbuf;
-	    freefunc = memFree8K;
-	    newbuf = NULL;
-#else
 	rep = clientBuildReply(http, buf, size);
 	if (rep) {
 	    body_size = size - rep->hdr_sz;
@@ -1489,85 +1444,67 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    http->range_iter.prefix_size = rep->hdr_sz;
 	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
 		body_size, rep->hdr_sz);
-#endif
-	} else {
-#if OLD_CODE
-	    memFree(MEM_8K_BUF, newbuf);
-	    newbuf = NULL;
-#endif
-	    if (size < SM_PAGE_SIZE && entry->store_status == STORE_PENDING) {
-		/* wait for more to arrive */
-		storeClientCopy(entry,
-		    http->out.offset + size,
-		    http->out.offset,
-		    SM_PAGE_SIZE,
-		    buf,
-		    clientSendMoreData,
-		    http);
-		return;
-	    }
+	} else if (size < SM_PAGE_SIZE && entry->store_status == STORE_PENDING) {
+	    /* wait for more to arrive */
+	    storeClientCopy(entry,
+		http->out.offset + size,
+		http->out.offset,
+		SM_PAGE_SIZE,
+		buf,
+		clientSendMoreData,
+		http);
+	    return;
 	}
 	/* reset range iterator */
 	http->range_iter.pos = HttpHdrRangeInitPos;
     }
     http->out.offset += size;
-    /*
-     * ick, this is gross
-     */
     if (http->request->method == METHOD_HEAD) {
-	size_t k = 0;
-	if (rep)
-	    body_size = 0;	/* do not forward body for HEAD replies */
-	else
-	    k = body_size = headersEnd(buf, size);	/* unparseable reply, stop and end-of-headers */
-	if (rep || k) {
-	    /* force end */
-	    if (entry->store_status == STORE_PENDING)
-		http->out.offset = entry->mem_obj->inmem_hi;
-	    else
-		http->out.offset = objectLen(entry);
-	}
-    }
-#if OLD_CODE
-    comm_write(fd, buf, writelen, clientWriteComplete, http, freefunc);
-#else
-    /* write headers and/or body if any */
-    if (rep || (body_buf && body_size)) {
-	MemBuf mb;
-	/* init mb; put status line and headers if any */
 	if (rep) {
-	    mb = httpReplyPack(rep);
-	    httpReplyDestroy(rep);
-	    rep = NULL;
+	    /* do not forward body for HEAD replies */
+	    body_size = 0;
+	    body_buf = NULL;
+	    http->flags.done_copying = 1;
 	} else {
-	    /* leave space for growth incase we do ranges */
-	    memBufInit(&mb, SM_PAGE_SIZE, 2 * SM_PAGE_SIZE);
+	    /* unparseable reply, stop and end-of-headers */
+	    body_size = headersEnd(buf, size);
+	    if (body_size)
+		http->flags.done_copying = 1;
+	    else
+	        body_buf = NULL;
 	}
-	/* append body if any */
-	if (body_buf && body_size)
-	    if (http->request->range && http->request->method != METHOD_HEAD) {
-		/* Returning out.offset its physical meaning; Argh! @?@ @?@ */
-		http->out.offset -= size;
-		if (!http->out.offset)
-		    http->out.offset += http->range_iter.prefix_size;
-		/* force the end of the transfer if we are done */
-		if (!clientPackMoreRanges(http, body_buf, body_size, &mb)) {
-		    /* ick ? */
-		    if (entry->store_status == STORE_PENDING)
-			/* @?@ @?@ @?@ Different from HEAD */
-			http->out.offset = entry->mem_obj->reply->content_length + entry->mem_obj->reply->hdr_sz;
-		    else
-			http->out.offset = objectLen(entry);
-		}
-	    } else {
-		memBufAppend(&mb, body_buf, body_size);
-	    }
-	/* write */
-	comm_write_mbuf(fd, mb, clientWriteComplete, http);
     }
+    /* write headers and/or body if any */
+    assert(rep || body_buf);
+    /* init mb; put status line and headers if any */
+    if (rep) {
+	mb = httpReplyPack(rep);
+	httpReplyDestroy(rep);
+	rep = NULL;
+    } else {
+	/* leave space for growth incase we do ranges */
+	memBufInit(&mb, SM_PAGE_SIZE, 2 * SM_PAGE_SIZE);
+    }
+    /* append body if any */
+    if (body_buf) {
+	assert(body_size > 0);
+	if (http->request->range) {
+	    assert(http->request->method == METHOD_PUT);
+	    /* Returning out.offset its physical meaning; Argh! @?@ @?@ */
+	    http->out.offset -= size;
+	    if (!http->out.offset)
+		http->out.offset += http->range_iter.prefix_size;
+	    /* force the end of the transfer if we are done */
+	    if (!clientPackMoreRanges(http, body_buf, body_size, &mb))
+		http->flags.done_copying = 1;
+	} else {
+	    memBufAppend(&mb, body_buf, body_size);
+	}
+    }
+    /* write */
+    comm_write_mbuf(fd, mb, clientWriteComplete, http);
     /* if we don't do it, who will? */
-    freefunc(buf);
-#endif
+    memFree4K(buf);
 }
 
 static
@@ -1860,8 +1797,12 @@ static log_type
 clientProcessRequest2(clientHttpRequest * http)
 {
     const request_t *r = http->request;
-    const cache_key *key = storeKeyPublic(http->uri, r->method);
+    const cache_key *key;
     StoreEntry *e;
+    if (r->method == METHOD_HEAD)
+        key = storeKeyPublic(http->uri, METHOD_GET);
+    else
+        key = storeKeyPublic(http->uri, r->method);
     e = http->entry = storeGet(key);
 #if USE_CACHE_DIGESTS
     http->lookup_type = e ? "HIT" : "MISS";
@@ -2673,6 +2614,12 @@ clientCheckTransferDone(clientHttpRequest * http)
     int sendlen;
     if (entry == NULL)
 	return 0;
+    /*
+     * For now, 'done_copying' is used for special cases like
+     * Range and HEAD requests.
+     */
+    if (http->flags.done_copying)
+	return 1;
     /*
      * Handle STORE_OK and STORE_ABORTED objects.
      * objectLen(entry) will be set proprely.
