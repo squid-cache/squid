@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.503 2000/10/04 15:32:13 wessels Exp $
+ * $Id: client_side.cc,v 1.504 2000/10/04 15:54:45 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -167,6 +167,7 @@ clientAccessCheck(void *data)
     clientHttpRequest *http = data;
     if (checkAccelOnly(http)) {
 	/* deny proxy requests in accel_only mode */
+	debug(33, 1) ("clientAccessCheck: proxy request denied in accel_only mode\n");
 	clientAccessCheckDone(ACCESS_DENIED, http);
 	return;
     }
