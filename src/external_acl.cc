@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.34 2003/03/06 06:21:37 robertc Exp $
+ * $Id: external_acl.cc,v 1.35 2003/03/19 18:03:04 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -531,7 +531,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
         ch->auth_user_request = NULL;
     }
 
-    if (!entry) {
+    if (!entry || entry->result == -1) {
         debug(82, 2) ("aclMatchExternal: %s(\"%s\") = lookup needed\n", acl->def->name, key);
         ch->changeState (ExternalACLLookup::Instance());
         return 0;
