@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.126 1997/02/27 02:57:12 wessels Exp $
+ * $Id: neighbors.cc,v 1.127 1997/02/27 06:29:15 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -143,7 +143,7 @@ const char *hier_strings[] =
     "SINGLE_PARENT",
     "FIRST_UP_PARENT",
     "NO_PARENT_DIRECT",
-    "FIRST_PARENT_MISS",
+    "BEST_PARENT_MISS",
     "NO_DIRECT_FAIL",
     "SOURCE_FASTEST",
     "SIBLING_UDP_HIT_OBJ",
@@ -433,7 +433,7 @@ neighbors_open(int fd)
 }
 
 int
-neighborsUdpPing(request_t * request, StoreEntry * entry)
+neighborsUdpPing(request_t * request, StoreEntry * entry, int *exprep)
 {
     char *host = request->host;
     char *url = entry->url;
@@ -459,12 +459,6 @@ neighborsUdpPing(request_t * request, StoreEntry * entry)
     }
     if (entry->swap_status != NO_SWAP)
 	fatal_dump("neighborsUdpPing: bad swap_status");
-
-    mem->e_pings_n_pings = 0;
-    mem->e_pings_n_acks = 0;
-    mem->e_pings_first_miss = NULL;
-    mem->w_rtt = 0;
-    mem->start_ping = current_time;
 
     for (i = 0, e = Peers.first_ping; i++ < Peers.n; e = e->next) {
 	if (e == NULL)
@@ -516,7 +510,7 @@ neighborsUdpPing(request_t * request, StoreEntry * entry)
 	    ICP_mcasts_sent++;
 	} else if (neighborUp(e)) {
 	    /* its alive, expect a reply from it */
-	    mem->e_pings_n_pings++;
+	    *exprep++;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
@@ -560,7 +554,7 @@ neighborsUdpPing(request_t * request, StoreEntry * entry)
     if ((ICP_queries_sent))
 	NObjectsQueried++;
     if ((ICP_mcasts_sent))
-	mem->e_pings_n_pings += MulticastFudgeFactor;
+	*exprep += MulticastFudgeFactor;
     return peers_pinged;
 }
 
@@ -597,12 +591,6 @@ neighborCountIgnored(peer * e, icp_opcode op_unused)
     NLateReplies++;
 }
 
-/* I should attach these records to the entry.  We take the first
- * hit we get our wait until everyone misses.  The timeout handler
- * call needs to nip this shopping list or call one of the misses.
- * 
- * If a hit process is already started, then sobeit
- */
 void
 neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct sockaddr_in *from, StoreEntry * entry, char *data, int data_sz)
 {
@@ -649,68 +637,23 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
     }
     debug(15, 3, "neighborsUdpAck: %s for '%s' from %s \n",
 	opcode_d, url, e ? e->host : "source");
-    mem->e_pings_n_acks++;
     if (e)
 	ntype = neighborType(e, mem->request);
-    if (opcode == ICP_OP_SECHO) {
-	/* Received source-ping reply */
-	if (e) {
-	    debug(15, 1, "Ignoring SECHO from neighbor %s\n", e->host);
-	    neighborCountIgnored(e, opcode);
-	} else {
-	    /* if we reach here, source-ping reply is the first 'parent',
-	     * so fetch directly from the source */
-	    debug(15, 6, "Source is the first to respond.\n");
-	    hierarchyNote(entry->mem_obj->request,
-		HIER_SOURCE_FASTEST,
-		0,
-		fqdnFromAddr(from->sin_addr));
-	    entry->ping_status = PING_DONE;
-	    protoStart(0, entry, NULL, entry->mem_obj->request);
-	    return;
-	}
-    } else if (opcode == ICP_OP_HIT_OBJ) {
+    if (opcode == ICP_OP_MISS) {
 	if (e == NULL) {
-	    debug(15, 0, "Ignoring ICP_OP_HIT_OBJ from non-peer %s\n",
+	    debug(15, 1, "Ignoring MISS from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
-	} else if (entry->object_len != 0) {
-	    debug(15, 1, "Too late UDP_HIT_OBJ '%s'?\n", entry->url);
-	} else if (!opt_udp_hit_obj) {
-	    /* HIT_OBJ poses a security risk since we take the object 
-	     * data from the ICP message */
-	    debug(15, 0, "WARNING: Received ICP_OP_HIT_OBJ from '%s' with HIT_OBJ disabled!\n");
-	    debug(15, 0, "--> URL '%s'\n", entry->url);
+	} else if (ntype != PEER_PARENT) {
+	    (void) 0;		/* ignore MISS from non-parent */
 	} else {
-	    if (e->options & NEIGHBOR_PROXY_ONLY)
-		storeReleaseRequest(entry);
-	    protoCancelTimeout(0, entry);
-	    entry->ping_status = PING_DONE;
-	    httpState = xcalloc(1, sizeof(HttpStateData));
-	    httpState->entry = entry;
-	    httpProcessReplyHeader(httpState, data, data_sz);
-	    storeAppend(entry, data, data_sz);
-	    hierarchyNote(entry->mem_obj->request,
-		ntype == PEER_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
-		0,
-		e->host);
-	    storeComplete(entry);	/* This might release entry! */
-	    if (httpState->reply_hdr)
-		put_free_8k_page(httpState->reply_hdr);
-	    safe_free(httpState);
-	    return;
+	    mem->icp_reply_callback(e, ntype, opcode, mem->cb_data);
 	}
-    } else if (opcode == ICP_OP_HIT) {
+    } else if (opcode == ICP_OP_HIT || opcode == ICP_OP_HIT_OBJ) {
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring HIT from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else {
-	    hierarchyNote(entry->mem_obj->request,
-		ntype == PEER_PARENT ? HIER_PARENT_HIT : HIER_SIBLING_HIT,
-		0,
-		e->host);
-	    entry->ping_status = PING_DONE;
-	    protoStart(0, entry, e, entry->mem_obj->request);
-	    return;
+	    mem->icp_reply_callback(e, ntype, ICP_OP_HIT, mem->cb_data);
 	}
     } else if (opcode == ICP_OP_DECHO) {
 	if (e == NULL) {
@@ -720,24 +663,14 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
 	    debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
 	} else {
-	    w_rtt = tvSubMsec(mem->start_ping, current_time) / e->weight;
-	    if (mem->w_rtt == 0 || w_rtt < mem->w_rtt) {
-		mem->e_pings_first_miss = e;
-		mem->w_rtt = w_rtt;
-	    }
+	    mem->icp_reply_callback(e, ntype, opcode, mem->cb_data);
 	}
-    } else if (opcode == ICP_OP_MISS) {
-	if (e == NULL) {
-	    debug(15, 1, "Ignoring MISS from non-peer %s\n",
-		inet_ntoa(from->sin_addr));
-	} else if (ntype != PEER_PARENT) {
-	    (void) 0;		/* ignore MISS from non-parent */
+    } else if (opcode == ICP_OP_SECHO) {
+	if (e) {
+	    debug(15, 1, "Ignoring SECHO from neighbor %s\n", e->host);
+	    neighborCountIgnored(e, opcode);
 	} else {
-	    w_rtt = tvSubMsec(mem->start_ping, current_time) / e->weight;
-	    if (mem->w_rtt == 0 || w_rtt < mem->w_rtt) {
-		mem->e_pings_first_miss = e;
-		mem->w_rtt = w_rtt;
-	    }
+	    mem->icp_reply_callback(NULL, ntype, opcode, mem->cb_data);
 	}
     } else if (opcode == ICP_OP_DENIED) {
 	if (e == NULL) {
@@ -753,18 +686,10 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 		neighborCountIgnored(e, opcode);
 	    }
 	}
-    } else if (opcode == ICP_OP_RELOADING) {
-	if (e)
-	    debug(15, 3, "neighborsUdpAck: %s is RELOADING\n", e->host);
+    } else if (opcode == ICP_OP_MISSNOFETCH) {
+	mem->icp_reply_callback(e, ntype, opcode, mem->cb_data);
     } else {
 	debug(15, 0, "neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
-    }
-    if (mem->e_pings_n_acks == mem->e_pings_n_pings) {
-	entry->ping_status = PING_DONE;
-	debug(15, 6, "neighborsUdpAck: All replies received.\n");
-	/* pass in fd=0 here so protoStart() looks up the real FD
-	 * and resets the timeout handler */
-	peerSelectStart(0, entry->mem_obj->request, entry);
     }
 }
 
