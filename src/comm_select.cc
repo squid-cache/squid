@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.31 1999/04/23 02:25:03 wessels Exp $
+ * $Id: comm_select.cc,v 1.32 1999/04/26 22:32:15 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -51,18 +51,20 @@
 
 /* STATIC */
 #if !HAVE_POLL
-static int examine_select(fd_set *, fd_set *);
+static int examine_select (fd_set *, fd_set *);
 #endif
-static int fdIsHttp(int fd);
-static int fdIsIcp(int fd);
-static int fdIsDns(int fd);
-static int commDeferRead(int fd);
-static void checkTimeouts(void);
+static int fdIsHttp (int fd);
+static int fdIsIcp (int fd);
+static int fdIsDns (int fd);
+static int commDeferRead (int fd);
+static void checkTimeouts (void);
 static OBJH commIncomingStats;
 #if HAVE_POLL
-static int comm_check_incoming_poll_handlers(int nfds, int *fds);
+static int comm_check_incoming_poll_handlers (int nfds, int *fds);
+static void comm_poll_dns_incoming (void);
 #else
-static int comm_check_incoming_select_handlers(int nfds, int *fds);
+static int comm_check_incoming_select_handlers (int nfds, int *fds);
+static void comm_select_dns_incoming (void);
 #endif
 
 static struct timeval zero_tv;
@@ -133,683 +135,748 @@ static int incoming_http_interval = 16 << INCOMING_FACTOR;
 #define commCheckHTTPIncoming (++http_io_events > (incoming_http_interval>> INCOMING_FACTOR))
 
 static int
-commDeferRead(int fd)
+commDeferRead (int fd)
 {
-    fde *F = &fd_table[fd];
-    if (F->defer_check == NULL)
-	return 0;
-    return F->defer_check(fd, F->defer_data);
-}
-
-static int
-fdIsIcp(int fd)
-{
-    if (fd == theInIcpConnection)
-	return 1;
-    if (fd == theOutIcpConnection)
-	return 1;
+  fde *F = &fd_table[fd];
+  if (F->defer_check == NULL)
     return 0;
+  return F->defer_check (fd, F->defer_data);
 }
 
 static int
-fdIsDns(int fd)
+fdIsIcp (int fd)
 {
-    if (fd == DnsSocket)
+  if (fd == theInIcpConnection)
+    return 1;
+  if (fd == theOutIcpConnection)
+    return 1;
+  return 0;
+}
+
+static int
+fdIsDns (int fd)
+{
+  if (fd == DnsSocket)
+    return 1;
+  return 0;
+}
+
+static int
+fdIsHttp (int fd)
+{
+  int j;
+  for (j = 0; j < NHttpSockets; j++)
+    {
+      if (fd == HttpSockets[j])
 	return 1;
-    return 0;
-}
-
-static int
-fdIsHttp(int fd)
-{
-    int j;
-    for (j = 0; j < NHttpSockets; j++) {
-	if (fd == HttpSockets[j])
-	    return 1;
     }
-    return 0;
+  return 0;
 }
 
 #if HAVE_POLL
 static int
-comm_check_incoming_poll_handlers(int nfds, int *fds)
+comm_check_incoming_poll_handlers (int nfds, int *fds)
 {
-    int i;
-    int fd;
-    int incame = 0;
-    PF *hdl = NULL;
-    int npfds;
-    struct pollfd pfds[3 + MAXHTTPPORTS];
-    for (i = npfds = 0; i < nfds; i++) {
-	int events;
-	fd = fds[i];
-	events = 0;
-	if (fd_table[fd].read_handler)
-	    events |= POLLRDNORM;
-	if (fd_table[fd].write_handler)
-	    events |= POLLWRNORM;
-	if (events) {
-	    pfds[npfds].fd = fd;
-	    pfds[npfds].events = events;
-	    pfds[npfds].revents = 0;
-	    npfds++;
+  int i;
+  int fd;
+  int incame = 0;
+  PF *hdl = NULL;
+  int npfds;
+  struct pollfd pfds[3 + MAXHTTPPORTS];
+  for (i = npfds = 0; i < nfds; i++)
+    {
+      int events;
+      fd = fds[i];
+      events = 0;
+      if (fd_table[fd].read_handler)
+	events |= POLLRDNORM;
+      if (fd_table[fd].write_handler)
+	events |= POLLWRNORM;
+      if (events)
+	{
+	  pfds[npfds].fd = fd;
+	  pfds[npfds].events = events;
+	  pfds[npfds].revents = 0;
+	  npfds++;
 	}
     }
-    if (!nfds)
-	return -1;
+  if (!nfds)
+    return -1;
 #if !ALARM_UPDATES_TIME
-    getCurrentTime();
+  getCurrentTime ();
 #endif
-    Counter.syscalls.polls++;
-    if (poll(pfds, npfds, 0) < 1)
-	return incame;
-    for (i = 0; i < npfds; i++) {
-	int revents;
-	if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
-	    continue;
-	if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
-	    if ((hdl = fd_table[fd].read_handler)) {
-		fd_table[fd].read_handler = NULL;
-		hdl(fd, &incame);
-	    } else
-		debug(5, 1) ("comm_poll_incoming: NULL read handler\n");
-	}
-	if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
-	    if ((hdl = fd_table[fd].write_handler)) {
-		fd_table[fd].write_handler = NULL;
-		hdl(fd, &incame);
-	    } else
-		debug(5, 1) ("comm_poll_incoming: NULL write handler\n");
-	}
-    }
+  Counter.syscalls.polls++;
+  if (poll (pfds, npfds, 0) < 1)
     return incame;
-}
-
-static void
-comm_poll_icp_incoming(void)
-{
-    int nfds = 0;
-    int fds[2];
-    int nevents;
-    icp_io_events = 0;
-    if (theInIcpConnection >= 0)
-	fds[nfds++] = theInIcpConnection;
-    if (theInIcpConnection != theOutIcpConnection)
-	if (theOutIcpConnection >= 0)
-	    fds[nfds++] = theOutIcpConnection;
-    if (nfds == 0)
-	return;
-    nevents = comm_check_incoming_poll_handlers(nfds, fds);
-    incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
-    if (incoming_icp_interval < Config.comm_incoming.icp_min_poll)
-	incoming_icp_interval = Config.comm_incoming.icp_min_poll;
-    if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
-	incoming_icp_interval = MAX_INCOMING_INTERVAL;
-    if (nevents > INCOMING_ICP_MAX)
-	nevents = INCOMING_ICP_MAX;
-    statHistCount(&Counter.comm_icp_incoming, nevents);
-}
-
-static void
-comm_poll_http_incoming(void)
-{
-    int nfds = 0;
-    int fds[MAXHTTPPORTS];
-    int j;
-    int nevents;
-    http_io_events = 0;
-    for (j = 0; j < NHttpSockets; j++) {
-	if (HttpSockets[j] < 0)
-	    continue;
-	if (commDeferRead(HttpSockets[j]))
-	    continue;
-	fds[nfds++] = HttpSockets[j];
+  for (i = 0; i < npfds; i++)
+    {
+      int revents;
+      if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
+	continue;
+      if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR))
+	{
+	  if ((hdl = fd_table[fd].read_handler))
+	    {
+	      fd_table[fd].read_handler = NULL;
+	      hdl (fd, &incame);
+	    }
+	  else
+	    debug (5, 1) ("comm_poll_incoming: NULL read handler\n");
+	}
+      if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR))
+	{
+	  if ((hdl = fd_table[fd].write_handler))
+	    {
+	      fd_table[fd].write_handler = NULL;
+	      hdl (fd, &incame);
+	    }
+	  else
+	    debug (5, 1) ("comm_poll_incoming: NULL write handler\n");
+	}
     }
-    nevents = comm_check_incoming_poll_handlers(nfds, fds);
-    incoming_http_interval = incoming_http_interval
-	+ Config.comm_incoming.http_average - nevents;
-    if (incoming_http_interval < Config.comm_incoming.http_min_poll)
-	incoming_http_interval = Config.comm_incoming.http_min_poll;
-    if (incoming_http_interval > MAX_INCOMING_INTERVAL)
-	incoming_http_interval = MAX_INCOMING_INTERVAL;
-    if (nevents > INCOMING_HTTP_MAX)
-	nevents = INCOMING_HTTP_MAX;
-    statHistCount(&Counter.comm_http_incoming, nevents);
+  return incame;
+}
+
+static void
+comm_poll_icp_incoming (void)
+{
+  int nfds = 0;
+  int fds[2];
+  int nevents;
+  icp_io_events = 0;
+  if (theInIcpConnection >= 0)
+    fds[nfds++] = theInIcpConnection;
+  if (theInIcpConnection != theOutIcpConnection)
+    if (theOutIcpConnection >= 0)
+      fds[nfds++] = theOutIcpConnection;
+  if (nfds == 0)
+    return;
+  nevents = comm_check_incoming_poll_handlers (nfds, fds);
+  incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
+  if (incoming_icp_interval < Config.comm_incoming.icp_min_poll)
+    incoming_icp_interval = Config.comm_incoming.icp_min_poll;
+  if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
+    incoming_icp_interval = MAX_INCOMING_INTERVAL;
+  if (nevents > INCOMING_ICP_MAX)
+    nevents = INCOMING_ICP_MAX;
+  statHistCount (&Counter.comm_icp_incoming, nevents);
+}
+
+static void
+comm_poll_http_incoming (void)
+{
+  int nfds = 0;
+  int fds[MAXHTTPPORTS];
+  int j;
+  int nevents;
+  http_io_events = 0;
+  for (j = 0; j < NHttpSockets; j++)
+    {
+      if (HttpSockets[j] < 0)
+	continue;
+      if (commDeferRead (HttpSockets[j]))
+	continue;
+      fds[nfds++] = HttpSockets[j];
+    }
+  nevents = comm_check_incoming_poll_handlers (nfds, fds);
+  incoming_http_interval = incoming_http_interval
+    + Config.comm_incoming.http_average - nevents;
+  if (incoming_http_interval < Config.comm_incoming.http_min_poll)
+    incoming_http_interval = Config.comm_incoming.http_min_poll;
+  if (incoming_http_interval > MAX_INCOMING_INTERVAL)
+    incoming_http_interval = MAX_INCOMING_INTERVAL;
+  if (nevents > INCOMING_HTTP_MAX)
+    nevents = INCOMING_HTTP_MAX;
+  statHistCount (&Counter.comm_http_incoming, nevents);
 }
 
 /* poll all sockets; call handlers for those that are ready. */
 int
-comm_poll(int msec)
+comm_poll (int msec)
 {
-    struct pollfd pfds[SQUID_MAXFD];
-    PF *hdl = NULL;
-    int fd;
-    int i;
-    int maxfd;
-    unsigned long nfds;
-    int num;
-    int callicp = 0, callhttp = 0;
-    int calldns = 0;
-    static time_t last_timeout = 0;
-    double timeout = current_dtime + (msec / 1000.0);
-    double start;
-    do {
+  struct pollfd pfds[SQUID_MAXFD];
+  PF *hdl = NULL;
+  int fd;
+  int i;
+  int maxfd;
+  unsigned long nfds;
+  int num;
+  int callicp = 0, callhttp = 0;
+  int calldns = 0;
+  static time_t last_timeout = 0;
+  double timeout = current_dtime + (msec / 1000.0);
+  double start;
+  do
+    {
 #if !ALARM_UPDATES_TIME
-	getCurrentTime();
-	start = current_dtime;
+      getCurrentTime ();
+      start = current_dtime;
 #endif
 #if USE_ASYNC_IO
-	aioCheckCallbacks();
+      aioCheckCallbacks ();
 #endif
-	if (commCheckICPIncoming)
-	    comm_poll_icp_incoming();
-	if (commCheckDNSIncoming)
-	    comm_poll_dns_incoming();
-	if (commCheckHTTPIncoming)
-	    comm_poll_http_incoming();
-	callicp = calldns = callhttp = 0;
-	nfds = 0;
-	maxfd = Biggest_FD + 1;
-	for (i = 0; i < maxfd; i++) {
-	    int events;
-	    events = 0;
-	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler && !commDeferRead(i))
-		events |= POLLRDNORM;
-	    if (fd_table[i].write_handler)
-		events |= POLLWRNORM;
-	    if (events) {
-		pfds[nfds].fd = i;
-		pfds[nfds].events = events;
-		pfds[nfds].revents = 0;
-		nfds++;
+      if (commCheckICPIncoming)
+	comm_poll_icp_incoming ();
+      if (commCheckDNSIncoming)
+	comm_poll_dns_incoming ();
+      if (commCheckHTTPIncoming)
+	comm_poll_http_incoming ();
+      callicp = calldns = callhttp = 0;
+      nfds = 0;
+      maxfd = Biggest_FD + 1;
+      for (i = 0; i < maxfd; i++)
+	{
+	  int events;
+	  events = 0;
+	  /* Check each open socket for a handler. */
+	  if (fd_table[i].read_handler && !commDeferRead (i))
+	    events |= POLLRDNORM;
+	  if (fd_table[i].write_handler)
+	    events |= POLLWRNORM;
+	  if (events)
+	    {
+	      pfds[nfds].fd = i;
+	      pfds[nfds].events = events;
+	      pfds[nfds].revents = 0;
+	      nfds++;
 	    }
 	}
-	if (nfds == 0) {
-	    assert(shutting_down);
-	    return COMM_SHUTDOWN;
+      if (nfds == 0)
+	{
+	  assert (shutting_down);
+	  return COMM_SHUTDOWN;
 	}
-	if (msec > MAX_POLL_TIME)
-	    msec = MAX_POLL_TIME;
-	for (;;) {
-	    Counter.syscalls.polls++;
-	    num = poll(pfds, nfds, msec);
-	    Counter.select_loops++;
-	    if (num >= 0)
-		break;
-	    if (ignoreErrno(errno))
-		continue;
-	    debug(5, 0) ("comm_poll: poll failure: %s\n", xstrerror());
-	    assert(errno != EINVAL);
-	    return COMM_ERROR;
-	    /* NOTREACHED */
-	}
-	debug(5, num ? 5 : 8) ("comm_poll: %d FDs ready\n", num);
-	statHistCount(&Counter.select_fds_hist, num);
-	/* Check timeout handlers ONCE each second. */
-	if (squid_curtime > last_timeout) {
-	    last_timeout = squid_curtime;
-	    checkTimeouts();
-	}
-	if (num == 0)
+      if (msec > MAX_POLL_TIME)
+	msec = MAX_POLL_TIME;
+      for (;;)
+	{
+	  Counter.syscalls.polls++;
+	  num = poll (pfds, nfds, msec);
+	  Counter.select_loops++;
+	  if (num >= 0)
+	    break;
+	  if (ignoreErrno (errno))
 	    continue;
-	/* scan each socket but the accept socket. Poll this 
-	 * more frequently to minimize losses due to the 5 connect 
-	 * limit in SunOS */
-	for (i = 0; i < nfds; i++) {
-	    fde *F;
-	    int revents;
-	    if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
-		continue;
-	    if (fdIsIcp(fd)) {
-		callicp = 1;
-		continue;
+	  debug (5, 0) ("comm_poll: poll failure: %s\n", xstrerror ());
+	  assert (errno != EINVAL);
+	  return COMM_ERROR;
+	  /* NOTREACHED */
+	}
+      debug (5, num ? 5 : 8) ("comm_poll: %d FDs ready\n", num);
+      statHistCount (&Counter.select_fds_hist, num);
+      /* Check timeout handlers ONCE each second. */
+      if (squid_curtime > last_timeout)
+	{
+	  last_timeout = squid_curtime;
+	  checkTimeouts ();
+	}
+      if (num == 0)
+	continue;
+      /* scan each socket but the accept socket. Poll this 
+       * more frequently to minimize losses due to the 5 connect 
+       * limit in SunOS */
+      for (i = 0; i < nfds; i++)
+	{
+	  fde *F;
+	  int revents;
+	  if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
+	    continue;
+	  if (fdIsIcp (fd))
+	    {
+	      callicp = 1;
+	      continue;
 	    }
-	    if (fdIsDns(fd)) {
-		calldns = 1;
-		continue;
+	  if (fdIsDns (fd))
+	    {
+	      calldns = 1;
+	      continue;
 	    }
-	    if (fdIsHttp(fd)) {
-		callhttp = 1;
-		continue;
+	  if (fdIsHttp (fd))
+	    {
+	      callhttp = 1;
+	      continue;
 	    }
-	    F = &fd_table[fd];
-	    if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
-		debug(5, 6) ("comm_poll: FD %d ready for reading\n", fd);
-		if ((hdl = F->read_handler)) {
-		    F->read_handler = NULL;
-		    hdl(fd, F->read_data);
-		    Counter.select_fds++;
+	  F = &fd_table[fd];
+	  if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR))
+	    {
+	      debug (5, 6) ("comm_poll: FD %d ready for reading\n", fd);
+	      if ((hdl = F->read_handler))
+		{
+		  F->read_handler = NULL;
+		  hdl (fd, F->read_data);
+		  Counter.select_fds++;
 		}
-		if (commCheckICPIncoming)
-		    comm_poll_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_poll_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_poll_http_incoming();
+	      if (commCheckICPIncoming)
+		comm_poll_icp_incoming ();
+	      if (commCheckDNSIncoming)
+		comm_poll_dns_incoming ();
+	      if (commCheckHTTPIncoming)
+		comm_poll_http_incoming ();
 	    }
-	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
-		debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
-		if ((hdl = F->write_handler)) {
-		    F->write_handler = NULL;
-		    hdl(fd, F->write_data);
-		    Counter.select_fds++;
+	  if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR))
+	    {
+	      debug (5, 5) ("comm_poll: FD %d ready for writing\n", fd);
+	      if ((hdl = F->write_handler))
+		{
+		  F->write_handler = NULL;
+		  hdl (fd, F->write_data);
+		  Counter.select_fds++;
 		}
-		if (commCheckICPIncoming)
-		    comm_poll_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_poll_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_poll_http_incoming();
+	      if (commCheckICPIncoming)
+		comm_poll_icp_incoming ();
+	      if (commCheckDNSIncoming)
+		comm_poll_dns_incoming ();
+	      if (commCheckHTTPIncoming)
+		comm_poll_http_incoming ();
 	    }
-	    if (revents & POLLNVAL) {
-		close_handler *ch;
-		debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
-		debug(5, 0) ("FD %d is a %s\n", fd, fdTypeStr[F->type]);
-		debug(5, 0) ("--> %s\n", F->desc);
-		debug(5, 0) ("tmout:%p read:%p write:%p\n",
-		    F->timeout_handler,
-		    F->read_handler,
-		    F->write_handler);
-		for (ch = F->close_handler; ch; ch = ch->next)
-		    debug(5, 0) (" close handler: %p\n", ch->handler);
-		if (F->close_handler) {
-		    commCallCloseHandlers(fd);
-		} else if (F->timeout_handler) {
-		    debug(5, 0) ("comm_poll: Calling Timeout Handler\n");
-		    F->timeout_handler(fd, F->timeout_data);
+	  if (revents & POLLNVAL)
+	    {
+	      close_handler *ch;
+	      debug (5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
+	      debug (5, 0) ("FD %d is a %s\n", fd, fdTypeStr[F->type]);
+	      debug (5, 0) ("--> %s\n", F->desc);
+	      debug (5, 0) ("tmout:%p read:%p write:%p\n",
+			    F->timeout_handler,
+			    F->read_handler,
+			    F->write_handler);
+	      for (ch = F->close_handler; ch; ch = ch->next)
+		debug (5, 0) (" close handler: %p\n", ch->handler);
+	      if (F->close_handler)
+		{
+		  commCallCloseHandlers (fd);
 		}
-		F->close_handler = NULL;
-		F->timeout_handler = NULL;
-		F->read_handler = NULL;
-		F->write_handler = NULL;
-		if (F->flags.open)
-		    fd_close(fd);
+	      else if (F->timeout_handler)
+		{
+		  debug (5, 0) ("comm_poll: Calling Timeout Handler\n");
+		  F->timeout_handler (fd, F->timeout_data);
+		}
+	      F->close_handler = NULL;
+	      F->timeout_handler = NULL;
+	      F->read_handler = NULL;
+	      F->write_handler = NULL;
+	      if (F->flags.open)
+		fd_close (fd);
 	    }
 	}
-	if (callicp)
-	    comm_poll_icp_incoming();
-	if (calldns)
-	    comm_poll_dns_incoming();
-	if (callhttp)
-	    comm_poll_http_incoming();
+      if (callicp)
+	comm_poll_icp_incoming ();
+      if (calldns)
+	comm_poll_dns_incoming ();
+      if (callhttp)
+	comm_poll_http_incoming ();
 #if !ALARM_UPDATES_TIME
-	getCurrentTime();
-	Counter.select_time += (current_dtime - start);
+      getCurrentTime ();
+      Counter.select_time += (current_dtime - start);
 #endif
-	return COMM_OK;
-    } while (timeout > current_dtime);
-    debug(5, 8) ("comm_poll: time out: %d.\n", squid_curtime);
-    return COMM_TIMEOUT;
+      return COMM_OK;
+    }
+  while (timeout > current_dtime);
+  debug (5, 8) ("comm_poll: time out: %d.\n", squid_curtime);
+  return COMM_TIMEOUT;
 }
 
 #else
 
 static int
-comm_check_incoming_select_handlers(int nfds, int *fds)
+comm_check_incoming_select_handlers (int nfds, int *fds)
 {
-    int i;
-    int fd;
-    int incame = 0;
-    int maxfd = 0;
-    PF *hdl = NULL;
-    fd_set read_mask;
-    fd_set write_mask;
-    FD_ZERO(&read_mask);
-    FD_ZERO(&write_mask);
-    for (i = 0; i < nfds; i++) {
-	fd = fds[i];
-	if (fd_table[fd].read_handler) {
-	    FD_SET(fd, &read_mask);
-	    if (fd > maxfd)
-		maxfd = fd;
+  int i;
+  int fd;
+  int incame = 0;
+  int maxfd = 0;
+  PF *hdl = NULL;
+  fd_set read_mask;
+  fd_set write_mask;
+  FD_ZERO (&read_mask);
+  FD_ZERO (&write_mask);
+  for (i = 0; i < nfds; i++)
+    {
+      fd = fds[i];
+      if (fd_table[fd].read_handler)
+	{
+	  FD_SET (fd, &read_mask);
+	  if (fd > maxfd)
+	    maxfd = fd;
 	}
-	if (fd_table[fd].write_handler) {
-	    FD_SET(fd, &write_mask);
-	    if (fd > maxfd)
-		maxfd = fd;
+      if (fd_table[fd].write_handler)
+	{
+	  FD_SET (fd, &write_mask);
+	  if (fd > maxfd)
+	    maxfd = fd;
 	}
     }
-    if (maxfd++ == 0)
-	return -1;
+  if (maxfd++ == 0)
+    return -1;
 #if !ALARM_UPDATES_TIME
-    getCurrentTime();
+  getCurrentTime ();
 #endif
-    Counter.syscalls.selects++;
-    if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
-	return incame;
-    for (i = 0; i < nfds; i++) {
-	fd = fds[i];
-	if (FD_ISSET(fd, &read_mask)) {
-	    if ((hdl = fd_table[fd].read_handler) != NULL) {
-		fd_table[fd].read_handler = NULL;
-		commUpdateReadBits(fd, NULL);
-		hdl(fd, &incame);
-	    } else {
-		debug(5, 1) ("comm_select_incoming: NULL read handler\n");
-	    }
-	}
-	if (FD_ISSET(fd, &write_mask)) {
-	    if ((hdl = fd_table[fd].write_handler) != NULL) {
-		fd_table[fd].write_handler = NULL;
-		commUpdateWriteBits(fd, NULL);
-		hdl(fd, &incame);
-	    } else {
-		debug(5, 1) ("comm_select_incoming: NULL write handler\n");
-	    }
-	}
-    }
+  Counter.syscalls.selects++;
+  if (select (maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
     return incame;
-}
-
-static void
-comm_select_icp_incoming(void)
-{
-    int nfds = 0;
-    int fds[2];
-    int nevents;
-    icp_io_events = 0;
-    if (theInIcpConnection >= 0)
-	fds[nfds++] = theInIcpConnection;
-    if (theInIcpConnection != theOutIcpConnection)
-	if (theOutIcpConnection >= 0)
-	    fds[nfds++] = theOutIcpConnection;
-    if (nfds == 0)
-	return;
-    nevents = comm_check_incoming_select_handlers(nfds, fds);
-    incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
-    if (incoming_icp_interval < 0)
-	incoming_icp_interval = 0;
-    if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
-	incoming_icp_interval = MAX_INCOMING_INTERVAL;
-    if (nevents > INCOMING_ICP_MAX)
-	nevents = INCOMING_ICP_MAX;
-    statHistCount(&Counter.comm_icp_incoming, nevents);
-}
-
-static void
-#if USE_POLL
-comm_poll_dns_incoming(void)
-#else
-comm_select_dns_incoming(void)
-#endif
-{
-    int nfds = 0;
-    int fds[2];
-    int nevents;
-    dns_io_events = 0;
-    if (DnsSocket < 0)
-	return;
-    fds[nfds++] = DnsSocket;
-#if USE_POLL
-    nevents = comm_check_incoming_poll_handlers(nfds, fds);
-#else
-    nevents = comm_check_incoming_select_handlers(nfds, fds);
-#endif
-    if (nevents < 0)
-	return;
-    incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
-    incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
-    if (incoming_dns_interval < Config.comm_incoming.dns_min_poll)
-	incoming_dns_interval = Config.comm_incoming.dns_min_poll;
-    if (incoming_dns_interval > MAX_INCOMING_INTERVAL)
-	incoming_dns_interval = MAX_INCOMING_INTERVAL;
-    if (nevents > INCOMING_DNS_MAX)
-	nevents = INCOMING_DNS_MAX;
-    statHistCount(&Counter.comm_dns_incoming, nevents);
-}
-
-static void
-comm_select_http_incoming(void)
-{
-    int nfds = 0;
-    int fds[MAXHTTPPORTS];
-    int j;
-    int nevents;
-    http_io_events = 0;
-    for (j = 0; j < NHttpSockets; j++) {
-	if (HttpSockets[j] < 0)
-	    continue;
-	if (commDeferRead(HttpSockets[j]))
-	    continue;
-	fds[nfds++] = HttpSockets[j];
+  for (i = 0; i < nfds; i++)
+    {
+      fd = fds[i];
+      if (FD_ISSET (fd, &read_mask))
+	{
+	  if ((hdl = fd_table[fd].read_handler) != NULL)
+	    {
+	      fd_table[fd].read_handler = NULL;
+	      commUpdateReadBits (fd, NULL);
+	      hdl (fd, &incame);
+	    }
+	  else
+	    {
+	      debug (5, 1) ("comm_select_incoming: NULL read handler\n");
+	    }
+	}
+      if (FD_ISSET (fd, &write_mask))
+	{
+	  if ((hdl = fd_table[fd].write_handler) != NULL)
+	    {
+	      fd_table[fd].write_handler = NULL;
+	      commUpdateWriteBits (fd, NULL);
+	      hdl (fd, &incame);
+	    }
+	  else
+	    {
+	      debug (5, 1) ("comm_select_incoming: NULL write handler\n");
+	    }
+	}
     }
-    nevents = comm_check_incoming_select_handlers(nfds, fds);
-    incoming_http_interval += Config.comm_incoming.http_average - nevents;
-    if (incoming_http_interval < 0)
-	incoming_http_interval = 0;
-    if (incoming_http_interval > MAX_INCOMING_INTERVAL)
-	incoming_http_interval = MAX_INCOMING_INTERVAL;
-    if (nevents > INCOMING_HTTP_MAX)
-	nevents = INCOMING_HTTP_MAX;
-    statHistCount(&Counter.comm_http_incoming, nevents);
+  return incame;
+}
+
+static void
+comm_select_icp_incoming (void)
+{
+  int nfds = 0;
+  int fds[2];
+  int nevents;
+  icp_io_events = 0;
+  if (theInIcpConnection >= 0)
+    fds[nfds++] = theInIcpConnection;
+  if (theInIcpConnection != theOutIcpConnection)
+    if (theOutIcpConnection >= 0)
+      fds[nfds++] = theOutIcpConnection;
+  if (nfds == 0)
+    return;
+  nevents = comm_check_incoming_select_handlers (nfds, fds);
+  incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
+  if (incoming_icp_interval < 0)
+    incoming_icp_interval = 0;
+  if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
+    incoming_icp_interval = MAX_INCOMING_INTERVAL;
+  if (nevents > INCOMING_ICP_MAX)
+    nevents = INCOMING_ICP_MAX;
+  statHistCount (&Counter.comm_icp_incoming, nevents);
+}
+
+static void
+comm_select_http_incoming (void)
+{
+  int nfds = 0;
+  int fds[MAXHTTPPORTS];
+  int j;
+  int nevents;
+  http_io_events = 0;
+  for (j = 0; j < NHttpSockets; j++)
+    {
+      if (HttpSockets[j] < 0)
+	continue;
+      if (commDeferRead (HttpSockets[j]))
+	continue;
+      fds[nfds++] = HttpSockets[j];
+    }
+  nevents = comm_check_incoming_select_handlers (nfds, fds);
+  incoming_http_interval += Config.comm_incoming.http_average - nevents;
+  if (incoming_http_interval < 0)
+    incoming_http_interval = 0;
+  if (incoming_http_interval > MAX_INCOMING_INTERVAL)
+    incoming_http_interval = MAX_INCOMING_INTERVAL;
+  if (nevents > INCOMING_HTTP_MAX)
+    nevents = INCOMING_HTTP_MAX;
+  statHistCount (&Counter.comm_http_incoming, nevents);
 }
 
 #define DEBUG_FDBITS 0
 /* Select on all sockets; call handlers for those that are ready. */
 int
-comm_select(int msec)
+comm_select (int msec)
 {
-    fd_set readfds;
-    fd_set writefds;
-    PF *hdl = NULL;
-    int fd;
-    int maxfd;
-    int num;
-    int callicp = 0, callhttp = 0;
-    int calldns = 0;
-    int maxindex;
-    int k;
-    int j;
+  fd_set readfds;
+  fd_set writefds;
+  PF *hdl = NULL;
+  int fd;
+  int maxfd;
+  int num;
+  int callicp = 0, callhttp = 0;
+  int calldns = 0;
+  int maxindex;
+  int k;
+  int j;
 #if DEBUG_FDBITS
-    int i;
+  int i;
 #endif
-    fd_mask *fdsp;
-    fd_mask tmask;
-    static time_t last_timeout = 0;
-    struct timeval poll_time;
-    double timeout = current_dtime + (msec / 1000.0);
-    fde *F;
-    do {
+  fd_mask *fdsp;
+  fd_mask tmask;
+  static time_t last_timeout = 0;
+  struct timeval poll_time;
+  double timeout = current_dtime + (msec / 1000.0);
+  fde *F;
+  do
+    {
 #if !ALARM_UPDATES_TIME
-	getCurrentTime();
+      getCurrentTime ();
 #endif
 #if USE_ASYNC_IO
-	aioCheckCallbacks();
+      aioCheckCallbacks ();
 #endif
-	if (commCheckICPIncoming)
-	    comm_select_icp_incoming();
-	if (commCheckDNSIncoming)
-	    comm_select_dns_incoming();
-	if (commCheckHTTPIncoming)
-	    comm_select_http_incoming();
-	callicp = calldns = callhttp = 0;
-	maxfd = Biggest_FD + 1;
-	xmemcpy(&readfds, &global_readfds,
-	    howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
-	xmemcpy(&writefds, &global_writefds,
-	    howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
-	/* remove stalled FDs */
-	maxindex = howmany(maxfd, FD_MASK_BITS);
-	fdsp = (fd_mask *) & readfds;
-	for (j = 0; j < maxindex; j++) {
-	    if ((tmask = fdsp[j]) == 0)
-		continue;	/* no bits here */
-	    for (k = 0; k < FD_MASK_BITS; k++) {
-		if (!EBIT_TEST(tmask, k))
-		    continue;
-		/* Found a set bit */
-		fd = (j * FD_MASK_BITS) + k;
-		if (commDeferRead(fd))
-		    FD_CLR(fd, &readfds);
+      if (commCheckICPIncoming)
+	comm_select_icp_incoming ();
+      if (commCheckDNSIncoming)
+	comm_select_dns_incoming ();
+      if (commCheckHTTPIncoming)
+	comm_select_http_incoming ();
+      callicp = calldns = callhttp = 0;
+      maxfd = Biggest_FD + 1;
+      xmemcpy (&readfds, &global_readfds,
+	       howmany (maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
+      xmemcpy (&writefds, &global_writefds,
+	       howmany (maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
+      /* remove stalled FDs */
+      maxindex = howmany (maxfd, FD_MASK_BITS);
+      fdsp = (fd_mask *) & readfds;
+      for (j = 0; j < maxindex; j++)
+	{
+	  if ((tmask = fdsp[j]) == 0)
+	    continue;		/* no bits here */
+	  for (k = 0; k < FD_MASK_BITS; k++)
+	    {
+	      if (!EBIT_TEST (tmask, k))
+		continue;
+	      /* Found a set bit */
+	      fd = (j * FD_MASK_BITS) + k;
+	      if (commDeferRead (fd))
+		FD_CLR (fd, &readfds);
 	    }
 	}
 #if DEBUG_FDBITS
-	for (i = 0; i < maxfd; i++) {
-	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler && !commDeferRead(i)) {
-		assert(FD_ISSET(i, &readfds));
+      for (i = 0; i < maxfd; i++)
+	{
+	  /* Check each open socket for a handler. */
+	  if (fd_table[i].read_handler && !commDeferRead (i))
+	    {
+	      assert (FD_ISSET (i, &readfds));
 	    }
-	    if (fd_table[i].write_handler) {
-		assert(FD_ISSET(i, &writefds));
+	  if (fd_table[i].write_handler)
+	    {
+	      assert (FD_ISSET (i, &writefds));
 	    }
 	}
 #endif
-	if (nreadfds + nwritefds == 0) {
-	    assert(shutting_down);
-	    return COMM_SHUTDOWN;
+      if (nreadfds + nwritefds == 0)
+	{
+	  assert (shutting_down);
+	  return COMM_SHUTDOWN;
 	}
-	if (msec > MAX_POLL_TIME)
-	    msec = MAX_POLL_TIME;
+      if (msec > MAX_POLL_TIME)
+	msec = MAX_POLL_TIME;
 #ifdef _SQUID_OS2_
-	if (msec < 0)
-	    msec = MAX_POLL_TIME;
+      if (msec < 0)
+	msec = MAX_POLL_TIME;
 #endif
-	for (;;) {
-	    poll_time.tv_sec = msec / 1000;
-	    poll_time.tv_usec = (msec % 1000) * 1000;
-	    Counter.syscalls.selects++;
-	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
-	    Counter.select_loops++;
-	    if (num >= 0)
-		break;
-	    if (ignoreErrno(errno))
-		break;
-	    debug(50, 0) ("comm_select: select failure: %s\n",
-		xstrerror());
-	    examine_select(&readfds, &writefds);
-	    return COMM_ERROR;
-	    /* NOTREACHED */
+      for (;;)
+	{
+	  poll_time.tv_sec = msec / 1000;
+	  poll_time.tv_usec = (msec % 1000) * 1000;
+	  Counter.syscalls.selects++;
+	  num = select (maxfd, &readfds, &writefds, NULL, &poll_time);
+	  Counter.select_loops++;
+	  if (num >= 0)
+	    break;
+	  if (ignoreErrno (errno))
+	    break;
+	  debug (50, 0) ("comm_select: select failure: %s\n",
+			 xstrerror ());
+	  examine_select (&readfds, &writefds);
+	  return COMM_ERROR;
+	  /* NOTREACHED */
 	}
-	if (num < 0)
-	    continue;
-	debug(5, num ? 5 : 8) ("comm_select: %d FDs ready at %d\n",
-	    num, (int) squid_curtime);
-	statHistCount(&Counter.select_fds_hist, num);
-	/* Check lifetime and timeout handlers ONCE each second.
-	 * Replaces brain-dead check every time through the loop! */
-	if (squid_curtime > last_timeout) {
-	    last_timeout = squid_curtime;
-	    checkTimeouts();
+      if (num < 0)
+	continue;
+      debug (5, num ? 5 : 8) ("comm_select: %d FDs ready at %d\n",
+			      num, (int) squid_curtime);
+      statHistCount (&Counter.select_fds_hist, num);
+      /* Check lifetime and timeout handlers ONCE each second.
+       * Replaces brain-dead check every time through the loop! */
+      if (squid_curtime > last_timeout)
+	{
+	  last_timeout = squid_curtime;
+	  checkTimeouts ();
 	}
-	if (num == 0)
-	    continue;
-	/* Scan return fd masks for ready descriptors */
-	fdsp = (fd_mask *) & readfds;
-	maxindex = howmany(maxfd, FD_MASK_BITS);
-	for (j = 0; j < maxindex; j++) {
-	    if ((tmask = fdsp[j]) == 0)
-		continue;	/* no bits here */
-	    for (k = 0; k < FD_MASK_BITS; k++) {
-		if (!EBIT_TEST(tmask, k))
-		    continue;
-		/* Found a set bit */
-		fd = (j * FD_MASK_BITS) + k;
+      if (num == 0)
+	continue;
+      /* Scan return fd masks for ready descriptors */
+      fdsp = (fd_mask *) & readfds;
+      maxindex = howmany (maxfd, FD_MASK_BITS);
+      for (j = 0; j < maxindex; j++)
+	{
+	  if ((tmask = fdsp[j]) == 0)
+	    continue;		/* no bits here */
+	  for (k = 0; k < FD_MASK_BITS; k++)
+	    {
+	      if (!EBIT_TEST (tmask, k))
+		continue;
+	      /* Found a set bit */
+	      fd = (j * FD_MASK_BITS) + k;
 #if DEBUG_FDBITS
-		debug(5, 9) ("FD %d bit set for reading\n", fd);
-		assert(FD_ISSET(fd, &readfds));
+	      debug (5, 9) ("FD %d bit set for reading\n", fd);
+	      assert (FD_ISSET (fd, &readfds));
 #endif
-		if (fdIsIcp(fd)) {
-		    callicp = 1;
-		    continue;
+	      if (fdIsIcp (fd))
+		{
+		  callicp = 1;
+		  continue;
 		}
-		if (fdIsDns(fd)) {
-		    calldns = 1;
-		    continue;
+	      if (fdIsDns (fd))
+		{
+		  calldns = 1;
+		  continue;
 		}
-		if (fdIsHttp(fd)) {
-		    callhttp = 1;
-		    continue;
+	      if (fdIsHttp (fd))
+		{
+		  callhttp = 1;
+		  continue;
 		}
-		F = &fd_table[fd];
-		debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
-		if (F->read_handler) {
-		    hdl = F->read_handler;
-		    F->read_handler = NULL;
-		    commUpdateReadBits(fd, NULL);
-		    hdl(fd, F->read_data);
-		    Counter.select_fds++;
+	      F = &fd_table[fd];
+	      debug (5, 6) ("comm_select: FD %d ready for reading\n", fd);
+	      if (F->read_handler)
+		{
+		  hdl = F->read_handler;
+		  F->read_handler = NULL;
+		  commUpdateReadBits (fd, NULL);
+		  hdl (fd, F->read_data);
+		  Counter.select_fds++;
 		}
-		if (commCheckICPIncoming)
-		    comm_select_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_select_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_select_http_incoming();
-		EBIT_CLR(tmask, k);	/* this bit is done */
-		if (tmask == 0)
-		    break;	/* and no more bits left */
+	      if (commCheckICPIncoming)
+		comm_select_icp_incoming ();
+	      if (commCheckDNSIncoming)
+		comm_select_dns_incoming ();
+	      if (commCheckHTTPIncoming)
+		comm_select_http_incoming ();
+	      EBIT_CLR (tmask, k);	/* this bit is done */
+	      if (tmask == 0)
+		break;		/* and no more bits left */
 	    }
 	}
-	fdsp = (fd_mask *) & writefds;
-	for (j = 0; j < maxindex; j++) {
-	    if ((tmask = fdsp[j]) == 0)
-		continue;	/* no bits here */
-	    for (k = 0; k < FD_MASK_BITS; k++) {
-		if (!EBIT_TEST(tmask, k))
-		    continue;
-		/* Found a set bit */
-		fd = (j * FD_MASK_BITS) + k;
+      fdsp = (fd_mask *) & writefds;
+      for (j = 0; j < maxindex; j++)
+	{
+	  if ((tmask = fdsp[j]) == 0)
+	    continue;		/* no bits here */
+	  for (k = 0; k < FD_MASK_BITS; k++)
+	    {
+	      if (!EBIT_TEST (tmask, k))
+		continue;
+	      /* Found a set bit */
+	      fd = (j * FD_MASK_BITS) + k;
 #if DEBUG_FDBITS
-		debug(5, 9) ("FD %d bit set for writing\n", fd);
-		assert(FD_ISSET(fd, &writefds));
+	      debug (5, 9) ("FD %d bit set for writing\n", fd);
+	      assert (FD_ISSET (fd, &writefds));
 #endif
-		if (fdIsIcp(fd)) {
-		    callicp = 1;
-		    continue;
+	      if (fdIsIcp (fd))
+		{
+		  callicp = 1;
+		  continue;
 		}
-		if (fdIsDns(fd)) {
-		    calldns = 1;
-		    continue;
+	      if (fdIsDns (fd))
+		{
+		  calldns = 1;
+		  continue;
 		}
-		if (fdIsHttp(fd)) {
-		    callhttp = 1;
-		    continue;
+	      if (fdIsHttp (fd))
+		{
+		  callhttp = 1;
+		  continue;
 		}
-		F = &fd_table[fd];
-		debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
-		if (F->write_handler) {
-		    hdl = F->write_handler;
-		    F->write_handler = NULL;
-		    commUpdateWriteBits(fd, NULL);
-		    hdl(fd, F->write_data);
-		    Counter.select_fds++;
+	      F = &fd_table[fd];
+	      debug (5, 5) ("comm_select: FD %d ready for writing\n", fd);
+	      if (F->write_handler)
+		{
+		  hdl = F->write_handler;
+		  F->write_handler = NULL;
+		  commUpdateWriteBits (fd, NULL);
+		  hdl (fd, F->write_data);
+		  Counter.select_fds++;
 		}
-		if (commCheckICPIncoming)
-		    comm_select_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_select_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_select_http_incoming();
-		EBIT_CLR(tmask, k);	/* this bit is done */
-		if (tmask == 0)
-		    break;	/* and no more bits left */
+	      if (commCheckICPIncoming)
+		comm_select_icp_incoming ();
+	      if (commCheckDNSIncoming)
+		comm_select_dns_incoming ();
+	      if (commCheckHTTPIncoming)
+		comm_select_http_incoming ();
+	      EBIT_CLR (tmask, k);	/* this bit is done */
+	      if (tmask == 0)
+		break;		/* and no more bits left */
 	    }
 	}
-	if (callicp)
-	    comm_select_icp_incoming();
-	if (calldns)
-	    comm_select_dns_incoming();
-	if (callhttp)
-	    comm_select_http_incoming();
-	return COMM_OK;
-    } while (timeout > current_dtime);
-    debug(5, 8) ("comm_select: time out: %d\n", (int) squid_curtime);
-    return COMM_TIMEOUT;
+      if (callicp)
+	comm_select_icp_incoming ();
+      if (calldns)
+	comm_select_dns_incoming ();
+      if (callhttp)
+	comm_select_http_incoming ();
+      return COMM_OK;
+    }
+  while (timeout > current_dtime);
+  debug (5, 8) ("comm_select: time out: %d\n", (int) squid_curtime);
+  return COMM_TIMEOUT;
 }
 #endif
 
-void
-comm_select_init(void)
+static void
+#if HAVE_POLL
+comm_poll_dns_incoming (void)
+#else
+comm_select_dns_incoming (void)
+#endif
 {
-    zero_tv.tv_sec = 0;
-    zero_tv.tv_usec = 0;
-    cachemgrRegister("comm_incoming",
-	"comm_incoming() stats",
-	commIncomingStats, 0, 1);
-    FD_ZERO(&global_readfds);
-    FD_ZERO(&global_writefds);
-    nreadfds = nwritefds = 0;
+  int nfds = 0;
+  int fds[2];
+  int nevents;
+  dns_io_events = 0;
+  if (DnsSocket < 0)
+    return;
+  fds[nfds++] = DnsSocket;
+#if HAVE_POLL
+  nevents = comm_check_incoming_poll_handlers (nfds, fds);
+#else
+  nevents = comm_check_incoming_select_handlers (nfds, fds);
+#endif
+  if (nevents < 0)
+    return;
+  incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
+  incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
+  if (incoming_dns_interval < Config.comm_incoming.dns_min_poll)
+    incoming_dns_interval = Config.comm_incoming.dns_min_poll;
+  if (incoming_dns_interval > MAX_INCOMING_INTERVAL)
+    incoming_dns_interval = MAX_INCOMING_INTERVAL;
+  if (nevents > INCOMING_DNS_MAX)
+    nevents = INCOMING_DNS_MAX;
+  statHistCount (&Counter.comm_dns_incoming, nevents);
+}
+
+void
+comm_select_init (void)
+{
+  zero_tv.tv_sec = 0;
+  zero_tv.tv_usec = 0;
+  cachemgrRegister ("comm_incoming",
+		    "comm_incoming() stats",
+		    commIncomingStats, 0, 1);
+  FD_ZERO (&global_readfds);
+  FD_ZERO (&global_writefds);
+  nreadfds = nwritefds = 0;
 }
 
 #if !HAVE_POLL
@@ -824,141 +891,156 @@ comm_select_init(void)
  * Call this from where the select loop fails.
  */
 static int
-examine_select(fd_set * readfds, fd_set * writefds)
+examine_select (fd_set * readfds, fd_set * writefds)
 {
-    int fd = 0;
-    fd_set read_x;
-    fd_set write_x;
-    struct timeval tv;
-    close_handler *ch = NULL;
-    fde *F = NULL;
-    struct stat sb;
-    debug(5, 0) ("examine_select: Examining open file descriptors...\n");
-    for (fd = 0; fd < Squid_MaxFD; fd++) {
-	FD_ZERO(&read_x);
-	FD_ZERO(&write_x);
-	tv.tv_sec = tv.tv_usec = 0;
-	if (FD_ISSET(fd, readfds))
-	    FD_SET(fd, &read_x);
-	else if (FD_ISSET(fd, writefds))
-	    FD_SET(fd, &write_x);
-	else
-	    continue;
-	Counter.syscalls.selects++;
-	errno = 0;
-	if (!fstat(fd, &sb)) {
-	    debug(5, 5) ("FD %d is valid.\n", fd);
-	    continue;
+  int fd = 0;
+  fd_set read_x;
+  fd_set write_x;
+  struct timeval tv;
+  close_handler *ch = NULL;
+  fde *F = NULL;
+  struct stat sb;
+  debug (5, 0) ("examine_select: Examining open file descriptors...\n");
+  for (fd = 0; fd < Squid_MaxFD; fd++)
+    {
+      FD_ZERO (&read_x);
+      FD_ZERO (&write_x);
+      tv.tv_sec = tv.tv_usec = 0;
+      if (FD_ISSET (fd, readfds))
+	FD_SET (fd, &read_x);
+      else if (FD_ISSET (fd, writefds))
+	FD_SET (fd, &write_x);
+      else
+	continue;
+      Counter.syscalls.selects++;
+      errno = 0;
+      if (!fstat (fd, &sb))
+	{
+	  debug (5, 5) ("FD %d is valid.\n", fd);
+	  continue;
 	}
-	F = &fd_table[fd];
-	debug(5, 0) ("FD %d: %s\n", fd, xstrerror());
-	debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
-	debug(5, 0) ("FD %d is a %s called '%s'\n",
-	    fd,
-	    fdTypeStr[F->type],
-	    F->desc);
-	debug(5, 0) ("tmout:%p read:%p write:%p\n",
-	    F->timeout_handler,
-	    F->read_handler,
-	    F->write_handler);
-	for (ch = F->close_handler; ch; ch = ch->next)
-	    debug(5, 0) (" close handler: %p\n", ch->handler);
-	if (F->close_handler) {
-	    commCallCloseHandlers(fd);
-	} else if (F->timeout_handler) {
-	    debug(5, 0) ("examine_select: Calling Timeout Handler\n");
-	    F->timeout_handler(fd, F->timeout_data);
+      F = &fd_table[fd];
+      debug (5, 0) ("FD %d: %s\n", fd, xstrerror ());
+      debug (5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
+      debug (5, 0) ("FD %d is a %s called '%s'\n",
+		    fd,
+		    fdTypeStr[F->type],
+		    F->desc);
+      debug (5, 0) ("tmout:%p read:%p write:%p\n",
+		    F->timeout_handler,
+		    F->read_handler,
+		    F->write_handler);
+      for (ch = F->close_handler; ch; ch = ch->next)
+	debug (5, 0) (" close handler: %p\n", ch->handler);
+      if (F->close_handler)
+	{
+	  commCallCloseHandlers (fd);
 	}
-	F->close_handler = NULL;
-	F->timeout_handler = NULL;
-	F->read_handler = NULL;
-	F->write_handler = NULL;
-	FD_CLR(fd, readfds);
-	FD_CLR(fd, writefds);
+      else if (F->timeout_handler)
+	{
+	  debug (5, 0) ("examine_select: Calling Timeout Handler\n");
+	  F->timeout_handler (fd, F->timeout_data);
+	}
+      F->close_handler = NULL;
+      F->timeout_handler = NULL;
+      F->read_handler = NULL;
+      F->write_handler = NULL;
+      FD_CLR (fd, readfds);
+      FD_CLR (fd, writefds);
     }
-    return 0;
+  return 0;
 }
 #endif
 
 static void
-checkTimeouts(void)
+checkTimeouts (void)
 {
-    int fd;
-    fde *F = NULL;
-    PF *callback;
-    for (fd = 0; fd <= Biggest_FD; fd++) {
-	F = &fd_table[fd];
-	if (!F->flags.open)
-	    continue;
-	if (F->timeout == 0)
-	    continue;
-	if (F->timeout > squid_curtime)
-	    continue;
-	debug(5, 5) ("checkTimeouts: FD %d Expired\n", fd);
-	if (F->timeout_handler) {
-	    debug(5, 5) ("checkTimeouts: FD %d: Call timeout handler\n", fd);
-	    callback = F->timeout_handler;
-	    F->timeout_handler = NULL;
-	    callback(fd, F->timeout_data);
-	} else {
-	    debug(5, 5) ("checkTimeouts: FD %d: Forcing comm_close()\n", fd);
-	    comm_close(fd);
+  int fd;
+  fde *F = NULL;
+  PF *callback;
+  for (fd = 0; fd <= Biggest_FD; fd++)
+    {
+      F = &fd_table[fd];
+      if (!F->flags.open)
+	continue;
+      if (F->timeout == 0)
+	continue;
+      if (F->timeout > squid_curtime)
+	continue;
+      debug (5, 5) ("checkTimeouts: FD %d Expired\n", fd);
+      if (F->timeout_handler)
+	{
+	  debug (5, 5) ("checkTimeouts: FD %d: Call timeout handler\n", fd);
+	  callback = F->timeout_handler;
+	  F->timeout_handler = NULL;
+	  callback (fd, F->timeout_data);
+	}
+      else
+	{
+	  debug (5, 5) ("checkTimeouts: FD %d: Forcing comm_close()\n", fd);
+	  comm_close (fd);
 	}
     }
 }
 
 static void
-commIncomingStats(StoreEntry * sentry)
+commIncomingStats (StoreEntry * sentry)
 {
-    StatCounters *f = &Counter;
-    storeAppendPrintf(sentry, "Current incoming_icp_interval: %d\n",
-	incoming_icp_interval >> INCOMING_FACTOR);
-    storeAppendPrintf(sentry, "Current incoming_dns_interval: %d\n",
-	incoming_dns_interval >> INCOMING_FACTOR);
-    storeAppendPrintf(sentry, "Current incoming_http_interval: %d\n",
-	incoming_http_interval >> INCOMING_FACTOR);
-    storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "Histogram of events per incoming socket type\n");
+  StatCounters *f = &Counter;
+  storeAppendPrintf (sentry, "Current incoming_icp_interval: %d\n",
+		     incoming_icp_interval >> INCOMING_FACTOR);
+  storeAppendPrintf (sentry, "Current incoming_dns_interval: %d\n",
+		     incoming_dns_interval >> INCOMING_FACTOR);
+  storeAppendPrintf (sentry, "Current incoming_http_interval: %d\n",
+		     incoming_http_interval >> INCOMING_FACTOR);
+  storeAppendPrintf (sentry, "\n");
+  storeAppendPrintf (sentry, "Histogram of events per incoming socket type\n");
 #ifdef HAVE_POLL
-    storeAppendPrintf(sentry, "ICP Messages handled per comm_poll_icp_incoming() call:\n");
+  storeAppendPrintf (sentry, "ICP Messages handled per comm_poll_icp_incoming() call:\n");
 #else
-    storeAppendPrintf(sentry, "ICP Messages handled per comm_select_icp_incoming() call:\n");
+  storeAppendPrintf (sentry, "ICP Messages handled per comm_select_icp_incoming() call:\n");
 #endif
-    statHistDump(&f->comm_icp_incoming, sentry, statHistIntDumper);
+  statHistDump (&f->comm_icp_incoming, sentry, statHistIntDumper);
 #ifdef HAVE_POLL
-    storeAppendPrintf(sentry, "DNS Messages handled per comm_poll_dns_incoming() call:\n");
+  storeAppendPrintf (sentry, "DNS Messages handled per comm_poll_dns_incoming() call:\n");
 #else
-    storeAppendPrintf(sentry, "DNS Messages handled per comm_select_dns_incoming() call:\n");
+  storeAppendPrintf (sentry, "DNS Messages handled per comm_select_dns_incoming() call:\n");
 #endif
-    statHistDump(&f->comm_dns_incoming, sentry, statHistIntDumper);
+  statHistDump (&f->comm_dns_incoming, sentry, statHistIntDumper);
 #ifdef HAVE_POLL
-    storeAppendPrintf(sentry, "HTTP Messages handled per comm_poll_http_incoming() call:\n");
+  storeAppendPrintf (sentry, "HTTP Messages handled per comm_poll_http_incoming() call:\n");
 #else
-    storeAppendPrintf(sentry, "HTTP Messages handled per comm_select_http_incoming() call:\n");
+  storeAppendPrintf (sentry, "HTTP Messages handled per comm_select_http_incoming() call:\n");
 #endif
-    statHistDump(&f->comm_http_incoming, sentry, statHistIntDumper);
+  statHistDump (&f->comm_http_incoming, sentry, statHistIntDumper);
 }
 
 void
-commUpdateReadBits(int fd, PF * handler)
+commUpdateReadBits (int fd, PF * handler)
 {
-    if (handler && !FD_ISSET(fd, &global_readfds)) {
-	FD_SET(fd, &global_readfds);
-	nreadfds++;
-    } else if (!handler && FD_ISSET(fd, &global_readfds)) {
-	FD_CLR(fd, &global_readfds);
-	nreadfds--;
+  if (handler && !FD_ISSET (fd, &global_readfds))
+    {
+      FD_SET (fd, &global_readfds);
+      nreadfds++;
+    }
+  else if (!handler && FD_ISSET (fd, &global_readfds))
+    {
+      FD_CLR (fd, &global_readfds);
+      nreadfds--;
     }
 }
 
 void
-commUpdateWriteBits(int fd, PF * handler)
+commUpdateWriteBits (int fd, PF * handler)
 {
-    if (handler && !FD_ISSET(fd, &global_writefds)) {
-	FD_SET(fd, &global_writefds);
-	nwritefds++;
-    } else if (!handler && FD_ISSET(fd, &global_writefds)) {
-	FD_CLR(fd, &global_writefds);
-	nwritefds--;
+  if (handler && !FD_ISSET (fd, &global_writefds))
+    {
+      FD_SET (fd, &global_writefds);
+      nwritefds++;
+    }
+  else if (!handler && FD_ISSET (fd, &global_writefds))
+    {
+      FD_CLR (fd, &global_writefds);
+      nwritefds--;
     }
 }
