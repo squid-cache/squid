@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.32 1996/10/07 15:04:46 wessels Exp $
+ * $Id: cachemgr.cc,v 1.33 1996/10/07 15:06:06 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -618,7 +618,7 @@ main(int argc, char *argv[])
 
 	plustospace(s);
 	unescape_url(s);
-	if (v = strchr(s, '='))
+	if ((v = strchr(s, '=')) != NULL)
 	    *v++ = '\0';
 	else
 	    v = s;
