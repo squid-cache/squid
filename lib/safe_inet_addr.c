@@ -38,7 +38,7 @@ safe_inet_addr(const char *buf, struct in_addr *addr)
 	return 0;
     if (a4 < 0 || a4 > 255)
 	return 0;
-    sprintf(addrbuf, "%d.%d.%d.%d", a1, a2, a3, a4);
+    snprintf(addrbuf,32, "%d.%d.%d.%d", a1, a2, a3, a4);
     A.s_addr = inet_addr(addrbuf);
     if (addr)
 	addr->s_addr = A.s_addr;

@@ -49,15 +49,6 @@
  * `BSTRING', as far as I know, and neither of them use this code.  */
 #if HAVE_STRING_H || STDC_HEADERS
 #include <string.h>
-#ifndef bcmp
-#define bcmp(s1, s2, n)	memcmp ((s1), (s2), (n))
-#endif
-#ifndef bcopy
-#define bcopy(s, d, n)	memcpy ((d), (s), (n))
-#endif
-#ifndef bzero
-#define bzero(s, n)	memset ((s), 0, (n))
-#endif
 #else
 #include <strings.h>
 #endif
@@ -98,7 +89,7 @@ init_syntax_once()
     if (done)
 	return;
 
-    bzero(re_syntax_table, sizeof re_syntax_table);
+    memset(re_syntax_table, 0, sizeof re_syntax_table);
 
     for (c = 'a'; c <= 'z'; c++)
 	re_syntax_table[c] = Sword;
@@ -208,7 +199,7 @@ char *alloca();
 /* Assumes a `char *destination' variable.  */
 #define REGEX_REALLOCATE(source, osize, nsize)				\
   (destination = (char *) alloca (nsize),				\
-   bcopy (source, destination, osize),					\
+   xmemcpy (destination, source, osize),				\
    destination)
 
 #endif /* not REGEX_MALLOC */
@@ -1333,7 +1324,7 @@ regex_compile(pattern, size, syntax, bufp)
 		BUF_PUSH((1 << BYTEWIDTH) / BYTEWIDTH);
 
 		/* Clear the whole map.  */
-		bzero(b, (1 << BYTEWIDTH) / BYTEWIDTH);
+		memset(b, 0, (1 << BYTEWIDTH) / BYTEWIDTH);
 
 		/* charset_not matches newline according to a syntax bit.  */
 		if ((re_opcode_t) b[-2] == charset_not
@@ -2492,7 +2483,7 @@ re_compile_fastmap(bufp)
     assert(fastmap != NULL && p != NULL);
 
     INIT_FAIL_STACK();
-    bzero(fastmap, 1 << BYTEWIDTH);	/* Assume nothing's valid.  */
+    memset(fastmap, 0,  1 << BYTEWIDTH);	/* Assume nothing's valid.  */
     bufp->fastmap_accurate = 1;	/* It will be when we're done.  */
     bufp->can_be_null = 0;
 
@@ -3694,7 +3685,7 @@ re_match_2(bufp, string1, size1, string2, size2, pos, regs, stop)
 		     * past them.  */
 		    if (translate
 			? bcmp_translate(d, d2, mcnt, translate)
-			: bcmp(d, d2, mcnt))
+			: memcmp(d, d2, mcnt))
 			goto fail;
 		    d += mcnt, d2 += mcnt;
 		}
