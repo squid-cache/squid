@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.48 2003/08/27 21:19:38 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.49 2003/08/30 06:39:24 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -861,7 +861,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 
     if (max_size > (max_offset>>10)) {
         debug(47,0)("COSS block-size = %d bytes\n", 1<<blksz_bits);
-        debug(47,0)("COSS largest file offset = %llu KB\n", max_offset >> 10);
+        debugs(47,0, "COSS largest file offset = " << (max_offset >> 10) << " KB");
         debug(47,0)("COSS cache_dir size = %d KB\n", max_size);
         fatal("COSS cache_dir size exceeds largest offset\n");
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.23 2003/08/27 21:19:38 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.24 2003/08/30 06:39:24 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -116,7 +116,7 @@ storeCossAllocate(CossSwapDir * SD, const StoreEntry * e, int which)
 
     /* Check if we have overflowed the disk .. */
     /* SD->max_size is int, so cast to (off_t) *before* bit-shifting */
-    if ((SD->current_offset + allocsize) > ((off_t)SD->max_size << 10)) {
+    if ((off_t)(SD->current_offset + allocsize) > ((off_t)SD->max_size << 10)) {
         /*
          * tried to allocate past the end of the disk, so wrap
          * back to the beginning
@@ -414,7 +414,7 @@ CossSwapDir::storeCossFilenoToMembuf(sfileno f)
     for (m = membufs.head; m; m = m->next) {
         t = (CossMemBuf *)m->data;
 
-        if ((o >= t->diskstart) && (o < t->diskend))
+        if ((o >= (off_t)t->diskstart) && (o < (off_t)t->diskend))
             break;
     }
 
@@ -665,7 +665,7 @@ storeCossCreateMemBuf(CossSwapDir * SD, size_t start,
         if (curfn == e->swap_filen)
             *collision = 1;	/* Mark an object alloc collision */
 
-        if ((o >= newmb->diskstart) && (o < newmb->diskend)) {
+        if ((o >= (off_t)newmb->diskstart) && (o < (off_t)newmb->diskend)) {
             storeRelease(e);
             numreleased++;
         } else
