@@ -5,10 +5,21 @@
 
 #define NET_DB_TTL 5
 
+#define NETDB_LOW_MARK 900
+#define NETDB_HIGH_MARK 1000
+
 static HashID addr_table;
 static HashID host_table;
 
 static struct in_addr networkFromInaddr _PARAMS((struct in_addr a));
+static void netdbRelease _PARAMS((netdbEntry * n));
+static netdbEntry *netdbGetFirst _PARAMS((HashID table));
+static netdbEntry *netdbGetNext _PARAMS((HashID table));
+static void netdbHashInsert _PARAMS((netdbEntry * n, struct in_addr addr));
+static void netdbHashDelete _PARAMS((char *key));
+static void netdbHashLink _PARAMS((netdbEntry * n, char *hostname));
+static void netdbHashUnlink _PARAMS((char *key));
+static void netdbPurgeLRU _PARAMS((void));
 
 void
 netdbInit(void)
@@ -27,9 +38,8 @@ netdbHashInsert(netdbEntry * n, struct in_addr addr)
 }
 
 static void
-netdbHashDelete(struct in_addr addr)
+netdbHashDelete(char *key)
 {
-    char *key = inet_ntoa(networkFromInaddr(addr));
     hash_link *hptr = hash_lookup(addr_table, key);
     if (hptr == NULL) {
 	debug_trap("netdbHashDelete: key not found");
@@ -59,7 +69,6 @@ netdbHashUnlink(char *key)
 	debug_trap("netdbHashUnlink: key not found");
 	return;
     }
-    meta_data.netdb--;
     n = (netdbEntry *) hptr->item;
     n->link_count--;
     hash_delete_link(host_table, hptr);
@@ -73,6 +82,75 @@ netdbLookupHost(char *key)
 }
 
 static netdbEntry *
+netdbGetFirst(HashID table)
+{
+    return (netdbEntry *) hash_first(table);
+}
+
+static netdbEntry *
+netdbGetNext(HashID table)
+{
+    return (netdbEntry *) hash_next(table);
+}
+
+static void
+netdbRelease(netdbEntry * n)
+{
+    struct _net_db_name *x;
+    struct _net_db_name *next;
+    for (x = n->hosts; x; x = next) {
+	next = x->next;
+	netdbHashUnlink(x->name);
+	safe_free(x->name);
+	safe_free(x);
+    }
+    n->hosts = NULL;
+    if (n->link_count == 0) {
+	netdbHashDelete(n->network);
+	xfree(n);
+    }
+}
+
+static int
+netdbLRU(netdbEntry ** n1, netdbEntry ** n2)
+{
+    if ((*n1)->last_use_time > (*n2)->last_use_time)
+	return (1);
+    if ((*n1)->last_use_time < (*n2)->last_use_time)
+	return (-1);
+    return (0);
+}
+
+
+static void
+netdbPurgeLRU(void)
+{
+    netdbEntry *n;
+    netdbEntry **list;
+    int k = 0;
+    int list_count = 0;
+    int removed = 0;
+    list = xcalloc(meta_data.netdb, sizeof(netdbEntry *));
+    for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table)) {
+	*(list + list_count) = n;
+	list_count++;
+	if (list_count > meta_data.netdb)
+	    fatal_dump("netdbPurgeLRU: list_count overflow");
+    }
+    qsort((char *) list,
+	list_count,
+	sizeof(netdbEntry *),
+	(QS) netdbLRU);
+    for (k = 0; k < list_count; k++) {
+	if (meta_data.netdb < NETDB_LOW_MARK)
+	    break;
+	netdbRelease(*(list + k));
+	removed++;
+    }
+    xfree(list);
+}
+
+static netdbEntry *
 netdbLookupAddr(struct in_addr addr)
 {
     char *key = inet_ntoa(networkFromInaddr(addr));
@@ -83,6 +161,8 @@ static netdbEntry *
 netdbAdd(struct in_addr addr, char *hostname)
 {
     netdbEntry *n;
+    if (meta_data.netdb > NETDB_HIGH_MARK)
+	netdbPurgeLRU();
     if ((n = netdbLookupAddr(addr)) == NULL) {
 	n = xcalloc(1, sizeof(netdbEntry));
 	netdbHashInsert(n, addr);
@@ -107,6 +187,7 @@ netdbSendPing(int fdunused, struct hostent *hp, void *data)
     debug(37, 3, "netdbSendPing: pinging %s\n", hostname);
     icmpDomainPing(addr, hostname);
     n->next_ping_time = squid_curtime + NET_DB_TTL;
+    n->last_use_time = squid_curtime;
     xfree(hostname);
 }
 
@@ -179,12 +260,9 @@ netdbDump(StoreEntry * sentry)
 	"Hops",
 	"Hostnames");
     list = xcalloc(meta_data.netdb, sizeof(netdbEntry *));
-    n = (netdbEntry *) hash_first(addr_table);
     i = 0;
-    while (n) {
+    for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table))
 	*(list + i++) = n;
-	n = (netdbEntry *) hash_next(addr_table);
-    }
     qsort((char *) list,
 	i,
 	sizeof(netdbEntry *),
