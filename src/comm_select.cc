@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.26 1999/01/12 16:42:15 wessels Exp $
+ * $Id: comm_select.cc,v 1.27 1999/01/12 23:52:08 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -409,7 +409,7 @@ comm_poll(int msec)
 		F->timeout_handler = NULL;
 		F->read_handler = NULL;
 		F->write_handler = NULL;
-		if (F->open != 0)
+		if (F->flags.open)
 		    fd_close(fd);
 	    }
 	}
