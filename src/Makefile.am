@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.102 2004/12/21 18:20:19 robertc Exp $
+#  $Id: Makefile.am,v 1.103 2005/01/03 16:08:25 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -217,6 +217,18 @@ all_DISKIOMODULES = \
 	DiskIO/DiskDaemon/DiskDaemonDiskIOModule.cc \
 	DiskIO/DiskThreads/DiskThreadsDiskIOModule.cc
 
+DISKIO_SOURCE = \
+	DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc \
+	DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc \
+	DiskIO/WriteRequest.h \
+	DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h \
+	DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h \
+	DiskIO/ReadRequest.h
+
 all_AUTHMODULES = \
 	auth/basic/basicScheme.cc \
 	auth/basic/basicScheme.h \
@@ -364,11 +376,7 @@ squid_SOURCES = \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
-	DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc \
-	DiskIO/WriteRequest.h \
+	$(DISKIO_SOURCE) \
 	$(DNSSOURCE) \
 	$(EPOLL_SOURCE) \
 	enums.h \
@@ -427,6 +435,7 @@ squid_SOURCES = \
 	IPInterception.cc \
 	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
+	list.cc \
 	logfile.cc \
 	main.cc \
 	mem.cc \
@@ -441,6 +450,8 @@ squid_SOURCES = \
 	neighbors.cc \
 	net_db.cc \
 	Packer.cc \
+	Parsing.cc \
+	Parsing.h \
 	$(XPROF_STATS_SOURCE) \
 	pconn.cc \
 	peer_digest.cc \
@@ -466,6 +477,7 @@ squid_SOURCES = \
 	Store.h \
 	StoreFileSystem.cc \
 	StoreFileSystem.h \
+	StoreHashIndex.h \
 	store_io.cc \
 	StoreIOBuffer.h \
 	StoreIOState.cc \
@@ -492,6 +504,7 @@ squid_SOURCES = \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
+	StoreSearch.h \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
 	structs.h \
@@ -683,6 +696,7 @@ ufsdump_SOURCES = debug.cc \
 	neighbors.cc \
 	net_db.cc \
 	Packer.cc \
+	Parsing.cc \
 	$(XPROF_STATS_SOURCE) \
 	pconn.cc \
 	peer_digest.cc \
@@ -766,13 +780,6 @@ data_DATA = \
 
 LDADD = -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@
 
-DISKIODIST = \
-	DiskIO/DiskFile.h \
-	DiskIO/DiskIOStrategy.h \
-	DiskIO/IORequestor.h \
-	DiskIO/DiskIOModule.h \
-	DiskIO/ReadRequest.h
-
 EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
@@ -780,8 +787,7 @@ EXTRA_DIST = \
 	mk-string-arrays.pl \
 	repl_modules.sh \
 	mib.txt \
-	mime.conf.default \
-	$(DISKIODIST)
+	mime.conf.default
 
 libAIO_a_SOURCES = \
 		DiskIO/AIO/async_io.h \
@@ -939,7 +945,7 @@ DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
 
 TESTSOURCES=../test-suite/test_tools.cc
 
-check_PROGRAMS+=tests/testAuth
+check_PROGRAMS+=tests/testAuth tests/testStore tests/testUfs tests/testCoss tests/testNull
 tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
 	AuthScheme.cc globals.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
@@ -964,3 +970,134 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
 	@SQUID_CPPUNIT_LA@
+	
+
+STORE_TEST_SOURCES=\
+	$(TESTSOURCES) \
+	CacheDigest.cc \
+	store_dir.cc \
+	store.cc \
+	store_key_md5.cc \
+	globals.cc \
+	string_arrays.c \
+	Parsing.cc \
+	ConfigOption.cc \
+	SwapDir.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
+	tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
+	tests/stub_http.cc \
+	mem_node.cc \
+	stmem.cc \
+	tests/stub_store_client.cc \
+	tests/stub_tools.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
+	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc
+
+## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
+## first line - what we are testing.
+tests_testStore_SOURCES= tests/testStore.cc \
+	tests/testStoreController.cc \
+	tests/testStoreHashIndex.cc \
+	tests/testMain.cc \
+	tests/testStore.h \
+	tests/testStoreController.h \
+	tests/testStoreHashIndex.h \
+	tests/TestSwapDir.cc \
+	tests/TestSwapDir.h \
+	tests/stub_store_swapout.cc \
+	tests/stub_fd.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_MemObject.cc \
+	$(STORE_TEST_SOURCES)
+
+tests_testStore_LDADD= \
+	-L../lib -lmiscutil \
+	@SQUID_CPPUNIT_LA@
+tests_testStore_LDFLAGS = $(LIBADD_DL)
+tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@SQUID_CPPUNIT_LA@
+
+SWAP_TEST_SOURCES=\
+	tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc \
+	fd.cc \
+	disk.cc \
+	filemap.cc \
+	HttpBody.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpStatusLine.cc \
+	int.cc \
+	list.cc \
+	MemObject.cc \
+	mime.cc \
+	StoreSwapLogData.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreFileSystem.cc \
+	store_io.cc \
+	store_swapout.cc \
+	store_swapmeta.cc \
+	unlinkd.cc \
+	$(STORE_TEST_SOURCES) \
+	$(DISKIO_SOURCE)
+
+SWAP_TEST_LDADD = \
+	DiskIO/Blocking/BlockingDiskIOModule.o \
+	repl/lru/store_repl_lru.o \
+	@STORE_LINKOBJS@ \
+	@STORE_OBJS@ \
+	@REPL_OBJS@ \
+	@DISK_LIBS@ \
+	-L../lib -lmiscutil \
+	@SQUID_CPPUNIT_LA@
+SWAP_TEST_DS =\
+	$(top_builddir)/lib/libmiscutil.a \
+	DiskIO/Blocking/BlockingDiskIOModule.o \
+	repl/lru/store_repl_lru.o \
+	repl_modules.o \
+	@DISK_LIBS@ \
+	@STORE_LINKOBJS@ \
+	@STORE_OBJS@ \
+	@REPL_OBJS@ \
+	@SQUID_CPPUNIT_LA@
+
+tests_testUfs_SOURCES= tests/testUfs.cc \
+	tests/testMain.cc \
+	tests/testUfs.h \
+	$(SWAP_TEST_SOURCES)
+tests_testUfs_LDADD= \
+	$(SWAP_TEST_LDADD)
+tests_testUfs_LDFLAGS = $(LIBADD_DL)
+tests_testUfs_DEPENDENCIES = \
+	$(SWAP_TEST_DS)
+
+tests_testCoss_SOURCES= tests/testCoss.cc \
+	tests/testMain.cc \
+	tests/testCoss.h \
+	$(SWAP_TEST_SOURCES)
+tests_testCoss_LDADD= \
+	$(SWAP_TEST_LDADD)
+tests_testCoss_LDFLAGS = $(LIBADD_DL)
+tests_testCoss_DEPENDENCIES = \
+	$(SWAP_TEST_DS)
+
+tests_testNull_SOURCES= tests/testNull.cc \
+	tests/testMain.cc \
+	tests/testNull.h \
+	$(SWAP_TEST_SOURCES)
+tests_testNull_LDADD= \
+	$(SWAP_TEST_LDADD)
+tests_testNull_LDFLAGS = $(LIBADD_DL)
+tests_testNull_DEPENDENCIES = \
+	$(SWAP_TEST_DS)

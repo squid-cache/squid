@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.98 2004/02/12 02:31:55 adrian Exp $
+ * $Id: store_swapout.cc,v 1.99 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -322,13 +322,15 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
                       e->swap_dirn, e->swap_filen, errflag, xstrerror());
 
         if (errflag == DISK_NO_SPACE_LEFT) {
-            storeDirDiskFull(e->swap_dirn);
-            storeDirConfigure();
+            /* FIXME: this should be handle by the link from store IO to
+             * Store, rather than being a top level API call.
+             */
+            e->store()->diskFull();
             storeConfigure();
         }
 
         if (e->swap_filen > 0)
-            storeUnlink(e);
+            e->unlink();
 
         e->swap_filen = -1;
 
@@ -343,7 +345,7 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
                       storeUrl(e), e->swap_dirn, e->swap_filen);
         e->swap_file_sz = objectLen(e) + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
-        storeDirUpdateSwapSize(INDEXSD(e->swap_dirn), e->swap_file_sz, 1);
+        e->store()->updateSize(e->swap_file_sz, 1);
 
         if (storeCheckCachable(e)) {
             storeLog(STORE_LOG_SWAPOUT, e);

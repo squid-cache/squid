@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.14 2004/12/27 11:04:36 serassio Exp $
+ * $Id: MemObject.cc,v 1.15 2005/01/03 16:08:25 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -110,7 +110,8 @@ MemObject::~MemObject()
 
 #endif
 
-    httpReplyDestroy((HttpReply *)_reply);
+    if (_reply)
+        httpReplyDestroy((HttpReply *)_reply);
 
     requestUnlink(request);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.67 2004/12/20 16:30:45 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.68 2005/01/03 16:08:27 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/DiskIOModule.h"
+#include "Parsing.h"
 
 #include "SwapDir.h"
 int UFSSwapDir::NumberOfUFSDirs = 0;
@@ -230,7 +231,7 @@ UFSSwapDir::init()
 }
 
 void
-UFSSwapDir::newFileSystem()
+UFSSwapDir::create()
 {
     debug(47, 3) ("Creating swap space in %s\n", path);
     createDirectory(path, 0);
@@ -276,7 +277,7 @@ UFSSwapDir::doubleCheck(StoreEntry & e)
 
     struct stat sb;
 
-    if (stat(fullPath(e.swap_filen, NULL), &sb) < 0) {
+    if (::stat(fullPath(e.swap_filen, NULL), &sb) < 0) {
         debug(47, 0) ("UFSSwapDir::doubleCheck: MISSING SWAP FILE\n");
         dumpEntry(e);
         return true;
@@ -337,7 +338,7 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
 }
 
 void
-UFSSwapDir::maintainfs()
+UFSSwapDir::maintain()
 {
     /* We can't delete objects while rebuilding swap */
 
@@ -350,7 +351,7 @@ UFSSwapDir::maintainfs()
 
     RemovalPurgeWalker *walker;
 
-    double f = (double) (cur_size - low_size) / (max_size - low_size);
+    double f = (double) (cur_size - minSize()) / (max_size - minSize());
 
     f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 
@@ -368,7 +369,7 @@ UFSSwapDir::maintainfs()
     walker = repl->PurgeInit(repl, max_scan);
 
     while (1) {
-        if (cur_size < low_size)
+        if (cur_size < (int) minSize()) /* cur_size should be unsigned */
             break;
 
         if (removed >= max_remove)
@@ -385,7 +386,7 @@ UFSSwapDir::maintainfs()
     }
 
     walker->Done(walker);
-    debug(47, (removed ? 2 : 3)) ("UFSSwapDir::maintainfs: %s removed %d/%d f=%.03f max_scan=%d\n",
+    debug(47, (removed ? 2 : 3)) ("UFSSwapDir::maintain: %s removed %d/%d f=%.03f max_scan=%d\n",
                                   path, removed, max_remove, f, max_scan);
 }
 
@@ -470,7 +471,7 @@ UFSSwapDir::mapBitAllocate()
 }
 
 /*
- * Initialise the asyncufs bitmap
+ * Initialise the ufs bitmap
  *
  * If there already is a bitmap, and the numobjects is larger than currently
  * configured, we allocate a new bitmap and 'grow' the old one into it.
@@ -506,7 +507,7 @@ UFSSwapDir::createDirectory(const char *path, int should_exist)
     struct stat st;
     getCurrentTime();
 
-    if (0 == stat(path, &st)) {
+    if (0 == ::stat(path, &st)) {
         if (S_ISDIR(st.st_mode)) {
             debug(47, should_exist ? 3 : 1) ("%s exists\n", path);
         } else {
@@ -536,7 +537,7 @@ UFSSwapDir::pathIsDirectory(const char *path)const
 
     struct stat sb;
 
-    if (stat(path, &sb) < 0) {
+    if (::stat(path, &sb) < 0) {
         debug(47, 0) ("%s: %s\n", path, xstrerror());
         return false;
     }
@@ -706,7 +707,7 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
     debug(47, 5) ("commonUfsAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
     /* if you call this you'd better be sure file_number is not
      * already in use! */
-    e = new_StoreEntry(STORE_ENTRY_WITHOUT_MEMOBJ, NULL, NULL);
+    e = new StoreEntry();
     e->store_status = STORE_OK;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_DONE;
@@ -734,41 +735,8 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
 void
 UFSSwapDir::rebuild()
 {
-    int clean = 0;
-    int zeroLengthLog = 0;
-    FILE *fp;
-    EVH *func = NULL;
-    RebuildState *rb = new RebuildState;
-    rb->sd = this;
-    rb->speed = opt_foreground_rebuild ? 1 << 30 : 50;
-    /*
-     * If the swap.state file exists in the cache_dir, then
-     * we'll use commonUfsDirRebuildFromSwapLog(), otherwise we'll
-     * use commonUfsDirRebuildFromDirectory() to open up each file
-     * and suck in the meta data.
-     */
-    fp = openTmpSwapLog(&clean, &zeroLengthLog);
-
-    if (fp == NULL || zeroLengthLog) {
-        if (fp != NULL)
-            fclose(fp);
-
-        func = RebuildState::RebuildFromDirectory;
-    } else {
-        func = RebuildState::RebuildFromSwapLog;
-        rb->log = fp;
-        rb->flags.clean = (unsigned int) clean;
-    }
-
-    if (!clean)
-        rb->flags.need_to_validate = 1;
-
-    debug(47, 1) ("Rebuilding storage in %s (%s)\n",
-                  path, clean ? "CLEAN" : "DIRTY");
-
     store_dirs_rebuilding++;
-
-    eventAdd("storeRebuild", func, rb, 0.0, 1);
+    eventAdd("storeRebuild", RebuildState::RebuildStep, new RebuildState(this), 0.0, 1);
 }
 
 void
@@ -809,7 +777,7 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     FILE *fp;
     int fd;
 
-    if (stat(swaplog_path, &log_sb) < 0) {
+    if (::stat(swaplog_path, &log_sb) < 0) {
         debug(47, 1) ("Cache Dir #%d: No log file\n", index);
         safe_free(swaplog_path);
         safe_free(clean_path);
@@ -842,7 +810,7 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
 
     memset(&clean_sb, '\0', sizeof(struct stat));
 
-    if (stat(clean_path, &clean_sb) < 0)
+    if (::stat(clean_path, &clean_sb) < 0)
         *clean_flag = 0;
     else if (clean_sb.st_mtime < log_sb.st_mtime)
         *clean_flag = 0;
@@ -918,7 +886,7 @@ UFSSwapDir::writeCleanStart()
                   state->newLog, state->fd);
 #if HAVE_FCHMOD
 
-    if (stat(state->cur, &sb) == 0)
+    if (::stat(state->cur, &sb) == 0)
         fchmod(state->fd, sb.st_mode);
 
 #endif
@@ -1156,7 +1124,7 @@ UFSSwapDir::DirClean(int swap_index)
 
 #if USE_TRUNCATE
 
-        if (!stat(de->d_name, &sb))
+        if (!::stat(de->d_name, &sb))
             if (sb.st_size == 0)
                 continue;
 
@@ -1215,7 +1183,8 @@ UFSSwapDir::CleanEvent(void *unused)
         UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
 
         for (i = 0, n = 0; i < Config.cacheSwap.n_configured; i++) {
-            sd = INDEXSD(i);
+            /* This is bogus, the controller should just clean each instance once */
+            sd = dynamic_cast <SwapDir *>(INDEXSD(i));
 
             if (!UFSSwapDir::IsUFSDir(sd))
                 continue;
@@ -1268,7 +1237,7 @@ UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
     int L1, L2;
     int filn = fn;
     assert(F0 < Config.cacheSwap.n_configured);
-    assert (UFSSwapDir::IsUFSDir (INDEXSD(F0)));
+    assert (UFSSwapDir::IsUFSDir (dynamic_cast<SwapDir *>(INDEXSD(F0))));
     UFSSwapDir *sd = dynamic_cast<UFSSwapDir *>(INDEXSD(F0));
 
     if (!sd)
@@ -1351,14 +1320,14 @@ UFSSwapDir::replacementAdd(StoreEntry * e)
 void
 UFSSwapDir::replacementRemove(StoreEntry * e)
 {
-    SwapDir *SD;
+    StorePointer SD;
 
     if (e->swap_dirn < 0)
         return;
 
     SD = INDEXSD(e->swap_dirn);
 
-    assert (dynamic_cast<UFSSwapDir *>(SD) == this);
+    assert (dynamic_cast<UFSSwapDir *>(SD.getRaw()) == this);
 
     debug(47, 4) ("UFSSwapDir::replacementRemove: remove node %p from dir %d\n", e,
                   index);
@@ -1407,4 +1376,68 @@ void
 UFSSwapDir::sync()
 {
     IO->sync();
+}
+
+StoreSearch *
+UFSSwapDir::search(String const url, HttpRequest *request)
+{
+    if (url.size())
+        fatal ("Cannot search by url yet\n");
+
+    return new StoreSearchUFS (this);
+}
+
+CBDATA_CLASS_INIT(StoreSearchUFS);
+StoreSearchUFS::StoreSearchUFS(RefCount<UFSSwapDir> aSwapDir) : sd(aSwapDir), walker (sd->repl->WalkInit(sd->repl)), current (NULL), _done (false)
+{}
+
+/* do not link
+StoreSearchUFS::StoreSearchUFS(StoreSearchUFS const &);
+*/
+
+StoreSearchUFS::~StoreSearchUFS()
+{
+    walker->Done(walker);
+    walker = NULL;
+}
+
+void
+StoreSearchUFS::next(void (callback)(void *cbdata), void *cbdata)
+{
+    next();
+    callback (cbdata);
+}
+
+bool
+StoreSearchUFS::next()
+{
+    /* the walker API doesn't make sense. the store entries referred to are already readwrite
+     * from their hash table entries
+     */
+
+    if (walker)
+        current = const_cast<StoreEntry *>(walker->Next(walker));
+
+    if (current == NULL)
+        _done = true;
+
+    return current != NULL;
+}
+
+bool
+StoreSearchUFS::error() const
+{
+    return false;
+}
+
+bool
+StoreSearchUFS::isDone() const
+{
+    return _done;
+}
+
+StoreEntry *
+StoreSearchUFS::currentItem()
+{
+    return current;
 }

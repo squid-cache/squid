@@ -33,7 +33,7 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
     assert (e);
     ssize_t objsize;
     sdirno dirn;
-    SwapDir *SD;
+    RefCount<SwapDir> SD;
 
     store_io_stats.create.calls++;
     /* This is just done for logging purposes */
@@ -55,7 +55,7 @@ storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, voi
     }
 
     debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%ld'\n", dirn, (long int) objsize);
-    SD = INDEXSD(dirn);
+    SD = dynamic_cast<SwapDir *>(INDEXSD(dirn));
 
     /* Now that we have a fs to use, call its storeCreate function */
     StoreIOState::Pointer sio = SD->createStoreIO(*e, file_callback, close_callback, callback_data);
@@ -75,7 +75,7 @@ StoreIOState::Pointer
 storeOpen(StoreEntry * e, STFNCB * file_callback, STIOCB * callback,
           void *callback_data)
 {
-    return INDEXSD(e->swap_dirn)->openStoreIO(*e, file_callback, callback, callback_data);
+    return dynamic_cast<SwapDir *>(e->store().getRaw())->openStoreIO(*e, file_callback, callback, callback_data);
 }
 
 void
@@ -99,13 +99,6 @@ void
 storeIOWrite(StoreIOState::Pointer sio, char const *buf, size_t size, off_t offset, FREE * free_func)
 {
     sio->write(buf,size,offset,free_func);
-}
-
-void
-storeUnlink(StoreEntry * e)
-{
-    assert (e);
-    INDEXSD(e->swap_dirn)->unlink(*e);
 }
 
 /*

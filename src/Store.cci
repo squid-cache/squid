@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.cci,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: Store.cci,v 1.2 2005/01/03 16:08:25 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -57,5 +57,14 @@ StoreEntry::isEmpty () const
 HttpReply const *
 NullStoreEntry::getReply() const
 {
-  return NULL;
+    return NULL;
+}
+
+Store &
+Store::Root()
+{
+    if (CurrentRoot == NULL)
+        fatal("No Store Root has been set");
+
+    return *CurrentRoot;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.176 2004/12/20 16:30:37 robertc Exp $
+ * $Id: typedefs.h,v 1.177 2005/01/03 16:08:26 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -211,8 +211,6 @@ typedef struct _StatCounters StatCounters;
 
 typedef struct _storeSwapLogData storeSwapLogData;
 
-typedef struct _cacheSwap cacheSwap;
-
 typedef struct _StatHist StatHist;
 
 typedef struct _ClientInfo ClientInfo;
@@ -258,8 +256,6 @@ typedef struct _RemovalPolicy RemovalPolicy;
 typedef struct _RemovalPolicyWalker RemovalPolicyWalker;
 
 typedef struct _RemovalPurgeWalker RemovalPurgeWalker;
-
-typedef struct _RemovalPolicySettings RemovalPolicySettings;
 
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);

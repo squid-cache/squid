@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.2 2004/12/21 17:28:29 robertc Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.3 2005/01/03 16:08:27 robertc Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -38,7 +38,6 @@
 #include "squid.h"
 #include "DiskThreadsDiskFile.h"
 #include "Store.h"
-#include "SwapDir.h"
 #include "Generic.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"

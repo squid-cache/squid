@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.243 2004/12/21 17:28:29 robertc Exp $
+ * $Id: squid.h,v 1.244 2005/01/03 16:08:26 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -448,7 +448,7 @@ void free(V x) { fatal("Do not use ::free()"); }
 /*
  * I'm sick of having to keep doing this ..
  */
-#define INDEXSD(i)   (Config.cacheSwap.swapDirs[(i)])
+#define INDEXSD(i)   (Config.cacheSwap.swapDirs[(i)].getRaw())
 
 #define FD_READ_METHOD(fd, buf, len) (*fd_table[fd].read_method)(fd, buf, len)
 #define FD_WRITE_METHOD(fd, buf, len) (*fd_table[fd].write_method)(fd, buf, len)

@@ -2,6 +2,7 @@
 #define __COSSSWAPDIR_H__
 
 #include "SwapDir.h"
+#include "StoreSearch.h"
 
 #ifndef COSS_MEMBUF_SZ
 #define	COSS_MEMBUF_SZ	1048576
@@ -32,9 +33,10 @@ class CossSwapDir : public SwapDir, public IORequestor
 public:
     CossSwapDir();
     virtual void init();
-    virtual void newFileSystem();
+    virtual void create();
     virtual void dump(StoreEntry &)const;
     ~CossSwapDir();
+    virtual StoreSearch *search(String const url, HttpRequest *);
     virtual void unlink (StoreEntry &);
     virtual void statfs (StoreEntry &)const;
     virtual int canStore(StoreEntry const &)const;
@@ -83,12 +85,43 @@ private:
     void optionIODump(StoreEntry * e) const;
     void CossSwapDir::optionBlockSizeDump(StoreEntry *) const;
     bool CossSwapDir::optionBlockSizeParse(const char *, const char *, int);
+    char const *stripePath() const;
     ConfigOption * getOptionTree() const;
     const char *ioModule;
     ConfigOptionVector *currentIOOptions;
+    const char *stripe_path;
 };
 
 extern void storeCossAdd(CossSwapDir *, StoreEntry *);
 extern void storeCossRemove(CossSwapDir *, StoreEntry *);
 extern void storeCossStartMembuf(CossSwapDir * SD);
+
+class StoreSearchCoss : public StoreSearch
+{
+
+public:
+    StoreSearchCoss(RefCount<CossSwapDir> sd);
+    StoreSearchCoss(StoreSearchCoss const &);
+    ~StoreSearchCoss();
+    /* Iterator API - garh, wrong place */
+    /* callback the client when a new StoreEntry is available
+     * or an error occurs 
+     */
+    virtual void next(void (callback)(void *cbdata), void *cbdata);
+    /* return true if a new StoreEntry is immediately available */
+    virtual bool next();
+    virtual bool error() const;
+    virtual bool isDone() const;
+    virtual StoreEntry *currentItem();
+
+private:
+    CBDATA_CLASS2(StoreSearchCoss);
+    RefCount<CossSwapDir> sd;
+    void (*callback)(void *cbdata);
+    void *cbdata;
+    bool _done;
+    dlink_node * current;
+    dlink_node * next_;
+};
+
 #endif

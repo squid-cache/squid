@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.6 2004/12/20 16:30:34 robertc Exp $
+ * $Id: SwapDir.cc,v 1.7 2005/01/03 16:08:25 robertc Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -35,7 +35,6 @@
 
 #include "squid.h"
 #include "SwapDir.h"
-#include "Store.h"
 #include "StoreFileSystem.h"
 #include "ConfigOption.h"
 
@@ -45,7 +44,7 @@ SwapDir::~SwapDir()
 }
 
 void
-SwapDir::newFileSystem(){}
+SwapDir::create(){}
 
 void
 SwapDir::dump(StoreEntry &)const{}
@@ -60,10 +59,34 @@ void
 SwapDir::unlink(StoreEntry &){}
 
 void
+SwapDir::stat(StoreEntry &output) const
+{
+    storeAppendPrintf(&output, "Store Directory #%d (%s): %s\n", index, type(),
+                      path);
+    storeAppendPrintf(&output, "FS Block Size %d Bytes\n",
+                      fs.blksize);
+    statfs(output);
+
+    if (repl) {
+        storeAppendPrintf(&output, "Removal policy: %s\n", repl->_type);
+
+        if (repl->Stats)
+            repl->Stats(repl, &output);
+    }
+}
+
+void
 SwapDir::statfs(StoreEntry &)const {}
 
 void
-SwapDir::maintainfs(){}
+SwapDir::maintain(){}
+
+size_t
+SwapDir::minSize() const
+{
+    return (size_t) (((float) maxSize() *
+                      (float) Config.Swap.lowWaterMark) / 100.0);
+}
 
 void
 SwapDir::reference(StoreEntry &){}
@@ -238,4 +261,23 @@ SwapDir::optionMaxSizeDump(StoreEntry * e) const
 {
     if (max_objsize != -1)
         storeAppendPrintf(e, " max-size=%ld", (long int) max_objsize);
+}
+
+/* Swapdirs do not have an index of their own - thus they ask their parent..
+ * but the parent child relationship isn't implemented yet 
+ */
+StoreEntry *
+
+SwapDir::get
+    (const cache_key *key)
+{
+    return Store::Root().get(key);
+}
+
+void
+
+SwapDir::get
+    (String const key, STOREGETCLIENT callback, void *cbdata)
+{
+    fatal("not implemented");
 }

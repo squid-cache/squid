@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.h,v 1.1 2003/07/22 15:23:14 robertc Exp $
+ * $Id: store_null.h,v 1.2 2005/01/03 16:08:27 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "SwapDir.h"
+#include "StoreSearch.h"
 
 class NullSwapDir : public SwapDir
 {
@@ -48,6 +49,29 @@ public:
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
     virtual void parse(int, char*);
     virtual void reconfigure (int, char *);
+    virtual StoreSearch *search(String const url, HttpRequest *);
+};
+
+class StoreSearchNull : public StoreSearch
+{
+
+public:
+    StoreSearchNull();
+    StoreSearchNull(StoreSearchNull const &);
+    ~StoreSearchNull();
+    /* Iterator API - garh, wrong place */
+    /* callback the client when a new StoreEntry is available
+     * or an error occurs 
+     */
+    virtual void next(void (callback)(void *cbdata), void *cbdata);
+    /* return true if a new StoreEntry is immediately available */
+    virtual bool next();
+    virtual bool error() const;
+    virtual bool isDone() const;
+    virtual StoreEntry *currentItem();
+
+private:
+    CBDATA_CLASS2(StoreSearchNull);
 };
 
 #endif /* SQUID_STORE_NULL_H */

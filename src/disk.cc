@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.168 2004/12/20 16:30:35 robertc Exp $
+ * $Id: disk.cc,v 1.169 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -507,3 +507,38 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     diskHandleRead(fd, ctrl_dat);
     PROF_stop(file_read);
 }
+
+void
+safeunlink(const char *s, int quiet)
+{
+    statCounter.syscalls.disk.unlinks++;
+
+    if (unlink(s) < 0 && !quiet)
+        debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
+}
+
+/*
+ * Same as rename(2) but complains if something goes wrong;
+ * the caller is responsible for handing and explaining the 
+ * consequences of errors.
+ */
+int
+xrename(const char *from, const char *to)
+{
+    debug(21, 2) ("xrename: renaming %s to %s\n", from, to);
+#if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
+
+    remove
+        (to);
+
+#endif
+
+    if (0 == rename(from, to))
+        return 0;
+
+    debug(21, errno == ENOENT ? 2 : 1) ("xrename: Cannot rename %s to %s: %s\n",
+                                        from, to, xstrerror());
+
+    return -1;
+}
+

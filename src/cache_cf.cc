@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.461 2004/12/22 16:21:33 serassio Exp $
+ * $Id: cache_cf.cc,v 1.462 2005/01/03 16:08:25 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -42,6 +42,7 @@
 #include "ConfigParser.h"
 #include "ACL.h"
 #include "StoreFileSystem.h"
+#include "Parsing.h"
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -215,24 +216,6 @@ wordlistDup(const wordlist * w)
  * These functions is the same as atoi/l/f, except that they check for errors
  */
 
-long
-xatol(const char *token)
-{
-    char *end;
-    long ret = strtol(token, &end, 10);
-
-    if (ret == 0 && end == token)
-        self_destruct();
-
-    return ret;
-}
-
-int
-xatoi(const char *token)
-{
-    return xatol(token);
-}
-
 static double
 xatof(const char *token)
 {
@@ -245,21 +228,6 @@ xatof(const char *token)
     return ret;
 }
 
-int
-GetInteger(void)
-{
-    char *token = strtok(NULL, w_space);
-    int i;
-
-    if (token == NULL)
-        self_destruct();
-
-    if (sscanf(token, "%d", &i) != 1)
-        self_destruct();
-
-    return i;
-}
-
 static void
 update_maxobjsize(void)
 {
@@ -267,10 +235,11 @@ update_maxobjsize(void)
     ssize_t ms = -1;
 
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        assert (Config.cacheSwap.swapDirs[i]);
+        assert (Config.cacheSwap.swapDirs[i].getRaw());
 
-        if (Config.cacheSwap.swapDirs[i]->max_objsize > ms)
-            ms = Config.cacheSwap.swapDirs[i]->max_objsize;
+        if (dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->
+                max_objsize > ms)
+            ms = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->max_objsize;
     }
 
     store_maxobjsize = ms;
@@ -421,13 +390,11 @@ configDoConfigure(void)
     if (Config.cacheSwap.swapDirs == NULL)
         fatal("No cache_dir's specified in config file");
 
-    /* calculate Config.Swap.maxSize */
-    storeDirConfigure();
-
-    if (0 == Config.Swap.maxSize)
+    if (0 == Store::Root().maxSize())
         /* people might want a zero-sized cache on purpose */
         (void) 0;
-    else if (Config.Swap.maxSize < (Config.memMaxSize >> 10))
+    else if (Store::Root().maxSize() < (Config.memMaxSize >> 10))
+        /* This is bogus. folk with NULL caches will want this */
         debug(3, 0) ("WARNING cache_mem is larger than total disk cache space!\n");
 
     if (Config.Announce.period > 0) {
@@ -1304,7 +1271,7 @@ dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swa
     assert (entry);
 
     for (i = 0; i < swap.n_configured; i++) {
-        s = swap.swapDirs[i];
+        s = dynamic_cast<SwapDir *>(swap.swapDirs[i].getRaw());
         storeAppendPrintf(entry, "%s %s %s", name, s->type(), s->path);
         s->dump(*entry);
         storeAppendPrintf(entry, "\n");
@@ -1378,24 +1345,6 @@ dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
         (*i)->dump(entry, name, (*i));
 }
 
-void
-allocate_new_swapdir(_SquidConfig::_cacheSwap * swap)
-{
-    if (swap->swapDirs == NULL) {
-        swap->n_allocated = 4;
-        swap->swapDirs = static_cast<SwapDir **>(xcalloc(swap->n_allocated, sizeof(SwapDir *)));
-    }
-
-    if (swap->n_allocated == swap->n_configured) {
-        SwapDir **tmp;
-        swap->n_allocated <<= 1;
-        tmp = static_cast<SwapDir **>(xcalloc(swap->n_allocated, sizeof(SwapDir *)));
-        xmemcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir *));
-        xfree(swap->swapDirs);
-        swap->swapDirs = tmp;
-    }
-}
-
 /* TODO: just return the object, the # is irrelevant */
 static int
 find_fstype(char *type)
@@ -1412,7 +1361,7 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
 {
     char *type_str;
     char *path_str;
-    SwapDir *sd;
+    RefCount<SwapDir> sd;
     int i;
     int fs;
 
@@ -1441,9 +1390,18 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
      */
 
     for (i = 0; i < swap->n_configured; i++) {
-        assert (swap->swapDirs[i]);
+        assert (swap->swapDirs[i].getRaw());
 
-        if (0 == strcasecmp(path_str, swap->swapDirs[i]->path)) {
+        /* this is specific to on-fs Stores. The right
+         * way to handle this is probably to have a mapping 
+         * from paths to stores, and have on-fs stores
+         * register with that, and lookip in that in their
+         * own setup logic. RBC 20041225. TODO.
+         */
+
+        if (0 == strcasecmp(path_str, dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw())->
+                            path)) {
+            /* existing configured swap dir */
             /* This is a little weird, you'll appreciate it later */
             fs = find_fstype(type_str);
 
@@ -1451,9 +1409,14 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
                 fatalf("Unknown cache_dir type '%s'\n", type_str);
             }
 
-            sd = swap->swapDirs[i];
+            /* TODO: warn here on type changing */
+
+            sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
+
             sd->reconfigure (i, path_str);
+
             update_maxobjsize();
+
             return;
         }
     }
@@ -1469,33 +1432,12 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
 
     allocate_new_swapdir(swap);
     swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().items[fs]->createSwapDir();
-    sd = swap->swapDirs[swap->n_configured];
+    sd = dynamic_cast<SwapDir *>(swap->swapDirs[swap->n_configured].getRaw());
     /* parse the FS parameters and options */
     sd->parse(swap->n_configured, path_str);
     ++swap->n_configured;
     /* Update the max object size */
     update_maxobjsize();
-}
-
-static void
-free_cachedir(_SquidConfig::_cacheSwap * swap)
-{
-    int i;
-    /* DON'T FREE THESE FOR RECONFIGURE */
-
-    if (reconfiguring)
-        return;
-
-    for (i = 0; i < swap->n_configured; i++) {
-        SwapDir * s = swap->swapDirs[i];
-        swap->swapDirs[i] = NULL;
-        delete s;
-    }
-
-    safe_free(swap->swapDirs);
-    swap->swapDirs = NULL;
-    swap->n_allocated = 0;
-    swap->n_configured = 0;
 }
 
 static const char *
@@ -2539,7 +2481,7 @@ free_removalpolicy(RemovalPolicySettings ** settings)
 
     free_wordlist(&(*settings)->args);
 
-    xfree(*settings);
+    delete *settings;
 
     *settings = NULL;
 }
@@ -2550,7 +2492,7 @@ parse_removalpolicy(RemovalPolicySettings ** settings)
     if (*settings)
         free_removalpolicy(settings);
 
-    *settings = static_cast<RemovalPolicySettings *>(xcalloc(1, sizeof(**settings)));
+    *settings = new RemovalPolicySettings;
 
     parse_string(&(*settings)->type);
 

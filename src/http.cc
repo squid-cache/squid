@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.441 2004/12/21 17:52:53 robertc Exp $
+ * $Id: http.cc,v 1.442 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -659,7 +659,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     hdr_len = reply_hdr.size;
 
     if (hdr_len > 4 && strncmp(reply_hdr.buf, "HTTP/", 5)) {
-        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'\n");
+        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'");
         reply_hdr_state += 2;
         memBufClean(&reply_hdr);
         failReply (reply, HTTP_INVALID_HEADER);
@@ -673,7 +673,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         hdr_len = hdr_size;
 
     if (hdr_len > Config.maxReplyHeaderSize) {
-        debugs(11, 1, "httpProcessReplyHeader: Too large reply header\n");
+        debugs(11, 1, "httpProcessReplyHeader: Too large reply header");
 
         if (!memBufIsNull(&reply_hdr))
             memBufClean(&reply_hdr);
@@ -712,7 +712,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     httpReplyParse(reply, reply_hdr.buf, hdr_size);
 
     if (reply->sline.status >= HTTP_INVALID_HEADER) {
-        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'\n");
+        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'");
         failReply (reply, HTTP_INVALID_HEADER);
         return;
     }

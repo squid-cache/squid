@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.81 2003/02/21 22:50:12 robertc Exp $
+ * $Id: store_rebuild.cc,v 1.82 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "SwapDir.h"
+#include "StoreSearch.h"
 
 static struct _store_rebuild_data counts;
 
@@ -57,73 +58,71 @@ static store_rebuild_progress *RebuildProgress = NULL;
 static int
 storeCleanupDoubleCheck(StoreEntry * e)
 {
-    SwapDir *SD = INDEXSD(e->swap_dirn);
+    SwapDir *SD = dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn));
     return (SD->doubleCheck(*e));
 }
 
 static void
 storeCleanup(void *datanotused)
 {
-    static int bucketnum = -1;
-    static int validnum = 0;
     static int store_errors = 0;
-    int validnum_start;
-    StoreEntry *e;
-    hash_link *link_ptr = NULL;
-    hash_link *link_next = NULL;
-    validnum_start = validnum;
+    static StoreSearchPointer currentSearch;
+    static int validated = 0;
 
-    while (validnum - validnum_start < 500) {
-        if (++bucketnum >= store_hash_buckets) {
-            debug(20, 1) ("  Completed Validation Procedure\n");
-            debug(20, 1) ("  Validated %d Entries\n", validnum);
-            debug(20, 1) ("  store_swap_size = %luk\n", store_swap_size);
-            store_dirs_rebuilding--;
-            assert(0 == store_dirs_rebuilding);
+    if (currentSearch == NULL || currentSearch->isDone())
+        currentSearch = Store::Root().search(NULL, NULL);
 
-            if (opt_store_doublecheck)
-                assert(store_errors == 0);
+    size_t statCount = 500;
 
-            if (store_digest)
-                storeDigestNoteStoreReady();
+    while (statCount-- && !currentSearch->isDone() && currentSearch->next()) {
+        ++validated;
+        StoreEntry *e;
 
-            return;
-        }
+        e = currentSearch->currentItem();
 
-        link_next = hash_get_bucket(store_table, bucketnum);
+        if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
+            continue;
 
-        while (NULL != (link_ptr = link_next)) {
-            link_next = link_ptr->next;
-            e = (StoreEntry *) link_ptr;
+        /*
+         * Calling storeRelease() has no effect because we're
+         * still in 'store_rebuilding' state
+         */
+        if (e->swap_filen < 0)
+            continue;
 
-            if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
-                continue;
+        if (opt_store_doublecheck)
+            if (storeCleanupDoubleCheck(e))
+                store_errors++;
 
-            /*
-             * Calling storeRelease() has no effect because we're
-             * still in 'store_rebuilding' state
-             */
-            if (e->swap_filen < 0)
-                continue;
+        EBIT_SET(e->flags, ENTRY_VALIDATED);
 
-            if (opt_store_doublecheck)
-                if (storeCleanupDoubleCheck(e))
-                    store_errors++;
+        /*
+         * Only set the file bit if we know its a valid entry
+         * otherwise, set it in the validation procedure
+         */
+        e->store()->updateSize(e->swap_file_sz, 1);
 
-            EBIT_SET(e->flags, ENTRY_VALIDATED);
-
-            /*
-             * Only set the file bit if we know its a valid entry
-             * otherwise, set it in the validation procedure
-             */
-            storeDirUpdateSwapSize(INDEXSD(e->swap_dirn), e->swap_file_sz, 1);
-
-            if ((++validnum & 0x3FFFF) == 0)
-                debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
-        }
+        if ((++validated & 0x3FFFF) == 0)
+            /* TODO format the int with with a stream operator */
+            debugs(20, 1, "  " << validated << " Entries Validated so far.");
     }
 
-    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
+    if (currentSearch->isDone()) {
+        debugs(20, 1, "  Completed Validation Procedure");
+        debugs(20, 1, "  Validated " << validated << " Entries");
+        debugs(20, 1, "  store_swap_size = " << store_swap_size);
+        store_dirs_rebuilding--;
+        assert(0 == store_dirs_rebuilding);
+
+        if (opt_store_doublecheck)
+            assert(store_errors == 0);
+
+        if (store_digest)
+            storeDigestNoteStoreReady();
+
+        currentSearch = NULL;
+    } else
+        eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }
 
 /* meta data recreated from disk image in swap directory */

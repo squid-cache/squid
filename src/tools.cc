@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.247 2004/12/20 16:30:37 robertc Exp $
+ * $Id: tools.cc,v 1.248 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "SwapDir.h"
 #include "fde.h"
 
 #define DEAD_MSG "\
@@ -630,15 +631,6 @@ uniqueHostname(void)
     return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 
-void
-safeunlink(const char *s, int quiet)
-{
-    statCounter.syscalls.disk.unlinks++;
-
-    if (unlink(s) < 0 && !quiet)
-        debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
-}
-
 /* leave a privilegied section. (Give up any privilegies)
  * Routines that need privilegies can rap themselves in enter_suid()
  * and leave_suid()
@@ -971,12 +963,6 @@ logsFlush(void)
         fflush(debug_log);
 }
 
-const char *
-checkNullString(const char *p)
-{
-    return p ? p : "(NULL)";
-}
-
 dlink_node *
 dlinkNodeNew()
 {
@@ -1084,64 +1070,6 @@ debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
     debug(section, level) ("%s%s", label, mb.buf);
     packerClean(&p);
     memBufClean(&mb);
-}
-
-void
-linklistPush(link_list ** L, void *p)
-{
-    link_list *l = (link_list *)memAllocate(MEM_LINK_LIST);
-    l->next = NULL;
-    l->ptr = p;
-
-    while (*L)
-        L = &(*L)->next;
-
-    *L = l;
-}
-
-void *
-linklistShift(link_list ** L)
-{
-    void *p;
-    link_list *l;
-
-    if (NULL == *L)
-        return NULL;
-
-    l = *L;
-
-    p = l->ptr;
-
-    *L = (*L)->next;
-
-    memFree(l, MEM_LINK_LIST);
-
-    return p;
-}
-
-/*
- * Same as rename(2) but complains if something goes wrong;
- * the caller is responsible for handing and explaining the 
- * consequences of errors.
- */
-int
-xrename(const char *from, const char *to)
-{
-    debug(21, 2) ("xrename: renaming %s to %s\n", from, to);
-#if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
-
-    remove
-        (to);
-
-#endif
-
-    if (0 == rename(from, to))
-        return 0;
-
-    debug(21, errno == ENOENT ? 2 : 1) ("xrename: Cannot rename %s to %s: %s\n",
-                                        from, to, xstrerror());
-
-    return -1;
 }
 
 void

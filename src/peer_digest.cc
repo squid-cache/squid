@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.101 2003/09/29 10:24:01 robertc Exp $
+ * $Id: peer_digest.cc,v 1.102 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -355,7 +355,7 @@ peerDigestRequest(PeerDigest * pd)
     /* the rest is based on clientProcessExpired() */
     req->flags.refresh = 1;
 
-    old_e = fetch->old_entry = storeGet(key);
+    old_e = fetch->old_entry = Store::Root().get(key);
 
     if (old_e) {
         debug(72, 5) ("peerDigestRequest: found old entry\n");

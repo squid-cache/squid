@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.19 2004/12/20 16:30:29 robertc Exp $
+ * $Id: Array.h,v 1.20 2005/01/03 16:08:24 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -101,6 +101,7 @@ public:
     const_iterator begin () const;
     iterator end();
     const_iterator end () const;
+    E& operator [] (unsigned i);
 
     /* Do not change these, until the entry C struct is removed */
     size_t capacity;
@@ -282,6 +283,13 @@ Vector<E>::end() const
     return const_iterator(size(), *this);
 }
 
+template<class E>
+E &
+Vector<E>::operator [] (unsigned i)
+{
+    assert (size() > i);
+    return items[i];
+}
 
 template<class C>
 VectorIteratorBase<C>::VectorIteratorBase() : pos(0), theVector(NULL)

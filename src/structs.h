@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.503 2004/12/23 22:17:22 hno Exp $
+ * $Id: structs.h,v 1.504 2005/01/03 16:08:26 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_STRUCTS_H
 
 #include "config.h"
+#include "RefCount.h"
 
 class dlink_node
 {
@@ -206,20 +207,26 @@ struct _https_port_list
 #include "DelayConfig.h"
 #endif
 
-struct _RemovalPolicySettings
+class RemovalPolicySettings
 {
+
+public:
     char *type;
     wordlist *args;
 };
 
 class external_acl;
 
+class Store;
+
 struct _SquidConfig
 {
 
     struct
     {
-        size_t maxSize;
+        /* These should be for the Store::Root instance.
+        * this needs pluggable parsing to be done smoothly.
+        */
         int highWaterMark;
         int lowWaterMark;
     }
@@ -614,7 +621,7 @@ struct _SquidConfig
 
     struct _cacheSwap
     {
-        SwapDir **swapDirs;
+        RefCount<class Store> *swapDirs;
         int n_allocated;
         int n_configured;
     }

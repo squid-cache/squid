@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.502 2004/12/21 17:52:53 robertc Exp $
+ * $Id: protos.h,v 1.503 2005/01/03 16:08:26 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,9 +55,7 @@ SQUIDCEXTERN wordlist *wordlistDup(const wordlist *);
 SQUIDCEXTERN void wordlistDestroy(wordlist **);
 SQUIDCEXTERN void configFreeMemory(void);
 SQUIDCEXTERN void wordlistCat(const wordlist *, MemBuf * mb);
-SQUIDCEXTERN void allocate_new_swapdir(cacheSwap *);
 SQUIDCEXTERN void self_destruct(void);
-SQUIDCEXTERN int GetInteger(void);
 SQUIDCEXTERN void add_http_port(char *portspec);
 extern int xatoi(const char *token);
 extern long xatol(const char *token);
@@ -701,7 +699,6 @@ extern StoreIOState::Pointer storeOpen(StoreEntry *, STFNCB *, STIOCB *, void *)
 SQUIDCEXTERN void storeClose(StoreIOState::Pointer);
 SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, STRCB *, void *);
 SQUIDCEXTERN void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
-SQUIDCEXTERN void storeUnlink(StoreEntry *);
 
 /*
  * store_log.c
@@ -738,34 +735,6 @@ SQUIDCEXTERN void storeDigestNoteStoreReady(void);
 SQUIDCEXTERN void storeDigestScheduleRebuild(void);
 SQUIDCEXTERN void storeDigestDel(const StoreEntry * entry);
 SQUIDCEXTERN void storeDigestReport(StoreEntry *);
-
-/*
- * store_dir.c
- */
-SQUIDCEXTERN OBJH storeDirStats;
-SQUIDCEXTERN char *storeDirSwapLogFile(int, const char *);
-SQUIDCEXTERN char *storeSwapDir(int);
-SQUIDCEXTERN char *storeSwapFullPath(int, char *);
-SQUIDCEXTERN char *storeSwapSubSubDir(int, char *);
-SQUIDCEXTERN const char *storeSwapPath(int);
-SQUIDCEXTERN int storeDirWriteCleanLogs(int reopen);
-SQUIDCEXTERN STDIRSELECT *storeDirSelectSwapDir;
-SQUIDCEXTERN int storeVerifySwapDirs(void);
-SQUIDCEXTERN void storeCreateSwapDirectories(void);
-SQUIDCEXTERN void storeDirCloseSwapLogs(void);
-SQUIDCEXTERN void storeDirCloseTmpSwapLog(int dirn);
-SQUIDCEXTERN void storeDirConfigure(void);
-SQUIDCEXTERN void storeDirDiskFull(sdirno);
-SQUIDCEXTERN void storeDirInit(void);
-SQUIDCEXTERN void storeDirOpenSwapLogs(void);
-SQUIDCEXTERN void storeDirSwapLog(const StoreEntry *, int op);
-SQUIDCEXTERN void storeDirUpdateSwapSize(SwapDir *, size_t size, int sign);
-SQUIDCEXTERN void storeDirSync(void);
-SQUIDCEXTERN void storeDirCallback(void);
-SQUIDCEXTERN void storeDirLRUDelete(StoreEntry *);
-SQUIDCEXTERN void storeDirLRUAdd(StoreEntry *);
-SQUIDCEXTERN int storeDirGetBlkSize(const char *path, int *blksize);
-SQUIDCEXTERN int storeDirGetUFSStats(const char *, int *, int *, int *, int *);
 
 /*
  * store_rebuild.c

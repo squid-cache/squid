@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.7 2004/12/20 16:30:34 robertc Exp $
+ * $Id: SwapDir.h,v 1.8 2005/01/03 16:08:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,7 @@
 #ifndef SQUID_SWAPDIR_H
 #define SQUID_SWAPDIR_H
 
+#include "Store.h"
 #include "StoreIOState.h"
 
 /* Store dir configuration routines */
@@ -41,18 +42,104 @@
 
 class ConfigOption;
 
-class SwapDir
+/* New class that replaces the static SwapDir methods as part of the Store overhaul */
+
+class StoreController : public Store
 {
 
 public:
-    SwapDir(char const *aType) : theType (aType), cur_size (0), low_size(0), max_size(0), max_objsize (-1)
+    StoreController();
+    virtual ~StoreController();
+    virtual int callback();
+    virtual void create();
+
+    virtual StoreEntry * get
+        (const cache_key *);
+
+    virtual void get
+        (String const, STOREGETCLIENT, void * cbdata);
+
+    virtual void init();
+
+    virtual void maintain(); /* perform regular maintenance should be private and self registered ... */
+
+    virtual size_t maxSize() const;
+
+    virtual size_t minSize() const;
+
+    virtual void stat(StoreEntry &) const;
+
+    virtual void sync();	/* Sync the store prior to shutdown */
+
+    virtual StoreSearch *search(String const url, HttpRequest *);
+
+    virtual void reference(StoreEntry &);	/* Reference this object */
+
+    virtual void dereference(StoreEntry &);	/* Unreference this object */
+
+    virtual void updateSize(size_t size, int sign);
+
+private:
+    void createOneStore(Store &aStore);
+
+    StorePointer swapDir;
+};
+
+/* migrating from the Config based list of swapdirs */
+extern void allocate_new_swapdir(_SquidConfig::_cacheSwap *);
+extern void free_cachedir(_SquidConfig::_cacheSwap * swap);
+SQUIDCEXTERN OBJH storeDirStats;
+SQUIDCEXTERN char *storeDirSwapLogFile(int, const char *);
+SQUIDCEXTERN char *storeSwapFullPath(int, char *);
+SQUIDCEXTERN char *storeSwapSubSubDir(int, char *);
+SQUIDCEXTERN const char *storeSwapPath(int);
+SQUIDCEXTERN int storeDirWriteCleanLogs(int reopen);
+SQUIDCEXTERN STDIRSELECT *storeDirSelectSwapDir;
+SQUIDCEXTERN int storeVerifySwapDirs(void);
+SQUIDCEXTERN void storeDirCloseSwapLogs(void);
+SQUIDCEXTERN void storeDirCloseTmpSwapLog(int dirn);
+SQUIDCEXTERN void storeDirDiskFull(sdirno);
+SQUIDCEXTERN void storeDirOpenSwapLogs(void);
+SQUIDCEXTERN void storeDirSwapLog(const StoreEntry *, int op);
+SQUIDCEXTERN void storeDirLRUDelete(StoreEntry *);
+SQUIDCEXTERN void storeDirLRUAdd(StoreEntry *);
+SQUIDCEXTERN int storeDirGetBlkSize(const char *path, int *blksize);
+SQUIDCEXTERN int storeDirGetUFSStats(const char *, int *, int *, int *, int *);
+
+
+class SwapDir : public Store
+{
+
+public:
+    SwapDir(char const *aType) : theType (aType), cur_size (0), max_size(0), max_objsize (-1), cleanLog(NULL)
     {
         fs.blksize = 1024;
+        path = NULL;
     }
 
     virtual ~SwapDir();
     virtual void reconfigure(int, char *) = 0;
     char const *type() const;
+
+    /* official Store interface functions */
+    virtual void diskFull();
+
+    virtual StoreEntry * get
+        (const cache_key *);
+
+    virtual void get
+        (String const, STOREGETCLIENT, void * cbdata);
+
+virtual size_t maxSize() const { return max_size;}
+
+    virtual size_t minSize() const;
+    virtual void stat (StoreEntry &anEntry) const;
+    virtual StoreSearch *search(String const url, HttpRequest *) = 0;
+
+    virtual void updateSize(size_t size, int sign);
+
+    /* migrated from store_dir.cc */
+    bool objectSizeIsAcceptable(ssize_t objsize) const;
 
 protected:
     void parseOptions(int reconfiguring);
@@ -68,7 +155,6 @@ private:
 
 public:
     int cur_size;
-    int low_size;
     int max_size;
     char *path;
     int index;			/* This entry's index into the swapDirs array */
@@ -90,11 +176,11 @@ unsigned int read_only:
 
     flags;
     virtual void init() = 0;	/* Initialise the fs */
-    virtual void newFileSystem();	/* Create a new fs */
+    virtual void create();	/* Create a new fs */
     virtual void dump(StoreEntry &)const;	/* Dump fs config snippet */
     virtual bool doubleCheck(StoreEntry &);	/* Double check the obj integrity */
     virtual void statfs(StoreEntry &) const;	/* Dump fs statistics */
-    virtual void maintainfs();	/* Replacement maintainence */
+    virtual void maintain();	/* Replacement maintainence */
     /* <0 == error. > 1000 == error */
     virtual int canStore(StoreEntry const &)const = 0; /* Check if the fs will store an object */
     /* These two are notifications */

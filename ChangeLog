@@ -1,4 +1,4 @@
-Changes to squid-2.6 ():
+Changes to squid-3.0 ():
 	
 	- CARP now plays well with the other peering algorithms,
 	  and support for CARP peerings is compiled by default. Can be
@@ -14,7 +14,9 @@ Changes to squid-2.6 ():
 	  occurred error by default, so that the email will contain this data in
 	  its body. This feature can be disabled via the email_err_data directive.
 	  (Clemens Löser)
-
+	- COSS now uses a file called stripe and the path in squid.conf is the
+	  directory this is placed in. Additionally squid -z will create the
+	  COSS swapfile.
 
 Changes to squid-2.5 ():
 

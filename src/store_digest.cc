@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.58 2003/09/29 10:24:02 robertc Exp $
+ * $Id: store_digest.cc,v 1.59 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -47,23 +47,25 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "StoreSearch.h"
 
 /*
  * local types
  */
 
-typedef struct
+class StoreDigestState
 {
+
+public:
     StoreDigestCBlock cblock;
     int rebuild_lock;		/* bucket number */
     generic_cbdata *rewrite_lock;	/* points to store entry with the digest */
-    int rebuild_offset;
+    StoreSearchPointer theSearch;
     int rewrite_offset;
     int rebuild_count;
     int rewrite_count;
-}
+};
 
-StoreDigestState;
 
 typedef struct
 {
@@ -321,7 +323,7 @@ storeDigestRebuildResume(void)
 {
     assert(sd_state.rebuild_lock);
     assert(!sd_state.rewrite_lock);
-    sd_state.rebuild_offset = 0;
+    sd_state.theSearch = Store::Root().search(NULL, NULL);
     /* resize or clear */
 
     if (!storeDigestResize())
@@ -352,28 +354,19 @@ storeDigestRebuildFinish(void)
 static void
 storeDigestRebuildStep(void *datanotused)
 {
-    int bcount = (int) ceil((double) store_hash_buckets *
-                            (double) Config.digest.rebuild_chunk_percentage / 100.0);
+    /* TODO: call Store::Root().size() to determine this.. */
+    int count = Config.Store.objectsPerBucket * (int) ceil((double) store_hash_buckets *
+                (double) Config.digest.rebuild_chunk_percentage / 100.0);
     assert(sd_state.rebuild_lock);
 
-    if (sd_state.rebuild_offset + bcount > store_hash_buckets)
-        bcount = store_hash_buckets - sd_state.rebuild_offset;
+    debug(71, 3) ("storeDigestRebuildStep: buckets: %d entries to check: %d\n",
+                  store_hash_buckets, count);
 
-    debug(71, 3) ("storeDigestRebuildStep: buckets: %d offset: %d chunk: %d buckets\n",
-                  store_hash_buckets, sd_state.rebuild_offset, bcount);
-
-    while (bcount--) {
-        hash_link *link_ptr = hash_get_bucket(store_table, sd_state.rebuild_offset);
-
-        for (; link_ptr; link_ptr = link_ptr->next) {
-            storeDigestAdd((StoreEntry *) link_ptr);
-        }
-
-        sd_state.rebuild_offset++;
-    }
+    while (count-- && !sd_state.theSearch->isDone() && sd_state.theSearch->next())
+        storeDigestAdd(sd_state.theSearch->currentItem());
 
     /* are we done ? */
-    if (sd_state.rebuild_offset >= store_hash_buckets)
+    if (sd_state.theSearch->isDone())
         storeDigestRebuildFinish();
     else
         eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0.0, 1);
@@ -520,7 +513,7 @@ storeDigestCalcCap(void)
      * the bits are off). However, we do not have a formula to calculate the 
      * number of _entries_ we want to pre-allocate for.
      */
-    const int hi_cap = Config.Swap.maxSize / Config.Store.avgObjectSize;
+    const int hi_cap = Store::Root().maxSize() / Config.Store.avgObjectSize;
     const int lo_cap = 1 + store_swap_size / Config.Store.avgObjectSize;
     const int e_count = StoreEntry::inUseCount();
     int cap = e_count ? e_count : hi_cap;

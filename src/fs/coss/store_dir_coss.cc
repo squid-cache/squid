@@ -1,6 +1,7 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.56 2004/12/20 16:30:42 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.57 2005/01/03 16:08:27 robertc Exp $
+ * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -46,6 +47,7 @@
 #include "DiskIO/ReadRequest.h"
 #include "ConfigOption.h"
 #include "StoreFScoss.h"
+#include "Parsing.h"
 
 #define STORE_META_BUFSZ 4096
 
@@ -333,7 +335,7 @@ CossSwapDir::init()
     io->init();
     openLog();
     storeCossDirRebuild(this);
-    theFile = io->newFile(path);
+    theFile = io->newFile(stripePath());
     theFile->open(O_RDWR | O_CREAT, 0644, this);
 
     ++n_coss_dirs;
@@ -417,7 +419,8 @@ storeCossRebuildFromSwapLog(void *data)
         } else if (s.op == SWAP_LOG_DEL) {
             /* Delete unless we already have a newer copy */
 
-            if ((e = storeGet(s.key)) != NULL && s.lastref > e->lastref) {
+            if ((e = rb->sd->get
+                     (s.key)) != NULL && s.lastref > e->lastref) {
                 /*
                  * Make sure we don't unlink the file, it might be
                  * in use by a subsequent entry.  Also note that
@@ -466,7 +469,8 @@ storeCossRebuildFromSwapLog(void *data)
             continue;
         }
 
-        e = storeGet(s.key);
+        e = rb->sd->get
+            (s.key);
 
         if (e) {
             /* key already exists, current entry is newer */
@@ -513,7 +517,7 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
     debug(47, 5) ("storeCossAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
     /* if you call this you'd better be sure file_number is not
      * already in use! */
-    e = new_StoreEntry(STORE_ENTRY_WITHOUT_MEMOBJ, NULL, NULL);
+    e = new StoreEntry();
     e->store_status = STORE_OK;
     e->swap_dirn = SD->index;
     storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -546,12 +550,10 @@ storeCossDirRebuild(CossSwapDir * sd)
     int clean = 0;
     int zero = 0;
     FILE *fp;
-    EVH *func = NULL;
     CBDATA_INIT_TYPE(RebuildState);
     rb = cbdataAlloc(RebuildState);
     rb->sd = sd;
     rb->speed = opt_foreground_rebuild ? 1 << 30 : 50;
-    func = storeCossRebuildFromSwapLog;
     rb->flags.clean = (unsigned int) clean;
     /*
      * If the swap.state file exists in the cache_dir, then
@@ -584,7 +586,7 @@ storeCossDirRebuild(CossSwapDir * sd)
         return;
     }
 
-    eventAdd("storeCossRebuild", func, rb, 0.0, 1);
+    eventAdd("storeCossRebuild", storeCossRebuildFromSwapLog, rb, 0.0, 1);
 }
 
 static void
@@ -625,7 +627,7 @@ storeCossDirOpenTmpSwapLog(CossSwapDir * sd, int *clean_flag, int *zero_flag)
     FILE *fp;
     int anfd;
 
-    if (stat(swaplog_path, &log_sb) < 0) {
+    if (::stat(swaplog_path, &log_sb) < 0) {
         debug(50, 1) ("Cache COSS Dir #%d: No log file\n", sd->index);
         safe_free(swaplog_path);
         safe_free(clean_path);
@@ -658,7 +660,7 @@ storeCossDirOpenTmpSwapLog(CossSwapDir * sd, int *clean_flag, int *zero_flag)
 
     memset(&clean_sb, '\0', sizeof(struct stat));
 
-    if (stat(clean_path, &clean_sb) < 0)
+    if (::stat(clean_path, &clean_sb) < 0)
         *clean_flag = 0;
     else if (clean_sb.st_mtime < log_sb.st_mtime)
         *clean_flag = 0;
@@ -733,7 +735,7 @@ CossSwapDir::writeCleanStart()
                   state->newLog, state->fd);
 #if HAVE_FCHMOD
 
-    if (stat(state->cur, &sb) == 0)
+    if (::stat(state->cur, &sb) == 0)
         fchmod(state->fd, sb.st_mode);
 
 #endif
@@ -743,6 +745,10 @@ CossSwapDir::writeCleanStart()
     return 0;
 }
 
+/* RBC 20050101 - I think there is a race condition here,
+ * *current can be freed as its not ref counted, if/when
+ * the store overruns the log writer 
+ */
 const StoreEntry *
 CossCleanLog::nextEntry()
 {
@@ -895,22 +901,56 @@ CossSwapDir::logEntry(const StoreEntry & e, int op) const
 }
 
 void
-CossSwapDir::newFileSystem()
+CossSwapDir::create()
 {
-    debug(47, 3) ("Creating swap space in %s\n", path);
-    debug (47,0)("COSS autocreation is not implemented. Please create the file manually\n");
+    debugs (47, 3, "Creating swap space in " << path);
+
+    struct stat swap_sb;
+    int swap;
+
+    if (::stat(path, &swap_sb) < 0) {
+        debugs (47, 2, "COSS swap space space being allocated.");
+        mkdir(path, 0700);
+    }
+
+    /* should check here for directories instead of files, and for file size
+     * TODO - if nothing changes, there is nothing to do
+     */
+    swap = open(stripePath(), O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
+
+    /* TODO just set the file size */
+    /* swap size is in K */
+    char *block[1024];
+
+    memset(&block, '\0', 1024);
+
+    for (off_t offset = 0; offset < max_size; ++offset) {
+        if (write (swap, block, 1024) < 1024) {
+            debugs (47, 0, "Failed to create COSS swap space in " << path);
+        }
+    }
+
+    close (swap);
+
 }
 
 /* we are shutting down, flush all membufs to disk */
 CossSwapDir::~CossSwapDir()
 {
     io->sync();
-    theFile->close();
+
+    if (theFile != NULL)
+        theFile->close();
+
     delete io;
 
     closeLog();
+
     n_coss_dirs--;
+
     safe_free(ioModule);
+
+    safe_free(stripe_path);
 }
 
 /*
@@ -1050,13 +1090,14 @@ CossSwapDir::dump(StoreEntry &entry)const
     dumpOptions(&entry);
 }
 
-CossSwapDir::CossSwapDir() : SwapDir ("coss"), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0),  blksz_bits(0), io (NULL), ioModule(NULL), currentIOOptions(new ConfigOptionVector())
+CossSwapDir::CossSwapDir() : SwapDir ("coss"), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0),  blksz_bits(0), io (NULL), ioModule(NULL), currentIOOptions(new ConfigOptionVector()), stripe_path(NULL)
 {
     membufs.head = NULL;
     membufs.tail = NULL;
     cossindex.head = NULL;
     cossindex.tail = NULL;
     blksz_mask = (1 << blksz_bits) - 1;
+    repl = NULL;
 }
 
 bool
@@ -1109,4 +1150,81 @@ void
 CossSwapDir::optionBlockSizeDump(StoreEntry * e) const
 {
     storeAppendPrintf(e, " block-size=%d", 1 << blksz_bits);
+}
+
+StoreSearch *
+CossSwapDir::search(String const url, HttpRequest *)
+{
+    if (url.size())
+        fatal ("Cannot search by url yet\n");
+
+    return new StoreSearchCoss (this);
+}
+
+char const *
+CossSwapDir::stripePath() const
+{
+    if (!stripe_path) {
+        String result = path;
+        result.append("/stripe");
+        const_cast<CossSwapDir *>(this)->stripe_path = xstrdup(result.buf());
+    }
+
+    return stripe_path;
+}
+
+CBDATA_CLASS_INIT(StoreSearchCoss);
+StoreSearchCoss::StoreSearchCoss(RefCount<CossSwapDir> aSwapDir) : sd(aSwapDir), callback (NULL), cbdata(NULL),  _done (false), current(NULL), next_(sd->cossindex.tail)
+{
+    /* TODO: this races with the store as does the cleanlog stuff.
+     * FIXME by making coss_nodes ref counted */
+}
+
+/* do not link
+StoreSearchCoss::StoreSearchCoss(StoreSearchCoss const &);
+*/
+
+StoreSearchCoss::~StoreSearchCoss()
+{}
+
+void
+StoreSearchCoss::next(void (callback)(void *cbdata), void *cbdata)
+{
+    next();
+    callback (cbdata);
+}
+
+bool
+StoreSearchCoss::next()
+{
+    current = next_;
+
+    if (next_)
+        next_ = next_->prev;
+
+    if (!current)
+        _done = true;
+
+    return current != NULL;
+}
+
+bool
+StoreSearchCoss::error() const
+{
+    return false;
+}
+
+bool
+StoreSearchCoss::isDone() const
+{
+    return _done;
+}
+
+StoreEntry *
+StoreSearchCoss::currentItem()
+{
+    if (!current)
+        return NULL;
+
+    return static_cast<StoreEntry *>( current->data );
 }
