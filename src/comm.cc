@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.59 1996/08/27 05:51:36 wessels Exp $
+ * $Id: comm.cc,v 1.60 1996/08/28 20:11:49 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -730,7 +730,7 @@ int comm_select(sec)
 	    poll_time.tv_sec = 0;
 	    poll_time.tv_usec = 250000;
 #else
-	    poll_time.tv_sec = sec > 1 ? 1 : 0;
+	    poll_time.tv_sec = sec > 0 ? 1 : 0;
 	    poll_time.tv_usec = 0;
 #endif
 	    num = select(maxfd, &readfds, &writefds, &exceptfds, &poll_time);
