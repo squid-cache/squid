@@ -2,6 +2,8 @@
  * 
  * squid_ldap_auth: authentication via ldap for squid proxy server
  * 
+ * Maintainer: Henrik Nordstrom <hno@squid-cache.org>
+ *
  * Author: Glen Newton 
  * glen.newton@nrc.ca
  * Advanced Services 
