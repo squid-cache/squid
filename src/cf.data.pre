@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.145 1999/04/07 21:13:20 wessels Exp $
+# $Id: cf.data.pre,v 1.146 1999/04/07 21:39:05 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -931,7 +931,7 @@ DOC_END
 
 
 NAME: redirect_program
-TYPE: string
+TYPE: wordlist
 LOC: Config.Program.redirect
 DEFAULT: none
 DOC_START
