@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.353 1998/07/16 00:29:53 rousskov Exp $
+ * $Id: client_side.cc,v 1.354 1998/07/16 03:46:47 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1124,6 +1124,13 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
     return rep;
 }
 
+/*
+ * clientCacheHit should only be called until the HTTP reply headers
+ * have been parsed.  Normally this should be a single call, but
+ * it might take more than one.  As soon as we have the headers,
+ * we hand off to clientSendMoreData, clientProcessExpired, or
+ * clientProcessMiss.
+ */
 static void
 clientCacheHit(void *data, char *buf, ssize_t size)
 {
