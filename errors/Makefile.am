@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.8 2002/04/02 01:33:04 hno Exp $
+# $Id: Makefile.am,v 1.9 2002/10/18 21:21:22 hno Exp $
 #
 
 errordir = $(datadir)/errors
@@ -65,7 +65,7 @@ uninstall-local:
 #
 addlang: all
 	-@if test -d $(srcdir)/$(ADDLANG); then \
-	if test -d $(DEFAULT_ERROR_DIR)/$(DESTLANG); then
+	if test -d $(DEFAULT_ERROR_DIR)/$(DESTLANG); then \
 	cd $(srcdir)/$(ADDLANG)/ ; \
 	for f in ERR_*; do \
 		if test -f $(DEFAULT_ERROR_DIR)/$(DESTLANG)/$$f ; then \
