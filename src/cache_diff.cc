@@ -1,5 +1,5 @@
 /*
- * $Id: cache_diff.cc,v 1.7 1998/03/31 05:37:35 wessels Exp $
+ * $Id: cache_diff.cc,v 1.8 1998/05/24 03:41:06 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -108,7 +108,8 @@ cacheIndexDestroy(CacheIndex * idx)
     hash_link *hashr = NULL;
     if (idx) {
 	/* destroy hash list contents */
-	for (hashr = hash_first(idx->hash); hashr; hashr = hash_next(idx->hash)) {
+	hash_first(idx->hash);
+	while (hashr = hash_next(idx->hash)) {
 	    hash_remove_link(idx->hash, hashr);
 	    cacheEntryDestroy((CacheEntry *) hashr);
 	}
@@ -219,7 +220,8 @@ cacheIndexCmp(CacheIndex * idx1, CacheIndex * idx2)
 	large_idx = idx1;
     }
     /* find shared_count */
-    for (hashr = hash_first(small_idx->hash); hashr; hashr = hash_next(small_idx->hash)) {
+    hash_first(small_idx->hash);
+    for (hashr = hash_next(small_idx->hash)) {
 	hashed_count++;
 	if (hash_lookup(large_idx->hash, hashr->key))
 	    shared_count++;

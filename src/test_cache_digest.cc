@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.19 1998/04/24 07:09:49 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.20 1998/05/24 03:41:15 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -248,7 +248,8 @@ cacheDestroy(Cache * cache)
     assert(cache);
     hash = cache->hash;
     /* destroy hash table contents */
-    for (e = hash_first(hash); e; e = hash_next(hash)) {
+    hash_first(hash);
+    while (e = hash_next(hash)) {
 	hash_remove_link(hash, (hash_link *) e);
 	cacheEntryDestroy(e);
     }
@@ -276,7 +277,8 @@ cacheResetDigest(Cache * cache)
     if (!cache->count)
 	return;
     gettimeofday(&t_start, NULL);
-    for (e = hash_first(hash); e; e = hash_next(hash)) {
+    hash_first(hash);
+    while (e = hash_next(hash)) {
 	cacheDigestAdd(cache->digest, e->key);
     }
     gettimeofday(&t_end, NULL);

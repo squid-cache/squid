@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.187 1998/05/15 15:16:23 wessels Exp $
+ * $Id: ipcache.cc,v 1.188 1998/05/24 03:41:10 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1003,12 +1003,10 @@ void
 ipcache_restart(void)
 {
     ipcache_entry *this;
-    ipcache_entry *next;
     assert(ip_table != NULL);
     while (ipcacheDequeue());
-    next = (ipcache_entry *) hash_first(ip_table);
-    while ((this = next) != NULL) {
-	next = (ipcache_entry *) hash_next(ip_table);
+    hash_first(ip_table);
+    while ((this = (ipcache_entry *) hash_next(ip_table))) {
 	if (this->status == IP_CACHED)
 	    continue;
 	if (this->status == IP_NEGATIVE_CACHED)

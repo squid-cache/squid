@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.253 1998/05/22 23:44:26 wessels Exp $
+ * $Id: stat.cc,v 1.254 1998/05/24 03:41:13 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -359,11 +359,9 @@ static void
 statObjects(StoreEntry * sentry, int vm_or_not)
 {
     StoreEntry *entry = NULL;
-    StoreEntry *next = NULL;
     int N = 0;
-    next = (StoreEntry *) hash_first(store_table);
-    while ((entry = next) != NULL) {
-	next = (StoreEntry *) hash_next(store_table);
+    hash_first(store_table);
+    while ((entry = (StoreEntry *) hash_next(store_table))) {
 	if (vm_or_not && entry->mem_obj == NULL)
 	    continue;
 	if ((++N & 0xFF) == 0) {
@@ -390,10 +388,8 @@ static void
 statOpenfdObj(StoreEntry * sentry)
 {
     StoreEntry *entry = NULL;
-    StoreEntry *next = NULL;
-    next = (StoreEntry *) hash_first(store_table);
-    while ((entry = next) != NULL) {
-	next = (StoreEntry *) hash_next(store_table);
+    hash_first(store_table);
+    while ((entry = (StoreEntry *) hash_next(store_table))) {
 	if (entry->mem_obj == NULL)
 	    continue;
 	if (entry->mem_obj->swapout.fd < 0)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.31 1998/04/24 05:44:08 wessels Exp $
+ * $Id: client_db.cc,v 1.32 1998/05/24 03:41:08 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -138,8 +138,8 @@ clientdbDump(StoreEntry * sentry)
     int http_total = 0;
     int http_hits = 0;
     storeAppendPrintf(sentry, "Cache Clients:\n");
-    c = (ClientInfo *) hash_first(client_table);
-    while (c) {
+    hash_first(client_table);
+    while ((c = (ClientInfo *) hash_next(client_table))) {
 	storeAppendPrintf(sentry, "Address: %s\n", c->key);
 	storeAppendPrintf(sentry, "Name: %s\n", fqdnFromAddr(c->addr));
 	storeAppendPrintf(sentry, "    ICP Requests %d\n",
@@ -171,7 +171,6 @@ clientdbDump(StoreEntry * sentry)
 		percent(c->Http.result_hist[l], c->Http.n_requests));
 	}
 	storeAppendPrintf(sentry, "\n");
-	c = (ClientInfo *) hash_next(client_table);
     }
     storeAppendPrintf(sentry, "TOTALS\n");
     storeAppendPrintf(sentry, "ICP : %d Queries, %d Hits (%3d%%)\n",
@@ -201,9 +200,10 @@ meshCtblGetRowFn(oid * New, oid * Oid)
     ClientInfo *c = NULL;
     static char key[15];
 
-    if (!Oid[0] && !Oid[1] && !Oid[2] && !Oid[3])
-	c = (ClientInfo *) hash_first(client_table);
-    else {
+    if (!Oid[0] && !Oid[1] && !Oid[2] && !Oid[3]) {
+	hash_first(client_table);
+	c = (ClientInfo *) hash_next(client_table);
+    } else {
 	snprintf(key, 15, "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
 	c = (ClientInfo *) hash_lookup(client_table, key);
 	if (NULL != c)
@@ -224,9 +224,6 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     ClientInfo *c = NULL;
     int aggr = 0;
     log_type l;
-#if 0
-    int cnt;
-#endif
 
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
@@ -235,13 +232,6 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 	Var->name[13], Var->name[14]);
     debug(49, 5) ("snmp_meshCtblFn: [%s] requested!\n", key);
     c = (ClientInfo *) hash_lookup(client_table, key);
-#if 0
-    c = (ClientInfo *) hash_first(client_table);
-    cnt = Var->name[11];
-    debug(49, 5) ("snmp_meshCtblFn: we want .x.%d\n", Var->name[10]);
-    while (--cnt)
-	if (!(c = (ClientInfo *) hash_next(client_table)));
-#endif
     if (c == NULL) {
 	debug(49, 5) ("snmp_meshCtblFn: not found.\n");
 	*ErrP = SNMP_ERR_NOSUCHNAME;

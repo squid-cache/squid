@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.103 1998/05/22 23:44:05 wessels Exp $
+ * $Id: fqdncache.cc,v 1.104 1998/05/24 03:41:08 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -681,7 +681,6 @@ void
 fqdnStats(StoreEntry * sentry)
 {
     fqdncache_entry *f = NULL;
-    fqdncache_entry *next = NULL;
     int k;
     int ttl;
     if (fqdn_table == NULL)
@@ -703,9 +702,8 @@ fqdnStats(StoreEntry * sentry)
 	FqdncacheStats.ghba_calls);
     storeAppendPrintf(sentry, "FQDN Cache Contents:\n\n");
 
-    next = (fqdncache_entry *) hash_first(fqdn_table);
-    while ((f = next) != NULL) {
-	next = (fqdncache_entry *) hash_next(fqdn_table);
+    hash_first(fqdn_table);
+    while ((f = (fqdncache_entry *) hash_next(fqdn_table))) {
 	if (f->status == FQDN_PENDING || f->status == FQDN_DISPATCHED)
 	    ttl = 0;
 	else
@@ -831,13 +829,11 @@ void
 fqdncache_restart(void)
 {
     fqdncache_entry *this;
-    fqdncache_entry *next;
     if (fqdn_table == 0)
 	fatal_dump("fqdncache_restart: fqdn_table == 0\n");
     while (fqdncacheDequeue());
-    next = (fqdncache_entry *) hash_first(fqdn_table);
-    while ((this = next) != NULL) {
-	next = (fqdncache_entry *) hash_next(fqdn_table);
+    hash_first(fqdn_table);
+    while ((this = (fqdncache_entry *) hash_next(fqdn_table))) {
 	if (this->status == FQDN_CACHED)
 	    continue;
 	if (this->status == FQDN_NEGATIVE_CACHED)
@@ -863,12 +859,9 @@ fqdn_getMax()
     int i = 0;
     fqdncache_entry *fq = NULL;
 
-    fq = (fqdncache_entry *) hash_first(fqdn_table);
-    if (fq != NULL) {
-	i = 1;
-	while ((fq = (fqdncache_entry *) hash_next(fqdn_table)))
-	    i++;
-    }
+    hash_first(fqdn_table);
+    while ((fq = (fqdncache_entry *) hash_next(fqdn_table)))
+	i++;
     return i;
 }
 
@@ -884,9 +877,12 @@ snmp_fqdncacheFn(variable_list * Var, snint * ErrP)
 
     cnt = Var->name[12];
 
-    fq = (fqdncache_entry *) hash_first(fqdn_table);
-    while (fq && --cnt)
+    hash_first(fqdn_table);
+    while (cnt--) {
 	fq = (fqdncache_entry *) hash_next(fqdn_table);
+	if (NULL == fq)
+		break;
+    }
     if (fq == NULL || cnt != 0) {
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	return NULL;

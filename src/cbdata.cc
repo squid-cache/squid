@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.20 1998/05/12 20:16:32 wessels Exp $
+ * $Id: cbdata.cc,v 1.21 1998/05/24 03:41:07 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -211,7 +211,8 @@ cbdataDump(StoreEntry * sentry)
     hash_link *hptr;
     cbdata *c;
     storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
-    for (hptr = hash_first(htable); hptr; hptr = hash_next(htable)) {
+    hash_first(htable);
+    while ((hptr = hash_next(htable))) {
 	c = (cbdata *) hptr;
 #if CBDATA_DEBUG
 	storeAppendPrintf(sentry, "%20p %10s %d locks %s:%d\n",

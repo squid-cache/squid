@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.106 1998/05/22 23:44:19 wessels Exp $
+ * $Id: net_db.cc,v 1.107 1998/05/24 03:41:11 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -174,12 +174,11 @@ netdbPurgeLRU(void)
     int list_count = 0;
     int removed = 0;
     list = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
-    n = (netdbEntry *) hash_first(addr_table);
-    while (n != NULL) {
+    hash_first(addr_table);
+    while ((n = (netdbEntry *) hash_next(addr_table))) {
 	assert(list_count < memInUse(MEM_NETDBENTRY));
 	*(list + list_count) = n;
 	list_count++;
-	n = (netdbEntry *) hash_next(addr_table);
     }
     qsort((char *) list,
 	list_count,
@@ -365,7 +364,6 @@ netdbSaveState(void *foo)
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
     FILE *fp;
     netdbEntry *n;
-    netdbEntry *next;
     net_db_name *x;
     struct timeval start = current_time;
     int count = 0;
@@ -375,9 +373,8 @@ netdbSaveState(void *foo)
 	debug(50, 1) ("netdbSaveState: %s: %s\n", path, xstrerror());
 	return;
     }
-    next = (netdbEntry *) hash_first(addr_table);
-    while ((n = next) != NULL) {
-	next = (netdbEntry *) hash_next(addr_table);
+    hash_first(addr_table);
+    while ((n = (netdbEntry *) hash_next(addr_table))) {
 	if (n->pings_recv == 0)
 	    continue;
 	fprintf(fp, "%s %d %d %10.5f %10.5f %d %d",
@@ -721,11 +718,9 @@ netdbDump(StoreEntry * sentry)
 	"Hostnames");
     list = xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
     i = 0;
-    n = (netdbEntry *) hash_first(addr_table);
-    while (n != NULL) {
+    hash_first(addr_table);
+    while ((n = (netdbEntry *) hash_next(addr_table)))
 	*(list + i++) = n;
-	n = (netdbEntry *) hash_next(addr_table);
-    }
     if (i != memInUse(MEM_NETDBENTRY))
 	debug(37, 0) ("WARNING: netdb_addrs count off, found %d, expected %d\n",
 	    i, memInUse(MEM_NETDBENTRY));
@@ -974,7 +969,6 @@ netdbBinaryExchange(StoreEntry * s)
     http_reply *reply = s->mem_obj->reply;
 #if USE_ICMP
     netdbEntry *n;
-    netdbEntry *next;
     int i;
     int j;
     int rec_sz;
@@ -991,10 +985,8 @@ netdbBinaryExchange(StoreEntry * s)
     rec_sz += 1 + sizeof(int);
     buf = memAllocate(MEM_4K_BUF);
     i = 0;
-    next = (netdbEntry *) hash_first(addr_table);
-    while (next != NULL) {
-	n = next;
-	next = (netdbEntry *) hash_next(addr_table);
+    hash_first(addr_table);
+    while ((n = (netdbEntry *) hash_next(addr_table))) {
 	if (0.0 == n->rtt)
 	    continue;
 	if (n->rtt > 60000)	/* RTT > 1 MIN probably bogus */
