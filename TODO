@@ -60,6 +60,18 @@ Our Todo List
 (5) Customizable access logging.
 (5) Inline DNS queries with native resolver calls.
 
+BUGS:
+
+	In a stream of pipelined requests, if one of the latter
+	requests causes us to want to write to the client socket
+	directly (e.g errorSend(), perhaps due to not passing the
+	access rules, or maybe a Not Modified reply), then we fail this
+	assertion in comm_write:
+		assert(fd_table[fd].rwstate == NULL);
+	Either we'll have to use storeClientCopy and StoreEntry's for
+	everything, or attach some pending-outgoing-buf to the
+	clientHttpRequest struct.
+
 
 DONE:
 + s/sprintf/snprintf/g
