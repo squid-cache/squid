@@ -1,3 +1,19 @@
+Changes to squid-1.1.1 ():
+
+	- Fixed announcement bug.  Announcements were always off unless
+	  a file was specified.
+	- Fixed wrong number of args to examine_select() debug.
+	- Fixed null-string content-type
+	- Don't cache replies with 'Set-Cookie:' headers.
+	- Fixed bug when client issues IMS, Squid has stale object and
+	  Squid's lastmod time is greater than the client IMS time.
+	  A 304 reply would be appropriate for Squid, but not the client
+	  (diagnosed by Mark Treacy).
+	- Fixed httpBuildRequestHeader() content length bug which breaks for
+	  really large POST requests (Takahiro Yugawa).
+	- Fixed 'passthrough_proxy' to pick up port number from list of
+	  neighbors.
+
 Changes to squid-1.1.0 (December 6, 1996):
 
 	- Fixed inequality bug in neighborUp().
