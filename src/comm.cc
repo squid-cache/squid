@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.387 2003/08/15 13:06:34 robertc Exp $
+ * $Id: comm.cc,v 1.388 2003/08/31 01:22:05 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1406,6 +1406,14 @@ commResetFD(ConnectStateData * cs)
 
         return 0;
     }
+
+#ifdef _SQUID_MSWIN_
+
+    /* On Windows dup2() can't work correctly on Sockets, the          */
+    /* workaround is to close the destination Socket before call them. */
+    close(cs->fd);
+
+#endif
 
     if (dup2(fd2, cs->fd) < 0) {
         debug(5, 0) ("commResetFD: dup2: %s\n", xstrerror());

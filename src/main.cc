@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.386 2003/08/17 13:22:30 robertc Exp $
+ * $Id: main.cc,v 1.387 2003/08/31 01:22:05 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1093,6 +1093,13 @@ main(int argc, char **argv)
         if (do_reconfigure) {
             mainReconfigure();
             do_reconfigure = 0;
+#if defined(_SQUID_MSWIN_) && defined(_DEBUG)
+
+        } else if (do_debug) {
+            do_debug = 0;
+            __asm int 3;
+#endif
+
         } else if (do_rotate) {
             mainRotate();
             do_rotate = 0;
