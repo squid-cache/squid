@@ -198,3 +198,5 @@
 #define VM_WINDOW_SZ		DISK_PAGE_SIZE
 
 #define SKIP_BASIC_SZ ((size_t) 6)
+
+#define STAT_LOG_HIST_BINS 300
