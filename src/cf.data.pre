@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.357 2004/09/26 21:40:29 hno Exp $
+# $Id: cf.data.pre,v 1.358 2004/10/08 17:42:09 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3114,7 +3114,7 @@ DOC_END
 NAME: memory_pools_limit
 COMMENT: (bytes)
 TYPE: b_size_t
-DEFAULT: none
+DEFAULT: 5 MB
 LOC: Config.MemPools.limit
 DOC_START
 	Used only with memory_pools on:
