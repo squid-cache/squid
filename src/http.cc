@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.233 1998/01/12 04:30:03 wessels Exp $
+ * $Id: http.cc,v 1.234 1998/01/12 04:30:39 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -815,9 +815,9 @@ httpBuildRequestHeader(request_t * request,
 	    if (EBIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
 		continue;
 	if (strncasecmp(xbuf, "Connection:", 11) == 0) {
-            handleConnectionHeader(0, no_forward, &xbuf[11]);
+	    handleConnectionHeader(0, no_forward, &xbuf[11]);
 	    continue;
-        }
+	}
 	if (strncasecmp(xbuf, "Host:", 5) == 0) {
 	    EBIT_SET(hdr_flags, HDR_HOST);
 	} else if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
@@ -846,7 +846,7 @@ httpBuildRequestHeader(request_t * request,
 		snprintf(xbuf, 4096, "Max-Forwards: %d", n - 1);
 	    }
 	}
-        if (!handleConnectionHeader(1, no_forward, xbuf))
+	if (!handleConnectionHeader(1, no_forward, xbuf))
 	    httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512, 1);
     }
     hdr_len = t - hdr_in;

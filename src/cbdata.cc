@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.13 1998/01/12 04:29:56 wessels Exp $
+ * $Id: cbdata.cc,v 1.14 1998/01/12 04:30:35 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -145,7 +145,7 @@ cbdataFree(void *p)
     xfree(c);
     debug(45, 3) ("cbdataFree: freeing %p\n", p);
     if (mem_type == MEM_NONE)
-        xfree(p);
+	xfree(p);
     else
 	memFree(mem_type, p);
 }
@@ -179,7 +179,7 @@ cbdataUnlock(const void *p)
     cbdataCount--;
     xfree(c);
     debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
-    xfree((void *)p);
+    xfree((void *) p);
 }
 
 int

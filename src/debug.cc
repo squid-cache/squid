@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.56 1998/01/07 22:45:25 wessels Exp $
+ * $Id: debug.cc,v 1.57 1998/01/12 04:30:36 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -164,7 +164,7 @@ _db_print(va_alist)
 	fflush(debug_log);
     if (opt_debug_stderr && debug_log != stderr) {
 #if defined(__QNX__)
-      vfprintf(stderr, f, eargs);
+	vfprintf(stderr, f, eargs);
 #else
 	vfprintf(stderr, f, args);
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.207 1998/01/12 04:30:05 wessels Exp $
+ * $Id: main.cc,v 1.208 1998/01/12 04:30:40 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -383,7 +383,7 @@ mainReconfigure(void)
     debug(1, 0) ("Ready to serve requests.\n");
 }
 
-static void 
+static void
 setEffectiveUser(void)
 {
     leave_suid();		/* Run as non privilegied user */
@@ -547,15 +547,15 @@ main(int argc, char **argv)
 	/* NOTREACHED */
     }
     if (opt_create_swap_dirs) {
-        if (ConfigFile == NULL)
-            ConfigFile = xstrdup(DefaultConfigFile);
-        cbdataInit();
-        parseConfigFile(ConfigFile);
-        setEffectiveUser();
-        debug(0, 0)("Creating Swap Directories\n");
-        storeCreateSwapDirectories();
-        return 0;
-    }   
+	if (ConfigFile == NULL)
+	    ConfigFile = xstrdup(DefaultConfigFile);
+	cbdataInit();
+	parseConfigFile(ConfigFile);
+	setEffectiveUser();
+	debug(0, 0) ("Creating Swap Directories\n");
+	storeCreateSwapDirectories();
+	return 0;
+    }
     if (!opt_no_daemon)
 	watch_child(argv);
     setMaxFD();
