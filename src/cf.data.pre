@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.143 1999/01/29 23:39:13 wessels Exp $
+# $Id: cf.data.pre,v 1.144 1999/02/01 05:43:30 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1410,6 +1410,9 @@ DOC_START
 	acltype is one of src dst srcdomain dstdomain url_pattern
 		urlpath_pattern time port proto method browser user
 
+	By default, regular expressions are CASE-SENSITIVE.  To make
+	them case-insensitive, use the -i option.
+
 	acl aclname src      ip-address/netmask ... (clients IP address)
 	acl aclname src      addr1-addr2/netmask ... (range of addresses)
 	acl aclname dst      ip-address/netmask ... (URL host's IP address)
@@ -1417,8 +1420,8 @@ DOC_START
 
 	acl aclname srcdomain   foo.com ...     # reverse lookup, client IP
 	acl aclname dstdomain   foo.com ...     # Destination server from URL
-	acl aclname srcdom_regex xxx ...        # regex matching client name
-	acl aclname dstdom_regex xxx ...        # regex matching server
+	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
+	acl aclname dstdom_regex [-i] xxx ...   # regex matching server
 	  # For dstdomain and dstdom_regex  a reverse lookup is tried if a IP
 	  # based URL is used. The name "none" is used if the reverse lookup
 	  # fails.
@@ -1433,13 +1436,14 @@ DOC_START
 		F - Friday
 		A - Saturday
 	    h1:m1 must be less than h2:m2
-	acl aclname url_regex  ^http:// ...	# regex matching on whole URL
-	acl aclname urlpath_regex  \.gif$ ...	# regex matching on URL path
+	acl aclname url_regex [-i] ^http:// ...	# regex matching on whole URL
+	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
 	acl aclname port     80 70 21 ...
 	acl aclname port     0-1024 ...		# ranges allowed
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
-	acl aclname browser  regexp
+	acl aclname browser  [-i] regexp
+	  # pattern match on User-Agent header
 	acl aclname ident    username ...
 	  # string match on ident output.
 	  # use REQUIRED to accept any non-null ident.
