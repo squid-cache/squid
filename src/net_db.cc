@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.128 1998/09/23 20:13:52 wessels Exp $
+ * $Id: net_db.cc,v 1.129 1998/09/23 21:29:29 glenn Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -870,111 +870,6 @@ netdbExchangeUpdatePeer(struct in_addr addr, peer * e, double rtt, double hops)
 	sortPeerByRtt);
 #endif
 }
-
-#if SQUID_SNMP
-
-int
-netdbGetRowFn(oid * New, oid * Oid)
-{
-    netdbEntry *c = NULL;
-    static struct in_addr maddr;
-
-#if USE_ICMP
-    if (!Oid[0] && !Oid[1] && !Oid[2] && !Oid[3]) {
-	hash_first(addr_table);
-	c = (netdbEntry *) hash_next(addr_table);
-	hash_last(addr_table);
-    } else {
-	static char key[15];
-	snprintf(key, sizeof(key), "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
-	c = (netdbEntry *) hash_lookup(addr_table, key);
-	if (NULL != c) {
-	    debug(49, 8) ("netdbGetRowFn: [%s] found\n", key);
-	    c = c->next;
-	}
-	if (!c)
-	    debug(49, 8) ("netdbGetRowFn: next does not exist!\n");
-    }
-#endif
-    if (!c)
-	return 0;
-    debug(49, 8) ("netdbGetRowFn: [%s] is returned\n", c->network);
-    safe_inet_addr(c->network, &maddr);
-    addr2oid(maddr, New);
-    return 1;
-}
-
-
-variable_list *
-snmp_netdbFn(variable_list * Var, snint * ErrP)
-{
-    variable_list *Answer;
-    static char key[15];
-
-    static netdbEntry *n = NULL;
-#if USE_ICMP
-    struct in_addr addr;
-#endif
-    snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[11], Var->name[12],
-	Var->name[13], Var->name[14]);
-
-    debug(49, 5) ("snmp_netdbFn: request with %d. (%s)!\n", Var->name[10], key);
-
-    Answer = snmp_var_new(Var->name, Var->name_length);
-    *ErrP = SNMP_ERR_NOERROR;
-
-#if USE_ICMP
-    n = (netdbEntry *) hash_lookup(addr_table, key);
-
-#endif
-    if (n == NULL) {
-	debug(49, 8) ("snmp_netdbFn: Requested past end of netdb table.\n");
-	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
-    }
-#if USE_ICMP
-    Answer->val_len = sizeof(snint);
-    Answer->val.integer = xmalloc(Answer->val_len);
-    switch (Var->name[10]) {
-    case NETDB_NET:
-	Answer->type = SMI_IPADDRESS;
-	safe_inet_addr(n->network, &addr);
-	*(Answer->val.integer) = addr.s_addr;
-	break;
-    case NETDB_PING_S:
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) n->pings_sent;
-	break;
-    case NETDB_PING_R:
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) n->pings_recv;
-	break;
-    case NETDB_HOPS:
-	Answer->type = SMI_COUNTER32;
-	*(Answer->val.integer) = (snint) n->hops;
-	break;
-    case NETDB_RTT:
-	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (snint) n->rtt;
-	break;
-    case NETDB_PINGTIME:
-	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (snint) n->next_ping_time - squid_curtime;
-	break;
-    case NETDB_LASTUSE:
-	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (snint) squid_curtime - n->last_use_time;
-	break;
-    default:
-	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
-    }
-#endif
-    return Answer;
-}
-#endif
 
 void
 netdbDeleteAddrNetwork(struct in_addr addr)
