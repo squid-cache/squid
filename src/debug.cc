@@ -1,4 +1,4 @@
-/* $Id: debug.cc,v 1.8 1996/03/27 18:50:58 wessels Exp $ */
+/* $Id: debug.cc,v 1.9 1996/03/27 20:20:44 wessels Exp $ */
 
 #include "squid.h"
 
@@ -43,7 +43,7 @@ void _db_print(va_alist)
     level = va_arg(args, int);
     format = va_arg(args, char *);
 
-    if (debugLevels[section] > level) {
+    if (level > debugLevels[section]) {
 	va_end(args);
 	return;
     }
