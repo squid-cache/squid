@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.7 1998/03/18 00:29:55 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.8 1998/03/20 18:06:37 rousskov Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -41,7 +41,9 @@ static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] =
     {"no-transform", CC_NO_TRANSFORM},
     {"must-revalidate", CC_MUST_REVALIDATE},
     {"proxy-revalidate", CC_PROXY_REVALIDATE},
-    {"max-age", CC_MAX_AGE}
+    {"only-if-cached", CC_ONLY_IF_CACHED},
+    {"max-age", CC_MAX_AGE},
+    {"Other,", CC_OTHER} /* ',' will protect from matches */
 };
 HttpHeaderFieldInfo *CcFieldsInfo = NULL;
 
@@ -108,13 +110,14 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 	    ilen = p++ - item;
 	/* find type */
 	type = httpHeaderIdByName(item, ilen,
-	    CcFieldsInfo, CC_ENUM_END, -1);
+	    CcFieldsInfo, CC_ENUM_END);
 	if (type < 0) {
 	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
-	    continue;
+	    type = CC_OTHER;
 	}
 	if (EBIT_TEST(cc->mask, type)) {
-	    debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
+	    if (type != CC_OTHER)
+		debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
 	    CcFieldsInfo[type].stat.repCount++;
 	    continue;
 	}
@@ -123,16 +126,14 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 	/* post-processing special cases */
 	switch (type) {
 	case CC_MAX_AGE:
-	    if (p)
-		cc->max_age = (time_t) atoi(p);
-	    if (cc->max_age < 0) {
+	    if (!p || !httpHeaderParseInt(p, &cc->max_age)) {
 		debug(65, 2) ("cc: invalid max-age specs near '%s'\n", item);
 		cc->max_age = -1;
 		EBIT_CLR(cc->mask, type);
 	    }
 	    break;
 	default:
-	    /* note that we ignore most of '=' specs @?@ */
+	    /* note that we ignore most of '=' specs */
 	    break;
 	}
     }
@@ -168,7 +169,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 	pcount++;
     }
     for (flag = 0; flag < CC_ENUM_END; flag++) {
-	if (EBIT_TEST(cc->mask, flag)) {
+	if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 	    packerPrintf(p, pcount ? ", %s" : "%s", CcFieldsInfo[flag].name);
 	    pcount++;
 	}

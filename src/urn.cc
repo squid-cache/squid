@@ -251,7 +251,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     if (EBIT_TEST(urnState->flags, URN_FORCE_MENU)) {
 	debug(51, 3) ("urnHandleReply: forcing menu\n");
     } else if (min_w) {
-	httpHeaderSetStr(&rep->hdr, HDR_LOCATION, min_w->key);
+	httpHeaderPutStr(&rep->header, HDR_LOCATION, min_w->key);
     }
     httpBodySet(&rep->body, mb.buf, mb.size+1, memBufFreeFunc(&mb));
     httpReplySwapOut(rep, e);

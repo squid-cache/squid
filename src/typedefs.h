@@ -58,10 +58,8 @@ typedef struct _HttpHdrCc HttpHdrCc;
 typedef struct _HttpHdrRangeSpec HttpHdrRangeSpec;
 typedef struct _HttpHdrRange HttpHdrRange;
 typedef struct _HttpHdrContRange HttpHdrContRange;
-typedef struct _HttpHdrExtField HttpHdrExtField;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
 typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
-typedef union _field_store field_store;
 typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
 typedef struct _HttpStateData HttpStateData;
@@ -168,3 +166,6 @@ typedef int HttpHdrRangePos;
 
 /*iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
+
+/* big mask for http headers */
+typedef char HttpHeaderMask[8];

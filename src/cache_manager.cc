@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.9 1998/03/16 23:50:04 wessels Exp $
+ * $Id: cache_manager.cc,v 1.10 1998/03/20 18:06:41 rousskov Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -224,7 +224,7 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	 * add Authenticate header, use 'action' as a realm because
 	 * password depends on action
 	 */
-	httpHeaderSetAuth(&rep->hdr, "Basic", mgr->action);
+	httpHeaderPutAuth(&rep->header, "Basic", mgr->action);
 	/* move info to the mem_obj->reply */
 	httpReplyAbsorb(entry->mem_obj->reply, rep);
 	/* store the reply */

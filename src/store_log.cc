@@ -17,7 +17,6 @@ storeLog(int tag, const StoreEntry * e)
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     MemObject *mem = e->mem_obj;
     HttpReply *reply;
-    const char *ctype;
     if (storelog_fd < 0)
 	return;
     if (mem == NULL)
@@ -28,18 +27,17 @@ storeLog(int tag, const StoreEntry * e)
 	mem->log_url = xstrdup(mem->url);
     }
     reply = mem->reply;
-    ctype = httpHeaderGetStr(&reply->hdr, HDR_CONTENT_TYPE);
     snprintf(logmsg, MAX_URL << 1, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
 	e->swap_file_number,
 	reply->sline.status,
-	(int) httpHeaderGetTime(&reply->hdr, HDR_DATE),
-	(int) httpHeaderGetTime(&reply->hdr, HDR_LAST_MODIFIED),
-	(int) httpReplyExpires(reply),
-	ctype ? ctype : "unknown",
-	httpReplyContentLen(reply),
+	(int) reply->date,
+	(int) reply->last_modified,
+	(int) reply->expires,
+	strBuf(reply->content_type) ? strBuf(reply->content_type) : "unknown",
+	reply->content_length,
 	(int) (mem->inmem_hi - mem->reply->hdr_sz),
 	RequestMethodStr[mem->method],
 	mem->log_url);

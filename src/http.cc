@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.256 1998/03/17 04:00:13 wessels Exp $
+ * $Id: http.cc,v 1.257 1998/03/20 18:06:44 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -219,9 +219,9 @@ httpCacheNegatively(StoreEntry * entry)
 static int
 httpCachableReply(HttpStateData * httpState)
 {
-    HttpHeader *hdr = &httpState->entry->mem_obj->reply->hdr;
-    const HttpHdrCc *cc = httpHeaderGetCc(hdr);
-    const int cc_mask = (cc) ? cc->mask : 0;
+    HttpReply *rep = httpState->entry->mem_obj->reply;
+    HttpHeader *hdr = &rep->header;
+    const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     if (EBIT_TEST(cc_mask, CC_PRIVATE))
 	return 0;
     if (EBIT_TEST(cc_mask, CC_NO_CACHE))
@@ -247,13 +247,14 @@ httpCachableReply(HttpStateData * httpState)
     case 410:			/* Gone */
 	/* don't cache objects from peers w/o LMT, Date, or Expires */
 	/* check that is it enough to check headers @?@ */
-	if (httpHeaderHas(hdr, HDR_DATE))
+	if (rep->date > -1)
 	    return 1;
-	else if (httpHeaderHas(hdr, HDR_LAST_MODIFIED))
+	else if (rep->last_modified > -1)
 	    return 1;
 	else if (!httpState->peer)
 	    return 1;
-	else if (httpHeaderHas(hdr, HDR_EXPIRES))
+	/* @?@ (here and 302): invalid expires header compiles to squid_curtime */
+	else if (rep->expires > -1)
 	    return 1;
 	else
 	    return 0;
@@ -261,7 +262,7 @@ httpCachableReply(HttpStateData * httpState)
 	break;
 	/* Responses that only are cacheable if the server says so */
     case 302:			/* Moved temporarily */
-	if (httpHeaderHas(hdr, HDR_EXPIRES))
+	if (rep->expires > -1)
 	    return 1;
 	else
 	    return 0;
@@ -357,12 +358,12 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    assert(0);
 	    break;
 	}
-	if (httpReplyHasCc(reply, CC_PROXY_REVALIDATE))
+	if (reply->cache_control && EBIT_TEST(reply->cache_control->mask, CC_PROXY_REVALIDATE))
 	    EBIT_SET(entry->flag, ENTRY_REVALIDATE);
 	if (EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_sent++;
-	if (httpHeaderHas(&reply->hdr, HDR_PROXY_KEEPALIVE))
+	if (reply->pconn_keep_alive)
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_recv++;
 	ctx_exit(ctx);
@@ -383,7 +384,7 @@ httpPconnTransferDone(HttpStateData * httpState)
     if (!EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	return 0;
     debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
-	httpReplyContentLen(reply));
+	reply->content_length);
     /*
      * Deal with gross HTTP stuff
      *    - If we haven't seen the end of the reply headers, we can't
@@ -412,9 +413,9 @@ httpPconnTransferDone(HttpStateData * httpState)
      * persistent.  If there is a content length, then we must
      * wait until we've seen the end of the body.
      */
-    if (httpReplyContentLen(reply) < 0)
+    if (reply->content_length < 0)
 	return 0;
-    else if (mem->inmem_hi < httpReplyContentLen(reply) + reply->hdr_sz)
+    else if (mem->inmem_hi < reply->content_length + reply->hdr_sz)
 	return 0;
     else
 	return 1;

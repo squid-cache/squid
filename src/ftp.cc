@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.208 1998/03/16 21:59:58 wessels Exp $
+ * $Id: ftp.cc,v 1.209 1998/03/20 18:06:43 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2095,7 +2095,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	mime_type, ftpState->size, ftpState->mdtm, -2);
     /* additional info */
     if (mime_enc)
-	httpHeaderSetStr(&reply->hdr, HDR_CONTENT_ENCODING, mime_enc);
+	httpHeaderPutStr(&reply->header, HDR_CONTENT_ENCODING, mime_enc);
     httpReplySwapOut(reply, e);
     storeBufferFlush(e);
     reply->hdr_sz = e->mem_obj->inmem_hi;
@@ -2124,7 +2124,7 @@ ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)
     rep = errorBuildReply(err);
     errorStateFree(err);
     /* add Authenticate header */
-    httpHeaderSetAuth(&rep->hdr, "Basic", realm);
+    httpHeaderPutAuth(&rep->header, "Basic", realm);
     /* move new reply to the old one */
     httpReplyAbsorb(old_reply, rep);
 }

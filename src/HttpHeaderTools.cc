@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.5 1998/03/15 04:25:28 rousskov Exp $
+ * $Id: HttpHeaderTools.cc,v 1.6 1998/03/20 18:06:39 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -70,36 +70,38 @@ httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo *table, int count)
     xfree(table);
 }
 
+void
+httpHeaderMaskInit(HttpHeaderMask *mask)
+{
+    memset(mask, 0, sizeof(*mask));
+}
+
 /* calculates a bit mask of a given array */
-int
-httpHeaderCalcMask(const int *enums, int count)
+void
+httpHeaderCalcMask(HttpHeaderMask *mask, const int *enums, int count)
 {
     int i;
-    int mask = 0;
-    assert(enums);
+    assert(mask && enums);
     assert(count < sizeof(int) * 8);	/* check for overflow */
+    httpHeaderMaskInit(mask);
 
     for (i = 0; i < count; ++i) {
-	assert(enums[i] < sizeof(int) * 8);	/* check for overflow again */
-	assert(!EBIT_TEST(mask, enums[i]));	/* check for duplicates */
-	EBIT_SET(mask, enums[i]);
+	assert(!CBIT_TEST(*mask, enums[i]));	/* check for duplicates */
+	CBIT_SET(*mask, enums[i]);
     }
-    return mask;
 }
 
 
 int
-httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo *info, int end, int mask)
+httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo *info, int end)
 {
     int i;
     for (i = 0; i < end; ++i) {
-	if (mask < 0 || EBIT_TEST(mask, i)) {
-	    if (name_len >= 0 && name_len != strLen(info[i].name))
-		continue;
-	    if (!strncasecmp(name, strBuf(info[i].name),
-		    name_len < 0 ? strLen(info[i].name) + 1 : name_len))
+	if (name_len >= 0 && name_len != strLen(info[i].name))
+	    continue;
+	if (!strncasecmp(name, strBuf(info[i].name),
+	    name_len < 0 ? strLen(info[i].name) + 1 : name_len))
 		return i;
-	}
     }
     return -1;
 }
@@ -143,11 +145,12 @@ strListGetItem(const char *str, char del, const char **item, int *ilen, const ch
 
 /* handy to printf prefixes of potentially very long buffers */
 const char *
-getStringPrefix(const char *str)
+getStringPrefix(const char *str, const char *end)
 {
-#define SHORT_PREFIX_SIZE 256
+#define SHORT_PREFIX_SIZE 512
     LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
-    xstrncpy(buf, str, SHORT_PREFIX_SIZE);
+    const int sz = 1 + (end ? end-str : strlen(str));
+    xstrncpy(buf, str, (sz > SHORT_PREFIX_SIZE) ? SHORT_PREFIX_SIZE : sz);
     return buf;
 }
 
@@ -193,9 +196,9 @@ void httpHeaderTestParser(const char *hstr)
     MemBuf mb;
     assert(hstr);
     /* disabled for now */
-    return;
+    /* return; */
     /* do not print too much, kludge */
-    if (bug_count > 50 && (lrand48() % bug_count) > 25L)
+    if (bug_count > 25 && (lrand48() % bug_count) > 3L)
 	return;
     /* skip start line if any */
     if (!strncasecmp(hstr, "HTTP/", 5)) {
@@ -221,7 +224,7 @@ void httpHeaderTestParser(const char *hstr)
     parse_success = httpHeaderParse(&hdr, hstr, hstr+hstr_len);
     /* debugLevels[55] = 2; */
     if (!parse_success) {
-	debug(66, 2) ("TEST: failed to parsed a header: {\n%s}\n", hstr);
+	debug(66, 2) ("TEST (%d): failed to parsed a header: {\n%s}\n", bug_count, hstr);
 	return;
     }
     /* we think that we parsed it, veryfy */
@@ -230,8 +233,8 @@ void httpHeaderTestParser(const char *hstr)
     httpHeaderPackInto(&hdr, &p);
     if ((pos = abs(httpHeaderStrCmp(hstr, mb.buf, hstr_len)))) {
 	bug_count++;
-	debug(66, 2) ("TEST: hdr parsing bug (pos: %d near '%s'): expected: {\n%s} got: {\n%s}\n",
-	    pos, hstr+pos, hstr, mb.buf);
+	debug(66, 2) ("TEST (%d): hdr parsing bug (pos: %d near '%s'): expected: {\n%s} got: {\n%s}\n",
+	    bug_count, pos, hstr+pos, hstr, mb.buf);
     }
     httpHeaderClean(&hdr);
     packerClean(&p);
