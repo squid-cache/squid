@@ -34,7 +34,7 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#ifdef __STDC__
+#if __STDC__
 #if HAVE_STDDEF_H
 #include <stddef.h>
 #endif

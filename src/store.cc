@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.115 1996/09/18 21:39:42 wessels Exp $
+ * $Id: store.cc,v 1.116 1996/09/18 22:44:53 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1023,7 +1023,7 @@ storeAppend(StoreEntry * e, char *data, int len)
 	InvokeHandlers(e);
 }
 
-#if defined(__STRICT_ANSI__)
+#if __STDC__ 
 void
 storeAppendPrintf(StoreEntry * e, char *fmt,...)
 {
