@@ -1,21 +1,81 @@
+#include "config.h"
 
-#define FD_SETSIZE 1024
+/*
+ * On some systems, FD_SETSIZE is set to something lower than the
+ * actual number of files which can be opened.  IRIX is one case,
+ * NetBSD is another.  So here we increase FD_SETSIZE to our
+ * configure-discovered maximum *before* any system includes.
+ */
+#define CHANGE_FD_SETSIZE 1
 
-#include <stdio.h>
+/* Cannot increase FD_SETSIZE on Linux */
+#if defined(_SQUID_LINUX_)
+#undef CHANGE_FD_SETSIZE
+#define CHANGE_FD_SETSIZE 0
+#endif
+
+/* Cannot increase FD_SETSIZE on FreeBSD before 2.2.0, causes select(2)
+ * to return EINVAL. */
+/* Marian Durkovic <marian@svf.stuba.sk> */
+/* Peter Wemm <peter@spinner.DIALix.COM> */
+#if defined(_SQUID_FREEBSD_)
+#include <osreldate.h>
+#if __FreeBSD_version < 220000
+#undef CHANGE_FD_SETSIZE
+#define CHANGE_FD_SETSIZE 0
+#endif
+#endif
+
+/* Increase FD_SETSIZE if SQUID_MAXFD is bigger */
+#if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
+#define FD_SETSIZE SQUID_MAXFD
+#endif
+
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_SIGNAL_H
 #include <signal.h>
+#endif
+#if HAVE_TIME_H
 #include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
+#if HAVE_ERRNO_H
 #include <errno.h>
+#endif
 
 #define PROXY_PORT 3128
 #define PROXY_ADDR "127.0.0.1"
