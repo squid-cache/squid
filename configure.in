@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.322 2003/02/12 06:09:58 robertc Exp $
+dnl  $Id: configure.in,v 1.323 2003/02/15 00:22:56 hno Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 3.0-DEVEL)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.322 $)dnl
+AC_REVISION($Revision: 1.323 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -976,6 +976,15 @@ AC_ARG_ENABLE(default-hostsfile,
     echo "Default hosts file set to: $enableval"
 ],[OPT_DEFAULT_HOSTS="/etc/hosts"])
 AC_SUBST(OPT_DEFAULT_HOSTS)
+
+AC_ARG_ENABLE(auth-on-acceleration,
+[  --enable-auth-on-acceleration
+                          Enable authentication in accelerators],
+[ if test "$enableval" = "yes" ; then
+    echo "AUTH_ON_ACCELERATION enabled"
+    AC_DEFINE(AUTH_ON_ACCELERATION, [Enable authentication support in accelerators])
+  fi
+])
 
 
 dnl Select auth schemes modules to build
