@@ -1,8 +1,8 @@
 
 /*
- * $Id: unlinkd.cc,v 1.47 2002/07/20 23:51:03 hno Exp $
+ * $Id: unlinkd.cc,v 1.48 2002/07/21 00:25:44 hno Exp $
  *
- * DEBUG: section 12    Unlink Daemon
+ * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

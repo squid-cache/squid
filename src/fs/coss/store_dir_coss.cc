@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.36 2002/07/20 23:51:05 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.37 2002/07/21 00:25:45 hno Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -132,10 +132,10 @@ storeCossDirOpenSwapLog(SwapDir * sd)
     path = storeCossDirSwapLogFile(sd, NULL);
     fd = file_open(path, O_WRONLY | O_CREAT | O_BINARY);
     if (fd < 0) {
-	debug(79, 1) ("%s: %s\n", path, xstrerror());
+	debug(47, 1) ("%s: %s\n", path, xstrerror());
 	fatal("storeCossDirOpenSwapLog: Failed to open swap log.");
     }
-    debug(79, 3) ("Cache COSS Dir #%d log opened on FD %d\n", sd->index, fd);
+    debug(47, 3) ("Cache COSS Dir #%d log opened on FD %d\n", sd->index, fd);
     cs->swaplog_fd = fd;
 }
 
@@ -146,7 +146,7 @@ storeCossDirCloseSwapLog(SwapDir * sd)
     if (cs->swaplog_fd < 0)	/* not open */
 	return;
     file_close(cs->swaplog_fd);
-    debug(79, 3) ("Cache COSS Dir #%d log closed on FD %d\n",
+    debug(47, 3) ("Cache COSS Dir #%d log closed on FD %d\n",
 	sd->index, cs->swaplog_fd);
     cs->swaplog_fd = -1;
 }
@@ -160,7 +160,7 @@ storeCossDirInit(SwapDir * sd)
     storeCossDirRebuild(sd);
     cs->fd = file_open(sd->path, O_RDWR | O_CREAT);
     if (cs->fd < 0) {
-	debug(79, 1) ("%s: %s\n", sd->path, xstrerror());
+	debug(47, 1) ("%s: %s\n", sd->path, xstrerror());
 	fatal("storeCossDirInit: Failed to open a COSS directory.");
     }
     n_coss_dirs++;
@@ -214,7 +214,7 @@ storeCossRebuildFromSwapLog(void *data)
     /* load a number of objects per invocation */
     for (count = 0; count < rb->speed; count++) {
 	if (fread(&s, ss, 1, rb->log) != 1) {
-	    debug(79, 1) ("Done reading %s swaplog (%d entries)\n",
+	    debug(47, 1) ("Done reading %s swaplog (%d entries)\n",
 		rb->sd->path, rb->n_read);
 	    fclose(rb->log);
 	    rb->log = NULL;
@@ -226,7 +226,7 @@ storeCossRebuildFromSwapLog(void *data)
 	    continue;
 	if (s.op >= SWAP_LOG_MAX)
 	    continue;
-	debug(20, 3) ("storeCossRebuildFromSwapLog: %s %s %08X\n",
+	debug(47, 3) ("storeCossRebuildFromSwapLog: %s %s %08X\n",
 	    swap_log_op_str[(int) s.op],
 	    storeKeyText(s.key),
 	    s.swap_filen);
@@ -256,7 +256,7 @@ storeCossRebuildFromSwapLog(void *data)
 	} else {
 	    x = log(++rb->counts.bad_log_op) / log(10.0);
 	    if (0.0 == x - (double) (int) x)
-		debug(20, 1) ("WARNING: %d invalid swap log entries found\n",
+		debug(47, 1) ("WARNING: %d invalid swap log entries found\n",
 		    rb->counts.bad_log_op);
 	    rb->counts.invalid++;
 	    continue;
@@ -310,7 +310,7 @@ storeCossAddDiskRestore(SwapDir * SD, const cache_key * key,
     int clean)
 {
     StoreEntry *e = NULL;
-    debug(20, 5) ("storeCossAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
+    debug(47, 5) ("storeCossAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
     /* if you call this you'd better be sure file_number is not 
      * already in use! */
     e = new_StoreEntry(STORE_ENTRY_WITHOUT_MEMOBJ, NULL, NULL);
@@ -358,7 +358,7 @@ storeCossDirRebuild(SwapDir * sd)
      * we'll use storeCossRebuildFromSwapLog().
      */
     fp = storeCossDirOpenTmpSwapLog(sd, &clean, &zero);
-    debug(20, 1) ("Rebuilding COSS storage in %s (%s)\n",
+    debug(47, 1) ("Rebuilding COSS storage in %s (%s)\n",
 	sd->path, clean ? "CLEAN" : "DIRTY");
     rb->log = fp;
     store_dirs_rebuilding++;
@@ -422,7 +422,7 @@ storeCossDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
     FILE *fp;
     int fd;
     if (stat(swaplog_path, &log_sb) < 0) {
-	debug(47, 1) ("Cache COSS Dir #%d: No log file\n", sd->index);
+	debug(50, 1) ("Cache COSS Dir #%d: No log file\n", sd->index);
 	safe_free(swaplog_path);
 	safe_free(clean_path);
 	safe_free(new_path);
@@ -498,7 +498,7 @@ storeCossDirWriteCleanStart(SwapDir * sd)
     state->outbuf_offset = 0;
     unlink(state->cln);
     state->current = cs->index.tail;
-    debug(20, 3) ("storeCOssDirWriteCleanLogs: opened %s, FD %d\n",
+    debug(50, 3) ("storeCOssDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
 #if HAVE_FCHMOD
     if (stat(state->cur, &sb) == 0)
@@ -551,7 +551,7 @@ storeCossDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 	if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	    debug(50, 0) ("storeCossDirWriteCleanLogs: %s: write: %s\n",
 		state->new, xstrerror());
-	    debug(20, 0) ("storeCossDirWriteCleanLogs: Current swap logfile not replaced.\n");
+	    debug(50, 0) ("storeCossDirWriteCleanLogs: Current swap logfile not replaced.\n");
 	    file_close(state->fd);
 	    state->fd = -1;
 	    unlink(state->new);
@@ -576,7 +576,7 @@ storeCossDirWriteCleanDone(SwapDir * sd)
     if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	debug(50, 0) ("storeCossDirWriteCleanLogs: %s: write: %s\n",
 	    state->new, xstrerror());
-	debug(20, 0) ("storeCossDirWriteCleanLogs: Current swap logfile "
+	debug(50, 0) ("storeCossDirWriteCleanLogs: Current swap logfile "
 	    "not replaced.\n");
 	file_close(state->fd);
 	state->fd = -1;
