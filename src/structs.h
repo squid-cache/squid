@@ -318,6 +318,7 @@ struct _SquidConfig {
 	int accel_with_proxy;
 	int mem_pools;
 	int test_reachability;
+	int half_closed_clients;
     } onoff;
     acl *aclList;
     struct {

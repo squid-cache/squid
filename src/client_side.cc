@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.307 1998/05/15 19:15:03 wessels Exp $
+ * $Id: client_side.cc,v 1.308 1998/05/18 21:14:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -128,7 +128,7 @@ clientOnlyIfCached(clientHttpRequest * http)
 {
     const request_t *r = http->request;
     assert(r);
-    return  r->cache_control && 
+    return r->cache_control &&
 	EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED);
 }
 
@@ -540,7 +540,7 @@ checkNegativeHit(StoreEntry * e)
 static void
 updateCDJunkStats()
 {
-	/* rewrite */
+    /* rewrite */
 }
 
 void
@@ -751,7 +751,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     if (request->login[0] != '\0')
 	EBIT_SET(request->flags, REQ_AUTH);
 #if OLD_CODE
-    if ((t =  httpHeaderGetStr(req_hdr, HDR_PROXY_CONNECTION))) {
+    if ((t = httpHeaderGetStr(req_hdr, HDR_PROXY_CONNECTION))) {
 	if (!strcasecmp(t, "Keep-Alive"))
 	    EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
     }
@@ -770,7 +770,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	    EBIT_SET(request->flags, REQ_LOOPDETECT);
 	}
 #if FORW_VIA_DB
-	fvdbCountVia(strBuf(s));	
+	fvdbCountVia(strBuf(s));
 #endif
 	stringClean(&s);
     }
@@ -837,7 +837,7 @@ clientCheckContentLength(request_t * r)
     return 1;
 #else
     /* We only require a content-length for "upload" methods */
-    return !pumpMethod(r->method) || 
+    return !pumpMethod(r->method) ||
 	httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) >= 0;
 #endif
 }
@@ -1215,8 +1215,8 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     debug(33, 5) ("clientWriteComplete: FD %d, sz %d, err %d, off %d, len %d\n",
 	fd, size, errflag, (int) http->out.offset, objectLen(entry));
     if (size > 0) {
-        kb_incr(&Counter.client_http.kbytes_out, size);
-        if (isTcpHit(http->log_type))
+	kb_incr(&Counter.client_http.kbytes_out, size);
+	if (isTcpHit(http->log_type))
 	    kb_incr(&Counter.client_http.hit_kbytes_out, size);
     }
     if (errflag) {
@@ -1269,7 +1269,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 
 /* called when clientGetHeadersFor*IMS completes */
 static void
-clientFinishIMS(clientHttpRequest *http)
+clientFinishIMS(clientHttpRequest * http)
 {
     StoreEntry *entry = http->entry;
     MemBuf mb;
@@ -1586,8 +1586,8 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    SM_PAGE_SIZE,
 	    memAllocate(MEM_4K_BUF),
-	    (http->log_type == LOG_TCP_IMS_MISS) ? 
-		clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
+	    (http->log_type == LOG_TCP_IMS_MISS) ?
+	    clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
 	    http);
 	break;
     case LOG_TCP_REFRESH_MISS:
@@ -1674,7 +1674,7 @@ parseHttpRequestAbort(ConnStateData * conn, const char *uri)
  */
 static clientHttpRequest *
 parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
-    char **prefix_p, size_t *req_line_sz_p)
+    char **prefix_p, size_t * req_line_sz_p)
 {
     char *inbuf = NULL;
     char *mstr = NULL;
@@ -1686,7 +1686,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     char *end;
     int free_request = 0;
     size_t header_sz;		/* size of headers, not including first line */
-    size_t prefix_sz;		/* size of whole request (req-line + headers)*/
+    size_t prefix_sz;		/* size of whole request (req-line + headers) */
     size_t url_sz;
     method_t method;
     clientHttpRequest *http = NULL;
@@ -1774,7 +1774,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 #endif
     prefix_sz = end - inbuf;
     *req_line_sz_p = req_hdr - inbuf;
-    debug(33, 3) ("parseHttpRequest: prefix_sz = %d, req_line_sz = %d\n", 
+    debug(33, 3) ("parseHttpRequest: prefix_sz = %d, req_line_sz = %d\n",
 	(int) prefix_sz, (int) *req_line_sz_p);
     assert(prefix_sz <= conn->in.offset);
 
@@ -1789,7 +1789,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     xmemcpy(*prefix_p, conn->in.buf, prefix_sz);
     *(*prefix_p + prefix_sz) = '\0';
 
-    debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", (*prefix_p)+*req_line_sz_p);
+    debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", (*prefix_p) + *req_line_sz_p);
     /* Assign http->uri */
     if ((t = strchr(url, '\n')))	/* remove NL */
 	*t = '\0';
@@ -1880,8 +1880,8 @@ clientReadRequest(int fd, void *data)
     debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
     size = read(fd, conn->in.buf + conn->in.offset, len);
     if (size > 0) {
-        fd_bytes(fd, size, FD_READ);
-        kb_incr(&Counter.client_http.kbytes_in, size);
+	fd_bytes(fd, size, FD_READ);
+	kb_incr(&Counter.client_http.kbytes_in, size);
     }
     /*
      * Don't reset the timeout value here.  The timeout value will be
@@ -1894,6 +1894,10 @@ clientReadRequest(int fd, void *data)
     if (size == 0) {
 	if (conn->chr == NULL) {
 	    /* no current or pending requests */
+	    comm_close(fd);
+	    return;
+	} else if (!Config.onoff.half_closed_clients) {
+	    /* admin doesn't want to support half-closed client sockets */
 	    comm_close(fd);
 	    return;
 	}
@@ -1976,13 +1980,13 @@ clientReadRequest(int fd, void *data)
 	    } else {
 		/* compile headers */
 		/* we should skip request line! */
-		if (!httpRequestParseHeader(request, prefix+req_line_sz))
+		if (!httpRequestParseHeader(request, prefix + req_line_sz))
 		    debug(33, 1) ("Failed to parse request headers: %s\n%s\n",
 			http->uri, prefix);
 		/* continue anyway? */
 	    }
 	    if (!http->flags.internal)
-    		if (internalCheck(strBuf(request->urlpath)))
+		if (internalCheck(strBuf(request->urlpath)))
 		    if (0 == strcasecmp(request->host, getMyHostname()))
 			if (request->port == Config.Port.http->i)
 			    http->flags.internal = 1;
