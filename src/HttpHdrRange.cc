@@ -1,0 +1,226 @@
+
+/*
+ * $Id: HttpHdrRange.cc,v 1.1 1998/03/05 20:55:55 rousskov Exp $
+ *
+ * DEBUG: section 64    HTTP Content-Range Header
+ * AUTHOR: Alex Rousskov
+ *
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
+
+#include "squid.h"
+
+#if 0
+    Currently only byte ranges are supported
+
+    Essentially, there are three types of byte ranges:
+
+	1) first-byte-pos "-" last-byte-pos  // range
+	2) first-byte-pos "-"                // trailer
+	3)                "-" suffix-length  // suffix (last length bytes)
+
+
+    When Range field is parsed, we have no clue about the content length of
+    the document. Thus, we simply code an "absent" part using range_spec_unknown
+    constant.
+
+    Note: when response length becomes known, we convert any range spec into
+    type one above. (Canonization process).
+
+#endif
+
+
+/* local constants */
+#define range_spec_unknown ((size_t)-1)
+
+/* local routines */
+#define known_spec(s) ((s) != range_spec_unknown)
+#define size_min(a,b) ((a) <= (b) ? (a) : (b))
+#define size_diff(a,b) ((a) >= (b) ? ((a)-(b)) : 0)
+static int httpHdrRangeSpecCanonize(HttpHdrRangeSpec *spec, size_t clen);
+
+/* globals */
+static int RangeParsedCount = 0;
+
+/*
+ * Range-Spec
+ */
+
+
+/* parses range-spec and returns new object on success */
+static HttpHdrRangeSpec *
+httpHdrRangeSpecParseCreate(const char *field, int flen)
+{
+    HttpHdrRangeSpec *sp = NULL;
+    HttpHdrRangeSpec spec = { range_spec_unknown, range_spec_unknown };
+    const char *p;
+    if (flen < 2)
+	return NULL;
+    /* is it a suffix-byte-range-spec ? */
+    if (*field == '-') {
+	if (!httpHeaderParseSize(field+1, &spec.length))
+	    return NULL;
+    } else
+    /* must have a '-' somewhere in _this_ field */
+    if (!((p = strchr(field, '-')) && (p-field < flen))) {
+	debug(64, 2) ("ignoring invalid range-spec near: '%s'\n", field);
+	return NULL;
+    } else {
+	if (!httpHeaderParseSize(field+1, &spec.offset))
+	    return NULL;
+	p++;
+	/* do we have last-pos ? */
+	if (p - field < flen) {
+	    size_t last_pos;
+	    if (!httpHeaderParseSize(p, &last_pos))
+	        return NULL;
+	    spec.length = size_diff(last_pos, spec.offset);
+	}
+    }
+    /* we managed to parse, check if the result makes sence */
+    if (known_spec(spec.length) && !spec.length) {
+	debug(64, 2) ("ignoring invalid range-spec near: '%s'\n", field);
+	return NULL;
+    }
+    sp = memAllocate(MEM_HTTP_HDR_RANGE_SPEC);
+    *sp = spec;
+    return sp;
+}
+
+static void
+httpHdrRangeSpecDestroy(HttpHdrRangeSpec *spec)
+{
+    memFree(MEM_HTTP_HDR_RANGE_SPEC, spec);
+}
+
+/* fills "absent" positions in range specification based on response body size 
+   returns true if the range is still valid
+   range is valid if its intersection with [0,length-1] is not empty
+*/
+static int
+httpHdrRangeSpecCanonize(HttpHdrRangeSpec *spec, size_t clen)
+{
+    if (!known_spec(spec->offset)) /* suffix */
+	spec->offset = size_diff(clen, spec->length);
+    else
+    if (!known_spec(spec->length)) /* trailer */
+	spec->length = size_diff(clen, spec->offset);
+    /* we have a "range" now, adjust length if needed */
+    assert(known_spec(spec->length));
+    assert(known_spec(spec->offset));
+    spec->length = size_min(size_diff(clen, spec->offset), spec->length);
+    /* check range validity */
+    return spec->length > 0;
+}
+
+/*
+ * Range
+ */
+
+HttpHdrRange *
+httpHdrRangeCreate()
+{
+    HttpHdrRange *r = memAllocate(MEM_HTTP_HDR_RANGE);
+    stackInit(&r->specs);
+    return r;
+}
+
+HttpHdrRange *
+httpHdrRangeParseCreate(const char *str)
+{
+    HttpHdrRange *r = httpHdrRangeCreate();
+    if (!httpHdrRangeParseInit(r, str)) {
+	httpHdrRangeDestroy(r);
+	r = NULL;
+    }
+    return r;
+}
+
+/* returns true if ranges are valid; inits HttpHdrRange */
+int
+httpHdrRangeParseInit(HttpHdrRange *range, const char *str)
+{
+    const char *item;
+    const char *pos = NULL;
+    int ilen;
+    assert(range && str);
+    RangeParsedCount++;
+    /* iterate through comma separated list */
+    while (strListGetItem(str, ',', &item, &ilen, &pos)) {
+	HttpHdrRangeSpec *spec = httpHdrRangeSpecParseCreate(item, ilen);
+	/*
+	 * HTTP/1.1 draft says we must ignore the whole header field if one spec
+	 * is invalid. However, RFC 2068 just says that we must ignore that spec.
+	 */
+	if (spec)
+	    stackPush(&range->specs, spec);
+    }
+    return range->specs.count;
+}
+
+void
+httpHdrRangeDestroy(HttpHdrRange *range)
+{
+    assert(range);
+    while (range->specs.count)
+	httpHdrRangeSpecDestroy(stackPop(&range->specs));
+    stackClean(&range->specs);
+    memFree(MEM_HTTP_HDR_RANGE, range);
+}
+
+/*
+ * canonizes all range specs within a set preserving the order
+ * returns true if the set is valid after canonization; 
+ * the set is valid if 
+ *   - all range specs are valid and 
+ *   - there is at least one range spec
+ */
+int
+httpHdrRangeCanonize(HttpHdrRange *range, size_t clen)
+{
+    int i;
+    assert(range);
+    for (i = 0; i < range->specs.count; i++)
+        if (!httpHdrRangeSpecCanonize(range->specs.items[i], clen))
+	    return 0;
+    return range->specs.count;
+}
+
+/* searches for next (unseen) range, returns true if found */
+int
+httpHdrRangeGetNext(const HttpHdrRange *range, HttpHdrRangeSpec *spec, size_t seen_len)
+{
+    int i;
+    assert(range && spec);
+    /* simple linear search */
+    for (i = 0; i < range->specs.count; i++) {
+	*spec = *(HttpHdrRangeSpec*)range->specs.items[i];
+	if (spec->offset < seen_len) {
+	    assert(spec->offset + spec->length <= seen_len);
+	} else
+	    return 1;
+    }
+    spec->offset = spec->length = 0;
+    return 0;
+}

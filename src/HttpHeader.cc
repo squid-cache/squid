@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.16 1998/03/05 00:45:37 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.17 1998/03/05 20:55:56 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -980,10 +980,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
     httpHeaderFieldInit(&field);
     switch (type) {
     case ftInt:
-	field.v_int = atoi(f->value);
-	if (!field.v_int && !isdigit(*f->value)) {
-	    debug(55, 2) ("cannot parse an int header field: id: %d, field: '%s: %s'\n",
-		id, f->name, f->value);
+	if (!httpHeaderParseInt(f->value, &field.v_int)) {
 	    Headers[id].stat.errCount++;
 	    return 0;
 	}

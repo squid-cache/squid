@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.2 1998/03/05 00:45:36 rousskov Exp $
+ * $Id: HttpHdrCc.cc,v 1.3 1998/03/05 20:55:55 rousskov Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -46,7 +46,10 @@ static field_attrs_t CcAttrs[CC_ENUM_END] =
 
 
 /* counters */
-static int CcPasredCount = 0;
+static int CcParsedCount = 0;
+
+/* local prototypes */
+static int httpHdrCcParseInit(HttpHdrCc * cc, const char *str);
 
 
 /* module initialization */
@@ -72,12 +75,15 @@ HttpHdrCc *
 httpHdrCcParseCreate(const char *str)
 {
     HttpHdrCc *cc = httpHdrCcCreate();
-    httpHdrCcParseInit(cc, str);
+    if (!httpHdrCcParseInit(cc, str)) {
+	httpHdrCcDestroy(cc);
+	cc = NULL;
+    }
     return cc;
 }
 
 /* parses a 0-terminating string and inits cc */
-void
+static int
 httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 {
     const char *item;
@@ -87,7 +93,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
     int ilen;
     assert(cc && str);
 
-    CcPasredCount++;
+    CcParsedCount++;
     /* iterate through comma separated list */
     while (strListGetItem(str, ',', &item, &ilen, &pos)) {
 	/* strip '=' statements @?@ */
@@ -123,7 +129,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 	    break;
 	}
     }
-    return;
+    return cc->mask != 0;
 }
 
 void
@@ -189,5 +195,5 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
     const char *name = valid_id ? CcAttrs[id].name : "INVALID";
     if (count || valid_id)
 	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-	    id, name, count, xdiv(count, CcPasredCount));
+	    id, name, count, xdiv(count, CcParsedCount));
 }

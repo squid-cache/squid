@@ -472,6 +472,19 @@ struct _HttpHdrCc {
     time_t max_age;
 };
 
+/* http byte-range-spec */
+struct _HttpHdrRangeSpec {
+    size_t offset;
+    size_t length;
+};
+
+/* There may be more than one byte range specified in the request.
+   This object holds all range specs in order of their appearence
+   in the request because we SHOULD preserve that order.
+*/
+struct _HttpHdrRange {
+    Stack specs;
+};
 
 /* a storage for an entry of one of possible types (for lower level routines) */
 union _field_store {
@@ -480,6 +493,7 @@ union _field_store {
     char *v_pchar;
     const char *v_pcchar;
     HttpHdrCc *v_pcc;
+    HttpHdrRange *v_prange;
     HttpHeaderExtField *v_pefield;
 };
 
