@@ -17,14 +17,18 @@
 	- Added 'unique_hostname' configuration option when its
 	  necessary to have multiple machines with the same visible
 	  hostname.
+	- Fixed pumpReadFromClient() to not read too many bytes on
+	  persistent connections.
 	- We can now cache HTTP replies with Set-Cookie.  These evil
 	  headers are now filtered out for cache hits on the client
 	  side.
+	- Fixed SNMP bugs caused by using snmpwalk.
 	- Fixed snmpwalk crash. snmpwalks do not crash squid anymore.
 	- Fixed snmp system Group; all objects are now returned.
 	- Fixed snmp system Group sysDescr and sysContact.
 	- Allocate FwdState from mem pools.
 	- Minor HTCP progress.
+	- Moved 'miss_access' ACL check from client_side.c to forward.c
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
