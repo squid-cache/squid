@@ -30,6 +30,11 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * 2003-03-01: David J N Begley
+ * 	       - Support for Netscape API method of ldap over SSL
+ * 	         connections
+ * 	       - Timeout option for better recovery when using
+ * 	         multiple LDAP servers
  * 2003-03-01: Christoph Lechleitner <lech@ibcl.at>
  *             - Added -W option to read bindpasswd from file
  * 2003-03-01: Juerg Michel
@@ -70,7 +75,9 @@
 
 #include "util.h"
 
-/* Change this to your search base */
+#define PROGRAM_NAME "squid_ldap_auth"
+
+/* Global options */
 static char *basedn;
 static char *searchfilter = NULL;
 static char *binddn = NULL;
@@ -80,6 +87,12 @@ static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
+#if defined(NETSCAPE_SSL)
+static char *sslpath = NULL;
+static int sslinit = 0;
+#endif
+static int connect_timeout = 0;
+static int timelimit = LDAP_NO_LIMIT;
 
 /* Added for TLS support and version 3 */
 static int use_tls = 0;
@@ -110,6 +123,24 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 static void
+squid_ldap_set_timelimit(LDAP *ld, int timelimit)
+{
+    ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &timelimit);
+}
+static void
+squid_ldap_set_connect_timeout(LDAP *ld, int timelimit)
+{
+#if defined(LDAP_OPT_NETWORK_TIMEOUT)
+    struct timeval tv;
+    tv.tv_sec = timelimit;
+    tv.tv_usec = 0;
+    ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &tv);
+#elif defined(LDAP_X_OPT_CONNECT_TIMEOUT)
+    timelimit *= 1000;
+    ldap_set_option(ld, LDAP_X_OPT_CONNECT_TIMEOUT, &timelimit);
+#endif
+}
+static void
 squid_ldap_memfree(char *p)
 {
     ldap_memfree(p);
@@ -132,6 +163,15 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
 	ld->ld_options |= ~LDAP_OPT_REFERRALS;
     else
 	ld->ld_options &= ~LDAP_OPT_REFERRALS;
+}
+static void squid_ldap_set_timelimit(LDAP *ld, int timelimit)
+{
+    ld->ld_timelimit = timelimit;
+}
+static void
+squid_ldap_set_connect_timeout(LDAP *ld, int timelimit)
+{
+    fprintf(stderr, "Connect timeouts not supported in your LDAP library\n");
 }
 static void
 squid_ldap_memfree(char *p)
@@ -215,10 +255,26 @@ main(int argc, char **argv)
 	    else if (strcmp(value, "sub") == 0)
 		searchscope = LDAP_SCOPE_SUBTREE;
 	    else {
-		fprintf(stderr, "squid_ldap_auth: ERROR: Unknown search scope '%s'\n", value);
+		fprintf(stderr, PROGRAM_NAME ": ERROR: Unknown search scope '%s'\n", value);
 		exit(1);
 	    }
 	    break;
+	case 'E':
+#if defined(NETSCAPE_SSL)
+		sslpath = value;
+		if (port == LDAP_PORT)
+		    port = LDAPS_PORT;
+#else
+		fprintf(stderr, PROGRAM_NAME " ERROR: -E unsupported with this LDAP library\n");
+		exit(1);
+#endif
+		break;
+	case 'c':
+		connect_timeout = atoi(value);
+		break;
+	case 't':
+		timelimit = atoi(value);
+		break;
 	case 'a':
 	    if (strcmp(value, "never") == 0)
 		aliasderef = LDAP_DEREF_NEVER;
@@ -229,7 +285,7 @@ main(int argc, char **argv)
 	    else if (strcmp(value, "find") == 0)
 		aliasderef = LDAP_DEREF_FINDING;
 	    else {
-		fprintf(stderr, "squid_ldap_auth: ERROR: Unknown alias dereference method '%s'\n", value);
+		fprintf(stderr, PROGRAM_NAME ": ERROR: Unknown alias dereference method '%s'\n", value);
 		exit(1);
 	    }
 	    break;
@@ -251,6 +307,7 @@ main(int argc, char **argv)
 	case 'R':
 	    noreferrals = !noreferrals;
 	    break;
+#ifdef LDAP_VERSION3
 	case 'v':
 	    switch( atoi(value) ) {
 	    case 2:
@@ -273,8 +330,9 @@ main(int argc, char **argv)
 	    version = LDAP_VERSION3;
 	    use_tls = 1;
 	    break;
+#endif
 	default:
-	    fprintf(stderr, "squid_ldap_auth: ERROR: Unknown command line option '%c'\n", option);
+	    fprintf(stderr, PROGRAM_NAME ": ERROR: Unknown command line option '%c'\n", option);
 	    exit(1);
 	}
     }
@@ -297,7 +355,7 @@ main(int argc, char **argv)
 	ldapServer = "localhost";
 
     if (!basedn) {
-	fprintf(stderr, "Usage: squid_ldap_auth -b basedn [options] [ldap_server_name[:port]]...\n\n");
+	fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn [options] [ldap_server_name[:port]]...\n\n");
 	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under which to search\n");
 	fprintf(stderr, "\t-f filter\t\tsearch filter to locate user DN\n");
 	fprintf(stderr, "\t-u userattr\t\tusername DN attribute\n");
@@ -311,6 +369,11 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-h server\t\tLDAP server (defaults to localhost)\n");
 	fprintf(stderr, "\t-p port\t\t\tLDAP server port\n");
 	fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
+#if defined(NETSCAPE_SSL)
+	fprintf(stderr, "\t-E sslcertpath\t\tenable LDAP over SSL\n");
+#endif
+	fprintf(stderr, "\t-c timeout\t\tconnect timeout\n");
+	fprintf(stderr, "\t-t timelimit\t\tsearch time limit\n");
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
 #ifdef LDAP_VERSION3
@@ -337,10 +400,26 @@ main(int argc, char **argv)
 	if (ld == NULL) {
 #if HAS_URI_SUPPORT
 	    if (strstr(ldapServer, "://") != NULL) {
-		rc = ldap_initialize( &ld, ldapServer );
+		int rc = ldap_initialize( &ld, ldapServer );
 		if( rc != LDAP_SUCCESS ) {
 		    fprintf(stderr, "\nUnable to connect to LDAPURI:%s\n", ldapServer);
 		    break;
+		}
+	    } else
+#endif
+#if NETSCAPE_SSL
+	    if (sslpath) {
+		if ( !sslinit && (ldapssl_client_init(sslpath, NULL) != LDAP_SUCCESS)) {
+		    fprintf(stderr, "\nUnable to initialise SSL with cert path %s\n",
+			    sslpath);
+		    exit(1);
+		} else {
+		    sslinit++;
+		}
+		if ((ld = ldapssl_init(ldapServer, port, 1)) == NULL) {
+		    fprintf(stderr, "\nUnable to connect to SSL LDAP server: %s port:%d\n",
+			    ldapServer, port);
+		    exit(1);
 		}
 	    } else
 #endif
@@ -349,25 +428,29 @@ main(int argc, char **argv)
 		    ldapServer, port);
 		exit(1);
 	    }
-	}
 
-        if (version == -1 ) {
+	    if (connect_timeout)
+		squid_ldap_set_connect_timeout(ld, connect_timeout);
+
+#ifdef LDAP_VERSION3
+	    if (version == -1 ) {
                 version = LDAP_VERSION2;
-        }
+	    }
 
-        if( ldap_set_option( ld, LDAP_OPT_PROTOCOL_VERSION, &version )
-                != LDAP_OPT_SUCCESS )
-        {
+	    if( ldap_set_option( ld, LDAP_OPT_PROTOCOL_VERSION, &version )
+		    != LDAP_OPT_SUCCESS )
+	    {
                 fprintf( stderr, "Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
                         version );
                 exit(1);
-        }
+	    }
 
-        if ( use_tls && ( version == LDAP_VERSION3 ) && ( ldap_start_tls_s( ld, NULL, NULL ) == LDAP_SUCCESS )) {
+	    if ( use_tls && ( version == LDAP_VERSION3 ) && ( ldap_start_tls_s( ld, NULL, NULL ) == LDAP_SUCCESS )) {
                 fprintf( stderr, "Could not Activate TLS connection\n");
                 exit(1);
-        }
-
+	    }
+#endif
+	    squid_ldap_set_timelimit(ld, timelimit);
 	    squid_ldap_set_referrals(ld, !noreferrals);
 	    squid_ldap_set_aliasderef(ld, aliasderef);
 	}
@@ -415,7 +498,7 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 	if (binddn) {
 	    rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
 	    if (rc != LDAP_SUCCESS) {
-		fprintf(stderr, "squid_ldap_auth: WARNING, could not bind to binddn '%s'\n", ldap_err2string(rc));
+		fprintf(stderr, PROGRAM_NAME ": WARNING, could not bind to binddn '%s'\n", ldap_err2string(rc));
 		return 1;
 	    }
 	}
@@ -427,7 +510,13 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 		 * are disabled.
 		 */
 	    } else {
-		fprintf(stderr, "squid_ldap_auth: WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
+		fprintf(stderr, PROGRAM_NAME ": WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
+#if defined(NETSCAPE_SSL)
+		if (sslpath && ((rc == LDAP_SERVER_DOWN) || (rc == LDAP_CONNECT_ERROR))) {
+		    int sslerr = PORT_GetError();
+		    fprintf(stderr, PROGRAM_NAME ": WARNING, SSL error %d (%s)\n", sslerr, ldapssl_err2string(sslerr));
+		}
+#endif
 	    }
 	}
 	entry = ldap_first_entry(ld, res);
@@ -437,7 +526,7 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 	}
 	userdn = ldap_get_dn(ld, entry);
 	if (!userdn) {
-	    fprintf(stderr, "squid_ldap_auth: ERROR, could not get user DN for '%s'\n", userid);
+	    fprintf(stderr, PROGRAM_NAME ": ERROR, could not get user DN for '%s'\n", userid);
 	    ldap_msgfree(res);
 	    return 1;
 	}
