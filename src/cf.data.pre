@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.114 1998/09/23 15:56:53 wessels Exp $
+# $Id: cf.data.pre,v 1.115 1998/09/23 21:21:05 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1096,18 +1096,18 @@ DEFAULT: -1 kb
 LOC: Config.quickAbort.min
 DOC_NONE
 
-NAME: quick_abort_pct
-COMMENT: (percent)
-TYPE: int
-DEFAULT: 0
-LOC: Config.quickAbort.pct
-DOC_NONE
-
 NAME: quick_abort_max
 COMMENT: (KB)
 TYPE: kb_size_t
 DEFAULT: 0 kb
 LOC: Config.quickAbort.max
+DOC_NONE
+
+NAME: quick_abort_pct
+COMMENT: (percent)
+TYPE: int
+DEFAULT: 0
+LOC: Config.quickAbort.pct
 DOC_START
 	The cache can be configured to continue downloading aborted
 	requests.  This may be undesirable on slow (e.g. SLIP) links
@@ -1123,15 +1123,15 @@ DOC_START
 	it will finish the retrieval.  Setting 'quick_abort_min' to -1
 	will disable the quick_abort feature.
 
-	If more than 'quick_abort_pct' of the transfer has completed,
-	it will finish the retrieval.
-
 	If the transfer has more than 'quick_abort_max' KB remaining,
 	it will abort the retrieval.
 
+	If more than 'quick_abort_pct' of the transfer has completed,
+	it will finish the retrieval.
+
 quick_abort_min -1 KB
-quick_abort_pct 0
 quick_abort_max 0 KB
+quick_abort_pct 0
 DOC_END
 
 
