@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.463 1998/09/21 06:52:22 wessels Exp $
+ * $Id: store.cc,v 1.464 1998/09/21 07:01:26 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -282,7 +282,7 @@ storeGet(const cache_key * key)
 StoreEntry *
 storeGetPublic(const char *uri, const method_t method)
 {
-    cache_key *key;
+    const cache_key *key;
     StoreEntry *e;
     key = storeKeyPublic(uri, method);
     e = storeGet(key);
