@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.9 2002/08/22 12:29:15 hno Exp $
+ * $Id: external_acl.cc,v 1.10 2002/09/05 21:09:24 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -56,6 +56,8 @@ static char *makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, external_acl_entry * entry);
 static int external_acl_entry_expired(external_acl * def, external_acl_entry * entry);
 static void external_acl_cache_touch(external_acl * def, external_acl_entry * entry);
+
+extern char *strtokFile(void);
 
 /*******************************************************************
  * external_acl cache entry
@@ -384,7 +386,7 @@ aclParseExternal(void *dataptr)
     data->def = cbdataReference(find_externalAclHelper(token));
     if (!data->def)
 	self_destruct();
-    while ((token = strtok(NULL, w_space))) {
+    while ((token = strtokFile())) {
 	wordlistAdd(&data->arguments, token);
     }
     *datap = data;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.282 2002/09/01 15:16:33 hno Exp $
+ * $Id: acl.cc,v 1.283 2002/09/05 21:09:23 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -50,7 +50,7 @@ static void aclParseProtoList(void *curlist);
 static void aclParseMethodList(void *curlist);
 static void aclParseTimeSpec(void *curlist);
 static void aclParseIntRange(void *curlist);
-static char *strtokFile(void);
+extern char *strtokFile(void);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
 static void aclLookupProxyAuthStart(aclCheck_t * checklist);
@@ -107,7 +107,7 @@ static SPLAYWALKEE aclDumpArpListWalkee;
 #endif
 static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char *MatchParam);
 
-static char *
+char *
 strtokFile(void)
 {
     char *t, *fn;
