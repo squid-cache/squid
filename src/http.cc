@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.302 1998/07/31 00:15:45 wessels Exp $
+ * $Id: http.cc,v 1.303 1998/08/04 21:38:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -712,7 +712,6 @@ httpStart(FwdState * fwdState, int fd)
 	proxy_req->port = httpState->peer->http_port;
 	proxy_req->flags = orig_req->flags;
 	httpState->request = requestLink(proxy_req);
-	httpState->peer = httpState->peer;
 	httpState->orig_request = requestLink(orig_req);
 	EBIT_SET(proxy_req->flags, REQ_PROXYING);
 	/*
