@@ -1,5 +1,5 @@
 /*
- * $Id: ESICustomParser.h,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESICustomParser.h,v 1.2 2003/06/09 05:12:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -56,7 +56,7 @@ private:
     enum ESITAG_t {
         ESITAG=1,
         ESIENDTAG=2,
-        ESICOMMENT=3,
+        ESICOMMENT=3
     };
 
     char const *findTag(char const *a, size_t b);
