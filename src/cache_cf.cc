@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.358 2000/12/05 06:24:00 wessels Exp $
+ * $Id: cache_cf.cc,v 1.359 2000/12/05 08:55:47 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1028,8 +1028,6 @@ parse_peer(peer ** head)
     char *token = NULL;
     peer *p;
     int i;
-    sockaddr_in_list *s;
-    const char *me = getMyHostname();
     p = memAllocate(MEM_PEER);
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
@@ -1045,17 +1043,6 @@ parse_peer(peer ** head)
     p->http_port = (u_short) i;
     i = GetInteger();
     p->icp.port = (u_short) i;
-    if (strcmp(p->host, me) == 0) {
-	for (s = Config.Sockaddr.http; s; s = s->next) {
-	    if (p->http_port != ntohs(s->s.sin_port))
-		continue;
-	    debug(15, 1) ("parse_peer: Peer looks like myself: Ignoring %s %s/%d/%d\n",
-		neighborTypeStr(p), p->host, p->http_port, p->icp.port);
-	    xfree(p->host);
-	    memFree(p, MEM_PEER);
-	    return;
-	}
-    }
     while ((token = strtok(NULL, w_space))) {
 	if (!strcasecmp(token, "proxy-only")) {
 	    p->options.proxy_only = 1;
