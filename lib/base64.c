@@ -1,5 +1,5 @@
 /*
- * $Id: base64.c,v 1.18 2001/02/07 18:56:50 hno Exp $
+ * $Id: base64.c,v 1.19 2001/06/29 20:20:01 wessels Exp $
  */
 
 #include "config.h"
@@ -42,7 +42,6 @@ base64_decode(const char *p)
 {
     static char result[BASE64_RESULT_SZ];
     int j;
-    unsigned int k;
     int c;
     long val;
     if (!p)
@@ -50,8 +49,8 @@ base64_decode(const char *p)
     if (!base64_initialized)
 	base64_init();
     val = c = 0;
-    for (j = 0; *p && j + 3 < BASE64_RESULT_SZ; p++) {
-	k = (int) *p % BASE64_VALUE_SZ;
+    for (j = 0; *p && j + 4 < BASE64_RESULT_SZ; p++) {
+	unsigned int k = ((unsigned char) *p) % BASE64_VALUE_SZ;
 	if (base64_value[k] < 0)
 	    continue;
 	val <<= 6;
@@ -84,7 +83,7 @@ base64_encode(const char *decoded_str)
     if (!base64_initialized)
 	base64_init();
 
-    while ((c = *decoded_str++) && out_cnt < sizeof(result) - 1) {
+    while ((c = (unsigned char) *decoded_str++) && out_cnt < sizeof(result) - 5) {
 	bits += c;
 	char_count++;
 	if (char_count == 3) {
@@ -122,7 +121,6 @@ base64_encode_bin(const char *data, int len)
     int bits = 0;
     int char_count = 0;
     int out_cnt = 0;
-    int c;
 
     if (!data)
 	return data;
@@ -130,8 +128,8 @@ base64_encode_bin(const char *data, int len)
     if (!base64_initialized)
 	base64_init();
 
-    while (len-- && out_cnt < sizeof(result) - 1) {
-	c = (unsigned char) *data++;
+    while (len-- && out_cnt < sizeof(result) - 5) {
+	int c = (unsigned char) *data++;
 	bits += c;
 	char_count++;
 	if (char_count == 3) {
