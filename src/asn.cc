@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.63 2000/06/06 19:34:31 hno Exp $
+ * $Id: asn.cc,v 1.64 2000/11/07 23:43:15 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -412,6 +412,8 @@ int
 mask_len(int mask)
 {
     int len = 32;
+    if (mask == 0)
+	return 0;
     while ((mask & 1) == 0) {
 	len--;
 	mask >>= 1;
