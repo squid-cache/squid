@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.12 2003/06/20 12:36:35 robertc Exp $
+ * $Id: client_side_request.h,v 1.13 2003/07/10 11:04:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -71,7 +71,9 @@ public:
     _SQUID_INLINE_ StoreEntry *storeEntry() const;
     void storeEntry(StoreEntry *);
 
-    ConnStateData *conn;
+    _SQUID_INLINE_ ConnStateData *getConn();
+    _SQUID_INLINE_ ConnStateData const *getConn() const;
+    _SQUID_INLINE_ void setConn(ConnStateData *);
     request_t *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
@@ -132,11 +134,12 @@ private:
     CBDATA_CLASS(ClientHttpRequest);
     ssize_t maxReplyBodySize_;
     StoreEntry *entry_;
+    ConnStateData *conn_;
 };
 
 /* client http based routines */
 SQUIDCEXTERN char *clientConstructTraceEcho(clientHttpRequest *);
-SQUIDCEXTERN ACLChecklist *clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http);
+SQUIDCEXTERN ACLChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
 SQUIDCEXTERN int clientHttpRequestStatus(int fd, clientHttpRequest const *http);
 SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 

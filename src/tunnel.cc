@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.141 2003/03/04 01:40:31 robertc Exp $
+ * $Id: tunnel.cc,v 1.142 2003/07/10 11:04:07 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -544,7 +544,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
     int sock;
     ErrorState *err = NULL;
     int answer;
-    int fd = http->conn->fd;
+    int fd = http->getConn()->fd;
     request_t *request = http->request;
     char *url = http->uri;
     /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cci,v 1.1 2003/06/20 01:01:05 robertc Exp $
+ * $Id: client_side_request.cci,v 1.2 2003/07/10 11:04:06 robertc Exp $
  *
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins 
@@ -49,3 +49,21 @@ ClientHttpRequest::memObject() const
     return NULL;
 }
 
+ConnStateData *
+ClientHttpRequest::getConn()
+{
+    return conn_;
+}
+
+ConnStateData const *
+ClientHttpRequest::getConn() const
+{
+    return conn_;
+}
+
+void
+ClientHttpRequest::setConn(ConnStateData *aConn)
+{
+    assert (!conn_ || !aConn);
+    conn_ = aConn;
+}
