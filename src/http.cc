@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.271 1998/05/12 04:11:16 wessels Exp $
+ * $Id: http.cc,v 1.272 1998/05/20 23:35:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -239,6 +239,8 @@ httpCachableReply(HttpStateData * httpState)
      */
     /* With new headers the above stripping should be easy to do? @?@ */
     if (httpHeaderHas(hdr, HDR_SET_COOKIE))
+	return 0;
+    if (httpHeaderHas(hdr, HDR_VARY))
 	return 0;
     switch (httpState->entry->mem_obj->reply->sline.status) {
 	/* Responses that are cacheable */

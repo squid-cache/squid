@@ -221,6 +221,7 @@ typedef enum {
     HDR_TITLE,
     HDR_UPGRADE,
     HDR_USER_AGENT,
+    HDR_VARY,
     HDR_VIA,
     HDR_WARNING,
     HDR_WWW_AUTHENTICATE,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.33 1998/05/11 18:44:26 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.34 1998/05/20 23:35:03 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -118,6 +118,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Title", HDR_TITLE, ftStr},
     {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
     {"User-Agent", HDR_USER_AGENT, ftStr},
+    {"Vary", HDR_VARY, ftStr},	/* for now */
     {"Via", HDR_VIA, ftStr},	/* for now */
     {"Warning", HDR_WARNING, ftStr},	/* for now */
     {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
@@ -145,7 +146,8 @@ static http_hdr_type ListHeadersArr[] =
     /*  HDR_IF_MATCH, HDR_IF_NONE_MATCH, */
     HDR_LINK, HDR_PRAGMA,
     /* HDR_TRANSFER_ENCODING, */
-    HDR_UPGRADE,		/* HDR_VARY, */
+    HDR_UPGRADE,
+    HDR_VARY,
     HDR_VIA, 
     /* HDR_WARNING, */
     HDR_WWW_AUTHENTICATE,
@@ -178,6 +180,7 @@ static http_hdr_type ReplyHeadersArr[] =
     HDR_CONTENT_MD5, HDR_CONTENT_TYPE,
     HDR_LOCATION, HDR_MAX_FORWARDS,
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
+    HDR_VARY,
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP
 };
