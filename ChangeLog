@@ -24,6 +24,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Delay pools tuned to allow large initial pool values
 	- cachemgr filesystem space information changed to show useable space
 	  rather than raw space, and platform support somewhat extended.
+	- Logs destination IP in the hierarchy log tag when going direct.
+	  (can be disabled by turning log_ip_on_direct off)
 
 Changes to Squid-2.4.DEVEL2 ():
 

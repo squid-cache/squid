@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.320 2000/05/02 18:51:51 hno Exp $
+ * $Id: structs.h,v 1.321 2000/05/02 19:35:24 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -416,6 +416,7 @@ struct _SquidConfig {
 #if USE_CACHE_DIGESTS
 	int digest_generation;
 #endif
+	int log_ip_on_direct;
     } onoff;
     acl *aclList;
     struct {

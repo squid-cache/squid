@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.102 2000/03/06 16:23:34 wessels Exp $
+ * $Id: tunnel.cc,v 1.103 2000/05/02 19:35:23 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -377,6 +377,15 @@ sslConnectDone(int fdnotused, int status, void *data)
     SslStateData *sslState = data;
     request_t *request = sslState->request;
     ErrorState *err = NULL;
+    if (sslState->servers->peer)
+	hierarchyNote(&sslState->request->hier, sslState->servers->code,
+	    sslState->servers->peer->host);
+    else if (Config.onoff.log_ip_on_direct)
+	hierarchyNote(&sslState->request->hier, sslState->servers->code,
+		fd_table[sslState->server.fd].ipaddr);
+    else
+	hierarchyNote(&sslState->request->hier, sslState->servers->code,
+		sslState->host);
     if (status == COMM_ERR_DNS) {
 	debug(26, 4) ("sslConnect: Unknown host: %s\n", sslState->host);
 	err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND);
@@ -546,9 +555,6 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 	sslState->delay_id = 0;
     }
 #endif
-    hierarchyNote(&sslState->request->hier,
-	fs->peer ? fs->code : DIRECT,
-	sslState->host);
     commConnectStart(sslState->server.fd,
 	sslState->host,
 	sslState->port,
