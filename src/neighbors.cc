@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.28 1996/07/15 23:18:53 wessels Exp $
+ * $Id: neighbors.cc,v 1.29 1996/07/17 17:01:37 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -371,7 +371,7 @@ static void neighborsOpenLog(fname)
 	cache_hierarchy_log = NULL;
     }
     if (strcmp(fname, "none") != 0) {
-	log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
+	log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
 	if (log_fd < 0) {
 	    debug(15, 0, "neighborsOpenLog: %s: %s\n", fname, xstrerror());
 	} else if ((cache_hierarchy_log = fdopen(log_fd, "a")) == NULL) {
