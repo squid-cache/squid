@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.49 2002/04/13 23:07:47 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.50 2002/06/19 06:29:45 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -384,7 +384,7 @@ Squid consists of the following major components
 <sect1>Refresh Rules
 
 	<P>
-	These routines decide wether a cached object is stale or fresh,
+	These routines decide whether a cached object is stale or fresh,
 	based on the <em/refresh_pattern/ configuration options.
 	If an object is fresh, it can be returned as a cache hit.
 	If it is stale, then it must be revalidated with an	
@@ -402,7 +402,7 @@ Squid consists of the following major components
 	<P>
 	We are experimenting with URN support in Squid version 1.2.
 	Note, we're not talking full-blown generic URN's here. This
-	is primarily targeted towards using URN's as an smart way
+	is primarily targeted toward using URN's as an smart way
 	of handling lists of mirror sites.  For more details, please
 	see <url        url="http://squid.nlanr.net/Squid/urn-support.html"
 	name="URN support in Squid">.
@@ -2506,9 +2506,10 @@ sub check {
 	<P>
 	Macro that defines a new cbdata datatype. Similar to a variable
 	or struct definition. Scope is always local to the file/block
-	where it is defined and all allocations must be within this scope.
-	Allocated entries referenced or freed anywhere with no restrictions
-	on scope.
+	where it is defined and all calls to cbdataAlloc for this type
+	must be within the same scope as the CBDATA_TYPE declaration.
+	Allocated entries may be referenced or freed anywhere with no
+	restrictions on scope.
 
 <sect2>CBDATA_GLOBAL_TYPE
 
@@ -2621,10 +2622,12 @@ sub check {
 
 	<P>
 	Removes a reference created by cbdataReference() and checks
-	it for validity.
+	it for validity. A temporary pointer to the referenced data
+	(if valid) is returned in the &amp;pointer argument.
 	
 	<P>
-	Meant to be used on the last dereference
+	Meant to be used on the last dereference, usually to make
+	a callback.
 
 <verb>
 	void *cbdata;
@@ -2639,81 +2642,120 @@ sub check {
 <sect1>Examples
 
 	<P>
-	For a blocking operation
-	with callback functions, the normal sequence of events is as
-	follows:
+	Here you can find some examples on how to use cbdata, and why
+
+<sect2>Asynchronous operation without cbdata, showing why cbdata is needed
+
+	<P>
+	For a asyncronous operation with callback functions, the normal
+	sequence of events in programs NOT using cbdata is as follows:
 <verb>
-	callback_data = malloc(...);
+	/* initialization */
+	type_of_data our_data;
 	...
-	fooOperationStart(bar, callback_func, callback_data);
+	our_data = malloc(...);
 	...
-	fooOperationComplete(...);
+	/* Initiate a asyncronous operation, with our_data as callback_data */
+	fooOperationStart(bar, callback_func, our_data);
+	...
+	/* The asyncronous operation completes and makes the callback */
 	callback_func(callback_data, ....);
-	...
-	free(callback_data);
+	/* Some time later we clean up our data */
+	free(our_data);
 </verb>
 	However, things become more interesting if we want or need
 	to free the callback_data, or otherwise cancel the callback,
-	before the operation completes.
+	before the operation completes. In constructs like this you
+	can quite easily end up with having the memory referenced
+	pointed to by callback_data freed before the callback is invoked
+	causing a program failure or memory corruption:
+<verb>
+	/* initialization */
+	type_of_data our_data;
+	...
+	our_data = malloc(...);
+	...
+	/* Initiate a asyncronous operation, with our_data as callback_data */
+	fooOperationStart(bar, callback_func, our_data);
+	...
+	/* ouch, something bad happened elsewhere.. try to cleanup
+	 * but the programmer forgot there is a callback pending from
+	 * fooOperationsStart() (an easy thing to forget when writing code
+	 * to deal with errors, especially if there may be many different
+	 * pending operation)
+	 */
+	free(our_data);
+	...
+	/* The asyncronous operation completes and makes the callback */
+	callback_func(callback_data, ....);
+	/* CRASH, the memory pointer to by callback_data is no longer valid
+	 * at the time of the callback
+	 */
+</verb>
+<sect2>Asyncronous operation with cbdata
 
 	<P>
 	The callback data allocator lets us do this in a uniform and
 	safe manner.  The callback data allocator is used to allocate,
 	track and free memory pool objects used during callback
-	operations.  Allocated memory is locked while the blocking
+	operations.  Allocated memory is locked while the asyncronous
 	operation executes elsewhere, and is freed when the operation
 	completes.  The normal sequence of events is:
 <verb>
 	/* initialization */
-	type_of_data callback_data;
+	type_of_data our_data;
 	...
-	callback_data = cbdataAlloc(type_of_data);
+	our_data = cbdataAlloc(type_of_data);
 	...
-	/* calling "foo" */
-	fooOperationStart(..., callback_func, callback_data);
+	/* Initiate a asyncronous operation, with our_data as callback_data */
+	fooOperationStart(..., callback_func, our_data);
 	...
-	/* being destroyed */
-	cbdataFree(callback_data);
-
 	/* foo */
-	void
-	fooOperationStart(..., callback_func, void *callback_data)
-	{
-	    void *local_pointer = cbdataReference(callback_data);
-	    ....
-	}
-	void
-	fooOperationComplete(...)
-	{
-	    void *cbdata;
-	    ...
-	    if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
-		callback_func(...., cbdata);
-	}
+	void *local_pointer = cbdataReference(callback_data);
+	....
+	/* The asyncronous operation completes and makes the callback */
+	void *cbdata;
+	if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
+	    callback_func(...., cbdata);
+	...
+	cbdataFree(our_data);
+
 </verb>
+
+<sect2>Asynchronous operation cancelled by cbdata
 
 	<P>
 	With this scheme, nothing bad happens if <tt/cbdataFree/ gets called
 	before fooOperantionComplete(...).
 <verb>
-	callback_data = cbdataAlloc(...);
+	/* initialization */
+	type_of_data our_data;
 	...
-	fooOperationStart(bar, callback_func, callback_data);
-	local_pointer = cbdataReference(callback_data);
+	our_data = cbdataAlloc(type_of_data);
 	...
-	cbdataFree(callback_data);
+	/* Initiate a asyncronous operation, with our_data as callback_data */
+	fooOperationStart(..., callback_func, our_data);
 	...
-	fooOperationComplete(...);
+	/* foo */
+	void *local_pointer = cbdataReference(callback_data);
+	....
+	/* something bad happened elsewhere.. cleanup */
+	cbdataFree(our_data);
+	...
+	/* The asyncronous operation completes and tries to make the callback */
 	void *cbdata;
-	if (cbdataReferenceValidDone(local_pointer, cbdata))
-	    callback_func(cbdata, ....);
+	if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
+	    /* won't be called, as the data is no longer valid */
+	    callback_func(...., cbdata);
+
 </verb>
 	In this case, when <tt/cbdataFree/ is called before
 	<tt/cbdataReferenceValidDone/, the callback_data gets marked as invalid.
-	Before executing the callback function, <tt/cbdataReferenceValidDone/ will return 0
-	and callback_func is never executed.  When <tt/cbdataReferenceValidDone/ gets
-	called, it notices that the callback_data is invalid and will
-	then call <tt/cbdataFree/.
+	When the callback_data is invalid before executing the callback
+	function, <tt/cbdataReferenceValidDone/ will return 0 and
+	callback_func is never executed.
+
+<sect2>Adding a new cbdata registered type
 
 	<P>
 	To add new module specific data types to the allocator one uses the
@@ -2732,16 +2774,24 @@ sub check {
 	 * (can be called multiple times with only a minimal overhead)
 	 */
 	CBDATA_INIT_TYPE(type_of_data);
-	/* Or if a free function is associated with the data type */
+	/* Or if a free function is associated with the data type. This
+	 * function is responsible for cleaning up any dependencies etc
+	 * referenced by the structure and is called on cbdataFree or
+	 * when the last reference is deleted by cbdataReferenceDone /
+	 * cbdataReferenceValidDone
+	 */
 	CBDATA_INIT_TYPE_FREECB(type_of_data, free_function);
 </verb>
 
+<sect2>Adding a new cbdata registered data type globally
+
 	<P>
-	To add new global data types one have to add them to the
-	cbdata_type enum in enums.h, and a corresponding
-	CREATE_CBDATA call in cbdata.c:cbdataInit(). Or alternatively
-	add a CBDATA_GLOBAL_TYPE definition to globals.h and use
-	CBDATA_INIT_TYPE as described above.
+	To add new global data types that can be allocated from anywhere
+	within the code one have to add them to the cbdata_type enum in
+	enums.h, and a corresponding CREATE_CBDATA call in
+	cbdata.c:cbdataInit(). Or alternatively add a CBDATA_GLOBAL_TYPE
+	definition to globals.h as shown below and use CBDATA_INIT_TYPE at
+	the appropriate location(s) as described above.
 
 <verb>
 	extern CBDATA_GLOBAL_TYPE(type_of_data);	/* CBDATA_UNDEF */
