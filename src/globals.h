@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.72 1998/11/25 09:00:21 wessels Exp $
+ * $Id: globals.h,v 1.73 1998/12/05 07:17:07 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -71,7 +71,6 @@ extern int NHttpSockets;	/* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;		/* SQUID_MAXFD */
 extern int config_lineno;	/* 0 */
-extern int configured_once;	/* 0 */
 extern int debugLevels[MAX_DEBUG_SECTIONS];
 extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
