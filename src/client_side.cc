@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.588 2002/08/28 04:44:52 wessels Exp $
+ * $Id: client_side.cc,v 1.589 2002/08/28 16:10:57 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -986,11 +986,11 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     }
 #if USE_USERAGENT_LOG
     if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)))
-	logUserAgent(fqdnFromAddr(http->conn->log_addr.sin_addr), str);
+	logUserAgent(fqdnFromAddr(http->conn->log_addr), str);
 #endif
 #if USE_REFERER_LOG
     if ((str = httpHeaderGetStr(req_hdr, HDR_REFERER)))
-	logReferer(fqdnFromAddr(http->conn->log_addr.sin_addr), str,
+	logReferer(fqdnFromAddr(http->conn->log_addr), str,
 	    http->log_uri);
 #endif
 #if FORW_VIA_DB
