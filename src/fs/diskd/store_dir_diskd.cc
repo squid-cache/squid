@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.16 2000/07/16 07:28:38 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.17 2000/10/03 15:31:40 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1476,10 +1476,7 @@ storeDiskdDirMaintain(SwapDir * SD)
     if (store_dirs_rebuilding) {
 	return;
     } else {
-	/* XXX FixMe: This should use the cache_dir hig/low values, not the
-	 * global ones
-	 */
-	f = (double) (store_swap_size - store_swap_low) / (store_swap_high - store_swap_low);
+	f = (double) (SD->cur_size - SD->low_size) / (SD->max_size - SD->low_size);
 	f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 	max_scan = (int) (f * 400.0 + 100.0);
 	max_remove = (int) (f * 70.0 + 10.0);
@@ -1490,10 +1487,7 @@ storeDiskdDirMaintain(SwapDir * SD)
     debug(20, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n", f, max_scan, max_remove);
     walker = SD->repl->PurgeInit(SD->repl, max_scan);
     while (1) {
-	/* XXX FixMe: This should use the cache_dir hig/low values, not the
-	 * global ones
-	 */
-	if (store_swap_size < store_swap_low)
+	if (SD->cur_size < SD->low_size)
 	    break;
 	if (removed >= max_remove)
 	    break;
