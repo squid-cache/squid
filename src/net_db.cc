@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.149 2000/10/10 18:15:30 wessels Exp $
+ * $Id: net_db.cc,v 1.150 2000/10/26 07:09:23 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -379,6 +379,11 @@ netdbSaveState(void *foo)
      * Solaris bugs, its a bad idea.  fopen can fail if more than
      * 256 FDs are open.
      */
+    /*
+     * unlink() is here because there is currently no way to make
+     * logfileOpen() use O_TRUNC.
+     */
+    unlink(path);
     lf = logfileOpen(path, 4096, 0);
     if (NULL == lf) {
 	debug(50, 1) ("netdbSaveState: %s: %s\n", path, xstrerror());
