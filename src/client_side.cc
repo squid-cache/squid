@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.416 1998/10/17 04:34:09 rousskov Exp $
+ * $Id: client_side.cc,v 1.417 1998/10/18 08:10:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -717,6 +717,13 @@ connStateFree(int fd, void *data)
     /* XXX account connState->in.buf */
     pconnHistCount(0, connState->nrequests);
     cbdataFree(connState);
+#ifdef _SQUID_LINUX_
+    /* prevent those nasty RST packets */
+    {
+	char buf[SQUID_TCP_SO_RCVBUF];
+    	while (read(fd, buf, SQUID_TCP_SO_RCVBUF) > 0);
+    }
+#endif
 }
 
 static void
