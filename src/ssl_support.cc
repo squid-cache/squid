@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.25 2005/03/18 16:06:11 hno Exp $
+ * $Id: ssl_support.cc,v 1.26 2005/03/18 16:32:37 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -411,6 +411,7 @@ no_options:
 #define SSL_FLAG_DELAYED_AUTH		(1<<1)
 #define SSL_FLAG_DONT_VERIFY_PEER	(1<<2)
 #define SSL_FLAG_DONT_VERIFY_DOMAIN	(1<<3)
+#define SSL_FLAG_NO_SESSION_REUSE	(1<<4)
 
 static long
 ssl_parse_flags(const char *flags)
@@ -435,6 +436,8 @@ ssl_parse_flags(const char *flags)
             fl |= SSL_FLAG_DONT_VERIFY_PEER;
         else if (strcmp(flag, "DONT_VERIFY_DOMAIN") == 0)
             fl |= SSL_FLAG_DONT_VERIFY_DOMAIN;
+        else if (strcmp(flag, "NO_SESSION_REUSE") == 0)
+            fl |= SSL_FLAG_NO_SESSION_REUSE;
         else
             fatalf("Unknown ssl flag '%s'", flag);
 
@@ -541,6 +544,10 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     if (context && *context) {
         SSL_CTX_set_session_id_context(sslContext, context, strlen(context));
+    }
+
+    if (fl & SSL_FLAG_NO_SESSION_REUSE) {
+        SSL_CTX_set_session_cache_mode(sslContext, SSL_SESS_CACHE_OFF);
     }
 
     if (Config.SSL.unclean_shutdown) {
