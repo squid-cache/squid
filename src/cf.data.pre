@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.212 2001/01/31 22:16:38 hno Exp $
+# $Id: cf.data.pre,v 1.213 2001/02/09 19:35:10 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1855,10 +1855,20 @@ DOC_START
 	  # NOTE: This does NOT match the reply. You cannot use this
 	  # to match the returned file type.
 
+	acl rep_mime_type mime-type1 ...
+	  # regex match against the mime type of the reply recieved by
+	  # squid. Can be used to detect file download or some
+	  # types HTTP tunelling requests.
+	  # NOTE: This has no effect in http_access rules. It only has
+	  # effect in rules that affect the reply data stream such as
+	  # http_reply_access.
+
+
 Examples:
 acl myexample dst_as 1241
 acl password proxy_auth REQUIRED
 acl fileupload req_mime_type -i ^multipart/form-data$
+acl javascript rep_mime_type -i ^application/x-javascript$
 
 NOCOMMENT_START
 #Recommended minimum configuration:
@@ -1918,6 +1928,34 @@ http_access deny CONNECT !SSL_ports
 #
 # And finally deny all other access to this proxy
 http_access deny all
+NOCOMMENT_END
+DOC_END
+
+NAME: http_reply_access
+TYPE: acl_access
+LOC: Config.accessList.reply
+DEFAULT: none
+DEFAULT_IF_NONE: allow all
+DOC_START
+        Allow replies to client requests. This is complementary to http_access.
+
+        http_reply_access allow|deny [!] aclname ...
+
+        NOTE: if there are no access lines present, the default is to allow 
+	all replies
+
+        If none of the access lines cause a match, then the opposite of the
+        last line will apply. Thus it is good practice to end the rules
+        with an "allow all" or "deny all" entry.
+
+NOCOMMENT_START
+#Recommended minimum configuration:
+#
+# Insert your own rules here.
+#
+#
+# and finally allow by default
+http_reply_access allow all
 NOCOMMENT_END
 DOC_END
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.380 2001/01/31 22:16:38 hno Exp $
+ * $Id: structs.h,v 1.381 2001/02/09 19:35:11 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -247,6 +247,8 @@ struct _aclCheck_t {
     struct in_addr my_addr;
     unsigned short my_port;
     request_t *request;
+    /* for acls that look at reply data */
+    HttpReply * reply;
     ConnStateData *conn;	/* hack for ident and NTLM */
     char rfc931[USER_IDENT_SZ];
     auth_user_request_t *auth_user_request;
@@ -552,6 +554,7 @@ struct _SquidConfig {
 	acl_access *identLookup;
 #endif
 	acl_access *redirector;
+	acl_access *reply;
     } accessList;
     acl_deny_info_list *denyInfoList;
     struct _authConfig {
