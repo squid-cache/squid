@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.238 1997/05/22 22:19:49 wessels Exp $
+ * $Id: store.cc,v 1.239 1997/05/22 22:54:01 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -840,31 +840,6 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     return e;
 }
 
-#if OLD_CODE
-/* Register interest in an object currently being retrieved. */
-void
-storeRegister(StoreEntry * e, STCB * callback, void *data, off_t offset)
-{
-    int i;
-    MemObject *mem = e->mem_obj;
-    struct _store_client *sc;
-    debug(20, 3, "storeRegister: '%s'\n", e->key);
-    if ((i = storeClientListSearch(mem, data)) < 0)
-	i = storeClientListAdd(e, data, 0);
-    sc = &mem->clients[i];
-    if (sc->callback)
-	fatal_dump("storeRegister: callback already exists");
-    sc->offset = offset;
-    sc->callback = callback;
-    sc->callback_data = data;
-    if (offset < e->object_len) {
-	sc->callback = NULL;
-	/* Don't NULL the callback_data, its used to identify the client */
-	callback(data);
-    }
-}
-#endif
-
 int
 storeUnregister(StoreEntry * e, void *data)
 {
@@ -877,7 +852,8 @@ storeUnregister(StoreEntry * e, void *data)
     if ((i = storeClientListSearch(mem, data)) < 0)
 	return 0;
     sc = &mem->clients[i];
-    sc->offset = 0;
+    sc->seen_offset = 0;
+    sc->copy_offset = 0;
     sc->callback = NULL;
     sc->callback_data = NULL;
     debug(20, 9, "storeUnregister: returning 1\n");
@@ -893,8 +869,8 @@ storeGetLowestReaderOffset(const StoreEntry * entry)
     for (i = 0; i < mem->nclients; i++) {
 	if (mem->clients[i].callback_data == NULL)
 	    continue;
-	if (mem->clients[i].offset < lowest)
-	    lowest = mem->clients[i].offset;
+	if (mem->clients[i].copy_offset < lowest)
+	    lowest = mem->clients[i].copy_offset;
     }
     return lowest;
 }
@@ -939,7 +915,7 @@ InvokeHandlers(StoreEntry * e)
 	sc->callback = NULL;
 	/* Don't NULL the callback_data, its used to identify the client */
 	size = memCopy(mem->data,
-	    sc->offset,
+	    sc->copy_offset,
 	    sc->copy_buf,
 	    sc->copy_size);
 	callback(sc->callback_data, sc->copy_buf, size);
@@ -2193,7 +2169,7 @@ storeClientListSearch(const MemObject * mem, void *data)
 
 /* add client with fd to client list */
 int
-storeClientListAdd(StoreEntry * e, void *data, int offset)
+storeClientListAdd(StoreEntry * e, void *data)
 {
     int i;
     MemObject *mem = e->mem_obj;
@@ -2222,7 +2198,8 @@ storeClientListAdd(StoreEntry * e, void *data, int offset)
 	i = oldsize;
     }
     mem->clients[i].callback_data = data;
-    mem->clients[i].offset = offset;
+    mem->clients[i].seen_offset = 0;
+    mem->clients[i].copy_offset = 0;
     return i;
 }
 
@@ -2230,7 +2207,8 @@ storeClientListAdd(StoreEntry * e, void *data, int offset)
  * for each client */
 void
 storeClientCopy(StoreEntry * e,
-    off_t offset,
+    off_t seen_offset,
+    off_t copy_offset,
     size_t size,
     char *buf,
     STCB * callback,
@@ -2239,23 +2217,23 @@ storeClientCopy(StoreEntry * e,
     int ci;
     size_t sz;
     MemObject *mem = e->mem_obj;
-    if (offset < mem->e_lowest_offset) {
-	debug_trap("storeClientCopy: requested offset < lowest offset");
-	debug(20, 0, " --> %d < %d\n",
-	    offset, mem->e_lowest_offset);
-	debug(20, 0, "--> '%s'\n", e->url);
-	return;
-    }
+    struct _store_client *sc;
+    assert(seen_offset <= mem->e_current_len);
+    assert(copy_offset < mem->e_lowest_offset);
     if ((ci = storeClientListSearch(mem, data)) < 0)
 	fatal_dump("storeClientCopy: Unregistered client");
-    mem->clients[ci].offset = offset;
-    if (offset >= mem->e_current_len) {
-	mem->clients[ci].callback = callback;
-	mem->clients[ci].copy_buf = buf;
-	mem->clients[ci].copy_size = size;
+    sc = &mem->clients[ci];
+    sc->copy_offset = copy_offset;
+    sc->seen_offset = seen_offset;
+    if (seen_offset == mem->e_current_len) {
+	/* client has already seen this, wait for more */
+	sc->callback = callback;
+	sc->copy_buf = buf;
+	sc->copy_size = size;
+	sc->copy_offset = copy_offset;
 	return;
     }
-    sz = memCopy(mem->data, offset, buf, size);
+    sz = memCopy(mem->data, copy_offset, buf, size);
     callback(data, buf, sz);
     /* see if we can get rid of some data if we are in "delete behind" mode . */
     if (BIT_TEST(e->flag, DELETE_BEHIND))
