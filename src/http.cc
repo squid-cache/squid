@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.46 1996/04/15 22:52:04 wessels Exp $ */
+/* $Id: http.cc,v 1.47 1996/04/15 23:02:26 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -69,9 +69,9 @@ static int http_url_parser(url, host, port, request)
 	return -1;
     } else if (t == 2)
 	strcpy(request, "/");
-    if ((s = strchr(hostbuf, ':')) && *(s+1)) {
-        *s = '\0';
-        *port = atoi(s + 1);
+    if ((s = strchr(hostbuf, ':')) && *(s + 1)) {
+	*s = '\0';
+	*port = atoi(s + 1);
     }
     strncpy(host, hostbuf, SQUIDHOSTNAMELEN);
     return 0;

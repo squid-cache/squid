@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.52 1996/04/15 22:54:23 wessels Exp $ */
-#ident "$Id: store.cc,v 1.52 1996/04/15 22:54:23 wessels Exp $"
+/* $Id: store.cc,v 1.53 1996/04/15 23:02:28 wessels Exp $ */
+#ident "$Id: store.cc,v 1.53 1996/04/15 23:02:28 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -109,7 +109,7 @@ static int storelog_fd = -1;
 static char key_temp_buffer[MAX_URL];
 static char swaplog_file[MAX_FILE_NAME_LEN];
 static char tmp_filename[MAX_FILE_NAME_LEN];
-static char logmsg[MAX_URL<<1];
+static char logmsg[MAX_URL << 1];
 
 /* patch cache_dir to accomodate multiple disk storage */
 dynamic_array *cache_dirs = NULL;
@@ -676,17 +676,9 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     debug(20, 5, "StoreAddDiskRestore: <URL:%s>: size %d: expires %d: file_number %d\n",
 	url, size, expires, file_number);
 
-#ifdef EXTRA_CODE
-    if (file_map_bit_test(file_number)) {
-	debug(20, 0, "This file number is already allocated!\n");
-	debug(20, 0, "    --> file_number %d\n", file_number);
-	debug(20, 0, "    --> <URL:%s>\n", url);
-	return (NULL);
-    }
-#else
     /* if you call this you'd better be sure file_number is not 
      * already in use! */
-#endif
+
     meta_data.store_entries++;
     meta_data.url_strings += strlen(url);
 
@@ -1252,14 +1244,7 @@ static int storeDoRebuildFromDisk(data)
     if (!fgets(data->line_in, 4095, data->log))
 	return 0;
 
-#ifdef NOT_NEEDED
-    if ((data->linecount++ & 0x7F) == 0)	/* update current time */
-	getCurrentTime();
-#else
-    data->linecount++;
-#endif
-
-    if ((data->linecount & 0xFFF) == 0)
+    if ((data->linecount++ & 0xFFF) == 0)
 	debug(20, 1, "  %7d Lines read so far.\n", data->linecount);
 
     debug(20, 10, "line_in: %s", data->line_in);
@@ -1457,21 +1442,21 @@ void storeStartRebuildFromDisk()
 	file_close(swaplog_fd);
     sprintf(tmp_filename, "%s.new", swaplog_file);
     swaplog_fd = file_open(tmp_filename, NULL, O_WRONLY | O_CREAT | O_APPEND);
-    debug(20,3,"swaplog_fd %d is now '%s'\n", swaplog_fd, tmp_filename);
+    debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, tmp_filename);
     if (swaplog_fd < 0) {
 	debug(20, 0, "storeStartRebuildFromDisk: %s: %s\n",
 	    tmp_filename, xstrerror());
 	fatal("storeStartRebuildFromDisk: Can't open tmp swaplog");
     }
     swaplog_lock = file_write_lock(swaplog_fd);
-    debug(20,3,"swaplog_lock = %d\n", swaplog_lock);
+    debug(20, 3, "swaplog_lock = %d\n", swaplog_lock);
     /* Open the existing swap log for reading */
     if ((data->log = fopen(swaplog_file, "r")) == (FILE *) NULL) {
 	sprintf(tmp_error_buf, "storeRebuildFromDisk: %s: %s",
 	    swaplog_file, xstrerror());
 	fatal(tmp_error_buf);
     }
-    debug(20,3,"data->log %d is now '%s'\n", fileno(data->log), swaplog_file);
+    debug(20, 3, "data->log %d is now '%s'\n", fileno(data->log), swaplog_file);
     if (data->fast_mode)
 	debug(20, 1, "Rebuilding in FAST MODE.\n");
 
@@ -2337,18 +2322,6 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
     return *size;
 }
 
-#ifdef NOT_USED_CODE
-int storeGrep(e, string, nbytes)
-     StoreEntry *e;
-     char *string;
-     int nbytes;
-{
-    if (e && entry->mem_obj && e->mem_obj->data && (nbytes > 0))
-	return e->mem_obj->data->mem_grep(e->mem_obj->data, string, nbytes);
-    return 0;
-}
-#endif
-
 
 int storeEntryValidToSend(e)
      StoreEntry *e;
@@ -2481,13 +2454,13 @@ int storeInit()
     sprintf(swaplog_file, "%s/log", swappath(0));
 
     swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT | O_APPEND);
-    debug(20,3,"swaplog_fd %d is now '%s'\n", swaplog_fd, swaplog_file);
+    debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, swaplog_file);
     if (swaplog_fd < 0) {
 	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
 	fatal(tmp_error_buf);
     }
     swaplog_lock = file_write_lock(swaplog_fd);
-    debug(20,3,"swaplog_lock = %d\n", swaplog_lock);
+    debug(20, 3, "swaplog_lock = %d\n", swaplog_lock);
 
     if (!zap_disk_store) {
 	ok_write_clean_log = 0;

@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.41 1996/04/15 22:56:31 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.42 1996/04/15 23:02:25 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -861,62 +861,6 @@ static void parseWAISRelayLine()
     Config.Wais.maxObjSize = i << 20;
 }
 
-#ifdef OLD_CODE
-static void parseProxyAllowLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == (char *) NULL)
-	return;
-    addToIPACL(&proxy_ip_acl, token, IP_ALLOW);
-}
-
-static void parseAccelAllowLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == (char *) NULL)
-	return;
-    addToIPACL(&accel_ip_acl, token, IP_ALLOW);
-}
-
-static void parseManagerAllowLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == (char *) NULL)
-	return;
-    addToIPACL(&manager_ip_acl, token, IP_ALLOW);
-}
-
-static void parseProxyDenyLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == (char *) NULL)
-	return;
-    addToIPACL(&proxy_ip_acl, token, IP_DENY);
-}
-
-static void parseAccelDenyLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == (char *) NULL)
-	return;
-    addToIPACL(&accel_ip_acl, token, IP_DENY);
-}
-
-static void parseManagerDenyLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == (char *) NULL)
-	return;
-    addToIPACL(&manager_ip_acl, token, IP_DENY);
-}
-#endif
-
 static void parseLocalIPLine()
 {
     char *token;
@@ -1223,32 +1167,6 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "cache_mgr"))
 	    parseMgrLine();
 
-#ifdef OLD_CODE
-	/* Parse a proxy_allow line */
-	else if (!strcmp(token, "proxy_allow"))
-	    parseProxyAllowLine();
-
-	/* Parse a proxy_deny line */
-	else if (!strcmp(token, "proxy_deny"))
-	    parseProxyDenyLine();
-
-	/* Parse a accel_allow line */
-	else if (!strcmp(token, "accel_allow"))
-	    parseAccelAllowLine();
-
-	/* Parse a accel_deny line */
-	else if (!strcmp(token, "accel_deny"))
-	    parseAccelDenyLine();
-
-	/* Parse a manager_allow line */
-	else if (!strcmp(token, "manager_allow"))
-	    parseManagerAllowLine();
-
-	/* Parse a manager_deny line */
-	else if (!strcmp(token, "manager_deny"))
-	    parseManagerDenyLine();
-#endif /* OLD_CODE */
-
 	else if (!strcmp(token, "acl"))
 	    aclParseAclLine();
 
@@ -1287,12 +1205,6 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "ttl_pattern"))
 	    parseTTLPattern();
-
-#ifdef OLD_CODE
-	/* Parse a blocklist line */
-	else if (!strcmp(token, "blocklist"))
-	    parseBlockListLine();
-#endif
 
 	/* Parse a negative_ttl line */
 	else if (!strcmp(token, "negative_ttl"))
