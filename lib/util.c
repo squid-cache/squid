@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.82 2001/10/17 19:46:43 hno Exp $
+ * $Id: util.c,v 1.83 2001/10/17 19:50:50 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -725,14 +725,12 @@ xpercent(double part, double whole)
 int
 xpercentInt(double part, double whole)
 {
-    double result;
 #if HAVE_RINT
-    result = rint(xpercent(part, whole));
+    return (int) rint(xpercent(part, whole));
 #else
     /* SCO 3.2v4.2 doesn't have rint() -- mauri@mbp.ee */
-    result = floor(xpercent(part, whole) + 0.5);
+    return (int) floor(xpercent(part, whole) + 0.5);
 #endif
-    return (int) result;
 }
 
 /* somewhat safer division */
