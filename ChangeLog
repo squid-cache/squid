@@ -18,6 +18,8 @@ Changes to squid-1.1.beta11 (October 24, 1996):
 	- renamed TCP_EXPIRED* to TCP_REFRESH*.
 	- Stopped appending error messages to partially delivered
 	  objects.
+	- Removed protoUnregister() call in icpDetectClientClose()
+	  as probable cause of storeReleaseRequest() warnings.
 	
 Changes to squid-1.1.beta10 (October 24, 1996):
 
