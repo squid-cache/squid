@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.10 1996/04/12 15:56:52 wessels Exp $"
+#ident "$Id: acl.cc,v 1.11 1996/04/12 21:44:19 wessels Exp $"
 
 /*
  * DEBUG: Section 28          acl
@@ -372,7 +372,7 @@ void aclParseAccessLine(head)
 	    L->op = 0;
 	    t++;
 	}
-	debug(28, 1, "aclParseAccessLine: looking for ACL name '%s'\n", t);
+	debug(28, 3, "aclParseAccessLine: looking for ACL name '%s'\n", t);
 	a = aclFindByName(t);
 	if (a == NULL) {
 	    debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
@@ -402,15 +402,15 @@ int aclMatchIp(data, c)
     struct in_addr h;
     while (data) {
 	h.s_addr = c.s_addr & data->mask1.s_addr;
-	debug(28, 1, "aclMatchIp: h     = %s\n", inet_ntoa(h));
-	debug(28, 1, "aclMatchIp: addr1 = %s\n", inet_ntoa(data->addr1));
+	debug(28, 3, "aclMatchIp: h     = %s\n", inet_ntoa(h));
+	debug(28, 3, "aclMatchIp: addr1 = %s\n", inet_ntoa(data->addr1));
 	if (h.s_addr == data->addr1.s_addr) {
-	    debug(28, 1, "aclMatchIp: returning 1\n");
+	    debug(28, 3, "aclMatchIp: returning 1\n");
 	    return 1;
 	}
 	data = data->next;
     }
-    debug(28, 1, "aclMatchIp: returning 0\n");
+    debug(28, 3, "aclMatchIp: returning 0\n");
     return 0;
 }
 
@@ -418,9 +418,9 @@ int aclMatchWord(data, word)
      wordlist *data;
      char *word;
 {
-    debug(28, 1, "aclMatchWord: checking '%s'\n", word);
+    debug(28, 3, "aclMatchWord: checking '%s'\n", word);
     while (data) {
-	debug(28, 1, "aclMatchWord: looking for '%s'\n", data->key);
+	debug(28, 3, "aclMatchWord: looking for '%s'\n", data->key);
 	if (strstr(word, data->key))
 	    return 1;
 	data = data->next;
@@ -431,9 +431,9 @@ int aclMatchRegex(data, word)
      relist *data;
      char *word;
 {
-    debug(28, 1, "aclMatchRegex: checking '%s'\n", word);
+    debug(28, 3, "aclMatchRegex: checking '%s'\n", word);
     while (data) {
-	debug(28, 1, "aclMatchRegex: looking for '%s'\n", data->pattern);
+	debug(28, 3, "aclMatchRegex: looking for '%s'\n", data->pattern);
 	if (regexec(&data->regex, word, 0, 0, 0) == 0)
 	    return 1;
 	data = data->next;
@@ -464,7 +464,7 @@ int aclMatchTime(data, when)
 	last_when = when;
 	memcpy(&tm, localtime(&when), sizeof(struct tm));
     }
-    debug(28, 1, "aclMatchTime: checking %d-%d, weekbits=%x\n",
+    debug(28, 3, "aclMatchTime: checking %d-%d, weekbits=%x\n",
 	data->start, data->stop, data->weekbits);
 
     t = (time_t) (tm.tm_hour * 60 + tm.tm_min);
@@ -484,7 +484,7 @@ static int aclMatchAcl(acl, c, m, pr, h, po, r)
 {
     if (!acl)
 	return 0;
-    debug(28, 1, "aclMatchAcl: checking '%s'\n", acl->cfgline);
+    debug(28, 3, "aclMatchAcl: checking '%s'\n", acl->cfgline);
     switch (acl->type) {
     case ACL_SRC_IP:
 	return aclMatchIp(acl->data, c);
@@ -531,15 +531,15 @@ static int aclMatchAclList(list, c, m, pr, h, po, r)
      int po;
      char *r;
 {
-    debug(28, 1, "aclMatchAclList: list=%p  op=%d\n", list, list->op);
+    debug(28, 3, "aclMatchAclList: list=%p  op=%d\n", list, list->op);
     while (list) {
 	if (aclMatchAcl(list->acl, c, m, pr, h, po, r) != list->op) {
-	    debug(28, 1, "aclMatchAclList: returning 0\n");
+	    debug(28, 3, "aclMatchAclList: returning 0\n");
 	    return 0;
 	}
 	list = list->next;
     }
-    debug(28, 1, "aclMatchAclList: returning 1\n");
+    debug(28, 3, "aclMatchAclList: returning 1\n");
     return 1;
 }
 
@@ -554,18 +554,18 @@ int aclCheck(A, cli_addr, method, proto, host, port, request)
 {
     int allow = 0;
 
-    debug(28, 1, "aclCheck: cli_addr=%s\n", inet_ntoa(cli_addr));
-    debug(28, 1, "aclCheck: method=%d\n", method);
-    debug(28, 1, "aclCheck: proto=%d\n", proto);
-    debug(28, 1, "aclCheck: host=%s\n", host ? host : "<NULL>");
-    debug(28, 1, "aclCheck: port=%d\n", port);
-    debug(28, 1, "aclCheck: request=%s\n", request ? request : "<NULL>");
+    debug(28, 3, "aclCheck: cli_addr=%s\n", inet_ntoa(cli_addr));
+    debug(28, 3, "aclCheck: method=%d\n", method);
+    debug(28, 3, "aclCheck: proto=%d\n", proto);
+    debug(28, 3, "aclCheck: host=%s\n", host ? host : "<NULL>");
+    debug(28, 3, "aclCheck: port=%d\n", port);
+    debug(28, 3, "aclCheck: request=%s\n", request ? request : "<NULL>");
 
     while (A) {
-	debug(28, 1, "aclCheck: checking '%s'\n", A->cfgline);
+	debug(28, 3, "aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
 	if (aclMatchAclList(A->acl_list, cli_addr, method, proto, host, port, request)) {
-	    debug(28, 1, "aclCheck: match found, returning %d\n", allow);
+	    debug(28, 3, "aclCheck: match found, returning %d\n", allow);
 	    return allow;
 	}
 	A = A->next;
@@ -611,7 +611,7 @@ void aclDestroyAcls()
     struct _acl *next = NULL;
     for (a = AclList; a; a = next) {
 	next = a->next;
-	debug(28, 1, "aclDestroyAcls: '%s'\n", a->cfgline);
+	debug(28, 3, "aclDestroyAcls: '%s'\n", a->cfgline);
 	switch (a->type) {
 	case ACL_SRC_IP:
 	    aclDestroyIpList(a->data);
@@ -659,7 +659,7 @@ void aclDestroyAccessList(list)
     struct _acl_access *l = NULL;
     struct _acl_access *next = NULL;
     for (l = *list; l; l = next) {
-	debug(28, 1, "aclDestroyAccessList: '%s'\n", l->cfgline);
+	debug(28, 3, "aclDestroyAccessList: '%s'\n", l->cfgline);
 	next = l->next;
 	aclDestroyAclList(l->acl_list);
 	l->acl_list = NULL;
