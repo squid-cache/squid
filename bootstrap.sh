@@ -60,6 +60,7 @@ acver=`find_version autoconf ${acversions}`
 
 # Bootstrap the autotool subsystems
 bootstrap aclocal$amver
+perl -i -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregex/g;' aclocal.m4
 bootstrap autoheader$acver
 bootstrap automake$amver --foreign --add-missing
 bootstrap autoconf$acver
