@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.25 2001/01/05 09:52:00 adrian Exp $
+ * $Id: store_dir_ufs.cc,v 1.26 2001/01/09 00:18:47 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,11 +34,6 @@
  */
 
 #include "squid.h"
-#if HAVE_STATVFS
-#if HAVE_SYS_STATVFS_H
-#include <sys/statvfs.h>
-#endif
-#endif
 
 #include "store_ufs.h"
 
@@ -1443,11 +1438,12 @@ storeUfsDirReplRemove(StoreEntry * e)
 void
 storeUfsDirStats(SwapDir * SD, StoreEntry * sentry)
 {
-    ufsinfo_t *ufsinfo;
-#if HAVE_STATVFS
-    struct statvfs sfs;
-#endif
-    ufsinfo = (ufsinfo_t *) SD->fsdata;
+    ufsinfo_t *ufsinfo = SD->fsdata;
+    int totl_kb = 0;
+    int free_kb = 0;
+    int totl_in = 0;
+    int free_in = 0;
+    int x;
     storeAppendPrintf(sentry, "First level subdirectories: %d\n", ufsinfo->l1);
     storeAppendPrintf(sentry, "Second level subdirectories: %d\n", ufsinfo->l2);
     storeAppendPrintf(sentry, "Maximum Size: %d KB\n", SD->max_size);
@@ -1457,20 +1453,17 @@ storeUfsDirStats(SwapDir * SD, StoreEntry * sentry)
     storeAppendPrintf(sentry, "Filemap bits in use: %d of %d (%d%%)\n",
 	ufsinfo->map->n_files_in_map, ufsinfo->map->max_n_files,
 	percent(ufsinfo->map->n_files_in_map, ufsinfo->map->max_n_files));
-#if HAVE_STATVFS
-#define fsbtoblk(num, fsbs, bs) \
-    (((fsbs) != 0 && (fsbs) < (bs)) ? \
-            (num) / ((bs) / (fsbs)) : (num) * ((fsbs) / (bs)))
-    if (!statvfs(SD->path, &sfs)) {
+    x = storeDirGetUFSStats(SD->path, &totl_kb, &free_kb, &totl_in, &free_in);
+    if (0 == x) {
 	storeAppendPrintf(sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
-	    fsbtoblk((sfs.f_blocks - sfs.f_bfree), sfs.f_frsize, 1024),
-	    fsbtoblk(sfs.f_blocks, sfs.f_frsize, 1024),
-	    percent(sfs.f_blocks - sfs.f_bfree, sfs.f_blocks));
+	    totl_kb - free_kb,
+	    totl_kb,
+	    percent(totl_kb - free_kb, totl_kb));
 	storeAppendPrintf(sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
-	    sfs.f_files - sfs.f_ffree, sfs.f_files,
-	    percent(sfs.f_files - sfs.f_ffree, sfs.f_files));
+	    totl_in - free_in,
+	    totl_in,
+	    percent(totl_in - free_in, totl_in));
     }
-#endif
     storeAppendPrintf(sentry, "Flags:");
     if (SD->flags.selected)
 	storeAppendPrintf(sentry, " SELECTED");
