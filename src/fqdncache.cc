@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.115 1998/09/14 21:58:48 wessels Exp $
+ * $Id: fqdncache.cc,v 1.116 1998/09/15 22:29:30 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -378,8 +378,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
     dnsData->offset += len;
     dnsData->ip_inbuf[dnsData->offset] = '\0';
     f = dnsData->data;
-    if (f->status != FQDN_DISPATCHED)
-	fatal_dump("fqdncache_dnsHandleRead: bad status");
+    assert(f->status == FQDN_DISPATCHED);
     if (strchr(dnsData->ip_inbuf, '\n')) {
 	/* end of record found */
 	DnsStats.replies++;
@@ -438,8 +437,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
     dnsserver_t *dnsData = NULL;
     char *name = inet_ntoa(addr);
 
-    if (!handler)
-	fatal_dump("fqdncache_nbgethostbyaddr: NULL handler");
+    assert(handler);
 
     debug(35, 4) ("fqdncache_nbgethostbyaddr: Name '%s'.\n", name);
     FqdncacheStats.requests++;
@@ -483,7 +481,9 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
 	}
 	return;
     } else {
-	fatal_dump("fqdncache_nbgethostbyaddr: BAD fqdncache_entry status");
+	debug(35,1)("fqdncache_nbgethostbyaddr: BAD status %d",
+		(int) f->status);
+	assert(0);
     }
 
     /* for HIT, PENDING, DISPATCHED we've returned.  For MISS we continue */
@@ -591,9 +591,7 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
     struct in_addr ip;
-
-    if (!name)
-	fatal_dump("fqdncache_gethostbyaddr: NULL name");
+    assert(name);
     FqdncacheStats.requests++;
     if ((f = fqdncache_get(name))) {
 	if (fqdncacheExpiredEntry(f)) {
@@ -781,8 +779,7 @@ void
 fqdncache_restart(void)
 {
     fqdncache_entry *this;
-    if (fqdn_table == 0)
-	fatal_dump("fqdncache_restart: fqdn_table == 0\n");
+    assert(fqdn_table);
     while (fqdncacheDequeue());
     hash_first(fqdn_table);
     while ((this = (fqdncache_entry *) hash_next(fqdn_table))) {
