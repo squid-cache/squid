@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.93 1999/05/25 06:53:48 wessels Exp $
+ * $Id: store_dir.cc,v 1.94 1999/05/25 20:38:06 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -410,7 +410,7 @@ storeDirWriteCleanLogs(int reopen)
 	sd = &Config.cacheSwap.swapDirs[dirn];
 	if (NULL == sd->log.clean.write)
 	    continue;
-	sd->log.clean.write(e, sd->log.clean.state);
+	sd->log.clean.write(e, sd);
 	if ((++n & 0xFFFF) == 0) {
 	    getCurrentTime();
 	    debug(20, 1) ("  %7d entries written so far.\n", n);
