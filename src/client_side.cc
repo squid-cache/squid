@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.681 2005/03/06 21:08:13 serassio Exp $
+ * $Id: client_side.cc,v 1.682 2005/03/18 14:41:21 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2974,6 +2974,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
         ssl_error = ERR_get_error();
         debug(83, 1) ("httpsAccept: Error allocating handle: %s\n",
                       ERR_error_string(ssl_error, NULL));
+        comm_close(newfd);
         return;
     }
 
