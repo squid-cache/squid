@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.13 2003/04/17 15:25:44 hno Exp $
+ * $Id: ssl_support.cc,v 1.14 2003/04/19 22:17:13 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -35,12 +35,6 @@
 
 #include "squid.h"
 #include "fde.h"
-
-extern int commUnsetNonBlocking(int fd);
-extern int commSetNonBlocking(int fd);
-
-void clientNegotiateSSL(int fd, void *data);
-void clientReadSSLRequest(int fd, void *data);
 
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
