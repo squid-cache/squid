@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.157 2000/12/05 09:15:59 wessels Exp $
+ * $Id: errorpage.cc,v 1.158 2000/12/08 23:58:08 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -377,6 +377,7 @@ errorStateFree(ErrorState * err)
     safe_free(err->url);
     safe_free(err->host);
     safe_free(err->dnsserver_msg);
+    safe_free(err->proxy_auth_msg);
     safe_free(err->request_hdrs);
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
@@ -404,6 +405,7 @@ errorStateFree(ErrorState * err)
  * I - server IP address                        x
  * L - HREF link for more info/contact          x
  * M - Request Method                           x
+ * m - Error message returned by external Auth. x 
  * p - URL port #                               x
  * P - Protocol                                 x
  * R - Full HTTP Request                        x
@@ -482,6 +484,9 @@ errorConvert(char token, ErrorState * err)
 	    memBufPrintf(&mb, "%s", Config.errHtmlText);
 	} else
 	    p = "[not available]";
+	break;
+    case 'm':
+	p = err->proxy_auth_msg ? err->proxy_auth_msg : "[not available]";
 	break;
     case 'M':
 	p = r ? RequestMethodStr[r->method] : "[unkown method]";

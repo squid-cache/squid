@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.514 2000/12/05 09:15:58 wessels Exp $
+ * $Id: client_side.cc,v 1.515 2000/12/08 23:58:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -215,10 +215,13 @@ clientAccessCheckDone(int answer, void *data)
     int page_id = -1;
     http_status status;
     ErrorState *err = NULL;
+    char *proxy_auth_msg = NULL;
     debug(33, 2) ("The request %s %s is %s, because it matched '%s'\n",
 	RequestMethodStr[http->request->method], http->uri,
 	answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED",
 	AclMatchedName ? AclMatchedName : "NO ACL's");
+    if (http->acl_checklist->auth_user)
+	proxy_auth_msg = http->acl_checklist->auth_user->message;
     http->acl_checklist = NULL;
     if (answer == ACCESS_ALLOWED) {
 	safe_free(http->uri);
@@ -230,6 +233,8 @@ clientAccessCheckDone(int answer, void *data)
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
 	debug(33, 5) ("AclMatchedName = %s\n",
 	    AclMatchedName ? AclMatchedName : "<null>");
+	debug(33, 5) ("Proxy Auth Message = %s\n",
+	    proxy_auth_msg ? proxy_auth_msg : "<null>");
 	/*
 	 * NOTE: get page_id here, based on AclMatchedName because
 	 * if USE_DELAY_POOLS is enabled, then AclMatchedName gets
@@ -258,6 +263,8 @@ clientAccessCheckDone(int answer, void *data)
 	err = errorCon(page_id, status);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
+	err->proxy_auth_msg = proxy_auth_msg;
+	err->callback_data = NULL;
 	errorAppendEntry(http->entry, err);
     }
 }
