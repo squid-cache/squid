@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.35 1998/09/29 16:33:54 wessels Exp $
+ * $Id: store_swapout.cc,v 1.36 1998/10/13 04:46:30 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -193,6 +193,7 @@ storeCheckSwapOut(StoreEntry * e)
 		e->swap_file_number = -1;
 	    }
 	    e->swap_status = SWAPOUT_NONE;
+	    storeReleaseRequest(e);
 	    storeSwapOutFileClose(e);
 	}
 	return;
@@ -235,6 +236,7 @@ storeCheckSwapOut(StoreEntry * e)
 	e->swap_file_number = -1;
 	e->swap_status = SWAPOUT_NONE;
 	memFree(MEM_DISK_BUF, swap_buf);
+	storeReleaseRequest(e);
 	storeSwapOutFileClose(e);
 	return;
     }
