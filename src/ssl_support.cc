@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.20 2004/12/20 16:30:36 robertc Exp $
+ * $Id: ssl_support.cc,v 1.21 2005/03/18 14:43:33 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -808,7 +808,7 @@ sslGetUserAttribute(SSL * ssl, const char *attribute_name)
     if (!cert)
         return NULL;
 
-    name = X509_get_issuer_name(cert);
+    name = X509_get_subject_name(cert);
 
     return ssl_get_attribute(name, attribute_name);
 }
@@ -827,7 +827,7 @@ sslGetCAAttribute(SSL * ssl, const char *attribute_name)
     if (!cert)
         return NULL;
 
-    name = X509_get_subject_name(cert);
+    name = X509_get_issuer_name(cert);
 
     return ssl_get_attribute(name, attribute_name);
 }
