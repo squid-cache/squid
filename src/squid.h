@@ -1,7 +1,7 @@
 
 /*
- * $Id: squid.h,v 1.189 1999/04/26 21:36:02 wessels Exp $
- * $Id: squid.h,v 1.189 1999/04/26 21:36:02 wessels Exp $
+ * $Id: squid.h,v 1.190 1999/04/26 21:52:39 glenn Exp $
+ * $Id: squid.h,v 1.190 1999/04/26 21:52:39 glenn Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -385,10 +385,6 @@ struct rusage {
 #endif
 #ifndef strdup
 #define strdup +
-#endif
-
-#if SQUID_SNMP
-extern struct snmp_mib_tree *Mib;
 #endif
 
 /*
