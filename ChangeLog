@@ -1,3 +1,7 @@
+
+	- Fixed ICMP 'pinger' failure detection.
+	- Fixed handling of no-cache for negative-cached objects.
+
 Changes to squid-1.1.beta11 (October 29, 1996):
 
 	- Fixed rfc1123() to use actual RFC1123 time format.
