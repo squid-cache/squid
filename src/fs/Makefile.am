@@ -1,6 +1,6 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.5 2003/01/27 09:49:08 robertc Exp $
+#  $Id: Makefile.am,v 1.6 2003/02/02 12:55:27 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -20,7 +20,8 @@ libdiskd_a_SOURCES = diskd/diskd.cc diskd/store_dir_diskd.cc \
 	diskd/store_diskd.h \
 	diskd/store_io_diskd.cc
 
-libexec_PROGRAMS = diskd/diskd
+EXTRA_PROGRAMS = diskd/diskd
+libexec_PROGRAMS = @STORE_PROGRAMS@
 diskd_diskd_SOURCES = diskd/diskd.cc diskd/dio.h
 diskd_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a @XTRA_LIBS@
 
