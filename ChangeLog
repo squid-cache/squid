@@ -1,6 +1,8 @@
 Changes to squid-2.6 ():
 	
 	- CARP now plays well with the other peering algorithms
+	- Configuration file can be read from an external program
+	  or preprocessor. See squid.8 man page.
 
 Changes to squid-2.5 ():
 

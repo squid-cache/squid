@@ -67,7 +67,11 @@ Specify HTTP port number (default: 3128).
 Write debugging to stderr also.
 .IP "-f file"
 Use the given config-file instead of
-.I /etc/squid/squid.conf
+.IR /etc/squid/squid.conf .
+If the file name starts with a ! or | then it is assumed to be an external
+command or command line. Can for example be used to pre-process the
+configuration before it is being read by Squid. To facilitate this Squid
+also understands the common #line notion to indicate the real source file.
 .IP -h
 Print help message.
 .IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
