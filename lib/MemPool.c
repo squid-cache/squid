@@ -1,5 +1,5 @@
 /*
- * $Id: MemPool.c,v 1.3 1998/02/25 07:42:34 rousskov Exp $
+ * $Id: MemPool.c,v 1.4 1998/02/25 17:39:46 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -120,7 +120,7 @@ memPoolDestroy(MemPool *mp)
  * never fails
  */
 void *
-memPoolGetObj2(MemPool *mp)
+memPoolGetObj(MemPool *mp)
 {
     assert(mp);
     if (mp->static_stack->count)
@@ -134,14 +134,6 @@ memPoolGetObj2(MemPool *mp)
     return xcalloc(1, mp->obj_size);
 }
 
-void *
-memPoolGetObj(MemPool *mp)
-{
-    void *obj = memPoolGetObj2(mp);
-    /*printf("memPoolGetObj: %p :  %d -> %d , %d >= %d\n", obj, mp->static_stack->count, mp->dynamic_stack->count, mp->alloc_count, mp->free_count);*/
-    return obj;
-}
-
 /*
  * return object to the pool; put on the corresponding stack or free if
  * corresponding stack is full
@@ -150,7 +142,6 @@ void
 memPoolPutObj(MemPool *mp, void *obj)
 {
     assert(mp);
-    /*printf("memPoolPutObj: %p :  %d >= %d\n", obj, mp->alloc_count, mp->free_count);*/
     /* static object? */
     if (mp->buf <= (char*)obj && mp->_buf_end > (char*)obj) {
 	assert(!mp->static_stack->is_full); /* never full if we got here! */
@@ -171,38 +162,18 @@ memPoolPutObj(MemPool *mp, void *obj)
 const char *
 memPoolReport(MemPool *mp)
 {
-    static char buf[512]; /* we do not use LOCALL_ARRAY in squid/lib, do we? */
-    u_num32 dyn_alive_cnt;
+    static char buf[1024]; /* we do not use LOCALL_ARRAY in squid/lib, do we? */
     assert(mp);
 
-#if 0 /* old detailed format */
     snprintf(buf, sizeof(buf),
-	"pool %s: obj_sz: %u cap: %u/%u "
-	"stat: +%lu-%lu dyn: +%lu-%lu alloc: +%lu/-%lu<%lu",
+	"pool %s: obj_sz: %u pre-allocated: %u (%.1lf KB); dyn stack capacity: %u"
+	"alive: %lu static + %lu dyn; alloc-high-water: %lu",
 	mp->name,
 	mp->obj_size,
 	mp->static_stack->capacity,
-	mp->dynamic_stack->capacity,
-	mp->static_stack->push_count,
-	mp->static_stack->pop_count,
-	mp->dynamic_stack->push_count,
-	mp->dynamic_stack->pop_count,
-	mp->alloc_count,
-	mp->free_count,
-	mp->alloc_high_water);
-#endif
-    dyn_alive_cnt = (mp->dynamic_stack->pop_count > mp->dynamic_stack->push_count) ?
-	mp->dynamic_stack->pop_count - mp->dynamic_stack->push_count : 0;
-
-    snprintf(buf, sizeof(buf),
-	"pool %s: obj_sz: %u static+dyn+alloc: capacity: %u+%u+oo "
-	"alive: %lu+%lu+%lu alloc-high-water: %lu",
-	mp->name,
-	mp->obj_size,
-	mp->static_stack->capacity,
+	(double)(mp->obj_size*mp->static_stack->capacity)/1024.,
 	mp->dynamic_stack->capacity,
 	mp->static_stack->capacity + mp->static_stack->pop_count - mp->static_stack->push_count,
-	dyn_alive_cnt,
 	mp->alloc_count - mp->free_count,
 	mp->alloc_high_water);
 
