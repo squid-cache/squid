@@ -79,6 +79,46 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+Changes to squid-1.0.6 (August 12, 1996):
+
+	- Fixed coredump in icpStateFree() for bad requests.
+	- Fixed configure bug in determining FD_SETSIZE.
+	- Fixed garbage collection to stop if SIGTERM received.
+	- Fixed pid file to be written just before 'ready to serve requests'.
+	- Fixed CheckQuickAbort() lock_count bug.
+	- Fixed setting the hierarchy code for access.log when the 
+	  hierarchy.log is disabled.
+	- Fixed urlParse() to fail for URLs longer than MAX_URL bytes.
+	- Fixed icpDetectClientClose() to detect TCP half-close and
+	  not abort the connection.
+
+Changes to squid-1.0.5 (July 25, 1996):
+
+	- Added ICP_OP_RELOADING to be used instead of ICP_OP_DENIED
+	  for -Y option.
+	- Moved hierarchy_code for access.log from MemObject to
+	  request_t so simultaneous client readers don't get the same
+	  hierachy code.
+
+Changes to squid-1.0.4 (July 24, 1996):
+
+	- Fixed ftpget logic/precedence bug
+	- Fixed ttlSet() to choose TTL as offset from when the object
+	  was originally served, not the current time.
+	- Fixed configure bug with setting GETTIMEOFDAY_NO_TZP.
+	- Removed unnecessary call to ipcache_gethostbyname() in
+	  sslConnect().
+	- Fixed stupid memset() bug in gopher.c causing
+	  a huge block of stack memory to be zeroed.
+
+Changes to squid-1.0.3 (July 18, 1996):
+
+	- Fixed FTP to send 'Ascii' or 'Binary' based on MIME encoding,
+	  not content-type.
+	- Changed icpHierarchical() to allow IMS requests to neighbors
+	  if they all support Squid's private keys.
+	- Fixed icpUdpSend() to not ask for a HIT_OBJ reply if the
+	  HTTP request included 'Pragma: no-cache'.
 
 Changes to squid-1.0.2 (July 16, 1996):
 
