@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.6 1996/03/22 17:48:17 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.7 1996/03/22 20:58:11 wessels Exp $ */
 
 #include "config.h"
 #include <sys/types.h>
@@ -97,9 +97,6 @@ static char w_space[] = " \t\n";
 static dnsserver_entry **dns_child_table = NULL;
 static int last_dns_dispatched = 2;
 static struct hostent *static_result = NULL;
-#ifdef USE_DNS_PIPE
-static int dnspipe[2];
-#endif
 static int dns_child_alive = 0;
 static int ipcache_initialized = 0;
 
@@ -138,55 +135,6 @@ int ipcache_testname()
 }
 
 
-#ifdef USE_DNS_PIPE
-/* open a process and pipes to it */
-int ipcache_openpipe(dnspipe, command)
-     int dnspipe[2];
-     char *command;
-{
-    int childpid, pipe1[2], pipe2[2];
-
-    if (pipe(pipe1) < 0 || pipe(pipe2) < 0) {
-	debug(0, "ipcache_openpipe: pipe failure: %s\n", xstrerror());
-	return -1;
-    }
-    if ((childpid = fork()) < 0) {
-	debug(0, "ipcache_openpipe: fork failure: %s\n", xstrerror());
-	return -1;
-    } else if (childpid > 0) {	/* parent */
-	close(pipe1[1]);	/* read from pipe 1 */
-	close(pipe2[0]);	/* write to pipe 2 */
-
-	/* return file descriptor */
-	dnspipe[0] = pipe1[0];	/* read file descriptor */
-	dnspipe[1] = pipe2[1];	/* write file descriptor */
-
-	fcntl(dnspipe[0], F_SETFD, 1);	/* set close-on-exec */
-	fcntl(dnspipe[1], F_SETFD, 1);	/* set close-on-exec */
-
-	return 0;
-
-    } else {			/* child */
-	int fd;
-
-	close(pipe1[0]);	/* write to pipe 1 */
-	close(pipe2[1]);	/* read from pipe 2 */
-
-	dup2(pipe1[1], 1);	/* point stdout to pipe1 */
-	dup2(pipe2[0], 0);	/* point stdin to pipe2 */
-	for (fd = 3; fd < getMaxFD(); fd++)
-	    (void) close(fd);
-
-	/* use a dummy argument 0 */
-	(void) execlp(command, "(dnsserver)", (char *) NULL);
-	perror(command);
-	_exit(-1);
-    }
-    /* NOTREACHED */
-}
-
-
-#else /* USE_DNS_PIPE */
 
 
 /*
@@ -207,6 +155,8 @@ int ipcache_create_dnsserver(command)
 	debug(0, "ipcache_create_dnsserver: socket: %s\n", xstrerror());
 	return -1;
     }
+    fdstat_open(cfd, Socket);
+    fd_note(cfd, "socket to dnsserver");
     memset(&addr, '\0', sizeof(addr));
     addr.sun_family = AF_UNIX;
     sprintf(socketname, "dns/dns%d.%d", (int) getpid(), n_dnsserver++);
@@ -250,7 +200,7 @@ int ipcache_create_dnsserver(command)
     /* child */
 
     dup2(cfd, 3);
-    for (fd = 4; fd < getMaxFD(); fd++) {
+    for (fd = getMaxFD(); fd > 3; fd--) {
 	(void) close(fd);
     }
 
@@ -260,7 +210,6 @@ int ipcache_create_dnsserver(command)
     return (0);			/* NOTREACHED */
 }
 
-#endif /* else USE_DNS_PIPE */
 
 /* removes the given ipcache entry */
 int ipcache_release(e)
@@ -1150,11 +1099,9 @@ void ipcache_init()
     if (ipcache_initialized)
 	return;
 
-#ifndef USE_DNS_PIPE
     if (mkdir("dns", 0755) < 0 && errno != EEXIST) {
 	debug(0, "ipcache_init: mkdir %s\n", xstrerror());
     }
-#endif
     last_dns_dispatched = getDnsChildren() - 1;
     dns_error_message = xcalloc(1, 256);
 
@@ -1182,7 +1129,7 @@ void ipcache_init()
     dns_child_alive = 0;
     debug(1, "ipcache_init: Starting %d 'dns_server' processes\n",
 	getDnsChildren());
-    for (i = 0; i < getDnsChildren(); ++i) {
+    for (i = 0; i < getDnsChildren(); i++) {
 	dns_child_table[i] = (dnsserver_entry *) xcalloc(1, sizeof(dnsserver_entry));
 	if ((dnssocket = ipcache_create_dnsserver(getDnsProgram())) < 0) {
 	    debug(1, "ipcache_init: WARNING: Cannot run 'dnsserver' process.\n");
@@ -1202,22 +1149,32 @@ void ipcache_init()
 
 	    /* update fd_stat */
 
-	    file_update_open(dns_child_table[i]->inpipe, fd_note_buf);
-
 	    sprintf(fd_note_buf, "%s #%d",
 		getDnsProgram(),
 		dns_child_table[i]->id);
+	    file_update_open(dns_child_table[i]->inpipe, fd_note_buf);
+
+	    debug(5, "Calling fd_note() with FD %d and buf '%s'\n",
+		dns_child_table[i]->inpipe, fd_note_buf);
 
 	    fd_note(dns_child_table[i]->inpipe, fd_note_buf);
 	    commSetNonBlocking(dns_child_table[i]->inpipe);
 
 	    /* clear unused handlers */
-	    comm_set_select_handler(dns_child_table[i]->inpipe, COMM_SELECT_WRITE, 0, 0);
-	    comm_set_select_handler(dns_child_table[i]->outpipe, COMM_SELECT_READ, 0, 0);
+	    comm_set_select_handler(dns_child_table[i]->inpipe,
+		COMM_SELECT_WRITE,
+		0,
+		0);
+	    comm_set_select_handler(dns_child_table[i]->outpipe,
+		COMM_SELECT_READ,
+		0,
+		0);
 
 	    /* set handler for incoming result */
-	    comm_set_select_handler(dns_child_table[i]->inpipe, COMM_SELECT_READ,
-		(PF) ipcache_dnsHandleRead, (caddr_t) dns_child_table[i]);
+	    comm_set_select_handler(dns_child_table[i]->inpipe,
+		COMM_SELECT_READ,
+		(PF) ipcache_dnsHandleRead,
+		(caddr_t) dns_child_table[i]);
 	    debug(3, "ipcache_init: 'dns_server' %d started\n", i);
 	}
     }
