@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.10 1998/07/20 17:19:08 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.11 1998/07/20 19:19:47 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -49,10 +49,8 @@ void
 requestDestroy(request_t * req)
 {
     assert(req);
-#if OLD_CODE
-    safe_free(req->prefix);
-#endif
     safe_free(req->body);
+    safe_free(req->canonical);
     stringClean(&req->urlpath);
     httpHeaderClean(&req->header);
     if (req->cache_control)
