@@ -34,6 +34,10 @@
 #include "config.h"
 #endif
 
+#if !HAVE_ALLOCA
+#define REGEX_MALLOC 1
+#endif
+
 /* The `emacs' switch turns on certain matching commands
    that make sense only in Emacs. */
 #ifdef emacs
