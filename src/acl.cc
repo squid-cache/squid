@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.260 2001/10/10 15:17:38 adrian Exp $
+ * $Id: acl.cc,v 1.261 2001/10/11 13:12:57 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2204,13 +2204,13 @@ aclHostDomainCompare(const void *a, const void *b)
 
 /* compare two network specs
  * 
- * * NOTE: this is very similar to aclIpNetworkCompare and it's not yet
- * * clear whether this OK. The problem could be with when a network
- * * is a subset of the other networks:
- * * 
- * * 128.1.2.0/255.255.255.128 == 128.1.2.0/255.255.255.0 ?
- * * 
- * * Currently only the first address of the first network is used.
+ * NOTE: this is very similar to aclIpNetworkCompare and it's not yet
+ * clear whether this OK. The problem could be with when a network
+ * is a subset of the other networks:
+ * 
+ * 128.1.2.0/255.255.255.128 == 128.1.2.0/255.255.255.0 ?
+ * 
+ * Currently only the first address of the first network is used.
  */
 
 /* compare an address and a network spec */
