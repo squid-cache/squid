@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.367 2000/12/09 01:47:19 wessels Exp $
+ * $Id: structs.h,v 1.368 2000/12/30 23:29:07 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -342,6 +342,7 @@ struct _SquidConfig {
     char *debugOptions;
     char *pidFilename;
     char *mimeTablePathname;
+    char *etcHostsPath;
     char *visibleHostname;
     char *uniqueHostname;
     wordlist *hostnameAliases;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.388 2000/12/05 09:15:59 wessels Exp $
+ * $Id: protos.h,v 1.389 2000/12/30 23:29:07 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -259,6 +259,7 @@ extern int fqdncacheQueueDrain(void);
 extern void fqdncacheFreeMemory(void);
 extern void fqdncache_restart(void);
 extern EVH fqdncache_purgelru;
+extern void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 extern void ftpStart(FwdState *);
 extern char *ftpUrlWith2f(const request_t *);
@@ -558,6 +559,7 @@ extern void ipcacheMarkGoodAddr(const char *name, struct in_addr);
 extern void ipcacheFreeMemory(void);
 extern ipcache_addrs *ipcacheCheckNumeric(const char *name);
 extern void ipcache_restart(void);
+extern int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
 
 /* MemBuf */
 /* init with specific sizes */
@@ -1084,6 +1086,7 @@ extern void linklistPush(link_list **, void *);
 extern void *linklistShift(link_list **);
 extern int xrename(const char *from, const char *to);
 extern int isPowTen(int);
+extern void parseEtcHosts(void);
 
 #if USE_HTCP
 extern void htcpInit(void);

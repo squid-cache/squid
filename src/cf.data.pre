@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.201 2000/12/18 21:52:40 hno Exp $
+# $Id: cf.data.pre,v 1.202 2000/12/30 23:29:06 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1017,6 +1017,28 @@ DOC_START
 	Example: dns_nameservers 10.0.0.1 192.172.0.4
 DOC_END
 
+NAME: hosts_file
+TYPE: string
+DEFAULT: /etc/hosts
+LOC: Config.etcHostsPath
+DOC_START
+	Location of the host-local IP name-address associations
+	database.  Most Operating Systems have such a file: under
+	Un*X it's by default in /etc/hosts MS-Windows NT/2000 places
+	that in %SystemRoot%(by default
+	c:\winnt)\system32\drivers\etc\hosts, while Windows 9x/ME
+	places that in %windir%(usually c:\windows)\hosts
+
+	The file contains newline-separated definitions, in the
+	form ip_address_in_dotted_form name [name ...] names are
+	whitespace-separated.  lines beginnng with an hash (#)
+	character are comments.
+
+	The file is checked at startup and upon configuration.  If
+	set to 'none', it won't be checked.  If append_domain is
+	used, that domain will be added to domain-local (i.e. not
+	containing any dot character) host definitions.
+DOC_END
 
 NAME: unlinkd_program
 IFDEF: USE_UNLINKD
