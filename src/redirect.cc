@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.30 1996/11/14 18:38:47 wessels Exp $
+ * $Id: redirect.cc,v 1.31 1996/12/05 16:07:16 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -180,7 +180,7 @@ redirectHandleRead(int fd, redirector_t * redirector)
 	    "FD %d: Connection from Redirector #%d is closed, disabling\n",
 	    fd, redirector->index + 1);
 	redirector->flags = 0;
-	put_free_4k_page(redirector->inbuf);
+	put_free_8k_page(redirector->inbuf);
 	redirector->inbuf = NULL;
 	comm_close(fd);
 	if (--NRedirectorsOpen == 0 && !shutdown_pending && !reread_pending)
@@ -342,7 +342,7 @@ redirectFreeMemory(void)
     if (redirect_child_table) {
 	for (k = 0; k < NRedirectors; k++) {
 	    if (redirect_child_table[k]->inbuf)
-		put_free_4k_page(redirect_child_table[k]->inbuf);
+		put_free_8k_page(redirect_child_table[k]->inbuf);
 	    safe_free(redirect_child_table[k]);
 	}
 	safe_free(redirect_child_table);
@@ -374,8 +374,8 @@ redirectOpenServers(void)
 	    redirect_child_table[k]->flags |= REDIRECT_FLAG_ALIVE;
 	    redirect_child_table[k]->index = k;
 	    redirect_child_table[k]->fd = redirectsocket;
-	    redirect_child_table[k]->inbuf = get_free_4k_page();
-	    redirect_child_table[k]->size = 4096;
+	    redirect_child_table[k]->inbuf = get_free_8k_page();
+	    redirect_child_table[k]->size = 8192;
 	    redirect_child_table[k]->offset = 0;
 	    sprintf(fd_note_buf, "%s #%d",
 		prg,
