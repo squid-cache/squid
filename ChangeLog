@@ -15,7 +15,7 @@ Changes to squid-1.2.alpha4 ():
 	- New inline debug() macro (David Luyer).
 	- Replace frequent gettimeofday() calls with alarm(3) based
 	  clock.  Need to add more gettimeofday() calls to get back
-	  high-resolution timestamp logging.
+	  high-resolution timestamp logging (Andres Kroonmaa).
 
 Changes to squid-1.2.alpha3 ():
 
