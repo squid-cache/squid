@@ -199,6 +199,8 @@
 
 #define SKIP_BASIC_SZ ((size_t) 6)
 
+#define PINGER_PAYLOAD_SZ 8192
+
 #define COUNT_INTERVAL 60
 /*
  * keep 60 minutes' worth of per-minute readings (+ current reading)
