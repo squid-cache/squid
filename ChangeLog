@@ -84,6 +84,10 @@ Changes to Squid-2.4.DEVEL4 ():
 	- Made store dir selection algorithm configurable.
 	- Added support for admin-definable extension methods,
 	  up to 20.
+	- Added 'maximum_object_size_in_memory' as a configuration option -
+	  this defines the watermark where objects transit from being true
+	  hot objects to being in-transit objects in memory. It currently
+	  defaults to 8 KB.
 
 Changes to Squid-2.4.DEVEL3 ():
 

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.194 2000/07/18 06:16:41 wessels Exp $
+# $Id: cf.data.pre,v 1.195 2000/08/15 07:14:04 adrian Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -556,6 +556,18 @@ DOC_START
 	Objects smaller than this size will NOT be saved on disk.  The
 	value is specified in kilobytes, and the default is 0 KB, which
 	means there is no minimum.
+DOC_END
+
+NAME: maximum_object_size_in_memory
+COMMENT: (bytes)
+TYPE: b_size_t
+DEFAULT: 8 KB
+LOC: Config.Store.maxInMemObjSize
+DOC_START
+        Objects greater than this size will not be attempted to kept in
+        the memory cache. This should be set high enough to keep objects
+        accessed frequently in memory to improve performance whilst low
+        enough to keep larger objects from hoarding cache_mem .
 DOC_END
 
 NAME: ipcache_size
