@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.307 2000/10/04 00:24:17 wessels Exp $
+ * $Id: comm.cc,v 1.308 2000/10/05 12:30:10 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -69,6 +69,10 @@ static IPH commConnectDnsHandle;
 static void commConnectCallback(ConnectStateData * cs, int status);
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
+static CBDUNL commConnectDataFree;
+
+static MemPool *comm_write_pool = NULL;
+static MemPool *conn_state_pool = NULL;
 
 static void
 CommWriteStateCallbackAndFree(int fd, int code)
@@ -89,7 +93,7 @@ CommWriteStateCallbackAndFree(int fd, int code)
     if (callback && cbdataValid(data))
 	callback(fd, CommWriteState->buf, CommWriteState->offset, code, data);
     cbdataUnlock(data);
-    safe_free(CommWriteState);
+    memPoolFree(comm_write_pool, CommWriteState);
 }
 
 /* Return the local port associated with fd. */
@@ -223,9 +227,9 @@ comm_listen(int sock)
 void
 commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
 {
-    ConnectStateData *cs = xcalloc(1, sizeof(ConnectStateData));
+    ConnectStateData *cs = memPoolAlloc(conn_state_pool);
     debug(5, 3) ("commConnectStart: FD %d, %s:%d\n", fd, host, (int) port);
-    cbdataAdd(cs, cbdataXfree, 0);
+    cbdataAdd(cs, commConnectDataFree, 0);
     cs->fd = fd;
     cs->host = xstrdup(host);
     cs->port = port;
@@ -235,6 +239,12 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     comm_add_close_handler(fd, commConnectFree, cs);
     cs->locks++;
     ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
+}
+
+static void
+commConnectDataFree(void *data, int unused)
+{
+    memPoolFree(conn_state_pool, data);
 }
 
 static void
@@ -770,6 +780,8 @@ comm_init(void)
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
+    comm_write_pool = memPoolCreate("CommWriteStateData", sizeof(CommWriteStateData));
+    conn_state_pool = memPoolCreate("ConnectStateData", sizeof(ConnectStateData));
 }
 
 /* Write to FD. */
@@ -842,11 +854,11 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
 	fd, size, handler, handler_data);
     if (NULL != state) {
 	debug(5, 1) ("comm_write: fd_table[%d].rwstate != NULL\n", fd);
-	safe_free(state);
+	memPoolFree(comm_write_pool, state);
 	fd_table[fd].rwstate = NULL;
     }
     assert(state == NULL);
-    fd_table[fd].rwstate = state = xcalloc(1, sizeof(CommWriteStateData));
+    fd_table[fd].rwstate = state = memPoolAlloc(comm_write_pool);
     state->buf = buf;
     state->size = size;
     state->offset = 0;
