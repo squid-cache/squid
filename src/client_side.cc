@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.414 1998/10/15 23:44:37 wessels Exp $
+ * $Id: client_side.cc,v 1.415 1998/10/16 19:19:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -66,6 +66,7 @@ static PF connStateFree;
 static PF requestTimeout;
 static int CheckQuickAbort2(const clientHttpRequest *);
 static int clientCheckTransferDone(clientHttpRequest *);
+static int clientGotNotEnough(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
 static void checkFailureRatio(err_type, hier_code);
 static void clientProcessMiss(clientHttpRequest *);
@@ -1599,8 +1600,8 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	} else if (!done) {
 	    debug(33, 5) ("clientWriteComplete: closing, !done\n");
 	    comm_close(fd);
-	} else if (EBIT_TEST(entry->flags, ENTRY_BAD_LENGTH)) {
-	    debug(33, 5) ("clientWriteComplete: closing, ENTRY_BAD_LENGTH\n");
+	} else if (clientGotNotEnough(http)) {
+	    debug(33, 5) ("clientWriteComplete: client didn't get all it expected\n");
 	    comm_close(fd);
 	} else if (http->request->flags.proxy_keepalive) {
 	    debug(33, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
@@ -2527,6 +2528,17 @@ clientCheckTransferDone(clientHttpRequest * http)
 	return 0;
     else
 	return 1;
+}
+
+static int
+clientGotNotEnough(clientHttpRequest * http)
+{
+    int cl = http->entry->mem_obj->reply->content_length;
+    int hs = http->entry->mem_obj->reply->hdr_sz;
+    assert(cl >= 0);
+    if (http->out.offset < cl + hs)
+	return 1;
+    return 0;
 }
 
 /*
