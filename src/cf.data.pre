@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.372 2005/01/25 00:14:34 hno Exp $
+# $Id: cf.data.pre,v 1.373 2005/01/29 19:41:22 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1950,6 +1950,7 @@ DOC_START
 	FORMAT specifications
 
 	  %LOGIN	Authenticated user login name
+	  %EXT_USER	Username from external acl
 	  %IDENT	Ident user name
 	  %SRC		Client IP
 	  %SRCPORT	Client source port
