@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.654 2003/08/10 11:00:42 robertc Exp $
+ * $Id: client_side.cc,v 1.655 2003/08/11 21:55:47 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -877,7 +877,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 {
     HttpHdrRangeIter * i = &http->range_iter;
     Range<size_t> available (source.range());
-    char const *buf (source.data);
+    char const *buf = source.data;
 
     while (i->currentSpec() && available.size()) {
         const size_t copy_sz = lengthToSend(available);
@@ -3073,8 +3073,10 @@ ConnStateData::operator delete (void *address)
     cbdataFree(t);
 }
 
-ConnStateData::ConnStateData() : transparent_ (false), reading_ (false), openReference (this)
-{}
+ConnStateData::ConnStateData() : transparent_ (false), reading_ (false)
+{
+    openReference = this;
+}
 
 bool
 ConnStateData::transparent() const
