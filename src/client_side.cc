@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.169 1997/12/03 08:57:19 wessels Exp $
+ * $Id: client_side.cc,v 1.170 1997/12/03 19:45:24 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1360,25 +1360,52 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     /* Look for request method */
     if ((mstr = strtok(inbuf, "\t ")) == NULL) {
 	debug(12, 1) ("parseHttpRequest: Can't get request method\n");
-	xfree(inbuf);
+	http = xcalloc(1, sizeof(clientHttpRequest));
+	cbdataAdd(http);
+	http->conn = conn;
+	http->start = current_time;
+	http->req_sz = conn->in.offset;
+	http->url = xstrdup("error:invalid-request-method");
+	http->log_url = xstrdup("error:invalid-request-method");
+	*headers_sz_p = conn->in.offset;
+	*headers_p = inbuf;
+	*method_p = METHOD_NONE;
 	*status = -1;
-	return NULL;
+	return http;
     }
     method = urlParseMethod(mstr);
     if (method == METHOD_NONE) {
 	debug(12, 1) ("parseHttpRequest: Unsupported method '%s'\n", mstr);
-	xfree(inbuf);
+	http = xcalloc(1, sizeof(clientHttpRequest));
+	cbdataAdd(http);
+	http->conn = conn;
+	http->start = current_time;
+	http->req_sz = conn->in.offset;
+	http->url = xstrdup("error:unsupported-request-method");
+	http->log_url = xstrdup("error:unsupported-request-method");
+	*headers_sz_p = conn->in.offset;
+	*headers_p = inbuf;
+	*method_p = METHOD_NONE;
 	*status = -1;
-	return NULL;
+	return http;
     }
     debug(12, 5) ("parseHttpRequest: Method is '%s'\n", mstr);
+    *method_p = method;
 
     /* look for URL */
     if ((url = strtok(NULL, "\r\n\t ")) == NULL) {
 	debug(12, 1) ("parseHttpRequest: Missing URL\n");
-	xfree(inbuf);
+	http = xcalloc(1, sizeof(clientHttpRequest));
+	cbdataAdd(http);
+	http->conn = conn;
+	http->start = current_time;
+	http->req_sz = conn->in.offset;
+	http->url = xstrdup("error:missing-url");
+	http->log_url = xstrdup("error:missing-url");
+	*headers_sz_p = conn->in.offset;
+	*headers_p = inbuf;
 	*status = -1;
-	return NULL;
+	return http;
     }
     debug(12, 5) ("parseHttpRequest: Request is '%s'\n", url);
 
@@ -1386,9 +1413,17 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     for (t = token; t && *t && *t != '\n' && *t != '\r'; t++);
     if (t == NULL || *t == '\0' || t == token || strncmp(token, "HTTP/", 5)) {
 	debug(12, 3) ("parseHttpRequest: Missing HTTP identifier\n");
-	xfree(inbuf);
+	http = xcalloc(1, sizeof(clientHttpRequest));
+	cbdataAdd(http);
+	http->conn = conn;
+	http->start = current_time;
+	http->req_sz = conn->in.offset;
+	http->url = xstrdup("error:missing-http-ident");
+	http->log_url = xstrdup("error:missing-http-ident");
+	*headers_sz_p = conn->in.offset;
+	*headers_p = inbuf;
 	*status = -1;
-	return NULL;
+	return http;
     }
     http_ver = (float) atof(token + 5);
 
@@ -1472,7 +1507,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if (free_request)
 	safe_free(url);
     xfree(inbuf);
-    *method_p = method;
     *status = 1;
     return http;
 }
@@ -1551,6 +1585,14 @@ clientReadRequest(int fd, void *data)
 	    conn->nrequests++;
 	    Counter.client_http.requests++;
 	    commSetTimeout(fd, Config.Timeout.lifetime, NULL, NULL);
+	    if (parser_return_code < 0) {
+		debug(12, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
+		err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
+		err->request_hdrs = xstrdup(conn->in.buf);
+		http->entry = clientCreateStoreEntry(http, method, 0);
+		errorAppendEntry(http->entry, err);
+		break;
+	    }
 	    if ((request = urlParse(method, http->url)) == NULL) {
 		debug(12, 5) ("Invalid URL: %s\n", http->url);
 		err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
@@ -1575,13 +1617,15 @@ clientReadRequest(int fd, void *data)
 		http->al.http.code = err->http_status;
 		http->entry = clientCreateStoreEntry(http, request->method, 0);
 		errorAppendEntry(http->entry, err);
-		return;
+		break;
 	    }
 	    http->request = requestLink(request);
 	    clientAccessCheck(http);
-	    /* break here for NON-GET because most likely there is a
+	    /*
+	     * break here for NON-GET because most likely there is a
 	     * reqeust body following and we don't want to parse it
-	     * as though it was new request */
+	     * as though it was new request
+	     */
 	    if (request->method != METHOD_GET) {
 		if (conn->in.offset) {
 		    request->body_sz = conn->in.offset;
@@ -1620,17 +1664,6 @@ clientReadRequest(int fd, void *data)
 		k = conn->in.size - 1 - conn->in.offset;
 	    }
 	    break;
-	} else {
-	    /* parser returned -1 */
-	    Counter.client_http.requests++;
-	    debug(12, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
-	    err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
-	    err->request_hdrs = xstrdup(conn->in.buf);
-	    http->url = http->log_url = "BAD-REQUEST";
-	    http->entry = clientCreateStoreEntry(http, METHOD_NONE, 0);
-	    http->url = http->log_url = NULL;
-	    errorAppendEntry(http->entry, err);
-	    return;
 	}
     }
 }
