@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.371 1998/07/31 00:15:38 wessels Exp $
+ * $Id: client_side.cc,v 1.372 1998/07/31 14:48:13 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1052,7 +1052,7 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 	rep = NULL;
 	/* if we were going to do ranges, backoff */
 	if (http->request->range)
-	    clientBuildRangeHeader(http, rep); /* will fail and destroy request->range */
+	    clientBuildRangeHeader(http, rep);	/* will fail and destroy request->range */
     }
     return rep;
 }
@@ -1378,10 +1378,15 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    body_size = 0;
 	    http->flags.done_copying = 1;
 	} else {
-	    /* unparseable reply, stop and end-of-headers */
-	    body_size = headersEnd(buf, size);
-	    if (body_size)
-		http->flags.done_copying = 1;
+	    /*
+	     * If we are here, then store_status == STORE_OK and it
+	     * seems we have a HEAD repsponse which is missing the
+	     * empty end-of-headers line (home.mira.net, phttpd/0.99.72
+	     * does this).  Because clientBuildReply() fails we just
+	     * call this reply a body, set the done_copying flag and
+	     * continue...
+	     */
+	    http->flags.done_copying = 1;
 	}
     }
     /* write headers and/or body if any */
