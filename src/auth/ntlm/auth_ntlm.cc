@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.2 2001/01/08 19:36:27 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.3 2001/01/10 00:24:39 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -94,8 +94,6 @@ static hash_table *proxy_auth_cache = NULL;
 void
 authNTLMDone(void)
 {
-//    memPoolDestroy(ufs_state_pool);
-
     if (ntlmauthenticators)
 	helperStatefulShutdown(ntlmauthenticators);
     authntlm_initialised = 0;
@@ -171,9 +169,6 @@ authNTLMParse(authScheme * scheme, int n_configured, char *param_str)
 void
 authSchemeSetup_ntlm(authscheme_entry_t * authscheme)
 {
-#if 0
-    static int ntlminit = 0;
-#endif
     assert(!authntlm_initialised);
     authscheme->Active = authenticateNTLMActive;
     authscheme->parse = authNTLMParse;
@@ -380,16 +375,10 @@ authenticateNTLMHandleplaceholder(void *data, void *lastserver, char *reply)
 static stateful_helper_callback_t
 authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 {
-#if 0
-    authenticateStatefulStateData *r = data;
-#endif
     authenticateStateData *r = data;
     ntlm_helper_state_t *helperstate;
     int valid;
     stateful_helper_callback_t result = S_HELPER_UNKNOWN;
-#if 0
-    void *nextserver = NULL;
-#endif
     char *t = NULL;
     auth_user_request_t *auth_user_request;
     auth_user_t *auth_user;
@@ -405,9 +394,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 		reply += 3;
 		/* we have been given a Challenge */
 		/* we should check we weren't given an empty challenge */
-#if 0
-		result = S_HELPER_RESERVE;
-#endif
 		/* copy the challenge to the state data */
 		helperstate = helperStatefulServerGetData(lastserver);
 		if (helperstate == NULL)
@@ -423,12 +409,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 		ntlm_request = auth_user_request->scheme_data;
 		assert(ntlm_request != NULL);
 		result = S_HELPER_DEFER;
-#if 0
-		nextserver = lastserver;
-#endif
 		debug(29, 9) ("authenticateNTLMHandleReply: helper '%d'\n", lastserver);
 		assert(ntlm_request->auth_state == AUTHENTICATE_STATE_NEGOTIATE);
-//                auth_user->auth_data.ntlm_auth.auth_state = AUTHENTICATE_STATE_CHALLENGE;
 		ntlm_request->authhelper = lastserver;
 		ntlm_request->authchallenge = xstrndup(reply, NTLM_CHALLENGE_SZ + 5);
 	    } else if (strncasecmp(reply, "AF ", 3) == 0) {
@@ -535,15 +517,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     return result;
 }
 
-#if 0
-static void
-authenticateNTLMStateFree(authenticateNTLMStateData * r)
-{
-    cbdataFree(r);
-}
-
-#endif
-
 static void
 authenticateNTLMStats(StoreEntry * sentry)
 {
@@ -578,9 +551,6 @@ authenticateNTLMChangeChallenge(ntlm_helper_state_t * helperstate)
 static void
 authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, void *data)
 {
-#if 0
-    authenticateStatefulStateData *r = NULL;
-#endif
     authenticateStateData *r = NULL;
     helper_stateful_server *server;
     ntlm_helper_state_t *helperstate;
@@ -623,7 +593,6 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
     debug(29, 9) ("authenticateNTLMStart: '%s'\n", sent_string);
     if (ntlmConfig->authenticate == NULL) {
 	debug(29, 0) ("authenticateNTLMStart: no NTLM program specified:'%s'\n", sent_string);
-//      handler(data,0, NULL);
 	handler(data, NULL);
 	return;
     }
@@ -839,13 +808,8 @@ authNTLMAuthenticated(auth_user_request_t * auth_user_request)
     return 0;
 }
 
-#if 0
-static acl_proxy_auth_user *
-authenticateNTLMAuthenticateUser(void *data, const char *proxy_auth, ConnStateData * conn)
-#else
 static void
 authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData * conn, http_hdr_type type)
-#endif
 {
     const char *proxy_auth;
     auth_user_hash_pointer *usernamehash, *proxy_auth_hash = NULL;
@@ -962,9 +926,6 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 		authenticateAuthUserMerge(auth_user, usernamehash->auth_user);
 		auth_user = usernamehash->auth_user;
 		auth_user_request->auth_user = auth_user;
-#if 0
-		conn->auth_user = auth_user;
-#endif
 	    }
 	} else {
 	    /* store user in hash's */
@@ -980,36 +941,6 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	break;
     case AUTHENTICATE_STATE_DONE:
 	fatal("authenticateNTLMAuthenticateUser: unexpect auth state DONE! Report a bug to the squid developers.\n");
-#if 0				/* done in acl.c */
-    case AUTHENTICATE_STATE_DONE:
-	debug(28, 5) ("aclMatchProxyAuth: connection in state Done. using connection credentials for the request. \n");
-	/* is it working right? */
-	assert(checklist->auth_user == NULL);
-	assert(checklist->conn->auth_user != NULL);
-	/* we have a valid username. */
-	auth_user = checklist->conn->auth_user;
-	/* store the username in the request for logging */
-	xstrncpy(checklist->request->authuser,
-	    auth_user->auth_data.ntlm_auth.username,
-	    USER_IDENT_SZ);
-	if (auth_user->expiretime + Config.authenticateTTL > current_time.tv_sec
-	    ) {
-	    auth_user->expiretime = current_time.tv_sec;
-	} else {
-	    //user passed externa; authentication in every case to get here. f.
-	    Let it through
-	}			/* we don't unlock the auth_user until the connection is dropped. Thank
-				 * MS for this quirk. */ if (authenticateCheckAuthUserIP(checklist->src_addr, auth_user)) {
-	    /* Once the match is completed we have finished with the
-	     * auth_user structure */
-	    /* check to see if we have matched the user-acl before */
-	    return aclCacheMatchAcl(&auth_user->proxy_match_cache, acltype,
-		data, auth_user->auth_data.ntlm_auth.username);
-	} else {
-	    return 0;
-	}
-	break;
-#endif
     }
 
     return;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_basic.cc,v 1.1 2001/01/07 23:36:43 hno Exp $
+ * $Id: auth_basic.cc,v 1.2 2001/01/10 00:24:39 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -82,7 +82,6 @@ MemPool *basic_data_pool = NULL;
 void
 authBasicDone(void)
 {
-//    memPoolDestroy(ufs_state_pool);
     if (basicauthenticators)
 	helperShutdown(basicauthenticators);
     authbasic_initialised = 0;
@@ -118,12 +117,6 @@ authSchemeSetup_basic(authscheme_entry_t * authscheme)
 int
 authenticateBasicActive()
 {
-#if 0
-    if (authbasic_initialised)
-	return 1;
-    else
-	return 0;
-#endif
     if ((basicConfig != NULL) && (basicConfig->authenticate != NULL) &&
 	(basicConfig->authenticateChildren != 0) && (basicConfig->basicAuthRealm != NULL))
 	return 1;
@@ -151,15 +144,8 @@ authenticateBasiccmpUsername(basic_data * u1, basic_data * u2)
 static void
 authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData * conn, http_hdr_type type)
 {
-#if 0
-    auth_user_hash_pointer *usernamehash, *proxy_auth_hash = NULL;
-#endif
     auth_user_t *auth_user;
     basic_data *basic_auth;
-#if 0
-//, *temp_auth;
-    const char *proxy_auth;
-#endif
 
     assert(auth_user_request->auth_user != NULL);
     auth_user = auth_user_request->auth_user;
@@ -176,53 +162,12 @@ authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, reque
 	debug(29, 4) ("authBasicAuthenticate: credentials expired - rechecking\n");
 	return;
     }
-#if 0
-    /*    get the header. */
-    proxy_auth = httpHeaderGetStr(&request->header, type);
-#endif
 
     /* we have been through the external helper, and the credentials haven't expired */
     debug(29, 9) ("authenticateBasicAuthenticateuser: user '%s' authenticated\n",
 	basic_auth->username);
 
     /* Decode now takes care of finding the auth_user struct in the cache */
-#if 0
-    /* see if this is an existing user with a different proxy_auth string */
-    if ((usernamehash = hash_lookup(proxy_auth_username_cache,
-		basic_auth->username))) {
-	while ((usernamehash->auth_user->auth_type != auth_user->auth_type) &&
-	    (usernamehash->next) &&
-	    !authenticateBasiccmpUsername(usernamehash->auth_user->scheme_data, basic_auth))
-	    usernamehash = usernamehash->next;
-	if (usernamehash->auth_user->auth_type == auth_user->auth_type) {
-	    /*
-	     * add another link from the new proxy_auth to the
-	     * auth_user structure and update the information */
-	    assert(proxy_auth_hash == NULL);
-	    authenticateProxyAuthCacheAddLink(proxy_auth, usernamehash->auth_user);
-	    /* maybe the p/w changed. update in the old structure */
-	    temp_auth = usernamehash->auth_user->scheme_data;
-	    xfree(temp_auth->passwd);
-	    temp_auth->passwd = basic_auth->passwd;
-	    basic_auth->passwd = NULL;
-	    /* and remove the temporary structure */
-	    authenticateAuthUserUnlock(auth_user);
-#if 0
-	    authenticateFreeProxyAuthUser(auth_user);
-#endif
-	    auth_user = usernamehash->auth_user;
-	    /* and reference the existing basic data structure */
-	    basic_auth = auth_user->scheme_data;
-	    /* lock the structure for this request */
-	    authenticateAuthUserLock(auth_user);
-	}
-    } else {
-	/* store user in hash's */
-	authenticateUserNameCacheAdd(auth_user);
-	authenticateProxyAuthCacheAddLink(proxy_auth, auth_user);
-    }
-    /* auth_user is now linked, we reset these values */
-#endif
     /* after external auth occurs anyway */
     auth_user->expiretime = current_time.tv_sec;
     auth_user->ip_expiretime = squid_curtime;
@@ -326,10 +271,6 @@ authenticateBasicHandleReply(void *data, char *reply)
 	xfree(node);
 	node = tmpnode;
     }
-#if 0
-    if (valid)
-	r->handler(r->data, reply);
-#endif
     authenticateStateFree(r);
 }
 
@@ -510,14 +451,7 @@ authenticateBasicDecodeAuth(auth_user_request_t * auth_user_request, const char 
 	    authenticateAuthUserLock(auth_user);
 	    node = dlinkNodeNew();
 	    dlinkAdd(auth_user_request, node, &auth_user->requests);
-#if 0
-	    xfree(local_basic.username);
-#endif
 	}
-#if 0
-	memPoolFree(basic_data_pool, basic_auth);
-	auth_user->scheme_data = NULL;
-#endif
 	return;
     } else {
 	local_basic.passwd = xstrndup(cleartext, USER_IDENT_SZ);
