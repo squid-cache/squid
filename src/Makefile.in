@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.200 2001/04/03 20:22:10 adrian Exp $
+#  $Id: Makefile.in,v 1.201 2001/04/14 00:03:21 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -65,6 +65,7 @@ REGEXLIB	= @REGEXLIB@
 PTHREADLIB	= @PTHREADLIB@
 SNMPLIB		= @SNMPLIB@
 MALLOCLIB	= @LIB_MALLOC@
+SSLLIB		= @SSLLIB@
 AC_CFLAGS	= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
@@ -80,7 +81,7 @@ SHELL		= /bin/sh
 INCLUDE		= -I. -I../include -I$(top_srcdir)/include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
 SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_PTHREAD_LIB@ \
-		  $(SNMPLIB) $(MALLOCLIB) -lmiscutil $(XTRA_LIBS)
+		  $(SNMPLIB) $(MALLOCLIB) $(SSLLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
@@ -160,6 +161,7 @@ OBJS	 	= \
 		send-announce.o \
 		@SNMP_OBJS@ \
 		ssl.o \
+		@SSL_OBJS@ \
 		stat.o \
 		StatHist.o \
 		String.o \
@@ -197,6 +199,8 @@ DELAY_OBJS	= delay_pools.o
 
 LEAKFINDER_OBJS	= \
 		leakfinder.o
+
+SSL_OBJS 	= ssl_support.o
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"

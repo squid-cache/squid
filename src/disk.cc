@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.154 2001/01/12 00:37:17 wessels Exp $
+ * $Id: disk.cc,v 1.155 2001/04/14 00:03:22 hno Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -192,7 +192,7 @@ diskHandleWrite(int fd, void *notused)
     errno = 0;
     if (fdd->write_q->file_offset != -1)
 	lseek(fd, fdd->write_q->file_offset, SEEK_SET);
-    len = write(fd,
+    len = FD_WRITE_METHOD(fd,
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset);
     debug(6, 3) ("diskHandleWrite: FD %d len = %d\n", fd, len);
@@ -361,7 +361,7 @@ diskHandleRead(int fd, void *data)
 	F->disk.offset = ctrl_dat->offset;
     }
     errno = 0;
-    len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
+    len = FD_READ_METHOD(fd, ctrl_dat->buf, ctrl_dat->req_len);
     if (len > 0)
 	F->disk.offset += len;
     statCounter.syscalls.disk.reads++;

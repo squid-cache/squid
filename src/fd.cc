@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.41 2001/01/12 00:37:17 wessels Exp $
+ * $Id: fd.cc,v 1.42 2001/04/14 00:03:22 hno Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -34,6 +34,9 @@
  */
 
 #include "squid.h"
+
+int default_read_method(int, char *, int);
+int default_write_method(int, const char *, int);
 
 const char *fdTypeStr[] =
 {
@@ -80,6 +83,12 @@ fd_close(int fd)
 	assert(F->read_handler == NULL);
 	assert(F->write_handler == NULL);
     }
+    F->read_method = &default_read_method;
+    F->write_method = &default_write_method;
+#if USE_SSL
+    safe_free(F->ssl);
+    F->ssl = NULL;
+#endif
     debug(51, 3) ("fd_close FD %d %s\n", fd, F->desc);
     F->flags.open = 0;
     fdUpdateBiggest(fd, 0);
@@ -88,6 +97,18 @@ fd_close(int fd)
     commUpdateWriteBits(fd, NULL);
     memset(F, '\0', sizeof(fde));
     F->timeout = 0;
+}
+
+int
+default_read_method(int fd, char *buf, int len)
+{
+    return (read(fd, buf, len));
+}
+
+int
+default_write_method(int fd, const char *buf, int len)
+{
+    return (write(fd, buf, len));
 }
 
 void
@@ -104,6 +125,8 @@ fd_open(int fd, unsigned int type, const char *desc)
     debug(51, 3) ("fd_open FD %d %s\n", fd, desc);
     F->type = type;
     F->flags.open = 1;
+    F->read_method = &default_read_method;
+    F->write_method = &default_write_method;
     fdUpdateBiggest(fd, 1);
     if (desc)
 	xstrncpy(F->desc, desc, FD_DESC_SZ);

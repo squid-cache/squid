@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.317 2001/03/03 10:39:31 hno Exp $
+ * $Id: comm.cc,v 1.318 2001/04/14 00:03:22 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -537,7 +537,7 @@ commLingerClose(int fd, void *unused)
 {
     LOCAL_ARRAY(char, buf, 1024);
     int n;
-    n = read(fd, buf, 1024);
+    n = FD_READ_METHOD(fd, buf, 1024);
     if (n < 0)
 	debug(5, 3) ("commLingerClose: FD %d read: %s\n", fd, xstrerror());
     comm_close(fd);
@@ -570,10 +570,12 @@ void
 comm_close(int fd)
 {
     fde *F = NULL;
+
     debug(5, 5) ("comm_close: FD %d\n", fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
+
     if (F->flags.closing)
 	return;
     if (shutting_down && (!F->flags.open || F->type == FD_FILE))
@@ -807,7 +809,7 @@ commHandleWrite(int fd, void *data)
 	fd, (int) state->offset, state->size);
 
     nleft = state->size - state->offset;
-    len = write(fd, state->buf + state->offset, nleft);
+    len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     debug(5, 5) ("commHandleWrite: write() returns %d\n", len);
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;

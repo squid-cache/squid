@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.205 2001/02/15 11:11:54 adrian Exp $
+ * $Id: tools.cc,v 1.206 2001/04/14 00:03:24 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -589,7 +589,7 @@ writePidFile(void)
 	return;
     }
     snprintf(buf, 32, "%d\n", (int) getpid());
-    write(fd, buf, strlen(buf));
+    FD_WRITE_METHOD(fd, buf, strlen(buf));
     file_close(fd);
 }
 

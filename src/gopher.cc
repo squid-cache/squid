@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.160 2001/03/03 10:39:32 hno Exp $
+ * $Id: gopher.cc,v 1.161 2001/04/14 00:03:22 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -612,7 +612,7 @@ gopherReadReply(int fd, void *data)
 #endif
     /* leave one space for \0 in gopherToHTML */
     statCounter.syscalls.sock.reads++;
-    len = read(fd, buf, read_sz);
+    len = FD_READ_METHOD(fd, buf, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.112 2001/03/03 10:39:33 hno Exp $
+ * $Id: tunnel.cc,v 1.113 2001/04/14 00:03:23 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -200,7 +200,7 @@ sslReadServer(int fd, void *data)
     read_sz = delayBytesWanted(sslState->delay_id, 1, read_sz);
 #endif
     statCounter.syscalls.sock.reads++;
-    len = read(fd, sslState->server.buf + sslState->server.len, read_sz);
+    len = FD_READ_METHOD(fd, sslState->server.buf + sslState->server.len, read_sz);
     debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
@@ -236,7 +236,7 @@ sslReadClient(int fd, void *data)
 	fd, SQUID_TCP_SO_RCVBUF - sslState->client.len,
 	sslState->client.len);
     statCounter.syscalls.sock.reads++;
-    len = read(fd,
+    len = FD_READ_METHOD(fd,
 	sslState->client.buf + sslState->client.len,
 	SQUID_TCP_SO_RCVBUF - sslState->client.len);
     debug(26, 3) ("sslReadClient: FD %d, read   %d bytes\n", fd, len);
@@ -276,7 +276,7 @@ sslWriteServer(int fd, void *data)
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes to write\n",
 	fd, sslState->client.len);
     statCounter.syscalls.sock.writes++;
-    len = write(fd,
+    len = FD_WRITE_METHOD(fd,
 	sslState->client.buf,
 	sslState->client.len);
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes written\n", fd, len);
@@ -315,7 +315,7 @@ sslWriteClient(int fd, void *data)
     debug(26, 3) ("sslWriteClient: FD %d, %d bytes to write\n",
 	fd, sslState->server.len);
     statCounter.syscalls.sock.writes++;
-    len = write(fd,
+    len = FD_WRITE_METHOD(fd,
 	sslState->server.buf,
 	sslState->server.len);
     debug(26, 3) ("sslWriteClient: FD %d, %d bytes written\n", fd, len);

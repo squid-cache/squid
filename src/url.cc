@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.129 2001/01/12 00:37:23 wessels Exp $
+ * $Id: url.cc,v 1.130 2001/04/14 00:03:24 hno Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -550,12 +550,17 @@ urlCheckRequest(const request_t * r)
 	    rc = 1;
 	break;
     case PROTO_HTTPS:
+#ifdef USE_SSL
+	rc = 1;
+	break;
+#else
 	/*
 	 * Squid can't originate an SSL connection, so it should
 	 * never receive an "https:" URL.  It should always be
 	 * CONNECT instead.
 	 */
 	rc = 0;
+#endif
     default:
 	break;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.30 2001/01/12 00:37:20 wessels Exp $
+ * $Id: pconn.cc,v 1.31 2001/04/14 00:03:23 hno Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -125,7 +125,7 @@ pconnRead(int fd, void *data)
     int n;
     assert(table != NULL);
     statCounter.syscalls.sock.reads++;
-    n = read(fd, buf, 256);
+    n = FD_READ_METHOD(fd, buf, 256);
     debug(48, 3) ("pconnRead: %d bytes from FD %d, %s\n", n, fd,
 	hashKeyStr(&p->hash));
     pconnRemoveFD(p, fd);

@@ -13,7 +13,7 @@
 
 
 /*
- * $Id: rfc2617.c,v 1.2 2001/02/01 18:49:06 hno Exp $
+ * $Id: rfc2617.c,v 1.3 2001/04/14 00:03:20 hno Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -49,6 +49,7 @@
 #include "config.h"
 #include <string.h>
 #include "rfc2617.h"
+#include "md5.h"
 
 void 
 CvtHex(const HASH Bin, HASHHEX Hex)

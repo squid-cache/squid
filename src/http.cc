@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.378 2001/03/03 10:39:32 hno Exp $
+ * $Id: http.cc,v 1.379 2001/04/14 00:03:23 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -482,7 +482,7 @@ httpReadReply(int fd, void *data)
     read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
     statCounter.syscalls.sock.reads++;
-    len = read(fd, buf, read_sz);
+    len = FD_READ_METHOD(fd, buf, read_sz);
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);

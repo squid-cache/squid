@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.308 2001/03/03 10:39:32 hno Exp $
+ * $Id: ftp.cc,v 1.309 2001/04/14 00:03:22 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -883,7 +883,7 @@ ftpDataRead(int fd, void *data)
 #endif
     memset(ftpState->data.buf + ftpState->data.offset, '\0', read_sz);
     statCounter.syscalls.sock.reads++;
-    len = read(fd, ftpState->data.buf + ftpState->data.offset, read_sz);
+    len = FD_READ_METHOD(fd, ftpState->data.buf + ftpState->data.offset, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
@@ -1244,7 +1244,7 @@ ftpReadControlReply(int fd, void *data)
     }
     assert(ftpState->ctrl.offset < ftpState->ctrl.size);
     statCounter.syscalls.sock.reads++;
-    len = read(fd,
+    len = FD_READ_METHOD(fd,
 	ftpState->ctrl.buf + ftpState->ctrl.offset,
 	ftpState->ctrl.size - ftpState->ctrl.offset);
     if (len > 0) {
