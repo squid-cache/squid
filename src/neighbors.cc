@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.177 1998/03/04 22:07:55 wessels Exp $
+ * $Id: neighbors.cc,v 1.178 1998/03/05 08:33:42 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -440,7 +440,7 @@ neighborsUdpPing(request_t * request,
 	if (p->type == PEER_MULTICAST)
 	    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
 	reqnum = mem->reqnum;
-	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", entry->key);
+	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText(entry->key));
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
 	if (p->icp_port == echo_port) {
