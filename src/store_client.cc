@@ -1,7 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.66 1999/05/04 19:22:28 wessels Exp $
- * $Id: store_client.cc,v 1.66 1999/05/04 19:22:28 wessels Exp $
+ * $Id: store_client.cc,v 1.67 1999/05/04 21:58:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -131,9 +130,6 @@ storeClientListAdd(StoreEntry * e, void *data)
 	assert(e->swap_file_number > -1 || storeSwapOutAble(e));
     for (T = &mem->clients; *T; T = &(*T)->next);
     *T = sc;
-#if DELAY_POOLS
-    delayRegisterDelayIdPtr(&sc->delay_id);
-#endif
 #if DELAY_POOLS
     sc->delay_id = 0;
     delayRegisterDelayIdPtr(&sc->delay_id);

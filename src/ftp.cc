@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.282 1999/04/23 02:57:23 wessels Exp $
+ * $Id: ftp.cc,v 1.283 1999/05/04 21:58:22 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1248,7 +1248,7 @@ static void
 ftpHandleControlReply(FtpStateData * ftpState)
 {
     char *oldbuf;
-    wordlist **W, **T;
+    wordlist **W;
     int bytes_used = 0;
     wordlistDestroy(&ftpState->ctrl.message);
     ftpState->ctrl.message = ftpParseControlReply(ftpState->ctrl.buf,
@@ -1275,21 +1275,11 @@ ftpHandleControlReply(FtpStateData * ftpState)
 	xmemmove(ftpState->ctrl.buf, ftpState->ctrl.buf + bytes_used,
 	    ftpState->ctrl.offset);
     }
-    /* Extract reply message (last line) */
-    for (T = NULL, W = &ftpState->ctrl.message; *W && (*W)->next; W = &(*W)->next) {
-	/* Skip trailing blank lines */
-	if (strlen((*W)->key) == 0) {
-	    if (T == NULL)
-		T = W;
-	} else if ((*W)->next) {
-	    T = NULL;
-	}
-    }
+    /* Find the last line of the reply message */
+    for (W = &ftpState->ctrl.message; (*W)->next; W = &(*W)->next);
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
-    if (T)
-	wordlistDestroy(T);
     debug(9, 8) ("ftpReadControlReply: state=%d, code=%d\n", ftpState->state,
 	ftpState->ctrl.replycode);
     FTP_SM_FUNCS[ftpState->state] (ftpState);

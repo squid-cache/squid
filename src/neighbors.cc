@@ -1,7 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.272 1999/04/23 02:57:26 wessels Exp $
- * $Id: neighbors.cc,v 1.272 1999/04/23 02:57:26 wessels Exp $
+ * $Id: neighbors.cc,v 1.273 1999/05/04 21:58:28 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived

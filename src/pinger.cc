@@ -1,7 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.41 1999/04/23 02:57:28 wessels Exp $
- * $Id: pinger.cc,v 1.41 1999/04/23 02:57:28 wessels Exp $
+ * $Id: pinger.cc,v 1.42 1999/05/04 21:58:30 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels

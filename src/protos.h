@@ -1,7 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.327 1999/05/03 22:59:56 wessels Exp $
- * $Id: protos.h,v 1.327 1999/05/03 22:59:56 wessels Exp $
+ * $Id: protos.h,v 1.328 1999/05/04 21:58:31 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
