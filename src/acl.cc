@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.83 1997/02/06 19:59:53 wessels Exp $
+ * $Id: acl.cc,v 1.84 1997/02/19 00:05:36 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -370,16 +370,16 @@ aclSplayIpCompare(struct in_addr addr, struct _acl_ip_data *data)
     int rc = 0;
     addr.s_addr &= data->mask.s_addr;	/* apply netmask */
     if (data->addr2.s_addr == 0) {	/* single address check */
-	if (addr.s_addr > data->addr1.s_addr)
+	if (ntohl(addr.s_addr) > ntohl(data->addr1.s_addr))
 	    rc = 1;
-	else if (addr.s_addr < data->addr1.s_addr)
+	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
 	    rc = -1;
 	else
 	    rc = 0;
     } else {			/* range address check */
-	if (addr.s_addr > data->addr2.s_addr)
+	if (ntohl(addr.s_addr) > ntohl(data->addr2.s_addr))
 	    rc = 1;
-	else if (addr.s_addr < data->addr1.s_addr)
+	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
 	    rc = -1;
 	else
 	    rc = 0;
