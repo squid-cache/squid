@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.5 2002/07/18 22:02:26 hno Exp $
+ * $Id: external_acl.cc,v 1.6 2002/08/21 05:56:10 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -515,6 +515,7 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	case EXT_ACL_PORT:
 	    snprintf(buf, sizeof(buf), "%d", request->port);
 	    str = buf;
+	    break;
 	case EXT_ACL_METHOD:
 	    str = RequestMethodStr[request->method];
 	    break;
