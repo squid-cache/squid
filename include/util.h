@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.40 1998/02/21 00:56:36 rousskov Exp $
+ * $Id: util.h,v 1.41 1998/02/23 13:04:40 rousskov Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -172,6 +172,7 @@ typedef struct in_addr SIA;
 extern int safe_inet_addr(const char *, SIA *);
 extern time_t parse_iso3307_time(const char *buf);
 extern char *base64_decode(const char *coded);
+extern const char *base64_encode(const char *decoded);
 
 typedef struct _String {
     char *buf;
