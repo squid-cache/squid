@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.56 1996/04/17 15:02:58 wessels Exp $ */
-#ident "$Id: store.cc,v 1.56 1996/04/17 15:02:58 wessels Exp $"
+/* $Id: store.cc,v 1.57 1996/04/17 16:43:37 wessels Exp $ */
+#ident "$Id: store.cc,v 1.57 1996/04/17 16:43:37 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -1240,7 +1240,7 @@ static int storeDoRebuildFromDisk(data)
     if (!fgets(data->line_in, 4095, data->log))
 	return 0;
 
-    if ((data->linecount++ & 0xFFF) == 0)
+    if ((++data->linecount & 0xFFF) == 0)
 	debug(20, 1, "  %7d Lines read so far.\n", data->linecount);
 
     debug(20, 10, "line_in: %s", data->line_in);
@@ -1334,7 +1334,8 @@ static int storeDoRebuildFromDisk(data)
     /* Is the swap file number already taken? */
     if (file_map_bit_test(sfileno)) {
 	/* Yes is is, we can't use this swapfile */
-	debug(20, 1, "storeRebuildFromDisk: Active clash: file #%d\n",
+	debug(20, 1, "storeRebuildFromDisk: Line %d Active clash: file #%d\n",
+	    data->linecount,
 	    sfileno);
 	debug(20, 3, "storeRebuildFromDisk: --> <URL:%s>\n", url);
 	if (opt_unlink_on_reload)
@@ -1397,11 +1398,16 @@ static void storeRebuiltFromDisk(data)
     safe_free(data);
     sprintf(tmp_filename, "%s.new", swaplog_file);
     if (rename(tmp_filename, swaplog_file) < 0) {
-	debug(20, 0, "storeRebuiltFromDisk: rename failed: %s\n",
-	    xstrerror());
+	debug(20, 0, "storeRebuiltFromDisk: %s,%s: %s\n",
+		tmp_filename, swaplog_file, xstrerror());
+	fatal_dump("storeRebuiltFromDisk: rename failed");
     }
-    file_update_open(swaplog_fd, swaplog_file);
-    /* file_update_open clears the lock so we must reset it */
+    if (file_write_unlock(swaplog_fd, swaplog_lock) != DISK_OK)
+	fatal_dump("storeRebuiltFromDisk: swaplog unlock failed");
+    if (file_close(swaplog_fd) != DISK_OK)
+	fatal_dump("storeRebuiltFromDisk: file_close(swaplog_fd) failed");
+    if ((swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT | O_APPEND)) < 0)
+	fatal_dump("storeRebuiltFromDisk: file_open(swaplog_file) failed");
     swaplog_lock = file_write_lock(swaplog_fd);
 }
 
@@ -1427,10 +1433,8 @@ void storeStartRebuildFromDisk()
     sprintf(tmp_filename, "%s/log-last-clean", swappath(0));
     if (stat(tmp_filename, &sb) >= 0) {
 	last_clean = sb.st_mtime;
-	sprintf(tmp_filename, "%s/log", swappath(0));
-	if (stat(tmp_filename, &sb) >= 0) {
+	if (stat(swaplog_file, &sb) >= 0)
 	    data->fast_mode = (sb.st_mtime <= last_clean) ? 1 : 0;
-	}
     }
     /* close the existing write-only swaplog, and open a temporary
      * write-only swaplog  */
