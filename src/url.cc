@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.103 1998/07/22 20:38:04 wessels Exp $
+ * $Id: url.cc,v 1.104 1998/08/10 19:37:51 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -240,7 +240,7 @@ urlParse(method_t method, char *url)
     if (Config.appendDomain && !strchr(host, '.'))
 	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
     if (port == 0) {
-	debug(23, 0) ("urlParse: Invalid port == 0\n");
+	debug(23, 3) ("urlParse: Invalid port == 0\n");
 	return NULL;
     }
 #ifdef HARDCODE_DENY_PORTS

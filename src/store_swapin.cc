@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.11 1998/07/22 20:54:03 wessels Exp $
+ * $Id: store_swapin.cc,v 1.12 1998/08/10 19:37:50 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -119,11 +119,11 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     } else if (e->swap_status != SWAPOUT_DONE) {
 	(void) 0;
     } else if (fstat(fd, &sb) < 0) {
-	debug(20, 0) ("storeSwapInFileOpened: fstat() FD %d: %s\n", fd, xstrerror());
+	debug(20, 1) ("storeSwapInFileOpened: fstat() FD %d: %s\n", fd, xstrerror());
 	file_close(fd);
 	fd = -1;
     } else if (sb.st_size == 0 || sb.st_size != e->swap_file_sz) {
-	debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, (int) sb.st_size, e->swap_file_sz);
+	debug(20, 1) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, (int) sb.st_size, e->swap_file_sz);
 	file_close(fd);
 	fd = -1;
     }
