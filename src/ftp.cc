@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.192 1998/02/10 18:39:36 wessels Exp $
+ * $Id: ftp.cc,v 1.193 1998/02/13 17:47:38 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1802,8 +1802,19 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	mime_type = "text/html";
     } else {
-	mime_type = mimeGetContentType(filename);
-	mime_enc = mimeGetContentEncoding(filename);
+	switch (ftpState->typecode) {
+	case 'I':
+	    mime_type = "application/octet-stream";
+	    mime_enc = mimeGetContentEncoding(filename);
+	    break;
+	case 'A':
+	    mime_type = "text/plain";
+	    break;
+	default:
+	    mime_type = mimeGetContentType(filename);
+	    mime_enc = mimeGetContentEncoding(filename);
+	    break;
+	}
     }
     storeBuffer(e);
     storeAppendPrintf(e, "HTTP/1.0 200 Gatewaying\r\n");
