@@ -408,8 +408,9 @@ InvokeHandlers(StoreEntry * e)
 int
 storePendingNClients(const StoreEntry * e)
 {
-    int npend = 0;
     MemObject *mem = e->mem_obj;
+    int npend = NULL == mem ? 0 : mem->nclients;
+#if OLD_CODE
     store_client *sc;
     store_client *nx = NULL;
     if (mem == NULL)
@@ -423,5 +424,7 @@ storePendingNClients(const StoreEntry * e)
 	    continue;
 	npend++;
     }
+#endif
+    debug(20,0)("storePendingNClients: returning %d\n", npend);
     return npend;
 }
