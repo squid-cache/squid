@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.33 1998/05/28 05:20:43 wessels Exp $
+ * $Id: client_db.cc,v 1.34 1998/05/30 19:43:04 rousskov Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -200,13 +200,13 @@ int
 meshCtblGetRowFn(oid * New, oid * Oid)
 {
     ClientInfo *c = NULL;
-    static char key[15];
 
     if (!Oid[0] && !Oid[1] && !Oid[2] && !Oid[3]) {
 	hash_first(client_table);
 	c = (ClientInfo *) hash_next(client_table);
     } else {
-	snprintf(key, 15, "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
+	char key[15];
+	snprintf(key, sizeof(key), "%d.%d.%d.%d", Oid[0], Oid[1], Oid[2], Oid[3]);
 	c = (ClientInfo *) hash_lookup(client_table, key);
 	if (NULL != c)
 	    c = c->next;
@@ -230,7 +230,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
-    snprintf(key, 15, "%d.%d.%d.%d", Var->name[11], Var->name[12],
+    snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[11], Var->name[12],
 	Var->name[13], Var->name[14]);
     debug(49, 5) ("snmp_meshCtblFn: [%s] requested!\n", key);
     c = (ClientInfo *) hash_lookup(client_table, key);

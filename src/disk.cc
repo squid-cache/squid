@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.116 1998/05/22 23:44:03 wessels Exp $
+ * $Id: disk.cc,v 1.117 1998/05/30 19:43:06 rousskov Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -466,7 +466,12 @@ file_write(int fd,
     }
 }
 
-
+/* a wrapper around file_write to allow for MemBuf to be file_written in a snap */
+void
+file_write_mbuf(int fd, off_t off, MemBuf mb, DWCB * handler, void *handler_data)
+{
+    file_write(fd, off, mb.buf, mb.size, handler, handler_data, memBufFreeFunc(&mb));
+}
 
 /* Read from FD */
 static void

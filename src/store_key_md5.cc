@@ -5,14 +5,12 @@ static cache_key null_key[MD5_DIGEST_CHARS];
 const char *
 storeKeyText(const unsigned char *key)
 {
-    LOCAL_ARRAY(char, buf, 33);
+    static MemBuf mb = MemBufNULL;
     int i;
-    int o;
-    for (i = 0; i < MD5_DIGEST_CHARS; i++) {
-	o = i << 1;
-	snprintf(buf + o, 33 - o, "%02X", *(key + i));
-    }
-    return buf;
+    memBufReset(&mb);
+    for (i = 0; i < MD5_DIGEST_CHARS; i++)
+	memBufPrintf(&mb, "%02X", *(key + i));
+    return mb.buf;
 }
 
 const unsigned char *
@@ -68,7 +66,7 @@ storeKeyPrivate(const char *url, method_t method, int num)
     assert(num > 0);
     debug(20, 3) ("storeKeyPrivate: %s %s\n",
 	RequestMethodStr[method], url);
-    n = snprintf(key_buf, MAX_URL + 100, "%d %s %s",
+    n = snprintf(key_buf, sizeof(key_buf), "%d %s %s",
 	num,
 	RequestMethodStr[method],
 	url);
@@ -85,7 +83,7 @@ storeKeyPublic(const char *url, method_t method)
     MD5_CTX M;
     int n;
     char key_buf[MAX_URL + 100];
-    n = snprintf(key_buf, MAX_URL + 100, "%s %s",
+    n = snprintf(key_buf, sizeof(key_buf), "%s %s",
 	RequestMethodStr[method],
 	url);
     MD5Init(&M);

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.125 1998/04/24 07:09:34 wessels Exp $
+ * $Id: gopher.cc,v 1.126 1998/05/30 19:43:09 rousskov Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -161,7 +161,7 @@ typedef struct gopher_ds {
 } GopherStateData;
 
 static PF gopherStateFree;
-static void gopher_mime_content(char *buf, const char *name, const char *def);
+static void gopher_mime_content(MemBuf *mb, const char *name, const char *def);
 static void gopherMimeCreate(GopherStateData *);
 static int gopher_url_parser(const char *url,
     char *host,
@@ -199,13 +199,13 @@ gopherStateFree(int fdnotused, void *data)
 
 /* figure out content type from file extension */
 static void
-gopher_mime_content(char *buf, const char *name, const char *def_ctype)
+gopher_mime_content(MemBuf *mb, const char *name, const char *def_ctype)
 {
     char *ctype = mimeGetContentType(name);
     char *cenc = mimeGetContentEncoding(name);
     if (cenc)
-	snprintf(buf + strlen(buf), MAX_MIME - strlen(buf), "Content-Encoding: %s\r\n", cenc);
-    snprintf(buf + strlen(buf), MAX_MIME - strlen(buf), "Content-Type: %s\r\n",
+	memBufPrintf(mb, "Content-Encoding: %s\r\n", cenc);
+    memBufPrintf(mb, "Content-Type: %s\r\n",
 	ctype ? ctype : def_ctype);
 }
 
@@ -215,9 +215,11 @@ gopher_mime_content(char *buf, const char *name, const char *def_ctype)
 static void
 gopherMimeCreate(GopherStateData * gopherState)
 {
-    LOCAL_ARRAY(char, tempMIME, MAX_MIME);
+    MemBuf mb;
 
-    snprintf(tempMIME, MAX_MIME,
+    memBufDefInit(&mb);
+
+    memBufPrintf(&mb, 
 	"HTTP/1.0 200 OK Gatewaying\r\n"
 	"Server: Squid/%s\r\n"
 	"Date: %s\r\n"
@@ -231,34 +233,35 @@ gopherMimeCreate(GopherStateData * gopherState)
     case GOPHER_HTML:
     case GOPHER_WWW:
     case GOPHER_CSO:
-	strcat(tempMIME, "Content-Type: text/html\r\n");
+	memBufPrintf(&mb, "Content-Type: text/html\r\n");
 	break;
     case GOPHER_GIF:
     case GOPHER_IMAGE:
     case GOPHER_PLUS_IMAGE:
-	strcat(tempMIME, "Content-Type: image/gif\r\n");
+	memBufPrintf(&mb, "Content-Type: image/gif\r\n");
 	break;
     case GOPHER_SOUND:
     case GOPHER_PLUS_SOUND:
-	strcat(tempMIME, "Content-Type: audio/basic\r\n");
+	memBufPrintf(&mb, "Content-Type: audio/basic\r\n");
 	break;
     case GOPHER_PLUS_MOVIE:
-	strcat(tempMIME, "Content-Type: video/mpeg\r\n");
+	memBufPrintf(&mb, "Content-Type: video/mpeg\r\n");
 	break;
     case GOPHER_MACBINHEX:
     case GOPHER_DOSBIN:
     case GOPHER_UUENCODED:
     case GOPHER_BIN:
 	/* Rightnow We have no idea what it is. */
-	gopher_mime_content(tempMIME, gopherState->request, def_gopher_bin);
+	gopher_mime_content(&mb, gopherState->request, def_gopher_bin);
 	break;
     case GOPHER_FILE:
     default:
-	gopher_mime_content(tempMIME, gopherState->request, def_gopher_text);
+	gopher_mime_content(&mb, gopherState->request, def_gopher_text);
 	break;
     }
-    strcat(tempMIME, "\r\n");
-    storeAppend(gopherState->entry, tempMIME, strlen(tempMIME));
+    memBufPrintf(&mb, "\r\n");
+    storeAppend(gopherState->entry, mb.buf, mb.size);
+    memBufClean(&mb);
 }
 
 /* Parse a gopher url into components.  By Anawat. */
@@ -330,15 +333,10 @@ gopherCachable(const char *url)
 static void
 gopherEndHTML(GopherStateData * gopherState)
 {
-    LOCAL_ARRAY(char, tmpbuf, TEMP_BUF_SIZE);
-
-    if (!gopherState->data_in) {
-	snprintf(tmpbuf, TEMP_BUF_SIZE,
+    if (!gopherState->data_in)
+	storeAppendPrintf(gopherState->entry,
 	    "<HTML><HEAD><TITLE>Server Return Nothing.</TITLE>\n"
 	    "</HEAD><BODY><HR><H1>Server Return Nothing.</H1></BODY></HTML>\n");
-	storeAppend(gopherState->entry, tmpbuf, strlen(tmpbuf));
-	return;
-    }
 }
 
 
@@ -369,13 +367,13 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     entry = gopherState->entry;
 
     if (gopherState->conversion == HTML_INDEX_PAGE) {
-	snprintf(outbuf, TEMP_BUF_SIZE << 4,
+	storeAppendPrintf(entry,
 	    "<HTML><HEAD><TITLE>Gopher Index %s</TITLE></HEAD>\n"
 	    "<BODY><H1>%s<BR>Gopher Search</H1>\n"
 	    "<p>This is a searchable Gopher index. Use the search\n"
 	    "function of your browser to enter search terms.\n"
-	    "<ISINDEX></BODY></HTML>\n", storeUrl(entry), storeUrl(entry));
-	storeAppend(entry, outbuf, strlen(outbuf));
+	    "<ISINDEX></BODY></HTML>\n",
+	    storeUrl(entry), storeUrl(entry));
 	/* now let start sending stuff to client */
 	storeBufferFlush(entry);
 	gopherState->data_in = 1;
@@ -383,15 +381,13 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	return;
     }
     if (gopherState->conversion == HTML_CSO_PAGE) {
-	snprintf(outbuf, TEMP_BUF_SIZE << 4,
+	storeAppendPrintf(entry,
 	    "<HTML><HEAD><TITLE>CSO Search of %s</TITLE></HEAD>\n"
 	    "<BODY><H1>%s<BR>CSO Search</H1>\n"
 	    "<P>A CSO database usually contains a phonebook or\n"
 	    "directory.  Use the search function of your browser to enter\n"
 	    "search terms.</P><ISINDEX></BODY></HTML>\n",
 	    storeUrl(entry), storeUrl(entry));
-
-	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
 	storeBufferFlush(entry);
 	gopherState->data_in = 1;

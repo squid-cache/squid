@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.37 1998/05/27 22:51:48 rousskov Exp $
+ * $Id: asn.cc,v 1.38 1998/05/30 19:43:01 rousskov Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -424,7 +424,7 @@ whoisConnectDone(int fd, int status, void *data)
 	comm_close(fd);
 	return;
     }
-    snprintf(buf, 128, "%s\r\n", strBuf(p->request->urlpath) + 1);
+    snprintf(buf, sizeof(buf), "%s\r\n", strBuf(p->request->urlpath) + 1);
     debug(53, 3) ("whoisConnectDone: FD %d, '%s'\n", fd, strBuf(p->request->urlpath) + 1);
     comm_write(fd, xstrdup(buf), strlen(buf), NULL, p, xfree);
     commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, 0);

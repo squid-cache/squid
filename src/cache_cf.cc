@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.282 1998/05/21 03:59:34 wessels Exp $
+ * $Id: cache_cf.cc,v 1.283 1998/05/30 19:43:02 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -52,7 +52,6 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
-static char fatal_str[BUFSIZ];
 static void self_destruct(void);
 static void wordlistAdd(wordlist **, const char *);
 
@@ -78,9 +77,8 @@ static OBJH dump_config;
 static void
 self_destruct(void)
 {
-    snprintf(fatal_str, BUFSIZ, "Bungled %s line %d: %s",
+    fatalf("Bungled %s line %d: %s",
 	cfg_filename, config_lineno, config_input_line);
-    fatal(fatal_str);
 }
 
 void
@@ -117,19 +115,13 @@ wordlistAdd(wordlist ** list, const char *key)
     }
 }
 
-char *
-wordlistCat(const wordlist * w)
+void
+wordlistCat(const wordlist * w, MemBuf *mb)
 {
-    LOCAL_ARRAY(char, buf, 16384);
-    int o = 0;
-    buf[0] = '\0';
     while (NULL != w) {
-	if (o + strlen(w->key) > 16384)
-	    break;
-	o += snprintf(buf + o, 16384 - o, "%s\n", w->key);
+	memBufPrintf(mb, "%s\n", w->key);
 	w = w->next;
     }
-    return buf;
 }
 
 void
@@ -175,11 +167,9 @@ parseConfigFile(const char *file_name)
     char *tmp_line;
     free_all();
     default_all();
-    if ((fp = fopen(file_name, "r")) == NULL) {
-	snprintf(fatal_str, BUFSIZ, "Unable to open configuration file: %s: %s",
+    if ((fp = fopen(file_name, "r")) == NULL)
+	fatalf("Unable to open configuration file: %s: %s",
 	    file_name, xstrerror());
-	fatal(fatal_str);
-    }
     cfg_filename = file_name;
     if ((token = strrchr(cfg_filename, '/')))
 	cfg_filename = token + 1;
@@ -287,10 +277,10 @@ configDoConfigure(void)
 	vhost_mode = 1;
     if (Config.Port.http == NULL)
 	fatal("No http_port specified!");
-    snprintf(ThisCache, SQUIDHOSTNAMELEN << 1, "%s:%d (Squid/%s)",
+    snprintf(ThisCache, sizeof(ThisCache), "%s:%d (%s)",
 	getMyHostname(),
 	(int) Config.Port.http->i,
-	SQUID_VERSION);
+	full_appname_string);
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
 	Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
     if (Config.appendDomain)
@@ -1346,10 +1336,7 @@ static void
 requirePathnameExists(const char *name, const char *path)
 {
     struct stat sb;
-    char buf[MAXPATHLEN];
     assert(path != NULL);
-    if (stat(path, &sb) < 0) {
-	snprintf(buf, MAXPATHLEN, "%s: %s", path, xstrerror());
-	fatal(buf);
-    }
+    if (stat(path, &sb) < 0)
+	fatalf("%s: %s", path, xstrerror());
 }

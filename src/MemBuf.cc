@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.11 1998/05/28 17:32:41 rousskov Exp $
+ * $Id: MemBuf.cc,v 1.12 1998/05/30 19:42:59 rousskov Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -147,6 +147,25 @@ memBufClean(MemBuf * mb)
     mb->size = mb->capacity = 0;
 }
 
+/* cleans the buffer without changing its capacity 
+ * if called with a Null buffer, calls memBufDefInit() */
+void
+memBufReset(MemBuf * mb)
+{
+    assert(mb);
+
+    if (!mb->buf && !mb->max_capacity && !mb->capacity && !mb->size) { 
+	/* Null */
+	memBufDefInit(mb);
+    } else {
+	assert(mb->buf);
+	assert(mb->freefunc); /* not frozen */
+	/* reset */
+	memset(mb->buf, 0, mb->capacity);
+	mb->size = 0;
+    }
+}
+
 /* calls memcpy, appends exactly size bytes, extends buffer if needed */
 void
 memBufAppend(MemBuf * mb, const char *buf, mb_size_t sz)
@@ -197,7 +216,6 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
     assert(mb && fmt);
     assert(mb->buf);
     assert(mb->freefunc);	/* not frozen */
-    /* @?@ we do not init buf with '\0', do we have to for vsnprintf?? @?@ */
     /* assert in Grow should quit first, but we do not want to have a scary infinite loop */
     while (mb->capacity <= mb->max_capacity) {
 	mb_size_t free_space = mb->capacity - mb->size;
@@ -206,17 +224,19 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
 	/* check for possible overflow */
 	/* snprintf on Linuz returns -1 on overflows */
 	/* snprintf on FreeBSD returns at least free_space on overflows */
-	if (sz < 0 || sz + 32 >= free_space)	/* magic constant 32, ARGH! @?@ */
+	if (sz < 0 || sz >= free_space)
 	    memBufGrow(mb, mb->capacity + 1);
 	else
 	    break;
     }
-    /* snprintf on FreeBSD and linux do not count terminating '\0' as "character stored" */
-    if (!sz || mb->buf[mb->size+sz-1])
-	assert(!mb->buf[mb->size+sz]);
-    else
-	sz--;	/* we cut 0-terminator as store does */
     mb->size += sz;
+    /* on Linux and FreeBSD, '\0' is not counted in return value */
+    /* on XXX it might be counted */
+    /* check that '\0' is appended and not counted */
+    if (!mb->size || mb->buf[mb->size-1])
+	assert(!mb->buf[mb->size]);
+    else
+	mb->size--;
 }
 
 /*
@@ -244,6 +264,8 @@ static void
 memBufGrow(MemBuf * mb, mb_size_t min_cap)
 {
     mb_size_t new_cap;
+    MemBuf old_mb;
+
     assert(mb);
     assert(mb->capacity < min_cap);
 
@@ -259,18 +281,48 @@ memBufGrow(MemBuf * mb, mb_size_t min_cap)
     if (new_cap > mb->max_capacity)
 	new_cap = mb->max_capacity;
 
-    assert(new_cap <= mb->max_capacity);	/* no overflow */
+    assert(new_cap <= mb->max_capacity);/* no overflow */
     assert(new_cap > mb->capacity);	/* progress */
 
-    /* finally [re]allocate memory */
-    if (!mb->buf) {
-	mb->buf = xmalloc(new_cap);
-	mb->freefunc = &xfree;
-    } else {
-	assert(mb->freefunc == &xfree);		/* for now */
-	mb->buf = xrealloc(mb->buf, new_cap);
+    old_mb = *mb;
+
+    /* allocate new memory */
+    switch (new_cap) {
+    case 2048:
+	mb->buf = memAllocate(MEM_2K_BUF);
+	mb->freefunc = &memFree2K;
+	break;
+    case 4096:
+	mb->buf = memAllocate(MEM_4K_BUF);
+	mb->freefunc = &memFree4K;
+	break;
+    case 8192:
+	mb->buf = memAllocate(MEM_8K_BUF);
+	mb->freefunc = &memFree8K;
+	break;
+    default:
+	/* recycle if old buffer was not "pool"ed */
+	if (old_mb.freefunc == &xfree) {
+	    mb->buf = xrealloc(old_mb.buf, new_cap);
+	    old_mb.buf = NULL;
+	    old_mb.freefunc = NULL;
+	    /* init tail, just in case */
+	    memset(mb->buf + mb->size, 0, new_cap - mb->size);
+	} else {
+	    mb->buf = xcalloc(1, new_cap);
+	    mb->freefunc = &xfree;
+	}
     }
-    memset(mb->buf + mb->size, 0, new_cap - mb->size);	/* just in case */
+
+    /* copy and free old buffer if needed */
+    if (old_mb.buf && old_mb.freefunc) {
+	memcpy(mb->buf, old_mb.buf, old_mb.size);
+	(*old_mb.freefunc)(old_mb.buf);
+    } else {
+	assert(!old_mb.buf && !old_mb.freefunc);
+    }
+
+    /* done */
     mb->capacity = new_cap;
 }
 

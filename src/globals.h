@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.57 1998/05/22 23:14:20 wessels Exp $
+ * $Id: globals.h,v 1.58 1998/05/30 19:43:08 rousskov Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -97,6 +97,7 @@ extern int store_hash_buckets;	/* 0 */
 extern hash_table *store_table;	/* NULL */
 extern dlink_list store_list;
 extern const String StringNull;	/* { 0, 0, NULL } */
+extern const MemBuf MemBufNull;	/* MemBufNULL */
 extern int hot_obj_count;	/* 0 */
 extern int _db_level;
 extern const int CacheDigestHashFuncCount;	/* 4 */

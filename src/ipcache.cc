@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.188 1998/05/24 03:41:10 wessels Exp $
+ * $Id: ipcache.cc,v 1.189 1998/05/30 19:43:13 rousskov Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -989,8 +989,7 @@ ipcacheChangeKey(ipcache_entry * i)
     }
     assert(i == (ipcache_entry *) table_entry);
     hash_remove_link(ip_table, table_entry);
-    snprintf(new_key, 256, "%d/", ++index);
-    strncat(new_key, i->name, 128);
+    snprintf(new_key, 256, "%d/%s", ++index, i->name);
     debug(14, 1) ("ipcacheChangeKey: from '%s' to '%s'\n", i->name, new_key);
     safe_free(i->name);
     i->name = xstrdup(new_key);

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.266 1998/05/28 23:35:31 wessels Exp $
+ * $Id: comm.cc,v 1.267 1998/05/30 19:43:05 rousskov Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1383,7 +1383,7 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
     commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, state, 0);
 }
 
-/* a wrapper around comm_write to allow for MemBuf to comm_written in a snap */
+/* a wrapper around comm_write to allow for MemBuf to be comm_written in a snap */
 void
 comm_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data)
 {

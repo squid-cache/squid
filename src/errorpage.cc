@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.134 1998/05/27 22:51:52 rousskov Exp $
+ * $Id: errorpage.cc,v 1.135 1998/05/30 19:43:07 rousskov Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -149,8 +149,7 @@ errorTryLoadText(const char *page_name, const char *dir)
     struct stat sb;
     char *text;
 
-    snprintf(path, MAXPATHLEN, "%s/%s",
-	dir, page_name);
+    snprintf(path, sizeof(path), "%s/%s", dir, page_name);
     fd = file_open(path, O_RDONLY, NULL, NULL, NULL);
     if (fd < 0 || fstat(fd, &sb) < 0) {
 	debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
@@ -372,20 +371,22 @@ static const char *
 errorConvert(char token, ErrorState * err)
 {
     request_t *r = err->request;
-    static char buf[CVT_BUF_SZ];
-    const char *p = buf;
+    static MemBuf mb = MemBufNULL;
+    const char *p = NULL; /* takes priority over mb if set */
+    
+    memBufReset(&mb);
     switch (token) {
     case 'B':
 	p = r ? ftpUrlWith2f(r) : "[no URL]";
 	break;
     case 'e':
-	snprintf(buf, CVT_BUF_SZ, "%d", err->xerrno);
+	memBufPrintf(&mb, "%d", err->xerrno);
 	break;
     case 'E':
 	if (err->xerrno)
-	    snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->xerrno, strerror(err->xerrno));
+	    memBufPrintf(&mb, "(%d) %s", err->xerrno, strerror(err->xerrno));
 	else
-	    snprintf(buf, CVT_BUF_SZ, "[No Error]");
+	    memBufPrintf(&mb, "[No Error]");
 	break;
     case 'f':
 	/* FTP REQUEST LINE */
@@ -403,26 +404,26 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'g':
 	/* FTP SERVER MESSAGE */
-	p = wordlistCat(err->ftp_server_msg);
+	wordlistCat(err->ftp_server_msg, &mb);
 	break;
     case 'h':
-	snprintf(buf, CVT_BUF_SZ, "%s", getMyHostname());
+	memBufPrintf(&mb, "%s", getMyHostname());
 	break;
     case 'H':
 	p = r ? r->host : "[unknown host]";
 	break;
     case 'i':
-	snprintf(buf, CVT_BUF_SZ, "%s", inet_ntoa(err->src_addr));
+	memBufPrintf(&mb, "%s", inet_ntoa(err->src_addr));
 	break;
     case 'I':
 	if (err->host) {
-	    snprintf(buf, CVT_BUF_SZ, "%s", err->host);
+	    memBufPrintf(&mb, "%s", err->host);
 	} else
 	    p = "[unknown]";
 	break;
     case 'L':
 	if (Config.errHtmlText) {
-	    snprintf(buf, CVT_BUF_SZ, "%s", Config.errHtmlText);
+	    memBufPrintf(&mb, "%s", Config.errHtmlText);
 	} else
 	    p = "[not available]";
 	break;
@@ -431,7 +432,7 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'p':
 	if (r) {
-	    snprintf(buf, CVT_BUF_SZ, "%d", (int) r->port);
+	    memBufPrintf(&mb, "%d", (int) r->port);
 	} else {
 	    p = "[unknown port]";
 	}
@@ -441,9 +442,7 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'R':
 	if (NULL != r) {
-	    MemBuf mb;
 	    Packer p;
-	    memBufDefInit(&mb);
 	    memBufPrintf(&mb, "%s %s HTTP/%3.1f\n",
 		RequestMethodStr[r->method],
 		strLen(r->urlpath) ? strBuf(r->urlpath) : "/",
@@ -451,8 +450,6 @@ errorConvert(char token, ErrorState * err)
 	    packerToMemInit(&p, &mb);
 	    httpHeaderPackInto(&r->header, &p);
 	    packerClean(&p);
-	    xstrncpy(buf, mb.buf, CVT_BUF_SZ);
-	    memBufClean(&mb);
 	} else if (err->request_hdrs) {
 	    p = err->request_hdrs;
 	} else {
@@ -466,11 +463,11 @@ errorConvert(char token, ErrorState * err)
 	/* signature may contain %-escapes, recursion */
 	if (err->page_id != ERR_SQUID_SIGNATURE) {
 	    const int saved_id = err->page_id;
-	    MemBuf mb;
+	    MemBuf sign_mb;
 	    err->page_id = ERR_SQUID_SIGNATURE;
-	    mb = errorBuildContent(err);
-	    snprintf(buf, CVT_BUF_SZ, "%s", mb.buf);
-	    memBufClean(&mb);
+	    sign_mb = errorBuildContent(err);
+	    memBufPrintf(&mb, "%s", sign_mb.buf);
+	    memBufClean(&sign_mb);
 	    err->page_id = saved_id;
 	} else {
 	    /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
@@ -478,18 +475,18 @@ errorConvert(char token, ErrorState * err)
 	}
 	break;
     case 't':
-	xstrncpy(buf, mkhttpdlogtime(&squid_curtime), 128);
+	memBufPrintf(&mb, "%s", mkhttpdlogtime(&squid_curtime));
 	break;
     case 'T':
-	snprintf(buf, CVT_BUF_SZ, "%s", mkrfc1123(squid_curtime));
+	memBufPrintf(&mb, "%s", mkrfc1123(squid_curtime));
 	break;
     case 'U':
 	p = r ? urlCanonicalClean(r) : err->url ? err->url : "[no URL]";
 	break;
     case 'w':
-	if (Config.adminEmail) {
-	    snprintf(buf, CVT_BUF_SZ, "%s", Config.adminEmail);
-	} else
+	if (Config.adminEmail)
+	    memBufPrintf(&mb, "%s", Config.adminEmail);
+	else
 	    p = "[unknown]";
 	break;
     case 'z':
@@ -505,7 +502,9 @@ errorConvert(char token, ErrorState * err)
 	p = "%UNKNOWN%";
 	break;
     }
-    assert(p != NULL);
+    if (!p)
+	p = mb.buf; /* do not use mb after this assignment! */
+    assert(p);
     debug(4, 3) ("errorConvert: %%%c --> '%s'\n", token, p);
     return p;
 }

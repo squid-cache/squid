@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.165 1998/05/28 20:47:52 wessels Exp $
+ * $Id: acl.cc,v 1.166 1998/05/30 19:43:00 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1936,22 +1936,23 @@ aclDumpIpList(acl_ip_data * ip)
 #else
     wordlist *W = NULL;
     wordlist **T = &W;
-    wordlist *w;
-    char buf[128];
-    off_t o;
+    MemBuf mb;
+
+    memBufDefInit(&mb);
     while (ip != NULL) {
-	o = 0;
-	o += snprintf(buf + o, 128 - o, "%s", inet_ntoa(ip->addr1));
+	wordlist *w = xcalloc(1, sizeof(wordlist));
+	memBufReset(&mb);
+	memBufPrintf(&mb, "%s", inet_ntoa(ip->addr1));
 	if (ip->addr2.s_addr != any_addr.s_addr)
-	    o += snprintf(buf + o, 128 - o, "-%s", inet_ntoa(ip->addr2));
+	    memBufPrintf(&mb, "-%s", inet_ntoa(ip->addr2));
 	if (ip->mask.s_addr != no_addr.s_addr)
-	    o += snprintf(buf + o, 128 - o, "/%s", inet_ntoa(ip->mask));
-	w = xcalloc(1, sizeof(wordlist));
-	w->key = xstrdup(buf);
+	    memBufPrintf(&mb, "/%s", inet_ntoa(ip->mask));
+	w->key = xstrdup(mb.buf);
 	*T = w;
 	T = &w->next;
 	ip = ip->next;
     }
+    memBufClean(&mb);
     return W;
 #endif
 }
@@ -1971,10 +1972,10 @@ aclDumpTimeSpecList(acl_time_data * t)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
-    wordlist *w;
     char buf[128];
     while (t != NULL) {
-	snprintf(buf, 128, "%c%c%c%c%c%c%c %02d:%02d-%02d:%02d",
+	wordlist *w = xcalloc(1, sizeof(wordlist));
+	snprintf(buf, sizeof(buf), "%c%c%c%c%c%c%c %02d:%02d-%02d:%02d",
 	    t->weekbits & ACL_SUNDAY ? 'S' : '-',
 	    t->weekbits & ACL_MONDAY ? 'M' : '-',
 	    t->weekbits & ACL_TUESDAY ? 'T' : '-',
@@ -1986,7 +1987,6 @@ aclDumpTimeSpecList(acl_time_data * t)
 	    t->start % 60,
 	    t->stop / 60,
 	    t->stop % 60);
-	w = xcalloc(1, sizeof(wordlist));
 	w->key = xstrdup(buf);
 	*T = w;
 	T = &w->next;
@@ -2016,11 +2016,10 @@ aclDumpIntlistList(intlist * data)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
-    wordlist *w;
     char buf[32];
     while (data != NULL) {
-	snprintf(buf, 32, "%d", data->i);
-	w = xcalloc(1, sizeof(wordlist));
+	wordlist *w = xcalloc(1, sizeof(wordlist));
+	snprintf(buf, sizeof(buf), "%d", data->i);
 	w->key = xstrdup(buf);
 	*T = w;
 	T = &w->next;
@@ -2084,11 +2083,10 @@ aclDumpProxyAuthList(acl_proxy_auth * data)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
-    wordlist *w;
     char buf[MAXPATHLEN];
+    wordlist *w = xcalloc(1, sizeof(wordlist));
     assert(data != NULL);
-    snprintf(buf, MAXPATHLEN, "%s %d\n", data->filename, data->check_interval);
-    w = xcalloc(1, sizeof(wordlist));
+    snprintf(buf, sizeof(buf), "%s %d\n", data->filename, data->check_interval);
     w->key = xstrdup(buf);
     *T = w;
     T = &w->next;
@@ -2388,13 +2386,12 @@ aclDumpArpList(acl_arp_data * data)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
-    wordlist *w;
     char buf[24];
     while (data != NULL) {
-	snprintf(buf, 24, "%02x:%02x:02x:02x:02x:02x",
+	wordlist *w = xcalloc(1, sizeof(wordlist));
+	xsnprintf(buf, sizeof(buf), "%02x:%02x:02x:02x:02x:02x",
 	    data->eth[0], data->eth[1], data->eth[2], data->eth[3],
 	    data->eth[4], data->eth[5]);
-	w = xcalloc(1, sizeof(wordlist));
 	w->key = xstrdup(buf);
 	*T = w;
 	T = &w->next;

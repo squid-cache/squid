@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.154 1998/05/15 15:16:39 wessels Exp $
+ * $Id: tools.cc,v 1.155 1998/05/30 19:43:20 rousskov Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -117,6 +117,7 @@ and report the trace back to squid-bugs@nlanr.net.\n\
 Thanks!\n"
 
 static void fatal_common(const char *);
+static void fatalvf(const char *fmt, va_list args);
 static void mail_warranty(void);
 static void shutdownTimeoutHandler(int fd, void *data);
 #if USE_ASYNC_IO
@@ -417,6 +418,37 @@ fatal(const char *message)
     exit(1);
 }
 
+/* printf-style interface for fatal */
+#ifdef __STDC__
+void
+fatalf(const char *fmt,...)
+{
+    va_list args;
+    va_start(args, fmt);
+#else
+void
+fatalf(va_alist)
+     va_dcl
+{
+    va_list args;
+    const char *fmt = NULL;
+    va_start(args);
+    fmt = va_arg(args, char *);
+#endif
+    fatalvf(fmt, args);
+    va_end(args);
+}
+
+
+/* used by fatalf */
+static void
+fatalvf(const char *fmt, va_list args)
+{
+    static char fatal_str[BUFSIZ];
+    vsnprintf(fatal_str, sizeof(fatal_str), fmt, args);
+    fatal(fatal_str);
+}
+
 /* fatal with dumping core */
 void
 fatal_dump(const char *message)
@@ -674,7 +706,7 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
+	    xsnprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"setrlimit: RLIMIT_OFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}

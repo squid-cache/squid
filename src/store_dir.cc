@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.69 1998/05/22 23:14:22 wessels Exp $
+ * $Id: store_dir.cc,v 1.70 1998/05/30 19:43:18 rousskov Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -131,18 +131,14 @@ storeCreateDirectory(const char *path, int should_exist)
 	if (S_ISDIR(st.st_mode)) {
 	    debug(20, should_exist ? 3 : 1) ("%s exists\n", path);
 	} else {
-	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
-		"Swap directory %s is not a directory.", path);
-	    fatal(tmp_error_buf);
+	    fatalf("Swap directory %s is not a directory.", path);
 	}
     } else if (0 == mkdir(path, 0755)) {
 	debug(20, should_exist ? 1 : 3) ("%s created\n", path);
 	created = 1;
     } else {
-	snprintf(tmp_error_buf, ERROR_BUF_SZ,
-	    "Failed to make swap directory %s: %s",
+	fatalf("Failed to make swap directory %s: %s",
 	    path, xstrerror());
-	fatal(tmp_error_buf);
     }
     return created;
 }
