@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.43 2002/09/07 15:29:08 hno Exp $
+ * $Id: helper.cc,v 1.44 2002/09/07 23:02:05 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -429,7 +429,7 @@ helperStats(StoreEntry * sentry, helper * hlp)
 	storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
 	    srv->index + 1,
 	    srv->rfd,
-	    src->pid,
+	    srv->pid,
 	    srv->stats.uses,
 	    srv->flags.alive ? 'A' : ' ',
 	    srv->flags.busy ? 'B' : ' ',
