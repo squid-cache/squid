@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.53 2003/03/11 22:13:12 robertc Exp $
+# $Id: Makefile.in,v 1.54 2003/04/20 03:35:39 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -485,7 +485,7 @@ dist-hook:
 	@if [ -f $(top_srcdir)/RELEASENOTES.html ]; then \
 	  cp -p $(top_srcdir)/RELEASENOTES.html $(distdir)/RELEASENOTES.html; \
 	else \
-	  cp $(top_srcdir)/doc/release-notes/release-2.5.html $(distdir)/RELEASENOTES.html; \
+	  cp $(top_srcdir)/doc/release-notes/release-3.0.html $(distdir)/RELEASENOTES.html; \
 	fi
 
 install-pinger:

@@ -1,4 +1,4 @@
-DOC	= release-2.5
+DOC	= release-3.0
 
 all: $(DOC).html $(DOC).ps
 
