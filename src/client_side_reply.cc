@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.61 2003/07/16 07:21:22 hno Exp $
+ * $Id: client_side_reply.cc,v 1.62 2003/07/23 11:21:37 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1916,6 +1916,11 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
     StoreIOBuffer tempBuffer;
     char *buf = next()->readBuffer.data;
     char *body_buf = buf + rep->hdr_sz;
+
+    //Server side may disable ranges under some circumstances.
+
+    if ((!http->request->range))
+        next()->readBuffer.offset = 0;
 
     if (next()->readBuffer.offset != 0) {
         if (next()->readBuffer.offset > body_size) {
