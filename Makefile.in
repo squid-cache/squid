@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.28 2002/09/30 00:18:30 hno Exp $
+# $Id: Makefile.in,v 1.29 2002/10/06 08:18:01 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -149,10 +149,9 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = README ./include/autoconf.h.in ./include/stamp-h.in \
 	COPYING ChangeLog INSTALL Makefile.am Makefile.in TODO \
-	acconfig.h acinclude.m4 aclocal.m4 cfgaux/compile \
-	cfgaux/config.guess cfgaux/config.sub cfgaux/depcomp \
-	cfgaux/install-sh cfgaux/missing cfgaux/mkinstalldirs configure \
-	configure.in
+	acinclude.m4 aclocal.m4 cfgaux/compile cfgaux/config.guess \
+	cfgaux/config.sub cfgaux/depcomp cfgaux/install-sh \
+	cfgaux/missing cfgaux/mkinstalldirs configure configure.in
 all: all-recursive
 
 .SUFFIXES:
@@ -188,7 +187,7 @@ $(srcdir)/./include/autoconf.h.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/./include/st
 		rm -f $(srcdir)/./include/stamp-h.in; \
 		$(MAKE) $(srcdir)/./include/stamp-h.in; \
 	else :; fi
-$(srcdir)/./include/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/acconfig.h
+$(srcdir)/./include/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	@rm -f $(srcdir)/./include/stamp-h.in $(srcdir)/./include/stamp-h.inT
 	@echo timestamp > $(srcdir)/./include/stamp-h.inT 2> /dev/null
 	cd $(top_srcdir) && $(AUTOHEADER)
