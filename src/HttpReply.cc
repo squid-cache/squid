@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.24 1998/05/22 23:43:54 wessels Exp $
+ * $Id: HttpReply.cc,v 1.25 1998/05/27 22:51:44 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -34,13 +34,33 @@
 
 /* local constants */
 
+/* these entity-headers must be ignored if a bogus server sends them in 304 */
+static HttpHeaderMask Denied304HeadersMask;
+static http_hdr_type Denied304HeadersArr[] =
+{
+    HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
+    HDR_CONTENT_LOCATION, HDR_CONTENT_RANGE, HDR_LAST_MODIFIED, HDR_LINK,
+    HDR_OTHER
+};
+
 /* local routines */
+static void httpReplyInit(HttpReply * rep);
+static void httpReplyClean(HttpReply * rep);
 static void httpReplyDoDestroy(HttpReply * rep);
 static void httpReplyHdrCacheInit(HttpReply * rep);
 static void httpReplyHdrCacheClean(HttpReply * rep);
 static int httpReplyParseStep(HttpReply * rep, const char *parse_start, int atEnd);
 static int httpReplyParseError(HttpReply * rep);
 static int httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end);
+
+
+/* module initialization */
+void
+httpReplyInitModule()
+{
+    httpHeaderMaskInit(&Denied304HeadersMask);
+    httpHeaderCalcMask(&Denied304HeadersMask, (const int *) Denied304HeadersArr, countof(Denied304HeadersArr));
+}
 
 
 HttpReply *
@@ -59,7 +79,7 @@ httpReplyInit(HttpReply * rep)
     rep->hdr_sz = 0;
     rep->pstate = psReadyToParseStartLine;
     httpBodyInit(&rep->body);
-    httpHeaderInit(&rep->header);
+    httpHeaderInit(&rep->header, hoReply);
     httpReplyHdrCacheInit(rep);
     httpStatusLineInit(&rep->sline);
 }
@@ -101,14 +121,14 @@ httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep)
     httpReplyDoDestroy(new_rep);
 }
 
-/* parses a buffer that may not be 0-terminated */
+/* parses a 4K buffer that may not be 0-terminated; returns true on success */
 int
 httpReplyParse(HttpReply * rep, const char *buf)
 {
     /*
      * this extra buffer/copy will be eliminated when headers become meta-data
      * in store. Currently we have to xstrncpy the buffer becuase store.c may
-     * feed a non 0-terminated buffer to us @?@.
+     * feed a non 0-terminated buffer to us.
      */
     char *headers = memAllocate(MEM_4K_BUF);
     int success;
@@ -237,7 +257,7 @@ httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
     /* clean cache */
     httpReplyHdrCacheClean(rep);
     /* update raw headers */
-    httpHeaderUpdate(&rep->header, &freshRep->header);
+    httpHeaderUpdate(&rep->header, &freshRep->header, &Denied304HeadersMask);
     /* init cache */
     httpReplyHdrCacheInit(rep);
 }
@@ -370,74 +390,4 @@ httpReplyIsolateStart(const char **parse_start, const char **blk_start, const ch
 
     *parse_start = *blk_end;
     return 1;
-}
-
-/* find end of headers */
-int
-httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end)
-{
-    /* adopted with mods from mime_headers_end() */
-    const char *p1 = strstr(*parse_start, "\n\r\n");
-    const char *p2 = strstr(*parse_start, "\n\n");
-    const char *end = NULL;
-
-    if (p1 && p2)
-	end = p1 < p2 ? p1 : p2;
-    else
-	end = p1 ? p1 : p2;
-
-    if (end) {
-	*blk_start = *parse_start;
-	*blk_end = end + 1;
-	*parse_start = end + (end == p1 ? 3 : 2);
-	return 1;
-    }
-    /* no headers, case 1 */
-    if ((*parse_start)[0] == '\r' && (*parse_start)[1] == '\n') {
-	*blk_start = *parse_start;
-	*blk_end = *blk_start;
-	*parse_start += 2;
-	return 1;
-    }
-    /* no headers, case 2 */
-    if ((*parse_start)[0] == '\n') {
-	/* no headers */
-	*blk_start = *parse_start;
-	*blk_end = *blk_start;
-	*parse_start += 1;
-	return 1;
-    }
-    /* failure */
-    return 0;
-}
-
-/*
- *returns true if connection should be "persistent" after processing
- this message
- */
-int
-httpMsgIsPersistent(float http_ver, const HttpHeader * hdr)
-{
-    if (http_ver >= 1.1) {
-	/*
-	 * for modern versions of HTTP: persistent unless there is
-	 * a "Connection: close" header.
-	 */
-	return !httpHeaderHasConnDir(hdr, "close");
-    } else {
-	/*
-	 * Persistent connections in Netscape 3.x are allegedly broken,
-	 * return false if it is a browser connection.  If there is a
-	 * VIA header, then we assume this is NOT a browser connection.
-	 */
-	const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
-	if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
-	    if (!strncasecmp(agent, "Mozilla/3.", 10))
-		return 0;
-	    if (!strncasecmp(agent, "Netscape/3.", 11))
-		return 0;
-	}
-	/* for old versions of HTTP: persistent if has "keep-alive" */
-	return httpHeaderHasConnDir(hdr, "keep-alive");
-    }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.32 1998/05/26 23:45:32 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.33 1998/05/27 22:51:57 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -249,6 +249,7 @@ peerDigestRequest(peer * p)
     requestLink(req);
     assert(req);
     /* add custom headers */
+#if OLD_CODE
     /* rewrite this when requests get rid of "prefix" */
     assert(!req->prefix);
     {
@@ -258,6 +259,17 @@ peerDigestRequest(peer * p)
 	httpRequestSetHeaders(req, METHOD_GET, url, mb.buf);
 	memBufClean(&mb);
     }
+#else
+    assert(!req->header.len);
+    {
+	HttpHdrCc *cc = httpHdrCcCreate();
+	EBIT_SET(cc->mask, CC_ONLY_IF_CACHED);
+	httpHeaderPutStr(&req->header, HDR_ACCEPT, StoreDigestMimeStr);
+	httpHeaderPutStr(&req->header, HDR_ACCEPT, "text/html");
+	httpHeaderPutCc(&req->header, cc);
+	httpHdrCcDestroy(cc);
+    }
+#endif
     /* create fetch state structure */
     fetch = memAllocate(MEM_DIGEST_FETCH_STATE);
     cbdataAdd(fetch, MEM_DIGEST_FETCH_STATE);
@@ -491,7 +503,6 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 }
 
 /* free state structures, disables digest on error */
-/* this probably should mimic httpRequestFree() but it does not! @?@ @?@ */
 static void
 peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
 {
@@ -501,7 +512,8 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
     const time_t expires = fetch->entry->expires;
     const time_t fetch_resp_time = squid_curtime - fetch->start_time;
     const int b_read = (fetch->entry->store_status == STORE_PENDING) ?
-    mem->inmem_hi : mem->object_sz;
+	mem->inmem_hi : mem->object_sz;
+    const int req_len = req ? httpRequestPrefixLen(req) : 0;
     assert(req);
     /* final checks */
     if (!err_msg) {
@@ -553,12 +565,12 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
     }
     /* update global stats */
     /* note: outgoing numbers are not precise! @?@ */
-    kb_incr(&Counter.cd.kbytes_sent, req->prefix_sz);
+    kb_incr(&Counter.cd.kbytes_sent, req_len);
     kb_incr(&Counter.cd.kbytes_recv, (size_t) b_read);
     Counter.cd.msgs_sent++;
     Counter.cd.msgs_recv++;
     /* update peer stats */
-    kb_incr(&peer->digest.stats.kbytes_sent, req->prefix_sz);
+    kb_incr(&peer->digest.stats.kbytes_sent, req_len);
     kb_incr(&peer->digest.stats.kbytes_recv, (size_t) b_read);
     peer->digest.stats.msgs_sent++;
     peer->digest.stats.msgs_recv++;

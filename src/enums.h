@@ -191,9 +191,11 @@ typedef enum {
     HDR_AUTHORIZATION,
     HDR_CACHE_CONTROL,
     HDR_CONNECTION,
+    HDR_CONTENT_BASE,
     HDR_CONTENT_ENCODING,
     HDR_CONTENT_LANGUAGE,
     HDR_CONTENT_LENGTH,
+    HDR_CONTENT_LOCATION,
     HDR_CONTENT_MD5,
     HDR_CONTENT_RANGE,
     HDR_CONTENT_TYPE,
@@ -228,6 +230,7 @@ typedef enum {
     HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,		/* tmp hack, remove later */
     HDR_X_FORWARDED_FOR,
+    HDR_X_REQUEST_URI,		/* appended if ADD_X_REQUEST_URI is #defined */
     HDR_X_SQUID_ERROR,
     HDR_OTHER,
     HDR_ENUM_END
@@ -258,6 +261,13 @@ typedef enum {
     ftPRange,
     ftPContRange
 } field_type;
+
+/* possible owners of http header */
+typedef enum {
+    hoNone,
+    hoRequest,
+    hoReply
+} http_hdr_owner_type;
 
 typedef enum {
     HIER_NONE,
@@ -456,7 +466,6 @@ enum {
     REQ_PROXYING,
     REQ_REFRESH,
     REQ_USED_PROXY_AUTH,
-    REQ_CC_ONLY_IF_CACHED,
     REQ_REDIRECTED
 };
 

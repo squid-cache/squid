@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.275 1998/05/26 23:04:13 wessels Exp $
+ * $Id: http.cc,v 1.276 1998/05/27 22:51:53 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -345,8 +345,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
-	/* Old code never parsed headers if headersEnd failed, was it intentional ? @?@ @?@ */
-	/* what happens if we fail to parse here? @?@ @?@ */
+	/* what happens if we fail to parse here? */
 	httpReplyParse(reply, httpState->reply_hdr);	/* httpState->eof); */
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
@@ -618,10 +617,12 @@ httpBuildRequestHeader(request_t * request,
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
 
+#if OLD_CODE
     assert(orig_request->prefix != NULL);
     debug(11, 3) ("httpBuildRequestHeader:\n%s", orig_request->prefix);
-    httpHeaderInit(hdr_out);
-
+#endif
+    httpHeaderInit(hdr_out, hoRequest);
+    
     /* append our IMS header */
     if (entry && entry->lastmod > -1 && request->method == METHOD_GET)
 	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);
@@ -696,9 +697,8 @@ httpBuildRequestHeader(request_t * request,
 	if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
 	    httpHeaderPutStr(hdr_out, HDR_HOST, orig_request->host);
 	} else {
-	    snprintf(bbuf, BBUF_SZ, "%s:%d",
+	    httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
 		orig_request->host, (int) orig_request->port);
-	    httpHeaderPutStr(hdr_out, HDR_HOST, bbuf);
 	}
     }
     /* append Cache-Control, add max-age if not there already */

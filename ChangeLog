@@ -1,3 +1,7 @@
+	- do not cut off "; parameter" from "digitized" Content-Type 
+	  http fields
+	- Added X-Request-URI for persistent connection debugging 
+	  (Henrik Nordstrom)
 	- Added Polish error pages from Maciej Kozinski.
 	- Fixed hash_first/hash_next bugs with **Current pointer.
 	  Replaced with *next pointer.
@@ -38,22 +42,25 @@ Changes to squid-1.2.beta21 (May 22, 1998):
 	- Changed URN menu output to be sorted.
 	- Added fast select(2) timeouts when using ASYNC_IO.
 	- Added ARP ACL support for Linux (David Luyer).
-        - Added binary http headers to requests (still under construction)
+        - Added binary http headers to requests
         - request_t objects are now created and destroyed in a consistent way
         - Fixed cache control printf bug
         - Added a lot of new http header ids
         - Improved Connection: header handling; now both Connection and
-          Proxy-Connection headers are checked
+          Proxy-Connection headers are checked for connection directives
         - Connection request header is now handled correctly regardless
           of its position and the number of entries
-        - Better handling of persistent connection "clues" in HTTP headers
+	- Only replies with valid Content-Length can be sent with keep-alive
+	  connection directive (Henrik Nordstrom)
+        - Better handling of persistent connection "clues" in HTTP headers;
+	  the decision now depends on HTTP version (and User-Agent exceptions)
         - Removed handling of "length=" directive in IMS headers;
           the directive is not in the HTTP/1.1 standard;
           standing by for objections
         - allowed/denied headers are now checked using bit masks instead of
           strcmp loops
         - removed Uri: from allowed headers; Uri is deprecated in RFC 2068
-	- removed processing of Request-Range header (no in specs?)
+	- removed processing of Request-Range header (not in specs?)
 	- Fixed byte-order bugs in cacheDigestHashKey.
 	- Changed hash_remove_link() to return void.
 	- Changed ipcache_gethostbyname() to return NULL if
