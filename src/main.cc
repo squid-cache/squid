@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.216 1998/02/10 21:44:34 wessels Exp $
+ * $Id: main.cc,v 1.217 1998/02/10 22:28:57 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -599,7 +599,9 @@ main(int argc, char **argv)
 	case COMM_SHUTDOWN:
 	    /* delayed close so we can transmit while shutdown pending */
 	    icpConnectionClose();
+#ifdef SQUID_SNMP
 	    snmpConnectionClose();
+#endif
 	    if (shutdown_pending) {
 		normal_shutdown();
 #if 0
