@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.55 1998/01/05 21:44:40 wessels Exp $
+ * $Id: debug.cc,v 1.56 1998/01/07 22:45:25 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -290,7 +290,7 @@ accessLogTime(time_t t)
     static time_t last_t = 0;
     if (t != last_t) {
 	tm = localtime(&t);
-	strftime(buf, 127, "%y/%m/%d %H:%M:%S", tm);
+	strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
 	last_t = t;
     }
     return buf;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.12 1998/01/05 00:57:53 wessels Exp $
+ * $Id: rfc1123.c,v 1.13 1998/01/07 22:45:23 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -193,6 +193,12 @@ parse_rfc1123(const char *str)
 	    tm.tm_mday = make_num(s);
 	    tm.tm_mon = make_month(s + 3);
 	    tm.tm_year = make_num(s + 7);
+	    /*
+	     * Y2K: Arjan de Vet <Arjan.deVet@adv.IAEhv.nl>
+	     * if tm.tm_year < 70, assume it's after the year 2000.
+	     */
+	    if (tm.tm_year < 70)
+		tm.tm_year += 100;
 	    tm.tm_hour = make_num(s + 10);
 	    tm.tm_min = make_num(s + 13);
 	    tm.tm_sec = make_num(s + 16);
