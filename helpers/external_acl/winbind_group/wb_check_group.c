@@ -1,5 +1,5 @@
 /*
- * $Id: wb_check_group.c,v 1.3 2002/07/20 11:26:20 hno Exp $
+ * $Id: wb_check_group.c,v 1.4 2002/09/07 10:09:50 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
@@ -143,9 +143,21 @@ char * wbinfo_gid_to_sid(char * sid, gid_t gid)
     return sid;
 }
 
+/* returns 0 on match, -1 if no match */
+static inline int strcmparray(const char *str, const char **array)
+{
+    while (*array) {
+    	debug("Windows group: %s, Squid group: %s\n", str, *array);
+	if (strcmp(str, *array) == 0)
+	    return 0;
+	array++;
+    }
+    return -1;
+}
+
 /* returns 1 on success, 0 on failure */
 int
-Valid_Group(char *UserName, char *UserGroup)
+Valid_Groups(char *UserName, const char **UserGroups)
 {
     struct winbindd_request request;
     struct winbindd_response response;
@@ -172,8 +184,7 @@ Valid_Group(char *UserName, char *UserGroup)
     	    debug("SID: %s\n", sid);	
 	    if (wbinfo_lookupsid(group,sid) == NULL)
     		break;
-    	    debug("Windows group: %s, Squid group: %s\n", group, UserGroup);
-	    if (strcmp(group,UserGroup) == 0) {
+	    if (strcmparray(group, UserGroups) == 0) {
 		match = 1;
 		break;
 	    }
@@ -230,6 +241,8 @@ main (int argc, char *argv[])
     char *username;
     char *group;
     int err = 0;
+    const char *groups[512];
+    int n;
 
     if (argc > 0) {	/* should always be true */
 	myname=strrchr(argv[0],'/');
@@ -274,9 +287,11 @@ main (int argc, char *argv[])
 	}
 
 	username = strwordtok(buf, &t);
-	group = strwordtok(NULL, &t);
+	for (n = 0; (group = strwordtok(NULL, &t)) != NULL; n++)
+	    groups[n] = group;
+	groups[n] = NULL;
 
-	if (Valid_Group(username, group)) {
+	if (Valid_Groups(username, groups)) {
 	    printf ("OK\n");
 	} else {
 error:
