@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+Tramitación denegada.
+</STRONG>
+</UL>
+
+<P>
+Esta caché no permitirá hacer seguir su petición porque trata de obligar a
+mantener una relación de hermandad.
+Quizás el cliente en %i es una caché que ha sido mal configurada.

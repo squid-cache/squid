@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+@SHORT_DESCRIPTION@
+</STRONG>
+</UL>
+
+<P>
+El sistema ha devuelto el siguiente mensaje:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Que significa que:
+<PRE>
+    @LONG_DESCRIPTION@
+</PRE>
+

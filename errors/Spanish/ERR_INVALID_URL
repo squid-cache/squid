@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+URL incorrecta.
+</STRONG>
+</UL>
+
+<P>
+Algún aspecto del URL solicitado es incorrecto. Posibles problemas:
+<UL>
+<LI>Falta o es incorrecto el protocolo de acceso (debe ser `http://'' o similar)
+<LI>Falta el nombre de la máquina.
+<LI>Hay caracteres ilegales en el nombre de máquina.
+    Los subrayados no están permitidos en dicha sección.
+</UL>

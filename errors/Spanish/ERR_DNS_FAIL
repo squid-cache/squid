@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<BLOCKQUOTE>
+Incapaz de determinar la dirección IP a partir
+del nombre de la máquina:
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+El programa dnsserver ha devuelto el siguiente mensaje:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Esto quiere decir que:
+<PRE>
+ La caché no ha sido capaz de resolver el nombre de máquina
+ presente en la URL.
+ Compruebe que la dirección es correcta.
+</PRE>
+
