@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.268 1998/07/23 03:29:03 wessels Exp $
+ * $Id: stat.cc,v 1.269 1998/07/24 23:59:06 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -307,6 +307,9 @@ statObjects(void *data)
     } else if (state->sentry->store_status == STORE_ABORTED) {
 	storeUnlockObject(state->sentry);
 	cbdataFree(state);
+	return;
+    } else if (fwdCheckDeferRead(-1, state->sentry)) {
+        eventAdd("statObjects", statObjects, state, 0.1, 1);
 	return;
     }
     storeBuffer(state->sentry);
