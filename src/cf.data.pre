@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.348 2004/04/04 23:17:48 hno Exp $
+# $Id: cf.data.pre,v 1.349 2004/04/11 20:32:25 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1733,14 +1733,16 @@ DOC_START
 	"program" cmdline
 	Specify the command for the external authenticator.  Such
 	a program reads a line containing "username":"realm" and
-	replies with the appropriate H(A1) value base64 encoded.
-	See rfc 2616 for the definition of H(A1).  If you use an
-	authenticator, make sure you have 1 acl of type proxy_auth.
-	By default, authentication is not used.
+	replies with the appropriate H(A1) value base64 encoded or
+	ERR if the user (or his H(A1) hash) does not exists.
+	See rfc 2616 for the definition of H(A1).
 
-	If you want to use build an authenticator,
-	jump over to the ../digest_auth_modules directory and choose the
-	authenticator to use. It it's directory type
+	By default, the digest authentication is not used unless a
+	program is specified.
+
+	If you want to use a digest authenticator, jump over to the
+        helpers/digest_auth/ directory and choose the authenticator
+	to use. In it's directory type
         	% make
 	        % make install
 
