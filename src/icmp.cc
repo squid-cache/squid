@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.76 2002/10/21 05:49:59 adrian Exp $
+ * $Id: icmp.cc,v 1.77 2002/10/21 05:54:36 adrian Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -115,7 +115,7 @@ icmpSend(pingerEchoData * pkt, int len)
 	return;
     debug(37, 2) ("icmpSend: to %s, opcode %d, len %d\n",
 	inet_ntoa(pkt->to), (int) pkt->opcode, pkt->psize);
-    x = send(icmp_sock, (char *) pkt, len, 0);
+    x = comm_send(icmp_sock, (char *) pkt, len, 0);
     if (x < 0) {
 	debug(50, 1) ("icmpSend: send: %s\n", xstrerror());
 	if (errno == ECONNREFUSED || errno == EPIPE) {

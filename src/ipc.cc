@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.31 2002/10/21 05:49:59 adrian Exp $
+ * $Id: ipc.cc,v 1.32 2002/10/21 05:54:36 adrian Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -259,7 +259,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 	    return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
     if (type == IPC_UDP_SOCKET) {
-	x = send(cwfd, hello_string, strlen(hello_string) + 1, 0);
+	x = comm_send(cwfd, hello_string, strlen(hello_string) + 1, 0);
 	if (x < 0) {
 	    debug(50, 0) ("sendto FD %d: %s\n", cwfd, xstrerror());
 	    debug(50, 0) ("ipcCreate: CHILD: hello write test failed\n");
