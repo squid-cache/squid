@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.523 2000/05/16 07:06:06 wessels Exp $
+ * $Id: store.cc,v 1.524 2000/05/28 17:00:13 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -97,9 +97,6 @@ static EVH storeLateRelease;
 #else
 static dlink_list inmem_list;
 #endif
-static int store_pages_max = 0;
-static int store_swap_high = 0;
-static int store_swap_low = 0;
 static Stack LateReleaseStack;
 
 #if URL_CHECKSUM_DEBUG
