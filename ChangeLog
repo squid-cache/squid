@@ -64,7 +64,7 @@ Changes to squid-1.2.alpha6 ():
         	- Added 'Connection' to allowed HTTP headers (http-anon.c)
 		- Added 'Proxy-Connection' to allowed HTTP headers
 		  (http-anon.c)
-		- Merged proxyhttpStart() with httpStart() and crated
+		- Merged proxyhttpStart() with httpStart() and created
 		  new httpBuildState().
 		- New httpPconnTransferDone() detects end-of-data on
 		  persistent connections.
