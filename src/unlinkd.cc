@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.17 1998/02/04 23:42:12 wessels Exp $
+ * $Id: unlinkd.cc,v 1.18 1998/02/10 00:42:54 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -59,6 +59,7 @@ main(int argc, char *argv[])
 {
     char buf[UNLINK_BUF_LEN];
     char *t;
+    setsid();
     setbuf(stdin, NULL);
     while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
 	if ((t = strchr(buf, '\n')))
@@ -143,6 +144,7 @@ unlinkdClose(void)
 	debug_trap("unlinkdClose: unlinkd_fd < 0");
 	return;
     }
+    debug(43, 1)("Closing unlinkd pipe on FD %d\n", unlinkd_fd);
     file_close(unlinkd_fd);
     unlinkd_fd = -1;
 #endif
