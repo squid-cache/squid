@@ -1745,6 +1745,12 @@ if test "${use_dlmalloc-unset}" = unset; then
 		LIBDLMALLOC="libdlmalloc.a"
 		LIB_MALLOC="-L../lib -ldlmalloc"
 		;;
+	*-sgi-irix*)
+		echo "Enabling dlmalloc for $host"
+		use_dlmalloc="yes"
+		LIBDLMALLOC="libdlmalloc.a"
+		LIB_MALLOC="-L../lib -ldlmalloc"
+		;;
     esac
 fi
 if test "x$ac_cv_enabled_dlmalloc" = "xyes"; then
