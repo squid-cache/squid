@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.23 1996/11/14 19:02:19 wessels Exp $
+ * $Id: ident.cc,v 1.24 1997/01/08 17:04:23 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -53,7 +53,7 @@ identStart(int fd, icpStateData * icpState, void (*callback) _PARAMS((void *)))
     if (fd < 0) {
 	fd = comm_open(SOCK_STREAM,
 	    0,
-	    Config.Addrs.tcp_outgoing,
+	    icpState->me.sin_addr,
 	    0,
 	    COMM_NONBLOCKING,
 	    "ident");
