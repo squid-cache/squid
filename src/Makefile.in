@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.196 2001/01/07 23:36:37 hno Exp $
+#  $Id: Makefile.in,v 1.197 2001/01/11 23:30:47 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -323,8 +323,8 @@ install-mkdirs:
 		mkdir $(bindir); \
 	fi
 	-@if test ! -d $(libexecdir); then \
-		echo "mkdir $(libexecdir)"; \
-		mkdir $(libexecdir); \
+		echo "mkdir -p $(libexecdir)"; \
+		mkdir -p $(libexecdir); \
 	fi
 	-@if test ! -d $(sysconfdir); then \
 		echo "mkdir $(sysconfdir)"; \
