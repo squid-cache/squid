@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.336 2002/10/21 14:00:02 adrian Exp $
+ * $Id: ftp.cc,v 1.337 2002/10/21 15:35:12 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "comm.h"
 
 
 static const char *const crlf = "\r\n";
@@ -149,7 +150,7 @@ typedef void (FTPSM) (FtpStateData *);
 static CNCB ftpPasvCallback;
 static IOCB ftpDataRead;
 static PF ftpDataWrite;
-static CWCB ftpDataWriteCallback;
+static IOWCB ftpDataWriteCallback;
 static PF ftpStateFree;
 static PF ftpTimeout;
 static IOCB ftpReadControlReply;
@@ -2208,7 +2209,7 @@ ftpRequestBody(char *buf, ssize_t size, void *data)
     ftpState->data.offset = size;
     if (size > 0) {
 	/* DataWrite */
-	comm_old_write(ftpState->data.fd, buf, size, ftpDataWriteCallback, ftpState, NULL);
+	comm_write(ftpState->data.fd, buf, size, ftpDataWriteCallback, ftpState);
     } else if (size < 0) {
 	/* Error */
 	debug(9, 1) ("ftpRequestBody: request aborted");
@@ -2221,7 +2222,7 @@ ftpRequestBody(char *buf, ssize_t size, void *data)
 
 /* This will be called when the put write is completed */
 static void
-ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t err, void *data)
+ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t err, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *) data;
     if (!err) {
