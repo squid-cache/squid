@@ -1,6 +1,4 @@
-TODO LIST before official squid-1.1:
-
-Changes to squid-1.1.beta11 (October 24, 1996):
+Changes to squid-1.1.beta11 (October 29, 1996):
 
 	- Fixed rfc1123() to use actual RFC1123 time format.
 	- Made Store Hash parameters configurable
