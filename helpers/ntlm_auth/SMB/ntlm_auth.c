@@ -40,6 +40,9 @@ extern int SMB_Get_Last_SMB_Err();
 #ifdef HAVE_CTYPE_H
 #include <ctype.h>
 #endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #ifdef DEBUG
 char error_messages_buffer[BUFFER_SIZE];
