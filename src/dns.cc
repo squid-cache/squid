@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.76 1999/05/19 21:55:51 wessels Exp $
+ * $Id: dns.cc,v 1.77 1999/05/25 06:53:40 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -44,6 +44,7 @@ dnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Dnsserver Statistics:\n");
     helperStats(sentry, dnsservers);
 }
+
 #endif
 
 void

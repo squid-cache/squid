@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.81 1999/05/22 07:42:04 wessels Exp $
+ * $Id: globals.h,v 1.82 1999/05/25 06:53:41 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -118,7 +118,7 @@ extern struct timeval squid_start;
 extern time_t squid_curtime;	/* 0 */
 extern int shutting_down;	/* 0 */
 extern int reconfiguring;	/* 0 */
-extern int store_rebuilding;	/* 1 */
+extern int store_dirs_rebuilding;	/* 0 */
 extern int store_swap_size;	/* 0 */
 extern unsigned long store_mem_size;	/* 0 */
 extern time_t hit_only_mode_until;	/* 0 */

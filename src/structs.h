@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.291 1999/05/22 07:42:16 wessels Exp $
+ * $Id: structs.h,v 1.292 1999/05/25 06:53:52 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1265,16 +1265,31 @@ struct _SwapDir {
     int cur_size;
     int max_size;
     char *path;
+    int index;			/* This entry's index into the swapDirs array */
     int suggest;
     struct {
 	unsigned int selected:1;
 	unsigned int read_only:1;
     } flags;
-    STOPEN *open;
-    STCLOSE *close;
-    STREAD *read;
-    STWRITE *write;
-    STUNLINK *unlink;
+    STINIT *init;
+    STNEWFS *newfs;
+    struct {
+	STOBJOPEN *open;
+	STOBJCLOSE *close;
+	STOBJREAD *read;
+	STOBJWRITE *write;
+	STOBJUNLINK *unlink;
+	STOBJLOG *log;
+    } obj;
+    struct {
+	STLOGOPEN *open;
+	STLOGCLOSE *close;
+	struct {
+	    STLOGCLEANOPEN *open;
+	    STLOGCLEANWRITE *write;
+	    void *state;
+	} clean;
+    } log;
     union {
 	struct {
 	    int l1;
@@ -1719,4 +1734,17 @@ struct _helper_server {
  */
 struct _generic_cbdata {
     void *data;
+};
+
+struct _store_rebuild_data {
+    int objcount;		/* # objects successfully reloaded */
+    int expcount;		/* # objects expired */
+    int scancount;		/* # entries scanned or read from state file */
+    int clashcount;		/* # swapfile clashes avoided */
+    int dupcount;		/* # duplicates purged */
+    int cancelcount;		/* # SWAP_LOG_DEL objects purged */
+    int invalid;		/* # bad lines */
+    int badflags;		/* # bad e->flags */
+    int bad_log_op;
+    int zero_object_sz;
 };
