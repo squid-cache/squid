@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.264 2001/10/17 19:43:39 hno Exp $
+ * $Id: acl.cc,v 1.265 2001/10/22 01:22:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1423,14 +1423,21 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     if (!ae)
 	return 0;
     switch (ae->type) {
-    case ACL_DST_IP:
+    case ACL_BROWSER:
+    case ACL_DST_ASN:
     case ACL_DST_DOMAIN:
     case ACL_DST_DOM_REGEX:
+    case ACL_DST_IP:
+    case ACL_MAX_USER_IP:
+    case ACL_METHOD:
+    case ACL_PROTO:
+    case ACL_PROXY_AUTH:
+    case ACL_PROXY_AUTH_REGEX:
+    case ACL_REP_MIME_TYPE:
+    case ACL_REQ_MIME_TYPE:
     case ACL_URLPATH_REGEX:
     case ACL_URL_PORT:
-    case ACL_PROTO:
-    case ACL_METHOD:
-    case ACL_DST_ASN:
+    case ACL_URL_REGEX:
 	/* These ACL types require checklist->request */
 	if (NULL == r) {
 	    debug(28, 1) ("WARNING: '%s' ACL is used but there is no"
