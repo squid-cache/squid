@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.36 2001/01/31 21:44:42 hno Exp $
+ * $Id: cbdata.cc,v 1.37 2001/01/31 21:46:04 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -160,7 +160,7 @@ cbdataInternalAlloc(cbdata_type type, CBDUNL * free_func)
     assert(type > 0 && type < cbdata_types);
     p = memPoolAlloc(cbdata_memory_pool[type]);
     p->type = type;
-    p->free_func = unlock_func;
+    p->free_func = free_func;
     p->valid = 1;
     p->locks = 0;
 #if CBDATA_DEBUG
