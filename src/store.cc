@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.343 1997/11/14 17:22:09 wessels Exp $
+ * $Id: store.cc,v 1.344 1997/11/17 22:11:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1720,7 +1720,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     MemObject *mem = e->mem_obj;
     size_t sz;
     static int loopdetect = 0;
-    assert(++loopdetect < 3);
+    assert(++loopdetect < 10);
     debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->key));
     assert(callback != NULL);
     if (e->store_status == STORE_ABORTED) {
