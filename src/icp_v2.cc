@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.47 1998/08/14 19:25:21 wessels Exp $
+ * $Id: icp_v2.cc,v 1.48 1998/08/18 16:00:22 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -211,6 +211,12 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     case ICP_QUERY:
 	/* We have a valid packet */
 	url = buf + sizeof(icp_common_t) + sizeof(u_num32);
+	if (strpbrk(url, w_space)) {
+	    url = rfc1738_escape(url);
+	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
+	    break;
+	}
 	if ((icp_request = urlParse(method, url)) == NULL) {
 	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, 0);
