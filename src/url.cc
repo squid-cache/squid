@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.16 1996/04/16 01:51:20 wessels Exp $ */
+/* $Id: url.cc,v 1.17 1996/04/16 04:23:17 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -29,7 +29,6 @@ char *ProtocolStr[] =
 };
 
 static int url_acceptable[256];
-static int url_acceptable_init = 0;
 static char hex[17] = "0123456789abcdef";
 
 /* convert %xx in url string to a character 
@@ -67,7 +66,7 @@ char *url_convert_hex(org_url, allocate)
 
 /* INIT Acceptable table. 
  * Borrow from libwww2 with Mosaic2.4 Distribution   */
-static void init_url_acceptable()
+void urlInitialize()
 {
     unsigned int i;
     char *good =
@@ -76,7 +75,6 @@ static void init_url_acceptable()
 	url_acceptable[i] = 0;
     for (; *good; good++)
 	url_acceptable[(unsigned int) *good] = 1;
-    url_acceptable_init = 1;
 }
 
 
@@ -87,9 +85,6 @@ char *url_escape(url)
 {
     char *p, *q;
     char *tmpline = xcalloc(1, MAX_URL);
-
-    if (!url_acceptable_init)
-	init_url_acceptable();
 
     q = tmpline;
     for (p = url; *p; p++) {
@@ -128,6 +123,10 @@ protocol_t urlParseProtocol(s)
 	return PROTO_HTTP;
     if (strncasecmp(s, "ftp", 3) == 0)
 	return PROTO_FTP;
+#ifndef NO_FTP_FOR_FILE
+    if (strncasecmp(s, "file", 4) == 0)
+	return PROTO_FTP;
+#endif
     if (strncasecmp(s, "gopher", 6) == 0)
 	return PROTO_GOPHER;
     if (strncasecmp(s, "cache_object", 12) == 0)
@@ -156,9 +155,80 @@ int urlDefaultPort(p)
 	return CACHE_HTTP_PORT;
 #ifdef NEED_PROTO_CONNECT
     case PROTO_CONNECT:
-	return 443;
+	return CONNECT_PORT;
 #endif
     default:
 	return 0;
     }
+}
+
+request_t *urlParse(method, url)
+	method_t method;
+	char *url;
+{
+    static char proto[MAX_URL+1];
+    static char host[MAX_URL+1];
+    static char urlpath[MAX_URL+1];
+    request_t *request = NULL;
+    char *t = NULL;
+    int port;
+    protocol_t protocol = PROTO_NONE;
+    proto[0] = host[0] = urlpath[0] = '\0';
+
+    if (method == METHOD_CONNECT) {
+	port = CONNECT_PORT;
+	if (sscanf(url, "%[^:]:%d", host, &port) < 1)
+	    return NULL;
+        if (!aclMatchInteger(connect_port_list, port))
+	    return NULL;
+    } else {
+	if (sscanf(url, "%[^:]://%[^/]%s", proto, host, urlpath) < 2)
+	    return NULL;
+	protocol = urlParseProtocol(proto);
+	port = urlDefaultPort(protocol);
+	if ((t = strchr(host, ':')) && *(t+1) != '\0') {
+	    *t = '\0';
+	    port = atoi(t + 1);
+	}
+    }
+    for (t = host; *t; t++)
+        *t = tolower(*t);
+    if (port == 0) {
+	debug(23,0,"urlParse: Invalid port == 0\n");
+	return NULL;
+    }
+
+    request = (request_t *) xcalloc (1, sizeof(request_t));
+    request->method = method;
+    request->protocol = protocol;
+    strncpy(request->host, host, SQUIDHOSTNAMELEN);
+    request->port = port;
+    strncpy(request->urlpath, urlpath, MAX_URL);
+    return request;
+}
+
+char *urlCanonical (request, buf)
+    request_t *request;
+    char *buf;
+{
+    static char urlbuf[MAX_URL+1];
+    static char portbuf[32];
+    if (buf == NULL)
+	buf = urlbuf;
+    switch (request->method) {
+    case METHOD_CONNECT:
+        sprintf(buf, "%s:%d", request->host, request->port);
+	break;
+    default:
+	portbuf[0] = '\0';
+	if (request->port != urlDefaultPort(request->protocol))
+		sprintf(portbuf, ":%d", request->port);
+        sprintf(buf, "%s://%s%s%s",
+		ProtocolStr[request->protocol],
+		request->host,
+		portbuf,
+		request->urlpath);
+	break;
+    }
+    return buf;
 }

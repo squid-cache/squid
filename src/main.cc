@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.33 1996/04/15 22:53:35 wessels Exp $ */
+/* $Id: main.cc,v 1.34 1996/04/16 04:23:14 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -220,6 +220,7 @@ static void mainInitialize()
     if (first_time) {
 	first_time = 0;
 	/* module initialization */
+	urlInitialize();
 	disk_init();
 	stat_init(&CacheInfo, getAccessLogFile());
 	storeInit();
