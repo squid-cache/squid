@@ -1,0 +1,70 @@
+#
+#  Makefile for the Digest authentication scheme modulefor the Squid Object Cache server
+#
+#  $Id: Makefile.in,v 1.1 2001/01/31 22:16:41 hno Exp $
+#
+
+AUTH		= digest
+
+SUBDIRS		= helpers
+
+top_srcdir	= @top_srcdir@
+VPATH		= @srcdir@
+
+CC		= @CC@
+MAKEDEPEND	= @MAKEDEPEND@
+AR_R		= @AR_R@
+RANLIB		= @RANLIB@
+AC_CFLAGS	= @CFLAGS@
+SHELL		= /bin/sh
+
+INCLUDE		= -I../../../include -I$(top_srcdir)/include -I$(top_srcdir)/src/
+CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
+
+OUT		= ../$(AUTH).a
+
+OBJS	 	= \
+		auth_digest.o
+
+
+all install: $(OUT)
+	@for dir in $(SUBDIRS); do \
+	if [ -f $$dir/Makefile ]; then \
+	       sh -c "cd $$dir && $(MAKE) $@" || exit 1; \
+	fi; \
+	done;
+
+$(OUT): $(OBJS)
+	@rm -f ../stamp
+	$(AR_R) $(OUT) $(OBJS)
+	$(RANLIB) $(OUT)
+
+$(OBJS): $(top_srcdir)/include/version.h ../../../include/autoconf.h
+
+.c.o:
+	@rm -f ../stamp
+	$(CC) $(CFLAGS) -c $<
+
+clean: 
+	-rm -rf *.o *pure_* core ../$(AUTH).a
+	-for dir in *; do \
+	    if [ -f $$dir/Makefile ]; then \
+	        sh -c "cd $$dir && $(MAKE) clean"; \
+	    fi; \
+	done
+
+distclean:	clean
+	-rm -f Makefile
+	-rm -f Makefile.bak
+	-rm -f tags
+	-for dir in *; do \
+	    if [ -f $$dir/Makefile ]; then \
+	        sh -c "cd $$dir && $(MAKE) distclean"; \
+	    fi; \
+	done
+
+tags:
+	ctags *.[ch] $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/*.h $(top_srcdir)/lib/*.[ch]
+
+depend:
+	$(MAKEDEPEND) $(INCLUDE) -fMakefile *.c

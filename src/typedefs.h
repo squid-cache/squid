@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.120 2001/01/12 00:37:23 wessels Exp $
+ * $Id: typedefs.h,v 1.121 2001/01/31 22:16:39 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -293,6 +293,7 @@ typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, i
 typedef int AUTHSACTIVE();
 typedef int AUTHSAUTHED(auth_user_request_t *);
 typedef void AUTHSAUTHUSER(auth_user_request_t *, request_t *, ConnStateData *, http_hdr_type);
+typedef int AUTHSCONFIGURED();
 typedef void AUTHSDECODE(auth_user_request_t *, const char *);
 typedef int AUTHSDIRECTION(auth_user_request_t *);
 typedef void AUTHSDUMP(StoreEntry *, const char *, authScheme *);

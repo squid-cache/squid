@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_basic.cc,v 1.4 2001/01/12 00:37:28 wessels Exp $
+ * $Id: auth_basic.cc,v 1.5 2001/01/31 22:16:40 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -53,6 +53,7 @@ static HLPCB authenticateBasicHandleReply;
 static AUTHSACTIVE authenticateBasicActive;
 static AUTHSAUTHED authenticateBasicAuthenticated;
 static AUTHSAUTHUSER authenticateBasicAuthenticateUser;
+static AUTHSCONFIGURED authBasicConfigured;
 static AUTHSDIRECTION authenticateBasicDirection;
 static AUTHSDECODE authenticateBasicDecodeAuth;
 static AUTHSDUMP authBasicCfgDump;
@@ -107,6 +108,7 @@ authSchemeSetup_basic(authscheme_entry_t * authscheme)
     authscheme->init = authBasicInit;
     authscheme->authAuthenticate = authenticateBasicAuthenticateUser;
     authscheme->authenticated = authenticateBasicAuthenticated;
+    authscheme->configured = authBasicConfigured;
     authscheme->authFixHeader = authenticateBasicFixErrorHeader;
     authscheme->FreeUser = authenticateBasicFreeUser;
     authscheme->freeconfig = authBasicFreeConfig;
@@ -122,9 +124,19 @@ authSchemeSetup_basic(authscheme_entry_t * authscheme)
 int
 authenticateBasicActive()
 {
+    return (authbasic_initialised == 1) ? 1 : 0;
+}
+
+int
+authBasicConfigured()
+{
     if ((basicConfig != NULL) && (basicConfig->authenticate != NULL) &&
-	(basicConfig->authenticateChildren != 0) && (basicConfig->basicAuthRealm != NULL))
+	(basicConfig->authenticateChildren != 0) &&
+	(basicConfig->basicAuthRealm != NULL)) {
+	debug(29, 9) ("authBasicConfigured: returning configured\n");
 	return 1;
+    }
+    debug(29, 9) ("authBasicConfigured: returning unconfigured\n");
     return 0;
 }
 
@@ -308,6 +320,8 @@ authBasicParse(authScheme * scheme, int n_configured, char *param_str)
     }
     basicConfig = scheme->scheme_data;
     if (strcasecmp(param_str, "program") == 0) {
+	if (basicConfig->authenticate)
+	    wordlistDestroy(&basicConfig->authenticate);
 	parse_wordlist(&basicConfig->authenticate);
 	requirePathnameExists("authparam basic program", basicConfig->authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {

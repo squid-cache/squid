@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.5 2001/01/12 00:37:30 wessels Exp $
+ * $Id: auth_ntlm.cc,v 1.6 2001/01/31 22:16:43 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -53,6 +53,7 @@ static HLPSCB authenticateNTLMHandleplaceholder;
 static AUTHSACTIVE authenticateNTLMActive;
 static AUTHSAUTHED authNTLMAuthenticated;
 static AUTHSAUTHUSER authenticateNTLMAuthenticateUser;
+static AUTHSCONFIGURED authNTLMConfigured;
 static AUTHSFIXERR authenticateNTLMFixErrorHeader;
 static AUTHSFREE authenticateNTLMFreeUser;
 static AUTHSDIRECTION authenticateNTLMDirection;
@@ -94,6 +95,7 @@ static hash_table *proxy_auth_cache = NULL;
 void
 authNTLMDone(void)
 {
+    debug(29, 2) ("authNTLMDone: shutting down NTLM authentication.\n");
     if (ntlmauthenticators)
 	helperStatefulShutdown(ntlmauthenticators);
     authntlm_initialised = 0;
@@ -165,6 +167,8 @@ authNTLMParse(authScheme * scheme, int n_configured, char *param_str)
     }
     ntlmConfig = scheme->scheme_data;
     if (strcasecmp(param_str, "program") == 0) {
+	if (ntlmConfig->authenticate)
+	    wordlistDestroy(&ntlmConfig->authenticate);
 	parse_wordlist(&ntlmConfig->authenticate);
 	requirePathnameExists("authparam ntlm program", ntlmConfig->authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
@@ -184,6 +188,7 @@ authSchemeSetup_ntlm(authscheme_entry_t * authscheme)
 {
     assert(!authntlm_initialised);
     authscheme->Active = authenticateNTLMActive;
+    authscheme->configured = authNTLMConfigured;
     authscheme->parse = authNTLMParse;
     authscheme->dump = authNTLMCfgDump;
     authscheme->requestFree = authNTLMAURequestFree;
@@ -243,10 +248,20 @@ authNTLMInit(authScheme * scheme)
 int
 authenticateNTLMActive()
 {
+    return (authntlm_initialised == 1) ? 1 : 0;
+}
+
+
+int
+authNTLMConfigured()
+{
     if ((ntlmConfig != NULL) && (ntlmConfig->authenticate != NULL) &&
 	(ntlmConfig->authenticateChildren != 0) && (ntlmConfig->challengeuses > -1)
-	&& (ntlmConfig->challengelifetime > -1))
+	&& (ntlmConfig->challengelifetime > -1)) {
+	debug(29, 9) ("authNTLMConfigured: returning configured\n");
 	return 1;
+    }
+    debug(29, 9) ("authNTLMConfigured: returning unconfigured\n");
     return 0;
 }
 
@@ -456,7 +471,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 		result = S_HELPER_RELEASE;	/*some error has occured. no more requests */
 		ntlm_request->authhelper = NULL;
 		auth_user->flags.credentials_ok = 2;	/* Login/Usercode failed */
-		debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM.\n");
+		debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
 		ntlm_request->auth_state = AUTHENTICATE_STATE_NONE;
 		if ((t = strchr(reply, ' ')))	/* strip after a space */
 		    *t = '\0';
@@ -482,7 +497,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 		    /* The helper broke on YR. It automatically
 		     * resets */
 		    auth_user->flags.credentials_ok = 3;	/* cannot process */
-		    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %d.\n", lastserver);
+		    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %d. Error returned '%s'\n", lastserver, reply);
 		    /* mark it for starving */
 		    helperstate->starve = 1;
 		    /* resubmit the request. This helper is currently busy, so we will get
@@ -492,7 +507,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 		    /* the helper broke on a KK */
 		    /* first the standard KK stuff */
 		    auth_user->flags.credentials_ok = 2;	/* Login/Usercode failed */
-		    debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM.\n");
+		    debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
 		    ntlm_request->auth_state = AUTHENTICATE_STATE_NONE;
 		    if ((t = strchr(reply, ' ')))	/* strip after a space */
 			*t = '\0';
@@ -845,6 +860,10 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	/* we've recieved a negotiate request. pass to a helper */
 	debug(29, 9) ("authenticateNTLMAuthenticateUser: auth state ntlm none. %s\n",
 	    proxy_auth);
+	if (auth_user->flags.credentials_ok == 2) {
+	    /* the authentication fialed badly... */
+	    return;
+	}
 	ntlm_request->auth_state = AUTHENTICATE_STATE_NEGOTIATE;
 	ntlm_request->ntlmnegotiate = xstrndup(proxy_auth, NTLM_CHALLENGE_SZ + 5);
 	conn->auth_type = AUTH_NTLM;

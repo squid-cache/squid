@@ -33,12 +33,9 @@
 /*
  * define this if you want debugging
  */
-#define DEBUG
-
-/*
- * Number of authentication attempts to perform in case of certain errors
- */
-#define BAD_DC_RETRIES_NUMBER 3
+#ifndef DEBUG
+/* #define DEBUG */
+#endif
 
 /************* END CONFIGURATION ***************/
 
@@ -74,12 +71,14 @@ extern int ntlm_errno;
 #define NTLM_SERVER_ERROR 1
 #define NTLM_PROTOCOL_ERROR 2
 #define NTLM_LOGON_ERROR 3
+#define NTLM_UNTRUSTED_DOMAIN 4
 #define NTLM_BAD_PROTOCOL -1
 #define NTLM_NOT_CONNECTED 10
 
 
 const char *make_challenge(char *domain, char *controller);
 extern char *ntlm_check_auth(ntlm_authenticate * auth, int auth_length);
+extern char *fetch_credentials(ntlm_authenticate * auth, int auth_length);
 void dc_disconnect(void);
 int connectedp(void);
 int is_dc_ok(char *domain, char *domain_controller);

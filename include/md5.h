@@ -1,5 +1,5 @@
 /*
- * $Id: md5.h,v 1.6 1998/09/23 17:19:59 wessels Exp $
+ * $Id: md5.h,v 1.7 2001/01/31 22:16:36 hno Exp $
  */
 
 #ifndef MD5_H
@@ -37,7 +37,7 @@ typedef struct {
 } MD5_CTX;
 
 void MD5Init(MD5_CTX *);
-void MD5Update(MD5_CTX *, unsigned char *, unsigned int);
+void MD5Update(MD5_CTX *, const unsigned char *, unsigned int);
 void MD5Final(unsigned char[16], MD5_CTX *);
 
 #define MD5_DIGEST_CHARS         16

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.211 2001/01/30 21:31:05 hno Exp $
+# $Id: cf.data.pre,v 1.212 2001/01/31 22:16:38 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1141,6 +1141,11 @@ DOC_START
 	basic) then either put basic first, or disable the other schemes (by commenting
 	out their program entry).
 
+	Once an authentication scheme is fully configured, it can only be shutdown
+	by shutting squid down and restarting. Changes can be made on the fly and
+	activated with a reconfigure. I.E. You can change to a different helper, 
+	but not unconfigure the helper completely.
+
 	=== Parameters for the basic scheme follow. ===
 	
 	"program" cmdline
@@ -1183,6 +1188,51 @@ DOC_START
 	If you are using such a system, you will be vulnerable to replay attacks
 	unless you also enable the IP ttl is strict option.
 
+	=== Parameters for the digest scheme follow ===
+
+	"program" cmdline
+	Specify the command for the external authenticator.  Such a
+	program reads a line containing "username":"realm" and replies
+	with the appropriate H(A1) value base64 encoded. See rfc 2616 for
+	the definition of H(A1).  If you use an authenticator,
+	make sure you have 1 acl of type proxy_auth.  By default, 
+	authentication is not used.
+
+	If you want to use build a authenticator,
+	jump over to the ../digest_auth_modules directory and choose the 
+	authenticator to use. It it's directory type
+        	% make
+	        % make install
+
+	Then, set this line to something like
+
+	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
+
+
+	"children" numberofchildren
+	The number of authenticator processes to spawn (no default). If you
+	start too few Squid will have to wait for them to process a backlog
+	of H(A1) calculations, slowing it down. When the H(A1) calculations
+	are done via a (slow) network you are likely to need lots of 
+	authenticator processes.
+	auth_param digest children 5
+
+	"realm" realmstring
+	Specifies the realm name which is to be reported to the client for
+	the digest proxy authentication scheme (part of the text the user will
+	see when prompted their username and password). There is no default.
+	auth_param digest realm Squid proxy-caching web server
+
+	"nonce_garbage_interval" timeinterval
+	Specifies the interval that nonces that have been issued to client_agent's
+	are checked for validity.
+
+	"nonce_max_duration" timeinterval
+	Specifies the maximum length of time a given nonce will be valid for. 
+
+	"nonce_max_count" number
+	Specifies the maximum number of times a given nonce can be used.
+
 	=== NTLM scheme options follow ===
 
 	"program" cmdline
@@ -1219,10 +1269,16 @@ DOC_START
 
 NOCOMMENT_START
 #Recommended minimum configuration:
+#auth_param digest program <uncomment and complete this line>
+#auth_param digest children 5
+#auth_param digest realm Squid proxy-caching web server
+#auth_param digest nonce_garbage_interval 5 minutes
+#auth_param digest nonce_max_duration 30 minutes
+#auth_param digest nonce_max_count 50
 #auth_param ntlm program <uncomment and complete this line to activate>
-auth_param ntlm children 5
-auth_param ntlm max_challenge_reuses 0
-auth_param ntlm max_challenge_lifetime 2 minutes
+#auth_param ntlm children 5
+#auth_param ntlm max_challenge_reuses 0
+#auth_param ntlm max_challenge_lifetime 2 minutes
 #auth_param basic program <uncomment and complete this line>
 auth_param basic children 5
 auth_param basic realm Squid proxy-caching web server
