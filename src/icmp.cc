@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.65 1998/09/15 19:37:49 wessels Exp $
+ * $Id: icmp.cc,v 1.66 1998/09/23 17:09:43 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -106,7 +106,7 @@ icmpSend(pingerEchoData * pkt, int len)
     int x;
     if (icmp_sock < 0)
 	return;
-    x = send(icmp_sock, pkt, len, 0);
+    x = send(icmp_sock, (char *) pkt, len, 0);
     if (x < 0) {
 	debug(50, 1) ("icmpSend: send: %s\n", xstrerror());
 	if (errno == ECONNREFUSED) {
