@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.7 1996/03/25 19:05:52 wessels Exp $ */
+/* $Id: store.cc,v 1.8 1996/03/26 05:18:33 wessels Exp $ */
 
 /* 
  * Here is a summary of the routines which change mem_status and swap_status:
@@ -2257,13 +2257,14 @@ int storeInit()
     }
     sprintf(swaplog_file, "%s/log", swappath(0));
 
-    swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT);
+    swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT |O_APPEND);
     if (swaplog_fd < 0) {
 	sprintf(tmpbuf, "Cannot open swap logfile: %s\n", swaplog_file);
 	fatal(tmpbuf);
     }
-    swaplog_stream = fdopen(swaplog_fd, "a+");
+    swaplog_stream = fdopen(swaplog_fd, "w");
     if (!swaplog_stream) {
+	debug(1, "storeInit: fdopen(%d, \"w\"): %s\n", swaplog_fd, xstrerror());
 	sprintf(tmpbuf, "Cannot open a stream for swap logfile: %s\n", swaplog_file);
 	fatal(tmpbuf);
     }
@@ -2271,12 +2272,12 @@ int storeInit()
 
     sprintf(swaplog_tmp_file, "%s/log_tmp", swappath(0));
 
-    swaplog_tmp_fd = file_open(swaplog_tmp_file, NULL, O_RDWR | O_TRUNC | O_CREAT);
+    swaplog_tmp_fd = file_open(swaplog_tmp_file, NULL, O_RDWR | O_TRUNC | O_CREAT |O_APPEND);
     if (swaplog_tmp_fd < 0) {
 	sprintf(tmpbuf, "Cannot open swap tmp logfile: %s\n", swaplog_tmp_file);
 	fatal(tmpbuf);
     }
-    swaplog_tmp_stream = fdopen(swaplog_tmp_fd, "a+");
+    swaplog_tmp_stream = fdopen(swaplog_tmp_fd, "w");
     if (!swaplog_tmp_stream) {
 	sprintf(tmpbuf, "Cannot open a stream for swap tmp logfile: %s\n", swaplog_tmp_file);
 	fatal(tmpbuf);
@@ -2291,12 +2292,12 @@ int storeInit()
 	safeunlink(swaplog_file, 0);
 	link(swaplog_tmp_file, swaplog_file);
 
-	swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT);
+	swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT | O_APPEND);
 	if (swaplog_fd < 0) {
 	    sprintf(tmpbuf, "Cannot reopen swap logfile: %s\n", swaplog_file);
 	    fatal(tmpbuf);
 	}
-	swaplog_stream = fdopen(swaplog_fd, "a+");
+	swaplog_stream = fdopen(swaplog_fd, "w");
 	if (!swaplog_stream) {
 	    sprintf(tmpbuf, "Cannot reopen a stream for swap logfile: %s\n", swaplog_file);
 	    fatal(tmpbuf);
@@ -2524,12 +2525,12 @@ int storeWriteCleanLog()
 	return 0;
     }
     file_close(swaplog_fd);
-    swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT);
+    swaplog_fd = file_open(swaplog_file, NULL, O_RDWR | O_CREAT| O_APPEND);
     if (swaplog_fd < 0) {
 	sprintf(tmpbuf, "Cannot open swap logfile: %s\n", swaplog_file);
 	fatal(tmpbuf);
     }
-    swaplog_stream = fdopen(swaplog_fd, "a+");
+    swaplog_stream = fdopen(swaplog_fd, "w");
     if (!swaplog_stream) {
 	sprintf(tmpbuf, "Cannot open a stream for swap logfile: %s\n",
 	    swaplog_file);
