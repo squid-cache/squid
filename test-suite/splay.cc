@@ -1,5 +1,5 @@
 /*
- * $Id: splay.cc,v 1.5 2003/06/26 12:52:00 robertc Exp $
+ * $Id: splay.cc,v 1.6 2003/09/22 03:31:02 robertc Exp $
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
@@ -214,7 +214,7 @@ main(int argc, char *argv[])
         if (safeTop->start() != NULL)
             exit (1);
 
-        if (safeTop->end() != NULL)
+        if (safeTop->finish() != NULL)
             exit (1);
 
         for (int i = 0; i < 100; i++) {
@@ -239,10 +239,10 @@ main(int argc, char *argv[])
         if (safeTop->start()->data.i != 50)
             exit (1);
 
-        if (!safeTop->end())
+        if (!safeTop->finish())
             exit (1);
 
-        if (safeTop->end()->data.i != 10000000)
+        if (safeTop->finish()->data.i != 10000000)
             exit (1);
 
         safeTop->destroy(destintref);

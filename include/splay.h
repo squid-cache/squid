@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.24 2003/09/02 22:57:00 robertc Exp $
+ * $Id: splay.h,v 1.25 2003/09/22 03:31:03 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -51,7 +51,7 @@ public:
     void destroy(SPLAYFREE *);
     void walk(SPLAYWALKEE *, void *callerState);
     SplayNode<V> const * start() const;
-    SplayNode<V> const * end() const;
+    SplayNode<V> const * finish() const;
 
     SplayNode<V> * remove
         (const Value data, SPLAYCMP * compare);
@@ -62,6 +62,10 @@ public:
 };
 
 typedef SplayNode<void *> splayNode;
+
+template <class V>
+
+class SplayIterator;
 
 template <class V>
 
@@ -85,7 +89,7 @@ public:
 
     SplayNode<V> const * start() const;
 
-    SplayNode<V> const * end() const;
+    SplayNode<V> const * finish() const;
 
     size_t size() const;
 
@@ -137,10 +141,10 @@ SplayNode<V>::start() const
 
 template<class V>
 SplayNode<V> const *
-SplayNode<V>::end() const
+SplayNode<V>::finish() const
 {
     if (this && right)
-        return right->end();
+        return right->finish();
 
     return this;
 }
@@ -338,10 +342,10 @@ Splay<V>:: start() const
 
 template <class V>
 SplayNode<V> const *
-Splay<V>:: end() const
+Splay<V>:: finish() const
 {
     if (head)
-        return head->end();
+        return head->finish();
 
     return NULL;
 }
