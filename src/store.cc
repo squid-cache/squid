@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.385 1998/02/21 18:46:39 rousskov Exp $
+ * $Id: store.cc,v 1.386 1998/02/21 18:56:48 rousskov Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -212,12 +212,12 @@ destroy_MemObject(StoreEntry * e)
 #endif
     assert(mem->clients == NULL);
     httpReplyDestroy(mem->reply);
-    safe_free(mem->url);
-    safe_free(mem->log_url);
     requestUnlink(mem->request);
     mem->request = NULL;
+    ctx_exit(ctx); /* must exit before we free mem->url */
+    safe_free(mem->url);
+    safe_free(mem->log_url);
     memFree(MEM_MEMOBJECT, mem);
-    ctx_exit(ctx);
 }
 
 static void
