@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.89 1999/05/26 17:07:59 wessels Exp $
+ * $Id: mime.cc,v 1.90 1999/06/17 04:04:04 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -427,6 +427,7 @@ mimeLoadIconFile(const char *icon)
     httpHdrCcSetMaxAge(reply->cache_control, 86400);
     httpHeaderPutCc(&reply->header, reply->cache_control);
     httpReplySwapOut(reply, e);
+    reply->hdr_sz = e->mem_obj->inmem_hi;	/* yuk */
     /* read the file into the buffer and append it to store */
     buf = memAllocate(MEM_4K_BUF);
     while ((n = read(fd, buf, 4096)) > 0)
