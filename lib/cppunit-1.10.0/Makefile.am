@@ -38,11 +38,11 @@ m4data_DATA = cppunit.m4
 DISTCLEANFILES = config/stamp-h1 so_locations
 
 dist-hook:
-	cp -dpR $(top_srcdir)/src/msvc6 $(distdir)/src
-	cp -dpR $(top_srcdir)/src/qttestrunner $(distdir)/src
-	cp -dpR $(top_srcdir)/include/msvc6 $(distdir)/include 
-	cp -dpR $(top_srcdir)/examples/msvc6 $(distdir)/examples
-	cp -dpR $(top_srcdir)/examples/qt $(distdir)/examples
+	cp -pR $(top_srcdir)/src/msvc6 $(distdir)/src
+	cp -pR $(top_srcdir)/src/qttestrunner $(distdir)/src
+	cp -pR $(top_srcdir)/include/msvc6 $(distdir)/include 
+	cp -pR $(top_srcdir)/examples/msvc6 $(distdir)/examples
+	cp -pR $(top_srcdir)/examples/qt $(distdir)/examples
 	mkdir $(distdir)/lib
 	find $(distdir) -name CVS | xargs rm -rf
 	perl -pi -e 's/\n/\r\n/g' `find $(distdir) -name '*.ds?'` \
