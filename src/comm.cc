@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.349 2002/10/23 09:17:34 adrian Exp $
+ * $Id: comm.cc,v 1.350 2002/10/23 10:11:03 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -43,6 +43,12 @@
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
 #endif
+
+/*
+ * This magic determines how many times to call accept()
+ * at a go.
+ */
+#define	MAX_ACCEPT_PER_LOOP		10
 
 typedef struct {
     char *host;
@@ -1736,36 +1742,42 @@ comm_accept_try(int fd, void *data)
 {
 	int newfd;
 	fdc_t *Fc;
+	int count;
+	IOACB *hdl;
 
 	assert(fdc_table[fd].active == 1);
 
 	Fc = &(fdc_table[fd]);
 
-	/* Accept a new connection */
-	newfd = comm_old_accept(fd, &Fc->accept.pn, &Fc->accept.me);
+	/* XXX magic number! */
+	for (count = 0; count < MAX_ACCEPT_PER_LOOP; count++) {
+		/* Accept a new connection */
+		newfd = comm_old_accept(fd, &Fc->accept.pn, &Fc->accept.me);
 
-	if (newfd < 0) {
-		/* Issues - check them */
-		if (newfd == COMM_NOMESSAGE) {
-			/* register interest again */
-			commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
+			if (newfd < 0) {
+			/* Issues - check them */
+			if (newfd == COMM_NOMESSAGE) {
+				/* register interest again */
+				commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
+				return;
+			}
+			/* Problem! */
+			comm_addacceptcallback(fd, -1, Fc->accept.handler, &Fc->accept.pn,
+			    &Fc->accept.me, COMM_ERROR, errno, Fc->accept.handler_data);
+			Fc->accept.handler = NULL;
+			Fc->accept.handler_data = NULL;
 			return;
 		}
-		/* Problem! */
-		comm_addacceptcallback(fd, -1, Fc->accept.handler, &Fc->accept.pn, &Fc->accept.me, COMM_ERROR, errno, Fc->accept.handler_data);
+
+		/* Try the callback! */
+		hdl = Fc->accept.handler;
 		Fc->accept.handler = NULL;
-		Fc->accept.handler_data = NULL;
-		return;
+		hdl(fd, newfd, &Fc->accept.pn, &Fc->accept.me, COMM_OK, 0, Fc->accept.handler_data);
+
+		/* If we weren't re-registed, don't bother trying again! */
+		if (Fc->accept.handler == NULL)
+			return;
 	}
-
-	/* setup our new filedescriptor in fd_table */
-	/* and set it up in fdc_table */
-
-	/* queue a completed callback with the new FD */
-        comm_addacceptcallback(fd, newfd, Fc->accept.handler, &Fc->accept.pn, &Fc->accept.me, COMM_OK, 0, Fc->accept.handler_data);
-	Fc->accept.handler = NULL;
-	Fc->accept.handler_data = NULL;
-
 }
 
 
