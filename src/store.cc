@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.250 1997/06/03 20:09:45 wessels Exp $
+ * $Id: store.cc,v 1.251 1997/06/04 05:50:29 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1495,7 +1495,9 @@ storeValidate(StoreEntry * e, VCB callback, void *callback_data)
     valid_ctrl_t *ctrlp;
     char *path;
     struct stat *sb;
+#if !USE_ASYNC_IO
     int x;
+#endif
     assert(!BIT_TEST(e->flag, ENTRY_VALIDATED));
     if (e->swap_file_number < 0) {
 	BIT_RESET(e->flag, ENTRY_VALIDATED);
