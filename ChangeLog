@@ -20,6 +20,14 @@
 	  the tail of the LRU list, and PUBLIC objects at the head.
 	  Thus, PRIVATE objects get kicked out quicker.
 	- Added David Luyer's DELAY_POOLS code.
+	- Fixed a bug due to HEAD replies which lack the end-of-headers
+	  line.
+	- Made proxy-auth realm string configurable (Bob Franklin)
+	- Changed default mime time to a viewable one (Henrik Nordstrom).
+	- configure fixes for Sony's NEWS-OS 6.x (Makoto MATSUSHITA).
+	- Fixed 'you are running out of filedescriptors' bug which
+	  could cause the HTTP incoming connection handler to not
+	  be reset.
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
