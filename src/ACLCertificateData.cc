@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: ACLCertificateData.cc,v 1.1 2003/02/16 02:23:18 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,31 +35,36 @@
  */
 
 #include "squid.h"
-#include "ACLUserData.h"
+#include "ACLCertificateData.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLUserData::Pool(NULL);
+MemPool *ACLCertificateData::Pool(NULL);
 void *
-ACLUserData::operator new (size_t byteCount)
+ACLCertificateData::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLUserData));
+    assert (byteCount == sizeof (ACLCertificateData));
     if (!Pool)
-	Pool = memPoolCreate("ACLUserData", sizeof (ACLUserData));
+	Pool = memPoolCreate("ACLCertificateData", sizeof (ACLCertificateData));
     return memPoolAlloc(Pool);
 }
 
 void
-ACLUserData::operator delete (void *address)
+ACLCertificateData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
 }
 
 void
-ACLUserData::deleteSelf() const
+ACLCertificateData::deleteSelf() const
 {
     delete this;
+}
+
+
+ACLCertificateData::ACLCertificateData() : attribute (NULL), values (NULL)
+{
 }
 
 template<class T>
@@ -69,10 +74,10 @@ xRefFree(T &thing)
     xfree (thing);
 }
 
-ACLUserData::~ACLUserData()
+ACLCertificateData::~ACLCertificateData()
 {
-    if (names)
-	names->destroy(xRefFree);
+    if (values)
+	values->destroy(xRefFree);
 } 
 
 template<class T>
@@ -89,95 +94,90 @@ splaystrcmp (T&l, T&r)
     return strcmp ((char *)l,(char *)r);
 }
 
-bool
-ACLUserData::match(char const *user)
+/* general compare functions, these are used for tree search algorithms
+ * so they return <0, 0 or >0 */
+
+/* compare two values */
+
+template<class T>
+int
+aclDomainCompare(T const &a, T const &b)
 {
-    SplayNode<char *> *Top = names;
-
-    debug(28, 7) ("aclMatchUser: user is %s, case_insensitive is %d\n",
-	user, flags.case_insensitive);
-    debug(28, 8) ("Top is %p, Top->data is %s\n", Top,
-	(char *) (Top != NULL ? (Top)->data : "Unavailable"));
-
-    if (user == NULL)
-	return 0;
-
-    if (flags.required) {
-	debug(28, 7) ("aclMatchUser: user REQUIRED and auth-info present.\n");
-	return 1;
+    char * const d1 = (char *const)b;
+    char * const d2 = (char *const )a;
+    int ret;
+    ret = aclHostDomainCompare(d1, d2);
+    if (ret != 0) {
+	char *const d3 = d2;
+	char *const d4 = d1;
+	ret = aclHostDomainCompare(d3, d4);
     }
-    if (flags.case_insensitive)
-	Top = Top->splay((char *)user, splaystrcasecmp);
-    else
-	Top = Top->splay((char *)user, splaystrcmp);
-    /* Top=splay_splay(user,Top,(splayNode::SPLAYCMP *)dumping_strcmp); */
-    debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
-	!splayLastResult, Top, (char *) (Top ? Top->data : "Unavailable"));
-    names = Top;
+    /* FIXME this warning may display d1 and d2 when it should display d3 and d4 */
+    if (ret == 0) {
+	debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
+	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", (char *) a);
+	debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
+    }
+    return ret;
+}
+
+/* compare a host and a domain */
+
+static int
+aclHostDomainCompare( char *const &a, char * const &b)
+{
+    const char *h = (const char *)a;
+    const char *d = (const char *)b;
+    return matchDomainName(h, d);
+}
+
+
+bool
+ACLCertificateData::match(char const *host)
+{
+    if (host == NULL)
+	return 0;
+    debug(28, 3) ("aclMatchCertificateList: checking '%s'\n", host);
+    values = values->splay((char *)host, aclHostDomainCompare);
+    debug(28, 3) ("aclMatchCertificateList: '%s' %s\n",
+	host, splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
 
 static void
-aclDumpUserListWalkee(char * const & node_data, void *outlist)
+aclDumpDomainListWalkee(char * const & node_data, void *outlist)
 {
     /* outlist is really a wordlist ** */
     wordlistAdd((wordlist **)outlist, (char const *)node_data);
 }
 
 wordlist *
-ACLUserData::dump()
+ACLCertificateData::dump()
 {
     wordlist *wl = NULL;
-    if (flags.case_insensitive)
-	wordlistAdd(&wl, "-i");
     /* damn this is VERY inefficient for long ACL lists... filling
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    if (flags.required)
-	wordlistAdd(&wl, "REQUIRED");
-    else if (names)
-	names->walk(aclDumpUserListWalkee, &wl);
+    values->walk(aclDumpDomainListWalkee, &wl);
     return wl;
 }
 
 void
-ACLUserData::parse()
+ACLCertificateData::parse()
 {
-    debug(28, 2) ("aclParseUserList: parsing user list\n");
     char *t = NULL;
-    if ((t = strtokFile())) {
-	debug(28, 5) ("aclParseUserList: First token is %s\n", t);
-	if (strcmp("-i", t) == 0) {
-	    debug(28, 5) ("aclParseUserList: Going case-insensitive\n");
-	    flags.case_insensitive = 1;
-	} else if (strcmp("REQUIRED", t) == 0) {
-	    debug(28, 5) ("aclParseUserList: REQUIRED-type enabled\n");
-	    flags.required = 1;
-	} else {
-	    if (flags.case_insensitive)
-		Tolower(t);
-	    names = names->insert(xstrdup(t), splaystrcmp);
-	}
-    }
-    debug(28, 3) ("aclParseUserList: Case-insensitive-switch is %d\n",
-	flags.case_insensitive);
-    /* we might inherit from a previous declaration */
-
-    debug(28, 4) ("aclParseUserList: parsing user list\n");
     while ((t = strtokFile())) {
-	debug(28, 6) ("aclParseUserList: Got token: %s\n", t);
-	if (flags.case_insensitive)
-	    Tolower(t);
-	names = names->insert(xstrdup(t), splaystrcmp);
+	Tolower(t);
+	values = values->insert(xstrdup(t), aclDomainCompare);
     }
 }
 
 
 ACLData *
-ACLUserData::clone() const
+ACLCertificateData::clone() const
 {
     /* Splay trees don't clone yet. */
-    assert (!names);
-    return new ACLUserData;
+    assert (!values);
+    return new ACLCertificateData;
 }

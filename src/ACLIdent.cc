@@ -38,6 +38,8 @@
 #include "ACLIdent.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
+#include "ACLRegexData.h"
+#include "ACLUserData.h"
 
 MemPool *ACLIdent::Pool(NULL);
 void *
@@ -64,13 +66,25 @@ ACLIdent::deleteSelf() const
 
 ACLIdent::~ACLIdent()
 {
-    delete data;
+    data->deleteSelf();
+}
+
+ACLIdent::ACLIdent(ACLData *newData, char const *newType) : data (newData), type_ (newType) {}
+ACLIdent::ACLIdent (ACLIdent const &old) : data (old.data->clone()), type_ (old.type_)
+{
+}
+ACLIdent &
+ACLIdent::operator= (ACLIdent const &rhs)
+{
+    data = rhs.data->clone();
+    type_ = rhs.type_;
+    return *this;
 }
 
 char const *
 ACLIdent::typeString() const
 {
-    return "ident";
+    return type_;
 }
 
 void
@@ -87,7 +101,7 @@ ACLIdent::match(ACLChecklist *checklist)
     if (checklist->rfc931[0]) {
 	return data->match(checklist->rfc931);
     } else {
-	checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
+	checklist->changeState(IdentLookup::Instance());
 	return 0;
     }
 }
@@ -102,4 +116,60 @@ bool
 ACLIdent::valid () const
 {
     return data != NULL;
+}
+
+ACL *
+ACLIdent::clone() const
+{
+    return new ACLIdent(*this);
+}
+
+ACL::Prototype ACLIdent::UserRegistryProtoype(&ACLIdent::UserRegistryEntry_, "ident");
+ACLIdent ACLIdent::UserRegistryEntry_(new ACLUserData, "ident");
+ACL::Prototype ACLIdent::RegexRegistryProtoype(&ACLIdent::RegexRegistryEntry_, "ident_regex" );
+ACLIdent ACLIdent::RegexRegistryEntry_(new ACLRegexData, "ident_regex");
+
+IdentLookup IdentLookup::instance_;
+
+IdentLookup *
+IdentLookup::Instance()
+{
+    return &instance_;
+}
+
+void
+IdentLookup::checkForAsync(ACLChecklist *checklist)const
+{
+    checklist->asyncInProgress(true);
+    debug(28, 3) ("IdentLookup::checkForAsync: Doing ident lookup\n");
+    if (checklist->conn() && cbdataReferenceValid(checklist->conn())) {
+	identStart(&checklist->conn()->me, &checklist->conn()->peer,
+		       LookupDone, checklist);
+    } else {
+	debug(28, 1) ("IdentLookup::checkForAsync: Can't start ident lookup. No client connection\n");
+	checklist->currentAnswer(ACCESS_DENIED);
+	checklist->markFinished();
+    }
+}
+
+void
+IdentLookup::LookupDone(const char *ident, void *data)
+{
+    ACLChecklist *checklist = (ACLChecklist *)data;
+    assert (checklist->asyncState() == IdentLookup::Instance());
+
+    if (ident) {
+	xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
+    } else {
+	xstrncpy(checklist->rfc931, dash_str, USER_IDENT_SZ);
+    }
+    /*
+     * Cache the ident result in the connection, to avoid redoing ident lookup
+     * over and over on persistent connections
+     */
+    if (cbdataReferenceValid(checklist->conn()) && !checklist->conn()->rfc931[0])
+	xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
+    checklist->asyncInProgress(false);
+    checklist->changeState (ACLChecklist::NullState::Instance());
+    checklist->check();
 }

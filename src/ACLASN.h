@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLASN.h,v 1.1 2003/02/16 02:23:18 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,48 +33,17 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLIDENT_H
-#define SQUID_ACLIDENT_H
-#include "ACL.h"
+#ifndef SQUID_ACLASN_H
+#define SQUID_ACLASN_H
 #include "ACLChecklist.h"
-#include "ACLData.h"
+#include "ACLIP.h"
 
-class IdentLookup : public ACLChecklist::AsyncState {
+class ASNLookup : public ACLChecklist::AsyncState {
   public:
-    static IdentLookup *Instance();
+    static ASNLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
   private:
-    static IdentLookup instance_;
-    static void LookupDone(const char *ident, void *data);
+    static ASNLookup instance_;
+    static IPH LookupDone;
 };
-
-class ACLIdent : public ACL {
-  public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
-
-    ACLIdent(ACLData *newData, char const *);
-    ACLIdent (ACLIdent const &old);
-    ACLIdent & operator= (ACLIdent const &rhs);
-    ~ACLIdent();
-    
-    virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-    virtual void parse();
-    virtual bool isProxyAuth() const {return true;}
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool valid () const;
-    virtual ACL *clone()const;
-  private:
-    static MemPool *Pool;
-    static Prototype UserRegistryProtoype;
-    static ACLIdent UserRegistryEntry_;
-    static Prototype RegexRegistryProtoype;
-    static ACLIdent RegexRegistryEntry_;
-    ACLData *data;
-    char const *type_;
-};
-
-#endif /* SQUID_ACLIDENT_H */
+#endif /* SQUID_ACLASN_H */

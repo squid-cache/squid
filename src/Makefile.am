@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.59 2003/02/14 13:59:50 robertc Exp $
+#  $Id: Makefile.am,v 1.60 2003/02/16 02:23:18 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -147,9 +147,15 @@ EXTRA_squid_SOURCES = \
 	win32.cc
 
 squid_ACLSOURCES = \
+	ACLCertificateData.cc \
+	ACLCertificateData.h \
 	ACLData.h \
+	ACLDestinationDomain.cc \
+	ACLDestinationDomain.h \
 	ACLDestinationIP.cc \
 	ACLDestinationIP.h \
+	ACLDomainData.h \
+	ACLDomainData.cc \
 	ACLIP.cc \
 	ACLIP.h \
 	ACLMyIP.cc \
@@ -158,6 +164,8 @@ squid_ACLSOURCES = \
 	ACLProxyAuth.h \
 	ACLRegexData.cc \
 	ACLRegexData.h \
+	ACLSourceDomain.cc \
+	ACLSourceDomain.h \
 	ACLSourceIP.cc \
 	ACLSourceIP.h \
 	ACLUserData.cc \

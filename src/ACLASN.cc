@@ -1,7 +1,8 @@
-
 /*
- * $Id$
+ * $Id: ACLASN.cc,v 1.1 2003/02/16 02:23:18 robertc Exp $
  *
+ * DEBUG: section 28    Access Control
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,52 +30,36 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLIDENT_H
-#define SQUID_ACLIDENT_H
-#include "ACL.h"
+#include "squid.h"
+#include "ACLASN.h"
 #include "ACLChecklist.h"
-#include "ACLData.h"
 
-class IdentLookup : public ACLChecklist::AsyncState {
-  public:
-    static IdentLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
-  private:
-    static IdentLookup instance_;
-    static void LookupDone(const char *ident, void *data);
-};
+ASNLookup ASNLookup::instance_;
 
-class ACLIdent : public ACL {
-  public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
+ASNLookup *
+ASNLookup::Instance()
+{
+    return &instance_;
+}
 
-    ACLIdent(ACLData *newData, char const *);
-    ACLIdent (ACLIdent const &old);
-    ACLIdent & operator= (ACLIdent const &rhs);
-    ~ACLIdent();
-    
-    virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-    virtual void parse();
-    virtual bool isProxyAuth() const {return true;}
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool valid () const;
-    virtual ACL *clone()const;
-  private:
-    static MemPool *Pool;
-    static Prototype UserRegistryProtoype;
-    static ACLIdent UserRegistryEntry_;
-    static Prototype RegexRegistryProtoype;
-    static ACLIdent RegexRegistryEntry_;
-    ACLData *data;
-    char const *type_;
-};
+void
+ASNLookup::checkForAsync(ACLChecklist *checklist)const
+{
+    checklist->asyncInProgress(true);
+    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_PENDING;
+    ipcache_nbgethostbyname(checklist->request->host, LookupDone, checklist);
+}
 
-#endif /* SQUID_ACLIDENT_H */
+void
+ASNLookup::LookupDone(const ipcache_addrs * ia, void *data)
+{
+    ACLChecklist *checklist = (ACLChecklist *)data;
+    assert (checklist->asyncState() == ASNLookup::Instance());
+    checklist->request->flags.destinationIPLookupCompleted();
+    checklist->asyncInProgress(false);
+    checklist->changeState (ACLChecklist::NullState::Instance());
+    checklist->check();
+}

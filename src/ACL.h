@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.4 2003/02/13 08:07:46 robertc Exp $
+ * $Id: ACL.h,v 1.5 2003/02/16 02:23:18 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,23 +35,7 @@
 
 #ifndef SQUID_ACL_H
 #define SQUID_ACL_H
-#include "splay.h"
 #include "Array.h"
-
-/* As ACL's get refactored, these probably need better homes */
-
-#if USE_SSL
-class acl_cert_data {
-  public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
-    SplayNode<char*> *values;
-    char *attribute;
-  private:
-    static MemPool *Pool;
-};
-#endif
 
 /* acl.c */
 SQUIDCEXTERN int aclMatchAclList(const acl_list * list, ACLChecklist * checklist);
@@ -72,12 +56,6 @@ SQUIDCEXTERN wordlist *aclDumpGeneric(const acl *);
 SQUIDCEXTERN int aclPurgeMethodInUse(acl_access *);
 SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
 extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
-IPH aclLookupDstIPforASNDone;
-#if USE_IDENT
-IDCB aclLookupIdentDone;
-#endif
-FQDNH aclLookupSrcFQDNDone;
-FQDNH aclLookupDstFQDNDone;
 
 class ACL {
   public:

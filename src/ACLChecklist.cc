@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.2 2003/02/14 11:56:51 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.3 2003/02/16 02:23:18 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,16 +35,9 @@
 
 #include "squid.h"
 #include "ACLChecklist.h"
-/* TODO: trim this ! */
-#include "splay.h"
 #include "HttpRequest.h"
 #include "authenticate.h"
-#include "fde.h"
 #include "ACLProxyAuth.h"
-#if USE_IDENT
-#include "ACLIdent.h"
-#endif
-#include "ACLUserData.h"
 
 int
 ACLChecklist::authenticated()
@@ -131,7 +124,7 @@ ACLChecklist::check()
 	     * We are done.  Either the request
 	     * is allowed, denied, requires authentication.
 	     */
-	    debug(28, 3) ("ACLChecklist::check: match found, returning %d\n", currentAnswer());
+	    debug(28, 3) ("ACLChecklist::check: match found, calling back with %d\n", currentAnswer());
 	    cbdataReferenceDone(accessList); /* A */
 	    checkCallback(currentAnswer());
 	    /* From here on in, this may be invalid */
@@ -159,7 +152,7 @@ ACLChecklist::asyncInProgress() const
 void
 ACLChecklist::asyncInProgress(bool const newAsync)
 {
-    assert (!finished());
+    assert (!finished() && !(asyncInProgress() && newAsync));
     async_ = newAsync;
     debug (28,3)("ACLChecklist::asyncInProgress: async set to %d\n",async_);
 }
@@ -173,7 +166,7 @@ ACLChecklist::finished() const
 void
 ACLChecklist::markFinished()
 {
-    assert (!finished());
+    assert (!finished() && !asyncInProgress());
     finished_ = true;
     debug (28,3)("checklist processing finished\n");
 }
@@ -188,59 +181,14 @@ ACLChecklist::checkAccessList()
     bool match = matchAclList(accessList->aclList);
     if (match)
 	markFinished();
-    /* Should be else, but keep the exact same flow as before */
-    checkForAsync();
+    else
+	checkForAsync();
 }
 
 void
 ACLChecklist::checkForAsync()
 {
-    /* check for async lookups needed. */
-    if (asyncState() != NullState::Instance()) {
-	/* If a state object is here, use it.
-	 * When all cases are converted, the if goes away and it
-	 * becomes unconditional.
-	 * RBC 02 2003
-	 */
-	asyncState()->checkForAsync(this);
-    } else if (state[ACL_DST_ASN] == ACL_LOOKUP_NEEDED) {
-	state[ACL_DST_ASN] = ACL_LOOKUP_PENDING;
-	ipcache_nbgethostbyname(request->host,
-				aclLookupDstIPforASNDone, this);
-    asyncInProgress(true);
-    } else if (state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
-	state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
-	fqdncache_nbgethostbyaddr(src_addr,
-				  aclLookupSrcFQDNDone, this);
-    asyncInProgress(true);
-    } else if (state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEEDED) {
-	ipcache_addrs *ia;
-	ia = ipcacheCheckNumeric(request->host);
-	if (ia == NULL) {
-	    state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
-	} else {
-	    dst_addr = ia->in_addrs[0];
-	    state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
-	    fqdncache_nbgethostbyaddr(dst_addr,
-				      aclLookupDstFQDNDone, this);
-	}
-    asyncInProgress(true);
-#if USE_IDENT
-    } else if (state[ACL_IDENT] == ACL_LOOKUP_NEEDED) {
-	debug(28, 3) ("ACLChecklist::checkForAsync: Doing ident lookup\n");
-	if (conn() && cbdataReferenceValid(conn())) {
-	    identStart(&conn()->me, &conn()->peer,
-		       aclLookupIdentDone, this);
-	    state[ACL_IDENT] = ACL_LOOKUP_PENDING;
-	} else {
-	    debug(28, 1) ("ACLChecklist::checkForAsync: Can't start ident lookup. No client connection\n");
-	    currentAnswer(ACCESS_DENIED);
-	    markFinished();
-	    return;
-	}
-    asyncInProgress(true);
-#endif
-    }
+    asyncState()->checkForAsync(this);
 }
 
 void
@@ -326,7 +274,9 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
   async_(false),
   finished_(false),
   allow_(ACCESS_DENIED),
-  state_(NullState::Instance())
+  state_(NullState::Instance()),
+  destinationDomainChecked_(false),
+  sourceDomainChecked_(false)
 {
     memset (&src_addr, '\0', sizeof (struct in_addr));
     memset (&dst_addr, '\0', sizeof (struct in_addr));
@@ -406,3 +356,28 @@ ACLChecklist::nonBlockingCheck(PF * callback_, void *callback_data_)
     check();
 }
 
+bool
+ACLChecklist::destinationDomainChecked() const
+{
+    return destinationDomainChecked_;
+}
+
+void
+ACLChecklist::markDestinationDomainChecked()
+{
+    assert (!finished() && !destinationDomainChecked());
+    destinationDomainChecked_ = true;
+}
+
+bool
+ACLChecklist::sourceDomainChecked() const
+{
+    return sourceDomainChecked_;
+}
+
+void
+ACLChecklist::markSourceDomainChecked()
+{
+    assert (!finished() && !sourceDomainChecked());
+    sourceDomainChecked_ = true;
+}

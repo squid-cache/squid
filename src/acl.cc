@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.302 2003/02/13 08:07:47 robertc Exp $
+ * $Id: acl.cc,v 1.303 2003/02/16 02:23:19 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,13 +39,13 @@
 #include "HttpRequest.h"
 #include "authenticate.h"
 #include "fde.h"
-#if USE_IDENT
-#include "ACLIdent.h"
-#endif
 #include "ACLUserData.h"
 #include "ExternalACL.h"
+#include "ACLDestinationIP.h"
+#if USE_SSL
+#include "ACLCertificateData.h"
+#endif
 
-static void aclParseDomainList(void *curlist);
 static void aclParseIntlist(void *curlist);
 #if SQUID_SNMP
 static void aclParseWordList(void *curlist);
@@ -57,7 +57,6 @@ static void aclParseIntRange(void *curlist);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
 static int aclMatchTime(acl_time_data * data, time_t when);
-static int aclMatchDomainList(void *dataptr, const char *);
 static int aclMatchIntegerRange(intrange * data, int i);
 #if SQUID_SNMP
 static int aclMatchWordList(wordlist *, const char *);
@@ -67,8 +66,6 @@ static void aclDestroyUserMaxIP(void *data);
 static wordlist *aclDumpUserMaxIP(void *data);
 static int aclMatchUserMaxIP(void *, auth_user_request_t *, struct in_addr);
 static squid_acl aclStrToType(const char *s);
-IPH aclLookupDstIPforASNDone;
-static wordlist *aclDumpDomainList(void *data);
 static wordlist *aclDumpTimeSpecList(acl_time_data *);
 static wordlist *aclDumpIntlistList(intlist * data);
 static wordlist *aclDumpIntRangeList(intrange * data);
@@ -76,7 +73,6 @@ static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
 static splayNode::SPLAYCMP aclHostDomainCompare;
 template<class T> int aclDomainCompare(T const &a, T const &b);
-static splayNode::SPLAYWALKEE aclDumpDomainListWalkee;
 
 
 #if USE_ARP_ACL
@@ -136,16 +132,6 @@ splaystrcmp (T&l, T&r)
 static squid_acl
 aclStrToType(const char *s)
 {
-    if (!strcmp(s, "domain"))
-	return ACL_DST_DOMAIN;
-    if (!strcmp(s, "dstdomain"))
-	return ACL_DST_DOMAIN;
-    if (!strcmp(s, "srcdomain"))
-	return ACL_SRC_DOMAIN;
-    if (!strcmp(s, "dstdom_regex"))
-	return ACL_DST_DOM_REGEX;
-    if (!strcmp(s, "srcdom_regex"))
-	return ACL_SRC_DOM_REGEX;
     if (!strcmp(s, "time"))
 	return ACL_TIME;
     if (!strcmp(s, "pattern"))
@@ -160,12 +146,6 @@ aclStrToType(const char *s)
 	return ACL_MY_PORT;
     if (!strcmp(s, "maxconn"))
 	return ACL_MAXCONN;
-#if USE_IDENT
-    if (!strcmp(s, "ident"))
-	return ACL_IDENT;
-    if (!strcmp(s, "ident_regex"))
-	return ACL_IDENT_REGEX;
-#endif
     if (!strncmp(s, "proto", 5))
 	return ACL_PROTO;
     if (!strcmp(s, "method"))
@@ -211,14 +191,6 @@ static const char *aclTypeToStr(squid_acl);
 const char *
 aclTypeToStr(squid_acl type)
 {
-    if (type == ACL_DST_DOMAIN)
-	return "dstdomain";
-    if (type == ACL_SRC_DOMAIN)
-	return "srcdomain";
-    if (type == ACL_DST_DOM_REGEX)
-	return "dstdom_regex";
-    if (type == ACL_SRC_DOM_REGEX)
-	return "srcdom_regex";
     if (type == ACL_TIME)
 	return "time";
     if (type == ACL_URLPATH_REGEX)
@@ -231,10 +203,6 @@ aclTypeToStr(squid_acl type)
 	return "myport";
     if (type == ACL_MAXCONN)
 	return "maxconn";
-#if USE_IDENT
-    if (type == ACL_IDENT_REGEX)
-	return "ident_regex";
-#endif
     if (type == ACL_PROTO)
 	return "proto";
     if (type == ACL_METHOD)
@@ -475,36 +443,22 @@ aclParseWordList(void *curlist)
 }
 #endif
 
-/**********************/
-/* aclParseDomainList */
-/**********************/
-
-static void
-aclParseDomainList(void *curlist)
-{
-    char *t = NULL;
-    splayNode **Top = (splayNode **)curlist;
-    while ((t = strtokFile())) {
-	Tolower(t);
-	*Top = splay_insert(xstrdup(t), *Top, aclDomainCompare);
-    }
-}
-
 #if USE_SSL
 static void
 aclParseCertList(void *curlist)
 {
-    acl_cert_data **datap = (acl_cert_data **)curlist;
+    ACLCertificateData **datap = (ACLCertificateData **)curlist;
     SplayNode<char *> **Top;
     char *t;
     char *attribute = strtokFile();
     if (!attribute)
 	self_destruct();
     if (*datap) {
+	/* an acl must use consistent attributes in all config lines */
 	if (strcasecmp((*datap)->attribute, attribute) != 0)
 	    self_destruct();
     } else {
-	*datap = new acl_cert_data;
+	*datap = new ACLCertificateData;
 	(*datap)->attribute = xstrdup(attribute);
     }
     Top = &(*datap)->values;
@@ -516,7 +470,7 @@ aclParseCertList(void *curlist)
 static int
 aclMatchUserCert(void *data, ACLChecklist * checklist)
 {
-    acl_cert_data *cert_data = (acl_cert_data *)data;
+    ACLCertificateData *cert_data = (ACLCertificateData *)data;
     const char *value;
     SSL *ssl = fd_table[checklist->conn()->fd].ssl;
 
@@ -532,7 +486,7 @@ aclMatchUserCert(void *data, ACLChecklist * checklist)
 static int
 aclMatchCACert(void *data, ACLChecklist * checklist)
 {
-    acl_cert_data *cert_data = (acl_cert_data *)data;
+    ACLCertificateData *cert_data = (ACLCertificateData *)data;
     const char *value;
     SSL *ssl = fd_table[checklist->conn()->fd].ssl;
 
@@ -548,7 +502,7 @@ aclMatchCACert(void *data, ACLChecklist * checklist)
 static void
 aclDestroyCertList(void *curlist)
 {
-    acl_cert_data **datap = (acl_cert_data **)curlist;
+    ACLCertificateData **datap = (ACLCertificateData **)curlist;
     if (!*datap)
 	return;
     (*datap)->values->destroy(xRefFree);
@@ -566,7 +520,7 @@ aclDumpCertListWalkee(char *const&node_data, void *outlist)
 static wordlist *
 aclDumpCertList(void *curlist)
 {
-    acl_cert_data *data = (acl_cert_data *)curlist;
+    ACLCertificateData *data = (ACLCertificateData *)curlist;
     wordlist *wl = NULL;
     wordlistAdd(&wl, data->attribute);
     data->values->walk(aclDumpCertListWalkee, &wl);
@@ -582,24 +536,12 @@ ACL::Factory (char const *type)
 	return result;
     squid_acl const acltype = aclStrToType(type);
     switch (acltype) {
-#if USE_IDENT
-      case ACL_IDENT:
-        result = new ACLIdent;
-	break;
-#endif
-      case ACL_DST_DOMAIN:
-      case ACL_SRC_DOMAIN:
-      case ACL_DST_DOM_REGEX:
-      case ACL_SRC_DOM_REGEX:
       case ACL_TIME:
       case ACL_URLPATH_REGEX:
       case ACL_URL_REGEX:
       case ACL_URL_PORT:
       case ACL_MY_PORT:
       case ACL_MAXCONN:
-#if USE_IDENT
-      case ACL_IDENT_REGEX:
-#endif
       case ACL_PROTO:
       case ACL_METHOD:
       case ACL_BROWSER:
@@ -730,10 +672,6 @@ void
 ACL::parse()
 {    
     switch (aclType()) {
-    case ACL_SRC_DOMAIN:
-    case ACL_DST_DOMAIN:
-	aclParseDomainList(&data);
-	break;
     case ACL_TIME:
 	aclParseTimeSpec(&data);
 	break;
@@ -741,8 +679,6 @@ ACL::parse()
     case ACL_URLPATH_REGEX:
     case ACL_BROWSER:
     case ACL_REFERER_REGEX:
-    case ACL_SRC_DOM_REGEX:
-    case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:
     case ACL_REP_MIME_TYPE:
 	aclParseRegexList(&data);
@@ -764,20 +700,12 @@ ACL::parse()
     case ACL_MY_PORT:
 	aclParseIntRange(&data);
 	break;
-#if USE_IDENT
-    case ACL_IDENT_REGEX:
-	aclParseRegexList(&data);
-	break;
-#endif
     case ACL_PROTO:
 	aclParseProtoList(&data);
 	break;
     case ACL_METHOD:
 	aclParseMethodList(&data);
 	break;
-#if USE_IDENT
-    case ACL_IDENT: 
-#endif
     case ACL_DERIVED:
 	fatal ("overriden");
 	break;
@@ -982,24 +910,6 @@ aclParseAclList(acl_list ** head)
 	*Tail = L;
 	Tail = &L->next;
     }
-}
-
-/**********************/
-/* aclMatchDomainList */
-/**********************/
-
-static int
-aclMatchDomainList(void *dataptr, const char *host)
-{
-    splayNode **Top = (splayNode **)dataptr;
-    if (host == NULL)
-	return 0;
-    debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
-    const void * __host = host;
-    *Top = splay_splay(&__host, *Top, aclHostDomainCompare);
-    debug(28, 3) ("aclMatchDomainList: '%s' %s\n",
-	host, splayLastResult ? "NOT found" : "found");
-    return !splayLastResult;
 }
 
 int
@@ -1276,8 +1186,6 @@ ACL::requiresRequest() const
     case ACL_BROWSER:
     case ACL_REFERER_REGEX:
     case ACL_DST_ASN:
-    case ACL_DST_DOMAIN:
-    case ACL_DST_DOM_REGEX:
     case ACL_MAX_USER_IP:
     case ACL_METHOD:
     case ACL_PROTO:
@@ -1311,65 +1219,12 @@ ACL::match(ACLChecklist * checklist)
 {
     request_t *r = checklist->request;
     const ipcache_addrs *ia = NULL;
-    const char *fqdn = NULL;
     char *esc_buf;
     const char *header;
     const char *browser;
     int k, ti;
 
     switch (aclType()) {
-    case ACL_DST_DOMAIN:
-	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchDomainList(&data, r->host);
-	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
-	if (fqdn)
-	    return aclMatchDomainList(&data, fqdn);
-	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
-	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		name, inet_ntoa(ia->in_addrs[0]));
-	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
-	    return 0;
-	}
-	return aclMatchDomainList(&data, "none");
-	/* NOTREACHED */
-    case ACL_SRC_DOMAIN:
-	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
-	if (fqdn) {
-	    return aclMatchDomainList(&data, fqdn);
-	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
-	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		name, inet_ntoa(checklist->src_addr));
-	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
-	    return 0;
-	}
-	return aclMatchDomainList(&data, "none");
-	/* NOTREACHED */
-    case ACL_DST_DOM_REGEX:
-	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchRegex((relist *)data, r->host);
-	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
-	if (fqdn)
-	    return aclMatchRegex((relist *)data, fqdn);
-	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
-	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		name, inet_ntoa(ia->in_addrs[0]));
-	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
-	    return 0;
-	}
-	return aclMatchRegex((relist *)data, "none");
-	/* NOTREACHED */
-    case ACL_SRC_DOM_REGEX:
-	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
-	if (fqdn) {
-	    return aclMatchRegex((relist *)data, fqdn);
-	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
-	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		name, inet_ntoa(checklist->src_addr));
-	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
-	    return 0;
-	}
-	return aclMatchRegex((relist *)data, "none");
-	/* NOTREACHED */
     case ACL_TIME:
 	return aclMatchTime((acl_time_data *)data, squid_curtime);
 	/* NOTREACHED */
@@ -1397,16 +1252,6 @@ ACL::match(ACLChecklist * checklist)
     case ACL_MY_PORT:
 	return aclMatchIntegerRange((intrange *)data, (int) checklist->my_port);
 	/* NOTREACHED */
-#if USE_IDENT
-    case ACL_IDENT_REGEX:
-	if (checklist->rfc931[0]) {
-	    return aclMatchRegex((relist *)data, checklist->rfc931);
-	} else {
-	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
-	    return 0;
-	}
-	/* NOTREACHED */
-#endif
     case ACL_PROTO:
 	return aclMatchInteger((intlist *)data, r->protocol);
 	/* NOTREACHED */
@@ -1452,7 +1297,7 @@ ACL::match(ACLChecklist * checklist)
 	} else if (checklist->state[ACL_DST_ASN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("asnMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		name, r->host);
-	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_NEEDED;
+	    checklist->changeState (DestinationIPLookup::Instance());
 	} else {
 	    return asnMatchIp(data, no_addr);
 	}
@@ -1492,9 +1337,6 @@ ACL::match(ACLChecklist * checklist)
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	break;
-#if USE_IDENT
-    case ACL_IDENT:
-#endif
     case ACL_DERIVED:
 	fatal ("overridden");
     }
@@ -1536,57 +1378,6 @@ aclCheckFast(const acl_access * A, ACLChecklist * checklist)
     debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", allow == ACCESS_DENIED);
     PROF_stop(aclCheckFast);
     return allow == ACCESS_DENIED;
-}
-
-#if USE_IDENT
-void
-aclLookupIdentDone(const char *ident, void *data)
-{
-    ACLChecklist *checklist = (ACLChecklist *)data;
-    if (ident) {
-	xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
-#if DONT
-	xstrncpy(checklist->request->authuser, ident, USER_IDENT_SZ);
-#endif
-    } else {
-	xstrncpy(checklist->rfc931, dash_str, USER_IDENT_SZ);
-    }
-    /*
-     * Cache the ident result in the connection, to avoid redoing ident lookup
-     * over and over on persistent connections
-     */
-    if (cbdataReferenceValid(checklist->conn()) && !checklist->conn()->rfc931[0])
-	xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
-    checklist->asyncInProgress(false);
-    checklist->check();
-}
-#endif
-
-void
-aclLookupDstIPforASNDone(const ipcache_addrs * ia, void *data)
-{
-    ACLChecklist *checklist = (ACLChecklist *)data;
-    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_DONE;
-    checklist->asyncInProgress(false);
-    checklist->check();
-}
-
-void
-aclLookupSrcFQDNDone(const char *fqdn, void *data)
-{
-    ACLChecklist *checklist = (ACLChecklist *)data;
-    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
-    checklist->asyncInProgress(false);
-    checklist->check();
-}
-
-void
-aclLookupDstFQDNDone(const char *fqdn, void *data)
-{
-    ACLChecklist *checklist = (ACLChecklist *)data;
-    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
-    checklist->asyncInProgress(false);
-    checklist->check();
 }
 
 /*
@@ -1674,33 +1465,21 @@ ACL::~ACL()
 #if USE_ARP_ACL
 	case ACL_SRC_ARP:
 #endif
-	case ACL_DST_DOMAIN:
-	case ACL_SRC_DOMAIN:
-	    splay_destroy((splayNode *)data, xRefFree);
-	    break;
 #if SQUID_SNMP
 	case ACL_SNMP_COMMUNITY:
 	    wordlistDestroy((wordlist **) & data);
 	    break;
 #endif
 	/* Destroyed in the children */
-#if USE_IDENT
-	case ACL_IDENT:
-#endif
 	case ACL_DERIVED:
 	    break;
 	case ACL_TIME:
 	    aclDestroyTimeList((acl_time_data *)data);
 	    break;
-#if USE_IDENT
-	case ACL_IDENT_REGEX:
-#endif
 	case ACL_URL_REGEX:
 	case ACL_URLPATH_REGEX:
 	case ACL_BROWSER:
 	case ACL_REFERER_REGEX:
-	case ACL_SRC_DOM_REGEX:
-	case ACL_DST_DOM_REGEX:
 	case ACL_REP_MIME_TYPE:
 	case ACL_REQ_MIME_TYPE:
 	    aclDestroyRegexList((relist *)data);
@@ -1835,21 +1614,6 @@ aclHostDomainCompare( void *const &a, void * const &b)
     return matchDomainName(h, d);
 }
 
-static void
-aclDumpDomainListWalkee(void * const &node, void *state)
-{
-    char *domain = (char *)node;
-    wordlistAdd((wordlist **)state, domain);
-}
-
-static wordlist *
-aclDumpDomainList(void *data)
-{
-    wordlist *w = NULL;
-    splay_walk((splayNode *)data, aclDumpDomainListWalkee, &w);
-    return w;
-}
-
 static wordlist *
 aclDumpTimeSpecList(acl_time_data * t)
 {
@@ -1944,19 +1708,9 @@ wordlist *
 ACL::dump() const
 {
     switch (aclType()) {
-    case ACL_SRC_DOMAIN:
-    case ACL_DST_DOMAIN:
-	return aclDumpDomainList(data);
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
 	return wordlistDup((wordlist *)data);
-#endif
-#if USE_IDENT
-    case ACL_IDENT_REGEX:
-	return aclDumpRegexList((relist *)data);
-#endif
-#if USE_IDENT
-    case ACL_IDENT:
 #endif
     case ACL_DERIVED:
 	fatal ("unused");
@@ -1966,8 +1720,6 @@ ACL::dump() const
     case ACL_URLPATH_REGEX:
     case ACL_BROWSER:
     case ACL_REFERER_REGEX:
-    case ACL_SRC_DOM_REGEX:
-    case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:
     case ACL_REP_MIME_TYPE:
 	return aclDumpRegexList((relist *)data);
@@ -2390,31 +2142,6 @@ aclDumpArpList(void *data)
 #endif /* USE_ARP_ACL */
 
 /* to be split into separate files in the future */
-
-#if USE_SSL
-MemPool *acl_cert_data::Pool(NULL);
-void *
-acl_cert_data::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (acl_cert_data));
-    if (!Pool)
-	Pool = memPoolCreate("acl_cert_data", sizeof (acl_cert_data));
-    return memPoolAlloc(Pool);
-}
-
-void
-acl_cert_data::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-void
-acl_cert_data::deleteSelf() const
-{
-    delete this;
-}
-#endif /* USE_SSL */
 
 MemPool *ACLList::Pool(NULL);
 void *

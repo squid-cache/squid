@@ -69,21 +69,22 @@ ACLProxyAuth::~ACLProxyAuth()
     data->deleteSelf();
 }
 
-ACLProxyAuth::ACLProxyAuth(ACLData *newData) : data (newData) {}
-ACLProxyAuth::ACLProxyAuth (ACLProxyAuth const &old) : data (old.data->clone())
+ACLProxyAuth::ACLProxyAuth(ACLData *newData, char const *theType) : data (newData), type_(theType) {}
+ACLProxyAuth::ACLProxyAuth (ACLProxyAuth const &old) : data (old.data->clone()), type_(old.type_)
 {
 }
 ACLProxyAuth &
 ACLProxyAuth::operator= (ACLProxyAuth const &rhs)
 {
     data = rhs.data->clone();
+    type_ = rhs.type_;
     return *this;
 }
 
 char const *
 ACLProxyAuth::typeString() const
 {
-    return "proxy_auth";
+    return type_;
 }
 
 void
@@ -189,13 +190,14 @@ ProxyAuthNeeded::checkForAsync(ACLChecklist *checklist) const
      */
     debug(28, 6) ("ACLChecklist::checkForAsync: requiring Proxy Auth header.\n");
     checklist->currentAnswer(ACCESS_REQ_PROXY_AUTH);
+    checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->markFinished();
 }
 
 ACL::Prototype ACLProxyAuth::UserRegistryProtoype(&ACLProxyAuth::UserRegistryEntry_, "proxy_auth");
-ACLProxyAuth ACLProxyAuth::UserRegistryEntry_(new ACLUserData);
-ACL::Prototype ACLProxyAuth::RegexRegistryProtoype(&ACLProxyAuth::RegexRegistryEntry_, "proxy_auth_regex");
-ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData);
+ACLProxyAuth ACLProxyAuth::UserRegistryEntry_(new ACLUserData, "proxy_auth");
+ACL::Prototype ACLProxyAuth::RegexRegistryProtoype(&ACLProxyAuth::RegexRegistryEntry_, "proxy_auth_regex" );
+ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_regex");
 
 ACL *
 ACLProxyAuth::clone() const
