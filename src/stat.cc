@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.44 1996/07/22 16:40:29 wessels Exp $
+ * $Id: stat.cc,v 1.45 1996/07/22 17:20:59 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -891,10 +891,10 @@ void parameter_get(obj, sentry)
 }
 
 
-void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier, neighbor)
+void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hier, neighbor)
      cacheinfo *obj;
      char *url;
-     char *id;
+     struct in_addr caddr;
      int size;
      char *action;
      char *method;
@@ -907,24 +907,12 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
     LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
     int x;
     static char *dash = "-";
+    char *client = fqdncache_gethostbyaddr(caddr, 0);
+
+    if (client == NULL)
+	client = inet_ntoa(caddr);
 
     getCurrentTime();
-
-#ifdef LOG_FQDN
-    /* ENABLE THIS IF YOU WANT A *SLOW* CACHE, OR
-     * JUST WRITE A PERL SCRIPT TO MUCK YOUR LOGS */
-    {
-	int ipx[4];
-	unsigned long ipy;
-	struct hostent *h = NULL;
-	if (sscanf(id, "%d.%d.%d.%d", &ipx[0], &ipx[1], &ipx[2], &ipx[3]) == 4) {
-	    ipy = inet_addr(id);
-	    if (h = gethostbyaddr((char *) &ipy, 4, AF_INET)) {
-		id = xstrdup(h->h_name);
-	    }
-	}
-    }
-#endif
 
     if (!method)
 	method = dash;
@@ -938,7 +926,7 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
     if (obj->logfile_status == LOG_ENABLE) {
 	if (emulate_httpd_log)
 	    sprintf(tmp, "%s %s - [%s] \"%s %s\" %s %d\n",
-		id,
+		client,
 		ident,
 		mkhttpdlogtime(&squid_curtime),
 		method,
@@ -950,7 +938,7 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
 		(int) current_time.tv_sec,
 		(int) current_time.tv_usec / 1000,
 		msec,
-		id,
+		client,
 		action,
 		http_code,
 		size,
