@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.46 1996/04/12 05:15:30 wessels Exp $ */
-#ident "$Id: store.cc,v 1.46 1996/04/12 05:15:30 wessels Exp $"
+/* $Id: store.cc,v 1.47 1996/04/12 21:22:16 wessels Exp $ */
+#ident "$Id: store.cc,v 1.47 1996/04/12 21:22:16 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -93,9 +93,6 @@ static int swaplog_fd = -1;
 static int swaplog_lock = 0;
 FILE *swaplog_stream = NULL;
 static int storelog_fd = -1;
-
-/* counter for uncachable objects */
-static int key_counter = 0;
 
 /* key temp buffer */
 static char key_temp_buffer[MAX_URL];
@@ -491,15 +488,21 @@ StoreEntry *storeGet(url)
     return NULL;
 }
 
+unsigned int getKeyCounter()
+{
+	static unsigned int key_counter = 0;
+	if (++key_counter == 0)
+	   ++key_counter;
+	return key_counter;
+}
+
 char *storeGeneratePrivateKey(url, method, num)
      char *url;
      int method;
      int num;
 {
-    if (key_counter == 0)
-	key_counter++;
     if (num == 0)
-	num = key_counter++;
+	num = getKeyCounter();
     debug(20, 3, "storeGeneratePrivateKey: '%s'\n", url);
     key_temp_buffer[0] = '\0';
     sprintf(key_temp_buffer, "%d/%s/%s",
@@ -2629,20 +2632,6 @@ int swapInError(fd_unused, entry)
 {
     cached_error_entry(entry, ERR_DISK_IO, xstrerror());
     return 0;
-}
-
-int storePendingFirstFD(e)
-    StoreEntry *e;
-{
-        int s;
-        int i;
-	if (!e->mem_obj)
-		return -1;
-	s = (int) e->mem_obj->pending_list_size;
-	for (i=0; i<s; i++)
-		if (e->mem_obj->pending[i])
-			return e->mem_obj->pending[i]->fd;
-	return -1;
 }
 
 int storePendingNClients(e)
