@@ -3,7 +3,7 @@ Caching  Code
 c        200 OK
          201 Created
          202 Accepted
-c        203 Non-Authoriative Information *
+c        203 Non-Authoritative Information *
 E        204 No Content
          205 Reset Content *
          206 Partial Content *
