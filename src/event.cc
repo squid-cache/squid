@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.10 1998/03/23 22:37:10 wessels Exp $
+ * $Id: event.cc,v 1.11 1998/03/28 23:24:46 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -52,7 +52,7 @@ eventAdd(const char *name, EVH * func, void *arg, time_t when)
     event->arg = arg;
     event->name = name;
     event->when = squid_curtime + when;
-    debug(41, 7) ("eventAdd: Adding '%s', in %d seconds\n", name, when);
+    debug(41, 7) ("eventAdd: Adding '%s', in %d seconds\n", name, (int) when);
     /* Insert after the last event with the same or earlier time */
     for (E = &tasks; *E; E = &(*E)->next) {
 	if ((*E)->when > event->when)
@@ -124,7 +124,7 @@ eventDump(StoreEntry * sentry)
 	"Next Execution");
     while (e != NULL) {
 	storeAppendPrintf(sentry, "%s\t%d seconds\n",
-	    e->name, e->when - squid_curtime);
+	    e->name, (int) (e->when - squid_curtime));
 	e = e->next;
     }
 }

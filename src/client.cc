@@ -3,7 +3,7 @@
 
 
 /*
- * $Id: client.cc,v 1.60 1998/03/07 05:49:35 wessels Exp $
+ * $Id: client.cc,v 1.61 1998/03/28 23:24:42 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 	strcat(msg, buf);
     }
     if (put_fd > 0) {
-	snprintf(buf, BUFSIZ, "Content-length: %d\r\n", sb.st_size);
+	snprintf(buf, BUFSIZ, "Content-length: %d\r\n", (int) sb.st_size);
 	strcat(msg, buf);
     }
     if (opt_noaccept == 0) {

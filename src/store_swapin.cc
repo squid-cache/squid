@@ -91,7 +91,7 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     }
     if (e->swap_status == SWAPOUT_DONE && fstat(fd, &sb) == 0) {
 	if (sb.st_size == 0 || sb.st_size != e->swap_file_sz) {
-	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, sb.st_size, e->swap_file_sz);
+	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, (int) sb.st_size, e->swap_file_sz);
 	    file_close(fd);
 	    fd = -1;
 	}

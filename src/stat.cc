@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.219 1998/03/25 05:50:41 wessels Exp $
+ * $Id: stat.cc,v 1.220 1998/03/28 23:24:49 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -340,8 +340,8 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	storeAppendPrintf(sentry, "\tinmem_lo: %d\n", (int) mem->inmem_lo);
 	storeAppendPrintf(sentry, "\tinmem_hi: %d\n", (int) mem->inmem_hi);
 	storeAppendPrintf(sentry, "\tswapout: %d bytes done, %d queued, FD %d\n",
-	    mem->swapout.done_offset,
-	    mem->swapout.queue_offset,
+	    (int) mem->swapout.done_offset,
+	    (int) mem->swapout.queue_offset,
 	    mem->swapout.fd);
 	for (i = 0; i < mem->nclients; i++) {
 	    sc = &mem->clients[i];
@@ -415,7 +415,7 @@ statFiledescriptors(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "%4d %-6.6s %4d %7d %7d %-21s %s\n",
 	    i,
 	    fdTypeStr[f->type],
-	    f->timeout_handler ? (f->timeout - squid_curtime) / 60 : 0,
+	    f->timeout_handler ? (int) (f->timeout - squid_curtime) / 60 : 0,
 	    f->bytes_read,
 	    f->bytes_written,
 	    fdRemoteAddr(f),
@@ -470,7 +470,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tStorage Swap size:\t%d KB\n",
 	store_swap_size);
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
-	store_mem_size >> 10);
+	(int) (store_mem_size >> 10));
     storeAppendPrintf(sentry, "\tStorage LRU Expiration Age:\t%6.2f days\n",
 	(double) storeExpiredReferenceAge() / 86400.0);
     storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%d\n",
@@ -483,9 +483,9 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tCPU Time:\t%.3f seconds\n", cputime);
     storeAppendPrintf(sentry, "\tCPU Usage:\t%.2f%%\n",
 	dpercent(cputime, runtime));
-    storeAppendPrintf(sentry, "\tMaximum Resident Size: %ld KB\n",
+    storeAppendPrintf(sentry, "\tMaximum Resident Size: %d KB\n",
 	rusage_maxrss(&rusage));
-    storeAppendPrintf(sentry, "\tPage faults with physical i/o: %ld\n",
+    storeAppendPrintf(sentry, "\tPage faults with physical i/o: %d\n",
 	rusage_pagefaults(&rusage));
 
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
@@ -592,12 +592,12 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     ct = f->cputime - l->cputime;
 
     storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
-	f->timestamp.tv_sec,
-	f->timestamp.tv_usec,
+	(int) f->timestamp.tv_sec,
+	(int) f->timestamp.tv_usec,
 	mkrfc1123(f->timestamp.tv_sec));
     storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
-	l->timestamp.tv_sec,
-	l->timestamp.tv_usec,
+	(int) l->timestamp.tv_sec,
+	(int) l->timestamp.tv_usec,
 	mkrfc1123(l->timestamp.tv_sec));
 
     storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
@@ -843,8 +843,8 @@ statCountersDump(StoreEntry * sentry)
     f->cputime = rusage_cputime(&rusage);
 
     storeAppendPrintf(sentry, "sample_time = %d.%d (%s)\n",
-	f->timestamp.tv_sec,
-	f->timestamp.tv_usec,
+	(int) f->timestamp.tv_sec,
+	(int) f->timestamp.tv_usec,
 	mkrfc1123(f->timestamp.tv_sec));
     storeAppendPrintf(sentry, "client_http.requests = %d\n",
 	f->client_http.requests);

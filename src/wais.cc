@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.104 1998/03/27 22:44:26 wessels Exp $
+ * $Id: wais.cc,v 1.105 1998/03/28 23:24:54 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -187,7 +187,8 @@ waisReadReply(int fd, void *data)
 	IOStats.Wais.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n", xstrerror());
+	debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n",
+		fd, xstrerror());
 	if (ignoreErrno(errno)) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */

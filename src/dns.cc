@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.56 1998/02/19 23:09:50 wessels Exp $
+ * $Id: dns.cc,v 1.57 1998/03/28 23:24:46 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -257,7 +257,7 @@ dnsStats(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "    Read Buffer Size: %d bytes\n",
 	    dns->size);
 	storeAppendPrintf(sentry, "    Read Offset: %d bytes\n",
-	    dns->offset);
+	    (int) dns->offset);
     }
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
     storeAppendPrintf(sentry, "   A = ALIVE\n");
