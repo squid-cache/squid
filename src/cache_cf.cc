@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.260 1998/03/20 09:34:45 wessels Exp $
+ * $Id: cache_cf.cc,v 1.261 1998/03/20 20:08:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -201,7 +201,9 @@ configDoConfigure(void)
 	Config.Swap.maxSize += Config.cacheSwap.swapDirs[i].max_size;
     if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10))
 	fatal("cache_swap is lower than cache_mem");
-    if (Config.Announce.period < 1) {
+    if (Config.Announce.period > 0) {
+	Config.onoff.announce = 1;
+    } else if (Config.Announce.period < 1) {
 	Config.Announce.period = 86400 * 365;	/* one year */
 	Config.onoff.announce = 0;
     }
