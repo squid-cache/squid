@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.2 2001/05/04 13:37:42 hno Exp $
+ * $Id: ssl_support.cc,v 1.3 2001/08/26 22:02:19 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 81     SSL accelerator support
@@ -40,8 +40,6 @@ extern int commSetNonBlocking(int fd);
 
 void clientNegotiateSSL(int fd, void *data);
 void clientReadSSLRequest(int fd, void *data);
-void connFreeSSL(int fd, void *data);
-
 
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int export, int keylen)
