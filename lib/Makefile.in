@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.52 2001/10/03 14:56:53 hno Exp $
+#  $Id: Makefile.in,v 1.53 2001/10/29 08:45:18 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -122,12 +122,16 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
+@NEED_OWN_SNPRINTF_TRUE@EXTRAMISC = snprintf.c
+@NEED_OWN_SNPRINTF_FALSE@EXTRAMISC = 
+
 EXTRA_LIBRARIES = libregex.a libdlmalloc.a
 noinst_LIBRARIES = libmiscutil.a @LIBREGEX@ @LIBDLMALLOC@ libntlmauth.a
+EXTRA_libmiscutil_a_SOURCES = snprintf.c
 libmiscutil_a_SOURCES = rfc1123.c rfc1738.c rfc1035.c rfc2617.c util.c \
 	getfullhostname.c base64.c uudecode.c splay.c safe_inet_addr.c \
-	iso3307.c snprintf.c md5.c radix.c stub_memaccount.c Array.c \
-	Stack.c hash.c heap.c html_quote.c 
+	iso3307.c md5.c radix.c stub_memaccount.c Array.c \
+	Stack.c hash.c heap.c html_quote.c $(EXTRAMISC)
 
 libmiscutil_a_LIBADD = @LIBOBJS@
 # $(top_srcdir)/include/version.h should be a dependency
@@ -149,13 +153,32 @@ am_libdlmalloc_a_OBJECTS = dlmalloc.$(OBJEXT)
 libdlmalloc_a_OBJECTS = $(am_libdlmalloc_a_OBJECTS)
 libmiscutil_a_AR = $(AR) cru
 libmiscutil_a_DEPENDENCIES = @LIBOBJS@
-am_libmiscutil_a_OBJECTS = rfc1123.$(OBJEXT) rfc1738.$(OBJEXT) \
-	rfc1035.$(OBJEXT) rfc2617.$(OBJEXT) util.$(OBJEXT) \
-	getfullhostname.$(OBJEXT) base64.$(OBJEXT) uudecode.$(OBJEXT) \
-	splay.$(OBJEXT) safe_inet_addr.$(OBJEXT) iso3307.$(OBJEXT) \
-	snprintf.$(OBJEXT) md5.$(OBJEXT) radix.$(OBJEXT) \
-	stub_memaccount.$(OBJEXT) Array.$(OBJEXT) Stack.$(OBJEXT) \
-	hash.$(OBJEXT) heap.$(OBJEXT) html_quote.$(OBJEXT)
+@NEED_OWN_SNPRINTF_TRUE@am_libmiscutil_a_OBJECTS = rfc1123.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	rfc1738.$(OBJEXT) rfc1035.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	rfc2617.$(OBJEXT) util.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	getfullhostname.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	base64.$(OBJEXT) uudecode.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	splay.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	safe_inet_addr.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	iso3307.$(OBJEXT) md5.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	radix.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	stub_memaccount.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	Array.$(OBJEXT) Stack.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	hash.$(OBJEXT) heap.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_TRUE@	html_quote.$(OBJEXT) snprintf.$(OBJEXT)
+@NEED_OWN_SNPRINTF_FALSE@am_libmiscutil_a_OBJECTS = rfc1123.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	rfc1738.$(OBJEXT) rfc1035.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	rfc2617.$(OBJEXT) util.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	getfullhostname.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	base64.$(OBJEXT) uudecode.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	splay.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	safe_inet_addr.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	iso3307.$(OBJEXT) md5.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	radix.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	stub_memaccount.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	Array.$(OBJEXT) Stack.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	hash.$(OBJEXT) heap.$(OBJEXT) \
+@NEED_OWN_SNPRINTF_FALSE@	html_quote.$(OBJEXT)
 libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
 libntlmauth_a_AR = $(AR) cru
 libntlmauth_a_DEPENDENCIES = @LIBOBJS@
@@ -192,10 +215,11 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) \
-	$(libntlmauth_a_SOURCES) $(libregex_a_SOURCES)
+	$(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) \
+	$(libregex_a_SOURCES)
 DIST_COMMON = Makefile.am Makefile.in drand48.c inet_ntoa.c strerror.c \
 	tempnam.c
-SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) $(libregex_a_SOURCES)
+SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) $(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) $(libregex_a_SOURCES)
 
 all: all-am
 
