@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.388 2002/06/06 15:11:31 hno Exp $
+ * $Id: http.cc,v 1.389 2002/09/01 13:46:56 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -730,7 +730,6 @@ httpBuildRequestHeader(request_t * request,
     String strConnection = StringNull;
     const HttpHeader *hdr_in = &orig_request->header;
     const HttpHeaderEntry *e;
-    String strVia;
     String strFwd;
     HttpHeaderPos pos = HttpHeaderInitPos;
     httpHeaderInit(hdr_out, hoRequest);
@@ -797,9 +796,13 @@ httpBuildRequestHeader(request_t * request,
 		    httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops - 1);
 	    }
 	    break;
+	case HDR_VIA:
+	    /* If Via is disabled then forward any received header as-is */
+	    if (!Config.onoff.via)
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	    break;
 	case HDR_PROXY_CONNECTION:
 	case HDR_CONNECTION:
-	case HDR_VIA:
 	case HDR_X_FORWARDED_FOR:
 	case HDR_CACHE_CONTROL:
 	    /* append these after the loop if needed */
@@ -811,14 +814,15 @@ httpBuildRequestHeader(request_t * request,
     }
 
     /* append Via */
-    strVia = httpHeaderGetList(hdr_in, HDR_VIA);
-    snprintf(bbuf, BBUF_SZ, "%d.%d %s",
-	orig_request->http_ver.major,
-	orig_request->http_ver.minor, ThisCache);
-    strListAdd(&strVia, bbuf, ',');
-    httpHeaderPutStr(hdr_out, HDR_VIA, strBuf(strVia));
-    stringClean(&strVia);
-
+    if (Config.onoff.via) {
+	String strVia = httpHeaderGetList(hdr_in, HDR_VIA);
+	snprintf(bbuf, BBUF_SZ, "%d.%d %s",
+	    orig_request->http_ver.major,
+	    orig_request->http_ver.minor, ThisCache);
+	strListAdd(&strVia, bbuf, ',');
+	httpHeaderPutStr(hdr_out, HDR_VIA, strBuf(strVia));
+	stringClean(&strVia);
+    }
     /* append X-Forwarded-For */
     strFwd = httpHeaderGetList(hdr_in, HDR_X_FORWARDED_FOR);
     strListAdd(&strFwd, (cfd < 0 ? "unknown" : fd_table[cfd].ipaddr), ',');

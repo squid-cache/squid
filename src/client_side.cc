@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.589 2002/08/28 16:10:57 wessels Exp $
+ * $Id: client_side.cc,v 1.590 2002/09/01 13:46:55 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1230,6 +1230,18 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
     if (httpReplyBodySize(request->method, rep) < 0) {
 	debug(33, 3) ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
 	request->flags.proxy_keepalive = 0;
+    }
+    /* Append Via */
+    {
+	LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
+	String strVia = httpHeaderGetList(hdr, HDR_VIA);
+	snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
+	    rep->sline.version.major,
+	    rep->sline.version.minor, ThisCache);
+	strListAdd(&strVia, bbuf, ',');
+	httpHeaderDelById(hdr, HDR_VIA);
+	httpHeaderPutStr(hdr, HDR_VIA, strBuf(strVia));
+	stringClean(&strVia);
     }
     /* Signal keep-alive if needed */
     httpHeaderPutStr(hdr,
