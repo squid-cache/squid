@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.223 2001/08/03 15:13:03 adrian Exp $
+# $Id: cf.data.pre,v 1.224 2001/08/19 16:33:17 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1161,7 +1161,7 @@ DEFAULT: none
 DOC_START
 	Specify the location of the executable for the URL redirector.
 	Since they can perform almost any function there isn't one included.
-	See the Release-Notes for information on how to write one.
+	See the FAQ (section 15) for information on how to write one.
 	By default, a redirector is not used.
 DOC_END
 
