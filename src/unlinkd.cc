@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.11 1997/11/15 00:14:53 wessels Exp $
+ * $Id: unlinkd.cc,v 1.12 1998/01/01 05:57:17 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -133,11 +133,11 @@ unlinkdCreate(void)
 	    close(wfd1);
 	    return -1;
 	}
-	commSetTimeout(wfd1, -1, NULL, NULL);
 	slp.tv_sec = 0;
 	slp.tv_usec = 250000;
 	select(0, NULL, NULL, NULL, &slp);
 	fd_open(wfd1, FD_PIPE, "squid -> unlinkd");
+	commSetTimeout(wfd1, -1, NULL, NULL);
 	commSetNonBlocking(wfd1);
 	return wfd1;
     }
