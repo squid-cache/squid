@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.425 1998/07/07 02:54:17 wessels Exp $
+ * $Id: store.cc,v 1.426 1998/07/14 20:54:54 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -988,7 +988,9 @@ storeTimestampsSet(StoreEntry * entry)
     if (entry->lastmod < 0)
 	entry->lastmod = served_date;
     entry->timestamp = served_date;
-
+#if USE_CACHE_DIGESTS
+    entry->refresh = refreshWhen(entry);
+#endif
 }
 
 void
