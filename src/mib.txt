@@ -1,6 +1,7 @@
 -- File: SQUID.MIB
 -- Maintained by: kostas@nlanr.net
--- $Id: mib.txt,v 1.8 1998/02/23 05:48:07 kostas Exp $
+--
+-- $Id: mib.txt,v 1.9 1998/02/23 06:34:04 kostas Exp $
 
 -- SQUID-MIB DEFINITIONS ::= BEGIN
 -- 		IMPORTS
@@ -761,25 +762,25 @@
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheProtoAggregateStats 12 }
+                ::= { cacheProtoAggregateStats 13 }
 
         cacheDNSMedianSvcFiveMin OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheProtoAggregateStats 13 }
+                ::= { cacheProtoAggregateStats 15 }
 
         cacheHttpMedianSvcHour OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheProtoAggregateStats 14 }
+                ::= { cacheProtoAggregateStats 12 }
 
         cacheICPMedianSvcHour OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheProtoAggregateStats 15 }
+                ::= { cacheProtoAggregateStats 14 }
 
         cacheDNSMedianSvcHour OBJECT-TYPE
                 SYNTAX INTEGER
