@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.28 1998/04/09 21:32:08 wessels Exp $
+ * $Id: access_log.cc,v 1.29 1998/05/24 03:41:06 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -401,7 +401,8 @@ fvdbDumpTable(StoreEntry * e, hash_table * hash)
     fvdb_entry *fv;
     if (hash == NULL)
 	return;
-    for (h = hash_first(hash); h != NULL; h = hash_next(hash)) {
+    hash_first(hash);
+    while (h = hash_next(hash)) {
 	fv = (fvdb_entry *) h;
 	storeAppendPrintf(e, "%9d %s\n", fv->n, fv->key);
     }
