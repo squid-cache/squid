@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.133 1997/10/21 15:59:38 wessels Exp $
+ * $Id: ipcache.cc,v 1.134 1997/10/21 18:40:32 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -330,7 +330,8 @@ ipcacheExpiredEntry(ipcache_entry * i)
 	return 0;
     if (i->status == IP_CACHED)
 	if (squid_curtime - i->lastref < 60)
-	    return 0;
+	    if (i->addrs.count > 0)
+		return 0;
     return 1;
 }
 
@@ -712,7 +713,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 	ipcache_dnsDispatch(dnsData, i);
 	return;
     }
-    if (NDnsServersAlloc > 0) {
+    if (NDnsServersAlloc) {
 	ipcacheEnqueue(i);
 	return;
     }
