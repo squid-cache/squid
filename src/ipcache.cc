@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.51 1996/08/28 20:12:55 wessels Exp $
+ * $Id: ipcache.cc,v 1.52 1996/08/29 17:59:05 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -607,6 +607,7 @@ static int ipcache_dnsHandleRead(fd, dnsData)
 	return 0;
     }
     n = ++IpcacheStats.replies;
+    DnsStats.replies++;
     dnsData->offset += len;
     dnsData->ip_inbuf[dnsData->offset] = '\0';
     i = dnsData->data;
@@ -769,7 +770,6 @@ static void ipcache_dnsDispatch(dns, i)
 /* initialize the ipcache */
 void ipcache_init()
 {
-
     debug(14, 3, "Initializing IP Cache...\n");
 
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
