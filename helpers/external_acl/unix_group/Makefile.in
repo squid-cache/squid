@@ -14,9 +14,9 @@
 @SET_MAKE@
 
 #
-#  Makefile for the Squid SASL authentication helper
+#  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.12 2002/07/06 12:24:34 hno Exp $
+#  $Id: Makefile.in,v 1.1 2002/07/06 12:28:45 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -123,25 +123,22 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		  -I$(top_srcdir)/src/
-
-
-libexec_PROGRAMS = sasl_auth
-LDADD = -lsasl $(XTRA_LIBS)
-EXTRA_DIST = squid_sasl_auth squid_sasl_auth.conf
-subdir = helpers/basic_auth/SASL
+libexec_PROGRAMS = squid_unix_group
+#man_MANS 		= squid_unix_group.8
+#EXTRA_DIST		= squid_unix_group.8
+squid_unix_group_SOURCES = check_group-1.0.c
+subdir = helpers/external_acl/unix_group
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
-libexec_PROGRAMS = sasl_auth$(EXEEXT)
+libexec_PROGRAMS = squid_unix_group$(EXEEXT)
 PROGRAMS = $(libexec_PROGRAMS)
 
-sasl_auth_SOURCES = sasl_auth.c
-sasl_auth_OBJECTS = sasl_auth.$(OBJEXT)
-sasl_auth_LDADD = $(LDADD)
-sasl_auth_DEPENDENCIES =
-sasl_auth_LDFLAGS =
+am_squid_unix_group_OBJECTS = check_group-1.0.$(OBJEXT)
+squid_unix_group_OBJECTS = $(am_squid_unix_group_OBJECTS)
+squid_unix_group_LDADD = $(LDADD)
+squid_unix_group_DEPENDENCIES =
+squid_unix_group_LDFLAGS =
 
 DEFS = @DEFS@
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)/include
@@ -149,15 +146,15 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/sasl_auth.Po
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/check_group-1.0.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = sasl_auth.c
+DIST_SOURCES = $(squid_unix_group_SOURCES)
 DIST_COMMON = README Makefile.am Makefile.in
-SOURCES = sasl_auth.c
+SOURCES = $(squid_unix_group_SOURCES)
 
 all: all-am
 
@@ -165,7 +162,7 @@ all: all-am
 .SUFFIXES: .c .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  helpers/basic_auth/SASL/Makefile
+	  $(AUTOMAKE) --foreign  helpers/external_acl/unix_group/Makefile
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
@@ -193,9 +190,9 @@ uninstall-libexecPROGRAMS:
 
 clean-libexecPROGRAMS:
 	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
-sasl_auth$(EXEEXT): $(sasl_auth_OBJECTS) $(sasl_auth_DEPENDENCIES) 
-	@rm -f sasl_auth$(EXEEXT)
-	$(LINK) $(sasl_auth_LDFLAGS) $(sasl_auth_OBJECTS) $(sasl_auth_LDADD) $(LIBS)
+squid_unix_group$(EXEEXT): $(squid_unix_group_OBJECTS) $(squid_unix_group_DEPENDENCIES) 
+	@rm -f squid_unix_group$(EXEEXT)
+	$(LINK) $(squid_unix_group_LDFLAGS) $(squid_unix_group_OBJECTS) $(squid_unix_group_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -203,7 +200,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/sasl_auth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/check_group-1.0.Po@am__quote@
 
 distclean-depend:
 	-rm -rf $(DEPDIR)
