@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.157 2003/12/04 10:17:16 hno Exp $
+ * $Id: fqdncache.cc,v 1.158 2004/04/03 14:35:48 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -311,7 +311,7 @@ fqdncacheParse(const char *inbuf)
     f.flags.negcached = 0;
     ttl = atoi(token);
 
-    if (ttl > 0)
+    if (ttl > 0 && ttl < Config.positiveDnsTtl)
         f.expires = squid_curtime + ttl;
     else
         f.expires = squid_curtime + Config.positiveDnsTtl;
@@ -368,7 +368,10 @@ fqdncacheParse(rfc1035_rr * answers, int nr)
 
         f.name_count = 1;
 
-        f.expires = squid_curtime + answers[k].ttl;
+        if ((int) answers[k].ttl < Config.positiveDnsTtl)
+            f.expires = squid_curtime + answers[k].ttl;
+        else
+            f.expires = squid_curtime + Config.positiveDnsTtl;
 
         return &f;
     }
