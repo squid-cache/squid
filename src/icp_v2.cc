@@ -84,7 +84,7 @@ icpCreateMessage(
     headerp->reqnum = htonl(reqnum);
     headerp->flags = htonl(flags);
     headerp->pad = htonl(pad);
-    headerp->shostid = htonl(theOutICPAddr.s_addr);
+    headerp->shostid = theOutICPAddr.s_addr;
     urloffset = buf + sizeof(icp_common_t);
     if (opcode == ICP_QUERY)
 	urloffset += sizeof(u_num32);
@@ -146,7 +146,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     header.length = ntohs(headerp->length);
     header.reqnum = ntohl(headerp->reqnum);
     header.flags = ntohl(headerp->flags);
-    header.shostid = ntohl(headerp->shostid);
+    header.shostid = headerp->shostid;
     header.pad = ntohl(headerp->pad);
 
     switch (header.opcode) {
@@ -266,7 +266,7 @@ icpPktDump(icp_common_t * pkt)
     debug(12, 9) ("length:  %-8d\n", (int) ntohs(pkt->length));
     debug(12, 9) ("reqnum:  %-8d\n", ntohl(pkt->reqnum));
     debug(12, 9) ("flags:   %-8x\n", ntohl(pkt->flags));
-    a.s_addr = ntohl(pkt->shostid);
+    a.s_addr = pkt->shostid;
     debug(12, 9) ("shostid: %s\n", inet_ntoa(a));
     debug(12, 9) ("payload: %s\n", (char *) pkt + sizeof(icp_common_t));
 }
