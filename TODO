@@ -158,7 +158,6 @@ DONE:
 (2) **	we don't properly handle the HTTP/1.1 'Connection' header (KA)
 (2) **	Code cleanup: (KA)
 		- Make sure the lib/*.c files do not use printf/fprintf.
-		- Replace bzero with memset
 		- Replace bcopy with xmemcpy
 (4) **	FTP PUT (KA)
 (1)	SSL doesn't work with Proxy Authentication

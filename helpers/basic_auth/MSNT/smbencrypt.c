@@ -158,7 +158,7 @@ nt_lm_owf_gen(char *pwd, char *nt_p16, char *p16)
     E_P16((uchar *) passwd, (uchar *) p16);
 
     /* clear out local copy of user's password (just being paranoid). */
-    bzero(passwd, sizeof(passwd));
+    memset(passwd, 0, sizeof(passwd));
 }
 
 /****************************************************************************

@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskIOStrategy.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: AIODiskIOStrategy.cc,v 1.2 2005/03/10 21:49:20 serassio Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -160,7 +160,7 @@ AIODiskIOStrategy::callback()
                 }
 
                 /* Free slot */
-                bzero(aqe, sizeof(async_queue_entry_t));
+                memset(aqe, 0, sizeof(async_queue_entry_t));
 
                 aqe->aq_e_state = AQ_ENTRY_FREE;
 
