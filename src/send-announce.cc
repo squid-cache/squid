@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.46 1998/02/02 21:15:05 wessels Exp $
+ * $Id: send-announce.cc,v 1.47 1998/03/23 22:07:28 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -36,7 +36,7 @@ static IPH send_announce;
 void
 start_announce(void *datanotused)
 {
-    if (!Config.onoff.announce)
+    if (0 == Config.onoff.announce)
 	return;
     ipcache_nbgethostbyname(Config.Announce.host, send_announce, NULL);
     eventAdd("send_announce", start_announce, NULL, Config.Announce.period);
