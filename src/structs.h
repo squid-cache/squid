@@ -1222,6 +1222,8 @@ struct _StatCounters {
         cd_guess_stats guess;
 	StatHist client_svc_time;
 	StatHist server_svc_time;
+	StatHist peer_choice_count;
+	StatHist peer_ichoice_count;
     } cd;
 #endif
     int page_faults;
