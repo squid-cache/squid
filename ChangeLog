@@ -28,6 +28,13 @@ Changes to Squid-2.2 ():
  	  manager stats.
 	- Added "-k parse" command line option: parses the config file
 	  but does not send a signal unlike other -k options.
+	- Revamped storeAbort() calling.  Only store_client.c has all
+	  the right information to determine if the request should
+	  be aborted.  Now client and server modules just storeUnregister
+	  without ever needing to call storeAbort.  In conjunction with
+	  this change, we have to add a special check that comm_close()
+	  doesn't close a FD while the read/write handler for that FD
+	  is still being serviced.  See 'current_hdl_fd'.
 
 Changes to Squid-2.1 (November 16, 1998):
 
