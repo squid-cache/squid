@@ -12,6 +12,7 @@ Changes to squid-1.2.alpha4 ():
 	  httpRequestFree().
 	- Moved IP lookups to commConnect stuff.
 	- Added support for retrying connect().
+	- New inline debug() macro (David Luyer).
 
 Changes to squid-1.2.alpha3 ():
 
