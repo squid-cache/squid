@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.36 1996/11/15 07:51:07 wessels Exp $
+ * $Id: fqdncache.cc,v 1.37 1996/11/22 07:15:50 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -137,7 +137,7 @@ static struct {
 } FqdncacheStats;
 
 static int fqdncache_compareLastRef _PARAMS((fqdncache_entry **, fqdncache_entry **));
-static int fqdncache_dnsHandleRead _PARAMS((int, dnsserver_t *));
+static void fqdncache_dnsHandleRead _PARAMS((int, dnsserver_t *));
 static fqdncache_entry *fqdncache_parsebuffer _PARAMS((const char *buf, dnsserver_t *));
 static int fqdncache_purgelru _PARAMS((void));
 static void fqdncache_release _PARAMS((fqdncache_entry *));
@@ -510,9 +510,10 @@ fqdncache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
     return &f;
 }
 
-static int
-fqdncache_dnsHandleRead(int fd, dnsserver_t * dnsData)
+static void
+     fqdncache_dnsHandleRead(int fd, void *data);
 {
+    dnsserver_t *dnsData = data;
     int len;
     int svc_time;
     int n;
@@ -535,7 +536,7 @@ fqdncache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	    NULL,
 	    0);
 	comm_close(fd);
-	return 0;
+	return;
     }
     n = ++FqdncacheStats.replies;
     DnsStats.replies++;
@@ -568,9 +569,13 @@ fqdncache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	dnsData->data = NULL;
 	dnsData->flags &= ~DNS_FLAG_BUSY;
     }
+    /* reschedule */
+    commSetSelect(dnsData->inpipe,
+	COMM_SELECT_READ,
+	fqdncache_dnsHandleRead,
+	dnsData, 0);
     while ((dnsData = dnsGetFirstAvailable()) && (f = fqdncacheDequeue()))
 	fqdncache_dnsDispatch(dnsData, f);
-    return 0;
 }
 
 static void
@@ -673,7 +678,7 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 	xfree);
     commSetSelect(dns->outpipe,
 	COMM_SELECT_READ,
-	(PF) fqdncache_dnsHandleRead,
+	fqdncache_dnsHandleRead,
 	dns,
 	0);
     debug(35, 5, "fqdncache_dnsDispatch: Request sent to DNS server #%d.\n",
