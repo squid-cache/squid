@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.7 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayVector.h,v 1.8 2003/08/03 09:03:48 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -66,14 +66,14 @@ class Id:public DelayIdComposite
         void operator delete (void *);
         virtual void deleteSelf() const;
 
-        Id (DelayVector::Pointer,CompositeSelectionDetails &);
+        Id (RefCount<DelayVector>,CompositeSelectionDetails &);
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
         virtual void delayRead(DeferredRead const &);
 
     private:
-        DelayVector::Pointer theVector;
+        RefCount<DelayVector> theVector;
         Vector<DelayIdComposite::Pointer> ids;
         typedef Vector<DelayIdComposite::Pointer>::iterator iterator;
         typedef Vector<DelayIdComposite::Pointer>::const_iterator const_iterator;

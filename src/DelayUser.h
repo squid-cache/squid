@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.h,v 1.5 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayUser.h,v 1.6 2003/08/03 09:03:48 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -91,13 +91,13 @@ class Id:public DelayIdComposite
         void *operator new(size_t);
         void operator delete (void *);
         virtual void deleteSelf() const;
-        Id (DelayUser::Pointer, AuthUser *);
+        Id (RefCount<DelayUser>, AuthUser *);
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
 
     private:
-        DelayUser::Pointer theUser;
+        RefCount<DelayUser> theUser;
         DelayUserBucket::Pointer theBucket;
     };
 
