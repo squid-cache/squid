@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.445 1998/08/18 22:42:21 wessels Exp $
+ * $Id: store.cc,v 1.446 1998/08/19 06:05:55 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -357,6 +357,9 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     e->timestamp = 0;		/* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
     EBIT_SET(e->flag, ENTRY_VALIDATED);
+#ifdef PPNR_WIP
+    EBIT_SET(e->flag, ENTRY_FWD_HDR_WAIT);
+#endif /* PPNR_WIP */
     return e;
 }
 
@@ -476,6 +479,15 @@ storeComplete(StoreEntry * e)
 #endif
     InvokeHandlers(e);
     storeCheckSwapOut(e);
+#ifdef PPNR_WIP
+}
+
+void
+storePPNR(StoreEntry *e)
+{
+	assert(EBIT_TEST(e->flag, ENTRY_FWD_HDR_WAIT));
+	EBIT_CLR(e->flag, ENTRY_FWD_HDR_WAIT);
+#endif /* PPNR_WIP */
 }
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.118 1998/08/17 22:04:58 wessels Exp $
+ * $Id: enums.h,v 1.119 1998/08/19 06:05:51 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -445,7 +445,11 @@ enum {
     ENTRY_CACHABLE,
     ENTRY_DISPATCHED,
     KEY_PRIVATE,
+#ifndef PPNR_WIP
     ENTRY_UNUSED_08,
+#else
+    ENTRY_FWD_HDR_WAIT,
+#endif /* PPNR_WIP */
     ENTRY_NEGCACHED,
     ENTRY_VALIDATED,
     ENTRY_BAD_LENGTH
