@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.123 1998/08/12 16:15:23 wessels Exp $
+ * $Id: disk.cc,v 1.124 1998/08/13 18:26:41 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -433,7 +433,8 @@ diskHandleRead(int fd, void *data)
 	F->disk.offset = ctrl_dat->offset;
     }
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
-    F->disk.offset += len;
+    if (len > 0)
+        F->disk.offset += len;
     diskHandleReadComplete(ctrlp, len, errno);
 #endif
 }
