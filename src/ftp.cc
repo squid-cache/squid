@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.132 1997/07/15 05:34:09 wessels Exp $
+ * $Id: ftp.cc,v 1.133 1997/07/16 22:57:02 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -201,6 +201,8 @@ ftpStateFree(int fd, void *data)
     safe_free(ftpState->ctrl.last_message);
     safe_free(ftpState->title_url);
     safe_free(ftpState->filepath);
+    if (ftpState->data.fd > -1)
+	comm_close(ftpState->data.fd);
     cbdataFree(ftpState);
 }
 
@@ -226,11 +228,12 @@ ftpTimeout(int fd, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
-    assert(cbdataValid(ftpState));
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url);
     storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
-    if (ftpState->data.fd >= 0)
+    if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
+    }
     comm_close(ftpState->ctrl.fd);
 }
 
@@ -1488,7 +1491,9 @@ ftpAbort(void *data)
 {
     FtpStateData *ftpState = data;
     debug(9, 1) ("ftpAbort: %s\n", ftpState->entry->url);
-    if (ftpState->data.fd >= 0)
+    if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
+    }
     comm_close(ftpState->ctrl.fd);
 }
