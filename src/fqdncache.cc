@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.37 1996/11/22 07:15:50 wessels Exp $
+ * $Id: fqdncache.cc,v 1.38 1996/11/22 07:43:13 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -137,7 +137,7 @@ static struct {
 } FqdncacheStats;
 
 static int fqdncache_compareLastRef _PARAMS((fqdncache_entry **, fqdncache_entry **));
-static void fqdncache_dnsHandleRead _PARAMS((int, dnsserver_t *));
+static void fqdncache_dnsHandleRead _PARAMS((int, void *));
 static fqdncache_entry *fqdncache_parsebuffer _PARAMS((const char *buf, dnsserver_t *));
 static int fqdncache_purgelru _PARAMS((void));
 static void fqdncache_release _PARAMS((fqdncache_entry *));
@@ -510,8 +510,7 @@ fqdncache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
     return &f;
 }
 
-static void
-     fqdncache_dnsHandleRead(int fd, void *data);
+static void fqdncache_dnsHandleRead(int fd, void *data)
 {
     dnsserver_t *dnsData = data;
     int len;
