@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.1 1998/06/04 18:57:10 wessels Exp $
+ * $Id: forward.cc,v 1.2 1998/06/05 21:24:57 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -105,7 +105,6 @@ fwdConnectTimeout(int fd, void *data)
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
     debug(17, 3) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
-    assert(entry->store_status == STORE_PENDING);
     if (entry->mem_obj->inmem_hi == 0) {
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->request = requestLink(fwdState->request);
