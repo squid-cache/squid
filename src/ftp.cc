@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.53 1996/09/05 19:02:55 wessels Exp $
+ * $Id: ftp.cc,v 1.54 1996/09/12 16:39:53 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -315,10 +315,15 @@ int ftpReadReply(fd, data)
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
 	    (void *) data);
-	/* NOTE there is no read timeout handler to disable */
+	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
+	    /* NOTE there is no read timeout handler to disable */
+	    BIT_SET(entry->flag, READ_DEFERRED);
+	}
 	/* dont try reading again for a while */
 	comm_set_stall(fd, Config.stallDelay);
 	return 0;
+    } else {
+	BIT_RESET(entry->flag, READ_DEFERRED);
     }
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
