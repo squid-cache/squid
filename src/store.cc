@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.55 1996/04/16 20:53:33 wessels Exp $ */
-#ident "$Id: store.cc,v 1.55 1996/04/16 20:53:33 wessels Exp $"
+/* $Id: store.cc,v 1.56 1996/04/17 15:02:58 wessels Exp $ */
+#ident "$Id: store.cc,v 1.56 1996/04/17 15:02:58 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -36,7 +36,6 @@
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 #define MAX_SWAP_FILE		(1<<21)
 #define SWAP_BUF		DISK_PAGE_SIZE
-#define FATAL_BUF_SIZE		1024
 #define SWAP_DIRECTORIES	100
 
 #define WITH_MEMOBJ	1
@@ -1225,8 +1224,8 @@ static int storeSwapOutStart(e)
 static int storeDoRebuildFromDisk(data)
      struct storeRebuild_data *data;
 {
-    static char log_swapfile[1024];
-    static char swapfile[1024];
+    static char log_swapfile[MAXPATHLEN];
+    static char swapfile[MAXPATHLEN];
     static char url[MAX_URL];
     char *t = NULL;
     StoreEntry *e = NULL;
@@ -1402,6 +1401,8 @@ static void storeRebuiltFromDisk(data)
 	    xstrerror());
     }
     file_update_open(swaplog_fd, swaplog_file);
+    /* file_update_open clears the lock so we must reset it */
+    swaplog_lock = file_write_lock(swaplog_fd);
 }
 
 void storeStartRebuildFromDisk()
@@ -1446,7 +1447,6 @@ void storeStartRebuildFromDisk()
 	fatal("storeStartRebuildFromDisk: Can't open tmp swaplog");
     }
     swaplog_lock = file_write_lock(swaplog_fd);
-    debug(20, 3, "swaplog_lock = %d\n", swaplog_lock);
     /* Open the existing swap log for reading */
     if ((data->log = fopen(swaplog_file, "r")) == (FILE *) NULL) {
 	sprintf(tmp_error_buf, "storeRebuildFromDisk: %s: %s",
@@ -2418,7 +2418,7 @@ static int storeVerifySwapDirs(clean)
 static void storeCreateSwapSubDirs()
 {
     int i, j;
-    static char name[1024];
+    static char name[MAXPATHLEN];
     for (j = 0; j < ncache_dirs; j++) {
 	for (i = 0; i < SWAP_DIRECTORIES; i++) {
 	    sprintf(name, "%s/%02d", swappath(j), i);
@@ -2457,7 +2457,6 @@ int storeInit()
 	fatal(tmp_error_buf);
     }
     swaplog_lock = file_write_lock(swaplog_fd);
-    debug(20, 3, "swaplog_lock = %d\n", swaplog_lock);
 
     if (!zap_disk_store) {
 	ok_write_clean_log = 0;
