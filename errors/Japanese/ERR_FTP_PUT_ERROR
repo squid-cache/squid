@@ -1,10 +1,12 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=EUC-JP">
 <TITLE>エラー: FTP アップロードは失敗しました</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>エラー</H1>
 <H2>FTP アップロードは失敗しました<H2>
-<HR>
+<HR noshade size="1px">
 <P>
 以下の URL を PUT しようとした際に:
 <A HREF="%U">%U</A>

@@ -1,9 +1,11 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>FEL</H1>
 <H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 FTP servern var ej tillg&auml;nglig vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>

@@ -1,7 +1,9 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
    <TITLE>BŁĄD: Żądany URN nie może zostać sprowadzony</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
@@ -11,7 +13,7 @@ BŁĄD</H1>
 <H2>
 URL dla żądanego URN nie może zostać sprowadzony</H2>
 
-<HR>
+<HR noshade size="1px">
 
 <P>Podzcas sprowadzania URN: <A HREF="%U">%U</A>
 
@@ -21,5 +23,3 @@ URL dla żądanego URN nie może zostać sprowadzony</H2>
 <B>nie można zlokalizować&nbsp; URN</B></LI>
 </UL>
 Proszę nie spodziewać się zbyt wiele od URNów z %T :)
-</BODY>
-</HTML>

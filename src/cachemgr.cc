@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.94 2002/04/13 23:07:49 hno Exp $
+ * $Id: cachemgr.cc,v 1.95 2002/07/18 23:43:12 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -220,7 +220,7 @@ xstrtok(char **str, char del)
 static void
 print_trailer(void)
 {
-    printf("<HR>\n");
+    printf("<HR noshade size=\"1px\">\n");
     printf("<ADDRESS>\n");
     printf("Generated %s, by %s/%s@%s\n",
 	mkrfc1123(now), progname, VERSION, getfullhostname());
@@ -234,22 +234,24 @@ auth_html(const char *host, int port, const char *user_name)
 	user_name = "";
     if (!host || !strlen(host))
 	host = "localhost";
-    printf("Content-type: text/html\r\n\r\n");
-    printf("<HTML><HEAD><TITLE>Cache Manager Interface</TITLE></HEAD>\n");
+    printf("Content-Type: text/html\r\n\r\n");
+    printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
+    printf("<HTML><HEAD><TITLE>Cache Manager Interface</TITLE>\n");
+    printf("<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE></HEAD>\n");
     printf("<BODY><H1>Cache Manager Interface</H1>\n");
     printf("<P>This is a WWW interface to the instrumentation interface\n");
     printf("for the Squid object cache.</P>\n");
-    printf("<HR>\n");
+    printf("<HR noshade size=\"1px\">\n");
     printf("<FORM METHOD=\"GET\" ACTION=\"%s\">\n", script_name);
     printf("<TABLE BORDER=\"0\" CELLPADDING=\"10\" CELLSPACING=\"1\">\n");
     printf("<TR><TH ALIGN=\"left\">Cache Host:</TH><TD><INPUT NAME=\"host\" ");
-    printf("SIZE=30 VALUE=\"%s\"></TD></TR>\n", host);
+    printf("size=\"30\" VALUE=\"%s\"></TD></TR>\n", host);
     printf("<TR><TH ALIGN=\"left\">Cache Port:</TH><TD><INPUT NAME=\"port\" ");
-    printf("SIZE=30 VALUE=\"%d\"></TD></TR>\n", port);
+    printf("size=\"30\" VALUE=\"%d\"></TD></TR>\n", port);
     printf("<TR><TH ALIGN=\"left\">Manager name:</TH><TD><INPUT NAME=\"user_name\" ");
-    printf("SIZE=30 VALUE=\"%s\"></TD></TR>\n", user_name);
+    printf("size=\"30\" VALUE=\"%s\"></TD></TR>\n", user_name);
     printf("<TR><TH ALIGN=\"left\">Password:</TH><TD><INPUT TYPE=\"password\" NAME=\"passwd\" ");
-    printf("SIZE=30 VALUE=\"\"></TD></TR>\n");
+    printf("size=\"30\" VALUE=\"\"></TD></TR>\n");
     printf("</TABLE><BR CLEAR=\"all\">\n");
     printf("<INPUT TYPE=\"submit\" VALUE=\"Continue...\">\n");
     printf("</FORM>\n");
@@ -259,8 +261,10 @@ auth_html(const char *host, int port, const char *user_name)
 static void
 error_html(const char *msg)
 {
-    printf("Content-type: text/html\r\n\r\n");
-    printf("<HTML><HEAD><TITLE>Cache Manager Error</TITLE></HEAD>\n");
+    printf("Content-Type: text/html\r\n\r\n");
+    printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
+    printf("<HTML><HEAD><TITLE>Cache Manager Error</TITLE>\n");
+    printf("<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE></HEAD>\n");
     printf("<BODY><H1>Cache Manager Error</H1>\n");
     printf("<P>\n%s</P>\n", msg);
     print_trailer();
@@ -364,7 +368,7 @@ munge_other_line(const char *buf, cachemgr_request * req)
     }
     /* start html table */
     if (!table_line_num) {
-	l += snprintf(html + l, sizeof(html) - l, "</pre><table border=1 cellpadding=2 cellspacing=1>\n");
+	l += snprintf(html + l, sizeof(html) - l, "</pre><table border=\"1\" cellpadding=\"2\" cellspacing=\"1\">\n");
 	next_is_header = 0;
     }
     /* remove '\n' */
@@ -383,7 +387,7 @@ munge_other_line(const char *buf, cachemgr_request * req)
 	    column_span++;
 	    x++;
 	}
-	l += snprintf(html + l, sizeof(html) - l, "<%s colspan=%d align=\"%s\">%s</%s>",
+	l += snprintf(html + l, sizeof(html) - l, "<%s colspan=\"%d\" align=\"%s\">%s</%s>",
 	    ttag, column_span,
 	    is_header ? "center" : is_number(cell) ? "right" : "left",
 	    cell, ttag);
@@ -449,14 +453,17 @@ read_reply(int s, cachemgr_request * req)
 		fputs(buf, stdout);
 	    break;
 	case isBodyStart:
-	    printf("<HTML><HEAD><TITLE>CacheMgr@%s: %s</TITLE></HEAD><BODY>\n",
+	    printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
+	    printf("<HTML><HEAD><TITLE>CacheMgr@%s: %s</TITLE>\n");
+	    printf("<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
+	    printf("</HEAD><BODY>\n",
 		req->hostname, action);
 	    if (parse_menu) {
 		printf("<H2><a href=\"%s\">Cache Manager</a> menu for %s:</H2>",
 		    menu_url(req, "authenticate"), req->hostname);
 		printf("<UL>\n");
 	    } else {
-		printf("<P><A HREF=\"%s\">%s</A>\n<HR>\n",
+		printf("<P><A HREF=\"%s\">%s</A>\n<HR noshade size=\"1px\">\n",
 		    menu_url(req, "menu"), "Cache Manager menu");
 		printf("<PRE>\n");
 	    }

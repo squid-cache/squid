@@ -1,9 +1,11 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>錯誤：檔案上傳失敗</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>錯誤</H1>
 <H2>檔案傳輸上傳（PUT）失敗</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 當嘗試上傳（PUT）下列位置時：
 <A HREF="%U">%U</A>

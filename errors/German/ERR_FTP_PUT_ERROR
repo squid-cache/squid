@@ -1,17 +1,19 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>FEHLER: FTP Upload fehlgeschlagen</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>FEHLER</H1>
 <H2>FTP PUT/Upload fehlgeschlagen</H2>
-<HR>
+<HR noshade size="1px">
 <P>
-W&auml;hrend dem PUT/Upload-Versuch des URL:
-<A HREF="%U">%U</A>
+W&auml;hrend dem PUT/Upload-Versuch zum URL:
+<A HREF="%U">%U</A><BR>
 <P>
-Squid schickte das folgende FTP Kommando:
-<PRE><STRONG>         %f </STRONG></PRE>
+Squid sendete den folgenden FTP-Befehl:
+<PRE><STRONG>        %f</STRONG></PRE>
 und erhielt die Antwort:
-<PRE><STRONG>         %F </STRONG></PRE>
+<PRE><STRONG>        %F</STRONG></PRE>
 <P>
 &Uuml;berpr&uuml;fen Sie den Pfad, die Zugriffsrechte und den
 Plattenplatz. Versuchen Sie es dann erneut.

@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.165 2002/07/15 00:30:54 hno Exp $
+ * $Id: gopher.cc,v 1.166 2002/07/18 23:43:14 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -240,9 +240,12 @@ gopherCachable(const request_t * req)
 static void
 gopherHTMLHeader(StoreEntry * e, const char *title, const char *substring)
 {
+    storeAppendPrintf(e, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
     storeAppendPrintf(e, "<HTML><HEAD><TITLE>");
     storeAppendPrintf(e, title, substring);
-    storeAppendPrintf(e, "</TITLE></HEAD>\n<BODY><H1>");
+    storeAppendPrintf(e, "</TITLE>");
+    storeAppendPrintf(e, "<STYLE type= \"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
+    storeAppendPrintf(e, "</HEAD>\n<BODY><H1>");
     storeAppendPrintf(e, title, substring);
     storeAppendPrintf(e, "</H1>\n");
 }
@@ -250,7 +253,7 @@ gopherHTMLHeader(StoreEntry * e, const char *title, const char *substring)
 static void
 gopherHTMLFooter(StoreEntry * e)
 {
-    storeAppendPrintf(e, "<HR>\n");
+    storeAppendPrintf(e, "<HR noshade size=\"1px\">\n");
     storeAppendPrintf(e, "<ADDRESS>\n");
     storeAppendPrintf(e, "Generated %s by %s (%s)\n",
 	mkrfc1123(squid_curtime),
@@ -480,11 +483,11 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			memset(tmpbuf, '\0', TEMP_BUF_SIZE);
 			if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
 			    if (strlen(escaped_selector) != 0)
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
 				    icon_url, escaped_selector, rfc1738_escape_part(host),
 				    *port ? ":" : "", port, html_quote(name));
 			    else
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
 				    icon_url, rfc1738_escape_part(host), *port ? ":" : "",
 				    port, html_quote(name));
 
@@ -493,11 +496,11 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			} else {
 			    if (strncmp(selector, "GET /", 5) == 0) {
 				/* WWW link */
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
 				    icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
 			    } else {
 				/* Standard link */
-				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG BORDER=0 SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
+				snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
 				    icon_url, host, gtype, escaped_selector, html_quote(name));
 			    }
 			}
@@ -535,7 +538,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 			break;
 
 		    if (gopherState->cso_recno != recno) {
-			snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
+			snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
 			gopherState->cso_recno = recno;
 		    } else {
 			snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", html_quote(result));
@@ -567,7 +570,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 		    case 502:	/* Too Many Matches */
 			{
 			    /* Print the message the server returns */
-			    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR><H2>%s</H2>\n<PRE>", html_quote(result));
+			    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
 			    strCat(outbuf, tmpbuf);
 			    gopherState->data_in = 1;
 			    break;

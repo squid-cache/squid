@@ -1,10 +1,12 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>FEJL: Den angivne URN kunne ikke hentes</TITLE>
 <META CONTENT="text/html; charset=iso-8859-1">
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>FEJL</H1>
 <H2>URL for den angivne URN kunne ikke hentes</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 Under hentning af f&oslash;gende URN:
 <A HREF="%U">%U</A>

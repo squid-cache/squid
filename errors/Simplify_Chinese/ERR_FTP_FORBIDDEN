@@ -1,10 +1,12 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <meta charset=gb2312">
 <TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>错误</H1>
 <H2>您所请求的网址（URL）无法获取</H2>
-<HR>
+<HR noshade size="1px">
 <P>
 当尝试读取以下网址（URL）时文件传输协议（FTP）身份验证失败：
 <A HREF="%U">%U</A>
