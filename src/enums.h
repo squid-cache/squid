@@ -62,6 +62,7 @@ typedef enum {
     ACL_PROXY_AUTH,
     ACL_SRC_ASN,
     ACL_DST_ASN,
+    ACL_SRC_ARP,
     ACL_ENUM_MAX
 } squid_acl;
 
