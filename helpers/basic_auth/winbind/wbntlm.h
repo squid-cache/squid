@@ -33,8 +33,6 @@
 /* the attempted entropy source. If it doesn't exist, random() is uesed */
 #define ENTROPY_SOURCE "/dev/urandom"
 
-#define DOMAIN "GCSINT"         /* TODO: fix ntlm_make_challenge */
-
 /************* END CONFIGURATION *************/
 
 /* Debugging stuff */
