@@ -1,8 +1,8 @@
 
 /*
- * $Id: store.cc,v 1.399 1998/03/29 08:51:03 wessels Exp $
+ * $Id: store.cc,v 1.400 1998/04/02 17:11:26 rousskov Exp $
  *
- * DEBUG: section 20    Storeage Manager
+ * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -254,11 +254,15 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
     e->key = storeKeyDup(key);
     hash_join(store_table, (hash_link *) e);
     dlinkAdd(e, &e->lru, &store_list);
+    if (store_digest && !EBIT_TEST(e->flag, KEY_PRIVATE))
+	cacheDigestAdd(store_digest, e->key);
 }
 
 static void
 storeHashDelete(StoreEntry * e)
 {
+    if (store_digest && !EBIT_TEST(e->flag, KEY_PRIVATE))
+	cacheDigestDel(store_digest, e->key);
     hash_remove_link(store_table, (hash_link *) e);
     dlinkDelete(&e->lru, &store_list);
     storeKeyFree(e->key);
@@ -370,8 +374,8 @@ storeSetPrivateKey(StoreEntry * e)
 	newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter(METHOD_NONE));
     }
     assert(hash_lookup(store_table, newkey) == NULL);
-    storeHashInsert(e, newkey);
     EBIT_SET(e->flag, KEY_PRIVATE);
+    storeHashInsert(e, newkey);
 }
 
 void
@@ -392,8 +396,8 @@ storeSetPublicKey(StoreEntry * e)
     }
     if (e->key)
 	storeHashDelete(e);
-    storeHashInsert(e, newkey);
     EBIT_CLR(e->flag, KEY_PRIVATE);
+    storeHashInsert(e, newkey);
     if (e->swap_file_number > -1)
 	storeDirSwapLog(e, SWAP_LOG_ADD);
 }
@@ -821,6 +825,7 @@ storeInit(void)
     storeInitHashValues();
     store_table = hash_create(storeKeyHashCmp,
 	store_hash_buckets, storeKeyHashHash);
+    storeDigestInit();
     storeLogOpen();
     if (storeVerifyCacheDirs() < 0) {
 	xstrncpy(tmp_error_buf,
@@ -931,6 +936,9 @@ storeFreeMemory(void)
     hashFreeItems(store_table, destroy_StoreEntry);
     hashFreeMemory(store_table);
     store_table = NULL;
+    if (store_digest)
+	cacheDigestDestroy(store_digest);
+    store_digest = NULL;
 }
 
 int

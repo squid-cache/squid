@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.48 1998/04/01 00:13:14 wessels Exp $
+ * $Id: globals.h,v 1.49 1998/04/02 17:11:23 rousskov Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -99,3 +99,4 @@ extern dlink_list store_list;
 extern const String StringNull;	/* { 0, 0, NULL } */
 extern int hot_obj_count;	/* 0 */
 extern int _db_level;
+extern CacheDigest *store_digest; /* NULL */

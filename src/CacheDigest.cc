@@ -1,8 +1,8 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.6 1998/04/01 07:14:05 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.7 1998/04/02 17:11:20 rousskov Exp $
  *
- * DEBUG: section ??    Cache Digest
+ * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -124,6 +124,30 @@ cacheDigestUtil(const CacheDigest * cd, int *bit_cnt_p, int *on_cnt_p)
     if (on_cnt_p)
 	*on_cnt_p = on_count;
     return xpercent(on_count, bit_count);
+}
+
+void
+cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
+{
+    int bit_count, on_count;
+    assert(cd && e);
+    cacheDigestUtil(cd, &bit_count, &on_count);
+    storeAppendPrintf(e, "%s digest: size: %d bytes.\n",
+	label ? label : "",
+	bit_count/8
+    );
+    storeAppendPrintf(e, "\t entries: count: %d capacity: %d util: %d%%\n",
+	cd->count,
+	cd->capacity,
+	xpercentInt(cd->count, cd->capacity)
+    );
+    storeAppendPrintf(e, "\t deletion attempts: %d\n", 
+	cd->del_count
+    );
+    storeAppendPrintf(e, "\t bits: on: %d capacity: %d util: %d%%\n", 
+	on_count, bit_count,
+	xpercentInt(on_count, bit_count)
+    );
 }
 
 static void
