@@ -6,7 +6,12 @@
 	  it is being swapped out.
 	- Added MEM_CLIENT_SOCK_BUF type so we can change the size
 	  of the buffers used for writing data to the client sockets.
-	
+	- Added configure check for libbind.a.  If found, it will be
+	  used instead of libresolv.a.
+	- Changed fwdStart() to always allow internally generated
+	  requests, such as for peer digests.
+	- Completed initial HTCP implementation.  It works, but is not
+	  tested much.
 
 Changes to squid-1.2.beta24 (August 21, 1998):
 
