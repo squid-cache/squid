@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.222 1998/04/01 05:39:04 wessels Exp $
+ * $Id: stat.cc,v 1.223 1998/04/06 22:00:29 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -818,6 +818,10 @@ statCountersInitSpecial(StatCounters * C)
      * DNS svc_time hist is kept in milli-seconds; max of 10 minutes.
      */
     statHistLogInit(&C->dns.svc_time, 300, 0.0, 60000.0 * 10.0);
+#if SQUID_PEER_DIGEST
+    statHistLogInit(&C->cd.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
+    statHistLogInit(&C->icp.client_svc_time, 300, 0.0, 3600000.0 * 30.0);
+#endif
 }
 
 /* add special cases here as they arrive */
@@ -832,6 +836,10 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->icp.query_svc_time);
     statHistClean(&C->icp.reply_svc_time);
     statHistClean(&C->dns.svc_time);
+#if SQUID_PEER_DIGEST
+    statHistClean(&C->cd.client_svc_time);
+    statHistClean(&C->icp.client_svc_time);
+#endif
 }
 
 /* add special cases here as they arrive */
@@ -852,6 +860,10 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statHistCopy(&dest->icp.query_svc_time, &orig->icp.query_svc_time);
     statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
     statHistCopy(&dest->dns.svc_time, &orig->dns.svc_time);
+#if SQUID_PEER_DIGEST
+    statHistCopy(&dest->cd.client_svc_time, &orig->cd.client_svc_time);
+    statHistCopy(&dest->icp.client_svc_time, &orig->icp.client_svc_time);
+#endif
 }
 
 static void
