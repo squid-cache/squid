@@ -1,0 +1,86 @@
+#
+#  Makefile for the Squid Object Cache server
+#
+#  $Id: Makefile.in,v 1.1 2001/01/07 23:36:48 hno Exp $
+#
+#  Uncomment and customize the following to suit your needs:
+#
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+exec_suffix	= @exec_suffix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+# Gotta love the DOS legacy
+#
+NTLM_AUTH_EXE	= ntlm_auth$(exec_suffix)
+
+CC		= @CC@
+MAKEDEPEND	= @MAKEDEPEND@
+INSTALL		= @INSTALL@
+INSTALL_BIN	= @INSTALL_PROGRAM@
+CRYPTLIB	= @CRYPTLIB@
+AC_CFLAGS	= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+XTRA_LIBS	= @XTRA_LIBS@
+XTRA_OBJS	= @XTRA_OBJS@
+MV		= @MV@
+RM		= @RM@
+SHELL		= /bin/sh
+
+
+INCLUDE		= -I. -I../../../../../include -I$(srcdir)/smbval -I$(top_srcdir)/include
+CFLAGS		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
+AUTH_LIBS	= -L../../../../../lib -lntlmauth -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
+
+PROGS		= $(NTLM_AUTH_EXE)
+OBJS		= ntlm_auth.o libntlmssp.o
+
+all:	$(NTLM_AUTH_EXE)  smbval/smbvalid.a
+
+$(OBJS): $(top_srcdir)/include/version.h ntlm.h
+
+$(NTLM_AUTH_EXE): $(OBJS) smbval/smbvalid.a 
+	$(CC) $(LDFLAGS) $(OBJS) smbval/smbvalid.a -o $@ $(AUTH_LIBS)
+
+smbval/smbvalid.a: smbval/stamp
+
+smbval smbval/stamp:
+	@sh -c "cd smbval && $(MAKE) all"
+
+install-mkdirs:
+	-@if test ! -d $(prefix); then \
+		echo "mkdir $(prefix)"; \
+		mkdir $(prefix); \
+	fi
+	-@if test ! -d $(bindir); then \
+		echo "mkdir $(bindir)"; \
+		mkdir $(bindir); \
+	fi
+
+install: all install-mkdirs
+	@for f in $(PROGS); do \
+		if test -f $(bindir)/$$f; then \
+			echo $(MV) $(bindir)/$$f $(bindir)/-$$f; \
+			$(MV) $(bindir)/$$f $(bindir)/-$$f; \
+		fi; \
+		echo $(INSTALL_BIN) $$f $(bindir); \
+		$(INSTALL_BIN) $$f $(bindir); \
+		if test -f $(bindir)/-$$f; then \
+			echo $(RM) -f $(bindir)/-$$f; \
+			$(RM) -f $(bindir)/-$$f; \
+		fi; \
+	done
+
+clean:
+	-rm -rf *.o *pure_* core $(PROGS)
+	cd smbval; make clean
+
+distclean:     clean
+	-rm -f Makefile
+
+depend:
+	$(MAKEDEPEND) -I../include -I. -fMakefile *.c

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.374 2001/01/07 19:55:20 hno Exp $
+ * $Id: structs.h,v 1.375 2001/01/07 23:36:40 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -73,15 +73,100 @@ struct _acl_name_list {
     acl_name_list *next;
 };
 
-struct _acl_proxy_auth_user {
-    hash_link hash;		/* must be first */
+struct _acl_proxy_auth_match_cache {
+    dlink_node link;
+    int matchrv;
+    void *acl_data;
+};
+
+struct _auth_user_hash_pointer {
+    /* first two items must be same as hash_link */
+    char *key;
+    auth_user_hash_pointer *next;
+    auth_user_t *auth_user;
+    dlink_node link;		/* other hash entries that point to the same auth_user */
+};
+
+struct _auth_user_t {
     /* extra fields for proxy_auth */
-    char *passwd;
-    int passwd_ok;		/* 1 = passwd checked OK */
+    /* this determines what scheme owns the user data. */
+    auth_type_t auth_type;
+    /* the index +1 in the authscheme_list to the authscheme entry */
+    int auth_module;
+    /* we only have one username associated with a given auth_user struct */
+    auth_user_hash_pointer *usernamehash;
+    /* we may have many proxy-authenticate strings that decode to the same user */
+    dlink_list proxy_auth_list;
+    dlink_list proxy_match_cache;
+    struct {
+	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
+    } flags;
     long expiretime;
-    struct in_addr ipaddr;	/* IP addr this user authenticated from */
+    /* IP addr this user authenticated from */
+    struct in_addr ipaddr;
     time_t ip_expiretime;
+    /* how many references are outstanding to this instance */
+    size_t references;
+    /* the auth scheme has it's own private data area */
+    void *scheme_data;
+    /* the auth_user_request structures that link to this. Yes it could be a splaytree
+     * but how many requests will a single username have in parallel? */
+    dlink_list requests;
+};
+
+struct _auth_user_request_t {
+    /* this is the object passed around by client_side and acl functions */
+    /* it has request specific data, and links to user specific data */
+    /* the user */
+    auth_user_t *auth_user;
+    /* return a message on the 407 error pages */
     char *message;
+    /* any scheme specific request related data */
+    void *scheme_data;
+    /* how many 'processes' are working on this data */
+    size_t references;
+};
+
+
+/*
+ * This defines an auth scheme module
+ */
+
+struct _authscheme_entry {
+    char *typestr;
+    AUTHSACTIVE *Active;
+    AUTHSADDHEADER *AddHeader;
+    AUTHSADDTRAILER *AddTrailer;
+    AUTHSAUTHED *authenticated;
+    AUTHSAUTHUSER *authAuthenticate;
+    AUTHSDUMP *dump;
+    AUTHSFIXERR *authFixHeader;
+    AUTHSFREE *FreeUser;
+    AUTHSFREECONFIG *freeconfig;
+    AUTHSUSERNAME *authUserUsername;
+    AUTHSONCLOSEC *oncloseconnection;	/*optional */
+    AUTHSDECODE *decodeauth;
+    AUTHSDIRECTION *getdirection;
+    AUTHSPARSE *parse;
+    AUTHSINIT *init;
+    AUTHSREQFREE *requestFree;
+    AUTHSSHUTDOWN *donefunc;
+    AUTHSSTART *authStart;
+    AUTHSSTATS *authStats;
+};
+
+/*
+ * This is a configured auth scheme
+ */
+
+/* private data types */
+struct _authScheme {
+    /* pointer to the authscheme_list's string entry */
+    char *typestr;
+    /* the scheme id in the authscheme_list */
+    int Id;
+    /* the scheme's configuration details. */
+    void *scheme_data;
 };
 
 struct _acl_deny_info_list {
@@ -161,11 +246,9 @@ struct _aclCheck_t {
     struct in_addr my_addr;
     unsigned short my_port;
     request_t *request;
-#if USE_IDENT
-    ConnStateData *conn;	/* hack for ident */
-    char ident[USER_IDENT_SZ];
-#endif
-    acl_proxy_auth_user *auth_user;
+    ConnStateData *conn;	/* hack for ident and NTLM */
+    char rfc931[USER_IDENT_SZ];
+    auth_user_request_t *auth_user_request;
     acl_lookup_state state[ACL_ENUM_MAX];
 #if SQUID_SNMP
     char *snmp_community;
@@ -205,6 +288,7 @@ struct _sockaddr_in_list {
     struct sockaddr_in s;
     sockaddr_in_list *next;
 };
+
 
 #if DELAY_POOLS
 struct _delaySpec {
@@ -334,7 +418,6 @@ struct _SquidConfig {
 	char *dnsserver;
 #endif
 	wordlist *redirect;
-	wordlist *authenticate;
 #if USE_ICMP
 	char *pinger;
 #endif
@@ -346,7 +429,7 @@ struct _SquidConfig {
     int dnsChildren;
 #endif
     int redirectChildren;
-    int authenticateChildren;
+    time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;
     struct {
@@ -470,7 +553,11 @@ struct _SquidConfig {
 	acl_access *redirector;
     } accessList;
     acl_deny_info_list *denyInfoList;
-    char *proxyAuthRealm;
+    struct _authConfig {
+	authScheme *schemes;
+	int n_allocated;
+	int n_configured;
+    } authConfig;
     struct {
 	size_t list_width;
 	int list_wrap;
@@ -876,7 +963,8 @@ struct _AccessLogEntry {
 	size_t size;
 	log_type code;
 	int msec;
-	const char *ident;
+	const char *rfc931;
+	const char *authuser;
     } cache;
     struct {
 	char *request;
@@ -932,13 +1020,25 @@ struct _ConnStateData {
 	off_t offset;
 	size_t size;
     } in;
+    struct {
+	size_t size_left;	/* How much body left to process */
+	request_t *request;	/* Parameters passed to clientReadBody */
+	char *buf;
+	size_t bufsize;
+	CBCB *callback;
+	void *cbdata;
+    } body;
+    auth_type_t auth_type;	/* Is this connection based authentication ? if so 
+				 * what type it is. */
+    /* note this is ONLY connection based because NTLM is against HTTP spec */
+    /* the user details for connection based authentication */
+    auth_user_request_t *auth_user_request;
     clientHttpRequest *chr;
     struct sockaddr_in peer;
     struct sockaddr_in me;
     struct in_addr log_addr;
-    char ident[USER_IDENT_SZ];
+    char rfc931[USER_IDENT_SZ];
     int nrequests;
-    int persistent;
     struct {
 	int n;
 	time_t until;
@@ -1421,7 +1521,6 @@ struct _request_flags {
     unsigned int proxy_keepalive:1;
     unsigned int proxying:1;
     unsigned int refresh:1;
-    unsigned int used_proxy_auth:1;
     unsigned int redirected:1;
     unsigned int need_validation:1;
 #if HTTP_VIOLATIONS
@@ -1429,6 +1528,7 @@ struct _request_flags {
 #endif
     unsigned int accelerated:1;
     unsigned int internal:1;
+    unsigned int body_sent:1;
 };
 
 struct _link_list {
@@ -1461,7 +1561,7 @@ struct _request_t {
     protocol_t protocol;
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
-    char user_ident[USER_IDENT_SZ];	/* from proxy auth or ident server */
+    auth_user_request_t *auth_user_request;
     u_short port;
     String urlpath;
     char *canonical;
@@ -1478,8 +1578,7 @@ struct _request_t {
     struct in_addr my_addr;
     unsigned short my_port;
     HttpHeader header;
-    char *body;
-    size_t body_sz;
+    ConnStateData *body_connection;	/* used by clientReadBody() */
     int content_length;
     HierarchyLogEntry hier;
     err_type err_type;
@@ -1524,13 +1623,13 @@ struct _ErrorState {
     err_type type;
     int page_id;
     http_status http_status;
+    auth_user_request_t *auth_user_request;
     request_t *request;
     char *url;
     int xerrno;
     char *host;
     u_short port;
     char *dnsserver_msg;
-    char *proxy_auth_msg;
     time_t ttl;
     struct in_addr src_addr;
     char *redirect_url;
@@ -1816,6 +1915,15 @@ struct _helper_request {
     void *data;
 };
 
+struct _helper_stateful_request {
+    char *buf;
+    HLPSCB *callback;
+    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper
+				 * to become available for deferred requests.*/
+    void *data;
+};
+
+
 struct _helper {
     wordlist *cmdline;
     dlink_list servers;
@@ -1824,6 +1932,26 @@ struct _helper {
     int n_to_start;
     int n_running;
     int ipc_type;
+    time_t last_queue_warn;
+    struct {
+	int requests;
+	int replies;
+	int queue_size;
+	int avg_svc_time;
+    } stats;
+};
+
+struct _helper_stateful {
+    wordlist *cmdline;
+    dlink_list servers;
+    dlink_list queue;
+    const char *id_name;
+    int n_to_start;
+    int n_running;
+    int ipc_type;
+    MemPool *datapool;
+    HLPSAVAIL *IsAvailable;
+    HLPSONEQ *OnEmptyQueue;
     time_t last_queue_warn;
     struct {
 	int requests;
@@ -1854,6 +1982,34 @@ struct _helper_server {
     struct {
 	int uses;
     } stats;
+};
+
+
+struct _helper_stateful_server {
+    int index;
+    int rfd;
+    int wfd;
+    char *buf;
+    size_t buf_sz;
+    off_t offset;
+    struct timeval dispatch_time;
+    struct timeval answer_time;
+    dlink_node link;
+    dlink_list queue;
+    statefulhelper *parent;
+    helper_stateful_request *request;
+    struct _helper_stateful_flags {
+	unsigned int alive:1;
+	unsigned int busy:1;
+	unsigned int closing:1;
+	unsigned int shutdown:1;
+	stateful_helper_reserve_t reserved:2;
+    } flags;
+    struct {
+	int uses;
+    } stats;
+    size_t deferred_requests;	/* current number of deferred requests */
+    void *data;			/* State data used by the calling routines */
 };
 
 /*

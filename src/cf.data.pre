@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.204 2001/01/04 21:09:00 wessels Exp $
+# $Id: cf.data.pre,v 1.205 2001/01/07 23:36:37 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -228,7 +228,7 @@ DOC_START
 		     no-digest
 		     no-netdb-exchange
 		     no-delay
-		     login=user:password
+		     login=user:password|PASS
 		     connect-timeout=nn
 		     digest-url=url
 		     allow-miss
@@ -279,6 +279,13 @@ DOC_START
 
 		     use 'login=user:password' if this is a personal/workgroup
 		     proxy and your parent requires proxy authentication.
+
+		     use 'login=PASS' if users must authenticate against
+		     the upstream proxy. Note: To combine this with
+		     proxy_auth both proxies must share the same user
+		     database as HTTP only allows for one proxy login.
+		     Also be warned that this will expose your users proxy
+		     password to the parent. USE WITH CAUTION
 
 		     use 'connect-timeout=nn' to specify a peer
 		     specific connect timeout (also see the
@@ -1104,17 +1111,35 @@ DOC_START
 	are sent.
 DOC_END
 
-
-NAME: authenticate_program
-TYPE: wordlist
-LOC: Config.Program.authenticate
+NAME: auth_param
+TYPE: authparam
+LOC: Config.authConfig
 DEFAULT: none
 DOC_START
+	This is used to pass parameters to the various authentication
+	schemes.
+	format: auth_param scheme parameter [setting]
+	
+	auth_param basic program @DEFAULT_PREFIX@/bin/ncsa_auth @DEFAULT_PREFIX@/etc/passwd	
+	would tell the basic authentication scheme it's program parameter.
+
+	The order that authentication prompts are presented to the client_agent
+	is dependant on the order the scheme first appears in config file.
+	IE has a bug (it's not rfc 2617 compliant) in that it will use the basic
+	scheme if basic is the first entry presented, even if more secure schemes
+	are presented. For now use the order in the file below. If other browsers
+	have difficulties (don't recognise the schemes offered even if you are using
+	basic) then either put basic first, or disable the other schemes (by commenting
+	out their program entry).
+
+	=== Parameters for the basic scheme follow. ===
+	
+	"program" cmdline
 	Specify the command for the external authenticator.  Such a
 	program reads a line containing "username password" and replies
 	"OK" or "ERR" in an endless loop.  If you use an authenticator,
 	make sure you have 1 acl of type proxy_auth.  By default, the
-	authenticator_program is not used.
+	authenticate_program is not used.
 
 	If you want to use the traditional proxy authentication,
 	jump over to the ../auth_modules/NCSA directory and
@@ -1124,19 +1149,87 @@ DOC_START
 
 	Then, set this line to something like
 
-	authenticate_program @DEFAULT_PREFIX@/bin/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
-DOC_END
+	auth_param basic program @DEFAULT_PREFIX@/bin/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
 
-NAME: authenticate_children
-TYPE: int
-DEFAULT: 5
-LOC: Config.authenticateChildren
-DOC_START
-	The number of authenticator processes to spawn (default 5). If you
+	"children" numberofchildren
+	The number of authenticator processes to spawn (no default). If you
 	start too few Squid will have to wait for them to process a backlog
 	of usercode/password verifications, slowing it down. When password
 	verifications are done via a (slow) network you are likely to need
 	lots of authenticator processes.
+	auth_param basic children 5
+
+	"realm" realmstring
+	Specifies the realm name which is to be reported to the client for
+	the basic proxy authentication scheme (part of the text the user will
+	see when prompted their username and password). Their is no default.
+	auth_param basic realm Squid proxy-caching web server
+
+	"credentialsttl" timetolive
+	Specifies how long squid assumes an externally validated username:password
+	pair is valid for - in other words how often the helper program is called 
+	for that user. Set this low to force revalidation with short lived passwords.
+	Note that setting this high does not impact your susceptability to replay
+	attacks unless you are using a one-time password system (such as SecureID).
+	If you are using such a system, you will be vulnerable to replay attacks
+	unless you also enable the IP ttl is strict option.
+
+	=== NTLM scheme options follow ===
+
+	"program" cmdline
+	Specify the command for the external ntlm authenticator.  Such a
+	program reads a line containing the uuencoded NEGOTIATE and replies
+	with the ntlm CHALLENGE, then waits for the response and answers with
+	"OK" or "ERR" in an endless loop.  If you use an ntlm authenticator,
+	make sure you have 1 acl of type proxy_auth.  By default, the
+	ntlm authenticator_program is not used.
+
+	auth_param ntlm program @DEFAULT_PREFIX@/bin/ntlm_auth
+
+	"children" numberofchildren
+	The number of authenticator processes to spawn (no default). If you
+	start too few Squid will have to wait for them to process a backlog
+	of credential verifications, slowing it down. When crendential
+	verifications are done via a (slow) network you are likely to need
+	lots of authenticator processes.
+	auth_param ntlm children 5
+
+	"max_challenge_reuses" number
+	The maximum number of times a challenge given by a ntlm authentication
+	helper can be reused. Increasing this number increases your exposure 
+	to replay attacks on your network. 0 means use the challenge only once. 
+	(disable challenge caching)
+	See max_ntlm_challenge_lifetime for more information.
+	auth_param ntlm max_challenge_reuses 0
+
+	"max_challenge_lifetime" timespan
+	The maximum time period that a ntlm challenge is reused over.
+	The actual period will be the minimum of this time AND the number of 
+	reused challenges.
+	auth_param ntlm max_challenge_lifetime 2 minutes
+
+NOCOMMENT_START
+#Recommended minimum configuration:
+#auth_param ntlm program <uncomment and complete this line to activate>
+auth_param ntlm children 5
+auth_param ntlm max_challenge_reuses 0
+auth_param ntlm max_challenge_lifetime 2 minutes
+#auth_param basic program <uncomment and complete this line>
+auth_param basic children 5
+auth_param basic realm Squid proxy-caching web server
+auth_param basic credentialsttl 2 hours
+NOCOMMENT_END
+DOC_END
+
+NAME: authenticate_cache_garbage_interval
+TYPE: time_t
+DEFAULT: 1 hour
+LOC: Config.authenticateGCInterval
+DOC_START
+	The time period between garbage collection across the username cache. 
+	This is a tradeoff between memory utilisation (long intervals - say
+	2 days) and CPU (short intervals - say 1 minute). Only change if
+	you have good reason to.
 DOC_END
 
 NAME: authenticate_ttl
@@ -1144,9 +1237,9 @@ TYPE: time_t
 DEFAULT: 1 hour
 LOC: Config.authenticateTTL
 DOC_START
-	The time a checked username/password combination remains cached.
-	If a wrong password is given for a cached user, the user gets
-	removed from the username/password cache forcing a revalidation.
+	The time a user & their credentials stay in the logged in user cache
+	since their last request. When the garbage interval passes, all
+	user credentials that have passed their TTL are removed from memory.
 DOC_END
 
 NAME: authenticate_ip_ttl
@@ -1176,7 +1269,7 @@ TYPE: onoff
 LOC: Config.onoff.authenticateIpTTLStrict
 DEFAULT: on
 DOC_START
-	This option makes authenticate_ip_ttl a bit stricted. With this
+	This option makes authenticate_ip_ttl a bit stricter. With this
 	enabled authenticate_ip_ttl will deny all access from other IP
 	addresses until the TTL has expired, and the IP address "owning"
 	the userid will not be forced to reauthenticate.
@@ -1823,17 +1916,6 @@ DOC_START
 	ACL elements.  See the comments for 'http_access' below, or
 	the Squid FAQ (http://squid.nlanr.net/Squid/FAQ/FAQ-10.html).
 DOC_END
-
-NAME: proxy_auth_realm
-TYPE: eol
-DEFAULT: Squid proxy-caching web server
-LOC: Config.proxyAuthRealm
-DOC_START
-	Specifies the realm name which is to be reported to the client for
-	proxy authentication (part of the text the user will see when
-	prompted their username and password).
-DOC_END
-
 
 NAME: ident_lookup_access
 TYPE: acl_access

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.235 2001/01/07 20:11:16 hno Exp $
+ * $Id: acl.cc,v 1.236 2001/01/07 23:36:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,7 +38,6 @@
 
 static int aclFromFile = 0;
 static FILE *aclFile;
-static hash_table *proxy_auth_cache = NULL;
 
 static void aclParseDomainList(void *curlist);
 static void aclParseUserList(void **current);
@@ -53,7 +52,8 @@ static char *strtokFile(void);
 static void aclDestroyAclList(acl_list * list);
 static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
-static FREE aclFreeProxyAuthUser;
+static void aclLookupProxyAuthStart(aclCheck_t * checklist);
+static void aclLookupProxyAuthDone(void *data, char *result);
 static struct _acl *aclFindByName(const char *name);
 static int aclMatchAcl(struct _acl *, aclCheck_t *);
 static int aclMatchIntegerRange(intrange * data, int i);
@@ -76,8 +76,6 @@ static IPH aclLookupDstIPDone;
 static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
-static void aclLookupProxyAuthStart(aclCheck_t * checklist);
-static void aclLookupProxyAuthDone(void *data, char *result);
 static wordlist *aclDumpIpList(void *);
 static wordlist *aclDumpDomainList(void *data);
 static wordlist *aclDumpTimeSpecList(acl_time_data *);
@@ -101,6 +99,7 @@ static wordlist *aclDumpArpList(void *);
 static SPLAYCMP aclArpCompare;
 static SPLAYWALKEE aclDumpArpListWalkee;
 #endif
+static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char *MatchParam);
 
 static char *
 strtokFile(void)
@@ -788,19 +787,25 @@ aclParseAclLine(acl ** head)
 	aclParseMethodList(&A->data);
 	break;
     case ACL_PROXY_AUTH:
-	aclParseUserList(&A->data);
-	if (!proxy_auth_cache) {
-	    /* First time around, 7921 should be big enough */
-	    proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
-	    assert(proxy_auth_cache);
+	if (authenticateSchemeCount() == 0) {
+	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
+because no authentication schemes were compiled.\n", A->cfgline);
+	} else if (authenticateActiveSchemeCount() == 0) {
+	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
+because no authentication schemes are fully configured.\n", A->cfgline);
+	} else {
+	    aclParseUserList(&A->data);
 	}
 	break;
     case ACL_PROXY_AUTH_REGEX:
-	aclParseRegexList(&A->data);
-	if (!proxy_auth_cache) {
-	    /* First time around, 7921 should be big enough */
-	    proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
-	    assert(proxy_auth_cache);
+	if (authenticateSchemeCount() == 0) {
+	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
+because no authentication schemes were compiled.\n", A->cfgline);
+	} else if (authenticateActiveSchemeCount() == 0) {
+	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
+because no authentication schemes are fully configured.\n", A->cfgline);
+	} else {
+	    aclParseRegexList(&A->data);
 	}
 	break;
 #if SQUID_SNMP
@@ -1081,205 +1086,229 @@ aclMatchUser(void *proxyauth_acl, char *user)
     return !splayLastResult;
 }
 
+/* ACL result caching routines */
+
+/*
+ * we lookup an acl's cached results, and if we cannot find the acl being 
+ * checked we check it and cache the result. This function is deliberatly 
+ * generic to support caching of multiple acl types (but it needs to be more
+ * generic still....
+ * The Match Param and the cache MUST be tied together by the calling routine.
+ * You have been warned :-]
+ * Also only Matchxxx that are of the form (void *, void *) can be used.
+ * probably some ugly overloading _could_ be done but I'll leave that as an
+ * exercise for the reader. Note that caching of time based acl's is not
+ * wise due to no expiry occuring to the cache entries until the user expires
+ * or a reconfigure takes place. 
+ * RBC
+ */
 static int
-aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *buf, size_t bufsize)
+aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
+    char *MatchParam)
 {
-    char *sent_auth;
-    char *cleartext;
-    if (proxy_auth == NULL)
-	return 0;
-    debug(28, 6) ("aclDecodeProxyAuth: header = '%s'\n", proxy_auth);
-    if (strncasecmp(proxy_auth, "Basic ", 6) != 0) {
-	debug(28, 1) ("aclDecodeProxyAuth: Unsupported proxy-auth sheme, '%s'\n", proxy_auth);
-	return 0;
+    int matchrv;
+    acl_proxy_auth_match_cache *auth_match;
+    dlink_node *link;
+    link = cache->head;
+    while (link) {
+	auth_match = link->data;
+	if (auth_match->acl_data == data) {
+	    debug(28, 4) ("aclCacheMatchAcl: cache hit on acl '%d'\n",
+		data);
+	    return auth_match->matchrv;
+	}
+	link = link->next;
     }
-    proxy_auth += 6;		/* "Basic " */
-    /* Trim leading whitespace before decoding */
-    while (xisspace(*proxy_auth))
-	proxy_auth++;
-    sent_auth = xstrdup(proxy_auth);	/* username and password */
-    /* Trim trailing \n before decoding */
-    strtok(sent_auth, "\n");
-    cleartext = uudecode(sent_auth);
-    xfree(sent_auth);
-    /*
-     * Don't allow NL or CR in the credentials.
-     * Oezguer Kesim <oec@codeblau.de>
-     */
-    strtok(cleartext, "\r\n");
-    debug(28, 6) ("aclDecodeProxyAuth: cleartext = '%s'\n", cleartext);
-    xstrncpy(buf, cleartext, bufsize);
-    xfree(cleartext);
-    /* Trim leading whitespace after decoding */
-    while (xisspace(*buf))
-	buf++;
-    *user = buf;
-    if ((*password = strchr(*user, ':')) != NULL)
-	*(*password)++ = '\0';
-    if (*password == NULL) {
-	debug(28, 1) ("aclDecodeProxyAuth: no password in proxy authorization header '%s'\n", proxy_auth);
-	return 0;
+    auth_match = NULL;
+    /* match the user in the acl. They are not cached. */
+    switch (acltype) {
+    case ACL_PROXY_AUTH:
+	matchrv = aclMatchUser(data, MatchParam);
+	break;
+    case ACL_PROXY_AUTH_REGEX:
+	matchrv = aclMatchRegex(data, MatchParam);
+    default:
+	/* This is a fatal to ensure that aclCacheMatchAcl calls are _only_
+	 * made for supported acl types */
+	fatal("aclCacheMatchAcl: unknown or unexpected ACL type");
+	return 0;		/* NOTREACHED */
     }
-    if (**password == '\0') {
-	debug(28, 1) ("aclDecodeProxyAuth: Disallowing empty password,"
-	    "user is '%s'\n", *user);
-	return 0;
-    }
-    return 1;
+    auth_match = memAllocate(MEM_ACL_PROXY_AUTH_MATCH);
+    auth_match->matchrv = matchrv;
+    auth_match->acl_data = data;
+    dlinkAddTail(auth_match, &auth_match->link, cache);
+    return matchrv;
 }
 
-/* aclMatchProxyAuth can return three exit codes:
- * 0 : user denied access
- * 1 : user validated OK
- * -1 : check the password for this user via an external authenticator
- * -2 : invalid Proxy-authorization: header;
- * ask for Proxy-Authorization: header
- */
+void
+aclCacheMatchFlush(dlink_list * cache)
+{
+    acl_proxy_auth_match_cache *auth_match;
+    dlink_node *link, *tmplink;
+    link = cache->head;
+    while (link) {
+	auth_match = link->data;
+	tmplink = link;
+	link = link->next;
+	dlinkDelete(tmplink, cache);
+	memFree(auth_match, MEM_ACL_PROXY_AUTH_MATCH);
+    }
+}
 
+/* aclMatchProxyAuth can return four exit codes:
+ * 0 : Authenticated OK, Authorisation for this ACL failed. 
+ * 1 : Authenticated OK, Authorisation OK.
+ * -1 : send data to an external authenticator
+ * -2 : send data to the client
+ */
 static int
-aclMatchProxyAuth(void *data, const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist, squid_acl acltype)
+aclMatchProxyAuth(void *data, http_hdr_type headertype,
+    auth_user_request_t * auth_user_request, aclCheck_t * checklist, squid_acl acltype)
 {
     /* checklist is used to register user name when identified, nothing else */
-    LOCAL_ARRAY(char, login_buf, USER_IDENT_SZ);
-    char *user, *password;
+    const char *proxy_auth;
+    /* consistent parameters ? */
+    assert(auth_user_request == checklist->auth_user_request);
 
-    if (!aclDecodeProxyAuth(proxy_auth, &user, &password, login_buf, sizeof(login_buf)))
-	/* No or invalid Proxy-Auth header */
-	return -2;
+    /* General program flow in proxy_auth acls
+     * 1. Consistency checks: are we getting sensible data
+     * 2. Call the authenticate* functions to establish a authenticated user
+     * 4. look up the username in acltype (and cache the result against the 
+     *     username
+     */
 
-    debug(28, 5) ("aclMatchProxyAuth: checking user '%s'\n", user);
+    assert(headertype != 0);
+    proxy_auth = httpHeaderGetStr(&checklist->request->header, headertype);
 
-    if (auth_user) {
+    if (checklist->conn == NULL) {
+	debug(28, 1) ("aclMatchProxyAuth: no connection data, cannot process authentication\n");
 	/*
-	 * This should be optimized to a boolean argument indicating that the
-	 * password is invalid, instead of passing full acl_proxy_auth_user
-	 * structures, and all messing with checklist->proxy_auth should
-	 * be restricted the functions that deal with the authenticator.
+	 * deny access: clientreadrequest requires conn data, and it is always
+	 * compiled in so we should have it too.
 	 */
-	assert(auth_user == checklist->auth_user);
-	checklist->auth_user = NULL;	/* get rid of that special reference */
-	/* Check result from external validation */
-	if (auth_user->passwd_ok != 1) {
-	    /* password was checked but did not match */
-	    assert(auth_user->passwd_ok == 0);
-	    debug(28, 4) ("aclMatchProxyAuth: authentication failed for user '%s'\n",
-		user);
-	    aclFreeProxyAuthUser(auth_user);
-	    /*
-	     * copy username to request for logging on client-side
-	     * unless ident is known (do not override ident with
-	     * false proxy auth names)
-	     */
-	    if (!*checklist->request->user_ident)
-		xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	    return -2;
-	} else {
-	    /* password was checked and did match */
-	    debug(28, 4) ("aclMatchProxyAuth: user '%s' validated OK\n", user);
-	    /* store validated user in hash, after filling in expiretime */
-	    xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	    auth_user->expiretime = current_time.tv_sec + Config.authenticateTTL;
-	    auth_user->ip_expiretime = squid_curtime + Config.authenticateIpTTL;
-	    auth_user->ipaddr = checklist->src_addr;
-	    hash_join(proxy_auth_cache, &auth_user->hash);
-	    /* Continue checking below, as normal */
-	}
+	return 0;
     }
-    /* see if we already know this user */
-    auth_user = hash_lookup(proxy_auth_cache, user);
-
-    if (!auth_user) {
-	/* user not yet known, ask external authenticator */
-	debug(28, 4) ("aclMatchProxyAuth: user '%s' not yet known\n", user);
-	return -1;
-    } else if ((0 == strcmp(auth_user->passwd, password)) &&
-	(auth_user->expiretime > current_time.tv_sec)) {
-	if (checklist->src_addr.s_addr == auth_user->ipaddr.s_addr
-	    || auth_user->ip_expiretime <= squid_curtime) {
-	    /* user already known and valid */
-	    debug(28, 5) ("aclMatchProxyAuth: user '%s' previously validated\n",
-		user);
-	    /* Update IP ttl */
-	    auth_user->ip_expiretime = squid_curtime + Config.authenticateIpTTL;
-	    auth_user->ipaddr = checklist->src_addr;
-	    /* copy username to request for logging on client-side */
-	    xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	    switch (acltype) {
-	    case ACL_PROXY_AUTH:
-		return aclMatchUser(data, user);
-	    case ACL_PROXY_AUTH_REGEX:
-		return aclMatchRegex(data, user);
-	    default:
-		fatal("aclMatchProxyAuth: unknown ACL type");
-		return 0;	/* NOTREACHED */
+    if (((proxy_auth == NULL) && (checklist->conn->auth_type == AUTH_UNKNOWN)) || (checklist->conn->auth_type == AUTH_BROKEN)) {
+	/* no header or authentication failed/got corrupted - restart */
+	checklist->conn->auth_type = AUTH_UNKNOWN;
+	debug(28, 4) ("aclMatchProxyAuth: broken auth or no proxy_auth header. Requesting auth header.\n");
+	/* something wrong with the AUTH credentials. Force a new attempt */
+	checklist->auth_user_request = NULL;
+	checklist->conn->auth_user_request = NULL;
+	if (auth_user_request) {
+	    /* unlock the ACL lock */
+	    authenticateAuthUserRequestUnlock(auth_user_request);
+	}
+	return -2;
+    }
+    /* we have a proxy auth header and as far as we know this connection has
+     * not had bungled connection oriented authentication happen on it. */
+    debug(28, 9) ("aclMatchProxyAuth: header %s.\n", proxy_auth);
+    if (auth_user_request == NULL) {
+	debug(28, 9) ("aclMatchProxyAuth: This is a new request on FD:%d\n", checklist->conn->fd);
+	if ((!checklist->request->auth_user_request) && (checklist->conn->auth_type == AUTH_UNKNOWN)) {
+	    /* beginning of a new request check */
+	    debug(28, 4) ("aclMatchProxyAuth: no connection authentication type\n");
+	    if (!authenticateValidateUser(auth_user_request = authenticateGetAuthUser(proxy_auth))) {
+		/* the decode might have left a username for logging, or a message to
+		 * the user */
+		if (auth_user_request) {
+		    /* lock the user for the request structure link */
+		    authenticateAuthUserRequestLock(auth_user_request);
+		    checklist->request->auth_user_request = auth_user_request;
+		    /* unlock the ACL reference. */
+		    authenticateAuthUserRequestUnlock(auth_user_request);
+		}
+		return -2;
 	    }
+	    /* the user_request comes prelocked for the caller to GetAuthUser (us) */
+	} else if (checklist->request->auth_user_request) {
+	    auth_user_request = checklist->request->auth_user_request;
+	    /* lock the user request for this ACL processing */
+	    authenticateAuthUserRequestLock(auth_user_request);
 	} else {
-	    if (Config.onoff.authenticateIpTTLStrict) {
-		/* Access from some other IP address than the one owning
-		 * this user ID. Deny access
-		 */
-		debug(28, 1) ("aclMatchProxyAuth: user '%s' tries to use multple IP addresses!\n", user);
-		return 0;
+	    if (checklist->conn->auth_user_request != NULL) {
+		auth_user_request = checklist->conn->auth_user_request;
+		/* lock the user request for this ACL processing */
+		authenticateAuthUserRequestLock(auth_user_request);
 	    } else {
-		/* user has switched to another IP addr */
-		debug(28, 1) ("aclMatchProxyAuth: user '%s' has changed IP address\n", user);
-		/* remove this user from the hash, making him unknown */
-		hash_remove_link(proxy_auth_cache, (hash_link *) auth_user);
-		aclFreeProxyAuthUser(auth_user);
-		/* require the user to reauthenticate */
+		/* failed connection based authentication */
+		debug(28, 4) ("aclMatchProxyAuth: Aauth user request %d conn-auth user request %d conn type %d authentication failed.\n", auth_user_request, checklist->conn->auth_user_request, checklist->conn->auth_type);
 		return -2;
 	    }
 	}
-    } else {
-	/* password mismatch/timeout */
-	debug(28, 4) ("aclMatchProxyAuth: user '%s' password mismatch/timeout\n",
-	    user);
-	/* remove this user from the hash, making him unknown */
-	hash_remove_link(proxy_auth_cache, (hash_link *) auth_user);
-	aclFreeProxyAuthUser(auth_user);
-	/* ask the external authenticator in case the password is changed */
-	/* wrong password will be trapped above so this does not loop */
-	return -1;
     }
-    /* NOTREACHED */
+    /* Clear the reference in the checklist */
+    checklist->auth_user_request = NULL;
+    if (!authenticateUserAuthenticated(auth_user_request)) {
+	/* User not logged in. Log them in */
+	authenticateAuthUserRequestSetIp(auth_user_request, checklist->src_addr);
+	authenticateAuthenticateUser(auth_user_request, checklist->request, checklist->conn, headertype);
+	switch (authenticateDirection(auth_user_request)) {
+	case 1:
+	    /* this ACL check is finished. Unlock. */
+	    authenticateAuthUserRequestUnlock(auth_user_request);
+	    return -2;
+	case -1:
+	    /* we are partway through authentication within squid
+	     * store the auth_user for the callback to here */
+	    checklist->auth_user_request = auth_user_request;
+	    /* we will be called back here. Do not Unlock */
+	    return -1;
+	case -2:
+	    /* this ACL check is finished. Unlock. */
+	    authenticateAuthUserRequestUnlock(auth_user_request);
+	    return -2;
+	}			/* on 0 the authentication is finished - fallthrough */
+	/* See of user authentication failed for some reason */
+	if (!authenticateUserAuthenticated(auth_user_request)) {
+	    if ((!checklist->rfc931[0]) &&
+		(authenticateUserRequestUsername(auth_user_request))) {
+		if (!checklist->request->auth_user_request) {
+		    /* lock the user for the request structure link */
+		    authenticateAuthUserRequestLock(auth_user_request);
+		    checklist->request->auth_user_request = auth_user_request;
+		}
+	    }
+	    /* this ACL check is finished. Unlock. */
+	    authenticateAuthUserRequestUnlock(auth_user_request);
+	    return -2;
 
+	}
+    }
+    /* User authenticated ok */
+    assert(authenticateUserAuthenticated(auth_user_request));
+
+    /* copy username to request for logging on client-side */
+    /* the credentials are correct at this point */
+    if (!checklist->request->auth_user_request) {
+	/* lock the user for the request structure link */
+	authenticateAuthUserRequestLock(auth_user_request);
+	checklist->request->auth_user_request = auth_user_request;
+    }
+    if (authenticateCheckAuthUserIP(checklist->src_addr, auth_user_request)) {
+	/* Once the match is completed we have finished with the
+	 * auth_user structure */
+	/* this ACL check completed */
+	authenticateAuthUserRequestUnlock(auth_user_request);
+	/* check to see if we have matched the user-acl before */
+	return aclCacheMatchAcl(&auth_user_request->auth_user->proxy_match_cache,
+	    acltype, data, authenticateUserRequestUsername(auth_user_request));
+    }
+    /* this acl check completed */
+    authenticateAuthUserRequestUnlock(auth_user_request);
+    return 0;
 }
 
 static void
 aclLookupProxyAuthStart(aclCheck_t * checklist)
 {
-    LOCAL_ARRAY(char, login_buf, USER_IDENT_SZ);
-    const char *proxy_auth;
-    char *user, *password;
-    int ok;
-    acl_proxy_auth_user *auth_user;
-    assert(!checklist->auth_user);
-    if (!checklist->request->flags.accelerated) {
-	/* Proxy auth on proxy requests */
-	proxy_auth = httpHeaderGetStr(&checklist->request->header,
-	    HDR_PROXY_AUTHORIZATION);
-    } else {
-	/* WWW auth on accelerated requests */
-	proxy_auth = httpHeaderGetStr(&checklist->request->header,
-	    HDR_AUTHORIZATION);
-    }
-    ok = aclDecodeProxyAuth(proxy_auth, &user, &password, login_buf,
-	sizeof(login_buf));
-    /*
-     * if aclDecodeProxyAuth() fails, the same call should have failed
-     * in aclMatchProxyAuth, and we should never get this far.
-     */
-    assert(ok);
-    debug(28, 4) ("aclLookupProxyAuthStart: going to ask authenticator on %s\n", user);
-    /* we must still check this user's password */
-    auth_user = memAllocate(MEM_ACL_PROXY_AUTH_USER);
-    auth_user->hash.key = xstrdup(user);
-    auth_user->passwd = xstrdup(password);
-    auth_user->passwd_ok = -1;
-    auth_user->expiretime = -1;
-    checklist->auth_user = auth_user;
-    authenticateStart(checklist->auth_user, aclLookupProxyAuthDone,
-	checklist);
+    auth_user_request_t *auth_user_request;
+    assert(checklist->auth_user_request != NULL);	/* this is created for us */
+    auth_user_request = checklist->auth_user_request;
+
+    assert(authenticateValidateUser(auth_user_request));
+    authenticateStart(auth_user_request, aclLookupProxyAuthDone, checklist);
 }
 
 static int
@@ -1378,6 +1407,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     const char *header;
     const char *browser;
     int k;
+    http_hdr_type headertype;
     if (!ae)
 	return 0;
     switch (ae->type) {
@@ -1505,16 +1535,16 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
 #if USE_IDENT
     case ACL_IDENT:
-	if (checklist->ident[0]) {
-	    return aclMatchUser(ae->data, checklist->ident);
+	if (checklist->rfc931[0]) {
+	    return aclMatchUser(ae->data, checklist->rfc931);
 	} else {
 	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
 	/* NOTREACHED */
     case ACL_IDENT_REGEX:
-	if (checklist->ident[0]) {
-	    return aclMatchRegex(ae->data, checklist->ident);
+	if (checklist->rfc931[0]) {
+	    return aclMatchRegex(ae->data, checklist->rfc931);
 	} else {
 	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
 	    return 0;
@@ -1539,48 +1569,39 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	    return -1;
 	} else if (!r->flags.accelerated) {
 	    /* Proxy authorization on proxy requests */
-	    header = httpHeaderGetStr(&checklist->request->header,
-		HDR_PROXY_AUTHORIZATION);
+	    headertype = HDR_PROXY_AUTHORIZATION;
 	} else if (r->flags.internal) {
 	    /* WWW authorization on accelerated internal requests */
-	    header = httpHeaderGetStr(&checklist->request->header,
-		HDR_AUTHORIZATION);
+	    headertype = HDR_AUTHORIZATION;
 	} else {
 #if AUTH_ON_ACCELERATION
 	    /* WWW authorization on accelerated requests */
-	    header = httpHeaderGetStr(&checklist->request->header,
-		HDR_AUTHORIZATION);
+	    headertype = HDR_AUTHORIZATION;
 #else
 	    debug(28, 1) ("aclMatchAcl: proxy_auth %s not applicable on accelerated requests.\n", ae->name);
 	    return -1;
 #endif
 	}
-	/*
-	 * Register that we used the proxy authentication header so that
-	 * it is not forwarded to the next proxy
-	 */
-	r->flags.used_proxy_auth = 1;
-	/* Check the password */
-	switch (aclMatchProxyAuth(ae->data,
-		header,
-		checklist->auth_user,
-		checklist,
-		ae->type)) {
+	/* Check the credentials */
+	switch (aclMatchProxyAuth(ae->data, headertype,
+		checklist->auth_user_request, checklist, ae->type)) {
 	case 0:
-	    /* Correct password, but was not allowed in this ACL */
+	    debug(28, 4) ("aclMatchAcl: returning  0 user authenticated but not authorised.\n");
+	    /* Authenticated but not Authorised for this ACL */
 	    return 0;
 	case 1:
-	    /* user validated OK */
+	    debug(28, 4) ("aclMatchAcl: returning  1 user authenticated and authorised.\n");
+	    /* Authenticated and Authorised for this ACL */
 	    return 1;
 	case -2:
-	    /* no such user OR we need a proxy authentication header */
+	    debug(28, 4) ("aclMatchAcl: returning 0 sending authentication challenge.\n");
+	    /* Authentication credentials invalid or missing. */
+	    /* Or partway through NTLM handshake. A proxy_Authenticate header
+	     * gets sent to the client. */
 	    checklist->state[ACL_PROXY_AUTH] = ACL_PROXY_AUTH_NEEDED;
-	    /*
-	     * XXX This is a bit oddly done.. should perhaps use different
-	     * return codes here
-	     */
 	    return 0;
 	case -1:
+	    debug(28, 4) ("aclMatchAcl: returning 0 sending credentials to helper.\n");
 	    /*
 	     * we need to validate the password
 	     */
@@ -1713,14 +1734,17 @@ aclCheck(aclCheck_t * checklist)
 		checklist);
 	    return;
 	} else if (checklist->state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED) {
-	    debug(28, 3) ("aclCheck: checking password via authenticator\n");
+	    debug(28, 3)
+		("aclCheck: checking password via authenticator\n");
 	    aclLookupProxyAuthStart(checklist);
 	    checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_PENDING;
 	    return;
 	} else if (checklist->state[ACL_PROXY_AUTH] == ACL_PROXY_AUTH_NEEDED) {
-	    /* Special case. Client is required to resend the request
-	     * with authentication. The request is denied.
+	    /* Client is required to resend the request with correct authentication
+	     * credentials. (This may be part of a stateful auth protocol.
+	     * The request is denied.
 	     */
+	    debug(28, 6) ("aclCheck: requiring Proxy Auth header.\n");
 	    allow = ACCESS_REQ_PROXY_AUTH;
 	    match = -1;
 	}
@@ -1787,6 +1811,9 @@ aclCheckCallback(aclCheck_t * checklist, allow_t answer)
     cbdataUnlock(checklist->callback_data);
     checklist->callback = NULL;
     checklist->callback_data = NULL;
+    /* XXX: this assert is here to check for misbehaved acl authentication code. 
+     * It can probably go sometime soon. */
+    assert(checklist->auth_user_request == NULL);
     aclChecklistFree(checklist);
 }
 
@@ -1796,17 +1823,19 @@ aclLookupIdentDone(const char *ident, void *data)
 {
     aclCheck_t *checklist = data;
     if (ident) {
-	xstrncpy(checklist->ident, ident, sizeof(checklist->ident));
-	xstrncpy(checklist->request->user_ident, ident, sizeof(checklist->request->user_ident));
+	xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
+#if DONT
+	xstrncpy(checklist->request->authuser, ident, USER_IDENT_SZ);
+#endif
     } else {
-	xstrncpy(checklist->ident, "-", sizeof(checklist->ident));
+	xstrncpy(checklist->rfc931, dash_str, USER_IDENT_SZ);
     }
     /*
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (cbdataValid(checklist->conn) && !checklist->conn->ident[0])
-	xstrncpy(checklist->conn->ident, checklist->ident, sizeof(checklist->conn->ident));
+    if (cbdataValid(checklist->conn) && !checklist->conn->rfc931[0])
+	xstrncpy(checklist->conn->rfc931, checklist->rfc931, USER_IDENT_SZ);
     aclCheck(checklist);
 }
 #endif
@@ -1847,17 +1876,22 @@ static void
 aclLookupProxyAuthDone(void *data, char *result)
 {
     aclCheck_t *checklist = data;
+    auth_user_request_t *auth_user_request;
     checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
-    debug(28, 4) ("aclLookupProxyAuthDone: result = %s\n",
-	result ? result : "NULL");
-    if (NULL == result)
-	checklist->auth_user->passwd_ok = 0;
-    else if (0 == strncasecmp(result, "OK", 2))
-	checklist->auth_user->passwd_ok = 1;
-    else {
-	if (strlen(result) > sizeof("ERR "))
-	    checklist->auth_user->message = xstrdup(result + 4);
-	checklist->auth_user->passwd_ok = 0;
+    if (result != NULL)
+	fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
+    /* state info check */
+    assert(checklist->conn != NULL);
+    auth_user_request = checklist->auth_user_request;
+    if (!authenticateValidateUser(auth_user_request)) {
+	/* credentials could not be checked either way
+	 * restart the whole process */
+	checklist->conn->auth_user_request = NULL;
+	checklist->conn->auth_type = AUTH_BROKEN;
+	checklist->auth_user_request = NULL;
+	authenticateAuthUserRequestUnlock(auth_user_request);
+	aclCheck(checklist);
+	return;
     }
     aclCheck(checklist);
 }
@@ -1886,9 +1920,9 @@ aclChecklistCreate(const acl_access * A,
 	checklist->state[i] = ACL_LOOKUP_NONE;
 #if USE_IDENT
     if (ident)
-	xstrncpy(checklist->ident, ident, USER_IDENT_SZ);
+	xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
 #endif
-    checklist->auth_user = NULL;	/* init to NULL */
+    checklist->auth_user_request = NULL;
     return checklist;
 }
 
@@ -1931,15 +1965,6 @@ aclDestroyRegexList(relist * data)
 	safe_free(data->pattern);
 	memFree(data, MEM_RELIST);
     }
-}
-
-static void
-aclFreeProxyAuthUser(void *data)
-{
-    acl_proxy_auth_user *u = data;
-    xfree(u->hash.key);
-    xfree(u->passwd);
-    memFree(u, MEM_ACL_PROXY_AUTH_USER);
 }
 
 static void

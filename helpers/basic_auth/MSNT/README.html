@@ -1,0 +1,317 @@
+<HTML>
+<HEAD>
+<TITLE>MSNTAUTH readme</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+
+<!--
+If you require this document in text form, download the 
+HTML-text package from http://members.tripod.com/~stellarx.
+-->
+
+<H1>
+MSNT Auth v2.0.1<BR>
+Squid web proxy Authentication module<BR>
+Antonino Iannella, Stellar-X Pty Ltd<BR>
+Fri Sep 29 15:53:33 CST 2000
+</H1>
+
+<H2>Contents</H2>
+
+<UL>
+<LI> <A HREF="#introduction">Introduction</A>
+<LI> <A HREF="#installation">Installation</A>
+<LI> <A HREF="#compiling">Other compiling issues</A>
+<LI> <A HREF="#configuration">Configuration file</A>
+<LI> <A HREF="#denying">Denying users</A>
+<LI> <A HREF="#allowing">Allowing users</A>
+<LI> <A HREF="#squid">Squid.conf changes</A>
+<LI> <A HREF="#testing">Testing</A>
+<LI> <A HREF="#contact">Contact details</A>
+<LI> <A HREF="#reported">Reported problem</A>
+<LI> <A HREF="#known">Known limitation</A>
+<LI> <A HREF="#changes">Changes since last revision</A>
+</UL>
+
+<A NAME="introduction"><H2>Introduction</H2>
+
+<P>
+This is an authentication module for the Squid proxy server
+to authenticate users on an NT domain.
+
+<P>
+It originates from the Samba and SMB packages by Andrew Tridgell
+and Richard Sharpe. This version is sourced from the Pike
+authentication module by William Welliver (hwellive@intersil.com).
+
+<P>
+Usage is simple. It accepts a username and password on standard input
+and will return OK if the username/password is valid for the domain,
+or ERR if there was some problem.
+Check syslog messages for reported problems.
+
+<P>
+Msntauth is released under the GNU General Public License and
+is available from http://stellarx.tripod.com.
+
+<A NAME="installation"><H2>Installation</H2>
+
+<P>
+Make any changes to the source code you need.
+
+<P>
+Type 'make', then 'make install', then 'make clean'.
+
+<P>
+To avoid using the makefile, it may compile with
+
+  gcc -O2 -s -o msntauth *.c
+
+<P>
+'Make install' will put 'msntauth' into
+/usr/local/squid/bin by default.
+
+<P>
+Hopefully nobody has problems compiling msntauth.
+In the future I plan to use GNU automake.
+
+<A NAME="compiling"><H2>Other compiling issues</H2>
+
+<P>
+The Makefile uses the GCC compiler, and assumes that it is in the current PATH.
+Msntauth is known to compile properly on Redhat Linux 6, and FreeBSD 3.1
+without problems. Other operating systems are untested,
+but use a recent copy of the GNU C compiler.
+Smbencrypt.c has the '#include <sys/vfs.h>' line commented out.
+Remove the comment for S5R4 systems, like Solaris.
+
+<P>
+When compiling under Solaris, the socket libraries must be linked to.
+In the Makefile, hash the default CFLAGS line, and unhash the Solaris
+CFLAGS line. It always helps to have /usr/ccs/bin in your path
+prior to compiling.
+
+<A NAME="configuration"><H2>Configuration file</H2>
+
+<P>
+Msntauth uses a configuration file which is a break from previous
+releases. The file is /usr/local/squid/etc/msntauth.conf.
+If this needs to be changed, it is defined in confload.h.
+
+<P>
+An example configuration file is provided. It looks like
+
+<PRE>
+# Sample MSNT authenticator configuration file
+# Antonino Iannella, Stellar-X Pty Ltd
+# Tue Sep 26 17:26:59 CST 2000
+
+server my_PDC           my_BDC          my_NTdomain
+server other_PDC        other_BDC       otherdomain
+
+denyusers       /usr/local/squid/etc/denyusers
+allowusers      /usr/local/squid/etc/allowusers
+</PRE>
+
+<P>
+All comments start with '#'.
+
+<P>
+NT servers are used to query user accounts. The 'server' lines
+are used for this, with the PDC, BDC, and NT domain as parameters.
+Up to 5 servers/domains can be queried. If this is not enough
+modify the MAXSERVERS define in confload.h.
+At least one server must be specified, or msntauth will not
+run.
+
+<P>
+When a user provides a username/password, each of these
+servers will be queried to authenticate the username.
+It stops after a user has been successfully authenticated,
+so it makes sense to specify the most commonly queried
+server first. Make sure the servers can be reached and
+are active, or else msntauth will start failing user accounts!
+
+<P>
+The 'denyusers' and 'allowusers' lines give the absolute path
+to files of user accounts. They can be used to deny or allow
+access to the proxy. Do not use these directives if you
+do not need these features.
+
+<A NAME="denying"><H2>Denying users</H2>
+
+<P>
+Users who are not allowed to access the web proxy can be added to
+the denied user list. This list is read around every minute, or when
+the msntauth process receives a SIGHUP signal.
+
+<P>
+The denied user file is set using the 'denyusers' directive
+in msntauth.h.  The denied user file
+contains a list of usernames in no particular structure or form.
+If the file does not exist, no users are denied.
+The file must be readable by the web proxy user.
+
+<P>
+Msntauth will send syslog messages if a user was denied,
+at LOG_USER facility.
+
+<A NAME="allowing"><H2>Allowing users</H2>
+
+<P>
+Similar to denying users, you can allow users to access the proxy
+by username. This is useful if only a number of people are
+allowed supposed to be accessing a proxy.
+
+<P>
+The allowed user file is set using the 'allowusers' directive
+in msntauth.h.
+If the file does not exist or if empty, all users are allowed.
+
+<P>
+You could make use of the SHOWMBRS tool in Microsoft Technet.
+This gives you a list of users which are in a particular
+NT Domain Group. This list can be made into the allowed users
+file.
+
+<P>
+Some other rules -
+
+<OL>
+<LI> The operation of the denied user file is independent of the
+allowed user file. The former file is checked first.
+<LI> You can use none, one, or both files.
+<LI> If a username appears in the denied user file, they will
+be denied, even if they are in the allowed user file.
+<LI> If a username is not in either file, they will be denied,
+because they have not been allowed.
+<LI> If the allowed user file is in use and is empty, all
+users will be allowed.
+</OL>
+
+<P>
+Hopefully this wasn't too confusing.
+
+<A NAME="squid"><H2>Squid.conf changes</H2>
+
+<P>
+Refer to Squid documentation for the required changes to squid.conf.
+You will need to set the following lines to enable authentication for
+your access list -
+
+<PRE>
+  acl <yourACL> proxy_auth REQUIRED
+  http_access allow password
+  http_access allow <yourACL>
+  http_access deny all
+
+</PRE>
+
+<P>
+You will also need to review the following directives -
+
+<PRE>
+  proxy_auth_realm enterprise web gateway
+  authenticate_program /usr/local/squid/bin/msntauth
+  authenticate_ttl 5
+  authenticate_children 20
+</PRE>
+
+<A NAME="testing"><H2>Testing</H2>
+
+<P>
+I strongly urge that Msntauth is tested prior to being used in a 
+production environment. It may behave differently on different platforms.
+To test it, run it from the command line. Enter username and password
+pairs separated by a space.
+
+<P>
+It should behave in the following way -
+<PRE>
+ - Press ENTER to get an OK or ERR message.
+ - Make sure pressing CTRL-D behaves the same as a carriage return.
+ - Make sure pressing CTRL-C aborts the program.
+ - Test that entering no details does not result in an OK or ERR message.
+ - Test that entering an invalid username and password results in
+   an ERR message. Note that if NT guest user access is allowed on
+   the PDC, an OK message may be returned instead of ERR.
+ - Test that entering an valid username and password results in an OK message.
+   Try usernames which are and aren't in the denied/allowed user files,
+   if they're in use.
+ - Test that entering a guest username and password returns the correct response.
+</PRE>
+
+<P>
+If the above didn't work as expected, you may need to modify the main()
+function in msntauth.c. Inform the maintainer of any problems.
+
+<A NAME="contact"><H2>Contact details</H2>
+
+<P>
+To contact the maintainer of this package, email Antonino Iannella
+at antonino@usa.net, antonino.iannella@usa.net, or
+antonino.iannella@camtech.com.au.
+
+<P>
+The latest version may be found on http://members.tripod.com/stellarx.
+It is also distributed as part of Squid.
+
+<A NAME="reported"><H2>Reported problem</H2>
+
+<P>
+For an unknown username, Msntauth returns OK.
+This is because the PDC returns guest access for unknown users,
+even if guest access is disabled.
+This problem was reported by Mr Vadim Popov (vap@iilsr.minsk.by).
+I am not able to replicate this.
+
+<P>
+The tested environment consisted of PDC on Windows NT 4, SP 6.
+Squid 2.3 and Msntauth was tested on SuSe, RedHat, and Debian Linux.
+A fix was provided in case you have this problem.
+Apply the provided patch before compiling, using
+
+<PRE>
+  patch smblib.c < smblib.c.patch
+</PRE>
+
+<A NAME="known"><H2>Known limitation</H2>
+
+<P>
+Usernames are checked if they are allowed or denied. If a username
+is found as a substring of a different username in these files, 
+the user will be affected somehow. For example, if 'jpeterman' has
+been explicitly denied in the denyusers file, then 'jpeter' who
+is trying to use the proxy, will be denied. If this causes anyone 
+any problems, then I'll fix it.
+
+<P>
+As of version 2.0.1, this problem has been fixed.
+
+<A NAME="changes"><H2>Changes since last revision</H2>
+
+<P>
+The following list of changes have been made to improve msntauth.
+I have not had a chance to do too much testing due
+to lack of resources. There should be no problems, though.
+
+<UL>
+<LI>Added many patches from Duane Wessels to stop compilation errors (?)
+<LI>Improved the main() function yet again
+<LI>Created a more informative Makefile
+<LI>Added an 'allowed users' feature to complement the 'denied users' feature
+<LI>Stopped the use of alarm() which was causing problems under Solaris
+<LI>Added more syslog messages for authentication problems
+<LI>Added the use of a configuration file, instead of hard-coding NT server details
+<LI>Allowed for querying multiple NT servers and domains (this was a hot issue)
+<LI>Changed README into an HTML document to improve readability
+<LI>Didn't make use of GNU autoconf. I will in future, I promise.
+<LI>Removed denied/allowed username substring search limitation.
+</UL>
+
+<P>
+Hopefully msntauth and Squid is now a more valuable product.
+Feel free to send me success or problem stories.
+
+</BODY>
+</HTML>

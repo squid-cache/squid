@@ -1,0 +1,38 @@
+#  Makefile for storage modules in the Squid Object Cache server
+#
+#  $Id: Makefile.in,v 1.1 2001/01/07 23:36:48 hno Exp $
+#
+
+# The 'nop' is in the SUBDIRS list because some Unixes that can't
+# handle empty for lists.
+
+SUBDIRS		= @NTLM_AUTH_HELPERS@ nop
+
+all:
+	@for dir in $(SUBDIRS); do \
+	    if [ -f $$dir/Makefile ]; then \
+	        sh -c "cd $$dir && $(MAKE) all" || exit 1; \
+	    fi; \
+	done;
+
+clean:
+	-for dir in *; do \
+	    if [ -f $$dir/Makefile ]; then \
+		sh -c "cd $$dir && $(MAKE) clean"; \
+	    fi; \
+	done
+
+distclean:
+	-rm -f Makefile
+	-for dir in *; do \
+	    if [ -f $$dir/Makefile ]; then \
+		sh -c "cd $$dir && $(MAKE) distclean"; \
+	    fi; \
+	done
+
+.DEFAULT:
+	@for dir in $(SUBDIRS); do \
+	    if [ -f $$dir/Makefile ]; then \
+		sh -c "cd $$dir && $(MAKE) $@" || exit 1; \
+	    fi; \
+	done;

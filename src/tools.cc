@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.202 2001/01/04 03:42:35 wessels Exp $
+ * $Id: tools.cc,v 1.203 2001/01/07 23:36:40 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -61,6 +61,8 @@ extern int setresuid(uid_t, uid_t, uid_t);
 #endif /* _SQUID_LINUX */
 
 extern void (*failure_notify) (const char *);
+
+MemPool *dlink_node_pool = NULL;
 
 void
 releaseServerSockets(void)
@@ -760,6 +762,24 @@ char *
 checkNullString(char *p)
 {
     return p ? p : "(NULL)";
+}
+
+dlink_node *
+dlinkNodeNew()
+{
+    if (dlink_node_pool == NULL)
+	dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
+    /* where should we call memPoolDestroy(dlink_node_pool); */
+    return memPoolAlloc(dlink_node_pool);
+}
+
+/* the node needs to be unlinked FIRST */
+void
+dlinkNodeDelete(dlink_node * m)
+{
+    if (m == NULL)
+	return;
+    memPoolFree(dlink_node_pool, m);
 }
 
 void

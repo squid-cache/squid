@@ -33,7 +33,7 @@ section 25    MIME Parsing
 section 26    Secure Sockets Layer Proxy
 section 27    Cache Announcer
 section 28    Access Control
-section 29    Redirector
+section 29    Redirector & Authentication
 section 30    Ident (RFC 931)
 section 31    Hypertext Caching Protocol
 section 32    Asynchronous Disk I/O

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.366 2001/01/05 09:51:36 adrian Exp $
+ * $Id: cache_cf.cc,v 1.367 2001/01/07 23:36:37 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -63,14 +63,14 @@ static int parseTimeUnits(const char *unit);
 static void parseTimeLine(time_t * tptr, const char *units);
 static void parse_ushort(u_short * var);
 static void parse_string(char **);
-static void parse_wordlist(wordlist **);
+void parse_wordlist(wordlist **);
 static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
 static void parseBytesLine(size_t * bptr, const char *units);
 static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
-static void requirePathnameExists(const char *name, const char *path);
+void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
 static void dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[]);
 static void parse_http_header_access(header_mangler header[]);
@@ -303,17 +303,6 @@ configDoConfigure(void)
 	    Config.redirectChildren = DefaultRedirectChildrenMax;
 	}
     }
-    if (Config.Program.authenticate) {
-	if (Config.authenticateChildren < 1) {
-	    Config.authenticateChildren = 0;
-	    wordlistDestroy(&Config.Program.authenticate);
-	} else if (Config.authenticateChildren > DefaultAuthenticateChildrenMax) {
-	    debug(3, 0) ("WARNING: authenticate_children was set to a bad value: %d\n",
-		Config.authenticateChildren);
-	    debug(3, 0) ("Setting it to the maximum (%d).\n", DefaultAuthenticateChildrenMax);
-	    Config.authenticateChildren = DefaultAuthenticateChildrenMax;
-	}
-    }
     if (Config.Accel.host) {
 	snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
 	Config2.Accel.prefix = xstrdup(buf);
@@ -369,8 +358,6 @@ configDoConfigure(void)
 #endif
     if (Config.Program.redirect)
 	requirePathnameExists("redirect_program", Config.Program.redirect->key);
-    if (Config.Program.authenticate)
-	requirePathnameExists("authenticate_program", Config.Program.authenticate->key);
     requirePathnameExists("Icon Directory", Config.icons.directory);
     requirePathnameExists("Error Directory", Config.errorDirectory);
 #if HTTP_VIOLATIONS
@@ -924,6 +911,86 @@ check_null_string(char *s)
 }
 
 void
+allocate_new_authScheme(authConfig * cfg)
+{
+    if (cfg->schemes == NULL) {
+	cfg->n_allocated = 4;
+	cfg->schemes = xcalloc(cfg->n_allocated, sizeof(authScheme));
+    }
+    if (cfg->n_allocated == cfg->n_configured) {
+	authScheme *tmp;
+	cfg->n_allocated <<= 1;
+	tmp = xcalloc(cfg->n_allocated, sizeof(authScheme));
+	xmemcpy(tmp, cfg->schemes, cfg->n_configured * sizeof(authScheme));
+	xfree(cfg->schemes);
+	cfg->schemes = tmp;
+    }
+}
+
+static void
+parse_authparam(authConfig * config)
+{
+    char *type_str;
+    char *param_str;
+    authScheme *scheme = NULL;
+    int type, i;
+
+    if ((type_str = strtok(NULL, w_space)) == NULL)
+	self_destruct();
+
+    if ((param_str = strtok(NULL, w_space)) == NULL)
+	self_destruct();
+
+    if ((type = authenticateAuthSchemeId(type_str)) == -1) {
+	debug(3, 0) ("Parsing Config File: Unknown authentication scheme '%s'.\n", type_str);
+	return;
+    }
+    for (i = 0; i < config->n_configured; i++) {
+	if (config->schemes[i].Id == type) {
+	    scheme = config->schemes + i;
+	}
+    }
+
+    if (scheme == NULL) {
+	allocate_new_authScheme(config);
+	scheme = config->schemes + config->n_configured;
+	config->n_configured++;
+	scheme->Id = type;
+	scheme->typestr = authscheme_list[type].typestr;
+    }
+    authscheme_list[type].parse(scheme, config->n_configured, param_str);
+}
+
+static void
+free_authparam(authConfig * cfg)
+{
+    authScheme *scheme;
+    int i;
+    /* DON'T FREE THESE FOR RECONFIGURE */
+    if (reconfiguring)
+	return;
+    for (i = 0; i < cfg->n_configured; i++) {
+	scheme = cfg->schemes + i;
+	authscheme_list[scheme->Id].freeconfig(scheme);
+    }
+    safe_free(cfg->schemes);
+    cfg->schemes = NULL;
+    cfg->n_allocated = 0;
+    cfg->n_configured = 0;
+}
+
+static void
+dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
+{
+    authScheme *scheme;
+    int i;
+    for (i = 0; i < cfg.n_configured; i++) {
+	scheme = cfg.schemes + i;
+	authscheme_list[scheme->Id].dump(entry, name, scheme);
+    }
+}
+
+void
 allocate_new_swapdir(cacheSwap * swap)
 {
     if (swap->swapDirs == NULL) {
@@ -1423,7 +1490,7 @@ dump_int(StoreEntry * entry, const char *name, int var)
     storeAppendPrintf(entry, "%s %d\n", name, var);
 }
 
-static void
+void
 parse_int(int *var)
 {
     int i;
@@ -1620,7 +1687,7 @@ free_string(char **var)
     safe_free(*var);
 }
 
-static void
+void
 parse_eol(char *volatile *var)
 {
     char *token = strtok(NULL, null_string);
@@ -1636,7 +1703,7 @@ dump_time_t(StoreEntry * entry, const char *name, time_t var)
     storeAppendPrintf(entry, "%s %d seconds\n", name, (int) var);
 }
 
-static void
+void
 parse_time_t(time_t * var)
 {
     parseTimeLine(var, T_SECOND_STR);
@@ -1729,7 +1796,7 @@ dump_wordlist(StoreEntry * entry, const char *name, wordlist * list)
     }
 }
 
-static void
+void
 parse_wordlist(wordlist ** list)
 {
     char *token;
@@ -1919,7 +1986,7 @@ configFreeMemory(void)
     free_all();
 }
 
-static void
+void
 requirePathnameExists(const char *name, const char *path)
 {
     struct stat sb;

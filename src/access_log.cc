@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.64 2001/01/02 00:09:55 wessels Exp $
+ * $Id: access_log.cc,v 1.65 2001/01/07 23:36:37 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -182,10 +182,60 @@ log_quote(const char *header)
     return buf;
 }
 
+char *
+username_quote(const char *header)
+/* copy of log_quote. Bugs there will be found here */
+{
+    int c;
+    int i;
+    char *buf;
+    char *buf_cursor;
+    if (header == NULL) {
+	buf = xcalloc(1, 1);
+	*buf = '\0';
+	return buf;
+    }
+    buf = xcalloc((strlen(header) * 3) + 1, 1);
+    buf_cursor = buf;
+    /*
+     * We escape: space \x00-\x1F and space (0x40) and \x7F-\xFF
+     * to prevent garbage in the logs. CR and LF are also there just in case. 
+     */
+    while ((c = *(const unsigned char *) header++) != '\0') {
+	if (c == '\r') {
+	    *buf_cursor++ = '\\';
+	    *buf_cursor++ = 'r';
+	} else if (c == '\n') {
+	    *buf_cursor++ = '\\';
+	    *buf_cursor++ = 'n';
+	} else if (c <= 0x1F
+		|| c >= 0x7F
+	    || c == ' ') {
+	    *buf_cursor++ = '%';
+	    i = c * 2;
+	    *buf_cursor++ = c2x[i];
+	    *buf_cursor++ = c2x[i + 1];
+	} else {
+	    *buf_cursor++ = (char) c;
+	}
+    }
+    *buf_cursor = '\0';
+    return buf;
+}
+
+char *
+accessLogFormatName(const char *name)
+{
+    if (NULL == name)
+	return xcalloc(strlen(dash_str) + 1, 1);
+    return username_quote(name);
+}
+
 static void
 accessLogSquid(AccessLogEntry * al)
 {
     const char *client = NULL;
+    char *user = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
     if (client == NULL)
@@ -200,24 +250,28 @@ accessLogSquid(AccessLogEntry * al)
 	al->cache.size,
 	al->private.method_str,
 	al->url,
-	al->cache.ident,
+	(user = accessLogFormatName(al->cache.authuser ?
+		al->cache.authuser : al->cache.rfc931)),
 	al->hier.ping.timedout ? "TIMEOUT_" : "",
 	hier_strings[al->hier.code],
 	al->hier.host,
 	al->http.content_type);
+    safe_free(user);
 }
 
 static void
 accessLogCommon(AccessLogEntry * al)
 {
     const char *client = NULL;
+    char *user = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
-    logfilePrintf(logfile, "%s %s - [%s] \"%s %s HTTP/%d.%d\" %d %d %s:%s",
+    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %d %s:%s",
 	client,
-	al->cache.ident,
+	accessLogFormatName(al->cache.rfc931),
+	(user = accessLogFormatName(al->cache.authuser)),
 	mkhttpdlogtime(&squid_curtime),
 	al->private.method_str,
 	al->url,
@@ -226,25 +280,18 @@ accessLogCommon(AccessLogEntry * al)
 	al->cache.size,
 	log_tags[al->cache.code],
 	hier_strings[al->hier.code]);
+    safe_free(user);
 }
 
 void
 accessLogLog(AccessLogEntry * al)
 {
-    LOCAL_ARRAY(char, ident_buf, USER_IDENT_SZ);
-
     if (LogfileStatus != LOG_ENABLE)
 	return;
     if (al->url == NULL)
 	al->url = dash_str;
     if (!al->http.content_type || *al->http.content_type == '\0')
 	al->http.content_type = dash_str;
-    if (!al->cache.ident || *al->cache.ident == '\0') {
-	al->cache.ident = dash_str;
-    } else {
-	xstrncpy(ident_buf, rfc1738_escape(al->cache.ident), USER_IDENT_SZ);
-	al->cache.ident = ident_buf;
-    }
     if (al->icp.opcode)
 	al->private.method_str = icp_opcode_str[al->icp.opcode];
     else

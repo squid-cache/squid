@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.85 2001/01/05 09:51:40 adrian Exp $
+ * $Id: redirect.cc,v 1.86 2001/01/07 23:36:40 hno Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -126,12 +126,12 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
     r = CBDATA_ALLOC(redirectStateData, NULL);
     r->orig_url = xstrdup(http->uri);
     r->client_addr = conn->log_addr;
-    if (http->request->user_ident[0])
-	r->client_ident = http->request->user_ident;
-    else if (conn->ident == NULL || *conn->ident == '\0') {
-	r->client_ident = dash_str;
+    if (http->request->auth_user_request)
+	r->client_ident = authenticateUserRequestUsername(http->request->auth_user_request);
+    else if (conn->rfc931[0]) {
+	r->client_ident = conn->rfc931;
     } else {
-	r->client_ident = conn->ident;
+	r->client_ident = dash_str;
     }
     r->method_s = RequestMethodStr[http->request->method];
     r->handler = handler;

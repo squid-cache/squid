@@ -1,0 +1,10 @@
+This is a dummy NTLM authentication module for Squid.
+It performs the NTLM challenge, but then it doesn't verify the
+user's credentials, it just takes the client's domain and username
+at face value.
+It's included mostly for demonstration purposes.
+
+(C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
+Distributed freely under the terms of the GNU General Public License, 
+version 2. For the licensing terms, see the file COPYING that
+came with Squid.

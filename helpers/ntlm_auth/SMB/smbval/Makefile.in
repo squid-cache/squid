@@ -1,0 +1,52 @@
+# makefile for smblib
+# Type make system, where system is ULTRIX, DU, DECOSF1, Solaris etc
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+exec_suffix	= @exec_suffix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+CC              = @CC@
+MAKEDEPEND      = @MAKEDEPEND@
+INSTALL         = @INSTALL@
+INSTALL_BIN     = @INSTALL_PROGRAM@
+INSTALL_FILE    = @INSTALL_DATA@
+RANLIB          = @RANLIB@
+AC_CFLAGS       = @CFLAGS@
+LDFLAGS         = @LDFLAGS@
+XTRA_LIBS       = @XTRA_LIBS@
+RM              = @RM@
+AR_R		= @AR_R@
+
+CFLAGS		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
+# CFLAGS = -fpic -g
+
+INCLUDE  = -I. -I../../../../../../include -I$(top_srcdir)/include
+INCLUDES = smblib.h smblib-priv.h
+
+#RFCNB = session.o rfcnb-util.o rfcnb-io.o
+
+#OBJS = smblib.o smblib-util.o file.o smb-errors.o exper.o smblib-api.o smbencrypt.o smbdes.o md4.o
+
+VALIDATE = valid.o session.o rfcnb-util.o \
+           rfcnb-io.o smblib-util.o smblib.o smbencrypt.o smbdes.o md4.o
+
+#.SUFFIXES: .c .o .h
+
+dummy: all
+
+smbvalid.a:	$(VALIDATE) 
+	$(RM) -f $@
+	$(AR_R) $@ $(VALIDATE)
+	$(RANLIB) $@
+
+all: smbvalid.a
+
+#.c.o:	$(INCLUDES)
+
+clean:
+	$(RM) -f *.o smbvalid.a *~
+

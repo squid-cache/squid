@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.195 2000/10/20 23:50:59 hno Exp $
+#  $Id: Makefile.in,v 1.196 2001/01/07 23:36:37 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -18,7 +18,7 @@ localstatedir   = @localstatedir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-SUBDIRS		= fs repl
+SUBDIRS		= fs repl auth
 
 # Gotta love the DOS legacy
 #
@@ -47,6 +47,8 @@ DEFAULT_ICON_DIR	= $(sysconfdir)/icons
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
 DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
 
+AUTH_OBJS	= @AUTH_OBJS@
+AUTH_MODULES	= @AUTH_MODULES@
 CC		= @CC@
 MAKEDEPEND	= @MAKEDEPEND@
 INSTALL		= @INSTALL@
@@ -90,6 +92,7 @@ OBJS	 	= \
 		access_log.o \
 		acl.o \
 		asn.o \
+		auth_modules.o \
 		authenticate.o \
 		cache_cf.o \
 		CacheDigest.o \
@@ -148,7 +151,6 @@ OBJS	 	= \
 		pconn.o \
 		peer_digest.o \
 		peer_select.o \
-		pump.o \
 		redirect.o \
 		referer.o \
 		refresh.o \
@@ -208,8 +210,8 @@ $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
 $(SNMP_OBJS): ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
-$(SQUID_EXE): $(OBJS) $(STORE_OBJS) $(REPL_OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(STORE_OBJS) $(REPL_OBJS) $(SQUID_LIBS)
+$(SQUID_EXE): $(OBJS) $(STORE_OBJS) $(REPL_OBJS) $(AUTH_OBJS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(STORE_OBJS) $(REPL_OBJS) $(AUTH_OBJS) $(SQUID_LIBS)
 
 globals.o: globals.c Makefile
 	$(CC) -c globals.c $(CFLAGS) -I$(srcdir) $(DEFAULTS)
@@ -297,6 +299,15 @@ $(REPL_OBJS):
 
 repl_modules repl/stamp:
 	@sh -c "cd repl && $(MAKE) all"
+
+auth_modules.c: auth_modules.sh Makefile
+	sh $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
+
+auth_modules.o: auth_modules.c
+	$(CC) -c auth_modules.c $(CFLAGS) -I$(srcdir)
+
+$(AUTH_OBJS):
+	@sh -c "cd `dirname $@` && $(MAKE) $(MFLAGS) `basename $@`"
 
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
@@ -406,7 +417,7 @@ install-pinger:
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
 	-rm -f cf_gen cf_gen_defines.h cf_parser.c cf.data globals.c string_arrays.c
-	-rm -f store_modules.c repl_modules.c squid.conf
+	-rm -f store_modules.c repl_modules.c auth_modules.c squid.conf
 	@for dir in $(SUBDIRS); do \
 		echo "Making $@ in $$dir..."; \
 		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \

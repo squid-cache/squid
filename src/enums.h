@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.181 2001/01/07 20:11:18 hno Exp $
+ * $Id: enums.h,v 1.182 2001/01/07 23:36:38 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -130,7 +130,7 @@ typedef enum {
     ACL_LOOKUP_NEEDED,
     ACL_LOOKUP_PENDING,
     ACL_LOOKUP_DONE,
-    ACL_PROXY_AUTH_NEEDED
+    ACL_PROXY_AUTH_NEEDED,
 } acl_lookup_state;
 
 enum {
@@ -492,6 +492,37 @@ typedef enum {
     ACCESS_REQ_PROXY_AUTH
 } allow_t;
 
+typedef enum {
+    AUTH_UNKNOWN,		/* default */
+    AUTH_BASIC,
+    AUTH_NTLM,
+    AUTH_BROKEN			/* known type, but broken data */
+} auth_type_t;
+
+typedef enum {
+    AUTHENTICATE_STATE_NONE,
+    AUTHENTICATE_STATE_NEGOTIATE,
+    AUTHENTICATE_STATE_CHALLENGE,
+    AUTHENTICATE_STATE_RESPONSE,
+    AUTHENTICATE_STATE_DONE
+} auth_state_t;			/* connection level auth state */
+
+/* stateful helper callback response codes */
+typedef enum {
+    S_HELPER_UNKNOWN,
+    S_HELPER_RESERVE,
+    S_HELPER_RELEASE,
+    S_HELPER_DEFER
+} stateful_helper_callback_t;
+
+/* stateful helper reservation info */
+typedef enum {
+    S_HELPER_FREE,		/* available for requests */
+    S_HELPER_RESERVED,		/* in a reserved state - no active request, but state data in the helper shouldn't be disturbed */
+    S_HELPER_DEFERRED		/* available for requests, and at least one more will come from a previous caller with the server pointer */
+} stateful_helper_reserve_t;
+
+
 #if SQUID_SNMP
 enum {
     SNMP_C_VIEW,
@@ -517,8 +548,10 @@ typedef enum {
     MEM_ACL_IP_DATA,
     MEM_ACL_LIST,
     MEM_ACL_NAME_LIST,
+    MEM_AUTH_USER_T,
+    MEM_AUTH_USER_HASH,
+    MEM_ACL_PROXY_AUTH_MATCH,
     MEM_ACL_USER_DATA,
-    MEM_ACL_PROXY_AUTH_USER,
     MEM_ACL_TIME_DATA,
     MEM_CACHEMGR_PASSWD,
 #if USE_CACHE_DIGESTS
@@ -551,8 +584,11 @@ typedef enum {
     MEM_HASH_LINK,
     MEM_HASH_TABLE,
     MEM_HELPER,
-    MEM_HELPER_REQUEST,
+    MEM_HELPER_STATEFUL,
     MEM_HELPER_SERVER,
+    MEM_HELPER_STATEFUL_SERVER,
+    MEM_HELPER_REQUEST,
+    MEM_HELPER_STATEFUL_REQUEST,
     MEM_HIERARCHYLOGENTRY,
 #if USE_HTCP
     MEM_HTCP_SPECIFIER,
@@ -609,6 +645,9 @@ typedef enum {
     MEM_PUMP_STATE_DATA,
     MEM_CLIENT_REQ_BUF,
     MEM_MAX
+#ifdef NTLM_CACHING
+    ,MEM_NTLM_AUTH_CACHE
+#endif
 } mem_type;
 
 /*
@@ -696,6 +735,8 @@ typedef enum {
     CBDATA_generic_cbdata,
     CBDATA_helper,
     CBDATA_helper_server,
+    CBDATA_statefulhelper,
+    CBDATA_helper_stateful_server,
     CBDATA_HttpStateData,
     CBDATA_peer,
     CBDATA_ps_state,

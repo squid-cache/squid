@@ -1,0 +1,96 @@
+#
+#  Makefile for the Squid Object Cache server
+#
+#  $Id: Makefile.in,v 1.1 2001/01/07 23:36:45 hno Exp $
+#
+#  Uncomment and customize the following to suit your needs:
+#
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+exec_suffix	= @exec_suffix@
+cgi_suffix	= @cgi_suffix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+libexecdir      = @libexecdir@
+sysconfdir	= @sysconfdir@
+localstatedir   = @localstatedir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+# Gotta love the DOS legacy
+#
+PAM_AUTH_EXE	= pam_auth$(exec_suffix)
+
+CC		= @CC@
+MAKEDEPEND	= @MAKEDEPEND@
+INSTALL		= @INSTALL@
+INSTALL_BIN 	= @INSTALL_PROGRAM@
+INSTALL_FILE 	= @INSTALL_DATA@
+INSTALL_SUID	= @INSTALL_PROGRAM@ -o root -m 4755
+RANLIB		= @RANLIB@
+LN_S		= @LN_S@
+PERL            = @PERL@
+CRYPTLIB	= @CRYPTLIB@
+REGEXLIB	= @REGEXLIB@
+PTHREADLIB	= @PTHREADLIB@
+SNMPLIB		= @SNMPLIB@
+MALLOCLIB	= @LIB_MALLOC@
+AC_CFLAGS	= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+XTRA_LIBS	= @XTRA_LIBS@ @DLLIB@
+XTRA_OBJS 	= @XTRA_OBJS@
+MV		= @MV@
+RM		= @RM@
+SHELL		= /bin/sh
+DEFINES		= 
+
+INCLUDE		= -I. -I../../../../../include -I$(top_srcdir)/include
+CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
+AUTH_LIBS	= -lpam $(XTRA_LIBS)
+
+LIBPROGS        = $(PAM_AUTH_EXE)
+OBJS	 	= pam_auth.o
+
+all:    $(PAM_AUTH_EXE)
+
+$(PAM_AUTH_EXE): pam_auth.o
+	$(CC) $(LDFLAGS) pam_auth.o -o $@ $(AUTH_LIBS)
+
+install-mkdirs:
+	-@if test ! -d $(prefix); then \
+		echo "mkdir $(prefix)"; \
+		mkdir $(prefix); \
+	fi
+	-@if test ! -d $(libexecdir); then \
+		echo "mkdir $(libexecdir)"; \
+		mkdir $(libexecdir); \
+	fi
+
+# Michael Lupp <mike@nemesis.saar.de> wants to know about additions
+# to the install target.
+install: all install-mkdirs
+	@for f in $(LIBPROGS); do \
+		if test -f $(libexecdir)/$$f; then \
+			echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+			$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+		fi; \
+		echo $(INSTALL_BIN) $$f $(libexecdir); \
+		$(INSTALL_BIN) $$f $(libexecdir); \
+		if test -f $(libexecdir)/-$$f; then \
+			echo $(RM) -f $(libexecdir)/-$$f; \
+			$(RM) -f $(libexecdir)/-$$f; \
+		fi; \
+	done
+
+clean: 
+	-rm -rf *.o *pure_* core $(LIBPROGS)
+
+distclean:	clean
+	-rm -f Makefile
+
+tags:
+	ctags *.[ch]
+
+depend:
+	$(MAKEDEPEND) -fMakefile *.c
