@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.146 1998/03/06 21:05:47 wessels Exp $
+ * $Id: acl.cc,v 1.147 1998/03/07 23:43:00 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -825,31 +825,28 @@ aclParseAclLine(acl ** head)
     *head = A;
 }
 
-/* maex@space.net (06.09.96)
- *    get (if any) the URL from deny_info for a certain acl
- */
-
-char *
-aclGetDenyInfoUrl(acl_deny_info_list ** head, const char *name)
+/* does name lookup, returns page_id */
+int
+aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
 {
     acl_deny_info_list *A = NULL;
     acl_name_list *L = NULL;
 
     A = *head;
     if (NULL == *head)		/* empty list */
-	return (NULL);
+	return -1;
     while (A) {
 	L = A->acl_list;
 	if (NULL == L)		/* empty list should never happen, but in case */
 	    continue;
 	while (L) {
 	    if (!strcmp(name, L->name))
-		return (A->url);
+		return A->err_page_id;
 	    L = L->next;
 	}
 	A = A->next;
     }
-    return (NULL);
+    return -1;
 }
 
 /* maex@space.net (05.09.96)
@@ -871,15 +868,20 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     acl_name_list *L = NULL;
     acl_name_list **Tail = NULL;
 
-    /* first expect an url */
+    /* first expect a page name */
     if ((t = strtok(NULL, w_space)) == NULL) {
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0) ("aclParseDenyInfoLine: missing 'url' parameter.\n");
+	debug(28, 0) ("aclParseDenyInfoLine: missing 'error page' parameter.\n");
 	return;
     }
     A = xcalloc(1, sizeof(acl_deny_info_list));
+    A->err_page_id = errorReservePageId(t);
+#if 0
     xstrncpy(A->url, t, MAX_URL);
+#else
+    A->err_page_name = xstrdup(t);
+#endif
     A->next = (acl_deny_info_list *) NULL;
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
@@ -1325,7 +1327,7 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
 	return aclMatchTime(acl->data, squid_curtime);
 	/* NOTREACHED */
     case ACL_URLPATH_REGEX:
-	return aclMatchRegex(acl->data, r->urlpath);
+	return aclMatchRegex(acl->data, strBuf(r->urlpath));
 	/* NOTREACHED */
     case ACL_URL_REGEX:
 	return aclMatchRegex(acl->data, urlCanonical(r, NULL));
@@ -1774,6 +1776,7 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 	    safe_free(l);
 	}
 	a_next = a->next;
+	xfree(a->err_page_name);
 	safe_free(a);
     }
     *list = NULL;

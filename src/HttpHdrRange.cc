@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.1 1998/03/05 20:55:55 rousskov Exp $
+ * $Id: HttpHdrRange.cc,v 1.2 1998/03/07 23:42:57 rousskov Exp $
  *
  * DEBUG: section 64    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -58,6 +58,7 @@
 #define known_spec(s) ((s) != range_spec_unknown)
 #define size_min(a,b) ((a) <= (b) ? (a) : (b))
 #define size_diff(a,b) ((a) >= (b) ? ((a)-(b)) : 0)
+static HttpHdrRangeSpec *httpHdrRangeSpecDup(const HttpHdrRangeSpec *spec);
 static int httpHdrRangeSpecCanonize(HttpHdrRangeSpec *spec, size_t clen);
 
 /* globals */
@@ -68,11 +69,16 @@ static int RangeParsedCount = 0;
  */
 
 
+static HttpHdrRangeSpec *
+httpHdrRangeSpecCreate()
+{
+    return memAllocate(MEM_HTTP_HDR_RANGE_SPEC);
+}
+
 /* parses range-spec and returns new object on success */
 static HttpHdrRangeSpec *
 httpHdrRangeSpecParseCreate(const char *field, int flen)
 {
-    HttpHdrRangeSpec *sp = NULL;
     HttpHdrRangeSpec spec = { range_spec_unknown, range_spec_unknown };
     const char *p;
     if (flen < 2)
@@ -103,15 +109,23 @@ httpHdrRangeSpecParseCreate(const char *field, int flen)
 	debug(64, 2) ("ignoring invalid range-spec near: '%s'\n", field);
 	return NULL;
     }
-    sp = memAllocate(MEM_HTTP_HDR_RANGE_SPEC);
-    *sp = spec;
-    return sp;
+    return httpHdrRangeSpecDup(&spec);
 }
 
 static void
 httpHdrRangeSpecDestroy(HttpHdrRangeSpec *spec)
 {
     memFree(MEM_HTTP_HDR_RANGE_SPEC, spec);
+}
+
+
+static HttpHdrRangeSpec *
+httpHdrRangeSpecDup(const HttpHdrRangeSpec *spec)
+{
+    HttpHdrRangeSpec *dup = httpHdrRangeSpecCreate();
+    dup->offset = spec->offset;
+    dup->length = spec->length;
+    return dup;
 }
 
 /* fills "absent" positions in range specification based on response body size 
@@ -189,6 +203,43 @@ httpHdrRangeDestroy(HttpHdrRange *range)
     memFree(MEM_HTTP_HDR_RANGE, range);
 }
 
+HttpHdrRange *
+httpHdrRangeDup(const HttpHdrRange * range)
+{
+    HttpHdrRange *dup;
+    int i;
+    assert(range);
+    dup = httpHdrRangeCreate();
+    stackPrePush(&dup->specs, range->specs.count);
+    for (i = 0; i < range->specs.count; i++)
+	stackPush(&dup->specs, httpHdrRangeSpecDup(range->specs.items[i]));
+    assert(range->specs.count == dup->specs.count);
+    return dup;
+}
+
+void
+httpHdrRangePackValueInto(const HttpHdrRange * range, Packer * p)
+{
+    HttpHdrRangePos pos = HttpHdrRangeInitPos;
+    HttpHdrRangeSpec spec;
+    assert(range);
+    while (httpHdrRangeGetSpec(range, &spec, &pos)) {
+	packerPrintf(p, (pos == HttpHdrRangeInitPos) ? "%d-%d" : ",%d-%d",
+	    spec.offset, spec.offset+spec.length-1);
+    }
+}
+
+void
+httpHdrRangeJoinWith(HttpHdrRange * range, const HttpHdrRange * new_range)
+{
+    HttpHdrRangePos pos = HttpHdrRangeInitPos;
+    HttpHdrRangeSpec spec;
+    assert(range && new_range);
+    stackPrePush(&range->specs, new_range->specs.count);
+    while (httpHdrRangeGetSpec(range, &spec, &pos))
+	stackPush(&range->specs, httpHdrRangeSpecDup(&spec));
+}
+
 /*
  * canonizes all range specs within a set preserving the order
  * returns true if the set is valid after canonization; 
@@ -207,19 +258,16 @@ httpHdrRangeCanonize(HttpHdrRange *range, size_t clen)
     return range->specs.count;
 }
 
-/* searches for next (unseen) range, returns true if found */
+/* searches for next range, returns true if found */
 int
-httpHdrRangeGetNext(const HttpHdrRange *range, HttpHdrRangeSpec *spec, size_t seen_len)
+httpHdrRangeGetSpec(const HttpHdrRange *range, HttpHdrRangeSpec *spec, int *pos)
 {
-    int i;
     assert(range && spec);
-    /* simple linear search */
-    for (i = 0; i < range->specs.count; i++) {
-	*spec = *(HttpHdrRangeSpec*)range->specs.items[i];
-	if (spec->offset < seen_len) {
-	    assert(spec->offset + spec->length <= seen_len);
-	} else
-	    return 1;
+    assert(pos && *pos >= -1 && *pos < range->specs.count);
+    (*pos)++;
+    if (*pos < range->specs.count) {
+	*spec = *(HttpHdrRangeSpec*)range->specs.items[*pos];
+	return 1;
     }
     spec->offset = spec->length = 0;
     return 0;

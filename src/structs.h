@@ -30,7 +30,8 @@ struct _acl_proxy_auth {
 };
 
 struct _acl_deny_info_list {
-    char url[MAX_URL];
+    int err_page_id;
+    char *err_page_name;
     acl_name_list *acl_list;
     acl_deny_info_list *next;
 };
@@ -44,6 +45,13 @@ struct _acl_arp_data {
 };
 
 #endif
+
+struct _String {
+    /* never reference these directly! */
+    unsigned short int size; /* buffer size; 64K limit */
+    unsigned short int len;  /* current length  */
+    char *buf;
+};
 
 #if SQUID_SNMP
 struct _snmpconf {
@@ -978,7 +986,11 @@ struct _request_t {
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
     u_short port;
+#if 0 /* trying new interface */
     char urlpath[MAX_URL];
+#else
+    String urlpath;
+#endif
     int link_count;		/* free when zero */
     int flags;
     time_t max_age;
@@ -1021,6 +1033,7 @@ struct _CommWriteStateData {
 
 struct _ErrorState {
     err_type type;
+    int page_id;
     http_status http_status;
     request_t *request;
     char *url;
@@ -1120,6 +1133,28 @@ struct _storeSwapLogData {
     u_short refcount;
     u_short flags;
     unsigned char key[MD5_DIGEST_CHARS];
+};
+
+/* object to track per-action memory usage (e.g. #idle objects) */
+struct _MemMeter {
+    size_t level;		/* current level (count or volume) */
+    size_t hwater;		/* high water mark */
+};
+
+/* object to track per-pool memory usage (alloc = inuse+idle) */
+struct _MemPoolMeter {
+    MemMeter alloc;
+    MemMeter inuse;
+    MemMeter idle;
+    gb_t saved;
+};
+
+/* a pool is a [growing] space for objects of the same size */
+struct _MemPool {
+    const char *label;
+    size_t obj_size;
+    Stack pstack;		/* stack for free pointers */
+    MemPoolMeter meter;
 };
 
 struct _ClientInfo {

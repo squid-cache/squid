@@ -1,3 +1,8 @@
+	- Added memory pools for variable size objects (strings).
+	  There are three pools; for small, medium, and large objects.  
+	- Extended String object to use memory pools.  Most fixed size char
+	  array fields will be replaced using string pools. Same for most
+	  malloc()-ed buffers.
 	- Fixed ICP bug when we send queries, but expect zero
 	  replies.
 	- Fixed alignment/casting bugs for ICP messages.
@@ -10,7 +15,7 @@
 
 Changes to squid-1.2.beta16 (Mar 4, 1998):
 
-	- Added Portugese erorr messages from Pedro Lineu Orso
+	- Added Portuguese error messages from Pedro Lineu Orso
 	- Added a simple but very effective hack to cachemgr.cgi that tries to
 	  interpret lines with '\t' as table records and formats them
 	  accordingly. With a few exceptions (see source code), first line

@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.54 1998/03/06 01:33:12 wessels Exp $
+ * $Id: util.c,v 1.55 1998/03/07 23:42:56 rousskov Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -129,6 +129,9 @@
 #endif
 #if HAVE_ERRNO_H
 #include <errno.h>
+#endif
+#if HAVE_MATH_H
+#include <math.h>
 #endif
 
 #include "util.h"
@@ -741,6 +744,13 @@ xpercent(double part, double whole)
 {
     return xdiv(100 * part, whole);
 }
+
+int
+xpercentInt(double part, double whole)
+{
+    return (int)rint(xpercent(part, whole));
+}
+
 
 /* somewhat safer division */
 double

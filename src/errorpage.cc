@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.120 1998/03/06 05:43:35 kostas Exp $
+ * $Id: errorpage.cc,v 1.121 1998/03/07 23:43:05 rousskov Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -38,27 +38,42 @@
 
 #include "squid.h"
 
+
+/* local types */
+
+typedef struct {
+    int id;
+    char *page_name;
+} ErrorDynamicPageInfo;
+
+/* local constant and vars */
+
 /*
  * note: hard coded error messages are not appended with %S automagically
  * to give you more control on the format
  */
 static const struct {
-    err_type type;
+    int type; /* and page_id */
     const char *text;
 } error_hard_text[] = {
-
     {
 	ERR_SQUID_SIGNATURE,
 	    "\n<br clear=\"all\">\n"
 	    "<hr noshade size=1>\n"
-	    "Generated on %T by <a href=\"http://squid.nlanr.net/\">%s</a>@%h"
+	    "Generated on %T by <a href=\"http://squid.nlanr.net/\">%s</a>@%h\n"
     }
 };
-static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
-static char *error_text[ERR_MAX];
 
-static char *errorTryLoadText(err_type type, const char *dir);
-static char *errorLoadText(err_type type);
+static Stack ErrorDynamicPages;
+
+/* local prototypes */
+
+static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
+static char **error_text = NULL;
+static int error_page_count = 0;
+
+static char *errorTryLoadText(const char *page_name, const char *dir);
+static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
 static MemBuf errorBuildContent(ErrorState * err);
 static const char *errorConvert(char token, ErrorState * err);
@@ -76,16 +91,25 @@ static CWCB errorSendComplete;
 void
 errorInitialize(void)
 {
-    err_type i;
+    int i;
     const char *text;
-    /* find this one first so we can append it to others in errorTryLoadText() */
-    for (i = ERR_NONE + 1; i < ERR_MAX; i++) {
+    error_page_count = ERR_MAX + ErrorDynamicPages.count;
+    error_text = xcalloc(error_page_count, sizeof(char*));
+    for (i = ERR_NONE + 1; i < error_page_count; i++) {
 	safe_free(error_text[i]);
 	/* hard-coded ? */
 	if ((text = errorFindHardText(i)))
 	    error_text[i] = xstrdup(text);
 	else
-	    error_text[i] = errorLoadText(i);
+	/* precompiled ? */
+	if (i < ERR_MAX)
+	    error_text[i] = errorLoadText(err_type_str[i]);
+	/* dynamic */
+	else {
+	    ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i-ERR_MAX];
+	    assert(info && info->id == i && info->page_name);
+	    error_text[i] = errorLoadText(info->page_name);
+	}
 	assert(error_text[i]);
     }
 }
@@ -102,13 +126,13 @@ errorFindHardText(err_type type)
 
 
 static char *
-errorLoadText(err_type type)
+errorLoadText(const char *page_name)
 {
     /* test configured location */
-    char *text = errorTryLoadText(type, Config.errorDirectory);
+    char *text = errorTryLoadText(page_name, Config.errorDirectory);
     /* test default location if failed */
     if (!text && strcmp(Config.errorDirectory, DEFAULT_SQUID_ERROR_DIR))
-	text = errorTryLoadText(type, DEFAULT_SQUID_ERROR_DIR);
+	text = errorTryLoadText(page_name, DEFAULT_SQUID_ERROR_DIR);
     /* giving up if failed */
     if (!text)
 	fatal("failed to find or read error text file.");
@@ -116,7 +140,7 @@ errorLoadText(err_type type)
 }
 
 static char *
-errorTryLoadText(err_type type, const char *dir)
+errorTryLoadText(const char *page_name, const char *dir)
 {
     int fd;
     char path[MAXPATHLEN];
@@ -124,7 +148,7 @@ errorTryLoadText(err_type type, const char *dir)
     char *text;
 
     snprintf(path, MAXPATHLEN, "%s/%s",
-	dir, err_type_str[type]);
+	dir, page_name);
     fd = file_open(path, O_RDONLY, NULL, NULL, NULL);
     if (fd < 0 || fstat(fd, &sb) < 0) {
 	debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
@@ -144,12 +168,42 @@ errorTryLoadText(err_type type, const char *dir)
     return text;
 }
 
+static ErrorDynamicPageInfo *
+errorDynamicPageInfoCreate(int id, const char *page_name)
+{
+    ErrorDynamicPageInfo *info = xcalloc(1, sizeof(ErrorDynamicPageInfo));
+    info->id = id;
+    info->page_name = xstrdup(page_name);
+    return info;
+}
+
+static void
+errorDynamicPageInfoDestroy(ErrorDynamicPageInfo *info)
+{
+    assert(info);
+    xfree(info->page_name);
+    xfree(info);
+}
+
+int
+errorReservePageId(const char *page_name)
+{
+    ErrorDynamicPageInfo *info = 
+	errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.count, page_name);
+    stackPush(&ErrorDynamicPages, info);
+    return info->id;
+}
+
 void
 errorFree(void)
 {
     int i;
-    for (i = ERR_NONE + 1; i < ERR_MAX; i++)
+    for (i = ERR_NONE + 1; i < error_page_count; i++)
 	safe_free(error_text[i]);
+    while (ErrorDynamicPages.count)
+	errorDynamicPageInfoDestroy(stackPop(&ErrorDynamicPages));
+    safe_free(error_text);
+    error_page_count = 0;
 }
 
 /*
@@ -158,9 +212,10 @@ errorFree(void)
  * Abstract:  This function creates a ErrorState object.
  */
 ErrorState *
-errorCon(err_type type, http_status status)
+errorCon(int type, http_status status)
 {
     ErrorState *err = xcalloc(1, sizeof(ErrorState));
+    err->page_id = type; /* has to be reset manually if needed */
     err->type = type;
     err->http_status = status;
     return err;
@@ -183,26 +238,16 @@ errorCon(err_type type, http_status status)
 void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
-#if 0
-    const char *buf;
-    int len;
-#else
     HttpReply *rep;
-#endif
     MemObject *mem = entry->mem_obj;
 #if 0	/* we might have an ok store for put etc */
     assert(entry->store_status == STORE_PENDING);
 #endif
     assert(mem != NULL);
     assert(mem->inmem_hi == 0);
-#if 0
-    buf = errorBuildBuf(err, &len);
-    storeAppend(entry, buf, len);
-#else
     rep = errorBuildReply(err);
     httpReplySwapOut(rep, entry);
     httpReplyDestroy(rep);
-#endif
     mem->reply->sline.status = err->http_status;
     storeComplete(entry);
     storeNegativeCache(entry);
@@ -233,11 +278,6 @@ void
 errorSend(int fd, ErrorState * err)
 {
     HttpReply *rep;
-#if 0
-    FREE *freefunc;
-    char *buf;
-    int len;
-#endif
     debug(4, 3) ("errorSend: FD %d, err=%p\n", fd, err);
     assert(fd >= 0);
     /*
@@ -249,14 +289,9 @@ errorSend(int fd, ErrorState * err)
     /* moved in front of errorBuildBuf @?@ */
     EBIT_SET(err->flags, ERR_FLAG_CBDATA);
     cbdataAdd(err, MEM_NONE);
-#if 0
-    buf = errorBuildBuf(err, &len);
-    comm_write(fd, xstrdup(buf), len, errorSendComplete, err, xfree);
-#else
     rep = errorBuildReply(err);
     comm_write_mbuf(fd, httpReplyPack(rep), errorSendComplete, err);
     httpReplyDestroy(rep);
-#endif
 }
 
 /*
@@ -401,14 +436,14 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'S':
 	/* signature may contain %-escapes, recursion */
-	if (err->type != ERR_SQUID_SIGNATURE) {
-	    const err_type saved_et = err->type;
+	if (err->page_id != ERR_SQUID_SIGNATURE) {
+	    const int saved_id = err->page_id;
 	    MemBuf mb;
-	    err->type = ERR_SQUID_SIGNATURE;
+	    err->page_id = ERR_SQUID_SIGNATURE;
 	    mb = errorBuildContent(err);
 	    snprintf(buf, CVT_BUF_SZ, "%s", mb.buf);
 	    memBufClean(&mb);
-	    err->type = saved_et;
+	    err->page_id = saved_id;
 	} else {
 	    /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
 	    p = "[%S]";
@@ -464,114 +499,22 @@ static MemBuf
 errorBuildContent(ErrorState * err)
 {
     MemBuf content;
-#if 0				/* use MemBuf so we can support recursion;  const pointers: no xstrdup */
-    LOCAL_ARRAY(char, content, ERROR_BUF_SZ);
-    int clen;
-    char *m;
-    char *mx;
-    char *p;
-#endif
     const char *m;
     const char *p;
     const char *t;
     assert(err != NULL);
-    assert(err->type > ERR_NONE && err->type < ERR_MAX);
-#if 0				/* use MemBuf so we can support recursion */
-    mx = m = xstrdup(error_text[err->type]);
-#endif
+    assert(err->page_id > ERR_NONE && err->page_id < error_page_count);
     memBufDefInit(&content);
-    m = error_text[err->type];
+    m = error_text[err->page_id];
     assert(m);
     while ((p = strchr(m, '%'))) {
-#if 0				/* use MemBuf so we can support recursion */
-	*p = '\0';		/* terminate */
-	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);	/* copy */
-	clen += (p - m);	/* advance */
-	if (clen >= ERROR_BUF_SZ)
-	    break;
-	p++;
-	m = p + 1;
-	t = errorConvert(*p, err);	/* convert */
-	xstrncpy(content + clen, t, ERROR_BUF_SZ - clen);	/* copy */
-	clen += strlen(t);	/* advance */
-	if (clen >= ERROR_BUF_SZ)
-	    break;
-#endif
 	memBufAppend(&content, m, p - m);	/* copy */
 	t = errorConvert(*++p, err);	/* convert */
 	memBufPrintf(&content, "%s", t);	/* copy */
 	m = p + 1;		/* advance */
     }
-#if 0				/* use MemBuf so we can support recursion */
-    if (clen < ERROR_BUF_SZ && m != NULL) {
-	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);
-	clen += strlen(m);
-    }
-    if (clen >= ERROR_BUF_SZ) {
-	clen = ERROR_BUF_SZ - 1;
-	*(content + clen) = '\0';
-    }
-    assert(clen == strlen(content));
-    if (len)
-	*len = clen;
-    xfree(mx);
-#endif
     if (*m)
 	memBufPrintf(&content, "%s", m);	/* copy tail */
     assert(content.size == strlen(content.buf));
     return content;
 }
-
-#if 0				/* we use httpReply instead of a buffer now */
-const char *
-errorBuildBuf(ErrorState * err, int *len)
-{
-    LOCAL_ARRAY(char, buf, ERROR_BUF_SZ);
-    LOCAL_ARRAY(char, content, ERROR_BUF_SZ);
-    char *hdr;
-    int clen;
-    int tlen;
-    char *m;
-    char *mx;
-    char *p;
-    const char *t;
-    assert(err != NULL);
-    assert(err->type > ERR_NONE && err->type < ERR_MAX);
-    mx = m = xstrdup(error_text[err->type]);
-    clen = 0;
-    while ((p = strchr(m, '%'))) {
-	*p = '\0';		/* terminate */
-	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);	/* copy */
-	clen += (p - m);	/* advance */
-	if (clen >= ERROR_BUF_SZ)
-	    break;
-	p++;
-	m = p + 1;
-	t = errorConvert(*p, err);	/* convert */
-	xstrncpy(content + clen, t, ERROR_BUF_SZ - clen);	/* copy */
-	clen += strlen(t);	/* advance */
-	if (clen >= ERROR_BUF_SZ)
-	    break;
-    }
-    if (clen < ERROR_BUF_SZ && m != NULL) {
-	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);
-	clen += strlen(m);
-    }
-    if (clen >= ERROR_BUF_SZ) {
-	clen = ERROR_BUF_SZ - 1;
-	*(content + clen) = '\0';
-    }
-    assert(clen == strlen(content));
-    hdr = httpReplyHeader((double) 1.0,
-	err->http_status,
-	"text/html",
-	clen,
-	0,			/* no LMT for error pages */
-	squid_curtime);
-    tlen = snprintf(buf, ERROR_BUF_SZ, "%s\r\n%s", hdr, content);
-    if (len)
-	*len = tlen;
-    xfree(mx);
-    return buf;
-}
-#endif

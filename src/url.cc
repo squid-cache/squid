@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.82 1998/03/03 00:31:17 rousskov Exp $
+ * $Id: url.cc,v 1.83 1998/03/07 23:43:12 rousskov Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -273,7 +273,11 @@ urlParse(method_t method, char *url)
     xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
     request->port = (u_short) port;
+#if OLD_CODE
     xstrncpy(request->urlpath, urlpath, MAX_URL);
+#else
+    stringReset(&request->urlpath, urlpath);
+#endif
     request->max_age = -1;
     request->max_forwards = -1;
     return request;
@@ -287,7 +291,11 @@ urnParse(method_t method, char *urn)
     request = memAllocate(MEM_REQUEST_T);
     request->method = method;
     request->protocol = PROTO_URN;
+#if OLD_CODE
     xstrncpy(request->urlpath, &urn[4], MAX_URL);
+#else
+    stringReset(&request->urlpath, urn+4);
+#endif
     request->max_age = -1;
     request->max_forwards = -1;
     return request;
@@ -301,7 +309,7 @@ urlCanonical(const request_t * request, char *buf)
     if (buf == NULL)
 	buf = urlbuf;
     if (request->protocol == PROTO_URN) {
-	snprintf(buf, MAX_URL, "urn:%s", request->urlpath);
+	snprintf(buf, MAX_URL, "urn:%s", strBuf(request->urlpath));
     } else
 	switch (request->method) {
 	case METHOD_CONNECT:
@@ -317,7 +325,7 @@ urlCanonical(const request_t * request, char *buf)
 		*request->login ? "@" : null_string,
 		request->host,
 		portbuf,
-		request->urlpath);
+		strBuf(request->urlpath));
 	    break;
 	}
     return buf;
@@ -331,7 +339,7 @@ urlCanonicalClean(const request_t * request)
     LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
     char *t;
     if (request->protocol == PROTO_URN) {
-	snprintf(buf, MAX_URL, "urn:%s", request->urlpath);
+	snprintf(buf, MAX_URL, "urn:%s", strBuf(request->urlpath));
     } else
 	switch (request->method) {
 	case METHOD_CONNECT:
@@ -353,7 +361,7 @@ urlCanonicalClean(const request_t * request)
 		loginbuf,
 		request->host,
 		portbuf,
-		request->urlpath);
+		strBuf(request->urlpath));
 	    if ((t = strchr(buf, '?')))
 		*t = '\0';
 	    break;
@@ -378,6 +386,7 @@ requestUnlink(request_t * request)
 	return;
     safe_free(request->headers);
     safe_free(request->body);
+    stringClean(&request->urlpath);
     memFree(MEM_REQUEST_T, request);
 }
 

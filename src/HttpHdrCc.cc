@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.3 1998/03/05 20:55:55 rousskov Exp $
+ * $Id: HttpHdrCc.cc,v 1.4 1998/03/07 23:42:56 rousskov Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -140,7 +140,7 @@ httpHdrCcDestroy(HttpHdrCc * cc)
 }
 
 HttpHdrCc *
-httpHdrCcDup(HttpHdrCc * cc)
+httpHdrCcDup(const HttpHdrCc * cc)
 {
     HttpHdrCc *dup;
     assert(cc);
@@ -151,13 +151,13 @@ httpHdrCcDup(HttpHdrCc * cc)
 }
 
 void
-httpHdrCcPackValueInto(HttpHdrCc * cc, Packer * p)
+httpHdrCcPackValueInto(const HttpHdrCc * cc, Packer * p)
 {
     http_hdr_cc_type flag;
     int pcount = 0;
     assert(cc && p);
     if (cc->max_age >= 0) {
-	packerPrintf(p, "max-age=%d", cc->max_age);
+	packerPrintf(p, "max-age=%d", (int)cc->max_age);
 	pcount++;
     }
     for (flag = 0; flag < CC_ENUM_END; flag++) {
@@ -169,7 +169,7 @@ httpHdrCcPackValueInto(HttpHdrCc * cc, Packer * p)
 }
 
 void
-httpHdrCcJoinWith(HttpHdrCc * cc, HttpHdrCc * new_cc)
+httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc)
 {
     assert(cc && new_cc);
     if (cc->max_age < 0)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.222 1998/03/06 22:19:31 wessels Exp $
+ * $Id: client_side.cc,v 1.223 1998/03/07 23:43:03 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -146,7 +146,11 @@ void
 clientAccessCheckDone(int answer, void *data)
 {
     clientHttpRequest *http = data;
+#if 0
     char *redirectUrl = NULL;
+#else
+    int page_id = -1;
+#endif
     ErrorState *err = NULL;
     HttpReply *rep;
     debug(33, 5) ("clientAccessCheckDone: '%s' answer=%d\n", http->uri, answer);
@@ -167,23 +171,18 @@ clientAccessCheckDone(int answer, void *data)
 	httpReplyDestroy(rep);
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
+	debug(33, 5) ("AclMatchedName = %s\n", AclMatchedName ? AclMatchedName : "<null>");
 	http->log_type = LOG_TCP_DENIED;
 	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
-	redirectUrl = aclGetDenyInfoUrl(&Config.denyInfoList, AclMatchedName);
-	if (redirectUrl) {
-	    err = errorCon(ERR_ACCESS_DENIED, HTTP_MOVED_TEMPORARILY);
-	    err->request = requestLink(http->request);
-	    err->src_addr = http->conn->peer.sin_addr;
-	    err->redirect_url = xstrdup(redirectUrl);
-	    errorAppendEntry(http->entry, err);
-	} else {
-	    /* NOTE: don't use HTTP_UNAUTHORIZED because then the
-	     * stupid browser wants us to authenticate */
-	    err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
-	    err->request = requestLink(http->request);
-	    err->src_addr = http->conn->peer.sin_addr;
-	    errorAppendEntry(http->entry, err);
-	}
+	page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
+	/* NOTE: don't use HTTP_UNAUTHORIZED because then the
+	 * stupid browser wants us to authenticate */
+	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
+	err->request = requestLink(http->request);
+	err->src_addr = http->conn->peer.sin_addr;
+	if (page_id > 0)
+	    err->page_id = page_id;
+	errorAppendEntry(http->entry, err);
     }
 }
 

@@ -1579,16 +1579,16 @@ TYPE: denyinfo
 LOC: Config.denyInfoList
 DEFAULT: none
 DOC_START
-	Usage: deny_info URL acl
+	Usage:   deny_info err_page_name acl
+	Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
-	This can be used to return a HTTP redirect for requests which
+	This can be used to return a ERR_ page for requests which
 	do not pass the 'http_access' rules.  A single ACL will cause
 	the http_access check to fail.  If a 'deny_info' line exists
-	for that ACL then Squid returns a redirect to the given URL.
+	for that ACL then Squid returns a corresponding error page.
 
-	Be sure to make an exception for the site you are referring
-	people to with the 'acl dstdomain' function, otherwise they
-	are going to be refused access to the redirected URL too.
+	You may use ERR_ pages that come with Squid or create your own pages
+	and put them into the configured errors/ directory.
 DOC_END
 
 NAME: memory_pools
