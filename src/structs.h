@@ -1093,9 +1093,6 @@ struct _StoreEntry {
     time_t lastref;
     time_t expires;
     time_t lastmod;
-#if USE_CACHE_DIGESTS
-    time_t refresh;
-#endif
     size_t swap_file_sz;
     u_short refcount;
     u_short flag;
