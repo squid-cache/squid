@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.664 2003/10/21 09:22:59 robertc Exp $
+ * $Id: client_side.cc,v 1.665 2003/10/21 09:30:09 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1082,7 +1082,11 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 #endif
     /* get rid of our range specs on error */
     if (range_err) {
-        /* XXX Why do we do this here, and not when parsing the request ? */
+        /* XXX We do this here because we need canonisation etc. However, this current
+         * code will lead to incorrect store offset requests - the store will have the 
+         * offset data, but we won't be requesting it.
+         * So, we can either re-request, or generate an error
+         */
         debug(33, 3) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
         delete http->request->range;
         http->request->range = NULL;
