@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.7 2003/10/20 11:23:38 robertc Exp $
+ * $Id: stmem.h,v 1.8 2005/04/01 21:11:28 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,6 +65,7 @@ public:
      * as a contianer ourselves 
      */
     const Splay<mem_node *> &getNodes() const;
+    char * NodeGet(mem_node * aNode);
 
     /* Only for use of MemObject */
     void internalAppend(const char *data, int len);

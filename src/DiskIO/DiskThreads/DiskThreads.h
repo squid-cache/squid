@@ -64,6 +64,8 @@ struct squidaio_ctrl_t
     dlink_node node;
 };
 
+void squidaio_init(void);
+void squidaio_shutdown(void);
 int squidaio_cancel(squidaio_result_t *);
 int squidaio_open(const char *, int, mode_t, squidaio_result_t *);
 int squidaio_read(int, char *, int, off_t, int, squidaio_result_t *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.401 2005/03/10 21:49:19 serassio Exp $
+ * $Id: comm.cc,v 1.402 2005/04/01 21:11:28 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2399,12 +2399,22 @@ void CommIO::Initialise() {
     pipe(DonePipe);
     DoneFD = DonePipe[1];
     DoneReadFD = DonePipe[0];
-    fd_open(DonePipe[0], FD_PIPE, "async-io completetion event: main");
-    fd_open(DonePipe[1], FD_PIPE, "async-io completetion event: threads");
-    commSetNonBlocking(DonePipe[0]);
-    commSetNonBlocking(DonePipe[1]);
-    commSetSelect(DonePipe[0], COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    fd_open(DoneReadFD, FD_PIPE, "async-io completetion event: main");
+    fd_open(DoneFD, FD_PIPE, "async-io completetion event: threads");
+    commSetNonBlocking(DoneReadFD);
+    commSetNonBlocking(DoneFD);
+    commSetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
     Initialised = true;
+}
+
+void CommIO::NotifyIOClose() {
+    /* Close done pipe signal */
+    FlushPipe();
+    close(DoneFD);
+    close(DoneReadFD);
+    fd_close(DoneFD);
+    fd_close(DoneReadFD);
+    Initialised = false;
 }
 
 bool CommIO::Initialised = false;

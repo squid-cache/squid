@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: aiops.cc,v 1.2 2005/04/01 21:11:28 serassio Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -74,7 +74,6 @@ typedef struct squidaio_request_t
     mode_t mode;
     int fd;
     char *bufferp;
-    char *tmpbufp;
     int buflen;
     off_t offset;
     int whence;
@@ -113,7 +112,6 @@ struct squidaio_thread_t
     unsigned long requests;
 };
 
-static void squidaio_init(void);
 static void squidaio_queue_request(squidaio_request_t *);
 static void squidaio_cleanup_request(squidaio_request_t *);
 static void *squidaio_thread_loop(void *);
@@ -249,7 +247,7 @@ squidaio_xstrfree(char *str)
         xfree(str);
 }
 
-static void
+void
 squidaio_init(void)
 {
     int i;
@@ -355,6 +353,21 @@ squidaio_init(void)
     squidaio_initialised = 1;
 }
 
+void
+squidaio_shutdown(void)
+{
+    if (!squidaio_initialised)
+        return;
+
+    /* This is the same as in squidaio_sync */
+    do {
+        squidaio_poll_queues();
+    } while (request_queue_len > 0);
+
+    CommIO::NotifyIOClose();
+
+    squidaio_initialised = 0;
+}
 
 static void *
 squidaio_thread_loop(void *ptr)
@@ -623,8 +636,6 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
         break;
 
     case _AIO_OP_WRITE:
-        squidaio_xfree(requestp->tmpbufp, requestp->buflen);
-
         break;
 
     default:
@@ -664,9 +675,6 @@ squidaio_open(const char *path, int oflag, mode_t mode, squidaio_result_t * resu
 {
     squidaio_request_t *requestp;
 
-    if (!squidaio_initialised)
-        squidaio_init();
-
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->path = (char *) squidaio_xstrdup(path);
@@ -701,9 +709,6 @@ int
 squidaio_read(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
-
-    if (!squidaio_initialised)
-        squidaio_init();
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
@@ -745,16 +750,11 @@ squidaio_write(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_
 {
     squidaio_request_t *requestp;
 
-    if (!squidaio_initialised)
-        squidaio_init();
-
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->fd = fd;
 
-    requestp->tmpbufp = (char *) squidaio_xmalloc(bufs);
-
-    xmemcpy(requestp->tmpbufp, bufp, bufs);
+    requestp->bufferp = bufp;
 
     requestp->buflen = bufs;
 
@@ -779,7 +779,7 @@ squidaio_write(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_
 static void
 squidaio_do_write(squidaio_request_t * requestp)
 {
-    requestp->ret = write(requestp->fd, requestp->tmpbufp, requestp->buflen);
+    requestp->ret = write(requestp->fd, requestp->bufferp, requestp->buflen);
     requestp->err = errno;
 }
 
@@ -788,9 +788,6 @@ int
 squidaio_close(int fd, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
-
-    if (!squidaio_initialised)
-        squidaio_init();
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
@@ -823,9 +820,6 @@ int
 squidaio_stat(const char *path, struct stat *sb, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
-
-    if (!squidaio_initialised)
-        squidaio_init();
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
@@ -862,9 +856,6 @@ squidaio_unlink(const char *path, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
 
-    if (!squidaio_initialised)
-        squidaio_init();
-
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
     requestp->path = squidaio_xstrdup(path);
@@ -894,9 +885,6 @@ int
 squidaio_truncate(const char *path, off_t length, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
-
-    if (!squidaio_initialised)
-        squidaio_init();
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
 
@@ -934,9 +922,6 @@ squidaio_opendir(const char *path, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
     int len;
-
-    if (!squidaio_initialised)
-        squidaio_init();
 
     requestp = squidaio_request_pool->alloc();
 

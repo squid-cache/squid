@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.87 2003/10/23 19:59:32 robertc Exp $
+ * $Id: stmem.cc,v 1.88 2005/04/01 21:11:28 serassio Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -40,6 +40,13 @@
 #include "MemObject.h"
 #include "Generic.h"
 
+char *
+mem_hdr::NodeGet(mem_node * aNode)
+{
+    aNode->uses++;
+    return aNode->data;
+}
+
 int
 mem_hdr::lowestOffset () const
 {
@@ -76,7 +83,12 @@ void
 mem_hdr::unlink(mem_node *aNode)
 {
     nodes.remove (aNode, NodeCompare);
-    delete aNode;
+
+    if (!aNode->uses)
+        delete aNode;
+    else
+        aNode->uses--;
+
 }
 
 int
