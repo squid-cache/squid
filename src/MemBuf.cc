@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.18 1998/07/22 20:36:51 wessels Exp $
+ * $Id: MemBuf.cc,v 1.19 1998/07/24 00:58:35 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -248,10 +248,11 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
     /* on Linux and FreeBSD, '\0' is not counted in return value */
     /* on XXX it might be counted */
     /* check that '\0' is appended and not counted */
-    if (!mb->size || mb->buf[mb->size - 1])
+    if (!mb->size || mb->buf[mb->size - 1]) {
 	assert(!mb->buf[mb->size]);
-    else
+    } else {
 	mb->size--;
+    }
 }
 
 /*
