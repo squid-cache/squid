@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.343 1999/01/19 23:17:58 wessels Exp $
+ * $Id: http.cc,v 1.344 1999/01/20 19:27:10 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -90,10 +90,11 @@ httpTimeout(int fd, void *data)
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
-    assert(entry->store_status == STORE_PENDING);
-    if (entry->mem_obj->inmem_hi == 0) {
-	fwdFail(httpState->fwd,
-	    errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+    if (entry->store_status == STORE_PENDING) {
+	if (entry->mem_obj->inmem_hi == 0) {
+	    fwdFail(httpState->fwd,
+		errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+	}
     }
     comm_close(fd);
 }
