@@ -13,5 +13,4 @@ Squid sent the following FTP command:
 and then received this reply
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
-</P>
-
+<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 

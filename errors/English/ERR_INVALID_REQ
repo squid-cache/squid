@@ -28,4 +28,4 @@ Some aspect of the HTTP Request is invalid.  Possible problems:
 <LI>Content-Length missing for POST or PUT requests
 <LI>Illegal character in hostname; underscores are not allowed
 </UL>
-</P>
+<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 

@@ -23,4 +23,4 @@ The system returned:
 <P>
 A Timeout occurred while waiting to read data from the network.  The network
 or server may be down or congested.  Please retry your request.
-</P>
+<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 

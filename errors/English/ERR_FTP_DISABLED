@@ -18,4 +18,4 @@ FTP is Disabled
 
 <P>
 This cache does not support FTP.
-</P>
+<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
