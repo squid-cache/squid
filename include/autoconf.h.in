@@ -386,6 +386,9 @@
 /* Define to 1 if you have the `rint' function. */
 #undef HAVE_RINT
 
+/* Define to 1 if you have the `sbrk' function. */
+#undef HAVE_SBRK
+
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.364 2002/12/27 10:26:33 robertc Exp $
+ * $Id: stat.cc,v 1.365 2003/01/18 02:10:40 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -457,7 +457,7 @@ info_get(StoreEntry * sentry)
 	statCounter.icp.pkts_sent);
     storeAppendPrintf(sentry, "\tNumber of queued ICP replies:\t%u\n",
 	statCounter.icp.replies_queued);
-    storeAppendPrintf(sentry, "\tRequest failure ratio:\t%5.2f%%\n",
+    storeAppendPrintf(sentry, "\tRequest failure ratio:\t%5.2f\n",
 	request_failure_ratio);
 
     storeAppendPrintf(sentry, "\tAverage HTTP requests per minute since start:\t%.1f\n",
@@ -524,6 +524,10 @@ info_get(StoreEntry * sentry)
 	statCPUUsage(5));
     storeAppendPrintf(sentry, "\tCPU Usage, 60 minute avg:\t%.2f%%\n",
 	statCPUUsage(60));
+#if HAVE_SBRK
+    storeAppendPrintf(sentry, "\tProcess Data Segment Size via sbrk(): %d KB\n",
+	(sbrk(0) - sbrk_start) >> 10);
+#endif
     storeAppendPrintf(sentry, "\tMaximum Resident Size: %d KB\n",
 	rusage_maxrss(&rusage));
     storeAppendPrintf(sentry, "\tPage faults with physical i/o: %d\n",
