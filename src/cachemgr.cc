@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.64 1997/11/05 05:29:19 wessels Exp $
+ * $Id: cachemgr.cc,v 1.65 1997/11/12 23:36:23 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -290,7 +290,7 @@ static const char *const op_cmds_descr[] =
     "Network Probe Database",
     "Shutdown Cache",
     "Refresh Object (URL required)",
-    "Persistant Connection Statistics",
+    "Persistent Connection Statistics",
 #ifdef REMOVE_OBJECT
     "Remove Object (URL required)",
 #endif

@@ -590,7 +590,7 @@ DOC_END
 
 
 NAME: mime_table
-TYPE: pathname_stat
+TYPE: string
 DEFAULT: @DEFAULT_MIME_TABLE@
 LOC: Config.mimeTablePathname
 DOC_START
@@ -752,7 +752,7 @@ DOC_END
 
 
 NAME: cache_dns_program
-TYPE: pathname_stat
+TYPE: string
 DEFAULT: @DEFAULT_DNSSERVER@
 LOC: Config.Program.dnsserver
 DOC_START
@@ -797,7 +797,7 @@ DOC_END
 
 
 NAME: unlinkd_program
-TYPE: pathname_stat
+TYPE: string
 DEFAULT: @DEFAULT_UNLINKD@
 LOC: Config.Program.unlinkd
 DOC_START
@@ -819,7 +819,7 @@ DOC_END
 
 
 NAME: redirect_program
-TYPE: pathname_stat
+TYPE: string
 LOC: Config.Program.redirect
 DEFAULT: none
 DOC_START
@@ -828,7 +828,7 @@ DOC_START
 	See the Release-Notes for how to write one.
 	By default, the redirector is not used.
 
-redirect_program /bin/false
+redirect_program none
 DOC_END
 
 
@@ -1386,7 +1386,7 @@ announce_port 3131
 DOC_END
 
 NAME: announce_file
-TYPE: pathname_stat
+TYPE: string
 DEFAULT: /dev/null
 LOC: Config.Announce.file
 DOC_NONE
@@ -1862,7 +1862,7 @@ fake_user_agent none
 DOC_END
 
 NAME: icon_directory
-TYPE: pathname_stat
+TYPE: string
 LOC: Config.icons.directory
 DEFAULT: @DEFAULT_ICON_DIR@
 DOC_START
@@ -1870,7 +1870,7 @@ DOC_START
 DOC_END
 
 NAME: error_directory
-TYPE: pathname_stat
+TYPE: string
 LOC: Config.errorDirectory
 DEFAULT: @DEFAULT_ERROR_DIR@
 DOC_START

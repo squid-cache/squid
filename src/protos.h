@@ -75,11 +75,6 @@ extern char *clientConstructTraceEcho(clientHttpRequest *);
 extern void clientPurgeRequest(clientHttpRequest *);
 extern int checkNegativeHit(StoreEntry *);
 
-#if USE_PROXY_AUTH
-extern const char *proxyAuthenticate(const char *headers);
-#endif /* USE_PROXY_AUTH */
-
-
 extern int commSetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
 extern int comm_accept(int fd, struct sockaddr_in *, struct sockaddr_in *);
