@@ -133,7 +133,7 @@ storeCheckSwapOut(StoreEntry * e)
     new_mem_lo = lowest_offset;
     if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
 	if (!EBIT_TEST(e->flag, KEY_PRIVATE))
-	    debug(20, 0) ("storeCheckSwapOut: Attempt to swap out a non-cacheable non-private object!\n");
+	    debug(20, 3) ("storeCheckSwapOut: Attempt to swap out a non-cacheable non-private object!\n");
 	stmemFreeDataUpto(mem->data, new_mem_lo);
 	mem->inmem_lo = new_mem_lo;
 	return;
