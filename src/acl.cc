@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.74 1997/01/13 23:09:44 wessels Exp $
+ * $Id: acl.cc,v 1.75 1997/01/14 19:50:05 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -59,15 +59,15 @@ static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
 static int aclMatchIdent _PARAMS((wordlist * data, const char *ident));
-static intlist *aclParseIntlist _PARAMS((void));
-static struct _acl_ip_data *aclParseIpList _PARAMS((void));
-static intlist *aclParseMethodList _PARAMS((void));
-static intlist *aclParseProtoList _PARAMS((void));
-static struct _acl_time_data *aclParseTimeSpec _PARAMS((void));
-static wordlist *aclParseWordList _PARAMS((void));
-static wordlist *aclParseDomainList _PARAMS((void));
 static squid_acl aclType _PARAMS((const char *s));
 static int decode_addr _PARAMS((const char *, struct in_addr *, struct in_addr *));
+static void aclParseIpList _PARAMS((void *curlist));
+static void aclParseDomainList _PARAMS((void *curlist));
+static void aclParseIntlist _PARAMS((void *curlist));
+static void aclParseWordList _PARAMS((void *curlist));
+static void aclParseProtoList _PARAMS((void *curlist));
+static void aclParseMethodList _PARAMS((void *curlist));
+static void aclParseTimeSpec _PARAMS((void *curlist));
 
 char *
 strtokFile(void)
@@ -153,52 +153,49 @@ aclFindByName(const char *name)
 }
 
 
-static intlist *
-aclParseIntlist(void)
+static void
+aclParseIntlist(void *curlist)
 {
-    intlist *head = NULL;
-    intlist **Tail = &head;
+    intlist **Tail;
     intlist *q = NULL;
     char *t = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = atoi(t);
 	*(Tail) = q;
 	Tail = &q->next;
     }
-    return head;
 }
 
-static intlist *
-aclParseProtoList(void)
+static void
+aclParseProtoList(void *curlist)
 {
-    intlist *head = NULL;
-    intlist **Tail = &head;
+    intlist **Tail;
     intlist *q = NULL;
     char *t = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = (int) urlParseProtocol(t);
 	*(Tail) = q;
 	Tail = &q->next;
     }
-    return head;
 }
 
-static intlist *
-aclParseMethodList(void)
+static void
+aclParseMethodList(void *curlist)
 {
-    intlist *head = NULL;
-    intlist **Tail = &head;
+    intlist **Tail;
     intlist *q = NULL;
     char *t = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = (int) urlParseMethod(t);
 	*(Tail) = q;
 	Tail = &q->next;
     }
-    return head;
 }
 
 /* Decode a ascii representation (asc) of a IP adress, and place
@@ -286,7 +283,7 @@ aclParseIpData(const char *t)
 	addr2[0] = '\0';
 	mask[0] = '\0';
     } else {
-	debug(28, 0, "aclParseIpList: Bad host/IP: '%s'\n", t);
+	debug(28, 0, "aclParseIpData: Bad host/IP: '%s'\n", t);
 	safe_free(q);
 	return NULL;
     }
@@ -294,7 +291,7 @@ aclParseIpData(const char *t)
     if (!decode_addr(addr1, &q->addr1, &q->mask)) {
 	debug(28, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
+	debug(28, 0, "aclParseIpData: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
 	safe_free(q);
 	return NULL;
     }
@@ -302,7 +299,7 @@ aclParseIpData(const char *t)
     if (*addr2 && !decode_addr(addr2, &q->addr2, &q->mask)) {
 	debug(28, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
+	debug(28, 0, "aclParseIpData: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
 	safe_free(q);
 	return NULL;
     }
@@ -310,7 +307,7 @@ aclParseIpData(const char *t)
     if (*mask && !decode_addr(mask, &q->mask, NULL)) {
 	debug(28, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
+	debug(28, 0, "aclParseIpData: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
 	safe_free(q);
 	return NULL;
     }
@@ -320,58 +317,58 @@ aclParseIpData(const char *t)
     return q;
 }
 
-static struct _acl_ip_data *
-aclParseIpList(void)
+static void
+aclParseIpList(void *curlist)
 {
     char *t = NULL;
-    struct _acl_ip_data *head = NULL;
-    struct _acl_ip_data **Tail = &head;
+    struct _acl_ip_data **Tail;
     struct _acl_ip_data *q = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	if ((q = aclParseIpData(t)) == NULL)
 	    continue;
 	*(Tail) = q;
 	Tail = &q->next;
     }
-    return head;
 }
 
-static struct _acl_time_data *
-aclParseTimeSpec(void)
+static void
+aclParseTimeSpec(void *curlist)
 {
-    struct _acl_time_data *data = NULL;
+    struct _acl_time_data *q = NULL;
+    struct _acl_time_data **Tail;
     int h1, m1, h2, m2;
     char *t = NULL;
-
-    data = xcalloc(1, sizeof(struct _acl_time_data));
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    q = xcalloc(1, sizeof(struct _acl_time_data));
     while ((t = strtokFile())) {
 	if (*t < '0' || *t > '9') {
 	    /* assume its day-of-week spec */
 	    while (*t) {
 		switch (*t++) {
 		case 'S':
-		    data->weekbits |= ACL_SUNDAY;
+		    q->weekbits |= ACL_SUNDAY;
 		    break;
 		case 'M':
-		    data->weekbits |= ACL_MONDAY;
+		    q->weekbits |= ACL_MONDAY;
 		    break;
 		case 'T':
-		    data->weekbits |= ACL_TUESDAY;
+		    q->weekbits |= ACL_TUESDAY;
 		    break;
 		case 'W':
-		    data->weekbits |= ACL_WEDNESDAY;
+		    q->weekbits |= ACL_WEDNESDAY;
 		    break;
 		case 'H':
-		    data->weekbits |= ACL_THURSDAY;
+		    q->weekbits |= ACL_THURSDAY;
 		    break;
 		case 'F':
-		    data->weekbits |= ACL_FRIDAY;
+		    q->weekbits |= ACL_FRIDAY;
 		    break;
 		case 'A':
-		    data->weekbits |= ACL_SATURDAY;
+		    q->weekbits |= ACL_SATURDAY;
 		    break;
 		case 'D':
-		    data->weekbits |= ACL_WEEKDAYS;
+		    q->weekbits |= ACL_WEEKDAYS;
 		    break;
 		default:
 		    debug(28, 0, "%s line %d: %s\n",
@@ -388,38 +385,39 @@ aclParseTimeSpec(void)
 		    cfg_filename, config_lineno, config_input_line);
 		debug(28, 0, "aclParseTimeSpec: Bad time range '%s'\n",
 		    t);
-		xfree(&data);
-		return NULL;
+		xfree(q);
+		return;
 	    }
-	    data->start = h1 * 60 + m1;
-	    data->stop = h2 * 60 + m2;
-	    if (data->start > data->stop) {
+	    q->start = h1 * 60 + m1;
+	    q->stop = h2 * 60 + m2;
+	    if (q->start > q->stop) {
 		debug(28, 0, "%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
 		debug(28, 0, "aclParseTimeSpec: Reversed time range '%s'\n",
 		    t);
-		xfree(&data);
-		return NULL;
+		xfree(q);
+		return;
 	    }
 	}
     }
-    if (data->start == 0 && data->stop == 0)
-	data->stop = 23 * 60 + 59;
-    if (data->weekbits == 0)
-	data->weekbits = ACL_ALLWEEK;
-    return data;
+    if (q->start == 0 && q->stop == 0)
+	q->stop = 23 * 60 + 59;
+    if (q->weekbits == 0)
+	q->weekbits = ACL_ALLWEEK;
+    *(Tail) = q;
+    Tail = &q->next;
 }
 
-struct _relist *
-aclParseRegexList(int icase)
+void
+aclParseRegexList(void *curlist, int icase)
 {
-    relist *head = NULL;
-    relist **Tail = &head;
+    relist **Tail;
     relist *q = NULL;
     char *t = NULL;
     regex_t comp;
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     if (icase)
 	flags |= REG_ICASE;
     while ((t = strtokFile())) {
@@ -438,32 +436,31 @@ aclParseRegexList(int icase)
 	*(Tail) = q;
 	Tail = &q->next;
     }
-    return head;
 }
 
-static wordlist *
-aclParseWordList(void)
+static void
+aclParseWordList(void *curlist)
 {
-    wordlist *head = NULL;
-    wordlist **Tail = &head;
+    wordlist **Tail;
     wordlist *q = NULL;
     char *t = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	q = xcalloc(1, sizeof(wordlist));
 	q->key = xstrdup(t);
 	*(Tail) = q;
 	Tail = &q->next;
     }
-    return head;
 }
 
-static wordlist *
-aclParseDomainList(void)
+
+static void
+aclParseDomainList(void *curlist)
 {
-    wordlist *head = NULL;
-    wordlist **Tail = &head;
+    wordlist **Tail;
     wordlist *q = NULL;
     char *t = NULL;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	Tolower(t);
 	q = xcalloc(1, sizeof(wordlist));
@@ -471,7 +468,6 @@ aclParseDomainList(void)
 	*(Tail) = q;
 	Tail = &q->next;
     }
-    return head;
 }
 
 
@@ -481,76 +477,82 @@ aclParseAclLine(void)
     /* we're already using strtok() to grok the line */
     char *t = NULL;
     struct _acl *A = NULL;
+    LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
+    squid_acl acltype;
 
-    A = xcalloc(1, sizeof(struct _acl));
     /* snarf the ACL name */
     if ((t = strtok(NULL, w_space)) == NULL) {
 	debug(28, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAclLine: missing ACL name.\n");
-	xfree(A);
 	return;
     }
-    if (aclFindByName(t)) {
-	debug(28, 0, "%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0, "aclParseAclLine: ACL name '%s' already exists.\n", t);
-	xfree(A);
-	return;
-    }
-    xstrncpy(A->name, t, ACL_NAME_SZ);
+    xstrncpy(aclname, t, ACL_NAME_SZ);
     /* snarf the ACL type */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	xfree(A);
 	debug(28, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAclLine: missing ACL type.\n");
 	return;
     }
-    switch (A->type = aclType(t)) {
-    case ACL_SRC_IP:
-    case ACL_DST_IP:
-	A->data = (void *) aclParseIpList();
-	break;
-    case ACL_SRC_DOMAIN:
-    case ACL_DST_DOMAIN:
-	A->data = (void *) aclParseDomainList();
-	break;
-    case ACL_TIME:
-	A->data = (void *) aclParseTimeSpec();
-	break;
-    case ACL_URL_REGEX:
-    case ACL_URLPATH_REGEX:
-	A->data = (void *) aclParseRegexList(0);
-	break;
-    case ACL_URL_PORT:
-	A->data = (void *) aclParseIntlist();
-	break;
-    case ACL_USER:
-	Config.identLookup = 1;
-	A->data = (void *) aclParseWordList();
-	break;
-    case ACL_PROTO:
-	A->data = (void *) aclParseProtoList();
-	break;
-    case ACL_METHOD:
-	A->data = (void *) aclParseMethodList();
-	break;
-    case ACL_BROWSER:
-	A->data = (void *) aclParseRegexList(0);
-	break;
-    case ACL_NONE:
-    default:
+    if ((acltype = aclType(t)) == ACL_NONE) {
 	debug(28, 0, "%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAclLine: Invalid ACL type '%s'\n", t);
-	xfree(A);
 	return;
-	/* NOTREACHED */
     }
-    A->cfgline = xstrdup(config_input_line);
-    *AclListTail = A;
-    AclListTail = &A->next;
+
+    if ((A = aclFindByName(t)) == NULL) {
+        A = xcalloc(1, sizeof(struct _acl));
+	xstrncpy(A->name, aclname, ACL_NAME_SZ);
+	A->type = acltype;
+        A->cfgline = xstrdup(config_input_line);
+        *AclListTail = A;
+        AclListTail = &A->next;
+    } else {
+        if (acltype != A->type) {
+	    debug(28, 0, "aclParseAclLine: ACL '%s' already exists with different type, skipping.\n", A->name);
+	    return;
+	}
+	debug(28, 0, "aclParseAclLine: Appending to '%s'\n", aclname);
+    }
+    switch (A->type) {
+    case ACL_SRC_IP:
+    case ACL_DST_IP:
+	aclParseIpList(&(A->data));
+	break;
+    case ACL_SRC_DOMAIN:
+    case ACL_DST_DOMAIN:
+	aclParseDomainList(&A->data);
+	break;
+    case ACL_TIME:
+	aclParseTimeSpec(&A->data);
+	break;
+    case ACL_URL_REGEX:
+    case ACL_URLPATH_REGEX:
+	aclParseRegexList(&A->data, 0);
+	break;
+    case ACL_URL_PORT:
+	aclParseIntlist(&A->data);
+	break;
+    case ACL_USER:
+	Config.identLookup = 1;
+	aclParseWordList(&A->data);
+	break;
+    case ACL_PROTO:
+	aclParseProtoList(&A->data);
+	break;
+    case ACL_METHOD:
+	aclParseMethodList(&A->data);
+	break;
+    case ACL_BROWSER:
+	aclParseRegexList(&A->data, 0);
+	break;
+    case ACL_NONE:
+    default:
+	debug_trap("Bad ACL type");
+	break;
+    }
 }
 
 /* maex@space.net (06.09.96)
