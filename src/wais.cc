@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.62 1997/03/04 05:16:45 wessels Exp $
+ * $Id: wais.cc,v 1.63 1997/04/28 04:23:34 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -116,6 +116,7 @@ typedef struct {
     int relayport;
     char *mime_hdr;
     char request[MAX_URL];
+    int ip_lookup_pending;
 } WaisStateData;
 
 static int waisStateFree _PARAMS((int, WaisStateData *));
@@ -134,6 +135,8 @@ waisStateFree(int fd, WaisStateData * waisState)
     if (waisState == NULL)
 	return 1;
     storeUnlockObject(waisState->entry);
+    if (waisState->ip_lookup_pending)
+	ipcache_unregister(waisState->relayhost, waisState->fd);
     xfree(waisState);
     return 0;
 }
@@ -373,6 +376,7 @@ waisStartComplete(void *data, int status)
     comm_add_close_handler(waisState->fd,
 	(PF) waisStateFree,
 	(void *) waisState);
+    waisState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(waisState->relayhost,
 	waisState->fd,
 	waisConnect,
@@ -384,6 +388,7 @@ static void
 waisConnect(int fd, const ipcache_addrs * ia, void *data)
 {
     WaisStateData *waisState = data;
+    waisState->ip_lookup_pending = 0;
     if (!ipcache_gethostbyname(waisState->relayhost, 0)) {
 	debug(24, 4, "waisstart: Unknown host: %s\n", waisState->relayhost);
 	squid_error_entry(waisState->entry, ERR_DNS_FAIL, dns_error_message);

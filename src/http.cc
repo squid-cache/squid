@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.153 1997/03/04 05:16:31 wessels Exp $
+ * $Id: http.cc,v 1.154 1997/04/28 04:23:11 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -240,6 +240,8 @@ httpStateFree(int fd, void *data)
 	put_free_8k_page(httpState->reply_hdr);
 	httpState->reply_hdr = NULL;
     }
+    if (httpState->ip_lookup_pending)
+	ipcache_unregister(httpState->request->host, httpState->fd);
     requestUnlink(httpState->request);
     requestUnlink(httpState->orig_request);
     xfree(httpState);
@@ -607,8 +609,8 @@ httpReadReply(int fd, void *data)
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
-    comm_set_fd_lifetime(fd, 86400);	/* extend after good read */
     if (len > 0) {
+	comm_set_fd_lifetime(fd, 86400);	/* extend after good read */
 	IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -726,8 +728,8 @@ httpBuildRequestHeader(request_t * request,
     size_t out_sz,
     int cfd)
 {
+    LOCAL_ARRAY(char, ybuf, MAX_URL + 32);
     char *xbuf = get_free_4k_page();
-    char *ybuf = get_free_8k_page();
     char *viabuf = get_free_4k_page();
     char *fwdbuf = get_free_4k_page();
     char *t = NULL;
@@ -815,7 +817,6 @@ httpBuildRequestHeader(request_t * request,
     }
     httpAppendRequestHeader(hdr_out, null_string, &len, out_sz);
     put_free_4k_page(xbuf);
-    put_free_8k_page(ybuf);
     put_free_4k_page(viabuf);
     put_free_4k_page(fwdbuf);
     if (in_len)
@@ -940,8 +941,9 @@ proxyhttpStartComplete(void *data, int status)
     httpState->request = requestLink(request);
     httpState->neighbor = e;
     httpState->orig_request = requestLink(orig_request);
+    httpState->fd = sock;
     /* register the handler to free HTTP state data when the FD closes */
-    comm_add_close_handler(sock,
+    comm_add_close_handler(httpState->fd,
 	httpStateFree,
 	(void *) httpState);
     request->method = orig_request->method;
@@ -949,8 +951,9 @@ proxyhttpStartComplete(void *data, int status)
     request->port = e->http_port;
     xstrncpy(request->urlpath, url, MAX_URL);
     BIT_SET(request->flags, REQ_PROXYING);
+    httpState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(request->host,
-	sock,
+	httpState->fd,
 	httpConnect,
 	httpState);
     return;
@@ -962,6 +965,7 @@ httpConnect(int fd, const ipcache_addrs * ia, void *data)
     HttpStateData *httpState = data;
     request_t *request = httpState->request;
     StoreEntry *entry = httpState->entry;
+    httpState->ip_lookup_pending = 0;
     if (ia == NULL) {
 	debug(11, 4, "httpConnect: Unknown host: %s\n", request->host);
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
@@ -1057,11 +1061,13 @@ httpStartComplete(void *data, int status)
     httpState->req_hdr = req_hdr;
     httpState->req_hdr_sz = req_hdr_sz;
     httpState->request = requestLink(request);
-    comm_add_close_handler(sock,
+    httpState->fd = sock;
+    comm_add_close_handler(httpState->fd,
 	httpStateFree,
 	(void *) httpState);
+    httpState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(request->host,
-	sock,
+	httpState->fd,
 	httpConnect,
 	httpState);
 }

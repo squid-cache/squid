@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.43 1997/03/29 04:45:20 wessels Exp $
+ * $Id: ssl.cc,v 1.44 1997/04/28 04:23:27 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -46,6 +46,7 @@ typedef struct {
     time_t timeout;
     int *size_ptr;		/* pointer to size in an icpStateData for logging */
     int proxying;
+    int ip_lookup_pending;
 } SslStateData;
 
 static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
@@ -118,6 +119,8 @@ sslStateFree(int fd, void *data)
     safe_free(sslState->client.buf);
     xfree(sslState->url);
     requestUnlink(sslState->request);
+    if (sslState->ip_lookup_pending)
+	ipcache_unregister(sslState->host, sslState->server.fd);
     safe_free(sslState);
 }
 
@@ -337,6 +340,7 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
     SslStateData *sslState = data;
     request_t *request = sslState->request;
     char *buf = NULL;
+    sslState->ip_lookup_pending = 0;
     if (ia == NULL) {
 	debug(26, 4, "sslConnect: Unknown host: %s\n", sslState->host);
 	buf = squid_error_url(sslState->url,
@@ -500,6 +504,7 @@ sslPeerSelectComplete(peer * p, void *data)
     } else {
 	sslState->port = CACHE_HTTP_PORT;
     }
+    sslState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(sslState->host,
 	sslState->server.fd,
 	sslConnect,

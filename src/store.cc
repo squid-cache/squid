@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.221 1997/04/25 22:01:18 wessels Exp $
+ * $Id: store.cc,v 1.222 1997/04/28 04:23:30 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -251,9 +251,8 @@ static const char *storeDescribeStatus _PARAMS((const StoreEntry *));
 static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
-static int compareBucketOrder _PARAMS((struct _bucketOrder *,
-	struct _bucketOrder *));
-static int storeCheckExpired _PARAMS((const StoreEntry *));
+static int compareBucketOrder _PARAMS((struct _bucketOrder *, struct _bucketOrder *));
+static int storeCheckExpired _PARAMS((const StoreEntry *, int flag));
 static int storeCheckPurgeMem _PARAMS((const StoreEntry *));
 static int storeClientListSearch _PARAMS((const MemObject *, int));
 static int storeCopy _PARAMS((const StoreEntry *, int, int, char *, int *));
@@ -304,6 +303,8 @@ static void storeValidate _PARAMS((StoreEntry *, void (*)(), void *));
 static void storeValidateComplete _PARAMS((void *data, int, int));
 static void storeRebuiltFromDisk _PARAMS((struct storeRebuildState * data));
 static unsigned int getKeyCounter _PARAMS((void));
+static void storePutUnusedFileno _PARAMS((int fileno));
+static int storeGetUnusedFileno _PARAMS((void));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -621,10 +622,14 @@ storeUnlockObject(StoreEntry * e)
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
+#ifdef COMPLAIN
 	debug_trap("storeUnlockObject: Someone unlocked STORE_PENDING object");
 	debug(20, 1, "   --> Key '%s'\n", e->key);
+#endif
 	e->store_status = STORE_ABORTED;
     }
+    if (storePendingNClients(e) > 0)
+	debug_trap("storeUnlockObject: unlocked entry with pending clients\n");
     if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
 	storeRelease(e);
     } else if (BIT_TEST(e->flag, ABORT_MSG_PENDING)) {
@@ -1231,7 +1236,7 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	file_close(fd);
 	if (e->swap_file_number != -1) {
 	    storeDirMapBitReset(e->swap_file_number);
-	    safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 0);
+	    storePutUnusedFileno(e->swap_file_number);
 	    e->swap_file_number = -1;
 	}
 	storeRelease(e);
@@ -1303,7 +1308,8 @@ storeSwapOutStart(StoreEntry * e)
 {
     swapout_ctrl_t *ctrlp;
     LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN);
-    swapfileno = storeDirMapAllocate();
+    if ((swapfileno = storeGetUnusedFileno()) < 0)
+	swapfileno = storeDirMapAllocate();
     storeSwapFullPath(swapfileno, swapfilename);
     ctrlp = xmalloc(sizeof(swapout_ctrl_t));
     ctrlp->swapfilename = xstrdup(swapfilename);
@@ -1383,6 +1389,7 @@ static void
 storeDoRebuildFromDisk(void *data)
 {
     struct storeRebuildState *RB = data;
+    LOCAL_ARRAY(char, swapfile, MAXPATHLEN);
     LOCAL_ARRAY(char, url, MAX_URL);
     StoreEntry *e = NULL;
     time_t expires;
@@ -1398,6 +1405,9 @@ storeDoRebuildFromDisk(void *data)
     int x;
     struct _rebuild_dir *d;
     struct _rebuild_dir **D;
+    int used;			/* is swapfile already in use? */
+    int newer;			/* is the log entry newer than current entry? */
+
     /* load a number of objects per invocation */
     if ((d = RB->rebuild_dir) == NULL) {
 	storeRebuiltFromDisk(RB);
@@ -1436,8 +1446,13 @@ storeDoRebuildFromDisk(void *data)
 	    &scan3,		/* last modified */
 	    &scan4,		/* size */
 	    url);		/* url */
-	if (x != 6)
+	if (x < 1)
 	    continue;
+	storeSwapFullPath(sfileno, swapfile);
+	if (x != 6) {
+	    storePutUnusedFileno(sfileno);
+	    continue;
+	}
 	if (sfileno < 0)
 	    continue;
 	sfileno = storeDirProperFileno(d->dirn, sfileno);
@@ -1458,16 +1473,51 @@ storeDoRebuildFromDisk(void *data)
 	    RB->objcount--;
 	    RB->dupcount++;
 	}
-	/* Is the swap file number already taken? */
-	if (storeDirMapBitTest(sfileno)) {
-	    /* Yes it is, we can't use this swapfile */
-	    debug(20, 2, "storeRebuildFromDisk: Line %d Active clash: file #%d\n",
-		RB->linecount,
-		sfileno);
-	    debug(20, 3, "storeRebuildFromDisk: --> '%s'\n", url);
-	    /* don't unlink the file!  just skip this log entry */
+	e = storeGet(url);
+	used = storeDirMapBitTest(sfileno);
+	/* If this URL already exists in the cache, does the swap log
+	 * appear to have a newer entry?  Compare 'timestamp' from the
+	 * swap log to e->lastref.  Note, we can't compare e->timestamp
+	 * because it is the Date: header from the HTTP reply and
+	 * doesn't really tell us when the object was added to the
+	 * cache. */
+	newer = e ? (timestamp > e->lastref ? 1 : 0) : 0;
+	if (used && !newer) {
+	    /* log entry is old, ignore it */
 	    RB->clashcount++;
 	    continue;
+	} else if (used && e && e->swap_file_number == sfileno) {
+	    /* swapfile taken, same URL, newer, update meta */
+	    e->lastref = timestamp;
+	    e->timestamp = timestamp;
+	    e->expires = expires;
+	    e->lastmod = lastmod;
+	    continue;
+	} else if (used) {
+	    /* swapfile in use, not by this URL, log entry is newer */
+	    /* This is sorta bad: the log entry should NOT be newer at this
+	     * point.  If the log is dirty, the filesize check should have
+	     * caught this.  If the log is clean, there should never be a
+	     * newer entry. */
+	    debug(20, 1, "WARNING: newer swaplog entry for fileno %08X\n",
+		sfileno);
+	    /* I'm tempted to remove the swapfile here just to be safe,
+	     * but there is a bad race condition in the NOVM version if
+	     * the swapfile has recently been opened for writing, but
+	     * not yet opened for reading.  Because we can't map
+	     * swapfiles back to StoreEntrys, we don't know the state
+	     * of the entry using that file.  */
+	    RB->clashcount++;
+	    continue;
+	} else if (e) {
+	    /* URL already exists, this swapfile not being used */
+	    /* junk old, load new */
+	    storeRelease(e);	/* release old entry */
+	    RB->dupcount++;
+	} else {
+	    /* URL doesnt exist, swapfile not in use */
+	    /* load new */
+	    (void) 0;
 	}
 	/* update store_swap_size */
 	storeDirUpdateSwapSize(sfileno, size, 1);
@@ -1821,7 +1871,7 @@ storePurgeOld(void *unused)
 	}
 	if ((n & 0xFFF) == 0)
 	    debug(20, 2, "storeWalkThrough: %7d objects so far.\n", n);
-	if (storeCheckExpired(e))
+	if (storeCheckExpired(e, 1))
 	    count += storeRelease(e);
     }
     debug(20, 0, "storePurgeOld: Removed %d objects\n", count);
@@ -1860,7 +1910,7 @@ storeGetMemSpace(int size)
 	    break;
 	if (storeEntryLocked(e))
 	    continue;
-	if (storeCheckExpired(e)) {
+	if (storeCheckExpired(e, 0)) {
 	    debug(20, 2, "storeGetMemSpace: Expired: %s\n", e->url);
 	    n_expired++;
 	    storeRelease(e);
@@ -1973,7 +2023,6 @@ storeGetSwapSpace(int size)
     StoreEntry *e = NULL;
     int scanned = 0;
     int removed = 0;
-    int expired = 0;
     int locked = 0;
     int locked_size = 0;
     int list_count = 0;
@@ -2000,12 +2049,10 @@ storeGetSwapSpace(int size)
     LRU_list = xcalloc(max_list_count, sizeof(StoreEntry *));
     /* remove expired objects until recover enough or no expired objects */
     for (i = 0; i < store_buckets; i++) {
-	int expired_in_one_bucket = 0;
 	link_ptr = hash_get_bucket(store_table, storeGetBucketNum());
 	if (link_ptr == NULL)
 	    continue;
-	/* this while loop handles one bucket of hash table */
-	expired_in_one_bucket = 0;
+	/* this for loop handles one bucket of hash table */
 	for (; link_ptr; link_ptr = next) {
 	    if (list_count == max_list_count)
 		break;
@@ -2014,9 +2061,9 @@ storeGetSwapSpace(int size)
 	    e = (StoreEntry *) link_ptr;
 	    if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
 		continue;
-	    if (storeCheckExpired(e)) {
+	    if (storeCheckExpired(e, 0)) {
 		debug(20, 3, "storeGetSwapSpace: Expired '%s'\n", e->url);
-		expired_in_one_bucket += storeRelease(e);
+		storeRelease(e);
 	    } else if (!storeEntryLocked(e)) {
 		*(LRU_list + list_count) = e;
 		list_count++;
@@ -2025,18 +2072,7 @@ storeGetSwapSpace(int size)
 		locked++;
 		locked_size += e->mem_obj->e_current_len;
 	    }
-	}			/* while, end of one bucket of hash table */
-	expired += expired_in_one_bucket;
-	if (expired_in_one_bucket &&
-	    ((!fReduceSwap && (store_swap_size + kb_size <= store_swap_high)) ||
-		(fReduceSwap && (store_swap_size + kb_size <= store_swap_low)))
-	    ) {
-	    fReduceSwap = 0;
-	    safe_free(LRU_list);
-	    debug(20, 2, "storeGetSwapSpace: Finished, %d objects expired.\n",
-		expired);
-	    return 0;
-	}
+	}			/* for, end of one bucket of hash table */
 	qsort((char *) LRU_list,
 	    list_count,
 	    sizeof(StoreEntry *),
@@ -2158,7 +2194,7 @@ storeRelease(StoreEntry * e)
 	debug(20, 5, "storeRelease: Release anonymous object\n");
 
     if (e->swap_status == SWAP_OK && (e->swap_file_number > -1)) {
-	(void) safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
+	storePutUnusedFileno(e->swap_file_number);
 	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
 	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
@@ -2187,33 +2223,25 @@ storeEntryLocked(const StoreEntry * e)
     return 0;
 }
 
-/*  use this for internal call only */
 static int
 storeCopy(const StoreEntry * e, int stateoffset, int maxSize, char *buf, int *size)
 {
-    int available_to_write = 0;
-
-    available_to_write = e->mem_obj->e_current_len - stateoffset;
-
-    if (stateoffset < e->mem_obj->e_lowest_offset) {
-	/* this should not happen. Logic race !!! */
-	debug(20, 1, "storeCopy: Client Request a chunk of data in area lower than the lowest_offset\n");
-	debug(20, 1, "           Current Lowest offset : %d\n", e->mem_obj->e_lowest_offset);
-	debug(20, 1, "           Requested offset      : %d\n", stateoffset);
-	/* can't really do anything here. Client may hang until lifetime runout. */
-	return 0;
+    int available;
+    MemObject *mem = e->mem_obj;
+    int s;
+    if (stateoffset < mem->e_lowest_offset) {
+	debug_trap("storeCopy: requested offset < e_lowest_offset");
+	return *size = 0;
     }
-    *size = (available_to_write >= maxSize) ?
-	maxSize : available_to_write;
-
-    debug(20, 6, "storeCopy: avail_to_write=%d, store_offset=%d\n",
-	*size, stateoffset);
-
-    if (*size > 0)
-	if (e->mem_obj->data->mem_copy(e->mem_obj->data, stateoffset, buf, *size) < 0)
-	    return -1;
-
-    return *size;
+    s = available = mem->e_current_len - stateoffset;
+    if (s < 0)
+	fatal_dump("storeCopy: offset > e_current_len");
+    if (s > maxSize)
+	s = maxSize;
+    debug(20, 6, "storeCopy: copying %d bytes at offset %d\n", s, stateoffset);
+    if (s > 0)
+	(void) mem->data->mem_copy(mem->data, stateoffset, buf, s);
+    return *size = s;
 }
 
 /* check if there is any client waiting for this object at all */
@@ -2264,6 +2292,8 @@ storeClientListAdd(StoreEntry * e, int fd, int last_offset)
 	    mem->clients[i].fd = -1;
     }
     for (i = 0; i < mem->nclients; i++) {
+	if (mem->clients[i].fd == fd)
+	    return i;		/* its already here */
 	if (mem->clients[i].fd == -1)
 	    break;
     }
@@ -2520,7 +2550,7 @@ storeMaintainSwapSpace(void *unused)
 		scan_obj++;
 		next = link_ptr->next;
 		e = (StoreEntry *) link_ptr;
-		if (!storeCheckExpired(e))
+		if (!storeCheckExpired(e, 1))
 		    continue;
 		rm_obj += storeRelease(e);
 	    }
@@ -2742,14 +2772,16 @@ storeCheckPurgeMem(const StoreEntry * e)
 }
 
 static int
-storeCheckExpired(const StoreEntry * e)
+storeCheckExpired(const StoreEntry * e, int check_lru_age)
 {
-    time_t max_age = storeExpiredReferenceAge();
+    time_t max_age;
     if (storeEntryLocked(e))
 	return 0;
     if (BIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
-    if (max_age <= 0)
+    if (!check_lru_age)
+	return 0;
+    if ((max_age = storeExpiredReferenceAge()) <= 0)
 	return 0;
     if (squid_curtime - e->lastref > max_age)
 	return 1;
@@ -2759,12 +2791,13 @@ storeCheckExpired(const StoreEntry * e)
 /* 
  * storeExpiredReferenceAge
  *
- * The LRU age is scaled exponentially between 1 minute and 1 year, when
- * store_swap_low < store_swap_size < store_swap_high.  This keeps
- * store_swap_size within the low and high water marks.  If the cache is
- * very busy then store_swap_size stays closer to the low water mark, if
- * it is not busy, then it will stay near the high water mark.  The LRU
- * age value can be examined on the cachemgr 'info' page.
+ * The LRU age is scaled exponentially between 1 minute and
+ * Config.referenceAge , when store_swap_low < store_swap_size <
+ * store_swap_high.  This keeps store_swap_size within the low and high
+ * water marks.  If the cache is very busy then store_swap_size stays
+ * closer to the low water mark, if it is not busy, then it will stay
+ * near the high water mark.  The LRU age value can be examined on the
+ * cachemgr 'info' page.
  */
 time_t
 storeExpiredReferenceAge(void)
@@ -2772,11 +2805,11 @@ storeExpiredReferenceAge(void)
     double x;
     double z;
     time_t age;
-    if (Config.referenceAge != 0)
-	return Config.referenceAge;
-    x = 2.0 * (store_swap_high - store_swap_size) / (store_swap_high - store_swap_low);
-    x = x < 0.0 ? 0.0 : x > 2.0 ? 2.0 : x;
-    z = pow(724.0, x);		/* minutes [1:525600] */
+    if (Config.referenceAge == 0)
+	return 0;
+    x = (double) (store_swap_high - store_swap_size) / (store_swap_high - store_swap_low);
+    x = x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x;
+    z = pow((double) Config.referenceAge, x);
     age = (time_t) (z * 60.0);
     if (age < 60)
 	age = 60;
@@ -2882,4 +2915,25 @@ storeTimestampsSet(StoreEntry * entry)
     else
 	entry->lastmod = served_date;
     entry->timestamp = served_date;
+}
+
+#define FILENO_STACK_SIZE 128
+static int fileno_stack[FILENO_STACK_SIZE];
+int fileno_stack_count = 0;
+
+static int
+storeGetUnusedFileno(void)
+{
+    if (fileno_stack_count < 1)
+	return -1;
+    return fileno_stack[--fileno_stack_count];
+}
+
+static void
+storePutUnusedFileno(int fileno)
+{
+    if (fileno_stack_count < FILENO_STACK_SIZE)
+	fileno_stack[fileno_stack_count++] = fileno;
+    else
+	unlinkdUnlink(storeSwapFullPath(fileno, NULL));
 }

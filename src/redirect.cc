@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.34 1997/01/31 23:38:38 wessels Exp $
+ * $Id: redirect.cc,v 1.35 1997/04/28 04:23:24 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -135,7 +135,7 @@ redirectCreateRedirector(const char *command)
 	}
 	comm_set_fd_lifetime(sfd, -1);
 	debug(29, 4, "redirect_create_redirector: FD %d connected to %s #%d.\n",
-	    sfd, command, n_redirector++);
+	    sfd, command, ++n_redirector);
 	slp.tv_sec = 0;
 	slp.tv_usec = 250000;
 	select(0, NULL, NULL, NULL, &slp);
@@ -211,6 +211,9 @@ redirectHandleRead(int fd, redirector_t * redirector)
 	} else {
 	    debug(29, 5, "redirectHandleRead: reply: '%s'\n",
 		redirector->inbuf);
+	    /* careful here.  r->data might point to something which
+	     * has recently been freed.  If so, we require that r->handler
+	     * be NULL */
 	    if (r->handler) {
 		r->handler(r->data,
 		    t == redirector->inbuf ? NULL : redirector->inbuf);
@@ -323,6 +326,7 @@ redirectStart(int cfd, icpStateData * icpState, RH handler, void *data)
 {
     redirectStateData *r = NULL;
     redirector_t *redirector = NULL;
+    debug(29, 5, "redirectStart: '%s'\n", icpState->url);
     if (!handler)
 	fatal_dump("redirectStart: NULL handler");
     if (!icpState)

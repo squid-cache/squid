@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.95 1997/03/29 04:45:14 wessels Exp $
+ * $Id: client_side.cc,v 1.96 1997/04/28 04:23:00 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -140,6 +140,9 @@ clientAccessCheckDone(int answer, void *data)
     debug(33, 5, "clientAccessCheckDone: '%s' answer=%d\n", icpState->url, answer);
     if (answer) {
 	urlCanonical(icpState->request, icpState->url);
+	if (icpState->redirect_state != REDIRECT_NONE)
+	    fatal_dump("clientAccessCheckDone: wrong redirect_state");
+	icpState->redirect_state = REDIRECT_PENDING;
 	redirectStart(fd, icpState, clientRedirectDone, icpState);
     } else {
 	debug(33, 5, "Access Denied: %s\n", icpState->url);
@@ -171,6 +174,9 @@ clientRedirectDone(void *data, char *result)
     request_t *old_request = icpState->request;
     debug(33, 5, "clientRedirectDone: '%s' result=%s\n", icpState->url,
 	result ? result : "NULL");
+    if (icpState->redirect_state != REDIRECT_PENDING)
+	fatal_dump("clientRedirectDone: wrong redirect_state");
+    icpState->redirect_state = REDIRECT_DONE;
     if (result)
 	new_request = urlParse(old_request->method, result);
     if (new_request) {

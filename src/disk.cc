@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.57 1997/02/26 19:46:11 wessels Exp $
+ * $Id: disk.cc,v 1.58 1997/04/28 04:23:03 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -242,7 +242,6 @@ file_open_complete(void *data, int retcode, int errcode)
     xfree(ctrlp);
 }
 
-
 /* must close a disk file */
 
 int
@@ -273,6 +272,22 @@ file_must_close(int fd)
     commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     file_close(fd);
     return DISK_OK;
+}
+
+void
+file_open_fd(int fd, const char *name, File_Desc_Type type)
+{
+    FileEntry *f = &file_table[fd];
+    fdstat_open(fd, type);
+    commSetCloseOnExec(fd);
+    xstrncpy(f->filename, name, SQUID_MAXPATHLEN);
+    f->at_eof = NO;
+    f->open_stat = FILE_OPEN;
+    f->close_request = NOT_REQUEST;
+    f->write_pending = NO_WRT_PENDING;
+    f->write_daemon = NOT_PRESENT;
+    f->write_q = NULL;
+    memset(&fd_table[fd], '\0', sizeof(FD_ENTRY));
 }
 
 
@@ -458,8 +473,10 @@ file_write(int fd,
 {
     dwrite_q *wq = NULL;
 
-    if (file_table[fd].open_stat == FILE_NOT_OPEN)
+    if (file_table[fd].open_stat == FILE_NOT_OPEN) {
+	debug_trap("file_write: FILE_NOT_OPEN");
 	return DISK_ERROR;
+    }
     /* if we got here. Caller is eligible to write. */
     wq = xcalloc(1, sizeof(dwrite_q));
     wq->buf = ptr_to_buf;
@@ -480,17 +497,18 @@ file_write(int fd,
 	file_table[fd].write_q_tail = wq;
     }
 
-    if (file_table[fd].write_daemon == PRESENT)
-	return DISK_OK;
+    if (file_table[fd].write_daemon != PRESENT) {
 #if USE_ASYNC_IO
-    diskHandleWrite(fd, &file_table[fd]);
+	diskHandleWrite(fd, &file_table[fd]);
 #else
-    commSetSelect(fd,
-	COMM_SELECT_WRITE,
-	(PF) diskHandleWrite,
-	(void *) &file_table[fd],
-	0);
+	commSetSelect(fd,
+	    COMM_SELECT_WRITE,
+	    (PF) diskHandleWrite,
+	    (void *) &file_table[fd],
+	    0);
 #endif
+	file_table[fd].write_daemon = PRESENT;
+    }
     return DISK_OK;
 }
 
