@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.9 1997/10/30 03:31:24 wessels Exp $
+ * $Id: pconn.cc,v 1.10 1997/11/20 17:47:12 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -132,6 +132,7 @@ pconnPush(int fd, const char *host, u_short port)
 {
     struct _pconn *p;
     LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
+    LOCAL_ARRAY(char, desc, FD_DESC_SZ);
     assert(table != NULL);
     strcpy(key, pconnKey(host, port));
     p = (struct _pconn *) hash_lookup(table, key);
@@ -140,13 +141,14 @@ pconnPush(int fd, const char *host, u_short port)
     if (p->nfds == PCONN_MAX_FDS) {
 	debug(48, 3) ("pconnPush: %s already has %d unused connections\n",
 	    key, p->nfds);
-	close(fd);
-	commSetTimeout(fd, -1, NULL, NULL);
+	comm_close(fd);
 	return;
     }
     p->fds[p->nfds++] = fd;
     commSetSelect(fd, COMM_SELECT_READ, pconnRead, p, 0);
     commSetTimeout(fd, Config.Timeout.pconn, pconnTimeout, p);
+    snprintf(desc, FD_DESC_SZ, "%s idle connection", host);
+    fd_note(fd, desc);
     debug(48, 3) ("pconnPush: pushed FD %d for %s\n", fd, key);
 }
 
