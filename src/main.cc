@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.336 2001/05/04 13:37:42 hno Exp $
+ * $Id: main.cc,v 1.337 2001/05/05 17:49:55 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -564,10 +564,18 @@ main(int argc, char **argv)
     int n;			/* # of GC'd objects */
     time_t loop_delay;
     mode_t oldmask;
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+    int WIN32_init_err;
+#endif
 
     debug_log = stderr;
     if (FD_SETSIZE < Squid_MaxFD)
 	Squid_MaxFD = FD_SETSIZE;
+
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+    if (WIN32_init_err = WIN32_Subsystem_Init())
+	return WIN32_init_err;
+#endif
 
     /* call mallopt() before anything else */
 #if HAVE_MALLOPT
@@ -989,5 +997,9 @@ SquidShutdown(void *unused)
 	version_string);
     if (debug_log)
 	fclose(debug_log);
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+    WIN32_Exit(0);
+#else
     exit(0);
+#endif
 }

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.201 2001/04/14 00:03:21 hno Exp $
+#  $Id: Makefile.in,v 1.202 2001/05/05 17:49:54 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -187,6 +187,7 @@ OBJS	 	= \
 		wais.o \
 		wccp.o \
 		whois.o \
+		@WIN32_OBJS@ \
 		$(XTRA_OBJS)
 
 SNMP_OBJS	= \
