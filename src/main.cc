@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.358 2002/10/28 01:12:27 adrian Exp $
+ * $Id: main.cc,v 1.359 2002/11/15 13:29:20 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -563,7 +563,7 @@ main(int argc, char **argv)
 {
     int errcount = 0;
     int n;			/* # of GC'd objects */
-    time_t loop_delay;
+    int loop_delay;
     mode_t oldmask;
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     int WIN32_init_err;
