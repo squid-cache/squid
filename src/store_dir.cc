@@ -274,6 +274,7 @@ storeDirOpenSwapLogs(void)
 	    debug(50, 1, "%s: %s\n", path, xstrerror());
 	    fatal("storeDirOpenSwapLogs: Failed to open swap log.");
 	}
+	debug(20, 3, "Cache Dir #%d log opened on FD %d\n", i, fd);
 	SD->swaplog_fd = fd;
     }
 }
@@ -286,6 +287,8 @@ storeDirCloseSwapLogs(void)
     for (i = 0; i < ncache_dirs; i++) {
 	SD = &SwapDirs[i];
 	file_close(SD->swaplog_fd);
+	debug(20, 3, "Cache Dir #%d log closed on FD %d\n", i, SD->swaplog_fd);
+	SD->swaplog_fd = -1;
     }
 }
 
@@ -307,7 +310,6 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
 	safe_free(new_path);
 	return NULL;
     }
-    debug(20, 1, "Rebuilding storage from %s\n", swaplog_path);
     /* close the existing write-only FD */
     if (SD->swaplog_fd >= 0)
 	file_close(SD->swaplog_fd);
@@ -354,7 +356,10 @@ storeDirCloseTmpSwapLog(int dirn)
 	debug(50, 1, "%s: %s\n", swaplog_path, xstrerror());
 	fatal("storeDirCloseTmpSwapLog: Failed to open swap log.");
     }
+    safe_free(swaplog_path);
+    safe_free(new_path);
     SD->swaplog_fd = fd;
+    debug(20, 3, "Cache Dir #%d log opened on FD %d\n", i, fd);
 }
 
 void

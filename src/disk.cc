@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.65 1997/04/30 20:06:26 wessels Exp $
+ * $Id: disk.cc,v 1.66 1997/04/30 22:46:25 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -396,8 +396,10 @@ file_write(int fd,
     void (*free_func) _PARAMS((void *)))
 {
     dwrite_q *wq = NULL;
-    FD_ENTRY *fde = &fd_table[fd];
-
+    FD_ENTRY *fde;
+    if (fd < 0)
+	fatal_dump("file_write: bad FD");
+    fde = &fd_table[fd];
     if (!fde->open) {
 	debug_trap("file_write: FILE_NOT_OPEN");
 	return DISK_ERROR;

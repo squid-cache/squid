@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.136 1997/04/30 20:06:32 wessels Exp $
+ * $Id: neighbors.cc,v 1.137 1997/04/30 22:46:26 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1106,8 +1106,10 @@ peerCountMcastPeersDone(void *data)
 	p->mcast.avg_n_members);
     p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
     fake->store_status = STORE_ABORTED;
+    requestUnlink(fake->mem_obj->request);
     storeReleaseRequest(fake);
     storeUnlockObject(fake);
+    requestUnlink(psstate->request);
     xfree(psstate);
 }
 
