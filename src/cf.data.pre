@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.279 2002/09/01 13:46:55 hno Exp $
+# $Id: cf.data.pre,v 1.280 2002/09/01 14:14:16 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2734,7 +2734,9 @@ DOC_START
 DOC_END
 
 NAME: via
+IFDEF: HTTP_VIOLATIONS
 COMMENT: on|off
+TYPE: onoff
 DEFAULT: on
 LOC: Config.onoff.via
 DOC_START
