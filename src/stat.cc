@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.48 1996/07/25 07:10:42 wessels Exp $
+ * $Id: stat.cc,v 1.49 1996/07/26 17:00:35 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1167,39 +1167,9 @@ char *stat_describe(entry)
     LOCAL_ARRAY(char, state, 256);
 
     state[0] = '\0';
-    switch (entry->store_status) {
-    case STORE_OK:
-	strncat(state, "STORE-OK", sizeof(state));
-	break;
-    case STORE_PENDING:
-	strncat(state, "ST-PEND", sizeof(state));
-	break;
-    case STORE_ABORTED:
-	strncat(state, "ABORTED", sizeof(state));
-	break;
-    default:
-	strncat(state, "YEEHAH", sizeof(state));
-	break;
-    }
-    strncat(state, "/", sizeof(state));
-
-    switch (entry->ping_status) {
-    case PING_WAITING:
-	strncat(state, "PING-WAIT", sizeof(state));
-	break;
-    case PING_TIMEOUT:
-	strncat(state, "PING-TIMEOUT", sizeof(state));
-	break;
-    case PING_DONE:
-	strncat(state, "PING-DONE", sizeof(state));
-	break;
-    case PING_NONE:
-	strncat(state, "NO-PING", sizeof(state));
-	break;
-    default:
-	strncat(state, "HELP!!", sizeof(state));
-	break;
-    }
+    sprintf (state, "%s/%s",
+	storeStatusStr[entry->store_status],
+	pingStatusStr[entry->ping_status]);
     return (state);
 }
 
@@ -1209,21 +1179,10 @@ char *mem_describe(entry)
     LOCAL_ARRAY(char, where, 100);
 
     where[0] = '\0';
-    if (entry->swap_file_number >= 0)
-	storeAppendPrintf(entry, "D%d", entry->swap_file_number);
-    if (entry->swap_status == SWAPPING_OUT)
-	strncat(where, "/SWAP-OUT", sizeof(where));
-    if (entry->swap_status == SWAP_OK)
-	strncat(where, "/SWAP-OK", sizeof(where));
-    else
-	strncat(where, "/NO-SWAP", sizeof(where));
-
-    if (entry->mem_status == SWAPPING_IN)
-	strncat(where, "/SWAP-IN", sizeof(where));
-    else if (entry->mem_status == IN_MEMORY)
-	strncat(where, "/IN-MEM", sizeof(where));
-    else			/* STORE_PENDING */
-	strncat(where, "/OUT-MEM", sizeof(where));
+    sprintf (where, "D%d/%s/%s",
+	entry->swap_file_number,
+	swapStatusStr[entry->swap_status],
+	memStatusStr[entry->mem_status]);
     return (where);
 }
 

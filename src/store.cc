@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.75 1996/07/25 07:10:43 wessels Exp $
+ * $Id: store.cc,v 1.76 1996/07/26 17:00:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -158,6 +158,31 @@ static char *storeLogTags[] =
     "RELEASE"
 };
 
+char *memStatusStr[] = {
+    "NOT_IN_MEMORY",
+    "SWAPPING_IN",
+    "IN_MEMORY"
+};
+
+char *pingStatusStr[] = {
+    "PING_WAITING",
+    "PING_TIMEOUT",
+    "PING_DONE",
+    "PING_NONE"
+};
+
+char *storeStatusStr[] = {
+    "STORE_OK",
+    "STORE_PENDING",
+    "STORE_ABORTED"
+};
+
+char *swapStatusStr[] = {
+    "NO_SWAP",
+    "SWAPPING_OUT",
+    "SWAP_OK"
+};
+
 struct storeRebuild_data {
     FILE *log;
     int objcount;		/* # objects successfully reloaded */
@@ -261,7 +286,6 @@ static void destroy_MemObject(mem)
     safe_free(mem->mime_hdr);
     safe_free(mem->reply);
     safe_free(mem->e_abort_msg);
-    safe_free(mem->hierarchy_host);
     requestUnlink(mem->request);
     mem->request = NULL;
     put_free_mem_obj(mem);
@@ -823,6 +847,8 @@ int storeRegister(e, fd, handler, data)
     PendingEntry *pe = NULL;
     int old_size;
     int i;
+    int j;
+    MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeRegister: FD %d '%s'\n", fd, e->key);
 
@@ -839,32 +865,34 @@ int storeRegister(e, fd, handler, data)
      *  it'll grow the array.
      */
     /* find an empty slot */
-    for (i = 0; i < (int) e->mem_obj->pending_list_size; i++)
-	if (e->mem_obj->pending[i] == NULL)
+    for (i = 0; i < (int) mem->pending_list_size; i++) {
+	if (mem->pending[i] == NULL)
 	    break;
+    }
 
-    if (i == e->mem_obj->pending_list_size) {
+    if (i == mem->pending_list_size) {
 	/* grow the array */
 	struct pentry **tmp = NULL;
 
-	old_size = e->mem_obj->pending_list_size;
+	old_size = mem->pending_list_size;
 
 	/* set list_size to an appropriate amount */
-	e->mem_obj->pending_list_size += MIN_PENDING;
+	mem->pending_list_size += MIN_PENDING;
 
 	/* allocate, and copy old pending list over to the new one */
-	tmp = xcalloc(e->mem_obj->pending_list_size, sizeof(struct pentry *));
-	xmemcpy(e->mem_obj->pending, tmp, old_size * sizeof(struct pentry *));
+	tmp = xcalloc(mem->pending_list_size, sizeof(struct pentry *));
+        for (j = 0; j < old_size; j++)
+            tmp[j] = mem->pending[j];
 
 	/* free the old list and set the new one */
-	safe_free(e->mem_obj->pending);
-	e->mem_obj->pending = tmp;
+	safe_free(mem->pending);
+	mem->pending = tmp;
 
-	debug(20, 10, "storeRegister: grew pending list to %d for slot %d.\n",
-	    e->mem_obj->pending_list_size, i);
+	debug(20, 9, "storeRegister: grew pending list to %d for slot %d.\n",
+	    mem->pending_list_size, i);
 
     }
-    e->mem_obj->pending[i] = pe;
+    mem->pending[i] = pe;
     return 0;
 }
 
@@ -878,7 +906,7 @@ int storeUnregister(e, fd)
     int i;
     int freed = 0;
 
-    debug(20, 10, "storeUnregister: called for FD %d '%s'\n", fd, e->key);
+    debug(20, 9, "storeUnregister: called for FD %d '%s'\n", fd, e->key);
 
     /* look for entry in client_list */
     if (e->mem_obj->client_list) {
@@ -900,7 +928,7 @@ int storeUnregister(e, fd)
 	}
     }
 
-    debug(20, 10, "storeUnregister: returning %d\n", freed);
+    debug(20, 9, "storeUnregister: returning %d\n", freed);
     return freed;
 }
 
@@ -950,19 +978,20 @@ static void InvokeHandlers(e)
      StoreEntry *e;
 {
     int i;
+    MemObject *mem = e->mem_obj;
 
     /* walk the entire list looking for valid handlers */
-    for (i = 0; i < (int) e->mem_obj->pending_list_size; i++) {
-	if (e->mem_obj->pending[i] && e->mem_obj->pending[i]->handler) {
+    for (i = 0; i < (int) mem->pending_list_size; i++) {
+	if (mem->pending[i] && mem->pending[i]->handler) {
 	    /* 
 	     *  Once we call the handler, it is no longer needed 
 	     *  until the write process sends all available data 
 	     *  from the object entry. 
 	     */
-	    (e->mem_obj->pending[i]->handler)
-		(e->mem_obj->pending[i]->fd, e, e->mem_obj->pending[i]->data);
-	    safe_free(e->mem_obj->pending[i]);
-	    e->mem_obj->pending[i] = NULL;
+	    (mem->pending[i]->handler)
+		(mem->pending[i]->fd, e, mem->pending[i]->data);
+	    safe_free(mem->pending[i]);
+	    mem->pending[i] = NULL;
 	}
     }
 
@@ -1455,7 +1484,7 @@ static int storeDoRebuildFromDisk(data)
 		continue;
 	    }
 	    timestamp = sb.st_mtime;
-	    debug(20, 10, "storeRebuildFromDisk: swap file exists: <URL:%s>: %s\n",
+	    debug(20, 9, "storeRebuildFromDisk: swap file exists: <URL:%s>: %s\n",
 		url, swapfile);
 	}
 	if ((e = storeGet(url))) {
@@ -2556,7 +2585,7 @@ static int storeVerifySwapDirs(clean)
 
     for (inx = 0; inx < ncache_dirs; ++inx) {
 	path = swappath(inx);
-	debug(20, 10, "storeVerifySwapDirs: Creating swap space in %s\n", path);
+	debug(20, 9, "storeVerifySwapDirs: Creating swap space in %s\n", path);
 	if (stat(path, &sb) < 0) {
 	    /* we need to create a directory for swap file here. */
 	    if (mkdir(path, 0777) < 0) {
