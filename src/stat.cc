@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.90 1996/10/18 20:36:25 wessels Exp $
+ * $Id: stat.cc,v 1.91 1996/10/24 06:11:57 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -769,8 +769,13 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
     storeAppendPrintf(sentry, "{\tCPU Usage: %d%%}\n",
 	percent(rusage.ru_utime.tv_sec + rusage.ru_stime.tv_sec,
 	    squid_curtime - squid_starttime));
+#ifdef _SQUID_SGI_
     storeAppendPrintf(sentry, "{\tProcess Size: rss %ld KB}\n",
-	rusage.ru_maxrss * getpagesize() >> 10);
+	rusage.ru_maxrss);
+#else /* _SQUID_SGI_ */
+    storeAppendPrintf(sentry, "{\tProcess Size: rss %ld KB}\n",
+	(rusage.ru_maxrss * getpagesize()) >> 10);
+#endif /* _SQUID_SGI_ */
     storeAppendPrintf(sentry, "{\tPage faults with physical i/o: %ld}\n",
 	rusage.ru_majflt);
 #endif
