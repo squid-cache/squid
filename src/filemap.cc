@@ -1,4 +1,4 @@
-/* $Id: filemap.cc,v 1.3 1996/02/29 07:23:11 wessels Exp $ */
+/* $Id: filemap.cc,v 1.4 1996/03/22 17:48:16 wessels Exp $ */
 
 #include "config.h"
 #include <stdlib.h>
@@ -115,7 +115,7 @@ int file_map_allocate(suggestion)
     debug(0, "file_map_allocate: All %d files are in use!\n", fm->max_n_files);
     debug(0, "You need to recompile with a larger value for MAX_SWAP_FILE\n");
     fatal_dump(NULL);
-    return (0); /* NOTREACHED */
+    return (0);			/* NOTREACHED */
 }
 
 #ifdef TEST

@@ -1,4 +1,5 @@
-/* $Id: store.cc,v 1.4 1996/02/29 07:23:22 wessels Exp $ */
+
+/* $Id: store.cc,v 1.5 1996/03/22 17:48:18 wessels Exp $ */
 
 /* 
  * Here is a summary of the routines which change mem_status and swap_status:

@@ -1,4 +1,5 @@
-/* $Id: mime.cc,v 1.2 1996/02/29 07:23:17 wessels Exp $ */
+
+/* $Id: mime.cc,v 1.3 1996/03/22 17:48:18 wessels Exp $ */
 
 #include "config.h"
 #include <string.h>

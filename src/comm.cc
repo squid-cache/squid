@@ -1,4 +1,5 @@
-/* $Id: comm.cc,v 1.4 1996/02/29 07:23:07 wessels Exp $ */
+
+/* $Id: comm.cc,v 1.5 1996/03/22 17:48:15 wessels Exp $ */
 
 #include "config.h"
 
