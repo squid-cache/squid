@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.410 2002/02/26 15:48:16 adrian Exp $
+ * $Id: structs.h,v 1.411 2002/04/01 05:59:50 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1078,8 +1078,8 @@ struct _clientHttpRequest {
 	char *location;
     } redirect;
     dlink_node active;
-    char norm_reqbuf[HTTP_REQBUF_SZ]; /* For 'normal requests' */
-    char ims_reqbuf[HTTP_REQBUF_SZ];  /* For 'ims' requests */
+    char norm_reqbuf[HTTP_REQBUF_SZ];	/* For 'normal requests' */
+    char ims_reqbuf[HTTP_REQBUF_SZ];	/* For 'ims' requests */
     char *reqbuf;
     int reqofs;
     int reqsize;
