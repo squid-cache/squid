@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.46 2002/09/07 23:11:04 hno Exp $
+ * $Id: helper.cc,v 1.47 2002/09/29 12:08:48 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -507,7 +507,6 @@ helperShutdown(helper * hlp)
 {
     dlink_node *link = hlp->servers.head;
     while (link) {
-	int wfd;
 	helper_server *srv;
 	srv = link->data;
 	link = link->next;
@@ -528,9 +527,10 @@ helperShutdown(helper * hlp)
 	    continue;
 	}
 	srv->flags.closing = 1;
-	wfd = srv->wfd;
-	srv->wfd = -1;
-	comm_close(wfd);
+	/* the rest of the details is dealt with in the helperServerFree
+	 * close handler
+	 */
+	comm_close(srv->rfd);
     }
 }
 
@@ -539,7 +539,6 @@ helperStatefulShutdown(statefulhelper * hlp)
 {
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
-    int wfd;
     while (link) {
 	srv = link->data;
 	link = link->next;
@@ -570,9 +569,10 @@ helperStatefulShutdown(statefulhelper * hlp)
 	    continue;
 	}
 	srv->flags.closing = 1;
-	wfd = srv->wfd;
-	srv->wfd = -1;
-	comm_close(wfd);
+	/* the rest of the details is dealt with in the helperStatefulServerFree
+	 * close handler
+	 */
+	comm_close(srv->rfd);
     }
 }
 
