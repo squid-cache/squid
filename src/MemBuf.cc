@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.35 2004/06/02 19:19:21 hno Exp $
+ * $Id: MemBuf.cc,v 1.36 2004/06/06 15:09:55 hno Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -268,6 +268,7 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs) {
          */
         VA_COPY(ap,vargs);
         sz = vsnprintf(mb->buf + mb->size, free_space, fmt, ap);
+        va_end(ap);
 #else /* VA_COPY */
 
         sz = vsnprintf(mb->buf + mb->size, free_space, fmt, vargs);
@@ -282,7 +283,6 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs) {
             break;
     }
 
-    va_end(ap);
     mb->size += sz;
     /* on Linux and FreeBSD, '\0' is not counted in return value */
     /* on XXX it might be counted */
