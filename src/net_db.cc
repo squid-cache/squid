@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.145 2000/05/16 07:06:06 wessels Exp $
+ * $Id: net_db.cc,v 1.146 2000/10/05 03:20:40 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -368,22 +368,34 @@ static void
 netdbSaveState(void *foo)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
-    FILE *fp;
+    int fd;
     netdbEntry *n;
     net_db_name *x;
     struct timeval start = current_time;
     int count = 0;
+    size_t wl = 4096;
+    char *wbuf = xmalloc(wl);
+    off_t wo = 0;
     snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", storeSwapDir(0));
-    fp = fopen(path, "w");
-    if (fp == NULL) {
+    /*
+     * This was nicer when we were using stdio, but thanks to
+     * Solaris bugs, its a bad idea.  fopen can fail if more than
+     * 256 FDs are open.
+     */
+    fd = file_open(path, O_WRONLY | O_CREAT | O_TRUNC);
+    if (fd < 0) {
 	debug(50, 1) ("netdbSaveState: %s: %s\n", path, xstrerror());
 	return;
     }
     hash_first(addr_table);
     while ((n = (netdbEntry *) hash_next(addr_table))) {
+#define RBUF_SZ 4096
+	char rbuf[RBUF_SZ];
+	off_t ro;
 	if (n->pings_recv == 0)
 	    continue;
-	fprintf(fp, "%s %d %d %10.5f %10.5f %d %d",
+	ro = 0;
+	ro += snprintf(rbuf, RBUF_SZ, "%s %d %d %10.5f %10.5f %d %d",
 	    n->network,
 	    n->pings_sent,
 	    n->pings_recv,
@@ -392,11 +404,25 @@ netdbSaveState(void *foo)
 	    (int) n->next_ping_time,
 	    (int) n->last_use_time);
 	for (x = n->hosts; x; x = x->next)
-	    fprintf(fp, " %s", x->name);
-	fprintf(fp, "\n");
+	    ro += snprintf(rbuf + ro, RBUF_SZ - ro, " %s", x->name);
+	ro += snprintf(rbuf + ro, RBUF_SZ - ro, "\n");
+	assert(ro <= RBUF_SZ);
+	while (ro + wo > wl) {
+	    char *t;
+	    t = wbuf;
+	    wl <<= 1;
+	    wbuf = xmalloc(wl);
+	    debug(0, 0) ("netdbSaveState: wbuf now %d bytes\n", wl);
+	    xmemcpy(wbuf, t, wo);
+	    xfree(t);
+	}
+	xmemcpy(wbuf + wo, rbuf, ro);
+	wo += ro;
 	count++;
+#undef RBUF_SZ
     }
-    fclose(fp);
+    write(fd, wbuf, wo);
+    file_close(fd);
     getCurrentTime();
     debug(38, 1) ("NETDB state saved; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
@@ -409,60 +435,78 @@ netdbReloadState(void)
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
     char *buf;
     char *t;
-    FILE *fp;
+    char *s;
+    int fd;
+    int l;
+    struct stat sb;
     netdbEntry *n;
     netdbEntry N;
     struct in_addr addr;
     int count = 0;
     struct timeval start = current_time;
     snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", storeSwapDir(0));
-    fp = fopen(path, "r");
-    if (fp == NULL)
+    /*
+     * This was nicer when we were using stdio, but thanks to
+     * Solaris bugs, its a bad idea.  fopen can fail if more than
+     * 256 FDs are open.
+     */
+    fd = file_open(path, O_RDONLY);
+    if (fd < 0)
 	return;
-    buf = memAllocate(MEM_4K_BUF);
-    while (fgets(buf, 4095, fp)) {
+    if (fstat(fd, &sb) < 0)
+	return;
+    t = buf = xcalloc(1, sb.st_size + 1);
+    l = read(fd, buf, sb.st_size);
+    file_close(fd);
+    if (l <= 0)
+	return;
+    while ((s = strchr(t, '\n'))) {
+	char *q;
+	assert(s - buf < l);
+	*s = '\0';
 	memset(&N, '\0', sizeof(netdbEntry));
-	if ((t = strtok(buf, w_space)) == NULL)
-	    continue;
-	if (!safe_inet_addr(t, &addr))
+	q = strtok(t, w_space);
+	t = s + 1;
+	if (NULL == q);
+	continue;
+	if (!safe_inet_addr(q, &addr))
 	    continue;
 	if (netdbLookupAddr(addr) != NULL)	/* no dups! */
 	    continue;
-	if ((t = strtok(NULL, w_space)) == NULL)
+	if ((q = strtok(NULL, w_space)) == NULL)
 	    continue;
-	N.pings_sent = atoi(t);
-	if ((t = strtok(NULL, w_space)) == NULL)
+	N.pings_sent = atoi(q);
+	if ((q = strtok(NULL, w_space)) == NULL)
 	    continue;
-	N.pings_recv = atoi(t);
+	N.pings_recv = atoi(q);
 	if (N.pings_recv == 0)
 	    continue;
 	/* give this measurement low weight */
 	N.pings_sent = 1;
 	N.pings_recv = 1;
-	if ((t = strtok(NULL, w_space)) == NULL)
+	if ((q = strtok(NULL, w_space)) == NULL)
 	    continue;
-	N.hops = atof(t);
-	if ((t = strtok(NULL, w_space)) == NULL)
+	N.hops = atof(q);
+	if ((q = strtok(NULL, w_space)) == NULL)
 	    continue;
-	N.rtt = atof(t);
-	if ((t = strtok(NULL, w_space)) == NULL)
+	N.rtt = atof(q);
+	if ((q = strtok(NULL, w_space)) == NULL)
 	    continue;
-	N.next_ping_time = (time_t) atoi(t);
-	if ((t = strtok(NULL, w_space)) == NULL)
+	N.next_ping_time = (time_t) atoi(q);
+	if ((q = strtok(NULL, w_space)) == NULL)
 	    continue;
-	N.last_use_time = (time_t) atoi(t);
+	N.last_use_time = (time_t) atoi(q);
 	n = memAllocate(MEM_NETDBENTRY);
 	xmemcpy(n, &N, sizeof(netdbEntry));
 	netdbHashInsert(n, addr);
-	while ((t = strtok(NULL, w_space)) != NULL) {
-	    if (netdbLookupHost(t) != NULL)	/* no dups! */
+	while ((q = strtok(NULL, w_space)) != NULL) {
+	    if (netdbLookupHost(q) != NULL)	/* no dups! */
 		continue;
-	    netdbHostInsert(n, t);
+	    netdbHostInsert(n, q);
 	}
 	count++;
     }
-    memFree(buf, MEM_4K_BUF);
-    fclose(fp);
+    xfree(buf);
     getCurrentTime();
     debug(38, 1) ("NETDB state reloaded; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
