@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.159 2004/04/10 13:10:17 hno Exp $
+ * $Id: fqdncache.cc,v 1.160 2004/12/10 00:54:04 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -441,6 +441,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
     if (name == NULL || name[0] == '\0')
     {
         debug(35, 4) ("fqdncache_nbgethostbyaddr: Invalid name!\n");
+        dns_error_message = "Invalid hostname";
         handler(NULL, handlerData);
         return;
     }
@@ -553,10 +554,14 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
     {
         FqdncacheStats.hits++;
         f->lastref = squid_curtime;
+        dns_error_message = f->error_message;
         return f->names[0];
     }
 
+    dns_error_message = NULL;
+
     /* check if it's already a FQDN address in text form. */
+
     if (!safe_inet_addr(name, &ip))
         return name;
 
