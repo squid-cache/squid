@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.47 1996/10/28 07:44:30 wessels Exp $
+ * $Id: wais.cc,v 1.48 1996/11/01 07:43:48 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -409,4 +409,6 @@ waisConnectDone(int fd, int status, void *data)
 	COMM_SELECT_WRITE,
 	(PF) waisSendRequest,
 	(void *) waisState, 0);
+    if (Config.vizHackAddr.sin_port)
+        vizHackSendPkt(&waisState->connectState.S, 2);
 }
