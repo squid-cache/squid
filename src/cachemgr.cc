@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.26 1996/09/17 16:54:02 wessels Exp $
+ * $Id: cachemgr.cc,v 1.27 1996/09/18 21:39:29 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -301,13 +301,13 @@ noargs_html(char *host, int port)
     printf("<FORM METHOD=\"POST\" ACTION=\"%s?%s:%d\">\n",
 	script_name, host, port);
     printf("<STRONG>Cache Host:</STRONG><INPUT NAME=\"host\" ");
-    printf("SIZE=30 VALUE=\"%s\">\n\n", host);
+    printf("SIZE=30 VALUE=\"%s\"><BR>\n", CACHEMGR_HOSTNAME);
     printf("<STRONG>Cache Port:</STRONG><INPUT NAME=\"port\" ");
-    printf("SIZE=30 VALUE=\"%d\">\n\n", port);
+    printf("SIZE=30 VALUE=\"%d\"><BR>\n", CACHE_HTTP_PORT);
     printf("<STRONG>Password  :</STRONG><INPUT TYPE=\"password\" ");
-    printf("NAME=\"password\" SIZE=30 VALUE=\"\">\n\n");
+    printf("NAME=\"password\" SIZE=30 VALUE=\"\"><BR>\n");
     printf("<STRONG>URL       :</STRONG><INPUT NAME=\"url\" ");
-    printf("SIZE=30 VALUE=\"\">\n\n");
+    printf("SIZE=30 VALUE=\"\"><BR>\n");
     printf("<STRONG>Operation :</STRONG>");
     printf("<SELECT NAME=\"operation\">\n");
     printf("<OPTION SELECTED VALUE=\"info\">Cache Information\n");
@@ -332,7 +332,7 @@ noargs_html(char *host, int port)
 #ifdef REMOVE_OBJECT
     printf("<OPTION VALUE=\"remove\">Remove Object (URL required)\n");
 #endif
-    printf("</SELECT>\n\n");
+    printf("</SELECT><BR>\n");
     printf("<HR>\n");
     printf("<INPUT TYPE=\"submit\"> <INPUT TYPE=\"reset\">\n");
     printf("</FORM></PRE>\n");
@@ -801,11 +801,11 @@ main(int argc, char *argv[])
 	break;
     case STATS_U:
 	if (hasTables) {
-	    printf("<table border=1><tr><td><STRONG>Protocol</STRONG><td><STRONG>Count</STRONG><td><STRONG>Max KB</STRONG><td><STRONG>Current KB</STRONG><td><STRONG>Min KB</STRONG><td><STRONG>Hit Ratio</STRONG><td><STRONG>Transfer Rate</STRONG><td><STRONG>References</STRONG><td><STRONG>Transfered KB</STRONG>\n");
+	    printf("<table border=1><tr><td><STRONG>Protocol</STRONG><td><STRONG>Object Count</STRONG><td><STRONG>Max KB</STRONG><td><STRONG>Current KB</STRONG><td><STRONG>Min KB</STRONG><td><STRONG>Hit Ratio</STRONG><td><STRONG>Transfer KB/sec</STRONG><td><STRONG>Transfer Count</STRONG><td><STRONG>Transfered KB</STRONG>\n");
 	    in_table = 1;
 	} else {
-	    printf("Protocol  Count   Maximum   Current   Minimum  Hit  Trans   Transfer Transfered\n");
-	    printf("                  KB        KB        KB       Rate KB/sec  Count     KB\n");
+	    printf("Protocol  Object  Maximum   Current   Minimum  Hit  Trans   Transfer Transfered\n");
+	    printf("          Count   KB        KB        KB       Rate KB/sec  Count     KB\n");
 	    printf("-------- ------- --------- --------- --------- ---- ------ --------- ----------\n");
 	}
 	break;

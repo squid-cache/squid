@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.41 1996/09/17 16:32:31 wessels Exp $
+ * $Id: acl.cc,v 1.42 1996/09/18 21:39:27 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,6 +37,9 @@ char *AclMatchedName = NULL;
 struct _acl_deny_info_list *DenyInfoList = NULL;
 struct _acl_access *HTTPAccessList = NULL;
 struct _acl_access *ICPAccessList = NULL;
+#if DELAY_HACK
+struct _acl_access *DelayAccessList = NULL;
+#endif
 
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;

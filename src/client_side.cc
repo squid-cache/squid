@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.32 1996/09/18 20:13:03 wessels Exp $
+ * $Id: client_side.cc,v 1.33 1996/09/18 21:39:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,9 +33,11 @@
 
 static void clientRedirectDone __P((void *data, char *result));
 static int icpHandleIMSReply __P((int fd, StoreEntry * entry, void *data));
+static void clientLookupDstIPDone __P((int fd, struct hostent *hp, void *data));
+static void clientLookupSrcFQDNDone __P((int fd, char *fqdn, void *data));
 
 
-static int
+static void
 clientLookupDstIPDone(int fd, struct hostent *hp, void *data)
 {
     icpStateData *icpState = data;
@@ -50,7 +52,7 @@ clientLookupDstIPDone(int fd, struct hostent *hp, void *data)
 	    inet_ntoa(icpState->aclChecklist->dst_addr));
     }
     clientAccessCheck(icpState, icpState->aclHandler);
-    return 1;
+    return;
 }
 
 static void
@@ -70,7 +72,6 @@ static void
 clientLookupIdentDone(void *data)
 {
 }
-
 #endif
 
 #if USE_PROXY_AUTH
@@ -101,9 +102,7 @@ clientProxyAuthCheck(icpStateData * icpState)
 #endif /* USE_PROXY_AUTH */
 
 void
-clientAccessCheck(icpStateData * icpState,
-    void (*handler) (icpStateData *,
-	int))
+clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int))
 {
     int answer = 1;
     request_t *r = icpState->request;
@@ -135,7 +134,7 @@ clientAccessCheck(icpStateData * icpState,
     icpState->aclHandler = handler;
     if (httpd_accel_mode && !Config.Accel.withProxy && r->protocol != PROTO_CACHEOBJ) {
 	/* this cache is an httpd accelerator ONLY */
-	if (!BIT_TEST(icpState->flags, REQ_ACCEL))
+	if (!BIT_TEST(icpState->request->flags, REQ_ACCEL))
 	    answer = 0;
     } else {
 	answer = aclCheck(HTTPAccessList, ch);
@@ -216,9 +215,9 @@ clientRedirectDone(void *data, char *result)
 	(PF) icpDetectClientClose,
 	(void *) icpState);
     icpProcessRequest(fd, icpState);
-#if USE_PROXY_AUTH
 }
 
+#if USE_PROXY_AUTH
 /* Check the modification time on the file that holds the proxy
  * passwords every 'n' seconds, and if it has changed, reload it
  */
@@ -354,8 +353,8 @@ proxyAuthenticate(char *headers)
 
     xfree(clear_userandpw);
     return (sent_user);
-#endif /* USE_PROXY_AUTH */
 }
+#endif /* USE_PROXY_AUTH */
 
 int
 icpProcessExpired(int fd, icpStateData * icpState)
@@ -369,7 +368,7 @@ icpProcessExpired(int fd, icpStateData * icpState)
     icpState->old_entry = icpState->entry;
     entry = storeCreateEntry(url,
 	request_hdr,
-	icpState->flags,
+	icpState->request->flags,
 	icpState->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
 
@@ -417,7 +416,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    (void *) icpState);
 	return 0;
     }
-    if (mem->reply->code == 304 && !BIT_TEST(icpState->flags, REQ_IMS)) {
+    if (mem->reply->code == 304 && !BIT_TEST(icpState->request->flags, REQ_IMS)) {
 	icpState->log_type = LOG_TCP_EXPIRED_HIT;
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back */

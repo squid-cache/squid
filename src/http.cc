@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.77 1996/09/18 20:12:18 wessels Exp $
+ * $Id: http.cc,v 1.78 1996/09/18 21:39:33 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -260,6 +260,15 @@ httpParseHeaders(char *buf, struct _http_reply *reply)
 		strncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ - 1);
 		ReplyHeaderStats.lm++;
 	    }
+	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
+	    if ((t = strtok(NULL, w_space))) {
+		if (!strncasecmp(t, "private", 7))
+		    reply->cache_control |= HTTP_CC_PRIVATE;
+		else if (!strncasecmp(t, "cachable", 8))
+		    reply->cache_control |= HTTP_CC_CACHABLE;
+		else if (!strncasecmp(t, "no-cache", 8))
+		    reply->cache_control |= HTTP_CC_NOCACHE;
+	    }
 	}
 	t = strtok(NULL, "\n");
     }
@@ -325,7 +334,11 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 	case 301:		/* Moved Permanently */
 	case 410:		/* Gone */
 	    /* don't cache objects from neighbors w/o LMT, Date, or Expires */
-	    if (*reply->date)
+	    if (BIT_TEST(reply->cache_control, HTTP_CC_PRIVATE))
+		httpMakePrivate(entry);
+	    else if (BIT_TEST(reply->cache_control, HTTP_CC_NOCACHE))
+		httpMakePrivate(entry);
+	    else if (*reply->date)
 		httpMakePublic(entry);
 	    else if (*reply->last_modified)
 		httpMakePublic(entry);
@@ -595,10 +608,10 @@ httpSendRequest(int fd, HttpStateData * httpState)
     ybuf = get_free_4k_page();
     if (entry->mem_obj)
 	cfd = entry->mem_obj->fd_of_first_client;
-    if (cfd < 0) {
-	sprintf(ybuf, "%s\r\n", ForwardedBy);
-    } else {
+    if (cfd > -1 && opt_forwarded_for) {
 	sprintf(ybuf, "%s for %s\r\n", ForwardedBy, fd_table[cfd].ipaddr);
+    } else {
+	sprintf(ybuf, "%s\r\n", ForwardedBy);
     }
     strcat(buf, ybuf);
     len += strlen(ybuf);

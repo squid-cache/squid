@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.114 1996/09/18 20:12:25 wessels Exp $
+ * $Id: store.cc,v 1.115 1996/09/18 21:39:42 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -739,8 +739,6 @@ storeCreateEntry(char *url, char *req_hdr, int flags, method_t method)
     e->method = method;
     if (req_hdr)
 	mem->mime_hdr = xstrdup(req_hdr);
-    if (BIT_TEST(flags, REQ_NOCACHE))
-	BIT_SET(e->flag, REFRESH_REQUEST);
     if (BIT_TEST(flags, REQ_CACHABLE)) {
 	BIT_SET(e->flag, ENTRY_CACHABLE);
 	BIT_RESET(e->flag, RELEASE_REQUEST);
@@ -756,8 +754,7 @@ storeCreateEntry(char *url, char *req_hdr, int flags, method_t method)
 	storeSetPrivateKey(e);
     else
 	storeSetPublicKey(e);
-    if (BIT_TEST(flags, REQ_HTML))
-	BIT_SET(e->flag, ENTRY_HTML);
+    BIT_SET(e->flag, ENTRY_HTML);
 
     e->store_status = STORE_PENDING;
     storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -1692,7 +1689,7 @@ void
 storeAbort(StoreEntry * e, char *msg)
 {
     LOCAL_ARRAY(char, mime_hdr, 300);
-    LOCAL_ARRAY(char, abort_msg, 2000);
+    char *abort_msg;
     MemObject *mem = e->mem_obj;
 
     if (e->store_status != STORE_PENDING) {	/* XXX remove later */
@@ -1727,17 +1724,22 @@ storeAbort(StoreEntry * e, char *msg)
 	squid_curtime,
 	squid_curtime + Config.negativeTtl);
     if (msg) {
-	/* This can run off the end here. Be careful */
-	if ((int) (strlen(msg) + strlen(mime_hdr) + 50) < 2000) {
-	    sprintf(abort_msg, "HTTP/1.0 400 Cache Detected Error\r\n%s\r\n\r\n%s", mime_hdr, msg);
-	} else {
-	    debug(20, 0, "storeAbort: WARNING: Must increase msg length!\n");
-	}
+	abort_msg = get_free_8k_page();
+	strcpy(abort_msg, "HTTP/1.0 400 Cache Detected Error\r\n");
+	mk_mime_hdr(mime_hdr,
+	    "text/html",
+	    strlen(msg),
+	    (time_t) Config.negativeTtl,
+	    squid_curtime);
+	strcat(abort_msg, mime_hdr);
+	strcat(abort_msg, "\r\n\r\n");
+	strncat(abort_msg, msg, 8191 - strlen(abort_msg));
 	storeAppend(e, abort_msg, strlen(abort_msg));
 	safe_free(mem->e_abort_msg);
 	mem->e_abort_msg = xstrdup(abort_msg);
 	/* Set up object for negative caching */
 	BIT_SET(e->flag, ABORT_MSG_PENDING);
+	put_free_8k_page(abort_msg);
     }
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
@@ -2135,7 +2137,7 @@ storeRelease(StoreEntry * e)
 	    debug(20, 0, "storeRelease: Not Found: '%s'\n", e->key);
 	    debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
 	    debug_trap("storeRelease: Invalid Entry");
-	    return;
+	    return -1;
 	}
 	result = (StoreEntry *) hptr;
 	if (result != e) {
@@ -2144,7 +2146,7 @@ storeRelease(StoreEntry * e)
 	    debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
 	    debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
 	    debug_trap("storeRelease: Duplicate Entry");
-	    return;
+	    return -1;
 	}
     }
     if (e->method == METHOD_GET) {

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.40 1996/09/16 21:50:23 wessels Exp $
+#  $Id: Makefile.in,v 1.41 1996/09/18 21:39:26 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -11,7 +11,9 @@ AIO_LIBS	= # @AIO_LIBS@
 AUTH_OPT	= # -DUSE_PROXY_AUTH=1
 LOG_HDRS_OPT	= # -DLOG_FULL_HEADERS=1
 ICMP_OPT	= # -DUSE_ICMP=1
-DEFINES		= $(HOST_OPT) $(AIO_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) $(ICMP_OPT)
+DELAY_HACK      = # -DDELAY_HACK=1
+DEFINES		= $(HOST_OPT) $(AIO_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) $(ICMP_OPT) \
+		  $(DELAY_HACK)
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -134,6 +136,8 @@ install-mkdirs:
 		mkdir $(localstatedir)/logs; \
 	fi
 
+# Michael Lupp <mike@nemesis.saar.de> wants to know about additions
+# to the install target.
 install: all install-mkdirs
 	@for f in $(PROGS); do \
 		if test -f $(bindir)/$$f; then \

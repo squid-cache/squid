@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.74 1996/09/17 16:32:35 wessels Exp $
+ * $Id: comm.cc,v 1.75 1996/09/18 21:39:30 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1156,13 +1156,9 @@ checkLifetimes(void)
 	    fde->lifetime_handler = NULL;
 	} else if ((func = fde->read_handler) != NULL) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling read handler\n", fd);
-	    func(fd, fde->read_data);
-	    fde->read_handler = NULL;
-	} else if ((func = fde->read_handler) != NULL) {
-	    debug(5, 5, "checkLifetimes: FD %d: Calling read handler\n", fd);
-	    func(fd, fde->read_data);
-	    fde->read_handler = NULL;
-	} else if ((func = fde->write_handler) != NULL) {
+	    func(fd, fd_table[fd].read_data);
+	    fd_table[fd].read_handler = NULL;
+	} else if ((func = fd_table[fd].write_handler)) {
 	    debug(5, 5, "checkLifetimes: FD %d: Calling write handler\n", fd);
 	    func(fd, fde->write_data);
 	    fde->write_handler = NULL;
