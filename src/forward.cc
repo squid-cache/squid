@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.60 1999/05/19 19:57:43 wessels Exp $
+ * $Id: forward.cc,v 1.61 1999/06/10 21:06:23 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -59,16 +59,6 @@ fwdServerFree(FwdServer * fs)
     if (fs->peer)
 	cbdataUnlock(fs->peer);
     memFree(fs, MEM_FWD_SERVER);
-}
-
-static void
-fwdServersFree(FwdServer ** FS)
-{
-    FwdServer *fs;
-    while ((fs = *FS)) {
-	*FS = fs->next;
-	fwdServerFree(fs);
-    }
 }
 
 static void
@@ -384,6 +374,16 @@ fwdReforward(FwdState * fwdState)
 }
 
 /* PUBLIC FUNCTIONS */
+
+void
+fwdServersFree(FwdServer ** FS)
+{
+    FwdServer *fs;
+    while ((fs = *FS)) {
+	*FS = fs->next;
+	fwdServerFree(fs);
+    }
+}
 
 void
 fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.96 1999/05/19 19:57:50 wessels Exp $
+ * $Id: ssl.cc,v 1.97 1999/06/10 21:06:26 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -40,13 +40,13 @@ typedef struct {
     char *host;			/* either request->host or proxy host */
     u_short port;
     request_t *request;
+    FwdServer *servers;
     struct {
 	int fd;
 	int len;
 	char *buf;
     } client, server;
     size_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
-    int proxying;
 #if DELAY_POOLS
     delay_id delay_id;
 #endif
@@ -104,6 +104,7 @@ sslStateFree(SslStateData * sslState)
     safe_free(sslState->server.buf);
     safe_free(sslState->client.buf);
     safe_free(sslState->url);
+    fwdServersFree(&sslState->servers);
     sslState->host = NULL;
     requestUnlink(sslState->request);
     sslState->request = NULL;
@@ -388,7 +389,7 @@ sslConnectDone(int fdnotused, int status, void *data)
 	err->callback_data = sslState;
 	errorSend(sslState->client.fd, err);
     } else {
-	if (sslState->proxying)
+	if (sslState->servers->peer)
 	    sslProxyConnected(sslState->server.fd, sslState);
 	else
 	    sslConnected(sslState->server.fd, sslState);
@@ -506,7 +507,6 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
     SslStateData *sslState = data;
     request_t *request = sslState->request;
     peer *g = NULL;
-
     if (fs == NULL) {
 	ErrorState *err;
 	err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
@@ -516,7 +516,7 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 	errorSend(sslState->client.fd, err);
 	return;
     }
-    sslState->proxying = fs->peer ? 1 : 0;
+    sslState->servers = fs;
     sslState->host = fs->peer ? fs->peer->host : request->host;
     if (fs->peer == NULL) {
 	sslState->port = request->port;
@@ -534,6 +534,9 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 	sslState->delay_id = 0;
     }
 #endif
+    hierarchyNote(&sslState->request->hier,
+	fs->peer ? fs->code : DIRECT,
+	sslState->host);
     commConnectStart(sslState->server.fd,
 	sslState->host,
 	sslState->port,
