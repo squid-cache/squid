@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.130 1998/01/12 04:29:54 wessels Exp $
+ * $Id: acl.cc,v 1.131 1998/02/02 21:59:43 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2205,15 +2205,16 @@ checkARP(u_long ip, char *eth)
     struct sockaddr_inarp *sin;
     struct sockaddr_dl *sdl;
     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-	debug(28, 0) ("Can't estimate ARP table size!");
+	debug(28, 0) ("Can't estimate ARP table size!\n");
 	return 0;
     }
-    if ((buf = malloc(needed)) == NULL) {
-	debug(28, 0) ("Can't allocate temporary ARP table!");
+    if ((buf = xmalloc(needed)) == NULL) {
+	debug(28, 0) ("Can't allocate temporary ARP table!\n");
 	return 0;
     }
     if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-	debug(28, 0) ("Can't retrieve ARP table!");
+	debug(28, 0) ("Can't retrieve ARP table!\n");
+	xfree(buf);
 	return 0;
     }
     lim = buf + needed;
@@ -2223,11 +2224,14 @@ checkARP(u_long ip, char *eth)
 	sdl = (struct sockaddr_dl *) (sin + 1);
 	if (sin->sin_addr.s_addr == ip) {
 	    if (sdl->sdl_alen)
-		if (!memcmp(LLADDR(sdl), eth, 6))
+		if (!memcmp(LLADDR(sdl), eth, 6)) {
+		    xfree(buf);
 		    return 1;
-	    return 0;
+		}
+	    break;
 	}
     }
+    xfree(buf);
     return 0;
 }
 
