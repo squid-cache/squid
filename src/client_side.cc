@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.557 2001/11/13 06:38:27 hno Exp $
+ * $Id: client_side.cc,v 1.558 2001/11/15 00:52:42 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2615,8 +2615,14 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    natLookup.nl_inip = http->conn->me.sin_addr;
 	    natLookup.nl_outip = http->conn->peer.sin_addr;
 	    natLookup.nl_flags = IPN_TCP;
-	    if (natfd < 0)
+	    if (natfd < 0) {
+		int save_errno;
+		enter_suid();
 		natfd = open(IPL_NAT, O_RDONLY, 0);
+		save_errno = errno;
+		leave_suid();
+		errno = save_errno;
+	    }
 	    if (natfd < 0) {
 		debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
 		    xstrerror());
