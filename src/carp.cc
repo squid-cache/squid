@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.17 2002/04/13 15:46:42 hno Exp $
+ * $Id: carp.cc,v 1.18 2002/04/13 16:24:50 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -138,7 +138,7 @@ carpSelectParent(request_t * request)
     unsigned int combined_hash;
     double score;
     double high_score = 0;
-    char *key = NULL;
+    const char *key = NULL;
 
     if (n_carp_peers == 0)
 	return NULL;
