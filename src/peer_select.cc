@@ -1,5 +1,5 @@
 /*
- * $Id: peer_select.cc,v 1.3 1997/02/26 20:49:12 wessels Exp $
+ * $Id: peer_select.cc,v 1.4 1997/02/27 02:57:13 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -31,30 +31,20 @@
 #include "squid.h"
 
 static struct {
-	int timeouts;
+    int timeouts;
 } PeerStats;
 
-int
-peerSelectDirect(request_t * request)
-{
-    int answer;
-    aclCheck_t ch;
-    const ipcache_addrs *ia = ipcache_gethostbyname(request->host, 0);
-    memset(&ch, '\0', sizeof(aclCheck_t));
-    ch.request = requestLink(request);
-    ch.dst_addr = ia->in_addrs[ia->cur];
-    ch.src_addr = request->client_addr;
-    answer = aclCheck(Config.accessList.NeverDirect, &ch);
-    requestUnlink(ch.request);
-    if (answer)
-	return DIRECT_NO;
-    answer = aclCheck(Config.accessList.AlwaysDirect, &ch);
-    if (answer)
-	return DIRECT_YES;
-    if (ia == NULL)
-	return DIRECT_NO;
-    return DIRECT_MAYBE;
-}
+typedef struct _peer_ctrl_t {
+    int fd;
+    request_t *request;
+    StoreEntry *entry;
+    int always_direct;
+    int never_direct;
+    int timeout;
+} peer_ctrl_t;
+
+
+static void peerSelect _PARAMS((peer_ctrl_t *));
 
 int
 peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
@@ -109,14 +99,71 @@ peerGetSomeParent(request_t * request, hier_code * code)
 }
 
 void
-peerSelect(int fd, request_t * request, StoreEntry * entry)
+peerSelectStart(int fd, request_t * request, StoreEntry * entry)
+{
+    peer_ctrl_t *ctrl = xcalloc(1, sizeof(peer_ctrl_t));
+    ctrl->request = request;
+    ctrl->entry = entry;
+    ctrl->fd = fd;
+    peerSelect(ctrl);
+}
+
+static void
+peerCheckNeverDirectDone(int answer, void *data)
+{
+    peer_ctrl_t *ctrl = data;
+    debug(44, 3, "peerCheckNeverDirectDone: %d\n", answer);
+    ctrl->never_direct = answer ? 1 : -1;
+    peerSelect(ctrl);
+}
+
+static void
+peerCheckAlwaysDirectDone(int answer, void *data)
+{
+    peer_ctrl_t *ctrl = data;
+    debug(44, 3, "peerCheckAlwaysDirectDone: %d\n", answer);
+    ctrl->always_direct = answer ? 1 : -1;
+    peerSelect(ctrl);
+}
+
+void
+peerSelect(peer_ctrl_t * ctrl)
 {
     peer *p;
     hier_code code;
-    int direct = peerSelectDirect(request);
+    StoreEntry *entry = ctrl->entry;
+    request_t *request = ctrl->request;
+    int fd = ctrl->fd;
+    int direct;
     debug(44, 3, "peerSelect: '%s'\n", entry->url);
+    if (ctrl->never_direct == 0) {
+	aclNBCheck(Config.accessList.NeverDirect,
+	    request,
+	    request->client_addr,
+	    NULL,		/* user agent */
+	    NULL,		/* ident */
+	    peerCheckNeverDirectDone,
+	    ctrl);
+	return;
+    } else if (ctrl->never_direct > 0) {
+	direct = DIRECT_NO;
+    } else if (ctrl->always_direct == 0) {
+	aclNBCheck(Config.accessList.AlwaysDirect,
+	    request,
+	    request->client_addr,
+	    NULL,		/* user agent */
+	    NULL,		/* ident */
+	    peerCheckAlwaysDirectDone,
+	    ctrl);
+	return;
+    } else if (ctrl->always_direct > 0) {
+	direct = DIRECT_YES;
+    } else {
+	direct = DIRECT_MAYBE;
+    }
+    debug(44, 3, "peerSelect: direct = %d\n", direct);
     if (direct == DIRECT_YES) {
-	debug(44, 3, "peerSelect: direct == DIRECT_YES --> HIER_DIRECT\n");
+	debug(44, 3, "peerSelect: HIER_DIRECT\n");
 	hierarchyNote(request, HIER_DIRECT, 0, request->host);
 	protoStart(fd, entry, NULL, request);
 	return;
@@ -129,7 +176,7 @@ peerSelect(int fd, request_t * request, StoreEntry * entry)
 	    commSetSelect(fd,
 		COMM_SELECT_TIMEOUT,
 		peerPingTimeout,
-		(void *) entry,
+		(void *) ctrl,
 		Config.neighborTimeout);
 	    return;
 	}
@@ -146,14 +193,16 @@ peerSelect(int fd, request_t * request, StoreEntry * entry)
 void
 peerPingTimeout(int fd, void *data)
 {
-	StoreEntry *entry = data;
-	debug(44,3,"peerPingTimeout: '%s'\n", entry->url);
-	PeerStats.timeouts++;
-	peerSelect(fd, entry->mem_obj->request, entry);
+    peer_ctrl_t *ctrl = data;
+    StoreEntry *entry = ctrl->entry;
+    debug(44, 3, "peerPingTimeout: '%s'\n", entry->url);
+    PeerStats.timeouts++;
+    ctrl->timeout = 1;
+    peerSelect(ctrl);
 }
 
 void
 peerSelectInit(void)
 {
-	memset(&PeerStats, '\0', sizeof(PeerStats));
+    memset(&PeerStats, '\0', sizeof(PeerStats));
 }

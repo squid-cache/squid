@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.92 1997/02/26 20:49:08 wessels Exp $
+ * $Id: client_side.cc,v 1.93 1997/02/27 02:57:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,53 +33,8 @@
 
 static void clientRedirectDone _PARAMS((void *data, char *result));
 static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
-static void clientLookupDstIPDone _PARAMS((int fd, const ipcache_addrs *, void *data));
-static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
-static void clientLookupDstFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
 static int clientGetsOldEntry _PARAMS((StoreEntry * new, StoreEntry * old, request_t * request));
 static int checkAccelOnly _PARAMS((icpStateData * icpState));
-
-
-static void
-clientLookupDstIPDone(int fd, const ipcache_addrs * ia, void *data)
-{
-    icpStateData *icpState = data;
-    debug(33, 5, "clientLookupDstIPDone: FD %d, '%s'\n",
-	fd,
-	icpState->url);
-    icpState->aclChecklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
-    if (ia) {
-	icpState->aclChecklist->dst_addr = ia->in_addrs[0];
-	debug(33, 5, "clientLookupDstIPDone: %s is %s\n",
-	    icpState->request->host,
-	    inet_ntoa(icpState->aclChecklist->dst_addr));
-    }
-    clientAccessCheck(icpState, icpState->aclHandler);
-}
-
-static void
-clientLookupSrcFQDNDone(int fd, const char *fqdn, void *data)
-{
-    icpStateData *icpState = data;
-    debug(33, 5, "clientLookupSrcFQDNDone: FD %d, '%s', FQDN %s\n",
-	fd,
-	icpState->url,
-	fqdn ? fqdn : "NULL");
-    icpState->aclChecklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
-    clientAccessCheck(icpState, icpState->aclHandler);
-}
-
-static void
-clientLookupDstFQDNDone(int fd, const char *fqdn, void *data)
-{
-    icpStateData *icpState = data;
-    debug(33, 5, "clientLookupDstFQDNDone: FD %d, '%s', FQDN %s\n",
-	fd,
-	icpState->url,
-	fqdn ? fqdn : "NULL");
-    icpState->aclChecklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
-    clientAccessCheck(icpState, icpState->aclHandler);
-}
 
 static void
 clientLookupIdentDone(void *data)
@@ -133,34 +88,14 @@ checkAccelOnly(icpStateData * icpState)
 }
 
 void
-clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int))
+clientAccessCheck(icpStateData * icpState, PF handler)
 {
-    int answer = 1;
-    aclCheck_t *ch = NULL;
-    char *browser = NULL;
-    const ipcache_addrs *ia = NULL;
-
+    char *browser;
     if (Config.identLookup && icpState->ident.state == IDENT_NONE) {
 	icpState->aclHandler = handler;
 	identStart(-1, icpState, clientLookupIdentDone);
 	return;
     }
-    if (icpState->aclChecklist == NULL) {
-	icpState->aclChecklist = xcalloc(1, sizeof(aclCheck_t));
-	icpState->aclChecklist->src_addr = icpState->peer.sin_addr;
-	icpState->aclChecklist->request = requestLink(icpState->request);
-	browser = mime_get_header(icpState->request_hdr, "User-Agent");
-	if (browser != NULL) {
-	    xstrncpy(icpState->aclChecklist->browser, browser, BROWSERNAMELEN);
-	} else {
-	    icpState->aclChecklist->browser[0] = '\0';
-	}
-	xstrncpy(icpState->aclChecklist->ident,
-	    icpState->ident.ident,
-	    ICP_IDENT_SZ);
-    }
-    /* This so we can have SRC ACLs for cache_host_acl. */
-    icpState->request->client_addr = icpState->peer.sin_addr;
 #if USE_PROXY_AUTH
     if (clientProxyAuthCheck(icpState) == 0) {
 	char *wbuf = NULL;
@@ -177,47 +112,24 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
 	return;
     }
 #endif /* USE_PROXY_AUTH */
-
-    ch = icpState->aclChecklist;
-    icpState->aclHandler = handler;
     if (checkAccelOnly(icpState)) {
-	answer = 0;
-    } else {
-	answer = aclCheck(Config.accessList.HTTP, ch);
-	if (ch->state[ACL_DST_IP] == ACL_LOOKUP_NEED) {
-	    ch->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;		/* first */
-	    ipcache_nbgethostbyname(icpState->request->host,
-		icpState->fd,
-		clientLookupDstIPDone,
-		icpState);
-	    return;
-	} else if (ch->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEED) {
-	    ch->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;	/* first */
-	    fqdncache_nbgethostbyaddr(icpState->peer.sin_addr,
-		icpState->fd,
-		clientLookupSrcFQDNDone,
-		icpState);
-	    return;
-	} else if (ch->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEED) {
-	    ch->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;	/* first */
-	    ia = ipcacheCheckNumeric(icpState->request->host);
-	    if (ia != NULL)
-		fqdncache_nbgethostbyaddr(ia->in_addrs[0],
-		    icpState->fd,
-		    clientLookupDstFQDNDone,
-		    icpState);
-	    return;
-	}
+        clientAccessCheckDone(0, icpState);
+	return;
     }
-    requestUnlink(icpState->aclChecklist->request);
-    safe_free(icpState->aclChecklist);
-    icpState->aclHandler = NULL;
-    handler(icpState, answer);
+    browser = mime_get_header(icpState->request_hdr, "User-Agent"),
+    aclNBCheck(Config.accessList.HTTP,
+	icpState->request,
+	icpState->peer.sin_addr,
+	browser,
+	icpState->ident.ident,
+	handler,
+	icpState);
 }
 
 void
-clientAccessCheckDone(icpStateData * icpState, int answer)
+clientAccessCheckDone(int answer, void *data)
 {
+    icpStateData * icpState = data;
     int fd = icpState->fd;
     char *buf = NULL;
     char *redirectUrl = NULL;

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.125 1997/02/26 20:49:11 wessels Exp $
+ * $Id: neighbors.cc,v 1.126 1997/02/27 02:57:12 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -764,7 +764,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	debug(15, 6, "neighborsUdpAck: All replies received.\n");
 	/* pass in fd=0 here so protoStart() looks up the real FD
 	 * and resets the timeout handler */
-	peerSelect(0, entry->mem_obj->request, entry);
+	peerSelectStart(0, entry->mem_obj->request, entry);
     }
 }
 

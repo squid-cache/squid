@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.71 1997/02/26 19:46:13 wessels Exp $
+ * $Id: gopher.cc,v 1.72 1997/02/27 02:57:08 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -158,12 +158,6 @@ typedef struct gopher_ds {
     char *buf;			/* pts to a 4k page */
     ConnectStateData connectState;
 } GopherStateData;
-
-typedef struct gopher_ctrl_t {
-    int unusedfd;
-    char *url;
-    StoreEntry *entry;
-} gopher_ctrl_t;
 
 static int gopherStateFree _PARAMS((int fd, GopherStateData *));
 static void gopher_mime_content _PARAMS((char *buf, const char *name, const char *def));
@@ -943,14 +937,9 @@ gopherSendRequest(int fd, GopherStateData * data)
 }
 
 int
-gopherStart(int unusedfd, const char *url, StoreEntry * entry)
+gopherStart(StoreEntry * entry)
 {
-    gopher_ctrl_t *ctrlp;
-    ctrlp = xmalloc(sizeof(gopher_ctrl_t));
-    ctrlp->unusedfd = unusedfd;
-    ctrlp->url = xstrdup(url);
-    ctrlp->entry = entry;
-    storeLockObject(entry, gopherStartComplete, ctrlp);
+    storeLockObject(entry, gopherStartComplete, entry);
     return COMM_OK;
 }
 
@@ -958,17 +947,10 @@ gopherStart(int unusedfd, const char *url, StoreEntry * entry)
 static void
 gopherStartComplete(void *datap, int status)
 {
-    gopher_ctrl_t *ctrlp = (gopher_ctrl_t *) datap;
-    /* Create state structure. */
+    StoreEntry *entry = datap;
+    char *url = entry->url;
     GopherStateData *data = CreateGopherStateData();
     int sock;
-    int unusedfd;
-    char *url;
-    StoreEntry *entry;
-    unusedfd = ctrlp->unusedfd;
-    url = ctrlp->url;
-    entry = ctrlp->entry;
-    xfree(ctrlp);
     data->entry = entry;
     debug(10, 3, "gopherStart: url: %s\n", url);
     /* Parse url. */
