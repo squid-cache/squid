@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.181 1997/12/31 17:52:04 wessels Exp $
+ * $Id: ftp.cc,v 1.182 1997/12/31 19:28:08 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -934,7 +934,7 @@ ftpConnectDone(int fd, int status, void *data)
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
-	comm_close(fd);
+	comm_close(ftpState->ctrl.fd);
     } else if (status != COMM_OK) {
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
@@ -942,7 +942,7 @@ ftpConnectDone(int fd, int status, void *data)
 	err->port = request->port;
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
-	comm_close(fd);
+	comm_close(ftpState->ctrl.fd);
     } else {
 	ftpState->state = BEGIN;
 	ftpState->ctrl.buf = get_free_4k_page();
@@ -996,7 +996,7 @@ ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void
 	}
 	if (entry->store_status == STORE_PENDING)
 	    storeAbort(entry, 0);
-	comm_close(fd);
+	comm_close(ftpState->ctrl.fd);
     }
 }
 
@@ -1071,7 +1071,7 @@ ftpReadControlReply(int fd, void *data)
 	    }
 	    if (entry->store_status == STORE_PENDING)
 		storeAbort(entry, 0);
-	    comm_close(fd);
+	    comm_close(ftpState->ctrl.fd);
 	}
 	return;
     }
@@ -1086,7 +1086,7 @@ ftpReadControlReply(int fd, void *data)
 		errorAppendEntry(entry, err);
 	    }
 	}
-	comm_close(fd);
+	comm_close(ftpState->ctrl.fd);
 	return;
     }
     len += ftpState->ctrl.offset;
@@ -1378,7 +1378,13 @@ ftpSendPasv(FtpStateData * ftpState)
 	ftpFail(ftpState);
 	return;
     }
-    comm_add_close_handler(fd, ftpStateFree, ftpState);
+    /*
+     * No comm_add_close_handler() here.  If we have both ctrl and
+     * data FD's call ftpStateFree() upon close, then we have
+     * to delete the close handler which did NOT get called
+     * to prevent ftpStateFree() getting called twice.
+     * Instead we'll always call comm_close() on the ctrl FD.
+     */
     ftpState->data.fd = fd;
     snprintf(cbuf, 1024, "PASV\r\n");
     ftpWriteCommand(cbuf, ftpState);
@@ -1446,7 +1452,7 @@ ftpPasvCallback(int fd, int status, void *data)
 	err->port = ftpState->data.port;
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
-	comm_close(fd);
+	comm_close(ftpState->ctrl.fd);
 	return;
     }
     ftpRestOrList(ftpState);
