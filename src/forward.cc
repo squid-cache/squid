@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.88 2002/10/13 20:35:01 robertc Exp $
+ * $Id: forward.cc,v 1.89 2002/11/29 22:02:32 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -182,12 +182,9 @@ static void
 fwdConnectDone(int server_fd, comm_err_t status, void *data)
 {
     FwdState *fwdState = (FwdState *)data;
-    static FwdState *current = NULL;
     FwdServer *fs = fwdState->servers;
     ErrorState *err;
     request_t *request = fwdState->request;
-    assert(current != fwdState);
-    current = fwdState;
     assert(fwdState->server_fd == server_fd);
     if (status == COMM_ERR_DNS) {
 	/*
@@ -238,7 +235,6 @@ fwdConnectDone(int server_fd, comm_err_t status, void *data)
 	    peerConnectSucceded(fs->_peer);
 	fwdDispatch(fwdState);
     }
-    current = NULL;
 }
 
 static void
