@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.389 1998/08/27 06:28:55 wessels Exp $
+ * $Id: client_side.cc,v 1.390 1998/08/30 05:21:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1510,6 +1510,9 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    kb_incr(&Counter.client_http.hit_kbytes_out, size);
     }
     if (errflag) {
+	/*
+	 * just close the socket, httpRequestFree will abort if needed
+	 */
 	comm_close(fd);
     } else if (NULL == entry) {
 	comm_close(fd);		/* yuk */
