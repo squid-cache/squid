@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.119 1996/09/20 20:55:31 wessels Exp $
+ * $Id: store.cc,v 1.120 1996/09/20 23:27:00 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -221,7 +221,7 @@ static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
 static int storeCopy _PARAMS((StoreEntry *, int, int, char *, int *));
 static int storeGetMemSpace _PARAMS((int size));
-static int storeShouldPurgeMem _PARAMS((StoreEntry *e));
+static int storeShouldPurgeMem _PARAMS((StoreEntry * e));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -566,7 +566,7 @@ storeUnlockObject(StoreEntry * e)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
 	debug_trap("storeUnlockObject: Someone unlocked STORE_PENDING object");
-        e->store_status = STORE_ABORTED;
+	e->store_status = STORE_ABORTED;
     }
     if (e->flag & RELEASE_REQUEST) {
 	storeRelease(e);
@@ -1886,8 +1886,8 @@ storeGetMemSpace(int size)
 
     /* Kick LRU out until we have enough memory space */
     for (i = 0; i < list_count; i++) {
-	    if (store_mem_size + size < store_mem_low)
-		break;
+	if (store_mem_size + size < store_mem_low)
+	    break;
 	e = *(list + i);
 	if (storeCheckPurgeMem(e)) {
 	    storePurgeMem(e);
@@ -2774,7 +2774,7 @@ storeRotateLog(void)
 }
 
 static int
-storeShouldPurgeMem(StoreEntry *e)
+storeShouldPurgeMem(StoreEntry * e)
 {
     if (storeCheckPurgeMem(e) == 0)
 	return 0;

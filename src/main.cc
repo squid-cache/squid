@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.84 1996/09/20 20:27:49 wessels Exp $
+ * $Id: main.cc,v 1.85 1996/09/20 23:26:57 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -370,7 +370,7 @@ serverConnectionsOpen(void)
 		    port,
 		    COMM_NONBLOCKING,
 		    "ICP Port");
-	        leave_suid();
+		leave_suid();
 		if (theOutIcpConnection < 0)
 		    fatal("Cannot open Outgoing ICP Port");
 		comm_set_select_handler(theOutIcpConnection,

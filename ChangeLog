@@ -5,6 +5,11 @@ Changes to squid-1.1.beta4 ():
 	- Added more stuff to net_db.c.
 	- Fixed memory leak in stat_ipcache_get().
 	- Changed __P back to _PARAMS.
+	- Fixed authorization parsing bug in ftp.c (Yoichi Shinoda).
+	- Allow ICP socket on priveledged ports.
+	- Added trap for STORE_PENDING objects when lock_count == 0.
+	- Replaced 'cache_hot_vm_factor' with 'max_hotvm_obj_size'.
+	- Moved ICMP socket to external 'pinger' program.
 
 Changes to squid-1.1.beta3 (September 16, 1996):
 
