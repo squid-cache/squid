@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.127 1997/10/26 02:35:40 wessels Exp $
+ * $Id: tools.cc,v 1.128 1997/10/30 18:37:08 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -430,7 +430,6 @@ debug_trap(const char *message)
 {
     if (!opt_catch_signals)
 	fatal_dump(message);
-    _db_level = 0;
     _db_print("WARNING: %s\n", message);
 }
 
