@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.162 1999/10/04 05:05:01 wessels Exp $
+# $Id: cf.data.pre,v 1.163 1999/12/11 15:57:43 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2265,14 +2265,14 @@ DOC_END
 
 NAME: store_objects_per_bucket
 TYPE: int
-DEFAULT: 50
+DEFAULT: 20
 LOC: Config.Store.objectsPerBucket
 DOC_START
 	Target number of objects per bucket in the store hash table.
 	Lowering this value increases the total number of buckets and
-	also the storage maintenance rate.  The default is 50.
+	also the storage maintenance rate.  The default is 20.
 
-store_objects_per_bucket 50
+store_objects_per_bucket 20
 DOC_END
 
 NAME: client_db

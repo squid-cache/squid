@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.21 1999/04/23 02:57:38 wessels Exp $
+ * $Id: store_key_md5.cc,v 1.22 1999/12/11 15:57:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -142,15 +142,12 @@ storeKeyFree(const cache_key * key)
 }
 
 int
-storeKeyHashBuckets(int nobj)
+storeKeyHashBuckets(int nbuckets)
 {
-    if (nobj < 0x2000)
-	return 0x2000;
-    if (nobj < 0x4000)
-	return 0x4000;
-    if (nobj < 0x8000)
-	return 0x8000;
-    return 0x10000;
+    int n = 0x2000;
+    while (n < nbuckets)
+	n <<= 1;
+    return n;
 }
 
 int
