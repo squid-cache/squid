@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.27 1996/11/14 19:02:10 wessels Exp $
+ * $Id: util.h,v 1.28 1996/12/01 07:42:34 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -143,6 +143,9 @@ extern void Tolower _PARAMS((char *));
 extern void xfree _PARAMS((void *));
 extern void xmemcpy _PARAMS((void *, void *, int));
 extern void xxfree _PARAMS((void *));
+
+/* rfc1738.c */
+extern char *rfc1738_escape _PARAMS((const char *));
 
 #if XMALLOC_STATISTICS
 void malloc_statistics _PARAMS((void (*)_PARAMS((int, int, void *)), void *));
