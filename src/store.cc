@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.565 2003/03/15 04:17:41 robertc Exp $
+ * $Id: store.cc,v 1.566 2003/05/18 00:04:07 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -236,6 +236,12 @@ StoreEntry::setNoDelay (bool const newValue)
 store_client_t
 StoreEntry::storeClientType() const
 {
+    /* The needed offset isn't in memory
+     * XXX TODO: this is wrong for range requests
+     * as the needed offset may *not* be 0, AND
+     * offset 0 in the memory object is the HTTP headers.
+     */
+
     if (mem_obj->inmem_lo)
         return STORE_DISK_CLIENT;
 
@@ -246,7 +252,10 @@ StoreEntry::storeClientType() const
     }
 
     if (store_status == STORE_OK) {
+        /* the object has completed. */
+
         if (mem_obj->inmem_lo == 0 && !isEmpty())
+            /* hot object */
             return STORE_MEM_CLIENT;
         else
             return STORE_DISK_CLIENT;
@@ -1000,8 +1009,13 @@ StoreEntry::complete()
         return;
     }
 
+    /* This is suspect: mem obj offsets include the headers. do we adjust for that
+     * in use of object_sz?
+     */
     mem_obj->object_sz = mem_obj->endOffset();
+
     store_status = STORE_OK;
+
     assert(mem_status == NOT_IN_MEMORY);
 
     if (!validLength()) {

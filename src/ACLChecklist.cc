@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.11 2003/05/17 17:35:03 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.12 2003/05/18 00:04:07 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -232,7 +232,7 @@ ACLChecklist::checkCallback(allow_t answer)
     if (cbdataReferenceValidDone(callback_data, &cbdata_))
         callback_(answer, cbdata_);
 
-    delete this;
+    deleteSelf();
 }
 
 void

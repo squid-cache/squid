@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.21 2003/05/11 13:53:03 hno Exp $
+ * $Id: client_side_request.cc,v 1.22 2003/05/18 00:04:07 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -130,7 +130,7 @@ ClientRequestContext::~ClientRequestContext()
         cbdataReferenceDone(http);
 
     if (acl_checklist)
-        delete acl_checklist;
+        acl_checklist->deleteSelf();
 }
 
 ClientRequestContext::ClientRequestContext() : acl_checklist (NULL), redirect_state (REDIRECT_NONE), http(NULL)
@@ -379,6 +379,7 @@ clientAccessCheckDone(int answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
 
+    context->acl_checklist = NULL;
     clientHttpRequest *http_ = context->http;
 
     if (!cbdataReferenceValid (http_)) {
@@ -397,7 +398,6 @@ clientAccessCheckDone(int answer, void *data)
     proxy_auth_msg = authenticateAuthUserRequestMessage((http->conn
                      && http->conn->auth_user_request) ? http->conn->
                      auth_user_request : http->request->auth_user_request);
-    context->acl_checklist = NULL;
 
     if (answer == ACCESS_ALLOWED) {
         safe_free(http->uri);
