@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.201 1998/08/17 22:05:02 wessels Exp $
+ * $Id: structs.h,v 1.202 1998/08/17 23:00:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -283,8 +283,7 @@ struct _SquidConfig {
     struct {
 	char *dnsserver;
 	char *redirect;
-	char *authenticate;
-	wordlist *authenticate_options;
+	wordlist *authenticate;
 	char *pinger;
 	char *unlinkd;
     } Program;
@@ -531,21 +530,6 @@ struct _fileMap {
     int toggle;
     int nwords;
     unsigned long *file_map;
-};
-
-struct _hash_link {
-    char *key;
-    hash_link *next;
-};
-
-struct _hash_table {
-    hash_link **buckets;
-    HASHCMP *cmp;
-    HASHHASH *hash;
-    unsigned int size;
-    unsigned int current_slot;
-    hash_link *next;
-    int count;
 };
 
 /* auto-growing memory-resident buffer with printf interface */
