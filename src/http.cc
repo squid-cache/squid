@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.250 1998/03/07 23:43:07 rousskov Exp $
+ * $Id: http.cc,v 1.251 1998/03/13 05:40:46 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -802,10 +802,10 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
 static HttpStateData *
 httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
 {
-    HttpStateData *httpState = xcalloc(1, sizeof(HttpStateData));
+    HttpStateData *httpState = memAllocate(MEM_HTTP_STATE_DATA);
     request_t *request;
     storeLockObject(entry);
-    cbdataAdd(httpState, MEM_NONE);
+    cbdataAdd(httpState, MEM_HTTP_STATE_DATA);
     httpState->entry = entry;
     httpState->fd = fd;
     if (e) {
@@ -813,11 +813,7 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
 	request->method = orig_request->method;
 	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
 	request->port = e->http_port;
-#if 0
-	xstrncpy(request->urlpath, storeUrl(entry), MAX_URL);
-#else
 	stringReset(&request->urlpath, storeUrl(entry));
-#endif
 	httpState->request = requestLink(request);
 	httpState->peer = e;
 	httpState->orig_request = requestLink(orig_request);
