@@ -28,31 +28,29 @@ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
-#ifdef KINETICS
-#include "gw.h"
-#endif
 
-#ifdef linux
+#include "config.h"
+
+#if HAVE_STDIO_H
 #include <stdio.h>
+#endif
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#include <netinet/in.h>
-
-#ifdef vms
-#include <in.h>
 #endif
-
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ASSERT_H
+#include <assert.h>
+#endif
 
 #include "asn1.h"
-
-#include <assert.h>
-
-#ifndef NULL
-#define NULL	0
-#endif
 
 #ifdef DEBUG
 #define ERROR(string)   printf("%s(%d): %s",__FILE__, __LINE__, string);

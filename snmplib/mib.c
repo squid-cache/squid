@@ -21,8 +21,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
 
-#include "squid.h"
-
 #include "asn1.h"
 #include "snmp.h"
 #include "snmp_impl.h"
@@ -568,12 +566,11 @@ static char Prefix[256];
 static int Suffix;
 
 void
-init_mib()
+init_mib(const char *file)
 {
-    char *file, *getenv(), *prefix;
+    char *prefix;
 
     Mib = 0;
-    file = Config.Snmp.mibPath;
     if (file)
 	Mib = read_mib(file);
     if (!Mib)

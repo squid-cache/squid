@@ -1700,8 +1700,7 @@ get_token(fp, token)
 }
 
 struct tree *
-read_mib(filename)
-     char *filename;
+read_mib(const char *filename)
 {
     FILE *fp;
     struct node *nodes;

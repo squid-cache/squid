@@ -121,15 +121,10 @@ typedef struct _conf_if_list {
 
 extern conf_if_list *if_list;
 
-/*extern void init_snmp(); */
-
-extern int read_objid(char *input,
-    oid * output,
-    int *out_len);
-
+extern int read_objid(char *input, oid * output, int *out_len);
+extern void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 extern void sprint_objid(char *buf, oid * id, int idlen);
 extern void print_objid(oid * id, int idlen);
-void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 extern void xdump(u_char * cp, int length, char *prefix);
 extern void snmp_synch_setup(struct snmp_session *session);
 extern int snmp_synch_response(struct snmp_session *ss,
