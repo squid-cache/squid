@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.51 2002/10/13 20:35:24 robertc Exp $
+ * $Id: store_dir_aufs.cc,v 1.52 2002/11/10 02:29:58 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -145,7 +145,7 @@ storeAufsDirReconfigure(SwapDir * sd, int index, char *path)
 void
 storeAufsDirDump(StoreEntry * entry, SwapDir * s)
 {
-    commonUfsDirDump (entry, s);
+    commonUfsDirDump(entry, s);
     dump_cachedir_options(entry, options, s);
 }
 

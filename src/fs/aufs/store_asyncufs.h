@@ -48,7 +48,7 @@ struct _squidaio_result_t {
 
 typedef struct _squidaio_result_t squidaio_result_t;
 
-typedef void AIOCB(int fd, void *, int aio_return, int aio_errno);
+typedef void AIOCB(int fd, void *cbdata, const char *buf, int aio_return, int aio_errno);
 
 int squidaio_cancel(squidaio_result_t *);
 int squidaio_open(const char *, int, mode_t, squidaio_result_t *);
@@ -63,6 +63,8 @@ squidaio_result_t *squidaio_poll_done(void);
 int squidaio_operations_pending(void);
 int squidaio_sync(void);
 int squidaio_get_queue_len(void);
+void *squidaio_xmalloc(int size);
+void squidaio_xfree(void *p, int size);
 
 void aioInit(void);
 void aioDone(void);
@@ -70,7 +72,7 @@ void aioCancel(int);
 void aioOpen(const char *, int, mode_t, AIOCB *, void *);
 void aioClose(int);
 void aioWrite(int, int offset, char *, int size, AIOCB *, void *, FREE *);
-void aioRead(int, int offset, char *, int size, AIOCB *, void *);
+void aioRead(int, int offset, int size, AIOCB *, void *);
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
 void aioTruncate(const char *, off_t length, AIOCB *, void *);
@@ -89,7 +91,7 @@ struct _squidaiostate_t {
 	unsigned int read_kicking:1;
 	unsigned int inreaddone:1;
     } flags;
-    const char *read_buf;
+    char *read_buf;
     link_list *pending_writes;
     link_list *pending_reads;
 };
