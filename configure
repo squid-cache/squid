@@ -7621,6 +7621,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 #if HAVE_LIMITS_H
 #include <limits.h>
@@ -7705,6 +7708,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 #if HAVE_SYS_SOCKET_H
@@ -9030,6 +9036,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -9106,6 +9115,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -9176,6 +9188,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -9255,6 +9270,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -9309,6 +9327,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -9381,6 +9402,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -9435,6 +9459,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -9515,6 +9542,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -9592,6 +9622,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -9706,6 +9739,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -9776,6 +9812,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -9855,6 +9894,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -9909,6 +9951,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -9981,6 +10026,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -10035,6 +10083,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -10115,6 +10166,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -10192,6 +10246,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -10306,6 +10363,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -10381,6 +10441,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -10458,6 +10521,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -10534,6 +10600,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -10604,6 +10673,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -10683,6 +10755,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -10737,6 +10812,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -10809,6 +10887,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -10863,6 +10944,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -10943,6 +11027,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -11020,6 +11107,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -11134,6 +11224,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -11209,6 +11302,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -11286,6 +11382,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -11361,6 +11460,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -11438,6 +11540,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -11508,6 +11613,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -11587,6 +11695,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -11641,6 +11752,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -11713,6 +11827,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -11767,6 +11884,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -11847,6 +11967,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -11924,6 +12047,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -12038,6 +12164,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -12113,6 +12242,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -12190,6 +12322,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -12265,6 +12400,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -12334,6 +12472,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -12413,6 +12554,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -12467,6 +12611,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -12539,6 +12686,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -12593,6 +12743,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -12673,6 +12826,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -12750,6 +12906,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -12862,6 +13021,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -12937,6 +13099,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -13006,6 +13171,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -13085,6 +13253,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -13139,6 +13310,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -13211,6 +13385,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -13265,6 +13442,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -13345,6 +13525,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 
@@ -13422,6 +13605,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
@@ -13534,6 +13720,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 
 int
@@ -13608,6 +13797,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 
