@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 if [ $# -ne 1 -a $# -ne 2 ]; then
 	echo "Usage: $0 revision [destination]"
 	exit 1
@@ -32,6 +32,7 @@ if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 	echo "${name} != ${PACKAGE}-${VERSION}"
 	exit 1
 fi
+RELEASE=`echo $VERSION | cut -d. -f1,2 | cut -d- -f1`
 ed -s configure.in <<EOS
 g/${VERSION}-CVS/ s//${VERSION}/
 w
@@ -51,5 +52,11 @@ make dist-all
 cd $startdir
 cp -p $tmpdir/${name}.tar.gz	$dst
 cp -p $tmpdir/${name}.tar.bz2	$dst
-cd $dst
-tar zxvf ${name}.tar.gz CONTRIBUTORS COPYING COPYRIGHT CREDITS ChangeLog RELEASENOTES.html
+cp -p $tmpdir/CONTRIBUTORS	$dst/CONTRIBUTORS.txt
+cp -p $tmpdir/COPYING		$dst/COPYING.txt
+cp -p $tmpdir/COPYRIGHT		$dst/COPYRIGHT.txt
+cp -p $tmpdir/CREDITS		$dst/CREDITS.txt
+cp -p $tmpdir/ChangeLog		$dst/ChangeLog.txt
+if [ -f $tmpdir/doc/release-notes/release-$RELEASE.html ]; then
+    cp -p $tmpdir/doc/release-notes/release-$RELEASE.html $dst/RELEASENOTES.html
+fi
