@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.288 2002/10/08 03:07:00 wessels Exp $
+# $Id: cf.data.pre,v 1.289 2002/10/08 04:27:31 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1489,23 +1489,13 @@ TYPE: time_t
 LOC: Config.authenticateIpTTL
 DEFAULT: 0 seconds
 DOC_START
-	With this option you control how long a proxy authentication
-	will be bound to a specific IP address. If a request using
-	the same user name is received during this time then access
-	will be denied and both users are required to reauthenticate
-	themselves.  The idea behind this is to make it annoying
-	for people to share their password with their friends, but
-	yet allow a dialup user to reconnect on a different dialup
-	port.
-
-	The default is 0 to disable the check. Recommended value
-	if you have dialup users are no more than 60 seconds to allow
-	the user to redial without hassle. If all your users are
-	stationary then higher values may be used.
-
-	See also the acl max_user_ip. The max_user_ip acl replaces
-	the authenticate_ip_ttl_is_strict option found in earlier
-	Squid versions.
+	If you use proxy authentication and the 'max_user_ip' ACL,
+	this directive controls how long Squid remembers the IP
+	addresses associated with each user.  Use a small value
+	(e.g., 60 seconds) if your users might change addresses
+	quickly, as is the case with dialups.   You might be safe
+	using a larger value (e.g., 2 hours) in a corporate LAN
+	environment with relatively static address assignments.
 DOC_END
 
 NAME: external_acl_type
