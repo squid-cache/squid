@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.201 1997/01/22 18:34:25 wessels Exp $
+ * $Id: store.cc,v 1.202 1997/01/24 22:20:08 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2806,7 +2806,7 @@ storeCheckExpired(const StoreEntry * e)
  * very busy then store_swap_size stays closer to the low water mark, if
  * it is not busy, then it will stay near the high water mark.  The LRU
  * age value can be examined on the cachemgr 'info' page.
-*/
+ */
 time_t
 storeExpiredReferenceAge(void)
 {
