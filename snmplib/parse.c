@@ -261,7 +261,6 @@ print_error(string, token, type)
     int type;
 {
     assert(string != NULL);
-    assert(snmplib_debug != NULL);
     if (type == ENDOFFILE)
 	snmplib_debug(0, "%s(EOF): On or around line %d\n", string, Line);
     else if (token)

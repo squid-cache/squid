@@ -14,9 +14,9 @@
 /* debugging redirected to squid (DW approach) */
 
 #ifdef __STDC__
-void (*snmplib_debug) (int,...); 
+void (*snmplib_debug_hook) (int,char *,...); 
 #else
-void (*snmplib_debug) (va_alist));
+void (*snmplib_debug_hook) (va_alist);
 #endif
 
 /* mib stuff here */
