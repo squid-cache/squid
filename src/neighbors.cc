@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.327 2005/01/05 21:59:34 serassio Exp $
+ * $Id: neighbors.cc,v 1.328 2005/01/06 03:22:22 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1771,7 +1771,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct soc
     debug(15, 6) ("neighborsHtcpReply: %s %s\n",
                   htcp->hit ? "HIT" : "MISS", storeKeyText(key));
 
-    if (NULL != (e = Store::Root().get(key)))
+    if (NULL != e)
         mem = e->mem_obj;
 
     if ((p = whichPeer(from)))
