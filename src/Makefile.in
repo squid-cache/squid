@@ -1,13 +1,15 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.142 1998/04/04 01:43:59 kostas Exp $
+#  $Id: Makefile.in,v 1.143 1998/04/08 00:42:20 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
+exec_suffix	= @exec_suffix@
+cgi_suffix	= @cgi_suffix@
 top_srcdir	= @top_srcdir@
 bindir		= @bindir@
 libexecdir      = @libexecdir@
@@ -62,10 +64,10 @@ DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
 
-PROGS           = squid client
-UTILS           = dnsserver unlinkd
-SUID_UTILS	= pinger
-CGIPROGS	= cachemgr.cgi
+PROGS           = squid$(exec_suffix) client$(exec_suffix)
+UTILS           = dnsserver$(exec_suffix) unlinkd$(exec_suffix)
+SUID_UTILS	= pinger$(exec_suffix)
+CGIPROGS	= cachemgr$(cgi_suffix)
 OBJS	 	= \
 		access_log.o \
 		acl.o \
@@ -172,7 +174,7 @@ $(OBJS): $(top_srcdir)/include/version.h
 
 $(SNMP_OBJS): $(top_srcdir)/snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
-squid:	$(OBJS)
+squid$(exec_suffix):	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
 
 globals.o: globals.c Makefile
@@ -184,19 +186,19 @@ globals.c: globals.h mk-globals-c.pl
 string_arrays.c: enums.h mk-string-arrays.pl
 	$(PERL) $(srcdir)/mk-string-arrays.pl < $(srcdir)/enums.h > $@
 
-client:	client.o
-	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)
+client$(exec_suffix):	client.o
+	$(CC) -o $@ $(LDFLAGS) client.o $(CLIENT_LIBS)
 
-dnsserver: dnsserver.o
-	$(CC) -o $@ $(LDFLAGS) $@.o $(DNSSERVER_LIBS)
+dnsserver$(exec_suffix): dnsserver.o
+	$(CC) -o $@ $(LDFLAGS) dnsserver.o $(DNSSERVER_LIBS)
 
-cachemgr.cgi:	cachemgr.o
+cachemgr$(cgi_suffix):	cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
 
-pinger: pinger.o
+pinger$(exec_suffix): pinger.o
 	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o globals.o $(PINGER_LIBS)
 
-unlinkd: unlinkd-daemon.o
+unlinkd$(exec_suffix): unlinkd-daemon.o
 	$(CC) $(LDFLAGS) unlinkd-daemon.o -o $@
 
 unlinkd-daemon.o: unlinkd.c

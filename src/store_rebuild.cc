@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.32 1998/04/07 23:28:27 rousskov Exp $
+ * $Id: store_rebuild.cc,v 1.33 1998/04/08 00:42:25 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -760,6 +760,8 @@ storeRebuildStart(void)
 	 */
 	fp = storeDirOpenTmpSwapLog(i, &clean, &zero);
 	if (fp == NULL || zero) {
+	    if (fp != NULL)
+		fclose(fp);
 	    d->rebuild_func = storeRebuildFromDirectory;
 	} else {
 	    d->rebuild_func = storeRebuildFromSwapLog;
