@@ -19,6 +19,10 @@
 + URLs --> MD5?
 + redo cachemgr utilization
 + internalize redirectors?
++ should we write clean store logs from the double-linked list so
+  that they are sorted in order of last reference?  Then upon
+  restart we won't have to worry about the list being unsorted
+  and causing problems with the LRU magic value.
 
 + Efficient public peer access control *without ACLs*
   Bill Wichers <billw@unix0.waveform.net>

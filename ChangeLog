@@ -1,3 +1,14 @@
+	- Fixed DST bug in rfc1123.c
+	- Changed default http_accel_port to 80.
+	- added errorCon() as a ErrorState constructor function
+	  (Max Okumoto).
+	- Added ERR_FTP_FAILURE message for ftpFail().
+	- For FTP, the timeout callback must be moved to the 'data'
+	  descriptor when data transfer begins.  Otherwise we are
+	  likely to get a timeout on the control descriptor.
+	- Fixed double-free bug in httpRequestFree().
+	- Fixed store_swap_size counting bug in storeSwapOutHandle().
+
 Changes to squid-1.2.beta3 (Oct 29, 1997):
 
 	- Initialize _res.options to RES_DEFAULT in dnsserver.c.
