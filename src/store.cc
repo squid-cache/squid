@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.70 1996/07/18 20:27:10 wessels Exp $
+ * $Id: store.cc,v 1.71 1996/07/19 17:36:19 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -133,7 +133,8 @@
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 #define MAX_SWAP_FILE		(1<<21)
 #define SWAP_BUF		DISK_PAGE_SIZE
-#define SWAP_DIRECTORIES	100
+#define SWAP_DIRECTORIES_L1	16
+#define SWAP_DIRECTORIES_L2	256
 
 #define WITH_MEMOBJ	1
 #define WITHOUT_MEMOBJ	0
@@ -181,6 +182,7 @@ static MemObject *new_MemObject _PARAMS((void));
 static mem_ptr new_MemObjectData _PARAMS((void));
 static StoreEntry *new_StoreEntry _PARAMS((int mem_obj_flag));
 static int storeCheckPurgeMem _PARAMS((StoreEntry * e));
+static void storeSwapLog _PARAMS((StoreEntry *));
 
 
 /* Now, this table is inaccessible to outsider. They have to use a method
@@ -213,7 +215,6 @@ static int storelog_fd = -1;
 static char key_temp_buffer[MAX_URL + 100];
 static char swaplog_file[MAX_FILE_NAME_LEN];
 static char tmp_filename[MAX_FILE_NAME_LEN];
-static char logmsg[MAX_URL << 1];
 
 /* patch cache_dir to accomodate multiple disk storage */
 dynamic_array *cache_dirs = NULL;
@@ -411,6 +412,7 @@ static void storeLog(tag, e)
      int tag;
      StoreEntry *e;
 {
+    LOCAL_ARRAY(char,logmsg,MAX_URL<<1);
     time_t t;
     int expect_len = 0;
     int actual_len = 0;
@@ -770,12 +772,13 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
-StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
+StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp, lastmod)
      char *url;
      int file_number;
      int size;
      time_t expires;
      time_t timestamp;
+     time_t lastmod;
 {
     StoreEntry *e = NULL;
 
@@ -804,8 +807,9 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     BIT_RESET(e->flag, CLIENT_ABORT_REQUEST);
     e->refcount = 0;
     e->lastref = squid_curtime;
-    e->timestamp = (u_num32) timestamp;
-    e->expires = (u_num32) expires;
+    e->timestamp = timestamp;
+    e->expires = expires;
+    e->lastmod = lastmod;
     e->ping_status = PING_NONE;
     return e;
 }
@@ -1070,20 +1074,15 @@ char *storeSwapFullPath(fn, fullpath)
      char *fullpath;
 {
     LOCAL_ARRAY(char, fullfilename, MAX_FILE_NAME_LEN);
-
-    if (fullpath) {
-	sprintf(fullpath, "%s/%02d/%d",
-	    swappath(fn),
-	    (fn / ncache_dirs) % SWAP_DIRECTORIES,
-	    fn);
-	return fullpath;
-    }
-    fullfilename[0] = '\0';
-    sprintf(fullfilename, "%s/%02d/%d",
+    if (!fullpath)
+	fullpath = fullfilename;
+    fullpath[0] = '\0';
+    sprintf(fullpath, "%s/%02X/%02X/%08X",
 	swappath(fn),
-	(fn / ncache_dirs) % SWAP_DIRECTORIES,
+	(fn / ncache_dirs) % SWAP_DIRECTORIES_L1,
+	(fn / ncache_dirs) / SWAP_DIRECTORIES_L1 % SWAP_DIRECTORIES_L2,
 	fn);
-    return fullfilename;
+    return fullpath;
 }
 
 /* swapping in handle */
@@ -1204,6 +1203,27 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
     return 0;
 }
 
+static void storeSwapLog(e)
+     StoreEntry *e;
+{
+    LOCAL_ARRAY(char,logmsg,MAX_URL<<1);
+    /* Note this printf format appears in storeWriteCleanLog() too */
+    sprintf(logmsg, "%08x %08x %08x %08x %9d %s\n",
+	(int) e->swap_file_number,
+	(int) e->timestamp,
+	(int) e->expires,
+	(int) e->lastmod,
+	e->object_len,
+	e->url);
+    file_write(swaplog_fd,
+	xstrdup(logmsg),
+	strlen(logmsg),
+	swaplog_lock,
+	NULL,
+	NULL,
+	xfree);
+}
+
 void storeSwapOutHandle(fd, flag, e)
      int fd;
      int flag;
@@ -1259,19 +1279,7 @@ void storeSwapOutHandle(fd, flag, e)
 	debug(20, 5, "storeSwapOutHandle: SwapOut complete: <URL:%s> to %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
 	put_free_8k_page(mem->e_swap_buf);
-	sprintf(logmsg, "%s %s %d %d %d\n",
-	    filename,
-	    e->url,
-	    (int) e->expires,
-	    (int) e->timestamp,
-	    e->object_len);
-	file_write(swaplog_fd,
-	    xstrdup(logmsg),
-	    strlen(logmsg),
-	    swaplog_lock,
-	    NULL,
-	    NULL,
-	    xfree);
+	storeSwapLog(e);
 	CacheInfo->proto_newobject(CacheInfo,
 	    mem->request->protocol,
 	    e->object_len,
@@ -1361,19 +1369,22 @@ static int storeSwapOutStart(e)
 static int storeDoRebuildFromDisk(data)
      struct storeRebuild_data *data;
 {
-    LOCAL_ARRAY(char, log_swapfile, MAXPATHLEN);
     LOCAL_ARRAY(char, swapfile, MAXPATHLEN);
     LOCAL_ARRAY(char, url, MAX_URL + 1);
-    char *t = NULL;
     StoreEntry *e = NULL;
     time_t expires;
     time_t timestamp;
-    int scan1, scan2, scan3;
+    time_t lastmod;
+    int scan1;
+    int scan2;
+    int scan3;
+    int scan4;
     struct stat sb;
     off_t size;
     int delta;
     int sfileno = 0;
     int count;
+    int x;
 
     /* load a number of objects per invocation */
     for (count = 0; count < data->speed; count++) {
@@ -1383,35 +1394,37 @@ static int storeDoRebuildFromDisk(data)
 	if ((++data->linecount & 0xFFF) == 0)
 	    debug(20, 1, "  %7d Lines read so far.\n", data->linecount);
 
-	debug(20, 10, "line_in: %s", data->line_in);
+	debug(20, 9, "line_in: %s", data->line_in);
 	if ((data->line_in[0] == '\0') || (data->line_in[0] == '\n') ||
 	    (data->line_in[0] == '#'))
 	    continue;		/* skip bad lines */
 
-	url[0] = log_swapfile[0] = '\0';
-	expires = squid_curtime;
-
+	url[0] = '\0';
+	swapfile[0] = '\0';
+	sfileno = 0;
+	scan1 = 0;
+	scan2 = 0;
 	scan3 = 0;
-	size = 0;
-	if (sscanf(data->line_in, "%s %s %d %d %d",
-		log_swapfile, url, &scan1, &scan2, &scan3) != 5) {
-	    if (opt_unlink_on_reload && log_swapfile[0])
-		safeunlink(log_swapfile, 0);
+	scan4 = 0;
+	x = sscanf(data->line_in, "%x %x %x %x %d %s",
+		&sfileno,	/* swap_file_number */
+		&scan1,		/* timestamp */
+		&scan2,		/* expires */
+		&scan3,		/* last modified */
+		&scan4,		/* size */
+		url);		/* url */
+	debug(20, 9, "x = %d\n", x);
+	if (x > 0)
+		storeSwapFullPath(sfileno, swapfile);
+	if (x != 6) {
+	    if (opt_unlink_on_reload && swapfile[0])
+		safeunlink(swapfile, 0);
 	    continue;
 	}
-	expires = (time_t) scan1;
-	timestamp = (time_t) scan2;
-	size = (off_t) scan3;
-	if ((t = strrchr(log_swapfile, '/')))
-	    sfileno = atoi(t + 1);
-	else
-	    sfileno = atoi(log_swapfile);
-	storeSwapFullPath(sfileno, swapfile);
-
-	/*
-	 * Note that swapfile may be different than log_swapfile if
-	 * another cache_dir is added.
-	 */
+	timestamp = (time_t) scan1;
+	expires = (time_t) scan2;
+	lastmod = (time_t) scan3;
+	size = (off_t) scan4;
 
 	if (store_rebuilding != STORE_REBUILDING_FAST) {
 	    if (stat(swapfile, &sb) < 0) {
@@ -1423,14 +1436,14 @@ static int storeDoRebuildFromDisk(data)
 		} else {
 		    debug(20, 3, "storeRebuildFromDisk: Swap file missing: <URL:%s>: %s: %s.\n", url, swapfile, xstrerror());
 		    if (opt_unlink_on_reload)
-			safeunlink(log_swapfile, 1);
+			safeunlink(swapfile, 1);
 		}
 		continue;
 	    }
 	    /* Empty swap file? */
 	    if (sb.st_size == 0) {
 		if (opt_unlink_on_reload)
-		    safeunlink(log_swapfile, 1);
+		    safeunlink(swapfile, 1);
 		continue;
 	    }
 	    /* timestamp might be a little bigger than sb.st_mtime */
@@ -1485,26 +1498,13 @@ static int storeDoRebuildFromDisk(data)
 	/* update store_swap_size */
 	store_swap_size += (int) ((size + 1023) >> 10);
 	data->objcount++;
-
-	sprintf(logmsg, "%s %s %d %d %d\n",
-	    swapfile,
-	    url,
-	    (int) expires,
-	    (int) timestamp,
-	    (int) size);
-	/* Automatically freed by file_write because no-handlers */
-	file_write(swaplog_fd,
-	    xstrdup(logmsg),
-	    strlen(logmsg),
-	    swaplog_lock,
-	    NULL,
-	    NULL,
-	    xfree);
-	storeAddDiskRestore(url,
+	e = storeAddDiskRestore(url,
 	    sfileno,
 	    (int) size,
 	    expires,
-	    timestamp);
+	    timestamp,
+	    lastmod);
+	storeSwapLog(e);
 	CacheInfo->proto_newobject(CacheInfo,
 	    urlParseProtocol(url),
 	    (int) size,
@@ -1913,6 +1913,7 @@ int storeGetMemSpace(size, check_vm_number)
 		debug(20, 5, "storeGetMemSpace: --> e->lock_count %d\n", e->lock_count);
 	}
     }
+#ifdef EXTRA_DEBUGGING
     debug(20, 5, "storeGetMemSpace: Current size:     %7d bytes\n", store_mem_size);
     debug(20, 5, "storeGetMemSpace: High W Mark:      %7d bytes\n", store_mem_high);
     debug(20, 5, "storeGetMemSpace: Low W Mark:       %7d bytes\n", store_mem_low);
@@ -1925,6 +1926,7 @@ int storeGetMemSpace(size, check_vm_number)
     debug(20, 5, "storeGetMemSpace: Can't purge:      %7d items\n", n_cantpurge);
     debug(20, 5, "storeGetMemSpace: Can't purge size: %7d bytes\n", mem_cantpurge);
     debug(20, 5, "storeGetMemSpace: Sorting LRU_list: %7d items\n", LRU_list->index);
+#endif
     qsort((char *) LRU_list->collection, LRU_list->index, sizeof(e), (int (*)(const void *, const void *)) compareLastRef);
 
     /* Kick LRU out until we have enough memory space */
@@ -2597,17 +2599,28 @@ static int storeVerifySwapDirs(clean)
 
 static void storeCreateSwapSubDirs()
 {
-    int i, j;
+    int i, j, k;
     LOCAL_ARRAY(char, name, MAXPATHLEN);
     for (j = 0; j < ncache_dirs; j++) {
-	for (i = 0; i < SWAP_DIRECTORIES; i++) {
-	    sprintf(name, "%s/%02d", swappath(j), i);
+	for (i = 0; i < SWAP_DIRECTORIES_L1; i++) {
+	    sprintf(name, "%s/%02X", swappath(j), i);
 	    if (mkdir(name, 0755) < 0) {
 		if (errno != EEXIST) {
 		    sprintf(tmp_error_buf,
 			"Failed to make swap directory %s: %s",
 			name, xstrerror());
 		    fatal(tmp_error_buf);
+		}
+	    }
+	    for (k = 0; k < SWAP_DIRECTORIES_L2; k++) {
+		sprintf(name, "%s/%02X/%02X", swappath(j), i, k);
+		if (mkdir(name, 0755) < 0) {
+		    if (errno != EEXIST) {
+			sprintf(tmp_error_buf,
+			    "Failed to make swap directory %s: %s",
+			    name, xstrerror());
+			fatal(tmp_error_buf);
+		    }
 		}
 	    }
 	}
@@ -2686,8 +2699,8 @@ void storeSanityCheck()
     if (ncache_dirs < 1)
 	storeAddSwapDisk(DefaultSwapDir);
 
-    for (i = 0; i < SWAP_DIRECTORIES; i++) {
-	sprintf(name, "%s/%02d", swappath(i), i);
+     for (i = 0; i < SWAP_DIRECTORIES_L1; i++) {
+       sprintf(name, "%s/%02X", swappath(i), i);
 	errno = 0;
 	if (access(name, W_OK)) {
 	    /* A very annoying problem occurs when access() fails because
@@ -2799,9 +2812,13 @@ int storeWriteCleanLog()
 	if (e->object_len <= 0)
 	    continue;
 	storeSwapFullPath(e->swap_file_number, swapfilename);
-	x = fprintf(fp, "%s %s %d %d %d\n",
-	    swapfilename, e->url, (int) e->expires, (int) e->timestamp,
-	    e->object_len);
+	x = fprintf(fp, "%08x %08x %08x %08x %9d %s\n",
+	    (int) e->swap_file_number,
+	    (int) e->timestamp,
+	    (int) e->expires,
+	    (int) e->lastmod,
+	    e->object_len,
+	    e->url);
 	if (x < 0) {
 	    debug(20, 0, "storeWriteCleanLog: %s: %s", tmp_filename, xstrerror());
 	    debug(20, 0, "storeWriteCleanLog: Current swap logfile not replaced.\n");
