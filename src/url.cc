@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.18 1996/04/16 05:13:37 wessels Exp $ */
+/* $Id: url.cc,v 1.19 1996/04/16 18:28:47 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -20,6 +20,7 @@ char *ProtocolStr[] =
     "NONE",
     "http",
     "ftp",
+    "gopher",
     "wais",
     "cache_object",
 #ifdef NEED_PROTO_CONNECT
