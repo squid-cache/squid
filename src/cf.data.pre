@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.126 1998/11/21 16:54:26 wessels Exp $
+# $Id: cf.data.pre,v 1.127 1998/11/26 01:22:26 glenn Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1447,6 +1447,7 @@ DOC_START
 	  # seem like it works at first, but it doesn't.
 
 	acl aclname snmp_community string ...
+	  # A community string to limit access to your SNMP Agent
 	  # Example:
 	  # 
 	  #	acl snmppublic snmp_community public
@@ -2381,9 +2382,19 @@ DEFAULT: none
 IFDEF: SQUID_SNMP
 DOC_START
 	Allowing or denying access to the SNMP port.
+
+	All access to the agent is denied by default.
 	usage:
 
 	snmp_access allow|deny [!]aclname ...
+
+Example:
+snmp_access allow public localhost
+snmp_access deny all
+
+NOCOMMENT_START
+snmp_access deny all
+NOCOMMENT_END
 DOC_END
 
 NAME: snmp_incoming_address
