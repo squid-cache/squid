@@ -1,4 +1,5 @@
-/* $Id: getfullhostname.c,v 1.3 1996/02/29 08:15:21 wessels Exp $ */
+
+/* $Id: getfullhostname.c,v 1.4 1996/04/14 03:25:23 wessels Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
