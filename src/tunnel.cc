@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.128 2002/10/21 14:00:03 adrian Exp $
+ * $Id: tunnel.cc,v 1.129 2002/10/21 15:13:40 adrian Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "comm.h"
 
 typedef struct {
     char *url;
@@ -62,8 +63,8 @@ static PF sslClientClosed;
 static IOCB sslReadClient;
 static IOCB sslReadServer;
 static PF sslTimeout;
-static CWCB sslWriteClientDone;
-static CWCB sslWriteServerDone;
+static IOWCB sslWriteClientDone;
+static IOWCB sslWriteServerDone;
 static PSC sslPeerSelectComplete;
 static void sslStateFree(SslStateData * sslState);
 static void sslConnected(int fd, void *);
@@ -166,7 +167,7 @@ sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
 	    comm_close(sslState->client.fd);
         }
     } else if (cbdataReferenceValid(sslState))
-	comm_old_write(sslState->client.fd, sslState->server.buf, len, sslWriteClientDone, sslState, NULL);
+	comm_write(sslState->client.fd, sslState->server.buf, len, sslWriteClientDone, sslState);
     cbdataInternalUnlock(sslState);	/* ??? */
 }
 
@@ -209,13 +210,13 @@ sslReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
 	    comm_close(sslState->server.fd);
         }
     } else if (cbdataReferenceValid(sslState))
-	comm_old_write(sslState->server.fd, sslState->client.buf, len, sslWriteServerDone, sslState, NULL);
+	comm_write(sslState->server.fd, sslState->client.buf, len, sslWriteServerDone, sslState);
     cbdataInternalUnlock(sslState);	/* ??? */
 }
 
 /* Writes data from the client buffer to the server side */
 static void
-sslWriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, void *data)
+sslWriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
     assert(fd == sslState->server.fd);
@@ -255,7 +256,7 @@ sslWriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, void *data)
 
 /* Writes data from the server buffer to the client side */
 static void
-sslWriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, void *data)
+sslWriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
     assert(fd == sslState->client.fd);
