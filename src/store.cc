@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.200 1997/01/22 04:41:12 wessels Exp $
+ * $Id: store.cc,v 1.201 1997/01/22 18:34:25 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2790,19 +2790,30 @@ storeCheckExpired(const StoreEntry * e)
 	return 0;
     if (BIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
-    if (max_age && squid_curtime - e->lastref > max_age)
+    if (max_age <= 0)
+	return 0;
+    if (squid_curtime - e->lastref > max_age)
 	return 1;
     return 0;
 }
 
-/* gnuplot> plot 724**((x)+1)*60  */
+/* 
+ * storeExpiredReferenceAge
+ *
+ * The LRU age is scaled exponentially between 1 minute and 1 year, when
+ * store_swap_low < store_swap_size < store_swap_high.  This keeps
+ * store_swap_size within the low and high water marks.  If the cache is
+ * very busy then store_swap_size stays closer to the low water mark, if
+ * it is not busy, then it will stay near the high water mark.  The LRU
+ * age value can be examined on the cachemgr 'info' page.
+*/
 time_t
 storeExpiredReferenceAge(void)
 {
     double x;
     double z;
     time_t age;
-    if (Config.referenceAge > -1)
+    if (Config.referenceAge != 0)
 	return Config.referenceAge;
     x = 2.0 * (store_swap_high - store_swap_size) / (store_swap_high - store_swap_low);
     x = x < 0.0 ? 0.0 : x > 2.0 ? 2.0 : x;
