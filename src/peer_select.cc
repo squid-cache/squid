@@ -1,5 +1,5 @@
 /*
- * $Id: peer_select.cc,v 1.6 1997/02/28 21:33:41 wessels Exp $
+ * $Id: peer_select.cc,v 1.7 1997/03/02 05:35:08 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -168,7 +168,7 @@ peerSelectFoo(ps_state * psstate)
     debug(44, 3, "peerSelect: '%s %s'\n",
 	RequestMethodStr[request->method],
 	request->host);
-    if (psstate->never_direct == 0) {
+    if (psstate->never_direct == 0 && Config.accessList.NeverDirect) {
 	aclNBCheck(Config.accessList.NeverDirect,
 	    request,
 	    request->client_addr,
@@ -179,7 +179,7 @@ peerSelectFoo(ps_state * psstate)
 	return;
     } else if (psstate->never_direct > 0) {
 	direct = DIRECT_NO;
-    } else if (psstate->always_direct == 0) {
+    } else if (psstate->always_direct == 0 && Config.accessList.AlwaysDirect) {
 	aclNBCheck(Config.accessList.AlwaysDirect,
 	    request,
 	    request->client_addr,
