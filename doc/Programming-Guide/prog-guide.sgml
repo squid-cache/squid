@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.30 2001/01/05 09:51:34 adrian Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.31 2001/01/06 00:30:37 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2059,6 +2059,8 @@ coupling between the storage layer and the replacement policy.
 	operation executes elsewhere, and is freed when the operation
 	completes.  The normal sequence of events is:
 <verb>
+	type_of_data callback_data;
+	...
 	callback_data = CBDATA_ALLOC(type_of_data, free_handler);
 	...
 	cbdataLock(callback_data);
@@ -2093,6 +2095,22 @@ coupling between the storage layer and the replacement policy.
 	and callback_func is never executed.  When <tt/cbdataUnlock/ gets
 	called, it notices that the callback_data is invalid and will
 	then call <tt/cbdataFree/.
+
+	<P>
+	To add new data types to the allocator one uses the macros
+	CBDATA_TYPE and CBDATA_INIT_TYPE.
+
+<verb>
+	/* Somewhere at the scope the cbdata type needs to exists, usually
+	 * global
+	 */
+	CBDATA_TYPE(type_of_data);
+
+	/* Then in the code somewhere before the first allocation
+	 * (can be called multiple times)
+	 */
+	CBDATA_INIT_TYPE(type_of_data);
+</verb>
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager
