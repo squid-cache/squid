@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.154 1997/11/19 06:16:33 wessels Exp $
+ * $Id: client_side.cc,v 1.155 1997/11/19 06:17:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1330,7 +1330,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     char *mstr = NULL;
     char *url = NULL;
     char *req_hdr = NULL;
-    LOCAL_ARRAY(char, http_ver_s, 32);
     float http_ver;
     char *token = NULL;
     char *t = NULL;
