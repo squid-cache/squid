@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.42 2000/05/16 07:06:02 wessels Exp $
+ * $Id: HttpReply.cc,v 1.43 2000/11/13 12:25:11 adrian Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -194,7 +194,7 @@ httpReplySwapOut(const HttpReply * rep, StoreEntry * e)
 }
 
 MemBuf
-httpPackedReply(double ver, http_status status, const char *ctype,
+httpPackedReply(http_version_t ver, http_status status, const char *ctype,
     int clen, time_t lmt, time_t expires)
 {
     HttpReply *rep = httpReplyCreate();
@@ -228,7 +228,7 @@ httpPacked304Reply(const HttpReply * rep)
 }
 
 void
-httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const char *reason,
+httpReplySetHeaders(HttpReply * reply, http_version_t ver, http_status status, const char *reason,
     const char *ctype, int clen, time_t lmt, time_t expires)
 {
     HttpHeader *hdr;
@@ -259,8 +259,10 @@ void
 httpRedirectReply(HttpReply * reply, http_status status, const char *loc)
 {
     HttpHeader *hdr;
+    http_version_t ver;
     assert(reply);
-    httpStatusLineSet(&reply->sline, 1.0, status, httpStatusString(status));
+    httpBuildVersion(&ver,1,0);
+    httpStatusLineSet(&reply->sline, ver, status, httpStatusString(status));
     hdr = &reply->header;
     httpHeaderPutStr(hdr, HDR_SERVER, full_appname_string);
     httpHeaderPutTime(hdr, HDR_DATE, squid_curtime);

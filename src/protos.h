@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.386 2000/11/01 04:03:15 wessels Exp $
+ * $Id: protos.h,v 1.387 2000/11/13 12:25:12 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -269,6 +269,7 @@ extern int gopherCachable(const char *);
 
 extern void whoisStart(FwdState *);
 
+/* http.c */
 extern int httpCachable(method_t);
 extern void httpStart(FwdState *);
 extern void httpParseReplyHeaders(const char *, http_reply *);
@@ -283,6 +284,7 @@ extern void httpAnonInitModule(void);
 extern int httpAnonHdrAllowed(http_hdr_type hdr_id);
 extern int httpAnonHdrDenied(http_hdr_type hdr_id);
 extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, http_state_flags);
+extern void httpBuildVersion(http_version_t *version,unsigned int major,unsigned int minor);
 
 /* ETag */
 extern int etagParseInit(ETag * etag, const char *str);
@@ -293,7 +295,7 @@ extern int etagIsEqual(const ETag * tag1, const ETag * tag2);
 extern void httpStatusLineInit(HttpStatusLine * sline);
 extern void httpStatusLineClean(HttpStatusLine * sline);
 /* set/get values */
-extern void httpStatusLineSet(HttpStatusLine * sline, double version,
+extern void httpStatusLineSet(HttpStatusLine * sline, http_version_t version,
     http_status status, const char *reason);
 extern const char *httpStatusLineReason(const HttpStatusLine * sline);
 /* parse/pack */
@@ -432,7 +434,7 @@ extern void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 extern void httpHeaderStoreReport(StoreEntry * e);
 
 /* Http Msg (currently in HttpReply.c @?@ ) */
-extern int httpMsgIsPersistent(float http_ver, const HttpHeader * hdr);
+extern int httpMsgIsPersistent(http_version_t http_ver, const HttpHeader * hdr);
 extern int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
 
 /* Http Reply */
@@ -453,10 +455,10 @@ extern MemBuf httpReplyPack(const HttpReply * rep);
 /* swap: create swap-based packer, pack, destroy packer */
 extern void httpReplySwapOut(const HttpReply * rep, StoreEntry * e);
 /* set commonly used info with one call */
-extern void httpReplySetHeaders(HttpReply * rep, double ver, http_status status,
+extern void httpReplySetHeaders(HttpReply * rep, http_version_t ver, http_status status,
     const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
 /* do everything in one call: init, set, pack, clean, return MemBuf */
-extern MemBuf httpPackedReply(double ver, http_status status, const char *ctype,
+extern MemBuf httpPackedReply(http_version_t ver, http_status status, const char *ctype,
     int clen, time_t lmt, time_t expires);
 /* construct 304 reply and pack it into MemBuf, return MemBuf */
 extern MemBuf httpPacked304Reply(const HttpReply * rep);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.360 2000/11/10 09:04:51 adrian Exp $
+ * $Id: structs.h,v 1.361 2000/11/13 12:25:13 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -91,6 +91,11 @@ struct _String {
     unsigned short int size;	/* buffer size; 64K limit */
     unsigned short int len;	/* current length  */
     char *buf;
+};
+
+struct _http_version_t {
+    unsigned int major;
+    unsigned int minor;
 };
 
 #if SQUID_SNMP
@@ -650,7 +655,10 @@ struct _Packer {
 /* http status line */
 struct _HttpStatusLine {
     /* public, read only */
+    http_version_t version;
+#if 0
     float version;
+#endif
     const char *reason;		/* points to a _constant_ string (default or supplied), never free()d */
     http_status status;
 };
@@ -838,7 +846,7 @@ struct _AccessLogEntry {
 	method_t method;
 	int code;
 	const char *content_type;
-	float version;
+        http_version_t version;
     } http;
     struct {
 	icp_opcode opcode;
@@ -880,7 +888,7 @@ struct _clientHttpRequest {
     const char *lookup_type;	/* temporary hack: storeGet() result: HIT/MISS/NONE */
 #endif
     struct timeval start;
-    float http_ver;
+    http_version_t http_ver;
     int redirect_state;
     aclCheck_t *acl_checklist;	/* need ptr back so we can unreg if needed */
     clientHttpRequest *next;
@@ -1436,7 +1444,7 @@ struct _request_t {
     request_flags flags;
     HttpHdrCc *cache_control;
     HttpHdrRange *range;
-    float http_ver;
+    http_version_t http_ver;
     time_t ims;
     int imslen;
     int max_forwards;

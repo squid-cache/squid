@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.94 2000/05/16 07:06:05 wessels Exp $
+ * $Id: mime.cc,v 1.95 2000/11/13 12:25:12 adrian Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -394,6 +394,7 @@ mimeLoadIconFile(const char *icon)
     char *buf;
     const char *type = mimeGetContentType(icon);
     HttpReply *reply;
+    http_version_t version;
     if (type == NULL)
 	fatal("Unknown icon format while reading mime.conf\n");
     buf = internalLocalUri("/squid-internal-static/icons/", icon);
@@ -421,7 +422,8 @@ mimeLoadIconFile(const char *icon)
     storeBuffer(e);
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
     httpReplyReset(reply = e->mem_obj->reply);
-    httpReplySetHeaders(reply, 1.0, HTTP_OK, NULL,
+    httpBuildVersion(&version,1,0);
+    httpReplySetHeaders(reply, version, HTTP_OK, NULL,
 	type, (int) sb.st_size, sb.st_mtime, -1);
     reply->cache_control = httpHdrCcCreate();
     httpHdrCcSetMaxAge(reply->cache_control, 86400);

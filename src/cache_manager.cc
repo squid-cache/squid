@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.22 2000/05/16 07:06:03 wessels Exp $
+ * $Id: cache_manager.cc,v 1.23 2000/11/13 12:25:11 adrian Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -253,11 +253,13 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
     if (a->flags.atomic)
 	storeBuffer(entry);
     {
+        http_version_t version;
 	HttpReply *rep = entry->mem_obj->reply;
 	/* prove there are no previous reply headers around */
 	assert(0 == rep->sline.status);
+        httpBuildVersion(&version,1,0);
 	httpReplySetHeaders(rep,
-	    (double) 1.0,
+	    version,
 	    HTTP_OK,
 	    NULL,
 	    "text/plain",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.369 2000/11/01 04:03:14 wessels Exp $
+ * $Id: http.cc,v 1.370 2000/11/13 12:25:12 adrian Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1016,4 +1016,10 @@ httpSendRequestEntryDone(int fd, char *bufnotused, size_t size, int errflag, voi
 	debug(11, 2) ("httpSendRequestEntryDone: matched brokenPosts\n");
 	comm_write(fd, "\r\n", 2, httpSendComplete, data, NULL);
     }
+}
+
+void
+httpBuildVersion(http_version_t *version, unsigned int major,unsigned int minor) {
+    version->major=major;
+    version->minor=minor;
 }
