@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.121 2004/10/14 23:32:45 hno Exp $
+ * $Id: forward.cc,v 1.122 2004/11/07 13:58:30 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -848,12 +848,12 @@ fwdReforward(FwdState * fwdState)
 /* PUBLIC FUNCTIONS */
 
 void
-fwdServersFree(FwdServer ** FS)
+fwdServersFree(FwdServer ** FSVR)
 {
     FwdServer *fs;
 
-    while ((fs = *FS)) {
-        *FS = fs->next;
+    while ((fs = *FSVR)) {
+        *FSVR = fs->next;
         fwdServerFree(fs);
     }
 }

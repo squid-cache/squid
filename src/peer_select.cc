@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.132 2003/10/16 21:40:16 robertc Exp $
+ * $Id: peer_select.cc,v 1.133 2004/11/07 13:58:30 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -770,7 +770,7 @@ peerHandlePingReply(peer * p, peer_t type, protocol_t proto, void *pingdata, voi
 }
 
 static void
-peerAddFwdServer(FwdServer ** FS, peer * p, hier_code code)
+peerAddFwdServer(FwdServer ** FSVR, peer * p, hier_code code)
 {
     FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
     debug(44, 5) ("peerAddFwdServer: adding %s %s\n",
@@ -779,10 +779,10 @@ peerAddFwdServer(FwdServer ** FS, peer * p, hier_code code)
     fs->_peer = cbdataReference(p);
     fs->code = code;
 
-    while (*FS)
-        FS = &(*FS)->next;
+    while (*FSVR)
+        FSVR = &(*FSVR)->next;
 
-    *FS = fs;
+    *FSVR = fs;
 }
 
 void *
