@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+<TITLE>שגיאה: העלאת קובץ ל-FTP נכשלה</TITLE>
+</HEAD><BODY>
+<div dir="rtl" align="right">
+<H1>שגיאה</H1>
+<H2>העלאת קובץ ל-FTP נכשלה</H2>
+<HR>
+<P>
+שגיאה כאשר ניסיתי לשלוח את:
+<A HREF="%U">%U</A>
+<P>
+השרת שלח את פקודת ה-FTP הבאה:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+וקיבל בתשובה:
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+זה אומר ש:
+<PRE>
+בדוק את הנתיב, ההרשאות, מקום בדיסק ונסה שוב.
+</PRE>
+<P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 

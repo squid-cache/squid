@@ -1,0 +1,17 @@
+<HTML><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+<TITLE>שגיאה: הכתובת המבוקשת לא נגישה</TITLE>
+</HEAD><BODY>
+<div dir="rtl" align="right">
+<H1>שגיאה</H1>
+<H2>לא ניתן לגשת אל הכתובת המבוקשת</H2>
+<HR>
+<P>
+שרת ה-FTP היה עסוק מדי, כאשר ניסיתי לגשת אל הכתובת: <A HREF="%U">%U</A>
+<P>
+השרת שלח את פקודת ה-FTP הבאה:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+וקיבל בתשובה:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 
