@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.106 2000/06/26 04:57:17 wessels Exp $
+ * $Id: typedefs.h,v 1.107 2000/06/27 08:41:31 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -169,6 +169,7 @@ typedef struct _generic_cbdata generic_cbdata;
 typedef struct _storeIOState storeIOState;
 typedef struct _link_list link_list;
 typedef struct _storefs_entry storefs_entry_t;
+typedef struct _storerepl_entry storerepl_entry_t;
 typedef struct _diskd_queue diskd_queue;
 typedef struct _Logfile Logfile;
 typedef struct _RemovalPolicy RemovalPolicy;

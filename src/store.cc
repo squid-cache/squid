@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.527 2000/06/26 04:57:16 wessels Exp $
+ * $Id: store.cc,v 1.528 2000/06/27 08:41:30 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1222,6 +1222,7 @@ storeEntryReset(StoreEntry * e)
 void
 storeFsInit(void)
 {
+    storeReplSetup();
     storeFsSetup();
 }
 
@@ -1258,6 +1259,39 @@ storeFsAdd(char *type, STSETUP * setup)
     storefs_list[i].typestr = type;
     /* Call the FS to set up capabilities and initialize the FS driver */
     setup(&storefs_list[i]);
+}
+
+/*
+ * called to add another store removal policy module
+ */
+void
+storeReplAdd(char *type, REMOVALPOLICYCREATE * create)
+{
+    int i;
+    /* find the number of currently known repl types */
+    for (i = 0; storerepl_list && storerepl_list[i].typestr; i++) {
+	assert(strcmp(storerepl_list[i].typestr, type) != 0);
+    }
+    /* add the new type */
+    storerepl_list = xrealloc(storerepl_list, (i + 2) * sizeof(storerepl_entry_t));
+    memset(&storerepl_list[i + 1], 0, sizeof(storerepl_entry_t));
+    storerepl_list[i].typestr = type;
+    storerepl_list[i].create = create;
+}
+
+/*
+ * Create a removal policy instance
+ */
+RemovalPolicy *
+createRemovalPolicy(RemovalPolicySettings * settings)
+{
+    storerepl_entry_t *r;
+    for (r = storerepl_list; r && r->typestr; r++) {
+	if (strcmp(r->typestr, settings->type) == 0)
+	    return r->create(settings->args);
+    }
+    debug(20,1)("Unknown policy %s\n", settings->type);
+    return NULL;
 }
 
 #if 0
