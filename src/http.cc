@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.445 2005/03/06 14:46:29 serassio Exp $
+ * $Id: http.cc,v 1.446 2005/03/06 19:37:17 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -638,7 +638,7 @@ void
 HttpStateData::processReplyHeader(const char *buf, int size)
 {
     size_t hdr_len;
-    size_t hdr_size = headersEnd(buf, size);
+    size_t hdr_size;
     /* Creates a blank header. If this routine is made incremental, this will
      * not do 
      */
@@ -652,10 +652,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
     assert(reply_hdr_state == 0);
 
-    if (hdr_size)
-        memBufAppend(&reply_hdr, buf, hdr_size);
-    else
-        memBufAppend(&reply_hdr, buf, size);
+    memBufAppend(&reply_hdr, buf, size);
 
     hdr_len = reply_hdr.size;
 
@@ -668,8 +665,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         return;
     }
 
-    if (hdr_size != hdr_len)
-        hdr_size = headersEnd(reply_hdr.buf, hdr_len);
+    hdr_size = headersEnd(reply_hdr.buf, hdr_len);
 
     if (hdr_size)
         hdr_len = hdr_size;
