@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.9 2000/05/29 00:36:39 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.10 2000/05/29 01:37:11 wessels Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -35,11 +35,12 @@
 
 #include "config.h"
 #include "squid.h"
-#include "store_diskd.h"
 
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/shm.h>
+
+#include "store_diskd.h"
 
 static int storeDiskdSend(int, SwapDir *, int, storeIOState *, int, int, int);
 static void storeDiskdIOCallback(storeIOState * sio, int errflag);

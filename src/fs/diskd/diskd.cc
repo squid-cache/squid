@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.3 2000/05/29 00:30:44 wessels Exp $
+ * $Id: diskd.cc,v 1.4 2000/05/29 01:37:11 wessels Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -35,12 +35,11 @@
 #include "config.h"
 #include "squid.h"
 
-
-#include "store_diskd.h"
-
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/shm.h>
+
+#include "store_diskd.h"
 
 #undef assert
 #include <assert.h>
