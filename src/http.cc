@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.191 1997/10/17 00:00:37 wessels Exp $
+ * $Id: http.cc,v 1.192 1997/10/21 19:38:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -633,7 +633,7 @@ httpReadReply(int fd, void *data)
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
-	comm_set_stall(fd, Config.stallDelay);
+	comm_set_stall(fd, 1);
 	return;
     } else {
 	BIT_RESET(entry->flag, READ_DEFERRED);

@@ -114,7 +114,6 @@ struct _SquidConfig {
     time_t positiveDnsTtl;
     time_t shutdownLifetime;
     time_t neighborTimeout;
-    time_t stallDelay;
     struct {
 	time_t read;
 	time_t defer;

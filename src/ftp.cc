@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.141 1997/10/21 18:24:02 wessels Exp $
+ * $Id: ftp.cc,v 1.142 1997/10/21 19:38:50 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -631,7 +631,7 @@ ftpReadData(int fd, void *data)
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
-	comm_set_stall(fd, Config.stallDelay);
+	comm_set_stall(fd, 1);
 	return;
     } else {
 	BIT_RESET(entry->flag, READ_DEFERRED);
