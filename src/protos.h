@@ -103,6 +103,7 @@ extern void comm_write(int fd,
 extern void commCallCloseHandlers(int fd);
 extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
+extern int ignoreErrno(int);
 
 extern void _db_init(const char *logfile, const char *options);
 extern void _db_rotate_log(void);
@@ -551,4 +552,4 @@ extern int pconnPop(const char *host, u_short port);
 extern void pconnInit(void);
 
 extern int asnMatchIp(void *, struct in_addr);
-extern void asnAclInitialize (acl *);
+extern void asnAclInitialize(acl *);

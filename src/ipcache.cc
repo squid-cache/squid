@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.142 1997/11/12 00:08:55 wessels Exp $
+ * $Id: ipcache.cc,v 1.143 1997/11/14 17:21:22 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -580,7 +580,7 @@ ipcache_dnsHandleRead(int fd, void *data)
     debug(14, 5) ("ipcache_dnsHandleRead: Result from DNS ID %d (%d bytes)\n",
 	dnsData->id, len);
     if (len <= 0) {
-	if (len < 0 && (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)) {
+	if (len < 0 && ignoreErrno(errno)) {
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
 		ipcache_dnsHandleRead,
@@ -742,7 +742,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     assert(i->status == IP_PENDING);
     buf = xcalloc(1, 256);
     snprintf(buf, 256, "%s\n", i->name);
-    EBIT_SET(dns->flags , HELPER_BUSY);
+    EBIT_SET(dns->flags, HELPER_BUSY);
     dns->data = i;
     i->status = IP_DISPATCHED;
     comm_write(dns->outpipe,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.66 1997/11/12 00:08:50 wessels Exp $
+ * $Id: fqdncache.cc,v 1.67 1997/11/14 17:21:17 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -537,7 +537,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
     debug(35, 5) ("fqdncache_dnsHandleRead: Result from DNS ID %d (%d bytes)\n",
 	dnsData->id, len);
     if (len <= 0) {
-	if (len < 0 && (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN)) {
+	if (len < 0 && ignoreErrno(errno)) {
 	    commSetSelect(fd,
 		COMM_SELECT_READ,
 		fqdncache_dnsHandleRead,

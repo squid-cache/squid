@@ -1,5 +1,6 @@
+
 /*
- * $Id: disk.cc,v 1.94 1997/11/14 04:55:07 wessels Exp $
+ * $Id: disk.cc,v 1.95 1997/11/14 17:21:17 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -280,9 +281,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (q == NULL)		/* Someone aborted then write completed */
 	return;
     if (len < 0) {
-	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    (void) 0;
-	} else {
+	if (!ignoreErrno(errno)) {
 	    status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
 	    debug(50, 1) ("diskHandleWrite: FD %d: disk write error: %s\n",
 		fd, xstrerror());
@@ -415,7 +414,7 @@ diskHandleReadComplete(void *data, int len, int errcode)
     xfree(data);
     fd_bytes(fd, len, FD_READ);
     if (len < 0) {
-	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
 	    return;
 	}

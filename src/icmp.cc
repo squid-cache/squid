@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.49 1997/11/12 23:47:38 wessels Exp $
+ * $Id: icmp.cc,v 1.50 1997/11/14 17:21:21 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -136,7 +136,7 @@ icmpSend(int fd, void *data)
 	    queue->len,
 	    0);
 	if (x < 0) {
-	    if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+	    if (ignoreErrno(errno))
 		break;		/* don't de-queue */
 	    debug(50, 0) ("icmpSend: send: %s\n", xstrerror());
 	    if (errno == ECONNREFUSED) {
