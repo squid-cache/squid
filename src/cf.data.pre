@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.164 1999/12/30 17:36:24 wessels Exp $
+# $Id: cf.data.pre,v 1.165 2000/01/31 23:23:04 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3051,7 +3051,7 @@ DOC_START
 	When this is 'on', a request will not go through the
 	redirector if all redirectors are busy.  If this is 'off'
 	and the redirector queue grows too large, Squid will exit
-	with a FATAL erorr and ask you to increase the number of
+	with a FATAL error and ask you to increase the number of
 	redirectors.  You should only enable this if the redirectors
 	are not critical to your caching system.  If you use
 	redirectors for access control, and you enable this option,
