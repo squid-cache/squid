@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.26 1996/12/05 17:36:12 wessels Exp $
+ * $Id: mime.cc,v 1.27 1996/12/18 03:50:24 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -159,7 +159,7 @@ mime_headers_end(const char *mime)
     const char *p1, *p2;
     const char *end = NULL;
 
-    p1 = strstr(mime, "\r\n\r\n");
+    p1 = strstr(mime, "\n\r\n");
     p2 = strstr(mime, "\n\n");
 
     if (p1 && p2)
@@ -167,7 +167,7 @@ mime_headers_end(const char *mime)
     else
 	end = p1 ? p1 : p2;
     if (end)
-	end += (end == p1 ? 4 : 2);
+	end += (end == p1 ? 3 : 2);
 
     return (char *) end;
 }
