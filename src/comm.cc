@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.344 2002/10/21 06:43:07 adrian Exp $
+ * $Id: comm.cc,v 1.345 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -87,6 +87,13 @@ struct _fdc_t {
 		void *handler_data;
 	} read;
 	struct {
+		char *buf;
+		int size;
+		int curofs;
+		IOCB *handler;
+		void *handler_data;
+	} write;
+	struct {
 		struct sockaddr_in me;
 		struct sockaddr_in pn;
 		IOACB *handler;
@@ -121,6 +128,7 @@ struct _CommCallbackData {
 	    IOCB *r_callback;
 	    IOACB *a_callback;
 	    IOFCB *f_callback;
+	    IOWCB *w_callback;
 	} c;
 	void *callback_data;
 	comm_err_t errcode;
@@ -260,6 +268,36 @@ comm_add_fill_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
 	dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
 }
 
+static void
+comm_add_write_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
+{
+	CommCallbackData *cio;
+
+	assert(fdc_table[fd].active == 1);
+
+	/* Allocate a new struct */
+	cio = (CommCallbackData *)memPoolAlloc(comm_callback_pool);
+
+	/* Throw our data into it */
+	cio->fd = fd;
+	cio->xerrno = xerrno;
+	cio->errcode = errcode;
+	cio->c.w_callback = fdc_table[fd].write.handler;
+	cio->callback_data = fdc_table[fd].fill.handler_data;
+	cio->seqnum = CommCallbackSeqnum;
+	cio->type = COMM_CB_WRITE;
+	cio->retval = retval;
+
+	/* Clear out fd state */
+	fdc_table[fd].write.handler = NULL;
+	fdc_table[fd].write.handler_data = NULL;
+
+	/* Add it to the end of the list */
+	dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
+
+	/* and add it to the end of the fd list */
+	dlinkAddTail(cio, &(cio->fd_node), &(fdc_table[fd].CommCallbackList));
+}
 
 
 
@@ -272,7 +310,8 @@ comm_call_io_callback(CommCallbackData *cio)
 		          cio->callback_data);
 			break;
 		    case COMM_CB_WRITE:
-			fatal("write comm hasn't been implemented yet!");
+			cio->c.w_callback(cio->fd, cio->buf, cio->retval, cio->errcode, cio->xerrno,
+			  cio->callback_data);
 		        break;
 		    case COMM_CB_ACCEPT:
                         cio->c.a_callback(cio->fd, cio->newfd, &cio->me, &cio->pn, cio->errcode,
@@ -572,6 +611,55 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 {
 	return send(s, buf, len, flags);
 }
+
+
+/*
+ * The new-style comm_write magic
+ */
+/*
+ * Attempt a write
+ *
+ * If the write attempt succeeds or fails, call the callback.
+ * Else, wait for another IO notification.
+ */
+static void
+comm_write_try(int fd, void *data)
+{
+	fdc_t *Fc = &fdc_table[fd];
+	int retval;
+
+	/* make sure we actually have a callback */
+	assert(Fc->write.handler != NULL);
+
+	/* Attempt a write */
+        statCounter.syscalls.sock.reads++;
+	retval = FD_WRITE_METHOD(fd, Fc->write.buf + Fc->write.curofs, Fc->write.size - Fc->write.curofs);
+	if (retval < 0 && !ignoreErrno(errno)) {
+		comm_add_write_callback(fd, 0, COMM_ERROR, errno);
+		return;
+	};
+
+	/* See if we wrote it all */
+	/* Note - write 0 == socket EOF, which is a valid read */
+	if (retval == 0) {
+		comm_add_write_callback(fd, retval, COMM_OK, 0);
+		return;
+	}
+	if (retval >= 0) {
+                fd_bytes(fd, retval, FD_WRITE);
+		Fc->write.curofs += retval;
+		assert(Fc->write.curofs <= Fc->write.size);
+		/* All? */
+		if (Fc->write.curofs == Fc->write.size) {
+			comm_add_write_callback(fd, retval, COMM_OK, 0);
+			return;
+		}
+	}
+
+	/* if we get here, we need to write more! */
+        commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
+}
+
 
 
 /* Older stuff */
@@ -1470,7 +1558,7 @@ commHandleWrite(int fd, void *data)
  * free_func is used to free the passed buffer when the write has completed.
  */
 void
-comm_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
+comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
 {
     CommWriteStateData *state = fd_table[fd].rwstate;
 
@@ -1495,9 +1583,9 @@ comm_write(int fd, const char *buf, int size, CWCB * handler, void *handler_data
 
 /* a wrapper around comm_write to allow for MemBuf to be comm_written in a snap */
 void
-comm_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data)
+comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data)
 {
-    comm_write(fd, mb.buf, mb.size, handler, handler_data, memBufFreeFunc(&mb));
+    comm_old_write(fd, mb.buf, mb.size, handler, handler_data, memBufFreeFunc(&mb));
 }
 
 

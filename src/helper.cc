@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.49 2002/10/14 08:16:58 robertc Exp $
+ * $Id: helper.cc,v 1.50 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -1023,7 +1023,7 @@ helperDispatch(helper_server * srv, helper_request * r)
     srv->flags.busy = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
-    comm_write(srv->wfd,
+    comm_old_write(srv->wfd,
 	r->buf,
 	strlen(r->buf),
 	NULL,			/* Handler */
@@ -1074,7 +1074,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     srv->flags.busy = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
-    comm_write(srv->wfd,
+    comm_old_write(srv->wfd,
 	r->buf,
 	strlen(r->buf),
 	NULL,			/* Handler */

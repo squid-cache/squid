@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.603 2002/10/18 22:46:46 hno Exp $
+ * $Id: client_side.cc,v 1.604 2002/10/21 14:00:01 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -608,7 +608,7 @@ contextSendBody(clientSocketContext * context, HttpReply * rep, StoreIOBuffer bo
 {
     assert(rep == NULL);
     context->http->out.offset += bodyData.length;
-    comm_write(context->http->conn->fd, bodyData.data, bodyData.length,
+    comm_old_write(context->http->conn->fd, bodyData.data, bodyData.length,
 	clientWriteBodyComplete, context, NULL);
     return;
 }
@@ -637,7 +637,7 @@ contextSendStartOfMessage(clientSocketContext * context, HttpReply * rep, StoreI
 	memBufAppend(&mb, bodyData.data, bodyData.length);
     }
     /* write */
-    comm_write_mbuf(context->http->conn->fd, mb, clientWriteComplete, context);
+    comm_old_write_mbuf(context->http->conn->fd, mb, clientWriteComplete, context);
     /* if we don't do it, who will? */
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.401 2002/10/15 13:36:47 robertc Exp $
+ * $Id: http.cc,v 1.402 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1025,7 +1025,7 @@ httpSendRequest(HttpStateData * httpState)
 	&mb,
 	httpState->flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", httpState->fd, mb.buf);
-    comm_write_mbuf(httpState->fd, mb, sendHeaderDone, httpState);
+    comm_old_write_mbuf(httpState->fd, mb, sendHeaderDone, httpState);
 }
 
 void
@@ -1103,7 +1103,7 @@ httpSendRequestEntityDone(int fd, void *data)
 	httpSendComplete(fd, NULL, 0, COMM_OK, data);
     } else {
 	debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
-	comm_write(fd, "\r\n", 2, httpSendComplete, data, NULL);
+	comm_old_write(fd, "\r\n", 2, httpSendComplete, data, NULL);
     }
 }
 
@@ -1112,7 +1112,7 @@ httpRequestBodyHandler(char *buf, ssize_t size, void *data)
 {
     HttpStateData *httpState = (HttpStateData *) data;
     if (size > 0) {
-	comm_write(httpState->fd, buf, size, httpSendRequestEntity, data, memFree8K);
+	comm_old_write(httpState->fd, buf, size, httpSendRequestEntity, data, memFree8K);
     } else if (size == 0) {
 	/* End of body */
 	memFree8K(buf);

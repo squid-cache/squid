@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.61 2002/10/14 08:16:58 robertc Exp $
+ * $Id: ident.cc,v 1.62 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -125,7 +125,7 @@ identConnectDone(int fd, comm_err_t status, void *data)
     memBufPrintf(&mb, "%d, %d\r\n",
 	ntohs(state->my_peer.sin_port),
 	ntohs(state->me.sin_port));
-    comm_write_mbuf(fd, mb, NULL, state);
+    comm_old_write_mbuf(fd, mb, NULL, state);
     comm_read(fd, state->buf, BUFSIZ, identReadReply, state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
 }

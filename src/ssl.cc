@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.127 2002/10/14 08:51:03 robertc Exp $
+ * $Id: ssl.cc,v 1.128 2002/10/21 14:00:03 adrian Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -166,7 +166,7 @@ sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
 	    comm_close(sslState->client.fd);
         }
     } else if (cbdataReferenceValid(sslState))
-	comm_write(sslState->client.fd, sslState->server.buf, len, sslWriteClientDone, sslState, NULL);
+	comm_old_write(sslState->client.fd, sslState->server.buf, len, sslWriteClientDone, sslState, NULL);
     cbdataInternalUnlock(sslState);	/* ??? */
 }
 
@@ -209,7 +209,7 @@ sslReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
 	    comm_close(sslState->server.fd);
         }
     } else if (cbdataReferenceValid(sslState))
-	comm_write(sslState->server.fd, sslState->client.buf, len, sslWriteServerDone, sslState, NULL);
+	comm_old_write(sslState->server.fd, sslState->client.buf, len, sslWriteServerDone, sslState, NULL);
     cbdataInternalUnlock(sslState);	/* ??? */
 }
 
@@ -349,7 +349,7 @@ sslConnected(int fd, void *data)
     SslStateData *sslState = (SslStateData *)data;
     debug(26, 3) ("sslConnected: FD %d sslState=%p\n", fd, sslState);
     *sslState->status_ptr = HTTP_OK;
-    comm_write(sslState->client.fd, conn_established, strlen(conn_established),
+    comm_old_write(sslState->client.fd, conn_established, strlen(conn_established),
       sslConnectedWriteDone, sslState, NULL);
 }
 
@@ -536,7 +536,7 @@ sslProxyConnected(int fd, void *data)
     packerClean(&p);
     memBufAppend(&mb, "\r\n", 2);
 
-    comm_write_mbuf(sslState->server.fd, mb, sslProxyConnectedWriteDone, sslState);
+    comm_old_write_mbuf(sslState->server.fd, mb, sslProxyConnectedWriteDone, sslState);
 
     commSetTimeout(sslState->server.fd,
 	Config.Timeout.read,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.455 2002/10/18 22:43:23 hno Exp $
+ * $Id: protos.h,v 1.456 2002/10/21 14:00:02 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -180,13 +180,13 @@ SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
 SQUIDCEXTERN void comm_add_close_handler(int fd, PF *, void *);
 SQUIDCEXTERN void comm_remove_close_handler(int fd, PF *, void *);
 SQUIDCEXTERN int comm_udp_sendto(int, const struct sockaddr_in *, int, const void *, int);
-SQUIDCEXTERN void comm_write(int fd,
+SQUIDCEXTERN void comm_old_write(int fd,
     const char *buf,
     int size,
     CWCB * handler,
     void *handler_data,
     FREE *);
-SQUIDCEXTERN void comm_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data);
+SQUIDCEXTERN void comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
 SQUIDCEXTERN void commSetDefer(int fd, DEFER * func, void *);
