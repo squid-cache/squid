@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.13 1998/06/02 04:18:14 wessels Exp $
+ * $Id: MemBuf.cc,v 1.14 1998/06/03 15:52:16 rousskov Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -53,9 +53,10 @@
  * 
  * The whole "packing" idea is quite messy: We are given a buffer of fixed
  * size and we have to check all the time that we still fit. Sounds logical.
- * However, what happens if we have more data? If we are lucky to be careful
- * to stop before we overrun any buffers, we still may have garbage (e.g.
- * half of ETag) in the buffer.
+ *
+ * However, what happens if we have more data? If we are lucky to stop before
+ * we overrun any buffers, we still may have garbage (e.g. half of ETag) in
+ * the buffer.
  * 
  * MemBuffer:
  * ----------

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.41 1998/06/02 22:15:18 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.42 1998/06/03 15:52:15 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -607,7 +607,7 @@ void
 httpHeaderPutInt(HttpHeader * hdr, http_hdr_type id, int number)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftInt);	/* must be of an appropriatre type */
+    assert(Headers[id].type == ftInt);	/* must be of an appropriate type */
     assert(number >= 0);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, xitoa(number)));
 }
@@ -616,7 +616,7 @@ void
 httpHeaderPutTime(HttpHeader * hdr, http_hdr_type id, time_t time)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftDate_1123);	/* must be of an appropriatre type */
+    assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
     assert(time >= 0);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, mkrfc1123(time)));
 }
@@ -625,7 +625,7 @@ void
 httpHeaderPutStr(HttpHeader * hdr, http_hdr_type id, const char *str)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftStr);	/* must be of an appropriatre type */
+    assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
     assert(str);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, str));
 }

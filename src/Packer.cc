@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.6 1998/03/03 22:17:52 rousskov Exp $
+ * $Id: Packer.cc,v 1.7 1998/06/03 15:52:17 rousskov Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -57,7 +57,7 @@
  * comm_write or "append" things to store, depending on actual packer
  * supplied.
  * 
- * It is amasing how much work a tiny object can save. :)
+ * It is amazing how much work a tiny object can save. :)
  * 
  */
 

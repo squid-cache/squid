@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.11 1998/05/22 23:43:56 wessels Exp $
+ * $Id: HttpStatusLine.cc,v 1.12 1998/06/03 15:52:16 rousskov Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -63,7 +63,7 @@ httpStatusLineSet(HttpStatusLine * sline, double version, http_status status, co
     sline->reason = reason;
 }
 
-/* parse a 0-terminating buffer and fill internal structires; returns true on success */
+/* parse a 0-terminating buffer and fill internal structures; returns true on success */
 void
 httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
 {
