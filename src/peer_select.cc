@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.44 1998/04/04 00:24:06 wessels Exp $
+ * $Id: peer_select.cc,v 1.45 1998/04/07 23:53:20 rousskov Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -47,7 +47,7 @@ const char *hier_strings[] =
     "NO_DIRECT_FAIL",
     "SOURCE_FASTEST",
     "ROUNDROBIN_PARENT",
-#if CACHE_DIGEST
+#if SQUID_PEER_DIGEST
     "CACHE_DIGEST_HIT",
 #endif
     "INVALID CODE"
@@ -303,20 +303,38 @@ peerSelectFoo(ps_state * psstate)
 	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
     } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
-#if CACHE_DIGEST
-	if (squid_random() & 1) {
+#if SQUID_PEER_DIGEST
+	/* always check digests if any */
+	/* @?@ optimize: track if there are any digested peers at all (global counter) */
+	if (1) {
+	    p = neighborsDigestSelect(request, entry);
+	    if (p) {
+		request->hier.cd_lookup = LOOKUP_HIT;
+	    } else
+	    if (request->hier.n_choices) {
+		request->hier.cd_lookup = LOOKUP_MISS;
+	    } else {
+		request->hier.cd_lookup = LOOKUP_NONE;
+	    }
+	    debug(44, 3) ("peerSelect: %s digest lookup: %s choices: %d (%d)\n", 
+		p ? p->host : "",
+		lookup_t_str[request->hier.cd_lookup],
+		request->hier.n_choices, request->hier.n_ichoices);
+	}
+	/* @?@ TEST: randomly choose a peer selection algorithm */
+	if (request->hier.cd_lookup != LOOKUP_NONE && (squid_random() & 1)) {
 	    debug(44, 3) ("peerSelect: Using Cache Digest\n");
-	    request->hier.used_cd = 1;
-	    p == cacheDigestSelect(request, entry);
-	    if (NULL != p) {
-		request->hier.cd_hit = 1;
+	    request->hier.alg = PEER_SA_DIGEST;
+	    if (request->hier.cd_lookup == LOOKUP_HIT) {
+		assert(p);
 		code = CACHE_DIGEST_HIT;
 		debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 		hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 		peerSelectCallback(psstate, NULL);
+		return;
 	    }
 	} else {
-	    request->hier.used_icp = 1;
+	    request->hier.alg = PEER_SA_ICP;
 #endif
 	    debug(44, 3) ("peerSelect: Doing ICP pings\n");
 	    psstate->icp.start = current_time;
@@ -335,7 +353,7 @@ peerSelectFoo(ps_state * psstate)
 		    Config.neighborTimeout);
 		return;
 	    }
-#if CACHE_DIGEST
+#if SQUID_PEER_DIGEST
 	}
 #endif
     }
