@@ -228,6 +228,7 @@ typedef enum {
     HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,		/* tmp hack, remove later */
     HDR_X_FORWARDED_FOR,
+    HDR_X_SQUID_ERROR,
     HDR_OTHER,
     HDR_ENUM_END
 } http_hdr_type;
