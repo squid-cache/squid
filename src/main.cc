@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.313 2000/05/31 07:01:42 hno Exp $
+ * $Id: main.cc,v 1.314 2000/05/31 08:57:08 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -337,8 +337,9 @@ mainReconfigure(void)
 #if USE_WCCP
     wccpConnectionClose();
 #endif
+#if USE_DNSSERVERS
     dnsShutdown();
-#if !USE_DNSSERVERS
+#else
     idnsShutdown();
 #endif
     redirectShutdown();
@@ -351,8 +352,9 @@ mainReconfigure(void)
     ipcache_restart();		/* clear stuck entries */
     fqdncache_restart();	/* sigh, fqdncache too */
     errorInitialize();		/* reload error pages */
+#if USE_DNSSERVERS
     dnsInit();
-#if !USE_DNSSERVERS
+#else
     idnsInit();
 #endif
     redirectInit();
@@ -378,7 +380,9 @@ static void
 mainRotate(void)
 {
     icmpClose();
+#if USE_DNSSERVERS
     dnsShutdown();
+#endif
     redirectShutdown();
     authenticateShutdown();
     _db_rotate_log();		/* cache.log */
@@ -387,7 +391,9 @@ mainRotate(void)
     accessLogRotate();		/* access.log */
     useragentRotateLog();	/* useragent.log */
     icmpOpen();
+#if USE_DNSSERVERS
     dnsInit();
+#endif
     redirectInit();
     authenticateInit();
 }
@@ -472,8 +478,9 @@ mainInitialize(void)
 	disk_init();		/* disk_init must go before ipcache_init() */
     ipcache_init();
     fqdncache_init();
+#if USE_DNSSERVERS
     dnsInit();
-#if !USE_DNSSERVERS
+#else
     idnsInit();
 #endif
     redirectInit();
@@ -692,8 +699,9 @@ main(int argc, char **argv)
 	    do_shutdown = 0;
 	    shutting_down = 1;
 	    serverConnectionsClose();
+#if USE_DNSSERVERS
 	    dnsShutdown();
-#if !USE_DNSSERVERS
+#else
 	    idnsShutdown();
 #endif
 	    redirectShutdown();

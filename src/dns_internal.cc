@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.26 2000/05/16 07:06:04 wessels Exp $
+ * $Id: dns_internal.cc,v 1.27 2000/05/31 08:57:08 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -34,8 +34,6 @@
  */
 
 #include "squid.h"
-
-#if !USE_DNSSERVERS
 
 #ifndef _PATH_RESOLV_CONF
 #define _PATH_RESOLV_CONF "/etc/resolv.conf"
@@ -458,4 +456,42 @@ idnsPTRLookup(const struct in_addr addr, IDNSCB * callback, void *data)
     idnsSendQuery(q);
 }
 
-#endif /* !USE_DNSSERVERS */
+#ifdef SQUID_SNMP
+/*
+ * The function to return the DNS via SNMP
+ */
+variable_list *
+snmp_netIdnsFn(variable_list * Var, snint * ErrP)
+{
+    int i, n = 0;
+    variable_list *Answer = NULL;
+    debug(49, 5) ("snmp_netDnsFn: Processing request:\n", Var->name[LEN_SQ_NET + 1]);
+    snmpDebugOid(5, Var->name, Var->name_length);
+    *ErrP = SNMP_ERR_NOERROR;
+    switch (Var->name[LEN_SQ_NET + 1]) {
+    case DNS_REQ:
+	for (i = 0; i < nss; i++)
+	    n += nameservers[i].nqueries;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    n,
+	    SMI_COUNTER32);
+	break;
+    case DNS_REP:
+	for (i = 0; i < nss; i++)
+	    n += nameservers[i].nreplies;
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    n,
+	    SMI_COUNTER32);
+	break;
+    case DNS_SERVERS:
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+	    0,
+	    SMI_COUNTER32);
+	break;
+    default:
+	*ErrP = SNMP_ERR_NOSUCHNAME;
+	break;
+    }
+    return Answer;
+}
+#endif /*SQUID_SNMP */
