@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.27 1996/04/10 17:28:37 wessels Exp $ */
+/* $Id: main.cc,v 1.28 1996/04/10 17:58:26 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -173,8 +173,6 @@ static void mainInitialize()
     static int first_time = 1;
     parseConfigFile(config_file);
 
-    neighbors_create();
-
     if (asciiPortNumOverride > 0)
 	setAsciiPortNum(asciiPortNumOverride);
     if (udpPortNumOverride > 0)
@@ -197,10 +195,6 @@ static void mainInitialize()
     /* do suid checking here */
     check_suid();
 
-    /* Now that the fd's are open, initialize neighbor connections */
-    if (theUdpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
-	neighbors_open(theUdpConnection);
-
     if (first_time) {
 	first_time = 0;
 	/* module initialization */
@@ -214,6 +208,8 @@ static void mainInitialize()
 	do_mallinfo = 1;
     }
     serverConnectionsOpen();
+    if (theUdpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
+	neighbors_open(theUdpConnection);
     debug(1, 0, "Ready to serve requests.\n");
 }
 
