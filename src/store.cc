@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.261 1997/06/20 00:00:16 wessels Exp $
+ * $Id: store.cc,v 1.262 1997/06/21 04:55:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1469,8 +1469,7 @@ storeCleanup(void *data)
     curr = list;
     list = list->next;
     e = (StoreEntry *) hash_lookup(store_table, curr->key);
-    if (e != NULL) {
-	assert(!BIT_TEST(e->flag, ENTRY_VALIDATED));
+    if (e && !BIT_TEST(e->flag, ENTRY_VALIDATED)) {
         storeLockObject(e);
 	storeValidate(e, storeCleanupComplete, e);
 	if ((++validnum & 0xFFF) == 0)
