@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.83 2003/02/21 22:50:09 robertc Exp $
+ * $Id: icmp.cc,v 1.84 2003/06/12 23:54:17 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -89,7 +89,7 @@ icmpRecv(int unused1, void *unused2)
                       sizeof(pingerReplyData),
                       0);
 
-    if (n < 0) {
+    if (n < 0 && EAGAIN != errno) {
         debug(37, 1) ("icmpRecv: recv: %s\n", xstrerror());
 
         if (++fail_count == 10 || errno == ECONNREFUSED)
