@@ -26,8 +26,8 @@ if [ ! -f $tmpdir/configure ]; then
 fi
 
 cd $tmpdir
-eval `grep ^VERSION= configure | sed -e 's/-CVS$//'`
-eval `grep ^PACKAGE= configure`
+eval `grep "^ *VERSION=" configure | sed -e 's/-CVS//'`
+eval `grep "^ *PACKAGE=" configure`
 if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 	echo "ERROR! The version numbers does not match!"
 	echo "${name} != ${PACKAGE}-${VERSION}"
@@ -35,11 +35,11 @@ if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 fi
 RELEASE=`echo $VERSION | cut -d. -f1,2 | cut -d- -f1`
 ed -s configure.in <<EOS
-g/${VERSION}-CVS/ s//${VERSION}/
+g/VERSION=${VERSION}-CVS/ s//VERSION=${VERSION}-${date}/
 w
 EOS
 ed -s configure <<EOS
-g/${VERSION}-CVS/ s//${VERSION}/
+g/VERSION=${VERSION}-CVS/ s//VERSION=${VERSION}-${date}/
 w
 EOS
 ed -s include/version.h <<EOS
