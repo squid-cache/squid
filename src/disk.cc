@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.76 1997/07/07 05:29:43 wessels Exp $
+ * $Id: disk.cc,v 1.77 1997/07/14 19:24:36 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -181,7 +181,7 @@ static void
 file_open_complete(void *data, int fd, int errcode)
 {
     open_ctrl_t *ctrlp = (open_ctrl_t *) data;
-    fde *fde;
+    fde *F;
     if (fd < 0) {
 	errno = errcode;
 	debug(50, 0) ("file_open: error opening file %s: %s\n", ctrlp->path,
@@ -195,7 +195,7 @@ file_open_complete(void *data, int fd, int errcode)
     debug(6, 5) ("file_open: FD %d\n", fd);
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, ctrlp->path);
-    fde = &fd_table[fd];
+    F = &fd_table[fd];
     if (ctrlp->callback)
 	(ctrlp->callback) (ctrlp->callback_data, fd);
     xfree(ctrlp->path);
@@ -206,15 +206,15 @@ file_open_complete(void *data, int fd, int errcode)
 void
 file_close(int fd)
 {
-    fde *fde = &fd_table[fd];
+    fde *F = &fd_table[fd];
     assert(fd >= 0);
-    assert(fde->open);
-    if (BIT_TEST(fde->flags, FD_WRITE_DAEMON)) {
-	BIT_SET(fde->flags, FD_CLOSE_REQUEST);
+    assert(F->open);
+    if (BIT_TEST(F->flags, FD_WRITE_DAEMON)) {
+	BIT_SET(F->flags, FD_CLOSE_REQUEST);
 	return;
     }
-    if (BIT_TEST(fde->flags, FD_WRITE_PENDING)) {
-	BIT_SET(fde->flags, FD_CLOSE_REQUEST);
+    if (BIT_TEST(F->flags, FD_WRITE_PENDING)) {
+	BIT_SET(F->flags, FD_CLOSE_REQUEST);
 	return;
     }
     fd_close(fd);
@@ -235,8 +235,8 @@ diskHandleWrite(int fd, void *unused)
     disk_ctrl_t *ctrlp;
     dwrite_q *q = NULL;
     dwrite_q *wq = NULL;
-    fde *fde = &fd_table[fd];
-    struct _fde_disk *fdd = &fde->disk;
+    fde *F = &fd_table[fd];
+    struct _fde_disk *fdd = &F->disk;
     if (!fdd->write_q)
 	return;
     /* We need to combine subsequent write requests after the first */
@@ -284,8 +284,8 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 {
     disk_ctrl_t *ctrlp = data;
     int fd = ctrlp->fd;
-    fde *fde = &fd_table[fd];
-    struct _fde_disk *fdd = &fde->disk;
+    fde *F = &fd_table[fd];
+    struct _fde_disk *fdd = &F->disk;
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     errno = errcode;
@@ -324,16 +324,16 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (fdd->write_q == NULL) {
 	/* no more data */
 	fdd->write_q_tail = NULL;
-	BIT_RESET(fde->flags, FD_WRITE_PENDING);
-	BIT_RESET(fde->flags, FD_WRITE_DAEMON);
+	BIT_RESET(F->flags, FD_WRITE_PENDING);
+	BIT_RESET(F->flags, FD_WRITE_DAEMON);
     } else {
 	/* another block is queued */
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
-	BIT_SET(fde->flags, FD_WRITE_DAEMON);
+	BIT_SET(F->flags, FD_WRITE_DAEMON);
     }
     if (fdd->wrt_handle)
 	fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
-    if (BIT_TEST(fde->flags, FD_CLOSE_REQUEST))
+    if (BIT_TEST(F->flags, FD_CLOSE_REQUEST))
 	file_close(fd);
 }
 
@@ -350,11 +350,11 @@ file_write(int fd,
     FREE * free_func)
 {
     dwrite_q *wq = NULL;
-    fde *fde;
+    fde *F;
     if (fd < 0)
 	fatal_dump("file_write: bad FD");
-    fde = &fd_table[fd];
-    if (!fde->open) {
+    F = &fd_table[fd];
+    if (!F->open) {
 	debug_trap("file_write: FILE_NOT_OPEN");
 	return DISK_ERROR;
     }
@@ -365,26 +365,26 @@ file_write(int fd,
     wq->cur_offset = 0;
     wq->next = NULL;
     wq->free = free_func;
-    fde->disk.wrt_handle = handle;
-    fde->disk.wrt_handle_data = handle_data;
+    F->disk.wrt_handle = handle;
+    F->disk.wrt_handle_data = handle_data;
 
     /* add to queue */
-    BIT_SET(fde->flags, FD_WRITE_PENDING);
-    if (!(fde->disk.write_q)) {
+    BIT_SET(F->flags, FD_WRITE_PENDING);
+    if (!(F->disk.write_q)) {
 	/* empty queue */
-	fde->disk.write_q = fde->disk.write_q_tail = wq;
+	F->disk.write_q = F->disk.write_q_tail = wq;
     } else {
-	fde->disk.write_q_tail->next = wq;
-	fde->disk.write_q_tail = wq;
+	F->disk.write_q_tail->next = wq;
+	F->disk.write_q_tail = wq;
     }
 
-    if (!BIT_TEST(fde->flags, FD_WRITE_DAEMON)) {
+    if (!BIT_TEST(F->flags, FD_WRITE_DAEMON)) {
 #if USE_ASYNC_IO
 	diskHandleWrite(fd, NULL);
 #else
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
 #endif
-	BIT_SET(fde->flags, FD_WRITE_DAEMON);
+	BIT_SET(F->flags, FD_WRITE_DAEMON);
     }
     return DISK_OK;
 }

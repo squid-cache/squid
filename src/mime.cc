@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.30 1997/06/04 06:16:02 wessels Exp $
+ * $Id: mime.cc,v 1.31 1997/07/14 19:24:38 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -324,6 +324,10 @@ mimeInit(char *filename)
 	MimeTableTail = &MimeTable;
     while (fgets(buf, BUFSIZ, fp)) {
 	if ((t = strchr(buf, '#')))
+	    *t = '\0';
+	if ((t = strchr(buf, '\r')))
+	    *t = '\0';
+	if ((t = strchr(buf, '\n')))
 	    *t = '\0';
 	if (buf[0] == '\0')
 	    continue;
