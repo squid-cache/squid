@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.27 1996/04/16 05:13:39 wessels Exp $ */
+/* $Id: wais.cc,v 1.28 1996/04/17 18:06:25 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -17,13 +17,14 @@ typedef struct _waisdata {
     char request[MAX_URL];
 } WAISData;
 
-static void waisCloseAndFree(fd, data)
+static int waisStateFree(fd, waisState)
      int fd;
-     WAISData *data;
+     WAISData *waisState;
 {
-    if (fd >= 0)
-	comm_close(fd);
-    xfree(data);
+    if (waisState == NULL)
+	return 1;
+    xfree(waisState);
+    return 0;
 }
 
 /* This will be called when timeout on read. */
@@ -37,7 +38,7 @@ static void waisReadReplyTimeout(fd, data)
     debug(24, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
-    waisCloseAndFree(fd, data);
+    comm_close(fd);
 }
 
 /* This will be called when socket lifetime is expired. */
@@ -51,7 +52,7 @@ void waisLifetimeExpire(fd, data)
     debug(24, 4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
-    waisCloseAndFree(fd, data);
+    comm_close(fd);
 }
 
 
@@ -97,7 +98,7 @@ void waisReadReply(fd, data)
 	} else {
 	    /* we can terminate connection right now */
 	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    waisCloseAndFree(fd, data);
+	    comm_close(fd);
 	    return;
 	}
     }
@@ -117,18 +118,18 @@ void waisReadReply(fd, data)
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
 	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
-	    waisCloseAndFree(fd, data);
+	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
 	squid_error_entry(entry,
 	    ERR_ZERO_SIZE_OBJECT,
 	    errno ? xstrerror() : NULL);
-	waisCloseAndFree(fd, data);
+	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	entry->expires = squid_curtime;
 	storeComplete(entry);
-	waisCloseAndFree(fd, data);
+	comm_close(fd);
     } else if (((entry->mem_obj->e_current_len + len) > getWAISMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
@@ -172,7 +173,7 @@ void waisSendComplete(fd, buf, size, errflag, data)
 	fd, size, errflag);
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	waisCloseAndFree(fd, data);
+	comm_close(fd);
     } else {
 	/* Schedule read reply. */
 	comm_set_select_handler(fd,
@@ -237,41 +238,45 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 	RequestMethodStr[method], url);
     debug(24, 4, "            header: %s\n", mime_hdr);
 
+    if (!getWaisRelayHost()) {
+	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
+	squid_error_entry(entry, ERR_NO_RELAY, NULL);
+	return COMM_ERROR;
+    }
+
+    /* Create socket. */
+    sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
+    if (sock == COMM_ERROR) {
+	debug(24, 4, "waisStart: Failed because we're out of sockets.\n");
+	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
+	return COMM_ERROR;
+    }
+
     data = (WAISData *) xcalloc(1, sizeof(WAISData));
     data->entry = entry;
     data->method = method;
     data->relayhost = getWaisRelayHost();
     data->relayport = getWaisRelayPort();
     data->mime_hdr = mime_hdr;
+    comm_set_select_handler(sock,
+	COMM_SELECT_CLOSE,
+	waisStateFree,
+	(void *) data);
 
-    if (!getWaisRelayHost()) {
-	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
-	squid_error_entry(entry, ERR_NO_RELAY, NULL);
-	safe_free(data);
-	return COMM_ERROR;
-    }
-    /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
-    if (sock == COMM_ERROR) {
-	debug(24, 4, "waisStart: Failed because we're out of sockets.\n");
-	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
-	safe_free(data);
-	return COMM_ERROR;
-    }
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->relayhost)) {
 	debug(24, 4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	waisCloseAndFree(sock, data);
+	comm_close(sock);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, data->relayhost, data->relayport))) {
 	if (status != EINPROGRESS) {
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    waisCloseAndFree(sock, data);
+	    comm_close(sock);
 	    return COMM_ERROR;
 	} else {
 	    debug(24, 5, "waisStart: FD %d EINPROGRESS\n", sock);
