@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.219 1998/04/21 20:41:21 wessels Exp $
+ * $Id: ftp.cc,v 1.220 1998/04/24 05:54:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -48,7 +48,8 @@ enum {
     FTP_TRY_SLASH_HACK,
     FTP_PUT,
     FTP_PUT_MKDIR,
-    FTP_LISTFORMAT_UNKNOWN
+    FTP_LISTFORMAT_UNKNOWN,
+    FTP_DATACHANNEL_HACK
 };
 
 static const char *const crlf = "\r\n";
@@ -98,6 +99,7 @@ typedef struct _Ftpdata {
     wordlist *cwd_message;
     char *old_request;
     char *old_reply;
+    char *old_filepath;
     char typecode;
     struct {
 	int fd;
@@ -148,6 +150,7 @@ static STABH ftpAbort;
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpPutStart(FtpStateData *);
 static CWCB ftpPutTransferDone;
+static void ftpUnhack(FtpStateData * ftpState);
 
 /* State machine functions
  * send == state transition
@@ -267,6 +270,7 @@ ftpStateFree(int fdnotused, void *data)
     safe_free(ftpState->ctrl.last_command);
     safe_free(ftpState->old_request);
     safe_free(ftpState->old_reply);
+    safe_free(ftpState->old_filepath);
     safe_free(ftpState->title_url);
     safe_free(ftpState->filepath);
     safe_free(ftpState->data.host);
@@ -1342,7 +1346,8 @@ static void
 ftpTraverseDirectory(FtpStateData * ftpState)
 {
     wordlist *w;
-    debug(9, 4) ("ftpTraverseDirectory %s\n", ftpState->filepath);
+    debug(9, 4) ("ftpTraverseDirectory %s\n",
+	ftpState->filepath ? ftpState->filepath : "<NULL>");
 
     safe_free(ftpState->filepath);
     /* Done? */
@@ -1388,6 +1393,7 @@ ftpReadCwd(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadCwd\n");
     if (code >= 200 && code < 300) {
 	/* CWD OK */
+	ftpUnhack(ftpState);
 	if (ftpState->cwd_message)
 	    wordlistDestroy(&ftpState->cwd_message);
 	ftpState->cwd_message = ftpState->ctrl.message;
@@ -1468,6 +1474,7 @@ ftpReadMdtm(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadMdtm\n");
     if (code == 213) {
 	ftpState->mdtm = parse_iso3307_time(ftpState->ctrl.last_reply);
+	ftpUnhack(ftpState);
     } else if (code < 0) {
 	ftpFail(ftpState);
     }
@@ -1496,6 +1503,7 @@ ftpReadSize(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadSize\n");
     if (code == 213) {
+	ftpUnhack(ftpState);
 	ftpState->size = atoi(ftpState->ctrl.last_reply);
     } else if (code < 0) {
 	ftpFail(ftpState);
@@ -1510,9 +1518,15 @@ ftpSendPasv(FtpStateData * ftpState)
     struct sockaddr_in addr;
     int addr_len;
     if (ftpState->data.fd >= 0) {
-	/* We are already connected, reuse this connection. */
-	ftpRestOrList(ftpState);
-	return;
+	if (!EBIT_TEST(ftpState->flags, FTP_DATACHANNEL_HACK)) {
+	    /* We are already connected, reuse this connection. */
+	    ftpRestOrList(ftpState);
+	    return;
+	} else {
+	    /* Close old connection */
+	    comm_close(ftpState->data.fd);
+	    ftpState->data.fd = -1;
+	}
     }
     if (!EBIT_TEST(ftpState->flags, FTP_PASV_SUPPORTED)) {
 	ftpSendPort(ftpState);
@@ -2004,14 +2018,49 @@ ftpTrySlashHack(FtpStateData * ftpState)
 }
 
 static void
+ftpTryDatachannelHack(FtpStateData * ftpState)
+{
+    EBIT_SET(ftpState->flags, FTP_DATACHANNEL_HACK);
+    /* we have to undo some of the slash hack... */
+    if (ftpState->old_filepath != NULL) {
+	EBIT_CLR(ftpState->flags, FTP_TRY_SLASH_HACK);
+	safe_free(ftpState->filepath);
+	ftpState->filepath = ftpState->old_filepath;
+	ftpState->old_filepath = NULL;
+    }
+    EBIT_CLR(ftpState->flags, FTP_TRIED_NLST);
+    /* And off we go */
+    if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
+	safe_free(ftpState->filepath);
+	ftpListDir(ftpState);
+    } else {
+	ftpGetFile(ftpState);
+    }
+    return;
+}
+
+/* Forget hack status. Next error is shown to the user */
+static void
+ftpUnhack(FtpStateData * ftpState)
+{
+    if (ftpState->old_request != NULL) {
+	safe_free(ftpState->old_request);
+	safe_free(ftpState->old_reply);
+    }
+}
+
+static void
 ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState)
 {
-    /* Leave the data connection open for future use */
-    /* Save old error message */
-    ftpState->old_request = ftpState->ctrl.last_command;
-    ftpState->ctrl.last_command = NULL;
-    ftpState->old_reply = ftpState->ctrl.last_reply;
-    ftpState->ctrl.last_reply = NULL;
+    /* Save old error message & some state info */
+    if (ftpState->old_request == NULL) {
+	ftpState->old_request = ftpState->ctrl.last_command;
+	ftpState->ctrl.last_command = NULL;
+	ftpState->old_reply = ftpState->ctrl.last_reply;
+	ftpState->ctrl.last_reply = NULL;
+	if (ftpState->pathcomps == NULL && ftpState->filepath != NULL)
+	    ftpState->old_filepath = xstrdup(ftpState->filepath);
+    }
     /* Jump to the "hack" state */
     nextState(ftpState);
 }
@@ -2029,6 +2078,20 @@ ftpFail(FtpStateData * ftpState)
 	case SENT_RETR:
 	    /* Try the / hack */
 	    ftpHackShortcut(ftpState, ftpTrySlashHack);
+	    return;
+	default:
+	    break;
+	}
+    }
+    /* Try to reopen datachannel */
+    if (!EBIT_TEST(ftpState->flags, FTP_DATACHANNEL_HACK) &&
+	ftpState->pathcomps == NULL) {
+	switch (ftpState->state) {
+	case SENT_RETR:
+	case SENT_LIST:
+	case SENT_NLST:
+	    /* Try to reopen datachannel */
+	    ftpHackShortcut(ftpState, ftpTryDatachannelHack);
 	    return;
 	default:
 	    break;
