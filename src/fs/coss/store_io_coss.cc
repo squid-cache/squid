@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.8 2001/03/03 10:39:37 hno Exp $
+ * $Id: store_io_coss.cc,v 1.9 2001/04/20 21:18:43 hno Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -529,14 +529,12 @@ storeCossStartMembuf(SwapDir * sd)
 }
 
 /*
- * We can't pass memFree() as a free function here, because we need to free
- * the fsstate variable ..
+ * Clean up any references from the SIO before it get's released.
  */
 static void
 storeCossIOFreeEntry(void *sio)
 {
     memPoolFree(coss_state_pool, ((storeIOState *) sio)->fsstate);
-    memFree(sio, MEM_STORE_IO);
 }
 
 /*
