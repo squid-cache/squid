@@ -202,7 +202,7 @@ asn_build_int(data, datalength, type, intp, intsize)
      * consecutive 1's or 0's at the most significant end of the
      * integer.
      */
-    mask = 0x1FF << ((8 * (sizeof(int32) - 1)) - 1);
+    mask = 0x1FF << ((8 * (NUM32LEN - 1)) - 1);
     /* mask is 0xFF800000 on a big-endian machine */
     while ((((integer & mask) == 0) || ((integer & mask) == mask))
 	&& intsize > 1) {
@@ -215,10 +215,10 @@ asn_build_int(data, datalength, type, intp, intsize)
     if (*datalength < intsize)
 	return NULL;
     *datalength -= intsize;
-    mask = 0xFF << (8 * (sizeof(int32) - 1));
+    mask = 0xFF << (8 * (NUM32LEN - 1));
     /* mask is 0xFF000000 on a big-endian machine */
     while (intsize--) {
-	*data++ = (u_char) ((integer & mask) >> (8 * (sizeof(int32) - 1)));
+	*data++ = (u_char) ((integer & mask) >> (8 * (NUM32LEN - 1)));
 	integer <<= 8;
     }
     return data;
@@ -256,9 +256,9 @@ asn_build_unsigned_int(data, datalength, type, intp, intsize)
 	return NULL;
     }
     integer = *intp;
-    mask = 0xFF << (8 * (sizeof(int32) - 1));
+    mask = 0xFF << (8 * (NUM32LEN - 1));
     /* mask is 0xFF000000 on a big-endian machine */
-    if ((u_char) ((integer & mask) >> (8 * (sizeof(int32) - 1))) & 0x80) {
+    if ((u_char) ((integer & mask) >> (8 * (NUM32LEN - 1))) & 0x80) {
 	/* if MSB is set */
 	add_null_byte = 1;
 	intsize++;
@@ -268,7 +268,7 @@ asn_build_unsigned_int(data, datalength, type, intp, intsize)
      * There should be no sequence of 9 consecutive 1's or 0's at the most significant end of the
      * integer.
      */
-    mask = 0x1FF << ((8 * (sizeof(int32) - 1)) - 1);
+    mask = 0x1FF << ((8 * (NUM32LEN - 1)) - 1);
     /* mask is 0xFF800000 on a big-endian machine */
     while ((((integer & mask) == 0) || ((integer & mask) == mask)) && intsize > 1) {
 	intsize--;
@@ -284,10 +284,10 @@ asn_build_unsigned_int(data, datalength, type, intp, intsize)
 	*data++ = '\0';
 	intsize--;
     }
-    mask = 0xFF << (8 * (sizeof(int32) - 1));
+    mask = 0xFF << (8 * (NUM32LEN - 1));
     /* mask is 0xFF000000 on a big-endian machine */
     while (intsize--) {
-	*data++ = (u_char) ((integer & mask) >> (8 * (sizeof(int32) - 1)));
+	*data++ = (u_char) ((integer & mask) >> (8 * (NUM32LEN - 1)));
 	integer <<= 8;
     }
     return data;
@@ -937,8 +937,8 @@ asn_build_unsigned_int64(data, datalength, type, cp, countersize)
  * ASN.1 integer ::= 0x02 asnlength byte {byte}*
  */
 
-    u_int32 low, high;
-    u_int32 mask, mask2;
+    u_num32 low, high;
+    u_num32 mask, mask2;
     int add_null_byte = 0;
     int intsize;
 
@@ -949,9 +949,9 @@ asn_build_unsigned_int64(data, datalength, type, cp, countersize)
     intsize = 8;
     low = cp->low;
     high = cp->high;
-    mask = 0xFF << (8 * (sizeof(int32) - 1));
+    mask = 0xFF << (8 * (NUM32LEN - 1));
     /* mask is 0xFF000000 on a big-endian machine */
-    if ((u_char) ((high & mask) >> (8 * (sizeof(int32) - 1))) & 0x80) {
+    if ((u_char) ((high & mask) >> (8 * (NUM32LEN - 1))) & 0x80) {
 	/* if MSB is set */
 	add_null_byte = 1;
 	intsize++;
@@ -962,13 +962,13 @@ asn_build_unsigned_int64(data, datalength, type, cp, countersize)
      * There should be no sequence of 9 consecutive 1's or 0's at the most
      * significant end of the integer.
      */
-    mask2 = 0x1FF << ((8 * (sizeof(int32) - 1)) - 1);
+    mask2 = 0x1FF << ((8 * (NUM32LEN - 1)) - 1);
     /* mask2 is 0xFF800000 on a big-endian machine */
     while ((((high & mask2) == 0) || ((high & mask2) == mask2))
 	&& intsize > 1) {
 	intsize--;
 	high = (high << 8)
-	    | ((low & mask) >> (8 * (sizeof(int32) - 1)));
+	    | ((low & mask) >> (8 * (NUM32LEN - 1)));
 	low <<= 8;
     }
     data = asn_build_header(data, datalength, type, intsize);
@@ -982,9 +982,9 @@ asn_build_unsigned_int64(data, datalength, type, cp, countersize)
 	intsize--;
     }
     while (intsize--) {
-	*data++ = (u_char) ((high & mask) >> (8 * (sizeof(int32) - 1)));
+	*data++ = (u_char) ((high & mask) >> (8 * (NUM32LEN - 1)));
 	high = (high << 8)
-	    | ((low & mask) >> (8 * (sizeof(int32) - 1)));
+	    | ((low & mask) >> (8 * (NUM32LEN - 1)));
 	low <<= 8;
 
     }
