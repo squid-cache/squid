@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.12 1998/07/22 20:53:58 wessels Exp $
+ * $Id: internal.cc,v 1.13 1998/08/05 07:49:43 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -49,7 +49,6 @@ internalStart(request_t * request, StoreEntry * entry)
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb"))
 	netdbBinaryExchange(entry);
     else {
-	debug(76, 0) ("internalStart: unknown request '%s'\n", upath);
 	debugObj(76, 1, "internalStart: unknown request:\n", request, (ObjPackMethod) & httpRequestPack);
 	err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND);
 	err->request = requestLink(request);
