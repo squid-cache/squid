@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.158 2002/04/13 23:07:50 hno Exp $
+ * $Id: disk.cc,v 1.159 2002/08/08 20:12:45 hno Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -60,7 +60,7 @@ int
 file_open(const char *path, int mode)
 {
     int fd;
-    if (mode & O_WRONLY)
+    if (FILE_MODE(mode) == O_WRONLY)
 	mode |= O_APPEND;
     mode |= SQUID_NONBLOCK;
     errno = 0;

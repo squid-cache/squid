@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.10 2002/04/13 23:07:57 hno Exp $
+ * $Id: store_io_ufs.cc,v 1.11 2002/08/08 20:12:46 hno Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -68,7 +68,7 @@ storeUfsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 
     sio->swap_filen = f;
     sio->swap_dirn = SD->index;
-    sio->mode = O_RDONLY;
+    sio->mode = O_RDONLY | O_BINARY;
     sio->callback = callback;
     sio->callback_data = cbdataReference(callback_data);
     sio->e = e;
