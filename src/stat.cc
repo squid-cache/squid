@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.235 1998/04/10 00:45:22 rousskov Exp $
+ * $Id: stat.cc,v 1.236 1998/04/10 00:49:39 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1061,7 +1061,7 @@ statCountersDump(StoreEntry * sentry)
 	f->cd.msgs_recv);
     storeAppendPrintf(sentry, "cd.memory = %d\n",
 	(int)f->cd.memory.kb);
-    storeAppendPrintf(sentry, "cd.store_memory = %d\n",
+    storeAppendPrintf(sentry, "cd.local_memory = %d\n",
         (int) (store_digest ? store_digest->mask_size/1024 : 0));
     storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
 	(int) f->cd.kbytes_sent.kb);
