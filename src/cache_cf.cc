@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.375 2001/02/10 16:40:40 hno Exp $
+ * $Id: cache_cf.cc,v 1.376 2001/02/21 00:02:34 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -776,10 +776,9 @@ static void
 dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
 {
     int i;
-    storeAppendPrintf(entry, "%s:", name);
     for (i = 0; i < HDR_ENUM_END; i++) {
 	if (header[i].access_list != NULL) {
-	    storeAppendPrintf(entry, "\t");
+	    storeAppendPrintf(entry, "%s ",name);
 	    dump_acl_access(entry, httpHeaderNameById(i),
 		header[i].access_list);
 	}
@@ -812,11 +811,12 @@ parse_http_header_access(header_mangler header[])
     if (id != HDR_ENUM_END) {
 	parse_acl_access(&header[id].access_list);
     } else {
-	char *next_string = t + strlen(t);
-	*next_string = ' ';
+	char *next_string = t + strlen(t) -1;
+	*next_string = 'A';
+	*(next_string+1) = ' ';
 	for (i = 0; i < HDR_ENUM_END; i++) {
 	    char *new_string = xstrdup(next_string);
-	    strtok(new_string, " ");
+	    strtok(new_string, w_space);
 	    parse_acl_access(&header[i].access_list);
 	    safe_free(new_string);
 	}
@@ -837,11 +837,10 @@ dump_http_header_replace(StoreEntry * entry, const char *name, header_mangler
     header[])
 {
     int i;
-    storeAppendPrintf(entry, "%s:", name);
     for (i = 0; i < HDR_ENUM_END; i++) {
 	if (NULL == header[i].replacement)
 	    continue;
-	storeAppendPrintf(entry, "\t%s: %s", httpHeaderNameById(i),
+	storeAppendPrintf(entry, "%s %s %s\n", name, httpHeaderNameById(i),
 	    header[i].replacement);
     }
 }
