@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.c,v 1.6 2002/06/17 18:27:30 hno Exp $
+ * $Id: ntlmauth.c,v 1.7 2002/07/22 02:05:00 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -109,9 +109,9 @@ ntlm_add_to_payload(char *payload, int *payload_length,
     int l = (*payload_length);
     memcpy(payload + l, toadd, toadd_length);
 
-    hdr->len = toadd_length;
-    hdr->maxlen = toadd_length;
-    hdr->offset = l + base_offset;	/* 48 is the base offset of the payload */
+    hdr->len = SSWAP(toadd_length);
+    hdr->maxlen = SSWAP(toadd_length);
+    hdr->offset = WSWAP(l + base_offset);	/* 48 is the base offset of the payload */
     (*payload_length) += toadd_length;
 }
 
