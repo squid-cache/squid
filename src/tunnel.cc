@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.120 2002/07/20 12:30:04 hno Exp $
+ * $Id: tunnel.cc,v 1.121 2002/09/15 06:23:29 adrian Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -381,7 +381,7 @@ sslErrorComplete(int fdnotused, void *data, size_t sizenotused)
 
 
 static void
-sslConnectDone(int fdnotused, int status, void *data)
+sslConnectDone(int fdnotused, comm_err_t status, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;

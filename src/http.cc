@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.390 2002/09/07 22:51:41 hno Exp $
+ * $Id: http.cc,v 1.391 2002/09/15 06:23:29 adrian Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -671,7 +671,7 @@ httpReadReply(int fd, void *data)
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
+httpSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
@@ -1072,7 +1072,7 @@ httpRequestBodyHandler(char *buf, size_t size, void *data)
 }
 
 static void
-httpSendRequestEntity(int fd, char *bufnotused, size_t size, int errflag, void *data)
+httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;

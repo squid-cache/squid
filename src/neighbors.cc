@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.304 2002/08/28 04:40:04 wessels Exp $
+ * $Id: neighbors.cc,v 1.305 2002/09/15 06:23:29 adrian Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1138,7 +1138,7 @@ peerProbeConnect2(const ipcache_addrs * ianotused, void *data)
 }
 
 static void
-peerProbeConnectDone(int fd, int status, void *data)
+peerProbeConnectDone(int fd, comm_err_t status, void *data)
 {
     peer *p = data;
     if (status == COMM_OK) {

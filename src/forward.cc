@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.85 2002/06/21 12:58:20 hno Exp $
+ * $Id: forward.cc,v 1.86 2002/09/15 06:23:29 adrian Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -177,7 +177,7 @@ fwdServerClosed(int fd, void *data)
 }
 
 static void
-fwdConnectDone(int server_fd, int status, void *data)
+fwdConnectDone(int server_fd, comm_err_t status, void *data)
 {
     FwdState *fwdState = data;
     static FwdState *current = NULL;

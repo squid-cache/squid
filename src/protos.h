@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.445 2002/09/15 05:41:57 robertc Exp $
+ * $Id: protos.h,v 1.446 2002/09/15 06:23:29 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -203,7 +203,7 @@ extern int commDeferRead(int fd);
  * comm_select.c
  */
 extern void comm_select_init(void);
-extern int comm_select(int);
+extern comm_err_t comm_select(int);
 extern void comm_quick_poll_required(void);
 
 extern void packerToStoreInit(Packer * p, StoreEntry * e);
