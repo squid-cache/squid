@@ -743,7 +743,8 @@ struct _MemObject {
     struct _store_client *clients;
     int nclients;
     struct {
-	off_t offset;
+	off_t queue_offset;
+	off_t done_offset;
 	int fd;
     } swapout;
     struct _http_reply *reply;
