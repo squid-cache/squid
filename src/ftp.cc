@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.116 1997/06/02 05:39:43 wessels Exp $
+ * $Id: ftp.cc,v 1.117 1997/06/02 17:19:25 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1422,9 +1422,11 @@ static void
 ftpDataTransferDone(FtpStateData * ftpState)
 {
     debug(9, 3, "This is ftpDataTransferDone\n");
-    assert(ftpState->data.fd >= 0);
-    comm_close(ftpState->data.fd);
-    ftpState->data.fd = -1;
+    if (ftpState->data.fd > -1) {
+        comm_close(ftpState->data.fd);
+        ftpState->data.fd = -1;
+    }
+    assert(ftpState->ctrl.fd > -1);
     sprintf(cbuf, "QUIT\r\n");
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_QUIT;
