@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.309 1999/01/21 21:13:04 wessels Exp $
+ * $Id: protos.h,v 1.310 1999/01/22 19:07:05 glenn Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -355,7 +355,8 @@ extern void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, size_t ent
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
 extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
-extern void httpHeaderMaskInit(HttpHeaderMask * mask);
+extern int httpHeaderIdByNameDef(const char *name, int name_len);
+extern void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
 extern void httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count);
 extern int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 extern void httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, size_t ent_len);

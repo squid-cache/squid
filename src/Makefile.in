@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.167 1999/01/13 23:24:09 wessels Exp $
+#  $Id: Makefile.in,v 1.168 1999/01/22 19:07:01 glenn Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -110,7 +110,6 @@ OBJS	 	= \
 		helper.o \
 		@HTCP_OBJS@ \
 		http.o \
-		http-anon.o \
 		HttpStatusLine.o \
 		HttpHdrCc.o \
 		HttpHdrRange.o \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.319 1999/01/21 23:15:35 wessels Exp $
+ * $Id: cache_cf.cc,v 1.320 1999/01/22 19:07:02 glenn Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -56,6 +56,8 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
+static int http_header_first = 0;
+
 static void self_destruct(void);
 
 static void configDoConfigure(void);
@@ -72,6 +74,9 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 static void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
+static void dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header);
+static void parse_http_header(HttpHeaderMask * header);
+static void free_http_header(HttpHeaderMask *header);
 
 static void
 self_destruct(void)
@@ -508,6 +513,57 @@ static void
 free_address(struct in_addr *addr)
 {
     memset(addr, '\0', sizeof(struct in_addr));
+}
+
+static void
+dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header)
+{    
+    storeAppendPrintf(entry, "%s\n", name);
+}
+    
+static void
+parse_http_header(HttpHeaderMask * header)
+{
+    int allowed, id;
+    char *t = NULL;
+
+    if ((t = strtok(NULL, w_space)) == NULL) {
+	debug(3, 0) ("%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(3, 0) ("parse_http_header: missing 'allow' or 'deny'.\n");
+	return;
+    }
+    if (!strcmp(t, "allow"))
+	allowed = 1;
+    else if (!strcmp(t, "deny"))
+	allowed = 0;
+    else {
+	debug(3, 0) ("%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(3, 0) ("parse_http_header: expecting 'allow' or 'deny', got '%s'.\n", t);
+	return;
+    }
+
+    if(!http_header_first){
+	http_header_first = 1;
+	if (allowed)
+	    httpHeaderMaskInit(header, 0xFF);
+    }
+
+    while ((t = strtok(NULL, w_space))) {
+	if ((id = httpHeaderIdByNameDef(t, strlen(t))) == -1)
+	    id = HDR_OTHER;
+	if (allowed)
+	    CBIT_CLR(*header, id);
+	else
+	    CBIT_SET(*header, id);
+    }
+}
+     
+static void
+free_http_header(HttpHeaderMask *header)
+{    
+    httpHeaderMaskInit(header, 0);
 }
 
 static void
@@ -950,38 +1006,6 @@ parse_hostdomaintype(void)
 	*L = l;
     }
 }
-
-static void
-dump_httpanonymizer(StoreEntry * entry, const char *name, int var)
-{
-    switch (var) {
-    case ANONYMIZER_NONE:
-	storeAppendPrintf(entry, "%s off\n", name);
-	break;
-    case ANONYMIZER_STANDARD:
-	storeAppendPrintf(entry, "%s paranoid\n", name);
-	break;
-    case ANONYMIZER_PARANOID:
-	storeAppendPrintf(entry, "%s standard\n", name);
-	break;
-    }
-}
-
-static void
-parse_httpanonymizer(int *var)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    if (!strcasecmp(token, "off"))
-	*var = ANONYMIZER_NONE;
-    else if (!strcasecmp(token, "paranoid"))
-	*var = ANONYMIZER_PARANOID;
-    else
-	*var = ANONYMIZER_STANDARD;
-}
-
 
 static void
 dump_ushortlist(StoreEntry * entry, const char *name, ushortlist * u)

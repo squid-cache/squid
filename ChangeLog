@@ -58,6 +58,11 @@ Changes to Squid-2.2 ():
 	- Fixed pconnPush() bug that prevented holding on to
 	  persistent connections (Manfred Bathelt).
 	- Pid file now rewritten on SIGHUP.
+	- Rewrote the anonymizer.
+	- Removed the http_anonymizer option.
+	- Added the http_header option to allow individual referencing of
+	  headers for addition or removal. See 'http_header' in squid.conf
+	  for additional configuration.
 
 Changes to Squid-2.1 (November 16, 1998):
 
