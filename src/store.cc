@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.226 1997/04/30 16:18:44 wessels Exp $
+ * $Id: store.cc,v 1.227 1997/04/30 22:46:27 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2454,7 +2454,6 @@ storeInitHashValues(void)
 void
 storeInit(void)
 {
-    int dir_created = 0;
     char *fname = NULL;
     storeInitHashValues();
     storeCreateHashTable(urlcmp);
@@ -2466,8 +2465,8 @@ storeInit(void)
 	debug(20, 1, "Store logging disabled\n");
     if (ncache_dirs < 1)
 	fatal("No cache_dir's specified in config file");
-    dir_created = storeVerifySwapDirs();
-
+    storeVerifySwapDirs();
+    storeDirOpenSwapLogs();
     if (!opt_zap_disk_store)
 	storeStartRebuildFromDisk();
     else

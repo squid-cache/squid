@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.39 1997/04/30 18:30:59 wessels Exp $
+ * $Id: redirect.cc,v 1.40 1997/04/30 22:46:26 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -77,6 +77,7 @@ static PF redirectHandleRead;
 static redirectStateData *Dequeue _PARAMS((void));
 static void Enqueue _PARAMS((redirectStateData *));
 static void redirectDispatch _PARAMS((redirector_t *, redirectStateData *));
+static void redirectStateFree _PARAMS((redirectStateData * r));
 
 static redirector_t **redirect_child_table = NULL;
 static int NRedirectors = 0;
@@ -220,7 +221,7 @@ redirectHandleRead(int fd, void *data)
 		r->handler(r->data,
 		    t == redirector->inbuf ? NULL : redirector->inbuf);
 	    }
-	    safe_free(r);
+	    redirectStateFree(r);
 	    redirector->redirectState = NULL;
 	    redirector->flags &= ~REDIRECT_FLAG_BUSY;
 	    redirector->offset = 0;
@@ -279,6 +280,13 @@ GetFirstAvailable(void)
     return NULL;
 }
 
+static void
+redirectStateFree(redirectStateData * r)
+{
+    safe_free(r->orig_url);
+    safe_free(r);
+}
+
 
 static void
 redirectDispatch(redirector_t * redirect, redirectStateData * r)
@@ -289,7 +297,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
     if (r->handler == NULL) {
 	debug(29, 1, "redirectDispatch: skipping '%s' because no handler\n",
 	    r->orig_url);
-	safe_free(r);
+	redirectStateFree(r);
 	return;
     }
     redirect->flags |= REDIRECT_FLAG_BUSY;
@@ -337,7 +345,7 @@ redirectStart(int cfd, icpStateData * icpState, RH * handler, void *data)
     }
     r = xcalloc(1, sizeof(redirectStateData));
     r->fd = cfd;
-    r->orig_url = icpState->url;
+    r->orig_url = xstrdup(icpState->url);
     r->client_addr = icpState->log_addr;
     if (icpState->ident.ident == NULL || *icpState->ident.ident == '\0') {
 	r->client_ident = dash_str;
