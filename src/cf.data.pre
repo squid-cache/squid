@@ -1449,15 +1449,16 @@ DOC_END
 
 
 NAME: tcp_recv_bufsize
-TYPE: int
-DEFAULT: 0
+COMMENT: (bytes)
+TYPE: size_t
+DEFAULT: 0 bytes
 LOC: Config.tcpRcvBufsz
 DOC_START
 	Size of receive buffer to set for TCP sockets.  Probably just
 	as easy to change your kernel's default.  Set to zero to use
 	the default buffer size.
 
-tcp_recv_bufsize 0
+tcp_recv_bufsize 0 bytes
 DOC_END
 
 
@@ -1573,15 +1574,16 @@ DOC_END
 
 
 NAME: udp_hit_obj_size
-TYPE: int
+COMMENT: (bytes)
+TYPE: size_t
 LOC: Config.udpMaxHitObjsz
-DEFAULT: 0
+DEFAULT: 0 bytes
 DOC_START
 	If set, Squid will limit UDP_HIT_OBJ size to be less than
 	this value.  Setting this value to more than SQUID_UDP_SO_SNDBUF
 	will not work as expected.  Set to zero to select the size
 	permited by the socket.
-udp_hit_obj_size     0
+udp_hit_obj_size     0 bytes
 DOC_END
 
 
@@ -1704,15 +1706,16 @@ DOC_END
 #swap_level2_dirs 256
 
 NAME: store_avg_object_size
-TYPE: int
-DEFAULT: 20
+COMMENT: (bytes)
+TYPE: size_t
+DEFAULT: 20 KB
 LOC: Config.Store.avgObjectSize
 DOC_START
 	Average object size, used to estimate number of objects your
 	cache can hold.  See doc/Release-Notes-1.1.txt.  The default is
 	20K.
 
-store_avg_object_size 20
+store_avg_object_size 20 KB
 DOC_END
 
 NAME: store_objects_per_bucket

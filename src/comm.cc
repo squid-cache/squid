@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.176 1997/07/14 19:27:28 wessels Exp $
+ * $Id: comm.cc,v 1.177 1997/07/15 02:30:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1070,9 +1070,9 @@ comm_select(time_t sec)
 void
 commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
-    fde *F;
+    fde *F = &fd_table[fd];
     assert(fd >= 0);
-    F = &fd_table[fd];
+    assert(F->open == FD_OPEN);
     debug(5, 5) ("commSetSelect: FD %d, type=%d, handler=%p, data=%p\n", fd, type, handler, client_data);
     if (type & COMM_SELECT_READ) {
 	F->read_handler = handler;
