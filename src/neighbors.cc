@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.107 1997/01/31 21:03:10 wessels Exp $
+ * $Id: neighbors.cc,v 1.108 1997/01/31 22:06:30 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -279,9 +279,13 @@ getRoundRobinParent(request_t * request)
     edge *e;
     edge *f = NULL;
     for (e = friends.edges_head; e; e = e->next) {
+	if (!BIT_TEST(e->options, NEIGHBOR_ROUNDROBIN))
+	    continue;
+	if (neighborType(e, request) != EDGE_PARENT)
+	    continue;
 	if (!neighborUp(e))
 	    continue;
-	if (!BIT_TEST(e->options, NEIGHBOR_ROUNDROBIN))
+	if (!edgeWouldBePinged(e, request))
 	    continue;
 	if (f && f->rr_count < e->rr_count)
 	    continue;
