@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.47 1996/07/09 03:41:32 wessels Exp $
+ * $Id: main.cc,v 1.48 1996/07/09 04:46:52 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -388,6 +388,9 @@ static void mainInitialize()
     }
     squid_signal(SIGPIPE, SIG_IGN, SA_RESTART);
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
+#if USE_ASYNC_IO
+    squid_signal(SIGIO, aioSigHandler, SA_RESTART);
+#endif
 
     if (ConfigFile == NULL)
 	ConfigFile = xstrdup(DefaultConfigFile);

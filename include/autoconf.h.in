@@ -130,6 +130,9 @@
 /* Define if you have the timegm function.  */
 #undef HAVE_TIMEGM
 
+/* Define if you have the <aio.h> header file.  */
+#undef HAVE_AIO_H
+
 /* Define if you have the <alloca.h> header file.  */
 #undef HAVE_ALLOCA_H
 

@@ -1,6 +1,7 @@
 Changes to squid-1.1.alpha2:
 
 	- Added Support for RFC931/ident
+	- Added Asynchronous Disk I/O routines from Pete Bentley.
 
 Changes to squid-1.0.1 (July 8, 1996):
 
