@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.54 2001/01/12 00:37:19 wessels Exp $
+ * $Id: mem.cc,v 1.55 2001/02/17 07:28:50 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -302,7 +302,6 @@ memInit(void)
     memDataInit(MEM_STORE_IO, "storeIOState", sizeof(storeIOState), 0);
     memDataInit(MEM_TLV, "storeSwapTLV", sizeof(tlv), 0);
     memDataInit(MEM_GEN_CBDATA, "generic_cbdata", sizeof(generic_cbdata), 0);
-    memDataInit(MEM_PUMP_STATE_DATA, "PumpStateData", sizeof(PumpStateData), 0);
     memDataInit(MEM_CLIENT_REQ_BUF, "clientRequestBuffer", CLIENT_REQ_BUF_SZ, 0);
     memDataInit(MEM_SWAP_LOG_DATA, "storeSwapLogData", sizeof(storeSwapLogData), 0);
 
