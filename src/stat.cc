@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.303 1999/01/08 20:39:32 wessels Exp $
+ * $Id: stat.cc,v 1.304 1999/01/08 21:19:43 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -220,8 +220,8 @@ storeEntryFlags(const StoreEntry * entry)
 	strcat(buf, "DISPATCHED,");
     if (EBIT_TEST(flags, KEY_PRIVATE))
 	strcat(buf, "PRIVATE,");
-    if (EBIT_TEST(flags, ENTRY_HDR_WAIT))
-	strcat(buf, "HDR_WAIT,");
+    if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT))
+	strcat(buf, "FWD_HDR_WAIT,");
     if (EBIT_TEST(flags, ENTRY_NEGCACHED))
 	strcat(buf, "NEGCACHED,");
     if (EBIT_TEST(flags, ENTRY_VALIDATED))
