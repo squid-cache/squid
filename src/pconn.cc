@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.41 2003/08/16 10:04:34 adrian Exp $
+ * $Id: pconn.cc,v 1.42 2004/04/03 14:25:59 hno Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -252,7 +252,7 @@ pconnPush(int fd, const char *host, u_short port, const char *domain)
     LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     LOCAL_ARRAY(char, desc, FD_DESC_SZ);
 
-    if (fdNFree() < (RESERVED_FD << 1)) {
+    if (fdUsageHigh()) {
         debug(48, 3) ("pconnPush: Not many unused FDs\n");
         comm_close(fd);
         return;
