@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.92 2003/03/09 12:29:41 robertc Exp $
+ * $Id: dns.cc,v 1.93 2004/04/10 13:10:17 hno Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -122,7 +122,7 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
 
         debug(34, 1) ("dnsSubmit: queue overload, rejecting %s\n", lookup);
 
-        callback(data, "$fail Temporary network problem, please retry later");
+        callback(data, (char *)"$fail Temporary network problem, please retry later");
 
         return;
     }
@@ -139,7 +139,7 @@ variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_netDnsFn: Processing request:\n", Var->name[LEN_SQ_NET + 1]);
+    debug(49, 5) ("snmp_netDnsFn: Processing request: %d\n", Var->name[LEN_SQ_NET + 1]);
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
