@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.28 2002/10/15 08:03:29 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.29 2003/01/22 10:05:43 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -276,7 +276,7 @@ HttpHdrRange *
 httpHdrRangeDup(const HttpHdrRange * range)
 {
     HttpHdrRange *dup;
-    int i;
+    size_t i;
     assert(range);
     dup = httpHdrRangeCreate();
     stackPrePush(&dup->specs, range->specs.count);
@@ -309,7 +309,7 @@ httpHdrRangePackInto(const HttpHdrRange * range, Packer * p)
 int
 httpHdrRangeCanonize(HttpHdrRange * range, ssize_t clen)
 {
-    int i;
+    size_t i;
     HttpHdrRangeSpec *spec;
     HttpHdrRangePos pos = HttpHdrRangeInitPos;
     Stack goods;
@@ -364,9 +364,9 @@ HttpHdrRangeSpec *
 httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangePos * pos)
 {
     assert(range);
-    assert(pos && *pos >= -1 && *pos < range->specs.count);
+    assert(pos && *pos >= -1 && *pos < (ssize_t)range->specs.count);
     (*pos)++;
-    if (*pos < range->specs.count)
+    if (*pos < (ssize_t)range->specs.count)
 	return (HttpHdrRangeSpec *) range->specs.items[*pos];
     else
 	return NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.82 2002/12/06 23:19:13 hno Exp $
+ * $Id: HttpHeader.cc,v 1.83 2003/01/22 10:05:43 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -457,8 +457,8 @@ HttpHeaderEntry *
 httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
 {
     assert(hdr && pos);
-    assert(*pos >= HttpHeaderInitPos && *pos < hdr->entries.count);
-    for ((*pos)++; *pos < hdr->entries.count; (*pos)++) {
+    assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)hdr->entries.count);
+    for ((*pos)++; *pos < (ssize_t)hdr->entries.count; (*pos)++) {
 	if (hdr->entries.items[*pos])
 	    return (HttpHeaderEntry*)hdr->entries.items[*pos];
     }
@@ -570,7 +570,7 @@ void
 httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos)
 {
     HttpHeaderEntry *e;
-    assert(pos >= HttpHeaderInitPos && pos < hdr->entries.count);
+    assert(pos >= HttpHeaderInitPos && pos < (ssize_t)hdr->entries.count);
     e = (HttpHeaderEntry*)hdr->entries.items[pos];
     hdr->entries.items[pos] = NULL;
     /* decrement header length, allow for ": " and crlf */
