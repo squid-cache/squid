@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.371 2000/11/13 20:42:33 wessels Exp $
+ * $Id: http.cc,v 1.372 2001/01/02 20:51:17 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -681,8 +681,11 @@ httpBuildRequestHeader(request_t * request,
     while ((e = httpHeaderGetEntry(hdr_in, &pos))) {
 	debug(11, 5) ("httpBuildRequestHeader: %s: %s\n",
 	    strBuf(e->name), strBuf(e->value));
-	if (!httpRequestHdrAllowed(e, &strConnection))
+	if (!httpRequestHdrAllowed(e, &strConnection)) {
+	    debug(11, 2) ("'%s' header denied by anonymize_headers configuration\n",
+		strBuf(e->name));
 	    continue;
+	}
 	switch (e->id) {
 	case HDR_PROXY_AUTHORIZATION:
 	    /* If we're not doing proxy auth, then it must be passed on */
