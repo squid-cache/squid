@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.268 2001/10/24 06:55:43 hno Exp $
+ * $Id: acl.cc,v 1.269 2001/11/13 18:50:43 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -905,7 +905,7 @@ aclIsProxyAuth(const char *name)
     if (NULL == name)
 	return 0;
     if ((a = aclFindByName(name)))
-	return a->type == ACL_PROXY_AUTH;
+	return a->type == ACL_PROXY_AUTH || a->type == ACL_PROXY_AUTH_REGEX;
     return 0;
 }
 
@@ -1162,6 +1162,7 @@ aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
 	break;
     case ACL_PROXY_AUTH_REGEX:
 	matchrv = aclMatchRegex(data, MatchParam);
+	break;
     default:
 	/* This is a fatal to ensure that aclCacheMatchAcl calls are _only_
 	 * made for supported acl types */
