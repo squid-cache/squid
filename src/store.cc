@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.453 1998/09/06 16:20:04 wessels Exp $
+ * $Id: store.cc,v 1.454 1998/09/09 16:47:08 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -492,10 +492,12 @@ storeCheckCachable(StoreEntry * e)
     } else if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
 	store_check_cachable_hist.no.private_key++;
+#if WIP
     } else if (statMedianSvc(5, MEDIAN_HTTP) > 2000.0) {
 	debug(20, 2) ("storeCheckCachable: NO: median HTTP svc time = %d\n",
 	    statMedianSvc(5, MEDIAN_HTTP));
 	store_check_cachable_hist.no.http_median_too_high++;
+#endif
     } else if (storeExpiredReferenceAge() < 300) {
 	debug(20, 2) ("storeCheckCachable: NO: LRU Age = %d\n",
 	    storeExpiredReferenceAge());
