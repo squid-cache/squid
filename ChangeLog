@@ -33,6 +33,7 @@ Changes to squid-2.5 ():
 	- Added 'max-conn' option to 'cache_peer'
 	- Added SSL gatewaying support, allowing Squid to act as a SSL server
 	  in accelerator setups.
+	- Multiple SNMP memory leaks fixed
 	- Countless other small things and fixes
 	
 Changes to Squid-2.4.STABLE2 (Aug 24, 2001):
