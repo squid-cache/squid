@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.34 2003/07/08 22:53:55 hno Exp $
+#  $Id: Makefile.in,v 1.35 2003/07/08 23:15:55 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -239,29 +239,29 @@ check_PROGRAMS = debug \
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 debug_SOURCES = debug.cc test_tools.cc
-debug_LDADD = $(top_builddir)/lib/Array.o $(LDADD)
+debug_LDADD = $(top_builddir)/lib/Array.o \
+		$(top_builddir)/src/globals.o \
+		$(LDADD)
+
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
 mem_hdr_test_SOURCES = mem_hdr_test.cc test_tools.cc
 mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
+		     $(top_builddir)/src/globals.o \
 		     $(top_builddir)/src/mem_node.o $(LDADD)
 
 MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
 
-DEBUG_OBJECTS = $(top_builddir)/src/debug.o\
-		$(top_builddir)/src/tools.o\
-		$(top_builddir)/src/globals.o
-
-
-http_range_test_SOURCES = http_range_test.cc
+http_range_test_SOURCES = http_range_test.cc test_tools.cc
 http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 		$(top_builddir)/src/HttpHeaderTools.o \
 		$(top_builddir)/src/MemBuf.o \
 		$(top_builddir)/src/Packer.o \
 		$(top_builddir)/src/String.o \
 		$(top_builddir)/src/mem.o \
-		$(DEBUG_OBJECTS) $(LDADD)
+		$(top_builddir)/src/globals.o \
+		$(LDADD)
 
 
 splay_SOURCES = splay.cc
@@ -285,21 +285,22 @@ MemPoolTest_DEPENDENCIES =
 MemPoolTest_LDFLAGS =
 am_debug_OBJECTS = debug.$(OBJEXT) test_tools.$(OBJEXT)
 debug_OBJECTS = $(am_debug_OBJECTS)
-debug_DEPENDENCIES = $(top_builddir)/lib/Array.o
+debug_DEPENDENCIES = $(top_builddir)/lib/Array.o \
+	$(top_builddir)/src/globals.o
 debug_LDFLAGS =
-am_http_range_test_OBJECTS = http_range_test.$(OBJEXT)
+am_http_range_test_OBJECTS = http_range_test.$(OBJEXT) \
+	test_tools.$(OBJEXT)
 http_range_test_OBJECTS = $(am_http_range_test_OBJECTS)
 http_range_test_DEPENDENCIES = $(top_builddir)/src/HttpHdrRange.o \
 	$(top_builddir)/src/HttpHeaderTools.o \
 	$(top_builddir)/src/MemBuf.o $(top_builddir)/src/Packer.o \
 	$(top_builddir)/src/String.o $(top_builddir)/src/mem.o \
-	$(top_builddir)/src/debug.o $(top_builddir)/src/tools.o \
 	$(top_builddir)/src/globals.o
 http_range_test_LDFLAGS =
 am_mem_hdr_test_OBJECTS = mem_hdr_test.$(OBJEXT) test_tools.$(OBJEXT)
 mem_hdr_test_OBJECTS = $(am_mem_hdr_test_OBJECTS)
 mem_hdr_test_DEPENDENCIES = $(top_builddir)/src/stmem.o \
-	$(top_builddir)/src/mem_node.o
+	$(top_builddir)/src/globals.o $(top_builddir)/src/mem_node.o
 mem_hdr_test_LDFLAGS =
 am_mem_node_test_OBJECTS = mem_node_test.$(OBJEXT)
 mem_node_test_OBJECTS = $(am_mem_node_test_OBJECTS)
