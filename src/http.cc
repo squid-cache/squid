@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.296 1998/07/20 17:19:45 wessels Exp $
+ * $Id: http.cc,v 1.297 1998/07/20 19:25:34 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -121,9 +121,6 @@ static PF httpReadReply;
 static PF httpSendRequest;
 static PF httpStateFree;
 static PF httpTimeout;
-#if OLD_CODE
-static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, int);
-#endif
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
@@ -135,9 +132,6 @@ httpStateFree(int fdnotused, void *data)
     HttpStateData *httpState = data;
     if (httpState == NULL)
 	return;
-#if OLD_CODE
-    storeUnregisterAbort(httpState->entry);
-#endif
     storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
 	memFree(MEM_8K_BUF, httpState->reply_hdr);
@@ -554,30 +548,6 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
     }
 }
 
-#if OLD_CODE
-static void
-httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, int check)
-{
-    size_t n = *sz + strlen(line) + 2;
-    if (n >= max)
-	return;
-    if (check) {
-	if (Config.onoff.anonymizer == ANONYMIZER_PARANOID) {
-	    if (!httpAnonAllowed(line))
-		return;
-	} else if (Config.onoff.anonymizer == ANONYMIZER_STANDARD) {
-	    if (httpAnonDenied(line))
-		return;
-	}
-    }
-    /* allowed header, explicitly known to be not dangerous */
-    debug(11, 5) ("httpAppendRequestHeader: %s\n", line);
-    strcpy(hdr + (*sz), line);
-    strcat(hdr + (*sz), crlf);
-    *sz = n;
-}
-#endif
-
 /*
  * build request headers and append them to a given MemBuf 
  * used by httpBuildRequestPrefix()
@@ -599,13 +569,7 @@ httpBuildRequestHeader(request_t * request,
     int filter_range;
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
-
-#if OLD_CODE
-    assert(orig_request->prefix != NULL);
-    debug(11, 3) ("httpBuildRequestHeader:\n%s", orig_request->prefix);
-#endif
     httpHeaderInit(hdr_out, hoRequest);
-
     /* append our IMS header */
     if (entry && entry->lastmod > -1 && request->method == METHOD_GET)
 	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);

@@ -110,12 +110,6 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    header.opcode, inet_ntoa(from.sin_addr));
 	break;
     }
-    if (icp_request) {
-#if OLD_CODE
-	stringClean(&icp_request->urlpath);
-	memFree(MEM_REQUEST_T, icp_request);
-#else
+    if (icp_request)
 	requestDestroy(icp_request);
-#endif
-    }
 }

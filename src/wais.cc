@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.112 1998/07/20 17:20:23 wessels Exp $
+ * $Id: wais.cc,v 1.113 1998/07/20 19:25:43 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -121,9 +121,6 @@ static PF waisTimeout;
 static PF waisReadReply;
 static CWCB waisSendComplete;
 static PF waisSendRequest;
-#if OLD_CODE
-static STABH waisAbort;
-#endif
 
 static void
 waisStateFree(int fdnotused, void *data)
@@ -131,9 +128,6 @@ waisStateFree(int fdnotused, void *data)
     WaisStateData *waisState = data;
     if (waisState == NULL)
 	return;
-#if OLD_CODE
-    storeUnregisterAbort(waisState->entry);
-#endif
     storeUnlockObject(waisState->entry);
     cbdataFree(waisState);
 }
@@ -268,28 +262,9 @@ static void
 waisSendRequest(int fd, void *data)
 {
     WaisStateData *waisState = data;
-#if OLD_CODE
-    int len = strlen(waisState->request) + 4;
-    char *buf = NULL;
-#else
     MemBuf mb;
-#endif
     const char *Method = RequestMethodStr[waisState->method];
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);
-#if OLD_CODE
-    if (Method)
-	len += strlen(Method);
-    if (waisState->request_hdr)
-	len += strlen(waisState->request_hdr);
-    buf = xcalloc(1, len + 1);
-    if (waisState->request_hdr)
-	snprintf(buf, len + 1, "%s %s %s\r\n", Method, waisState->request,
-	    waisState->request_hdr);
-    else
-	snprintf(buf, len + 1, "%s %s\r\n", Method, waisState->request);
-    debug(24, 6) ("waisSendRequest: buf: %s\n", buf);
-    comm_write(fd, buf, len, waisSendComplete, waisState, xfree);
-#else
     memBufPrintf(&mb, "%s %s", Method, waisState->request);
     if (waisState->request_hdr) {
 	Packer p;
@@ -300,7 +275,6 @@ waisSendRequest(int fd, void *data)
     memBufPrintf(&mb, "\r\n");
     debug(24, 6) ("waisSendRequest: buf: %s\n", mb.buf);
     comm_write_mbuf(fd, mb, waisSendComplete, waisState);
-#endif
     if (EBIT_TEST(waisState->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
@@ -332,20 +306,7 @@ waisStart(request_t * request, StoreEntry * entry, int fd)
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
-#if OLD_CODE
-    storeRegisterAbort(entry, waisAbort, waisState);
-#endif
     storeLockObject(entry);
     commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
 }
-
-#if OLD_CODE
-static void
-waisAbort(void *data)
-{
-    HttpStateData *waisState = data;
-    debug(24, 1) ("waisAbort: %s\n", storeUrl(waisState->entry));
-    comm_close(waisState->fd);
-}
-#endif

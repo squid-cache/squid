@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.131 1998/07/20 17:19:42 wessels Exp $
+ * $Id: gopher.cc,v 1.132 1998/07/20 19:25:32 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -175,9 +175,6 @@ static PF gopherReadReply;
 static CWCB gopherSendComplete;
 static PF gopherSendRequest;
 static GopherStateData *CreateGopherStateData(void);
-#if OLD_CODE
-static STABH gopherAbort;
-#endif
 
 static char def_gopher_bin[] = "www/unknown";
 static char def_gopher_text[] = "text/plain";
@@ -189,9 +186,6 @@ gopherStateFree(int fdnotused, void *data)
     if (gopherState == NULL)
 	return;
     if (gopherState->entry) {
-#if OLD_CODE
-	storeUnregisterAbort(gopherState->entry);
-#endif
 	storeUnlockObject(gopherState->entry);
     }
     memFree(MEM_4K_BUF, gopherState->buf);
@@ -854,9 +848,6 @@ gopherStart(StoreEntry * entry, int fd)
 	return;
     }
     comm_add_close_handler(fd, gopherStateFree, gopherState);
-#if OLD_CODE
-    storeRegisterAbort(entry, gopherAbort, gopherState);
-#endif
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
 	&& (strchr(gopherState->request, '?') == NULL)) {
 	/* Index URL without query word */
@@ -889,13 +880,3 @@ CreateGopherStateData(void)
     gd->buf = memAllocate(MEM_4K_BUF);
     return (gd);
 }
-
-#if OLD_CODE
-static void
-gopherAbort(void *data)
-{
-    GopherStateData *gopherState = data;
-    debug(10, 1) ("gopherAbort: %s\n", storeUrl(gopherState->entry));
-    comm_close(gopherState->fd);
-}
-#endif
