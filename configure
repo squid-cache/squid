@@ -50,8 +50,6 @@ mandir='${prefix}/man'
 # Initialize some other variables.
 subdirs=
 MFLAGS= MAKEFLAGS=
-SNMPLIB='libsnmp.a'
-
 # Maximum number of lines to put in a shell here document.
 ac_max_here_lines=12
 
@@ -522,7 +520,7 @@ fi
 
 
 
-# From configure.in Revision: 1.82 
+# From configure.in Revision: 1.84 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -3450,6 +3448,9 @@ if test "$ac_cv_lib_malloc_main" = "yes" ; then
 		XTRA_OBJS="$XTRA_OBJS /usr/lib/debug/mallocmap.o"
 	fi
 fi
+SNMPLIB='libsnmp.a'
+
+
 
 
 if test -z "$XTRA_LIBS"; then
@@ -3569,7 +3570,9 @@ trap 'rm -fr `echo "\
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \
+	./src/options.h \
 	./contrib/Makefile \
+	./snmplib/Makefile \
 	./icons/Makefile \
 	./errors/Makefile \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
@@ -3610,7 +3613,6 @@ s%@host_os@%$host_os%g
 s%@CACHE_HTTP_PORT@%$CACHE_HTTP_PORT%g
 s%@CACHE_ICP_PORT@%$CACHE_ICP_PORT%g
 s%@CC@%$CC%g
-s%@SNMPLIB@%$SNMPLIB%g
 s%@CPP@%$CPP%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
@@ -3632,6 +3634,7 @@ s%@CRYPTLIB@%$CRYPTLIB%g
 s%@REGEXLIB@%$REGEXLIB%g
 s%@LIBREGEX@%$LIBREGEX%g
 s%@LIBOBJS@%$LIBOBJS%g
+s%@SNMPLIB@%$SNMPLIB%g
 s%@XTRA_OBJS@%$XTRA_OBJS%g
 s%@XTRA_LIBS@%$XTRA_LIBS%g
 
@@ -3680,11 +3683,12 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	./lib/Makefile \
 	./include/config.h \
 	./scripts/Makefile \
-	./snmplib/Makefile \
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \
+	./src/options.h \
 	./contrib/Makefile \
+	./snmplib/Makefile \
 	./icons/Makefile \
 	./errors/Makefile \
 "}
