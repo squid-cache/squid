@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
 <HR>
 <P>
-An FTP authentication failure occurred
-while trying to retrieve the URL:
+De FTP authenticatie is mislukt
+tijdens het opvragen van de URL:
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
+Squid stuurde de volgende FTP opdracht:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
+en ontving daarop het volgende antwoord:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>

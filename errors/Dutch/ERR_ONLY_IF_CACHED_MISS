@@ -17,5 +17,5 @@ Een geldig document werd niet gevonden in de cache, en de <code>only-if-cached</
 </UL>
 
 <P>
-U heeft een verzoek gedaan met een <code>only-if-cached</code> cache beheer richtlijn. Het document werd niet gevonden in de cache <em>of</em> er was een herbevestiging nodig die niet werd toegestaan door de <code>only-if-cached</code> richtlijn.
+U heeft een verzoek gedaan met een <code>only-if-cached</code> cachebeheer richtlijn. Het document werd niet gevonden in de cache <em>of</em> er was een herbevestiging nodig die niet werd toegestaan door de <code>only-if-cached</code> richtlijn.
 </P>

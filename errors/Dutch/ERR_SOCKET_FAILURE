@@ -12,7 +12,7 @@ kwam de volgende fout voor:
 <UL>
 <LI>
 <STRONG>
-Socket Fout
+Socket Fout.
 </STRONG>
 </UL>
 
@@ -21,5 +21,5 @@ Het systeem gaf terug:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Squid is niet in staat een TCP socket aan te maken, waarschijnlijk als gevolg van een hoge bezettingsgraad. Probeer uw verzoek opnieuw.
+Squid is niet in staat een TCP socket aan te maken, waarschijnlijk als gevolg van een te hoge bezettingsgraad. Probeer uw verzoek opnieuw.
 </P>

@@ -10,7 +10,7 @@ Tijdens het opvragen van de URL:
 <P>
 kwam de volgende fout voor:
 <BLOCKQUOTE>
-Niet in staat om het IP adres te bepalen van de host naam 
+Niet in staat om het IP adres te bepalen van de hostnaam.
 <I>%H</I>
 </BLOCKQUOTE>
 
@@ -23,7 +23,7 @@ De dnsserver gaf als antwoord:
 <P>
 Dit betekent dat:
 <PRE>
- De cache was niet in staat om de host naam uit de URL te herleiden. 
+ De cache niet in staat was om de hostnaam uit de URL te herleiden. 
  Controleer of de naam klopt.
 </PRE>
 </P>
