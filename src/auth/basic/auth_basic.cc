@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.34 2004/12/20 16:30:38 robertc Exp $
+ * $Id: auth_basic.cc,v 1.35 2004/12/24 01:03:39 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -527,7 +527,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
     /* decode the username */
     /* trim BASIC from string */
 
-    while (!xisspace(*proxy_auth))
+    while (xisgraph(*proxy_auth))
         proxy_auth++;
 
     BasicUser *basic_auth, local_basic(&basicConfig);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.45 2004/12/20 17:35:58 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.46 2004/12/24 01:03:39 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -709,7 +709,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
         fatal("Invalid authenticate state for NTLMStart");
     }
 
-    while (!xisspace(*sent_string))	/*trim NTLM */
+    while (xisgraph(*sent_string))	/*trim NTLM */
         sent_string++;
 
     while (xisspace(*sent_string))	/*trim leading spaces */
