@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.4 2001/10/19 22:34:49 hno Exp $
+ * $Id: ssl_support.cc,v 1.5 2001/10/24 06:55:44 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 81     SSL accelerator support
@@ -162,7 +162,7 @@ static struct ssl_option {
     }
 };
 
-static long 
+static long
 ssl_parse_options(const char *options)
 {
     long op = SSL_OP_ALL;

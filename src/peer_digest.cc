@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.82 2001/10/24 06:16:17 hno Exp $
+ * $Id: peer_digest.cc,v 1.83 2001/10/24 06:55:44 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -193,7 +193,7 @@ peerDigestSetCheck(PeerDigest * pd, time_t delay)
     eventAdd("peerDigestCheck", peerDigestCheck, pd, (double) delay, 1);
     pd->times.next_check = squid_curtime + delay;
     debug(72, 3) ("peerDigestSetCheck: will check peer %s in %d secs\n",
-	strBuf(pd->host), (int)delay);
+	strBuf(pd->host), (int) delay);
 }
 
 /*
@@ -236,7 +236,7 @@ peerDigestCheck(void *data)
     }
     debug(72, 3) ("peerDigestCheck: peer %s:%d\n", pd->peer->host, pd->peer->http_port);
     debug(72, 3) ("peerDigestCheck: time: %ld, last received: %ld (%+d)\n",
-	(long int)squid_curtime, (long int)pd->times.received, (int)(squid_curtime - pd->times.received));
+	(long int) squid_curtime, (long int) pd->times.received, (int) (squid_curtime - pd->times.received));
 
     /* decide when we should send the request:
      * request now unless too close to other requests */
@@ -245,15 +245,15 @@ peerDigestCheck(void *data)
     /* per-peer limit */
     if (req_time - pd->times.received < PeerDigestReqMinGap) {
 	debug(72, 2) ("peerDigestCheck: %s, avoiding close peer requests (%d < %d secs).\n",
-	    strBuf(pd->host), (int)(req_time - pd->times.received),
-	    (int)PeerDigestReqMinGap);
+	    strBuf(pd->host), (int) (req_time - pd->times.received),
+	    (int) PeerDigestReqMinGap);
 	req_time = pd->times.received + PeerDigestReqMinGap;
     }
     /* global limit */
     if (req_time - pd_last_req_time < GlobDigestReqMinGap) {
 	debug(72, 2) ("peerDigestCheck: %s, avoiding close requests (%d < %d secs).\n",
-	    strBuf(pd->host), (int)(req_time - pd_last_req_time),
-	    (int)GlobDigestReqMinGap);
+	    strBuf(pd->host), (int) (req_time - pd_last_req_time),
+	    (int) GlobDigestReqMinGap);
 	req_time = pd_last_req_time + GlobDigestReqMinGap;
     }
     if (req_time <= squid_curtime)
@@ -355,7 +355,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	status = reply->sline.status;
 	debug(72, 3) ("peerDigestFetchReply: %s status: %d, expires: %ld (%+d)\n",
 	    strBuf(pd->host), status,
-	    (long int)reply->expires, (int)(reply->expires - squid_curtime));
+	    (long int) reply->expires, (int) (reply->expires - squid_curtime));
 
 	/* this "if" is based on clientHandleIMSReply() */
 	if (status == HTTP_NOT_MODIFIED) {
@@ -730,10 +730,10 @@ peerDigestFetchSetStats(DigestFetchState * fetch)
     fetch->resp_time = squid_curtime - fetch->start_time;
 
     debug(72, 3) ("peerDigestFetchFinish: recv %d bytes in %d secs\n",
-	fetch->recv.bytes, (int)fetch->resp_time);
+	fetch->recv.bytes, (int) fetch->resp_time);
     debug(72, 3) ("peerDigestFetchFinish: expires: %ld (%+d), lmt: %ld (%+d)\n",
-	(long int)fetch->expires, (int)(fetch->expires - squid_curtime),
-	(long int)fetch->entry->lastmod, (int)(fetch->entry->lastmod - squid_curtime));
+	(long int) fetch->expires, (int) (fetch->expires - squid_curtime),
+	(long int) fetch->entry->lastmod, (int) (fetch->entry->lastmod - squid_curtime));
 }
 
 
@@ -858,9 +858,9 @@ peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e)
     storeAppendPrintf(e, "\tneeded: %3s, usable: %3s, requested: %3s\n",
 	f2s(needed), f2s(usable), f2s(requested));
     storeAppendPrintf(e, "\n\tlast retry delay: %d secs\n",
-	(int)pd->times.retry_delay);
+	(int) pd->times.retry_delay);
     storeAppendPrintf(e, "\tlast request response time: %d secs\n",
-	(int)pd->times.req_delay);
+	(int) pd->times.req_delay);
     storeAppendPrintf(e, "\tlast request result: %s\n",
 	pd->req_result ? pd->req_result : "(none)");
 
