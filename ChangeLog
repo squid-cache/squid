@@ -1,25 +1,37 @@
-	- Fixed ENTRY_DISPATCHED bug.  ENTRY_DISPATCHED was not always getting
-	  set (e.g. for requests matching hierarchy_stoplist).  This caused
-	  multiple calls to storeAbort() for the same entry.
-	- Fixed 'quick_abort' parsing bug
-	- NULL terminate too-long URL strings in urlParse().
+Changes to squid-1.1.alpha14:
+
+	- Fixed ENTRY_DISPATCHED bug.  ENTRY_DISPATCHED was not always
+	  getting set (e.g. for requests matching hierarchy_stoplist).
+	  This could cause multiple calls to storeAbort() for the same
+	  entry.
+	- With ENTRY_DISPATCHED now fixed, call squid_error_entry()
+	  from protoUnregister() for StoreEntries which have not
+	  been dispatched.
+	- Fixed 'quick_abort' parsing bug.
+	- NULL terminate too-long URL strings in urlParse().  Still
+	  need fix to somehow handle these.
 	- Added shadow password patch from John Saunders
 	  <johns@rd.scitec.com.au>
-	- Added _dns_ttl_ hack from bne@CareNet.hu to get real TTL values
-	  from DNS queries.  See Release-Notes-1.1.txt for more info.
+	- Added _dns_ttl_ hack from bne@CareNet.hu to get real TTL
+	  values from DNS queries.  See Release-Notes-1.1.txt for more
+	  info.
 	- Added better '304 Not Modified' reply from Jaeyeon Jung
   	  <jyjung@cosmos.kaist.ac.kr>.
-	- Unchanged protoUndispatch() calling squid_error_entry().
-	  Needs to be called on entries not yet dispatched.
 	- Rewrote ipcache_parsebuffer().
-	- Fixed stupid clientProxyAuthCheck() bug.
-	- Made IP cache size configurable.
-	- Fixed bug parsing 'cache_swap_low'
-	- Added -b option to ftpget to limit data transfer rate.
-	- misc filedescriptor management cleanup
-	- renamed getFromCache() to protoStart().
+	- Fixed stupid clientProxyAuthCheck() bugs.
+	- Made IP cache size configurable with 'ipcache_size'.
+	- Fixed bug parsing 'cache_swap_low'.
+	- Added -b option to ftpget to limit data transfer rate
+	  (bytes/sec).  Specify on 'ftpget_options' in config file.
+	- Miscellaneous filedescriptor management cleanup.
+	- Renamed function getFromCache() to protoStart().
 	- Added delays when forking dnsservers, redirectors, and
 	  ftpget.
+	- Includes 1.0 changes up to 1.0.11.
+
+Changes to squid-1.1.alpha13:
+
+	- oops, there was no alpha13.
 
 Changes to squid-1.1.alpha12:
 
