@@ -23,9 +23,8 @@ if [ ! -f $tmpdir/configure ]; then
 fi
 
 cd $tmpdir
-eval CVS`grep ^VERSION= configure`
-VERSION=`echo $CVSVERSION | sed -e 's/-CVS//'`
-eval `grep ^PACKAGE= configure`
+eval `grep "^ *VERSION=" configure | sed -e 's/-CVS//'`
+eval `grep "^ *PACKAGE=" configure`
 ed -s configure.in <<EOS
 g/${CVSVERSION}/ s//${VERSION}-${date}/
 w
