@@ -1,0 +1,347 @@
+
+                                                               J.Brezak 
+Internet Draft                                                Microsoft 
+Document: draft-brezak-kerberos-http-00.txt                             
+Category: Informational                                November 17,2003 
+                                                   Expires: May 17,2003 
+ 
+ 
+              HTTP Authentication: Kerberos Authentication 
+                 As implemented in Microsoft Windows 2000 
+ 
+ 
+Status of this Memo 
+ 
+   This document is an Internet-Draft and is subject to all provisions  
+   of Section 10 of RFC2026 [1] except that the right to create 
+   derivative works is not granted. Internet-Drafts are working 
+   documents of the Internet Engineering Task Force (IETF), its areas, 
+   and its working groups. Note that other groups may also distribute 
+   working documents as Internet-Drafts. Internet-Drafts are draft 
+   documents valid for a maximum of six months and may be updated, 
+   replaced, or obsoleted by other documents at any time. It is 
+   inappropriate to use Internet- Drafts as reference material or to 
+   cite them other than as "work in progress." 
+     
+   The list of current Internet-Drafts can be accessed at 
+   http://www.ietf.org/ietf/1id-abstracts.txt  
+    
+   The list of Internet-Draft Shadow Directories can be accessed at 
+   http://www.ietf.org/shadow.html. 
+    
+1. Abstract 
+    
+   This document describes how the Microsoft Internet Explorer (MSIE) 
+   and Internet Information Services (IIS) incorporated in Microsoft 
+   Windows 2000 use Kerberos for security enhancements of web 
+   transactions. The Hypertext Transport Protocol (HTTP) auth-scheme of 
+   "negotiate" is defined here; when the negotiation results in the 
+   selection of Kerberos, the security services of authentication and 
+   optionally impersonation are performed. 
+    
+   This document explains how HTTP authentication utilizes the Simple 
+   and Protected GSS-API Negotiation mechanism. Details of SPNEGO 
+   implementation are not provided in this document. 
+    
+    
+2. Conventions used in this document 
+    
+   In examples, "C:" and "S:" indicate lines sent by the client and 
+   server respectively. 
+    
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", 
+   "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in 
+   this document are to be interpreted as described in RFC-2119 [1]. 
+    
+  
+Brezak                 Category - Informational                      1 
+                 HTTP Kerberos Access Authentication    November 2003 
+
+3. Introduction 
+   Microsoft has provided support for Kerberos authentication in MSIE 
+   and IIS in addition to other mechanisms. This provides the benefits 
+   of the Kerberos v5 protocol for Web applications.  
+   Support for Kerberos authentication is based on other previously 
+   defined mechanisms such as SPNEGO and the Generic Security Services 
+   Application Program Interface(GSSAPI).  
+    
+3. Access Authentication 
+    
+3.1 Reliance on the HTTP/1.1 Specification 
+ 
+   This specification is a companion to the HTTP/1.1 specification [1] 
+   and builds on the authentication mechanisms defined in [2]. It uses 
+   the augmented BNF section 2.1 of that document, and relies on both 
+   the non-terminals defined in that document and other aspects of the 
+   HTTP/1.1 specification. 
+    
+    
+4. HTTP Negotiate Authentication Scheme 
+    
+   Use of Kerberos is wrapped in an HTTP auth-scheme of "Negotiate".  
+   The auth-params exchanged use data formats defined for use with the 
+   GSS-API [3].  In particular, they follow the formats set for the 
+   SPNEGO [4] and Kerberos [5] mechanisms for GSSAPI.  The "Negotiate" 
+   auth-scheme calls for the use of SPNEGO GSSAPI tokens which the 
+   specific mechanism type specifies. 
+    
+   The current implementation of this protocol is limited to the use of 
+   SPNEGO with the Kerberos and Microsoft(NT Lan Manager) NTLM 
+   protocols. 
+    
+4.1 The WWW-Authenticate Response Header 
+    
+   If the server receives a request for an access-protected object, and 
+   an acceptable Authorization header has not been sent, the server 
+   responds with a "401 Unauthorized" status code, and a "WWW-
+   Authenticate:" header as per the framework described in [1]. The 
+   initial WWW-Authenticate header will not carry any gssapi-data. 
+    
+   The negotiate scheme will operate as follows: 
+    
+        challenge       = "Negotiate" auth-data 
+        auth-data       = 1#( [gssapi-data] ) 
+         
+   The meanings of the values of the directives used above are as 
+   follows: 
+    
+   gssapi-data 
+        If the gss_accept_security_context return a token for the 
+        client, this directive contains the base64 encoding of an 
+        InitialContextToken as defined in [3]. This is not present in 
+        the initial response from the server. 
+  
+  
+Brezak                 Category - Informational                      2 
+                 HTTP Kerberos Access Authentication    November 2003 
+
+   A status code 200 status response can also carry a "WWW-
+   Authenticate" response header containing the final leg of an 
+   authentication. In this case, the gssapi-data will be present. 
+   Before using the contents of the response, the gssapi-data should be 
+   processed by gss_init_security_context to determine the state of the 
+   security context. If this function indicates success, the response 
+   can be used by the application. Otherwise an appropriate action 
+   based on the authentication status should be. 
+    
+   For example the authentication could have failed on the final leg if 
+   mutual authentication was requested and the server was not able to 
+   prove its identity. In this case, the returned results are suspect. 
+   It is not always possible to mutually authenticate the server before 
+   the HTTP operation. POST methods are in this category. 
+    
+   When the Kerberos Version 5 GSSAPI mechanism [5] is being used, the 
+   HTTP server will be using a principal name of the form of 
+   "HTTP/<hostname>". 
+    
+4.2 The Authorization Request Header 
+ 
+   Upon receipt of the response containing a "WWW-Authenticate" header 
+   from the server, the client is expected to retry the HTTP request, 
+   passing a HTTP "Authorization" header line. This is defined 
+   according to the framework described in [1] utilized as follows: 
+    
+        credentials             = "Negotiate" auth-data2 
+        auth-data2              = 1#( gssapi-data ) 
+                                 
+   gssapi-data 
+        This directive contains is the base64 encoding of an 
+        InitialContextToken as defined in [3]. 
+    
+   Any returned code other than a success 2xx code represents an 
+   authentication error. If a 401 containing a "WWW-Authenticate" 
+   header with "Negotiate" and gssapi-data is returned from the server, 
+   it is a continuation of the authentication request. 
+    
+   A client may initiate a connection to the server with an 
+   "Authorization" header containing the initial token for the server. 
+   This form will bypass the initial 401 error from the server when the 
+   client knows that the server will accept the Negotiate HTTP 
+   authentication type. 
+    
+5. Negotiate Operation Example 
+    
+   The client requests an access-protected document from server via a 
+   GET method request. The URI of the document is 
+   "http://www.nowhere.org/dir/index.html". 
+    
+        C: GET dir/index.html 
+    
+   The first time the client requests the document, no Authorization 
+   header is sent, so the server responds with: 
+  
+Brezak                 Category - Informational                      3 
+                 HTTP Kerberos Access Authentication    November 2003 
+
+    
+        S: HTTP/1.1 401 Unauthorized 
+        S: WWW-Authenticate: Negotiate 
+         
+   The client will obtain the user credentials using the SPNEGO GSSAPI 
+   mechanism type to identify generate a GSSAPI message to be sent to 
+   the server with a new request, including the following Authorization 
+   header: 
+    
+        C: GET dir/index.html 
+        C: Authorization: Negotiate a87421000492aa874209af8bc028 
+         
+   The server will decode the gssapi-data and pass this to the SPNEGO 
+   GSSAPI mechanism in the gss_accept_security_context function. If the 
+   context is not complete, the server will respond with a 401 status 
+   code with a WWW-Authenticate header containing the gssapi-data. 
+    
+        S: HTTP/1.1 401 Unauthorized 
+        S: WWW-Authenticate: Negotiate 749efa7b23409c20b92356 
+    
+   The client will decode the gssapi-data and pass this into 
+   gss_init_security_context and return the new gssapi-data to the 
+   server. 
+    
+        C: GET dir/index.html 
+        C: Authorization: Negotiate 89a8742aa8729a8b028 
+    
+   This cycle can continue until the security context is complete. 
+    
+   When the return value from the gss_accept_security_context function 
+   indicates that the security context is complete, it may supply final 
+   authentication data to be returned to the client. If the server has 
+   more gssapi data to send to the client to complete the context it is 
+   to be carried in WWW-Authenticate header with the final response 
+   containing the HTTP body. 
+    
+        S: HTTP/1.1 200 Success 
+        S: WWW-Authenticate: Negotiate ade0234568a4209af8bc0280289eca 
+         
+   The client will decode the gssapi-data and supply it to 
+   gss_init_security_context using the context for this server. If the 
+   status is successful from the final gss_init_security_context, the 
+   response can be used by the application. 
+ 
+7. Security Considerations 
+ 
+   The SPNEGO HTTP authentication facility is only used to provide 
+   authentication of a user to server. It provides no facilities for 
+   protecting the HTTP headers or data including the Authorization and 
+   WWW-Authenticate headers that are used to implement this mechanism. 
+    
+   This mechanism is not used for HTTP authentication to HTTP proxies. 
+    
+
+  
+Brezak                 Category - Informational                      4 
+                 HTTP Kerberos Access Authentication    November 2003 
+
+   If an HTTP proxy is used between the client and server, it must take 
+   care to not share authenticated connections between different 
+   authenticated clients to the same server. If this is not honored, 
+   then the server can easily lose track of security context 
+   associations. A proxy that correctly honors client to server 
+   authentication integrity will supply the "Proxy-support: Session-
+   Based-Authentication" HTTP header to the client in HTTP responses 
+   from the proxy. The client MUST NOT utilize the SPNEGO HTTP 
+   authentication mechanism through a proxy unless the proxy supplies 
+   this header with the "401 Unauthorized" response from the server. 
+    
+   When using the SPNEGO HTTP authentication facility with client 
+   supplied data such as PUT and POST, the authentication should be 
+   complete between the client and server before sending the user data. 
+   The return status from the gss_init_security_context will indicate 
+   with the security context is complete. At this point the data can be 
+   sent to the server. 
+    
+    
+8. References 
+ 
+    
+    
+10. Author's Addresses 
+    
+   John Brezak 
+   Microsoft 
+   One Microsoft Way 
+   Redmond, Washington 
+   Email: jbrezak@microsoft.com 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+Brezak                 Category - Informational                      5 
+                 HTTP Kerberos Access Authentication    November 2003 
+
+    
+Full Copyright Statement 
+ 
+   Copyright (C) The Internet Society (2001).  All Rights Reserved. 
+    
+   This document and translations of it may be copied and furnished to 
+   others, and derivative works that comment on or otherwise explain it 
+   or assist in its implementation may be prepared, copied, published 
+   and distributed, in whole or in part, without restriction of any 
+   kind, provided that the above copyright notice and this paragraph 
+   are included on all such copies and derivative works.  However, this   
+   document itself may not be modified in any way, such as by removing   
+   the copyright notice or references to the Internet Society or other   
+   Internet organizations, except as needed for the purpose of 
+   developing Internet standards in which case the procedures for 
+   copyrights defined in the Internet Standards process must be 
+   followed, or as required to translate it into languages other than 
+   English. 
+    
+   The limited permissions granted above are perpetual and will not be 
+   revoked by the Internet Society or its successors or assigns. 
+    
+   This document and the information contained herein is provided on an 
+   "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING 
+   TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING 
+   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION 
+   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF 
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE." 
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+Brezak                 Category - Informational                      6 
