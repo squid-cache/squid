@@ -280,5 +280,5 @@ storeSwapOutWriteQueued(MemObject *mem)
     off_t done = mem->swapout.done_offset;
     size_t hdr = mem->swap_hdr_sz;
     assert(queued + hdr >= done);
-    return (queued + hdr == done);
+    return (queued + hdr > done);
 }
