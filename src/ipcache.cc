@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.235 2001/10/24 06:16:16 hno Exp $
+ * $Id: ipcache.cc,v 1.236 2001/11/13 22:16:24 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -728,8 +728,12 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     ipcache_entry *i;
     struct in_addr ip;
     if (!safe_inet_addr(ipaddr, &ip)) {
-	debug(14, 1) ("ipcacheAddEntryFromHosts: bad IP address '%s'\n",
-	    ipaddr);
+	if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
+	    debug(14, 3) ("ipcacheAddEntryFromHosts: Skipping IPv6 address '%s'\n", ipaddr);
+	} else {
+	    debug(14, 1) ("ipcacheAddEntryFromHosts: Bad IP address '%s'\n",
+		ipaddr);
+	}
 	return 1;
     }
     if ((i = ipcache_get(name))) {
