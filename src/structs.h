@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.454 2003/02/25 12:22:34 robertc Exp $
+ * $Id: structs.h,v 1.455 2003/02/25 15:07:54 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -156,13 +156,33 @@ struct _sockaddr_in_list
     sockaddr_in_list *next;
 };
 
+struct _http_port_list
+{
+    http_port_list *next;
+
+    struct sockaddr_in s;
+    char *protocol;            /* protocol name */
+    char *name;                /* visible name */
+    char *defaultsite;         /* default web site */
+
+unsigned int transparent:
+    1; /* transparent proxy */
+
+unsigned int accel:
+    1; /* HTTP accelerator */
+
+unsigned int vhost:
+    1; /* uses host header */
+
+    int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
+};
+
+
 #if USE_SSL
 
 struct _https_port_list
 {
-    https_port_list *next;
-
-    struct sockaddr_in s;
+    http_port_list http;	/* must be first */
     char *cert;
     char *key;
     int version;

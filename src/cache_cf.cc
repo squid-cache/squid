@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.435 2003/02/25 12:24:35 robertc Exp $
+ * $Id: cache_cf.cc,v 1.436 2003/02/25 15:07:53 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -392,7 +392,6 @@ parseConfigFile(const char *file_name)
 static void
 configDoConfigure(void)
 {
-    LOCAL_ARRAY(char, buf, BUFSIZ);
     memset(&Config2, '\0', sizeof(SquidConfig2));
     /* init memory as early as possible */
     memConfigure();
@@ -430,12 +429,6 @@ configDoConfigure(void)
         }
     }
 
-    if (Config.Accel.host) {
-        snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
-        Config2.Accel.prefix = xstrdup(buf);
-        Config2.Accel.on = 1;
-    }
-
     if (Config.appendDomain)
         if (*Config.appendDomain != '.')
             fatal("append_domain must begin with a '.'");
@@ -445,16 +438,10 @@ configDoConfigure(void)
 
     storeConfigure();
 
-    if (Config2.Accel.on && !strcmp(Config.Accel.host, "virtual")) {
-        vhost_mode = 1;
-
-        if (Config.Accel.port == 0)
-            vport_mode = 1;
-    }
-
     snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
              uniqueHostname(),
              full_appname_string);
+
     /*
      * the extra space is for loop detection in client_side.c -- we search
      * for substrings in the Via header.
