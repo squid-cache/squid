@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.254 1998/09/25 05:35:31 wessels Exp $
+ * $Id: neighbors.cc,v 1.255 1998/09/29 01:32:59 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -97,7 +97,7 @@ whichPeer(const struct sockaddr_in * from)
     return NULL;
 }
 
-static peer_t
+peer_t
 neighborType(const peer * p, const request_t * request)
 {
     const struct _domain_type *d = NULL;

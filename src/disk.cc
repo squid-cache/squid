@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.135 1998/09/23 15:36:49 wessels Exp $
+ * $Id: disk.cc,v 1.136 1998/09/29 01:32:58 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -94,7 +94,7 @@ static void
 fileOpenComplete(int unused, void *data, int fd, int errcode)
 {
     open_ctrl_t *ctrlp = (open_ctrl_t *) data;
-    debug(6, 5) ("fileOpenComplete: fd %d, data %p, errcode %d\n",
+    debug(6, 5) ("fileOpenComplete: FD %d, data %p, errcode %d\n",
 	fd, data, errcode);
     Counter.syscalls.disk.opens++;
     if (fd == -2 && errcode == -2) {	/* Cancelled - clean up */
