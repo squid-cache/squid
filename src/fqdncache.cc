@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.40 1996/11/24 02:55:56 wessels Exp $
+ * $Id: fqdncache.cc,v 1.41 1996/11/24 04:33:00 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -462,7 +462,7 @@ fqdncache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
 	} else if (!strcmp(token, "$alive")) {
 	    dnsData->answer = squid_curtime;
 	} else if (!strcmp(token, "$fail")) {
-	    if ((token = strtok(NULL, w_space)) == NULL)
+	    if ((token = strtok(NULL, "\n")) == NULL)
 		fatal_dump("Invalid $fail");
 	    f.expires = squid_curtime + Config.negativeDnsTtl;
 	    f.status = FQDN_NEGATIVE_CACHED;
