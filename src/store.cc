@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.547 2002/10/02 11:06:31 robertc Exp $
+ * $Id: store.cc,v 1.548 2002/10/13 20:35:04 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "StoreClient.h"
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
@@ -94,6 +96,40 @@ static EVH storeLateRelease;
  * local variables
  */
 static Stack LateReleaseStack;
+MemPool *_StoreEntry::pool = NULL;
+
+void *
+_StoreEntry::operator new (unsigned int bytecount)
+{
+    assert (bytecount == sizeof (_StoreEntry));
+    if (!pool) {
+	pool = memPoolCreate ("StoreEntry", bytecount);
+	memPoolSetChunkSize(pool, 2048 * 1024);
+    }
+    return memPoolAlloc (pool);
+}
+
+void
+_StoreEntry::operator delete (void *address)
+{
+    memPoolFree(pool, address);
+}
+
+size_t
+_StoreEntry::inUseCount()
+{
+    if (!pool)
+	return 0;
+    MemPoolStats stats;
+    memPoolGetStats (&stats, pool);
+    return stats.items_inuse;
+}
+
+size_t
+storeEntryInUse ()
+{
+    return _StoreEntry::inUseCount();
+}
 
 #if URL_CHECKSUM_DEBUG
 unsigned int
@@ -113,7 +149,7 @@ url_checksum(const char *url)
 static MemObject *
 new_MemObject(const char *url, const char *log_url)
 {
-    MemObject *mem = memAllocate(MEM_MEMOBJECT);
+    MemObject *mem = static_cast<MemObject *>(memAllocate(MEM_MEMOBJECT));
     mem->reply = httpReplyCreate();
     mem->url = xstrdup(url);
 #if URL_CHECKSUM_DEBUG
@@ -131,7 +167,7 @@ StoreEntry *
 new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
 {
     StoreEntry *e = NULL;
-    e = memAllocate(MEM_STOREENTRY);
+    e = new _StoreEntry;
     if (mem_obj_flag)
 	e->mem_obj = new_MemObject(url, log_url);
     debug(20, 3) ("new_StoreEntry: returning %p\n", e);
@@ -173,14 +209,16 @@ destroy_MemObject(StoreEntry * e)
 static void
 destroy_StoreEntry(void *data)
 {
-    StoreEntry *e = data;
+    StoreEntry *e = static_cast<StoreEntry *>(data);
     debug(20, 3) ("destroy_StoreEntry: destroying %p\n", e);
     assert(e != NULL);
+    if (e == NullStoreEntry::getInstance())
+	return;
     if (e->mem_obj)
 	destroy_MemObject(e);
     storeHashDelete(e);
     assert(e->hash.key == NULL);
-    memFree(e, MEM_STOREENTRY);
+    delete e;
 }
 
 /* ----- INTERFACE BETWEEN STORAGE MANAGER AND HASH TABLE FUNCTIONS --------- */
@@ -198,7 +236,7 @@ static void
 storeHashDelete(StoreEntry * e)
 {
     hash_remove_link(store_table, &e->hash);
-    storeKeyFree(e->hash.key);
+    storeKeyFree((unsigned char *)e->hash.key);
     e->hash.key = NULL;
 }
 
@@ -213,7 +251,7 @@ storePurgeMem(StoreEntry * e)
     if (e->mem_obj == NULL)
 	return;
     debug(20, 3) ("storePurgeMem: Freeing memory-copy of %s\n",
-	storeKeyText(e->hash.key));
+	storeKeyText((unsigned char *)e->hash.key));
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_MemObject(e);
     if (e->swap_status != SWAPOUT_DONE)
@@ -261,7 +299,7 @@ storeLockObject(StoreEntry * e)
 {
     e->lock_count++;
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
-	storeKeyText(e->hash.key), (int) e->lock_count);
+	storeKeyText((unsigned char *)e->hash.key), (int) e->lock_count);
     e->lastref = squid_curtime;
     storeEntryReferenced(e);
 }
@@ -271,7 +309,7 @@ storeReleaseRequest(StoreEntry * e)
 {
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
 	return;
-    debug(20, 3) ("storeReleaseRequest: '%s'\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeReleaseRequest: '%s'\n", storeKeyText((unsigned char *)e->hash.key));
     EBIT_SET(e->flags, RELEASE_REQUEST);
     /*
      * Clear cachable flag here because we might get called before
@@ -289,7 +327,7 @@ storeUnlockObject(StoreEntry * e)
 {
     e->lock_count--;
     debug(20, 3) ("storeUnlockObject: key '%s' count=%d\n",
-	storeKeyText(e->hash.key), e->lock_count);
+	storeKeyText((unsigned char *)e->hash.key), e->lock_count);
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING)
@@ -322,6 +360,37 @@ storeGet(const cache_key * key)
     p = hash_lookup(store_table, key);
     PROF_stop(storeGet);
     return (StoreEntry *) p;
+}
+
+void
+_StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, request_t * request, const method_t method)
+{
+    assert (aClient);
+    _StoreEntry *result = storeGetPublicByRequestMethod( request, method);
+    if (!result)
+	aClient->created (NullStoreEntry::getInstance());
+    else
+	aClient->created (result);
+}
+
+void
+_StoreEntry::getPublicByRequest (StoreClient *aClient, request_t * request)
+{
+    assert (aClient);
+    _StoreEntry *result = storeGetPublicByRequest (request);
+    if (!result)
+	result = NullStoreEntry::getInstance();
+    aClient->created (result);
+}
+
+void
+_StoreEntry::getPublic (StoreClient *aClient, const char *uri, const method_t method)
+{
+    assert (aClient);
+    _StoreEntry *result = storeGetPublic (uri, method);
+    if (!result)
+	result = NullStoreEntry::getInstance();
+    aClient->created (result);
 }
 
 StoreEntry *
@@ -511,7 +580,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
 void
 storeExpireNow(StoreEntry * e)
 {
-    debug(20, 3) ("storeExpireNow: '%s'\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeExpireNow: '%s'\n", storeKeyText((unsigned char *)e->hash.key));
     e->expires = squid_curtime;
 }
 
@@ -526,7 +595,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     if (len) {
 	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n",
 	    len,
-	    storeKeyText(e->hash.key));
+	    storeKeyText((unsigned char *)e->hash.key));
 	storeGetMemSpace(len);
 	stmemAppend(&mem->data_hdr, buf, len);
 	mem->inmem_hi += len;
@@ -605,7 +674,8 @@ storeCheckTooSmall(StoreEntry * e)
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
 	return 0;
     if (STORE_OK == e->store_status)
-	if (mem->object_sz < Config.Store.minObjectSize)
+	if (mem->object_sz < 0 ||
+	    static_cast<size_t>(mem->object_sz) < Config.Store.minObjectSize)
 	    return 1;
     if (mem->reply->content_length > -1)
 	if (mem->reply->content_length < (int) Config.Store.minObjectSize)
@@ -636,8 +706,8 @@ storeCheckCachable(StoreEntry * e)
 	store_check_cachable_hist.no.negative_cached++;
 	return 0;		/* avoid release call below */
     } else if ((e->mem_obj->reply->content_length > 0 &&
-		e->mem_obj->reply->content_length > Config.Store.maxObjectSize) ||
-	e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
+		static_cast<size_t>(e->mem_obj->reply->content_length) > Config.Store.maxObjectSize) ||
+	static_cast<size_t>(e->mem_obj->inmem_hi) > Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
 	store_check_cachable_hist.no.too_big++;
     } else if (e->mem_obj->reply->content_length > (int) Config.Store.maxObjectSize) {
@@ -704,7 +774,7 @@ storeCheckCachableStats(StoreEntry * sentry)
 void
 storeComplete(StoreEntry * e)
 {
-    debug(20, 3) ("storeComplete: '%s'\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeComplete: '%s'\n", storeKeyText((unsigned char *)e->hash.key));
     if (e->store_status != STORE_PENDING) {
 	/*
 	 * if we're not STORE_PENDING, then probably we got aborted
@@ -746,7 +816,7 @@ storeAbort(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
-    debug(20, 6) ("storeAbort: %s\n", storeKeyText(e->hash.key));
+    debug(20, 6) ("storeAbort: %s\n", storeKeyText((unsigned char *)e->hash.key));
     storeLockObject(e);		/* lock while aborting */
     storeNegativeCache(e);
     storeReleaseRequest(e);
@@ -852,7 +922,7 @@ void
 storeRelease(StoreEntry * e)
 {
     PROF_start(storeRelease);
-    debug(20, 3) ("storeRelease: Releasing: '%s'\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeRelease: Releasing: '%s'\n", storeKeyText((unsigned char *)e->hash.key));
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
     if (storeEntryLocked(e)) {
@@ -911,7 +981,7 @@ storeLateRelease(void *unused)
 	return;
     }
     for (i = 0; i < 10; i++) {
-	e = stackPop(&LateReleaseStack);
+	e = static_cast<StoreEntry*>(stackPop(&LateReleaseStack));
 	if (e == NULL) {
 	    /* done! */
 	    debug(20, 1) ("storeLateRelease: released %d objects\n", n);
@@ -949,7 +1019,7 @@ storeEntryValidLength(const StoreEntry * e)
     const HttpReply *reply;
     assert(e->mem_obj != NULL);
     reply = e->mem_obj->reply;
-    debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", storeKeyText((unsigned char *)e->hash.key));
     debug(20, 5) ("storeEntryValidLength:     object_len = %d\n",
 	objectLen(e));
     debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
@@ -958,17 +1028,17 @@ storeEntryValidLength(const StoreEntry * e)
 	reply->content_length);
     if (reply->content_length < 0) {
 	debug(20, 5) ("storeEntryValidLength: Unspecified content length: %s\n",
-	    storeKeyText(e->hash.key));
+	    storeKeyText((unsigned char *)e->hash.key));
 	return 1;
     }
     if (reply->hdr_sz == 0) {
 	debug(20, 5) ("storeEntryValidLength: Zero header size: %s\n",
-	    storeKeyText(e->hash.key));
+	    storeKeyText((unsigned char *)e->hash.key));
 	return 1;
     }
     if (e->mem_obj->method == METHOD_HEAD) {
 	debug(20, 5) ("storeEntryValidLength: HEAD request: %s\n",
-	    storeKeyText(e->hash.key));
+	    storeKeyText((unsigned char *)e->hash.key));
 	return 1;
     }
     if (reply->sline.status == HTTP_NOT_MODIFIED)
@@ -981,7 +1051,7 @@ storeEntryValidLength(const StoreEntry * e)
     debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
 	diff < 0 ? -diff : diff,
 	diff < 0 ? "big" : "small",
-	storeKeyText(e->hash.key));
+	storeKeyText((unsigned char *)e->hash.key));
     return 0;
 }
 
@@ -1181,7 +1251,7 @@ storeMemObjectDump(MemObject * mem)
 void
 storeEntryDump(const StoreEntry * e, int l)
 {
-    debug(20, l) ("StoreEntry->key: %s\n", storeKeyText(e->hash.key));
+    debug(20, l) ("StoreEntry->key: %s\n", storeKeyText((unsigned char *)e->hash.key));
     debug(20, l) ("StoreEntry->next: %p\n", e->hash.next);
     debug(20, l) ("StoreEntry->mem_obj: %p\n", e->mem_obj);
     debug(20, l) ("StoreEntry->timestamp: %d\n", (int) e->timestamp);
@@ -1204,7 +1274,7 @@ storeEntryDump(const StoreEntry * e, int l)
  * NOTE, this function assumes only two mem states
  */
 void
-storeSetMemStatus(StoreEntry * e, int new_status)
+storeSetMemStatus(StoreEntry * e, mem_status_t new_status)
 {
     MemObject *mem = e->mem_obj;
     if (new_status == e->mem_status)
@@ -1270,7 +1340,7 @@ storeBufferFlush(StoreEntry * e)
     storeSwapOut(e);
 }
 
-int
+ssize_t
 objectLen(const StoreEntry * e)
 {
     assert(e->mem_obj != NULL);
@@ -1350,7 +1420,7 @@ storeFsAdd(const char *type, STSETUP * setup)
 	assert(strcmp(storefs_list[i].typestr, type) != 0);
     }
     /* add the new type */
-    storefs_list = xrealloc(storefs_list, (i + 2) * sizeof(storefs_entry_t));
+    storefs_list = static_cast<storefs_entry_t *>(xrealloc(storefs_list, (i + 2) * sizeof(storefs_entry_t)));
     memset(&storefs_list[i + 1], 0, sizeof(storefs_entry_t));
     storefs_list[i].typestr = type;
     /* Call the FS to set up capabilities and initialize the FS driver */
@@ -1369,7 +1439,7 @@ storeReplAdd(const char *type, REMOVALPOLICYCREATE * create)
 	assert(strcmp(storerepl_list[i].typestr, type) != 0);
     }
     /* add the new type */
-    storerepl_list = xrealloc(storerepl_list, (i + 2) * sizeof(storerepl_entry_t));
+    storerepl_list = static_cast<storerepl_entry_t *>(xrealloc(storerepl_list, (i + 2) * sizeof(storerepl_entry_t)));
     memset(&storerepl_list[i + 1], 0, sizeof(storerepl_entry_t));
     storerepl_list[i].typestr = type;
     storerepl_list[i].create = create;
@@ -1411,3 +1481,14 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
     }
 }
 #endif
+
+
+/* NullStoreEntry */
+
+NullStoreEntry NullStoreEntry::_instance;
+
+NullStoreEntry *
+NullStoreEntry::getInstance()
+{
+    return &_instance;
+}

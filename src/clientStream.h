@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.h,v 1.1 2002/09/24 10:46:43 robertc Exp $
+ * $Id: clientStream.h,v 1.2 2002/10/13 20:34:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,6 +47,11 @@ typedef clientStream_status_t CSS(clientStreamNode *, clientHttpRequest *);
 
 
 struct _clientStreamNode {
+#ifdef __cplusplus
+public:
+    _clientStreamNode *prev() const;
+    _clientStreamNode *next() const;
+#endif
     dlink_node node;
     dlink_list *head;		/* sucks I know, but hey, the interface is limited */
     CSR *readfunc;
@@ -58,13 +63,13 @@ struct _clientStreamNode {
 };
 
 /* clientStream.c */
-extern void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, void *, CSCB *, CSD *, void *, StoreIOBuffer tailBuffer);
-extern void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, void *);
-extern clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, void *);
-extern void clientStreamCallback(clientStreamNode *, clientHttpRequest *, HttpReply *, StoreIOBuffer replyBuffer);
-extern void clientStreamRead(clientStreamNode *, clientHttpRequest *, StoreIOBuffer readBuffer);
-extern void clientStreamDetach(clientStreamNode *, clientHttpRequest *);
-extern void clientStreamAbort(clientStreamNode *, clientHttpRequest *);
-extern clientStream_status_t clientStreamStatus(clientStreamNode *, clientHttpRequest *);
+SQUIDCEXTERN void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, void *, CSCB *, CSD *, void *, StoreIOBuffer tailBuffer);
+SQUIDCEXTERN void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, void *);
+SQUIDCEXTERN clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, void *);
+SQUIDCEXTERN void clientStreamCallback(clientStreamNode *, clientHttpRequest *, HttpReply *, StoreIOBuffer replyBuffer);
+SQUIDCEXTERN void clientStreamRead(clientStreamNode *, clientHttpRequest *, StoreIOBuffer readBuffer);
+SQUIDCEXTERN void clientStreamDetach(clientStreamNode *, clientHttpRequest *);
+SQUIDCEXTERN void clientStreamAbort(clientStreamNode *, clientHttpRequest *);
+SQUIDCEXTERN clientStream_status_t clientStreamStatus(clientStreamNode *, clientHttpRequest *);
 
 #endif /* SQUID_CLIENTSTREAM_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.6 2002/10/07 13:55:37 robertc Exp $
+ * $Id: config.h,v 1.7 2002/10/13 20:34:51 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -36,6 +36,13 @@
 
 #include "autoconf.h"		/* For GNU autoconf variables */
 #include "version.h"
+
+/* To keep API definitions clear */
+#ifdef __cplusplus
+#define SQUIDCEXTERN extern "C"
+#else
+#define SQUIDCEXTERN extern
+#endif
 
 /****************************************************************************
  *--------------------------------------------------------------------------*

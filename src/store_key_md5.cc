@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.26 2001/04/14 00:25:19 hno Exp $
+ * $Id: store_key_md5.cc,v 1.27 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -67,8 +67,8 @@ storeKeyScan(const char *buf)
 int
 storeKeyHashCmp(const void *a, const void *b)
 {
-    const unsigned char *A = a;
-    const unsigned char *B = b;
+    const unsigned char *A = (const unsigned char *)a;
+    const unsigned char *B = (const unsigned char *)b;
     int i;
     for (i = 0; i < MD5_DIGEST_CHARS; i++) {
 	if (A[i] < B[i])
@@ -83,7 +83,7 @@ unsigned int
 storeKeyHashHash(const void *key, unsigned int n)
 {
     /* note, n must be a power of 2! */
-    const unsigned char *digest = key;
+    const unsigned char *digest = (const unsigned char *)key;
     unsigned int i = digest[0]
     | digest[1] << 8
     | digest[2] << 16
@@ -145,7 +145,7 @@ storeKeyPublicByRequestMethod(request_t * request, const method_t method)
 cache_key *
 storeKeyDup(const cache_key * key)
 {
-    cache_key *dup = memAllocate(MEM_MD5_DIGEST);
+    cache_key *dup = (cache_key *)memAllocate(MEM_MD5_DIGEST);
     xmemcpy(dup, key, MD5_DIGEST_CHARS);
     return dup;
 }

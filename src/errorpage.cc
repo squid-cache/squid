@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.177 2002/09/15 06:40:57 robertc Exp $
+ * $Id: errorpage.cc,v 1.178 2002/10/13 20:35:00 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -41,7 +41,8 @@
  */
 
 #include "squid.h"
-
+#include "authenticate.h"
+#include "Store.h"
 
 /* local types */
 
@@ -94,6 +95,12 @@ static int errorDump(ErrorState * err, MemBuf * mb);
 static const char *errorConvert(char token, ErrorState * err);
 static CWCB errorSendComplete;
 
+
+err_type &operator++ (err_type &anErr)
+{
+    anErr = (err_type)(++(int)anErr);
+    return anErr;
+}
 /*
  * Function:  errorInitialize
  *
@@ -109,8 +116,8 @@ errorInitialize(void)
     err_type i;
     const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.count;
-    error_text = xcalloc(error_page_count, sizeof(char *));
-    for (i = ERR_NONE, i++; i < error_page_count; i++) {
+    error_text = static_cast<char **>(xcalloc(error_page_count, sizeof(char *)));
+    for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
 	safe_free(error_text[i]);
 	/* hard-coded ? */
 	if ((text = errorFindHardText(i)))
@@ -120,7 +127,7 @@ errorInitialize(void)
 	    error_text[i] = errorLoadText(err_type_str[i]);
 	} else {
 	    /* dynamic */
-	    ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
+	    ErrorDynamicPageInfo *info = static_cast<ErrorDynamicPageInfo *>(ErrorDynamicPages.items[i - ERR_MAX]);
 	    assert(info && info->id == i && info->page_name);
 	    if (strchr(info->page_name, ':') == NULL) {
 		/* Not on redirected errors... */
@@ -140,7 +147,7 @@ errorClean(void)
 	safe_free(error_text);
     }
     while (ErrorDynamicPages.count)
-	errorDynamicPageInfoDestroy(stackPop(&ErrorDynamicPages));
+	errorDynamicPageInfoDestroy(static_cast<ErrorDynamicPageInfo *>(stackPop(&ErrorDynamicPages)));
     error_page_count = 0;
 }
 
@@ -185,7 +192,7 @@ errorTryLoadText(const char *page_name, const char *dir)
 	    file_close(fd);
 	return NULL;
     }
-    text = xcalloc(sb.st_size + 2 + 1, 1);	/* 2 == space for %S */
+    text = (char *)xcalloc(sb.st_size + 2 + 1, 1);	/* 2 == space for %S */
     if (FD_READ_METHOD(fd, text, sb.st_size) != sb.st_size) {
 	debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
 	    path, xstrerror());
@@ -201,7 +208,7 @@ errorTryLoadText(const char *page_name, const char *dir)
 static ErrorDynamicPageInfo *
 errorDynamicPageInfoCreate(int id, const char *page_name)
 {
-    ErrorDynamicPageInfo *info = xcalloc(1, sizeof(ErrorDynamicPageInfo));
+    ErrorDynamicPageInfo *info = static_cast<ErrorDynamicPageInfo *>(xcalloc(1, sizeof(ErrorDynamicPageInfo)));
     info->id = id;
     info->page_name = xstrdup(page_name);
     return info;
@@ -230,7 +237,7 @@ errorPageId(const char *page_name)
     return ERR_NONE;
 }
 
-int
+err_type
 errorReservePageId(const char *page_name)
 {
     ErrorDynamicPageInfo *info;
@@ -240,7 +247,7 @@ errorReservePageId(const char *page_name)
 	stackPush(&ErrorDynamicPages, info);
 	id = info->id;
     }
-    return id;
+    return (err_type)id;
 }
 
 static const char *
@@ -378,7 +385,7 @@ errorSend(int fd, ErrorState * err)
 static void
 errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
-    ErrorState *err = data;
+    ErrorState *err = static_cast<ErrorState *>(data);
     debug(4, 3) ("errorSendComplete: FD %d, size=%ld\n", fd, (long int) size);
     if (errflag != COMM_ERR_CLOSING) {
 	if (err->callback) {
@@ -721,6 +728,6 @@ errorBuildContent(ErrorState * err)
     }
     if (*m)
 	memBufPrintf(&content, "%s", m);	/* copy tail */
-    assert(content.size == strlen(content.buf));
+    assert((size_t)content.size == strlen(content.buf));
     return content;
 }

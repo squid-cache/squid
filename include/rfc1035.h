@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.7 2002/09/15 06:40:53 robertc Exp $
+ * $Id: rfc1035.h,v 1.8 2002/10/13 20:34:51 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -56,20 +56,20 @@ struct _rfc1035_rr {
     unsigned short rdlength;
     char *rdata;
 };
-extern unsigned short rfc1035BuildAQuery(const char *hostname,
+SQUIDCEXTERN unsigned short rfc1035BuildAQuery(const char *hostname,
     char *buf,
     size_t * szp);
-extern unsigned short rfc1035BuildPTRQuery(const struct in_addr,
+SQUIDCEXTERN unsigned short rfc1035BuildPTRQuery(const struct in_addr,
     char *buf,
     size_t * szp);
-extern unsigned short rfc1035RetryQuery(char *);
-extern int rfc1035AnswersUnpack(const char *buf,
+SQUIDCEXTERN unsigned short rfc1035RetryQuery(char *);
+SQUIDCEXTERN int rfc1035AnswersUnpack(const char *buf,
     size_t sz,
     rfc1035_rr ** records,
     unsigned short *id);
-extern void rfc1035RRDestroy(rfc1035_rr * rr, int n);
-extern int rfc1035_errno;
-extern const char *rfc1035_error_message;
+SQUIDCEXTERN void rfc1035RRDestroy(rfc1035_rr * rr, int n);
+SQUIDCEXTERN int rfc1035_errno;
+SQUIDCEXTERN const char *rfc1035_error_message;
 
 #define RFC1035_TYPE_A 1
 #define RFC1035_TYPE_PTR 12

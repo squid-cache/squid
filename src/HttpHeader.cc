@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.80 2002/08/11 07:54:04 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.81 2002/10/13 20:34:56 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "HttpHeader.h"
 
 /*
  * On naming conventions:
@@ -132,6 +134,13 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
 };
 static HttpHeaderFieldInfo *Headers = NULL;
+
+http_hdr_type &operator++ (http_hdr_type &aHeader)
+{
+    aHeader = (http_hdr_type)(++(int)aHeader);
+    return aHeader;
+}
+
 
 /*
  * headers with field values defined as #(values) in HTTP/1.1
@@ -450,7 +459,7 @@ httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
     assert(*pos >= HttpHeaderInitPos && *pos < hdr->entries.count);
     for ((*pos)++; *pos < hdr->entries.count; (*pos)++) {
 	if (hdr->entries.items[*pos])
-	    return hdr->entries.items[*pos];
+	    return (HttpHeaderEntry*)hdr->entries.items[*pos];
     }
     return NULL;
 }
@@ -561,7 +570,7 @@ httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos)
 {
     HttpHeaderEntry *e;
     assert(pos >= HttpHeaderInitPos && pos < hdr->entries.count);
-    e = hdr->entries.items[pos];
+    e = (HttpHeaderEntry*)hdr->entries.items[pos];
     hdr->entries.items[pos] = NULL;
     /* decrement header length, allow for ": " and crlf */
     hdr->len -= strLen(e->name) + 2 + strLen(e->value) + 2;
@@ -998,7 +1007,7 @@ httpHeaderEntryCreate(http_hdr_type id, const char *name, const char *value)
 {
     HttpHeaderEntry *e;
     assert_eid(id);
-    e = memAllocate(MEM_HTTP_HDR_ENTRY);
+    e = (HttpHeaderEntry *)memAllocate(MEM_HTTP_HDR_ENTRY);
     e->id = id;
     if (id != HDR_OTHER)
 	e->name = Headers[id].name;
@@ -1022,7 +1031,7 @@ httpHeaderEntryDestroy(HttpHeaderEntry * e)
     stringClean(&e->value);
     assert(Headers[e->id].stat.aliveCount);
     Headers[e->id].stat.aliveCount--;
-    e->id = -1;
+    e->id = HDR_BAD_HDR;
     memFree(e, MEM_HTTP_HDR_ENTRY);
 }
 
@@ -1031,7 +1040,7 @@ static HttpHeaderEntry *
 httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
 {
     HttpHeaderEntry *e;
-    int id;
+    http_hdr_type id;
     /* note: name_start == field_start */
     const char *name_end = strchr(field_start, ':');
     const int name_len = name_end ? name_end - field_start : 0;
@@ -1049,7 +1058,7 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
 	return NULL;
     }
     /* now we know we can parse it */
-    e = memAllocate(MEM_HTTP_HDR_ENTRY);
+    e = (HttpHeaderEntry *)memAllocate(MEM_HTTP_HDR_ENTRY);
     debug(55, 9) ("creating entry %p: near '%s'\n", e, getStringPrefix(field_start, field_end));
     /* is it a "known" field? */
     id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
@@ -1188,7 +1197,7 @@ httpHeaderStoreReport(StoreEntry * e)
     storeAppendPrintf(e, "\nHttp Fields Stats (replies and requests)\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\t %6s\n",
 	"id", "name", "#alive", "%err", "%repeat");
-    for (ht = 0; ht < HDR_ENUM_END; ht++) {
+    for (ht = (http_hdr_type)0; ht < HDR_ENUM_END; ++ht) {
 	HttpHeaderFieldInfo *f = Headers + ht;
 	storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3f\t %6.3f\n",
 	    f->id, strBuf(f->name), f->stat.aliveCount,
@@ -1202,7 +1211,7 @@ httpHeaderStoreReport(StoreEntry * e)
     storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
 }
 
-int
+http_hdr_type
 httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * info, int end)
 {
     int i;
@@ -1211,12 +1220,12 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
 	    continue;
 	if (!strncasecmp(name, strBuf(info[i].name),
 		name_len < 0 ? strLen(info[i].name) + 1 : name_len))
-	    return i;
+	    return info[i].id;
     }
-    return -1;
+    return HDR_BAD_HDR;
 }
 
-int
+http_hdr_type
 httpHeaderIdByNameDef(const char *name, int name_len)
 {
     if (!Headers)

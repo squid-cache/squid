@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.13 2001/01/12 00:37:14 wessels Exp $
+ * $Id: Packer.cc,v 1.14 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -72,6 +72,7 @@
 
 
 #include "squid.h"
+#include "Store.h"
 
 /* local types */
 

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.289 2002/10/08 04:27:31 wessels Exp $
+# $Id: cf.data.pre,v 1.290 2002/10/13 20:34:59 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1283,7 +1283,7 @@ DOC_END
 
 NAME: auth_param
 TYPE: authparam
-LOC: Config.authConfig
+LOC: Config.authConfiguration
 DEFAULT: none
 DOC_START
 	This is used to pass parameters to the various authentication

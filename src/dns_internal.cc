@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.47 2002/06/25 11:43:34 hno Exp $
+ * $Id: dns_internal.cc,v 1.48 2002/10/13 20:35:00 robertc Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 #include <windows.h>
@@ -116,7 +117,7 @@ idnsAddNameserver(const char *buf)
 	    nns_alloc = 2;
 	else
 	    nns_alloc <<= 1;
-	nameservers = xcalloc(nns_alloc, sizeof(*nameservers));
+	nameservers = (ns *)xcalloc(nns_alloc, sizeof(*nameservers));
 	if (oldptr && oldalloc)
 	    xmemcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
 	if (oldptr)
@@ -181,7 +182,7 @@ idnsParseResolvConf(void)
 static void
 idnsParseWIN32Registry(void)
 {
-    char *t;
+    BYTE *t;
     char *token;
     HKEY hndKey, hndKey2;
 
@@ -335,7 +336,7 @@ idnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "  ID   SIZE SENDS FIRST SEND LAST SEND\n");
     storeAppendPrintf(sentry, "------ ---- ----- ---------- ---------\n");
     for (n = lru_list.head; n; n = n->next) {
-	q = n->data;
+	q = (idns_query *)n->data;
 	storeAppendPrintf(sentry, "%#06x %4d %5d %10.3f %9.3f\n",
 	    (int) q->id, (int) q->sz, q->nsends,
 	    tvSubDsec(q->start_t, current_time),
@@ -430,7 +431,7 @@ idnsFindQuery(unsigned short id)
     dlink_node *n;
     idns_query *q;
     for (n = lru_list.tail; n; n = n->prev) {
-	q = n->data;
+	q = (idns_query*)n->data;
 	if (q->id == id)
 	    return q;
     }
@@ -571,7 +572,7 @@ idnsCheckQueue(void *unused)
 	if (0 == nns)
 	    /* name servers went away; reconfiguring or shutting down */
 	    break;
-	q = n->data;
+	q = (idns_query *)n->data;
 	if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << q->nsends % nns))
 	    break;
 	debug(78, 3) ("idnsCheckQueue: ID %#04x timeout\n",
@@ -681,7 +682,7 @@ idnsShutdown(void)
 void
 idnsALookup(const char *name, IDNSCB * callback, void *data)
 {
-    idns_query *q = memAllocate(MEM_IDNS_QUERY);
+    idns_query *q = (idns_query *)memAllocate(MEM_IDNS_QUERY);
     q->sz = sizeof(q->buf);
     q->id = rfc1035BuildAQuery(name, q->buf, &q->sz);
     if (0 == q->id) {
@@ -701,7 +702,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 void
 idnsPTRLookup(const struct in_addr addr, IDNSCB * callback, void *data)
 {
-    idns_query *q = memAllocate(MEM_IDNS_QUERY);
+    idns_query *q = (idns_query *)memAllocate(MEM_IDNS_QUERY);
     q->sz = sizeof(q->buf);
     q->id = rfc1035BuildPTRQuery(addr, q->buf, &q->sz);
     debug(78, 3) ("idnsPTRLookup: buf is %d bytes for %s, id = %#hx\n",

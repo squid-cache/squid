@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.27 2001/01/12 00:37:22 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.28 2002/10/13 20:35:05 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -136,7 +136,7 @@ static void fileIteratorAdvance(FileIterator * fi);
 static FileIterator *
 fileIteratorCreate(const char *fname, FI_READER reader)
 {
-    FileIterator *fi = xcalloc(1, sizeof(FileIterator));
+    FileIterator *fi = (FileIterator *)xcalloc(1, sizeof(FileIterator));
     assert(fname && reader);
     fi->fname = fname;
     fi->reader = reader;
@@ -208,7 +208,7 @@ fileIteratorAdvance(FileIterator * fi)
 static CacheEntry *
 cacheEntryCreate(const storeSwapLogData * s)
 {
-    CacheEntry *e = xcalloc(1, sizeof(CacheEntry));
+    CacheEntry *e = (CacheEntry *)xcalloc(1, sizeof(CacheEntry));
     assert(s);
     /* e->s = *s; */
     xmemcpy(e->key_arr, s->key, MD5_DIGEST_CHARS);
@@ -231,9 +231,9 @@ cacheCreate(const char *name)
 {
     Cache *c;
     assert(name && strlen(name));
-    c = xcalloc(1, sizeof(Cache));
+    c = (Cache *)xcalloc(1, sizeof(Cache));
     c->name = name;
-    c->hash = hash_create(storeKeyHashCmp, 2e6, storeKeyHashHash);
+    c->hash = hash_create(storeKeyHashCmp, (int)2e6, storeKeyHashHash);
     return c;
 }
 
@@ -246,7 +246,7 @@ cacheDestroy(Cache * cache)
     hash = cache->hash;
     /* destroy hash table contents */
     hash_first(hash);
-    while (e = hash_next(hash)) {
+    while ((e = (CacheEntry *)hash_next(hash))) {
 	hash_remove_link(hash, (hash_link *) e);
 	cacheEntryDestroy(e);
     }
@@ -275,7 +275,7 @@ cacheResetDigest(Cache * cache)
 	return;
     gettimeofday(&t_start, NULL);
     hash_first(hash);
-    while (e = hash_next(hash)) {
+    while ((e = (CacheEntry *)hash_next(hash))) {
 	cacheDigestAdd(cache->digest, e->key);
     }
     gettimeofday(&t_end, NULL);
@@ -288,7 +288,8 @@ cacheResetDigest(Cache * cache)
 	(double) 1e6 * tvSubDsec(t_start, t_end) / cache->count);
     /* check how long it takes to traverse the hash */
     gettimeofday(&t_start, NULL);
-    for (e = hash_first(hash); e; e = hash_next(hash)) {
+    hash_first(hash);
+    for (e = (CacheEntry *)hash_next(hash); e; e = (CacheEntry *)hash_next(hash)) {
     }
     gettimeofday(&t_end, NULL);
     fprintf(stderr, "%s: hash scan took: %f sec, %f sec/M\n",
@@ -364,7 +365,7 @@ swapStateReader(FileIterator * fi)
     storeSwapLogData *entry;
     if (!fi->entry)
 	fi->entry = xcalloc(1, sizeof(storeSwapLogData));
-    entry = fi->entry;
+    entry = (storeSwapLogData *)fi->entry;
     if (fread(entry, sizeof(*entry), 1, fi->file) != 1)
 	return frEof;
     fi->inner_time = entry->lastref;
@@ -382,7 +383,7 @@ accessLogReader(FileIterator * fi)
     RawAccessLogEntry *entry;
     char *url;
     char *method;
-    int method_id = METHOD_NONE;
+    method_t method_id = METHOD_NONE;
     char *hier = NULL;
 
     assert(fi);
@@ -390,7 +391,7 @@ accessLogReader(FileIterator * fi)
 	fi->entry = xcalloc(1, sizeof(RawAccessLogEntry));
     else
 	memset(fi->entry, 0, sizeof(RawAccessLogEntry));
-    entry = fi->entry;
+    entry = (RawAccessLogEntry*)fi->entry;
     if (!fgets(buf, sizeof(buf), fi->file))
 	return frEof;		/* eof */
     entry->timestamp = fi->inner_time = (time_t) atoi(buf);
@@ -467,7 +468,7 @@ cacheStore(Cache * cache, storeSwapLogData * s, int update_digest)
 	cache->bad_add_count++;
     } else {
 	CacheEntry *e = cacheEntryCreate(s);
-	hash_join(cache->hash, &e->hash);
+	hash_join(cache->hash, (hash_link *)&e->key);
 	cache->count++;
 	if (update_digest)
 	    cacheDigestAdd(cache->digest, e->key);
@@ -515,7 +516,7 @@ main(int argc, char *argv[])
     them->peer = us;
     us->peer = them;
 
-    fis = xcalloc(fi_count, sizeof(FileIterator *));
+    fis = (FileIterator **)xcalloc(fi_count, sizeof(FileIterator *));
     /* init iterators with files */
     fis[0] = fileIteratorCreate(argv[1], accessLogReader);
     for (i = 2; i < argc; ++i)
@@ -530,13 +531,13 @@ main(int argc, char *argv[])
 	FileIterator *fi = fis[i];
 	while (fi->inner_time > 0) {
 	    if (((storeSwapLogData *) fi->entry)->op == SWAP_LOG_DEL) {
-		cachePurge(them, fi->entry, 0);
+		cachePurge(them, (storeSwapLogData *)fi->entry, 0);
 		if (ready_time < 0)
 		    ready_time = fi->inner_time;
 	    } else {
 		if (ready_time > 0 && fi->inner_time > ready_time)
 		    break;
-		cacheStore(them, fi->entry, 0);
+		cacheStore(them, (storeSwapLogData *)fi->entry, 0);
 	    }
 	    fileIteratorAdvance(fi);
 	}
@@ -567,9 +568,9 @@ main(int argc, char *argv[])
 	    cur_time = next_time;
 	    /*fprintf(stderr, "%2d time: %d %s", next_i, (int)cur_time, ctime(&cur_time)); */
 	    if (next_i == 0)
-		cacheFetch(us, fis[next_i]->entry);
+		cacheFetch(us, (RawAccessLogEntry *)fis[next_i]->entry);
 	    else
-		cacheUpdateStore(them, fis[next_i]->entry, 1);
+		cacheUpdateStore(them, (storeSwapLogData *)fis[next_i]->entry, 1);
 	    fileIteratorAdvance(fis[next_i]);
 	}
     } while (active_fi_count);

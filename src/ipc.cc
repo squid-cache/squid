@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.28 2002/04/04 23:59:25 hno Exp $
+ * $Id: ipc.cc,v 1.29 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -272,7 +272,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 	}
     }
 #if HAVE_PUTENV
-    env_str = xcalloc((tmp_s = strlen(Config.debugOptions) + 32), 1);
+    env_str = (char *)xcalloc((tmp_s = strlen(Config.debugOptions) + 32), 1);
     snprintf(env_str, tmp_s, "SQUID_DEBUG=%s", Config.debugOptions);
     putenv(env_str);
 #endif

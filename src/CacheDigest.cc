@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.33 2002/08/09 10:57:43 robertc Exp $
+ * $Id: CacheDigest.cc,v 1.34 2002/10/13 20:34:56 robertc Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #if USE_CACHE_DIGESTS
 
@@ -61,7 +62,7 @@ cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
     cd->capacity = capacity;
     cd->bits_per_entry = bpe;
     cd->mask_size = mask_size;
-    cd->mask = xcalloc(cd->mask_size, 1);
+    cd->mask = (char *)xcalloc(cd->mask_size, 1);
     debug(70, 2) ("cacheDigestInit: capacity: %d entries, bpe: %d; size: %d bytes\n",
 	cd->capacity, cd->bits_per_entry, cd->mask_size);
 }
@@ -69,7 +70,7 @@ cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
 CacheDigest *
 cacheDigestCreate(int capacity, int bpe)
 {
-    CacheDigest *cd = memAllocate(MEM_CACHE_DIGEST);
+    CacheDigest *cd = (CacheDigest *)memAllocate(MEM_CACHE_DIGEST);
     assert(MD5_DIGEST_CHARS == 16);	/* our hash functions rely on 16 byte keys */
     cacheDigestInit(cd, capacity, bpe);
     return cd;

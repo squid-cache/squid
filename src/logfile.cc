@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.11 2002/06/26 09:55:56 hno Exp $
+ * $Id: logfile.cc,v 1.12 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "authenticate.h"
 
 static void logfileWriteWrapper(Logfile * lf, const void *buf, size_t len);
 
@@ -57,13 +58,13 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 	    return NULL;
 	}
     }
-    lf = xcalloc(1, sizeof(*lf));
+    lf = static_cast<Logfile *>(xcalloc(1, sizeof(*lf)));
     lf->fd = fd;
     if (fatal_flag)
 	lf->flags.fatal = 1;
     xstrncpy(lf->path, path, MAXPATHLEN);
     if (bufsz > 0) {
-	lf->buf = xmalloc(bufsz);
+	lf->buf = (char *) xmalloc(bufsz);
 	lf->bufsz = bufsz;
     }
     return lf;
@@ -135,7 +136,8 @@ logfileWrite(Logfile * lf, void *buf, size_t len)
     /* buffer it */
     xmemcpy(lf->buf + lf->offset, buf, len);
     lf->offset += len;
-    assert(lf->offset <= lf->bufsz);
+    assert (lf->offset >= 0);
+    assert((size_t)lf->offset <= lf->bufsz);
 }
 
 void
@@ -179,8 +181,8 @@ logfileFlush(Logfile * lf)
 static void
 logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
 {
-    int s;
-    s = FD_WRITE_METHOD(lf->fd, buf, len);
+    size_t s;
+    s = FD_WRITE_METHOD(lf->fd, (char const *)buf, len);
     fd_bytes(lf->fd, s, FD_WRITE);
     if (s == len)
 	return;

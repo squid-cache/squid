@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.11 2002/04/06 08:49:46 adrian Exp $
+ * $Id: store_repl_lru.cc,v 1.12 2002/10/13 20:35:29 robertc Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -34,11 +34,12 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 
-typedef struct _LruPolicyData LruPolicyData;
-struct _LruPolicyData {
+struct LruPolicyData {
+    void setPolicyNode (StoreEntry *, void *) const;
     RemovalPolicy *policy;
     dlink_list list;
     int count;
@@ -51,22 +52,26 @@ struct _LruPolicyData {
 /* Hack to avoid having to remember the RemovalPolicyNode location.
  * Needed by the purge walker to clear the policy information
  */
-static enum heap_entry_type
+static enum LruPolicyData::heap_entry_type
 repl_guessType(StoreEntry * entry, RemovalPolicyNode * node)
 {
     if (node == &entry->repl)
-	return TYPE_STORE_ENTRY;
+	return LruPolicyData::TYPE_STORE_ENTRY;
     if (entry->mem_obj && node == &entry->mem_obj->repl)
-	return TYPE_STORE_MEM;
+	return LruPolicyData::TYPE_STORE_MEM;
     fatal("Heap Replacement: Unknown StoreEntry node type");
-    return TYPE_UNKNOWN;
+    return LruPolicyData::TYPE_UNKNOWN;
 }
-#define SET_POLICY_NODE(entry,value) \
-    switch(lru->type) { \
-    case TYPE_STORE_ENTRY: entry->repl.data = value; break ; \
-    case TYPE_STORE_MEM: entry->mem_obj->repl.data = value ; break ; \
-    default: break; \
+
+void
+LruPolicyData::setPolicyNode (StoreEntry *entry, void *value) const
+{
+    switch (type) {
+        case TYPE_STORE_ENTRY: entry->repl.data = value; break ;
+	case TYPE_STORE_MEM: entry->mem_obj->repl.data = value ; break ;
+	default: break;
     }
+}
 
 typedef struct _LruNode LruNode;
 struct _LruNode {
@@ -82,10 +87,10 @@ static int nr_lru_policies = 0;
 static void
 lru_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 {
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     LruNode *lru_node;
     assert(!node->data);
-    node->data = lru_node = memPoolAlloc(lru_node_pool);
+    node->data = lru_node = (LruNode *)memPoolAlloc(lru_node_pool);
     dlinkAddTail(entry, &lru_node->node, &lru->list);
     lru->count += 1;
     if (!lru->type)
@@ -95,8 +100,8 @@ lru_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 static void
 lru_remove(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 {
-    LruPolicyData *lru = policy->_data;
-    LruNode *lru_node = node->data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
+    LruNode *lru_node = (LruNode *)node->data;
     if (!lru_node)
 	return;
     /*
@@ -117,8 +122,8 @@ static void
 lru_referenced(RemovalPolicy * policy, const StoreEntry * entry,
     RemovalPolicyNode * node)
 {
-    LruPolicyData *lru = policy->_data;
-    LruNode *lru_node = node->data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
+    LruNode *lru_node = (LruNode *)node->data;
     if (!lru_node)
 	return;
     dlinkDelete(&lru_node->node, &lru->list);
@@ -135,7 +140,7 @@ struct _LruWalkData {
 static const StoreEntry *
 lru_walkNext(RemovalPolicyWalker * walker)
 {
-    LruWalkData *lru_walk = walker->_data;
+    LruWalkData *lru_walk = (LruWalkData *)walker->_data;
     LruNode *lru_node = lru_walk->current;
     if (!lru_node)
 	return NULL;
@@ -147,7 +152,7 @@ static void
 lru_walkDone(RemovalPolicyWalker * walker)
 {
     RemovalPolicy *policy = walker->_policy;
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     assert(strcmp(policy->_type, "lru") == 0);
     assert(lru->nwalkers > 0);
     lru->nwalkers -= 1;
@@ -158,12 +163,12 @@ lru_walkDone(RemovalPolicyWalker * walker)
 static RemovalPolicyWalker *
 lru_walkInit(RemovalPolicy * policy)
 {
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     RemovalPolicyWalker *walker;
     LruWalkData *lru_walk;
     lru->nwalkers += 1;
     walker = cbdataAlloc(RemovalPolicyWalker);
-    lru_walk = xcalloc(1, sizeof(*lru_walk));
+    lru_walk = (LruWalkData *)xcalloc(1, sizeof(*lru_walk));
     walker->_policy = policy;
     walker->_data = lru_walk;
     walker->Next = lru_walkNext;
@@ -183,9 +188,9 @@ struct _LruPurgeData {
 static StoreEntry *
 lru_purgeNext(RemovalPurgeWalker * walker)
 {
-    LruPurgeData *lru_walker = walker->_data;
+    LruPurgeData *lru_walker = (LruPurgeData *)walker->_data;
     RemovalPolicy *policy = walker->_policy;
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     LruNode *lru_node;
     StoreEntry *entry;
   try_again:
@@ -208,7 +213,7 @@ lru_purgeNext(RemovalPurgeWalker * walker)
     }
     memPoolFree(lru_node_pool, lru_node);
     lru->count -= 1;
-    SET_POLICY_NODE(entry, NULL);
+    lru->setPolicyNode(entry, NULL);
     return entry;
 }
 
@@ -216,7 +221,7 @@ static void
 lru_purgeDone(RemovalPurgeWalker * walker)
 {
     RemovalPolicy *policy = walker->_policy;
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     assert(strcmp(policy->_type, "lru") == 0);
     assert(lru->nwalkers > 0);
     lru->nwalkers -= 1;
@@ -227,12 +232,12 @@ lru_purgeDone(RemovalPurgeWalker * walker)
 static RemovalPurgeWalker *
 lru_purgeInit(RemovalPolicy * policy, int max_scan)
 {
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     RemovalPurgeWalker *walker;
     LruPurgeData *lru_walk;
     lru->nwalkers += 1;
     walker = cbdataAlloc(RemovalPurgeWalker);
-    lru_walk = xcalloc(1, sizeof(*lru_walk));
+    lru_walk = (LruPurgeData *)xcalloc(1, sizeof(*lru_walk));
     walker->_policy = policy;
     walker->_data = lru_walk;
     walker->max_scan = max_scan;
@@ -245,7 +250,7 @@ lru_purgeInit(RemovalPolicy * policy, int max_scan)
 static void
 lru_stats(RemovalPolicy * policy, StoreEntry * sentry)
 {
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     LruNode *lru_node = (LruNode *) lru->list.head;
 
   again:
@@ -262,7 +267,7 @@ lru_stats(RemovalPolicy * policy, StoreEntry * sentry)
 static void
 lru_free(RemovalPolicy * policy)
 {
-    LruPolicyData *lru = policy->_data;
+    LruPolicyData *lru = (LruPolicyData *)policy->_data;
     /* Make some verification of the policy state */
     assert(strcmp(policy->_type, "lru") == 0);
     assert(lru->nwalkers);
@@ -286,7 +291,7 @@ createRemovalPolicy_lru(wordlist * args)
 	memPoolSetChunkSize(lru_node_pool, 512 * 1024);
     }
     /* Allocate the needed structures */
-    lru_data = xcalloc(1, sizeof(*lru_data));
+    lru_data = (LruPolicyData *)xcalloc(1, sizeof(*lru_data));
     policy = cbdataAlloc(RemovalPolicy);
     /* Initialize the URL data */
     lru_data->policy = policy;

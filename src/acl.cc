@@ -1,6 +1,5 @@
-
 /*
- * $Id: acl.cc,v 1.288 2002/10/08 03:32:54 wessels Exp $
+ * $Id: acl.cc,v 1.289 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,6 +34,7 @@
 
 #include "squid.h"
 #include "splay.h"
+#include "authenticate.h"
 
 static void aclParseDomainList(void *curlist);
 static void aclParseUserList(void **current);
@@ -54,7 +54,7 @@ static void aclLookupProxyAuthDone(void *data, char *result);
 static struct _acl *aclFindByName(const char *name);
 static int aclMatchAcl(struct _acl *, aclCheck_t *);
 static int aclMatchTime(acl_time_data * data, time_t when);
-static int aclMatchUser(void *proxyauth_acl, char *user);
+static int aclMatchUser(void *proxyauth_acl, char const *user);
 static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
 static int aclMatchIntegerRange(intrange * data, int i);
@@ -101,7 +101,7 @@ static wordlist *aclDumpArpList(void *);
 static SPLAYCMP aclArpCompare;
 static SPLAYWALKEE aclDumpArpListWalkee;
 #endif
-static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char *MatchParam);
+static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char const *MatchParam);
 
 static squid_acl
 aclStrToType(const char *s)
@@ -271,9 +271,9 @@ aclParseIntlist(void *curlist)
     intlist **Tail;
     intlist *q = NULL;
     char *t = NULL;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    for (Tail = (intlist **)curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-	q = memAllocate(MEM_INTLIST);
+	q = (intlist *)memAllocate(MEM_INTLIST);
 	q->i = atoi(t);
 	*(Tail) = q;
 	Tail = &q->next;
@@ -286,9 +286,9 @@ aclParseIntRange(void *curlist)
     intrange **Tail;
     intrange *q = NULL;
     char *t = NULL;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    for (Tail = (intrange **)curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-	q = xcalloc(1, sizeof(intrange));
+	q = (intrange *)xcalloc(1, sizeof(intrange));
 	q->i = atoi(t);
 	t = strchr(t, '-');
 	if (t && *(++t))
@@ -307,10 +307,10 @@ aclParseProtoList(void *curlist)
     intlist *q = NULL;
     char *t = NULL;
     protocol_t protocol;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    for (Tail = (intlist **)curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	protocol = urlParseProtocol(t);
-	q = memAllocate(MEM_INTLIST);
+	q = (intlist *)memAllocate(MEM_INTLIST);
 	q->i = (int) protocol;
 	*(Tail) = q;
 	Tail = &q->next;
@@ -323,9 +323,9 @@ aclParseMethodList(void *curlist)
     intlist **Tail;
     intlist *q = NULL;
     char *t = NULL;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    for (Tail = (intlist **)curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-	q = memAllocate(MEM_INTLIST);
+	q = (intlist *)memAllocate(MEM_INTLIST);
 	q->i = (int) urlParseMethod(t);
 	*(Tail) = q;
 	Tail = &q->next;
@@ -390,7 +390,7 @@ aclParseIpData(const char *t)
     LOCAL_ARRAY(char, addr1, 256);
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
-    acl_ip_data *q = memAllocate(MEM_ACL_IP_DATA);
+    acl_ip_data *q = (acl_ip_data *)memAllocate(MEM_ACL_IP_DATA);
     acl_ip_data *r;
     acl_ip_data **Q;
     struct hostent *hp;
@@ -427,7 +427,7 @@ aclParseIpData(const char *t)
 	Q = &q;
 	for (x = hp->h_addr_list; x != NULL && *x != NULL; x++) {
 	    if ((r = *Q) == NULL)
-		r = *Q = memAllocate(MEM_ACL_IP_DATA);
+		r = *Q = (acl_ip_data *)memAllocate(MEM_ACL_IP_DATA);
 	    xmemcpy(&r->addr1.s_addr, *x, sizeof(r->addr1.s_addr));
 	    r->addr2.s_addr = 0;
 	    r->mask.s_addr = no_addr.s_addr;	/* 255.255.255.255 */
@@ -481,7 +481,7 @@ static void
 aclParseIpList(void *curlist)
 {
     char *t = NULL;
-    splayNode **Top = curlist;
+    splayNode **Top = (splayNode **)curlist;
     acl_ip_data *q = NULL;
     while ((t = strtokFile())) {
 	q = aclParseIpData(t);
@@ -499,8 +499,8 @@ aclParseTimeSpec(void *curlist)
     acl_time_data **Tail;
     int h1, m1, h2, m2;
     char *t = NULL;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    q = memAllocate(MEM_ACL_TIME_DATA);
+    for (Tail = (acl_time_data **)curlist; *Tail; Tail = &((*Tail)->next));
+    q = (acl_time_data *)memAllocate(MEM_ACL_TIME_DATA);
     while ((t = strtokFile())) {
 	if (*t < '0' || *t > '9') {
 	    /* assume its day-of-week spec */
@@ -577,7 +577,7 @@ aclParseRegexList(void *curlist)
     regex_t comp;
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
+    for (Tail = (relist **)curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	if (strcmp(t, "-i") == 0) {
 	    flags |= REG_ICASE;
@@ -596,7 +596,7 @@ aclParseRegexList(void *curlist)
 		t, errbuf);
 	    continue;
 	}
-	q = memAllocate(MEM_RELIST);
+	q = (relist *)memAllocate(MEM_RELIST);
 	q->pattern = xstrdup(t);
 	q->regex = comp;
 	*(Tail) = q;
@@ -610,7 +610,7 @@ aclParseWordList(void *curlist)
 {
     char *t = NULL;
     while ((t = strtokFile()))
-	wordlistAdd(curlist, t);
+	wordlistAdd((wordlist **)curlist, t);
 }
 #endif
 
@@ -626,7 +626,7 @@ aclParseUserList(void **current)
 	debug(28, 3) ("aclParseUserList: current is null. Creating\n");
 	*current = memAllocate(MEM_ACL_USER_DATA);
     }
-    data = *current;
+    data = (acl_user_data*)*current;
     Top = data->names;
     if ((t = strtokFile())) {
 	debug(28, 5) ("aclParseUserList: First token is %s\n", t);
@@ -665,7 +665,7 @@ static void
 aclParseDomainList(void *curlist)
 {
     char *t = NULL;
-    splayNode **Top = curlist;
+    splayNode **Top = (splayNode **)curlist;
     while ((t = strtokFile())) {
 	Tolower(t);
 	*Top = splay_insert(xstrdup(t), *Top, aclDomainCompare);
@@ -705,7 +705,7 @@ aclParseAclLine(acl ** head)
     }
     if ((A = aclFindByName(aclname)) == NULL) {
 	debug(28, 3) ("aclParseAclLine: Creating ACL '%s'\n", aclname);
-	A = memAllocate(MEM_ACL);
+	A = (acl *)memAllocate(MEM_ACL);
 	xstrncpy(A->name, aclname, ACL_NAME_SZ);
 	A->type = acltype;
 	A->cfgline = xstrdup(config_input_line);
@@ -898,14 +898,14 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
 	debug(28, 0) ("aclParseDenyInfoLine: missing 'error page' parameter.\n");
 	return;
     }
-    A = memAllocate(MEM_ACL_DENY_INFO_LIST);
+    A = (acl_deny_info_list *)memAllocate(MEM_ACL_DENY_INFO_LIST);
     A->err_page_id = errorReservePageId(t);
     A->err_page_name = xstrdup(t);
     A->next = (acl_deny_info_list *) NULL;
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
     while ((t = strtok(NULL, w_space))) {
-	L = memAllocate(MEM_ACL_NAME_LIST);
+	L = (acl_name_list *)memAllocate(MEM_ACL_NAME_LIST);
 	xstrncpy(L->name, t, ACL_NAME_SZ);
 	*Tail = L;
 	Tail = &L->next;
@@ -939,9 +939,9 @@ aclParseAccessLine(acl_access ** head)
     A = cbdataAlloc(acl_access);
 
     if (!strcmp(t, "allow"))
-	A->allow = 1;
+	A->allow = ACCESS_ALLOWED;
     else if (!strcmp(t, "deny"))
-	A->allow = 0;
+	A->allow = ACCESS_DENIED;
     else {
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
@@ -975,7 +975,7 @@ aclParseAclList(acl_list ** head)
     /* next expect a list of ACL names, possibly preceeded
      * by '!' for negation */
     while ((t = strtok(NULL, w_space))) {
-	L = memAllocate(MEM_ACL_LIST);
+	L = (acl_list *)memAllocate(MEM_ACL_LIST);
 	L->op = 1;		/* defaults to non-negated */
 	if (*t == '!') {
 	    /* negated ACL */
@@ -1004,7 +1004,7 @@ aclParseAclList(acl_list ** head)
 static int
 aclMatchIp(void *dataptr, struct in_addr c)
 {
-    splayNode **Top = dataptr;
+    splayNode **Top = (splayNode **)dataptr;
     acl_ip_data x;
     /*
      * aclIpAddrNetworkCompare() takes two acl_ip_data pointers as
@@ -1032,7 +1032,7 @@ aclMatchIp(void *dataptr, struct in_addr c)
 static int
 aclMatchDomainList(void *dataptr, const char *host)
 {
-    splayNode **Top = dataptr;
+    splayNode **Top = (splayNode **)dataptr;
     if (host == NULL)
 	return 0;
     debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
@@ -1070,7 +1070,7 @@ aclMatchRegex(relist * data, const char *word)
 }
 
 static int
-aclMatchUser(void *proxyauth_acl, char *user)
+aclMatchUser(void *proxyauth_acl, char const *user)
 {
     acl_user_data *data = (acl_user_data *) proxyauth_acl;
     splayNode *Top = data->names;
@@ -1116,14 +1116,14 @@ aclMatchUser(void *proxyauth_acl, char *user)
  */
 static int
 aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
-    char *MatchParam)
+    char const *MatchParam)
 {
     int matchrv;
     acl_proxy_auth_match_cache *auth_match;
     dlink_node *link;
     link = cache->head;
     while (link) {
-	auth_match = link->data;
+	auth_match = (acl_proxy_auth_match_cache *)link->data;
 	if (auth_match->acl_data == data) {
 	    debug(28, 4) ("aclCacheMatchAcl: cache hit on acl '%p'\n", data);
 	    return auth_match->matchrv;
@@ -1137,7 +1137,7 @@ aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
 	matchrv = aclMatchUser(data, MatchParam);
 	break;
     case ACL_PROXY_AUTH_REGEX:
-	matchrv = aclMatchRegex(data, MatchParam);
+	matchrv = aclMatchRegex((relist *)data, MatchParam);
 	break;
     default:
 	/* This is a fatal to ensure that aclCacheMatchAcl calls are _only_
@@ -1145,7 +1145,7 @@ aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
 	fatal("aclCacheMatchAcl: unknown or unexpected ACL type");
 	return 0;		/* NOTREACHED */
     }
-    auth_match = memAllocate(MEM_ACL_PROXY_AUTH_MATCH);
+    auth_match = (acl_proxy_auth_match_cache *)memAllocate(MEM_ACL_PROXY_AUTH_MATCH);
     auth_match->matchrv = matchrv;
     auth_match->acl_data = data;
     dlinkAddTail(auth_match, &auth_match->link, cache);
@@ -1159,7 +1159,7 @@ aclCacheMatchFlush(dlink_list * cache)
     dlink_node *link, *tmplink;
     link = cache->head;
     while (link) {
-	auth_match = link->data;
+	auth_match = (acl_proxy_auth_match_cache *)link->data;
 	tmplink = link;
 	link = link->next;
 	dlinkDelete(tmplink, cache);
@@ -1201,7 +1201,7 @@ CBDATA_TYPE(acl_user_ip_data);
 void
 aclParseUserMaxIP(void *data)
 {
-    acl_user_ip_data **acldata = data;
+    acl_user_ip_data **acldata = (acl_user_ip_data **)data;
     char *t = NULL;
     CBDATA_INIT_TYPE(acl_user_ip_data);
     if (*acldata) {
@@ -1230,7 +1230,7 @@ aclParseUserMaxIP(void *data)
 void
 aclDestroyUserMaxIP(void *data)
 {
-    acl_user_ip_data **acldata = data;
+    acl_user_ip_data **acldata = (acl_user_ip_data **)data;
     if (*acldata)
 	cbdataFree(*acldata);
     *acldata = NULL;
@@ -1239,7 +1239,7 @@ aclDestroyUserMaxIP(void *data)
 wordlist *
 aclDumpUserMaxIP(void *data)
 {
-    acl_user_ip_data *acldata = data;
+    acl_user_ip_data *acldata = (acl_user_ip_data *)data;
     wordlist *W = NULL;
     char buf[128];
     if (acldata->flags.strict)
@@ -1249,7 +1249,7 @@ aclDumpUserMaxIP(void *data)
     return W;
 }
 
-/*
+/* 
  * aclMatchUserMaxIP - check for users logging in from multiple IP's 
  * 0 : No match
  * 1 : Match 
@@ -1263,14 +1263,14 @@ aclMatchUserMaxIP(void *data, auth_user_request_t * auth_user_request,
      * it sorted in most recent access order and just drop the oldest
      * one off is currently undecided
      */
-    acl_user_ip_data *acldata = data;
+    acl_user_ip_data *acldata = (acl_user_ip_data *)data;
 
     if (authenticateAuthUserRequestIPCount(auth_user_request) <= acldata->max)
 	return 0;
 
     /* this is a match */
     if (acldata->flags.strict) {
-	/*
+	/* 
 	 * simply deny access - the user name is already associated with
 	 * the request 
 	 */
@@ -1278,7 +1278,7 @@ aclMatchUserMaxIP(void *data, auth_user_request_t * auth_user_request,
 	authenticateAuthUserRequestRemoveIp(auth_user_request, src_addr);
 	debug(28, 4) ("aclMatchUserMaxIP: Denying access in strict mode\n");
     } else {
-	/*
+	/* 
 	 * non-strict - remove some/all of the cached entries 
 	 * ie to allow the user to move machines easily
 	 */
@@ -1524,44 +1524,44 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
     case ACL_DST_DOM_REGEX:
 	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchRegex(ae->data, r->host);
+	    return aclMatchRegex((relist *)ae->data, r->host);
 	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
 	if (fqdn)
-	    return aclMatchRegex(ae->data, fqdn);
+	    return aclMatchRegex((relist *)ae->data, fqdn);
 	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		ae->name, inet_ntoa(ia->in_addrs[0]));
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchRegex(ae->data, "none");
+	return aclMatchRegex((relist *)ae->data, "none");
 	/* NOTREACHED */
     case ACL_SRC_DOM_REGEX:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
 	if (fqdn) {
-	    return aclMatchRegex(ae->data, fqdn);
+	    return aclMatchRegex((relist *)ae->data, fqdn);
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		ae->name, inet_ntoa(checklist->src_addr));
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchRegex(ae->data, "none");
+	return aclMatchRegex((relist *)ae->data, "none");
 	/* NOTREACHED */
     case ACL_TIME:
-	return aclMatchTime(ae->data, squid_curtime);
+	return aclMatchTime((acl_time_data *)ae->data, squid_curtime);
 	/* NOTREACHED */
     case ACL_URLPATH_REGEX:
 	esc_buf = xstrdup(strBuf(r->urlpath));
 	rfc1738_unescape(esc_buf);
-	k = aclMatchRegex(ae->data, esc_buf);
+	k = aclMatchRegex((relist *)ae->data, esc_buf);
 	safe_free(esc_buf);
 	return k;
 	/* NOTREACHED */
     case ACL_URL_REGEX:
 	esc_buf = xstrdup(urlCanonical(r));
 	rfc1738_unescape(esc_buf);
-	k = aclMatchRegex(ae->data, esc_buf);
+	k = aclMatchRegex((relist *)ae->data, esc_buf);
 	safe_free(esc_buf);
 	return k;
 	/* NOTREACHED */
@@ -1570,10 +1570,10 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return ((k > ((intlist *) ae->data)->i) ? 1 : 0);
 	/* NOTREACHED */
     case ACL_URL_PORT:
-	return aclMatchIntegerRange(ae->data, (int) r->port);
+	return aclMatchIntegerRange((intrange *)ae->data, (int) r->port);
 	/* NOTREACHED */
     case ACL_MY_PORT:
-	return aclMatchIntegerRange(ae->data, (int) checklist->my_port);
+	return aclMatchIntegerRange((intrange *)ae->data, (int) checklist->my_port);
 	/* NOTREACHED */
 #if USE_IDENT
     case ACL_IDENT:
@@ -1586,7 +1586,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
     case ACL_IDENT_REGEX:
 	if (checklist->rfc931[0]) {
-	    return aclMatchRegex(ae->data, checklist->rfc931);
+	    return aclMatchRegex((relist *)ae->data, checklist->rfc931);
 	} else {
 	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
 	    return 0;
@@ -1594,22 +1594,22 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
 #endif
     case ACL_PROTO:
-	return aclMatchInteger(ae->data, r->protocol);
+	return aclMatchInteger((intlist *)ae->data, r->protocol);
 	/* NOTREACHED */
     case ACL_METHOD:
-	return aclMatchInteger(ae->data, r->method);
+	return aclMatchInteger((intlist *)ae->data, r->method);
 	/* NOTREACHED */
     case ACL_BROWSER:
 	browser = httpHeaderGetStr(&checklist->request->header, HDR_USER_AGENT);
 	if (NULL == browser)
 	    return 0;
-	return aclMatchRegex(ae->data, browser);
+	return aclMatchRegex((relist *)ae->data, browser);
 	/* NOTREACHED */
     case ACL_REFERER_REGEX:
 	header = httpHeaderGetStr(&checklist->request->header, HDR_REFERER);
 	if (NULL == header)
 	    return 0;
-	return aclMatchRegex(ae->data, header);
+	return aclMatchRegex((relist *)ae->data, header);
 	/* NOTREACHED */
     case ACL_PROXY_AUTH:
     case ACL_PROXY_AUTH_REGEX:
@@ -1630,7 +1630,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
-	return aclMatchWordList(ae->data, checklist->snmp_community);
+	return aclMatchWordList((wordlist *)ae->data, checklist->snmp_community);
 	/* NOTREACHED */
 #endif
     case ACL_SRC_ASN:
@@ -1663,7 +1663,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	    HDR_CONTENT_TYPE);
 	if (NULL == header)
 	    header = "";
-	return aclMatchRegex(ae->data, header);
+	return aclMatchRegex((relist *)ae->data, header);
 	/* NOTREACHED */
     case ACL_REP_MIME_TYPE:
 	if (!checklist->reply)
@@ -1671,7 +1671,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	header = httpHeaderGetStr(&checklist->reply->header, HDR_CONTENT_TYPE);
 	if (NULL == header)
 	    header = "";
-	return aclMatchRegex(ae->data, header);
+	return aclMatchRegex((relist *)ae->data, header);
 	/* NOTREACHED */
     case ACL_EXTERNAL:
 	return aclMatchExternal(ae->data, checklist);
@@ -1901,7 +1901,7 @@ aclLookupIdentDone(const char *ident, void *data)
 static void
 aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
 {
-    aclCheck_t *checklist = data;
+    aclCheck_t *checklist = (aclCheck_t *)data;
     checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -1909,7 +1909,7 @@ aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
 static void
 aclLookupDstIPforASNDone(const ipcache_addrs * ia, void *data)
 {
-    aclCheck_t *checklist = data;
+    aclCheck_t *checklist = (aclCheck_t *)data;
     checklist->state[ACL_DST_ASN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -1917,7 +1917,7 @@ aclLookupDstIPforASNDone(const ipcache_addrs * ia, void *data)
 static void
 aclLookupSrcFQDNDone(const char *fqdn, void *data)
 {
-    aclCheck_t *checklist = data;
+    aclCheck_t *checklist = (aclCheck_t *)data;
     checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -1925,7 +1925,7 @@ aclLookupSrcFQDNDone(const char *fqdn, void *data)
 static void
 aclLookupDstFQDNDone(const char *fqdn, void *data)
 {
-    aclCheck_t *checklist = data;
+    aclCheck_t *checklist = (aclCheck_t *)data;
     checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -1933,7 +1933,7 @@ aclLookupDstFQDNDone(const char *fqdn, void *data)
 static void
 aclLookupProxyAuthDone(void *data, char *result)
 {
-    aclCheck_t *checklist = data;
+    aclCheck_t *checklist = (aclCheck_t *)data;
     checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
     if (result != NULL)
 	fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
@@ -1954,9 +1954,9 @@ aclLookupProxyAuthDone(void *data, char *result)
 static void
 aclLookupExternalDone(void *data, void *result)
 {
-    aclCheck_t *checklist = data;
+    aclCheck_t *checklist = (aclCheck_t *)data;
     checklist->state[ACL_EXTERNAL] = ACL_LOOKUP_DONE;
-    checklist->extacl_entry = cbdataReference(result);
+    checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     aclCheck(checklist);
 }
 
@@ -1990,12 +1990,6 @@ aclNBCheck(aclCheck_t * checklist, PF * callback, void *callback_data)
     checklist->callback_data = cbdataReference(callback_data);
     aclCheck(checklist);
 }
-
-
-
-
-
-
 
 /*********************/
 /* Destroy functions */
@@ -2032,7 +2026,7 @@ aclFreeIpData(void *p)
 static void
 aclFreeUserData(void *data)
 {
-    acl_user_data *d = data;
+    acl_user_data *d = (acl_user_data *)data;
     if (d->names)
 	splay_destroy(d->names, xfree);
     memFree(d, MEM_ACL_USER_DATA);
@@ -2051,14 +2045,14 @@ aclDestroyAcls(acl ** head)
 	case ACL_SRC_IP:
 	case ACL_DST_IP:
 	case ACL_MY_IP:
-	    splay_destroy(a->data, aclFreeIpData);
+	    splay_destroy((splayNode *)a->data, aclFreeIpData);
 	    break;
 #if USE_ARP_ACL
 	case ACL_SRC_ARP:
 #endif
 	case ACL_DST_DOMAIN:
 	case ACL_SRC_DOMAIN:
-	    splay_destroy(a->data, xfree);
+	    splay_destroy((splayNode *)a->data, xfree);
 	    break;
 #if SQUID_SNMP
 	case ACL_SNMP_COMMUNITY:
@@ -2074,7 +2068,7 @@ aclDestroyAcls(acl ** head)
 	    aclFreeUserData(a->data);
 	    break;
 	case ACL_TIME:
-	    aclDestroyTimeList(a->data);
+	    aclDestroyTimeList((acl_time_data *)a->data);
 	    break;
 #if USE_IDENT
 	case ACL_IDENT_REGEX:
@@ -2088,7 +2082,7 @@ aclDestroyAcls(acl ** head)
 	case ACL_DST_DOM_REGEX:
 	case ACL_REP_MIME_TYPE:
 	case ACL_REQ_MIME_TYPE:
-	    aclDestroyRegexList(a->data);
+	    aclDestroyRegexList((relist *)a->data);
 	    break;
 	case ACL_PROTO:
 	case ACL_METHOD:
@@ -2105,7 +2099,7 @@ aclDestroyAcls(acl ** head)
 	    break;
 	case ACL_URL_PORT:
 	case ACL_MY_PORT:
-	    aclDestroyIntRange(a->data);
+	    aclDestroyIntRange((intrange *)a->data);
 	    break;
 	case ACL_EXTERNAL:
 	    aclDestroyExternal(&a->data);
@@ -2191,12 +2185,12 @@ aclDomainCompare(const void *a, const void *b)
     const char *d1;
     const char *d2;
     int ret;
-    d1 = b;
-    d2 = a;
+    d1 = (const char *)b;
+    d2 = (const char *)a;
     ret = aclHostDomainCompare(d1, d2);
     if (ret != 0) {
-	d1 = a;
-	d2 = b;
+	d1 = (const char *)a;
+	d2 = (const char *)b;
 	ret = aclHostDomainCompare(d1, d2);
     }
     if (ret == 0) {
@@ -2212,8 +2206,8 @@ aclDomainCompare(const void *a, const void *b)
 static int
 aclHostDomainCompare(const void *a, const void *b)
 {
-    const char *h = a;
-    const char *d = b;
+    const char *h = (const char *)a;
+    const char *d = (const char *)b;
     return matchDomainName(h, d);
 }
 
@@ -2284,12 +2278,12 @@ aclIpNetworkCompare(const void *a, const void *b)
     const acl_ip_data *n1;
     const acl_ip_data *n2;
     int ret;
-    n1 = b;
-    n2 = a;
+    n1 = (const acl_ip_data *)b;
+    n2 = (const acl_ip_data *)a;
     ret = aclIpNetworkCompare2(n1, n2);
     if (ret != 0) {
-	n1 = a;
-	n2 = b;
+	n1 = (const acl_ip_data *)a;
+	n2 = (const acl_ip_data *)b;
 	ret = aclIpNetworkCompare2(n1, n2);
     }
     if (ret == 0) {
@@ -2319,14 +2313,14 @@ aclIpNetworkCompare(const void *a, const void *b)
 static int
 aclIpAddrNetworkCompare(const void *a, const void *b)
 {
-    return aclIpNetworkCompare2(a, b);
+    return aclIpNetworkCompare2((const acl_ip_data *)a, (const acl_ip_data *)b);
 }
 
 static void
 aclDumpUserListWalkee(void *node_data, void *outlist)
 {
     /* outlist is really a wordlist ** */
-    wordlistAdd(outlist, node_data);
+    wordlistAdd((wordlist **)outlist, (char const *)node_data);
 }
 
 static wordlist *
@@ -2349,9 +2343,9 @@ aclDumpUserList(acl_user_data * data)
 static void
 aclDumpIpListWalkee(void *node, void *state)
 {
-    acl_ip_data *ip = node;
+    acl_ip_data *ip = (acl_ip_data *)node;
     MemBuf mb;
-    wordlist **W = state;
+    wordlist **W = (wordlist **)state;
     memBufDefInit(&mb);
     memBufPrintf(&mb, "%s", inet_ntoa(ip->addr1));
     if (ip->addr2.s_addr != any_addr.s_addr)
@@ -2366,22 +2360,22 @@ static wordlist *
 aclDumpIpList(void *data)
 {
     wordlist *w = NULL;
-    splay_walk(data, aclDumpIpListWalkee, &w);
+    splay_walk((splayNode *)data, aclDumpIpListWalkee, &w);
     return w;
 }
 
 static void
 aclDumpDomainListWalkee(void *node, void *state)
 {
-    char *domain = node;
-    wordlistAdd(state, domain);
+    char *domain = (char *)node;
+    wordlistAdd((wordlist **)state, domain);
 }
 
 static wordlist *
 aclDumpDomainList(void *data)
 {
     wordlist *w = NULL;
-    splay_walk(data, aclDumpDomainListWalkee, &w);
+    splay_walk((splayNode *)data, aclDumpDomainListWalkee, &w);
     return w;
 }
 
@@ -2482,7 +2476,7 @@ aclDumpGeneric(const acl * a)
 	return aclDumpDomainList(a->data);
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
-	return wordlistDup(a->data);
+	return wordlistDup((wordlist *)a->data);
 #endif
 #if USE_IDENT
     case ACL_IDENT:
@@ -2491,9 +2485,9 @@ aclDumpGeneric(const acl * a)
 	return aclDumpRegexList(a->data);
 #endif
     case ACL_PROXY_AUTH:
-	return aclDumpUserList(a->data);
+	return aclDumpUserList((acl_user_data *)a->data);
     case ACL_TIME:
-	return aclDumpTimeSpecList(a->data);
+	return aclDumpTimeSpecList((acl_time_data *)a->data);
     case ACL_PROXY_AUTH_REGEX:
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
@@ -2503,20 +2497,20 @@ aclDumpGeneric(const acl * a)
     case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:
     case ACL_REP_MIME_TYPE:
-	return aclDumpRegexList(a->data);
+	return aclDumpRegexList((relist *)a->data);
     case ACL_SRC_ASN:
     case ACL_MAXCONN:
     case ACL_DST_ASN:
-	return aclDumpIntlistList(a->data);
+	return aclDumpIntlistList((intlist *)a->data);
     case ACL_MAX_USER_IP:
 	return aclDumpUserMaxIP(a->data);
     case ACL_URL_PORT:
     case ACL_MY_PORT:
-	return aclDumpIntRangeList(a->data);
+	return aclDumpIntRangeList((intrange *)a->data);
     case ACL_PROTO:
-	return aclDumpProtoList(a->data);
+	return aclDumpProtoList((intlist *)a->data);
     case ACL_METHOD:
-	return aclDumpMethodList(a->data);
+	return aclDumpMethodList((intlist *)a->data);
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
 	return aclDumpArpList(a->data);
@@ -2545,7 +2539,7 @@ aclPurgeMethodInUse(acl_access * a)
 	for (b = a->aclList; b; b = b->next) {
 	    if (ACL_METHOD != b->_acl->type)
 		continue;
-	    if (aclMatchInteger(b->_acl->data, METHOD_PURGE))
+	    if (aclMatchInteger((intlist *)b->_acl->data, METHOD_PURGE))
 		return 1;
 	}
     }

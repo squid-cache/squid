@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.h,v 1.2 2002/09/27 11:21:10 robertc Exp $
+ * $Id: IPInterception.h,v 1.3 2002/10/13 20:34:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,7 +34,7 @@
 #ifndef SQUID_IPINTERCEPTION_H
 #define SQUID_IPINTERCEPTION_H
 
-void
+SQUIDCEXTERN void
      rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_t bufferLength, int fd, struct sockaddr_in me, struct sockaddr_in peer, int vport);
 
 #endif /* SQUID_IPINTERCEPTION_H */

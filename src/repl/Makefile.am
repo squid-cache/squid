@@ -1,52 +1,22 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.2 2001/12/27 00:23:35 hno Exp $
+#  $Id: Makefile.am,v 1.3 2002/10/13 20:35:28 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
+AM_CFLAGS = -Werror -Wall
+AM_CXXFLAGS = -Werror -Wall
 
 DIST_SUBDIRS = lru heap
 SUBDIRS		= 
 # No recursion is needed for the subdirs, we build from here. // @REPL_POLICIES@
-OUTLIBS		= @REPL_LIBS@
 
 EXTRA_LIBRARIES = liblru.a libheap.a
 noinst_LIBRARIES = @REPL_LIBS@
 
-liblru_a_SOURCES = lru/store_repl_lru.c
-libheap_a_SOURCES = heap/store_heap_replacement.h heap/store_heap_replacement.c heap/store_repl_heap.c
+liblru_a_SOURCES = lru/store_repl_lru.cc
+libheap_a_SOURCES = heap/store_heap_replacement.h heap/store_heap_replacement.cc heap/store_repl_heap.cc
 
 INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/
 
-##all:
-##	@test -z "$(SUBDIRS)" || for dir in $(SUBDIRS); do \
-##	   sh -c "cd $$dir && $(MAKE) $(MFLAGS) all" || exit 1; \
-##	done; \
-##	if [ ! -f stamp ]; then \
-##	   touch stamp; \
-##	fi
-
-##$(OUTLIBS):
-##	@sh -c "cd `basename $@ .a` && $(MAKE) $(MFLAGS) ../$@"
-
-##clean:
-##	-rm -f *.a stamp
-##	-for dir in *; do \
-##	    if [ -f $$dir/Makefile ]; then \
-##	       sh -c "cd $$dir && $(MAKE) $(MFLAGS) $@" || exit 1;\
-##	    fi; \
-##	done
-
-##distclean:
-##	-rm -f *.a Makefile
-##	-for dir in *; do \
-##	    if [ -f $$dir/Makefile ]; then \
-##		sh -c "cd $$dir && $(MAKE) $(MFLAGS) distclean"; \
-##	    fi; \
-##	done
-
-##.DEFAULT:
-##	@test -z "$(SUBDIRS)" || for dir in $(SUBDIRS); do \
-##	   sh -c "cd $$dir && $(MAKE) $(MFLAGS) $@" || exit 1; \
-##	done

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.50 2002/10/12 09:45:56 robertc Exp $
+ * $Id: store_dir_aufs.cc,v 1.51 2002/10/13 20:35:24 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #include "store_asyncufs.h"
 #include "ufscommon.h"
@@ -174,7 +175,7 @@ storeAufsDirParse(SwapDir * sd, int index, char *path)
     if (l2 <= 0)
 	fatal("storeAufsDirParse: invalid level 2 directories value");
 
-    aioinfo = xmalloc(sizeof(squidufsinfo_t));
+    aioinfo = (squidufsinfo_t *)xmalloc(sizeof(squidufsinfo_t));
     if (aioinfo == NULL)
 	fatal("storeAufsDirParse: couldn't xmalloc() squidufsinfo_t!\n");
 

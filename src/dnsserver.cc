@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.60 2002/07/01 08:55:32 hno Exp $
+ * $Id: dnsserver.cc,v 1.61 2002/10/13 20:35:00 robertc Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -262,8 +262,12 @@ main(int argc, char *argv[])
     char request[512];
     char *t = NULL;
     int c;
+#if HAVE_RES_INIT
     int opt_s = 0;
+#if HAVE_RES_NSADDR_LIST || HAVE_RES_NS_LIST
     extern char *optarg;
+#endif
+#endif
 
     safe_inet_addr("255.255.255.255", &no_addr);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.305 2002/09/15 06:23:29 adrian Exp $
+ * $Id: neighbors.cc,v 1.306 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "ICP.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -321,7 +323,7 @@ getWeightedRoundRobinParent(request_t * request)
 void
 peerClearRR(void *data)
 {
-    peer *p = data;
+    peer *p = (peer *)data;
     p->rr_count -= p->rr_lastcount;
     if (p->rr_count < 0)
 	p->rr_count = 0;
@@ -409,29 +411,29 @@ neighbors_open(int fd)
     socklen_t len = sizeof(struct sockaddr_in);
     struct servent *sep = NULL;
     const char *me = getMyHostname();
-    peer *this;
+    peer *thisPeer;
     peer *next;
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1) ("getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
-    for (this = Config.peers; this; this = next) {
+    for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
 	sockaddr_in_list *s;
-	next = this->next;
-	if (0 != strcmp(this->host, me))
+	next = thisPeer->next;
+	if (0 != strcmp(thisPeer->host, me))
 	    continue;
 	for (s = Config.Sockaddr.http; s; s = s->next) {
-	    if (this->http_port != ntohs(s->s.sin_port))
+	    if (thisPeer->http_port != ntohs(s->s.sin_port))
 		continue;
 	    debug(15, 1) ("WARNING: Peer looks like this host\n");
 	    debug(15, 1) ("         Ignoring %s %s/%d/%d\n",
-		neighborTypeStr(this), this->host, this->http_port,
-		this->icp.port);
-	    neighborRemove(this);
+		neighborTypeStr(thisPeer), thisPeer->host, thisPeer->http_port,
+		thisPeer->icp.port);
+	    neighborRemove(thisPeer);
 	}
     }
 
     peerRefreshDNS((void *) 1);
-    if (0 == echo_hdr.opcode) {
+    if (ICP_INVALID == echo_hdr.opcode) {
 	echo_hdr.opcode = ICP_SECHO;
 	echo_hdr.version = ICP_VERSION_CURRENT;
 	echo_hdr.length = 0;
@@ -479,7 +481,7 @@ neighborsUdpPing(request_t * request,
     mem->start_ping = current_time;
     mem->ping_reply_callback = callback;
     mem->ircb_data = callback_data;
-    reqnum = icpSetCacheKey(entry->hash.key);
+    reqnum = icpSetCacheKey((const cache_key *)entry->hash.key);
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	if (p == NULL)
 	    p = Config.peers;
@@ -491,7 +493,7 @@ neighborsUdpPing(request_t * request,
 	    p->host, url);
 	if (p->type == PEER_MULTICAST)
 	    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
-	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText(entry->hash.key));
+	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText((const cache_key *)entry->hash.key));
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
 #if USE_HTCP
@@ -503,7 +505,7 @@ neighborsUdpPing(request_t * request,
 	if (p->icp.port == echo_port) {
 	    debug(15, 4) ("neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    echo_hdr.reqnum = reqnum;
-	    query = icpCreateMessage(ICP_DECHO, 0, url, reqnum, 0);
+	    query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
 	    icpUdpSend(theOutIcpConnection,
 		&p->in_addr,
 		query,
@@ -514,7 +516,7 @@ neighborsUdpPing(request_t * request,
 	    if (Config.onoff.query_icmp)
 		if (p->icp.version == ICP_VERSION_2)
 		    flags |= ICP_FLAG_SRC_RTT;
-	    query = icpCreateMessage(ICP_QUERY, flags, url, reqnum, 0);
+	    query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
 	    icpUdpSend(theOutIcpConnection,
 		&p->in_addr,
 		query,
@@ -575,7 +577,7 @@ neighborsUdpPing(request_t * request,
 		to_addr.sin_family = AF_INET;
 		to_addr.sin_addr = ia->in_addrs[ia->cur];
 		to_addr.sin_port = htons(echo_port);
-		query = icpCreateMessage(ICP_SECHO, 0, url, reqnum, 0);
+		query = _icp_common_t::createMessage(ICP_SECHO, 0, url, reqnum, 0);
 		icpUdpSend(theOutIcpConnection,
 		    &to_addr,
 		    query,
@@ -795,7 +797,7 @@ neighborIgnoreNonPeer(const struct sockaddr_in *from, icp_opcode opcode)
 	break;
     }
     if (np == NULL) {
-	np = xcalloc(1, sizeof(peer));
+	np = (peer *)xcalloc(1, sizeof(peer));
 	np->in_addr.sin_addr = from->sin_addr;
 	np->in_addr.sin_port = from->sin_port;
 	np->icp.port = ntohl(from->sin_port);
@@ -996,7 +998,7 @@ neighborUp(const peer * p)
 void
 peerDestroy(void *data)
 {
-    peer *p = data;
+    peer *p = (peer *)data;
     struct _domain_ping *l = NULL;
     struct _domain_ping *nl = NULL;
     if (p == NULL)
@@ -1023,7 +1025,7 @@ peerNoteDigestGone(peer * p)
 static void
 peerDNSConfigure(const ipcache_addrs * ia, void *data)
 {
-    peer *p = data;
+    peer *p = (peer *)data;
     struct sockaddr_in *ap;
     int j;
     if (p->n_addresses == 0) {
@@ -1129,7 +1131,7 @@ peerProbeConnect(peer * p)
 static void
 peerProbeConnect2(const ipcache_addrs * ianotused, void *data)
 {
-    peer *p = data;
+    peer *p = (peer *)data;
     commConnectStart(p->test_fd,
 	p->host,
 	p->http_port,
@@ -1140,7 +1142,7 @@ peerProbeConnect2(const ipcache_addrs * ianotused, void *data)
 static void
 peerProbeConnectDone(int fd, comm_err_t status, void *data)
 {
-    peer *p = data;
+    peer *p = (peer*)data;
     if (status == COMM_OK) {
 	peerConnectSucceded(p);
     } else {
@@ -1166,7 +1168,7 @@ peerCountMcastPeersSchedule(peer * p, time_t when)
 static void
 peerCountMcastPeersStart(void *data)
 {
-    peer *p = data;
+    peer *p = (peer *)data;
     ps_state *psstate;
     StoreEntry *fake;
     MemObject *mem;
@@ -1190,8 +1192,8 @@ peerCountMcastPeersStart(void *data)
     mem->ircb_data = psstate;
     mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
     p->mcast.id = mem->id;
-    reqnum = icpSetCacheKey(fake->hash.key);
-    query = icpCreateMessage(ICP_QUERY, 0, url, reqnum, 0);
+    reqnum = icpSetCacheKey((const cache_key *)fake->hash.key);
+    query = _icp_common_t::createMessage(ICP_QUERY, 0, url, reqnum, 0);
     icpUdpSend(theOutIcpConnection,
 	&p->in_addr,
 	query,
@@ -1209,8 +1211,8 @@ peerCountMcastPeersStart(void *data)
 static void
 peerCountMcastPeersDone(void *data)
 {
-    ps_state *psstate = data;
-    peer *p = psstate->callback_data;
+    ps_state *psstate = (ps_state *)data;
+    peer *p = (peer *)psstate->callback_data;
     StoreEntry *fake = psstate->entry;
     p->mcast.flags.counting = 0;
     p->mcast.avg_n_members = doubleAverage(p->mcast.avg_n_members,
@@ -1237,7 +1239,7 @@ peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void *hdrnotuse
 {
     int rtt_av_factor;
 
-    ps_state *psstate = data;
+    ps_state *psstate = (ps_state *)data;
     StoreEntry *fake = psstate->entry;
     MemObject *mem = fake->mem_obj;
     int rtt = tvSubMsec(mem->start_ping, current_time);
@@ -1352,7 +1354,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 		percent(e->htcp.counts[1], e->stats.pings_acked));
 	} else {
 #endif
-	    for (op = ICP_INVALID; op < ICP_END; op++) {
+	    for (op = ICP_INVALID; op < ICP_END; ++op) {
 		if (e->icp.counts[op] == 0)
 		    continue;
 		storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",

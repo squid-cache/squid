@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.30 2001/04/14 00:25:17 hno Exp $
+ * $Id: HttpRequest.cc,v 1.31 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -34,11 +34,12 @@
  */
 
 #include "squid.h"
+#include "authenticate.h"
 
 request_t *
 requestCreate(method_t method, protocol_t protocol, const char *urlpath)
 {
-    request_t *req = memAllocate(MEM_REQUEST_T);
+    request_t *req = static_cast<request_t *>(memAllocate(MEM_REQUEST_T));
     req->method = method;
     req->protocol = protocol;
     if (urlpath)

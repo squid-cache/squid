@@ -1,6 +1,6 @@
 
 /*
- * $Id: leakfinder.cc,v 1.6 2002/10/12 09:45:56 robertc Exp $
+ * $Id: leakfinder.cc,v 1.7 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 static hash_table *htable = NULL;
 
@@ -75,7 +76,7 @@ leakAddFL(void *p, const char *file, int line)
     assert(p);
     assert(htable != NULL);
     assert(hash_lookup(htable, p) == NULL);
-    c = xcalloc(1, sizeof(*c));
+    c = (ptr *)xcalloc(1, sizeof(*c));
     c->key = p;
     c->file = file;
     c->line = line;
@@ -132,9 +133,9 @@ ptrDump(StoreEntry * sentry)
     ptr *c;
     storeAppendPrintf(sentry, "Tracking %d pointers\n", leakCount);
     hash_first(htable);
-    while ((hptr = hash_next(htable))) {
+    while ((hptr = (hash_link *)hash_next(htable))) {
 	c = (ptr *) hptr;
 	storeAppendPrintf(sentry, "%20p last used %9d seconds ago by %s:%d\n",
-	    c->key, (int) (squid_curtime - c->when), c->file, c->line);
+	    c->key, (int)(squid_curtime - c->when), c->file, c->line);
     }
 }

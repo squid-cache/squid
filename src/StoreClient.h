@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.1 2002/09/24 10:46:43 robertc Exp $
+ * $Id: StoreClient.h,v 1.2 2002/10/13 20:34:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,18 @@
 
 typedef void STCB(void *, StoreIOBuffer);	/* store callback */
 
+#ifdef __cplusplus
+class _StoreEntry;
+#endif
+
+#ifdef __cplusplus
+class StoreClient {
+public:
+  virtual ~StoreClient () {}
+  virtual void created (_StoreEntry *newEntry) = 0;
+};
+#endif
+
 /* keep track each client receiving data from that particular StoreEntry */
 struct _store_client {
     int type;
@@ -60,9 +72,11 @@ struct _store_client {
     dlink_node node;
     /* Below here is private - do no alter outside storeClient calls */
     StoreIOBuffer copyInto;
+#ifdef __cplusplus
+#endif
 };
 
-extern void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
-extern void storeClientDumpStats(store_client * thisClient, StoreEntry * output, int clientNumber);
+SQUIDCEXTERN void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
+SQUIDCEXTERN void storeClientDumpStats(store_client * thisClient, StoreEntry * output, int clientNumber);
 
 #endif /* SQUID_STORECLIENT_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.104 2002/10/08 16:20:10 wessels Exp $
+ * $Id: mime.cc,v 1.105 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -34,10 +34,29 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "StoreClient.h"
 
 #define GET_HDR_SZ 1024
 
-typedef struct _mime_entry {
+class MimeIcon : public StoreClient {
+public: 
+    MimeIcon ();
+    void setName (char const *);
+    char const * getName () const;
+    void _free();
+    void load();
+    void created (_StoreEntry *newEntry);
+private:
+    char *icon;
+    char *url;
+};
+
+class mimeEntry {
+public:
+    void *operator new (unsigned int byteCount);
+    void operator delete (void *address);
+  
     char *pattern;
     regex_t compiled_pattern;
     char *icon;
@@ -45,13 +64,24 @@ typedef struct _mime_entry {
     char *content_encoding;
     char transfer_mode;
     unsigned int view_option:1, download_option:1;
-    struct _mime_entry *next;
-} mimeEntry;
+    mimeEntry *next;
+    MimeIcon theIcon;
+};
 
 static mimeEntry *MimeTable = NULL;
 static mimeEntry **MimeTableTail = &MimeTable;
 
-static void mimeLoadIconFile(const char *icon);
+void *
+mimeEntry::operator new (unsigned int byteCount)
+{
+    return xcalloc(1, byteCount);
+}
+
+void
+mimeEntry::operator delete (void *address)
+{
+    safe_free (address);
+}
 
 /* returns a pointer to a field-value of the first matching field-name */
 char *
@@ -205,21 +235,48 @@ mimeGetEntry(const char *fn, int skip_encodings)
     return m;
 }
 
-char *
+MimeIcon::MimeIcon () : icon (NULL), url (NULL)
+{
+}
+
+void
+MimeIcon::setName (char const *aString)
+{
+    safe_free (icon);
+    safe_free (url);
+    icon = xstrdup (aString);
+    url = xstrdup (internalLocalUri("/squid-internal-static/icons/", icon));
+}
+
+char const *
+MimeIcon::getName () const
+{
+    return icon;
+}
+
+void
+MimeIcon::_free()
+{
+    safe_free (icon);
+    safe_free (url);
+}
+
+
+char const *
 mimeGetIcon(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 1);
     if (m == NULL)
 	return NULL;
-    if (!strcmp(m->icon, dash_str))
+    if (!strcmp(m->theIcon.getName(), dash_str))
 	return NULL;
-    return m->icon;
+    return m->theIcon.getName();
 }
 
 const char *
 mimeGetIconURL(const char *fn)
 {
-    char *icon = mimeGetIcon(fn);
+    char const *icon = mimeGetIcon(fn);
     if (icon == NULL)
 	return null_string;
     return internalLocalUri("/squid-internal-static/icons/", icon);
@@ -345,10 +402,10 @@ mimeInit(char *filename)
 	    debug(25, 1) ("mimeInit: regcomp error: '%s'\n", buf);
 	    continue;
 	}
-	m = xcalloc(1, sizeof(mimeEntry));
+	m = new mimeEntry;
 	m->pattern = xstrdup(pattern);
 	m->content_type = xstrdup(type);
-	m->icon = xstrdup(icon);
+	m->theIcon.setName(icon);
 	m->content_encoding = xstrdup(encoding);
 	m->compiled_pattern = re;
 	if (!strcasecmp(mode, "ascii"))
@@ -368,7 +425,7 @@ mimeInit(char *filename)
      * Create Icon StoreEntry's
      */
     for (m = MimeTable; m != NULL; m = m->next)
-	mimeLoadIconFile(m->icon);
+	m->theIcon.load();
     debug(25, 1) ("Loaded Icons.\n");
 }
 
@@ -383,32 +440,36 @@ mimeFreeMemory(void)
 	safe_free(m->icon);
 	safe_free(m->content_encoding);
 	regfree(&m->compiled_pattern);
-	safe_free(m);
+	delete m;
     }
     MimeTableTail = &MimeTable;
 }
 
-static void
-mimeLoadIconFile(const char *icon)
+void
+MimeIcon::load()
 {
+    const char *type = mimeGetContentType(icon);
+    if (type == NULL)
+	fatal("Unknown icon format while reading mime.conf\n");
+    _StoreEntry::getPublic(this, url, METHOD_GET);
+}
+
+void
+MimeIcon::created (StoreEntry *newEntry)
+{
+    /* is already in the store, do nothing */
+    if (!newEntry->isNull())
+	return;
     int fd;
     int n;
     request_flags flags;
     struct stat sb;
-    StoreEntry *e;
     LOCAL_ARRAY(char, path, MAXPATHLEN);
-    LOCAL_ARRAY(char, url, MAX_URL);
     char *buf;
-    const char *type = mimeGetContentType(icon);
     HttpReply *reply;
     http_version_t version;
-    request_t *r;
-    if (type == NULL)
-	fatal("Unknown icon format while reading mime.conf\n");
-    buf = internalLocalUri("/squid-internal-static/icons/", icon);
-    xstrncpy(url, buf, MAX_URL);
-    if (storeGetPublic(url, METHOD_GET))
-	return;
+	
+				
     snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
     fd = file_open(path, O_RDONLY | O_BINARY);
     if (fd < 0) {
@@ -422,7 +483,7 @@ mimeLoadIconFile(const char *icon)
     }
     flags = null_request_flags;
     flags.cachable = 1;
-    e = storeCreateEntry(url,
+    StoreEntry *e = storeCreateEntry(url,
 	url,
 	flags,
 	METHOD_GET);
@@ -430,21 +491,21 @@ mimeLoadIconFile(const char *icon)
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     storeSetPublicKey(e);
     storeBuffer(e);
-    r = urlParse(METHOD_GET, url);
+    request_t *r = urlParse(METHOD_GET, url);
     if (NULL == r)
 	fatal("mimeLoadIcon: cannot parse internal URL");
     e->mem_obj->request = requestLink(r);
     httpReplyReset(reply = e->mem_obj->reply);
     httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(reply, version, HTTP_OK, NULL,
-	type, (int) sb.st_size, sb.st_mtime, -1);
+	mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);
     reply->cache_control = httpHdrCcCreate();
     httpHdrCcSetMaxAge(reply->cache_control, 86400);
     httpHeaderPutCc(&reply->header, reply->cache_control);
     httpReplySwapOut(reply, e);
     reply->hdr_sz = e->mem_obj->inmem_hi;	/* yuk */
     /* read the file into the buffer and append it to store */
-    buf = memAllocate(MEM_4K_BUF);
+    buf = (char *)memAllocate(MEM_4K_BUF);
     while ((n = FD_READ_METHOD(fd, buf, 4096)) > 0)
 	storeAppend(e, buf, n);
     file_close(fd);

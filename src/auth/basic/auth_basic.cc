@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.18 2002/08/12 01:11:58 hno Exp $
+ * $Id: auth_basic.cc,v 1.19 2002/10/13 20:35:17 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -39,9 +39,11 @@
 
 #include "squid.h"
 #include "auth_basic.h"
+#include "authenticate.h"
+#include "Store.h"
 
 static void
-authenticateStateFree(authenticateStateData * r)
+authenticateStateFree(AuthenticateStateData * r)
 {
     cbdataFree(r);
 }
@@ -148,7 +150,7 @@ authBasicConfigured()
 static int
 authenticateBasicAuthenticated(auth_user_request_t * auth_user_request)
 {
-    basic_data *basic_auth = auth_user_request->auth_user->scheme_data;
+    basic_data *basic_auth = static_cast<basic_data *>(auth_user_request->auth_user->scheme_data);
     if ((basic_auth->flags.credentials_ok == 1) && (basic_auth->credentials_checkedtime + basicConfig->credentialsTTL > squid_curtime))
 	return 1;
     debug(29, 4) ("User not authenticated or credentials need rechecking.\n");
@@ -175,7 +177,7 @@ authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, reque
     auth_user = auth_user_request->auth_user;
 
     assert(auth_user->scheme_data != NULL);
-    basic_auth = auth_user->scheme_data;
+    basic_auth = static_cast<basic_data *>(auth_user->scheme_data);
 
     /* if the password is not ok, do an identity */
     if (basic_auth->flags.credentials_ok != 1)
@@ -201,7 +203,7 @@ authenticateBasicDirection(auth_user_request_t * auth_user_request)
 {
 /* null auth_user is checked for by authenticateDirection */
     auth_user_t *auth_user = auth_user_request->auth_user;
-    basic_data *basic_auth = auth_user->scheme_data;
+    basic_data *basic_auth = static_cast<basic_data *>(auth_user->scheme_data);
     switch (basic_auth->flags.credentials_ok) {
     case 0:			/* not checked */
 	return -1;
@@ -244,7 +246,7 @@ authBasicFreeConfig(authScheme * scheme)
 void
 authenticateBasicFreeUser(auth_user_t * auth_user)
 {
-    basic_data *basic_auth = auth_user->scheme_data;
+    basic_data *basic_auth = static_cast<basic_data *>(auth_user->scheme_data);
     debug(29, 5) ("authenticateBasicFreeUser: Clearing Basic scheme data\n");
     if (basic_auth->username)
 	xfree(basic_auth->username);
@@ -257,10 +259,10 @@ authenticateBasicFreeUser(auth_user_t * auth_user)
 static void
 authenticateBasicHandleReply(void *data, char *reply)
 {
-    authenticateStateData *r = data;
+    AuthenticateStateData *r = static_cast<AuthenticateStateData *>(data);
     auth_user_t *auth_user;
     basic_data *basic_auth;
-    auth_basic_queue_node *tmpnode;
+    BasicAuthQueueNode *tmpnode;
     char *t = NULL;
     void *cbdata;
     debug(29, 9) ("authenticateBasicHandleReply: {%s}\n", reply ? reply : "<NULL>");
@@ -273,7 +275,7 @@ authenticateBasicHandleReply(void *data, char *reply)
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->auth_user->auth_type == AUTH_BASIC);
     auth_user = r->auth_user_request->auth_user;
-    basic_auth = auth_user->scheme_data;
+    basic_auth = static_cast<basic_data *>(auth_user->scheme_data);
     if (reply && (strncasecmp(reply, "OK", 2) == 0))
 	basic_auth->flags.credentials_ok = 1;
     else
@@ -295,7 +297,7 @@ authenticateBasicHandleReply(void *data, char *reply)
 static void
 authBasicCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
 {
-    auth_basic_config *config = scheme->scheme_data;
+    auth_basic_config *config = static_cast<auth_basic_config *>(scheme->scheme_data);
     wordlist *list = config->authenticate;
     storeAppendPrintf(entry, "%s %s", name, "basic");
     while (list != NULL) {
@@ -317,11 +319,11 @@ authBasicParse(authScheme * scheme, int n_configured, char *param_str)
 	/* this is the first param to be found */
 	scheme->scheme_data = xmalloc(sizeof(auth_basic_config));
 	memset(scheme->scheme_data, 0, sizeof(auth_basic_config));
-	basicConfig = scheme->scheme_data;
+	basicConfig = static_cast<auth_basic_config *>(scheme->scheme_data);
 	basicConfig->authenticateChildren = 5;
 	basicConfig->credentialsTTL = 2 * 60 * 60;	/* two hours */
     }
-    basicConfig = scheme->scheme_data;
+    basicConfig =  static_cast<auth_basic_config *>(scheme->scheme_data);
     if (strcasecmp(param_str, "program") == 0) {
 	if (basicConfig->authenticate)
 	    wordlistDestroy(&basicConfig->authenticate);
@@ -345,13 +347,13 @@ authenticateBasicStats(StoreEntry * sentry)
     helperStats(sentry, basicauthenticators);
 }
 
-CBDATA_TYPE(authenticateStateData);
+CBDATA_TYPE(AuthenticateStateData);
 
 /* authenticateBasicUsername: return a pointer to the username in the */
-char *
-authenticateBasicUsername(auth_user_t * auth_user)
+char const *
+authenticateBasicUsername(auth_user_t const * auth_user)
 {
-    basic_data *basic_auth = auth_user->scheme_data;
+    basic_data *basic_auth =  static_cast<basic_data *>(auth_user->scheme_data);
     if (basic_auth)
 	return basic_auth->username;
     return NULL;
@@ -361,7 +363,7 @@ static basic_data *
 authBasicDataNew(void)
 {
     basic_data *temp;
-    temp = memPoolAlloc(basic_data_pool);
+    temp =  static_cast<basic_data *>(memPoolAlloc(basic_data_pool));
     assert(temp != NULL);
     temp->username = NULL;
     temp->passwd = NULL;
@@ -380,13 +382,13 @@ authBasicDataFree(basic_data * basic_auth)
 static auth_user_t *
 authBasicAuthUserFindUsername(const char *username)
 {
-    auth_user_hash_pointer *usernamehash;
+    AuthUserHashPointer *usernamehash;
     debug(29, 9) ("authBasicAuthUserFindUsername: Looking for user '%s'\n", username);
-    if (username && (usernamehash = hash_lookup(proxy_auth_username_cache, username))) {
+    if (username && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, username)))) {
 	while (usernamehash) {
-	    if ((usernamehash->auth_user->auth_type == AUTH_BASIC) &&
+	    if ((authUserHashPointerUser(usernamehash)->auth_type == AUTH_BASIC) &&
 		!strcmp(username, usernamehash->key))
-		return usernamehash->auth_user;
+		return authUserHashPointerUser(usernamehash);
 	    usernamehash = usernamehash->next;
 	}
     }
@@ -442,12 +444,12 @@ authenticateBasicDecodeAuth(auth_user_request_t * auth_user_request, const char 
 	debug(29, 4) ("authenticateBasicDecodeAuth: no password in proxy authorization header '%s'\n",
 	    proxy_auth);
 	local_basic.passwd = NULL;
-	auth_user_request->message = xstrdup("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
+	authenticateSetDenyMessage (auth_user_request, "no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
     } else if (*cleartext == '\0') {
 	debug(29, 4) ("authenticateBasicDecodeAuth: Disallowing empty password,"
 	    "user is '%s'\n", local_basic.username);
 	local_basic.passwd = NULL;
-	auth_user_request->message = xstrdup("Request denied because you provided an empty password. Users MUST have a password.");
+	authenticateSetDenyMessage (auth_user_request, "Request denied because you provided an empty password. Users MUST have a password.");
     }
     /* special case: we have to free the strings for user and password
      * if we are not returning a filled out structure 
@@ -504,7 +506,7 @@ authenticateBasicDecodeAuth(auth_user_request_t * auth_user_request, const char 
     } else {
 	debug(29, 9) ("authBasicDecodeAuth: Found user '%s' in the user cache as '%p'\n", local_basic.username, auth_user);
 	xfree(local_basic.username);
-	basic_auth = auth_user->scheme_data;
+	basic_auth =  static_cast<basic_data *>(auth_user->scheme_data);
 	if (strcmp(local_basic.passwd, basic_auth->passwd)) {
 	    debug(29, 4) ("authBasicDecodeAuth: new password found. Updating in user master record and resetting auth state to unchecked\n");
 	    basic_auth->flags.credentials_ok = 0;
@@ -548,7 +550,7 @@ authBasicInit(authScheme * scheme)
 		authenticateBasicStats, 0, 1);
 	    init++;
 	}
-	CBDATA_INIT_TYPE(authenticateStateData);
+	CBDATA_INIT_TYPE(AuthenticateStateData);
     }
 }
 
@@ -556,7 +558,7 @@ authBasicInit(authScheme * scheme)
 static void
 authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, void *data)
 {
-    authenticateStateData *r = NULL;
+    AuthenticateStateData *r = NULL;
     char buf[8192];
     char user[1024], pass[1024];
     basic_data *basic_auth;
@@ -564,7 +566,7 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
     assert(handler);
     assert(auth_user_request->auth_user->auth_type == AUTH_BASIC);
     assert(auth_user_request->auth_user->scheme_data != NULL);
-    basic_auth = auth_user_request->auth_user->scheme_data;
+    basic_auth = static_cast<basic_data *>(auth_user_request->auth_user->scheme_data);
     debug(29, 9) ("authenticateStart: '%s:%s'\n", basic_auth->username,
 	basic_auth->passwd);
     if (basicConfig->authenticate == NULL) {
@@ -574,8 +576,8 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
     /* check to see if the auth_user already has a request outstanding */
     if (basic_auth->flags.credentials_ok == 2) {
 	/* there is a request with the same credentials already being verified */
-	auth_basic_queue_node *node;
-	node = xmalloc(sizeof(auth_basic_queue_node));
+	BasicAuthQueueNode *node;
+	node = static_cast<BasicAuthQueueNode *>(xmalloc(sizeof(BasicAuthQueueNode)));
 	assert(node);
 	/* save the details */
 	node->next = basic_auth->auth_queue;
@@ -585,7 +587,7 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
 	node->data = cbdataReference(data);
 	return;
     } else {
-	r = cbdataAlloc(authenticateStateData);
+	r = cbdataAlloc(AuthenticateStateData);
 	r->handler = handler;
 	r->data = cbdataReference(data);
 	r->auth_user_request = auth_user_request;

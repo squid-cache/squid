@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.432 2002/09/26 13:33:08 robertc Exp $
+ * $Id: structs.h,v 1.433 2002/10/13 20:35:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -88,109 +88,8 @@ struct _acl_proxy_auth_match_cache {
     void *acl_data;
 };
 
-struct _auth_user_hash_pointer {
-    /* first two items must be same as hash_link */
-    char *key;
-    auth_user_hash_pointer *next;
-    auth_user_t *auth_user;
-    dlink_node link;		/* other hash entries that point to the same auth_user */
-};
-
-struct _auth_user_ip_t {
-    dlink_node node;
-    /* IP addr this user authenticated from */
-    struct in_addr ipaddr;
-    time_t ip_expiretime;
-};
-
-struct _auth_user_t {
-    /* extra fields for proxy_auth */
-    /* this determines what scheme owns the user data. */
-    auth_type_t auth_type;
-    /* the index +1 in the authscheme_list to the authscheme entry */
-    int auth_module;
-    /* we only have one username associated with a given auth_user struct */
-    auth_user_hash_pointer *usernamehash;
-    /* we may have many proxy-authenticate strings that decode to the same user */
-    dlink_list proxy_auth_list;
-    dlink_list proxy_match_cache;
-    /* what ip addresses has this user been seen at?, plus a list length cache */
-    dlink_list ip_list;
-    size_t ipcount;
-    long expiretime;
-    /* how many references are outstanding to this instance */
-    size_t references;
-    /* the auth scheme has it's own private data area */
-    void *scheme_data;
-    /* the auth_user_request structures that link to this. Yes it could be a splaytree
-     * but how many requests will a single username have in parallel? */
-    dlink_list requests;
-};
-
-struct _auth_user_request_t {
-    /* this is the object passed around by client_side and acl functions */
-    /* it has request specific data, and links to user specific data */
-    /* the user */
-    auth_user_t *auth_user;
-    /* return a message on the 407 error pages */
-    char *message;
-    /* any scheme specific request related data */
-    void *scheme_data;
-    /* how many 'processes' are working on this data */
-    size_t references;
-    /* We only attempt authentication once per http request. This 
-     * is to allow multiple auth acl references from different _access areas
-     * when using connection based authentication
-     */
-    auth_acl_t lastReply;
-};
-
-
-/*
- * This defines an auth scheme module
- */
-
-struct _authscheme_entry {
-    const char *typestr;
-    AUTHSACTIVE *Active;
-    AUTHSADDHEADER *AddHeader;
-    AUTHSADDTRAILER *AddTrailer;
-    AUTHSAUTHED *authenticated;
-    AUTHSAUTHUSER *authAuthenticate;
-    AUTHSCONFIGURED *configured;
-    AUTHSDUMP *dump;
-    AUTHSFIXERR *authFixHeader;
-    AUTHSFREE *FreeUser;
-    AUTHSFREECONFIG *freeconfig;
-    AUTHSUSERNAME *authUserUsername;
-    AUTHSONCLOSEC *oncloseconnection;	/*optional */
-    AUTHSCONNLASTHEADER *authConnLastHeader;
-    AUTHSDECODE *decodeauth;
-    AUTHSDIRECTION *getdirection;
-    AUTHSPARSE *parse;
-    AUTHSINIT *init;
-    AUTHSREQFREE *requestFree;
-    AUTHSSHUTDOWN *donefunc;
-    AUTHSSTART *authStart;
-    AUTHSSTATS *authStats;
-};
-
-/*
- * This is a configured auth scheme
- */
-
-/* private data types */
-struct _authScheme {
-    /* pointer to the authscheme_list's string entry */
-    const char *typestr;
-    /* the scheme id in the authscheme_list */
-    int Id;
-    /* the scheme's configuration details. */
-    void *scheme_data;
-};
-
 struct _acl_deny_info_list {
-    int err_page_id;
+    err_type err_page_id;
     char *err_page_name;
     acl_name_list *acl_list;
     acl_deny_info_list *next;
@@ -259,7 +158,7 @@ struct _acl_list {
 };
 
 struct _acl_access {
-    int allow;
+    allow_t allow;
     acl_list *aclList;
     char *cfgline;
     acl_access *next;
@@ -367,6 +266,12 @@ struct _delayConfig {
 };
 
 #endif
+
+struct _authConfig {
+    authScheme *schemes;
+    int n_allocated;
+    int n_configured;
+};
 
 struct _RemovalPolicySettings {
     char *type;
@@ -619,11 +524,7 @@ struct _SquidConfig {
 	acl_tos *outgoing_tos;
     } accessList;
     acl_deny_info_list *denyInfoList;
-    struct _authConfig {
-	authScheme *schemes;
-	int n_allocated;
-	int n_configured;
-    } authConfig;
+    authConfig authConfiguration;
     struct {
 	size_t list_width;
 	int list_wrap;
@@ -757,6 +658,14 @@ struct _ETag {
     int weak;			/* true if it is a weak validator */
 };
 
+struct _fde_disk {
+    DWCB *wrt_handle;
+    void *wrt_handle_data;
+    dwrite_q *write_q;
+    dwrite_q *write_q_tail;
+    off_t offset;
+};
+
 struct _fde {
     unsigned int type;
     u_short local_port;
@@ -782,13 +691,7 @@ struct _fde {
     int bytes_read;
     int bytes_written;
     int uses;			/* ie # req's over persistent conn */
-    struct _fde_disk {
-	DWCB *wrt_handle;
-	void *wrt_handle_data;
-	dwrite_q *write_q;
-	dwrite_q *write_q_tail;
-	off_t offset;
-    } disk;
+    struct _fde_disk disk;
     PF *read_handler;
     void *read_data;
     PF *write_handler;
@@ -905,13 +808,6 @@ struct _HttpHdrRangeIter {
     String boundary;		/* boundary for multipart responses */
 };
 
-/* constant attributes of http header fields */
-struct _HttpHeaderFieldAttrs {
-    const char *name;
-    http_hdr_type id;
-    field_type type;
-};
-
 /* per field statistics */
 struct _HttpHeaderFieldStat {
     int aliveCount;		/* created but not destroyed (count) */
@@ -971,20 +867,6 @@ struct _http_state_flags {
     unsigned int proxying:1;
     unsigned int keepalive:1;
     unsigned int only_if_cached:1;
-};
-
-struct _HttpStateData {
-    StoreEntry *entry;
-    request_t *request;
-    char *reply_hdr;
-    size_t reply_hdr_size;
-    int reply_hdr_state;
-    peer *_peer;		/* peer request made to */
-    int eof;			/* reached end-of-object? */
-    request_t *orig_request;
-    int fd;
-    http_state_flags flags;
-    FwdState *fwd;
 };
 
 struct _icpUdpData {
@@ -1089,7 +971,7 @@ struct _ConnStateData {
     int fd;
     struct {
 	char *buf;
-	off_t notYetUsed;
+	size_t notYetUsed;
 	size_t allocatedSize;
     } in;
     struct {
@@ -1188,7 +1070,7 @@ struct _cd_guess_stats {
 };
 
 struct _PeerDigest {
-    peer *peer;			/* pointer back to peer structure, argh */
+    struct _peer *peer;			/* pointer back to peer structure, argh */
     CacheDigest *cd;		/* actual digest structure */
     String host;		/* copy of peer->host */
     const char *req_result;	/* text status of the last request */
@@ -1393,16 +1275,6 @@ struct _pingerReplyData {
 
 #endif
 
-struct _icp_common_t {
-    unsigned char opcode;	/* opcode */
-    unsigned char version;	/* version number */
-    unsigned short length;	/* total length (bytes) */
-    u_int32_t reqnum;		/* req number (req'd for UDP) */
-    u_int32_t flags;
-    u_int32_t pad;
-    u_int32_t shostid;		/* sender host id */
-};
-
 struct _iostats {
     struct {
 	int reads;
@@ -1492,28 +1364,6 @@ struct _MemObject {
     unsigned int chksum;
 #endif
     const char *vary_headers;
-};
-
-struct _StoreEntry {
-    hash_link hash;		/* must be first */
-    MemObject *mem_obj;
-    RemovalPolicyNode repl;
-    /* START OF ON-DISK STORE_META_STD TLV field */
-    time_t timestamp;
-    time_t lastref;
-    time_t expires;
-    time_t lastmod;
-    size_t swap_file_sz;
-    u_short refcount;
-    u_short flags;
-    /* END OF ON-DISK STORE_META_STD */
-    sfileno swap_filen:25;
-    sdirno swap_dirn:7;
-    u_short lock_count;		/* Assume < 65536! */
-    mem_status_t mem_status:3;
-    ping_status_t ping_status:3;
-    store_status_t store_status:3;
-    swap_status_t swap_status:3;
 };
 
 struct _SwapDir {

@@ -1,9 +1,9 @@
 
 /*
- * $Id: authenticate.cc,v 1.43 2002/10/08 03:30:41 wessels Exp $
+ * $Id: authenticate.cc,v 1.44 2002/10/13 20:34:58 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
- * AUTHOR: Duane Wessels
+ * AUTHOR:  Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,14 +37,10 @@
  * They DO NOT perform access control or auditing.
  * See acl.c for access control and client_side.c for auditing */
 
-
 #include "squid.h"
+#include "authenticate.h"
 
 CBDATA_TYPE(auth_user_ip_t);
-
-static void
-     authenticateDecodeAuth(const char *proxy_auth, auth_user_request_t * auth_user_request);
-static auth_acl_t authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr);
 
 /*
  *
@@ -52,7 +48,13 @@ static auth_acl_t authenticateAuthenticate(auth_user_request_t ** auth_user_requ
  *
  */
 
-MemPool *auth_user_request_pool = NULL;
+MemPool *AuthUserRequest::pool = NULL;
+MemPool *AuthUserHashPointer::pool = NULL;
+MemPool *AuthUser::pool = NULL;
+/*
+ *     memDataInit(MEM_AUTH_USER_T, "auth_user_t",
+ *             sizeof(auth_user_t), 0);
+ */
 
 /* Generic Functions */
 
@@ -62,8 +64,8 @@ authenticateAuthSchemeConfigured(const char *proxy_auth)
 {
     authScheme *scheme;
     int i;
-    for (i = 0; i < Config.authConfig.n_configured; i++) {
-	scheme = Config.authConfig.schemes + i;
+    for (i = 0; i < Config.authConfiguration.n_configured; i++) {
+	scheme = Config.authConfiguration.schemes + i;
 	if ((strncasecmp(proxy_auth, scheme->typestr, strlen(scheme->typestr)) == 0) &&
 	    (authscheme_list[scheme->Id].Active()))
 	    return 1;
@@ -84,24 +86,40 @@ authenticateAuthSchemeId(const char *typestr)
 }
 
 void
-authenticateDecodeAuth(const char *proxy_auth, auth_user_request_t * auth_user_request)
+AuthUserRequest::decodeAuth(const char *proxy_auth)
 {
     int i = 0;
     assert(proxy_auth != NULL);
-    assert(auth_user_request != NULL);	/* we need this created for us. */
     debug(29, 9) ("authenticateDecodeAuth: header = '%s'\n", proxy_auth);
-    if (authenticateAuthSchemeConfigured(proxy_auth)) {
-	/* we're configured to use this scheme - but is it active ? */
-	if ((i = authenticateAuthSchemeId(proxy_auth)) != -1) {
-	    authscheme_list[i].decodeauth(auth_user_request, proxy_auth);
-	    auth_user_request->auth_user->auth_module = i + 1;
-	    return;
-	}
+    if (!authenticateAuthSchemeConfigured(proxy_auth) || 
+	(i = authenticateAuthSchemeId(proxy_auth)) == -1) {
+	debug(29, 1) ("AuthUserRequest::decodeAuth: Unsupported or unconfigured proxy-auth scheme, '%s'\n", proxy_auth);
+	return;
     }
-    debug(29, 1)
-	("authenticateDecodeAuth: Unsupported or unconfigured proxy-auth scheme, '%s'\n",
-	proxy_auth);
-    return;
+    assert (i >= 0);
+    authscheme_list[i].decodeauth(this, proxy_auth);
+    auth_user->auth_module = i + 1;
+}
+
+size_t
+AuthUserRequest::refCount () const
+{
+    return references;
+}
+
+char const *
+AuthUserRequest::username() const
+{
+    if (auth_user)
+	return auth_user->username();
+    else
+	return NULL;
+}
+
+size_t
+authenticateRequestRefCount (auth_user_request_t *aRequest)
+{
+    return aRequest->refCount();
 }
 
 /* clear any connection related authentication details */
@@ -126,15 +144,21 @@ authenticateOnCloseConnection(ConnStateData * conn)
 
 /* send the initial data to an authenticator module */
 void
+AuthUserRequest::start(RH * handler, void *data)
+{
+    assert(handler);
+    debug(29, 9) ("authenticateStart: auth_user_request '%p'\n", this);
+    if (auth_user->auth_module > 0)
+	authscheme_list[auth_user->auth_module - 1].authStart(this, handler, data);
+    else
+	handler(data, NULL);
+}
+
+void
 authenticateStart(auth_user_request_t * auth_user_request, RH * handler, void *data)
 {
     assert(auth_user_request);
-    assert(handler);
-    debug(29, 9) ("authenticateStart: auth_user_request '%p'\n", auth_user_request);
-    if (auth_user_request->auth_user->auth_module > 0)
-	authscheme_list[auth_user_request->auth_user->auth_module - 1].authStart(auth_user_request, handler, data);
-    else
-	handler(data, NULL);
+    auth_user_request->start (handler, data);
 }
 
 /*
@@ -176,72 +200,115 @@ authenticateValidateUser(auth_user_request_t * auth_user_request)
 
 }
 
+void *
+AuthUser::operator new (unsigned int byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (AuthUser));
+    if (!pool)
+	pool = memPoolCreate("Authenticate User Data", sizeof (auth_user_t));
+    return static_cast<auth_user_t *> (memPoolAlloc(pool));
+}
+
+AuthUser::AuthUser (const char *scheme) :
+auth_type (AUTH_UNKNOWN), auth_module (authenticateAuthSchemeId(scheme) + 1),
+usernamehash (NULL), ipcount (0), expiretime (0), references (0), scheme_data (NULL)
+{
+    proxy_auth_list.head = proxy_auth_list.tail = NULL;
+    proxy_match_cache.head = proxy_match_cache.tail = NULL;
+    ip_list.head = ip_list.tail = NULL;
+    requests.head = requests.tail = NULL;
+}
+
+char const *
+AuthUser::username () const
+{
+    if (auth_module <= 0)
+	return NULL;
+    return authscheme_list[auth_module - 1].authUserUsername(this);
+}
+
 auth_user_t *
 authenticateAuthUserNew(const char *scheme)
 {
-    auth_user_t *temp_auth;
-    temp_auth = memAllocate(MEM_AUTH_USER_T);
-    assert(temp_auth != NULL);
-    memset(temp_auth, '\0', sizeof(auth_user_t));
-    temp_auth->auth_type = AUTH_UNKNOWN;
-    temp_auth->references = 0;
-    temp_auth->auth_module = authenticateAuthSchemeId(scheme) + 1;
-    temp_auth->usernamehash = NULL;
-    return temp_auth;
+    return new AuthUser (scheme);
 }
 
-static auth_user_request_t *
-authenticateAuthUserRequestNew(void)
+void *
+AuthUserRequest::operator new (unsigned int byteCount)
 {
-    auth_user_request_t *temp_request;
-    if (!auth_user_request_pool)
-	auth_user_request_pool = memPoolCreate("Authenticate Request Data", sizeof(auth_user_request_t));
-    temp_request = memPoolAlloc(auth_user_request_pool);
-    assert(temp_request != NULL);
-    memset(temp_request, '\0', sizeof(auth_user_request_t));
-    return temp_request;
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (AuthUserRequest));
+    if (!pool)
+	pool = memPoolCreate("Authenticate Request Data", sizeof(auth_user_request_t));
+    return static_cast<auth_user_request_t *>(memPoolAlloc(pool));
 }
 
-static void
-authenticateAuthUserRequestFree(auth_user_request_t * auth_user_request)
+void
+AuthUserRequest::operator delete (void *address)
+{
+    memPoolFree(pool, address);
+}
+
+AuthUserRequest::AuthUserRequest():auth_user(NULL), scheme_data (NULL), message(NULL),
+  references (0), lastReply (AUTH_ACL_CANNOT_AUTHENTICATE)
+{
+}
+ 
+AuthUserRequest::~AuthUserRequest()
 {
     dlink_node *link;
-    debug(29, 5) ("authenticateAuthUserRequestFree: freeing request %p\n", auth_user_request);
-    if (!auth_user_request)
-	return;
-    assert(auth_user_request->references == 0);
-    if (auth_user_request->auth_user) {
-	if (auth_user_request->scheme_data != NULL) {
+    debug(29, 5) ("AuthUserRequest::~AuthUserRequest: freeing request %p\n", this);
+    assert(references == 0);
+    if (auth_user) {
+	if (scheme_data != NULL) {
 	    /* we MUST know the module */
-	    assert((auth_user_request->auth_user->auth_module > 0));
+	    assert(auth_user->auth_module > 0);
 	    /* and the module MUST support requestFree if it has created scheme data */
-	    assert(authscheme_list[auth_user_request->auth_user->auth_module - 1].requestFree != NULL);
-	    authscheme_list[auth_user_request->auth_user->auth_module - 1].requestFree(auth_user_request);
+	    assert(authscheme_list[auth_user->auth_module - 1].requestFree != NULL);
+	    authscheme_list[auth_user->auth_module - 1].requestFree(this);
 	}
 	/* unlink from the auth_user struct */
-	link = auth_user_request->auth_user->requests.head;
-	while (link && (link->data != auth_user_request))
+	link = auth_user->requests.head;
+	while (link && (link->data != this))
 	    link = link->next;
 	assert(link != NULL);
-	dlinkDelete(link, &auth_user_request->auth_user->requests);
+	dlinkDelete(link, &auth_user->requests);
 	dlinkNodeDelete(link);
 
 	/* unlock the request structure's lock */
-	authenticateAuthUserUnlock(auth_user_request->auth_user);
-	auth_user_request->auth_user = NULL;
+	authenticateAuthUserUnlock(auth_user);
+	auth_user = NULL;
     } else
-	assert(auth_user_request->scheme_data == NULL);
-    if (auth_user_request->message)
-	xfree(auth_user_request->message);
-    memPoolFree(auth_user_request_pool, auth_user_request);
+	assert(scheme_data == NULL);
+    safe_free (message);
 }
 
-char *
+void
+AuthUserRequest::setDenyMessage (char const *aString)
+{
+    safe_free (message);
+    message = xstrdup (aString);
+}
+
+char const *
+AuthUserRequest::getDenyMessage ()
+{
+    return message;
+}
+
+char const *
 authenticateAuthUserRequestMessage(auth_user_request_t * auth_user_request)
 {
     if (auth_user_request)
-	return auth_user_request->message;
+	return auth_user_request->getDenyMessage();
     return NULL;
+}
+
+void
+authenticateSetDenyMessage (auth_user_request_t * auth_user_request, char const *message)
+{
+    auth_user_request->setDenyMessage (message);
 }
 
 static void
@@ -265,7 +332,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
 	tempnode = (auth_user_ip_t *) ipdata->node.next;
 	/* walk the ip list */
 	if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
-	    /* This ip has already been seen. */
+	    /* This ip has alreadu been seen. */
 	    found = 1;
 	    /* update IP ttl */
 	    ipdata->ip_expiretime = squid_curtime;
@@ -291,7 +358,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
     auth_user->ipcount++;
 
     ip1 = xstrdup(inet_ntoa(ipaddr));
-    debug(29, 2) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s)\n ", authenticateUserUsername(auth_user), ip1);
+    debug(29, 2) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s)\n ", auth_user->username(), ip1);
     safe_free(ip1);
 }
 
@@ -362,15 +429,15 @@ authenticateAuthUserRequestIPCount(auth_user_request_t * auth_user_request)
  * Proxy Auth (or Auth) header. It may be a cached Auth User or a new
  * Unauthenticated structure. The structure is given an inital lock here.
  */
-static auth_user_request_t *
-authenticateGetAuthUser(const char *proxy_auth)
+auth_user_request_t *
+AuthUserRequest::createAuthUser(const char *proxy_auth)
 {
-    auth_user_request_t *auth_user_request = authenticateAuthUserRequestNew();
+    auth_user_request_t *result = new auth_user_request_t;
     /* and lock for the callers instance */
-    authenticateAuthUserRequestLock(auth_user_request);
+    result->lock();
     /* The scheme is allowed to provide a cached auth_user or a new one */
-    authenticateDecodeAuth(proxy_auth, auth_user_request);
-    return auth_user_request;
+    result->decodeAuth(proxy_auth);
+    return result;
 }
 
 /*
@@ -421,7 +488,7 @@ authenticateAuthenticateUser(auth_user_request_t * auth_user_request, request_t 
  * the authenticateStart routine for rv==AUTH_ACL_HELPER
  */
 auth_acl_t
-authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
+AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -449,12 +516,12 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	debug(28, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
 	/* something wrong with the AUTH credentials. Force a new attempt */
 	if (conn->auth_user_request) {
-	    authenticateAuthUserRequestUnlock(conn->auth_user_request);
+	    conn->auth_user_request->unlock();
 	    conn->auth_user_request = NULL;
 	}
 	if (*auth_user_request) {
 	    /* unlock the ACL lock */
-	    authenticateAuthUserRequestUnlock(*auth_user_request);
+	    (*auth_user_request)->unlock();
 	    auth_user_request = NULL;
 	}
 	return AUTH_ACL_CHALLENGE;
@@ -467,7 +534,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
     if (proxy_auth && conn->auth_user_request &&
 	authenticateUserAuthenticated(conn->auth_user_request) &&
 	strcmp(proxy_auth, authscheme_list[conn->auth_user_request->auth_user->auth_module - 1].authConnLastHeader(conn->auth_user_request))) {
-	debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
+	debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, conn->auth_user_request->username(), proxy_auth);
 	/* remove this request struct - the link is already authed and it can't be to 
 	 * reauth.
 	 */
@@ -477,7 +544,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	 */
 	assert(*auth_user_request == NULL);
 	/* unlock the conn lock on the auth_user_request */
-	authenticateAuthUserRequestUnlock(conn->auth_user_request);
+	conn->auth_user_request->unlock();
 	/* mark the conn as non-authed. */
 	conn->auth_user_request = NULL;
 	/* Set the connection auth type */
@@ -494,34 +561,34 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	    /* beginning of a new request check */
 	    debug(28, 4) ("authenticateAuthenticate: no connection authentication type\n");
 	    if (!authenticateValidateUser(*auth_user_request =
-		    authenticateGetAuthUser(proxy_auth))) {
+		    createAuthUser(proxy_auth))) {
 		/* the decode might have left a username for logging, or a message to
 		 * the user */
-		if (authenticateUserRequestUsername(*auth_user_request)) {
+		if ((*auth_user_request)->username()) {
 		    /* lock the user for the request structure link */
-		    authenticateAuthUserRequestLock(*auth_user_request);
+		    (*auth_user_request)->lock();
 		    request->auth_user_request = *auth_user_request;
 		}
-		/* unlock the ACL reference granted by ...GetAuthUser. */
-		authenticateAuthUserRequestUnlock(*auth_user_request);
+		/* unlock the ACL reference granted by ...createAuthUser. */
+		(*auth_user_request)->unlock();
 		*auth_user_request = NULL;
 		return AUTH_ACL_CHALLENGE;
 	    }
-	    /* the user_request comes prelocked for the caller to GetAuthUser (us) */
+	    /* the user_request comes prelocked for the caller to createAuthUser (us) */
 	} else if (request->auth_user_request) {
 	    *auth_user_request = request->auth_user_request;
 	    /* lock the user request for this ACL processing */
-	    authenticateAuthUserRequestLock(*auth_user_request);
+	    (*auth_user_request)->lock();
 	} else {
 	    if (conn->auth_user_request != NULL) {
 		*auth_user_request = conn->auth_user_request;
 		/* lock the user request for this ACL processing */
-		authenticateAuthUserRequestLock(*auth_user_request);
+		(*auth_user_request)->lock();
 	    } else {
 		/* failed connection based authentication */
 		debug(28, 4) ("authenticateAuthenticate: Auth user request %p conn-auth user request %p conn type %d authentication failed.\n",
 		    *auth_user_request, conn->auth_user_request, conn->auth_type);
-		authenticateAuthUserRequestUnlock(*auth_user_request);
+		(*auth_user_request)->unlock();
 		*auth_user_request = NULL;
 		return AUTH_ACL_CHALLENGE;
 	    }
@@ -535,7 +602,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	case 1:
 	case -2:
 	    /* this ACL check is finished. Unlock. */
-	    authenticateAuthUserRequestUnlock(*auth_user_request);
+	    (*auth_user_request)->unlock();
 	    *auth_user_request = NULL;
 	    return AUTH_ACL_CHALLENGE;
 	case -1:
@@ -547,15 +614,15 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 	/* on 0 the authentication is finished - fallthrough */
 	/* See if user authentication failed for some reason */
 	if (!authenticateUserAuthenticated(*auth_user_request)) {
-	    if ((authenticateUserRequestUsername(*auth_user_request))) {
+	    if ((*auth_user_request)->username()) {
 		if (!request->auth_user_request) {
 		    /* lock the user for the request structure link */
-		    authenticateAuthUserRequestLock(*auth_user_request);
+		    (*auth_user_request)->lock();
 		    request->auth_user_request = *auth_user_request;
 		}
 	    }
 	    /* this ACL check is finished. Unlock. */
-	    authenticateAuthUserRequestUnlock(*auth_user_request);
+	    (*auth_user_request)->unlock();
 	    *auth_user_request = NULL;
 	    return AUTH_ACL_CHALLENGE;
 	}
@@ -564,17 +631,17 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
     /* the credentials are correct at this point */
     if (!request->auth_user_request) {
 	/* lock the user for the request structure link */
-	authenticateAuthUserRequestLock(*auth_user_request);
+	(*auth_user_request)->lock();
 	request->auth_user_request = *auth_user_request;
 	authenticateAuthUserRequestSetIp(*auth_user_request, src_addr);
     }
     /* Unlock the request - we've authenticated it */
-    authenticateAuthUserRequestUnlock(*auth_user_request);
+    (*auth_user_request)->unlock();
     return AUTH_AUTHENTICATED;
 }
 
 auth_acl_t
-authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
+AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
 {
     /* If we have already been called, return the cached value */
     auth_user_request_t *t = *auth_user_request ? *auth_user_request : conn->auth_user_request;
@@ -586,7 +653,7 @@ authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_req
 	return t->lastReply;
     }
     /* ok, call the actual authenticator routine. */
-    result = authenticateAuthenticate(auth_user_request, headertype, request, conn, src_addr);
+    result = authenticate(auth_user_request, headertype, request, conn, src_addr);
     t = *auth_user_request ? *auth_user_request : conn->auth_user_request;
     if (t && result != AUTH_ACL_CANNOT_AUTHENTICATE &&
 	result != AUTH_ACL_HELPER)
@@ -594,27 +661,18 @@ authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_req
     return result;
 }
 
-
-/* authenticateUserUsername: return a pointer to the username in the */
-char *
-authenticateUserUsername(auth_user_t * auth_user)
+auth_acl_t
+authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
 {
-    if (!auth_user)
-	return NULL;
-    if (auth_user->auth_module > 0)
-	return authscheme_list[auth_user->auth_module - 1].authUserUsername(auth_user);
-    return NULL;
+    return AuthUserRequest::tryToAuthenticateAndSetAuthUser (auth_user_request, headertype,request, conn, src_addr);
 }
 
 /* authenticateUserRequestUsername: return a pointer to the username in the */
-char *
+char const *
 authenticateUserRequestUsername(auth_user_request_t * auth_user_request)
 {
     assert(auth_user_request != NULL);
-    if (auth_user_request->auth_user)
-	return authenticateUserUsername(auth_user_request->auth_user);
-    else
-	return NULL;
+    return auth_user_request->username();
 }
 
 /* returns
@@ -674,20 +732,7 @@ authenticateInit(authConfig * config)
 	}
     }
     if (!proxy_auth_username_cache)
-	authenticateInitUserCache();
-}
-
-static void
-authenticateProxyUserCacheFree(void *usernamehash_p)
-{
-    auth_user_hash_pointer *usernamehash = usernamehash_p;
-    auth_user_t *auth_user;
-    char *username = NULL;
-    auth_user = usernamehash->auth_user;
-    username = authenticateUserUsername(auth_user);
-    if ((authenticateAuthUserInuse(auth_user) - 1))
-	debug(29, 1) ("authenticateProxyUserCacheFree: entry in use\n");
-    authenticateAuthUserUnlock(auth_user);
+	AuthUser::cacheInit();
 }
 
 void
@@ -697,7 +742,7 @@ authenticateShutdown(void)
     debug(29, 2) ("authenticateShutdown: shutting down auth schemes\n");
     /* free the cache if we are shutting down */
     if (shutting_down)
-	hashFreeItems(proxy_auth_username_cache, authenticateProxyUserCacheFree);
+	hashFreeItems(proxy_auth_username_cache, AuthUserHashPointer::removeFromCache);
 
     /* find the currently known authscheme types */
     for (i = 0; authscheme_list && authscheme_list[i].typestr; i++) {
@@ -711,10 +756,10 @@ authenticateShutdown(void)
 }
 
 void
-authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal)
+AuthUserRequest::addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
 {
-    int type = 0;
+    http_hdr_type type;
     switch (rep->sline.status) {
     case HTTP_PROXY_AUTHENTICATION_REQUIRED:
 	/* Proxy authorisation needed */
@@ -727,6 +772,7 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
     default:
 	/* Keep GCC happy */
 	/* some other HTTP status */
+	type = HDR_ENUM_END;
 	break;
     }
     debug(29, 9) ("authenticateFixHeader: headertype:%d authuser:%p\n", type, auth_user_request);
@@ -740,8 +786,8 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	    int i;
 	    authScheme *scheme;
 	    /* call each configured & running authscheme */
-	    for (i = 0; i < Config.authConfig.n_configured; i++) {
-		scheme = Config.authConfig.schemes + i;
+	    for (i = 0; i < Config.authConfiguration.n_configured; i++) {
+		scheme = Config.authConfiguration.schemes + i;
 		if (authscheme_list[scheme->Id].Active())
 		    authscheme_list[scheme->Id].authFixHeader(NULL, rep, type,
 			request);
@@ -750,7 +796,7 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	    }
 	}
     }
-    /*
+    /* 
      * allow protocol specific headers to be _added_ to the existing
      * response - ie digest auth
      */
@@ -760,6 +806,13 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
     if (auth_user_request != NULL)
 	auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
 }
+
+void
+authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal)
+{
+    AuthUserRequest::addReplyAuthHeader(rep, auth_user_request, request, accelerated, internal);
+}
+  
 
 /* call the active auth module and allow it to add a trailer to the request */
 void
@@ -791,34 +844,46 @@ authenticateAuthUserUnlock(auth_user_t * auth_user)
     }
     debug(29, 9) ("authenticateAuthUserUnlock auth_user '%p' now at '%ld'.\n", auth_user, (long int) auth_user->references);
     if (auth_user->references == 0)
-	authenticateFreeProxyAuthUser(auth_user);
+	delete auth_user;
+}
+
+void
+AuthUserRequest::lock()
+{
+    debug(29, 9) ("AuthUserRequest::lock: auth_user request '%p'.\n", this);
+    assert(this != NULL);
+    ++references;
+    debug(29, 9) ("AuthUserRequest::lock: auth_user request '%p' now at '%ld'.\n", this, (long int) references);
+}
+
+void
+AuthUserRequest::unlock()
+{
+    debug(29, 9) ("AuthUserRequest::unlock: auth_user request '%p'.\n", this);
+    assert(this != NULL);
+    if (references > 0) {
+	--references;
+    } else {
+	debug(29, 1) ("Attempt to lower Auth User request %p refcount below 0!\n", this);
+    }
+    debug(29, 9) ("AuthUserRequest::unlock: auth_user_request '%p' now at '%ld'.\n", this, (long int) references);
+    if (references == 0)
+	/* not locked anymore */
+	delete this;
 }
 
 void
 authenticateAuthUserRequestLock(auth_user_request_t * auth_user_request)
 {
-    debug(29, 9) ("authenticateAuthUserRequestLock auth_user request '%p'.\n", auth_user_request);
-    assert(auth_user_request != NULL);
-    auth_user_request->references++;
-    debug(29, 9) ("authenticateAuthUserRequestLock auth_user request '%p' now at '%ld'.\n", auth_user_request, (long int) auth_user_request->references);
+    auth_user_request->lock();
 }
 
 void
 authenticateAuthUserRequestUnlock(auth_user_request_t * auth_user_request)
 {
-    debug(29, 9) ("authenticateAuthUserRequestUnlock auth_user request '%p'.\n", auth_user_request);
-    assert(auth_user_request != NULL);
-    if (auth_user_request->references > 0) {
-	auth_user_request->references--;
-    } else {
-	debug(29, 1) ("Attempt to lower Auth User request %p refcount below 0!\n", auth_user_request);
-    }
-    debug(29, 9) ("authenticateAuthUserRequestUnlock auth_user_request '%p' now at '%ld'.\n", auth_user_request, (long int) auth_user_request->references);
-    if (auth_user_request->references == 0) {
-	/* not locked anymore */
-	authenticateAuthUserRequestFree(auth_user_request);
-    }
+    auth_user_request->unlock();
 }
+  
 
 int
 authenticateAuthUserInuse(auth_user_t * auth_user)
@@ -828,123 +893,129 @@ authenticateAuthUserInuse(auth_user_t * auth_user)
     return auth_user->references;
 }
 
-/*
- * Combine two user structs. ONLY to be called from within a scheme
- * module.  The scheme module is responsible for ensuring that the
+/* Combine two user structs. ONLY to be called from within a scheme
+ * module. The scheme module is responsible for ensuring that the
  * two users _can_ be merged without invalidating all the request
- * scheme data. the scheme is also responsible for merging any user
+ * scheme data. The scheme is also responsible for merging any user
  * related scheme data itself.
  */
 void
-authenticateAuthUserMerge(auth_user_t * from, auth_user_t * to)
+AuthUser::absorb (AuthUser *from)
 {
-    dlink_node *link, *tmplink;
     auth_user_request_t *auth_user_request;
     /*
      * XXX combine two authuser structs. Incomplete: it should merge
      * in hash references too and ask the module to merge in scheme
      * data
      */
-    debug(29, 5) ("authenticateAuthUserMerge auth_user '%p' into auth_user '%p'.\n", from, to);
-    link = from->requests.head;
+    debug(29, 5) ("authenticateAuthUserMerge auth_user '%p' into auth_user '%p'.\n", from, this);
+    dlink_node *link = from->requests.head;
     while (link) {
-	auth_user_request = link->data;
-	tmplink = link;
+	auth_user_request = static_cast<auth_user_request_t *>(link->data);
+	dlink_node *tmplink = link;
 	link = link->next;
 	dlinkDelete(tmplink, &from->requests);
-	dlinkAddTail(auth_user_request, tmplink, &to->requests);
-	auth_user_request->auth_user = to;
+	dlinkAddTail(auth_user_request, tmplink, &requests);
+	auth_user_request->auth_user = this;
     }
-    to->references += from->references;
+    references += from->references;
     from->references = 0;
-    authenticateFreeProxyAuthUser(from);
+    delete from;
 }
 
 void
-authenticateFreeProxyAuthUser(void *data)
+authenticateAuthUserMerge(auth_user_t * from, auth_user_t * to)
+{   
+    to->absorb (from);
+}
+
+void
+AuthUser::operator delete (void *address)
 {
-    auth_user_t *u = data;
+    memPoolFree(pool, address);
+}
+
+AuthUser::~AuthUser()
+{
     auth_user_request_t *auth_user_request;
     dlink_node *link, *tmplink;
-    assert(data != NULL);
-    debug(29, 5) ("authenticateFreeProxyAuthUser: Freeing auth_user '%p' with refcount '%ld'.\n", u, (long int) u->references);
-    assert(u->references == 0);
+    debug(29, 5) ("AuthUser::~AuthUser: Freeing auth_user '%p' with refcount '%ld'.\n", this, (long int) references);
+    assert(references == 0);
     /* were they linked in by username ? */
-    if (u->usernamehash) {
-	assert(u->usernamehash->auth_user == u);
-	debug(29, 5) ("authenticateFreeProxyAuthUser: removing usernamehash entry '%p'\n", u->usernamehash);
+    if (usernamehash) {
+	assert(usernamehash->user() == this);
+	debug(29, 5) ("AuthUser::~AuthUser: removing usernamehash entry '%p'\n", usernamehash);
 	hash_remove_link(proxy_auth_username_cache,
-	    (hash_link *) u->usernamehash);
+	    (hash_link *) usernamehash);
 	/* don't free the key as we use the same user string as the auth_user 
 	 * structure */
-	memFree(u->usernamehash, MEM_AUTH_USER_HASH);
+	delete usernamehash;
     }
     /* remove any outstanding requests */
-    link = u->requests.head;
+    link = requests.head;
     while (link) {
-	debug(29, 5) ("authenticateFreeProxyAuthUser: removing request entry '%p'\n", link->data);
-	auth_user_request = link->data;
+	debug(29, 5) ("AuthUser::~AuthUser: removing request entry '%p'\n", link->data);
+	auth_user_request = static_cast<auth_user_request_t *>(link->data);
 	tmplink = link;
 	link = link->next;
-	dlinkDelete(tmplink, &u->requests);
+	dlinkDelete(tmplink, &requests);
 	dlinkNodeDelete(tmplink);
-	authenticateAuthUserRequestFree(auth_user_request);
+	delete auth_user_request;
     }
     /* free cached acl results */
-    aclCacheMatchFlush(&u->proxy_match_cache);
+    aclCacheMatchFlush(&proxy_match_cache);
     /* free seen ip address's */
-    authenticateAuthUserClearIp(u);
-    if (u->scheme_data && u->auth_module > 0)
-	authscheme_list[u->auth_module - 1].FreeUser(u);
+    authenticateAuthUserClearIp(this);
+    if (scheme_data && auth_module > 0)
+	authscheme_list[auth_module - 1].FreeUser(this);
     /* prevent accidental reuse */
-    u->auth_type = AUTH_UNKNOWN;
-    memFree(u, MEM_AUTH_USER_T);
+    auth_type = AUTH_UNKNOWN;
 }
 
 void
-authenticateInitUserCache(void)
+AuthUser::cacheInit(void)
 {
     if (!proxy_auth_username_cache) {
 	/* First time around, 7921 should be big enough */
 	proxy_auth_username_cache =
 	    hash_create((HASHCMP *) strcmp, 7921, hash_string);
 	assert(proxy_auth_username_cache);
-	eventAdd("User Cache Maintenance", authenticateProxyUserCacheCleanup, NULL, Config.authenticateGCInterval, 1);
+	eventAdd("User Cache Maintenance", cacheCleanup, NULL, Config.authenticateGCInterval, 1);
     }
 }
 
 void
-authenticateProxyUserCacheCleanup(void *datanotused)
+AuthUser::cacheCleanup(void *datanotused)
 {
     /*
      * We walk the hash by username as that is the unique key we use.
      * For big hashs we could consider stepping through the cache, 100/200
      * entries at a time. Lets see how it flys first.
      */
-    auth_user_hash_pointer *usernamehash;
+    AuthUserHashPointer *usernamehash;
     auth_user_t *auth_user;
-    char *username = NULL;
-    debug(29, 3) ("authenticateProxyUserCacheCleanup: Cleaning the user cache now\n");
-    debug(29, 3) ("authenticateProxyUserCacheCleanup: Current time: %ld\n", (long int) current_time.tv_sec);
+    char const *username = NULL;
+    debug(29, 3) ("AuthUser::cacheCleanup: Cleaning the user cache now\n");
+    debug(29, 3) ("AuthUser::cacheCleanup: Current time: %ld\n", (long int) current_time.tv_sec);
     hash_first(proxy_auth_username_cache);
-    while ((usernamehash = ((auth_user_hash_pointer *) hash_next(proxy_auth_username_cache)))) {
-	auth_user = usernamehash->auth_user;
-	username = authenticateUserUsername(auth_user);
+    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
+	auth_user = usernamehash->user();
+	username = auth_user->username();
 
 	/* if we need to have inpedendent expiry clauses, insert a module call
 	 * here */
-	debug(29, 4) ("authenticateProxyUserCacheCleanup: Cache entry:\n\tType: %d\n\tUsername: %s\n\texpires: %ld\n\treferences: %ld\n", auth_user->auth_type, username, (long int) (auth_user->expiretime + Config.authenticateTTL), (long int) auth_user->references);
+	debug(29, 4) ("AuthUser::cacheCleanup: Cache entry:\n\tType: %d\n\tUsername: %s\n\texpires: %ld\n\treferences: %ld\n", auth_user->auth_type, username, (long int) (auth_user->expiretime + Config.authenticateTTL), (long int) auth_user->references);
 	if (auth_user->expiretime + Config.authenticateTTL <= current_time.tv_sec) {
-	    debug(29, 5) ("authenticateProxyUserCacheCleanup: Removing user %s from cache due to timeout.\n", username);
+	    debug(29, 5) ("AuthUser::cacheCleanup: Removing user %s from cache due to timeout.\n", username);
 	    /* the minus 1 accounts for the cache lock */
 	    if ((authenticateAuthUserInuse(auth_user) - 1))
-		debug(29, 4) ("authenticateProxyUserCacheCleanup: this cache entry has expired AND has a non-zero ref count.\n");
+		debug(29, 4) ("AuthUser::cacheCleanup: this cache entry has expired AND has a non-zero ref count.\n");
 	    else
 		authenticateAuthUserUnlock(auth_user);
 	}
     }
-    debug(29, 3) ("authenticateProxyUserCacheCleanup: Finished cleaning the user cache.\n");
-    eventAdd("User Cache Maintenance", authenticateProxyUserCacheCleanup, NULL, Config.authenticateGCInterval, 1);
+    debug(29, 3) ("AuthUser::cacheCleanup: Finished cleaning the user cache.\n");
+    eventAdd("User Cache Maintenance", cacheCleanup, NULL, Config.authenticateGCInterval, 1);
 }
 
 /*
@@ -955,16 +1026,13 @@ authenticateProxyUserCacheCleanup(void *datanotused)
 void
 authenticateUserCacheRestart(void)
 {
-    auth_user_hash_pointer *usernamehash;
+    AuthUserHashPointer *usernamehash;
     auth_user_t *auth_user;
-    char *username = NULL;
     debug(29, 3) ("authenticateUserCacheRestart: Clearing config dependent cache data.\n");
     hash_first(proxy_auth_username_cache);
-    while ((usernamehash = ((auth_user_hash_pointer *) hash_next(proxy_auth_username_cache)))) {
-	auth_user = usernamehash->auth_user;
-	username = authenticateUserUsername(auth_user);
-	debug(29, 5) ("authenticateUserCacheRestat: Clearing cache ACL results for user: %s\n", username);
-	aclCacheMatchFlush(&auth_user->proxy_match_cache);
+    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
+	auth_user = usernamehash->user();
+	debug(29, 5) ("authenticateUserCacheRestat: Clearing cache ACL results for user: %s\n", auth_user->username());
     }
 
 }
@@ -982,25 +1050,68 @@ authSchemeAdd(const char *type, AUTHSSETUP * setup)
 	assert(strcmp(authscheme_list[i].typestr, type) != 0);
     }
     /* add the new type */
-    authscheme_list = xrealloc(authscheme_list, (i + 2) * sizeof(authscheme_entry_t));
+    authscheme_list = static_cast<authscheme_entry_t *>(xrealloc(authscheme_list, (i + 2) * sizeof(authscheme_entry_t)));
     memset(&authscheme_list[i + 1], 0, sizeof(authscheme_entry_t));
     authscheme_list[i].typestr = type;
     /* Call the scheme module to set up capabilities and initialize any global data */
     setup(&authscheme_list[i]);
 }
 
+/* _auth_user_hash_pointe */
 
+void
+AuthUserHashPointer::removeFromCache(void *usernamehash_p)
+{
+    AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(usernamehash_p);
+    auth_user_t *auth_user = usernamehash->auth_user;
+    if ((authenticateAuthUserInuse(auth_user) - 1))
+	debug(29, 1) ("AuthUserHashPointer::removeFromCache: entry in use - not freeing\n");
+    authenticateAuthUserUnlock(auth_user);
+    /* TODO: change behaviour - we remove from the auth user list here, and then unlock, and the
+     * delete ourselves.
+     */
+}
 
+void *
+AuthUserHashPointer::operator new (unsigned int byteCount)
+{
+    assert (byteCount == sizeof (AuthUserHashPointer));
+    if (!pool)
+	pool = memPoolCreate("Auth user hash link", sizeof(AuthUserHashPointer));
+    return static_cast<AuthUserHashPointer *>(memPoolAlloc(pool));
+}
+
+void
+AuthUserHashPointer::operator delete (void *address)
+{
+    memPoolFree(pool, address);
+}
+
+AuthUserHashPointer::AuthUserHashPointer (auth_user_t * anAuth_user):
+key (anAuth_user->username()), next (NULL), auth_user (anAuth_user)
+{
+    hash_join(proxy_auth_username_cache, (hash_link *) this);
+    /* lock for presence in the cache */
+    authenticateAuthUserLock(auth_user);
+}
+
+AuthUser *
+AuthUserHashPointer::user() const
+{
+    return auth_user;
+}
+
+/* C bindings */
 /* UserNameCacheAdd: add a auth_user structure to the username cache */
 void
 authenticateUserNameCacheAdd(auth_user_t * auth_user)
 {
-    auth_user_hash_pointer *usernamehash;
-    usernamehash = memAllocate(MEM_AUTH_USER_HASH);
-    usernamehash->key = authenticateUserUsername(auth_user);
-    usernamehash->auth_user = auth_user;
-    hash_join(proxy_auth_username_cache, (hash_link *) usernamehash);
-    auth_user->usernamehash = usernamehash;
-    /* lock for presence in the cache */
-    authenticateAuthUserLock(auth_user);
+    auth_user->usernamehash = new AuthUserHashPointer (auth_user);
 }
+
+auth_user_t*
+authUserHashPointerUser (auth_user_hash_pointer *aHashEntry)
+{
+    return aHashEntry->user();
+}
+

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.238 2002/09/15 06:40:57 robertc Exp $
+ * $Id: ipcache.cc,v 1.239 2002/10/13 20:35:02 robertc Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 typedef struct _ipcache_entry ipcache_entry;
 
@@ -156,7 +157,7 @@ ipcache_purgelru(void *voidnotused)
 	if (memInUse(MEM_IPCACHE_ENTRY) < ipcache_low)
 	    break;
 	prev = m->prev;
-	i = m->data;
+	i = (ipcache_entry *)m->data;
 	if (i->locks != 0)
 	    continue;
 	ipcacheRelease(i);
@@ -176,7 +177,7 @@ purge_entries_fromhosts(void)
 	    ipcacheRelease(i);	/* we just override locks */
 	    i = NULL;
 	}
-	t = m->data;
+	t = (ipcache_entry*)m->data;
 	if (t->flags.fromhosts)
 	    i = t;
 	m = m->next;
@@ -190,7 +191,7 @@ static ipcache_entry *
 ipcacheCreateEntry(const char *name)
 {
     static ipcache_entry *i;
-    i = memAllocate(MEM_IPCACHE_ENTRY);
+    i = (ipcache_entry *)memAllocate(MEM_IPCACHE_ENTRY);
     i->hash.key = xstrdup(name);
     i->expires = squid_curtime + Config.negativeDnsTtl;
     return i;
@@ -199,7 +200,7 @@ ipcacheCreateEntry(const char *name)
 static void
 ipcacheAddEntry(ipcache_entry * i)
 {
-    hash_link *e = hash_lookup(ip_table, i->hash.key);
+    hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
     if (NULL != e) {
 	/* avoid colission */
 	ipcache_entry *q = (ipcache_entry *) e;
@@ -287,8 +288,8 @@ ipcacheParse(const char *inbuf)
 	i.addrs.in_addrs = NULL;
 	i.addrs.bad_mask = NULL;
     } else {
-	i.addrs.in_addrs = xcalloc(ipcount, sizeof(struct in_addr));
-	i.addrs.bad_mask = xcalloc(ipcount, sizeof(unsigned char));
+	i.addrs.in_addrs = (struct in_addr *)xcalloc(ipcount, sizeof(struct in_addr));
+	i.addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
     }
     for (j = 0, k = 0; k < ipcount; k++) {
 	if (safe_inet_addr(A[k], &i.addrs.in_addrs[j]))
@@ -335,8 +336,8 @@ ipcacheParse(rfc1035_rr * answers, int nr)
 	return &i;
     }
     i.flags.negcached = 0;
-    i.addrs.in_addrs = xcalloc(na, sizeof(struct in_addr));
-    i.addrs.bad_mask = xcalloc(na, sizeof(unsigned char));
+    i.addrs.in_addrs = (struct in_addr *)xcalloc(na, sizeof(struct in_addr));
+    i.addrs.bad_mask = (unsigned char *)xcalloc(na, sizeof(unsigned char));
     i.addrs.count = (unsigned char) na;
     for (j = 0, k = 0; k < nr; k++) {
 	if (answers[k].type != RFC1035_TYPE_A)
@@ -363,8 +364,8 @@ ipcacheHandleReply(void *data, char *reply)
 ipcacheHandleReply(void *data, rfc1035_rr * answers, int na)
 #endif
 {
-    generic_cbdata *c = data;
-    ipcache_entry *i = c->data;
+    generic_cbdata *c = (generic_cbdata *)data;
+    ipcache_entry *i = (ipcache_entry *)c->data;
     ipcache_entry *x = NULL;
     cbdataFree(c);
     c = NULL;
@@ -455,8 +456,8 @@ ipcache_init(void)
 	debug(14, 1) ("Successful DNS name lookup tests...\n");
     }
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
-    static_addrs.in_addrs = xcalloc(1, sizeof(struct in_addr));
-    static_addrs.bad_mask = xcalloc(1, sizeof(unsigned char));
+    static_addrs.in_addrs = (struct in_addr *)xcalloc(1, sizeof(struct in_addr));
+    static_addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     ipcache_high = (long) (((float) Config.ipcache.size *
 	    (float) Config.ipcache.high) / (float) 100);
     ipcache_low = (long) (((float) Config.ipcache.size *
@@ -549,7 +550,7 @@ stat_ipcache_get(StoreEntry * sentry)
 	"TTL",
 	"N");
     for (m = lru_list.head; m; m = m->next)
-	ipcacheStatPrint(m->data, sentry);
+	ipcacheStatPrint((ipcache_entry *)m->data, sentry);
 }
 
 static void
@@ -688,7 +689,7 @@ ipcacheMarkGoodAddr(const char *name, struct in_addr addr)
 static void
 ipcacheFreeEntry(void *data)
 {
-    ipcache_entry *i = data;
+    ipcache_entry *i = (ipcache_entry *)data;
     safe_free(i->addrs.in_addrs);
     safe_free(i->addrs.bad_mask);
     safe_free(i->hash.key);
@@ -748,8 +749,8 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     i->addrs.count = 1;
     i->addrs.cur = 0;
     i->addrs.badcount = 0;
-    i->addrs.in_addrs = xcalloc(1, sizeof(struct in_addr));
-    i->addrs.bad_mask = xcalloc(1, sizeof(unsigned char));
+    i->addrs.in_addrs = (struct in_addr *)xcalloc(1, sizeof(struct in_addr));
+    i->addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     i->addrs.in_addrs[0].s_addr = ip.s_addr;
     i->addrs.bad_mask[0] = FALSE;
     i->flags.fromhosts = 1;

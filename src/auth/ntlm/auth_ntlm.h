@@ -62,13 +62,17 @@ struct _auth_ntlm_config {
     time_t challengelifetime;
 };
 
+struct ProxyAuthCachePointer {
+    /* first two items must be same as hash_link */
+    char *key;
+    auth_user_hash_pointer *next;dlink_node link;
+    /* other hash entries that point to the same auth_user */
+    auth_user_t *auth_user;
+};
+
 typedef struct _ntlm_user ntlm_user_t;
 typedef struct _ntlm_request ntlm_request_t;
 typedef struct _ntlm_helper_state_t ntlm_helper_state_t;
 typedef struct _auth_ntlm_config auth_ntlm_config;
-
-extern MemPool *ntlm_helper_state_pool;
-extern MemPool *ntlm_user_pool;
-extern MemPool *ntlm_request_pool;
 
 #endif

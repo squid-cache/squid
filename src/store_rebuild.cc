@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.77 2001/10/17 12:41:50 hno Exp $
+ * $Id: store_rebuild.cc,v 1.78 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 static struct _store_rebuild_data counts;
 static struct timeval rebuild_start;
@@ -70,7 +71,7 @@ storeCleanup(void *datanotused)
 	if (++bucketnum >= store_hash_buckets) {
 	    debug(20, 1) ("  Completed Validation Procedure\n");
 	    debug(20, 1) ("  Validated %d Entries\n", validnum);
-	    debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
+	    debug(20, 1) ("  store_swap_size = %luk\n", store_swap_size);
 	    store_dirs_rebuilding--;
 	    assert(0 == store_dirs_rebuilding);
 	    if (opt_store_doublecheck)
@@ -163,7 +164,7 @@ storeRebuildStart(void)
      * finished rebuilding for sure.  The corresponding decrement
      * occurs in storeCleanup(), when it is finished.
      */
-    RebuildProgress = xcalloc(Config.cacheSwap.n_configured,
+    RebuildProgress = (store_rebuild_progress *)xcalloc(Config.cacheSwap.n_configured,
 	sizeof(store_rebuild_progress));
 }
 

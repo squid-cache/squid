@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.14 2002/10/02 22:32:22 robertc Exp $
+ * $Id: aiops.cc,v 1.15 2002/10/13 20:35:24 robertc Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -192,7 +192,7 @@ squidaio_xstrdup(const char *str)
     char *p;
     int len = strlen(str) + 1;
 
-    p = squidaio_xmalloc(len);
+    p = (char *)squidaio_xmalloc(len);
     strncpy(p, str, len);
 
     return p;
@@ -272,7 +272,7 @@ squidaio_init(void)
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
     assert (NUMTHREADS);
     for (i = 0; i < NUMTHREADS; i++) {
-	threadp = memPoolAlloc(squidaio_thread_pool);
+	threadp = (squidaio_thread_t *)memPoolAlloc(squidaio_thread_pool);
 	threadp->status = _THREAD_STARTING;
 	threadp->current_req = NULL;
 	threadp->requests = 0;
@@ -300,9 +300,9 @@ squidaio_init(void)
 static void *
 squidaio_thread_loop(void *ptr)
 {
-    squidaio_thread_t *threadp = ptr;
+    squidaio_thread_t *threadp = (squidaio_thread_t *)ptr;
     squidaio_request_t *request;
-    sigset_t new;
+    sigset_t newSig;
 
     /*
      * Make sure to ignore signals which may possibly get sent to
@@ -310,21 +310,21 @@ squidaio_thread_loop(void *ptr)
      * condition waits otherwise
      */
 
-    sigemptyset(&new);
-    sigaddset(&new, SIGPIPE);
-    sigaddset(&new, SIGCHLD);
+    sigemptyset(&newSig);
+    sigaddset(&newSig, SIGPIPE);
+    sigaddset(&newSig, SIGCHLD);
 #ifdef _SQUID_LINUX_THREADS_
-    sigaddset(&new, SIGQUIT);
-    sigaddset(&new, SIGTRAP);
+    sigaddset(&newSig, SIGQUIT);
+    sigaddset(&newSig, SIGTRAP);
 #else
-    sigaddset(&new, SIGUSR1);
-    sigaddset(&new, SIGUSR2);
+    sigaddset(&newSig, SIGUSR1);
+    sigaddset(&newSig, SIGUSR2);
 #endif
-    sigaddset(&new, SIGHUP);
-    sigaddset(&new, SIGTERM);
-    sigaddset(&new, SIGINT);
-    sigaddset(&new, SIGALRM);
-    pthread_sigmask(SIG_BLOCK, &new, NULL);
+    sigaddset(&newSig, SIGHUP);
+    sigaddset(&newSig, SIGTERM);
+    sigaddset(&newSig, SIGINT);
+    sigaddset(&newSig, SIGALRM);
+    pthread_sigmask(SIG_BLOCK, &newSig, NULL);
 
     while (1) {
 	threadp->current_req = request = NULL;
@@ -532,7 +532,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
 int
 squidaio_cancel(squidaio_result_t * resultp)
 {
-    squidaio_request_t *request = resultp->_data;
+    squidaio_request_t *request = (squidaio_request_t *)resultp->_data;
 
     if (request && request->resultp == resultp) {
 	debug(43, 9) ("squidaio_cancel: %p type=%d result=%p\n",
@@ -554,7 +554,7 @@ squidaio_open(const char *path, int oflag, mode_t mode, squidaio_result_t * resu
 
     if (!squidaio_initialised)
 	squidaio_init();
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
     requestp->path = (char *) squidaio_xstrdup(path);
     requestp->oflag = oflag;
     requestp->mode = mode;
@@ -583,7 +583,7 @@ squidaio_read(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_r
 
     if (!squidaio_initialised)
 	squidaio_init();
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
     requestp->fd = fd;
     requestp->bufferp = bufp;
     requestp->tmpbufp = (char *) squidaio_xmalloc(bufs);
@@ -616,7 +616,7 @@ squidaio_write(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_
 
     if (!squidaio_initialised)
 	squidaio_init();
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
     requestp->fd = fd;
     requestp->tmpbufp = (char *) squidaio_xmalloc(bufs);
     xmemcpy(requestp->tmpbufp, bufp, bufs);
@@ -648,7 +648,7 @@ squidaio_close(int fd, squidaio_result_t * resultp)
 
     if (!squidaio_initialised)
 	squidaio_init();
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
     requestp->fd = fd;
     requestp->resultp = resultp;
     requestp->request_type = _AIO_OP_CLOSE;
@@ -675,7 +675,7 @@ squidaio_stat(const char *path, struct stat *sb, squidaio_result_t * resultp)
 
     if (!squidaio_initialised)
 	squidaio_init();
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
     requestp->path = (char *) squidaio_xstrdup(path);
     requestp->statp = sb;
     requestp->tmpstatp = (struct stat *) squidaio_xmalloc(sizeof(struct stat));
@@ -704,7 +704,7 @@ squidaio_unlink(const char *path, squidaio_result_t * resultp)
 
     if (!squidaio_initialised)
 	squidaio_init();
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
     requestp->path = squidaio_xstrdup(path);
     requestp->resultp = resultp;
     requestp->request_type = _AIO_OP_UNLINK;
@@ -730,7 +730,7 @@ squidaio_truncate(const char *path, off_t length, squidaio_result_t * resultp)
 
     if (!squidaio_initialised)
 	squidaio_init();
-    requestp = memPoolAlloc(squidaio_request_pool);
+    requestp = (squidaio_request_t *)memPoolAlloc(squidaio_request_pool);
     requestp->path = (char *) squidaio_xstrdup(path);
     requestp->offset = length;
     requestp->resultp = resultp;

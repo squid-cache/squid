@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.81 2002/09/24 10:46:43 robertc Exp $
+ * $Id: asn.cc,v 1.82 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "radix.h"
 #include "StoreClient.h"
+#include "Store.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096
@@ -91,7 +92,7 @@ static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
 static STCB asHandleReply;
 static int destroyRadixNode(struct squid_radix_node *rn, void *w);
-static int printRadixNode(struct squid_radix_node *rn, void *w);
+static int printRadixNode(struct squid_radix_node *rn, StoreEntry *);
 static void asnAclInitialize(acl * acls);
 static void asStateFree(void *data);
 static void destroyRadixNodeInfo(as_info *);
@@ -145,7 +146,7 @@ asnAclInitialize(acl * acls)
     for (a = acls; a; a = a->next) {
 	if (a->type != ACL_DST_ASN && a->type != ACL_SRC_ASN)
 	    continue;
-	for (i = a->data; i; i = i->next)
+	for (i = (intlist *)a->data; i; i = i->next)
 	    asnCacheStart(i->i);
     }
 }
@@ -224,7 +225,7 @@ asnCacheStart(int as)
 static void
 asHandleReply(void *data, StoreIOBuffer result)
 {
-    ASState *asState = data;
+    ASState *asState = (ASState *)data;
     StoreEntry *e = asState->entry;
     char *s;
     char *t;
@@ -257,7 +258,7 @@ asHandleReply(void *data, StoreIOBuffer result)
      * Remembering that the actual buffer size is retsize + reqofs!
      */
     s = buf;
-    while (s - buf < (result.length + asState->reqofs) && *s != '\0') {
+    while (s - buf < (off_t)(result.length + asState->reqofs) && *s != '\0') {
 	while (*s && xisspace(*s))
 	    s++;
 	for (t = s; *t; t++) {
@@ -325,7 +326,7 @@ asHandleReply(void *data, StoreIOBuffer result)
 static void
 asStateFree(void *data)
 {
-    ASState *asState = data;
+    ASState *asState = (ASState *)data;
     debug(53, 3) ("asnStateFree: %s\n", storeUrl(asState->entry));
     storeUnregister(asState->sc, asState->entry, asState);
     storeUnlockObject(asState->entry);
@@ -340,7 +341,7 @@ asStateFree(void *data)
 static int
 asnAddNet(char *as_string, int as_number)
 {
-    rtentry *e = xmalloc(sizeof(rtentry));
+    rtentry *e = (rtentry *)xmalloc(sizeof(rtentry));
     struct squid_radix_node *rn;
     char dbg1[32], dbg2[32];
     intlist **Tail = NULL;
@@ -384,15 +385,15 @@ asnAddNet(char *as_string, int as_number)
 	} else {
 	    debug(53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
 	    for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next);
-	    q = xcalloc(1, sizeof(intlist));
+	    q = (intlist *)xcalloc(1, sizeof(intlist));
 	    q->i = as_number;
 	    *(Tail) = q;
 	    e->e_info = asinfo;
 	}
     } else {
-	q = xcalloc(1, sizeof(intlist));
+	q = (intlist *)xcalloc(1, sizeof(intlist));
 	q->i = as_number;
-	asinfo = xmalloc(sizeof(asinfo));
+	asinfo = (as_info *)xmalloc(sizeof(asinfo));
 	asinfo->as_number = q;
 	rn = squid_rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
 	rn = squid_rn_match(e->e_addr, AS_tree_head);
@@ -451,9 +452,8 @@ mask_len(u_long mask)
 }
 
 static int
-printRadixNode(struct squid_radix_node *rn, void *w)
+printRadixNode(struct squid_radix_node *rn, StoreEntry *sentry)
 {
-    StoreEntry *sentry = w;
     rtentry *e = (rtentry *) rn;
     intlist *q;
     as_info *asinfo;

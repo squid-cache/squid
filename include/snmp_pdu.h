@@ -25,9 +25,13 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_pdu.h,v 1.9 2002/02/13 02:40:33 hno Exp $
+ * $Id: snmp_pdu.h,v 1.10 2002/10/13 20:34:51 robertc Exp $
  * 
  **********************************************************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct sockaddr_in ipaddr;
 
@@ -107,6 +111,10 @@ void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 #define SNMP_TRAP_AUTHENTICATIONFAILURE (0x4)
 #define SNMP_TRAP_EGPNEIGHBORLOSS       (0x5)
 #define SNMP_TRAP_ENTERPRISESPECIFIC    (0x6)
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* SQUID_SNMP_PDU_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.75 2002/09/24 10:46:41 robertc Exp $
+ * $Id: urn.cc,v 1.76 2002/10/13 20:35:06 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -35,10 +35,25 @@
 
 #include "squid.h"
 #include "StoreClient.h"
+#include "Store.h"
 
 #define	URN_REQBUF_SZ	4096
 
-typedef struct {
+class UrnState : public StoreClient {
+public:
+    void created (_StoreEntry *newEntry);
+    void *operator new (unsigned int byteCount);
+    void operator delete (void *address);
+    void start (request_t *, StoreEntry *);
+    char *getHost (String &urlpath);
+    void setUriResFromRequest(request_t *);
+    bool RequestNeedsMenu(request_t *r);
+    void updateRequestURL(request_t *r, char const *newPath);
+    void createUriResRequest (String &uri);
+
+    virtual ~UrnState();
+      
+    
     StoreEntry *entry;
     store_client *sc;
     StoreEntry *urlres_e;
@@ -49,7 +64,9 @@ typedef struct {
     } flags;
     char reqbuf[URN_REQBUF_SZ];
     int reqofs;
-} UrnState;
+private:
+    char *urlres;
+};
 
 typedef struct {
     char *url;
@@ -64,6 +81,28 @@ static STCB urnHandleReply;
 static url_entry *urnParseReply(const char *inbuf, method_t);
 static const char *const crlf = "\r\n";
 static QS url_entry_sort;
+
+CBDATA_TYPE(UrnState);
+void *
+UrnState::operator new (unsigned int byteCount)
+{
+     /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (UrnState));
+    CBDATA_INIT_TYPE(UrnState);
+    return cbdataAlloc(UrnState);
+		
+}
+
+void
+UrnState::operator delete (void *address)
+{
+    cbdataFree ((UrnState *)address);
+}
+
+UrnState::~UrnState ()
+{
+    safe_free(urlres);
+}
 
 static url_entry *
 urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
@@ -100,73 +139,116 @@ urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
     return min_u;
 }
 
-CBDATA_TYPE(UrnState);
-void
-urnStart(request_t * r, StoreEntry * e)
+char *
+UrnState::getHost (String &urlpath)
 {
-    LOCAL_ARRAY(char, urlres, 4096);
-    request_t *urlres_r = NULL;
-    const char *t;
-    char *host;
-    UrnState *urnState;
-    StoreEntry *urlres_e;
-    ErrorState *err;
-    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
-    debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
-    CBDATA_INIT_TYPE(UrnState);
-    urnState = cbdataAlloc(UrnState);
-    urnState->entry = e;
-    urnState->request = requestLink(r);
-    storeLockObject(urnState->entry);
-    if (strncasecmp(strBuf(r->urlpath), "menu.", 5) == 0) {
-	char *new_path = xstrdup(strBuf(r->urlpath) + 5);
-	urnState->flags.force_menu = 1;
-	stringReset(&r->urlpath, new_path);
-	xfree(new_path);
-    }
-    if ((t = strChr(r->urlpath, ':')) != NULL) {
-	strSet(r->urlpath, t, '\0');
-	host = xstrdup(strBuf(r->urlpath));
-	strSet(r->urlpath, t, ':');
+    char * result;
+    char const *t;
+    if ((t = strChr(urlpath, ':')) != NULL) {
+	strSet(urlpath, t, '\0');
+	result = xstrdup(strBuf(urlpath));
+	strSet(urlpath, t, ':');
     } else {
-	host = xstrdup(strBuf(r->urlpath));
+	result = xstrdup(strBuf(urlpath));
     }
-    snprintf(urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, strBuf(r->urlpath));
-    safe_free(host);
+    return result;
+}
+
+bool
+UrnState::RequestNeedsMenu(request_t *r)
+{
+    return strncasecmp(strBuf(r->urlpath), "menu.", 5) == 0;
+}
+
+void
+UrnState::updateRequestURL(request_t *r, char const *newPath)
+{
+     char *new_path = xstrdup (newPath);
+     stringReset(&r->urlpath, new_path);
+     xfree(new_path);
+}
+
+void
+UrnState::createUriResRequest (String &uri)
+{
+    LOCAL_ARRAY(char, local_urlres, 4096);
+    char *host = getHost (uri);
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, strBuf(uri));
+    safe_free (host);
+    safe_free (urlres);
+    urlres = xstrdup (local_urlres);
     urlres_r = urlParse(METHOD_GET, urlres);
+}
+
+void
+UrnState::setUriResFromRequest(request_t *r)
+{
+    if (RequestNeedsMenu(r)) {
+	updateRequestURL(r, strBuf(r->urlpath) + 5);
+	flags.force_menu = 1;
+    }
+ 
+    createUriResRequest (r->urlpath);
     if (urlres_r == NULL) {
 	debug(52, 3) ("urnStart: Bad uri-res URL %s\n", urlres);
-	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
-	err->url = xstrdup(urlres);
-	errorAppendEntry(e, err);
+	ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
+	err->url = urlres;
+	urlres = NULL;
+	errorAppendEntry(entry, err);
 	return;
     }
+    requestLink(urlres_r);
     httpHeaderPutStr(&urlres_r->header, HDR_ACCEPT, "text/plain");
-    if ((urlres_e = storeGetPublic(urlres, METHOD_GET)) == NULL) {
+}
+
+void
+UrnState::start(request_t * r, StoreEntry * e)
+{
+    debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
+    entry = e;
+    request = requestLink(r);
+    storeLockObject(entry);
+    setUriResFromRequest(r);
+    if (urlres_r == NULL)
+	return;
+    _StoreEntry::getPublic (this, urlres, METHOD_GET);
+}
+
+void
+UrnState::created(_StoreEntry *newEntry)
+{
+    urlres_e = newEntry;
+    if (urlres_e->isNull()) {
 	urlres_e = storeCreateEntry(urlres, urlres, null_request_flags, METHOD_GET);
-	urnState->sc = storeClientListAdd(urlres_e, urnState);
+	sc = storeClientListAdd(urlres_e, this);
 	fwdStart(-1, urlres_e, urlres_r);
     } else {
 	storeLockObject(urlres_e);
-	urnState->sc = storeClientListAdd(urlres_e, urnState);
+	sc = storeClientListAdd(urlres_e, this);
     }
-    urnState->urlres_e = urlres_e;
-    urnState->urlres_r = requestLink(urlres_r);
-    urnState->reqofs = 0;
-    tempBuffer.offset = urnState->reqofs;
+    reqofs = 0;
+    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+    tempBuffer.offset = reqofs;
     tempBuffer.length = URN_REQBUF_SZ;
-    tempBuffer.data = urnState->reqbuf;
-    storeClientCopy(urnState->sc, urlres_e,
+    tempBuffer.data = reqbuf;
+    storeClientCopy(sc, urlres_e,
 	tempBuffer,
 	urnHandleReply,
-	urnState);
+	this);
+}
+
+void
+urnStart(request_t * r, StoreEntry * e)
+{
+    UrnState *anUrn = new UrnState();
+    anUrn->start (r, e);
 }
 
 static int
 url_entry_sort(const void *A, const void *B)
 {
-    const url_entry *u1 = A;
-    const url_entry *u2 = B;
+    const url_entry *u1 = (const url_entry *)A;
+    const url_entry *u2 = (const url_entry *)B;
     if (u2->rtt == u1->rtt)
 	return 0;
     else if (0 == u1->rtt)
@@ -180,7 +262,7 @@ url_entry_sort(const void *A, const void *B)
 static void
 urnHandleReply(void *data, StoreIOBuffer result)
 {
-    UrnState *urnState = data;
+    UrnState *urnState = static_cast<UrnState *>(data);
     StoreEntry *e = urnState->entry;
     StoreEntry *urlres_e = urnState->urlres_e;
     char *s = NULL;
@@ -313,7 +395,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     storeUnlockObject(urnState->entry);
     requestUnlink(urnState->request);
     requestUnlink(urnState->urlres_r);
-    cbdataFree(urnState);
+    delete urnState;
 }
 
 static url_entry *
@@ -329,13 +411,13 @@ urnParseReply(const char *inbuf, method_t m)
     int n = 32;
     int i = 0;
     debug(52, 3) ("urnParseReply\n");
-    list = xcalloc(n + 1, sizeof(*list));
+    list = (url_entry *)xcalloc(n + 1, sizeof(*list));
     for (token = strtok(buf, crlf); token; token = strtok(NULL, crlf)) {
 	debug(52, 3) ("urnParseReply: got '%s'\n", token);
 	if (i == n) {
 	    old = list;
 	    n <<= 2;
-	    list = xcalloc(n + 1, sizeof(*list));
+	    list = (url_entry *)xcalloc(n + 1, sizeof(*list));
 	    xmemcpy(list, old, i * sizeof(*list));
 	    safe_free(old);
 	}

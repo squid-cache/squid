@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.11 2002/04/06 08:49:24 adrian Exp $
+ * $Id: splay.h,v 1.12 2002/10/13 20:34:51 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -15,12 +15,12 @@ typedef int SPLAYCMP(const void *a, const void *b);
 typedef void SPLAYWALKEE(void *nodedata, void *state);
 typedef void SPLAYFREE(void *);
 
-extern int splayLastResult;
+SQUIDCEXTERN int splayLastResult;
 
-extern splayNode *splay_insert(void *, splayNode *, SPLAYCMP *);
-extern splayNode *splay_splay(const void *, splayNode *, SPLAYCMP *);
-extern splayNode *splay_delete(const void *, splayNode *, SPLAYCMP *);
-extern void splay_destroy(splayNode *, SPLAYFREE *);
-extern void splay_walk(splayNode *, SPLAYWALKEE *, void *);
+SQUIDCEXTERN splayNode *splay_insert(void *, splayNode *, SPLAYCMP *);
+SQUIDCEXTERN splayNode *splay_splay(const void *, splayNode *, SPLAYCMP *);
+SQUIDCEXTERN splayNode *splay_delete(const void *, splayNode *, SPLAYCMP *);
+SQUIDCEXTERN void splay_destroy(splayNode *, SPLAYFREE *);
+SQUIDCEXTERN void splay_walk(splayNode *, SPLAYWALKEE *, void *);
 
 #endif /* SQUID_SPLAY_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.22 2001/01/12 00:37:13 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.23 2002/10/13 20:34:56 robertc Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -34,24 +34,33 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "HttpHeader.h"
 
 /* this table is used for parsing cache control header */
 static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] =
 {
-    {"public", CC_PUBLIC},
-    {"private", CC_PRIVATE},
-    {"no-cache", CC_NO_CACHE},
-    {"no-store", CC_NO_STORE},
-    {"no-transform", CC_NO_TRANSFORM},
-    {"must-revalidate", CC_MUST_REVALIDATE},
-    {"proxy-revalidate", CC_PROXY_REVALIDATE},
-    {"only-if-cached", CC_ONLY_IF_CACHED},
-    {"max-age", CC_MAX_AGE},
-    {"s-maxage", CC_S_MAXAGE},
-    {"max-stale", CC_MAX_STALE},
-    {"Other,", CC_OTHER}	/* ',' will protect from matches */
+    {"public", (http_hdr_type)CC_PUBLIC},
+    {"private", (http_hdr_type)CC_PRIVATE},
+    {"no-cache", (http_hdr_type)CC_NO_CACHE},
+    {"no-store", (http_hdr_type)CC_NO_STORE},
+    {"no-transform", (http_hdr_type)CC_NO_TRANSFORM},
+    {"must-revalidate", (http_hdr_type)CC_MUST_REVALIDATE},
+    {"proxy-revalidate", (http_hdr_type)CC_PROXY_REVALIDATE},
+    {"only-if-cached", (http_hdr_type)CC_ONLY_IF_CACHED},
+    {"max-age", (http_hdr_type)CC_MAX_AGE},
+    {"s-maxage", (http_hdr_type)CC_S_MAXAGE},
+    {"max-stale", (http_hdr_type)CC_MAX_STALE},
+    {"Other,", (http_hdr_type)CC_OTHER}	/* ',' will protect from matches */
 };
 HttpHeaderFieldInfo *CcFieldsInfo = NULL;
+
+http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
+{
+    aHeader = (http_hdr_cc_type)(++(int)aHeader);
+    return aHeader;
+}
+
 
 /* local prototypes */
 static int httpHdrCcParseInit(HttpHdrCc * cc, const String * str);
@@ -77,7 +86,7 @@ httpHdrCcCleanModule(void)
 HttpHdrCc *
 httpHdrCcCreate(void)
 {
-    HttpHdrCc *cc = memAllocate(MEM_HTTP_HDR_CC);
+    HttpHdrCc *cc = (HttpHdrCc *)memAllocate(MEM_HTTP_HDR_CC);
     cc->max_age = cc->s_maxage = cc->max_stale = -1;
     return cc;
 }
@@ -101,7 +110,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
     const char *item;
     const char *p;		/* '=' parameter */
     const char *pos = NULL;
-    int type;
+    http_hdr_cc_type type;
     int ilen;
     assert(cc && str);
 
@@ -111,7 +120,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 	if ((p = strchr(item, '=')) && (p - item < ilen))
 	    ilen = p++ - item;
 	/* find type */
-	type = httpHeaderIdByName(item, ilen,
+	type = (http_hdr_cc_type ) httpHeaderIdByName(item, ilen,
 	    CcFieldsInfo, CC_ENUM_END);
 	if (type < 0) {
 	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, strBuf(*str));
@@ -181,7 +190,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     http_hdr_cc_type flag;
     int pcount = 0;
     assert(cc && p);
-    for (flag = 0; flag < CC_ENUM_END; flag++) {
+    for (flag = CC_PUBLIC; flag < CC_ENUM_END; ++flag) {
 	if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 
 	    /* print option name */
@@ -244,7 +253,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 {
     http_hdr_cc_type c;
     assert(cc);
-    for (c = 0; c < CC_ENUM_END; c++)
+    for (c = CC_PUBLIC; c < CC_ENUM_END; ++c)
 	if (EBIT_TEST(cc->mask, c))
 	    statHistCount(hist, c);
 }

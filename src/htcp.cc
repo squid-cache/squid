@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.42 2002/10/04 14:00:22 hno Exp $
+ * $Id: htcp.cc,v 1.43 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -34,13 +34,14 @@
  */
 
 #include "squid.h"
+#include "Store.h"
+#include "StoreClient.h"
 
 typedef struct _Countstr Countstr;
 typedef struct _htcpHeader htcpHeader;
 typedef struct _htcpDataHeader htcpDataHeader;
 typedef struct _htcpAuthHeader htcpAuthHeader;
 typedef struct _htcpStuff htcpStuff;
-typedef struct _htcpSpecifier htcpSpecifier;
 typedef struct _htcpDetail htcpDetail;
 
 struct _Countstr {
@@ -88,11 +89,25 @@ struct _htcpAuthHeader {
     Countstr signature;
 };
 
-struct _htcpSpecifier {
+class htcpSpecifier : public StoreClient {
+public:
+    void *operator new (unsigned int byteCount);
+    void operator delete (void *address);
+
+    void created (_StoreEntry *newEntry);
+    void checkHit();
+    void checkedHit(StoreEntry *e);
+    void setFrom (struct sockaddr_in *from);
+    void setDataHeader (htcpDataHeader *);
     char *method;
     char *uri;
     char *version;
     char *req_hdrs;
+private:
+    static MemPool *pool;
+    request_t *checkHitRequest;
+    struct sockaddr_in *from;
+    htcpDataHeader *dhdr;
 };
 
 struct _htcpDetail {
@@ -155,7 +170,7 @@ static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 #define N_QUERIED_KEYS 256
 static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
-static MemPool *htcpSpecifierPool = NULL;
+MemPool *htcpSpecifier::pool = NULL;
 static MemPool *htcpDetailPool = NULL;
 
 
@@ -183,7 +198,6 @@ static void htcpSend(const char *buf, int len, struct sockaddr_in *to);
 static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, struct sockaddr_in *);
 static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
 static void htcpHandleTstResponse(htcpDataHeader *, char *, int, struct sockaddr_in *);
-static StoreEntry *htcpCheckHit(const htcpSpecifier *);
 
 static void
 htcpHexdump(const char *tag, const char *s, int sz)
@@ -366,7 +380,7 @@ htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
     ssize_t off = 0;
     size_t hdr_sz = sizeof(htcpHeader);
     htcpHeader hdr;
-    char *buf = xcalloc(buflen, 1);
+    char *buf = (char *)xcalloc(buflen, 1);
     /* skip the header -- we don't know the overall length */
     if (buflen < hdr_sz) {
 	xfree(buf);
@@ -414,6 +428,34 @@ htcpSend(const char *buf, int len, struct sockaddr_in *to)
  * STUFF FOR RECEIVING HTCP MESSAGES
  */
 
+void *
+htcpSpecifier::operator new (unsigned int byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (htcpSpecifier));
+    if (!pool)
+	pool = memPoolCreate("htcpSpecifier", sizeof(htcpSpecifier));
+    return static_cast<htcpSpecifier *> (memPoolAlloc(pool));
+}
+
+void 
+htcpSpecifier::operator delete (void *address)
+{
+    memPoolFree(pool, address);
+}
+
+void
+htcpSpecifier::setFrom (struct sockaddr_in *aSocket)
+{
+    from = aSocket;
+}
+
+void
+htcpSpecifier::setDataHeader (htcpDataHeader *aDataHeader)
+{
+    dhdr = aDataHeader;
+}
+
 static void
 htcpFreeSpecifier(htcpSpecifier * s)
 {
@@ -421,7 +463,7 @@ htcpFreeSpecifier(htcpSpecifier * s)
     safe_free(s->uri);
     safe_free(s->version);
     safe_free(s->req_hdrs);
-    memPoolFree(htcpSpecifierPool, s);
+    delete s;
 }
 
 static void
@@ -453,7 +495,7 @@ htcpUnpackCountstr(char *buf, int sz, char **str)
 	return -1;
     }
     if (str) {
-	*str = xmalloc(l + 1);
+	*str = (char *)xmalloc(l + 1);
 	xstrncpy(*str, buf, l + 1);
 	debug(31, 3) ("htcpUnpackCountstr: TEXT = {%s}\n", *str);
     }
@@ -463,7 +505,7 @@ htcpUnpackCountstr(char *buf, int sz, char **str)
 static htcpSpecifier *
 htcpUnpackSpecifier(char *buf, int sz)
 {
-    htcpSpecifier *s = memPoolAlloc(htcpSpecifierPool);
+    htcpSpecifier *s = new htcpSpecifier;
     int o;
     debug(31, 3) ("htcpUnpackSpecifier: %d bytes\n", (int) sz);
     o = htcpUnpackCountstr(buf, sz, &s->method);
@@ -505,7 +547,7 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    htcpDetail *d = memPoolAlloc(htcpDetailPool);
+    htcpDetail *d = static_cast<htcpDetail *>(memPoolAlloc(htcpDetailPool));
     int o;
     debug(31, 3) ("htcpUnpackDetail: %d bytes\n", (int) sz);
     o = htcpUnpackCountstr(buf, sz, &d->resp_hdrs);
@@ -612,25 +654,34 @@ htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
     debug(31, 3) ("htcpHandleNop: Unimplemented\n");
 }
 
-static StoreEntry *
-htcpCheckHit(const htcpSpecifier * s)
+void
+htcpSpecifier::checkHit()
 {
-    request_t *request;
-    method_t m = urlParseMethod(s->method);
-    StoreEntry *e = NULL, *hit = NULL;
+    method_t m = urlParseMethod(method);
     char *blk_end;
-    request = urlParse(m, s->uri);
-    if (NULL == request) {
+    checkHitRequest = urlParse(m, uri);
+    if (NULL == checkHitRequest) {
 	debug(31, 3) ("htcpCheckHit: NO; failed to parse URL\n");
-	return NULL;
+	checkedHit(NullStoreEntry::getInstance());
+	return;
     }
-    blk_end = s->req_hdrs + strlen(s->req_hdrs);
-    if (!httpHeaderParse(&request->header, s->req_hdrs, blk_end)) {
+    blk_end = req_hdrs + strlen(req_hdrs);
+    if (!httpHeaderParse(&checkHitRequest->header, req_hdrs, blk_end)) {
 	debug(31, 3) ("htcpCheckHit: NO; failed to parse request headers\n");
-	goto miss;
+	requestDestroy(checkHitRequest);
+	checkHitRequest = NULL;
+	checkedHit(NullStoreEntry::getInstance());
+	return;
     }
-    e = storeGetPublicByRequest(request);
-    if (NULL == e) {
+    _StoreEntry::getPublicByRequest(this, checkHitRequest);
+}
+
+void
+htcpSpecifier::created (_StoreEntry *e)
+{
+    StoreEntry *hit=NULL;
+    assert (e);
+    if (e->isNull()) {
 	debug(31, 3) ("htcpCheckHit: NO; public object not found\n");
 	goto miss;
     }
@@ -638,15 +689,15 @@ htcpCheckHit(const htcpSpecifier * s)
 	debug(31, 3) ("htcpCheckHit: NO; entry not valid to send\n");
 	goto miss;
     }
-    if (refreshCheckHTCP(e, request)) {
+    if (refreshCheckHTCP(e, checkHitRequest)) {
 	debug(31, 3) ("htcpCheckHit: NO; cached response is stale\n");
 	goto miss;
     }
     debug(31, 3) ("htcpCheckHit: YES!?\n");
     hit = e;
   miss:
-    requestDestroy(request);
-    return hit;
+    requestDestroy(checkHitRequest);
+    checkedHit (hit);
 }
 
 static void
@@ -704,14 +755,16 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
 {
     /* buf should be a SPECIFIER */
     htcpSpecifier *s;
-    StoreEntry *e;
     if (sz == 0) {
 	debug(31, 3) ("htcpHandleTst: nothing to do\n");
 	return;
     }
     if (dhdr->F1 == 0)
 	return;
+    /* s is a new object */
     s = htcpUnpackSpecifier(buf, sz);
+    s->setFrom (from);
+    s->setDataHeader (dhdr);
     if (NULL == s) {
 	debug(31, 3) ("htcpHandleTstRequest: htcpUnpackSpecifier failed\n");
 	return;
@@ -721,11 +774,17 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
 	s->uri,
 	s->version);
     debug(31, 3) ("htcpHandleTstRequest: %s\n", s->req_hdrs);
-    if ((e = htcpCheckHit(s)))
-	htcpTstReply(dhdr, e, s, from);		/* hit */
+    s->checkHit();
+}
+
+void
+htcpSpecifier::checkedHit(StoreEntry *e)
+{
+    if (e)
+	htcpTstReply(dhdr, e, this, from);		/* hit */
     else
 	htcpTstReply(dhdr, NULL, NULL, from);	/* cache miss */
-    htcpFreeSpecifier(s);
+    htcpFreeSpecifier(this);
 }
 
 static void
@@ -744,7 +803,8 @@ static void
 htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpDataHeader hdr;
-    if (sz < sizeof(htcpDataHeader)) {
+    assert (sz >= 0);
+    if ((size_t)sz < sizeof(htcpDataHeader)) {
 	debug(31, 0) ("htcpHandleData: msg size less than htcpDataHeader size\n");
 	return;
     }
@@ -805,7 +865,8 @@ static void
 htcpHandle(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpHeader htcpHdr;
-    if (sz < sizeof(htcpHeader)) {
+    assert (sz >= 0);
+    if ((size_t)sz < sizeof(htcpHeader)) {
 	debug(31, 0) ("htcpHandle: msg size less than htcpHeader size\n");
 	return;
     }
@@ -830,7 +891,7 @@ htcpRecv(int fd, void *data)
     static char buf[8192];
     int len;
     static struct sockaddr_in from;
-    int flen = sizeof(struct sockaddr_in);
+    socklen_t flen = sizeof(struct sockaddr_in);
     memset(&from, '\0', flen);
     statCounter.syscalls.sock.recvfroms++;
     len = recvfrom(fd, buf, 8192, 0, (struct sockaddr *) &from, &flen);
@@ -884,8 +945,7 @@ htcpInit(void)
     } else {
 	htcpOutSocket = htcpInSocket;
     }
-    if (!htcpSpecifierPool) {
-	htcpSpecifierPool = memPoolCreate("htcpSpecifier", sizeof(htcpSpecifier));
+    if (!htcpDetailPool) {
 	htcpDetailPool = memPoolCreate("htcpDetail", sizeof(htcpDetail));
     }
 }
@@ -932,7 +992,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     }
     htcpSend(pkt, (int) pktlen, &p->in_addr);
     save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
-    storeKeyCopy(save_key, e->hash.key);
+    storeKeyCopy(save_key, (unsigned char const *)e->hash.key);
     debug(31, 3) ("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
     xfree(pkt);
 }

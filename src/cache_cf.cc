@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.416 2002/09/29 19:02:00 hno Exp $
+ * $Id: cache_cf.cc,v 1.417 2002/10/13 20:34:58 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "authenticate.h"
+#include "Store.h"
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -83,7 +85,7 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
-#if HTTP_VIOLATIONS
+#ifdef HTTP_VIOLATIONS
 static void dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[]);
 static void parse_http_header_access(header_mangler header[]);
 static void free_http_header_access(header_mangler header[]);
@@ -133,7 +135,7 @@ wordlistAdd(wordlist ** list, const char *key)
 {
     while (*list)
 	list = &(*list)->next;
-    *list = memAllocate(MEM_WORDLIST);
+    *list = static_cast<wordlist *>(memAllocate(MEM_WORDLIST));
     (*list)->key = xstrdup(key);
     (*list)->next = NULL;
     return (*list)->key;
@@ -154,7 +156,7 @@ wordlistAddWl(wordlist ** list, wordlist * wl)
     while (*list)
 	list = &(*list)->next;
     for (; wl; wl = wl->next, list = &(*list)->next) {
-	*list = memAllocate(MEM_WORDLIST);
+	*list = static_cast<wordlist *>(memAllocate(MEM_WORDLIST));
 	(*list)->key = xstrdup(wl->key);
 	(*list)->next = NULL;
     }
@@ -525,7 +527,7 @@ parseTimeLine(time_t * tptr, const char *units)
 	    config_input_line, d, units);
     else if ((m = parseTimeUnits(token)) == 0)
 	self_destruct();
-    *tptr = m * d / u;
+    *tptr = static_cast<time_t> (m * d / u);
 }
 
 static int
@@ -546,9 +548,9 @@ parseTimeUnits(const char *unit)
     if (!strncasecmp(unit, T_MONTH_STR, strlen(T_MONTH_STR)))
 	return 86400 * 30;
     if (!strncasecmp(unit, T_YEAR_STR, strlen(T_YEAR_STR)))
-	return 86400 * 365.2522;
+	return static_cast<int>(86400 * 365.2522);
     if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
-	return 86400 * 365.2522 * 10;
+	return static_cast<int>(86400 * 365.2522 * 10);
     debug(3, 1) ("parseTimeUnits: unknown time unit '%s'\n", unit);
     return 0;
 }
@@ -573,7 +575,7 @@ parseBytesLine(size_t * bptr, const char *units)
 	    config_input_line, d, units);
     else if ((m = parseBytesUnits(token)) == 0)
 	self_destruct();
-    *bptr = m * d / u;
+    *bptr = static_cast<size_t>(m * d / u);
 }
 
 static size_t
@@ -712,7 +714,7 @@ dump_acl_address(StoreEntry * entry, const char *name, acl_address * head)
 static void
 freed_acl_address(void *data)
 {
-    acl_address *l = data;
+    acl_address *l = static_cast<acl_address *>(data);
     aclDestroyAclList(&l->aclList);
 }
 
@@ -759,7 +761,7 @@ dump_acl_tos(StoreEntry * entry, const char *name, acl_tos * head)
 static void
 freed_acl_tos(void *data)
 {
-    acl_tos *l = data;
+    acl_tos *l = static_cast<acl_tos *>(data);
     aclDestroyAclList(&l->aclList);
 }
 
@@ -967,7 +969,7 @@ parse_delay_pool_access(delayConfig * cfg)
 }
 #endif
 
-#if HTTP_VIOLATIONS
+#ifdef HTTP_VIOLATIONS
 static void
 dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
 {
@@ -1100,7 +1102,7 @@ dump_cachedir_options(StoreEntry * entry, struct cache_dir_option *options, Swap
 }
 
 static void
-dump_cachedir(StoreEntry * entry, const char *name, cacheSwap swap)
+dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swap)
 {
     SwapDir *s;
     int i;
@@ -1115,7 +1117,7 @@ dump_cachedir(StoreEntry * entry, const char *name, cacheSwap swap)
 }
 
 static int
-check_null_cachedir(cacheSwap swap)
+check_null_cachedir(_SquidConfig::_cacheSwap swap)
 {
     return swap.swapDirs == NULL;
 }
@@ -1131,12 +1133,12 @@ allocate_new_authScheme(authConfig * cfg)
 {
     if (cfg->schemes == NULL) {
 	cfg->n_allocated = 4;
-	cfg->schemes = xcalloc(cfg->n_allocated, sizeof(authScheme));
+	cfg->schemes = static_cast<authScheme *>(xcalloc(cfg->n_allocated, sizeof(authScheme)));
     }
     if (cfg->n_allocated == cfg->n_configured) {
 	authScheme *tmp;
 	cfg->n_allocated <<= 1;
-	tmp = xcalloc(cfg->n_allocated, sizeof(authScheme));
+	tmp = static_cast<authScheme *>(xcalloc(cfg->n_allocated, sizeof(authScheme)));
 	xmemcpy(tmp, cfg->schemes, cfg->n_configured * sizeof(authScheme));
 	xfree(cfg->schemes);
 	cfg->schemes = tmp;
@@ -1207,16 +1209,16 @@ dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
 }
 
 void
-allocate_new_swapdir(cacheSwap * swap)
+allocate_new_swapdir(_SquidConfig::_cacheSwap * swap)
 {
     if (swap->swapDirs == NULL) {
 	swap->n_allocated = 4;
-	swap->swapDirs = xcalloc(swap->n_allocated, sizeof(SwapDir));
+	swap->swapDirs = static_cast<SwapDir *>(xcalloc(swap->n_allocated, sizeof(SwapDir)));
     }
     if (swap->n_allocated == swap->n_configured) {
 	SwapDir *tmp;
 	swap->n_allocated <<= 1;
-	tmp = xcalloc(swap->n_allocated, sizeof(SwapDir));
+	tmp = static_cast<SwapDir *>(xcalloc(swap->n_allocated, sizeof(SwapDir)));
 	xmemcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir));
 	xfree(swap->swapDirs);
 	swap->swapDirs = tmp;
@@ -1236,7 +1238,7 @@ find_fstype(char *type)
 }
 
 static void
-parse_cachedir(cacheSwap * swap)
+parse_cachedir(_SquidConfig::_cacheSwap * swap)
 {
     char *type_str;
     char *path_str;
@@ -1346,7 +1348,7 @@ dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir * sd)
 void
 parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring)
 {
-    int old_read_only = sd->flags.read_only;
+    unsigned int old_read_only = sd->flags.read_only;
     char *name, *value;
     struct cache_dir_option *option, *op;
 
@@ -1387,7 +1389,7 @@ parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int recon
 }
 
 static void
-free_cachedir(cacheSwap * swap)
+free_cachedir(_SquidConfig::_cacheSwap * swap)
 {
     SwapDir *s;
     int i;
@@ -1604,7 +1606,7 @@ parse_cachemgrpasswd(cachemgr_passwd ** head)
     cachemgr_passwd **P;
     parse_string(&passwd);
     parse_wordlist(&actions);
-    p = xcalloc(1, sizeof(cachemgr_passwd));
+    p = static_cast<cachemgr_passwd *>(xcalloc(1, sizeof(cachemgr_passwd)));
     p->passwd = passwd;
     p->actions = actions;
     for (P = head; *P; P = &(*P)->next);
@@ -1693,7 +1695,7 @@ parse_hostdomain(void)
 		cfg_filename, config_lineno, host);
 	    continue;
 	}
-	l = xcalloc(1, sizeof(domain_ping));
+	l = static_cast<domain_ping *>(xcalloc(1, sizeof(domain_ping)));
 	l->do_ping = 1;
 	if (*domain == '!') {	/* check for !.edu */
 	    l->do_ping = 0;
@@ -1724,7 +1726,7 @@ parse_hostdomaintype(void)
 		cfg_filename, config_lineno, host);
 	    return;
 	}
-	l = xcalloc(1, sizeof(domain_type));
+	l = static_cast<domain_type *>(xcalloc(1, sizeof(domain_type)));
 	l->type = parseNeighborType(type);
 	l->domain = xstrdup(domain);
 	for (L = &(p->typelist); *L; L = &((*L)->next));
@@ -1915,7 +1917,7 @@ parse_refreshpattern(refresh_t ** head)
     }
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = xcalloc(1, sizeof(refresh_t));
+    t = static_cast<refresh_t *>(xcalloc(1, sizeof(refresh_t)));
     t->pattern = (char *) xstrdup(pattern);
     t->compiled_pattern = comp;
     t->min = min;
@@ -2234,7 +2236,7 @@ parse_removalpolicy(RemovalPolicySettings ** settings)
 {
     if (*settings)
 	free_removalpolicy(settings);
-    *settings = xcalloc(1, sizeof(**settings));
+    *settings = static_cast<RemovalPolicySettings *>(xcalloc(1, sizeof(**settings)));
     parse_string(&(*settings)->type);
     parse_wordlist(&(*settings)->args);
 }
@@ -2295,7 +2297,7 @@ parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
     } else {
 	self_destruct();
     }
-    s = xcalloc(1, sizeof(*s));
+    s = static_cast<sockaddr_in_list *>(xcalloc(1, sizeof(*s)));
     s->s.sin_port = htons(port);
     if (NULL == host)
 	s->s.sin_addr = any_addr;
@@ -2376,7 +2378,7 @@ parse_https_port_list(https_port_list ** head)
     } else {
 	self_destruct();
     }
-    s = xcalloc(1, sizeof(*s));
+    s = (https_port_list *)xcalloc(1, sizeof(*s));
     s->s.sin_port = htons(port);
     if (NULL == host)
 	s->s.sin_addr = any_addr;

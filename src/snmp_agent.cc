@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.83 2001/10/24 06:16:17 hno Exp $
+ * $Id: snmp_agent.cc,v 1.84 2002/10/13 20:35:03 robertc Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "cache_snmp.h"
+#include "Store.h"
 
 /************************************************************************
 
@@ -63,7 +64,7 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 	break;
     case SYS_UPTIME:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    tvSubDsec(squid_start, current_time) * 100,
+	    (int)(tvSubDsec(squid_start, current_time) * 100),
 	    SMI_TIMETICKS);
 	break;
     default:
@@ -299,7 +300,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	break;
     case PERF_SYS_NUMOBJCNT:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    (snint) memInUse(MEM_STOREENTRY),
+	    (snint) _StoreEntry::inUseCount(),
 	    SMI_COUNTER32);
 	break;
     default:

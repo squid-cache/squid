@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.161 2002/10/02 11:06:31 robertc Exp $
+ * $Id: disk.cc,v 1.162 2002/10/13 20:35:00 robertc Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -151,8 +151,8 @@ diskCombineWrites(struct _fde_disk *fdd)
 	len = 0;
 	for (q = fdd->write_q; q != NULL; q = q->next)
 	    len += q->len - q->buf_offset;
-	wq = memAllocate(MEM_DWRITE_Q);
-	wq->buf = xmalloc(len);
+	wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
+	wq->buf = (char *)xmalloc(len);
 	wq->len = 0;
 	wq->buf_offset = 0;
 	wq->next = NULL;
@@ -307,9 +307,9 @@ file_write(int fd,
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
-    wq = memAllocate(MEM_DWRITE_Q);
+    wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
     wq->file_offset = file_offset;
-    wq->buf = ptr_to_buf;
+    wq->buf = (char *)ptr_to_buf;
     wq->len = len;
     wq->buf_offset = 0;
     wq->next = NULL;
@@ -349,7 +349,7 @@ file_write_mbuf(int fd, off_t off, MemBuf mb, DWCB * handler, void *handler_data
 static void
 diskHandleRead(int fd, void *data)
 {
-    dread_ctrl *ctrl_dat = data;
+    dread_ctrl *ctrl_dat = (dread_ctrl *)data;
     fde *F = &fd_table[fd];
     int len;
     int rc = DISK_OK;
@@ -405,7 +405,7 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     dread_ctrl *ctrl_dat;
     PROF_start(file_read);
     assert(fd >= 0);
-    ctrl_dat = memAllocate(MEM_DREAD_CTRL);
+    ctrl_dat = (dread_ctrl *)memAllocate(MEM_DREAD_CTRL);
     ctrl_dat->fd = fd;
     ctrl_dat->offset = offset;
     ctrl_dat->req_len = req_len;

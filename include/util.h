@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.63 2002/04/06 08:49:24 adrian Exp $
+ * $Id: util.h,v 1.64 2002/10/13 20:34:51 robertc Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -61,35 +61,35 @@
 #define _etext etext
 #endif
 
-extern const char *getfullhostname(void);
-extern const char *mkhttpdlogtime(const time_t *);
-extern const char *mkrfc1123(time_t);
-extern char *uudecode(const char *);
-extern char *xstrdup(const char *);
-extern char *xstrndup(const char *, size_t);
-extern const char *xstrerror(void);
+SQUIDCEXTERN const char *getfullhostname(void);
+SQUIDCEXTERN const char *mkhttpdlogtime(const time_t *);
+SQUIDCEXTERN const char *mkrfc1123(time_t);
+SQUIDCEXTERN char *uudecode(const char *);
+SQUIDCEXTERN char *xstrdup(const char *);
+SQUIDCEXTERN char *xstrndup(const char *, size_t);
+SQUIDCEXTERN const char *xstrerror(void);
 extern const char *xbstrerror(int);
-extern int tvSubMsec(struct timeval, struct timeval);
-extern int tvSubUsec(struct timeval, struct timeval);
-extern double tvSubDsec(struct timeval, struct timeval);
-extern char *xstrncpy(char *, const char *, size_t);
-extern size_t xcountws(const char *str);
-extern time_t parse_rfc1123(const char *str);
-extern void *xcalloc(size_t, size_t);
-extern void *xmalloc(size_t);
-extern void *xrealloc(void *, size_t);
-extern void Tolower(char *);
-extern void xfree(void *);
-extern void xxfree(const void *);
+SQUIDCEXTERN int tvSubMsec(struct timeval, struct timeval);
+SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
+SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
+SQUIDCEXTERN char *xstrncpy(char *, const char *, size_t);
+SQUIDCEXTERN size_t xcountws(const char *str);
+SQUIDCEXTERN time_t parse_rfc1123(const char *str);
+SQUIDCEXTERN void *xcalloc(size_t, size_t);
+SQUIDCEXTERN void *xmalloc(size_t);
+SQUIDCEXTERN void *xrealloc(void *, size_t);
+SQUIDCEXTERN void Tolower(char *);
+SQUIDCEXTERN void xfree(void *);
+SQUIDCEXTERN void xxfree(const void *);
 
 /* rfc1738.c */
-extern char *rfc1738_escape(const char *);
-extern char *rfc1738_escape_unescaped(const char *);
-extern char *rfc1738_escape_part(const char *);
-extern void rfc1738_unescape(char *);
+SQUIDCEXTERN char *rfc1738_escape(const char *);
+SQUIDCEXTERN char *rfc1738_escape_unescaped(const char *);
+SQUIDCEXTERN char *rfc1738_escape_part(const char *);
+SQUIDCEXTERN void rfc1738_unescape(char *);
 
 /* html.c */
-extern char *html_quote(const char *);
+SQUIDCEXTERN char *html_quote(const char *);
 
 #if XMALLOC_STATISTICS
 extern void malloc_statistics(void (*)(int, int, int, void *), void *);
@@ -111,17 +111,17 @@ extern void xmalloc_find_leaks(void);
 #endif
 
 typedef struct in_addr SIA;
-extern int safe_inet_addr(const char *, SIA *);
-extern time_t parse_iso3307_time(const char *buf);
-extern char *base64_decode(const char *coded);
-extern const char *base64_encode(const char *decoded);
-extern const char *base64_encode_bin(const char *data, int len);
+SQUIDCEXTERN int safe_inet_addr(const char *, SIA *);
+SQUIDCEXTERN time_t parse_iso3307_time(const char *buf);
+SQUIDCEXTERN char *base64_decode(const char *coded);
+SQUIDCEXTERN const char *base64_encode(const char *decoded);
+SQUIDCEXTERN const char *base64_encode_bin(const char *data, int len);
 
-extern double xpercent(double part, double whole);
-extern int xpercentInt(double part, double whole);
-extern double xdiv(double nom, double denom);
+SQUIDCEXTERN double xpercent(double part, double whole);
+SQUIDCEXTERN int xpercentInt(double part, double whole);
+SQUIDCEXTERN double xdiv(double nom, double denom);
 
-extern const char *xitoa(int num);
+SQUIDCEXTERN const char *xitoa(int num);
 
 #if !HAVE_DRAND48
 double drand48(void);
@@ -139,7 +139,7 @@ typedef struct {
 #define gb_incb(gb, delta) { if ((gb)->bytes > gb_flush_limit || delta > gb_flush_limit) gb_flush(gb); (gb)->bytes += delta; }
 #define gb_incc(gb, delta) { if ((gb)->bytes > gb_flush_limit || delta > gb_flush_limit) gb_flush(gb); (gb)->count+= delta; }
 extern double gb_to_double(const gb_t *);
-extern const char *double_to_str(char *buf, int buf_size, double value);
+SQUIDCEXTERN const char *double_to_str(char *buf, int buf_size, double value);
 extern const char *gb_to_str(const gb_t *);
 extern void gb_flush(gb_t *);  /* internal, do not use this */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.46 2002/09/01 15:16:35 hno Exp $
+ * $Id: cf_gen.cc,v 1.47 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -126,7 +126,7 @@ lineAdd(Line ** L, const char *str)
 {
     while (*L)
 	L = &(*L)->next;
-    *L = xcalloc(1, sizeof(Line));
+    *L = (Line *)xcalloc(1, sizeof(Line));
     (*L)->data = xstrdup(str);
 }
 
@@ -181,10 +181,10 @@ main(int argc, char *argv[])
 		    printf("Error in input file\n");
 		    exit(1);
 		}
-		curr = calloc(1, sizeof(Entry));
+		curr = (Entry *)calloc(1, sizeof(Entry));
 		curr->name = xstrdup(name);
 		while ((aliasname = strtok(NULL, WS)) != NULL) {
-		    EntryAlias *alias = calloc(1, sizeof(EntryAlias));
+		    EntryAlias *alias = (EntryAlias *)calloc(1, sizeof(EntryAlias));
 		    alias->next = curr->alias;
 		    alias->name = xstrdup(aliasname);
 		    curr->alias = alias;
@@ -193,7 +193,7 @@ main(int argc, char *argv[])
 	    } else if (!strcmp(buff, "EOF")) {
 		state = sEXIT;
 	    } else if (!strcmp(buff, "COMMENT_START")) {
-		curr = calloc(1, sizeof(Entry));
+		curr = (Entry *)calloc(1, sizeof(Entry));
 		curr->name = xstrdup("comment");
 		curr->loc = xstrdup("none");
 		state = sDOC;
@@ -279,7 +279,7 @@ main(int argc, char *argv[])
 	    } else if (!strcmp(buff, "NOCOMMENT_START")) {
 		state = sNOCOMMENT;
 	    } else {
-		Line *line = calloc(1, sizeof(Line));
+		Line *line = (Line *)calloc(1, sizeof(Line));
 		line->data = xstrdup(buff);
 		line->next = curr->doc;
 		curr->doc = line;
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
 		curr->nocomment = head;
 		state = sDOC;
 	    } else {
-		Line *line = calloc(1, sizeof(Line));
+		Line *line = (Line *)calloc(1, sizeof(Line));
 		line->data = xstrdup(buff);
 		line->next = curr->nocomment;
 		curr->nocomment = line;

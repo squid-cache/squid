@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.22 2002/08/28 04:33:51 wessels Exp $
+ * $Id: auth_ntlm.cc,v 1.23 2002/10/13 20:35:23 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -40,6 +40,8 @@
 
 #include "squid.h"
 #include "auth_ntlm.h"
+#include "authenticate.h"
+#include "Store.h"
 
 extern AUTHSSETUP authSchemeSetup_ntlm;
 
@@ -85,6 +87,8 @@ static int authntlm_initialised = 0;
 static MemPool *ntlm_helper_state_pool = NULL;
 static MemPool *ntlm_user_pool = NULL;
 static MemPool *ntlm_request_pool = NULL;
+static MemPool *ntlm_user_hash_pool = NULL;
+
 static auth_ntlm_config *ntlmConfig = NULL;
 
 static hash_table *proxy_auth_cache = NULL;
@@ -138,7 +142,7 @@ authNTLMFreeConfig(authScheme * scheme)
 static void
 authNTLMCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
 {
-    auth_ntlm_config *config = scheme->scheme_data;
+    auth_ntlm_config *config = static_cast<auth_ntlm_config *>(scheme->scheme_data);
     wordlist *list = config->authenticate;
     storeAppendPrintf(entry, "%s %s", name, "ntlm");
     while (list != NULL) {
@@ -160,12 +164,12 @@ authNTLMParse(authScheme * scheme, int n_configured, char *param_str)
 	/* this is the first param to be found */
 	scheme->scheme_data = xmalloc(sizeof(auth_ntlm_config));
 	memset(scheme->scheme_data, 0, sizeof(auth_ntlm_config));
-	ntlmConfig = scheme->scheme_data;
+	ntlmConfig = static_cast<auth_ntlm_config *>(scheme->scheme_data);
 	ntlmConfig->authenticateChildren = 5;
 	ntlmConfig->challengeuses = 0;
 	ntlmConfig->challengelifetime = 60;
     }
-    ntlmConfig = scheme->scheme_data;
+    ntlmConfig = static_cast<auth_ntlm_config *>(scheme->scheme_data);
     if (strcasecmp(param_str, "program") == 0) {
 	if (ntlmConfig->authenticate)
 	    wordlistDestroy(&ntlmConfig->authenticate);
@@ -231,6 +235,8 @@ authNTLMInit(authScheme * scheme)
 	    ntlm_user_pool = memPoolCreate("NTLM Scheme User Data", sizeof(ntlm_user_t));
 	if (!ntlm_request_pool)
 	    ntlm_request_pool = memPoolCreate("NTLM Scheme Request Data", sizeof(ntlm_request_t));
+	if (!ntlm_user_hash_pool)
+	    ntlm_user_hash_pool = memPoolCreate("NTLM Header Hash Data", sizeof(struct ProxyAuthCachePointer));
 	authntlm_initialised = 1;
 	if (ntlmauthenticators == NULL)
 	    ntlmauthenticators = helperStatefulCreate("ntlmauthenticator");
@@ -277,7 +283,7 @@ authNTLMConfigured()
 static int
 authenticateNTLMDirection(auth_user_request_t * auth_user_request)
 {
-    ntlm_request_t *ntlm_request = auth_user_request->scheme_data;
+    ntlm_request_t *ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
     /* null auth_user is checked for by authenticateDirection */
     switch (ntlm_request->auth_state) {
     case AUTHENTICATE_STATE_NONE:	/* no progress at all. */
@@ -316,7 +322,7 @@ authenticateNTLMFixErrorHeader(auth_user_request_t * auth_user_request, HttpRepl
 	     * I haven't checked the RFC compliance of this hack - RBCollins */
 	    request->flags.proxy_keepalive = 0;
 	} else {
-	    ntlm_request = auth_user_request->scheme_data;
+	    ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
 	    switch (ntlm_request->auth_state) {
 	    case AUTHENTICATE_STATE_NONE:
 	    case AUTHENTICATE_STATE_FAILED:
@@ -365,7 +371,7 @@ static void
 authNTLMAURequestFree(auth_user_request_t * auth_user_request)
 {
     if (auth_user_request->scheme_data)
-	authNTLMRequestFree((ntlm_request_t *) auth_user_request->scheme_data);
+	authNTLMRequestFree(static_cast< ntlm_request_t *>(auth_user_request->scheme_data));
     auth_user_request->scheme_data = NULL;
 }
 
@@ -373,8 +379,8 @@ static void
 authenticateNTLMFreeUser(auth_user_t * auth_user)
 {
     dlink_node *link, *tmplink;
-    ntlm_user_t *ntlm_user = auth_user->scheme_data;
-    auth_user_hash_pointer *proxy_auth_hash;
+    ntlm_user_t *ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
+    ProxyAuthCachePointer *proxy_auth_hash;
 
     debug(29, 5) ("authenticateNTLMFreeUser: Clearing NTLM scheme data\n");
     if (ntlm_user->username)
@@ -383,14 +389,14 @@ authenticateNTLMFreeUser(auth_user_t * auth_user)
     link = ntlm_user->proxy_auth_list.head;
     while (link) {
 	debug(29, 9) ("authenticateFreeProxyAuthUser: removing proxy_auth hash entry '%p'\n", link->data);
-	proxy_auth_hash = link->data;
+	proxy_auth_hash = static_cast<ProxyAuthCachePointer *>(link->data);
 	tmplink = link;
 	link = link->next;
 	dlinkDelete(tmplink, &ntlm_user->proxy_auth_list);
 	hash_remove_link(proxy_auth_cache, (hash_link *) proxy_auth_hash);
 	/* free the key (usually the proxy_auth header) */
 	xfree(proxy_auth_hash->key);
-	memFree(proxy_auth_hash, MEM_AUTH_USER_HASH);
+	memPoolFree(ntlm_user_hash_pool, proxy_auth_hash);
     }
     memPoolFree(ntlm_user_pool, ntlm_user);
     auth_user->scheme_data = NULL;
@@ -399,7 +405,7 @@ authenticateNTLMFreeUser(auth_user_t * auth_user)
 static stateful_helper_callback_t
 authenticateNTLMHandleplaceholder(void *data, void *lastserver, char *reply)
 {
-    authenticateStateData *r = data;
+    authenticateStateData *r = static_cast<authenticateStateData *>(data);
     stateful_helper_callback_t result = S_HELPER_UNKNOWN;
     /* we should only be called for placeholder requests - which have no reply string */
     assert(reply == NULL);
@@ -420,7 +426,7 @@ authenticateNTLMHandleplaceholder(void *data, void *lastserver, char *reply)
 static stateful_helper_callback_t
 authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 {
-    authenticateStateData *r = data;
+    authenticateStateData *r = static_cast<authenticateStateData *>(data);
     ntlm_helper_state_t *helperstate;
     stateful_helper_callback_t result = S_HELPER_UNKNOWN;
     char *t = NULL;
@@ -448,7 +454,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	/* we have been given a Challenge */
 	/* we should check we weren't given an empty challenge */
 	/* copy the challenge to the state data */
-	helperstate = helperStatefulServerGetData(lastserver);
+	helperstate = static_cast<ntlm_helper_state_t *>(helperStatefulServerGetData(static_cast<helper_stateful_server *>(lastserver)));
 	if (helperstate == NULL)
 	    fatal("lost NTLM helper state! quitting\n");
 	helperstate->challenge = xstrndup(reply, NTLM_CHALLENGE_SZ + 5);
@@ -459,14 +465,14 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	assert(r->auth_user_request != NULL);
 	assert(r->auth_user_request->auth_user->auth_type == AUTH_NTLM);
 	auth_user_request = r->auth_user_request;
-	ntlm_request = auth_user_request->scheme_data;
+	ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
 	assert(ntlm_request != NULL);
 	result = S_HELPER_DEFER;
 	/* reserve the server for future authentication */
 	ntlm_request->authserver_deferred = 1;
 	debug(29, 9) ("authenticateNTLMHandleReply: helper '%p'\n", lastserver);
 	assert(ntlm_request->auth_state == AUTHENTICATE_STATE_NEGOTIATE);
-	ntlm_request->authserver = lastserver;
+	ntlm_request->authserver = static_cast<helper_stateful_server *>(lastserver);
 	ntlm_request->authchallenge = xstrndup(reply, NTLM_CHALLENGE_SZ + 5);
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
 	/* we're finished, release the helper */
@@ -475,9 +481,9 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	assert(r->auth_user_request->auth_user->auth_type == AUTH_NTLM);
 	auth_user_request = r->auth_user_request;
 	assert(auth_user_request->scheme_data != NULL);
-	ntlm_request = auth_user_request->scheme_data;
+	ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
 	auth_user = auth_user_request->auth_user;
-	ntlm_user = auth_user_request->auth_user->scheme_data;
+	ntlm_user = static_cast<ntlm_user_t *>(auth_user_request->auth_user->scheme_data);
 	assert(ntlm_user != NULL);
 	result = S_HELPER_RELEASE;
 	/* we only expect OK when finishing the handshake */
@@ -500,9 +506,9 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	assert(r->auth_user_request->auth_user->auth_type == AUTH_NTLM);
 	auth_user_request = r->auth_user_request;
 	assert(auth_user_request->scheme_data != NULL);
-	ntlm_request = auth_user_request->scheme_data;
+	ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
 	auth_user = auth_user_request->auth_user;
-	ntlm_user = auth_user_request->auth_user->scheme_data;
+	ntlm_user = static_cast<ntlm_user_t *>(auth_user_request->auth_user->scheme_data);
 	assert(ntlm_user != NULL);
 	result = S_HELPER_RELEASE;
 	/* we only expect LD when finishing the handshake */
@@ -521,8 +527,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	auth_user_request = r->auth_user_request;
 	auth_user = auth_user_request->auth_user;
 	assert(auth_user != NULL);
-	ntlm_user = auth_user->scheme_data;
-	ntlm_request = auth_user_request->scheme_data;
+	ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
+	ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
 	assert((ntlm_user != NULL) && (ntlm_request != NULL));
 	/* todo: action of Negotiate state on error */
 	result = S_HELPER_RELEASE;	/*some error has occured. no more requests */
@@ -545,13 +551,13 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	auth_user_request = r->auth_user_request;
 	auth_user = auth_user_request->auth_user;
 	assert(auth_user != NULL);
-	ntlm_user = auth_user->scheme_data;
-	ntlm_request = auth_user_request->scheme_data;
+	ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
+	ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
 	assert((ntlm_user != NULL) && (ntlm_request != NULL));
 	result = S_HELPER_RELEASE;	/*some error has occured. no more requests for 
 					 * this helper */
 	assert(ntlm_request->authserver ? ntlm_request->authserver == lastserver : 1);
-	helperstate = helperStatefulServerGetData(ntlm_request->authserver);
+	helperstate = static_cast<ntlm_helper_state_t *>(helperStatefulServerGetData(ntlm_request->authserver));
 	ntlm_request->authserver = NULL;
 	if (ntlm_request->auth_state == AUTHENTICATE_STATE_NEGOTIATE) {
 	    /* The helper broke on YR. It automatically
@@ -584,8 +590,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	auth_user_request = r->auth_user_request;
 	auth_user = auth_user_request->auth_user;
 	assert(auth_user != NULL);
-	ntlm_user = auth_user->scheme_data;
-	ntlm_request = auth_user_request->scheme_data;
+	ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
+	ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
 	assert((ntlm_user != NULL) && (ntlm_request != NULL));
 	debug(29, 1) ("authenticateNTLMHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
 	/* **** NOTE THIS CODE IS EFFECTIVELY UNTESTED **** */
@@ -658,8 +664,8 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 
     assert(auth_user_request);
     auth_user = auth_user_request->auth_user;
-    ntlm_user = auth_user->scheme_data;
-    ntlm_request = auth_user_request->scheme_data;
+    ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
+    ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
     assert(ntlm_user);
     assert(ntlm_request);
     assert(handler);
@@ -702,7 +708,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 	 * 3: tell it to get a challenge, or give ntlmauthdone the challenge
 	 */
 	server = helperStatefulDefer(ntlmauthenticators);
-	helperstate = server ? helperStatefulServerGetData(server) : NULL;
+	helperstate = server ? static_cast<ntlm_helper_state_t *>(helperStatefulServerGetData(server)) : NULL;
 	while ((server != NULL) && authenticateNTLMChangeChallenge_p(helperstate)) {
 	    /* flag this helper for challenge changing */
 	    helperstate->starve = 1;
@@ -710,7 +716,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 	    helperStatefulReleaseServer(server);
 	    /* Get another deferrable server */
 	    server = helperStatefulDefer(ntlmauthenticators);
-	    helperstate = server ? helperStatefulServerGetData(server) : NULL;
+	    helperstate = server ? static_cast<ntlm_helper_state_t *>(helperStatefulServerGetData(server)) : NULL;
 	}
 	if (server == NULL)
 	    debug(29, 9) ("unable to get a deferred ntlm helper... all helpers are refreshing challenges. Queuing as a placeholder request.\n");
@@ -767,7 +773,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 static int
 authenticateNTLMHelperServerAvailable(void *data)
 {
-    ntlm_helper_state_t *statedata = data;
+    ntlm_helper_state_t *statedata = static_cast<ntlm_helper_state_t *>(data);
     if (statedata != NULL) {
 	if (statedata->starve) {
 	    debug(29, 4) ("authenticateNTLMHelperServerAvailable: starving - returning 0\n");
@@ -784,7 +790,7 @@ authenticateNTLMHelperServerAvailable(void *data)
 static void
 authenticateNTLMHelperServerOnEmpty(void *data)
 {
-    ntlm_helper_state_t *statedata = data;
+    ntlm_helper_state_t *statedata = static_cast<ntlm_helper_state_t *>(data);
     if (statedata == NULL)
 	return;
     if (statedata->starve) {
@@ -806,7 +812,7 @@ authenticateNTLMReleaseServer(auth_user_request_t * auth_user_request)
     ntlm_request_t *ntlm_request;
     assert(auth_user_request->auth_user->auth_type == AUTH_NTLM);
     assert(auth_user_request->scheme_data != NULL);
-    ntlm_request = auth_user_request->scheme_data;
+    ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
     debug(29, 9) ("authenticateNTLMReleaseServer: releasing server '%p'\n", ntlm_request->authserver);
     helperStatefulReleaseServer(ntlm_request->authserver);
     ntlm_request->authserver = NULL;
@@ -820,28 +826,28 @@ authenticateNTLMOnCloseConnection(ConnStateData * conn)
     assert(conn != NULL);
     if (conn->auth_user_request != NULL) {
 	assert(conn->auth_user_request->scheme_data != NULL);
-	ntlm_request = conn->auth_user_request->scheme_data;
+	ntlm_request = static_cast< ntlm_request_t *>(conn->auth_user_request->scheme_data);
 	assert(ntlm_request->conn == conn);
 	if (ntlm_request->authserver != NULL && ntlm_request->authserver_deferred)
 	    authenticateNTLMReleaseServer(conn->auth_user_request);
 	/* unlock the connection based lock */
 	debug(29, 9) ("authenticateNTLMOnCloseConnection: Unlocking auth_user from the connection.\n");
-	/* minor abstraction break here: FIXME */
+	/* This still breaks the abstraction, but is at least read only now */
 	/* Ensure that the auth user request will be getting closed */
 	/* IFF we start persisting the struct after the conn closes - say for logging
 	 * then this test may become invalid
 	 */
-	assert(conn->auth_user_request->references == 1);
+	assert(authenticateRequestRefCount(conn->auth_user_request) == 1);
 	authenticateAuthUserRequestUnlock(conn->auth_user_request);
 	conn->auth_user_request = NULL;
     }
 }
 
 /* authenticateUserUsername: return a pointer to the username in the */
-static char *
-authenticateNTLMUsername(auth_user_t * auth_user)
+static const char *
+authenticateNTLMUsername(auth_user_t const * auth_user)
 {
-    ntlm_user_t *ntlm_user = auth_user->scheme_data;
+    ntlm_user_t *ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
     if (ntlm_user)
 	return ntlm_user->username;
     return NULL;
@@ -856,7 +862,7 @@ NTLMLastHeader(auth_user_request_t * auth_user_request)
     ntlm_request_t *ntlm_request;
     assert(auth_user_request != NULL);
     assert(auth_user_request->scheme_data != NULL);
-    ntlm_request = auth_user_request->scheme_data;
+    ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
     return ntlm_request->ntlmauthenticate;
 }
 
@@ -899,18 +905,18 @@ authenticateNTLMcmpUsername(ntlm_user_t * u1, ntlm_user_t * u2)
 static void
 authenticateProxyAuthCacheAddLink(const char *key, auth_user_t * auth_user)
 {
-    auth_user_hash_pointer *proxy_auth_hash;
+    struct ProxyAuthCachePointer *proxy_auth_hash;
     dlink_node *node;
     ntlm_user_t *ntlm_user;
-    ntlm_user = auth_user->scheme_data;
+    ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
     node = ntlm_user->proxy_auth_list.head;
     /* prevent duplicates */
     while (node) {
-	if (!strcmp(key, ((auth_user_hash_pointer *) node->data)->key))
+	if (!strcmp(key, ((struct ProxyAuthCachePointer *) node->data)->key))
 	    return;
 	node = node->next;
     }
-    proxy_auth_hash = memAllocate(MEM_AUTH_USER_HASH);
+    proxy_auth_hash = static_cast<ProxyAuthCachePointer *>(memPoolAlloc(ntlm_user_hash_pool));
     proxy_auth_hash->key = xstrdup(key);
     proxy_auth_hash->auth_user = auth_user;
     dlinkAddTail(proxy_auth_hash, &proxy_auth_hash->link, &ntlm_user->proxy_auth_list);
@@ -921,7 +927,7 @@ authenticateProxyAuthCacheAddLink(const char *key, auth_user_t * auth_user)
 static int
 authNTLMAuthenticated(auth_user_request_t * auth_user_request)
 {
-    ntlm_request_t *ntlm_request = auth_user_request->scheme_data;
+    ntlm_request_t *ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
     if (ntlm_request->auth_state == AUTHENTICATE_STATE_DONE)
 	return 1;
     debug(29, 9) ("User not fully authenticated.\n");
@@ -932,7 +938,8 @@ static void
 authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, request_t * request, ConnStateData * conn, http_hdr_type type)
 {
     const char *proxy_auth;
-    auth_user_hash_pointer *usernamehash, *proxy_auth_hash = NULL;
+    struct ProxyAuthCachePointer *proxy_auth_hash = NULL;
+    auth_user_hash_pointer *usernamehash;
     auth_user_t *auth_user;
     ntlm_request_t *ntlm_request;
     ntlm_user_t *ntlm_user;
@@ -945,8 +952,8 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
     assert(auth_user->auth_type == AUTH_NTLM);
     assert(auth_user->scheme_data != NULL);
     assert(auth_user_request->scheme_data != NULL);
-    ntlm_user = auth_user->scheme_data;
-    ntlm_request = auth_user_request->scheme_data;
+    ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
+    ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
     switch (ntlm_request->auth_state) {
     case AUTHENTICATE_STATE_NONE:
 	/* we've recieved a negotiate request. pass to a helper */
@@ -987,7 +994,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	/* see if we already know this user's authenticate */
 	debug(29, 9) ("aclMatchProxyAuth: cache lookup with key '%s'\n", ntlmhash);
 	assert(proxy_auth_cache != NULL);
-	proxy_auth_hash = hash_lookup(proxy_auth_cache, ntlmhash);
+	proxy_auth_hash = static_cast<ProxyAuthCachePointer *>(hash_lookup(proxy_auth_cache, ntlmhash));
 	if (!proxy_auth_hash) {	/* not in the hash table */
 	    debug(29, 4) ("authenticateNTLMAuthenticateUser: proxy-auth cache miss.\n");
 	    ntlm_request->auth_state = AUTHENTICATE_STATE_RESPONSE;
@@ -1005,7 +1012,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	    debug(29, 9) ("found matching cache entry\n");
 	    assert(auth_user->auth_type == AUTH_NTLM);
 	    /* get the existing entries details */
-	    ntlm_user = auth_user->scheme_data;
+	    ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
 	    debug(29, 9) ("Username to be used is %s\n", ntlm_user->username);
 	    /* on ntlm auth we do not unlock the auth_user until the
 	     * connection is dropped. Thank MS for this quirk */
@@ -1028,20 +1035,20 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	    ntlm_request->authchallenge);
 	/* see if this is an existing user with a different proxy_auth 
 	 * string */
-	if ((usernamehash = hash_lookup(proxy_auth_username_cache, ntlm_user->username))) {
-	    while ((usernamehash->auth_user->auth_type != auth_user->auth_type) && (usernamehash->next) && !authenticateNTLMcmpUsername(usernamehash->auth_user->scheme_data, ntlm_user))
+	if ((usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username)))) {
+	    while ((authUserHashPointerUser(usernamehash)->auth_type != auth_user->auth_type) && (usernamehash->next) && !authenticateNTLMcmpUsername(static_cast<ntlm_user_t *>(authUserHashPointerUser(usernamehash)->scheme_data), ntlm_user))
 		usernamehash = usernamehash->next;
-	    if (usernamehash->auth_user->auth_type == auth_user->auth_type) {
+	    if (authUserHashPointerUser(usernamehash)->auth_type == auth_user->auth_type) {
 		/*
 		 * add another link from the new proxy_auth to the
 		 * auth_user structure and update the information */
 		assert(proxy_auth_hash == NULL);
-		authenticateProxyAuthCacheAddLink(ntlmhash, usernamehash->auth_user);
+		authenticateProxyAuthCacheAddLink(ntlmhash, authUserHashPointerUser(usernamehash));
 		/* we can't seamlessly recheck the username due to the 
 		 * challenge nature of the protocol. Just free the 
 		 * temporary auth_user */
-		authenticateAuthUserMerge(auth_user, usernamehash->auth_user);
-		auth_user = usernamehash->auth_user;
+		authenticateAuthUserMerge(auth_user, authUserHashPointerUser(usernamehash));
+		auth_user = authUserHashPointerUser(usernamehash);
 		auth_user_request->auth_user = auth_user;
 	    }
 	} else {

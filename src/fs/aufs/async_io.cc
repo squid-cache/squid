@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.15 2002/10/02 22:32:22 robertc Exp $
+ * $Id: async_io.cc,v 1.16 2002/10/13 20:35:24 robertc Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "store_asyncufs.h"
+#include "Store.h"
 
 #define _AIO_OPEN	0
 #define _AIO_READ	1
@@ -119,7 +120,7 @@ aioOpen(const char *path, int oflag, mode_t mode, AIOCB * callback, void *callba
 
     assert(initialised);
     squidaio_counts.open_start++;
-    ctrlp = memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -138,7 +139,7 @@ aioClose(int fd)
     assert(initialised);
     squidaio_counts.close_start++;
     aioCancel(fd);
-    ctrlp = memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = fd;
     ctrlp->done_handler = NULL;
     ctrlp->done_handler_data = NULL;
@@ -159,7 +160,7 @@ aioCancel(int fd)
     squidaio_counts.cancel++;
     for (m = used_list.head; m; m = next) {
 	next = m->next;
-	curr = m->data;
+	curr = (squidaio_ctrl_t *)m->data;
 	if (curr->fd != fd)
 	    continue;
 
@@ -187,7 +188,7 @@ aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callba
 
     assert(initialised);
     squidaio_counts.write_start++;
-    ctrlp = memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -214,7 +215,7 @@ aioRead(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callbac
 
     assert(initialised);
     squidaio_counts.read_start++;
-    ctrlp = memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -238,7 +239,7 @@ aioStat(char *path, struct stat *sb, AIOCB * callback, void *callback_data)
 
     assert(initialised);
     squidaio_counts.stat_start++;
-    ctrlp = memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -255,7 +256,7 @@ aioUnlink(const char *path, AIOCB * callback, void *callback_data)
     squidaio_ctrl_t *ctrlp;
     assert(initialised);
     squidaio_counts.unlink_start++;
-    ctrlp = memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);
@@ -271,7 +272,7 @@ aioTruncate(const char *path, off_t length, AIOCB * callback, void *callback_dat
     squidaio_ctrl_t *ctrlp;
     assert(initialised);
     squidaio_counts.unlink_start++;
-    ctrlp = memPoolAlloc(squidaio_ctrl_pool);
+    ctrlp = (squidaio_ctrl_t *)memPoolAlloc(squidaio_ctrl_pool);
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
     ctrlp->done_handler_data = cbdataReference(callback_data);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.114 2002/09/26 13:33:08 robertc Exp $
+ * $Id: store_client.cc,v 1.115 2002/10/13 20:35:05 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -35,6 +35,8 @@
 
 #include "squid.h"
 #include "StoreClient.h"
+#include "Store.h"
+
 
 CBDATA_TYPE(store_client);
 
@@ -172,7 +174,7 @@ storeClientCallback(store_client * sc, ssize_t sz)
 static void
 storeClientCopyEvent(void *data)
 {
-    store_client *sc = data;
+    store_client *sc = (store_client *)data;
     debug(20, 3) ("storeClientCopyEvent: Running\n");
     sc->flags.copy_event_pending = 0;
     if (!sc->callback)
@@ -190,7 +192,7 @@ storeClientCopy(store_client * sc,
 {
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     debug(20, 3) ("storeClientCopy: %s, from %lu, for length %d, cb %p, cbdata %p\n",
-	storeKeyText(e->hash.key),
+	storeKeyText((const cache_key *)e->hash.key),
 	(unsigned long) copyInto.offset,
 	copyInto.length,
 	callback,
@@ -250,7 +252,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	return;
     }
     sc->flags.store_copying = 1;
-    debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText((const cache_key *)e->hash.key));
     assert(sc->callback != NULL);
     /*
      * We used to check for ENTRY_ABORTED here.  But there were some
@@ -355,7 +357,7 @@ storeClientFileRead(store_client * sc)
 	    sc);
     } else {
 	if (sc->entry->swap_status == SWAPOUT_WRITING)
-	    assert(storeOffset(mem->swapout.sio) > sc->copyInto.offset + mem->swap_hdr_sz);
+	    assert(storeOffset(mem->swapout.sio) > sc->copyInto.offset + (off_t)mem->swap_hdr_sz);
 	storeRead(sc->swapin_sio,
 	    sc->copyInto.data,
 	    sc->copyInto.length,
@@ -368,7 +370,7 @@ storeClientFileRead(store_client * sc)
 static void
 storeClientReadBody(void *data, const char *buf, ssize_t len)
 {
-    store_client *sc = data;
+    store_client *sc = (store_client *)data;
     MemObject *mem = sc->entry->mem_obj;
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
@@ -383,7 +385,7 @@ static void
 storeClientReadHeader(void *data, const char *buf, ssize_t len)
 {
     static int md5_mismatches = 0;
-    store_client *sc = data;
+    store_client *sc = (store_client *)data;
     StoreEntry *e = sc->entry;
     MemObject *mem = e->mem_obj;
     int swap_hdr_sz = 0;
@@ -423,8 +425,8 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	    if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
 		memcmp(t->value, e->hash.key, MD5_DIGEST_CHARS)) {
 		debug(20, 2) ("storeClientReadHeader: swapin MD5 mismatch\n");
-		debug(20, 2) ("\t%s\n", storeKeyText(t->value));
-		debug(20, 2) ("\t%s\n", storeKeyText(e->hash.key));
+		debug(20, 2) ("\t%s\n", storeKeyText((const cache_key *)t->value));
+		debug(20, 2) ("\t%s\n", storeKeyText((const cache_key *)e->hash.key));
 		if (isPowTen(++md5_mismatches))
 		    debug(20, 1) ("WARNING: %d swapin MD5 mismatches\n",
 			md5_mismatches);
@@ -434,7 +436,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	case STORE_META_URL:
 	    if (NULL == mem->url)
 		(void) 0;	/* can't check */
-	    else if (0 == strcasecmp(mem->url, t->value))
+	    else if (0 == strcasecmp(mem->url, (char *)t->value))
 		(void) 0;	/* a match! */
 	    else {
 		debug(20, 1) ("storeClientReadHeader: URL mismatch\n");
@@ -447,11 +449,11 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	    break;
 	case STORE_META_VARY_HEADERS:
 	    if (mem->vary_headers) {
-		if (strcmp(mem->vary_headers, t->value) != 0)
+		if (strcmp(mem->vary_headers, (char *)t->value) != 0)
 		    swap_object_ok = 0;
 	    } else {
 		/* Assume the object is OK.. remember the vary request headers */
-		mem->vary_headers = xstrdup(t->value);
+		mem->vary_headers = xstrdup((char *)t->value);
 	    }
 	    break;
 	default:
@@ -471,7 +473,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
      * it to them, otherwise schedule another read.
      */
     body_sz = len - swap_hdr_sz;
-    if (sc->copyInto.offset < body_sz) {
+    if (static_cast<size_t>(sc->copyInto.offset) < body_sz) {
 	/*
 	 * we have (part of) what they want
 	 */
@@ -524,7 +526,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 #endif
     if (mem == NULL)
 	return 0;
-    debug(20, 3) ("storeUnregister: called for '%s'\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("storeUnregister: called for '%s'\n", storeKeyText((const cache_key *)e->hash.key));
     if (sc == NULL)
 	return 0;
     if (mem->clients.head == NULL)
@@ -574,7 +576,7 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
     dlink_node *node;
 
     for (node = mem->clients.head; node; node = nx) {
-	sc = node->data;
+	sc = (store_client *)node->data;
 	nx = node->next;
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
@@ -597,10 +599,10 @@ InvokeHandlers(StoreEntry * e)
     dlink_node *nx = NULL;
     dlink_node *node;
 
-    debug(20, 3) ("InvokeHandlers: %s\n", storeKeyText(e->hash.key));
+    debug(20, 3) ("InvokeHandlers: %s\n", storeKeyText((const cache_key *)e->hash.key));
     /* walk the entire list looking for valid callbacks */
     for (node = mem->clients.head; node; node = nx) {
-	sc = node->data;
+	sc = (store_client *)node->data;
 	nx = node->next;
 	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i++);
 	if (sc->callback_data == NULL)
@@ -626,9 +628,9 @@ storePendingNClients(const StoreEntry * e)
 static int
 CheckQuickAbort2(StoreEntry * entry)
 {
-    int curlen;
-    int minlen;
-    int expectlen;
+    size_t curlen;
+    size_t minlen;
+    size_t expectlen;
     MemObject *mem = entry->mem_obj;
     assert(mem);
     debug(20, 3) ("CheckQuickAbort2: entry=%p, mem=%p\n", entry, mem);
@@ -641,8 +643,9 @@ CheckQuickAbort2(StoreEntry * entry)
 	return 1;
     }
     expectlen = mem->reply->content_length + mem->reply->hdr_sz;
-    curlen = (int) mem->inmem_hi;
-    minlen = (int) Config.quickAbort.min << 10;
+    assert (mem->reply->content_length + mem->reply->hdr_sz >= 0);
+    curlen = (size_t) mem->inmem_hi;
+    minlen = (size_t) Config.quickAbort.min << 10;
     if (minlen < 0) {
 	debug(20, 3) ("CheckQuickAbort2: NO disabled\n");
 	return 0;
@@ -663,7 +666,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	debug(20, 3) ("CheckQuickAbort2: NO avoid FPE\n");
 	return 0;
     }
-    if ((curlen / (expectlen / 100)) > Config.quickAbort.pct) {
+    if ((curlen / (expectlen / 100)) > (size_t)Config.quickAbort.pct) {
 	debug(20, 3) ("CheckQuickAbort2: NO past point of no return\n");
 	return 0;
     }

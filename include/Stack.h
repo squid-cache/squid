@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.11 2001/10/08 16:18:31 hno Exp $
+ * $Id: Stack.h,v 1.12 2002/10/13 20:34:51 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -42,9 +42,9 @@ typedef Array Stack;
 #define stackInit arrayInit
 #define stackClean arrayClean
 #define stackDestroy arrayDestroy
-extern void *stackPop(Stack * s);
+SQUIDCEXTERN void *stackPop(Stack * s);
 #define stackPush arrayAppend
 #define stackPrePush arrayPreAppend
-extern void *stackTop(Stack * s);
+SQUIDCEXTERN void *stackTop(Stack * s);
 
 #endif /* SQUID_STACK_H */

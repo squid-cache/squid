@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.47 2002/09/29 12:08:48 hno Exp $
+ * $Id: helper.cc,v 1.48 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #define HELPER_MAX_ARGS 64
 
@@ -82,7 +83,7 @@ helperOpenServers(helper * hlp)
 	shortname = xstrdup(progname);
     debug(84, 1) ("helperOpenServers: Starting %d '%s' processes\n",
 	hlp->n_to_start, shortname);
-    procname = xmalloc(strlen(shortname) + 3);
+    procname = (char *)xmalloc(strlen(shortname) + 3);
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
     args[nargs++] = procname;
     for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
@@ -109,7 +110,7 @@ helperOpenServers(helper * hlp)
 	srv->index = k;
 	srv->rfd = rfd;
 	srv->wfd = wfd;
-	srv->buf = memAllocate(MEM_8K_BUF);
+	srv->buf = (char *)memAllocate(MEM_8K_BUF);
 	srv->buf_sz = 8192;
 	srv->offset = 0;
 	srv->parent = cbdataReference(hlp);
@@ -158,7 +159,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 	shortname = xstrdup(progname);
     debug(84, 1) ("helperStatefulOpenServers: Starting %d '%s' processes\n",
 	hlp->n_to_start, shortname);
-    procname = xmalloc(strlen(shortname) + 3);
+    procname = (char *)xmalloc(strlen(shortname) + 3);
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
     args[nargs++] = procname;
     for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
@@ -191,7 +192,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 	srv->index = k;
 	srv->rfd = rfd;
 	srv->wfd = wfd;
-	srv->buf = memAllocate(MEM_8K_BUF);
+	srv->buf = (char *)memAllocate(MEM_8K_BUF);
 	srv->buf_sz = 8192;
 	srv->offset = 0;
 	srv->parent = cbdataReference(hlp);
@@ -221,7 +222,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 void
 helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
-    helper_request *r = memAllocate(MEM_HELPER_REQUEST);
+    helper_request *r = (helper_request *)memAllocate(MEM_HELPER_REQUEST);
     helper_server *srv;
     if (hlp == NULL) {
 	debug(84, 3) ("helperSubmit: hlp == NULL\n");
@@ -244,7 +245,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 void
 helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver)
 {
-    helper_stateful_request *r = memAllocate(MEM_HELPER_STATEFUL_REQUEST);
+    helper_stateful_request *r = (helper_stateful_request *)memAllocate(MEM_HELPER_STATEFUL_REQUEST);
     helper_stateful_server *srv;
     if (hlp == NULL) {
 	debug(84, 3) ("helperStatefulSubmit: hlp == NULL\n");
@@ -311,7 +312,7 @@ helperStatefulDefer(statefulhelper * hlp)
     rv = srv;
     if (rv == NULL)
 	for (n = hlp->servers.head; n != NULL; n = n->next) {
-	    srv = n->data;
+	    srv = (helper_stateful_server *)n->data;
 	    if (srv->flags.reserved == S_HELPER_RESERVED)
 		continue;
 	    if (!srv->flags.alive)
@@ -424,7 +425,7 @@ helperStats(StoreEntry * sentry, helper * hlp)
 	"Offset",
 	"Request");
     for (link = hlp->servers.head; link; link = link->next) {
-	srv = link->data;
+	srv = (helper_server*)link->data;
 	tt = 0.001 * tvSubMsec(srv->dispatch_time,
 	    srv->flags.busy ? current_time : srv->answer_time);
 	storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
@@ -475,7 +476,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
 	"Offset",
 	"Request");
     for (link = hlp->servers.head; link; link = link->next) {
-	srv = link->data;
+	srv = (helper_stateful_server *)link->data;
 	tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
 	storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%11d\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
 	    srv->index + 1,
@@ -508,7 +509,7 @@ helperShutdown(helper * hlp)
     dlink_node *link = hlp->servers.head;
     while (link) {
 	helper_server *srv;
-	srv = link->data;
+	srv = (helper_server *)link->data;
 	link = link->next;
 	if (!srv->flags.alive) {
 	    debug(34, 3) ("helperShutdown: %s #%d is NOT ALIVE.\n",
@@ -540,7 +541,7 @@ helperStatefulShutdown(statefulhelper * hlp)
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
     while (link) {
-	srv = link->data;
+	srv = (helper_stateful_server *)link->data;
 	link = link->next;
 	if (!srv->flags.alive) {
 	    debug(34, 3) ("helperStatefulShutdown: %s #%d is NOT ALIVE.\n",
@@ -628,7 +629,7 @@ helperStatefulFree(statefulhelper * hlp)
 static void
 helperServerFree(int fd, void *data)
 {
-    helper_server *srv = data;
+    helper_server *srv = (helper_server *)data;
     helper *hlp = srv->parent;
     helper_request *r;
     assert(srv->rfd == fd);
@@ -661,7 +662,7 @@ helperServerFree(int fd, void *data)
 static void
 helperStatefulServerFree(int fd, void *data)
 {
-    helper_stateful_server *srv = data;
+    helper_stateful_server *srv = (helper_stateful_server *)data;
     statefulhelper *hlp = srv->parent;
     helper_stateful_request *r;
     assert(srv->rfd == fd);
@@ -700,7 +701,7 @@ helperHandleRead(int fd, void *data)
 {
     int len;
     char *t = NULL;
-    helper_server *srv = data;
+    helper_server *srv = (helper_server *)data;
     helper_request *r;
     helper *hlp = srv->parent;
     assert(fd == srv->rfd);
@@ -760,7 +761,7 @@ helperStatefulHandleRead(int fd, void *data)
 {
     int len;
     char *t = NULL;
-    helper_stateful_server *srv = data;
+    helper_stateful_server *srv = (helper_stateful_server *)data;
     helper_stateful_request *r;
     statefulhelper *hlp = srv->parent;
     assert(fd == srv->rfd);
@@ -858,7 +859,7 @@ helperStatefulHandleRead(int fd, void *data)
 static void
 Enqueue(helper * hlp, helper_request * r)
 {
-    dlink_node *link = memAllocate(MEM_DLINK_NODE);
+    dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
     hlp->stats.queue_size++;
     if (hlp->stats.queue_size < hlp->n_running)
@@ -878,7 +879,7 @@ Enqueue(helper * hlp, helper_request * r)
 static void
 StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
 {
-    dlink_node *link = memAllocate(MEM_DLINK_NODE);
+    dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
     hlp->stats.queue_size++;
     if (hlp->stats.queue_size < hlp->n_running)
@@ -898,7 +899,7 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
 static void
 StatefulServerEnqueue(helper_stateful_server * srv, helper_stateful_request * r)
 {
-    dlink_node *link = memAllocate(MEM_DLINK_NODE);
+    dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &srv->queue);
 /* TODO: warning if the queue on this server is more than X
  * We don't check the queue size at the moment, because
@@ -926,7 +927,7 @@ Dequeue(helper * hlp)
     dlink_node *link;
     helper_request *r = NULL;
     if ((link = hlp->queue.head)) {
-	r = link->data;
+	r = (helper_request *)link->data;
 	dlinkDelete(link, &hlp->queue);
 	memFree(link, MEM_DLINK_NODE);
 	hlp->stats.queue_size--;
@@ -940,7 +941,7 @@ StatefulServerDequeue(helper_stateful_server * srv)
     dlink_node *link;
     helper_stateful_request *r = NULL;
     if ((link = srv->queue.head)) {
-	r = link->data;
+	r = (helper_stateful_request *)link->data;
 	dlinkDelete(link, &srv->queue);
 	memFree(link, MEM_DLINK_NODE);
     }
@@ -953,7 +954,7 @@ StatefulDequeue(statefulhelper * hlp)
     dlink_node *link;
     helper_stateful_request *r = NULL;
     if ((link = hlp->queue.head)) {
-	r = link->data;
+	r = (helper_stateful_request *)link->data;
 	dlinkDelete(link, &hlp->queue);
 	memFree(link, MEM_DLINK_NODE);
 	hlp->stats.queue_size--;
@@ -969,7 +970,7 @@ GetFirstAvailable(helper * hlp)
     if (hlp->n_running == 0)
 	return NULL;
     for (n = hlp->servers.head; n != NULL; n = n->next) {
-	srv = n->data;
+	srv = (helper_server *)n->data;
 	if (srv->flags.busy)
 	    continue;
 	if (!srv->flags.alive)
@@ -988,7 +989,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
     if (hlp->n_running == 0)
 	return NULL;
     for (n = hlp->servers.head; n != NULL; n = n->next) {
-	srv = n->data;
+	srv = (helper_stateful_server *)n->data;
 	if (srv->flags.busy)
 	    continue;
 	if (srv->flags.reserved == S_HELPER_RESERVED)

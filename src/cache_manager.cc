@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.26 2001/02/23 20:59:50 hno Exp $
+ * $Id: cache_manager.cc,v 1.27 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #define MGR_PASSWD_SZ 128
 
@@ -77,7 +78,7 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
 	debug(16, 3) ("cachemgrRegister: Duplicate '%s'\n", action);
 	return;
     }
-    a = xcalloc(1, sizeof(action_table));
+    a = (action_table *)xcalloc(1, sizeof(action_table));
     a->action = xstrdup(action);
     a->desc = xstrdup(desc);
     a->handler = handler;
@@ -131,7 +132,7 @@ cachemgrParseUrl(const char *url)
 	}
     }
     /* set absent entries to NULL so we can test if they are present later */
-    mgr = xcalloc(1, sizeof(cachemgrStateData));
+    mgr = (cachemgrStateData *)xcalloc(1, sizeof(cachemgrStateData));
     mgr->user_name = NULL;
     mgr->passwd = t == 3 ? xstrdup(password) : NULL;
     mgr->action = xstrdup(request);

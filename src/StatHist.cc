@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.26 2001/10/24 08:19:08 hno Exp $
+ * $Id: StatHist.cc,v 1.27 2002/10/13 20:34:57 robertc Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -46,6 +46,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 /* Local functions */
 static void statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
@@ -71,7 +72,7 @@ statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, do
     assert(val_in && val_out);
     /* check before we divide to get scale */
     assert(val_in(max - min) > 0);
-    H->bins = xcalloc(capacity, sizeof(int));
+    H->bins = (int *)xcalloc(capacity, sizeof(int));
     H->min = min;
     H->max = max;
     H->capacity = capacity;
@@ -188,7 +189,7 @@ statHistDeltaMedian(const StatHist * A, const StatHist * B)
     int J = A->capacity;
     int K;
     double f;
-    int *D = xcalloc(A->capacity, sizeof(int));
+    int *D = (int *)xcalloc(A->capacity, sizeof(int));
     assert(A->capacity == B->capacity);
     for (i = 0; i < A->capacity; i++) {
 	D[i] = B->bins[i] - A->bins[i];

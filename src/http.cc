@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.394 2002/10/04 09:53:35 hno Exp $
+ * $Id: http.cc,v 1.395 2002/10/13 20:35:01 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -39,6 +39,12 @@
  */
 
 #include "squid.h"
+#include "http.h"
+#include "authenticate.h"
+#include "Store.h"
+
+CBDATA_TYPE(HttpStateData);
+
 
 static const char *const crlf = "\r\n";
 
@@ -54,17 +60,11 @@ static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
 static int httpCachableReply(HttpStateData *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
-static mb_size_t httpBuildRequestPrefix(request_t * request,
-    request_t * orig_request,
-    StoreEntry * entry,
-    MemBuf * mb,
-    http_state_flags);
-static void httpProcessReplyHeader(HttpStateData *, const char *, int);
 
 static void
 httpStateFree(int fd, void *data)
 {
-    HttpStateData *httpState = data;
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
 #if DELAY_POOLS
     delayClearNoDelay(fd);
 #endif
@@ -95,7 +95,7 @@ httpCachable(method_t method)
 static void
 httpTimeout(int fd, void *data)
 {
-    HttpStateData *httpState = data;
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (entry->store_status == STORE_PENDING) {
@@ -348,7 +348,7 @@ httpMakeVaryMark(request_t * request, HttpReply * reply)
     stringClean(&vstr);
     vary = httpHeaderGetList(&reply->header, HDR_VARY);
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
-	char *name = xmalloc(ilen + 1);
+	char *name = (char *)xmalloc(ilen + 1);
 	xstrncpy(name, item, ilen + 1);
 	Tolower(name);
 	strListAdd(&vstr, name, ',');
@@ -390,62 +390,71 @@ httpMakeVaryMark(request_t * request, HttpReply * reply)
 
 /* rewrite this later using new interfaces @?@ */
 void
-httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
+HttpStateData::processReplyHeader(const char *buf, int size)
 {
     char *t = NULL;
-    StoreEntry *entry = httpState->entry;
     int room;
     size_t hdr_len;
     HttpReply *reply = entry->mem_obj->reply;
     Ctx ctx;
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
-	storeKeyText(entry->hash.key));
-    if (httpState->reply_hdr == NULL)
-	httpState->reply_hdr = memAllocate(MEM_8K_BUF);
-    assert(httpState->reply_hdr_state == 0);
-    hdr_len = httpState->reply_hdr_size;
+	storeKeyText((const cache_key *)(entry->hash.key)));
+    if (reply_hdr == NULL)
+	reply_hdr = (char *)memAllocate(MEM_8K_BUF);
+    assert(reply_hdr_state == 0);
+    hdr_len = reply_hdr_size;
     room = 8191 - hdr_len;
-    xmemcpy(httpState->reply_hdr + hdr_len, buf, room < size ? room : size);
+    xmemcpy(reply_hdr + hdr_len, buf, room < size ? room : size);
     hdr_len += room < size ? room : size;
-    httpState->reply_hdr[hdr_len] = '\0';
-    httpState->reply_hdr_size = hdr_len;
-    if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
-	debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", httpState->reply_hdr);
-	httpState->reply_hdr_state += 2;
+    reply_hdr[hdr_len] = '\0';
+    reply_hdr_size = hdr_len;
+    if (hdr_len > 4 && strncmp(reply_hdr, "HTTP/", 5)) {
+	debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", reply_hdr);
+	reply_hdr_state += 2;
 	reply->sline.status = HTTP_INVALID_HEADER;
+	if (eof == 1) {
+	    fwdComplete(fwd);
+	    comm_close(fd);
+	}
 	return;
     }
-    t = httpState->reply_hdr + hdr_len;
+    t = reply_hdr + hdr_len;
     /* headers can be incomplete only if object still arriving */
-    if (!httpState->eof) {
-	size_t k = headersEnd(httpState->reply_hdr, 8192);
-	if (0 == k)
+    if (!eof) {
+	size_t k = headersEnd(reply_hdr, 8192);
+	if (0 == k) {
+	    if (eof == 1) {
+		fwdComplete(fwd);
+		comm_close(fd);
+	    }
 	    return;		/* headers not complete */
-	t = httpState->reply_hdr + k;
+	}
+	t = reply_hdr + k;
     }
     *t = '\0';
-    httpState->reply_hdr_state++;
-    assert(httpState->reply_hdr_state == 1);
+    reply_hdr_state++;
+    assert(reply_hdr_state == 1);
     ctx = ctx_enter(entry->mem_obj->url);
-    httpState->reply_hdr_state++;
+    reply_hdr_state++;
     debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
-	httpState->reply_hdr);
+	reply_hdr);
     /* Parse headers into reply structure */
     /* what happens if we fail to parse here? */
-    httpReplyParse(reply, httpState->reply_hdr, hdr_len);
+    httpReplyParse(reply, reply_hdr, hdr_len);
     storeTimestampsSet(entry);
     /* Check if object is cacheable or not based on reply code */
     debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->sline.status);
     if (neighbors_do_private_keys)
 	httpMaybeRemovePublic(entry, reply->sline.status);
-    switch (httpCachableReply(httpState)) {
+
+    switch (httpCachableReply(this)) {
     case 1:
 	if (httpHeaderHas(&reply->header, HDR_VARY)
 #if X_ACCELERATOR_VARY
 	    || httpHeaderHas(&reply->header, HDR_X_ACCELERATOR_VARY)
 #endif
 	    ) {
-	    const char *vary = httpMakeVaryMark(httpState->orig_request, reply);
+	    const char *vary = httpMakeVaryMark(orig_request, reply);
 	    if (vary) {
 		entry->mem_obj->vary_headers = xstrdup(vary);
 		/* Kill the old base object if a change in variance is detected */
@@ -473,22 +482,26 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	else if (EBIT_TEST(reply->cache_control->mask, CC_MUST_REVALIDATE))
 	    EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
-    if (httpState->flags.keepalive)
-	if (httpState->_peer)
-	    httpState->_peer->stats.n_keepalives_sent++;
+    if (flags.keepalive)
+	if (_peer)
+	    _peer->stats.n_keepalives_sent++;
     if (reply->keep_alive)
-	if (httpState->_peer)
-	    httpState->_peer->stats.n_keepalives_recv++;
-    if (reply->date > -1 && !httpState->_peer) {
+	if (_peer)
+	    _peer->stats.n_keepalives_recv++;
+    if (reply->date > -1 && !_peer) {
 	int skew = abs(reply->date - squid_curtime);
 	if (skew > 86400)
 	    debug(11, 3) ("%s's clock is skewed by %d seconds!\n",
-		httpState->request->host, skew);
+		request->host, skew);
     }
     ctx_exit(ctx);
 #if HEADERS_LOG
-    headersLog(1, 0, httpState->request->method, reply);
+    headersLog(1, 0, request->method, reply);
 #endif
+    if (eof == 1) {
+	fwdComplete(fwd);
+	comm_close(fd);
+    }
 }
 
 static int
@@ -544,7 +557,7 @@ httpPconnTransferDone(HttpStateData * httpState)
 static void
 httpReadReply(int fd, void *data)
 {
-    HttpStateData *httpState = data;
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
     LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     StoreEntry *entry = httpState->entry;
     const request_t *request = httpState->request;
@@ -630,12 +643,15 @@ httpReadReply(int fd, void *data)
 	     * the end of headers, but now we are definately at EOF, so
 	     * we want to process the reply headers.
 	     */
-	    httpProcessReplyHeader(httpState, buf, len);
-	fwdComplete(httpState->fwd);
-	comm_close(fd);
+	    /* doesn't return */
+	    httpState->processReplyHeader(buf, len);
+	else {
+	    fwdComplete(httpState->fwd);
+	    comm_close(fd);
+	}
     } else {
 	if (httpState->reply_hdr_state < 2) {
-	    httpProcessReplyHeader(httpState, buf, len);
+	    httpState->processReplyHeader(buf, len);
 	    if (httpState->reply_hdr_state == 2) {
 		http_status s = entry->mem_obj->reply->sline.status;
 #if WIP_FWD_LOG
@@ -649,32 +665,38 @@ httpReadReply(int fd, void *data)
 		    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 	    }
 	}
-	storeAppend(entry, buf, len);
-	if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-	    /*
-	     * the above storeAppend() call could ABORT this entry,
-	     * in that case, the server FD should already be closed.
-	     * there's nothing for us to do.
-	     */
-	    (void) 0;
-	} else if (httpPconnTransferDone(httpState)) {
-	    /* yes we have to clear all these! */
-	    commSetDefer(fd, NULL, NULL);
-	    commSetTimeout(fd, -1, NULL, NULL);
-	    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+	httpState->processReplyData(buf, len);
+    }
+}
+
+void
+HttpStateData::processReplyData(const char *buf, int len)
+{
+    storeAppend(entry, buf, len);
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+	/*
+	 * the above storeAppend() call could ABORT this entry,
+	 * in that case, the server FD should already be closed.
+	 * there's nothing for us to do.
+	 */
+	(void) 0;
+    } else if (httpPconnTransferDone(this)) {
+	/* yes we have to clear all these! */
+	commSetDefer(fd, NULL, NULL);
+	commSetTimeout(fd, -1, NULL, NULL);
+	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 #if DELAY_POOLS
-	    delayClearNoDelay(fd);
+	delayClearNoDelay(fd);
 #endif
-	    comm_remove_close_handler(fd, httpStateFree, httpState);
-	    fwdUnregister(fd, httpState->fwd);
-	    pconnPush(fd, request->host, request->port);
-	    fwdComplete(httpState->fwd);
-	    httpState->fd = -1;
-	    httpStateFree(fd, httpState);
-	} else {
-	    /* Wait for EOF condition */
-	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
-	}
+	comm_remove_close_handler(fd, httpStateFree, this);
+	fwdUnregister(fd, fwd);
+	pconnPush(fd, request->host, request->port);
+	fwdComplete(fwd);
+	fd = -1;
+	httpStateFree(fd, this);
+    } else {
+	/* Wait for EOF condition */
+	commSetSelect(fd, COMM_SELECT_READ, httpReadReply, this, 0);
     }
 }
 
@@ -683,7 +705,7 @@ httpReadReply(int fd, void *data)
 static void
 httpSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
-    HttpStateData *httpState = data;
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
     ErrorState *err;
     debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
@@ -867,7 +889,7 @@ httpBuildRequestHeader(request_t * request,
 	    char loginbuf[256];
 	    const char *username = "-";
 	    if (orig_request->auth_user_request)
-		username = authenticateUserRequestUsername(orig_request->auth_user_request);
+		username = orig_request->auth_user_request->username();
 	    snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 	    httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
 		base64_encode(loginbuf));
@@ -988,6 +1010,7 @@ httpStart(FwdState * fwd)
     debug(11, 3) ("httpStart: \"%s %s\"\n",
 	RequestMethodStr[orig_req->method],
 	storeUrl(fwd->entry));
+    CBDATA_INIT_TYPE(HttpStateData);
     httpState = cbdataAlloc(HttpStateData);
     storeLockObject(fwd->entry);
     httpState->fwd = fwd;
@@ -1038,7 +1061,7 @@ httpStart(FwdState * fwd)
 static void
 httpSendRequestEntityDone(int fd, void *data)
 {
-    HttpStateData *httpState = data;
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
     aclCheck_t ch;
     debug(11, 5) ("httpSendRequestEntityDone: FD %d\n",
 	fd);
@@ -1046,10 +1069,10 @@ httpSendRequestEntityDone(int fd, void *data)
     ch.request = httpState->request;
     if (!Config.accessList.brokenPosts) {
 	debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
-	httpSendComplete(fd, NULL, 0, 0, data);
+	httpSendComplete(fd, NULL, 0, COMM_OK, data);
     } else if (!aclCheckFast(Config.accessList.brokenPosts, &ch)) {
 	debug(11, 5) ("httpSendRequestEntityDone: didn't match brokenPosts\n");
-	httpSendComplete(fd, NULL, 0, 0, data);
+	httpSendComplete(fd, NULL, 0, COMM_OK, data);
     } else {
 	debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
 	comm_write(fd, "\r\n", 2, httpSendComplete, data, NULL);
@@ -1057,7 +1080,7 @@ httpSendRequestEntityDone(int fd, void *data)
 }
 
 static void
-httpRequestBodyHandler(char *buf, size_t size, void *data)
+httpRequestBodyHandler(char *buf, ssize_t size, void *data)
 {
     HttpStateData *httpState = (HttpStateData *) data;
     if (size > 0) {
@@ -1076,7 +1099,7 @@ httpRequestBodyHandler(char *buf, size_t size, void *data)
 static void
 httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
-    HttpStateData *httpState = data;
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
     ErrorState *err;
     debug(11, 5) ("httpSendRequestEntity: FD %d: size %d: errflag %d.\n",
@@ -1100,7 +1123,7 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
 	comm_close(fd);
 	return;
     }
-    clientReadBody(httpState->orig_request, memAllocate(MEM_8K_BUF), 8192, httpRequestBodyHandler, httpState);
+    clientReadBody(httpState->orig_request, (char *)memAllocate(MEM_8K_BUF), 8192, httpRequestBodyHandler, httpState);
 }
 
 void

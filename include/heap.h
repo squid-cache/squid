@@ -1,5 +1,5 @@
 /*
- * $Id: heap.h,v 1.4 2001/10/08 16:18:31 hno Exp $
+ * $Id: heap.h,v 1.5 2002/10/13 20:34:51 robertc Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -89,13 +89,13 @@ typedef struct _heap {
 /* 
  * Create and initialize a new heap.
  */
-extern heap *new_heap(int init_size, heap_key_func gen_key);
+SQUIDCEXTERN heap *new_heap(int init_size, heap_key_func gen_key);
 
 /* 
  * Delete a heap and clean up its memory.  Does not delete what the heap
  * nodes are pointing to!
  */
-extern void delete_heap(heap *);
+SQUIDCEXTERN void delete_heap(heap *);
 
 /*
  * Insert a new node into a heap, returning a pointer to it.  The heap_node
@@ -103,13 +103,13 @@ extern void delete_heap(heap *);
  * should be done with this data structure (especially modifying it!)  The
  * heap does not assume ownership of the data passed to it.
  */
-extern heap_node *heap_insert(heap *, heap_t dat);
+SQUIDCEXTERN heap_node *heap_insert(heap *, heap_t dat);
 
 /*
  * Delete a node out of a heap.  Returns the heap data from the deleted
  * node.  The caller is responsible for freeing this data.
  */
-extern heap_t heap_delete(heap *, heap_node * elm);
+SQUIDCEXTERN heap_t heap_delete(heap *, heap_node * elm);
 
 /*
  * The semantics of this routine is the same as the followings:
@@ -118,13 +118,13 @@ extern heap_t heap_delete(heap *, heap_node * elm);
  * Returns the old data object from elm (the one being replaced).  The
  * caller must free this as necessary.
  */
-extern heap_t heap_update(heap *, heap_node * elm, heap_t dat);
+SQUIDCEXTERN heap_t heap_update(heap *, heap_node * elm, heap_t dat);
 
 /* 
  * Generate a heap key for a given data object.  Alternative macro form:
  */
 #ifdef	MACRO_DEBUG
-extern heap_key heap_gen_key(heap * hp, heap_t dat);
+SQUIDCEXTERN heap_key heap_gen_key(heap * hp, heap_t dat);
 #else
 #define	heap_gen_key(hp,md)	((hp)->gen_key((md),(hp)->age))
 #endif /* MACRO_DEBUG */
@@ -135,7 +135,7 @@ extern heap_key heap_gen_key(heap * hp, heap_t dat);
  * Returns the data pointed to by the root node, which the caller must
  * free as necessary.
  */
-extern heap_t heap_extractmin(heap *);
+SQUIDCEXTERN heap_t heap_extractmin(heap *);
 
 /* 
  * Extract the last leaf node (does not change the heap property).
@@ -144,24 +144,24 @@ extern heap_t heap_extractmin(heap *);
  * parent, but may not be less than any of the other (leaf or parent) notes
  * in the tree.  This operation is fast but imprecise.
  */
-extern heap_t heap_extractlast(heap * hp);
+SQUIDCEXTERN heap_t heap_extractlast(heap * hp);
 
 /* 
  * Get the root key, the nth key, the root (smallest) element, or the nth
  * element.  None of these operations modify the heap.
  */
-extern heap_key heap_peepminkey(heap *);
-extern heap_key heap_peepkey(heap *, int n);
+SQUIDCEXTERN heap_key heap_peepminkey(heap *);
+SQUIDCEXTERN heap_key heap_peepkey(heap *, int n);
 
-extern heap_t heap_peepmin(heap *);
-extern heap_t heap_peep(heap *, int n);
+SQUIDCEXTERN heap_t heap_peepmin(heap *);
+SQUIDCEXTERN heap_t heap_peep(heap *, int n);
 
 /* 
  * Is the heap empty?  How many nodes (data objects) are in it? 
  */
 #ifdef	MACRO_DEBUG
-extern int heap_empty(heap *);
-extern int heap_nodes(heap *);
+SQUIDCEXTERN int heap_empty(heap *);
+SQUIDCEXTERN int heap_nodes(heap *);
 #else /* MACRO_DEBUG */
 #define	heap_nodes(heap)	((heap)->last)
 #define	heap_empty(heap)	(((heap)->last <= 0) ? 1 : 0)
@@ -170,9 +170,9 @@ extern int heap_nodes(heap *);
 /* 
  * Print the heap or a node in the heap.
  */
-extern void heap_print(heap *);
-extern void heap_printnode(char *msg, heap_node * elm);
+SQUIDCEXTERN void heap_print(heap *);
+SQUIDCEXTERN void heap_printnode(char *msg, heap_node * elm);
 
-extern int verify_heap_property(heap *);
+SQUIDCEXTERN int verify_heap_property(heap *);
 
 #endif /* SQUID_HEAP_H */

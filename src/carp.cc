@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.19 2002/04/13 23:07:49 hno Exp $
+ * $Id: carp.cc,v 1.20 2002/10/13 20:34:59 robertc Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -35,6 +35,7 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 #if USE_CARP
 
