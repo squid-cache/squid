@@ -486,9 +486,9 @@ extern void neighbors_open(int);
 extern peer *peerFindByName(const char *);
 extern peer *getDefaultParent(request_t * request);
 extern peer *getRoundRobinParent(request_t * request);
-extern lookup_t peerDigestLookup(peer *p, request_t * request, StoreEntry * entry);
+extern lookup_t peerDigestLookup(peer * p, request_t * request, StoreEntry * entry);
 extern peer *neighborsDigestSelect(request_t * request, StoreEntry * entry);
-extern void peerNoteDigestLookup(request_t * request, peer *p, lookup_t lookup);
+extern void peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup);
 extern int neighborUp(const peer * e);
 extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
@@ -518,7 +518,7 @@ extern peer *peerGetSomeParent(request_t *, hier_code *);
 extern void peerSelectInit(void);
 
 /* peer_digest.c */
-void peerDigestInit(peer *p);
+void peerDigestInit(peer * p);
 
 extern void protoDispatch(int, StoreEntry *, request_t *);
 
@@ -738,6 +738,7 @@ extern int storeDirWriteCleanLogs(int reopen);
 extern int storeDirValidFileno(int fn);
 extern int storeFilenoBelongsHere(int, int, int, int);
 extern OBJH storeDirStats;
+extern int storeDirMapBitsInUse(void);
 
 
 /*
@@ -917,8 +918,8 @@ extern void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
 extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
-extern void cacheDigestGuessStatsUpdate(cd_guess_stats *stats, int real_hit, int guess_hit);
-extern void cacheDigestGuessStatsReport(const cd_guess_stats *stats, StoreEntry * sentry, const char *label);
+extern void cacheDigestGuessStatsUpdate(cd_guess_stats * stats, int real_hit, int guess_hit);
+extern void cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, const char *label);
 extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
 /*

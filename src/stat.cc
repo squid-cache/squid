@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.239 1998/04/15 00:34:34 rousskov Exp $
+ * $Id: stat.cc,v 1.240 1998/04/16 17:18:53 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -575,6 +575,8 @@ info_get(StoreEntry * sentry)
 	memInUse(MEM_MEM_HDR));
     storeAppendPrintf(sentry, "\t%6d Hot Object Cache Items\n",
 	hot_obj_count);
+    storeAppendPrintf(sentry, "\t%6d Filemap bits set\n",
+	storeDirMapBitsInUse());
 
 #if XMALLOC_STATISTICS
     storeAppendPrintf(sentry, "Memory allocation statistics\n");
@@ -937,7 +939,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 }
 
 static void
-statCountersHistograms(StoreEntry *sentry)
+statCountersHistograms(StoreEntry * sentry)
 {
     StatCounters *f = &Counter;
 #if TOO_MUCH_OUTPUT
@@ -1071,17 +1073,17 @@ statCountersDump(StoreEntry * sentry)
 
 #if SQUID_PEER_DIGEST
     storeAppendPrintf(sentry, "icp.times_used = %d\n",
-        f->icp.times_used);
+	f->icp.times_used);
     storeAppendPrintf(sentry, "cd.times_used = %d\n",
-        f->cd.times_used);
+	f->cd.times_used);
     storeAppendPrintf(sentry, "cd.msgs_sent = %d\n",
 	f->cd.msgs_sent);
     storeAppendPrintf(sentry, "cd.msgs_recv = %d\n",
 	f->cd.msgs_recv);
     storeAppendPrintf(sentry, "cd.memory = %d\n",
-	(int)f->cd.memory.kb);
+	(int) f->cd.memory.kb);
     storeAppendPrintf(sentry, "cd.local_memory = %d\n",
-        (int) (store_digest ? store_digest->mask_size/1024 : 0));
+	(int) (store_digest ? store_digest->mask_size / 1024 : 0));
     storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
 	(int) f->cd.kbytes_sent.kb);
     storeAppendPrintf(sentry, "cd.kbytes_recv = %d\n",
@@ -1123,13 +1125,13 @@ statPeerSelect(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "peer.kbytes_recv = %d\n",
 	    (int) peer->digest.stats.kbytes_recv.kb);
 	storeAppendPrintf(sentry, "peer.local_memory = %d\n",
-	    peer->digest.cd ? peer->digest.cd->mask_size/1024 : 0);
+	    peer->digest.cd ? peer->digest.cd->mask_size / 1024 : 0);
 	storeAppendPrintf(sentry, "digest state: inited: %d, disabled: %d usable: %d requested: %d\n",
 	    0 < EBIT_TEST(peer->digest.flags, PD_INITED),
 	    0 < EBIT_TEST(peer->digest.flags, PD_DISABLED),
 	    0 < EBIT_TEST(peer->digest.flags, PD_USABLE),
 	    0 < EBIT_TEST(peer->digest.flags, PD_REQUESTED)
-	);
+	    );
 	if (peer->digest.cd)
 	    cacheDigestReport(peer->digest.cd, peer->host, sentry);
 	else
