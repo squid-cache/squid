@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.4 1998/09/23 20:13:45 wessels Exp $
+ * $Id: hash.c,v 1.5 1998/09/23 20:45:10 wessels Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -237,7 +237,7 @@ hash_next(hash_table * hid)
  *
  */
 void
-hash_next(hash_table * hid)
+hash_last(hash_table * hid)
 {
     assert(hid);
     hid->next = NULL;
