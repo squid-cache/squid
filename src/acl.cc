@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.64 1996/11/15 07:51:04 wessels Exp $
+ * $Id: acl.cc,v 1.65 1996/11/24 04:17:05 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -407,14 +407,18 @@ aclParseRegexList(int icase)
     relist *q = NULL;
     char *t = NULL;
     regex_t comp;
-    int flags = REG_EXTENDED;
+    int errcode;
+    int flags = REG_EXTENDED | REG_NOSUB;
     if (icase)
 	flags |= REG_ICASE;
     while ((t = strtokFile())) {
-	if (regcomp(&comp, t, flags) != REG_NOERROR) {
+	if ((errcode = regcomp(&comp, t, flags)) != 0) {
+	    char errbuf[256];
+	    regerror(errcode, &comp, errbuf, sizeof errbuf);
 	    debug(28, 0, "%s line %d: %s\n",
 		cfg_filename, config_lineno, config_input_line);
-	    debug(28, 0, "aclParseRegexList: Invalid regular expression: '%s'\n", t);
+	    debug(28, 0, "aclParseRegexList: Invalid regular expression '%s': %s\n",
+		t, errbuf);
 	    continue;
 	}
 	q = xcalloc(1, sizeof(relist));

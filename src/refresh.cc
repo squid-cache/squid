@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.8 1996/11/18 18:21:41 wessels Exp $
+ * $Id: refresh.cc,v 1.9 1996/11/24 04:17:05 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -82,12 +82,17 @@ refreshAddToList(const char *pattern, int opts, time_t min, int pct, time_t max)
 {
     refresh_t *t;
     regex_t comp;
-    int flags = REG_EXTENDED;
+    int errcode;
+    int flags = REG_EXTENDED | REG_NOSUB;
     if (opts & REFRESH_ICASE)
 	flags |= REG_ICASE;
-    if (regcomp(&comp, pattern, flags) != REG_NOERROR) {
-	debug(22, 0, "refreshAddToList: Invalid regular expression: %s\n",
-	    pattern);
+    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
+	char errbuf[256];
+	regerror(errcode, &comp, errbuf, sizeof errbuf);
+	debug(22, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(22, 0, "refreshAddToList: Invalid regular expression '%s': %s\n",
+	    pattern, errbuf);
 	return;
     }
     pct = pct < 0 ? 0 : pct;
