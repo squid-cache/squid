@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.35 2003/02/21 22:50:12 robertc Exp $
+ * $Id: store_swapin.cc,v 1.36 2003/10/20 12:34:01 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -80,7 +80,7 @@ storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
     sc->swapin_sio = NULL;
     /* why this assert */
 
-    if (sc->callbackPending()) {
+    if (sc->_callback.pending()) {
         assert (errflag <= 0);
         sc->callback(0, errflag ? true : false);
     }
