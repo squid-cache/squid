@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.137 2002/10/13 20:35:05 robertc Exp $
+ * $Id: store_dir.cc,v 1.138 2002/10/14 11:57:13 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -290,8 +290,8 @@ storeDirStats(StoreEntry * sentry)
     SwapDir *SD;
 
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
-    storeAppendPrintf(sentry, "Store Entries          : %d\n",
-	storeEntryInUse());
+    storeAppendPrintf(sentry, "Store Entries          : %lu\n",
+	(unsigned long int)storeEntryInUse());
     storeAppendPrintf(sentry, "Maximum Swap Size      : %8ld KB\n",
 	(long int) Config.Swap.maxSize);
     storeAppendPrintf(sentry, "Current Store Swap Size: %8lu KB\n",
