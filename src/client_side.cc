@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.109 1997/06/02 01:06:09 wessels Exp $
+ * $Id: client_side.cc,v 1.110 1997/06/03 20:08:22 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -178,6 +178,8 @@ clientRedirectDone(void *data, char *result)
 	safe_free(http->url);
 	http->url = xstrdup(result);
 	new_request->http_ver = old_request->http_ver;
+	new_request->headers = old_request->headers;
+	new_request->headers_sz = old_request->headers_sz;
 	requestUnlink(old_request);
 	http->request = requestLink(new_request);
 	urlCanonical(http->request, http->url);
@@ -515,7 +517,6 @@ clientConstructTraceEcho(clientHttpRequest * http)
     httpBuildRequestHeader(http->request,
 	http->request,
 	NULL,			/* entry */
-	http->request->headers,
 	NULL,			/* in_len */
 	buf + len,
 	8192 - len,

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.168 1997/06/02 19:56:03 wessels Exp $
+ * $Id: http.cc,v 1.169 1997/06/03 20:08:23 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -657,7 +657,6 @@ size_t
 httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
-    char *hdr_in,
     size_t * in_len,
     char *hdr_out,
     size_t out_sz,
@@ -677,7 +676,9 @@ httpBuildRequestHeader(request_t * request,
     int cc_flags = 0;
     int n;
     const char *url = NULL;
+    char *hdr_in = orig_request->headers;
 
+    assert(hdr_in != NULL);
     debug(11, 3, "httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
     xstrncpy(fwdbuf, "X-Forwarded-For: ", 4096);
     xstrncpy(viabuf, "Via: ", 4096);
@@ -804,7 +805,6 @@ httpSendRequest(int fd, void *data)
     len = httpBuildRequestHeader(req,
 	httpState->orig_request ? httpState->orig_request : req,
 	entry,
-	req->headers,
 	NULL,
 	buf,
 	buflen,
