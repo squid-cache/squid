@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.84 1997/02/19 00:05:36 wessels Exp $
+ * $Id: acl.cc,v 1.85 1997/02/20 21:03:09 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -30,6 +30,14 @@
 
 #include "squid.h"
 
+#if defined(USE_BIN_TREE)
+#include "tree.h"
+#endif
+
+#if defined(USE_SPLAY_TREE)
+#include "splay.h"
+#endif
+
 /* Global */
 const char *AclMatchedName = NULL;
 
@@ -37,7 +45,7 @@ const char *AclMatchedName = NULL;
 int aclFromFile = 0;
 FILE *aclFile;
 
-/* These three should never be referenced directly in this file! */
+/* These should never be referenced directly in this file! */
 struct _acl_deny_info_list *DenyInfoList = NULL;
 struct _acl_access *HTTPAccessList = NULL;
 struct _acl_access *ICPAccessList = NULL;
@@ -50,32 +58,43 @@ static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
 static const char *const w_space = " \t\n\r";	/* Jasper sez so */
 
-
-#ifdef USE_SPLAY_TREE
-int aclCompIpResult = 0;
-static struct _acl_ip_data *aclSplayInsertIp
-             _PARAMS((struct _acl_ip_data *, struct _acl_ip_data *));
-static struct _acl_ip_data *aclSplayIp
-             _PARAMS((struct in_addr, struct _acl_ip_data *));
-static int aclSplayIpCompare
-    _PARAMS((struct in_addr addr, struct _acl_ip_data * data));
-static int aclMatchIp _PARAMS((void *dataptr, struct in_addr c));
-#else
-static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
-#endif /* USE_SPLAY_TREE */
-
 static void aclDestroyAclList _PARAMS((struct _acl_list * list));
-static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
-static int aclMatchDomainList _PARAMS((wordlist *, const char *));
 static int aclMatchAclList _PARAMS((const struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
 static int aclMatchIdent _PARAMS((wordlist * data, const char *ident));
+static int aclMatchIp _PARAMS((void *dataptr, struct in_addr c));
+static int aclMatchDomainList _PARAMS((void *dataptr, const char *));
 static squid_acl aclType _PARAMS((const char *s));
 static int decode_addr _PARAMS((const char *, struct in_addr *, struct in_addr *));
-static void aclParseIpList _PARAMS((void *curlist));
+
+#if defined(USE_SPLAY_TREE)
+static int aclIpNetworkCompare _PARAMS((const void *, splayNode *));
+static int aclHostDomainCompare _PARAMS((const void *, splayNode *));
+static int aclDomainCompare _PARAMS((const void *, splayNode *));
+
+#elif defined(USE_BIN_TREE)
+static int bintreeDomainCompare _PARAMS((void *, void *));
+static int bintreeHostDomainCompare _PARAMS((void *, void *));
+static int bintreeNetworkCompare _PARAMS((void *, void *));
+static int bintreeIpNetworkCompare _PARAMS((void *, void *));
+static int aclDomainCompare _PARAMS((const char *d1, const char *d2));
+static void aclDestroyTree _PARAMS((tree **));
+
+#else /* LINKED LIST */
+static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
+
+#endif /* USE_SPLAY_TREE */
+
+#if defined(USE_BIN_TREE)
+static void aclParseDomainList _PARAMS((void **curtree));
+static void aclParseIpList _PARAMS((void **curtree));
+#else
 static void aclParseDomainList _PARAMS((void *curlist));
+static void aclParseIpList _PARAMS((void *curlist));
+#endif
+
 static void aclParseIntlist _PARAMS((void *curlist));
 static void aclParseWordList _PARAMS((void *curlist));
 static void aclParseProtoList _PARAMS((void *curlist));
@@ -164,7 +183,6 @@ aclFindByName(const char *name)
 	    return a;
     return NULL;
 }
-
 
 static void
 aclParseIntlist(void *curlist)
@@ -329,23 +347,42 @@ aclParseIpData(const char *t)
     return q;
 }
 
-#ifdef USE_SPLAY_TREE
+/******************/
+/* aclParseIpList */
+/******************/
 
+#if defined(USE_SPLAY_TREE)
 static void
 aclParseIpList(void *curlist)
 {
     char *t = NULL;
-    struct _acl_ip_data **ip_data = curlist;
+    splayNode **Top = curlist;
     struct _acl_ip_data *q = NULL;
     while ((t = strtokFile())) {
 	if ((q = aclParseIpData(t)) == NULL)
 	    continue;
-	*ip_data = aclSplayInsertIp(q, *ip_data);
+	*Top = splay_insert(q, *Top, aclIpNetworkCompare);
+    }
+}
+
+#elif defined(USE_BIN_TREE)
+static void
+aclParseIpList(void **curtree)
+{
+    tree **Tree;
+    char *t = NULL;
+    struct _acl_ip_data *q;
+    Tree = xmalloc(sizeof(tree *));
+    *curtree = Tree;
+    tree_init(Tree);
+    while ((t = strtokFile())) {
+	if ((q = aclParseIpData(t)) == NULL)
+	    continue;
+	tree_add(Tree, bintreeNetworkCompare, q, NULL);
     }
 }
 
 #else
-
 static void
 aclParseIpList(void *curlist)
 {
@@ -361,114 +398,6 @@ aclParseIpList(void *curlist)
     }
 }
 
-#endif
-
-#ifdef USE_SPLAY_TREE
-static int
-aclSplayIpCompare(struct in_addr addr, struct _acl_ip_data *data)
-{
-    int rc = 0;
-    addr.s_addr &= data->mask.s_addr;	/* apply netmask */
-    if (data->addr2.s_addr == 0) {	/* single address check */
-	if (ntohl(addr.s_addr) > ntohl(data->addr1.s_addr))
-	    rc = 1;
-	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    } else {			/* range address check */
-	if (ntohl(addr.s_addr) > ntohl(data->addr2.s_addr))
-	    rc = 1;
-	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    }
-    return rc;
-}
-
-static struct _acl_ip_data *
-aclSplayInsertIp(struct _acl_ip_data *q, struct _acl_ip_data *t)
-{
-    struct _acl_ip_data *new;
-    new = xmalloc(sizeof(struct _acl_ip_data));
-    new->addr1 = q->addr1;
-    new->addr2 = q->addr2;
-    new->mask = q->mask;
-    if (t == NULL) {
-	new->left = new->right = NULL;
-	return new;
-    }
-    t = aclSplayIp(q->addr1, t);
-    if (aclCompIpResult < 0) {
-	new->left = t->left;
-	new->right = t;
-	t->left = NULL;
-	return new;
-    } else if (aclCompIpResult > 0) {
-	new->right = t->right;
-	new->left = t;
-	t->right = NULL;
-	return new;
-    } else {
-	debug_trap("aclSplayInsertIp: entry duplicated\n");
-	safe_free(new);
-	return t;
-    }
-}
-
-static struct _acl_ip_data *
-aclSplayIp(struct in_addr addr1, struct _acl_ip_data *t)
-{
-    struct _acl_ip_data N;
-    struct _acl_ip_data *l;
-    struct _acl_ip_data *r;
-    struct _acl_ip_data *y;
-    if (t == NULL)
-	return t;
-    N.left = N.right = NULL;
-    l = r = &N;
-
-    for (;;) {
-	aclCompIpResult = aclSplayIpCompare(addr1, t);
-	if (aclCompIpResult < 0) {
-	    if (t->left == NULL)
-		break;
-	    if (aclSplayIpCompare(addr1, t->left) < 0) {
-		y = t->left;	/* rotate right */
-		t->left = y->right;
-		y->right = t;
-		t = y;
-		if (t->left == NULL)
-		    break;
-	    }
-	    r->left = t;	/* link right */
-	    r = t;
-	    t = t->left;
-	} else if (aclCompIpResult > 0) {
-	    if (t->right == NULL)
-		break;
-	    if (aclSplayIpCompare(addr1, t->right) > 0) {
-		y = t->right;	/* rotate left */
-		t->right = y->left;
-		y->left = t;
-		t = y;
-		if (t->right == NULL)
-		    break;
-	    }
-	    l->right = t;	/* link left */
-	    l = t;
-	    t = t->right;
-	} else {
-	    break;
-	}
-    }
-    l->right = t->left;		/* assemble */
-    r->left = t->right;
-    t->left = N.right;
-    t->right = N.left;
-    return t;
-}
 #endif /* USE_SPLAY_TREE */
 
 static void
@@ -592,7 +521,41 @@ aclParseWordList(void *curlist)
     }
 }
 
+/**********************/
+/* aclParseDomainList */
+/**********************/
 
+#if defined(USE_SPLAY_TREE)
+static void
+aclParseDomainList(void *curlist)
+{
+    char *t = NULL;
+    splayNode **Top = curlist;
+    while ((t = strtokFile())) {
+	Tolower(t);
+	*Top = splay_insert(xstrdup(t), *Top, aclDomainCompare);
+    }
+}
+
+#elif defined(USE_BIN_TREE)
+static void
+aclParseDomainList(void **curtree)
+{
+    tree **Tree;
+    char *t = NULL;
+    char *tt;
+
+    Tree = xmalloc(sizeof(tree *));
+    *curtree = Tree;
+    tree_init(Tree);
+    while ((t = strtokFile())) {
+	Tolower(t);
+	tt = xstrdup(t);
+	tree_add(Tree, bintreeDomainCompare, tt, NULL);
+    }
+}
+
+#else /* !USE_BIN_TREE */
 static void
 aclParseDomainList(void *curlist)
 {
@@ -609,6 +572,7 @@ aclParseDomainList(void *curlist)
     }
 }
 
+#endif /* USE_SPLAY_TREE */
 
 void
 aclParseAclLine(void)
@@ -697,6 +661,7 @@ aclParseAclLine(void)
 /* maex@space.net (06.09.96)
  *    get (if any) the URL from deny_info for a certain acl
  */
+
 char *
 aclGetDenyInfoUrl(struct _acl_deny_info_list **head, const char *name)
 {
@@ -719,6 +684,7 @@ aclGetDenyInfoUrl(struct _acl_deny_info_list **head, const char *name)
     }
     return (NULL);
 }
+
 /* maex@space.net (05.09.96)
  *    get the info for redirecting "access denied" to info pages
  *      TODO (probably ;-)
@@ -727,6 +693,7 @@ aclGetDenyInfoUrl(struct _acl_deny_info_list **head, const char *name)
  *      - a check, whether the given acl really is defined
  *      - a check, whether an acl is added more than once for the same url
  */
+
 void
 aclParseDenyInfoLine(struct _acl_deny_info_list **head)
 {
@@ -833,14 +800,40 @@ aclParseAccessLine(struct _acl_access **head)
     *T = A;
 }
 
+/**************/
+/* aclMatchIp */
+/**************/
+
+#if defined(USE_SPLAY_TREE)
 static int
-#ifndef USE_SPLAY_TREE
-aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
-#else
 aclMatchIp(void *dataptr, struct in_addr c)
-#endif				/* USE_SPLAY_TREE */
 {
-#ifndef USE_SPLAY_TREE
+    splayNode **Top = dataptr;
+    *Top = splay_splay(&c, *Top, aclIpNetworkCompare);
+    debug(28, 3, "aclMatchIp: '%s' %s\n",
+	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+    return !splayLastResult;
+}
+
+#elif defined(USE_BIN_TREE)
+static int
+aclMatchIp(void *dataptr, struct in_addr c)
+{
+    tree **data = dataptr;
+    if (tree_srch(data, bintreeIpNetworkCompare, &c)) {
+	debug(28, 3, "aclMatchIp: '%s' found\n", inet_ntoa(c));
+	return 1;
+    }
+    debug(28, 3, "aclMatchIp: '%s' NOT found\n", inet_ntoa(c));
+    return 0;
+}
+
+#else
+static int
+aclMatchIp(void *dataptr, struct in_addr c)
+{
+    struct _acl_ip_data **D = dataptr;
+    struct _acl_ip_data *data = *D;
     struct in_addr h;
     unsigned long lh, la1, la2;
     struct _acl_ip_data *first, *prev;
@@ -871,6 +864,13 @@ aclMatchIp(void *dataptr, struct in_addr c)
 	    la2 = ntohl(data->addr2.s_addr);
 	    if (lh >= la1 && lh <= la2) {
 		debug(28, 3, "aclMatchIp: returning 1\n");
+		if (prev != NULL) {
+		    /* shift the element just found to the second position
+		     * in the list */
+		    prev->next = data->next;
+		    data->next = first->next;
+		    first->next = data;
+		}
 		return 1;
 	    }
 	}
@@ -879,32 +879,62 @@ aclMatchIp(void *dataptr, struct in_addr c)
     }
     debug(28, 3, "aclMatchIp: returning 0\n");
     return 0;
-#else
-    struct _acl_ip_data **data = dataptr;
-    *data = aclSplayIp(c, *data);
-    return !aclCompIpResult;
-#endif /* USE_SPLAY_TREE */
 }
 
-static int
-aclMatchDomainList(wordlist * data, const char *host)
-{
-    wordlist *first, *prev;
+#endif /* USE_SPLAY_TREE */
 
+/**********************/
+/* aclMatchDomainList */
+/**********************/
+
+#if defined(USE_SPLAY_TREE)
+static int
+aclMatchDomainList(void *dataptr, const char *host)
+{
+    splayNode **Top = dataptr;
     if (host == NULL)
 	return 0;
     debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
-    first = data;
-    prev = NULL;
-    for (; data; data = data->next) {
+    *Top = splay_splay(host, *Top, aclHostDomainCompare);
+    debug(28, 3, "aclMatchDomainList: '%s' %s\n",
+	host, splayLastResult ? "NOT found" : "found");
+    return !splayLastResult;
+}
+
+#elif defined(USE_BIN_TREE)
+static int
+aclMatchDomainList(void *dataptr, const char *host)
+{
+    tree **data = dataptr;
+    if (host == NULL)
+	return 0;
+    debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
+    if (tree_srch(data, bintreeHostDomainCompare, (void *) host)) {
+	debug(28, 3, "aclMatchDomainList: '%s' found\n", host);
+	return 1;
+    }
+    debug(28, 3, "aclMatchDomainList: '%s' NOT found\n", host);
+    return 0;
+}
+
+#else /* LINKED LIST */
+static int
+aclMatchDomainList(void *dataptr, const char *host)
+{
+    wordlist **Head = dataptr;
+    wordlist *data;
+    wordlist *prev = NULL;
+    if (host == NULL)
+	return 0;
+    debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
+    for (data = *Head; data; data = data->next) {
 	debug(28, 3, "aclMatchDomainList: looking for '%s'\n", data->key);
 	if (matchDomainName(data->key, host)) {
-	    if (prev != NULL) {
-		/* shift the element just found to the second position
-		 * in the list */
+	    if (prev) {
+		/* shift the element just found to the top of the list */
 		prev->next = data->next;
-		data->next = first->next;
-		first->next = data;
+		data->next = *Head;
+		*Head = data;
 	    }
 	    return 1;
 	}
@@ -912,6 +942,8 @@ aclMatchDomainList(wordlist * data, const char *host)
     }
     return 0;
 }
+
+#endif /* USE_SPLAY_TREE */
 
 int
 aclMatchRegex(relist * data, const char *word)
@@ -1012,22 +1044,14 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
     debug(28, 3, "aclMatchAcl: checking '%s'\n", acl->cfgline);
     switch (acl->type) {
     case ACL_SRC_IP:
-#ifndef USE_SPLAY_TREE
-	return aclMatchIp(acl->data, checklist->src_addr);
-#else
 	return aclMatchIp(&acl->data, checklist->src_addr);
-#endif /* USE_SPLAY_TREE */
 	/* NOTREACHED */
     case ACL_DST_IP:
 	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (ia) {
 	    for (k = 0; k < (int) ia->count; k++) {
 		checklist->dst_addr = ia->in_addrs[k];
-#ifndef USE_SPLAY_TREE
-		if (aclMatchIp(acl->data, checklist->dst_addr))
-#else
 		if (aclMatchIp(&acl->data, checklist->dst_addr))
-#endif /* USE_SPLAY_TREE */
 		    return 1;
 	    }
 	    return 0;
@@ -1037,31 +1061,27 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_NEED;
 	    return 0;
 	} else {
-#ifndef USE_SPLAY_TREE
-	    return aclMatchIp(acl->data, no_addr);
-#else
 	    return aclMatchIp(&acl->data, no_addr);
-#endif /* USE_SPLAY_TREE */
 	}
 	/* NOTREACHED */
     case ACL_DST_DOMAIN:
 	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchDomainList(acl->data, r->host);
+	    return aclMatchDomainList(&acl->data, r->host);
 	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
 	if (fqdn)
-	    return aclMatchDomainList(acl->data, fqdn);
+	    return aclMatchDomainList(&acl->data, fqdn);
 	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, inet_ntoa(ia->in_addrs[0]));
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEED;
 	    return 0;
 	}
-	return aclMatchDomainList(acl->data, "none");
+	return aclMatchDomainList(&acl->data, "none");
 	/* NOTREACHED */
     case ACL_SRC_DOMAIN:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
 	if (fqdn) {
-	    return aclMatchDomainList(acl->data, fqdn);
+	    return aclMatchDomainList(&acl->data, fqdn);
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, inet_ntoa(checklist->src_addr));
@@ -1140,19 +1160,24 @@ aclCheck(const struct _acl_access *A, aclCheck_t * checklist)
     return !allow;
 }
 
-#ifdef USE_SPLAY_TREE
-static void
-aclDestroyIpList(struct _acl_ip_data *data)
+/*********************/
+/* Destroy functions */
+/*********************/
+
+#if defined(USE_BIN_TREE)
+void
+destroyTreeItem(void **t)
 {
-    if (data == NULL)
-	return;
-    aclDestroyIpList(data->left);
-    aclDestroyIpList(data->right);
-    safe_free(data);
+    safe_free(t);
 }
 
-#else
+static void
+aclDestroyTree(tree ** data)
+{
+    tree_mung(data, destroyTreeItem);
+}
 
+#elif !defined(USE_SPLAY_TREE)
 static void
 aclDestroyIpList(struct _acl_ip_data *data)
 {
@@ -1162,7 +1187,8 @@ aclDestroyIpList(struct _acl_ip_data *data)
 	safe_free(data);
     }
 }
-#endif
+
+#endif /* USE_SPLAY_TREE */
 
 static void
 aclDestroyTimeList(struct _acl_time_data *data)
@@ -1197,10 +1223,24 @@ aclDestroyAcls(void)
 	switch (a->type) {
 	case ACL_SRC_IP:
 	case ACL_DST_IP:
+#if defined (USE_SPLAY_TREE)
+	    splay_destroy(a->data, xfree);
+#elif defined(USE_BIN_TREE)
+	    aclDestroyTree(a->data);
+#else /* LINKED LIST */
 	    aclDestroyIpList(a->data);
+#endif
 	    break;
 	case ACL_DST_DOMAIN:
 	case ACL_SRC_DOMAIN:
+#if defined(USE_SPLAY_TREE)
+	    splay_destroy(a->data, xfree);
+#elif defined(USE_BIN_TREE)
+	    aclDestroyTree(a->data);
+#else /* LINKED LIST */
+	    wordlistDestroy((wordlist **) & a->data);
+#endif
+	    break;
 	case ACL_USER:
 	    wordlistDestroy((wordlist **) & a->data);
 	    break;
@@ -1257,6 +1297,7 @@ aclDestroyAccessList(struct _acl_access **list)
 
 /* maex@space.net (06.09.1996)
  *    destroy an _acl_deny_info_list */
+
 void
 aclDestroyDenyInfoList(struct _acl_deny_info_list **list)
 {
@@ -1275,3 +1316,238 @@ aclDestroyDenyInfoList(struct _acl_deny_info_list **list)
     }
     *list = NULL;
 }
+
+/* general compare functions, these are used for tree search algorithms
+ * so they return <0, 0 or >0 */
+
+/* compare two domains */
+
+#if defined(USE_SPLAY_TREE)
+static int
+aclDomainCompare(const void *data, splayNode * n)
+{
+    const char *d1 = data;
+    const char *d2 = n->data;
+    int l1 = strlen(d1);
+    int l2 = strlen(d2);
+    while (d1[l1] == d2[l2]) {
+	if ((l1 == 0) && (l2 == 0))
+	    return 0;		/* d1 == d2 */
+	if (l1-- == 0)
+	    return -1;		/* d1 < d2 */
+	if (l2-- == 0)
+	    return 1;		/* d1 > d2 */
+    }
+    return (d1[l1] - d2[l2]);
+}
+
+#elif defined(USE_BIN_TREE)
+static int
+aclDomainCompare(const char *d1, const char *d2)
+{
+    int l1, l2;
+    l1 = strlen(d1);
+    l2 = strlen(d2);
+    while (d1[l1] == d2[l2]) {
+	if ((l1 == 0) && (l2 == 0))
+	    return 0;		/* d1 == d2 */
+	if (l1-- == 0)
+	    return -1;		/* d1 < d2 */
+	if (l2-- == 0)
+	    return 1;		/* d1 > d2 */
+    }
+    return (d1[l1] - d2[l2]);
+}
+
+#endif /* USE_BIN_TREE || SPLAY_TREE */
+
+/* compare a host and a domain */
+
+#if defined(USE_SPLAY_TREE)
+static int
+aclHostDomainCompare(const void *data, splayNode * n)
+{
+    const char *h = data;
+    char *d = n->data;
+    int l1;
+    int l2;
+    if (matchDomainName(d, h))
+	return 0;
+    l1 = strlen(h);
+    l2 = strlen(d);
+    /* h != d */
+    while (h[l1] == d[l2]) {
+	if (l1 == 0)
+	    break;
+	if (l2 == 0)
+	    break;
+	l1--;
+	l2--;
+    }
+    /* a '.' is a special case */
+    if ((h[l1] == '.') || (l1 == 0))
+	return -1;		/* domain(h) < d */
+    if ((d[l2] == '.') || (l2 == 0))
+	return 1;		/* domain(h) > d */
+    return (h[l1] - d[l2]);
+}
+
+#elif defined(USE_BIN_TREE)
+static int
+aclHostDomainCompare(const char *h, const char *d)
+{
+    int l1, l2;
+    if (matchDomainName(d, h))
+	return 0;
+    l1 = strlen(h);
+    l2 = strlen(d);
+    /* h != d */
+    while (h[l1] == d[l2]) {
+	if (l1 == 0)
+	    break;
+	if (l2 == 0)
+	    break;
+	l1--;
+	l2--;
+    }
+    /* a '.' is a special case */
+    if ((h[l1] == '.') || (l1 == 0))
+	return -1;		/* domain(h) < d */
+    if ((d[l2] == '.') || (l2 == 0))
+	return 1;		/* domain(h) > d */
+    return (h[l1] - d[l2]);
+}
+
+#endif /* USE_SPLAY_TREE || USE_BIN_TREE */
+
+/* compare two network specs
+ * 
+ * NOTE: this is very similar to aclIpNetworkCompare and it's not yet
+ * clear whether this OK. The problem could be with when a network
+ * is a subset of the other networks:
+ * 
+ * 128.1.2.0/255.255.255.128 == 128.1.2.0/255.255.255.0 ?
+ * 
+ * Currently only the first address of the first network is used.
+ */
+
+#if defined(USE_BIN_TREE)
+static int
+networkCompare(struct _acl_ip_data *net, struct _acl_ip_data *data)
+{
+    struct in_addr addr;
+    struct _acl_ip_data acl_ip;
+    int rc = 0;
+    memcpy(&acl_ip, net, sizeof(acl_ip));
+    addr = acl_ip.addr1;
+    addr.s_addr &= data->mask.s_addr;	/* apply netmask */
+    if (data->addr2.s_addr == 0) {	/* single address check */
+	if (ntohl(addr.s_addr) > ntohl(data->addr1.s_addr))
+	    rc = 1;
+	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
+	    rc = -1;
+	else
+	    rc = 0;
+    } else {			/* range address check */
+	if (ntohl(addr.s_addr) > ntohl(data->addr2.s_addr))
+	    rc = 1;
+	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
+	    rc = -1;
+	else
+	    rc = 0;
+    }
+    return rc;
+}
+#endif /* USE_BIN_TREE */
+
+/* compare an address and a network spec */
+
+#if defined(USE_SPLAY_TREE)
+static int
+aclIpNetworkCompare(const void *a, splayNode * n)
+{
+    struct in_addr *A = (struct in_addr *) a;
+    struct _acl_ip_data *q = n->data;
+    struct in_addr B = q->addr1;
+    struct in_addr C = q->addr2;
+    int rc = 0;
+    A->s_addr &= q->mask.s_addr;	/* apply netmask */
+    if (C.s_addr == 0) {	/* single address check */
+	if (ntohl(A->s_addr) > ntohl(B.s_addr))
+	    rc = 1;
+	else if (ntohl(A->s_addr) < ntohl(B.s_addr))
+	    rc = -1;
+	else
+	    rc = 0;
+    } else {			/* range address check */
+	if (ntohl(A->s_addr) > ntohl(C.s_addr))
+	    rc = 1;
+	else if (ntohl(A->s_addr) < ntohl(B.s_addr))
+	    rc = -1;
+	else
+	    rc = 0;
+    }
+    return rc;
+}
+
+#elif defined(USE_BIN_TREE)
+static int
+aclIpNetworkCompare(struct in_addr addr, struct _acl_ip_data *data)
+{
+    int rc = 0;
+    addr.s_addr &= data->mask.s_addr;	/* apply netmask */
+    if (data->addr2.s_addr == 0) {	/* single address check */
+	if (ntohl(addr.s_addr) > ntohl(data->addr1.s_addr))
+	    rc = 1;
+	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
+	    rc = -1;
+	else
+	    rc = 0;
+    } else {			/* range address check */
+	if (ntohl(addr.s_addr) > ntohl(data->addr2.s_addr))
+	    rc = 1;
+	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
+	    rc = -1;
+	else
+	    rc = 0;
+    }
+    return rc;
+}
+
+#endif /* USE_SPLAY_TREE || USE_BIN_TREE */
+
+
+/* compare functions for different kind of tree search algorithms */
+
+#if defined(USE_BIN_TREE)
+static int
+bintreeDomainCompare(void *t1, void *t2)
+{
+    return aclDomainCompare((char *) t1, (char *) t2);
+}
+
+static int
+bintreeHostDomainCompare(void *t1, void *t2)
+{
+    /* t1 is the hostname, t2 the domainname to compare with */
+    return aclHostDomainCompare((char *) t1, (char *) t2);
+}
+
+static int
+bintreeNetworkCompare(void *t1, void *t2)
+{
+    return networkCompare((struct _acl_ip_data *) t1,
+	(struct _acl_ip_data *) t2);
+}
+
+static int
+bintreeIpNetworkCompare(void *t1, void *t2)
+{
+    struct in_addr addr;
+    struct _acl_ip_data *data;
+    memcpy(&addr, t1, sizeof(addr));
+    data = (struct _acl_ip_data *) t2;
+    return aclIpNetworkCompare(addr, data);
+}
+
+#endif /* USE_BIN_TREE */
