@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ACLStrategised.h,v 1.6 2003/08/10 09:53:49 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -76,7 +76,7 @@ private:
 /* implementation follows */
 
 template <class MatchType>
-MemPool (*ACLStrategised<MatchType>::Pool)(NULL);
+MemPool *ACLStrategised<MatchType>::Pool = NULL;
 
 template <class MatchType>
 void *

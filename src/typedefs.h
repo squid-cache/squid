@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.168 2003/07/22 15:23:02 robertc Exp $
+ * $Id: typedefs.h,v 1.169 2003/08/10 09:53:49 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -199,7 +199,7 @@ typedef struct _header_mangler header_mangler;
 
 typedef struct _body_size body_size;
 
-typedef struct HttpRequest request_t;
+class HttpRequest;
 
 typedef struct _AccessLogEntry AccessLogEntry;
 

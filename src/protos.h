@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.488 2003/08/10 05:11:22 robertc Exp $
+ * $Id: protos.h,v 1.489 2003/08/10 09:53:49 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -439,11 +439,11 @@ SQUIDCEXTERN HttpHdrContRange *httpHeaderGetContRange(const HttpHeader * hdr);
 SQUIDCEXTERN const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
 SQUIDCEXTERN const char *httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id);
 SQUIDCEXTERN const char *httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *auth_scheme);
-SQUIDCEXTERN String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN String httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN String httpHeaderGetByName(const HttpHeader * hdr, const char *name);
-SQUIDCEXTERN String httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator);
-SQUIDCEXTERN String httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
+extern String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id);
+extern String httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id);
+extern String httpHeaderGetByName(const HttpHeader * hdr, const char *name);
+extern String httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator);
+extern String httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 SQUIDCEXTERN int httpHeaderDelByName(HttpHeader * hdr, const char *name);
 SQUIDCEXTERN int httpHeaderDelById(HttpHeader * hdr, http_hdr_type id);
 SQUIDCEXTERN void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
@@ -736,8 +736,8 @@ SQUIDCEXTERN void storeReplSetup(void);
 
 /* store_io.c */
 #include "StoreIOState.h"
-SQUIDCEXTERN StoreIOState::Pointer storeCreate(StoreEntry *, STFNCB *, STIOCB *, void *);
-SQUIDCEXTERN StoreIOState::Pointer storeOpen(StoreEntry *, STFNCB *, STIOCB *, void *);
+extern StoreIOState::Pointer storeCreate(StoreEntry *, STFNCB *, STIOCB *, void *);
+extern StoreIOState::Pointer storeOpen(StoreEntry *, STFNCB *, STIOCB *, void *);
 SQUIDCEXTERN void storeClose(StoreIOState::Pointer);
 SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, STRCB *, void *);
 SQUIDCEXTERN void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
