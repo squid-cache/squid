@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.85 1997/06/18 01:43:43 wessels Exp $
+ * $Id: gopher.cc,v 1.86 1997/06/19 22:51:50 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -647,7 +647,7 @@ gopherTimeout(int fd, void *data)
     GopherStateData *gopherState = data;
     StoreEntry *entry = gopherState->entry;
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+    storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
     comm_close(fd);
 }
 
@@ -664,7 +664,7 @@ gopherReadReply(int fd, void *data)
     int off;
     int bin;
     if (protoAbortFetch(entry)) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	storeAbort(entry, ERR_CLIENT_ABORT, NULL, 0);
 	comm_close(fd);
 	return;
     }
@@ -718,13 +718,11 @@ gopherReadReply(int fd, void *data)
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	squid_error_entry(entry,
-	    ERR_ZERO_SIZE_OBJECT,
-	    errno ? xstrerror() : NULL);
+	storeAbort(entry, ERR_ZERO_SIZE_OBJECT, errno ? xstrerror() : NULL, 0);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -761,7 +759,7 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
     debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
 	if (buf)
 	    put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
@@ -854,7 +852,7 @@ gopherStart(StoreEntry * entry)
     /* Parse url. */
     if (gopher_url_parser(url, gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {
-	squid_error_entry(entry, ERR_INVALID_URL, NULL);
+	storeAbort(entry, ERR_INVALID_URL, NULL, 0);
 	gopherStateFree(-1, gopherState);
 	return;
     }
@@ -867,7 +865,7 @@ gopherStart(StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(10, 4) ("gopherStart: Failed because we're out of sockets.\n");
-	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
+	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
 	gopherStateFree(-1, gopherState);
 	return;
     }
@@ -878,7 +876,7 @@ gopherStart(StoreEntry * entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(gopherState->host, 0)) {
 	debug(10, 4) ("gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
-	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
+	storeAbort(entry, ERR_DNS_FAIL, dns_error_message, 0);
 	comm_close(fd);
 	return;
     }
@@ -916,7 +914,7 @@ gopherConnectDone(int fd, int status, void *data)
 {
     GopherStateData *gopherState = data;
     if (status == COMM_ERROR) {
-	squid_error_entry(gopherState->entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(gopherState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
 	return;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.77 1997/06/18 01:43:46 wessels Exp $
+ * $Id: wais.cc,v 1.78 1997/06/19 22:51:57 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -144,7 +144,7 @@ waisTimeout(int fd, void *data)
     WaisStateData *waisState = data;
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+    storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
     comm_close(fd);
 }
 
@@ -163,13 +163,13 @@ waisReadReply(int fd, void *data)
     int off;
     int bin;
     if (protoAbortFetch(entry)) {
-	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	storeAbort(entry, ERR_CLIENT_ABORT, NULL, 0);
 	comm_close(fd);
 	return;
     }
     if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
 	/* we can terminate connection right now */
-	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+	storeAbort(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL, 0);
 	comm_close(fd);
 	return;
     }
@@ -218,13 +218,11 @@ waisReadReply(int fd, void *data)
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	squid_error_entry(entry,
-	    ERR_ZERO_SIZE_OBJECT,
-	    errno ? xstrerror() : NULL);
+	storeAbort(entry, ERR_ZERO_SIZE_OBJECT, errno ? xstrerror() : NULL, 0);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -250,7 +248,7 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
     debug(24, 5) ("waisSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
     } else {
 	/* Schedule read reply. */
@@ -305,7 +303,7 @@ waisStart(request_t * request, StoreEntry * entry)
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     if (!Config.Wais.relayHost) {
 	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");
-	squid_error_entry(entry, ERR_NO_RELAY, NULL);
+	storeAbort(entry, ERR_NO_RELAY, NULL, 0);
 	return;
     }
     fd = comm_open(SOCK_STREAM,
@@ -316,7 +314,7 @@ waisStart(request_t * request, StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(24, 4) ("waisStart: Failed because we're out of sockets.\n");
-	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
+	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
 	return;
     }
     waisState = xcalloc(1, sizeof(WaisStateData));
@@ -344,11 +342,11 @@ waisConnectDone(int fd, int status, void *data)
 {
     WaisStateData *waisState = data;
     if (status == COMM_ERR_DNS) {
-	squid_error_entry(waisState->entry, ERR_DNS_FAIL, dns_error_message);
+	storeAbort(waisState->entry, ERR_DNS_FAIL, dns_error_message, 0);
 	comm_close(fd);
 	return;
     } else if (status != COMM_OK) {
-	squid_error_entry(waisState->entry, ERR_CONNECT_FAIL, xstrerror());
+	storeAbort(waisState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
 	comm_close(fd);
 	return;
     }
