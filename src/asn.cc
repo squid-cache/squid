@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.34 1998/05/09 04:49:08 wessels Exp $
+ * $Id: asn.cc,v 1.35 1998/05/09 16:49:00 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -91,6 +91,7 @@ static PF whoisReadReply;
 static STCB asHandleReply;
 static int destroyRadixNode(struct radix_node *rn, void *w);
 static void asnAclInitialize(acl * acls);
+static void asStateFree(void *data);
 
 static void destroyRadixNodeInfo(as_info *);
 
@@ -209,7 +210,6 @@ asnCacheStart(int as)
 static void
 asHandleReply(void *data, char *buf, ssize_t size)
 {
-
     ASState *asState = data;
     StoreEntry *e = asState->entry;
     char *s;
@@ -217,14 +217,17 @@ asHandleReply(void *data, char *buf, ssize_t size)
     debug(53, 3) ("asHandleReply: Called with size=%d\n", size);
     if (e->store_status == STORE_ABORTED) {
 	memFree(MEM_4K_BUF, buf);
+	asStateFree(asState);
 	return;
     }
     if (size == 0 && e->mem_obj->inmem_hi > 0) {
 	memFree(MEM_4K_BUF, buf);
+	asStateFree(asState);
 	return;
     } else if (size < 0) {
 	debug(53, 1) ("asHandleReply: Called with size=%d\n", size);
 	memFree(MEM_4K_BUF, buf);
+	asStateFree(asState);
 	return;
     }
     s = buf;
@@ -249,6 +252,16 @@ asHandleReply(void *data, char *buf, ssize_t size)
     debug(53, 3) ("asState->seen = %d, asState->offset = %d\n",
 	asState->seen, asState->offset);
     if (e->store_status == STORE_PENDING) {
+	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
+	storeClientCopy(e,
+	    asState->seen,
+	    asState->offset,
+	    SM_PAGE_SIZE,
+	    buf,
+	    asHandleReply,
+	    asState);
+    } else if (asState->seen < e->mem_obj->inmem_hi) {
+	debug(53, 3) ("asHandleReply: asState->seen < e->mem_obj->inmem_hi %s\n", storeUrl(e));
 	storeClientCopy(e,
 	    asState->seen,
 	    asState->offset,
@@ -259,11 +272,19 @@ asHandleReply(void *data, char *buf, ssize_t size)
     } else {
 	debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
 	memFree(MEM_4K_BUF, buf);
-	storeUnregister(e, asState);
-	storeUnlockObject(e);
-	requestUnlink(asState->request);
-	cbdataFree(asState);
+	asStateFree(asState);
     }
+}
+
+static void
+asStateFree(void *data)
+{
+    ASState *asState = data;
+    debug(53, 3) ("asnStateFree: %s\n", storeUrl(asState->entry));
+    storeUnregister(asState->entry, asState);
+    storeUnlockObject(asState->entry);
+    requestUnlink(asState->request);
+    cbdataFree(asState);
 }
 
 
