@@ -219,6 +219,12 @@ enum {
 };
 
 enum {
+	STORE_NON_CLIENT,
+	STORE_MEM_CLIENT,
+	STORE_DISK_CLIENT
+};
+
+enum {
     METHOD_NONE,		/* 000 */
     METHOD_GET,			/* 001 */
     METHOD_POST,		/* 010 */
