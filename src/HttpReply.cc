@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.61 2003/07/14 08:21:56 robertc Exp $
+ * $Id: HttpReply.cc,v 1.62 2003/07/15 06:50:39 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -60,7 +60,6 @@ HttpMsgParseState &operator++ (HttpMsgParseState &aState)
 
 
 /* local routines */
-static void httpReplyInit(HttpReply * rep);
 static void httpReplyClean(HttpReply * rep);
 static void httpReplyDoDestroy(HttpReply * rep);
 static void httpReplyHdrCacheInit(HttpReply * rep);
@@ -85,20 +84,16 @@ httpReplyCreate(void)
 {
     HttpReply *rep = new HttpReply;
     debug(58, 7) ("creating rep: %p\n", rep);
-    httpReplyInit(rep);
     return rep;
 }
 
-static void
-httpReplyInit(HttpReply * rep)
+HttpReply::HttpReply() : hdr_sz (0), content_length (0), date (0), last_modified (0), expires (0), cache_control (NULL), surrogate_control (NULL), content_range (NULL), keep_alive (0), pstate(psReadyToParseStartLine), header (hoReply)
 {
-    assert(rep);
-    rep->hdr_sz = 0;
-    rep->pstate = psReadyToParseStartLine;
-    httpBodyInit(&rep->body);
-    httpHeaderInit(&rep->header, hoReply);
-    httpReplyHdrCacheInit(rep);
-    httpStatusLineInit(&rep->sline);
+    assert(this);
+    httpBodyInit(&body);
+    httpReplyHdrCacheInit(this);
+    httpStatusLineInit(&sline);
+
 }
 
 static void
@@ -124,7 +119,7 @@ void
 httpReplyReset(HttpReply * rep)
 {
     httpReplyClean(rep);
-    httpReplyInit(rep);
+    *rep = HttpReply();
 }
 
 /* absorb: copy the contents of a new reply to the old one, destroy new one */

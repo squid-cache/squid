@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.142 2003/07/10 11:04:07 robertc Exp $
+ * $Id: tunnel.cc,v 1.143 2003/07/15 06:50:43 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -639,7 +639,7 @@ sslProxyConnected(int fd, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
     MemBuf mb;
-    HttpHeader hdr_out;
+    HttpHeader hdr_out(hoRequest);
     Packer p;
     http_state_flags flags;
     debug(26, 3) ("sslProxyConnected: FD %d sslState=%p\n", fd, sslState);

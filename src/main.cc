@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.383 2003/07/06 15:30:42 hno Exp $
+ * $Id: main.cc,v 1.384 2003/07/15 06:50:42 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -41,6 +41,7 @@
 #include "Mem.h"
 #include "ACLASN.h"
 #include "ACL.h"
+#include "htcp.h"
 
 #if USE_WIN32_SERVICE
 

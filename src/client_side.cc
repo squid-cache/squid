@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.650 2003/07/13 23:00:09 robertc Exp $
+ * $Id: client_side.cc,v 1.651 2003/07/15 06:50:41 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -837,7 +837,7 @@ clientPackTermBound(String boundary, MemBuf * mb)
 static void
 clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
-    HttpHeader hdr;
+    HttpHeader hdr(hoReply);
     Packer p;
     assert(rep);
     assert(spec);
@@ -848,7 +848,6 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     memBufPrintf(mb, "\r\n--%s\r\n", boundary.buf());
 
     /* stuff the header with required entries and pack it */
-    httpHeaderInit(&hdr, hoReply);
 
     if (httpHeaderHas(&rep->header, HDR_CONTENT_TYPE))
         httpHeaderPutStr(&hdr, HDR_CONTENT_TYPE, httpHeaderGetStr(&rep->header, HDR_CONTENT_TYPE));

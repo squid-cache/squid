@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.4 2003/06/23 14:13:03 robertc Exp $
+ * $Id: fde.h,v 1.5 2003/07/15 06:50:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,6 +39,7 @@ class fde
 {
 
 public:
+    /* NOTE: memset is used on fdes today. 20030715 RBC */
     static void DumpStats (StoreEntry *);
 
     char const *remoteAddr() const;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.39 2003/07/11 01:40:34 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.40 2003/07/15 06:50:41 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -40,10 +40,68 @@
 
 static void httpRequestHdrCacheInit(request_t * req);
 
+void *
+HttpRequest::operator new(size_t amount)
+{
+    // Todo: assign private pool.
+    return static_cast<request_t *>(memAllocate(MEM_REQUEST_T));
+}
+
+void
+HttpRequest::operator delete(void *address)
+{
+    memFree(address, MEM_REQUEST_T);
+}
+
+void
+HttpRequest::deleteSelf() const
+{
+    delete this;
+}
+
+HttpRequest::HttpRequest()  : header(hoRequest)
+{
+    /* We should initialise these ... */
+#if 0
+    method_t method;
+    protocol_t protocol;
+    char login[MAX_LOGIN_SZ];
+    char host[SQUIDHOSTNAMELEN + 1];
+    auth_user_request_t *auth_user_request;
+    u_short port;
+    String urlpath;
+    char *canonical;
+    int link_count;		/* free when zero */
+    request_flags flags;
+    HttpHdrCc *cache_control;
+    HttpHdrRange *range;
+    http_version_t http_ver;
+    time_t ims;
+    int imslen;
+    int max_forwards;
+    /* these in_addr's could probably be sockaddr_in's */
+
+    struct in_addr client_addr;
+
+    struct in_addr my_addr;
+    unsigned short my_port;
+    unsigned short client_port;
+    HttpHeader header;
+    ConnStateData::Pointer body_connection;	/* used by clientReadBody() */
+    int content_length;
+    HierarchyLogEntry hier;
+    err_type errType;
+    char *peer_login;		/* Configured peer login:password */
+    time_t lastmod;		/* Used on refreshes */
+    const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
+    char *peer_domain;		/* Configured peer forceddomain */
+#endif
+}
+
 request_t *
 requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
 {
-    request_t *req = static_cast<request_t *>(memAllocate(MEM_REQUEST_T));
+    request_t *req = new HttpRequest;
     req->method = method;
     req->protocol = protocol;
 
@@ -57,8 +115,6 @@ requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
     req->client_addr = no_addr;
 
     req->my_addr = no_addr;
-
-    httpHeaderInit(&req->header, hoRequest);
 
     httpRequestHdrCacheInit(req);
 
@@ -98,7 +154,7 @@ requestDestroy(request_t * req)
 
     req->extacl_log.clean();
 
-    memFree(req, MEM_REQUEST_T);
+    req->deleteSelf();
 }
 
 request_t *

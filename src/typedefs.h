@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.165 2003/07/14 14:16:02 robertc Exp $
+ * $Id: typedefs.h,v 1.166 2003/07/15 06:50:43 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -199,7 +199,7 @@ typedef struct _header_mangler header_mangler;
 
 typedef struct _body_size body_size;
 
-class request_t;
+typedef struct HttpRequest request_t;
 
 typedef struct _AccessLogEntry AccessLogEntry;
 
@@ -367,11 +367,6 @@ typedef char HttpHeaderMask[12];
 
 /* a common objPackInto interface; used by debugObj */
 typedef void (*ObjPackMethod) (void *obj, Packer * p);
-
-#if USE_HTCP
-
-typedef struct _htcpReplyData htcpReplyData;
-#endif
 
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
