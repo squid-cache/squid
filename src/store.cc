@@ -1,7 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.497 1999/05/04 19:39:00 wessels Exp $
- * $Id: store.cc,v 1.497 1999/05/04 19:39:00 wessels Exp $
+ * $Id: store.cc,v 1.498 1999/05/04 21:58:40 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived

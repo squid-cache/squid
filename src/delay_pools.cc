@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.8 1999/04/15 06:15:52 wessels Exp $
+ * $Id: delay_pools.cc,v 1.9 1999/05/04 21:58:20 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -113,8 +113,12 @@ delayIdPtrHash(const void *key, unsigned int n)
 static int
 delayIdPtrHashCmp(const void *a, const void *b)
 {
-    /* Sort by POINTER VALUE. */
-    return b - a;
+    /*
+     * Compare POINTER VALUE.
+     * Note, we can't subtract void pointers, but we don't need
+     * to anyway.  All we need is a test for equality.
+     */
+    return a != b;
 }
 
 void

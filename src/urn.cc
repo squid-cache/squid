@@ -1,8 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.54 1999/04/23 02:57:42 wessels Exp $
- * $Id: urn.cc,v 1.54 1999/04/23 02:57:42 wessels Exp $
+ * $Id: urn.cc,v 1.55 1999/05/04 21:58:46 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis

@@ -1,7 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.138 1999/04/23 02:57:27 wessels Exp $
- * $Id: net_db.cc,v 1.138 1999/04/23 02:57:27 wessels Exp $
+ * $Id: net_db.cc,v 1.139 1999/05/04 21:58:29 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels

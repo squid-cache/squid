@@ -1,7 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.297 1999/04/26 21:04:45 wessels Exp $
- * $Id: main.cc,v 1.297 1999/04/26 21:04:45 wessels Exp $
+ * $Id: main.cc,v 1.298 1999/05/04 21:58:25 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived

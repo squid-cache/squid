@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.151 1999/05/04 20:49:37 wessels Exp $
+# $Id: cf.data.pre,v 1.152 1999/05/04 21:58:18 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -762,33 +762,6 @@ DOC_START
 	"ALL,1".
 
 debug_options ALL,1
-DOC_END
-
-
-NAME: ident_lookup_access
-TYPE: acl_access
-IFDEF: USE_IDENT
-DEFAULT: none
-DEFAULT_IF_NONE: deny all
-LOC: Config.accessList.identLookup
-DOC_START
-	A list of ACL elements which, if matched, cause an ident
-	(RFC 931) lookup to be performed for this request.  For
-	example, you might choose to always perform ident lookups
-	for your main multi-user Unix boxes, but not for your Macs
-	and PCs.  By default, ident lookups are not performed for
-	any requests.
-
-	To enable ident lookups for specific client addresses, you
-	can follow this example:
-
-	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
-	ident_lookup_access allow ident_aware_hosts
-	ident_lookup_access deny all
-
-	This option may be disabled by using --disable-ident with
-	the configure script.
-ident_lookup_access deny all
 DOC_END
 
 
@@ -1627,6 +1600,33 @@ DOC_START
 	prompted their username and password).
 
 proxy_auth_realm Squid proxy-caching web server
+DOC_END
+
+
+NAME: ident_lookup_access
+TYPE: acl_access
+IFDEF: USE_IDENT
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+LOC: Config.accessList.identLookup
+DOC_START
+	A list of ACL elements which, if matched, cause an ident
+	(RFC 931) lookup to be performed for this request.  For
+	example, you might choose to always perform ident lookups
+	for your main multi-user Unix boxes, but not for your Macs
+	and PCs.  By default, ident lookups are not performed for
+	any requests.
+
+	To enable ident lookups for specific client addresses, you
+	can follow this example:
+ 
+	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
+	ident_lookup_access allow ident_aware_hosts
+	ident_lookup_access deny all
+
+	This option may be disabled by using --disable-ident with
+	the configure script.
+ident_lookup_access deny all
 DOC_END
 
 

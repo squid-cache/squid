@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.36 1999/04/26 19:47:14 wessels Exp $
+ * $Id: snmp_core.cc,v 1.37 1999/05/04 21:58:35 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -449,6 +449,7 @@ snmpHandleUdp(int sock, void *not_used)
     commSetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
     from_len = sizeof(struct sockaddr_in);
     memset(&from, '\0', from_len);
+    memset(buf, '\0', SNMP_REQUEST_SIZE);
 
     Counter.syscalls.sock.recvfroms++;
 
@@ -652,7 +653,7 @@ snmpTreeGet(oid * Current, snint CurrentLen)
 	    count++;
 	}
     }
-    if (mibTreeEntry)
+    if (mibTreeEntry && mibTreeEntry->parsefunction)
 	Fn = mibTreeEntry->parsefunction;
     debug(49, 5) ("snmpTreeGet: return\n");
     return (Fn);

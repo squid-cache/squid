@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.34 1999/05/04 19:26:45 wessels Exp $
+ * $Id: comm_select.cc,v 1.35 1999/05/04 21:58:19 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -796,7 +796,6 @@ comm_select_dns_incoming(void)
 #endif
     if (nevents < 0)
 	return;
-    incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
     incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
     if (incoming_dns_interval < Config.comm_incoming.dns_min_poll)
 	incoming_dns_interval = Config.comm_incoming.dns_min_poll;

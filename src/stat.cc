@@ -1,7 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.316 1999/05/04 19:22:26 wessels Exp $
- * $Id: stat.cc,v 1.316 1999/05/04 19:22:26 wessels Exp $
+ * $Id: stat.cc,v 1.317 1999/05/04 21:58:38 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
