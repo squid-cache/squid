@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.88 1997/07/14 23:50:17 wessels Exp $
+ * $Id: gopher.cc,v 1.89 1997/07/15 03:29:02 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -770,26 +770,19 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
      * stuff.  Do it anyway even though request is not HTML type.
      */
     gopherMimeCreate(gopherState);
-
-    if (!BIT_TEST(entry->flag, ENTRY_HTML))
-	gopherState->conversion = NORMAL;
-    else
 	switch (gopherState->type_id) {
-
 	case GOPHER_DIRECTORY:
 	    /* we got to convert it first */
 	    BIT_SET(entry->flag, DELAY_SENDING);
 	    gopherState->conversion = HTML_DIR;
 	    gopherState->HTML_header_added = 0;
 	    break;
-
 	case GOPHER_INDEX:
 	    /* we got to convert it first */
 	    BIT_SET(entry->flag, DELAY_SENDING);
 	    gopherState->conversion = HTML_INDEX_RESULT;
 	    gopherState->HTML_header_added = 0;
 	    break;
-
 	case GOPHER_CSO:
 	    /* we got to convert it first */
 	    BIT_SET(entry->flag, DELAY_SENDING);
@@ -797,16 +790,11 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	    gopherState->cso_recno = 0;
 	    gopherState->HTML_header_added = 0;
 	    break;
-
 	default:
 	    gopherState->conversion = NORMAL;
-
-	}
+    }
     /* Schedule read reply. */
-    commSetSelect(fd,
-	COMM_SELECT_READ,
-	gopherReadReply,
-	gopherState, 0);
+    commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
     if (buf)
 	put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
 }
@@ -881,8 +869,7 @@ gopherStart(StoreEntry * entry)
 	return;
     }
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
-	&& (strchr(gopherState->request, '?') == NULL)
-	&& (BIT_TEST(entry->flag, ENTRY_HTML))) {
+	&& (strchr(gopherState->request, '?') == NULL)) {
 	/* Index URL without query word */
 	/* We have to generate search page back to client. No need for connection */
 	gopherMimeCreate(gopherState);

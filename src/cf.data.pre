@@ -1647,7 +1647,7 @@ DOC_END
 
 NAME: cachemgr_passwd
 TYPE: cachemgrpasswd
-DEFAULT: disable all
+DEFAULT: none
 LOC: Config.passwd_list
 DOC_START
 	Specify passwords for cachemgr operations.
@@ -1706,8 +1706,8 @@ DOC_END
 #swap_level2_dirs 256
 
 NAME: store_avg_object_size
-COMMENT: (bytes)
-TYPE: size_t
+COMMENT: (kbytes)
+TYPE: kb_size_t
 DEFAULT: 20 KB
 LOC: Config.Store.avgObjectSize
 DOC_START
