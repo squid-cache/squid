@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.311 2003/06/28 00:13:09 hno Exp $
+#  $Id: Makefile.in,v 1.312 2003/07/08 00:12:52 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -555,6 +555,7 @@ squid_SOURCES = \
 	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
+	SquidNew.cc \
 	tunnel.cc \
 	$(SSL_SOURCE) \
 	stat.cc \
@@ -644,16 +645,17 @@ squid_LDADD = \
 
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@
 
-unlinkd_SOURCES = unlinkd.cc
+unlinkd_SOURCES = unlinkd.cc SquidNew.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
 
 pinger_SOURCES = \
 	pinger.cc \
-	debug.cc
+	debug.cc \
+	SquidNew.cc 
 
 
-dnsserver_SOURCES = dnsserver.cc
-recv_announce_SOURCES = recv-announce.cc
+dnsserver_SOURCES = dnsserver.cc SquidNew.cc
+recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 
 ufsdump_SOURCES = debug.cc \
 	int.cc \
@@ -765,6 +767,7 @@ ufsdump_SOURCES = debug.cc \
 	squid.h \
 	$(SSL_SOURCE) \
 	tunnel.cc \
+	SquidNew.cc \
 	stat.cc \
 	StatHist.cc \
 	String.cc \
@@ -937,18 +940,18 @@ cf_gen_OBJECTS = $(am_cf_gen_OBJECTS)
 cf_gen_LDADD = $(LDADD)
 cf_gen_DEPENDENCIES =
 cf_gen_LDFLAGS =
-am_dnsserver_OBJECTS = dnsserver.$(OBJEXT)
+am_dnsserver_OBJECTS = dnsserver.$(OBJEXT) SquidNew.$(OBJEXT)
 dnsserver_OBJECTS = $(am_dnsserver_OBJECTS)
 dnsserver_LDADD = $(LDADD)
 dnsserver_DEPENDENCIES =
 dnsserver_LDFLAGS =
-am_pinger_OBJECTS = pinger.$(OBJEXT) debug.$(OBJEXT)
+am_pinger_OBJECTS = pinger.$(OBJEXT) debug.$(OBJEXT) SquidNew.$(OBJEXT)
 nodist_pinger_OBJECTS = globals.$(OBJEXT)
 pinger_OBJECTS = $(am_pinger_OBJECTS) $(nodist_pinger_OBJECTS)
 pinger_LDADD = $(LDADD)
 pinger_DEPENDENCIES =
 pinger_LDFLAGS =
-am_recv_announce_OBJECTS = recv-announce.$(OBJEXT)
+am_recv_announce_OBJECTS = recv-announce.$(OBJEXT) SquidNew.$(OBJEXT)
 recv_announce_OBJECTS = $(am_recv_announce_OBJECTS)
 recv_announce_LDADD = $(LDADD)
 recv_announce_DEPENDENCIES =
@@ -1007,10 +1010,10 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	MemObject.cc MemObject.h mime.cc multicast.cc neighbors.cc \
 	net_db.cc Packer.cc ProfStats.cc pconn.cc peer_digest.cc \
 	peer_select.cc protos.h redirect.cc referer.cc refresh.cc \
-	send-announce.cc snmp_core.cc snmp_agent.cc squid.h tunnel.cc \
-	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
-	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
-	StatHist.cc String.cc stmem.cc stmem.h store.cc Store.h \
+	send-announce.cc snmp_core.cc snmp_agent.cc squid.h SquidNew.cc \
+	tunnel.cc ACLCertificateData.cc ACLCertificateData.h \
+	ACLCertificate.cc ACLCertificate.h ssl_support.cc ssl_support.h \
+	stat.cc StatHist.cc String.cc stmem.cc stmem.h store.cc Store.h \
 	store_io.cc StoreIOBuffer.h StoreIOState.cc StoreIOState.h \
 	store_client.cc StoreClient.h store_digest.cc store_dir.cc \
 	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
@@ -1099,12 +1102,12 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	Packer.$(OBJEXT) $(am__objects_13) pconn.$(OBJEXT) \
 	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
 	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
-	$(am__objects_14) tunnel.$(OBJEXT) $(am__objects_16) \
-	stat.$(OBJEXT) StatHist.$(OBJEXT) String.$(OBJEXT) \
-	stmem.$(OBJEXT) store.$(OBJEXT) store_io.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
-	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
-	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	$(am__objects_14) SquidNew.$(OBJEXT) tunnel.$(OBJEXT) \
+	$(am__objects_16) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	String.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
+	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
+	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
@@ -1179,13 +1182,14 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	protos.h redirect.cc referer.cc refresh.cc send-announce.cc \
 	snmp_core.cc snmp_agent.cc squid.h ACLCertificateData.cc \
 	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
-	ssl_support.cc ssl_support.h tunnel.cc stat.cc StatHist.cc \
-	String.cc stmem.cc store_io.cc StoreIOBuffer.h StoreIOState.cc \
-	store_client.cc StoreClient.h store_digest.cc store_dir.cc \
-	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
-	store_swapmeta.cc store_swapout.cc structs.h SwapDir.cc \
-	tools.cc typedefs.h ufscommon.cc ufscommon.h unlinkd.cc url.cc \
-	urn.cc useragent.cc wais.cc wccp.cc whois.cc win32.cc
+	ssl_support.cc ssl_support.h tunnel.cc SquidNew.cc stat.cc \
+	StatHist.cc String.cc stmem.cc store_io.cc StoreIOBuffer.h \
+	StoreIOState.cc store_client.cc StoreClient.h store_digest.cc \
+	store_dir.cc store_key_md5.cc store_log.cc store_rebuild.cc \
+	store_swapin.cc store_swapmeta.cc store_swapout.cc structs.h \
+	SwapDir.cc tools.cc typedefs.h ufscommon.cc ufscommon.h \
+	unlinkd.cc url.cc urn.cc useragent.cc wais.cc wccp.cc whois.cc \
+	win32.cc
 am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store.$(OBJEXT) StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
@@ -1219,11 +1223,11 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
 	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
 	send-announce.$(OBJEXT) $(am__objects_14) $(am__objects_16) \
-	tunnel.$(OBJEXT) stat.$(OBJEXT) StatHist.$(OBJEXT) \
-	String.$(OBJEXT) stmem.$(OBJEXT) store_io.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
-	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
-	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	tunnel.$(OBJEXT) SquidNew.$(OBJEXT) stat.$(OBJEXT) \
+	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
+	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
+	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) ufscommon.$(OBJEXT) \
@@ -1235,7 +1239,8 @@ nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 ufsdump_OBJECTS = $(am_ufsdump_OBJECTS) $(nodist_ufsdump_OBJECTS)
 ufsdump_LDFLAGS =
-am_unlinkd_OBJECTS = unlinkd-unlinkd.$(OBJEXT)
+am_unlinkd_OBJECTS = unlinkd-unlinkd.$(OBJEXT) \
+	unlinkd-SquidNew.$(OBJEXT)
 unlinkd_OBJECTS = $(am_unlinkd_OBJECTS)
 unlinkd_LDADD = $(LDADD)
 unlinkd_DEPENDENCIES =
@@ -1298,7 +1303,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/IPInterception.Po ./$(DEPDIR)/MemBuf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/MemObject.Po ./$(DEPDIR)/NullDelayId.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/Packer.Po ./$(DEPDIR)/ProfStats.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/StatHist.Po ./$(DEPDIR)/StoreIOState.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/SquidNew.Po ./$(DEPDIR)/StatHist.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreIOState.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMeta.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMetaMD5.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMetaSTD.Po \
@@ -1359,6 +1365,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/string_arrays.Po ./$(DEPDIR)/tools.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/tunnel.Po ./$(DEPDIR)/ufscommon.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ufsdump.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/unlinkd-SquidNew.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/unlinkd-unlinkd.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/unlinkd.Po ./$(DEPDIR)/url.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/urn.Po ./$(DEPDIR)/useragent.Po \
@@ -1584,6 +1591,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NullDelayId.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Packer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ProfStats.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SquidNew.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StatHist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreIOState.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMeta.Po@am__quote@
@@ -1685,6 +1693,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tunnel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ufscommon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ufsdump.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlinkd-SquidNew.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlinkd-unlinkd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlinkd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/url.Po@am__quote@
@@ -1763,6 +1772,28 @@ unlinkd-unlinkd.obj: unlinkd.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/unlinkd-unlinkd.Po' tmpdepfile='$(DEPDIR)/unlinkd-unlinkd.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unlinkd_CXXFLAGS) $(CXXFLAGS) -c -o unlinkd-unlinkd.obj `if test -f 'unlinkd.cc'; then $(CYGPATH_W) 'unlinkd.cc'; else $(CYGPATH_W) '$(srcdir)/unlinkd.cc'; fi`
+
+unlinkd-SquidNew.o: SquidNew.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unlinkd_CXXFLAGS) $(CXXFLAGS) -MT unlinkd-SquidNew.o -MD -MP -MF "$(DEPDIR)/unlinkd-SquidNew.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o unlinkd-SquidNew.o `test -f 'SquidNew.cc' || echo '$(srcdir)/'`SquidNew.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/unlinkd-SquidNew.Tpo" "$(DEPDIR)/unlinkd-SquidNew.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/unlinkd-SquidNew.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='SquidNew.cc' object='unlinkd-SquidNew.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/unlinkd-SquidNew.Po' tmpdepfile='$(DEPDIR)/unlinkd-SquidNew.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unlinkd_CXXFLAGS) $(CXXFLAGS) -c -o unlinkd-SquidNew.o `test -f 'SquidNew.cc' || echo '$(srcdir)/'`SquidNew.cc
+
+unlinkd-SquidNew.obj: SquidNew.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unlinkd_CXXFLAGS) $(CXXFLAGS) -MT unlinkd-SquidNew.obj -MD -MP -MF "$(DEPDIR)/unlinkd-SquidNew.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o unlinkd-SquidNew.obj `if test -f 'SquidNew.cc'; then $(CYGPATH_W) 'SquidNew.cc'; else $(CYGPATH_W) '$(srcdir)/SquidNew.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/unlinkd-SquidNew.Tpo" "$(DEPDIR)/unlinkd-SquidNew.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/unlinkd-SquidNew.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='SquidNew.cc' object='unlinkd-SquidNew.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/unlinkd-SquidNew.Po' tmpdepfile='$(DEPDIR)/unlinkd-SquidNew.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unlinkd_CXXFLAGS) $(CXXFLAGS) -c -o unlinkd-SquidNew.obj `if test -f 'SquidNew.cc'; then $(CYGPATH_W) 'SquidNew.cc'; else $(CYGPATH_W) '$(srcdir)/SquidNew.cc'; fi`
 uninstall-info-am:
 dataDATA_INSTALL = $(INSTALL_DATA)
 install-dataDATA: $(data_DATA)
