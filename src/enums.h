@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.111 1998/07/22 20:53:55 wessels Exp $
+ * $Id: enums.h,v 1.112 1998/07/30 22:05:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -171,44 +171,6 @@ typedef enum {
     LOOKUP_HIT,
     LOOKUP_MISS
 } lookup_t;
-
-typedef enum {
-    MGR_NONE,
-    MGR_CLIENT_LIST,
-    MGR_CONFIGURATION,
-    MGR_DNSSERVERS,
-    MGR_FILEDESCRIPTORS,
-    MGR_FQDNCACHE,
-    MGR_INFO,
-    MGR_IO,
-    MGR_IPCACHE,
-    MGR_LOG_CLEAR,
-    MGR_LOG_DISABLE,
-    MGR_LOG_ENABLE,
-    MGR_LOG_STATUS,
-    MGR_LOG_VIEW,
-    MGR_NETDB,
-    MGR_OBJECTS,
-    MGR_REDIRECTORS,
-    MGR_REFRESH,
-    MGR_REMOVE,
-    MGR_REQUEST_HDRS,
-    MGR_REPLY_HDRS,
-    MGR_MSG_HDRS,
-    MGR_SERVER_LIST,
-    MGR_NON_PEERS,
-    MGR_SHUTDOWN,
-    MGR_UTILIZATION,
-    MGR_VM_OBJECTS,
-    MGR_STOREDIR,
-    MGR_CBDATA,
-    MGR_PCONN,
-    MGR_COUNTERS,
-    MGR_5MIN,
-    MGR_60MIN,
-    MGR_MEM,
-    MGR_MAX
-} objcache_op;
 
 /* recognized or "known" header fields; @?@ add more! */
 typedef enum {
