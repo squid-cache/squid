@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.8 2003/01/23 00:36:47 robertc Exp $
+ * $Id: config.h,v 1.9 2003/04/24 06:35:03 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -110,9 +110,11 @@
 
 #elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
 #define _SQUID_CYGWIN_
+#define _SQUID_WIN32_
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
 #define _SQUID_MSWIN_
+#define _SQUID_WIN32_
 
 #elif defined(__APPLE__)
 #define _SQUID_APPLE_

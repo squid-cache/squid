@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.113 2003/04/20 05:28:58 robertc Exp $
+ * $Id: defines.h,v 1.114 2003/04/24 06:35:08 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -312,7 +312,7 @@
 #define	HTTP_REQBUF_SZ	4096
 
 /* CygWin & Windows NT Port */
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 #define _WIN_SQUID_SERVICE_CONTROL_STOP SERVICE_CONTROL_STOP
 #define _WIN_SQUID_SERVICE_CONTROL_SHUTDOWN SERVICE_CONTROL_SHUTDOWN
 #define _WIN_SQUID_SERVICE_CONTROL_INTERROGATE SERVICE_CONTROL_INTERROGATE

@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.89 2003/02/21 22:50:07 robertc Exp $
+ * $Id: debug.cc,v 1.90 2003/04/24 06:35:08 hno Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -224,7 +224,7 @@ debugOpenLog(const char *logfile) {
         debug_log = stderr;
     }
 
-#if defined(_SQUID_CYGWIN_)||defined(_SQUID_MSWIN_)
+#ifdef _SQUID_WIN32_
     setmode(fileno(debug_log), O_TEXT);
 
 #endif

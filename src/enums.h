@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.230 2003/03/10 04:56:38 robertc Exp $
+ * $Id: enums.h,v 1.231 2003/04/24 06:35:09 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -708,7 +708,7 @@ typedef enum {
 
 
 /* CygWin & Windows NT Port */
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 /*
  * Supported Windows OS types codes
  */

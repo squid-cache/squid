@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.58 2003/04/22 15:06:09 hno Exp $
+ * $Id: dns_internal.cc,v 1.59 2003/04/24 06:35:09 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -42,7 +42,7 @@
    using external DNS process.
  */
 #ifndef USE_DNSSERVERS
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 #include "squid_windows.h"
 #endif
 #ifndef _PATH_RESOLV_CONF
@@ -99,7 +99,7 @@ static void idnsParseNameservers(void);
 #ifndef _SQUID_MSWIN_
 static void idnsParseResolvConf(void);
 #endif
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 static void idnsParseWIN32Registry(void);
 #endif
 static void idnsSendQuery(idns_query * q);
@@ -217,7 +217,7 @@ idnsParseResolvConf(void)
 
 #endif
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 static void
 idnsParseWIN32Registry(void)
 {
@@ -798,7 +798,7 @@ idnsInit(void)
         idnsParseResolvConf();
 
 #endif
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 
     if (0 == nns)
         idnsParseWIN32Registry();
@@ -807,7 +807,7 @@ idnsInit(void)
 
     if (0 == nns)
         fatal("Could not find any nameservers.\n"
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
               "       Please check your TCP-IP settings or /etc/resolv.conf file\n"
 #else
               "       Please check your /etc/resolv.conf file\n"

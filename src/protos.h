@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.476 2003/04/21 12:52:40 hno Exp $
+ * $Id: protos.h,v 1.477 2003/04/24 06:35:09 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1069,7 +1069,7 @@ SQUIDCEXTERN int varyEvaluateMatch(StoreEntry * entry, request_t * req);
 
 /* CygWin & Windows NT Port */
 /* win32.c */
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 #ifdef USE_WIN32_SERVICE
 SQUIDCEXTERN int WIN32_Subsystem_Init(int *, char ***);
 #else
@@ -1081,7 +1081,7 @@ SQUIDCEXTERN void WIN32_Exit(void);
 SQUIDCEXTERN void WIN32_SetServiceCommandLine(void);
 SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
-#endif
+#endif /* _SQUID_WIN32_ */
 #ifdef _SQUID_MSWIN_
 
 SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);

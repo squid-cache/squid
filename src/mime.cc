@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.111 2003/02/21 22:50:10 robertc Exp $
+ * $Id: mime.cc,v 1.112 2003/04/24 06:35:09 hno Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -421,7 +421,7 @@ mimeInit(char *filename)
         return;
     }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
     setmode(fileno(fp), O_TEXT);
 
 #endif

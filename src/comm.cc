@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.373 2003/04/20 05:28:58 robertc Exp $
+ * $Id: comm.cc,v 1.374 2003/04/24 06:35:08 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1961,7 +1961,7 @@ commSetNonBlocking(int fd)
     int flags;
     int dummy = 0;
 #endif
-#if defined (_SQUID_CYGWIN_) || defined (_SQUID_MSWIN_)
+#ifdef _SQUID_WIN32_
 
     int nonblocking = TRUE;
 
@@ -1985,7 +1985,7 @@ commSetNonBlocking(int fd)
         }
 
 #endif
-#if defined (_SQUID_CYGWIN_) || defined (_SQUID_MSWIN_)
+#ifdef _SQUID_WIN32_
 
     }
 

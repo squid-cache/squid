@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.164 2003/02/21 22:50:08 robertc Exp $
+ * $Id: disk.cc,v 1.165 2003/04/24 06:35:08 hno Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -39,7 +39,7 @@
 static PF diskHandleRead;
 static PF diskHandleWrite;
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_OS2_) || defined(_SQUID_CYGWIN_)
+#if defined(_SQUID_WIN32_) || defined(_SQUID_OS2_)
 static int
 diskWriteIsComplete(int fd)
 {
@@ -106,7 +106,7 @@ file_close(int fd)
     }
 
     if (F->flags.write_daemon) {
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_OS2_) || defined(_SQUID_CYGWIN_)
+#if defined(_SQUID_WIN32_) || defined(_SQUID_OS2_)
         /*
          * on some operating systems, you can not delete or rename
          * open files, so we won't allow delayed close.

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.50 2003/02/21 22:50:07 robertc Exp $
+ * $Id: cf_gen.cc,v 1.51 2003/04/24 06:35:08 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -66,7 +66,7 @@
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 #include <io.h>
 #endif
 #if HAVE_FCNTL_H
@@ -178,7 +178,7 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
     setmode(fileno(fp), O_TEXT);
 
 #endif
@@ -404,7 +404,7 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
     setmode(fileno(fp), O_TEXT);
 
 #endif
@@ -438,7 +438,7 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
     setmode(fileno(fp), O_TEXT);
 
 #endif
