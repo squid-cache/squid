@@ -20,6 +20,7 @@ Our Todo List
 		- Make sure the lib/*.c files do not use printf/fprintf.
 		- Replace bzero with memset
 		- Replace bcopy with xmemcpy
+(2)     Use storeBuffer/Flush where needed, consider supporting nested calls
 
 (3) **	request-range (AR)
 (3)	hit metering
