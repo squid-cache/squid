@@ -1,3 +1,4 @@
+#if SQUID_SNMP
 /*
  * Simple Network Management Protocol (RFC 1067).
  *
@@ -111,7 +112,7 @@ init_agent_auth(void)
 	    debug(49,5) ("init_agent_auth: Agent not installed properly, cannot open '%s'\n", 
 		    Config.Snmp.agentInfo );
 	    debug(49,5)("init_agent_auth: Create a empty file '%s'. This is used for\n",
-		    snmp_agentinfo );
+		    Config.Snmp.agentInfo );
 	    debug(49,5)( "NV store of the agentBoots object.\n" );
 	    return -1;
 	}
@@ -1011,3 +1012,5 @@ bulk_var_op_list(sn_data, length, out_sn_data, out_length, non_repeaters, max_re
     *index = 0;
     return SNMP_ERR_NOERROR;
 }
+
+#endif
