@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.48 1999/01/24 04:03:52 wessels Exp $
+ * $Id: ident.cc,v 1.49 1999/01/24 05:24:22 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -116,8 +116,11 @@ identConnectDone(int fd, int status, void *data)
 	if (cbdataValid(c->callback_data))
 	    break;
     }
-    if (c == NULL)		/* no clients care */
+    if (c == NULL) {
+	/* no clients care */
 	comm_close(fd);
+	return;
+    }
     memBufDefInit(&mb);
     memBufPrintf(&mb, "%d, %d\r\n",
 	ntohs(state->peer.sin_port),
