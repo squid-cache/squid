@@ -1,4 +1,21 @@
-Changes to squid-1.2.alpha1 ():
+Changes to squid-1.2.alpha3 ():
+
+	- Implemented persistent connections between clients and squid.
+	- Moved various FD tables (comm.c, fdstat.c, disk.c) to a single
+	  table in fd.c.
+	- Removed use of FD as an identifier in certain callback
+	  operations (ipcache, fqdncache).
+	- General code cleanup.
+	- Fixed typedefs for callback functions.
+	- Removed FD lifetime/timeout dichotomy.  Now we only have
+	  timeouts, however the lifetime concept/keyword may still
+	  linger in certain places.
+	- Change Makefile 'realclean' target to 'distclean'
+	- Changed config file parsing of time specifications to use
+	  parseTimeLine().
+	- Removed storetoString.c
+
+Changes to squid-1.2.alpha2 ():
 
 	- Merged squid-1.1.9, squid-1.1.10 changes
 
