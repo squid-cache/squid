@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.166 1997/01/21 02:53:34 wessels Exp $
+ * $Id: cache_cf.cc,v 1.167 1997/01/22 17:01:23 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -314,10 +314,6 @@ ip_access_check(struct in_addr address, const ip_acl * list)
     debug(3, 5, "ip_access_check: using %s\n", inet_ntoa(naddr));
 
     for (p = list; p; p = p->next) {
-	debug(3, 5, "ip_access_check: %s vs %s/%s\n",
-	    inet_ntoa(naddr),
-	    inet_ntoa(p->addr),
-	    inet_ntoa(p->mask));
 	if (ip_acl_match(naddr, p))
 	    return p->access;
     }
