@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.165 1997/11/05 05:29:24 wessels Exp $
+ * $Id: ftp.cc,v 1.166 1997/11/10 19:42:04 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -206,8 +206,10 @@ ftpStateFree(int fdnotused, void *data)
     safe_free(ftpState->title_url);
     safe_free(ftpState->filepath);
     safe_free(ftpState->data.host);
-    if (ftpState->data.fd > -1)
+    if (ftpState->data.fd > -1) {
 	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
+    }
     cbdataFree(ftpState);
 }
 
@@ -1482,6 +1484,10 @@ ftpReadList(FtpStateData * ftpState)
 	    Config.Timeout.read);
 	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
+	/* Cancel the timeout on the Control socket and establish one
+	 * on the data socket */
+	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
+	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout, ftpState);
 	return;
     } else if (!EBIT_TEST(ftpState->flags, FTP_TRIED_NLST)) {
 	EBIT_SET(ftpState->flags, FTP_TRIED_NLST);
