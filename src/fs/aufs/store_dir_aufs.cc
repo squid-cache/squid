@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.48 2002/08/09 10:57:44 robertc Exp $
+ * $Id: store_dir_aufs.cc,v 1.49 2002/08/23 22:31:09 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -211,12 +211,12 @@ storeAufsDirCreateDirectory(const char *path, int should_exist)
     getCurrentTime();
     if (0 == stat(path, &st)) {
 	if (S_ISDIR(st.st_mode)) {
-	    debug(20, should_exist ? 3 : 1) ("%s exists\n", path);
+	    debug(47, should_exist ? 3 : 1) ("%s exists\n", path);
 	} else {
 	    fatalf("Swap directory %s is not a directory.", path);
 	}
     } else if (0 == mkdir(path, 0755)) {
-	debug(20, should_exist ? 1 : 3) ("%s created\n", path);
+	debug(47, should_exist ? 1 : 3) ("%s created\n", path);
 	created = 1;
     } else {
 	fatalf("Failed to make swap directory %s: %s",
@@ -230,11 +230,11 @@ storeAufsDirVerifyDirectory(const char *path)
 {
     struct stat sb;
     if (stat(path, &sb) < 0) {
-	debug(20, 0) ("%s: %s\n", path, xstrerror());
+	debug(47, 0) ("%s: %s\n", path, xstrerror());
 	return -1;
     }
     if (S_ISDIR(sb.st_mode) == 0) {
-	debug(20, 0) ("%s is not a directory\n", path);
+	debug(47, 0) ("%s is not a directory\n", path);
 	return -1;
     }
     return 0;
@@ -325,7 +325,7 @@ storeAufsDirOpenSwapLog(SwapDir * sd)
 	debug(50, 1) ("%s: %s\n", path, xstrerror());
 	fatal("storeAufsDirOpenSwapLog: Failed to open swap log.");
     }
-    debug(47, 3) ("Cache Dir #%d log opened on FD %d\n", sd->index, fd);
+    debug(50, 3) ("Cache Dir #%d log opened on FD %d\n", sd->index, fd);
     aioinfo->swaplog_fd = fd;
     if (0 == n_asyncufs_dirs)
 	assert(NULL == asyncufs_dir_index);
@@ -387,12 +387,12 @@ storeAufsDirRebuildFromDirectory(void *data)
     tlv *tlv_list;
     tlv *t;
     assert(rb != NULL);
-    debug(20, 3) ("storeAufsDirRebuildFromDirectory: DIR #%d\n", rb->sd->index);
+    debug(47, 3) ("storeAufsDirRebuildFromDirectory: DIR #%d\n", rb->sd->index);
     for (count = 0; count < rb->speed; count++) {
 	assert(fd == -1);
 	fd = storeAufsDirGetNextFile(rb, &filn, &size);
 	if (fd == -2) {
-	    debug(20, 1) ("Done scanning %s swaplog (%d entries)\n",
+	    debug(47, 1) ("Done scanning %s swaplog (%d entries)\n",
 		rb->sd->path, rb->n_read);
 	    store_dirs_rebuilding--;
 	    storeAufsDirCloseTmpSwapLog(rb->sd);
@@ -405,7 +405,7 @@ storeAufsDirRebuildFromDirectory(void *data)
 	assert(fd > -1);
 	/* lets get file stats here */
 	if (fstat(fd, &sb) < 0) {
-	    debug(20, 1) ("storeAufsDirRebuildFromDirectory: fstat(FD %d): %s\n",
+	    debug(47, 1) ("storeAufsDirRebuildFromDirectory: fstat(FD %d): %s\n",
 		fd, xstrerror());
 	    file_close(fd);
 	    store_open_disk_fd--;
@@ -413,12 +413,12 @@ storeAufsDirRebuildFromDirectory(void *data)
 	    continue;
 	}
 	if ((++rb->counts.scancount & 0xFFFF) == 0)
-	    debug(20, 3) ("  %s %7d files opened so far.\n",
+	    debug(47, 3) ("  %s %7d files opened so far.\n",
 		rb->sd->path, rb->counts.scancount);
-	debug(20, 9) ("file_in: fd=%d %08X\n", fd, filn);
+	debug(47, 9) ("file_in: fd=%d %08X\n", fd, filn);
 	statCounter.syscalls.disk.reads++;
 	if (FD_READ_METHOD(fd, hdr_buf, SM_PAGE_SIZE) < 0) {
-	    debug(20, 1) ("storeAufsDirRebuildFromDirectory: read(FD %d): %s\n",
+	    debug(47, 1) ("storeAufsDirRebuildFromDirectory: read(FD %d): %s\n",
 		fd, xstrerror());
 	    file_close(fd);
 	    store_open_disk_fd--;
@@ -435,12 +435,12 @@ storeAufsDirRebuildFromDirectory(void *data)
 #endif
 	tlv_list = storeSwapMetaUnpack(hdr_buf, &swap_hdr_len);
 	if (tlv_list == NULL) {
-	    debug(20, 1) ("storeAufsDirRebuildFromDirectory: failed to get meta data\n");
+	    debug(47, 1) ("storeAufsDirRebuildFromDirectory: failed to get meta data\n");
 	    /* XXX shouldn't this be a call to storeAufsUnlink ? */
 	    storeAufsDirUnlinkFile(SD, filn);
 	    continue;
 	}
-	debug(20, 3) ("storeAufsDirRebuildFromDirectory: successful swap meta unpacking\n");
+	debug(47, 3) ("storeAufsDirRebuildFromDirectory: successful swap meta unpacking\n");
 	memset(key, '\0', MD5_DIGEST_CHARS);
 	memset(&tmpe, '\0', sizeof(StoreEntry));
 	for (t = tlv_list; t; t = t->next) {
@@ -460,7 +460,7 @@ storeAufsDirRebuildFromDirectory(void *data)
 	storeSwapTLVFree(tlv_list);
 	tlv_list = NULL;
 	if (storeKeyNull(key)) {
-	    debug(20, 1) ("storeAufsDirRebuildFromDirectory: NULL key\n");
+	    debug(47, 1) ("storeAufsDirRebuildFromDirectory: NULL key\n");
 	    storeAufsDirUnlinkFile(SD, filn);
 	    continue;
 	}
@@ -471,7 +471,7 @@ storeAufsDirRebuildFromDirectory(void *data)
 	} else if (tmpe.swap_file_sz == sb.st_size - swap_hdr_len) {
 	    tmpe.swap_file_sz = sb.st_size;
 	} else if (tmpe.swap_file_sz != sb.st_size) {
-	    debug(20, 1) ("storeAufsDirRebuildFromDirectory: SIZE MISMATCH %ld!=%ld\n",
+	    debug(47, 1) ("storeAufsDirRebuildFromDirectory: SIZE MISMATCH %ld!=%ld\n",
 		(long int) tmpe.swap_file_sz, (long int) sb.st_size);
 	    storeAufsDirUnlinkFile(SD, filn);
 	    continue;
@@ -526,7 +526,7 @@ storeAufsDirRebuildFromSwapLog(void *data)
     /* load a number of objects per invocation */
     for (count = 0; count < rb->speed; count++) {
 	if (fread(&s, ss, 1, rb->log) != 1) {
-	    debug(20, 1) ("Done reading %s swaplog (%d entries)\n",
+	    debug(47, 1) ("Done reading %s swaplog (%d entries)\n",
 		rb->sd->path, rb->n_read);
 	    fclose(rb->log);
 	    rb->log = NULL;
@@ -550,7 +550,7 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	 * to mask it off.
 	 */
 	s.swap_filen &= 0x00FFFFFF;
-	debug(20, 3) ("storeAufsDirRebuildFromSwapLog: %s %s %08X\n",
+	debug(47, 3) ("storeAufsDirRebuildFromSwapLog: %s %s %08X\n",
 	    swap_log_op_str[(int) s.op],
 	    storeKeyText(s.key),
 	    s.swap_filen);
@@ -581,7 +581,7 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	} else {
 	    x = log(++rb->counts.bad_log_op) / log(10.0);
 	    if (0.0 == x - (double) (int) x)
-		debug(20, 1) ("WARNING: %d invalid swap log entries found\n",
+		debug(47, 1) ("WARNING: %d invalid swap log entries found\n",
 		    rb->counts.bad_log_op);
 	    rb->counts.invalid++;
 	    continue;
@@ -622,7 +622,7 @@ storeAufsDirRebuildFromSwapLog(void *data)
 		storeAufsDirUnrefObj(SD, e);
 	    } else {
 		debug_trap("storeAufsDirRebuildFromSwapLog: bad condition");
-		debug(20, 1) ("\tSee %s:%d\n", __FILE__, __LINE__);
+		debug(47, 1) ("\tSee %s:%d\n", __FILE__, __LINE__);
 	    }
 	    continue;
 	} else if (used) {
@@ -631,7 +631,7 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	     * point.  If the log is dirty, the filesize check should have
 	     * caught this.  If the log is clean, there should never be a
 	     * newer entry. */
-	    debug(20, 1) ("WARNING: newer swaplog entry for dirno %d, fileno %08X\n",
+	    debug(47, 1) ("WARNING: newer swaplog entry for dirno %d, fileno %08X\n",
 		SD->index, s.swap_filen);
 	    /* I'm tempted to remove the swapfile here just to be safe,
 	     * but there is a bad race condition in the NOVM version if
@@ -694,7 +694,7 @@ storeAufsDirGetNextFile(RebuildState * rb, sfileno * filn_p, int *size)
     int fd = -1;
     int used = 0;
     int dirs_opened = 0;
-    debug(20, 3) ("storeAufsDirGetNextFile: flag=%d, %d: /%02X/%02X\n",
+    debug(47, 3) ("storeAufsDirGetNextFile: flag=%d, %d: /%02X/%02X\n",
 	rb->flags.init,
 	rb->sd->index,
 	rb->curlvl1,
@@ -720,39 +720,39 @@ storeAufsDirGetNextFile(RebuildState * rb, sfileno * filn_p, int *size)
 	    rb->td = opendir(rb->fullpath);
 	    dirs_opened++;
 	    if (rb->td == NULL) {
-		debug(50, 1) ("storeAufsDirGetNextFile: opendir: %s: %s\n",
+		debug(47, 1) ("storeAufsDirGetNextFile: opendir: %s: %s\n",
 		    rb->fullpath, xstrerror());
 	    } else {
 		rb->entry = readdir(rb->td);	/* skip . and .. */
 		rb->entry = readdir(rb->td);
 		if (rb->entry == NULL && errno == ENOENT)
-		    debug(20, 1) ("storeAufsDirGetNextFile: directory does not exist!.\n");
-		debug(20, 3) ("storeAufsDirGetNextFile: Directory %s\n", rb->fullpath);
+		    debug(47, 1) ("storeAufsDirGetNextFile: directory does not exist!.\n");
+		debug(47, 3) ("storeAufsDirGetNextFile: Directory %s\n", rb->fullpath);
 	    }
 	}
 	if (rb->td != NULL && (rb->entry = readdir(rb->td)) != NULL) {
 	    rb->in_dir++;
 	    if (sscanf(rb->entry->d_name, "%x", &rb->fn) != 1) {
-		debug(20, 3) ("storeAufsDirGetNextFile: invalid %s\n",
+		debug(47, 3) ("storeAufsDirGetNextFile: invalid %s\n",
 		    rb->entry->d_name);
 		continue;
 	    }
 	    if (!storeAufsFilenoBelongsHere(rb->fn, rb->sd->index, rb->curlvl1, rb->curlvl2)) {
-		debug(20, 3) ("storeAufsDirGetNextFile: %08X does not belong in %d/%d/%d\n",
+		debug(47, 3) ("storeAufsDirGetNextFile: %08X does not belong in %d/%d/%d\n",
 		    rb->fn, rb->sd->index, rb->curlvl1, rb->curlvl2);
 		continue;
 	    }
 	    used = storeAufsDirMapBitTest(SD, rb->fn);
 	    if (used) {
-		debug(20, 3) ("storeAufsDirGetNextFile: Locked, continuing with next.\n");
+		debug(47, 3) ("storeAufsDirGetNextFile: Locked, continuing with next.\n");
 		continue;
 	    }
 	    snprintf(rb->fullfilename, SQUID_MAXPATHLEN, "%s/%s",
 		rb->fullpath, rb->entry->d_name);
-	    debug(20, 3) ("storeAufsDirGetNextFile: Opening %s\n", rb->fullfilename);
+	    debug(47, 3) ("storeAufsDirGetNextFile: Opening %s\n", rb->fullfilename);
 	    fd = file_open(rb->fullfilename, O_RDONLY | O_BINARY);
 	    if (fd < 0)
-		debug(50, 1) ("storeAufsDirGetNextFile: %s: %s\n", rb->fullfilename, xstrerror());
+		debug(47, 1) ("storeAufsDirGetNextFile: %s: %s\n", rb->fullfilename, xstrerror());
 	    else
 		store_open_disk_fd++;
 	    continue;
@@ -788,7 +788,7 @@ storeAufsDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     int clean)
 {
     StoreEntry *e = NULL;
-    debug(20, 5) ("storeAufsAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
+    debug(47, 5) ("storeAufsAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
     /* if you call this you'd better be sure file_number is not 
      * already in use! */
     e = new_StoreEntry(STORE_ENTRY_WITHOUT_MEMOBJ, NULL, NULL);
@@ -848,7 +848,7 @@ storeAufsDirRebuild(SwapDir * sd)
     }
     if (!clean)
 	rb->flags.need_to_validate = 1;
-    debug(20, 1) ("Rebuilding storage in %s (%s)\n",
+    debug(47, 1) ("Rebuilding storage in %s (%s)\n",
 	sd->path, clean ? "CLEAN" : "DIRTY");
     store_dirs_rebuilding++;
     eventAdd("storeRebuild", func, rb, 0.0, 1);
@@ -905,7 +905,7 @@ storeAufsDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
     if (aioinfo->swaplog_fd >= 0)
 	file_close(aioinfo->swaplog_fd);
     /* open a write-only FD for the new log */
-    fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC);
+    fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", new_path, xstrerror());
 	fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
@@ -969,7 +969,7 @@ storeAufsDirWriteCleanStart(SwapDir * sd)
     state->outbuf_offset = 0;
     state->walker = sd->repl->WalkInit(sd->repl);
     unlink(state->cln);
-    debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
+    debug(47, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
 #if HAVE_FCHMOD
     if (stat(state->cur, &sb) == 0)
@@ -1020,7 +1020,7 @@ storeAufsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 	if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	    debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 		state->new, xstrerror());
-	    debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
+	    debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
 	    file_close(state->fd);
 	    state->fd = -1;
 	    unlink(state->new);
@@ -1046,7 +1046,7 @@ storeAufsDirWriteCleanDone(SwapDir * sd)
     if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 	    state->new, xstrerror());
-	debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile "
+	debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile "
 	    "not replaced.\n");
 	file_close(state->fd);
 	state->fd = -1;
@@ -1259,7 +1259,7 @@ storeAufsDirCleanEvent(void *unused)
 static int
 storeAufsDirIs(SwapDir * sd)
 {
-    if (strncmp(sd->type, "aufs", 3) == 0)
+    if (strncmp(sd->type, "aufs", 4) == 0)
 	return 1;
     return 0;
 }
@@ -1325,7 +1325,7 @@ storeAufsDirMaintain(SwapDir * SD)
 	 * This is kinda cheap, but so we need this priority hack?
 	 */
     }
-    debug(20, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n",
+    debug(47, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n",
 	f, max_scan, max_remove);
     walker = SD->repl->PurgeInit(SD->repl, max_scan);
     while (1) {
@@ -1340,7 +1340,7 @@ storeAufsDirMaintain(SwapDir * SD)
 	storeRelease(e);
     }
     walker->Done(walker);
-    debug(20, (removed ? 2 : 3)) ("storeUfsDirMaintain: %s removed %d/%d f=%.03f max_scan=%d\n",
+    debug(47, (removed ? 2 : 3)) ("storeAufsDirMaintain: %s removed %d/%d f=%.03f max_scan=%d\n",
 	SD->path, removed, max_remove, f, max_scan);
 }
 
@@ -1359,7 +1359,7 @@ storeAufsDirCheckObj(SwapDir * SD, const StoreEntry * e)
 
 #if OLD_UNUSED_CODE
     if (storeAufsDirExpiredReferenceAge(SD) < 300) {
-	debug(20, 3) ("storeAufsDirCheckObj: NO: LRU Age = %d\n",
+	debug(47, 3) ("storeAufsDirCheckObj: NO: LRU Age = %d\n",
 	    storeAufsDirExpiredReferenceAge(SD));
 	/* store_check_cachable_hist.no.lru_age_too_low++; */
 	return -1;
@@ -1429,7 +1429,7 @@ storeAufsDirUnlinkFile(SwapDir * SD, sfileno f)
 void
 storeAufsDirReplAdd(SwapDir * SD, StoreEntry * e)
 {
-    debug(20, 4) ("storeAufsDirReplAdd: added node %p to dir %d\n", e,
+    debug(47, 4) ("storeAufsDirReplAdd: added node %p to dir %d\n", e,
 	SD->index);
     SD->repl->Add(SD->repl, e, &e->repl);
 }
@@ -1439,7 +1439,7 @@ void
 storeAufsDirReplRemove(StoreEntry * e)
 {
     SwapDir *SD = INDEXSD(e->swap_dirn);
-    debug(20, 4) ("storeAufsDirReplRemove: remove node %p from dir %d\n", e,
+    debug(47, 4) ("storeAufsDirReplRemove: remove node %p from dir %d\n", e,
 	SD->index);
     SD->repl->Remove(SD->repl, e, &e->repl);
 }
@@ -1589,19 +1589,19 @@ storeAufsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 {
     struct stat sb;
     if (stat(storeAufsDirFullPath(sd, e->swap_filen, NULL), &sb) < 0) {
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: MISSING SWAP FILE\n");
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
+	debug(47, 0) ("storeAufsCleanupDoubleCheck: MISSING SWAP FILE\n");
+	debug(47, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
+	debug(47, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
 	    storeAufsDirFullPath(sd, e->swap_filen, NULL));
 	storeEntryDump(e, 0);
 	return -1;
     }
     if (e->swap_file_sz != sb.st_size) {
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: SIZE MISMATCH\n");
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
+	debug(47, 0) ("storeAufsCleanupDoubleCheck: SIZE MISMATCH\n");
+	debug(47, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
+	debug(47, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
 	    storeAufsDirFullPath(sd, e->swap_filen, NULL));
-	debug(20, 0) ("storeAufsCleanupDoubleCheck: ENTRY SIZE: %ld, FILE SIZE: %ld\n",
+	debug(47, 0) ("storeAufsCleanupDoubleCheck: ENTRY SIZE: %ld, FILE SIZE: %ld\n",
 	    (long int) e->swap_file_sz, (long int) sb.st_size);
 	storeEntryDump(e, 0);
 	return -1;
