@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.162 2002/06/26 09:55:56 hno Exp $
+ * $Id: net_db.cc,v 1.163 2002/09/25 22:23:59 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -44,6 +44,8 @@
 #include "squid.h"
 
 #if USE_ICMP
+#include "StoreClient.h"
+
 #define	NETDB_REQBUF_SZ	4096
 
 typedef enum {
@@ -544,7 +546,7 @@ netdbFreeNameEntry(void *data)
 
 
 static void
-netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
+netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 {
     netdbExchangeState *ex = data;
     int rec_sz = 0;
@@ -564,7 +566,7 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
-    debug(38, 3) ("netdbExchangeHandleReply: %d read bytes\n", (int) retsize);
+    debug(38, 3) ("netdbExchangeHandleReply: %d read bytes\n", (int) recievedData.length);
     if (!cbdataReferenceValid(ex->p)) {
 	debug(38, 3) ("netdbExchangeHandleReply: Peer became invalid\n");
 	netdbExchangeDone(ex);
@@ -574,13 +576,13 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
     p = ex->buf;
 
     /* Get the size of the buffer now */
-    size = ex->buf_ofs + retsize;
+    size = ex->buf_ofs + recievedData.length;
     debug(38, 3) ("netdbExchangeHandleReply: %d bytes buf\n", (int) size);
 
     /* Check if we're still doing headers */
     if (ex->connstate == STATE_HEADER) {
 
-	ex->buf_ofs += retsize;
+	ex->buf_ofs += recievedData.length;
 
 	/* skip reply headers */
 	if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
@@ -608,9 +610,12 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
 	    /* Finally, set the conn state mode to STATE_BODY */
 	    ex->connstate = STATE_BODY;
 	} else {
+	    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+	    tempBuffer.offset = ex->buf_ofs;
+	    tempBuffer.length = ex->buf_sz - ex->buf_ofs;
+	    tempBuffer.data = ex->buf + ex->buf_ofs;
 	    /* Have more headers .. */
-	    storeClientCopy(ex->sc, ex->e, ex->buf_ofs,
-		ex->buf_sz - ex->buf_ofs, ex->buf + ex->buf_ofs,
+	    storeClientCopy(ex->sc, ex->e, tempBuffer,
 		netdbExchangeHandleReply, ex);
 	    return;
 	}
@@ -694,13 +699,21 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
 	debug(38, 3) ("netdbExchangeHandleReply: ENTRY_ABORTED\n");
 	netdbExchangeDone(ex);
     } else if (ex->e->store_status == STORE_PENDING) {
+	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+	tempBuffer.offset = ex->used;
+	tempBuffer.length = ex->buf_sz - ex->buf_ofs;
+	tempBuffer.data = ex->buf + ex->buf_ofs;
 	debug(38, 3) ("netdbExchangeHandleReply: STORE_PENDING\n");
-	storeClientCopy(ex->sc, ex->e, ex->used, ex->buf_sz - ex->buf_ofs,
-	    ex->buf + ex->buf_ofs, netdbExchangeHandleReply, ex);
+	storeClientCopy(ex->sc, ex->e, tempBuffer,
+	    netdbExchangeHandleReply, ex);
     } else if (ex->used < ex->e->mem_obj->inmem_hi) {
+	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+	tempBuffer.offset = ex->used;
+	tempBuffer.length = ex->buf_sz - ex->buf_ofs;
+	tempBuffer.data = ex->buf + ex->buf_ofs;
 	debug(38, 3) ("netdbExchangeHandleReply: ex->e->mem_obj->inmem_hi\n");
-	storeClientCopy(ex->sc, ex->e, ex->used, ex->buf_sz - ex->buf_ofs,
-	    ex->buf + ex->buf_ofs, netdbExchangeHandleReply, ex);
+	storeClientCopy(ex->sc, ex->e, tempBuffer,
+	    netdbExchangeHandleReply, ex);
     } else {
 	debug(38, 3) ("netdbExchangeHandleReply: Done\n");
 	netdbExchangeDone(ex);
@@ -1059,6 +1072,7 @@ netdbExchangeStart(void *data)
     peer *p = data;
     char *uri;
     netdbExchangeState *ex;
+    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
     CBDATA_INIT_TYPE(netdbExchangeState);
     ex = cbdataAlloc(netdbExchangeState);
     ex->p = cbdataReference(p);
@@ -1078,7 +1092,10 @@ netdbExchangeStart(void *data)
     ex->buf_sz = NETDB_REQBUF_SZ;
     assert(NULL != ex->e);
     ex->sc = storeClientListAdd(ex->e, ex);
-    storeClientCopy(ex->sc, ex->e, 0, ex->buf_sz, ex->buf,
+    tempBuffer.offset = 0;
+    tempBuffer.length = ex->buf_sz;
+    tempBuffer.data = ex->buf;
+    storeClientCopy(ex->sc, ex->e, tempBuffer,
 	netdbExchangeHandleReply, ex);
     ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
     if (p->login)
