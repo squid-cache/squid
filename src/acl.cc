@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.68 1996/12/03 20:26:47 wessels Exp $
+ * $Id: acl.cc,v 1.69 1996/12/17 21:16:53 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -58,6 +58,7 @@ static int aclMatchAclList _PARAMS((const struct _acl_list *, aclCheck_t *));
 static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
+static int aclMatchIdent _PARAMS((wordlist * data, const char *ident));
 static intlist *aclParseIntlist _PARAMS((void));
 static struct _acl_ip_data *aclParseIpList _PARAMS((void));
 static intlist *aclParseMethodList _PARAMS((void));
@@ -549,6 +550,7 @@ aclParseAclLine(void)
 	A->data = (void *) aclParseIntlist();
 	break;
     case ACL_USER:
+	Config.identLookup = 1;
 	A->data = (void *) aclParseWordList();
 	break;
     case ACL_PROTO:
@@ -811,6 +813,23 @@ aclMatchRegex(relist * data, const char *word)
 }
 
 static int
+aclMatchIdent(wordlist * data, const char *ident)
+{
+    if (ident == NULL)
+	return 0;
+    debug(28, 3, "aclMatchIdent: checking '%s'\n", ident);
+    while (data) {
+	debug(28, 3, "aclMatchIdent: looking for '%s'\n", data->key);
+	if (strcmp(data->key, "REQUIRED") == 0 && *ident != '\0')
+	    return 1;
+	if (strcmp(data->key, ident) == 0)
+	    return 1;
+	data = data->next;
+    }
+    return 0;
+}
+
+static int
 aclMatchInteger(intlist * data, int i)
 {
     intlist *first, *prev;
@@ -914,8 +933,9 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	return aclMatchInteger(acl->data, r->port);
 	/* NOTREACHED */
     case ACL_USER:
-	debug(28, 0, "aclMatchAcl: ACL_USER unimplemented\n");
-	return 0;
+	/* debug(28, 0, "aclMatchAcl: ACL_USER unimplemented\n"); */
+	/* return 0; */
+	return aclMatchIdent(acl->data, checklist->ident);
 	/* NOTREACHED */
     case ACL_PROTO:
 	return aclMatchInteger(acl->data, r->protocol);
