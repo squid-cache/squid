@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.32 1998/05/24 03:41:08 wessels Exp $
+ * $Id: client_db.cc,v 1.33 1998/05/28 05:20:43 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -182,7 +182,9 @@ clientdbDump(StoreEntry * sentry)
 static void
 clientdbFreeItem(void *data)
 {
-    memFree(MEM_CLIENT_INFO, data);
+    ClientInfo *c = data;
+    safe_free(c->key);
+    memFree(MEM_CLIENT_INFO, c);
 }
 
 void
