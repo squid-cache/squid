@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.272 1998/05/20 23:35:01 wessels Exp $
+ * $Id: http.cc,v 1.273 1998/05/21 22:01:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -602,7 +602,7 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, in
  * used by httpBuildRequestPrefix()
  * note: calls httpHeaderInit(), the caller is responsible for Clean()-ing
  */
-static void
+void
 httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
