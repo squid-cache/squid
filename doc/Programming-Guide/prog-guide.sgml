@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.32 2001/01/06 11:09:43 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.33 2001/01/06 11:39:43 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2118,14 +2118,17 @@ coupling between the storage layer and the replacement policy.
 	<P>
 	To add new global data types one have to add them to the 
 	cbdata_type enum in enums.h, and a corresponding 
-	CREATE_CBDATA call in cbdata.c:cbdataInit().
+	CREATE_CBDATA call in cbdata.c:cbdataInit(). Or alternatively
+	add a CBDATA_GLOBAL_TYPE definition to globals.h and use
+	CBDATA_INIT_TYPE as described above.
+
+<verb>
+	extern CBDATA_GLOBAL_TYPE(type_of_data);	/* CBDATA_UNDEF */
+</verb>
 
 	<P>
 	TODO: Restructure the free function so there is one free function
 	associated with the whole cbdata type rather than per allocation.
-
-	<P>
-	TODO: Add macros for global definitions outside cbdata.c.
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager
