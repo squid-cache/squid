@@ -1,5 +1,6 @@
+
 /*
- * $Id: HttpHeaderTools.cc,v 1.23 1999/01/22 19:06:59 glenn Exp $
+ * $Id: HttpHeaderTools.cc,v 1.24 1999/01/24 02:26:20 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
