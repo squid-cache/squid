@@ -1,8 +1,8 @@
 <HTML><HEAD>
-<TITLE>ERRO: A URL requerida n&atilde;o pode ser recuperada</TITLE>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
 </HEAD><BODY>
 <H1>ERRO</H1>
-<H2>A URL requerida n&atilde;o pode ser recuperada</H2>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
 <HR>
 <P>
 Ocorreu erro no protocolo FTP<BR>
@@ -18,8 +18,8 @@ e recebeu esta resposta
 	%F
 </STRONG></PRE>
 <P>
-Isto pode ter como causa uma URL de FTP com caminho absoluto (que n&atilde;
-est&aacute; de acordo com a RFC 1738). Se a causa &eacute; essa, ent&atilde;o
+Isto pode ter como causa uma URL de FTP com caminho absoluto (que n&atilde;o
+est&aacute; de acordo com a RFC 1738). Se a causa for essa, ent&atilde;o
 o arquivo pode ser encontrado em <A HREF="%B">%B</A>.
 </P>
 
