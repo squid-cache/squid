@@ -485,6 +485,9 @@
 /* Define if you have the bsd library (-lbsd).  */
 #undef HAVE_LIBBSD
 
+/* Define if you have the crypt library (-lcrypt).  */
+#undef HAVE_LIBCRYPT
+
 /* Define if you have the gnumalloc library (-lgnumalloc).  */
 #undef HAVE_LIBGNUMALLOC
 
@@ -496,6 +499,9 @@
 
 /* Define if you have the nsl library (-lnsl).  */
 #undef HAVE_LIBNSL
+
+/* Define if you have the pthread library (-lpthread).  */
+#undef HAVE_LIBPTHREAD
 
 /* Define if you have the resolv library (-lresolv).  */
 #undef HAVE_LIBRESOLV
