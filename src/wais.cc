@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.98 1997/11/14 17:21:24 wessels Exp $
+ * $Id: wais.cc,v 1.99 1997/12/03 09:00:20 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -146,7 +146,6 @@ waisTimeout(int fd, void *data)
     err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
     err->request = urlParse(METHOD_CONNECT, waisState->request);
     errorAppendEntry(entry, err);
-    storeAbort(entry, 0);
     comm_close(fd);
 }
 
@@ -167,7 +166,6 @@ waisReadReply(int fd, void *data)
 	err = errorCon(ERR_CLIENT_ABORT, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     }
@@ -199,7 +197,6 @@ waisReadReply(int fd, void *data)
 	    err->xerrno = errno;
 	    err->request = urlParse(METHOD_CONNECT, waisState->request);
 	    errorAppendEntry(entry, err);
-	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
@@ -208,7 +205,6 @@ waisReadReply(int fd, void *data)
 	err->xerrno = errno;
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -243,7 +239,6 @@ waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	err->port = waisState->relayport;
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	comm_close(fd);
     } else {
 	/* Schedule read reply. */
@@ -294,8 +289,6 @@ waisStart(request_t * request, StoreEntry * entry)
 	err = errorCon(ERR_NO_RELAY, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
-
-	storeAbort(entry, 0);
 	return;
     }
     fd = comm_open(SOCK_STREAM,
@@ -310,7 +303,6 @@ waisStart(request_t * request, StoreEntry * entry)
 	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->request = urlParse(METHOD_CONNECT, waisState->request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	return;
     }
     waisState = xcalloc(1, sizeof(WaisStateData));
@@ -345,7 +337,6 @@ waisConnectDone(int fd, int status, void *data)
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = urlParse(METHOD_CONNECT, request);
 	errorAppendEntry(waisState->entry, err);
-	storeAbort(waisState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
@@ -354,7 +345,6 @@ waisConnectDone(int fd, int status, void *data)
 	err->port = waisState->relayport;
 	err->request = urlParse(METHOD_CONNECT, request);
 	errorAppendEntry(waisState->entry, err);
-	storeAbort(waisState->entry, 0);
 	comm_close(fd);
     } else {
 	commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);

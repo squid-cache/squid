@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.226 1997/12/02 00:17:37 wessels Exp $
+ * $Id: http.cc,v 1.227 1997/12/03 09:00:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -256,8 +256,9 @@ httpTimeout(int fd, void *data)
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
+    } else {
+        storeAbort(entry, 0);
     }
-    storeAbort(entry, 0);
     comm_close(fd);
 }
 
@@ -639,8 +640,9 @@ httpReadReply(int fd, void *data)
 		err->xerrno = errno;
 		err->request = requestLink(httpState->orig_request);
 		errorAppendEntry(entry, err);
+	    } else {
+	        storeAbort(entry, 0);
 	    }
-	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
@@ -654,7 +656,6 @@ httpReadReply(int fd, void *data)
 	    err->xerrno = errno;
 	    err->request = requestLink(httpState->orig_request);
 	    errorAppendEntry(entry, err);
-	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0) {
@@ -701,7 +702,6 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	err->xerrno = errno;
 	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     } else {
@@ -956,7 +956,6 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
 	err->xerrno = errno;
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
     }
     return fd;
 }
@@ -1074,7 +1073,6 @@ httpConnectDone(int fd, int status, void *data)
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
@@ -1083,7 +1081,6 @@ httpConnectDone(int fd, int status, void *data)
 	err->port = request->port;
 	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	if (httpState->peer)
 	    peerCheckConnectStart(httpState->peer);
 	comm_close(fd);

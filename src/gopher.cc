@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.114 1997/11/18 01:02:38 wessels Exp $
+ * $Id: gopher.cc,v 1.115 1997/12/03 09:00:18 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -651,8 +651,9 @@ gopherTimeout(int fd, void *data)
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->url = xstrdup(gopherState->request);
 	errorAppendEntry(entry, err);
+    } else {
+        storeAbort(entry, 0);
     }
-    storeAbort(entry, 0);
     comm_close(fd);
 }
 
@@ -698,7 +699,6 @@ gopherReadReply(int fd, void *data)
 	    err->xerrno = errno;
 	    err->url = xstrdup(storeUrl(entry));
 	    errorAppendEntry(entry, err);
-	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
@@ -707,7 +707,6 @@ gopherReadReply(int fd, void *data)
 	err->xerrno = errno;
 	err->url = xstrdup(gopherState->request);
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -750,8 +749,6 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
 	err->port = gopherState->port;
 	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
-
-	storeAbort(entry, 0);
 	comm_close(fd);
 	if (buf)
 	    put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
@@ -837,7 +834,6 @@ gopherStart(StoreEntry * entry)
 	err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
 	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
 	return;
     }
@@ -854,7 +850,6 @@ gopherStart(StoreEntry * entry)
 	err->xerrno = errno;
 	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
 	return;
     }
@@ -901,7 +896,6 @@ gopherConnectDone(int fd, int status, void *data)
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
-	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
 	ErrorState *err;
@@ -911,7 +905,6 @@ gopherConnectDone(int fd, int status, void *data)
 	err->port = gopherState->port;
 	err->url = xstrdup(storeUrl(entry));
 	errorAppendEntry(entry, err);
-	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
     } else {
 	commSetSelect(fd, COMM_SELECT_WRITE, gopherSendRequest, gopherState, 0);

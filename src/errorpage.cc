@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.109 1997/12/03 08:26:34 wessels Exp $
+ * $Id: errorpage.cc,v 1.110 1997/12/03 09:00:16 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -114,14 +114,14 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     MemObject *mem = entry->mem_obj;
     int len;
     assert(entry->store_status == STORE_PENDING);
-#if WE_SHOULD_PROBABLY_REQUIRE_THIS
+    assert(mem != NULL);
     assert(mem->inmem_hi == 0);
-#endif
     buf = errorBuildBuf(err, &len);
     storeAppend(entry, buf, len);
-    if (mem)
-	mem->reply->code = err->http_status;
+    mem->reply->code = err->http_status;
     storeComplete(entry);
+    storeNegativeCache(entry);
+    storeReleaseRequest(entry);
     errorStateFree(err);
 }
 
