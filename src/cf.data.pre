@@ -353,20 +353,36 @@ TYPE: b_size_t
 DEFAULT: 8 MB
 LOC: Config.Mem.maxSize
 DOC_START
-	Maximum amout of VM used to store objects in memory.
-	This includes:
-		in-transit objects,
-		negative-cached objects,
-		"hot" objects
-	The value of cache_mem is an upper limit on the size of the
-	"in-memory object data" pool.  This is a pool of 4k pages used
-	to hold object data.
+	NOTE: THIS PARAMETER DOES NOT SPECIFY THE MAXIMUM PROCESS
+	SIZE.  IT PLACES A LIMIT ON ONE ASPECT OF SQUID'S MEMORY
+	USAGE.  SQUID USES MEMORY FOR OTHER THINGS AS WELL.
+	YOUR PROCESS WILL PROBABLY BECOME TWICE OR THREE TIMES
+	BIGGER THAN THE VALUE YOU PUT HERE 
+
+	'cache_mem' specifies the ideal amount of memory to be used
+	for:
+		* In-Transit objects
+		* Hot Objects
+		* Negative-Cached objects
+
+	Data for these objects are stored in 4 KB blocks.  This
+	parameter specifies the ideal upper limit on the total size of
+	4 KB blocks allocated.  In-Transit objects take the highest
+	priority.
 
 	In-transit objects have priority over the others.  When
 	additional space is needed for incoming data, negative-cached
 	and hot objects will be released.  In other words, the
 	negative-cached and hot objects will fill up any unused space
 	not needed for in-transit objects.
+
+	If circumstances require, this limit will be exceeded.
+	Specifically, if your incoming request rate requires more than
+	'cache_mem' of memory to hold in-transit objects, Squid will
+	exceed this limit to satisfy the new requests.  When the load
+	decreases, blocks will be freed until the high-water mark is
+	reached.  Thereafter, blocks will be used to store hot
+	objects.
 
 	The values of cache_mem_low and cache_mem_high (below) can be
 	used to tune the use of the memory pool.  When the high mark is
