@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.2 2003/02/21 22:50:10 robertc Exp $
+ * $Id: mem_node.h,v 1.3 2003/06/24 12:30:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,6 +52,7 @@ public:
     size_t end() const;
     bool contains (size_t const &location) const;
     bool canAccept (size_t const &location) const;
+    bool operator < (mem_node const & rhs) const;
     /* public */
     StoreIOBuffer nodeBuffer;
     mem_node *next;

@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.19 2003/06/09 03:39:08 robertc Exp $
+ * $Id: splay.h,v 1.20 2003/06/24 12:30:59 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -39,6 +39,7 @@ class SplayNode {
     mutable SplayNode<V> *right;
     void destroy(SPLAYFREE *);
     void walk(SPLAYWALKEE *, void *callerState);
+    SplayNode<V> const * start() const;
     SplayNode<V> * remove(const Value data, SPLAYCMP * compare);
     SplayNode<V> * insert(Value data, SPLAYCMP * compare);
     SplayNode<V> * splay(const Value &data, SPLAYCMP * compare) const;
@@ -56,6 +57,7 @@ class Splay {
     Value const *find (Value const &, SPLAYCMP *compare) const;
     void insert(Value const &, SPLAYCMP *compare);
     void remove(Value const &, SPLAYCMP *compare);
+    SplayNode<V> const * start() const;
     size_t elements;
 };
 
@@ -80,6 +82,15 @@ SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
     walkee(data, state);
     if (right)
 	right->walk(walkee, state);
+}
+
+template<class V>
+SplayNode<V> const *
+SplayNode<V>::start() const
+{
+    if (this && left)
+	return left->start();
+    return this;
 }
 
 template<class V>
@@ -234,6 +245,14 @@ Splay<V>::remove(Value const &value, SPLAYCMP *compare)
     assert (find (value, compare));
     head = head->remove(value, compare);
     --elements;
+}
+
+template <class V>
+SplayNode<V> const * 
+Splay<V>:: start() const{
+    if (head)
+	return head->start();
+    return NULL;
 }
 
 #endif

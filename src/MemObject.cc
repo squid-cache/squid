@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.6 2003/03/04 01:40:25 robertc Exp $
+ * $Id: MemObject.cc,v 1.7 2003/06/24 12:30:59 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -395,7 +395,7 @@ MemObject::trimUnSwappable()
 bool
 MemObject::isContiguous() const
 {
-    bool result = data_hdr.hasContigousContentRange (inmem_lo, endOffset());
+    bool result = data_hdr.hasContigousContentRange (Range<size_t>(inmem_lo, endOffset()));
     /* XXX : make this higher level */
     debug (19, result ? 4 :3) ("MemObject::isContiguous: Returning %s\n",
                                result ? "true" : "false");

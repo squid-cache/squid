@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.2 2003/02/21 22:50:11 robertc Exp $
+ * $Id: stmem.h,v 1.3 2003/06/24 12:30:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,9 @@
 #ifndef SQUID_STMEM_H
 #define SQUID_STMEM_H
 
+#include "splay.h"
+#include "Range.h"
+
 class mem_node;
 
 class StoreIOBuffer;
@@ -42,12 +45,14 @@ class mem_hdr
 {
 
 public:
+    mem_hdr();
+    ~mem_hdr();
     void freeContent();
     int lowestOffset () const;
     off_t endOffset () const;
     int freeDataUpto (int);
     ssize_t copy (off_t, char *, size_t) const;
-    bool hasContigousContentRange(size_t start, size_t end) const;
+    bool hasContigousContentRange(Range<size_t> const &range) const;
     /* success or fail */
     bool write (StoreIOBuffer const &);
 
@@ -68,6 +73,7 @@ private:
     mem_node *nodeToRecieve(off_t offset);
     size_t writeAvailable(mem_node *aNode, size_t location, size_t amount, char const *source);
     off_t inmem_hi;
+    Splay<mem_node> nodes;
 };
 
 #endif /* SQUID_STMEM_H */

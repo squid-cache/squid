@@ -1,5 +1,5 @@
 /*
- * $Id: splay.cc,v 1.3 2003/04/22 01:37:44 robertc Exp $
+ * $Id: splay.cc,v 1.4 2003/06/24 12:31:00 robertc Exp $
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
@@ -180,9 +180,38 @@ main(int argc, char *argv[])
     SplayCheck::BeginWalk();
     intnode I;
     I.i = 1;
+    /* check we don't segfault on NULL splay calls */
     SplayCheck::WalkNodeRef(I, NULL);
     I.i = 0;
     SplayCheck::ExpectedFail = true;
     SplayCheck::WalkNodeRef(I, NULL);
+    
+{
+    /* check for begin() */
+    SplayNode<intnode> *safeTop = NULL;
+    if (safeTop->start() != NULL)
+	exit (1);
+    for (int i = 0; i < 100; i++) {
+	intnode I;
+	I.i = random();
+	if (i > 50)
+	    safeTop = safeTop->insert(I, compareintref);
+    }
+    {
+      intnode I;
+      I.i = 50;
+      safeTop = safeTop->insert (I, compareintref);
+    }
+    if (!safeTop->start())
+      exit (1);
+    if (safeTop->start()->data.i != 50)
+      exit (1);
+    safeTop->destroy(destintref);
+}
+    {
+      Splay<intnode *> aSplay;
+      if (aSplay.start() != NULL)
+	  exit (1);
+    }
     return 0;
 }

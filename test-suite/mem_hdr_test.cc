@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.3 2003/06/24 12:30:59 robertc Exp $
+ * $Id: mem_hdr_test.cc,v 1.1 2003/06/24 12:31:02 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -31,93 +31,42 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003  Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
+#include "stmem.h"
 #include "mem_node.h"
-
-MemPool *mem_node::pool = NULL;
-unsigned long mem_node::store_mem_size;
-
-void *
-mem_node::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (mem_node));
-
-    if (!pool)
-        pool = memPoolCreate("mem_node", sizeof (mem_node));
-
-    return memPoolAlloc(pool);
-}
+#include <iostream>
 
 void
-mem_node::operator delete (void *address)
+testLowAndHigh()
 {
-    memPoolFree(pool, address);
+    mem_hdr aHeader;
+    assert (aHeader.lowestOffset() == 0);
+    assert (aHeader.write (StoreIOBuffer()));
+    assert (aHeader.lowestOffset() == 0);
+    assert (aHeader.write (StoreIOBuffer(0, 1, NULL)));
+    assert (aHeader.lowestOffset() == 0);
+    char * sampleData = xstrdup ("A");
+    assert (aHeader.write (StoreIOBuffer(1, 100, sampleData)));
+    safe_free (sampleData);
+    assert (aHeader.lowestOffset() == 100);
+    assert (aHeader.endOffset() == 101);
+    sampleData = xstrdup ("B");
+    assert (aHeader.write (StoreIOBuffer(1, 10, sampleData)));
+    safe_free (sampleData);
+    assert (aHeader.lowestOffset() == 10);
+    assert (aHeader.endOffset() == 101);
+    assert (aHeader.hasContigousContentRange(Range<size_t>(10,11)));
+    assert (!aHeader.hasContigousContentRange(Range<size_t>(10,12)));
+    assert (!aHeader.hasContigousContentRange(Range<size_t>(10,101)));
 }
 
-mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data), next (NULL)
-{}
-
-mem_node::~mem_node()
+int
+main (int argc, char *argv)
 {
-    store_mem_size -= nodeBuffer.length;
-}
-
-size_t
-mem_node::InUseCount()
-{
-    if (!pool)
-        return 0;
-
-    MemPoolStats stats;
-
-    memPoolGetStats (&stats, pool);
-
-    return stats.items_inuse;
-}
-
-size_t
-mem_node::start() const
-{
-    assert (nodeBuffer.offset >= 0);
-    return nodeBuffer.offset;
-}
-
-size_t
-mem_node::end() const
-{
-    return nodeBuffer.offset + nodeBuffer.length;
-}
-
-size_t
-mem_node::space() const
-{
-    return SM_PAGE_SIZE - nodeBuffer.length;
-}
-
-bool
-mem_node::contains (size_t const &location) const
-{
-    if (start() <= location && end() > location)
-        return true;
-
-    return false;
-}
-
-/* nodes can not be sparse */
-bool
-mem_node::canAccept (size_t const &location) const
-{
-    if (location == end() && space() > 0)
-        return true;
-
-    return false;
-}
-
-bool
-mem_node::operator < (mem_node const & rhs) const
-{
-    return start() < rhs.start();
+    testLowAndHigh();
+    assert (mem_node::InUseCount() == 0);
+    return 0;
 }
