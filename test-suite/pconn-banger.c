@@ -432,7 +432,7 @@ handle_read(char *inbuf, int len)
 		free(r);
 		noutstanding--;
 		r = Requests;
-	    } else {
+	    } else if (r->content_length > -1) {
 		assert(r->bytes_read < r->content_length);
 	    }
 	    xmemmove(buf, buf + bytes_used, len);
