@@ -1,8 +1,8 @@
 <HTML><HEAD>
-<TITLE>ERRO: A URL requisitada n&atilde;o pode ser recuperada</TITLE>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
 </HEAD><BODY>
 <H1>ERRO</H1>
-<H2>A URL requisitada n&atilde;o pode ser recuperada</H2>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
 <HR>
 <P>
 
@@ -24,5 +24,5 @@ O sistema retornou:
 
 <P>
 Excedeu o tempo limite enquanto esperava para ler dados na rede. A rede ou servidor
-pode estar fora do ar ou congestionado. Por favor tente novamente.
+pode estar indispon&iacute;vel ou congestionado. Por favor tente novamente.
 </P>

@@ -1,8 +1,8 @@
 <HTML><HEAD>
-<TITLE>ERRO: A URL requerida n&atilde;o pode ser recuperada</TITLE>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
 </HEAD><BODY>
 <H1>ERRO</H1>
-<H2>A URL requerida n&atilde;o pode ser recuperada</H2>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
 <HR>
 <P>
 
@@ -20,7 +20,7 @@ Requisi&ccedil;&atilde;o inv&aacute;lida.
 </UL>
 
 <P>
-Alguns aspectos de requisi&ccedil;&atilde;o HTTP s&atilde;o invalidos. Problemas poss&iacute;veis:
+Alguns aspectos de requisi&ccedil;&atilde;o HTTP s&atilde;o invalidos. Poss&iacute;veis causas:
 <UL>
 <LI>M&eacute;todo desconhecido ou faltando (GET, POST)
 <LI>Faltou a URL

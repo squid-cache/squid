@@ -1,8 +1,8 @@
 <HTML><HEAD>
-<TITLE>ERRO: A URL Solicitada n&atilde;o pode ser recuperada</TITLE>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
 </HEAD><BODY>
 <H1>ERRO</H1>
-<H2>A URL requerida n&atilde;o pode ser recuperada</H2>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
 <HR>
 <P>
 
@@ -23,5 +23,5 @@ O sistema retornou:
 <PRE><I>    %E</I></PRE>
 
 <P>
-O host remoto (servidor) ou a rede pode estar fora do ar. Por favor tente novamente.
+O host remoto (servidor) ou a rede pode estar indispon&iacute;vel. Por favor tente novamente.
 </P>

@@ -1,8 +1,8 @@
 <HTML><HEAD>
-<TITLE>ERRO: A URL requisitada n&atilde;o pode ser recuperada</TITLE>
+<TITLE>ERRO: A URL solicitada n&atilde;o pode ser recuperada</TITLE>
 </HEAD><BODY>
 <H1>ERRO</H1>
-<H2>A URL requisitada n&atilde;o pode ser recuperada</H2>
+<H2>A URL solicitada n&atilde;o pode ser recuperada</H2>
 <HR>
 <P>
 
@@ -19,7 +19,7 @@ URL inv&aacute;lida
 </UL>
 
 <P>
-Alguns aspectos de requisi&ccedil;&otilde;es URL s&atilde;o incorretos. Problemas poss&iacute;veis:
+Alguns aspectos de requisi&ccedil;&otilde;es URL s&atilde;o incorretos. Poss&iacute;veis causas:
 <UL>
 <LI>Protocolo de acesso incorreto ou faltando (deve ser `http://` ou similar)
 <LI>Faltou o hostname
