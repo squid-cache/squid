@@ -14,6 +14,7 @@ typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
 typedef struct _acl acl;
+typedef struct _snmpconf snmpconf;
 typedef struct _acl_list acl_list;
 typedef struct _acl_access acl_access;
 typedef struct _aclCheck_t aclCheck_t;
@@ -104,8 +105,8 @@ typedef void SIGHDLR(int sig);
 
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
-typedef int num32;
-typedef unsigned int u_num32;
+/*typedef int num32;
+typedef unsigned int u_num32;*/
 #elif SIZEOF_LONG == 4
 typedef long num32;
 typedef unsigned long u_num32;

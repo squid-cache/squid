@@ -1,8 +1,20 @@
 -- File: SQUID.MIB
 -- kostas@nlanr.net
 -- Created    : 11/ 2/97 kostas@nlanr.net
--- Last Update: 11/18/97 kostas@nlanr.net
+-- Last Update: 12/1/97 kostas@nlanr.net
 
+SQUID-MIB DEFINITIONS ::= BEGIN
+		IMPORTS
+              	TimeTicks,
+              	Counter                FROM RFC1155-SMI
+             	DisplayString          FROM RFC1158-MIB
+            	mib-2                  FROM RFC1213-MIB
+           	OBJECT-TYPE            FROM RFC-1212
+          	TRAP-TYPE              FROM RFC-1215;
+
+-- 
+-- definitions included for standalone agent/managers
+--
 
 mgmt           	OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) 2 }
 mib            	OBJECT IDENTIFIER ::= { mgmt 1 }
@@ -11,24 +23,18 @@ experimental   	OBJECT IDENTIFIER ::= { internet 3 }
 private        	OBJECT IDENTIFIER ::= { internet 4 }
 enterprises    	OBJECT IDENTIFIER ::= { private 1 }
 nsfnet		OBJECT IDENTIFIER ::= { experimental 25 } 
+squid 		OBJECT IDENTIFIER ::= { nsfnet 17 }
 
-
---	SQUID-MIB DEFINITIONS ::= BEGIN
---		IMPORTS
---              TimeTicks,
---              Counter                FROM RFC1155-SMI
---             	DisplayString          FROM RFC1158-MIB
---            	mib-2                  FROM RFC1213-MIB
---           	OBJECT-TYPE            FROM RFC-1212
---          	TRAP-TYPE              FROM RFC-1215;
-	squid 	OBJECT IDENTIFIER ::= { nsfnet 17 }
-
+--
+-- Major MIB groups
+--
 	cacheSystem	OBJECT IDENTIFIER ::= { squid 1 }
 	cacheConfig  	OBJECT IDENTIFIER ::= { squid 2 }
 	cachePerf	OBJECT IDENTIFIER ::= { squid 3 }
-	cacheAccounting	OBJECT IDENTIFIER ::= { squid 4 }
+	cacheAccounting	OBJECT IDENTIFIER ::= { squid 6 }
 	cacheSecurity	OBJECT IDENTIFIER ::= { squid 5 }
-	cacheNetwork	OBJECT IDENTIFIER ::= { squid 6 } 
+	cacheNetwork	OBJECT IDENTIFIER ::= { squid 4 } 
+
 
 --
 -- cacheSystem group
@@ -59,7 +65,7 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
 --
 -- config group
 --
--- Contains configuration information including peers, acls etc.
+-- Contains configuration information including peers etc.
 
 
 	cacheAdmin OBJECT-TYPE
@@ -129,7 +135,7 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 ::= { cacheStorageConfig 6 }
 
 	cacheWaisRelayHost OBJECT-TYPE
-                SYNTAX OCTET STRING
+                SYNTAX DisplayString
                 ACCESS read-only
                 STATUS mandatory
                 DESCRIPTION
@@ -145,7 +151,6 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 ::= { cacheConfig 5 }
 
 	cacheTimeoutValues OBJECT IDENTIFIER ::= { cacheConfig 6 }
-
 
 	cacheReadTimeout  OBJECT-TYPE
                 SYNTAX Integer
@@ -174,7 +179,7 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
 
 
 	cacheLoggingLevel OBJECT-TYPE
-		SYNTAX Integer 
+		SYNTAX DisplayString
 		ACCESS read-write
 		STATUS mandatory
 		DESCRIPTION
@@ -213,51 +218,59 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
 	  cachePeerState	INTEGER
 	}
 
+	cachePeerId OBJECT-TYPE
+		SYNTAX Integer
+		ACCESS read-only
+		STATUS current
+	::= { cachePeerEntry 1 }
 	cachePeerName OBJECT-TYPE
 		SYNTAX DisplayString
 		ACCESS read-only
 		STATUS current
-	::= { cachePeerEntry 1 } 
+	::= { cachePeerEntry 2 } 
 
 	cachePeerIP OBJECT-TYPE
                 SYNTAX IpAddress
                 ACCESS read-only
                 STATUS current
-        ::= { cachePeerEntry 2 }
+        ::= { cachePeerEntry 3 }
 
 	cachePeerPortHttp OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS current
-        ::= { cachePeerEntry 3 }
+        ::= { cachePeerEntry 4 }
 
 	cachePeerPortIcp OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS current
-        ::= { cachePeerEntry 4 }
-
-	cachePeerType OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS current
         ::= { cachePeerEntry 5 }
+
+--	cachePeerType OBJECT-TYPE
+--                SYNTAX INTEGER
+--                ACCESS read-only
+--                STATUS current
+--        ::= { cachePeerEntry 6 }
 
 	cachePeerState OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS current
-        ::= { cachePeerEntry 6 }
+        ::= { cachePeerEntry 7 }
 
 	cachePeerType OBJECT-TYPE
                 SYNTAX INTEGER { 
-                                parent(1), sibling(2), multicast(3), none(4)
+                                parent(1), 
+				sibling(2), 
+				multicast(3), 
+				none(4)
                                 }
                 MAX-ACCESS not-accessible
                 STATUS current
                 DESCRIPTION 
                         " Peer Type "
-	::= { cachePeerEntry 4 } 
+	::= { cachePeerEntry 6 } 
 
 --
 -- cacheNetwork group
@@ -340,7 +353,7 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
 	
 	-- IP cache info
 
-	IPcacheTable OBJECT-TYPE
+	ipCacheTable OBJECT-TYPE
                 SYNTAX SEQUENCE OF iPcacheEntry
                 ACCESS read-only
                 STATUS current
@@ -355,10 +368,11 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 STATUS current
                 DESCRIPTION 
                         " An entry in cachePeerTable " 
-                INDEX   { IPcacheEntryIP }
-                ::= { IPcacheTable 1 }
+                INDEX   { IPcacheEntryId }
+                ::= { ipCacheTable 1 }
 
         IPcacheEntry ::= SEQUENCE {
+	  IPcacheEntryId		Integer,
           IPcacheEntryName         OCTET STRING,
           IPcacheEntryIP           IpAddress,
           IPcacheEntryState        INTEGER, 
@@ -373,27 +387,33 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                         " State of IP cache entry " 
 		::= { iPcacheEntry 3 } 
 
+	IPcacheEntryId OBJECT-TYPE
+		SYNTAX Integer
+		ACCESS read-only
+		STATUS current
+	::= { iPcacheEntry 1 } 
+
 	IPcacheEntryName OBJECT-TYPE
                 SYNTAX OCTET STRING
                 ACCESS read-only
                 STATUS current
-	::= { iPcacheEntry 1 }
+	::= { iPcacheEntry 2 }
 
 	IPcacheEntryIP OBJECT-TYPE
                 SYNTAX IpAddress
                 ACCESS read-only
                 STATUS current
-        ::= { iPcacheEntry 2 }
+        ::= { iPcacheEntry 3 }
 
 	IPcacheEntryState OBJECT-TYPE
                 SYNTAX Integer
                 ACCESS read-only
                 STATUS current
-        ::= { iPcacheEntry 3 }
+        ::= { iPcacheEntry 4 }
 
 	-- fqdn cache info
 
-        FQDNcacheTable OBJECT-TYPE
+        fQDNcacheTable OBJECT-TYPE
                 SYNTAX SEQUENCE OF fQDNcacheEntry
                 ACCESS read-only
                 STATUS current
@@ -408,10 +428,11 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 STATUS current
                 DESCRIPTION 
                         " An entry in cachePeerTable " 
-                INDEX   { FQDNcacheEntryName }
-                ::= { IPcacheTable 1 }
+                INDEX   { FQDNcacheEntryId }
+                ::= { fQDNcacheTable 1 }
 
         FQDNcacheEntry ::= SEQUENCE {
+	  FQDNcacheEntryId		Integer,
           FQDNcacheEntryName         OCTET STRING,
           FQDNcacheEntryIP           IpAddress,
 	  FQDNcacheEntryLastRef	     TimeTicks,
@@ -419,35 +440,41 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
           FQDNcacheEntryState        INTEGER
         }
 
+	FQDNcacheEntryId OBJECT-TYPE
+		SYNTAX Integer
+		ACCESS read-only
+		STATUS current
+	::= { fQDNcacheEntry 1 }
+
 	FQDNcacheEntryName OBJECT-TYPE
                 SYNTAX OCTET STRING
                 ACCESS read-only
                 STATUS current
-	::= { fQDNcacheEntry 1 }
+	::= { fQDNcacheEntry 2 }
 
 	FQDNcacheEntryIP OBJECT-TYPE
                 SYNTAX IpAddress
                 ACCESS read-only
                 STATUS current
-        ::= { fQDNcacheEntry 2 }
+        ::= { fQDNcacheEntry 3 }
 
 	FQDNcacheEntryLastRef OBJECT-TYPE
                 SYNTAX TimeTicks
                 ACCESS read-only
                 STATUS current
-        ::= { fQDNcacheEntry 3}
+        ::= { fQDNcacheEntry 4}
 
 	FQDNcacheEntryExpires OBJECT-TYPE
                 SYNTAX TimeTicks
                 ACCESS read-only
                 STATUS current
-        ::= { fQDNcacheEntry 4}
+        ::= { fQDNcacheEntry 5}
 
 	FQDNcacheEntryState OBJECT-TYPE
                 SYNTAX Integer
                 ACCESS read-only
                 STATUS current
-        ::= { fQDNcacheEntry 5}
+        ::= { fQDNcacheEntry 6}
 
 
 
@@ -458,7 +485,7 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 STATUS current
                 DESCRIPTION 
                         "  state of  FQDN cache entry "
-                ::= { fQDNcacheEntry 3  }
+                ::= { fQDNcacheEntry 7  }
 
 
 	cacheTCPconnections OBJECT-TYPE
@@ -485,13 +512,13 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
 			" Throughput of incoming traffic in 5 min intervals "
 		::= { cacheNetwork 6 } 
 
---	cacheOutThroughput OBJECT-TYPE
-----		SYNTAX Integer32
-  --              ACCESS read-only
-   --             STATUS current
-    --            DESCRIPTION 
---			"Throughput of outgoing traffic in 5 min intevals"
---		::= { cacheNetwork 7 }
+	cacheOutThroughput OBJECT-TYPE
+		SYNTAX Integer32
+                ACCESS read-only
+                STATUS current
+                DESCRIPTION 
+			" Throughput of outgoing traffic in 5 min intevals"
+		::= { cacheNetwork 7 }
 
 --
 -- performance group { squid 3 }
@@ -637,12 +664,42 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 ::= { cacheSysPerf 7 }
 
 	cacheNumObjCount OBJECT-TYPE
-                SYNTAX Counter32                 MAX-ACCESS read-only
+                SYNTAX Counter32                 
+		MAX-ACCESS read-only
                 STATUS  current
                 DESCRIPTION
                         " Number of objects "
                 ::= { cacheSysPerf 8 }
 
+        cacheCurrentMemSize OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheSysPerf 9 }
+
+        cacheCurrentLRUExpiration OBJECT-TYPE
+                SYNTAX TimeTicks
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheSysPerf 10 }
+
+        cacheCurrentUnlinkRequests OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheSysPerf 11 }
+
+        cacheCurrentUnusedFileDescrCount OBJECT-TYPE
+                SYNTAX Gauge32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheSysPerf 12 }
+
+	cacheCurrentReservedFileDescrCount  OBJECT-TYPE
+                SYNTAX Gauge32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheSysPerf 13 }
 
 	--
 	-- cacheProtoStats
@@ -733,6 +790,34 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 STATUS mandatory
                 ::= { cacheProtoStatEntry 9 }
 	
+
+	cacheProtoAggregateStats OBJECT IDENTIFIER ::= { cacheProtoStats 2 }
+
+	cacheClientHttpRequests  OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 1 }
+
+	cacheICPpktsSent OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 2 }
+
+	cacheICPpktsRecv OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 3 }
+
+	cacheCurrentSwapSize OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 4 }
+
+
 	
 	-- 
 	-- cachePeerStats
@@ -745,7 +830,7 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
                 DESCRIPTION
                         " Table containing aggregate statistics 
                           per supported protocol "
-                ::= { cacheProtoStats 2 }
+                ::= { cachePeerStats 1 }
 
         cachePeerStatEntry OBJECT-TYPE
                 SYNTAX CachePeerStatEntry
@@ -863,4 +948,4 @@ nsfnet		OBJECT IDENTIFIER ::= { experimental 25 }
 	  cacheProtoAclMask	IpAddress
           cacheProtoAclType     INTEGER
         }
-
+END

@@ -593,6 +593,8 @@ void
 init_mib(const char *file)
 {
     char *prefix;
+	if (Mib!=NULL)
+		return;
 
     Mib = 0;
     if (file)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.69 1997/11/28 08:19:56 wessels Exp $
+ * $Id: fqdncache.cc,v 1.70 1997/12/01 22:45:51 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -140,8 +140,8 @@ static void fqdncache_dnsHandleRead(int, void *);
 static fqdncache_entry *fqdncache_parsebuffer(const char *buf, dnsserver_t *);
 static int fqdncache_purgelru(void);
 static void fqdncache_release(fqdncache_entry *);
-static fqdncache_entry *fqdncache_GetFirst(void);
-static fqdncache_entry *fqdncache_GetNext(void);
+ fqdncache_entry *fqdncache_GetFirst(void);
+ fqdncache_entry *fqdncache_GetNext(void);
 static fqdncache_entry *fqdncache_create(const char *name);
 static void fqdncache_add_to_hash(fqdncache_entry *);
 static void fqdncache_call_pending(fqdncache_entry *);
@@ -240,13 +240,13 @@ fqdncache_get(const char *name)
     return f;
 }
 
-static fqdncache_entry *
+ fqdncache_entry *
 fqdncache_GetFirst(void)
 {
     return (fqdncache_entry *) hash_first(fqdn_table);
 }
 
-static fqdncache_entry *
+ fqdncache_entry *
 fqdncache_GetNext(void)
 {
     return (fqdncache_entry *) hash_next(fqdn_table);

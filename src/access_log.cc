@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.12 1997/11/30 02:26:41 wessels Exp $
+ * $Id: access_log.cc,v 1.13 1997/12/01 22:45:48 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -53,6 +53,7 @@ const char *log_tags[] =
     "UDP_DENIED",
     "UDP_INVALID",
     "UDP_MISS_NOFETCH",
+    "LOG_METER_EXPIRES",
     "LOG_TYPE_MAX"
 };
 

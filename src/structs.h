@@ -34,6 +34,12 @@ struct _acl_deny_info_list {
     struct _acl_deny_info_list *next;
 };
 
+struct _snmpconf {
+	char *line;
+	int type;
+	struct _snmpconf *next;
+};
+
 struct _acl {
     char name[ACL_NAME_SZ];
     squid_acl type;
@@ -131,8 +137,15 @@ struct _SquidConfig {
 	char *configFile;
 	char *agentInfo;
 	char *mibPath;
+	char *trap_community;
+	char *trap_sink;
 	u_short localPort;
 	int do_queueing;
+	int conf_authtraps;
+	struct _snmpconf *snmpconf;
+	viewEntry       *views;
+	usecEntry       *users;
+	communityEntry  *communities;
     } Snmp;
     struct {
 	char *log;
@@ -612,7 +625,7 @@ struct _net_db_peer {
 
 struct _netdbEntry {
     char *key;
-    struct _net_db *next;
+    struct _netdbEntry *next;
     char network[16];
     int pings_sent;
     int pings_recv;

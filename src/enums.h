@@ -20,6 +20,7 @@ typedef enum {
     LOG_UDP_DENIED,
     LOG_UDP_INVALID,
     LOG_UDP_MISS_NOFETCH,
+    LOG_METER_EXPIRES,
     LOG_TYPE_MAX
 } log_type;
 
@@ -362,3 +363,9 @@ typedef enum {
     ACCESS_ALLOWED,
     ACCESS_REQ_PROXY_AUTH
 } allow_t;
+
+enum {
+SNMP_C_VIEW,
+SNMP_C_USER,
+SNMP_C_COMMUNITY
+};

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.131 1997/11/28 08:12:02 wessels Exp $
+ * $Id: tools.cc,v 1.132 1997/12/01 22:45:59 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -178,9 +178,9 @@ dumpMallocStats(void)
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     struct mstats ms = mstats();
     fprintf(debug_log, "\ttotal space in arena:  %6d KB\n",
-	ms.bytes_total >> 10);
+	(int) (ms.bytes_total >> 10));
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
-	ms.bytes_free >> 10,
+	(int) (ms.bytes_free >> 10),
 	percent(ms.bytes_free, ms.bytes_total));
 #elif HAVE_MALLINFO
     struct mallinfo mp;

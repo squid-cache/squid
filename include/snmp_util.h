@@ -61,19 +61,10 @@ Util_file_read (char *file, int offset, char *data, int dataSz);
  * ** Write data into file
  */
 int
-Util_file_write (char *file, int offset, char *data, int dataSz))
+Util_file_write (char *file, int offset, char *data, int dataSz);
 
 
 /* ---------------------------------------------------------------------- */
-
-
-
-
-
-
-
-
-
 
 
 
