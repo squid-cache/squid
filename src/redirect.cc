@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.31 1996/12/05 16:07:16 wessels Exp $
+ * $Id: redirect.cc,v 1.32 1997/01/13 23:08:52 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -199,21 +199,30 @@ redirectHandleRead(int fd, redirector_t * redirector)
 	*t = '\0';
 	if ((t = strchr(redirector->inbuf, ' ')))
 	    *t = '\0';		/* terminate at space */
-	debug(29, 5, "redirectHandleRead: reply: '%s'\n", redirector->inbuf);
-	if (r->handler) {
-	    r->handler(r->data,
-		t == redirector->inbuf ? NULL : redirector->inbuf);
+	if (r == NULL) {
+	    /* A naughty redirector has spoken without being spoken to */
+	    /* B.R.Foster@massey.ac.nz, SQUID/1.1.3 */
+	    debug(29, 0, "redirectHandleRead: unexpected reply: '%s'\n",
+		redirector->inbuf);
+	    redirector->offset = 0;
+	} else {
+	    debug(29, 5, "redirectHandleRead: reply: '%s'\n",
+		redirector->inbuf);
+	    if (r->handler) {
+		r->handler(r->data,
+		    t == redirector->inbuf ? NULL : redirector->inbuf);
+	    }
+	    safe_free(r);
+	    redirector->redirectState = NULL;
+	    redirector->flags &= ~REDIRECT_FLAG_BUSY;
+	    redirector->offset = 0;
+	    n = ++RedirectStats.replies;
+	    svc_time = tvSubMsec(redirector->dispatch_time, current_time);
+	    if (n > REDIRECT_AV_FACTOR)
+		n = REDIRECT_AV_FACTOR;
+	    RedirectStats.avg_svc_time
+		= (RedirectStats.avg_svc_time * (n - 1) + svc_time) / n;
 	}
-	safe_free(r);
-	redirector->redirectState = NULL;
-	redirector->flags &= ~REDIRECT_FLAG_BUSY;
-	redirector->offset = 0;
-	n = ++RedirectStats.replies;
-	svc_time = tvSubMsec(redirector->dispatch_time, current_time);
-	if (n > REDIRECT_AV_FACTOR)
-	    n = REDIRECT_AV_FACTOR;
-	RedirectStats.avg_svc_time
-	    = (RedirectStats.avg_svc_time * (n - 1) + svc_time) / n;
     }
     while ((redirector = GetFirstAvailable()) && (r = Dequeue()))
 	redirectDispatch(redirector, r);
