@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.17 1998/04/24 05:20:23 wessels Exp $
+ * $Id: rfc1123.c,v 1.18 1998/07/17 00:16:29 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -251,7 +251,10 @@ parse_rfc1123(const char *str)
     t = mktime(&tm);
     {
 	time_t dst = 0;
-#if !defined _TIMEZONE && !defined _timezone
+#if defined (_TIMEZONE)
+#elif defined (_timezone)
+#elif defined(_SQUID_AIX_)
+#else
 	extern time_t timezone;
 #endif
 	/*

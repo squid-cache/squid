@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.49 1998/04/24 07:09:32 wessels Exp $
+ * $Id: dnsserver.cc,v 1.50 1998/07/17 00:16:28 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -213,7 +213,9 @@
 #include "util.h"
 #include "snprintf.h"
 
+#if !defined(_SQUID_AIX_)
 extern int h_errno;
+#endif
 
 #if LIBRESOLV_DNS_TTL_HACK
 extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
