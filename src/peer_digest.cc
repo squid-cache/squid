@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.53 1998/09/19 17:06:08 wessels Exp $
+ * $Id: peer_digest.cc,v 1.54 1998/09/21 07:10:55 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -175,12 +175,10 @@ peerDigestValidate(void *data)
     debug(72, 3) ("peerDigestValidate: %s was %s disabled\n",
 	p->host, p->digest.last_dis_delay ? "" : "not");
     if (1 /* p->digest.cd */ ) {
-	const cache_key *key;
 	const char *u = internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestUrlPath);
-	key = storeKeyPublic(u, METHOD_GET);
-	e = storeGet(key);
-	debug(72, 3) ("peerDigestValidate: %s store entry, key: %s, exp: %s\n",
-	    e ? "has" : "no", storeKeyText(key), mkrfc1123(e ? e->expires : 0));
+	e = storeGetPublic(u, METHOD_GET);
+	debug(72, 3) ("peerDigestValidate: %s store entry, exp: %s\n",
+	    e ? "has" : "no", mkrfc1123(e ? e->expires : 0));
     }
     /* currently we rely on entry->expire information */
     {
@@ -237,15 +235,13 @@ peerDigestRequest(peer * p)
 {
     StoreEntry *e, *old_e;
     char *url;
-    const cache_key *key;
     request_t *req;
     DigestFetchState *fetch = NULL;
     assert(p);
     p->digest.flags.requested = 1;
     /* compute future request components */
     url = internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestUrlPath);
-    key = storeKeyPublic(url, METHOD_GET);
-    debug(72, 2) ("peerDigestRequest: %s key: %s\n", url, storeKeyText(key));
+    debug(72, 2) ("peerDigestRequest: %s\n", url);
     req = urlParse(METHOD_GET, url);
     if (NULL == req) {
 	debug(72, 1) ("peerDigestRequest: Bad URI: %s\n", url);
@@ -266,7 +262,7 @@ peerDigestRequest(peer * p)
     req->flags.cachable = 1;
     /* the rest is based on clientProcessExpired() */
     req->flags.refresh = 1;
-    old_e = fetch->old_entry = storeGet(key);
+    old_e = fetch->old_entry = storeGetPublic(url, METHOD_GET);
     if (old_e) {
 	debug(72, 5) ("peerDigestRequest: found old entry\n");
 	storeLockObject(old_e);
