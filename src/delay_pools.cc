@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.27 2002/10/13 23:48:24 hno Exp $
+ * $Id: delay_pools.cc,v 1.28 2002/10/14 07:35:45 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -302,7 +302,7 @@ delayIsNoDelay(int fd)
 static delay_id
 delayId(unsigned short pool, unsigned short position)
 {
-    return (pool << 16) | position;
+    return (delay_id)((pool << 16) | position);
 }
 
 delay_id
@@ -661,7 +661,7 @@ delayMostBytesWanted(const MemObject * mem, int max)
 	wanted = sc->copyInto.length;
 	if (wanted > max)
 	    wanted = max;
-	i = delayBytesWanted(sc->delay_id, i, wanted);
+	i = delayBytesWanted(sc->delayId, i, wanted);
 	found = 1;
     }
     return found ? i : max;
@@ -681,21 +681,21 @@ delayMostBytesAllowed(const MemObject * mem)
 	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
-	j = delayBytesWanted(sc->delay_id, 0, sc->copyInto.length);
+	j = delayBytesWanted(sc->delayId, 0, sc->copyInto.length);
 	if (j > jmax) {
 	    jmax = j;
-	    d = sc->delay_id;
+	    d = sc->delayId;
 	}
     }
     return d;
 }
 
 void
-delaySetStoreClient(store_client * sc, delay_id delay_id)
+delaySetStoreClient(store_client * sc, delay_id delayId)
 {
     assert(sc != NULL);
-    sc->delay_id = delay_id;
-    delayRegisterDelayIdPtr(&sc->delay_id);
+    sc->delayId = delayId;
+    delayRegisterDelayIdPtr(&sc->delayId);
 }
 
 static void

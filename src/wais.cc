@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.140 2002/10/13 20:35:06 robertc Exp $
+ * $Id: wais.cc,v 1.141 2002/10/14 07:35:46 hno Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -92,7 +92,7 @@ waisReadReply(int fd, void *data)
     int bin;
     size_t read_sz;
 #if DELAY_POOLS
-    delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
+    delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
 #endif
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
@@ -101,14 +101,14 @@ waisReadReply(int fd, void *data)
     errno = 0;
     read_sz = 4096;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+    read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
     statCounter.syscalls.sock.reads++;
     len = FD_READ_METHOD(fd, buf, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
-	delayBytesIn(delay_id, len);
+	delayBytesIn(delayId, len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.other.kbytes_in, len);
