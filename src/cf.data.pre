@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.190 2000/06/26 01:38:37 wessels Exp $
+# $Id: cf.data.pre,v 1.191 2000/06/26 04:57:16 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3224,6 +3224,14 @@ DOC_START
 	If the memory usage (as determined by mallinfo) exceeds
 	value, Squid prints a WARNING with debug level 0 to get
 	the administrators attention.
+DOC_END
+
+NAME: store_dir_select_algorithm
+TYPE: string
+LOC: Config.store_dir_select_algorithm
+DEFAULT: least-load
+DOC_START
+	Set this to 'round-robin' as an alternative.
 DOC_END
 
 EOF

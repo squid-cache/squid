@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.112 2000/06/25 22:28:43 wessels Exp $
+ * $Id: store_dir.cc,v 1.113 2000/06/26 04:57:17 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -36,6 +36,14 @@
 #include "squid.h"
 
 static int storeDirValidSwapDirSize(int, ssize_t);
+static STDIRSELECT storeDirSelectSwapDirRoundRobin;
+static STDIRSELECT storeDirSelectSwapDirLeastLoad;
+
+/*
+ * This function pointer is set according to 'store_dir_select_algorithm'
+ * in squid.conf.
+ */
+STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
 
 void
 storeDirInit(void)
@@ -45,6 +53,13 @@ storeDirInit(void)
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	sd = &Config.cacheSwap.swapDirs[i];
 	sd->init(sd);
+    }
+    if (0 == strcasecmp(Config.store_dir_select_algorithm, "round-robin")) {
+	storeDirSelectSwapDir = storeDirSelectSwapDirRoundRobin;
+	debug(47, 1) ("Using Round Robin store dir selection\n");
+    } else {
+	storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
+	debug(47, 1) ("Using Least Load store dir selection\n");
     }
 }
 
@@ -97,7 +112,6 @@ storeDirValidSwapDirSize(int swapdir, ssize_t objsize)
 }
 
 
-#if UNUSED			/* Squid-2..4.DEVEL3 code */
 /*
  * This new selection scheme simply does round-robin on all SwapDirs.
  * A SwapDir is skipped if it is over the max_size (100%) limit.  If
@@ -108,7 +122,7 @@ storeDirValidSwapDirSize(int swapdir, ssize_t objsize)
  * XXX This function does NOT account for the read_only flag!
  */
 static int
-storeDirSelectSwapDir(void)
+storeDirSelectSwapDirRoundRobin(const StoreEntry * unused)
 {
     static int dirn = 0;
     int i;
@@ -129,40 +143,6 @@ storeDirSelectSwapDir(void)
     return dirn;
 }
 
-#if USE_DISKD && EXPERIMENTAL
-/*
- * This fileno selection function returns a fileno on the least
- * busy SwapDir.  Ties are broken by selecting the SwapDir with
- * the most free space.
- */
-static int
-storeDirSelectSwapDir(void)
-{
-    SwapDir *SD;
-    int min_away = 10000;
-    int min_size = 1 << 30;
-    int dirn = 0;
-    int i;
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	SD = &Config.cacheSwap.swapDirs[i];
-	if (SD->cur_size > SD->max_size)
-	    continue;
-	if (SD->u.diskd.away > min_away)
-	    continue;
-	if (SD->cur_size > min_size)
-	    continue;
-	if (SD->flags.read_only)
-	    continue;
-	min_away = SD->u.diskd.away;
-	min_size = SD->cur_size;
-	dirn = i;
-    }
-    return dirn;
-}
-#endif
-
-#endif /* Squid-2.4.DEVEL3 code */
-
 /*
  * Spread load across all of the store directories
  *
@@ -176,8 +156,8 @@ storeDirSelectSwapDir(void)
  * ALL swapdirs, regardless of state. Again, this is a hack while
  * we sort out the real usefulness of this algorithm.
  */
-int
-storeDirSelectSwapDir(const StoreEntry * e)
+static int
+storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 {
     ssize_t objsize;
     ssize_t least_size;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.373 2000/06/25 22:41:22 wessels Exp $
+ * $Id: protos.h,v 1.374 2000/06/26 04:57:16 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -909,7 +909,7 @@ extern char *storeSwapFullPath(int, char *);
 extern char *storeSwapSubSubDir(int, char *);
 extern const char *storeSwapPath(int);
 extern int storeDirWriteCleanLogs(int reopen);
-extern int storeDirSelectSwapDir(const StoreEntry *);
+extern STDIRSELECT *storeDirSelectSwapDir;
 extern int storeVerifySwapDirs(void);
 extern void storeCreateSwapDirectories(void);
 extern void storeDirCloseSwapLogs(void);
