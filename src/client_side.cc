@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.72 1996/12/13 21:38:33 wessels Exp $
+ * $Id: client_side.cc,v 1.73 1996/12/14 18:53:55 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@ static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
 static void clientLookupDstIPDone _PARAMS((int fd, const ipcache_addrs *, void *data));
 static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
 static int clientGetsOldEntry _PARAMS((StoreEntry *new, StoreEntry *old, request_t *request));
+static int checkAccelOnly _PARAMS((icpStateData * icpState));
 
 
 static void
@@ -102,11 +103,26 @@ clientProxyAuthCheck(icpStateData * icpState)
 }
 #endif /* USE_PROXY_AUTH */
 
+static int
+checkAccelOnly(icpStateData * icpState)
+{
+    /* return TRUE if someone makes a proxy request to us and
+     * we are in httpd-accel only mode */
+    if (!httpd_accel_mode)
+	return 0;
+    if (Config.Accel.withProxy)
+	return 0;
+    if (icpState->request->protocol == PROTO_CACHEOBJ)
+	return 0;
+    if (icpState->accel)
+	return 0;
+    return 1;
+}
+
 void
 clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int))
 {
     int answer = 1;
-    request_t *r = icpState->request;
     aclCheck_t *ch = NULL;
     char *browser = NULL;
 
@@ -145,9 +161,7 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
 
     ch = icpState->aclChecklist;
     icpState->aclHandler = handler;
-    if (httpd_accel_mode && !Config.Accel.withProxy && r->protocol != PROTO_CACHEOBJ) {
-	/* this cache is an httpd accelerator ONLY */
-	if (icpState->accel == 0)
+    if (checkAccelOnly(icpState)) {
 	    answer = 0;
     } else {
 	answer = aclCheck(HTTPAccessList, ch);
