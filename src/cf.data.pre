@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.331 2003/07/09 14:14:58 hno Exp $
+# $Id: cf.data.pre,v 1.332 2003/07/10 15:55:22 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -248,6 +248,8 @@ DEFAULT: none
 LOC: Config.ssl_client.cafile
 TYPE: string
 DOC_START
+	file containing CA certificates to use when verifying server
+	certificates while proxying https:// URLs
 DOC_END
 
 NAME: sslproxy_capath
@@ -256,6 +258,8 @@ DEFAULT: none
 LOC: Config.ssl_client.capath
 TYPE: string
 DOC_START
+	directory containing CA certificates to use when verifying
+	server certificates while proxying https:// URLs
 DOC_END
 
 NAME: sslproxy_flags
@@ -264,6 +268,11 @@ DEFAULT: none
 LOC: Config.ssl_client.flags
 TYPE: string
 DOC_START
+	Various flags modifying the use of SSL while proxying https:// URLs:
+	    DONT_VERIFY_PEER	Accept certificates even if they fail to
+				verify.
+	    NO_DEFAULT_CA	Don't use the default CA list built in
+				to OpenSSL.
 DOC_END
 
 NAME: icp_port udp_port
@@ -1142,17 +1151,17 @@ TYPE: access_log
 LOC: Config.Log.accesslogs
 DEFAULT: none
 DOC_START
-  These files log client request activities. Has a line every HTTP or
-  ICP request. The format is:
-  access_log <filepath> [<logformat name> [acl acl ...]]
+	These files log client request activities. Has a line every HTTP or
+	ICP request. The format is:
+	access_log <filepath> [<logformat name> [acl acl ...]]
 
-  Will log to the specified file using the specified format (which
-  must be defined in a logformat directive) those entries which match
-  ALL the acl's specified (which must be defined in acl clauses).
-  If no acl is specified, all requests will be logged to this file.
-  
-  To disable logging of a request use the filepath "none", in which case
-  a logformat name should not be specified.
+	Will log to the specified file using the specified format (which
+	must be defined in a logformat directive) those entries which match
+	ALL the acl's specified (which must be defined in acl clauses).
+	If no acl is specified, all requests will be logged to this file.
+	
+	To disable logging of a request use the filepath "none", in which
+	case a logformat name should not be specified.
 NOCOMMENT_START
 access_log @DEFAULT_ACCESS_LOG@ squid
 NOCOMMENT_END
