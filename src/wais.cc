@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.70 1997/05/15 23:38:02 wessels Exp $
+ * $Id: wais.cc,v 1.71 1997/05/23 05:21:04 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -114,7 +114,7 @@ typedef struct {
     method_t method;
     char *relayhost;
     int relayport;
-    char *mime_hdr;
+    char *request_hdr;
     char request[MAX_URL];
     int ip_lookup_pending;
 } WaisStateData;
@@ -277,14 +277,14 @@ waisSendRequest(int fd, void *data)
 
     if (Method)
 	len += strlen(Method);
-    if (waisState->mime_hdr)
-	len += strlen(waisState->mime_hdr);
+    if (waisState->request_hdr)
+	len += strlen(waisState->request_hdr);
 
     buf = xcalloc(1, len + 1);
 
-    if (waisState->mime_hdr)
+    if (waisState->request_hdr)
 	sprintf(buf, "%s %s %s\r\n", Method, waisState->request,
-	    waisState->mime_hdr);
+	    waisState->request_hdr);
     else
 	sprintf(buf, "%s %s\r\n", Method, waisState->request);
     debug(24, 6, "waisSendRequest: buf: %s\n", buf);
@@ -299,13 +299,12 @@ waisSendRequest(int fd, void *data)
 }
 
 void
-waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
+waisStart(method_t method, StoreEntry * entry)
 {
     WaisStateData *waisState = NULL;
     int fd;
     char *url = entry->url;
     debug(24, 3, "waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
-    debug(24, 4, "            header: %s\n", mime_hdr);
     if (!Config.Wais.relayHost) {
 	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
 	squid_error_entry(entry, ERR_NO_RELAY, NULL);
@@ -326,7 +325,7 @@ waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
     waisState->method = method;
     waisState->relayhost = Config.Wais.relayHost;
     waisState->relayport = Config.Wais.relayPort;
-    waisState->mime_hdr = mime_hdr;
+    waisState->request_hdr = entry->mem_obj->request_hdr;
     waisState->fd = fd;
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);

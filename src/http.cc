@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.163 1997/05/22 17:28:51 wessels Exp $
+ * $Id: http.cc,v 1.164 1997/05/23 05:20:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -842,7 +842,7 @@ proxyhttpStart(request_t * orig_request,
     debug(11, 3, "proxyhttpStart: \"%s %s\"\n",
 	RequestMethodStr[orig_request->method], entry->url);
     debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
-	entry->mem_obj->mime_hdr);
+	entry->mem_obj->request_hdr);
     if (e->options & NEIGHBOR_PROXY_ONLY)
 #if DONT_USE_VM
 	storeReleaseRequest(entry);
@@ -864,8 +864,8 @@ proxyhttpStart(request_t * orig_request,
     storeLockObject(entry);
     httpState = xcalloc(1, sizeof(HttpStateData));
     httpState->entry = entry;
-    httpState->req_hdr = entry->mem_obj->mime_hdr;
-    httpState->req_hdr_sz = entry->mem_obj->mime_hdr_sz;
+    httpState->req_hdr = entry->mem_obj->request_hdr;
+    httpState->req_hdr_sz = entry->mem_obj->request_hdr_sz;
     request = get_free_request_t();
     httpState->request = requestLink(request);
     httpState->neighbor = e;
@@ -932,16 +932,12 @@ httpConnectDone(int fd, int status, void *data)
 }
 
 void
-httpStart(request_t * request,
-    char *req_hdr,
-    int req_hdr_sz,
-    StoreEntry * entry)
+httpStart(request_t * request, StoreEntry * entry)
 {
     int fd;
     HttpStateData *httpState;
     debug(11, 3, "httpStart: \"%s %s\"\n",
 	RequestMethodStr[request->method], entry->url);
-    debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
     /* Create socket. */
     fd = comm_open(SOCK_STREAM,
 	0,
@@ -957,8 +953,8 @@ httpStart(request_t * request,
     storeLockObject(entry);
     httpState = xcalloc(1, sizeof(HttpStateData));
     httpState->entry = entry;
-    httpState->req_hdr = req_hdr;
-    httpState->req_hdr_sz = req_hdr_sz;
+    httpState->req_hdr = entry->mem_obj->request_hdr;
+    httpState->req_hdr_sz = entry->mem_obj->request_hdr_sz;
     httpState->request = requestLink(request);
     httpState->fd = fd;
     comm_add_close_handler(httpState->fd,
