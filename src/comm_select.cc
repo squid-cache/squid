@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.43 2000/05/12 00:29:07 wessels Exp $
+ * $Id: comm_select.cc,v 1.44 2000/05/28 16:21:45 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -635,7 +635,6 @@ comm_select(int msec)
     fd_set slowfds;
 #endif
     PF *hdl = NULL;
-    SwapDir *SD;
     int fd;
     int maxfd;
     int num;
