@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.117 1997/07/16 20:32:21 wessels Exp $
+ * $Id: tools.cc,v 1.118 1997/08/25 15:49:04 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -744,11 +744,11 @@ inaddrFromHostent(const struct hostent *hp)
 }
 
 double
-doubleAverage(double cur, double new, int n, int max)
+doubleAverage(double cur, double new, int N, int max)
 {
-    if (n > max)
-	n = max;
-    return (cur * (n - 1)) + new / n;
+    if (N > max)
+	N = max;
+    return (cur * (N - 1.0) + new) / N;
 }
 
 int
