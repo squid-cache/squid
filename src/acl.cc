@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.134 1998/02/06 00:48:59 wessels Exp $
+ * $Id: acl.cc,v 1.135 1998/02/06 06:44:31 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2086,11 +2086,37 @@ aclDumpDomainList(void *data)
 #endif
 }
 static wordlist *
-aclDumpTimeSpec(void *data)
+aclDumpTimeSpec(acl_time_data *t)
 {
-    wordlist *w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup("UNIMPLEMENTED");
-    return w;
+struct _acl_time_data {
+    int weekbits;
+    int start;
+    int stop;
+    acl_time_data *next;
+};
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    char buf[128];
+    while (t != NULL) {
+	w = xcalloc(1, sizeof(wordlist));
+	snprintf(buf, 128, "%c%c%c%c%c%c%c %02d:%02d-%02d:%02d",
+		t->weekbits & ACL_SUNDAY ? 'S' : '-',
+		t->weekbits & ACL_MONDAY ? 'M' : '-',
+		t->weekbits & ACL_TUESDAY ? 'T' : '-',
+		t->weekbits & ACL_WEDNESDAY ? 'W' : '-',
+		t->weekbits & ACL_THURSDAY ? 'H' : '-',
+		t->weekbits & ACL_FRIDAY ? 'F' : '-',
+		t->weekbits & ACL_SATURDAY ? 'A' : '-',
+		t->start / 60,
+		t->start % 60,
+		t->stop / 60,
+		t->stop % 60);
+	w->key = xstrdup(buf);
+	*T = w;
+	T = &w->next;
+	t = t->next;
+	
 }
 static wordlist *
 aclDumpRegexList(void *data)
