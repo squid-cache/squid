@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.509 2000/11/01 03:58:51 wessels Exp $
+ * $Id: client_side.cc,v 1.510 2000/11/01 09:36:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2100,7 +2100,10 @@ clientProcessRequest(clientHttpRequest * http)
 	}
 	/* yes, continue */
 	http->log_type = LOG_TCP_MISS;
-    } else if (r->content_length > 0) {
+    } else if (r->content_length >= 0) {
+	/*
+	 * Need to initialize pump even if content-length: 0
+	 */
 	http->log_type = LOG_TCP_MISS;
 	/* XXX oof, POST can be cached! */
 	pumpInit(fd, r, http->uri);
