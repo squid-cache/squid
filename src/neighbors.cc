@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.241 1998/09/04 21:40:27 wessels Exp $
+ * $Id: neighbors.cc,v 1.242 1998/09/09 16:47:56 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -588,8 +588,6 @@ peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup)
 static void
 neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 {
-    int rtt;
-    int n;
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
 	debug(15, 1) ("Detected REVIVED %s: %s/%d/%d\n",
 	    neighborTypeStr(p),
@@ -597,25 +595,29 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 	p->stats.logged_state = PEER_ALIVE;
     }
     p->stats.last_reply = squid_curtime;
-    n = ++p->stats.pings_acked;
+    p->stats.pings_acked++;
     if ((icp_opcode) header->opcode <= ICP_END)
 	p->icp.counts[header->opcode]++;
-    if (mem) {
-	if (mem->start_ping.tv_sec) {
-	    rtt = tvSubMsec(mem->start_ping, current_time);
-	    if (rtt)
-	        p->stats.rtt = intAverage(p->stats.rtt, rtt, n, RTT_AV_FACTOR);
-	}
-	p->icp.version = (int) header->version;
-    }
+    p->icp.version = (int) header->version;
+}
+
+static void
+neighborUpdateRtt(peer * p, MemObject * mem)
+{
+    int rtt;
+    assert(mem);
+    if (!mem->start_ping.tv_sec)
+	return;
+    rtt = tvSubMsec(mem->start_ping, current_time);
+    if (rtt)
+	p->stats.rtt = intAverage(p->stats.rtt, rtt,
+	    p->stats.pings_acked, RTT_AV_FACTOR);
 }
 
 #if USE_HTCP
 static void
 neighborAliveHtcp(peer * p, const MemObject * mem, const htcpReplyData * htcp)
 {
-    int rtt;
-    int n;
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
 	debug(15, 1) ("Detected REVIVED %s: %s/%d/%d\n",
 	    neighborTypeStr(p),
@@ -623,14 +625,9 @@ neighborAliveHtcp(peer * p, const MemObject * mem, const htcpReplyData * htcp)
 	p->stats.logged_state = PEER_ALIVE;
     }
     p->stats.last_reply = squid_curtime;
-    n = ++p->stats.pings_acked;
+    p->stats.pings_acked++;
     p->htcp.counts[htcp->hit ? 1 : 0]++;
-    if (mem) {
-	rtt = tvSubMsec(mem->start_ping, current_time);
-	if (rtt)
-	    p->stats.rtt = intAverage(p->stats.rtt, rtt, n, RTT_AV_FACTOR);
-	p->htcp.version = htcp->version;
-    }
+    p->htcp.version = htcp->version;
 }
 #endif
 
@@ -753,8 +750,10 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     }
     debug(15, 3) ("neighborsUdpAck: %s for '%s' from %s \n",
 	opcode_d, storeKeyText(key), p ? p->host : "source");
-    if (p)
+    if (p) {
 	ntype = neighborType(p, mem->request);
+        neighborUpdateRtt(p, mem);
+    }
     if (ignoreMulticastReply(p, mem)) {
 	neighborCountIgnored(p);
     } else if (opcode == ICP_SECHO) {
@@ -1231,8 +1230,10 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct soc
 	neighborCountIgnored(p);
 	return;
     }
-    if (p)
+    if (p) {
 	ntype = neighborType(p, mem->request);
+	neighborUpdateRtt(p, mem);
+    }
     if (ignoreMulticastReply(p, mem)) {
 	neighborCountIgnored(p);
 	return;
