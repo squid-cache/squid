@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.81 1996/09/03 19:24:01 wessels Exp $
+ * $Id: cache_cf.cc,v 1.82 1996/09/04 23:42:01 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1411,12 +1411,6 @@ int parseConfigFile(file_name)
     return 0;
 }
 
-int setCacheSwapMax(size)
-     int size;
-{
-    Config.Swap.maxSize = size;
-    return Config.Swap.maxSize;
-}
 u_short setHttpPortNum(port)
      u_short port;
 {
@@ -1564,4 +1558,5 @@ static void configDoConfigure()
 	getMyHostname(), Config.Port.http);
     if (Config.errHtmlText == NULL)
 	Config.errHtmlText = xstrdup("");
+    storeConfigure();
 }

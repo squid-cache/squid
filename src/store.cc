@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.96 1996/09/04 22:50:15 wessels Exp $
+ * $Id: store.cc,v 1.97 1996/09/04 23:42:02 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1272,11 +1272,8 @@ void storeSwapOutHandle(fd, flag, e)
 	}
 	if (flag == DISK_NO_SPACE_LEFT) {
 	    /* reduce the swap_size limit to the current size. */
-	    setCacheSwapMax(store_swap_size);
-	    store_swap_high = (long) (((float) Config.Swap.maxSize *
-		    (float) Config.Swap.highWaterMark) / (float) 100);
-	    store_swap_low = (long) (((float) Config.Swap.maxSize *
-		    (float) Config.Swap.lowWaterMark) / (float) 100);
+	    Config.Swap.maxSize = store_swap_size;
+	    storeConfigure();
 	}
 	return;
     }
@@ -2518,7 +2515,7 @@ static void storeCreateSwapSubDirs()
     }
 }
 
-int storeInit()
+void storeInit()
 {
     int dir_created;
     wordlist *w = NULL;
@@ -2555,7 +2552,10 @@ int storeInit()
 
     if (dir_created || opt_zap_disk_store)
 	storeCreateSwapSubDirs();
+}
 
+void storeConfigure()
+{
     store_mem_high = (long) (Config.Mem.maxSize / 100) *
 	Config.Mem.highWaterMark;
     store_mem_low = (long) (Config.Mem.maxSize / 100) *
@@ -2578,12 +2578,10 @@ int storeInit()
     if (store_hotobj_low > store_hotobj_high)
 	store_hotobj_low = store_hotobj_high;
 
-    store_swap_high = (long) (Config.Swap.maxSize / 100) *
-	Config.Swap.highWaterMark;
-    store_swap_low = (long) (Config.Swap.maxSize / 100) *
-	Config.Swap.lowWaterMark;
-
-    return 0;
+    store_swap_high = (long) (((float) Config.Swap.maxSize *
+	    (float) Config.Swap.highWaterMark) / (float) 100);
+    store_swap_low = (long) (((float) Config.Swap.maxSize *
+	    (float) Config.Swap.lowWaterMark) / (float) 100);
 }
 
 /* 
