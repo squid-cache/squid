@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.28 2003/08/04 22:14:48 robertc Exp $
+ * $Id: auth_digest.cc,v 1.29 2003/08/07 13:35:04 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -776,7 +776,7 @@ digest_request_h::direction()
 void
 digest_request_h::addHeader(HttpReply * rep, int accel)
 {
-    enum http_hdr_type type;
+    http_hdr_type type;
 
     /* don't add to authentication error pages */
 
