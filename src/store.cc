@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.577 2004/08/30 05:12:31 robertc Exp $
+ * $Id: store.cc,v 1.578 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -97,10 +97,7 @@ extern OBJH storeIOStats;
 static void storeGetMemSpace(int);
 static void storeHashDelete(StoreEntry *);
 static void destroy_MemObject(StoreEntry *);
-static FREE destroyStoreEntry;
 static void storePurgeMem(StoreEntry *);
-static void storeEntryReferenced(StoreEntry *);
-static void storeEntryDereferenced(StoreEntry *);
 static int getKeyCounter(void);
 static int storeKeepInMemory(const StoreEntry *);
 static OBJH storeCheckCachableStats;
@@ -111,6 +108,45 @@ static EVH storeLateRelease;
  */
 static Stack<StoreEntry*> LateReleaseStack;
 MemImplementingAllocator *StoreEntry::pool = NULL;
+
+StorePointer Store::CurrentRoot = NULL;
+
+void
+Store::Root(Store * aRoot)
+{
+    CurrentRoot = aRoot;
+}
+
+void
+Store::Root(StorePointer aRoot)
+{
+    Root(aRoot.getRaw());
+}
+
+void
+Store::Stats(StoreEntry * output)
+{
+    assert (output);
+    Root().stat(*output);
+}
+
+void
+Store::create()
+{}
+
+void
+Store::diskFull()
+{}
+
+void
+Store::sync()
+{}
+
+void
+Store::unlink (StoreEntry &anEntry)
+{
+    fatal("Store::unlink on invalid Store\n");
+}
 
 void *
 StoreEntry::operator new (size_t bytecount)
@@ -285,24 +321,28 @@ StoreEntry::storeClientType() const
     return STORE_DISK_CLIENT;
 }
 
-StoreEntry *
-new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
+StoreEntry::StoreEntry()
 {
-    StoreEntry *e = NULL;
-    e = new StoreEntry;
+    mem_obj = NULL;
 
-    if (mem_obj_flag)
-        e->mem_obj = new MemObject(url, log_url);
+    debugs(20, 3, "newStoreEntry: returning " << this);
 
-    debug(20, 3) ("newStoreEntry: returning %p\n", e);
+    expires = lastmod = lastref = timestamp = -1;
 
-    e->expires = e->lastmod = e->lastref = e->timestamp = -1;
+    swap_filen = -1;
+    swap_dirn = -1;
+}
 
-    e->swap_filen = -1;
+StoreEntry::StoreEntry(const char *url, const char *log_url)
+{
+    mem_obj = new MemObject(url, log_url);
 
-    e->swap_dirn = -1;
+    debugs(20, 3, "newStoreEntry: returning " << this);
 
-    return e;
+    expires = lastmod = lastref = timestamp = -1;
+
+    swap_filen = -1;
+    swap_dirn = -1;
 }
 
 static void
@@ -314,10 +354,10 @@ destroy_MemObject(StoreEntry * e)
     delete mem;
 }
 
-static void
+void
 destroyStoreEntry(void *data)
 {
-    StoreEntry *e = static_cast<StoreEntry *>(data);
+    StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     debug(20, 3) ("destroyStoreEntry: destroying %p\n", e);
     assert(e != NULL);
 
@@ -371,36 +411,13 @@ storePurgeMem(StoreEntry * e)
         storeRelease(e);
 }
 
-static void
-storeEntryReferenced(StoreEntry * e)
-{
-    /* Notify the fs that we're referencing this object again */
-
-    if (e->swap_dirn > -1)
-        INDEXSD(e->swap_dirn)->reference(*e);
-
-    /* Notify the memory cache that we're referencing this object again */
-    if (e->mem_obj) {
-        if (mem_policy->Referenced)
-            mem_policy->Referenced(mem_policy, e, &e->mem_obj->repl);
-    }
-}
-
-static void
-storeEntryDereferenced(StoreEntry * e)
-{
-    /* Notify the fs that we're not referencing this object any more */
-
-    if (e->swap_filen > -1)
-        INDEXSD(e->swap_dirn)->dereference(*e);
-
-    /* Notify the memory cache that we're not referencing this object any more */
-    if (e->mem_obj) {
-        if (mem_policy->Dereferenced)
-            mem_policy->Dereferenced(mem_policy, e, &e->mem_obj->repl);
-    }
-}
-
+/* RBC 20050104 this is wrong- memory ref counting
+ * is not at all equivalent to the store 'usage' concept
+ * which the replacement policies should be acting upon.
+ * specifically, object iteration within stores needs
+ * memory ref counting to prevent race conditions,
+ * but this should not influence store replacement.
+ */
 void
 storeLockObject(StoreEntry * e)
 {
@@ -408,7 +425,7 @@ storeLockObject(StoreEntry * e)
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
                   e->getMD5Text(), (int) e->lock_count);
     e->lastref = squid_curtime;
-    storeEntryReferenced(e);
+    Store::Root().reference(*e);
 }
 
 void
@@ -460,11 +477,11 @@ storeUnlockObject(StoreEntry * e)
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
         storeRelease(e);
     else if (storeKeepInMemory(e)) {
-        storeEntryDereferenced(e);
+        Store::Root().dereference(*e);
         storeSetMemStatus(e, IN_MEMORY);
         e->mem_obj->unlinkRequest();
     } else {
-        storeEntryDereferenced(e);
+        Store::Root().dereference(*e);
 
         if (EBIT_TEST(e->flags, KEY_PRIVATE))
             debug(20, 1) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
@@ -474,18 +491,6 @@ storeUnlockObject(StoreEntry * e)
     }
 
     return 0;
-}
-
-/* Lookup an object in the cache.
- * return just a reference to object, don't start swapping in yet. */
-StoreEntry *
-storeGet(const cache_key * key)
-{
-    PROF_start(storeGet);
-    debug(20, 3) ("storeGet: looking up %s\n", storeKeyText(key));
-    StoreEntry *p = static_cast<StoreEntry *>(hash_lookup(store_table, key));
-    PROF_stop(storeGet);
-    return p;
 }
 
 void
@@ -527,13 +532,13 @@ StoreEntry::getPublic (StoreClient *aClient, const char *uri, const method_t met
 StoreEntry *
 storeGetPublic(const char *uri, const method_t method)
 {
-    return storeGet(storeKeyPublic(uri, method));
+    return Store::Root().get(storeKeyPublic(uri, method));
 }
 
 StoreEntry *
 storeGetPublicByRequestMethod(HttpRequest * req, const method_t method)
 {
-    return storeGet(storeKeyPublicByRequestMethod(req, method));
+    return Store::Root().get(storeKeyPublicByRequestMethod(req, method));
 }
 
 StoreEntry *
@@ -559,6 +564,15 @@ getKeyCounter(void)
     return key_counter;
 }
 
+/* RBC 20050104 AFAICT this should become simpler:
+ * rather than reinserting with a special key it should be marked
+ * as 'released' and then cleaned up when refcounting indicates.
+ * the StoreHashIndex could well implement its 'released' in the
+ * current manner.
+ * Also, clean log writing should skip over ia,t
+ * Otherwise, we need a 'remove from the index but not the store
+ * concept'.
+ */
 void
 storeSetPrivateKey(StoreEntry * e)
 {
@@ -723,7 +737,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     MemObject *mem = NULL;
     debug(20, 3) ("storeCreateEntry: '%s'\n", url);
 
-    e = new_StoreEntry(STORE_ENTRY_WITH_MEMOBJ, url, log_url);
+    e = new StoreEntry(url, log_url);
     e->lock_count = 1;		/* Note lock here w/o calling storeLock() */
     mem = e->mem_obj;
     mem->method = method;
@@ -1147,6 +1161,22 @@ storeGetMemSpace(int size)
     PROF_stop(storeGetMemSpace);
 }
 
+
+/* thunk through to Store::Root().maintain(). Note that this would be better still
+ * if registered against the root store itself, but that requires more complex 
+ * update logic - bigger fish to fry first. Long term each store when 
+ * it becomes active will self register
+ */
+void
+Store::Maintain(void *notused)
+{
+    Store::Root().maintain();
+
+    /* Reregister a maintain event .. */
+    eventAdd("MaintainSwapSpace", Maintain, NULL, 1.0, 1);
+
+}
+
 /* The maximum objects to scan for maintain storage space */
 #define MAINTAIN_MAX_SCAN	1024
 #define MAINTAIN_MAX_REMOVE	64
@@ -1158,34 +1188,22 @@ storeGetMemSpace(int size)
  * This should get called 1/s from main().
  */
 void
-storeMaintainSwapSpace(void *datanotused)
+StoreController::maintain()
 {
-    int i;
-    SwapDir *SD;
     static time_t last_warn_time = 0;
 
     PROF_start(storeMaintainSwapSpace);
-    /* walk each fs */
+    swapDir->maintain();
 
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        /* call the maintain function .. */
-        SD = INDEXSD(i);
-        /* XXX FixMe: This should be done "in parallell" on the different
-         * cache_dirs, not one at a time.
-         */
-        SD->maintainfs();
-    }
+    /* this should be emitted by the oversize dir, not globally */
 
-    if (store_swap_size > Config.Swap.maxSize) {
+    if (store_swap_size > Store::Root().maxSize()) {
         if (squid_curtime - last_warn_time > 10) {
-            debug(20, 0) ("WARNING: Disk space over limit: %lu KB > %lu KB\n",
-                          (long unsigned) store_swap_size, (long unsigned) Config.Swap.maxSize);
+            debugs(20, 0, "WARNING: Disk space over limit: " << store_swap_size << " KB > "
+                   << Store::Root().maxSize() << " KB");
             last_warn_time = squid_curtime;
         }
     }
-
-    /* Reregister a maintain event .. */
-    eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
 
     PROF_stop(storeMaintainSwapSpace);
 }
@@ -1225,18 +1243,18 @@ storeRelease(StoreEntry * e)
             PROF_stop(storeRelease);
             return;
         } else {
-            destroyStoreEntry(e);
+            destroyStoreEntry(static_cast<hash_link *>(e));
         }
     }
 
     storeLog(STORE_LOG_RELEASE, e);
 
     if (e->swap_filen > -1) {
-        storeUnlink(e);
+        e->unlink();
 
         if (e->swap_status == SWAPOUT_DONE)
             if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
-                storeDirUpdateSwapSize(INDEXSD(e->swap_dirn), e->swap_file_sz, -1);
+                e->store()->updateSize(e->swap_file_sz, -1);
 
         if (!EBIT_TEST(e->flags, KEY_PRIVATE))
             storeDirSwapLog(e, SWAP_LOG_DEL);
@@ -1250,7 +1268,7 @@ storeRelease(StoreEntry * e)
     }
 
     storeSetMemStatus(e, NOT_IN_MEMORY);
-    destroyStoreEntry(e);
+    destroyStoreEntry(static_cast<hash_link *>(e));
     PROF_stop(storeRelease);
 }
 
@@ -1357,40 +1375,19 @@ StoreEntry::validLength() const
     return 0;
 }
 
-static void
-storeInitHashValues(void)
-{
-    long int i;
-    /* Calculate size of hash table (maximum currently 64k buckets).  */
-    i = Config.Swap.maxSize / Config.Store.avgObjectSize;
-    debug(20, 1) ("Swap maxSize %ld KB, estimated %ld objects\n",
-                  (long int) Config.Swap.maxSize, i);
-    i /= Config.Store.objectsPerBucket;
-    debug(20, 1) ("Target number of buckets: %ld\n", i);
-    /* ideally the full scan period should be configurable, for the
-     * moment it remains at approximately 24 hours.  */
-    store_hash_buckets = storeKeyHashBuckets(i);
-    debug(20, 1) ("Using %d Store buckets\n", store_hash_buckets);
-    debug(20, 1) ("Max Mem  size: %ld KB\n", (long int) Config.memMaxSize >> 10);
-    debug(20, 1) ("Max Swap size: %ld KB\n", (long int) Config.Swap.maxSize);
-}
-
 void
 storeInit(void)
 {
     storeKeyInit();
-    storeInitHashValues();
-    store_table = hash_create(storeKeyHashCmp,
-                              store_hash_buckets, storeKeyHashHash);
     mem_policy = createRemovalPolicy(Config.memPolicy);
     storeDigestInit();
     storeLogOpen();
     eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
-    storeDirInit();
+    Store::Root().init();
     storeRebuildStart();
     cachemgrRegister("storedir",
                      "Store Directory Stats",
-                     storeDirStats, 0, 1);
+                     Store::Stats, 0, 1);
     cachemgrRegister("store_check_cachable_stats",
                      "storeCheckCachable() Stats",
                      storeCheckCachableStats, 0, 1);
@@ -1402,9 +1399,9 @@ storeInit(void)
 void
 storeConfigure(void)
 {
-    store_swap_high = (long) (((float) Config.Swap.maxSize *
+    store_swap_high = (long) (((float) Store::Root().maxSize() *
                                (float) Config.Swap.highWaterMark) / (float) 100);
-    store_swap_low = (long) (((float) Config.Swap.maxSize *
+    store_swap_low = (long) (((float) Store::Root().maxSize() *
                               (float) Config.Swap.lowWaterMark) / (float) 100);
     store_pages_max = Config.memMaxSize / SM_PAGE_SIZE;
 }
@@ -1448,9 +1445,7 @@ storeNegativeCache(StoreEntry * e)
 void
 storeFreeMemory(void)
 {
-    hashFreeItems(store_table, destroyStoreEntry);
-    hashFreeMemory(store_table);
-    store_table = NULL;
+    Store::Root(NULL);
 #if USE_CACHE_DIGESTS
 
     if (store_digest)
@@ -1887,6 +1882,18 @@ StoreEntry::modifiedSince(HttpRequest * request) const
     }
 }
 
+StorePointer
+StoreEntry::store() const
+{
+    assert(0 <= swap_dirn && swap_dirn < Config.cacheSwap.n_configured);
+    return INDEXSD(swap_dirn);
+}
+
+void
+StoreEntry::unlink()
+{
+    store()->unlink(*this);
+}
 
 /* NullStoreEntry */
 

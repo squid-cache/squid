@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.89 2003/06/24 21:08:02 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.90 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -124,7 +124,7 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 
         case CONF_ST_SWMAXSZ:
             Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) Config.Swap.maxSize >> 10,
+                                          (snint) Store::Root().maxSize() >> 10,
                                           ASN_INTEGER);
             break;
 

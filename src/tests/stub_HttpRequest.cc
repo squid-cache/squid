@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpRequest.cc,v 1.1 2004/08/30 03:29:02 robertc Exp $
+ * $Id: stub_HttpRequest.cc,v 1.2 2005/01/03 16:08:27 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -51,6 +51,9 @@ requestLink(HttpRequest * request)
 void
 requestUnlink(HttpRequest * request)
 {
+    if (!request)
+        return;
+
     fatal("Not implemented");
 }
 

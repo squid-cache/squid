@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.401 2004/12/31 10:29:28 serassio Exp $
+ * $Id: main.cc,v 1.402 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -46,6 +46,7 @@
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
 #include "comm.h"
+#include "SwapDir.h"
 
 #if USE_WIN32_SERVICE
 
@@ -823,7 +824,7 @@ mainInitialize(void)
     debug(1, 1) ("Ready to serve requests.\n");
 
     if (!configured_once) {
-        eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1.0, 1);
+        eventAdd("storeMaintain", Store::Maintain, NULL, 1.0, 1);
 
         if (Config.onoff.announce)
             eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
@@ -994,6 +995,9 @@ main(int argc, char **argv)
         /* Shouldn't be needed for config parsing, but have not audited for such */
         StoreFileSystem::SetupAllFs();
 
+        /* we may want the parsing process to set this up in the future */
+        Store::Root(new StoreController);
+
         parse_err = parseConfigFile(ConfigFile);
 
         if (opt_parse_cfg_only)
@@ -1047,7 +1051,7 @@ main(int argc, char **argv)
 
         setEffectiveUser();
         debug(0, 0) ("Creating Swap Directories\n");
-        storeCreateSwapDirectories();
+        Store::Root().create();
 #if USE_WIN32_SERVICE
 
         return;
@@ -1129,7 +1133,7 @@ main(int argc, char **argv)
             loop_delay = 0;
 
         /* Attempt any pending storedir IO */
-        storeDirCallback();
+        Store::Root().callback();
 
         comm_calliocallback();
 
@@ -1488,11 +1492,11 @@ SquidShutdown(void *unused)
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif
 
-    storeDirSync();		/* Flush pending object writes/unlinks */
+    Store::Root().sync(); /* Flush pending object writes/unlinks */
     storeDirWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
-    storeDirSync();		/* Flush log writes */
+    Store::Root().sync();		/* Flush log writes */
     storeLogClose();
     accessLogClose();
     useragentLogClose();
@@ -1502,7 +1506,7 @@ SquidShutdown(void *unused)
     fwdUninit();
 #endif
 
-    storeDirSync();		/* Flush log close */
+    Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
 #if PURIFY || XMALLOC_TRACE

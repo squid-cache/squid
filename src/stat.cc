@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.387 2004/12/27 11:04:36 serassio Exp $
+ * $Id: stat.cc,v 1.388 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -49,19 +49,24 @@
  * to use during static construction
  */
 #include "comm.h"
+#include "StoreSearch.h"
 
 #define DEBUG_OPENFD 1
 
 typedef int STOBJFLT(const StoreEntry *);
 
-typedef struct
+class StatObjectsState
 {
-    StoreEntry *sentry;
-    int bucket;
-    STOBJFLT *filter;
-}
 
-StatObjectsState;
+public:
+    StoreEntry *sentry;
+    STOBJFLT *filter;
+    StoreSearchPointer theSearch;
+
+private:
+    CBDATA_CLASS2(StatObjectsState);
+};
+
 
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
@@ -105,7 +110,7 @@ StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
 static StatCounters CountHourHist[N_COUNT_HOUR_HIST];
 static int NCountHourHist = 0;
-CBDATA_TYPE(StatObjectsState);
+CBDATA_CLASS_INIT(StatObjectsState);
 
 extern unsigned int mem_pool_alloc_calls;
 extern unsigned int mem_pool_free_calls;
@@ -335,10 +340,8 @@ statObjects(void *data)
 {
     StatObjectsState *state = static_cast<StatObjectsState *>(data);
     StoreEntry *e;
-    hash_link *link_ptr = NULL;
-    hash_link *link_next = NULL;
 
-    if (state->bucket >= store_hash_buckets) {
+    if (state->theSearch->isDone()) {
         state->sentry->complete();
         storeUnlockObject(state->sentry);
         cbdataFree(state);
@@ -352,39 +355,36 @@ statObjects(void *data)
         return;
     }
 
-    debug(49, 3) ("statObjects: Bucket #%d\n", state->bucket);
-    link_next = hash_get_bucket(store_table, state->bucket);
+    storeBuffer(state->sentry);
+    size_t statCount = 0;
+    MemBuf mb;
+    memBufDefInit(&mb);
 
-    if (link_next) {
-        MemBuf mb;
-        memBufDefInit(&mb);
+    while (statCount++ < static_cast<size_t>(Config.Store.objectsPerBucket) && state->
+            theSearch->next()) {
+        e = state->theSearch->currentItem();
 
-        while (NULL != (link_ptr = link_next)) {
-            link_next = link_ptr->next;
-            e = (StoreEntry *) link_ptr;
+        if (state->filter && 0 == state->filter(e))
+            continue;
 
-            if (state->filter && 0 == state->filter(e))
-                continue;
-
-            statStoreEntry(&mb, e);
-        }
-
-        storeAppend(state->sentry, mb.buf, mb.size);
-        memBufClean(&mb);
+        statStoreEntry(&mb, e);
     }
 
-    state->bucket++;
+    if (mb.size)
+        storeAppend(state->sentry, mb.buf, mb.size);
+    memBufClean(&mb);
+
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 
 static void
 statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 {
-    StatObjectsState *state;
-    state = cbdataAlloc(StatObjectsState);
+    StatObjectsState *state = new StatObjectsState;
     state->sentry = sentry;
     state->filter = filter;
     storeLockObject(sentry);
+    state->theSearch = Store::Root().search(NULL, NULL);
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 
@@ -965,7 +965,6 @@ statInit(void)
 {
     int i;
     debug(18, 5) ("statInit: Initializing...\n");
-    CBDATA_INIT_TYPE(StatObjectsState);
 
     for (i = 0; i < N_COUNT_HIST; i++)
         statCountersInit(&CountHist[i]);

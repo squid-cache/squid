@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.18 2004/08/30 03:28:57 robertc Exp $
+ * $Id: String.cc,v 1.19 2005/01/03 16:08:25 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -374,6 +374,12 @@ done:
 error:
     *t = (char *) p;
     return (char *) word;
+}
+
+const char *
+checkNullString(const char *p)
+{
+    return p ? p : "(NULL)";
 }
 
 #ifndef _USE_INLINE_

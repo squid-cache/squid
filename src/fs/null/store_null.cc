@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.7 2003/07/22 15:23:14 robertc Exp $
+ * $Id: store_null.cc,v 1.8 2005/01/03 16:08:27 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -98,3 +98,53 @@ NullSwapDir::parse(int anIndex, char *aPath)
     parseOptions(0);
 }
 
+StoreSearch *
+NullSwapDir::search(String const url, HttpRequest *)
+{
+    if (url.size())
+        fatal ("Cannot search by url yet\n");
+
+    return new StoreSearchNull ();
+}
+
+
+CBDATA_CLASS_INIT(StoreSearchNull);
+StoreSearchNull::StoreSearchNull()
+{}
+
+/* do not link
+StoreSearchNull::StoreSearchNull(StoreSearchNull const &);
+*/
+
+StoreSearchNull::~StoreSearchNull()
+{}
+
+void
+StoreSearchNull::next(void (callback)(void *cbdata), void *cbdata)
+{
+    callback (cbdata);
+}
+
+bool
+StoreSearchNull::next()
+{
+    return false;
+}
+
+bool
+StoreSearchNull::error() const
+{
+    return false;
+}
+
+bool
+StoreSearchNull::isDone() const
+{
+    return true;
+}
+
+StoreEntry *
+StoreSearchNull::currentItem()
+{
+    return NULL;
+}

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.370 2004/12/24 08:05:29 robertc Exp $
+# $Id: cf.data.pre,v 1.371 2005/01/03 16:08:25 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1111,6 +1111,10 @@ DOC_START
 	you should not change the coss block size after Squid
 	has written some objects to the cache_dir.
 
+	The coss file store has changed from 2.5. Now it uses a file 
+	called 'stripe' in the directory names in the config - and
+	this will be created by squid -z.
+
 	Common options:
 
 	read-only, this cache_dir is read only.
@@ -1124,6 +1128,10 @@ DOC_START
 	Note for coss, max-size must be less than COSS_MEMBUF_SZ,
 	which can be changed with the --with-coss-membuf-size=N configure
 	option.
+
+	The null store type:
+
+	no options are allowed or required
 DOC_END
 
 
@@ -3350,7 +3358,7 @@ LOC: Config.Store.objectsPerBucket
 DOC_START
 	Target number of objects per bucket in the store hash table.
 	Lowering this value increases the total number of buckets and
-	also the storage maintenance rate.  The default is 50.
+	also the storage maintenance rate.  The default is 20.
 DOC_END
 
 NAME: client_db

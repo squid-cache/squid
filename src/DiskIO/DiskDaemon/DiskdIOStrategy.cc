@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.2 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -397,8 +397,8 @@ DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, int size, int offse
      * up to 2*magic1) and we can run out of shared memory buffers.
      */
     /*
-     * Note that we call storeDirCallback (for all SDs), rather
-     * than storeDiskdDirCallback for just this SD, so that while
+     * Note that we call Store::Root().callbackk (for all SDs), rather
+     * than callback for just this SD, so that while
      * we're "blocking" on this SD we can also handle callbacks
      * from other SDs that might be ready.
      */
@@ -407,7 +407,7 @@ DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, int size, int offse
         struct timeval delay = {0, 1};
 
         select(0, NULL, NULL, NULL, &delay);
-        storeDirCallback();
+        Store::Root().callback();
 
         if (delay.tv_usec < 1000000)
             delay.tv_usec <<= 1;
@@ -456,8 +456,8 @@ DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, int size, in
      * up to 2*magic1) and we can run out of shared memory buffers.
      */
     /*
-     * Note that we call storeDirCallback (for all SDs), rather
-     * than storeDiskdDirCallback for just this SD, so that while
+     * Note that we call Store::Root().callbackk (for all SDs), rather
+     * than callback for just this SD, so that while
      * we're "blocking" on this SD we can also handle callbacks
      * from other SDs that might be ready.
      */
@@ -466,7 +466,7 @@ DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, int size, in
         struct timeval delay = {0, 1};
 
         select(0, NULL, NULL, NULL, &delay);
-        storeDirCallback();
+        Store::Root().callback();
 
         if (delay.tv_usec < 1000000)
             delay.tv_usec <<= 1;

@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cci,v 1.1 2004/12/20 16:30:45 robertc Exp $
+ * $Id: ufscommon.cci,v 1.2 2005/01/03 16:08:27 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -31,6 +31,4 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-RebuildState::RebuildState () : e(NULL){}
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.325 2004/04/03 14:07:39 hno Exp $
+ * $Id: neighbors.cc,v 1.326 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1061,7 +1061,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     debug(15, 6) ("neighborsUdpAck: opcode %d '%s'\n",
                   (int) opcode, storeKeyText(key));
 
-    if (NULL != (entry = storeGet(key)))
+    if (NULL != (entry = Store::Root().get(key)))
         mem = entry->mem_obj;
 
     if ((p = whichPeer(from)))

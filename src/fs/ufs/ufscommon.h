@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.1 2004/12/20 16:30:45 robertc Exp $
+ * $Id: ufscommon.h,v 1.2 2005/01/03 16:08:27 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -41,6 +41,7 @@
 
 /* Common UFS routines */
 #include "SwapDir.h"
+#include "StoreSearch.h"
 
 class UFSStrategy;
 
@@ -58,13 +59,14 @@ public:
 
     UFSSwapDir(char const *aType, const char *aModuleType);
     virtual void init();
-    virtual void newFileSystem();
+    virtual void create();
     virtual void dump(StoreEntry &) const;
     ~UFSSwapDir();
+    virtual StoreSearch *search(String const url, HttpRequest *);
     virtual bool doubleCheck(StoreEntry &);
     virtual void unlink(StoreEntry &);
     virtual void statfs(StoreEntry &)const;
-    virtual void maintainfs();
+    virtual void maintain();
     virtual int canStore(StoreEntry const &)const;
     virtual void reference(StoreEntry &);
     virtual void dereference(StoreEntry &);
@@ -269,18 +271,56 @@ private:
 MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read)
 MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write)
 
+class StoreSearchUFS : public StoreSearch
+{
+
+public:
+    StoreSearchUFS(RefCount<UFSSwapDir> sd);
+    StoreSearchUFS(StoreSearchUFS const &);
+    virtual ~StoreSearchUFS();
+    /* Iterator API - garh, wrong place */
+    /* callback the client when a new StoreEntry is available
+     * or an error occurs 
+     */
+    virtual void next(void (callback)(void *cbdata), void *cbdata);
+    /* return true if a new StoreEntry is immediately available */
+    virtual bool next();
+    virtual bool error() const;
+    virtual bool isDone() const;
+    virtual StoreEntry *currentItem();
+
+    RefCount<UFSSwapDir> sd;
+    RemovalPolicyWalker *walker;
+
+private:
+    CBDATA_CLASS2(StoreSearchUFS);
+    void (callback)(void *cbdata);
+    void *cbdata;
+    StoreEntry * current;
+    bool _done;
+};
+
 class RebuildState : public RefCountable
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    static EVH RebuildFromDirectory;
-    static EVH RebuildFromSwapLog;
+    static EVH RebuildStep;
 
-    _SQUID_INLINE_ RebuildState();
+    RebuildState(RefCount<UFSSwapDir> sd);
     ~RebuildState();
-    UFSSwapDir *sd;
+
+    /* Iterator API - garh, wrong place */
+    /* callback the client when a new StoreEntry is available
+     * or an error occurs 
+     */
+    virtual void next(void (callback)(void *cbdata), void *cbdata);
+    /* return true if a new StoreEntry is immediately available */
+    virtual bool next();
+    virtual bool error() const;
+    virtual bool isDone() const;
+    virtual StoreEntry *currentItem();
+
+    RefCount<UFSSwapDir> sd;
     int n_read;
     FILE *log;
     int speed;
@@ -301,8 +341,8 @@ unsigned int init:
     }
 
     flags;
-    int done;
     int in_dir;
+    int done;
     int fn;
 
     struct dirent *entry;
@@ -313,13 +353,18 @@ unsigned int init:
     struct _store_rebuild_data counts;
 
 private:
-    CBDATA_CLASS(RebuildState);
+    CBDATA_CLASS2(RebuildState);
     void rebuildFromDirectory();
     void rebuildFromSwapLog();
+    void rebuildStep();
     int getNextFile(sfileno *, int *size);
     StoreEntry *currentEntry() const;
     void currentEntry(StoreEntry *);
     StoreEntry *e;
+    bool fromLog;
+    bool _done;
+    void (callback)(void *cbdata);
+    void *cbdata;
 };
 
 #ifdef _USE_INLINE_

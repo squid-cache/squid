@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_tools.cc,v 1.6 2004/08/30 05:12:33 robertc Exp $
+ * $Id: test_tools.cc,v 1.7 2005/01/03 16:08:27 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -262,3 +262,11 @@ dlinkDelete(dlink_node * m, dlink_list * list)
     m->next = m->prev = NULL;
 }
 
+Ctx
+ctx_enter(const char *descr) {
+    return 0;
+}
+
+void
+ctx_exit(Ctx ctx) {
+}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.13 2004/08/30 05:12:31 robertc Exp $
+ * $Id: Store.h,v 1.14 2005/01/03 16:08:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 
 #include "StoreIOBuffer.h"
 #include "Range.h"
+#include "RefCount.h"
 #include "CommRead.h"
 
 #if ESI
@@ -46,6 +47,10 @@ class StoreClient;
 
 class MemObject;
 
+class Store;
+
+class StoreSearch;
+
 class StoreEntry : public hash_link
 {
 
@@ -54,6 +59,8 @@ public:
     bool checkDeferRead(int fd) const;
 
     virtual const char *getMD5Text() const;
+    StoreEntry();
+    StoreEntry(const char *url, const char *log_url);
     virtual ~StoreEntry(){}
 
     virtual HttpReply const *getReply() const;
@@ -65,11 +72,14 @@ public:
     virtual char const *getSerialisedMetaData();
     virtual bool swapoutPossible();
     virtual void trimMemory();
+    void unlink();
 
     void delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data);
 
     void setNoDelay (bool const);
     bool modifiedSince(HttpRequest * request) const;
+    /* what store does this entry belong too ? */
+    virtual RefCount<Store> store() const;
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;
@@ -160,14 +170,86 @@ private:
     static NullStoreEntry _instance;
 };
 
+typedef void (*STOREGETCLIENT) (StoreEntry *, void *cbdata);
+
+/* Abstract base class that will replace the whole store and swapdir interface. */
+
+class Store : public RefCountable
+{
+
+public:
+    /* The root store */
+    static Store &Root();
+    static void Root(Store *);
+    static void Root(RefCount<Store>);
+    static void Stats(StoreEntry * output);
+    static void Maintain(void *unused);
+
+    virtual ~Store() {}
+
+    /* Handle pending callbacks - called by the event loop. */
+    virtual int callback() = 0;
+    /* create the resources needed for this store to operate */
+    virtual void create();
+    /* notify this store that its disk is full. TODO XXX move into a protected api call
+     * between store files and their stores, rather than a top level api call
+     */
+    virtual void diskFull();
+    /* Retrieve a store entry from the store */
+
+    virtual StoreEntry * get
+        (const cache_key *) = 0;
+
+    /* TODO: imeplement the async version */
+    virtual void get
+        (String const key , STOREGETCLIENT callback, void *cbdata) = 0;
+
+    /* prepare the store for use. The store need not be usable immediately,
+     * it should respond to readable() and writable() with true as soon
+     * as it can provide those services
+     */
+    virtual void init() = 0;
+
+    /* the maximum size the store will support in normal use. Inaccuracy is permitted,
+     * but may throw estimates for memory etc out of whack. */
+    virtual size_t maxSize() const = 0;
+
+    /* The minimum size the store will shrink to via normal housekeeping */
+    virtual size_t minSize() const = 0;
+
+    /* TODO: make these calls asynchronous */
+    virtual void stat(StoreEntry &) const = 0; /* output stats to the provided store entry */
+
+    virtual void sync();	/* Sync the store prior to shutdown */
+
+    /* remove a Store entry from the store */
+    virtual void unlink (StoreEntry &);
+
+    /* search in the store */
+    virtual StoreSearch *search(String const url, HttpRequest *) = 0;
+
+    /* pulled up from SwapDir for migration.... probably do not belong here */
+    virtual void reference(StoreEntry &) = 0;	/* Reference this object */
+
+    virtual void dereference(StoreEntry &) = 0;	/* Unreference this object */
+
+    virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
+
+    /* These should really be private */
+    virtual void updateSize(size_t size, int sign) = 0;
+
+private:
+    static RefCount<Store> CurrentRoot;
+};
+
+typedef RefCount<Store> StorePointer;
+
 SQUIDCEXTERN size_t storeEntryInUse();
 SQUIDCEXTERN off_t storeLowestMemReaderOffset(const StoreEntry * entry);
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *);
 SQUIDCEXTERN int storeEntryLocked(const StoreEntry *);
 extern void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 
-SQUIDCEXTERN StoreEntry *new_StoreEntry(int, const char *, const char *);
-SQUIDCEXTERN StoreEntry *storeGet(const cache_key *);
 SQUIDCEXTERN StoreEntry *storeGetPublic(const char *uri, const method_t method);
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(HttpRequest * request);
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const method_t method);
@@ -180,7 +262,6 @@ SQUIDCEXTERN void storeAppend(StoreEntry *, const char *, int);
 SQUIDCEXTERN void storeLockObject(StoreEntry *);
 SQUIDCEXTERN void storeRelease(StoreEntry *);
 SQUIDCEXTERN int storeUnlockObject(StoreEntry *);
-SQUIDCEXTERN EVH storeMaintainSwapSpace;
 SQUIDCEXTERN void storeExpireNow(StoreEntry *);
 SQUIDCEXTERN void storeReleaseRequest(StoreEntry *);
 SQUIDCEXTERN void storeConfigure(void);
@@ -216,6 +297,7 @@ SQUIDCEXTERN void storeSwapFileNumberSet(StoreEntry * e, sfileno filn);
 SQUIDCEXTERN void storeFsInit(void);
 SQUIDCEXTERN void storeFsDone(void);
 SQUIDCEXTERN void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
+extern FREE destroyStoreEntry;
 
 #ifdef _USE_INLINE_
 #include "Store.cci"

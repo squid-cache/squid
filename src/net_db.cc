@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.173 2003/09/01 03:49:39 robertc Exp $
+ * $Id: net_db.cc,v 1.174 2005/01/03 16:08:26 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -446,6 +446,16 @@ sortPeerByRtt(const void *A, const void *B)
 }
 
 static void
+netdbPath(char *path)
+{
+    /* this is completely wrong. the netdb location should be memoised
+     * separately from the cache dirs, and also be settable in 
+     * squid.conf RBC 20041225
+     */
+    snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", Config.cacheSwap.swapDirs[0]->path);
+}
+
+static void
 netdbSaveState(void *foo)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
@@ -455,7 +465,7 @@ netdbSaveState(void *foo)
 
     struct timeval start = current_time;
     int count = 0;
-    snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", storeSwapDir(0));
+    netdbPath(path);
     /*
      * This was nicer when we were using stdio, but thanks to
      * Solaris bugs, its a bad idea.  fopen can fail if more than
@@ -522,7 +532,7 @@ netdbReloadState(void)
     int count = 0;
 
     struct timeval start = current_time;
-    snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", storeSwapDir(0));
+    netdbPath(path);
     /*
      * This was nicer when we were using stdio, but thanks to
      * Solaris bugs, its a bad idea.  fopen can fail if more than
