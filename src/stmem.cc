@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.10 1996/07/09 03:41:42 wessels Exp $
+ * $Id: stmem.cc,v 1.11 1996/07/12 17:41:51 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -115,6 +115,10 @@ stmem_stats mem_obj_pool;
 #ifndef USE_MEMALIGN
 #define USE_MEMALIGN 0
 #endif
+
+static void *get_free_thing _PARAMS((stmem_stats *thing));
+static void put_free_thing _PARAMS((stmem_stats *thing, void *p));
+
 
 void memFree(mem)
      mem_ptr mem;
@@ -246,6 +250,7 @@ int memAppend(mem, data, len)
     return len;
 }
 
+#ifdef UNUSED_CODE
 int memGrep(mem, string, nbytes)
      mem_ptr mem;
      char *string;
@@ -296,6 +301,7 @@ int memGrep(mem, string, nbytes)
     }
     return 0;
 }
+#endif
 
 int memCopy(mem, offset, buf, size)
      mem_ptr mem;
@@ -367,129 +373,87 @@ mem_ptr memInit()
     new->mem_free_data_upto = memFreeDataUpto;
     new->mem_append = memAppend;
     new->mem_copy = memCopy;
+#ifdef UNUSED_CODE
     new->mem_grep = memGrep;
+#endif
     return new;
+}
+
+static void *get_free_thing(thing)
+	stmem_stats *thing;
+{
+    void *p = NULL;
+    if (!empty_stack(&thing->free_page_stack)) {
+        p = pop(&thing->free_page_stack);
+        if (p == NULL)
+	    fatal_dump("get_free_thing: NULL pointer?");
+    } else {
+        p = xmalloc(thing->page_size);
+	thing->total_pages_allocated++;
+    }
+    thing->n_pages_in_use++;
+    memset(p, '\0', thing->page_size);
+    return p;
 }
 
 void *get_free_request_t()
 {
-    void *req = NULL;
-    if (!empty_stack(&request_pool.free_page_stack)) {
-	req = pop(&request_pool.free_page_stack);
+    return get_free_thing(&request_pool);
+}
+
+void *get_free_mem_obj()
+{
+    return get_free_thing(&mem_obj_pool);
+}
+
+char *get_free_4k_page()
+{
+    return get_free_thing(&sm_stats);
+}
+
+char *get_free_8k_page()
+{
+    return get_free_thing(&disk_stats);
+}
+
+static void put_free_thing(thing, p)
+	stmem_stats *thing;
+	void *p;
+{
+    thing->n_pages_in_use--;
+    if (thing->total_pages_allocated > thing->max_pages) {
+	xfree(p);
+	thing->total_pages_allocated--;
+    } else if (full_stack(&thing->free_page_stack)) {
+	xfree(p);
+	thing->total_pages_allocated--;
     } else {
-	req = xmalloc(sizeof(request_t));
-	request_pool.total_pages_allocated++;
+        push(&thing->free_page_stack, p);
     }
-    request_pool.n_pages_in_use++;
-    if (req == NULL)
-	fatal_dump("get_free_request_t: Null pointer?");
-    memset(req, '\0', sizeof(request_t));
-    return (req);
 }
 
 void put_free_request_t(req)
      void *req;
 {
-    if (full_stack(&request_pool.free_page_stack))
-	request_pool.total_pages_allocated--;
-    request_pool.n_pages_in_use--;
-    push(&request_pool.free_page_stack, req);
-}
-
-void *get_free_mem_obj()
-{
-    void *mem = NULL;
-    if (!empty_stack(&mem_obj_pool.free_page_stack)) {
-	mem = pop(&mem_obj_pool.free_page_stack);
-    } else {
-	mem = xmalloc(sizeof(MemObject));
-	mem_obj_pool.total_pages_allocated++;
-    }
-    mem_obj_pool.n_pages_in_use++;
-    if (mem == NULL)
-	fatal_dump("get_free_mem_obj: Null pointer?");
-    memset(mem, '\0', sizeof(MemObject));
-    return (mem);
+    put_free_thing(&request_pool, req);
 }
 
 void put_free_mem_obj(mem)
      void *mem;
 {
-    if (full_stack(&mem_obj_pool.free_page_stack))
-	mem_obj_pool.total_pages_allocated--;
-    mem_obj_pool.n_pages_in_use--;
-    push(&mem_obj_pool.free_page_stack, mem);
-}
-
-
-/* PBD 12/95: Memory allocator routines for saving and reallocating fixed 
- * size blocks rather than mallocing and freeing them */
-char *get_free_4k_page()
-{
-    char *page = NULL;
-    if (!empty_stack(&sm_stats.free_page_stack)) {
-	page = pop(&sm_stats.free_page_stack);
-    } else {
-#if USE_MEMALIGN
-	page = memalign(SM_PAGE_SIZE, SM_PAGE_SIZE);
-	if (!page)
-	    fatal_dump(NULL);
-#else
-	page = xmalloc(SM_PAGE_SIZE);
-#endif
-	sm_stats.total_pages_allocated++;
-    }
-    sm_stats.n_pages_in_use++;
-    if (page == NULL)
-	fatal_dump("get_free_4k_page: Null page pointer?");
-    return (page);
+    put_free_thing(&mem_obj_pool, mem);
 }
 
 void put_free_4k_page(page)
      char *page;
 {
-#if USE_MEMALIGN
-    if ((int) page % SM_PAGE_SIZE)
-	fatal_dump("Someone tossed a string into the 4k page pool");
-#endif
-    if (full_stack(&sm_stats.free_page_stack))
-	sm_stats.total_pages_allocated--;
-    sm_stats.n_pages_in_use--;
-    push(&sm_stats.free_page_stack, page);
-}
-
-char *get_free_8k_page()
-{
-    char *page = NULL;
-    if (!empty_stack(&disk_stats.free_page_stack)) {
-	page = pop(&disk_stats.free_page_stack);
-    } else {
-#if USE_MEMALIGN
-	page = memalign(DISK_PAGE_SIZE, DISK_PAGE_SIZE);
-	if (!page)
-	    fatal_dump(NULL);
-#else
-	page = xmalloc(DISK_PAGE_SIZE);
-#endif
-	disk_stats.total_pages_allocated++;
-    }
-    disk_stats.n_pages_in_use++;
-    if (page == NULL)
-	fatal_dump("get_free_8k_page: Null page pointer?");
-    return (page);
+    put_free_thing(&sm_stats, page);
 }
 
 void put_free_8k_page(page)
      char *page;
 {
-#if USE_MEMALIGN
-    if ((int) page % DISK_PAGE_SIZE)
-	fatal_dump("Someone tossed a string into the 8k page pool");
-#endif
-    if (full_stack(&disk_stats.free_page_stack))
-	disk_stats.total_pages_allocated--;
-    disk_stats.n_pages_in_use--;
-    push(&disk_stats.free_page_stack, page);
+    put_free_thing(&disk_stats, page);
 }
 
 void stmemInit()
@@ -498,35 +462,28 @@ void stmemInit()
     sm_stats.total_pages_allocated = 0;
     sm_stats.n_pages_free = 0;
     sm_stats.n_pages_in_use = 0;
+    sm_stats.max_pages = (getCacheMemMax() / SM_PAGE_SIZE) >> 1;
 
     disk_stats.page_size = DISK_PAGE_SIZE;
     disk_stats.total_pages_allocated = 0;
     disk_stats.n_pages_free = 0;
     disk_stats.n_pages_in_use = 0;
+    disk_stats.max_pages = 200;
 
     request_pool.page_size = sizeof(request_t);
     request_pool.total_pages_allocated = 0;
     request_pool.n_pages_free = 0;
     request_pool.n_pages_in_use = 0;
+    request_pool.max_pages = FD_SETSIZE >> 3;
 
     mem_obj_pool.page_size = sizeof(MemObject);
     mem_obj_pool.total_pages_allocated = 0;
     mem_obj_pool.n_pages_free = 0;
     mem_obj_pool.n_pages_in_use = 0;
+    mem_obj_pool.max_pages = FD_SETSIZE >> 3;
 
-/* use -DPURIFY=1 on the compile line to enable Purify checks */
-
-#if !PURIFY
-    init_stack(&sm_stats.free_page_stack, (getCacheMemMax() / SM_PAGE_SIZE) >> 1);
-    init_stack(&disk_stats.free_page_stack, 1000);
-    init_stack(&request_pool.free_page_stack, FD_SETSIZE >> 3);
-    init_stack(&mem_obj_pool.free_page_stack, FD_SETSIZE >> 3);
-#else /* !PURIFY */
-    /* Declare a zero size page stack so that purify checks for 
-     * FMRs/UMRs etc.  */
-    init_stack(&sm_stats.free_page_stack, 0);
-    init_stack(&disk_stats.free_page_stack, 0);
-    init_stack(&request_pool.free_page_stack, 0);
-    init_stack(&mem_obj_pool.free_page_stack, 0);
-#endif /* !PURIFY */
+    init_stack(&sm_stats.free_page_stack, sm_stats.max_pages);
+    init_stack(&disk_stats.free_page_stack, disk_stats.max_pages);
+    init_stack(&request_pool.free_page_stack, request_pool.max_pages);
+    init_stack(&mem_obj_pool.free_page_stack, mem_obj_pool.max_pages);
 }
