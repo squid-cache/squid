@@ -1,0 +1,15 @@
+#!/sbin/sh
+#
+# Squid Internet Object Cache configuration
+# AUTHOR: Markus Gyger
+#
+# HP-UX 10:         this is file /etc/rc.config.d/squid
+# SGI IRIX:         this is file /var/config/squid.options
+
+# SQUID:            Set to 1 to enable Squid (HP-UX 10 only)
+# SQUID_OPTIONS:    Options passed to Squid (e.g. "-f squid.conf")
+# SQUID_RESPAWN:    Set to 1 to automatically restart squid after failure
+
+#SQUID=1
+SQUID_OPTIONS="-s"
+SQUID_RESPAWN=1
