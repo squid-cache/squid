@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.417 1998/05/22 23:44:29 wessels Exp $
+ * $Id: store.cc,v 1.418 1998/05/26 15:48:28 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -425,10 +425,6 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
 	EBIT_CLR(e->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(e);
     }
-    if (EBIT_TEST(flags, REQ_HIERARCHICAL))
-	EBIT_SET(e->flag, HIERARCHICAL);
-    else
-	EBIT_CLR(e->flag, HIERARCHICAL);
     e->store_status = STORE_PENDING;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_NONE;
