@@ -72,7 +72,7 @@ snmpAclCheckStart(snmp_request_t * rq)
 {
     communityEntry *cp;
     for (cp = Config.Snmp.communities; cp != NULL; cp = cp->next)
-	if (!strcmp((char *)rq->community, cp->name) && cp->acls) {
+	if (!strcmp((char *) rq->community, cp->name) && cp->acls) {
 	    rq->acl_checklist = aclChecklistCreate(cp->acls,
 		NULL, rq->from.sin_addr, NULL, NULL);
 	    aclNBCheck(rq->acl_checklist, snmpAclCheckDone, rq);
@@ -111,14 +111,14 @@ snmpAclCheckDone(int answer, void *data)
 	debug(49, 5) ("snmpAclCheckDone: checking.\n");
 	/* access check for each variable */
 
-	if (!community_check((char *)Community, VarPtr->name, VarPtr->name_length)) {
+	if (!community_check((char *) Community, VarPtr->name, VarPtr->name_length)) {
 	    debug(49, 5) ("snmpAclCheckDone: failed on community_check.\n");
 	    snmp_agent_parse_done(0, rq);
 	    return;
 	}
     }
     Session->community = Community;
-    Session->community_len = strlen((char *)Community);
+    Session->community_len = strlen((char *) Community);
     RespPDU = snmp_agent_response(PDU);
     snmp_free_pdu(PDU);
     if (RespPDU == NULL) {

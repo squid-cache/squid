@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.163 1998/03/08 08:43:16 rousskov Exp $
+ * $Id: squid.h,v 1.164 1998/03/16 20:30:05 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -353,4 +353,8 @@ struct rusage {
 #define calloc +
 #define sprintf +
 #define strdup +
+
+#if SQUID_SNMP
+extern struct snmp_mib_tree *Mib;
+#endif
 #endif /* SQUID_H */
