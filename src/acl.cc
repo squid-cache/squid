@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.162 1998/04/23 22:51:04 wessels Exp $
+ * $Id: acl.cc,v 1.163 1998/05/08 22:58:38 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2177,7 +2177,12 @@ aclDumpGeneric(const acl * a)
 #include "squid.h"
 
 #include <sys/sysctl.h>
+#ifdef _SQUID_LINUX_
+#include <net/if_arp.h>
+#include <sys/ioctl.h>
+#else
 #include <net/if_dl.h>
+#endif
 #include <net/route.h>
 #include <net/if.h>
 #include <netinet/if_ether.h>
@@ -2305,6 +2310,33 @@ aclMatchArp(void *dataptr, struct in_addr c)
 }
 #endif /* USE_SPLAY_TREE */
 
+#ifdef _SQUID_LINUX_
+static int
+checkARP(u_long ip, char *eth)
+{
+    struct arpreq arpReq;
+    struct sockaddr_in ipAddr;
+
+    ipAddr.sin_family = AF_INET;
+    ipAddr.sin_port = 0;
+    ipAddr.sin_addr.s_addr = ip;
+    memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    arpReq.arp_dev[0] = '\0';
+    arpReq.arp_flags = 0;
+    /* any AF_INET socket will do... gives back hardware type, device, etc */
+    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) == -1) {
+	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
+	    arpReq.arp_ha.sa_family);
+	return 0;
+    } else if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
+	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
+	    arpReq.arp_ha.sa_family);
+	/* update here and MAC address parsing to handle non-ethernet */
+	return 0;
+    } else
+	return !memcmp(&arpReq.arp_ha.sa_data, eth, 6);
+}
+#else
 static int
 checkARP(u_long ip, char *eth)
 {
@@ -2345,6 +2377,7 @@ checkARP(u_long ip, char *eth)
     xfree(buf);
     return 0;
 }
+#endif
 
 static wordlist *
 aclDumpArpList(acl_arp_data * data)
