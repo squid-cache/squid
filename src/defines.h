@@ -246,3 +246,7 @@
 #define ICP_DATA_SZ (sizeof(icp_databe_t))
 #define ICP_MESSAGE_SZ (sizeof(icp_message_t))
 #define ICP_MESSAGE_SZ (sizeof(icp_message_t))
+
+#define ICON_MENU	"anthony-dir.gif"
+#define ICON_DIRUP	"anthony-dirup.gif"
+#define ICON_LINK	"anthony-link.gif"

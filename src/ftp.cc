@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.134 1997/07/19 01:33:55 wessels Exp $
+ * $Id: ftp.cc,v 1.135 1997/07/19 07:18:00 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -463,7 +463,7 @@ ftpHtmlifyListEntry(char *line, int flags)
     if (!strcmp(line, "..")) {
 	sprintf(icon, "<IMG BORDER=0 SRC=\"%s%s\" ALT=\"%-6s\">",
 	    "http://internal.squid/icons/",
-	    "menu",
+	    ICON_DIRUP,
 	    "[DIR]");
 	sprintf(link, "<A HREF=\"%s\">%s</A>", "../", "Parent Directory");
 	sprintf(html, "%s %s\n", icon, link);
@@ -496,7 +496,7 @@ ftpHtmlifyListEntry(char *line, int flags)
     case 'd':
 	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
 	    "http://internal.squid/icons/",
-	    "menu",
+	    ICON_MENU,
 	    "[DIR]");
 	sprintf(link, "<A HREF=\"%s/\">%s</A>%s",
 	    ename,
@@ -510,7 +510,7 @@ ftpHtmlifyListEntry(char *line, int flags)
     case 'l':
 	sprintf(icon, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
 	    "http://internal.squid/icons/",
-	    mimeGetIcon(parts->link),
+	    ICON_LINK,
 	    "[LINK]");
 	sprintf(link, "<A HREF=\"%s\">%s</A>%s",
 	    ename,

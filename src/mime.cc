@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.33 1997/07/19 01:33:57 wessels Exp $
+ * $Id: mime.cc,v 1.34 1997/07/19 07:18:01 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -376,6 +376,9 @@ mimeInit(char *filename)
 	MimeTableTail = &m->next;
     }
     fclose(fp);
+    mimeLoadIconFile(ICON_MENU);
+    mimeLoadIconFile(ICON_DIRUP);
+    mimeLoadIconFile(ICON_LINK);
 }
 
 static void
