@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.39 2002/10/19 01:23:22 robertc Exp $
+#  $Id: Makefile.am,v 1.40 2002/10/19 02:05:33 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -121,6 +121,7 @@ squid_SOURCES = \
 	acl.cc \
 	asn.cc \
 	authenticate.cc \
+	authenticate.h \
 	cache_cf.cc \
 	CacheDigest.cc \
 	cache_manager.cc \
@@ -158,17 +159,20 @@ squid_SOURCES = \
 	helper.cc \
 	$(HTCPSOURCE) \
 	http.cc \
+	http.h \
 	HttpStatusLine.cc \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
 	HttpHdrContRange.cc \
 	HttpHeader.cc \
+	HttpHeader.h \
 	HttpHeaderTools.cc \
 	HttpBody.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
 	icmp.cc \
+	ICP.h \
 	icp_v2.cc \
 	icp_v3.cc \
 	ident.cc \
