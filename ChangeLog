@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta11 (Jan 6, 1998):
+
 	- Fixed fake 'struct rusage' definition which prevented compling
 	  on Solaris 2.4.
 	- Fixed copy-by-ref bug for request->headers in

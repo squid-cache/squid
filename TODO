@@ -9,8 +9,6 @@ Our Todo List
 	doubly-linked list.
 (1) **	Send full HTTP requests in ICP messages (DW)
 
-(2) **  copy over -z semantics from 1.1; don't automatically wipeout
-	cache (DW)
 (2) **	copy over 'test_reachability' from 1.1 (DW)
 (2) **	we don't properly handle the HTTP/1.1 'Connection' header (KA)
 (2)	be more persistent in forwarding requests; return fewer error pages
@@ -23,6 +21,8 @@ Our Todo List
 		- Replace bzero with memset
 		- Replace bcopy with xmemcpy
 (2) **	Add "Squid" trailer to all error messages. (AR)
+(2) **  Fix cachemgr.cgi.  It doesn't understand some of the new
+        output formats. (??)
 
 (3) **	request-range (AR)
 (3)	hit metering
@@ -41,7 +41,7 @@ Our Todo List
 	Clayton Donley <qa1049@ilms04.cig.mot.com>
 (3) **  Store cache key and other metadata in swap files (KA)
 (3) **  Make sure every squid.conf option has documentation (??)
-(3) **  Finish implementing the *_dump() functions in cache_cf.c (??)
+(3) **  Finish implementing the *_dump() functions in cache_cf.c (DW)
 
 (4) **	FTP PUT (KA)
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
@@ -86,3 +86,5 @@ DONE:
 	restart we won't have to worry about the list being unsorted
 	and causing problems with the LRU magic value.
 (3) **	Make checkFailureRatio() work again.  (DW)
+(2) **  copy over -z semantics from 1.1; don't automatically wipeout
+	cache (DW)
