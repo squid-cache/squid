@@ -1,4 +1,4 @@
-/* $Id: debug.cc,v 1.5 1996/03/27 18:15:42 wessels Exp $ */
+/* $Id: debug.cc,v 1.6 1996/03/27 18:16:28 wessels Exp $ */
 
 #include "squid.h"
 
@@ -83,27 +83,27 @@ void _db_print(va_alist)
 }
 
 static void debugArg(arg)
-	char *arg;
+     char *arg;
 {
-	int s = 0;
-	int l = 0;
-	int i;
+    int s = 0;
+    int l = 0;
+    int i;
 
-	if (!strncasecmp(arg, "ALL", 3)) {
-		s = -1;
-		arg += 4;
-	} else {
-		s = atoi(arg);
-		while (*arg && *arg++ != ',');
-	}
-	l = atoi (arg);
+    if (!strncasecmp(arg, "ALL", 3)) {
+	s = -1;
+	arg += 4;
+    } else {
+	s = atoi(arg);
+	while (*arg && *arg++ != ',');
+    }
+    l = atoi(arg);
 
-	if (s >= 0) {
-		debugLevels[s] = l;
-		return;
-	}
-	for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
-        	debugLevels[i] = l;
+    if (s >= 0) {
+	debugLevels[s] = l;
+	return;
+    }
+    for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
+	debugLevels[i] = l;
 }
 
 void _db_init(prefix, logfile)
@@ -119,12 +119,11 @@ void _db_init(prefix, logfile)
 
     if ((p = getDebugOptions())) {
 	p = xstrdup(p);
-	for (s=strtok(p, w_space); s; s=strtok(NULL, w_space)) {
+	for (s = strtok(p, w_space); s; s = strtok(NULL, w_space)) {
 	    debugArg(s);
 	}
 	xfree(p);
     }
-
     /* open error logging file */
     if (logfile != NULL) {
 	if (debug_log_file)
