@@ -155,7 +155,11 @@ asnInit(void)
 void
 asnFreeMemory(void)
 {
-    debug(0, 0) ("asnFreeMemory: Write me!\n");
+    debug(0, 0) ("asnFreeMemory: Calling asnCleanup()!\n");
+
+	/* XXX - Cleanup is enough.   */ 
+
+    asnCleanup();
 }
 
 void
@@ -241,7 +245,10 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	while (*s && isspace(*s))
 	    s++;
     }
+	/* XXX why assert that ? */
+#if 0
     assert(e->mem_obj->reply);
+#endif
     storeUnregister(e, asState);
     storeUnlockObject(e);
     requestUnlink(asState->request);
