@@ -1,5 +1,5 @@
 /*
- * $Id: cachemgr.cc,v 1.10 1996/07/09 03:41:19 wessels Exp $
+ * $Id: cachemgr.cc,v 1.11 1996/07/09 22:58:06 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -219,6 +219,8 @@ typedef enum {
     STATS_VM,
     STATS_U,
     STATS_IO,
+    STATS_HDRS,
+    STATS_FDS,
     SHUTDOWN,
     REFRESH,
 #ifdef REMOVE_OBJECT
@@ -239,6 +241,8 @@ static char *op_cmds[] =
     "stats/vm_objects",
     "stats/utilization",
     "stats/io",
+    "stats/reply_headers",
+    "stats/filedescriptors",
     "shutdown",
     "<refresh>",
 #ifdef REMOVE_OBJECT
@@ -305,6 +309,8 @@ void noargs_html()
 #endif
     printf("<OPTION VALUE=\"stats/utilization\">Utilization\n");
     printf("<OPTION VALUE=\"stats/io\">I/O\n");
+    printf("<OPTION VALUE=\"stats/reply_headers\">HTTP Reply Headers\n");
+    printf("<OPTION VALUE=\"stats/filedescriptors\">Filedescriptor Usage\n");
     printf("<OPTION VALUE=\"stats/objects\">Objects\n");
     printf("<OPTION VALUE=\"stats/vm_objects\">VM_Objects\n");
     printf("<OPTION VALUE=\"server_list\">Cache Server List\n");
@@ -602,6 +608,12 @@ int main(int argc, char *argv[])
     } else if (!strcmp(operation, "stats/io") ||
 	!strcmp(operation, "I/O")) {
 	op = STATS_IO;
+    } else if (!strcmp(operation, "stats/reply_headers") ||
+	!strcmp(operation, "Reply Headers")) {
+	op = STATS_HDRS;
+    } else if (!strcmp(operation, "stats/filedescriptors") ||
+	!strcmp(operation, "Filedescriptor")) {
+	op = STATS_FDS;
     } else if (!strcmp(operation, "shutdown")) {
 	op = SHUTDOWN;
     } else if (!strcmp(operation, "refresh")) {
@@ -626,6 +638,8 @@ int main(int argc, char *argv[])
     case STATS_VM:
     case STATS_U:
     case STATS_IO:
+    case STATS_HDRS:
+    case STATS_FDS:
 	sprintf(msg, "GET cache_object://%s/%s HTTP/1.0\r\n\r\n",
 	    hostname, op_cmds[op]);
 	break;
@@ -665,6 +679,8 @@ int main(int argc, char *argv[])
 #endif
     printf("<OPTION VALUE=\"stats/utilization\">Utilization\n");
     printf("<OPTION VALUE=\"stats/io\">I/O\n");
+    printf("<OPTION VALUE=\"stats/reply_headers\">HTTP Reply Headers\n");
+    printf("<OPTION VALUE=\"stats/filedescriptors\">Filedescriptor Usage\n");
     printf("<OPTION VALUE=\"stats/objects\">Objects\n");
     printf("<OPTION VALUE=\"stats/vm_objects\">VM_Objects\n");
     printf("<OPTION VALUE=\"server_list\">Cache Server List\n");
@@ -710,6 +726,8 @@ int main(int argc, char *argv[])
     case STATS_O:
     case STATS_VM:
     case STATS_IO:
+    case STATS_HDRS:
+    case STATS_FDS:
     case SHUTDOWN:
     case REFRESH:
 	break;
@@ -773,6 +791,8 @@ int main(int argc, char *argv[])
 		case LOG:
 		case STATS_G:
 		case STATS_IO:
+		case STATS_HDRS:
+		case STATS_FDS:
 		case SHUTDOWN:
 		    p_state = 1;
 		    printf("%s", reserve);
