@@ -143,6 +143,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0, 0);
 	return;
     }
+    cbdataLock(sc);		/* ick, prevent sc from getting freed */
     sc->flags.store_copying = 1;
     debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->key));
     assert(callback != NULL);
@@ -211,6 +212,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	}
     }
     sc->flags.store_copying = 0;
+    cbdataUnlock(sc);		/* ick, allow sc to be freed */
 }
 
 static void
