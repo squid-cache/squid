@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.336 1998/06/10 06:00:22 wessels Exp $
+ * $Id: client_side.cc,v 1.337 1998/06/11 05:32:19 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2469,6 +2469,11 @@ clientReadRequest(int fd, void *data)
 		    if (conn->in.offset)
 			xmemmove(conn->in.buf, conn->in.buf + copy_len, conn->in.offset);
 		}
+		/*
+		 * ick; cancel the read handler for NON-GET requests
+		 * until this request is forwarded/resolved
+		 */
+    		commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 		break;
 	    }
 	    continue;		/* while offset > 0 */
