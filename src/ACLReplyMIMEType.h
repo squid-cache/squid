@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLReplyMIMEType.h,v 1.3 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ACLReplyMIMEType.h,v 1.4 2004/10/20 22:37:56 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,8 +40,7 @@
 #include "ACLReplyHeaderStrategy.h"
 #include "ACLStrategised.h"
 #include "ACLChecklist.h"
-/* FIXME: TODO: this is broken - should be HttpReply checks!! */
-#include "HttpRequest.h"
+#include "HttpReply.h"
 
 class ACLReplyMIMEType
 {
@@ -55,7 +54,7 @@ private:
 int
 ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {
-    char const *theHeader = httpHeaderGetStr(&checklist->request->header, HDR_CONTENT_TYPE);
+    char const *theHeader = httpHeaderGetStr(&checklist->reply->header, HDR_CONTENT_TYPE);
 
     if (NULL == theHeader)
         theHeader = "";
