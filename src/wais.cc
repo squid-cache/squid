@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.26 1996/04/16 05:05:35 wessels Exp $ */
+/* $Id: wais.cc,v 1.27 1996/04/16 05:13:39 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -250,7 +250,6 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 	safe_free(data);
 	return COMM_ERROR;
     }
-
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {

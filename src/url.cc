@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.17 1996/04/16 04:23:17 wessels Exp $ */
+/* $Id: url.cc,v 1.18 1996/04/16 05:13:37 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -163,12 +163,12 @@ int urlDefaultPort(p)
 }
 
 request_t *urlParse(method, url)
-	method_t method;
-	char *url;
+     method_t method;
+     char *url;
 {
-    static char proto[MAX_URL+1];
-    static char host[MAX_URL+1];
-    static char urlpath[MAX_URL+1];
+    static char proto[MAX_URL + 1];
+    static char host[MAX_URL + 1];
+    static char urlpath[MAX_URL + 1];
     request_t *request = NULL;
     char *t = NULL;
     int port;
@@ -179,26 +179,25 @@ request_t *urlParse(method, url)
 	port = CONNECT_PORT;
 	if (sscanf(url, "%[^:]:%d", host, &port) < 1)
 	    return NULL;
-        if (!aclMatchInteger(connect_port_list, port))
+	if (!aclMatchInteger(connect_port_list, port))
 	    return NULL;
     } else {
 	if (sscanf(url, "%[^:]://%[^/]%s", proto, host, urlpath) < 2)
 	    return NULL;
 	protocol = urlParseProtocol(proto);
 	port = urlDefaultPort(protocol);
-	if ((t = strchr(host, ':')) && *(t+1) != '\0') {
+	if ((t = strchr(host, ':')) && *(t + 1) != '\0') {
 	    *t = '\0';
 	    port = atoi(t + 1);
 	}
     }
     for (t = host; *t; t++)
-        *t = tolower(*t);
+	*t = tolower(*t);
     if (port == 0) {
-	debug(23,0,"urlParse: Invalid port == 0\n");
+	debug(23, 0, "urlParse: Invalid port == 0\n");
 	return NULL;
     }
-
-    request = (request_t *) xcalloc (1, sizeof(request_t));
+    request = (request_t *) xcalloc(1, sizeof(request_t));
     request->method = method;
     request->protocol = protocol;
     strncpy(request->host, host, SQUIDHOSTNAMELEN);
@@ -207,27 +206,27 @@ request_t *urlParse(method, url)
     return request;
 }
 
-char *urlCanonical (request, buf)
-    request_t *request;
-    char *buf;
+char *urlCanonical(request, buf)
+     request_t *request;
+     char *buf;
 {
-    static char urlbuf[MAX_URL+1];
+    static char urlbuf[MAX_URL + 1];
     static char portbuf[32];
     if (buf == NULL)
 	buf = urlbuf;
     switch (request->method) {
     case METHOD_CONNECT:
-        sprintf(buf, "%s:%d", request->host, request->port);
+	sprintf(buf, "%s:%d", request->host, request->port);
 	break;
     default:
 	portbuf[0] = '\0';
 	if (request->port != urlDefaultPort(request->protocol))
-		sprintf(portbuf, ":%d", request->port);
-        sprintf(buf, "%s://%s%s%s",
-		ProtocolStr[request->protocol],
-		request->host,
-		portbuf,
-		request->urlpath);
+	    sprintf(portbuf, ":%d", request->port);
+	sprintf(buf, "%s://%s%s%s",
+	    ProtocolStr[request->protocol],
+	    request->host,
+	    portbuf,
+	    request->urlpath);
 	break;
     }
     return buf;
