@@ -29,6 +29,8 @@
 #include "rfcnb-io.h"
 #include <sys/uio.h>
 #include <sys/signal.h>
+#include <string.h>
+
 
 int RFCNB_Timeout = 0;		/* Timeout in seconds ... */
 

@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <string.h>
 #include "smblib-priv.h"
 #include "valid.h"
 
