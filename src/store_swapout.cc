@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.83 2001/10/24 08:19:09 hno Exp $
+ * $Id: store_swapout.cc,v 1.84 2001/11/13 17:30:45 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -366,8 +366,8 @@ storeSwapOutAble(const StoreEntry * e)
 	if (((store_client *) node->data)->type == STORE_DISK_CLIENT)
 	    return 1;
     }
-    if (store_dirs_rebuilding)
-	if (!EBIT_TEST(e->flags, ENTRY_SPECIAL))
-	    return 0;
+    /* Don't pollute the disk with icons and other special entries */
+    if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
+	return 0;
     return EBIT_TEST(e->flags, ENTRY_CACHABLE);
 }
