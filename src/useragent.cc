@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.23 2001/01/12 00:37:23 wessels Exp $
+ * $Id: useragent.cc,v 1.24 2001/03/04 00:50:26 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -48,7 +48,7 @@ useragentOpenLog(void)
 	debug(40, 1) ("User-Agent logging is disabled.\n");
 	return;
     }
-    logfileOpen(Config.Log.useragent, 0, 1);
+    useragentlog = logfileOpen(Config.Log.useragent, 0, 1);
 #endif
 }
 
