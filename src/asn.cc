@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.68 2001/01/12 00:37:14 wessels Exp $
+ * $Id: asn.cc,v 1.69 2001/02/07 18:56:51 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -410,7 +410,7 @@ destroyRadixNodeInfo(as_info * e_info)
     xfree(data);
 }
 
-int
+static int
 mask_len(int mask)
 {
     int len = 32;

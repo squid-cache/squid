@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.523 2001/01/12 00:37:15 wessels Exp $
+ * $Id: client_side.cc,v 1.524 2001/02/07 18:56:52 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -633,7 +633,7 @@ checkNegativeHit(StoreEntry * e)
     return 1;
 }
 
-void
+static void
 clientUpdateCounters(clientHttpRequest * http)
 {
     int svc_time = tvSubMsec(http->start, current_time);
@@ -2863,7 +2863,7 @@ clientProcessBody(ConnStateData * conn)
 
 /* A dummy handler that throws away a request-body */
 static char bodyAbortBuf[SQUID_TCP_SO_RCVBUF];
-void
+static void
 clientReadBodyAbortHandler(char *buf, size_t size, void *data)
 {
     ConnStateData *conn = (ConnStateData *) data;

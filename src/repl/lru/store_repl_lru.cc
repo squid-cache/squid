@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.6 2001/01/12 00:37:36 wessels Exp $
+ * $Id: store_repl_lru.cc,v 1.7 2001/02/07 18:56:56 hno Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -132,7 +132,7 @@ struct _LruWalkData {
     LruNode *current;
 };
 
-const StoreEntry *
+static const StoreEntry *
 lru_walkNext(RemovalPolicyWalker * walker)
 {
     LruWalkData *lru_walk = walker->_data;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.373 2001/01/30 09:46:46 hno Exp $
+ * $Id: cache_cf.cc,v 1.374 2001/02/07 18:56:51 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -388,23 +388,23 @@ configDoConfigure(void)
 	Config2.onoff.enable_purge = 1;
     if (geteuid() == 0) {
 	if (NULL != Config.effectiveUser) {
-    	    struct passwd *pwd = getpwnam(Config.effectiveUser);
-    	    if (NULL == pwd)
-	    /*
-	     * Andres Kroonmaa <andre@online.ee>:
-	     * Some getpwnam() implementations (Solaris?) require
-	     * an available FD < 256 for opening a FILE* to the
-	     * passwd file.
-	     * DW:
-	     * This should be safe at startup, but might still fail
-	     * during reconfigure.
-	     */
-    		fatalf("getpwnam failed to find userid for effective user '%s'",
-    		    Config.effectiveUser,
-    		    xstrerror());
-    	    Config2.effectiveUserID = pwd->pw_uid;
+	    struct passwd *pwd = getpwnam(Config.effectiveUser);
+	    if (NULL == pwd)
+		/*
+		 * Andres Kroonmaa <andre@online.ee>:
+		 * Some getpwnam() implementations (Solaris?) require
+		 * an available FD < 256 for opening a FILE* to the
+		 * passwd file.
+		 * DW:
+		 * This should be safe at startup, but might still fail
+		 * during reconfigure.
+		 */
+		fatalf("getpwnam failed to find userid for effective user '%s'",
+		    Config.effectiveUser,
+		    xstrerror());
+	    Config2.effectiveUserID = pwd->pw_uid;
 	    Config2.effectiveGroupID = pwd->pw_gid;
-       	}
+	}
     } else {
 	Config2.effectiveUserID = geteuid();
 	Config2.effectiveGroupID = getegid();
@@ -916,7 +916,7 @@ check_null_string(char *s)
     return s == NULL;
 }
 
-void
+static void
 allocate_new_authScheme(authConfig * cfg)
 {
     if (cfg->schemes == NULL) {
@@ -1115,7 +1115,7 @@ free_cachedir(cacheSwap * swap)
     swap->n_configured = 0;
 }
 
-const char *
+static const char *
 peer_type_str(const peer_t type)
 {
     switch (type) {
@@ -1702,9 +1702,9 @@ parse_eol(char *volatile *var)
     unsigned char *token = strtok(NULL, null_string);
     safe_free(*var);
     if (token == NULL)
-    	self_destruct();
-    while(*token && isspace(*token))
-    	token++;
+	self_destruct();
+    while (*token && isspace(*token))
+	token++;
     if (!*token)
 	self_destruct();
     *var = xstrdup(token);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.396 2001/01/12 00:37:20 wessels Exp $
+ * $Id: protos.h,v 1.397 2001/02/07 18:56:52 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -178,7 +178,7 @@ extern int comm_select(int);
 #endif
 extern void commUpdateReadBits(int, PF *);
 extern void commUpdateWriteBits(int, PF *);
-extern void comm_quick_poll_required();
+extern void comm_quick_poll_required(void);
 
 extern void packerToStoreInit(Packer * p, StoreEntry * e);
 extern void packerToMemInit(Packer * p, MemBuf * mb);
@@ -743,13 +743,13 @@ extern int authenticateDirection(auth_user_request_t *);
 extern FREE authenticateFreeProxyAuthUser;
 extern void authenticateFreeProxyAuthUserACLResults(void *data);
 extern void authenticateProxyUserCacheCleanup(void *);
-extern void authenticateInitUserCache();
-extern int authenticateActiveSchemeCount();
-extern int authenticateSchemeCount();
+extern void authenticateInitUserCache(void);
+extern int authenticateActiveSchemeCount(void);
+extern int authenticateSchemeCount(void);
 extern void authenticateUserNameCacheAdd(auth_user_t * auth_user);
 extern int authenticateCheckAuthUserIP(struct in_addr request_src_addr, auth_user_request_t * auth_user);
 extern int authenticateUserAuthenticated(auth_user_request_t *);
-extern void authenticateUserCacheRestart();
+extern void authenticateUserCacheRestart(void);
 extern char *authenticateUserUsername(auth_user_t *);
 extern char *authenticateUserRequestUsername(auth_user_request_t *);
 extern int authenticateValidateUser(auth_user_request_t *);
@@ -1094,7 +1094,7 @@ extern int urlCheckRequest(const request_t *);
 extern int urlDefaultPort(protocol_t p);
 extern char *urlCanonicalClean(const request_t *);
 extern char *urlHostname(const char *url);
-extern void urlExtMethodConfigure();
+extern void urlExtMethodConfigure(void);
 
 extern void useragentOpenLog(void);
 extern void useragentRotateLog(void);
@@ -1126,7 +1126,7 @@ extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkAddTail(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
 extern void dlinkNodeDelete(dlink_node * m);
-extern dlink_node *dlinkNodeNew();
+extern dlink_node *dlinkNodeNew(void);
 
 extern void kb_incr(kb_t *, size_t);
 extern double gb_to_double(const gb_t *);
@@ -1286,3 +1286,8 @@ extern int gethostname(char *, int);
 #if URL_CHECKSUM_DEBUG
 extern unsigned int url_checksum(const char *url);
 #endif
+
+/*
+ * hack to allow snmp access to the statistics counters
+ */
+extern StatCounters *snmpStatGet(int);

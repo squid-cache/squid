@@ -1,5 +1,5 @@
 /*
- * $Id: Array.cc,v 1.6 2001/01/12 00:37:12 wessels Exp $
+ * $Id: Array.cc,v 1.7 2001/02/07 18:56:50 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -41,6 +41,8 @@
 
 
 #include "config.h"
+#include "Array.h"
+
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
@@ -53,7 +55,7 @@
 static void arrayGrow(Array * a, int min_capacity);
 
 Array *
-arrayCreate()
+arrayCreate(void)
 {
     Array *a = xmalloc(sizeof(Array));
     arrayInit(a);

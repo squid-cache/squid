@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.79 2001/01/24 22:38:25 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.80 2001/02/07 18:56:52 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -36,8 +36,6 @@
 
 #include "squid.h"
 #include "cache_snmp.h"
-
-extern StatCounters *snmpStatGet(int);
 
 /************************************************************************
 
@@ -257,7 +255,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	break;
     case PERF_SYS_MEMUSAGE:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    (snint) memTotalAllocated() >> 10,
+	    (snint) statMemoryAccounted() >> 10,
 	    ASN_INTEGER);
 	break;
     case PERF_SYS_CPUTIME:

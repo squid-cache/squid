@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_basic.cc,v 1.5 2001/01/31 22:16:40 hno Exp $
+ * $Id: auth_basic.cc,v 1.6 2001/02/07 18:56:53 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -74,29 +74,14 @@ static auth_basic_config *basicConfig = NULL;
 static int authbasic_initialised = 0;
 MemPool *basic_data_pool = NULL;
 
+
 /*
  *
- * Private Functions
+ * Public Functions
  *
  */
 
-void
-authBasicDone(void)
-{
-    if (basicauthenticators)
-	helperShutdown(basicauthenticators);
-    authbasic_initialised = 0;
-    if (!shutting_down)
-	return;
-    if (basicauthenticators)
-	helperFree(basicauthenticators);
-    basicauthenticators = NULL;
-    if (basic_data_pool) {
-	memPoolDestroy(basic_data_pool);
-	basic_data_pool = NULL;
-    }
-    debug(29, 2) ("authBasicDone: Basic authentication Shutdown.\n");
-}
+AUTHSSETUP authSchemeSetup_basic;
 
 void
 authSchemeSetup_basic(authscheme_entry_t * authscheme)
@@ -121,13 +106,33 @@ authSchemeSetup_basic(authscheme_entry_t * authscheme)
     authscheme->donefunc = authBasicDone;
 }
 
-int
+/* internal functions */
+
+static void
+authBasicDone(void)
+{
+    if (basicauthenticators)
+	helperShutdown(basicauthenticators);
+    authbasic_initialised = 0;
+    if (!shutting_down)
+	return;
+    if (basicauthenticators)
+	helperFree(basicauthenticators);
+    basicauthenticators = NULL;
+    if (basic_data_pool) {
+	memPoolDestroy(basic_data_pool);
+	basic_data_pool = NULL;
+    }
+    debug(29, 2) ("authBasicDone: Basic authentication Shutdown.\n");
+}
+
+static int
 authenticateBasicActive()
 {
     return (authbasic_initialised == 1) ? 1 : 0;
 }
 
-int
+static int
 authBasicConfigured()
 {
     if ((basicConfig != NULL) && (basicConfig->authenticate != NULL) &&
@@ -140,7 +145,7 @@ authBasicConfigured()
     return 0;
 }
 
-int
+static int
 authenticateBasicAuthenticated(auth_user_request_t * auth_user_request)
 {
     basic_data *basic_auth = auth_user_request->auth_user->scheme_data;
@@ -150,11 +155,13 @@ authenticateBasicAuthenticated(auth_user_request_t * auth_user_request)
     return 0;
 }
 
-int
+#if UNUSED_CODE
+static int
 authenticateBasiccmpUsername(basic_data * u1, basic_data * u2)
 {
     return strcmp(u1->username, u2->username);
 }
+#endif
 
 /* log a basic user in
  */
@@ -354,7 +361,7 @@ authenticateBasicUsername(auth_user_t * auth_user)
     return NULL;
 }
 
-basic_data *
+static basic_data *
 authBasicDataNew()
 {
     basic_data *temp;
@@ -366,12 +373,14 @@ authBasicDataNew()
     return temp;
 }
 
-void
+#if UNUSED_CODE
+static void
 authBasicDataFree(basic_data * basic_auth)
 {
 }
+#endif
 
-auth_user_t *
+static auth_user_t *
 authBasicAuthUserFindUsername(const char *username)
 {
     auth_user_hash_pointer *usernamehash;

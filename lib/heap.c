@@ -1,6 +1,6 @@
 
 /*
- * $Id: heap.c,v 1.7 2001/01/12 00:37:12 wessels Exp $
+ * $Id: heap.c,v 1.8 2001/02/07 18:56:50 hno Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -38,6 +38,7 @@
  ****************************************************************************/
 
 #include "config.h"
+#include "heap.h"
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
@@ -482,7 +483,7 @@ _heap_node_exist(heap * hp, int id)
 /* 
  * Print the heap in element order, id..last. 
  */
-void
+static void
 heap_print_inorder(heap * hp, int id)
 {
     while (id < hp->last) {

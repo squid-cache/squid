@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.4 2001/01/12 00:37:35 wessels Exp $
+ * $Id: store_repl_heap.cc,v 1.5 2001/02/07 18:56:56 hno Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -119,7 +119,7 @@ struct _HeapWalkData {
     int current;
 };
 
-const StoreEntry *
+static const StoreEntry *
 heap_walkNext(RemovalPolicyWalker * walker)
 {
     HeapWalkData *heap_walk = walker->_data;

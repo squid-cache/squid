@@ -1,8 +1,9 @@
 /*
- * $Id: iso3307.c,v 1.4 1998/09/23 17:16:11 wessels Exp $
+ * $Id: iso3307.c,v 1.5 2001/02/07 18:56:50 hno Exp $
  */
 
 #include "config.h"
+#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>

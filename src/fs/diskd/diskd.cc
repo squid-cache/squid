@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.9 2001/01/12 00:37:33 wessels Exp $
+ * $Id: diskd.cc,v 1.10 2001/02/07 18:56:54 hno Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ msg_handle(diomsg * r, int rl, diomsg * s)
     }
 }
 
-int
+static int
 fsCmp(const void *a, const void *b)
 {
     const int *A = a;
@@ -256,7 +256,7 @@ fsCmp(const void *a, const void *b)
     return *A != *B;
 }
 
-unsigned int
+static unsigned int
 fsHash(const void *key, unsigned int n)
 {
     /* note, n must be a power of 2! */

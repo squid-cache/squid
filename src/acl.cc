@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.245 2001/02/01 18:47:46 hno Exp $
+ * $Id: acl.cc,v 1.246 2001/02/07 18:56:51 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -43,7 +43,9 @@ static void aclParseDomainList(void *curlist);
 static void aclParseUserList(void **current);
 static void aclParseIpList(void *curlist);
 static void aclParseIntlist(void *curlist);
+#if SQUID_SNMP
 static void aclParseWordList(void *curlist);
+#endif
 static void aclParseProtoList(void *curlist);
 static void aclParseMethodList(void *curlist);
 static void aclParseTimeSpec(void *curlist);
@@ -629,6 +631,7 @@ aclParseRegexList(void *curlist)
     }
 }
 
+#if SQUID_SNMP
 static void
 aclParseWordList(void *curlist)
 {
@@ -636,6 +639,7 @@ aclParseWordList(void *curlist)
     while ((t = strtokFile()))
 	wordlistAdd(curlist, t);
 }
+#endif
 
 static void
 aclParseUserList(void **current)
@@ -2198,7 +2202,7 @@ aclDumpUserListWalkee(void *node_data, void *outlist)
     wordlistAdd(outlist, node_data);
 }
 
-wordlist *
+static wordlist *
 aclDumpUserList(acl_user_data * data)
 {
     wordlist *wl = NULL;

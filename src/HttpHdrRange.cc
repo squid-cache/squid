@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.24 2001/01/12 00:37:13 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.25 2001/02/07 18:56:51 hno Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -208,7 +208,7 @@ httpHdrRangeSpecMergeWith(HttpHdrRangeSpec * recep, const HttpHdrRangeSpec * don
  * Range
  */
 
-HttpHdrRange *
+static HttpHdrRange *
 httpHdrRangeCreate(void)
 {
     HttpHdrRange *r = memAllocate(MEM_HTTP_HDR_RANGE);
