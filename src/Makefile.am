@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.22 2002/04/13 14:11:43 hno Exp $
+#  $Id: Makefile.am,v 1.23 2002/04/14 15:57:01 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -341,28 +341,28 @@ auth_modules.c: auth_modules.sh Makefile
 	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
 
 install-data-local: install-sysconfDATA install-dataDATA
-	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/mime.conf" ; \
+	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
+	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
 	else \
-	        echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(sysconfdir)/mime.conf" ;\
-	        $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(sysconfdir)/mime.conf; \
+	        echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE)" ;\
+	        $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
-	@if test -f $(DESTDIR)$(sysconfdir)/squid.conf ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/squid.conf" ; \
+	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
+	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CONFIG_FILE)" ; \
 	else \
-	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(sysconfdir)/squid.conf"; \
-	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(sysconfdir)/squid.conf; \
+	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
+	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
 uninstall-local:
-	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
-		echo "rm -f $(DESTDIR)$(sysconfdir)/mime.conf"; \
-		$(RM) -f $(DESTDIR)$(sysconfdir)/mime.conf; \
+	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
+		echo "rm -f $(DESTDIR)$(DEFAULT_MIME_TABLE)"; \
+		$(RM) -f $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
-	@if test -f $(DESTDIR)$(sysconfdir)/squid.conf ; then \
-		echo "rm -f $(DESTDIR)$(sysconfdir)/squid.conf"; \
-		$(RM) -f $(DESTDIR)$(sysconfdir)/squid.conf; \
+	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
+		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
+		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
