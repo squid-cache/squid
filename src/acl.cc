@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.295 2003/01/23 00:37:15 robertc Exp $
+ * $Id: acl.cc,v 1.296 2003/01/24 09:07:19 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "splay.h"
 #include "HttpRequest.h"
 #include "authenticate.h"
+#include "fde.h"
 
 static void aclParseDomainList(void *curlist);
 static void aclParseUserList(void **current);
