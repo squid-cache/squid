@@ -1,5 +1,5 @@
 /*
- * $Id: ssl.cc,v 1.3 1996/07/09 03:41:39 wessels Exp $
+ * $Id: ssl.cc,v 1.4 1996/07/09 23:00:26 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -156,15 +156,6 @@ static void sslReadServer(fd, sslState)
 	    COMM_SELECT_WRITE,
 	    (PF) sslWriteClient,
 	    (void *) sslState);
-	comm_set_select_handler_plus_timeout(sslState->server.fd,
-	    COMM_SELECT_TIMEOUT,
-	    (PF) sslReadTimeout,
-	    (void *) sslState,
-	    sslState->timeout);
-	comm_set_select_handler(sslState->server.fd,
-	    COMM_SELECT_READ,
-	    (PF) sslReadServer,
-	    (void *) sslState);
     }
 }
 
@@ -185,13 +176,8 @@ static void sslReadClient(fd, sslState)
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(sslState->client.fd,
 		COMM_SELECT_READ,
-		(PF) sslReadServer,
+		(PF) sslReadClient,
 		(void *) sslState);
-	    comm_set_select_handler_plus_timeout(sslState->client.fd,
-		COMM_SELECT_TIMEOUT,
-		(PF) sslReadTimeout,
-		(void *) sslState,
-		sslState->timeout);
 	} else {
 	    sslClose(sslState);
 	}
@@ -204,14 +190,6 @@ static void sslReadClient(fd, sslState)
 	comm_set_select_handler(sslState->server.fd,
 	    COMM_SELECT_WRITE,
 	    (PF) sslWriteServer,
-	    (void *) sslState);
-	comm_set_select_handler_plus_timeout(sslState->client.fd, COMM_SELECT_TIMEOUT,
-	    (PF) sslReadTimeout,
-	    (void *) sslState,
-	    sslState->timeout);
-	comm_set_select_handler(sslState->client.fd,
-	    COMM_SELECT_READ,
-	    (PF) sslReadServer,
 	    (void *) sslState);
     }
 }
@@ -238,6 +216,11 @@ static void sslWriteServer(fd, sslState)
 	    COMM_SELECT_READ,
 	    (PF) sslReadClient,
 	    (void *) sslState);
+       comm_set_select_handler_plus_timeout(sslState->server.fd,
+           COMM_SELECT_TIMEOUT,
+           (PF) sslReadTimeout,
+           (void *) sslState,
+           sslState->timeout);
     } else {
 	/* still have more to write */
 	comm_set_select_handler(sslState->server.fd,
@@ -305,15 +288,6 @@ static void sslConnected(fd, sslState)
 	(PF) sslWriteClient,
 	(void *) sslState);
     comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
-    comm_set_select_handler_plus_timeout(sslState->server.fd,
-	COMM_SELECT_TIMEOUT,
-	(PF) sslReadTimeout,
-	(void *) sslState,
-	sslState->timeout);
-    comm_set_select_handler(sslState->server.fd,
-	COMM_SELECT_READ,
-	(PF) sslReadServer,
-	(void *) sslState);
     comm_set_select_handler(sslState->client.fd,
 	COMM_SELECT_READ,
 	(PF) sslReadClient,
