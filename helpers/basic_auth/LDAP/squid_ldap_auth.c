@@ -12,7 +12,7 @@
  * 
  * Usage: squid_ldap_auth [-b basedn] [-s searchscope]
  *			  [-f searchfilter] [-D binddn -w bindpasswd]
- *                        [-p] <ldap_server_name>
+ *                        [-p] [-R] <ldap_server_name>
  * 
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org
@@ -28,6 +28,9 @@
  *             - Added the ability to search for the user DN
  * 2001-04-16: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added -D binddn -w bindpasswd.
+ * 2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Added -R to disable referrals
+ *             - Added -a to control alias dereferencing
  */
 
 #include <stdio.h>
@@ -44,6 +47,8 @@ static char *binddn = NULL;
 static char *bindpasswd = NULL;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
+static int noreferrals = 0;
+static int aliasderef = LDAP_DEREF_NEVER;
 
 static int checkLDAP(LDAP * ld, char *userid, char *password);
 
@@ -54,7 +59,6 @@ main(int argc, char **argv)
     char *user, *passwd, *p;
     char *ldapServer;
     LDAP *ld = NULL;
-    int rc;
     int tryagain;
 
     setbuf(stdout, NULL);
@@ -64,6 +68,7 @@ main(int argc, char **argv)
 	char option = argv[1][1];
 	switch(option) {
 	case 'p':
+	case 'R':
 	    break;
 	default:
 	    if (strlen(argv[1]) > 2) {
@@ -96,6 +101,20 @@ main(int argc, char **argv)
 		    exit(1);
 		}
 		break;
+	case 'a':
+		if (strcmp(value, "never") == 0)
+		    aliasderef = LDAP_DEREF_NEVER;
+		else if (strcmp(value, "always") == 0)
+		    aliasderef = LDAP_DEREF_ALWAYS;
+		else if (strcmp(value, "search") == 0)
+		    aliasderef = LDAP_DEREF_SEARCHING;
+		else if (strcmp(value, "find") == 0)
+		    aliasderef = LDAP_DEREF_FINDING;
+		else {
+		    fprintf(stderr, "squid_ldap_auth: ERROR: Unknown alias dereference method '%s'\n", value);
+		    exit(1);
+		}
+		break;
 	case 'D':
 		binddn = value;
 		break;
@@ -104,6 +123,9 @@ main(int argc, char **argv)
 		break;
 	case 'p':
 		persistent = !persistent;
+		break;
+	case 'R':
+		noreferrals = !noreferrals;
 		break;
 	default:
 		fprintf(stderr, "squid_ldap_auth: ERROR: Unknown command line option '%c'\n", option);
@@ -119,6 +141,8 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
 	fprintf(stderr, "\t-p\t\t\tpersistent LDAP connection\n");
+	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
+	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "\tIf no search filter is specified, then the dn uid=user,basedn will\n\tbe used (same as specifying a search filter of 'uid=', but quicker\n\tas as there is no need to search for the user DN)\n\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
@@ -146,6 +170,9 @@ recover:
 		    ldapServer, LDAP_PORT);
 		exit(1);
 	    }
+	    if (noreferrals)
+		ld->ld_options &= ~LDAP_OPT_REFERRALS;
+	    ld->ld_deref = aliasderef;
 	}
 	if (checkLDAP(ld, user, passwd) != 0) {
 	    if (tryagain && ld->ld_errno != LDAP_INVALID_CREDENTIALS) {
@@ -185,16 +212,27 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 	LDAPMessage *entry;
 	char *searchattr[] = {NULL};
 	char *userdn;
+	int rc;
 
 	if (binddn) {
-	    if (ldap_simple_bind_s(ld, binddn, bindpasswd) != LDAP_SUCCESS) {
-		fprintf(stderr, "squid_ldap_auth: WARNING, could not bind to binddn '%s'\n", binddn);
+	    rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
+	    if (rc != LDAP_SUCCESS) {
+		fprintf(stderr, "squid_ldap_auth: WARNING, could not bind to binddn '%s'\n", ldap_err2string(rc));
 		return 1;
 	    }
 	}
 	snprintf(filter, sizeof(filter), "%s%s", searchfilter, userid);
-	if (ldap_search_s(ld, basedn, searchscope, filter, searchattr, 1, &res) != LDAP_SUCCESS)
-	    return 1;
+	if (ldap_search_s(ld, basedn, searchscope, filter, searchattr, 1, &res) != LDAP_SUCCESS) {
+	    int rc = ldap_result2error(ld, res, 0);
+	    if (rc != LDAP_PARTIAL_RESULTS) {
+		/* LDAP_PARTIAL_RESULT ignored. What we are looking for
+		 * is most likely availale
+		 * This error is seen when querying a MS ActiveDirector
+		 * server due to referrals..
+		 */
+		fprintf(stderr, "squid_ldap_auth: WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
+	    }
+	}
 	entry = ldap_first_entry(ld, res);
 	if (!entry) {
 	    ldap_msgfree(res);
