@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.125 1997/01/03 22:59:15 wessels Exp $
+ * $Id: comm.cc,v 1.126 1997/01/04 08:34:49 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -408,7 +408,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 	return COMM_ERROR;
     }
     /* Establish connection. */
-    if (connect(sock, (const struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
+    if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
 	switch (errno) {
 	case EALREADY:
 	    return COMM_ERROR;
