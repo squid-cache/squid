@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.183 1997/04/30 18:30:42 wessels Exp $
+ * $Id: cache_cf.cc,v 1.184 1997/05/14 21:07:51 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -207,6 +207,15 @@ struct SquidConfig Config;
 #define DefaultOptionsClientDb	1	/* default on */
 #define DefaultOptionsQueryIcmp	0	/* default off */
 
+static const char *const T_SECOND_STR = "second";
+static const char *const T_MINUTE_STR = "minute";
+static const char *const T_HOUR_STR = "hour";
+static const char *const T_DAY_STR = "day";
+static const char *const T_WEEK_STR = "week";
+static const char *const T_FORTNIGHT_STR = "fortnight";
+static const char *const T_MONTH_STR = "month";
+static const char *const T_YEAR_STR = "year";
+static const char *const T_DECADE_STR = "decade";
 
 int httpd_accel_mode = 0;	/* for fast access */
 const char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -253,7 +262,6 @@ static void parseKilobytes _PARAMS((int *));
 static void parseRefreshPattern _PARAMS((int icase));
 static void parseVisibleHostnameLine _PARAMS((void));
 static void parseWAISRelayLine _PARAMS((void));
-static void parseMinutesLine _PARAMS((int *));
 static void parseCachemgrPasswd _PARAMS((void));
 static void parsePathname _PARAMS((char **, int fatal));
 static void parseProxyLine _PARAMS((peer **));
@@ -477,15 +485,6 @@ parseQuickAbort(void)
 	GetInteger(i);
 	Config.quickAbort.max = i * 1024;
     }
-}
-
-static void
-parseMinutesLine(int *iptr)
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    *iptr = i * 60;
 }
 
 static void
@@ -928,9 +927,9 @@ parseConfigFile(const char *file_name)
 	    parseHostDomainTypeLine();
 
 	else if (!strcmp(token, "neighbor_timeout"))
-	    parseIntegerValue(&Config.neighborTimeout);
+	    parseTimeLine(&Config.neighborTimeout, T_SECOND_STR);
 	else if (!strcmp(token, "neighbour_timeout"))	/* alternate spelling */
-	    parseIntegerValue(&Config.neighborTimeout);
+	    parseTimeLine(&Config.neighborTimeout, T_SECOND_STR);
 
 	else if (!strcmp(token, "cache_dir"))
 	    parseCacheDir();
@@ -1021,25 +1020,25 @@ parseConfigFile(const char *file_name)
 	    parseQuickAbort();
 
 	else if (!strcmp(token, "negative_ttl"))
-	    parseMinutesLine(&Config.negativeTtl);
+	    parseTimeLine(&Config.negativeTtl, T_MINUTE_STR);
 	else if (!strcmp(token, "negative_dns_ttl"))
-	    parseMinutesLine(&Config.negativeDnsTtl);
+	    parseTimeLine(&Config.negativeDnsTtl, T_MINUTE_STR);
 	else if (!strcmp(token, "positive_dns_ttl"))
-	    parseMinutesLine(&Config.positiveDnsTtl);
+	    parseTimeLine(&Config.positiveDnsTtl, T_MINUTE_STR);
 	else if (!strcmp(token, "read_timeout"))
-	    parseMinutesLine(&Config.Timeout.read);
+	    parseTimeLine(&Config.Timeout.read, T_MINUTE_STR);
 	else if (!strcmp(token, "connect_timeout"))
-	    parseIntegerValue(&Config.Timeout.connect);
+	    parseTimeLine(&Config.Timeout.connect, T_SECOND_STR);
 	else if (!strcmp(token, "defer_timeout"))
-	    parseIntegerValue(&Config.Timeout.defer);
+	    parseTimeLine(&Config.Timeout.defer, T_MINUTE_STR);
 	else if (!strcmp(token, "client_lifetime"))
-	    parseIntegerValue(&Config.Timeout.lifetime);
+	    parseTimeLine(&Config.Timeout.lifetime, T_MINUTE_STR);
 	else if (!strcmp(token, "shutdown_lifetime"))
-	    parseIntegerValue(&Config.shutdownLifetime);
+	    parseTimeLine(&Config.shutdownLifetime, T_SECOND_STR);
 	else if (!strcmp(token, "clean_rate"))
-	    parseMinutesLine(&Config.cleanRate);
+	    parseTimeLine(&Config.cleanRate, T_MINUTE_STR);
 	else if (!strcmp(token, "reference_age"))
-	    parseTimeLine(&Config.referenceAge, "minutes");
+	    parseTimeLine(&Config.referenceAge, T_MINUTE_STR);
 
 	else if (!strcmp(token, "request_size"))
 	    parseKilobytes(&Config.maxRequestSize);
@@ -1214,7 +1213,7 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "netdb_low"))
 	    parseIntegerValue(&Config.Netdb.low);
 	else if (!strcmp(token, "netdb_ping_period"))
-	    parseTimeLine(&Config.Netdb.period, "seconds");
+	    parseTimeLine(&Config.Netdb.period, T_SECOND_STR);
 
 	/* If unknown, treat as a comment line */
 	else {
@@ -1468,23 +1467,23 @@ parseTimeLine(int *iptr, const char *units)
 static int
 parseTimeUnits(const char *unit)
 {
-    if (!strncasecmp(unit, "second", 6))
+    if (!strncasecmp(unit, T_SECOND_STR, strlen(T_SECOND_STR)))
 	return 1;
-    if (!strncasecmp(unit, "minute", 6))
+    if (!strncasecmp(unit, T_MINUTE_STR, strlen(T_MINUTE_STR)))
 	return 60;
-    if (!strncasecmp(unit, "hour", 4))
+    if (!strncasecmp(unit, T_HOUR_STR, strlen(T_HOUR_STR)))
 	return 3600;
-    if (!strncasecmp(unit, "day", 3))
+    if (!strncasecmp(unit, T_DAY_STR, strlen(T_DAY_STR)))
 	return 86400;
-    if (!strncasecmp(unit, "week", 4))
+    if (!strncasecmp(unit, T_WEEK_STR, strlen(T_WEEK_STR)))
 	return 86400 * 7;
-    if (!strncasecmp(unit, "fortnight", 9))
+    if (!strncasecmp(unit, T_FORTNIGHT_STR, strlen(T_FORTNIGHT_STR)))
 	return 86400 * 14;
-    if (!strncasecmp(unit, "month", 5))
+    if (!strncasecmp(unit, T_MONTH_STR, strlen(T_MONTH_STR)))
 	return 86400 * 30;
-    if (!strncasecmp(unit, "year", 4))
+    if (!strncasecmp(unit, T_YEAR_STR, strlen(T_YEAR_STR)))
 	return 86400 * 365.2522;
-    if (!strncasecmp(unit, "decade", 6))
+    if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
 	return 86400 * 365.2522 * 10;
     debug(3, 1, "parseTimeUnits: unknown time unit '%s'\n", unit);
     return 0;
