@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.12 1996/08/26 19:57:11 wessels Exp $
+ * $Id: ssl.cc,v 1.13 1996/08/31 06:40:20 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -427,9 +427,9 @@ static int sslConnect(fd, hp, sslState)
 		(void *) sslState);
 	    return COMM_OK;
 	}
-	if (opt_no_ipcache)
-	    ipcacheInvalidate(sslState->host);
     }
+    if (opt_no_ipcache)
+	ipcacheInvalidate(sslState->host);
     if (Config.sslProxy.host)
 	sslProxyConnected(sslState->server.fd, sslState);
     else

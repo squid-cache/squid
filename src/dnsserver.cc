@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.17 1996/08/28 20:12:53 wessels Exp $
+ * $Id: dnsserver.cc,v 1.18 1996/08/31 06:40:18 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -452,7 +452,5 @@ int main(argc, argv)
 	    continue;
 	}
     }
-    exit(0);
-    /*NOTREACHED */
-    return 0;
+    /* NOTREACHED */
 }
