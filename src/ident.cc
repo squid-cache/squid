@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.62 2002/10/21 14:00:02 adrian Exp $
+ * $Id: ident.cc,v 1.63 2002/11/10 04:30:44 hno Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ identCallback(IdentStateData * state, char *result)
 static void
 identClose(int fdnotused, void *data)
 {
-    IdentStateData *state = data;
+    IdentStateData *state = (IdentStateData *)data;
     identCallback(state, NULL);
     comm_close(state->fd);
     hash_remove_link(ident_hash, (hash_link *) state);
@@ -92,7 +92,7 @@ identClose(int fdnotused, void *data)
 static void
 identTimeout(int fd, void *data)
 {
-    IdentStateData *state = data;
+    IdentStateData *state = (IdentStateData *)data;
     debug(30, 3) ("identTimeout: FD %d, %s\n", fd,
 	inet_ntoa(state->my_peer.sin_addr));
     comm_close(fd);
@@ -101,7 +101,7 @@ identTimeout(int fd, void *data)
 static void
 identConnectDone(int fd, comm_err_t status, void *data)
 {
-    IdentStateData *state = data;
+    IdentStateData *state = (IdentStateData *)data;
     IdentClient *c;
     MemBuf mb;
     if (status != COMM_OK) {
@@ -133,13 +133,13 @@ identConnectDone(int fd, comm_err_t status, void *data)
 static void
 identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
-    IdentStateData *state = data;
+    IdentStateData *state = (IdentStateData *)data;
     char *ident = NULL;
     char *t = NULL;
 
     assert (buf == state->buf);
     
-    if (if (flag != COMM_OK || len <= 0) {
+    if (flag != COMM_OK || len <= 0) {
 	comm_close(fd);
 	return;
     }
@@ -167,7 +167,7 @@ identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 static void
 identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
 {
-    IdentClient *c = xcalloc(1, sizeof(*c));
+    IdentClient *c = (IdentClient *)xcalloc(1, sizeof(*c));
     IdentClient **C;
     c->callback = callback;
     c->callback_data = cbdataReference(callback_data);
@@ -197,7 +197,7 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
 	inet_ntoa(my_peer->sin_addr),
 	ntohs(my_peer->sin_port));
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
-    if ((state = hash_lookup(ident_hash, key)) != NULL) {
+    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL) {
 	identClientAdd(state, callback, data);
 	return;
     }
