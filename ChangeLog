@@ -17,6 +17,11 @@ Changes to Squid-2.2 ():
 	  Squid can behave more like a proper daemon process.
 	- Added 'prefer_direct' option (enabled by default) so that
 	  people can give parents higher preference than direct.
+	- Fixed ipc.c close() bug for async IO.  On FreeBSD,
+	  comm_close() doesn't work for child processes when async IO is
+	  used.
+	- Fixed setting the public key for large ``icons'' (Henrik
+	  Nordstrom).
 	- Rewrote peer digest module to fix memory leaks on reconfigure
 	  and clean the code. Increased "current" digest version to 5
  	  ("required" version is still 3). Revised "Peer Select" cache 
