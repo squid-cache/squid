@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.19 2000/11/30 20:12:46 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.20 2000/12/05 09:11:30 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1051,6 +1051,8 @@ static void
 storeAufsDirWriteCleanDone(SwapDir * sd)
 {
     struct _clean_state *state = sd->log.clean.state;
+    if (NULL == state)
+	return;
     if (state->fd < 0)
 	return;
     state->walker->Done(state->walker);

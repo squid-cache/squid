@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.10 2000/11/30 20:08:50 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.11 2000/12/05 09:11:31 wessels Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -551,6 +551,8 @@ static void
 storeCossDirWriteCleanDone(SwapDir * sd)
 {
     struct _clean_state *state = sd->log.clean.state;
+    if (NULL == state)
+	return;
     if (state->fd < 0)
 	return;
     if (write(state->fd, state->outbuf, state->outbuf_offset) < 0) {

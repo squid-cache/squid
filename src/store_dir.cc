@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.116 2000/12/05 09:03:31 wessels Exp $
+ * $Id: store_dir.cc,v 1.117 2000/12/05 09:11:24 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -401,8 +401,7 @@ storeDirWriteCleanLogs(int reopen)
     /* Flush */
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	sd = &Config.cacheSwap.swapDirs[dirn];
-	if (sd->log.clean.done)
-	    sd->log.clean.done(sd);
+	sd->log.clean.done(sd);
     }
     if (reopen)
 	storeDirOpenSwapLogs();
