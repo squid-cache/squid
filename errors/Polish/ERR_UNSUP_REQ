@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Żądany URL nie może zostać sprowadzony</H2>
+
+<HR>
+
+<P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>użyta w żądaniu kombinacja metoda/protokół jest niewłaściwa</B></LI>
+</UL>
+Squid nie wspiera wszystkich metod we wszystkich protokołach. Na przykład
+nie możesz użyć metody POST&nbsp;w żądaniu skierowanym do usługi Gopher.
+</BODY>
+</HTML>

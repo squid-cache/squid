@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Żądany URL nie może zostać sprowadzony</H2>
+
+<HR>
+
+<P>Podczas obsługi następującego żądania:
+<PRE>%R</PRE>
+wystąpił następujący błąd:
+<UL>
+<LI>
+<B>błędne żądanie</B></LI>
+</UL>
+Niektóre części żądania HTTP mogą być błędne. Możliwe problemy to:
+<UL>
+<LI>
+Brak lub nieznana metoda (GET, POST)</LI>
+
+<LI>
+Brak URL-a</LI>
+
+<LI>
+Brak identyfikatora HTTP (HTTP/1.0)</LI>
+
+<LI>
+RZbyt duży rozmiar żądania</LI>
+
+<LI>
+Brak pola Content-Length&nbsp; dla metod POST lub PUT</LI>
+
+<LI>
+Błędny znak w nazwie hosta; podkreślenia (underscores) są niedozwolone</LI>
+</UL>
+
+</BODY>
+</HTML>

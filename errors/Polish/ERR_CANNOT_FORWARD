@@ -1,0 +1,35 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Żądany URL nie może zostać sprowadzony</H2>
+
+<HR>
+
+<P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>Nie można przekazać tego żądania w chwili obecnej.</B></LI>
+</UL>
+Żądanie nie może zostać przakazane serwerowi źródłowemu ani żadnemu z serwerów-rodziców.
+Najbardziej prawdopodobne źródła błędu to:
+<UL>
+<LI>
+Administrator serwera cache&nbsp; nie pozwala temu cache na bezpośrednie
+połączenia do serwerów źródłowych</LI>
+
+<LI>
+Wszystkie kooperujące serwery-rodzice są w tej chwili niedostępne.</LI>
+</UL>
+
+</BODY>
+</HTML>

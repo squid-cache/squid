@@ -1,0 +1,25 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URN nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+URL dla żądanego URN nie może zostać sprowadzony</H2>
+
+<HR>
+
+<P>Podzcas sprowadzania URN: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>nie można zlokalizować&nbsp; URN</B></LI>
+</UL>
+Proszę nie spodziewać się zbyt wiele od URNów z %T :)
+</BODY>
+</HTML>

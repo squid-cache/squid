@@ -1,0 +1,24 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+</HEAD>
+<BODY>
+
+<H2>
+Żądany URL nie może zostać sprowadzony</H2>
+
+<HR>
+
+<P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<BLOCKQUOTE>Nie można ustalić adresu IP hosta o nazwie <I>%H</I></BLOCKQUOTE>
+Serwer DNS zwrócił następującą wartość
+<BLOCKQUOTE>%z</BLOCKQUOTE>
+To oznacza, że:
+<PRE>&nbsp;Serwer cache nie jest w stanie polaczyć się z hostem o nazwie wymienionej w URL.&nbsp;
+&nbsp;Sprawdź czy podany adres jest poprawny.</PRE>
+
+</BODY>
+</HTML>

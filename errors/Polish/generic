@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>The requested URL could not be retrieved</H2>
+<HR>
+<P>
+While trying to retrieve the URL:
+<A HREF="%U">%U</A>
+<P>
+The following error was encountered:
+<UL>
+<LI>
+<STRONG>
+@SHORT_DESCRIPTION@
+</STRONG>
+</UL>
+
+<P>
+The system returned:
+<PRE><I>    %E</I></PRE>
+
+<P>
+This means that:
+<PRE>
+    @LONG_DESCRIPTION@
+</PRE>
+</P>
+

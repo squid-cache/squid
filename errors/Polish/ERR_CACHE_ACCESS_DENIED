@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+   <TITLE>BŁĄD: Dostęp do serwera cache zabroniony</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+BŁĄD</H1>
+
+<H2>
+Dostęp do serwera cache zabroniony</H2>
+
+<HR>
+
+<P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
+
+<P>wystąpił następujący błąd:
+<UL>
+<LI>
+<B>Dostęp do serwera cache zabroniony.</B></LI>
+</UL>
+Niestety, nie możesz sprowadzić:
+<PRE>&nbsp;&nbsp;&nbsp; %U</PRE>
+z tego serwera cache, dopóki nie dokonałeś autoryzacji.
+
+<P>Musisz używać Netscape 2.0 lub nowszej lub Microsoft Internet Explorer
+3.0 lub innej przeglądarki zgodnej z HTTP/1.1. Skontaktuj się z <A HREF="mailto:%w">administratorem
+serwera cache</A> jeśli masz trudności z autoryzacją lub <A HREF="http://%h/cgi-bin/chpasswd.cgi\">zmień</A>&nbsp;
+haslo.
+</BODY>
+</HTML>
