@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.153 1999/05/10 19:33:20 wessels Exp $
+# $Id: cf.data.pre,v 1.154 1999/05/12 16:35:57 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1155,7 +1155,7 @@ DOC_START
 		4 months
 		2.2 hours
 
-reference_age 1 month
+reference_age 1 year
 DOC_END
 
 
