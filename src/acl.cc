@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.23 1996/07/22 17:19:12 wessels Exp $
+ * $Id: acl.cc,v 1.24 1996/07/23 02:39:49 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -680,6 +680,9 @@ int aclMatchAcl(acl, checklist)
 	/* NOTREACHED */
     case ACL_DST_IP:
 	if ((hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS)) == NULL) {
+	    /* if lookup previously failed, s_addr == INADDR_NONE */
+	    if (checklist->dst_addr.s_addr != INADDR_ANY)
+		return aclMatchIp(acl->data, checklist->dst_addr);
 	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, r->host);
 	    checklist->need |= (1 << ACL_DST_IP);
