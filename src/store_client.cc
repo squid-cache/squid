@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.56 1999/01/19 17:41:06 wessels Exp $
+ * $Id: store_client.cc,v 1.57 1999/01/19 19:03:05 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -576,6 +576,8 @@ CheckQuickAbort(StoreEntry * entry)
     if (storePendingNClients(entry) > 0)
 	return;
     if (entry->store_status != STORE_PENDING)
+	return;
+    if (EBIT_TEST(entry->flags, ENTRY_SPECIAL))
 	return;
     if (CheckQuickAbort2(entry) == 0)
 	return;
