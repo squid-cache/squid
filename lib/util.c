@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.40 1998/02/02 21:16:15 wessels Exp $
+ * $Id: util.c,v 1.41 1998/02/06 00:54:59 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -174,11 +174,29 @@ malloc_statistics(void (*func) (int, int, void *), void *data)
 
 
 
+#if XMALLOC_TRACE
+char *xmalloc_file="";
+int xmalloc_line=0;
+char *xmalloc_func="";
+static int xmalloc_count=0;
+#undef xmalloc
+#undef xfree
+#undef xxfree
+#undef xrealloc
+#undef xcalloc
+#undef xstrdup
+#endif
+
 #if XMALLOC_DEBUG
 #define DBG_ARRY_SZ (1<<10)
 #define DBG_ARRY_BKTS (1<<8)
 static void *malloc_ptrs[DBG_ARRY_BKTS][DBG_ARRY_SZ];
 static int malloc_size[DBG_ARRY_BKTS][DBG_ARRY_SZ];
+#if XMALLOC_TRACE
+static void *malloc_file[DBG_ARRY_BKTS][DBG_ARRY_SZ];
+static int malloc_line[DBG_ARRY_BKTS][DBG_ARRY_SZ];
+static int malloc_count[DBG_ARRY_BKTS][DBG_ARRY_SZ];
+#endif
 static int dbg_initd = 0;
 static int B = 0;
 static int I = 0;
@@ -192,6 +210,11 @@ check_init(void)
 	for (I = 0; I < DBG_ARRY_SZ; I++) {
 	    malloc_ptrs[B][I] = NULL;
 	    malloc_size[B][I] = 0;
+#if XMALLOC_TRACE
+	    malloc_file[B][I] = NULL;
+	    malloc_line[B][I] = 0;
+	    malloc_count[B][I] = 0;
+#endif
 	}
     }
     dbg_initd = 1;
@@ -206,6 +229,11 @@ check_free(void *s)
 	    continue;
 	malloc_ptrs[B][I] = NULL;
 	malloc_size[B][I] = 0;
+#if XMALLOC_TRACE
+	    malloc_file[B][I] = NULL;
+	    malloc_line[B][I] = 0;
+	    malloc_count[B][I] = 0;
+#endif
 	break;
     }
     if (I == DBG_ARRY_SZ) {
@@ -235,6 +263,11 @@ check_malloc(void *p, size_t sz)
 	    continue;
 	malloc_ptrs[B][I] = p;
 	malloc_size[B][I] = (int) sz;
+#if XMALLOC_TRACE
+	malloc_file[B][I] = xmalloc_file;
+	malloc_line[B][I] = xmalloc_line;
+	malloc_count[B][I] = xmalloc_count;
+#endif
 	break;
     }
     if (I == DBG_ARRY_SZ)
@@ -242,7 +275,7 @@ check_malloc(void *p, size_t sz)
 }
 #endif
 
-#if XMALLOC_COUNT && !HAVE_MALLOCBLKSIZE
+#if XMALLOC_TRACE && !HAVE_MALLOCBLKSIZE
 int
 mallocblksize(void *p)
 {
@@ -255,9 +288,39 @@ mallocblksize(void *p)
 }
 #endif
 
-#ifdef XMALLOC_COUNT
+#ifdef XMALLOC_TRACE
+static char *
+malloc_file_name(void *p)
+{
+    B = (((int) p) >> 4) & 0xFF;
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	if (malloc_ptrs[B][I] == p)
+	    return malloc_file[B][I];
+    }
+    return 0;
+}
+int
+malloc_line_number(void *p)
+{
+    B = (((int) p) >> 4) & 0xFF;
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	if (malloc_ptrs[B][I] == p)
+	    return malloc_line[B][I];
+    }
+    return 0;
+}
+int
+malloc_number(void *p)
+{
+    B = (((int) p) >> 4) & 0xFF;
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	if (malloc_ptrs[B][I] == p)
+	    return malloc_count[B][I];
+    }
+    return 0;
+}
 static void
-xmalloc_count(void *p, int sign)
+xmalloc_trace(void *p, int sign)
 {
     int statMemoryAccounted();
     static size_t last_total = 0, last_accounted = 0, last_mallinfo = 0;
@@ -268,16 +331,23 @@ xmalloc_count(void *p, int sign)
     static size_t total = 0;
     sz = mallocblksize(p) * sign;
     total += sz;
-    fprintf(stderr, "xmalloc_count=%7d/%9d  accounted=%7d/%9d  mallinfo=%7d%9d\n",
+    xmalloc_count += sign>0;
+    fprintf(stderr, "%c%8p size=%5d/%d acc=%5d/%d mallinfo=%5d/%d %s:%d %s",
+	sign>0 ? '+':'-',p,
 	(int) total - last_total, (int) total,
 	(int) accounted - last_accounted, (int) accounted,
-	(int) mi - last_mallinfo, (int) mi);
+	(int) mi - last_mallinfo, (int) mi,
+	xmalloc_file, xmalloc_line, xmalloc_func);
+    if (sign<0)
+	fprintf(stderr," (%d %s:%d)\n",malloc_number(p),malloc_file_name(p),malloc_line_number(p));
+    else
+	fprintf(stderr," %d\n",xmalloc_count);
     last_total = total;
     last_accounted = accounted;
     last_mallinfo = mi;
 }
 
-#endif /* XMALLOC_COUNT */
+#endif /* XMALLOC_TRACE */
 
 /*
  *  xmalloc() - same as malloc(3).  Used for portability.
@@ -306,8 +376,8 @@ xmalloc(size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
-#if XMALLOC_COUNT
-    xmalloc_count(p, 1);
+#if XMALLOC_TRACE
+    xmalloc_trace(p, 1);
 #endif
     return (p);
 }
@@ -318,8 +388,8 @@ xmalloc(size_t sz)
 void
 xfree(void *s)
 {
-#if XMALLOC_COUNT
-    xmalloc_count(s, -1);
+#if XMALLOC_TRACE
+    xmalloc_trace(s, -1);
 #endif
 #if XMALLOC_DEBUG
     check_free(s);
@@ -332,8 +402,8 @@ xfree(void *s)
 void
 xxfree(void *s)
 {
-#if XMALLOC_COUNT
-    xmalloc_count(s, -1);
+#if XMALLOC_TRACE
+    xmalloc_trace(s, -1);
 #endif
 #if XMALLOC_DEBUG
     check_free(s);
@@ -350,8 +420,8 @@ xrealloc(void *s, size_t sz)
 {
     static void *p;
 
-#if XMALLOC_COUNT
-    xmalloc_count(s, -1);
+#if XMALLOC_TRACE
+    xmalloc_trace(s, -1);
 #endif
 
     if (sz < 1)
@@ -372,8 +442,8 @@ xrealloc(void *s, size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
-#if XMALLOC_COUNT
-    xmalloc_count(p, 1);
+#if XMALLOC_TRACE
+    xmalloc_trace(p, 1);
 #endif
     return (p);
 }
@@ -407,8 +477,8 @@ xcalloc(int n, size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
-#if XMALLOC_COUNT
-    xmalloc_count(p, 1);
+#if XMALLOC_TRACE
+    xmalloc_trace(p, 1);
 #endif
     return (p);
 }
