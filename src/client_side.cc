@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.568 2002/04/04 21:33:26 hno Exp $
+ * $Id: client_side.cc,v 1.569 2002/04/06 11:25:46 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1581,6 +1581,8 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
 	    ch = aclChecklistCreate(Config.accessList.reply, http->request, NULL);
 	    ch->reply = rep;
 	    rv = aclCheckFast(Config.accessList.reply, ch);
+	    aclChecklistFree(ch);
+	    ch = NULL;
 	    debug(33, 2) ("The reply for %s %s is %s, because it matched '%s'\n",
 		RequestMethodStr[http->request->method], http->uri,
 		rv ? "ALLOWED" : "DENIED",
@@ -1602,7 +1604,6 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
 		httpReplyDestroy(rep);
 		return;
 	    }
-	    aclChecklistFree(ch);
 	} else if (size < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
 	    /* wait for more to arrive */
 	    http->reqofs += retsize;
