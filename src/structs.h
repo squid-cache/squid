@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.241 1998/10/15 17:34:33 wessels Exp $
+ * $Id: structs.h,v 1.242 1998/10/15 23:40:07 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -820,6 +820,10 @@ struct _clientHttpRequest {
 	unsigned int internal:1;
 	unsigned int done_copying:1;
     } flags;
+    struct {
+	http_status status;
+	char *location;
+    } redirect;
 };
 
 struct _ConnStateData {

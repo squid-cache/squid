@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.31 1998/08/18 05:44:53 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.32 1998/10/15 23:40:04 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -242,6 +242,21 @@ httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const cha
     reply->content_length = clen;
     reply->expires = expires;
     reply->last_modified = lmt;
+}
+
+void
+httpRedirectReply(HttpReply * reply, http_status status, const char *loc)
+{
+    HttpHeader *hdr;
+    assert(reply);
+    httpStatusLineSet(&reply->sline, 1.0, status, httpStatusString(status));
+    hdr = &reply->header;
+    httpHeaderPutStr(hdr, HDR_SERVER, full_appname_string);
+    httpHeaderPutTime(hdr, HDR_DATE, squid_curtime);
+    httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, 0);
+    httpHeaderPutStr(hdr, HDR_LOCATION, loc);
+    reply->date = squid_curtime;
+    reply->content_length = 0;
 }
 
 void
