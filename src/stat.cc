@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.291 1998/09/21 06:43:10 wessels Exp $
+ * $Id: stat.cc,v 1.292 1998/09/21 07:00:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -200,7 +200,7 @@ const char *
 storeEntryFlags(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
-    int flags = (int) entry->flag;
+    int flags = (int) entry->flags;
     char *t;
     buf[0] = '\0';
     if (EBIT_TEST(flags, ENTRY_SPECIAL))
