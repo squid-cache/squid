@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.19 2003/07/15 23:12:02 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.20 2003/07/22 15:23:15 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -47,6 +47,13 @@ UfsIO::shedLoad()
     return false;
 }
 
+int
+UfsIO::load()
+{
+    /* Return 999 (99.9%) constant load */
+    return 999;
+}
+
 void
 UfsIO::deleteSelf() const
 {
@@ -56,7 +63,7 @@ UfsIO::deleteSelf() const
 StoreIOState::Pointer
 UfsIO::createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const
 {
-    return new ufsstate_t (SD, e, callback, callback_data);
+    return new UFSStoreState (SD, e, callback, callback_data);
 }
 
 DiskFile::Pointer
@@ -65,36 +72,33 @@ UfsIO::newFile (char const *path)
     return new UFSFile (path);
 }
 
-CBDATA_CLASS_INIT(ufsstate_t);
+void
+UfsIO::unlinkFile(char const *path)
+{
+#if USE_UNLINKD
+    unlinkdUnlink(path);
+#elif USE_TRUNCATE
+
+    truncate(path, 0);
+#else
+
+    ::unlink(path);
+#endif
+}
+
+CBDATA_CLASS_INIT(UFSStoreState);
 
 void *
-ufsstate_t::operator new (size_t)
+UFSStoreState::operator new (size_t)
 {
-    CBDATA_INIT_TYPE(ufsstate_t);
-    ufsstate_t *result = cbdataAlloc(ufsstate_t);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    cbdataReference(result);
-    return result;
+    CBDATA_INIT_TYPE(UFSStoreState);
+    return cbdataAlloc(UFSStoreState);
 }
 
 void
-ufsstate_t::operator delete (void *address)
+UFSStoreState::operator delete (void *address)
 {
-    ufsstate_t *t = static_cast<ufsstate_t *>(address);
     cbdataFree(address);
-    /* And allow the memory to be freed */
-    cbdataReferenceDone (t);
-}
-
-ufsstate_t::ufsstate_t(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_)
-{
-    swap_filen = anEntry->swap_filen;
-    swap_dirn = SD->index;
-    mode = O_BINARY;
-    callback = callback_;
-    callback_data = cbdataReference(callback_data_);
-    e = anEntry;
 }
 
 CBDATA_CLASS_INIT(UFSFile);
@@ -121,7 +125,7 @@ UFSFile::operator delete (void *address)
 void
 UFSFile::deleteSelf() const {delete this;}
 
-UFSFile::UFSFile (char const *aPath) : fd (-1)
+UFSFile::UFSFile (char const *aPath) : fd (-1), closed (true)
 {
     assert (aPath);
     debug (79,3)("UFSFile::UFSFile: %s\n", aPath);
@@ -144,6 +148,7 @@ UFSFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
     if (fd < 0) {
         debug(79, 3) ("UFSFile::open: got failure (%d)\n", errno);
     } else {
+        closed = false;
         store_open_disk_fd++;
         debug(79, 3) ("UFSFile::open: opened FD %d\n", fd);
     }
@@ -162,6 +167,7 @@ UFSFile::create (int flags, mode_t mode, IORequestor::Pointer callback)
 void UFSFile::doClose()
 {
     if (fd > -1) {
+        closed = true;
         file_close(fd);
         store_open_disk_fd--;
         fd = -1;
@@ -186,45 +192,87 @@ UFSFile::canRead() const
 bool
 UFSFile::error() const
 {
-    if (fd < 0)
+    if (fd < 0 && !closed)
         return true;
 
     return false;
 }
 
 void
-ufsstate_t::ioCompletedNotification()
+UFSStoreState::ioCompletedNotification()
 {
     if (opening) {
         opening = false;
-        /* There is no 'opened' callback */
+        debug(79, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
+                      swap_dirn, swap_filen, theFile->error());
+        assert (FILE_MODE(mode) == O_RDONLY);
+        openDone();
+
         return;
     }
 
     if (creating) {
         creating = false;
+        debug(79, 3) ("storeDiskdCreateDone: dirno %d, fileno %08x status %d\n",
+                      swap_dirn, swap_filen, theFile->error());
+        openDone();
+
         return;
     }
 
-    assert(0);
+    assert (!(closing ||opening));
+    debug(79, 3) ("diskd::ioCompleted: dirno %d, fileno %08x status %d\n",                      swap_dirn, swap_filen, theFile->error());
+    /* Ok, notification past open means an error has occured */
+    assert (theFile->error());
+    doCallback(DISK_ERROR);
 }
 
 void
-ufsstate_t::closeCompleted()
+UFSStoreState::openDone()
 {
-    doCallback(theFile->error() ? 0 : -1);
-}
-
-void
-ufsstate_t::close()
-{
-    debug(79, 3) ("storeUfsClose: dirno %d, fileno %08X\n",
-                  swap_dirn, swap_filen);
-    closing = true;
-
-    if (!(reading || writing)) {
-        ((UFSFile *)theFile.getRaw())->close();
+    if (theFile->error()) {
+        doCallback(DISK_ERROR);
+        return;
     }
+
+    if (FILE_MODE(mode) == O_WRONLY) {
+        if (kickWriteQueue())
+            return;
+    } else if ((FILE_MODE(mode) == O_RDONLY) && !closing) {
+        if (kickReadQueue())
+            return;
+    }
+
+    if (closing && !theFile->ioInProgress())
+        doCallback(theFile->error() ? -1 : 0);
+
+    debug(79, 3) ("squidaiostate_t::openDone: exiting\n");
+}
+
+void
+UFSStoreState::closeCompleted()
+{
+    assert (closing);
+    debug(79, 3) ("UFSStoreState::closeCompleted: dirno %d, fileno %08x status %d\n",
+                  swap_dirn, swap_filen, theFile->error());
+
+    if (theFile->error())
+        doCallback(DISK_ERROR);
+    else
+        doCallback(DISK_OK);
+
+    closing = false;
+}
+
+/* Close */
+void
+UFSStoreState::close()
+{
+    debug(79, 3) ("UFSStoreState::close: dirno %d, fileno %08X\n", swap_dirn,
+                  swap_filen);
+    /* mark the object to be closed on the next io that completes */
+    closing = true;
+    theFile->close();
 }
 
 void
@@ -286,7 +334,7 @@ UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_fun
 {
     debug(79, 3) ("UFSStoreState::write: dirn %d, fileno %08X\n", swap_dirn, swap_filen);
 
-    if (!theFile->canWrite() || writing) {
+    if (!theFile->canWrite()) {
         assert(creating || writing);
         queueWrite(buf, size, offset, free_func);
         return;
@@ -296,13 +344,11 @@ UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_fun
     theFile->write(buf,size,offset,free_func);
 }
 
-void
-UfsSwapDir::unlink(StoreEntry & e)
+bool
+UFSFile::ioInProgress()const
 {
-    debug(79, 3) ("storeUfsUnlink: fileno %08X\n", e.swap_filen);
-    replacementRemove(&e);
-    mapBitReset(e.swap_filen);
-    UFSSwapDir::unlinkFile(e.swap_filen);
+    /* IO is never pending with UFS */
+    return false;
 }
 
 /*  === STATIC =========================================================== */
@@ -329,11 +375,10 @@ UFSFile::readDone(int rvfd, const char *buf, int len, int errflag)
 }
 
 void
-ufsstate_t::readCompleted(const char *buf, int len, int errflag)
+UFSStoreState::readCompleted(const char *buf, int len, int errflag)
 {
-
     reading = false;
-    debug(79, 3) ("storeUfsReadDone: dirno %d, fileno %08X, len %d\n",
+    debug(79, 3) ("storeDiskdReadDone: dirno %d, fileno %08x len %d\n",
                   swap_dirn, swap_filen, len);
 
     if (len > 0)
@@ -347,13 +392,25 @@ ufsstate_t::readCompleted(const char *buf, int len, int errflag)
 
     void *cbdata;
 
+    /* A note:
+     * diskd IO queues closes via the diskd queue. So close callbacks
+     * occur strictly after reads and writes.
+     * ufs doesn't queue, it simply completes, so close callbacks occur
+     * strictly after reads and writes.
+     * aufs performs closes syncronously, so close events must be managed
+     * to force strict ordering.
+     * The below does this:
+     * closing is set when close() is called, and close only triggers
+     * when no io's are pending.
+     * writeCompleted likewise.
+     */
     if (!closing && cbdataReferenceValidDone(read.callback_data, &cbdata)) {
         if (len > 0 && read_buf != buf)
             memcpy(read_buf, buf, len);
 
         callback(cbdata, read_buf, len);
-    } else if (closing)
-        fatal("Sync ufs doesn't support overlapped close and read calls\n");
+    } else if (closing && theFile.getRaw()!= NULL && !theFile->ioInProgress())
+        doCallback(errflag);
 }
 
 void
@@ -381,47 +438,66 @@ UFSFile::writeDone(int rvfd, int errflag, size_t len)
 }
 
 void
-ufsstate_t::writeCompleted(int errflag, size_t len)
+UFSStoreState::writeCompleted(int errflag, size_t len)
 {
     debug(79, 3) ("storeUfsWriteDone: dirno %d, fileno %08X, len %ld\n",
                   swap_dirn, swap_filen, (long int) len);
     writing = false;
 
-    if (theFile->error())
-        doCallback(DISK_ERROR);
-
     offset_ += len;
 
-    if (closing)
-        ((UFSFile *)theFile.getRaw())->close();
+    if (theFile->error()) {
+        doCallback(DISK_ERROR);
+        return;
+    }
+
+    if (closing && !theFile->ioInProgress()) {
+        theFile->close();
+        return;
+    }
+
+    if (!flags.write_kicking) {
+        flags.write_kicking = true;
+        /* While we start and complete syncronously io's. */
+
+        while (kickWriteQueue() && !theFile->ioInProgress())
+
+            ;
+        flags.write_kicking = false;
+
+        if (!theFile->ioInProgress() && closing)
+            doCallback(errflag);
+    }
 }
 
 void
-ufsstate_t::doCallback(int errflag)
+UFSStoreState::doCallback(int errflag)
 {
     debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
-    /* We are finished with the file */
+    /* We are finished with the file as this is on close or error only.*/
     theFile = NULL;
+
+    STIOCB *theCallback = callback;
+    callback = NULL;
+
     void *cbdata;
 
-    if (cbdataReferenceValidDone(callback_data, &cbdata))
-        callback(cbdata, errflag, this);
-
-    callback = NULL;
+    if (cbdataReferenceValidDone(callback_data, &cbdata) && theCallback)
+        theCallback(cbdata, errflag, this);
 }
-
-
-/*
- * Clean up any references from the SIO before it get's released.
- */
-ufsstate_t::~ufsstate_t()
-{}
-
-
 
 /* ============= THE REAL UFS CODE ================ */
 
-UFSStoreState::UFSStoreState() : opening (false), creating (false), closing (false), reading(false), writing(false), pending_reads(NULL), pending_writes (NULL){}
+UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_) : opening (false), creating (false), closing (false), reading(false), writing(false), pending_reads(NULL), pending_writes (NULL)
+{
+    swap_filen = anEntry->swap_filen;
+    swap_dirn = SD->index;
+    mode = O_BINARY;
+    callback = callback_;
+    callback_data = cbdataReference(callback_data_);
+    e = anEntry;
+    flags.write_kicking = false;
+}
 
 UFSStoreState::~UFSStoreState()
 {
@@ -545,7 +621,7 @@ StoreIOState::Pointer
 UFSStrategy::open(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
                   STIOCB * callback, void *callback_data)
 {
-    assert (((UfsSwapDir *)SD)->IO == this);
+    assert (((UFSSwapDir *)SD)->IO == this);
     debug(79, 3) ("UFSStrategy::open: fileno %08X\n", e->swap_filen);
 
     if (shedLoad()) {
@@ -582,7 +658,7 @@ StoreIOState::Pointer
 UFSStrategy::create(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
                     STIOCB * callback, void *callback_data)
 {
-    assert (((UfsSwapDir *)SD)->IO == this);
+    assert (((UFSSwapDir *)SD)->IO == this);
     /* Allocate a number */
     sfileno filn = ((UFSSwapDir *)SD)->mapBitAllocate();
     debug(79, 3) ("UFSStrategy::create: fileno %08X\n", filn);
@@ -625,3 +701,28 @@ UFSStrategy::create(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 
     return sio;
 }
+
+UfsIOModule &
+UfsIOModule::GetInstance()
+{
+    if (!Instance)
+        Instance = new UfsIOModule;
+
+    return *Instance;
+}
+
+void
+UfsIOModule::init()
+{}
+
+void
+UfsIOModule::shutdown()
+{}
+
+UFSStrategy *
+UfsIOModule::createSwapDirIOStrategy()
+{
+    return new InstanceToSingletonAdapter<UfsIO>(&UfsIO::Instance);
+}
+
+UfsIOModule *UfsIOModule::Instance = NULL;

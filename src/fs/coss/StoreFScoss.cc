@@ -1,7 +1,9 @@
+
 /*
- * $Id: Array.cc,v 1.11 2003/07/22 15:23:18 robertc Exp $
+ * $Id: StoreFScoss.cc,v 1.1 2003/07/22 15:23:10 robertc Exp $
  *
- * AUTHOR: Alex Rousskov
+ * DEBUG: section 47    Store Directory Routines
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,25 +31,52 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-/*
- * Array is an array of (void*) items with unlimited capacity
- *
- * Array grows when arrayAppend() is called and no space is left
- * Currently, array does not have an interface for deleting an item because
- *     we do not need such an interface yet.
- */
+#include "StoreFileSystem.h"
+#include "fs/coss/StoreFScoss.h"
+#include "store_coss.h"
+
+StoreFScoss StoreFScoss::_instance;
+
+StoreFileSystem &
+StoreFScoss::GetInstance()
+{
+    return _instance;
+}
+
+StoreFScoss::StoreFScoss()
+{
+    FsAdd(*this);
+}
+
+char const *
+StoreFScoss::type() const
+{
+    return "coss";
+}
+
+void
+StoreFScoss::done()
+{
+    /*  memPoolDestroy(&coss_index_pool);  XXX Should be here? */
+    initialised = false;
+}
+
+SwapDir *
+StoreFScoss::createSwapDir()
+{
+    SwapDir *result = new CossSwapDir;
+    return result;
+}
 
 
-#include "config.h"
-#include "Array.h"
+void
+StoreFScoss::setup()
+{
+    assert(!initialised);
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#include "util.h"
-#include "Array.h"
+    coss_index_pool = memPoolCreate("COSS index data", sizeof(CossIndexNode));
+    initialised = true;
+}

@@ -1,7 +1,9 @@
+
 /*
- * $Id: Array.cc,v 1.11 2003/07/22 15:23:18 robertc Exp $
+ * $Id: StoreFileSystem.cc,v 1.1 2003/07/22 15:23:01 robertc Exp $
  *
- * AUTHOR: Alex Rousskov
+ * DEBUG: section 92    Storage File System
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,25 +31,61 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
+
+#include "squid.h"
+#include "StoreFileSystem.h"
+
+Vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
+
+void
+StoreFileSystem::SetupAllFs()
+{
+    for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
+        /* Call the FS to set up capabilities and initialize the FS driver */
+        (*i)->setup();
+}
+
+void
+StoreFileSystem::FsAdd(StoreFileSystem &instance)
+{
+    iterator i = GetFileSystems().begin();
+
+    while (i != GetFileSystems().end()) {
+        assert(strcmp((*i)->type(), instance.type()) != 0);
+        ++i;
+    }
+
+    GetFileSystems().push_back (&instance);
+}
+
+Vector<StoreFileSystem *> const &
+StoreFileSystem::FileSystems()
+{
+    return GetFileSystems();
+}
+
+Vector<StoreFileSystem*> &
+StoreFileSystem::GetFileSystems()
+{
+    if (!_FileSystems)
+        _FileSystems = new Vector<StoreFileSystem *>;
+
+    return *_FileSystems;
+}
 
 /*
- * Array is an array of (void*) items with unlimited capacity
- *
- * Array grows when arrayAppend() is called and no space is left
- * Currently, array does not have an interface for deleting an item because
- *     we do not need such an interface yet.
+ * called when a graceful shutdown is to occur
+ * of each fs module.
  */
+void
+StoreFileSystem::FreeAllFs()
+{
+    while (GetFileSystems().size()) {
+        StoreFileSystem *fs = GetFileSystems().back();
+        GetFileSystems().pop_back();
+        fs->done();
+    }
+}
 
-
-#include "config.h"
-#include "Array.h"
-
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#include "util.h"
-#include "Array.h"

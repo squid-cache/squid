@@ -1,6 +1,6 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.7 2003/03/11 22:11:39 robertc Exp $
+#  $Id: Makefile.am,v 1.8 2003/07/22 15:23:18 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -13,10 +13,10 @@ EXTRA_LIBRARIES = libaufs.a libcoss.a libdiskd.a libnull.a libufs.a
 noinst_LIBRARIES = @STORE_LIBS@
 
 libaufs_a_SOURCES = aufs/aiops.cc aufs/async_io.cc aufs/store_asyncufs.h \
-	aufs/store_dir_aufs.cc aufs/store_io_aufs.cc
+	aufs/store_io_aufs.cc
 libcoss_a_SOURCES = coss/store_coss.h   coss/store_io_coss.cc coss/store_dir_coss.cc \
 	coss/async_io.cc coss/async_io.h
-libdiskd_a_SOURCES = diskd/diskd.cc diskd/store_dir_diskd.cc \
+libdiskd_a_SOURCES = diskd/diskd.cc \
 	diskd/store_diskd.h \
 	diskd/store_io_diskd.cc
 
@@ -32,7 +32,9 @@ libnull_a_SOURCES = null/store_null.cc
 libufs_a_SOURCES = ufs/store_dir_ufs.cc ufs/store_io_ufs.cc ufs/store_ufs.h
 
 EXTRA_DIST = \
-	coss/coss-notes.txt
+	coss/coss-notes.txt \
+	ufs/IOModule.h \
+	ufs/StoreFSufs.h
 
 INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/

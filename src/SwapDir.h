@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.5 2003/07/15 23:12:02 robertc Exp $
+ * $Id: SwapDir.h,v 1.6 2003/07/22 15:23:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,26 +35,87 @@
 #define SQUID_SWAPDIR_H
 
 #include "StoreIOState.h"
+#include "Array.h"
+
+/* cache option parsers */
+
+class SwapDirOption
+{
+
+public:
+    virtual ~SwapDirOption() {}
+
+    virtual bool parse(char const *option, const char *value, int reconfiguring) = 0;
+    virtual void dump (StoreEntry * e) const = 0;
+};
+
+class SwapDirOptionVector : public SwapDirOption
+{
+
+public:
+    virtual ~SwapDirOptionVector();
+    virtual bool parse(char const *option, const char *value, int reconfiguring);
+    virtual void dump(StoreEntry * e) const;
+    Vector<SwapDirOption *>options;
+};
+
+template <class C>
+
+class SwapDirOptionAdapter : public SwapDirOption
+{
+
+public:
+    SwapDirOptionAdapter (C& theObject, bool (C::*parseFP)(char const *option, const char *value, int reconfiguring), void (C::*dumpFP) (StoreEntry * e) const) : object(theObject), parser (parseFP), dumper(dumpFP) {}
+
+    bool parse(char const *option, const char *value, int reconfiguring)
+    {
+        if (parser)
+            return (object.*parser)(option, value, reconfiguring);
+
+        return false;
+    }
+
+    void dump (StoreEntry * e) const
+    {
+        if (dumper)
+            (object.*dumper) (e);
+    }
+
+private:
+    C &object;
+    bool (C::*parser) (char const *option, const char *value, int reconfiguring) ;
+    void (C::*dumper)(StoreEntry * e) const;
+};
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
-typedef void STFSSTARTUP(void);
-typedef void STFSSHUTDOWN(void);
-typedef SwapDir *STFSNEW(void);
 
 class SwapDir
 {
 
 public:
-    static SwapDir *Factory (_storefs_entry const &fs);
-    SwapDir() : cur_size (0), low_size(0), max_size(0), max_objsize (-1)
+    SwapDir(char const *aType) : theType (aType), cur_size (0), low_size(0), max_size(0), max_objsize (-1)
     {
         fs.blksize = 1024;
     }
 
     virtual ~SwapDir();
     virtual void reconfigure(int, char *) = 0;
-    const char *type;
+    char const *type() const;
+
+protected:
+    void parseOptions(int reconfiguring);
+    void dumpOptions(StoreEntry * e) const;
+    virtual SwapDirOption *getOptionTree() const;
+
+private:
+    bool optionReadOnlyParse(char const *option, const char *value, int reconfiguring);
+    void optionReadOnlyDump(StoreEntry * e) const;
+    bool optionMaxSizeParse(char const *option, const char *value, int reconfiguring);
+    void optionMaxSizeDump(StoreEntry * e) const;
+    char const *theType;
+
+public:
     int cur_size;
     int low_size;
     int max_size;

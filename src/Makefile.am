@@ -1,12 +1,13 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.85 2003/07/15 13:15:04 robertc Exp $
+#  $Id: Makefile.am,v 1.86 2003/07/22 15:23:01 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 
 
+AUTOMAKE_OPTIONS = subdir-objects
 if USE_DNSSERVER
 DNSSOURCE = dns.cc
 DNSSERVER = dnsserver
@@ -185,7 +186,15 @@ cf_gen.$(OBJEXT): cf_gen_defines.h
 squidclient_SOURCES = client.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 
+all_FSMODULES = \
+	fs/aufs/StoreFSaufs.cc \
+	fs/coss/StoreFScoss.cc \
+	fs/diskd/StoreFSdiskd.cc \
+	fs/null/StoreFSnull.cc \
+	fs/ufs/StoreFSufs.cc
+
 EXTRA_squid_SOURCES = \
+	$(all_FSMODULES) \
 	$(ARP_ACL_ALL_SOURCE) \
 	$(DELAY_POOL_ALL_SOURCE) \
 	dns.cc \
@@ -400,6 +409,8 @@ squid_SOURCES = \
 	stmem.h \
 	store.cc \
 	Store.h \
+	StoreFileSystem.cc \
+	StoreFileSystem.h \
 	store_io.cc \
 	StoreIOBuffer.h \
 	StoreIOState.cc \
@@ -426,6 +437,7 @@ squid_SOURCES = \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
+	$(STORE_SOURCES) \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
 	structs.h \
@@ -457,7 +469,6 @@ noinst_HEADERS = ACLChecklist.cci \
 nodist_squid_SOURCES = \
 	repl_modules.cc \
 	auth_modules.cc \
-	store_modules.cc \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c
@@ -466,6 +477,7 @@ squid_LDADD = \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
+	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
 	@AUTH_OBJS@ \
 	@CRYPTLIB@ \
@@ -476,7 +488,7 @@ squid_LDADD = \
 	-lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@
-squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@
+squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKOBJS@
 
 unlinkd_SOURCES = unlinkd.cc SquidNew.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
@@ -652,7 +664,6 @@ ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
 	auth_modules.cc \
-	store_modules.cc \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c
@@ -666,8 +677,7 @@ BUILT_SOURCES = \
 	globals.cc \
 	string_arrays.c \
 	repl_modules.cc \
-	auth_modules.cc \
-	store_modules.cc
+	auth_modules.cc
 
 sysconf_DATA = \
 	squid.conf.default \
@@ -684,7 +694,6 @@ EXTRA_DIST = \
 	mk-globals-c.pl \
 	mk-string-arrays.pl \
 	auth_modules.sh \
-	store_modules.sh \
 	repl_modules.sh \
 	mib.txt \
 	mime.conf.default
@@ -760,9 +769,6 @@ cf.data: cf.data.pre Makefile
 	s%@[V]ERSION@%$(VERSION)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
-store_modules.cc: store_modules.sh Makefile
-	$(SHELL) $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.cc
-
 repl_modules.cc: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
 
@@ -797,7 +803,7 @@ uninstall-local:
 #	fi
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
-	globals.cc string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
+	globals.cc string_arrays.c repl_modules.cc auth_modules.cc 
 
 ##install-pinger:
 ##	@f=$(PINGER_EXE); \

@@ -1,7 +1,6 @@
+
 /*
- * $Id: Array.cc,v 1.11 2003/07/22 15:23:18 robertc Exp $
- *
- * AUTHOR: Alex Rousskov
+ * $Id: StoreFScoss.h,v 1.1 2003/07/22 15:23:10 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,25 +28,32 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-/*
- * Array is an array of (void*) items with unlimited capacity
- *
- * Array grows when arrayAppend() is called and no space is left
- * Currently, array does not have an interface for deleting an item because
- *     we do not need such an interface yet.
- */
+#ifndef SQUID_STOREFSCOSS_H
+#define SQUID_STOREFSCOSS_H
 
+#include "squid.h"
 
-#include "config.h"
-#include "Array.h"
+class StoreFScoss : public StoreFileSystem
+{
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#include "util.h"
-#include "Array.h"
+public:
+    static StoreFileSystem &GetInstance();
+    StoreFScoss();
+    virtual ~StoreFScoss() {}
+
+    virtual char const *type() const;
+    virtual SwapDir *createSwapDir();
+    virtual void done();
+    virtual void setup();
+    /* Not implemented */
+    StoreFScoss (StoreFScoss const &);
+    StoreFScoss &operator=(StoreFScoss const &);
+
+private:
+    static StoreFScoss _instance;
+};
+
+#endif /* SQUID_STOREFSCOSS_H */

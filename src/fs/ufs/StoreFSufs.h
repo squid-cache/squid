@@ -1,7 +1,6 @@
+
 /*
- * $Id: Array.cc,v 1.11 2003/07/22 15:23:18 robertc Exp $
- *
- * AUTHOR: Alex Rousskov
+ * $Id: StoreFSufs.h,v 1.1 2003/07/22 15:23:14 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,25 +28,76 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-/*
- * Array is an array of (void*) items with unlimited capacity
- *
- * Array grows when arrayAppend() is called and no space is left
- * Currently, array does not have an interface for deleting an item because
- *     we do not need such an interface yet.
- */
+#ifndef SQUID_STOREFSUFS_H
+#define SQUID_STOREFSUFS_H
 
+#include "squid.h"
 
-#include "config.h"
-#include "Array.h"
+class IOModule;
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#include "util.h"
-#include "Array.h"
+template <class TheSwapDir>
+
+class StoreFSufs : public StoreFileSystem
+{
+
+public:
+    static StoreFileSystem &GetInstance();
+    StoreFSufs(IOModule &, char const *label);
+    virtual ~StoreFSufs() {}
+
+    virtual char const *type() const;
+    virtual SwapDir *createSwapDir();
+    virtual void done();
+    virtual void setup();
+    /* Not implemented */
+    StoreFSufs (StoreFSufs const &);
+    StoreFSufs &operator=(StoreFSufs const &);
+
+protected:
+    IOModule &IO;
+    char const *label;
+};
+
+template <class C>
+StoreFSufs<C>::StoreFSufs(IOModule &anIO, char const *aLabel) : IO(anIO), label(aLabel)
+{
+    FsAdd(*this);
+}
+
+template <class C>
+char const *
+StoreFSufs<C>::type() const
+{
+    return label;
+}
+
+template <class C>
+SwapDir *
+StoreFSufs<C>::createSwapDir()
+{
+    C *result = new C(type());
+    result->IO = IO.createSwapDirIOStrategy();
+    return result;
+}
+
+template <class C>
+void
+StoreFSufs<C>::done()
+{
+    IO.shutdown();
+    initialised = false;
+}
+
+template <class C>
+void
+StoreFSufs<C>::setup()
+{
+    assert(!initialised);
+    initialised = true;
+    IO.init();
+}
+
+#endif /* SQUID_STOREFSUFS_H */

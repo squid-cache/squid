@@ -1,7 +1,10 @@
+
+
 /*
- * $Id: Array.cc,v 1.11 2003/07/22 15:23:18 robertc Exp $
+ * $Id: StoreFSnull.cc,v 1.1 2003/07/22 15:23:14 robertc Exp $
  *
- * AUTHOR: Alex Rousskov
+ * DEBUG: section 47    Store Directory Routines
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,25 +32,48 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- */
-
-/*
- * Array is an array of (void*) items with unlimited capacity
- *
- * Array grows when arrayAppend() is called and no space is left
- * Currently, array does not have an interface for deleting an item because
- *     we do not need such an interface yet.
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 
-#include "config.h"
-#include "Array.h"
+#include "StoreFileSystem.h"
+#include "fs/null/StoreFSnull.h"
+#include "fs/null/store_null.h"
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#include "util.h"
-#include "Array.h"
+StoreFSnull StoreFSnull::_instance;
+
+StoreFileSystem &
+StoreFSnull::GetInstance()
+{
+    return _instance;
+}
+
+StoreFSnull::StoreFSnull()
+{
+    FsAdd(*this);
+}
+
+char const *
+StoreFSnull::type() const
+{
+    return "null";
+}
+
+void
+StoreFSnull::done()
+{
+    initialised = false;
+}
+
+SwapDir *
+StoreFSnull::createSwapDir()
+{
+    return new NullSwapDir;
+}
+
+void
+StoreFSnull::setup()
+{
+    assert(!initialised);
+    initialised = true;
+}

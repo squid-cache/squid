@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.h,v 1.4 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreIOState.h,v 1.5 2003/07/22 15:23:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,7 +44,7 @@ public:
     /* storeIOState does not get mempooled - it's children do */
     void *operator new (size_t amount);
     void operator delete (void *address);
-    void deleteSelf() const = 0;
+    virtual void deleteSelf() const = 0;
     virtual ~storeIOState();
 
     storeIOState();
