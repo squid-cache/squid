@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.135 1996/11/11 21:42:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.136 1996/11/12 22:37:01 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -136,7 +136,7 @@ struct SquidConfig Config;
 
 #define DefaultCacheLogFile	DEFAULT_CACHE_LOG
 #define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
-#define DefaultUseragentLogFile	(char *)NULL    /* default NONE */
+#define DefaultUseragentLogFile	(char *)NULL	/* default NONE */
 #define DefaultStoreLogFile	DEFAULT_STORE_LOG
 #define DefaultSwapLogFile	(char *)NULL	/* default swappath(0) */
 #if USE_PROXY_AUTH

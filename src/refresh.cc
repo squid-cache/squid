@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.6 1996/11/06 23:14:53 wessels Exp $
+ * $Id: refresh.cc,v 1.7 1996/11/12 22:37:15 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -41,9 +41,9 @@
  *      PCT     20%
  *      MAX     3 days
  */
-#define REFRESH_DEFAULT_MIN	0
-#define REFRESH_DEFAULT_PCT	20
-#define REFRESH_DEFAULT_MAX	259200
+#define REFRESH_DEFAULT_MIN	(time_t)0
+#define REFRESH_DEFAULT_PCT	(time_t)20
+#define REFRESH_DEFAULT_MAX	(time_t)259200
 
 typedef struct _refresh_t {
     char *pattern;
@@ -111,7 +111,7 @@ refreshAddToList(const char *pattern, int opts, time_t min, int pct, time_t max)
  *     return 1 if its time to revalidate this entry, 0 otherwise
  */
 int
-refreshCheck(const StoreEntry * entry, const request_t * request_unused)
+refreshCheck(const StoreEntry * entry, const request_t * request)
 {
     refresh_t *R;
     time_t min = REFRESH_DEFAULT_MIN;
@@ -134,6 +134,12 @@ refreshCheck(const StoreEntry * entry, const request_t * request_unused)
 	pattern, (int) min, pct, (int) max);
     age = squid_curtime - entry->timestamp;
     debug(22, 3, "refreshCheck: age = %d\n", (int) age);
+    if (request->max_age > -1) {
+	if (age > request->max_age) {
+	    debug(22, 3, "refreshCheck: YES: age > client-max-age\n");
+	    return 1;
+	}
+    }
     if (age <= min) {
 	debug(22, 3, "refreshCheck: NO: age < min\n");
 	return 0;
@@ -162,4 +168,16 @@ refreshCheck(const StoreEntry * entry, const request_t * request_unused)
 	return 1;
     }
     return 0;
+}
+
+time_t
+getMaxAge(const char *url)
+{
+    refresh_t *R;
+    debug(22, 3, "getMaxAge: '%s'\n", url);
+    for (R = Refresh_tbl; R; R = R->next) {
+	if (regexec(&(R->compiled_pattern), url, 0, 0, 0) == 0)
+	    return R->max;
+    }
+    return REFRESH_DEFAULT_MAX;
 }

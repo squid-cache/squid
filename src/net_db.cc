@@ -361,3 +361,25 @@ netdbDump(StoreEntry * sentry)
     xfree(list);
 #endif
 }
+
+int
+netdbHostHops(const char *host)
+{
+#if USE_ICMP
+    netdbEntry *n = netdbLookupHost(host);
+    if (n)
+	return (int) (n->hops + 0.5);
+#endif
+    return 0xFFFF;
+}
+
+int
+netdbHostRtt(const char *host)
+{
+#if USE_ICMP
+    netdbEntry *n = netdbLookupHost(host);
+    if (n)
+	return (int) (n->rtt + 0.5);
+#endif
+    return 0xFFFF;
+}

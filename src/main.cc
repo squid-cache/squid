@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.109 1996/11/08 03:45:43 wessels Exp $
+ * $Id: main.cc,v 1.110 1996/11/12 22:37:10 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -130,6 +130,7 @@ const char *const version_string = SQUID_VERSION;
 const char *const appname = "squid";
 const char *const localhost = "127.0.0.1";
 struct in_addr local_addr;
+struct in_addr theOutICPAddr;
 const char *const dash_str = "-";
 const char *const null_string = "";
 
@@ -143,13 +144,6 @@ static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int malloc_debug_level = 0;
 #endif
 
-static time_t next_cleaning;
-static time_t next_maintain;
-static time_t next_dirclean;
-static time_t next_announce;
-static time_t next_ip_purge;
-
-static time_t mainMaintenance _PARAMS((void));
 static void rotate_logs _PARAMS((int));
 static void reconfigure _PARAMS((int));
 static void mainInitialize _PARAMS((void));
@@ -158,8 +152,6 @@ static void usage _PARAMS((void));
 static void mainParseOptions _PARAMS((int, char **));
 static void sendSignal _PARAMS((void));
 static void serverConnectionsOpen _PARAMS((void));
-
-extern int store_maintain_rate;
 
 static void
 usage(void)
@@ -326,6 +318,8 @@ serverConnectionsOpen(void)
 {
     struct in_addr addr;
     u_short port;
+    int len;
+    int x;
     enter_suid();
     theHttpConnection = comm_open(SOCK_STREAM,
 	0,
@@ -389,6 +383,13 @@ serverConnectionsOpen(void)
 	    } else {
 		theOutIcpConnection = theInIcpConnection;
 	    }
+	    len = sizeof(struct sockaddr_in);
+	    x = getsockname(theOutIcpConnection,
+		(struct sockaddr *) &theOutICPAddr,
+		&len);
+	    if (x < 0)
+		debug(1, 1, "theOutIcpConnection FD %d: getsockname: %s\n",
+		    theOutIcpConnection, xstrerror());
 	}
     }
     clientdbInit();
@@ -537,49 +538,13 @@ mainInitialize(void)
     debug(1, 0, "Ready to serve requests.\n");
 
     if (first_time) {
-	next_cleaning = squid_curtime + Config.cleanRate;
-	next_maintain = squid_curtime + 0;
-	next_dirclean = squid_curtime + 15;
-	next_announce = squid_curtime + 3600;
-	next_ip_purge = squid_curtime + 10;
+	eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
+	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
+	eventAdd("storeDirClean", storeDirClean, NULL, 15);
+	eventAdd("send_announce", send_announce, NULL, 3600);
+	eventAdd("ipcache_purgelru", (EVH) ipcache_purgelru, NULL, 10);
     }
     first_time = 0;
-}
-
-static time_t
-mainMaintenance(void)
-{
-    time_t next;
-    if (squid_curtime >= next_maintain) {
-	storeMaintainSwapSpace();
-	next_maintain = squid_curtime + 1;
-    }
-    if (store_rebuilding == STORE_NOT_REBUILDING) {
-	if (squid_curtime >= next_ip_purge) {
-	    ipcache_purgelru();
-	    next_ip_purge = squid_curtime + 10;
-	} else if (squid_curtime >= next_dirclean) {
-	    /* clean a cache directory every 15 seconds */
-	    /* 15 * 16 * 256 = 17 hrs */
-	    storeDirClean();
-	    next_dirclean = squid_curtime + 15;
-	} else if (squid_curtime >= next_cleaning) {
-	    storePurgeOld();
-	    next_cleaning = squid_curtime + Config.cleanRate;
-	} else if (squid_curtime >= next_announce) {
-	    if (Config.Announce.on)
-		send_announce();
-	    next_announce = squid_curtime + Config.Announce.rate;
-	}
-    }
-    next = next_ip_purge;
-    if (next_dirclean < next)
-	next = next_dirclean;
-    if (next_cleaning < next)
-	next = next_cleaning;
-    if (next_announce < next)
-	next = next_announce;
-    return next - squid_curtime;
 }
 
 int
@@ -658,11 +623,8 @@ main(int argc, char **argv)
 	    icmpOpen();
 	    rotate_pending = 0;
 	}
-	if ((loop_delay = mainMaintenance()) < 0)
-	    loop_delay = 0;
-	else if (loop_delay > store_maintain_rate)
-	    loop_delay = store_maintain_rate;
-	if (doBackgroundProcessing())
+	eventRun();
+	if ((loop_delay = eventNextTime()) < 0)
 	    loop_delay = 0;
 	switch (comm_select(loop_delay)) {
 	case COMM_OK:

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.39 1996/11/06 23:15:06 wessels Exp $
+ * $Id: url.cc,v 1.40 1996/11/12 22:37:19 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -245,6 +245,7 @@ urlParse(method_t method, char *url)
     strncpy(request->login, login, MAX_LOGIN_SZ);
     request->port = port;
     strncpy(request->urlpath, urlpath, MAX_URL);
+    request->max_age = -1;
     return request;
 }
 

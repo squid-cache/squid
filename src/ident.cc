@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.21 1996/11/08 00:46:45 wessels Exp $
+ * $Id: ident.cc,v 1.22 1996/11/12 22:37:08 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -36,7 +36,7 @@ static void identRequestComplete _PARAMS((int, char *, int, int, void *));
 static void identReadReply _PARAMS((int, icpStateData *));
 static void identClose _PARAMS((int, icpStateData *));
 static void identConnectDone _PARAMS((int fd, int status, void *data));
-static void identCallback _PARAMS((icpStateData *icpState));
+static void identCallback _PARAMS((icpStateData * icpState));
 
 static void
 identClose(int fd, icpStateData * icpState)

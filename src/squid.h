@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.73 1996/11/08 00:46:46 wessels Exp $
+ * $Id: squid.h,v 1.74 1996/11/12 22:37:16 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -166,7 +166,7 @@
 #endif
 
 #if !defined(HAVE_GETRUSAGE) && defined(_SQUID_HPUX_)
-#define HAVE_GETRUSAGE
+#define HAVE_GETRUSAGE 1
 #define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
 #endif
 
@@ -256,7 +256,7 @@ typedef int (*QS) (const void *, const void *);
 #include "ftp.h"
 #include "gopher.h"
 #include "util.h"
-#include "background.h"
+#include "event.h"
 #include "acl.h"
 #include "async_io.h"
 #include "redirect.h"
@@ -295,6 +295,7 @@ extern int vhost_mode;		/* main.c */
 extern const char *const version_string;	/* main.c */
 extern const char *const appname;	/* main.c */
 extern struct in_addr local_addr;	/* main.c */
+extern struct in_addr theOutICPAddr;	/* main.c */
 extern const char *const localhost;
 extern struct in_addr any_addr;	/* comm.c */
 extern struct in_addr no_addr;	/* comm.c */
@@ -308,12 +309,12 @@ extern int opt_forwarded_for;	/* main.c */
 #define  CONNECT_PORT        443
 
 extern int objcacheStart _PARAMS((int, const char *, StoreEntry *));
-extern void send_announce _PARAMS((void));
+extern void send_announce _PARAMS((void *unused));
 extern int sslStart _PARAMS((int fd, const char *, request_t *, char *, int *sz));
 extern const char *storeToString _PARAMS((const StoreEntry *));
 extern void timestampsSet _PARAMS((StoreEntry *));
 extern int waisStart _PARAMS((int, const char *, method_t, char *, StoreEntry *));
-extern void storeDirClean _PARAMS((void));
+extern void storeDirClean _PARAMS((void *unused));
 extern int passStart _PARAMS((int fd,
 	const char *url,
 	request_t * request,
@@ -321,7 +322,7 @@ extern int passStart _PARAMS((int fd,
 	int buflen,
 	int *size_ptr));
 extern void identStart _PARAMS((int, icpStateData *,
-	void (*callback) _PARAMS((void *))));
+	void       (*callback) _PARAMS((void *))));
 
 extern const char *const dash_str;
 extern const char *const null_string;

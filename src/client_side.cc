@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.62 1996/11/08 17:51:46 wessels Exp $
+ * $Id: client_side.cc,v 1.63 1996/11/12 22:37:03 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -109,8 +109,8 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
     char *browser = NULL;
 
     if (Config.identLookup && icpState->ident.state == IDENT_NONE) {
-        icpState->aclHandler = handler;
-        identStart(-1, icpState, clientLookupIdentDone);
+	icpState->aclHandler = handler;
+	identStart(-1, icpState, clientLookupIdentDone);
 	return;
     }
     if (icpState->aclChecklist == NULL) {
@@ -456,7 +456,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	entry = icpState->entry = oldentry;
 	entry->timestamp = squid_curtime;
 	if (mime_headers_end(hbuf)) {
-	    httpParseHeaders(hbuf, entry->mem_obj->reply);
+	    httpParseReplyHeaders(hbuf, entry->mem_obj->reply);
 	    timestampsSet(entry);
 	} else {
 	    debug(33, 1, "icpHandleIMSReply: No end-of-headers, len=%d\n", len);
