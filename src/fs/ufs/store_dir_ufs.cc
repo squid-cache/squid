@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.2 2000/05/12 00:29:20 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.3 2000/05/29 01:54:02 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -118,7 +118,7 @@ static int storeUfsFilenoBelongsHere(int fn, int F0, int F1, int F2);
 static int storeUfsCleanupDoubleCheck(SwapDir *, StoreEntry *);
 static void storeUfsDirStats(SwapDir *, StoreEntry *);
 static void storeUfsDirInitBitmap(SwapDir *);
-static int storeUfsDirValidFileno(SwapDir *, sfileno);
+static int storeUfsDirValidFileno(SwapDir *, sfileno, int);
 static int storeUfsDirCheckExpired(SwapDir *, StoreEntry *);
 #if !HEAP_REPLACEMENT
 static time_t storeUfsDirExpiredReferenceAge(SwapDir *);
@@ -576,7 +576,7 @@ storeUfsDirRebuildFromSwapLog(void *data)
 	if ((++rb->counts.scancount & 0xFFFF) == 0)
 	    debug(20, 3) ("  %7d %s Entries read so far.\n",
 		rb->counts.scancount, rb->sd->path);
-	if (!storeUfsDirValidFileno(SD, s.swap_filen)) {
+	if (!storeUfsDirValidFileno(SD, s.swap_filen, 0)) {
 	    rb->counts.invalid++;
 	    continue;
 	}
@@ -1140,7 +1140,7 @@ storeUfsDirClean(int swap_index)
 	if (sscanf(de->d_name, "%X", &swapfileno) != 1)
 	    continue;
 	fn = swapfileno;	/* XXX should remove this cruft ! */
-	if (storeUfsDirValidFileno(SD, fn))
+	if (storeUfsDirValidFileno(SD, fn, 1))
 	    if (storeUfsDirMapBitTest(SD, fn))
 		if (storeUfsFilenoBelongsHere(fn, D0, D1, D2))
 		    continue;
@@ -1248,13 +1248,18 @@ storeUfsFilenoBelongsHere(int fn, int F0, int F1, int F2)
 }
 
 int
-storeUfsDirValidFileno(SwapDir * SD, sfileno filn)
+storeUfsDirValidFileno(SwapDir * SD, sfileno filn, int flag)
 {
     ufsinfo_t *ufsinfo = (ufsinfo_t *) SD->fsdata;
     if (filn < 0)
 	return 0;
-    if (filn > ufsinfo->map->max_n_files)
-	return 0;
+    /*
+     * If flag is set it means out-of-range file number should
+     * be considered invalid.
+     */
+    if (flag)
+	if (filn > ufsinfo->map->max_n_files)
+	    return 0;
     return 1;
 }
 
