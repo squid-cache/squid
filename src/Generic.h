@@ -1,7 +1,7 @@
+
 /*
- * $Id: Array.h,v 1.7.2.1 2002/10/24 14:56:26 robertc Exp $
+ * $Id: Generic.h,v 1.1.2.1 2002/10/24 14:53:10 robertc Exp $
  *
- * AUTHOR: Alex Rousskov
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,27 +28,33 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *  
+ *
  */
 
-#ifndef SQUID_ARRAY_H
-#define SQUID_ARRAY_H
+#ifndef SQUID_GENERIC_H
+#define SQUID_GENERIC_H
 
-/* see Array.c for more documentation */
+template <class _Arg, class _Result>
+struct unary_function {
+    typedef _Arg argument_type;
+    typedef _Result result_type;
+};
 
-typedef struct {
-    int capacity;
-    int count;
-    void **items;
-} Array;
-
-
-SQUIDCEXTERN Array *arrayCreate(void);
-SQUIDCEXTERN void arrayInit(Array * s);
-SQUIDCEXTERN void arrayClean(Array * s);
-SQUIDCEXTERN void arrayDestroy(Array * s);
-SQUIDCEXTERN void arrayAppend(Array * s, void *obj);
-SQUIDCEXTERN void arrayPreAppend(Array * s, int app_count);
+template <class L, class T>
+T& for_each(L const &head, T& visitor)
+{
+    for (L const *node = &head; node; node=node->next)
+	visitor(*node);
+    return visitor;
+}
 
 
-#endif /* SQUID_ARRAY_H */
+template <class T>
+T& for_each(dlink_list const &collection, T& visitor)
+{
+    for (dlink_node const *node = collection.head; node; node=node->next)
+	visitor(*(typename T::argument_type const *)node->data);
+    return visitor;
+}
+
+#endif /* SQUID_GENERIC_H */

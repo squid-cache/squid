@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.40 2002/10/19 02:05:33 robertc Exp $
+#  $Id: Makefile.am,v 1.40.2.1 2002/10/24 14:53:10 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -154,6 +154,7 @@ squid_SOURCES = \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
+	Generic.h \
 	globals.h \
 	gopher.cc \
 	helper.cc \
