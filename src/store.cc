@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.53 1996/04/15 23:02:28 wessels Exp $ */
-#ident "$Id: store.cc,v 1.53 1996/04/15 23:02:28 wessels Exp $"
+/* $Id: store.cc,v 1.54 1996/04/16 05:05:32 wessels Exp $ */
+#ident "$Id: store.cc,v 1.54 1996/04/16 05:05:32 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -325,7 +325,7 @@ static void storeLog(tag, e)
     int code = 0;
     if (storelog_fd < 0)
 	return;
-    t = e->expires - cached_curtime;
+    t = e->expires - squid_curtime;
     if (e->mem_obj) {
 	code = e->mem_obj->reply->code;
 	expect_len = (int) e->mem_obj->reply->content_length;
@@ -404,7 +404,7 @@ int storeLockObject(e)
 	/* If this sanity check fails, we should just ... */
 	fatal_dump(NULL);
     }
-    e->lastref = cached_curtime;
+    e->lastref = squid_curtime;
 
     /* StoreLockObject() is called during icp_hit_or_miss and once by storeAbort 
      * If the object is NOT_IN_MEMORY, fault it in. */
@@ -644,7 +644,7 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
     e->lock_count = 0;
     m->data = new_MemObjectData();
     e->refcount = 0;
-    e->lastref = cached_curtime;
+    e->lastref = squid_curtime;
     e->timestamp = 0;		/* set in storeSwapOutHandle() */
     e->ping_status = NOPING;
 
@@ -699,7 +699,7 @@ StoreEntry *storeAddDiskRestore(url, file_number, size, expires, timestamp)
     e->lock_count = 0;
     BIT_RESET(e->flag, CLIENT_ABORT_REQUEST);
     e->refcount = 0;
-    e->lastref = cached_curtime;
+    e->lastref = squid_curtime;
     e->timestamp = (u_num32) timestamp;
     e->expires = (u_num32) expires;
     e->ping_status = NOPING;
@@ -871,7 +871,7 @@ void storeExpireNow(e)
      StoreEntry *e;
 {
     debug(20, 3, "storeExpireNow: '%s'\n", e->key);
-    e->expires = cached_curtime;
+    e->expires = squid_curtime;
 }
 
 /* switch object to deleting behind mode call by
@@ -1087,7 +1087,7 @@ void storeSwapOutHandle(fd, flag, e)
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
 
-    e->timestamp = cached_curtime;
+    e->timestamp = squid_curtime;
     storeSwapFullPath(e->swap_file_number, filename);
     page_ptr = e->mem_obj->e_swap_buf;
 
@@ -1253,7 +1253,7 @@ static int storeDoRebuildFromDisk(data)
 	return 1;		/* skip bad lines */
 
     url[0] = log_swapfile[0] = '\0';
-    expires = cached_curtime;
+    expires = squid_curtime;
 
     scan3 = 0;
     size = 0;
@@ -1279,7 +1279,7 @@ static int storeDoRebuildFromDisk(data)
 
     if (!data->fast_mode) {
 	if (stat(swapfile, &sb) < 0) {
-	    if (expires < cached_curtime) {
+	    if (expires < squid_curtime) {
 		debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
 		if (opt_unlink_on_reload)
 		    safeunlink(swapfile, 1);
@@ -1311,7 +1311,7 @@ static int storeDoRebuildFromDisk(data)
 	    return 1;
 	}
 	timestamp = sb.st_mtime;
-	debug(20, 10, "storeRebuildFromDisk: Cached file exists: <URL:%s>: %s\n",
+	debug(20, 10, "storeRebuildFromDisk: swap file exists: <URL:%s>: %s\n",
 	    url, swapfile);
     }
     if ((e = storeGet(url))) {
@@ -1328,7 +1328,7 @@ static int storeDoRebuildFromDisk(data)
 	data->objcount--;
 	data->dupcount++;
     }
-    if (expires < cached_curtime) {
+    if (expires < squid_curtime) {
 	debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
 	if (opt_unlink_on_reload)
 	    safeunlink(swapfile, 1);
@@ -1487,7 +1487,7 @@ static int storeCheckSwapable(e)
 
     if (BIT_TEST(e->flag, ENTRY_PRIVATE)) {
 	debug(20, 2, "storeCheckSwapable: NO: private entry\n");
-    } else if (e->expires <= cached_curtime) {
+    } else if (e->expires <= squid_curtime) {
 	debug(20, 2, "storeCheckSwapable: NO: already expired\n");
     } else if (e->method != METHOD_GET) {
 	debug(20, 2, "storeCheckSwapable: NO: non-GET method\n");
@@ -1515,7 +1515,7 @@ void storeComplete(e)
 
     e->object_len = e->mem_obj->e_current_len;
     InvokeHandlers(e);
-    e->lastref = cached_curtime;
+    e->lastref = squid_curtime;
     e->status = STORE_OK;
     storeSetMemStatus(e, IN_MEMORY);
     e->swap_status = NO_SWAP;
@@ -1541,12 +1541,12 @@ int storeAbort(e, msg)
     static char abort_msg[2000];
 
     debug(20, 6, "storeAbort: '%s'\n", e->key);
-    e->expires = cached_curtime + getNegativeTTL();
+    e->expires = squid_curtime + getNegativeTTL();
     e->status = STORE_ABORTED;
     storeSetMemStatus(e, IN_MEMORY);
     /* No DISK swap for negative cached object */
     e->swap_status = NO_SWAP;
-    e->lastref = cached_curtime;
+    e->lastref = squid_curtime;
     /* In case some parent responds late and 
      * tries to restart the fetch, say that it's been
      * dispatched already.
@@ -1564,7 +1564,7 @@ int storeAbort(e, msg)
     mk_mime_hdr(mime_hdr,
 	(time_t) getNegativeTTL(),
 	6 + strlen(msg),
-	cached_curtime,
+	squid_curtime,
 	"text/html");
     if (msg) {
 	/* This can run off the end here. Be careful */
@@ -1675,9 +1675,9 @@ int removeOldEntry(e, data)
     debug(20, 6, "removeOldEntry:   * time in cache: %8ld\n",
 	curtime - e->timestamp);
     debug(20, 6, "removeOldEntry:   *  time-to-live: %8ld\n",
-	e->expires - cached_curtime);
+	e->expires - squid_curtime);
 
-    if ((cached_curtime > e->expires) && (e->status != STORE_PENDING)) {
+    if ((squid_curtime > e->expires) && (e->status != STORE_PENDING)) {
 	return (storeRelease(e) == 0 ? 1 : 0);
     }
     return 0;
@@ -1690,7 +1690,7 @@ int storePurgeOld()
     int n;
 
     debug(20, 3, "storePurgeOld: Begin purging TTL-expired objects\n");
-    n = storeWalkThrough(removeOldEntry, (void *) &cached_curtime);
+    n = storeWalkThrough(removeOldEntry, (void *) &squid_curtime);
     debug(20, 3, "storePurgeOld: Done purging TTL-expired objects.\n");
     debug(20, 3, "storePurgeOld: %d objects expired\n", n);
     return n;
@@ -1744,7 +1744,7 @@ int storeGetMemSpace(size, check_vm_number)
 	    }
 	    continue;
 	}
-	if (cached_curtime > e->expires) {
+	if (squid_curtime > e->expires) {
 	    debug(20, 2, "storeGetMemSpace: Expired: %s\n", e->url);
 	    n_expired++;
 	    /* Delayed release */
@@ -1977,7 +1977,7 @@ int storeGetSwapSpace(size)
 		(e->swap_status == SWAP_OK) &&	/* Only release it if it is on disk */
 		(e->lock_count == 0) &&		/* Be overly cautious */
 		(e->mem_status != SWAPPING_IN)) {	/* Not if it's being faulted into memory */
-		if (cached_curtime > e->expires) {
+		if (squid_curtime > e->expires) {
 		    debug(20, 2, "storeGetSwapSpace: Expired: <URL:%s>\n", e->url);
 		    /* just call release. don't have to check for lock status.
 		     * storeRelease will take care of that and set a pending flag
@@ -2326,7 +2326,7 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
 int storeEntryValidToSend(e)
      StoreEntry *e;
 {
-    if (cached_curtime < e->expires)
+    if (squid_curtime < e->expires)
 	return 1;
     if (e->expires == 0 && e->status == STORE_PENDING)
 	return 1;
@@ -2511,13 +2511,15 @@ void storeSanityCheck()
 	errno = 0;
 	if (access(name, W_OK)) {
 	    /* A very annoying problem occurs when access() fails because
-	     * the system file table is full.  To prevent cached from
+	     * the system file table is full.  To prevent squid from
 	     * deleting your entire disk cache on a whim, insist that the
 	     * errno indicates that the directory doesn't exist */
 	    if (errno != ENOENT)
 		continue;
-	    debug(20, 0, "WARNING: Cannot write to '%s' for storage swap area.\n", name);
-	    debug(20, 0, "Forcing a *full restart* (e.g., cached -z)...\n");
+	    debug(20, 0, "WARNING: Cannot write to swap directory '%s'\n",
+		name);
+	    debug(20, 0, "Forcing a *full restart* (e.g., %s -z)...\n",
+		appname);
 	    zap_disk_store = 1;
 	    return;
 	}
@@ -2575,10 +2577,10 @@ int storeMaintainSwapSpace()
 	while (link_ptr) {
 	    next = link_ptr->next;
 	    e = (StoreEntry *) link_ptr;
-	    if ((cached_curtime > e->expires) &&
+	    if ((squid_curtime > e->expires) &&
 		(e->swap_status == SWAP_OK)) {
 		debug(20, 2, "storeMaintainSwapSpace: Expired: <TTL:%d> <URL:%s>\n",
-		    e->expires - cached_curtime, e->url);
+		    e->expires - squid_curtime, e->url);
 		/* just call release. don't have to check for lock status.
 		 * storeRelease will take care of that and set a pending flag
 		 * if it's still locked. */
@@ -2670,7 +2672,7 @@ int swapInError(fd_unused, entry)
      int fd_unused;
      StoreEntry *entry;
 {
-    cached_error_entry(entry, ERR_DISK_IO, xstrerror());
+    squid_error_entry(entry, ERR_DISK_IO, xstrerror());
     return 0;
 }
 

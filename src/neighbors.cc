@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.20 1996/04/16 04:23:15 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.21 1996/04/16 05:05:26 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -83,10 +83,10 @@ void hierarchy_log_append(url, code, timeout, cache_host)
 	code = HIER_MAX;
 
     if (emulate_httpd_log) {
-	if (cached_curtime != last_time) {
-	    s = mkhttpdlogtime(&cached_curtime);
+	if (squid_curtime != last_time) {
+	    s = mkhttpdlogtime(&squid_curtime);
 	    strcpy(time_str, s);
-	    last_time = cached_curtime;
+	    last_time = squid_curtime;
 	}
 	if (cache_host) {
 	    fprintf(cache_hierarchy_log, "[%s] %s %s%s %s\n",
@@ -105,14 +105,14 @@ void hierarchy_log_append(url, code, timeout, cache_host)
     } else {
 	if (cache_host) {
 	    fprintf(cache_hierarchy_log, "%d %s %s%s %s\n",
-		(int) cached_curtime,
+		(int) squid_curtime,
 		url,
 		timeout ? "TIMEOUT_" : "",
 		hier_strings[code],
 		cache_host);
 	} else {
 	    fprintf(cache_hierarchy_log, "%d %s %s%s\n",
-		(int) cached_curtime,
+		(int) squid_curtime,
 		url,
 		timeout ? "TIMEOUT_" : "",
 		hier_strings[code]);
@@ -371,7 +371,7 @@ int neighborsUdpPing(proto)
 
 	/* skip dumb caches where we failed to connect() w/in the last 60s */
 	if (e->udp_port == echo_port &&
-	    (cached_curtime - e->last_fail_time < 60))
+	    (squid_curtime - e->last_fail_time < 60))
 	    continue;
 
 	if (!edgeWouldBePinged(e, host))
@@ -437,7 +437,7 @@ int neighborsUdpPing(proto)
 	    to_addr.sin_family = AF_INET;
 	    memcpy(&to_addr.sin_addr, hep->h_addr, hep->h_length);
 	    to_addr.sin_port = echo_port;
-	    echo_hdr.reqnum = cached_curtime;
+	    echo_hdr.reqnum = squid_curtime;
 	    debug(15, 6, "neighborsUdpPing - url: %s to url-host %s \n",
 		url, inet_ntoa(to_addr.sin_addr));
 	    /* send to original site */
@@ -517,9 +517,9 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	url, e ? inet_ntoa(e->in_addr.sin_addr) : "url-host");
 
     if (header->opcode == ICP_OP_SECHO) {
-	/* receive ping back from source or from non-cached cache */
+	/* receive ping back from source or from non-ICP cache */
 	if (e) {
-	    debug(15, 6, "Got SECHO from non-cached cache:%s\n",
+	    debug(15, 6, "Got SECHO from non-ICP cache:%s\n",
 		inet_ntoa(e->in_addr.sin_addr));
 	    debug(15, 6, "This is not supposed to happen.  Ignored.\n");
 	} else {
@@ -562,10 +562,10 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	    e->misses++;
 
 	if (header->opcode == ICP_OP_DECHO) {
-	    /* receive ping back from non-cached cache */
+	    /* receive ping back from non-ICP cache */
 
 	    if (e) {
-		debug(15, 6, "Got DECHO from non-cached cache:%s\n",
+		debug(15, 6, "Got DECHO from non-ICP cache:%s\n",
 		    inet_ntoa(e->in_addr.sin_addr));
 
 		if (e->type == EDGE_PARENT) {
@@ -577,12 +577,11 @@ void neighborsUdpAck(fd, url, header, from, entry)
 		    }
 		} else {
 		    debug(15, 6, "Dumb Cached as a neighbor does not make sense.\n");
-		    debug(15, 6, "Count it anyway.\n");
 		}
 
 
 	    } else {
-		debug(15, 6, "Got DECHO from non-cached cache: But the host is not in the list.\n");
+		debug(15, 6, "Got DECHO from non-ICP cache: But the host is not in the list.\n");
 		debug(15, 6, "Count it anyway.\n");
 	    }
 

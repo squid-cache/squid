@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.11 1996/04/12 21:44:19 wessels Exp $"
+#ident "$Id: acl.cc,v 1.12 1996/04/16 05:05:17 wessels Exp $"
 
 /*
  * DEBUG: Section 28          acl
@@ -129,7 +129,8 @@ struct _acl_ip_data *aclParseIpList()
 		break;
 	    case 5:
 		if (m1 < 0 || m1 > 32) {
-		    debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+		    debug(28, 0, "%s line %d: %s\n",
+			cfg_filename, config_lineno, config_input_line);
 		    debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
 		    safe_free(q);
 		    continue;
@@ -140,7 +141,8 @@ struct _acl_ip_data *aclParseIpList()
 		lmask.s_addr = htonl(m1 * 0x1000000 + m2 * 0x10000 + m3 * 0x100 + m4);
 		break;
 	    default:
-		debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+		debug(28, 0, "%s line %d: %s\n",
+		    cfg_filename, config_lineno, config_input_line);
 		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry '%s'\n", t);
 		safe_free(q);
 		continue;
@@ -188,9 +190,8 @@ struct _acl_time_data *aclParseTimeSpec()
 		    data->weekbits |= ACL_SATURDAY;
 		    break;
 		default:
-		    debug(28, 0, "cached.conf line %d: %s\n",
-			config_lineno,
-			config_input_line);
+		    debug(28, 0, "%s line %d: %s\n",
+			cfg_filename, config_lineno, config_input_line);
 		    debug(28, 0, "aclParseTimeSpec: Bad Day '%c'\n",
 			*t);
 		    break;
@@ -199,9 +200,8 @@ struct _acl_time_data *aclParseTimeSpec()
 	} else {
 	    /* assume its time-of-day spec */
 	    if (sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) {
-		debug(28, 0, "cached.conf line %d: %s\n",
-		    config_lineno,
-		    config_input_line);
+		debug(28, 0, "%s line %d: %s\n",
+		    cfg_filename, config_lineno, config_input_line);
 		debug(28, 0, "aclParseTimeSpec: Bad time range '%s'\n",
 		    t);
 		xfree(&data);
@@ -210,9 +210,8 @@ struct _acl_time_data *aclParseTimeSpec()
 	    data->start = h1 * 60 + m1;
 	    data->stop = h2 * 60 + m2;
 	    if (data->start > data->stop) {
-		debug(28, 0, "cached.conf line %d: %s\n",
-		    config_lineno,
-		    config_input_line);
+		debug(28, 0, "%s line %d: %s\n",
+		    cfg_filename, config_lineno, config_input_line);
 		debug(28, 0, "aclParseTimeSpec: Reversed time range '%s'\n",
 		    t);
 		xfree(&data);
@@ -236,7 +235,8 @@ struct _relist *aclParseRegexList()
     regex_t comp;
     while ((t = strtok(NULL, w_space))) {
 	if (regcomp(&comp, t, REG_EXTENDED) != REG_NOERROR) {
-	    debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	    debug(28, 0, "%s line %d: %s\n",
+		cfg_filename, config_lineno, config_input_line);
 	    debug(28, 0, "aclParseRegexList: Invalid regular expression: '%s'\n", t);
 	    continue;
 	}
@@ -275,13 +275,15 @@ void aclParseAclLine()
     A = (struct _acl *) xcalloc(1, sizeof(struct _acl));
     /* snarf the ACL name */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAclLine: missing ACL name.\n");
 	xfree(A);
 	return;
     }
     if (aclFindByName(t)) {
-	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAclLine: ACL name '%s' already exists.\n", t);
 	xfree(A);
 	return;
@@ -290,7 +292,8 @@ void aclParseAclLine()
     /* snarf the ACL type */
     if ((t = strtok(NULL, w_space)) == NULL) {
 	xfree(A);
-	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAclLine: missing ACL type.\n");
 	return;
     }
@@ -321,7 +324,8 @@ void aclParseAclLine()
 	break;
     case ACL_NONE:
     default:
-	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAclLine: Invalid ACL type '%s'\n", t);
 	xfree(A);
 	return;
@@ -345,7 +349,8 @@ void aclParseAccessLine(head)
 
     /* first expect either 'allow' or 'deny' */
     if ((t = strtok(NULL, w_space)) == NULL) {
-	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAccessLine: missing 'allow' or 'deny'.\n");
 	return;
     }
@@ -355,7 +360,8 @@ void aclParseAccessLine(head)
     else if (!strcmp(t, "deny"))
 	A->allow = 0;
     else {
-	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
 	xfree(A);
 	return;
@@ -375,7 +381,8 @@ void aclParseAccessLine(head)
 	debug(28, 3, "aclParseAccessLine: looking for ACL name '%s'\n", t);
 	a = aclFindByName(t);
 	if (a == NULL) {
-	    debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	    debug(28, 0, "%s line %d: %s\n",
+		cfg_filename, config_lineno, config_input_line);
 	    debug(28, 0, "aclParseAccessLine: ACL name '%s' not found.\n", t);
 	    xfree(L);
 	    continue;
@@ -385,7 +392,8 @@ void aclParseAccessLine(head)
 	Tail = &L->next;
     }
     if (A->acl_list == NULL) {
-	debug(28, 0, "cached.conf line %d: %s\n", config_lineno, config_input_line);
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0, "aclParseAccessLine: Access line contains no ACL's, skipping\n");
 	xfree(A);
 	return;
@@ -493,7 +501,7 @@ static int aclMatchAcl(acl, c, m, pr, h, po, r)
 	return aclMatchWord(acl->data, h);
 	break;
     case ACL_TIME:
-	return aclMatchTime(acl->data, cached_curtime);
+	return aclMatchTime(acl->data, squid_curtime);
 	return 0;
 	break;
     case ACL_URL_REGEX:

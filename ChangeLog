@@ -1,12 +1,12 @@
-	- use cached_error() instead of CACHED_RETRIEVE_ERROR_MSG
+	- use squid_error() instead of CACHED_RETRIEVE_ERROR_MSG
 	- fix some fd discprencies in the cachemgr/info page
 	- Fixed "defer/spin" problem
-	- Changed ftpget to be a server so cached never forks
+	- Changed ftpget to be a server so squid never forks
 	- Added blocklist patch
 	- Changed #includes and such.
 	- the -d (debug) option is now gone.  Use new "debug" in the
 	  config file instead.  Debugging is section,level.
-	- Added 'pid_filename' to cached.conf
+	- Added 'pid_filename' to squid.conf
 	- Changed default behaviour to unbuffered, use -b to make buffered.
 	- fix byte order conversion bug on echo port
 	- Removed all code and references to binary port
@@ -55,7 +55,7 @@
 	- Open server sockets _after_ storeRebuild() so many incoming
 	  connections don't stack up on the listen queue.
 	- Created "store.log" which logs RELEASE/SWAPIN/SWAPOUT events.
-	- Added announce to cached; no longer external program.
+	- Added announce to squid; no longer external program.
 	- Added ftpProcessReplyHeader() (a twin of the one in http.c).
 	- Fixed bad free() in ipcacheShtudownServers()
 	- Cleaned up FTP url parsing; support port.
@@ -71,6 +71,8 @@
 	- Check specifically for tm_gmtoff and set HAVE_TM_GMTOFF
 	- Fixed memory problem for colon but no port ("http://foo.com:/")
 	- Added support for weighted neighbors.
-	-fixed SSL/CONNECT
-	-Added background processing for rebuilding store
-	-Removed check for "\r\n" in icpRead, use 'immed' flag instead
+	- fixed SSL/CONNECT
+	- Added background processing for rebuilding store
+	- Removed check for "\r\n" in icpRead, use 'immed' flag instead
+	- Invented request_t struct and urlParse to avoid sscanf'ing
+	  the URL string too often.

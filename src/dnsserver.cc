@@ -1,4 +1,4 @@
-/* $Id: dnsserver.cc,v 1.4 1996/03/27 01:46:00 wessels Exp $ */
+/* $Id: dnsserver.cc,v 1.5 1996/04/16 05:05:20 wessels Exp $ */
 
 #include "squid.h"
 
@@ -21,24 +21,24 @@ int do_debug = 0;
 		"Unknown DNS problem")
 
 /* 
- * Modified to use UNIX domain sockets between cached and the dnsservers to
+ * Modified to use UNIX domain sockets between squid and the dnsservers to
  * save an FD per DNS server, Hong Mei, USC.
  * 
- * Before forking a dnsserver, cached creates listens on a UNIX domain
- * socket.  After the fork(), cached closes its end of the rendevouz socket
+ * Before forking a dnsserver, squid creates listens on a UNIX domain
+ * socket.  After the fork(), squid closes its end of the rendevouz socket
  * but then immediately connects to it to establish the connection to the
  * dnsserver process.  We use AF_UNIX to prevent other folks from
  * connecting to our little dnsservers after we fork but before we connect
  * to them.
  * 
- * Cached creates UNIX domain sockets named dns.PID.NN, e.g. dns.19215.11
+ * Squid creates UNIX domain sockets named dns.PID.NN, e.g. dns.19215.11
  * 
  * In ipcache_init():
  *       . dnssocket = ipcache_opensocket(getDnsProgram())
  *       . dns_child_table[i]->inpipe = dnssocket
  *       . dns_child_table[i]->outpipe = dnssocket
  * 
- * The dnsserver inherits socket(socket_from_ipcache) from cached which it
+ * The dnsserver inherits socket(socket_from_ipcache) from squid which it
  * uses to rendevouz with.  The child takes responsibility for cleaning up
  * the UNIX domain pathnames by setting a few signal handlers.
  * 

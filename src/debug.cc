@@ -1,5 +1,5 @@
 
-/* $Id: debug.cc,v 1.15 1996/04/15 22:51:20 wessels Exp $ */
+/* $Id: debug.cc,v 1.16 1996/04/16 05:05:19 wessels Exp $ */
 
 #include "squid.h"
 
@@ -9,7 +9,7 @@ int _db_line = 0;
 int syslog_enable = 0;
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
-static time_t last_cached_curtime = 0;
+static time_t last_squid_curtime = 0;
 static char the_time[81];
 
 #define MAX_DEBUG_SECTIONS 50
@@ -49,10 +49,10 @@ void _db_print(va_alist)
 	return;
     }
     /* don't compute the curtime too much */
-    if (last_cached_curtime != cached_curtime) {
-	last_cached_curtime = cached_curtime;
+    if (last_squid_curtime != squid_curtime) {
+	last_squid_curtime = squid_curtime;
 	the_time[0] = '\0';
-	s = mkhttpdlogtime(&cached_curtime);
+	s = mkhttpdlogtime(&squid_curtime);
 	strcpy(the_time, s);
     }
     sprintf(f, "[%s] %s:%d:\t %s",
@@ -145,7 +145,7 @@ void _db_init(logfile)
 
 #if HAVE_SYSLOG
     if (syslog_enable)
-	openlog("cached", LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+	openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 #endif /* HAVE_SYSLOG */
 
 }

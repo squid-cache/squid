@@ -3,13 +3,13 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.7)
 dnl
-dnl  $Id: configure.in,v 1.16 1996/04/15 18:00:24 wessels Exp $
+dnl  $Id: configure.in,v 1.17 1996/04/16 05:07:10 wessels Exp $
 dnl
 dnl
 dnl
 AC_INIT(src/main.c)
 AC_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.16 $)dnl
+AC_REVISION($Revision: 1.17 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AC_CONFIG_AUX_DIR(aux)
 
@@ -157,7 +157,7 @@ AC_CHECK_LIB(44bsd, inet_aton, [HAVE_LIB44BSD="yes"])
 AC_CHECK_LIB(resolv, inet_aton, [if test "$HAVE_LIB44BSD" = "yes"; then LIBS="$LIBS -l44bsd"; fi])
 
 dnl Check for libcrypt
-dnl cached uses crypt(3) which may be in libc, or in libcrypt (eg FreeBSD)
+dnl We use crypt(3) which may be in libc, or in libcrypt (eg FreeBSD)
 AC_CHECK_LIB(crypt, crypt, [CRYPT_LIB="-lcrypt"])
 AC_SUBST(CRYPT_LIB)
 
@@ -255,5 +255,5 @@ AC_OUTPUT(\
 	./scripts/RunCache \
 	./scripts/RunAccel \
 	./src/Makefile \
-	./src/cached.conf \
+	./src/squid.conf \
 )

@@ -1,10 +1,10 @@
-/* $Id: main.cc,v 1.34 1996/04/16 04:23:14 wessels Exp $ */
+/* $Id: main.cc,v 1.35 1996/04/16 05:05:25 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
 #include "squid.h"
 
-time_t cached_starttime = 0;
+time_t squid_starttime = 0;
 time_t next_cleaning = 0;
 int theAsciiConnection = -1;
 int theUdpConnection = -1;
@@ -18,6 +18,7 @@ int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
 int reread_pending = 0;		/* set by SIGHUP handler */
 char *version_string = SQUID_VERSION;
+char *appname = "squid";
 
 extern void (*failure_notify) ();	/* for error reporting from xmalloc */
 
@@ -28,7 +29,7 @@ static int malloc_debug_level = 0;
 static void usage()
 {
     fprintf(stderr, "\
-Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
+Usage: %s [-Rsehvz] [-f config-file] [-[apu] port]\n\
        -h        Print help message.\n\
        -s        Enable logging to syslog.\n\
        -v        Print version.\n\
@@ -38,10 +39,10 @@ Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
        -R        Do not set REUSEADDR on port.\n\
        -U        Unlink expired objects on reload.\n\
        -f file   Use given config-file instead of\n\
-                 $HARVEST_HOME/lib/cached.conf.\n\
+                 %s\n\
        -a port	 Specify ASCII port number (default: %d).\n\
        -u port	 Specify UDP port number (default: %d).\n",
-	CACHE_HTTP_PORT, CACHE_ICP_PORT);
+	appname, DEFAULT_CONFIG_FILE, CACHE_HTTP_PORT, CACHE_ICP_PORT);
     exit(1);
 }
 
@@ -255,7 +256,7 @@ int main(argc, argv)
 
     errorInitialize();
 
-    cached_starttime = getCurrentTime();
+    squid_starttime = getCurrentTime();
     failure_notify = fatal_dump;
 
     mainParseOptions(argc, argv);
@@ -306,9 +307,9 @@ int main(argc, argv)
     while (1) {
 	loop_delay = (time_t) 60;
 	/* maintain cache storage */
-	if (cached_curtime > last_maintain) {
+	if (squid_curtime > last_maintain) {
 	    storeMaintainSwapSpace();
-	    last_maintain = cached_curtime;
+	    last_maintain = squid_curtime;
 	}
 	/* do background processing */
 	if (doBackgroundProcessing())
@@ -327,16 +328,16 @@ int main(argc, argv)
 	    /* this happens after 1 minute of idle time, or
 	     * when next_cleaning has arrived */
 	    /* garbage collection */
-	    if (getCleanRate() > 0 && cached_curtime >= next_cleaning) {
+	    if (getCleanRate() > 0 && squid_curtime >= next_cleaning) {
 		debug(1, 1, "Performing a garbage collection...\n");
 		n = storePurgeOld();
 		debug(1, 1, "Garbage collection done, %d objects removed\n", n);
-		next_cleaning = cached_curtime + getCleanRate();
+		next_cleaning = squid_curtime + getCleanRate();
 	    }
 	    if ((n = getAnnounceRate()) > 0) {
-		if (cached_curtime > last_announce + n)
+		if (squid_curtime > last_announce + n)
 		    send_announce();
-		last_announce = cached_curtime;
+		last_announce = squid_curtime;
 	    }
 	    /* house keeping */
 	    break;

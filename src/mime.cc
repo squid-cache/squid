@@ -1,5 +1,5 @@
 
-/* $Id: mime.cc,v 1.11 1996/04/04 01:30:48 wessels Exp $ */
+/* $Id: mime.cc,v 1.12 1996/04/16 05:05:25 wessels Exp $ */
 
 /*
  * DEBUG: Section 25          mime
@@ -119,7 +119,7 @@ int mk_mime_hdr(result, ttl, size, lmt, type)
     if (result == NULL)
 	return 1;
 
-    t = cached_curtime;
+    t = squid_curtime;
     expiretime = t + ttl;
 
     date[0] = expire[0] = last_modified_time[0] = result[0] = '\0';
