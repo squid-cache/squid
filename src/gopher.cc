@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.134 1998/07/30 22:29:35 wessels Exp $
+ * $Id: gopher.cc,v 1.135 1998/08/14 09:22:36 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -64,7 +64,7 @@
 #define GOPHER_PORT         70
 
 #define TAB                 '\t'
-#define TEMP_BUF_SIZE       SM_PAGE_SIZE
+#define TEMP_BUF_SIZE       4096
 #define MAX_CSO_RESULT      1024
 
 typedef struct gopher_ds {
@@ -596,18 +596,29 @@ gopherReadReply(int fd, void *data)
     int len;
     int clen;
     int bin;
+    size_t read_sz;
+#if DELAY_POOLS
+    delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
+#endif
     if (fwdAbortFetch(entry)) {
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     }
-    /* check if we want to defer reading */
-    buf = memAllocate(MEM_4K_BUF);
     errno = 0;
+    buf = memAllocate(MEM_4K_BUF);
+    read_sz = 4096 - 1;		/* leave room for termination */
+#if DELAY_POOLS
+    read_sz = delayBytesWanted(delay_id, read_sz);
+    assert(read_sz > 0);
+#endif
     /* leave one space for \0 in gopherToHTML */
-    len = read(fd, buf, TEMP_BUF_SIZE - 1);
+    len = read(fd, buf, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
+#if DELAY_POOLS
+	delayBytesIn(delay_id, len);
+#endif
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.other.kbytes_in, len);
     }

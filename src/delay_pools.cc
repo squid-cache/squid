@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.1 1998/07/31 00:15:40 wessels Exp $
+ * $Id: delay_pools.cc,v 1.2 1998/08/14 09:22:34 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -38,6 +38,7 @@
 #if DELAY_POOLS
 #include "squid.h"
 
+
 struct _delayData {
     int class1_aggregate;
     int class2_aggregate;
@@ -58,6 +59,14 @@ struct _delayData {
 
 static struct _delayData delay_data;
 static OBJH delayPoolStats;
+static delay_id delayId(unsigned char class, int position);
+
+static delay_id
+delayId(unsigned char class, int position)
+{
+    assert(class <= 3);
+    return (class << 16) | (position & 0xFFFF);
+}
 
 int
 delayClient(clientHttpRequest * http)
@@ -66,20 +75,25 @@ delayClient(clientHttpRequest * http)
     int i, j;
     unsigned int host;
     unsigned char net;
+    unsigned char class = 0;
+    int position = 0;
+    request_t *r = http->request;
 
     memset(&ch, '\0', sizeof(ch));
     ch.src_addr = http->conn->peer.sin_addr;
-    ch.request = http->request;
+    ch.request = r;
     if (aclCheckFast(Config.Delay.class1.access, &ch)) {
-	http->request->delay.class = 1;
+	class = 1;
+	r->delay_id = delayId(class, position);
 	return 1;
     }
     if (aclCheckFast(Config.Delay.class2.access, &ch)) {
-	http->request->delay.class = 2;
+	class = 2;
 	host = ntohl(ch.src_addr.s_addr) & 0xff;
 	if (host == 255 || !host) {
 	    debug(77, 0) ("ARGH: Delay requested for host %s\n", inet_ntoa(ch.src_addr));
-	    http->request->delay.class = 0;
+	    class = 0;
+	    r->delay_id = delayId(class, position);
 	    return 0;
 	}
 	for (i = 0;; i++) {
@@ -92,17 +106,19 @@ delayClient(clientHttpRequest * http)
 		break;
 	    }
 	}
-	http->request->delay.position = i;
+	position = i;
+	r->delay_id = delayId(class, position);
 	return 1;
     }
     if (aclCheckFast(Config.Delay.class3.access, &ch)) {
-	http->request->delay.class = 3;
+	class = 3;
 	host = ntohl(ch.src_addr.s_addr) & 0xffff;
 	net = host >> 8;
 	host &= 0xff;
 	if (host == 255 || !host || net == 255) {
 	    debug(77, 0) ("ARGH: Delay requested for host %s\n", inet_ntoa(ch.src_addr));
-	    http->request->delay.class = 0;
+	    class = 0;
+	    r->delay_id = delayId(class, position);
 	    return 0;
 	}
 	for (i = 0;; i++) {
@@ -110,28 +126,31 @@ delayClient(clientHttpRequest * http)
 		break;
 	    if (delay_data.class3_network_map[i] == 255) {
 		delay_data.class3_network_map[i] = net;
+		delay_data.class3_individual_map[i][0] = 255;
 		delay_data.class3_network_map[i + 1] = 255;
 		delay_data.class3_network[i] = Config.Delay.class3.network.restore_bps;
 		break;
 	    }
 	}
-	http->request->delay.position = i << 8;
+	position = i << 8;
 	for (j = 0;; j++) {
 	    if (delay_data.class3_individual_map[i][j] == host) {
-		http->request->delay.position |= j;
+		position |= j;
 		break;
 	    }
 	    if (delay_data.class3_individual_map[i][j] == 255) {
 		delay_data.class3_individual_map[i][j] = host;
 		delay_data.class3_individual_map[i][j + 1] = 255;
-		delay_data.class3_individual[http->request->delay.position |= j] =
+		delay_data.class3_individual[position |= j] =
 		    Config.Delay.class3.individual.restore_bps;
 		break;
 	    }
 	}
+	r->delay_id = delayId(class, position);
 	return 1;
     }
-    http->request->delay.class = 0;
+    class = 0;
+    r->delay_id = delayId(class, position);
     return 0;
 }
 
@@ -202,61 +221,104 @@ delayPoolsUpdate(int incr)
     }
 }
 
+
 static void
 delayPoolStats(StoreEntry * sentry)
 {
     int i;
     int j;
     storeAppendPrintf(sentry, "Class 1 Delay Pool Statistics:\n");
-    storeAppendPrintf(sentry, "\n\tAggregate:\n");
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", Config.Delay.class1.aggregate.max_bytes);
-    storeAppendPrintf(sentry, "\t\tRate: %d\n", Config.Delay.class1.aggregate.restore_bps);
-    storeAppendPrintf(sentry, "\t\tCurrent: %d\n", delay_data.class1_aggregate);
+    if (Config.Delay.class1.aggregate.restore_bps != -1) {
+	storeAppendPrintf(sentry, "\n\tAggregate:\n");
+	storeAppendPrintf(sentry, "\t\tMax: %d\n",
+	    Config.Delay.class1.aggregate.max_bytes);
+	storeAppendPrintf(sentry, "\t\tRate: %d\n",
+	    Config.Delay.class1.aggregate.restore_bps);
+	storeAppendPrintf(sentry, "\t\tCurrent: %d\n",
+	    delay_data.class1_aggregate);
+    } else {
+	storeAppendPrintf(sentry, "\n\tAggregate:\n\tDisabled.\n");
+    }
     storeAppendPrintf(sentry, "\nClass 2 Delay Pool Statistics:\n");
-    storeAppendPrintf(sentry, "\n\tAggregate:\n");
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", Config.Delay.class2.aggregate.max_bytes);
-    storeAppendPrintf(sentry, "\t\tRate: %d\n", Config.Delay.class2.aggregate.restore_bps);
-    storeAppendPrintf(sentry, "\t\tCurrent: %d\n", delay_data.class2_aggregate);
-    storeAppendPrintf(sentry, "\n\tIndividual:\n");
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", Config.Delay.class2.individual.max_bytes);
-    storeAppendPrintf(sentry, "\t\tRate: %d\n", Config.Delay.class2.individual.restore_bps);
-    storeAppendPrintf(sentry, "\t\tCurrent: ");
-    for (i = 0;; i++) {
-	if (delay_data.class2_individual_map[i] == 255)
-	    break;
-	storeAppendPrintf(sentry, "%d:%d ", delay_data.class2_individual_map[i],
-	    delay_data.class2_individual[i]);
+    if (Config.Delay.class2.aggregate.restore_bps != -1) {
+	storeAppendPrintf(sentry, "\n\tAggregate:\n");
+	storeAppendPrintf(sentry, "\t\tMax: %d\n",
+	    Config.Delay.class2.aggregate.max_bytes);
+	storeAppendPrintf(sentry, "\t\tRate: %d\n",
+	    Config.Delay.class2.aggregate.restore_bps);
+	storeAppendPrintf(sentry, "\t\tCurrent: %d\n",
+	    delay_data.class2_aggregate);
+    } else {
+	storeAppendPrintf(sentry, "\n\tAggregate:\n\tDisabled.\n");
+    }
+    if (Config.Delay.class2.individual.restore_bps != -1) {
+	storeAppendPrintf(sentry, "\n\tIndividual:\n");
+	storeAppendPrintf(sentry, "\t\tMax: %d\n",
+	    Config.Delay.class2.individual.max_bytes);
+	storeAppendPrintf(sentry, "\t\tRate: %d\n",
+	    Config.Delay.class2.individual.restore_bps);
+	storeAppendPrintf(sentry, "\t\tCurrent: ");
+	for (i = 0;; i++) {
+	    if (delay_data.class2_individual_map[i] == 255)
+		break;
+	    storeAppendPrintf(sentry, "%d:%d ",
+		delay_data.class2_individual_map[i],
+		delay_data.class2_individual[i]);
+	}
+    } else {
+	storeAppendPrintf(sentry, "\n\tIndividual:\n\tDisabled.");
     }
     storeAppendPrintf(sentry, "\n\nClass 3 Delay Pool Statistics:\n");
-    storeAppendPrintf(sentry, "\n\tAggregate:\n");
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", Config.Delay.class3.aggregate.max_bytes);
-    storeAppendPrintf(sentry, "\t\tRate: %d\n", Config.Delay.class3.aggregate.restore_bps);
-    storeAppendPrintf(sentry, "\t\tCurrent: %d\n", delay_data.class3_aggregate);
-    storeAppendPrintf(sentry, "\n\tNetwork:\n");
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", Config.Delay.class3.network.max_bytes);
-    storeAppendPrintf(sentry, "\t\tRate: %d\n", Config.Delay.class3.network.restore_bps);
-    storeAppendPrintf(sentry, "\t\tCurrent: ");
-    for (i = 0;; i++) {
-	if (delay_data.class3_network_map[i] == 255)
-	    break;
-	storeAppendPrintf(sentry, "%d:%d ", delay_data.class3_network_map[i],
-	    delay_data.class3_network[i]);
+    if (Config.Delay.class3.aggregate.restore_bps != -1) {
+	storeAppendPrintf(sentry, "\n\tAggregate:\n");
+	storeAppendPrintf(sentry, "\t\tMax: %d\n",
+	    Config.Delay.class3.aggregate.max_bytes);
+	storeAppendPrintf(sentry, "\t\tRate: %d\n",
+	    Config.Delay.class3.aggregate.restore_bps);
+	storeAppendPrintf(sentry, "\t\tCurrent: %d\n",
+	    delay_data.class3_aggregate);
+    } else {
+	storeAppendPrintf(sentry, "\n\tAggregate:\n\tDisabled.\n");
     }
-    storeAppendPrintf(sentry, "\n\n\tIndividual:\n");
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", Config.Delay.class3.individual.max_bytes);
-    storeAppendPrintf(sentry, "\t\tRate: %d\n", Config.Delay.class3.individual.restore_bps);
-    for (i = 0;; i++) {
-	if (delay_data.class3_network_map[i] == 255)
-	    break;
-	storeAppendPrintf(sentry, "\t\tCurrent [Network %d]: ",
-	    delay_data.class3_network_map[i]);
-	for (j = 0;; j++) {
-	    if (delay_data.class3_individual_map[i][j] == 255)
+    if (Config.Delay.class3.network.restore_bps != -1) {
+	storeAppendPrintf(sentry, "\n\tNetwork:\n");
+	storeAppendPrintf(sentry, "\t\tMax: %d\n",
+	    Config.Delay.class3.network.max_bytes);
+	storeAppendPrintf(sentry, "\t\tRate: %d\n",
+	    Config.Delay.class3.network.restore_bps);
+	storeAppendPrintf(sentry, "\t\tCurrent: ");
+	for (i = 0;; i++) {
+	    if (delay_data.class3_network_map[i] == 255)
 		break;
-	    storeAppendPrintf(sentry, "%d:%d ", delay_data.class3_individual_map[i][j],
-		delay_data.class3_individual[(i << 8) + j]);
+	    storeAppendPrintf(sentry, "%d:%d ",
+		delay_data.class3_network_map[i],
+		delay_data.class3_network[i]);
 	}
-	storeAppendPrintf(sentry, "\n");
+    } else {
+	storeAppendPrintf(sentry, "\n\tNetwork:\n\tDisabled.");
+    }
+    if (Config.Delay.class3.individual.restore_bps != -1) {
+	storeAppendPrintf(sentry, "\n\n\tIndividual:\n");
+	storeAppendPrintf(sentry, "\t\tMax: %d\n",
+	    Config.Delay.class3.individual.max_bytes);
+	storeAppendPrintf(sentry, "\t\tRate: %d\n",
+	    Config.Delay.class3.individual.restore_bps);
+	for (i = 0;; i++) {
+	    if (delay_data.class3_network_map[i] == 255)
+		break;
+	    storeAppendPrintf(sentry, "\t\tCurrent [Network %d]: ",
+		delay_data.class3_network_map[i]);
+	    for (j = 0;; j++) {
+		if (delay_data.class3_individual_map[i][j] == 255)
+		    break;
+		storeAppendPrintf(sentry, "%d:%d ",
+		    delay_data.class3_individual_map[i][j],
+		    delay_data.class3_individual[(i << 8) + j]);
+	    }
+	    storeAppendPrintf(sentry, "\n");
+	}
+    } else {
+	storeAppendPrintf(sentry, "\n\n\tIndividual:\n\tDisabled.\n");
     }
     storeAppendPrintf(sentry, "\n");
 }
@@ -271,6 +333,124 @@ delayPoolsInit(void)
     delay_data.class3_aggregate = Config.Delay.class3.aggregate.restore_bps;
     delay_data.class3_network_map[0] = 255;
     cachemgrRegister("delay", "Delay Pool Levels", delayPoolStats, 0, 1);
+}
+
+/*
+ * this returns the number of bytes the client is permitted. it does not take
+ * into account bytes already buffered - that is up to the caller.
+ */
+int
+delayBytesWanted(delay_id d, int max)
+{
+    int position = d & 0xFFFF;
+    unsigned char class = (d & 0xFF0000) >> 16;
+    int nbytes = max;
+    switch (class) {
+    case 0:
+	break;
+
+    case 1:
+	if (Config.Delay.class1.aggregate.restore_bps != -1)
+	    nbytes = XMIN(nbytes, delay_data.class1_aggregate);
+	break;
+
+    case 2:
+	if (Config.Delay.class2.aggregate.restore_bps != -1)
+	    nbytes = XMIN(nbytes, delay_data.class2_aggregate);
+	if (Config.Delay.class2.individual.restore_bps != -1)
+	    nbytes = XMIN(nbytes, delay_data.class2_individual[position]);
+	break;
+
+    case 3:
+	if (Config.Delay.class3.aggregate.restore_bps != -1)
+	    nbytes = XMIN(nbytes, delay_data.class3_aggregate);
+	if (Config.Delay.class3.individual.restore_bps != -1)
+	    nbytes = XMIN(nbytes, delay_data.class3_individual[position]);
+	if (Config.Delay.class3.network.restore_bps != -1)
+	    nbytes = XMIN(nbytes, delay_data.class3_network[position >> 8]);
+	break;
+
+    default:
+	fatalf("delayBytesWanted: Invalid class %d\n", class);
+	break;
+    }
+    assert(nbytes > 0);
+    assert(nbytes <= max);
+    return nbytes;
+}
+
+/*
+ * this records actual bytes recieved.  always recorded, even if the
+ * class is disabled - see above for all the cases which would be needed
+ * to efficiently not record it, so it's just ignored if not wanted.
+ */
+void
+delayBytesIn(delay_id d, int qty)
+{
+    int position = d & 0xFFFF;
+    unsigned char class = (d & 0xFF0000) >> 16;
+    if (class == 0)
+	return;
+    if (class == 1) {
+	delay_data.class1_aggregate -= qty;
+	return;
+    }
+    if (class == 2) {
+	delay_data.class2_aggregate -= qty;
+	delay_data.class3_individual[position] -= qty;
+	return;
+    }
+    if (class == 3) {
+	delay_data.class3_aggregate -= qty;
+	delay_data.class3_network[position >> 8] -= qty;
+	delay_data.class3_individual[position] -= qty;
+	return;
+    }
+    assert(0);
+}
+
+int
+delayMostBytesWanted(const MemObject * mem, int max)
+{
+    int i = 0;
+    store_client *sc;
+    for (sc = mem->clients; sc; sc = sc->next) {
+	if (sc->callback_data == NULL)	/* open slot */
+	    continue;
+	if (sc->type != STORE_MEM_CLIENT)
+	    continue;
+	i = XMAX(delayBytesWanted(sc->delay_id, max), i);
+    }
+    return i;
+}
+
+delay_id
+delayMostBytesAllowed(const MemObject * mem)
+{
+    int j;
+    int jmax = 0;
+    store_client *sc;
+    delay_id d = 0;
+    for (sc = mem->clients; sc; sc = sc->next) {
+	if (sc->callback_data == NULL)	/* open slot */
+	    continue;
+	if (sc->type != STORE_MEM_CLIENT)
+	    continue;
+	j = delayBytesWanted(sc->delay_id, SQUID_TCP_SO_RCVBUF);
+	if (j > jmax) {
+	    jmax = j;
+	    d = sc->delay_id;
+	}
+    }
+    return d;
+}
+
+void
+delaySetStoreClient(StoreEntry * e, void *data, delay_id delay_id)
+{
+    store_client *sc = storeClientListSearch(e->mem_obj, data);
+    assert(sc != NULL);
+    sc->delay_id = delay_id;
 }
 
 #endif

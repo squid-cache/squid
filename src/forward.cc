@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.22 1998/08/13 18:26:17 wessels Exp $
+ * $Id: forward.cc,v 1.23 1998/08/14 09:22:34 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -393,6 +393,10 @@ fwdCheckDeferRead(int fdnotused, void *data)
     MemObject *mem = e->mem_obj;
     if (mem == NULL)
 	return 0;
+#if DELAY_POOLS
+    if (delayMostBytesWanted(mem, 1) == 0)
+	return 1;
+#endif
     if (mem->inmem_hi - storeLowestMemReaderOffset(e) < READ_AHEAD_GAP)
 	return 0;
     return 1;
