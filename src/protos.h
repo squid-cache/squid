@@ -182,10 +182,10 @@ extern int gopherCachable(const char *);
 
 /* init */
 extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
-extern int hash_insert(hash_table *, const char *, void *);
+extern void hash_insert(hash_table *, const char *, void *);
 extern int hash_delete(hash_table *, const char *);
 extern int hash_delete_link(hash_table *, hash_link *);
-extern int hash_join(hash_table *, hash_link *);
+extern void hash_join(hash_table *, hash_link *);
 extern int hash_remove_link(hash_table *, hash_link *);
 
 /* searching, accessing */
@@ -574,3 +574,6 @@ extern void pconnInit(void);
 
 extern int asnMatchIp(void *, struct in_addr);
 extern void asnAclInitialize(acl *);
+
+extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
+extern void dlinkDelete(dlink_node * m, dlink_list * list);
