@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.3 2001/10/22 23:55:43 hno Exp $
+ * $Id: config.h,v 1.4 2001/11/13 21:27:47 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -176,9 +176,13 @@
 #endif
 
 #if __GNUC__
-#define PRINTF_FORMAT_ARG(pos) __attribute__ ((format (printf, pos, pos + 1)))
+#define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
+#define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
+#define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
 #else
-#define PRINTF_FORMAT_ARG(pos)
+#define PRINTF_FORMAT_ARG1
+#define PRINTF_FORMAT_ARG2
+#define PRINTF_FORMAT_ARG3
 #endif
 
 #endif /* SQUID_CONFIG_H */
