@@ -135,7 +135,7 @@ void sync_with_agent();
 int parse_app_community_string();
 void snmp_synch_setup();
 int snmp_synch_response();
-void md5Digest(u_char *msg, int length, u_char *key, u_char *digest);
+void md5Digest(u_char * msg, int length, u_char * key, u_char * digest);
 
 #if NO_PRINTFS
 static char *
