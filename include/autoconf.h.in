@@ -6,6 +6,9 @@
 /* Defines how many threads aufs uses for I/O */
 #undef AUFS_IO_THREADS
 
+/* Enable authentication support in accelerators */
+#undef AUTH_ON_ACCELERATION
+
 /* If you are upset that the cachemgr.cgi form comes up with the hostname
    field blank, then define this to getfullhostname() */
 #undef CACHEMGR_HOSTNAME
