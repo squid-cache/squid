@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.5 2002/01/07 01:20:10 hno Exp $
+ * $Id: pam_auth.c,v 1.6 2002/01/07 03:10:46 hno Exp $
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999 Henrik Nordstrom <hno@squid-cache.org>
@@ -32,23 +32,26 @@
  *  squid account  required /lib/security/pam_unix.so.1
  *
  * Note that some PAM modules (for example shadow password authentication)
- * requires the program to be installed suid root, or PAM will not allow
- * it to authenticate other users than it runs as (this is a security
- * limitation of PAM to avoid automated probing of passwords).
+ * requires the program to be installed suid root to gain access to the
+ * user password database
  *
- * Compile this program with: gcc -o pam_auth pam_auth.c -lpam -ldl
+ * Change Log:
  *
- * History:
+ *   Version 2.0, 2002-01-07
+ *      One shot mode, command line options
+ *	man page
  *
  *   Version 1.3, 1999-12-10
  *   	Bugfix release 1.3 to work around Solaris 2.6
  *      brokenness (not sending arguments to conversation
  *      functions)
  *
- *   Version 1.2, never released
+ *   Version 1.2, internal release
  *
  *   Version 1.1, 1999-05-11
  *	Initial version
+ *
+ * Compile this program with: gcc -o pam_auth pam_auth.c -lpam -ldl
  */
 
 #include <stdio.h>
@@ -57,6 +60,7 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <security/pam_appl.h>
 
@@ -64,14 +68,14 @@
 
 
 /* The default PAM service name */
-#ifndef SQUID_PAM_SERVICE
-#define SQUID_PAM_SERVICE "squid"
+#ifndef DEFAULT_SQUID_PAM_SERVICE
+#define DEFAULT_SQUID_PAM_SERVICE "squid"
 #endif
 
-/* How often to reinitialize PAM, in seconds. Undefined = never, 0=always */
-/* #define PAM_CONNECTION_TTL 60 */
-
-static int reset_pam = 1;	/* Set to one if it is time to reset PAM processing */
+/* The default TTL */
+#ifndef DEFAULT_SQUID_PAM_TTL
+#define DEFAULT_SQUID_PAM_TTL 60
+#endif
 
 static char *password = NULL;	/* Workaround for Solaris 2.6 brokenness */
 
@@ -115,78 +119,127 @@ static struct pam_conv conv =
     NULL
 };
 
-void
-signal_received(int sig)
+static void usage(char *program)
 {
-    reset_pam = 1;
-    signal(sig, signal_received);
+    fprintf(stderr, "Usage: %s [options..]\n", program);
+    fprintf(stderr, " -n service_name\n");
+    fprintf(stderr, "           The PAM service name (default \"%s\")\n", DEFAULT_SQUID_PAM_SERVICE);
+    fprintf(stderr, " -t ttl    PAM connection ttl in seconds (default %d)\n", DEFAULT_SQUID_PAM_TTL);
+    fprintf(stderr, "           during this time the same connection will be reused\n");
+    fprintf(stderr, "           to authenticate all users\n");
+    fprintf(stderr, " -o        Do not perform account mgmt (account expiration etc)\n");
+    fprintf(stderr, " -1        Only one user authentication per PAM connection\n");
 }
 
 int
 main(int argc, char *argv[])
 {
     pam_handle_t *pamh = NULL;
-    int retval;
+    int retval = PAM_SUCCESS;
     char *user;
     /* char *password; */
     char buf[BUFSIZE];
     time_t pamh_created = 0;
-
-    signal(SIGHUP, signal_received);
+    int ttl = DEFAULT_SQUID_PAM_TTL;
+    char *service = DEFAULT_SQUID_PAM_SERVICE;
+    int no_acct_mgmt = 0;
 
     /* make standard output line buffered */
     setvbuf(stdout, NULL, _IOLBF, 0);
 
-    while (retval = PAM_SUCCESS, fgets(buf, BUFSIZE, stdin)) {
+    while (1) {
+	int ch = getopt(argc, argv, "1n:t:o");
+	switch (ch) {
+	case -1:
+		goto start;
+	case 'n':
+		service = optarg;
+		break;
+	case 't':
+		ttl = atoi(optarg);
+		break;
+	case '1':
+		ttl = 0;
+		break;
+	case 'o':
+		no_acct_mgmt = 1;
+		break;
+	default:
+		fprintf(stderr, "Unknown getopt value '%c'\n", ch);
+		usage(argv[0]);
+		exit(1);
+	}
+    }
+start:
+    if (optind < argc) {
+	fprintf(stderr, "Unknown option '%s'\n", argv[optind]);
+	usage(argv[0]);
+	exit(1);
+    }
+
+    while (fgets(buf, BUFSIZE, stdin)) {
 	user = buf;
 	password = strchr(buf, '\n');
 	if (!password) {
 	    fprintf(stderr, "authenticator: Unexpected input '%s'\n", buf);
-	    fprintf(stdout, "ERR\n");
-	    continue;
+	    goto error;
 	}
 	*password = '\0';
 	password = strchr(buf, ' ');
 	if (!password) {
 	    fprintf(stderr, "authenticator: Unexpected input '%s'\n", buf);
-	    fprintf(stdout, "ERR\n");
-	    continue;
+	    goto error;
 	}
 	*password++ = '\0';
 	conv.appdata_ptr = (char *) password;	/* from buf above. not allocated */
-#ifdef PAM_CONNECTION_TTL
-	if (pamh_created + PAM_CONNECTION_TTL >= time(NULL))
-	    reset_pam = 1;
-#endif
-	if (reset_pam && pamh) {
-	    /* Close previous PAM connection */
-	    retval = pam_end(pamh, retval);
-	    if (retval != PAM_SUCCESS) {
-		fprintf(stderr, "ERROR: failed to release PAM authenticator\n");
-	    }
-	    pamh = NULL;
-	}
-	if (!pamh) {
-	    /* Initialize PAM connection */
-	    retval = pam_start(SQUID_PAM_SERVICE, "squid@", &conv, &pamh);
+
+	if (ttl == 0) {
+	    /* Create PAM connection */
+	    retval = pam_start(service, user, &conv, &pamh);
 	    if (retval != PAM_SUCCESS) {
 		fprintf(stderr, "ERROR: failed to create PAM authenticator\n");
+		goto error;
 	    }
-	    reset_pam = 0;
+	} else if (!pamh || (time(NULL) - pamh_created) >= ttl || pamh_created > time(NULL)) {
+	    /* Close previous PAM connection */
+	    if (pamh) {
+		retval = pam_end(pamh, retval);
+		if (retval != PAM_SUCCESS) {
+		    fprintf(stderr, "WARNING: failed to release PAM authenticator\n");
+		}
+		pamh = NULL;
+	    }
+	    /* Initialize persistent PAM connection */
+	    retval = pam_start(service, "squid@", &conv, &pamh);
+	    if (retval != PAM_SUCCESS) {
+		fprintf(stderr, "ERROR: failed to create PAM authenticator\n");
+		goto error;
+	    }
 	    pamh_created = time(NULL);
 	}
-	if (retval == PAM_SUCCESS)
-	    retval = pam_set_item(pamh, PAM_USER, user);
-	if (retval == PAM_SUCCESS)
-	    retval = pam_set_item(pamh, PAM_CONV, &conv);
+	retval = PAM_SUCCESS;
+	if (ttl != 0) {
+	    if (retval == PAM_SUCCESS)
+		retval = pam_set_item(pamh, PAM_USER, user);
+	    if (retval == PAM_SUCCESS)
+		retval = pam_set_item(pamh, PAM_CONV, &conv);
+	}
 	if (retval == PAM_SUCCESS)
 	    retval = pam_authenticate(pamh, 0);
-	if (retval == PAM_SUCCESS)
+	if (retval == PAM_SUCCESS && !no_acct_mgmt)
 	    retval = pam_acct_mgmt(pamh, 0);
 	if (retval == PAM_SUCCESS) {
 	    fprintf(stdout, "OK\n");
 	} else {
+error:
 	    fprintf(stdout, "ERR\n");
+	}
+	if (ttl == 0) {
+	    retval = pam_end(pamh, retval);
+	    if (retval != PAM_SUCCESS) {
+		fprintf(stderr, "WARNING: failed to release PAM authenticator\n");
+	    }
+	    pamh = NULL;
 	}
     }
 
@@ -197,5 +250,5 @@ main(int argc, char *argv[])
 	    fprintf(stderr, "ERROR: failed to release PAM authenticator\n");
 	}
     }
-    return (retval == PAM_SUCCESS ? 0 : 1);	/* indicate success */
+    return 0;
 }
