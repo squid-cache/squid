@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.57 1999/04/23 02:57:22 wessels Exp $
+ * $Id: forward.cc,v 1.58 1999/05/04 20:49:38 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -210,6 +210,8 @@ fwdConnectTimeout(int fd, void *data)
 	err->request = requestLink(fwdState->request);
 	err->xerrno = ETIMEDOUT;
 	fwdFail(fwdState, err);
+	if (fwdState->servers->peer)
+	    peerConnectFailed(fwdState->servers->peer);
     }
     comm_close(fd);
 }
@@ -224,15 +226,19 @@ fwdConnectStart(void *data)
     FwdServer *fs = fwdState->servers;
     const char *host;
     unsigned short port;
+    time_t ctimeout;
     assert(fs);
     assert(fwdState->server_fd == -1);
     debug(17, 3) ("fwdConnectStart: %s\n", url);
     if (fs->peer) {
 	host = fs->peer->host;
 	port = fs->peer->http_port;
+	ctimeout = fs->peer->connect_timeout > 0 ? fs->peer->connect_timeout
+	    : Config.Timeout.peer_connect;
     } else {
 	host = fwdState->request->host;
 	port = fwdState->request->port;
+	ctimeout = Config.Timeout.connect;
     }
     hierarchyNote(&fwdState->request->hier, fs->code, host);
     if ((fd = pconnPop(host, port)) >= 0) {
@@ -262,7 +268,7 @@ fwdConnectStart(void *data)
     fwdState->n_tries++;
     comm_add_close_handler(fd, fwdServerClosed, fwdState);
     commSetTimeout(fd,
-	Config.Timeout.connect,
+	ctimeout,
 	fwdConnectTimeout,
 	fwdState);
     commConnectStart(fd, host, port, fwdConnectDone, fwdState);

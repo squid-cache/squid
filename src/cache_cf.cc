@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.327 1999/04/23 02:57:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.328 1999/05/04 20:49:36 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -991,6 +991,8 @@ parse_peer(peer ** head)
 #endif
 	} else if (!strncasecmp(token, "login=", 6)) {
 	    p->login = xstrdup(token + 6);
+	} else if (!strncasecmp(token, "connect-timeout=", 16)) {
+	    p->connect_timeout = atoi(token + 16);
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();
