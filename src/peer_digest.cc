@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.87 2002/06/06 15:11:01 hno Exp $
+ * $Id: peer_digest.cc,v 1.88 2002/06/06 18:44:35 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -220,10 +220,6 @@ peerDigestCheck(void *data)
     PeerDigest *pd = data;
     time_t req_time;
 
-    /*
-     * you can't assert(cbdataReferenceValid(pd)) -- if its not valid this
-     * function never gets called
-     */
     assert(!pd->flags.requested);
 
     pd->times.next_check = 0;	/* unknown */
@@ -363,8 +359,11 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
     /* Call the right function based on the state */
     /* (Those functions will update the state if needed) */
 
-    /* Lock our data to protect us from ourselves */
-    cbdataInternalLock(fetch);
+    /* Give us a temporary reference. Some of the calls we make may
+     * try to destroy the fetch structure, and we like to know if they
+     * do
+     */ 
+    fetch = cbdataReference(fetch);
 
     /* Repeat this loop until we're out of data OR the state changes */
     /* (So keep going if the state has changed and we still have data */
@@ -403,7 +402,7 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
 	xmemmove(fetch->buf, fetch->buf + retsize, fetch->bufofs - newsize);
 	fetch->bufofs = newsize;
 
-    } while (prevstate != fetch->state && fetch->bufofs > 0);
+    } while (cbdataReferenceValid(fetch) && prevstate != fetch->state && fetch->bufofs > 0);
 
     /* Update the copy offset */
     fetch->offset += copysize;
@@ -414,8 +413,8 @@ peerDigestHandleReply(void *data, char *buf, ssize_t copysize)
 	    fetch->buf + fetch->bufofs, peerDigestHandleReply, fetch);
     }
   finish:
-    /* Unlock our data - we've finished with it for now */
-    cbdataInternalUnlock(fetch);
+    /* Get rid of our reference, we've finished with it for now */
+    cbdataReferenceDone(fetch);
 }
 
 
@@ -615,19 +614,16 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     const char *host = "<unknown>";	/* peer host */
     const char *reason = NULL;	/* reason for completion */
     const char *no_bug = NULL;	/* successful completion if set */
-    const int fcb_valid = cbdataReferenceValid(fetch);
-    const int pdcb_valid = fcb_valid && cbdataReferenceValid(fetch->pd);
-    const int pcb_valid = pdcb_valid && cbdataReferenceValid(fetch->pd->peer);
+    const int pdcb_valid = cbdataReferenceValid(fetch->pd);
+    const int pcb_valid = cbdataReferenceValid(fetch->pd->peer);
 
     /* test possible exiting conditions (the same for most steps!)
      * cases marked with '?!' should not happen */
 
     if (!reason) {
-	if (!fcb_valid)
-	    reason = "fetch aborted?!";
-	else if (!(pd = fetch->pd))
+	if (!(pd = fetch->pd))
 	    reason = "peer digest disappeared?!";
-#if DONT
+#if DONT /* WHY NOT? /HNO */
 	else if (!cbdataReferenceValid(pd))
 	    reason = "invalidated peer digest?!";
 #endif
@@ -635,7 +631,8 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 	    host = strBuf(pd->host);
     }
     debug(72, 6) ("%s: peer %s, offset: %d size: %d.\n",
-	step_name, host, fcb_valid ? fetch->offset : -1, size);
+	step_name, host, 
+	fetch->offset, size);
 
     /* continue checking (with pd and host known and valid) */
     if (!reason) {
@@ -665,10 +662,10 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 	debug(72, level) ("%s: peer %s, exiting after '%s'\n",
 	    step_name, host, reason);
 	peerDigestReqFinish(fetch, buf,
-	    fcb_valid, pdcb_valid, pcb_valid, reason, !no_bug);
+	    1, pdcb_valid, pcb_valid, reason, !no_bug);
     } else {
 	/* paranoid check */
-	assert(fcb_valid && pdcb_valid && pcb_valid);
+	assert(pdcb_valid && pcb_valid);
     }
     return reason != NULL;
 }
