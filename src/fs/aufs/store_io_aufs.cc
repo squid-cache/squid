@@ -453,12 +453,12 @@ storeAufsIOFreeEntry(void *siop)
     squidaiostate_t *aiostate = (squidaiostate_t *) sio->fsstate;
     struct _queued_write *qw;
     struct _queued_read *qr;
-    while ((qw = linklistShift(&aiostate->pending_writes))) {
+    while ((qw = (struct _queued_write *)linklistShift(&aiostate->pending_writes))) {
 	if (qw->free_func)
 	    qw->free_func(qw->buf);
 	memPoolFree(aufs_qwrite_pool, qw);
     }
-    while ((qr = linklistShift(&aiostate->pending_reads))) {
+    while ((qr = (struct _queued_read *)linklistShift(&aiostate->pending_reads))) {
 	cbdataReferenceDone(qr->callback_data);
 	memPoolFree(aufs_qread_pool, qr);
     }
