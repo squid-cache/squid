@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.99 1996/12/18 18:35:33 wessels Exp $
+ * $Id: neighbors.cc,v 1.100 1996/12/19 21:24:15 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -414,7 +414,8 @@ neighbors_open(int fd)
 int
 neighborsUdpPing(protodispatch_data * proto)
 {
-    char *host = proto->request->host;
+    request_t *request = proto->request;
+    char *host = request->host;
     char *url = proto->url;
     StoreEntry *entry = proto->entry;
     const ipcache_addrs *ia = NULL;
@@ -451,23 +452,19 @@ neighborsUdpPing(protodispatch_data * proto)
 	if (squid_curtime - e->last_fail_time < 60)
 	    continue;
 
-	if (!edgeWouldBePinged(e, proto->request))
+	if (!edgeWouldBePinged(e, request))
 	    continue;		/* next edge */
 	if (e->options & NEIGHBOR_NO_QUERY)
 	    continue;
 	/* the case below seems strange, but can happen if the
 	 * URL host is on the other side of a firewall */
 	if (e->type == EDGE_SIBLING)
-	    if (!BIT_TEST(proto->request->flags, REQ_HIERARCHICAL))
+	    if (!BIT_TEST(request->flags, REQ_HIERARCHICAL))
 		continue;
 
 	debug(15, 4, "neighborsUdpPing: pinging cache %s for '%s'\n",
 	    e->host, url);
-
-	if (BIT_TEST(entry->flag, KEY_PRIVATE))
-	    reqnum = atoi(entry->key);
-	else
-	    reqnum = getKeyCounter();
+	reqnum = storeReqnum(entry, request);
 	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
 	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", reqnum);
 
@@ -484,7 +481,7 @@ neighborsUdpPing(protodispatch_data * proto)
 	    flags = 0;
 	    /* check if we should set ICP_FLAG_HIT_OBJ */
 	    if (opt_udp_hit_obj)
-		if (!BIT_TEST(proto->request->flags, REQ_NOCACHE))
+		if (!BIT_TEST(request->flags, REQ_NOCACHE))
 		    if (e->icp_version == ICP_VERSION_2)
 			flags |= ICP_FLAG_HIT_OBJ;
 	    query = icpCreateMessage(ICP_OP_QUERY, flags, url, reqnum, 0);
