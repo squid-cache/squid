@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.129 1998/09/23 21:29:29 glenn Exp $
+ * $Id: net_db.cc,v 1.130 1998/09/25 18:31:27 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1010,6 +1010,8 @@ netdbClosestParent(request_t * request)
 		break;
 	p = peerFindByName(h->peername);
 	if (NULL == p)		/* not found */
+	    continue;
+	if (neighborType(p, request) != PEER_PARENT)
 	    continue;
 	if (!peerHTTPOkay(p, request))	/* not allowed */
 	    continue;
