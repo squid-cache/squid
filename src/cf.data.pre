@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.108 1998/09/14 02:33:54 wessels Exp $
+# $Id: cf.data.pre,v 1.109 1998/09/14 20:29:12 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -288,7 +288,7 @@ DOC_START
 		* Cache hosts with no domain restrictions are queried
 		  for all requests.
 		* There are no defaults.
-		* There is also a 'cache_peer_acl' tag in the ACL
+		* There is also a 'cache_peer_access' tag in the ACL
 		  section.
 DOC_END
 
@@ -1357,8 +1357,8 @@ DOC_START
 	  # example for routing all requests for AS#1241 and only 
 	  # those to mycache.mydomain.net:
 	  # acl asexample dst_as 1241
-	  # cache_peer_acl mycache.mydomain.net asexample
-	  # cache_peer_acl mycache_mydomain.net !all
+	  # cache_peer_access allow mycache.mydomain.net asexample
+	  # cache_peer_access deny mycache_mydomain.net all
 
 	acl aclname proxy_auth [ refresh ]
 	  # Use an EXTERNAL authentication program to check username/password
