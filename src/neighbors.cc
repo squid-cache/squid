@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.251 1998/09/19 17:06:07 wessels Exp $
+ * $Id: neighbors.cc,v 1.252 1998/09/19 20:01:06 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -605,7 +605,8 @@ static void
 neighborUpdateRtt(peer * p, MemObject * mem)
 {
     int rtt;
-    assert(mem);
+    if (!mem)
+	return;
     if (!mem->start_ping.tv_sec)
 	return;
     rtt = tvSubMsec(mem->start_ping, current_time);
