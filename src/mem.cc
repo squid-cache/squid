@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.76 2003/03/06 11:51:56 robertc Exp $
+ * $Id: mem.cc,v 1.77 2003/03/09 12:29:41 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -430,7 +430,8 @@ Mem::Init(void)
 
 mem_type &operator++ (mem_type &aMem)
 {
-    aMem = (mem_type)(++(int)aMem);
+    int tmp = (int)aMem;
+    aMem = (mem_type)(++tmp);
     return aMem;
 }
 

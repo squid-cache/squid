@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.143 2003/02/21 22:50:12 robertc Exp $
+ * $Id: url.cc,v 1.144 2003/03/09 12:29:41 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -184,7 +184,8 @@ urlInitialize(void)
 
 method_t &operator++ (method_t &aMethod)
 {
-    aMethod = (method_t)(++(int)aMethod);
+    int tmp = (int)aMethod;
+    aMethod = (method_t)(++tmp);
     return aMethod;
 }
 

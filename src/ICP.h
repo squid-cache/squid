@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.4 2003/02/21 22:50:05 robertc Exp $
+ * $Id: ICP.h,v 1.5 2003/03/09 12:29:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,7 +65,8 @@ struct _icp_common_t
 
 inline icp_opcode & operator++ (icp_opcode & aCode)
 {
-    aCode = (icp_opcode) (++(int) aCode);
+    int tmp = (int) aCode;
+    aCode = (icp_opcode) (++tmp);
     return aCode;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.87 2003/03/06 11:51:55 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.88 2003/03/09 12:29:40 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -141,7 +141,8 @@ static HttpHeaderFieldInfo *Headers = NULL;
 
 http_hdr_type &operator++ (http_hdr_type &aHeader)
 {
-    aHeader = (http_hdr_type)(++(int)aHeader);
+    int tmp = (int)aHeader;
+    aHeader = (http_hdr_type)(++tmp);
     return aHeader;
 }
 

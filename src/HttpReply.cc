@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.56 2003/03/06 11:51:55 robertc Exp $
+ * $Id: HttpReply.cc,v 1.57 2003/03/09 12:29:40 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -53,7 +53,8 @@ static http_hdr_type Denied304HeadersArr[] =
 
 HttpMsgParseState &operator++ (HttpMsgParseState &aState)
 {
-    aState = (HttpMsgParseState)(++(int)aState);
+    int tmp = (int)aState;
+    aState = (HttpMsgParseState)(++tmp);
     return aState;
 }
 
