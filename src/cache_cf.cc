@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.347 2000/05/31 01:04:49 hno Exp $
+ * $Id: cache_cf.cc,v 1.348 2000/05/31 05:02:11 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -360,9 +360,7 @@ configDoConfigure(void)
 #if USE_DNSSERVERS
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
 #endif
-#if USE_UNLINKD
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
-#endif
     if (Config.Program.redirect)
 	requirePathnameExists("redirect_program", Config.Program.redirect->key);
     if (Config.Program.authenticate)
