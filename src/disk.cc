@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.126 1998/08/15 07:24:12 wessels Exp $
+ * $Id: disk.cc,v 1.127 1998/08/18 21:15:43 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -38,12 +38,6 @@
 
 #define DISK_LINE_LEN  1024
 
-typedef struct disk_ctrl_t {
-    int fd;
-    void *data;
-} disk_ctrl_t;
-
-
 typedef struct open_ctrl_t {
     FOCB *callback;
     void *callback_data;
@@ -54,7 +48,7 @@ static AIOCB diskHandleWriteComplete;
 static AIOCB diskHandleReadComplete;
 static PF diskHandleRead;
 static PF diskHandleWrite;
-static void file_open_complete(void *, int, int);
+static AIOCB fileOpenComplete;
 
 void
 disk_init(void)
@@ -83,12 +77,12 @@ file_open(const char *path, int mode, FOCB * callback, void *callback_data, void
     /* Open file */
 #if USE_ASYNC_IO
     if (callback != NULL) {
-	aioOpen(path, mode, 0644, file_open_complete, ctrlp, tag);
+	aioOpen(path, mode, 0644, fileOpenComplete, ctrlp, tag);
 	return DISK_OK;
     }
 #endif
     fd = open(path, mode, 0644);
-    file_open_complete(ctrlp, fd, errno);
+    fileOpenComplete(-1, ctrlp, fd, errno);
     if (fd < 0)
 	return DISK_ERROR;
     return fd;
@@ -96,9 +90,11 @@ file_open(const char *path, int mode, FOCB * callback, void *callback_data, void
 
 
 static void
-file_open_complete(void *data, int fd, int errcode)
+fileOpenComplete(int unused, void *data, int fd, int errcode)
 {
     open_ctrl_t *ctrlp = (open_ctrl_t *) data;
+    debug(6, 5) ("fileOpenComplete: fd %d, data %p, errcode %d\n",
+	fd, data, errcode);
 
     if (fd == -2 && errcode == -2) {	/* Cancelled - clean up */
 	if (ctrlp->callback)
@@ -109,7 +105,7 @@ file_open_complete(void *data, int fd, int errcode)
     }
     if (fd < 0) {
 	errno = errcode;
-	debug(50, 3) ("file_open: error opening file %s: %s\n", ctrlp->path,
+	debug(50, 3) ("fileOpenComplete: error opening file %s: %s\n", ctrlp->path,
 	    xstrerror());
 	if (ctrlp->callback)
 	    (ctrlp->callback) (ctrlp->callback_data, DISK_ERROR, errcode);
@@ -117,7 +113,7 @@ file_open_complete(void *data, int fd, int errcode)
 	xfree(ctrlp);
 	return;
     }
-    debug(6, 5) ("file_open: FD %d\n", fd);
+    debug(6, 5) ("fileOpenComplete: FD %d\n", fd);
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, ctrlp->path);
     if (ctrlp->callback)
@@ -164,7 +160,6 @@ static void
 diskHandleWrite(int fd, void *notused)
 {
     int len = 0;
-    disk_ctrl_t *ctrlp;
     dwrite_q *q = NULL;
     dwrite_q *wq = NULL;
     fde *F = &fd_table[fd];
@@ -198,11 +193,6 @@ diskHandleWrite(int fd, void *notused)
 	fdd->write_q_tail = wq;
 	fdd->write_q->next = wq;
     }
-    ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
-    ctrlp->fd = fd;
-#if USE_ASYNC_IO
-    ctrlp->data = fdd->write_q;
-#endif
     assert(fdd->write_q != NULL);
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 #if USE_ASYNC_IO
@@ -211,22 +201,20 @@ diskHandleWrite(int fd, void *notused)
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset,
 	diskHandleWriteComplete,
-	ctrlp);
+	fdd->write_q);
 #else
     debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
 	fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
     len = write(fd,
 	fdd->write_q->buf + fdd->write_q->buf_offset,
 	fdd->write_q->len - fdd->write_q->buf_offset);
-    diskHandleWriteComplete(ctrlp, len, errno);
+    diskHandleWriteComplete(fd, NULL, len, errno);
 #endif
 }
 
 static void
-diskHandleWriteComplete(void *data, int len, int errcode)
+diskHandleWriteComplete(int fd, void *data, int len, int errcode)
 {
-    disk_ctrl_t *ctrlp = data;
-    int fd = ctrlp->fd;
     fde *F = &fd_table[fd];
     struct _fde_disk *fdd = &F->disk;
     dwrite_q *q = fdd->write_q;
@@ -245,8 +233,8 @@ diskHandleWriteComplete(void *data, int len, int errcode)
  * async IO call.  note that I haven't actually rebooted with this
  * patch yet, so 'provisional' is an understatement.
  */
-    if (q && q != ctrlp->data) {
-	dwrite_q *p = ctrlp->data;
+    if (q && q != data) {
+	dwrite_q *p = data;
 	debug(50, 0) ("KARMA: q != data (%p, %p)\n", q, p);
 	debug(50, 0) ("KARMA: (%d, %d, %d FD %d)\n",
 	    q->buf_offset, q->len, len, fd);
@@ -435,15 +423,14 @@ diskHandleRead(int fd, void *data)
     len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
     if (len > 0)
         F->disk.offset += len;
-    diskHandleReadComplete(ctrl_dat, len, errno);
+    diskHandleReadComplete(fd, ctrl_dat, len, errno);
 #endif
 }
 
 static void
-diskHandleReadComplete(void *data, int len, int errcode)
+diskHandleReadComplete(int fd, void *data, int len, int errcode)
 {
     dread_ctrl *ctrl_dat = data;
-    int fd = ctrl_dat->fd;
     int rc = DISK_OK;
     errno = errcode;
     if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
