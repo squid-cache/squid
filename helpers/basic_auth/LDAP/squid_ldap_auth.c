@@ -197,6 +197,12 @@ squid_ldap_memfree(char *p)
 
 #endif
 
+#ifdef LDAP_API_FEATURE_X_OPENLDAP
+#if LDAP_VENDOR_VERSION > 194
+#define HAS_URI_SUPPORT 1
+#endif
+#endif
+
 static LDAP *
 open_ldap_connection(const char *ldapServer, int port)
 {
@@ -206,7 +212,7 @@ open_ldap_connection(const char *ldapServer, int port)
 	int rc = ldap_initialize(&ld, ldapServer);
 	if (rc != LDAP_SUCCESS) {
 	    fprintf(stderr, "\nUnable to connect to LDAPURI:%s\n", ldapServer);
-	    break;
+	    exit(1);
 	}
     } else
 #endif
@@ -252,13 +258,8 @@ open_ldap_connection(const char *ldapServer, int port)
     squid_ldap_set_timelimit(ld, timelimit);
     squid_ldap_set_referrals(ld, !noreferrals);
     squid_ldap_set_aliasderef(ld, aliasderef);
+    return ld;
 }
-
-#ifdef LDAP_API_FEATURE_X_OPENLDAP
-#if LDAP_VENDOR_VERSION > 194
-#define HAS_URI_SUPPORT 1
-#endif
-#endif
 
 int
 main(int argc, char **argv)
@@ -281,6 +282,7 @@ main(int argc, char **argv)
 	case 'z':
 	case 'Z':
 	case 'd':
+	case 'O':
 	    break;
 	default:
 	    if (strlen(argv[1]) > 2) {
@@ -381,6 +383,7 @@ main(int argc, char **argv)
 	    break;
 	case 'O':
 	    bind_once = !bind_once;
+	    break;
 	case 'p':
 	    port = atoi(value);
 	    break;
@@ -478,7 +481,7 @@ main(int argc, char **argv)
 	}
 	rfc1738_unescape(user);
 	rfc1738_unescape(passwd);
-	tryagain = 1;
+	tryagain = (ld != NULL);
       recover:
 	if (ld == NULL && persistent)
 	    ld = open_ldap_connection(ldapServer, port);
@@ -602,7 +605,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 	snprintf(dn, sizeof(dn), "%s", userdn);
 	squid_ldap_memfree(userdn);
 
-	if (ret == 0 && (!bind_once || passwdattr)) {
+	if (ret == 0 && (!binddn || !bind_once || passwdattr)) {
 	    /* Reuse the search connection for comparing the user password attribute */
 	    bind_ld = search_ld;
 	    search_ld = NULL;
@@ -612,7 +615,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 	    ldap_msgfree(res);
 	    res = NULL;
 	}
-	if (search_ld != persistent_ld) {
+	if (search_ld && search_ld != persistent_ld) {
 	    ldap_unbind(search_ld);
 	    search_ld = NULL;
 	}
@@ -636,7 +639,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 	ldap_unbind(bind_ld);
 	bind_ld = NULL;
     }
-    return 0;
+    return ret;
 }
 
 int 
