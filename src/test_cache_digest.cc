@@ -1,5 +1,5 @@
 /*
- * $Id: test_cache_digest.cc,v 1.1 1998/03/30 20:42:42 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.2 1998/03/30 21:16:10 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -137,6 +137,15 @@ cacheIndexInitDigest(CacheIndex *idx)
     fprintf(stderr, "%s: init-ed  digest with %d entries\n", 
 	idx->name, idx->digest->count);
     fprintf(stderr, "%s: init took: %f sec, %f sec/M\n",
+	idx->name,
+	tvSubDsec(t_start, t_end),
+	(double)1e6*tvSubDsec(t_start, t_end)/idx->count);
+    /* check how long it takes to traverse the hash */
+    gettimeofday(&t_start, NULL);
+    for (hashr = hash_first(idx->hash); hashr; hashr = hash_next(idx->hash)) {
+    }
+    gettimeofday(&t_end, NULL);
+    fprintf(stderr, "%s: hash scan took: %f sec, %f sec/M\n",
 	idx->name,
 	tvSubDsec(t_start, t_end),
 	(double)1e6*tvSubDsec(t_start, t_end)/idx->count);
