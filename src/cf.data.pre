@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.375 2005/02/19 16:03:33 hno Exp $
+# $Id: cf.data.pre,v 1.376 2005/02/27 16:36:06 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3773,6 +3773,17 @@ DOC_START
 
 	Note: This is in addition to the request reforwarding which
 	takes place if Squid fails to get a satisfying response.
+DOC_END
+
+NAME: retry_on_error
+TYPE: onoff
+LOC: Config.retry.onerror
+DEFAULT: off
+DOC_START
+	If set to on Squid will automatically retry requests when
+	receiving an error response. This is mainly useful if you
+	are in a complex cache hierarchy to work around access
+	control errors.
 DOC_END
 
 NAME: snmp_port
