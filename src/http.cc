@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.448 2005/03/08 21:38:40 serassio Exp $
+ * $Id: http.cc,v 1.449 2005/04/03 18:53:24 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -858,6 +858,17 @@ HttpStateData::statusIfComplete() const
         return COMPLETE_NONPERSISTENT_MSG;
 
     /*
+     * If we haven't sent the whole request then this can not be a persistent
+     * connection.
+     */
+    if (!flags.request_sent) {
+        debug(11, 1) ("httpReadReply: Request not yet fully sent \"%s %s\"\n",
+                      RequestMethodStr[orig_request->method],
+                      storeUrl(entry));
+        return COMPLETE_NONPERSISTENT_MSG;
+    }
+
+    /*
      * What does the reply have to say about keep-alive?
      */
     /*
@@ -1232,6 +1243,8 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
          */
         commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
     }
+
+    httpState->flags.request_sent = 1;
 }
 
 /*
