@@ -15,7 +15,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.11 2002/04/13 15:38:13 hno Exp $
+#  $Id: Makefile.in,v 1.12 2002/05/20 02:05:39 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -137,6 +137,10 @@ libdiskd_a_SOURCES = diskd/diskd.c diskd/store_dir_diskd.c diskd/store_diskd.h \
 
 libnull_a_SOURCES = null/store_null.c
 libufs_a_SOURCES = ufs/store_dir_ufs.c ufs/store_io_ufs.c ufs/store_ufs.h
+
+EXTRA_DIST = \
+	coss/coss-notes.txt
+
 
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/
@@ -613,6 +617,7 @@ top_distdir = ../..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
+	$(mkinstalldirs) $(distdir)/coss
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
