@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.6 1997/07/14 19:56:15 wessels Exp $
+ * $Id: cf_gen.cc,v 1.7 1997/07/14 21:11:01 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -76,6 +76,7 @@ typedef struct Entry {
 
 
 static const char WS[] = " \t";
+static const char NS[] = "";
 static int gen_default(Entry *, FILE *);
 static void gen_parse(Entry *, FILE *);
 static void gen_dump(Entry *, FILE *);
@@ -94,6 +95,7 @@ main(int argc, char *argv[])
     Entry *curr = NULL;
     enum State state;
     int rc = 0;
+    char *ptr = NULL;
 
     /*-------------------------------------------------------------------*
      * Parse input file
@@ -139,49 +141,35 @@ main(int argc, char *argv[])
 	case s1:
 	    if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
 		/* ignore empty and comment lines */
-
 	    } else if (!strncmp(buff, "COMMENT:", 8)) {
-		char *ptr = buff+8;
-		while(isspace(*ptr))
-			ptr++;
+		ptr = buff + 8;
+		while (isspace(*ptr))
+		    ptr++;
 		curr->comment = strdup(ptr);
 	    } else if (!strncmp(buff, "DEFAULT:", 8)) {
-		char *ptr;
-
-		if ((ptr = strtok(buff + 8, WS)) == NULL) {
-		    printf("Error on line %d\n", linenum);
-		    exit(1);
-		}
+		ptr = buff + 8;
+		while (isspace(*ptr))
+		    ptr++;
 		curr->default_value = strdup(ptr);
-
 	    } else if (!strncmp(buff, "LOC:", 4)) {
-		char *ptr;
-
 		if ((ptr = strtok(buff + 4, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
 		    exit(1);
 		}
 		curr->loc = strdup(ptr);
-
 	    } else if (!strncmp(buff, "TYPE:", 5)) {
-		char *ptr;
-
 		if ((ptr = strtok(buff + 5, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
 		    exit(1);
 		}
 		curr->type = strdup(ptr);
-
 	    } else if (!strcmp(buff, "DOC_START")) {
 		state = sDOC;
-
 	    } else if (!strcmp(buff, "DOC_NONE")) {
 		/* add to list of entries */
 		curr->next = entries;
 		entries = curr;
-
 		state = sSTART;
-
 	    } else {
 		printf("Error on line %d\n", linenum);
 		exit(1);
@@ -291,10 +279,10 @@ gen_default(Entry * head, FILE * fp)
 	"default_line(const char *s)\n"
 	"{\n"
 	"\tLOCAL_ARRAY(char, tmp_line, BUFSIZ);\n"
-        "\txstrncpy(tmp_line, s, BUFSIZ);\n"
-        "\txstrncpy(config_input_line, s, BUFSIZ);\n"
+	"\txstrncpy(tmp_line, s, BUFSIZ);\n"
+	"\txstrncpy(config_input_line, s, BUFSIZ);\n"
 	"\tconfig_lineno++;\n"
-        "\tparse_line(tmp_line);\n"
+	"\tparse_line(tmp_line);\n"
 	"}\n"
 	);
 
@@ -423,7 +411,7 @@ gen_conf(Entry * head, FILE * fp)
 
 	fprintf(fp, "#  TAG: %s", entry->name);
 	if (entry->comment)
-		fprintf(fp, "\t%s", entry->comment);
+	    fprintf(fp, "\t%s", entry->comment);
 	fprintf(fp, "\n");
 	for (line = entry->doc; line != NULL; line = line->next) {
 	    fprintf(fp, "#%s\n", line->data);

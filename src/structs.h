@@ -101,7 +101,7 @@ struct _cache_peer {
 
 struct _SquidConfig {
     struct {
-	int maxSize;
+	size_t maxSize;
 	int highWaterMark;
 	int lowWaterMark;
     } Mem , Swap;
@@ -110,9 +110,9 @@ struct _SquidConfig {
 	u_short relayPort;
     } Wais;
     struct {
-	int min;
+	size_t min;
 	int pct;
-	int max;
+	size_t max;
     } quickAbort;
     time_t referenceAge;
     time_t negativeTtl;
@@ -128,7 +128,7 @@ struct _SquidConfig {
 	time_t connect;
 	time_t request;
     } Timeout;
-    int maxRequestSize;
+    size_t maxRequestSize;
     struct {
 	ushortlist *http;
 	u_short icp;
@@ -188,8 +188,8 @@ struct _SquidConfig {
 	struct in_addr udp_outgoing;
 	struct in_addr client_netmask;
     } Addrs;
-    int tcpRcvBufsz;
-    int udpMaxHitObjsz;
+    size_t tcpRcvBufsz;
+    size_t udpMaxHitObjsz;
     wordlist *cache_stoplist;
     wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
@@ -199,7 +199,7 @@ struct _SquidConfig {
     cache_peer *sslProxy;
     cache_peer *passProxy;
     struct {
-	int size;
+	size_t size;
 	int low;
 	int high;
     } ipcache;
@@ -207,8 +207,8 @@ struct _SquidConfig {
     cachemgr_passwd *passwd_list;
     struct {
 	int objectsPerBucket;
-	int avgObjectSize;
-	int maxObjectSize;
+	size_t avgObjectSize;
+	size_t maxObjectSize;
     } Store;
     struct {
 	int high;

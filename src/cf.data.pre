@@ -357,9 +357,9 @@ DOC_END
 
 
 NAME: cache_mem
-COMMENT: (in megabytes)
-TYPE: int
-DEFAULT: 8
+COMMENT: (bytes)
+TYPE: size_t
+DEFAULT: 8 MB
 LOC: Config.Mem.maxSize
 DOC_START
 	Maximum amout of VM used to store objects in memory.
@@ -386,7 +386,7 @@ DOC_START
 
 	The default is 8 Megabytes.
 
-cache_mem  8
+cache_mem  8 MB
 DOC_END
 
 
@@ -437,14 +437,15 @@ DOC_END
 
 
 NAME: maximum_object_size
-TYPE: int
-DEFAULT: 4096
+COMMENT: (KB)
+TYPE: kb_size_t
+DEFAULT: 4096 KB
 LOC: Config.Store.maxObjectSize
 DOC_START
 	Objects larger than this size will NOT be saved on disk.  The
 	value is specified in kilobytes, and the default is 4MB.
 
-maximum_object_size 4096
+maximum_object_size 4096 KB
 DOC_END
 
 
@@ -827,15 +828,16 @@ DOC_END
 
 
 NAME: request_size
-TYPE: int
-DEFAULT: 100
+COMMENT: (KB)
+TYPE: kb_size_t
+DEFAULT: 100 KB
 LOC: Config.maxRequestSize
 DOC_START
 	Maximum allowed request size in kilobytes.  If people are using
 	POST to upload files, then set this to the largest acceptable
 	filesize plus a few extra kbytes.
 
-request_size 100
+request_size 100 KB
 DOC_END
 
 
@@ -893,8 +895,8 @@ DOC_END
 
 
 NAME: quick_abort_min
-COMMENT: (kbytes)
-TYPE: int
+COMMENT: (KB)
+TYPE: kb_size_t
 DEFAULT: -1
 LOC: Config.quickAbort.min
 DOC_NONE
@@ -907,8 +909,8 @@ LOC: Config.quickAbort.pct
 DOC_NONE
 
 NAME: quick_abort_max
-COMMENT: (kbytes)
-TYPE: int
+COMMENT: (KB)
+TYPE: kb_size_t
 DEFAULT: 0
 LOC: Config.quickAbort.max
 DOC_START
