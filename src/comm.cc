@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.162 1997/06/16 22:01:44 wessels Exp $
+ * $Id: comm.cc,v 1.163 1997/06/17 03:03:21 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -140,6 +140,7 @@ typedef struct {
     struct in_addr in_addr;
     int locks;
     int fd;
+    callback_meta *cbm_list;
 } ConnectStateData;
 
 /* GLOBAL */
@@ -337,7 +338,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs->data = data;
     comm_add_close_handler(fd, commConnectFree, cs);
     cs->locks++;
-    ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
+    ipcache_nbgethostbyname(host, commConnectDnsHandle, cs, &cs->cbm_list);
 }
 
 static void
@@ -370,8 +371,7 @@ static void
 commConnectFree(int fdunused, void *data)
 {
     ConnectStateData *cs = data;
-    if (cs->locks)
-	ipcacheUnregister(cs->host, cs);
+    callbackUnlinkList(cs->cbm_list);
     xfree(cs->host);
     xfree(cs);
 }
@@ -425,7 +425,7 @@ commConnectHandle(int fd, void *data)
 	    cs->S.sin_addr.s_addr = 0;
 	    ipcacheCycleAddr(cs->host);
 	    cs->locks++;
-	    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
+	    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs, &cs->cbm_list);
 	} else {
 	    ipcacheRemoveBadAddr(cs->host, cs->S.sin_addr);
 	    commConnectCallback(cs, COMM_ERR_CONNECT);

@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.97 1997/06/16 22:01:43 wessels Exp $
+ * $Id: acl.cc,v 1.98 1997/06/17 03:03:20 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1176,7 +1176,8 @@ aclCheck(aclCheck_t * checklist)
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
 	    ipcache_nbgethostbyname(checklist->request->host,
 		aclLookupDstIPDone,
-		checklist);
+		checklist,
+		&checklist->cbm_list);
 	    return;
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
@@ -1215,9 +1216,8 @@ aclChecklistFree(aclCheck_t * checklist)
 	fqdncacheUnregister(checklist->src_addr, checklist);
     if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_PENDING)
 	fqdncacheUnregister(checklist->dst_addr, checklist);
-    if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_PENDING)
-	ipcacheUnregister(checklist->request->host, checklist);
     requestUnlink(checklist->request);
+    callbackUnlinkList(checklist->cbm_list);
     xfree(checklist);
 }
 
