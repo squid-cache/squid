@@ -36,6 +36,7 @@ MV		= @MV@
 RM		= @RM@
 SHELL		= /bin/sh
 
+CFLAGS		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
 
 all: $(LDAP_EXE)
 
@@ -51,6 +52,9 @@ install-mkdirs:
 		echo "mkdir $(libexecdir)"; \
 		mkdir -p $(libexecdir); \
 	fi
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
 
 # Michael Lupp <mike@nemesis.saar.de> wants to know about additions
 # to the install target.
