@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.120 1997/07/28 06:40:52 wessels Exp $
+ * $Id: client_side.cc,v 1.121 1997/08/10 04:42:35 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -528,7 +528,8 @@ clientConstructTraceEcho(clientHttpRequest * http)
 	NULL,			/* in_len */
 	buf + len,
 	8192 - len,
-	http->conn->fd);
+	http->conn->fd,
+	0);			/* flags */
     http->log_type = LOG_TCP_MISS;
     http->http_code = 200;
     return buf;

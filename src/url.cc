@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.60 1997/07/16 20:32:22 wessels Exp $
+ * $Id: url.cc,v 1.61 1997/08/10 04:42:50 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -338,7 +338,7 @@ urlClean(char *dirty)
 
 
 request_t *
-requestLink(request_t * request)
+requestLink(const request_t * request)
 {
     request->link_count++;
     return request;

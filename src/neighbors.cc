@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.155 1997/08/09 00:01:32 wessels Exp $
+ * $Id: neighbors.cc,v 1.156 1997/08/10 04:42:42 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ static void peerRefreshDNS _PARAMS((void *));
 static IPH peerDNSConfigure;
 static void peerCheckConnect _PARAMS((void *));
 static IPH peerCheckConnect2;
-static void peerCheckConnectDone _PARAMS((int, int, void *));
+static CNCB peerCheckConnectDone;
 static void peerCountMcastPeersDone _PARAMS((void *data));
 static void peerCountMcastPeersStart _PARAMS((void *data));
 static void peerCountMcastPeersSchedule _PARAMS((peer * p, time_t when));

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.180 1997/07/28 06:40:57 wessels Exp $
+ * $Id: http.cc,v 1.181 1997/08/10 04:42:38 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -210,9 +210,11 @@ static void httpMakePrivate _PARAMS((StoreEntry *));
 static void httpMakePublic _PARAMS((StoreEntry *));
 static char *httpStatusString _PARAMS((int status));
 static STABH httpAbort;
+static HttpStateData *httpBuildState _PARAMS((int, StoreEntry *, request_t *, peer *));
+static int httpSocketOpen _PARAMS((StoreEntry *, const request_t *));
 
 static void
-httpStateFree(int fd, void *data)
+httpStateFree(int fdunused, void *data)
 {
     HttpStateData *httpState = data;
     if (httpState == NULL)
@@ -557,6 +559,40 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     }
 }
 
+static int
+httpPconnTransferDone(HttpStateData * httpState)
+{
+    /* return 1 if we got the last of the data on a persistent connection */
+    MemObject *mem = httpState->entry->mem_obj;
+    struct _http_reply *reply = mem->reply;
+    debug(0, 0) ("httpPconnTransferDone: FD %d\n", httpState->fd);
+    if (!BIT_TEST(httpState->flags, HTTP_KEEPALIVE))
+	return 0;
+    debug(0, 0) ("httpPconnTransferDone: content_length=%d\n",
+	reply->content_length);
+    /*
+     * !200 replies maybe don't have content-length, so
+     * if we saw the end of the headers then try being persistent.
+     */
+    if (reply->code != 200)
+	if (httpState->reply_hdr_state > 1)
+	    return 1;
+    /*
+     * If there is no content-length, then we probably can't be persistent
+     */
+    if (reply->content_length == 0)
+	return 0;
+    /*
+     * If there is a content_length, see if we've got all of it.  If so,
+     * then we can recycle this connection.
+     */
+    debug(0, 0) ("httpPconnTransferDone: hdr_sz=%d\n", reply->hdr_sz);
+    debug(0, 0) ("httpPconnTransferDone: e_current_len=%d\n",
+	mem->e_current_len);
+    if (mem->e_current_len < reply->content_length + reply->hdr_sz)
+	return 0;
+    return 1;
+}
 
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
@@ -567,6 +603,7 @@ httpReadReply(int fd, void *data)
     HttpStateData *httpState = data;
     LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     StoreEntry *entry = httpState->entry;
+    const request_t *request = httpState->request;
     int len;
     int bin;
     int clen;
@@ -652,10 +689,15 @@ httpReadReply(int fd, void *data)
 	if (httpState->reply_hdr_state < 2)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    httpReadReply,
-	    httpState, 0);
+	if (httpPconnTransferDone(httpState)) {
+	    pconnPush(fd, request->host, request->port);
+	    comm_remove_close_handler(fd, httpStateFree, httpState);
+	    storeComplete(entry);	/* deallocates mem_obj->request */
+	    httpState->fd = -1;
+	    httpStateFree(-1, httpState);
+	} else {
+	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
+	}
     }
 }
 
@@ -717,7 +759,8 @@ httpBuildRequestHeader(request_t * request,
     size_t * in_len,
     char *hdr_out,
     size_t out_sz,
-    int cfd)
+    int cfd,
+    int flags)
 {
     LOCAL_ARRAY(char, ybuf, MAX_URL + 32);
     char *xbuf = get_free_4k_page();
@@ -820,6 +863,15 @@ httpBuildRequestHeader(request_t * request,
 	    assert(strstr(url, request->urlpath));
 	}
     }
+    /* maybe append Connection: Keep-Alive */
+    if (BIT_TEST(flags, HTTP_KEEPALIVE)) {
+	if (BIT_TEST(flags, HTTP_PROXYING)) {
+	    sprintf(ybuf, "Proxy-Connection: Keep-Alive");
+	} else {
+	    sprintf(ybuf, "Connection: Keep-Alive");
+	}
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
+    }
     httpAppendRequestHeader(hdr_out, null_string, &len, out_sz, 1);
     put_free_4k_page(xbuf);
     put_free_4k_page(viabuf);
@@ -871,13 +923,18 @@ httpSendRequest(int fd, void *data)
 	cfd = -1;
     else
 	cfd = entry->mem_obj->fd;
+    if (httpState->neighbor != NULL)
+	BIT_SET(httpState->flags, HTTP_PROXYING);
+    if (req->method == METHOD_GET)
+	BIT_SET(httpState->flags, HTTP_KEEPALIVE);
     len = httpBuildRequestHeader(req,
 	httpState->orig_request ? httpState->orig_request : req,
 	entry,
 	NULL,
 	buf,
 	buflen,
-	cfd);
+	cfd,
+	httpState->flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, buf);
     comm_write(fd,
 	buf,
@@ -889,62 +946,97 @@ httpSendRequest(int fd, void *data)
     httpState->orig_request = NULL;
 }
 
-void
-proxyhttpStart(request_t * orig_request,
-    StoreEntry * entry,
-    peer * e)
+static int
+httpSocketOpen(StoreEntry * entry, const request_t * request)
 {
-    HttpStateData *httpState;
-    request_t *request;
     int fd;
     ErrorState *err;
-    debug(11, 3) ("proxyhttpStart: \"%s %s\"\n",
-	RequestMethodStr[orig_request->method], entry->url);
-    if (e->options & NEIGHBOR_PROXY_ONLY)
-#if DONT_USE_VM
-	storeReleaseRequest(entry);
-#else
-	storeStartDeleteBehind(entry);
-#endif
-    /* Create socket. */
     fd = comm_open(SOCK_STREAM,
 	0,
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
 	entry->url);
-    if (fd == COMM_ERROR) {
-	debug(11, 4) ("proxyhttpStart: Failed because we're out of sockets.\n");
+    if (fd < 0) {
+	debug(11, 4) ("httpSocketOpen: Failed because we're out of sockets.\n");
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_SOCKET_FAILURE;
 	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
 	err->errno = errno;
+	if (request)
+	    err->request = requestLink(request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
-	return;
     }
+    return fd;
+}
+
+static HttpStateData *
+httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
+{
+    HttpStateData *httpState = xcalloc(1, sizeof(HttpStateData));
+    request_t *request;
     storeLockObject(entry);
-    httpState = xcalloc(1, sizeof(HttpStateData));
     cbdataAdd(httpState);
     httpState->entry = entry;
-    request = get_free_request_t();
-    httpState->request = requestLink(request);
-    httpState->neighbor = e;
-    httpState->orig_request = requestLink(orig_request);
     httpState->fd = fd;
+    if (e) {
+	request = get_free_request_t();
+	request->method = orig_request->method;
+	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
+	request->port = e->http_port;
+	xstrncpy(request->urlpath, entry->url, MAX_URL);
+	httpState->request = requestLink(request);
+	httpState->neighbor = e;
+	httpState->orig_request = requestLink(orig_request);
+	BIT_SET(request->flags, REQ_PROXYING);
+    } else {
+	httpState->request = requestLink(orig_request);
+    }
     /* register the handler to free HTTP state data when the FD closes */
-    comm_add_close_handler(httpState->fd,
-	httpStateFree,
+    comm_add_close_handler(httpState->fd, httpStateFree, httpState);
+    return httpState;
+}
+
+void
+httpStart(request_t * request, StoreEntry * entry, peer * e)
+{
+    HttpStateData *httpState;
+    int fd;
+    debug(11, 3) ("httpStart: \"%s %s\"\n",
+	RequestMethodStr[request->method], entry->url);
+    if (e) {
+	if (e->options & NEIGHBOR_PROXY_ONLY)
+#if DONT_USE_VM
+	    storeReleaseRequest(entry);
+#else
+	    storeStartDeleteBehind(entry);
+#endif
+	if ((fd = pconnPop(e->host, e->http_port)) >= 0) {
+	    debug(0, 0) ("httpStart: reusing pconn FD %d\n", fd);
+	    httpState = httpBuildState(fd, entry, request, e);
+	    httpConnectDone(fd, COMM_OK, httpState);
+	    return;
+	}
+    } else {
+	if ((fd = pconnPop(request->host, request->port)) >= 0) {
+	    debug(0, 0) ("httpStart: reusing pconn FD %d\n", fd);
+	    httpState = httpBuildState(fd, entry, request, e);
+	    httpConnectDone(fd, COMM_OK, httpState);
+	    return;
+	}
+    }
+    if ((fd = httpSocketOpen(entry, NULL)) < 0)
+	return;
+    httpState = httpBuildState(fd, entry, request, e);
+    storeRegisterAbort(entry, httpAbort, httpState);
+    commSetTimeout(httpState->fd,
+	Config.Timeout.connect,
+	httpTimeout,
 	httpState);
-    request->method = orig_request->method;
-    xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
-    request->port = e->http_port;
-    xstrncpy(request->urlpath, entry->url, MAX_URL);
-    BIT_SET(request->flags, REQ_PROXYING);
-    commSetTimeout(fd, Config.Timeout.connect, httpTimeout, httpState);
     commConnectStart(httpState->fd,
-	request->host,
-	request->port,
+	httpState->request->host,
+	httpState->request->port,
 	httpConnectDone,
 	httpState);
 }
@@ -983,50 +1075,6 @@ httpConnectDone(int fd, int status, void *data)
 	fd_note(fd, entry->url);
 	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
     }
-}
-
-void
-httpStart(request_t * request, StoreEntry * entry)
-{
-    int fd;
-    HttpStateData *httpState;
-    ErrorState *err;
-    debug(11, 3) ("httpStart: \"%s %s\"\n",
-	RequestMethodStr[request->method], entry->url);
-    /* Create socket. */
-    fd = comm_open(SOCK_STREAM,
-	0,
-	Config.Addrs.tcp_outgoing,
-	0,
-	COMM_NONBLOCKING,
-	entry->url);
-    if (fd == COMM_ERROR) {
-	debug(11, 4) ("httpStart: Failed because we're out of sockets.\n");
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_SOCKET_FAILURE;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
-	err->errno = errno;
-	err->request = requestLink(request);
-	errorAppendEntry(entry, err);
-	storeAbort(entry, 0);
-	return;
-    }
-    storeLockObject(entry);
-    httpState = xcalloc(1, sizeof(HttpStateData));
-    cbdataAdd(httpState);
-    httpState->entry = entry;
-    httpState->request = requestLink(request);
-    httpState->fd = fd;
-    comm_add_close_handler(httpState->fd,
-	httpStateFree,
-	httpState);
-    storeRegisterAbort(entry, httpAbort, httpState);
-    commSetTimeout(fd, Config.Timeout.connect, httpTimeout, httpState);
-    commConnectStart(httpState->fd,
-	request->host,
-	request->port,
-	httpConnectDone,
-	httpState);
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.171 1997/08/09 05:42:34 wessels Exp $
+ * $Id: main.cc,v 1.172 1997/08/10 04:42:41 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -518,6 +518,7 @@ mainInitialize(void)
 	/* after this point we want to see the mallinfo() output */
 	do_mallinfo = 1;
 	mimeInit(Config.mimeTablePathname);
+	pconnInit();
     }
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.onoff.accel_with_proxy))

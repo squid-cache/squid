@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.183 1997/07/26 04:48:26 wessels Exp $
+ * $Id: comm.cc,v 1.184 1997/08/10 04:42:36 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -269,7 +269,7 @@ comm_open(int sock_type,
 	default:
 	    debug(50, 0) ("comm_open: socket failure: %s\n", xstrerror());
 	}
-	return (COMM_ERROR);
+	return -1;
     }
     /* update fdstat */
     debug(5, 5) ("comm_open: FD %d is a new socket\n", new_socket);
@@ -285,14 +285,14 @@ comm_open(int sock_type,
     if (addr.s_addr != no_addr.s_addr) {
 	if (commBind(new_socket, addr, port) != COMM_OK) {
 	    comm_close(new_socket);
-	    return COMM_ERROR;
+	    return -1;
 	}
     }
     F->local_port = port;
 
     if (BIT_TEST(flags, COMM_NONBLOCKING))
 	if (commSetNonBlocking(new_socket) == COMM_ERROR)
-	    return COMM_ERROR;
+	    return -1;
 #ifdef TCP_NODELAY
     if (sock_type == SOCK_STREAM)
 	commSetTcpNoDelay(new_socket);
@@ -564,7 +564,9 @@ commCallCloseHandlers(int fd)
     debug(5, 5) ("commCallCloseHandlers: FD %d\n", fd);
     while ((ch = F->close_handler) != NULL) {
 	F->close_handler = ch->next;
-	ch->handler(fd, ch->data);
+	if (cbdataValid(ch->data))
+	    ch->handler(fd, ch->data);
+	cbdataUnlock(ch->data);
 	safe_free(ch);
     }
 }
@@ -1098,6 +1100,7 @@ comm_add_close_handler(int fd, PF * handler, void *data)
     new->data = data;
     new->next = fd_table[fd].close_handler;
     fd_table[fd].close_handler = new;
+    cbdataLock(data);
 }
 
 void

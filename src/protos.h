@@ -218,8 +218,7 @@ extern HASHHASH hash_url;
 extern HASHHASH hash4;
 
 extern int httpCachable _PARAMS((method_t));
-extern void proxyhttpStart _PARAMS((request_t *, StoreEntry *, peer *));
-extern void httpStart _PARAMS((request_t *, StoreEntry *));
+extern void httpStart _PARAMS((request_t *, StoreEntry *, peer *));
 extern void httpParseReplyHeaders _PARAMS((const char *, struct _http_reply *));
 extern void httpProcessReplyHeader _PARAMS((HttpStateData *, const char *, int));
 extern void httpReplyHeaderStats _PARAMS((StoreEntry *));
@@ -229,7 +228,8 @@ extern size_t httpBuildRequestHeader _PARAMS((request_t * request,
 	size_t * in_len,
 	char *hdr_out,
 	size_t out_sz,
-	int cfd));
+	int cfd,
+	int flags));
 extern int httpAnonAllowed _PARAMS((const char *line));
 extern int httpAnonDenied _PARAMS((const char *line));
 extern char *httpReplyHeader _PARAMS((double ver,
@@ -424,7 +424,7 @@ extern void storeComplete _PARAMS((StoreEntry *));
 extern void storeInit _PARAMS((void));
 extern int storeClientWaiting _PARAMS((const StoreEntry *));
 extern void storeAbort _PARAMS((StoreEntry *, int));
-extern void storeAppend _PARAMS((StoreEntry *, const char *, int));
+extern void storeAppend _PARAMS((const StoreEntry *, const char *, int));
 extern int storeGetSwapSpace _PARAMS((int));
 extern void storeLockObject _PARAMS((StoreEntry *));
 extern void storeSwapInStart _PARAMS((StoreEntry *, SIH *, void *data));
@@ -527,7 +527,7 @@ extern method_t urlParseMethod _PARAMS((const char *));
 extern void urlInitialize _PARAMS((void));
 extern request_t *urlParse _PARAMS((method_t, char *));
 extern char *urlCanonical _PARAMS((const request_t *, char *));
-extern request_t *requestLink _PARAMS((request_t *));
+extern request_t *requestLink _PARAMS((const request_t *));
 extern void requestUnlink _PARAMS((request_t *));
 extern int matchDomainName _PARAMS((const char *d, const char *h));
 extern int urlCheckRequest _PARAMS((const request_t *));
@@ -542,7 +542,7 @@ extern void logUserAgent _PARAMS((const char *, const char *));
 extern peer_t parseNeighborType _PARAMS((const char *s));
 
 extern void errorSend _PARAMS((int fd, ErrorState *));
-extern void errorAppendEntry _PARAMS((StoreEntry *, ErrorState *));
+extern void errorAppendEntry _PARAMS((const StoreEntry *, ErrorState *));
 extern void errorInitialize _PARAMS((void));
 
 extern OBJH stat_io_get;
@@ -556,3 +556,7 @@ extern OBJH server_list;
 extern OBJH parameter_get;
 extern OBJH storeDirStats;
 extern OBJH pconnHistDump;
+
+extern void pconnPush _PARAMS((int, const char *host, u_short port));
+extern int pconnPop _PARAMS((const char *host, u_short port));
+extern void pconnInit _PARAMS((void));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.45 1997/07/16 23:01:31 wessels Exp $
+ * $Id: net_db.cc,v 1.46 1997/08/10 04:42:42 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -438,8 +438,8 @@ netdbInit(void)
 #if USE_ICMP
     if (addr_table)
 	return;
-    addr_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp, 229, hash_string);
-    host_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp, 467, hash_string);
+    addr_table = hash_create((HASHCMP *) strcmp, 229, hash_string);
+    host_table = hash_create((HASHCMP *) strcmp, 467, hash_string);
     eventAdd("netdbSaveState", netdbSaveState, NULL, 3617);
     netdbReloadState();
 #endif

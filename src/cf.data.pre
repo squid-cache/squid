@@ -1082,6 +1082,16 @@ DOC_START
 client_lifetime 1 day
 DOC_END
 
+NAME: pconn_timeout
+TYPE: time_t
+LOC: Config.Timeout.pconn
+DEFAULT: 120 seconds
+DOC_START
+	Timeout for idle persistent connections to servers and other
+	proxies.
+pconn_timeout 120 seconds
+DOC_END
+
 
 NAME: shutdown_lifetime
 COMMENT: (in seconds)

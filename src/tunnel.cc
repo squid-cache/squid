@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.60 1997/07/28 06:41:03 wessels Exp $
+ * $Id: tunnel.cc,v 1.61 1997/08/10 04:42:46 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -58,7 +58,7 @@ static void sslProxyConnected _PARAMS((int fd, void *));
 static ERCB sslErrorComplete;
 static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
-static void sslConnectDone _PARAMS((int fd, int status, void *data));
+static CNCB sslConnectDone;
 static void sslStateFree _PARAMS((int fd, void *data));
 static void sslPeerSelectComplete _PARAMS((peer * p, void *data));
 static void sslPeerSelectFail _PARAMS((peer * p, void *data));
