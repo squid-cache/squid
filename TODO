@@ -9,17 +9,11 @@ Our Todo List
 	doubly-linked list.
 (1) **	Send full HTTP requests in ICP messages (DW)
 
-(2) **	copy over 'test_reachability' from 1.1 (DW)
-(2) **	we don't properly handle the HTTP/1.1 'Connection' header (KA)
 (2)	be more persistent in forwarding requests; return fewer error pages
 (2)	Fix some problems with peer-selection.
 		- Allow for 'backup' parents 
 		- An orderd list of siblings to try.  
 		- Hash function load balancing
-(2) **	Code cleanup: (KA)
-		- Make sure the lib/*.c files do not use printf/fprintf.
-		- Replace bzero with memset
-		- Replace bcopy with xmemcpy
 (2)     Use storeBuffer/Flush where needed, consider supporting nested calls
 
 (3) **	request-range (AR)
@@ -58,7 +52,6 @@ Our Todo List
 	  we debug and polish things. Comments discussing current code
 	  problems will be deleted; hopefully, along with the problems.
 
-(4) **	FTP PUT (KA)
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
 	stoplist_pattern, refresh_pattern, ...  (DW)
 (4) **  Double check that MemBuf.size is used correctly everywhere (AR)
@@ -114,3 +107,10 @@ DONE:
 (2) **  Fix cachemgr.cgi.  It doesn't understand some of the new
         output formats. (??)
 (2) **	Add "Squid" trailer to all error messages. (AR)
+(2) **	copy over 'test_reachability' from 1.1 (DW)
+(2) **	we don't properly handle the HTTP/1.1 'Connection' header (KA)
+(2) **	Code cleanup: (KA)
+		- Make sure the lib/*.c files do not use printf/fprintf.
+		- Replace bzero with memset
+		- Replace bcopy with xmemcpy
+(4) **	FTP PUT (KA)
