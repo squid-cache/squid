@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.64 1996/09/13 20:23:31 wessels Exp $
+ * $Id: stat.cc,v 1.65 1996/09/13 20:50:51 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -900,13 +900,7 @@ void parameter_get(obj, sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-#ifdef LOG_FULL_HEADERS
-/* Table of char to hex string conversions */
-#endif /* LOG_FULL_HEADERS */
-
-#ifndef LOG_FULL_HEADERS
-void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData)
-#else
+#if LOG_FULL_HEADERS
 static char c2x[] =
 {
     "000102030405060708090a0b0c0d0e0f"
@@ -934,7 +928,6 @@ char *log_quote(header)
 {
     int c, i;
     char *buf, *buf_cursor;
-
     if (header == NULL) {
 	buf = xcalloc(1, 1);
 	*buf = '\0';
@@ -942,7 +935,6 @@ char *log_quote(header)
     }
     buf = xcalloc((strlen(header) * 3) + 1, 1);
     buf_cursor = buf;
-
     /*
      * We escape: \x00-\x1F"#%;<>?{}|\\\\^~`\[\]\x7F-\xFF 
      * which is the default escape list for the CPAN Perl5 URI module
@@ -976,13 +968,16 @@ char *log_quote(header)
 	    *buf_cursor++ = c;
 	}
     }
-
     *buf_cursor = '\0';
     return buf;
 }
+#endif /* LOG_FULL_HEADERS */
 
 
+#if LOG_FULL_HEADERS
 void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData, request_hdr, reply_hdr)
+#else
+void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, hierData)
 #endif				/* LOG_FULL_HEADERS */
      cacheinfo *obj;
      char *url;
@@ -994,15 +989,15 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
      int msec;
      char *ident;
      struct _hierarchyLogData *hierData;
-#ifdef LOG_FULL_HEADERS
+#if LOG_FULL_HEADERS
      char *request_hdr;
      char *reply_hdr;
 #endif /* LOG_FULL_HEADERS */
 {
-#ifndef LOG_FULL_HEADERS
-    LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
-#else
+#if LOG_FULL_HEADERS
     LOCAL_ARRAY(char, tmp, 10000);	/* MAX_URL is 4096 */
+#else
+    LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
 #endif /* LOG_FULL_HEADERS */
     int x;
     char *client = NULL;
@@ -1053,8 +1048,7 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 		hier_timeout ? "TIMEOUT_" : "",
 		hier_strings[hier_code],
 		hier_host);
-#ifdef LOG_FULL_HEADERS
-
+#if LOG_FULL_HEADERS
 	if (Config.logMimeHdrs) {
 	    int msize = strlen(tmp);
 	    char *ereq = log_quote(request_hdr);

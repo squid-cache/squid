@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.85 1996/09/13 20:22:59 wessels Exp $
+ * $Id: cache_cf.cc,v 1.86 1996/09/13 20:50:48 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -168,7 +168,7 @@ struct SquidConfig Config;
 #define DefaultAccelWithProxy	0	/* default off */
 #define DefaultSourcePing	0	/* default off */
 #define DefaultCommonLogFormat	0	/* default off */
-#ifdef LOG_FULL_HEADERS
+#if LOG_FULL_HEADERS
 #define DefaultLogMimeHdrs	0	/* default off */
 #endif /* LOG_FULL_HEADERS */
 #define DefaultIdentLookup	0	/* default off */
@@ -1228,7 +1228,7 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "emulate_httpd_log"))
 	    parseOnOff(&Config.commonLogFormat);
 
-#ifdef LOG_FULL_HEADERS
+#if LOG_FULL_HEADERS
 	else if (!strcmp(token, "log_mime_hdrs"))
 	    parseOnOff(&Config.logMimeHdrs);
 
@@ -1470,7 +1470,7 @@ static void configSetFactoryDefaults()
     Config.quickAbort.pct = DefaultQuickAbortPct;
     Config.quickAbort.max = DefaultQuickAbortMax;
     Config.commonLogFormat = DefaultCommonLogFormat;
-#ifdef LOG_FULL_HEADERS
+#if LOG_FULL_HEADERS
     Config.logMimeHdrs = DefaultLogMimeHdrs;
 #endif /* LOG_FULL_HEADERS */
     Config.debugOptions = safe_xstrdup(DefaultDebugOptions);
