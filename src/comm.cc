@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.129 1997/01/15 05:48:26 wessels Exp $
+ * $Id: comm.cc,v 1.130 1997/01/31 20:12:29 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -957,7 +957,9 @@ comm_select(time_t sec)
 	maxfd = fdstat_biggest_fd() + 1;
 	for (i = 0; i < maxfd; i++) {
 	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler && fd_table[i].stall_until <= squid_curtime) {
+	    if (fd_table[i].stall_until > squid_curtime)
+		continue;
+	    if (fd_table[i].read_handler) {
 		nfds++;
 		FD_SET(i, &readfds);
 	    }
@@ -1010,20 +1012,17 @@ comm_select(time_t sec)
 	for (fd = 0; fd < maxfd; fd++) {
 	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
 		continue;
-
 	    /*
 	     * Admit more connections quickly until we hit the hard limit.
 	     * Don't forget to keep the UDP acks coming and going.
 	     */
 	    comm_select_incoming();
-
 	    if (fd == theInIcpConnection)
 		continue;
 	    if (fd == theOutIcpConnection)
 		continue;
 	    if (fd == theHttpConnection)
 		continue;
-
 	    if (FD_ISSET(fd, &readfds)) {
 		debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
 		if (fd_table[fd].read_handler) {
