@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.46 1999/01/11 22:23:07 wessels Exp $
+ * $Id: refresh.cc,v 1.47 1999/01/19 23:18:01 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -41,7 +41,7 @@
 #include "squid.h"
 
 typedef enum {
-    rcHTTP, rcICP, rcCDigest, rcCount
+    rcHTTP, rcICP, rcCDigest, rcStore, rcCount
 } refreshCountsEnum;
 
 static struct RefreshCounts {
@@ -255,6 +255,34 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
     return 1;
 }
 
+int
+refreshIsCachable(const StoreEntry * entry)
+{
+    /*
+     * Don't look at the request to avoid no-cache and other nuisances.
+     * the object should have a mem_obj so the URL will be found there.
+     * 60 seconds delta, to avoid objects which expire almost
+     * immediately, and which can't be refreshed.
+     */
+    if (!refreshCheck(entry, NULL, 60, &refreshCounts[rcStore]))
+	/* Does not need refresh. This is certainly cachable */
+	return 1;
+    if (entry->lastmod < 0)
+	/* Last modified is needed to do a refresh */
+	return 0;
+    if (entry->mem_obj == NULL)
+	/* no mem_obj? */
+	return 1;
+    if (entry->mem_obj->reply)
+	/* no reply? */
+	return 1;
+    if (entry->mem_obj->reply->content_length == 0)
+	/* No use refreshing (caching?) 0 byte objects */
+	return 0;
+    /* This seems to be refreshable. Cache it */
+    return 1;
+}
+
 /* refreshCheck... functions below are protocol-specific wrappers around
  * refreshCheck() function above */
 
@@ -357,6 +385,7 @@ refreshInit()
     memset(refreshCounts, 0, sizeof(refreshCounts));
     refreshCounts[rcHTTP].proto = "HTTP";
     refreshCounts[rcICP].proto = "ICP";
+    refreshCounts[rcStore].proto = "On Store";
     refreshCounts[rcCDigest].proto = "Cache Digests";
 
     cachemgrRegister("refresh",
