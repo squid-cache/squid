@@ -1097,7 +1097,7 @@ read_mib(filename)
 	return(NULL);
 
     mbuf[0]='\0';
-    while ( (p=fgets(mbuf, 256, fp)) && strncmp(mbuf, CURRENT_MIB_VERSION,
+    while ( (p=fgets(mbuf, 256, fp)) && strncmp(&mbuf[4], CURRENT_MIB_VERSION,
 		strlen(CURRENT_MIB_VERSION)));
     if (!p) {
         snmplib_debug(0, "Bad MIB version or tag missing,install original!\n");
