@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.127 1998/04/23 19:27:22 wessels Exp $
+ * $Id: errorpage.cc,v 1.128 1998/04/24 04:52:07 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -158,7 +158,7 @@ errorTryLoadText(const char *page_name, const char *dir)
 	    file_close(fd);
 	return NULL;
     }
-    text = xcalloc(sb.st_size + 2 + 1, 1);
+    text = xcalloc(sb.st_size + 2 + 1, 1);	/* 2 == space for %S */
     if (read(fd, text, sb.st_size) != sb.st_size) {
 	debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
 	    path, xstrerror());
