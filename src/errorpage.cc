@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.59 1997/07/16 20:32:04 wessels Exp $
+ * $Id: errorpage.cc,v 1.60 1997/07/17 05:25:09 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -125,9 +125,6 @@ static error_data ErrorData[] =
     {"ERR_ZERO_SIZE_OBJECT",
 	"No Object Data",
 	"The remote server closed the connection before sending any data."},
-    {"ERR_FTP_DISABLED",
-	"FTP is disabled",
-	"This cache is configured to NOT retrieve FTP objects."},
     {"ERR_PROXY_DENIED",
 	"Access Denied",
 	"You must authenticate yourself before accessing this cache."}
