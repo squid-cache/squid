@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.233 1998/08/18 19:14:05 wessels Exp $
+ * $Id: neighbors.cc,v 1.234 1998/08/21 03:15:19 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -119,10 +119,10 @@ peerAllowedToUse(const peer * p, request_t * request)
     int do_ping = 1;
     aclCheck_t checklist;
     assert(request != NULL);
-    if (EBIT_TEST(request->flags, REQ_NOCACHE))
+    if (request->flags.nocache)
 	if (neighborType(p, request) == PEER_SIBLING)
 	    return 0;
-    if (EBIT_TEST(request->flags, REQ_REFRESH))
+    if (request->flags.refresh)
 	if (neighborType(p, request) == PEER_SIBLING)
 	    return 0;
     if (p->pinglist == NULL && p->access == NULL)
@@ -157,7 +157,7 @@ peerWouldBePinged(const peer * p, request_t * request)
     /* the case below seems strange, but can happen if the
      * URL host is on the other side of a firewall */
     if (p->type == PEER_SIBLING)
-	if (!EBIT_TEST(request->flags, REQ_HIERARCHICAL))
+	if (!request->flags.hierarchical)
 	    return 0;
     if (p->icp_port == echo_port)
 	if (!neighborUp(p))
@@ -964,7 +964,7 @@ peerCountMcastPeersStart(void *data)
     assert(p->type == PEER_MULTICAST);
     p->mcast.flags &= ~PEER_COUNT_EVENT_PENDING;
     snprintf(url, MAX_URL, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
-    fake = storeCreateEntry(url, url, 0, METHOD_GET);
+    fake = storeCreateEntry(url, url, null_request_flags, METHOD_GET);
     psstate->request = requestLink(urlParse(METHOD_GET, url));
     psstate->entry = fake;
     psstate->callback = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.384 1998/08/20 22:45:46 wessels Exp $
+ * $Id: client_side.cc,v 1.385 1998/08/21 03:15:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -143,7 +143,7 @@ clientConstructProxyAuthReply(clientHttpRequest * http)
 }
 
 StoreEntry *
-clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
+clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
 {
     StoreEntry *e;
     /*
@@ -178,7 +178,7 @@ clientAccessCheckDone(int answer, void *data)
 	redirectStart(http, clientRedirectDone, http);
     } else if (answer == ACCESS_REQ_PROXY_AUTH) {
 	http->log_type = LOG_TCP_DENIED;
-	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
+	http->entry = clientCreateStoreEntry(http, http->request->method, null_request_flags);
 	/* create appropriate response */
 	http->entry->mem_obj->reply = clientConstructProxyAuthReply(http);
 	httpReplySwapOut(http->entry->mem_obj->reply, http->entry);
@@ -188,7 +188,7 @@ clientAccessCheckDone(int answer, void *data)
 	debug(33, 5) ("AclMatchedName = %s\n",
 	    AclMatchedName ? AclMatchedName : "<null>");
 	http->log_type = LOG_TCP_DENIED;
-	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
+	http->entry = clientCreateStoreEntry(http, http->request->method, null_request_flags);
 	page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
 	/* NOTE: don't use HTTP_UNAUTHORIZED because then the
 	 * stupid browser wants us to authenticate */
@@ -219,7 +219,7 @@ clientRedirectDone(void *data, char *result)
 	new_request->http_ver = old_request->http_ver;
 	httpHeaderAppend(&new_request->header, &old_request->header);
 	new_request->client_addr = old_request->client_addr;
-	EBIT_SET(new_request->flags, REQ_REDIRECTED);
+	new_request->flags.redirected = 1;
 	if (old_request->body) {
 	    new_request->body = xmalloc(old_request->body_sz);
 	    xmemcpy(new_request->body, old_request->body, old_request->body_sz);
@@ -250,7 +250,7 @@ clientProcessExpired(void *data)
 	clientProcessOnlyIfCachedMiss(http);
 	return;
     }
-    EBIT_SET(http->request->flags, REQ_REFRESH);
+    http->request->flags.refresh = 1;
     http->old_entry = http->entry;
     entry = storeCreateEntry(url,
 	http->log_uri,
@@ -298,7 +298,7 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
     }
     /* If the client did not send IMS in the request, then it
      * must get the old object, not this "Not Modified" reply */
-    if (!EBIT_TEST(request->flags, REQ_IMS)) {
+    if (!request->flags.ims) {
 	debug(33, 5) ("clientGetsOldEntry: YES, no client IMS\n");
 	return 1;
     }
@@ -457,7 +457,7 @@ clientPurgeRequest(clientHttpRequest * http)
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
-	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
+	http->entry = clientCreateStoreEntry(http, http->request->method, null_request_flags);
 	errorAppendEntry(http->entry, err);
 	return;
     }
@@ -475,7 +475,7 @@ clientPurgeRequest(clientHttpRequest * http)
      * Make a new entry to hold the reply to be written
      * to the client.
      */
-    http->entry = clientCreateStoreEntry(http, http->request->method, 0);
+    http->entry = clientCreateStoreEntry(http, http->request->method, null_request_flags);
     httpReplyReset(r = http->entry->mem_obj->reply);
     httpReplySetHeaders(r, 1.0, http->http_code, NULL, NULL, 0, 0, -1);
     httpReplySwapOut(r, http->entry);
@@ -676,16 +676,16 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     request->imslen = -1;
     request->ims = httpHeaderGetTime(req_hdr, HDR_IF_MODIFIED_SINCE);
     if (request->ims > 0)
-	EBIT_SET(request->flags, REQ_IMS);
+	request->flags.ims = 1;
     if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
 	if (strListIsMember(&s, "no-cache", ',')) {
 	    if (Config.onoff.reload_into_ims)
-		EBIT_SET(request->flags, REQ_NOCACHE_HACK);
+		request->flags.nocache_hack = 1;
 	    else if (refresh_nocache_hack)
-		EBIT_SET(request->flags, REQ_NOCACHE_HACK);
+		request->flags.nocache_hack = 1;
 	    else
-		EBIT_SET(request->flags, REQ_NOCACHE);
+		request->flags.nocache = 1;
 	}
 	stringClean(&s);
     }
@@ -693,14 +693,14 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     if (request->method == METHOD_GET) {
 	request->range = httpHeaderGetRange(req_hdr);
 	if (request->range)
-	    EBIT_SET(request->flags, REQ_RANGE);
+	    request->flags.range = 1;
     }
     if (httpHeaderHas(req_hdr, HDR_AUTHORIZATION))
-	EBIT_SET(request->flags, REQ_AUTH);
+	request->flags.auth = 1;
     if (request->login[0] != '\0')
-	EBIT_SET(request->flags, REQ_AUTH);
+	request->flags.auth = 1;
     if (httpMsgIsPersistent(request->http_ver, req_hdr))
-	EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
+	request->flags.proxy_keepalive = 1;
     if (httpHeaderHas(req_hdr, HDR_VIA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_VIA);
 	/* ThisCache cannot be a member of Via header, "1.0 ThisCache" can */
@@ -708,7 +708,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	    debug(33, 1) ("WARNING: Forwarding loop detected for '%s'\n",
 		http->uri);
 	    debug(33, 1) ("--> %s\n", strBuf(s));
-	    EBIT_SET(request->flags, REQ_LOOPDETECT);
+	    request->flags.loopdetect = 1;
 	}
 #if FORW_VIA_DB
 	fvdbCountVia(strBuf(s));
@@ -731,9 +731,9 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	request->max_forwards = httpHeaderGetInt(req_hdr, HDR_MAX_FORWARDS);
     }
     if (clientCachable(http))
-	EBIT_SET(request->flags, REQ_CACHABLE);
+	request->flags.cachable = 1;
     if (clientHierarchical(http))
-	EBIT_SET(request->flags, REQ_HIERARCHICAL);
+	request->flags.hierarchical = 1;
 #if DELAY_POOLS
     if (delayClient(http)) {
 	debug(33, 5) ("clientInterpretRequestHeaders: delay request class %d position %d\n",
@@ -742,11 +742,11 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     }
 #endif
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_NOCACHE = %s\n",
-	EBIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
+	request->flags.nocache ? "SET" : "NOT SET");
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_CACHABLE = %s\n",
-	EBIT_TEST(request->flags, REQ_CACHABLE) ? "SET" : "NOT SET");
+	request->flags.cachable ? "SET" : "NOT SET");
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_HIERARCHICAL = %s\n",
-	EBIT_TEST(request->flags, REQ_HIERARCHICAL) ? "SET" : "NOT SET");
+	request->flags.hierarchical ? "SET" : "NOT SET");
 }
 
 static int
@@ -812,9 +812,9 @@ clientHierarchical(clientHttpRequest * http)
 
     /* IMS needs a private key, so we can use the hierarchy for IMS only
      * if our neighbors support private keys */
-    if (EBIT_TEST(request->flags, REQ_IMS) && !neighbors_do_private_keys)
+    if (request->flags.ims && !neighbors_do_private_keys)
 	return 0;
-    if (EBIT_TEST(request->flags, REQ_AUTH))
+    if (request->flags.auth)
 	return 0;
     if (method == METHOD_TRACE)
 	return 1;
@@ -824,7 +824,7 @@ clientHierarchical(clientHttpRequest * http)
     for (p = Config.hierarchy_stoplist; p; p = p->next)
 	if (strstr(url, p->key))
 	    return 0;
-    if (EBIT_TEST(request->flags, REQ_LOOPDETECT))
+    if (request->flags.loopdetect)
 	return 0;
     if (request->protocol == PROTO_HTTP)
 	return httpCachable(method);
@@ -1025,11 +1025,11 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
     /* Only replies with valid Content-Length can be sent with keep-alive */
     if (request->method != METHOD_HEAD &&
 	http->entry->mem_obj->reply->content_length < 0)
-	EBIT_CLR(request->flags, REQ_PROXY_KEEPALIVE);
+	request->flags.proxy_keepalive = 0;
     /* Signal keep-alive if needed */
     httpHeaderPutStr(hdr,
 	http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
-	EBIT_TEST(request->flags, REQ_PROXY_KEEPALIVE) ? "keep-alive" : "close");
+	request->flags.proxy_keepalive ? "keep-alive" : "close");
     /* Accept-Range header for cached objects if not there already */
     if (is_hit && !httpHeaderHas(hdr, HDR_ACCEPT_RANGES))
 	httpHeaderPutStr(hdr, HDR_ACCEPT_RANGES, "bytes");
@@ -1145,7 +1145,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	     */
 	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
-	} else if (EBIT_TEST(r->flags, REQ_NOCACHE)) {
+	} else if (r->flags.nocache) {
 	    /*
 	     * This did not match a refresh pattern that overrides no-cache
 	     * we should honour the client no-cache header.
@@ -1168,7 +1168,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    clientProcessMiss(http);
 	}
 	memFree(MEM_4K_BUF, buf);
-    } else if (EBIT_TEST(r->flags, REQ_IMS)) {
+    } else if (r->flags.ims) {
 	/*
 	 * Handle If-Modified-Since requests from the client
 	 */
@@ -1186,7 +1186,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    memFree(MEM_4K_BUF, buf);
 	    storeUnregister(e, http);
 	    storeUnlockObject(e);
-	    e = clientCreateStoreEntry(http, http->request->method, 0);
+	    e = clientCreateStoreEntry(http, http->request->method, null_request_flags);
 	    http->entry = e;
 	    httpReplyParse(e->mem_obj->reply, mb.buf);
 	    storeAppend(e, mb.buf, mb.size);
@@ -1533,7 +1533,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	} else if (EBIT_TEST(entry->flag, ENTRY_BAD_LENGTH)) {
 	    debug(33, 5) ("clientWriteComplete: closing, ENTRY_BAD_LENGTH\n");
 	    comm_close(fd);
-	} else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
+	} else if (http->request->flags.proxy_keepalive) {
 	    debug(33, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
 	    clientKeepaliveNextRequest(http);
 	} else {
@@ -1572,7 +1572,7 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
     err = errorCon(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT);
     err->request = requestLink(r);
     err->src_addr = http->conn->peer.sin_addr;
-    http->entry = clientCreateStoreEntry(http, r->method, 0);
+    http->entry = clientCreateStoreEntry(http, r->method, null_request_flags);
     errorAppendEntry(http->entry, err);
 }
 
@@ -1600,11 +1600,11 @@ clientProcessRequest2(clientHttpRequest * http)
 	/* Special entries are always hits, no matter what the client says */
 	http->entry = e;
 	return LOG_TCP_HIT;
-    } else if (EBIT_TEST(r->flags, REQ_NOCACHE_HACK)) {
+    } else if (r->flags.nocache_hack) {
 	http->entry = NULL;
 	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
-    } else if (EBIT_TEST(r->flags, REQ_NOCACHE)) {
+    } else if (r->flags.nocache) {
 	http->entry = NULL;
 	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
@@ -1633,7 +1633,7 @@ clientProcessRequest(clientHttpRequest * http)
 	return;
     } else if (r->method == METHOD_TRACE) {
 	if (r->max_forwards == 0) {
-	    http->entry = clientCreateStoreEntry(http, r->method, 0);
+	    http->entry = clientCreateStoreEntry(http, r->method, null_request_flags);
 	    storeReleaseRequest(http->entry);
 	    storeBuffer(http->entry);
 	    rep = httpReplyCreate();
@@ -1709,12 +1709,12 @@ clientProcessMiss(clientHttpRequest * http)
     /*
      * Deny loops when running in accelerator/transproxy mode.
      */
-    if (http->flags.accel && EBIT_TEST(r->flags, REQ_LOOPDETECT)) {
+    if (http->flags.accel && r->flags.loopdetect) {
 	http->al.http.code = HTTP_FORBIDDEN;
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(r);
 	err->src_addr = http->conn->peer.sin_addr;
-	http->entry = clientCreateStoreEntry(http, r->method, 0);
+	http->entry = clientCreateStoreEntry(http, r->method, null_request_flags);
 	errorAppendEntry(http->entry, err);
 	return;
     }
@@ -2038,7 +2038,7 @@ clientReadRequest(int fd, void *data)
 		debug(33, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
 		err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
 		err->request_hdrs = xstrdup(conn->in.buf);
-		http->entry = clientCreateStoreEntry(http, method, 0);
+		http->entry = clientCreateStoreEntry(http, method, null_request_flags);
 		errorAppendEntry(http->entry, err);
 		safe_free(prefix);
 		break;
@@ -2049,7 +2049,7 @@ clientReadRequest(int fd, void *data)
 		err->src_addr = conn->peer.sin_addr;
 		err->url = xstrdup(http->uri);
 		http->al.http.code = err->http_status;
-		http->entry = clientCreateStoreEntry(http, method, 0);
+		http->entry = clientCreateStoreEntry(http, method, null_request_flags);
 		errorAppendEntry(http->entry, err);
 		safe_free(prefix);
 		break;
@@ -2083,7 +2083,7 @@ clientReadRequest(int fd, void *data)
 		err->src_addr = conn->peer.sin_addr;
 		err->request = requestLink(request);
 		http->al.http.code = err->http_status;
-		http->entry = clientCreateStoreEntry(http, request->method, 0);
+		http->entry = clientCreateStoreEntry(http, request->method, null_request_flags);
 		errorAppendEntry(http->entry, err);
 		break;
 	    }
@@ -2092,7 +2092,7 @@ clientReadRequest(int fd, void *data)
 		err->src_addr = conn->peer.sin_addr;
 		err->request = requestLink(request);
 		http->al.http.code = err->http_status;
-		http->entry = clientCreateStoreEntry(http, request->method, 0);
+		http->entry = clientCreateStoreEntry(http, request->method, null_request_flags);
 		errorAppendEntry(http->entry, err);
 		break;
 	    }
@@ -2139,7 +2139,7 @@ clientReadRequest(int fd, void *data)
 		    debug(33, 0) ("This request = %d bytes.\n",
 			(int) conn->in.offset);
 		    err = errorCon(ERR_INVALID_REQ, HTTP_REQUEST_ENTITY_TOO_LARGE);
-		    http->entry = clientCreateStoreEntry(http, request->method, 0);
+		    http->entry = clientCreateStoreEntry(http, request->method, null_request_flags);
 		    errorAppendEntry(http->entry, err);
 		    return;
 		}
@@ -2257,7 +2257,7 @@ CheckQuickAbort2(const clientHttpRequest * http)
     int minlen;
     int expectlen;
 
-    if (!EBIT_TEST(http->request->flags, REQ_CACHABLE))
+    if (!http->request->flags.cachable)
 	return 1;
     if (EBIT_TEST(http->entry->flag, KEY_PRIVATE))
 	return 1;

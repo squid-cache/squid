@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.311 1998/08/20 22:29:59 wessels Exp $
+ * $Id: http.cc,v 1.312 1998/08/21 03:15:17 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -176,7 +176,7 @@ httpCachableReply(HttpStateData * httpState)
 	return 0;
     if (EBIT_TEST(cc_mask, CC_NO_STORE))
 	return 0;
-    if (EBIT_TEST(httpState->request->flags, REQ_AUTH)) {
+    if (httpState->request->flags.auth) {
 	/*
 	 * Responses to requests with authorization may be cached
 	 * only if a Cache-Control: public reply header is present.
@@ -577,7 +577,7 @@ httpBuildRequestHeader(request_t * request,
      * no reason to filter out if the reply will not be cachable
      * or if we cannot parse the specs */
     filter_range =
-	orig_request->range && EBIT_TEST(orig_request->flags, REQ_CACHABLE);
+	orig_request->range && orig_request->flags.cachable;
 
     strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
     while ((e = httpHeaderGetEntry(hdr_in, &pos))) {
@@ -588,12 +588,12 @@ httpBuildRequestHeader(request_t * request,
 	switch (e->id) {
 	case HDR_PROXY_AUTHORIZATION:
 	    /* If we're not going to do proxy auth, then it must be passed on */
-	    if (!EBIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
+	    if (!request->flags.used_proxy_auth)
 		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;
 	case HDR_HOST:
 	    /* Don't use client's Host: header for redirected requests */
-	    if (!EBIT_TEST(request->flags, REQ_REDIRECTED))
+	    if (!request->flags.redirected)
 		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;
 	case HDR_IF_MODIFIED_SINCE:
@@ -784,7 +784,7 @@ httpStart(FwdState * fwdState, int fd)
 	proxy_req->flags = orig_req->flags;
 	httpState->request = requestLink(proxy_req);
 	httpState->orig_request = requestLink(orig_req);
-	EBIT_SET(proxy_req->flags, REQ_PROXYING);
+	proxy_req->flags.proxying = 1;
 	/*
 	 * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
 	 * We might end up getting the object from somewhere else if,

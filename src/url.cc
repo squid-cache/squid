@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.106 1998/08/19 04:32:15 wessels Exp $
+ * $Id: url.cc,v 1.107 1998/08/21 03:15:29 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -109,6 +109,7 @@ urlInitialize(void)
 {
     debug(23, 5) ("urlInitialize: Initializing...\n");
     assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
+    memset(&null_request_flags, '\0', sizeof(null_request_flags));
 }
 
 method_t

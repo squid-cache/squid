@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.447 1998/08/20 22:30:04 wessels Exp $
+ * $Id: store.cc,v 1.448 1998/08/21 03:15:24 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -327,21 +327,21 @@ storeSetPublicKey(StoreEntry * e)
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, const char *log_url, int flags, method_t method)
+storeCreateEntry(const char *url, const char *log_url, request_flags flags, method_t method)
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
-    debug(20, 3) ("storeCreateEntry: '%s' icp flags=%x\n", url, flags);
+    debug(20, 3) ("storeCreateEntry: '%s'\n", url);
 
     e = new_StoreEntry(STORE_ENTRY_WITH_MEMOBJ, url, log_url);
     e->lock_count = 1;		/* Note lock here w/o calling storeLock() */
     mem = e->mem_obj;
     mem->method = method;
-    if (neighbors_do_private_keys || !EBIT_TEST(flags, REQ_HIERARCHICAL))
+    if (neighbors_do_private_keys || !flags.hierarchical)
 	storeSetPrivateKey(e);
     else
 	storeSetPublicKey(e);
-    if (EBIT_TEST(flags, REQ_CACHABLE)) {
+    if (flags.cachable) {
 	EBIT_SET(e->flag, ENTRY_CACHABLE);
 	EBIT_CLR(e->flag, RELEASE_REQUEST);
     } else {

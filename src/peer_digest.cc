@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.44 1998/07/24 00:55:03 wessels Exp $
+ * $Id: peer_digest.cc,v 1.45 1998/08/21 03:15:20 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -262,9 +262,9 @@ peerDigestRequest(peer * p)
     fetch->start_time = squid_curtime;
     p->digest.last_req_timestamp = squid_curtime;
     global_last_req_timestamp = squid_curtime;
-    EBIT_SET(req->flags, REQ_CACHABLE);
+    req->flags.cachable = 1;
     /* the rest is based on clientProcessExpired() */
-    EBIT_SET(req->flags, REQ_REFRESH);
+    req->flags.refresh = 1;
     old_e = fetch->old_entry = storeGet(key);
     if (old_e) {
 	debug(72, 5) ("peerDigestRequest: found old entry\n");

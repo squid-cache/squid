@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.123 1998/08/20 15:30:23 wessels Exp $
+ * $Id: net_db.cc,v 1.124 1998/08/21 03:15:20 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1057,14 +1057,14 @@ netdbExchangeStart(void *data)
     requestLink(ex->r);
     assert(NULL != ex->r);
     ex->r->http_ver = 1.0;
-    ex->e = storeCreateEntry(uri, uri, 0, METHOD_GET);
+    ex->e = storeCreateEntry(uri, uri, null_request_flags, METHOD_GET);
     ex->buf_sz = 4096;;
     ex->buf = memAllocate(MEM_4K_BUF);
     assert(NULL != ex->e);
     storeClientListAdd(ex->e, ex);
     storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
 	ex->buf, netdbExchangeHandleReply, ex);
-    EBIT_SET(ex->r->flags, REQ_LOOPDETECT);	/* cheat! -- force direct */
+    ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
     fwdStart(-1, ex->e, ex->r, any_addr);
 #endif
 }
