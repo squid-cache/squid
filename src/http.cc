@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.83 1996/10/11 23:11:12 wessels Exp $
+ * $Id: http.cc,v 1.84 1996/10/15 05:45:36 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -570,6 +570,7 @@ httpSendRequest(int fd, void *data)
     char *Method = RequestMethodStr[req->method];
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
+    int saw_host = 0;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(Method) + strlen(req->urlpath);
@@ -604,6 +605,8 @@ httpSendRequest(int fd, void *data)
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
 	    if (strncasecmp(t, "Connection:", 11) == 0)
 		continue;
+	    if (strncasecmp(t, "Host:", 5) == 0)
+		saw_host = 1;
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
 	    strcat(buf, t);
@@ -632,6 +635,14 @@ httpSendRequest(int fd, void *data)
 	    mkrfc850(entry->lastmod));
 	ybuf = get_free_4k_page();
 	sprintf(ybuf, "If-Modified-Since: %s\r\n", mkrfc850(entry->lastmod));
+	strcat(buf, ybuf);
+	len += strlen(ybuf);
+	put_free_4k_page(ybuf);
+    }
+    /* Add Host: header */
+    if (!saw_host) {
+	ybuf = get_free_4k_page();
+	sprintf(ybuf, "Host: %s\r\n", req->host);
 	strcat(buf, ybuf);
 	len += strlen(ybuf);
 	put_free_4k_page(ybuf);
