@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.232 1998/09/22 17:50:33 wessels Exp $
+ * $Id: structs.h,v 1.233 1998/09/22 23:15:41 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1472,6 +1472,7 @@ struct _StatCounters {
 #endif
     } syscalls;
     int store_files_cleaned;
+    int aborted_requests;
 };
 
 /* per header statistics */

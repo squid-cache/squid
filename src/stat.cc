@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.292 1998/09/21 07:00:10 wessels Exp $
+ * $Id: stat.cc,v 1.293 1998/09/22 23:15:39 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -752,6 +752,10 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	: 0.0);
     x = statHistDeltaMedian(&l->select_fds_hist, &f->select_fds_hist);
     storeAppendPrintf(sentry, "median_select_fds = %f\n", x);
+    storeAppendPrintf(sentry, "store_files_cleaned = %f/sec\n",
+	XAVG(store_files_cleaned));
+    storeAppendPrintf(sentry, "aborted_requests = %f/sec\n",
+	XAVG(aborted_requests));
 
 #if HAVE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", XAVG(syscalls.polls));
@@ -763,6 +767,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "syscalls.disk.reads = %f/sec\n", XAVG(syscalls.disk.reads));
     storeAppendPrintf(sentry, "syscalls.disk.writes = %f/sec\n", XAVG(syscalls.disk.writes));
     storeAppendPrintf(sentry, "syscalls.disk.seeks = %f/sec\n", XAVG(syscalls.disk.seeks));
+    storeAppendPrintf(sentry, "syscalls.disk.unlinks = %f/sec\n", XAVG(syscalls.disk.unlinks));
     storeAppendPrintf(sentry, "syscalls.sock.accepts = %f/sec\n", XAVG(syscalls.sock.accepts));
     storeAppendPrintf(sentry, "syscalls.sock.sockets = %f/sec\n", XAVG(syscalls.sock.sockets));
     storeAppendPrintf(sentry, "syscalls.sock.connects = %f/sec\n", XAVG(syscalls.sock.connects));
@@ -1091,6 +1096,10 @@ statCountersDump(StoreEntry * sentry)
 	f->cputime);
     storeAppendPrintf(sentry, "wall_time = %f\n",
 	tvSubDsec(f->timestamp, current_time));
+    storeAppendPrintf(sentry, "store_files_cleaned = %d\n",
+	f->store_files_cleaned);
+    storeAppendPrintf(sentry, "aborted_requests = %d\n",
+	f->aborted_requests);
 }
 
 void
