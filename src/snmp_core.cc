@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.31 1999/01/29 20:42:59 glenn Exp $
+ * $Id: snmp_core.cc,v 1.32 1999/01/30 00:40:40 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -671,8 +671,8 @@ snmpDecodePacket(snmp_request_t * rq)
 	debug(49, 5) ("snmpAgentParse: reqid=[%d]\n", PDU->reqid);
 	snmpConstructReponse(rq);
     } else {
-	debug (49,0) ("Failed SNMP agent query from : %s.\n",
-		inet_ntoa(rq->from.sin_addr));
+	debug(49, 0) ("Failed SNMP agent query from : %s.\n",
+	    inet_ntoa(rq->from.sin_addr));
 	snmp_free_pdu(PDU);
     }
 }
@@ -924,44 +924,43 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
 /*
  * Adds a node to the MIB tree structure and adds the appropriate children
  */
-#if STDC_HEADERS
 mib_tree_entry *
+#if STDC_HEADERS
 snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...)
+#else
+snmpAddNode(va_alist)
+     va_dcl
+#else
 {
+#if STDC_HEADERS
     va_list args;
     int loop;
     mib_tree_entry *entry = NULL;
-    va_start(args, children);
-
+                   va_start(args, children);
 #else
-mib_tree_entry *
-snmpAddNode(va_alist)
-     va_dcl
-{
     va_list args;
     oid *name = NULL;
     int len = 0, children = 0, loop;
     oid_ParseFn *parsefunction = NULL;
     mib_tree_entry *entry = NULL;
-
-    va_start(args);
-    name = va_arg(args, oid *);
-    len = va_arg(args, int);
-    parsefunction = va_arg(args, oid_ParseFn *);
-    children = va_arg(args, int);
+                   va_start(args);
+                   name = va_arg(args, oid *);
+                   len = va_arg(args, int);
+        parsefunction = va_arg(args, oid_ParseFn *);
+        children = va_arg(args, int);
 #endif
 
-    debug(49, 6) ("snmpAddNode: Children : %d, Oid : \n", children);
-    snmpDebugOid(6, name, len);
+        debug(49, 6) ("snmpAddNode: Children : %d, Oid : \n", children);
+        snmpDebugOid(6, name, len);
 
-    va_start(args, children);
-    entry = xmalloc(sizeof(mib_tree_entry));
-    entry->name = snmpOidDup(name, len);
-    entry->len = len;
-    entry->parsefunction = parsefunction;
-    entry->children = children;
+        va_start(args, children);
+        entry = xmalloc(sizeof(mib_tree_entry));
+        entry->name = snmpOidDup(name, len);
+        entry->len = len;
+        entry->parsefunction = parsefunction;
+        entry->children = children;
 
-    if (children > 0) {
+    if  (children > 0) {
 	entry->leaves = xmalloc(sizeof(mib_tree_entry *) * children);
 	for (loop = 0; loop < children; loop++) {
 	    entry->leaves[loop] = va_arg(args, mib_tree_entry *);
@@ -975,24 +974,23 @@ snmpAddNode(va_alist)
 /* 
  * Returns the list of parameters in an oid
  */
-#if STDC_HEADERS
 oid *
+#if STDC_HEADERS
 snmpCreateOid(int length,...)
+#else
+snmpCreateOid(va_alist)
+     va_dcl
+#endif
 {
+#if STDC_HEADERS
     va_list args;
     oid *new_oid;
     int loop;
-
     va_start(args, length);
 #else
-oid *
-snmpCreateOid(va_alist)
-     va_dcl
-{
     va_list args;
     int length = 0, loop;
     oid *new_oid;
-
     va_start(args);
     length va_arg(args, int);
 #endif
