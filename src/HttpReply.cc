@@ -1,5 +1,5 @@
 /*
- * $Id: HttpReply.cc,v 1.3 1998/02/21 18:46:33 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.4 1998/02/22 07:45:16 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -37,6 +37,7 @@
 /* local constants */
 
 /* local routines */
+static void httpReplyDoDestroy(HttpReply *rep);
 static int httpReplyParseStep(HttpReply *rep, const char *parse_start, int atEnd);
 static int httpReplyParseError(HttpReply *rep);
 static int httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end);
@@ -78,7 +79,7 @@ httpReplyDestroy(HttpReply *rep)
     assert(rep);
     tmp_debug(here) ("destroying rep: %p\n", rep);
     httpReplyClean(rep);
-    memFree(MEM_HTTPREPLY, rep);
+    httpReplyDoDestroy(rep);
 }
 
 void
@@ -86,6 +87,17 @@ httpReplyReset(HttpReply *rep)
 {
     httpReplyClean(rep);
     httpReplyInit(rep);
+}
+
+/* absorb: copy the contents of a new reply to the old one, destroy new one */
+void
+httpReplyAbsorb(HttpReply *rep, HttpReply *new_rep)
+{
+    assert(rep && new_rep);
+    httpReplyClean(rep);
+    *rep = *new_rep;
+    /* cannot use Clean() on new reply now! */
+    httpReplyDoDestroy(new_rep);
 }
 
 /* parses a buffer that may not be 0-terminated */
@@ -298,6 +310,11 @@ httpReplyHasScc(const HttpReply *rep, http_scc_type type)
 
 /* internal routines */
 
+/* internal function used by Destroy and Absorb */
+static void
+httpReplyDoDestroy(HttpReply *rep) {
+    memFree(MEM_HTTPREPLY, rep);
+}
 
 /*
  * parses a 0-terminating buffer into HttpReply. 

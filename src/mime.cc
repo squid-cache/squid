@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.50 1998/02/21 00:56:59 rousskov Exp $
+ * $Id: mime.cc,v 1.51 1998/02/22 07:45:20 rousskov Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -235,6 +235,26 @@ mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
     return 0;
 }
 
+
+const char *
+mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field)
+{
+    char *auth_hdr;
+    char *t;
+    if (auth_field) *auth_field = NULL;
+    if (hdr == NULL)
+	return NULL;
+    if ((auth_hdr = mime_get_header(hdr, "Authorization")) == NULL)
+	return NULL;
+    if (auth_field) *auth_field = auth_hdr;
+    if ((t = strtok(auth_hdr, " \t")) == NULL)
+	return NULL;
+    if (strcasecmp(t, auth_scheme) != 0)
+	return NULL;
+    if ((t = strtok(NULL, " \t")) == NULL)
+	return NULL;
+    return base64_decode(t);
+}
 
 char *
 mimeGetIcon(const char *fn)

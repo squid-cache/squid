@@ -1,5 +1,23 @@
 Future/Current Changes to squid-1.2.beta16 (Feb 23, 1998):
 
+	- Added "basic" authentication scheme for Cache Manager interface.
+	  Tested with Netscape 3.01. When a password protected function is
+	  accessed, Squid sends an HTTP_UNAUTHORIZED reply, and the browser
+	  prompts the user for "user name" and "password" for the specified
+	  action. The user name is currently used for logging purposes only.
+	  The password is verified against must be an appropriate
+	  "cachemgr_passwd" entry from squid.conf. Note that Netscape will
+	  cache your authentication info and will reuse it for future
+	  accesses. Caching is done on per-realm (per-action) basis, but
+	  Netscape may try to use information from other realms when new realm
+	  is accessed.  The old interface (appending @password to the url)
+	  is still supported but discouraged.
+
+	- Added ERR_CACHE_MGR_ACCESS_DENIED page to notify of authentication
+	  failures when accessing Cache Manager.
+
+	- Added "-v" (Verbose) and "-H" (extra Headers) options to client.c.
+
 	- Added simple context-based debugging to debug.c. Currently, the
 	  context is defined as a constant string. Context reporting is
 	  triggered by debug() calls.  Context debugging routines print
