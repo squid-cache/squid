@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.52 1996/07/19 17:35:13 wessels Exp $
+ * $Id: main.cc,v 1.53 1996/07/22 16:40:27 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -372,7 +372,7 @@ static void mainReinitialize()
     parseConfigFile(ConfigFile);
     _db_init(getCacheLogFile(), getDebugOptions());
     neighbors_init();
-    ipcacheOpenServers();
+    dnsOpenServers();
     redirectOpenServers();
     serverConnectionsOpen();
     (void) ftpInitialize();
@@ -425,6 +425,8 @@ static void mainInitialize()
 	writePidFile();		/* write PID file */
     }
     ipcache_init();
+    fqdncache_init();
+    dnsOpenServers();
     redirectOpenServers();
     neighbors_init();
     (void) ftpInitialize();

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.30 1996/07/20 03:16:54 wessels Exp $
+ * $Id: squid.h,v 1.31 1996/07/22 16:40:29 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -185,6 +185,7 @@ typedef struct mem_hdr *mem_ptr;
 typedef struct _edge edge;
 typedef struct icp_common_s icp_common_t;
 typedef struct _cacheinfo cacheinfo;
+typedef struct _aclCheck_t aclCheck_t;
 
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
@@ -225,7 +226,9 @@ typedef void (*SIH) _PARAMS((int, void *));	/* swap in */
 #include "proto.h"
 #include "icp.h"
 #include "errorpage.h"		/* must go after icp.h */
+#include "dns.h"
 #include "ipcache.h"
+#include "fqdncache.h"
 #include "mime.h"
 #include "neighbors.h"
 #include "stack.h"
@@ -236,11 +239,12 @@ typedef void (*SIH) _PARAMS((int, void *));	/* swap in */
 #include "http.h"
 #include "ftp.h"
 #include "gopher.h"
-#include "acl.h"
 #include "util.h"
 #include "background.h"
+#include "acl.h"
 #include "async_io.h"
 #include "redirect.h"
+#include "client_side.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
