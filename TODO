@@ -19,12 +19,13 @@ Squid-3.0:
   - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
     (get rid of udp_incoming_address) (???)
 
-Squid-3.0 if finished in time:
-
+Squid-3.1
+  
   - Customized logging capabilities
   - External logging
   - IPv6
   - Other devel.squid-cache.org projects
+  - header filtering improvements (bug #601)
 
 Later:
 
