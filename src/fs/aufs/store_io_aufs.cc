@@ -49,7 +49,7 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 #if !ASYNC_OPEN
     fd = file_open(path, O_RDONLY | O_BINARY);
     if (fd < 0) {
-	debug(78, 3) ("storeAufsOpen: got failude (%d)\n", errno);
+	debug(78, 3) ("storeAufsOpen: got failure (%d)\n", errno);
 	return NULL;
     }
 #endif
@@ -102,7 +102,7 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 #if !ASYNC_CREATE
     fd = file_open(path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     if (fd < 0) {
-	debug(78, 3) ("storeAufsCreate: got failude (%d)\n", errno);
+	debug(78, 3) ("storeAufsCreate: got failure (%d)\n", errno);
 	return NULL;
     }
 #endif
@@ -179,7 +179,7 @@ storeAufsRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t of
 #if ASYNC_READ
     aioRead(aiostate->fd, offset, buf, size, storeAufsReadDone, sio);
 #else
-    file_read(aiostate->fd, offset, buf, size, storeAufsReadDone, sio);
+    file_read(aiostate->fd, buf, size, offset, storeAufsReadDone, sio);
 #endif
 }
 
@@ -297,7 +297,7 @@ static void
 storeAufsReadDone(int fd, void *my_data, int len, int errflag)
 #else
 static void
-storeAufsReadDone(int fd, int errflag, size_t len, void *my_data)
+storeAufsReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 #endif
 {
     storeIOState *sio = my_data;
@@ -353,7 +353,7 @@ storeAufsWriteDone(int fd, int errflag, size_t len, void *my_data)
     /* Translate from errno to Squid disk error */
     errno = errflag;
     if (errflag)
-	errflag = errno == ENOSP ? DISK_NO_SPACE_LEFT : DISK_ERROR;
+	errflag = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
     else
 	errflag = DISK_OK;
 #endif
