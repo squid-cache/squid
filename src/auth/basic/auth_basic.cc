@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.28 2003/08/10 11:00:48 robertc Exp $
+ * $Id: auth_basic.cc,v 1.29 2003/08/10 18:57:08 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -239,7 +239,7 @@ authenticateBasicDirection(auth_user_request_t * auth_user_request)
         return -1;
 
     case 3:			/* authentication process failed. */
-        return -2;
+        return 0;
     }
 
     return -2;
