@@ -1,14 +1,12 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.3 2002/10/13 20:35:28 robertc Exp $
+#  $Id: Makefile.am,v 1.4 2002/10/19 01:00:27 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = -Werror -Wall
 AM_CXXFLAGS = -Werror -Wall
 
-DIST_SUBDIRS = lru heap
-SUBDIRS		= 
 # No recursion is needed for the subdirs, we build from here. // @REPL_POLICIES@
 
 EXTRA_LIBRARIES = liblru.a libheap.a
