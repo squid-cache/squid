@@ -21,11 +21,7 @@ extern void aclDestroyAcls(acl **);
 extern void aclParseAccessLine(struct _acl_access **);
 extern void aclParseAclLine(acl **);
 extern struct _acl *aclFindByName(const char *name);
-#if 0
-extern char *aclGetDenyInfoUrl(struct _acl_deny_info_list **, const char *name);
-#else
 extern int aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
-#endif
 extern void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 extern void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
 extern void aclDestroyRegexList(struct _relist *data);

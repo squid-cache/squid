@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.229 1998/03/17 00:38:52 wessels Exp $
+ * $Id: client_side.cc,v 1.230 1998/03/17 04:00:12 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -147,11 +147,7 @@ void
 clientAccessCheckDone(int answer, void *data)
 {
     clientHttpRequest *http = data;
-#if 0
-    char *redirectUrl = NULL;
-#else
     int page_id = -1;
-#endif
     ErrorState *err = NULL;
     HttpReply *rep;
     debug(33, 5) ("clientAccessCheckDone: '%s' answer=%d\n", http->uri, answer);
@@ -172,7 +168,8 @@ clientAccessCheckDone(int answer, void *data)
 	httpReplyDestroy(rep);
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
-	debug(33, 5) ("AclMatchedName = %s\n", AclMatchedName ? AclMatchedName : "<null>");
+	debug(33, 5) ("AclMatchedName = %s\n",
+		AclMatchedName ? AclMatchedName : "<null>");
 	http->log_type = LOG_TCP_DENIED;
 	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
 	page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
@@ -837,7 +834,10 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	if (!hdr_len && !strncasecmp(xbuf, "HTTP/", 5) && l > 8 &&
 	    (isspace(xbuf[8]) || isspace(xbuf[9])))
 	    xmemmove(xbuf + 5, "1.0 ", 4);
-#if 0
+#if DONT_FILTER_THESE
+	/*
+	 * but you might want to if you run Squid as a HTTP accelerator
+	 */
 	if (strncasecmp(xbuf, "Accept-Ranges:", 14) == 0)
 	    continue;
 	if (strncasecmp(xbuf, "Etag:", 5) == 0)

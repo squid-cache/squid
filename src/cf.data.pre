@@ -273,39 +273,6 @@ EXAMPLE:
 	neighbor_type_domain cache.foo.org sibling .au .de
 DOC_END
 
-NAME: single_parent_bypass
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: Config.onoff.single_parent_bypass
-DOC_START
-	This tag specifies that it is okay to bypass the hierarchy
-	"Pinging" when there is only a single parent for a given URL.
-
-	Usage: single_parent_bypass on|off
-
-	Before actually sending ICP "ping" packets to parents and
-	neighbors, we figure out which hosts would be pinged based
-	on the cache_host_domain rules, etc.  Often it may be the
-	case that only a single parent cache would be pinged.
-
-	Since there is only a single parent, there is a very good
-	chance that we will end up fetching the object from that
-	parent.  For this reason, it may be beneficial to avoid
-	the ping and just fetch the object anyway.
-
-	However, if we avoid the ping, we will be assuming that the
-	parent host is reachable and that the cache process is running.
-	By using the ping, we can be reasonably sure that the parent
-	host will be able to handle our request.  If the ping fails then
-	it may be possible to fetch the object directly from the source.
-
-	To favor the resiliency provided by the ping algorithm,
-	single_parent_bypass is 'off' by default.
-
-single_parent_bypass off
-DOC_END
-
 NAME: neighbor_timeout neighbour_timeout
 COMMENT: (seconds)
 DEFAULT: 2 seconds
