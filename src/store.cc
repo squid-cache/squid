@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.327 1997/10/29 17:52:51 wessels Exp $
+ * $Id: store.cc,v 1.328 1997/10/30 00:50:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -750,7 +750,7 @@ storeUnregister(StoreEntry * e, void *data)
     }
     if ((callback = sc->callback)) {
 	/* callback with ssize = -1 to indicate unexpected termination */
-	debug(20,1)("WARNING: store_client for %s has a callback\n", e->url);
+	debug(20, 1) ("WARNING: store_client for %s has a callback\n", e->url);
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, -1);
     }
@@ -890,18 +890,18 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
     /* swapping complete */
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	e->url, storeSwapFullPath(e->swap_file_number, NULL));
-    if (!storeCheckCachable(e)) {
-	storeReleaseRequest(e);
-    } else {
-	e->swap_status = SWAPOUT_DONE;
-	storeDirUpdateSwapSize(e->swap_file_number, mem->swapout.done_offset, 1);
-	storeLog(STORE_LOG_SWAPOUT, e);
-	storeDirSwapLog(e);
-    }
+    e->swap_status = SWAPOUT_DONE;
+    storeDirUpdateSwapSize(e->swap_file_number, mem->swapout.done_offset, 1);
     HTTPCacheInfo->proto_newobject(HTTPCacheInfo,
 	mem->request->protocol,
 	e->object_len,
 	FALSE);
+    if (storeCheckCachable(e)) {
+	storeLog(STORE_LOG_SWAPOUT, e);
+	storeDirSwapLog(e);
+    }
+    /* Note, we don't otherwise call storeReleaseRequest() here because
+     * storeCheckCachable() does it for is if necessary */
     storeSwapOutFileClose(e);
 }
 
@@ -1570,9 +1570,7 @@ static void
 storeGetMemSpace(int size)
 {
     StoreEntry *e = NULL;
-    int n_expired = 0;
-    int n_purged = 0;
-    int n_released = 0;
+    int released = 0;
     static time_t last_check = 0;
     int pages_needed;
     dlink_node *m;
@@ -1591,21 +1589,14 @@ storeGetMemSpace(int size)
 	e = m->data;
 	if (storeEntryLocked(e))
 	    continue;
-	if (storeCheckExpired(e, 0)) {
-	    debug(20, 2) ("storeGetMemSpace: Expired: %s\n", e->url);
-	    n_expired++;
-	    storeRelease(e);
-	} else {
-	    storePurgeMem(e);
-	    n_purged++;
-	}
+	released++;
+	storeRelease(e);
 	if (sm_stats.n_pages_in_use + pages_needed < store_pages_low)
 	    break;
     }
     debug(20, 3) ("storeGetMemSpace stats:\n");
     debug(20, 3) ("  %6d HOT objects\n", meta_data.hot_vm);
-    debug(20, 3) ("  %6d were purged\n", n_purged);
-    debug(20, 3) ("  %6d were released\n", n_released);
+    debug(20, 3) ("  %6d were released\n", released);
 }
 
 /* The maximum objects to scan for maintain storage space */
@@ -1628,12 +1619,20 @@ storeMaintainSwapSpace(void *NOTUSED)
     int scanned = 0;
     int locked = 0;
     int expired = 0;
-    int purged = 0;
+    int max_scan;
+    int max_remove;
     static time_t last_warn_time = 0;
     eventAdd("storeMaintainSwapSpace", storeMaintainSwapSpace, NULL, 1);
     /* We can't delete objects while rebuilding swap */
     if (store_rebuilding)
 	return;
+    if (store_swap_size < store_swap_high) {
+	max_scan = 100;
+	max_remove = 10;
+    } else {
+	max_scan = 500;
+	max_remove = 50;
+    }
     debug(20, 3) ("storeMaintainSwapSpace\n");
     for (m = all_list.tail; m; m = prev) {
 	prev = m->prev;
@@ -1643,15 +1642,10 @@ storeMaintainSwapSpace(void *NOTUSED)
 	} else if (storeCheckExpired(e, 1)) {
 	    expired++;
 	    storeRelease(e);
-	} else {
-	    purged++;
-	    storeRelease(e);
 	}
-	if (store_swap_size <= store_swap_high)
+	if (expired > max_remove)
 	    break;
-	if (expired + purged > MAINTAIN_MAX_REMOVE)
-	    break;
-	if (++scanned > MAINTAIN_MAX_SCAN)
+	if (++scanned > max_scan)
 	    break;
     }
     debug(20, 3) ("storeMaintainSwapSpace stats:\n");
@@ -1659,7 +1653,6 @@ storeMaintainSwapSpace(void *NOTUSED)
     debug(20, 3) ("  %6d were scanned\n", scanned);
     debug(20, 3) ("  %6d were locked\n", locked);
     debug(20, 3) ("  %6d were expired\n", expired);
-    debug(20, 3) ("  %6d were purged\n", purged);
     if (store_swap_size < Config.Swap.maxSize)
 	return;
     if (squid_curtime - last_warn_time < 10)
@@ -2048,7 +2041,7 @@ storeWriteCleanLogs(int reopen)
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeWriteCleanLogs: Operation aborted.\n");
-        storeDirCloseSwapLogs();
+	storeDirCloseSwapLogs();
 	return 0;
     }
     debug(20, 1) ("storeWriteCleanLogs: Starting...\n");
@@ -2456,7 +2449,7 @@ storeSwapOutFileClose(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     if (mem->swapout.fd > -1)
-        file_close(mem->swapout.fd);
+	file_close(mem->swapout.fd);
     mem->swapout.fd = -1;
     storeUnlockObject(e);
 }
