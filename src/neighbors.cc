@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.302 2002/06/23 14:50:07 hno Exp $
+ * $Id: neighbors.cc,v 1.303 2002/07/30 04:23:10 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -219,6 +219,7 @@ neighborsCount(request_t * request)
     return count;
 }
 
+#if UNUSED_CODE
 peer *
 getSingleParent(request_t * request)
 {
@@ -238,6 +239,7 @@ getSingleParent(request_t * request)
     debug(15, 3) ("getSingleParent: returning %s\n", p ? p->host : "NULL");
     return p;
 }
+#endif
 
 peer *
 getFirstUpParent(request_t * request)
