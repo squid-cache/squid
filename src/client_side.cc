@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.30 1996/09/17 16:32:34 wessels Exp $
+ * $Id: client_side.cc,v 1.31 1996/09/18 20:12:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -392,7 +392,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 {
     icpStateData *icpState = data;
     MemObject *mem = entry->mem_obj;
-    LOCAL_ARRAY(char, hbuf, 8192);
+    char *hbuf;
     int len;
     int unlink_request = 0;
     debug(33, 3, "icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
@@ -408,6 +408,15 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    400);
 	return 0;
     }
+    if (mem->reply->code == 0) {
+	debug(33,0,"icpHandleIMSReply: Incomplete headers for '%s'\n",
+	    entry->url);
+	storeRegister(entry,
+	    fd,
+	    (PIF) icpHandleIMSReply,
+	    (void *) icpState);
+	return 0;
+    }
     if (mem->reply->code == 304 && !BIT_TEST(icpState->flags, REQ_IMS)) {
 	icpState->log_type = LOG_TCP_EXPIRED_HIT;
 	/* We initiated the IMS request, the client is not expecting
@@ -421,10 +430,12 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	/* Extend the TTL
 	 * XXX race condition here.  Assumes old_entry has been swapped 
 	 * in by the time this 304 reply arrives.  */
+	hbuf = get_free_8k_page();
 	storeClientCopy(entry, 0, 8191, hbuf, &len, fd);
 	if (!mime_headers_end(hbuf))
 	    fatal_dump("icpHandleIMSReply: failed to load headers, lost race");
 	httpParseHeaders(hbuf, entry->mem_obj->reply);
+	put_free_8k_page(hbuf);
 	ttlSet(entry);
 	if (unlink_request) {
 	    requestUnlink(entry->mem_obj->request);

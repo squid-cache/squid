@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.42 1996/09/16 21:11:17 wessels Exp $
+ * $Id: wais.cc,v 1.43 1996/09/18 20:12:25 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -125,7 +125,7 @@ static void waisReadReply __P((int, WaisStateData *));
 static void waisSendComplete __P((int, char *, int, int, void *));
 static void waisSendRequest __P((int, WaisStateData *));
 static void waisConnInProgress __P((int, WaisStateData *));
-static int waisConnect __P((int, struct hostent *, WaisStateData *));
+static void waisConnect __P((int, struct hostent *, void *));
 
 static int
 waisStateFree(int fd, WaisStateData * waisState)
@@ -409,30 +409,31 @@ waisStart(int unusedfd, char *url, method_t method, char *mime_hdr, StoreEntry *
 	(void *) waisState);
     ipcache_nbgethostbyname(waisState->relayhost,
 	waisState->fd,
-	(IPH) waisConnect,
+	waisConnect,
 	waisState);
     return COMM_OK;
 }
 
 
-static int
-waisConnect(int fd, struct hostent *hp, WaisStateData * waisState)
+static void
+waisConnect(int fd, struct hostent *hp, void *data)
 {
     int status;
+    WaisStateData *waisState = data;
     char *host = waisState->relayhost;
     u_short port = waisState->relayport;
     if (!ipcache_gethostbyname(waisState->relayhost, 0)) {
 	debug(24, 4, "waisstart: Unknown host: %s\n", waisState->relayhost);
 	squid_error_entry(waisState->entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(waisState->fd);
-	return COMM_ERROR;
+	return;
     }
     /* Open connection. */
     if ((status = comm_connect(fd, host, port))) {
 	if (status != EINPROGRESS) {
 	    squid_error_entry(waisState->entry, ERR_CONNECT_FAIL, xstrerror());
 	    comm_close(fd);
-	    return COMM_ERROR;
+	    return;
 	} else {
 	    debug(24, 5, "waisStart: FD %d EINPROGRESS\n", fd);
 	    comm_set_select_handler(fd,
@@ -443,7 +444,7 @@ waisConnect(int fd, struct hostent *hp, WaisStateData * waisState)
 		COMM_SELECT_WRITE,
 		(PF) waisConnInProgress,
 		(void *) waisState);
-	    return COMM_OK;
+	    return;
 	}
     }
     /* Install connection complete handler. */
@@ -457,5 +458,4 @@ waisConnect(int fd, struct hostent *hp, WaisStateData * waisState)
 	COMM_SELECT_WRITE,
 	(PF) waisSendRequest,
 	(void *) waisState);
-    return COMM_OK;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.113 1996/09/17 02:30:05 wessels Exp $
+ * $Id: store.cc,v 1.114 1996/09/18 20:12:25 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -593,13 +593,8 @@ storeUnlockObject(StoreEntry * e)
 StoreEntry *
 storeGet(char *url)
 {
-    hash_link *hptr = NULL;
-
     debug(20, 3, "storeGet: looking up %s\n", url);
-
-    if ((hptr = hash_lookup(store_table, url)) != NULL)
-	return (StoreEntry *) hptr;
-    return NULL;
+    return (StoreEntry *) hash_lookup(store_table, url);
 }
 
 unsigned int
@@ -2140,6 +2135,7 @@ storeRelease(StoreEntry * e)
 	    debug(20, 0, "storeRelease: Not Found: '%s'\n", e->key);
 	    debug(20, 0, "Dump of Entry 'e':\n %s\n", storeToString(e));
 	    debug_trap("storeRelease: Invalid Entry");
+	    return;
 	}
 	result = (StoreEntry *) hptr;
 	if (result != e) {
@@ -2148,6 +2144,7 @@ storeRelease(StoreEntry * e)
 	    debug(20, 0, "Dump of Entry 'e':\n%s", storeToString(e));
 	    debug(20, 0, "Dump of Entry 'result':\n%s", storeToString(result));
 	    debug_trap("storeRelease: Duplicate Entry");
+	    return;
 	}
     }
     if (e->method == METHOD_GET) {

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.76 1996/09/16 21:11:08 wessels Exp $
+ * $Id: http.cc,v 1.77 1996/09/18 20:12:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -126,7 +126,7 @@ static void httpReadReply __P((int fd, HttpStateData *));
 static void httpSendComplete __P((int fd, char *, int, int, void *));
 static void httpSendRequest __P((int fd, HttpStateData *));
 static void httpConnInProgress __P((int fd, HttpStateData *));
-static int httpConnect __P((int fd, struct hostent *, void *));
+static void httpConnect __P((int fd, struct hostent *, void *));
 
 static int
 httpStateFree(int fd, HttpStateData * httpState)
@@ -297,14 +297,11 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
 	    debug(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
 	    httpState->reply_hdr_state += 2;
+	    entry->mem_obj->reply->code = 555;
 	    return;
 	}
-	/* Find the end of the headers */
-	t = mime_headers_end(httpState->reply_hdr);
-	if (!t)
-	    /* XXX: Here we could check for buffer overflow... */
+	if ((t = mime_headers_end(httpState->reply_hdr)) == NULL)
 	    return;		/* headers not complete */
-	/* Cut after end of headers */
 	*t = '\0';
 	reply = entry->mem_obj->reply;
 	reply->hdr_sz = t - httpState->reply_hdr;
@@ -704,19 +701,18 @@ proxyhttpStart(edge * e, char *url, StoreEntry * entry)
     comm_add_close_handler(sock,
 	(PF) httpStateFree,
 	(void *) httpState);
-
     request->method = entry->method;
     strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
     request->port = e->http_port;
     strncpy(request->urlpath, url, MAX_URL);
     ipcache_nbgethostbyname(request->host,
 	sock,
-	(IPH) httpConnect,
+	httpConnect,
 	httpState);
     return COMM_OK;
 }
 
-static int
+static void
 httpConnect(int fd, struct hostent *hp, void *data)
 {
     HttpStateData *httpState = data;
@@ -728,7 +724,7 @@ httpConnect(int fd, struct hostent *hp, void *data)
 	debug(11, 4, "httpConnect: Unknown host: %s\n", request->host);
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(fd);
-	return COMM_ERROR;
+	return;
     }
     /* Open connection. */
     if ((status = comm_connect(fd, request->host, request->port))) {
@@ -739,14 +735,14 @@ httpConnect(int fd, struct hostent *hp, void *data)
 		e->last_fail_time = squid_curtime;
 		e->neighbor_up = 0;
 	    }
-	    return COMM_ERROR;
+	    return;
 	} else {
 	    debug(11, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", fd);
 	    comm_set_select_handler(fd, COMM_SELECT_LIFETIME,
 		(PF) httpLifetimeExpire, (void *) httpState);
 	    comm_set_select_handler(fd, COMM_SELECT_WRITE,
 		(PF) httpConnInProgress, (void *) httpState);
-	    return COMM_OK;
+	    return;
 	}
     }
     /* Install connection complete handler. */
@@ -757,7 +753,6 @@ httpConnect(int fd, struct hostent *hp, void *data)
 	(PF) httpLifetimeExpire, (void *) httpState);
     comm_set_select_handler(fd, COMM_SELECT_WRITE,
 	(PF) httpSendRequest, (void *) httpState);
-    return COMM_OK;
 }
 
 int
@@ -794,7 +789,6 @@ httpStart(int unusedfd, char *url, request_t * request, char *req_hdr, StoreEntr
 	sock,
 	httpConnect,
 	httpState);
-
     return COMM_OK;
 }
 
