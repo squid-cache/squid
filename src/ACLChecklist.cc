@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.23 2004/12/21 17:28:28 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.24 2004/12/24 01:14:23 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -419,7 +419,16 @@ ACLChecklist::fastCheck()
             return currentAnswer() == ACCESS_ALLOWED;
         }
 
-        accessList = accessList->next;
+        /*
+         * Reference the next access entry
+         */
+        const acl_access *A = accessList;
+
+        assert (A);
+
+        accessList = cbdataReference(A->next);
+
+        cbdataReferenceDone(A);
     }
 
     debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", currentAnswer() == ACCESS_DENIED);
