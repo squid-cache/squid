@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.639 2003/06/19 18:18:46 hno Exp $
+ * $Id: client_side.cc,v 1.640 2003/06/19 18:56:59 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -487,10 +487,12 @@ clientPrepareLogWithRequestDetails(request_t * request, AccessLogEntry * aLogEnt
     aLogEntry->hier = request->hier;
 
     if (request->auth_user_request) {
-        aLogEntry->cache.authuser =
-            xstrdup(authenticateUserRequestUsername(request->
-                                                    auth_user_request));
+        if (authenticateUserRequestUsername(request->auth_user_request))
+            aLogEntry->cache.authuser =
+                xstrdup(authenticateUserRequestUsername(request->auth_user_request));
+
         authenticateAuthUserRequestUnlock(request->auth_user_request);
+
         request->auth_user_request = NULL;
     }
 

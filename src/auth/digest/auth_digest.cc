@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.22 2003/02/26 06:11:41 robertc Exp $
+ * $Id: auth_digest.cc,v 1.23 2003/06/19 18:57:00 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -364,16 +364,22 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 
     intnc = strtol(nc, NULL, 16);
 
+    /* has it already been invalidated ? */
+    if (!nonce->flags.valid) {
+        debug(29, 4) ("authDigestNonceIsValid: Nonce already invalidated\n");
+        return 0;
+    }
+
+    /* is the nonce-count ok ? */
+    if (!digestConfig->CheckNonceCount) {
+        nonce->nc++;
+        return -1;              /* forced OK by configuration */
+    }
+
     if ((digestConfig->NonceStrictness && intnc != nonce->nc + 1) ||
             intnc < nonce->nc + 1) {
         debug(29, 4) ("authDigestNonceIsValid: Nonce count doesn't match\n");
         nonce->flags.valid = 0;
-        return 0;
-    }
-
-    /* has it already been invalidated ? */
-    if (!nonce->flags.valid) {
-        debug(29, 4) ("authDigestNonceIsValid: Nonce already invalidated\n");
         return 0;
     }
 
@@ -686,11 +692,47 @@ digest_request_h::authenticate(request_t * request, ConnStateData * conn, http_h
                   "squid is = '%s'\n", digest_request->response, Response);
 
     if (strcasecmp(digest_request->response, Response)) {
-        credentials(Failed);
-        return;
+        if (digestConfig->PostWorkaround && request->method != METHOD_GET) {
+            /* Ugly workaround for certain very broken browsers using the
+             * wrong method to calculate the request-digest on POST request.
+             * This should be deleted once Digest authentication becomes more
+             * widespread and such broken browsers no longer are commonly
+             * used.
+             */
+            DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
+                               digest_request->nc, digest_request->cnonce, digest_request->qop,
+                               RequestMethodStr[METHOD_GET], digest_request->uri, HA2, Response);
+
+            if (strcasecmp(digest_request->response, Response)) {
+                credentials(Failed);
+                return;
+            } else {
+                const char *useragent = httpHeaderGetStr(&request->header, HDR_USER_AGENT);
+
+                static struct in_addr last_broken_addr = {0};
+
+                if (memcmp(&last_broken_addr, &request->client_addr, sizeof(last_broken_addr)) != 0) {
+                    debug(29, 1) ("\nDigest POST bug detected from %s using '%s'. Please upgrade browser. See Bug #630 for details.\n", inet_ntoa(request->client_addr), useragent ? useragent : "-");
+                    last_broken_addr = request->client_addr;
+                }
+            }
+        } else {
+            credentials(Failed);
+            return;
+        }
+
+        /* check for stale nonce */
+        if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
+            debug(29, 3) ("authenticateDigestAuthenticateuser: user '%s' validated OK but nonce stale\n",
+                          digest_user->username);
+            digest_request->flags.nonce_stale = 1;
+            credentials(Failed);
+            return;
+        }
     }
 
     credentials(Ok);
+
     /* password was checked and did match */
     debug(29, 4) ("authenticateDigestAuthenticateuser: user '%s' validated OK\n",
                   digest_user->username);
@@ -711,16 +753,17 @@ digest_request_h::direction()
 
     case Ok:
 
-        if (authDigestNonceIsStale(nonce))
-            /* send stale response to the client agent */
-            return -2;
-
         return 0;
 
     case Pending:
         return -1;
 
     case Failed:
+
+        if (digest_request->flags.nonce_stale)
+            /* nonce is stale, send new challenge */
+            return 1;
+
         return -2;
     }
 
@@ -801,11 +844,7 @@ authenticateDigestFixHeader(auth_user_request_t * auth_user_request, HttpReply *
         digest_request = dynamic_cast < digest_request_h * >(auth_user_request->state());
         assert (digest_request);
 
-        if (digest_request->authenticated())
-            /* stale indicates that the old nonce can't be used
-             * and we are providing a new one.
-             */
-            stale = authDigestNonceIsStale(digest_request->nonce);
+        stale = digest_request->flags.nonce_stale;
     }
 
     /* on a 407 or 401 we always use a new nonce */
@@ -954,8 +993,10 @@ authDigestParse(authScheme * scheme, int n_configured, char *param_str)
         digestConfig->noncemaxduration = 30 * 60;
         /* 50 requests */
         digestConfig->noncemaxuses = 50;
-        /* strict nonce count behaviour */
-        digestConfig->NonceStrictness = 1;
+        /* Not strict nonce count behaviour */
+        digestConfig->NonceStrictness = 0;
+        /* Verify nonce count */
+        digestConfig->CheckNonceCount = 1;
     }
 
     digestConfig = static_cast < auth_digest_config * >(scheme->scheme_data);
@@ -979,6 +1020,10 @@ authDigestParse(authScheme * scheme, int n_configured, char *param_str)
         parse_int((int *) &digestConfig->noncemaxuses);
     } else if (strcasecmp(param_str, "nonce_strictness") == 0) {
         parse_onoff(&digestConfig->NonceStrictness);
+    } else if (strcasecmp(param_str, "check_nonce_count") == 0) {
+        parse_onoff(&digestConfig->CheckNonceCount);
+    } else if (strcasecmp(param_str, "post_workaround") == 0) {
+        parse_onoff(&digestConfig->PostWorkaround);
     } else {
         debug(28, 0) ("unrecognised digest auth scheme parameter '%s'\n", param_str);
     }
@@ -1288,7 +1333,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
     /* now the nonce */
     nonce = authenticateDigestNonceFindNonce(digest_request->nonceb64);
 
-    if ((nonce == NULL) || !(authDigestNonceIsValid(nonce, digest_request->nc))) {
+    if (!nonce) {
         /* we couldn't find a matching nonce! */
         debug(29, 4) ("authenticateDigestDecode: Unexpected or invalid nonce recieved\n");
         authDigestLogUsername(auth_user_request, username);

@@ -86,6 +86,9 @@ public:
 
 unsigned int authinfo_sent:
         1;
+
+unsigned int nonce_stale:
+        1;
     }
 
     flags;
@@ -144,6 +147,8 @@ struct _auth_digest_config
     time_t noncemaxduration;
     unsigned int noncemaxuses;
     int NonceStrictness;
+    int CheckNonceCount;
+    int PostWorkaround;
 };
 
 typedef struct _auth_digest_config auth_digest_config;

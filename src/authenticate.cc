@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.57 2003/06/19 18:20:51 hno Exp $
+ * $Id: authenticate.cc,v 1.58 2003/06/19 18:56:59 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -722,10 +722,22 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
         case 1:
 
+            if (!request->auth_user_request) {
+
+                (*auth_user_request)->lock()
+
+                ;
+                request->auth_user_request = *auth_user_request;
+            }
+
+            /* fallthrough to -2 */
+
         case -2:
             /* this ACL check is finished. Unlock. */
             (*auth_user_request)->unlock();
+
             *auth_user_request = NULL;
+
             return AUTH_ACL_CHALLENGE;
 
         case -1:
