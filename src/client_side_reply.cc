@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.73 2004/10/14 23:32:45 hno Exp $
+ * $Id: client_side_reply.cc,v 1.74 2004/10/18 12:20:09 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1496,17 +1496,39 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     e = http->storeEntry();
-    /* Release negatively cached IP-cache entries on reload */
+    /* Release IP-cache entries on reload */
 
-    if (r->flags.nocache)
+    if (r->flags.nocache) {
+
+#if USE_DNSSERVERS
+
         ipcacheInvalidate(r->host);
+
+#else
+
+        ipcacheInvalidateNegative(r->host);
+
+#endif /* USE_DNSSERVERS */
+
+    }
 
 #if HTTP_VIOLATIONS
 
-    else if (r->flags.nocache_hack)
+    else if (r->flags.nocache_hack) {
+
+#if USE_DNSSERVERS
+
         ipcacheInvalidate(r->host);
 
-#endif
+#else
+
+        ipcacheInvalidateNegative(r->host);
+
+#endif /* USE_DNSSERVERS */
+
+    }
+
+#endif /* HTTP_VIOLATIONS */
 #if USE_CACHE_DIGESTS
 
     lookup_type = http->storeEntry() ? "HIT" : "MISS";

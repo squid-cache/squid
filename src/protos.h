@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.495 2004/08/30 05:12:31 robertc Exp $
+ * $Id: protos.h,v 1.496 2004/10/18 12:20:10 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -487,10 +487,9 @@ SQUIDCEXTERN void ipcache_nbgethostbyname(const char *name,
 SQUIDCEXTERN EVH ipcache_purgelru;
 SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
 SQUIDCEXTERN void ipcacheInvalidate(const char *);
-SQUIDCEXTERN void ipcacheReleaseInvalid(const char *);
+SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
 SQUIDCEXTERN void ipcache_init(void);
 SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
-SQUIDCEXTERN int ipcacheQueueDrain(void);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 
 SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, struct in_addr);

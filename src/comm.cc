@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.395 2004/08/30 05:12:31 robertc Exp $
+ * $Id: comm.cc,v 1.396 2004/10/18 12:20:09 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1231,9 +1231,14 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 
     assert(ia->cur < ia->count);
     cs->in_addr = ia->in_addrs[ia->cur];
-    ipcacheCycleAddr(cs->host, NULL);
+
+    if (Config.onoff.balance_on_multiple_ip)
+        ipcacheCycleAddr(cs->host, NULL);
+
     cs->addrcount = ia->count;
+
     cs->connstart = squid_curtime;
+
     cs->connect();
 }
 

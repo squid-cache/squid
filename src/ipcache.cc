@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.245 2004/10/15 21:12:47 hno Exp $
+ * $Id: ipcache.cc,v 1.246 2004/10/18 12:20:10 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -129,6 +129,7 @@ ipcache_testname(void)
 static void
 ipcacheRelease(ipcache_entry * i)
 {
+    debug(14, 3) ("ipcacheRelease: Releasing entry for '%s'\n", (const char *) i->hash.key);
     hash_remove_link(ip_table, (hash_link *) i);
     dlinkDelete(&i->lru, &lru_list);
     ipcacheFreeEntry(i);
@@ -394,7 +395,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
     assert(answers);
 
-    for (j = 0, k = 0; k < nr; k++) {
+    for (k = 0; k < nr; k++) {
         if (answers[k].type != RFC1035_TYPE_A)
             continue;
 
@@ -685,6 +686,23 @@ ipcacheInvalidate(const char *name)
      */
 }
 
+void
+ipcacheInvalidateNegative(const char *name)
+{
+    ipcache_entry *i;
+
+    if ((i = ipcache_get(name)) == NULL)
+        return;
+
+    if (i->flags.negcached)
+        i->expires = squid_curtime;
+
+    /*
+     * NOTE, don't call ipcacheRelease here becuase we might be here due
+     * to a thread started from a callback.
+     */
+}
+
 ipcache_addrs *
 ipcacheCheckNumeric(const char *name)
 {
@@ -799,6 +817,7 @@ ipcacheMarkBadAddr(const char *name, struct in_addr addr)
     {
         ia->bad_mask[k] = TRUE;
         ia->badcount++;
+        i->expires = XMIN(squid_curtime + XMAX((time_t)60, Config.negativeDnsTtl), i->expires);
         debug(14, 2) ("ipcacheMarkBadAddr: %s [%s]\n", name, inet_ntoa(addr));
     }
 
