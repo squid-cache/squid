@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>ERROR: Erro no FTP upload </TITLE>
+</HEAD><BODY>
+<H1>ERRO</H1>
+<H2>FTP PUT/erro na carga</H2>
+<HR>
+<P>
+Na tentativa de salvar (PUT) a seguinte URL:
+<A HREF="%U">%U</A>
+<P>
+O Squid emitiu o seguinte comando FTP:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+e recebeu esta resposta
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Isto significa que:
+<PRE>
+Verifique o caminho (path), permiss&otilde;es, espa&ccedil;o em disco e tente novamente.
+</PRE>
+</P>
+
