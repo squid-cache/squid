@@ -801,10 +801,9 @@ struct _MemObject {
     struct _store_client *clients;
     int nclients;
     struct {
-	off_t queue_offset;
-	off_t done_offset;
+	off_t queue_offset;	/* relative to in-mem data */
+	off_t done_offset;	/* relative to swap file with meta headers! */
 	int fd;
-	size_t hdr_len;		/* size of the swapfile header */
     } swapout;
     struct _http_reply *reply;
     request_t *request;
@@ -819,6 +818,7 @@ struct _MemObject {
     char *log_url;
     dlink_node lru;
     u_num32 reqnum;
+    size_t swap_hdr_sz;
 };
 
 struct _StoreEntry {

@@ -122,7 +122,7 @@ extern void _db_print();
 
 extern int file_open(const char *path, int mode, FOCB *, void *callback_data, void *tag);
 extern void file_close(int fd);
-extern int file_write(int, off_t, char *, int len, DWCB *, void *, FREE *);
+extern void file_write(int, off_t, char *, int len, DWCB *, void *, FREE *);
 extern int file_read(int, char *, int, off_t, DRCB *, void *);
 extern int disk_init(void);
 extern int diskWriteIsComplete(int);
@@ -413,14 +413,11 @@ extern void storeClientCopy(StoreEntry * e,
     STCB * callback,
     void *data);
 extern int storePendingNClients(const StoreEntry *);
-extern int storeWriteCleanLogs(int reopen);
 extern HASHCMP urlcmp;
 extern EVH storeMaintainSwapSpace;
 extern void storeExpireNow(StoreEntry *);
 extern void storeReleaseRequest(StoreEntry *);
-extern void storeRotateLog(void);
 extern off_t storeLowestMemReaderOffset(const StoreEntry *);
-extern void storeCloseLog(void);
 extern void storeConfigure(void);
 extern void storeNegativeCache(StoreEntry *);
 extern void storeFreeMemory(void);
@@ -433,7 +430,7 @@ extern time_t storeExpiredReferenceAge(void);
 extern void storeRegisterAbort(StoreEntry * e, STABH * cb, void *);
 extern void storeUnregisterAbort(StoreEntry * e);
 extern void storeMemObjectDump(MemObject * mem);
-extern void storeEntryDump(StoreEntry * e);
+extern void storeEntryDump(StoreEntry * e, int debug_lvl);
 extern const char *storeUrl(const StoreEntry *);
 extern void storeCreateMemObject(StoreEntry *, const char *, const char *);
 extern void storeCopyNotModifiedReplyHeaders(MemObject * O, MemObject * N);
@@ -450,8 +447,15 @@ extern void storeAppendPrintf(StoreEntry *, const char *,...);
 #else
 extern void storeAppendPrintf();
 #endif
-extern void storeLog(int tag, const StoreEntry * e);
 extern int storeCheckCachable(StoreEntry * e);
+
+/*
+ * store_log.c
+ */
+extern void storeLog(int tag, const StoreEntry * e);
+extern void storeLogRotate(void);
+extern void storeLogClose(void);
+extern void storeLogOpen(void);
 
 
 /*
@@ -495,6 +499,9 @@ extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
 extern int storeDirProperFileno(int dirn, int fn);
 extern void storeCreateSwapDirectories(void);
 extern int storeVerifyCacheDirs(void);
+extern int storeDirWriteCleanLogs(int reopen);
+extern int storeDirValidFileno(int fn);
+
 
 /*
  * store_swapmeta.c

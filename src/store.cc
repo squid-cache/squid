@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.373 1998/02/03 07:35:28 wessels Exp $
+ * $Id: store.cc,v 1.374 1998/02/03 22:08:14 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -110,14 +110,6 @@
 
 #define STORE_IN_MEM_BUCKETS		(229)
 
-static char *storeLogTags[] =
-{
-    "CREATE",
-    "SWAPIN",
-    "SWAPOUT",
-    "RELEASE"
-};
-
 const char *memStatusStr[] =
 {
     "NOT_IN_MEMORY",
@@ -153,7 +145,9 @@ typedef struct lock_ctrl_t {
     StoreEntry *e;
 } lock_ctrl_t;
 
-/* Static Functions */
+/*
+ * local function prototypes
+ */
 static int storeCheckExpired(const StoreEntry *, int flag);
 static int storeEntryLocked(const StoreEntry *);
 static int storeEntryValidLength(const StoreEntry *);
@@ -165,31 +159,19 @@ static void destroy_MemObjectData(MemObject *);
 static void destroy_StoreEntry(StoreEntry *);
 static void storePurgeMem(StoreEntry *);
 static void storeSetPrivateKey(StoreEntry *);
-#if OLD_CODE
-static STVLDCB storeCleanupComplete;
-#endif
 static unsigned int getKeyCounter(void);
 static int storeKeepInMemory(const StoreEntry *);
 
+/*
+ * local variables
+ */
 static dlink_list inmem_list;
-static dlink_list all_list;
-
 static int store_pages_high = 0;
 static int store_pages_low = 0;
-
-/* current file name, swap file, use number as a filename */
 static int store_swap_high = 0;
 static int store_swap_low = 0;
-static int storelog_fd = -1;
-
-/* expiration parameters and stats */
 static int store_maintain_rate;
 static int store_maintain_buckets;
-
-#if OLD_CODE
-/* outstanding cleanup validations */
-static int outvalid = 0;
-#endif
 
 static MemObject *
 new_MemObject(const char *url, const char *log_url)
@@ -273,58 +255,19 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
 	e, storeKeyText(key));
     e->key = storeKeyDup(key);
     hash_join(store_table, (hash_link *) e);
-    dlinkAdd(e, &e->lru, &all_list);
+    dlinkAdd(e, &e->lru, &store_list);
 }
 
 static void
 storeHashDelete(StoreEntry * e)
 {
     hash_remove_link(store_table, (hash_link *) e);
-    dlinkDelete(&e->lru, &all_list);
+    dlinkDelete(&e->lru, &store_list);
     storeKeyFree(e->key);
     e->key = NULL;
 }
 
 /* -------------------------------------------------------------------------- */
-
-void
-storeLog(int tag, const StoreEntry * e)
-{
-    LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
-    MemObject *mem = e->mem_obj;
-    struct _http_reply *reply;
-    if (storelog_fd < 0)
-	return;
-    if (mem == NULL)
-	return;
-    if (mem->log_url == NULL) {
-	debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
-	storeMemObjectDump(mem);
-	mem->log_url = xstrdup(mem->url);
-    }
-    reply = mem->reply;
-    snprintf(logmsg, MAX_URL << 1, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
-	(int) current_time.tv_sec,
-	(int) current_time.tv_usec / 1000,
-	storeLogTags[tag],
-	e->swap_file_number,
-	reply->code,
-	(int) reply->date,
-	(int) reply->last_modified,
-	(int) reply->expires,
-	reply->content_type[0] ? reply->content_type : "unknown",
-	reply->content_length,
-	(int) (mem->inmem_hi - mem->reply->hdr_sz),
-	RequestMethodStr[mem->method],
-	mem->log_url);
-    file_write(storelog_fd,
-	-1,
-	xstrdup(logmsg),
-	strlen(logmsg),
-	NULL,
-	NULL,
-	xfree);
-}
 
 
 /* get rid of memory copy of the object */
@@ -347,8 +290,8 @@ void
 storeLockObject(StoreEntry * e)
 {
     if (e->lock_count++ == 0) {
-	dlinkDelete(&e->lru, &all_list);
-	dlinkAdd(e, &e->lru, &all_list);
+	dlinkDelete(&e->lru, &store_list);
+	dlinkAdd(e, &e->lru, &store_list);
     }
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
 	storeKeyText(e->key), (int) e->lock_count);
@@ -713,7 +656,7 @@ storeMaintainSwapSpace(void *datanotused)
 	return;
     }
     debug(20, 3) ("storeMaintainSwapSpace\n");
-    for (m = all_list.tail; m; m = prev) {
+    for (m = store_list.tail; m; m = prev) {
 	prev = m->prev;
 	e = m->data;
 	if (storeEntryLocked(e)) {
@@ -889,16 +832,10 @@ storeInitHashValues(void)
 void
 storeInit(void)
 {
-    char *fname = NULL;
     storeInitHashValues();
     store_table = hash_create(storeKeyHashCmp,
 	store_hash_buckets, storeKeyHashHash);
-    if (strcmp((fname = Config.Log.store), "none") == 0)
-	storelog_fd = -1;
-    else
-	storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL, NULL);
-    if (storelog_fd < 0)
-	debug(20, 1) ("Store logging disabled\n");
+    storeLogOpen();
     if (storeVerifyCacheDirs() < 0) {
 	xstrncpy(tmp_error_buf,
 	    "\tFailed to verify one of the swap directories, Check cache.log\n"
@@ -907,15 +844,9 @@ storeInit(void)
 	    ERROR_BUF_SZ);
 	fatal(tmp_error_buf);
     }
-    if (opt_convert) {
-	storeDirOpenSwapLogs();
-	storeConvert();
-	debug(0, 0) ("DONE Converting. Welcome to %s!\n", version_string);
-	storeDirCloseSwapLogs();
-	exit(0);
-    }
+    storeDirOpenSwapLogs();
     storeStartRebuildFromDisk();
-    all_list.head = all_list.tail = NULL;
+    store_list.head = store_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
 }
 
@@ -943,212 +874,6 @@ urlcmp(const void *url1, const void *url2)
 {
     assert(url1 && url2);
     return (strcmp(url1, url2));
-}
-
-/*
- *  storeWriteCleanLogs
- * 
- *  Writes a "clean" swap log file from in-memory metadata.
- */
-#define CLEAN_BUF_SZ 16384
-int
-storeWriteCleanLogs(int reopen)
-{
-    StoreEntry *e = NULL;
-    int *fd;
-    char *line;
-    int n = 0;
-    time_t start, stop, r;
-    struct stat sb;
-    char **cur;
-    char **new;
-    char **cln;
-    int dirn;
-    dlink_node *m;
-    int linelen;
-    char **outbufs;
-    int *outbuflens;
-    if (store_rebuilding) {
-	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
-	debug(20, 1) ("storeWriteCleanLogs: Operation aborted.\n");
-	storeDirCloseSwapLogs();
-	return 0;
-    }
-    debug(20, 1) ("storeWriteCleanLogs: Starting...\n");
-    start = squid_curtime;
-    fd = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
-    cur = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    new = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    cln = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	fd[dirn] = -1;
-	cur[dirn] = xstrdup(storeDirSwapLogFile(dirn, NULL));
-	new[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".clean"));
-	cln[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".last-clean"));
-	unlink(new[dirn]);
-	unlink(cln[dirn]);
-	fd[dirn] = file_open(new[dirn],
-	    O_WRONLY | O_CREAT | O_TRUNC,
-	    NULL,
-	    NULL,
-	    NULL);
-	if (fd[dirn] < 0) {
-	    debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
-	    continue;
-	}
-#if HAVE_FCHMOD
-	if (stat(cur[dirn], &sb) == 0)
-	    fchmod(fd[dirn], sb.st_mode);
-#endif
-    }
-    line = xcalloc(1, CLEAN_BUF_SZ);
-    outbufs = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
-    outbuflens = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	outbufs[dirn] = xcalloc(Config.cacheSwap.n_configured, CLEAN_BUF_SZ);
-	outbuflens[dirn] = 0;
-    }
-    for (m = all_list.tail; m; m = m->prev) {
-	e = m->data;
-	if (e->swap_file_number < 0)
-	    continue;
-	if (e->swap_status != SWAPOUT_DONE)
-	    continue;
-	if (e->object_len <= 0)
-	    continue;
-	if (EBIT_TEST(e->flag, RELEASE_REQUEST))
-	    continue;
-	if (EBIT_TEST(e->flag, KEY_PRIVATE))
-	    continue;
-	dirn = storeDirNumber(e->swap_file_number);
-	assert(dirn < Config.cacheSwap.n_configured);
-	if (fd[dirn] < 0)
-	    continue;
-	snprintf(line, CLEAN_BUF_SZ, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
-	    (int) e->swap_file_number,
-	    (int) e->timestamp,
-	    (int) e->lastref,
-	    (int) e->expires,
-	    (int) e->lastmod,
-	    e->object_len,
-	    e->refcount,
-	    e->flag,
-	    storeKeyText(e->key));
-	linelen = strlen(line);
-	/* buffered write */
-	if (linelen + outbuflens[dirn] > CLEAN_BUF_SZ - 2) {
-	    if (write(fd[dirn], outbufs[dirn], outbuflens[dirn]) < 0) {
-		debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
-		debug(20, 0) ("storeWriteCleanLogs: Current swap logfile not replaced.\n");
-		file_close(fd[dirn]);
-		fd[dirn] = -1;
-		unlink(cln[dirn]);
-		continue;
-	    }
-	    outbuflens[dirn] = 0;
-	}
-	strcpy(outbufs[dirn] + outbuflens[dirn], line);
-	outbuflens[dirn] += linelen;
-	if ((++n & 0x3FFF) == 0) {
-	    getCurrentTime();
-	    debug(20, 1) ("  %7d lines written so far.\n", n);
-	}
-    }
-    safe_free(line);
-    /* flush */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	if (outbuflens[dirn] > 0) {
-	    if (write(fd[dirn], outbufs[dirn], outbuflens[dirn]) < 0) {
-		debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
-		debug(20, 0) ("storeWriteCleanLogs: Current swap logfile not replaced.\n");
-		file_close(fd[dirn]);
-		fd[dirn] = -1;
-		unlink(cln[dirn]);
-		continue;
-	    }
-	}
-	safe_free(outbufs[dirn]);
-    }
-    safe_free(outbufs);
-    safe_free(outbuflens);
-    /* close */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	file_close(fd[dirn]);
-	fd[dirn] = -1;
-	if (rename(new[dirn], cur[dirn]) < 0) {
-	    debug(50, 0) ("storeWriteCleanLogs: rename failed: %s, %s -> %s\n",
-		xstrerror(), new[dirn], cur[dirn]);
-	}
-    }
-    storeDirCloseSwapLogs();
-    if (reopen)
-	storeDirOpenSwapLogs();
-    stop = squid_curtime;
-    r = stop - start;
-    debug(20, 1) ("  Finished.  Wrote %d lines.\n", n);
-    debug(20, 1) ("  Took %d seconds (%6.1lf lines/sec).\n",
-	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
-    /* touch a timestamp file if we're not still validating */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	if (!store_rebuilding)
-	    file_close(file_open(cln[dirn],
-		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL));
-	safe_free(cur[dirn]);
-	safe_free(new[dirn]);
-	safe_free(cln[dirn]);
-    }
-    safe_free(cur);
-    safe_free(new);
-    safe_free(cln);
-    safe_free(fd);
-    return n;
-}
-#undef CLEAN_BUF_SZ
-
-void
-storeRotateLog(void)
-{
-    char *fname = NULL;
-    int i;
-    LOCAL_ARRAY(char, from, MAXPATHLEN);
-    LOCAL_ARRAY(char, to, MAXPATHLEN);
-#ifdef S_ISREG
-    struct stat sb;
-#endif
-
-    if (storelog_fd > -1) {
-	file_close(storelog_fd);
-	storelog_fd = -1;
-    }
-    if ((fname = Config.Log.store) == NULL)
-	return;
-    if (strcmp(fname, "none") == 0)
-	return;
-#ifdef S_ISREG
-    if (stat(fname, &sb) == 0)
-	if (S_ISREG(sb.st_mode) == 0)
-	    return;
-#endif
-
-    debug(20, 1) ("storeRotateLog: Rotating.\n");
-
-    /* Rotate numbers 0 through N up one */
-    for (i = Config.Log.rotateNumber; i > 1;) {
-	i--;
-	snprintf(from, MAXPATHLEN, "%s.%d", fname, i - 1);
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
-	rename(from, to);
-    }
-    /* Rotate the current log to .0 */
-    if (Config.Log.rotateNumber > 0) {
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
-	rename(fname, to);
-    }
-    storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL, NULL);
-    if (storelog_fd < 0) {
-	debug(50, 0) ("storeRotateLog: %s: %s\n", fname, xstrerror());
-	debug(20, 1) ("Store logging disabled\n");
-    }
 }
 
 static int
@@ -1202,13 +927,6 @@ storeExpiredReferenceAge(void)
     else if (age > 31536000)
 	age = 31536000;
     return age;
-}
-
-void
-storeCloseLog(void)
-{
-    if (storelog_fd >= 0)
-	file_close(storelog_fd);
 }
 
 void
@@ -1364,24 +1082,24 @@ storeMemObjectDump(MemObject * mem)
 }
 
 void
-storeEntryDump(StoreEntry * e)
+storeEntryDump(StoreEntry * e, int l)
 {
-    debug(20, 1) ("StoreEntry->key: %s\n", storeKeyText(e->key));
-    debug(20, 1) ("StoreEntry->next: %p\n", e->next);
-    debug(20, 1) ("StoreEntry->mem_obj: %p\n", e->mem_obj);
-    debug(20, 1) ("StoreEntry->timestamp: %d\n", (int) e->timestamp);
-    debug(20, 1) ("StoreEntry->lastref: %d\n", (int) e->lastref);
-    debug(20, 1) ("StoreEntry->expires: %d\n", (int) e->expires);
-    debug(20, 1) ("StoreEntry->lastmod: %d\n", (int) e->lastmod);
-    debug(20, 1) ("StoreEntry->object_len: %d\n", e->object_len);
-    debug(20, 1) ("StoreEntry->refcount: %d\n", e->refcount);
-    debug(20, 1) ("StoreEntry->flag: %X\n", e->flag);
-    debug(20, 1) ("StoreEntry->swap_file_number: %d\n", (int) e->swap_file_number);
-    debug(20, 1) ("StoreEntry->lock_count: %d\n", (int) e->lock_count);
-    debug(20, 1) ("StoreEntry->mem_status: %d\n", (int) e->mem_status);
-    debug(20, 1) ("StoreEntry->ping_status: %d\n", (int) e->ping_status);
-    debug(20, 1) ("StoreEntry->store_status: %d\n", (int) e->store_status);
-    debug(20, 1) ("StoreEntry->swap_status: %d\n", (int) e->swap_status);
+    debug(20, l) ("StoreEntry->key: %s\n", storeKeyText(e->key));
+    debug(20, l) ("StoreEntry->next: %p\n", e->next);
+    debug(20, l) ("StoreEntry->mem_obj: %p\n", e->mem_obj);
+    debug(20, l) ("StoreEntry->timestamp: %d\n", (int) e->timestamp);
+    debug(20, l) ("StoreEntry->lastref: %d\n", (int) e->lastref);
+    debug(20, l) ("StoreEntry->expires: %d\n", (int) e->expires);
+    debug(20, l) ("StoreEntry->lastmod: %d\n", (int) e->lastmod);
+    debug(20, l) ("StoreEntry->object_len: %d\n", e->object_len);
+    debug(20, l) ("StoreEntry->refcount: %d\n", e->refcount);
+    debug(20, l) ("StoreEntry->flag: %X\n", e->flag);
+    debug(20, l) ("StoreEntry->swap_file_number: %d\n", (int) e->swap_file_number);
+    debug(20, l) ("StoreEntry->lock_count: %d\n", (int) e->lock_count);
+    debug(20, l) ("StoreEntry->mem_status: %d\n", (int) e->mem_status);
+    debug(20, l) ("StoreEntry->ping_status: %d\n", (int) e->ping_status);
+    debug(20, l) ("StoreEntry->store_status: %d\n", (int) e->store_status);
+    debug(20, l) ("StoreEntry->swap_status: %d\n", (int) e->swap_status);
 }
 
 /* NOTE, this function assumes only two mem states */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.42 1998/02/02 21:15:09 wessels Exp $
+ * $Id: store_dir.cc,v 1.43 1998/02/03 22:08:16 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -97,7 +97,7 @@ storeSwapSubSubDir(int fn, char *fullpath)
 	((filn / Config.cacheSwap.swapDirs[dirn].l2) / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l1,
 	(filn / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l2);
 #else
-    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
+    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
 	Config.cacheSwap.swapDirs[dirn].path,
 	filn % Config.cacheSwap.swapDirs[dirn].l1,
 	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2);
@@ -211,6 +211,20 @@ storeMostFreeSwapDir(void)
 	dirn = i;
     }
     return dirn;
+}
+
+int
+storeDirValidFileno(int fn)
+{
+    int dirn = fn >> SWAP_DIR_SHIFT;
+    int filn = fn & SWAP_FILE_MASK;
+    SwapDir *SD;
+    if (dirn > Config.cacheSwap.n_configured)
+	return 0;
+    SD =  &Config.cacheSwap.swapDirs[dirn];
+    if (filn > SD->map->max_n_files)
+	return 0;
+    return 1;
 }
 
 int
@@ -468,3 +482,163 @@ storeDirStats(StoreEntry * sentry)
 	    100.0 * SD->cur_size / SD->max_size);
     }
 }
+
+/*
+ *  storeDirWriteCleanLogs
+ * 
+ *  Writes a "clean" swap log file from in-memory metadata.
+ */
+#define CLEAN_BUF_SZ 16384
+int
+storeDirWriteCleanLogs(int reopen)
+{
+    StoreEntry *e = NULL;
+    int *fd;
+    char *line;
+    int n = 0;
+    time_t start, stop, r;
+    struct stat sb;
+    char **cur;
+    char **new;
+    char **cln;
+    int dirn;
+    dlink_node *m;
+    int linelen;
+    char **outbufs;
+    int *outbuflens;
+    if (store_rebuilding) {
+	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
+	debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
+	storeDirCloseSwapLogs();
+	return 0;
+    }
+    debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");
+    start = squid_curtime;
+    fd = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
+    cur = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    new = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    cln = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	fd[dirn] = -1;
+	cur[dirn] = xstrdup(storeDirSwapLogFile(dirn, NULL));
+	new[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".clean"));
+	cln[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".last-clean"));
+	unlink(new[dirn]);
+	unlink(cln[dirn]);
+	fd[dirn] = file_open(new[dirn],
+	    O_WRONLY | O_CREAT | O_TRUNC,
+	    NULL,
+	    NULL,
+	    NULL);
+	if (fd[dirn] < 0) {
+	    debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
+	    continue;
+	}
+#if HAVE_FCHMOD
+	if (stat(cur[dirn], &sb) == 0)
+	    fchmod(fd[dirn], sb.st_mode);
+#endif
+    }
+    line = xcalloc(1, CLEAN_BUF_SZ);
+    outbufs = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    outbuflens = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	outbufs[dirn] = xcalloc(Config.cacheSwap.n_configured, CLEAN_BUF_SZ);
+	outbuflens[dirn] = 0;
+    }
+    for (m = store_list.tail; m; m = m->prev) {
+	e = m->data;
+	if (e->swap_file_number < 0)
+	    continue;
+	if (e->swap_status != SWAPOUT_DONE)
+	    continue;
+	if (e->object_len <= 0)
+	    continue;
+	if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+	    continue;
+	if (EBIT_TEST(e->flag, KEY_PRIVATE))
+	    continue;
+	dirn = storeDirNumber(e->swap_file_number);
+	assert(dirn < Config.cacheSwap.n_configured);
+	if (fd[dirn] < 0)
+	    continue;
+	snprintf(line, CLEAN_BUF_SZ, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
+	    (int) e->swap_file_number,
+	    (int) e->timestamp,
+	    (int) e->lastref,
+	    (int) e->expires,
+	    (int) e->lastmod,
+	    e->object_len,
+	    e->refcount,
+	    e->flag,
+	    storeKeyText(e->key));
+	linelen = strlen(line);
+	/* buffered write */
+	if (linelen + outbuflens[dirn] > CLEAN_BUF_SZ - 2) {
+	    if (write(fd[dirn], outbufs[dirn], outbuflens[dirn]) < 0) {
+		debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
+		debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
+		file_close(fd[dirn]);
+		fd[dirn] = -1;
+		unlink(cln[dirn]);
+		continue;
+	    }
+	    outbuflens[dirn] = 0;
+	}
+	strcpy(outbufs[dirn] + outbuflens[dirn], line);
+	outbuflens[dirn] += linelen;
+	if ((++n & 0x3FFF) == 0) {
+	    getCurrentTime();
+	    debug(20, 1) ("  %7d lines written so far.\n", n);
+	}
+    }
+    safe_free(line);
+    /* flush */
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	if (outbuflens[dirn] > 0) {
+	    if (write(fd[dirn], outbufs[dirn], outbuflens[dirn]) < 0) {
+		debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
+		debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
+		file_close(fd[dirn]);
+		fd[dirn] = -1;
+		unlink(cln[dirn]);
+		continue;
+	    }
+	}
+	safe_free(outbufs[dirn]);
+    }
+    safe_free(outbufs);
+    safe_free(outbuflens);
+    /* close */
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	file_close(fd[dirn]);
+	fd[dirn] = -1;
+	if (rename(new[dirn], cur[dirn]) < 0) {
+	    debug(50, 0) ("storeDirWriteCleanLogs: rename failed: %s, %s -> %s\n",
+		xstrerror(), new[dirn], cur[dirn]);
+	}
+    }
+    storeDirCloseSwapLogs();
+    if (reopen)
+	storeDirOpenSwapLogs();
+    stop = squid_curtime;
+    r = stop - start;
+    debug(20, 1) ("  Finished.  Wrote %d lines.\n", n);
+    debug(20, 1) ("  Took %d seconds (%6.1lf lines/sec).\n",
+	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
+    /* touch a timestamp file if we're not still validating */
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	if (!store_rebuilding)
+	    file_close(file_open(cln[dirn],
+		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL));
+	safe_free(cur[dirn]);
+	safe_free(new[dirn]);
+	safe_free(cln[dirn]);
+    }
+    safe_free(cur);
+    safe_free(new);
+    safe_free(cln);
+    safe_free(fd);
+    return n;
+}
+#undef CLEAN_BUF_SZ

@@ -6,7 +6,7 @@ typedef struct swapout_ctrl_t {
     StoreEntry *e;
 } swapout_ctrl_t;
 
-static void storeSwapoutFileOpened(void *data, int fd, int errcode);
+static FOCB storeSwapOutFileOpened;
 
 /* start swapping object to disk */
 void
@@ -27,7 +27,7 @@ storeSwapOutStart(StoreEntry * e)
     e->swap_status = SWAPOUT_OPENING;
     file_open(swapfilename,
 	O_WRONLY | O_CREAT | O_TRUNC,
-	storeSwapoutFileOpened,
+	storeSwapOutFileOpened,
 	ctrlp, e);
 }
 
@@ -70,17 +70,18 @@ storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 #else
     assert(mem != NULL);
 #endif
+    assert(mem->swap_hdr_sz != 0);
     mem->swapout.done_offset += len;
     if (e->store_status == STORE_PENDING) {
 	storeCheckSwapOut(e);
 	return;
-    } else if (mem->swapout.done_offset < e->object_len + mem->swapout.hdr_len) {
+    } else if (mem->swapout.done_offset < e->object_len + mem->swap_hdr_sz) {
 	storeCheckSwapOut(e);
 	return;
     }
     /* swapping complete */
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
-	mem->url, storeSwapFullPath(e->swap_file_number, NULL));
+	storeUrl(e), storeSwapFullPath(e->swap_file_number, NULL));
     e->swap_status = SWAPOUT_DONE;
     storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
     if (storeCheckCachable(e)) {
@@ -101,11 +102,10 @@ storeCheckSwapOut(StoreEntry * e)
     size_t swapout_size;
     char *swap_buf;
     ssize_t swap_buf_len;
-    int x;
     int hdr_len = 0;
     assert(mem != NULL);
     /* should we swap something out to disk? */
-    debug(20, 3) ("storeCheckSwapOut: %s\n", mem->url);
+    debug(20, 3) ("storeCheckSwapOut: %s\n", storeUrl(e));
     debug(20, 3) ("storeCheckSwapOut: store_status = %s\n",
 	storeStatusStr[e->store_status]);
     if (e->store_status == STORE_ABORTED) {
@@ -169,29 +169,13 @@ storeCheckSwapOut(StoreEntry * e)
     if (e->swap_status == SWAPOUT_OPENING)
 	return;
     assert(mem->swapout.fd > -1);
-    swap_buf = memAllocate(MEM_DISK_BUF, 1);
-
-#if USE_SWAP_HEADER
-	/* XXX: BROKEN */
-    if (mem->swapout.queue_offset == 0) {
-	tlv = storeSwapMetaBuild(e);
-	hdr_buf = storeSwapMetaPack(tlv, &hdr_len);
-    }
-    if (swapout_size > STORE_SWAP_BUF - hdr_len)
-	swapout_size = STORE_SWAP_BUF - hdr_len;
-    swap_buf_len = stmemCopy(mem->data,
-	mem->swapout.queue_offset,
-	swap_buf + hdr_len,
-	swapout_size) + hdr_len;
-#else
     if (swapout_size > STORE_SWAP_BUF)
 	swapout_size = STORE_SWAP_BUF;
+    swap_buf = memAllocate(MEM_DISK_BUF, 1);
     swap_buf_len = stmemCopy(mem->data,
         mem->swapout.queue_offset,
         swap_buf,
         swapout_size);
-#endif
-
     if (swap_buf_len < 0) {
 	debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
 	/* XXX This is probably wrong--we should storeRelease()? */
@@ -208,14 +192,13 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: swapping out %d bytes from %d\n",
 	swap_buf_len, mem->swapout.queue_offset);
     mem->swapout.queue_offset += swap_buf_len - hdr_len;
-    x = file_write(mem->swapout.fd,
+    file_write(mem->swapout.fd,
 	-1,
 	swap_buf,
 	swap_buf_len,
 	storeSwapOutHandle,
 	e,
 	memFreeDISK);
-    assert(x == DISK_OK);
 }
 
 void
@@ -233,13 +216,16 @@ storeSwapOutFileClose(StoreEntry * e)
 }
 
 static void
-storeSwapoutFileOpened(void *data, int fd, int errcode)
+storeSwapOutFileOpened(void *data, int fd, int errcode)
 {
     swapout_ctrl_t *ctrlp = data;
     int oldswapstatus = ctrlp->oldswapstatus;
     char *swapfilename = ctrlp->swapfilename;
     StoreEntry *e = ctrlp->e;
     MemObject *mem;
+    int swap_hdr_sz = 0;
+    tlv *tlv_list;
+    char *buf;
     xfree(ctrlp);
     if (fd == -2 && errcode == -2) {	/* Cancelled - Clean up */
 	xfree(swapfilename);
@@ -247,7 +233,7 @@ storeSwapoutFileOpened(void *data, int fd, int errcode)
     }
     assert(e->swap_status == SWAPOUT_OPENING);
     if (fd < 0) {
-	debug(20, 0) ("storeSwapoutFileOpened: Unable to open swapfile: %s\n",
+	debug(20, 0) ("storeSwapOutFileOpened: Unable to open swapfile: %s\n",
 	    swapfilename);
 	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
@@ -258,9 +244,19 @@ storeSwapoutFileOpened(void *data, int fd, int errcode)
     mem = e->mem_obj;
     mem->swapout.fd = (short) fd;
     e->swap_status = SWAPOUT_WRITING;
-    debug(20, 5) ("storeSwapoutFileOpened: Begin SwapOut '%s' to FD %d FILE %s.\n",
-	mem->url, fd, swapfilename);
+    debug(20, 5) ("storeSwapOutFileOpened: Begin SwapOut '%s' to FD %d '%s'\n",
+	storeUrl(e), fd, swapfilename);
     xfree(swapfilename);
     debug(20, 5) ("swap_file_number=%08X\n", e->swap_file_number);
-    storeCheckSwapOut(e);
+    tlv_list = storeSwapMetaBuild(e);
+    buf = storeSwapMetaPack(tlv_list, &swap_hdr_sz);
+    storeSwapTLVFree(tlv_list);
+    mem->swap_hdr_sz = (size_t) swap_hdr_sz;
+    file_write(mem->swapout.fd,
+	-1,
+	buf,
+	mem->swap_hdr_sz,
+	storeSwapOutHandle,
+	e,
+	xfree);
 }
