@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.24 2001/03/10 00:55:36 hno Exp $
+ * $Id: HttpStatusLine.cc,v 1.25 2002/09/23 04:01:51 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -160,6 +160,9 @@ httpStatusString(http_status status)
 	break;
     case HTTP_USE_PROXY:
 	p = "Use Proxy";
+	break;
+    case HTTP_TEMPORARY_REDIRECT:
+	p = "Temporary Redirect";
 	break;
     case HTTP_BAD_REQUEST:
 	p = "Bad Request";
