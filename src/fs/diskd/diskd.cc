@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.5 2000/06/26 20:17:12 adrian Exp $
+ * $Id: diskd.cc,v 1.6 2000/10/03 15:31:40 wessels Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -188,10 +188,11 @@ static int
 do_unlink(diomsg * r, int len, const char *buf)
 {
 #if USE_TRUNCATE
-    if (truncate(buf, 0) < 0) {
+    if (truncate(buf, 0) < 0)
 #else
-    if (unlink(buf) < 0) {
+    if (unlink(buf) < 0)
 #endif
+    {
 	fprintf(stderr, "%d UNLNK id %d %s: ", (int) mypid, r->id, buf);
 	perror("truncate");
 	return -errno;
