@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.11 2002/09/06 20:11:44 hno Exp $
+ * $Id: external_acl.cc,v 1.12 2002/09/07 14:39:52 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -275,8 +275,7 @@ parse_externalAclHelper(external_acl ** list)
     wordlistAdd(&a->cmdline, token);
 
     /* arguments */
-    while ((token = strtok(NULL, w_space)) != NULL)
-	wordlistAdd(&a->cmdline, token);
+    parse_wordlist(&a->cmdline);
 
     while (*list)
 	list = &(*list)->next;
