@@ -16,6 +16,7 @@ internalStart(request_t * request, StoreEntry * entry)
 	netdbBinaryExchange(entry);
     else {
 	debug(0, 0) ("internalStart: unknown request '%s'\n", upath);
+	debugObj(0,0, request, &httpRequestPack);
 	err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND);
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);

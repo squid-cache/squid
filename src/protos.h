@@ -424,6 +424,7 @@ extern request_t *requestLink(request_t *);
 extern void requestUnlink(request_t *);
 extern int httpRequestParseHeader(request_t * req, const char *parse_start);
 extern void httpRequestSwapOut(const request_t * req, StoreEntry * e);
+extern void httpRequestPack(const request_t * req, Packer *p);
 extern int httpRequestPrefixLen(const request_t * req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 
@@ -1015,6 +1016,8 @@ extern void carpInit(void);
 extern peer * carpSelectParent(request_t *);
 #endif
 
+/* packs, then prints an object using debug() */
+extern void debugObj(int section, int level, void *obj, void (*packMeth)(void *obj, Packer *p));
 
 /*
  * prototypes for system functions missing from system includes
