@@ -35,7 +35,7 @@ Changes to squid-2.5 ():
 	  in accelerator setups.
 	- Countless other small things and fixes
 	
-Changes to Squid-2.4.STABLE4 ()
+Changes to Squid-2.4.STABLE4 (Feb 19, 2002)
 
 	- htcp_port 0 now properly disabled htcp
         - Fixed problem with certain non-anonymous ftp:// style URL's
