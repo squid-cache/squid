@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.278 2000/03/06 16:23:33 wessels Exp $
+ * $Id: neighbors.cc,v 1.279 2000/05/02 18:23:48 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -163,15 +163,17 @@ peerWouldBePinged(const peer * p, request_t * request)
 	return 0;
     if (p->options.mcast_responder)
 	return 0;
+    if (p->n_addresses == 0)
+	return 0;
     /* the case below seems strange, but can happen if the
      * URL host is on the other side of a firewall */
     if (p->type == PEER_SIBLING)
 	if (!request->flags.hierarchical)
 	    return 0;
-    if (p->icp.port == echo_port)
-	if (!neighborUp(p))
-	    return 0;
-    if (p->n_addresses == 0)
+    /* Ping dead peers every timeout interval */
+    if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
+	return 1;
+    if (!neighborUp(p))
 	return 0;
     return 1;
 }
@@ -434,24 +436,6 @@ neighborsUdpPing(request_t * request,
 	     */
 	    p->stats.last_reply = squid_curtime;
 	    (*exprep) += p->mcast.n_replies_expected;
-	} else if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer) {
-	    /*
-	     * fake a recent reply if its been a long time since our
-	     * last query
-	     */
-	    p->stats.last_reply = squid_curtime;
-	    /*
-	     * We used to not expect a reply in this case; we assumed
-	     * the peer was DEAD if we hadn't queried it in a long
-	     * time.  However, the number of people whining to
-	     * squid-users that ICP is broken became unbearable.  They
-	     * tried a single request which, to their amazement, was
-	     * forwarded directly to the origin server, even thought
-	     * they KNEW it was in a neighbor cache.  Ok, I give up, you
-	     * win!
-	     */
-	    (*exprep)++;
-	    (*timeout) += 1000;
 	} else if (neighborUp(p)) {
 	    /* its alive, expect a reply from it */
 	    (*exprep)++;
@@ -467,6 +451,8 @@ neighborsUdpPing(request_t * request,
 	    }
 	}
 	p->stats.last_query = squid_curtime;
+	if (p->stats.probe_start == 0)
+	    p->stats.probe_start = squid_curtime;
     }
     if ((first_ping = first_ping->next) == NULL)
 	first_ping = Config.peers;
@@ -633,6 +619,7 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 	p->stats.logged_state = PEER_ALIVE;
     }
     p->stats.last_reply = squid_curtime;
+    p->stats.probe_start = 0;
     p->stats.pings_acked++;
     if ((icp_opcode) header->opcode <= ICP_END)
 	p->icp.counts[header->opcode]++;
@@ -665,6 +652,7 @@ neighborAliveHtcp(peer * p, const MemObject * mem, const htcpReplyData * htcp)
 	p->stats.logged_state = PEER_ALIVE;
     }
     p->stats.last_reply = squid_curtime;
+    p->stats.probe_start = 0;
     p->stats.pings_acked++;
     p->htcp.counts[htcp->hit ? 1 : 0]++;
     p->htcp.version = htcp->version;
@@ -880,9 +868,10 @@ neighborUp(const peer * p)
 {
     if (!p->tcp_up)
 	return 0;
-    if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
+    if (p->options.no_query)
 	return 1;
-    if (p->stats.last_query - p->stats.last_reply > Config.Timeout.deadPeer)
+    if (p->stats.probe_start != 0 &&
+	    squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer)
 	return 0;
     return 1;
 }
