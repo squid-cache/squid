@@ -23,6 +23,7 @@ Our Todo List
 (2)     Use storeBuffer/Flush where needed, consider supporting nested calls
 
 (3) **	request-range (AR)
+(3) **  shrink-able memory pools (AR)
 (3)	hit metering
 (3)	ETag support (makes metadata bigger--ack!)
 (3)	Efficient public peer access control *without ACLs*
