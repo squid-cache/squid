@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.25 1996/07/23 04:07:48 wessels Exp $
+ * $Id: acl.cc,v 1.26 1996/07/23 04:59:33 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -711,7 +711,7 @@ int aclMatchAcl(acl, checklist)
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEED;
 	    return 0;
 	} else {
-	    return aclMatchDomainList(acl->data, "NONE");
+	    return aclMatchDomainList(acl->data, "none");
 	}
 	/* NOTREACHED */
     case ACL_TIME:
