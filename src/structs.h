@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.339 2000/06/08 18:05:36 hno Exp $
+ * $Id: structs.h,v 1.340 2000/06/25 22:28:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1280,28 +1280,28 @@ struct _RemovalPolicyNode {
 struct _RemovalPolicy {
     char *_type;
     void *_data;
-    void (*Free)(RemovalPolicy *policy);
-    void (*Add)(RemovalPolicy *policy, StoreEntry *entry, RemovalPolicyNode *node);
-    void (*Remove)(RemovalPolicy *policy, StoreEntry *entry, RemovalPolicyNode *node);
-    void (*Referenced)(RemovalPolicy *policy, const StoreEntry *entry, RemovalPolicyNode *node);
-    void (*Dereferenced)(RemovalPolicy *policy, const StoreEntry *entry, RemovalPolicyNode *node);
-    RemovalPolicyWalker *(*WalkInit)(RemovalPolicy *policy);
-    RemovalPurgeWalker *(*PurgeInit)(RemovalPolicy *policy, int max_scan);
+    void (*Free) (RemovalPolicy * policy);
+    void (*Add) (RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node);
+    void (*Remove) (RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node);
+    void (*Referenced) (RemovalPolicy * policy, const StoreEntry * entry, RemovalPolicyNode * node);
+    void (*Dereferenced) (RemovalPolicy * policy, const StoreEntry * entry, RemovalPolicyNode * node);
+    RemovalPolicyWalker *(*WalkInit) (RemovalPolicy * policy);
+    RemovalPurgeWalker *(*PurgeInit) (RemovalPolicy * policy, int max_scan);
 };
 
 struct _RemovalPolicyWalker {
     RemovalPolicy *_policy;
     void *_data;
-    const StoreEntry *(*Next)(RemovalPolicyWalker *walker);
-    void (*Done)(RemovalPolicyWalker *walker);
+    const StoreEntry *(*Next) (RemovalPolicyWalker * walker);
+    void (*Done) (RemovalPolicyWalker * walker);
 };
 
 struct _RemovalPurgeWalker {
     RemovalPolicy *_policy;
     void *_data;
     int scanned, max_scan, locked;
-    StoreEntry *(*Next)(RemovalPurgeWalker *walker);
-    void (*Done)(RemovalPurgeWalker *walker);
+    StoreEntry *(*Next) (RemovalPurgeWalker * walker);
+    void (*Done) (RemovalPurgeWalker * walker);
 };
 
 /* This structure can be freed while object is purged out from memory */
@@ -1909,4 +1909,3 @@ struct _Logfile {
     size_t bufsz;
     off_t offset;
 };
-

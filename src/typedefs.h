@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.104 2000/06/08 18:05:37 hno Exp $
+ * $Id: typedefs.h,v 1.105 2000/06/25 22:28:43 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -308,5 +308,5 @@ typedef unsigned int delay_id;
 typedef struct _htcpReplyData htcpReplyData;
 #endif
 
-typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist *args);
+typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 #endif /* _TYPEDEFS_H_ */

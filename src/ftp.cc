@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.294 2000/05/31 10:00:24 hno Exp $
+ * $Id: ftp.cc,v 1.295 2000/06/25 22:28:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1880,7 +1880,6 @@ ftpAcceptDataConnection(int fd, void *data)
 	comm_close(ftpState->ctrl.fd);
 	return;
     }
-
     fd = comm_accept(fd, &my_peer, &me);
     if (fd < 0) {
 	debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", fd, xstrerror());

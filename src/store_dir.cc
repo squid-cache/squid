@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.111 2000/06/08 18:05:36 hno Exp $
+ * $Id: store_dir.cc,v 1.112 2000/06/25 22:28:43 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -387,7 +387,7 @@ storeDirWriteCleanLogs(int reopen)
 	    continue;
 	}
     }
-    while(notdone) {
+    while (notdone) {
 	notdone = 0;
 	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	    sd = &Config.cacheSwap.swapDirs[dirn];
@@ -419,7 +419,7 @@ storeDirWriteCleanLogs(int reopen)
     /* Flush */
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	sd = &Config.cacheSwap.swapDirs[dirn];
-        sd->log.clean.done(sd);
+	sd->log.clean.done(sd);
     }
     if (reopen)
 	storeDirOpenSwapLogs();
@@ -458,16 +458,15 @@ storeDirCallback(void)
     SwapDir *SD;
     static int ndir = 0;
     do {
-        j = 0;
-        for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-            if (ndir >= Config.cacheSwap.n_configured)
-                ndir = ndir % Config.cacheSwap.n_configured;
-            SD = &Config.cacheSwap.swapDirs[ndir++];
-            if (NULL == SD->callback)
-                continue;
-            j += SD->callback(SD);
-        }
+	j = 0;
+	for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	    if (ndir >= Config.cacheSwap.n_configured)
+		ndir = ndir % Config.cacheSwap.n_configured;
+	    SD = &Config.cacheSwap.swapDirs[ndir++];
+	    if (NULL == SD->callback)
+		continue;
+	    j += SD->callback(SD);
+	}
     } while (j > 0);
     ndir++;
 }
-
