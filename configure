@@ -591,7 +591,7 @@ fi
 
 
 
-# From configure.in Revision: 1.164 
+# From configure.in Revision: 1.165 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -3873,7 +3873,7 @@ EOF
 EOF
 
 		;;
-	*-sony-newsos56*)
+	*-sony-newsos[56]*)
 		cat >> confdefs.h <<\EOF
 #define GETTIMEOFDAY_NO_TZP 1
 EOF
