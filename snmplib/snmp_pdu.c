@@ -270,7 +270,7 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command)
 
 /**********************************************************************/
 
-void 
+void
 snmp_pdu_free(struct snmp_pdu *pdu)
 {
     snmp_free_pdu(pdu);
@@ -279,7 +279,7 @@ snmp_pdu_free(struct snmp_pdu *pdu)
 /*
  * Frees the pdu and any xmalloc'd data associated with it.
  */
-void 
+void
 snmp_free_pdu(struct snmp_pdu *pdu)
 {
     struct variable_list *vp, *ovp;
@@ -670,7 +670,7 @@ snmp_pdu_type(struct snmp_pdu *PDU)
  * Add a null variable with the requested name to the end of the list of
  * variables for this pdu.
  */
-void 
+void
 snmp_add_null_var(struct snmp_pdu *pdu, oid * name, int name_length)
 {
     struct variable_list *vars;

@@ -382,7 +382,7 @@ main(int argc, char *argv[])
     signal(SIGCHLD, sig_child);
     create_children(argv);
     parent_main_loop();
-    for (i=3;i<=maxfd; i++)
+    for (i = 3; i <= maxfd; i++)
 	close(i);
     sleep(1);
 }

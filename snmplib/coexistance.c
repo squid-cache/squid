@@ -100,7 +100,7 @@
  * valid V1 responses.  (I think. XXXXX)
  *
  */
-int 
+int
 snmp_coexist_V2toV1(struct snmp_pdu *PDU)
 {
     /* Per 3.1.1:

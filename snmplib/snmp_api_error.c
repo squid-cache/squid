@@ -69,7 +69,7 @@ static char *api_errors[17] =
     "Unknown Error"
 };
 
-void 
+void
 snmp_set_api_error(int x)
 {
     snmp_errno = x;
@@ -86,7 +86,7 @@ snmp_api_error(int err)
     return (api_errors[foo]);
 }
 
-int 
+int
 snmp_api_errno(void)
 {
     return (snmp_errno);

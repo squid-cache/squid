@@ -114,7 +114,7 @@ uptimeString(timeticks, buf)
     return buf;
 }
 
-static void 
+static void
 sprint_hexstring(buf, cp, len)
      char *buf;
      u_char *cp;
@@ -136,7 +136,7 @@ sprint_hexstring(buf, cp, len)
     *buf = '\0';
 }
 
-static void 
+static void
 sprint_asciistring(buf, cp, len)
      char *buf;
      u_char *cp;
@@ -531,7 +531,7 @@ set_functions(subtree)
 }
 #endif
 
-void 
+void
 init_mib(char *file)
 {
     if (Mib != NULL)
@@ -674,7 +674,7 @@ parse_subtree(subtree, input, output, out_len)
     return (++*out_len);
 }
 
-int 
+int
 read_objid(input, output, out_len)
      char *input;
      oid *output;
@@ -709,7 +709,7 @@ read_objid(input, output, out_len)
     return (1);
 }
 
-void 
+void
 print_objid(objid, objidlen)
      oid *objid;
      int objidlen;		/* number of subidentifiers */
@@ -723,7 +723,7 @@ print_objid(objid, objidlen)
 
 }
 
-void 
+void
 sprint_objid(buf, objid, objidlen)
      char *buf;
      oid *objid;
@@ -736,7 +736,7 @@ sprint_objid(buf, objid, objidlen)
 }
 
 #if 0
-void 
+void
 print_variable(objid, objidlen, pvariable)
      oid *objid;
      int objidlen;
@@ -763,7 +763,7 @@ print_variable(objid, objidlen, pvariable)
 }
 
 
-void 
+void
 sprint_variable(buf, objid, objidlen, pvariable)
      char *buf;
      oid *objid;
@@ -790,7 +790,7 @@ sprint_variable(buf, objid, objidlen, pvariable)
     strcat(buf, "\n");
 }
 
-void 
+void
 sprint_value(buf, objid, objidlen, pvariable)
      char *buf;
      oid *objid;
@@ -808,7 +808,7 @@ sprint_value(buf, objid, objidlen, pvariable)
     }
 }
 
-void 
+void
 print_value(objid, objidlen, pvariable)
      oid *objid;
      int objidlen;
@@ -870,13 +870,13 @@ get_symbol(objid, objidlen, subtree, buf)
 
 
 #if 0
-void 
+void
 print_variable_list(variable_list * V)
 {
     print_variable(V->name, V->name_length, V);
 }
 
-void 
+void
 print_variable_list_value(variable_list * pvariable)
 {
     char buf[512];
@@ -895,7 +895,7 @@ print_variable_list_value(variable_list * pvariable)
 }
 #endif
 
-void 
+void
 print_type(variable_list * var)
 {
     switch (var->type) {
@@ -932,7 +932,7 @@ print_type(variable_list * var)
     }
 }
 
-void 
+void
 print_oid_nums(oid * O, int len)
 {
     int x;

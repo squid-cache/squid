@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.5 1998/07/22 20:38:08 wessels Exp $
+ * $Id: hash.c,v 1.6 2001/01/07 09:55:24 hno Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -39,7 +39,7 @@
 #include <assert.h>
 #include "hash.h"
 #undef free
-extern void my_free(char *, int , void *);
+extern void my_free(char *, int, void *);
 
 #define free(a) my_free(__FILE__, __LINE__, a)
 
@@ -176,7 +176,7 @@ hash_insert(hash_table * hid, const char *k, void *item)
     /* Add to the given hash table 'hid' */
     new = calloc(1, sizeof(hash_link));
     if (!new) {
-	fprintf(stderr,"calloc failed!\n");
+	fprintf(stderr, "calloc failed!\n");
 	print_stats();
 	exit(1);
     }
@@ -298,7 +298,7 @@ hash_unlink(hash_table * hid, hash_link * hl, int FreeLink)
 		hid->current_ptr = walker->next;
 	    if (FreeLink) {
 		if (walker) {
-		free(walker);
+		    free(walker);
 		}
 	    }
 	    return 0;
@@ -337,10 +337,10 @@ hash_get_bucket(hash_table * hid, unsigned int bucket)
 void
 hashFreeMemory(hash_table * hid)
 {
-	if (hid->buckets);
+    if (hid->buckets);
     free(hid->buckets);
-	if (hid)
-    free(hid);
+    if (hid)
+	free(hid);
 }
 
 
@@ -402,4 +402,3 @@ main(void)
     exit(0);
 }
 #endif
-

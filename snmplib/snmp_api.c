@@ -128,7 +128,7 @@ struct session_list *Sessions = NULL;
  */
 static int Reqid = 0;
 
-static void 
+static void
 init_snmp(void)
 {
     struct timeval tv;
@@ -142,7 +142,7 @@ init_snmp(void)
 /*
  * Free each element in the input request list.
  */
-static void 
+static void
 free_request_list(rp)
      struct request_list *rp;
 {
@@ -344,7 +344,7 @@ snmp_open(struct snmp_session *session)
  * dequeues any pending requests, and closes any sockets allocated for
  * the session.  Returns 0 on error, 1 otherwise.
  */
-int 
+int
 snmp_close(struct snmp_session *session)
 {
     struct session_list *slp = NULL, *oslp = NULL;
@@ -451,7 +451,7 @@ snmp_parse(struct snmp_session * session,
  * The pdu is freed by snmp_send() unless a failure occured.
  */
 #if 0
-int 
+int
 snmp_send(struct snmp_session *session, struct snmp_pdu *pdu)
 {
     struct session_list *slp;
@@ -763,7 +763,7 @@ snmp_select_info(numfds, fdset, timeout, block)
  * from the pdu and is resent.  If there are no more retries available, the 
  * callback for the session is used to alert the user of the timeout.
  */
-void 
+void
 snmp_timeout(void)
 {
     struct session_list *slp;
@@ -846,7 +846,7 @@ snmp_timeout(void)
 
 
 /* Print some API stats */
-void 
+void
 snmp_api_stats(void *outP)
 {
     struct session_list *slp;

@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.2 1998/07/20 17:18:46 wessels Exp $
+ * $Id: Array.h,v 1.3 2001/01/07 09:55:21 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -42,8 +42,8 @@ typedef struct {
 extern Array *arrayCreate();
 extern void arrayInit(Array * s);
 extern void arrayClean(Array * s);
-extern void arrayDestroy(Array *s);
-extern void arrayAppend(Array *s, void *obj);
+extern void arrayDestroy(Array * s);
+extern void arrayAppend(Array * s, void *obj);
 extern void arrayPreAppend(Array * s, int app_count);
 
 

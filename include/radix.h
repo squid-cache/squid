@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.7 1998/09/23 17:20:00 wessels Exp $
+ * $Id: radix.h,v 1.8 2001/01/07 09:55:21 hno Exp $
  */
 
 /*
@@ -52,14 +52,14 @@ struct radix_node {
     struct radix_node *rn_p;	/* parent */
     short rn_b;			/* bit offset; -1-index(netmask) */
     char rn_bmask;		/* node: mask for bit test */
-    unsigned char rn_flags;		/* enumerated next */
+    unsigned char rn_flags;	/* enumerated next */
 #define RNF_NORMAL	1	/* leaf contains normal route */
 #define RNF_ROOT	2	/* leaf is root leaf for tree */
 #define RNF_ACTIVE	4	/* This node is alive (for rtfree) */
     union {
 	struct {		/* leaf only data: */
-	    char * rn_Key;	/* object of search */
-	    char * rn_Mask;	/* netmask, if present */
+	    char *rn_Key;	/* object of search */
+	    char *rn_Mask;	/* netmask, if present */
 	    struct radix_node *rn_Dupedkey;
 	} rn_leaf;
 	struct {		/* node only data: */
@@ -89,10 +89,10 @@ struct radix_node {
 extern struct radix_mask {
     short rm_b;			/* bit offset; -1-index(netmask) */
     char rm_unused;		/* cf. rn_bmask */
-    unsigned char rm_flags;		/* cf. rn_flags */
+    unsigned char rm_flags;	/* cf. rn_flags */
     struct radix_mask *rm_mklist;	/* more masks to try */
     union {
-	char * rmu_mask;	/* the mask */
+	char *rmu_mask;		/* the mask */
 	struct radix_node *rmu_leaf;	/* for normal routes */
     } rm_rmu;
     int rm_refs;		/* # of references to this struct */

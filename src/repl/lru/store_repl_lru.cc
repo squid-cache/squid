@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.4 2001/01/05 09:52:11 adrian Exp $
+ * $Id: store_repl_lru.cc,v 1.5 2001/01/07 09:55:24 hno Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -162,7 +162,7 @@ lru_walkInit(RemovalPolicy * policy)
     RemovalPolicyWalker *walker;
     LruWalkData *lru_walk;
     lru->nwalkers += 1;
-    walker=CBDATA_ALLOC(RemovalPolicyWalker, NULL);
+    walker = CBDATA_ALLOC(RemovalPolicyWalker, NULL);
     lru_walk = xcalloc(1, sizeof(*lru_walk));
     walker->_policy = policy;
     walker->_data = lru_walk;
@@ -231,7 +231,7 @@ lru_purgeInit(RemovalPolicy * policy, int max_scan)
     RemovalPurgeWalker *walker;
     LruPurgeData *lru_walk;
     lru->nwalkers += 1;
-    walker=CBDATA_ALLOC(RemovalPurgeWalker, NULL);
+    walker = CBDATA_ALLOC(RemovalPurgeWalker, NULL);
     lru_walk = xcalloc(1, sizeof(*lru_walk));
     walker->_policy = policy;
     walker->_data = lru_walk;
@@ -268,7 +268,7 @@ createRemovalPolicy_lru(wordlist * args)
 	lru_node_pool = memPoolCreate("LRU policy node", sizeof(LruNode));
     /* Allocate the needed structures */
     lru_data = xcalloc(1, sizeof(*lru_data));
-    policy=CBDATA_ALLOC(RemovalPolicy, NULL);
+    policy = CBDATA_ALLOC(RemovalPolicy, NULL);
     /* Initialize the URL data */
     lru_data->policy = policy;
     /* Populate the policy structure */
