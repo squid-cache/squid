@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.439 1998/07/30 23:31:19 wessels Exp $
+ * $Id: store.cc,v 1.440 1998/08/14 23:52:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -440,6 +440,9 @@ storeCheckCachable(StoreEntry * e)
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
     } else if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
+    } else if (storeExpiredReferenceAge() < 300) {
+	debug(20,2)("storeCheckCachable: NO: LRU Age = %d\n",
+		storeExpiredReferenceAge());
     } else {
 	return 1;
     }
