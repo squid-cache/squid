@@ -1,11 +1,11 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2002/05/19 23:42:40 hno Exp $
+#  $Id: Makefile.am,v 1.2 2002/05/20 01:42:50 hno Exp $
 #
 
 libexec_PROGRAMS = wb_auth
-wb_auth_SOURCES = wb_basic_auth.c wb_common.c
+wb_auth_SOURCES = wb_basic_auth.c wb_common.c samba_nss.h  wbntlm.h winbind_nss_config.h
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
     -I$(top_srcdir)/src
 LDADD = -L$(top_builddir)/lib -lmiscutil -lntlmauth
