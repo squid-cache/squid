@@ -1,7 +1,7 @@
 -- File: SQUID.MIB
 -- Maintained by: kostas@nlanr.net
 --
--- $Id: mib.txt,v 1.9 1998/02/23 06:34:04 kostas Exp $
+-- $Id: mib.txt,v 1.10 1998/02/26 09:01:14 kostas Exp $
 
 -- SQUID-MIB DEFINITIONS ::= BEGIN
 -- 		IMPORTS
@@ -689,7 +689,11 @@
 	-- cacheProtoStats
 	--
 
+		-- cacheProtoAggregateStats
+		--
+
 	cacheProtoAggregateStats OBJECT IDENTIFIER ::= { cacheProtoStats 1 }
+
 
 	cacheClientHttpRequests  OBJECT-TYPE
                 SYNTAX Counter32
@@ -709,85 +713,153 @@
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 3 }
 
-	cacheICPpktsSent OBJECT-TYPE
+        cacheHttpInKb OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 4 }
 
-	cacheICPpktsRecv OBJECT-TYPE
+        cacheHttpOutKb OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 5 }
 
-        cacheICPkbSent OBJECT-TYPE
+	cacheICPpktsSent OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 6 }
 
-        cacheICPkbRecv OBJECT-TYPE
+	cacheICPpktsRecv OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 7 }
 
-        cacheHttpInKb OBJECT-TYPE
+        cacheICPkbSent OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 8 }
 
-        cacheHttpOutKb OBJECT-TYPE
+        cacheICPkbRecv OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 9 }
 
-	cacheCurrentSwapSize OBJECT-TYPE
-                SYNTAX Counter32
+        cacheServerRequests OBJECT-TYPE
+                SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 10 }
 
-
-	cacheHttpMedianSvcFiveMin OBJECT-TYPE
+        cacheServerErrors OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 11 }
 
-        cacheICPMedianSvcFiveMin OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS mandatory
-                ::= { cacheProtoAggregateStats 13 }
-
-        cacheDNSMedianSvcFiveMin OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS mandatory
-                ::= { cacheProtoAggregateStats 15 }
-
-        cacheHttpMedianSvcHour OBJECT-TYPE
-                SYNTAX INTEGER
+	cacheServerInKb OBJECT-TYPE
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 12 }
 
-        cacheICPMedianSvcHour OBJECT-TYPE
-                SYNTAX INTEGER
+        cacheServerOutKb OBJECT-TYPE
+                SYNTAX Counter32
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 13 }
+
+	cacheCurrentSwapSize OBJECT-TYPE
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 14 }
 
-        cacheDNSMedianSvcHour OBJECT-TYPE
+
+	--
+	-- cacheProtoMedianSvcStats group
+
+
+	cacheMedianSvcTable OBJECT-TYPE
+                SYNTAX SEQUENCE OF cacheMedianSvcEntry
+                ACCESS read-only
+                STATUS current
+		::= { cacheProtoStats 2 }
+
+        cacheMedianSvcEntry OBJECT-TYPE
+                SYNTAX CacheMedianSvcEntry
+                MAX-ACCESS not-accessible
+                STATUS current
+                DESCRIPTION 
+                        " An entry in cacheFdTable " 
+                INDEX   { cacheMedianTime }
+                ::= { cacheMedianSvcTable 1 }
+
+        CacheMedianSvcEntry ::= SEQUENCE {
+		cacheMedianTime	INTEGER,
+		cacheHttpAllSvcTime INTEGER,
+		cacheHttpMissSvcTime INTEGER,	
+		cacheHttpNmSvcTime INTEGER,
+		cacheHttpHitSvcTime INTEGER,
+		cacheIcpQuerySvcTime INTEGER,
+		cacheIcpReplySvcTime INTEGER,
+		cacheDnsSvcTime	INTEGER
+	}
+
+	cacheMedianTime OBJECT-TYPE
                 SYNTAX INTEGER
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheProtoAggregateStats 16 }
+                ::= { cacheMedianSvcEntry 1 }
 
+	cacheHttpAllSvcTime OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheMedianSvcEntry 2 } 
+
+	cacheHttpMissSvcTime OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheMedianSvcEntry 3 } 
+
+	cacheHttpNmSvcTime OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheMedianSvcEntry 4 } 
+
+
+	cacheHttpHitSvcTime OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheMedianSvcEntry 5 } 
+
+
+	cacheIcpQuerySvcTime OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheMedianSvcEntry 6 } 
+
+
+	cacheIcpReplySvcTime OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheMedianSvcEntry 7 } 
+
+	cacheDnsSvcTime OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheMedianSvcEntry 8 } 
 
 	
 	-- 

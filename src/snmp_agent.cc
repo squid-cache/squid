@@ -20,7 +20,9 @@ static struct snmp_pdu *snmp_agent_response(struct snmp_pdu *PDU);
 static int community_check(char *b, oid *name, int namelen);
 struct snmp_session *Session;
 extern int get_median_svc(int, int);
+extern StatCounters *snmpStatGet(int);
 extern void snmp_agent_parse_done(int, snmp_request_t *);
+
 void snmpAclCheckStart(snmp_request_t *rq);
 
 
@@ -88,6 +90,7 @@ snmpAclCheckDone(int answer, void *data)
     rq->acl_checklist = NULL;
     PDU=rq->PDU;
     Community=rq->community;
+
     if (answer==ACCESS_DENIED) {
 		debug(49,5)("snmpAclCheckDone: failed on acl.\n");
     		snmp_agent_parse_done(0, rq);
@@ -99,7 +102,7 @@ snmpAclCheckDone(int answer, void *data)
         VarPtrP = &((*VarPtrP)->next_variable)) {
         VarPtr = *VarPtrP;
 
-	debug(49,5)("snmpAclCheckDone: checking.");
+	debug(49,5)("snmpAclCheckDone: checking.\n");
 	/* access check for each variable */
 
     	if (!community_check(Community, VarPtr->name, VarPtr->name_length)) {
@@ -222,7 +225,7 @@ snmp_agent_response(struct snmp_pdu *PDU)
 	/* Done.  Return this PDU */
 	return (Answer);
     }				/* end SNMP_PDU_GETNEXT */
-#
+
     debug(49, 9) ("Ignoring PDU %d\n", PDU->command);
     snmp_free_pdu(Answer);
     return (NULL);
@@ -312,7 +315,7 @@ snmp_basicFn(variable_list * Var, long *ErrP)
     case SYSORLASTCHANGE:
 	Answer->val_len = sizeof(long);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_INTEGER;
+	Answer->type = SMI_TIMETICKS;
 	*(Answer->val.integer) = tvSubDsec(squid_start, current_time);
 	break;
     case SYSCONTACT:
@@ -561,6 +564,7 @@ snmp_confFn(variable_list * Var, long *ErrP)
 	    snmp_var_free(Answer);
 	    return (NULL);
 	}
+	break;
     case CONF_LOG_LVL:
 	if (!(cp = Config.debugOptions))
 	    cp = "None";
@@ -613,8 +617,8 @@ snmp_confPtblFn(variable_list * Var, long *ErrP)
 	break;
     case CONF_PTBL_IP:
 	Answer->type = SMI_IPADDRESS;
-	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->val_len = sizeof(long);
+	Answer->val.integer = xmalloc(Answer->val_len);
 	*(Answer->val.integer) = (long) (p->in_addr.sin_addr.s_addr);
 	break;
     case CONF_PTBL_HTTP:
@@ -687,7 +691,7 @@ snmp_prfSysFn(variable_list * Var, long *ErrP)
 	break;
     case PERF_SYS_CURLRUEXP:
 	Answer->type = SMI_TIMETICKS;
-	*(Answer->val.integer) = (long) ((double) storeExpiredReferenceAge() / 86400.0);
+	*(Answer->val.integer) = (long) storeExpiredReferenceAge();
 	break;
     case PERF_SYS_CURUNLREQ:
 	*(Answer->val.integer) = (long) Counter.unlink.requests;
@@ -775,13 +779,18 @@ variable_list *
 snmp_prfProtoFn(variable_list * Var, long *ErrP)
 {
     variable_list *Answer;
+    static StatCounters *f=NULL;
+    static StatCounters *l=NULL;
+    double x;
+    int minutes;
 
     debug(49, 5) ("snmp_prfProtoFn: Processing request with magic %d!\n", Var->name[8]);
 
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
-    if (Var->name[9] == 1) {	/* cacheProtoAggregateStats */
+    switch(Var->name[9]) { 
+    case PERF_PROTOSTAT_AGGR: 	/* cacheProtoAggregateStats */
 	Answer->type = SMI_COUNTER32;
 	Answer->val_len = sizeof(long);
 	Answer->val.integer = xmalloc(Answer->val_len);
@@ -795,6 +804,12 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	case PERF_PROTOSTAT_AGGR_HTTP_ERRORS:
 	    *(Answer->val.integer) = (long) Counter.client_http.errors;
 	    break;
+        case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_IN:
+            *(Answer->val.integer) = (long) Counter.client_http.kbytes_in.kb;
+            break;
+        case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_OUT:
+            *(Answer->val.integer) = (long) Counter.client_http.kbytes_out.kb;
+            break;
 	case PERF_PROTOSTAT_AGGR_ICP_S:
 	    *(Answer->val.integer) = (long) Counter.icp.pkts_sent;
 	    break;
@@ -806,52 +821,88 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_RKB:
 	    *(Answer->val.integer) = (long) Counter.icp.kbytes_recv.kb;
-	    break;
+	    break; 
+        case PERF_PROTOSTAT_AGGR_REQ:
+            *(Answer->val.integer) = (long) Counter.server.requests;
+            break;
+        case PERF_PROTOSTAT_AGGR_ERRORS:
+            *(Answer->val.integer) = (long) Counter.server.errors;
+            break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_IN:
-	    *(Answer->val.integer) = (long) Counter.client_http.kbytes_in.kb;
+	    *(Answer->val.integer) = (long) Counter.server.kbytes_in.kb;
 	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_OUT:
-	    *(Answer->val.integer) = (long) Counter.client_http.kbytes_out.kb;
+	    *(Answer->val.integer) = (long) Counter.server.kbytes_out.kb;
 	    break;
 	case PERF_PROTOSTAT_AGGR_CURSWAP:
 	    *(Answer->val.integer) = (long) store_swap_size;
 	    break;
-	case PERF_PROTOSTAT_AGGR_HTTP_SVC_5:
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (long) get_median_svc(5, HTTP_SVC);
-	    break;
-	case PERF_PROTOSTAT_AGGR_ICP_SVC_5:
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (long) get_median_svc(5, ICP_SVC);
-	    break;
-	case PERF_PROTOSTAT_AGGR_DNS_SVC_5:
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (long) get_median_svc(5, DNS_SVC);
-	    break;
-	case PERF_PROTOSTAT_AGGR_HTTP_SVC_60:
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (long) get_median_svc(60, HTTP_SVC);
-	    break;
-	case PERF_PROTOSTAT_AGGR_ICP_SVC_60:
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (long) get_median_svc(60, ICP_SVC);
-	    break;
-	case PERF_PROTOSTAT_AGGR_DNS_SVC_60:
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (long) get_median_svc(60, DNS_SVC);
-	    break;
 	default:
+#if 0
 	    xfree(Answer->val.integer);
+#endif
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
 	    snmp_var_free(Answer);
 	    return (NULL);
 	}
-    } else {
-	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+    	return Answer;
+    case PERF_PROTOSTAT_MEDIAN:
+	
+	minutes= Var->name[12];
+
+	f= snmpStatGet(0);
+        l= snmpStatGet(minutes);
+
+	debug(49,8)("median: min= %d, %d l= %x , f = %x\n",minutes, 
+			Var->name[11], l, f);
+	Answer->type = SMI_INTEGER;
+	Answer->val_len = sizeof(long);
+	Answer->val.integer = xmalloc(Answer->val_len);
+
+	debug(49,8)("median: l= %x , f = %x\n",l, f);
+	switch (Var->name[11]) {
+		case PERF_MEDIAN_TIME:
+			x= minutes;
+			break;
+		case PERF_MEDIAN_HTTP_ALL:
+			x = statHistDeltaMedian(&l->client_http.all_svc_time,
+        			&f->client_http.all_svc_time);
+			break;
+		case PERF_MEDIAN_HTTP_MISS:
+	    		x = statHistDeltaMedian(&l->client_http.miss_svc_time,
+        			&f->client_http.miss_svc_time);
+			break;
+		case PERF_MEDIAN_HTTP_NM:
+			x = statHistDeltaMedian(&l->client_http.nm_svc_time,
+        			&f->client_http.nm_svc_time);
+			break;
+		case PERF_MEDIAN_HTTP_HIT:
+			x = statHistDeltaMedian(&l->client_http.hit_svc_time,
+				&f->client_http.hit_svc_time);
+			break;
+		case PERF_MEDIAN_ICP_QUERY:
+			x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
+			break;
+		case PERF_MEDIAN_ICP_REPLY:
+			x = statHistDeltaMedian(&l->icp.reply_svc_time, &f->icp.reply_svc_time);
+			break;
+		case PERF_MEDIAN_DNS:
+			x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
+			break;
+		default:
+#if 0
+	    		xfree(Answer->val.integer);
+#endif
+        		*ErrP = SNMP_ERR_NOSUCHNAME;
+		        snmp_var_free(Answer);
+		        return (NULL);
+	}
+	*(Answer->val.integer) = (long) x;
+    	return Answer;
     }
-    return Answer;
+    *ErrP = SNMP_ERR_NOSUCHNAME;
+    snmp_var_free(Answer);
+    return (NULL);
 }
 
 

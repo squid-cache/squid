@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.160 1998/02/25 09:53:59 rousskov Exp $
+ * $Id: ipcache.cc,v 1.161 1998/02/26 09:01:13 kostas Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1088,8 +1088,8 @@ snmp_ipcacheFn(variable_list * Var, long *ErrP)
     }
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
-    Answer->val.integer = xmalloc(Answer->val_len);
     Answer->val_len = sizeof(long);
+    Answer->val.integer = xmalloc(Answer->val_len);
     switch (Var->name[11]) {
     case NET_IPC_ID:
 	Answer->type = SMI_INTEGER;
