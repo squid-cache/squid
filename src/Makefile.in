@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.325 2004/10/11 00:10:37 hno Exp $
+#  $Id: Makefile.in,v 1.326 2004/10/26 00:10:38 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -389,8 +389,11 @@ all_FSMODULES = \
 
 all_AUTHMODULES = \
 	auth/basic/basicScheme.cc \
+	auth/basic/basicScheme.h \
 	auth/digest/digestScheme.cc \
-	auth/ntlm/ntlmScheme.cc 
+	auth/digest/digestScheme.h \
+	auth/ntlm/ntlmScheme.cc \
+	auth/ntlm/ntlmScheme.h 
 
 
 EXTRA_squid_SOURCES = \
