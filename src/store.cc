@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.190 1997/01/10 23:14:27 wessels Exp $
+ * $Id: store.cc,v 1.191 1997/01/15 18:35:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -241,6 +241,9 @@ static void storeSetPrivateKey _PARAMS((StoreEntry *));
 static void storeDoRebuildFromDisk _PARAMS((void *data));
 static void storeRebuiltFromDisk _PARAMS((struct storeRebuild_data * data));
 static unsigned int getKeyCounter _PARAMS((void));
+#ifdef AUTO_ADJUST_REF_AGE
+static void storeAdjustReferenceAge _PARAMS((void));
+#endif
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -2534,6 +2537,10 @@ storeMaintainSwapSpace(void *unused)
     if (store_rebuilding == STORE_REBUILDING_FAST)
 	return;
 
+#ifdef AUTO_ADJUST_REF_AGE
+	storeAdjustReferenceAge();
+#endif
+
     /* Purges expired objects, check one bucket on each calling */
     if (squid_curtime - last_time >= store_maintain_rate) {
 	for (scan_buckets = store_maintain_buckets; scan_buckets > 0;
@@ -2761,6 +2768,35 @@ storeCheckExpired(const StoreEntry * e)
 	return 1;
     return 0;
 }
+
+#ifdef AUTO_ADJUST_REF_AGE
+static void
+storeAdjustReferenceAge(void)
+{
+    static time_t delta = 1;
+    static int last_above = 0;
+    int above;
+    above = store_swap_size > ((store_swap_high + store_swap_low) / 2) ? 1 : 0;
+    if (last_above == above) {
+	if (delta < (1 << 25))	/* 388 days */
+	    delta <<= 1;
+    } else {
+	if (delta > 1)
+	    delta >>= 1;
+    }
+    if (above)
+	Config.referenceAge -= delta;
+    else
+	Config.referenceAge += delta;
+    if (Config.referenceAge > (1 << 25))
+	Config.referenceAge = (1 << 25);
+    else if (Config.referenceAge < 1)
+	Config.referenceAge = 1;
+    debug(20, 0, "storeAdjustReferenceAge: delta=%d, referenceAge=%d\n",
+	(int) delta, (int) Config.referenceAge);
+    last_above = above;
+}
+#endif
 
 static const char *
 storeDescribeStatus(const StoreEntry * e)
