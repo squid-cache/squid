@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.15 1996/04/04 18:39:55 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.16 1996/04/04 18:41:22 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -177,7 +177,8 @@ ip_access_type ip_access_check(address, list)
      struct in_addr address;
      ip_acl *list;
 {
-    static struct in_addr localhost = {0};
+    static struct in_addr localhost =
+    {0};
     ip_acl *p = NULL;
     struct in_addr naddr;	/* network byte-order IP addr */
     static char buf[100];

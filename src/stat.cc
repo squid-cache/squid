@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.15 1996/04/04 01:30:51 wessels Exp $ */
+/* $Id: stat.cc,v 1.16 1996/04/04 18:41:27 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -626,32 +626,48 @@ void info_get(obj, sentry)
     storeAppend(sentry, line, strlen(line));
     sprintf(line, "{Meta Data:}\n");
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tStoreEntry %d x %d}\n", (int) sizeof(StoreEntry),
-	meta_data.store_entries);
+
+    sprintf(line, "{\t\tStoreEntry %d x %d bytes = %d KB}\n",
+	meta_data.store_entries,
+	(int) sizeof(StoreEntry),
+	(int) meta_data.store_entries * sizeof(StoreEntry) >> 10);
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tStoreMemObject %d x %d}\n", (int) sizeof(MemObject),
-	meta_data.store_in_mem_objects);
+
+    sprintf(line, "{\t\tStoreMemObject %d x %d bytes = %d KB}\n",
+	meta_data.store_in_mem_objects,
+	(int) sizeof(MemObject),
+	(int) meta_data.store_in_mem_objects * sizeof(MemObject) >> 10);
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tIPCacheEntry %d x %d}\n", (int) sizeof(ipcache_entry),
-	meta_data.ipcache_count);
+
+    sprintf(line, "{\t\tIPCacheEntry %d x %d bytes = %d KB}\n",
+	meta_data.ipcache_count,
+	(int) sizeof(ipcache_entry),
+	(int) meta_data.ipcache_count * sizeof(ipcache_entry) >> 10);
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tHash link  %d x %d}\n", (int) sizeof(hash_link),
-	meta_data.hash_links = hash_links_allocated);
+
+    sprintf(line, "{\t\tHash link  %d x %d bytes = %d KB}\n",
+	meta_data.hash_links = hash_links_allocated,
+	(int) sizeof(hash_link),
+	(int) meta_data.hash_links * sizeof(hash_link) >> 10);
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tURL strings %d}\n", meta_data.url_strings);
+
+    sprintf(line, "{\t\tURL strings %d KB}\n",
+	meta_data.url_strings >> 10);
     storeAppend(sentry, line, strlen(line));
+
     sprintf(line, "{\t\tHot Object Cache Items %d}\n", meta_data.hot_vm);
     storeAppend(sentry, line, strlen(line));
+
     sprintf(line, "{\t\tPool for disk I/O %d KB (Free %d KB)}\n",
-	(disk_stats.total_pages_allocated * disk_stats.page_size) / (1 << 10),
-	((disk_stats.total_pages_allocated - disk_stats.n_pages_in_use) * disk_stats.page_size) /
-	(1 << 10)
-	);
+	disk_stats.total_pages_allocated * disk_stats.page_size >> 10,
+	(disk_stats.total_pages_allocated - disk_stats.n_pages_in_use) * disk_stats.page_size >> 10);
     storeAppend(sentry, line, strlen(line));
+
     sprintf(line, "{\t\tPool for in-memory objects %d KB (Free %d KB)}\n",
-	(sm_stats.total_pages_allocated * sm_stats.page_size) / (1 << 10),
-	((sm_stats.total_pages_allocated - sm_stats.n_pages_in_use) * sm_stats.page_size) / (1 << 10));
+	sm_stats.total_pages_allocated * sm_stats.page_size >> 10,
+	(sm_stats.total_pages_allocated - sm_stats.n_pages_in_use) * sm_stats.page_size >> 10);
     storeAppend(sentry, line, strlen(line));
+
     sprintf(line, "{\tTotal Accounted %d KB}\n",
 	(int) (meta_data.store_entries * sizeof(StoreEntry) +
 	    meta_data.store_in_mem_objects * sizeof(MemObject) +

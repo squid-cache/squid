@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.20 1996/04/04 05:19:48 wessels Exp $ */
+/* $Id: ftp.cc,v 1.21 1996/04/04 18:41:24 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -124,7 +124,7 @@ void ftpLifetimeExpire(fd, data)
     entry = data->entry;
     debug(9, 4, "ftpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     if (data->icp_page_ptr) {
-	put_free_8k_page(data->icp_page_ptr);
+	put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
 	data->icp_page_ptr = NULL;
     }
     safe_free(data->icp_rwd_ptr);
@@ -263,7 +263,7 @@ void ftpSendComplete(fd, buf, size, errflag, data)
 	fd, size, errflag);
 
     if (buf) {
-	put_free_8k_page(buf);	/* Allocated by ftpSendRequest. */
+	put_free_8k_page(buf, __FILE__, __LINE__);	/* Allocated by ftpSendRequest. */
 	buf = NULL;
     }
     data->icp_page_ptr = NULL;	/* So lifetime expire doesn't re-free */
@@ -306,7 +306,7 @@ void ftpSendRequest(fd, data)
     debug(9, 5, "ftpSendRequest: FD %d\n", fd);
 
     buflen = strlen(data->request) + 256;
-    buf = (char *) get_free_8k_page();
+    buf = (char *) get_free_8k_page(__FILE__, __LINE__);
     data->icp_page_ptr = buf;
     memset(buf, '\0', buflen);
 
