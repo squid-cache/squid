@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.571 2002/04/13 14:16:04 hno Exp $
+ * $Id: client_side.cc,v 1.572 2002/04/13 15:30:10 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -60,6 +60,16 @@
 #elif HAVE_NETINET_IP_NAT_H
 #include <netinet/ip_nat.h>
 #endif
+#endif
+
+#if PF_TRANSPARENT
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/fcntl.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <net/pfvar.h>
 #endif
 
 #if LINUX_NETFILTER
@@ -2084,6 +2094,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     static int siocgnatl_cmd = SIOCGNATL & 0xff;
     int x;
 #endif
+#if PF_TRANSPARENT
+    struct pfioc_natlook nl;
+    static int pffd = -1;
+#endif
 #if LINUX_NETFILTER
     size_t sock_sz = sizeof(conn->me);
 #endif
@@ -2314,6 +2328,36 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		    inet_ntoa(natLookup.nl_realip),
 		    vport, url);
 	    }
+#elif PF_TRANSPARENT
+	    if (pffd < 0)
+		pffd = open("/dev/pf", O_RDWR);
+	    if (pffd < 0) {
+		debug(50, 1) ("parseHttpRequest: PF open failed: %s\n",
+		    xstrerror());
+		return parseHttpRequestAbort(conn, "error:pf-open-failed");
+	    }
+	    memset(&nl, 0, sizeof(struct pfioc_natlook));
+	    nl.saddr.v4.s_addr = http->conn->peer.sin_addr.s_addr;
+	    nl.sport = http->conn->peer.sin_port;
+	    nl.daddr.v4.s_addr = http->conn->me.sin_addr.s_addr;
+	    nl.dport = http->conn->me.sin_port;
+	    nl.af = AF_INET;
+	    nl.proto = IPPROTO_TCP;
+	    nl.direction = PF_OUT;
+	    if (ioctl(pffd, DIOCNATLOOK, &nl)) {
+		if (errno != ENOENT) {
+		    debug(50, 1) ("parseHttpRequest: PF lookup failed: ioctl(DIOCNATLOOK)\n");
+		    close(pffd);
+		    pffd = -1;
+		    return parseHttpRequestAbort(conn, "error:pf-lookup-failed");
+		} else
+		    snprintf(http->uri, url_sz, "http://%s:%d%s",
+			inet_ntoa(http->conn->me.sin_addr),
+			vport, url);
+	    } else
+		snprintf(http->uri, url_sz, "http://%s:%d%s",
+		    inet_ntoa(nl.rdaddr.v4),
+		    ntohs(nl.rdport), url);
 #else
 #if LINUX_NETFILTER
 	    /* If the call fails the address structure will be unchanged */
