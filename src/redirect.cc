@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.41 1997/05/05 03:43:48 wessels Exp $
+ * $Id: redirect.cc,v 1.42 1997/05/08 07:22:06 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -35,7 +35,6 @@
 #define REDIRECT_FLAG_CLOSING		0x04
 
 typedef struct {
-    int fd;
     void *data;
     char *orig_url;
     struct in_addr client_addr;
@@ -328,29 +327,29 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
 
 
 void
-redirectStart(int cfd, icpStateData * icpState, RH * handler, void *data)
+redirectStart(clientHttpRequest * http, RH * handler, void *data)
 {
+    ConnStateData *conn = http->conn;
     redirectStateData *r = NULL;
     redirector_t *redirector = NULL;
-    debug(29, 5, "redirectStart: '%s'\n", icpState->url);
+    if (!http)
+	fatal_dump("redirectStart: NULL clientHttpRequest");
     if (!handler)
 	fatal_dump("redirectStart: NULL handler");
-    if (!icpState)
-	fatal_dump("redirectStart: NULL icpState");
+    debug(29, 5, "redirectStart: '%s'\n", http->url);
     if (Config.Program.redirect == NULL) {
 	handler(data, NULL);
 	return;
     }
     r = xcalloc(1, sizeof(redirectStateData));
-    r->fd = cfd;
-    r->orig_url = xstrdup(icpState->url);
-    r->client_addr = icpState->log_addr;
-    if (icpState->ident.ident == NULL || *icpState->ident.ident == '\0') {
+    r->orig_url = xstrdup(http->url);
+    r->client_addr = conn->log_addr;
+    if (conn->ident.ident == NULL || *conn->ident.ident == '\0') {
 	r->client_ident = dash_str;
     } else {
-	r->client_ident = icpState->ident.ident;
+	r->client_ident = conn->ident.ident;
     }
-    r->method_s = RequestMethodStr[icpState->request->method];
+    r->method_s = RequestMethodStr[http->request->method];
     r->handler = handler;
     r->data = data;
     if ((redirector = GetFirstAvailable()))
@@ -458,7 +457,7 @@ redirectShutdownServers(void)
 
 
 int
-redirectUnregister(const char *url, int fd)
+redirectUnregister(const char *url, void *data)
 {
     redirector_t *redirect = NULL;
     redirectStateData *r = NULL;
@@ -467,12 +466,12 @@ redirectUnregister(const char *url, int fd)
     int n = 0;
     if (Config.Program.redirect == NULL)
 	return 0;
-    debug(29, 3, "redirectUnregister: FD %d '%s'\n", fd, url);
+    debug(29, 3, "redirectUnregister: '%s'\n", url);
     for (k = 0; k < NRedirectors; k++) {
 	redirect = *(redirect_child_table + k);
 	if ((r = redirect->redirectState) == NULL)
 	    continue;
-	if (r->fd != fd)
+	if (r->data != data)
 	    continue;
 	if (strcmp(r->orig_url, url))
 	    continue;
@@ -483,7 +482,7 @@ redirectUnregister(const char *url, int fd)
     for (rq = redirectQueueHead; rq; rq = rq->next) {
 	if ((r = rq->redirectState) == NULL)
 	    continue;
-	if (r->fd != fd)
+	if (r->data != data)
 	    continue;
 	if (strcmp(r->orig_url, url))
 	    continue;

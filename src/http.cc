@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.159 1997/05/05 03:43:44 wessels Exp $
+ * $Id: http.cc,v 1.160 1997/05/08 07:22:02 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -814,7 +814,7 @@ httpSendRequest(int fd, void *data)
     else if (entry->mem_obj == NULL)
 	cfd = -1;
     else
-	cfd = storeFirstClientFD(entry->mem_obj);
+	cfd = entry->mem_obj->fd;
     len = httpBuildRequestHeader(req,
 	httpState->orig_request ? httpState->orig_request : req,
 	entry,
