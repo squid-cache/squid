@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.180 1999/05/25 06:53:53 wessels Exp $
+ * $Id: tools.cc,v 1.181 1999/05/26 17:08:05 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -548,7 +548,7 @@ writePidFile(void)
 	return;
     enter_suid();
     old_umask = umask(022);
-    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL);
+    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC);
     umask(old_umask);
     leave_suid();
     if (fd < 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.145 1999/05/04 19:22:24 wessels Exp $
+ * $Id: disk.cc,v 1.146 1999/05/26 17:07:57 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -35,16 +35,16 @@
 
 #include "squid.h"
 
-#define DISK_LINE_LEN  1024
-
-typedef struct open_ctrl_t {
-    FOCB *callback;
-    void *callback_data;
-    char *path;
-} open_ctrl_t;
-
 static PF diskHandleRead;
 static PF diskHandleWrite;
+
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_OS2_)
+static int
+diskWriteIsComplete(int fd)
+{
+    return fd_table[fd].disk.write_q ? 0 : 1;
+}
+#endif
 
 void
 disk_init(void)
@@ -52,15 +52,17 @@ disk_init(void)
     (void) 0;
 }
 
-/* Open a disk file. Return a file descriptor */
+/*
+ * opens a disk file specified by 'path'.  This function always
+ * blocks!  There is no callback.
+ */
 int
-file_open(const char *path, int mode, FOCB * callback, void *callback_data, void *tag)
+file_open(const char *path, int mode)
 {
     int fd;
     if (mode & O_WRONLY)
 	mode |= O_APPEND;
     mode |= SQUID_NONBLOCK;
-    /* Open file */
     errno = 0;
     fd = open(path, mode, 0644);
     Counter.syscalls.disk.opens++;
@@ -73,8 +75,6 @@ file_open(const char *path, int mode, FOCB * callback, void *callback_data, void
 	commSetCloseOnExec(fd);
 	fd_open(fd, FD_FILE, path);
     }
-    if (callback)
-	callback(callback_data, fd, errno);
     return fd;
 }
 
@@ -392,10 +392,4 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     ctrl_dat->client_data = client_data;
     cbdataLock(client_data);
     diskHandleRead(fd, ctrl_dat);
-}
-
-int
-diskWriteIsComplete(int fd)
-{
-    return fd_table[fd].disk.write_q ? 0 : 1;
 }
