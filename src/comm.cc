@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.319 2001/08/16 00:16:16 hno Exp $
+ * $Id: comm.cc,v 1.320 2001/08/26 22:22:43 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -559,6 +559,10 @@ commLingerTimeout(int fd, void *unused)
 void
 comm_lingering_close(int fd)
 {
+#if USE_SSL
+    if (fd_table[fd].ssl)
+	SSL_shutdown(fd_table[fd].ssl);
+#endif
     if (shutdown(fd, 1) < 0) {
 	comm_close(fd);
 	return;
@@ -586,10 +590,20 @@ comm_close(int fd)
     assert(F->flags.open);
     assert(F->type != FD_FILE);
     F->flags.closing = 1;
+#if USE_SSL
+    if (F->ssl)
+	SSL_shutdown(F->ssl);
+#endif
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
 	pconnHistCount(1, F->uses);
+#if USE_SSL
+    if (F->ssl) {
+	SSL_free(F->ssl);
+	F->ssl = NULL;
+    }
+#endif
     fd_close(fd);		/* update fdstat */
     close(fd);
     statCounter.syscalls.sock.closes++;
