@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.13 1996/07/17 17:03:45 wessels Exp $
+ * $Id: stmem.cc,v 1.14 1996/07/20 03:16:56 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -481,6 +481,13 @@ void stmemInit()
     mem_obj_pool.n_pages_free = 0;
     mem_obj_pool.n_pages_in_use = 0;
     mem_obj_pool.max_pages = FD_SETSIZE >> 3;
+
+#if PURIFY
+    sm_stats.max_pages = 0;
+    disk_stats.max_pages = 0;
+    request_pool.max_pages = 0;
+    mem_obj_pool.max_pages = 0;
+#endif
 
     init_stack(&sm_stats.free_page_stack, sm_stats.max_pages);
     init_stack(&disk_stats.free_page_stack, disk_stats.max_pages);

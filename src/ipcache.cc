@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.34 1996/07/19 17:34:45 wessels Exp $
+ * $Id: ipcache.cc,v 1.35 1996/07/20 03:16:53 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1014,7 +1014,8 @@ static void dnsDispatch(dns, i)
 	strlen(buf),
 	0,			/* timeout */
 	NULL,			/* Handler */
-	NULL);			/* Handler-data */
+	NULL,			/* Handler-data */
+	xfree);
     debug(14, 5, "dnsDispatch: Request sent to DNS server #%d.\n",
 	dns->id);
     dns->dispatch_time = current_time;
@@ -1289,7 +1290,8 @@ void ipcacheShutdownServers()
 	    strlen(shutdown),
 	    0,			/* timeout */
 	    NULL,		/* Handler */
-	    NULL);		/* Handler-data */
+	    NULL,		/* Handler-data */
+	    xfree);
 	dnsData->flags |= DNS_FLAG_CLOSING;
     }
 }

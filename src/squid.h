@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.29 1996/07/19 17:38:38 wessels Exp $
+ * $Id: squid.h,v 1.30 1996/07/20 03:16:54 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -199,7 +199,7 @@ typedef unsigned long u_num32;
 #endif
 #define NUM32LEN sizeof(num32)	/* this should always be 4 */
 
-#if MALLOC_GUARD
+#if PURIFY
 #define LOCAL_ARRAY(type,name,size) \
         static type *local_##name=NULL; \
         type *name = local_##name ? local_##name : \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.6 1996/07/18 20:27:09 wessels Exp $
+ * $Id: tunnel.cc,v 1.7 1996/07/20 03:16:55 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -339,7 +339,8 @@ static void sslConnInProgress(fd, sslState)
 		strlen(buf),
 		30,
 		sslErrorComplete,
-		sslState);
+		sslState,
+		xfree);
 	    return;
 	}
     }
@@ -369,7 +370,8 @@ static int sslConnect(fd, hp, sslState)
 	    strlen(buf),
 	    30,
 	    sslErrorComplete,
-	    (void *) sslState);
+	    (void *) sslState,
+		xfree);
 	return COMM_ERROR;
     }
     debug(26, 5, "sslConnect: client=%d server=%d\n",
@@ -402,7 +404,8 @@ static int sslConnect(fd, hp, sslState)
 		strlen(buf),
 		30,
 		sslErrorComplete,
-		(void *) sslState);
+		(void *) sslState,
+		xfree);
 	    return COMM_ERROR;
 	} else {
 	    debug(26, 5, "sslConnect: conn %d EINPROGRESS\n", fd);
@@ -448,7 +451,8 @@ int sslStart(fd, url, request, mime_hdr, size_ptr)
 	    strlen(buf),
 	    30,
 	    sslErrorComplete,
-	    (void *) sslState);
+	    (void *) sslState,
+		xfree);
 	return COMM_ERROR;
     }
     sslState = xcalloc(1, sizeof(SslStateData));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.45 1996/07/19 17:38:36 wessels Exp $
+ * $Id: ftp.cc,v 1.46 1996/07/20 03:16:50 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -121,9 +121,6 @@ typedef struct _Ftpdata {
     char password[MAX_URL];
     char *reply_hdr;
     int ftp_fd;
-    char *icp_page_ptr;		/* Used to send proxy-http request: 
-				 * put_free_8k_page(me) if the lifetime
-				 * expires */
     int got_marker;		/* denotes end of successful request */
     int reply_hdr_state;
     int authenticated;		/* This ftp request is authenticated */
@@ -157,10 +154,6 @@ static int ftpStateFree(fd, ftpState)
     if (ftpState->reply_hdr) {
 	put_free_8k_page(ftpState->reply_hdr);
 	ftpState->reply_hdr = NULL;
-    }
-    if (ftpState->icp_page_ptr) {
-	put_free_8k_page(ftpState->icp_page_ptr);
-	ftpState->icp_page_ptr = NULL;
     }
     requestUnlink(ftpState->request);
     xfree(ftpState);
@@ -343,10 +336,10 @@ int ftpReadReply(fd, data)
 	return 0;
     }
     errno = 0;
-    IOStats.Ftp.reads++;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(9, 5, "ftpReadReply: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
+        IOStats.Ftp.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
 	IOStats.Ftp.read_hist[bin]++;
@@ -444,8 +437,6 @@ void ftpSendComplete(fd, buf, size, errflag, data)
 	put_free_8k_page(buf);	/* Allocated by ftpSendRequest. */
 	buf = NULL;
     }
-    ftpState->icp_page_ptr = NULL;	/* So lifetime expire doesn't re-free */
-
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
@@ -501,7 +492,6 @@ void ftpSendRequest(fd, data)
 
     buflen = strlen(data->request->urlpath) + 256;
     buf = (char *) get_free_8k_page();
-    data->icp_page_ptr = buf;
     memset(buf, '\0', buflen);
 
     path = data->request->urlpath;
@@ -557,7 +547,8 @@ void ftpSendRequest(fd, data)
 	strlen(buf),
 	30,
 	ftpSendComplete,
-	(void *) data);
+	(void *) data,
+	put_free_8k_page);
 }
 
 void ftpConnInProgress(fd, data)

@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.34 1996/07/19 17:38:37 wessels Exp $
+ * $Id: gopher.cc,v 1.35 1996/07/20 03:16:50 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -156,7 +156,6 @@ typedef struct gopher_ds {
     int cso_recno;
     int len;
     char *buf;			/* pts to a 4k page */
-    char *icp_page_ptr;		/* Pts to gopherStart buffer that needs to be freed */
 } GopherData;
 
 GopherData *CreateGopherData();
@@ -669,8 +668,6 @@ int gopherReadReplyTimeout(fd, data)
     entry = data->entry;
     debug(10, 4, "GopherReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
-    if (data->icp_page_ptr)
-	put_free_4k_page(data->icp_page_ptr);
     comm_close(fd);
     return 0;
 }
@@ -684,8 +681,6 @@ void gopherLifetimeExpire(fd, data)
     entry = data->entry;
     debug(10, 4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    if (data->icp_page_ptr)
-	put_free_4k_page(data->icp_page_ptr);
     comm_set_select_handler(fd,
 	COMM_SELECT_READ | COMM_SELECT_WRITE,
 	0,
@@ -899,7 +894,6 @@ void gopherSendComplete(fd, buf, size, errflag, data)
 
     if (buf)
 	put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
-    gopherState->icp_page_ptr = NULL;
 }
 
 /* This will be called when connect completes. Write request. */
@@ -910,8 +904,6 @@ void gopherSendRequest(fd, data)
     int len;
     LOCAL_ARRAY(char, query, MAX_URL);
     char *buf = get_free_4k_page();
-
-    data->icp_page_ptr = buf;
 
     if (data->type_id == GOPHER_CSO) {
 	sscanf(data->request, "?%s", query);
@@ -935,7 +927,8 @@ void gopherSendRequest(fd, data)
 	len,
 	30,
 	gopherSendComplete,
-	(void *) data);
+	(void *) data,
+	put_free_4k_page);
     if (BIT_TEST(data->entry->flag, CACHABLE))
 	storeSetPublicKey(data->entry);		/* Make it public */
 }

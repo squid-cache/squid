@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.63 1996/07/19 17:38:38 wessels Exp $
+ * $Id: http.cc,v 1.64 1996/07/20 03:16:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -138,12 +138,6 @@ static int httpStateFree(fd, httpState)
     if (httpState->reply_hdr) {
 	put_free_8k_page(httpState->reply_hdr);
 	httpState->reply_hdr = NULL;
-    }
-    if (httpState->reqbuf && httpState->buf_type == BUF_TYPE_8K) {
-	put_free_8k_page(httpState->reqbuf);
-	httpState->reqbuf = NULL;
-    } else {
-	safe_free(httpState->reqbuf)
     }
     requestUnlink(httpState->request);
     xfree(httpState);
@@ -445,11 +439,11 @@ static void httpReadReply(fd, httpState)
 	return;
     }
     errno = 0;
-    IOStats.Http.reads++;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
     comm_set_fd_lifetime(fd, 86400);	/* extend after good read */
     if (len > 0) {
+        IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
 	IOStats.Http.read_hist[bin]++;
@@ -529,13 +523,6 @@ static void httpSendComplete(fd, buf, size, errflag, data)
     debug(11, 5, "httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
 
-    if (httpState->reqbuf && httpState->buf_type == BUF_TYPE_8K) {
-	put_free_8k_page(httpState->reqbuf);
-	httpState->reqbuf = NULL;
-    } else {
-	safe_free(httpState->reqbuf);
-    }
-
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
@@ -572,6 +559,7 @@ static void httpSendRequest(fd, httpState)
     int cfd = -1;
     request_t *req = httpState->request;
     char *Method = RequestMethodStr[req->method];
+    int buftype = 0;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(Method) + strlen(req->urlpath);
@@ -586,14 +574,13 @@ static void httpSendRequest(fd, httpState)
 	}
     }
     if (buflen < DISK_PAGE_SIZE) {
-	httpState->reqbuf = get_free_8k_page();
-	memset(httpState->reqbuf, '\0', buflen);
-	httpState->buf_type = BUF_TYPE_8K;
+	buf = get_free_8k_page();
+	memset(buf, '\0', buflen);
+	buftype = BUF_TYPE_8K;
     } else {
-	httpState->reqbuf = xcalloc(buflen, 1);
-	httpState->buf_type = BUF_TYPE_MALLOC;
+	buf = xcalloc(buflen, 1);
+	buftype = BUF_TYPE_MALLOC;
     }
-    buf = httpState->reqbuf;
 
     sprintf(buf, "%s %s HTTP/1.0\r\n",
 	Method,
@@ -647,7 +634,8 @@ static void httpSendRequest(fd, httpState)
 	len,
 	30,
 	httpSendComplete,
-	httpState);
+	httpState,
+	buftype == BUF_TYPE_8K ? put_free_8k_page : xfree);
 }
 
 static void httpConnInProgress(fd, httpState)
