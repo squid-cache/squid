@@ -40,10 +40,15 @@ make -s dist-all
 
 cd $startdir
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
-cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
-
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
+cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
 echo ${PACKAGE}-${VERSION}-${date}.tar.bz2 >>${tag}.out
+
+relnotes=$tmpdir/doc/release-notes/release-`echo $VERSION | cut -d. -f1,2 | cut -d- -f1`.html
+if [ -f $relnotes ]; then
+	cp -p $relnotes ${PACKAGE}-${VERSION}-${date}-RELEASENOTES.html
+	echo ${PACKAGE}-${VERSION}-${date}-RELEASENOTES.html >>${tag}.out
+fi
 
 if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
   echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
