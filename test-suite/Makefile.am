@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.10 2003/07/08 22:50:15 hno Exp $
+#  $Id: Makefile.am,v 1.11 2003/07/08 23:10:59 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -35,27 +35,27 @@ check_PROGRAMS= debug \
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 debug_SOURCES = debug.cc test_tools.cc
-debug_LDADD = $(top_builddir)/lib/Array.o $(LDADD)
+debug_LDADD = $(top_builddir)/lib/Array.o \
+		$(top_builddir)/src/globals.o \
+		$(LDADD)
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
 mem_hdr_test_SOURCES = mem_hdr_test.cc test_tools.cc
 mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
+		     $(top_builddir)/src/globals.o \
 		     $(top_builddir)/src/mem_node.o $(LDADD)
 MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
 
-DEBUG_OBJECTS = $(top_builddir)/src/debug.o\
-		$(top_builddir)/src/tools.o\
-		$(top_builddir)/src/globals.o
-
-http_range_test_SOURCES = http_range_test.cc
+http_range_test_SOURCES = http_range_test.cc test_tools.cc
 http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 		$(top_builddir)/src/HttpHeaderTools.o \
 		$(top_builddir)/src/MemBuf.o \
 		$(top_builddir)/src/Packer.o \
 		$(top_builddir)/src/String.o \
 		$(top_builddir)/src/mem.o \
-		$(DEBUG_OBJECTS) $(LDADD)
+		$(top_builddir)/src/globals.o \
+		$(LDADD)
 
 splay_SOURCES = splay.cc
 
