@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.311 2003/02/12 06:11:04 robertc Exp $
+ * $Id: neighbors.cc,v 1.312 2003/02/13 20:52:42 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1329,8 +1329,9 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	}
 	storeAppendPrintf(sentry, "Status     : %s\n",
 	    neighborUp(e) ? "Up" : "Down");
-	storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
+	storeAppendPrintf(sentry, "FETCHES    : %d\n", e->stats.fetches);
 	storeAppendPrintf(sentry, "OPEN CONNS : %d\n", e->stats.conn_open);
+	storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
 	storeAppendPrintf(sentry, "LAST QUERY : %8d seconds ago\n",
 	    (int) (squid_curtime - e->stats.last_query));
 	storeAppendPrintf(sentry, "LAST REPLY : %8d seconds ago\n",
@@ -1339,9 +1340,6 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	storeAppendPrintf(sentry, "PINGS ACKED: %8d %3d%%\n",
 	    e->stats.pings_acked,
 	    percent(e->stats.pings_acked, e->stats.pings_sent));
-	storeAppendPrintf(sentry, "FETCHES    : %8d %3d%%\n",
-	    e->stats.fetches,
-	    percent(e->stats.fetches, e->stats.pings_acked));
 	storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n",
 	    e->stats.ignored_replies,
 	    percent(e->stats.ignored_replies, e->stats.pings_acked));
