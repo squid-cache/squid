@@ -1,3 +1,6 @@
+	- Added v1.1 'test_reachability' option.
+	- Fixed hash4() len == 0 bug.
+
 Changes to squid-1.2.beta17 (Mar 17, 1998):
 
 	- SNMP MIB version check changed to non-rcs.
