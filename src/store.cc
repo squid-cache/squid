@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.423 1998/06/09 21:18:55 wessels Exp $
+ * $Id: store.cc,v 1.424 1998/06/28 07:52:59 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -534,6 +534,7 @@ void
 storeComplete(StoreEntry * e)
 {
     debug(20, 3) ("storeComplete: '%s'\n", storeKeyText(e->key));
+    assert(e->store_status == STORE_PENDING);
     e->mem_obj->object_sz = e->mem_obj->inmem_hi;
     e->store_status = STORE_OK;
     assert(e->mem_status == NOT_IN_MEMORY);
