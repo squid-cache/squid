@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.267 1998/07/22 22:36:08 wessels Exp $
+ * $Id: stat.cc,v 1.268 1998/07/23 03:29:03 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -60,6 +60,7 @@ static void statCountersClean(StatCounters *);
 static void statCountersCopy(StatCounters * dest, const StatCounters * orig);
 static double statMedianSvc(int, int);
 static void statStoreEntry(StoreEntry * s, StoreEntry * e);
+static double statCPUUsage(int minutes);
 static OBJH stat_io_get;
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
@@ -504,7 +505,9 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tCPU Usage:\t%.2f%%\n",
 	dpercent(cputime, runtime));
     storeAppendPrintf(sentry, "\tCPU Usage, 5 minute avg:\t%.2f%%\n",
-	stat5minCPUUsage());
+	statCPUUsage(5));
+    storeAppendPrintf(sentry, "\tCPU Usage, 60 minute avg:\t%.2f%%\n",
+	statCPUUsage(60));
     storeAppendPrintf(sentry, "\tMaximum Resident Size: %d KB\n",
 	rusage_maxrss(&rusage));
     storeAppendPrintf(sentry, "\tPage faults with physical i/o: %d\n",
@@ -1182,11 +1185,12 @@ stat5minClientRequests(void)
     return Counter.client_http.requests - CountHist[5].client_http.requests;
 }
 
-double
-stat5minCPUUsage(void)
+static double
+statCPUUsage(int minutes)
 {
-    return dpercent(CountHist[0].cputime - CountHist[5].cputime,
-	tvSubDsec(CountHist[5].timestamp, CountHist[0].timestamp));
+    assert(minutes < N_COUNT_HIST);
+    return dpercent(CountHist[0].cputime - CountHist[minutes].cputime,
+	tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
 }
 
 #if STAT_GRAPHS
