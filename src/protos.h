@@ -592,6 +592,7 @@ extern int fwdAbortFetch(StoreEntry * entry);
 extern DEFER fwdCheckDeferRead;
 extern void fwdFail(FwdState *, int, http_status, int);
 extern STABH fwdAbort;
+extern void fwdUnregister(int fd, FwdState *);
 
 extern void urnStart(request_t *, StoreEntry *);
 
