@@ -32,6 +32,7 @@
 	  to syslog.  Level 0 gets LOG_WARNING and level 1 gets LOG_NOTICE
 	  (this needs more work!)
 	- Fixed memory access errors in statAvgTick().
+	- Fixed duplicate requestUnlink() bug in forward.c
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
