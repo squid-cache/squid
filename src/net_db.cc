@@ -186,6 +186,7 @@ netdbSendPing(int fdunused, struct hostent *hp, void *data)
 	n = netdbAdd(addr, hostname);
     debug(37, 3, "netdbSendPing: pinging %s\n", hostname);
     icmpDomainPing(addr, hostname);
+    n->pings_sent++;
     n->next_ping_time = squid_curtime + NET_DB_TTL;
     n->last_use_time = squid_curtime;
     xfree(hostname);
@@ -213,6 +214,7 @@ netdbHandlePingReply(struct sockaddr_in *from, int hops, int rtt)
 	N = 100;
     n->hops = ((n->hops * (N - 1)) + hops) / N;
     n->rtt = ((n->rtt * (N - 1)) + rtt) / N;
+    n->pings_recv++;
     debug(37, 3, "netdbHandlePingReply: %s; rtt=%5.1f  hops=%4.1f\n",
 	n->network,
 	n->rtt,
@@ -281,4 +283,12 @@ netdbDump(StoreEntry * sentry)
     xfree(list);
 }
 
+int
+netdbHops(struct in_addr addr)
+{
+    netdbEntry *n = netdbLookupAddr(addr);
+    if (n && n->pings_recv)
+	return (int) (n->hops + 0.5);
+    return 256;
+}
 #endif /* USE_ICMP */
