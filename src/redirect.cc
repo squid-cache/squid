@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.94 2003/01/28 01:29:35 robertc Exp $
+ * $Id: redirect.cc,v 1.95 2003/02/12 06:11:04 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "Store.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
+#include "HttpRequest.h"
 
 typedef struct {
     void *data;
@@ -111,7 +112,7 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 	ch.src_addr = http->conn->peer.sin_addr;
 	ch.my_addr = http->conn->me.sin_addr;
 	ch.my_port = ntohs(http->conn->me.sin_port);
-	ch.request = http->request;
+	ch.request = requestLink(http->request);
 	if (!aclCheckFast(Config.accessList.redirector, &ch)) {
 	    /* denied -- bypass redirector */
 	    handler(data, NULL);

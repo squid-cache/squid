@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.363 2003/02/09 17:24:02 hno Exp $
+ * $Id: comm.cc,v 1.364 2003/02/12 06:11:02 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1244,15 +1244,16 @@ void
 commCallCloseHandlers(int fd)
 {
     fde *F = &fd_table[fd];
-    close_handler *ch;
     debug(5, 5) ("commCallCloseHandlers: FD %d\n", fd);
-    while ((ch = F->closeHandler) != NULL) {
-	F->closeHandler = ch->next;
-	debug(5, 5) ("commCallCloseHandlers: ch->handler=%p\n", ch->handler);
-	if (cbdataReferenceValid(ch->data))
-	    ch->handler(fd, ch->data);
-	cbdataReferenceDone(ch->data);
-	memPoolFree(conn_close_pool, ch);	/* AAA */
+    while (F->closeHandler != NULL) {
+	close_handler ch = *F->closeHandler;
+	memPoolFree(conn_close_pool, F->closeHandler);	/* AAA */
+	F->closeHandler = ch.next;
+	ch.next = NULL;
+	debug(5, 5) ("commCallCloseHandlers: ch->handler=%p data=%p\n", ch.handler, ch.data);
+	if (cbdataReferenceValid(ch.data))
+	    ch.handler(fd, ch.data);
+	cbdataReferenceDone(ch.data);
     }
 }
 

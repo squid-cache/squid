@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.56 2003/02/11 13:06:04 hno Exp $
+#  $Id: Makefile.am,v 1.57 2003/02/12 06:10:58 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -89,6 +89,12 @@ else
 WIN32SOURCE = 
 endif
 
+if ENABLE_IDENT
+IDENTSOURCE = ACLIdent.cc ACLIdent.h ident.cc
+else
+IDENTSOURCE =
+endif
+
 AM_CFLAGS = -Werror -Wall
 AM_CXXFLAGS = -Werror -Wall
 
@@ -140,11 +146,26 @@ EXTRA_squid_SOURCES = \
 	ssl_support.h \
 	win32.cc
 
+squid_ACLSOURCES = \
+	ACLDestinationIP.cc \
+	ACLDestinationIP.h \
+	ACLIP.cc \
+	ACLIP.h \
+	ACLMyIP.cc \
+	ACLMyIP.h \
+	ACLProxyAuth.cc \
+	ACLProxyAuth.h \
+	ACLSourceIP.cc \
+	ACLSourceIP.h \
+	ACLUserData.cc \
+	ACLUserData.h 
+
 squid_SOURCES = \
 	access_log.cc \
 	acl.cc \
 	ACL.h \
 	ACLChecklist.h \
+	$(squid_ACLSOURCES) \
 	asn.cc \
 	authenticate.cc \
 	authenticate.h \
@@ -210,7 +231,7 @@ squid_SOURCES = \
 	ICP.h \
 	icp_v2.cc \
 	icp_v3.cc \
-	ident.cc \
+	$(IDENTSOURCE) \
 	int.cc \
 	internal.cc \
 	ipc.cc \
@@ -352,6 +373,7 @@ ufsdump_SOURCES = debug.cc \
 	StoreMetaVary.h \
 	access_log.cc \
 	acl.cc \
+	$(squid_ACLSOURCES) \
 	asn.cc \
 	authenticate.cc \
 	cache_cf.cc \
@@ -405,7 +427,7 @@ ufsdump_SOURCES = debug.cc \
 	icmp.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	ident.cc \
+	$(IDENTSOURCE) \
 	internal.cc \
 	ipc.cc \
 	ipcache.cc \

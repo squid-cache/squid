@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.1 2003/01/28 01:29:32 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.2 2003/02/12 06:10:58 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,14 +38,62 @@
 
 class ACLChecklist {
   public:
+
+    /* State class.
+     * This abstract class defines the behaviour of
+     * async lookups - which can vary for different ACL types.
+     * Today, every state object must be a singleton.
+     * See NULLState for an example.
+     * Note that *no* state should be stored in the state object,
+     * they are used to change the behaviour of the checklist, not
+     * to hold information. If you need to store information in the
+     * state object, consider subclassing ACLChecklist, converting it
+     * to a composite, or changing the state objects from singletons to
+     * refcounted objects.
+     */
+
+    class AsyncState {
+      public:
+	virtual void checkForAsync(ACLChecklist *) const = 0;
+      protected:
+	void changeState (ACLChecklist *, AsyncState *) const;
+    };
+
+    class NullState : public AsyncState {
+      public:
+	static NullState *Instance();
+	virtual void checkForAsync(ACLChecklist *) const;
+      private:
+	static NullState _instance;
+    };
+    
+    
     void *operator new(size_t);
     void operator delete(void *);
     void deleteSelf() const;
 
     ACLChecklist();
     ~ACLChecklist();
+    /* To cause link failures if assignment attempted */
+    ACLChecklist (ACLChecklist const &);
+    ACLChecklist &operator=(ACLChecklist const &);
 
     void checkCallback(allow_t answer);
+    int matchAclList(const acl_list * list);
+    ConnStateData *conn();
+    void conn(ConnStateData *);
+
+    bool asyncInProgress() const;
+    void asyncInProgress(bool const);
+    bool finished() const;
+    void markFinished();
+    void check();
+    allow_t const & currentAnswer() const;
+    void currentAnswer(allow_t const);
+    void checkAccessList();
+    void checkForAsync();
+    void changeState (AsyncState *);
+    AsyncState *asyncState() const;
     
     const acl_access *accessList;
     struct in_addr src_addr;
@@ -55,7 +103,6 @@ class ACLChecklist {
     request_t *request;
     /* for acls that look at reply data */
     HttpReply *reply;
-    ConnStateData *conn;	/* hack for ident and NTLM */
     char rfc931[USER_IDENT_SZ];
     auth_user_request_t *auth_user_request;
     acl_lookup_state state[ACL_ENUM_MAX];
@@ -67,6 +114,17 @@ class ACLChecklist {
     external_acl_entry *extacl_entry;
 private:
     CBDATA_CLASS(ACLChecklist);
+    ConnStateData *conn_;	/* hack for ident and NTLM */
+    bool async_;
+    bool finished_;
+    allow_t allow_;
+    AsyncState *state_;
 };
+
+SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
+    request_t *,
+    const char *ident);
+SQUIDCEXTERN void aclNBCheck(ACLChecklist *, PF *, void *);
+SQUIDCEXTERN int aclCheckFast(const acl_access *A, ACLChecklist *);
 
 #endif /* SQUID_ACLCHECKLIST_H */

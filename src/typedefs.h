@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.149 2003/02/08 01:45:51 robertc Exp $
+ * $Id: typedefs.h,v 1.150 2003/02/12 06:11:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,12 +47,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-/*
- * grep '^struct' structs.h \
- * | perl -ne '($a,$b)=split;$c=$b;$c=~s/^_//; print "typedef struct $b $c;\n";'
- */
-
-typedef struct _acl_ip_data acl_ip_data;
 typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
@@ -67,11 +61,9 @@ typedef struct _authScheme authScheme;
 typedef struct _acl_user_ip_data acl_user_ip_data;
 typedef struct _acl_arp_data acl_arp_data;
 typedef struct _acl_snmp_comm acl_snmp_comm;
-typedef struct _acl_list acl_list;
-class acl_access;
+typedef class ACLList acl_list;
 typedef struct _acl_address acl_address;
 typedef struct _acl_tos acl_tos;
-typedef struct _acl acl;
 class ACLChecklist;
 typedef struct _wordlist wordlist;
 typedef struct _intlist intlist;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.52 2003/01/28 01:29:32 robertc Exp $
+ * $Id: HttpReply.cc,v 1.53 2003/02/12 06:10:58 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -564,6 +564,6 @@ httpReplyBodyBuildSize(request_t * request, HttpReply * reply, dlink_list * body
 	    bs = NULL;
 	    debug(58, 3) ("httpReplyBodyBuildSize: Setting maxBodySize to %ld\n", (long int) reply->maxBodySize);
 	}
-	aclChecklistFree(checklist);
+	delete checklist;
     }
 }

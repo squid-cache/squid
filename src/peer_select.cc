@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.125 2003/01/23 00:37:24 robertc Exp $
+ * $Id: peer_select.cc,v 1.126 2003/02/12 06:11:04 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "ICP.h"
 #include "HttpRequest.h"
+#include "ACLChecklist.h"
 
 const char *hier_strings[] =
 {
@@ -100,7 +101,7 @@ peerSelectStateFree(ps_state * psstate)
 {
     if (psstate->acl_checklist) {
 	debug(44, 1) ("calling aclChecklistFree() from peerSelectStateFree\n");
-	aclChecklistFree(psstate->acl_checklist);
+	delete (psstate->acl_checklist);
     }
     requestUnlink(psstate->request);
     psstate->request = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.33 2003/01/23 00:37:13 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.34 2003/02/12 06:10:58 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -220,4 +220,16 @@ bool
 request_t::multipartRangeRequest() const
 {
     return (range && range->specs.count > 1);
+}
+
+void
+request_flags::destinationIPLookupCompleted()
+{
+    destinationIPLookedUp_ = true;
+}
+
+bool
+request_flags::destinationIPLookedUp() const
+{
+    return destinationIPLookedUp_;
 }

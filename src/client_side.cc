@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.618 2003/02/09 19:48:32 hno Exp $
+ * $Id: client_side.cc,v 1.619 2003/02/12 06:11:00 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2222,9 +2222,6 @@ httpAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer
 {
     int *N = &incoming_sockets_accepted;
     ConnStateData *connState = NULL;
-#if USE_IDENT
-    static ACLChecklist identChecklist;
-#endif
 
     if (flag == COMM_ERR_CLOSING) {
         return;
@@ -2249,6 +2246,7 @@ httpAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer
 	    fqdncache_gethostbyaddr(peer->sin_addr, FQDN_LOOKUP_IF_MISS);
 	commSetTimeout(newfd, Config.Timeout.request, requestTimeout, connState);
 #if USE_IDENT
+        ACLChecklist identChecklist;
 	identChecklist.src_addr = peer->sin_addr;
 	identChecklist.my_addr = me->sin_addr;
 	identChecklist.my_port = ntohs(me->sin_port);
@@ -2326,9 +2324,6 @@ httpsAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *pee
     ConnStateData *connState = NULL;
     SSL *ssl;
     int ssl_error;
-#if USE_IDENT
-    static ACLChecklist identChecklist;
-#endif
 
     if (flag == COMM_ERR_CLOSING) {
         return;
@@ -2361,6 +2356,7 @@ httpsAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *pee
 	fqdncache_gethostbyaddr(peer->sin_addr, FQDN_LOOKUP_IF_MISS);
     commSetTimeout(newfd, Config.Timeout.request, requestTimeout, connState);
 #if USE_IDENT
+    ACLChecklist identChecklist;
     identChecklist.src_addr = peer->sin_addr;
     identChecklist.my_addr = me->sin_addr;
     identChecklist.my_port = ntohs(me->sin_port);
@@ -2545,7 +2541,7 @@ clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
      * the server end.
      */
     if (conn)
-	ch->conn = cbdataReference(conn);	/* unreferenced in acl.cc */
+	ch->conn(cbdataReference(conn));	/* unreferenced in acl.cc */
 
     return ch;
 }

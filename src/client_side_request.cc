@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.14 2003/02/05 03:11:14 robertc Exp $
+ * $Id: client_side_request.cc,v 1.15 2003/02/12 06:11:02 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -46,6 +46,8 @@
 #include "client_side_request.h"
 #include "authenticate.h"
 #include "HttpRequest.h"
+#include "ACLChecklist.h"
+#include "ACL.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -121,7 +123,7 @@ ClientRequestContext::~ClientRequestContext()
     if (http)
 	cbdataReferenceDone(http);
     if (acl_checklist)
-	aclChecklistFree(acl_checklist);
+	delete acl_checklist;
 }
 
 ClientRequestContext::ClientRequestContext() : acl_checklist (NULL), redirect_state (REDIRECT_NONE), http(NULL)

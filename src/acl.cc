@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.300 2003/02/08 17:32:43 hno Exp $
+ * $Id: acl.cc,v 1.301 2003/02/12 06:10:58 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,10 +39,13 @@
 #include "HttpRequest.h"
 #include "authenticate.h"
 #include "fde.h"
+#include "ACLProxyAuth.h"
+#if USE_IDENT
+#include "ACLIdent.h"
+#endif
+#include "ACLUserData.h"
 
 static void aclParseDomainList(void *curlist);
-static void aclParseUserList(void **current);
-static void aclParseIpList(void *curlist);
 static void aclParseIntlist(void *curlist);
 #if SQUID_SNMP
 static void aclParseWordList(void *curlist);
@@ -55,11 +58,8 @@ static void aclDestroyTimeList(acl_time_data * data);
 static void aclDestroyIntRange(intrange *);
 static void aclLookupProxyAuthStart(ACLChecklist * checklist);
 static void aclLookupProxyAuthDone(void *data, char *result);
-static struct _acl *aclFindByName(const char *name);
-static int aclMatchAcl(struct _acl *, ACLChecklist *);
+static acl*aclFindByName(const char *name);
 static int aclMatchTime(acl_time_data * data, time_t when);
-static int aclMatchUser(void *proxyauth_acl, char const *user);
-static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
 static int aclMatchIntegerRange(intrange * data, int i);
 #if SQUID_SNMP
@@ -70,17 +70,13 @@ static void aclDestroyUserMaxIP(void *data);
 static wordlist *aclDumpUserMaxIP(void *data);
 static int aclMatchUserMaxIP(void *, auth_user_request_t *, struct in_addr);
 static squid_acl aclStrToType(const char *s);
-static int decode_addr(const char *, struct in_addr *, struct in_addr *);
-static void aclCheck(ACLChecklist * checklist);
 #if USE_IDENT
 static IDCB aclLookupIdentDone;
 #endif
-static IPH aclLookupDstIPDone;
 static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
 static EAH aclLookupExternalDone;
-static wordlist *aclDumpIpList(void *);
 static wordlist *aclDumpDomainList(void *data);
 static wordlist *aclDumpTimeSpecList(acl_time_data *);
 static wordlist *aclDumpRegexList(relist * data);
@@ -88,13 +84,10 @@ static wordlist *aclDumpIntlistList(intlist * data);
 static wordlist *aclDumpIntRangeList(intrange * data);
 static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
-static splayNode::SPLAYCMP aclIpAddrNetworkCompare;
-static splayNode::SPLAYCMP aclIpNetworkCompare;
 static splayNode::SPLAYCMP aclHostDomainCompare;
 template<class T> int aclDomainCompare(T const &a, T const &b);
-static splayNode::SPLAYWALKEE aclDumpIpListWalkee;
 static splayNode::SPLAYWALKEE aclDumpDomainListWalkee;
-static splayNode::SPLAYFREE aclFreeIpData;
+
 
 #if USE_ARP_ACL
 static void aclParseArpList(void *curlist);
@@ -113,6 +106,29 @@ static wordlist *aclDumpCertList(void *data);
 static void aclDestroyCertList(void *data);
 #endif
 
+MemPool *ACL::Pool(NULL);
+void *
+ACL::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (ACL));
+    if (!Pool)
+	Pool = memPoolCreate("ACL", sizeof (ACL));
+    return memPoolAlloc(Pool);
+}
+
+void
+ACL::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+ACL::deleteSelf() const
+{
+    delete this;
+}
+
 template<class T>
 inline void
 xRefFree(T &thing)
@@ -127,22 +143,10 @@ splaystrcmp (T&l, T&r)
     return strcmp ((char *)l,(char *)r);
 }
 
-template<class T>
-inline int
-splaystrcasecmp (T&l, T&r)
-{
-    return strcasecmp ((char *)l,(char *)r);
-}
 
 static squid_acl
 aclStrToType(const char *s)
 {
-    if (!strcmp(s, "src"))
-	return ACL_SRC_IP;
-    if (!strcmp(s, "dst"))
-	return ACL_DST_IP;
-    if (!strcmp(s, "myip"))
-	return ACL_MY_IP;
     if (!strcmp(s, "domain"))
 	return ACL_DST_DOMAIN;
     if (!strcmp(s, "dstdomain"))
@@ -218,15 +222,10 @@ aclStrToType(const char *s)
     return ACL_NONE;
 }
 
+static const char *aclTypeToStr(squid_acl);
 const char *
 aclTypeToStr(squid_acl type)
 {
-    if (type == ACL_SRC_IP)
-	return "src";
-    if (type == ACL_DST_IP)
-	return "dst";
-    if (type == ACL_MY_IP)
-	return "myip";
     if (type == ACL_DST_DOMAIN)
 	return "dstdomain";
     if (type == ACL_SRC_DOMAIN)
@@ -248,8 +247,6 @@ aclTypeToStr(squid_acl type)
     if (type == ACL_MAXCONN)
 	return "maxconn";
 #if USE_IDENT
-    if (type == ACL_IDENT)
-	return "ident";
     if (type == ACL_IDENT_REGEX)
 	return "ident_regex";
 #endif
@@ -261,8 +258,6 @@ aclTypeToStr(squid_acl type)
 	return "browser";
     if (type == ACL_REFERER_REGEX)
 	return "referer_regex";
-    if (type == ACL_PROXY_AUTH)
-	return "proxy_auth";
     if (type == ACL_PROXY_AUTH_REGEX)
 	return "proxy_auth_regex";
     if (type == ACL_SRC_ASN)
@@ -372,166 +367,6 @@ aclParseMethodList(void *curlist)
 	q->i = (int) urlParseMethod(t);
 	*(Tail) = q;
 	Tail = &q->next;
-    }
-}
-
-/*
- * Decode a ascii representation (asc) of a IP adress, and place
- * adress and netmask information in addr and mask.
- * This function should NOT be called if 'asc' is a hostname!
- */
-static int
-decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
-{
-    u_int32_t a;
-    int a1 = 0, a2 = 0, a3 = 0, a4 = 0;
-
-    switch (sscanf(asc, "%d.%d.%d.%d", &a1, &a2, &a3, &a4)) {
-    case 4:			/* a dotted quad */
-	if (!safe_inet_addr(asc, addr)) {
-	    debug(28, 0) ("decode_addr: unsafe IP address: '%s'\n", asc);
-	    fatal("decode_addr: unsafe IP address");
-	}
-	break;
-    case 1:			/* a significant bits value for a mask */
-	if (a1 >= 0 && a1 < 33) {
-	    addr->s_addr = a1 ? htonl(0xfffffffful << (32 - a1)) : 0;
-	    break;
-	}
-    default:
-	debug(28, 0) ("decode_addr: Invalid IP address '%s'\n", asc);
-	return 0;		/* This is not valid address */
-    }
-
-    if (mask != NULL) {		/* mask == NULL if called to decode a netmask */
-
-	/* Guess netmask */
-	a = (u_int32_t) ntohl(addr->s_addr);
-	if (!(a & 0xFFFFFFFFul))
-	    mask->s_addr = htonl(0x00000000ul);
-	else if (!(a & 0x00FFFFFF))
-	    mask->s_addr = htonl(0xFF000000ul);
-	else if (!(a & 0x0000FFFF))
-	    mask->s_addr = htonl(0xFFFF0000ul);
-	else if (!(a & 0x000000FF))
-	    mask->s_addr = htonl(0xFFFFFF00ul);
-	else
-	    mask->s_addr = htonl(0xFFFFFFFFul);
-    }
-    return 1;
-}
-
-
-#define SCAN_ACL1       "%[0123456789.]-%[0123456789.]/%[0123456789.]"
-#define SCAN_ACL2       "%[0123456789.]-%[0123456789.]%c"
-#define SCAN_ACL3       "%[0123456789.]/%[0123456789.]"
-#define SCAN_ACL4       "%[0123456789.]%c"
-
-static acl_ip_data *
-aclParseIpData(const char *t)
-{
-    LOCAL_ARRAY(char, addr1, 256);
-    LOCAL_ARRAY(char, addr2, 256);
-    LOCAL_ARRAY(char, mask, 256);
-    acl_ip_data *q = (acl_ip_data *)memAllocate(MEM_ACL_IP_DATA);
-    acl_ip_data *r;
-    acl_ip_data **Q;
-    struct hostent *hp;
-    char **x;
-    char c;
-    debug(28, 5) ("aclParseIpData: %s\n", t);
-    if (!strcasecmp(t, "all")) {
-	q->addr1.s_addr = 0;
-	q->addr2.s_addr = 0;
-	q->mask.s_addr = 0;
-	return q;
-    }
-    if (sscanf(t, SCAN_ACL1, addr1, addr2, mask) == 3) {
-	(void) 0;
-    } else if (sscanf(t, SCAN_ACL2, addr1, addr2, &c) == 2) {
-	mask[0] = '\0';
-    } else if (sscanf(t, SCAN_ACL3, addr1, mask) == 2) {
-	addr2[0] = '\0';
-    } else if (sscanf(t, SCAN_ACL4, addr1, &c) == 1) {
-	addr2[0] = '\0';
-	mask[0] = '\0';
-    } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
-	addr2[0] = '\0';
-    } else if (sscanf(t, "%s", addr1) == 1) {
-	/*
-	 * Note, must use plain gethostbyname() here because at startup
-	 * ipcache hasn't been initialized
-	 */
-	if ((hp = gethostbyname(addr1)) == NULL) {
-	    debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
-	    safe_free(q);
-	    return NULL;
-	}
-	Q = &q;
-	for (x = hp->h_addr_list; x != NULL && *x != NULL; x++) {
-	    if ((r = *Q) == NULL)
-		r = *Q = (acl_ip_data *)memAllocate(MEM_ACL_IP_DATA);
-	    xmemcpy(&r->addr1.s_addr, *x, sizeof(r->addr1.s_addr));
-	    r->addr2.s_addr = 0;
-	    r->mask.s_addr = no_addr.s_addr;	/* 255.255.255.255 */
-	    Q = &r->next;
-	    debug(28, 3) ("%s --> %s\n", addr1, inet_ntoa(r->addr1));
-	}
-	return q;
-    } else {
-	debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
-	safe_free(q);
-	return NULL;
-    }
-    /* Decode addr1 */
-    if (!decode_addr(addr1, &q->addr1, &q->mask)) {
-	debug(28, 0) ("%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
-	safe_free(q);
-	return NULL;
-    }
-    /* Decode addr2 */
-    if (*addr2 && !decode_addr(addr2, &q->addr2, &q->mask)) {
-	debug(28, 0) ("%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
-	safe_free(q);
-	return NULL;
-    }
-    /* Decode mask */
-    if (*mask && !decode_addr(mask, &q->mask, NULL)) {
-	debug(28, 0) ("%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
-	safe_free(q);
-	return NULL;
-    }
-    if ((q->addr1.s_addr & q->mask.s_addr) != q->addr1.s_addr ||
-	(q->addr2.s_addr & q->mask.s_addr) != q->addr2.s_addr)
-	debug(28, 0) ("aclParseIpData: WARNING: Netmask masks away part of the specified IP in '%s'\n", t);
-    q->addr1.s_addr &= q->mask.s_addr;
-    q->addr2.s_addr &= q->mask.s_addr;
-    /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
-    return q;
-}
-
-/******************/
-/* aclParseIpList */
-/******************/
-
-static void
-aclParseIpList(void *curlist)
-{
-    char *t = NULL;
-    splayNode **Top = (splayNode **)curlist;
-    acl_ip_data *q = NULL;
-    while ((t = strtokFile())) {
-	q = aclParseIpData(t);
-	while (q != NULL) {
-	    *Top = splay_insert(q, *Top, aclIpNetworkCompare);
-	    q = q->next;
-	}
     }
 }
 
@@ -657,49 +492,6 @@ aclParseWordList(void *curlist)
 }
 #endif
 
-static void
-aclParseUserList(void **current)
-{
-    char *t = NULL;
-    acl_user_data *data;
-    SplayNode<char *> *Top = NULL;
-
-    debug(28, 2) ("aclParseUserList: parsing user list\n");
-    if (*current == NULL) {
-	debug(28, 3) ("aclParseUserList: current is null. Creating\n");
-	*current = new acl_user_data;
-    }
-    data = (acl_user_data*)*current;
-    Top = data->names;
-    if ((t = strtokFile())) {
-	debug(28, 5) ("aclParseUserList: First token is %s\n", t);
-	if (strcmp("-i", t) == 0) {
-	    debug(28, 5) ("aclParseUserList: Going case-insensitive\n");
-	    data->flags.case_insensitive = 1;
-	} else if (strcmp("REQUIRED", t) == 0) {
-	    debug(28, 5) ("aclParseUserList: REQUIRED-type enabled\n");
-	    data->flags.required = 1;
-	} else {
-	    if (data->flags.case_insensitive)
-		Tolower(t);
-	    Top = Top->insert(xstrdup(t), splaystrcmp);
-	}
-    }
-    debug(28, 3) ("aclParseUserList: Case-insensitive-switch is %d\n",
-	data->flags.case_insensitive);
-    /* we might inherit from a previous declaration */
-
-    debug(28, 4) ("aclParseUserList: parsing user list\n");
-    while ((t = strtokFile())) {
-	debug(28, 6) ("aclParseUserList: Got token: %s\n", t);
-	if (data->flags.case_insensitive)
-	    Tolower(t);
-	Top = Top->insert(xstrdup(t), splaystrcmp);
-    }
-    data->names = Top;
-}
-
-
 /**********************/
 /* aclParseDomainList */
 /**********************/
@@ -743,7 +535,7 @@ aclMatchUserCert(void *data, ACLChecklist * checklist)
 {
     acl_cert_data *cert_data = (acl_cert_data *)data;
     const char *value;
-    SSL *ssl = fd_table[checklist->conn->fd].ssl;
+    SSL *ssl = fd_table[checklist->conn()->fd].ssl;
 
     if (!ssl)
 	return 0;
@@ -759,7 +551,7 @@ aclMatchCACert(void *data, ACLChecklist * checklist)
 {
     acl_cert_data *cert_data = (acl_cert_data *)data;
     const char *value;
-    SSL *ssl = fd_table[checklist->conn->fd].ssl;
+    SSL *ssl = fd_table[checklist->conn()->fd].ssl;
 
     if (!ssl)
 	return 0;
@@ -799,8 +591,85 @@ aclDumpCertList(void *curlist)
 }
 #endif
 
+ACL *
+ACL::Factory (char const *type)
+{
+    ACL *result = Prototype::Factory (type);
+    if (result)
+	return result;
+    squid_acl const acltype = aclStrToType(type);
+    switch (acltype) {
+#if USE_IDENT
+      case ACL_IDENT:
+        result = new ACLIdent;
+	break;
+#endif
+      case ACL_PROXY_AUTH:
+        result = new ACLProxyAuth;
+	break;
+      case ACL_DST_DOMAIN:
+      case ACL_SRC_DOMAIN:
+      case ACL_DST_DOM_REGEX:
+      case ACL_SRC_DOM_REGEX:
+      case ACL_TIME:
+      case ACL_URLPATH_REGEX:
+      case ACL_URL_REGEX:
+      case ACL_URL_PORT:
+      case ACL_MY_PORT:
+      case ACL_MAXCONN:
+#if USE_IDENT
+      case ACL_IDENT_REGEX:
+#endif
+      case ACL_PROTO:
+      case ACL_METHOD:
+      case ACL_BROWSER:
+      case ACL_REFERER_REGEX:
+      case ACL_PROXY_AUTH_REGEX:
+      case ACL_SRC_ASN:
+      case ACL_DST_ASN:
+#if SQUID_SNMP
+      case ACL_SNMP_COMMUNITY:
+#endif
+#if SRC_RTT_NOT_YET_FINISHED
+      case ACL_NETDB_SRC_RTT:
+#endif
+#if USE_ARP_ACL
+      case ACL_SRC_ARP:
+#endif
+      case ACL_REQ_MIME_TYPE:
+      case ACL_REP_MIME_TYPE:
+      case ACL_MAX_USER_IP:
+      case ACL_EXTERNAL:
+#if USE_SSL
+      case ACL_USER_CERT:
+      case ACL_CA_CERT:
+#endif
+	result = new ACL(acltype);
+	break;
+      case ACL_DERIVED:
+      default:
+	fatal ("Unknown acl type in ACL::Factory");
+    };
+    assert (result);
+    return result;
+}
+
+ACL::ACL (squid_acl const acltype) : type (acltype)
+{
+}
+
+ACL::ACL () : type(ACL_NONE)
+{
+}
+
+char const *
+ACL::typeString() const
+{
+    return aclTypeToStr(aclType());
+}
+
 void
-aclParseAclLine(acl ** head)
+ACL::ParseAclLine(acl ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
@@ -824,7 +693,7 @@ aclParseAclLine(acl ** head)
 	debug(28, 0) ("aclParseAclLine: missing ACL type.\n");
 	return;
     }
-    if ((acltype = aclStrToType(t)) == ACL_NONE) {
+    if ((acltype = aclStrToType(t)) == ACL_NONE && !Prototype::Registered (t)) {
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAclLine: Invalid ACL type '%s'\n", t);
@@ -832,13 +701,12 @@ aclParseAclLine(acl ** head)
     }
     if ((A = aclFindByName(aclname)) == NULL) {
 	debug(28, 3) ("aclParseAclLine: Creating ACL '%s'\n", aclname);
-	A = (acl *)memAllocate(MEM_ACL);
+	A = ACL::Factory(t);
 	xstrncpy(A->name, aclname, ACL_NAME_SZ);
-	A->type = acltype;
 	A->cfgline = xstrdup(config_input_line);
 	new_acl = 1;
     } else {
-	if (acltype != A->type) {
+	if (acltype != A->aclType()) {
 	    debug(28, 0) ("aclParseAclLine: ACL '%s' already exists with different type, skipping.\n", A->name);
 	    return;
 	}
@@ -849,19 +717,46 @@ aclParseAclLine(acl ** head)
      * Here we set AclMatchedName in case we need to use it in a
      * warning message in aclDomainCompare().
      */
-    AclMatchedName = aclname;	/* ugly */
-    switch (A->type) {
-    case ACL_SRC_IP:
-    case ACL_DST_IP:
-    case ACL_MY_IP:
-	aclParseIpList(&A->data);
-	break;
+    AclMatchedName = A->name;	/* ugly */
+
+    /*split the function here */
+    A->parse();
+    /*
+     * Clear AclMatchedName from our temporary hack
+     */
+    AclMatchedName = NULL;	/* ugly */
+    if (!new_acl)
+	return;
+    if (!A->valid()) {
+	debug(28, 0) ("aclParseAclLine: IGNORING invalid ACL: %s\n",
+	    A->cfgline);
+	A->deleteSelf();
+	/* Do we need this? */
+	A = NULL;
+	return;
+    }
+    /* append */
+    while (*head)
+	head = &(*head)->next;
+    *head = A;
+}
+
+bool
+ACL::valid () const
+{
+    return data != NULL;
+}
+
+void
+ACL::parse()
+{    
+    switch (aclType()) {
     case ACL_SRC_DOMAIN:
     case ACL_DST_DOMAIN:
-	aclParseDomainList(&A->data);
+	aclParseDomainList(&data);
 	break;
     case ACL_TIME:
-	aclParseTimeSpec(&A->data);
+	aclParseTimeSpec(&data);
 	break;
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
@@ -871,78 +766,71 @@ aclParseAclLine(acl ** head)
     case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:
     case ACL_REP_MIME_TYPE:
-	aclParseRegexList(&A->data);
+	aclParseRegexList(&data);
 	break;
     case ACL_SRC_ASN:
     case ACL_MAXCONN:
     case ACL_DST_ASN:
-	aclParseIntlist(&A->data);
+	aclParseIntlist(&data);
 	break;
     case ACL_MAX_USER_IP:
-	aclParseUserMaxIP(&A->data);
+	aclParseUserMaxIP(&data);
 	break;
 #if SRC_RTT_NOT_YET_FINISHED
     case ACL_NETDB_SRC_RTT:
-	aclParseIntlist(&A->data);
+	aclParseIntlist(&data);
 	break;
 #endif
     case ACL_URL_PORT:
     case ACL_MY_PORT:
-	aclParseIntRange(&A->data);
+	aclParseIntRange(&data);
 	break;
 #if USE_IDENT
-    case ACL_IDENT:
-	aclParseUserList(&A->data);
-	break;
     case ACL_IDENT_REGEX:
-	aclParseRegexList(&A->data);
+	aclParseRegexList(&data);
 	break;
 #endif
     case ACL_PROTO:
-	aclParseProtoList(&A->data);
+	aclParseProtoList(&data);
 	break;
     case ACL_METHOD:
-	aclParseMethodList(&A->data);
+	aclParseMethodList(&data);
 	break;
+#if USE_IDENT
+    case ACL_IDENT: 
+#endif
+    case ACL_DERIVED:
     case ACL_PROXY_AUTH:
-	if (authenticateSchemeCount() == 0) {
-	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
-because no authentication schemes were compiled.\n", A->cfgline);
-	} else if (authenticateActiveSchemeCount() == 0) {
-	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
-because no authentication schemes are fully configured.\n", A->cfgline);
-	} else {
-	    aclParseUserList(&A->data);
-	}
+	fatal ("unused");
 	break;
     case ACL_PROXY_AUTH_REGEX:
 	if (authenticateSchemeCount() == 0) {
 	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
-because no authentication schemes were compiled.\n", A->cfgline);
+because no authentication schemes were compiled.\n", cfgline);
 	} else if (authenticateActiveSchemeCount() == 0) {
 	    debug(28, 0) ("aclParseAclLine: IGNORING: Proxy Auth ACL '%s' \
-because no authentication schemes are fully configured.\n", A->cfgline);
+because no authentication schemes are fully configured.\n", cfgline);
 	} else {
-	    aclParseRegexList(&A->data);
+	    aclParseRegexList(&data);
 	}
 	break;
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
-	aclParseWordList(&A->data);
+	aclParseWordList(&data);
 	break;
 #endif
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
-	aclParseArpList(&A->data);
+	aclParseArpList(&data);
 	break;
 #endif
     case ACL_EXTERNAL:
-	aclParseExternal(&A->data);
+	aclParseExternal(&data);
 	break;
 #if USE_SSL
     case ACL_USER_CERT:
     case ACL_CA_CERT:
-	aclParseCertList(&A->data);
+	aclParseCertList(&data);
 	break;
 #endif
     case ACL_NONE:
@@ -950,22 +838,6 @@ because no authentication schemes are fully configured.\n", A->cfgline);
 	fatal("Bad ACL type");
 	break;
     }
-    /*
-     * Clear AclMatchedName from our temporary hack
-     */
-    AclMatchedName = NULL;	/* ugly */
-    if (!new_acl)
-	return;
-    if (A->data == NULL) {
-	debug(28, 0) ("aclParseAclLine: IGNORING invalid ACL: %s\n",
-	    A->cfgline);
-	memFree(A, MEM_ACL);
-	return;
-    }
-    /* append */
-    while (*head)
-	head = &(*head)->next;
-    *head = A;
 }
 
 /* does name lookup, returns page_id */
@@ -996,14 +868,19 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
 int
 aclIsProxyAuth(const char *name)
 {
-    acl *a;
     if (NULL == name)
-	return 0;
+	return false;
+    acl *a;
     if ((a = aclFindByName(name)))
-	return a->type == ACL_PROXY_AUTH || a->type == ACL_PROXY_AUTH_REGEX;
-    return 0;
+	return a->isProxyAuth();
+    return false;
 }
 
+bool
+ACL::isProxyAuth() const
+{
+    return aclType() == ACL_PROXY_AUTH_REGEX;
+}
 
 /* maex@space.net (05.09.96)
  *    get the info for redirecting "access denied" to info pages
@@ -1069,7 +946,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("aclParseAccessLine: missing 'allow' or 'deny'.\n");
 	return;
     }
-    A = cbdataAlloc(acl_access);
+    A = new acl_access;
 
     if (!strcmp(t, "allow"))
 	A->allow = ACCESS_ALLOWED;
@@ -1079,7 +956,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
-	cbdataFree(A);
+	delete A;
 	return;
     }
     aclParseAclList(&A->aclList);
@@ -1087,20 +964,32 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
-	cbdataFree(A);
+	delete A;
 	return;
     }
     A->cfgline = xstrdup(config_input_line);
     /* Append to the end of this list */
     for (B = *head, T = head; B; T = &B->next, B = B->next);
     *T = A;
-    /* We lock _acl_access structures in aclCheck() */
+    /* We lock _acl_access structures in ACLChecklist::check() */
+}
+
+ACLList::ACLList() : op (1), _acl (NULL), next (NULL)
+{
+}
+
+void
+ACLList::negated(bool isNegated)
+{
+    if (isNegated)
+	op = 0;
+    else
+	op = 1;
 }
 
 void
 aclParseAclList(acl_list ** head)
 {
-    acl_list *L = NULL;
     acl_list **Tail = head;	/* sane name in the use below */
     acl *a = NULL;
     char *t;
@@ -1108,11 +997,9 @@ aclParseAclList(acl_list ** head)
     /* next expect a list of ACL names, possibly preceeded
      * by '!' for negation */
     while ((t = strtok(NULL, w_space))) {
-	L = (acl_list *)memAllocate(MEM_ACL_LIST);
-	L->op = 1;		/* defaults to non-negated */
+	acl_list *L (new ACLList);
 	if (*t == '!') {
-	    /* negated ACL */
-	    L->op = 0;
+	    L->negated (true);
 	    t++;
 	}
 	debug(28, 3) ("aclParseAccessLine: looking for ACL name '%s'\n", t);
@@ -1121,42 +1008,13 @@ aclParseAclList(acl_list ** head)
 	    debug(28, 0) ("%s line %d: %s\n",
 		cfg_filename, config_lineno, config_input_line);
 	    debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
-	    memFree(L, MEM_ACL_LIST);
+	    L->deleteSelf();
 	    continue;
 	}
 	L->_acl = a;
 	*Tail = L;
 	Tail = &L->next;
     }
-}
-
-/**************/
-/* aclMatchIp */
-/**************/
-
-static int
-aclMatchIp(void *dataptr, struct in_addr c)
-{
-    splayNode **Top = (splayNode **)dataptr;
-    acl_ip_data x;
-    /*
-     * aclIpAddrNetworkCompare() takes two acl_ip_data pointers as
-     * arguments, so we must create a fake one for the client's IP
-     * address, and use a /32 netmask.  However, the current code
-     * probably only accesses the addr1 element of this argument,
-     * so it might be possible to leave addr2 and mask unset.
-     * XXX Could eliminate these repetitive assignments with a
-     * static structure.
-     */
-    x.addr1 = c;
-    x.addr2 = any_addr;
-    x.mask = no_addr;
-    x.next = NULL;
-    const void *X = &x;
-    *Top = splay_splay(&X, *Top, aclIpAddrNetworkCompare);
-    debug(28, 3) ("aclMatchIp: '%s' %s\n",
-	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
-    return !splayLastResult;
 }
 
 /**********************/
@@ -1204,35 +1062,6 @@ aclMatchRegex(relist * data, const char *word)
     return 0;
 }
 
-static int
-aclMatchUser(void *proxyauth_acl, char const *user)
-{
-    acl_user_data *data = (acl_user_data *) proxyauth_acl;
-    SplayNode<char *> *Top = data->names;
-
-    debug(28, 7) ("aclMatchUser: user is %s, case_insensitive is %d\n",
-	user, data->flags.case_insensitive);
-    debug(28, 8) ("Top is %p, Top->data is %s\n", Top,
-	(char *) (Top != NULL ? (Top)->data : "Unavailable"));
-
-    if (user == NULL)
-	return 0;
-
-    if (data->flags.required) {
-	debug(28, 7) ("aclMatchUser: user REQUIRED and auth-info present.\n");
-	return 1;
-    }
-    if (data->flags.case_insensitive)
-	Top = Top->splay((char *)user, splaystrcasecmp);
-    else
-	Top = Top->splay((char *)user, splaystrcmp);
-    /* Top=splay_splay(user,Top,(splayNode::SPLAYCMP *)dumping_strcmp); */
-    debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
-	!splayLastResult, Top, (char *) (Top ? Top->data : "Unavailable"));
-    data->names = Top;
-    return !splayLastResult;
-}
-
 /* ACL result caching routines */
 
 /*
@@ -1269,7 +1098,7 @@ aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
     /* match the user in the acl. They are not cached. */
     switch (acltype) {
     case ACL_PROXY_AUTH:
-	matchrv = aclMatchUser(data, MatchParam);
+	matchrv = ((ACLUserData *)data)->match(MatchParam);
 	break;
     case ACL_PROXY_AUTH_REGEX:
 	matchrv = aclMatchRegex((relist *)data, MatchParam);
@@ -1306,7 +1135,7 @@ aclCacheMatchFlush(dlink_list * cache)
  * 0 : Authorisation for this ACL failed. (Did not match)
  * 1 : Authorisation OK. (Matched)
  */
-static int
+int
 aclMatchProxyAuth(void *data, auth_user_request_t * auth_user_request,
     ACLChecklist * checklist, squid_acl acltype)
 {
@@ -1549,7 +1378,7 @@ aclAuthenticated(ACLChecklist * checklist)
     }
     /* get authed here */
     /* Note: this fills in checklist->auth_user_request when applicable */
-    switch (authenticateTryToAuthenticateAndSetAuthUser(&checklist->auth_user_request, headertype, checklist->request, checklist->conn, checklist->src_addr)) {
+    switch (authenticateTryToAuthenticateAndSetAuthUser(&checklist->auth_user_request, headertype, checklist->request, checklist->conn(), checklist->src_addr)) {
     case AUTH_ACL_CANNOT_AUTHENTICATE:
 	debug(28, 4) ("aclMatchAcl: returning  0 user authenticated but not authorised.\n");
 	return 0;
@@ -1570,25 +1399,15 @@ aclAuthenticated(ACLChecklist * checklist)
     }
 }
 
-static int
-aclMatchAcl(acl * ae, ACLChecklist * checklist)
+bool
+ACL::requiresRequest() const
 {
-    request_t *r = checklist->request;
-    const ipcache_addrs *ia = NULL;
-    const char *fqdn = NULL;
-    char *esc_buf;
-    const char *header;
-    const char *browser;
-    int k, ti;
-    if (!ae)
-	return 0;
-    switch (ae->type) {
+    switch (aclType()) {
     case ACL_BROWSER:
     case ACL_REFERER_REGEX:
     case ACL_DST_ASN:
     case ACL_DST_DOMAIN:
     case ACL_DST_DOM_REGEX:
-    case ACL_DST_IP:
     case ACL_MAX_USER_IP:
     case ACL_METHOD:
     case ACL_PROTO:
@@ -1600,131 +1419,120 @@ aclMatchAcl(acl * ae, ACLChecklist * checklist)
     case ACL_URL_PORT:
     case ACL_URL_REGEX:
 	/* These ACL types require checklist->request */
-	if (NULL == r) {
-	    debug(28, 1) ("WARNING: '%s' ACL is used but there is no"
-		" HTTP request -- access denied.\n", ae->name);
-	    return 0;
-	}
-	break;
+	return true;
     default:
-	break;
+	return false;
     }
-    debug(28, 3) ("aclMatchAcl: checking '%s'\n", ae->cfgline);
-    switch (ae->type) {
-    case ACL_SRC_IP:
-	return aclMatchIp(&ae->data, checklist->src_addr);
-	/* NOTREACHED */
-    case ACL_MY_IP:
-	return aclMatchIp(&ae->data, checklist->my_addr);
-	/* NOTREACHED */
-    case ACL_DST_IP:
-	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
-	if (ia) {
-	    for (k = 0; k < (int) ia->count; k++) {
-		if (aclMatchIp(&ae->data, ia->in_addrs[k]))
-		    return 1;
-	    }
-	    return 0;
-	} else if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NONE) {
-	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		ae->name, r->host);
-	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_NEEDED;
-	    return 0;
-	} else {
-	    return aclMatchIp(&ae->data, no_addr);
-	}
-	/* NOTREACHED */
+}
+
+int
+ACL::checklistMatches(ACLChecklist *checklist)
+{
+    if (NULL == checklist->request && requiresRequest()) {
+	debug(28, 1) ("WARNING: '%s' ACL is used but there is no"
+		      " HTTP request -- access denied.\n", name);
+	return 0;
+    }
+
+    debug(28, 3) ("aclMatchAcl: checking '%s'\n", cfgline);
+    return match(checklist);
+}
+
+int
+ACL::match(ACLChecklist * checklist)
+{
+    request_t *r = checklist->request;
+    const ipcache_addrs *ia = NULL;
+    const char *fqdn = NULL;
+    char *esc_buf;
+    const char *header;
+    const char *browser;
+    int k, ti;
+
+    switch (aclType()) {
     case ACL_DST_DOMAIN:
 	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchDomainList(&ae->data, r->host);
+	    return aclMatchDomainList(&data, r->host);
 	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
 	if (fqdn)
-	    return aclMatchDomainList(&ae->data, fqdn);
+	    return aclMatchDomainList(&data, fqdn);
 	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		ae->name, inet_ntoa(ia->in_addrs[0]));
+		name, inet_ntoa(ia->in_addrs[0]));
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchDomainList(&ae->data, "none");
+	return aclMatchDomainList(&data, "none");
 	/* NOTREACHED */
     case ACL_SRC_DOMAIN:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
 	if (fqdn) {
-	    return aclMatchDomainList(&ae->data, fqdn);
+	    return aclMatchDomainList(&data, fqdn);
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		ae->name, inet_ntoa(checklist->src_addr));
+		name, inet_ntoa(checklist->src_addr));
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchDomainList(&ae->data, "none");
+	return aclMatchDomainList(&data, "none");
 	/* NOTREACHED */
     case ACL_DST_DOM_REGEX:
 	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
-	    return aclMatchRegex((relist *)ae->data, r->host);
+	    return aclMatchRegex((relist *)data, r->host);
 	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
 	if (fqdn)
-	    return aclMatchRegex((relist *)ae->data, fqdn);
+	    return aclMatchRegex((relist *)data, fqdn);
 	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		ae->name, inet_ntoa(ia->in_addrs[0]));
+		name, inet_ntoa(ia->in_addrs[0]));
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchRegex((relist *)ae->data, "none");
+	return aclMatchRegex((relist *)data, "none");
 	/* NOTREACHED */
     case ACL_SRC_DOM_REGEX:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
 	if (fqdn) {
-	    return aclMatchRegex((relist *)ae->data, fqdn);
+	    return aclMatchRegex((relist *)data, fqdn);
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		ae->name, inet_ntoa(checklist->src_addr));
+		name, inet_ntoa(checklist->src_addr));
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
 	}
-	return aclMatchRegex((relist *)ae->data, "none");
+	return aclMatchRegex((relist *)data, "none");
 	/* NOTREACHED */
     case ACL_TIME:
-	return aclMatchTime((acl_time_data *)ae->data, squid_curtime);
+	return aclMatchTime((acl_time_data *)data, squid_curtime);
 	/* NOTREACHED */
     case ACL_URLPATH_REGEX:
 	esc_buf = xstrdup(r->urlpath.buf());
 	rfc1738_unescape(esc_buf);
-	k = aclMatchRegex((relist *)ae->data, esc_buf);
+	k = aclMatchRegex((relist *)data, esc_buf);
 	safe_free(esc_buf);
 	return k;
 	/* NOTREACHED */
     case ACL_URL_REGEX:
 	esc_buf = xstrdup(urlCanonical(r));
 	rfc1738_unescape(esc_buf);
-	k = aclMatchRegex((relist *)ae->data, esc_buf);
+	k = aclMatchRegex((relist *)data, esc_buf);
 	safe_free(esc_buf);
 	return k;
 	/* NOTREACHED */
     case ACL_MAXCONN:
 	k = clientdbEstablished(checklist->src_addr, 0);
-	return ((k > ((intlist *) ae->data)->i) ? 1 : 0);
+	return ((k > ((intlist *) data)->i) ? 1 : 0);
 	/* NOTREACHED */
     case ACL_URL_PORT:
-	return aclMatchIntegerRange((intrange *)ae->data, (int) r->port);
+	return aclMatchIntegerRange((intrange *)data, (int) r->port);
 	/* NOTREACHED */
     case ACL_MY_PORT:
-	return aclMatchIntegerRange((intrange *)ae->data, (int) checklist->my_port);
+	return aclMatchIntegerRange((intrange *)data, (int) checklist->my_port);
 	/* NOTREACHED */
 #if USE_IDENT
-    case ACL_IDENT:
-	if (checklist->rfc931[0]) {
-	    return aclMatchUser(ae->data, checklist->rfc931);
-	} else {
-	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
-	    return 0;
-	}
-	/* NOTREACHED */
     case ACL_IDENT_REGEX:
 	if (checklist->rfc931[0]) {
-	    return aclMatchRegex((relist *)ae->data, checklist->rfc931);
+	    return aclMatchRegex((relist *)data, checklist->rfc931);
 	} else {
 	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
 	    return 0;
@@ -1732,68 +1540,67 @@ aclMatchAcl(acl * ae, ACLChecklist * checklist)
 	/* NOTREACHED */
 #endif
     case ACL_PROTO:
-	return aclMatchInteger((intlist *)ae->data, r->protocol);
+	return aclMatchInteger((intlist *)data, r->protocol);
 	/* NOTREACHED */
     case ACL_METHOD:
-	return aclMatchInteger((intlist *)ae->data, r->method);
+	return aclMatchInteger((intlist *)data, r->method);
 	/* NOTREACHED */
     case ACL_BROWSER:
 	browser = httpHeaderGetStr(&checklist->request->header, HDR_USER_AGENT);
 	if (NULL == browser)
 	    return 0;
-	return aclMatchRegex((relist *)ae->data, browser);
+	return aclMatchRegex((relist *)data, browser);
 	/* NOTREACHED */
     case ACL_REFERER_REGEX:
 	header = httpHeaderGetStr(&checklist->request->header, HDR_REFERER);
 	if (NULL == header)
 	    return 0;
-	return aclMatchRegex((relist *)ae->data, header);
+	return aclMatchRegex((relist *)data, header);
 	/* NOTREACHED */
-    case ACL_PROXY_AUTH:
     case ACL_PROXY_AUTH_REGEX:
 	if ((ti = aclAuthenticated(checklist)) != 1)
 	    return ti;
-	ti = aclMatchProxyAuth(ae->data, checklist->auth_user_request,
-	    checklist, ae->type);
+	ti = aclMatchProxyAuth(data, checklist->auth_user_request,
+	    checklist, aclType());
 	checklist->auth_user_request = NULL;
 	return ti;
 	/* NOTREACHED */
     case ACL_MAX_USER_IP:
 	if ((ti = aclAuthenticated(checklist)) != 1)
 	    return ti;
-	ti = aclMatchUserMaxIP(ae->data, checklist->auth_user_request,
+	ti = aclMatchUserMaxIP(data, checklist->auth_user_request,
 	    checklist->src_addr);
 	checklist->auth_user_request = NULL;
 	return ti;
 	/* NOTREACHED */
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
-	return aclMatchWordList((wordlist *)ae->data, checklist->snmp_community);
+	return aclMatchWordList((wordlist *)data, checklist->snmp_community);
 	/* NOTREACHED */
 #endif
     case ACL_SRC_ASN:
-	return asnMatchIp(ae->data, checklist->src_addr);
+	return asnMatchIp(data, checklist->src_addr);
 	/* NOTREACHED */
     case ACL_DST_ASN:
 	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (ia) {
 	    for (k = 0; k < (int) ia->count; k++) {
-		if (asnMatchIp(ae->data, ia->in_addrs[k]))
+		if (asnMatchIp(data, ia->in_addrs[k]))
 		    return 1;
 	    }
 	    return 0;
 	} else if (checklist->state[ACL_DST_ASN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3) ("asnMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		ae->name, r->host);
+		name, r->host);
 	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_NEEDED;
 	} else {
-	    return asnMatchIp(ae->data, no_addr);
+	    return asnMatchIp(data, no_addr);
 	}
 	return 0;
 	/* NOTREACHED */
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
-	return aclMatchArp(&ae->data, checklist->src_addr);
+	return aclMatchArp(&data, checklist->src_addr);
 	/* NOTREACHED */
 #endif
     case ACL_REQ_MIME_TYPE:
@@ -1801,7 +1608,7 @@ aclMatchAcl(acl * ae, ACLChecklist * checklist)
 	    HDR_CONTENT_TYPE);
 	if (NULL == header)
 	    header = "";
-	return aclMatchRegex((relist *)ae->data, header);
+	return aclMatchRegex((relist *)data, header);
 	/* NOTREACHED */
     case ACL_REP_MIME_TYPE:
 	if (!checklist->reply)
@@ -1809,55 +1616,63 @@ aclMatchAcl(acl * ae, ACLChecklist * checklist)
 	header = httpHeaderGetStr(&checklist->reply->header, HDR_CONTENT_TYPE);
 	if (NULL == header)
 	    header = "";
-	return aclMatchRegex((relist *)ae->data, header);
+	return aclMatchRegex((relist *)data, header);
 	/* NOTREACHED */
     case ACL_EXTERNAL:
-	return aclMatchExternal(ae->data, checklist);
+	return aclMatchExternal(data, checklist);
 	/* NOTREACHED */
 #if USE_SSL
     case ACL_USER_CERT:
-	return aclMatchUserCert(ae->data, checklist);
+	return aclMatchUserCert(data, checklist);
 	/* NOTREACHED */
     case ACL_CA_CERT:
-	return aclMatchCACert(ae->data, checklist);
+	return aclMatchCACert(data, checklist);
 	/* NOTREACHED */
 #endif
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	break;
+#if USE_IDENT
+    case ACL_IDENT:
+#endif
+    case ACL_DERIVED:
+    case ACL_PROXY_AUTH:
+	fatal ("overridden");
     }
     debug(28, 0) ("aclMatchAcl: '%s' has bad type %d\n",
-	ae->name, ae->type);
+	name, aclType());
     return 0;
 }
 
+bool
+ACLList::matches (ACLChecklist *checklist) const
+{
+    assert (_acl);
+    AclMatchedName = _acl->name;
+    debug(28, 3) ("ACLList::matches: checking %s%s\n",
+		  op ? null_string : "!", _acl->name);
+    if (_acl->checklistMatches(checklist) != op) {
+	return false;
+    }
+    return true;
+}
+
 int
-aclMatchAclList(const acl_list * list, ACLChecklist * checklist)
+ACLChecklist::matchAclList(const acl_list * head)
 {
     PROF_start(aclMatchAclList);
-    while (list) {
-	AclMatchedName = list->_acl->name;
-	debug(28, 3) ("aclMatchAclList: checking %s%s\n",
-	    list->op ? null_string : "!", list->_acl->name);
-	if (aclMatchAcl(list->_acl, checklist) != list->op) {
-	    debug(28, 3) ("aclMatchAclList: returning 0\n");
+    const acl_list *node = head;
+    while (node) {
+	if (!node->matches(this)) {
+	    debug(28, 3) ("aclmatchAclList: returning 0 (AND list entry failed to match)\n");
 	    PROF_stop(aclMatchAclList);
 	    return 0;
 	}
-	list = list->next;
+	node = node->next;
     }
-    debug(28, 3) ("aclMatchAclList: returning 1\n");
+    debug(28, 3) ("aclmatchAclList: returning 1 (AND list satisfied)\n");
     PROF_stop(aclMatchAclList);
     return 1;
-}
-
-static void
-aclCheckCleanup(ACLChecklist * checklist)
-{
-    /* Cleanup temporary stuff used by the ACL checking */
-    if (checklist->extacl_entry) {
-	cbdataReferenceDone(checklist->extacl_entry);
-    }
 }
 
 /* Warning: do not cbdata lock checklist here - it 
@@ -1871,135 +1686,195 @@ aclCheckFast(const acl_access * A, ACLChecklist * checklist)
     debug(28, 5) ("aclCheckFast: list: %p\n", A);
     while (A) {
 	allow = A->allow;
-	if (aclMatchAclList(A->aclList, checklist)) {
-	    aclCheckCleanup(checklist);
+	if (checklist->matchAclList(A->aclList)) {
 	    PROF_stop(aclCheckFast);
 	    return allow == ACCESS_ALLOWED;
 	}
 	A = A->next;
     }
     debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", allow == ACCESS_DENIED);
-    aclCheckCleanup(checklist);
     PROF_stop(aclCheckFast);
     return allow == ACCESS_DENIED;
 }
 
-static void
-aclCheck(ACLChecklist * checklist)
+allow_t const &
+ACLChecklist::currentAnswer() const
 {
-    allow_t allow = ACCESS_DENIED;
-    const acl_access *A;
-    int match;
-    ipcache_addrs *ia;
+    return allow_;
+}
+
+void
+ACLChecklist::currentAnswer(allow_t const newAnswer)
+{
+    allow_ = newAnswer;
+}
+    
+void
+ACLChecklist::check()
+{
+    /* deny if no rules present */
+    currentAnswer(ACCESS_DENIED);
     /* NOTE: This holds a cbdata reference to the current access_list
      * entry, not the whole list.
      */
-    while ((A = checklist->accessList) != NULL) {
+    while (accessList != NULL) {
 	/*
 	 * If the _acl_access is no longer valid (i.e. its been
 	 * freed because of a reconfigure), then bail on this
 	 * access check.  For now, return ACCESS_DENIED.
 	 */
-	if (!cbdataReferenceValid(A)) {
-	    cbdataReferenceDone(checklist->accessList);
+	if (!cbdataReferenceValid(accessList)) {
+	    cbdataReferenceDone(accessList);
 	    break;
 	}
-	debug(28, 3) ("aclCheck: checking '%s'\n", A->cfgline);
-	allow = A->allow;
-	match = aclMatchAclList(A->aclList, checklist);
-	if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEEDED) {
-	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
-	    ipcache_nbgethostbyname(checklist->request->host,
-		aclLookupDstIPDone, checklist);
+
+	checkAccessList();
+	if (asyncInProgress())
 	    return;
-	} else if (checklist->state[ACL_DST_ASN] == ACL_LOOKUP_NEEDED) {
-	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_PENDING;
-	    ipcache_nbgethostbyname(checklist->request->host,
-		aclLookupDstIPforASNDone, checklist);
-	    return;
-	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
-	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
-	    fqdncache_nbgethostbyaddr(checklist->src_addr,
-		aclLookupSrcFQDNDone, checklist);
-	    return;
-	} else if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEEDED) {
-	    ia = ipcacheCheckNumeric(checklist->request->host);
-	    if (ia == NULL) {
-		checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
-		return;
-	    }
-	    checklist->dst_addr = ia->in_addrs[0];
-	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
-	    fqdncache_nbgethostbyaddr(checklist->dst_addr,
-		aclLookupDstFQDNDone, checklist);
-	    return;
-	} else if (checklist->state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED) {
-	    debug(28, 3)
-		("aclCheck: checking password via authenticator\n");
-	    aclLookupProxyAuthStart(checklist);
-	    checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_PENDING;
-	    return;
-	} else if (checklist->state[ACL_PROXY_AUTH] == ACL_PROXY_AUTH_NEEDED) {
-	    /* Client is required to resend the request with correct authentication
-	     * credentials. (This may be part of a stateful auth protocol.
-	     * The request is denied.
+
+	if (finished()) {
+	    /*
+	     * We are done.  Either the request
+	     * is allowed, denied, requires authentication.
 	     */
-	    debug(28, 6) ("aclCheck: requiring Proxy Auth header.\n");
-	    allow = ACCESS_REQ_PROXY_AUTH;
-	    match = -1;
-	}
-#if USE_IDENT
-	else if (checklist->state[ACL_IDENT] == ACL_LOOKUP_NEEDED) {
-	    debug(28, 3) ("aclCheck: Doing ident lookup\n");
-	    if (checklist->conn && cbdataReferenceValid(checklist->conn)) {
-		identStart(&checklist->conn->me, &checklist->conn->peer,
-		    aclLookupIdentDone, checklist);
-		checklist->state[ACL_IDENT] = ACL_LOOKUP_PENDING;
-		return;
-	    } else {
-		debug(28, 1) ("aclCheck: Can't start ident lookup. No client connection\n");
-		cbdataReferenceDone(checklist->conn);
-		allow = ACCESS_DENIED;
-		match = -1;
-	    }
-	}
-#endif
-	else if (checklist->state[ACL_EXTERNAL] == ACL_LOOKUP_NEEDED) {
-	    acl *acl = aclFindByName(AclMatchedName);
-	    externalAclLookup(checklist, acl->data, aclLookupExternalDone, checklist);
+	    debug(28, 3) ("ACLChecklist::check: match found, returning %d\n", currentAnswer());
+	    cbdataReferenceDone(accessList); /* A */
+	    checkCallback(currentAnswer());
+	    /* From here on in, this may be invalid */
 	    return;
 	}
 	/*
-	 * We are done with this _acl_access entry.  Either the request
-	 * is allowed, denied, requires authentication, or we move on to
-	 * the next entry.
+	 * Reference the next access entry
 	 */
-	if (match) {
-	    debug(28, 3) ("aclCheck: match found, returning %d\n", allow);
-	    cbdataReferenceDone(checklist->accessList);		/* A */
-	    checklist->checkCallback(allow);
-	    return;
-	}
-	/*
-	 * Reference the next _acl_access entry
-	 */
-	checklist->accessList = cbdataReference(A->next);
+	const acl_access *A = accessList;
+	accessList = cbdataReference(accessList->next);
 	cbdataReferenceDone(A);
     }
-    debug(28, 3) ("aclCheck: NO match found, returning %d\n", allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
-    checklist->checkCallback(allow != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
+    /* dropped off the end of the list */
+    debug(28, 3) ("ACLChecklist::check: NO match found, returning %d\n", 
+		  currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
+    checkCallback(currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
+}
+
+bool
+ACLChecklist::asyncInProgress() const
+{
+    return async_;
 }
 
 void
-aclChecklistFree(ACLChecklist * checklist)
+ACLChecklist::asyncInProgress(bool const newAsync)
 {
-    if (checklist->request)
-	requestUnlink(checklist->request);
-    checklist->request = NULL;
-    cbdataReferenceDone(checklist->conn);
-    cbdataReferenceDone(checklist->accessList);
-    aclCheckCleanup(checklist);
-    delete checklist;
+    assert (!finished());
+    async_ = newAsync;
+    debug (28,3)("ACLChecklist::asyncInProgress: async set to %d\n",async_);
+}
+
+bool
+ACLChecklist::finished() const
+{
+    return finished_;
+}
+
+void
+ACLChecklist::markFinished()
+{
+    assert (!finished());
+    finished_ = true;
+    debug (28,3)("checklist processing finished\n");
+}
+
+void
+ACLChecklist::checkAccessList()
+{
+    debug(28, 3) ("ACLChecklist::checkAccessList: checking '%s'\n", accessList->cfgline);
+    /* what is our result on a match? */
+    currentAnswer(accessList->allow);
+    /* does the current AND clause match */
+    int match = matchAclList(accessList->aclList);
+    if (match)
+	markFinished();
+    /* Should be else, but keep the exact same flow as before */
+    checkForAsync();
+}
+
+void
+ACLChecklist::checkForAsync()
+{
+    /* TODO: introduce a state object, with states:
+     * synccheck -- null op
+     * asyncneeded -- async lookup needed
+     * finished -- answer set.
+     */
+    /* check for async lookups needed. */
+    if (asyncState() != NullState::Instance()) {
+	/* If a state object is here, use it.
+	 * When all cases are converted, the if goes away and it
+	 * becomes unconditional.
+	 * RBC 02 2003
+	 */
+	asyncState()->checkForAsync(this);
+    } else if (state[ACL_DST_ASN] == ACL_LOOKUP_NEEDED) {
+	state[ACL_DST_ASN] = ACL_LOOKUP_PENDING;
+	ipcache_nbgethostbyname(request->host,
+				aclLookupDstIPforASNDone, this);
+    } else if (state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
+	state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
+	fqdncache_nbgethostbyaddr(src_addr,
+				  aclLookupSrcFQDNDone, this);
+    } else if (state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEEDED) {
+	ipcache_addrs *ia;
+	ia = ipcacheCheckNumeric(request->host);
+	if (ia == NULL) {
+	    state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
+	} else {
+	    dst_addr = ia->in_addrs[0];
+	    state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
+	    fqdncache_nbgethostbyaddr(dst_addr,
+				      aclLookupDstFQDNDone, this);
+	}
+    } else if (state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED) {
+	debug(28, 3)
+	  ("ACLChecklist::checkForAsync: checking password via authenticator\n");
+	aclLookupProxyAuthStart(this);
+	state[ACL_PROXY_AUTH] = ACL_LOOKUP_PENDING;
+    } else if (state[ACL_PROXY_AUTH] == ACL_PROXY_AUTH_NEEDED) {
+	/* Client is required to resend the request with correct authentication
+	 * credentials. (This may be part of a stateful auth protocol.
+	 * The request is denied.
+	 */
+	debug(28, 6) ("ACLChecklist::checkForAsync: requiring Proxy Auth header.\n");
+	currentAnswer(ACCESS_REQ_PROXY_AUTH);
+	markFinished();
+	return;
+#if USE_IDENT
+    } else if (state[ACL_IDENT] == ACL_LOOKUP_NEEDED) {
+	debug(28, 3) ("ACLChecklist::checkForAsync: Doing ident lookup\n");
+	if (conn() && cbdataReferenceValid(conn())) {
+	    identStart(&conn()->me, &conn()->peer,
+		       aclLookupIdentDone, this);
+	    state[ACL_IDENT] = ACL_LOOKUP_PENDING;
+	} else {
+	    debug(28, 1) ("ACLChecklist::checkForAsync: Can't start ident lookup. No client connection\n");
+	    currentAnswer(ACCESS_DENIED);
+	    markFinished();
+	    return;
+	}
+#endif
+    } else if (state[ACL_EXTERNAL] == ACL_LOOKUP_NEEDED) {
+	acl *acl = aclFindByName(AclMatchedName);
+	assert (acl->aclType() == ACL_EXTERNAL);
+	acl->startExternal(this);
+    } else {
+	return;
+    }
+    asyncInProgress(true);
+}
+
+void
+ACL::startExternal(ACLChecklist *checklist)
+{
+    externalAclLookup(checklist, data, aclLookupExternalDone, checklist);
 }
 
 void
@@ -2014,16 +1889,16 @@ ACLChecklist::checkCallback(allow_t answer)
 	/* the checklist lock */
 	authenticateAuthUserRequestUnlock(auth_user_request);
 	/* it might have been connection based */
-	assert(conn);
-	conn->auth_user_request = NULL;
-	conn->auth_type = AUTH_BROKEN;
+	assert(conn());
+	conn()->auth_user_request = NULL;
+	conn()->auth_type = AUTH_BROKEN;
 	auth_user_request = NULL;
     }
     callback_ = callback;
     callback = NULL;
     if (cbdataReferenceValidDone(callback_data, &cbdata_))
 	callback_(answer, cbdata_);
-    aclChecklistFree(this);
+    delete this;
 }
 
 #if USE_IDENT
@@ -2043,26 +1918,20 @@ aclLookupIdentDone(const char *ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (cbdataReferenceValid(checklist->conn) && !checklist->conn->rfc931[0])
-	xstrncpy(checklist->conn->rfc931, checklist->rfc931, USER_IDENT_SZ);
-    aclCheck(checklist);
+    if (cbdataReferenceValid(checklist->conn()) && !checklist->conn()->rfc931[0])
+	xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
+    checklist->asyncInProgress(false);
+    checklist->check();
 }
 #endif
-
-static void
-aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
-{
-    ACLChecklist *checklist = (ACLChecklist *)data;
-    checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
-    aclCheck(checklist);
-}
 
 static void
 aclLookupDstIPforASNDone(const ipcache_addrs * ia, void *data)
 {
     ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_DST_ASN] = ACL_LOOKUP_DONE;
-    aclCheck(checklist);
+    checklist->asyncInProgress(false);
+    checklist->check();
 }
 
 static void
@@ -2070,7 +1939,8 @@ aclLookupSrcFQDNDone(const char *fqdn, void *data)
 {
     ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
-    aclCheck(checklist);
+    checklist->asyncInProgress(false);
+    checklist->check();
 }
 
 static void
@@ -2078,7 +1948,8 @@ aclLookupDstFQDNDone(const char *fqdn, void *data)
 {
     ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
-    aclCheck(checklist);
+    checklist->asyncInProgress(false);
+    checklist->check();
 }
 
 static void
@@ -2088,18 +1959,19 @@ aclLookupProxyAuthDone(void *data, char *result)
     checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
     if (result != NULL)
 	fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
-    if (!authenticateValidateUser(checklist->auth_user_request) || checklist->conn == NULL) {
+    if (!authenticateValidateUser(checklist->auth_user_request) || checklist->conn() == NULL) {
 	/* credentials could not be checked either way
 	 * restart the whole process */
 	/* OR the connection was closed, there's no way to continue */
 	authenticateAuthUserRequestUnlock(checklist->auth_user_request);
-	if (checklist->conn) {
-	    checklist->conn->auth_user_request = NULL;
-	    checklist->conn->auth_type = AUTH_BROKEN;
+	if (checklist->conn()) {
+	    checklist->conn()->auth_user_request = NULL;
+	    checklist->conn()->auth_type = AUTH_BROKEN;
 	}
 	checklist->auth_user_request = NULL;
     }
-    aclCheck(checklist);
+    checklist->asyncInProgress(false);
+    checklist->check();
 }
 
 static void
@@ -2108,7 +1980,8 @@ aclLookupExternalDone(void *data, void *result)
     ACLChecklist *checklist = (ACLChecklist *)data;
     checklist->state[ACL_EXTERNAL] = ACL_LOOKUP_DONE;
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
-    aclCheck(checklist);
+    checklist->asyncInProgress(false);
+    checklist->check();
 }
 
 CBDATA_CLASS_INIT(ACLChecklist);
@@ -2142,14 +2015,18 @@ ACLChecklist::deleteSelf() const
 
 ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
   reply (NULL),
-  conn (NULL),
   auth_user_request (NULL)
 #if SQUID_SNMP
     ,snmp_community(NULL)
 #endif
   , callback (NULL),
   callback_data (NULL),
-  extacl_entry (NULL)
+  extacl_entry (NULL),
+  conn_(NULL),
+  async_(false),
+  finished_(false),
+  allow_(ACCESS_DENIED),
+  state_(NullState::Instance())
 {
     memset (&src_addr, '\0', sizeof (struct in_addr));
     memset (&dst_addr, '\0', sizeof (struct in_addr));
@@ -2160,11 +2037,32 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
 
 ACLChecklist::~ACLChecklist()
 {
+    assert (!asyncInProgress());
+    if (extacl_entry)
+	cbdataReferenceDone(extacl_entry);
+    if (request)
+	requestUnlink(request);
+    request = NULL;
+    cbdataReferenceDone(conn_);
+    cbdataReferenceDone(accessList);
+}
+
+ConnStateData *
+ACLChecklist::conn()
+{
+    return  conn_;
+}
+
+void
+ACLChecklist::conn(ConnStateData *aConn)
+{
+    assert (conn() == NULL);
+    conn_ = aConn;
 }
 
 /*
  * Any ACLChecklist created by aclChecklistCreate() must eventually be
- * freed by aclChecklistFree().  There are two common cases:
+ * freed by ACLChecklist::operator delete().  There are two common cases:
  *
  * A) Using aclCheckFast():  The caller creates the ACLChecklist using
  *    aclChecklistCreate(), checks it using aclCheckFast(), and frees it
@@ -2208,7 +2106,7 @@ aclNBCheck(ACLChecklist * checklist, PF * callback, void *callback_data)
 {
     checklist->callback = callback;
     checklist->callback_data = cbdataReference(callback_data);
-    aclCheck(checklist);
+    checklist->check();
 }
 
 /*********************/
@@ -2237,58 +2135,42 @@ aclDestroyRegexList(relist * data)
     }
 }
 
-static void
-aclFreeIpData(void * &p)
-{
-    memFree(p, MEM_ACL_IP_DATA);
-}
-
-static void
-aclFreeUserData(void *data)
-{
-    acl_user_data *d = (acl_user_data *)data;
-    if (d->names)
-	d->names->destroy(xRefFree);
-    delete d;
-}
-
-
 void
 aclDestroyAcls(acl ** head)
 {
-    acl *a = NULL;
-    acl *next = NULL;
-    for (a = *head; a; a = next) {
+    ACL *next = NULL;
+    for (acl *a = *head; a; a = next) {
 	next = a->next;
-	debug(28, 3) ("aclDestroyAcls: '%s'\n", a->cfgline);
-	switch (a->type) {
-	case ACL_SRC_IP:
-	case ACL_DST_IP:
-	case ACL_MY_IP:
-	    splay_destroy((splayNode *)a->data, aclFreeIpData);
-	    break;
+	a->deleteSelf();
+    }
+    *head = NULL;
+}
+
+ACL::~ACL()
+{
+    debug(28, 3) ("aclDestroyAcls: '%s'\n", cfgline);
+    switch (aclType()) {
 #if USE_ARP_ACL
 	case ACL_SRC_ARP:
 #endif
 	case ACL_DST_DOMAIN:
 	case ACL_SRC_DOMAIN:
-	    splay_destroy((splayNode *)a->data, xRefFree);
+	    splay_destroy((splayNode *)data, xRefFree);
 	    break;
 #if SQUID_SNMP
 	case ACL_SNMP_COMMUNITY:
-	    wordlistDestroy((wordlist **) & a->data);
+	    wordlistDestroy((wordlist **) & data);
 	    break;
 #endif
+	/* Destroyed in the children */
 #if USE_IDENT
 	case ACL_IDENT:
-	    aclFreeUserData(a->data);
-	    break;
 #endif
+	case ACL_DERIVED:
 	case ACL_PROXY_AUTH:
-	    aclFreeUserData(a->data);
 	    break;
 	case ACL_TIME:
-	    aclDestroyTimeList((acl_time_data *)a->data);
+	    aclDestroyTimeList((acl_time_data *)data);
 	    break;
 #if USE_IDENT
 	case ACL_IDENT_REGEX:
@@ -2302,7 +2184,7 @@ aclDestroyAcls(acl ** head)
 	case ACL_DST_DOM_REGEX:
 	case ACL_REP_MIME_TYPE:
 	case ACL_REQ_MIME_TYPE:
-	    aclDestroyRegexList((relist *)a->data);
+	    aclDestroyRegexList((relist *)data);
 	    break;
 	case ACL_PROTO:
 	case ACL_METHOD:
@@ -2312,33 +2194,30 @@ aclDestroyAcls(acl ** head)
 	case ACL_NETDB_SRC_RTT:
 #endif
 	case ACL_MAXCONN:
-	    intlistDestroy((intlist **) & a->data);
+	    intlistDestroy((intlist **) & data);
 	    break;
 	case ACL_MAX_USER_IP:
-	    aclDestroyUserMaxIP(&a->data);
+	    aclDestroyUserMaxIP(&data);
 	    break;
 	case ACL_URL_PORT:
 	case ACL_MY_PORT:
-	    aclDestroyIntRange((intrange *)a->data);
+	    aclDestroyIntRange((intrange *)data);
 	    break;
 	case ACL_EXTERNAL:
-	    aclDestroyExternal(&a->data);
+	    aclDestroyExternal(&data);
 	    break;
 #if USE_SSL
 	case ACL_USER_CERT:
 	case ACL_CA_CERT:
-	    aclDestroyCertList(&a->data);
+	    aclDestroyCertList(&data);
 	    break;
 #endif
 	case ACL_NONE:
 	case ACL_ENUM_MAX:
-	    debug(28, 1) ("aclDestroyAcls: no case for ACL type %d\n", a->type);
+	    debug(28, 1) ("aclDestroyAcls: no case for ACL type %d\n", aclType());
 	    break;
 	}
-	safe_free(a->cfgline);
-	memFree(a, MEM_ACL);
-    }
-    *head = NULL;
+	safe_free(cfgline);
 }
 
 void
@@ -2347,7 +2226,7 @@ aclDestroyAclList(acl_list ** head)
     acl_list *l;
     for (l = *head; l; l = *head) {
 	*head = l->next;
-	memFree(l, MEM_ACL_LIST);
+	l->deleteSelf();
     }
 }
 
@@ -2435,158 +2314,6 @@ aclHostDomainCompare( void *const &a, void * const &b)
     const char *h = (const char *)a;
     const char *d = (const char *)b;
     return matchDomainName(h, d);
-}
-
-/*
- * aclIpDataToStr - print/format an acl_ip_data structure for
- * debugging output.
- */
-static void
-aclIpDataToStr(const acl_ip_data * ip, char *buf, int len)
-{
-    char b1[20];
-    char b2[20];
-    char b3[20];
-    snprintf(b1, 20, "%s", inet_ntoa(ip->addr1));
-    if (ip->addr2.s_addr != any_addr.s_addr)
-	snprintf(b2, 20, "-%s", inet_ntoa(ip->addr2));
-    else
-	b2[0] = '\0';
-    if (ip->mask.s_addr != no_addr.s_addr)
-	snprintf(b3, 20, "/%s", inet_ntoa(ip->mask));
-    else
-	b3[0] = '\0';
-    snprintf(buf, len, "%s%s%s", b1, b2, b3);
-}
-
-/*
- * aclIpNetworkCompare2 - The guts of the comparison for IP ACLs.
- * The first argument (a) is a "host" address, i.e. the IP address
- * of a cache client.  The second argument (b) is a "network" address
- * that might have a subnet and/or range.  We mask the host address
- * bits with the network subnet mask.
- */
-static int
-aclIpNetworkCompare2(acl_ip_data * const &p, acl_ip_data * const &q)
-{
-    struct in_addr A = p->addr1;
-    const struct in_addr B = q->addr1;
-    const struct in_addr C = q->addr2;
-    int rc = 0;
-    A.s_addr &= q->mask.s_addr;	/* apply netmask */
-    if (C.s_addr == 0) {	/* single address check */
-	if (ntohl(A.s_addr) > ntohl(B.s_addr))
-	    rc = 1;
-	else if (ntohl(A.s_addr) < ntohl(B.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    } else {			/* range address check */
-	if (ntohl(A.s_addr) > ntohl(C.s_addr))
-	    rc = 1;
-	else if (ntohl(A.s_addr) < ntohl(B.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    }
-    return rc;
-}
-
-/*
- * aclIpNetworkCompare - Compare two acl_ip_data entries.  Strictly
- * used by the splay insertion routine.  It emits a warning if it
- * detects a "collision" or overlap that would confuse the splay
- * sorting algorithm.  Much like aclDomainCompare.
- */
-static int
-aclIpNetworkCompare(void * const & a, void * const &b)
-{
-    acl_ip_data * const n1 = (acl_ip_data *const)b;
-    acl_ip_data * const n2 = (acl_ip_data *const)a;
-    int ret;
-    ret = aclIpNetworkCompare2(n1, n2);
-    if (ret != 0) {
-	acl_ip_data * const n3 = n2;
-	acl_ip_data * const n4 = n1;
-	ret = aclIpNetworkCompare2(n3, n4);
-    }
-    if (ret == 0) {
-	char buf_n1[60];
-	char buf_n2[60];
-	char buf_a[60];
-	aclIpDataToStr(n1, buf_n1, 60);
-	aclIpDataToStr(n2, buf_n2, 60);
-	aclIpDataToStr((acl_ip_data *) a, buf_a, 60);
-	/* TODO: this warning may display the wrong way around */
-	debug(28, 0) ("WARNING: '%s' is a subnetwork of "
-	    "'%s'\n", buf_n1, buf_n2);
-	debug(28, 0) ("WARNING: because of this '%s' is ignored "
-	    "to keep splay tree searching predictable\n", buf_a);
-	debug(28, 0) ("WARNING: You should probably remove '%s' "
-	    "from the ACL named '%s'\n", buf_n1, AclMatchedName);
-    }
-    return ret;
-}
-
-/*
- * aclIpAddrNetworkCompare - The comparison function used for ACL
- * matching checks.  The first argument (a) is a "host" address,
- * i.e.  the IP address of a cache client.  The second argument (b)
- * is an entry in some address-based access control element.  This
- * function is called via aclMatchIp() and the splay library.
- */
-static int
-aclIpAddrNetworkCompare(void *const &a, void * const &b)
-{
-    return aclIpNetworkCompare2((acl_ip_data * const)a, (acl_ip_data * const)b);
-}
-
-static void
-aclDumpUserListWalkee(char * const & node_data, void *outlist)
-{
-    /* outlist is really a wordlist ** */
-    wordlistAdd((wordlist **)outlist, (char const *)node_data);
-}
-
-static wordlist *
-aclDumpUserList(acl_user_data * data)
-{
-    wordlist *wl = NULL;
-    if (data->flags.case_insensitive)
-	wordlistAdd(&wl, "-i");
-    /* damn this is VERY inefficient for long ACL lists... filling
-     * a wordlist this way costs Sum(1,N) iterations. For instance
-     * a 1000-elements list will be filled in 499500 iterations.
-     */
-    if (data->flags.required)
-	wordlistAdd(&wl, "REQUIRED");
-    else if (data->names)
-	data->names->walk(aclDumpUserListWalkee, &wl);
-    return wl;
-}
-
-static void
-aclDumpIpListWalkee(void * const & node, void *state)
-{
-    acl_ip_data *ip = (acl_ip_data *)node;
-    MemBuf mb;
-    wordlist **W = (wordlist **)state;
-    memBufDefInit(&mb);
-    memBufPrintf(&mb, "%s", inet_ntoa(ip->addr1));
-    if (ip->addr2.s_addr != any_addr.s_addr)
-	memBufPrintf(&mb, "-%s", inet_ntoa(ip->addr2));
-    if (ip->mask.s_addr != no_addr.s_addr)
-	memBufPrintf(&mb, "/%s", inet_ntoa(ip->mask));
-    wordlistAdd(W, mb.buf);
-    memBufClean(&mb);
-}
-
-static wordlist *
-aclDumpIpList(void *data)
-{
-    wordlist *w = NULL;
-    splay_walk((splayNode *)data, aclDumpIpListWalkee, &w);
-    return w;
 }
 
 static void
@@ -2688,31 +2415,35 @@ aclDumpMethodList(intlist * data)
 }
 
 wordlist *
-aclDumpGeneric(const acl * a)
+ACL::dumpGeneric () const
 {
-    debug(28, 3) ("aclDumpGeneric: %s type %d\n", a->name, a->type);
-    switch (a->type) {
-    case ACL_SRC_IP:
-    case ACL_DST_IP:
-    case ACL_MY_IP:
-	return aclDumpIpList(a->data);
+    debug(28, 3) ("ACL::dumpGeneric: %s type %d\n", name, aclType());
+    return dump();
+}
+
+wordlist *
+ACL::dump() const
+{
+    switch (aclType()) {
     case ACL_SRC_DOMAIN:
     case ACL_DST_DOMAIN:
-	return aclDumpDomainList(a->data);
+	return aclDumpDomainList(data);
 #if SQUID_SNMP
     case ACL_SNMP_COMMUNITY:
-	return wordlistDup((wordlist *)a->data);
+	return wordlistDup((wordlist *)data);
+#endif
+#if USE_IDENT
+    case ACL_IDENT_REGEX:
+	return aclDumpRegexList((relist *)data);
 #endif
 #if USE_IDENT
     case ACL_IDENT:
-	return aclDumpUserList((acl_user_data *)a->data);
-    case ACL_IDENT_REGEX:
-	return aclDumpRegexList((relist *)a->data);
 #endif
+    case ACL_DERIVED:
     case ACL_PROXY_AUTH:
-	return aclDumpUserList((acl_user_data *)a->data);
+	fatal ("unused");
     case ACL_TIME:
-	return aclDumpTimeSpecList((acl_time_data *)a->data);
+	return aclDumpTimeSpecList((acl_time_data *)data);
     case ACL_PROXY_AUTH_REGEX:
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
@@ -2722,36 +2453,36 @@ aclDumpGeneric(const acl * a)
     case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:
     case ACL_REP_MIME_TYPE:
-	return aclDumpRegexList((relist *)a->data);
+	return aclDumpRegexList((relist *)data);
     case ACL_SRC_ASN:
     case ACL_MAXCONN:
     case ACL_DST_ASN:
-	return aclDumpIntlistList((intlist *)a->data);
+	return aclDumpIntlistList((intlist *)data);
     case ACL_MAX_USER_IP:
-	return aclDumpUserMaxIP(a->data);
+	return aclDumpUserMaxIP(data);
     case ACL_URL_PORT:
     case ACL_MY_PORT:
-	return aclDumpIntRangeList((intrange *)a->data);
+	return aclDumpIntRangeList((intrange *)data);
     case ACL_PROTO:
-	return aclDumpProtoList((intlist *)a->data);
+	return aclDumpProtoList((intlist *)data);
     case ACL_METHOD:
-	return aclDumpMethodList((intlist *)a->data);
+	return aclDumpMethodList((intlist *)data);
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
-	return aclDumpArpList(a->data);
+	return aclDumpArpList(data);
 #endif
     case ACL_EXTERNAL:
-	return aclDumpExternal(a->data);
+	return aclDumpExternal(data);
 #if USE_SSL
     case ACL_USER_CERT:
     case ACL_CA_CERT:
-	return aclDumpCertList(a->data);
+	return aclDumpCertList(data);
 #endif
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	break;
     }
-    debug(28, 1) ("aclDumpGeneric: no case for ACL type %d\n", a->type);
+    debug(28, 1) ("ACL::dumpGeneric: no case for ACL type %d\n", aclType());
     return NULL;
 }
 
@@ -2764,16 +2495,31 @@ aclDumpGeneric(const acl * a)
 int
 aclPurgeMethodInUse(acl_access * a)
 {
+    return a->containsPURGE();
+}
+
+bool
+acl_access::containsPURGE() const
+{
+    acl_access const *a = this;
     acl_list *b;
     for (; a; a = a->next) {
 	for (b = a->aclList; b; b = b->next) {
-	    if (ACL_METHOD != b->_acl->type)
+	    if (ACL_METHOD != b->_acl->aclType())
 		continue;
-	    if (aclMatchInteger((intlist *)b->_acl->data, METHOD_PURGE))
-		return 1;
+	    if (b->_acl->containsPURGE())
+		return true;
 	}
     }
-    return 0;
+    return false;
+}
+
+bool
+ACL::containsPURGE() const
+{
+    if (aclMatchInteger((intlist *)data, METHOD_PURGE))
+	return true;
+    return false;
 }
 
 
@@ -3128,29 +2874,6 @@ aclDumpArpList(void *data)
 
 /* to be split into separate files in the future */
 
-MemPool *acl_user_data::Pool(NULL);
-void *
-acl_user_data::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (acl_user_data));
-    if (!Pool)
-	Pool = memPoolCreate("acl_user_data", sizeof (acl_user_data));
-    return memPoolAlloc(Pool);
-}
-
-void
-acl_user_data::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-void
-acl_user_data::deleteSelf() const
-{
-    delete this;
-}
-
 #if USE_SSL
 MemPool *acl_cert_data::Pool(NULL);
 void *
@@ -3175,3 +2898,141 @@ acl_cert_data::deleteSelf() const
     delete this;
 }
 #endif /* USE_SSL */
+
+MemPool *ACLList::Pool(NULL);
+void *
+ACLList::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (ACLList));
+    if (!Pool)
+	Pool = memPoolCreate("ACLList", sizeof (ACLList));
+    return memPoolAlloc(Pool);
+}
+
+void
+ACLList::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+ACLList::deleteSelf() const
+{
+    delete this;
+}
+
+
+CBDATA_CLASS_INIT(acl_access);
+
+void *
+acl_access::operator new (size_t)
+{
+    CBDATA_INIT_TYPE(acl_access);
+    acl_access *result = cbdataAlloc(acl_access);
+    return result;
+}
+
+void
+acl_access::operator delete (void *address)
+{
+    acl_access *t = static_cast<acl_access *>(address);
+    cbdataFree(t);
+}
+
+void
+acl_access::deleteSelf () const
+{
+    delete this;
+}
+
+void
+ACLChecklist::AsyncState::changeState (ACLChecklist *checklist, AsyncState *newState) const
+{
+    checklist->changeState(newState);
+}
+
+ACLChecklist::NullState *
+ACLChecklist::NullState::Instance()
+{
+    return &_instance;
+}
+
+void
+ACLChecklist::NullState::checkForAsync(ACLChecklist *) const
+{
+}
+
+ACLChecklist::NullState ACLChecklist::NullState::_instance;
+
+void
+ACLChecklist::changeState (AsyncState *newState)
+{
+    /* only change from null to active and back again,
+     * not active to active.
+     * relax this once conversion to states is complete
+     * RBC 02 2003
+     */
+    assert (state_ == NullState::Instance() || newState == NullState::Instance());
+    state_ = newState;
+}
+
+ACLChecklist::AsyncState *
+ACLChecklist::asyncState() const
+{
+    return state_;
+}
+
+ACL::Prototype::Prototype() : prototype (NULL), typeString (NULL) {}
+
+ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype (aPrototype), typeString (aType) 
+{
+    registerMe ();
+}
+
+Vector<ACL::Prototype const *> * ACL::Prototype::Registry;
+void *ACL::Prototype::Initialized;
+
+bool
+ACL::Prototype::Registered(char const *aType) 
+{
+    for (iterator i = Registry->begin(); i != Registry->end(); ++i)
+	if (!strcmp (aType, (*i)->typeString))
+	    return true;
+    return false;
+}
+
+void
+ACL::Prototype::registerMe ()
+{
+    if (!Registry || (Initialized != ((char *)Registry - 5))  ) {
+	/* TODO: extract this */
+	/* Not initialised */
+	Registry = new Vector <ACL::Prototype const *>;
+	Initialized = (char *)Registry - 5;
+    }
+    if (Registered (typeString))
+	fatalf ("Attempt to register %s twice", typeString);
+    Registry->push_back (this);
+}
+
+ACL::Prototype::~Prototype() 
+{
+    debug (28,2)("ACL::Prototype::~Prototype: TODO: unregister me\n");
+}
+
+ACL *
+ACL::Prototype::Factory (char const *typeToClone)
+{
+    for (iterator i = Registry->begin(); i != Registry->end(); ++i)
+	if (!strcmp (typeToClone, (*i)->typeString)) 
+	    return (*i)->prototype->clone();
+    return NULL;
+}
+
+ACL *
+ACL::clone()const
+{
+    fatal ("Cannot clone base class");
+    return NULL;
+}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayConfig.cc,v 1.2 2003/02/06 09:57:35 robertc Exp $
+ * $Id: DelayConfig.cc,v 1.3 2003/02/12 06:10:58 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -46,6 +46,7 @@
 #include "DelayPools.h"
 #include "DelayPool.h"
 #include "Store.h"
+#include "ACL.h"
 
 void
 DelayConfig::parsePoolCount()

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.64 2003/01/23 00:37:22 robertc Exp $
+ * $Id: ident.cc,v 1.65 2003/02/12 06:11:04 robertc Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -34,8 +34,6 @@
  */
 
 #include "squid.h"
-
-#if USE_IDENT
 
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50
@@ -238,5 +236,3 @@ identInit(void)
 	hashPrime(Squid_MaxFD / 8),
 	hash4);
 }
-
-#endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.3 2003/02/05 10:37:14 robertc Exp $
+ * $Id: http_range_test.cc,v 1.4 2003/02/12 06:11:41 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -104,10 +104,13 @@ int aclCheckFast(const acl_access *A, ACLChecklist *)
     return 0;
 }
 
-SQUIDCEXTERN void aclChecklistFree(ACLChecklist *)
+void
+ACLChecklist::operator delete (void *address)
 {
-    fatal ("dummy function\n");
+    safe_free( address);
 }
+
+ACLChecklist::~ACLChecklist(){}
 
 SQUIDCEXTERN void fatal (char const *msg)
 {

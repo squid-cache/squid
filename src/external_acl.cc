@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.24 2003/01/28 01:29:34 robertc Exp $
+ * $Id: external_acl.cc,v 1.25 2003/02/12 06:11:03 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -45,6 +45,7 @@
 #include "Store.h"
 #include "fde.h"
 #include "ACLChecklist.h"
+#include "ACL.h"
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
@@ -474,8 +475,8 @@ aclMatchExternal(void *data, ACLChecklist * ch)
      * piggy backs on ident, and may fail if there is child proxies..
      * Register the username for logging purposes
      */
-    if (entry->user && cbdataReferenceValid(ch->conn) && !ch->conn->rfc931[0])
-	xstrncpy(ch->conn->rfc931, entry->user, USER_IDENT_SZ);
+    if (entry->user && cbdataReferenceValid(ch->conn()) && !ch->conn()->rfc931[0])
+	xstrncpy(ch->conn()->rfc931, entry->user, USER_IDENT_SZ);
     return result;
 }
 
