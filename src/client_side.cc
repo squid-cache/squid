@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.199 1998/01/31 05:31:54 wessels Exp $
+ * $Id: client_side.cc,v 1.200 1998/02/02 19:50:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1480,16 +1480,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     /* see if we running in Config2.Accel.on, if so got to convert it to URL */
     if (Config2.Accel.on && *url == '/') {
 	/* prepend the accel prefix */
-	if (vhost_mode) {
-	    /* Put the local socket IP address as the hostname */
-	    url_sz = strlen(url) + 32 + Config.appendDomainLen;
-	    http->uri = xcalloc(url_sz, 1);
-	    snprintf(http->uri, url_sz, "http://%s:%d%s",
-		inet_ntoa(http->conn->me.sin_addr),
-		(int) Config.Accel.port,
-		url);
-	    debug(12, 5) ("VHOST REWRITE: '%s'\n", http->uri);
-	} else if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
+	if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
 	    /* If a Host: header was specified, use it to build the URL 
 	     * instead of the one in the Config file. */
 	    /*
@@ -1505,6 +1496,15 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    http->uri = xcalloc(url_sz, 1);
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		t, (int) Config.Accel.port, url);
+	} else if (vhost_mode) {
+	    /* Put the local socket IP address as the hostname */
+	    url_sz = strlen(url) + 32 + Config.appendDomainLen;
+	    http->uri = xcalloc(url_sz, 1);
+	    snprintf(http->uri, url_sz, "http://%s:%d%s",
+		inet_ntoa(http->conn->me.sin_addr),
+		(int) Config.Accel.port,
+		url);
+	    debug(12, 5) ("VHOST REWRITE: '%s'\n", http->uri);
 	} else {
 	    url_sz = strlen(Config2.Accel.prefix) + strlen(url) +
 		Config.appendDomainLen + 1;
@@ -1614,7 +1614,7 @@ clientReadRequest(int fd, void *data)
 	     * data to the beginning
 	     */
 	    if (conn->in.offset > 0)
-		memmove(conn->in.buf, conn->in.buf + http->req_sz, conn->in.offset);
+		xmemmove(conn->in.buf, conn->in.buf + http->req_sz, conn->in.offset);
 	    /* add to the client request queue */
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
