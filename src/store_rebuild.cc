@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.45 1998/08/05 08:19:56 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.46 1998/08/24 22:06:48 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -100,6 +100,7 @@ static StoreEntry *storeAddDiskRestore(const cache_key * key,
     u_num32 refcount,
     u_num32 flags,
     int clean);
+static AIOCB storeValidateComplete;
 
 static int
 storeRebuildFromDirectory(rebuild_dir * d)
@@ -665,13 +666,13 @@ storeValidate(StoreEntry * e, STVLDCB * callback, void *callback_data, void *tag
      * not specified;
      */
     x = stat(path, sb);
-    storeValidateComplete(ctrlp, x, errno);
+    storeValidateComplete(-1, ctrlp, x, errno);
 #endif
     return;
 }
 
 void
-storeValidateComplete(void *data, int retcode, int errcode)
+storeValidateComplete(int fd, void *data, int retcode, int errcode)
 {
     valid_ctrl_t *ctrlp = data;
     struct stat *sb = ctrlp->sb;

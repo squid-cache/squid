@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.253 1998/08/21 03:15:22 wessels Exp $
+ * $Id: protos.h,v 1.254 1998/08/24 22:06:46 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -869,7 +869,6 @@ extern void storeSwapTLVFree(tlv * n);
  */
 extern void storeDoRebuildFromSwapFiles(void *data);
 extern void storeValidate(StoreEntry *, STVLDCB *, void *, void *);
-extern void storeValidateComplete(void *data, int retcode, int errcode);
 extern void storeRebuildStart(void);
 
 /*
