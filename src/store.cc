@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.379 1998/02/12 07:03:06 wessels Exp $
+ * $Id: store.cc,v 1.380 1998/02/12 16:36:30 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -358,9 +358,10 @@ storeSetPrivateKey(StoreEntry * e)
 {
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (EBIT_TEST(e->flag, KEY_PRIVATE))
+    if (e->key && EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
-    storeHashDelete(e);
+    if (e->key)
+	storeHashDelete(e);
     if (mem != NULL) {
 	mem->reqnum = getKeyCounter();
 	newkey = storeKeyPrivate(mem->url, mem->method, mem->reqnum);
@@ -378,7 +379,7 @@ storeSetPublicKey(StoreEntry * e)
     StoreEntry *e2 = NULL;
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (!EBIT_TEST(e->flag, KEY_PRIVATE))
+    if (e->key && !EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
     assert(mem);
     newkey = storeKeyPublic(mem->url, mem->method);
@@ -388,7 +389,8 @@ storeSetPublicKey(StoreEntry * e)
 	storeRelease(e2);
 	newkey = storeKeyPublic(mem->url, mem->method);
     }
-    storeHashDelete(e);
+    if (e->key)
+	storeHashDelete(e);
     storeHashInsert(e, newkey);
     EBIT_CLR(e->flag, KEY_PRIVATE);
 }
