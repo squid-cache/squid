@@ -1,8 +1,8 @@
 
 /*
- * $Id: cachemgr.cc,v 1.47 1996/11/25 06:15:29 wessels Exp $
+ * $Id: cachemgr.cc,v 1.48 1996/12/14 18:54:58 wessels Exp $
  *
- * DEBUG: Section 0     CGI Cache Manager
+ * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

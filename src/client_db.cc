@@ -1,8 +1,8 @@
 
 /*
- * $Id: client_db.cc,v 1.7 1996/12/13 22:26:35 wessels Exp $
+ * $Id: client_db.cc,v 1.8 1996/12/14 18:54:59 wessels Exp $
  *
- * DEBUG: section       Client Database
+ * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

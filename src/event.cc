@@ -1,8 +1,8 @@
 
 /*
- * $Id: event.cc,v 1.2 1996/11/14 19:02:15 wessels Exp $
+ * $Id: event.cc,v 1.3 1996/12/14 18:54:59 wessels Exp $
  *
- * DEBUG: Section 41    Event Processing
+ * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
