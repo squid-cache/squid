@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.360 1998/07/21 03:16:04 wessels Exp $
+ * $Id: client_side.cc,v 1.361 1998/07/21 17:22:02 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1449,7 +1449,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    memBufAppend(&mb, body_buf, body_size);
 	}
     }
-    if (!http->request->range)
+    if (!http->request->range && http->request->method == METHOD_GET)
 	assert(check_size == size);
     /* write */
     comm_write_mbuf(fd, mb, clientWriteComplete, http);
