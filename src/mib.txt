@@ -1,6 +1,6 @@
 SQUID-MIB  DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.23 1999/01/26 06:16:32 glenn Exp $
+-- $Id: mib.txt,v 1.24 1999/06/11 22:40:33 wessels Exp $
 --
 
 IMPORTS
@@ -62,7 +62,7 @@ squid MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION
-			" Virtual Memory size in KB"
+			" Storage Mem size in KB"
 	::= { cacheSystem 1 }
 
 	cacheSysStorage OBJECT-TYPE
@@ -70,7 +70,7 @@ squid MODULE-IDENTITY
 		MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Diskspace in KB"
+                        " Storage Swap size in KB"
         ::= { cacheSystem 2 }
 
 	cacheUptime  OBJECT-TYPE
@@ -78,7 +78,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Number of timeticks since cache started "
+                        " The Uptime of the cache in timeticks"
 	::= { cacheSystem 3 }
 
 --
@@ -130,7 +130,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Cache Memory Maximum Size "
+                        " The value of the cache_mem parameter in MB"
         ::= { cacheStorageConfig 1 }
 
         cacheSwapMaxSize OBJECT-TYPE
@@ -138,7 +138,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Cache Swap Maximum Size "
+                        " The total of the cache_dir space allocated in MB"
         ::= { cacheStorageConfig 2 }
 
         cacheSwapHighWM OBJECT-TYPE
@@ -146,7 +146,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Cache Swap High Water Mark "
+                        " Cache Swap High Water Mark"
         ::= { cacheStorageConfig 3 }
 
         cacheSwapLowWM OBJECT-TYPE
@@ -154,7 +154,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Cache Swap Low Water Mark "
+                        " Cache Swap Low Water Mark"
         ::= { cacheStorageConfig 4 }
 
 -- end of  cacheStorageConfig group
@@ -175,7 +175,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                        " Number of system page faults "
+                        " Page faults with physical i/o"
         ::= { cacheSysPerf 1 }
 
         cacheSysNumReads OBJECT-TYPE
@@ -183,39 +183,39 @@ squid MODULE-IDENTITY
                 MAX-ACCESS not-accessible
                 STATUS current 
                 DESCRIPTION
-                        " Number of Reads " 
+                        " HTTP I/O number of reads" 
        	::= { cacheSysPerf 2 }
-
-        cacheSysDefReads OBJECT-TYPE
-                SYNTAX Counter32
-                MAX-ACCESS not-accessible
-                STATUS current
-		DESCRIPTION
-			" see cachemgr "
-       	::= { cacheSysPerf 3 }
 
 	cacheMemUsage OBJECT-TYPE
 		SYNTAX Integer32
 		MAX-ACCESS read-only
 		STATUS 	current
 		DESCRIPTION
-			" Amount of system memory allocated by the cache"
-	::= { cacheSysPerf 4 } 
+			" Total memory accounted for KB"
+	::= { cacheSysPerf 3 } 
 
-	cacheCpuUsage OBJECT-TYPE
+	cacheCpuTime OBJECT-TYPE
 		SYNTAX Integer32
 		MAX-ACCESS read-only
                 STATUS  current
                 DESCRIPTION
                         " Amount of cpu seconds consumed"
-	::= { cacheSysPerf 5 }
+	::= { cacheSysPerf 4 }
+
+	cacheCpuUsage OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS  current
+                DESCRIPTION
+                        " The percentage use of the CPU"
+        ::= { cacheSysPerf 5 }
 
 	cacheMaxResSize OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS  current
                 DESCRIPTION
-                        " Maximum Resident Size"
+                        " Maximum Resident Size in KB"
         ::= { cacheSysPerf 6 }
 
 	cacheNumObjCount OBJECT-TYPE
@@ -223,31 +223,39 @@ squid MODULE-IDENTITY
 		MAX-ACCESS read-only
                 STATUS  current
                 DESCRIPTION
-                        " Number of objects "
+                        " Number of objects stored by the cache"
         ::= { cacheSysPerf 7 }
 
         cacheCurrentLRUExpiration OBJECT-TYPE
                 SYNTAX TimeTicks
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Storage LRU Expiration Age"
         ::= { cacheSysPerf 8 }
 
         cacheCurrentUnlinkRequests OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Requests given to unlinkd"
         ::= { cacheSysPerf 9 }
 
         cacheCurrentUnusedFileDescrCount OBJECT-TYPE
                 SYNTAX Gauge32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Available number of file descriptors"
         ::= { cacheSysPerf 10 }
 
 	cacheCurrentReservedFileDescrCount  OBJECT-TYPE
                 SYNTAX Gauge32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Reserved number of file descriptors"
         ::= { cacheSysPerf 11 }
 
 	--
@@ -264,90 +272,120 @@ squid MODULE-IDENTITY
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Number of HTTP requests received"
         ::= { cacheProtoAggregateStats 1 }
 
         cacheHttpHits OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Number of HTTP Hits"
         ::= { cacheProtoAggregateStats 2 }
 
         cacheHttpErrors OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Number of HTTP Errors"
         ::= { cacheProtoAggregateStats 3 }
 
         cacheHttpInKb OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+			" Number of HTTP KB's recieved"
         ::= { cacheProtoAggregateStats 4 }
 
         cacheHttpOutKb OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Number of HTTP KB's transmitted"
         ::= { cacheProtoAggregateStats 5 }
 
 	cacheIcpPktsSent OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Number of ICP messages sent"
         ::= { cacheProtoAggregateStats 6 }
 
 	cacheIcpPktsRecv OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Number of ICP messages received"
         ::= { cacheProtoAggregateStats 7 }
 
         cacheIcpKbSent OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Number of ICP KB's transmitted"
         ::= { cacheProtoAggregateStats 8 }
 
         cacheIcpKbRecv OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Number of ICP KB's recieved"
         ::= { cacheProtoAggregateStats 9 }
 
         cacheServerRequests OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " All requests from the client for the cache server"
         ::= { cacheProtoAggregateStats 10 }
 
         cacheServerErrors OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " All errors for the cache server from client requests"
         ::= { cacheProtoAggregateStats 11 }
 
 	cacheServerInKb OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " KB's of traffic recieved from servers"
         ::= { cacheProtoAggregateStats 12 }
 
         cacheServerOutKb OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " KB's of traffic sent to servers"
         ::= { cacheProtoAggregateStats 13 }
 
 	cacheCurrentSwapSize OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Storage Swap size"
         ::= { cacheProtoAggregateStats 14 }
 
        cacheClients OBJECT-TYPE
                 SYNTAX Counter32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Number of clients accessing cache"
         ::= { cacheProtoAggregateStats 15 }
 
 	--
@@ -388,60 +426,80 @@ squid MODULE-IDENTITY
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " The value used to index the table 1/5/60"
         ::= { cacheMedianSvcEntry 1 }
 
 	cacheHttpAllSvcTime OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " HTTP all service time" 
         ::= { cacheMedianSvcEntry 2 } 
 
 	cacheHttpMissSvcTime OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " HTTP miss service time"
         ::= { cacheMedianSvcEntry 3 } 
 
 	cacheHttpNmSvcTime OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " HTTP near miss service time"
         ::= { cacheMedianSvcEntry 4 } 
 
 	cacheHttpHitSvcTime OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " HTTP hit service time"
         ::= { cacheMedianSvcEntry 5 } 
 
 	cacheIcpQuerySvcTime OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " ICP query service time"
         ::= { cacheMedianSvcEntry 6 } 
 
 	cacheIcpReplySvcTime OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " ICP reply service time"
         ::= { cacheMedianSvcEntry 7 } 
 
 	cacheDnsSvcTime OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " DNS service time"
         ::= { cacheMedianSvcEntry 8 } 
 
         cacheRequestHitRatio OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Request Hit Ratios"
         ::= { cacheMedianSvcEntry 9 }
 
         cacheRequestByteRatio OBJECT-TYPE
                 SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
+		DESCRIPTION
+                        " Byte Hit Ratios"
         ::= { cacheMedianSvcEntry 10 }
 
 --

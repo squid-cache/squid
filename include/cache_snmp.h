@@ -1,5 +1,5 @@
 /*
- * $Id: cache_snmp.h,v 1.23 1999/04/15 06:15:35 wessels Exp $
+ * $Id: cache_snmp.h,v 1.24 1999/06/11 22:40:32 wessels Exp $
  */
 
 #ifdef SQUID_SNMP
@@ -25,12 +25,12 @@
 
 /* MIB definitions
  * SQUID-MIB
- * 	.iso.org.dod.internet.private.enterprises.nlanr.squid
- *	  1   3   6     1        4         1      3495    1
+ *      .iso.org.dod.internet.private.enterprises.nlanr.squid
+ *        1   3   6     1        4         1      3495    1
  *
  * PROXY-MIB
- *	.iso.org.dod.internet.experimental.nsfnet.proxy
- *	  1   3   6     1          3         25    17
+ *      .iso.org.dod.internet.experimental.nsfnet.proxy
+ *        1   3   6     1          3         25    17
  */
 
 #define SQUIDMIB 1, 3, 6, 1, 4, 1, 3495, 1
@@ -53,8 +53,8 @@
 #define LEN_SQ_MESH LEN_SQUIDMIB+1
 
 /* 
-	cacheSystem group 
-*/
+ * cacheSystem group 
+ */
 
 enum {
     SYS_START,
@@ -68,8 +68,8 @@ enum {
 #define LEN_SYS_INST LEN_SQ_SYS + 2
 
 /* 
-	cacheConfig group 
-*/
+ * cacheConfig group 
+ */
 
 enum {
     CONF_START,
@@ -97,8 +97,8 @@ enum {
 #define LEN_CONF_ST_INST LEN_CONF + 2
 
 /* 
-	cacheMesh group 
-*/
+ * cacheMesh group 
+ */
 
 enum {
     MESH_START,
@@ -140,8 +140,8 @@ enum {				/* cacheClientTable */
 };
 
 /* 
-	cacheNetwork group 
-*/
+ * cacheNetwork group 
+ */
 
 enum {
     NET_START,
@@ -185,8 +185,8 @@ enum {
 };
 
 /* 
-	Cache Performance Group 
-*/
+ * Cache Performance Group 
+ */
 
 enum {
     PERF_START,
@@ -199,8 +199,8 @@ enum {
     PERF_SYS_START,
     PERF_SYS_PF,
     PERF_SYS_NUMR,
-    PERF_SYS_DEFR,
     PERF_SYS_MEMUSAGE,
+    PERF_SYS_CPUTIME,
     PERF_SYS_CPUUSAGE,
     PERF_SYS_MAXRESSZ,
     PERF_SYS_NUMOBJCNT,
