@@ -14,6 +14,11 @@ Changes to squid-1.1.4 (January 13, 1997):
 	- Fixed finding FTP end-of-transfer marker in the middle
 	  of the file.
 	- More ipcache fixes for long-pending requests which get preempted.
+	- Fixed cachemgr.cgi to parse password from URL (Peter Wemm).
+	- Fixed cachemgr.cgi to keep password in HTML form field (Peter
+	  Wemm).
+	- Fixed reporting Maximum Resident Size (Peter Wemm).
+	- Handle unexpected data from a redirector (Brent Foster).
 
 Changes to squid-1.novm.3 (January 7, 1996):
 
