@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.389 2001/08/19 16:28:33 wessels Exp $
+ * $Id: cache_cf.cc,v 1.390 2001/08/23 13:20:46 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2075,7 +2075,7 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
 }
 
 
-#include "cf_parser.c"
+#include "cf_parser.h"
 
 peer_t
 parseNeighborType(const char *s)

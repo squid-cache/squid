@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.205 2001/08/22 09:25:41 robertc Exp $
+#  $Id: Makefile.in,v 1.206 2001/08/23 13:20:46 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -253,12 +253,12 @@ cache_diff: cache_diff.o debug.o globals.o store_key_md5.o
 test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 
-cache_cf.o: cf_parser.c
+cache_cf.o: cf_parser.h
 
-squid.conf.default: cf_parser.c
+squid.conf.default: cf_parser.h
 	@sh -c "test -f squid.conf.default || ./cf_gen cf.data"
 
-cf_parser.c: cf.data cf_gen
+cf_parser.h: cf.data cf_gen
 	./cf_gen cf.data
 
 cf_gen: cf_gen.o
@@ -424,7 +424,7 @@ install-pinger:
 
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
-	-rm -f cf_gen cf_gen_defines.h cf_parser.c cf.data globals.c string_arrays.c
+	-rm -f cf_gen cf_gen_defines.h cf_parser.h cf.data globals.c string_arrays.c
 	-rm -f store_modules.c repl_modules.c auth_modules.c squid.conf.default
 	@for dir in $(SUBDIRS); do \
 		echo "Making $@ in $$dir..."; \
@@ -443,5 +443,5 @@ distclean:	clean
 tags:
 	ctags *.[ch] ../include/*.h ../lib/*.[ch]
 
-depend: cf_parser.c
+depend: cf_parser.h
 	$(MAKEDEPEND) $(INCLUDE) -fMakefile $(srcdir)/*.c
