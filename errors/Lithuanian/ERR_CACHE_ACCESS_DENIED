@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
 <TITLE>KLAIDA: Priėjimas prie kešo uždraustas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD>
@@ -20,7 +20,7 @@ Priėjimas prie kešo uždraustas.
 </UL>
 </P>
 
-<P>Atsiprašau, bet jūs šiuo metu negalite vykdyti užklausimo:
+<P>Atsiprašome, bet jūs šiuo metu negalite vykdyti užklausos:
 <PRE>    %U</PRE>
 per šį serverį, kol jūs neprisistatysite.
 </P>
@@ -28,7 +28,7 @@ per šį serverį, kol jūs neprisistatysite.
 <P>
 Jums reikia Netscape v2.0 ar naujesnio, arba Microsoft Internet
 Explorer 3.0 ar naujesnio, arba kitos HTTP/1.1 suprantančios peržiūros
-programos. Prašau susisiekti su <A HREF="mailto:%w%W">proxy 
+programos. Prašome susisiekti su <A HREF="mailto:%w%W">proxy 
 administratoriumi</a>, jei jums kils sunkumai prisistatant arba 
-<A HREF="http://%h/cgi-bin/chpasswd.cgi\">pakeisti</a> savo slaptažodį.
+<A HREF="http://%h/cgi-bin/chpasswd.cgi">pakeisti</a> savo slaptažodį.
 </P>

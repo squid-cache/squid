@@ -14,15 +14,14 @@ Gautas klaidos praneðimas:
 <UL>
 <LI>
 <STRONG>
-Raðymo klaida
+Uþklausa arba atsakymas yra per dideli.
 </STRONG>
+<P>
+Jei jûs vykdote POST arba PUT uþklausà, jûsø uþklausos dydis
+(tai, kà jûs bandote nusiøsti) yra per didelis.  Jei jûs vykdote
+GET uþklausà, atsakymo dydis (tai, kà jûs bandote atsisiøsti)
+yra per didelis.  Ðie apribojimai yra uþdëti jûsø Interneto
+tiekëjo.  Praðome kreiptis á savo administratoriø arba Interneto
+tiekëjà, jei manote, kad tai neteisinga.
 </UL>
-
-<P>
-Sistema atsakë:
-<PRE><I>    %E</I></PRE>
-
-<P>
-Ávyko klaida bandant raðyti tinkle. 
-Praðome pakartoti savo uþklausà.
 </P>

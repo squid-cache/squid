@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
 <TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
@@ -7,7 +7,7 @@
 <H2>Puslapis nurodytu adresu negali būti atsiųstas</H2>
 <HR noshade size="1px">
 <P>
-Bandant įvykdyti užklausimą:
+Bandant įvykdyti užklausą:
 <PRE>
 %R
 </PRE>
@@ -16,18 +16,18 @@ Gautas klaidos pranešimas:
 <UL>
 <LI>
 <STRONG>
-Neteisingas užklausimas
+Neteisinga užklausa
 </STRONG>
 </UL>
 
 <P>
-Dalis HTTP užklausimo yra klaidinga. Galimos problemos:
+Dalis HTTP užklausos yra klaidinga. Galimos problemos:
 <UL>
-<LI>Trūksta arba nežinomas užklausimo metodas
+<LI>Trūksta arba nežinomas užklausos metodas
 <LI>Trūksta adresas
 <LI>Trūksta HTTP identifikatoriaus (HTTP/1.0)
-<LI>Užklausimas per didelis
-<LI>Trūksta Content-Length parametro POST arba PUT užklausime
-<LI>Neleistinas simbolis serverio varde; underscore simboliai yra neleistini
+<LI>Užklausa per didelė
+<LI>Trūksta Content-Length parametro POST arba PUT užklausoje
+<LI>Neleistinas simbolis serverio varde; pabraukimo simboliai yra neleistini
 </UL>
 </P>
