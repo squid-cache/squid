@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.9 2002/04/08 08:19:05 hno Exp $
+ * $Id: MemPool.c,v 1.10 2002/04/08 10:17:11 hno Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -193,14 +193,13 @@ memCompChunks(MemChunk * chunkA, MemChunk * chunkB)
 }
 
 /* Compare object to chunk */
+/* XXX Note: this depends on lastPool */
 static int
 memCompObjChunks(void *obj, MemChunk * chunk)
 {
-    int bounds;
-    bounds = (char *)obj - (char *)chunk->objCache;
-    if (bounds < 0)
+    if (obj < chunk->objCache)
 	return -1;
-    if (bounds < lastPool->chunk_size)
+    if (obj < (void *)((char *)chunk->objCache + lastPool->chunk_size))
 	return 0;
     return 1;
 }
