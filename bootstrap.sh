@@ -22,7 +22,7 @@ find_version()
   shift
   versions="$*"
   for version in $versions; do
-    for variant in "" "-${version}" "`echo $version | sed -e 's/.//g'`"; do
+    for variant in "" "-${version}" "`echo $version | sed -e 's/\.//g'`"; do
       if check_version $tool ${tool}${variant} $version; then
 	found="${variant}"
 	break
