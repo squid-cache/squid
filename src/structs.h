@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.308 1999/12/30 17:37:00 wessels Exp $
+ * $Id: structs.h,v 1.309 2000/01/05 22:44:03 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1550,6 +1550,8 @@ struct _StatCounters {
 	int clients;
 	int requests;
 	int hits;
+	int mem_hits;
+	int disk_hits;
 	int errors;
 	kb_t kbytes_in;
 	kb_t kbytes_out;

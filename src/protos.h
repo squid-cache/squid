@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.350 2000/01/05 06:23:45 wessels Exp $
+ * $Id: protos.h,v 1.351 2000/01/05 22:44:01 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -728,6 +728,8 @@ extern int stat5minClientRequests(void);
 extern double stat5minCPUUsage(void);
 extern const char *storeEntryFlags(const StoreEntry *);
 extern double statRequestHitRatio(int minutes);
+extern double statRequestHitMemoryRatio(int minutes);
+extern double statRequestHitDiskRatio(int minutes);
 extern double statByteHitRatio(int minutes);
 
 

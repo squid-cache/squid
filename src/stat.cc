@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.322 1999/12/30 17:36:52 wessels Exp $
+ * $Id: stat.cc,v 1.323 2000/01/05 22:44:02 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -485,6 +485,12 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tByte Hit Ratios:\t5min: %3.1f%%, 60min: %3.1f%%\n",
 	statByteHitRatio(5),
 	statByteHitRatio(60));
+    storeAppendPrintf(sentry, "\tRequest Memory Hit Ratios:\t5min: %3.1f%%, 60min: %3.1f%%\n",
+	statRequestHitMemoryRatio(5),
+	statRequestHitMemoryRatio(60));
+    storeAppendPrintf(sentry, "\tRequest Disk Hit Ratios:\t5min: %3.1f%%, 60min: %3.1f%%\n",
+	statRequestHitDiskRatio(5),
+	statRequestHitDiskRatio(60));
     storeAppendPrintf(sentry, "\tStorage Swap size:\t%d KB\n",
 	store_swap_size);
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
@@ -1287,6 +1293,26 @@ statRequestHitRatio(int minutes)
 	CountHist[minutes].client_http.hits,
 	CountHist[0].client_http.requests -
 	CountHist[minutes].client_http.requests);
+}
+
+extern double
+statRequestHitMemoryRatio(int minutes)
+{
+    assert(minutes < N_COUNT_HIST);
+    return dpercent(CountHist[0].client_http.mem_hits -
+	CountHist[minutes].client_http.mem_hits,
+	CountHist[0].client_http.hits -
+	CountHist[minutes].client_http.hits);
+}
+
+extern double
+statRequestHitDiskRatio(int minutes)
+{
+    assert(minutes < N_COUNT_HIST);
+    return dpercent(CountHist[0].client_http.disk_hits -
+	CountHist[minutes].client_http.disk_hits,
+	CountHist[0].client_http.hits -
+	CountHist[minutes].client_http.hits);
 }
 
 extern double

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.466 2000/01/05 06:22:19 wessels Exp $
+ * $Id: client_side.cc,v 1.467 2000/01/05 22:44:00 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -578,6 +578,10 @@ clientUpdateCounters(clientHttpRequest * http)
     Counter.client_http.requests++;
     if (isTcpHit(http->log_type))
 	Counter.client_http.hits++;
+    if (http->log_type == LOG_TCP_HIT)
+	Counter.client_http.disk_hits++;
+    else if (http->log_type == LOG_TCP_MEM_HIT)
+	Counter.client_http.mem_hits++;
     if (http->request->err_type != ERR_NONE)
 	Counter.client_http.errors++;
     statHistCount(&Counter.client_http.all_svc_time, svc_time);
