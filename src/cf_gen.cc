@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.20 1998/02/10 22:17:53 wessels Exp $
+ * $Id: cf_gen.cc,v 1.21 1998/03/16 20:11:50 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -440,7 +440,7 @@ gen_dump(Entry * head, FILE * fp)
 {
     Entry *entry;
     fprintf(fp,
-	"void\n"
+	"static void\n"
 	"dump_config(StoreEntry *entry)\n"
 	"{\n"
 	);

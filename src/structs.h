@@ -61,8 +61,8 @@ struct _snmpconf {
 };
 
 struct _snmp_request_t {
-    char *buf;
-    char *outbuf;
+    u_char *buf;
+    u_char *outbuf;
     int len;
     int sock;
     long reqid;
@@ -70,7 +70,7 @@ struct _snmp_request_t {
     struct sockaddr_in from;
     struct snmp_pdu *PDU;
     aclCheck_t *acl_checklist;
-    char *community;
+    u_char *community;
 };
 
 typedef struct _viewEntry {

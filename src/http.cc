@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.253 1998/03/16 17:03:26 wessels Exp $
+ * $Id: http.cc,v 1.254 1998/03/16 20:11:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -125,7 +125,7 @@ enum {
 
 static CNCB httpConnectDone;
 static CWCB httpSendComplete;
-static void *sendHeaderDone;
+static CWCB *sendHeaderDone;
 static CWCB httpSendRequestEntry;
 
 static PF httpReadReply;
