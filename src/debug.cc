@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.32 1996/10/24 05:07:17 wessels Exp $
+ * $Id: debug.cc,v 1.33 1996/10/24 05:17:43 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -243,8 +243,6 @@ _db_init(char *logfile, char *options)
 	    debugArg(s);
 	xfree(p);
     }
-    if (opt_read_only)
-	return;
     debugOpenLog(logfile);
 
 #if HAVE_SYSLOG && defined(LOG_LOCAL4)

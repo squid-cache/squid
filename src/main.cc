@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.98 1996/10/24 05:07:22 wessels Exp $
+ * $Id: main.cc,v 1.99 1996/10/24 05:17:45 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -122,7 +122,6 @@ static int opt_send_signal = -1;	/* no signal to send */
 int opt_udp_hit_obj = 1;
 int opt_mem_pools = 1;
 int opt_forwarded_for = 1;
-int opt_read_only = 0;
 int vhost_mode = 0;
 volatile int unbuffered_logs = 1;	/* debug and hierarchy unbuffered by default */
 volatile int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
@@ -284,10 +283,6 @@ mainParseOptions(int argc, char *argv[])
     }
     argc -= optind;
     argv += optind;
-    if (argc) {
-	opt_read_only = 1;
-	get_url = xstrdup(*argv);
-    }
 }
 
 static void
@@ -331,7 +326,6 @@ serverConnectionsOpen(void)
 {
     struct in_addr addr;
     u_short port;
-    if (!opt_read_only) {
     enter_suid();
     theHttpConnection = comm_open(SOCK_STREAM,
 	0,
@@ -351,12 +345,9 @@ serverConnectionsOpen(void)
 	NULL, 0);
     debug(1, 1, "Accepting HTTP connections on FD %d.\n",
 	theHttpConnection);
-    }
 
     if (!httpd_accel_mode || Config.Accel.withProxy) {
 	if ((port = Config.Port.icp) > (u_short) 0) {
-	    if (opt_read_only)
-		Config.Port.icp = port = 0;
 	    enter_suid();
 	    theInIcpConnection = comm_open(SOCK_DGRAM,
 		0,
