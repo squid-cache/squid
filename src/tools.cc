@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.200 2000/12/30 23:29:08 wessels Exp $
+ * $Id: tools.cc,v 1.201 2000/12/31 23:53:08 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -89,12 +89,21 @@ static void
 mail_warranty(void)
 {
     FILE *fp = NULL;
-    char *filename;
     static char command[256];
+#if HAVE_MKSTEMP
+    char filename[] = "/tmp/squid-XXXXXX";
+    int tfd = mkstemp(filename);
+    if (tfd < 0)
+	return;
+    if ((fp = fdopen(tfd, "w")) == NULL)
+	return;
+#else
+    char *filename;
     if ((filename = tempnam(NULL, appname)) == NULL)
 	return;
     if ((fp = fopen(filename, "w")) == NULL)
 	return;
+#endif
     fprintf(fp, "From: %s\n", appname);
     fprintf(fp, "To: %s\n", Config.adminEmail);
     fprintf(fp, "Subject: %s\n", dead_msg());
