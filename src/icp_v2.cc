@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.68 2002/10/13 20:35:01 robertc Exp $
+ * $Id: icp_v2.cc,v 1.69 2002/10/14 11:50:08 adrian Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -510,9 +510,9 @@ icpHandleUdp(int sock, void *data)
 	(*N)++;
 	icpCount(buf, RECV, (size_t) len, 0);
 	buf[len] = '\0';
-	debug(12, 4) ("icpHandleUdp: FD %d: received %d bytes from %s.\n",
+	debug(12, 4) ("icpHandleUdp: FD %d: received %lu bytes from %s.\n",
 	    sock,
-	    len,
+	    (unsigned long int)len,
 	    inet_ntoa(from.sin_addr));
 #ifdef ICP_PACKET_DUMP
 	icpPktDump(buf);
