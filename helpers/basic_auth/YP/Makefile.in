@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.8 2001/11/28 08:01:52 robertc Exp $
+#  $Id: Makefile.in,v 1.9 2001/11/29 11:17:09 hno Exp $
 #
 #
 
@@ -111,7 +111,6 @@ SH = @SH@
 SNMPLIB = @SNMPLIB@
 SQUID_AIO_LIB = @SQUID_AIO_LIB@
 SQUID_PTHREAD_LIB = @SQUID_PTHREAD_LIB@
-SSLINC = @SSLINC@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_MODULES = @STORE_MODULES@
