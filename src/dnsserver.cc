@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.14 1996/08/27 20:10:51 wessels Exp $
+ * $Id: dnsserver.cc,v 1.15 1996/08/27 21:49:42 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -443,7 +443,8 @@ int main(argc, argv)
 	    /* DNS TTL handling - bne@CareNet.hu
 	     * for first try it's a dirty hack, by hacking getanswer
 	     * to place th e ttl in a global variable */
-	    printf("$ttl %d\n", _dns_ttl_);
+	    if (_dns_ttl_ > -1)
+	    	printf("$ttl %d\n", _dns_ttl_);
 #endif
 
 	    printf("$end\n");
