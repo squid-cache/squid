@@ -1114,7 +1114,7 @@ if test "${enable_gnuregex+set}" = set; then
 fi
 
 
-# Check whether --enable-xmalloc_debug or --disable-xmalloc_debug was given.
+# Check whether --enable-xmalloc-debug or --disable-xmalloc-debug was given.
 if test "${enable_xmalloc_debug+set}" = set; then
   enableval="$enable_xmalloc_debug"
    if test "$enableval" = "yes" ; then
@@ -1128,7 +1128,7 @@ EOF
 fi
 
 
-# Check whether --enable-xmalloc_debug_trace or --disable-xmalloc_debug_trace was given.
+# Check whether --enable-xmalloc-debug-trace or --disable-xmalloc-debug-trace was given.
 if test "${enable_xmalloc_debug_trace+set}" = set; then
   enableval="$enable_xmalloc_debug_trace"
    if test "$enableval" = "yes" ; then
@@ -1146,7 +1146,7 @@ EOF
 fi
 
 
-# Check whether --enable-xmalloc_statistics or --disable-xmalloc_statistics was given.
+# Check whether --enable-xmalloc-statistics or --disable-xmalloc-statistics was given.
 if test "${enable_xmalloc_statistics+set}" = set; then
   enableval="$enable_xmalloc_statistics"
    if test "$enableval" = "yes" ; then
@@ -1276,7 +1276,7 @@ if test "${enable_heap_replacement+set}" = set; then
 fi
 
 
-# Check whether --enable-removal_policies or --disable-removal_policies was given.
+# Check whether --enable-removal-policies or --disable-removal-policies was given.
 if test "${enable_removal_policies+set}" = set; then
   enableval="$enable_removal_policies"
    case $enableval in
@@ -1322,7 +1322,7 @@ fi
 
 
 
-# Check whether --enable-delay_pools or --disable-delay_pools was given.
+# Check whether --enable-delay-pools or --disable-delay-pools was given.
 if test "${enable_delay_pools+set}" = set; then
   enableval="$enable_delay_pools"
    if test "$enableval" = "yes" ; then
@@ -1352,7 +1352,7 @@ EOF
 fi
      
 
-# Check whether --enable-useragent_log or --disable-useragent_log was given.
+# Check whether --enable-useragent-log or --disable-useragent-log was given.
 if test "${enable_useragent_log+set}" = set; then
   enableval="$enable_useragent_log"
    if test "$enableval" = "yes" ; then
@@ -1399,7 +1399,7 @@ EOF
 fi
       
 
-# Check whether --enable-kill_parent_hack or --disable-kill_parent_hack was given.
+# Check whether --enable-kill-parent-hack or --disable-kill-parent-hack was given.
 if test "${enable_kill_parent_hack+set}" = set; then
   enableval="$enable_kill_parent_hack"
    if test "$enableval" = "yes" ; then
@@ -1434,7 +1434,7 @@ fi
 
 
 
-# Check whether --enable-time_hack or --disable-time_hack was given.
+# Check whether --enable-time-hack or --disable-time-hack was given.
 if test "${enable_time_hack+set}" = set; then
   enableval="$enable_time_hack"
    if test "$enableval" = "yes" ; then
@@ -1448,7 +1448,7 @@ EOF
 fi
 
 
-# Check whether --enable-cachemgr_hostname or --disable-cachemgr_hostname was given.
+# Check whether --enable-cachemgr-hostname or --disable-cachemgr-hostname was given.
 if test "${enable_cachemgr_hostname+set}" = set; then
   enableval="$enable_cachemgr_hostname"
     case $enableval in
@@ -1474,7 +1474,7 @@ EOF
 fi
 
 
-# Check whether --enable-arp_acl or --disable-arp_acl was given.
+# Check whether --enable-arp-acl or --disable-arp-acl was given.
 if test "${enable_arp_acl+set}" = set; then
   enableval="$enable_arp_acl"
     if test "$enableval" = "yes" ; then
