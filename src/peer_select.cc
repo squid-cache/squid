@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.50 1998/04/16 17:48:50 wessels Exp $
+ * $Id: peer_select.cc,v 1.51 1998/04/18 05:41:54 rousskov Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -461,8 +461,9 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 	storeUrl(psstate->entry));
 #if SQUID_PEER_DIGEST
     /* do cd lookup to count false misses */
-    peerNoteDigestLookup(request, p, 
-	peerDigestLookup(p, request, psstate->entry));
+    if (p && request)
+	peerNoteDigestLookup(request, p, 
+	    peerDigestLookup(p, request, psstate->entry));
 #endif
     psstate->icp.n_recv++;
     if (op == ICP_MISS || op == ICP_DECHO) {
