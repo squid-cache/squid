@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.115 1998/08/16 06:35:17 wessels Exp $
+ * $Id: enums.h,v 1.116 1998/08/17 18:49:00 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -40,7 +40,6 @@ typedef enum {
     LOG_TCP_REFRESH_MISS,
     LOG_TCP_CLIENT_REFRESH_MISS,
     LOG_TCP_IMS_HIT,
-    LOG_TCP_IMS_MISS,
     LOG_TCP_SWAPFAIL_MISS,
     LOG_TCP_NEGATIVE_HIT,
     LOG_TCP_MEM_HIT,
