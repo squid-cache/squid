@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.481 1999/01/12 23:37:49 wessels Exp $
+ * $Id: store.cc,v 1.482 1999/01/15 06:30:10 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -826,7 +826,7 @@ storeLateRelease(void *unused)
 	e = stackPop(&LateReleaseStack);
 	if (e == NULL) {
 	    /* done! */
-	    debug(20, 0) ("storeLateRelease: released %d objects\n", n);
+	    debug(20, 1) ("storeLateRelease: released %d objects\n", n);
 	    return;
 	}
 	storeUnlockObject(e);
