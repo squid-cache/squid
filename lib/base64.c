@@ -26,7 +26,7 @@ static void base64_init()
 }
 
 char *base64_decode(p)
-     unsigned char *p;
+     char *p;
 {
     static char result[8192];
     int c;

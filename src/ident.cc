@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.9 1996/08/19 22:46:00 wessels Exp $
+ * $Id: ident.cc,v 1.10 1996/08/31 06:40:19 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -78,7 +78,7 @@ void identStart(sock, icpState)
     sprintf(reqbuf, "%d, %d\r\n",
 	ntohs(icpState->peer.sin_port),
 	ntohs(icpState->me.sin_port));
-    (void) comm_write(sock,
+    comm_write(sock,
 	reqbuf,
 	strlen(reqbuf),
 	5,			/* timeout */
