@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.431 2004/08/30 03:28:59 robertc Exp $
+ * $Id: http.cc,v 1.432 2004/10/10 02:45:11 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -685,28 +685,26 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     if (neighbors_do_private_keys)
         httpMaybeRemovePublic(entry, entry->getReply()->sline.status);
 
+    if (httpHeaderHas(&entry->getReply()->header, HDR_VARY)
+#if X_ACCELERATOR_VARY
+            || httpHeaderHas(&entry->getReply()->header, HDR_X_ACCELERATOR_VARY)
+#endif
+       ) {
+        const char *vary = httpMakeVaryMark(orig_request, entry->getReply());
+
+        if (!vary) {
+            httpMakePrivate(entry);
+            goto no_cache;
+
+        }
+
+        entry->mem_obj->vary_headers = xstrdup(vary);
+    }
+
     switch (cacheableReply()) {
 
     case 1:
-
-        if (httpHeaderHas(&entry->getReply()->header, HDR_VARY)
-#if X_ACCELERATOR_VARY
-                || httpHeaderHas(&entry->getReply()->header, HDR_X_ACCELERATOR_VARY)
-#endif
-           ) {
-            const char *vary = httpMakeVaryMark(orig_request, entry->getReply());
-
-            if (vary) {
-                entry->mem_obj->vary_headers = xstrdup(vary);
-                /* Kill the old base object if a change in variance is detected */
-                httpMakePublic(entry);
-            } else {
-                httpMakePrivate(entry);
-            }
-        } else {
-            httpMakePublic(entry);
-        }
-
+        httpMakePublic(entry);
         break;
 
     case 0:
@@ -714,13 +712,21 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         break;
 
     case -1:
-        httpCacheNegatively(entry);
+
+        if (Config.negativeTtl > 0)
+            httpCacheNegatively(entry);
+        else
+            httpMakePrivate(entry);
+
         break;
 
     default:
         assert(0);
+
         break;
     }
+
+no_cache:
 
     if (!ignoreCacheControl && entry->getReply()->cache_control) {
         if (EBIT_TEST(entry->getReply()->cache_control->mask, CC_PROXY_REVALIDATE))
