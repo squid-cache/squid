@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.15 2002/10/13 20:35:24 robertc Exp $
+ * $Id: aiops.cc,v 1.16 2002/10/22 07:02:00 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -408,34 +408,26 @@ squidaio_queue_request(squidaio_request_t * request)
     request->resultp->_data = request;
     /* Play some tricks with the request_queue2 queue */
     request->next = NULL;
-    if (!request_queue2.head) {
-	if (pthread_mutex_trylock(&request_queue.mutex) == 0) {
-	    /* Normal path */
-	    *request_queue.tailp = request;
-	    request_queue.tailp = &request->next;
-	    pthread_cond_signal(&request_queue.cond);
-	    pthread_mutex_unlock(&request_queue.mutex);
-	} else {
-	    /* Oops, the request queue is blocked, use request_queue2 */
-	    *request_queue2.tailp = request;
-	    request_queue2.tailp = &request->next;
-	}
-    } else {
-	/* Secondary path. We have blocked requests to deal with */
-	/* add the request to the chain */
-	*request_queue2.tailp = request;
-	if (pthread_mutex_trylock(&request_queue.mutex) == 0) {
-	    /* Ok, the queue is no longer blocked */
+    if (pthread_mutex_trylock(&request_queue.mutex) == 0) {
+	if (request_queue2.head) {
+	    /* Grab blocked requests */
 	    *request_queue.tailp = request_queue2.head;
-	    request_queue.tailp = &request->next;
-	    pthread_cond_signal(&request_queue.cond);
-	    pthread_mutex_unlock(&request_queue.mutex);
+	    request_queue.tailp = request_queue2.tailp;
+	}
+	/* Enqueue request */
+	*request_queue.tailp = request;
+	request_queue.tailp = &request->next;
+	pthread_cond_signal(&request_queue.cond);
+	pthread_mutex_unlock(&request_queue.mutex);
+	if (request_queue2.head) {
+	    /* Clear queue of blocked requests */
 	    request_queue2.head = NULL;
 	    request_queue2.tailp = &request_queue2.head;
-	} else {
-	    /* still blocked, bump the blocked request chain */
-	    request_queue2.tailp = &request->next;
 	}
+    } else {
+	/* Oops, the request queue is blocked, use request_queue2 */
+	*request_queue2.tailp = request;
+	request_queue2.tailp = &request->next;
     }
     if (request_queue2.head) {
 	static int filter = 0;
