@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.29 2003/05/05 22:57:42 hno Exp $
+#  $Id: Makefile.in,v 1.30 2003/06/09 07:22:48 robertc Exp $
 #
 
 srcdir = @srcdir@
@@ -210,8 +210,8 @@ target_alias = @target_alias@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-AM_CFLAGS = -Werror -Wall
-AM_CXXFLAGS = -Werror -Wall
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
 
