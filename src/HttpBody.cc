@@ -2,7 +2,7 @@
 
 
 /*
- * $Id: HttpBody.cc,v 1.10 1998/05/22 23:43:49 wessels Exp $
+ * $Id: HttpBody.cc,v 1.11 1998/05/27 22:51:39 rousskov Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -84,7 +84,7 @@ void
 httpBodyPackInto(const HttpBody * body, Packer * p)
 {
     assert(body && p);
-    /* assume it was a 0-terminating buffer */
+    /* assume it was a 0-terminated buffer */
     if (body->size)
 	packerAppend(p, body->buf, body->size - 1);
 }

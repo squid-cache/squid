@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.3 1998/04/06 22:32:06 wessels Exp $
+ * $Id: HttpHdrExtField.cc,v 1.4 1998/05/27 22:51:40 rousskov Exp $
  *
  * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov
@@ -72,12 +72,6 @@ httpHdrExtFieldParseCreate(const char *field_start, const char *field_end)
     while (value_start < field_end && isspace(*value_start))
 	value_start++;
 
-    /* cut off "; parameter" from Content-Type @?@ why? */
-    if (!strncasecmp(field_start, "Content-Type:", 13)) {
-	const int l = strcspn(value_start, ";\t ");
-	if (l > 0 && value_start + l < field_end)
-	    field_end = value_start + l;
-    }
     return httpHdrExtFieldDoCreate(
 	field_start, name_end - field_start,
 	value_start, field_end - value_start);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.316 1998/05/27 20:31:33 wessels Exp $
+ * $Id: client_side.cc,v 1.317 1998/05/27 22:51:49 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -56,8 +56,7 @@ static int clientCheckTransferDone(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
 static void checkFailureRatio(err_type, hier_code);
 static void clientProcessMiss(clientHttpRequest *);
-static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
-size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t, size_t *, char *, size_t);
+static void clientBuildReplyHeader(clientHttpRequest * http, HttpReply *rep);
 static clientHttpRequest *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
 static RH clientRedirectDone;
@@ -230,9 +229,7 @@ clientRedirectDone(void *data, char *result)
 	new_request->headers = xstrdup(old_request->headers);
 	new_request->headers_sz = old_request->headers_sz;
 #else
-	new_request->prefix = xstrdup(old_request->prefix);
-	new_request->prefix_sz = old_request->prefix_sz;
-	httpHeaderUpdate(&new_request->header, &old_request->header);
+	httpHeaderAppend(&new_request->header, &old_request->header);
 #endif
 	new_request->client_addr = old_request->client_addr;
 	EBIT_SET(new_request->flags, REQ_REDIRECTED);
@@ -538,11 +535,13 @@ checkNegativeHit(StoreEntry * e)
     return 1;
 }
 
+#if UNUSED_CODE
 static void
 updateCDJunkStats()
 {
     /* rewrite */
 }
+#endif
 
 void
 clientUpdateCounters(clientHttpRequest * http)
@@ -636,9 +635,16 @@ httpRequestFree(void *data)
 	http->al.cache.msec = tvSubMsec(http->start, current_time);
 	http->al.cache.ident = conn->ident.ident;
 	if (request) {
+	    Packer p;
+	    MemBuf mb;
+	    memBufDefInit(&mb);
+	    packerToMemInit(&p, &mb);
+	    httpHeaderPackInto(&request->header, &p);
 	    http->al.http.method = request->method;
-	    http->al.headers.request = request->prefix;
+	    http->al.headers.request = xstrdup(mb.buf);
 	    http->al.hier = request->hier;
+	    packerClean(&p);
+	    memBufClean(&mb);
 	}
 	accessLogLog(&http->al);
 	clientUpdateCounters(http);
@@ -652,6 +658,7 @@ httpRequestFree(void *data)
 	checkFailureRatio(request->err_type, http->al.hier.code);
     safe_free(http->uri);
     safe_free(http->log_uri);
+    safe_free(http->al.headers.request);
     safe_free(http->al.headers.reply);
     if (entry) {
 	http->entry = NULL;
@@ -938,6 +945,7 @@ isTcpHit(log_type code)
     return 0;
 }
 
+#if OLD_CODE
 static void
 clientAppendReplyHeader(char *hdr, const char *line, size_t * sz, size_t max)
 {
@@ -948,9 +956,10 @@ clientAppendReplyHeader(char *hdr, const char *line, size_t * sz, size_t max)
     strcat(hdr + (*sz), crlf);
     *sz = n;
 }
+#endif
 
-/* this entire function has to be rewriten using new interfaces @?@ @?@ */
-size_t
+#if OLD_CODE /* use new interfaces instead */
+static size_t
 clientBuildReplyHeader(clientHttpRequest * http,
     char *hdr_in,
     size_t hdr_in_sz,
@@ -1038,6 +1047,84 @@ clientBuildReplyHeader(clientHttpRequest * http,
     memFree(MEM_4K_BUF, ybuf);
     return len;
 }
+#endif
+
+static void
+clientBuildReplyHeader(clientHttpRequest * http, HttpReply *rep)
+{
+    HttpHeader *hdr = &rep->header;
+    int is_hit = isTcpHit(http->log_type);
+#if DONT_FILTER_THESE
+    /* but you might want to if you run Squid as an HTTP accelerator */
+    httpHeaderDelById(hdr, HDR_ACCEPT_RANGES);
+    httpHeaderDelById(hdr, HDR_ETAG);
+#endif
+    httpHeaderDelById(hdr, HDR_PROXY_CONNECTION);
+    /* here: Keep-Alive is a field-name, not a connection directive! */
+    httpHeaderDelByName(hdr, "Keep-Alive");
+    /* remove Set-Cookie if a hit */
+    if (is_hit)
+	httpHeaderDelById(hdr, HDR_SET_COOKIE);
+    /* handle Connection header */
+    if (httpHeaderHas(hdr, HDR_CONNECTION)) {
+	/* anything that matches Connection list member will be deleted */
+	String strConnection = httpHeaderGetList(hdr, HDR_CONNECTION);
+	const HttpHeaderEntry *e;
+	HttpHeaderPos pos = HttpHeaderInitPos;
+	while ((e = httpHeaderGetEntry(hdr, &pos))) {
+	    if (strListIsMember(&strConnection, strBuf(e->name), ','))
+		httpHeaderDelAt(hdr, pos);
+	}
+	httpHeaderDelById(hdr, HDR_CONNECTION);
+	stringClean(&strConnection);
+    }
+    /* Append X-Cache */
+    httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
+	is_hit ? "HIT" : "MISS", getMyHostname());
+#if USE_CACHE_DIGESTS
+    /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
+    httpHeaderPutStrf(hdr, HDR_X_CACHE_LOOKUP, "%s from %s:%d",
+	http->lookup_type ? http->lookup_type : "NONE",
+	getMyHostname(), Config.Port.http->i);
+#endif
+    /* Only replies with valid Content-Length can be sent with keep-alive */
+    if (http->request->method != METHOD_HEAD &&
+	http->entry->mem_obj->reply->content_length < 0)
+	EBIT_CLR(http->request->flags, REQ_PROXY_KEEPALIVE);
+    /* Signal keep-alive if needed */
+    if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE))
+	httpHeaderPutStr(hdr, 
+	    http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
+	    "keep-alive");
+#if ADD_X_REQUEST_URI
+    /*
+     * Knowing the URI of the request is useful when debugging persistent
+     * connections in a client; we cannot guarantee the order of http headers,
+     * but X-Request-URI is likely to be the very last header to ease use from a
+     * debugger [hdr->entries.count-1].
+     */
+     httpHeaderPutStr(hdr, HDR_X_REQUEST_URI,
+	http->entry->mem_obj->url ? http->entry->mem_obj->url : http->uri);
+#endif
+}
+
+static HttpReply*
+clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
+{
+    HttpReply *rep = httpReplyCreate();
+    assert(size <= 4096); /* httpReplyParse depends on this */
+    if (httpReplyParse(rep, buf)) {
+	/* enforce 1.0 reply version */
+	rep->sline.version = 1.0;
+	/* do header conversions */
+	clientBuildReplyHeader(http, rep);
+    } else {
+	/* parsing failure, get rid of the invalid reply */
+	httpReplyDestroy(rep);
+	rep = NULL;
+    }
+    return rep;
+}
 
 static void
 clientCacheHit(void *data, char *buf, ssize_t size)
@@ -1062,6 +1149,10 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     }
 }
 
+/*
+ * accepts chunk of a http message in buf, parses prefix, filters headers and
+ * such, writes processed message to the client's socket
+ */
 static void
 clientSendMoreData(void *data, char *buf, ssize_t size)
 {
@@ -1069,11 +1160,18 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     StoreEntry *entry = http->entry;
     ConnStateData *conn = http->conn;
     int fd = conn->fd;
+#if OLD_CODE
     size_t hdrlen;
     size_t l = 0;
     size_t writelen;
     char *newbuf;
     FREE *freefunc = memFree4K;
+#else
+    HttpReply *rep = NULL;
+    FREE *freefunc = memFree4K;
+    const char *body_buf = buf;
+    ssize_t body_size = size;
+#endif
     debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
     assert(size <= SM_PAGE_SIZE);
     assert(http->request != NULL);
@@ -1100,7 +1198,9 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	freefunc(buf);
 	return;
     }
+#if OLD_CODE
     writelen = size;
+#endif
     if (http->out.offset == 0) {
 	if (Config.onoff.log_mime_hdrs) {
 	    size_t k;
@@ -1110,6 +1210,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		xstrncpy(http->al.headers.reply, buf, k);
 	    }
 	}
+#if OLD_CODE
 	newbuf = memAllocate(MEM_8K_BUF);
 	hdrlen = 0;
 	l = clientBuildReplyHeader(http, buf, size, &hdrlen, newbuf, 8192);
@@ -1133,9 +1234,20 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    buf = newbuf;
 	    freefunc = memFree8K;
 	    newbuf = NULL;
+#else
+	rep = clientBuildReply(http, buf, size);
+	if (rep) {
+	    body_size = size - rep->hdr_sz;
+	    assert(body_size >= 0);
+	    body_buf = buf + rep->hdr_sz;
+	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
+		body_size, rep->hdr_sz);
+#endif
 	} else {
+#if OLD_CODE
 	    memFree(MEM_8K_BUF, newbuf);
 	    newbuf = NULL;
+#endif
 	    if (size < SM_PAGE_SIZE && entry->store_status == STORE_PENDING) {
 		/* wait for more to arrive */
 		storeClientCopy(entry,
@@ -1154,9 +1266,12 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
      * ick, this is gross
      */
     if (http->request->method == METHOD_HEAD) {
-	size_t k;
-	if ((k = headersEnd(buf, size))) {
-	    writelen = k;
+	size_t k = 0;
+	if (rep)
+	    body_size = 0; /* do not forward body for HEAD replies */
+	else
+	    k = body_size = headersEnd(buf, size); /* unparseable reply, stop and end-of-headers */
+	if (rep || k) {
 	    /* force end */
 	    if (entry->store_status == STORE_PENDING)
 		http->out.offset = entry->mem_obj->inmem_hi;
@@ -1164,7 +1279,28 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		http->out.offset = objectLen(entry);
 	}
     }
+#if OLD_CODE
     comm_write(fd, buf, writelen, clientWriteComplete, http, freefunc);
+#else
+    if (rep || (body_buf && body_size)) {
+	MemBuf mb;
+	/* init mb; put status line and headers if any */
+	if (rep) {
+	    mb = httpReplyPack(rep);
+	    httpReplyDestroy(rep);
+	    rep = NULL;
+	} else {
+	    memBufInit(&mb, body_size, body_size);
+	}
+	/* append body if any */
+	if (body_buf && body_size)
+	    memBufAppend(&mb, body_buf, body_size);
+	/* write */
+	comm_write_mbuf(fd, mb, clientWriteComplete, http);
+    }
+    /* if we don't do it, who will? */
+    freefunc(buf);
+#endif
 }
 
 static
@@ -1537,10 +1673,14 @@ clientProcessRequest(clientHttpRequest * http)
 	    storeBuffer(http->entry);
 	    rep = httpReplyCreate();
 	    httpReplySetHeaders(rep, 1.0, HTTP_OK, NULL, "text/plain",
-		r->prefix_sz, 0, squid_curtime);
+		httpRequestPrefixLen(r), 0, squid_curtime);
 	    httpReplySwapOut(rep, http->entry);
 	    httpReplyDestroy(rep);
+#if OLD_CODE
 	    storeAppend(http->entry, r->prefix, r->prefix_sz);
+#else
+	    httpRequestSwapOut(r, http->entry);
+#endif
 	    storeComplete(http->entry);
 	    return;
 	}
@@ -1612,7 +1752,9 @@ clientProcessMiss(clientHttpRequest * http)
     ErrorState *err = NULL;
     debug(33, 4) ("clientProcessMiss: '%s %s'\n",
 	RequestMethodStr[r->method], url);
+#if OLD_CODE
     debug(33, 10) ("clientProcessMiss: prefix:\n%s\n", r->prefix);
+#endif
     /*
      * We might have a left-over StoreEntry from a failed cache hit
      * or IMS request.
@@ -2013,8 +2155,10 @@ clientReadRequest(int fd, void *data)
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;
 	    request->http_ver = http->http_ver;
+#if OLD_CODE
 	    request->prefix = prefix;
 	    request->prefix_sz = http->req_sz;
+#endif
 	    if (!urlCheckRequest(request)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);
 		err->src_addr = conn->peer.sin_addr;
@@ -2367,7 +2511,8 @@ clientHttpConnectionsOpen(void)
 	fatal("Cannot open HTTP Port");
 }
 
-int
+#if OLD_CODE
+static int
 handleConnectionHeader(int flag, char *where, char *what)
 {
     char *t, *p, *wh;
@@ -2411,6 +2556,7 @@ handleConnectionHeader(int flag, char *where, char *what)
     xfree(wh);
     return 1;
 }
+#endif
 
 void
 clientHttpConnectionsClose(void)

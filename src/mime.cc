@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.65 1998/05/08 23:29:28 wessels Exp $
+ * $Id: mime.cc,v 1.66 1998/05/27 22:51:55 rousskov Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -219,6 +219,7 @@ headersEnd(const char *mime, size_t l)
     return 0;
 }
 
+#if UNUSED_CODE
 /*
  *  mk_mime_hdr - Generates a MIME header using the given parameters.
  *  You can call mk_mime_hdr with a 'lmt = time(NULL) - ttl' to
@@ -253,9 +254,6 @@ mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
     if (size > 0)
 	snprintf(content_length, 100, "Content-Length: %d\r\n", size);
 
-    /* NOTE: don't know size of result thus didn't change
-     * to snprintf(). Should be done sometime! */
-
     snprintf(result, MAX_MIME, "Server: %s/%s\r\n%s%s%sContent-Type: %s\r\n%s",
 	appname,
 	version_string,
@@ -266,7 +264,7 @@ mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
 	content_length);
     return 0;
 }
-
+#endif
 
 const char *
 mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field)

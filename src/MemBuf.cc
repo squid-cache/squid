@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.9 1998/05/22 23:43:57 wessels Exp $
+ * $Id: MemBuf.cc,v 1.10 1998/05/27 22:51:47 rousskov Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -29,7 +29,7 @@
  */
 
 /*
- * To-Do: uses memory pools for .buf recycling @?@ @?@
+ * To-Do: use memory pools for .buf recycling @?@ @?@
  */
 
 /*
@@ -85,8 +85,8 @@
  * ...
  * 
  * -- write
- * comm_write(buf.buf, memBufFreeFunc(&buf), ...);
- * 
+ * comm_write_mbuf(fd, buf, handler, data);
+ *
  * -- *iff* you did not give the buffer away, free it yourself
  * -- memBufClean(&buf);
  * }
@@ -141,7 +141,8 @@ memBufClean(MemBuf * mb)
     assert(mb->buf);
     assert(mb->freefunc);	/* not frozen */
 
-    (*mb->freefunc) (mb->buf);	/* freeze */
+    (*mb->freefunc) (mb->buf);	/* free */
+    mb->freefunc = NULL;	/* freeze */
     mb->buf = NULL;
     mb->size = mb->capacity = 0;
 }
@@ -197,7 +198,7 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
     assert(mb->buf);
     assert(mb->freefunc);	/* not frozen */
     /* @?@ we do not init buf with '\0', do we have to for vsnprintf?? @?@ */
-    /* assert in Grow should quit first, but we do not want to have a scare (1) loop */
+    /* assert in Grow should quit first, but we do not want to have a scary infinite loop */
     while (mb->capacity <= mb->max_capacity) {
 	mb_size_t free_space = mb->capacity - mb->size;
 	/* put as much as we can */
@@ -208,7 +209,8 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
 	else
 	    break;
     }
-    mb->size += sz - 1;		/* note that we cut 0-terminator as store does @?@ @?@ */
+    assert(sz > 0);
+    mb->size += sz - 1;		/* note that we cut 0-terminator as store does */
 }
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.107 1998/05/11 18:44:48 rousskov Exp $
+ * $Id: wais.cc,v 1.108 1998/05/27 22:52:04 rousskov Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -112,7 +112,7 @@ typedef struct {
     method_t method;
     char *relayhost;
     int relayport;
-    char *request_hdr;
+    const HttpHeader *request_hdr;
     char request[MAX_URL];
 } WaisStateData;
 
@@ -265,10 +265,15 @@ static void
 waisSendRequest(int fd, void *data)
 {
     WaisStateData *waisState = data;
+#if OLD_CODE    
     int len = strlen(waisState->request) + 4;
     char *buf = NULL;
+#else
+    MemBuf mb;
+#endif
     const char *Method = RequestMethodStr[waisState->method];
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);
+#if OLD_CODE
     if (Method)
 	len += strlen(Method);
     if (waisState->request_hdr)
@@ -281,6 +286,18 @@ waisSendRequest(int fd, void *data)
 	snprintf(buf, len + 1, "%s %s\r\n", Method, waisState->request);
     debug(24, 6) ("waisSendRequest: buf: %s\n", buf);
     comm_write(fd, buf, len, waisSendComplete, waisState, xfree);
+#else
+    memBufPrintf(&mb, "%s %s", Method, waisState->request);
+    if (waisState->request_hdr) {
+	Packer p;
+	packerToMemInit(&p, &mb);
+	httpHeaderPackInto(waisState->request_hdr, &p);
+	packerClean(&p);
+    }
+    memBufPrintf(&mb, "\r\n");
+    debug(24, 6) ("waisSendRequest: buf: %s\n", mb.buf);
+    comm_write_mbuf(fd, mb, waisSendComplete, waisState);
+#endif
     if (EBIT_TEST(waisState->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
@@ -322,7 +339,7 @@ waisStart(request_t * request, StoreEntry * entry)
     waisState->method = method;
     waisState->relayhost = Config.Wais.relayHost;
     waisState->relayport = Config.Wais.relayPort;
-    waisState->request_hdr = request->prefix;
+    waisState->request_hdr = &request->header;
     waisState->fd = fd;
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);

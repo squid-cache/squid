@@ -488,7 +488,7 @@ struct _HttpStatusLine {
  */
 struct _HttpBody {
     /* private, never dereference these */
-    char *buf;			/* null terminating _text_ buffer, not for binary stuff */
+    char *buf;			/* null terminated _text_ buffer, not for binary stuff */
     FREE *freefunc;		/* used to free() .buf */
     int size;
 };
@@ -560,6 +560,8 @@ struct _HttpHeader {
     /* protected, do not use these, use interface functions instead */
     Array entries;		/* parsed fields in raw format */
     HttpHeaderMask mask;	/* bit set <=> entry present */
+    http_hdr_owner_type owner;  /* request or reply */
+    int len;                    /* length when packed, not counting terminating '\0' */
 };
 
 struct _HttpReply {
@@ -671,7 +673,7 @@ struct _clientHttpRequest {
 	off_t offset;
 	size_t size;
     } out;
-    size_t req_sz;
+    size_t req_sz;              /* raw request size on input, not current request size */
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;
@@ -1109,15 +1111,7 @@ struct _request_t {
     char *headers;
     size_t headers_sz;
 #else
-#if TEST_STAGE_CODE
-    const char *prefix;
-    const size_t prefix_sz;
-    const HttpHeader header;
-#else
-    char *prefix;
-    size_t prefix_sz;
     HttpHeader header;
-#endif
 #endif
     char *body;
     size_t body_sz;

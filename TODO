@@ -36,23 +36,6 @@ Our Todo List
 (3)	'no_cache' access list for specifing objects which should not
 	be cached.
 (3)	What to do about ACL's and URL escaping?
-(3)	Alex's HTTP Header todo list
-	- http_request will be replaced with HttpRequest with changes
-	  similar to (http_reply -> HttpReply) transition.
-	- Http replies and request will be parsed once on
-	  receiver(reader) end and will remain in compiled form after
-	  that. No "raw" header buffer will be preserved.
-	- Request and reply headers (with start-lines) are likely to be
-	  written in compiled form as metadata to swap files.
-	- Dynamic memory allocation will be revised once again. Most of
-	  xstrdup calls and local buffers will be replaced with better
-	  alternatives with static pre-allocation of resources. This work
-	  has  been started already.
-	- Statistics collected on Http* objects and memory management
-	  routines will be enhanced.
-	- A lot of current oddities with freshly added code should go away as
-	  we debug and polish things. Comments discussing current code
-	  problems will be deleted; hopefully, along with the problems.
 (3)	Full request headers for CONNECT requests.
 
 (4) **	Everywhere that we use 'pattern' or such, use ACL elements instead.
@@ -60,6 +43,7 @@ Our Todo List
 (4) **  Double check that MemBuf.size is used correctly everywhere (AR)
 (4)	Refresh based on content types.  This means we'll need an enum of
 	known content types added to StoreEntry.  Unknown types will lose.
+(4)	Write binary headers as metadata?
 
 (5)	X-Proxy-hops header?
 (5)	internalize redirectors?
@@ -119,3 +103,4 @@ DONE:
 		- Replace bcopy with xmemcpy
 (4) **	FTP PUT (KA)
 (1)	SSL doesn't work with Proxy Authentication
+(3)     HTTP Header todo list (AR)

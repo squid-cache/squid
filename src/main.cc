@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.251 1998/05/15 15:16:25 wessels Exp $
+ * $Id: main.cc,v 1.252 1998/05/27 22:51:54 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -466,6 +466,7 @@ mainInitialize(void)
     useragentOpenLog();
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
     httpAnonInitModule();	/* must go before accepting requests */
+    httpReplyInitModule();	/* must go before accepting replies */
     errorInitialize();
     accessLogInit();
 #ifdef SQUID_SNMP

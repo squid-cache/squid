@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.30 1998/05/24 03:47:19 wessels Exp $
+ * $Id: access_log.cc,v 1.31 1998/05/27 22:51:47 rousskov Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -227,6 +227,7 @@ accessLogLog(AccessLogEntry * al)
     if (!al->http.content_type || *al->http.content_type == '\0')
 	al->http.content_type = dash_str;
     if (!al->cache.ident || *al->cache.ident == '\0') {
+	/* argh, binary headers did not come through */
 	t = mime_get_header(al->headers.request, "Proxy-authorization:");
 	if (t == NULL) {
 	    al->cache.ident = dash_str;

@@ -129,6 +129,7 @@ typedef struct _usecEntry usecEntry;
 typedef void AIOCB(void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
 typedef void CNCB(int fd, int status, void *);
+
 typedef void FREE(void *);
 typedef void FOCB(void *, int fd, int errcode);
 typedef void EVH(void *);

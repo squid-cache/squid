@@ -90,7 +90,6 @@ extern void clientHttpConnectionsOpen(void);
 extern void clientHttpConnectionsClose(void);
 extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, int);
 extern int isTcpHit(log_type);
-extern int handleConnectionHeader(int flag, char *where, char *what);
 
 extern int commSetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
@@ -313,15 +312,21 @@ extern int strListGetItem(const String * str, char del, const char **item, int *
 extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
 extern int httpHeaderParseSize(const char *start, size_t * sz);
+#ifdef __STDC__
+extern void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt, ...);
+#else
+extern void httpHeaderPutStrf()
+#endif
 
 /* Http Header */
 extern void httpHeaderInitModule();
 extern void httpHeaderCleanModule();
 /* init/clean */
-extern void httpHeaderInit(HttpHeader * hdr);
+extern void httpHeaderInit(HttpHeader * hdr, http_hdr_owner_type owner);
 extern void httpHeaderClean(HttpHeader * hdr);
-/* update */
-extern void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh);
+/* append/update */
+extern void httpHeaderAppend(HttpHeader * dest, const HttpHeader * src);
+extern void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask *denied_mask);
 /* parse/pack */
 extern int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
 extern void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
@@ -343,6 +348,8 @@ extern const char *httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id
 extern const char *httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *authScheme);
 extern String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id);
 extern int httpHeaderDelByName(HttpHeader * hdr, const char *name);
+extern int httpHeaderDelById(HttpHeader * hdr, http_hdr_type id);
+extern void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
 /* avoid using these low level routines */
 extern HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos);
 extern HttpHeaderEntry *httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id);
@@ -357,9 +364,9 @@ extern int httpMsgIsPersistent(float http_ver, const HttpHeader * hdr);
 extern int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
 
 /* Http Reply */
+extern void httpReplyInitModule();
+/* create/destroy */
 extern HttpReply *httpReplyCreate();
-extern void httpReplyInit(HttpReply * rep);
-extern void httpReplyClean(HttpReply * rep);
 extern void httpReplyDestroy(HttpReply * rep);
 /* reset: clean, then init */
 extern void httpReplyReset(HttpReply * rep);
@@ -395,7 +402,8 @@ extern void requestDestroy(request_t *);
 extern request_t *requestLink(request_t *);
 extern void requestUnlink(request_t *);
 extern int httpRequestParseHeader(request_t * req, const char *parse_start);
-extern void httpRequestSetHeaders(request_t *, method_t, const char *uri, const char *header_str);
+extern void httpRequestSwapOut(const request_t *req, StoreEntry *e);
+extern int httpRequestPrefixLen(const request_t *req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 
 extern void icmpOpen(void);
@@ -480,7 +488,6 @@ extern char *mime_get_header_field(const char *mime, const char *name, const cha
 extern char *mime_headers_end(const char *mime);
 #endif
 extern size_t headersEnd(const char *, size_t);
-extern int mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt);
 extern const char *mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field);
 
 extern void mimeInit(char *filename);

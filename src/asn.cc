@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.36 1998/05/11 18:44:32 rousskov Exp $
+ * $Id: asn.cc,v 1.37 1998/05/27 22:51:48 rousskov Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -188,8 +188,6 @@ asnCacheStart(int as)
 #if OLD_CODE
     asState->request->headers = xstrdup("\r\n");
     asState->request->headers_sz = strlen(asState->request->headers);
-#else
-    httpRequestSetHeaders(asState->request, METHOD_GET, asres, "");
 #endif
     if ((e = storeGet(k)) == NULL) {
 	e = storeCreateEntry(asres, asres, 0, METHOD_GET);

@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.13 1998/05/22 23:43:53 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.14 1998/05/27 22:51:42 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -31,6 +31,7 @@
 #include "squid.h"
 
 static int httpHeaderStrCmp(const char *h1, const char *h2, int len);
+static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 
 
 HttpHeaderFieldInfo *
@@ -105,6 +106,50 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
     return -1;
 }
 
+/* same as httpHeaderPutStr, but formats the string using snprintf first */
+#ifdef __STDC__
+void
+httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+#else
+void
+httpHeaderPutStrf(va_alist)
+     va_dcl
+{
+    va_list args;
+    HttpHeader *hdr = NULL;
+    http_hdr_type id = HDR_ENUM_END;
+    const char *fmt = NULL;
+    va_start(args);
+    hdr = va_arg(args, HttpHeader *);
+    id = va_arg(args, http_hdr_type);
+    fmt = va_arg(args, char *);
+#endif
+    httpHeaderPutStrvf(hdr, id, fmt, args);
+    va_end(args);
+}
+
+/* used by httpHeaderPutStrf */
+static void
+httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs)
+{
+#if OLD_CODE
+    LOCAL_ARRAY(char, buf, 4096);
+    buf[0] = '\0';
+    vsnprintf(buf, 4096, fmt, vargs);
+    httpHeaderPutStr(hdr, id, buf);
+#else
+    MemBuf mb;
+    memBufDefInit(&mb);
+    memBufVPrintf(&mb, fmt, vargs);
+    httpHeaderPutStr(hdr, id, mb.buf);
+    memBufClean(&mb);
+#endif
+}
+
+
 /*
  * return true if a given directive is found in at least one of the "connection" header-fields
  * note: if HDR_PROXY_CONNECTION is present we ignore HDR_CONNECTION
@@ -158,8 +203,10 @@ void
 strListAdd(String * str, const char *item, char del)
 {
     assert(str && item);
-    if (strLen(*str))
-	stringAppend(str, &del, 1);
+    if (strLen(*str)) {
+	char buf[3] = { del, ' ', '\0' };
+	stringAppend(str, buf, 2);
+    }
     stringAppend(str, item, strlen(item));
 }
 
@@ -274,7 +321,7 @@ httpHeaderTestParser(const char *hstr)
 	hstr_len -= 2;
     else if (strstr(hstr, "\n\n"))
 	hstr_len -= 1;
-    httpHeaderInit(&hdr);
+    httpHeaderInit(&hdr, hoReply);
     /* debugLevels[55] = 8; */
     parse_success = httpHeaderParse(&hdr, hstr, hstr + hstr_len);
     /* debugLevels[55] = 2; */
