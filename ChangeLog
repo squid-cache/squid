@@ -9,6 +9,7 @@
 	- Changed ftpget default Content-Type to application/octet-stream.
 	- Added .rpm MIME type (Nigel Metheringham).
 	- Changed storeDirClean() to create missing directories.
+	- Removed icpState->buf and storeCopy() call in icpGetHeadersfForIMS().
 
 Changes to squid-1.novm.4 (January XX, 1996):
 
