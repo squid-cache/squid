@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.67 1996/10/17 11:30:53 wessels Exp $
+ * $Id: neighbors.cc,v 1.68 1996/10/19 07:08:35 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@
 
 static int edgeWouldBePinged _PARAMS((edge *, request_t *));
 static void neighborRemove _PARAMS((edge *));
-static edge *whichEdge _PARAMS((icp_common_t *, struct sockaddr_in *));
+static edge *whichEdge _PARAMS((struct sockaddr_in *from));
 
 static neighbors *friends = NULL;
 static struct neighbor_cf *Neighbor_cf = NULL;
@@ -135,18 +135,13 @@ char *hier_strings[] =
 
 
 static edge *
-whichEdge(icp_common_t * header, struct sockaddr_in *from)
+whichEdge(struct sockaddr_in *from)
 {
     int j;
-    u_short port;
-    struct in_addr ip;
+    u_short port = ntohs(from->sin_port);
+    struct in_addr ip = from->sin_addr;
     edge *e = NULL;
-
-    port = ntohs(from->sin_port);
-    ip = from->sin_addr;
-
     debug(15, 3, "whichEdge: from %s port %d\n", inet_ntoa(ip), port);
-
     for (e = friends->edges_head; e; e = e->next) {
 	for (j = 0; j < e->n_addresses; j++) {
 	    if (ip.s_addr == e->addresses[j].s_addr && port == e->icp_port) {
@@ -154,7 +149,7 @@ whichEdge(icp_common_t * header, struct sockaddr_in *from)
 	    }
 	}
     }
-    return (NULL);
+    return NULL;
 }
 
 void
@@ -529,6 +524,30 @@ neighborsUdpPing(protodispatch_data * proto)
     return mem->e_pings_n_pings;
 }
 
+void
+neighborAlive(edge * e, MemObject * mem, icp_common_t * header)
+{
+    int rtt;
+    int n;
+    /* Neighbor is alive, reset the ack deficit */
+    if (e->stats.ack_deficit >= HIER_MAX_DEFICIT) {
+	debug(15, 0, "Detected REVIVED %s: %s/%d/%d\n",
+	    e->type == EDGE_PARENT ? "PARENT" : "SIBLING",
+	    e->host, e->http_port, e->icp_port);
+    }
+    e->neighbor_up = 1;
+    e->stats.ack_deficit = 0;
+    n = ++e->stats.pings_acked;
+    if ((icp_opcode) header->opcode <= ICP_OP_END)
+	e->stats.counts[header->opcode]++;
+    if (n > RTT_AV_FACTOR)
+	n = RTT_AV_FACTOR;
+    if (mem) {
+	rtt = tvSubMsec(mem->start_ping, current_time);
+	e->stats.rtt = (e->stats.rtt * (n - 1) + rtt) / n;
+	e->icp_version = (int) header->version;
+    }
+}
 
 /* I should attach these records to the entry.  We take the first
  * hit we get our wait until everyone misses.  The timeout handler
@@ -542,13 +561,13 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
     edge *e = NULL;
     MemObject *mem = entry->mem_obj;
     int w_rtt;
-    int rtt;
-    int n;
     HttpStateData *httpState = NULL;
     neighbor_t ntype = EDGE_NONE;
 
     debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n",
 	(int) header->opcode, url);
+    if ((e = whichEdge(from)))
+	neighborAlive(e, mem, header);
     if ((icp_opcode) header->opcode > ICP_OP_END)
 	return;
     if (mem == NULL) {
@@ -564,28 +583,14 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	debug(15, 5, "neighborsUdpAck: '%s' unexpected ICP reply.\n", url);
 	return;
     }
-    if ((e = whichEdge(header, from))) {
-	ntype = neighborType(e, entry->mem_obj->request);
-	/* Neighbor is alive, reset the ack deficit */
-	if (e->stats.ack_deficit >= HIER_MAX_DEFICIT) {
-	    debug(15, 0, "Detected REVIVED %s: %s/%d/%d\n",
-		e->type == EDGE_PARENT ? "PARENT" : "SIBLING",
-		e->host, e->http_port, e->icp_port);
-	}
-	e->neighbor_up = 1;
-	e->stats.ack_deficit = 0;
-	n = ++e->stats.pings_acked;
-	e->stats.counts[header->opcode]++;
-	if (n > RTT_AV_FACTOR)
-	    n = RTT_AV_FACTOR;
-	rtt = tvSubMsec(mem->start_ping, current_time);
-	e->stats.rtt = (e->stats.rtt * (n - 1) + rtt) / n;
-	e->icp_version = (int) header->version;
+    if (entry->lock_count == 0) {
+	debug(12, 3, "neighborsUdpAck: '%s has no locks.\n", url);
+	return;
     }
     debug(15, 3, "neighborsUdpAck: %s for '%s' from %s \n",
 	IcpOpcodeStr[header->opcode], url, e ? e->host : "source");
-
     mem->e_pings_n_acks++;
+    ntype = neighborType(e, entry->mem_obj->request);
     if (header->opcode == ICP_OP_SECHO) {
 	/* Received source-ping reply */
 	if (e) {

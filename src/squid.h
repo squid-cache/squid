@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.60 1996/10/14 23:45:30 wessels Exp $
+ * $Id: squid.h,v 1.61 1996/10/19 07:08:37 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -193,6 +193,7 @@ typedef struct icp_common_s icp_common_t;
 typedef struct _cacheinfo cacheinfo;
 typedef struct _aclCheck_t aclCheck_t;
 typedef struct _request request_t;
+typedef struct _MemObject MemObject;
 
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
