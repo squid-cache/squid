@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.450 1999/05/04 19:22:23 wessels Exp $
+ * $Id: client_side.cc,v 1.451 1999/05/04 21:08:40 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -655,10 +655,6 @@ httpRequestFree(void *data)
 	http->al.cache.size = http->out.size;
 	http->al.cache.code = http->log_type;
 	http->al.cache.msec = tvSubMsec(http->start, current_time);
-	if (request->user_ident[0])
-	    http->al.cache.ident = request->user_ident;
-	else
-	    http->al.cache.ident = conn->ident;
 	if (request) {
 	    Packer p;
 	    MemBuf mb;
@@ -669,6 +665,10 @@ httpRequestFree(void *data)
 	    http->al.http.version = request->http_ver;
 	    http->al.headers.request = xstrdup(mb.buf);
 	    http->al.hier = request->hier;
+	    if (request->user_ident[0])
+		http->al.cache.ident = request->user_ident;
+	    else
+		http->al.cache.ident = conn->ident;
 	    packerClean(&p);
 	    memBufClean(&mb);
 	}
