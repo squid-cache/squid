@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.235 2001/10/19 23:49:36 hno Exp $
+# $Id: cf.data.pre,v 1.236 2001/10/20 09:32:51 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1939,6 +1939,7 @@ NOCOMMENT_START
 acl all src 0.0.0.0/0.0.0.0
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
+acl to_localhost dst 127.0.0.0/8
 acl SSL_ports port 443 563
 acl Safe_ports port 80		# http
 acl Safe_ports port 21		# ftp
@@ -1988,8 +1989,13 @@ http_access deny !Safe_ports
 # Deny CONNECT to other than SSL ports
 http_access deny CONNECT !SSL_ports
 #
-# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+# We strongly recommend to uncomment the following to protect innocent
+# web applications running on the proxy server who think that the only
+# one who can access services on "localhost" is a local user
+#http_access deny to_localhost
 #
+# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+
 # And finally deny all other access to this proxy
 http_access deny all
 NOCOMMENT_END
