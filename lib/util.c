@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.2 1996/02/29 08:15:25 wessels Exp $ */
+/* $Id: util.c,v 1.3 1996/03/26 05:13:15 wessels Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +9,11 @@
 
 void (*failure_notify) () = NULL;
 static char msg[128];
+
+extern int sys_nerr;
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+extern char *sys_errlist[];
+#endif
 
 #include "autoconf.h"
 
@@ -138,16 +143,13 @@ char *strdup(s)
  */
 char *xstrerror()
 {
-    extern int sys_nerr;
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
-    extern char *sys_errlist[];
-#endif
-    int n;
+    static char xstrerror_buf[BUFSIZ];
 
-    n = errno;
-    if (n < 0 || n >= sys_nerr)
+    if (errno < 0 || errno >= sys_nerr)
 	return ("Unknown");
-    return (sys_errlist[n]);
+    sprintf(xstrerror_buf, "(%d) %s", errno, sys_errlist[errno]);
+    return xstrerror_buf;
+    /* return (sys_errlist[errno]); */
 }
 
 #ifndef HAVE_STRERROR
