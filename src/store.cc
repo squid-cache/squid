@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.347 1997/11/24 22:32:38 wessels Exp $
+ * $Id: store.cc,v 1.348 1997/11/24 22:36:24 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -709,7 +709,7 @@ InvokeHandlers(StoreEntry * e)
     /* walk the entire list looking for valid callbacks */
     for (sc = mem->clients; sc; sc = nx) {
 	nx = sc->next;
-	debug(20, 0) ("InvokeHandlers: checking client #%d\n", i++);
+	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i++);
 	if (sc->callback_data == NULL)
 	    continue;
 	if (sc->callback == NULL)
