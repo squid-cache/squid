@@ -42,6 +42,8 @@ Our Todo List
 (4) Everywhere that we use 'pattern' or such, use ACL elements instead.
     stoplist_pattern, refresh_pattern, ...
 (4) Base stoplists on ACLs.
+(4) Refresh based on content types.  This means we'll need an enum of
+    known content types added to StoreEntry.  Unknown types will lose.
 
 (5) X-Proxy-hops header?
 (5) internalize redirectors?

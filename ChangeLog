@@ -4,6 +4,8 @@
 	- Fixed storeDirCloseSwapLogs(); logs might not be open.
 	- Fixed storeClientCopy2() bug.  Detect when there is
 	  no more data to send for objects in STORE_OK state.
+	- Fixed FTP truncation bug when ftpState->size == 0, e.g.
+	  especially directory listings.
 
 Changes to squid-1.2.beta6 (Nov 13, 1997):
 
