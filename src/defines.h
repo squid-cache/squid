@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.73 1999/04/16 01:00:50 wessels Exp $
+ * $Id: defines.h,v 1.74 1999/05/26 03:18:15 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -205,8 +205,6 @@
 
 #define STORE_ENTRY_WITH_MEMOBJ		1
 #define STORE_ENTRY_WITHOUT_MEMOBJ	0
-#define STORE_SWAP_BUF		DISK_PAGE_SIZE
-#define VM_WINDOW_SZ		DISK_PAGE_SIZE
 
 #define SKIP_BASIC_SZ ((size_t) 6)
 
