@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.21 1998/07/22 20:37:20 wessels Exp $
+ * $Id: forward.cc,v 1.22 1998/08/13 18:26:17 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -246,7 +246,6 @@ fwdStartFail(peer * peernotused, void *data)
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(fwdState->request);
     errorAppendEntry(fwdState->entry, err);
-    requestUnlink(fwdState->request);
     fwdStateFree(fwdState);
 }
 
