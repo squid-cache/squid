@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.8 2000/05/29 00:30:44 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.9 2000/05/29 01:53:58 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -128,7 +128,7 @@ static int storeDiskdFilenoBelongsHere(int fn, int F0, int F1, int F2);
 static int storeDiskdCleanupDoubleCheck(SwapDir *, StoreEntry *);
 static void storeDiskdDirStats(SwapDir *, StoreEntry *);
 static void storeDiskdDirInitBitmap(SwapDir *);
-static int storeDiskdDirValidFileno(SwapDir *, sfileno);
+static int storeDiskdDirValidFileno(SwapDir *, sfileno, int);
 static int storeDiskdDirCheckExpired(SwapDir *, StoreEntry *);
 #if !HEAP_REPLACEMENT
 static time_t storeDiskdDirExpiredReferenceAge(SwapDir *);
@@ -725,7 +725,7 @@ storeDiskdDirRebuildFromSwapLog(void *data)
 	if ((++rb->counts.scancount & 0xFFFF) == 0)
 	    debug(20, 3) ("  %7d %s Entries read so far.\n",
 		rb->counts.scancount, rb->sd->path);
-	if (!storeDiskdDirValidFileno(SD, s.swap_filen)) {
+	if (!storeDiskdDirValidFileno(SD, s.swap_filen, 0)) {
 	    rb->counts.invalid++;
 	    continue;
 	}
@@ -1289,7 +1289,7 @@ storeDiskdDirClean(int swap_index)
 	if (sscanf(de->d_name, "%X", &swapfileno) != 1)
 	    continue;
 	fn = swapfileno;	/* XXX should remove this cruft ! */
-	if (storeDiskdDirValidFileno(SD, fn))
+	if (storeDiskdDirValidFileno(SD, fn, 1))
 	    if (storeDiskdDirMapBitTest(SD, fn))
 		if (storeDiskdFilenoBelongsHere(fn, D0, D1, D2))
 		    continue;
@@ -1397,13 +1397,18 @@ storeDiskdFilenoBelongsHere(int fn, int F0, int F1, int F2)
 }
 
 int
-storeDiskdDirValidFileno(SwapDir * SD, sfileno filn)
+storeDiskdDirValidFileno(SwapDir * SD, sfileno filn, int flag)
 {
     diskdinfo_t *diskdinfo = SD->fsdata;
     if (filn < 0)
 	return 0;
-    if (filn > diskdinfo->map->max_n_files)
-	return 0;
+    /*
+     * If flag is set it means out-of-range file number should
+     * be considered invalid.
+     */
+    if (flag)
+	if (filn > diskdinfo->map->max_n_files)
+	    return 0;
     return 1;
 }
 
