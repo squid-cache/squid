@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.92 1996/11/02 00:17:51 wessels Exp $
+ * $Id: http.cc,v 1.93 1996/11/04 18:12:43 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -125,7 +125,7 @@ static void httpCacheNegatively _PARAMS((StoreEntry *));
 static void httpReadReply _PARAMS((int fd, void *));
 static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
 static void httpSendRequest _PARAMS((int fd, void *));
-static void httpConnect _PARAMS((int fd, ipcache_addrs *, void *));
+static void httpConnect _PARAMS((int fd, const ipcache_addrs *, void *));
 static void httpConnectDone _PARAMS((int fd, int status, void *data));
 
 static void
@@ -144,7 +144,7 @@ httpStateFree(int fd, void *data)
 }
 
 int
-httpCachable(char *url, int method)
+httpCachable(const char *url, int method)
 {
     /* GET and HEAD are cachable. Others are not. */
     if (method != METHOD_GET && method != METHOD_HEAD)
@@ -212,7 +212,7 @@ httpCacheNegatively(StoreEntry * entry)
 
 /* Build a reply structure from HTTP reply headers */
 void
-httpParseHeaders(char *buf, struct _http_reply *reply)
+httpParseHeaders(const char *buf, struct _http_reply *reply)
 {
     char *headers = NULL;
     char *t = NULL;
@@ -285,7 +285,7 @@ httpParseHeaders(char *buf, struct _http_reply *reply)
 
 
 void
-httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
+httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 {
     char *t = NULL;
     StoreEntry *entry = httpState->entry;
@@ -554,12 +554,12 @@ httpSendRequest(int fd, void *data)
     char *t = NULL;
     char *post_buf = NULL;
     int post_buf_sz = 0;
-    static char *crlf = "\r\n";
+    const char *const crlf = "\r\n";
     int len = 0;
     int buflen;
     int cfd = -1;
     request_t *req = httpState->request;
-    char *Method = RequestMethodStr[req->method];
+    const char *Method = RequestMethodStr[req->method];
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
     int saw_host = 0;
@@ -657,7 +657,7 @@ httpSendRequest(int fd, void *data)
 }
 
 int
-proxyhttpStart(edge * e, char *url, StoreEntry * entry)
+proxyhttpStart(edge *e, const char *url, StoreEntry *entry)
 {
     int sock;
     HttpStateData *httpState = NULL;
@@ -706,7 +706,7 @@ proxyhttpStart(edge * e, char *url, StoreEntry * entry)
 }
 
 static void
-httpConnect(int fd, ipcache_addrs * ia, void *data)
+httpConnect(int fd, const ipcache_addrs *ia, void *data)
 {
     HttpStateData *httpState = data;
     request_t *request = httpState->request;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.36 1996/10/24 23:31:19 wessels Exp $
+ * $Id: url.cc,v 1.37 1996/11/04 18:13:13 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -31,7 +31,7 @@
 
 #include "squid.h"
 
-char *RequestMethodStr[] =
+const char *RequestMethodStr[] =
 {
     "NONE",
     "GET",
@@ -53,7 +53,7 @@ static char *ProtocolStr[] =
 };
 
 static int url_acceptable[256];
-static char hex[17] = "0123456789abcdef";
+static const char *const hex = "0123456789abcdef";
 static int urlDefaultPort _PARAMS((protocol_t p));
 
 /* convert %xx in url string to a character 
@@ -107,9 +107,10 @@ urlInitialize(void)
 /* Encode prohibited char in string */
 /* return the pointer to new (allocated) string */
 char *
-url_escape(char *url)
+url_escape(const char *url)
 {
-    char *p, *q;
+    const char *p;
+    char *q;
     char *tmpline = xcalloc(1, MAX_URL);
 
     q = tmpline;
@@ -127,7 +128,7 @@ url_escape(char *url)
 }
 
 method_t
-urlParseMethod(char *s)
+urlParseMethod(const char *s)
 {
     if (strcasecmp(s, "GET") == 0) {
 	return METHOD_GET;
@@ -145,7 +146,7 @@ urlParseMethod(char *s)
 
 
 protocol_t
-urlParseProtocol(char *s)
+urlParseProtocol(const char *s)
 {
     if (strncasecmp(s, "http", 4) == 0)
 	return PROTO_HTTP;
@@ -248,7 +249,7 @@ urlParse(method_t method, char *url)
 }
 
 char *
-urlCanonical(request_t * request, char *buf)
+urlCanonical(const request_t *request, char *buf)
 {
     LOCAL_ARRAY(char, urlbuf, MAX_URL + 1);
     LOCAL_ARRAY(char, portbuf, 32);
@@ -294,7 +295,7 @@ requestUnlink(request_t * request)
 }
 
 int
-matchDomainName(char *domain, char *host)
+matchDomainName(const char *domain, const char *host)
 {
     int offset;
     if ((offset = strlen(host) - strlen(domain)) < 0)
@@ -311,7 +312,7 @@ matchDomainName(char *domain, char *host)
 }
 
 int
-urlCheckRequest(request_t * r)
+urlCheckRequest(const request_t *r)
 {
     int rc = 0;
     if (r->method == METHOD_CONNECT)

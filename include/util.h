@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.24 1996/10/25 02:15:14 wessels Exp $
+ * $Id: util.h,v 1.25 1996/11/04 18:14:00 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -127,15 +127,14 @@
 #endif
 #endif
 
-extern char *getfullhostname _PARAMS((void));
-extern char *mkhttpdlogtime _PARAMS((time_t *));
-extern char *mkrfc1123 _PARAMS((time_t));
-extern char *uudecode _PARAMS((char *));
-extern char *xstrdup _PARAMS((char *));
-extern char *xstrdup _PARAMS((char *));
-extern char *xstrerror _PARAMS((void));
+extern const char *getfullhostname _PARAMS((void));
+extern const char *mkhttpdlogtime _PARAMS((const time_t *));
+extern const char *mkrfc1123 _PARAMS((time_t));
+extern char *uudecode _PARAMS((const char *));
+extern char *xstrdup _PARAMS((const char *));
+extern const char *xstrerror _PARAMS((void));
 extern int tvSubMsec _PARAMS((struct timeval, struct timeval));
-extern time_t parse_rfc1123 _PARAMS((char *str));
+extern time_t parse_rfc1123 _PARAMS((const char *str));
 extern void *xcalloc _PARAMS((int, size_t));
 extern void *xmalloc _PARAMS((size_t));
 extern void *xrealloc _PARAMS((void *, size_t));

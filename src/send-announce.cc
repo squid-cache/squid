@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.21 1996/10/11 23:11:18 wessels Exp $
+ * $Id: send-announce.cc,v 1.22 1996/11/04 18:13:01 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -37,7 +37,7 @@ send_announce(void)
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
     icpUdpData *qdata = NULL;
-    ipcache_addrs *ia = NULL;
+    const ipcache_addrs *ia = NULL;
     char *host = NULL;
     char *file = NULL;
     u_short port;

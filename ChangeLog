@@ -7,6 +7,7 @@ Changes to squid-1.1.beta14 ():
 	  which have not yet expired, but are past the LM-factor.
 	- Fixed asciiConnLifetimeHandle() to force storeAbort() for
 	  pending objects.
+	- Made lots of variables and args 'const' (Markus Gyger).
 
 Changes to squid-1.1.beta13 (November 1, 1996):
 

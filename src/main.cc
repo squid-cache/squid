@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.105 1996/10/25 16:43:25 wessels Exp $
+ * $Id: main.cc,v 1.106 1996/11/04 18:12:51 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -126,15 +126,15 @@ int vhost_mode = 0;
 volatile int unbuffered_logs = 1;	/* debug and hierarchy unbuffered by default */
 volatile int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
 volatile int reread_pending = 0;	/* set by SIGHUP handler */
-char version_string[] = SQUID_VERSION;
-char appname[] = "squid";
-char localhost[] = "127.0.0.1";
+const char *const version_string = SQUID_VERSION;
+const char *const appname = "squid";
+const char *const localhost = "127.0.0.1";
 struct in_addr local_addr;
-char dash_str[] = "-";
-char null_string[] = "";
+const char *const dash_str = "-";
+const char *const null_string = "";
 
 /* for error reporting from xmalloc and friends */
-extern void (*failure_notify) _PARAMS((char *));
+extern void (*failure_notify) _PARAMS((const char *));
 
 static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
@@ -164,26 +164,26 @@ extern int store_maintain_rate;
 static void
 usage(void)
 {
-    fprintf(stderr, "\
-Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n\
-       -a port   Specify ASCII port number (default: %d).\n\
-       -f file   Use given config-file instead of\n\
-                 %s\n\
-       -h        Print help message.\n\
-       -i        Disable IP caching.\n\
-       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check\n\
-		 Send signal to running copy and exit.\n\
-       -s        Enable logging to syslog.\n\
-       -u port   Specify ICP port number (default: %d), disable with 0.\n\
-       -v        Print version.\n\
-       -z        Zap disk storage -- deletes all objects in disk cache.\n\
-       -C        Do not catch fatal signals.\n\
-       -D        Disable initial DNS tests.\n\
-       -F        Foreground fast store rebuild.\n\
-       -R        Do not set REUSEADDR on port.\n\
-       -U        Unlink expired objects on reload.\n\
-       -V        Virtual host httpd-accelerator.\n\
-       -Y        Only return UDP_HIT or UDP_RELOADING during fast reload.\n",
+    fprintf(stderr,
+	"Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n"
+	"       -a port   Specify ASCII port number (default: %d).\n"
+	"       -f file   Use given config-file instead of\n"
+	"                 %s\n"
+	"       -h        Print help message.\n"
+	"       -i        Disable IP caching.\n"
+	"       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check\n"
+	"                 Send signal to running copy and exit.\n"
+	"       -s        Enable logging to syslog.\n"
+	"       -u port   Specify ICP port number (default: %d), disable with 0.\n"
+	"       -v        Print version.\n"
+	"       -z        Zap disk storage -- deletes all objects in disk cache.\n"
+	"       -C        Do not catch fatal signals.\n"
+	"       -D        Disable initial DNS tests.\n"
+	"       -F        Foreground fast store rebuild.\n"
+	"       -R        Do not set REUSEADDR on port.\n"
+	"       -U        Unlink expired objects on reload.\n"
+	"       -V        Virtual host httpd-accelerator.\n"
+	"       -Y        Only return UDP_HIT or UDP_RELOADING during fast reload.\n",
 	appname, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
     exit(1);
 }

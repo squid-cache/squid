@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.22 1996/10/15 23:32:48 wessels Exp $
+ * $Id: util.c,v 1.23 1996/11/04 18:14:04 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -130,7 +130,7 @@
 #include "ansiproto.h"
 #include "util.h"
 
-void (*failure_notify) _PARAMS((char *)) = NULL;
+void (*failure_notify) _PARAMS((const char *)) = NULL;
 static char msg[128];
 
 extern int sys_nerr;
@@ -412,7 +412,7 @@ xcalloc(int n, size_t sz)
  *  Never returns NULL; fatal on error.
  */
 char *
-xstrdup(char *s)
+xstrdup(const char *s)
 {
     static char *p = NULL;
     size_t sz;
@@ -435,7 +435,7 @@ xstrdup(char *s)
 /*
  * xstrerror() - return sys_errlist[errno];
  */
-char *
+const char *
 xstrerror(void)
 {
     static char xstrerror_buf[BUFSIZ];

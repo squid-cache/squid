@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.77 1996/11/01 06:52:13 wessels Exp $
+ * $Id: neighbors.cc,v 1.78 1996/11/04 18:12:53 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -105,10 +105,10 @@
 
 #include "squid.h"
 
-static int edgeWouldBePinged _PARAMS((edge *, request_t *));
+static int edgeWouldBePinged _PARAMS((const edge *, request_t *));
 static void neighborRemove _PARAMS((edge *));
-static edge *whichEdge _PARAMS((struct sockaddr_in * from));
-static void neighborAlive _PARAMS((edge *, MemObject *, icp_common_t *));
+static edge *whichEdge _PARAMS((const struct sockaddr_in * from));
+static void neighborAlive _PARAMS((edge *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((edge * e, icp_opcode op_unused));
 
 static neighbors *friends = NULL;
@@ -116,7 +116,7 @@ static struct neighbor_cf *Neighbor_cf = NULL;
 static icp_common_t echo_hdr;
 static u_short echo_port;
 
-char *hier_strings[] =
+const char *hier_strings[] =
 {
     "NONE",
     "DIRECT",
@@ -137,7 +137,7 @@ char *hier_strings[] =
 
 
 static edge *
-whichEdge(struct sockaddr_in *from)
+whichEdge(const struct sockaddr_in *from)
 {
     int j;
     u_short port = ntohs(from->sin_port);
@@ -155,7 +155,7 @@ whichEdge(struct sockaddr_in *from)
 }
 
 void
-hierarchyNote(request_t * request, hier_code code, int timeout, char *cache_host)
+hierarchyNote(request_t *request, hier_code code, int timeout, const char *cache_host)
 {
     if (request) {
 	request->hierarchy.code = code;
@@ -165,9 +165,9 @@ hierarchyNote(request_t * request, hier_code code, int timeout, char *cache_host
 }
 
 static neighbor_t
-neighborType(edge * e, request_t * request)
+neighborType(const edge *e, const request_t *request)
 {
-    dom_list *d = NULL;
+    const dom_list *d = NULL;
     for (d = e->domains; d; d = d->next) {
 	if (matchDomainName(d->domain, request->host))
 	    if (d->neighbor_type != EDGE_NONE)
@@ -177,11 +177,11 @@ neighborType(edge * e, request_t * request)
 }
 
 static int
-edgeWouldBePinged(edge * e, request_t * request)
+edgeWouldBePinged(const edge *e, request_t *request)
 {
-    dom_list *d = NULL;
+    const dom_list *d = NULL;
     int do_ping = 1;
-    struct _acl_list *a = NULL;
+    const struct _acl_list *a = NULL;
     aclCheck_t checklist;
 
     if (BIT_TEST(request->flags, REQ_NOCACHE))
@@ -318,7 +318,7 @@ neighbors_open(int fd)
     struct sockaddr_in name;
     struct sockaddr_in *ap;
     int len = sizeof(struct sockaddr_in);
-    ipcache_addrs *ia = NULL;
+    const ipcache_addrs *ia = NULL;
     edge *e = NULL;
     edge *next = NULL;
     edge **E = NULL;
@@ -391,7 +391,7 @@ neighborsUdpPing(protodispatch_data * proto)
     char *host = proto->request->host;
     char *url = proto->url;
     StoreEntry *entry = proto->entry;
-    ipcache_addrs *ia = NULL;
+    const ipcache_addrs *ia = NULL;
     struct sockaddr_in to_addr;
     edge *e = NULL;
     int i;
@@ -527,7 +527,7 @@ neighborsUdpPing(protodispatch_data * proto)
 }
 
 static void
-neighborAlive(edge * e, MemObject * mem, icp_common_t * header)
+neighborAlive(edge *e, const MemObject *mem, const icp_common_t *header)
 {
     int rtt;
     int n;
@@ -566,7 +566,7 @@ neighborCountIgnored(edge * e, icp_opcode op_unused)
  * If a hit process is already started, then sobeit
  */
 void
-neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *from, StoreEntry * entry, char *data, int data_sz)
+neighborsUdpAck(int fd, const char *url, icp_common_t *header, const struct sockaddr_in *from, StoreEntry *entry, char *data, int data_sz)
 {
     edge *e = NULL;
     MemObject *mem = entry->mem_obj;
@@ -719,7 +719,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 }
 
 void
-neighbors_cf_add(char *host, char *type, int http_port, int icp_port, int options, int weight, int mcast_ttl)
+neighbors_cf_add(const char *host, const char *type, int http_port, int icp_port, int options, int weight, int mcast_ttl)
 {
     struct neighbor_cf *t, *u;
 
@@ -742,7 +742,7 @@ neighbors_cf_add(char *host, char *type, int http_port, int icp_port, int option
 }
 
 void
-neighbors_cf_domain(char *host, char *domain, neighbor_t type)
+neighbors_cf_domain(const char *host, const char *domain, neighbor_t type)
 {
     struct neighbor_cf *t = NULL;
     dom_list *l = NULL;
@@ -771,7 +771,7 @@ neighbors_cf_domain(char *host, char *domain, neighbor_t type)
 }
 
 void
-neighbors_cf_acl(char *host, char *aclname)
+neighbors_cf_acl(const char *host, const char *aclname)
 {
     struct neighbor_cf *t = NULL;
     struct _acl_list *L = NULL;
@@ -819,7 +819,7 @@ neighbors_init(void)
 {
     struct neighbor_cf *t = NULL;
     struct neighbor_cf *next = NULL;
-    char *me = getMyHostname();
+    const char *me = getMyHostname();
     edge *e = NULL;
 
     debug(15, 1, "neighbors_init: Initializing Neighbors...\n");
@@ -872,7 +872,7 @@ neighbors_init(void)
 }
 
 edge *
-neighborFindByName(char *name)
+neighborFindByName(const char *name)
 {
     edge *e = NULL;
     for (e = friends->edges_head; e; e = e->next) {

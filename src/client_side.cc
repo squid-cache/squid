@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.55 1996/10/30 21:56:34 wessels Exp $
+ * $Id: client_side.cc,v 1.56 1996/11/04 18:12:16 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,12 +33,12 @@
 
 static void clientRedirectDone _PARAMS((void *data, char *result));
 static int icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
-static void clientLookupDstIPDone _PARAMS((int fd, ipcache_addrs *, void *data));
-static void clientLookupSrcFQDNDone _PARAMS((int fd, char *fqdn, void *data));
+static void clientLookupDstIPDone _PARAMS((int fd, const ipcache_addrs *, void *data));
+static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
 
 
 static void
-clientLookupDstIPDone(int fd, ipcache_addrs * ia, void *data)
+clientLookupDstIPDone(int fd, const ipcache_addrs *ia, void *data)
 {
     icpStateData *icpState = data;
     debug(33, 5, "clientLookupDstIPDone: FD %d, '%s'\n",
@@ -56,7 +56,7 @@ clientLookupDstIPDone(int fd, ipcache_addrs * ia, void *data)
 }
 
 static void
-clientLookupSrcFQDNDone(int fd, char *fqdn, void *data)
+clientLookupSrcFQDNDone(int fd, const char *fqdn, void *data)
 {
     icpStateData *icpState = data;
     debug(33, 5, "clientLookupSrcFQDNDone: FD %d, '%s', FQDN %s\n",
@@ -80,7 +80,7 @@ clientLookupIdentDone(void *data)
 static int
 clientProxyAuthCheck(icpStateData * icpState)
 {
-    char *proxy_user;
+    const char *proxy_user;
 
     /* Check that the user is allowed to access via this proxy-cache
      * don't restrict if they're accessing a local domain or
@@ -234,8 +234,8 @@ clientRedirectDone(void *data, char *result)
  */
 #define CHECK_PROXY_FILE_TIME 300
 
-char *
-proxyAuthenticate(char *headers)
+const char *
+proxyAuthenticate(const char *headers)
 {
     /* Keep the time measurements and the hash
      * table of users and passwords handy */

@@ -21,10 +21,10 @@ const int pr2six[256] =
 };
 
 char *
-uudecode(char *bufcoded)
+uudecode(const char *bufcoded)
 {
     int nbytesdecoded;
-    unsigned char *bufin;
+    const unsigned char *bufin;
     char *bufplain;
     unsigned char *bufout;
     int nprbytes;
@@ -37,7 +37,7 @@ uudecode(char *bufcoded)
     /* Figure out how many characters are in the input buffer.
      * Allocate this many from the per-transaction pool for the result.
      */
-    bufin = (unsigned char *) bufcoded;
+    bufin = (const unsigned char *) bufcoded;
     while (pr2six[*(bufin++)] <= 63);
     nprbytes = (char *) bufin - bufcoded - 1;
     nbytesdecoded = ((nprbytes + 3) / 4) * 3;
@@ -47,7 +47,7 @@ uudecode(char *bufcoded)
 	return (NULL);
     bufout = (unsigned char *) bufplain;
 
-    bufin = (unsigned char *) bufcoded;
+    bufin = (const unsigned char *) bufcoded;
 
     while (nprbytes > 0) {
 	*(bufout++) =

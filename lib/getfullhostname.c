@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.10 1996/10/19 08:21:54 wessels Exp $
+ * $Id: getfullhostname.c,v 1.11 1996/11/04 18:14:01 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -147,10 +147,10 @@
  *  host, or NULL on error.  Pointer is only valid until the next call
  *  to the gethost*() functions.
  */
-char *
+const char *
 getfullhostname(void)
 {
-    struct hostent *hp = NULL;
+    const struct hostent *hp = NULL;
     static char buf[SQUIDHOSTNAMELEN + 1];
 
     if (gethostname(buf, SQUIDHOSTNAMELEN) < 0)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.49 1996/11/02 00:18:00 wessels Exp $
+ * $Id: wais.cc,v 1.50 1996/11/04 18:13:15 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -125,7 +125,7 @@ static void waisLifetimeExpire _PARAMS((int, WaisStateData *));
 static void waisReadReply _PARAMS((int, WaisStateData *));
 static void waisSendComplete _PARAMS((int, char *, int, int, void *));
 static void waisSendRequest _PARAMS((int, WaisStateData *));
-static void waisConnect _PARAMS((int, ipcache_addrs *, void *));
+static void waisConnect _PARAMS((int, const ipcache_addrs *, void *));
 static void waisConnectDone _PARAMS((int fd, int status, void *data));
 
 static int
@@ -300,7 +300,7 @@ waisSendRequest(int fd, WaisStateData * waisState)
 {
     int len = strlen(waisState->request) + 4;
     char *buf = NULL;
-    char *Method = RequestMethodStr[waisState->method];
+    const char *Method = RequestMethodStr[waisState->method];
 
     debug(24, 5, "waisSendRequest: FD %d\n", fd);
 
@@ -329,7 +329,7 @@ waisSendRequest(int fd, WaisStateData * waisState)
 }
 
 int
-waisStart(int unusedfd, char *url, method_t method, char *mime_hdr, StoreEntry * entry)
+waisStart(int unusedfd, const char *url, method_t method, char *mime_hdr, StoreEntry * entry)
 {
     WaisStateData *waisState = NULL;
     int fd;
@@ -372,7 +372,7 @@ waisStart(int unusedfd, char *url, method_t method, char *mime_hdr, StoreEntry *
 
 
 static void
-waisConnect(int fd, ipcache_addrs * ia, void *data)
+waisConnect(int fd, const ipcache_addrs *ia, void *data)
 {
     WaisStateData *waisState = data;
     if (!ipcache_gethostbyname(waisState->relayhost, 0)) {

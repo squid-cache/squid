@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.26 1996/10/13 06:19:49 wessels Exp $
+ * $Id: redirect.cc,v 1.27 1996/11/04 18:12:59 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -39,8 +39,8 @@ typedef struct {
     void *data;
     char *orig_url;
     struct in_addr client_addr;
-    char *client_ident;
-    char *method_s;
+    const char *client_ident;
+    const char *method_s;
     RH handler;
 } redirectStateData;
 
@@ -71,7 +71,7 @@ struct redirectQueueData {
 };
 
 static redirector_t *GetFirstAvailable _PARAMS((void));
-static int redirectCreateRedirector _PARAMS((char *command));
+static int redirectCreateRedirector _PARAMS((const char *command));
 static int redirectHandleRead _PARAMS((int, redirector_t *));
 static redirectStateData *Dequeue _PARAMS((void));
 static void Enqueue _PARAMS((redirectStateData *));
@@ -84,7 +84,7 @@ static struct redirectQueueData *redirectQueueHead = NULL;
 static struct redirectQueueData **redirectQueueTailP = &redirectQueueHead;
 
 static int
-redirectCreateRedirector(char *command)
+redirectCreateRedirector(const char *command)
 {
     pid_t pid;
     struct sockaddr_in S;
@@ -265,7 +265,7 @@ static void
 redirectDispatch(redirector_t * redirect, redirectStateData * r)
 {
     char *buf = NULL;
-    char *fqdn = NULL;
+    const char *fqdn = NULL;
     int len;
     if (r->handler == NULL) {
 	debug(29, 1, "redirectDispatch: skipping '%s' because no handler\n",
@@ -428,7 +428,7 @@ redirectShutdownServers(void)
 
 
 int
-redirectUnregister(char *url, int fd)
+redirectUnregister(const char *url, int fd)
 {
     redirector_t *redirect = NULL;
     redirectStateData *r = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.31 1996/10/28 07:44:27 wessels Exp $
+ * $Id: stmem.cc,v 1.32 1996/11/04 18:13:07 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -118,8 +118,8 @@ stmem_stats mem_obj_pool;
 #endif
 
 static int memFreeDataUpto _PARAMS((mem_ptr, int));
-static int memAppend _PARAMS((mem_ptr, char *, int));
-static int memCopy _PARAMS((mem_ptr, int, char *, int));
+static int memAppend _PARAMS((mem_ptr, const char *, int));
+static int memCopy _PARAMS((const mem_ptr, int, char *, int));
 static void *get_free_thing _PARAMS((stmem_stats *));
 static void put_free_thing _PARAMS((stmem_stats *, void *));
 static void stmemFreeThingMemory _PARAMS((stmem_stats *));
@@ -209,7 +209,7 @@ memFreeDataUpto(mem_ptr mem, int target_offset)
 
 /* Append incoming data. */
 static int
-memAppend(mem_ptr mem, char *data, int len)
+memAppend(mem_ptr mem, const char *data, int len)
 {
     mem_node p;
     int avail_len;
@@ -253,7 +253,7 @@ memAppend(mem_ptr mem, char *data, int len)
 }
 
 static int
-memCopy(mem_ptr mem, int offset, char *buf, int size)
+memCopy(const mem_ptr mem, int offset, char *buf, int size)
 {
     mem_node p = mem->head;
     int t_off = mem->origin_offset;

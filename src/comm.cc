@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.95 1996/10/30 21:56:35 wessels Exp $
+ * $Id: comm.cc,v 1.96 1996/11/04 18:12:19 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -230,7 +230,7 @@ comm_open(int sock_type,
     struct in_addr addr,
     u_short port,
     int flags,
-    char *note)
+    const char *note)
 {
     int new_socket;
     FD_ENTRY *conn = NULL;
@@ -311,7 +311,7 @@ void
 comm_nbconnect(int fd, void *data)
 {
     ConnectStateData *connectState = data;
-    ipcache_addrs *ia = NULL;
+    const ipcache_addrs *ia = NULL;
     if (connectState->S.sin_addr.s_addr == 0) {
 	ia = ipcache_gethostbyname(connectState->host, IP_BLOCKING_LOOKUP);
 	if (ia == NULL) {
@@ -380,7 +380,7 @@ comm_get_fd_timeout(int fd)
 }
 
 int
-comm_connect_addr(int sock, struct sockaddr_in *address)
+comm_connect_addr(int sock, const struct sockaddr_in *address)
 {
     int status = COMM_OK;
     FD_ENTRY *conn = &fd_table[sock];
@@ -396,7 +396,7 @@ comm_connect_addr(int sock, struct sockaddr_in *address)
 	return COMM_ERROR;
     }
     /* Establish connection. */
-    if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
+    if (connect(sock, (const struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
 	switch (errno) {
 	case EALREADY:
 	    return COMM_ERROR;
@@ -545,9 +545,9 @@ comm_cleanup_fd_entry(int fd)
 
 /* Send a udp datagram to specified PORT at HOST. */
 int
-comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
+comm_udp_send(int fd, const char *host, u_short port, const char *buf, int len)
 {
-    ipcache_addrs *ia = NULL;
+    const ipcache_addrs *ia = NULL;
     static struct sockaddr_in to_addr;
     int bytes_sent;
 
@@ -572,11 +572,11 @@ comm_udp_send(int fd, char *host, u_short port, char *buf, int len)
 
 /* Send a udp datagram to specified TO_ADDR. */
 int
-comm_udp_sendto(int fd, struct sockaddr_in *to_addr, int addr_len, char *buf, int len)
+comm_udp_sendto(int fd, const struct sockaddr_in *to_addr, int addr_len, const char *buf, int len)
 {
     int bytes_sent;
 
-    if ((bytes_sent = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len)) < 0) {
+    if ((bytes_sent = sendto(fd, buf, len, 0, to_addr, addr_len)) < 0) {
 	debug(5, 1, "comm_udp_sendto: sendto failure: FD %d: %s\n", fd, xstrerror());
 	debug(5, 1, "comm_udp_sendto: --> sin_family = %d\n", to_addr->sin_family);
 	debug(5, 1, "comm_udp_sendto: --> sin_port   = %d\n", htons(to_addr->sin_port));
@@ -1090,7 +1090,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 }
 
 char *
-fd_note(int fd, char *s)
+fd_note(int fd, const char *s)
 {
     if (s == NULL)
 	return (fd_table[fd].ascii_note);

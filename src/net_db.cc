@@ -16,9 +16,9 @@ static void netdbRelease _PARAMS((netdbEntry * n));
 static netdbEntry *netdbGetFirst _PARAMS((HashID table));
 static netdbEntry *netdbGetNext _PARAMS((HashID table));
 static void netdbHashInsert _PARAMS((netdbEntry * n, struct in_addr addr));
-static void netdbHashDelete _PARAMS((char *key));
-static void netdbHashLink _PARAMS((netdbEntry * n, char *hostname));
-static void netdbHashUnlink _PARAMS((char *key));
+static void netdbHashDelete _PARAMS((const char *key));
+static void netdbHashLink _PARAMS((netdbEntry * n, const char *hostname));
+static void netdbHashUnlink _PARAMS((const char *key));
 static void netdbPurgeLRU _PARAMS((void));
 
 static void
@@ -31,7 +31,7 @@ netdbHashInsert(netdbEntry * n, struct in_addr addr)
 }
 
 static void
-netdbHashDelete(char *key)
+netdbHashDelete(const char *key)
 {
     hash_link *hptr = hash_lookup(addr_table, key);
     if (hptr == NULL) {
@@ -43,7 +43,7 @@ netdbHashDelete(char *key)
 }
 
 static void
-netdbHashLink(netdbEntry * n, char *hostname)
+netdbHashLink(netdbEntry * n, const char *hostname)
 {
     struct _net_db_name *x = xcalloc(1, sizeof(struct _net_db_name));
     x->name = xstrdup(hostname);
@@ -55,7 +55,7 @@ netdbHashLink(netdbEntry * n, char *hostname)
 }
 
 static void
-netdbHashUnlink(char *key)
+netdbHashUnlink(const char *key)
 {
     netdbEntry *n;
     hash_link *hptr = hash_lookup(host_table, key);
@@ -70,7 +70,7 @@ netdbHashUnlink(char *key)
 }
 
 static netdbEntry *
-netdbLookupHost(char *key)
+netdbLookupHost(const char *key)
 {
     hash_link *hptr = hash_lookup(host_table, key);
     return hptr ? (netdbEntry *) hptr->item : NULL;
@@ -152,7 +152,7 @@ netdbLookupAddr(struct in_addr addr)
 }
 
 static netdbEntry *
-netdbAdd(struct in_addr addr, char *hostname)
+netdbAdd(struct in_addr addr, const char *hostname)
 {
     netdbEntry *n;
     if (meta_data.netdb_addrs > NETDB_HIGH_MARK)
@@ -166,7 +166,7 @@ netdbAdd(struct in_addr addr, char *hostname)
 }
 
 static void
-netdbSendPing(int fdunused, ipcache_addrs * ia, void *data)
+netdbSendPing(int fdunused, const ipcache_addrs *ia, void *data)
 {
     struct in_addr addr;
     char *hostname = data;
@@ -220,13 +220,13 @@ void
 netdbInit(void)
 {
 #if USE_ICMP
-    addr_table = hash_create((int (*)_PARAMS((char *, char *))) strcmp, 229, hash_string);
-    host_table = hash_create((int (*)_PARAMS((char *, char *))) strcmp, 467, hash_string);
+    addr_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp, 229, hash_string);
+    host_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp, 467, hash_string);
 #endif
 }
 
 void
-netdbPingSite(char *hostname)
+netdbPingSite(const char *hostname)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -241,7 +241,7 @@ netdbPingSite(char *hostname)
 }
 
 void
-netdbHandlePingReply(struct sockaddr_in *from, int hops, int rtt)
+netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -330,37 +330,34 @@ netdbDump(StoreEntry * sentry)
     struct _net_db_name *x;
     int k;
     int i;
-    storeAppendPrintf(sentry, "{Network DB Statistics:\n");
-    */
-} */
-
-storeAppendPrintf(sentry, "{%-16.16s %9s %7s %5s %s}\n",
-    "Network",
-    "recv/sent",
-    "RTT",
-    "Hops",
-    "Hostnames");
-list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
-i = 0;
-for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table))
-    *(list + i++) = n;
-qsort((char *) list,
-    i,
-    sizeof(netdbEntry *),
-    (QS) sortByHops);
-for (k = 0; k < i; k++) {
-    n = *(list + k);
-    storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f",	/* } */
-	n->network,
-	n->pings_recv,
-	n->pings_sent,
-	n->rtt,
-	n->hops);
-    for (x = n->hosts; x; x = x->next)
-	storeAppendPrintf(sentry, " %s", x->name);
+    storeAppendPrintf(sentry, "{Network DB Statistics:\n");	/* } */
+    storeAppendPrintf(sentry, "{%-16.16s %9s %7s %5s %s}\n",
+	"Network",
+	"recv/sent",
+	"RTT",
+	"Hops",
+	"Hostnames");
+    list = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
+    i = 0;
+    for (n = netdbGetFirst(addr_table); n; n = netdbGetNext(addr_table))
+	*(list + i++) = n;
+    qsort((char *) list,
+	i,
+	sizeof(netdbEntry *),
+	(QS) sortByHops);
+    for (k = 0; k < i; k++) {
+	n = *(list + k);
+	storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f",	/* } */
+	    n->network,
+	    n->pings_recv,
+	    n->pings_sent,
+	    n->rtt,
+	    n->hops);
+	for (x = n->hosts; x; x = x->next)
+	    storeAppendPrintf(sentry, " %s", x->name);
+	storeAppendPrintf(sentry, close_bracket);
+    }
     storeAppendPrintf(sentry, close_bracket);
-}
-storeAppendPrintf(sentry, close_bracket);
-xfree(list);
+    xfree(list);
 #endif
 }

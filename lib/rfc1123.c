@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1123.c,v 1.2 1996/10/25 17:35:22 wessels Exp $
+ * $Id: rfc1123.c,v 1.3 1996/11/04 18:14:02 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -135,8 +135,8 @@
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
 #define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
 
-static int make_month _PARAMS((char *s));
-static int make_num _PARAMS((char *s));
+static int make_month _PARAMS((const char *s));
+static int make_num _PARAMS((const char *s));
 
 static char *month_names[12] =
 {
@@ -146,7 +146,7 @@ static char *month_names[12] =
 
 
 static int
-make_num(char *s)
+make_num(const char *s)
 {
     if (*s >= '0' && *s <= '9')
 	return 10 * (*s - '0') + *(s + 1) - '0';
@@ -155,25 +155,26 @@ make_num(char *s)
 }
 
 static int
-make_month(char *s)
+make_month(const char *s)
 {
     int i;
+    char month[3];
 
-    *s = toupper(*s);
-    *(s + 1) = tolower(*(s + 1));
-    *(s + 2) = tolower(*(s + 2));
+    month[0] = toupper(*s);
+    month[1] = tolower(*(s + 1));
+    month[2] = tolower(*(s + 2));
 
     for (i = 0; i < 12; i++)
-	if (!strncmp(month_names[i], s, 3))
+	if (!strncmp(month_names[i], month, 3))
 	    return i;
     return 0;
 }
 
 
 time_t
-parse_rfc1123(char *str)
+parse_rfc1123(const char *str)
 {
-    char *s;
+    const char *s;
     struct tm tm;
     time_t t;
 
@@ -254,7 +255,7 @@ parse_rfc1123(char *str)
     return t;
 }
 
-char *
+const char *
 mkrfc1123(time_t t)
 {
     static char buf[128];
@@ -266,8 +267,8 @@ mkrfc1123(time_t t)
     return buf;
 }
 
-char *
-mkhttpdlogtime(time_t * t)
+const char *
+mkhttpdlogtime(const time_t *t)
 {
     static char buf[128];
 

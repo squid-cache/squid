@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.38 1996/10/17 11:14:42 wessels Exp $
+ * $Id: cachemgr.cc,v 1.39 1996/11/04 18:12:13 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -298,9 +298,9 @@ static char *op_cmds_descr[] =
 
 static int hasTables = FALSE;
 
-static char *script_name = "/cgi-bin/cachemgr.cgi";
-static char *w_space = " \t\n";
-static char *progname = NULL;
+static const char *script_name = "/cgi-bin/cachemgr.cgi";
+static const char *const w_space = " \t\n";
+static const char *progname = NULL;
 static time_t now;
 
 static char x2c _PARAMS((char *));
@@ -494,7 +494,7 @@ describeTimeSince(time_t then)
     time_t delta = now - then;
     static char buf[128];
     static char buf2[128];
-    char *fmt = "%s ago";
+    const char *fmt = "%s ago";
     buf[0] = '\0';
     if (delta < 0) {
 	delta = (-delta);
@@ -984,7 +984,7 @@ main(int argc, char *argv[])
 static int
 client_comm_connect(int sock, char *dest_host, u_short dest_port)
 {
-    struct hostent *hp;
+    const struct hostent *hp;
     static struct sockaddr_in to_addr;
     unsigned long haddr;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.73 1996/11/01 21:57:17 wessels Exp $
+ * $Id: ftp.cc,v 1.74 1996/11/04 18:12:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -128,20 +128,20 @@ typedef struct _Ftpdata {
 } FtpStateData;
 
 /* Local functions */
-static char *ftpTransferMode _PARAMS((char *));
-static char *ftpGetBasicAuth _PARAMS((char *));
+static const char *ftpTransferMode _PARAMS((const char *));
+static char *ftpGetBasicAuth _PARAMS((const char *));
 static int ftpReadReply _PARAMS((int, FtpStateData *));
 static int ftpStateFree _PARAMS((int, FtpStateData *));
 static void ftpConnectDone _PARAMS((int fd, int status, void *data));
 static void ftpLifetimeExpire _PARAMS((int, FtpStateData *));
-static void ftpProcessReplyHeader _PARAMS((FtpStateData *, char *, int));
+static void ftpProcessReplyHeader _PARAMS((FtpStateData *, const char *, int));
 static void ftpSendComplete _PARAMS((int, char *, int, int, void *));
 static void ftpSendRequest _PARAMS((int, FtpStateData *));
 static void ftpServerClosed _PARAMS((int, void *));
-static void ftp_login_parser _PARAMS((char *, FtpStateData *));
+static void ftp_login_parser _PARAMS((const char *, FtpStateData *));
 
 /* External functions */
-extern char *base64_decode _PARAMS((char *coded));
+extern char *base64_decode _PARAMS((const char *coded));
 
 static int
 ftpStateFree(int fd, FtpStateData * ftpState)
@@ -159,7 +159,7 @@ ftpStateFree(int fd, FtpStateData * ftpState)
 }
 
 static void
-ftp_login_parser(char *login, FtpStateData * data)
+ftp_login_parser(const char *login, FtpStateData * data)
 {
     char *user = data->user;
     char *password = data->password;
@@ -195,7 +195,7 @@ ftpLifetimeExpire(int fd, FtpStateData * data)
 /* This is too much duplicated code from httpProcessReplyHeader.  Only
  * difference is FtpStateData vs HttpData. */
 static void
-ftpProcessReplyHeader(FtpStateData * data, char *buf, int size)
+ftpProcessReplyHeader(FtpStateData * data, const char *buf, int size)
 {
     char *t = NULL;
     StoreEntry *entry = data->entry;
@@ -424,13 +424,13 @@ ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	(void *) ftpState, Config.readTimeout);
 }
 
-static char *
-ftpTransferMode(char *urlpath)
+static const char *
+ftpTransferMode(const char *urlpath)
 {
-    static char ftpASCII[] = "A";
-    static char ftpBinary[] = "I";
+    const char *const ftpASCII = "A";
+    const char *const ftpBinary = "I";
     char *ext = NULL;
-    ext_table_entry *mime = NULL;
+    const ext_table_entry *mime = NULL;
     int len;
     len = strlen(urlpath);
     if (*(urlpath + len - 1) == '/')
@@ -448,11 +448,11 @@ static void
 ftpSendRequest(int fd, FtpStateData * data)
 {
     char *path = NULL;
-    char *mode = NULL;
+    const char *mode = NULL;
     char *buf = NULL;
     LOCAL_ARRAY(char, tbuf, BUFSIZ);
     LOCAL_ARRAY(char, opts, BUFSIZ);
-    static char *space = " ";
+    const char *const space = " ";
     char *s = NULL;
     int got_timeout = 0;
     int got_negttl = 0;
@@ -526,7 +526,7 @@ ftpSendRequest(int fd, FtpStateData * data)
 }
 
 static char *
-ftpGetBasicAuth(char *req_hdr)
+ftpGetBasicAuth(const char *req_hdr)
 {
     char *auth_hdr;
     char *t;
@@ -545,7 +545,7 @@ ftpGetBasicAuth(char *req_hdr)
 
 
 int
-ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
+ftpStart(int unusedfd, const char *url, request_t *request, StoreEntry *entry)
 {
     LOCAL_ARRAY(char, realm, 8192);
     FtpStateData *ftpData = NULL;

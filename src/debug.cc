@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.33 1996/10/24 05:17:43 wessels Exp $
+ * $Id: debug.cc,v 1.34 1996/11/04 18:12:22 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -105,7 +105,7 @@
 
 #include "squid.h"
 
-char *volatile _db_file = __FILE__;
+const char *volatile _db_file = __FILE__;
 volatile int _db_line = 0;
 
 FILE *debug_log = NULL;
@@ -118,7 +118,7 @@ static char *accessLogTime _PARAMS((time_t));
 
 #ifdef __STDC__
 void
-_db_print(int section, int level, char *format,...)
+_db_print(int section, int level, const char *format, ...)
 {
     va_list args;
 #else
@@ -129,7 +129,7 @@ _db_print(va_alist)
     va_list args;
     int section;
     int level;
-    char *format = NULL;
+    const char *format = NULL;
 #endif
     LOCAL_ARRAY(char, f, BUFSIZ);
 #if HAVE_SYSLOG
@@ -145,7 +145,7 @@ _db_print(va_alist)
     va_start(args);
     section = va_arg(args, int);
     level = va_arg(args, int);
-    format = va_arg(args, char *);
+    format = va_arg(args, const char *);
 #endif
 
     if (level > debugLevels[section]) {
@@ -182,7 +182,7 @@ _db_print(va_alist)
 }
 
 static void
-debugArg(char *arg)
+debugArg(const char *arg)
 {
     int s = 0;
     int l = 0;
@@ -206,7 +206,7 @@ debugArg(char *arg)
 }
 
 static void
-debugOpenLog(char *logfile)
+debugOpenLog(const char *logfile)
 {
     if (logfile == NULL) {
 	debug_log = stderr;
@@ -228,7 +228,7 @@ debugOpenLog(char *logfile)
 }
 
 void
-_db_init(char *logfile, char *options)
+_db_init(const char *logfile, const char *options)
 {
     int i;
     char *p = NULL;

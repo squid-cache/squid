@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.59 1996/11/02 00:17:49 wessels Exp $
+ * $Id: gopher.cc,v 1.60 1996/11/04 18:12:39 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -160,9 +160,9 @@ typedef struct gopher_ds {
 } GopherStateData;
 
 static int gopherStateFree _PARAMS((int fd, GopherStateData *));
-static void gopher_mime_content _PARAMS((char *buf, char *name, char *def));
+static void gopher_mime_content _PARAMS((char *buf, const char *name, const char *def));
 static void gopherMimeCreate _PARAMS((GopherStateData *));
-static int gopher_url_parser(char *url,
+static int gopher_url_parser(const char *url,
     char *host,
     int *port,
     char *type_id,
@@ -199,13 +199,13 @@ gopherStateFree(int fd, GopherStateData * gopherState)
 
 /* figure out content type from file extension */
 static void
-gopher_mime_content(char *buf, char *name, char *def)
+gopher_mime_content(char *buf, const char *name, const char *def)
 {
     LOCAL_ARRAY(char, temp, MAX_URL + 1);
     char *ext1 = NULL;
     char *ext2 = NULL;
-    char *str = NULL;
-    ext_table_entry *e = NULL;
+    const char *str = NULL;
+    const ext_table_entry *e = NULL;
 
     ext2 = NULL;
     strcpy(temp, name);
@@ -253,11 +253,11 @@ gopherMimeCreate(GopherStateData * data)
 {
     LOCAL_ARRAY(char, tempMIME, MAX_MIME);
 
-    sprintf(tempMIME, "\
-HTTP/1.0 200 OK Gatewaying\r\n\
-Server: Squid/%s\r\n\
-Date: %s\r\n\
-MIME-version: 1.0\r\n",
+    sprintf(tempMIME,
+	"HTTP/1.0 200 OK Gatewaying\r\n"
+	"Server: Squid/%s\r\n"
+	"Date: %s\r\n"
+	"MIME-version: 1.0\r\n",
 	version_string, mkrfc1123(squid_curtime));
 
     switch (data->type_id) {
@@ -302,7 +302,7 @@ MIME-version: 1.0\r\n",
 
 /* Parse a gopher url into components.  By Anawat. */
 static int
-gopher_url_parser(char *url, char *host, int *port, char *type_id, char *request)
+gopher_url_parser(const char *url, char *host, int *port, char *type_id, char *request)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, hostbuf, MAX_URL);
@@ -335,7 +335,7 @@ gopher_url_parser(char *url, char *host, int *port, char *type_id, char *request
 }
 
 int
-gopherCachable(char *url)
+gopherCachable(const char *url)
 {
     GopherStateData *data = NULL;
     int cachable = 1;
@@ -367,8 +367,8 @@ gopherEndHTML(GopherStateData * data)
     LOCAL_ARRAY(char, tmpbuf, TEMP_BUF_SIZE);
 
     if (!data->data_in) {
-	sprintf(tmpbuf, "<HTML><HEAD><TITLE>Server Return Nothing.</TITLE>\n\
-	</HEAD><BODY><HR><H1>Server Return Nothing.</H1></BODY></HTML>\n");
+	sprintf(tmpbuf, "<HTML><HEAD><TITLE>Server Return Nothing.</TITLE>\n"
+	    "</HEAD><BODY><HR><H1>Server Return Nothing.</H1></BODY></HTML>\n");
 	storeAppend(data->entry, tmpbuf, strlen(tmpbuf));
 	return;
     }
@@ -402,11 +402,11 @@ gopherToHTML(GopherStateData * data, char *inbuf, int len)
     entry = data->entry;
 
     if (data->conversion == HTML_INDEX_PAGE) {
-	sprintf(outbuf, "<HTML><HEAD><TITLE>Gopher Index %s</TITLE></HEAD>\n\
-		<BODY><H1>%s<BR>Gopher Search</H1>\n\
-		<p>This is a searchable Gopher index. Use the search\n\
-		function of your browser to enter search terms.\n\
-		<ISINDEX></BODY></HTML>\n", entry->url, entry->url);
+	sprintf(outbuf, "<HTML><HEAD><TITLE>Gopher Index %s</TITLE></HEAD>\n"
+		"<BODY><H1>%s<BR>Gopher Search</H1>\n"
+		"<p>This is a searchable Gopher index. Use the search\n"
+		"function of your browser to enter search terms.\n"
+		"<ISINDEX></BODY></HTML>\n", entry->url, entry->url);
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
 	BIT_RESET(entry->flag, DELAY_SENDING);
@@ -415,11 +415,11 @@ gopherToHTML(GopherStateData * data, char *inbuf, int len)
 	return;
     }
     if (data->conversion == HTML_CSO_PAGE) {
-	sprintf(outbuf, "<HTML><HEAD><TITLE>CSO Search of %s</TITLE></HEAD>\n\
-		<BODY><H1>%s<BR>CSO Search</H1>\n\
-		<P>A CSO database usually contains a phonebook or\n\
-		directory.  Use the search function of your browser to enter\n\
-		search terms.</P><ISINDEX></BODY></HTML>\n",
+	sprintf(outbuf, "<HTML><HEAD><TITLE>CSO Search of %s</TITLE></HEAD>\n"
+		"<BODY><H1>%s<BR>CSO Search</H1>\n"
+		"<P>A CSO database usually contains a phonebook or\n"
+		"directory.  Use the search function of your browser to enter\n"
+		"search terms.</P><ISINDEX></BODY></HTML>\n",
 	    entry->url, entry->url);
 
 	storeAppend(entry, outbuf, strlen(outbuf));
@@ -433,11 +433,11 @@ gopherToHTML(GopherStateData * data, char *inbuf, int len)
 
     if (!data->HTML_header_added) {
 	if (data->conversion == HTML_CSO_RESULT)
-	    strcat(outbuf, "<HTML><HEAD><TITLE>CSO Searchs Result</TITLE></HEAD>\n\
-		<BODY><H1>CSO Searchs Result</H1>\n<PRE>\n");
+	    strcat(outbuf, "<HTML><HEAD><TITLE>CSO Searchs Result</TITLE></HEAD>\n"
+		"<BODY><H1>CSO Searchs Result</H1>\n<PRE>\n");
 	else
-	    strcat(outbuf, "<HTML><HEAD><TITLE>Gopher Menu</TITLE></HEAD>\n\
-		<BODY><H1>Gopher Menu</H1>\n<PRE>\n");
+	    strcat(outbuf, "<HTML><HEAD><TITLE>Gopher Menu</TITLE></HEAD>\n"
+		"<BODY><H1>Gopher Menu</H1>\n<PRE>\n");
 	data->HTML_header_added = 1;
     }
     while ((pos != NULL) && (pos < inbuf + len)) {
@@ -936,7 +936,7 @@ gopherSendRequest(int fd, GopherStateData * data)
 }
 
 int
-gopherStart(int unusedfd, char *url, StoreEntry * entry)
+gopherStart(int unusedfd, const char *url, StoreEntry * entry)
 {
     /* Create state structure. */
     int sock;

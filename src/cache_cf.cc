@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.125 1996/11/04 17:04:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.126 1996/11/04 18:12:10 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -195,24 +195,24 @@ struct SquidConfig Config;
 #define DefaultObjectsPerBucket	50
 
 int httpd_accel_mode = 0;	/* for fast access */
-char *DefaultSwapDir = DEFAULT_SWAP_DIR;
-char *DefaultConfigFile = DEFAULT_CONFIG_FILE;
+const char *DefaultSwapDir = DEFAULT_SWAP_DIR;
+const char *DefaultConfigFile = DEFAULT_CONFIG_FILE;
 char *ConfigFile = NULL;	/* the whole thing */
-char *cfg_filename = NULL;	/* just the last part */
-char ForwardedBy[256];
+const char *cfg_filename = NULL;	/* just the last part */
+char ForwardedBy[256] = "";
 
-char w_space[] = " \t\n";
+const char *const w_space = " \t\n";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
 static char fatal_str[BUFSIZ];
-static char *safe_xstrdup _PARAMS((char *p));
-static int ip_acl_match _PARAMS((struct in_addr, ip_acl *));
-static void addToIPACL _PARAMS((ip_acl **, char *, ip_access_type));
+static char *safe_xstrdup _PARAMS((const char *p));
+static int ip_acl_match _PARAMS((struct in_addr, const ip_acl *));
+static void addToIPACL _PARAMS((ip_acl **, const char *, ip_access_type));
 static void parseOnOff _PARAMS((int *));
 static void parseIntegerValue _PARAMS((int *));
 static void self_destruct _PARAMS((void));
-static void wordlistAdd _PARAMS((wordlist **, char *));
+static void wordlistAdd _PARAMS((wordlist **, const char *));
 
 static void configDoConfigure _PARAMS((void));
 static void configSetFactoryDefaults _PARAMS((void));
@@ -234,7 +234,7 @@ static void parseHttpPortLine _PARAMS((void));
 static void parseHttpdAccelLine _PARAMS((void));
 static void parseIPLine _PARAMS((ip_acl ** list));
 static void parseIcpPortLine _PARAMS((void));
-static void parseLocalDomainFile _PARAMS((char *fname));
+static void parseLocalDomainFile _PARAMS((const char *fname));
 static void parseLocalDomainLine _PARAMS((void));
 static void parseMcastGroupLine _PARAMS((void));
 static void parseMemLine _PARAMS((void));
@@ -257,7 +257,7 @@ self_destruct(void)
 }
 
 static int
-ip_acl_match(struct in_addr c, ip_acl * a)
+ip_acl_match(struct in_addr c, const ip_acl *a)
 {
     static struct in_addr h;
 
@@ -281,11 +281,11 @@ ip_acl_destroy(ip_acl ** a)
 }
 
 ip_access_type
-ip_access_check(struct in_addr address, ip_acl * list)
+ip_access_check(struct in_addr address, const ip_acl *list)
 {
     static int init = 0;
     static struct in_addr localhost;
-    ip_acl *p = NULL;
+    const ip_acl *p = NULL;
     struct in_addr naddr;	/* network byte-order IP addr */
 
     if (!list)
@@ -315,7 +315,7 @@ ip_access_check(struct in_addr address, ip_acl * list)
 
 
 static void
-addToIPACL(ip_acl ** list, char *ip_str, ip_access_type access)
+addToIPACL(ip_acl **list, const char *ip_str, ip_access_type access)
 {
     ip_acl *p, *q;
     int a1, a2, a3, a4;
@@ -405,7 +405,7 @@ wordlistDestroy(wordlist ** list)
 }
 
 static void
-wordlistAdd(wordlist ** list, char *key)
+wordlistAdd(wordlist **list, const char *key)
 {
     wordlist *p = NULL;
     wordlist *q = NULL;
@@ -494,7 +494,7 @@ parseCacheHostLine(void)
 }
 
 static neighbor_t
-parseNeighborType(char *token)
+parseNeighborType(const char *token)
 {
     if (!strcasecmp(token, "parent"))
 	return EDGE_PARENT;
@@ -777,7 +777,7 @@ static void
 parseAddressLine(struct in_addr *addr)
 {
     char *token;
-    struct hostent *hp;
+    const struct hostent *hp;
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
@@ -790,7 +790,7 @@ parseAddressLine(struct in_addr *addr)
 }
 
 static void
-parseLocalDomainFile(char *fname)
+parseLocalDomainFile(const char *fname)
 {
     LOCAL_ARRAY(char, tmp_line, BUFSIZ);
     FILE *fp = NULL;
@@ -931,7 +931,7 @@ parseVizHackLine(void)
 {
     char *token;
     int i;
-    struct hostent *hp;
+    const struct hostent *hp;
     token = strtok(NULL, w_space);
     memset((char *) &Config.vizHackAddr, '\0', sizeof(struct sockaddr_in));
     Config.vizHackAddr.sin_family = AF_INET;
@@ -984,7 +984,7 @@ parseErrHtmlLine(void)
 }
 
 int
-parseConfigFile(char *file_name)
+parseConfigFile(const char *file_name)
 {
     FILE *fp = NULL;
     char *token = NULL;
@@ -1366,9 +1366,9 @@ setIcpPortNum(u_short port)
 }
 
 static char *
-safe_xstrdup(char *p)
+safe_xstrdup(const char *p)
 {
-    return p ? xstrdup(p) : p;
+    return p ? xstrdup(p) : NULL;
 }
 
 void

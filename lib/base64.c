@@ -31,7 +31,7 @@ base64_init(void)
 }
 
 char *
-base64_decode(char *p)
+base64_decode(const char *p)
 {
     static char result[8192];
     int c;
@@ -40,7 +40,7 @@ base64_decode(char *p)
     char *d;
 
     if (!p)
-	return p;
+	return NULL;
 
     if (!base64_initialized)
 	base64_init();

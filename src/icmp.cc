@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.25 1996/10/31 18:30:17 wessels Exp $
+ * $Id: icmp.cc,v 1.26 1996/11/04 18:12:44 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -55,10 +55,10 @@ static void icmpQueueSend _PARAMS((pingerEchoData * pkt,
 	int len,
 	void          (*free_func) _PARAMS((void *))));
 static void icmpSend _PARAMS((int fd, icmpQueueData * queue));
-static void icmpHandleSourcePing _PARAMS((struct sockaddr_in * from, char *buf));
+static void icmpHandleSourcePing _PARAMS((const struct sockaddr_in * from, const char *buf));
 
 static void
-icmpSendEcho(struct in_addr to, int opcode, char *payload, int len)
+icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
 {
     pingerEchoData *pecho = xcalloc(1, sizeof(pingerEchoData));
     if (payload && len == 0)
@@ -182,12 +182,12 @@ icmpSend(int fd, icmpQueueData * queue)
 }
 
 static void
-icmpHandleSourcePing(struct sockaddr_in *from, char *buf)
+icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
 {
-    char *key;
+    const char *key;
     StoreEntry *entry;
     icp_common_t header;
-    char *url;
+    const char *url;
     xmemcpy(&header, buf, sizeof(icp_common_t));
     url = buf + sizeof(icp_common_t);
     if (neighbors_do_private_keys && header.reqnum) {
@@ -222,7 +222,7 @@ icmpPing(struct in_addr to)
 }
 
 void
-icmpSourcePing(struct in_addr to, icp_common_t * header, char *url)
+icmpSourcePing(struct in_addr to, const icp_common_t *header, const char *url)
 {
 #if USE_ICMP
     char *payload;
@@ -242,7 +242,7 @@ icmpSourcePing(struct in_addr to, icp_common_t * header, char *url)
 }
 
 void
-icmpDomainPing(struct in_addr to, char *domain)
+icmpDomainPing(struct in_addr to, const char *domain)
 {
 #if USE_ICMP
     debug(37, 3, "icmpDomainPing: '%s'\n", domain);
