@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.124 1998/08/21 03:15:20 wessels Exp $
+ * $Id: net_db.cc,v 1.125 1998/08/25 19:09:20 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -788,6 +788,19 @@ netdbHostRtt(const char *host)
     }
 #endif
     return 0;
+}
+
+void
+netdbHostData(const char *host, int *samp, int *rtt, int *hops)
+{
+#if USE_ICMP
+	netdbEntry *n = netdbLookupHost(host);
+	if (n == NULL)
+		return;
+	*samp = n->pings_recv;
+	*rtt = (int) (n->rtt + 0.5);
+	*hops = (int) (n->hops + 0.5);
+#endif
 }
 
 int
