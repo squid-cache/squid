@@ -215,7 +215,20 @@
 /* Define if you have struct rusage */
 #undef HAVE_STRUCT_RUSAGE
 
+/*
+ * This makes warnings go away.  If you have socklen_t defined in your
+ * /usr/include files, then this should remain undef'd.  Otherwise it
+ * should be defined to int.
+ */
 #undef socklen_t
+
+/*
+ * By default (for now anyway) Squid includes options which allows
+ * the cache administrator to violate the HTTP protocol specification
+ * in terms of cache behaviour.  Setting this to '0' will disable
+ * such code.
+ */
+#define HTTP_VIOLATIONS 1
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
