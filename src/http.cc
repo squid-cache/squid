@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.162 1997/05/22 15:51:54 wessels Exp $
+ * $Id: http.cc,v 1.163 1997/05/22 17:28:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -744,7 +744,7 @@ httpBuildRequestHeader(request_t * request,
 	}
 	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512);
     }
-    hdr_len = t - hdr_in;
+    hdr_len = end - hdr_in;
     /* Append Via: */
     sprintf(ybuf, "%3.1f %s", orig_request->http_ver, ThisCache);
     strcat(viabuf, ybuf);
