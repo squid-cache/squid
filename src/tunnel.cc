@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.103 2000/05/02 19:35:23 hno Exp $
+ * $Id: tunnel.cc,v 1.104 2000/05/02 19:55:45 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -425,6 +425,31 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
     SslStateData *sslState = NULL;
     int sock;
     ErrorState *err = NULL;
+    aclCheck_t ch;
+    int answer;
+    /*
+       * client_addr == no_addr indicates this is an "internal" request
+       * from peer_digest.c, asn.c, netdb.c, etc and should always
+       * be allowed.  yuck, I know.
+       */
+    if (request->client_addr.s_addr != no_addr.s_addr) {
+	/*
+	   * Check if this host is allowed to fetch MISSES from us (miss_access)
+	   */
+	memset(&ch, '\0', sizeof(aclCheck_t));
+	ch.src_addr = request->client_addr;
+	ch.my_addr = request->my_addr;
+	ch.my_port = request->my_port;
+	ch.request = request;
+	answer = aclCheckFast(Config.accessList.miss, &ch);
+	if (answer == 0) {
+	    err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
+	    err->request = requestLink(request);
+	    err->src_addr = request->client_addr;
+	    errorSend(fd, err);
+	    return;
+	}
+    }
     debug(26, 3) ("sslStart: '%s %s'\n",
 	RequestMethodStr[request->method], url);
     Counter.server.all.requests++;
