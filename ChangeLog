@@ -1,3 +1,11 @@
+	- Fixed async IO bugs from adding filedescriptor arg to AIOCB
+	  callbacks (Henrik Nordstrom).
+	- Fixed store_swapout.c assertion.  We were freeing object data
+	  past the swapout_done offset.  This probably happens (only?)
+	  when an object changes from cachable to uncachable while
+	  it is being swapped out.
+	
+
 Changes to squid-1.2.beta24 (August 21, 1998):
 
 	- Added Bulgarian error pages by Evgeny Gechev.
