@@ -159,8 +159,6 @@
 #define SM_PAGE_SIZE 4096
 #define DISK_PAGE_SIZE  8192
 
-#define MIN_CLIENT 		1
-
 #define BIT_SET(flag, bit) 	((flag) |= (bit))
 #define BIT_RESET(flag, bit) 	((flag) &= ~(bit))
 #define BIT_TEST(flag, bit) 	((flag) & (bit))

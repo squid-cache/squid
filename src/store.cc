@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.303 1997/10/23 20:43:36 wessels Exp $
+ * $Id: store.cc,v 1.304 1997/10/23 23:26:45 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -203,7 +203,7 @@ typedef struct swapin_ctrl_t {
     char *path;
     SIH *callback;
     void *callback_data;
-    struct _store_client *sc;
+    store_client *sc;
 } swapin_ctrl_t;
 
 typedef struct lock_ctrl_t {
@@ -229,7 +229,7 @@ static void storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const ch
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareBucketOrder _PARAMS((struct _bucketOrder *, struct _bucketOrder *));
 static int storeCheckExpired _PARAMS((const StoreEntry *, int flag));
-static struct _store_client *storeClientListSearch _PARAMS((const MemObject *, void *));
+static store_client *storeClientListSearch _PARAMS((const MemObject *, void *));
 static int storeCopy _PARAMS((const StoreEntry *, off_t, size_t, char *, size_t *));
 static int storeEntryLocked _PARAMS((const StoreEntry *));
 static int storeEntryValidLength _PARAMS((const StoreEntry *));
@@ -275,7 +275,7 @@ static int storeKeepInMemory(const StoreEntry *);
 static SIH storeClientCopyFileOpened;
 static DRCB storeClientCopyHandleRead;
 static FOCB storeSwapInFileOpened;
-static void storeClientCopyFileRead(struct _store_client *sc);
+static void storeClientCopyFileRead(store_client *sc);
 static void storeInMemAdd(StoreEntry * e);
 static void storeInMemDelete(StoreEntry * e);
 static void storeSetMemStatus(StoreEntry * e, int);
@@ -684,11 +684,6 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     e->timestamp = 0;		/* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
     BIT_SET(e->flag, ENTRY_VALIDATED);
-
-    /* allocate client list */
-    mem->nclients = MIN_CLIENT;
-    mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
-    /* storeLog(STORE_LOG_CREATE, e); */
     return e;
 }
 
@@ -748,23 +743,26 @@ int
 storeUnregister(StoreEntry * e, void *data)
 {
     MemObject *mem = e->mem_obj;
-    struct _store_client *sc;
+    store_client *sc;
+    store_client **S;
     if (mem == NULL)
 	return 0;
     debug(20, 3) ("storeUnregister: called for '%s'\n", e->key);
-    sc = storeClientListSearch(mem, data);
+    for (S = &mem->clients; (sc = *S); S = &(*S)->next) {
+	if (sc->callback_data == data)
+	    break;
+    }
     if (sc == NULL)
 	return 0;
+    *S = sc->next;
+    mem->nclients--;
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
 	storeCheckSwapOut(e);
-    sc->seen_offset = 0;
-    sc->copy_offset = 0;
-    if (sc->swapin_fd > -1)
+    if (sc->swapin_fd > -1) {
+	commSetSelect(sc->swapin_fd, COMM_SELECT_READ, NULL, NULL, 0);
 	file_close(sc->swapin_fd);
-    sc->swapin_fd = -1;
-    sc->callback = NULL;
-    sc->callback_data = NULL;
-    debug(20, 9) ("storeUnregister: returning 1\n");
+    }
+    cbdataFree(sc);
     return 1;
 }
 
@@ -773,13 +771,13 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
 {
     const MemObject *mem = entry->mem_obj;
     off_t lowest = mem->inmem_hi;
-    int i;
-    struct _store_client *sc;
-    for (i = 0; i < mem->nclients; i++) {
-	sc = &mem->clients[i];
+    store_client *sc;
+    store_client *nx = NULL;
+    for (sc = mem->clients; sc; sc=nx) {
+	nx = sc->next;
 	if (sc->callback_data == NULL)	/* open slot */
 	    continue;
-	if (sc->swapin_fd > -1)	/* reading from disk */
+	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
 	if (sc->copy_offset < lowest)
 	    lowest = sc->copy_offset;
@@ -791,17 +789,18 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
 void
 InvokeHandlers(const StoreEntry * e)
 {
-    int i;
+    int i = 0;
     MemObject *mem = e->mem_obj;
     STCB *callback = NULL;
-    struct _store_client *sc;
+    store_client *sc;
+    store_client *nx = NULL;
     ssize_t size;
     assert(mem->clients != NULL || mem->nclients == 0);
     debug(20, 3) ("InvokeHandlers: %s\n", e->key);
     /* walk the entire list looking for valid callbacks */
-    for (i = 0; i < mem->nclients; i++) {
-	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i);
-	sc = &mem->clients[i];
+    for (sc = mem->clients; sc; sc=nx) {
+	nx = sc->next;
+	debug(20, 3) ("InvokeHandlers: checking client #%d\n", i++);
 	if (sc->callback_data == NULL)
 	    continue;
 	if ((callback = sc->callback) == NULL)
@@ -1075,6 +1074,8 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	if (storeDirMapBitTest(e->swap_file_number)) {
 	    /* someone took our file while we weren't looking */
+	    debug(0,0)("storeSwapInStart: someone took our file while we weren't looking\n");
+	    debug(0,0)("storeSwapInStart: for %s\n", e->url);
 	    callback(-1, callback_data);
 	    return;
 	}
@@ -1857,68 +1858,52 @@ storeClientWaiting(const StoreEntry * e)
 {
     int i;
     MemObject *mem = e->mem_obj;
-    if (mem->clients) {
-	for (i = 0; i < mem->nclients; i++) {
-	    if (mem->clients[i].callback_data != NULL)
-		return 1;
-	}
+    store_client *sc;
+    for (sc = mem->clients; sc; sc = sc->next) {
+	if (sc->callback_data != NULL)
+	    return 1;
     }
     return 0;
 }
 
-static struct _store_client *
+static store_client *
 storeClientListSearch(const MemObject * mem, void *data)
 {
-    int i;
-    if (mem->clients) {
-	for (i = 0; i < mem->nclients; i++) {
-	    if (mem->clients[i].callback_data == data)
-		return &mem->clients[i];
-	}
+    store_client *sc;
+    for (sc = mem->clients; sc; sc = sc->next) {
+	if (sc->callback_data == data)
+	    break;
     }
-    return NULL;
+    return sc;
 }
 
 /* add client with fd to client list */
-int
+void
 storeClientListAdd(StoreEntry * e, void *data)
 {
     int i;
     MemObject *mem = e->mem_obj;
-    struct _store_client *oldlist = NULL;
-    struct _store_client *sc;
+    store_client **T;
+    store_client *sc;
     int oldsize;
     if (mem == NULL)
 	mem = e->mem_obj = new_MemObject(urlClean(e->url));
-    /* look for empty slot */
-    if (mem->clients == NULL) {
-	mem->nclients = MIN_CLIENT;
-	mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
-    }
-    for (i = 0; i < mem->nclients; i++) {
-	if (mem->clients[i].callback_data == data)
-	    return i;		/* its already here */
-	if (mem->clients[i].callback_data == NULL)
-	    break;
-    }
-    if (i == mem->nclients) {
-	debug(20, 3) ("storeClientListAdd: Growing clients for '%s'\n", e->url);
-	oldlist = mem->clients;
-	oldsize = mem->nclients;
-	mem->nclients <<= 1;
-	mem->clients = xcalloc(mem->nclients, sizeof(struct _store_client));
-	for (i = 0; i < oldsize; i++)
-	    mem->clients[i] = oldlist[i];
-	safe_free(oldlist);
-	i = oldsize;
-    }
-    sc = &mem->clients[i];
+    if (storeClientListSearch(mem, data) != NULL)
+	return;
+    mem->nclients++;
+    sc = xcalloc(1, sizeof(store_client));
+    cbdataAdd(sc);	/* sc is callback_data for file_read */
     sc->callback_data = data;
     sc->seen_offset = 0;
     sc->copy_offset = 0;
     sc->swapin_fd = -1;
     sc->mem = mem;
-    return i;
+    if (e->store_status == STORE_PENDING && mem->swapout.fd == -1)
+	sc->type = STORE_MEM_CLIENT;
+    else
+	sc->type = STORE_DISK_CLIENT;
+    for (T = &mem->clients; *T; T = &(*T)->next);
+    *T = sc;
 }
 
 /* same to storeCopy but also register client fd and last requested offset
@@ -1934,7 +1919,7 @@ storeClientCopy(StoreEntry * e,
 {
     size_t sz;
     MemObject *mem = e->mem_obj;
-    struct _store_client *sc;
+    store_client *sc;
     static int recurse_detect = 0;
     assert(e->store_status != STORE_ABORTED);
     assert(recurse_detect < 3);	/* could == 1 for IMS not modified's */
@@ -1968,12 +1953,14 @@ storeClientCopy(StoreEntry * e,
 	callback(data, buf, sz);
     } else if (sc->swapin_fd < 0) {
 	debug(20, 3) ("storeClientCopy: Need to open swap in file\n");
+	assert(sc->type == STORE_DISK_CLIENT);
 	/* gotta open the swapin file */
 	assert(copy_offset == 0);
 	storeSwapInStart(e, storeClientCopyFileOpened, sc);
     } else {
 	debug(20, 3) ("storeClientCopy: reading from disk FD %d\n",
 	    sc->swapin_fd);
+	assert(sc->type == STORE_DISK_CLIENT);
 	storeClientCopyFileRead(sc);
     }
     recurse_detect--;
@@ -1982,10 +1969,12 @@ storeClientCopy(StoreEntry * e,
 static void
 storeClientCopyFileOpened(int fd, void *data)
 {
-    struct _store_client *sc = data;
+    store_client *sc = data;
+    STCB *callback = sc->callback;
     if (fd < 0) {
 	debug(20, 1) ("storeClientCopyFileOpened: failed\n");
-	sc->callback(sc->callback_data, sc->copy_buf, -1);
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, -1);
 	return;
     }
     sc->swapin_fd = fd;
@@ -1993,8 +1982,9 @@ storeClientCopyFileOpened(int fd, void *data)
 }
 
 static void
-storeClientCopyFileRead(struct _store_client *sc)
+storeClientCopyFileRead(store_client *sc)
 {
+    assert (sc->callback != NULL);
     file_read(sc->swapin_fd,
 	sc->copy_buf,
 	sc->copy_size,
@@ -2006,12 +1996,14 @@ storeClientCopyFileRead(struct _store_client *sc)
 static void
 storeClientCopyHandleRead(int fd, const char *buf, int len, int flag, void *data)
 {
-    struct _store_client *sc = data;
+    store_client *sc = data;
     MemObject *mem = sc->mem;
+    STCB *callback = sc->callback;
     debug(20, 3) ("storeClientCopyHandleRead: FD %d, len %d\n", fd, len);
-    if (len > 0 && sc->copy_offset == 0)
+    if (sc->copy_offset == 0 && len > 0 && mem != NULL)
 	httpParseReplyHeaders(buf, mem->reply);
-    sc->callback(sc->callback_data, sc->copy_buf, len);
+    sc->callback = NULL;
+    callback(sc->callback_data, sc->copy_buf, len);
 }
 
 static int
@@ -2345,11 +2337,14 @@ storePendingNClients(const StoreEntry * e)
 {
     int npend = 0;
     MemObject *mem = e->mem_obj;
+    store_client *sc;
+    store_client *nx = NULL;
     int i;
     if (mem == NULL)
 	return 0;
-    for (i = 0; i < mem->nclients; i++) {
-	if (mem->clients[i].callback_data == NULL)
+    for (sc = mem->clients; sc; sc=nx) {
+	nx = sc->next;
+	if (sc->callback_data == NULL)
 	    continue;
 	npend++;
     }
@@ -2582,8 +2577,6 @@ storeMemObjectDump(MemObject * mem)
     debug(20, 1) ("MemObject->start_ping: %d.%06d\n",
 	mem->start_ping.tv_sec,
 	mem->start_ping.tv_usec);
-    debug(20, 1) ("MemObject->pending_list_size: %d\n",
-	mem->pending_list_size);
     debug(20, 1) ("MemObject->inmem_hi: %d\n",
 	mem->inmem_hi);
     debug(20, 1) ("MemObject->inmem_lo: %d\n",
