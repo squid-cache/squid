@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.59 2003/04/24 06:35:09 hno Exp $
+ * $Id: dns_internal.cc,v 1.60 2004/04/03 14:52:21 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -75,6 +75,8 @@ struct _idns_query
     IDNSCB *callback;
     void *callback_data;
     int attempt;
+    const char *error;
+    int rcode;
 };
 
 struct _ns
@@ -573,11 +575,15 @@ idnsGrokReply(const char *buf, size_t sz)
 
     dlinkDelete(&q->lru, &lru_list);
     idnsRcodeCount(n, q->attempt);
+    q->error = NULL;
 
     if (n < 0) {
         debug(78, 3) ("idnsGrokReply: error %d\n", rfc1035_errno);
 
-        if (-2 == n && ++q->attempt < MAX_ATTEMPT) {
+        q->error = rfc1035_error_message;
+        q->rcode = -n;
+
+        if (q->rcode == 2 && ++q->attempt < MAX_ATTEMPT) {
             /*
              * RCODE 2 is "Server failure - The name server was
              * unable to process this query due to a problem with
@@ -595,7 +601,7 @@ idnsGrokReply(const char *buf, size_t sz)
     q->callback = NULL;
 
     if (cbdataReferenceValidDone(q->callback_data, &cbdata))
-        callback(cbdata, answers, n);
+        q->callback(q->callback_data, answers, n, q->error);
 
     rfc1035RRDestroy(answers, n);
 
@@ -706,7 +712,7 @@ idnsCheckQueue(void *unused)
 
         q = (idns_query *)n->data;
 
-        if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << q->nsends % nns))
+        if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << (q->nsends - 1) % nns))
             break;
 
         debug(78, 3) ("idnsCheckQueue: ID %#04x timeout\n",
@@ -727,8 +733,12 @@ idnsCheckQueue(void *unused)
             callback = q->callback;
             q->callback = NULL;
 
-            if (cbdataReferenceValidDone(q->callback_data, &cbdata))
-                callback(cbdata, NULL, 0);
+            if (cbdataReferenceValidDone(q->callback_data, &cbdata)) {
+                if (q->rcode != 0)
+                    q->callback(q->callback_data, NULL, -q->rcode, q->error);
+                else
+                    q->callback(q->callback_data, NULL, -16, "Timeout");
+            }
 
             memFree(q, MEM_IDNS_QUERY);
         }
@@ -846,7 +856,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     if (0 == q->id) {
         /* problem with query data -- query not sent */
-        callback(data, NULL, 0);
+        callback(data, NULL, 0, "Internal error");
         memFree(q, MEM_IDNS_QUERY);
         return;
     }
