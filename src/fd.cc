@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.34 1999/01/21 21:10:32 wessels Exp $
+ * $Id: fd.cc,v 1.35 1999/01/21 21:13:01 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -90,11 +90,27 @@ fd_close(int fd)
     F->timeout = 0;
 }
 
+#if USE_ASYNC_IO
+void
+fd_was_closed(int fd)
+{
+    fde *F = &fd_table[fd];
+    if (F->flags.closing)
+	fd_close(fd);
+}
+#endif
+
 void
 fd_open(int fd, unsigned int type, const char *desc)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
+#if USE_ASYNC_IO
+    if (F->flags.closing) {
+	/* Reuse of a closed FD before we have noticed it is closed */
+	fd_close(fd);
+    }
+#endif
     if (F->flags.open) {
 	debug(51, 1) ("WARNING: Closing open FD %4d\n", fd);
 	fd_close(fd);

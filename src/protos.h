@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.308 1999/01/19 23:18:00 wessels Exp $
+ * $Id: protos.h,v 1.309 1999/01/21 21:13:04 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -75,6 +75,7 @@ extern int aio_stat(const char *, struct stat *, aio_result_t *);
 extern int aio_unlink(const char *, aio_result_t *);
 extern int aio_opendir(const char *, aio_result_t *);
 extern aio_result_t *aio_poll_done(void);
+extern int aio_operations_pending(void);
 
 extern void aioCancel(int, void *);
 extern void aioOpen(const char *, int, mode_t, AIOCB *, void *, void *);
@@ -84,6 +85,7 @@ extern void aioRead(int, int offset, char *, int size, AIOCB *, void *);
 extern void aioStat(char *, struct stat *, AIOCB *, void *, void *);
 extern void aioUnlink(const char *, AIOCB *, void *);
 extern void aioCheckCallbacks(void);
+extern void aioSync(void);
 #endif
 
 extern int parseConfigFile(const char *file_name);
@@ -218,6 +220,9 @@ extern void eventFreeMemory(void);
 extern int eventFind(EVH *, void *);
 
 extern void fd_close(int fd);
+#if USE_ASYNC_IO
+extern void fd_was_closed(int fd);
+#endif
 extern void fd_open(int fd, unsigned int type, const char *);
 extern void fd_note(int fd, const char *);
 extern void fd_bytes(int fd, int len, unsigned int type);
