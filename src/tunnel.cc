@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.148 2004/12/21 14:55:21 robertc Exp $
+ * $Id: tunnel.cc,v 1.149 2004/12/27 15:59:55 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -435,6 +435,43 @@ SslStateData::copyRead(Connection &from, IOCB *completion)
     comm_read(from.fd(), from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), completion, this);
 }
 
+static void
+sslConnectTimeout(int fd, void *data)
+{
+    SslStateData *sslState = (SslStateData *)data;
+    HttpRequest *request = sslState->request;
+    ErrorState *err = NULL;
+
+    if (sslState->servers->_peer)
+        hierarchyNote(&sslState->request->hier, sslState->servers->code,
+                      sslState->servers->_peer->host);
+    else if (Config.onoff.log_ip_on_direct)
+        hierarchyNote(&sslState->request->hier, sslState->servers->code,
+                      fd_table[sslState->server.fd()].ipaddr);
+    else
+        hierarchyNote(&sslState->request->hier, sslState->servers->code,
+                      sslState->host);
+
+    comm_close(fd);
+
+    err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+
+    *sslState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
+
+    err->xerrno = ETIMEDOUT;
+
+    err->host = xstrdup(sslState->host);
+
+    err->port = sslState->port;
+
+    err->request = requestLink(request);
+
+    err->callback = sslErrorComplete;
+
+    err->callback_data = sslState;
+
+    errorSend(sslState->client.fd(), err);
+}
 
 static void
 sslConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
@@ -476,12 +513,16 @@ sslErrorComplete(int fdnotused, void *data, size_t sizenotused)
 {
     SslStateData *sslState = (SslStateData *)data;
     assert(sslState != NULL);
+    /* temporary lock to save our own feets (comm_close -> sslClientClosed -> Free) */
+    cbdataInternalLock(sslState);
 
     if (sslState->client.fd() > -1)
         comm_close(sslState->client.fd());
 
     if (sslState->server.fd() > -1)
         comm_close(sslState->server.fd());
+
+    cbdataInternalUnlock(sslState);
 }
 
 
@@ -622,7 +663,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
                    sslState);
     commSetTimeout(sslState->server.fd(),
                    Config.Timeout.connect,
-                   sslTimeout,
+                   sslConnectTimeout,
                    sslState);
     peerSelect(request,
                NULL,
