@@ -313,12 +313,12 @@ enum {
 
 
 enum {
-	HTTP_PROXYING,
-	HTTP_KEEPALIVE
+    HTTP_PROXYING,
+    HTTP_KEEPALIVE
 };
 
 enum {
-	ERR_FLAG_CBDATA
+    ERR_FLAG_CBDATA
 };
 
 enum {
@@ -358,3 +358,9 @@ enum {
     NEIGHBOR_MCAST_RESPONDER,
     NEIGHBOR_CLOSEST_ONLY
 };
+
+typedef enum {
+    ACCESS_DENIED,
+    ACCESS_ALLOWED,
+    ACCESS_REQ_PROXY_AUTH
+} allow_t;

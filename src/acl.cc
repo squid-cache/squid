@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.114 1997/11/12 00:08:44 wessels Exp $
+ * $Id: acl.cc,v 1.115 1997/11/12 18:58:38 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -53,7 +53,7 @@ static int aclMatchDomainList(void *dataptr, const char *);
 static squid_acl aclType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
-static void aclCheckCallback(aclCheck_t * checklist, int answer);
+static void aclCheckCallback(aclCheck_t * checklist, allow_t answer);
 static IPH aclLookupDstIPDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
@@ -1073,7 +1073,6 @@ aclMatchProxyAuth(struct _acl_proxy_auth *p, aclCheck_t * checklist)
 	return 0;
     }
     passwd = strtok(sent_user, null_string);
-    passwd++;
     /* See if we've already validated them */
     passwd[0] |= 0x80;
     if (strcmp(hashr->item, passwd) == 0) {
@@ -1124,8 +1123,7 @@ aclMatchTime(struct _acl_time_data *data, time_t when)
     static time_t last_when = 0;
     static struct tm tm;
     time_t t;
-    if (data == NULL)
-	fatal_dump("aclMatchTime: NULL data");
+    assert(data != NULL);
     if (when != last_when) {
 	last_when = when;
 	xmemcpy(&tm, localtime(&when), sizeof(struct tm));
@@ -1275,7 +1273,7 @@ aclCheckFast(const struct _acl_access *A, aclCheck_t * checklist)
 static void
 aclCheck(aclCheck_t * checklist)
 {
-    int allow = 0;
+    allow_t allow = ACCESS_DENIED;
     const struct _acl_access *A;
     int match;
     ipcache_addrs *ia;
@@ -1309,6 +1307,10 @@ aclCheck(aclCheck_t * checklist)
 	    return;
 	}
 	if (match) {
+	    /* hack! */
+	    if (allow == ACCESS_DENIED)
+		if (checklist->state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED)
+		    allow = ACCESS_REQ_PROXY_AUTH;
 	    debug(28, 3) ("aclCheck: match found, returning %d\n", allow);
 	    aclCheckCallback(checklist, allow);
 	    return;
@@ -1334,7 +1336,7 @@ aclChecklistFree(aclCheck_t * checklist)
 }
 
 static void
-aclCheckCallback(aclCheck_t * checklist, int answer)
+aclCheckCallback(aclCheck_t * checklist, allow_t answer)
 {
     debug(28, 3) ("aclCheckCallback: answer=%d\n", answer);
     if (cbdataValid(checklist->callback_data))
@@ -1523,7 +1525,7 @@ aclDestroyAcls(acl ** head)
 	    break;
 	case ACL_NONE:
 	default:
-	    fatal_dump("aclDestroyAcls: Found ACL_NONE?");
+	    assert(0);
 	    break;
 	}
 	safe_free(a->cfgline);
