@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.399 2004/12/27 16:59:14 hno Exp $
+ * $Id: main.cc,v 1.400 2004/12/28 12:52:05 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -856,7 +856,6 @@ main(int argc, char **argv)
 #endif
 {
     int errcount = 0;
-    int n;			/* # of GC'd objects */
     mode_t oldmask;
 
 #if HAVE_SBRK
