@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.557 2003/02/06 00:16:16 robertc Exp $
+ * $Id: store.cc,v 1.558 2003/02/08 17:45:09 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -529,7 +529,8 @@ storeSetPublicKey(StoreEntry * e)
 #if X_ACCELERATOR_VARY
 	    vary = httpHeaderGetList(&mem->getReply()->header, HDR_X_ACCELERATOR_VARY);
 	    if (vary.buf()) {
-		httpHeaderPutStr(&pe->getReply()->header, HDR_X_ACCELERATOR_VARY, vary.buf());
+		/* Again, we own this structure layout */
+		httpHeaderPutStr((HttpHeader *)&pe->getReply()->header, HDR_X_ACCELERATOR_VARY, vary.buf());
 		vary.clean();
 	    }
 #endif
