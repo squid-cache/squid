@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.205 1998/03/14 23:29:20 wessels Exp $
+ * $Id: ftp.cc,v 1.206 1998/03/15 17:19:57 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1743,18 +1743,22 @@ ftpReadStor(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadStor\n");
     if (code >= 100 && code < 200) {
-      ftpPutStart(ftpState);
-      debug(9, 3) ("ftpReadStor: writing data channel\n");
-      ftpState->state = WRITING_DATA;
-    }
-    else if (code==553) {
+	/*
+	 * Cancel the timeout on the Control socket, pumpStart will
+	 * establish one on the data socket.
+	 */
+	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
+	ftpPutStart(ftpState);
+	debug(9, 3) ("ftpReadStor: writing data channel\n");
+	ftpState->state = WRITING_DATA;
+    } else if (code == 553) {
 	/* directory does not exist, have to create, sigh */
 #if WORK_IN_PROGRESS
 	ftpTraverseDirectory(ftpState);
 #endif
 	ftpSendReply(ftpState);
     } else {
-      debug(9, 3) ("ftpReadStor: that's all folks\n");
+	debug(9, 3) ("ftpReadStor: that's all folks\n");
 	ftpSendReply(ftpState);
     }
 }
@@ -2028,35 +2032,30 @@ static void
 ftpSendReply(FtpStateData * ftpState)
 {
     ErrorState *err;
-    int code=ftpState->ctrl.replycode;
+    int code = ftpState->ctrl.replycode;
     int http_code;
-    int err_code=ERR_NONE;
-    debug(9,5)("ftpSendReply for %x (%d)\n", ftpState,code);
+    int err_code = ERR_NONE;
+    debug(9, 5) ("ftpSendReply for %x (%d)\n", ftpState, code);
     if (cbdataValid(ftpState))
-    debug(9,5)("ftpSendReply: ftpState (%p) is valid!\n", ftpState);
-
-
-    if (code==226)  {
-        err_code= (ftpState->mdtm>0)?ERR_FTP_PUT_MODIFIED:ERR_FTP_PUT_CREATED;
-	http_code= (ftpState->mdtm>0)?HTTP_ACCEPTED:HTTP_CREATED;
+	debug(9, 5) ("ftpSendReply: ftpState (%p) is valid!\n", ftpState);
+    if (code == 226) {
+	err_code = (ftpState->mdtm > 0) ? ERR_FTP_PUT_MODIFIED : ERR_FTP_PUT_CREATED;
+	http_code = (ftpState->mdtm > 0) ? HTTP_ACCEPTED : HTTP_CREATED;
     } else {
 	err_code = ERR_FTP_PUT_ERROR;
-	http_code=HTTP_INTERNAL_SERVER_ERROR;
+	http_code = HTTP_INTERNAL_SERVER_ERROR;
     }
-
     err = errorCon(err_code, http_code);
     err->request = requestLink(ftpState->request);
     if (ftpState->old_request)
-        err->ftp.request = ftpState->old_request;
+	err->ftp.request = ftpState->old_request;
     else
-        err->ftp.request = ftpState->ctrl.last_command;
+	err->ftp.request = ftpState->ctrl.last_command;
     if (ftpState->old_reply)
-        err->ftp.reply = ftpState->old_reply;
+	err->ftp.reply = ftpState->old_reply;
     else
-        err->ftp.reply = ftpState->ctrl.last_reply;
-
+	err->ftp.reply = ftpState->ctrl.last_reply;
     errorAppendEntry(ftpState->entry, err);
-
     storeBufferFlush(ftpState->entry);
     comm_close(ftpState->ctrl.fd);
 }
