@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.194 2000/07/13 06:06:16 wessels Exp $
+ * $Id: tools.cc,v 1.195 2000/09/16 21:47:46 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -52,6 +52,13 @@ static void mail_warranty(void);
 extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
+
+#ifdef _SQUID_LINUX_
+/* Workaround for crappy glic header files */
+extern int backtrace(void *, int);
+extern void backtrace_symbols_fd(void *, int, int);
+extern int setresuid(uid_t, uid_t, uid_t);
+#endif /* _SQUID_LINUX */
 
 extern void (*failure_notify) (const char *);
 
