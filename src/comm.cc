@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.324 2001/10/24 07:45:34 hno Exp $
+ * $Id: comm.cc,v 1.325 2001/12/24 15:33:42 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -684,27 +684,6 @@ commSetDefer(int fd, DEFER * func, void *data)
 }
 
 void
-commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
-{
-    fde *F = &fd_table[fd];
-    assert(fd >= 0);
-    assert(F->flags.open);
-    debug(5, 5) ("commSetSelect: FD %d type %d\n", fd, type);
-    if (type & COMM_SELECT_READ) {
-	F->read_handler = handler;
-	F->read_data = client_data;
-	commUpdateReadBits(fd, handler);
-    }
-    if (type & COMM_SELECT_WRITE) {
-	F->write_handler = handler;
-	F->write_data = client_data;
-	commUpdateWriteBits(fd, handler);
-    }
-    if (timeout)
-	F->timeout = squid_curtime + timeout;
-}
-
-void
 comm_add_close_handler(int fd, PF * handler, void *data)
 {
     close_handler *new = memPoolAlloc(conn_close_pool);		/* AAA */
@@ -999,3 +978,41 @@ commCloseAllSockets(void)
 	}
     }
 }
+
+void
+checkTimeouts(void)
+{
+    int fd;
+    fde *F = NULL;
+    PF *callback;
+    for (fd = 0; fd <= Biggest_FD; fd++) {
+        F = &fd_table[fd];
+        if (!F->flags.open)
+            continue;
+        if (F->timeout == 0)
+            continue;
+        if (F->timeout > squid_curtime)
+            continue;
+        debug(5, 5) ("checkTimeouts: FD %d Expired\n", fd);
+        if (F->timeout_handler) {
+            debug(5, 5) ("checkTimeouts: FD %d: Call timeout handler\n", fd);
+            callback = F->timeout_handler;
+            F->timeout_handler = NULL;
+            callback(fd, F->timeout_data);
+        } else {
+            debug(5, 5) ("checkTimeouts: FD %d: Forcing comm_close()\n", fd);
+            comm_close(fd);
+        }
+    }
+}
+
+
+int 
+commDeferRead(int fd)
+{
+    fde *F = &fd_table[fd];
+    if (F->defer_check == NULL)
+        return 0;
+    return F->defer_check(fd, F->defer_data);
+}
+
