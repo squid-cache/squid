@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H1>CHYBA</H1>
+<H2>Požadovaný dokument je nedostupný</H2>
+<HR noshade size="1px">
+<P>
+Pri pokuse o prístup k:
+<PRE>
+%R
+</PRE>
+<P>
+došlo k nasledovnej chybe:
+<UL>
+<LI>
+<STRONG>
+Invalid Response
+</STRONG>
+</UL>
+
+<P>
+HTTP odpovedi obdržanej z kontaktovaného servera nebolo možné porozumieť
+alebo bola nejako poškodená. Kontaktujte prosím správcu servera. V prípade
+potreby Vám Váš cache administrátor môže poskytnúť detaily o presnej povahe
+problému.
+</P>
+
+<P>Vaším cache administrátorom je <A HREF="mailto:%w">%w</A>.</P>

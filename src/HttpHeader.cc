@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.101 2004/12/20 16:30:32 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.102 2005/03/06 14:46:29 serassio Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -467,59 +467,115 @@ httpHeaderReset(HttpHeader * hdr)
 int
 httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end)
 {
-    const char *field_start = header_start;
-    HttpHeaderEntry *e;
+    const char *field_ptr = header_start;
+    HttpHeaderEntry *e, *e2;
 
     assert(hdr);
     assert(header_start && header_end);
     debug(55, 7) ("parsing hdr: (%p)\n%s\n", hdr, getStringPrefix(header_start, header_end));
     HttpHeaderStats[hdr->owner].parsedCount++;
-    /* commonn format headers are "<name>:[ws]<value>" lines delimited by <CRLF> */
 
-    while (field_start < header_end) {
+    if (memchr(header_start, '\0', header_end - header_start)) {
+        debug(55, 1) ("WARNING: HTTP header contains NULL characters {%s}\n",
+                      getStringPrefix(header_start, header_end));
+        return httpHeaderReset(hdr);
+    }
+
+    /* common format headers are "<name>:[ws]<value>" lines delimited by <CRLF>.
+     * continuation lines start with a (single) space or tab */
+    while (field_ptr < header_end) {
+        const char *field_start = field_ptr;
         const char *field_end;
-        const char *field_ptr = field_start;
 
         do {
-            field_end = field_ptr = field_ptr + strcspn(field_ptr, "\r\n");
-            /* skip CRLF */
+            const char *this_line = field_ptr;
+            field_ptr = (const char *)memchr(field_ptr, '\n', header_end - field_ptr);
 
-            if (*field_ptr == '\r')
-                field_ptr++;
+            if (!field_ptr)
+                return httpHeaderReset(hdr);	/* missing <LF> */
 
-            if (*field_ptr == '\n')
-                field_ptr++;
-        } while (*field_ptr == ' ' || *field_ptr == '\t');
+            field_end = field_ptr;
 
-        if (!*field_end || field_end > header_end)
-            return httpHeaderReset(hdr);	/* missing <CRLF> */
+            field_ptr++;	/* Move to next line */
+
+            if (field_end > this_line && field_end[-1] == '\r') {
+                field_end--;	/* Ignore CR LF */
+                /* Ignore CR CR LF in relaxed mode */
+
+                if (Config.onoff.relaxed_header_parser && field_end > this_line + 1 && field_end[-1] == '\r') {
+                    debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
+                    ("WARNING: Double CR characters in HTTP header {%s}\n", getStringPrefix(field_start, field_end));
+                    field_end--;
+                }
+            }
+
+            /* Barf on stray CR characters */
+            if (memchr(this_line, '\r', field_end - this_line)) {
+                debug(55, 1) ("WARNING: suspicious CR characters in HTTP header {%s}\n",
+                              getStringPrefix(field_start, field_end));
+
+                if (Config.onoff.relaxed_header_parser) {
+                    char *p = (char *) this_line;	/* XXX Warning! This destroys original header content and violates specifications somewhat */
+
+                    while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL)
+                        *p++ = ' ';
+                } else
+                    return httpHeaderReset(hdr);
+            }
+
+            if (this_line + 1 == field_end && this_line > field_start) {
+                debug(55, 1) ("WARNING: Blank continuation line in HTTP header {%s}\n",
+                              getStringPrefix(header_start, header_end));
+                return httpHeaderReset(hdr);
+            }
+        } while (field_ptr < header_end && (*field_ptr == ' ' || *field_ptr == '\t'));
+
+        if (field_start == field_end) {
+            if (field_ptr < header_end) {
+                debug(55, 1) ("WARNING: unparseable HTTP header field near {%s}\n",
+                              getStringPrefix(field_start, header_end));
+                return httpHeaderReset(hdr);
+            }
+
+            break;		/* terminating blank line */
+        }
 
         e = httpHeaderEntryParseCreate(field_start, field_end);
 
         if (NULL == e) {
-            debug(55, 1) ("WARNING: ignoring unparseable HTTP header field near '%s'\n",
+            debug(55, 1) ("WARNING: unparseable HTTP header field {%s}\n",
                           getStringPrefix(field_start, field_end));
-        } else if (e->id == HDR_CONTENT_LENGTH && httpHeaderHas(hdr, HDR_CONTENT_LENGTH)) {
-            debug(55, 1) ("WARNING: found double content-length header\n");
-            httpHeaderEntryDestroy(e);
-            return httpHeaderReset(hdr);
-        } else if (e->id == HDR_OTHER && stringHasWhitespace(e->name.buf())) {
-            debug(55, 1) ("WARNING: found whitespace in HTTP header {%s}\n", e->name.buf());
-            httpHeaderEntryDestroy(e);
-            return httpHeaderReset(hdr);
-        } else {
-            httpHeaderAddEntry(hdr, e);
+            debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
+            (" in {%s}\n", getStringPrefix(header_start, header_end));
+
+            if (Config.onoff.relaxed_header_parser)
+                continue;
+            else
+                return httpHeaderReset(hdr);
         }
 
-        field_start = field_end;
+        if (e->id == HDR_CONTENT_LENGTH && (e2 = httpHeaderFindEntry(hdr, e->id)) != NULL) {
+            if (!Config.onoff.relaxed_header_parser || e->value.cmp(e2->value.buf()) != 0) {
+                debug(55, 1) ("WARNING: found two conflicting content-length headers in {%s}\n", getStringPrefix(header_start, header_end));
+                httpHeaderEntryDestroy(e);
+                return httpHeaderReset(hdr);
+            } else {
+                debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
+                ("NOTICE: found double content-length header\n");
+            }
+        }
 
-        /* skip CRLF */
+        if (e->id == HDR_OTHER && stringHasWhitespace(e->name.buf())) {
+            debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
+            ("WARNING: found whitespace in HTTP header name {%s}\n", getStringPrefix(field_start, field_end));
 
-        if (*field_start == '\r')
-            field_start++;
+            if (!Config.onoff.relaxed_header_parser) {
+                httpHeaderEntryDestroy(e);
+                return httpHeaderReset(hdr);
+            }
+        }
 
-        if (*field_start == '\n')
-            field_start++;
+        httpHeaderAddEntry(hdr, e);
     }
 
     return 1;			/* even if no fields where found, it is a valid header */
@@ -1254,8 +1310,8 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     HttpHeaderEntry *e;
     http_hdr_type id;
     /* note: name_start == field_start */
-    const char *name_end = strchr(field_start, ':');
-    const int name_len = name_end ? name_end - field_start : 0;
+    const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
+    int name_len = name_end ? name_end - field_start : 0;
     const char *value_start = field_start + name_len + 1;	/* skip ':' */
     /* note: value_end == field_end */
 
@@ -1270,6 +1326,17 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
         /* String has a 64K limit */
         debug(55, 1) ("WARNING: ignoring header name of %d bytes\n", name_len);
         return NULL;
+    }
+
+    if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
+        debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
+        ("NOTICE: Whitespace after header name in '%s'\n", getStringPrefix(field_start, field_end));
+
+        while (name_len > 0 && xisspace(field_start[name_len - 1]))
+            name_len--;
+
+        if (!name_len)
+            return NULL;
     }
 
     /* now we know we can parse it */
@@ -1296,6 +1363,9 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
         value_start++;
+
+    while (value_start < field_end && xisspace(field_end[-1]))
+        field_end--;
 
     if (field_end - value_start > 65536) {
         /* String has a 64K limit */

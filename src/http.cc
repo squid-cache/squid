@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.444 2005/02/14 22:12:57 serassio Exp $
+ * $Id: http.cc,v 1.445 2005/03/06 14:46:29 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1010,7 +1010,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             processReplyHeader(buf, len);
         else if (entry->getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != entry->getReply()->sline.version) {
             ErrorState *err;
-            err = errorCon(ERR_INVALID_REQ, HTTP_BAD_GATEWAY);
+            err = errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY);
             err->request = requestLink((HttpRequest *) request);
             fwdFail(fwd, err);
             do_next_read = 0;
@@ -1040,7 +1040,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
                 if (s == HTTP_INVALID_HEADER && httpver != HttpVersion(0,9)) {
                     ErrorState *err;
                     storeEntryReset(entry);
-                    err = errorCon(ERR_INVALID_REQ, HTTP_BAD_GATEWAY);
+                    err = errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY);
                     err->request = requestLink((HttpRequest *) request);
                     fwdFail(fwd, err);
                     comm_close(fd);
