@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.118 1998/07/20 19:25:36 wessels Exp $
+ * $Id: net_db.cc,v 1.119 1998/07/20 20:21:05 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -634,7 +634,7 @@ netdbInit(void)
     netdbReloadState();
     cachemgrRegister("netdb",
 	"Network Measurement Database",
-	netdbDump, 0);
+	netdbDump, 0, 1);
 #endif
 }
 

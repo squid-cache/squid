@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.14 1998/07/20 19:25:30 wessels Exp $
+ * $Id: cache_manager.cc,v 1.15 1998/07/20 20:20:53 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -44,7 +44,10 @@ typedef struct _action_table {
     char *action;
     char *desc;
     OBJH *handler;
-    int pw_req_flag;
+    struct {
+        int pw_req:1;
+        int atomic:1;
+    } flags;
     struct _action_table *next;
 } action_table;
 
@@ -61,7 +64,7 @@ static OBJH cachemgrMenu;
 action_table *ActionTable = NULL;
 
 void
-cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_req_flag)
+cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_req_flag, int atomic)
 {
     action_table *a;
     action_table **A;
@@ -73,7 +76,8 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
     a->action = xstrdup(action);
     a->desc = xstrdup(desc);
     a->handler = handler;
-    a->pw_req_flag = pw_req_flag;
+    a->flags.pw_req = pw_req_flag;
+    a->flags.atomic = atomic;
     for (A = &ActionTable; *A; A = &(*A)->next);
     *A = a;
     debug(16, 3) ("cachemgrRegister: registered %s\n", action);
@@ -154,7 +158,7 @@ cachemgrCheckPassword(cachemgrStateData * mgr)
     action_table *a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
     if (pwd == NULL)
-	return a->pw_req_flag;
+	return a->flags.pw_req;
     if (strcmp(pwd, "disable") == 0)
 	return 1;
     if (strcmp(pwd, "none") == 0)
@@ -233,7 +237,8 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
     /* retrieve object requested */
     a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
-    storeBuffer(entry);
+    if (a->flags.atomic)
+        storeBuffer(entry);
     {
 	HttpReply *rep = entry->mem_obj->reply;
 	/* prove there are no previous reply headers around */
@@ -249,8 +254,10 @@ cachemgrStart(int fd, request_t * request, StoreEntry * entry)
 	httpReplySwapOut(rep, entry);
     }
     a->handler(entry);
-    storeBufferFlush(entry);
-    storeComplete(entry);
+    if (a->flags.atomic) {
+        storeBufferFlush(entry);
+        storeComplete(entry);
+    }
     cachemgrStateFree(mgr);
 }
 
@@ -268,7 +275,7 @@ cachemgrActionProtection(const action_table * at)
     assert(at);
     pwd = cachemgrPasswdGet(Config.passwd_list, at->action);
     if (!pwd)
-	return at->pw_req_flag ? "hidden" : "public";
+	return at->flags.pw_req ? "hidden" : "public";
     if (!strcmp(pwd, "disable"))
 	return "disabled";
     if (strcmp(pwd, "none") == 0)
@@ -307,8 +314,8 @@ cachemgrInit(void)
 {
     cachemgrRegister("menu",
 	"This Cachemanager Menu",
-	cachemgrMenu, 0);
+	cachemgrMenu, 0, 1);
     cachemgrRegister("shutdown",
 	"Shut Down the Squid Process",
-	cachemgrShutdown, 1);
+	cachemgrShutdown, 1, 1);
 }

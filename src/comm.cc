@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.274 1998/07/20 17:19:30 wessels Exp $
+ * $Id: comm.cc,v 1.275 1998/07/20 20:20:56 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1214,7 +1214,7 @@ comm_init(void)
 	invert32[i] = (int) (32.0 / (double) i + 0.5);
     cachemgrRegister("comm_incoming",
 	"comm_incoming() stats",
-	commIncomingStats, 0);
+	commIncomingStats, 0, 1);
 }
 
 

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.106 1998/07/20 17:19:40 wessels Exp $
+ * $Id: fqdncache.cc,v 1.107 1998/07/20 20:20:59 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -610,7 +610,7 @@ fqdncache_init(void)
     fqdn_table = hash_create(urlcmp, n, hash4);
     cachemgrRegister("fqdncache",
 	"FQDN Cache Stats and Contents",
-	fqdnStats, 0);
+	fqdnStats, 0, 1);
 }
 
 /* clean up the pending entries in dnsserver */

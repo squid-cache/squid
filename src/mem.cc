@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.28 1998/07/20 17:19:52 wessels Exp $
+ * $Id: mem.cc,v 1.29 1998/07/20 20:21:02 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -288,7 +288,7 @@ memInit(void)
     }
     cachemgrRegister("mem",
 	"Memory Utilization",
-	memStats, 0);
+	memStats, 0, 1);
 }
 
 void
