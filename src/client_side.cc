@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.15 1996/09/04 22:03:20 wessels Exp $
+ * $Id: client_side.cc,v 1.16 1996/09/05 16:59:49 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -405,18 +405,19 @@ int icpHandleIMSReply(fd, entry, data)
 	icpState->log_type = LOG_TCP_EXPIRED_HIT;
 	/* We initiated the IMS request, the client is not expecting
 	 * 304, so put the good one back */
+	if (icpState->old_entry->mem_obj->request == NULL)
+	    icpState->old_entry->mem_obj->request = requestLink(mem->request);
 	storeUnlockObject(entry);
 	entry = icpState->entry = icpState->old_entry;
 	/* Extend the TTL
-	 * * XXX race condition here.  Assumes old_entry has been swapped 
-	 * * in by the time this 304 reply arrives.  */
+	 * XXX race condition here.  Assumes old_entry has been swapped 
+	 * in by the time this 304 reply arrives.  */
 	storeClientCopy(entry, 0, 8191, hbuf, &len, fd);
 	if (!mime_headers_end(hbuf))
 	    fatal_dump("icpHandleIMSReply: failed to load headers, lost race");
 	httpParseHeaders(hbuf, entry->mem_obj->reply);
-	debug(44, 0, "OLD EXPIRES=%d\n", entry->expires);
 	ttlSet(entry);
-	debug(44, 0, "NEW EXPIRES=%d\n", entry->expires);
+	requestUnlink(entry->mem_obj->request);
     } else {
 	/* the client can handle this reply, whatever it is */
 	icpState->log_type = LOG_TCP_EXPIRED_MISS;
