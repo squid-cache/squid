@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.15 1996/04/15 23:02:28 wessels Exp $ */
+/* $Id: url.cc,v 1.16 1996/04/16 01:51:20 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -22,6 +22,9 @@ char *ProtocolStr[] =
     "ftp",
     "wais",
     "cache_object",
+#ifdef NEED_PROTO_CONNECT
+    "connect",
+#endif
     "TOTAL"
 };
 
@@ -131,8 +134,10 @@ protocol_t urlParseProtocol(s)
 	return PROTO_CACHEOBJ;
     if (strncasecmp(s, "file", 4) == 0)
 	return PROTO_FTP;
+#ifdef NEED_PROTO_CONNECT
     if (strncasecmp(s, "connect", 7) == 0)
 	return PROTO_CONNECT;
+#endif
     return PROTO_NONE;
 }
 
@@ -149,6 +154,10 @@ int urlDefaultPort(p)
 	return 70;
     case PROTO_CACHEOBJ:
 	return CACHE_HTTP_PORT;
+#ifdef NEED_PROTO_CONNECT
+    case PROTO_CONNECT:
+	return 443;
+#endif
     default:
 	return 0;
     }

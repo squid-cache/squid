@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.42 1996/04/15 23:02:25 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.43 1996/04/16 01:51:17 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -154,12 +154,12 @@ extern char *config_file;
 intlist snews =
 {
     563,
-    NULL,
+    NULL
 };
 intlist https =
 {
     443,
-    &snews,
+    &snews
 };
 intlist *connect_port_list = &https;
 
