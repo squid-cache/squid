@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.355 1998/07/16 22:22:47 wessels Exp $
+ * $Id: client_side.cc,v 1.356 1998/07/18 07:26:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1025,6 +1025,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 {
     HttpHeader *hdr = &rep->header;
     int is_hit = isTcpHit(http->log_type);
+    request_t *request = http->request;
 #if DONT_FILTER_THESE
     /* but you might want to if you run Squid as an HTTP accelerator */
     /* httpHeaderDelById(hdr, HDR_ACCEPT_RANGES); */
@@ -1042,8 +1043,14 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	String strConnection = httpHeaderGetList(hdr, HDR_CONNECTION);
 	const HttpHeaderEntry *e;
 	HttpHeaderPos pos = HttpHeaderInitPos;
-	/* think: on-average-best nesting of the two loops (hdrEntry and strListItem) @?@ */
-	/* maybe we should delete standard stuff ("keep-alive","close") from strConnection first? */
+	/*
+	 * think: on-average-best nesting of the two loops (hdrEntry
+	 * and strListItem) @?@
+	 */
+	/*
+	 * maybe we should delete standard stuff ("keep-alive","close")
+	 * from strConnection first?
+	 */
 	while ((e = httpHeaderGetEntry(hdr, &pos))) {
 	    if (strListIsMember(&strConnection, strBuf(e->name), ','))
 		httpHeaderDelAt(hdr, pos);
@@ -1052,17 +1059,23 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	stringClean(&strConnection);
     }
     /* Handle Ranges */
-    if (http->request->range)
+    if (request->range)
 	clientBuildRangeHeader(http, rep);
-    /* Add Age header, not that our header must replace Age headers from other caches if any */
+    /*
+     * Add Age header, not that our header must replace Age headers
+     * from other caches if any
+     */
     if (http->entry->timestamp > 0) {
 	httpHeaderDelById(hdr, HDR_AGE);
-	/* we do not follow HTTP/1.1 precisely here becuase we rely on Date
-	* header when computing entry->timestamp; we should be using _request_ time
-	* if Date header is not available or if it is out of sync */
+	/*
+	 * we do not follow HTTP/1.1 precisely here becuase we rely
+	 * on Date header when computing entry->timestamp; we should
+	 * be using _request_ time if Date header is not available
+	 * or if it is out of sync
+	 */
 	httpHeaderPutInt(hdr, HDR_AGE,
-	    http->entry->timestamp <= squid_curtime ? 
-		squid_curtime - http->entry->timestamp : 0);
+	    http->entry->timestamp <= squid_curtime ?
+	    squid_curtime - http->entry->timestamp : 0);
     }
     /* Append X-Cache */
     httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
@@ -1074,14 +1087,13 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	getMyHostname(), Config.Port.http->i);
 #endif
     /* Only replies with valid Content-Length can be sent with keep-alive */
-    if (http->request->method != METHOD_HEAD &&
+    if (request->method != METHOD_HEAD &&
 	http->entry->mem_obj->reply->content_length < 0)
-	EBIT_CLR(http->request->flags, REQ_PROXY_KEEPALIVE);
+	EBIT_CLR(request->flags, REQ_PROXY_KEEPALIVE);
     /* Signal keep-alive if needed */
-    if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE))
-	httpHeaderPutStr(hdr,
-	    http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
-	    "keep-alive");
+    httpHeaderPutStr(hdr,
+	http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
+	EBIT_TEST(request->flags, REQ_PROXY_KEEPALIVE) ? "keep-alive" : "close");
     /* Accept-Range header for cached objects if not there already */
     if (is_hit && !httpHeaderHas(hdr, HDR_ACCEPT_RANGES))
 	httpHeaderPutStr(hdr, HDR_ACCEPT_RANGES, "bytes");
