@@ -1,3 +1,5 @@
+	- Fixed directory increment bug in storeDirClean().
+
 Changes to squid-1.1.alpha9:
 
 	- Fixed parsing of redirected URLs.
