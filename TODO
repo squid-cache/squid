@@ -27,6 +27,7 @@ Squid-2.6 if finished in time:
   - ESI
   - Customized logging capabilities
   - External logging
+  - IPv6
   - Other devel.squid-cache.org projects
 
 Later:
