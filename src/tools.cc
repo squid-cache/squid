@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.20 1996/04/01 23:25:37 wessels Exp $ */
+/* $Id: tools.cc,v 1.21 1996/04/04 05:19:51 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -119,16 +119,16 @@ void death(sig)
      int sig;
 {
     if (sig == SIGSEGV)
-	fprintf(stderr, "FATAL: Received Segment Violation...dying.\n");
+	fprintf(debug_log, "FATAL: Received Segment Violation...dying.\n");
     else if (sig == SIGBUS)
-	fprintf(stderr, "FATAL: Received bus error...dying.\n");
+	fprintf(debug_log, "FATAL: Received bus error...dying.\n");
     else
-	fprintf(stderr, "FATAL: Received signal %d...dying.\n", sig);
+	fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
     signal(SIGSEGV, SIG_DFL);
     signal(SIGBUS, SIG_DFL);
     signal(sig, SIG_DFL);
     storeWriteCleanLog();
-    PrintRusage(NULL, stderr);
+    PrintRusage(NULL, debug_log);
     print_warranty();
     abort();
 }
@@ -153,7 +153,7 @@ void shut_down(sig)
 {
     debug(21, 1, "Shutting down...\n");
     storeWriteCleanLog();
-    PrintRusage(NULL, stderr);
+    PrintRusage(NULL, debug_log);
     debug(21, 0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
 	SQUID_VERSION, sig);
     exit(1);
@@ -166,16 +166,11 @@ void fatal_common(message)
     if (syslog_enable)
 	syslog(LOG_ALERT, message);
 #endif
-    fprintf(stderr, "FATAL: %s\n", message);
-    fprintf(stderr, "Harvest Cache (Version %s): Terminated abnormally.\n",
+    fprintf(debug_log, "FATAL: %s\n", message);
+    fprintf(debug_log, "Harvest Cache (Version %s): Terminated abnormally.\n",
 	SQUID_VERSION);
-    fflush(stderr);
-    PrintRusage(NULL, stderr);
-    if (debug_log != stderr) {
-	debug(21, 0, "FATAL: %s\n", message);
-	debug(21, 0, "Harvest Cache (Version %s): Terminated abnormally.\n",
-	    SQUID_VERSION);
-    }
+    fflush(debug_log);
+    PrintRusage(NULL, debug_log);
 }
 
 /* fatal */
