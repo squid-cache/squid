@@ -21,5 +21,6 @@ Some aspect of the requested URL is incorrect.  Possible problems:
 <UL>
 <LI>Missing or incorrect access protocol (should be `http://'' or similar)
 <LI>Missing hostname
+<LI>Illegal double-escape in the URL-Path
 <LI>Illegal character in hostname; underscores are not allowed
 </UL>
