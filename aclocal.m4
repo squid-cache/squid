@@ -84,7 +84,7 @@ ${CXX} -Werror -fhuge-objects -c conftest.cc 2>/dev/null
 res=$?
 rm -f conftest.*
 echo yes
-exit $res` 2> /dev/null
+exit $res`
     if [[ $? -ne 0 ]]
     then ac_cv_test_checkforhugeobjects=no
     else if [[ -z "$ac_cv_test_checkforhugeobjects" ]]
