@@ -61,6 +61,9 @@ SQUID_DEFAULT_INCLUDES
 #if HAVE_NET_IF_H
 #include <net/if.h>
 #endif
+#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 ])
 
 # Do all the work for Automake.                            -*- Autoconf -*-
