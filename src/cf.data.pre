@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.128 1998/12/04 16:37:07 wessels Exp $
+# $Id: cf.data.pre,v 1.129 1998/12/10 20:10:13 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -37,6 +37,14 @@ COMMENT_START
 	This is the default Squid configuration file. You may wish
 	to look at http://cache.is.co.za/squid/ for documentation,
 	or the Squid home page (http://squid.nlanr.net/) for the FAQ.
+
+	The default Squid config file shows what the defaults for
+	various options happen to be.  If you don't need to change the
+	default, you shouldn't uncomment the line.  Doing so may cause
+	run-time problems.  In some cases "none" refers to no default
+	setting at all, whilst in other cases it refers to a valid
+	option - the comments for that keyword indicate if this is the
+	case.
 
 COMMENT_END
 
