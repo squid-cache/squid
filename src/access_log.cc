@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.93 2003/08/13 00:17:24 robertc Exp $
+ * $Id: access_log.cc,v 1.94 2003/08/20 13:34:41 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1470,7 +1470,7 @@ accessLogInit(void)
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
-        if (strcasecmp(log->filename, "none") == 0)
+        if (log->type == CLF_NONE)
             continue;
 
         log->logfile = logfileOpen(log->filename, MAX_URL << 1, 1);
