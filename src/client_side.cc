@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.17 1996/09/11 22:31:07 wessels Exp $
+ * $Id: client_side.cc,v 1.18 1996/09/11 22:38:48 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -71,10 +71,12 @@ static void clientLookupSrcFQDNDone(fd, fqdn, data)
     clientAccessCheck(icpState, icpState->aclHandler);
 }
 
+#ifdef UNUSED_CODE
 static void clientLookupIdentDone(data)
      void *data;
 {
 }
+#endif
 
 #if USE_PROXY_AUTH
 /* return 1 if allowed, 0 if denied */
