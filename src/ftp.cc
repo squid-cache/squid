@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.147 1997/10/23 20:41:35 wessels Exp $
+ * $Id: ftp.cc,v 1.148 1997/10/24 03:14:37 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1473,7 +1473,8 @@ ftpReadTransferDone(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadTransferDone\n");
     if (code != 226) {
-	debug(9, 1) ("Got code %d after reading data, releasing entry\n");
+	debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n");
+	debug(9, 1) ("--> releasing '%s'\n", ftpState->entry->url);
 	storeReleaseRequest(ftpState->entry);
     }
     ftpDataTransferDone(ftpState);
