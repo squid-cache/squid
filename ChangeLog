@@ -1,5 +1,17 @@
 Changes to squid-1.2.beta15 (Feb 13, 1998):
 
+	NOTE: This version has changes which may cause all or part
+	      of your cache to be lost.  However, you can problably
+	      save most of it by doing a slow restart.  Specifically:
+
+	1. Kill the running squid-1.2.beta14 process; wait for it to
+	   fully exit.
+	2. Remove all 'swap.state*' files, either in each cache_dir, or
+	   as defined in your squid.conf
+	3. Start squid-1.2.beta15.   The store will be rebuilt from the
+	   existing swap files, reading the directories and opening
+	   the files.
+
 	- Fixed some problems related to disk (and pipe) write error
 	  handling.  file_close() doesn't always close the file
 	  immediately; i.e. when there are pending buffers to write.
