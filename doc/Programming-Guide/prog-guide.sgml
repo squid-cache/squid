@@ -57,7 +57,7 @@ name="the Squid Developers">.
 <P>
 Function names and file names will be written in a courier font, such
 as <tt/store.c/ and <tt/storeRegister()/.  Data structures and their
-members will be written in an italicised font, such as <em/StoreEntry/.
+members will be written in an italicized font, such as <em/StoreEntry/.
 
 <sect1>The Big Picture
 
@@ -150,7 +150,7 @@ Squid consists of the following major components
     reply headers are not the same as the cache metadata.
 
 <P>
-    Client-side reqeusts register themselves with a <em/StoreEntry/
+    Client-side requests register themselves with a <em/StoreEntry/
     to be notified when new data arrives.  Multiple clients may
     receive data via a single <em/StoreEntry/.  For POST and
     PUT request, this process works in reverse.  Server-side functions
@@ -178,7 +178,7 @@ Squid consists of the following major components
     or denying a request, based on a number of different parameters.
     These parameters include the client's IP address, the hostname
     of the requested resource, the request method, etc.
-    Some of the necessary information may not be immedaitely available,
+    Some of the necessary information may not be immediately available,
     for example the origin server's IP address.  In these cases, 
     the ACL routines initiate lookups for the necessary information and
     continues the access control checks when the information is
@@ -196,7 +196,7 @@ Squid consists of the following major components
     closed, read, and written.  In addition, note that the heart of
     Squid (<tt/comm_select()/ or <tt/comm_poll()/) exists here, even
     though it handles all file descriptors, not just network sockets.
-    These routines do not support queueing multiple
+    These routines do not support queuing multiple
     blocks of data for writing.  Consequently, a callback occurs
     for every write request.
 
@@ -210,9 +210,9 @@ Squid consists of the following major components
     Routines for reading and writing disk files (and FIFOs).
     Reasons for separating network and
     disk I/O functions are partly historical, and partly because of
-    different behaviours.  For example, we don't worry about getting a
+    different behaviors.  For example, we don't worry about getting a
     ``No space left on device'' error for network sockets.  The disk
-    I/O routines support queueing of multiple blocks for writing.
+    I/O routines support queuing of multiple blocks for writing.
     In some cases, it is possible to merge multiple blocks into
     a single write request.  The write callback does not necessarily
     occur for every write request.
@@ -251,7 +251,7 @@ Squid consists of the following major components
 	This provides access to certain information needed by the
 	cache administrator.  A companion program, <em/cachemgr.cgi/
 	can be used to make this information available via a Web
-	broswer.  Cache manager requests to Squid are made with a 
+	browser.  Cache manager requests to Squid are made with a 
 	special URL of the form
 <verb>
 	cache_object://hostname/operation
@@ -322,7 +322,7 @@ Squid consists of the following major components
 	implement blocking disk operations in a set of thread (child)
 	processes.
 
-<sect2>Configuation File Parsing
+<sect2>Configuration File Parsing
 
 <P>
 <em/Files:/
@@ -350,7 +350,7 @@ Squid consists of the following major components
 	so that the <tt/callback_data/ memory is still valid when
 	the callback function is executed.  The routines in <tt/cbdata.c/
 	provide a uniform method for managing callback data memory,
-	cancelling callbacks, and preventing erroneous memory accesses.
+	canceling callbacks, and preventing erroneous memory accesses.
 
 <sect2>Debugging
 
@@ -360,7 +360,7 @@ Squid consists of the following major components
 
 <P>
 	Squid includes extensive debugging statements to assist in
-	tracking down bugs and strange behaviour.  Every debug statement
+	tracking down bugs and strange behavior.  Every debug statement
 	is assigned a section and level.  Usually, every debug statement
 	in the same source file has the same section.  Levels are chosen
 	depending on how much output will be generated, or how useful the
@@ -397,7 +397,7 @@ Squid consists of the following major components
 	cache replacement, cleaning swap directories, as well as one-time
 	functions such as ICP query timeouts.
 	
-<sect2>Filedescriptor Managment
+<sect2>Filedescriptor Management
 <P>
 <em/Files:/
 	<tt/fd.c/
@@ -428,232 +428,6 @@ Squid consists of the following major components
 	the cache.  Either specific request headers will be removed
 	(the ``standard'' mode), or only specific request headers
 	will be allowed (the ``paranoid'' mode).
-
-
-<!-- MOVE ME -->
-<sect>HTTP Headers
-<P>
-<em/Files:/
-	<tt/HttpHeader.c/
-	<tt/HttpHeaderTools.c/
-	<tt/HttpHdrCc.c/
-	<tt/HttpHdrContRange.c/
-	<tt/HttpHdrExtField.c/
-	<tt/HttpHdrRange.c/
-
-<P> 
-	<tt/HttpHeader/ class encapsulates methods and data for HTTP header
-	manipulation.  <tt/HttpHeader/ can be viewed as a collection of HTTP
-	header-fields with such common operations as add, delete, and find.
-	Compared to an ascii "string" representation, <tt/HttpHeader/ performs
-	those operations without rebuilding the underlying structures from
-	scratch or searching through the entire "string".
-
-<sect3>General remarks
-
-<P>
-	<tt/HttpHeader/ is a collection (or array) of HTTP header-fields. A header
-	field is represented by an <tt/HttpHeaderEntry/ object. <tt/HttpHeaderEntry/ is
-	an (id, name, value) triplet.  Meaningful "Id"s are defined for
-	"well-known" header-fields like "Connection" or "Content-Length".
-	When Squid fails to recognize a field, it uses special "id",
-	<em/HDR_OTHER/.  Ids are formed by capitalizing the corresponding HTTP
-	header-field name and replacing dashes ('-') with underscores ('_').
-
-<P>
-	Most operations on <tt/HttpHeader/ require a "known" id as a parameter. The
-	rationale behind the later restriction is that Squid programmer should
-	operate on "known" fields only. If a new field is being added to
-	header processing, it must be given an id.
- 
-<sect3>Life cycle
-
-<P> 
-	<tt/HttpHeader/ follows a common pattern for object initialization and
-	cleaning:
-
-<verb>
-    /* declare */
-    HttpHeader hdr;
-    
-    /* initialize (as an HTTP Request header) */
-    httpHeaderInit(&amp;hdr, hoRequest);
-
-    /* do something */
-    ...
-
-    /* cleanup */
-    httpHeaderClean(&amp;hdr);
-</verb>
-
-<P> 
-	Prior to use, an <tt/HttpHeader/ must be initialized. A programmer must
-	specify if a header belongs to a request or reply message. The
-	"ownership" information is used mostly for statistical purposes.
-
-<P>
-	Once initialized, the <tt/HttpHeader/ object <em/must/ be, eventually,
-	cleaned.  Failure to do so will result in a memory leak.
-
-<P>
-	Note that there are no methods for "creating" or "destroying" a
-	"dynamic" <tt/HttpHeader/ object. Looks like headers are always stored as a
-	part of another object or as a temporary variable. Thus, dynamic
-	allocation of headers is not needed.
-
-
-<sect3>Header Manipulation.
-
-<P>
-	The mostly common operations on HTTP headers are testing for a particular
-	header-field (<tt/httpHeaderHas()/), extracting field-values (<tt/httpHeaderGet*()/), and
-	adding new fields (<tt/httpHeaderPut*()/).
-
-<P>
-	<tt/httpHeaderHas(hdr, id)/ returns true if at least one header-field specified by
-	"id" is present in the header. Note that using <em/HDR_OTHER/ as an id is
-	prohibited.  There is usually no reason to know if there are "other"
-	header-fields in a header.
-
-<P>
-	<tt/httpHeaderGet&lt;Type&gt;(hdr, id)/ returns the value of the specified header-field.
-	The "Type" must match header-field type. If a header is not present a "null"
-	value is returned. "Null" values depend on field-type, of course.
-
-<P>
-	Special care must be taken when several header-fields with the same id are
-	preset in the header. If HTTP protocol allows only one copy of the specified
-	field per header (e.g. "Content-Length"), <tt/httpHeaderGet&lt;Type&gt;()/ will return
-	one of the field-values (chosen semi-randomly). If HTTP protocol allows for
-	several values (e.g. "Accept"), a "String List" will be returned.
-
-<P>
-	It is prohibited to ask for a List of values when only one value is permitted,
-	and visa-versa. This restriction prevents a programmer from processing one
-	value of an header-field while ignoring other valid values.
-
-<P>
-	<tt/httpHeaderPut&lt;Type&gt;(hdr, id, value)/ will add an header-field with a specified
-	field-name (based on "id") and field_value. The location of the newly added
-	field in the header array is undefined, but it is guaranteed to be after all
-	fields with the same "id" if any. Note that old header-fields with the same id
-	(if any) are not altered in any way.
-
-<P>
-	The value being put using one of the <tt/httpHeaderPut()/ methods is converted to
-	and stored as a String object.
-
-<P>
-	Example:
-
-<verb>
-	    /* add our own Age field if none was added before */
-	    int age = ...
-	    if (!httpHeaderHas(hdr, HDR_AGE))
-		httpHeaderPutInt(hdr, HDR_AGE, age);
-</verb>
-
-<P>
-	There are two ways to delete a field from a header. To delete a "known" field
-	(a field with "id" other than <em/HDR_OTHER/), use <tt/httpHeaderDelById()/ function.
-	Sometimes, it is convenient to delete all fields with a given name ("known" or
-	not) using <tt/httpHeaderDelByName()/ method. Both methods will delete <em/all/ fields
-	specified.
-
-
-<P>
-
-	The <em/httpHeaderGetEntry(hdr, pos)/ function can be used for
-	iterating through all fields in a given header. Iteration is
-	controlled by the <em/pos/ parameter. Thus, several concurrent
-	iterations over one <em/hdr/ are possible. It is also safe to
-	delete/add fields from/to <em/hdr/ while iteration is in progress.
-
-<verb>
-	/* delete all fields with a given name */
-	HttpHeaderPos pos = HttpHeaderInitPos;
-	HttpHeaderEntry *e;
-	while ((e = httpHeaderGetEntry(hdr, &amp;pos))) {
-		if (!strCaseCmp(e->name, name))
-			... /* delete entry */
-	}
-</verb>
-
-	Note that <em/httpHeaderGetEntry()/ is a low level function and must
-	not be used if high level alternatives are available. For example, to
-	delete an entry with a given name, use the <em/httpHeaderDelByName()/
-	function rather than the loop above.
-
-<sect3>I/O and Headers.
-
-<P>
-	To store a header in a file or socket, pack it using <tt/httpHeaderPackInto()/
-	method and a corresponding "Packer". Note that <tt/httpHeaderPackInto/ will pack
-	only header-fields; request-lines and status-lines are not prepended, and
-	CRLF is not appended. Remember that neither of them is a part of HTTP
-	message header as defined by the HTTP protocol.
-
-
-<sect3>Adding new header-field ids.
-
-<P> 
-	Adding new ids is simple. First add new HDR_ entry to the http_hdr_type
-	enumeration in enums.h. Then describe a new header-field attributes in
-	the HeadersAttrs array located in <tt/HttpHeader.c/. The last
-	attribute specifies field type. Five types are supported: integer
-	(<em/ftInt/), string (<em/ftStr/), date in RFC 1123 format
-	(<em/ftDate_1123/), cache control field (<em/ftPCc/), range field
-	(<em/ftPRange/), and content range field (<em/ftPContRange/).  Squid
-	uses type information to convert internal binary representation of
-	fields to their string representation (<tt/httpHeaderPut/ functions)
-	and visa-versa (<tt/httpHeaderGet/ functions).
-
-<P>
-	Finally, add new id to one of the following arrays:
-	<em/GeneralHeadersArr/, <em/EntityHeadersArr/, <em/ReplyHeadersArr/,
-	<em/RequestHeadersArr/.  Use HTTP specs to determine the applicable
-	array.  If your header-field is an "extension-header", its place is in
-	<em/ReplyHeadersArr/ and/or in <em/RequestHeadersArr/. You can also
-	use <em/EntityHeadersArr/ for "extension-header"s that can be used
-	both in replies and requests.  Header fields other than
-	"extension-header"s must go to one and only one of the arrays
-	mentioned above.
-
-<P>
-	Also, if the new field is a "list" header, add it to the
-	<em/ListHeadersArr/ array.  A "list" field-header is the one that is
-	defined (or can be defined) using "#" BNF construct described in the
-	HTTP specs. Essentially, a field that may have more than one valid
-	field-value in a single header is a "list" field.
-
-<P>
-	In most cases, if you forget to include a new field id in one of the required
-	arrays, you will get a run-time assertion. For rarely used fields, however, it
-	may take a long time for an assertion to be triggered.
-
-<P>
-	There is virtually no limit on the number of fields supported by Squid. If
-	current mask sizes cannot fit all the ids (you will get an assertion if that
-	happens), simply enlarge HttpHeaderMask type in <tt/typedefs.h/.
-
-
-<sect3>A Word on Efficiency.
-
-<P>
-	<tt/httpHeaderHas()/ is a very cheap (fast) operation implemented using a bit mask
-	lookup.
-
-<P>
-	Adding new fields is somewhat expensive if they require complex conversions to
-	a string.
-
-<P>
-	Deleting existing fields requires scan of all the entries and comparing their
-	"id"s (faster) or "names" (slower) with the one specified for deletion.
-
-<P>
-	Most of the operations are faster than their "ascii string" equivalents.
-
 
 
 <sect2>Internet Cache Protocol
@@ -743,7 +517,7 @@ Squid consists of the following major components
 
 <P>
 	These routines implement SNMP for Squid.  At the present time,
-	we have made almost all of the cachemgr information avaialble
+	we have made almost all of the cachemgr information available
 	via SNMP.
 
 <sect2>URN Support
@@ -782,14 +556,14 @@ mirror sites.  For more details, please see
 	<tt/pinger.c/
 
 <P>
-	Although it would be possible for Squid to send and recieve
+	Although it would be possible for Squid to send and receive
 	ICMP messages directly, we use an external process for
 	two important reasons:
 	<enum>
 	<item>Because squid handles many filedescriptors simultaneously,
-	we get much more accruate RTT measurements when ICMP is
+	we get much more accurate RTT measurements when ICMP is
 	handled by a separate process.
-	<item>Superuser priveleges are required to send and receive
+	<item>Superuser privileges are required to send and receive
 	ICMP.  Rather than require Squid to be started as root,
 	we prefer to have the smaller and simpler <em/pinger/
 	program installed with setuid permissions.
@@ -822,7 +596,7 @@ mirror sites.  For more details, please see
 <P>
 <enum>
 <item>
-A client connetion is accepted by the <em/client-side/.  The HTTP request
+A client connection is accepted by the <em/client-side/.  The HTTP request
 is parsed.
 
 <item>
@@ -920,7 +694,7 @@ will execute
 The I/O handlers are reset every time they are called.  In other words,
 a handler function must re-register itself with <tt/commSetSelect/
 if it wants to continue reading or writing on a file descriptor.
-The I/O handler may be cancelled before being called by providing
+The I/O handler may be canceled before being called by providing
 NULL arguments, e.g.:
 <verb>
 	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
@@ -1008,7 +782,7 @@ just-freed memory.
 
 <P>
 The timeout and lifetime handlers are called for file descriptors which
-have been idle for too long.  They are futher discussed in a following 
+have been idle for too long.  They are further discussed in a following 
 chapter.
 
 <!-- %%%% Chapter : CLIENT REQUEST PROCESSING %%%% -->
@@ -1187,5 +961,229 @@ according to the <em/ipcache_high/ threshold.
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager
+
+<!-- %%%% Chapter : HTTP Headers %%%% -->
+<sect>HTTP Headers
+<P>
+<em/Files:/
+	<tt/HttpHeader.c/,
+	<tt/HttpHeaderTools.c/,
+	<tt/HttpHdrCc.c/,
+	<tt/HttpHdrContRange.c/,
+	<tt/HttpHdrExtField.c/,
+	<tt/HttpHdrRange.c/
+
+<P> 
+	<tt/HttpHeader/ class encapsulates methods and data for HTTP header
+	manipulation.  <tt/HttpHeader/ can be viewed as a collection of HTTP
+	header-fields with such common operations as add, delete, and find.
+	Compared to an ascii "string" representation, <tt/HttpHeader/ performs
+	those operations without rebuilding the underlying structures from
+	scratch or searching through the entire "string".
+
+<sect1>General remarks
+
+<P>
+	<tt/HttpHeader/ is a collection (or array) of HTTP header-fields. A header
+	field is represented by an <tt/HttpHeaderEntry/ object. <tt/HttpHeaderEntry/ is
+	an (id, name, value) triplet.  Meaningful "Id"s are defined for
+	"well-known" header-fields like "Connection" or "Content-Length".
+	When Squid fails to recognize a field, it uses special "id",
+	<em/HDR_OTHER/.  Ids are formed by capitalizing the corresponding HTTP
+	header-field name and replacing dashes ('-') with underscores ('_').
+
+<P>
+	Most operations on <tt/HttpHeader/ require a "known" id as a parameter. The
+	rationale behind the later restriction is that Squid programmer should
+	operate on "known" fields only. If a new field is being added to
+	header processing, it must be given an id.
+ 
+<sect1>Life cycle
+
+<P> 
+	<tt/HttpHeader/ follows a common pattern for object initialization and
+	cleaning:
+
+<verb>
+    /* declare */
+    HttpHeader hdr;
+    
+    /* initialize (as an HTTP Request header) */
+    httpHeaderInit(&amp;hdr, hoRequest);
+
+    /* do something */
+    ...
+
+    /* cleanup */
+    httpHeaderClean(&amp;hdr);
+</verb>
+
+<P> 
+	Prior to use, an <tt/HttpHeader/ must be initialized. A programmer must
+	specify if a header belongs to a request or reply message. The
+	"ownership" information is used mostly for statistical purposes.
+
+<P>
+	Once initialized, the <tt/HttpHeader/ object <em/must/ be, eventually,
+	cleaned.  Failure to do so will result in a memory leak.
+
+<P>
+	Note that there are no methods for "creating" or "destroying" a
+	"dynamic" <tt/HttpHeader/ object. Looks like headers are always stored as a
+	part of another object or as a temporary variable. Thus, dynamic
+	allocation of headers is not needed.
+
+
+<sect1>Header Manipulation.
+
+<P>
+	The mostly common operations on HTTP headers are testing for a particular
+	header-field (<tt/httpHeaderHas()/), extracting field-values (<tt/httpHeaderGet*()/), and
+	adding new fields (<tt/httpHeaderPut*()/).
+
+<P>
+	<tt/httpHeaderHas(hdr, id)/ returns true if at least one header-field specified by
+	"id" is present in the header. Note that using <em/HDR_OTHER/ as an id is
+	prohibited.  There is usually no reason to know if there are "other"
+	header-fields in a header.
+
+<P>
+	<tt/httpHeaderGet&lt;Type&gt;(hdr, id)/ returns the value of the specified header-field.
+	The "Type" must match header-field type. If a header is not present a "null"
+	value is returned. "Null" values depend on field-type, of course.
+
+<P>
+	Special care must be taken when several header-fields with the same id are
+	preset in the header. If HTTP protocol allows only one copy of the specified
+	field per header (e.g. "Content-Length"), <tt/httpHeaderGet&lt;Type&gt;()/ will return
+	one of the field-values (chosen semi-randomly). If HTTP protocol allows for
+	several values (e.g. "Accept"), a "String List" will be returned.
+
+<P>
+	It is prohibited to ask for a List of values when only one value is permitted,
+	and visa-versa. This restriction prevents a programmer from processing one
+	value of an header-field while ignoring other valid values.
+
+<P>
+	<tt/httpHeaderPut&lt;Type&gt;(hdr, id, value)/ will add an header-field with a specified
+	field-name (based on "id") and field_value. The location of the newly added
+	field in the header array is undefined, but it is guaranteed to be after all
+	fields with the same "id" if any. Note that old header-fields with the same id
+	(if any) are not altered in any way.
+
+<P>
+	The value being put using one of the <tt/httpHeaderPut()/ methods is converted to
+	and stored as a String object.
+
+<P>
+	Example:
+
+<verb>
+	    /* add our own Age field if none was added before */
+	    int age = ...
+	    if (!httpHeaderHas(hdr, HDR_AGE))
+		httpHeaderPutInt(hdr, HDR_AGE, age);
+</verb>
+
+<P>
+	There are two ways to delete a field from a header. To delete a "known" field
+	(a field with "id" other than <em/HDR_OTHER/), use <tt/httpHeaderDelById()/ function.
+	Sometimes, it is convenient to delete all fields with a given name ("known" or
+	not) using <tt/httpHeaderDelByName()/ method. Both methods will delete <em/all/ fields
+	specified.
+
+
+<P>
+
+	The <em/httpHeaderGetEntry(hdr, pos)/ function can be used for
+	iterating through all fields in a given header. Iteration is
+	controlled by the <em/pos/ parameter. Thus, several concurrent
+	iterations over one <em/hdr/ are possible. It is also safe to
+	delete/add fields from/to <em/hdr/ while iteration is in progress.
+
+<verb>
+	/* delete all fields with a given name */
+	HttpHeaderPos pos = HttpHeaderInitPos;
+	HttpHeaderEntry *e;
+	while ((e = httpHeaderGetEntry(hdr, &amp;pos))) {
+		if (!strCaseCmp(e->name, name))
+			... /* delete entry */
+	}
+</verb>
+
+	Note that <em/httpHeaderGetEntry()/ is a low level function and must
+	not be used if high level alternatives are available. For example, to
+	delete an entry with a given name, use the <em/httpHeaderDelByName()/
+	function rather than the loop above.
+
+<sect1>I/O and Headers.
+
+<P>
+	To store a header in a file or socket, pack it using <tt/httpHeaderPackInto()/
+	method and a corresponding "Packer". Note that <tt/httpHeaderPackInto/ will pack
+	only header-fields; request-lines and status-lines are not prepended, and
+	CRLF is not appended. Remember that neither of them is a part of HTTP
+	message header as defined by the HTTP protocol.
+
+
+<sect1>Adding new header-field ids.
+
+<P> 
+	Adding new ids is simple. First add new HDR_ entry to the http_hdr_type
+	enumeration in enums.h. Then describe a new header-field attributes in
+	the HeadersAttrs array located in <tt/HttpHeader.c/. The last
+	attribute specifies field type. Five types are supported: integer
+	(<em/ftInt/), string (<em/ftStr/), date in RFC 1123 format
+	(<em/ftDate_1123/), cache control field (<em/ftPCc/), range field
+	(<em/ftPRange/), and content range field (<em/ftPContRange/).  Squid
+	uses type information to convert internal binary representation of
+	fields to their string representation (<tt/httpHeaderPut/ functions)
+	and visa-versa (<tt/httpHeaderGet/ functions).
+
+<P>
+	Finally, add new id to one of the following arrays:
+	<em/GeneralHeadersArr/, <em/EntityHeadersArr/, <em/ReplyHeadersArr/,
+	<em/RequestHeadersArr/.  Use HTTP specs to determine the applicable
+	array.  If your header-field is an "extension-header", its place is in
+	<em/ReplyHeadersArr/ and/or in <em/RequestHeadersArr/. You can also
+	use <em/EntityHeadersArr/ for "extension-header"s that can be used
+	both in replies and requests.  Header fields other than
+	"extension-header"s must go to one and only one of the arrays
+	mentioned above.
+
+<P>
+	Also, if the new field is a "list" header, add it to the
+	<em/ListHeadersArr/ array.  A "list" field-header is the one that is
+	defined (or can be defined) using "#" BNF construct described in the
+	HTTP specs. Essentially, a field that may have more than one valid
+	field-value in a single header is a "list" field.
+
+<P>
+	In most cases, if you forget to include a new field id in one of the required
+	arrays, you will get a run-time assertion. For rarely used fields, however, it
+	may take a long time for an assertion to be triggered.
+
+<P>
+	There is virtually no limit on the number of fields supported by Squid. If
+	current mask sizes cannot fit all the ids (you will get an assertion if that
+	happens), simply enlarge HttpHeaderMask type in <tt/typedefs.h/.
+
+
+<sect1>A Word on Efficiency.
+
+<P>
+	<tt/httpHeaderHas()/ is a very cheap (fast) operation implemented using a bit mask
+	lookup.
+
+<P>
+	Adding new fields is somewhat expensive if they require complex conversions to
+	a string.
+
+<P>
+	Deleting existing fields requires scan of all the entries and comparing their
+	"id"s (faster) or "names" (slower) with the one specified for deletion.
+
+<P>
+	Most of the operations are faster than their "ascii string" equivalents.
 
 </article>
