@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.314 2000/05/31 08:57:08 hno Exp $
+ * $Id: main.cc,v 1.315 2000/06/27 22:06:03 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -693,7 +693,7 @@ main(int argc, char **argv)
 	} else if (do_shutdown) {
 	    time_t wait = do_shutdown > 0 ? (int) Config.shutdownLifetime : 0;
 	    debug(1, 1) ("Preparing for shutdown after %d requests\n",
-		Counter.client_http.requests);
+		statCounter.client_http.requests);
 	    debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
 		wait);
 	    do_shutdown = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.220 2000/05/16 07:06:05 wessels Exp $
+ * $Id: ipcache.cc,v 1.221 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -406,7 +406,7 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na)
     cbdataFree(c);
     c = NULL;
     n = ++IpcacheStats.replies;
-    statHistCount(&Counter.dns.svc_time, tvSubMsec(i->request_time, current_time));
+    statHistCount(&statCounter.dns.svc_time, tvSubMsec(i->request_time, current_time));
 #if USE_DNSSERVERS
     x = ipcacheParse(reply);
 #else

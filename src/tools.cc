@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.192 2000/05/30 09:30:10 hno Exp $
+ * $Id: tools.cc,v 1.193 2000/06/27 22:06:05 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -476,7 +476,7 @@ uniqueHostname(void)
 void
 safeunlink(const char *s, int quiet)
 {
-    Counter.syscalls.disk.unlinks++;
+    statCounter.syscalls.disk.unlinks++;
     if (unlink(s) < 0 && !quiet)
 	debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.40 2000/06/06 19:34:31 hno Exp $
+ * $Id: unlinkd.cc,v 1.41 2000/06/27 22:06:05 hno Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -139,7 +139,7 @@ unlinkdUnlink(const char *path)
 	safeunlink(path, 0);
 	return;
     }
-    Counter.unlink.requests++;
+    statCounter.unlink.requests++;
     queuelen++;
 }
 

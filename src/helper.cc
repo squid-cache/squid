@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.19 2000/06/06 19:34:31 hno Exp $
+ * $Id: helper.cc,v 1.20 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -286,7 +286,7 @@ helperHandleRead(int fd, void *data)
     helper *hlp = srv->parent;
     assert(fd == srv->rfd);
     assert(cbdataValid(data));
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, srv->buf + srv->offset, srv->buf_sz - srv->offset);
     fd_bytes(fd, len, FD_READ);
     debug(29, 5) ("helperHandleRead: %d bytes from %s #%d.\n",

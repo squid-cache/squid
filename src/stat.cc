@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.332 2000/06/26 06:40:02 wessels Exp $
+ * $Id: stat.cc,v 1.333 2000/06/27 22:06:04 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -460,24 +460,24 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Connection information for %s:\n",
 	appname);
     storeAppendPrintf(sentry, "\tNumber of clients accessing cache:\t%u\n",
-	Counter.client_http.clients);
+	statCounter.client_http.clients);
     storeAppendPrintf(sentry, "\tNumber of HTTP requests received:\t%u\n",
-	Counter.client_http.requests);
+	statCounter.client_http.requests);
     storeAppendPrintf(sentry, "\tNumber of ICP messages received:\t%u\n",
-	Counter.icp.pkts_recv);
+	statCounter.icp.pkts_recv);
     storeAppendPrintf(sentry, "\tNumber of ICP messages sent:\t%u\n",
-	Counter.icp.pkts_sent);
+	statCounter.icp.pkts_sent);
     storeAppendPrintf(sentry, "\tNumber of queued ICP replies:\t%u\n",
-	Counter.icp.replies_queued);
+	statCounter.icp.replies_queued);
     storeAppendPrintf(sentry, "\tRequest failure ratio:\t%5.2f%%\n",
 	request_failure_ratio);
 
     storeAppendPrintf(sentry, "\tHTTP requests per minute:\t%.1f\n",
-	Counter.client_http.requests / (runtime / 60.0));
+	statCounter.client_http.requests / (runtime / 60.0));
     storeAppendPrintf(sentry, "\tICP messages per minute:\t%.1f\n",
-	(Counter.icp.pkts_sent + Counter.icp.pkts_recv) / (runtime / 60.0));
+	(statCounter.icp.pkts_sent + statCounter.icp.pkts_recv) / (runtime / 60.0));
     storeAppendPrintf(sentry, "\tSelect loop called: %d times, %0.3f ms avg\n",
-	Counter.select_loops, 1000.0 * runtime / Counter.select_loops);
+	statCounter.select_loops, 1000.0 * runtime / statCounter.select_loops);
 
     storeAppendPrintf(sentry, "Cache information for %s:\n",
 	appname);
@@ -500,7 +500,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
 	n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0);
     storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%d\n",
-	Counter.unlink.requests);
+	statCounter.unlink.requests);
 
     storeAppendPrintf(sentry, "Median Service Times (seconds)  5 min    60 min:\n");
     storeAppendPrintf(sentry, "\tHTTP Requests (All):  %8.5f %8.5f\n",
@@ -824,7 +824,7 @@ statInit(void)
 	statCountersInit(&CountHist[i]);
     for (i = 0; i < N_COUNT_HOUR_HIST; i++)
 	statCountersInit(&CountHourHist[i]);
-    statCountersInit(&Counter);
+    statCountersInit(&statCounter);
     eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
     cachemgrRegister("info",
 	"General Runtime Information",
@@ -884,7 +884,7 @@ statAvgTick(void *notused)
 {
     StatCounters *t = &CountHist[0];
     StatCounters *p = &CountHist[1];
-    StatCounters *c = &Counter;
+    StatCounters *c = &statCounter;
     struct rusage rusage;
     eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
     squid_getrusage(&rusage);
@@ -1022,7 +1022,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 static void
 statCountersHistograms(StoreEntry * sentry)
 {
-    StatCounters *f = &Counter;
+    StatCounters *f = &statCounter;
     storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
     statHistDump(&f->client_http.all_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
@@ -1044,7 +1044,7 @@ statCountersHistograms(StoreEntry * sentry)
 static void
 statCountersDump(StoreEntry * sentry)
 {
-    StatCounters *f = &Counter;
+    StatCounters *f = &statCounter;
     struct rusage rusage;
     squid_getrusage(&rusage);
     f->page_faults = rusage_pagefaults(&rusage);
@@ -1185,7 +1185,7 @@ static void
 statPeerSelect(StoreEntry * sentry)
 {
 #if USE_CACHE_DIGESTS
-    StatCounters *f = &Counter;
+    StatCounters *f = &statCounter;
     peer *peer;
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
@@ -1301,7 +1301,7 @@ int
 stat5minClientRequests(void)
 {
     assert(N_COUNT_HIST > 5);
-    return Counter.client_http.requests - CountHist[5].client_http.requests;
+    return statCounter.client_http.requests - CountHist[5].client_http.requests;
 }
 
 static double

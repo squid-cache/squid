@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.63 2000/05/16 07:06:05 wessels Exp $
+ * $Id: icp_v2.cc,v 1.64 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -156,10 +156,10 @@ icpUdpSend(int fd,
 	    IcpQueueTail = queue;
 	}
 	commSetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
-	Counter.icp.replies_queued++;
+	statCounter.icp.replies_queued++;
     } else {
 	/* don't queue it */
-	Counter.icp.replies_dropped++;
+	statCounter.icp.replies_dropped++;
     }
     return x;
 }
@@ -348,7 +348,7 @@ icpHandleUdp(int sock, void *data)
     while (max--) {
 	from_len = sizeof(from);
 	memset(&from, '\0', from_len);
-	Counter.syscalls.sock.recvfroms++;
+	statCounter.syscalls.sock.recvfroms++;
 	len = recvfrom(sock,
 	    buf,
 	    SQUID_UDP_SO_RCVBUF - 1,
@@ -514,32 +514,32 @@ icpCount(void *buf, int which, size_t len, int delay)
     if (len < sizeof(*icp))
 	return;
     if (SENT == which) {
-	Counter.icp.pkts_sent++;
-	kb_incr(&Counter.icp.kbytes_sent, len);
+	statCounter.icp.pkts_sent++;
+	kb_incr(&statCounter.icp.kbytes_sent, len);
 	if (ICP_QUERY == icp->opcode) {
-	    Counter.icp.queries_sent++;
-	    kb_incr(&Counter.icp.q_kbytes_sent, len);
+	    statCounter.icp.queries_sent++;
+	    kb_incr(&statCounter.icp.q_kbytes_sent, len);
 	} else {
-	    Counter.icp.replies_sent++;
-	    kb_incr(&Counter.icp.r_kbytes_sent, len);
+	    statCounter.icp.replies_sent++;
+	    kb_incr(&statCounter.icp.r_kbytes_sent, len);
 	    /* this is the sent-reply service time */
-	    statHistCount(&Counter.icp.reply_svc_time, delay);
+	    statHistCount(&statCounter.icp.reply_svc_time, delay);
 	}
 	if (ICP_HIT == icp->opcode)
-	    Counter.icp.hits_sent++;
+	    statCounter.icp.hits_sent++;
     } else if (RECV == which) {
-	Counter.icp.pkts_recv++;
-	kb_incr(&Counter.icp.kbytes_recv, len);
+	statCounter.icp.pkts_recv++;
+	kb_incr(&statCounter.icp.kbytes_recv, len);
 	if (ICP_QUERY == icp->opcode) {
-	    Counter.icp.queries_recv++;
-	    kb_incr(&Counter.icp.q_kbytes_recv, len);
+	    statCounter.icp.queries_recv++;
+	    kb_incr(&statCounter.icp.q_kbytes_recv, len);
 	} else {
-	    Counter.icp.replies_recv++;
-	    kb_incr(&Counter.icp.r_kbytes_recv, len);
-	    /* Counter.icp.query_svc_time set in clientUpdateCounters */
+	    statCounter.icp.replies_recv++;
+	    kb_incr(&statCounter.icp.r_kbytes_recv, len);
+	    /* statCounter.icp.query_svc_time set in clientUpdateCounters */
 	}
 	if (ICP_HIT == icp->opcode)
-	    Counter.icp.hits_recv++;
+	    statCounter.icp.hits_recv++;
     }
 }
 

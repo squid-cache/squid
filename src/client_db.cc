@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.49 2000/05/16 07:06:03 wessels Exp $
+ * $Id: client_db.cc,v 1.50 2000/06/27 22:05:58 hno Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -47,7 +47,7 @@ clientdbAdd(struct in_addr addr)
     c->key = xstrdup(inet_ntoa(addr));
     c->addr = addr;
     hash_join(client_table, (hash_link *) c);
-    Counter.client_http.clients++;
+    statCounter.client_http.clients++;
     return c;
 }
 

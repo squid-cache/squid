@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.362 2000/05/16 07:09:34 wessels Exp $
+ * $Id: http.cc,v 1.363 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -480,7 +480,7 @@ httpReadReply(int fd, void *data)
 #if DELAY_POOLS
     read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, buf, read_sz);
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
@@ -488,8 +488,8 @@ httpReadReply(int fd, void *data)
 #if DELAY_POOLS
 	delayBytesIn(delay_id, len);
 #endif
-	kb_incr(&Counter.server.all.kbytes_in, len);
-	kb_incr(&Counter.server.http.kbytes_in, len);
+	kb_incr(&statCounter.server.all.kbytes_in, len);
+	kb_incr(&statCounter.server.http.kbytes_in, len);
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
@@ -597,8 +597,8 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 #endif
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.all.kbytes_out, size);
-	kb_incr(&Counter.server.http.kbytes_out, size);
+	kb_incr(&statCounter.server.all.kbytes_out, size);
+	kb_incr(&statCounter.server.http.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -929,8 +929,8 @@ httpStart(FwdState * fwd)
      * register the handler to free HTTP state data when the FD closes
      */
     comm_add_close_handler(fd, httpStateFree, httpState);
-    Counter.server.all.requests++;
-    Counter.server.http.requests++;
+    statCounter.server.all.requests++;
+    statCounter.server.http.requests++;
     httpSendRequest(httpState);
     /*
      * We used to set the read timeout here, but not any more.
@@ -949,8 +949,8 @@ httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void *d
 	fd, size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.all.kbytes_out, size);
-	kb_incr(&Counter.server.http.kbytes_out, size);
+	kb_incr(&statCounter.server.all.kbytes_out, size);
+	kb_incr(&statCounter.server.http.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -980,8 +980,8 @@ httpSendRequestEntryDone(int fd, char *bufnotused, size_t size, int errflag, voi
 	fd, size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.all.kbytes_out, size);
-	kb_incr(&Counter.server.http.kbytes_out, size);
+	kb_incr(&statCounter.server.all.kbytes_out, size);
+	kb_incr(&statCounter.server.http.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;

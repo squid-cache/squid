@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.30 2000/03/06 16:23:31 wessels Exp $
+ * $Id: htcp.cc,v 1.31 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -821,7 +821,7 @@ htcpRecv(int fd, void *data)
     static struct sockaddr_in from;
     int flen = sizeof(struct sockaddr_in);
     memset(&from, '\0', flen);
-    Counter.syscalls.sock.recvfroms++;
+    statCounter.syscalls.sock.recvfroms++;
     len = recvfrom(fd, buf, 8192, 0, (struct sockaddr *) &from, &flen);
     debug(31, 3) ("htcpRecv: FD %d, %d bytes from %s:%d\n",
 	fd, len, inet_ntoa(from.sin_addr), ntohs(from.sin_port));

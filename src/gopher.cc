@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.154 2000/06/06 19:34:31 hno Exp $
+ * $Id: gopher.cc,v 1.155 2000/06/27 22:06:02 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -610,15 +610,15 @@ gopherReadReply(int fd, void *data)
     read_sz = delayBytesWanted(delay_id, 1, read_sz);
 #endif
     /* leave one space for \0 in gopherToHTML */
-    Counter.syscalls.sock.reads++;
+    statCounter.syscalls.sock.reads++;
     len = read(fd, buf, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
 	delayBytesIn(delay_id, len);
 #endif
-	kb_incr(&Counter.server.all.kbytes_in, len);
-	kb_incr(&Counter.server.other.kbytes_in, len);
+	kb_incr(&statCounter.server.all.kbytes_in, len);
+	kb_incr(&statCounter.server.other.kbytes_in, len);
     }
     debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, len);
     if (len > 0) {
@@ -684,8 +684,8 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
 	fd, size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.all.kbytes_out, size);
-	kb_incr(&Counter.server.other.kbytes_out, size);
+	kb_incr(&statCounter.server.all.kbytes_out, size);
+	kb_incr(&statCounter.server.other.kbytes_out, size);
     }
     if (errflag) {
 	ErrorState *err;
@@ -773,8 +773,8 @@ gopherStart(FwdState * fwdState)
     storeLockObject(entry);
     gopherState->entry = entry;
     debug(10, 3) ("gopherStart: %s\n", storeUrl(entry));
-    Counter.server.all.requests++;
-    Counter.server.other.requests++;
+    statCounter.server.all.requests++;
+    statCounter.server.other.requests++;
     /* Parse url. */
     if (gopher_url_parser(storeUrl(entry), gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {

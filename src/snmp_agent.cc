@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.76 2000/05/16 07:06:06 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.77 2000/06/27 22:06:03 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -286,7 +286,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 	break;
     case PERF_SYS_CURUNLREQ:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    (snint) Counter.unlink.requests,
+	    (snint) statCounter.unlink.requests,
 	    SMI_COUNTER32);
 	break;
     case PERF_SYS_CURUNUSED_FD:
@@ -326,67 +326,67 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	switch (Var->name[LEN_SQ_PRF + 2]) {
 	case PERF_PROTOSTAT_AGGR_HTTP_REQ:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.client_http.requests,
+		(snint) statCounter.client_http.requests,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_HITS:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.client_http.hits,
+		(snint) statCounter.client_http.hits,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_ERRORS:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.client_http.errors,
+		(snint) statCounter.client_http.errors,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_IN:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.client_http.kbytes_in.kb,
+		(snint) statCounter.client_http.kbytes_in.kb,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_OUT:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.client_http.kbytes_out.kb,
+		(snint) statCounter.client_http.kbytes_out.kb,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_S:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.icp.pkts_sent,
+		(snint) statCounter.icp.pkts_sent,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_R:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.icp.pkts_recv,
+		(snint) statCounter.icp.pkts_recv,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_SKB:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.icp.kbytes_sent.kb,
+		(snint) statCounter.icp.kbytes_sent.kb,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ICP_RKB:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.icp.kbytes_recv.kb,
+		(snint) statCounter.icp.kbytes_recv.kb,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_REQ:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.server.all.requests,
+		(snint) statCounter.server.all.requests,
 		SMI_INTEGER);
 	    break;
 	case PERF_PROTOSTAT_AGGR_ERRORS:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.server.all.errors,
+		(snint) statCounter.server.all.errors,
 		SMI_INTEGER);
 	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_IN:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.server.all.kbytes_in.kb,
+		(snint) statCounter.server.all.kbytes_in.kb,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_OUT:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.server.all.kbytes_out.kb,
+		(snint) statCounter.server.all.kbytes_out.kb,
 		SMI_COUNTER32);
 	    break;
 	case PERF_PROTOSTAT_AGGR_CURSWAP:
@@ -396,7 +396,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	    break;
 	case PERF_PROTOSTAT_AGGR_CLIENTS:
 	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
-		(snint) Counter.client_http.clients,
+		(snint) statCounter.client_http.clients,
 		SMI_COUNTER32);
 	    break;
 	default:
