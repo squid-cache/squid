@@ -1,7 +1,7 @@
 /*
  *  Darren Hardy, hardy@cs.colorado.edu, April 1994
  *
- *  $Id: util.h,v 1.1 1996/02/22 06:23:56 wessels Exp $
+ *  $Id: util.h,v 1.2 1996/02/29 07:59:28 wessels Exp $
  *
  *  ----------------------------------------------------------------------
  *  Copyright (c) 1994, 1995.  All rights reserved.
@@ -183,5 +183,7 @@ extern char *mkrfc850 _PARAMS((time_t *));
 extern void init_log3 _PARAMS((char *pn, FILE *a, FILE *b));
 extern void debug_init();
 extern void log_errno2 _PARAMS((char *, int, char *));
+extern void Log ();
+extern void errorlog ();
 
 #endif /* ndef _UTIL_H_ */
