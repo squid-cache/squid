@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.36 1998/12/14 05:01:09 wessels Exp $
+ * $Id: forward.cc,v 1.37 1998/12/14 05:19:36 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -332,6 +332,10 @@ fwdReforward(FwdState * fwdState)
     http_status s;
     assert(e->store_status == STORE_PENDING);
     assert(e->mem_obj);
+    if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
+	debug(17, 3) ("fwdReforward: No, ENTRY_FWD_HDR_WAIT isn't set\n");
+	return 0;
+    }
     if (fwdState->n_tries > 9)
 	return 0;
     assert(fs);
@@ -483,12 +487,8 @@ fwdComplete(FwdState * fwdState)
     assert(e->store_status == STORE_PENDING);
     debug(17, 3) ("fwdComplete: %s\n\tstatus %d\n", storeUrl(e),
 	e->mem_obj->reply->sline.status);
-    if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
-	debug(17, 3) ("ENTRY_FWD_HDR_WAIT not set, calling storeComplete\n");
-	storeComplete(e);
-	fwdStateFree(fwdState);
-    } else if (fwdReforward(fwdState)) {
-	debug(0, 0) ("fwdComplete: re-forwarding %d %s\n",
+    if (fwdReforward(fwdState)) {
+	debug(17, 1) ("fwdComplete: re-forwarding %d %s\n",
 	    e->mem_obj->reply->sline.status,
 	    storeUrl(e));
 	if (fwdState->server_fd > -1)
@@ -496,8 +496,15 @@ fwdComplete(FwdState * fwdState)
 	storeEntryReset(e);
 	fwdStartComplete(fwdState->servers, fwdState);
     } else {
+	debug(17, 3) ("fwdComplete: not re-forwarding status %d\n",
+	    e->mem_obj->reply->sline.status);
 	EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
 	storeComplete(e);
-	fwdStateFree(fwdState);
+	/*
+	 * If fwdState isn't associated with a server FD, it
+	 * won't get freed unless we do it here.
+	 */
+	if (fwdState->server_fd < 0)
+	    fwdStateFree(fwdState);
     }
 }
