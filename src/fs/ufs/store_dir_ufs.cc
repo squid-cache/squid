@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.46 2002/07/21 00:25:46 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.47 2002/07/22 00:05:20 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -324,7 +324,7 @@ storeUfsDirOpenSwapLog(SwapDir * sd)
 	debug(50, 1) ("%s: %s\n", path, xstrerror());
 	fatal("storeUfsDirOpenSwapLog: Failed to open swap log.");
     }
-    debug(47, 3) ("Cache Dir #%d log opened on FD %d\n", sd->index, fd);
+    debug(50, 3) ("Cache Dir #%d log opened on FD %d\n", sd->index, fd);
     ufsinfo->swaplog_fd = fd;
     if (0 == n_ufs_dirs)
 	assert(NULL == ufs_dir_index);
@@ -1018,7 +1018,7 @@ storeUfsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 	if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
 	    debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 		state->new, xstrerror());
-	    debug(47, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
+	    debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
 	    file_close(state->fd);
 	    state->fd = -1;
 	    unlink(state->new);
