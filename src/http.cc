@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.213 1997/10/31 20:46:23 wessels Exp $
+ * $Id: http.cc,v 1.214 1997/10/31 23:37:24 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -873,7 +873,6 @@ httpSendRequest(int fd, void *data)
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
     int cfd;
-    static int xcount = 0;
     peer *p = httpState->peer;
     double d;
 
@@ -907,8 +906,6 @@ httpSendRequest(int fd, void *data)
 	if (p) {
 	    d = (double) p->stats.n_keepalives_recv /
 		(double) ++p->stats.n_keepalives_sent;
-	    if ((xcount++ & 0x3F) == 0)
-		debug(0, 0) ("%s Keepalive Ratio = %f\n", p->host, d);
 	    if (d > 0.50 || p->stats.n_keepalives_sent < 10)
 	        BIT_SET(httpState->flags, HTTP_KEEPALIVE);
 	} else {
