@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.549 2001/10/19 22:34:48 hno Exp $
+ * $Id: client_side.cc,v 1.550 2001/10/23 11:00:41 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2459,16 +2459,19 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     /* Barf on NULL characters in the headers */
     if (strlen(inbuf) != req_sz) {
 	debug(33, 1) ("parseHttpRequest: Requestheader contains NULL characters\n");
+	xfree(inbuf);
 	return parseHttpRequestAbort(conn, "error:invalid-request");
     }
     /* Look for request method */
     if ((mstr = strtok(inbuf, "\t ")) == NULL) {
 	debug(33, 1) ("parseHttpRequest: Can't get request method\n");
+	xfree(inbuf);
 	return parseHttpRequestAbort(conn, "error:invalid-request-method");
     }
     method = urlParseMethod(mstr);
     if (method == METHOD_NONE) {
 	debug(33, 1) ("parseHttpRequest: Unsupported method '%s'\n", mstr);
+	xfree(inbuf);
 	return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
     debug(33, 5) ("parseHttpRequest: Method is '%s'\n", mstr);
@@ -2477,6 +2480,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     /* look for URL+HTTP/x.x */
     if ((url = strtok(NULL, "\n")) == NULL) {
 	debug(33, 1) ("parseHttpRequest: Missing URL\n");
+	xfree(inbuf);
 	return parseHttpRequestAbort(conn, "error:missing-url");
     }
     while (xisspace(*url))
@@ -2499,11 +2503,13 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 #if RELAXED_HTTP_PARSER
 	httpBuildVersion(&http_ver, 0, 9);	/* wild guess */
 #else
+	xfree(inbuf);
 	return parseHttpRequestAbort(conn, "error:missing-http-ident");
 #endif
     } else {
 	if (sscanf(token + 5, "%d.%d", &http_ver.major, &http_ver.minor) != 2) {
 	    debug(33, 3) ("parseHttpRequest: Invalid HTTP identifier.\n");
+	    xfree(inbuf);
 	    return parseHttpRequestAbort(conn, "error: invalid HTTP-ident");
 	}
 	debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n", http_ver.major, http_ver.minor);
@@ -2517,6 +2523,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if (0 == header_sz) {
 	debug(33, 3) ("parseHttpRequest: header_sz == 0\n");
 	*status = 0;
+	xfree(inbuf);
 	return NULL;
     }
     assert(header_sz > 0);
@@ -2611,6 +2618,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    if (natfd < 0) {
 		debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
 		    xstrerror());
+		dlinkDelete(&http->active, &ClientActiveRequests);
+		xfree(http->uri);
+		cbdataFree(http);
+		xfree(inbuf);
 		return parseHttpRequestAbort(conn, "error:nat-open-failed");
 	    }
 	    /*
@@ -2631,6 +2642,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		    debug(50, 1) ("parseHttpRequest: NAT lookup failed: ioctl(SIOCGNATL)\n");
 		    close(natfd);
 		    natfd = -1;
+		    dlinkDelete(&http->active, &ClientActiveRequests);
+		    xfree(http->uri);
+		    cbdataFree(http);
+		    xfree(inbuf);
 		    return parseHttpRequestAbort(conn, "error:nat-lookup-failed");
 		} else
 		    snprintf(http->uri, url_sz, "http://%s:%d%s",
