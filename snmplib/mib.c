@@ -477,7 +477,7 @@ sprint_by_type(buf, var, enums, quiet)
 }
 #endif
 
-static struct snmp_mib_tree *get_symbol();
+static struct snmp_mib_tree *get_symbol(oid *objid, int objidlen, struct snmp_mib_tree *subtree, char *buf);
 
 oid RFC1066_MIB[] =
 {1, 3, 6, 1, 2, 1};
@@ -895,6 +895,7 @@ print_variable_list_value(variable_list * pvariable)
 }
 #endif
 
+#if UNUSED_CODE
 void
 print_type(variable_list * var)
 {
@@ -931,6 +932,7 @@ print_type(variable_list * var)
 	break;
     }
 }
+#endif
 
 void
 print_oid_nums(oid * O, int len)
