@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.322 1998/09/19 17:06:05 wessels Exp $
+ * $Id: http.cc,v 1.323 1998/09/21 06:52:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -132,7 +132,6 @@ static void
 httpMaybeRemovePublic(StoreEntry * e, http_status status)
 {
     int remove = 0;
-    const cache_key *key;
     StoreEntry *pe;
     if (!EBIT_TEST(e->flags, KEY_PRIVATE))
 	return;
@@ -160,15 +159,13 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     if (!remove)
 	return;
     assert(e->mem_obj);
-    key = storeKeyPublic(e->mem_obj->url, e->mem_obj->method);
-    if ((pe = storeGet(key)) != NULL) {
+    if ((pe = storeGetPublic(e->mem_obj->url, e->mem_obj->method)) != NULL) {
 	assert(e != pe);
 	storeRelease(pe);
     }
     if (e->mem_obj->method == METHOD_GET) {
 	/* A fresh GET should eject old HEAD objects */
-	key = storeKeyPublic(e->mem_obj->url, METHOD_HEAD);
-	if ((pe = storeGet(key)) != NULL) {
+	if ((pe = storeGetPublic(e->mem_obj->url, METHOD_HEAD)) != NULL) {
 	    assert(e != pe);
 	    storeRelease(pe);
 	}

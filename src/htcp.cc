@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.22 1998/09/04 23:04:48 wessels Exp $
+ * $Id: htcp.cc,v 1.23 1998/09/21 06:52:13 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -674,8 +674,7 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
 	s->version);
     m = urlParseMethod(s->method);
     debug(31, 1) ("htcpHandleTstRequest: %s\n", s->req_hdrs);
-    key = storeKeyPublic(s->uri, m);
-    e = storeGet(key);
+    e = storeGetPublic(s->uri, m);
     if (NULL == e) {
 	/* cache miss */
 	htcpTstReply(dhdr, NULL, NULL, from);

@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.45 1998/09/14 22:18:04 wessels Exp $
+ * $Id: urn.cc,v 1.47 1998/09/21 06:52:23 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -35,10 +35,6 @@
  */
 
 #include "squid.h"
-
-enum {
-    URN_FORCE_MENU
-};
 
 typedef struct {
     StoreEntry *entry;
@@ -104,7 +100,6 @@ urnStart(request_t * r, StoreEntry * e)
 {
     LOCAL_ARRAY(char, urlres, 4096);
     request_t *urlres_r = NULL;
-    const cache_key *k;
     const char *t;
     char *host;
     UrnState *urnState;
@@ -131,7 +126,6 @@ urnStart(request_t * r, StoreEntry * e)
     }
     snprintf(urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, strBuf(r->urlpath));
     safe_free(host);
-    k = storeKeyPublic(urlres, METHOD_GET);
     urlres_r = urlParse(METHOD_GET, urlres);
     if (urlres_r == NULL) {
 	debug(52, 3) ("urnStart: Bad uri-res URL %s\n", urlres);
@@ -141,7 +135,7 @@ urnStart(request_t * r, StoreEntry * e)
 	return;
     }
     httpHeaderPutStr(&urlres_r->header, HDR_ACCEPT, "text/plain");
-    if ((urlres_e = storeGet(k)) == NULL) {
+    if ((urlres_e = storeGetPublic(urlres, METHOD_GET)) == NULL) {
 	urlres_e = storeCreateEntry(urlres, urlres, null_request_flags, METHOD_GET);
 	storeClientListAdd(urlres_e, urnState);
 	fwdStart(-1, urlres_e, urlres_r, no_addr);
@@ -314,7 +308,6 @@ urnParseReply(const char *inbuf, method_t m)
     char *token;
     char *url;
     char *host;
-    const cache_key *key;
     int rtt;
     url_entry *list;
     url_entry *old;
@@ -340,11 +333,10 @@ urnParseReply(const char *inbuf, method_t m)
 	    debug(52, 3) ("urnParseReply: Pinging %s\n", host);
 	    netdbPingSite(host);
 	}
-	key = storeKeyPublic(url, m);
 	list[i].url = url;
 	list[i].host = xstrdup(host);
 	list[i].rtt = rtt;
-	list[i].flags.cached = storeGet(key) ? 1 : 0;
+	list[i].flags.cached = storeGetPublic(url, m) ? 1 : 0;
 	i++;
     }
     debug(0, 0) ("urnParseReply: Found %d URLs\n", i);

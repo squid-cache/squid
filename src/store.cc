@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.462 1998/09/19 17:06:12 wessels Exp $
+ * $Id: store.cc,v 1.463 1998/09/21 06:52:22 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -277,6 +277,20 @@ storeGet(const cache_key * key)
 {
     debug(20, 3) ("storeGet: looking up %s\n", storeKeyText(key));
     return (StoreEntry *) hash_lookup(store_table, key);
+}
+
+StoreEntry *
+storeGetPublic(const char *uri, const method_t method)
+{
+    cache_key *key;
+    StoreEntry *e;
+    key = storeKeyPublic(uri, method);
+    e = storeGet(key);
+    if (e == NULL && squid_curtime < 909000000) {
+	key = storeKeyPublicOld(uri, method);
+	e = storeGet(key);
+    }
+    return storeGet(key);
 }
 
 static int
