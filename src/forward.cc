@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.6 1998/06/09 22:43:48 wessels Exp $
+ * $Id: forward.cc,v 1.7 1998/06/09 22:58:01 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -371,4 +371,16 @@ fwdAbort(void *data)
 	FwdState * fwdState = data;
 	debug(17,1)("fwdAbort: %s\n", storeUrl(fwdState->entry));
         fwdStateFree(fwdState);
+}
+
+/*
+ * Frees fwdState without closing FD or generating an abort
+ */
+void
+fwdUnregister(int fd, FwdState *fwdState)
+{
+	assert(fd = fwdState->server_fd);
+	comm_remove_close_handler(fd, fwdServerClosed, fwdState);
+	fwdState->server_fd = -1;
+	fwdStateFree(fwdState);
 }
