@@ -18,10 +18,16 @@ LN_S		= @LN_S@
 all: 
 
 install:	
+	@if test ! -d $(prefix); then \
+		echo "mkdir $(prefix)"; \
+		mkdir $(prefix); \
+	fi
+	@if test ! -d $(INSTALL_BINDIR); then \
+		echo "mkdir $(INSTALL_BINDIR)"; \
+		mkdir $(INSTALL_BINDIR); \
+	fi
 	$(INSTALL_BIN) RunCache $(INSTALL_BINDIR)
 	$(INSTALL_BIN) RunAccel $(INSTALL_BINDIR)
-	$(INSTALL_BIN) CachedMosaic $(INSTALL_BINDIR)
-	$(INSTALL_BIN) CachedLynx $(INSTALL_BINDIR)
 
 clean:
 

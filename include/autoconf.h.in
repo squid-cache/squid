@@ -42,6 +42,9 @@
 /* Define if you have the <arpa/inet.h> header file.  */
 #undef HAVE_ARPA_INET_H
 
+/* Define if you have the <bstring.h> header file.  */
+#undef HAVE_BSTRING_H
+
 /* Define if you have the <config.h> header file.  */
 #undef HAVE_CONFIG_H
 
@@ -80,6 +83,9 @@
 
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/select.h> header file.  */
+#undef HAVE_SYS_SELECT_H
 
 /* Define if you have the <sys/syslog.h> header file.  */
 #undef HAVE_SYS_SYSLOG_H
