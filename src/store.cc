@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.91 1996/08/29 16:54:03 wessels Exp $
+ * $Id: store.cc,v 1.92 1996/08/30 22:44:13 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2914,4 +2914,10 @@ static char *storeDescribeStatus(e)
 	(int) e->lock_count,
 	e->url);
     return buf;
+}
+
+void storeCloseLog()
+{
+    file_close(swaplog_fd);
+    file_close(storelog_fd);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.45 1996/08/29 16:55:00 wessels Exp $
+ * $Id: neighbors.cc,v 1.46 1996/08/30 22:44:09 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -480,8 +480,8 @@ int neighborsUdpPing(proto)
 	e->stats.ack_deficit++;
 	e->stats.pings_sent++;
 
-	debug(15,3,"neighborsUdpPing: %s: ack_deficit = %d\n",
-		e->host, e->stats.ack_deficit);
+	debug(15, 3, "neighborsUdpPing: %s: ack_deficit = %d\n",
+	    e->host, e->stats.ack_deficit);
 
 	if (e->stats.ack_deficit < HIER_MAX_DEFICIT) {
 	    /* its alive, expect a reply from it */
@@ -598,9 +598,8 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 		HIER_SOURCE_FASTEST,
 		0,
 		fqdnFromAddr(from->sin_addr));
-	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = PING_DONE;
-	    getFromCache(0, entry, NULL, entry->mem_obj->request);
+	    protoStart(0, entry, NULL, entry->mem_obj->request);
 	    return;
 	}
     } else if (header->opcode == ICP_OP_HIT_OBJ) {
@@ -635,9 +634,8 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 		e->type == EDGE_SIBLING ? HIER_SIBLING_HIT : HIER_PARENT_HIT,
 		0,
 		e->host);
-	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = PING_DONE;
-	    getFromCache(0, entry, e, entry->mem_obj->request);
+	    protoStart(0, entry, e, entry->mem_obj->request);
 	    return;
 	}
     } else if (header->opcode == ICP_OP_DECHO) {
@@ -683,10 +681,9 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    IcpOpcodeStr[header->opcode]);
     }
     if (mem->e_pings_n_acks == mem->e_pings_n_pings) {
-	BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	entry->ping_status = PING_DONE;
 	debug(15, 6, "neighborsUdpAck: All replies received.\n");
-	/* pass in fd=0 here so getFromCache() looks up the real FD
+	/* pass in fd=0 here so protoStart() looks up the real FD
 	 * and resets the timeout handler */
 	getFromDefaultSource(0, entry);
 	return;

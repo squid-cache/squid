@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.12 1996/08/26 22:47:55 wessels Exp $
+ * $Id: redirect.cc,v 1.13 1996/08/30 22:44:11 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -95,6 +95,7 @@ static int redirectCreateRedirector(command)
     int sfd;
     int len;
     int fd;
+    struct timeval slp;
     cfd = comm_open(COMM_NOCLOEXEC,
 	local_addr,
 	0,
@@ -130,6 +131,9 @@ static int redirectCreateRedirector(command)
 	comm_set_fd_lifetime(sfd, -1);
 	debug(29, 4, "redirect_create_redirector: FD %d connected to %s #%d.\n",
 	    sfd, command, n_redirector++);
+	slp.tv_sec = 0;
+	slp.tv_usec = 250000;
+	select(0, NULL, NULL, NULL, &slp);
 	return sfd;
     }
     /* child */
@@ -141,8 +145,10 @@ static int redirectCreateRedirector(command)
     }
     dup2(fd, 0);
     dup2(fd, 1);
-    for (fd = 3; fd < FD_SETSIZE; fd++)
-	close(fd);
+    dup2(fileno(debug_log), 2);
+    fclose(debug_log);
+    close(fd);
+    close(cfd);
     execlp(command, "(redirector)", NULL);
     debug(29, 0, "redirect_create_redirector: %s: %s\n", command, xstrerror());
     _exit(1);
@@ -171,6 +177,7 @@ static int redirectHandleRead(fd, redirector)
 	    "FD %d: Connection from Redirector #%d is closed, disabling\n",
 	    fd, redirector->index + 1);
 	redirector->flags = 0;
+	put_free_4k_page(redirector->inbuf);
 	comm_close(fd);
 	if (--NRedirectorsOpen == 0 && !shutdown_pending && !reread_pending)
 	    fatal_dump("All redirectors have exited!");

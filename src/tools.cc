@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.49 1996/08/26 19:14:54 wessels Exp $
+ * $Id: tools.cc,v 1.50 1996/08/30 22:44:15 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -292,6 +292,9 @@ void normal_shutdown()
     PrintRusage(NULL, debug_log);
     debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
+    storeCloseLog();
+    statCloseLog();
+    fclose(debug_log);
     exit(0);
 }
 
