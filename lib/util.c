@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.37 1998/01/02 22:39:17 kostas Exp $
+ * $Id: util.c,v 1.38 1998/01/05 00:57:55 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -131,6 +131,7 @@
 #endif
 
 #include "util.h"
+#include "snprintf.h"
 
 void (*failure_notify) (const char *) = NULL;
 static char msg[128];

@@ -22,6 +22,8 @@
 #include <arpa/inet.h>
 #endif
 
+#include "snprintf.h"
+
 int
 safe_inet_addr(const char *buf, struct in_addr *addr)
 {
