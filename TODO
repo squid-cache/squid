@@ -17,8 +17,6 @@ Our Todo List
 (2)     Use storeBuffer/Flush where needed, consider supporting nested calls
 
 (3) **	request-range (AR)
-(3) **  shrink-able memory pools (AR)
-(3) **  honor DIRECT_NO case for cache digest misses (AR)
 (3)	hit metering
 (3)	ETag support (makes metadata bigger--ack!)
 (3)	Efficient public peer access control *without ACLs*
@@ -57,7 +55,6 @@ Our Todo List
 (5)	return "ERR_TOO_LARGE" messages for replies with
 	content-lengths larger than some limit.
 (5)	Bind HTTP/ICP sockets to multiple interfaces
-(5)     replace "for" loops in md5.c with memcpy and memset
 
 DONE:
 + s/sprintf/snprintf/g
@@ -104,3 +101,5 @@ DONE:
 (4) **	FTP PUT (KA)
 (1)	SSL doesn't work with Proxy Authentication
 (3)     HTTP Header todo list (AR)
+(5)     replace "for" loops in md5.c with memcpy and memset
+(3) **  shrink-able memory pools (AR)
