@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.268 1999/01/29 21:28:15 wessels Exp $
+ * $Id: neighbors.cc,v 1.269 1999/01/29 22:17:09 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -956,7 +956,7 @@ peerRefreshDNS(void *data)
 {
     peer *p = NULL;
     if (eventFind(peerRefreshDNS, NULL))
-	return;
+	eventDelete(peerRefreshDNS, NULL);
     if (!data && 0 == stat5minClientRequests()) {
 	/* no recent client traffic, wait a bit */
 	eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 180.0, 1);
