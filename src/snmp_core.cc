@@ -1,5 +1,5 @@
-*
- * $Id: snmp_core.cc,v 1.22 1998/12/02 05:57:52 wessels Exp $
+/*
+ * $Id: snmp_core.cc,v 1.23 1998/12/02 06:00:41 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
