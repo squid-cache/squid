@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.187 1997/01/03 22:45:51 wessels Exp $
+ * $Id: store.cc,v 1.188 1997/01/04 08:35:04 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1581,7 +1581,7 @@ storeStartRebuildFromDisk(void)
 
     /* Start reading the log file */
     if (opt_foreground_rebuild) {
-	data->speed = 1 << 31;
+	data->speed = 1 << 30;
 	storeDoRebuildFromDisk(data);
     } else {
 	eventAdd("storeRebuild", storeDoRebuildFromDisk, data, 0);
