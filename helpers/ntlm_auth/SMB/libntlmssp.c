@@ -224,7 +224,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 	return NULL;
     }
     memcpy(domain, tmp.str, tmp.l);
-    user = domain + tmp.l + 1;
+    user = domain + tmp.l;
     *user++ = '\0';
 
 /*      debug("fetching user name\n"); */
