@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.105 2002/10/13 20:35:02 robertc Exp $
+ * $Id: mime.cc,v 1.106 2002/10/14 11:51:07 adrian Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -54,7 +54,7 @@ private:
 
 class mimeEntry {
 public:
-    void *operator new (unsigned int byteCount);
+    void *operator new (size_t byteCount);
     void operator delete (void *address);
   
     char *pattern;
@@ -72,7 +72,7 @@ static mimeEntry *MimeTable = NULL;
 static mimeEntry **MimeTableTail = &MimeTable;
 
 void *
-mimeEntry::operator new (unsigned int byteCount)
+mimeEntry::operator new (size_t byteCount)
 {
     return xcalloc(1, byteCount);
 }
