@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.68 2004/04/03 14:25:59 hno Exp $
+ * $Id: client_side_reply.cc,v 1.69 2004/04/04 13:52:42 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1547,17 +1547,6 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         return;
     }
 
-#if HTTP_VIOLATIONS
-    if (http->storeEntry()->store_status == STORE_PENDING) {
-        if (r->flags.nocache || r->flags.nocache_hack) {
-            debug(85, 3) ("Clearing no-cache for STORE_PENDING request\n\t%s\n",
-                          storeUrl(http->storeEntry()));
-            r->flags.nocache = 0;
-            r->flags.nocache_hack = 0;
-        }
-    }
-
-#endif
     if (r->flags.nocache) {
         debug(85, 3) ("clientProcessRequest2: no-cache REFRESH MISS\n");
         http->storeEntry(NULL);
