@@ -1,6 +1,6 @@
 
 /*
- * $Id: heap.c,v 1.1 1999/06/24 20:17:02 wessels Exp $
+ * $Id: heap.c,v 1.2 1999/06/30 06:31:18 wessels Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -351,11 +351,13 @@ _heap_ify_down(heap * hp, heap_node * elm)
     while (true) {
 	left = Left(elm->id);
 	right = Right(elm->id);
-	if (!_heap_node_exist(hp, left)) {	// At the bottom of the heap (no child).
+	if (!_heap_node_exist(hp, left)) {
+	    /* At the bottom of the heap (no child). */
 
 	    assert(!_heap_node_exist(hp, right));
 	    break;
-	} else if (!_heap_node_exist(hp, right))	// Only left child exists.
+	} else if (!_heap_node_exist(hp, right))
+	    /*  Only left child exists. */
 
 	    kid = hp->nodes[left];
 	else {
@@ -443,11 +445,14 @@ _heap_grow(heap * hp)
 	newSize = hp->size * NormalRate;
 
     hp->nodes = (heap_node * *)realloc(hp->nodes, newSize * sizeof(heap_node *));
-    //for(i = 0; i < hp->size; i++)
-    //newNodes[i] = hp->nodes[i];
-    //free(hp->nodes);
-    //hp->nodes = newNodes;
+#if COMMENTED_OUT
+    for (i = 0; i < hp->size; i++)
+	newNodes[i] = hp->nodes[i];
+    free(hp->nodes);
+    hp->nodes = newNodes;
+#endif
     hp->size = newSize;
+    u
 }
 
 
