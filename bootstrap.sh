@@ -67,7 +67,7 @@ for dir in \
 	lib/libTrie \
 	lib/cppunit-1.10.0
 do
-    if [ -z "$dir" ] || [ -d $dir ] && [ ! -f $dir/configure ]; then
+    if [ -z "$dir" ] || [ -d $dir ]; then
 	if (
 	echo "Bootstrapping $dir"
 	cd ./$dir
@@ -81,7 +81,7 @@ do
 		perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
 	    fi
 	    bootstrap autoheader$acver
-	    bootstrap libtoolize --force --automake
+	    bootstrap libtoolize --force --copy --automake
 	    bootstrap automake$amver --foreign --add-missing
 	    bootstrap autoconf$acver
 	fi ); then
