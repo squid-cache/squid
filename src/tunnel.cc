@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.138 2003/03/02 14:46:15 hno Exp $
+ * $Id: tunnel.cc,v 1.139 2003/03/02 23:10:22 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -110,6 +110,8 @@ sslClientClosed(int fd, void *data)
 
     if (sslState->server.fd == -1)
         sslStateFree(sslState);
+    else
+        comm_close(sslState->server.fd);
 }
 
 static void
@@ -150,18 +152,16 @@ sslDeferServerRead(int fdnotused, void *data)
 
 /* Read from server side and queue it for writing to the client */
 static void
-sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+sslReadServer(int fd, char *buf, size_t len, comm_err_t err, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
 
-    assert(fd == sslState->server.fd);
-    errno = 0;
-
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
 
-    if (errcode == COMM_ERR_CLOSING) {
+    if (err == COMM_ERR_CLOSING)
         return;
-    }
+
+    assert(fd == sslState->server.fd);
 
     debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, (int)len);
 
@@ -175,39 +175,28 @@ sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
         sslState->server.len += len;
     }
 
-    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
-
-    if (len < 0) {
-        debug(50, ignoreErrno(errno) ? 3 : 1)
-        ("sslReadServer: FD %d: read failure: %s\n", fd, xstrerror());
-
-        if (!ignoreErrno(errno))
-            comm_close(fd);
-    } else if (len == 0) {
-        comm_close(sslState->server.fd);
-        /* Only close the remote end if we've finished queueing data to it */
-
-        if (sslState->server.len == 0 && sslState->client.fd != -1) {
-            comm_close(sslState->client.fd);
-        }
-    } else if (cbdataReferenceValid(sslState))
+    if (err == COMM_OK && len > 0) {
         comm_write(sslState->client.fd, sslState->server.buf, len, sslWriteClientDone, sslState);
+        return;
+    }
 
-    cbdataInternalUnlock(sslState);	/* ??? */
+    if (err != COMM_OK)
+        debug(50, 1) ("sslReadServer: FD %d: read failure: %s\n", fd, xstrerr(xerrno));
+
+    /* Close the client side if we've finished queueing data to it */
+    if (sslState->server.len == 0 && sslState->client.fd != -1) {
+        comm_close(sslState->client.fd); /* also closes server */
+    } else {
+        comm_close(sslState->server.fd);
+    }
 }
 
 /* Read from client side and queue it for writing to the server */
 static void
-sslReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+sslReadClient(int fd, char *buf, size_t len, comm_err_t err, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
     assert(fd == sslState->client.fd);
-
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
-
-    if (errcode == COMM_ERR_CLOSING) {
-        return;
-    }
 
     debug(26, 3) ("sslReadClient: FD %d, read %d bytes\n", fd, (int) len);
 
@@ -216,10 +205,13 @@ sslReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
         sslState->client.len += len;
     }
 
-    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
 
-    if (len < 0) {
+    if (err != COMM_OK) {
         int level = 1;
+
+        if (err == COMM_ERR_CLOSING)
+            return;
+
 #ifdef ECONNRESET
 
         if (xerrno == ECONNRESET)
@@ -227,35 +219,31 @@ sslReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
 
 #endif
 
-        if (ignoreErrno(xerrno))
-            level = 3;
-
-        /* XXX xstrerror() should be changed to take errno as an arg! */
-        errno = xerrno;
-
         debug(50, level) ("sslReadClient: FD %d: read failure: %s\n",
-                          fd, xstrerror());
+                          fd, xstrerr(xerrno));
 
-        if (!ignoreErrno(xerrno))
-            comm_close(fd);
+        comm_close(fd);
     } else if (len == 0) {
+        cbdataInternalLock(sslState); /* protect sslState from ourself */
         comm_close(sslState->client.fd);
         /* Only close the remote end if we've finished queueing data to it */
 
         if (sslState->client.len == 0 && sslState->server.fd != -1) {
             comm_close(sslState->server.fd);
         }
+
+        cbdataInternalUnlock(sslState);
     } else if (cbdataReferenceValid(sslState))
         comm_write(sslState->server.fd, sslState->client.buf, len, sslWriteServerDone, sslState);
 
-    cbdataInternalUnlock(sslState);	/* ??? */
 }
 
 /* Writes data from the client buffer to the server side */
 static void
-sslWriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+sslWriteServerDone(int fd, char *buf, size_t len, comm_err_t err, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
+
     assert(fd == sslState->server.fd);
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes written\n", fd, (int)len);
     /* Valid data */
@@ -267,41 +255,28 @@ sslWriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, v
         sslState->client.len = 0;
     }
 
-    /* EOF */
-    if (len == 0) {
-        comm_close(sslState->server.fd);
-        return;
-    }
+    if (err != COMM_OK) {
+        if (err == COMM_ERR_CLOSING)
+            return;
 
-    /* If the other end has closed, so should we */
-    if (sslState->client.fd == -1) {
-        comm_close(sslState->server.fd);
-        return;
-    }
+        debug(50, 1) ("sslWriteServer: FD %d: write failure: %s.\n", fd, xstrerr(xerrno));
 
-    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
-    /* Error? */
-
-    if (len < 0) {
-        debug(50, ignoreErrno(errno) ? 3 : 1)
-        ("sslWriteServer: FD %d: write failure: %s.\n", fd, xstrerror());
-
-        if (!ignoreErrno(errno))
+        if (sslState->client.fd != -1)
+            comm_close(sslState->client.fd);
+        else
             comm_close(fd);
+
+        return;
     }
 
-    if (cbdataReferenceValid(sslState)) {
-        assert(sslState->client.len == 0);
-        comm_read(sslState->client.fd, sslState->client.buf, SQUID_TCP_SO_RCVBUF,
-                  sslReadClient, sslState);
-    }
-
-    cbdataInternalUnlock(sslState);	/* ??? */
+    assert(sslState->client.len == 0);
+    comm_read(sslState->client.fd, sslState->client.buf, SQUID_TCP_SO_RCVBUF,
+              sslReadClient, sslState);
 }
 
 /* Writes data from the server buffer to the client side */
 static void
-sslWriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+sslWriteClientDone(int fd, char *buf, size_t len, comm_err_t err, int xerrno, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
     assert(fd == sslState->client.fd);
@@ -317,42 +292,32 @@ sslWriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, v
             *sslState->size_ptr += len;
     }
 
+    if (err == COMM_ERR_CLOSING)
+        return;
+
     /* EOF */
-    if (len == 0) {
-        comm_close(sslState->client.fd);
+    if (len == 0 || sslState->server.fd == -1) {
+        comm_close(fd);
         return;
     }
 
-    /* If the other end has closed, so should we */
-    if (sslState->server.fd == -1) {
-        comm_close(sslState->client.fd);
+    if (err) {
+        debug(50, 1) ("sslWriteClient: FD %d: write failure: %s.\n", fd, xstrerr(xerrno));
+
+        comm_close(fd);
         return;
     }
 
-    cbdataInternalLock(sslState);	/* ??? should be locked by the caller... */
-    /* Error? */
+    assert(sslState->server.len == 0);
 
-    if (len < 0) {
-        debug(50, ignoreErrno(errno) ? 3 : 1)
-        ("sslWriteClient: FD %d: write failure: %s.\n", fd, xstrerror());
-
-        if (!ignoreErrno(errno))
-            comm_close(fd);
-    }
-
-    if (cbdataReferenceValid(sslState)) {
-        assert(sslState->server.len == 0);
-        int read_sz = SQUID_TCP_SO_RCVBUF;
+    int read_sz = SQUID_TCP_SO_RCVBUF;
 #if DELAY_POOLS
 
-        read_sz = sslState->delayId.bytesWanted(1, read_sz);
+    read_sz = sslState->delayId.bytesWanted(1, read_sz);
 #endif
 
-        comm_read(sslState->server.fd, sslState->server.buf, read_sz,
-                  sslReadServer, sslState);
-    }
-
-    cbdataInternalUnlock(sslState);	/* ??? */
+    comm_read(sslState->server.fd, sslState->server.buf, read_sz,
+              sslReadServer, sslState);
 }
 
 static void
@@ -360,16 +325,15 @@ sslTimeout(int fd, void *data)
 {
     SslStateData *sslState = (SslStateData *)data;
     debug(26, 3) ("sslTimeout: FD %d\n", fd);
-    /* Temporary lock to protect our own feets (comm_close -> sslClientClosed -> Free) */
-    cbdataInternalLock(sslState);
+
+    /* closing client closes both via close callback, do not
+     * touch the sslState afterwards
+     */
 
     if (sslState->client.fd > -1)
         comm_close(sslState->client.fd);
-
-    if (sslState->server.fd > -1)
+    else if (sslState->server.fd > -1)
         comm_close(sslState->server.fd);
-
-    cbdataInternalUnlock(sslState);
 }
 
 static void
