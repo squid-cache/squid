@@ -1,4 +1,54 @@
-Our Todo List
+Squid-2.5:
+
+  - WCCP fixes
+  - Run a polygraph test of aufs
+  - Write release notes
+  - HTML tidyups from "PsychoTekk / C.L."
+
+Squid-2.6:
+
+  - Windows port
+  - ESI client side streams support framework
+  - Authentication tidyups in proxy_auth acl managagement
+  - Appropriate parts of rproxy
+  - Some kind of Range support to at least the level of 2.5 and earlier
+  - ETag caching
+  - Other sponsored work that needs to get into manline sooner rather
+    than later
+  - Go over the old TODO (below) and sort out what has
+     o) Been done
+     o) Needs to be done, and when
+     o) Can be ignored
+  - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
+    (get rid of udp_incoming_address)
+
+Squid-2.6 if finished in time:
+
+  - ESI
+  - Customized logging capabilities
+  - External logging
+  - Other devel.squid-cache.org projects
+
+Later:
+
+  - Rework the store API like planned
+  - Improved event driven comm code
+  - Buffer management (required by store API and comm code improvements)
+  - Improved reply processing to not reparse the reply headers several
+    times
+
+
+
+
+
+
+
+
+
+
+******************************************************************************
+Our OLD Todo List, still containing some interesting items.
+******************************************************************************
 
 ()	dont re-sibling requests which came from a sibling
 ()
