@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.11 1996/08/20 15:44:18 wessels Exp $
+ * $Id: redirect.cc,v 1.12 1996/08/26 22:47:55 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -83,7 +83,6 @@ static int NRedirectors = 0;
 static int NRedirectorsOpen = 0;
 static struct redirectQueueData *redirectQueueHead = NULL;
 static struct redirectQueueData **redirectQueueTailP = &redirectQueueHead;
-static char *dash_str = "-";
 
 static int redirectCreateRedirector(command)
      char *command;
