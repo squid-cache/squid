@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.21 1998/02/19 23:09:49 wessels Exp $
+ * $Id: client_db.cc,v 1.22 1998/03/06 21:05:48 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -39,6 +39,11 @@ typedef struct _client_info {
 	int result_hist[LOG_TYPE_MAX];
 	int n_requests;
     } Http, Icp;
+    struct {
+	time_t time;
+	int n_req;
+	int n_denied;
+    } cutoff;
 } ClientInfo;
 
 static hash_table *client_table = NULL;
@@ -91,22 +96,47 @@ clientdbUpdate(struct in_addr addr, log_type log_type, protocol_t p)
     }
 }
 
+#define CUTOFF_SECONDS 3600
 int
-clientdbDeniedPercent(struct in_addr addr)
+clientdbCutoffDenied(struct in_addr addr)
 {
     char *key;
-    int n = 100;
+    int NR;
+    int ND;
+    double p;
     ClientInfo *c;
-    if (!Config.onoff.client_db)
+    if (!Config.Options.client_db)
 	return 0;
     key = inet_ntoa(addr);
     c = (ClientInfo *) hash_lookup(client_table, key);
     if (c == NULL)
 	return 0;
-    if (c->Icp.n_requests > 100)
-	n = c->Icp.n_requests;
-    return 100 * c->Icp.result_hist[LOG_UDP_DENIED] / n;
+    /*
+     * If we are in a cutoff window, we don't send a reply
+     */
+    if (squid_curtime - c->cutoff.time < CUTOFF_SECONDS)
+	return 1;
+    /*
+     * Calculate the percent of DENIED replies since the last
+     * cutoff time.
+     */
+    NR = c->Icp.n_requests - c->cutoff.n_req;
+    if (NR < 150)
+	NR = 150;
+    ND = c->Icp.result_hist[LOG_UDP_DENIED] - c->cutoff.n_denied;
+    p = 100.0 * ND / NR;
+    if (p < 95.0)
+	return 0;
+    debug(1, 0, "WARNING: Probable misconfigured neighbor at %s\n", key);
+    debug(1, 0, "WARNING: %d of the last %d ICP replies are DENIED\n", ND, NR);
+    debug(1, 0, "WARNING: No replies will be sent for the next %d seconds\n",
+	CUTOFF_SECONDS);
+    c->cutoff.time = squid_curtime;
+    c->cutoff.n_req = c->Icp.n_requests;
+    c->cutoff.n_denied = c->Icp.result_hist[LOG_UDP_DENIED];
+    return 1;
 }
+
 
 void
 clientdbDump(StoreEntry * sentry)
