@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.2 2002/09/24 11:56:50 robertc Exp $
+ * $Id: IPInterception.cc,v 1.3 2002/09/27 11:21:10 robertc Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -79,7 +79,7 @@
 #endif
 
 void
-rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_t bufferLength, struct sockaddr_in me, struct sockaddr_in peer, int vport)
+rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_t bufferLength, int fd, struct sockaddr_in me, struct sockaddr_in peer, int vport)
 {
 #if IPF_TRANSPARENT
     struct natlookup natLookup;
@@ -92,7 +92,7 @@ rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_
     static int pffd = -1;
 #endif
 #if LINUX_NETFILTER
-    size_t sock_sz = sizeof(conn->me);
+    size_t sock_sz = sizeof(me);
 #endif
 #if IPF_TRANSPARENT
     natLookup.nl_inport = me.sin_port;
@@ -182,9 +182,9 @@ rewriteURIwithInterceptedDetails(char const *originalURL, char *uriBuffer, size_
 #else
 #if LINUX_NETFILTER
     /* If the call fails the address structure will be unchanged */
-    getsockopt(conn->fd, SOL_IP, SO_ORIGINAL_DST, &conn->me, &sock_sz);
+    getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, &me, &sock_sz);
     debug(89, 5) ("rewriteURIwithInterceptedDetails: addr = %s",
-	inet_ntoa(conn->me.sin_addr));
+	inet_ntoa(me.sin_addr));
     if (vport_mode)
 	vport = (int) ntohs(me.sin_port);
 #endif
