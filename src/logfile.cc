@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.5 2000/07/12 16:15:15 wessels Exp $
+ * $Id: logfile.cc,v 1.6 2000/10/10 18:15:30 wessels Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -37,17 +37,17 @@
 static void logfileWriteWrapper(Logfile * lf, const void *buf, size_t len);
 
 Logfile *
-logfileOpen(const char *path, size_t bufsz)
+logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 {
     int fd;
     Logfile *lf;
     fd = file_open(path, O_WRONLY | O_CREAT);
     if (DISK_ERROR == fd) {
-	if (ENOENT == errno) {
+	if (ENOENT == errno && fatal_flag) {
 	    fatalf("Cannot open '%s' because\n"
 		"\tthe parent directory does not exist.\n"
 		"\tPlease create the directory.\n", path);
-	} else if (EACCES == errno) {
+	} else if (EACCES == errno && fatal_flag) {
 	    fatalf("Cannot open '%s' for writing.\n"
 		"\tThe parent directory must be writeable by the\n"
 		"\tuser '%s', which is the cache_effective_user\n"
@@ -59,6 +59,8 @@ logfileOpen(const char *path, size_t bufsz)
     }
     lf = xcalloc(1, sizeof(*lf));
     lf->fd = fd;
+    if (fatal_flag)
+	lf->flags.fatal = 1;
     xstrncpy(lf->path, path, MAXPATHLEN);
     if (bufsz > 0) {
 	lf->buf = xmalloc(bufsz);
@@ -107,7 +109,7 @@ logfileRotate(Logfile * lf)
     }
     /* Reopen the log.  It may have been renamed "manually" */
     lf->fd = file_open(lf->path, O_WRONLY | O_CREAT);
-    if (DISK_ERROR == lf->fd) {
+    if (DISK_ERROR == lf->fd && lf->flags.fatal) {
 	debug(50, 1) ("logfileRotate: %s: %s\n", lf->path, xstrerror());
 	fatalf("Cannot open %s: %s", lf->path, xstrerror());
     }
@@ -178,6 +180,8 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
     s = write(lf->fd, buf, len);
     fd_bytes(lf->fd, s, FD_WRITE);
     if (s == len)
+	return;
+    if (!lf->flags.fatal)
 	return;
     fatalf("logfileWrite: %s: %s\n", lf->path, xstrerror());
 }

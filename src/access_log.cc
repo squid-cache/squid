@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.58 2000/06/06 19:34:31 hno Exp $
+ * $Id: access_log.cc,v 1.59 2000/10/10 18:15:30 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -329,7 +329,7 @@ void
 accessLogInit(void)
 {
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
-    logfile = logfileOpen(Config.Log.access, MAX_URL << 1);
+    logfile = logfileOpen(Config.Log.access, MAX_URL << 1, 1);
     LogfileStatus = LOG_ENABLE;
 #if HEADERS_LOG
     headerslog = logfileOpen("/usr/local/squid/logs/headers.log", 512);

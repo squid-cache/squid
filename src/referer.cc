@@ -1,6 +1,6 @@
 
 /*
- * $Id: referer.cc,v 1.1 2000/07/13 06:13:43 wessels Exp $
+ * $Id: referer.cc,v 1.2 2000/10/10 18:15:30 wessels Exp $
  *
  * DEBUG: section 40    User-Agent and Referer logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
@@ -49,7 +49,7 @@ refererOpenLog(void)
 	debug(40, 1) ("Referer logging is disabled.\n");
 	return;
     }
-    logfileOpen(Config.Log.referer, 0);
+    logfileOpen(Config.Log.referer, 0, 1);
 #endif
 }
 
