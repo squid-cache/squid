@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.41 1996/08/26 22:47:56 wessels Exp $
+ * $Id: squid.h,v 1.42 1996/08/27 18:01:37 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -138,6 +138,11 @@
 /* Make sure syslog goes after stdarg/varargs */
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
+
+/* Only enable shadow password suite if both header and library exist */
+#if HAVE_SHADOW_H && HAVE_LIBSHADOW
+#include <shadow.h>
 #endif
 
 #if !defined(MAXHOSTNAMELEN) || (MAXHOSTNAMELEN < 128)
