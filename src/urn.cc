@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.27 1998/04/09 17:54:23 wessels Exp $
+ * $Id: urn.cc,v 1.28 1998/05/01 22:13:32 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -56,8 +56,15 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
     int rtt;
     wordlist *w;
     wordlist *min_w = NULL;
+    int urlcnt = 0;
     debug(52, 3) ("urnFindMinRtt\n");
     assert(urls != NULL);
+    for (w = urls; w; w = w->next)
+	urlcnt++;
+    if (urlcnt == 1) {
+	debug(52, 3) ("Only one URL - return it!\n");
+	return(urls);
+    }
     for (w = urls; w; w = w->next) {
 	r = urlParse(m, w->key);
 	if (r == NULL)
