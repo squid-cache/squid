@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.211 1998/05/15 16:58:33 wessels Exp $
+ * $Id: neighbors.cc,v 1.212 1998/05/21 00:46:16 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -110,7 +110,6 @@
 #define MCAST_COUNT_RATE 900
 
 static int peerAllowedToUse(const peer *, request_t *);
-static int peerHTTPOkay(const peer *, request_t *);
 static int peerWouldBePinged(const peer *, request_t *);
 static void neighborRemove(peer *);
 static peer *whichPeer(const struct sockaddr_in *from);
@@ -247,7 +246,7 @@ peerWouldBePinged(const peer * p, request_t * request)
 }
 
 /* Return TRUE if it is okay to send an HTTP request to this peer. */
-static int
+int
 peerHTTPOkay(const peer * p, request_t * request)
 {
     if (!peerAllowedToUse(p, request))
