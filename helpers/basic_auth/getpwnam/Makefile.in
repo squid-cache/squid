@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.14 2002/07/06 12:24:37 hno Exp $
+#  $Id: Makefile.in,v 1.15 2002/08/12 01:15:25 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -127,10 +127,7 @@ libexec_PROGRAMS = getpwname_auth
 
 getpwname_auth_SOURCES = getpwnam_auth.c 
 
-INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/
-
-
+INCLUDES = -I$(top_srcdir)/include
 LDADD = -L$(top_builddir)/lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
 subdir = helpers/basic_auth/getpwnam
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
