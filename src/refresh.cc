@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.23 1998/07/16 22:22:52 wessels Exp $
+ * $Id: refresh.cc,v 1.24 1998/07/16 22:47:25 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -75,7 +75,7 @@ refreshUncompiledPattern(const char *pat)
  *     return 1 if its time to revalidate this entry, 0 otherwise
  */
 int
-refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
+refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 {
     const refresh_t *R;
     const char *uri;
