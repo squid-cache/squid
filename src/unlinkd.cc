@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.37 2000/05/16 07:06:08 wessels Exp $
+ * $Id: unlinkd.cc,v 1.38 2000/05/31 00:28:20 hno Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -78,7 +78,6 @@ static int unlinkd_rfd = -1;
 void
 unlinkdUnlink(const char *path)
 {
-#if USE_UNLINKD
     char buf[MAXPATHLEN];
     int l;
     int x;
@@ -141,7 +140,6 @@ unlinkdUnlink(const char *path)
     }
     Counter.unlink.requests++;
     queuelen++;
-#endif
 }
 
 void
@@ -159,7 +157,6 @@ unlinkdClose(void)
 void
 unlinkdInit(void)
 {
-#if USE_UNLINKD
     int x;
     char *args[2];
     struct timeval slp;
@@ -196,9 +193,6 @@ unlinkdInit(void)
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
 	commUnsetNonBlocking(unlinkd_wfd);
     debug(12, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
-#else
-    debug(12, 1) ("Unlinkd is disabled\n");
-#endif
 }
 
 #endif /* ndef UNLINK_DAEMON */
