@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.102 1998/09/09 17:47:09 wessels Exp $
+# $Id: cf.data.pre,v 1.103 1998/09/09 18:18:02 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2546,3 +2546,32 @@ DOC_START
 	individual host delay pool traffic allowances.
 DOC_END
 EOF
+
+NAME incoming_icp_average
+TYPE: int
+DEFAULT: 6
+LOC: Config.comm_incoming.icp_average
+DOC_NONE
+
+NAME incoming_http_average
+TYPE: int
+DEFAULT: 4
+LOC: Config.comm_incoming.http_average
+DOC_NONE
+
+NAME min_icp_poll_cnt
+TYPE: int
+DEFAULT: 8
+LOC: Config.comm_incoming.icp_min_poll
+DOC_NONE
+
+NAME min_http_poll_cnt
+TYPE: int
+DEFAULT: 8
+LOC: Config.comm_incoming.http_min_poll
+DOC_START
+	Heavy voodoo here.  I can't even beleve you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
+

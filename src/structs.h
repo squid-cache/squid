@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.217 1998/09/04 23:05:04 wessels Exp $
+ * $Id: structs.h,v 1.218 1998/09/09 18:18:05 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -424,6 +424,12 @@ struct _SquidConfig {
 	} class3;
     } Delay;
 #endif
+    struct {
+	int icp_average;
+	int http_average;
+	int icp_min_poll;
+	int http_min_poll;
+    } comm_incoming;
 };
 
 struct _SquidConfig2 {
