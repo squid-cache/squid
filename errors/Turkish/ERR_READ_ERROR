@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>HATA:  İstenilen URL'e ulaşılamadı </TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+</HEAD><BODY>
+<H1>HATA</H1>
+<H2>İstenilen URL'e ulaşılamadı</H2>
+<HR>
+<P>
+<A HREF="%U">%U</A>
+<P>
+adresine ulaşırken aşağıdaki hata oluştu
+<P>
+<UL>
+<LI>
+
+<STRONG>
+Okuma Hatası
+</STRONG>
+</UL>
+
+<P>
+Sistem aşağıdaki mesajı verdi:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Ağıdan bilgileri okuma sırasında hata oluştu. Lütfen isteğinizi tekrar giriniz.
+</P>

@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>HATA: Cache Yönetici Girişi Yasak</TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+</HEAD>
+<BODY>
+<H1>ERROR</H1>
+<H2>Cache Yönetici Girişi Yasak</H2>
+<HR>
+<P>
+<A HREF="%U">%U</A>
+<P>
+adresine ulaşırken aşağıdaki hata oluştu :
+<UL>
+<LI>
+<STRONG>
+Cache Yönetici Girişi Yasak.
+</STRONG>
+</UL>
+</P>
+
+<P>Özür dilerim, istediğiniz:
+<PRE>    %U</PRE>
+adresine bu cache yönetici girişinden bağlanamazsınız.
+</P>
+
+<P> Netscape 2.0 ve yenisi, Microsoft Internet Exporer 3.0 ve yenisi, 
+veya herhangi HTTP/1.1 uyumlu tarayıcı kullandığınıza emin olun. Eğer sorun devam 
+ediyor ise lütfen  <A HREF="mailto:%w"> cache yöneticisi </A> ile bağlantıya geçin
+Eğer <em>yönetici</em> siz iseniz Squid Yardım Sayfalarında Cache Yöneticisi giriş arayüzü
+ile ilgili kısımları tekrar okuyun ve Cache sunucusunun hata mesajlarını kontrol edın.
