@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.11 2002/01/10 07:46:06 adrian Exp $
+ * $Id: async_io.cc,v 1.12 2002/04/06 15:08:05 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -102,7 +102,7 @@ aioInit(void)
 void
 aioDone(void)
 {
-    memPoolDestroy(squidaio_ctrl_pool);
+    memPoolDestroy(&squidaio_ctrl_pool);
     initialised = 0;
 }
 

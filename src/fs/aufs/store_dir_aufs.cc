@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.42 2002/04/01 21:53:21 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.43 2002/04/06 15:08:05 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1687,9 +1687,9 @@ static void
 storeAufsDirDone(void)
 {
     aioDone();
-    memPoolDestroy(squidaio_state_pool);
-    memPoolDestroy(aufs_qread_pool);
-    memPoolDestroy(aufs_qwrite_pool);
+    memPoolDestroy(&squidaio_state_pool);
+    memPoolDestroy(&aufs_qread_pool);
+    memPoolDestroy(&aufs_qwrite_pool);
     asyncufs_initialised = 0;
 }
 
