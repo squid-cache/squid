@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.235 1998/08/26 05:36:44 wessels Exp $
+ * $Id: neighbors.cc,v 1.236 1998/08/26 18:48:56 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -42,7 +42,7 @@ static int peerAllowedToUse(const peer *, request_t *);
 static int peerWouldBePinged(const peer *, request_t *);
 static void neighborRemove(peer *);
 static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
-static void neighborCountIgnored(peer *, icp_opcode op_unused);
+static void neighborCountIgnored(peer *);
 static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
 static EVH peerCheckConnect;
@@ -606,7 +606,7 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 }
 
 static void
-neighborCountIgnored(peer * p, icp_opcode opnotused)
+neighborCountIgnored(peer * p)
 {
     if (p == NULL)
 	return;
@@ -694,32 +694,32 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     if (NULL == entry) {
 	debug(12, 3) ("neighborsUdpAck: Cache key '%s' not found\n",
 	    storeKeyText(key));
-	neighborCountIgnored(p, opcode);
+	neighborCountIgnored(p);
 	return;
     }
     /* check if someone is already fetching it */
     if (EBIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
 	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n",
 	    storeKeyText(key));
-	neighborCountIgnored(p, opcode);
+	neighborCountIgnored(p);
 	return;
     }
     if (mem == NULL) {
 	debug(15, 2) ("Ignoring %s for missing mem_obj: %s\n",
 	    opcode_d, storeKeyText(key));
-	neighborCountIgnored(p, opcode);
+	neighborCountIgnored(p);
 	return;
     }
     if (entry->ping_status != PING_WAITING) {
 	debug(15, 2) ("neighborsUdpAck: Unexpected %s for %s\n",
 	    opcode_d, storeKeyText(key));
-	neighborCountIgnored(p, opcode);
+	neighborCountIgnored(p);
 	return;
     }
     if (entry->lock_count == 0) {
 	debug(12, 1) ("neighborsUdpAck: '%s' has no locks\n",
 	    storeKeyText(key));
-	neighborCountIgnored(p, opcode);
+	neighborCountIgnored(p);
 	return;
     }
     debug(15, 3) ("neighborsUdpAck: %s for '%s' from %s \n",
@@ -727,12 +727,12 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     if (p)
 	ntype = neighborType(p, mem->request);
     if (ignoreMulticastReply(p, mem)) {
-	neighborCountIgnored(p, opcode);
+	neighborCountIgnored(p);
     } else if (opcode == ICP_SECHO) {
 	/* Received source-ping reply */
 	if (p) {
 	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
-	    neighborCountIgnored(p, opcode);
+	    neighborCountIgnored(p);
 	} else {
 	    /* if we reach here, source-ping reply is the first 'parent',
 	     * so fetch directly from the source */
@@ -764,7 +764,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     } else if (opcode == ICP_SECHO) {
 	if (p) {
 	    debug(15, 1) ("Ignoring SECHO from neighbor %s\n", p->host);
-	    neighborCountIgnored(p, opcode);
+	    neighborCountIgnored(p);
 #if ALLOW_SOURCE_PING
 	} else if (Config.onoff.source_ping) {
 	    mem->icp_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
@@ -782,7 +782,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 		neighborRemove(p);
 		p = NULL;
 	    } else {
-		neighborCountIgnored(p, opcode);
+		neighborCountIgnored(p);
 	    }
 	}
     } else if (opcode == ICP_MISS_NOFETCH) {
