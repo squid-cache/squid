@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.44 1996/08/26 19:57:08 wessels Exp $
+ * $Id: neighbors.cc,v 1.45 1996/08/29 16:55:00 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -480,6 +480,9 @@ int neighborsUdpPing(proto)
 	e->stats.ack_deficit++;
 	e->stats.pings_sent++;
 
+	debug(15,3,"neighborsUdpPing: %s: ack_deficit = %d\n",
+		e->host, e->stats.ack_deficit);
+
 	if (e->stats.ack_deficit < HIER_MAX_DEFICIT) {
 	    /* its alive, expect a reply from it */
 	    e->neighbor_up = 1;
@@ -487,10 +490,6 @@ int neighborsUdpPing(proto)
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    e->neighbor_up = 0;
-	    if (e->stats.ack_deficit > (HIER_MAX_DEFICIT << 1))
-		/* do this to prevent wrap around but we still want it
-		 * to move a bit so we can debug it easier. */
-		e->stats.ack_deficit = HIER_MAX_DEFICIT + 1;
 	    /* log it once at the threshold */
 	    if ((e->stats.ack_deficit == HIER_MAX_DEFICIT)) {
 		debug(15, 0, "neighborsUdpPing: Detected DEAD %s: %s\n",
