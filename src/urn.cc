@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.40 1998/07/22 20:38:05 wessels Exp $
+ * $Id: urn.cc,v 1.41 1998/07/31 00:15:55 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -138,6 +138,10 @@ urnStart(request_t * r, StoreEntry * e)
 	errorAppendEntry(e, err);
 	return;
     }
+#if DELAY_POOLS
+    urlres_r->delay.class = r->delay.class;
+    urlres_r->delay.position = r->delay.position;
+#endif
     httpHeaderPutStr(&urlres_r->header, HDR_ACCEPT, "text/plain");
     if ((urlres_e = storeGet(k)) == NULL) {
 	urlres_e = storeCreateEntry(urlres, urlres, 0, METHOD_GET);

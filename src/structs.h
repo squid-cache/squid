@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.192 1998/07/24 00:55:04 wessels Exp $
+ * $Id: structs.h,v 1.193 1998/07/31 00:15:54 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -201,6 +201,11 @@ struct _relist {
     relist *next;
 };
 
+struct _delay_spec {
+    int restore_bps;
+    int max_bytes;
+};
+
 struct _SquidConfig {
     struct {
 	size_t maxSize;
@@ -388,6 +393,25 @@ struct _SquidConfig {
     struct {
 	size_t limit;
     } MemPools;
+#if DELAY_POOLS
+    struct {
+	struct {
+	    struct _delay_spec aggregate;
+	    acl_access *access;
+	} class1;
+	struct {
+	    struct _delay_spec aggregate;
+	    struct _delay_spec individual;
+	    acl_access *access;
+	} class2;
+	struct {
+	    struct _delay_spec aggregate;
+	    struct _delay_spec individual;
+	    struct _delay_spec network;
+	    acl_access *access;
+	} class3;
+    } Delay;
+#endif
 };
 
 struct _SquidConfig2 {
@@ -1178,6 +1202,12 @@ struct _request_t {
     size_t body_sz;
     HierarchyLogEntry hier;
     err_type err_type;
+#if DELAY_POOLS
+    struct {
+	int position;
+	char class;
+    } delay;
+#endif
 };
 
 struct _cachemgr_passwd {

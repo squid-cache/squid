@@ -19,6 +19,7 @@
 	- Modified storeHashInsert() to insert PRIVATE objects at
 	  the tail of the LRU list, and PUBLIC objects at the head.
 	  Thus, PRIVATE objects get kicked out quicker.
+	- Added David Luyer's DELAY_POOLS code.
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 

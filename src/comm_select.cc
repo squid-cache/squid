@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm_select.cc,v 1.3 1998/07/25 00:16:25 wessels Exp $
+ * $Id: comm_select.cc,v 1.4 1998/07/31 00:15:39 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -276,6 +276,12 @@ comm_poll(int msec)
 	    comm_poll_icp_incoming();
 	if (commCheckHTTPIncoming)
 	    comm_poll_http_incoming();
+#if DELAY_POOLS
+	if (squid_curtime > delay_pools_last_update) {
+	    delayPoolsUpdate(delay_pools_last_update - squid_curtime);
+	    delay_pools_last_update = squid_curtime;
+	}
+#endif
 	callicp = callhttp = 0;
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
@@ -529,6 +535,12 @@ comm_select(int msec)
 	    comm_select_icp_incoming();
 	if (commCheckHTTPIncoming)
 	    comm_select_http_incoming();
+#if DELAY_POOLS
+	if (squid_curtime > delay_pools_last_update) {
+	    delayPoolsUpdate(delay_pools_last_update - squid_curtime);
+	    delay_pools_last_update = squid_curtime;
+	}
+#endif
 	callicp = callhttp = 0;
 	nfds = 0;
 	maxfd = Biggest_FD + 1;

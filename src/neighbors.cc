@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.230 1998/07/30 22:59:45 wessels Exp $
+ * $Id: neighbors.cc,v 1.231 1998/07/31 00:15:49 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1068,6 +1068,10 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 #endif
     if (EBIT_TEST(p->options, NEIGHBOR_NO_NETDB_EXCHANGE))
 	storeAppendPrintf(sentry, " no-netdb-exchange");
+#if DELAY_POOLS
+    if (EBIT_TEST(p->options, NEIGHBOR_NO_DELAY))
+	storeAppendPrintf(sentry, " no-delay");
+#endif
     if (p->mcast.ttl > 0)
 	storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
     storeAppendPrintf(sentry, "\n");

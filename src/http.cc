@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.301 1998/07/30 22:04:46 wessels Exp $
+ * $Id: http.cc,v 1.302 1998/07/31 00:15:45 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -722,6 +722,14 @@ httpStart(FwdState * fwdState, int fd)
 	 */
 	if (EBIT_TEST(httpState->peer->options, NEIGHBOR_PROXY_ONLY))
 	    storeReleaseRequest(httpState->entry);
+#if DELAY_POOLS
+	if (EBIT_TEST(httpState->peer->options, NEIGHBOR_NO_DELAY)) {
+	    proxy_req->delay.class = 0;
+	} else {
+	    proxy_req->delay.class = orig_req->delay.class;
+	    proxy_req->delay.position = orig_req->delay.position;
+	}
+#endif
     } else {
 	httpState->request = requestLink(orig_req);
 	httpState->orig_request = requestLink(orig_req);
