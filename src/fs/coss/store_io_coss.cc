@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.16 2002/07/20 23:51:05 hno Exp $
+ * $Id: store_io_coss.cc,v 1.17 2002/07/28 21:36:31 hno Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -264,7 +264,7 @@ void
 storeCossClose(SwapDir * SD, storeIOState * sio)
 {
     debug(79, 3) ("storeCossClose: offset %d\n", sio->swap_filen);
-    if (sio->mode == O_WRONLY)
+    if (sio->mode & O_WRONLY)
 	storeCossMemBufUnlock(SD, sio);
     storeCossIOCallback(sio, 0);
 }
