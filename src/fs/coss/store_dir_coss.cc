@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.30 2001/11/13 18:11:20 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.31 2002/04/01 21:53:21 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -556,6 +556,7 @@ storeCossDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 	    safe_free(state);
 	    sd->log.clean.state = NULL;
 	    sd->log.clean.write = NULL;
+	    return;
 	}
 	state->outbuf_offset = 0;
     }
