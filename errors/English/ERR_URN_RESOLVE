@@ -5,7 +5,7 @@
 <H2>A URL for the requested URN could not be retrieved</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+While trying to retrieve the URN:
 <A HREF="%U">%U</A>
 <P>
 The following error was encountered:
