@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.20 1996/09/12 00:31:22 wessels Exp $
+ * $Id: client_side.cc,v 1.21 1996/09/12 00:32:33 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -444,7 +444,7 @@ int icpHandleIMSReply(fd, entry, data)
 	icpState->log_type = LOG_TCP_EXPIRED_MISS;
 	storeUnlockObject(icpState->old_entry);
     }
-    icpState->old_entry = NULL;		/* done with old_entry */
+    icpState->old_entry = NULL;	/* done with old_entry */
     icpSendMoreData(fd, icpState);	/* give data to the client */
     return 1;
 }
