@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.170 1997/12/03 19:45:24 wessels Exp $
+ * $Id: client_side.cc,v 1.171 1997/12/03 23:12:11 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1553,6 +1553,7 @@ clientReadRequest(int fd, void *data)
 	EBIT_SET(F->flags, FD_SOCKET_EOF);
 	conn->defer.until = squid_curtime + 1;
 	conn->defer.n++;
+        fd_note(fd, "half-closed");
 	return;
     } else if (size < 0) {
 	if (!ignoreErrno(errno)) {
