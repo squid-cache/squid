@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.46 2003/01/17 05:17:07 robertc Exp $
+#  $Id: Makefile.am,v 1.47 2003/01/17 05:37:24 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -179,6 +179,7 @@ squid_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	ident.cc \
+	int.cc \
 	internal.cc \
 	ipc.cc \
 	ipcache.cc \
