@@ -1,5 +1,5 @@
 /*
- * $Id: radix.c,v 1.12 2001/02/07 18:56:50 hno Exp $
+ * $Id: radix.c,v 1.13 2001/02/07 19:04:08 hno Exp $
  *
  * DEBUG: section 53     Radix tree data structure implementation
  * AUTHOR: NetBSD Derived
@@ -221,7 +221,7 @@ rn_refines(m_arg, n_arg)
     return (!masks_are_equal);
 }
 
-static struct radix_node *
+struct radix_node *
 rn_lookup(v_arg, m_arg, head)
      void *v_arg, *m_arg;
      struct radix_node_head *head;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.69 2001/02/07 18:56:51 hno Exp $
+ * $Id: asn.cc,v 1.70 2001/02/07 19:04:08 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -92,9 +92,6 @@ static void asnAclInitialize(acl * acls);
 static void asStateFree(void *data);
 static void destroyRadixNodeInfo(as_info *);
 static OBJH asnStats;
-
-extern struct radix_node *rn_lookup(void *, void *, void *);
-
 
 /* PUBLIC */
 
