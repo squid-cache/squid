@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.335 2000/10/03 20:51:04 wessels Exp $
+ * $Id: stat.cc,v 1.336 2000/10/05 03:26:48 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1363,7 +1363,8 @@ statByteHitRatio(int minutes)
      * digest bytes out before calculating the byte hit ratio.
      */
     cd = CountHist[0].cd.kbytes_recv.kb - CountHist[minutes].cd.kbytes_recv.kb;
-    assert(s > cd);
+    if (s < cd)
+	debug(18, 1) ("STRANGE: srv_kbytes=%d, cd_kbytes=%d\n", s, cd);
     s -= cd;
 #endif
     if (c > s)
