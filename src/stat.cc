@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.127 1997/02/26 19:46:22 wessels Exp $
+ * $Id: stat.cc,v 1.128 1997/02/28 21:33:43 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1078,7 +1078,10 @@ log_append(const cacheinfo * obj,
     const char *client = NULL;
     hier_code hier_code = HIER_NONE;
     const char *hier_host = dash_str;
-    int hier_timeout = 0;
+    int ns = 0;
+    int ne = 0;
+    int nr = 0;
+    int tt = 0;
 
     if (obj->logfile_status != LOG_ENABLE)
 	return;
@@ -1101,21 +1104,24 @@ log_append(const cacheinfo * obj,
     if (hierData) {
 	hier_code = hierData->code;
 	hier_host = hierData->host ? hierData->host : dash_str;
-	hier_timeout = hierData->timeout;
+	if (hierData->icp.start.tv_sec && hierData->icp.stop.tv_sec)
+	    tt = tvSubMsec(hierData->icp.start, hierData->icp.stop);
+	ns = hierData->icp.n_sent;
+	ne = hierData->icp.n_replies_expected;
+	nr = hierData->icp.n_recv;
     }
     if (Config.commonLogFormat)
-	sprintf(tmp, "%s %s - [%s] \"%s %s\" %s:%s%s %d\n",
+	sprintf(tmp, "%s %s - [%s] \"%s %s\" %s:%s %d\n",
 	    client,
 	    ident,
 	    mkhttpdlogtime(&squid_curtime),
 	    method,
 	    url,
 	    action,
-	    hier_timeout ? "TIMEOUT_" : null_string,
 	    hier_strings[hier_code],
 	    size);
     else
-	sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s %s\n",
+	sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s/%s %d/%d/%d/%d %s\n",
 	    (int) current_time.tv_sec,
 	    (int) current_time.tv_usec / 1000,
 	    msec,
@@ -1126,9 +1132,9 @@ log_append(const cacheinfo * obj,
 	    method,
 	    url,
 	    ident,
-	    hier_timeout ? "TIMEOUT_" : null_string,
 	    hier_strings[hier_code],
 	    hier_host,
+	    ns,ne,nr,tt,
 	    content_type);
 #if LOG_FULL_HEADERS
     if (Config.logMimeHdrs) {
