@@ -1,3 +1,13 @@
+Changes to squid-1.1.beta14 ():
+
+	- Added pw_encrypt() check to configure.
+	- Added 'cache_stop_relist' for a regular expression based
+	  stoplist.
+	- Fixed checkRefresh() to not cause IMS request for objects
+	  which have not yet expired, but are past the LM-factor.
+	- Fixed asciiConnLifetimeHandle() to force storeAbort() for
+	  pending objects.
+
 Changes to squid-1.1.beta13 (November 1, 1996):
 
 	- Fixed base64_code[] typo bug (Joe Ramey).
