@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.10 2005/03/18 16:51:22 hno Exp $
+ * $Id: ssl_support.h,v 1.11 2005/03/18 17:12:34 hno Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -46,8 +46,8 @@
 #include <openssl/engine.h>
 #endif
 
-SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *dhpath, const char *context);
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath);
+SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
 int ssl_read_method(int, char *, int);
 int ssl_write_method(int, const char *, int);
 void ssl_shutdown_method(int);

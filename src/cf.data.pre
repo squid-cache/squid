@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.383 2005/03/18 16:51:22 hno Exp $
+# $Id: cf.data.pre,v 1.384 2005/03/18 17:12:34 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -184,7 +184,11 @@ DOC_START
 			clientca will be used
 
 	   capath=	Directory containing additional CA certificates
-			to use when verifying client certificates
+			and CRL lists to use when verifying client certificates
+
+	   crlfile=	File of additional CRL lists to use when verifying
+			the client certificate, in addition to CRLs stored in
+			the capath. Implies VERIFY_CRL flag below.
 
 	   dhparams=	File containing DH parameters for temporary/ephemeral
 			DH key exchanges
@@ -193,13 +197,19 @@ DOC_START
 			    DELAYED_AUTH
 				Don't request client certificates
 				immediately, but wait until acl processing
-				requires a certificate
+				requires a certificate (not yet implemented)
 			    NO_DEFAULT_CA
-				Don't use the default CA list built in
+				Don't use the default CA lists built in
 				to OpenSSL
 			    NO_SESSION_REUSE
 				Don't allow for session reuse. Each connection
 				will result in a new SSL session.
+			    VERIFY_CRL
+				Verify CRL lists when accepting client
+				certificates
+			    VERIFY_CRL_ALL
+				Verify CRL lists for all certificates in the
+				client certificate chain
 
 	   sslcontext=	SSL session ID context identifier.
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.28 2005/03/18 16:51:22 hno Exp $
+ * $Id: ssl_support.cc,v 1.29 2005/03/18 17:12:34 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -412,6 +412,8 @@ no_options:
 #define SSL_FLAG_DONT_VERIFY_PEER	(1<<2)
 #define SSL_FLAG_DONT_VERIFY_DOMAIN	(1<<3)
 #define SSL_FLAG_NO_SESSION_REUSE	(1<<4)
+#define SSL_FLAG_VERIFY_CRL		(1<<5)
+#define SSL_FLAG_VERIFY_CRL_ALL		(1<<6)
 
 static long
 ssl_parse_flags(const char *flags)
@@ -438,6 +440,16 @@ ssl_parse_flags(const char *flags)
             fl |= SSL_FLAG_DONT_VERIFY_DOMAIN;
         else if (strcmp(flag, "NO_SESSION_REUSE") == 0)
             fl |= SSL_FLAG_NO_SESSION_REUSE;
+
+#ifdef X509_V_FLAG_CRL_CHECK
+
+        else if (strcmp(flag, "VERIFY_CRL") == 0)
+            fl |= SSL_FLAG_VERIFY_CRL;
+        else if (strcmp(flag, "VERIFY_CRL_ALL") == 0)
+            fl |= SSL_FLAG_VERIFY_CRL_ALL;
+
+#endif
+
         else
             fatalf("Unknown ssl flag '%s'", flag);
 
@@ -488,8 +500,34 @@ ssl_initialize(void)
 
 }
 
+static int
+ssl_load_crl(SSL_CTX *sslContext, const char *CRLfile)
+{
+    X509_STORE *st = SSL_CTX_get_cert_store(sslContext);
+    X509_CRL *crl;
+    BIO *in = BIO_new_file(CRLfile, "r");
+    int count = 0;
+
+    if (!in) {
+        debug(83, 2)("WARNING: Failed to open CRL file '%s'\n", CRLfile);
+        return 0;
+    }
+
+    while ((crl = PEM_read_bio_X509_CRL(in,NULL,NULL,NULL))) {
+        if (!X509_STORE_add_crl(st, crl))
+            debug(83, 2)("WARNING: Failed to add CRL from file '%s'\n", CRLfile);
+        else
+            count++;
+
+        X509_CRL_free(crl);
+    }
+
+    BIO_free(in);
+    return count;
+}
+
 SSL_CTX *
-sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *dhfile, const char *context)
+sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhfile, const char *context)
 {
     int ssl_error;
     SSL_METHOD *method;
@@ -599,7 +637,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     debug(83, 9) ("Setting CA certificate locations.\n");
 
-    if ((!SSL_CTX_load_verify_locations(sslContext, CAfile, CApath))) {
+    if ((CAfile || CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
         ssl_error = ERR_get_error();
         debug(83, 1) ("Error setting CA certificate locations: %s\n",
                       ERR_error_string(ssl_error, NULL));
@@ -625,6 +663,20 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
             debug(83, 9) ("Requiring client certificates.\n");
             SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
         }
+
+        if (CRLfile) {
+            ssl_load_crl(sslContext, CRLfile);
+            fl |= SSL_FLAG_VERIFY_CRL;
+        }
+
+#ifdef X509_V_FLAG_CRL_CHECK
+        if (fl & SSL_FLAG_VERIFY_CRL_ALL)
+            X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
+        else if (fl & SSL_FLAG_VERIFY_CRL)
+            X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK);
+
+#endif
+
     } else {
         debug(83, 9) ("Not requiring any client certificates\n");
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
@@ -666,7 +718,7 @@ error:
 }
 
 SSL_CTX *
-sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath)
+sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile)
 {
     int ssl_error;
     SSL_METHOD *method;
@@ -766,13 +818,25 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     debug(83, 9) ("Setting CA certificate locations.\n");
 
-    if (CAfile || CApath)
-        if ((!SSL_CTX_load_verify_locations(sslContext, CAfile, CApath))) {
-            ssl_error = ERR_get_error();
-            debug(83, 1) ("Error setting CA certificate locations: %s\n",
-                          ERR_error_string(ssl_error, NULL));
-            debug(83, 1) ("continuing anyway...\n");
-        }
+    if ((CAfile || CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
+        ssl_error = ERR_get_error();
+        debug(83, 1) ("Error setting CA certificate locations: %s\n",
+                      ERR_error_string(ssl_error, NULL));
+        debug(83, 1) ("continuing anyway...\n");
+    }
+
+    if (CRLfile) {
+        ssl_load_crl(sslContext, CRLfile);
+        fl |= SSL_FLAG_VERIFY_CRL;
+    }
+
+#ifdef X509_V_FLAG_CRL_CHECK
+    if (fl & SSL_FLAG_VERIFY_CRL_ALL)
+        X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
+    else if (fl & SSL_FLAG_VERIFY_CRL)
+        X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK);
+
+#endif
 
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
