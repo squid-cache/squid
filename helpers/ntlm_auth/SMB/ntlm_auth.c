@@ -106,6 +106,24 @@ lc(char *string)
  * -f fail-over to another DC if DC connection fails.
  * domain\controller ...
  */
+char *my_program_name = NULL;
+
+void
+usage()
+{
+    fprintf(stderr,
+	"%s usage:\n"
+	"%s [-b] [-f] domain\\controller [domain\\controller ...]\n"
+	"-b, if specified, enables load-balancing among controllers\n"
+	"-f, if specified, enables failover among controllers\n\n"
+	"You MUST specify at least one Domain Controller.\n"
+	"You can use either \\ or / as separator between the domain name \n"
+	"\tand the controller name\n"
+	,my_program_name
+	,my_program_name);
+}
+
+
 void
 process_options(int argc, char *argv[])
 {
@@ -121,6 +139,7 @@ process_options(int argc, char *argv[])
 	    break;
 	default:
 	    fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
+	    usage();
 	    had_error = 1;
 	}
     }
@@ -158,6 +177,7 @@ process_options(int argc, char *argv[])
     }
     if (numcontrollers == 0) {
 	fprintf(stderr, "You must specify at least one domain-controller!\n");
+	usage();
 	exit(1);
     }
     last_dc->next = controllers;	/* close the queue, now it's circular */
@@ -308,6 +328,7 @@ main(int argc, char *argv[])
 
     debug("starting up...\n");
 
+    my_program_name = argv[0];
     process_options(argc, argv);
 
     debug("options processed OK\n");
