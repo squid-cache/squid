@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.537 2001/05/04 13:37:41 hno Exp $
+ * $Id: client_side.cc,v 1.538 2001/05/21 04:50:57 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -311,6 +311,7 @@ clientRedirectDone(void *data, char *result)
 	new_request->my_port = old_request->my_port;
 	new_request->flags.redirected = 1;
 	new_request->auth_user_request = old_request->auth_user_request;
+	authenticateAuthUserRequestLock(new_request->auth_user_request);
 	if (old_request->body_connection) {
 	    new_request->body_connection = old_request->body_connection;
 	    old_request->body_connection = NULL;
@@ -1342,7 +1343,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
     }
     /* Handle authentication headers */
     if (request->auth_user_request)
-	authenticateFixHeader(rep, request->auth_user_request, request, http->flags.accel);
+	authenticateFixHeader(rep, request->auth_user_request, request, http->flags.accel, 0);
     /* Append X-Cache */
     httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
 	is_hit ? "HIT" : "MISS", getMyHostname());

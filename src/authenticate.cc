@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.22 2001/03/10 00:55:36 hno Exp $
+ * $Id: authenticate.cc,v 1.23 2001/05/21 04:50:57 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -155,12 +155,16 @@ authenticateValidateUser(auth_user_request_t * auth_user_request)
 	debug(29, 4) ("authenticateValidateUser: Auth_user '%p' is broken for it's scheme.\n", auth_user_request->auth_user);
 	return 0;
     }
+    if (!auth_user_request->auth_user->scheme_data) {
+	debug(29, 4) ("authenticateValidateUser: auth_user '%p' has no scheme data\n", auth_user_request->auth_user);
+	return 0;
+    }
     /* any other sanity checks that we need in the future */
 
     /* Thus should a module call to something like authValidate */
 
     /* finally return ok */
-    debug(29, 4) ("authenticateValidateUser: Validated Auth_user request '%p'.\n", auth_user_request);
+    debug(29, 5) ("authenticateValidateUser: Validated Auth_user request '%p'.\n", auth_user_request);
     return 1;
 
 }
@@ -382,7 +386,7 @@ authenticateShutdown(void)
 }
 
 void
-authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated)
+authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
 {
 /*    auth_type_t auth_type=err->auth_type;
@@ -406,8 +410,8 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	break;
     }
     debug(29, 9) ("authenticateFixHeader: headertype:%d authuser:%p\n", type, auth_user_request);
-    if ((rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
-	|| (rep->sline.status == HTTP_UNAUTHORIZED))
+    if (((rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
+	    || (rep->sline.status == HTTP_UNAUTHORIZED)) && internal)
 	/* this is a authenticate-needed response */
     {
 	if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0))
@@ -426,6 +430,9 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	    }
 	}
     }
+    /* allow protocol specific headers to be _added_ to the existing response - ie
+     * digest auth
+     */
     if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0)
 	&& (authscheme_list[auth_user_request->auth_user->auth_module - 1].AddHeader))
 	authscheme_list[auth_user_request->auth_user->auth_module - 1].AddHeader(auth_user_request, rep, accelerated);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.164 2001/04/14 00:03:22 hno Exp $
+ * $Id: errorpage.cc,v 1.165 2001/05/21 04:50:57 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -282,7 +282,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
      * depends on authenticate behaviour: all schemes to date send no extra data
      * on 407/401 responses, and do not check the accel state on 401/407 responses 
      */
-    authenticateFixHeader(rep, err->auth_user_request, err->request, 0);
+    authenticateFixHeader(rep, err->auth_user_request, err->request, 0, 1);
     httpReplySwapOut(rep, entry);
     httpReplyAbsorb(mem->reply, rep);
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
