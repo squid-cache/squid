@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.15 2000/05/11 22:20:57 wessels Exp $
+ * $Id: rfc1035.c,v 1.16 2000/05/12 00:37:25 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -482,7 +482,7 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
     size_t sz = *szp;
     memset(&h, '\0', sizeof(h));
     /* the first char of hostname must be alphanmeric */
-    if (NULL == strchr(Alphanum, *buf)) {
+    if (NULL == strchr(Alphanum, *hostname)) {
 	rfc1035SetErrno(3);
 	return 0;
     }
