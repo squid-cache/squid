@@ -126,7 +126,6 @@ struct _SquidConfig {
 	char *swap;
 	char *useragent;
 	int rotateNumber;
-	int log_fqdn;
     } Log;
     struct {
 	char *File;
@@ -143,15 +142,9 @@ struct _SquidConfig {
     } Program;
     int dnsChildren;
     int redirectChildren;
-    int sourcePing;
-    int commonLogFormat;
-    int logMimeHdrs;
-    int identLookup;
-    int singleParentBypass;
     struct {
 	char *host;
 	u_short port;
-	int withProxy;
     } Accel;
     char *appendDomain;
     size_t appendDomainLen;
@@ -164,7 +157,6 @@ struct _SquidConfig {
 	char *host;
 	char *file;
 	time_t period;
-	int on;
 	u_short port;
     } Announce;
     struct {
@@ -209,7 +201,15 @@ struct _SquidConfig {
 	int query_icmp;
 	int icp_hit_stale;
 	int buffered_logs;
-    } Options;
+        int source_ping;
+        int common_log;
+        int log_mime_hdrs;
+        int ident_lookup;
+        int single_parent_bypass;
+	int log_fqdn;
+	int announce;
+	int accel_with_proxy;
+    } onoff;
     struct _acl *aclList;
     struct {
 	struct _acl_access *http;

@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.182 1997/07/16 22:58:24 wessels Exp $
+ * $Id: comm.cc,v 1.183 1997/07/26 04:48:26 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -407,7 +407,7 @@ commConnectHandle(int fd, void *data)
 	cs->S.sin_family = AF_INET;
 	cs->S.sin_addr = cs->in_addr;
 	cs->S.sin_port = htons(cs->port);
-	if (Config.Log.log_fqdn)
+	if (Config.onoff.log_fqdn)
 	    fqdncache_gethostbyaddr(cs->S.sin_addr, FQDN_LOOKUP_IF_MISS);
     }
     switch (comm_connect_addr(fd, &cs->S)) {

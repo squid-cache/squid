@@ -238,7 +238,7 @@ NAME: single_parent_bypass
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.singleParentBypass
+LOC: Config.onoff.single_parent_bypass
 DOC_START
 	This tag specifies that it is okay to bypass the hierarchy
 	"Pinging" when there is only a single parent for a given URL.
@@ -272,7 +272,7 @@ NAME: source_ping
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.sourcePing
+LOC: Config.onoff.source_ping
 DOC_START
 	If source_ping is enabled, then squid will include the source
 	provider site in its selection algorithm.  This is accomplished
@@ -552,7 +552,7 @@ NAME: emulate_httpd_log
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.commonLogFormat
+LOC: Config.onoff.common_log
 DOC_START
 	The Cache can emulate the log file format which many 'httpd'
 	programs use.  To disable/enable this emulation, set
@@ -579,7 +579,7 @@ DOC_END
 NAME: log_mime_hdrs
 COMMENT: on|off
 TYPE: onoff
-LOC: Config.logMimeHdrs
+LOC: Config.onoff.log_mime_hdrs
 DEFAULT: off
 DOC_START
 	The Cache can record both the request and the response
@@ -640,7 +640,7 @@ NAME: ident_lookup
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.identLookup
+LOC: Config.onoff.ident_lookup
 DOC_START
 	If you wish to make an RFC931/ident lookup of the client username
 	for each connection, enable this.  It is off by default.
@@ -653,7 +653,7 @@ NAME: log_fqdn
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.Log.log_fqdn
+LOC: Config.onoff.log_fqdn
 DOC_START
 	Turn this on if you wish to log fully qualified domain names
 	in the access.log.
@@ -756,7 +756,7 @@ NAME: dns_defnames
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.Options.res_defnames
+LOC: Config.onoff.res_defnames
 DOC_START
 	Normally the 'dnsserver' disables the RES_DEFNAMES resolver
 	option (see res_init(3)).  This prevents caches in a hierarchy
@@ -1385,7 +1385,7 @@ NAME: httpd_accel_with_proxy
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.Accel.withProxy
+LOC: Config.onoff.accel_with_proxy
 DOC_START
 	If you want to use squid as both a local httpd accelerator
 	and as a proxy, change this to 'on'.
@@ -1594,7 +1594,7 @@ NAME: log_icp_queries
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: on
-LOC: Config.Options.log_udp
+LOC: Config.onoff.log_udp
 DOC_START
 	If set, ICP queries are logged to access.log.  ICP logging
 	is enabled by default, so uncomment and change the line
@@ -1607,7 +1607,7 @@ NAME: icp_hit_stale
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.Options.icp_hit_stale
+LOC: Config.onoff.icp_hit_stale
 DOC_START
 	If you want to return ICP_HIT for stale cache objects, set this
 	option to 'on'.  If you have sibling relationships with caches
@@ -1719,7 +1719,7 @@ DOC_END
 
 NAME: http_anonymizer
 TYPE: httpanonymizer
-LOC: Config.Options.anonymizer
+LOC: Config.onoff.anonymizer
 DEFAULT: off
 DOC_START
 	If you want to filter out certain HTTP request headers for
@@ -1739,7 +1739,7 @@ NAME: client_db
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: on
-LOC: Config.Options.client_db
+LOC: Config.onoff.client_db
 DOC_START
 	If you want to disable collecting per-client statistics, then
 	turn off client_db here.
@@ -1786,7 +1786,7 @@ NAME: query_icmp
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.Options.query_icmp
+LOC: Config.onoff.query_icmp
 DOC_START
 	If you want to ask your peers to include ICMP data in their ICP
 	replies, enable this option.
@@ -1807,7 +1807,7 @@ NAME: buffered_logs
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
-LOC: Config.Options.buffered_logs
+LOC: Config.onoff.buffered_logs
 DOC_START
 	Some log files (cache.log, useragent.log) are written with
 	stdio functions, and as such they can be buffered or

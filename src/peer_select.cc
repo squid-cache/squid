@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.23 1997/07/19 07:20:04 wessels Exp $
+ * $Id: peer_select.cc,v 1.24 1997/07/26 04:48:34 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -96,7 +96,7 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
 	fatal_dump("direct == DIRECT_YES");
     if (!BIT_TEST(entry->flag, HIERARCHICAL) && direct != DIRECT_NO)
 	return 0;
-    if (Config.singleParentBypass && !Config.sourcePing)
+    if (Config.onoff.single_parent_bypass && !Config.onoff.source_ping)
 	if (getSingleParent(request))
 	    return 0;
     if (BIT_TEST(entry->flag, KEY_PRIVATE) && !neighbors_do_private_keys)

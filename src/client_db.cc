@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.14 1997/07/17 05:22:31 wessels Exp $
+ * $Id: client_db.cc,v 1.15 1997/07/26 04:48:24 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ clientdbUpdate(struct in_addr addr, log_type log_type, protocol_t p)
 {
     char *key;
     ClientInfo *c;
-    if (!Config.Options.client_db)
+    if (!Config.onoff.client_db)
 	return;
     key = inet_ntoa(addr);
     c = (ClientInfo *) hash_lookup(client_table, key);
@@ -95,7 +95,7 @@ clientdbDeniedPercent(struct in_addr addr)
     char *key;
     int n = 100;
     ClientInfo *c;
-    if (!Config.Options.client_db)
+    if (!Config.onoff.client_db)
 	return 0;
     key = inet_ntoa(addr);
     c = (ClientInfo *) hash_lookup(client_table, key);

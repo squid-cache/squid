@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.118 1997/07/16 20:32:00 wessels Exp $
+ * $Id: client_side.cc,v 1.119 1997/07/26 04:48:25 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -75,7 +75,7 @@ checkAccelOnly(clientHttpRequest * http)
      * we are in httpd-accel only mode */
     if (!Config2.Accel.on)
 	return 0;
-    if (Config.Accel.withProxy)
+    if (Config.onoff.accel_with_proxy)
 	return 0;
     if (http->request->protocol == PROTO_CACHEOBJ)
 	return 0;
@@ -90,7 +90,7 @@ clientAccessCheck(void *data)
     clientHttpRequest *http = data;
     ConnStateData *conn = http->conn;
     char *browser;
-    if (Config.identLookup && conn->ident.state == IDENT_NONE) {
+    if (Config.onoff.ident_lookup && conn->ident.state == IDENT_NONE) {
 	identStart(-1, conn, clientAccessCheck);
 	return;
     }
@@ -547,8 +547,8 @@ clientPurgeRequest(clientHttpRequest * http)
     LOCAL_ARRAY(char, msg, 8192);
     LOCAL_ARRAY(char, line, 256);
     StoreEntry *entry;
-    debug(0, 0) ("Config.Options.enable_purge = %d\n", Config.Options.enable_purge);
-    if (!Config.Options.enable_purge) {
+    debug(0, 0) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
+    if (!Config.onoff.enable_purge) {
 	buf = access_denied_msg(http->http_code = 401,
 	    http->request->method,
 	    http->url,

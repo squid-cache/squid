@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.38 1997/07/16 20:32:03 wessels Exp $
+ * $Id: dns.cc,v 1.39 1997/07/26 04:48:28 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -198,7 +198,7 @@ dnsOpenServer(const char *command)
     fclose(debug_log);
     close(fd);
     close(cfd);
-    if (Config.Options.res_defnames)
+    if (Config.onoff.res_defnames)
 	execlp(command, "(dnsserver)", "-D", NULL);
     else
 	execlp(command, "(dnsserver)", NULL);

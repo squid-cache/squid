@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.3 1997/07/19 06:12:49 wessels Exp $
+ * $Id: access_log.cc,v 1.4 1997/07/26 04:48:21 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -114,7 +114,7 @@ static int
 accessLogSquid(AccessLogEntry * al)
 {
     const char *client = dash_str;
-    if (Config.Log.log_fqdn)
+    if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
@@ -140,7 +140,7 @@ static int
 accessLogCommon(AccessLogEntry * al)
 {
     const char *client = dash_str;
-    if (Config.Log.log_fqdn)
+    if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(al->cache.caddr);
@@ -176,11 +176,11 @@ accessLogLog(AccessLogEntry * al)
 	al->private.method_str = RequestMethodStr[al->http.method];
     if (al->hier.host[0] == '\0')
 	xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
-    if (Config.commonLogFormat)
+    if (Config.onoff.common_log)
 	l = accessLogCommon(al);
     else
 	l = accessLogSquid(al);
-    if (Config.logMimeHdrs) {
+    if (Config.onoff.log_mime_hdrs) {
 	char *ereq = log_quote(al->headers.request);
 	char *erep = log_quote(al->headers.reply);
 	if (LOG_BUF_SZ - l > 0)
