@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.69 1998/09/15 06:38:28 wessels Exp $
+ * $Id: redirect.cc,v 1.70 1998/09/15 06:49:58 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -115,8 +115,6 @@ redirectHandleRead(int fd, void *data)
 	memFree(MEM_8K_BUF, redirector->inbuf);
 	redirector->inbuf = NULL;
 	comm_close(fd);
-	if (--NRedirectorsOpen == 0 && !shutting_down)
-	    fatal_dump("All redirectors have exited!");
 	return;
     }
     if (len != 1)
@@ -304,6 +302,9 @@ redirectorStateFree(int fd, void *data)
     }
     dlinkDelete(&r->link, &redirectors);
     cbdataFree(r);
+    NRedirectorsOpen--;
+    if (NRedirectorsOpen == 0 && !shutting_down)
+	fatal_dump("All redirectors have exited!");
 }
 
 void
@@ -326,7 +327,6 @@ redirectOpenServers(void)
     }
     assert(redirectors.head == NULL);
     assert(redirectors.tail == NULL);
-    assert(NRedirectorsOpen == 0);
     if (Config.Program.redirect == NULL)
 	return;
     NRedirectors = Config.redirectChildren;
