@@ -1,4 +1,6 @@
-
-	- ftpget daemon mode
 	- use cached_error() instead of CACHED_RETRIEVE_ERROR_MSG
 	- fix some fd discprencies in the cachemgr/info page
+	- Fixed "defer/spin" problem
+	- Changed ftpget to be a server so cached never forks
+	- Added blocklist patch
+	- Changed #includes and such.
