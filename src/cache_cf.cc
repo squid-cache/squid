@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.95 1996/09/18 21:41:07 wessels Exp $
+ * $Id: cache_cf.cc,v 1.96 1996/09/20 06:28:27 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -208,52 +208,52 @@ char w_space[] = " \t\n";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
-static char *safe_xstrdup __P((char *p));
-static void parseOnOff __P((int *));
-static void parseIntegerValue __P((int *));
+static char *safe_xstrdup _PARAMS((char *p));
+static void parseOnOff _PARAMS((int *));
+static void parseIntegerValue _PARAMS((int *));
 static char fatal_str[BUFSIZ];
 
-static void configDoConfigure __P((void));
-static void configFreeMemory __P((void));
-static void configSetFactoryDefaults __P((void));
-static void parseAccessLogLine __P((void));
-static void parseAddressLine __P((struct in_addr *));
-static void parseAnnounceToLine __P((void));
-static void parseAppendDomainLine __P((void));
-static void parseCacheAnnounceLine __P((void));
-static void parseCacheHostLine __P((void));
-static void parseDebugOptionsLine __P((void));
-static void parseDnsProgramLine __P((void));
-static void parseEffectiveUserLine __P((void));
-static void parseErrHtmlLine __P((void));
-static void parseFtpLine __P((void));
-static void parseFtpOptionsLine __P((void));
-static void parseFtpProgramLine __P((void));
-static void parseFtpUserLine __P((void));
-static void parseGopherLine __P((void));
-static void parseWordlist __P((wordlist **));
-static void parseHostAclLine __P((void));
-static void parseHostDomainLine __P((void));
-static void parseHotVmFactorLine __P((void));
-static void parseHttpLine __P((void));
-static void parseHttpPortLine __P((void));
-static void parseHttpdAccelLine __P((void));
-static void parseIPLine __P((ip_acl ** list));
-static void parseIcpPortLine __P((void));
-static void parseLocalDomainFile __P((char *fname));
-static void parseLocalDomainLine __P((void));
-static void parseLogLine __P((void));
-static void parseMemLine __P((void));
-static void parseMgrLine __P((void));
-static void parsePidFilenameLine __P((void));
-static void parseRequestSizeLine __P((void));
-static void parseStoreLogLine __P((void));
-static void parseSwapLine __P((void));
-static void parseTTLPattern __P((int icase, int force));
-static void parseVisibleHostnameLine __P((void));
-static void parseWAISRelayLine __P((void));
-static void parseMinutesLine __P((int *));
-static void ip_acl_destroy __P((ip_acl **));
+static void configDoConfigure _PARAMS((void));
+static void configFreeMemory _PARAMS((void));
+static void configSetFactoryDefaults _PARAMS((void));
+static void parseAccessLogLine _PARAMS((void));
+static void parseAddressLine _PARAMS((struct in_addr *));
+static void parseAnnounceToLine _PARAMS((void));
+static void parseAppendDomainLine _PARAMS((void));
+static void parseCacheAnnounceLine _PARAMS((void));
+static void parseCacheHostLine _PARAMS((void));
+static void parseDebugOptionsLine _PARAMS((void));
+static void parseDnsProgramLine _PARAMS((void));
+static void parseEffectiveUserLine _PARAMS((void));
+static void parseErrHtmlLine _PARAMS((void));
+static void parseFtpLine _PARAMS((void));
+static void parseFtpOptionsLine _PARAMS((void));
+static void parseFtpProgramLine _PARAMS((void));
+static void parseFtpUserLine _PARAMS((void));
+static void parseGopherLine _PARAMS((void));
+static void parseWordlist _PARAMS((wordlist **));
+static void parseHostAclLine _PARAMS((void));
+static void parseHostDomainLine _PARAMS((void));
+static void parseHotVmFactorLine _PARAMS((void));
+static void parseHttpLine _PARAMS((void));
+static void parseHttpPortLine _PARAMS((void));
+static void parseHttpdAccelLine _PARAMS((void));
+static void parseIPLine _PARAMS((ip_acl ** list));
+static void parseIcpPortLine _PARAMS((void));
+static void parseLocalDomainFile _PARAMS((char *fname));
+static void parseLocalDomainLine _PARAMS((void));
+static void parseLogLine _PARAMS((void));
+static void parseMemLine _PARAMS((void));
+static void parseMgrLine _PARAMS((void));
+static void parsePidFilenameLine _PARAMS((void));
+static void parseRequestSizeLine _PARAMS((void));
+static void parseStoreLogLine _PARAMS((void));
+static void parseSwapLine _PARAMS((void));
+static void parseTTLPattern _PARAMS((int icase, int force));
+static void parseVisibleHostnameLine _PARAMS((void));
+static void parseWAISRelayLine _PARAMS((void));
+static void parseMinutesLine _PARAMS((int *));
+static void ip_acl_destroy _PARAMS((ip_acl **));
 
 void
 self_destruct(void)
@@ -276,8 +276,7 @@ ip_acl_match(struct in_addr c, ip_acl * a)
 }
 
 static void
-ip_acl_destroy(a)
-     ip_acl **a;
+ip_acl_destroy(ip_acl ** a)
 {
     ip_acl *b;
     ip_acl *n;

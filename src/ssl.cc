@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.17 1996/09/18 20:12:22 wessels Exp $
+ * $Id: ssl.cc,v 1.18 1996/09/20 06:29:07 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -49,19 +49,19 @@ typedef struct {
 
 static char conn_established[] = "HTTP/1.0 200 Connection established\r\n\r\n";
 
-static void sslLifetimeExpire __P((int fd, SslStateData * sslState));
-static void sslReadTimeout __P((int fd, SslStateData * sslState));
-static void sslReadServer __P((int fd, SslStateData * sslState));
-static void sslReadClient __P((int fd, SslStateData * sslState));
-static void sslWriteServer __P((int fd, SslStateData * sslState));
-static void sslWriteClient __P((int fd, SslStateData * sslState));
-static void sslConnected __P((int fd, SslStateData * sslState));
-static void sslProxyConnected __P((int fd, SslStateData * sslState));
-static void sslConnect __P((int fd, struct hostent *, void *));
-static void sslConnInProgress __P((int fd, SslStateData * sslState));
-static void sslErrorComplete __P((int, char *, int, int, void *));
-static void sslClose __P((SslStateData * sslState));
-static int sslClientClosed __P((int fd, SslStateData * sslState));
+static void sslLifetimeExpire _PARAMS((int fd, SslStateData * sslState));
+static void sslReadTimeout _PARAMS((int fd, SslStateData * sslState));
+static void sslReadServer _PARAMS((int fd, SslStateData * sslState));
+static void sslReadClient _PARAMS((int fd, SslStateData * sslState));
+static void sslWriteServer _PARAMS((int fd, SslStateData * sslState));
+static void sslWriteClient _PARAMS((int fd, SslStateData * sslState));
+static void sslConnected _PARAMS((int fd, SslStateData * sslState));
+static void sslProxyConnected _PARAMS((int fd, SslStateData * sslState));
+static void sslConnect _PARAMS((int fd, struct hostent *, void *));
+static void sslConnInProgress _PARAMS((int fd, SslStateData * sslState));
+static void sslErrorComplete _PARAMS((int, char *, int, int, void *));
+static void sslClose _PARAMS((SslStateData * sslState));
+static int sslClientClosed _PARAMS((int fd, SslStateData * sslState));
 
 static void
 sslClose(SslStateData * sslState)

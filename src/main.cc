@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.82 1996/09/18 21:39:37 wessels Exp $
+ * $Id: main.cc,v 1.83 1996/09/20 06:28:56 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -133,9 +133,9 @@ struct in_addr local_addr;
 char *dash_str = "-";
 
 /* for error reporting from xmalloc and friends */
-extern void (*failure_notify) __P((char *));
+extern void (*failure_notify) _PARAMS((char *));
 
-volatile static int rotate_pending = 0;		/* set by SIGUSR1 handler */
+static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 #if MALLOC_DBG
@@ -148,14 +148,14 @@ static time_t next_dirclean;
 static time_t next_announce;
 static time_t next_ip_purge;
 
-static void rotate_logs __P((int));
-static void reconfigure __P((int));
-static void mainInitialize __P((void));
-static void mainReinitialize __P((void));
-static time_t mainMaintenance __P((void));
-static void usage __P((void));
-static void mainParseOptions __P((int, char **));
-static void sendSignal __P((void));
+static void rotate_logs _PARAMS((int));
+static void reconfigure _PARAMS((int));
+static void mainInitialize _PARAMS((void));
+static void mainReinitialize _PARAMS((void));
+static time_t mainMaintenance _PARAMS((void));
+static void usage _PARAMS((void));
+static void mainParseOptions _PARAMS((int, char **));
+static void sendSignal _PARAMS((void));
 
 static void
 usage(void)
@@ -384,6 +384,7 @@ serverConnectionsOpen(void)
     }
 #if USE_ICMP
     icmpOpen();
+    netdbInit();
 #endif
 }
 

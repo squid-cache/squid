@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.10 1996/09/15 05:04:23 wessels Exp $
+ * $Id: filemap.cc,v 1.11 1996/09/20 06:28:41 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -123,8 +123,8 @@
 #define ALL_ONES (unsigned long) 0xFFFFFFFF
 #endif
 
-extern int storeGetSwapSpace __P((int));
-extern void fatal_dump __P((char *));
+extern int storeGetSwapSpace _PARAMS((int));
+extern void fatal_dump _PARAMS((char *));
 
 static fileMap *fm = NULL;
 

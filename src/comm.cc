@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.75 1996/09/18 21:39:30 wessels Exp $
+ * $Id: comm.cc,v 1.76 1996/09/20 06:28:32 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -137,19 +137,19 @@ struct _RWStateData {
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
-static void checkTimeouts __P((void));
-static void checkLifetimes __P((void));
-static void Reserve_More_FDs __P((void));
-static void commSetReuseAddr __P((int));
-static int examine_select __P((fd_set *, fd_set *, fd_set *));
-static void commSetNoLinger __P((int));
-static void comm_select_incoming __P((void));
-static int commBind __P((int s, struct in_addr, u_short port));
-static void RWStateCallbackAndFree __P((int fd, int code));
+static void checkTimeouts _PARAMS((void));
+static void checkLifetimes _PARAMS((void));
+static void Reserve_More_FDs _PARAMS((void));
+static void commSetReuseAddr _PARAMS((int));
+static int examine_select _PARAMS((fd_set *, fd_set *, fd_set *));
+static void commSetNoLinger _PARAMS((int));
+static void comm_select_incoming _PARAMS((void));
+static int commBind _PARAMS((int s, struct in_addr, u_short port));
+static void RWStateCallbackAndFree _PARAMS((int fd, int code));
 #ifdef TCP_NODELAY
-static void commSetTcpNoDelay __P((int));
+static void commSetTcpNoDelay _PARAMS((int));
 #endif
-static void commSetTcpRcvbuf __P((int, int));
+static void commSetTcpRcvbuf _PARAMS((int, int));
 
 static int *fd_lifetime = NULL;
 static struct timeval zero_tv;
@@ -617,6 +617,7 @@ comm_select_incoming(void)
     if (maxfd++ == 0)
 	return;
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) > 0) {
+	getCurrentTime();
 	for (i = 0; i < N; i++) {
 	    fd = fds[i];
 	    if (FD_ISSET(fd, &read_mask)) {
@@ -712,6 +713,7 @@ comm_select(time_t sec)
 	    poll_time.tv_usec = 0;
 #endif
 	    num = select(maxfd, &readfds, &writefds, &exceptfds, &poll_time);
+	    getCurrentTime();
 	    if (num >= 0)
 		break;
 	    if (errno == EINTR)
@@ -837,7 +839,10 @@ comm_set_select_handler_plus_timeout(int fd, unsigned int type, PF handler, void
 }
 
 int
-comm_get_select_handler(int fd, unsigned int type, int (**handler_ptr) (), void **client_data_ptr)
+comm_get_select_handler(int fd,
+    unsigned int type,
+    int (**handler_ptr) _PARAMS((int, void *)),
+    void **client_data_ptr)
 {
     if (type & COMM_SELECT_TIMEOUT) {
 	*handler_ptr = fd_table[fd].timeout_handler;

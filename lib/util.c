@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.18 1996/09/17 16:54:00 wessels Exp $
+ * $Id: util.c,v 1.19 1996/09/20 06:28:22 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -130,7 +130,7 @@
 #include "ansiproto.h"
 #include "util.h"
 
-void (*failure_notify) __P((char *)) = NULL;
+void (*failure_notify) _PARAMS((char *)) = NULL;
 static char msg[128];
 
 extern int sys_nerr;

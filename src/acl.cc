@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.42 1996/09/18 21:39:27 wessels Exp $
+ * $Id: acl.cc,v 1.43 1996/09/20 06:28:24 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -44,26 +44,26 @@ struct _acl_access *DelayAccessList = NULL;
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
 
-static void aclDestroyAclList __P((struct _acl_list * list));
-static void aclDestroyIpList __P((struct _acl_ip_data * data));
-static void aclDestroyRegexList __P((struct _relist * data));
-static void aclDestroyTimeList __P((struct _acl_time_data * data));
-static int aclMatchDomainList __P((wordlist *, char *));
-static int aclMatchAclList __P((struct _acl_list *, aclCheck_t *));
-static int aclMatchInteger __P((intlist * data, int i));
-static int aclMatchIp __P((struct _acl_ip_data * data, struct in_addr c));
-static int aclMatchRegex __P((relist * data, char *word));
-static int aclMatchTime __P((struct _acl_time_data * data, time_t when));
-static intlist *aclParseIntlist __P((void));
-static struct _acl_ip_data *aclParseIpList __P((void));
-static intlist *aclParseMethodList __P((void));
-static intlist *aclParseProtoList __P((void));
-static struct _relist *aclParseRegexList __P((void));
-static struct _acl_time_data *aclParseTimeSpec __P((void));
-static wordlist *aclParseWordList __P((void));
-static wordlist *aclParseDomainList __P((void));
-static squid_acl aclType __P((char *s));
-static int decode_addr __P((char *, struct in_addr *, struct in_addr *));
+static void aclDestroyAclList _PARAMS((struct _acl_list * list));
+static void aclDestroyIpList _PARAMS((struct _acl_ip_data * data));
+static void aclDestroyRegexList _PARAMS((struct _relist * data));
+static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
+static int aclMatchDomainList _PARAMS((wordlist *, char *));
+static int aclMatchAclList _PARAMS((struct _acl_list *, aclCheck_t *));
+static int aclMatchInteger _PARAMS((intlist * data, int i));
+static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
+static int aclMatchRegex _PARAMS((relist * data, char *word));
+static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
+static intlist *aclParseIntlist _PARAMS((void));
+static struct _acl_ip_data *aclParseIpList _PARAMS((void));
+static intlist *aclParseMethodList _PARAMS((void));
+static intlist *aclParseProtoList _PARAMS((void));
+static struct _relist *aclParseRegexList _PARAMS((void));
+static struct _acl_time_data *aclParseTimeSpec _PARAMS((void));
+static wordlist *aclParseWordList _PARAMS((void));
+static wordlist *aclParseDomainList _PARAMS((void));
+static squid_acl aclType _PARAMS((char *s));
+static int decode_addr _PARAMS((char *, struct in_addr *, struct in_addr *));
 
 static squid_acl
 aclType(char *s)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.61 1996/09/17 16:32:49 wessels Exp $
+ * $Id: tools.cc,v 1.62 1996/09/20 06:29:17 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -594,7 +594,7 @@ percent(int a, int b)
 }
 
 void
-squid_signal(int sig, void (*func) (), int flags)
+squid_signal(int sig, void (*func) _PARAMS((int)), int flags)
 {
 #if HAVE_SIGACTION
     struct sigaction sa;

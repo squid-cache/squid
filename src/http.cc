@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.78 1996/09/18 21:39:33 wessels Exp $
+ * $Id: http.cc,v 1.79 1996/09/20 06:28:49 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -116,17 +116,17 @@ struct {
     int ctype;
 } ReplyHeaderStats;
 
-static int httpStateFree __P((int fd, HttpStateData *));
-static void httpReadReplyTimeout __P((int fd, HttpStateData *));
-static void httpLifetimeExpire __P((int fd, HttpStateData *));
-static void httpMakePublic __P((StoreEntry *));
-static void httpMakePrivate __P((StoreEntry *));
-static void httpCacheNegatively __P((StoreEntry *));
-static void httpReadReply __P((int fd, HttpStateData *));
-static void httpSendComplete __P((int fd, char *, int, int, void *));
-static void httpSendRequest __P((int fd, HttpStateData *));
-static void httpConnInProgress __P((int fd, HttpStateData *));
-static void httpConnect __P((int fd, struct hostent *, void *));
+static int httpStateFree _PARAMS((int fd, HttpStateData *));
+static void httpReadReplyTimeout _PARAMS((int fd, HttpStateData *));
+static void httpLifetimeExpire _PARAMS((int fd, HttpStateData *));
+static void httpMakePublic _PARAMS((StoreEntry *));
+static void httpMakePrivate _PARAMS((StoreEntry *));
+static void httpCacheNegatively _PARAMS((StoreEntry *));
+static void httpReadReply _PARAMS((int fd, HttpStateData *));
+static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
+static void httpSendRequest _PARAMS((int fd, HttpStateData *));
+static void httpConnInProgress _PARAMS((int fd, HttpStateData *));
+static void httpConnect _PARAMS((int fd, struct hostent *, void *));
 
 static int
 httpStateFree(int fd, HttpStateData * httpState)
@@ -635,7 +635,7 @@ httpSendRequest(int fd, HttpStateData * httpState)
 	len += strlen(post_buf);
 	xfree(post_buf);
     }
-    debug(11, 6, "httpSendRequest: FD %d: buf '%s'\n", fd, buf);
+    debug(11, 6, "httpSendRequest: FD %d:\n%s\n", fd, buf);
     comm_write(fd,
 	buf,
 	len,
