@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.617 2003/02/08 17:36:16 hno Exp $
+ * $Id: client_side.cc,v 1.618 2003/02/09 19:48:32 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1980,13 +1980,14 @@ void *data)
 	    clientProcessRequest(conn, context, method, prefix, req_line_sz);
 
 	    safe_free(prefix);
-           if (!conn->flags.readMoreRequests) {
-               conn->flags.readMoreRequests = 1;
-		break;
-	    }
 	    if (context->mayUseConnection()) {
 		debug (33, 3) ("clientReadRequest: Not reading, as this request may need the connection\n");
 		do_next_read = 0;
+		break;
+	    }
+            if (!conn->flags.readMoreRequests) {
+                conn->flags.readMoreRequests = 1;
+		break;
 	    }
 	    continue;		/* while offset > 0 && body.size_left == 0 */
 	}
