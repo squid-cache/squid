@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.249 1998/05/11 18:44:41 rousskov Exp $
+ * $Id: main.cc,v 1.250 1998/05/14 20:48:03 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -517,12 +517,12 @@ mainInitialize(void)
     debug(1, 0) ("Ready to serve requests.\n");
 
     if (!configured_once) {
-	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
-	eventAdd("storeDirClean", storeDirClean, NULL, 15);
+	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1, 1);
+	eventAdd("storeDirClean", storeDirClean, NULL, 15, 1);
 	if (Config.onoff.announce)
-	    eventAdd("start_announce", start_announce, NULL, 3600);
-	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
-	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15);
+	    eventAdd("start_announce", start_announce, NULL, 3600, 1);
+	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10, 1);
+	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15, 1);
     }
     configured_once = 1;
 }

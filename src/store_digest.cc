@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.15 1998/05/12 20:29:26 wessels Exp $
+ * $Id: store_digest.cc,v 1.16 1998/05/14 20:48:17 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -200,7 +200,7 @@ storeDigestRebuildResume()
     if (!storeDigestResize())
 	cacheDigestClear(store_digest);		/* not clean()! */
     memset(&sd_stats, 0, sizeof(sd_stats));
-    eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0);
+    eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0, 1);
 }
 
 /* finishes swap out sequence for the digest; schedules next rebuild */
@@ -211,7 +211,7 @@ storeDigestRebuildFinish()
     sd_state.rebuild_lock = 0;
     sd_state.rebuild_count++;
     debug(71, 2) ("storeDigestRebuildFinish: done.\n");
-    eventAdd("storeDigestRebuildStart", storeDigestRebuildStart, NULL, StoreDigestRebuildPeriod);
+    eventAdd("storeDigestRebuildStart", storeDigestRebuildStart, NULL, StoreDigestRebuildPeriod, 1);
     /* resume pending Rewrite if any */
     if (sd_state.rewrite_lock)
 	storeDigestRewriteResume();
@@ -238,7 +238,7 @@ storeDigestRebuildStep(void *datanotused)
     if (sd_state.rebuild_offset >= store_hash_buckets)
 	storeDigestRebuildFinish();
     else
-	eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0);
+	eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0, 1);
 }
 
 
@@ -295,7 +295,7 @@ storeDigestRewriteResume()
     httpReplySwapOut(e->mem_obj->reply, e);
     storeDigestCBlockSwapOut(e);
     storeBufferFlush(e);
-    eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0);
+    eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0, 1);
 }
 
 /* finishes swap out sequence for the digest; schedules next rewrite */
@@ -318,7 +318,7 @@ storeDigestRewriteFinish(StoreEntry * e)
     cbdataFree(sd_state.rewrite_lock);
     sd_state.rewrite_lock = e = NULL;
     sd_state.rewrite_count++;
-    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, StoreDigestRewritePeriod);
+    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, StoreDigestRewritePeriod, 1);
     /* resume pending Rebuild if any */
     if (sd_state.rebuild_lock)
 	storeDigestRebuildResume();
@@ -343,7 +343,7 @@ storeDigestSwapOutStep(void * data)
     if (sd_state.rewrite_offset >= store_digest->mask_size)
 	storeDigestRewriteFinish(e);
     else
-	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, e, 0);
+	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, e, 0, 1);
 }
 
 static void

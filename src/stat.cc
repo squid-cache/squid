@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.246 1998/05/14 16:33:55 wessels Exp $
+ * $Id: stat.cc,v 1.247 1998/05/14 20:48:12 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -750,7 +750,7 @@ statInit(void)
     for (i = 0; i < N_COUNT_HOUR_HIST; i++)
 	statCountersInit(&CountHourHist[i]);
     statCountersInit(&Counter);
-    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL);
+    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL, 1);
     cachemgrRegister("info",
 	"General Runtime Information",
 	info_get, 0);
@@ -798,7 +798,7 @@ statAvgTick(void *notused)
     StatCounters *p = &CountHist[1];
     StatCounters *c = &Counter;
     struct rusage rusage;
-    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL);
+    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL, 1);
     squid_getrusage(&rusage);
     c->page_faults = rusage_pagefaults(&rusage);
     c->cputime = rusage_cputime(&rusage);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.100 1998/05/14 16:33:52 wessels Exp $
+ * $Id: net_db.cc,v 1.101 1998/05/14 20:48:06 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -397,7 +397,7 @@ netdbSaveState(void *foo)
     getCurrentTime();
     debug(37, 0) ("NETDB state saved; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
-    eventAdd("netdbSaveState", netdbSaveState, NULL, 3617);
+    eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600, 1);
 }
 
 static void
@@ -627,7 +627,7 @@ netdbInit(void)
     addr_table = hash_create((HASHCMP *) strcmp, n, hash_string);
     n = hashPrime(3 * Config.Netdb.high / 4);
     host_table = hash_create((HASHCMP *) strcmp, n, hash_string);
-    eventAdd("netdbSaveState", netdbSaveState, NULL, 3617);
+    eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600, 1);
     netdbReloadState();
     cachemgrRegister("netdb",
 	"Network Measurement Database",
@@ -1072,8 +1072,8 @@ netdbExchangeStart(void *data)
 peer *
 netdbClosestParent(const char *host)
 {
-    peer *p = NULL;
 #if USE_ICMP
+    peer *p = NULL;
     netdbEntry *n;
     const ipcache_addrs *ia;
     net_db_peer *h;
