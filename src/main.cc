@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.100 1996/10/24 05:23:54 wessels Exp $
+ * $Id: main.cc,v 1.101 1996/10/24 06:12:45 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -569,7 +569,7 @@ mainMaintenance(void)
 	    next_cleaning = squid_curtime + Config.cleanRate;
 	} else if (squid_curtime >= next_announce) {
 	    if (Config.Announce.on)
-	    	send_announce();
+		send_announce();
 	    next_announce = squid_curtime + Config.Announce.rate;
 	}
     }

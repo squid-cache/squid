@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.71 1996/10/24 05:15:26 wessels Exp $
+ * $Id: neighbors.cc,v 1.72 1996/10/24 06:12:46 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -594,7 +594,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	opcode_d, url, e ? e->host : "source");
     mem->e_pings_n_acks++;
     if (e)
-    	ntype = neighborType(e, mem->request);
+	ntype = neighborType(e, mem->request);
     if (header->opcode == ICP_OP_SECHO) {
 	/* Received source-ping reply */
 	if (e) {
