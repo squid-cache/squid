@@ -7,8 +7,8 @@
 #ifndef __STORE_ASYNCUFS_H__
 #define __STORE_ASYNCUFS_H__
 
-#ifdef ASYNC_IO_THREADS
-#define NUMTHREADS ASYNC_IO_THREADS
+#ifdef AUFS_IO_THREADS
+#define NUMTHREADS AUFS_IO_THREADS
 #else
 #define NUMTHREADS (Config.cacheSwap.n_configured*16)
 #endif

@@ -91,8 +91,8 @@
 
 #undef FORW_VIA_DB
 
-/* Defines how many threads to use for async I/O */
-#undef ASYNC_IO_THREADS
+/* Defines how many threads aufs uses for I/O */
+#undef AUFS_IO_THREADS
 
 /*
  * If you want to use Squid's ICMP features (highly recommended!) then
@@ -236,7 +236,7 @@
 /*
  * This makes warnings go away.  If you have socklen_t defined in your
  * /usr/include files, then this should remain undef'd.  Otherwise it
- * should be defined to int.
+ * should be defined to int. 
  */
 #undef socklen_t
 
