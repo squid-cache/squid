@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.80 1998/09/22 17:45:28 wessels Exp $
+ * $Id: store_dir.cc,v 1.81 1998/09/22 18:55:01 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,8 +34,10 @@
  */
 
 #include "squid.h"
-#if HAVE_SYS_STATFS_H
-#include <sys/statfs.h>
+#if HAVE_STATVFS
+#if HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
 #endif
 
 #define SWAP_DIR_SHIFT 24
@@ -569,8 +571,8 @@ storeDirStats(StoreEntry * sentry)
 {
     int i;
     SwapDir *SD;
-#if HAVE_SYS_STATFS_H
-    struct statfs sfs;
+#if HAVE_STATVFS
+    struct statvfs sfs;
 #endif
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries          : %d\n",
@@ -595,11 +597,11 @@ storeDirStats(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "Filemap bits in use: %d of %d (%d%%)\n",
 	    SD->map->n_files_in_map, SD->map->max_n_files,
 	    percent(SD->map->n_files_in_map, SD->map->max_n_files));
-#if HAVE_SYS_STATFS_H
+#if HAVE_STATVFS
 #define fsbtoblk(num, fsbs, bs) \
         (((fsbs) != 0 && (fsbs) < (bs)) ? \
                 (num) / ((bs) / (fsbs)) : (num) * ((fsbs) / (bs)))
-	if (!statfs(SD->path, &sfs, sizeof(sfs), 0)) {
+	if (!statvfs(SD->path, &sfs)) {
 	    storeAppendPrintf(sentry, "Filesystem Space in use: %d/%d (%d%%)\n",
 		fsbtoblk((sfs.f_blocks - sfs.f_bfree), sfs.f_bsize, 1024),
 		fsbtoblk(sfs.f_blocks, sfs.f_bsize, 1024),
