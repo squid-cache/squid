@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.121 1996/12/02 04:15:10 wessels Exp $
+ * $Id: main.cc,v 1.122 1996/12/02 05:54:41 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -284,7 +284,7 @@ mainParseOptions(int argc, char *argv[])
 static void
 rotate_logs(int sig)
 {
-    debug(21, 1, "rotate_logs: SIGUSR1 received.\n");
+    debug(1, 1, "rotate_logs: SIGUSR1 received.\n");
     rotate_pending = 1;
 #if !HAVE_SIGACTION
     signal(sig, rotate_logs);
@@ -294,8 +294,8 @@ rotate_logs(int sig)
 static void
 reconfigure(int sig)
 {
-    debug(21, 1, "reconfigure: SIGHUP received\n");
-    debug(21, 1, "Waiting %d seconds for active connections to finish\n",
+    debug(1, 1, "reconfigure: SIGHUP received\n");
+    debug(1, 1, "Waiting %d seconds for active connections to finish\n",
 	Config.lifetimeShutdown);
     reread_pending = 1;
 #if !HAVE_SIGACTION
@@ -307,10 +307,14 @@ void
 shut_down(int sig)
 {
     shutdown_pending = sig == SIGINT ? -1 : 1;
-    debug(21, 1, "Preparing for shutdown after %d connections\n",
+    debug(1, 1, "Preparing for shutdown after %d connections\n",
 	ntcpconn + nudpconn);
-    debug(21, 1, "Waiting %d seconds for active connections to finish\n",
+    debug(1, 1, "Waiting %d seconds for active connections to finish\n",
 	shutdown_pending > 0 ? Config.lifetimeShutdown : 0);
+#ifdef KILL_PARENT_OPT
+    debug(1, 1, "Killing RunCache, pid %d\n", getppid());
+    kill(getppid(), sig);
+#endif
 #if SA_RESETHAND == 0
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
@@ -456,7 +460,7 @@ serverConnectionsClose(void)
     /* NOTE, this function will be called repeatedly while shutdown
      * is pending */
     if (theHttpConnection >= 0) {
-	debug(21, 1, "FD %d Closing HTTP connection\n",
+	debug(1, 1, "FD %d Closing HTTP connection\n",
 	    theHttpConnection);
 	comm_close(theHttpConnection);
 	commSetSelect(theHttpConnection,
@@ -468,7 +472,7 @@ serverConnectionsClose(void)
     if (theInIcpConnection >= 0) {
 	/* NOTE, don't close outgoing ICP connection, we need to write to
 	 * it during shutdown */
-	debug(21, 1, "FD %d Closing ICP connection\n",
+	debug(1, 1, "FD %d Closing ICP connection\n",
 	    theInIcpConnection);
 	if (theInIcpConnection != theOutIcpConnection)
 	    comm_close(theInIcpConnection);
@@ -541,7 +545,7 @@ mainInitialize(void)
     debug(1, 0, "Starting Squid Cache version %s for %s...\n",
 	version_string,
 	CONFIG_HOST_TYPE);
-    debug(1, 1, "With %d file descriptors available\n", FD_SETSIZE);
+    debug(1, 1, "With %d file descriptors available\n", SQUID_MAXFD);
 
     if (first_time) {
 	stmemInit();		/* stmem must go before at least redirect */
@@ -646,7 +650,7 @@ main(int argc, char **argv)
     setMaxFD();
 
     if (opt_catch_signals)
-	for (n = FD_SETSIZE; n > 2; n--)
+	for (n = SQUID_MAXFD; n > 2; n--)
 	    close(n);
 
     /*init comm module */

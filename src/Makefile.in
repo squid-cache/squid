@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.57 1996/11/25 03:02:48 wessels Exp $
+#  $Id: Makefile.in,v 1.58 1996/12/02 05:54:42 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -13,8 +13,10 @@ LOG_HDRS_OPT	= # -DLOG_FULL_HEADERS=1
 ICMP_OPT	= # -DUSE_ICMP=1
 DELAY_HACK      = # -DDELAY_HACK=1
 USERAGENT_OPT	= # -DUSE_USERAGENT_LOG=1
+KILL_PARENT_OPT	= # -DKILL_PARENT_OPT
 DEFINES		= $(HOST_OPT) $(AIO_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) \
-		  $(ICMP_OPT) $(DELAY_HACK) $(USERAGENT_OPT)
+		  $(ICMP_OPT) $(DELAY_HACK) $(USERAGENT_OPT) \
+		  $(KILL_PARENT_OPT)
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
