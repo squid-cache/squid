@@ -76,6 +76,7 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
     tmp->l2 = l2;
     tmp->read_only = read_only;
     tmp->map = file_map_create(MAX_FILES_PER_DIR);
+    tmp->swaplog_fd = -1;
     return ++ncache_dirs;
 }
 
@@ -308,7 +309,8 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
     }
     debug(20, 1, "Rebuilding storage from %s\n", swaplog_path);
     /* close the existing write-only FD */
-    file_close(SD->swaplog_fd);
+    if (SD->swaplog_fd >= 0)
+        file_close(SD->swaplog_fd);
     /* open a write-only FD for the new log */
     fd = file_open(new_path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
     if (fd < 0) {
