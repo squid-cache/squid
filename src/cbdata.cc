@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.60 2003/09/01 23:41:17 robertc Exp $
+ * $Id: cbdata.cc,v 1.61 2003/10/08 21:21:14 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -84,7 +84,7 @@ public:
 #endif
 
     void *operator new(size_t size, void *where);
-    void operator delete(void *where, void *where);
+    void operator delete(void *where, void *where2);
 
     ~cbdata();
     int valid;
