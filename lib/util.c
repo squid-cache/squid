@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.27 1996/11/22 05:05:23 wessels Exp $
+ * $Id: util.c,v 1.28 1996/11/24 02:41:56 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -473,11 +473,12 @@ tvSubMsec(struct timeval t1, struct timeval t2)
 char *
 xstrncpy(char *dst, const char *src, size_t n)
 {
-    if (n != 0) {
-	if (src != NULL)
-	    while (--n != 0 && *src != '\0')
-		*dst++ = *src++;
-	*dst = '\0';
-    }
+    if (n == 0)
+	return dst;
+    if (src == NULL)
+	return dst;
+    while (--n != 0 && *src != '\0')
+	*dst++ = *src++;
+    *dst = '\0';
     return dst;
 }
