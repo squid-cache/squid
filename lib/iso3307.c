@@ -29,9 +29,9 @@ parse_iso3307_time(const char *buf)
     struct tm tms;
     time_t t;
     while (*buf == ' ' || *buf == '\t')
-        buf++;
+	buf++;
     if ((int) strlen(buf) < 14)
-        return 0;
+	return 0;
     memset(&tms, '\0', sizeof(struct tm));
     tms.tm_year = (ASCII_DIGIT(buf[2]) * 10) + ASCII_DIGIT(buf[3]);
     tms.tm_mon = (ASCII_DIGIT(buf[4]) * 10) + ASCII_DIGIT(buf[5]) - 1;
