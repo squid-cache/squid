@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.284 1998/06/02 04:18:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.285 1998/06/03 20:34:41 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -450,7 +450,7 @@ dump_snmp_access(StoreEntry * entry, const char *name, communityEntry * Head)
 		storeAppendPrintf(entry, "%s %s %s %s%s\n",
 		    name, cp->name,
 		    head->allow ? "Allow" : "Deny",
-		    l->op ? "" : "!",
+		    l->op ? null_string : "!",
 		    l->acl->name);
 	    }
 	    head = head->next;
@@ -464,13 +464,15 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
     acl_list *l;
     while (head != NULL) {
-	for (l = head->acl_list; l != NULL; l = l->next) {
-	    storeAppendPrintf(entry, "%s %s %s%s\n",
+	storeAppendPrintf(entry, "%s %s",
 		name,
-		head->allow ? "Allow" : "Deny",
-		l->op ? "" : "!",
+	    head->allow ? "Allow" : "Deny");
+	for (l = head->acl_list; l != NULL; l = l->next) {
+	    storeAppendPrintf(entry, " %s%s",
+		l->op ? null_string : "!",
 		l->acl->name);
 	}
+	storeAppendPrintf(entry, "\n");
 	head = head->next;
     }
 }
@@ -666,9 +668,32 @@ free_cachedir(cacheSwap * swap)
     swap->n_configured = 0;
 }
 
+const char *
+peer_type_str(const peer_t type)
+{
+    switch(type) {
+    case PEER_PARENT:
+	return "parent";
+	break;
+    case PEER_SIBLING:
+	return "sibling";
+	break;
+    case PEER_MULTICAST:
+	return "multicast";
+	break;
+    default:
+	return "unknown";
+	break;
+    }
+}
+
 static void
 dump_peer(StoreEntry * entry, const char *name, peer * p)
 {
+    domain_ping *d;
+    acl_access *a;
+    domain_type *t;
+    LOCAL_ARRAY(char, xname, 128);
     while (p != NULL) {
 	storeAppendPrintf(entry, "%s %s %s %d %d",
 	    name,
@@ -677,6 +702,22 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 	    p->http_port,
 	    p->icp_port);
 	dump_peer_options(entry, p);
+	for (d = p->pinglist; d; d = d->next) {
+	    storeAppendPrintf(entry, "cache_peer_domain %s %s%s\n",
+		p->host,
+		d->do_ping ? null_string : "!",
+		d->domain);
+	}
+	if ((a = p->access)) {
+	    snprintf(xname, 128, "cache_peer_access %s", p->host);
+	    dump_acl_access(entry, xname, p->access);
+	}
+	for (t = p->typelist; t; t = t->next) {
+	    storeAppendPrintf(entry, "neighbor_type_domain %s %s %s\n",
+		p->host,
+		peer_type_str(t->type),
+		t->domain);
+	}
 	p = p->next;
     }
 }
@@ -847,42 +888,18 @@ free_denyinfo(acl_deny_info_list ** list)
 }
 
 static void
-parse_peeracl(void)
+parse_peer_access(void)
 {
     char *host = NULL;
-    char *aclname = NULL;
-
+    peer *p;
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
-    while ((aclname = strtok(NULL, list_sep))) {
-	peer *p;
-	acl_list *L = NULL;
-	acl_list **Tail = NULL;
-	acl *a = NULL;
 	if ((p = peerFindByName(host)) == NULL) {
 	    debug(15, 0) ("%s, line %d: No cache_peer '%s'\n",
 		cfg_filename, config_lineno, host);
 	    return;
 	}
-	L = xcalloc(1, sizeof(acl_list));
-	L->op = 1;
-	if (*aclname == '!') {
-	    L->op = 0;
-	    aclname++;
-	}
-	debug(15, 3) ("neighborAddAcl: looking for ACL name '%s'\n", aclname);
-	a = aclFindByName(aclname);
-	if (a == NULL) {
-	    debug(15, 0) ("%s line %d: %s\n",
-		cfg_filename, config_lineno, config_input_line);
-	    debug(15, 0) ("neighborAddAcl: ACL name '%s' not found.\n", aclname);
-	    xfree(L);
-	    return;
-	}
-	L->acl = a;
-	for (Tail = &p->acls; *Tail; Tail = &(*Tail)->next);
-	*Tail = L;
-    }
+    aclParseAccessLine(&p->access);
 }
 
 static void

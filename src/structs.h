@@ -874,7 +874,7 @@ struct _peer {
     int icp_version;
     domain_ping *pinglist;
     domain_type *typelist;
-    acl_list *acls;
+    acl_access *access;
     int options;
     int weight;
     struct {

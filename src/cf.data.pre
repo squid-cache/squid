@@ -1320,23 +1320,19 @@ miss_access allow  all
 DOC_END
 
 
-NAME: cache_peer_acl cache_host_acl
-TYPE: peeracl
+NAME: cache_peer_access
+TYPE: peer_access
 DEFAULT: none
 LOC: none
 DOC_START
-	Just like 'cache_peer_domain' but provides more flexibility by
-	using ACL's.
+	Similar to 'cache_peer_domain' but provides more flexibility by
+	using ACL elements.
 
-		cache_peer_acl cache-host	[!]aclname ...
+	cache_peer_access cache-host allow|deny [!]aclname ...
 
-	NOTE:	* Any number of ACL's may be given for a cache-host,
-		  either on the same or separate lines.
-		* When multiple ACL's are given for a particular
-		  cache-host, the first matched ACL is applied.
-		* Cache hosts with no domain or ACL restrictions are
-		  queried for all requests.
-		* There are no defaults.
+	The syntax is identical to 'http_access' and the other lists of
+	ACL elements.  See the comments for 'http_access' below, or
+	the Squid FAQ (http://squid.nlanr.net/Squid/FAQ/FAQ-10.html).
 DOC_END
 
 COMMENT_START

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.219 1998/05/28 23:43:45 wessels Exp $
+ * $Id: neighbors.cc,v 1.220 1998/06/03 20:34:44 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -197,7 +197,7 @@ peerAllowedToUse(const peer * p, request_t * request)
     if (EBIT_TEST(request->flags, REQ_REFRESH))
 	if (neighborType(p, request) == PEER_SIBLING)
 	    return 0;
-    if (p->pinglist == NULL && p->acls == NULL)
+    if (p->pinglist == NULL && p->access == NULL)
 	return do_ping;
     do_ping = 0;
     for (d = p->pinglist; d; d = d->next) {
@@ -209,9 +209,11 @@ peerAllowedToUse(const peer * p, request_t * request)
     }
     if (p->pinglist && 0 == do_ping)
 	return do_ping;
+    if (p->access == NULL)
+	return do_ping;
     checklist.src_addr = request->client_addr;
     checklist.request = request;
-    return aclMatchAclList(p->acls, &checklist);
+    return aclCheckFast(p->access, &checklist);
 }
 
 /* Return TRUE if it is okay to send an ICP request to this peer.   */
