@@ -177,6 +177,33 @@ Changes to Squid-2.2 (April 19, 1999):
 	  it always kept trying to connect to the first server
 	  int the list.
 
+	2.2.STABLE3:
+
+	- Fixed preprocessor problems for HP-UX in lib/safe_inet_addr.c.
+	- Avoid coredump in aclMatchAcl() if someone tries to use
+	  proxy authentication with a non-HTTP request (e.g. icp_access).
+	- Moved 'ident_lookup_access' in squid.conf so it appears
+	  after the ACL section.
+	- Fixed typo in squid.conf on "Config.Addrs.snmp_outgoing"
+	- Fixed a case in clientCacheHit() where we thought it
+	  was a hit, but the reply status was not 200, so we
+	  had to perform a cache miss.  We forgot to change the
+	  log_type and these were being recorded as TCP_HIT's.
+	- Fixed a void pointer subtraction bug in delayIdPtrHashCmp().
+	- Fixed delay_pools coredump and memory leak bugs from
+	  NULL delay_id values.
+	- Fixed a SEGV bug with delay_pools when requesting
+	  'objects' or 'vm_objects' from the cachemgr.
+	- Added a workaround for buggy FTP servers that return
+	  a size of zero for non-zero-sized objects.
+	- Removed umask(0) call from main().
+	- Fixed a peer selection bug that caused us to never select
+	  a neighbor based on ICP replies if the ICP timeout occurs.
+	  In conjunction with this, removed the PING_TIMEOUT state.
+	- Fixed a store_rebuild bug that caused us to get stuck trying
+	  if a cache_dir subdirectory didn't exist.
+	- Fixed a buffer overrun bug in gb_to_str().
+
 Changes to Squid-2.1 (November 16, 1998):
 
 	- Changed delayPoolsUpdate() to be called as an event.
