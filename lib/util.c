@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.3 1996/03/26 05:13:15 wessels Exp $ */
+/* $Id: util.c,v 1.4 1996/04/14 03:25:06 wessels Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +16,70 @@ extern char *sys_errlist[];
 #endif
 
 #include "autoconf.h"
+
+#undef XMALLOC_DEBUG
+
+#ifdef XMALLOC_DEBUG
+#define DBG_ARRY_SZ (2<<16)
+static void *malloc_ptrs[DBG_ARRY_SZ];
+static int malloc_size[DBG_ARRY_SZ];
+static int dbg_initd = 0;
+static int I = 0;
+static void *P;
+static void *Q;
+
+static void check_init()
+{
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	malloc_ptrs[I] = NULL;
+	malloc_size[I] = 0;
+    }
+    dbg_initd = 1;
+}
+
+static void check_free(s)
+     void *s;
+{
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	if (malloc_ptrs[I] != s)
+	    continue;
+	malloc_ptrs[I] = NULL;
+	malloc_size[I] = 0;
+	break;
+    }
+    if (I == DBG_ARRY_SZ) {
+	sprintf(msg, "xfree: ERROR: s=%p not found!", s);
+	(*failure_notify) (msg);
+    }
+}
+
+static void check_malloc(p, sz)
+     void *p;
+     size_t sz;
+{
+    if (!dbg_initd)
+	check_init();
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	if ((P = malloc_ptrs[I]) == NULL)
+	    continue;
+	Q = P + malloc_size[I];
+	if (P <= p && p < Q) {
+	    sprintf(msg, "xmalloc: ERROR: p=%p falls in P=%p+%d",
+		p, P, malloc_size[I]);
+	    (*failure_notify) (msg);
+	}
+    }
+    for (I = 0; I < DBG_ARRY_SZ; I++) {
+	if ((P = malloc_ptrs[I]))
+	    continue;
+	malloc_ptrs[I] = p;
+	malloc_size[I] = (int) sz;
+	break;
+    }
+    if (I == DBG_ARRY_SZ)
+	(*failure_notify) ("xmalloc: debug out of array space!");
+}
+#endif
 
 /*
  *  xmalloc() - same as malloc(3).  Used for portability.
@@ -38,6 +102,9 @@ void *xmalloc(sz)
 	}
 	exit(1);
     }
+#ifdef XMALLOC_DEBUG
+    check_malloc(p, sz);
+#endif
     return (p);
 }
 
@@ -47,9 +114,21 @@ void *xmalloc(sz)
 void xfree(s)
      void *s;
 {
-    if (s != NULL) {
+#ifdef XMALLOC_DEBUG
+    check_free(s);
+#endif
+    if (s != NULL)
 	free(s);
-    }
+}
+
+/* xxfree() - like xfree(), but we already know s != NULL */
+void xxfree(s)
+     void *s;
+{
+#ifdef XMALLOC_DEBUG
+    check_free(s);
+#endif
+    free(s);
 }
 
 /*
@@ -74,6 +153,9 @@ void *xrealloc(s, sz)
 	}
 	exit(1);
     }
+#ifdef XMALLOC_DEBUG
+    check_malloc(p, sz);
+#endif
     return (p);
 }
 
@@ -101,6 +183,9 @@ void *xcalloc(n, sz)
 	}
 	exit(1);
     }
+#ifdef XMALLOC_DEBUG
+    check_malloc(p, sz * n);
+#endif
     return (p);
 }
 
@@ -129,15 +214,6 @@ char *xstrdup(s)
     return (p);
 }
 
-#ifndef HAVE_STRDUP
-/* define for systems that don't have strdup */
-char *strdup(s)
-     char *s;
-{
-    return (xstrdup(s));
-}
-#endif
-
 /*
  * xstrerror() - return sys_errlist[errno];
  */
@@ -152,9 +228,18 @@ char *xstrerror()
     /* return (sys_errlist[errno]); */
 }
 
-#ifndef HAVE_STRERROR
+#if !HAVE_STRDUP
+/* define for systems that don't have strdup */
+char *strdup(s)
+     char *s;
+{
+    return (xstrdup(s));
+}
+#endif
+
+#if !HAVE_STRERROR
 char *strerror(n)
-     int n;
+int n;
 {
     return (xstrerror(n));
 }
