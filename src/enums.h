@@ -628,8 +628,8 @@ enum {
  * These are field indicators for raw cache-cache netdb transfers
  */
 enum {
-	NETDB_NONE,
-	NETDB_NETWORK,
-	NETDB_RTT,
-	NETDB_HOPS
+	NETDB_EX_NONE,
+	NETDB_EX_NETWORK,
+	NETDB_EX_RTT,
+	NETDB_EX_HOPS
 };
