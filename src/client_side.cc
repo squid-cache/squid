@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.142 1997/11/05 19:52:22 wessels Exp $
+ * $Id: client_side.cc,v 1.143 1997/11/10 20:54:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -280,7 +280,11 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
 	    oldentry->mem_obj->request = requestLink(mem->request);
 	    unlink_request = 1;
 	}
-	memcpy(oldentry->mem_obj->reply, entry->mem_obj->reply, sizeof(struct _http_reply));
+	/* Don't memcpy() the whole reply structure here.  For example,
+	 * www.thegist.com (Netscape/1.13) returns a content-length for
+	 * 304's which seems to be the length of the 304 HEADERS!!! and
+	 * not the body they refer to.  */
+	storeCopyNotModifiedReplyHeaders(entry->mem_obj, oldentry->mem_obj);
 	storeTimestampsSet(oldentry);
 	storeUnregister(entry, http);
 	storeUnlockObject(entry);
@@ -1698,7 +1702,6 @@ icpCheckTransferDone(clientHttpRequest * http)
 {
     StoreEntry *entry = http->entry;
     MemObject *mem = NULL;
-
     if (entry == NULL)
 	return 0;
     if (entry->store_status != STORE_PENDING)
@@ -1708,6 +1711,7 @@ icpCheckTransferDone(clientHttpRequest * http)
 	return 0;
     if (mem->reply->content_length == 0)
 	return 0;
+    assert(http->out.offset <= mem->reply->content_length + mem->reply->hdr_sz);
     if (http->out.offset >= mem->reply->content_length + mem->reply->hdr_sz)
 	return 1;
     return 0;
