@@ -59,8 +59,7 @@ struct _digest_nonce_data {
 };
 
 /* the nonce structure we'll pass around */
-struct _digest_nonce_h {
-    hash_link hash;		/* must be first */
+struct _digest_nonce_h : public hash_link {
     digest_nonce_data noncedata;
     /* number of uses we've seen of this nonce */
     unsigned long nc;

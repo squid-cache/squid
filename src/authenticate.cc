@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.45 2002/10/14 10:47:51 adrian Exp $
+ * $Id: authenticate.cc,v 1.46 2002/10/15 09:25:33 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -1088,8 +1088,10 @@ AuthUserHashPointer::operator delete (void *address)
 }
 
 AuthUserHashPointer::AuthUserHashPointer (auth_user_t * anAuth_user):
-key (anAuth_user->username()), next (NULL), auth_user (anAuth_user)
+auth_user (anAuth_user)
 {
+    key = (void *)anAuth_user->username();
+    next = NULL;
     hash_join(proxy_auth_username_cache, (hash_link *) this);
     /* lock for presence in the cache */
     authenticateAuthUserLock(auth_user);

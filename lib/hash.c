@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.13 2002/10/02 11:06:30 robertc Exp $
+ * $Id: hash.c,v 1.14 2002/10/15 09:25:32 robertc Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -179,7 +179,7 @@ hash_join(hash_table * hid, hash_link * lnk)
  *  'hid'.  Returns a pointer to the hash bucket on success; otherwise
  *  returns NULL.
  */
-void *
+hash_link *
 hash_lookup(hash_table * hid, const void *k)
 {
     hash_link *walker;
@@ -225,7 +225,7 @@ hash_first(hash_table * hid)
  *
  *  MUST call hash_first() before hash_next().
  */
-void *
+hash_link *
 hash_next(hash_table * hid)
 {
     hash_link *this = hid->next;

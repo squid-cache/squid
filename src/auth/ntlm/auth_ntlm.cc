@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.23 2002/10/13 20:35:23 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.24 2002/10/15 09:25:35 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -912,7 +912,7 @@ authenticateProxyAuthCacheAddLink(const char *key, auth_user_t * auth_user)
     node = ntlm_user->proxy_auth_list.head;
     /* prevent duplicates */
     while (node) {
-	if (!strcmp(key, ((struct ProxyAuthCachePointer *) node->data)->key))
+	if (!strcmp(key, (char const *)((struct ProxyAuthCachePointer *) node->data)->key))
 	    return;
 	node = node->next;
     }
@@ -1037,7 +1037,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	 * string */
 	if ((usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username)))) {
 	    while ((authUserHashPointerUser(usernamehash)->auth_type != auth_user->auth_type) && (usernamehash->next) && !authenticateNTLMcmpUsername(static_cast<ntlm_user_t *>(authUserHashPointerUser(usernamehash)->scheme_data), ntlm_user))
-		usernamehash = usernamehash->next;
+		usernamehash = static_cast<AuthUserHashPointer*>(usernamehash->next);
 	    if (authUserHashPointerUser(usernamehash)->auth_type == auth_user->auth_type) {
 		/*
 		 * add another link from the new proxy_auth to the

@@ -1,5 +1,5 @@
 /*
- * $Id: hash.h,v 1.6 2002/10/13 20:34:51 robertc Exp $
+ * $Id: hash.h,v 1.7 2002/10/15 09:25:32 robertc Exp $
  */
 
 #ifndef SQUID_HASH_H
@@ -30,9 +30,9 @@ SQUIDCEXTERN hash_table *hash_create(HASHCMP *, int, HASHHASH *);
 SQUIDCEXTERN void hash_join(hash_table *, hash_link *);
 SQUIDCEXTERN void hash_remove_link(hash_table *, hash_link *);
 SQUIDCEXTERN int hashPrime(int n);
-SQUIDCEXTERN void *hash_lookup(hash_table *, const void *);
+SQUIDCEXTERN hash_link *hash_lookup(hash_table *, const void *);
 SQUIDCEXTERN void hash_first(hash_table *);
-SQUIDCEXTERN void *hash_next(hash_table *);
+SQUIDCEXTERN hash_link *hash_next(hash_table *);
 SQUIDCEXTERN void hash_last(hash_table *);
 SQUIDCEXTERN hash_link *hash_get_bucket(hash_table *, unsigned int);
 SQUIDCEXTERN void hashFreeMemory(hash_table *);
