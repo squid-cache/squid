@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.17 1996/07/18 20:26:59 wessels Exp $
+ * $Id: acl.cc,v 1.18 1996/07/19 17:36:57 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -611,15 +611,16 @@ static int aclMatchTime(data, when)
     static time_t last_when = 0;
     static struct tm tm;
     time_t t;
+    int rc;
 
     if (when != last_when) {
 	last_when = when;
 	xmemcpy(&tm, localtime(&when), sizeof(struct tm));
     }
-    debug(28, 3, "aclMatchTime: checking %d-%d, weekbits=%x\n",
-	data->start, data->stop, data->weekbits);
-
     t = (time_t) (tm.tm_hour * 60 + tm.tm_min);
+    debug(28, 3, "aclMatchTime: checking %d in %d-%d, weekbits=%x\n",
+	(int) t, (int) data->start, (int) data->stop, data->weekbits);
+
     if (t < data->start || t > data->stop)
 	return 0;
     return data->weekbits & (1 << tm.tm_wday) ? 1 : 0;
