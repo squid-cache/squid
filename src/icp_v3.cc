@@ -23,6 +23,9 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     header.pad = ntohl(header.pad);
 
     method = header.reqnum >> 24;
+    /* Squid-1.1 doesn't use the "method bits" for METHOD_GET */
+    if (METHOD_NONE == method || METHOD_ENUM_END <= method) 
+        method = METHOD_GET;
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
