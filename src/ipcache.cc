@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.29 1996/07/09 03:41:31 wessels Exp $
+ * $Id: ipcache.cc,v 1.30 1996/07/09 22:55:14 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1325,4 +1325,15 @@ static int ipcacheHasPending(i)
 	if (p->handler)
 	    return 1;
     return 0;
+}
+
+void ipcacheReleaseInvalid(name)
+     char *name;
+{
+    ipcache_entry *i;
+    if ((i = ipcache_get(name)) == NULL)
+	return;
+    if (i->status != IP_NEGATIVE_CACHED)
+	return;
+    ipcache_release(i);
 }
