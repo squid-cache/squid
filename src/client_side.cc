@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.430 1999/01/12 00:20:42 wessels Exp $
+ * $Id: client_side.cc,v 1.431 1999/01/18 23:15:42 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1643,6 +1643,10 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
     err = errorCon(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT);
     err->request = requestLink(r);
     err->src_addr = http->conn->peer.sin_addr;
+    if (http->entry) {
+	storeUnregister(http->entry, http);
+	storeUnlockObject(http->entry);
+    }
     http->entry = clientCreateStoreEntry(http, r->method, null_request_flags);
     errorAppendEntry(http->entry, err);
 }
