@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.76 1996/09/23 22:14:43 wessels Exp $
+ * $Id: stat.cc,v 1.77 1996/09/23 23:10:33 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -644,7 +644,7 @@ memoryAccounted(void)
 	mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
 	meta_data.url_strings +
 #if USE_ICMP
-	meta_data.netdb * sizeof(struct netdbEntry) +
+	meta_data.netdb * sizeof(netdbEntry) +
 #endif
                meta_data.misc;
 }
