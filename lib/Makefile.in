@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.60 2002/04/13 15:37:44 hno Exp $
+#  $Id: Makefile.in,v 1.61 2002/07/01 16:07:16 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -70,6 +70,7 @@ AUTH_OBJS = @AUTH_OBJS@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
 CC = @CC@
+CGIEXT = @CGIEXT@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
 DEPDIR = @DEPDIR@

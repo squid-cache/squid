@@ -15,7 +15,7 @@
 
 #  Makefile for digest auth helpers in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.10 2002/06/26 10:37:39 hno Exp $
+#  $Id: Makefile.in,v 1.11 2002/07/01 16:07:04 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -71,6 +71,7 @@ AUTH_OBJS = @AUTH_OBJS@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
 CC = @CC@
+CGIEXT = @CGIEXT@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
 DEPDIR = @DEPDIR@

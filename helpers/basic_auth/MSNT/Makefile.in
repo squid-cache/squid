@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.17 2002/06/26 18:45:31 hno Exp $
+#  $Id: Makefile.in,v 1.18 2002/07/01 16:06:54 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -74,6 +74,7 @@ AUTH_OBJS = @AUTH_OBJS@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
 CC = @CC@
+CGIEXT = @CGIEXT@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
 DEPDIR = @DEPDIR@

@@ -16,7 +16,7 @@
 #
 #  Makefile for the DISKD storage driver for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.9 2002/04/13 15:38:17 hno Exp $
+#  $Id: Makefile.in,v 1.10 2002/07/01 16:07:27 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -72,6 +72,7 @@ AUTH_OBJS = @AUTH_OBJS@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
 CC = @CC@
+CGIEXT = @CGIEXT@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
 DEPDIR = @DEPDIR@

@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.235 2002/06/23 14:53:34 hno Exp $
+#  $Id: Makefile.in,v 1.236 2002/07/01 16:07:19 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -120,6 +120,7 @@ am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
+CGIEXT = @CGIEXT@
 
 @USE_DNSSERVER_TRUE@DNSSOURCE = dns.c
 @USE_DNSSERVER_FALSE@DNSSOURCE = dns_internal.c
@@ -173,12 +174,13 @@ libexec_PROGRAMS = \
 	@OPT_PINGER@ \
 	$(DNSSERVER) \
 	$(UNLINKD) \
-	cachemgr
+	cachemgr$(CGIEXT)
 
 
 cf_gen_SOURCES = cf_gen.c defines.h
 nodist_cf_gen_HEADER = cf_gen_defines.h
 squidclient_SOURCES = client.c
+cachemgr__CGIEXT__SOURCES = cachemgr.c
 
 EXTRA_squid_SOURCES = \
 	delay_pools.c \
@@ -398,26 +400,26 @@ bin_PROGRAMS = squid$(EXEEXT) squidclient$(EXEEXT)
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@libexec_PROGRAMS = \
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	@OPT_PINGER@ \
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	dnsserver$(EXEEXT) \
-@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	cachemgr$(EXEEXT)
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	cachemgr$(CGIEXT)$(EXEEXT)
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_FALSE@libexec_PROGRAMS = \
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_FALSE@	@OPT_PINGER@ \
-@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_FALSE@	cachemgr$(EXEEXT)
+@ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_FALSE@	cachemgr$(CGIEXT)$(EXEEXT)
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@libexec_PROGRAMS = @OPT_PINGER@ \
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	dnsserver$(EXEEXT) \
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	unlinkd$(EXEEXT) \
-@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	cachemgr$(EXEEXT)
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_TRUE@	cachemgr$(CGIEXT)$(EXEEXT)
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@libexec_PROGRAMS = \
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	@OPT_PINGER@ \
 @ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	unlinkd$(EXEEXT) \
-@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	cachemgr$(EXEEXT)
+@ENABLE_UNLINKD_TRUE@@USE_DNSSERVER_FALSE@	cachemgr$(CGIEXT)$(EXEEXT)
 noinst_PROGRAMS = cf_gen$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(libexec_PROGRAMS) $(noinst_PROGRAMS)
 
-cachemgr_SOURCES = cachemgr.c
-cachemgr_OBJECTS = cachemgr.$(OBJEXT)
-cachemgr_LDADD = $(LDADD)
-cachemgr_DEPENDENCIES =
-cachemgr_LDFLAGS =
+am_cachemgr__CGIEXT__OBJECTS = cachemgr.$(OBJEXT)
+cachemgr__CGIEXT__OBJECTS = $(am_cachemgr__CGIEXT__OBJECTS)
+cachemgr__CGIEXT__LDADD = $(LDADD)
+cachemgr__CGIEXT__DEPENDENCIES =
+cachemgr__CGIEXT__LDFLAGS =
 am_cf_gen_OBJECTS = cf_gen.$(OBJEXT)
 cf_gen_OBJECTS = $(am_cf_gen_OBJECTS)
 cf_gen_LDADD = $(LDADD)
@@ -563,9 +565,10 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = cachemgr.c $(cf_gen_SOURCES) dnsserver.c \
-	$(pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) \
-	$(squidclient_SOURCES) $(unlinkd_SOURCES)
+DIST_SOURCES = $(cachemgr__CGIEXT__SOURCES) $(cf_gen_SOURCES) \
+	dnsserver.c $(pinger_SOURCES) $(squid_SOURCES) \
+	$(EXTRA_squid_SOURCES) $(squidclient_SOURCES) \
+	$(unlinkd_SOURCES)
 DATA = $(data_DATA) $(sysconf_DATA)
 
 
@@ -575,7 +578,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = Makefile.am Makefile.in
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = cachemgr.c $(cf_gen_SOURCES) dnsserver.c $(pinger_SOURCES) $(nodist_pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) $(nodist_squid_SOURCES) $(squidclient_SOURCES) $(unlinkd_SOURCES)
+SOURCES = $(cachemgr__CGIEXT__SOURCES) $(cf_gen_SOURCES) dnsserver.c $(pinger_SOURCES) $(nodist_pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) $(nodist_squid_SOURCES) $(squidclient_SOURCES) $(unlinkd_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -638,9 +641,9 @@ clean-libexecPROGRAMS:
 
 clean-noinstPROGRAMS:
 	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
-cachemgr$(EXEEXT): $(cachemgr_OBJECTS) $(cachemgr_DEPENDENCIES) 
-	@rm -f cachemgr$(EXEEXT)
-	$(LINK) $(cachemgr_LDFLAGS) $(cachemgr_OBJECTS) $(cachemgr_LDADD) $(LIBS)
+cachemgr$(CGIEXT)$(EXEEXT): $(cachemgr__CGIEXT__OBJECTS) $(cachemgr__CGIEXT__DEPENDENCIES) 
+	@rm -f cachemgr$(CGIEXT)$(EXEEXT)
+	$(LINK) $(cachemgr__CGIEXT__LDFLAGS) $(cachemgr__CGIEXT__OBJECTS) $(cachemgr__CGIEXT__LDADD) $(LIBS)
 cf_gen$(EXEEXT): $(cf_gen_OBJECTS) $(cf_gen_DEPENDENCIES) 
 	@rm -f cf_gen$(EXEEXT)
 	$(LINK) $(cf_gen_LDFLAGS) $(cf_gen_OBJECTS) $(cf_gen_LDADD) $(LIBS)
