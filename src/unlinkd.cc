@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.24 1998/08/03 19:29:09 wessels Exp $
+ * $Id: unlinkd.cc,v 1.25 1998/08/05 06:05:03 wessels Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -154,7 +154,7 @@ unlinkdInit(void)
     commSetTimeout(unlinkd_wfd, -1, NULL, NULL);
     commSetNonBlocking(unlinkd_wfd);
     commSetNonBlocking(unlinkd_rfd);
-    debug(12, 0) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
+    debug(12, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
 #endif
 }
 

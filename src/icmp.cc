@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.61 1998/07/22 20:37:28 wessels Exp $
+ * $Id: icmp.cc,v 1.62 1998/08/05 06:05:01 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -73,7 +73,7 @@ icmpRecv(int unused1, void *unused2)
 	sizeof(pingerReplyData),
 	0);
     if (n < 0) {
-	debug(50, 0) ("icmpRecv: recv: %s\n", xstrerror());
+	debug(50, 1) ("icmpRecv: recv: %s\n", xstrerror());
 	if (++fail_count == 10 || errno == ECONNREFUSED)
 	    icmpClose();
 	return;
@@ -94,7 +94,7 @@ icmpRecv(int unused1, void *unused2)
 	netdbHandlePingReply(&F, preply.hops, preply.rtt);
 	break;
     default:
-	debug(37, 0) ("icmpRecv: Bad opcode: %d\n", (int) preply.opcode);
+	debug(37, 1) ("icmpRecv: Bad opcode: %d\n", (int) preply.opcode);
 	break;
     }
 }
@@ -196,7 +196,7 @@ icmpOpen(void)
     icmp_sock = rfd;
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     commSetTimeout(icmp_sock, -1, NULL, NULL);
-    debug(29, 0) ("Pinger socket opened on FD %d\n", icmp_sock);
+    debug(29, 1) ("Pinger socket opened on FD %d\n", icmp_sock);
 #endif
 }
 
@@ -206,7 +206,7 @@ icmpClose(void)
 #if USE_ICMP
     if (icmp_sock < 0)
 	return;
-    debug(29, 0) ("Closing Pinger socket on FD %d\n", icmp_sock);
+    debug(29, 1) ("Closing Pinger socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     icmp_sock = -1;
 #endif
