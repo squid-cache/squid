@@ -969,5 +969,5 @@ struct _storeSwapData {
     int object_len;
     u_short refcount;
     u_short flags;
-    char key[MD5_DIGEST_CHARS];
+    unsigned char key[MD5_DIGEST_CHARS];
 };

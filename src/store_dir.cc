@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.50 1998/02/10 02:16:39 wessels Exp $
+ * $Id: store_dir.cc,v 1.51 1998/02/10 18:06:22 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -554,7 +554,7 @@ storeDirWriteCleanLogs(int reopen)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-	s = (void *) outbuf[dirn] + outbufoffset[dirn];
+	s = (storeSwapData *) (outbuf[dirn] + outbufoffset[dirn]);
 	outbufoffset[dirn] += sizeof(storeSwapData);
 	memset(s, '\0', sizeof(storeSwapData));
 	s->op = (char) SWAP_LOG_ADD;
