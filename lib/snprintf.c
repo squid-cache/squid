@@ -54,7 +54,7 @@
  * <panos@alumni.cs.colorado.edu> for xinetd.
  */
 
-
+#include "config.h"
 #if !HAVE_SNPRINTF || !HAVE_VSNPRINTF
 
 #include <stdio.h>
