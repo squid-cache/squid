@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.51 1998/02/27 09:07:25 kostas Exp $
+ * $Id: util.c,v 1.52 1998/02/28 16:17:28 kostas Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -532,7 +532,7 @@ xxfree(void *s)
 #endif
     free(s);
 #if MEM_GEN_TRACE
-	if (tracefp)
+	if (tracefp && s)
     fprintf(tracefp,"f:%p\n",s);
 #endif
 }
