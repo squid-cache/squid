@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.287 1998/10/01 22:28:26 wessels Exp $
+ * $Id: comm.cc,v 1.288 1998/10/08 02:40:06 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -404,7 +404,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     fde *F = &fd_table[sock];
     int x;
     int err = 0;
-    int errlen;
+    socklen_t errlen;
     assert(ntohs(address->sin_port) != 0);
     /* Establish connection. */
     errno = 0;

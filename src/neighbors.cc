@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.256 1998/10/03 03:56:54 wessels Exp $
+ * $Id: neighbors.cc,v 1.257 1998/10/08 02:40:07 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -122,12 +122,16 @@ peerAllowedToUse(const peer * p, request_t * request)
     int do_ping = 1;
     aclCheck_t checklist;
     assert(request != NULL);
-    if (request->flags.nocache)
-	if (neighborType(p, request) == PEER_SIBLING)
+    if (neighborType(p, request) == PEER_SIBLING) {
+	if (request->flags.nocache)
 	    return 0;
-    if (request->flags.refresh)
-	if (neighborType(p, request) == PEER_SIBLING)
+	if (request->flags.refresh)
 	    return 0;
+	if (request->flags.loopdetect)
+	    return 0;
+	if (request->flags.need_validation)
+	    return 0;
+    }
     if (p->pinglist == NULL && p->access == NULL)
 	return do_ping;
     do_ping = 0;
@@ -493,8 +497,8 @@ peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
     if (p->digest.flags.disabled) {
 	debug(15, 5) ("peerDigestLookup: Disabled!\n");
 	return LOOKUP_NONE;
-    } else if (!peerAllowedToUse(p, request)) {
-	debug(15, 5) ("peerDigestLookup: !peerAllowedToUse()\n");
+    } else if (!peerHTTPOkay(p, request)) {
+	debug(15, 5) ("peerDigestLookup: !peerHTTPOkay()\n");
 	return LOOKUP_NONE;
     } else if (p->digest.flags.usable) {
 	debug(15, 5) ("peerDigestLookup: Usable!\n");
