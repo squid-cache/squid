@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: RunCache.in,v 1.6 1996/07/09 03:41:15 wessels Exp $
+#  $Id: RunCache.in,v 1.7 1996/10/31 07:28:58 wessels Exp $
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -16,9 +16,9 @@ fi
 
 failcount=0
 while : ; do
-	echo "Running: squid -s $conf >> $logdir/squid.out 2>&1"
+	echo "Running: squid -sY $conf >> $logdir/squid.out 2>&1"
 	start=`date '+%d%H%M%S'`
-	squid -s $conf >> $logdir/squid.out 2>&1
+	squid -sY $conf >> $logdir/squid.out 2>&1
 	stop=`date '+%d%H%M%S'`
 	t=`expr $stop - $start`
 	if test 0 -le $t -a $t -lt 5 ; then
