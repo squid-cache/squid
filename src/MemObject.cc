@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.9 2003/06/26 12:51:57 robertc Exp $
+ * $Id: MemObject.cc,v 1.10 2003/07/23 10:12:33 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -291,7 +291,7 @@ MemObject::lowestMemReaderOffset() const
 bool
 MemObject::readAheadPolicyCanRead() const
 {
-    return (size_t)endOffset() - getReply()->hdr_sz < lowestMemReaderOffset() + Config.readAheadGap;
+    return (size_t)endOffset() - getReply()->hdr_sz < lowestMemReaderOffset() + (Config.readAheadGap << 10);
 }
 
 void
