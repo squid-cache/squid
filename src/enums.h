@@ -459,9 +459,6 @@ typedef enum {
     MEM_ACL_NAME_LIST,
     MEM_ACL_DENY_INFO_LIST,
     MEM_ACL,
-#if SQUID_SNMP
-    MEM_SNMPCONF,
-#endif
     MEM_ACL_LIST,
     MEM_ACL_ACCESS,
     MEM_ACLCHECK_T,
