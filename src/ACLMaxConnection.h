@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLMaxConnection.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,11 +33,12 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLMAXCONNECTION_H
+#define SQUID_ACLMAXCONNECTION_H
+#include "ACL.h"
+#include "ACLChecklist.h"
 
-class ACLSourceIP : public ACLIP
+class ACLMaxConnection : public ACL
 {
 
 public:
@@ -45,14 +46,25 @@ public:
     void operator delete(void *);
     virtual void deleteSelf() const;
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    ACLMaxConnection(char const *);
+    ACLMaxConnection(ACLMaxConnection const &);
+    ~ACLMaxConnection();
+    ACLMaxConnection&operator=(ACLMaxConnection const &);
 
-private:
+    virtual ACL *clone()const;
+    virtual char const *typeString() const;
+    virtual void parse();
+    virtual int match(ACLChecklist *checklist);
+    virtual wordlist *dump() const;
+    virtual bool valid () const;
+    virtual void prepareForUse();
+
+protected:
     static MemPool *Pool;
     static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
+    static ACLMaxConnection RegistryEntry_;
+    char const *class_;
+    int limit;
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+#endif /* SQUID_ACLMAXCONNECTION_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLMaxUserIP.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,11 +33,12 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLMAXUSERIP_H
+#define SQUID_ACLMAXUSERIP_H
+#include "ACL.h"
+#include "ACLChecklist.h"
 
-class ACLSourceIP : public ACLIP
+class ACLMaxUserIP : public ACL
 {
 
 public:
@@ -45,14 +46,37 @@ public:
     void operator delete(void *);
     virtual void deleteSelf() const;
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
+    ACLMaxUserIP(char const *);
+    ACLMaxUserIP(ACLMaxUserIP const &);
+    ~ACLMaxUserIP();
+    ACLMaxUserIP&operator=(ACLMaxUserIP const &);
+
     virtual ACL *clone()const;
+    virtual char const *typeString() const;
+    virtual void parse();
+    virtual int match(ACLChecklist *checklist);
+    virtual wordlist *dump() const;
+    virtual bool valid () const;
+    virtual bool requiresRequest() const {return true;}
 
 private:
     static MemPool *Pool;
     static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
+    static ACLMaxUserIP RegistryEntry_;
+
+    int match(auth_user_request_t *, struct in_addr const &);
+    char const *class_;
+    size_t max;
+
+    struct Flags
+    {
+        Flags() : strict(0){}
+
+unsigned int strict:
+        1;
+    }
+
+    flags;
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+#endif /* SQUID_ACLMAXUSERIP_H */

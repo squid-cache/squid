@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLProtocol.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,26 +33,37 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLPROTOCOL_H
+#define SQUID_ACLPROTOCOL_H
+#include "ACLStrategy.h"
+#include "ACLStrategised.h"
 
-class ACLSourceIP : public ACLIP
+class ACLProtocolStrategy : public ACLStrategy<protocol_t>
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
+    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
+    virtual bool requiresRequest() const {return true;}
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    static ACLProtocolStrategy *Instance();
+    /* Not implemented to prevent copies of the instance. */
+    /* Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends */
+    ACLProtocolStrategy(ACLProtocolStrategy const &);
 
 private:
-    static MemPool *Pool;
-    static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
+    static ACLProtocolStrategy Instance_;
+    ACLProtocolStrategy(){}
+
+    ACLProtocolStrategy&operator=(ACLProtocolStrategy const &);
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+class ACLProtocol
+{
+
+private:
+    static ACL::Prototype RegistryProtoype;
+    static ACLStrategised<protocol_t> RegistryEntry_;
+};
+
+#endif /* SQUID_ACLPROTOCOL_H */

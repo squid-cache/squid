@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.120 2003/02/21 22:50:08 robertc Exp $
+ * $Id: globals.h,v 1.121 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,7 +46,6 @@ extern char *volatile debug_options;	/* NULL */
 extern char ThisCache[SQUIDHOSTNAMELEN << 1];
 extern char ThisCache2[SQUIDHOSTNAMELEN << 1];
 extern char config_input_line[BUFSIZ];
-extern const char *AclMatchedName;	/* NULL */
 extern const char *DefaultConfigFile;	/* DEFAULT_CONFIG_FILE */
 extern const char *RequestMethodStr[];
 extern const char *ProtocolStr[];

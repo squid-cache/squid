@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.468 2003/02/21 22:50:10 robertc Exp $
+ * $Id: protos.h,v 1.469 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,8 +55,6 @@ SQUIDCEXTERN int logTypeIsATcpHit(log_type);
  * cache_cf.c
  */
 SQUIDCEXTERN int parseConfigFile(const char *file_name);
-SQUIDCEXTERN void intlistDestroy(intlist **);
-SQUIDCEXTERN int intlistFind(intlist * list, int i);
 SQUIDCEXTERN const char *wordlistAdd(wordlist **, const char *);
 SQUIDCEXTERN void wordlistAddWl(wordlist **, wordlist *);
 SQUIDCEXTERN void wordlistJoin(wordlist **, wordlist **);
@@ -919,10 +917,6 @@ SQUIDCEXTERN void pconnPush(int, const char *host, u_short port);
 SQUIDCEXTERN int pconnPop(const char *host, u_short port);
 SQUIDCEXTERN void pconnInit(void);
 
-SQUIDCEXTERN int asnMatchIp(void *, struct in_addr);
-SQUIDCEXTERN void asnInit(void);
-SQUIDCEXTERN void asnFreeMemory(void);
-
 /* tools.c */
 SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);
 SQUIDCEXTERN void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
@@ -1065,10 +1059,6 @@ SQUIDCEXTERN void WIN32_Exit(void);
 SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
 SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
 SQUIDCEXTERN void free_externalAclHelper(external_acl **);
-SQUIDCEXTERN void aclParseExternal(void *curlist);
-SQUIDCEXTERN void aclDestroyExternal(void **curlust);
-SQUIDCEXTERN int aclMatchExternal(void *dataptr, ACLChecklist * ch);
-SQUIDCEXTERN wordlist *aclDumpExternal(void *dataptr);
 typedef void EAH(void *data, void *result);
 SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
 SQUIDCEXTERN void externalAclInit(void);

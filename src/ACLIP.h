@@ -81,7 +81,6 @@ public:
     typedef SplayNode<acl_ip_data *> IPSplay;
 
     virtual char const *typeString() const = 0;
-    virtual squid_acl aclType() const = 0;
     virtual void parse();
     //    virtual bool isProxyAuth() const {return true;}
     virtual int match(ACLChecklist *checklist) = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.41 2003/02/21 22:50:07 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.42 2003/02/25 12:24:35 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -44,6 +44,7 @@
 #include "MemObject.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
+#include "ACL.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.453 2003/02/22 14:59:35 hno Exp $
+ * $Id: structs.h,v 1.454 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,20 +49,6 @@ struct _dlink_list
     dlink_node *tail;
 };
 
-struct _acl_user_ip_data
-{
-    size_t max;
-
-    struct
-    {
-
-unsigned int strict:
-        1;
-    }
-
-    flags;
-};
-
 struct _acl_name_list
 {
     char name[ACL_NAME_SZ];
@@ -83,15 +69,6 @@ struct _acl_deny_info_list
     acl_name_list *acl_list;
     acl_deny_info_list *next;
 };
-
-#if USE_ARP_ACL
-
-struct _acl_arp_data
-{
-    char eth[6];
-};
-
-#endif
 
 
 class acl_access;
@@ -159,19 +136,6 @@ struct _wordlist
     wordlist *next;
 };
 
-struct _intlist
-{
-    int i;
-    intlist *next;
-};
-
-struct _intrange
-{
-    int i;
-    int j;
-    intrange *next;
-};
-
 struct _ushortlist
 {
     u_short i;
@@ -192,31 +156,13 @@ struct _sockaddr_in_list
     sockaddr_in_list *next;
 };
 
-struct _http_port_list
-{
-    http_port_list *next;
-
-    struct sockaddr_in s;
-    char *protocol;		/* protocol name */
-    char *name;			/* visible name */
-    char *defaultsite;		/* default web site */
-
-unsigned int transparent:
-    1;	/* transparent proxy */
-
-unsigned int accel:
-    1;	/* HTTP accelerator */
-
-unsigned int vhost:
-    1;	/* uses host header */
-    int vport;			/* virtual port support, -1 for dynamic, >0 static*/
-};
-
 #if USE_SSL
 
 struct _https_port_list
 {
-    http_port_list http;	/* must be first */
+    https_port_list *next;
+
+    struct sockaddr_in s;
     char *cert;
     char *key;
     int version;

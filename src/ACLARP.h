@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLARP.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,11 +33,19 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLARP_H
+#define SQUID_ACLARP_H
+#include "ACL.h"
+#include "ACLChecklist.h"
+#include "splay.h"
 
-class ACLSourceIP : public ACLIP
+struct acl_arp_data
+{
+    char eth[6];
+    void deleteSelf() const {delete this;}
+};
+
+class ACLARP : public ACL
 {
 
 public:
@@ -45,14 +53,24 @@ public:
     void operator delete(void *);
     virtual void deleteSelf() const;
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    ACLARP(char const *);
+    ACLARP(ACLARP const &);
+    ~ACLARP();
+    ACLARP&operator=(ACLARP const &);
 
-private:
+    virtual ACL *clone()const;
+    virtual char const *typeString() const;
+    virtual void parse();
+    virtual int match(ACLChecklist *checklist);
+    virtual wordlist *dump() const;
+    virtual bool valid () const;
+
+protected:
     static MemPool *Pool;
     static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
+    static ACLARP RegistryEntry_;
+    SplayNode<acl_arp_data *> *data;
+    char const *class_;
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+#endif /* SQUID_ACLARP_H */

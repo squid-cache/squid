@@ -65,8 +65,6 @@ public:
     ~ACLIdent();
 
     virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-
     virtual void parse();
     virtual bool isProxyAuth() const {return true;}
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLASN.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLASN.h,v 1.3 2003/02/25 12:22:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,19 +35,38 @@
 
 #ifndef SQUID_ACLASN_H
 #define SQUID_ACLASN_H
+#include "ACLData.h"
+#include "List.h"
+#include "ACLStrategised.h"
 #include "ACLChecklist.h"
-#include "ACLIP.h"
 
-class ASNLookup : public ACLChecklist::AsyncState
+SQUIDCEXTERN int asnMatchIp(List<int> *, struct in_addr);
+SQUIDCEXTERN void asnInit(void);
+SQUIDCEXTERN void asnFreeMemory(void);
+
+class ACLASN : public ACLData<struct in_addr>
 {
 
 public:
-    static ASNLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
+    void *operator new(size_t);
+    void operator delete(void *);
+    virtual void deleteSelf() const;
+
+    virtual ~ACLASN();
+
+    virtual bool match(struct in_addr);
+    virtual wordlist *dump();
+    virtual void parse();
+    virtual ACLData<struct in_addr> *clone() const;
+    virtual void prepareForUse();
 
 private:
-    static ASNLookup instance_;
-    static IPH LookupDone;
+    static MemPool *Pool;
+    static ACL::Prototype SourceRegistryProtoype;
+    static ACLStrategised<struct in_addr> SourceRegistryEntry_;
+    static ACL::Prototype DestinationRegistryProtoype;
+    static ACLStrategised<struct in_addr> DestinationRegistryEntry_;
+    List<int> *data;
 };
 
 #endif /* SQUID_ACLASN_H */

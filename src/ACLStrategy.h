@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLStrategy.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,26 +33,25 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
-#include "ACLIP.h"
+#ifndef SQUID_ACLSTRATEGY_H
+#define SQUID_ACLSTRATEGY_H
+#include "ACL.h"
+#include "ACLData.h"
 
-class ACLSourceIP : public ACLIP
+/* Perhaps this should live in ACL? */
+
+template<class M>
+
+class ACLStrategy
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
+    typedef M MatchType;
+    virtual int match (ACLData<M> * &, ACLChecklist *) = 0;
+    virtual bool requiresRequest() const {return false;}
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    virtual ~ACLStrategy(){}}
 
-private:
-    static MemPool *Pool;
-    static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
-};
+;
 
-#endif /* SQUID_ACLSOURCEIP_H */
+#endif /* SQUID_ACLSTRATEGY_H */

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.61 2003/02/17 07:01:35 robertc Exp $
+#  $Id: Makefile.am,v 1.62 2003/02/25 12:24:32 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -100,6 +100,12 @@ else
 IDENTSOURCE =
 endif
 
+if ENABLE_ARP_ACL
+ARP_ACL_SOURCE = ACLARP.cc ACLARP.h
+else
+ARP_ACL_SOURCE =
+endif
+
 AM_CFLAGS = -Werror -Wall
 AM_CXXFLAGS = -Werror -Wall
 
@@ -137,6 +143,7 @@ squidclient_SOURCES = client.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 
 EXTRA_squid_SOURCES = \
+	$(ARP_ACL_SOURCE) \
 	$(DELAY_POOL_SOURCE) \
 	dns.cc \
 	dnsserver.cc \
@@ -152,6 +159,11 @@ EXTRA_squid_SOURCES = \
 	win32.cc
 
 squid_ACLSOURCES = \
+	$(ARP_ACL_SOURCE) \
+	ACLASN.cc \
+	ACLASN.h \
+	ACLDestinationASN.h \
+	ACLSourceASN.h \
 	ACLBrowser.cc \
 	ACLBrowser.h \
 	ACLData.h \
@@ -161,17 +173,35 @@ squid_ACLSOURCES = \
 	ACLDestinationIP.h \
 	ACLDomainData.h \
 	ACLDomainData.cc \
+	ACLIntRange.cc \
+	ACLIntRange.h \
 	ACLIP.cc \
 	ACLIP.h \
-	ACLMatchStrategy.h \
+	ACLMaxConnection.cc \
+	ACLMaxConnection.h \
+	ACLMaxUserIP.cc \
+	ACLMaxUserIP.h \
+	ACLMethod.cc \
+	ACLMethod.h \
+	ACLMethodData.cc \
+	ACLMethodData.h \
 	ACLMyIP.cc \
 	ACLMyIP.h \
+	ACLMyPort.cc \
+	ACLMyPort.h \
+	ACLProtocol.cc \
+	ACLProtocol.h \
+	ACLProtocolData.cc \
+	ACLProtocolData.h \
 	ACLProxyAuth.cc \
 	ACLProxyAuth.h \
 	ACLReferer.cc \
 	ACLReferer.h \
 	ACLRegexData.cc \
 	ACLRegexData.h \
+	ACLReplyHeaderStrategy.h \
+	ACLReplyMIMEType.cc \
+	ACLReplyMIMEType.h \
 	ACLRequestHeaderStrategy.h \
 	ACLRequestMIMEType.cc \
 	ACLRequestMIMEType.h \
@@ -181,6 +211,9 @@ squid_ACLSOURCES = \
 	ACLSourceIP.h \
 	ACLStrategised.cc \
 	ACLStrategised.h \
+	ACLStrategy.h \
+	ACLStringData.cc \
+	ACLStringData.h \
 	ACLTime.cc \
 	ACLTime.h \
 	ACLTimeData.cc \
@@ -189,6 +222,8 @@ squid_ACLSOURCES = \
 	ACLUrl.h \
 	ACLUrlPath.cc \
 	ACLUrlPath.h \
+	ACLUrlPort.cc \
+	ACLUrlPort.h \
 	ACLUserData.cc \
 	ACLUserData.h 
 
@@ -409,6 +444,7 @@ ufsdump_SOURCES = debug.cc \
 	access_log.cc \
 	acl.cc \
 	$(squid_ACLSOURCES) \
+	ACLChecklist.cc \
 	asn.cc \
 	authenticate.cc \
 	cache_cf.cc \
