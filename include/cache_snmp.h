@@ -11,14 +11,6 @@
 #include "snmp_oidlist.h"
 #include "mib.h"
 
-/* debugging redirected to squid (DW approach) */
-
-#ifdef __STDC__
-void (*snmplib_debug_hook) (int,char *,...); 
-#else
-void (*snmplib_debug_hook) (va_alist);
-#endif
-
 /* mib stuff here */
 
 /* MIB definitions
