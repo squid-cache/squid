@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.431 2002/04/04 21:33:27 hno Exp $
+ * $Id: protos.h,v 1.432 2002/04/06 08:49:27 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -826,14 +826,6 @@ extern StatHistBinDumper statHistEnumDumper;
 extern StatHistBinDumper statHistIntDumper;
 
 
-/* MemMeter */
-extern void memMeterSyncHWater(MemMeter * m);
-#define memMeterCheckHWater(m) { if ((m).hwater_level < (m).level) memMeterSyncHWater(&(m)); }
-#define memMeterInc(m) { (m).level++; memMeterCheckHWater(m); }
-#define memMeterDec(m) { (m).level--; }
-#define memMeterAdd(m, sz) { (m).level += (sz); memMeterCheckHWater(m); }
-#define memMeterDel(m, sz) { (m).level -= (sz); }
-
 /* mem */
 extern void memInit(void);
 extern void memClean(void);
@@ -851,23 +843,28 @@ extern void memFreeString(size_t size, void *);
 extern void memFreeBuf(size_t size, void *);
 extern FREE *memFreeBufFunc(size_t size);
 extern int memInUse(mem_type);
-extern size_t memTotalAllocated(void);
 extern void memDataInit(mem_type, const char *, size_t, int);
 extern void memCheckInit(void);
 
 /* MemPool */
 extern MemPool *memPoolCreate(const char *label, size_t obj_size);
-extern void memPoolDestroy(MemPool * pool);
 extern void *memPoolAlloc(MemPool * pool);
 extern void memPoolFree(MemPool * pool, void *obj);
-extern int memPoolWasUsed(const MemPool * pool);
-extern int memPoolInUseCount(const MemPool * pool);
-extern size_t memPoolInUseSize(const MemPool * pool);
-extern int memPoolUsedCount(const MemPool * pool);
-extern void memPoolReport(const MemPool * pool, StoreEntry * e);
+extern void memPoolDestroy(MemPool ** pool);
+extern MemPoolIterator * memPoolGetFirst(void);
+extern MemPool * memPoolGetNext(MemPoolIterator ** iter);
+extern void memPoolSetChunkSize(MemPool * pool, size_t chunksize);
+extern void memPoolSetIdleLimit(size_t new_idle_limit);
+extern int memPoolGetStats(MemPoolStats * stats, MemPool * pool);
+extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
+extern void memPoolClean(time_t maxage);
 
 /* Mem */
 extern void memReport(StoreEntry * e);
+extern void memConfigure(void);
+extern void memPoolCleanIdlePools(void *unused);
+extern int memPoolInUseCount(MemPool * pool);
+extern int memPoolsTotalAllocated(void);
 
 extern int stmemFreeDataUpto(mem_hdr *, int);
 extern void stmemAppend(mem_hdr *, const char *, int);
@@ -1153,9 +1150,6 @@ extern void dlinkNodeDelete(dlink_node * m);
 extern dlink_node *dlinkNodeNew(void);
 
 extern void kb_incr(kb_t *, size_t);
-extern double gb_to_double(const gb_t *);
-extern const char *gb_to_str(const gb_t *);
-extern void gb_flush(gb_t *);	/* internal, do not use this */
 extern int stringHasWhitespace(const char *);
 extern int stringHasCntl(const char *);
 extern void linklistPush(link_list **, void *);

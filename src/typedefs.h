@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.132 2001/10/10 15:17:42 adrian Exp $
+ * $Id: typedefs.h,v 1.133 2002/04/06 08:49:28 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,12 +45,6 @@ typedef struct {
     size_t bytes;
     size_t kb;
 } kb_t;
-
-typedef struct {
-    size_t count;
-    size_t bytes;
-    size_t gb;
-} gb_t;
 
 /*
  * grep '^struct' structs.h \
@@ -163,9 +157,6 @@ typedef struct _authConfig authConfig;
 typedef struct _cacheSwap cacheSwap;
 typedef struct _StatHist StatHist;
 typedef struct _String String;
-typedef struct _MemMeter MemMeter;
-typedef struct _MemPoolMeter MemPoolMeter;
-typedef struct _MemPool MemPool;
 typedef struct _ClientInfo ClientInfo;
 typedef struct _cd_guess_stats cd_guess_stats;
 typedef struct _CacheDigest CacheDigest;

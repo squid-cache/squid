@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.20 2002/01/01 09:47:48 adrian Exp $
+#  $Id: Makefile.am,v 1.21 2002/04/06 08:49:27 adrian Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -155,7 +155,6 @@ squid_SOURCES = \
 	logfile.c \
 	main.c \
 	mem.c \
-	MemPool.c \
 	MemBuf.c \
 	mime.c \
 	multicast.c \

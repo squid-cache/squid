@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.10 2001/08/16 00:16:22 hno Exp $
+ * $Id: store_repl_lru.cc,v 1.11 2002/04/06 08:49:46 adrian Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -281,8 +281,10 @@ createRemovalPolicy_lru(wordlist * args)
     /* no arguments expected or understood */
     assert(!args);
     /* Initialize */
-    if (!lru_node_pool)
+    if (!lru_node_pool) {
 	lru_node_pool = memPoolCreate("LRU policy node", sizeof(LruNode));
+	memPoolSetChunkSize(lru_node_pool, 512 * 1024);
+    }
     /* Allocate the needed structures */
     lru_data = xcalloc(1, sizeof(*lru_data));
     policy = cbdataAlloc(RemovalPolicy);

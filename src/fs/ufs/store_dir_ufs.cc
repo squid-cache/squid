@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.41 2002/04/01 21:53:22 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.42 2002/04/06 08:49:44 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1670,7 +1670,7 @@ storeUfsDirParse(SwapDir * sd, int index, char *path)
 static void
 storeUfsDirDone(void)
 {
-    memPoolDestroy(ufs_state_pool);
+    memPoolDestroy(&ufs_state_pool);
     ufs_initialised = 0;
 }
 

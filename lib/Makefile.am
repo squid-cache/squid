@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.3 2001/11/21 23:47:12 hno Exp $
+#  $Id: Makefile.am,v 1.4 2002/04/06 08:49:26 adrian Exp $
 #
 
 if NEED_OWN_SNPRINTF
@@ -26,6 +26,7 @@ EXTRA_libmiscutil_a_SOURCES = \
 	md5.c \
 	snprintf.c
 libmiscutil_a_SOURCES = \
+	MemPool.c \
 	Array.c \
 	base64.c \
 	getfullhostname.c \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.12 2002/04/04 23:59:27 hno Exp $
+ * $Id: auth_digest.cc,v 1.13 2002/04/06 08:49:37 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -238,8 +238,7 @@ authenticateDigestNonceShutdown(void)
     }
     if (digest_nonce_pool) {
 	assert(memPoolInUseCount(digest_nonce_pool) == 0);
-	memPoolDestroy(digest_nonce_pool);
-	digest_nonce_pool = NULL;
+	memPoolDestroy(&digest_nonce_pool);
     }
     debug(29, 2) ("authenticateDigestNonceShutdown: Nonce cache shutdown\n");
 }
@@ -480,8 +479,7 @@ authDigestUserShutdown(void)
     }
     if (digest_user_pool) {
 	assert(memPoolInUseCount(digest_user_pool) == 0);
-	memPoolDestroy(digest_user_pool);
-	digest_user_pool = NULL;
+	memPoolDestroy(&digest_user_pool);
     }
 }
 
@@ -544,8 +542,7 @@ authDigestRequestShutdown(void)
     /* No requests should be in progress when we get here */
     if (digest_request_pool) {
 	assert(memPoolInUseCount(digest_request_pool) == 0);
-	memPoolDestroy(digest_request_pool);
-	digest_request_pool = NULL;
+	memPoolDestroy(&digest_request_pool);
     }
 }
 

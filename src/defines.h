@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.100 2002/04/04 23:59:25 hno Exp $
+ * $Id: defines.h,v 1.101 2002/04/06 08:49:27 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -230,10 +230,6 @@
 
 /* were to look for errors if config path fails */
 #define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"
-
-/* gb_type operations */
-#define gb_flush_limit (0x3FFFFFFF)
-#define gb_inc(gb, delta) { if ((gb)->bytes > gb_flush_limit || delta > gb_flush_limit) gb_flush(gb); (gb)->bytes += delta; (gb)->count++; }
 
 /* iteration for HttpHdrRange */
 #define HttpHdrRangeInitPos (-1)
