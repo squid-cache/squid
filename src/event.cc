@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.14 1998/05/12 20:16:33 wessels Exp $
+ * $Id: event.cc,v 1.15 1998/05/13 21:20:42 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -109,7 +109,6 @@ eventRun(void)
     event->func = NULL;
     event->arg = NULL;
     tasks = event->next;
-    safe_free(event);
     if (NULL != arg) {
         int valid = cbdataValid(arg);
         cbdataUnlock(arg);
@@ -118,6 +117,7 @@ eventRun(void)
     }
     debug(41, 7) ("eventRun: Running '%s'\n", event->name);
     func(arg);
+    safe_free(event);
 }
 
 time_t
