@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.64 1999/01/22 03:49:22 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.65 1999/01/26 06:16:33 glenn Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -118,18 +118,6 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 	    Answer->val.integer = xmalloc(Answer->val_len);
 	    Answer->type = ASN_INTEGER;
 	    *(Answer->val.integer) = (snint) Config.memMaxSize;
-	    break;
-	case CONF_ST_MHIWM:	/* DELETE ME */
-	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = xmalloc(Answer->val_len);
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) 0;
-	    break;
-	case CONF_ST_MLOWM:	/* DELETE ME */
-	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = xmalloc(Answer->val_len);
-	    Answer->type = ASN_INTEGER;
-	    *(Answer->val.integer) = (snint) 0;
 	    break;
 	case CONF_ST_SWMAXSZ:
 	    Answer->val_len = sizeof(snint);
