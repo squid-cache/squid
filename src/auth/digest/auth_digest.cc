@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.31 2003/08/10 11:00:48 robertc Exp $
+ * $Id: auth_digest.cc,v 1.32 2003/11/07 17:23:04 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -693,7 +693,14 @@ digest_request_h::authenticate(HttpRequest * request, ConnStateData::Pointer con
     debug(29, 9) ("\nResponse = '%s'\n"
                   "squid is = '%s'\n", digest_request->response, Response);
 
-    if (strcasecmp(digest_request->response, Response)) {
+    if (strcasecmp(digest_request->response, Response) != 0) {
+        if (!digest_request->flags.helper_queried) {
+            /* Query the helper in case the password has changed */
+            digest_request->flags.helper_queried = 1;
+            digest_request->credentials_ok = Pending;
+            return;
+        }
+
         if (digestConfig->PostWorkaround && request->method != METHOD_GET) {
             /* Ugly workaround for certain very broken browsers using the
              * wrong method to calculate the request-digest on POST request.
@@ -1449,6 +1456,7 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
          * username cache */
         /* store user in hash's */
         authenticateUserNameCacheAdd(auth_user);
+
         /*
          * Add the digest to the user so we can tell if a hacking
          * or spoofing attack is taking place. We do this by assuming

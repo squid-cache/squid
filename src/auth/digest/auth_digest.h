@@ -87,6 +87,9 @@ unsigned int authinfo_sent:
 
 unsigned int nonce_stale:
         1;
+
+unsigned int helper_queried:
+        1;
     }
 
     flags;
