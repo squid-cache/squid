@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.33 1998/06/02 04:18:15 wessels Exp $
+ * $Id: access_log.cc,v 1.34 1998/07/14 23:58:08 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -107,8 +107,10 @@ static const char c2x[] =
 static char *
 log_quote(const char *header)
 {
-    int c, i;
-    char *buf, *buf_cursor;
+    int c;
+    int i;
+    char *buf;
+    char *buf_cursor;
     if (header == NULL) {
 	buf = xcalloc(1, 1);
 	*buf = '\0';
