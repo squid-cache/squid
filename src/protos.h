@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.273 1998/09/29 01:33:00 wessels Exp $
+ * $Id: protos.h,v 1.274 1998/09/30 04:34:08 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1069,7 +1069,7 @@ extern peer *carpSelectParent(request_t *);
 #if DELAY_POOLS
 extern int delayClient(clientHttpRequest *);
 extern void delayPoolsInit(void);
-extern void delayPoolsUpdate(int);
+extern EVH delayPoolsUpdate;
 extern int delayMostBytesWanted(const MemObject * mem, int max);
 extern int delayMostBytesAllowed(const MemObject * mem);
 extern void delayBytesIn(delay_id, int qty);
