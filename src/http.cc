@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.47 1996/04/15 23:02:26 wessels Exp $ */
+/* $Id: http.cc,v 1.48 1996/04/16 04:23:12 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -11,11 +11,8 @@
 
 typedef struct _httpdata {
     StoreEntry *entry;
-    char host[SQUIDHOSTNAMELEN + 1];
-    int port;
-    int method;
+    request_t *REQ;
     char *req_hdr;
-    char request[MAX_URL + 1];
     char *icp_page_ptr;		/* Used to send proxy-http request: 
 				 * put_free_8k_page(me) if the lifetime
 				 * expires */
@@ -24,6 +21,7 @@ typedef struct _httpdata {
 				 * icpReadWriteData */
     char *reply_hdr;
     int reply_hdr_state;
+    int free_request;
 } HttpData;
 
 static void httpCloseAndFree(fd, data)
@@ -43,44 +41,15 @@ static void httpCloseAndFree(fd, data)
 	}
 	if (data->icp_rwd_ptr)
 	    safe_free(data->icp_rwd_ptr);
+	if (data->free_request)
+	    safe_free(data->REQ);
 	xfree(data);
     }
 }
 
-static int http_url_parser(url, host, port, request)
-     char *url;
-     char *host;
-     int *port;
-     char *request;
-{
-    static char hostbuf[MAX_URL];
-    static char proto[MAX_URL];
-    int t;
-    char *s = NULL;
-
-    /* initialize everything */
-    (*port) = urlDefaultPort(PROTO_HTTP);
-    proto[0] = hostbuf[0] = request[0] = host[0] = '\0';
-
-    t = sscanf(url, "%[a-zA-Z]://%[^/]%s", proto, hostbuf, request);
-    if (t < 2)
-	return -1;
-    if (strcasecmp(proto, "http") != 0) {
-	return -1;
-    } else if (t == 2)
-	strcpy(request, "/");
-    if ((s = strchr(hostbuf, ':')) && *(s + 1)) {
-	*s = '\0';
-	*port = atoi(s + 1);
-    }
-    strncpy(host, hostbuf, SQUIDHOSTNAMELEN);
-    return 0;
-}
-
-int httpCachable(url, method, req_hdr)
+int httpCachable(url, method)
      char *url;
      int method;
-     char *req_hdr;
 {
     wordlist *p = NULL;
 
@@ -421,15 +390,16 @@ static void httpSendRequest(fd, data)
     int len = 0;
     int buflen;
     int cfd = -1;
-    char *Method = RequestMethodStr[data->method];
+    request_t *req = data->REQ;
+    char *Method = RequestMethodStr[req->method];
 
     debug(11, 5, "httpSendRequest: FD %d: data %p.\n", fd, data);
-    buflen = strlen(Method) + strlen(data->request);
+    buflen = strlen(Method) + strlen(req->urlpath);
     if (data->req_hdr)
 	buflen += strlen(data->req_hdr);
     buflen += 512;		/* lots of extra */
 
-    if (data->method == METHOD_POST && data->req_hdr) {
+    if (req->method == METHOD_POST && data->req_hdr) {
 	if ((t = strstr(data->req_hdr, "\r\n\r\n"))) {
 	    post_buf = xstrdup(t + 4);
 	    *(t + 4) = '\0';
@@ -444,7 +414,7 @@ static void httpSendRequest(fd, data)
     }
     memset(buf, '\0', buflen);
 
-    sprintf(buf, "%s %s HTTP/1.0\r\n", Method, data->request);
+    sprintf(buf, "%s %s HTTP/1.0\r\n", Method, req->urlpath);
     len = strlen(buf);
     if (data->req_hdr) {	/* we have to parse the request header */
 	xbuf = xstrdup(data->req_hdr);
@@ -504,10 +474,11 @@ static void httpConnInProgress(fd, data)
      HttpData *data;
 {
     StoreEntry *entry = data->entry;
+    request_t *req = data->REQ;
 
     debug(11, 5, "httpConnInProgress: FD %d data=%p\n", fd, data);
 
-    if (comm_connect(fd, data->host, data->port) != COMM_OK) {
+    if (comm_connect(fd, req->host, req->port) != COMM_OK) {
 	debug(11, 5, "httpConnInProgress: FD %d errno=%d\n", fd, errno);
 	switch (errno) {
 	case EINPROGRESS:
@@ -539,19 +510,23 @@ int proxyhttpStart(e, url, entry)
     int sock;
     int status;
     HttpData *data = NULL;
+    request_t *request = NULL;
 
-    debug(11, 3, "proxyhttpStart: <URL:%s>\n", url);
+    debug(11, 3, "proxyhttpStart: \"%s %s\"\n",
+	RequestMethodStr[request->method], url);
     debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
 
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
-
-    strncpy(data->request, url, sizeof(data->request) - 1);
-    data->method = entry->method;
-    data->port = e->ascii_port;
     data->req_hdr = entry->mem_obj->mime_hdr;
-    strncpy(data->host, e->host, sizeof(data->host) - 1);
+    request = (request_t *) xcalloc (1, sizeof(request_t));
+    data->free_request = 1;
+    data->REQ = request;
+
+    strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
+    request->port = e->ascii_port;
+    strncpy(request->urlpath, url, MAX_URL);
 
     if (e->proxy_only)
 	storeStartDeleteBehind(entry);
@@ -567,14 +542,14 @@ int proxyhttpStart(e, url, entry)
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(data->host)) {
+    if (!ipcache_gethostbyname(request->host)) {
 	debug(11, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
-    if ((status = comm_connect(sock, data->host, data->port))) {
+    if ((status = comm_connect(sock, request->host, request->port))) {
 	if (status != EINPROGRESS) {
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    httpCloseAndFree(sock, data);
@@ -597,13 +572,12 @@ int proxyhttpStart(e, url, entry)
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
 	(PF) httpSendRequest, (void *) data);
     return COMM_OK;
-
 }
 
-int httpStart(unusedfd, url, method, req_hdr, entry)
+int httpStart(unusedfd, url, request, req_hdr, entry)
      int unusedfd;
      char *url;
-     int method;
+     request_t *request;
      char *req_hdr;
      StoreEntry *entry;
 {
@@ -611,20 +585,15 @@ int httpStart(unusedfd, url, method, req_hdr, entry)
     int sock, status;
     HttpData *data = NULL;
 
-    debug(11, 3, "httpStart: %s <URL:%s>\n", RequestMethodStr[method], url);
+    debug(11, 3, "httpStart: \"%s %s\"\n",
+	RequestMethodStr[request->method], url);
     debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
-    data->method = method;
     data->req_hdr = req_hdr;
+    data->REQ = request;
 
-    /* Parse url. */
-    if (http_url_parser(url, data->host, &data->port, data->request)) {
-	cached_error_entry(entry, ERR_INVALID_URL, NULL);
-	safe_free(data);
-	return COMM_ERROR;
-    }
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
@@ -636,14 +605,14 @@ int httpStart(unusedfd, url, method, req_hdr, entry)
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(data->host)) {
+    if (!ipcache_gethostbyname(request->host)) {
 	debug(11, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
-    if ((status = comm_connect(sock, data->host, data->port))) {
+    if ((status = comm_connect(sock, request->host, request->port))) {
 	if (status != EINPROGRESS) {
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    httpCloseAndFree(sock, data);

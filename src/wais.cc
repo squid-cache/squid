@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.24 1996/04/12 21:41:44 wessels Exp $ */
+/* $Id: wais.cc,v 1.25 1996/04/16 04:23:18 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -10,9 +10,9 @@
 
 typedef struct _waisdata {
     StoreEntry *entry;
-    char host[SQUIDHOSTNAMELEN + 1];
-    int port;
-    int method;
+    method_t method;
+    char *relayhost;
+    int relayport;
     char *mime_hdr;
     char request[MAX_URL];
 } WAISData;
@@ -24,20 +24,6 @@ static void waisCloseAndFree(fd, data)
     if (fd >= 0)
 	comm_close(fd);
     xfree(data);
-}
-
-
-static int wais_url_parser(url, host, port, request)
-     char *url;
-     char *host;
-     int *port;
-     char *request;
-{
-    strcpy(host, getWaisRelayHost());
-    *port = getWaisRelayPort();
-    strcpy(request, url);
-
-    return 0;
 }
 
 /* This will be called when timeout on read. */
@@ -239,7 +225,7 @@ void waisSendRequest(fd, data)
 int waisStart(unusedfd, url, method, mime_hdr, entry)
      int unusedfd;
      char *url;
-     int method;
+     method_t method;
      char *mime_hdr;
      StoreEntry *entry;
 {
@@ -247,11 +233,16 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
     int sock, status;
     WAISData *data = NULL;
 
-    debug(24, 3, "waisStart - url:%s, type:%s\n", url, RequestMethodStr[method]);
+    debug(24, 3, "waisStart: \"%s %s\"\n",
+	RequestMethodStr[method], url);
     debug(24, 4, "            header: %s\n", mime_hdr);
 
     data = (WAISData *) xcalloc(1, sizeof(WAISData));
     data->entry = entry;
+    data->method = method;
+    data->relayhost = getWaisRelayHost();
+    data->relayport = getWaisRelayPort();
+    data->mime_hdr = mime_hdr;
 
     if (!getWaisRelayHost()) {
 	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
@@ -259,10 +250,6 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 	safe_free(data);
 	return COMM_ERROR;
     }
-    /* Parse url. */
-    (void) wais_url_parser(url, data->host, &data->port, data->request);
-    data->method = method;
-    data->mime_hdr = mime_hdr;
 
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
@@ -275,20 +262,20 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(data->host)) {
+    if (!ipcache_gethostbyname(data->relayhost)) {
 	debug(24, 4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	waisCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
-    if ((status = comm_connect(sock, data->host, data->port))) {
+    if ((status = comm_connect(sock, data->relayhost, data->relayport))) {
 	if (status != EINPROGRESS) {
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    waisCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {
-	    debug(24, 5, "waisStart - conn %d EINPROGRESS\n", sock);
+	    debug(24, 5, "waisStart: FD %d EINPROGRESS\n", sock);
 	}
     }
     /* Install connection complete handler. */

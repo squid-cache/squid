@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.19 1996/04/15 22:53:46 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.20 1996/04/16 04:23:15 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -341,7 +341,7 @@ int neighborsUdpPing(proto)
      protodispatch_data *proto;
 {
     char *t = NULL;
-    char *host = proto->host;
+    char *host = proto->request->host;
     char *url = proto->url;
     StoreEntry *entry = proto->entry;
     struct hostent *hep = NULL;
@@ -532,7 +532,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 		inet_ntoa(from->sin_addr));
 	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = DONE;
-	    getFromOrgSource(0, entry);
+	    getFromCache(0, entry, NULL, entry->mem_obj->request);
 	}
 	return;
     }
@@ -552,7 +552,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	}
 	BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	entry->ping_status = DONE;
-	getFromCache(0, entry, e);
+	getFromCache(0, entry, e, entry->mem_obj->request);
 	e->hits++;
 	return;
     } else if ((header->opcode == ICP_OP_MISS) || (header->opcode == ICP_OP_DECHO)) {
@@ -600,7 +600,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	    debug(15, 6, "Receive MISSes from all neighbors and parents\n");
 	    /* pass in fd=0 here so getFromCache() looks up the real FD
 	     * and resets the timeout handler */
-	    getFromDefaultSource(0, entry);
+	    getFromCache(0, entry, NULL, entry->mem_obj->request);
 	    return;
 	}
     } else {
