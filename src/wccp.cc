@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.19 2001/02/17 07:30:44 hno Exp $
+ * $Id: wccp.cc,v 1.20 2002/03/27 18:00:55 wessels Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -225,6 +225,14 @@ wccpHandleUdp(int sock, void *not_used)
 	0,
 	(struct sockaddr *) &from,
 	&from_len);
+    debug(80, 3) ("wccpHandleUdp: %d bytes WCCP pkt from %s: type=%d, version=%d, change=%d, id=%d, number=%d\n",
+	len,
+	inet_ntoa(from.sin_addr),
+	ntohl(wccp_i_see_you.type),
+	ntohl(wccp_i_see_you.version),
+	ntohl(wccp_i_see_you.change),
+	ntohl(wccp_i_see_you.id),
+	ntohl(wccp_i_see_you.number));
     if (len < 0)
 	return;
     if (Config.Wccp.router.s_addr != from.sin_addr.s_addr)
