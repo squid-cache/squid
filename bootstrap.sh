@@ -65,8 +65,9 @@ AUTOCONF="autoconf${acver}" ; export AUTOCONF
 for dir in \
 	"" \
 	lib/libTrie
+	lib/cppunit-1.10.0
 do
-    if (
+    if [ -z "$dir" ] || [ -d $dir ] && [ ! -f $dir/configure ]; then
 	echo "Bootstrapping $dir"
 	cd ./$dir
 	# Bootstrap the autotool subsystems
@@ -86,9 +87,3 @@ do
 done
 
 echo "Autotool bootstrapping complete."
-
-#echo "bootstrapping sub projects."
-if [ -d lib/libTrie ] && [ ! -f lib/libTrie/configure ]; then
-	cd lib/libTrie && ./bootstrap.sh
-fi
-
