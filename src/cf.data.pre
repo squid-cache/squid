@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.319 2003/06/10 20:45:29 wessels Exp $
+# $Id: cf.data.pre,v 1.320 2003/06/18 13:10:12 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2738,7 +2738,7 @@ NAME: httpd_accel_surrogate_id
 IFDEF: ESI
 TYPE:  string
 LOC: Config.Accel.surrogate_id
-DEFAULT: none
+DEFAULT: unset-id
 DOC_START
 	Surrogates (http://www.esi.org/architecture_spec_1.0.html)
 	need an identification token to allow control targeting. Because
