@@ -1,3 +1,4 @@
+
 #include "squid.h"
 
 static char *storeLogTags[] =
@@ -109,10 +110,10 @@ storeLogOpen(void)
 	storelog_fd = -1;
     else
 	storelog_fd = file_open(Config.Log.store,
-		O_WRONLY | O_CREAT,
-		NULL,
-		NULL,
-		NULL);
+	    O_WRONLY | O_CREAT,
+	    NULL,
+	    NULL,
+	    NULL);
     if (storelog_fd < 0)
-        debug(20, 1) ("Store logging disabled\n");
+	debug(20, 1) ("Store logging disabled\n");
 }

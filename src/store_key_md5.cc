@@ -1,5 +1,7 @@
 #include "squid.h"
 
+static cache_key null_key[MD5_DIGEST_CHARS];
+
 const char *
 storeKeyText(const unsigned char *key)
 {
@@ -117,4 +119,19 @@ storeKeyHashBuckets(int nobj)
     if (nobj < 0x8000)
 	return 0x8000;
     return 0x10000;
+}
+
+int
+storeKeyNull(const cache_key * key)
+{
+    if (memcmp(key, null_key, MD5_DIGEST_CHARS) == 0)
+	return 1;
+    else
+	return 0;
+}
+
+void
+storeKeyInit(void)
+{
+    memset(null_key, '\0', MD5_DIGEST_CHARS);
 }

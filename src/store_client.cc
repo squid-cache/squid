@@ -216,11 +216,14 @@ static void
 storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *data)
 {
     store_client *sc = data;
+    MemObject *mem = sc->mem;
     STCB *callback = sc->callback;
     assert(sc->disk_op_in_progress != 0);
     sc->disk_op_in_progress = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadBody: FD %d, len %d\n", fd, len);
+    if (sc->copy_offset == 0 && len > 0 && mem->reply->code == 0)
+	httpParseReplyHeaders(sc->copy_buf, mem->reply);
     sc->callback = NULL;
     callback(sc->callback_data, sc->copy_buf, len);
 }
@@ -243,18 +246,18 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadHeader: FD %d, len %d\n", fd, len);
     if (len < 0) {
-        debug(20, 3) ("storeClientReadHeader: FD %d: %s\n", fd, xstrerror());
+	debug(20, 3) ("storeClientReadHeader: FD %d: %s\n", fd, xstrerror());
 	memFree(MEM_DISK_BUF, (void *) buf);
-        sc->callback = NULL;
-        callback(sc->callback_data, sc->copy_buf, len);
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, len);
 	return;
     }
     tlv_list = storeSwapMetaUnpack(buf, &swap_hdr_sz);
     if (tlv_list == NULL) {
-        debug(20, 1) ("storeClientReadHeader: failed to unpack meta data\n");
+	debug(20, 1) ("storeClientReadHeader: failed to unpack meta data\n");
 	memFree(MEM_DISK_BUF, (void *) buf);
-        sc->callback = NULL;
-        callback(sc->callback_data, sc->copy_buf, -1);
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, -1);
 	return;
     }
     /*
@@ -269,15 +272,17 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
     body_sz = len - swap_hdr_sz;
     if (sc->copy_offset < body_sz) {
 	/*
-         * we have (part of )what they want
+	 * we have (part of) what they want
 	 */
 	copy_sz = XMIN(sc->copy_size, body_sz);
-	debug(20,3)("storeClientReadHeader: copying %d bytes of body\n",
-		copy_sz);
-	xmemcpy(sc->copy_buf, buf+swap_hdr_sz, copy_sz);
+	debug(20, 3) ("storeClientReadHeader: copying %d bytes of body\n",
+	    copy_sz);
+	xmemcpy(sc->copy_buf, buf + swap_hdr_sz, copy_sz);
 	memFree(MEM_DISK_BUF, (void *) buf);
+	if (sc->copy_offset == 0 && len > 0 && mem->reply->code == 0)
+	    httpParseReplyHeaders(sc->copy_buf, mem->reply);
 	sc->callback = NULL;
-        callback(sc->callback_data, sc->copy_buf, copy_sz);
+	callback(sc->callback_data, sc->copy_buf, copy_sz);
 	return;
     }
     /*

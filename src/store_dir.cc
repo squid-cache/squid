@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.45 1998/02/04 07:01:21 wessels Exp $
+ * $Id: store_dir.cc,v 1.46 1998/02/04 23:41:02 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -52,19 +52,11 @@ storeSwapFullPath(int fn, char *fullpath)
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
-#if MONOTONIC_STORE
     snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
 	Config.cacheSwap.swapDirs[dirn].path,
 	((filn / Config.cacheSwap.swapDirs[dirn].l2) / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l1,
 	(filn / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l2,
 	filn);
-#else
-    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
-	Config.cacheSwap.swapDirs[dirn].path,
-	filn % Config.cacheSwap.swapDirs[dirn].l1,
-	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2,
-	filn);
-#endif
     return fullpath;
 }
 
@@ -91,17 +83,10 @@ storeSwapSubSubDir(int fn, char *fullpath)
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
-#if MONOTONIC_STORE
     snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
 	Config.cacheSwap.swapDirs[dirn].path,
 	((filn / Config.cacheSwap.swapDirs[dirn].l2) / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l1,
 	(filn / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l2);
-#else
-    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
-	Config.cacheSwap.swapDirs[dirn].path,
-	filn % Config.cacheSwap.swapDirs[dirn].l1,
-	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2);
-#endif
     return fullpath;
 }
 
@@ -241,9 +226,6 @@ storeDirMapBitSet(int fn)
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
     file_map_bit_set(Config.cacheSwap.swapDirs[dirn].map, filn);
-#if !MONOTONIC_STORE
-    Config.cacheSwap.swapDirs[dirn].suggest++;
-#endif
 }
 
 void
@@ -252,10 +234,6 @@ storeDirMapBitReset(int fn)
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
     file_map_bit_reset(Config.cacheSwap.swapDirs[dirn].map, filn);
-#if !MONOTONIC_STORE
-    if (fn < Config.cacheSwap.swapDirs[dirn].suggest)
-	Config.cacheSwap.swapDirs[dirn].suggest = fn;
-#endif
 }
 
 int
@@ -264,9 +242,7 @@ storeDirMapAllocate(void)
     int dirn = storeMostFreeSwapDir();
     SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     int filn = file_map_allocate(SD->map, SD->suggest);
-#if MONOTONIC_STORE
     SD->suggest = filn + 1;
-#endif
     return (dirn << SWAP_DIR_SHIFT) | (filn & SWAP_FILE_MASK);
 }
 
@@ -378,7 +354,7 @@ storeDirCloseSwapLogs(void)
 }
 
 FILE *
-storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
+storeDirOpenTmpSwapLog(int dirn, int *clean_flag, int *zero_flag)
 {
     char *swaplog_path = xstrdup(storeDirSwapLogFile(dirn, NULL));
     char *clean_path = xstrdup(storeDirSwapLogFile(dirn, ".last-clean"));
@@ -395,6 +371,7 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
 	safe_free(new_path);
 	return NULL;
     }
+    *zero_flag = log_sb.st_size == 0 ? 1 : 0;
     /* close the existing write-only FD */
     if (SD->swaplog_fd >= 0)
 	file_close(SD->swaplog_fd);
@@ -562,24 +539,24 @@ storeDirWriteCleanLogs(int reopen)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-        s = (void *) outbuf[dirn] + outbufoffset[dirn];
+	s = (void *) outbuf[dirn] + outbufoffset[dirn];
 	outbufoffset[dirn] += sizeof(storeSwapData);
-        memset(s, '\0', sizeof(storeSwapData));
-        s->op = (char) SWAP_LOG_ADD;
-        s->swap_file_number = e->swap_file_number;
-        s->timestamp = e->timestamp;
-        s->lastref = e->lastref;
-        s->expires = e->expires;
-        s->lastmod = e->lastmod;
-        s->object_len = e->object_len;
-        s->refcount = e->refcount;
-        s->flags = e->flag;
-        xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
+	memset(s, '\0', sizeof(storeSwapData));
+	s->op = (char) SWAP_LOG_ADD;
+	s->swap_file_number = e->swap_file_number;
+	s->timestamp = e->timestamp;
+	s->lastref = e->lastref;
+	s->expires = e->expires;
+	s->lastmod = e->lastmod;
+	s->object_len = e->object_len;
+	s->refcount = e->refcount;
+	s->flags = e->flag;
+	xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
 	/* buffered write */
 	if (outbufoffset[dirn] + sizeof(storeSwapData) > CLEAN_BUF_SZ) {
 	    if (write(fd[dirn], outbuf[dirn], outbufoffset[dirn]) < 0) {
 		debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n",
-			new[dirn], xstrerror());
+		    new[dirn], xstrerror());
 		debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
 		file_close(fd[dirn]);
 		fd[dirn] = -1;
