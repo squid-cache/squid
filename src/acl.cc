@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.9 1996/04/11 22:53:39 wessels Exp $"
+#ident "$Id: acl.cc,v 1.10 1996/04/12 15:56:52 wessels Exp $"
 
 /*
  * DEBUG: Section 28          acl
@@ -557,9 +557,9 @@ int aclCheck(A, cli_addr, method, proto, host, port, request)
     debug(28, 1, "aclCheck: cli_addr=%s\n", inet_ntoa(cli_addr));
     debug(28, 1, "aclCheck: method=%d\n", method);
     debug(28, 1, "aclCheck: proto=%d\n", proto);
-    debug(28, 1, "aclCheck: host=%s\n", host);
+    debug(28, 1, "aclCheck: host=%s\n", host ? host : "<NULL>");
     debug(28, 1, "aclCheck: port=%d\n", port);
-    debug(28, 1, "aclCheck: request=%s\n", request);
+    debug(28, 1, "aclCheck: request=%s\n", request ? request : "<NULL>");
 
     while (A) {
 	debug(28, 1, "aclCheck: checking '%s'\n", A->cfgline);
