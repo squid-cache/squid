@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.282 2000/05/02 20:31:44 hno Exp $
+ * $Id: neighbors.cc,v 1.283 2000/05/12 00:29:07 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -269,7 +269,7 @@ peerClearRR(void *data)
     if (p->rr_count < 0)
 	p->rr_count = 0;
     p->rr_lastcount = p->rr_count;
-    eventAdd("peerClearRR",peerClearRR, p, 5*60, 0);
+    eventAdd("peerClearRR", peerClearRR, p, 5 * 60, 0);
 }
 
 peer *
@@ -893,13 +893,13 @@ int
 neighborUp(const peer * p)
 {
     if (!p->tcp_up) {
-	peerProbeConnect((peer *)p);
+	peerProbeConnect((peer *) p);
 	return 0;
     }
     if (p->options.no_query)
 	return 1;
     if (p->stats.probe_start != 0 &&
-	    squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer)
+	squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer)
 	return 0;
     return 1;
 }
@@ -996,7 +996,7 @@ peerRefreshDNS(void *data)
 }
 
 void
-peerConnectFailed(peer *p)
+peerConnectFailed(peer * p)
 {
     p->stats.last_connect_failure = squid_curtime;
     if (!p->tcp_up) {
@@ -1014,7 +1014,7 @@ peerConnectFailed(peer *p)
 }
 
 void
-peerConnectSucceded(peer *p)
+peerConnectSucceded(peer * p)
 {
     if (!p->tcp_up) {
 	debug(15, 2) ("TCP connection to %s/%d succeded\n", p->host, p->http_port);
@@ -1030,13 +1030,13 @@ peerConnectSucceded(peer *p)
  * peerProbeConnect will be called on dead peers by neighborUp 
  */
 static void
-peerProbeConnect(peer *p)
+peerProbeConnect(peer * p)
 {
     int fd;
     if (p->test_fd != -1)
-	return; /* probe already running */
+	return;			/* probe already running */
     if (squid_curtime - p->stats.last_connect_probe < Config.Timeout.connect)
-	return; /* don't probe to often */
+	return;			/* don't probe to often */
     fd = comm_open(SOCK_STREAM, 0, Config.Addrs.tcp_outgoing,
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)

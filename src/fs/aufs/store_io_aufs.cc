@@ -33,8 +33,8 @@ struct _queued_read {
 
 /* open for reading */
 storeIOState *
-storeAufsOpen(SwapDir *SD, StoreEntry *e, STFNCB * file_callback,
-  STIOCB * callback, void *callback_data)
+storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
+    STIOCB * callback, void *callback_data)
 {
     sfileno f = e->swap_filen;
     char *path = storeAufsDirFullPath(SD, f, NULL);
@@ -49,8 +49,8 @@ storeAufsOpen(SwapDir *SD, StoreEntry *e, STFNCB * file_callback,
     sio = memAllocate(MEM_STORE_IO);
     cbdataAdd(sio, storeAufsIOFreeEntry, MEM_STORE_IO);
     sio->fsstate = memPoolAlloc(aio_state_pool);
-    ((aiostate_t *)(sio->fsstate))->fd = -1;
-    ((aiostate_t *)(sio->fsstate))->flags.opening = 1;
+    ((aiostate_t *) (sio->fsstate))->fd = -1;
+    ((aiostate_t *) (sio->fsstate))->flags.opening = 1;
     sio->swap_filen = f;
     sio->swap_dirn = SD->index;
     sio->mode = O_RDONLY;
@@ -66,9 +66,9 @@ storeAufsOpen(SwapDir *SD, StoreEntry *e, STFNCB * file_callback,
 
 /* open for creating */
 storeIOState *
-storeAufsCreate(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *callback, void *callback_data)
+storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * callback, void *callback_data)
 {
-    char *path ;
+    char *path;
     storeIOState *sio;
     sfileno filn;
     sdirno dirn;
@@ -88,8 +88,8 @@ storeAufsCreate(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *callb
     sio = memAllocate(MEM_STORE_IO);
     cbdataAdd(sio, storeAufsIOFreeEntry, MEM_STORE_IO);
     sio->fsstate = memPoolAlloc(aio_state_pool);
-    ((aiostate_t *)(sio->fsstate))->fd = -1;
-    ((aiostate_t *)(sio->fsstate))->flags.opening = 1;
+    ((aiostate_t *) (sio->fsstate))->fd = -1;
+    ((aiostate_t *) (sio->fsstate))->flags.opening = 1;
     sio->swap_filen = filn;
     sio->swap_dirn = dirn;
     sio->mode = O_WRONLY;
@@ -111,9 +111,9 @@ storeAufsCreate(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *callb
 
 /* Close */
 void
-storeAufsClose(SwapDir *SD, storeIOState * sio)
+storeAufsClose(SwapDir * SD, storeIOState * sio)
 {
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     debug(78, 3) ("storeAufsClose: dirno %d, fileno %08X, FD %d\n",
 	sio->swap_dirn, sio->swap_filen, aiostate->fd);
     if (storeAufsSomethingPending(sio)) {
@@ -126,9 +126,9 @@ storeAufsClose(SwapDir *SD, storeIOState * sio)
 
 /* Read */
 void
-storeAufsRead(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
+storeAufsRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
 {
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     assert(sio->read.callback == NULL);
     assert(sio->read.callback_data == NULL);
     assert(!aiostate->flags.reading);
@@ -160,9 +160,9 @@ storeAufsRead(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t off
 
 /* Write */
 void
-storeAufsWrite(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t offset, FREE * free_func)
+storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t offset, FREE * free_func)
 {
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     debug(78, 3) ("storeAufsWrite: dirno %d, fileno %08X, FD %d\n",
 	sio->swap_dirn, sio->swap_filen, aiostate->fd);
     if (aiostate->fd < 0) {
@@ -200,7 +200,7 @@ storeAufsWrite(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t of
 
 /* Unlink */
 void
-storeAufsUnlink(SwapDir *SD, StoreEntry *e)
+storeAufsUnlink(SwapDir * SD, StoreEntry * e)
 {
     debug(78, 3) ("storeAufsUnlink: dirno %d, fileno %08X\n", SD->index, e->swap_filen);
     storeAufsDirReplRemove(e);
@@ -212,7 +212,7 @@ storeAufsUnlink(SwapDir *SD, StoreEntry *e)
 static int
 storeAufsKickWriteQueue(storeIOState * sio)
 {
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     struct _queued_write *q = linklistShift(&aiostate->pending_writes);
     if (NULL == q)
 	return 0;
@@ -226,7 +226,7 @@ storeAufsKickWriteQueue(storeIOState * sio)
 static int
 storeAufsKickReadQueue(storeIOState * sio)
 {
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     struct _queued_read *q = linklistShift(&(aiostate->pending_reads));
     if (NULL == q)
 	return 0;
@@ -241,7 +241,7 @@ static void
 storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
 {
     storeIOState *sio = my_data;
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     debug(78, 3) ("storeAufsOpenDone: FD %d, errflag %d\n", fd, errflag);
     Opening_FD--;
     aiostate->flags.opening = 0;
@@ -266,7 +266,7 @@ static void
 storeAufsReadDone(int fd, void *my_data, int len, int errflag)
 {
     storeIOState *sio = my_data;
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     STRCB *callback = sio->read.callback;
     void *their_data = sio->read.callback_data;
     ssize_t rlen;
@@ -293,7 +293,7 @@ storeAufsReadDone(int fd, void *my_data, int len, int errflag)
      * says it fixes his FD leaks, with no side effects.
      */
     if (aiostate->flags.close_request)
-        storeAufsIOCallback(sio, DISK_OK);
+	storeAufsIOCallback(sio, DISK_OK);
 }
 
 /*
@@ -307,7 +307,7 @@ storeAufsWriteDone(int fd, void *my_data, int len, int errflag)
 {
     static int loop_detect = 0;
     storeIOState *sio = my_data;
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     debug(78, 3) ("storeAufsWriteDone: dirno %d, fileno %08X, FD %d, len %d\n",
 	sio->swap_dirn, sio->swap_filen, fd, len);
     assert(++loop_detect < 10);
@@ -331,7 +331,7 @@ storeAufsIOCallback(storeIOState * sio, int errflag)
 {
     STIOCB *callback = sio->callback;
     void *their_data = sio->callback_data;
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     int fd = aiostate->fd;
     debug(78, 3) ("storeAufsIOCallback: errflag=%d\n", errflag);
     sio->callback = NULL;
@@ -357,7 +357,7 @@ storeAufsIOCallback(storeIOState * sio, int errflag)
 static int
 storeAufsSomethingPending(storeIOState * sio)
 {
-    aiostate_t *aiostate = (aiostate_t *)sio->fsstate;
+    aiostate_t *aiostate = (aiostate_t *) sio->fsstate;
     if (aiostate->flags.reading)
 	return 1;
     if (aiostate->flags.writing)
@@ -371,11 +371,10 @@ storeAufsSomethingPending(storeIOState * sio)
 /*      
  * We can't pass memFree() as a free function here, because we need to free
  * the fsstate variable ..
- */ 
+ */
 static void
 storeAufsIOFreeEntry(void *sio, int foo)
 {
-        memPoolFree(aio_state_pool, ((storeIOState *)sio)->fsstate);
-        memFree(sio, MEM_STORE_IO);
+    memPoolFree(aio_state_pool, ((storeIOState *) sio)->fsstate);
+    memFree(sio, MEM_STORE_IO);
 }
-

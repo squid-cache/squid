@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.80 2000/05/03 17:15:41 adrian Exp $
+ * $Id: defines.h,v 1.81 2000/05/12 00:29:07 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -268,4 +268,3 @@
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "/dev/null"
 #endif
-

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.217 2000/05/02 21:38:11 hno Exp $
+ * $Id: acl.cc,v 1.218 2000/05/12 00:29:06 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1075,7 +1075,7 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
  */
 
 static int
-aclMatchProxyAuth(void * data, const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist, squid_acl acltype)
+aclMatchProxyAuth(void *data, const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist, squid_acl acltype)
 {
     /* checklist is used to register user name when identified, nothing else */
     LOCAL_ARRAY(char, login_buf, USER_IDENT_SZ);
@@ -1142,14 +1142,14 @@ aclMatchProxyAuth(void * data, const char *proxy_auth, acl_proxy_auth_user * aut
 	    auth_user->ipaddr = checklist->src_addr;
 	    /* copy username to request for logging on client-side */
 	    xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	    switch(acltype) {
+	    switch (acltype) {
 	    case ACL_PROXY_AUTH:
 		return aclMatchUser(data, user);
 	    case ACL_PROXY_AUTH_REGEX:
 		return aclMatchRegex(data, user);
 	    default:
 		fatal("aclMatchProxyAuth: unknown ACL type");
-		return 0; /* NOTREACHED */
+		return 0;	/* NOTREACHED */
 	    }
 	} else {
 	    if (Config.onoff.authenticateIpTTLStrict) {
@@ -2004,16 +2004,16 @@ aclDomainCompare(const void *a, const void *b)
     const char *d1;
     const char *d2;
     int ret;
-    d1=b;
-    d2=a;
+    d1 = b;
+    d2 = a;
     ret = aclHostDomainCompare(d1, d2);
     if (ret != 0) {
-	d1=a;
-	d2=b;
+	d1 = a;
+	d2 = b;
 	ret = aclHostDomainCompare(d1, d2);
     }
     if (ret == 0) {
-	debug(28,0 ) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
+	debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
 	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", a);
 	debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.1 2000/05/03 17:15:46 adrian Exp $
+ * $Id: store_dir_aufs.cc,v 1.2 2000/05/12 00:29:18 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -81,7 +81,7 @@ static char *storeAufsDirSwapLogFile(SwapDir *, const char *);
 static EVH storeAufsDirRebuildFromDirectory;
 static EVH storeAufsDirRebuildFromSwapLog;
 static int storeAufsDirGetNextFile(RebuildState *, int *sfileno, int *size);
-static StoreEntry *storeAufsDirAddDiskRestore(SwapDir *SD, const cache_key * key,
+static StoreEntry *storeAufsDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     int file_number,
     size_t swap_file_sz,
     time_t expires,
@@ -130,36 +130,36 @@ static time_t storeAufsDirExpiredReferenceAge(SwapDir *);
  */
 
 int
-storeAufsDirMapBitTest(SwapDir *SD, int fn)
+storeAufsDirMapBitTest(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
     aioinfo_t *aioinfo;
-    aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo = (aioinfo_t *) SD->fsdata;
     return file_map_bit_test(aioinfo->map, filn);
 }
- 
+
 void
-storeAufsDirMapBitSet(SwapDir *SD, int fn)
-{  
+storeAufsDirMapBitSet(SwapDir * SD, int fn)
+{
     sfileno filn = fn;
     aioinfo_t *aioinfo;
-    aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo = (aioinfo_t *) SD->fsdata;
     file_map_bit_set(aioinfo->map, filn);
 }
- 
+
 void
-storeAufsDirMapBitReset(SwapDir *SD, int fn)
-{ 
+storeAufsDirMapBitReset(SwapDir * SD, int fn)
+{
     sfileno filn = fn;
     aioinfo_t *aioinfo;
-    aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo = (aioinfo_t *) SD->fsdata;
     file_map_bit_reset(aioinfo->map, filn);
 }
 
 int
-storeAufsDirMapBitAllocate(SwapDir *SD)
+storeAufsDirMapBitAllocate(SwapDir * SD)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
     int fn;
     fn = file_map_allocate(aioinfo->map, aioinfo->suggest);
     file_map_bit_set(aioinfo->map, fn);
@@ -167,7 +167,7 @@ storeAufsDirMapBitAllocate(SwapDir *SD)
     return fn;
 }
 
-    
+
 /*
  * Initialise the asyncufs bitmap
  *
@@ -175,16 +175,16 @@ storeAufsDirMapBitAllocate(SwapDir *SD)
  * configured, we allocate a new bitmap and 'grow' the old one into it.
  */
 static void
-storeAufsDirInitBitmap(SwapDir *sd)
+storeAufsDirInitBitmap(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
 
     if (aioinfo->map == NULL) {
-        /* First time */
+	/* First time */
 	aioinfo->map = file_map_create();
     } else if (aioinfo->map->max_n_files) {
-        /* it grew, need to expand */
-        /* XXX We don't need it anymore .. */
+	/* it grew, need to expand */
+	/* XXX We don't need it anymore .. */
     }
     /* else it shrunk, and we leave the old one in place */
 }
@@ -192,7 +192,7 @@ storeAufsDirInitBitmap(SwapDir *sd)
 static char *
 storeAufsDirSwapSubDir(SwapDir * sd, int subdirn)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
 
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     assert(0 <= subdirn && subdirn < aioinfo->l1);
@@ -245,7 +245,7 @@ storeAufsDirVerifyDirectory(const char *path)
 static int
 storeAufsDirVerifyCacheDirs(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
     int j;
     const char *path = sd->path;
 
@@ -262,7 +262,7 @@ storeAufsDirVerifyCacheDirs(SwapDir * sd)
 static void
 storeAufsDirCreateSwapSubDirs(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
     int i, k;
     int should_exist;
     LOCAL_ARRAY(char, name, MAXPATHLEN);
@@ -288,31 +288,31 @@ storeAufsDirSwapLogFile(SwapDir * sd, const char *ext)
     LOCAL_ARRAY(char, digit, 32);
     char *pathtmp2;
     if (Config.Log.swap) {
-        xstrncpy(pathtmp, sd->path, SQUID_MAXPATHLEN - 64);
-        while (index(pathtmp,'/'))
-            *index(pathtmp,'/')='.';
-        while (strlen(pathtmp) && pathtmp[strlen(pathtmp)-1]=='.')
-            pathtmp[strlen(pathtmp)-1]= '\0';
-        for(pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
-        snprintf(path, SQUID_MAXPATHLEN-64, Config.Log.swap, pathtmp2);
-        if (strncmp(path, Config.Log.swap, SQUID_MAXPATHLEN - 64) == 0) {
-            strcat(path, ".");
-            snprintf(digit, 32, "%02d", sd->index);
-            strncat(path, digit, 3);
-        }
+	xstrncpy(pathtmp, sd->path, SQUID_MAXPATHLEN - 64);
+	while (index(pathtmp, '/'))
+	    *index(pathtmp, '/') = '.';
+	while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
+	    pathtmp[strlen(pathtmp) - 1] = '\0';
+	for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
+	snprintf(path, SQUID_MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
+	if (strncmp(path, Config.Log.swap, SQUID_MAXPATHLEN - 64) == 0) {
+	    strcat(path, ".");
+	    snprintf(digit, 32, "%02d", sd->index);
+	    strncat(path, digit, 3);
+	}
     } else {
-        xstrncpy(path, sd->path, SQUID_MAXPATHLEN - 64);
-        strcat(path, "/swap.state");
+	xstrncpy(path, sd->path, SQUID_MAXPATHLEN - 64);
+	strcat(path, "/swap.state");
     }
     if (ext)
-        strncat(path, ext, 16);
+	strncat(path, ext, 16);
     return path;
 }
 
 static void
 storeAufsDirOpenSwapLog(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
     char *path;
     int fd;
     path = storeAufsDirSwapLogFile(sd, NULL);
@@ -332,7 +332,7 @@ storeAufsDirOpenSwapLog(SwapDir * sd)
 static void
 storeAufsDirCloseSwapLog(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
     if (aioinfo->swaplog_fd < 0)	/* not open */
 	return;
     file_close(aioinfo->swaplog_fd);
@@ -551,14 +551,14 @@ storeAufsDirRebuildFromSwapLog(void *data)
 		 * because adding to store_swap_size happens in
 		 * the cleanup procedure.
 		 */
-                storeExpireNow(e);
-                storeReleaseRequest(e);
-                storeAufsDirReplRemove(e);
+		storeExpireNow(e);
+		storeReleaseRequest(e);
+		storeAufsDirReplRemove(e);
 		storeRelease(e);
 		if (e->swap_filen > -1) {
 		    /* Fake a unlink here, this is a bad hack :( */
 		    e->swap_filen = -1;
-                    e->swap_dirn = -1;
+		    e->swap_dirn = -1;
 		}
 		rb->counts.objcount--;
 		rb->counts.cancelcount++;
@@ -639,14 +639,14 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	} else if (e) {
 	    /* key already exists, this swapfile not being used */
 	    /* junk old, load new */
-            storeExpireNow(e);
-            storeReleaseRequest(e);
-            storeAufsDirReplRemove(e);
+	    storeExpireNow(e);
+	    storeReleaseRequest(e);
+	    storeAufsDirReplRemove(e);
 	    storeRelease(e);
 	    if (e->swap_filen > -1) {
 		/* Fake a unlink here, this is a bad hack :( */
 		e->swap_filen = -1;
-                e->swap_dirn = -1;
+		e->swap_dirn = -1;
 	    }
 	    rb->counts.dupcount++;
 	} else {
@@ -675,7 +675,7 @@ static int
 storeAufsDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 {
     SwapDir *SD = rb->sd;
-    aioinfo_t *aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
     int fd = -1;
     int used = 0;
     int dirs_opened = 0;
@@ -761,7 +761,7 @@ storeAufsDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
 static StoreEntry *
-storeAufsDirAddDiskRestore(SwapDir *SD, const cache_key * key,
+storeAufsDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     int file_number,
     size_t swap_file_sz,
     time_t expires,
@@ -842,7 +842,7 @@ storeAufsDirRebuild(SwapDir * sd)
 static void
 storeAufsDirCloseTmpSwapLog(SwapDir * sd)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
     char *swaplog_path = xstrdup(storeAufsDirSwapLogFile(sd, NULL));
     char *new_path = xstrdup(storeAufsDirSwapLogFile(sd, ".new"));
     int fd;
@@ -870,7 +870,7 @@ storeAufsDirCloseTmpSwapLog(SwapDir * sd)
 static FILE *
 storeAufsDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
     char *swaplog_path = xstrdup(storeAufsDirSwapLogFile(sd, NULL));
     char *clean_path = xstrdup(storeAufsDirSwapLogFile(sd, ".last-clean"));
     char *new_path = xstrdup(storeAufsDirSwapLogFile(sd, ".new"));
@@ -1056,7 +1056,7 @@ storeAufsDirWriteCleanClose(SwapDir * sd)
 static void
 storeAufsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)sd->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) sd->fsdata;
     storeSwapLogData *s = xcalloc(1, sizeof(storeSwapLogData));
     s->op = (char) op;
     s->swap_filen = e->swap_filen;
@@ -1115,7 +1115,7 @@ storeAufsDirClean(int swap_index)
     N0 = n_asyncufs_dirs;
     D0 = asyncufs_dir_index[swap_index % N0];
     SD = &Config.cacheSwap.swapDirs[D0];
-    aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo = (aioinfo_t *) SD->fsdata;
     N1 = aioinfo->l1;
     D1 = (swap_index / N0) % N1;
     N2 = aioinfo->l2;
@@ -1137,7 +1137,7 @@ storeAufsDirClean(int swap_index)
     while ((de = readdir(dp)) != NULL && k < 20) {
 	if (sscanf(de->d_name, "%X", &swapfileno) != 1)
 	    continue;
-	fn = swapfileno; /* XXX should remove this cruft ! */
+	fn = swapfileno;	/* XXX should remove this cruft ! */
 	if (storeAufsDirValidFileno(SD, fn))
 	    if (storeAufsDirMapBitTest(SD, fn))
 		if (storeAufsFilenoBelongsHere(fn, D0, D1, D2))
@@ -1183,7 +1183,7 @@ storeAufsDirCleanEvent(void *unused)
     assert(n_asyncufs_dirs);
     if (NULL == asyncufs_dir_index) {
 	SwapDir *sd;
-        aioinfo_t *aioinfo;
+	aioinfo_t *aioinfo;
 	/*
 	 * Initialize the little array that translates ASYNCUFS cache_dir
 	 * number into the Config.cacheSwap.swapDirs array index.
@@ -1194,7 +1194,7 @@ storeAufsDirCleanEvent(void *unused)
 	    if (!storeAufsDirIs(sd))
 		continue;
 	    asyncufs_dir_index[n++] = i;
-            aioinfo = (aioinfo_t *)sd->fsdata;
+	    aioinfo = (aioinfo_t *) sd->fsdata;
 	    j += (aioinfo->l1 * aioinfo->l2);
 	}
 	assert(n == n_asyncufs_dirs);
@@ -1233,7 +1233,7 @@ storeAufsFilenoBelongsHere(int fn, int F0, int F1, int F2)
     int filn = fn;
     aioinfo_t *aioinfo;
     assert(F0 < Config.cacheSwap.n_configured);
-    aioinfo = (aioinfo_t *)Config.cacheSwap.swapDirs[F0].fsdata;
+    aioinfo = (aioinfo_t *) Config.cacheSwap.swapDirs[F0].fsdata;
     L1 = aioinfo->l1;
     L2 = aioinfo->l2;
     D1 = ((filn / L2) / L2) % L1;
@@ -1245,19 +1245,19 @@ storeAufsFilenoBelongsHere(int fn, int F0, int F1, int F2)
     return 1;
 }
 
-int 
-storeAufsDirValidFileno(SwapDir *SD, sfileno filn)
+int
+storeAufsDirValidFileno(SwapDir * SD, sfileno filn)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
     if (filn < 0)
-        return 0;
-    if (filn > aioinfo->map->max_n_files)  
-        return 0;
+	return 0;
+    if (filn > aioinfo->map->max_n_files)
+	return 0;
     return 1;
 }
 
 void
-storeAufsDirMaintain(SwapDir *SD)
+storeAufsDirMaintain(SwapDir * SD)
 {
     StoreEntry *e = NULL;
     int scanned = 0;
@@ -1276,135 +1276,134 @@ storeAufsDirMaintain(SwapDir *SD)
     link_list *locked_entries = NULL;
 #if HEAP_REPLACEMENT_DEBUG
     if (!verify_heap_property(SD->repl.heap.heap)) {
-        debug(20, 1) ("Heap property violated!\n");
+	debug(20, 1) ("Heap property violated!\n");
     }
 #endif
 #endif
     /* We can't delete objects while rebuilding swap */
     if (store_dirs_rebuilding) {
-        return;
+	return;
     } else {
-        f = (double) (store_swap_size - store_swap_low) / (store_swap_high - store_swap_low);
-        f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
-        max_scan = (int) (f * 400.0 + 100.0);
-        max_remove = (int) (f * 70.0 + 10.0);
+	f = (double) (store_swap_size - store_swap_low) / (store_swap_high - store_swap_low);
+	f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
+	max_scan = (int) (f * 400.0 + 100.0);
+	max_remove = (int) (f * 70.0 + 10.0);
 	/*
 	 * This is kinda cheap, but so we need this priority hack?
-         */
+	 */
 #if 0
-        eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0 - f, 1);
+	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0 - f, 1);
 #endif
     }
     debug(20, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n", f, max_scan, max_remove);
 #if HEAP_REPLACEMENT
     while (heap_nodes(SD->repl.heap.heap) > 0) {
-        if (store_swap_size < store_swap_low)
-            break;
-        if (expired >= max_remove)
-            break;
-        if (scanned >= max_scan)
-            break;
-        age = heap_peepminkey(SD->repl.heap.heap);
-        e = heap_extractmin(SD->repl.heap.heap);
-        e->repl.node = NULL;         /* no longer in the heap */
-        scanned++;
-        if (storeEntryLocked(e)) {
-            /*
-             * Entry is in use ... put it in a linked list to ignore it.
-             */
-            if (!EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-                /*
-                 * If this was a "SPECIAL" do not add it back into the heap.
-                 * It will always be "SPECIAL" and therefore never removed.
-                 */
-                debug(20, 4) ("storeAufsDirMaintain: locked url %s\n",
-                    (e->mem_obj && e->mem_obj->url) ? e->mem_obj->url : storeKeyText(e->
-key));
-                linklistPush(&locked_entries, e);
-            }
-            locked++;
-            continue;
-        } else if (storeAufsDirCheckExpired(SD, e)) {
-            /*
-             * Note: This will not check the reference age ifdef
-             * HEAP_REPLACEMENT, but it does some other useful
-             * checks...
-             */
-            expired++;
-            debug(20, 3) ("Released store object age %f size %d refs %d key %s\n",
-                age, e->swap_file_sz, e->refcount, storeKeyText(e->key));
-            min_age = age;
-            storeRelease(e);
-        } else {
-            /*
-             * Did not expire the object so we need to add it back
-             * into the heap!
-             */
-            debug(20, 5) ("storeMaintainSwapSpace: non-expired %s\n",
-                storeKeyText(e->key));
-            linklistPush(&locked_entries, e);
-            continue;
-        }
-        if (store_swap_size < store_swap_low)
-            break;
-        else if (expired >= max_remove)
-            break;
-        else if (scanned >= max_scan)
-            break;
+	if (store_swap_size < store_swap_low)
+	    break;
+	if (expired >= max_remove)
+	    break;
+	if (scanned >= max_scan)
+	    break;
+	age = heap_peepminkey(SD->repl.heap.heap);
+	e = heap_extractmin(SD->repl.heap.heap);
+	e->repl.node = NULL;	/* no longer in the heap */
+	scanned++;
+	if (storeEntryLocked(e)) {
+	    /*
+	     * Entry is in use ... put it in a linked list to ignore it.
+	     */
+	    if (!EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
+		/*
+		 * If this was a "SPECIAL" do not add it back into the heap.
+		 * It will always be "SPECIAL" and therefore never removed.
+		 */
+		debug(20, 4) ("storeAufsDirMaintain: locked url %s\n",
+		    (e->mem_obj && e->mem_obj->url) ? e->mem_obj->url : storeKeyText(e->
+			key));
+		linklistPush(&locked_entries, e);
+	    }
+	    locked++;
+	    continue;
+	} else if (storeAufsDirCheckExpired(SD, e)) {
+	    /*
+	     * Note: This will not check the reference age ifdef
+	     * HEAP_REPLACEMENT, but it does some other useful
+	     * checks...
+	     */
+	    expired++;
+	    debug(20, 3) ("Released store object age %f size %d refs %d key %s\n",
+		age, e->swap_file_sz, e->refcount, storeKeyText(e->key));
+	    min_age = age;
+	    storeRelease(e);
+	} else {
+	    /*
+	     * Did not expire the object so we need to add it back
+	     * into the heap!
+	     */
+	    debug(20, 5) ("storeMaintainSwapSpace: non-expired %s\n",
+		storeKeyText(e->key));
+	    linklistPush(&locked_entries, e);
+	    continue;
+	}
+	if (store_swap_size < store_swap_low)
+	    break;
+	else if (expired >= max_remove)
+	    break;
+	else if (scanned >= max_scan)
+	    break;
     }
     /*
      * Bump the heap age factor.
      */
     if (min_age > 0.0)
-        SD->repl.heap.heap->age = min_age;
+	SD->repl.heap.heap->age = min_age;
     /*
      * Reinsert all bumped locked entries back into heap...
      */
     while ((e = linklistShift(&locked_entries)))
-        e->repl.node = heap_insert(SD->repl.heap.heap, e);
+	e->repl.node = heap_insert(SD->repl.heap.heap, e);
 #else
     for (m = SD->repl.lru.list.tail; m; m = prev) {
-        prev = m->prev;
-        e = m->data;
-        scanned++;
-        if (storeEntryLocked(e)) {
-            /*
-             * If there is a locked entry at the tail of the LRU list,
-             * move it to the beginning to get it out of the way.
-             * Theoretically, we might have all locked objects at the
-             * tail, and then we'll never remove anything here and the
-             * LRU age will go to zero.
-             */
-            if (memInUse(MEM_STOREENTRY) > max_scan) {
-                dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
-                dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
-            }
-            locked++;
+	prev = m->prev;
+	e = m->data;
+	scanned++;
+	if (storeEntryLocked(e)) {
+	    /*
+	     * If there is a locked entry at the tail of the LRU list,
+	     * move it to the beginning to get it out of the way.
+	     * Theoretically, we might have all locked objects at the
+	     * tail, and then we'll never remove anything here and the
+	     * LRU age will go to zero.
+	     */
+	    if (memInUse(MEM_STOREENTRY) > max_scan) {
+		dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
+		dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
+	    }
+	    locked++;
 
-        } else if (storeAufsDirCheckExpired(SD, e)) {
-            expired++;
-            storeRelease(e);
-        }
-        if (expired >= max_remove)
-            break;
-        if (scanned >= max_scan)
-            break;
+	} else if (storeAufsDirCheckExpired(SD, e)) {
+	    expired++;
+	    storeRelease(e);
+	}
+	if (expired >= max_remove)
+	    break;
+	if (scanned >= max_scan)
+	    break;
     }
 #endif
-    debug(20, (expired ? 2 : 3)) ("storeMaintainSwapSpace: scanned %d/%d removed %d/%d l
-ocked %d f=%.03f\n",
-        scanned, max_scan, expired, max_remove, locked, f);
+    debug(20, (expired ? 2 : 3)) ("storeMaintainSwapSpace: scanned %d/%d removed %d/%d locked %d f=%.03f\n",
+	scanned, max_scan, expired, max_remove, locked, f);
     debug(20, 3) ("storeMaintainSwapSpace stats:\n");
     debug(20, 3) ("  %6d objects\n", memInUse(MEM_STOREENTRY));
     debug(20, 3) ("  %6d were scanned\n", scanned);
     debug(20, 3) ("  %6d were locked\n", locked);
     debug(20, 3) ("  %6d were expired\n", expired);
     if (store_swap_size < Config.Swap.maxSize)
-        return;
+	return;
     if (squid_curtime - last_warn_time < 10)
-        return;
+	return;
     debug(20, 0) ("WARNING: Disk space over limit: %d KB > %d KB\n",
-        store_swap_size, Config.Swap.maxSize);
+	store_swap_size, Config.Swap.maxSize);
     last_warn_time = squid_curtime;
 }
 
@@ -1416,7 +1415,7 @@ ocked %d f=%.03f\n",
  * happily store anything as long as the LRU time isn't too small.
  */
 int
-storeAufsDirCheckObj(SwapDir *SD, const StoreEntry *e)
+storeAufsDirCheckObj(SwapDir * SD, const StoreEntry * e)
 {
     int loadav;
     int ql;
@@ -1431,11 +1430,11 @@ storeAufsDirCheckObj(SwapDir *SD, const StoreEntry *e)
 #endif
     ql = aioQueueSize();
     if (ql == 0)
-        loadav = 0;
-    else if (ql >= MAGIC1) /* Queue is too long, don't even consider it */
-        loadav = -1;
+	loadav = 0;
+    else if (ql >= MAGIC1)	/* Queue is too long, don't even consider it */
+	loadav = -1;
     else
-        loadav = MAGIC1 * 1000 / ql;
+	loadav = MAGIC1 * 1000 / ql;
     return loadav;
 }
 
@@ -1446,18 +1445,18 @@ storeAufsDirCheckObj(SwapDir *SD, const StoreEntry *e)
  * maintain replacement information within the storage fs.
  */
 void
-storeAufsDirRefObj(SwapDir *SD, StoreEntry *e)
+storeAufsDirRefObj(SwapDir * SD, StoreEntry * e)
 {
     debug(1, 3) ("storeAufsDirRefObj: referencing %d/%d\n", e->swap_dirn,
-      e->swap_filen);
+	e->swap_filen);
 #if HEAP_REPLACEMENT
     /* Nothing to do here */
 #else
     /* Reference the object */
     if (!EBIT_TEST(e->flags, RELEASE_REQUEST) &&
-        !EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-        dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
-        dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
+	!EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
+	dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
+	dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
     }
 #endif
 }
@@ -1468,10 +1467,10 @@ storeAufsDirRefObj(SwapDir *SD, StoreEntry *e)
  * removed, to maintain replacement information within the storage fs.
  */
 void
-storeAufsDirUnrefObj(SwapDir *SD, StoreEntry *e)
+storeAufsDirUnrefObj(SwapDir * SD, StoreEntry * e)
 {
     debug(1, 3) ("storeAufsDirUnrefObj: referencing %d/%d\n", e->swap_dirn,
-      e->swap_filen);
+	e->swap_filen);
 #if HEAP_REPLACEMENT
     if (e->repl.node)
 	heap_update(SD->repl.heap.heap, e->repl.node, e);
@@ -1486,7 +1485,7 @@ storeAufsDirUnrefObj(SwapDir *SD, StoreEntry *e)
  * forced this bit of code here. Eeek.
  */
 void
-storeAufsDirUnlinkFile(SwapDir *SD, sfileno f)
+storeAufsDirUnlinkFile(SwapDir * SD, sfileno f)
 {
     debug(79, 3) ("storeAufsDirUnlinkFile: unlinking fileno %08X\n", f);
     storeAufsDirMapBitReset(SD, f);
@@ -1506,13 +1505,13 @@ storeAufsDirUnlinkFile(SwapDir *SD, sfileno f)
  * cachemgr 'info' page.
  */
 static time_t
-storeAufsDirExpiredReferenceAge(SwapDir *SD)
+storeAufsDirExpiredReferenceAge(SwapDir * SD)
 {
     double x;
     double z;
     time_t age;
     long store_high, store_low;
-    
+
     store_high = (long) (((float) SD->max_size *
 	    (float) Config.Swap.highWaterMark) / (float) 100);
     store_low = (long) (((float) SD->max_size *
@@ -1541,7 +1540,7 @@ storeAufsDirExpiredReferenceAge(SwapDir *SD)
  * right now.
  */
 static int
-storeAufsDirCheckExpired(SwapDir *SD, StoreEntry *e)
+storeAufsDirCheckExpired(SwapDir * SD, StoreEntry * e)
 {
     if (storeEntryLocked(e))
 	return 0;
@@ -1569,16 +1568,16 @@ storeAufsDirCheckExpired(SwapDir *SD, StoreEntry *e)
  */
 
 void
-storeAufsDirReplAdd(SwapDir *SD, StoreEntry *e)
+storeAufsDirReplAdd(SwapDir * SD, StoreEntry * e)
 {
     debug(20, 4) ("storeUfsDirReplAdd: added node %p to dir %d\n", e,
-      SD->index);
+	SD->index);
 #if HEAP_REPLACEMENT
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-        (void) 0;
+	(void) 0;
     } else {
-        e->repl.node = heap_insert(SD->repl.heap.heap, e);
-        debug(20, 4) ("storeUfsDirReplAdd: inserted node 0x%x\n", e->repl.node);
+	e->repl.node = heap_insert(SD->repl.heap.heap, e);
+	debug(20, 4) ("storeUfsDirReplAdd: inserted node 0x%x\n", e->repl.node);
     }
 #else
     /* Shouldn't we not throw special objects into the lru ? */
@@ -1588,18 +1587,18 @@ storeAufsDirReplAdd(SwapDir *SD, StoreEntry *e)
 
 
 void
-storeAufsDirReplRemove(StoreEntry *e)
+storeAufsDirReplRemove(StoreEntry * e)
 {
     SwapDir *SD = INDEXSD(e->swap_dirn);
     debug(20, 4) ("storeUfsDirReplRemove: remove node %p from dir %d\n", e,
-      SD->index);
+	SD->index);
 #if HEAP_REPLACEMENT
     /* And now, release the object from the replacement policy */
     if (e->repl.node) {
-        debug(20, 4) ("storeUfsDirReplRemove: deleting node 0x%x\n",
-          e->repl.node);
-        heap_delete(SD->repl.heap.heap, e->repl.node);
-        e->repl.node = NULL;
+	debug(20, 4) ("storeUfsDirReplRemove: deleting node 0x%x\n",
+	    e->repl.node);
+	heap_delete(SD->repl.heap.heap, e->repl.node);
+	e->repl.node = NULL;
     }
 #else
     dlinkDelete(&e->repl.lru, &SD->repl.lru.list);
@@ -1610,41 +1609,41 @@ storeAufsDirReplRemove(StoreEntry *e)
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
 
 void
-storeAufsDirStats(SwapDir *SD, StoreEntry * sentry)
+storeAufsDirStats(SwapDir * SD, StoreEntry * sentry)
 {
     aioinfo_t *aioinfo;
 #if HAVE_STATVFS
     struct statvfs sfs;
 #endif
-    aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo = (aioinfo_t *) SD->fsdata;
     storeAppendPrintf(sentry, "First level subdirectories: %d\n", aioinfo->l1);
     storeAppendPrintf(sentry, "Second level subdirectories: %d\n", aioinfo->l2);
     storeAppendPrintf(sentry, "Maximum Size: %d KB\n", SD->max_size);
     storeAppendPrintf(sentry, "Current Size: %d KB\n", SD->cur_size);
     storeAppendPrintf(sentry, "Percent Used: %0.2f%%\n",
-        100.0 * SD->cur_size / SD->max_size);
+	100.0 * SD->cur_size / SD->max_size);
     storeAppendPrintf(sentry, "Filemap bits in use: %d of %d (%d%%)\n",
-    aioinfo->map->n_files_in_map, aioinfo->map->max_n_files,
-    percent(aioinfo->map->n_files_in_map, aioinfo->map->max_n_files));
+	aioinfo->map->n_files_in_map, aioinfo->map->max_n_files,
+	percent(aioinfo->map->n_files_in_map, aioinfo->map->max_n_files));
 #if HAVE_STATVFS
 #define fsbtoblk(num, fsbs, bs) \
     (((fsbs) != 0 && (fsbs) < (bs)) ? \
             (num) / ((bs) / (fsbs)) : (num) * ((fsbs) / (bs)))
-	if (!statvfs(SD->path, &sfs)) {
-            storeAppendPrintf(sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
-            fsbtoblk((sfs.f_blocks - sfs.f_bfree), sfs.f_frsize, 1024),
-            fsbtoblk(sfs.f_blocks, sfs.f_frsize, 1024),
-            percent(sfs.f_blocks - sfs.f_bfree, sfs.f_blocks));
-            storeAppendPrintf(sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
-            sfs.f_files - sfs.f_ffree, sfs.f_files,
-            percent(sfs.f_files - sfs.f_ffree, sfs.f_files));
+    if (!statvfs(SD->path, &sfs)) {
+	storeAppendPrintf(sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
+	    fsbtoblk((sfs.f_blocks - sfs.f_bfree), sfs.f_frsize, 1024),
+	    fsbtoblk(sfs.f_blocks, sfs.f_frsize, 1024),
+	    percent(sfs.f_blocks - sfs.f_bfree, sfs.f_blocks));
+	storeAppendPrintf(sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
+	    sfs.f_files - sfs.f_ffree, sfs.f_files,
+	    percent(sfs.f_files - sfs.f_ffree, sfs.f_files));
     }
 #endif
     storeAppendPrintf(sentry, "Flags:");
     if (SD->flags.selected)
-        storeAppendPrintf(sentry, " SELECTED");
+	storeAppendPrintf(sentry, " SELECTED");
     if (SD->flags.read_only)
-        storeAppendPrintf(sentry, " READ-ONLY");
+	storeAppendPrintf(sentry, " READ-ONLY");
     storeAppendPrintf(sentry, "\n");
 #if !HEAP_REPLACEMENT
     storeAppendPrintf(sentry, "LRU Expiration Age: %6.2f days\n",
@@ -1663,7 +1662,7 @@ storeAufsDirStats(SwapDir *SD, StoreEntry * sentry)
  * This routine is called when the given swapdir needs reconfiguring 
  */
 void
-storeAufsDirReconfigure(SwapDir *sd, int index, char *path)
+storeAufsDirReconfigure(SwapDir * sd, int index, char *path)
 {
     char *token;
     int i;
@@ -1706,10 +1705,10 @@ storeAufsDirReconfigure(SwapDir *sd, int index, char *path)
 void
 storeAufsDirDump(StoreEntry * entry, const char *name, SwapDir * s)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)s->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) s->fsdata;
     storeAppendPrintf(entry, "%s %s %s %d %d %d\n",
 	name,
-        "asyncufs",
+	"asyncufs",
 	s->path,
 	s->max_size >> 10,
 	aioinfo->l1,
@@ -1722,22 +1721,22 @@ storeAufsDirDump(StoreEntry * entry, const char *name, SwapDir * s)
 static void
 storeAufsDirFree(SwapDir * s)
 {
-    aioinfo_t *aioinfo = (aioinfo_t *)s->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) s->fsdata;
     if (aioinfo->swaplog_fd > -1) {
 	file_close(aioinfo->swaplog_fd);
 	aioinfo->swaplog_fd = -1;
     }
     filemapFreeMemory(aioinfo->map);
     xfree(aioinfo);
-    s->fsdata = NULL; /* Will aid debugging... */
+    s->fsdata = NULL;		/* Will aid debugging... */
 
 }
 
 char *
-storeAufsDirFullPath(SwapDir *SD, sfileno filn, char *fullpath)
+storeAufsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath)
 {
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
-    aioinfo_t *aioinfo = (aioinfo_t *)SD->fsdata;
+    aioinfo_t *aioinfo = (aioinfo_t *) SD->fsdata;
     int L1 = aioinfo->l1;
     int L2 = aioinfo->l2;
     if (!fullpath)
@@ -1757,28 +1756,28 @@ storeAufsDirFullPath(SwapDir *SD, sfileno filn, char *fullpath)
  * This is called by storeCleanup() if -S was given on the command line.
  */
 static int
-storeAufsCleanupDoubleCheck(SwapDir *sd, StoreEntry *e)
+storeAufsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 {
     struct stat sb;
 
     if (stat(storeAufsDirFullPath(sd, e->swap_filen, NULL), &sb) < 0) {
-        debug(20, 0) ("storeAufsCleanupDoubleCheck: MISSING SWAP FILE\n");
-        debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
-        debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
-            storeAufsDirFullPath(sd, e->swap_filen, NULL));
-        storeEntryDump(e, 0);
-        return -1;
-    }       
+	debug(20, 0) ("storeAufsCleanupDoubleCheck: MISSING SWAP FILE\n");
+	debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
+	debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
+	    storeAufsDirFullPath(sd, e->swap_filen, NULL));
+	storeEntryDump(e, 0);
+	return -1;
+    }
     if (e->swap_file_sz != sb.st_size) {
-        debug(20, 0) ("storeAufsCleanupDoubleCheck: SIZE MISMATCH\n");
-        debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
-        debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
-            storeAufsDirFullPath(sd, e->swap_filen, NULL));
-        debug(20, 0) ("storeAufsCleanupDoubleCheck: ENTRY SIZE: %d, FILE SIZE: %d\n",
-            e->swap_file_sz, (int) sb.st_size); 
-        storeEntryDump(e, 0); 
-        return -1;
-    }       
+	debug(20, 0) ("storeAufsCleanupDoubleCheck: SIZE MISMATCH\n");
+	debug(20, 0) ("storeAufsCleanupDoubleCheck: FILENO %08X\n", e->swap_filen);
+	debug(20, 0) ("storeAufsCleanupDoubleCheck: PATH %s\n",
+	    storeAufsDirFullPath(sd, e->swap_filen, NULL));
+	debug(20, 0) ("storeAufsCleanupDoubleCheck: ENTRY SIZE: %d, FILE SIZE: %d\n",
+	    e->swap_file_sz, (int) sb.st_size);
+	storeEntryDump(e, 0);
+	return -1;
+    }
     return 0;
 }
 
@@ -1788,7 +1787,7 @@ storeAufsCleanupDoubleCheck(SwapDir *sd, StoreEntry *e)
  * Called when a *new* fs is being setup.
  */
 void
-storeAufsDirParse(SwapDir *sd, int index, char *path)
+storeAufsDirParse(SwapDir * sd, int index, char *path)
 {
     char *token;
     int i;
@@ -1816,7 +1815,7 @@ storeAufsDirParse(SwapDir *sd, int index, char *path)
 
     aioinfo = xmalloc(sizeof(aioinfo_t));
     if (aioinfo == NULL)
-        fatal("storeAufsDirParse: couldn't xmalloc() aioinfo_t!\n");
+	fatal("storeAufsDirParse: couldn't xmalloc() aioinfo_t!\n");
 
     sd->index = index;
     sd->path = xstrdup(path);
@@ -1825,7 +1824,7 @@ storeAufsDirParse(SwapDir *sd, int index, char *path)
     aioinfo->l1 = l1;
     aioinfo->l2 = l2;
     aioinfo->swaplog_fd = -1;
-    aioinfo->map = NULL; /* Debugging purposes */
+    aioinfo->map = NULL;	/* Debugging purposes */
     aioinfo->suggest = 0;
     sd->flags.read_only = read_only;
     sd->init = storeAufsDirInit;
@@ -1861,24 +1860,24 @@ storeAufsDirParse(SwapDir *sd, int index, char *path)
      * always uses GDSF since we want to maximize object hit rate.
      */
     if (Config.replPolicy) {
-        if (tolower(Config.replPolicy[0]) == 'g') {
-            debug(20, 1) ("Using GDSF disk replacement policy\n");
-            sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
-        } else if (tolower(Config.replPolicy[0]) == 'l') {
-            if (tolower(Config.replPolicy[1]) == 'f') {
-                debug(20, 1) ("Using LFUDA disk replacement policy\n");
-                sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_LFUDA);
-            } else if (tolower(Config.replPolicy[1]) == 'r') {
-                debug(20, 1) ("Using LRU heap disk replacement policy\n");
-                sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_LRU);
-            }
-        } else {
-            debug(20, 1) ("Unrecognized replacement_policy; using GDSF\n");
-            sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
-        }
+	if (tolower(Config.replPolicy[0]) == 'g') {
+	    debug(20, 1) ("Using GDSF disk replacement policy\n");
+	    sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
+	} else if (tolower(Config.replPolicy[0]) == 'l') {
+	    if (tolower(Config.replPolicy[1]) == 'f') {
+		debug(20, 1) ("Using LFUDA disk replacement policy\n");
+		sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_LFUDA);
+	    } else if (tolower(Config.replPolicy[1]) == 'r') {
+		debug(20, 1) ("Using LRU heap disk replacement policy\n");
+		sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_LRU);
+	    }
+	} else {
+	    debug(20, 1) ("Unrecognized replacement_policy; using GDSF\n");
+	    sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
+	}
     } else {
-        debug(20, 1) ("Using default disk replacement policy (GDSF)\n");
-        sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
+	debug(20, 1) ("Using default disk replacement policy (GDSF)\n");
+	sd->repl.heap.heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
     }
 #else
     sd->repl.lru.list.head = NULL;
@@ -1887,7 +1886,7 @@ storeAufsDirParse(SwapDir *sd, int index, char *path)
 }
 
 void
-storeFsSetup_aufs(storefs_entry_t *storefs)
+storeFsSetup_aufs(storefs_entry_t * storefs)
 {
     storefs->parsefunc = storeAufsDirParse;
     storefs->reconfigurefunc = storeAufsDirReconfigure;

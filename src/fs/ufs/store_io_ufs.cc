@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.1 2000/05/03 17:15:48 adrian Exp $
+ * $Id: store_io_ufs.cc,v 1.2 2000/05/12 00:29:20 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -45,8 +45,8 @@ static void storeUfsIOFreeEntry(void *, int);
 /* === PUBLIC =========================================================== */
 
 storeIOState *
-storeUfsOpen(SwapDir *SD, StoreEntry *e, STFNCB * file_callback, 
-  STIOCB * callback, void *callback_data)
+storeUfsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
+    STIOCB * callback, void *callback_data)
 {
     sfileno f = e->swap_filen;
     char *path = storeUfsDirFullPath(SD, f, NULL);
@@ -71,12 +71,12 @@ storeUfsOpen(SwapDir *SD, StoreEntry *e, STFNCB * file_callback,
     sio->callback_data = callback_data;
     cbdataLock(callback_data);
     sio->e = e;
-    ((ufsstate_t *)(sio->fsstate))->fd = fd;
-    ((ufsstate_t *)(sio->fsstate))->flags.writing = 0;
-    ((ufsstate_t *)(sio->fsstate))->flags.reading = 0;
-    ((ufsstate_t *)(sio->fsstate))->flags.close_request = 0;
+    ((ufsstate_t *) (sio->fsstate))->fd = fd;
+    ((ufsstate_t *) (sio->fsstate))->flags.writing = 0;
+    ((ufsstate_t *) (sio->fsstate))->flags.reading = 0;
+    ((ufsstate_t *) (sio->fsstate))->flags.close_request = 0;
     if (fstat(fd, &sb) == 0)
-        sio->st_size = sb.st_size;
+	sio->st_size = sb.st_size;
     store_open_disk_fd++;
 
     /* We should update the heap/dlink position here ! */
@@ -84,13 +84,13 @@ storeUfsOpen(SwapDir *SD, StoreEntry *e, STFNCB * file_callback,
 }
 
 storeIOState *
-storeUfsCreate(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *callback, void *callback_data)
+storeUfsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * callback, void *callback_data)
 {
     storeIOState *sio;
     int fd;
     int mode = (O_WRONLY | O_CREAT | O_TRUNC);
     char *path;
-    ufsinfo_t *ufsinfo = (ufsinfo_t *)SD->fsdata;
+    ufsinfo_t *ufsinfo = (ufsinfo_t *) SD->fsdata;
     sfileno filn;
     sdirno dirn;
 
@@ -104,8 +104,8 @@ storeUfsCreate(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *callba
     debug(79, 3) ("storeUfsCreate: fileno %08X\n", filn);
     fd = file_open(path, mode);
     if (fd < 0) {
-        debug(79, 3) ("storeUfsCreate: got failure (%d)\n", errno);
-        return NULL;
+	debug(79, 3) ("storeUfsCreate: got failure (%d)\n", errno);
+	return NULL;
     }
     debug(79, 3) ("storeUfsCreate: opened FD %d\n", fd);
     sio = memAllocate(MEM_STORE_IO);
@@ -119,10 +119,10 @@ storeUfsCreate(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *callba
     sio->callback_data = callback_data;
     cbdataLock(callback_data);
     sio->e = (StoreEntry *) e;
-    ((ufsstate_t *)(sio->fsstate))->fd = fd;
-    ((ufsstate_t *)(sio->fsstate))->flags.writing = 0;
-    ((ufsstate_t *)(sio->fsstate))->flags.reading = 0;
-    ((ufsstate_t *)(sio->fsstate))->flags.close_request = 0;
+    ((ufsstate_t *) (sio->fsstate))->fd = fd;
+    ((ufsstate_t *) (sio->fsstate))->flags.writing = 0;
+    ((ufsstate_t *) (sio->fsstate))->flags.reading = 0;
+    ((ufsstate_t *) (sio->fsstate))->flags.close_request = 0;
     store_open_disk_fd++;
 
     /* now insert into the replacement policy */
@@ -131,9 +131,9 @@ storeUfsCreate(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *callba
 }
 
 void
-storeUfsClose(SwapDir *SD, storeIOState * sio)
+storeUfsClose(SwapDir * SD, storeIOState * sio)
 {
-    ufsstate_t *ufsstate = (ufsstate_t *)sio->fsstate;
+    ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
 
     debug(79, 3) ("storeUfsClose: dirno %d, fileno %08X, FD %d\n",
 	sio->swap_dirn, sio->swap_filen, ufsstate->fd);
@@ -145,9 +145,9 @@ storeUfsClose(SwapDir *SD, storeIOState * sio)
 }
 
 void
-storeUfsRead(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
+storeUfsRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
 {
-    ufsstate_t *ufsstate = (ufsstate_t *)sio->fsstate;
+    ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
 
     assert(sio->read.callback == NULL);
     assert(sio->read.callback_data == NULL);
@@ -167,9 +167,9 @@ storeUfsRead(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t offs
 }
 
 void
-storeUfsWrite(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t offset, FREE * free_func)
+storeUfsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t offset, FREE * free_func)
 {
-    ufsstate_t *ufsstate = (ufsstate_t *)sio->fsstate;
+    ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
     debug(79, 3) ("storeUfsWrite: dirn %d, fileno %08X, FD %d\n", sio->swap_dirn, sio->swap_filen, ufsstate->fd);
     ufsstate->flags.writing = 1;
     file_write(ufsstate->fd,
@@ -182,7 +182,7 @@ storeUfsWrite(SwapDir *SD, storeIOState * sio, char *buf, size_t size, off_t off
 }
 
 void
-storeUfsUnlink(SwapDir *SD, StoreEntry *e)
+storeUfsUnlink(SwapDir * SD, StoreEntry * e)
 {
     debug(79, 3) ("storeUfsUnlink: fileno %08X\n", e->swap_filen);
     storeUfsDirReplRemove(e);
@@ -195,7 +195,7 @@ static void
 storeUfsReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 {
     storeIOState *sio = my_data;
-    ufsstate_t *ufsstate = (ufsstate_t *)sio->fsstate;
+    ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
     STRCB *callback = sio->read.callback;
     void *their_data = sio->read.callback_data;
     ssize_t rlen;
@@ -205,10 +205,10 @@ storeUfsReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
     ufsstate->flags.reading = 0;
     if (errflag) {
 	debug(79, 3) ("storeUfsReadDone: got failure (%d)\n", errflag);
-        rlen = -1;
+	rlen = -1;
     } else {
-        rlen = (ssize_t) len;
-        sio->offset += len;
+	rlen = (ssize_t) len;
+	sio->offset += len;
     }
     assert(callback);
     assert(their_data);
@@ -223,7 +223,7 @@ static void
 storeUfsWriteDone(int fd, int errflag, size_t len, void *my_data)
 {
     storeIOState *sio = my_data;
-    ufsstate_t *ufsstate = (ufsstate_t *)sio->fsstate;
+    ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
     debug(79, 3) ("storeUfsWriteDone: dirno %d, fileno %08X, FD %d, len %d\n",
 	sio->swap_dirn, sio->swap_filen, fd, len);
     ufsstate->flags.writing = 0;
@@ -240,7 +240,7 @@ storeUfsWriteDone(int fd, int errflag, size_t len, void *my_data)
 static void
 storeUfsIOCallback(storeIOState * sio, int errflag)
 {
-    ufsstate_t *ufsstate = (ufsstate_t *)sio->fsstate;
+    ufsstate_t *ufsstate = (ufsstate_t *) sio->fsstate;
     debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
     if (ufsstate->fd > -1) {
 	file_close(ufsstate->fd);
@@ -262,6 +262,6 @@ storeUfsIOCallback(storeIOState * sio, int errflag)
 static void
 storeUfsIOFreeEntry(void *sio, int foo)
 {
-    memPoolFree(ufs_state_pool, ((storeIOState *)sio)->fsstate);
+    memPoolFree(ufs_state_pool, ((storeIOState *) sio)->fsstate);
     memFree(sio, MEM_STORE_IO);
 }

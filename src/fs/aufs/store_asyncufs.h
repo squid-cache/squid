@@ -40,8 +40,8 @@ int aio_get_queue_len(void);
 
 void aioInit(void);
 void aioDone(void);
-void aioCancel(int); 
-void aioOpen(const char *, int, mode_t, AIOCB *, void *);  
+void aioCancel(int);
+void aioOpen(const char *, int, mode_t, AIOCB *, void *);
 void aioClose(int);
 void aioWrite(int, int offset, char *, int size, AIOCB *, void *, FREE *);
 void aioRead(int, int offset, char *, int size, AIOCB *, void *);
@@ -49,7 +49,7 @@ void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
 void aioCheckCallbacks(SwapDir *);
 void aioSync(SwapDir *);
-int aioQueueSize(void); 
+int aioQueueSize(void);
 
 struct _aioinfo_t {
     int swaplog_fd;
@@ -76,14 +76,14 @@ typedef struct _aioinfo_t aioinfo_t;
 typedef struct _aiostate_t aiostate_t;
 
 /* The aio_state memory pool */
-extern MemPool * aio_state_pool;
+extern MemPool *aio_state_pool;
 
 extern void storeAufsDirMapBitReset(SwapDir *, sfileno);
 extern int storeAufsDirMapBitAllocate(SwapDir *);
 
-extern char * storeAufsDirFullPath(SwapDir *SD, sfileno filn, char *fullpath);
+extern char *storeAufsDirFullPath(SwapDir * SD, sfileno filn, char *fullpath);
 extern void storeAufsDirUnlinkFile(SwapDir *, sfileno);
-extern void storeAufsDirReplAdd(SwapDir *SD, StoreEntry *);
+extern void storeAufsDirReplAdd(SwapDir * SD, StoreEntry *);
 extern void storeAufsDirReplRemove(StoreEntry *);
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.104 2000/05/02 19:55:45 hno Exp $
+ * $Id: tunnel.cc,v 1.105 2000/05/12 00:29:08 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -382,10 +382,10 @@ sslConnectDone(int fdnotused, int status, void *data)
 	    sslState->servers->peer->host);
     else if (Config.onoff.log_ip_on_direct)
 	hierarchyNote(&sslState->request->hier, sslState->servers->code,
-		fd_table[sslState->server.fd].ipaddr);
+	    fd_table[sslState->server.fd].ipaddr);
     else
 	hierarchyNote(&sslState->request->hier, sslState->servers->code,
-		sslState->host);
+	    sslState->host);
     if (status == COMM_ERR_DNS) {
 	debug(26, 4) ("sslConnect: Unknown host: %s\n", sslState->host);
 	err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND);
@@ -428,14 +428,14 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
     aclCheck_t ch;
     int answer;
     /*
-       * client_addr == no_addr indicates this is an "internal" request
-       * from peer_digest.c, asn.c, netdb.c, etc and should always
-       * be allowed.  yuck, I know.
-       */
+     * client_addr == no_addr indicates this is an "internal" request
+     * from peer_digest.c, asn.c, netdb.c, etc and should always
+     * be allowed.  yuck, I know.
+     */
     if (request->client_addr.s_addr != no_addr.s_addr) {
 	/*
-	   * Check if this host is allowed to fetch MISSES from us (miss_access)
-	   */
+	 * Check if this host is allowed to fetch MISSES from us (miss_access)
+	 */
 	memset(&ch, '\0', sizeof(aclCheck_t));
 	ch.src_addr = request->client_addr;
 	ch.my_addr = request->my_addr;

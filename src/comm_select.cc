@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.42 2000/05/03 17:15:41 adrian Exp $
+ * $Id: comm_select.cc,v 1.43 2000/05/12 00:29:07 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -34,7 +34,7 @@
 
 #include "squid.h"
 
-static int MAX_POLL_TIME = 1000; /* see also comm_quick_poll_required() */
+static int MAX_POLL_TIME = 1000;	/* see also comm_quick_poll_required() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -326,8 +326,8 @@ comm_poll(int msec)
 	getCurrentTime();
 	start = current_dtime;
 #endif
-    /* Handle any fs callbacks that need doing */
-    storeDirCallback();
+	/* Handle any fs callbacks that need doing */
+	storeDirCallback();
 #if DELAY_POOLS
 	FD_ZERO(&slowfds);
 #endif
@@ -661,8 +661,8 @@ comm_select(int msec)
 #if DELAY_POOLS
 	FD_ZERO(&slowfds);
 #endif
-        /* Handle any fs callbacks that need doing */
-        storeDirCallback();
+	/* Handle any fs callbacks that need doing */
+	storeDirCallback();
 	if (commCheckICPIncoming)
 	    comm_select_icp_incoming();
 	if (commCheckDNSIncoming)

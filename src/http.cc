@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.359 2000/05/02 21:21:08 hno Exp $
+ * $Id: http.cc,v 1.360 2000/05/12 00:29:07 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -877,7 +877,7 @@ httpSendRequest(HttpStateData * httpState)
 	httpState->flags.keepalive = 1;
     if (httpState->peer)
 	if (neighborType(httpState->peer, httpState->request) == PEER_SIBLING &&
-		!httpState->peer->options.allow_miss)
+	    !httpState->peer->options.allow_miss)
 	    httpState->flags.only_if_cached = 1;
     memBufDefInit(&mb);
     httpBuildRequestPrefix(req,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.107 2000/05/03 17:15:43 adrian Exp $
+ * $Id: store_dir.cc,v 1.108 2000/05/12 00:29:09 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -88,18 +88,18 @@ storeDirValidSwapDirSize(int swapdir, size_t objsize)
      * If the swapdir's max_obj_size is -1, then it definitely can
      */
     if (Config.cacheSwap.swapDirs[swapdir].max_objsize == -1)
-        return 1;
+	return 1;
     /*
      * Else, make sure that the max object size is larger than objsize
      */
     if (Config.cacheSwap.swapDirs[swapdir].max_objsize > objsize)
-        return 1;
+	return 1;
     else
-        return 0;
+	return 0;
 }
 
 
-#if UNUSED /* Squid-2..4.DEVEL3 code */
+#if UNUSED			/* Squid-2..4.DEVEL3 code */
 /*
  * This new selection scheme simply does round-robin on all SwapDirs.
  * A SwapDir is skipped if it is over the max_size (100%) limit.  If
@@ -179,7 +179,7 @@ storeDirSelectSwapDir(void)
  * we sort out the real usefulness of this algorithm.
  */
 int
-storeDirSelectSwapDir(const StoreEntry *e)
+storeDirSelectSwapDir(const StoreEntry * e)
 {
     size_t objsize;
     size_t least_size;
@@ -198,28 +198,28 @@ storeDirSelectSwapDir(const StoreEntry *e)
     least_size = Config.cacheSwap.swapDirs[0].cur_size;
     least_objsize = Config.cacheSwap.swapDirs[0].max_objsize;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        SD = &Config.cacheSwap.swapDirs[i];
+	SD = &Config.cacheSwap.swapDirs[i];
 	SD->flags.selected = 0;
-        if (SD->flags.read_only)
-            continue;
-        /* Valid for object size check */
-        if (!storeDirValidSwapDirSize(i, objsize))
-            continue;
-        load = SD->checkobj(SD, e);
-        if (load < 0)
+	if (SD->flags.read_only)
 	    continue;
-        if (SD->cur_size > SD->max_size)
-            continue;
-        if (load > least_load)
-            continue;
-        if ((least_objsize > 0) && (objsize > least_objsize))
-            continue;
-        /* Only use leastsize if the load is equal */
-        if ((load == least_load) && (SD->cur_size > least_size))
-            continue;
-        least_load = load;
-        least_size = SD->cur_size;
-        dirn = i;
+	/* Valid for object size check */
+	if (!storeDirValidSwapDirSize(i, objsize))
+	    continue;
+	load = SD->checkobj(SD, e);
+	if (load < 0)
+	    continue;
+	if (SD->cur_size > SD->max_size)
+	    continue;
+	if (load > least_load)
+	    continue;
+	if ((least_objsize > 0) && (objsize > least_objsize))
+	    continue;
+	/* Only use leastsize if the load is equal */
+	if ((load == least_load) && (SD->cur_size > least_size))
+	    continue;
+	least_load = load;
+	least_size = SD->cur_size;
+	dirn = i;
     }
 
     if (dirn >= 0)
@@ -261,14 +261,14 @@ storeDirSwapLog(const StoreEntry * e, int op)
     debug(20, 3) ("storeDirSwapLog: %s %s %d %08X\n",
 	swap_log_op_str[op],
 	storeKeyText(e->key),
-        e->swap_dirn,
+	e->swap_dirn,
 	e->swap_filen);
     sd = &Config.cacheSwap.swapDirs[e->swap_dirn];
     sd->log.write(sd, e, op);
 }
 
 void
-storeDirUpdateSwapSize(SwapDir *SD, size_t size, int sign)
+storeDirUpdateSwapSize(SwapDir * SD, size_t size, int sign)
 {
     int k = ((size + 1023) >> 10) * sign;
     SD->cur_size += k;
@@ -298,11 +298,11 @@ storeDirStats(StoreEntry * sentry)
 
     /* Now go through each swapdir, calling its statfs routine */
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        storeAppendPrintf(sentry, "\n");
-        SD = &(Config.cacheSwap.swapDirs[i]);
-        storeAppendPrintf(sentry, "Store Directory #%d (%s): %s\n", i, SD->type,
-          storeSwapDir(i));
-        SD->statfs(SD, sentry);
+	storeAppendPrintf(sentry, "\n");
+	SD = &(Config.cacheSwap.swapDirs[i]);
+	storeAppendPrintf(sentry, "Store Directory #%d (%s): %s\n", i, SD->type,
+	    storeSwapDir(i));
+	SD->statfs(SD, sentry);
     }
 }
 
@@ -391,16 +391,16 @@ storeDirWriteCleanLogs(int reopen)
 	if (NULL == sd->log.clean.write)
 	    continue;
 #if HEAP_REPLACEMENT
-        if (NULL == sd->repl.heap.heap)
-            continue;
+	if (NULL == sd->repl.heap.heap)
+	    continue;
 #endif
 #if HEAP_REPLACEMENT
-        for (node = 0; node < heap_nodes(sd->repl.heap.heap); node++)
+	for (node = 0; node < heap_nodes(sd->repl.heap.heap); node++)
 #else
 	storeDirLRUWalkInitHead(sd);
-        while ((e = storeDirLRUWalkNext(sd)) != NULL)
+	while ((e = storeDirLRUWalkNext(sd)) != NULL)
 #endif
-        {
+	{
 #if HEAP_REPLACEMENT
 	    e = (StoreEntry *) heap_peep(sd->repl.heap.heap, node);
 #endif
@@ -422,8 +422,8 @@ storeDirWriteCleanLogs(int reopen)
 		debug(20, 1) ("  %7d entries written so far.\n", n);
 	    }
 	}
-        /* Flush */
-        sd->log.clean.write(NULL, sd);
+	/* Flush */
+	sd->log.clean.write(NULL, sd);
     }
     if (reopen)
 	storeDirOpenSwapLogs();
@@ -446,9 +446,9 @@ storeDirSync(void)
     SwapDir *SD;
 
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        SD = &Config.cacheSwap.swapDirs[i];
-        if (SD->sync != NULL)
-            SD->sync(SD);
+	SD = &Config.cacheSwap.swapDirs[i];
+	if (SD->sync != NULL)
+	    SD->sync(SD);
     }
 }
 
@@ -462,13 +462,13 @@ storeDirCallback(void)
     SwapDir *SD;
 
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        SD = &Config.cacheSwap.swapDirs[i];
-        if (SD->callback != NULL)
-            SD->callback(SD);
+	SD = &Config.cacheSwap.swapDirs[i];
+	if (SD->callback != NULL)
+	    SD->callback(SD);
     }
 }
 
-#if 0 /* from Squid-2.4.DEVEL3 */
+#if 0				/* from Squid-2.4.DEVEL3 */
 void
 storeDirLRUDelete(StoreEntry * e)
 {

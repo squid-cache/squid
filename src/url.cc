@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.123 2000/05/03 17:15:44 adrian Exp $
+ * $Id: url.cc,v 1.124 2000/05/12 00:29:10 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -243,10 +243,10 @@ urlParse(method_t method, char *url)
 	port = urlDefaultPort(protocol);
 	/* Is there any login informaiton? */
 	if ((t = strrchr(host, '@'))) {
-	    strcpy((char *)login, (char *)host);
+	    strcpy((char *) login, (char *) host);
 	    t = strrchr(login, '@');
 	    *t = 0;
-	    strcpy((char *)host, t + 1);
+	    strcpy((char *) host, t + 1);
 	}
 	if ((t = strrchr(host, ':'))) {
 	    *t++ = '\0';

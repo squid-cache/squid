@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.66 2000/05/07 16:18:20 adrian Exp $
+ * $Id: store_swapout.cc,v 1.67 2000/05/12 00:29:09 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -71,8 +71,8 @@ storeSwapOutStart(StoreEntry * e)
 	xfree(buf);
 	return;
     }
-    storeLockObject(e); /* Don't lock until after create, or the replacement
-                         * code might get confused */
+    storeLockObject(e);		/* Don't lock until after create, or the replacement
+				 * code might get confused */
     /* Pick up the file number if it was assigned immediately */
     e->swap_filen = mem->swapout.sio->swap_filen;
     e->swap_dirn = mem->swapout.sio->swap_dirn;
@@ -134,8 +134,8 @@ storeSwapOut(StoreEntry * e)
      */
     swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
     if ((e->store_status != STORE_OK) && (swapout_size < store_maxobjsize)) {
-        debug (20, 5) ("storeSwapOut: Deferring starting swapping out\n"); 
-        return;
+	debug(20, 5) ("storeSwapOut: Deferring starting swapping out\n");
+	return;
     }
     /*
      * Careful.  lowest_offset can be greater than inmem_hi, such
@@ -194,8 +194,8 @@ storeSwapOut(StoreEntry * e)
      * than the maximum object size (so we pick a -1 maxobjsize fs)
      */
     if ((e->store_status != STORE_OK) && (swapout_size < store_maxobjsize)) {
-        debug (20, 5) ("storeSwapOut: Deferring starting swapping out\n"); 
-        return;
+	debug(20, 5) ("storeSwapOut: Deferring starting swapping out\n");
+	return;
     }
     /* Ok, we have stuff to swap out.  Is there a swapout.sio open? */
     if (e->swap_status == SWAPOUT_NONE) {
@@ -210,18 +210,18 @@ storeSwapOut(StoreEntry * e)
     if (NULL == mem->swapout.sio)
 	return;
     do {
-        /*
+	/*
 	 * Evil hack time.
 	 * We are paging out to disk in page size chunks. however, later on when
 	 * we update the queue position, we might not have a page (I *think*),
 	 * so we do the actual page update here.
-         */
+	 */
 
-        if (mem->swapout.memnode == NULL) {
-            /* We need to swap out the first page */
+	if (mem->swapout.memnode == NULL) {
+	    /* We need to swap out the first page */
 	    mem->swapout.memnode = mem->data_hdr.head;
 	} else {
-            /* We need to swap out the next page */
+	    /* We need to swap out the next page */
 	    mem->swapout.memnode = mem->swapout.memnode->next;
 	}
 	/*
@@ -292,8 +292,8 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 	}
 	if (e->swap_filen > 0)
 	    storeUnlink(e);
-        e->swap_filen = -1;
-        e->swap_dirn = -1;
+	e->swap_filen = -1;
+	e->swap_dirn = -1;
 	e->swap_status = SWAPOUT_NONE;
 	storeReleaseRequest(e);
     } else {
@@ -356,8 +356,8 @@ storeSwapOutAble(const StoreEntry * e)
      * even if its not cachable
      */
     for (node = e->mem_obj->clients.head; node; node = node->next) {
-        if (((store_client *)node->data)->type == STORE_DISK_CLIENT)
-            return 1;
+	if (((store_client *) node->data)->type == STORE_DISK_CLIENT)
+	    return 1;
     }
     if (store_dirs_rebuilding)
 	if (!EBIT_TEST(e->flags, ENTRY_SPECIAL))
