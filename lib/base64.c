@@ -1,3 +1,6 @@
+/*
+ * $Id: base64.c,v 1.15 1998/09/23 17:14:21 wessels Exp $
+ */
 
 #include "config.h"
 
