@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.125 2001/01/12 00:37:22 wessels Exp $
+ * $Id: store_dir.cc,v 1.126 2001/02/10 16:40:40 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -124,33 +124,35 @@ storeDirValidSwapDirSize(int swapdir, ssize_t objsize)
 
 /*
  * This new selection scheme simply does round-robin on all SwapDirs.
- * A SwapDir is skipped if it is over the max_size (100%) limit.  If
- * all SwapDir's are above the limit, then the first dirn that we
- * checked is returned.  Note that 'dirn' is guaranteed to advance even
- * if all SwapDirs are full.
- * 
- * XXX This function does NOT account for the read_only flag!
+ * A SwapDir is skipped if it is over the max_size (100%) limit, or
+ * overloaded.
  */
 static int
-storeDirSelectSwapDirRoundRobin(const StoreEntry * unused)
+storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 {
     static int dirn = 0;
     int i;
+    int load;
     SwapDir *sd;
-    /*
-     * yes, the '<=' is intentional.  If all dirs are full we want to
-     * make sure 'dirn' advances every time this gets called, otherwise
-     * we get stuck on one dir.
-     */
+    ssize_t objsize = (ssize_t) objectLen(e);
     for (i = 0; i <= Config.cacheSwap.n_configured; i++) {
 	if (++dirn >= Config.cacheSwap.n_configured)
 	    dirn = 0;
 	sd = &Config.cacheSwap.swapDirs[dirn];
+	if (sd->flags.read_only)
+	    continue;
 	if (sd->cur_size > sd->max_size)
 	    continue;
+	if (!storeDirValidSwapDirSize(i, objsize))
+	    continue;
+	/* check for error or overload condition */
+	load = sd->checkobj(sd, e);
+	if (load < 0 || load > 1000) {
+	    continue;
+	}
 	return dirn;
     }
-    return dirn;
+    return -1;
 }
 
 /*
@@ -170,9 +172,9 @@ static int
 storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 {
     ssize_t objsize;
-    ssize_t least_size;
-    ssize_t least_objsize;
-    int least_load = 1000;
+    ssize_t most_free = 0, cur_free;
+    ssize_t least_objsize = -1;
+    int least_load = INT_MAX;
     int load;
     int dirn = -1;
     int i;
@@ -182,31 +184,33 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
     objsize = (ssize_t) objectLen(e);
     if (objsize != -1)
 	objsize += e->mem_obj->swap_hdr_sz;
-    /* Initial defaults */
-    least_size = Config.cacheSwap.swapDirs[0].cur_size;
-    least_objsize = Config.cacheSwap.swapDirs[0].max_objsize;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	SD = &Config.cacheSwap.swapDirs[i];
 	SD->flags.selected = 0;
-	if (SD->flags.read_only)
-	    continue;
-	/* Valid for object size check */
-	if (!storeDirValidSwapDirSize(i, objsize))
-	    continue;
 	load = SD->checkobj(SD, e);
-	if (load < 0)
+	if (load < 0 || load > 1000) {
+	    continue;
+	}
+	if (SD->flags.read_only)
 	    continue;
 	if (SD->cur_size > SD->max_size)
 	    continue;
 	if (load > least_load)
 	    continue;
-	if ((least_objsize > 0) && (objsize > least_objsize))
-	    continue;
-	/* Only use leastsize if the load is equal */
-	if ((load == least_load) && (SD->cur_size > least_size))
-	    continue;
+	cur_free = SD->max_size - SD->cur_size;
+	/* If the load is equal, then look in more details */
+	if (load == least_load) {
+	    /* closest max_objsize fit */
+	    if (least_objsize != -1)
+		if (SD->max_size > least_objsize || SD->max_size == -1)
+		    continue;
+	    /* most free */
+	    if (cur_free < most_free)
+		continue;
+	}
 	least_load = load;
-	least_size = SD->cur_size;
+	least_objsize = SD->max_objsize;
+	most_free = cur_free;
 	dirn = i;
     }
 

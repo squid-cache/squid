@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.1 2001/02/07 17:42:37 hno Exp $
+ * $Id: store_null.cc,v 1.2 2001/02/10 16:40:42 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -113,6 +113,7 @@ storeNullDirParse(SwapDir * sd, int index, char *path)
     sd->checkobj = storeNullDirCheckObj;
     sd->log.clean.start = storeNullDirWriteCleanStart;
     sd->log.clean.done = storeNullDirWriteCleanDone;
+    parse_cachedir_options(sd, NULL, 0);
 }
 
 /* Setup and register the store module */
@@ -126,4 +127,3 @@ storeFsSetup_null(storefs_entry_t * storefs)
     storefs->donefunc = storeNullDirDone;
     null_initialised = 1;
 }
-

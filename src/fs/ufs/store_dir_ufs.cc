@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.28 2001/02/07 18:56:55 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.29 2001/02/10 16:40:43 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1483,6 +1483,15 @@ storeUfsDirStats(SwapDir * SD, StoreEntry * sentry)
 #endif /* OLD_UNUSED_CODE */
 }
 
+static struct cache_dir_option options[] =
+{
+#if NOT_YET_DONE
+    {"L1", storeAufsDirParseL1},
+    {"L2", storeAufsDirParseL2},
+#endif
+    {NULL, NULL}
+};
+
 /*
  * storeUfsDirReconfigure
  *
@@ -1491,12 +1500,10 @@ storeUfsDirStats(SwapDir * SD, StoreEntry * sentry)
 static void
 storeUfsDirReconfigure(SwapDir * sd, int index, char *path)
 {
-    char *token;
     int i;
     int size;
     int l1;
     int l2;
-    unsigned int read_only = 0;
 
     i = GetInteger();
     size = i << 10;		/* Mbytes to kbytes */
@@ -1510,9 +1517,6 @@ storeUfsDirReconfigure(SwapDir * sd, int index, char *path)
     l2 = i;
     if (l2 <= 0)
 	fatal("storeUfsDirReconfigure: invalid level 2 directories value");
-    if ((token = strtok(NULL, w_space)))
-	if (!strcasecmp(token, "read-only"))
-	    read_only = 1;
 
     /* just reconfigure it */
     if (size == sd->max_size)
@@ -1522,11 +1526,8 @@ storeUfsDirReconfigure(SwapDir * sd, int index, char *path)
 	debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
 	    path, size);
     sd->max_size = size;
-    if (sd->flags.read_only != read_only)
-	debug(3, 1) ("Cache dir '%s' now %s\n",
-	    path, read_only ? "Read-Only" : "Read-Write");
-    sd->flags.read_only = read_only;
-    return;
+
+    parse_cachedir_options(sd, options, 1);
 }
 
 void
@@ -1615,12 +1616,10 @@ storeUfsCleanupDoubleCheck(SwapDir * sd, StoreEntry * e)
 static void
 storeUfsDirParse(SwapDir * sd, int index, char *path)
 {
-    char *token;
     int i;
     int size;
     int l1;
     int l2;
-    unsigned int read_only = 0;
     ufsinfo_t *ufsinfo;
 
     i = GetInteger();
@@ -1635,9 +1634,6 @@ storeUfsDirParse(SwapDir * sd, int index, char *path)
     l2 = i;
     if (l2 <= 0)
 	fatal("storeUfsDirParse: invalid level 2 directories value");
-    if ((token = strtok(NULL, w_space)))
-	if (!strcasecmp(token, "read-only"))
-	    read_only = 1;
 
     ufsinfo = xmalloc(sizeof(ufsinfo_t));
     if (ufsinfo == NULL)
@@ -1652,7 +1648,6 @@ storeUfsDirParse(SwapDir * sd, int index, char *path)
     ufsinfo->swaplog_fd = -1;
     ufsinfo->map = NULL;	/* Debugging purposes */
     ufsinfo->suggest = 0;
-    sd->flags.read_only = read_only;
     sd->init = storeUfsDirInit;
     sd->newfs = storeUfsDirNewfs;
     sd->dump = storeUfsDirDump;
@@ -1677,6 +1672,8 @@ storeUfsDirParse(SwapDir * sd, int index, char *path)
     sd->log.clean.start = storeUfsDirWriteCleanStart;
     sd->log.clean.nextentry = storeUfsDirCleanLogNextEntry;
     sd->log.clean.done = storeUfsDirWriteCleanDone;
+
+    parse_cachedir_options(sd, options, 1);
 
     /* Initialise replacement policy stuff */
     sd->repl = createRemovalPolicy(Config.replPolicy);
