@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.500 2000/10/04 01:46:30 wessels Exp $
+ * $Id: client_side.cc,v 1.501 2000/10/04 02:18:48 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2071,7 +2071,7 @@ clientProcessRequest(clientHttpRequest * http)
 	url);
     if (r->method == METHOD_CONNECT) {
 	http->log_type = LOG_TCP_MISS;
-	sslStart(fd, url, r, &http->out.size);
+	sslStart(fd, url, r, &http->out.size, &http->al.http.code);
 	return;
     } else if (r->method == METHOD_PURGE) {
 	clientPurgeRequest(http);
