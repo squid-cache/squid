@@ -205,6 +205,7 @@ extern int hash_delete(hash_table *, const char *);
 extern int hash_delete_link(hash_table *, hash_link *);
 extern void hash_join(hash_table *, hash_link *);
 extern int hash_remove_link(hash_table *, hash_link *);
+extern int hashPrime(int n);
 
 /* searching, accessing */
 extern hash_link *hash_lookup(hash_table *, const void *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.234 1998/03/20 06:51:44 wessels Exp $
+ * $Id: comm.cc,v 1.235 1998/03/24 17:29:44 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1420,32 +1420,24 @@ commHandleWrite(int fd, void *data)
 void
 comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
 {
-    CommWriteStateData *state = NULL;
+    CommWriteStateData *state = fd_table[fd].rwstate;
     debug(5, 5) ("comm_write: FD %d: sz %d: hndl %p: data %p.\n",
 	fd, size, handler, handler_data);
-    if (fd_table[fd].rwstate) {
+    if (NULL != state) {
 	debug(5, 1) ("comm_write: fd_table[%d].rwstate != NULL", fd);
-	state = fd_table[fd].rwstate;
-	debug(5, 1) ("comm_write: %d'%s',(%d,%d)'%s'\n", size, buf, state->size,
-	    state->offset, state->buf);
-	safe_free(fd_table[fd].rwstate);
+	safe_free(state);
 	fd_table[fd].rwstate = NULL;
     }
-    assert(fd_table[fd].rwstate == NULL);
-    state = xcalloc(1, sizeof(CommWriteStateData));
+    assert(state == NULL);
+    fd_table[fd].rwstate = state = xcalloc(1, sizeof(CommWriteStateData));
     state->buf = buf;
     state->size = size;
     state->offset = 0;
     state->handler = handler;
     state->handler_data = handler_data;
     state->free_func = free_func;
-    fd_table[fd].rwstate = state;
     cbdataLock(handler_data);
-    commSetSelect(fd,
-	COMM_SELECT_WRITE,
-	commHandleWrite,
-	fd_table[fd].rwstate,
-	0);
+    commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, state, 0);
 }
 
 /* a wrapper around comm_write to allow for MemBuf to comm_written in a snap */
