@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.38 1996/10/07 22:04:57 wessels Exp $
+ * $Id: client_side.cc,v 1.39 1996/10/08 14:57:06 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -376,6 +376,7 @@ icpProcessExpired(int fd, icpStateData * icpState)
     icpState->old_entry = icpState->entry;
     entry = storeCreateEntry(url,
 	request_hdr,
+	icpState->req_hdr_sz,
 	icpState->request->flags,
 	icpState->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
