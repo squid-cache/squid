@@ -1,3 +1,5 @@
+Changes to squid-1.1.5 (January 22, 1996):
+
 	- Fixed ACL parsing to join ACL entries with the same name
 	  (Markus Stumpf).
 	- Fixed BIT_SET/BIT_TEST typo in getDefaultParent() (Ed Knowles).
@@ -10,6 +12,9 @@
 	- Added .rpm MIME type (Nigel Metheringham).
 	- Changed storeDirClean() to create missing directories.
 	- Removed icpState->buf and storeCopy() call in icpGetHeadersfForIMS().
+	- Fixed *_ip_list parsing bug (Hiroyuki Inoue).
+	- Fixed bad comm_write() calls in passStart() and sslStart()
+	  (Martin Boening).
 
 Changes to squid-1.novm.4 (January XX, 1996):
 
