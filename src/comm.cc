@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.325 2001/12/24 15:33:42 adrian Exp $
+ * $Id: comm.cc,v 1.326 2002/02/26 02:30:50 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -173,7 +173,7 @@ comm_openex(int sock_type,
     const char *note)
 {
     int new_socket;
-    int tos;
+    int tos = 0;
     fde *F = NULL;
 
     /* Create socket for accepting new connections. */
