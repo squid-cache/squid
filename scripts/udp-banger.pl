@@ -11,10 +11,11 @@
 # neighbor cache load.
 
 require 'getopts.pl';
+require 'fcntl.ph';
 
 $|=1;
 
-&Getopts('n');
+&Getopts('nr');
 
 $host=(shift || 'localhost') ;
 $port=(shift || '3130') ;
@@ -62,29 +63,61 @@ $myip=(gethostbyname($me))[4];
 die "socket: $!\n" unless
 	socket (SOCK, &AF_INET, &SOCK_DGRAM, $proto);
 
+$flags = fcntl (SOCK, &F_GETFL, 0);
+$flags |= &O_NONBLOCK;
+die "fcntl O_NONBLOCK: $!\n" unless
+	fcntl (SOCK, &F_SETFL, $flags);
+
 $flags = 0;
 $flags |= 0x80000000;
 $flags |= 0x40000000 if ($opt_n);
 $flags = ~0;
+$rn = 0;
 
+$start = time;
 while (<>) {
 	chop;
-	$request_template = 'CCnx4Nx4x4a4a' . length;
-	$request = pack($request_template, 1, 2, 24 + length, $flags, $myip, $_);
+        $len = length($_) + 1;
+        $request_template = sprintf 'CCnNNa4a4x4a%d', $len;
+        $request = pack($request_template,
+                1,              # C opcode
+                2,              # C version
+                24 + $len,      # n length
+                ++$rn,          # N reqnum
+                $flags,         # N flags
+                '',             # a4 pad
+                $myip,          # a4 shostid
+                $_);            # a%d payload
 	die "send: $!\n" unless
 		send(SOCK, $request, 0, $them);
+	$nsent++;
         $rin = '';
         vec($rin,fileno(SOCK),1) = 1;
         ($nfound,$timeleft) = select($rout=$rin, undef, undef, 2.0);
 	next if ($nfound == 0);
-	die "recv: $!\n" unless
-                $theiraddr = recv(SOCK, $reply, 1024, 0);
-  	($junk, $junk, $sourceaddr, $junk) = unpack($sockaddr, $theiraddr);
-  	@theirip = unpack('C4', $sourceaddr);
-        ($type,$ver,$len,$flag,$p1,$p2,$payload) = unpack('CCnx4Nnnx4A', $reply);
-        print join('.', @theirip) . ' ' . $CODES[$type] . " $_";
-	print " hop=$p1" if ($opt_n);
-	print " rtt=$p2" if ($opt_n);
-	print "\n";
+	while (1) {
+        	last unless ($theiraddr = recv(SOCK, $reply, 1024, 0));
+		$nrecv++;
+		if ($opt_r) {
+			# only print send/receive rates
+			if (($nsent & 0xFF) == 0) {
+	    			$dt = time - $start;
+	    			printf "SENT %d %f/sec; RECV %d %f/sec\n",
+					$nsent,
+					$nsent / $dt,
+					$nrecv,
+					$nrecv / $dt;
+			}
+		} else {
+			# print the whole reply
+  			($junk, $junk, $sourceaddr, $junk) = unpack($sockaddr, $theiraddr);
+  			@theirip = unpack('C4', $sourceaddr);
+        		($type,$ver,$len,$flag,$p1,$p2,$payload) = unpack('CCnx4Nnnx4A', $reply);
+        		print join('.', @theirip) . ' ' . $CODES[$type] . " $_";
+			print " hop=$p1" if ($opt_n);
+			print " rtt=$p2" if ($opt_n);
+			print "\n";
+		}
+        }
 }
 
