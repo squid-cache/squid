@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.3 1996/02/23 05:57:04 wessels Exp $
+#  $Id: Makefile.in,v 1.4 1996/02/23 06:13:56 wessels Exp $
 #
 prefix = @prefix@
 INSTALL_BINDIR	= $(prefix)/bin
@@ -15,14 +15,10 @@ INSTALL		= @INSTALL@
 INSTALL_BIN 	= @INSTALL_PROGRAM@
 INSTALL_FILE 	= @INSTALL_DATA@
 RANLIB		= @RANLIB@
+CFLAGS		= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 XTRA_CFLAGS     = @XTRA_CFLAGS@
-
-
-DEBUG		= $(DEBUG_TOP) #-O #-g #-DDEBUG
-DEBUG_LIBS	=
-
-CFLAGS		= $(DEBUG) $(CACHE_FLAGS) -I../include $(XTRA_CFLAGS)
 
 LIBDIR		= .
 UTILOBJS	= rfc850.o \
