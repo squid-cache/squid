@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.197 1997/01/20 18:27:15 wessels Exp $
+ * $Id: store.cc,v 1.198 1997/01/20 18:47:53 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -130,10 +130,6 @@
  */
 
 #include "squid.h"		/* goes first */
-
-#if HAVE_MATH_H
-#include <math.h>
-#endif
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 #define MAX_SWAP_FILE		(1<<21)
