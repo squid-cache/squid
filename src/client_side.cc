@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.550 2001/10/23 11:00:41 hno Exp $
+ * $Id: client_side.cc,v 1.551 2001/10/23 11:05:16 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2235,7 +2235,6 @@ clientProcessRequest2(clientHttpRequest * http)
     if (r->flags.nocache) {
 	debug(33, 3) ("clientProcessRequest2: no-cache REFRESH MISS\n");
 	http->entry = NULL;
-	ipcacheInvalidate(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
     }
     if (NULL == r->range) {
