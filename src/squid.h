@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.144 1997/12/06 01:26:28 wessels Exp $
+ * $Id: squid.h,v 1.145 1997/12/21 11:21:11 kostas Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -218,10 +218,11 @@
  * places
  */
 typedef void struct {
-        struct timeval ru_stime;
-        int ru_maxrss;
-        int ru_majflt;
+    struct timeval ru_stime;
+    int ru_maxrss;
+    int ru_majflt;
 } rusage;
+
 #endif
 #endif
 
@@ -311,6 +312,7 @@ typedef void struct {
 #include "globals.h"
 
 #include "util.h"
+#include "radix.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
