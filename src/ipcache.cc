@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.89 1996/11/24 04:33:00 wessels Exp $
+ * $Id: ipcache.cc,v 1.90 1996/12/18 00:03:00 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -155,7 +155,6 @@ static void ipcacheAddPending _PARAMS((ipcache_entry *, int fd, IPH, void *));
 static void ipcacheEnqueue _PARAMS((ipcache_entry *));
 static void *ipcacheDequeue _PARAMS((void));
 static void ipcache_dnsDispatch _PARAMS((dnsserver_t *, ipcache_entry *));
-static ipcache_addrs *ipcacheCheckNumeric _PARAMS((const char *name));
 static void ipcacheStatPrint _PARAMS((ipcache_entry *, StoreEntry *));
 static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
 static void ipcacheLockEntry _PARAMS((ipcache_entry *));
@@ -966,7 +965,7 @@ ipcacheInvalidate(const char *name)
      * FMR */
 }
 
-static ipcache_addrs *
+ipcache_addrs *
 ipcacheCheckNumeric(const char *name)
 {
     unsigned int ip;

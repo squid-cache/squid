@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.69 1996/12/17 21:16:53 wessels Exp $
+ * $Id: acl.cc,v 1.70 1996/12/18 00:02:59 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -905,7 +905,18 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	}
 	/* NOTREACHED */
     case ACL_DST_DOMAIN:
-	return aclMatchDomainList(acl->data, r->host);
+	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
+	    return aclMatchDomainList(acl->data, r->host);
+	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
+	if (fqdn)
+	    return aclMatchDomainList(acl->data, fqdn);
+	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
+	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+		acl->name, inet_ntoa(ia->in_addrs[0]));
+	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEED;
+	    return 0;
+	}
+	return aclMatchDomainList(acl->data, "none");
 	/* NOTREACHED */
     case ACL_SRC_DOMAIN:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
