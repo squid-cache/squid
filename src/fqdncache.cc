@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.39 1996/11/22 08:38:50 wessels Exp $
+ * $Id: fqdncache.cc,v 1.40 1996/11/24 02:55:56 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -693,6 +693,8 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 void
 fqdncache_init(void)
 {
+    if (fqdn_table)
+	return;
     debug(35, 3, "Initializing FQDN Cache...\n");
     memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
     /* small hash table */
