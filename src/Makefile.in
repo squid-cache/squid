@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.160 1998/08/17 23:27:15 wessels Exp $
+#  $Id: Makefile.in,v 1.161 1998/10/10 14:57:36 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -107,6 +107,7 @@ OBJS	 	= \
 		ftp.o \
 		globals.o \
 		gopher.o \
+		helper.o \
 		@HTCP_OBJS@ \
 		http.o \
 		http-anon.o \

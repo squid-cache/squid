@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.272 1998/09/15 19:37:51 wessels Exp $
+ * $Id: main.cc,v 1.273 1998/10/10 14:57:41 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -314,9 +314,9 @@ mainReconfigure(void)
 #ifdef SQUID_SNMP
     snmpConnectionClose();
 #endif
-    dnsShutdownServers(NULL);
-    redirectShutdownServers(NULL);
-    authenticateShutdownServers(NULL);
+    dnsShutdown();
+    redirectShutdown();
+    authenticateShutdown();
     storeDirCloseSwapLogs();
     errorFree();
     parseConfigFile(ConfigFile);
@@ -324,9 +324,9 @@ mainReconfigure(void)
     ipcache_restart();		/* clear stuck entries */
     fqdncache_restart();	/* sigh, fqdncache too */
     errorInitialize();		/* reload error pages */
-    dnsOpenServers();
-    redirectOpenServers();
-    authenticateOpenServers();
+    dnsInit();
+    redirectInit();
+    authenticateInit();
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0) {
 	if (!Config2.Accel.on || Config.onoff.accel_with_proxy)
@@ -404,9 +404,9 @@ mainInitialize(void)
 	disk_init();		/* disk_init must go before ipcache_init() */
     ipcache_init();
     fqdncache_init();
-    dnsOpenServers();
-    redirectOpenServers();
-    authenticateOpenServers();
+    dnsInit();
+    redirectInit();
+    authenticateInit();
     useragentOpenLog();
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
     httpAnonInitModule();	/* must go before accepting requests */
@@ -575,9 +575,9 @@ main(int argc, char **argv)
 	    do_shutdown = 0;
 	    shutting_down = 1;
 	    serverConnectionsClose();
-	    eventAdd("dnsShutdownServers", dnsShutdownServers, NULL, 0.0, 1);
-	    eventAdd("redirectShutdownServers", redirectShutdownServers, NULL, 0.0, 1);
-	    eventAdd("authenticateShutdownServers", authenticateShutdownServers, NULL, 0.0, 1);
+	    dnsShutdown();
+	    redirectShutdown();
+	    authenticateShutdown();
 	    eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
 	}
 	eventRun();
@@ -704,7 +704,6 @@ SquidShutdown(void *unused)
     snmpConnectionClose();
 #endif
     releaseServerSockets();
-    redirectShutdownServers(NULL);
     commCloseAllSockets();
     unlinkdClose();
     storeDirWriteCleanLogs(0);
