@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.17 1997/11/05 05:29:25 wessels Exp $
+ * $Id: globals.h,v 1.18 1997/11/15 00:14:48 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -65,7 +65,6 @@ extern int opt_reload_hit_only;	/* 0 */
 extern int opt_syslog_enable;	/* 0 */
 extern int opt_udp_hit_obj;	/* 0 */
 extern int opt_zap_disk_store;	/* 0 */
-extern int select_loops;	/* 0 */
 extern int syslog_enable;	/* 0 */
 extern int theInIcpConnection;	/* -1 */
 extern int theOutIcpConnection;	/* -1 */
@@ -82,13 +81,10 @@ extern struct in_addr local_addr;
 extern struct in_addr no_addr;
 extern struct in_addr theOutICPAddr;
 extern struct timeval current_time;
+extern struct timeval squid_start;
 extern time_t squid_curtime;	/* 0 */
-extern time_t squid_starttime;	/* 0 */
 extern volatile int reconfigure_pending;	/* 0 */
 extern volatile int shutdown_pending;	/* 0 */
-extern volatile unsigned long nudpconn;		/* 0 */
-extern volatile unsigned long ntcpconn;		/* 0 */
-extern int unlinkd_count;	/* 0 */
 extern int fileno_stack_count;	/* 0 */
 extern int store_rebuilding;	/* 1 */
 extern int store_swap_size;	/* 0 */
@@ -97,6 +93,7 @@ extern unsigned long store_mem_size;	/* 0 */
 extern icpUdpData *UdpQueueHead;	/* NULL */
 extern icpUdpData *UdpQueueTail;	/* NULL */
 extern time_t hit_only_mode_until;	/* 0 */
+extern StatCounters Counter;
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;

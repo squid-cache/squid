@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.204 1997/11/14 17:21:15 wessels Exp $
+ * $Id: comm.cc,v 1.205 1997/11/15 00:14:47 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -869,7 +869,7 @@ comm_poll(time_t sec)
 #endif
 	for (;;) {
 	    num = poll(pfds, nfds, poll_time);
-	    select_loops++;
+	    Counter.select_loops++;
 	    if (num >= 0)
 		break;
 	    if (errno == EINTR)
@@ -1016,7 +1016,7 @@ comm_select(time_t sec)
 	    poll_time.tv_sec = sec > 0 ? 1 : 0;
 	    poll_time.tv_usec = 0;
 	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
-	    select_loops++;
+	    Counter.select_loops++;
 	    if (num >= 0)
 		break;
 	    if (errno == EINTR)

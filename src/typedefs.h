@@ -73,6 +73,7 @@ typedef struct _CommWriteStateData CommWriteStateData;
 typedef struct _ErrorState ErrorState;
 typedef struct _dlink_node dlink_node;
 typedef struct _dlink_list dlink_list;
+typedef struct _StatCounters StatCounters;
 
 typedef void AIOCB(void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, size_t size, int flag, void *data);

@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.10 1997/10/25 17:23:04 wessels Exp $
+ * $Id: unlinkd.cc,v 1.11 1997/11/15 00:14:53 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -177,7 +177,7 @@ unlinkdUnlink(const char *path)
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	xfree);
-    unlinkd_count++;
+    Counter.unlink.requests++;
 }
 
 void
@@ -194,7 +194,6 @@ unlinkdClose(void)
 void
 unlinkdInit(void)
 {
-    unlinkd_count = 0;
     unlinkd_fd = unlinkdCreate();
     if (unlinkd_fd < 0)
 	fatal("unlinkdInit: failed to start unlinkd\n");

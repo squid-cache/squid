@@ -41,6 +41,7 @@ icpUdpReply(int fd, void *data)
 	    queue->len,
 	    inet_ntoa(queue->address.sin_addr),
 	    ntohs(queue->address.sin_port));
+	Counter.icp.pkts_sent++;
 	x = comm_udp_sendto(fd,
 	    &queue->address,
 	    sizeof(struct sockaddr_in),
@@ -49,6 +50,8 @@ icpUdpReply(int fd, void *data)
 	if (x < 0) {
 	    if (ignoreErrno(errno))
 		break;		/* don't de-queue */
+	} else {
+	    Counter.icp.bytes_sent += x;
 	}
 	UdpQueueHead = queue->next;
 	if (queue->logcode)
@@ -231,7 +234,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 
     switch (header.opcode) {
     case ICP_OP_QUERY:
-	nudpconn++;
 	/* We have a valid packet */
 	url = buf + sizeof(header) + sizeof(u_num32);
 	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
@@ -402,6 +404,8 @@ icpHandleUdp(int sock, void *datanotused)
 		sock, xstrerror());
 	return;
     }
+    Counter.icp.pkts_recv++;
+    Counter.icp.bytes_recv += len;
     buf[len] = '\0';
     debug(12, 4) ("icpHandleUdp: FD %d: received %d bytes from %s.\n",
 	sock,
