@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.220 1998/01/05 21:18:13 wessels Exp $
+ * $Id: comm.cc,v 1.221 1998/01/06 02:47:14 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -328,6 +328,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     cs->locks--;
     if (ia == NULL) {
 	debug(5, 3) ("commConnectDnsHandle: Unknown host: %s\n", cs->host);
+	assert(dns_error_message != NULL);
 	commConnectCallback(cs, COMM_ERR_DNS);
 	return;
     }
