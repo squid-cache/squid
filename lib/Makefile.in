@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.19 1996/10/25 02:15:15 wessels Exp $
+#  $Id: Makefile.in,v 1.20 1996/11/25 02:38:20 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -31,7 +31,7 @@ UTILOBJS	= rfc1123.o \
 		  uudecode.o \
 		  $(LIBOBJS)
 REGEXOBJS	= GNUregex.o
-LIBS		= libmiscutil.a libregex.a
+LIBS		= libmiscutil.a @LIBREGEX@
 
 CFLAGS		= $(AC_CFLAGS) $(INCLUDE)
 
