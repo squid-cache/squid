@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.93 1997/10/13 22:09:10 kostas Exp $
+ * $Id: gopher.cc,v 1.94 1997/10/14 16:56:04 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -867,16 +867,6 @@ gopherStart(StoreEntry * entry)
     }
     comm_add_close_handler(fd, gopherStateFree, gopherState);
     storeRegisterAbort(entry, gopherAbort, gopherState);
-    /* check if IP is already in cache. It must be. 
-     * It should be done before this route is called. 
-     * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(gopherState->host, 0)) {
-	debug(10, 4) ("gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
-	assert(!ERR_DNS_FAIL);
-	storeAbort(entry, 0);
-	comm_close(fd);
-	return;
-    }
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
 	&& (strchr(gopherState->request, '?') == NULL)) {
 	/* Index URL without query word */
