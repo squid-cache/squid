@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.114 1998/08/14 19:25:17 wessels Exp $
+ * $Id: enums.h,v 1.115 1998/08/16 06:35:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -644,6 +644,7 @@ enum {
     MEDIAN_HIT,
     MEDIAN_MISS,
     MEDIAN_NM,
+    MEDIAN_NH,
     MEDIAN_ICP_REPLY
 };
 
