@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.417 2002/10/13 20:34:58 robertc Exp $
+ * $Id: cache_cf.cc,v 1.418 2002/10/13 23:48:23 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -819,14 +819,14 @@ free_delay_pool_count(delayConfig * cfg)
     if (!cfg->pools)
 	return;
     for (i = 0; i < cfg->pools; i++) {
-	if (cfg->class[i]) {
+	if (cfg->delay_class[i]) {
 	    delayFreeDelayPool(i);
 	    safe_free(cfg->rates[i]);
 	}
 	aclDestroyAccessList(&cfg->access[i]);
     }
     delayFreeDelayData(cfg->pools);
-    xfree(cfg->class);
+    xfree(cfg->delay_class);
     xfree(cfg->rates);
     xfree(cfg->access);
     memset(cfg, 0, sizeof(*cfg));
@@ -874,7 +874,7 @@ parse_delay_pool_count(delayConfig * cfg)
     parse_ushort(&cfg->pools);
     if (cfg->pools) {
 	delayInitDelayData(cfg->pools);
-	cfg->class = xcalloc(cfg->pools, sizeof(u_char));
+	cfg->delay_class = xcalloc(cfg->pools, sizeof(u_char));
 	cfg->rates = xcalloc(cfg->pools, sizeof(delaySpecSet *));
 	cfg->access = xcalloc(cfg->pools, sizeof(acl_access *));
     }
@@ -896,16 +896,16 @@ parse_delay_pool_class(delayConfig * cfg)
 	return;
     }
     pool--;
-    if (cfg->class[pool]) {
+    if (cfg->delay_class[pool]) {
 	delayFreeDelayPool(pool);
 	safe_free(cfg->rates[pool]);
     }
     cfg->rates[pool] = xmalloc(class * sizeof(delaySpec));
-    cfg->class[pool] = class;
+    cfg->delay_class[pool] = class;
     cfg->rates[pool]->aggregate.restore_bps = cfg->rates[pool]->aggregate.max_bytes = -1;
-    if (cfg->class[pool] >= 3)
+    if (cfg->delay_class[pool] >= 3)
 	cfg->rates[pool]->network.restore_bps = cfg->rates[pool]->network.max_bytes = -1;
-    if (cfg->class[pool] >= 2)
+    if (cfg->delay_class[pool] >= 2)
 	cfg->rates[pool]->individual.restore_bps = cfg->rates[pool]->individual.max_bytes = -1;
     delayCreateDelayPool(pool, class);
 }
@@ -924,7 +924,7 @@ parse_delay_pool_rates(delayConfig * cfg)
 	return;
     }
     pool--;
-    class = cfg->class[pool];
+    class = cfg->delay_class[pool];
     if (class == 0) {
 	debug(3, 0) ("parse_delay_pool_rates: Ignoring pool %d attempt to set rates with class not set\n", pool + 1);
 	return;
@@ -942,7 +942,7 @@ parse_delay_pool_rates(delayConfig * cfg)
 	ptr->max_bytes = i;
 	ptr++;
     }
-    class = cfg->class[pool];
+    class = cfg->delay_class[pool];
     /* if class is 3, swap around network and individual */
     if (class == 3) {
 	delaySpec tmp;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.26 2002/09/24 21:29:31 robertc Exp $
+ * $Id: delay_pools.cc,v 1.27 2002/10/13 23:48:24 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -40,14 +40,14 @@
 #include "StoreClient.h"
 
 struct _class1DelayPool {
-    int class;
+    int delay_class;
     int aggregate;
 };
 
 #define IND_MAP_SZ 256
 
 struct _class2DelayPool {
-    int class;
+    int delay_class;
     int aggregate;
     /* OK: -1 is terminator.  individual[255] is always host 255. */
     /* 255 entries + 1 terminator byte */
@@ -61,7 +61,7 @@ struct _class2DelayPool {
 #define C3_IND_SZ (NET_MAP_SZ*IND_MAP_SZ)
 
 struct _class3DelayPool {
-    int class;
+    int delay_class;
     int aggregate;
     /* OK: -1 is terminator.  network[255] is always host 255. */
     /* 255 entries + 1 terminator byte */
@@ -207,22 +207,22 @@ delayUnregisterDelayIdPtr(delay_id * loc)
 }
 
 void
-delayCreateDelayPool(unsigned short pool, u_char class)
+delayCreateDelayPool(unsigned short pool, u_char delay_class)
 {
-    switch (class) {
+    switch (delay_class) {
     case 1:
 	delay_data[pool].class1 = xmalloc(sizeof(class1DelayPool));
-	delay_data[pool].class1->class = 1;
+	delay_data[pool].class1->delay_class = 1;
 	memory_used += sizeof(class1DelayPool);
 	break;
     case 2:
 	delay_data[pool].class2 = xmalloc(sizeof(class2DelayPool));
-	delay_data[pool].class1->class = 2;
+	delay_data[pool].class1->delay_class = 2;
 	memory_used += sizeof(class2DelayPool);
 	break;
     case 3:
 	delay_data[pool].class3 = xmalloc(sizeof(class3DelayPool));
-	delay_data[pool].class1->class = 3;
+	delay_data[pool].class1->delay_class = 3;
 	memory_used += sizeof(class3DelayPool);
 	break;
     default:
@@ -231,12 +231,12 @@ delayCreateDelayPool(unsigned short pool, u_char class)
 }
 
 void
-delayInitDelayPool(unsigned short pool, u_char class, delaySpecSet * rates)
+delayInitDelayPool(unsigned short pool, u_char delay_class, delaySpecSet * rates)
 {
     /* delaySetSpec may be pointer to partial structure so MUST pass by
      * reference.
      */
-    switch (class) {
+    switch (delay_class) {
     case 1:
 	delay_data[pool].class1->aggregate = (int) (((double) rates->aggregate.max_bytes *
 		Config.Delay.initial) / 100);
@@ -264,7 +264,7 @@ void
 delayFreeDelayPool(unsigned short pool)
 {
     /* this is a union - and all free() cares about is the pointer location */
-    switch (delay_data[pool].class1->class) {
+    switch (delay_data[pool].class1->delay_class) {
     case 1:
 	memory_used -= sizeof(class1DelayPool);
 	break;
@@ -276,7 +276,7 @@ delayFreeDelayPool(unsigned short pool)
 	break;
     default:
 	debug(77, 1) ("delayFreeDelayPool: bad class %d\n",
-	    delay_data[pool].class1->class);
+	    delay_data[pool].class1->delay_class);
     }
     safe_free(delay_data[pool].class1);
 }
@@ -314,7 +314,7 @@ delayClient(clientHttpRequest * http)
     int j;
     unsigned int host;
     unsigned short pool, position;
-    unsigned char class, net;
+    unsigned char delay_class, net;
     assert(http);
     r = http->request;
 
@@ -334,12 +334,12 @@ delayClient(clientHttpRequest * http)
     }
     if (pool == Config.Delay.pools)
 	return delayId(0, 0);
-    class = Config.Delay.class[pool];
-    if (class == 0)
+    delay_class = Config.Delay.delay_class[pool];
+    if (delay_class == 0)
 	return delayId(0, 0);
-    if (class == 1)
+    if (delay_class == 1)
 	return delayId(pool + 1, 0);
-    if (class == 2) {
+    if (delay_class == 2) {
 	host = ntohl(ch.src_addr.s_addr) & 0xff;
 	if (host == 255) {
 	    if (!delay_data[pool].class2->individual_255_used) {
@@ -539,7 +539,7 @@ delayPoolsUpdate(void *unused)
 {
     int incr = squid_curtime - delay_pools_last_update;
     unsigned short i;
-    unsigned char class;
+    unsigned char delay_class;
     if (!Config.Delay.pools)
 	return;
     eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
@@ -547,10 +547,10 @@ delayPoolsUpdate(void *unused)
 	return;
     delay_pools_last_update = squid_curtime;
     for (i = 0; i < Config.Delay.pools; i++) {
-	class = Config.Delay.class[i];
-	if (!class)
+	delay_class = Config.Delay.delay_class[i];
+	if (!delay_class)
 	    continue;
-	switch (class) {
+	switch (delay_class) {
 	case 1:
 	    delayUpdateClass1(delay_data[i].class1, Config.Delay.rates[i], incr);
 	    break;
@@ -575,10 +575,10 @@ delayBytesWanted(delay_id d, int min, int max)
 {
     unsigned short position = d & 0xFFFF;
     unsigned short pool = (d >> 16) - 1;
-    unsigned char class = (pool == 0xFFFF) ? 0 : Config.Delay.class[pool];
+    unsigned char delay_class = (pool == 0xFFFF) ? 0 : Config.Delay.delay_class[pool];
     int nbytes = max;
 
-    switch (class) {
+    switch (delay_class) {
     case 0:
 	break;
 
@@ -604,7 +604,7 @@ delayBytesWanted(delay_id d, int min, int max)
 	break;
 
     default:
-	fatalf("delayBytesWanted: Invalid class %d\n", class);
+	fatalf("delayBytesWanted: Invalid class %d\n", delay_class);
 	break;
     }
     nbytes = XMAX(min, nbytes);
@@ -621,12 +621,12 @@ delayBytesIn(delay_id d, int qty)
 {
     unsigned short position = d & 0xFFFF;
     unsigned short pool = (d >> 16) - 1;
-    unsigned char class;
+    unsigned char delay_class;
 
     if (pool == 0xFFFF)
 	return;
-    class = Config.Delay.class[pool];
-    switch (class) {
+    delay_class = Config.Delay.delay_class[pool];
+    switch (delay_class) {
     case 1:
 	delay_data[pool].class1->aggregate -= qty;
 	return;
@@ -640,7 +640,7 @@ delayBytesIn(delay_id d, int qty)
 	delay_data[pool].class3->individual[position] -= qty;
 	return;
     }
-    fatalf("delayBytesWanted: Invalid class %d\n", class);
+    fatalf("delayBytesWanted: Invalid class %d\n", delay_class);
     assert(0);
 }
 
@@ -841,7 +841,7 @@ delayPoolStats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "Delay pools configured: %d\n\n", Config.Delay.pools);
     for (i = 0; i < Config.Delay.pools; i++) {
-	switch (Config.Delay.class[i]) {
+	switch (Config.Delay.delay_class[i]) {
 	case 0:
 	    storeAppendPrintf(sentry, "Pool: %d\n\tClass: 0\n\n", i + 1);
 	    storeAppendPrintf(sentry, "\tMisconfigured pool.\n\n");
