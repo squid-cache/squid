@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.569 2002/04/06 11:25:46 hno Exp $
+ * $Id: client_side.cc,v 1.570 2002/04/11 22:05:53 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1825,7 +1825,7 @@ clientProcessRequest2(clientHttpRequest * http)
 {
     request_t *r = http->request;
     StoreEntry *e;
-    if (r->flags.cachable)
+    if (r->flags.cachable || r->flags.internal)
 	e = http->entry = storeGetPublicByRequest(r);
     else
 	e = http->entry = NULL;
