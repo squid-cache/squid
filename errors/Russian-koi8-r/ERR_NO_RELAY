@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=koi8-r">
+<TITLE>ОШИБКА: Запрошенный URL не может быть доставлен</TITLE>
+</HEAD><BODY>
+<H1>ОШИБКА</H1>
+<H2>Запрошенный URL не может быть доставлен</H2>
+<HR>
+<P>
+Во время доставки URL:
+<A HREF="%U">%U</A>
+<P>
+Произошла следующая ошибка:
+<UL>
+<LI>
+<STRONG>
+Wais Relay не определен.
+</STRONG>
+</UL>
+
+<P>
+Для этого кэша не определен сервер WAIS Relay.
+ Сообщите администратору.
+</P>
