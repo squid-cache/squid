@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.34 1996/07/22 16:40:27 wessels Exp $
+ * $Id: neighbors.cc,v 1.35 1996/07/25 05:46:38 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ char *hier_strings[] =
 {
     "NONE",
     "DIRECT",
-    "NEIGHBOR_HIT",
+    "SIBLING_HIT",
     "PARENT_HIT",
     "SINGLE_PARENT",
     "FIRST_UP_PARENT",
@@ -127,13 +127,10 @@ char *hier_strings[] =
     "FIRST_PARENT_MISS",
     "LOCAL_IP_DIRECT",
     "FIREWALL_IP_DIRECT",
-    "DEAD_PARENT",
-    "DEAD_NEIGHBOR",
-    "REVIVE_PARENT",
-    "REVIVE_NEIGHBOR",
     "NO_DIRECT_FAIL",
     "SOURCE_FASTEST",
-    "UDP_HIT_OBJ",
+    "SIBLING_UDP_HIT_OBJ",
+    "PARENT_UDP_HIT_OBJ",
     "INVALID CODE"
 };
 
@@ -673,7 +670,10 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    return;
 	}
     } else if (header->opcode == ICP_OP_HIT_OBJ) {
-	if (entry->object_len != 0) {
+	if (e == NULL) {
+	    debug(15, 0, "Ignoring ICP_OP_HIT_OBJ from non-neighbor %s\n",
+		inet_ntoa(from->sin_addr));
+	} else if (entry->object_len != 0) {
 	    debug(15, 1, "Too late UDP_HIT_OBJ '%s'?\n", entry->url);
 	} else {
 	    protoCancelTimeout(0, entry);
@@ -684,9 +684,9 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    storeAppend(entry, data, data_sz);
 	    storeComplete(entry);
 	    hierarchy_log_append(entry,
-		HIER_UDP_HIT_OBJ,
+		e->type==EDGE_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
 		0,
-		e ? e->host : inet_ntoa(from->sin_addr));
+		e->host);
 	    if (httpState->reply_hdr)
 		put_free_8k_page(httpState->reply_hdr);
 	    safe_free(httpState);
@@ -697,7 +697,7 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    debug(15, 1, "neighborsUdpAck: Ignoring HIT from non-neighbor\n");
 	} else {
 	    hierarchy_log_append(entry,
-		e->type == EDGE_SIBLING ? HIER_NEIGHBOR_HIT : HIER_PARENT_HIT,
+		e->type == EDGE_SIBLING ? HIER_SIBLING_HIT : HIER_PARENT_HIT,
 		0,
 		e->host);
 	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
