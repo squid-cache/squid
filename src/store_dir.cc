@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.101 2000/01/05 06:25:42 wessels Exp $
+ * $Id: store_dir.cc,v 1.102 2000/01/05 06:26:41 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -75,6 +75,7 @@ storeCreateSwapDirectories(void)
     } while (pid > 0 || (pid < 0 && errno == EINTR));
 }
 
+
 static int
 storeDirSelectSwapDir(void)
 {
@@ -102,7 +103,7 @@ storeDirSelectSwapDir(void)
 
 #if OLD
 /*
- *Spread load across least 3/4 of the store directories
+ * Spread load across least 3/4 of the store directories
  */
 static int
 storeDirSelectSwapDir(void)
