@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.16 1998/03/08 21:02:10 rousskov Exp $
+ * $Id: mem.cc,v 1.17 1998/03/13 05:43:52 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -52,7 +52,10 @@ static MemMeter StrVolumeMeter;
 
 /* local routines */
 
-/* we have a limit on _total_ amount of idle memory so we ignore max_pages for now */
+/*
+ * we have a limit on _total_ amount of idle memory so we ignore
+ * max_pages for now
+ */
 static void
 memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused)
 {
@@ -212,7 +215,7 @@ memInit(void)
     memDataInit(MEM_HASH_TABLE, "hash_table", sizeof(hash_table), 0);
     memDataInit(MEM_HIERARCHYLOGENTRY, "HierarchyLogEntry",
 	sizeof(HierarchyLogEntry), 0);
-    memDataInit(MEM_HTTPSTATEDATA, "HttpStateData", sizeof(HttpStateData), 0);
+    memDataInit(MEM_HTTP_STATE_DATA, "HttpStateData", sizeof(HttpStateData), 0);
     memDataInit(MEM_HTTPREPLY, "http_reply", sizeof(http_reply), 0);
     memDataInit(MEM_HTTP_HDR_CC, "HttpHdrCc", sizeof(HttpHdrCc), 0);
     memDataInit(MEM_HTTP_HDR_RANGE_SPEC, "HttpHdrRangeSpec", sizeof(HttpHdrRangeSpec), 0);
