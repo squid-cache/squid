@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.61 1998/11/18 00:29:27 glenn Exp $
+ * $Id: snmp_agent.cc,v 1.62 1998/11/25 09:00:24 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -420,9 +420,9 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	case PERF_PROTOSTAT_AGGR_CURSWAP:
 	    *(Answer->val.integer) = (snint) store_swap_size;
 	    break;
-        case PERF_PROTOSTAT_AGGR_CLIENTS:
-            *(Answer->val.integer) = (snint) Counter.client_http.clients;
-            break;
+	case PERF_PROTOSTAT_AGGR_CLIENTS:
+	    *(Answer->val.integer) = (snint) Counter.client_http.clients;
+	    break;
 	default:
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
 	    snmp_var_free(Answer);
@@ -472,12 +472,12 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	case PERF_MEDIAN_DNS:
 	    x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
 	    break;
-        case PERF_MEDIAN_RHR:
-            x = statRequestHitRatio(minutes);
-            break;
-        case PERF_MEDIAN_BHR:
-            x = statByteHitRatio(minutes);
-            break;
+	case PERF_MEDIAN_RHR:
+	    x = statRequestHitRatio(minutes);
+	    break;
+	case PERF_MEDIAN_BHR:
+	    x = statByteHitRatio(minutes);
+	    break;
 	default:
 	    *ErrP = SNMP_ERR_NOSUCHNAME;
 	    snmp_var_free(Answer);

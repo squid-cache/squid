@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.311 1998/11/13 21:02:02 rousskov Exp $
+ * $Id: cache_cf.cc,v 1.312 1998/11/25 09:00:18 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -757,12 +757,12 @@ parse_peer(peer ** head)
 	    p->carp.hash += (p->carp.hash << 19) + *token;
     }
 #endif
-    cbdataAdd(p, MEM_PEER); /* must preceed peerDigestCreate */
+    cbdataAdd(p, MEM_PEER);	/* must preceed peerDigestCreate */
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest) {
 	p->digest = peerDigestCreate(p);
-	cbdataLock(p->digest); /* so we know when/if digest disappears */
-    }	
+	cbdataLock(p->digest);	/* so we know when/if digest disappears */
+    }
 #endif
     while (*head != NULL)
 	head = &(*head)->next;
