@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.37 2002/05/15 10:30:27 hno Exp $
+ * $Id: helper.cc,v 1.38 2002/05/15 19:08:34 wessels Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -410,8 +410,8 @@ helperStats(StoreEntry * sentry, helper * hlp)
 	hlp->stats.replies);
     storeAppendPrintf(sentry, "queue length: %d\n",
 	hlp->stats.queue_size);
-    storeAppendPrintf(sentry, "avg service time: %d msec\n",
-	hlp->stats.avg_svc_time);
+    storeAppendPrintf(sentry, "avg service time: %.2f msec\n",
+	(double) hlp->stats.avg_svc_time / 1000.0);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
 	"#",
@@ -423,7 +423,8 @@ helperStats(StoreEntry * sentry, helper * hlp)
 	"Request");
     for (link = hlp->servers.head; link; link = link->next) {
 	srv = link->data;
-	tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
+	tt = 0.001 * tvSubMsec(srv->dispatch_time,
+	    srv->flags.busy ? current_time : srv->answer_time);
 	storeAppendPrintf(sentry, "%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
 	    srv->index + 1,
 	    srv->rfd,
@@ -731,9 +732,10 @@ helperHandleRead(int fd, void *data)
 	helperRequestFree(r);
 	srv->request = NULL;
 	hlp->stats.replies++;
+	srv->answer_time = current_time;
 	hlp->stats.avg_svc_time =
 	    intAverage(hlp->stats.avg_svc_time,
-	    tvSubMsec(srv->dispatch_time, current_time),
+	    tvSubUsec(srv->dispatch_time, current_time),
 	    hlp->stats.replies, REDIRECT_AV_FACTOR);
 	if (srv->flags.shutdown) {
 	    comm_close(srv->wfd);
