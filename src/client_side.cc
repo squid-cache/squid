@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.174 1997/12/06 05:16:53 wessels Exp $
+ * $Id: client_side.cc,v 1.175 1997/12/06 18:58:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -559,7 +559,6 @@ httpRequestFree(void *data)
     safe_free(http->uri);
     safe_free(http->log_uri);
     safe_free(http->al.headers.reply);
-    wordlistDestroy(&http->urls);
     if (entry) {
 	http->entry = NULL;
 	storeUnregister(entry, http);
@@ -1407,6 +1406,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*status = -1;
 	return http;
     }
+debug(0,0)("URI=%s\n", url);
     debug(12, 5) ("parseHttpRequest: Request is '%s'\n", url);
 
     token = strtok(NULL, null_string);
@@ -1499,6 +1499,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	/* URL may be rewritten later, so make extra room */
 	url_sz = strlen(url) + Config.appendDomainLen + 5;
 	http->uri = xcalloc(url_sz, 1);
+debug(0,0)("URI=%s\n", url);
 	strcpy(http->uri, url);
 	http->accel = 0;
     }
@@ -1624,10 +1625,7 @@ clientReadRequest(int fd, void *data)
 		break;
 	    }
 	    http->request = requestLink(request);
-	    if (request->protocol == PROTO_URN)
-		urnStart(http);
-	    else
-	        clientAccessCheck(http);
+	    clientAccessCheck(http);
 	    /*
 	     * break here for NON-GET because most likely there is a
 	     * reqeust body following and we don't want to parse it
