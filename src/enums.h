@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.162 1999/12/30 17:36:31 wessels Exp $
+ * $Id: enums.h,v 1.163 2000/03/06 16:23:31 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -10,10 +10,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,9 @@ typedef enum {
     LOG_TCP_MEM_HIT,
     LOG_TCP_DENIED,
     LOG_TCP_OFFLINE_HIT,
+#if LOG_TCP_REDIRECTS
+    LOG_TCP_REDIRECT,
+#endif
     LOG_UDP_HIT,
     LOG_UDP_MISS,
     LOG_UDP_DENIED,
@@ -197,6 +200,7 @@ typedef enum {
     HDR_CONTENT_MD5,
     HDR_CONTENT_RANGE,
     HDR_CONTENT_TYPE,
+    HDR_COOKIE,
     HDR_DATE,
     HDR_ETAG,
     HDR_EXPIRES,

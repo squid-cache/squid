@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.165 2000/01/31 23:23:04 wessels Exp $
+# $Id: cf.data.pre,v 1.166 2000/03/06 16:23:29 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -10,10 +10,10 @@
 #  Internet community.  Development is led by Duane Wessels of the
 #  National Laboratory for Applied Network Research and funded by the
 #  National Science Foundation.  Squid is Copyrighted (C) 1998 by
-#  Duane Wessels and the University of California San Diego.  Please
-#  see the COPYRIGHT file for full details.  Squid incorporates
-#  software developed and/or copyrighted by other sources.  Please see
-#  the CREDITS file for full details.
+#  the Regents of the University of California.  Please see the
+#  COPYRIGHT file for full details.  Squid incorporates software
+#  developed and/or copyrighted by other sources.  Please see the
+#  CREDITS file for full details.
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ COMMENT_START
 	various options happen to be.  If you don't need to change the
 	default, you shouldn't uncomment the line.  Doing so may cause
 	run-time problems.  In some cases "none" refers to no default
-	setting at all, whilst in other cases it refers to a valid
+	setting at all, while in other cases it refers to a valid
 	option - the comments for that keyword indicate if this is the
 	case.
 
@@ -74,12 +74,14 @@ DOC_START
 
 	The default port number is 3128.
 
-	If you are running Squid in accelerateor mode, then you
+	If you are running Squid in accelerator mode, then you
 	probably want to listen on port 80 also, or instead.
 
 	The -a command line option will override the *first* port
 	number listed here.   That option will NOT override an IP
 	address, however.
+
+	You may specify multiple socket addresses on multiple lines.
 
 http_port 3128
 DOC_END
@@ -130,10 +132,7 @@ DOC_START
 	receive replies from multicast group members.
 
 	You must be very careful to NOT use a multicast address which
-	is already in use by another group of caches.  NLANR has been
-	assigned a block of multicast address space for use in Web
-	Caching.  Plese write to us at nlanr-cache@nlanr.net to receive
-	an address for your own use.
+	is already in use by another group of caches.
 
 	If you are unsure about multicast, please read the Multicast
 	chapter in the Squid FAQ (http://squid.nlanr.net/Squid/FAQ/).
@@ -173,7 +172,7 @@ DOC_START
 	udp_outgoing_address	is used for ICP packets sent out to other
 				caches.
 
-	The default behaviour is to not bind to any specific address.
+	The default behavior is to not bind to any specific address.
 
 	NOTE, udp_incoming_address and udp_outgoing_address can not
 	have the same value (unless it is 0.0.0.0) since they both use
@@ -375,12 +374,15 @@ DEFAULT: 2000
 TYPE: int
 LOC: Config.Timeout.icp_query_max
 DOC_START
-	When you use the dynamic ICP query timeout (by setting
-	'icp_query_timeout' to zero) you might want to place an
-	upper limit on the timeout value.
+	Normally the ICP query timeout is determined dynamically.  But
+	sometimes it can lead to very large values (say 5 seconds).
+	Use this option to put an upper limit on the dynamic timeout
+	value.  Do NOT use this option to always use a fixed (instead
+	of a dynamic) timeout value.
 
-	If 'icp_query_timeout' is set to zero, this value is ignored.
-icp_query_timeout 2000
+	If 'icp_query_timeout' is set to zero, then this value is
+	ignored.
+maximum_icp_query_timeout 2000
 DOC_END
 
 NAME: mcast_icp_query_timeout
@@ -613,8 +615,11 @@ DOC_START
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
 
-	Type specifies the kind of storage system to use.  If you
-	don't know what to put here, then use "ufs".
+	Type specifies the kind of storage system to use.  Most
+	everyone will want to use "ufs" as the type.  If you are using
+	Async I/O (--enable async-io) on Linux or Solaris, then you may
+	want to try "asyncufs" as the type.  Async IO support may be
+	buggy, however, so beware.
 
 	'Directory' is a top-level directory where cache swap
 	files will be stored.  If you want to use an entire disk
@@ -658,7 +663,7 @@ DEFAULT: @DEFAULT_CACHE_LOG@
 LOC: Config.Log.log
 DOC_START
 	Cache logging file. This is where general information about
-	your cache's behaviour goes. You can increase the amount of data
+	your cache's behavior goes. You can increase the amount of data
 	logged to this file with the "debug_options" tag below.
 
 cache_log @DEFAULT_CACHE_LOG@
@@ -673,7 +678,7 @@ DOC_START
 	Logs the activities of the storage manager.  Shows which
 	objects are ejected from the cache, and which objects are
 	saved and for how long.  To disable, enter "none". There are
-	not really utilities to analyse this data, so you can safely
+	not really utilities to analyze this data, so you can safely
 	disable it.
 
 cache_store_log @DEFAULT_STORE_LOG@
@@ -722,7 +727,7 @@ DOC_START
 	programs use.  To disable/enable this emulation, set
 	emulate_httpd_log to 'off' or 'on'.  The default
 	is to use the native log format since it includes useful
-	information that Squid-specific log analysers use.
+	information that Squid-specific log analyzers use.
 
 emulate_httpd_log off
 DOC_END
@@ -840,7 +845,7 @@ LOC: Config.Ftp.anon_user
 DOC_START
 	If you want the anonymous login password to be more informative
 	(and enable the use of picky ftp servers), set this to something
-	resonable for your domain, like wwwuser@somewhere.net
+	reasonable for your domain, like wwwuser@somewhere.net
 
 	The reason why this is domainless by default is that the
 	request can be made on the behalf of a user in any domain,
@@ -865,6 +870,7 @@ DOC_END
 
 NAME: cache_dns_program
 TYPE: string
+IFDEF: USE_DNSSERVER
 DEFAULT: @DEFAULT_DNSSERVER@
 LOC: Config.Program.dnsserver
 DOC_START
@@ -875,6 +881,7 @@ DOC_END
 
 NAME: dns_children
 TYPE: int
+IFDEF: USE_DNSSERVER
 DEFAULT: 5
 LOC: Config.dnsChildren
 DOC_START
@@ -883,9 +890,7 @@ DOC_START
 	probably increase this value to at least 10.  The maximum
 	is 32.  The default is 5.
 
-	To disable dnsservers, set this to 0.  NOTE, this is very
-	strongly discouraged.  If you disable dnsservers your Squid
-	process will BLOCK on DNS lookups!
+	You must have at least one dnsserver process.
 
 dns_children 5
 DOC_END
@@ -893,6 +898,7 @@ DOC_END
 
 NAME: dns_defnames
 COMMENT: on|off
+IFDEF: USE_DNSSERVER
 TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.res_defnames
@@ -940,7 +946,7 @@ DEFAULT: @DEFAULT_PINGER@
 LOC: Config.Program.pinger
 DOC_START
 	Specify the location of the executable for the pinger process.
-	This is only useful if you configured Squid (during compliation)
+	This is only useful if you configured Squid (during compilation)
 	with the '--enable-icmp' option.
 
 pinger_program @DEFAULT_PINGER@
@@ -1127,14 +1133,24 @@ TYPE: b_size_t
 DEFAULT: 0
 LOC: Config.maxReplyBodySize
 DOC_START
-	This specifies the maximum size for an HTTP reply body.
-	This can be used to restrict users from downloading very
-	large files.  If the reply headers include a content-length
-	value, then we can recognize large reply bodies early and
-	avoid downloading any of it.  If not, we will download as
-	much data up to this limit and then ungraciously terminate
-	the transfer.  If you set this parameter to zero, there
-	will be no limit imposed.
+	This option specifies the maximum size of a reply body.  It
+	can be used to prevent users from downloading very large files,
+	such as MP3's and movies.   The reply size is checked twice.
+	First when we get the reply headers, we check the
+	content-length value.  If the content length value exists and
+	is larger than this parameter, the request is denied and the
+	user receives an error message that says "the request or reply
+	is too large." If there is no content-length, and the reply
+	size exceeds this limit, the client's connection is just closed
+	and they will receive a partial reply.
+
+	NOTE: downstream caches probably can not detect a partial reply
+	if there is no content-length header, so they will cache
+	partial responses and give them out as hits.  You should NOT
+	use this option if you have downstream caches.
+
+	If you set this parameter to zero (the default), there will be
+	no limit imposed.
 reply_body_max_size 0
 DOC_END
 
@@ -1152,11 +1168,11 @@ DOC_START
 	'Min' is the time (in minutes) an object without an explicit
 	expiry time should be considered fresh. The recommended
 	value is 0, any higher values may cause dynamic applications
-	to be erronously cached unless the application designer
+	to be erroneously cached unless the application designer
 	has taken the appropriate actions.
 
 	'Percent' is a percentage of the objects age (time since last
-	modification age) an object without explicit exipry time
+	modification age) an object without explicit expiry time
 	will be considered fresh.
 
 	'Max' is an upper limit on how long objects without an explicit
@@ -1245,7 +1261,7 @@ DOC_START
 	to maximize the potential byte hit rate improvement of LFUDA.  
 
 	For more information about these cache replacement policies see
-	http://www.hpl.hp.com/personal/John_Dilley/caching/wcw.html and
+	http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html and
 	http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
 
 replacement_policy LFUDA
@@ -1474,7 +1490,7 @@ DEFAULT: 1 day
 DOC_START
 	The maximum amount of time that a client (browser) is allowed to
 	remain connected to the cache process.  This protects the Cache
-	from having alot of sockets (and hence file descriptors) tied up
+	from having a lot of sockets (and hence file descriptors) tied up
 	in a CLOSE_WAIT state from remote clients that go away without
 	properly shutting down (either because of a network failure or
 	because of a poor client implementation).  The default is one
@@ -1581,8 +1597,8 @@ DOC_START
 	acl aclname dst      ip-address/netmask ... (URL host's IP address)
 	acl aclname myip     ip-address/netmask ... (local socket IP address)
 
-	acl aclname srcdomain   foo.com ...     # reverse lookup, client IP
-	acl aclname dstdomain   foo.com ...     # Destination server from URL
+	acl aclname srcdomain   .foo.com ...    # reverse lookup, client IP
+	acl aclname dstdomain   .foo.com ...    # Destination server from URL
 	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
 	acl aclname dstdom_regex [-i] xxx ...   # regex matching server
 	  # For dstdomain and dstdom_regex  a reverse lookup is tried if a IP
@@ -1887,7 +1903,7 @@ COMMENT_START
 	create cache hierarchies.
 
 	An 'announcement' message is sent (via UDP) to the registration
-	service by Squid.  By default, the annoucement message is NOT
+	service by Squid.  By default, the announcement message is NOT
 	SENT unless you enable it with 'announce_period' below.
 
 	The announcement message includes your hostname, plus the
@@ -2499,7 +2515,7 @@ DOC_START
 	allow specific headers (thus denying all others), or you
 	may deny specific headers (thus allowing all others).
 
-	For example, to achieve the same behaviour as the old
+	For example, to achieve the same behavior as the old
 	'http_anonymizer standard' option, you should use:
 
 		anonymize_headers deny From Referer Server
@@ -2512,7 +2528,7 @@ DOC_START
 		anonymize_headers allow Content-Encoding Content-Length
 		anonymize_headers allow Content-Type Date Expires Host
 		anonymize_headers allow If-Modified-Since Last-Modified
-		anonymize_headers allow Location Pragma Accept Charset
+		anonymize_headers allow Location Pragma Accept
 		anonymize_headers allow Accept-Encoding Accept-Language
 		anonymize_headers allow Content-Language Mime-Version
 		anonymize_headers allow Retry-After Title Connection
@@ -2557,8 +2573,8 @@ LOC: Config.errorDirectory
 DEFAULT: @DEFAULT_ERROR_DIR@
 DOC_START
 	If you wish to create your own versions of the default
-	(English) error files, either to customise them to suit your
-	language or company copy the template english files to another
+	(English) error files, either to customize them to suit your
+	language or company copy the template English files to another
 	directory and point this tag at them.
 DOC_END
 
@@ -2632,7 +2648,7 @@ DOC_START
 	snmp_access allow|deny [!]aclname ...
 
 Example:
-snmp_access allow snmpppublic localhost
+snmp_access allow snmppublic localhost
 snmp_access deny all
 DOC_END
 
@@ -2655,7 +2671,7 @@ DOC_START
 	snmp_outgoing_address	is used for SNMP packets returned to SNMP
 				agents.
 
-	The default behaviour is to not bind to any specific address.
+	The default behavior is to not bind to any specific address.
 
 	NOTE, snmp_incoming_address and snmp_outgoing_address can not have
 	the same value since they both use port 3130.
@@ -2680,10 +2696,10 @@ LOC: Config.Wccp.router
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
 DOC_START
-	Specifies the router that will manage WCCP for this
-	cache.
-
-wccp_router 10.0.0.1
+	Use this option to define your WCCP ``home'' router for
+	Squid.   Setting the 'wccp_router' to 0.0.0.0 (the default)
+	disables WCCP.
+wccp_router 0.0.0.0
 DOC_END
 
 NAME: wccp_incoming_address
@@ -2698,14 +2714,21 @@ LOC: Config.Wccp.outgoing
 DEFAULT: 255.255.255.255
 IFDEF: USE_WCCP
 DOC_START
-        Just like 'udp_incoming_address' above, but for the WCCP port.
+        wccp_incoming_address   Use this option if you require WCCP
+				messages to be received on only one
+				interface.  Do NOT use this option if
+				you're unsure how many interfaces you
+				have, or if you know you have only one
+				interface.
 
-        wccp_incoming_address   is used for the WCCP socket receiving
-                                messages from WCCP routers.
-        wccp_outgoing_address   is used for WCCP packets returned to WCCP
-                                routers.
+	wccp_outgoing_address	Use this option if you require WCCP
+				messages to be sent out on only one
+				interface.  Do NOT use this option if
+				you're unsure how many interfaces you
+				have, or if you know you have only one
+				interface.
 
-        The default behaviour is to not bind to any specific address.
+        The default behavior is to not bind to any specific address.
 
         NOTE, wccp_incoming_address and wccp_outgoing_address can not have
         the same value since they both use port 2048.
@@ -2778,7 +2801,7 @@ IFDEF: DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This is used to determine which delay pool a request falls into.
-	The first matched delay pool is always used, ie, if a request falls
+	The first matched delay pool is always used, i.e., if a request falls
 	into delay pool number one, no more delay are checked, otherwise the
 	rest are checked in order of their delay pool number until they have
 	all been checked.  For example, if you want some_big_clients in delay
@@ -2993,7 +3016,7 @@ TYPE: ushort
 LOC: Config.mcast_miss.port
 DEFAULT: 3135
 DOC_START
-	This is the port number to be used in conjuction with
+	This is the port number to be used in conjunction with
 	'mcast_miss_addr'.
 DOC_END
 
@@ -3081,7 +3104,6 @@ DOC_START
 	This controls whether the server will generate a Cache Digest
 	of its contents.  By default, Cache Digest generation is
 	enabled if Squid is compiled with USE_CACHE_DIGESTS defined.
-
 digest_generation on
 DOC_END
 
@@ -3094,61 +3116,89 @@ DOC_START
 	This is the number of bits of the server's Cache Digest which
 	will be associated with the Digest entry for a given HTTP
 	Method and URL (public key) combination.  The default is 5.
-
 digest_bits_per_entry 5
 DOC_END
 
 NAME: digest_rebuild_period
 IFDEF: USE_CACHE_DIGESTS
-TYPE: int
+COMMENT: (seconds)
+TYPE: time_t
 LOC: Config.digest.rebuild_period
-DEFAULT: 3600
+DEFAULT: 1 hour
 DOC_START
 	This is the number of seconds between Cache Digest rebuilds.
-	By default the server's Digest is rebuilt every hour - 60
-	minutes * 60 seconds per minute, 3600 seconds.
-
-digest_rebuild_period 3600
+	By default the server's Digest is rebuilt every hour.
+digest_rebuild_period 1 hour
 DOC_END
 
 NAME: digest_rewrite_period
+COMMENT: (seconds)
 IFDEF: USE_CACHE_DIGESTS
-TYPE: int
+TYPE: time_t
 LOC: Config.digest.rewrite_period
-DEFAULT: 3600
+DEFAULT: 1 hour
 DOC_START
 	This is the number of seconds between Cache Digest writes to
 	disk.  By default the server's Digest is written to disk every
-	hour - 60 minutes * 60 seconds per minute, 3600 seconds.
-
-digest_rewrite_period 3600
+	hour.
+digest_rewrite_period 1 hour
 DOC_END
 
 NAME: digest_swapout_chunk_size
+COMMENT: (bytes)
+TYPE: b_size_t
 IFDEF: USE_CACHE_DIGESTS
-TYPE: int
 LOC: Config.digest.swapout_chunk_size
-DEFAULT: 4096
+DEFAULT: 4096 bytes
 DOC_START
 	This is the number of bytes of the Cache Digest to write to
-	disk at a time.  It defaults to 4096 (4KB), the Squid default
-	swap page.
-
-digest_swapout_chunk_size 4096
+	disk at a time.  It defaults to 4096 bytes (4KB), the Squid
+	default swap page.
+digest_swapout_chunk_size 4096 bytes
 DOC_END
 
 NAME: digest_rebuild_chunk_percentage
+COMMENT: (percent, 0-100)
 IFDEF: USE_CACHE_DIGESTS
 TYPE: int
 LOC: Config.digest.rebuild_chunk_percentage
 DEFAULT: 10
 DOC_START
-	This is the portion (where 0 < portion <= 100) of the Cache Digest
-	to be scanned at a time.  By default it is set to 10 (10%) of
-	the Cache Digest.
-
+	This is the percentage of the Cache Digest to be scanned at a
+	time.  By default it is set to 10% of the Cache Digest.
 digest_rebuild_chunk_percentage 10
 DOC_END
 
+NAME: chroot
+TYPE: string
+LOC: Config.chroot_dir
+DEFAULT: none
+DOC_START
+	Use this to have Squid do a chroot() while initializing.  This
+	also causes Squid to fully drop root privileges after
+	initializing.  This means, for example, that if you use a HTTP
+	port less than 1024 and try to reconfigure, you will get an
+	error.
+DOC_END
+EOF
+
+NAME: client_persistent_connections
+TYPE: onoff
+LOC: Config.onoff.client_pconns
+DEFAULT: on
+DOC_NONE
+
+NAME: server_persistent_connections
+TYPE: onoff
+LOC: Config.onoff.server_pconns
+DEFAULT: on
+DOC_START
+	Persistent connection support for clients and servers.  By
+	default, Squid uses persistent connections (when allowed)
+	with its clients and servers.  You can use these options to
+	disable persistent connections with clients and/or servers.
+client_persistent_connections on
+server_persistent_connections on
+DOC_END
 EOF
 

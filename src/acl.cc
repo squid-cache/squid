@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.211 2000/01/14 08:37:03 wessels Exp $
+ * $Id: acl.cc,v 1.212 2000/03/06 16:23:28 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -11,11 +11,11 @@
  *  Squid is the result of efforts by numerous individuals from the
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
- *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  National Science Foundation.  Squid is Copyrighted (C) 2000 by
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1372,7 +1372,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
     case ACL_MAXCONN:
 	k = clientdbEstablished(checklist->src_addr, 0);
-	return ((k > ((intlist *) ae->data)->i) ? 0 : 1);
+	return ((k > ((intlist *) ae->data)->i) ? 1 : 0);
 	/* NOTREACHED */
     case ACL_URL_PORT:
 	return aclMatchIntegerRange(ae->data, (int) r->port);
@@ -2264,7 +2264,9 @@ aclPurgeMethodInUse(acl_access * a)
 #endif
 #include <net/route.h>
 #include <net/if.h>
+#if HAVE_NETINET_IF_ETHER_H
 #include <netinet/if_ether.h>
+#endif
 
 /*
  * Decode an ascii representation (asc) of an ethernet adress, and place

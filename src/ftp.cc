@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.288 1999/12/30 17:36:33 wessels Exp $
+ * $Id: ftp.cc,v 1.289 2000/03/06 16:23:31 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -568,6 +568,8 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 	ct = buf + 1;
 	p->type = 0;
 	while (ct && *ct) {
+	    long lt;
+	    time_t t;
 	    switch (*ct) {
 	    case '\t':
 		sscanf(ct + 1, "%[^,]", sbuf);
@@ -577,8 +579,10 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 		sscanf(ct + 1, "%d", &(p->size));
 		break;
 	    case 'm':
-		sscanf(ct + 1, "%d", &i);
-		p->date = xstrdup(ctime((time_t *) & i));
+		if (1 != sscanf(ct + 1, "%ld", &lt))
+		    break;
+		t = lt;
+		p->date = xstrdup(ctime(&t));
 		*(strstr(p->date, "\n")) = '\0';
 		break;
 	    case '/':

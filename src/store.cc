@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.514 2000/02/01 05:43:02 wessels Exp $
+ * $Id: store.cc,v 1.515 2000/03/06 16:23:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1254,9 +1254,24 @@ storeTimestampsSet(StoreEntry * entry)
 {
     const HttpReply *reply = entry->mem_obj->reply;
     time_t served_date = reply->date;
+    int age = httpHeaderGetInt(&reply->header, HDR_AGE);
+    /*
+     * The timestamp calculations below tries to mimic the properties
+     * of the age calculation in RFC2616 section 13.2.3. The implementaion
+     * isn't complete, and the most notable exception from the RFC is that
+     * this does not account for response_delay, but it probably does
+     * not matter much as this is calculated immediately when the headers
+     * are received, not when the whole response has been received.
+     */
     /* make sure that 0 <= served_date <= squid_curtime */
     if (served_date < 0 || served_date > squid_curtime)
 	served_date = squid_curtime;
+    /*
+     * Compensate with Age header if origin server clock is ahead of us
+     * and there is a cache in between us and the origin server
+     */
+    if (age > squid_curtime - served_date)
+	served_date = squid_curtime - age;
     entry->expires = reply->expires;
     entry->lastmod = reply->last_modified;
     entry->timestamp = served_date;

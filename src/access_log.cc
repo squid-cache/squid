@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.53 1999/12/30 17:36:19 wessels Exp $
+ * $Id: access_log.cc,v 1.54 2000/03/06 16:23:28 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -13,10 +13,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -63,6 +63,9 @@ const char *log_tags[] =
     "TCP_MEM_HIT",
     "TCP_DENIED",
     "TCP_OFFLINE_HIT",
+#if LOG_TCP_REDIRECTS
+    "TCP_REDIRECT",
+#endif
     "UDP_HIT",
     "UDP_MISS",
     "UDP_DENIED",
@@ -234,8 +237,21 @@ accessLogOpen(const char *fname)
     xstrncpy(LogfileName, fname, SQUID_MAXPATHLEN);
     LogfileFD = file_open(LogfileName, O_WRONLY | O_CREAT);
     if (LogfileFD == DISK_ERROR) {
-	debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
-	fatalf("Cannot open %s: %s", LogfileName, xstrerror());
+	if (ENOENT == errno) {
+	    fatalf("%s cannot be created, since the\n"
+		"\tdirectory it is to reside in does not exist."
+		"\t(%s)\n", LogfileName, xstrerror());
+	} else if (EACCES == errno) {
+	    fatalf("cannot create %s:\n"
+		"\t%s.\n"
+		"\tThe directory access.log is to reside in needs to be\n"
+		"\twriteable by the user %s, the cache_effective_user\n"
+		"\tset in squid.conf.",
+		LogfileName, xstrerror(), Config.effectiveUser);
+	} else {
+	    debug(50, 0) ("%s: %s\n", LogfileName, xstrerror());
+	    fatalf("Cannot open %s: %s", LogfileName, xstrerror());
+	}
     }
     LogfileStatus = LOG_ENABLE;
 }

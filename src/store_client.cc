@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.83 2000/01/14 18:33:40 wessels Exp $
+ * $Id: store_client.cc,v 1.84 2000/03/06 16:23:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -384,12 +384,12 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
     tlv_list = storeSwapMetaUnpack(buf, &swap_hdr_sz);
     if (swap_hdr_sz > len) {
 	/* oops, bad disk file? */
-	debug(20, 1) ("storeClientReadHeader: header too small\n");
+	debug(20, 1) ("WARNING: swapfile header too small\n");
 	storeClientCallback(sc, -1);
 	return;
     }
     if (tlv_list == NULL) {
-	debug(20, 1) ("storeClientReadHeader: failed to unpack meta data\n");
+	debug(20, 1) ("WRNING: failed to unpack meta data\n");
 	storeClientCallback(sc, -1);
 	return;
     }
