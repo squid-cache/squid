@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.92 1998/05/11 18:44:47 rousskov Exp $
+ * $Id: url.cc,v 1.93 1998/05/20 20:46:50 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -391,9 +391,9 @@ matchDomainName(const char *domain, const char *host)
 	return 0;		/* no match at all */
     if (*domain == '.')
 	return 1;
-    if (*(host + offset - 1) == '.')
-	return 1;
     if (offset == 0)
+	return 1;
+    if (*(host + offset - 1) == '.')
 	return 1;
     return 0;
 }
