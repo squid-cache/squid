@@ -29,8 +29,10 @@ SOFTWARE.
 #ifndef ASN1_H
 #define ASN1_H
 
-
+/* assume someone else includes "config.h" for us */
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 
 #ifndef EIGHTBIT_SUBIDS
 typedef u_long oid;
@@ -66,27 +68,26 @@ typedef u_char oid;
 #define IS_CONSTRUCTOR(byte)	((byte) & ASN_CONSTRUCTOR)
 #define IS_EXTENSION_ID(byte)	(((byte) & ASN_EXTENSION_ID) == ASN_EXTENSION_ID)
 
-/*
- * support for 64 bit linux platform.
- * instead of a rewrite, which is obviously neccessary,
- * we replace `long' by `int32'
- */
-#if defined(__alpha)
-typedef unsigned int u_int32;
-typedef int int32;
+/* 32 bit integer compatability hack */
+#if SIZEOF_INT == 4
+typedef int num32;
+typedef unsigned int u_num32; 
+#elif SIZEOF_LONG == 4
+typedef long num32;
+typedef unsigned long u_num32;
 #else
-typedef unsigned long u_int32;
-typedef long int32;
+typedef long num32;             /* assume that long's are 32bit */
+typedef unsigned long u_num32;
 #endif
+#define NUM32LEN sizeof(num32)  /* this should always be 4 */
 
 /* 
  * internal 64 bit representation:
  */
 struct counter64 {
-    u_int32 high;
-    u_int32 low;
+    u_num32 high;
+    u_num32 low;
 };
-
 
 extern u_char *asn_parse_int (u_char * data,
 	int *datalength,
