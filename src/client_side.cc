@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.538 2001/05/21 04:50:57 hno Exp $
+ * $Id: client_side.cc,v 1.539 2001/07/16 12:44:05 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -760,18 +760,9 @@ httpRequestFree(void *data)
     if (!clientCheckTransferDone(http)) {
 	if (request && request->body_connection)
 	    clientAbortBody(request);	/* abort body transter */
-#if MYSTERIOUS_CODE
-	/*
-	 * DW: this seems odd here, is it really needed?  It causes
-	 * incomplete transfers to get logged with "000" status
-	 * code because http->entry becomes NULL.
+	/* HN: This looks a bit odd.. why should client_side care about
+	 * the ICP selection status?
 	 */
-	if ((e = http->entry)) {
-	    http->entry = NULL;
-	    storeUnregister(http->sc, e, http);
-	    storeUnlockObject(e);
-	}
-#endif
 	if (http->entry && http->entry->ping_status == PING_WAITING)
 	    storeReleaseRequest(http->entry);
     }
@@ -2697,7 +2688,6 @@ clientReadRequest(int fd, void *data)
 {
     ConnStateData *conn = data;
     int parser_return_code = 0;
-    int k;
     request_t *request = NULL;
     int size;
     void *p;
@@ -2709,6 +2699,21 @@ clientReadRequest(int fd, void *data)
     fde *F = &fd_table[fd];
     int len = conn->in.size - conn->in.offset - 1;
     debug(33, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
+    if (len == 0) {
+	/* Grow the request memory area to accomodate for a large request */
+	conn->in.size += CLIENT_REQ_BUF_SZ;
+	if (conn->in.size == 2 * CLIENT_REQ_BUF_SZ) {
+	    p = conn->in.buf;	/* get rid of fixed size Pooled buffer */
+	    conn->in.buf = xcalloc(2, CLIENT_REQ_BUF_SZ);
+	    xmemcpy(conn->in.buf, p, CLIENT_REQ_BUF_SZ);
+	    memFree(p, MEM_CLIENT_REQ_BUF);
+	} else
+	    conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
+	/* XXX account conn->in.buf */
+	debug(33, 2) ("growing request buffer: offset=%ld size=%ld\n",
+	      (long) conn->in.offset, (long) conn->in.size);
+	len = conn->in.size - conn->in.offset - 1;
+    }
     statCounter.syscalls.sock.reads++;
     size = FD_READ_METHOD(fd, conn->in.buf + conn->in.offset, len);
     if (size > 0) {
@@ -2725,7 +2730,7 @@ clientReadRequest(int fd, void *data)
     if (size > 0) {
 	conn->in.offset += size;
 	conn->in.buf[conn->in.offset] = '\0';	/* Terminate the string */
-    } else if (size == 0 && len > 0) {
+    } else if (size == 0) {
 	if (conn->chr == NULL && conn->in.offset == 0) {
 	    /* no current or pending requests */
 	    debug(33, 4) ("clientReadRequest: FD %d closed\n", fd);
@@ -2759,10 +2764,11 @@ clientReadRequest(int fd, void *data)
 	}
 	/* Continue to process previously read data */
     }
-    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
     /* Process request body if any */
     if (conn->in.offset > 0 && conn->body.callback != NULL)
 	clientProcessBody(conn);
+    if (conn->body.size_left == 0)
+	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
     /* Process next request */
     while (conn->in.offset > 0 && conn->body.size_left == 0) {
 	int nrequests;
@@ -2912,36 +2918,20 @@ clientReadRequest(int fd, void *data)
 	     *    Partial request received; reschedule until parseHttpRequest()
 	     *    is happy with the input
 	     */
-	    k = conn->in.size - 1 - conn->in.offset;
-	    if (k == 0) {
-		if (conn->in.offset >= Config.maxRequestHeaderSize) {
-		    /* The request is too large to handle */
-		    debug(33, 1) ("Request header is too large (%d bytes)\n",
-			(int) conn->in.offset);
-		    debug(33, 1) ("Config 'request_header_max_size'= %d bytes.\n",
-			Config.maxRequestHeaderSize);
-		    err = errorCon(ERR_TOO_BIG, HTTP_REQUEST_ENTITY_TOO_LARGE);
-		    http = parseHttpRequestAbort(conn, "error:request-too-large");
-		    /* add to the client request queue */
-		    for (H = &conn->chr; *H; H = &(*H)->next);
-		    *H = http;
-		    http->entry = clientCreateStoreEntry(http, METHOD_NONE, null_request_flags);
-		    errorAppendEntry(http->entry, err);
-		    return;
-		}
-		/* Grow the request memory area to accomodate for a large request */
-		conn->in.size += CLIENT_REQ_BUF_SZ;
-		if (conn->in.size == 2 * CLIENT_REQ_BUF_SZ) {
-		    p = conn->in.buf;	/* get rid of fixed size Pooled buffer */
-		    conn->in.buf = xcalloc(2, CLIENT_REQ_BUF_SZ);
-		    xmemcpy(conn->in.buf, p, CLIENT_REQ_BUF_SZ);
-		    memFree(p, MEM_CLIENT_REQ_BUF);
-		} else
-		    conn->in.buf = xrealloc(conn->in.buf, conn->in.size);
-		/* XXX account conn->in.buf */
-		debug(33, 3) ("Handling a large request, offset=%d inbufsize=%d\n",
-		    (int) conn->in.offset, conn->in.size);
-		k = conn->in.size - 1 - conn->in.offset;
+	    if (conn->in.offset >= Config.maxRequestHeaderSize) {
+		/* The request is too large to handle */
+		debug(33, 1) ("Request header is too large (%d bytes)\n",
+		    (int) conn->in.offset);
+		debug(33, 1) ("Config 'request_header_max_size'= %d bytes.\n",
+		    Config.maxRequestHeaderSize);
+		err = errorCon(ERR_TOO_BIG, HTTP_REQUEST_ENTITY_TOO_LARGE);
+		http = parseHttpRequestAbort(conn, "error:request-too-large");
+		/* add to the client request queue */
+		for (H = &conn->chr; *H; H = &(*H)->next);
+		*H = http;
+		http->entry = clientCreateStoreEntry(http, METHOD_NONE, null_request_flags);
+		errorAppendEntry(http->entry, err);
+		return;
 	    }
 	    break;
 	}
@@ -2950,7 +2940,7 @@ clientReadRequest(int fd, void *data)
     if (F->flags.socket_eof) {
 	if (conn->in.offset != conn->body.size_left) {	/* != 0 when no request body */
 	    /* Partial request received. Abort client connection! */
-	    debug(33, 3) ("clientReadRequest: FD %d aborted\n", fd);
+	    debug(33, 3) ("clientReadRequest: FD %d aborted, partial request\n", fd);
 	    comm_close(fd);
 	    return;
 	}
@@ -2973,12 +2963,7 @@ clientReadBody(request_t * request, char *buf, size_t size, CBCB * callback, voi
     conn->body.buf = buf;
     conn->body.bufsize = size;
     conn->body.request = requestLink(request);
-    if (conn->in.offset) {
-	/* Data available */
-	clientProcessBody(conn);
-    } else {
-	debug(33, 2) ("clientReadBody: fd %d wait for clientReadRequest\n", conn->fd);
-    }
+    clientProcessBody(conn);
 }
 
 /* Called by clientReadRequest to process body content */
@@ -2992,41 +2977,44 @@ clientProcessBody(ConnStateData * conn)
     request_t *request = conn->body.request;
     /* Note: request is null while eating "aborted" transfers */
     debug(33, 2) ("clientProcessBody: start fd=%d body_size=%d in.offset=%d cb=%p req=%p\n", conn->fd, conn->body.size_left, conn->in.offset, callback, request);
-    /* Some sanity checks... */
-    assert(conn->body.size_left > 0);
-    assert(conn->in.offset > 0);
-    assert(callback != NULL);
-    assert(buf != NULL);
-    /* How much do we have to process? */
-    size = conn->in.offset;
-    if (size > conn->body.size_left)	/* only process the body part */
-	size = conn->body.size_left;
-    if (size > conn->body.bufsize)	/* don't copy more than requested */
-	size = conn->body.bufsize;
-    xmemcpy(buf, conn->in.buf, size);
-    conn->body.size_left -= size;
-    /* Move any remaining data */
-    conn->in.offset -= size;
-    if (conn->in.offset > 0)
-	xmemmove(conn->in.buf, conn->in.buf + size, conn->in.offset);
-    /* Remove request link if this is the last part of the body, as
-     * clientReadRequest automatically continues to process next request */
-    if (conn->body.size_left <= 0 && request != NULL)
-	request->body_connection = NULL;
-    /* Remove clientReadBody arguments (the call is completed) */
-    conn->body.request = NULL;
-    conn->body.callback = NULL;
-    conn->body.buf = NULL;
-    conn->body.bufsize = 0;
-    /* Remember that we have touched the body, not restartable */
-    if (request != NULL)
-	request->flags.body_sent = 1;
-    /* Invoke callback function */
-    callback(buf, size, cbdata);
-    if (request != NULL)
-	requestUnlink(request);	/* Linked in clientReadBody */
-    debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%d in.offset=%d cb=%p req=%p\n", conn->fd, size, conn->body.size_left, conn->in.offset, callback, request);
-    return;
+    if (conn->in.offset) {
+	/* Some sanity checks... */
+	assert(conn->body.size_left > 0);
+	assert(conn->in.offset > 0);
+	assert(callback != NULL);
+	assert(buf != NULL);
+	/* How much do we have to process? */
+	size = conn->in.offset;
+	if (size > conn->body.size_left)	/* only process the body part */
+	    size = conn->body.size_left;
+	if (size > conn->body.bufsize)	/* don't copy more than requested */
+	    size = conn->body.bufsize;
+	xmemcpy(buf, conn->in.buf, size);
+	conn->body.size_left -= size;
+	/* Move any remaining data */
+	conn->in.offset -= size;
+	if (conn->in.offset > 0)
+	    xmemmove(conn->in.buf, conn->in.buf + size, conn->in.offset);
+	/* Remove request link if this is the last part of the body, as
+	 * clientReadRequest automatically continues to process next request */
+	if (conn->body.size_left <= 0 && request != NULL)
+	    request->body_connection = NULL;
+	/* Remove clientReadBody arguments (the call is completed) */
+	conn->body.request = NULL;
+	conn->body.callback = NULL;
+	conn->body.buf = NULL;
+	conn->body.bufsize = 0;
+	/* Remember that we have touched the body, not restartable */
+	if (request != NULL)
+	    request->flags.body_sent = 1;
+	/* Invoke callback function */
+	callback(buf, size, cbdata);
+	if (request != NULL)
+	    requestUnlink(request);	/* Linked in clientReadBody */
+	debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%d in.offset=%d cb=%p req=%p\n", conn->fd, size, conn->body.size_left, conn->in.offset, callback, request);
+    }
+    if (conn->in.offset < conn->in.size - 1 || conn->body.size_left == 0)
+	commSetSelect(conn->fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
 }
 
 /* A dummy handler that throws away a request-body */
