@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.281 1998/12/11 21:01:13 wessels Exp $
+ * $Id: main.cc,v 1.282 1998/12/16 06:04:16 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -441,6 +441,7 @@ mainInitialize(void)
 #if DELAY_POOLS
 	delayPoolsInit();
 #endif
+	fwdInit();
     }
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0) {
