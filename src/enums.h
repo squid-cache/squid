@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.164 2000/05/02 19:58:13 hno Exp $
+ * $Id: enums.h,v 1.165 2000/05/02 20:58:30 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -570,8 +570,10 @@ typedef enum {
 #if USE_CACHE_DIGESTS
     MEM_PEER_DIGEST,
 #endif
+#if USE_ICMP
     MEM_PINGERECHODATA,
     MEM_PINGERREPLYDATA,
+#endif
     MEM_PS_STATE,
     MEM_REFRESH_T,
     MEM_RELIST,

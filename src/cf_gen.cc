@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.33 2000/03/06 16:23:29 wessels Exp $
+ * $Id: cf_gen.cc,v 1.34 2000/05/02 20:58:30 hno Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -48,6 +48,7 @@
  *****************************************************************************/
 
 #include "config.h"
+#include "cf_gen_defines.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -89,7 +90,7 @@ typedef struct Entry {
     char *type;
     char *loc;
     char *default_value;
-    char *default_if_none;
+    Line *default_if_none;
     char *comment;
     char *ifdef;
     Line *doc;
@@ -105,6 +106,14 @@ static void gen_dump(Entry *, FILE *);
 static void gen_free(Entry *, FILE *);
 static void gen_conf(Entry *, FILE *);
 static void gen_default_if_none(Entry *, FILE *);
+
+static void lineAdd(Line **L, char *str)
+{
+    while(*L)
+    	L = &(*L)->next;
+    *L=xcalloc(1, sizeof(Line));
+    (*L)->data = xstrdup(str);
+}
 
 int
 main(int argc, char *argv[])
@@ -189,7 +198,7 @@ main(int argc, char *argv[])
 		ptr = buff + 16;
 		while (xisspace(*ptr))
 		    ptr++;
-		curr->default_if_none = xstrdup(ptr);
+		lineAdd(&curr->default_if_none, ptr);
 	    } else if (!strncmp(buff, "LOC:", 4)) {
 		if ((ptr = strtok(buff + 4, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
@@ -396,6 +405,7 @@ static void
 gen_default_if_none(Entry * head, FILE * fp)
 {
     Entry *entry;
+    Line *line;
     fprintf(fp,
 	"static void\n"
 	"defaults_if_none(void)\n"
@@ -408,15 +418,20 @@ gen_default_if_none(Entry * head, FILE * fp)
 	    continue;
 	if (entry->ifdef)
 	    fprintf(fp, "#if %s\n", entry->ifdef);
-	fprintf(fp,
-	    "\tif (check_null_%s(%s))\n"
-	    "\t\tdefault_line(\"%s %s\");\n",
-	    entry->type,
-	    entry->loc,
-	    entry->name,
-	    entry->default_if_none);
+	if (entry->default_if_none) {
+	    fprintf(fp,
+		"\tif (check_null_%s(%s)) {\n",
+		entry->type,
+		entry->loc);
+	    for (line = entry->default_if_none; line; line = line->next)
+		fprintf(fp,
+		    "\t\tdefault_line(\"%s %s\");\n",
+		    entry->name,
+		    line->data);
+	    fprintf(fp, "\t}\n");
+	}
 	if (entry->ifdef)
-	    fprintf(fp, "#endif\n");
+	fprintf(fp, "#endif\n");
     }
     fprintf(fp, "}\n\n");
 }
@@ -520,13 +535,37 @@ gen_free(Entry * head, FILE * fp)
     fprintf(fp, "}\n\n");
 }
 
+static int defined(char *name)
+{
+	int i=0;
+	if (!name)
+	    return 1;
+	for(i=0;strcmp(defines[i].name, name) != 0; i++) {
+	    assert(defines[i].name);
+	}
+	return defines[i].defined;
+}
+
+static const char *available_if(char *name)
+{
+	int i=0;
+	assert(name);
+	for(i=0;strcmp(defines[i].name, name) != 0; i++) {
+	    assert(defines[i].name);
+	}
+	return defines[i].enable;
+}
+
 static void
 gen_conf(Entry * head, FILE * fp)
 {
     Entry *entry;
+    char buf[8192];
+    Line *def = NULL;
 
     for (entry = head; entry != NULL; entry = entry->next) {
 	Line *line;
+	int blank = 1;
 
 	if (!strcmp(entry->name, "comment"))
 	    (void) 0;
@@ -535,9 +574,43 @@ gen_conf(Entry * head, FILE * fp)
 	if (entry->comment)
 	    fprintf(fp, "\t%s", entry->comment);
 	fprintf(fp, "\n");
+	if (!defined(entry->ifdef)) {
+	    fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
+	    fprintf(fp, "#       %s option\n#\n", available_if(entry->ifdef));
+	}
 	for (line = entry->doc; line != NULL; line = line->next) {
 	    fprintf(fp, "#%s\n", line->data);
 	}
+	if (entry->default_value && strcmp(entry->default_value,"none") != 0) {
+	    sprintf(buf, "%s %s", entry->name, entry->default_value);
+	    lineAdd(&def, buf);
+	}
+	if (entry->default_if_none) {
+	    for (line = entry->default_if_none; line; line = line->next) {
+		sprintf(buf, "%s %s", entry->name, line->data);
+		lineAdd(&def, buf);
+	    }
+	}
+	if (entry->nocomment)
+	    blank = 0;
+	if (!def && entry->doc && !entry->nocomment &&
+		strcmp(entry->name, "comment") != 0)
+	    lineAdd(&def, "none");
+	if (def && (entry->doc || entry->nocomment)) {
+	    if (blank)
+		fprintf(fp, "#\n");
+	    fprintf(fp, "#Default:\n");
+	    while (def != NULL) {
+		line = def;
+		def = line->next;
+		fprintf(fp, "# %s\n", line->data);
+		free(line->data);
+		free(line);
+	    }
+	    blank=1;
+	}
+	if (entry->nocomment && blank)
+	    fprintf(fp, "#\n");
 	for (line = entry->nocomment; line != NULL; line = line->next) {
 	    fprintf(fp, "%s\n", line->data);
 	}

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.175 2000/05/02 20:39:27 hno Exp $
+# $Id: cf.data.pre,v 1.176 2000/05/02 20:58:30 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -82,8 +82,6 @@ DOC_START
 	address, however.
 
 	You may specify multiple socket addresses on multiple lines.
-
-http_port 3128
 DOC_END
 
 
@@ -95,8 +93,6 @@ DOC_START
 	The port number where Squid sends and receives ICP queries to
 	and from neighbor caches.  Default is 3130.  To disable use
 	"0".  May be overridden with -u on the command line.
-
-icp_port 3130
 DOC_END
 
 NAME: htcp_port
@@ -111,7 +107,6 @@ DOC_START
 
 	To enable this option, you must use --enable-htcp with the
 	configure script.
-htcp_port 4827
 DOC_END
 
 
@@ -140,8 +135,6 @@ DOC_START
 	Usage: mcast_groups 239.128.16.128 224.0.1.20
 
 	By default, Squid doesn't listen on any multicast groups.
-
-mcast_groups 239.128.16.128
 DOC_END
 
 
@@ -174,16 +167,20 @@ DOC_START
 
 	The default behavior is to not bind to any specific address.
 
+	A *_incoming_address value of 0.0.0.0 indicates that Squid should
+	listen on all available interfaces.
+
+	If udp_outgoing_address is set to 255.255.255.255 (the default)
+	then it will use the same socket as udp_incoming_address. Only
+	change this if you want to have ICP queries sent using another
+	address than where this Squid listens for ICP queries from other
+	caches.
+
 	NOTE, udp_incoming_address and udp_outgoing_address can not
-	have the same value (unless it is 0.0.0.0) since they both use
-	port 3130.
+	have the same value since they both use port 3130.
 
 	NOTE, tcp_incoming_address has been removed.  You can now
 	specify IP addresses on the 'http_port' line.
-
-tcp_outgoing_address 0.0.0.0
-udp_incoming_address 0.0.0.0
-udp_outgoing_address 0.0.0.0
 DOC_END
 
 COMMENT_START
@@ -198,7 +195,7 @@ LOC: Config.peers
 DOC_START
 	To specify other caches in a hierarchy, use the format:
 
-		hostname type http_port icp_port
+		cache_peer hostname type http_port icp_port
 
 	For example,
 
@@ -302,8 +299,6 @@ DOC_START
 		     source is a peer)
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
-
-cache_peer hostname type 3128 3130
 DOC_END
 
 NAME: cache_peer_domain cache_host_domain
@@ -373,8 +368,6 @@ DOC_START
 	timeout (the old default), you would write:
 
 		icp_query_timeout 2000
-
-icp_query_timeout 0
 DOC_END
 
 NAME: maximum_icp_query_timeout
@@ -391,7 +384,6 @@ DOC_START
 
 	If 'icp_query_timeout' is set to zero, then this value is
 	ignored.
-maximum_icp_query_timeout 2000
 DOC_END
 
 NAME: mcast_icp_query_timeout
@@ -405,8 +397,6 @@ DOC_START
 	address.  This value specifies how long Squid should wait to
 	count all the replies.  The default is 2000 msec, or 2
 	seconds.
-
-mcast_icp_query_timeout 2000
 DOC_END
 
 NAME: dead_peer_timeout
@@ -429,15 +419,12 @@ DOC_START
 	your time between requests is greater than this timeout, you
 	will see a lot of requests sent DIRECT to origin servers
 	instead of to your parents.
-
-dead_peer_timeout 10 seconds
 DOC_END
 
 
 NAME: hierarchy_stoplist
 TYPE: wordlist
 DEFAULT: none
-DEFAULT_IF_NONE: cgi-bin ?
 LOC: Config.hierarchy_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
@@ -445,9 +432,10 @@ DOC_START
 	to not query neighbor caches for certain objects.  You may
 	list this option multiple times.
 
-	The default is to directly fetch URLs containing 'cgi-bin' or '?'.
-
+NOCOMMENT_START
+#We recommend you to use at least the following line.
 hierarchy_stoplist cgi-bin ?
+NOCOMMENT_END
 DOC_END
 
 
@@ -463,11 +451,11 @@ DOC_START
 	You must use the word 'DENY' to indicate the ACL names which should
 	NOT be cached.
 
-	There is no default.  We recommend you uncomment the following
-	two lines.
-
+NOCOMMENT_START
+#We recommend you to use the following two lines.
 acl QUERY urlpath_regex cgi-bin \?
 no_cache deny QUERY
+NOCOMMENT_END
 DOC_END
 
 
@@ -512,10 +500,6 @@ DOC_START
 	decreases, blocks will be freed until the high-water mark is
 	reached.  Thereafter, blocks will be used to store hot
 	objects.
-
-	The default is 8 Megabytes.
-
-cache_mem  8 MB
 DOC_END
 
 
@@ -543,9 +527,6 @@ DOC_START
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
 	hundreds of MB. If this is the case you may wish to set these
 	numbers closer together.
-
-cache_swap_low  90
-cache_swap_high 95
 DOC_END
 
 NAME: maximum_object_size
@@ -564,8 +545,6 @@ DOC_START
 	NOTE: if using the LFUDA replacement policy you should increase
 	this value to maximize the byte hit rate improvement of LFUDA!
 	See replacement_policy below for a discussion of this policy.
-
-maximum_object_size 4096 KB
 DOC_END
 
 
@@ -590,10 +569,6 @@ DEFAULT: 95
 LOC: Config.ipcache.high
 DOC_START
 	The size, low-, and high-water marks for the IP cache.
-
-ipcache_size 1024
-ipcache_low  90
-ipcache_high 95
 DOC_END
 
 NAME: fqdncache_size
@@ -603,7 +578,6 @@ DEFAULT: 1024
 LOC: Config.fqdncache.size
 DOC_START
 	Maximum number of FQDN cache entries.
-fqdncache_size 1024
 DOC_END
 
 COMMENT_START
@@ -649,8 +623,6 @@ DOC_START
 	'Level-2' is the number of second-level subdirectories which
 	will be created under each first-level directory.  The default
 	is 256.
-
-cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
 DOC_END
 
 
@@ -661,8 +633,6 @@ LOC: Config.Log.access
 DOC_START
 	Logs the client request activity.  Contains an entry for
 	every HTTP and ICP queries received.
-
-cache_access_log @DEFAULT_ACCESS_LOG@
 DOC_END
 
 
@@ -674,8 +644,6 @@ DOC_START
 	Cache logging file. This is where general information about
 	your cache's behavior goes. You can increase the amount of data
 	logged to this file with the "debug_options" tag below.
-
-cache_log @DEFAULT_CACHE_LOG@
 DOC_END
 
 
@@ -689,8 +657,6 @@ DOC_START
 	saved and for how long.  To disable, enter "none". There are
 	not really utilities to analyze this data, so you can safely
 	disable it.
-
-cache_store_log @DEFAULT_STORE_LOG@
 DOC_END
 
 
@@ -726,8 +692,6 @@ DOC_START
 	the correct 'cache_dir' entry (unless you manually rename
 	them).  We recommend that you do NOT use this option.  It is
 	better to keep these log files in each 'cache_dir' directory.
-
-cache_swap_log
 DOC_END
 
 
@@ -742,8 +706,6 @@ DOC_START
 	emulate_httpd_log to 'off' or 'on'.  The default
 	is to use the native log format since it includes useful
 	information that Squid-specific log analyzers use.
-
-emulate_httpd_log off
 DOC_END
 
 NAME: log_ip_on_direct
@@ -755,8 +717,6 @@ DOC_START
 	Log the destination IP address in the hierarchy log tag when going
 	direct. Earlier Squid versions logged the hostname here. If you
 	prefer the old way set this to off.
-
-log_ip_on_direct on
 DOC_END
 
 NAME: mime_table
@@ -767,8 +727,6 @@ DOC_START
 	Pathname to Squid's MIME table. You shouldn't need to change
 	this, but the default file contains examples and formatting
 	information if you do.
-
-mime_table @DEFAULT_MIME_TABLE@
 DOC_END
 
 
@@ -783,8 +741,6 @@ DOC_START
 	safely and will appear as two bracketed fields at the end of
 	the access log (for either the native or httpd-emulated log
 	formats).  To enable this logging set log_mime_hdrs to 'on'.
-
-log_mime_hdrs off
 DOC_END
 
 
@@ -792,13 +748,11 @@ NAME: useragent_log
 TYPE: string
 LOC: Config.Log.useragent
 DEFAULT: none
+IFDEF: USE_USERAGENT_LOG
 DOC_START
-	If configured with the "--enable-useragent_log" configure
-	option, Squid will write the User-Agent field from HTTP
-	requests to the filename specified here.  By default
-	useragent_log is disabled.
-
-useragent_log none
+	Squid will write the User-Agent field from HTTP requests
+	to the filename specified here.  By default useragent_log
+	is disabled.
 DOC_END
 
 
@@ -808,8 +762,6 @@ DEFAULT: @DEFAULT_PID_FILE@
 LOC: Config.pidFilename
 DOC_START
 	A filename to write the process-id to.  To disable, enter "none".
-
-pid_filename @DEFAULT_PID_FILE@
 DOC_END
 
 
@@ -824,8 +776,6 @@ DOC_START
 	log file, so be careful.  The magic word "ALL" sets debugging
 	levels for all sections.  We recommend normally running with
 	"ALL,1".
-
-debug_options ALL,1
 DOC_END
 
 
@@ -840,8 +790,6 @@ DOC_START
 	IP's connecting to it. This can (in some situations) increase
 	latency, which makes your cache seem slower for interactive
 	browsing. 
-
-log_fqdn off
 DOC_END
 
 
@@ -854,8 +802,6 @@ DOC_START
 	Change this to protect the privacy of your cache clients.
 	A netmask of 255.255.255.0 will log all IP's in that range with
 	the last digit set to '0'.
-
-client_netmask 255.255.255.255
 DOC_END
 
 
@@ -878,8 +824,6 @@ DOC_START
 	depending on how the cache is used.
 	Some ftp server also validate that the email address is valid
 	(for example perl.com).
-
-ftp_user Squid@
 DOC_END
 
 NAME: ftp_list_width
@@ -890,8 +834,6 @@ DOC_START
 	Sets the width of ftp listings. This should be set to fit in
 	the width of a standard browser. Setting this too small
 	can cut off long filenames when browsing ftp sites.
-
-ftp_list_width 32
 DOC_END
 
 NAME: cache_dns_program
@@ -901,13 +843,11 @@ DEFAULT: @DEFAULT_DNSSERVER@
 LOC: Config.Program.dnsserver
 DOC_START
 	Specify the location of the executable for dnslookup process.
-
-cache_dns_program @DEFAULT_DNSSERVER@
 DOC_END
 
 NAME: dns_children
 TYPE: int
-IFDEF: USE_DNSSERVER
+IFDEF: USE_DNSSERVERS
 DEFAULT: 5
 LOC: Config.dnsChildren
 DOC_START
@@ -917,8 +857,6 @@ DOC_START
 	is 32.  The default is 5.
 
 	You must have at least one dnsserver process.
-
-dns_children 5
 DOC_END
 
 NAME: dns_retransmit_interval
@@ -949,14 +887,13 @@ IFDEF: USE_DNSSERVER
 TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.res_defnames
+IFDEF: USE_DNSSERVERS
 DOC_START
 	Normally the 'dnsserver' disables the RES_DEFNAMES resolver
 	option (see res_init(3)).  This prevents caches in a hierarchy
 	from interpreting single-component hostnames locally.  To allow
 	dnsserver to handle single-component names, enable this
 	option.
-
-dns_defnames off
 DOC_END
 
 NAME: dns_nameservers
@@ -969,8 +906,6 @@ DOC_START
 	/etc/resolv.conf file.
 
 	Example: dns_nameservers 10.0.0.1 192.172.0.4
-
-dns_nameservers none
 DOC_END
 
 
@@ -980,23 +915,15 @@ DEFAULT: @DEFAULT_UNLINKD@
 LOC: Config.Program.unlinkd
 DOC_START
 	Specify the location of the executable for file deletion process.
-	This isn't needed if you are using async-io since it's handled by
-	a thread.
-
-unlinkd_program @DEFAULT_UNLINKD@
 DOC_END
-
 
 NAME: pinger_program
 TYPE: string
 DEFAULT: @DEFAULT_PINGER@
 LOC: Config.Program.pinger
+IFDEF: USE_ICMP
 DOC_START
 	Specify the location of the executable for the pinger process.
-	This is only useful if you configured Squid (during compilation)
-	with the '--enable-icmp' option.
-
-pinger_program @DEFAULT_PINGER@
 DOC_END
 
 
@@ -1009,8 +936,6 @@ DOC_START
 	Since they can perform almost any function there isn't one included.
 	See the Release-Notes for information on how to write one.
 	By default, a redirector is not used.
-
-redirect_program none
 DOC_END
 
 
@@ -1023,8 +948,6 @@ DOC_START
 	too few Squid will have to wait for them to process a backlog of
 	URLs, slowing it down. If you start too many they will use RAM
 	and other system resources.
-
-redirect_children 5
 DOC_END
 
 NAME: redirect_rewrites_host_header
@@ -1035,7 +958,6 @@ DOC_START
 	By default Squid rewrites any Host: header in redirected
 	requests.  If you are running a accelerator then this may
 	not be a wanted effect of a redirector.
-redirect_rewrites_host_header on
 DOC_END
 
 NAME: redirector_access
@@ -1069,8 +991,6 @@ DOC_START
 	Then, set this line to something like
 
 	authenticate_program @DEFAULT_PREFIX@/bin/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
-
-authenticate_program none
 DOC_END
 
 NAME: authenticate_children
@@ -1083,8 +1003,6 @@ DOC_START
 	of usercode/password verifications, slowing it down. When password
 	verifications are done via a (slow) network you are likely to need
 	lots of authenticator processes.
-
-authenticate_children 5
 DOC_END
 
 NAME: authenticate_ttl
@@ -1096,8 +1014,6 @@ DOC_START
 	(default 3600). If a wrong password is given for a cached user,
 	the user gets removed from the username/password cache forcing
 	a revalidation.
-
-authenticate_ttl 3600
 DOC_END
 
 NAME: authenticate_ip_ttl
@@ -1118,8 +1034,6 @@ DOC_START
 	if you have dialup users are no more than 60 (seconds). If
 	all your users are stationary then higher values may be
 	used.
-
-authenticate_ip_ttl 0
 DOC_END
 
 COMMENT_START
@@ -1139,9 +1053,6 @@ DEFAULT: 0
 LOC: Config.Wais.relayPort
 DOC_START
 	Relay WAIS request to host (1st arg) at port (2 arg).
-
-wais_relay_host localhost
-wais_relay_port 8000
 DOC_END
 
 
@@ -1156,7 +1067,6 @@ DOC_START
 	Placing a limit on the request header size will catch certain
 	bugs (for example with persistent connections) and possibly
 	buffer-overflow or denial-of-service attacks.
-request_header_max_size 10 KB
 DOC_END
 
 NAME: request_body_max_size
@@ -1171,7 +1081,6 @@ DOC_START
 	than this limit receives an "Invalid Request" error message.
 	If you set this parameter to a zero, there will be no limit
 	imposed.
-request_body_max_size 1 MB
 DOC_END
 
 NAME: reply_body_max_size
@@ -1198,7 +1107,6 @@ DOC_START
 
 	If you set this parameter to zero (the default), there will be
 	no limit imposed.
-reply_body_max_size 0
 DOC_END
 
 
@@ -1206,6 +1114,9 @@ NAME: refresh_pattern
 TYPE: refreshpattern
 LOC: Config.Refresh
 DEFAULT: none
+DEFAULT_IF_NONE:	^ftp:		1440	20%	10080
+DEFAULT_IF_NONE:	^gopher:	1440	0%	1440
+DEFAULT_IF_NONE: 	.		0	20%	4320
 DOC_START
 	usage: refresh_pattern [-i] regex min percent max [options]
 
@@ -1262,12 +1173,9 @@ DOC_START
 	The first entry which matches is used.  If none of the entries
 	match, then the default will be used.
 
-Default:
-NOCOMMENT_START
-refresh_pattern		^ftp:		1440	20%	10080
-refresh_pattern		^gopher:	1440	0%	1440
-refresh_pattern 	.		0	20%	4320
-NOCOMMENT_END
+	Note, you must uncomment all the default lines if you want
+	to change one. The default setting is only active if none is
+	used.
 DOC_END
 
 
@@ -1310,8 +1218,6 @@ DOC_START
 	For more information about these cache replacement policies see
 	http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html and
 	http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
-
-replacement_policy LFUDA
 DOC_END
 
 
@@ -1339,8 +1245,6 @@ DOC_START
 
 	NOTE: this parameter is not used when using the enhanced
 	replacement policies, GDSH or LFUDA.
-
-reference_age 1 year
 DOC_END
 
 
@@ -1354,7 +1258,7 @@ DOC_NONE
 NAME: quick_abort_max
 COMMENT: (KB)
 TYPE: kb_size_t
-DEFAULT: 16 kb
+DEFAULT: 16 KB
 LOC: Config.quickAbort.max
 DOC_NONE
 
@@ -1383,10 +1287,6 @@ DOC_START
 
 	If more than 'quick_abort_pct' of the transfer has completed,
 	it will finish the retrieval.
-
-quick_abort_min 16 KB
-quick_abort_max 16 KB
-quick_abort_pct 95
 DOC_END
 
 
@@ -1401,8 +1301,6 @@ DOC_START
 	negatively-cached for a configurable amount of time.  The
 	default is 5 minutes.  Note that this is different from
 	negative caching of DNS lookups.
-
-negative_ttl 5 minutes
 DOC_END
 
 
@@ -1415,8 +1313,6 @@ DOC_START
 	Time-to-Live (TTL) for positive caching of successful DNS lookups.
 	Default is 6 hours (360 minutes).  If you want to minimize the
 	use of Squid's ipcache, set this to 1, not 0.
-
-positive_dns_ttl 6 hours
 DOC_END
 
 
@@ -1427,8 +1323,6 @@ LOC: Config.negativeDnsTtl
 DEFAULT: 5 minutes
 DOC_START
 	Time-to-Live (TTL) for negative caching of failed DNS lookups.
-
-negative_dns_ttl 5 minutes
 DOC_END
 
 NAME: range_offset_limit
@@ -1451,8 +1345,6 @@ DOC_START
 
 	A value of 0 causes Squid to never fetch more than the client
 	client requested. (default)
-
-range_offset_limit 0 KB
 DOC_END
 
 
@@ -1472,8 +1364,6 @@ DOC_START
 	enforces its own timeout on server connections.  This parameter
 	specifies how long to wait for the connect to complete.  The
 	default is two minutes (120 seconds).
-
-connect_timeout 120 seconds
 DOC_END
 
 NAME: peer_connect_timeout
@@ -1486,7 +1376,6 @@ DOC_START
 	connection to a peer cache.  The default is 30 seconds.   You
 	may also set different timeout values for individual neighbors
 	with the 'connect-timeout' option on a 'cache_peer' line.
-peer_connect_timeout 30 seconds
 DOC_END
 
 NAME: siteselect_timeout
@@ -1496,8 +1385,6 @@ LOC: Config.Timeout.siteSelect
 DEFAULT: 4 seconds
 DOC_START
 	For URN to multiple URL's URL selection
-
-siteselect_timeout 4 seconds
 DOC_END
 
 NAME: read_timeout
@@ -1511,8 +1398,6 @@ DOC_START
 	amount.  If no data is read again after this amount of time,
 	the request is aborted and logged with ERR_READ_TIMEOUT.  The
 	default is 15 minutes.
-
-read_timeout 15 minutes
 DOC_END
 
 
@@ -1524,8 +1409,6 @@ DOC_START
 	How long to wait for an HTTP request after connection
 	establishment.  For persistent connections, wait this long
 	after the previous request completes.
-
-request_timeout 30 seconds
 DOC_END
 
 
@@ -1549,8 +1432,6 @@ DOC_START
 	If you seem to have many client connections tying up
 	filedescriptors, we recommend first tuning the read_timeout,
 	request_timeout, pconn_timeout and quick_abort values.
-
-client_lifetime 1 day
 DOC_END
 
 NAME: half_closed_clients
@@ -1566,8 +1447,6 @@ DOC_START
 	socket returns an error.  Change this option to 'off' and Squid
 	will immediately close client connections when read(2) returns
 	"no more data to read."
-
-half_closed_clients on
 DOC_END
 
 NAME: pconn_timeout
@@ -1577,7 +1456,6 @@ DEFAULT: 120 seconds
 DOC_START
 	Timeout for idle persistent connections to servers and other
 	proxies.
-pconn_timeout 120 seconds
 DOC_END
 
 NAME: ident_timeout
@@ -1597,7 +1475,6 @@ DOC_START
 
 	This option may be disabled by using --disable-ident with
 	the configure script.
-ident_timeout 10 seconds
 DOC_END
 
 
@@ -1612,8 +1489,6 @@ DOC_START
 	This value is the lifetime to set for all open descriptors
 	during shutdown mode.  Any active clients after this many
 	seconds will receive a 'timeout' message.
-
-shutdown_lifetime 30 seconds
 DOC_END
 
 COMMENT_START
@@ -1717,13 +1592,18 @@ Examples:
 acl myexample dst_as 1241
 acl password proxy_auth REQUIRED
 
-Defaults:
 NOCOMMENT_START
+#Recommended minimum configuration:
 acl all src 0.0.0.0/0.0.0.0
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
 acl SSL_ports port 443 563
-acl Safe_ports port 80 21 443 563 70 210 1025-65535
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443 563	# https, snews
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
 acl Safe_ports port 280		# http-mgmt
 acl Safe_ports port 488		# gss-http
 acl Safe_ports port 591		# filemaker
@@ -1743,12 +1623,9 @@ DOC_START
 	Access to the HTTP port:
 	http_access allow|deny [!]aclname ...
 
-	Access to the ICP port:
-	icp_access  allow|deny [!]aclname ...
-
 	NOTE on default values:
 
-	If there are no "access" lines present, the default is to allow
+	If there are no "access" lines present, the default is to deny
 	the request.
 
 	If none of the "access" lines cause a match, the default is the
@@ -1758,15 +1635,20 @@ DOC_START
 	good idea to have an "deny all" or "allow all" entry at the end
 	of your access lists to avoid potential confusion.
 
-Default configuration:
 NOCOMMENT_START
+#Recommended minimum configuration:
+#
+# Only allow cachemgr access from localhost
 http_access allow manager localhost
 http_access deny manager
+# Deny requests to unknown ports
 http_access deny !Safe_ports
+# Deny CONNECT to other than SSL ports
 http_access deny CONNECT !SSL_ports
 #
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
 #
+# And finally deny all other access to this proxy
 http_access deny all
 NOCOMMENT_END
 DOC_END
@@ -1778,9 +1660,15 @@ LOC: Config.accessList.icp
 DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
-	Reply to all ICP queries we receive
+	Allowing or Denying access to the ICP port based on defined
+	access lists
+
+	icp_access  allow|deny [!]aclname ...
+
+	See http_access for details
 
 NOCOMMENT_START
+#Allow ICP queries from eveyone
 icp_access allow all
 NOCOMMENT_END
 DOC_END
@@ -1803,8 +1691,10 @@ DOC_START
 
 	By default, allow all clients who passed the http_access rules
 	to fetch MISSES from us.
+
 NOCOMMENT_START
-miss_access allow all
+#Default setting:
+# miss_access allow all
 NOCOMMENT_END
 DOC_END
 
@@ -1832,8 +1722,6 @@ DOC_START
 	Specifies the realm name which is to be reported to the client for
 	proxy authentication (part of the text the user will see when
 	prompted their username and password).
-
-proxy_auth_realm Squid proxy-caching web server
 DOC_END
 
 
@@ -1860,7 +1748,6 @@ DOC_START
 
 	This option may be disabled by using --disable-ident with
 	the configure script.
-ident_lookup_access deny all
 DOC_END
 
 
@@ -1876,8 +1763,6 @@ LOC: Config.adminEmail
 DOC_START
 	Email-address of local cache manager who will receive
 	mail if the cache dies.  The default is "webmaster."
-
-cache_mgr webmaster
 DOC_END
 
 
@@ -1900,9 +1785,6 @@ DOC_START
 	If Squid is not started as root, the default is to keep the
 	current UID/GID.  Note that if Squid is not started as root then
 	you cannot set http_port to a value lower than 1024.
-
-cache_effective_user nobody
-cache_effective_group nogroup
 DOC_END
 
 
@@ -1916,8 +1798,6 @@ DOC_START
 	will be used. If you have multiple caches in a cluster and
 	get errors about IP-forwarding you must set them to have individual
 	names with this setting.
-
-visible_hostname www-cache.foo.org
 DOC_END
 
 
@@ -1929,8 +1809,6 @@ DOC_START
 	If you want to have multiple machines with the same
 	'visible_hostname' then you must give each machine a different
 	'unique_hostname' so that forwarding loops can be detected.
-
-unique_hostname www-cache1.foo.org
 DOC_END
 
 
@@ -1975,10 +1853,10 @@ DOC_START
 	default is `0' which disables sending the announcement
 	messages.
 
-	To enable announcing your cache, just uncomment the line
-	below.
-
-announce_period 1 day
+NOCOMMENT_START
+#To enable announcing your cache, just uncomment the line below.
+#announce_period 1 day
+NOCOMMENT_END
 DOC_END
 
 
@@ -2006,9 +1884,6 @@ DOC_START
 	default default to 3131.  If the 'filename' argument is given,
 	the contents of that file will be included in the announce
 	message.
-
-announce_host tracker.ircache.net
-announce_port 3131
 DOC_END
 
 COMMENT_START
@@ -2036,9 +1911,6 @@ DOC_START
 	NOTE: enabling httpd_accel_host disables proxy-caching and
 	ICP.  If you want these features enabled also, then set
 	the 'httpd_accel_with_proxy' option.
-
-httpd_accel_host hostname
-httpd_accel_port port
 DOC_END
 
 NAME: httpd_accel_single_host
@@ -2069,11 +1941,12 @@ DEFAULT: off
 LOC: Config.onoff.accel_with_proxy
 DOC_START
 	If you want to use Squid as both a local httpd accelerator
-	and as a proxy, change this to 'on'.
-
-httpd_accel_with_proxy off
+	and as a proxy, change this to 'on'. Note however that your
+	proxy users may have trouble to reach the accelerated domains
+	unless their browsers are configured not to use this proxy for
+	those domains (for example via the no_proxy browser configuration
+	setting)
 DOC_END
-
 
 NAME: httpd_accel_uses_host_header
 COMMENT: on|off
@@ -2091,7 +1964,6 @@ DOC_START
 	However, you will need to enable this option if you run Squid
 	as a transparent proxy.  Otherwise, virtual servers which
 	require the Host: header will not be properly cached.
-httpd_accel_uses_host_header off
 DOC_END
 
 COMMENT_START
@@ -2103,13 +1975,11 @@ NAME: dns_testnames
 TYPE: wordlist
 LOC: Config.dns_testname_list
 DEFAULT: none
+DEFAULT_IF_NONE: netscape.com internic.net nlanr.net microsoft.com
 DOC_START
 	The DNS tests exit as soon as the first site is successfully looked up
 
-	If you want to disable DNS tests, do not comment out or delete this
-	list.  Instead use the -D command line option
-
-dns_testnames netscape.com internic.net nlanr.net microsoft.com
+	This test can be disabled with the -D command line option.
 DOC_END
 
 
@@ -2131,8 +2001,6 @@ DOC_START
 	purposes, so -k rotate uses another signal.  It is best to get
 	in the habit of using 'squid -k rotate' instead of 'kill -USR1
 	<pid>'.
-
-logfile_rotate 10
 DOC_END
 
 
@@ -2144,7 +2012,8 @@ DOC_START
 	Appends local domain name to hostnames without any dots in
 	them.  append_domain must begin with a period.
 
-append_domain .yourdomain.com
+Example:
+ append_domain .yourdomain.com
 DOC_END
 
 
@@ -2157,8 +2026,6 @@ DOC_START
 	Size of receive buffer to set for TCP sockets.  Probably just
 	as easy to change your kernel's default.  Set to zero to use
 	the default buffer size.
-
-tcp_recv_bufsize 0 bytes
 DOC_END
 
 NAME: err_html_text
@@ -2174,7 +2041,6 @@ DOC_START
 	the error template files (found in the "errors" directory).
 	Wherever you want the 'err_html_text' line to appear,
 	insert a %L tag in the error template file.
-err_html_text
 DOC_END
 
 
@@ -2205,8 +2071,6 @@ DOC_START
 	available for future use.  If memory is a premium on your
 	system and you believe your malloc library outperforms Squid 
 	routines, disable this.
-
-memory_pools on
 DOC_END
 
 NAME: memory_pools_limit
@@ -2254,8 +2118,6 @@ DOC_START
 	If you disable this, it will appear as
 
 		X-Forwarded-For: unknown
-
-forwarded_for on
 DOC_END
 
 NAME: log_icp_queries
@@ -2267,8 +2129,6 @@ DOC_START
 	If set, ICP queries are logged to access.log. You may wish
 	do disable this if your ICP load is VERY high to speed things
 	up or to simplify log analysis.
-
-log_icp_queries on
 DOC_END
 
 NAME: icp_hit_stale
@@ -2282,8 +2142,6 @@ DOC_START
 	in other administrative domains, this should be 'off'.  If you only
 	have sibling relationships with caches under your control, then
 	it is probably okay to set this to 'on'.
-
-icp_hit_stale off
 DOC_END
 
 
@@ -2294,8 +2152,6 @@ LOC: Config.minDirectHops
 DOC_START
 	If using the ICMP pinging stuff, do direct fetches for sites
 	which are no more than this many hops away.
-
-minimum_direct_hops 4
 DOC_END
 
 
@@ -2355,9 +2211,10 @@ DOC_START
 
 	Use the keyword "all" to set the same password for all actions.
 
-cachemgr_passwd secret shutdown
-cachemgr_passwd lesssssssecret info stats/objects
-cachemgr_passwd disable all
+Example:
+ cachemgr_passwd secret shutdown
+ cachemgr_passwd lesssssssecret info stats/objects
+ cachemgr_passwd disable all
 DOC_END
 
 NAME: store_avg_object_size
@@ -2369,8 +2226,6 @@ DOC_START
 	Average object size, used to estimate number of objects your
 	cache can hold.  See doc/Release-Notes-1.1.txt.  The default is
 	13 KB.
-
-store_avg_object_size 13 KB
 DOC_END
 
 NAME: store_objects_per_bucket
@@ -2381,8 +2236,6 @@ DOC_START
 	Target number of objects per bucket in the store hash table.
 	Lowering this value increases the total number of buckets and
 	also the storage maintenance rate.  The default is 50.
-
-store_objects_per_bucket 20
 DOC_END
 
 NAME: client_db
@@ -2393,8 +2246,6 @@ LOC: Config.onoff.client_db
 DOC_START
 	If you want to disable collecting per-client statistics, then
 	turn off client_db here.
-
-client_db on
 DOC_END
 
 
@@ -2413,9 +2264,6 @@ DOC_START
 	database.  These are counts, not percents.  The defaults are
 	900 and 1000.  When the high water mark is reached, database
 	entries will be deleted until the low mark is reached.
-
-netdb_low 900
-netdb_high 1000
 DOC_END
 
 
@@ -2427,8 +2275,6 @@ DOC_START
 	The minimum period for measuring a site.  There will be at
 	least this much delay between successive pings to the same
 	network.  The default is five minutes.
-
-netdb_ping_period 5 minutes
 DOC_END
 
 
@@ -2449,8 +2295,6 @@ DOC_START
 	the minimal RTT to the origin server.  When this happens, the
 	hierarchy field of the access.log will be
 	"CLOSEST_PARENT_MISS".  This option is off by default.
-
-query_icmp off
 DOC_END
 
 NAME: test_reachability
@@ -2462,8 +2306,6 @@ DOC_START
 	When this is 'on', ICP MISS replies will be ICP_MISS_NOFETCH
 	instead of ICP_MISS if the target host is NOT in the ICMP
 	database, or has a zero RTT.
-
-test_reachability off
 DOC_END
 
 NAME: buffered_logs
@@ -2477,7 +2319,6 @@ DOC_START
 	unbuffered.  By default they will be unbuffered. Buffering them
 	can speed up the writing slightly (though you are unlikely to
 	need to worry).
-buffered_logs off
 DOC_END
 
 NAME: reload_into_ims
@@ -2497,7 +2338,6 @@ DOC_START
 
 	This option may be disabled by using --disable-http-violations
 	with the configure script.
-reload_into_ims off
 DOC_END
 
 NAME: always_direct
@@ -2608,8 +2448,6 @@ DOC_START
 
 	By default, all headers are allowed (no anonymizing is
 	performed).
-
-anonymize_headers
 DOC_END
 
 NAME: fake_user_agent
@@ -2623,8 +2461,6 @@ DOC_START
 
 	fake_user_agent Nutscrape/1.0 (CP/M; 8-bit)
 	(credit to Paul Southworth pauls@etext.org for this one!)
-
-fake_user_agent none
 DOC_END
 
 NAME: icon_directory
@@ -2667,8 +2503,6 @@ DOC_START
 	minimum value, is five seconds, and the maximum value is sixty
 	seconds, or half of connect_timeout, whichever is greater and
 	less than connect_timeout.
-
-minimum_retry_timeout 5 seconds
 DOC_END
 
 NAME: maximum_single_addr_tries
@@ -2683,8 +2517,6 @@ DOC_START
 	The default value is three tries, the (not recommended)
 	maximum is 255 tries.  A warning message will be generated
 	if it is set to a value greater than ten.
-
-maximum_single_addr_tries 3
 DOC_END
 
 NAME: snmp_port
@@ -2699,7 +2531,6 @@ DOC_START
 
 	NOTE: SNMP support requires use the --enable-snmp configure
 	command line option.
-snmp_port 3401
 DOC_END
 
 NAME: snmp_access
@@ -2717,8 +2548,8 @@ DOC_START
 	snmp_access allow|deny [!]aclname ...
 
 Example:
-snmp_access allow snmppublic localhost
-snmp_access deny all
+ snmp_access allow snmppublic localhost
+ snmp_access deny all
 DOC_END
 
 NAME: snmp_incoming_address
@@ -2740,13 +2571,16 @@ DOC_START
 	snmp_outgoing_address	is used for SNMP packets returned to SNMP
 				agents.
 
-	The default behavior is to not bind to any specific address.
+	The default snmp_incoming_address (0.0.0.0) is to listen on all
+	available network interfaces.
+
+	If snmp_outgoing_address is set to 255.255.255.255 (the default)
+	then it will use the same socket as snmp_incoming_address. Only
+	change this if you want to have SNMP replies sent using another
+	address than where this Squid listens for SNMP queries.
 
 	NOTE, snmp_incoming_address and snmp_outgoing_address can not have
-	the same value since they both use port 3130.
-
-snmp_incoming_address 0.0.0.0
-snmp_outgoing_address 0.0.0.0
+	the same value since they both use port 3401.
 DOC_END
 
 NAME: as_whois_server
@@ -2768,7 +2602,6 @@ DOC_START
 	Use this option to define your WCCP ``home'' router for
 	Squid.   Setting the 'wccp_router' to 0.0.0.0 (the default)
 	disables WCCP.
-wccp_router 0.0.0.0
 DOC_END
 
 NAME: wccp_incoming_address
@@ -2801,9 +2634,6 @@ DOC_START
 
         NOTE, wccp_incoming_address and wccp_outgoing_address can not have
         the same value since they both use port 2048.
-
-wccp_incoming_address 0.0.0.0
-wccp_outgoing_address 0.0.0.0
 DOC_END
 
 
@@ -2824,7 +2654,6 @@ DOC_START
 
 	To enable this option, you must use --enable-delay-pools with the
 	configure script.
-delay_pools 0
 DOC_END
 
 NAME: delay_class
@@ -2838,9 +2667,10 @@ DOC_START
 	delay pools, one of class 2 and one of class 3, the settings above
 	and here would be:
 
-delay_pools 2      # 2 delay pools
-delay_class 1 2    # pool 1 is a class 2 pool
-delay_class 2 3    # pool 2 is a class 3 pool
+Example:
+ delay_pools 2      # 2 delay pools
+ delay_class 1 2    # pool 1 is a class 2 pool
+ delay_class 2 3    # pool 2 is a class 3 pool
 
 	The delay pool classes are:
 
@@ -2876,10 +2706,11 @@ DOC_START
 	all been checked.  For example, if you want some_big_clients in delay
 	pool 1 and lotsa_little_clients in delay pool 2:
 
-delay_access 1 allow some_big_clients
-delay_access 1 deny all
-delay_access 2 allow lotsa_little_clients
-delay_access 2 deny all
+Example:
+ delay_access 1 allow some_big_clients
+ delay_access 1 deny all
+ delay_access 2 allow lotsa_little_clients
+ delay_access 2 deny all
 DOC_END
 
 NAME: delay_parameters
@@ -2955,8 +2786,6 @@ DOC_START
 	a host accessing it (in class 2 and class 3, individual hosts and
 	networks only have buckets associated with them once they have been
 	"seen" by squid).
-
-delay_initial_bucket_level 50
 DOC_END
 
 NAME: incoming_icp_average
@@ -2985,18 +2814,19 @@ DOC_START
 	Heavy voodoo here.  I can't even believe you are reading this.
 	Are you crazy?  Don't even think about adjusting these unless
 	you understand the algorithms in comm_select.c first!
-
-incoming_icp_average 6
-incoming_http_average 4
-min_icp_poll_cnt 8
-min_http_poll_cnt 8
 DOC_END
 
 NAME: max_open_disk_fds
 TYPE: int
 LOC: Config.max_open_disk_fds
 DEFAULT: 0
-DOC_NONE
+DOC_START
+	To avoid having disk as the I/O bottleneck Squid can optionally
+	bypass the on-disk cache if more than this amount of disk file
+	descriptors are open.
+
+	A value of 0 indicates no limit.
+DOC_END
 
 NAME: offline_mode
 TYPE: onoff
@@ -3030,7 +2860,6 @@ DOC_START
 	chop:	The request is allowed and the URI is chopped at the
 		first whitespace.  This might also be considered a
 		violation.
-uri_whitespace strip
 DOC_END
 
 NAME: broken_posts
@@ -3051,8 +2880,9 @@ DOC_START
 	  forbidden by the BNF, an HTTP/1.1 client must not preface or follow
 	  a request with an extra CRLF.
 
-acl buggy_server url_regex ^http://....
-broken_posts allow buggy_server
+Example:
+ acl buggy_server url_regex ^http://....
+ broken_posts allow buggy_server
 DOC_END
 
 NAME: mcast_miss_addr
@@ -3117,8 +2947,6 @@ DOC_START
 
 	If you are inside an firewall then see never_direct instead of
 	this directive.
-
-nonhierarchical_direct on
 DOC_END
 
 NAME: prefer_direct
@@ -3133,8 +2961,6 @@ DOC_START
 	By combining nonhierarchical_direct off and prefer_direct on you
 	can set up Squid to use a parent as a backup path if going direct
 	fails.
-
-prefer_direct off
 DOC_END
 
 NAME: strip_query_terms
@@ -3144,7 +2970,6 @@ DEFAULT: on
 DOC_START
 	By default, Squid strips query terms from requested URLs before
 	logging.  This protects your user's privacy.
-strip_query_terms on
 DOC_END
 
 NAME: coredump_dir
@@ -3184,7 +3009,6 @@ DOC_START
 	don't match, Squid ignores the response and writes a warning
 	message to cache.log.  You can allow responses from unknown
 	nameservers by setting this option to 'off'.
-ignore_unknown_nameservers on
 DOC_END
 
 NAME: digest_generation
@@ -3196,7 +3020,6 @@ DOC_START
 	This controls whether the server will generate a Cache Digest
 	of its contents.  By default, Cache Digest generation is
 	enabled if Squid is compiled with USE_CACHE_DIGESTS defined.
-digest_generation on
 DOC_END
 
 NAME: digest_bits_per_entry
@@ -3208,7 +3031,6 @@ DOC_START
 	This is the number of bits of the server's Cache Digest which
 	will be associated with the Digest entry for a given HTTP
 	Method and URL (public key) combination.  The default is 5.
-digest_bits_per_entry 5
 DOC_END
 
 NAME: digest_rebuild_period
@@ -3219,8 +3041,6 @@ LOC: Config.digest.rebuild_period
 DEFAULT: 1 hour
 DOC_START
 	This is the number of seconds between Cache Digest rebuilds.
-	By default the server's Digest is rebuilt every hour.
-digest_rebuild_period 1 hour
 DOC_END
 
 NAME: digest_rewrite_period
@@ -3231,9 +3051,7 @@ LOC: Config.digest.rewrite_period
 DEFAULT: 1 hour
 DOC_START
 	This is the number of seconds between Cache Digest writes to
-	disk.  By default the server's Digest is written to disk every
-	hour.
-digest_rewrite_period 1 hour
+	disk.
 DOC_END
 
 NAME: digest_swapout_chunk_size
@@ -3246,7 +3064,6 @@ DOC_START
 	This is the number of bytes of the Cache Digest to write to
 	disk at a time.  It defaults to 4096 bytes (4KB), the Squid
 	default swap page.
-digest_swapout_chunk_size 4096 bytes
 DOC_END
 
 NAME: digest_rebuild_chunk_percentage
@@ -3258,7 +3075,6 @@ DEFAULT: 10
 DOC_START
 	This is the percentage of the Cache Digest to be scanned at a
 	time.  By default it is set to 10% of the Cache Digest.
-digest_rebuild_chunk_percentage 10
 DOC_END
 
 NAME: chroot
@@ -3288,8 +3104,6 @@ DOC_START
 	default, Squid uses persistent connections (when allowed)
 	with its clients and servers.  You can use these options to
 	disable persistent connections with clients and/or servers.
-client_persistent_connections on
-server_persistent_connections on
 DOC_END
 
 NAME: diskd_magic1
@@ -3304,7 +3118,9 @@ IFDEF: USE_DISKD
 TYPE: int
 LOC: Config.diskd.magic2
 DEFAULT: 72
-DOC_NONE
+DOC_START
+	Macic constants for the diskd daemon..
+DOC_END
 
 EOF
 

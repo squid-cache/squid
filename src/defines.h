@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.78 2000/03/06 16:23:30 wessels Exp $
+ * $Id: defines.h,v 1.79 2000/05/02 20:58:30 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -275,3 +275,10 @@
 #define NUMTHREADS 16
 #endif
 #endif
+
+#if USE_ASYNC_IO
+#undef USE_UNLINKD
+#else
+#define USE_UNLINKD 1
+#endif
+
