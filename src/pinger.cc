@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.3 1996/09/24 18:50:07 wessels Exp $
+ * $Id: pinger.cc,v 1.4 1996/09/24 20:17:31 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -307,7 +307,7 @@ pingerSendtoSquid(pingerReplyData * preply)
 {
     int len = sizeof(pingerReplyData) - 8192 + preply->psize;
     if (send(1, preply, len, 0) < 0) {
-	debug(37,0,"send: %s\n", xstrerror());
+	debug(37, 0, "send: %s\n", xstrerror());
 	exit(1);
     }
 }

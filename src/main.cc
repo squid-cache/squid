@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.86 1996/09/24 19:50:08 wessels Exp $
+ * $Id: main.cc,v 1.87 1996/09/24 20:17:31 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -240,8 +240,8 @@ mainParseOptions(int argc, char *argv[])
 		opt_send_signal = SIGUSR2;
 	    else if (!strncmp(optarg, "shutdown", strlen(optarg)))
 		opt_send_signal = SIGTERM;
-            else if (!strncmp(optarg, "interrupt", strlen(optarg)))
-                opt_send_signal = SIGINT;
+	    else if (!strncmp(optarg, "interrupt", strlen(optarg)))
+		opt_send_signal = SIGINT;
 	    else if (!strncmp(optarg, "kill", strlen(optarg)))
 		opt_send_signal = SIGKILL;
 	    else if (!strncmp(optarg, "check", strlen(optarg)))

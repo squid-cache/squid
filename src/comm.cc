@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.78 1996/09/24 19:50:07 wessels Exp $
+ * $Id: comm.cc,v 1.79 1996/09/24 20:17:28 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -671,7 +671,7 @@ comm_select(time_t sec)
 	    dnsShutdownServers();
 	    redirectShutdownServers();
 	    if (shutdown_pending > 0)
-	    	setSocketShutdownLifetimes(Config.lifetimeShutdown);
+		setSocketShutdownLifetimes(Config.lifetimeShutdown);
 	    else
 		setSocketShutdownLifetimes(0);
 	}
