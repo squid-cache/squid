@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.5 2003/03/10 20:12:43 robertc Exp $
+ * $Id: DelayVector.cc,v 1.6 2003/05/15 07:06:24 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -64,8 +64,15 @@ DelayVector::deleteSelf() const
     delete this;
 }
 
+DelayVector::DelayVector()
+{
+    DelayPools::RegisterForUpdates (this);
+}
+
 DelayVector::~DelayVector()
-{}
+{
+    DelayPools::DeregisterForUpdates (this);
+}
 
 void
 DelayVector::stats(StoreEntry * sentry)
@@ -92,12 +99,10 @@ DelayVector::dump(StoreEntry *entry) const
 void
 DelayVector::update(int incr)
 {
-    iterator pos = pools.begin();
-
-    while (pos != pools.end()) {
-        (*pos)->update(incr);
-        ++pos;
-    }
+    /*
+     * Each pool updates itself,
+     * but we may have deferred reads waiting on the pool as a whole.
+     */
 
     kickReads();
 }
