@@ -41,7 +41,6 @@
 typedef struct _request_data {
     char *user;
     char *realm;
-    char *password;
     HASHHEX HHA1;
     int parsed;
     int error;
