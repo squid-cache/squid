@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.151 1998/01/05 21:44:42 wessels Exp $
+ * $Id: squid.h,v 1.152 1998/01/06 00:28:01 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -32,7 +32,6 @@
 #define SQUID_H
 
 #include "config.h"
-#include "options.h"
 
 /*
  * On some systems, FD_SETSIZE is set to something lower than the

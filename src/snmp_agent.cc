@@ -1,4 +1,3 @@
-#ifdef SQUID_SNMP
 /*
  * Simple Network Management Protocol (RFC 1067).
  *
@@ -991,4 +990,3 @@ bulk_var_op_list(sn_data, length, out_sn_data, out_length, non_repeaters, max_re
     *index = 0;
     return SNMP_ERR_NOERROR;
 }
-#endif

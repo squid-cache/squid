@@ -1,9 +1,5 @@
-
-
-
-
 /*
- * $Id: client.cc,v 1.47 1998/01/02 02:06:03 wessels Exp $
+ * $Id: client.cc,v 1.48 1998/01/06 00:27:56 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -225,7 +221,7 @@ main(int argc, char *argv[])
     if (strncmp(url, "mgr:", 4) == 0) {
 	char *t = xstrdup(url + 4);
 	snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
-	free(t);
+	xfree(t);
     }
     snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);
     if (reload) {
