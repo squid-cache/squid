@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.11 1996/03/27 18:50:23 wessels Exp $ */
+/* $Id: main.cc,v 1.12 1996/03/27 18:50:59 wessels Exp $ */
 
 #include "squid.h"
 
@@ -38,7 +38,7 @@ static int udpPortNumOverride = 0;
 
 static void usage()
 {
-	    fprintf(stderr, "\
+    fprintf(stderr, "\
 Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
        -h        Print help message.\n\
        -s        Enable logging to syslog.\n\
@@ -51,8 +51,8 @@ Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
                  $HARVEST_HOME/lib/cached.conf.\n\
        -a port	 Specify ASCII port number (default: %d).\n\
        -u port	 Specify UDP port number (default: %d).\n",
-		CACHE_HTTP_PORT, CACHE_ICP_PORT);
-	exit(1);
+	CACHE_HTTP_PORT, CACHE_ICP_PORT);
+    exit(1);
 }
 
 int main(argc, argv)
