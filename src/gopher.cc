@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.65 1996/11/14 18:38:43 wessels Exp $
+ * $Id: gopher.cc,v 1.66 1996/11/14 19:02:17 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -444,7 +444,7 @@ gopherToHTML(GopherStateData * data, char *inbuf, int len)
 
 	if (data->len != 0) {
 	    /* there is something left from last tx. */
-	    strncpy(line, data->buf, data->len);
+	    xstrncpy(line, data->buf, data->len);
 	    lpos = (char *) memccpy(line + data->len, inbuf, '\n', len);
 	    if (lpos)
 		*lpos = '\0';

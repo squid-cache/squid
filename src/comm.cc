@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.104 1996/11/14 18:38:40 wessels Exp $
+ * $Id: comm.cc,v 1.105 1996/11/14 19:02:14 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1103,7 +1103,7 @@ fd_note(int fd, const char *s)
 {
     if (s == NULL)
 	return (fd_table[fd].ascii_note);
-    strncpy(fd_table[fd].ascii_note, s, FD_ASCII_NOTE_SZ - 1);
+    xstrncpy(fd_table[fd].ascii_note, s, FD_ASCII_NOTE_SZ - 1);
     return (NULL);
 }
 

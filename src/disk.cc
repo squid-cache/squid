@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.41 1996/11/14 18:38:41 wessels Exp $
+ * $Id: disk.cc,v 1.42 1996/11/14 19:02:15 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -173,7 +173,7 @@ file_open(const char *path, int (*handler) _PARAMS((void)), int mode)
     commSetCloseOnExec(fd);
 
     /* init table */
-    strncpy(file_table[fd].filename, path, SQUID_MAXPATHLEN);
+    xstrncpy(file_table[fd].filename, path, SQUID_MAXPATHLEN);
     file_table[fd].at_eof = NO;
     file_table[fd].open_stat = FILE_OPEN;
     file_table[fd].close_request = NOT_REQUEST;
@@ -534,7 +534,7 @@ diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
     while (end_pos < len) {
 	if (walk_dat->buf[end_pos] == '\n') {
 	    /* new line found */
-	    strncpy(temp_line, walk_dat->buf + st_pos, end_pos - st_pos);
+	    xstrncpy(temp_line, walk_dat->buf + st_pos, end_pos - st_pos);
 	    temp_line[end_pos - st_pos] = '\0';
 	    used_bytes += end_pos - st_pos + 1;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.24 1996/11/06 23:14:16 wessels Exp $
+ * $Id: util.c,v 1.25 1996/11/14 19:02:11 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -464,4 +464,20 @@ tvSubMsec(struct timeval t1, struct timeval t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000 +
 	(t2.tv_usec - t1.tv_usec) / 1000;
+}
+
+/*
+ *  xstrncpy() - similar to strncpy(3) but terminates string
+ *  always with '\0' if n != 0, and doesn't do padding
+ */
+char *
+xstrncpy(char *dst, const char *src, size_t n)
+{
+    if (n != 0) {
+	if (src != NULL)
+	    while (--n != 0 && *src != '\0')
+		*dst++ = *src++;
+	*dst = '\0';
+    }
+    return dst;
 }
