@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.260 1998/05/28 02:50:48 wessels Exp $
+ * $Id: comm.cc,v 1.261 1998/05/28 04:42:28 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -900,8 +900,9 @@ comm_incoming(void)
     incame = 0;
     if (theInIcpConnection > 0)
 	icpHandleUdp(theInIcpConnection, &incame);
-    if (theInIcpConnection != theOutIcpConnection)
-	icpHandleUdp(theOutIcpConnection, &incame);
+        if (theInIcpConnection != theOutIcpConnection)
+	    icpHandleUdp(theOutIcpConnection, &incame);
+    }
     for (j = 0; j < NHttpSockets; j++) {
 	if (HttpSockets[j] < 0)
 	    continue;
