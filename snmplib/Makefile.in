@@ -1,0 +1,82 @@
+##
+## Makefile for libsnmp.
+## 
+## because this is for Linux with ELF only, we are building 
+## a shared lib, to be installed in /lib.
+##
+
+## set to installation prefix (overridden by configure --prefix=path):
+prefix=@prefix@
+
+VERSION = 3.4
+OSHLIB= libsnmp.so
+ALIB = libsnmp.a
+
+TARG=	@SNMPLIB@
+
+CSRCS=	snmp_client.c snmp.c snmp_auth.c asn1.c mib.c parse.c snmp_api.c \
+	md5.c usec.c snmpdump.c
+OBJS=	snmp_client.o snmp.o snmp_auth.o asn1.o mib.o parse.o snmp_api.o \
+	md5.o usec.o snmpdump.o
+
+CC= @CC@
+FLAGS= 
+DEFS= -DBSD4_3 -DSQUID_SNMP
+INCLUDE= -I../include -I./../include -I../src -I./../src
+MIBDEFS= -DMIBFILEPATH=\"$(prefix)/lib\"
+# CFLAGS=-O -DDEBUG -DBSD4_3
+CFLAGS=  $(FLAGS) $(DEFS) $(CONFDEFS) $(INCLUDE)
+
+
+all:	$(TARG)
+install: all
+$(OSHLIB):    ${OBJS}
+	$(CC) -shared -Wl,-soname,$(OSHLIB).$(VERSION) -o $(OSHLIB).$(VERSION) $(OBJS)
+	ln -sf $(OSHLIB).$(VERSION) $(OSHLIB)
+
+$(ALIB):    ${OBJS}
+	@AR_R@  $(ALIB) ${OBJS}
+	@RANLIB@ $(ALIB)
+
+##
+## special rule to include -DMIBFILEPATH=...:
+##
+mib.o:		mib.c
+	$(CC) $(CFLAGS) $(MIBDEFS)	-c mib.c 
+
+clean:
+	rm -f core *.o ${TARG} shared/*.o *.a *.so*
+
+
+# install:	../lib/libsnmp.a
+# 
+# ../lib/libsnmp.a:	libsnmp.a
+# 	cp libsnmp.a ../lib
+# 	ranlib ../lib/libsnmp.a
+#
+# lint:
+# 	lint -nhx $(CSRCS)
+
+asn1.o: 
+mib.o: 
+mib.o: 
+mib.o: 
+mib.o: 
+parse.o:
+snmp.o: 
+snmp.o: 
+snmp.o: 
+snmp.o: 
+snmp_api.o: 
+snmp_api.o: 
+snmp_api.o: 
+snmp_api.o: 
+snmp_auth.o:
+snmp_auth.o:
+snmp_auth.o:
+snmp_client.o:
+snmp_client.o:
+snmp_client.o:
+snmp_client.o:
+snmp_client.o:
+
