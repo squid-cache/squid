@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.16 1996/04/08 17:08:01 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.17 1996/04/10 05:06:13 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -1357,7 +1357,7 @@ void ipcacheShutdownServers()
 	debug(14, 1, "ipcacheShutdownServers: sending '$shutdown' to dnsserver #%d\n", i);
 	debug(14, 1, "ipcacheShutdownServers: --> FD %d\n", dns->outpipe);
 	file_write(dns->outpipe,
-	    shutdown,
+	    xstrdup(shutdown),
 	    strlen(shutdown),
 	    0,			/* Lock */
 	    0,			/* Handler */
