@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.9 2003/08/04 22:14:56 robertc Exp $
+ * $Id: http_range_test.cc,v 1.10 2003/08/14 22:27:39 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -114,14 +114,14 @@ ACLChecklist::operator delete (void *address)
 ACLChecklist::~ACLChecklist(){}
 
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
-        request_t *,
+        HttpRequest *,
         const char *ident)
 {
     fatal ("dummy function\n");
     return NULL;
 }
 
-SQUIDCEXTERN String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
+extern String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
 {
     fatal ("dummy function\n");
     return String();
