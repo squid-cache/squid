@@ -76,6 +76,7 @@ typedef struct _ErrorState ErrorState;
 typedef struct _dlink_node dlink_node;
 typedef struct _dlink_list dlink_list;
 typedef struct _StatCounters StatCounters;
+typedef struct _tlv tlv;
 
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);

@@ -174,9 +174,9 @@
 #define VIEWEXCLUDED    2
 #endif
 
-#define META_OK     0x03
-#define META_DIRTY  0x04
-#define META_BAD    0x05
+#define STORE_META_OK     0x03
+#define STORE_META_DIRTY  0x04
+#define STORE_META_BAD    0x05
 
 #define IPC_NONE 0
 #define IPC_TCP_SOCKET 1

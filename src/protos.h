@@ -499,11 +499,10 @@ extern int storeVerifyCacheDirs(void);
 /*
  * store_swapmeta.c
  */
-extern int storeBuildMetaData(StoreEntry * e, char *swap_buf_c);
-extern int getSwapHdr(int *, int *len, void *dst, char *write_buf, int hdr_len);
-extern int getSwapHdr(int *, int *len, void *dst, char *write_buf, int hdr_len);
-extern void addSwapHdr(int, int len, void *src, char *write_buf, int *write_len);
-extern int storeGetMetaBuf(const char *buf, MemObject * mem);
+char *storeSwapMetaPack(tlv *tlv_list, int *length);
+tlv *storeSwapMetaBuild(StoreEntry * e);
+tlv *storeSwapMetaUnpack(const char *buf, int *hdrlen);
+void storeSwapTLVFree(tlv *n);
 
 /*
  * store_rebuild.c

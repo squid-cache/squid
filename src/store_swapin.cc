@@ -39,13 +39,11 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 	storeValidate(e, storeSwapInValidateComplete, ctrlp, callback_data);
 }
 
-
 void
 storeSwapInValidateComplete(void *data, int retcode, int errcode)
 {
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
     StoreEntry *e;
-
     if (retcode == -2 && errcode == -2) {
 	xfree(ctrlp);
 	return;
@@ -70,7 +68,6 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     StoreEntry *e = ctrlp->e;
     MemObject *mem = e->mem_obj;
     struct stat sb;
-
     if (fd == -2 && errcode == -2) {
 	xfree(ctrlp->path);
 	xfree(ctrlp);
@@ -100,3 +97,4 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     xfree(ctrlp->path);
     xfree(ctrlp);
 }
+

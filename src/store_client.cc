@@ -208,12 +208,15 @@ storeClientCopyHandleRead(int fd, const char *buf, int len, int flagnotused, voi
     sc->disk_op_in_progress = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientCopyHandleRead: FD %d, len %d\n", fd, len);
+#if USE_SWAP_HEADERS
+	/* XXX: BROKEN */
     if (sc->copy_offset == 0 && len > 0 && mem != NULL) {
 	hdr_len = storeGetMetaBuf(buf, mem);
 	memmove((char *) buf, (char *) (buf + hdr_len), len - hdr_len);
 	len -= hdr_len;
 	httpParseReplyHeaders(buf, mem->reply);
     }
+#endif
     sc->callback = NULL;
     callback(sc->callback_data, sc->copy_buf, len);
 }
