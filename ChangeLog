@@ -16,6 +16,7 @@ Changes to squid-1.1.beta14 ():
 	- Removed InvokeHandlers() call from StoreAbort().
 	- Added icpFinishAbort() to deliver abort messages, if at all.
 	- Added passthrough module (pass.c) for POST, et. al.
+	- Fixed purify bugs in storeCloseLog() and storeSwapInHandle().
 
 Changes to squid-1.1.beta13 (November 1, 1996):
 
