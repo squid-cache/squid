@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.107 2002/04/01 22:20:43 hno Exp $
+ * $Id: store_client.cc,v 1.108 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -67,14 +67,14 @@ storeClientWaiting(const StoreEntry * e)
 }
 
 #if STORE_CLIENT_LIST_DEBUG
-store_client *
+static store_client *
 storeClientListSearch(const MemObject * mem, void *data)
 {
     dlink_node *node;
     store_client *sc = NULL;
     for (node = mem->clients.head; node; node = node->next) {
 	sc = node->data;
-	if (sc->callback_data == data)
+	if (sc->owner == data)
 	    return sc;
     }
     return NULL;
@@ -134,8 +134,9 @@ storeClientListAdd(StoreEntry * e, void *data)
     e->refcount++;
     mem->nclients++;
     sc = cbdataAlloc(store_client);
-    cbdataLock(data);		/* locked while we point to it */
-    sc->callback_data = data;
+#if STORE_CLIENT_LIST_DEBUG
+    sc->owner = cbdataReference(data);
+#endif
     sc->copy_offset = 0;
     sc->cmp_offset = 0;
     sc->flags.disk_io_pending = 0;
@@ -156,13 +157,14 @@ static void
 storeClientCallback(store_client * sc, ssize_t sz)
 {
     STCB *callback = sc->callback;
+    void *cbdata;
     char *buf = sc->copy_buf;
     assert(sc->callback);
     sc->cmp_offset = sc->copy_offset + sz;
     sc->callback = NULL;
     sc->copy_buf = NULL;
-    if (cbdataValid(sc->callback_data))
-	callback(sc->callback_data, buf, sz);
+    if (cbdataReferenceValidDone(sc->callback_data, &cbdata))
+	callback(cbdata, buf, sz);
 }
 
 static void
@@ -177,8 +179,8 @@ storeClientCopyEvent(void *data)
 }
 
 void
-storeClientCopyOld(store_client *sc, StoreEntry *e, off_t seen_offset,
-   off_t copy_offset, size_t size, char *buf, STCB *callback, void *data)
+storeClientCopyOld(store_client * sc, StoreEntry * e, off_t seen_offset,
+    off_t copy_offset, size_t size, char *buf, STCB * callback, void *data)
 {
     /* OLD API -- adrian */
     fatal("storeClientCopyOld() has been called!\n");
@@ -211,6 +213,7 @@ storeClientCopy(store_client * sc,
     assert(sc->cmp_offset == copy_offset);
     sc->copy_offset = copy_offset;
     sc->callback = callback;
+    sc->callback_data = cbdataReference(data);
     sc->copy_buf = buf;
     sc->copy_size = size;
     sc->copy_offset = copy_offset;
@@ -243,8 +246,9 @@ storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
 static void
 storeClientCopy2(StoreEntry * e, store_client * sc)
 {
-    if (sc->flags.copy_event_pending)
+    if (sc->flags.copy_event_pending) {
 	return;
+    }
     if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
 	debug(20, 5) ("storeClientCopy2: returning because ENTRY_FWD_HDR_WAIT set\n");
 	return;
@@ -255,7 +259,6 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0.0, 0);
 	return;
     }
-    cbdataLock(sc);		/* ick, prevent sc from getting freed */
     sc->flags.store_copying = 1;
     debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->hash.key));
     assert(sc->callback != NULL);
@@ -266,9 +269,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * if the server-side aborts, we want to give the client(s)
      * everything we got before the abort condition occurred.
      */
+    /* Warning: storeClientCopy3 may indirectly free sc in callbacks,
+     * hence the cbdata reference to keep it active for the duration of
+     * this function
+     */
+    cbdataInternalLock(sc);
     storeClientCopy3(e, sc);
     sc->flags.store_copying = 0;
-    cbdataUnlock(sc);		/* ick, allow sc to be freed */
+    cbdataInternalUnlock(sc);
 }
 
 static void
@@ -277,20 +285,18 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
     MemObject *mem = e->mem_obj;
     size_t sz;
 
-    debug(33, 5) ("co: %ld, hi: %ld\n", (long int)sc->copy_offset, (long int)mem->inmem_hi);
+    debug(33, 5) ("co: %ld, hi: %ld\n", (long int) sc->copy_offset, (long int) mem->inmem_hi);
 
     if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 	storeClientCallback(sc, 0);
 	return;
     }
-
     /* Check that we actually have data */
     if (e->store_status == STORE_PENDING && sc->copy_offset >= mem->inmem_hi) {
-        debug(20, 3) ("storeClientCopy3: Waiting for more\n");
-        return;
+	debug(20, 3) ("storeClientCopy3: Waiting for more\n");
+	return;
     }
-
     /*
      * Slight weirdness here.  We open a swapin file for any
      * STORE_DISK_CLIENT, even if we can copy the requested chunk
@@ -302,7 +308,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
      * is clientCacheHit) so that we can fall back to a cache miss
      * if needed.
      */
-    
+
     if (STORE_DISK_CLIENT == sc->type && NULL == sc->swapin_sio) {
 	debug(20, 3) ("storeClientCopy3: Need to open swap in file\n");
 	/* gotta open the swapin file */
@@ -328,12 +334,12 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
     }
     if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
 	/* What the client wants is in memory */
-        /* Old style */
-        debug(20, 3) ("storeClientCopy3: Copying normal from memory\n");
-        sz = stmemCopy(&mem->data_hdr, sc->copy_offset, sc->copy_buf,
-          sc->copy_size);
-        storeClientCallback(sc, sz);
-        return;
+	/* Old style */
+	debug(20, 3) ("storeClientCopy3: Copying normal from memory\n");
+	sz = stmemCopy(&mem->data_hdr, sc->copy_offset, sc->copy_buf,
+	    sc->copy_size);
+	storeClientCallback(sc, sz);
+	return;
     }
     /* What the client wants is not in memory. Schedule a disk read */
     assert(STORE_DISK_CLIENT == sc->type);
@@ -541,8 +547,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 	storeSwapOut(e);
     if (sc->swapin_sio) {
 	storeClose(sc->swapin_sio);
-	cbdataUnlock(sc->swapin_sio);
-	sc->swapin_sio = NULL;
+	cbdataReferenceDone(sc->swapin_sio);
 	statCounter.swap.ins++;
     }
     if (NULL != sc->callback) {
@@ -554,8 +559,9 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 #if DELAY_POOLS
     delayUnregisterDelayIdPtr(&sc->delay_id);
 #endif
-    cbdataUnlock(sc->callback_data);	/* we're done with it now */
-    /*assert(!sc->flags.disk_io_pending); */
+#if STORE_CLIENT_LIST_DEBUG
+    cbdataReferenceDone(sc->owner);
+#endif
     cbdataFree(sc);
     assert(e->lock_count > 0);
     if (mem->nclients == 0)
@@ -575,8 +581,6 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
     for (node = mem->clients.head; node; node = nx) {
 	sc = node->data;
 	nx = node->next;
-	if (sc->callback_data == NULL)	/* open slot */
-	    continue;
 	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
 	if (sc->type == STORE_DISK_CLIENT)

@@ -11,7 +11,7 @@
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
  *
- * $Id: async_io.cc,v 1.7 2001/08/24 13:48:31 hno Exp $
+ * $Id: async_io.cc,v 1.8 2002/04/13 23:07:56 hno Exp $
  */
 
 #include "squid.h"
@@ -75,7 +75,7 @@ a_file_read(async_queue_t * q, int fd, void *buf, int req_len, off_t offset,
     qe = &q->aq_queue[slot];
     qe->aq_e_state = AQ_ENTRY_USED;
     qe->aq_e_callback.read = callback;
-    qe->aq_e_callback_data = data;
+    qe->aq_e_callback_data = cbdataReference(data);
     qe->aq_e_type = AQ_ENTRY_READ;
     qe->aq_e_free = NULL;
     qe->aq_e_buf = buf;
@@ -88,9 +88,6 @@ a_file_read(async_queue_t * q, int fd, void *buf, int req_len, off_t offset,
 
     /* Account */
     q->aq_numpending++;
-
-    /* Lock */
-    cbdataLock(data);
 
     /* Initiate aio */
     if (aio_read(&qe->aq_e_aiocb) < 0) {
@@ -122,7 +119,7 @@ a_file_write(async_queue_t * q, int fd, off_t offset, void *buf, int len,
     qe = &q->aq_queue[slot];
     qe->aq_e_state = AQ_ENTRY_USED;
     qe->aq_e_callback.write = callback;
-    qe->aq_e_callback_data = data;
+    qe->aq_e_callback_data = cbdataReference(data);
     qe->aq_e_type = AQ_ENTRY_WRITE;
     qe->aq_e_free = freefunc;
     qe->aq_e_buf = buf;
@@ -135,9 +132,6 @@ a_file_write(async_queue_t * q, int fd, off_t offset, void *buf, int len,
 
     /* Account */
     q->aq_numpending++;
-
-    /* Lock */
-    cbdataLock(data);
 
     /* Initiate aio */
     if (aio_write(&qe->aq_e_aiocb) < 0) {
@@ -164,7 +158,7 @@ a_file_callback(async_queue_t * q)
     DRCB *rc;
     DWCB *wc;
     FREE *freefunc;
-    void *callback_data;
+    void *cbdata;
     void *buf;
     int fd;
     async_queue_entry_t *aqe;
@@ -186,7 +180,6 @@ a_file_callback(async_queue_t * q)
 		retval = aio_return(&aqe->aq_e_aiocb);
 
 		/* Get the callback parameters */
-		callback_data = aqe->aq_e_callback_data;
 		freefunc = aqe->aq_e_free;
 		rc = aqe->aq_e_callback.read;
 		wc = aqe->aq_e_callback.write;
@@ -200,13 +193,12 @@ a_file_callback(async_queue_t * q)
 		q->aq_numpending--;
 
 		/* Callback */
-		if (cbdataValid(callback_data)) {
+		if (cbdataReferenceValidDone(aqe->aq_e_callback_data, &cbdata)) {
 		    if (type == AQ_ENTRY_READ)
-			rc(fd, buf, retval, reterr, callback_data);
+			rc(fd, buf, retval, reterr, cbdata);
 		    if (type == AQ_ENTRY_WRITE)
-			wc(fd, reterr, retval, callback_data);
+			wc(fd, reterr, retval, cbdata);
 		}
-		cbdataUnlock(callback_data);
 		if (type == AQ_ENTRY_WRITE && freefunc)
 		    freefunc(buf);
 	    }

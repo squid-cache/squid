@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.48 2002/04/06 08:49:22 adrian Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.49 2002/04/13 23:07:47 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2447,13 +2447,13 @@ $|=1;		# no buffering, important!
 while (<>) {
         chop;
         ($u,$p) = split;
-        $ans = &check($u,$p);
+        $ans = &amp;check($u,$p);
         print "$ans\n";
 }
 
 sub check {
         local($u,$p) = @_;
-        return 'ERR' unless (defined $p && defined $u);
+        return 'ERR' unless (defined $p &amp;&amp; defined $u);
         return 'OK' if ('Dirk' eq $u);
         return 'OK' if ('Sekrit' eq $p);
         return 'ERR';
@@ -2483,7 +2483,163 @@ sub check {
 
 	<P>
 	Squid's extensive use of callback functions makes it very
-	susceptible to memory access errors.  For a blocking operation
+	susceptible to memory access errors. To address this all callback
+	functions make use of a construct called "cbdata". This allows
+	functions doing callbacks to verify that the caller is still
+	valid before making the callback. 
+
+	<P>
+	Note: cbdata is intended for callback data and is tailored specifically
+	to make callbacks less dangerous leaving as few windows of errors as
+	possible. It is not suitable or intended as a generic referencecounted
+	memory allocator.
+
+<sect1>API
+
+<sect2>CBDATA_TYPE
+
+	<P>
+<verb>
+	CBDATA_TYPE(datatype);
+</verb>
+	
+	<P>
+	Macro that defines a new cbdata datatype. Similar to a variable
+	or struct definition. Scope is always local to the file/block
+	where it is defined and all allocations must be within this scope.
+	Allocated entries referenced or freed anywhere with no restrictions
+	on scope.
+
+<sect2>CBDATA_GLOBAL_TYPE
+
+	<P>
+<verb>
+	/* Module header file */
+	external CBDATA_GLOBAL_TYPE(datatype);
+
+	/* Module main C file */
+	CBDATA_GLOBAL_TYPE(datatype);
+</verb>
+
+	<P>
+	Defines a global cbdata type that can be referenced anywhere in
+	the code.
+
+<sect2>CBDATA_INIT_TYPE
+
+	<P>
+<verb>
+	CBDATA_INIT_TYPE(datatype);
+	/* or */
+	CBDATA_INIT_TYPE_FREECB(datatype, FREE *freehandler);
+</verb>
+
+	<P>
+	Initializes the cbdatatype. Must be called prior to the first use of
+	cbdataAlloc() for the type.
+
+	<P>
+	The freehandler is called when the last known reference to a
+	allocated entry goes away.
+
+<sect2>cbdataAlloc
+
+	<P>
+<verb>
+	pointer = cbdataAlloc(datatype);
+</verb>
+
+	<P>
+	Allocates a new entry of a registered cbdata type.
+
+<sect2>cbdataFree
+
+	<P>
+<verb>
+	cbdataFree(pointer);
+</verb>
+
+	<P>
+	Frees a entry allocated by cbdataAlloc().
+
+	<P>
+	Note: If there are active references to the entry then the entry
+	will be freed with the last reference is removed. However,
+	cbdataReferenceValid() will return false for those references.
+
+<sect2>cbdataReference
+
+	<P>
+<verb>
+	reference = cbdataReference(pointer);
+</verb>
+
+	<P>
+	Creates a new reference to a cbdata entry. Used when you need to
+	store a reference in another structure. The reference can later
+	be verified for validity by cbdataReferenceValid().
+
+	<P>
+	Note: The reference variable is a pointer to the entry, in all
+	aspects identical to the original pointer. But semantically it
+	is quite different. It is best if the reference is thought of
+	and handled as a "void *".
+
+<sect2>cbdataReferenceDone
+
+	<P>
+<verb>
+	cbdataReferenceDone(reference);
+</verb>
+
+	<P>
+	Removes a reference created by cbdataReference().
+	
+	<P>
+	Note: The reference variable will be automatically cleared to NULL.
+
+<sect2>cbdataReferenceValid
+
+	<P>
+<verb>
+	if (cbdataReferenceValid(reference)) {
+	    ...
+	}
+</verb>
+
+	<P>
+	cbdataReferenceValid() returns false if a reference is stale (refers to a
+	entry freed by cbdataFree).
+
+<sect2>cbdataReferenceValidDone
+
+	<P>
+<verb>
+	void *pointer;
+	bool cbdataReferenceValidDone(reference, &amp;pointer);
+</verb>
+
+	<P>
+	Removes a reference created by cbdataReference() and checks
+	it for validity.
+	
+	<P>
+	Meant to be used on the last dereference
+
+<verb>
+	void *cbdata;
+	...
+	if (cbdataReferenceValidDone(reference, &amp;cbdata)) != NULL)
+	    callback(..., cbdata);
+</verb>
+
+	<P>
+	Note: The reference variable will be automatically cleared to NULL.
+
+<sect1>Examples
+
+	<P>
+	For a blocking operation
 	with callback functions, the normal sequence of events is as
 	follows:
 <verb>
@@ -2508,40 +2664,54 @@ sub check {
 	operation executes elsewhere, and is freed when the operation
 	completes.  The normal sequence of events is:
 <verb>
+	/* initialization */
 	type_of_data callback_data;
 	...
 	callback_data = cbdataAlloc(type_of_data);
 	...
-	cbdataLock(callback_data);
-	fooOperationStart(bar, callback_func, callback_data);
+	/* calling "foo" */
+	fooOperationStart(..., callback_func, callback_data);
 	...
-	fooOperationComplete(...);
-	if (cbdataValid(callback_data)) {
-		callback_func(callback_data, ....);
-	cbdataUnlock(callback_data);
+	/* being destroyed */
 	cbdataFree(callback_data);
+
+	/* foo */
+	void
+	fooOperationStart(..., callback_func, void *callback_data)
+	{
+	    void *local_pointer = cbdataReference(callback_data);
+	    ....
+	}
+	void
+	fooOperationComplete(...)
+	{
+	    void *cbdata;
+	    ...
+	    if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
+		callback_func(...., cbdata);
+	}
 </verb>
 
 	<P>
 	With this scheme, nothing bad happens if <tt/cbdataFree/ gets called
-	before <tt/cbdataUnlock/:
+	before fooOperantionComplete(...).
 <verb>
 	callback_data = cbdataAlloc(...);
 	...
-	cbdataLock(callback_data);
 	fooOperationStart(bar, callback_func, callback_data);
+	local_pointer = cbdataReference(callback_data);
 	...
 	cbdataFree(callback_data);
 	...
 	fooOperationComplete(...);
-	if (cbdataValid(callback_data)) {
-		callback_func(callback_data, ....);
-	cbdataUnlock(callback_data);
+	void *cbdata;
+	if (cbdataReferenceValidDone(local_pointer, cbdata))
+	    callback_func(cbdata, ....);
 </verb>
 	In this case, when <tt/cbdataFree/ is called before
-	<tt/cbdataUnlock/, the callback_data gets marked as invalid.  Before
-	executing the callback function, <tt/cbdataValid/ will return 0
-	and callback_func is never executed.  When <tt/cbdataUnlock/ gets
+	<tt/cbdataReferenceValidDone/, the callback_data gets marked as invalid.
+	Before executing the callback function, <tt/cbdataReferenceValidDone/ will return 0
+	and callback_func is never executed.  When <tt/cbdataReferenceValidDone/ gets
 	called, it notices that the callback_data is invalid and will
 	then call <tt/cbdataFree/.
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.572 2002/04/13 15:30:10 hno Exp $
+ * $Id: client_side.cc,v 1.573 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -168,8 +168,7 @@ clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
      * place to store the ident result on persistent connections...
      */
     /* connection oriented auth also needs these two lines for it's operation. */
-    ch->conn = conn;
-    cbdataLock(ch->conn);
+    ch->conn = cbdataReference(conn);	/* unreferenced in acl.c */
 
     return ch;
 }
@@ -2526,13 +2525,6 @@ clientReadRequest(int fd, void *data)
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
 	    conn->nrequests++;
-	    /*
-	     * I wanted to lock 'http' here since its callback data for 
-	     * clientLifetimeTimeout(), but there's no logical place to
-	     * cbdataUnlock if the timeout never happens.  Maybe its safe
-	     * enough to assume that if the FD is open, and the timeout
-	     * triggers, that 'http' is valid.
-	     */
 	    commSetTimeout(fd, Config.Timeout.lifetime, clientLifetimeTimeout, http);
 	    if (parser_return_code < 0) {
 		debug(33, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);

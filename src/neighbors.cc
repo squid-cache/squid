@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.300 2002/04/07 03:35:30 hno Exp $
+ * $Id: neighbors.cc,v 1.301 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -957,11 +957,7 @@ peerDestroy(void *data)
     }
     safe_free(p->host);
 #if USE_CACHE_DIGESTS
-    if (p->digest) {
-	PeerDigest *pd = p->digest;
-	p->digest = NULL;
-	cbdataUnlock(pd);
-    }
+    cbdataReferenceDone(p->digest);
 #endif
 }
 
@@ -969,11 +965,7 @@ void
 peerNoteDigestGone(peer * p)
 {
 #if USE_CACHE_DIGESTS
-    if (p->digest) {
-	PeerDigest *pd = p->digest;
-	p->digest = NULL;
-	cbdataUnlock(pd);
-    }
+    cbdataReferenceDone(p->digest);
 #endif
 }
 

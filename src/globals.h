@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.109 2002/03/30 16:29:51 hno Exp $
+ * $Id: globals.h,v 1.110 2002/04/13 23:07:50 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -159,7 +159,7 @@ extern hash_table *proxy_auth_username_cache;	/* NULL */
 extern int incoming_sockets_accepted;
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 extern unsigned int WIN32_OS_version;	/* 0 */
-extern char *WIN32_OS_string;		/* NULL */
+extern char *WIN32_OS_string;	/* NULL */
 #endif
 
 #endif /* SQUID_GLOBALS_H */

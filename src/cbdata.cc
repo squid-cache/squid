@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.42 2001/10/17 19:43:39 hno Exp $
+ * $Id: cbdata.cc,v 1.43 2002/04/13 23:07:49 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -42,41 +42,25 @@
  * pointers, lock them just before registering the callback function,
  * validate them before issuing the callback, and then free them
  * when finished.
- * 
- * In terms of time, the sequence goes something like this:
- * 
- * foo = cbdataAlloc(sizeof(foo),NULL);
- * ...
- * some_blocking_operation(..., callback_func, foo);
- *   cbdataLock(foo);
- *   ...
- *   some_blocking_operation_completes()
- *   if (cbdataValid(foo))
- *   callback_func(..., foo)
- *   cbdataUnlock(foo);
- * ...
- * cbdataFree(foo);
- * 
- * The nice thing is that, we do not need to require that Unlock
- * occurs before Free.  If the Free happens first, then the 
- * callback data is marked invalid and the callback will never
- * be made.  When we Unlock and the lock count reaches zero,
- * we free the memory if it is marked invalid.
  */
 
 #include "squid.h"
 
 static int cbdataCount = 0;
+#if CBDATA_DEBUG
+dlink_list cbdataEntries;
+#endif
 
 typedef struct _cbdata {
     int valid;
     int locks;
     int type;
 #if CBDATA_DEBUG
+    dlink_node link;
     const char *file;
     int line;
 #endif
-    void *y;			/* cookie used while debugging */
+    long y;			/* cookie used while debugging */
     union {
 	void *pointer;
 	double double_float;
@@ -93,9 +77,11 @@ struct {
 int cbdata_types = 0;
 
 #define OFFSET_OF(type, member) ((int)(char *)&((type *)0L)->member)
+#define CBDATA_COOKIE	0xDEADBEEF
+#define CBDATA_CHECK(c) assert(c->y == ((long)c ^ CBDATA_COOKIE))
 
-void
-cbdataInitType(cbdata_type type, const char *name, int size, FREE * free_func)
+static void
+cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free_func)
 {
     char *label;
     if (type >= cbdata_types) {
@@ -114,12 +100,12 @@ cbdataInitType(cbdata_type type, const char *name, int size, FREE * free_func)
 }
 
 cbdata_type
-cbdataAddType(cbdata_type type, const char *name, int size, FREE * free_func)
+cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_func)
 {
     if (type)
 	return type;
     type = cbdata_types;
-    cbdataInitType(type, name, size, free_func);
+    cbdataInternalInitType(type, name, size, free_func);
     return type;
 }
 
@@ -130,8 +116,11 @@ cbdataInit(void)
     cachemgrRegister("cbdata",
 	"Callback Data Registry Contents",
 	cbdataDump, 0, 1);
-#define CREATE_CBDATA(type) cbdataInitType(CBDATA_##type, #type, sizeof(type), NULL)
-#define CREATE_CBDATA_FREE(type, free_func) cbdataInitType(CBDATA_##type, #type, sizeof(type), free_func)
+#define CREATE_CBDATA(type) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), NULL)
+#define CREATE_CBDATA_FREE(type, free_func) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), free_func)
+    /* XXX
+     * most of these should be moved out to their respective module.
+     */
     CREATE_CBDATA(acl_access);
     CREATE_CBDATA(aclCheck_t);
     CREATE_CBDATA(clientHttpRequest);
@@ -169,20 +158,31 @@ cbdataInternalAlloc(cbdata_type type)
     p->file = file;
     p->line = line;
 #endif
-    p->y = p;
+    p->y = (long) p ^ CBDATA_COOKIE;
     cbdataCount++;
 
+#if CBDATA_DEBUG
+    dlinkAdd(p, &p->link, &cbdataEntries);
+#endif
     return (void *) &p->data;
 }
 
 void *
+#if CBDATA_DEBUG
+cbdataInternalFreeDbg(void *p, const char *file, int line)
+#else
 cbdataInternalFree(void *p)
+#endif
 {
     cbdata *c;
     FREE *free_func;
+#if CBDATA_DEBUG
+    debug(45, 3) ("cbdataFree: %p %s:%d\n", p, file, line);
+#else
     debug(45, 3) ("cbdataFree: %p\n", p);
+#endif
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
-    assert(c->y == c);
+    CBDATA_CHECK(c);
     c->valid = 0;
     if (c->locks) {
 	debug(45, 3) ("cbdataFree: %p has %d locks, not freeing\n",
@@ -191,6 +191,9 @@ cbdataInternalFree(void *p)
     }
     cbdataCount--;
     debug(45, 3) ("cbdataFree: Freeing %p\n", p);
+#if CBDATA_DEBUG
+    dlinkDelete(&c->link, &cbdataEntries);
+#endif
     free_func = cbdata_index[c->type].free_func;
     if (free_func)
 	free_func((void *) p);
@@ -198,44 +201,31 @@ cbdataInternalFree(void *p)
     return NULL;
 }
 
-int
-cbdataLocked(const void *p)
-{
-    cbdata *c;
-    assert(p);
-    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
-    assert(c->y == c);
-    debug(45, 3) ("cbdataLocked: %p = %d\n", p, c->locks);
-    assert(c != NULL);
-    return c->locks;
-}
-
 void
 #if CBDATA_DEBUG
-cbdataLockDbg(const void *p, const char *file, int line)
+cbdataInternalLockDbg(const void *p, const char *file, int line)
 #else
-cbdataLock(const void *p)
+cbdataInternalLock(const void *p)
 #endif
 {
     cbdata *c;
     if (p == NULL)
 	return;
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
-    assert(c->y == c);
-    debug(45, 3) ("cbdataLock: %p\n", p);
-    assert(c != NULL);
-    c->locks++;
 #if CBDATA_DEBUG
-    c->file = file;
-    c->line = line;
+    debug(45, 3) ("cbdataLock: %p=%d %s:%d\n", p, c ? c->locks + 1 : -1, file, line);
+#else
+    debug(45, 3) ("cbdataLock: %p=%d\n", p, c ? c->locks + 1 : -1);
 #endif
+    CBDATA_CHECK(c);
+    c->locks++;
 }
 
 void
 #if CBDATA_DEBUG
-cbdataUnlockDbg(const void *p, const char *file, int line)
+cbdataInternalUnlockDbg(const void *p, const char *file, int line)
 #else
-cbdataUnlock(const void *p)
+cbdataInternalUnlock(const void *p)
 #endif
 {
     cbdata *c;
@@ -243,19 +233,22 @@ cbdataUnlock(const void *p)
     if (p == NULL)
 	return;
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
-    assert(c->y == c);
-    debug(45, 3) ("cbdataUnlock: %p\n", p);
+#if CBDATA_DEBUG
+    debug(45, 3) ("cbdataUnlock: %p=%d %s:%d\n", p, c ? c->locks - 1 : -1, file, line);
+#else
+    debug(45, 3) ("cbdataUnlock: %p=%d\n", p, c ? c->locks - 1 : -1);
+#endif
+    CBDATA_CHECK(c);
     assert(c != NULL);
     assert(c->locks > 0);
     c->locks--;
-#if CBDATA_DEBUG
-    c->file = file;
-    c->line = line;
-#endif
     if (c->valid || c->locks)
 	return;
     cbdataCount--;
     debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
+#if CBDATA_DEBUG
+    dlinkDelete(&c->link, &cbdataEntries);
+#endif
     free_func = cbdata_index[c->type].free_func;
     if (free_func)
 	free_func((void *) p);
@@ -263,21 +256,69 @@ cbdataUnlock(const void *p)
 }
 
 int
-cbdataValid(const void *p)
+cbdataReferenceValid(const void *p)
 {
     cbdata *c;
     if (p == NULL)
 	return 1;		/* A NULL pointer cannot become invalid */
-    debug(45, 3) ("cbdataValid: %p\n", p);
+    debug(45, 3) ("cbdataReferenceValid: %p\n", p);
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
-    assert(c->y == c);
+    CBDATA_CHECK(c);
     assert(c->locks > 0);
     return c->valid;
 }
 
+int
+#if CBDATA_DEBUG
+cbdataInternalReferenceDoneValidDbg(void **pp, void **tp, const char *file, int line)
+#else
+cbdataInternalReferenceDoneValid(void **pp, void **tp)
+#endif
+{
+    void *p = (void *) *pp;
+    int valid = cbdataReferenceValid(p);
+    *pp = NULL;
+#if CBDATA_DEBUG
+    cbdataInternalUnlockDbg(p, file, line);
+#else
+    cbdataInternalUnlock(p);
+#endif
+    if (valid) {
+	*tp = p;
+	return 1;
+    } else {
+	*tp = NULL;
+	return 0;
+    }
+}
+
+
 static void
 cbdataDump(StoreEntry * sentry)
 {
+#if CBDATA_DEBUG
+    dlink_node *n;
+    cbdata *p;
+    int i;
+#endif
     storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
-    storeAppendPrintf(sentry, "see also memory pools section\n");
+#if CBDATA_DEBUG
+    storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
+    for (n = cbdataEntries.head; n; n = n->next) {
+	p = n->data;
+	storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", p->valid ? ' ' : '!', &p->data, p->type, p->locks, p->file, p->line);
+    }
+    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
+    for (i = 1; i < cbdata_types; i++) {
+	MemPool *pool = cbdata_index[i].pool;
+	if (pool) {
+	    int obj_size = pool->obj_size - OFFSET_OF(cbdata, data);
+	    storeAppendPrintf(sentry, "%s\t%d\t%d\t%d\n", pool->label + 7, obj_size, pool->meter.inuse.level, obj_size * pool->meter.inuse.level);
+	}
+    }
+#else
+    storeAppendPrintf(sentry, "detailed allocation information only available when compiled with CBDATA_DEBUG\n");
+#endif
+    storeAppendPrintf(sentry, "\nsee also \"Memory utilization\" for detailed per type statistics\n");
 }

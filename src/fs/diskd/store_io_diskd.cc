@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.22 2001/05/30 17:40:26 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.23 2002/04/13 23:07:56 hno Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -78,9 +78,8 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     sio->swap_dirn = SD->index;
     sio->mode = O_RDONLY;
     sio->callback = callback;
-    sio->callback_data = callback_data;
+    sio->callback_data = cbdataReference(callback_data);
     sio->e = e;
-    cbdataLock(callback_data);
 
     diskdstate->flags.writing = 0;
     diskdstate->flags.reading = 0;
@@ -99,7 +98,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     if (x < 0) {
 	debug(50, 1) ("storeDiskdSend OPEN: %s\n", xstrerror());
 	storeDiskdShmPut(SD, shm_offset);
-	cbdataUnlock(sio->callback_data);
+	cbdataReferenceDone(sio->callback_data);
 	cbdataFree(sio);
 	return NULL;
     }
@@ -137,9 +136,8 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     sio->swap_dirn = SD->index;
     sio->mode = O_WRONLY | O_CREAT | O_TRUNC;
     sio->callback = callback;
-    sio->callback_data = callback_data;
+    sio->callback_data = cbdataReference(callback_data);
     sio->e = e;
-    cbdataLock(callback_data);
 
     diskdstate->flags.writing = 0;
     diskdstate->flags.reading = 0;
@@ -158,7 +156,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     if (x < 0) {
 	debug(50, 1) ("storeDiskdSend OPEN: %s\n", xstrerror());
 	storeDiskdShmPut(SD, shm_offset);
-	cbdataUnlock(sio->callback_data);
+	cbdataReferenceDone(sio->callback_data);
 	cbdataFree(sio);
 	return NULL;
     }
@@ -199,7 +197,7 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     diskdstate_t *diskdstate = sio->fsstate;
     debug(81, 3) ("storeDiskdRead: dirno %d, fileno %08X\n", sio->swap_dirn, sio->swap_filen);
     assert(!diskdstate->flags.close_request);
-    if (!cbdataValid(sio))
+    if (!cbdataReferenceValid(sio))
 	return;
     if (diskdstate->flags.reading) {
 	debug(81, 1) ("storeDiskdRead: already reading!\n");
@@ -208,9 +206,8 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     assert(sio->read.callback == NULL);
     assert(sio->read.callback_data == NULL);
     sio->read.callback = callback;
-    sio->read.callback_data = callback_data;
+    sio->read.callback_data = cbdataReference(callback_data);
     diskdstate->read_buf = buf;	/* the one passed from above */
-    cbdataLock(sio->read.callback_data);
     sio->offset = offset;
     diskdstate->flags.reading = 1;
     rbuf = storeDiskdShmGet(SD, &shm_offset);
@@ -239,7 +236,7 @@ storeDiskdWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t 
     diskdstate_t *diskdstate = sio->fsstate;
     debug(81, 3) ("storeDiskdWrite: dirno %d, fileno %08X\n", SD->index, sio->swap_filen);
     assert(!diskdstate->flags.close_request);
-    if (!cbdataValid(sio)) {
+    if (!cbdataReferenceValid(sio)) {
 	free_func(buf);
 	return;
     }
@@ -338,18 +335,15 @@ storeDiskdReadDone(diomsg * M)
 {
     storeIOState *sio = M->callback_data;
     STRCB *callback = sio->read.callback;
+    void *cbdata;
     SwapDir *sd = INDEXSD(sio->swap_dirn);
     diskdstate_t *diskdstate = sio->fsstate;
     diskdinfo_t *diskdinfo = sd->fsdata;
-    void *their_data = sio->read.callback_data;
     char *their_buf = diskdstate->read_buf;
     char *sbuf;
     size_t len;
-    int valid;
     statCounter.syscalls.disk.reads++;
     diskdstate->flags.reading = 0;
-    valid = cbdataValid(sio->read.callback_data);
-    cbdataUnlock(sio->read.callback_data);
     debug(81, 3) ("storeDiskdReadDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
@@ -362,10 +356,8 @@ storeDiskdReadDone(diomsg * M)
     len = M->status;
     sio->offset += len;
     assert(callback);
-    assert(their_data);
     sio->read.callback = NULL;
-    sio->read.callback_data = NULL;
-    if (valid) {
+    if (cbdataReferenceValidDone(sio->read.callback_data, &cbdata)) {
 	assert(!diskdstate->flags.close_request);
 	/*
 	 * Only copy the data if the callback is still valid,
@@ -374,7 +366,7 @@ storeDiskdReadDone(diomsg * M)
 	 *   -- adrian
 	 */
 	xmemcpy(their_buf, sbuf, len);	/* yucky copy */
-	callback(their_data, their_buf, len);
+	callback(cbdata, their_buf, len);
     }
 }
 
@@ -411,10 +403,28 @@ storeDiskdUnlinkDone(diomsg * M)
 void
 storeDiskdHandle(diomsg * M)
 {
-    int valid = M->callback_data ? cbdataValid(M->callback_data) : 1;
-    if (M->callback_data)
-	cbdataUnlock(M->callback_data);
-    if (!valid) {
+    if (cbdataReferenceValid(M->callback_data)) {
+	switch (M->mtype) {
+	case _MQD_OPEN:
+	    storeDiskdOpenDone(M);
+	    break;
+	case _MQD_CLOSE:
+	    storeDiskdCloseDone(M);
+	    break;
+	case _MQD_READ:
+	    storeDiskdReadDone(M);
+	    break;
+	case _MQD_WRITE:
+	    storeDiskdWriteDone(M);
+	    break;
+	case _MQD_UNLINK:
+	    storeDiskdUnlinkDone(M);
+	    break;
+	default:
+	    assert(0);
+	    break;
+	}
+    } else {
 	debug(81, 3) ("storeDiskdHandle: Invalid callback_data %p\n",
 	    M->callback_data);
 	/*
@@ -423,41 +433,26 @@ storeDiskdHandle(diomsg * M)
 	 * callback_data gets unlocked!
 	 */
 	if (_MQD_READ == M->mtype) {
+	    /* XXX This cannot be the correct approach. This
+	     * is most likely the wrong place for this. It should
+	     * be done before the sio becomes invalid, not here.
+	     */
 	    storeIOState *sio = M->callback_data;
-	    cbdataUnlock(sio->read.callback_data);
+	    cbdataReferenceDone(sio->read.callback_data);
 	}
-	return;
     }
-    switch (M->mtype) {
-    case _MQD_OPEN:
-	storeDiskdOpenDone(M);
-	break;
-    case _MQD_CLOSE:
-	storeDiskdCloseDone(M);
-	break;
-    case _MQD_READ:
-	storeDiskdReadDone(M);
-	break;
-    case _MQD_WRITE:
-	storeDiskdWriteDone(M);
-	break;
-    case _MQD_UNLINK:
-	storeDiskdUnlinkDone(M);
-	break;
-    default:
-	assert(0);
-	break;
-    }
+    cbdataReferenceDone(M->callback_data);
 }
 
 static void
 storeDiskdIOCallback(storeIOState * sio, int errflag)
 {
-    int valid = cbdataValid(sio->callback_data);
+    void *cbdata;
+    STIOCB *callback = sio->callback;
     debug(81, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
-    cbdataUnlock(sio->callback_data);
-    if (valid)
-	sio->callback(sio->callback_data, errflag, sio);
+    sio->callback = NULL;
+    if (cbdataReferenceValidDone(sio->callback_data, &cbdata))
+	callback(cbdata, errflag, sio);
     cbdataFree(sio);
 }
 
@@ -471,15 +466,13 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
     static int seq_no = 0;
     diskdinfo_t *diskdinfo = sd->fsdata;
     M.mtype = mtype;
-    M.callback_data = sio;
+    M.callback_data = cbdataReference(sio);
     M.size = size;
     M.offset = offset;
     M.status = -1;
     M.shm_offset = (int) shm_offset;
     M.id = id;
     M.seq_no = ++seq_no;
-    if (M.callback_data)
-	cbdataLock(M.callback_data);
     if (M.seq_no < last_seq_no)
 	debug(81, 1) ("WARNING: sequencing out of order\n");
     x = msgsnd(diskdinfo->smsgid, &M, msg_snd_rcv_sz, IPC_NOWAIT);
@@ -489,8 +482,7 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
 	diskdinfo->away++;
     } else {
 	debug(50, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
-	if (M.callback_data)
-	    cbdataUnlock(M.callback_data);
+	cbdataReferenceDone(M.callback_data);
 	assert(++send_errors < 100);
     }
     /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.159 2002/02/26 15:48:15 adrian Exp $
+ * $Id: net_db.cc,v 1.160 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -47,9 +47,9 @@
 #define	NETDB_REQBUF_SZ	4096
 
 typedef enum {
-	STATE_NONE,
-	STATE_HEADER,
-	STATE_BODY
+    STATE_NONE,
+    STATE_HEADER,
+    STATE_BODY
 } netdb_conn_state_t;
 
 typedef struct {
@@ -564,8 +564,10 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
+    ex->seen = ex->used + size;
+    debug(38, 3) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
     debug(38, 3) ("netdbExchangeHandleReply: %d read bytes\n", (int) retsize);
-    if (!cbdataValid(ex->p)) {
+    if (!cbdataReferenceValid(ex->p)) {
 	debug(38, 3) ("netdbExchangeHandleReply: Peer became invalid\n");
 	netdbExchangeDone(ex);
 	return;
@@ -580,7 +582,7 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
     /* Check if we're still doing headers */
     if (ex->connstate == STATE_HEADER) {
 
-        ex->buf_ofs += retsize;
+	ex->buf_ofs += retsize;
 
 	/* skip reply headers */
 	if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
@@ -596,26 +598,25 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
 	    }
 	    assert(ex->buf_ofs >= hdr_sz);
 
-            /*
-             * Now, point p to the part of the buffer where the data
-             * starts, and update the size accordingly
-             */
-            assert(ex->used == 0);
+	    /*
+	     * Now, point p to the part of the buffer where the data
+	     * starts, and update the size accordingly
+	     */
+	    assert(ex->used == 0);
 	    ex->used = hdr_sz;
 	    size = ex->buf_ofs - hdr_sz;
 	    p += hdr_sz;
 
-            /* Finally, set the conn state mode to STATE_BODY */
-            ex->connstate = STATE_BODY;
+	    /* Finally, set the conn state mode to STATE_BODY */
+	    ex->connstate = STATE_BODY;
 	} else {
-            /* Have more headers .. */
-            storeClientCopy(ex->sc, ex->e, ex->buf_ofs,
-              ex->buf_sz - ex->buf_ofs, ex->buf + ex->buf_ofs,
-              netdbExchangeHandleReply, ex);
-            return;
+	    /* Have more headers .. */
+	    storeClientCopy(ex->sc, ex->e, ex->buf_ofs,
+		ex->buf_sz - ex->buf_ofs, ex->buf + ex->buf_ofs,
+		netdbExchangeHandleReply, ex);
+	    return;
 	}
     }
-
     assert(ex->connstate == STATE_BODY);
 
     /* If we get here, we have some body to parse .. */
@@ -657,7 +658,7 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
 	ex->used += rec_sz;
 	size -= rec_sz;
 	p += rec_sz;
-        nused++;
+	nused++;
     }
 
     /*
@@ -690,7 +691,7 @@ netdbExchangeHandleReply(void *data, char *notused, ssize_t retsize)
 
     debug(38, 3) ("netdbExchangeHandleReply: used %d entries, (x %d bytes) == %d bytes total\n",
 	nused, rec_sz, nused * rec_sz);
-    debug(38, 3) ("netdbExchangeHandleReply: used %ld\n",(long int) ex->used);
+    debug(38, 3) ("netdbExchangeHandleReply: used %ld\n", (long int) ex->used);
     if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
 	debug(38, 3) ("netdbExchangeHandleReply: ENTRY_ABORTED\n");
 	netdbExchangeDone(ex);
@@ -716,7 +717,7 @@ netdbExchangeDone(void *data)
     requestUnlink(ex->r);
     storeUnregister(ex->sc, ex->e, ex);
     storeUnlockObject(ex->e);
-    cbdataUnlock(ex->p);
+    cbdataReferenceDone(ex->p);
     cbdataFree(ex);
 }
 
@@ -1062,8 +1063,7 @@ netdbExchangeStart(void *data)
     netdbExchangeState *ex;
     CBDATA_INIT_TYPE(netdbExchangeState);
     ex = cbdataAlloc(netdbExchangeState);
-    cbdataLock(p);
-    ex->p = p;
+    ex->p = cbdataReference(p);
     uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
     debug(38, 3) ("netdbExchangeStart: Requesting '%s'\n", uri);
     assert(NULL != uri);
@@ -1081,7 +1081,7 @@ netdbExchangeStart(void *data)
     assert(NULL != ex->e);
     ex->sc = storeClientListAdd(ex->e, ex);
     storeClientCopy(ex->sc, ex->e, 0, ex->buf_sz, ex->buf,
-        netdbExchangeHandleReply, ex);
+	netdbExchangeHandleReply, ex);
     ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
     if (p->login)
 	xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);

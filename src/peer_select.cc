@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.120 2002/04/04 21:03:46 hno Exp $
+ * $Id: peer_select.cc,v 1.121 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -143,14 +143,13 @@ peerSelect(request_t * request,
     psstate->request = requestLink(request);
     psstate->entry = entry;
     psstate->callback = callback;
-    psstate->callback_data = callback_data;
+    psstate->callback_data = cbdataReference(callback_data);
     psstate->direct = DIRECT_UNKNOWN;
 #if USE_CACHE_DIGESTS
     request->hier.peer_select_start = current_time;
 #endif
     if (psstate->entry)
 	storeLockObject(psstate->entry);
-    cbdataLock(callback_data);
     peerSelectFoo(psstate);
 }
 
@@ -179,7 +178,8 @@ peerSelectCallback(ps_state * psstate)
 {
     StoreEntry *entry = psstate->entry;
     FwdServer *fs = psstate->servers;
-    void *data = psstate->callback_data;
+    PSC *callback;
+    void *cbdata;
     if (entry) {
 	debug(44, 3) ("peerSelectCallback: %s\n", storeUrl(entry));
 	if (entry->ping_status == PING_WAITING)
@@ -194,11 +194,12 @@ peerSelectCallback(ps_state * psstate)
     }
     psstate->ping.stop = current_time;
     psstate->request->hier.ping = psstate->ping;
-    if (cbdataValid(data)) {
+    callback = psstate->callback;
+    psstate->callback = NULL;
+    if (cbdataReferenceValidDone(psstate->callback_data, &cbdata)) {
 	psstate->servers = NULL;
-	psstate->callback(fs, data);
+	callback(fs, cbdata);
     }
-    cbdataUnlock(data);
     peerSelectStateFree(psstate);
 }
 
@@ -491,10 +492,10 @@ peerPingTimeout(void *data)
     StoreEntry *entry = psstate->entry;
     if (entry)
 	debug(44, 3) ("peerPingTimeout: '%s'\n", storeUrl(entry));
-    if (!cbdataValid(psstate->callback_data)) {
+    if (!cbdataReferenceValid(psstate->callback_data)) {
 	/* request aborted */
 	entry->ping_status = PING_DONE;
-	cbdataUnlock(psstate->callback_data);
+	cbdataReferenceDone(psstate->callback_data);
 	peerSelectStateFree(psstate);
 	return;
     }
@@ -650,9 +651,8 @@ peerAddFwdServer(FwdServer ** FS, peer * p, hier_code code)
     debug(44, 5) ("peerAddFwdServer: adding %s %s\n",
 	p ? p->host : "DIRECT",
 	hier_strings[code]);
-    fs->peer = p;
+    fs->peer = cbdataReference(p);
     fs->code = code;
-    cbdataLock(fs->peer);
     while (*FS)
 	FS = &(*FS)->next;
     *FS = fs;

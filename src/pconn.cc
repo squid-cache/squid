@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.31 2001/04/14 00:03:23 hno Exp $
+ * $Id: pconn.cc,v 1.32 2002/04/13 23:07:51 hno Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@ struct _pconn {
     int nfds_alloc;
     int nfds;
 };
+typedef struct _pconn pconn;
 
 #define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */
 #define PCONN_HIST_SZ (1<<16)
@@ -55,8 +56,10 @@ static struct _pconn *pconnNew(const char *key);
 static void pconnDelete(struct _pconn *p);
 static void pconnRemoveFD(struct _pconn *p, int fd);
 static OBJH pconnHistDump;
-static MemPool *pconn_data_pool = NULL;
 static MemPool *pconn_fds_pool = NULL;
+CBDATA_TYPE(pconn);
+
+
 
 static const char *
 pconnKey(const char *host, u_short port)
@@ -69,7 +72,9 @@ pconnKey(const char *host, u_short port)
 static struct _pconn *
 pconnNew(const char *key)
 {
-    struct _pconn *p = memPoolAlloc(pconn_data_pool);
+    pconn *p;
+    CBDATA_INIT_TYPE(pconn);
+    p = cbdataAlloc(pconn);
     p->hash.key = xstrdup(key);
     p->nfds_alloc = PCONN_FDS_SZ;
     p->fds = memPoolAlloc(pconn_fds_pool);
@@ -88,7 +93,7 @@ pconnDelete(struct _pconn *p)
     else
 	xfree(p->fds);
     xfree(p->hash.key);
-    memPoolFree(pconn_data_pool, p);
+    cbdataFree(p);
 }
 
 static void
@@ -174,7 +179,6 @@ pconnInit(void)
 	client_pconn_hist[i] = 0;
 	server_pconn_hist[i] = 0;
     }
-    pconn_data_pool = memPoolCreate("pconn_data", sizeof(struct _pconn));
     pconn_fds_pool = memPoolCreate("pconn_fds", PCONN_FDS_SZ * sizeof(int));
 
     cachemgrRegister("pconn",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.34 2001/11/28 08:01:46 robertc Exp $
+ * $Id: helper.cc,v 1.35 2002/04/13 23:07:50 hno Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -111,8 +111,7 @@ helperOpenServers(helper * hlp)
 	srv->buf = memAllocate(MEM_8K_BUF);
 	srv->buf_sz = 8192;
 	srv->offset = 0;
-	srv->parent = hlp;
-	cbdataLock(hlp);	/* lock because of the parent backlink */
+	srv->parent = cbdataReference(hlp);
 	dlinkAddTail(srv, &srv->link, &hlp->servers);
 	if (rfd == wfd) {
 	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
@@ -194,10 +193,9 @@ helperStatefulOpenServers(statefulhelper * hlp)
 	srv->buf = memAllocate(MEM_8K_BUF);
 	srv->buf_sz = 8192;
 	srv->offset = 0;
-	srv->parent = hlp;
+	srv->parent = cbdataReference(hlp);
 	if (hlp->datapool != NULL)
 	    srv->data = memPoolAlloc(hlp->datapool);
-	cbdataLock(hlp);	/* lock because of the parent backlink */
 	dlinkAddTail(srv, &srv->link, &hlp->servers);
 	if (rfd == wfd) {
 	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
@@ -230,9 +228,8 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 	return;
     }
     r->callback = callback;
-    r->data = data;
+    r->data = cbdataReference(data);
     r->buf = xstrdup(buf);
-    cbdataLock(r->data);
     if ((srv = GetFirstAvailable(hlp)))
 	helperDispatch(srv, r);
     else
@@ -254,7 +251,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
 	return;
     }
     r->callback = callback;
-    r->data = data;
+    r->data = cbdataReference(data);
     if (buf != NULL) {
 	r->buf = xstrdup(buf);
 	r->placeholder = 0;
@@ -262,7 +259,6 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
 	r->buf = NULL;
 	r->placeholder = 1;
     }
-    cbdataLock(r->data);
     if ((buf != NULL) && lastserver) {
 	debug(29, 5) ("StatefulSubmit with lastserver %p\n", lastserver);
 	/* the queue doesn't count for this assert because queued requests
@@ -633,8 +629,9 @@ helperServerFree(int fd, void *data)
 	srv->buf = NULL;
     }
     if ((r = srv->request)) {
-	if (cbdataValid(r->data))
-	    r->callback(r->data, srv->buf);
+	void *cbdata;
+	if (cbdataReferenceValidDone(r->data, &cbdata))
+	    r->callback(cbdata, srv->buf);
 	helperRequestFree(r);
 	srv->request = NULL;
     }
@@ -649,7 +646,7 @@ helperServerFree(int fd, void *data)
 	if (hlp->n_running < hlp->n_to_start / 2)
 	    fatalf("Too few %s processes are running", hlp->id_name);
     }
-    cbdataUnlock(srv->parent);
+    cbdataReferenceDone(srv->parent);
     cbdataFree(srv);
 }
 
@@ -665,8 +662,9 @@ helperStatefulServerFree(int fd, void *data)
 	srv->buf = NULL;
     }
     if ((r = srv->request)) {
-	if (cbdataValid(r->data))
-	    r->callback(r->data, srv, srv->buf);
+	void *cbdata;
+	if (cbdataReferenceValidDone(r->data, &cbdata))
+	    r->callback(cbdata, srv, srv->buf);
 	helperStatefulRequestFree(r);
 	srv->request = NULL;
     }
@@ -684,7 +682,7 @@ helperStatefulServerFree(int fd, void *data)
     }
     if (srv->data != NULL)
 	memPoolFree(hlp->datapool, srv->data);
-    cbdataUnlock(srv->parent);
+    cbdataReferenceDone(srv->parent);
     cbdataFree(srv);
 }
 
@@ -698,7 +696,7 @@ helperHandleRead(int fd, void *data)
     helper_request *r;
     helper *hlp = srv->parent;
     assert(fd == srv->rfd);
-    assert(cbdataValid(data));
+    assert(cbdataReferenceValid(data));
     statCounter.syscalls.sock.reads++;
     len = FD_READ_METHOD(fd, srv->buf + srv->offset, srv->buf_sz - srv->offset);
     fd_bytes(fd, len, FD_READ);
@@ -720,10 +718,14 @@ helperHandleRead(int fd, void *data)
 	srv->offset = 0;
     } else if ((t = strchr(srv->buf, '\n'))) {
 	/* end of reply found */
+	HLPCB *callback;
+	void *cbdata;
 	debug(29, 3) ("helperHandleRead: end of reply found\n");
 	*t = '\0';
-	if (cbdataValid(r->data))
-	    r->callback(r->data, srv->buf);
+	callback = r->callback;
+	r->callback = NULL;
+	if (cbdataReferenceValidDone(r->data, &cbdata))
+	    callback(cbdata, srv->buf);
 	srv->flags.busy = 0;
 	srv->offset = 0;
 	helperRequestFree(r);
@@ -752,7 +754,7 @@ helperStatefulHandleRead(int fd, void *data)
     helper_stateful_request *r;
     statefulhelper *hlp = srv->parent;
     assert(fd == srv->rfd);
-    assert(cbdataValid(data));
+    assert(cbdataReferenceValid(data));
     statCounter.syscalls.sock.reads++;
     len = read(fd, srv->buf + srv->offset, srv->buf_sz - srv->offset);
     fd_bytes(fd, len, FD_READ);
@@ -776,7 +778,7 @@ helperStatefulHandleRead(int fd, void *data)
 	/* end of reply found */
 	debug(29, 3) ("helperStatefulHandleRead: end of reply found\n");
 	*t = '\0';
-	if (cbdataValid(r->data)) {
+	if (cbdataReferenceValid(r->data)) {
 	    switch ((r->callback(r->data, srv, srv->buf))) {	/*if non-zero reserve helper */
 	    case S_HELPER_UNKNOWN:
 		fatal("helperStatefulHandleRead: either a non-state aware callback was give to the stateful helper routines, or an uninitialised callback response was recieved.\n");
@@ -995,7 +997,7 @@ static void
 helperDispatch(helper_server * srv, helper_request * r)
 {
     helper *hlp = srv->parent;
-    if (!cbdataValid(r->data)) {
+    if (!cbdataReferenceValid(r->data)) {
 	debug(29, 1) ("helperDispatch: invalid callback data\n");
 	helperRequestFree(r);
 	return;
@@ -1024,7 +1026,7 @@ static void
 helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r)
 {
     statefulhelper *hlp = srv->parent;
-    if (!cbdataValid(r->data)) {
+    if (!cbdataReferenceValid(r->data)) {
 	debug(29, 1) ("helperStatefulDispatch: invalid callback data\n");
 	helperStatefulRequestFree(r);
 	return;
@@ -1103,7 +1105,7 @@ helperStatefulServerKickQueue(helper_stateful_server * srv)
 static void
 helperRequestFree(helper_request * r)
 {
-    cbdataUnlock(r->data);
+    cbdataReferenceDone(r->data);
     xfree(r->buf);
     memFree(r, MEM_HELPER_REQUEST);
 }
@@ -1111,7 +1113,7 @@ helperRequestFree(helper_request * r)
 static void
 helperStatefulRequestFree(helper_stateful_request * r)
 {
-    cbdataUnlock(r->data);
+    cbdataReferenceDone(r->data);
     xfree(r->buf);
     memFree(r, MEM_HELPER_STATEFUL_REQUEST);
 }

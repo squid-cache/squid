@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.432 2002/04/06 08:49:27 adrian Exp $
+ * $Id: protos.h,v 1.433 2002/04/13 23:07:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -109,20 +109,20 @@ extern void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
  */
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
-extern void *cbdataInternalAllocDbg(cbdata_type type, int, const char *);
-extern void cbdataLockDbg(const void *p, const char *, int);
-extern void cbdataUnlockDbg(const void *p, const char *, int);
+extern void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);
+extern void *cbdataInternalFreeDbg(void *p, const char *, int);
+extern void cbdataInternalLockDbg(const void *p, const char *, int);
+extern void cbdataInternalUnlockDbg(const void *p, const char *, int);
+extern int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
 #else
 extern void *cbdataInternalAlloc(cbdata_type type);
-extern void cbdataLock(const void *p);
-extern void cbdataUnlock(const void *p);
-#endif
-/* Note: Allocations is done using the cbdataAlloc macro */
 extern void *cbdataInternalFree(void *p);
-extern int cbdataValid(const void *p);
-extern void cbdataInitType(cbdata_type type, const char *label, int size, FREE * free_func);
-extern cbdata_type cbdataAddType(cbdata_type type, const char *label, int size, FREE * free_func);
-extern int cbdataLocked(const void *p);
+extern void cbdataInternalLock(const void *p);
+extern void cbdataInternalUnlock(const void *p);
+extern int cbdataInternalReferenceDoneValid(void **p, void **tp);
+#endif
+extern int cbdataReferenceValid(const void *p);
+extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
 
 extern void clientdbInit(void);
 extern void clientdbUpdate(struct in_addr, log_type, protocol_t, size_t);
@@ -851,8 +851,8 @@ extern MemPool *memPoolCreate(const char *label, size_t obj_size);
 extern void *memPoolAlloc(MemPool * pool);
 extern void memPoolFree(MemPool * pool, void *obj);
 extern void memPoolDestroy(MemPool ** pool);
-extern MemPoolIterator * memPoolGetFirst(void);
-extern MemPool * memPoolGetNext(MemPoolIterator ** iter);
+extern MemPoolIterator *memPoolGetFirst(void);
+extern MemPool *memPoolGetNext(MemPoolIterator ** iter);
 extern void memPoolSetChunkSize(MemPool * pool, size_t chunksize);
 extern void memPoolSetIdleLimit(size_t new_idle_limit);
 extern int memPoolGetStats(MemPoolStats * stats, MemPool * pool);
@@ -1042,9 +1042,6 @@ extern int storeSwapOutAble(const StoreEntry * e);
 /*
  * store_client.c
  */
-#if STORE_CLIENT_LIST_DEBUG
-extern store_client *storeClientListSearch(const MemObject * mem, void *data);
-#endif
 extern store_client *storeClientListAdd(StoreEntry * e, void *data);
 extern void storeClientCopyOld(store_client *, StoreEntry *, off_t, off_t, size_t, char *, STCB *, void *);
 extern void storeClientCopy(store_client *, StoreEntry *, off_t, size_t, char *, STCB *, void *);

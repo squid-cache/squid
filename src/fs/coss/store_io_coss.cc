@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.13 2001/10/24 07:45:37 hno Exp $
+ * $Id: store_io_coss.cc,v 1.14 2002/04/13 23:07:56 hno Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -163,8 +163,7 @@ storeCossCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 
     sio->callback = callback;
     sio->file_callback = file_callback;
-    sio->callback_data = callback_data;
-    cbdataLock(callback_data);
+    sio->callback_data = cbdataReference(callback_data);
     sio->e = (StoreEntry *) e;
 
     cstate->flags.writing = 0;
@@ -202,8 +201,7 @@ storeCossOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     sio->mode = O_RDONLY;
     sio->callback = callback;
     sio->file_callback = file_callback;
-    sio->callback_data = callback_data;
-    cbdataLock(callback_data);
+    sio->callback_data = cbdataReference(callback_data);
     sio->st_size = e->swap_file_sz;
     sio->e = e;
 
@@ -281,7 +279,7 @@ storeCossRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t of
     assert(sio->read.callback == NULL);
     assert(sio->read.callback_data == NULL);
     sio->read.callback = callback;
-    sio->read.callback_data = callback_data;
+    sio->read.callback_data = cbdataReference(callback_data);
     debug(81, 3) ("storeCossRead: offset %ld\n", (long int) offset);
     sio->offset = offset;
     cstate->flags.reading = 1;
@@ -341,7 +339,7 @@ storeCossReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
     storeIOState *sio = my_data;
     char *p;
     STRCB *callback = sio->read.callback;
-    void *their_data = sio->read.callback_data;
+    void *cbdata;
     SwapDir *SD = INDEXSD(sio->swap_dirn);
     CossState *cstate = (CossState *) sio->fsstate;
     size_t rlen;
@@ -365,23 +363,22 @@ storeCossReadDone(int fd, const char *buf, int len, int errflag, void *my_data)
 	rlen = (size_t) cstate->requestlen;
     }
     assert(callback);
-    assert(their_data);
     sio->read.callback = NULL;
-    sio->read.callback_data = NULL;
-    if (cbdataValid(their_data))
-	callback(their_data, cstate->requestbuf, rlen);
+    if (cbdataReferenceValidDone(sio->read.callback_data, &cbdata))
+	callback(cbdata, cstate->requestbuf, rlen);
 }
 
 static void
 storeCossIOCallback(storeIOState * sio, int errflag)
 {
     CossState *cstate = (CossState *) sio->fsstate;
+    STIOCB *callback = sio->callback;
+    void *cbdata;
     debug(81, 3) ("storeCossIOCallback: errflag=%d\n", errflag);
     xfree(cstate->readbuffer);
-    if (cbdataValid(sio->callback_data))
-	sio->callback(sio->callback_data, errflag, sio);
-    cbdataUnlock(sio->callback_data);
-    sio->callback_data = NULL;
+    sio->callback = NULL;
+    if (cbdataReferenceValidDone(sio->callback_data, &cbdata))
+	callback(cbdata, errflag, sio);
     cbdataFree(sio);
 }
 

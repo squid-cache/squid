@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.218 2002/04/06 08:49:27 adrian Exp $
+ * $Id: squid.h,v 1.219 2002/04/13 23:07:51 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -53,16 +53,16 @@
  * directly, so this is a dirty hack!
  */
 #if defined(_SQUID_LINUX_)
-#  undef CHANGE_FD_SETSIZE
-#  define CHANGE_FD_SETSIZE 0
-#  include <features.h>
-#  if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)
-#    if SQUID_MAXFD > DEFAULT_FD_SETSIZE
-#      include <bits/types.h>
-#      undef __FD_SETSIZE
-#      define __FD_SETSIZE SQUID_MAXFD
-#    endif
-#  endif
+#undef CHANGE_FD_SETSIZE
+#define CHANGE_FD_SETSIZE 0
+#include <features.h>
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)
+#if SQUID_MAXFD > DEFAULT_FD_SETSIZE
+#include <bits/types.h>
+#undef __FD_SETSIZE
+#define __FD_SETSIZE SQUID_MAXFD
+#endif
+#endif
 #endif
 
 /*
@@ -353,12 +353,6 @@ struct rusage {
                 ( local_##name = (type *)xcalloc(size, sizeof(type)) )
 #else
 #define LOCAL_ARRAY(type,name,size) static type name[size]
-#endif
-
-#if CBDATA_DEBUG
-#define cbdataAlloc(a,b)	cbdataAllocDbg(a,b,__FILE__,__LINE__)
-#define cbdataLock(a)		cbdataLockDbg(a,__FILE__,__LINE__)
-#define cbdataUnlock(a)		cbdataUnlockDbg(a,__FILE__,__LINE__)
 #endif
 
 #if USE_LEAKFINDER

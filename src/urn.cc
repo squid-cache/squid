@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.69 2002/02/26 15:48:16 adrian Exp $
+ * $Id: urn.cc,v 1.70 2002/04/13 23:07:52 hno Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -207,12 +207,11 @@ urnHandleReply(void *data, char *unused_buf, ssize_t size)
 
     /* Handle reqofs being bigger than normal */
     if (urnState->reqofs >= URN_REQBUF_SZ) {
-        goto error;
+	goto error;
     }
-
     /* If we haven't received the entire object (urn), copy more */
     if (urlres_e->store_status == STORE_PENDING &&
-      urnState->reqofs < URN_REQBUF_SZ) {
+	urnState->reqofs < URN_REQBUF_SZ) {
 	storeClientCopy(urnState->sc, urlres_e,
 	    urnState->reqofs,
 	    URN_REQBUF_SZ,
@@ -303,7 +302,7 @@ urnHandleReply(void *data, char *unused_buf, ssize_t size)
     safe_free(urls);
     /* mb was absorbed in httpBodySet call, so we must not clean it */
     storeUnregister(urnState->sc, urlres_e, urnState);
-error:
+  error:
     storeUnlockObject(urlres_e);
     storeUnlockObject(urnState->entry);
     requestUnlink(urnState->request);
