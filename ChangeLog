@@ -54,6 +54,7 @@
 	- Removed top-level Makefile.  People must now run 'configure'
 	  before 'make'.
 	- Fixed checkFailureRatio() implementation.
+	- Made 'squid -z' behave like the 1.1 version.
 
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
