@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.176 1996/12/06 17:53:43 wessels Exp $
+ * $Id: store.cc,v 1.177 1996/12/06 21:49:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1776,7 +1776,7 @@ storeGetMemSpace(int size)
 	return;
     last_check = squid_curtime;
     pages_needed = (size / SM_PAGE_SIZE) + 1;
-    if (sm_stats.n_pages_in_use + pages_needed < sm_stats.max_pages)
+    if (sm_stats.n_pages_in_use + pages_needed < store_pages_high)
 	return;
     if (store_rebuilding == STORE_REBUILDING_FAST)
 	return;
@@ -1825,10 +1825,10 @@ storeGetMemSpace(int size)
     }
 
     i = 3;
-    if (sm_stats.n_pages_in_use + pages_needed > store_pages_high) {
+    if (sm_stats.n_pages_in_use > sm_stats.max_pages) {
 	if (squid_curtime - last_warning > 600) {
-	    debug(20, 0, "WARNING: Over store_pages high-water mark (%d > %d)\n",
-		sm_stats.n_pages_in_use + pages_needed, store_pages_high);
+	    debug(20, 0, "WARNING: Exceeded 'cache_mem' size (%dK > %dK)\n",
+		sm_stats.n_pages_in_use * 4, sm_stats.max_pages * 4);
 	    last_warning = squid_curtime;
 	    debug(20, 0, "Perhaps you should increase cache_mem?\n");
 	    i = 0;
