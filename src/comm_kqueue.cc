@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.5 2002/10/27 13:45:06 adrian Exp $
+ * $Id: comm_kqueue.cc,v 1.6 2002/10/28 00:37:36 adrian Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -83,6 +83,7 @@ static struct timespec zero_timespec;
 static struct kevent *kqlst;        /* kevent buffer */
 static int kqmax;                /* max structs to buffer */
 static int kqoff;                /* offset into the buffer */
+static int max_poll_time = 1000;
 
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
@@ -169,7 +170,7 @@ comm_select_init(void)
         fatal("comm_select_init: Couldn't open kqueue fd!\n");
     }
     kqmax = getdtablesize();
-    kqlst = xmalloc(sizeof(*kqlst) * kqmax);
+    kqlst = (struct kevent *)xmalloc(sizeof(*kqlst) * kqmax);
     zero_timespec.tv_sec = 0;
     zero_timespec.tv_nsec = 0;
 }
@@ -230,6 +231,8 @@ comm_select(int msec)
      * why jlemon used a timespec, but hey, he wrote the interface, not I
      *   -- Adrian
      */
+    if (msec > max_poll_time)
+        msec = max_poll_time;
     poll_time.tv_sec = msec / 1000;
     poll_time.tv_nsec = (msec % 1000) * 1000000;
     for (;;) {
@@ -247,7 +250,7 @@ comm_select(int msec)
 
     getCurrentTime();
     if (num == 0)
-        continue;
+        return COMM_OK;		/* No error.. */
 
     for (i = 0; i < num; i++) {
         int fd = (int) ke[i].ident;
@@ -274,11 +277,17 @@ comm_select(int msec)
 		break;
             default:
                 /* Bad! -- adrian */
-		debug(5, 1) ("comm_select: kevent returned %d!\n", fe[i].filter);
+		debug(5, 1) ("comm_select: kevent returned %d!\n", ke[i].filter);
                 break;
         }
     }
     return COMM_OK;
+}
+
+void
+comm_quick_poll_required(void)
+{
+    max_poll_time = 100;
 }
 
 #endif /* USE_KQUEUE */
