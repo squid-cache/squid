@@ -318,7 +318,8 @@ enum {
     METHOD_HEAD,		/* 100 */
     METHOD_CONNECT,		/* 101 */
     METHOD_TRACE,		/* 110 */
-    METHOD_PURGE		/* 111 */
+    METHOD_PURGE,		/* 111 */
+    METHOD_ENUM_END
 };
 typedef unsigned int method_t;
 
