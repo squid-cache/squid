@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.38 1996/07/15 23:12:06 wessels Exp $
+ * $Id: comm.cc,v 1.39 1996/07/18 20:25:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -428,6 +428,7 @@ int comm_accept(fd, peer, me)
 	}
     }
 
+    P.sin_addr.s_addr &= getClientNetmask().s_addr;
     if (peer)
 	*peer = P;
 
