@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.8 1998/04/03 22:05:09 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.9 1998/04/04 07:47:53 rousskov Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -40,7 +40,7 @@ typedef struct {
 } CacheDigestStats;
 
 /* local functions */
-static void cacheDigestHashKey(int bit_count, const char *key);
+static void cacheDigestHashKey(int bit_count, const cache_key *key);
 
 /* configuration params */
 static const int BitsPerEntry = 4;
@@ -184,7 +184,7 @@ cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
 }
 
 static void
-cacheDigestHashKey(int bit_count, const char *key)
+cacheDigestHashKey(int bit_count, const cache_key *key)
 {
     /* get four hashed values */
     memcpy(hashed_keys, key, sizeof(hashed_keys));
