@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.12 1996/07/15 23:16:41 wessels Exp $
+ * $Id: stmem.cc,v 1.13 1996/07/17 17:03:45 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -445,13 +445,13 @@ void put_free_mem_obj(mem)
 }
 
 void put_free_4k_page(page)
-     char *page;
+     void *page;
 {
     put_free_thing(&sm_stats, page);
 }
 
 void put_free_8k_page(page)
-     char *page;
+     void *page;
 {
     put_free_thing(&disk_stats, page);
 }
