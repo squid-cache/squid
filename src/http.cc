@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.182 1997/08/10 06:34:29 wessels Exp $
+ * $Id: http.cc,v 1.183 1997/08/11 02:29:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -947,8 +947,10 @@ httpSendRequest(int fd, void *data)
 	httpSendComplete,
 	httpState,
 	buftype == BUF_TYPE_8K ? put_free_8k_page : xfree);
+#ifdef BREAKS_PCONN_RESTART
     requestUnlink(httpState->orig_request);
     httpState->orig_request = NULL;
+#endif
 }
 
 static int
