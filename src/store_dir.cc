@@ -7,9 +7,11 @@
 #define DefaultLevelOneDirs     16
 #define DefaultLevelTwoDirs     256
 
+/* GLOBALS */
+int ncache_dirs = 0;
 
+/* LOCALS */
 static int SwapDirsAllocated = 0;
-static int ncache_dirs;
 
 /* return full name to swapfile */
 char *
@@ -26,6 +28,23 @@ storeSwapFullPath(int fn, char *fullpath)
 	filn % SwapDirs[dirn].l1,
 	filn / SwapDirs[dirn].l1 % SwapDirs[dirn].l2,
 	filn);
+    return fullpath;
+}
+
+/* return full name to swapfile */
+char *
+storeSwapSubSubDir(int fn, char *fullpath)
+{
+    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
+    int dirn = (fn >> SWAP_DIR_SHIFT) % ncache_dirs;
+    int filn = fn & SWAP_FILE_MASK;
+    if (!fullpath)
+	fullpath = fullfilename;
+    fullpath[0] = '\0';
+    sprintf(fullpath, "%s/%02X/%02X",
+	SwapDirs[dirn].path,
+	filn % SwapDirs[dirn].l1,
+	filn / SwapDirs[dirn].l1 % SwapDirs[dirn].l2);
     return fullpath;
 }
 
@@ -74,12 +93,12 @@ storeVerifyOrCreateDir(const char *path)
 	}
     }
     debug(20, 1, "Created directory %s\n", path);
-    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode) == 0)
-	return 1;
-    sprintf(tmp_error_buf,
-	"Failed to create directory %s: %s", path, xstrerror());
-    fatal(tmp_error_buf);
-    /* NOTREACHED */
+    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode) != 0) {
+        sprintf(tmp_error_buf,
+	    "Failed to create directory %s: %s", path, xstrerror());
+        fatal(tmp_error_buf);
+    }
+    return 1;
 }
 
 int
@@ -133,13 +152,21 @@ storeMostFreeSwapDir(void)
     return dirn;
 }
 
+int
+storeDirMapBitTest(int fn)
+{
+    int dirn = fn >> SWAP_DIR_SHIFT;
+    int filn = fn & SWAP_FILE_MASK;
+    return file_map_bit_test(SwapDirs[dirn].map, filn);
+}
+
 void
 storeDirMapBitSet(int fn)
 {
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
-    file_map_bit_set(SwapDir[dirn].map, filn);
-    SwapDir[dirn].suggest++;
+    file_map_bit_set(SwapDirs[dirn].map, filn);
+    SwapDirs[dirn].suggest++;
 }
 
 void
@@ -147,9 +174,9 @@ storeDirMapBitReset(int fn)
 {
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
-    file_map_bit_reset(SwapDir[dirn].map, filn);
-    if (fn < SwapDir[dirn].suggest)
-	SwapDir[dirn].suggest = fn;
+    file_map_bit_reset(SwapDirs[dirn].map, filn);
+    if (fn < SwapDirs[dirn].suggest)
+	SwapDirs[dirn].suggest = fn;
 }
 
 int
@@ -166,5 +193,5 @@ storeSwapDir(int dirn)
 {
     if (dirn < 0 || dirn >= ncache_dirs)
 	fatal_dump("storeSwapDir: bad index");
-    return SwapDir[dirn].path;
+    return SwapDirs[dirn].path;
 }
