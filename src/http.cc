@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.130 1996/12/05 00:19:48 wessels Exp $
+ * $Id: http.cc,v 1.131 1996/12/05 07:04:21 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -265,6 +265,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     time_t delta;
     size_t l;
 
+    reply->code = 500;		/* default to Internal Server Error */
     ReplyHeaderStats.parsed++;
     xstrncpy(headers, buf, 4096);
     end = mime_headers_end(headers);
@@ -390,8 +391,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	httpParseReplyHeaders(httpState->reply_hdr, reply);
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
-	if (reply->code)
-	    debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
+	debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
 	switch (reply->code) {
 	    /* Responses that are cacheable */
 	case 200:		/* OK */
