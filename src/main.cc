@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.41 1996/04/17 15:07:31 wessels Exp $ */
+/* $Id: main.cc,v 1.42 1996/04/17 17:45:13 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -210,6 +210,10 @@ static void mainInitialize()
 
     debug(1, 0, "Starting Squid Cache (version %s)...\n", version_string);
 
+    if (first_time) {
+	disk_init();	/* disk_init must go before ipcache_init() */
+    }
+
     ipcache_init();
     neighbors_init();
     ftpInitialize();
@@ -225,7 +229,6 @@ static void mainInitialize()
 	first_time = 0;
 	/* module initialization */
 	urlInitialize();
-	disk_init();
 	stat_init(&CacheInfo, getAccessLogFile());
 	storeInit();
 	stmemInit();
