@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.384 2005/03/18 17:12:34 hno Exp $
+# $Id: cf.data.pre,v 1.385 2005/03/18 17:17:51 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1997,6 +1997,7 @@ DOC_START
 	  %MYADDR	Squid interface address
 	  %MYPORT	Squid http_port number
 	  %USER_CERT	SSL User certificate in PEM format
+	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
 	  %USER_CA_xx	SSL User certificate issuer attribute xx
 	  %{Header}	HTTP request header
