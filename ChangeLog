@@ -4,6 +4,8 @@
 	  past the swapout_done offset.  This probably happens (only?)
 	  when an object changes from cachable to uncachable while
 	  it is being swapped out.
+	- Added MEM_CLIENT_SOCK_BUF type so we can change the size
+	  of the buffers used for writing data to the client sockets.
 	
 
 Changes to squid-1.2.beta24 (August 21, 1998):
