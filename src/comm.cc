@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.289 1998/10/08 20:10:19 wessels Exp $
+ * $Id: comm.cc,v 1.290 1998/10/13 23:33:33 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -448,7 +448,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 /* Wait for an incoming connection on FD.  FD should be a socket returned
  * from comm_listen. */
 int
-comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
+comm_accept(int fd, struct sockaddr_in *pn, struct sockaddr_in *me)
 {
     int sock;
     struct sockaddr_in P;
@@ -469,8 +469,8 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 	    return COMM_ERROR;
 	}
     }
-    if (peer)
-	*peer = P;
+    if (pn)
+	*pn = P;
     Slen = sizeof(M);
     memset(&M, '\0', Slen);
     getsockname(sock, (struct sockaddr *) &M, &Slen);

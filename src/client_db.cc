@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.41 1998/09/29 16:33:42 wessels Exp $
+ * $Id: client_db.cc,v 1.42 1998/10/13 23:33:32 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -64,7 +64,7 @@ clientdbInit(void)
 }
 
 void
-clientdbUpdate(struct in_addr addr, log_type log_type, protocol_t p, size_t size)
+clientdbUpdate(struct in_addr addr, log_type ltype, protocol_t p, size_t size)
 {
     char *key;
     ClientInfo *c;
@@ -78,15 +78,15 @@ clientdbUpdate(struct in_addr addr, log_type log_type, protocol_t p, size_t size
 	debug_trap("clientdbUpdate: Failed to add entry");
     if (p == PROTO_HTTP) {
 	c->Http.n_requests++;
-	c->Http.result_hist[log_type]++;
+	c->Http.result_hist[ltype]++;
 	kb_incr(&c->Http.kbytes_out, size);
-	if (isTcpHit(log_type))
+	if (isTcpHit(ltype))
 	    kb_incr(&c->Http.hit_kbytes_out, size);
     } else if (p == PROTO_ICP) {
 	c->Icp.n_requests++;
-	c->Icp.result_hist[log_type]++;
+	c->Icp.result_hist[ltype]++;
 	kb_incr(&c->Icp.kbytes_out, size);
-	if (LOG_UDP_HIT == log_type)
+	if (LOG_UDP_HIT == ltype)
 	    kb_incr(&c->Icp.hit_kbytes_out, size);
     }
 }
