@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.4 1999/04/16 01:00:51 wessels Exp $
+ * $Id: dns_internal.cc,v 1.5 1999/04/18 05:30:56 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -346,6 +346,21 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     q->id = rfc1035BuildAQuery(name, q->buf, &q->sz);
     debug(78, 3) ("idnsALookup: buf is %d bytes for %s, id = %#hx\n",
 	(int) q->sz, name, q->id);
+    q->callback = callback;
+    q->callback_data = data;
+    cbdataLock(q->callback_data);
+    q->start_t = current_time;
+    idnsSendQuery(q);
+}
+
+void
+idnsPTRLookup(const struct in_addr addr, IDNSCB * callback, void *data)
+{
+    idns_query *q = memAllocate(MEM_IDNS_QUERY);
+    q->sz = sizeof(q->buf);
+    q->id = rfc1035BuildPTRQuery(addr, q->buf, &q->sz);
+    debug(78, 3) ("idnsPTRLookup: buf is %d bytes for %s, id = %#hx\n",
+	(int) q->sz, inet_ntoa(addr), q->id);
     q->callback = callback;
     q->callback_data = data;
     cbdataLock(q->callback_data);

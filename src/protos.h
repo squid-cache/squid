@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.317 1999/04/15 06:16:06 wessels Exp $
+ * $Id: protos.h,v 1.318 1999/04/18 05:30:56 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -217,6 +217,7 @@ extern void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
 extern void idnsInit(void);
 extern void idnsShutdown(void);
 extern void idnsALookup(const char *, IDNSCB *, void *);
+extern void idnsPTRLookup(const struct in_addr, IDNSCB *, void *);
 
 extern void eventAdd(const char *name, EVH * func, void *arg, double when, int);
 extern void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
