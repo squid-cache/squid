@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.213 2002/09/15 06:23:29 adrian Exp $
+ * $Id: enums.h,v 1.214 2002/09/15 06:27:49 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -371,7 +371,7 @@ typedef enum {
     STORE_DISK_CLIENT
 } store_client_t;
 
-enum {
+typedef enum {
     METHOD_NONE,		/* 000 */
     METHOD_GET,			/* 001 */
     METHOD_POST,		/* 010 */
@@ -419,8 +419,7 @@ enum {
     METHOD_EXT18,
     METHOD_EXT19,
     METHOD_ENUM_END
-};
-typedef unsigned int method_t;
+} method_t;
 
 typedef enum {
     PROTO_NONE,
