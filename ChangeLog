@@ -4,7 +4,21 @@
 	- Fixed FTP directory parsing again.
 	- Made FTP directory listing "Generated" tagline like
 	  the one for error pages.
-	
+	- Ignore leading whitespace on requests (and replies).  RFC
+	  2068 section 4.1, robustness (Henrik Nordstrom)
+	- Fixed keep_alive bug.  We did not always honour reply
+	  headers, but rather assumed connections could be persistent.
+	- Fixed reading whois output for AS numbers, especially when
+	  they are longer than 4 KB.
+	- Removed 'cache_stoplist_pattern' configuration option.  This
+	  feature is now handled by 'no_cache'.
+	- If a URN resolves to only one URL, just return it immediately
+	  instead of giving the user a "choice" (Andy Powell).
+	- Fixed year-2000 bug in lib/iso3307.c (Henrik Nordstrom).
+	- Changed squid-internal object names.
+	- Added netdb exchange protocol.
+	- Fixed wordlistDestroy() uninitialized pointer bug in
+	  ftpParseControlReply.
 
 Changes to squid-1.2.beta20 (April 24, 1998):
 
