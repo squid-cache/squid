@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.228 2000/12/30 23:29:06 wessels Exp $
+ * $Id: ipcache.cc,v 1.229 2000/12/31 05:15:38 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -509,8 +509,9 @@ static void
 ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 {
     int k;
-    storeAppendPrintf(sentry, " %-32.32s  %c %6d %6d %2d(%2d)",
+    storeAppendPrintf(sentry, " %-32.32s %c%c %6d %6d %2d(%2d)",
 	hashKeyStr(&i->hash),
+	i->flags.fromhosts ? 'H' : ' ',
 	i->flags.negcached ? 'N' : ' ',
 	(int) (squid_curtime - i->lastref),
 	(int) ((i->flags.fromhosts ? -1 : i->expires - squid_curtime)),
@@ -720,8 +721,8 @@ ipcache_restart(void)
 }
 
 /*
- *  adds a "static" entry from /etc/hosts.  the worldist is to be
- *  managed by the caller, including pointed-to strings
+ *  adds a "static" entry from /etc/hosts.  
+ *  returns 0 upon success, 1 if the ip address is invalid
  */
 int
 ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
