@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.265 1998/05/28 22:16:36 wessels Exp $
+ * $Id: comm.cc,v 1.266 1998/05/28 23:35:31 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -118,10 +118,6 @@
 #define MAX_POLL_TIME 1000
 #endif
 
-#define commCheckIncoming \
-	((++incoming_counter & \
-	(lastinc > 0 ? Config.incoming_rate.max : Config.incoming_rate.min)) == 0)
-
 typedef struct {
     char *host;
     u_short port;
@@ -160,8 +156,60 @@ static void commConnectCallback(ConnectStateData * cs, int status);
 static int commDeferRead(int fd);
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
+static OBJH commIncomingStats;
 
 static struct timeval zero_tv;
+
+/*
+ * Automatic tuning for incoming requests:
+ *
+ * INCOMING sockets are the ICP and HTTP ports.  We need to check these
+ * fairly regularly, but how often?  When the load increases, we
+ * want to check the incoming sockets more often.  If we have a lot
+ * of incoming ICP, then we need to check these sockets more than
+ * if we just have HTTP.
+ *
+ * The variable 'incoming_interval' determines how many normal I/O
+ * events to process before checking incoming sockets again.  
+ * Note we store the incoming_interval multipled by a factor
+ * of 16 (e.g. <<4) to have some pseudo-floating point precision.
+ *
+ * The variable 'io_events' counts how many normal I/O events have
+ * been processed.  When io_events > incoming_interval, its time
+ * to check incoming sockets.
+ *
+ * Every time we check incoming sockets, we count how many new messages
+ * or connections were processed.  This is used to adjust the
+ * incoming_interval for the next iteration.  The new incoming_interval
+ * is calculated as the average of the current incoming_interval and
+ * 32 divided by the number of incoming events just processed. e.g.
+ *
+ *                      1                      1       32 
+ *  incoming_interval = - incoming_interval  + - -----------------
+ *                      2                      2  incoming_events
+ * 
+ * You can see the current value of incoming_interval, as well as
+ * a histogram of 'incoming_events' by asking the cache manager
+ * for 'comm_incoming', e.g.:
+ *
+ *      % ./client mgr:comm_incoming
+ *
+ * Bugs:
+ *
+ *      - We have 32 as a magic upper limit on incoming_interval.
+ *      - INCOMING_TOTAL_MAX = INCOMING_ICP_MAX + INCOMING_HTTP_MAX,
+ *        but this assumes only one ICP socket and one HTTP socket.
+ *        If there are multiple incoming HTTP sockets, the we could
+ *        conceivably process more than INCOMING_TOTAL_MAX events
+ *        in comm_incoming().
+ *
+ * The 'invert32[]' array is a pre-calculated array of division for 32/i
+ *
+ */
+static int io_events = 0;
+static int incoming_interval = 16 << 4;
+static int invert32[INCOMING_TOTAL_MAX];
+#define commCheckIncoming (++io_events > (incoming_interval>>4))
 
 static void
 CommWriteStateCallbackAndFree(int fd, int code)
@@ -715,166 +763,15 @@ commDeferRead(int fd)
     return F->defer_check(fd, F->defer_data);
 }
 
-#if OLD_CODE
-#if HAVE_POLL
-
-/* poll() version by:
- * Stewart Forster <slf@connect.com.au>, and
- * Anthony Baxter <arb@connect.com.au> */
-
-static void
-comm_poll_incoming(void)
-{
-    int fd;
-    int fds[4];
-    struct pollfd pfds[3 + MAXHTTPPORTS];
-    unsigned long N = 0;
-    unsigned long i, nfds;
-    int j;
-    PF *hdl = NULL;
-    polledinc = 0;
-    if (theInIcpConnection >= 0)
-	fds[N++] = theInIcpConnection;
-    if (theInIcpConnection != theOutIcpConnection)
-	if (theOutIcpConnection >= 0)
-	    fds[N++] = theOutIcpConnection;
-    for (j = 0; j < NHttpSockets; j++) {
-	if (HttpSockets[j] < 0)
-	    continue;
-	if (commDeferRead(HttpSockets[j]))
-	    continue;
-	fds[N++] = HttpSockets[j];
-    }
-    for (i = nfds = 0; i < N; i++) {
-	int events;
-	fd = fds[i];
-	events = 0;
-	if (fd_table[fd].read_handler)
-	    events |= POLLRDNORM;
-	if (fd_table[fd].write_handler)
-	    events |= POLLWRNORM;
-	if (events) {
-	    pfds[nfds].fd = fd;
-	    pfds[nfds].events = events;
-	    pfds[nfds].revents = 0;
-	    nfds++;
-	}
-    }
-    if (!nfds)
-	return;
-#if !ALARM_UPDATES_TIME
-    getCurrentTime();
-#endif
-    polledinc = poll(pfds, nfds, 0);
-    if (polledinc < 1) {
-	polledinc = 0;
-	return;
-    }
-    for (i = 0; i < nfds; i++) {
-	int revents;
-	if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
-	    continue;
-	if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
-	    if (hdl = fd_table[fd].read_handler) {
-		fd_table[fd].read_handler = NULL;
-		hdl(fd, fd_table[fd].read_data);
-	    } else
-		debug(5, 1) ("comm_poll_incoming: NULL read handler\n");
-	}
-	if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
-	    if (hdl = fd_table[fd].write_handler) {
-		fd_table[fd].write_handler = NULL;
-		hdl(fd, fd_table[fd].write_data);
-	    } else
-		debug(5, 1) ("comm_poll_incoming: NULL write handler\n");
-	}
-    }
-    /* TO FIX: repoll ICP connection here */
-}
-#else
-
-static void
-comm_select_incoming(void)
-{
-    fd_set read_mask;
-    fd_set write_mask;
-    int maxfd = 0;
-    int fd = 0;
-    int fds[3 + MAXHTTPPORTS];
-    int N = 0;
-    int i = 0;
-    PF *hdl = NULL;
-    polledinc = 0;
-    FD_ZERO(&read_mask);
-    FD_ZERO(&write_mask);
-    for (i = 0; i < NHttpSockets; i++) {
-	if (HttpSockets[i] < 0)
-	    continue;
-	if (commDeferRead(HttpSockets[i]))
-	    continue;
-	fds[N++] = HttpSockets[i];
-    }
-    if (theInIcpConnection >= 0)
-	fds[N++] = theInIcpConnection;
-    if (theInIcpConnection != theOutIcpConnection)
-	if (theOutIcpConnection >= 0)
-	    fds[N++] = theOutIcpConnection;
-    fds[N++] = 0;
-    for (i = 0; i < N; i++) {
-	fd = fds[i];
-	if (fd_table[fd].read_handler) {
-	    FD_SET(fd, &read_mask);
-	    if (fd > maxfd)
-		maxfd = fd;
-	}
-	if (fd_table[fd].write_handler) {
-	    FD_SET(fd, &write_mask);
-	    if (fd > maxfd)
-		maxfd = fd;
-	}
-    }
-    if (maxfd++ == 0)
-	return;
-#if !ALARM_UPDATES_TIME
-    getCurrentTime();
-#endif
-    polledinc = select(maxfd, &read_mask, &write_mask, NULL, &zero_tv);
-    if (polledinc < 1) {
-	polledinc = 0;
-	return;
-    }
-    for (i = 0; i < N; i++) {
-	fd = fds[i];
-	if (FD_ISSET(fd, &read_mask)) {
-	    if ((hdl = fd_table[fd].read_handler) != NULL) {
-		fd_table[fd].read_handler = NULL;
-		hdl(fd, fd_table[fd].read_data);
-	    } else {
-		debug(5, 1) ("comm_select_incoming: NULL read handler\n");
-	    }
-	}
-	if (FD_ISSET(fd, &write_mask)) {
-	    if ((hdl = fd_table[fd].write_handler) != NULL) {
-		fd_table[fd].write_handler = NULL;
-		hdl(fd, fd_table[fd].write_data);
-	    } else {
-		debug(5, 1) ("comm_select_incoming: NULL write handler\n");
-	    }
-	}
-    }
-}
-#endif
-
-#endif /* OLD_CODE */
-
 static void
 comm_incoming(void)
 {
     int j;
     incame = 0;
+    io_events = 0;
     if (theInIcpConnection > 0) {
 	icpHandleUdp(theInIcpConnection, &incame);
-        if (theInIcpConnection != theOutIcpConnection)
+	if (theInIcpConnection != theOutIcpConnection)
 	    icpHandleUdp(theOutIcpConnection, &incame);
     }
     for (j = 0; j < NHttpSockets; j++) {
@@ -883,6 +780,8 @@ comm_incoming(void)
 	httpAccept(HttpSockets[j], &incame);
     }
     statHistCount(&Counter.comm_incoming, incame);
+    if (incame < INCOMING_TOTAL_MAX)
+	incoming_interval = (incoming_interval >> 1) + (invert32[incame] << 3);
 }
 
 static int
@@ -914,7 +813,6 @@ comm_poll(int msec)
     int num;
     static time_t last_timeout = 0;
     static int lastinc = 0;
-    static int incoming_counter = 0;
     double timeout = current_dtime + (msec / 1000.0);
     do {
 #if !ALARM_UPDATES_TIME
@@ -1053,7 +951,6 @@ comm_select(int msec)
     int maxfd;
     int nfds;
     int num;
-    static int incoming_counter = 0;
     static time_t last_timeout = 0;
     struct timeval poll_time;
     static int lastinc;
@@ -1294,6 +1191,7 @@ commSetTcpNoDelay(int fd)
 void
 comm_init(void)
 {
+    int i;
     fd_table = xcalloc(Squid_MaxFD, sizeof(fde));
     /* XXX account fd_table */
     /* Keep a few file descriptors free so that we don't run out of FD's
@@ -1302,6 +1200,12 @@ comm_init(void)
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
+    invert32[0] = 32;
+    for (i = 1; i < INCOMING_TOTAL_MAX; i++)
+	invert32[i] = (int) (32.0 / (double) i + 0.5);
+    cachemgrRegister("comm_incoming",
+	"comm_incoming() stats",
+	commIncomingStats, 0);
 }
 
 
@@ -1509,4 +1413,16 @@ ignoreErrno(int ierrno)
 	return 0;
     }
     /* NOTREACHED */
+}
+
+static void
+commIncomingStats(StoreEntry * sentry)
+{
+    StatCounters *f = &Counter;
+    storeAppendPrintf(sentry, "Current incoming_interval: %d\n",
+	incoming_interval >> 4);
+    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, "Histogram of number of incoming sockets or\n");
+    storeAppendPrintf(sentry, "Messages handled per comm_incoming() call:\n");
+    statHistDump(&f->comm_incoming, sentry, statHistIntDumper);
 }

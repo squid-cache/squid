@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.319 1998/05/28 15:25:18 rousskov Exp $
+ * $Id: client_side.cc,v 1.320 1998/05/28 23:35:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2292,7 +2292,7 @@ httpAccept(int sock, void *data)
     ConnStateData *connState = NULL;
     struct sockaddr_in peer;
     struct sockaddr_in me;
-    int max = 10;
+    int max = INCOMING_HTTP_MAX;
     while (max-- && !httpAcceptDefer()) {
 	memset(&peer, '\0', sizeof(struct sockaddr_in));
 	memset(&me, '\0', sizeof(struct sockaddr_in));

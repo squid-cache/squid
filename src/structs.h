@@ -355,10 +355,6 @@ struct _SquidConfig {
     struct {
 	size_t limit;
     } MemPools;
-    struct {
-	int min;
-	int max;
-    } incoming_rate;
 };
 
 struct _SquidConfig2 {

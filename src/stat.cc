@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.256 1998/05/27 20:31:37 wessels Exp $
+ * $Id: stat.cc,v 1.257 1998/05/28 23:35:33 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -883,7 +883,7 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashFuncCount);
-    statHistEnumInit(&C->comm_incoming, 20);
+    statHistEnumInit(&C->comm_incoming, INCOMING_TOTAL_MAX);
 }
 
 /* add special cases here as they arrive */
@@ -928,7 +928,6 @@ static void
 statCountersHistograms(StoreEntry * sentry)
 {
     StatCounters *f = &Counter;
-#if TOO_MUCH_OUTPUT
     storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
     statHistDump(&f->client_http.all_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
@@ -943,9 +942,6 @@ statCountersHistograms(StoreEntry * sentry)
     statHistDump(&f->icp.reply_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
     statHistDump(&f->dns.svc_time, sentry, NULL);
-#endif
-    storeAppendPrintf(sentry, "comm_incoming histogram:\n");
-    statHistDump(&f->comm_incoming, sentry, statHistIntDumper);
 }
 
 static void
