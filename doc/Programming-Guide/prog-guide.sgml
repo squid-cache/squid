@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.38 2001/04/22 15:22:51 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.39 2001/04/27 23:42:05 wessels Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -157,8 +157,8 @@ Squid consists of the following major components
 
 	<P>
 	These functions are responsible for handling HTTP authentication.
-	They follow a modular framework allow different auth schemes
-	to be added at will. For information on working with the auth schemes
+	They follow a modular framework allow different authentication schemes
+	to be added at will. For information on working with the authentication schemes
 	See the chapter Authentication Framework.
 
 <sect1>Network Communication
@@ -708,7 +708,7 @@ Squid consists of the following major components
 	<P>
 	To be written...
 
-<sect1>Object retreival
+<sect1>Object retrieval
 
 	<P>
 	To be written...
@@ -780,10 +780,10 @@ Squid consists of the following major components
 </verb>
 
 
-<sect1>Initialisation of a storage type
+<sect1>Initialization of a storage type
 
 	<P>
-	Each storage type initialises through the <tt/storeFsSetup_$type()/
+	Each storage type initializes through the <tt/storeFsSetup_$type()/
 	function.  The <tt/storeFsSetup_$type()/ function takes a single
 	argument - a <tt/storefs_entry_t/ pointer. This pointer references
 	the storefs_entry to initialise. A typical setup function is as
@@ -804,7 +804,7 @@ Squid consists of the following major components
 
 	<P>
 	There are five function pointers in the storefs_entry which require
-	initialising. In this example, some protection is made against the
+	initializing. In this example, some protection is made against the
 	setup function being called twice, and a memory pool is initialised
 	for use inside the storage module.
 
@@ -1369,7 +1369,7 @@ Squid consists of the following major components
 	other in-transit and cached objects. You must make sure that the
 	<em/storeIOState->offset/ refers to the ondisk offset, or undefined
 	results will occur. For reads, this returns the current offset of
-	sucessfully read data, not including queued reads.
+	successfully read data, not including queued reads.
 
 
 <sect1>Callbacks
@@ -1587,7 +1587,7 @@ coupling between the storage layer and the replacement policy.
 	<P>
 	It is implemented as a modular API where a storage directory or
 	memory creates a policy of choice for maintaining it's objects,
-	and modules registerering to be used by this API.
+	and modules registering to be used by this API.
 
 <sect3>createRemovalPolicy()
 
@@ -1690,7 +1690,7 @@ coupling between the storage layer and the replacement policy.
 
 	<P>
 	Note: The walk must be performed as an atomic operation
-	with no other policy actions interveaning, or the outcome
+	with no other policy actions intervening, or the outcome
 	will be undefined.
 
 <sect3>walker.Next()
@@ -1714,7 +1714,7 @@ coupling between the storage layer and the replacement policy.
 </verb>
 
 	<P>
-	Finishes a walk of the maintaned objects, destroys
+	Finishes a walk of the maintained objects, destroys
 	walker.
 
 <sect3>policy.PurgeInit()
@@ -1725,7 +1725,7 @@ coupling between the storage layer and the replacement policy.
 </verb>
 
 	<P>
-	Initiates a search for removal candidates. Seach depth is indicated
+	Initiates a search for removal candidates. Search depth is indicated
 	by max_scan.
 
 	<P>
@@ -1733,7 +1733,7 @@ coupling between the storage layer and the replacement policy.
 
 	<P>
 	Note: The walk must be performed as an atomic operation
-	with no other policy actions interveaning, or the outcome
+	with no other policy actions intervening, or the outcome
 	will be undefined.
 
 <sect3>purgewalker.Next()
@@ -1747,7 +1747,7 @@ coupling between the storage layer and the replacement policy.
 	Gets the next object to purge. The purgewalker will remove each
 	returned object from the policy.
 	
-	<P>It is the policys responsibility to verify that the object
+	<P>It is the polices responsibility to verify that the object
 	isn't locked or otherwise prevented from being removed. What this
 	means is that the policy must not return objects where
 	storeEntryLocked() is true.
@@ -1763,7 +1763,7 @@ coupling between the storage layer and the replacement policy.
 </verb>
 
 	<P>
-	Finishes a walk of the maintaned objects, destroys
+	Finishes a walk of the maintained objects, destroys
 	walker and restores the policy to it's normal state.
 
 <sect2>Future removal policy implementation
@@ -1854,7 +1854,7 @@ coupling between the storage layer and the replacement policy.
 	When a walker is created the policy populates it with at least the API
 	methods supported. Currently all API calls are mandatory, but the
 	policy implementation must make sure to NULL fill the structure prior
-	to populating it in order to assure future API compability.
+	to populating it in order to assure future API compatibility.
 
 <sect2>Design notes/bugs
 
@@ -1865,7 +1865,7 @@ coupling between the storage layer and the replacement policy.
 	caches, but unfortunately the purge method for HEAP based policies
 	needs to update this, and it is also preferable if the purge method
 	in general knows how to clear the information. I think the agreement
-	was that the current design of thightly coupling the two together
+	was that the current design of tightly coupling the two together
 	on one StoreEntry is not the best design possible.
 
 <P>
@@ -2035,13 +2035,13 @@ coupling between the storage layer and the replacement policy.
 	<P>An auth scheme in squid is the collection of functions required to
         manage the authentication process for a given HTTP authentication
         scheme. Existing auth schemes in squid are Basic and NTLM. Other HTTP
-        schemes (see for example rfc 2617) have been published and could be
+        schemes (see for example RFC 2617) have been published and could be
         implemented in squid. The term auth scheme and auth module are
-        interchangable. An auth module is not to be confused with an
+        interchangeable. An auth module is not to be confused with an
         authentication helper, which is a scheme specific external program used
         by a specific scheme to perform data manipulation external to squid.
         Typically this involves comparing the browser submitted credentials with
-        those in the organisation's user directory.
+        those in the organization's user directory.
 		
 	<P>Auth modules SHOULD NOT perform access control functions. Squid has
         advanced caching access control functionality already. Future work in
@@ -2055,9 +2055,9 @@ coupling between the storage layer and the replacement policy.
 		
 	<P>Function typedefs.
 	
-	<P>Each function related to the general case of http authentication has
+	<P>Each function related to the general case of HTTP authentication has
         a matching typedef. There are some additional function types used to
-        register/initialise, deregister/shutdown and provide stats on auth
+        register/initialize, deregister/shutdown and provide stats on auth
         modules:
 		
 	<P>typedef int   AUTHSACTIVE();
@@ -2077,7 +2077,7 @@ coupling between the storage layer and the replacement policy.
 	<P>functions of type AUTHSSETUP are used to register an auth module with
         squid. The registration function MUST be named
         "authSchemeSetup_SCHEME" where SCHEME is the auth_scheme as
-        defined by rfc 2617. Only one auth scheme registered in squid can
+        defined by RFC 2617. Only one auth scheme registered in squid can
         provide functionality for a given auth_scheme. (I.e. only one auth
         module can handle Basic, only one can handle Digest and so forth). The
         Setup function is responsible for registering the functions in the
@@ -2093,7 +2093,7 @@ coupling between the storage layer and the replacement policy.
 		
 	<P>Functions of type AUTHSSHUTDOWN are responsible for freeing any
         resources used by the auth modules. The shutdown function will be called
-        before squid reconfigures, and before squid shutsdown.
+        before squid reconfigures, and before squid shuts down.
 		
 	<P>typedef void  AUTHSINIT(authScheme *);
 		
@@ -2110,7 +2110,7 @@ coupling between the storage layer and the replacement policy.
         scheme_data pointer should point to the local data structure. Future
         development will allow all authentication schemes direct access to their
         configuration data without a locally scope structure. The parse function
-        is called by squid's config file parser when a auth_param scheme_name
+        is called by Squid's config file parser when a auth_param scheme_name
         entry is encountered.
 		
 	<P>typedef void  AUTHSFREECONFIG(authScheme *);
@@ -2142,7 +2142,7 @@ coupling between the storage layer and the replacement policy.
         freed by the authentication framework, and scheme specific data was
         present. The function should free any scheme related data and MUST set
         the scheme_data pointer to NULL. Failure to unlink the scheme data will
-        result in squid dieing.
+        result in squid dying.
 		
 	<P>typedef char *AUTHSUSERNAME(auth_user_t *);
 		
@@ -2156,7 +2156,7 @@ coupling between the storage layer and the replacement policy.
 	
 	<P>The AUTHED function is used by squid to determine whether the auth
         scheme has successfully authenticated the user request. If timeouts on
-        cached credentials have occured or for any reason the credentials are
+        cached credentials have occurred or for any reason the credentials are
         not valid, return false.<P>The next set of
         functions perform the actual authentication. The functions are used by
         squid for both WWW- and Proxy- authentication. Therefore they MUST NOT
@@ -2167,7 +2167,7 @@ coupling between the storage layer and the replacement policy.
         that needs authentication. If needed the auth scheme can alter the
         auth_user pointer (usually to point to a previous instance of the user
         whose name is discovered late in the auth process. For an example of
-        this see the ntlm scheme). These functions are responsible for
+        this see the NTLM scheme). These functions are responsible for
         performing any in-squid routines for the authentication of the user. The
         auth_user_request struct that is passed around is only persistent for
         the current request. If the auth module requires access to the structure
@@ -2260,7 +2260,7 @@ coupling between the storage layer and the replacement policy.
 	<P>This is the main user related structure. It stores user-related data,
         and is persistent across requests. It can even persistent across
         multiple external authentications. One major benefit of preserving this
-        structure is the cached acl match results. This structure, is private to
+        structure is the cached ACL match results. This structure, is private to
         the authentication framework.
 		
 	<P>struct _auth_user_t {
@@ -2343,8 +2343,8 @@ coupling between the storage layer and the replacement policy.
 	
 	<P>How to add a new auth scheme
 		
-	<P>Copy the nearest existing auth scheme and modify to recieve the
-        approprate scheme headers. Now step through the acl.c MatchAclProxyUser
+	<P>Copy the nearest existing auth scheme and modify to receive the
+        appropriate scheme headers. Now step through the acl.c MatchAclProxyUser
         function's code path and see how the functions call down through
         authenticate.c to your scheme. Write a helper to provide you scheme with
         any backend existence it needs. Remember any blocking code must go in
@@ -2355,7 +2355,7 @@ coupling between the storage layer and the replacement policy.
 	<P>Start of by figuring the code path that will result in the function
         being called, and what data it will need. Then create a typedef for the
         function, add and entry to the authscheme_entry struct. Add a wrapper
-        function to authenticate.c (or if approprate cf_cache.c) that called the
+        function to authenticate.c (or if appropriate cf_cache.c) that called the
         scheme specific function if it exists. Test it. Test it again. Now
         port to all the existing auth schemes, or at least add a setting
         of NULL for the function for each scheme.
