@@ -77,13 +77,8 @@ and ideas to make this software available.
 	Scott Schram <scott@schram.net>
 	Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
 	Georgy Salnikov <sge@nmr.nioch.nsc.ru>
-
-Development of this caching software is funded by the National Science
-Foundation (grants NCR-9616602 and NCR-9521745).  Paid staff members on
-the caching project are:
-
-	Duane Wessels <wessels@ircache.net>
-	Alex Rousskov <rousskov@ircache.net>
 	Glenn Chisholm <glenn@ircache.net>
-	K Claffy <kc@nlanr.net>
-	Hans-Werner Braun <hwb@nlanr.net>
+	Alex Rousskov <rousskov@ircache.net>
+	Sergio Rabellino <rabellino@di.unito.it>
+
+	Duane Wessels <wessels@squid-cache.org>
