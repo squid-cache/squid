@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.229 1998/06/09 21:18:48 wessels Exp $
+ * $Id: ftp.cc,v 1.230 1998/06/30 19:32:38 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -142,7 +142,7 @@ static PF ftpTimeout;
 static PF ftpReadControlReply;
 static CWCB ftpWriteCommandCallback;
 static void ftpLoginParser(const char *, FtpStateData *);
-static wordlist *ftpParseControlReply(char *buf, size_t len, int *code);
+static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
 static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
 #if OLD_CODE
@@ -152,6 +152,8 @@ static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpPutStart(FtpStateData *);
 static CWCB ftpPutTransferDone;
 static void ftpUnhack(FtpStateData * ftpState);
+static void ftpScheduleReadControlReply(FtpStateData *);
+static void ftpHandleControlReply(FtpStateData *);
 
 /* State machine functions
  * send == state transition
@@ -693,7 +695,7 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 }
 
 static void
-ftpParseListing(FtpStateData * ftpState, int len)
+ftpParseListing(FtpStateData * ftpState)
 {
     char *buf = ftpState->data.buf;
     char *sbuf;			/* NULL-terminated copy of buf */
@@ -704,11 +706,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
     size_t linelen;
     size_t usable;
     StoreEntry *e = ftpState->entry;
-    /*
-     * There may have been 'data.offset' bytes left over from a previous
-     * call here
-     */
-    len += ftpState->data.offset;
+    int len = ftpState->data.offset;
     /*
      * We need a NULL-terminated buffer for scanning, ick
      */
@@ -772,11 +770,7 @@ ftpReadComplete(FtpStateData * ftpState)
 	storeComplete(ftpState->entry);
     }
     /* expect the "transfer complete" message on the control socket */
-    commSetSelect(ftpState->ctrl.fd,
-	COMM_SELECT_READ,
-	ftpReadControlReply,
-	ftpState,
-	Config.Timeout.read);
+    ftpScheduleReadControlReply(ftpState);
 }
 
 static void
@@ -804,6 +798,7 @@ ftpDataRead(int fd, void *data)
 	fd_bytes(fd, len, FD_READ);
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.ftp.kbytes_in, len);
+	ftpState->data.offset += len;
     }
     debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
@@ -831,10 +826,10 @@ ftpDataRead(int fd, void *data)
 	if (ftpState->flags.isdir) {
 	    if (!ftpState->flags.html_header_sent)
 		ftpListingStart(ftpState);
-	    ftpParseListing(ftpState, len);
+	    ftpParseListing(ftpState);
 	} else {
-	    assert(ftpState->data.offset == 0);
 	    storeAppend(entry, ftpState->data.buf, len);
+	    ftpState->data.offset = 0;
 	}
 	if (ftpState->size > 0 && mem->inmem_hi >= ftpState->size + mem->reply->hdr_sz)
 	    ftpReadComplete(ftpState);
@@ -992,7 +987,7 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
     ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     ftpState->data.size = SQUID_TCP_SO_RCVBUF;
     ftpState->data.freefunc = xfree;
-    commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
+    ftpScheduleReadControlReply(ftpState);
     commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
 }
 
@@ -1010,11 +1005,7 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 	ftpWriteCommandCallback,
 	ftpState,
 	xfree);
-    commSetSelect(ftpState->ctrl.fd,
-	COMM_SELECT_READ,
-	ftpReadControlReply,
-	ftpState,
-	Config.Timeout.read);
+    ftpScheduleReadControlReply(ftpState);
 }
 
 static void
@@ -1046,9 +1037,12 @@ ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void
 }
 
 static wordlist *
-ftpParseControlReply(char *buf, size_t len, int *codep)
+ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
 {
     char *s;
+    char *sbuf;
+    char *end;
+    int usable;
     int complete = 0;
     wordlist *head = NULL;
     wordlist *list;
@@ -1057,9 +1051,29 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
     size_t linelen;
     int code = -1;
     debug(9, 5) ("ftpParseControlReply\n");
-    if (*(buf + len - 1) != '\n')
-	return NULL;
-    for (s = buf; s - buf < len; s += strcspn(s, crlf), s += strspn(s, crlf)) {
+    /*
+     * We need a NULL-terminated buffer for scanning, ick
+     */
+    sbuf = xmalloc(len + 1);
+    xstrncpy(sbuf, buf, len + 1);
+    end = sbuf + len - 1;
+    while (*end != '\r' && *end != '\n' && end > sbuf)
+        end--;
+    usable = end - sbuf;
+    debug(9, 3) ("ftpParseControlReply: usable = %d\n", usable);
+    if (usable == 0) {
+        debug(9, 3) ("ftpParseControlReply: didn't find end of line\n");
+        xfree(sbuf);
+        return NULL;
+    }
+    debug(9, 3) ("ftpParseControlReply: %d bytes to play with\n", len);
+    end++;
+    s = sbuf;
+    s += strspn(s, crlf);
+    for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
+	if (complete)
+	    break;
+	debug(9,3)("ftpParseControlReply: s = {%s}\n", s);
 	linelen = strcspn(s, crlf) + 1;
 	if (linelen < 2)
 	    break;
@@ -1078,6 +1092,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
 	*tail = list;
 	tail = &list->next;
     }
+    *used = (int) (s - sbuf);
     if (!complete)
 	wordlistDestroy(&head);
     if (codep)
@@ -1086,12 +1101,26 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
 }
 
 static void
+ftpScheduleReadControlReply(FtpStateData *ftpState)
+{
+    debug(9,1)("ftpScheduleReadControlReply: FD %d\n", ftpState->ctrl.fd);
+    if (ftpState->ctrl.offset > 0) {
+	/* We've already read some reply data */
+	ftpHandleControlReply(ftpState);
+    } else {
+        commSetSelect(ftpState->ctrl.fd,
+	    COMM_SELECT_READ,
+	    ftpReadControlReply,
+	    ftpState,
+	    Config.Timeout.read);
+    }
+}
+
+static void
 ftpReadControlReply(int fd, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
-    char *oldbuf;
-    wordlist **W;
     int len;
     ErrorState *err;
     debug(9, 5) ("ftpReadControlReply\n");
@@ -1108,11 +1137,7 @@ ftpReadControlReply(int fd, void *data)
     if (len < 0) {
 	debug(50, 1) ("ftpReadControlReply: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
-	    commSetSelect(fd,
-		COMM_SELECT_READ,
-		ftpReadControlReply,
-		ftpState,
-		Config.Timeout.read);
+	    ftpScheduleReadControlReply(ftpState);
 	} else {
 	    if (entry->mem_obj->inmem_hi == 0) {
 		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
@@ -1143,12 +1168,26 @@ ftpReadControlReply(int fd, void *data)
     len += ftpState->ctrl.offset;
     ftpState->ctrl.offset = len;
     assert(len <= ftpState->ctrl.size);
+    ftpHandleControlReply(ftpState);
+}
+
+static void
+ftpHandleControlReply(FtpStateData * ftpState)
+{
+    char *oldbuf;
+    wordlist **W;
+    int bytes_used = 0;
     wordlistDestroy(&ftpState->ctrl.message);
-    ftpState->ctrl.message = ftpParseControlReply(ftpState->ctrl.buf, len,
-	&ftpState->ctrl.replycode);
-    if (ftpState->ctrl.message == NULL) {
-	debug(9, 5) ("ftpReadControlReply: partial server reply\n");
-	if (len == ftpState->ctrl.size) {
+    ftpState->ctrl.message = ftpParseControlReply(ftpState->ctrl.buf,
+	ftpState->ctrl.offset, &ftpState->ctrl.replycode, &bytes_used);
+    if (ftpState->ctrl.offset == bytes_used) {
+	/* used it all up */
+	assert(ftpState->ctrl.message);
+	ftpState->ctrl.offset = 0;
+    } else if (bytes_used == 0) {
+	/* didn't get complete reply yet */
+	assert(ftpState->ctrl.message == NULL);
+	if (ftpState->ctrl.offset == ftpState->ctrl.size) {
 	    oldbuf = ftpState->ctrl.buf;
 	    ftpState->ctrl.buf = xcalloc(ftpState->ctrl.size << 1, 1);
 	    xmemcpy(ftpState->ctrl.buf, oldbuf, ftpState->ctrl.size);
@@ -1156,15 +1195,21 @@ ftpReadControlReply(int fd, void *data)
 	    ftpState->ctrl.freefunc(oldbuf);
 	    ftpState->ctrl.freefunc = xfree;
 	}
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, Config.Timeout.read);
+	ftpScheduleReadControlReply(ftpState);
 	return;
+    } else {
+	/* Got some data past the complete reply */
+	assert(bytes_used < ftpState->ctrl.offset);
+	ftpState->ctrl.offset -= bytes_used;
+	xmemmove(ftpState->ctrl.buf, ftpState->ctrl.buf + bytes_used,
+	    ftpState->ctrl.offset);
     }
     for (W = &ftpState->ctrl.message; *W && (*W)->next; W = &(*W)->next);
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
-    ftpState->ctrl.offset = 0;
-    debug(9, 8) ("ftpReadControlReply: state=%d, code=%d\n", ftpState->state, ftpState->ctrl.replycode);
+    debug(9, 8) ("ftpReadControlReply: state=%d, code=%d\n", ftpState->state,
+	ftpState->ctrl.replycode);
     FTP_SM_FUNCS[ftpState->state] (ftpState);
 }
 
@@ -1603,15 +1648,19 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     int addr_len;
     int on = 1;
     u_short port = 0;
-    /* Set up a listen socket on the same local address as the control connection. */
+    /*
+     * Set up a listen socket on the same local address as the
+     * control connection.
+     */
     addr_len = sizeof(addr);
     if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
 	debug(9, 0) ("ftpOpenListenSocket: getsockname(%d,..): %s\n",
 	    ftpState->ctrl.fd, xstrerror());
 	return -1;
     }
-    /* REUSEADDR is needed in fallback mode, since the same port is used for both
-     * control and data
+    /*
+     * REUSEADDR is needed in fallback mode, since the same port is
+     * used for both control and data.
      */
     if (fallback) {
 	setsockopt(ftpState->ctrl.fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
