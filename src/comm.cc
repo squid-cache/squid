@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.391 2003/10/20 12:33:01 robertc Exp $
+ * $Id: comm.cc,v 1.392 2004/02/18 01:58:59 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1302,7 +1302,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs->fd = fd;
     cs->host = xstrdup(host);
     cs->port = port;
-    cs->callback = CallBack<CNCB>(callback,cbdataReference(data));
+    cs->callback = CallBack<CNCB>(callback, data);
     comm_add_close_handler(fd, commConnectFree, cs);
     cs->locks++;
     ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
@@ -1345,10 +1345,8 @@ ConnectStateData::callCallback(comm_err_t status, int xerrno)
     callback = CallBack<CNCB>();
     commSetTimeout(fd, -1, NULL, NULL);
 
-    if (cbdataReferenceValid(aCallback.data))
+    if (aCallback.dataValid())
         aCallback.handler(fd, status, xerrno, aCallback.data);
-
-    cbdataReferenceDone(aCallback.data);
 
     commConnectFree(fd, this);
 }
@@ -1358,7 +1356,7 @@ commConnectFree(int fd, void *data)
 {
     ConnectStateData *cs = (ConnectStateData *)data;
     debug(5, 3) ("commConnectFree: FD %d\n", fd);
-    cbdataReferenceDone(cs->callback.data);
+    cs->callback = CallBack<CNCB>();
     safe_free(cs->host);
     delete cs;
 }
