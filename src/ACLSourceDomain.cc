@@ -1,5 +1,5 @@
 /*
- * $Id: ACLSourceDomain.cc,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLSourceDomain.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,90 +36,9 @@
 
 #include "squid.h"
 #include "ACLSourceDomain.h"
-#include "authenticate.h"
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
 #include "ACLDomainData.h"
-
-MemPool *ACLSourceDomain::Pool(NULL);
-void *
-ACLSourceDomain::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLSourceDomain));
-    if (!Pool)
-	Pool = memPoolCreate("ACLSourceDomain", sizeof (ACLSourceDomain));
-    return memPoolAlloc(Pool);
-}
-
-void
-ACLSourceDomain::operator delete (void *address)
-{
-    memPoolFree (Pool, address);
-}
-
-void
-ACLSourceDomain::deleteSelf() const
-{
-    delete this;
-}
-
-ACLSourceDomain::~ACLSourceDomain()
-{
-    data->deleteSelf();
-}
-
-ACLSourceDomain::ACLSourceDomain(ACLData *newData, char const *theType) : data (newData), type_(theType) {}
-ACLSourceDomain::ACLSourceDomain (ACLSourceDomain const &old) : data (old.data->clone()), type_(old.type_)
-{
-}
-ACLSourceDomain &
-ACLSourceDomain::operator= (ACLSourceDomain const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
-char const *
-ACLSourceDomain::typeString() const
-{
-    return type_;
-}
-
-void
-ACLSourceDomain::parse()
-{
-    data->parse();
-}
-
-int
-ACLSourceDomain::match(ACLChecklist *checklist)
-{
-    const char *fqdn = NULL;
-    fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
-    if (fqdn) {
-	return data->match(fqdn);
-    } else if (!checklist->sourceDomainChecked()) {
-	debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		      name, inet_ntoa(checklist->src_addr));
-	checklist->changeState(SourceDomainLookup::Instance());
-	return 0;
-    }
-    return data->match("none");
-}
-
-wordlist *
-ACLSourceDomain::dump() const
-{
-    return data->dump();
-}
-
-bool
-ACLSourceDomain::valid () const
-{
-    return data != NULL;
-}
 
 SourceDomainLookup SourceDomainLookup::instance_;
 
@@ -149,12 +68,32 @@ SourceDomainLookup::LookupDone(const char *fqdn, void *data)
 }
 
 ACL::Prototype ACLSourceDomain::LiteralRegistryProtoype(&ACLSourceDomain::LiteralRegistryEntry_, "srcdomain");
-ACLSourceDomain ACLSourceDomain::LiteralRegistryEntry_(new ACLDomainData, "srcdomain");
+ACLStrategised<char const *> ACLSourceDomain::LiteralRegistryEntry_(new ACLDomainData, ACLSourceDomainStrategy::Instance(), "srcdomain");
 ACL::Prototype ACLSourceDomain::RegexRegistryProtoype(&ACLSourceDomain::RegexRegistryEntry_, "srcdom_regex");
-ACLSourceDomain ACLSourceDomain::RegexRegistryEntry_(new ACLRegexData, "srcdom_regex");
+ACLStrategised<char const *> ACLSourceDomain::RegexRegistryEntry_(new ACLRegexData,ACLSourceDomainStrategy::Instance() ,"srcdom_regex");
 
-ACL *
-ACLSourceDomain::clone() const
+int
+ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
-    return new ACLSourceDomain(*this);
+    const char *fqdn = NULL;
+    fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
+    if (fqdn) {
+	return data->match(fqdn);
+    } else if (!checklist->sourceDomainChecked()) {
+	/* FIXME: reinstate a means to get to "name" 
+	debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+		      name, inet_ntoa(checklist->src_addr));
+		      */
+	checklist->changeState(SourceDomainLookup::Instance());
+	return 0;
+    }
+    return data->match("none");
 }
+
+ACLSourceDomainStrategy *
+ACLSourceDomainStrategy::Instance()
+{
+    return &Instance_;
+}
+
+ACLSourceDomainStrategy ACLSourceDomainStrategy::Instance_;

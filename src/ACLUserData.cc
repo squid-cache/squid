@@ -174,7 +174,7 @@ ACLUserData::parse()
 }
 
 
-ACLData *
+ACLData<char const *> *
 ACLUserData::clone() const
 {
     /* Splay trees don't clone yet. */

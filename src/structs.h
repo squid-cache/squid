@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.449 2003/02/15 00:15:51 hno Exp $
+ * $Id: structs.h,v 1.450 2003/02/17 07:01:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,13 +52,6 @@ struct _acl_user_ip_data {
     struct {
 	unsigned int strict:1;
     } flags;
-};
-
-struct _acl_time_data {
-    int weekbits;
-    int start;
-    int stop;
-    acl_time_data *next;
 };
 
 struct _acl_name_list {

@@ -63,7 +63,7 @@ class ACLProxyAuth : public ACL {
     virtual void deleteSelf() const;
 
     ~ACLProxyAuth();
-    ACLProxyAuth(ACLData *, char const *);
+    ACLProxyAuth(ACLData<char const *> *, char const *);
     ACLProxyAuth (ACLProxyAuth const &);
     ACLProxyAuth &operator= (ACLProxyAuth const &);
     
@@ -85,7 +85,7 @@ class ACLProxyAuth : public ACL {
     static ACLProxyAuth RegexRegistryEntry_;
     int matchProxyAuth(ACLChecklist *);
     void checkAuthForCaching(ACLChecklist *) const;
-    ACLData *data;
+    ACLData<char const *> *data;
     char const *type_;
 };
 

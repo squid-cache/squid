@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDestinationDomain.h,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLDestinationDomain.h,v 1.2 2003/02/17 07:01:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,7 +55,7 @@ class ACLDestinationDomain : public ACL {
     virtual void deleteSelf() const;
 
     ~ACLDestinationDomain();
-    ACLDestinationDomain(ACLData *, char const *);
+    ACLDestinationDomain(ACLData<char const *> *, char const *);
     ACLDestinationDomain (ACLDestinationDomain const &);
     ACLDestinationDomain &operator= (ACLDestinationDomain const &);
     
@@ -74,7 +74,7 @@ class ACLDestinationDomain : public ACL {
     static ACLDestinationDomain LiteralRegistryEntry_;
     static Prototype RegexRegistryProtoype;
     static ACLDestinationDomain RegexRegistryEntry_;
-    ACLData *data;
+    ACLData<char const *> *data;
     char const *type_;
 };
 

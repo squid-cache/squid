@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.430 2003/02/15 00:15:51 hno Exp $
+ * $Id: cache_cf.cc,v 1.431 2003/02/17 07:01:35 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -611,16 +611,17 @@ dump_acl(StoreEntry * entry, const char *name, acl * ae)
     wordlist *v;
     while (ae != NULL) {
 	debug(3, 3) ("dump_acl: %s %s\n", name, ae->name);
+	storeAppendPrintf(entry, "%s %s %s ",
+		name,
+		ae->name,
+		ae->typeString());
 	v = w = ae->dumpGeneric();
 	while (v != NULL) {
 	    debug(3, 3) ("dump_acl: %s %s %s\n", name, ae->name, v->key);
-	    storeAppendPrintf(entry, "%s %s %s %s\n",
-		name,
-		ae->name,
-		ae->typeString(),
-		v->key);
+	    storeAppendPrintf(entry, "%s ", v->key);
 	    v = v->next;
 	}
+	storeAppendPrintf(entry, "\n");
 	wordlistDestroy(&w);
 	ae = ae->next;
     }
@@ -1292,6 +1293,7 @@ free_cachedir(_SquidConfig::_cacheSwap * swap)
     swap->n_configured = 0;
 }
 
+#if 0
 static const char *
 peer_type_str(const peer_t type)
 {
@@ -1518,6 +1520,7 @@ free_peer(peer ** P)
     }
     Config.npeers = 0;
 }
+#endif
 
 static void
 dump_cachemgrpasswd(StoreEntry * entry, const char *name, cachemgr_passwd * list)
@@ -1637,6 +1640,7 @@ parse_peer_access(void)
     aclParseAccessLine(&p->access);
 }
 
+#if 0
 static void
 parse_hostdomain(void)
 {
@@ -1691,6 +1695,7 @@ parse_hostdomaintype(void)
 	*L = l;
     }
 }
+#endif
 
 #if UNUSED_CODE
 static void

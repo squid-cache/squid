@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLCertificateData.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -63,8 +63,15 @@ ACLCertificateData::deleteSelf() const
 }
 
 
-ACLCertificateData::ACLCertificateData() : attribute (NULL), values (NULL)
+ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (NULL), sslAttributeCall (sslStrategy)
 {
+}
+
+ACLCertificateData::ACLCertificateData(ACLCertificateData const &old) : attribute (NULL), values (NULL), sslAttributeCall (old.sslAttributeCall)
+{
+    assert (!old.values);
+    if (old.attribute)
+	attribute = xstrdup (old.attribute);
 }
 
 template<class T>
@@ -76,6 +83,7 @@ xRefFree(T &thing)
 
 ACLCertificateData::~ACLCertificateData()
 {
+    safe_free (attribute);
     if (values)
 	values->destroy(xRefFree);
 } 
@@ -94,90 +102,65 @@ splaystrcmp (T&l, T&r)
     return strcmp ((char *)l,(char *)r);
 }
 
-/* general compare functions, these are used for tree search algorithms
- * so they return <0, 0 or >0 */
-
-/* compare two values */
-
-template<class T>
-int
-aclDomainCompare(T const &a, T const &b)
-{
-    char * const d1 = (char *const)b;
-    char * const d2 = (char *const )a;
-    int ret;
-    ret = aclHostDomainCompare(d1, d2);
-    if (ret != 0) {
-	char *const d3 = d2;
-	char *const d4 = d1;
-	ret = aclHostDomainCompare(d3, d4);
-    }
-    /* FIXME this warning may display d1 and d2 when it should display d3 and d4 */
-    if (ret == 0) {
-	debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
-	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", (char *) a);
-	debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
-    }
-    return ret;
-}
-
-/* compare a host and a domain */
-
-static int
-aclHostDomainCompare( char *const &a, char * const &b)
-{
-    const char *h = (const char *)a;
-    const char *d = (const char *)b;
-    return matchDomainName(h, d);
-}
-
-
 bool
-ACLCertificateData::match(char const *host)
+ACLCertificateData::match(SSL *ssl)
 {
-    if (host == NULL)
+    if (!ssl)
 	return 0;
-    debug(28, 3) ("aclMatchCertificateList: checking '%s'\n", host);
-    values = values->splay((char *)host, aclHostDomainCompare);
+    
+    char const *value = sslAttributeCall(ssl, attribute);
+    if (value == NULL)
+	return 0;
+    debug(28, 3) ("aclMatchCertificateList: checking '%s'\n", value);
+    values = values->splay((char *)value, splaystrcmp);
     debug(28, 3) ("aclMatchCertificateList: '%s' %s\n",
-	host, splayLastResult ? "NOT found" : "found");
+	value, splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
 
 static void
-aclDumpDomainListWalkee(char * const & node_data, void *outlist)
+aclDumpAttributeListWalkee(char * const & node_data, void *outlist)
 {
     /* outlist is really a wordlist ** */
-    wordlistAdd((wordlist **)outlist, (char const *)node_data);
+    wordlistAdd((wordlist **)outlist, node_data);
 }
 
 wordlist *
 ACLCertificateData::dump()
 {
     wordlist *wl = NULL;
+    wordlistAdd(&wl, attribute);
     /* damn this is VERY inefficient for long ACL lists... filling
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    values->walk(aclDumpDomainListWalkee, &wl);
+    values->walk(aclDumpAttributeListWalkee, &wl);
     return wl;
 }
 
 void
 ACLCertificateData::parse()
 {
-    char *t = NULL;
+    char *newAttribute = strtokFile();
+    if (!newAttribute)
+	self_destruct();
+    /* an acl must use consistent attributes in all config lines */
+    if (attribute) {
+	if (strcasecmp(newAttribute, attribute) != 0)
+	    self_destruct();
+    } else
+	attribute = xstrdup(newAttribute);
+    char *t;
     while ((t = strtokFile())) {
-	Tolower(t);
-	values = values->insert(xstrdup(t), aclDomainCompare);
+	values = values->insert(xstrdup(t), splaystrcmp);
     }
 }
 
 
-ACLData *
+ACLData<SSL *> *
 ACLCertificateData::clone() const
 {
     /* Splay trees don't clone yet. */
     assert (!values);
-    return new ACLCertificateData;
+    return new ACLCertificateData(*this);
 }

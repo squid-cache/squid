@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -69,7 +69,7 @@ ACLDestinationDomain::~ACLDestinationDomain()
     data->deleteSelf();
 }
 
-ACLDestinationDomain::ACLDestinationDomain(ACLData *newData, char const *theType) : data (newData), type_(theType) {}
+ACLDestinationDomain::ACLDestinationDomain(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}
 ACLDestinationDomain::ACLDestinationDomain (ACLDestinationDomain const &old) : data (old.data->clone()), type_(old.type_)
 {
 }
@@ -135,7 +135,6 @@ DestinationDomainLookup::Instance()
 void
 DestinationDomainLookup::checkForAsync(ACLChecklist *checklist)const
 {
-    checklist->asyncInProgress(true);
 
     ipcache_addrs *ia;
     ia = ipcacheCheckNumeric(checklist->request->host);
@@ -144,6 +143,7 @@ DestinationDomainLookup::checkForAsync(ACLChecklist *checklist)const
 	checklist->markDestinationDomainChecked();
 	checklist->changeState (ACLChecklist::NullState::Instance());
     } else {
+	checklist->asyncInProgress(true);
 	checklist->dst_addr = ia->in_addrs[0];
 	fqdncache_nbgethostbyaddr(checklist->dst_addr,
 				  LookupDone, checklist);

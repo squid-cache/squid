@@ -39,7 +39,7 @@
 #include "ACL.h"
 #include "ACLData.h"
 
-class ACLUserData : public ACLData {
+class ACLUserData : public ACLData<char const *> {
   public:
     void *operator new(size_t);
     void operator delete(void *);
@@ -49,7 +49,7 @@ class ACLUserData : public ACLData {
     bool match(char const *user);
     wordlist *dump();
     void parse();
-    virtual ACLData *clone() const;
+    virtual ACLData<char const *> *clone() const;
     
     SplayNode<char *> *names;
     struct {

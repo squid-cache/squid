@@ -54,7 +54,7 @@ class ACLIdent : public ACL {
     void operator delete(void *);
     virtual void deleteSelf() const;
 
-    ACLIdent(ACLData *newData, char const *);
+    ACLIdent(ACLData<char const *> *newData, char const *);
     ACLIdent (ACLIdent const &old);
     ACLIdent & operator= (ACLIdent const &rhs);
     ~ACLIdent();
@@ -73,7 +73,7 @@ class ACLIdent : public ACL {
     static ACLIdent UserRegistryEntry_;
     static Prototype RegexRegistryProtoype;
     static ACLIdent RegexRegistryEntry_;
-    ACLData *data;
+    ACLData<char const *> *data;
     char const *type_;
 };
 

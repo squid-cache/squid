@@ -69,7 +69,7 @@ ACLIdent::~ACLIdent()
     data->deleteSelf();
 }
 
-ACLIdent::ACLIdent(ACLData *newData, char const *newType) : data (newData), type_ (newType) {}
+ACLIdent::ACLIdent(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}
 ACLIdent::ACLIdent (ACLIdent const &old) : data (old.data->clone()), type_ (old.type_)
 {
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDomainData.h,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLDomainData.h,v 1.2 2003/02/17 07:01:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,7 +39,7 @@
 #include "ACL.h"
 #include "ACLData.h"
 
-class ACLDomainData : public ACLData {
+class ACLDomainData : public ACLData<char const *> {
   public:
     void *operator new(size_t);
     void operator delete(void *);
@@ -49,7 +49,7 @@ class ACLDomainData : public ACLData {
     bool match(char const *);
     wordlist *dump();
     void parse();
-    virtual ACLData *clone() const;
+    virtual ACLData<char const *> *clone() const;
     
     SplayNode<char *> *domains;
   private:
