@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.33 1996/07/18 20:27:04 wessels Exp $
+ * $Id: ipcache.cc,v 1.34 1996/07/19 17:34:45 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -491,7 +491,7 @@ static void ipcache_add(name, i, hp, cached)
 	while ((addr_count < 255) && *(hp->h_addr_list + addr_count))
 	    ++addr_count;
 
-	i->addr_count = addr_count;
+	i->addr_count = (unsigned char) addr_count;
 
 	/* count for Alias */
 	alias_count = 0;
@@ -499,7 +499,7 @@ static void ipcache_add(name, i, hp, cached)
 	    while ((alias_count < 255) && hp->h_aliases[alias_count])
 		++alias_count;
 
-	i->alias_count = alias_count;
+	i->alias_count = (unsigned char) alias_count;
 
 	/* copy ip addresses information */
 	i->entry.h_addr_list = xcalloc(addr_count + 1, sizeof(char *));
@@ -726,7 +726,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 		    token = strtok(tmp_ptr, w_space);
 		    tmp_ptr = NULL;
 		    token = strtok(tmp_ptr, w_space);
-		    i->addr_count = ipcount = atoi(token);
+		    ipcount = atoi(token);
+		    i->addr_count = (unsigned char) ipcount;
 
 		    if (ipcount == 0) {
 			i->entry.h_addr_list = NULL;
@@ -762,7 +763,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 		    token = strtok(tmp_ptr, w_space);
 		    tmp_ptr = NULL;
 		    token = strtok(tmp_ptr, w_space);
-		    i->alias_count = aliascount = atoi(token);
+		    aliascount = atoi(token);
+		    i->alias_count = (unsigned char) aliascount;
 
 		    if (aliascount == 0) {
 			i->entry.h_aliases = NULL;
@@ -1247,7 +1249,7 @@ void stat_ipcache_get(sentry)
 	    i->name,
 	    ipcache_status_char[i->status],
 	    ttl,
-	    i->addr_count);
+	    (int) i->addr_count);
 	for (k = 0; k < (int) i->addr_count; k++) {
 	    struct in_addr addr;
 	    xmemcpy(&addr, *(i->entry.h_addr_list + k), i->entry.h_length);

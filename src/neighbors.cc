@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.31 1996/07/18 20:27:06 wessels Exp $
+ * $Id: neighbors.cc,v 1.32 1996/07/19 17:35:23 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -112,7 +112,6 @@ static neighbors *friends = NULL;
 static struct neighbor_cf *Neighbor_cf = NULL;
 static icp_common_t echo_hdr;
 static u_short echo_port;
-static struct in_addr any_addr;
 
 FILE *cache_hierarchy_log = NULL;
 
@@ -622,7 +621,7 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 
     debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n",
 	(int) header->opcode, url);
-    if (header->opcode > ICP_OP_END)
+    if ((icp_opcode) header->opcode > ICP_OP_END)
 	return;
     if (mem == NULL) {
 	debug(15, 1, "Ignoring ICP reply for missing mem_obj: %s\n", url);
