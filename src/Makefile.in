@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.5 1996/03/19 01:28:29 wessels Exp $
+#  $Id: Makefile.in,v 1.6 1996/03/22 17:46:19 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -81,6 +81,14 @@ ftpget: ftpget.o
 	$(CC) -o $@ $(LDFLAGS) ftpget.o $(LIBS)
 
 install: all
+	@if test ! -d $(prefix); then \
+		echo "mkdir $(prefix)"; \
+		mkdir $(prefix); \
+	fi
+	@if test ! -d $(INSTALL_BINDIR); then \
+		echo "mkdir $(INSTALL_BINDIR)"; \
+		mkdir $(INSTALL_BINDIR); \
+	fi
 	@for f in $(PROGS); do \
 		echo $(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
 		$(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
@@ -89,6 +97,10 @@ install: all
 		echo $(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
 		$(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
 	done
+	@if test ! -d $(INSTALL_CGIDIR); then \
+		echo "mkdir $(INSTALL_CGIDIR)"; \
+		mkdir $(INSTALL_CGIDIR); \
+	fi
 	@for f in $(CGIPROGS); do \
 		echo $(INSTALL_BIN) $$f $(INSTALL_CGIDIR); \
 		$(INSTALL_BIN) $$f $(INSTALL_CGIDIR); \
