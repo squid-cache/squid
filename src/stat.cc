@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.381 2003/09/29 10:24:01 robertc Exp $
+ * $Id: stat.cc,v 1.382 2004/09/25 15:48:16 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -38,6 +38,9 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "mem_node.h"
+#if DELAY_POOLS
+#include "DelayId.h"
+#endif
 #include "client_side_request.h"
 #include "client_side.h"
 
@@ -1629,6 +1632,11 @@ statClientRequests(StoreEntry * s)
                           (long int) http->start.tv_sec,
                           (int) http->start.tv_usec,
                           tvSubDsec(http->start, current_time));
+#if DELAY_POOLS
+
+        storeAppendPrintf(s, "delay_pool %d\n", DelayId::DelayClient(http) >> 16);
+#endif
+
         storeAppendPrintf(s, "\n");
     }
 }
