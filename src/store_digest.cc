@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.3 1998/04/06 22:32:21 wessels Exp $
+ * $Id: store_digest.cc,v 1.4 1998/04/07 23:26:46 rousskov Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -32,11 +32,6 @@
 
 /* local types */
 
-/* digest control block */
-typedef struct {
-    char reserved[128];
-} StoreDigestCBlock;
-
 typedef struct {
     StoreDigestCBlock cblock;
     int rebuild_lock;		/* bucket number */
@@ -52,8 +47,6 @@ typedef struct {
  * local constants (many of these are good candidates for SquidConfig
  */
 
-/* fake url suffix */
-static const char *StoreDigestUrl = "cache_digest";
 /* how often we want to rebuild the digest, seconds */
 static const time_t StoreDigestRebuildPeriod = 60 * 60;
 /* how often we want to rewrite the digest, seconds */
@@ -62,8 +55,8 @@ static const time_t StoreDigestRewritePeriod = 60 * 60;
 static const int StoreDigestSwapOutChunkSize = SM_PAGE_SIZE;
 /* portion (0,1] of a hash table to be rescanned at a time */
 static const double StoreDigestRebuildChunkPercent = 0.10;
-/* local vars */
 
+/* local vars */
 static StoreDigestState sd_state;
 
 /* local prototypes */
@@ -99,7 +92,6 @@ storeDigestInit()
 	storeDigestReport, 0);
 }
 
-/* you probably want to call this before storeDigestRewriteContinue() */
 void
 storeDigestScheduleRebuild()
 {
@@ -108,8 +100,14 @@ storeDigestScheduleRebuild()
 
 /* externally initiated rewrite (inits store entry and pauses) */
 void
-storeDigestRewriteStart(const char *initiator)
-{
+storeDigestRewriteStart() {
+    eventAdd("storeDigestRewrite", storeDigestRewrite, NULL, 0);
+}
+
+#if OLD_CODE
+/* externally initiated rewrite (inits store entry and pauses) */
+void
+storeDigestRewriteStart(const char *initiator) {
     assert(initiator);
     assert(!sd_state.other_lock);
     sd_state.other_lock = initiator;
@@ -126,6 +124,7 @@ storeDigestRewriteContinue(const char *initiator)
     sd_state.other_lock = NULL;
     storeDigestSwapOutStep(sd_state.rewrite_lock);
 }
+#endif /* OLD_CODE */
 
 /* rebuilds digest from scratch */
 static void
@@ -192,7 +191,7 @@ storeDigestRewrite(void *datanotused)
 {
     int flags;
     StoreEntry *e;
-    char url[MAX_URL];
+    char *url;
 
     assert(store_digest);
     /* prevent overlapping if rewrite schedule is too tight */
@@ -202,8 +201,7 @@ storeDigestRewrite(void *datanotused)
     }
     debug(71, 2) ("storeDigestRewrite: start rewrite #%d\n", sd_state.rewrite_count + 1);
     /* make new store entry */
-    snprintf(url, sizeof(url), "http://%s:%d/squid-internal/%s",
-	getMyHostname(), Config.Port.http->i, StoreDigestUrl);
+    url = urlInternal("", StoreDigestUrlPath);
     flags = 0;
     EBIT_SET(flags, REQ_CACHABLE);
     e = storeCreateEntry(url, url, flags, METHOD_GET);
@@ -211,13 +209,17 @@ storeDigestRewrite(void *datanotused)
     sd_state.rewrite_lock = e;
     sd_state.rewrite_offset = 0;
     EBIT_SET(e->flag, ENTRY_SPECIAL);
-    /* this will purge old digest entry if any */
+    /* setting public key will purge old digest entry if any */
     storeSetPublicKey(e);
+    debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText(e->key));
+    /* we never unlink it! @?@ @?@ */
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
+    /* fake reply */
     httpReplyReset(e->mem_obj->reply);
     httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, "Cache Digest OK",
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + StoreDigestRewritePeriod);
+    debug(71, 3) ("storeDigestRewrite: reply.expires = %s\n", mkrfc1123(e->mem_obj->reply->expires));
     storeBuffer(e);
     httpReplySwapOut(e->mem_obj->reply, e);
     storeDigestCBlockSwapOut(e);
@@ -233,14 +235,14 @@ storeDigestRewrite(void *datanotused)
 static void
 storeDigestRewriteFinish(StoreEntry * e)
 {
-    assert(e);
     assert(e == sd_state.rewrite_lock);
     storeComplete(e);
     storeTimestampsSet(e);
+    debug(71, 2) ("storeDigestRewriteFinish: digest expires on %s (%d)\n",
+	mkrfc1123(e->expires), e->expires);
     storeUnlockObject(e);
-    sd_state.rewrite_lock = NULL;
+    sd_state.rewrite_lock = e = NULL;
     sd_state.rewrite_count++;
-    debug(71, 2) ("storeDigestRewriteFinish: done.\n");
     eventAdd("storeDigestRewrite", storeDigestRewrite, NULL, StoreDigestRewritePeriod);
 }
 
@@ -274,12 +276,14 @@ storeDigestSwapOutStep(StoreEntry * e)
 static void
 storeDigestCBlockSwapOut(StoreEntry * e)
 {
-    /*
-     * when we actually start using control block, do not forget to convert to
-     * network byte order if needed
-     */
     memset(&sd_state.cblock, 0, sizeof(sd_state.cblock));
-    storeAppend(e, (char *) &sd_state.cblock, sizeof(sd_state.cblock));
+    sd_state.cblock.ver.current = htons(CacheDigestVer.current);
+    sd_state.cblock.ver.required = htons(CacheDigestVer.required);
+    sd_state.cblock.capacity = htonl(store_digest->capacity);
+    sd_state.cblock.count = htonl(store_digest->count);
+    sd_state.cblock.del_count = htonl(store_digest->del_count);
+    sd_state.cblock.mask_size = htonl(store_digest->mask_size);
+    storeAppend(e, (char*) &sd_state.cblock, sizeof(sd_state.cblock));
 }
 
 void
