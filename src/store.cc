@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.192 1997/01/15 18:41:49 wessels Exp $
+ * $Id: store.cc,v 1.193 1997/01/18 06:19:57 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -131,6 +131,10 @@
 
 #include "squid.h"		/* goes first */
 
+#if HAVE_MATH_H
+#include <math.h>
+#endif
+
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 #define MAX_SWAP_FILE		(1<<21)
 #define SWAP_BUF		DISK_PAGE_SIZE
@@ -241,9 +245,7 @@ static void storeSetPrivateKey _PARAMS((StoreEntry *));
 static void storeDoRebuildFromDisk _PARAMS((void *data));
 static void storeRebuiltFromDisk _PARAMS((struct storeRebuild_data * data));
 static unsigned int getKeyCounter _PARAMS((void));
-#ifdef AUTO_ADJUST_REF_AGE
-static void storeAdjustReferenceAge _PARAMS((void));
-#endif
+static time_t storeExpiredReferenceAge _PARAMS((void));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -261,8 +263,8 @@ static int store_pages_low = 0;
 /* current file name, swap file, use number as a filename */
 static int swapfileno = 0;
 static int store_swap_size = 0;	/* kilobytes !! */
-static unsigned long store_swap_high = 0;
-static unsigned long store_swap_low = 0;
+static int store_swap_high = 0;
+static int store_swap_low = 0;
 static int swaplog_fd = -1;
 static int swaplog_lock = 0;
 static int storelog_fd = -1;
@@ -2407,6 +2409,9 @@ storeInitHashValues(void)
     else
 	store_buckets = 65357, store_maintain_rate = 1;
     store_maintain_buckets = 1;
+#ifdef ONE_BUCKET_PER_SEC
+    store_maintain_rate = 1;
+#endif
     debug(20, 1, "Using %d Store buckets, maintain %d bucket%s every %d second%s\n",
 	store_buckets,
 	store_maintain_buckets,
@@ -2529,7 +2534,7 @@ storeMaintainSwapSpace(void *unused)
     hash_link *link_ptr = NULL, *next = NULL;
     StoreEntry *e = NULL;
     int rm_obj = 0;
-    int scan_buckets;
+    int scan_buckets = 0;
     int scan_obj = 0;
 
     eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
@@ -2537,14 +2542,13 @@ storeMaintainSwapSpace(void *unused)
     if (store_rebuilding == STORE_REBUILDING_FAST)
 	return;
 
-#ifdef AUTO_ADJUST_REF_AGE
-    storeAdjustReferenceAge();
-#endif
-
     /* Purges expired objects, check one bucket on each calling */
     if (squid_curtime - last_time >= store_maintain_rate) {
-	for (scan_buckets = store_maintain_buckets; scan_buckets > 0;
-	    scan_buckets--) {
+	for (;;) {
+	    if (scan_obj && scan_buckets >= store_maintain_buckets)
+		break;
+	    if (++scan_buckets > 100)
+		break;
 	    last_time = squid_curtime;
 	    if (bucket >= store_buckets) {
 		bucket = 0;
@@ -2763,44 +2767,40 @@ storeCheckPurgeMem(const StoreEntry * e)
 static int
 storeCheckExpired(const StoreEntry * e)
 {
+    time_t max_age = storeExpiredReferenceAge();
     if (storeEntryLocked(e))
 	return 0;
     if (BIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
-    if (Config.referenceAge && squid_curtime - e->lastref > Config.referenceAge)
+    if (max_age && squid_curtime - e->lastref > max_age)
 	return 1;
     return 0;
 }
 
-#ifdef AUTO_ADJUST_REF_AGE
-static void
-storeAdjustReferenceAge(void)
+/* gnuplot> plot 2000**((x)+1)*60  */
+static time_t
+storeExpiredReferenceAge(void)
 {
-    static time_t delta = 1;
-    static int last_above = 0;
-    int above;
-    above = store_swap_size > ((store_swap_high + store_swap_low) / 2) ? 1 : 0;
-    if (last_above == above) {
-	if (delta < (1 << 25))	/* 388 days */
-	    delta <<= 1;
-    } else {
-	if (delta > 1)
-	    delta >>= 1;
-    }
-    if (above)
-	Config.referenceAge -= delta;
-    else
-	Config.referenceAge += delta;
-    if (Config.referenceAge > (1 << 25))
-	Config.referenceAge = (1 << 25);
-    else if (Config.referenceAge < 1)
-	Config.referenceAge = 1;
-    debug(20, 0, "storeAdjustReferenceAge: delta=%d, referenceAge=%d\n",
-	(int) delta, (int) Config.referenceAge);
-    last_above = above;
+    int half;
+    double x;
+    double z;
+    time_t age;
+    if (Config.referenceAge > -1)
+	return Config.referenceAge;
+    half = (store_swap_high >> 1) + (store_swap_low >> 1);
+    x = (double) (half - store_swap_size) / (store_swap_high - half);
+    if (x < -1.0)
+	x = -1.0;
+    else if (x > 1.0)
+	x = 1.0;
+    z = pow(724.0,(x + 1.0));	/* minutes [1:525600] */
+    age = (time_t) (z * 60.0);
+    if (age < 60)
+	age = 60;
+    else if (age > 31536000)
+	age = 31536000;
+    return age;
 }
-
-#endif
 
 static const char *
 storeDescribeStatus(const StoreEntry * e)
