@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.7 1998/06/09 22:58:01 wessels Exp $
+ * $Id: forward.cc,v 1.8 1998/06/09 23:34:26 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -48,7 +48,6 @@ fwdStateFree(FwdState * fwdState)
     FwdServer *n = fwdState->servers;
     int sfd;
     static int loop_detect = 0;
-    assert(cbdataValid(fwdState));
     assert(loop_detect++ == 0);
     while ((s = n)) {
 	n = s->next;
@@ -88,10 +87,6 @@ fwdConnectDone(int server_fd, int status, void *data)
 {
     FwdState *fwdState = data;
     ErrorState *err;
-    int valid = cbdataValid(fwdState);
-    cbdataUnlock(fwdState);
-    if (!valid)
-	return;
     assert(fwdState->server_fd == server_fd);
     if (status == COMM_ERR_DNS) {
 	debug(17, 4) ("fwdConnectDone: Unknown host: %s\n",
@@ -147,7 +142,6 @@ fwdConnectStart(FwdState * fwdState)
     assert(srv);
     assert(fwdState->server_fd == -1);
     debug(17, 3) ("fwdConnectStart: %s\n", url);
-    cbdataLock(fwdState);
     if ((fd = pconnPop(srv->host, srv->port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
         fwdState->server_fd = fd;
@@ -167,7 +161,6 @@ fwdConnectStart(FwdState * fwdState)
 	err->xerrno = errno;
 	err->request = requestLink(fwdState->request);
 	errorAppendEntry(fwdState->entry, err);
-	cbdataUnlock(fwdState);
 	fwdStateFree(fwdState);
 	return;
     }
@@ -189,10 +182,6 @@ fwdStartComplete(peer * p, void *data)
 {
     FwdState *fwdState = data;
     FwdServer *s;
-    int valid = cbdataValid(fwdState);
-    cbdataUnlock(fwdState);
-    if (!valid)
-	return;
     s = xcalloc(1, sizeof(*s));
     if (NULL != p) {
 	s->host = xstrdup(p->host);
@@ -211,10 +200,6 @@ fwdStartFail(peer * peernotused, void *data)
 {
     FwdState *fwdState = data;
     ErrorState *err;
-    int valid = cbdataValid(fwdState);
-    cbdataUnlock(fwdState);
-    if (!valid)
-	return;
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(fwdState->request);
     errorAppendEntry(fwdState->entry, err);
@@ -304,7 +289,6 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     default:
 	break;
     }
-    cbdataLock(fwdState);
     storeRegisterAbort(entry, fwdAbort, fwdState);
     peerSelect(request,
 	entry,
