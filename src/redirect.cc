@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.57 1998/03/03 00:31:12 rousskov Exp $
+ * $Id: redirect.cc,v 1.58 1998/03/31 04:09:51 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -105,7 +105,7 @@ redirectHandleRead(int fd, void *data)
 	memFree(MEM_8K_BUF, redirector->inbuf);
 	redirector->inbuf = NULL;
 	comm_close(fd);
-	if (--NRedirectorsOpen == 0 && !shutdown_pending && !reconfigure_pending)
+	if (--NRedirectorsOpen == 0 && !shutdown_pending)
 	    fatal_dump("All redirectors have exited!");
 	return;
     }
