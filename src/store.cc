@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.281 1997/08/25 02:17:49 wessels Exp $
+ * $Id: store.cc,v 1.282 1997/08/25 05:29:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2290,8 +2290,6 @@ storeInit(void)
 	storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL);
     if (storelog_fd < 0)
 	debug(20, 1) ("Store logging disabled\n");
-    if (Config.cacheSwap.n_configured < 1)
-	fatal("No cache_dir's specified in config file");
     storeVerifySwapDirs();
     storeDirOpenSwapLogs();
     if (!opt_zap_disk_store)
