@@ -1,10 +1,10 @@
-.TH pam_auth 8 "7 January 2002" "Squid PAM Auth"
+.TH pam_auth 8 "15 May 2002" "Squid PAM Auth"
 .
 .SH NAME
 pam_auth - Squid PAM authentication helper
 .
 .SH SYNOPSIS
-squid_pam_auth [-n "service name"] [-t TTL] [-1]
+squid_pam_auth [-n "service name"] [-t TTL] [-o] [-1]
 .
 .SH DESCRIPTION
 This helper allows Squid to connect to a mostly any available PAM
@@ -21,6 +21,11 @@ Unless the -1 option is used, this specified for how long
 the connection to the PAM database should be kept open and
 reused for new logins. Defaults to 60 seconds.
 .
+.TP
+.BI "-o"
+Do not perform the PAM account management group (account
+expiration etc)
+
 .TP
 .BI "-1"
 Specifies "One shot" mode, where a new PAM connection will
