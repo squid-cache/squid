@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.275 2002/08/13 05:11:26 wessels Exp $
+# $Id: cf.data.pre,v 1.276 2002/08/21 09:12:44 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1519,6 +1519,7 @@ DOC_START
 	  %DST		Requested host
 	  %PROTO	Requested protocol
 	  %PORT		Requested port
+	  %PATH		Requested URL path
 	  %METHOD	Request method
 	  %{Header}	HTTP request header
 	  %{Hdr:member}	HTTP request header list member
