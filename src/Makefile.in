@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.49 1996/10/17 11:09:39 wessels Exp $
+#  $Id: Makefile.in,v 1.50 1996/10/22 03:36:47 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -35,6 +35,7 @@ DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 DEFAULT_PINGER		= $(libexecdir)/pinger
 
 CC		= @CC@
+MAKEDEPEND	= @MAKEDEPEND@
 INSTALL		= @INSTALL@
 INSTALL_BIN 	= @INSTALL_PROGRAM@
 INSTALL_FILE 	= @INSTALL_DATA@
@@ -59,16 +60,15 @@ CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PROGS           = squid client
 UTILS           = dnsserver ftpget pinger
 CGIPROGS	= cachemgr.cgi
-OBJS	 	= acl.o async_io.o background.o cache_cf.o \
-		client_db.o errorpage.o \
-		client_side.o comm.o debug.o disk.o dns.o \
-		fdstat.o filemap.o ftp.o fqdncache.o gopher.o \
-		hash.o http.o icmp.o icp.o ident.o ipcache.o \
-		main.o mime.o neighbors.o net_db.o objcache.o \
-		proto.o redirect.o send-announce.o ssl.o \
-		stack.o stat.o stmem.o \
-		store.o store_clean.o storetoString.o tools.o ttl.o \
-		url.o wais.o $(XTRA_OBJS)
+OBJS	 	= \
+		acl.o async_io.o background.o cache_cf.o client_db.o \
+		client_side.o comm.o debug.o disk.o dns.o errorpage.o \
+		fdstat.o filemap.o fqdncache.o ftp.o gopher.o hash.o \
+		http.o icmp.o icp.o ident.o ipcache.o main.o mime.o \
+		neighbors.o net_db.o objcache.o proto.o redirect.o \
+		send-announce.o ssl.o stack.o stat.o stmem.o store.o \
+		store_clean.o storetoString.o tools.o ttl.o url.o \
+		wais.o $(XTRA_OBJS)
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
@@ -81,6 +81,8 @@ DEFAULTS        = \
 	-DDEFAULT_PINGER=\"$(DEFAULT_PINGER)\"
 
 all:    squid.conf $(PROGS) $(UTILS) $(CGIPROGS)
+
+$(OBJS): ../include/version.h
 
 squid:	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(CRYPT_LIB) $(LIBS) $(AIO_LIBS)
@@ -198,3 +200,6 @@ realclean:	clean
 
 tags:
 	ctags *.[ch] ../include/*.h ../lib/*.[ch]
+
+depend:
+	$(MAKEDEPEND) -I../include -I. -fMakefile *.c
