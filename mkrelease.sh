@@ -2,7 +2,7 @@
 if [ $# -ne 1 -a $# -ne 2 ]; then
 	echo "Usage: $0 revision [destination]"
 	exit 1
-fi
+i
 package=squid
 module=squid3
 rev=`echo $1 | sed -e "s/^${package}-//"`
@@ -12,7 +12,7 @@ startdir=$PWD/
 dst=${2:-$PWD}/
 RELEASE_TIME=`date +%s`
 
-tmpdir=$PWD/${name}-mkrelease
+tmpdir=${TMPDIR:-${PWD}}/${name}-mkrelease
 
 CVSROOT=${CVSROOT:-/server/cvs-server/squid}
 export CVSROOT
