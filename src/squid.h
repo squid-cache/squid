@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.196 1999/12/30 17:36:50 wessels Exp $
+ * $Id: squid.h,v 1.197 2000/01/03 19:39:16 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -80,6 +80,8 @@
 #endif
 
 #if PURIFY
+#define assert(EX) ((void)0)
+#elif defined(NODEBUG)
 #define assert(EX) ((void)0)
 #elif STDC_HEADERS
 #define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
