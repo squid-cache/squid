@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.16 2000/10/06 05:00:24 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.17 2000/11/27 00:03:33 adrian Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -184,6 +184,7 @@ storeDiskdClose(SwapDir * SD, storeIOState * sio)
 	debug(50, 1) ("storeDiskdSend CLOSE: %s\n", xstrerror());
 	storeDiskdIOCallback(sio, DISK_ERROR);
     }
+    diskdstate->flags.close_request = 1;
     diskd_stats.close.ops++;
 }
 
@@ -194,6 +195,8 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     int shm_offset;
     char *rbuf;
     diskdstate_t *diskdstate = sio->fsstate;
+    debug(81, 3) ("storeDiskdRead: dirno %d, fileno %08X\n", sio->swap_dirn, sio->swap_filen);
+    assert(!diskdstate->flags.close_request);
     if (!cbdataValid(sio))
 	return;
     if (diskdstate->flags.reading) {
@@ -206,7 +209,6 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
     sio->read.callback_data = callback_data;
     diskdstate->read_buf = buf;	/* the one passed from above */
     cbdataLock(sio->read.callback_data);
-    debug(81, 3) ("storeDiskdRead: dirno %d, fileno %08X\n", sio->swap_dirn, sio->swap_filen);
     sio->offset = offset;
     diskdstate->flags.reading = 1;
     rbuf = storeDiskdShmGet(SD, &shm_offset);
@@ -234,6 +236,7 @@ storeDiskdWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t 
     int shm_offset;
     diskdstate_t *diskdstate = sio->fsstate;
     debug(81, 3) ("storeDiskdWrite: dirno %d, fileno %08X\n", SD->index, sio->swap_filen);
+    assert(!diskdstate->flags.close_request);
     if (!cbdataValid(sio)) {
 	free_func(buf);
 	return;
@@ -355,14 +358,22 @@ storeDiskdReadDone(diomsg * M)
     diskd_stats.read.success++;
     sbuf = diskdinfo->shm.buf + M->shm_offset;
     len = M->status;
-    xmemcpy(their_buf, sbuf, len);	/* yucky copy */
     sio->offset += len;
     assert(callback);
     assert(their_data);
     sio->read.callback = NULL;
     sio->read.callback_data = NULL;
-    if (valid)
+    if (valid) {
+        assert(!diskdstate->flags.close_request);
+        /*
+         * Only copy the data if the callback is still valid,
+         * if it isn't valid then the request should have been
+         * aborted.
+         *   -- adrian
+         */
+        xmemcpy(their_buf, sbuf, len);	/* yucky copy */
 	callback(their_data, their_buf, len);
+    }
 }
 
 static void
