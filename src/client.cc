@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.107 2004/04/03 15:10:56 hno Exp $
+ * $Id: client.cc,v 1.108 2005/01/06 13:16:39 serassio Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -427,7 +427,7 @@ main(int argc, char *argv[])
 
         /* Send the HTTP request */
 #ifdef _SQUID_MSWIN_
-        bytesWritten = send(conn, msg, strlen(msg), 0);
+        bytesWritten = send(conn, (const void *) msg, strlen(msg), 0);
 
 #else
 
@@ -471,7 +471,7 @@ main(int argc, char *argv[])
 #ifdef _SQUID_MSWIN_
         setmode(1, O_BINARY);
 
-        while ((len = recv(conn, buf, sizeof(buf), 0)) > 0) {
+        while ((len = recv(conn, (void *) buf, sizeof(buf), 0)) > 0) {
 #else
 
         while ((len = myread(conn, buf, sizeof(buf))) > 0) {

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.35 2004/12/24 01:03:39 hno Exp $
+ * $Id: auth_basic.cc,v 1.36 2005/01/06 13:16:39 serassio Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -400,12 +400,14 @@ BasicUser::extractUsername()
 
     debug(29, 9) ("authenticateBasicDecodeAuth: cleartext = '%s'\n", cleartext);
 
-    username(xstrndup(cleartext, USER_IDENT_SZ));
+    char * tempusername = xstrndup(cleartext, USER_IDENT_SZ);
     xfree(cleartext);
     /* terminate the username string */
 
-    if ((cleartext = strchr(username(), ':')) != NULL)
+    if ((cleartext = strchr(tempusername, ':')) != NULL)
         *(cleartext)++ = '\0';
+
+    username (tempusername);
 
     if (!basicConfig.casesensitive)
         Tolower((char *)username());

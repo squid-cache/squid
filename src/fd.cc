@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.51 2004/12/27 10:25:32 robertc Exp $
+ * $Id: fd.cc,v 1.52 2005/01/06 13:16:39 serassio Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -111,7 +111,7 @@ fd_close(int fd)
 int
 socket_read_method(int fd, char *buf, int len)
 {
-    return (recv(fd, buf, len, 0));
+    return (recv(fd, (void *) buf, len, 0));
 }
 
 int
@@ -123,7 +123,7 @@ file_read_method(int fd, char *buf, int len)
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    return (send(fd, buf, len, 0));
+    return (send(fd, (const void *) buf, len, 0));
 }
 
 int

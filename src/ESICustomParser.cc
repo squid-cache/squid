@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESICustomParser.cc,v 1.5 2005/01/06 13:16:38 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -113,7 +113,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
 
         case ESITAG: {
                 ++openESITags;
-                char *tagEnd = strchr(tag, '>');
+                char *tagEnd = strchr(const_cast<char *>(tag), '>');
 
                 if (!tagEnd) {
                     error = "Could not find end ('>') of tag";
@@ -128,7 +128,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
                 if (*(tagEnd - 1) == '/')
                     --openESITags;
 
-                char * endofName = strpbrk(tag, w_space);
+                char * endofName = strpbrk(const_cast<char *>(tag), w_space);
 
                 if (endofName > tagEnd)
                     endofName = const_cast<char *>(tagEnd);
@@ -139,7 +139,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
 
                 Vector<char *>attributes;
 
-                char *attribute = endofName + 1;
+                char *attribute = const_cast<char *>(endofName + 1);
 
                 while (attribute > tag && attribute < tagEnd) {
                     /* leading spaces */
@@ -213,7 +213,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
                 if (tagEnd - tag > (ssize_t)remainingCount)
                     return false;
 
-                char * endofName = strpbrk(tag, w_space);
+                char * endofName = strpbrk(const_cast<char *>(tag), w_space);
 
                 if (endofName > tagEnd)
                     endofName = const_cast<char *>(tagEnd);
@@ -240,7 +240,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
                 /* Comments must not be nested, without CDATA
                  * and we don't support CDATA
                  */
-                char *commentEnd = strstr (tag, "-->");
+                char *commentEnd = strstr (const_cast<char *>(tag), "-->");
 
                 if (!commentEnd) {
                     error = "missing end of comment";

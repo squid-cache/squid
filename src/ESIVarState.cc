@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIVarState.cc,v 1.4 2005/01/06 13:16:39 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -239,8 +239,8 @@ ESIVariableQuery::ESIVariableQuery(char const *uri) : query (NULL), query_sz (0)
         n = 0;
 
         while (query_pos) {
-            char *next = strchr (query_pos, '&');
-            char *div = strchr (query_pos, '=');
+            char const *next = strchr (query_pos, '&');
+            char const *div = strchr (query_pos, '=');
 
             if (next)
                 ++next;

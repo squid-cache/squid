@@ -1,6 +1,6 @@
 
 /*
- * $Id: int.cc,v 1.2 2003/02/21 22:50:09 robertc Exp $
+ * $Id: int.cc,v 1.3 2005/01/06 13:16:39 serassio Exp $
  *
  * DEBUG: section 21    Integer functions
  * AUTHOR: Harvest Derived
@@ -37,7 +37,7 @@
 int
 isPowTen(int count)
 {
-    double x = log(count) / log(10.0);
+    double x = log(static_cast<double>(count)) / log(10.0);
 
     if (0.0 != x - (double) (int) x)
         return 0;

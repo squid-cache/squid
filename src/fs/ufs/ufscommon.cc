@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.3 2005/01/03 16:08:27 robertc Exp $
+ * $Id: ufscommon.cc,v 1.4 2005/01/06 13:16:39 serassio Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -400,7 +400,7 @@ RebuildState::rebuildFromSwapLog()
 
             continue;
         } else {
-            x = ::log(++counts.bad_log_op) / ::log(10.0);
+            x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
 
             if (0.0 == x - (double) (int) x)
                 debug(47, 1) ("WARNING: %d invalid swap log entries found\n",
