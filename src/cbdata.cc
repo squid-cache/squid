@@ -58,7 +58,8 @@ cbdataFree(void *p)
     assert(c != NULL);
     c->valid = 0;
     if (c->locks) {
-	debug(45, 3) ("cbdataFree: %p has locks, not freeing\n", p);
+	debug(45, 3) ("cbdataFree: %p has %d locks, not freeing\n",
+		p, c->locks);
 	return;
     }
     hash_remove_link(htable, (hash_link *) c);
@@ -90,10 +91,11 @@ cbdataUnlock(void *p)
     assert(c != NULL);
     assert(c->locks > 0);
     c->locks--;
-    if (c->valid)
+    if (c->valid || c->locks)
 	return;
     hash_remove_link(htable, (hash_link *) c);
     xfree(c);
+    debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
     xfree(p);
 }
 
