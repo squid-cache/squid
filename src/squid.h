@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.132 1997/10/25 17:22:57 wessels Exp $
+ * $Id: squid.h,v 1.133 1997/11/03 22:43:20 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -234,19 +234,6 @@
 #define SA_RESETHAND SA_ONESHOT
 #endif
 
-/* 32 bit integer compatability hack */
-#if SIZEOF_INT == 4
-typedef int num32;
-typedef unsigned int u_num32;
-#elif SIZEOF_LONG == 4
-typedef long num32;
-typedef unsigned long u_num32;
-#else
-typedef long num32;		/* assume that long's are 32bit */
-typedef unsigned long u_num32;
-#endif
-#define NUM32LEN sizeof(num32)	/* this should always be 4 */
-
 #if PURIFY
 #define LOCAL_ARRAY(type,name,size) \
         static type *local_##name=NULL; \
@@ -260,6 +247,16 @@ typedef unsigned long u_num32;
 #include "GNUregex.h"
 #elif HAVE_REGEX_H
 #include <regex.h>
+#endif
+
+#if STORE_KEY_SHA
+#undef STORE_KEY_URL
+#include "sha.h"
+#else
+#undef STORE_KEY_SHA
+#define STORE_KEY_URL 1
+#define storeKeyHashCmp urlcmp
+#define storeKeyHashHash hash4
 #endif
 
 #include "defines.h"

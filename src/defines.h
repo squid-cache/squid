@@ -168,11 +168,6 @@
 #define EBIT_CLR(flag, bit) 	((flag) &= ~((1<<bit)))
 #define EBIT_TEST(flag, bit) 	((flag) & ((1<<bit)))
 
-/* 
- * KEY_URL              If e->key and e->url point to the same location
- * KEY_CHANGE           If the key for this URL has been changed
- */
-
 #define ENTRY_VALIDATED		(1<<16)
 #define ENTRY_UNUSED15		(1<<15)
 #define ENTRY_NEGCACHED		(1<<14)
@@ -180,8 +175,8 @@
 #define KEY_PRIVATE 		(1<<12)		/* is the key currently private? */
 #define ENTRY_DISPATCHED 	(1<<11)
 #define ENTRY_UNUSED10 		(1<<10)
-#define KEY_CHANGE 		(1<<9)
-#define KEY_URL    		(1<<8)
+#define ENTRY_UNUSED09 		(1<<9)
+#define ENTRY_UNUSED08		(1<<8)
 #define ENTRY_CACHABLE   	(1<<7)
 #define REFRESH_REQUEST   	(1<<6)
 #define RELEASE_REQUEST 	(1<<5)

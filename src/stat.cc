@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.165 1997/10/31 20:46:24 wessels Exp $
+ * $Id: stat.cc,v 1.166 1997/11/03 22:43:20 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -295,10 +295,6 @@ describeFlags(const StoreEntry * entry)
 	strcat(buf, "RF,");
     if (BIT_TEST(flags, ENTRY_CACHABLE))
 	strcat(buf, "EC,");
-    if (BIT_TEST(flags, KEY_CHANGE))
-	strcat(buf, "KC,");
-    if (BIT_TEST(flags, KEY_URL))
-	strcat(buf, "KU,");
     if (BIT_TEST(flags, ENTRY_DISPATCHED))
 	strcat(buf, "ED,");
     if (BIT_TEST(flags, KEY_PRIVATE))
@@ -341,7 +337,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
 	}
 	storeAppendPrintf(sentry, "%s %s\n",
-	    RequestMethodStr[entry->method], entry->url);
+	    RequestMethodStr[entry->method], storeUrl(entry));
 	storeAppendPrintf(sentry, "\t%s\n", describeStatuses(entry));
 	storeAppendPrintf(sentry, "\t%s\n", describeFlags(entry));
 	storeAppendPrintf(sentry, "\t%s\n", describeTimestamps(entry));
@@ -507,6 +503,7 @@ memoryAccounted(void)
 {
     return (int)
 	meta_data.store_entries * sizeof(StoreEntry) +
+	meta_data.store_keys +
 	meta_data.ipcache_count * sizeof(ipcache_entry) +
 	meta_data.fqdncache_count * sizeof(fqdncache_entry) +
 	hash_links_allocated * sizeof(hash_link) +
@@ -514,7 +511,6 @@ memoryAccounted(void)
 	disk_stats.total_pages_allocated * disk_stats.page_size +
 	request_pool.total_pages_allocated * request_pool.page_size +
 	mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
-	meta_data.url_strings +
 	meta_data.netdb_addrs * sizeof(netdbEntry) +
 	meta_data.netdb_hosts * sizeof(struct _net_db_name) +
                  meta_data.netdb_peers * sizeof(struct _net_db_peer) +
@@ -673,8 +669,8 @@ info_get(StoreEntry * sentry)
 	(int) (meta_data.store_entries * sizeof(StoreEntry) >> 10));
 
     storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
-	"URL strings",
-	meta_data.url_strings >> 10);
+	"StoreEntry Keys",
+	meta_data.store_keys >> 10);
 
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
 	"IPCacheEntry",

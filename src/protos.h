@@ -203,7 +203,7 @@ extern int hash_join(hash_table *, hash_link *);
 extern int hash_remove_link(hash_table *, hash_link *);
 
 /* searching, accessing */
-extern hash_link *hash_lookup(hash_table *, const char *);
+extern hash_link *hash_lookup(hash_table *, const void *);
 extern hash_link *hash_first(hash_table *);
 extern hash_link *hash_next(hash_table *);
 extern hash_link *hash_get_bucket(hash_table *, unsigned int);
@@ -416,7 +416,7 @@ extern void memFreeData(mem_hdr *);
 
 /* ----------------------------------------------------------------- */
 
-extern StoreEntry *storeGet(const char *);
+extern StoreEntry *storeGet(const cache_key *);
 extern StoreEntry *storeCreateEntry(const char *, const char *, int, method_t);
 extern void storeSetPublicKey(StoreEntry *);
 extern StoreEntry *storeGetFirst(void);
@@ -431,8 +431,6 @@ extern void storeSwapInStart(StoreEntry *, SIH *, void *data);
 extern int storeRelease(StoreEntry *);
 extern int storeUnlockObject(StoreEntry *);
 extern int storeUnregister(StoreEntry *, void *);
-extern const char *storeGeneratePublicKey(const char *, method_t);
-extern const char *storeGeneratePrivateKey(const char *, method_t, int);
 extern void storeClientCopy(StoreEntry * e,
     off_t seen_offset,
     off_t copy_offset,
@@ -457,11 +455,21 @@ extern void storeClientListAdd(StoreEntry *, void *);
 extern void InvokeHandlers(StoreEntry *);
 extern int storeEntryValidToSend(StoreEntry *);
 extern void storeTimestampsSet(StoreEntry *);
-extern unsigned int storeReqnum(StoreEntry * entry, method_t);
 extern time_t storeExpiredReferenceAge(void);
 extern void storeRegisterAbort(StoreEntry * e, STABH * cb, void *);
 extern void storeUnregisterAbort(StoreEntry * e);
 extern void storeMemObjectDump(MemObject * mem);
+extern const char *storeUrl(const StoreEntry *);
+
+/* storeKey stuff */
+extern const cache_key *storeKeyDup(const cache_key *);
+extern void storeKeyFree(const cache_key *);
+extern const cache_key *storeKeyScan(const char *);
+extern const char *storeKeyText(const cache_key *);
+extern const cache_key *storeKeyPublic(const char *, method_t);
+extern const cache_key *storeKeyPrivate(const char *, method_t, int);
+extern HASHHASH storeKeyHashHash;
+extern HASHCMP storeKeyHashCmp;
 
 #ifdef __STDC__
 extern void storeAppendPrintf(StoreEntry *, const char *,...);

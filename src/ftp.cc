@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.163 1997/11/03 16:19:23 wessels Exp $
+ * $Id: ftp.cc,v 1.164 1997/11/03 22:43:10 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -183,7 +183,7 @@ ftpStateFree(int fd, void *data)
     FtpStateData *ftpState = data;
     if (ftpState == NULL)
 	return;
-    debug(9, 3) ("ftpStateFree: %s\n", ftpState->entry->url);
+    debug(9, 3) ("ftpStateFree: %s\n", storeUrl(ftpState->entry));
     storeUnregisterAbort(ftpState->entry);
     storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
@@ -234,7 +234,7 @@ ftpTimeout(int fd, void *data)
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
     ErrorState *err;
-    debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url);
+    debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     if (entry->store_status == STORE_PENDING) {
 	if (entry->mem_obj->inmem_hi == 0) {
 	    err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
@@ -599,7 +599,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	end--;
     usable = end - buf;
     if (usable == 0) {
-	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", e->url);
+	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
 	return;
     }
     line = get_free_4k_page();
@@ -877,13 +877,13 @@ void
 ftpStart(request_t * request, StoreEntry * entry)
 {
     LOCAL_ARRAY(char, realm, 8192);
-    char *url = entry->url;
+    const char *url = storeUrl(entry);
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
     char *response;
     int fd;
     ErrorState *err;
     cbdataAdd(ftpState);
-    debug(9, 3) ("FtpStart: '%s'\n", entry->url);
+    debug(9, 3) ("FtpStart: '%s'\n", url);
     storeLockObject(entry);
     ftpState->entry = entry;
     ftpState->request = requestLink(request);
@@ -1341,7 +1341,7 @@ ftpSendPasv(FtpStateData * ftpState)
 	Config.Addrs.tcp_outgoing,
 	0,
 	COMM_NONBLOCKING,
-	ftpState->entry->url);
+	storeUrl(ftpState->entry));
     if (fd < 0) {
 	ftpFail(ftpState);
 	return;
@@ -1528,7 +1528,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadTransferDone\n");
     if (code != 226) {
 	debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n");
-	debug(9, 1) ("--> releasing '%s'\n", ftpState->entry->url);
+	debug(9, 1) ("--> releasing '%s'\n", storeUrl(ftpState->entry));
 	storeReleaseRequest(ftpState->entry);
     }
     ftpDataTransferDone(ftpState);
@@ -1622,7 +1622,7 @@ static void
 ftpAbort(void *data)
 {
     FtpStateData *ftpState = data;
-    debug(9, 2) ("ftpAbort: %s\n", ftpState->entry->url);
+    debug(9, 2) ("ftpAbort: %s\n", storeUrl(ftpState->entry));
     if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
 	ftpState->data.fd = -1;

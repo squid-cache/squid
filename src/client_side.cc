@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.138 1997/10/30 22:41:21 wessels Exp $
+ * $Id: client_side.cc,v 1.139 1997/11/03 22:43:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -217,14 +217,15 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
     int fd = http->conn->fd;
     StoreEntry *entry = http->entry;
     MemObject *mem = entry->mem_obj;
+    const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
-    debug(33, 3) ("icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
+    debug(33, 3) ("icpHandleIMSReply: FD %d '%s'\n", fd, url);
     put_free_4k_page(buf);
     buf = NULL;
     /* unregister this handler */
     if (size < 0 || entry->store_status == STORE_ABORTED) {
-	debug(33, 3) ("icpHandleIMSReply: ABORTED '%s'\n", entry->url);
+	debug(33, 3) ("icpHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
 	/* Its okay to send the old one anyway */
 	http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
@@ -233,8 +234,7 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
 	entry = http->entry = http->old_entry;
 	entry->refcount++;
     } else if (mem->reply->code == 0) {
-	debug(33, 3) ("icpHandleIMSReply: Incomplete headers for '%s'\n",
-	    entry->url);
+	debug(33, 3) ("icpHandleIMSReply: Incomplete headers for '%s'\n", url);
 	storeClientCopy(entry,
 	    http->out.offset + size,
 	    http->out.offset,
@@ -292,7 +292,7 @@ modifiedSince(StoreEntry * entry, request_t * request)
 {
     int object_length;
     MemObject *mem = entry->mem_obj;
-    debug(33, 3) ("modifiedSince: '%s'\n", entry->url);
+    debug(33, 3) ("modifiedSince: '%s'\n", storeUrl(entry));
     if (entry->lastmod < 0)
 	return 1;
     /* Find size of the object */
@@ -354,6 +354,7 @@ clientPurgeRequest(clientHttpRequest * http)
     char *msg;
     StoreEntry *entry;
     ErrorState *err = NULL;
+    const cache_key *k;
     debug(33, 3) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
     if (!Config.onoff.enable_purge) {
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
@@ -363,7 +364,8 @@ clientPurgeRequest(clientHttpRequest * http)
 	return;
     }
     http->log_type = LOG_TCP_MISS;
-    if ((entry = storeGet(http->url)) == NULL) {
+    k = storeKeyPublic(http->url, METHOD_GET);
+    if ((entry = storeGet(k)) == NULL) {
 	http->http_code = HTTP_NOT_FOUND;
     } else {
 	storeRelease(entry);
