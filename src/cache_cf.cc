@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.115 1996/10/24 23:18:17 wessels Exp $
+ * $Id: cache_cf.cc,v 1.116 1996/10/24 23:29:37 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -207,7 +207,6 @@ char *cfg_filename = NULL;	/* just the last part */
 char ForwardedBy[256];
 
 char w_space[] = " \t\n";
-static char null_string[] = "";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
