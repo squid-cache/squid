@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.227 1998/02/26 18:00:45 wessels Exp $
+ * $Id: main.cc,v 1.228 1998/02/27 05:51:15 kostas Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -132,6 +132,10 @@ static void serverConnectionsOpen(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
 static void normal_shutdown(void);
+#if MEM_GEN_TRACE
+extern void log_trace_done();
+extern void log_trace_init(char *);
+#endif
 
 static void
 usage(void)
@@ -509,11 +513,14 @@ main(int argc, char **argv)
     int errcount = 0;
     int n;			/* # of GC'd objects */
     time_t loop_delay;
+#if MEM_GEN_TRACE
+    log_trace_init("/tmp/squid.alloc");
+#endif
 
     debug_log = stderr;
     if (FD_SETSIZE < Squid_MaxFD)
 	Squid_MaxFD = FD_SETSIZE;
-
+	
     /* call mallopt() before anything else */
 #if HAVE_MALLOPT
 #ifdef M_GRAIN
@@ -755,6 +762,10 @@ normal_shutdown(void)
 	debug(1, 0) ("Memory used after shutdown: %d\n", xmalloc_total);
     }
 #endif
+#if MEM_GEN_TRACE
+	log_trace_done();
+#endif
+
     debug(1, 0) ("Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     fclose(debug_log);

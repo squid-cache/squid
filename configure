@@ -28,6 +28,9 @@ ac_help="$ac_help
   --enable-xmalloc-statistics
                           Show malloc statistics in status page"
 ac_help="$ac_help
+  --enable-mem-gen-trace
+                          Trace memory alloc/free to /tmp/squid.alloc"
+ac_help="$ac_help
   --enable-async-io       Do ASYNC disk I/O using threads"
 ac_help="$ac_help
   --enable-icmp           Enable ICMP pinging"
@@ -988,6 +991,18 @@ EOF
 
 fi
 
+# Check whether --enable-mem-gen-trace or --disable-mem-gen-trace was given.
+if test "${enable_mem_gen_trace+set}" = set; then
+  enableval="$enable_mem_gen_trace"
+   if test "$enableval" = "yes" ; then
+    echo "Alloc trace to file enabled"
+    cat >> confdefs.h <<\EOF
+#define MEM_GEN_TRACE 1
+EOF                      
+   
+  fi
+   
+fi 
 
 # Check whether --enable-async_io or --disable-async_io was given.
 if test "${enable_async_io+set}" = set; then
