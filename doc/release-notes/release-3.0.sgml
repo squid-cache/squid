@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.16 2004/08/14 22:57:48 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.17 2004/12/08 00:24:41 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -129,6 +129,7 @@ This fixes two issues:
 	<tag>access_log</tag>The access_log directive now optionally includes specifications on what log format to use and acls matching which requests to log. Can be specified multiple times to log different requests to different files.
 	<tag>logformat</tag>new directive to define custom log formats
 	<tag>httpd_accel_*</tag>These directives have been replaced by http(s)_port options and cache_peer based request forwarding. Note that you can no longer run proxy and acceleration mode on the same port. If you previously did this you now need to define two ports, one for acceleration, one for proxying.
+	<tag>header_access</tag>This directive have been split into request_header_access and reply_header_access directives to allow for better control of what is allowed in reqests vs replies.
 </descrip>
 
 <sect>Known limitations

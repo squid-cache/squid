@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.362 2004/11/06 22:20:47 hno Exp $
+# $Id: cf.data.pre,v 1.363 2004/12/08 00:24:42 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3501,17 +3501,94 @@ DOC_START
 	and firewall_ip.
 DOC_END
 
-NAME: header_access
+NAME: request_header_access
 IFDEF: HTTP_VIOLATIONS
 TYPE: http_header_access[]
-LOC: Config.header_access
+LOC: Config.request_header_access
 DEFAULT: none
 DOC_START
-	Usage: header_access header_name allow|deny [!]aclname ...
+	Usage: request_header_access header_name allow|deny [!]aclname ...
 
 	WARNING: Doing this VIOLATES the HTTP standard.  Enabling
 	this feature could make you liable for problems which it
 	causes.
+
+	This option replaces the old 'anonymize_headers' and the
+	older 'http_anonymizer' option with something that is much
+	more configurable. This new method creates a list of ACLs
+	for each header, allowing you very fine-tuned header
+	mangling.
+
+	This option only applies to request headers, i.e., from the
+	client to the server.
+
+	You can only specify known headers for the header name.
+	Other headers are reclassified as 'Other'. You can also
+	refer to all the headers with 'All'.
+
+	For example, to achieve the same behaviour as the old
+	'http_anonymizer standard' option, you should use:
+
+		request_header_access From deny all
+		request_header_access Referer deny all
+		request_header_access Server deny all
+		request_header_access User-Agent deny all
+		request_header_access WWW-Authenticate deny all
+		request_header_access Link deny all
+
+	Or, to reproduce the old 'http_anonymizer paranoid' feature
+	you should use:
+
+		request_header_access Allow allow all
+		request_header_access Authorization allow all
+		request_header_access WWW-Authenticate allow all
+		request_header_access Cache-Control allow all
+		request_header_access Content-Encoding allow all
+		request_header_access Content-Length allow all
+		request_header_access Content-Type allow all
+		request_header_access Date allow all
+		request_header_access Expires allow all
+		request_header_access Host allow all
+		request_header_access If-Modified-Since allow all
+		request_header_access Last-Modified allow all
+		request_header_access Location allow all
+		request_header_access Pragma allow all
+		request_header_access Accept allow all
+		request_header_access Accept-Charset allow all
+		request_header_access Accept-Encoding allow all
+		request_header_access Accept-Language allow all
+		request_header_access Content-Language allow all
+		request_header_access Mime-Version allow all
+		request_header_access Retry-After allow all
+		request_header_access Title allow all
+		request_header_access Connection allow all
+		request_header_access Proxy-Connection allow all
+		request_header_access All deny all
+
+	although many of those are HTTP reply headers, and so should be
+	controlled with the reply_header_access directive.
+
+	By default, all headers are allowed (no anonymizing is
+	performed).
+DOC_END
+
+NAME: reply_header_access
+IFDEF: HTTP_VIOLATIONS
+TYPE: http_header_access[]
+LOC: Config.reply_header_access
+DEFAULT: none
+DOC_START
+	Usage: reply_header_access header_name allow|deny [!]aclname ...
+
+	WARNING: Doing this VIOLATES the HTTP standard.  Enabling
+	this feature could make you liable for problems which it
+	causes.
+
+	This option only applies to reply headers, i.e., from the
+	server to the client.
+
+	This is the same as request_header_access, but in the other
+	direction.
 
 	This option replaces the old 'anonymize_headers' and the
 	older 'http_anonymizer' option with something that is much
@@ -3526,41 +3603,44 @@ DOC_START
 	For example, to achieve the same behaviour as the old
 	'http_anonymizer standard' option, you should use:
 
-		header_access From deny all
-		header_access Referer deny all
-		header_access Server deny all
-		header_access User-Agent deny all
-		header_access WWW-Authenticate deny all
-		header_access Link deny all
+		reply_header_access From deny all
+		reply_header_access Referer deny all
+		reply_header_access Server deny all
+		reply_header_access User-Agent deny all
+		reply_header_access WWW-Authenticate deny all
+		reply_header_access Link deny all
 
 	Or, to reproduce the old 'http_anonymizer paranoid' feature
 	you should use:
 
-		header_access Allow allow all
-		header_access Authorization allow all
-		header_access WWW-Authenticate allow all
-		header_access Cache-Control allow all
-		header_access Content-Encoding allow all
-		header_access Content-Length allow all
-		header_access Content-Type allow all
-		header_access Date allow all
-		header_access Expires allow all
-		header_access Host allow all
-		header_access If-Modified-Since allow all
-		header_access Last-Modified allow all
-		header_access Location allow all
-		header_access Pragma allow all
-		header_access Accept allow all
-		header_access Accept-Charset allow all
-		header_access Accept-Encoding allow all
-		header_access Accept-Language allow all
-		header_access Content-Language allow all
-		header_access Mime-Version allow all
-		header_access Retry-After allow all
-		header_access Title allow all
-		header_access Connection allow all
-		header_access Proxy-Connection allow all
-		header_access All deny all
+		reply_header_access Allow allow all
+		reply_header_access Authorization allow all
+		reply_header_access WWW-Authenticate allow all
+		reply_header_access Cache-Control allow all
+		reply_header_access Content-Encoding allow all
+		reply_header_access Content-Length allow all
+		reply_header_access Content-Type allow all
+		reply_header_access Date allow all
+		reply_header_access Expires allow all
+		reply_header_access Host allow all
+		reply_header_access If-Modified-Since allow all
+		reply_header_access Last-Modified allow all
+		reply_header_access Location allow all
+		reply_header_access Pragma allow all
+		reply_header_access Accept allow all
+		reply_header_access Accept-Charset allow all
+		reply_header_access Accept-Encoding allow all
+		reply_header_access Accept-Language allow all
+		reply_header_access Content-Language allow all
+		reply_header_access Mime-Version allow all
+		reply_header_access Retry-After allow all
+		reply_header_access Title allow all
+		reply_header_access Connection allow all
+		reply_header_access Proxy-Connection allow all
+		reply_header_access All deny all
+
+	although the HTTP request headers won't be usefully controlled
+	by this directive -- see request_header_access for details.
 
 	By default, all headers are allowed (no anonymizing is
 	performed).
@@ -3569,7 +3649,7 @@ DOC_END
 NAME: header_replace
 IFDEF: HTTP_VIOLATIONS
 TYPE: http_header_replace[]
-LOC: Config.header_access
+LOC: Config.request_header_access
 DEFAULT: none
 DOC_START
 	Usage:   header_replace header_name message
@@ -3579,6 +3659,8 @@ DOC_START
 	denied with header_access above, by replacing them with
 	some fixed string. This replaces the old fake_user_agent
 	option.
+
+	This only applies to request headers, not reply headers.
 
 	By default, headers are removed if denied.
 DOC_END

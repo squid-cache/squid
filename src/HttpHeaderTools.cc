@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.45 2003/09/21 00:30:46 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.46 2004/12/08 00:24:42 hno Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -504,7 +504,7 @@ httpHeaderStrCmp(const char *h1, const char *h2, int len)
  * Returns 1 if the header is allowed.
  */
 static int
-httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request)
+httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
 {
     int retval;
 
@@ -512,7 +512,16 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request)
     header_mangler *hm;
     ACLChecklist *checklist;
     assert(e);
-    hm = &Config.header_access[e->id];
+
+    if (ROR_REQUEST == req_or_rep) {
+        hm = &Config.request_header_access[e->id];
+    } else if (ROR_REPLY == req_or_rep) {
+        hm = &Config.reply_header_access[e->id];
+    } else {
+        /* error. But let's call it "request". */
+        hm = &Config.request_header_access[e->id];
+    }
+
     checklist = aclChecklistCreate(hm->access_list, request, NULL);
 
     if (1 == checklist->fastCheck()) {
@@ -536,12 +545,12 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request)
 
 /* Mangles headers for a list of headers. */
 void
-httpHdrMangleList(HttpHeader * l, HttpRequest * request)
+httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
 {
     HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;
 
     while ((e = httpHeaderGetEntry(l, &p)))
-        if (0 == httpHdrMangle(e, request))
+        if (0 == httpHdrMangle(e, request, req_or_rep))
             httpHeaderDelAt(l, p);
 }

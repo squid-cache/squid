@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.235 2004/08/30 03:28:59 robertc Exp $
+ * $Id: enums.h,v 1.236 2004/12/08 00:24:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -701,6 +701,12 @@ typedef enum {
     COMM_ERR_DNS = -8,
     COMM_ERR_CLOSING = -9
 } comm_err_t;
+
+/* Distinguish between Request and Reply (for header mangling) */
+enum {
+    ROR_REQUEST,
+    ROR_REPLY
+};
 
 
 /* CygWin & Windows NT Port */

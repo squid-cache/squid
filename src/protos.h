@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.498 2004/11/07 13:58:30 hno Exp $
+ * $Id: protos.h,v 1.499 2004/12/08 00:24:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -432,7 +432,7 @@ SQUIDCEXTERN HttpHeaderEntry *httpHeaderEntryClone(const HttpHeaderEntry * e);
 SQUIDCEXTERN void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 /* store report about current header usage and other stats */
 SQUIDCEXTERN void httpHeaderStoreReport(StoreEntry * e);
-SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *);
+SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 
 /* Http Msg (currently in HttpReply.c @?@ ) */
 SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);

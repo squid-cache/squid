@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.495 2004/11/07 23:29:50 hno Exp $
+ * $Id: structs.h,v 1.496 2004/12/08 00:24:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -674,7 +674,8 @@ struct _SquidConfig
     mcast_miss;
 #endif
 
-    header_mangler header_access[HDR_ENUM_END];
+    header_mangler request_header_access[HDR_ENUM_END];
+    header_mangler reply_header_access[HDR_ENUM_END];
     char *coredump_dir;
     char *chroot_dir;
 #if USE_CACHE_DIGESTS
