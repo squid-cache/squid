@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.25 2003/07/11 01:40:41 robertc Exp $
+ * $Id: auth_digest.cc,v 1.26 2003/07/14 08:22:01 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -1509,7 +1509,7 @@ authenticateDigestStart(auth_user_request_t * auth_user_request, RH * handler, v
 }
 
 
-MemPool *digest_user_h::Pool(NULL);
+MemPool (*digest_user_h::Pool)(NULL);
 void *
 digest_user_h::operator new (size_t byteCount)
 {
@@ -1537,7 +1537,7 @@ digest_user_h::deleteSelf() const
 digest_user_h::digest_user_h () : username (NULL), HA1created (0)
 {}
 
-MemPool *digest_request_h::Pool(NULL);
+MemPool (*digest_request_h::Pool)(NULL);
 void *
 digest_request_h::operator new (size_t byteCount)
 {

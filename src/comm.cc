@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.381 2003/07/10 01:31:50 robertc Exp $
+ * $Id: comm.cc,v 1.382 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -317,7 +317,7 @@ dlink_list CommCallbackList;
 
 /* New and improved stuff */
 
-MemPool *CommCallbackData::Pool(NULL);
+MemPool (*CommCallbackData::Pool)(NULL);
 void *
 CommCallbackData::operator new (size_t byteCount)
 {
@@ -342,7 +342,7 @@ CommCallbackData::deleteSelf() const
     delete this;
 }
 
-MemPool *CommReadCallbackData::Pool(NULL);
+MemPool (*CommReadCallbackData::Pool)(NULL);
 void *
 CommReadCallbackData::operator new (size_t byteCount)
 {
@@ -367,7 +367,7 @@ CommReadCallbackData::deleteSelf() const
     delete this;
 }
 
-MemPool *CommAcceptCallbackData::Pool(NULL);
+MemPool (*CommAcceptCallbackData::Pool)(NULL);
 void *
 CommAcceptCallbackData::operator new (size_t byteCount)
 {
@@ -392,7 +392,7 @@ CommAcceptCallbackData::deleteSelf() const
     delete this;
 }
 
-MemPool *CommFillCallbackData::Pool(NULL);
+MemPool (*CommFillCallbackData::Pool)(NULL);
 void *
 CommFillCallbackData::operator new (size_t byteCount)
 {
@@ -418,7 +418,7 @@ CommFillCallbackData::deleteSelf() const
 }
 
 
-MemPool *CommWriteCallbackData::Pool(NULL);
+MemPool (*CommWriteCallbackData::Pool)(NULL);
 void *
 CommWriteCallbackData::operator new (size_t byteCount)
 {

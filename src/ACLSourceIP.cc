@@ -37,7 +37,7 @@
 #include "ACLSourceIP.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLSourceIP::Pool(NULL);
+MemPool (*ACLSourceIP::Pool)(NULL);
 void *
 ACLSourceIP::operator new (size_t byteCount)
 {

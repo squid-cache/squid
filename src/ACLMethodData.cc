@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLMethodData.cc,v 1.2 2003/07/14 08:21:57 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,7 +38,7 @@
 #include "ACLMethodData.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLMethodData::Pool(NULL);
+MemPool (*ACLMethodData::Pool)(NULL);
 void *
 ACLMethodData::operator new (size_t byteCount)
 {

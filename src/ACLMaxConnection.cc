@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxConnection.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLMaxConnection.cc,v 1.2 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -53,7 +53,7 @@ ACLMaxConnection::ACLMaxConnection (char const *theClass) : class_ (theClass), l
 ACLMaxConnection::ACLMaxConnection (ACLMaxConnection const & old) :class_ (old.class_), limit (old.limit)
 {}
 
-MemPool *ACLMaxConnection::Pool(NULL);
+MemPool (*ACLMaxConnection::Pool)(NULL);
 void *
 ACLMaxConnection::operator new (size_t byteCount)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLDomainData.cc,v 1.4 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,7 +39,7 @@
 #include "authenticate.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLDomainData::Pool(NULL);
+MemPool (*ACLDomainData::Pool)(NULL);
 void *
 ACLDomainData::operator new (size_t byteCount)
 {

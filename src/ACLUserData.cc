@@ -39,7 +39,7 @@
 #include "authenticate.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLUserData::Pool(NULL);
+MemPool (*ACLUserData::Pool)(NULL);
 void *
 ACLUserData::operator new (size_t byteCount)
 {

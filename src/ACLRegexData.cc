@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.4 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLRegexData.cc,v 1.5 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -40,7 +40,7 @@
 #include "ACLChecklist.h"
 #include "ACL.h"
 
-MemPool *ACLRegexData::Pool(NULL);
+MemPool (*ACLRegexData::Pool)(NULL);
 void *
 ACLRegexData::operator new (size_t byteCount)
 {

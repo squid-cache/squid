@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.93 2003/06/19 13:12:04 robertc Exp $
+ * $Id: asn.cc,v 1.94 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -547,7 +547,7 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     return 0;
 }
 
-MemPool *ACLASN::Pool(NULL);
+MemPool (*ACLASN::Pool)(NULL);
 void *
 ACLASN::operator new (size_t byteCount)
 {

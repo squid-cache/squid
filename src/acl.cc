@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.307 2003/05/17 17:35:05 hno Exp $
+ * $Id: acl.cc,v 1.308 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -668,7 +668,7 @@ acl_access::containsPURGE() const
 
 /* to be split into separate files in the future */
 
-MemPool *ACLList::Pool(NULL);
+MemPool (*ACLList::Pool)(NULL);
 void *
 ACLList::operator new (size_t byteCount)
 {

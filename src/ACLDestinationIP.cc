@@ -38,7 +38,7 @@
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
 
-MemPool *ACLDestinationIP::Pool(NULL);
+MemPool (*ACLDestinationIP::Pool)(NULL);
 void *
 ACLDestinationIP::operator new (size_t byteCount)
 {

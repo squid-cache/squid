@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.90 2003/07/10 17:48:04 hno Exp $
+ * $Id: HttpHeader.cc,v 1.91 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1452,7 +1452,7 @@ httpHeaderNameById(int id)
     return HeadersAttrs[id].name;
 }
 
-MemPool *HttpHeaderEntry::Pool(NULL);
+MemPool (*HttpHeaderEntry::Pool)(NULL);
 void *
 HttpHeaderEntry::operator new (size_t byteCount)
 {

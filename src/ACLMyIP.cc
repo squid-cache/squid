@@ -37,7 +37,7 @@
 #include "ACLMyIP.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLMyIP::Pool(NULL);
+MemPool (*ACLMyIP::Pool)(NULL);
 void *
 ACLMyIP::operator new (size_t byteCount)
 {

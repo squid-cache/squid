@@ -43,7 +43,7 @@
 #include "client_side.h"
 #include "HttpRequest.h"
 
-MemPool *ACLProxyAuth::Pool(NULL);
+MemPool (*ACLProxyAuth::Pool)(NULL);
 void *
 ACLProxyAuth::operator new (size_t byteCount)
 {

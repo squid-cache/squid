@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.56 2003/03/10 04:56:36 robertc Exp $
+ * $Id: cbdata.cc,v 1.57 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -111,11 +111,12 @@ void check() const { assert(cookie == ((long)this ^ Cookie));}
 
     size_t dataSize() const { return sizeof(data);}
 
-    static const long Cookie = (long)0xDEADBEEF;
+    static const long Cookie;
     static long MakeOffset();
     static const long Offset;
 };
 
+const long cbdata::Cookie((long)0xDEADBEEF);
 const long cbdata::Offset(MakeOffset());
 
 long
