@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.68 1996/10/19 07:08:35 wessels Exp $
+ * $Id: neighbors.cc,v 1.69 1996/10/19 07:10:08 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -108,6 +108,7 @@
 static int edgeWouldBePinged _PARAMS((edge *, request_t *));
 static void neighborRemove _PARAMS((edge *));
 static edge *whichEdge _PARAMS((struct sockaddr_in *from));
+static void neighborAlive _PARAMS((edge *, MemObject *, icp_common_t *));
 
 static neighbors *friends = NULL;
 static struct neighbor_cf *Neighbor_cf = NULL;
@@ -524,7 +525,7 @@ neighborsUdpPing(protodispatch_data * proto)
     return mem->e_pings_n_pings;
 }
 
-void
+static void
 neighborAlive(edge * e, MemObject * mem, icp_common_t * header)
 {
     int rtt;
