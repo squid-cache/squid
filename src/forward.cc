@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.64 1999/08/02 06:18:36 wessels Exp $
+ * $Id: forward.cc,v 1.65 1999/09/29 00:22:13 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -68,6 +68,9 @@ fwdStateFree(FwdState * fwdState)
     int sfd;
     debug(17, 3) ("fwdStateFree: %p\n", fwdState);
     assert(e->mem_obj);
+#if URL_CHECKSUM_DEBUG
+    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+#endif
     if (e->store_status == STORE_PENDING) {
 	if (e->mem_obj->inmem_hi == 0) {
 	    assert(fwdState->err);
@@ -240,6 +243,9 @@ fwdConnectStart(void *data)
 	fwdConnectDone(fd, COMM_OK, fwdState);
 	return;
     }
+#if URL_CHECKSUM_DEBUG
+    assert(fwdState->entry->mem_obj->chksum == url_checksum(url));
+#endif
     fd = comm_open(SOCK_STREAM,
 	0,
 	Config.Addrs.tcp_outgoing,
@@ -369,6 +375,9 @@ fwdReforward(FwdState * fwdState)
     http_status s;
     assert(e->store_status == STORE_PENDING);
     assert(e->mem_obj);
+#if URL_CHECKSUM_DEBUG
+    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+#endif
     debug(17, 3) ("fwdReforward: %s?\n", storeUrl(e));
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
 	debug(17, 3) ("fwdReforward: No, ENTRY_FWD_HDR_WAIT isn't set\n");
@@ -436,6 +445,9 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr,
     debug(17, 3) ("fwdStart: '%s'\n", storeUrl(e));
     e->mem_obj->request = requestLink(r);
     e->mem_obj->fd = fd;
+#if URL_CHECKSUM_DEBUG
+    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+#endif
     if (shutting_down) {
 	/* more yuck */
 	err = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
@@ -479,6 +491,9 @@ fwdCheckDeferRead(int fd, void *data)
     MemObject *mem = e->mem_obj;
     if (mem == NULL)
 	return 0;
+#if URL_CHECKSUM_DEBUG
+    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+#endif
 #if DELAY_POOLS
     if (fd < 0)
 	(void) 0;
@@ -544,6 +559,9 @@ fwdComplete(FwdState * fwdState)
     assert(e->store_status == STORE_PENDING);
     debug(17, 3) ("fwdComplete: %s\n\tstatus %d\n", storeUrl(e),
 	e->mem_obj->reply->sline.status);
+#if URL_CHECKSUM_DEBUG
+    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+#endif
     fwdLogReplyStatus(fwdState->n_tries, e->mem_obj->reply->sline.status);
     if (fwdReforward(fwdState)) {
 	debug(17, 3) ("fwdComplete: re-forwarding %d %s\n",

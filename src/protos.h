@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.345 1999/09/28 23:48:47 wessels Exp $
+ * $Id: protos.h,v 1.346 1999/09/29 00:22:16 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1228,4 +1228,8 @@ extern void *leakFree(void *);
 extern int getrusage(int, struct rusage *);
 extern int getpagesize(void);
 extern int gethostname(char *, int);
+#endif
+
+#if URL_CHECKSUM_DEBUG
+extern unsigned int url_checksum(const char *url);
 #endif
