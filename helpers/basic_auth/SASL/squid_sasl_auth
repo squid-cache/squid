@@ -1,0 +1,7 @@
+#%PAM-1.0
+#
+# Example PAM service configuration file if using the sasl pam password
+# backend (pwcheck_method:pam)
+#
+auth       required     /lib/security/pam_pwdb.so shadow nullok
+account    required     /lib/security/pam_pwdb.so
