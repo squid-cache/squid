@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.14 1998/05/12 20:16:34 wessels Exp $
+ * $Id: store_digest.cc,v 1.15 1998/05/12 20:29:26 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -85,7 +85,7 @@ static void storeDigestRebuildStep(void *datanotused);
 static void storeDigestRewriteStart();
 static void storeDigestRewriteResume();
 static void storeDigestRewriteFinish(StoreEntry * e);
-static void storeDigestSwapOutStep(StoreEntry * e);
+static EVH storeDigestSwapOutStep;
 static void storeDigestCBlockSwapOut(StoreEntry * e);
 static int storeDigestCalcCap();
 static int storeDigestResize();
@@ -295,7 +295,7 @@ storeDigestRewriteResume()
     httpReplySwapOut(e->mem_obj->reply, e);
     storeDigestCBlockSwapOut(e);
     storeBufferFlush(e);
-    eventAdd("storeDigestSwapOutStep", (EVH *) storeDigestSwapOutStep, sd_state.rewrite_lock, 0);
+    eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0);
 }
 
 /* finishes swap out sequence for the digest; schedules next rewrite */
@@ -326,8 +326,9 @@ storeDigestRewriteFinish(StoreEntry * e)
 
 /* swaps out one digest "chunk" per invocation; schedules next swap out */
 static void
-storeDigestSwapOutStep(StoreEntry * e)
+storeDigestSwapOutStep(void * data)
 {
+    StoreEntry * e = data;
     int chunk_size = StoreDigestSwapOutChunkSize;
     assert(e);
     assert(e == sd_state.rewrite_lock);
@@ -342,7 +343,7 @@ storeDigestSwapOutStep(StoreEntry * e)
     if (sd_state.rewrite_offset >= store_digest->mask_size)
 	storeDigestRewriteFinish(e);
     else
-	eventAdd("storeDigestSwapOutStep", (EVH *) storeDigestSwapOutStep, e, 0);
+	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, e, 0);
 }
 
 static void
