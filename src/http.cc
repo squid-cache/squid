@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.380 2001/04/14 00:25:18 hno Exp $
+ * $Id: http.cc,v 1.381 2001/07/11 22:57:54 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -596,6 +596,7 @@ httpReadReply(int fd, void *data)
 	} else if (entry->mem_obj->inmem_hi == 0) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+	    err->request = requestLink((request_t *) request);
 	    err->xerrno = errno;
 	    fwdFail(httpState->fwd, err);
 	    comm_close(fd);
@@ -606,6 +607,7 @@ httpReadReply(int fd, void *data)
 	ErrorState *err;
 	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
+	err->request = requestLink((request_t *) request);
 	fwdFail(httpState->fwd, err);
 	httpState->eof = 1;
 	comm_close(fd);
