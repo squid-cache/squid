@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.58 2004/09/04 14:43:07 hno Exp $
+# $Id: Makefile.in,v 1.59 2004/10/11 00:10:36 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -224,7 +224,7 @@ DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc helpers test-sui
 SUBDIRS = lib @makesnmplib@ scripts src icons errors doc helpers test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
-DEFAULT_PINGER = $(libexecdir)/pinger$(EXEEXT)
+DEFAULT_PINGER = $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 
 EXTRA_DIST = \
 	ChangeLog \
