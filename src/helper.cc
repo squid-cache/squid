@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.33 2001/10/24 07:45:35 hno Exp $
+ * $Id: helper.cc,v 1.34 2001/11/28 08:01:46 robertc Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -670,6 +670,7 @@ helperStatefulServerFree(int fd, void *data)
 	helperStatefulRequestFree(r);
 	srv->request = NULL;
     }
+    /* TODO: walk the local queue of requests and carry them all out */
     if (srv->wfd != srv->rfd && srv->wfd != -1)
 	comm_close(srv->wfd);
     dlinkDelete(&srv->link, &hlp->servers);

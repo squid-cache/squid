@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.201 2001/11/17 11:09:24 hno Exp $
+ * $Id: enums.h,v 1.202 2001/11/28 08:01:46 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -525,14 +525,6 @@ typedef enum {
     AUTH_DIGEST,
     AUTH_BROKEN			/* known type, but broken data */
 } auth_type_t;
-
-typedef enum {
-    AUTHENTICATE_STATE_NONE,
-    AUTHENTICATE_STATE_NEGOTIATE,
-    AUTHENTICATE_STATE_CHALLENGE,
-    AUTHENTICATE_STATE_RESPONSE,
-    AUTHENTICATE_STATE_DONE
-} auth_state_t;			/* connection level auth state */
 
 /* stateful helper callback response codes */
 typedef enum {

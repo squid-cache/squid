@@ -8,6 +8,15 @@
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
+typedef enum {
+    AUTHENTICATE_STATE_NONE,
+    AUTHENTICATE_STATE_NEGOTIATE,
+    AUTHENTICATE_STATE_CHALLENGE,
+    AUTHENTICATE_STATE_RESPONSE,
+    AUTHENTICATE_STATE_DONE,
+    AUTHENTICATE_STATE_FAILED
+} auth_state_t;                 /* connection level auth state */
+
 /* Generic */
 typedef struct {
     void *data;
@@ -22,9 +31,6 @@ struct _ntlm_user {
 };
 
 struct _ntlm_request {
-    struct {
-	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
-    } flags;
     /* what negotiate string did the client use? */
     char *ntlmnegotiate;
     /* what challenge did we give the client? */

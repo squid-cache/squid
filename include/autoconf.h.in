@@ -1,4 +1,4 @@
-/* include/autoconf.h.in.  Generated automatically from configure.in by autoheader.  */
+/* include/autoconf.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
 /* 
  * All configurable options are enabled by using --enable-....
  * when running configure. See configure --help for a list
@@ -362,6 +362,11 @@
  */
 #undef LINUX_NETFILTER
 
+/*
+ * Do we have unix sockets? (required for the winbind ntlm helper
+ */
+#undef HAVE_UNIXSOCKET
+
 #undef int16_t
 
 #undef u_int16_t
@@ -685,6 +690,12 @@
 /* Define if you have the <netinet/tcp.h> header file.  */
 #undef HAVE_NETINET_TCP_H
 
+/* Define if you have the <nss.h> header file.  */
+#undef HAVE_NSS_H
+
+/* Define if you have the <nss_common.h> header file.  */
+#undef HAVE_NSS_COMMON_H
+
 /* Define if you have the <openssl/err.h> header file.  */
 #undef HAVE_OPENSSL_ERR_H
 
@@ -787,6 +798,9 @@
 /* Define if you have the <sys/wait.h> header file.  */
 #undef HAVE_SYS_WAIT_H
 
+/* Define if you have the <syscall.h> header file.  */
+#undef HAVE_SYSCALL_H
+
 /* Define if you have the <syslog.h> header file.  */
 #undef HAVE_SYSLOG_H
 
@@ -795,6 +809,9 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the <utime.h> header file.  */
+#undef HAVE_UTIME_H
 
 /* Define if you have the <varargs.h> header file.  */
 #undef HAVE_VARARGS_H

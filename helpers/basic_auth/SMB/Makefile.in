@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.5 2001/10/03 14:57:00 hno Exp $
+#  $Id: Makefile.in,v 1.6 2001/11/28 08:01:52 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -85,7 +85,8 @@ CRYPTLIB = @CRYPTLIB@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 DLLIB = @DLLIB@
-ERR_LANGUAGE = @ERR_LANGUAGE@
+ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@
+ERR_LANGUAGES = @ERR_LANGUAGES@
 EXEEXT = @EXEEXT@
 FALSE = @FALSE@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@

@@ -83,7 +83,6 @@ SOFTWARE.
 #include "util.h"
 #include "snprintf.h"
 
-
 static struct snmp_mib_tree *get_symbol(oid *objid, int objidlen, struct snmp_mib_tree *subtree, char *buf);
 
 oid RFC1066_MIB[] =
