@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.391 2002/09/15 06:23:29 adrian Exp $
+ * $Id: http.cc,v 1.392 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -271,7 +271,7 @@ httpCachableReply(HttpStateData * httpState)
 	    return 1;
 	else if (rep->last_modified > -1)
 	    return 1;
-	else if (!httpState->peer)
+	else if (!httpState->_peer)
 	    return 1;
 	/* @?@ (here and 302): invalid expires header compiles to squid_curtime */
 	else if (rep->expires > -1)
@@ -464,12 +464,12 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
     if (httpState->flags.keepalive)
-	if (httpState->peer)
-	    httpState->peer->stats.n_keepalives_sent++;
+	if (httpState->_peer)
+	    httpState->_peer->stats.n_keepalives_sent++;
     if (reply->keep_alive)
-	if (httpState->peer)
-	    httpState->peer->stats.n_keepalives_recv++;
-    if (reply->date > -1 && !httpState->peer) {
+	if (httpState->_peer)
+	    httpState->_peer->stats.n_keepalives_recv++;
+    if (reply->date > -1 && !httpState->_peer) {
 	int skew = abs(reply->date - squid_curtime);
 	if (skew > 86400)
 	    debug(11, 3) ("%s's clock is skewed by %d seconds!\n",
@@ -929,7 +929,7 @@ httpSendRequest(HttpStateData * httpState)
     request_t *req = httpState->request;
     StoreEntry *entry = httpState->entry;
     int cfd;
-    peer *p = httpState->peer;
+    peer *p = httpState->_peer;
     CWCB *sendHeaderDone;
 
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd, httpState);
@@ -961,9 +961,9 @@ httpSendRequest(HttpStateData * httpState)
 	httpState->flags.keepalive = 1;
     else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
 	httpState->flags.keepalive = 1;
-    if (httpState->peer)
-	if (neighborType(httpState->peer, httpState->request) == PEER_SIBLING &&
-	    !httpState->peer->options.allow_miss)
+    if (httpState->_peer)
+	if (neighborType(httpState->_peer, httpState->request) == PEER_SIBLING &&
+	    !httpState->_peer->options.allow_miss)
 	    httpState->flags.only_if_cached = 1;
     memBufDefInit(&mb);
     httpBuildRequestPrefix(req,
@@ -992,12 +992,12 @@ httpStart(FwdState * fwd)
     httpState->entry = fwd->entry;
     httpState->fd = fd;
     if (fwd->servers)
-	httpState->peer = fwd->servers->peer;	/* might be NULL */
-    if (httpState->peer) {
+	httpState->_peer = fwd->servers->_peer;		/* might be NULL */
+    if (httpState->_peer) {
 	proxy_req = requestCreate(orig_req->method,
 	    PROTO_NONE, storeUrl(httpState->entry));
-	xstrncpy(proxy_req->host, httpState->peer->host, SQUIDHOSTNAMELEN);
-	proxy_req->port = httpState->peer->http_port;
+	xstrncpy(proxy_req->host, httpState->_peer->host, SQUIDHOSTNAMELEN);
+	proxy_req->port = httpState->_peer->http_port;
 	proxy_req->flags = orig_req->flags;
 	proxy_req->lastmod = orig_req->lastmod;
 	httpState->request = requestLink(proxy_req);
@@ -1008,11 +1008,11 @@ httpStart(FwdState * fwd)
 	 * We might end up getting the object from somewhere else if,
 	 * for example, the request to this neighbor fails.
 	 */
-	if (httpState->peer->options.proxy_only)
+	if (httpState->_peer->options.proxy_only)
 	    storeReleaseRequest(httpState->entry);
 #if DELAY_POOLS
 	assert(delayIsNoDelay(fd) == 0);
-	if (httpState->peer->options.no_delay)
+	if (httpState->_peer->options.no_delay)
 	    delaySetNoDelay(fd);
 #endif
     } else {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.414 2002/09/07 15:12:56 hno Exp $
+ * $Id: cache_cf.cc,v 1.415 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -453,11 +453,11 @@ configDoConfigure(void)
 	debug(22, 1) ("WARNING: HTTP requires the use of Via\n");
 #endif
     if (Config.Wais.relayHost) {
-	if (Config.Wais.peer)
-	    cbdataFree(Config.Wais.peer);
-	Config.Wais.peer = cbdataAlloc(peer);
-	Config.Wais.peer->host = xstrdup(Config.Wais.relayHost);
-	Config.Wais.peer->http_port = Config.Wais.relayPort;
+	if (Config.Wais._peer)
+	    cbdataFree(Config.Wais._peer);
+	Config.Wais._peer = cbdataAlloc(peer);
+	Config.Wais._peer->host = xstrdup(Config.Wais.relayHost);
+	Config.Wais._peer->http_port = Config.Wais.relayPort;
     }
     if (aclPurgeMethodInUse(Config.accessList.http))
 	Config2.onoff.enable_purge = 1;
@@ -634,7 +634,7 @@ dump_acl_list(StoreEntry * entry, acl_list * head)
     for (l = head; l; l = l->next) {
 	storeAppendPrintf(entry, " %s%s",
 	    l->op ? null_string : "!",
-	    l->acl->name);
+	    l->_acl->name);
     }
 }
 
@@ -646,7 +646,7 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 	storeAppendPrintf(entry, "%s %s",
 	    name,
 	    l->allow ? "Allow" : "Deny");
-	dump_acl_list(entry, l->acl_list);
+	dump_acl_list(entry, l->aclList);
 	storeAppendPrintf(entry, "\n");
     }
 }
@@ -702,7 +702,7 @@ dump_acl_address(StoreEntry * entry, const char *name, acl_address * head)
 	    storeAppendPrintf(entry, "%s %s", name, inet_ntoa(l->addr));
 	else
 	    storeAppendPrintf(entry, "%s autoselect", name);
-	dump_acl_list(entry, l->acl_list);
+	dump_acl_list(entry, l->aclList);
 	storeAppendPrintf(entry, "\n");
     }
 }
@@ -711,7 +711,7 @@ static void
 freed_acl_address(void *data)
 {
     acl_address *l = data;
-    aclDestroyAclList(&l->acl_list);
+    aclDestroyAclList(&l->aclList);
 }
 
 static void
@@ -722,7 +722,7 @@ parse_acl_address(acl_address ** head)
     CBDATA_INIT_TYPE_FREECB(acl_address, freed_acl_address);
     l = cbdataAlloc(acl_address);
     parse_address(&l->addr);
-    aclParseAclList(&l->acl_list);
+    aclParseAclList(&l->aclList);
     while (*tail)
 	tail = &(*tail)->next;
     *tail = l;
@@ -749,7 +749,7 @@ dump_acl_tos(StoreEntry * entry, const char *name, acl_tos * head)
 	    storeAppendPrintf(entry, "%s 0x%02X", name, l->tos);
 	else
 	    storeAppendPrintf(entry, "%s none", name);
-	dump_acl_list(entry, l->acl_list);
+	dump_acl_list(entry, l->aclList);
 	storeAppendPrintf(entry, "\n");
     }
 }
@@ -758,7 +758,7 @@ static void
 freed_acl_tos(void *data)
 {
     acl_tos *l = data;
-    aclDestroyAclList(&l->acl_list);
+    aclDestroyAclList(&l->aclList);
 }
 
 static void
@@ -778,7 +778,7 @@ parse_acl_tos(acl_tos ** head)
     CBDATA_INIT_TYPE_FREECB(acl_tos, freed_acl_tos);
     l = cbdataAlloc(acl_tos);
     l->tos = tos;
-    aclParseAclList(&l->acl_list);
+    aclParseAclList(&l->aclList);
     while (*tail)
 	tail = &(*tail)->next;
     *tail = l;
@@ -2068,10 +2068,10 @@ dump_body_size_t(StoreEntry * entry, const char *name, dlink_list bodylist)
 	while (head != NULL) {
 	    storeAppendPrintf(entry, "%s %ld %s", name, (long int) bs->maxsize,
 		head->allow ? "Allow" : "Deny");
-	    for (l = head->acl_list; l != NULL; l = l->next) {
+	    for (l = head->aclList; l != NULL; l = l->next) {
 		storeAppendPrintf(entry, " %s%s",
 		    l->op ? null_string : "!",
-		    l->acl->name);
+		    l->_acl->name);
 	    }
 	    storeAppendPrintf(entry, "\n");
 	    head = head->next;
@@ -2519,4 +2519,3 @@ strtokFile(void)
 	return t;
     }
 }
-

@@ -16,7 +16,7 @@
 #
 #  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.in,v 1.4 2002/09/15 05:41:44 robertc Exp $
+#  $Id: Makefile.in,v 1.5 2002/09/15 06:40:43 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -77,6 +77,7 @@ CC = @CC@
 CGIEXT = @CGIEXT@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
+CXX = @CXX@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@

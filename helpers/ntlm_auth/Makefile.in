@@ -15,7 +15,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.17 2002/09/15 05:41:48 robertc Exp $
+#  $Id: Makefile.in,v 1.18 2002/09/15 06:40:47 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -74,6 +74,7 @@ CC = @CC@
 CGIEXT = @CGIEXT@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
+CXX = @CXX@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@

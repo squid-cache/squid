@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.333 2002/09/15 06:23:28 adrian Exp $
+ * $Id: comm.cc,v 1.334 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -563,8 +563,8 @@ commCallCloseHandlers(int fd)
     fde *F = &fd_table[fd];
     close_handler *ch;
     debug(5, 5) ("commCallCloseHandlers: FD %d\n", fd);
-    while ((ch = F->close_handler) != NULL) {
-	F->close_handler = ch->next;
+    while ((ch = F->closeHandler) != NULL) {
+	F->closeHandler = ch->next;
 	debug(5, 5) ("commCallCloseHandlers: ch->handler=%p\n", ch->handler);
 	if (cbdataReferenceValid(ch->data))
 	    ch->handler(fd, ch->data);
@@ -704,12 +704,12 @@ comm_add_close_handler(int fd, PF * handler, void *data)
     close_handler *c;
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
 	fd, handler, data);
-    for (c = fd_table[fd].close_handler; c; c = c->next)
+    for (c = fd_table[fd].closeHandler; c; c = c->next)
 	assert(c->handler != handler || c->data != data);
     new->handler = handler;
     new->data = cbdataReference(data);
-    new->next = fd_table[fd].close_handler;
-    fd_table[fd].close_handler = new;
+    new->next = fd_table[fd].closeHandler;
+    fd_table[fd].closeHandler = new;
 }
 
 void
@@ -720,7 +720,7 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     /* Find handler in list */
     debug(5, 5) ("comm_remove_close_handler: FD %d, handler=%p, data=%p\n",
 	fd, handler, data);
-    for (p = fd_table[fd].close_handler; p != NULL; last = p, p = p->next)
+    for (p = fd_table[fd].closeHandler; p != NULL; last = p, p = p->next)
 	if (p->handler == handler && p->data == data)
 	    break;		/* This is our handler */
     assert(p != NULL);
@@ -728,7 +728,7 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     if (last)
 	last->next = p->next;
     else
-	fd_table[fd].close_handler = p->next;
+	fd_table[fd].closeHandler = p->next;
     cbdataReferenceDone(p->data);
     memPoolFree(conn_close_pool, p);
 }

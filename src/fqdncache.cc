@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.150 2002/04/13 23:07:50 hno Exp $
+ * $Id: fqdncache.cc,v 1.151 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -296,7 +296,7 @@ fqdncacheParse(rfc1035_rr * answers, int nr)
     for (k = 0; k < nr; k++) {
 	if (answers[k].type != RFC1035_TYPE_PTR)
 	    continue;
-	if (answers[k].class != RFC1035_CLASS_IN)
+	if (answers[k]._class != RFC1035_CLASS_IN)
 	    continue;
 	na++;
 	f.flags.negcached = 0;

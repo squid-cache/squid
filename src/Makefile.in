@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.241 2002/09/15 05:41:56 robertc Exp $
+#  $Id: Makefile.in,v 1.242 2002/09/15 06:40:56 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -77,6 +77,7 @@ CC = @CC@
 CGIEXT = @CGIEXT@
 CPP = @CPP@
 CRYPTLIB = @CRYPTLIB@
+CXX = @CXX@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@
@@ -331,6 +332,7 @@ squid_LDADD = \
 	-lmiscutil \
 	@XTRA_LIBS@
 
+squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 
 unlinkd_SOURCES = 
 unlinkd_LDADD = unlinkd-daemon.o
@@ -500,7 +502,6 @@ nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
-squid_DEPENDENCIES =
 squid_LDFLAGS =
 am_squidclient_OBJECTS = client.$(OBJEXT)
 squidclient_OBJECTS = $(am_squidclient_OBJECTS)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.121 2002/09/15 06:23:29 adrian Exp $
+ * $Id: tunnel.cc,v 1.122 2002/09/15 06:40:57 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -386,9 +386,9 @@ sslConnectDone(int fdnotused, comm_err_t status, void *data)
     SslStateData *sslState = data;
     request_t *request = sslState->request;
     ErrorState *err = NULL;
-    if (sslState->servers->peer)
+    if (sslState->servers->_peer)
 	hierarchyNote(&sslState->request->hier, sslState->servers->code,
-	    sslState->servers->peer->host);
+	    sslState->servers->_peer->host);
     else if (Config.onoff.log_ip_on_direct)
 	hierarchyNote(&sslState->request->hier, sslState->servers->code,
 	    fd_table[sslState->server.fd].ipaddr);
@@ -415,7 +415,7 @@ sslConnectDone(int fdnotused, comm_err_t status, void *data)
 	err->callback_data = sslState;
 	errorSend(sslState->client.fd, err);
     } else {
-	if (sslState->servers->peer)
+	if (sslState->servers->_peer)
 	    sslProxyConnected(sslState->server.fd, sslState);
 	else
 	    sslConnected(sslState->server.fd, sslState);
@@ -578,18 +578,18 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 	return;
     }
     sslState->servers = fs;
-    sslState->host = fs->peer ? fs->peer->host : request->host;
-    if (fs->peer == NULL) {
+    sslState->host = fs->_peer ? fs->_peer->host : request->host;
+    if (fs->_peer == NULL) {
 	sslState->port = request->port;
-    } else if (fs->peer->http_port != 0) {
-	sslState->port = fs->peer->http_port;
-    } else if ((g = peerFindByName(fs->peer->host))) {
+    } else if (fs->_peer->http_port != 0) {
+	sslState->port = fs->_peer->http_port;
+    } else if ((g = peerFindByName(fs->_peer->host))) {
 	sslState->port = g->http_port;
     } else {
 	sslState->port = CACHE_HTTP_PORT;
     }
-    if (fs->peer) {
-	sslState->request->peer_login = fs->peer->login;
+    if (fs->_peer) {
+	sslState->request->peer_login = fs->_peer->login;
 	sslState->request->flags.proxying = 1;
     } else {
 	sslState->request->peer_login = NULL;
