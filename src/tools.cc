@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.250 2005/02/06 09:30:38 serassio Exp $
+ * $Id: tools.cc,v 1.251 2005/02/06 09:37:15 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -409,10 +409,8 @@ sigusr2_handle(int sig)
 
 #endif
 #if !HAVE_SIGACTION
-    if (signal(sig, sigusr2_handle) == SIG_ERR)
-
-        ;	/* reinstall */
-    debug(50, 0) ("signal: sig=%d func=%p: %s\n", sig, sigusr2_handle, xstrerror());
+    if (signal(sig, sigusr2_handle) == SIG_ERR)	/* reinstall */
+        debug(50, 0) ("signal: sig=%d func=%p: %s\n", sig, sigusr2_handle, xstrerror());
 
 #endif
 }
