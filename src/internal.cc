@@ -1,6 +1,10 @@
 
 #include "squid.h"
 
+/* called when we "miss" on an internal object;
+ * generate known dynamic objects, 
+ * return HTTP_NOT_FOUND for others
+ */
 void
 internalStart(request_t * request, StoreEntry * entry)
 {
