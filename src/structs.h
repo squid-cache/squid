@@ -979,4 +979,5 @@ struct _StatCounters {
     int page_faults;
     int select_loops;
     double cputime;
+    struct timeval timestamp;
 };
