@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.43 2003/02/12 01:10:52 hno Exp $
+# $Id: Makefile.in,v 1.44 2003/02/12 02:00:35 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -136,7 +136,8 @@ EXTRA_DIST = \
 	QUICKSTART \
 	README \
 	SPONSORS \
-	bootstrap.sh
+	bootstrap.sh \
+	include/samba/README.txt
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -302,7 +303,7 @@ GZIP_ENV = --best
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/./include $(distdir)/cfgaux $(distdir)/scripts
+	$(mkinstalldirs) $(distdir)/./include $(distdir)/cfgaux $(distdir)/include/samba $(distdir)/scripts
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
@@ -468,7 +469,7 @@ uninstall-info: uninstall-info-recursive
 
 
 dist-hook:
-	@ for subdir in "include include/samba/nsswitch"; do \
+	@ for subdir in include include/samba/nsswitch; do \
 	  if test "$$subdir" = .; then :; else \
 	    test -d $(distdir)/$$subdir \
 	    || mkdir $(distdir)/$$subdir \
