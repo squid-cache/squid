@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.7 2000/06/27 22:06:26 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.8 2000/10/13 06:35:21 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -152,7 +152,15 @@ storeUfsDirMapBitReset(SwapDir * SD, int fn)
     sfileno filn = fn;
     ufsinfo_t *ufsinfo;
     ufsinfo = (ufsinfo_t *) SD->fsdata;
-    file_map_bit_reset(ufsinfo->map, filn);
+    /*
+     * We have to test the bit before calling file_map_bit_reset.
+     * file_map_bit_reset doesn't do bounds checking.  It assumes
+     * filn in a valid file number, but it might not be because
+     * the map is dynamic in size.  Also clearing an already clear
+     * bit puts the map counter of-of-whack.
+     */
+    if (file_map_bit_test(ufsinfo->map, filn))
+	file_map_bit_reset(ufsinfo->map, filn);
 }
 
 int
@@ -348,9 +356,9 @@ storeUfsDirInit(SwapDir * sd)
 {
     static int started_clean_event = 0;
     static const char *errmsg =
-	"\tFailed to verify one of the swap directories, Check cache.log\n"
-	"\tfor details.  Run 'squid -z' to create swap directories\n"
-	"\tif needed, or if running Squid for the first time.";
+    "\tFailed to verify one of the swap directories, Check cache.log\n"
+    "\tfor details.  Run 'squid -z' to create swap directories\n"
+    "\tif needed, or if running Squid for the first time.";
     storeUfsDirInitBitmap(sd);
     if (storeUfsDirVerifyCacheDirs(sd) < 0)
 	fatal(errmsg);
