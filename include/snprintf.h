@@ -27,10 +27,19 @@ XX **NO VARARGS ** XX
 #endif
 
 /* you can have ANSI C definitions */
+
+#if !HAVE_SNPRINTF
 #ifdef HAVE_STDARGS
 int snprintf(char *str, size_t count, const char *fmt,...);
-int vsnprintf(char *str, size_t count, const char *fmt, va_list arg);
 #else
 int snprintf();
+#endif
+#endif
+
+#if !HAVE_VSNPRINTF
+#ifdef HAVE_STDARGS
+int vsnprintf(char *str, size_t count, const char *fmt, va_list arg);
+#else
 int vsnprintf();
+#endif
 #endif
