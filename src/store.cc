@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.32 1996/04/05 17:48:32 wessels Exp $ */
+/* $Id: store.cc,v 1.33 1996/04/08 23:25:22 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -2360,11 +2360,13 @@ int storeInit()
 {
     int dir_created;
 
+    storeSanityCheck();
     file_map_create(MAX_SWAP_FILE);
     dir_created = storeVerifySwapDirs(zap_disk_store);
     storeCreateHashTable(urlcmp);
 
     sprintf(swaplog_file, "%s/log", swappath(0));
+
 
     if (!zap_disk_store) {
 	ok_write_clean_log = 0;
@@ -2436,7 +2438,7 @@ void storeSanityCheck()
 	    if (errno != ENOENT)
 		continue;
 	    debug(20, 0, "WARNING: Cannot write to '%s' for storage swap area.\n", name);
-	    debug(20, 0, "Forcing a *full restart* (e.g., cached -z)...");
+	    debug(20, 0, "Forcing a *full restart* (e.g., cached -z)...\n");
 	    zap_disk_store = 1;
 	    return;
 	}
