@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.21 1998/03/08 21:02:09 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.22 1998/03/08 21:26:29 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1037,7 +1037,7 @@ httpHeaderEntryPackByType(const HttpHeaderEntry * e, Packer * p)
 	httpHdrContRangePackInto(e->field.v_pcont_range, p);
 	break;
     case ftPExtField:
-	packerPrintf(p, "%s", e->field.v_pefield->value);
+	packerPrintf(p, "%s", strBuf(e->field.v_pefield->value));
 	break;
     default:
 	assert(0 && type);	/* pack for invalid/unknown type */
