@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.189 1997/01/07 03:37:42 wessels Exp $
+ * $Id: store.cc,v 1.190 1997/01/10 23:14:27 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1888,7 +1888,6 @@ storeGetBucketNum(void)
     return (bucket++);
 }
 
-#define SWAP_LRUSCAN_BLOCK 16
 #define SWAP_MAX_HELP (store_buckets/2)
 
 /* The maximum objects to scan for maintain storage space */

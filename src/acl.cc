@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.72 1997/01/10 18:48:42 wessels Exp $
+ * $Id: acl.cc,v 1.73 1997/01/10 23:14:20 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -255,88 +255,81 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
     return 1;
 }
 
+static struct _acl_ip_data *
+aclParseIpData(const char *t)
+{
+    LOCAL_ARRAY(char, addr1, 256);
+    LOCAL_ARRAY(char, addr2, 256);
+    LOCAL_ARRAY(char, mask, 256);
+    struct _acl_ip_data *q = xcalloc(1, sizeof(struct _acl_ip_data));
+    if (!strcasecmp(t, "all")) {
+	q->addr1.s_addr = 0;
+	q->addr2.s_addr = 0;
+	q->mask.s_addr = 0;
+	return q;
+    }
+    memset(addr1, 0, 256);
+    memset(addr2, 0, 256);
+    memset(mask, 0, 256);
+    if (sscanf(t, "%[0-9.]-%[0-9.]/%[0-9.]", addr1, addr2, mask) == 3) {
+	(void) 0;
+    } else if (sscanf(t, "%[0-9.]-%[0-9.]", addr1, addr2) == 2) {
+	mask[0] = '\0';
+    } else if (sscanf(t, "%[0-9.]/%[0-9.]", addr1, mask) == 2) {
+	addr2[0] = '\0';
+    } else if (sscanf(t, "%[0-9.]", addr1) == 1) {
+	addr2[0] = '\0';
+	mask[0] = '\0';
+    } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
+	addr2[0] = '\0';
+    } else if (sscanf(t, "%s", addr1) == 1) {
+	addr2[0] = '\0';
+	mask[0] = '\0';
+    } else {
+	debug(28, 0, "aclParseIpList: Bad host/IP: '%s'\n", t);
+	safe_free(q);
+	return NULL;
+    }
+    /* Decode addr1 */
+    if (!decode_addr(addr1, &q->addr1, &q->mask)) {
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
+	safe_free(q);
+	return NULL;
+    }
+    /* Decode addr2 */
+    if (*addr2 && !decode_addr(addr2, &q->addr2, &q->mask)) {
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
+	safe_free(q);
+	return NULL;
+    }
+    /* Decode mask */
+    if (*mask && !decode_addr(mask, &q->mask, NULL)) {
+	debug(28, 0, "%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
+	safe_free(q);
+	return NULL;
+    }
+    q->addr1.s_addr &= q->mask.s_addr;
+    q->addr2.s_addr &= q->mask.s_addr;
+    /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
+    return q;
+}
 
 static struct _acl_ip_data *
 aclParseIpList(void)
 {
     char *t = NULL;
-    char *p = NULL;
     struct _acl_ip_data *head = NULL;
     struct _acl_ip_data **Tail = &head;
     struct _acl_ip_data *q = NULL;
-    LOCAL_ARRAY(char, addr1, 256);
-    LOCAL_ARRAY(char, addr2, 256);
-    LOCAL_ARRAY(char, mask, 256);
-
     while ((t = strtokFile())) {
-	q = xcalloc(1, sizeof(struct _acl_ip_data));
-	if (!strcasecmp(t, "all")) {
-	    q->addr1.s_addr = 0;
-	    q->addr2.s_addr = 0;
-	    q->mask.s_addr = 0;
-	} else {
-	    p = t;
-	    memset(addr1, 0, 256);
-	    memset(addr2, 0, 256);
-	    memset(mask, 0, 256);
-
-	    for (;;) {
-		if (sscanf(t, "%[0-9.]-%[0-9.]/%[0-9.]", addr1, addr2, mask) == 3)
-		    break;
-		if (sscanf(t, "%[0-9.]-%[0-9.]", addr1, addr2) == 2) {
-		    mask[0] = '\0';
-		    break;
-		}
-		if (sscanf(t, "%[0-9.]/%[0-9.]", addr1, mask) == 2) {
-		    addr2[0] = '\0';
-		    break;
-		}
-		if (sscanf(t, "%[0-9.]", addr1) == 1) {
-		    addr2[0] = '\0';
-		    mask[0] = '\0';
-		    break;
-		}
-		if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
-		    addr2[0] = '\0';
-		    break;
-		}
-		if (sscanf(t, "%s", addr1) == 1) {
-		    addr2[0] = '\0';
-		    mask[0] = '\0';
-		    break;
-		}
-		debug(28, 0, "aclParseIpList: Bad host/IP: '%s'\n", t);
-		break;
-	    }
-
-	    /* Decode addr1 */
-	    if (!decode_addr(addr1, &q->addr1, &q->mask)) {
-		debug(28, 0, "%s line %d: %s\n",
-		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
-		safe_free(q);
+	if ((q = aclParseIpData(t)) == NULL)
 		continue;
-	    }
-	    /* Decode addr2 */
-	    if (*addr2 && !decode_addr(addr2, &q->addr2, &q->mask)) {
-		debug(28, 0, "%s line %d: %s\n",
-		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
-		safe_free(q);
-		continue;
-	    }
-	    /* Decode mask */
-	    if (*mask && !decode_addr(mask, &q->mask, NULL)) {
-		debug(28, 0, "%s line %d: %s\n",
-		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseIpList: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
-		safe_free(q);
-		continue;
-	    }
-	    q->addr1.s_addr &= q->mask.s_addr;
-	    q->addr2.s_addr &= q->mask.s_addr;
-	    /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
-	}
 	*(Tail) = q;
 	Tail = &q->next;
     }

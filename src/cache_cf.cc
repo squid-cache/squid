@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.161 1996/12/21 07:54:50 wessels Exp $
+ * $Id: cache_cf.cc,v 1.162 1997/01/10 23:14:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -181,6 +181,7 @@ struct SquidConfig Config;
 #define DefaultAnnounceFile	(char *)NULL	/* default NONE */
 #define DefaultAnnounceRate	0	/* Default off */
 #define DefaultTcpRcvBufsz	0	/* use system default */
+#define DefaultUdpMaxHitObjsz	SQUID_UDP_SO_SNDBUF     /* from configure */
 #define DefaultTcpIncomingAddr	INADDR_ANY
 #define DefaultTcpOutgoingAddr	inaddr_none
 #define DefaultUdpIncomingAddr	INADDR_ANY
@@ -331,6 +332,7 @@ addToIPACL(ip_acl ** list, const char *ip_str, ip_access_type access)
     int a1, a2, a3, a4;
     int m1, m2, m3, m4;
     struct in_addr lmask;
+    int inv = 0;
     int c;
 
     if (!ip_str) {
@@ -351,8 +353,11 @@ addToIPACL(ip_acl ** list, const char *ip_str, ip_access_type access)
 	p->next = q;
     }
 
-
     /* decode ip address */
+    if (*ip_str == '!') {
+	ip_str++;
+	inv = 1;
+    }
     if (!strcasecmp(ip_str, "all")) {
 	a1 = a2 = a3 = a4 = 0;
 	lmask.s_addr = 0;
@@ -395,7 +400,8 @@ addToIPACL(ip_acl ** list, const char *ip_str, ip_access_type access)
 	}
     }
 
-    q->access = access;
+    if (inv)
+	q->access = (access == IP_ALLOW) ? IP_DENY : IP_ALLOW;
     q->addr.s_addr = htonl(a1 * 0x1000000 + a2 * 0x10000 + a3 * 0x100 + a4);
     q->mask.s_addr = lmask.s_addr;
 }
@@ -1343,6 +1349,8 @@ parseConfigFile(const char *file_name)
 	    parseOnOff(&opt_mem_pools);
 	else if (!strcmp(token, "udp_hit_obj"))
 	    parseOnOff(&opt_udp_hit_obj);
+        else if (!strcmp(token, "udp_hit_obj_size"))
+            parseIntegerValue(&Config.udpMaxHitObjsz);
 	else if (!strcmp(token, "forwarded_for"))
 	    parseOnOff(&opt_forwarded_for);
 	else if (!strcmp(token, "log_icp_queries"))
@@ -1561,6 +1569,7 @@ configSetFactoryDefaults(void)
     Config.Announce.rate = DefaultAnnounceRate;
     Config.Announce.on = 0;
     Config.tcpRcvBufsz = DefaultTcpRcvBufsz;
+    Config.udpMaxHitObjsz = DefaultUdpMaxHitObjsz;
     Config.Addrs.tcp_outgoing.s_addr = DefaultTcpOutgoingAddr;
     Config.Addrs.tcp_incoming.s_addr = DefaultTcpIncomingAddr;
     Config.Addrs.udp_outgoing.s_addr = DefaultUdpOutgoingAddr;
@@ -1595,4 +1604,6 @@ configDoConfigure(void)
 	getMyHostname(),
 	(int) Config.Port.http,
 	SQUID_VERSION);
+    if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
+    	Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.51 1997/01/03 22:43:54 wessels Exp $
+ * $Id: cachemgr.cc,v 1.52 1997/01/10 23:14:23 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -497,6 +497,8 @@ describeTimeSince(time_t then)
 	delta = (-delta);
 	fmt = "in %s";
     }
+    if (then < 0)
+	return "NEVER";
     if (delta < ONE_MINUTE)
 	sprintf(buf, "%ds", (int) (delta / ONE_SECOND));
     else if (delta < ONE_HOUR)
