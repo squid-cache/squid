@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.166 2002/07/18 23:43:14 hno Exp $
+ * $Id: gopher.cc,v 1.167 2002/07/19 12:16:19 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -148,7 +148,6 @@ gopherMimeCreate(GopherStateData * gopherState)
 	"HTTP/1.0 200 OK Gatewaying\r\n"
 	"Server: Squid/%s\r\n"
 	"Date: %s\r\n"
-	"MIME-version: 1.0\r\n",
 	version_string, mkrfc1123(squid_curtime));
 
     switch (gopherState->type_id) {
