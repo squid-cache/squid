@@ -77,14 +77,14 @@
 /* Define to do simple malloc debugging */
 #undef XMALLOC_DEBUG
 
+/* Define for log file trace of mem alloc/free */
+#undef MEM_GEN_TRACE
+
 /* Define to have malloc statistics */
 #undef XMALLOC_STATISTICS
 
 /* Define to have a detailed trace of memory allocations */
 #undef XMALLOC_TRACE
-
-/* Define to have mem trace to file */
-#undef MEM_GEN_TRACE
 
 /* Define to use async disk I/O operations */
 #undef USE_ASYNC_IO
