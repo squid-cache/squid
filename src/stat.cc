@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.208 1998/02/25 23:56:54 rousskov Exp $
+ * $Id: stat.cc,v 1.209 1998/02/26 09:01:16 kostas Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -134,7 +134,9 @@ static void info_get_mallstat(int, int, StoreEntry *);
 /*
  * An hour's worth, plus the 'current' counter
  */
+#if 0 /* moved to defines.h to get from snmp_oidlist.c */
 #define N_COUNT_HIST 61
+#endif 
 StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
 
@@ -890,4 +892,10 @@ get_median_svc(int interval, int which)
 	x = 0;
     }
     return (int) x;
+}
+
+StatCounters *
+snmpStatGet(int minutes)
+{
+  return &CountHist[minutes];
 }

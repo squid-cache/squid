@@ -531,7 +531,6 @@ set_functions(subtree)
 
 void init_mib(char *file)
 {
-    snmplib_debug(6, "init_mib: Called.\n");
     if (Mib != NULL)
 	return;
 

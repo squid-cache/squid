@@ -206,5 +206,8 @@
 
 #define SKIP_BASIC_SZ ((size_t) 6)
 
+/* stat.c */
+#define N_COUNT_HIST 61
+
 /* were to look for errors if config path fails */
 #define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"

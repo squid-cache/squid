@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.252 1998/02/25 19:15:06 kostas Exp $
+ * $Id: cache_cf.cc,v 1.253 1998/02/26 09:01:11 kostas Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -384,6 +384,7 @@ parse_snmp_conf(snmpconf ** s)
 {
     static char buff[256];
     static char *tokens[10], *p;
+
     if (Mib == NULL) {
 	if (Config.Snmp.mibPath)
 	    init_mib(Config.Snmp.mibPath);
