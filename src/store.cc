@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.263 1997/06/26 22:36:00 wessels Exp $
+ * $Id: store.cc,v 1.264 1997/07/02 22:42:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -273,6 +273,8 @@ static StoreEntry *storeAddDiskRestore _PARAMS((const char *,
 	time_t,
 	time_t,
 	time_t,
+	u_num32,
+	u_num32,
 	int));
 static StoreEntry *storeGetInMemFirst _PARAMS((void));
 static StoreEntry *storeGetInMemNext _PARAMS((void));
@@ -778,7 +780,7 @@ storeCreateEntry(const char *url, int flags, method_t method)
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
 static StoreEntry *
-storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod, int clean)
+storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod, u_num32 refcount, u_num32 flags, int clean)
 {
     StoreEntry *e = NULL;
 
@@ -808,6 +810,8 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->timestamp = timestamp;
     e->expires = expires;
     e->lastmod = lastmod;
+    e->refcount = refcount;
+    e->flag = flags;
     e->ping_status = PING_NONE;
     if (clean) {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
@@ -1300,6 +1304,8 @@ storeDoRebuildFromDisk(void *data)
     int scan2;
     int scan3;
     int scan4;
+    int scan5;
+    int scan6;
     off_t size;
     int sfileno = 0;
     int count;
@@ -1340,17 +1346,19 @@ storeDoRebuildFromDisk(void *data)
 	scan2 = 0;
 	scan3 = 0;
 	scan4 = 0;
-	x = sscanf(RB->line_in, "%x %x %x %x %d %s",
+	x = sscanf(RB->line_in, "%x %x %x %x %d %d %x %s",
 	    &sfileno,		/* swap_file_number */
 	    &scan1,		/* timestamp */
 	    &scan2,		/* expires */
 	    &scan3,		/* last modified */
 	    &scan4,		/* size */
+	    &scan5,		/* refcount */
+	    &scan6,		/* flags */
 	    url);		/* url */
 	if (x < 1)
 	    continue;
 	storeSwapFullPath(sfileno, swapfile);
-	if (x != 6)
+	if (x != 8)
 	    continue;
 	if (sfileno < 0)
 	    continue;
@@ -1379,6 +1387,8 @@ storeDoRebuildFromDisk(void *data)
 	    e->timestamp = timestamp;
 	    e->expires = expires;
 	    e->lastmod = lastmod;
+	    e->flag |= (u_num32) scan5;
+	    e->refcount += (u_num32) scan6;
 	    continue;
 	} else if (used) {
 	    /* swapfile in use, not by this URL, log entry is newer */
@@ -1419,6 +1429,8 @@ storeDoRebuildFromDisk(void *data)
 	    expires,
 	    timestamp,
 	    lastmod,
+	    (u_num32) scan5,	/* refcount */
+	    (u_num32) scan6,	/* flags */
 	    d->clean);
 	storeDirSwapLog(e);
 	HTTPCacheInfo->proto_newobject(HTTPCacheInfo,
@@ -1672,6 +1684,7 @@ storeAbort(StoreEntry * e, log_type abort_code, const char *msg, int cbflag)
     if (msg)
 	mem->e_abort_msg = xstrdup(msg);
     debug(20, 6) ("storeAbort: %s %s\n", log_tags[abort_code], e->key);
+    mem->abort_code = abort_code;
     storeNegativeCache(e);
     storeReleaseRequest(e);
     e->store_status = STORE_ABORTED;

@@ -242,12 +242,14 @@ storeDirSwapLog(const StoreEntry * e)
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < ncache_dirs);
     /* Note this printf format appears in storeWriteCleanLog() too */
-    sprintf(logmsg, "%08x %08x %08x %08x %9d %s\n",
+    sprintf(logmsg, "%08x %08x %08x %08x %9d %6d %08x %s\n",
 	(int) e->swap_file_number,
 	(int) e->timestamp,
 	(int) e->expires,
 	(int) e->lastmod,
 	e->object_len,
+	e->refcount,
+	e->flag,
 	e->url);
     file_write(SwapDirs[dirn].swaplog_fd,
 	xstrdup(logmsg),
