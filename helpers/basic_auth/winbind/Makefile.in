@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2002/05/19 23:53:28 hno Exp $
+#  $Id: Makefile.in,v 1.2 2002/05/20 01:48:03 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -120,7 +120,7 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 libexec_PROGRAMS = wb_auth
-wb_auth_SOURCES = wb_basic_auth.c wb_common.c
+wb_auth_SOURCES = wb_basic_auth.c wb_common.c samba_nss.h winbindd_nss.h wbntlm.h winbind_nss_config.h
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
     -I$(top_srcdir)/src
 
