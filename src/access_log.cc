@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.45 1998/12/11 20:06:49 wessels Exp $
+ * $Id: access_log.cc,v 1.46 1998/12/11 23:45:09 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -280,7 +280,7 @@ accessLogLog(AccessLogEntry * al)
 	xstrncpy((char *) ibuf, al->url, 364 * sizeof(int));
 	isize = ((strlen(al->url) + 8) / 8) * 2;
 	mcast_encode((unsigned int *) ibuf, isize,
-		(const unsigned int *) Config.mcast_miss.encode_key);
+	    (const unsigned int *) Config.mcast_miss.encode_key);
 	comm_udp_sendto(mcast_miss_fd,
 	    &mcast_miss_to, sizeof(mcast_miss_to),
 	    ibuf, isize * sizeof(int));
@@ -339,15 +339,11 @@ accessLogClose(void)
 void
 hierarchyNote(HierarchyLogEntry * hl,
     hier_code code,
-    ping_data * pingdata,
     const char *cache_peer)
 {
     assert(hl != NULL);
     hl->code = code;
-    if (pingdata)
-	hl->ping = *pingdata;
     xstrncpy(hl->host, cache_peer, SQUIDHOSTNAMELEN);
-    hl->ping.stop = current_time;
 }
 
 void

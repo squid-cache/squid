@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.34 1998/12/11 23:10:48 wessels Exp $
+ * $Id: forward.cc,v 1.35 1998/12/11 23:45:10 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ fwdStateFree(FwdState * fwdState)
     ErrorState *err;
     int sfd;
     static int loop_detect = 0;
-    debug(17,3)("fwdStateFree: %p\n", fwdState);
+    debug(17, 3) ("fwdStateFree: %p\n", fwdState);
     assert(loop_detect++ == 0);
     assert(e->mem_obj);
     if (e->store_status == STORE_PENDING) {
@@ -213,6 +213,7 @@ fwdConnectStart(FwdState * fwdState)
 	host = fwdState->request->host;
 	port = fwdState->request->port;
     }
+    hierarchyNote(&fwdState->request->hier, fs->code, host);
     if ((fd = pconnPop(host, port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
 	fwdState->server_fd = fd;
@@ -486,11 +487,11 @@ fwdComplete(FwdState * fwdState)
 	debug(17, 3) ("ENTRY_FWD_HDR_WAIT not set, calling storeComplete\n");
 	storeComplete(e);
     } else if (fwdReforward(fwdState)) {
-debug(0,0)("fwdComplete: re-forwarding %d %s\n", 
-	e->mem_obj->reply->sline.status,
-	storeUrl(e));
+	debug(0, 0) ("fwdComplete: re-forwarding %d %s\n",
+	    e->mem_obj->reply->sline.status,
+	    storeUrl(e));
 	if (fwdState->server_fd > -1)
-		fwdUnregister(fwdState->server_fd, fwdState);
+	    fwdUnregister(fwdState->server_fd, fwdState);
 	storeEntryReset(e);
 	fwdStartComplete(fwdState->servers, fwdState);
     } else {
