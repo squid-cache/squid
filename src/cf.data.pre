@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.356 2004/09/26 21:35:41 hno Exp $
+# $Id: cf.data.pre,v 1.357 2004/09/26 21:40:29 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2016,7 +2016,7 @@ DOC_END
 NAME: request_header_max_size
 COMMENT: (KB)
 TYPE: b_size_t
-DEFAULT: 10 KB
+DEFAULT: 20 KB
 LOC: Config.maxRequestHeaderSize
 DOC_START
 	This specifies the maximum size for HTTP headers in a request.
