@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.448 2003/08/13 16:05:22 wessels Exp $
+ * $Id: cache_cf.cc,v 1.449 2003/08/31 21:20:08 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2014,6 +2014,8 @@ parse_onoff(int *var)
 #define free_onoff free_int
 #define dump_eol dump_string
 #define free_eol free_string
+#define dump_debug dump_string
+#define free_debug free_string
 
 static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
@@ -2232,6 +2234,15 @@ parse_eol(char *volatile *var)
         self_destruct();
 
     *var = xstrdup((char *) token);
+}
+
+void
+parse_debug(char *volatile *var)
+{
+    parse_eol(var);
+    safe_free(debug_options)
+    debug_options = xstrdup(Config.debugOptions);
+    Debug::parseOptions(Config.debugOptions);
 }
 
 static void

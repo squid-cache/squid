@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.49 2003/08/30 06:39:24 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.50 2003/08/31 21:20:10 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -48,9 +48,6 @@ int n_coss_dirs = 0;
 MemPool *coss_index_pool = NULL;
 
 typedef struct _RebuildState RebuildState;
-
-void storeCossDirParseBlkSize(SwapDir *, const char *, const char *, int);
-void storeCossDirDumpBlkSize(StoreEntry *, const char *, const SwapDir *);
 
 struct _RebuildState
 {
@@ -900,7 +897,7 @@ CossSwapDir::dump(StoreEntry &entry)const
 }
 
 
-CossSwapDir::CossSwapDir() : SwapDir ("coss"), fd (-1), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0)
+CossSwapDir::CossSwapDir() : SwapDir ("coss"), fd (-1), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0), blksz_bits(0)
 {
     membufs.head = NULL;
     membufs.tail = NULL;
@@ -912,6 +909,14 @@ CossSwapDir::CossSwapDir() : SwapDir ("coss"), fd (-1), swaplog_fd(-1), count(0)
 bool
 CossSwapDir::optionBlockSizeParse(const char *option, const char *value, int reconfiguring)
 {
+    assert(option);
+
+    if (strcmp(option, "block-size") != 0)
+        return false;
+
+    if (!value)
+        self_destruct();
+
     int blksz = atoi(value);
 
     if (blksz == (1 << blksz_bits))

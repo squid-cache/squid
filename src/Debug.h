@@ -1,6 +1,6 @@
 
 /*
- * $Id: Debug.h,v 1.6 2003/07/16 05:27:17 robertc Exp $
+ * $Id: Debug.h,v 1.7 2003/08/31 21:20:08 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -60,6 +60,7 @@ public:
     static int level;
     static std::ostream &getDebugOut();
     static void finishDebug();
+    static void parseOptions(char const *);
 
 private:
     static std::ostringstream *CurrentDebug;

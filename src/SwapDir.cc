@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.4 2003/07/22 15:23:01 robertc Exp $
+ * $Id: SwapDir.cc,v 1.5 2003/08/31 21:20:08 robertc Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -153,6 +153,8 @@ SwapDir::parseOptions(int reconfiguring)
 
         if (value)
             *value++ = '\0';	/* cut on = */
+
+        debugs(3,2, "SwapDir::parseOptions: parsing store option '" << name << "'='" << (value ? value : "") << "'");
 
         if (newOption)
             if (!newOption->parse(name, value, reconfiguring))

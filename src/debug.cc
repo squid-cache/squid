@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.95 2003/07/14 08:21:56 robertc Exp $
+ * $Id: debug.cc,v 1.96 2003/08/31 21:20:08 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -232,7 +232,7 @@ debugOpenLog(const char *logfile) {
 }
 
 void
-_db_init(const char *logfile, const char *options) {
+Debug::parseOptions(char const *options) {
     int i;
     char *p = NULL;
     char *s = NULL;
@@ -248,6 +248,11 @@ _db_init(const char *logfile, const char *options) {
 
         xfree(p);
     }
+}
+
+void
+_db_init(const char *logfile, const char *options) {
+    Debug::parseOptions(options);
 
     debugOpenLog(logfile);
 
