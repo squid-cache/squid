@@ -110,7 +110,7 @@ send_bh_or_ld(char *bhmessage, ntlm_authenticate * failedauth, int authlen)
 	    SEND("NA last-ditch on, but no credentials");
 	}
     } else {
-	SEND(bhmessage);
+	SEND2("NA %s", bhmessage);
     }
 }
 
