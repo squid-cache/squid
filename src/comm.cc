@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.17 1996/04/08 17:08:00 wessels Exp $ */
+/* $Id: comm.cc,v 1.18 1996/04/08 17:10:43 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -544,7 +544,7 @@ int comm_select(sec, usec, failtime)
 	if (!fdstat_are_n_free_fd(RESERVED_FD)) {
 	    FD_CLR(theAsciiConnection, &readfds);
 	}
-	debug(5, 1, "comm_select: nfds = %d\n", nfds);
+	debug(5, 5, "comm_select: nfds = %d\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
 	while (1) {
@@ -552,19 +552,16 @@ int comm_select(sec, usec, failtime)
 	    poll_time.tv_usec = 0;
 	    num = select(fdstat_biggest_fd() + 1,
 		&readfds, &writefds, &exceptfds, &poll_time);
-	    debug(0, 0, "num=%d errno=%d\n", num, errno);
 	    if (num >= 0)
 		break;
 
+	    /* break on interrupt so outer loop will reset FD_SET's */
 	    if (errno == EINTR)
 		break;
-	    if (errno != EINTR) {
-		debug(5, 0, "comm_select: select failure: %s (errno %d).\n",
-		    xstrerror(), errno);
-		examine_select(&readfds, &writefds, &exceptfds);
-		return COMM_ERROR;
-	    }
-	    /* if select interrupted, try again */
+	    debug(5, 0, "comm_select: select failure: %s (errno %d).\n",
+		xstrerror(), errno);
+	    examine_select(&readfds, &writefds, &exceptfds);
+	    return COMM_ERROR;
 	}
 	if (num < 0)
 	    continue;
@@ -603,11 +600,11 @@ int comm_select(sec, usec, failtime)
 		    FD_ZERO(&write_mask);
 
 		    if (theAsciiConnection >= 0) {
-		    if ((fdstat_are_n_free_fd(RESERVED_FD))
-			&& (fd_table[theAsciiConnection].read_handler))
-			FD_SET(theAsciiConnection, &read_mask);
-		    else
-			FD_CLR(theAsciiConnection, &read_mask);
+			if ((fdstat_are_n_free_fd(RESERVED_FD))
+			    && (fd_table[theAsciiConnection].read_handler))
+			    FD_SET(theAsciiConnection, &read_mask);
+			else
+			    FD_CLR(theAsciiConnection, &read_mask);
 		    }
 		    if (theUdpConnection >= 0) {
 			if (fd_table[theUdpConnection].read_handler)
