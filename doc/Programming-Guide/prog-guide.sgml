@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.31 2001/01/06 00:30:37 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.32 2001/01/06 11:09:43 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2097,20 +2097,35 @@ coupling between the storage layer and the replacement policy.
 	then call <tt/cbdataFree/.
 
 	<P>
-	To add new data types to the allocator one uses the macros
-	CBDATA_TYPE and CBDATA_INIT_TYPE.
+	To add new module specific data types to the allocator one uses the
+	macros CBDATA_TYPE and CBDATA_INIT_TYPE. These creates a local cbdata
+	definition (file or block scope). Any CBDATA_ALLOC calls must be made
+	within this scope. However, cbdataFree might be called from anywhere.
 
 <verb>
-	/* Somewhere at the scope the cbdata type needs to exists, usually
-	 * global
+	/* First the cbdata type needs to be defined in the module. This
+	 * is usually done at file scope, but it can also be local to a
+	 * function or block..
 	 */
 	CBDATA_TYPE(type_of_data);
 
 	/* Then in the code somewhere before the first allocation
-	 * (can be called multiple times)
+	 * (can be called multiple times with only a minimal overhead)
 	 */
 	CBDATA_INIT_TYPE(type_of_data);
 </verb>
+
+	<P>
+	To add new global data types one have to add them to the 
+	cbdata_type enum in enums.h, and a corresponding 
+	CREATE_CBDATA call in cbdata.c:cbdataInit().
+
+	<P>
+	TODO: Restructure the free function so there is one free function
+	associated with the whole cbdata type rather than per allocation.
+
+	<P>
+	TODO: Add macros for global definitions outside cbdata.c.
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager
