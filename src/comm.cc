@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.215 1997/12/31 05:01:46 wessels Exp $
+ * $Id: comm.cc,v 1.216 1997/12/31 22:13:20 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -846,8 +846,7 @@ comm_poll(time_t sec)
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
 #endif
-#if 0
-	if (shutdown_pending || reconfigure_pending) {
+	if (shutdown_pending) {
 	    serverConnectionsClose();
 	    dnsShutdownServers();
 	    redirectShutdownServers();
@@ -860,7 +859,6 @@ comm_poll(time_t sec)
 	    else
 		setSocketShutdownLifetimes(1);
 	}
-#endif
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
