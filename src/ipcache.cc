@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.45 1996/08/27 20:10:52 wessels Exp $
+ * $Id: ipcache.cc,v 1.46 1996/08/27 20:16:14 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -531,7 +531,6 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
     char *tpos = NULL;
     char *endpos = NULL;
     char *token = NULL;
-    char *tmp_ptr = NULL;
     line_entry *line_head = NULL;
     line_entry *line_tail = NULL;
     line_entry *line_cur = NULL;
@@ -604,9 +603,7 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 	    }
 	    free_lines(line_head);
 	} else if (strstr(line_head->line, "$name")) {
-	    tmp_ptr = line_head->line;
-	    /* skip the first token */
-	    token = strtok(tmp_ptr, w_space);
+	    token = strtok(line_head->line, w_space);
 	    if ((token = strtok(NULL, w_space)) == NULL) {
 		debug(14, 0, "ipcache_parsebuffer: Invalid OPCODE?\n");
 	    } else {
@@ -626,11 +623,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 			/* abandon this record */
 			break;
 		    }
-		    tmp_ptr = line_cur->line;
-		    /* skip the first token */
-		    token = strtok(tmp_ptr, w_space);
-		    tmp_ptr = NULL;
-		    token = strtok(tmp_ptr, w_space);
+		    token = strtok(line_cur->line, w_space);
+		    token = strtok(NULL, w_space);
 		    i->entry.h_name = xstrdup(token);
 
 		    line_cur = line_cur->next;
@@ -642,11 +636,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 			/* abandon this record */
 			break;
 		    }
-		    tmp_ptr = line_cur->line;
-		    /* skip the first token */
-		    token = strtok(tmp_ptr, w_space);
-		    tmp_ptr = NULL;
-		    token = strtok(tmp_ptr, w_space);
+		    token = strtok(line_cur->line, w_space);
+		    token = strtok(NULL, w_space);
 		    i->entry.h_length = atoi(token);
 
 		    line_cur = line_cur->next;
@@ -658,11 +649,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 			/* abandon this record */
 			break;
 		    }
-		    tmp_ptr = line_cur->line;
-		    /* skip the first token */
-		    token = strtok(tmp_ptr, w_space);
-		    tmp_ptr = NULL;
-		    token = strtok(tmp_ptr, w_space);
+		    token = strtok(line_cur->line, w_space);
+		    token = strtok(NULL, w_space);
 		    ipcount = atoi(token);
 		    i->addr_count = (unsigned char) ipcount;
 
@@ -695,11 +683,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 			/* abandon this record */
 			break;
 		    }
-		    tmp_ptr = line_cur->line;
-		    /* skip the first token */
-		    token = strtok(tmp_ptr, w_space);
-		    tmp_ptr = NULL;
-		    token = strtok(tmp_ptr, w_space);
+		    token = strtok(line_cur->line, w_space);
+		    token = strtok(NULL, w_space);
 		    aliascount = atoi(token);
 		    i->alias_count = (unsigned char) aliascount;
 
@@ -726,11 +711,8 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 		    /* DNS TTL - bne@CareNet.hu */
 		    /* next line is either a $ttl ttl\n or a $end\n */
 		    if (strstr(line_cur->line, "$ttl")) {
-			tmp_ptr = line_cur->line;
-			/* skip the first token */
-			token = strtok(tmp_ptr, w_space);
-			tmp_ptr = NULL;
-			token = strtok(tmp_ptr, w_space);
+			token = strtok(line_cur->line, w_space);
+			token = strtok(NULL, w_space);
 			i->expires = squid_curtime + atoi(token);
 		    }
 		    ipcache_call_pending(i);
