@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.90 1997/10/26 02:35:41 wessels Exp $
+ * $Id: wais.cc,v 1.91 1997/10/28 20:42:55 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -148,7 +148,6 @@ waisTimeout(int fd, void *data)
     err->http_status = HTTP_GATEWAY_TIMEOUT;
     err->request = urlParse(METHOD_CONNECT, waisState->request);
     errorAppendEntry(entry, err);
-
     storeAbort(entry, 0);
     comm_close(fd);
 }
