@@ -11,15 +11,10 @@
 
 #include "mib.h"
 
-enum {
-    HTTP_SVC, ICP_SVC, DNS_SVC
-};
-
 void snmpAclCheckDone(int answer, void *);
 static struct snmp_pdu *snmp_agent_response(struct snmp_pdu *PDU);
 static int community_check(char *b, oid * name, int namelen);
 struct snmp_session *Session;
-extern int get_median_svc(int, int);
 extern StatCounters *snmpStatGet(int);
 extern void snmp_agent_parse_done(int, snmp_request_t *);
 void addr2oid(struct in_addr addr, oid *);

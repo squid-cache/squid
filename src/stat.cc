@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.221 1998/03/31 05:37:50 wessels Exp $
+ * $Id: stat.cc,v 1.222 1998/04/01 05:39:04 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -121,6 +121,7 @@ static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
 static void statCountersCopy(StatCounters * dest, const StatCounters * orig);
 static void statCountersDump(StoreEntry * sentry);
+static double statMedianSvc(int, int);
 static OBJH stat_io_get;
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
@@ -475,6 +476,26 @@ info_get(StoreEntry * sentry)
 	(double) storeExpiredReferenceAge() / 86400.0);
     storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%d\n",
 	Counter.unlink.requests);
+
+    storeAppendPrintf(sentry, "Median Service Times (seconds)  5 min    60 min:\n");
+    storeAppendPrintf(sentry, "\tHTTP Requests (All):  %8.5f %8.5f\n",
+	statMedianSvc(5, MEDIAN_HTTP) / 1000.0,
+	statMedianSvc(60, MEDIAN_HTTP) / 1000.0);
+    storeAppendPrintf(sentry, "\tCache Misses:         %8.5f %8.5f\n",
+	statMedianSvc(5, MEDIAN_MISS) / 1000.0,
+	statMedianSvc(60, MEDIAN_MISS) / 1000.0);
+    storeAppendPrintf(sentry, "\tCache Hits:           %8.5f %8.5f\n",
+	statMedianSvc(5, MEDIAN_HIT) / 1000.0,
+	statMedianSvc(60, MEDIAN_HIT) / 1000.0);
+    storeAppendPrintf(sentry, "\tNot-Modified Replies: %8.5f %8.5f\n",
+	statMedianSvc(5, MEDIAN_NM) / 1000.0,
+	statMedianSvc(60, MEDIAN_NM) / 1000.0);
+    storeAppendPrintf(sentry, "\tDNS Lookups:          %8.5f %8.5f\n",
+	statMedianSvc(5, MEDIAN_DNS) / 1000.0,
+	statMedianSvc(60, MEDIAN_DNS) / 1000.0);
+    storeAppendPrintf(sentry, "\tICP Queries:          %8.5f %8.5f\n",
+	statMedianSvc(5, MEDIAN_ICP_QUERY) / 1000000.0,
+	statMedianSvc(60, MEDIAN_ICP_QUERY) / 1000000.0);
 
     squid_getrusage(&rusage);
     cputime = rusage_cputime(&rusage);
@@ -954,12 +975,8 @@ statAvg60min(StoreEntry * e)
     statAvgDump(e, 60, 0);
 }
 
-enum {
-    HTTP_SVC, ICP_SVC, DNS_SVC
-};
-
-int
-get_median_svc(int interval, int which)
+static double
+statMedianSvc(int interval, int which)
 {
     StatCounters *f;
     StatCounters *l;
@@ -972,20 +989,38 @@ get_median_svc(int interval, int which)
     assert(f);
     assert(l);
     switch (which) {
-    case HTTP_SVC:
+    case MEDIAN_HTTP:
 	x = statHistDeltaMedian(&l->client_http.all_svc_time, &f->client_http.all_svc_time);
 	break;
-    case ICP_SVC:
+    case MEDIAN_HIT:
+	x = statHistDeltaMedian(&l->client_http.hit_svc_time, &f->client_http.hit_svc_time);
+	break;
+    case MEDIAN_MISS:
+	x = statHistDeltaMedian(&l->client_http.miss_svc_time, &f->client_http.miss_svc_time);
+	break;
+    case MEDIAN_NM:
+	x = statHistDeltaMedian(&l->client_http.nm_svc_time, &f->client_http.nm_svc_time);
+	break;
+    case MEDIAN_ICP_QUERY:
 	x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
 	break;
-    case DNS_SVC:
+    case MEDIAN_DNS:
 	x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
 	break;
     default:
 	debug(49, 5) ("get_median_val: unknown type.\n");
 	x = 0;
     }
-    return (int) x;
+    return x;
+}
+
+/*
+ * SNMP wants ints, ick
+ */
+int
+get_median_svc(int interval, int which)
+{
+	return(int) statMedianSvc(interval, which);
 }
 
 StatCounters *

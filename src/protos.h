@@ -546,6 +546,7 @@ extern void passStart(int, const char *, request_t *, size_t *);
 extern void identStart(int, ConnStateData *, IDCB * callback, void *);
 
 extern void statInit(void);
+extern double median_svc_get(int, int);
 extern void pconnHistCount(int, int);
 
 void statHistClean(StatHist * H);
