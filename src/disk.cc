@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.18 1996/07/15 23:48:32 wessels Exp $
+ * $Id: disk.cc,v 1.19 1996/07/17 16:59:59 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -151,8 +151,14 @@ int file_open(path, handler, mode)
     FD_ENTRY *conn;
     int fd;
 
+    if (mode & O_RDWR)
+	fatal_dump("file_open: O_RDWR not allowed");
+    if (mode & O_WRONLY)
+	mode |= O_APPEND;
+    mode |= O_NDELAY;
+
     /* Open file */
-    if ((fd = open(path, mode | O_NDELAY, 0644)) < 0) {
+    if ((fd = open(path, mode, 0644)) < 0) {
 	debug(6, 0, "file_open: error opening file %s: %s\n",
 	    path, xstrerror());
 	return (DISK_ERROR);
@@ -179,6 +185,7 @@ int file_open(path, handler, mode)
     return fd;
 }
 
+#ifdef UNUSED_CODE
 int file_update_open(fd, path)
      int fd;
      char *path;		/* path to file */
@@ -204,6 +211,7 @@ int file_update_open(fd, path)
     conn->comm_type = COMM_NONBLOCKING;
     return fd;
 }
+#endif
 
 
 /* close a disk file. */
@@ -284,32 +292,26 @@ int diskHandleWrite(fd, entry)
      FileEntry *entry;
 {
     int len;
-    dwrite_q *q;
-    int block_complete = 0;
+    dwrite_q *q = NULL;
 
     if (file_table[fd].at_eof == NO)
 	lseek(fd, 0, SEEK_END);
 
-    for (;;) {
-	len = write(fd, (entry->write_q->buf) + entry->write_q->cur_offset,
+    while (entry->write_q) {
+	len = write(fd,
+	    entry->write_q->buf + entry->write_q->cur_offset,
 	    entry->write_q->len - entry->write_q->cur_offset);
-
 	file_table[fd].at_eof = YES;
-
 	if (len < 0) {
-	    switch (errno) {
-#if EAGAIN != EWOULDBLOCK
-	    case EAGAIN:
-#endif
-	    case EWOULDBLOCK:
-		/* just reschedule itself, try again */
+	    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+		/* just reschedule us, try again */
 		comm_set_select_handler(fd,
 		    COMM_SELECT_WRITE,
 		    (PF) diskHandleWrite,
 		    (void *) entry);
 		entry->write_daemon = PRESENT;
 		return DISK_OK;
-	    default:
+	    } else {
 		/* disk i/o failure--flushing all outstanding writes  */
 		debug(6, 1, "diskHandleWrite: FD %d: disk write error: %s\n",
 		    fd, xstrerror());
@@ -319,72 +321,39 @@ int diskHandleWrite(fd, entry)
 		do {
 		    q = entry->write_q;
 		    entry->write_q = q->next;
-		    if (!entry->wrt_handle) {
-			safe_free(q->buf);
-		    } else {
-			/* XXXXXX 
-			 * Notice we call the handler multiple times but
-			 * the write handler (in page mode) doesn't know
-			 * the buf ptr so it'll be hard to deallocate
-			 * memory.
-			 * XXXXXX */
-			entry->wrt_handle(fd,
-			    errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR,
-			    entry->wrt_handle_data);
-		    }
+		    if (q->free)
+			(q->free) (q->buf);
 		    safe_free(q);
 		} while (entry->write_q);
+		if (entry->wrt_handle) {
+		    entry->wrt_handle(fd,
+			errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR,
+			entry->wrt_handle_data);
+		}
 		return DISK_ERROR;
 	    }
 	}
 	entry->write_q->cur_offset += len;
-	block_complete = (entry->write_q->cur_offset >= entry->write_q->len);
-
-	if (block_complete && (!entry->write_q->next)) {
-	    /* No more data */
-	    if (!entry->wrt_handle)
-		safe_free(entry->write_q->buf);
-	    safe_free(entry->write_q);
-	    entry->write_q = entry->write_q_tail = NULL;
-	    entry->write_pending = NO_WRT_PENDING;
-	    entry->write_daemon = NOT_PRESENT;
-	    /* call finish handle */
-	    if (entry->wrt_handle) {
-		entry->wrt_handle(fd, DISK_OK, entry->wrt_handle_data);
-	    }
-	    /* Close it if requested */
-	    if (file_table[fd].close_request == REQUEST) {
-		file_close(fd);
-	    }
-	    return DISK_OK;
-	} else if ((block_complete) && (entry->write_q->next)) {
-	    /* Do next block */
-
-	    /* XXXXX THESE PRIMITIVES ARE WEIRD XXXXX   
-	     * If we have multiple blocks to send, we  
-	     * only call the completion handler once, 
-	     * so it becomes our job to free buffer space    
-	     */
-
+	if (entry->write_q->cur_offset < entry->write_q->len) {
+	    continue;		/* partial write? */
+	} else {
+	    /* complete write */
 	    q = entry->write_q;
-	    entry->write_q = entry->write_q->next;
-	    if (!entry->wrt_handle)
-		safe_free(q->buf);
+	    entry->write_q = q->next;
+	    if (q->free)
+		(q->free) (q->buf);
 	    safe_free(q);
-	    /* Schedule next write 
-	     *  comm_set_select_handler(fd, COMM_SELECT_WRITE, (PF) diskHandleWrite,
-	     *      (void *) entry);
-	     */
-	    entry->write_daemon = PRESENT;
-	    /* Repeat loop */
-	} else {		/* !Block_completed; block incomplete */
-	    /* reschedule */
-	    comm_set_select_handler(fd, COMM_SELECT_WRITE, (PF) diskHandleWrite,
-		(void *) entry);
-	    entry->write_daemon = PRESENT;
-	    return DISK_OK;
 	}
     }
+    /* no more data */
+    entry->write_q = entry->write_q_tail = NULL;
+    entry->write_pending = NO_WRT_PENDING;
+    entry->write_daemon = NOT_PRESENT;
+    if (entry->wrt_handle)
+	entry->wrt_handle(fd, DISK_OK, entry->wrt_handle_data);
+    if (file_table[fd].close_request == REQUEST)
+	file_close(fd);
+    return DISK_OK;
 }
 
 
@@ -392,13 +361,14 @@ int diskHandleWrite(fd, entry)
 /* write block to a file */
 /* write back queue. Only one writer at a time. */
 /* call a handle when writing is complete. */
-int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
+int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data, free)
      int fd;
      char *ptr_to_buf;
      int len;
      int access_code;
      void (*handle) ();
      void *handle_data;
+     void (*free) _PARAMS((void *));
 {
     dwrite_q *wq = NULL;
 
@@ -411,12 +381,11 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
     }
     /* if we got here. Caller is eligible to write. */
     wq = xcalloc(1, sizeof(dwrite_q));
-
     wq->buf = ptr_to_buf;
-
     wq->len = len;
     wq->cur_offset = 0;
     wq->next = NULL;
+    wq->free = free;
     file_table[fd].wrt_handle = handle;
     file_table[fd].wrt_handle_data = handle_data;
 
@@ -425,7 +394,6 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
     if (!(file_table[fd].write_q)) {
 	/* empty queue */
 	file_table[fd].write_q = file_table[fd].write_q_tail = wq;
-
     } else {
 	file_table[fd].write_q_tail->next = wq;
 	file_table[fd].write_q_tail = wq;
@@ -433,7 +401,6 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
 
     if (file_table[fd].write_daemon == PRESENT)
 	return DISK_OK;
-    /* got to start write routine for this fd */
 #if USE_ASYNC_IO
     return aioFileQueueWrite(fd,
 	aioFileWriteComplete,
@@ -645,4 +612,9 @@ char *diskFileName(fd)
 	return (file_table[fd].filename);
     else
 	return (0);
+}
+
+int diskWriteIsComplete(fd)
+{
+    return file_table[fd].write_q ? 0 : 1;
 }
