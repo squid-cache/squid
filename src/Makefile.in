@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.56 1996/11/19 07:21:12 wessels Exp $
+#  $Id: Makefile.in,v 1.57 1996/11/25 03:02:48 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -44,7 +44,8 @@ INSTALL_FILE 	= @INSTALL_DATA@
 RANLIB		= @RANLIB@
 LN_S		= @LN_S@
 PERL            = @PERL@
-CRYPT_LIB	= @CRYPT_LIB@
+CRYPTLIB	= @CRYPTLIB@
+REGEXLIB	= @REGEXLIB@
 AC_CFLAGS	= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
@@ -56,8 +57,12 @@ SHELL		= /bin/sh
 
 INCLUDE		= -I. -I../include -I$(srcdir)/../include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-LIBS		= -L../lib -lregex -lmiscutil $(XTRA_LIBS)
+SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) -lmiscutil $(XTRA_LIBS) \
+		   $(AIO_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
+DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
+FTPGET_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
+PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = squid client
 UTILS           = dnsserver ftpget pinger
@@ -125,7 +130,7 @@ all:    squid.conf $(PROGS) $(UTILS) $(CGIPROGS)
 $(OBJS): ../include/version.h
 
 squid:	$(OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(CRYPT_LIB) $(LIBS) $(AIO_LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
 
 cache_cf.o: cache_cf.c Makefile
 	$(CC) -c $< $(CFLAGS) $(DEFAULTS)
@@ -134,16 +139,16 @@ client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)
 
 dnsserver: dnsserver.o
-	$(CC) -o $@ $(LDFLAGS) $@.o $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) $@.o $(DNSSERVER_LIBS)
 
 cachemgr.cgi:	cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
 
 ftpget: ftpget.o
-	$(CC) -o $@ $(LDFLAGS) ftpget.o debug.o $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) ftpget.o debug.o $(FTPGET_LIBS)
 
 pinger: pinger.o
-	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o $(PINGER_LIBS)
 
 squid.conf: squid.conf.pre Makefile
 	sed "\
