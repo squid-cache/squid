@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.44 1997/06/04 06:16:07 wessels Exp $
+ * $Id: redirect.cc,v 1.45 1997/07/15 05:34:12 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -113,6 +113,8 @@ redirectCreateRedirector(const char *command)
 	return -1;
     }
     listen(cfd, 1);
+    /* flush or else we get dup data if unbuffered_logs is set */
+    logsFlush();
     if ((pid = fork()) < 0) {
 	debug(50, 0) ("redirect_create_redirector: fork: %s\n", xstrerror());
 	comm_close(cfd);

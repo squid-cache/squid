@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.161 1997/07/14 23:45:02 wessels Exp $
+ * $Id: main.cc,v 1.162 1997/07/15 05:34:11 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -482,6 +482,7 @@ mainInitialize(void)
     debug(1, 0) ("Starting Squid Cache version %s for %s...\n",
 	version_string,
 	CONFIG_HOST_TYPE);
+    debug(1, 0) ("Process ID %d\n", (int) getpid());
     debug(1, 1) ("With %d file descriptors available\n", Squid_MaxFD);
 
     if (!configured_once) {

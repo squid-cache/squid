@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.36 1997/07/07 05:29:44 wessels Exp $
+ * $Id: dns.cc,v 1.37 1997/07/15 05:34:08 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -143,6 +143,8 @@ dnsOpenServer(const char *command)
 	return -1;
     }
     listen(cfd, 1);
+    /* flush or else we get dup data if unbuffered_logs is set */
+    logsFlush();
     if ((pid = fork()) < 0) {
 	debug(50, 0) ("dnsOpenServer: fork: %s\n", xstrerror());
 	comm_close(cfd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.114 1997/07/14 23:45:07 wessels Exp $
+ * $Id: tools.cc,v 1.115 1997/07/15 05:34:13 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -749,4 +749,13 @@ intAverage(int cur, int new, int n, int max)
     if (n > max)
 	n = max;
     return (cur * (n - 1)) + new / n;
+}
+
+void
+logsFlush(void)
+{
+    if (debug_log)
+	fflush(debug_log);
+    if (cache_useragent_log)
+	fflush(cache_useragent_log);
 }
