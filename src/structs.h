@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.223 1998/09/14 22:18:02 wessels Exp $
+ * $Id: structs.h,v 1.224 1998/09/14 22:20:00 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1031,7 +1031,7 @@ struct _peer {
 	struct {
 		int count_event_pending:1;
 		int counting:1;
-	}
+	} flags;
     } mcast;
     PeerDigest digest;
     int tcp_up;			/* 0 if a connect() fails */
