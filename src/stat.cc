@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.95 1996/10/28 07:44:27 wessels Exp $
+ * $Id: stat.cc,v 1.96 1996/10/29 02:40:13 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -772,7 +772,7 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
     storeAppendPrintf(sentry, "{\tCPU Usage: %d%%}\n",
 	percent(rusage.ru_utime.tv_sec + rusage.ru_stime.tv_sec,
 	    squid_curtime - squid_starttime));
-#ifdef _SQUID_SGI_
+#if defined(_SQUID_SGI_) || defined(_SQUID_OSF_)
     storeAppendPrintf(sentry, "{\tProcess Size: rss %ld KB}\n",
 	rusage.ru_maxrss);
 #else /* _SQUID_SGI_ */
