@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.189 1997/05/15 23:30:58 wessels Exp $
+ * $Id: cache_cf.cc,v 1.190 1997/05/16 07:43:54 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -877,7 +877,10 @@ parseCacheDir(void)
     if ((token = strtok(NULL, w_space)))
 	if (!strcasecmp(token, "read-only"))
 	    readonly = 1;
-    storeAddSwapDisk(dir, size, l1, l2, readonly);
+    if (configured_once)
+        storeReconfigureSwapDisk(dir, size, l1, l2, readonly);
+    else
+        storeAddSwapDisk(dir, size, l1, l2, readonly);
 }
 
 int
