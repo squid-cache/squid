@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.51 2003/09/01 03:49:42 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.52 2004/03/03 09:34:58 adrian Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -827,7 +827,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 {
     unsigned int i;
     unsigned int size;
-    off_t max_offset;
+    unsigned long max_offset;
 
     i = GetInteger();
     size = i << 10;		/* Mbytes to Kbytes */
@@ -856,9 +856,9 @@ CossSwapDir::parse(int anIndex, char *aPath)
      * largest possible sfileno, assuming sfileno is a 25-bit
      * signed integer, as defined in structs.h.
      */
-    max_offset = (off_t) 0xFFFFFF << blksz_bits;
+    max_offset = (unsigned long) 0xFFFFFF << blksz_bits;
 
-    if (max_size > (max_offset>>10)) {
+    if ((unsigned long)max_size > (unsigned long)(max_offset>>10)) {
         debug(47,0)("COSS block-size = %d bytes\n", 1<<blksz_bits);
         debugs(47,0, "COSS largest file offset = " << (max_offset >> 10) << " KB");
         debug(47,0)("COSS cache_dir size = %d KB\n", max_size);
