@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.22 2004/10/10 03:02:42 hno Exp $
+# $Id: Makefile.am,v 1.23 2004/12/20 14:52:07 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5

@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.16 2004/11/07 23:29:50 hno Exp $
+ * $Id: Stack.h,v 1.17 2004/12/20 14:52:22 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -54,7 +54,7 @@ public:
         if (!count)
             return value_type();
 
-        value_type result = items[count];
+        value_type result = items[--count];
 
         this->items[count] = value_type();
 

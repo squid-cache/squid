@@ -7,8 +7,8 @@
 # Autotool versions preferred. To override either edit the script
 # to match the versions you want to use, or set the variables on
 # the command line like "env acver=.. amver=... ./bootstrap.sh"
-acversions="${acver:-2.57 2.53 2.52}"
-amversions="${amver:-1.7 1.6 1.5}"
+acversions="${acver:-2.59 2.57 2.53 2.52}"
+amversions="${amver:-1.9 1.7 1.6 1.5}"
 
 check_version()
 {
@@ -81,7 +81,7 @@ do
 		perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
 	    fi
 	    bootstrap autoheader$acver
-	    #bootstrap libtoolize --automake
+	    bootstrap libtoolize --automake
 	    bootstrap automake$amver --foreign --add-missing
 	    bootstrap autoconf$acver
 	fi ); then

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.40 2004/11/07 23:29:50 hno Exp $
+ * $Id: client_side_request.cc,v 1.41 2004/12/20 14:52:27 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.7 2004/11/07 23:29:50 hno Exp $
+ * $Id: ACLDomainData.cc,v 1.8 2004/12/20 14:52:24 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

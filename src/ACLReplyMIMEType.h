@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLReplyMIMEType.h,v 1.4 2004/10/20 22:37:56 hno Exp $
+ * $Id: ACLReplyMIMEType.h,v 1.5 2004/12/20 14:52:24 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.160 2004/12/10 00:54:04 hno Exp $
+ * $Id: fqdncache.cc,v 1.161 2004/12/20 14:52:27 robertc Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
