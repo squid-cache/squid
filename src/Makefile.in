@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.90 1997/11/03 22:43:06 wessels Exp $
+#  $Id: Makefile.in,v 1.91 1997/11/04 00:31:17 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -16,12 +16,13 @@ KILL_PARENT_OPT	= # -DKILL_PARENT_OPT
 USE_SPLAY_TREE  = # -DUSE_SPLAY_TREE
 USE_BIN_TREE    = # -DUSE_BIN_TREE
 ALARM_UPDATES_TIME = # -DALARM_UPDATES_TIME=1
+STORE_KEY_SHA	= # -DSTORE_KEY_SHA=1
 
 DEFINES         = $(HOST_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) \
                   $(ICMP_OPT) $(DELAY_HACK) $(USERAGENT_OPT) \
                   $(KILL_PARENT_OPT) $(USE_POLL_OPT) \
                   $(USE_SPLAY_TREE) $(USE_BIN_TREE) \
-		  $(ALARM_UPDATES_TIME)
+		  $(ALARM_UPDATES_TIME) $(STORE_KEY_SHA)
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
