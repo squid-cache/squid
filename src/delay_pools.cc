@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.21 2002/04/13 23:07:50 hno Exp $
+ * $Id: delay_pools.cc,v 1.22 2002/04/14 13:58:01 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -305,19 +305,23 @@ delayId(unsigned short pool, unsigned short position)
 }
 
 delay_id
-delayClient(request_t * r)
+delayClient(clientHttpRequest * http)
 {
+    request_t *r;
     aclCheck_t ch;
     int i;
     int j;
     unsigned int host;
     unsigned short pool, position;
     unsigned char class, net;
+    assert(http);
+    r = http->request;
 
     memset(&ch, '\0', sizeof(ch));
     ch.src_addr = r->client_addr;
     ch.my_addr = r->my_addr;
     ch.my_port = r->my_port;
+    ch.conn = http->conn;
     ch.request = r;
     if (r->client_addr.s_addr == INADDR_BROADCAST) {
 	debug(77, 2) ("delayClient: WARNING: Called with 'allones' address, ignoring\n");

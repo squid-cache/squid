@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.433 2002/04/13 23:07:51 hno Exp $
+ * $Id: protos.h,v 1.434 2002/04/14 13:58:01 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1234,7 +1234,7 @@ extern void delayPoolsReconfigure(void);
 extern void delaySetNoDelay(int fd);
 extern void delayClearNoDelay(int fd);
 extern int delayIsNoDelay(int fd);
-extern delay_id delayClient(request_t *);
+extern delay_id delayClient(clientHttpRequest *);
 extern EVH delayPoolsUpdate;
 extern int delayBytesWanted(delay_id d, int min, int max);
 extern void delayBytesIn(delay_id, int qty);
