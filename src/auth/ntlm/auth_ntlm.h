@@ -34,6 +34,8 @@ struct _ntlm_request {
     auth_state_t auth_state;
     /* have we got the helper-server in a deferred state? */
     int authserver_deferred;
+    /* what connection is this associated with */
+    ConnStateData * conn;
 };
 
 struct _ntlm_helper_state_t {

@@ -1,7 +1,7 @@
 /*
- * $Id: ntlm.h,v 1.3 2001/03/10 00:55:39 hno Exp $
+ * $Id: ntlm.h,v 1.4 2001/08/29 14:57:38 robertc Exp $
  *
- * AUTHOR: Andy Doran <ad@netbsd.org>
+ * AUTHOR: Andrew Doran <ad@interlude.eu.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.29 2001/08/03 15:13:04 adrian Exp $
+ * $Id: helper.cc,v 1.30 2001/08/29 14:57:35 robertc Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -180,6 +180,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 	}
 	hlp->n_running++;
 	srv = cbdataAlloc(helper_stateful_server);
+	srv->pid = x;
 	srv->flags.alive = 1;
 	srv->flags.reserved = S_HELPER_FREE;
 	srv->deferred_requests = 0;
@@ -463,9 +464,10 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
 	hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
 	"#",
 	"FD",
+	"PID",
 	"# Requests",
 	"# Deferred Requests",
 	"Flags",
@@ -475,9 +477,10 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     for (link = hlp->servers.head; link; link = link->next) {
 	srv = link->data;
 	tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
-	storeAppendPrintf(sentry, "%7d\t%7d\t%11d\t%11d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+	storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%11d\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
 	    srv->index + 1,
 	    srv->rfd,
+	    srv->pid,
 	    srv->stats.uses,
 	    srv->deferred_requests,
 	    srv->flags.alive ? 'A' : ' ',
@@ -485,6 +488,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
 	    srv->flags.closing ? 'C' : ' ',
 	    srv->flags.reserved != S_HELPER_FREE ? 'R' : ' ',
 	    srv->flags.shutdown ? 'S' : ' ',
+	    srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
 	    tt < 0.0 ? 0.0 : tt,
 	    (int) srv->offset,
 	    srv->request ? log_quote(srv->request->buf) : "(none)");
@@ -495,6 +499,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     storeAppendPrintf(sentry, "   C = CLOSING\n");
     storeAppendPrintf(sentry, "   R = RESERVED or DEFERRED\n");
     storeAppendPrintf(sentry, "   S = SHUTDOWN\n");
+    storeAppendPrintf(sentry, "   P = PLACEHOLDER\n");
 }
 
 void
@@ -820,7 +825,9 @@ helperStatefulHandleRead(int fd, void *data)
 	    intAverage(hlp->stats.avg_svc_time,
 	    tvSubMsec(srv->dispatch_time, current_time),
 	    hlp->stats.replies, REDIRECT_AV_FACTOR);
-	if (srv->flags.shutdown) {
+	if (srv->flags.shutdown
+	    && srv->flags.reserved == S_HELPER_FREE
+	    && !srv->deferred_requests) {
 	    comm_close(srv->wfd);
 	    srv->wfd = -1;
 	} else {
@@ -1032,7 +1039,9 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
 	/* and push the queue. Note that the callback may have submitted a new 
 	 * request to the helper which is why we test for the request*/
 	if (srv->request == NULL) {
-	    if (srv->flags.shutdown) {
+	    if (srv->flags.shutdown
+		&& srv->flags.reserved == S_HELPER_FREE
+		&& !srv->deferred_requests) {
 		comm_close(srv->wfd);
 		srv->wfd = -1;
 	    } else {

@@ -1,6 +1,6 @@
 /*
  * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>,
- *        inspired by previous work by Andy Doran
+ *        inspired by previous work by Andrew Doran <ad@interlude.eu.org>
  *
  * Distributed freely under the terms of the GNU General Public License,
  * version 2. See the file COPYING for licensing details
@@ -37,6 +37,8 @@
 /* #define DEBUG */
 #endif
 
+#define DEAD_DC_RETRY_INTERVAL 30
+
 /************* END CONFIGURATION ***************/
 
 #include <sys/types.h>
@@ -66,10 +68,9 @@ debug(char *format,...)
 
 
 /* A couple of harmless helper macros */
-#define SEND(X) debug("sending '%s' to squid\n",X); printf(X); printf("\n");
+#define SEND(X) debug("sending '%s' to squid\n",X); printf(X "\n");
 #ifdef __GNUC__
-#define SEND2(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X,Y);\
-         printf("\n");
+#define SEND2(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
 #else
 /* no gcc, no debugging. varargs macros are a gcc extension */
 #define SEND2 printf
@@ -92,15 +93,11 @@ void dc_disconnect(void);
 int connectedp(void);
 int is_dc_ok(char *domain, char *domain_controller);
 
-/* flags used for dc status */
-#define DC_OK 0x0
-#define DC_DEAD 0x1
-
 typedef struct _dc dc;
 struct _dc {
     char *domain;
     char *controller;
-    unsigned char status;
+    time_t dead; /* 0 if it's alive, otherwise time of death */
     dc *next;
 };
 
