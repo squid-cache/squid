@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.104 1998/08/10 19:37:51 wessels Exp $
+ * $Id: url.cc,v 1.105 1998/08/17 23:49:56 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -166,8 +166,9 @@ urlDefaultPort(protocol_t p)
 {
     switch (p) {
     case PROTO_HTTP:
-    case PROTO_HTTPS:
 	return 80;
+    case PROTO_HTTPS:
+	return 443;
     case PROTO_FTP:
 	return 21;
     case PROTO_GOPHER:
