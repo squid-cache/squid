@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.512 2000/11/13 12:25:11 adrian Exp $
+ * $Id: client_side.cc,v 1.513 2000/11/15 02:32:53 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2581,7 +2581,13 @@ clientReadRequest(int fd, void *data)
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
 	    conn->nrequests++;
-	    cbdataLock(http);	/* lock for clientLifetimeTimeout() */
+	    /*
+	     * I wanted to lock 'http' here since its callback data for 
+	     * clientLifetimeTimeout(), but there's no logical place to
+	     * cbdataUnlock if the timeout never happens.  Maybe its safe
+	     * enough to assume that if the FD is open, and the timeout
+	     * triggers, that 'http' is valid.
+	     */
 	    commSetTimeout(fd, Config.Timeout.lifetime, clientLifetimeTimeout, http);
 	    if (parser_return_code < 0) {
 		debug(33, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
@@ -2798,12 +2804,7 @@ static void
 clientLifetimeTimeout(int fd, void *data)
 {
     clientHttpRequest *http = data;
-    ConnStateData *conn;
-    int valid = cbdataValid(http);
-    cbdataUnlock(http);
-    if (!valid)
-	return;
-    conn = http->conn;
+    ConnStateData *conn = http->conn;
     debug(33, 1) ("WARNING: Closing client %s connection due to lifetime timeout\n",
 	inet_ntoa(conn->peer.sin_addr));
     debug(33, 1) ("\t%s\n", http->uri);
