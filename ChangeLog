@@ -1,4 +1,5 @@
 	- Added Italian error pages by Alessio Bragadini.
+	- Added Estonian error pages by Toomas Soome.
 	- Fixed asnAclInitialize calling to prevent coredump.
 	- Fixed FTP directory parsing again.
 	- Made FTP directory listing "Generated" tagline like
