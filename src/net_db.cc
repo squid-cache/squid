@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.93 1998/05/08 16:40:35 wessels Exp $
+ * $Id: net_db.cc,v 1.94 1998/05/08 21:22:16 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -64,7 +64,7 @@ static QS netdbLRU;
 static FREE netdbFreeNameEntry;
 static FREE netdbFreeNetdbEntry;
 static STCB netdbExchangeHandleReply;
-static void netdbExchangeDone(netdbExchangeState *);
+static void netdbExchangeDone(void *);
 
 /* We have to keep a local list of peer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to
@@ -479,7 +479,112 @@ netdbPeerName(const char *name)
     return w->key;
 }
 
+static void
+netdbFreeNetdbEntry(void *data)
+{
+    netdbEntry *n = data;
+    safe_free(n->peers);
+    memFree(MEM_NETDBENTRY, n);
+}
 
+static void
+netdbFreeNameEntry(void *data)
+{
+    net_db_name *x = data;
+    xfree(x->name);
+    memFree(MEM_NET_DB_NAME, x);
+}
+
+static void
+netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
+{
+    netdbExchangeState *ex = data;
+    int rec_sz = 0;
+    off_t o;
+    struct in_addr addr;
+    double rtt;
+    double hops;
+    char *p;
+    int j;
+    HttpReply *rep;
+    size_t hdr_sz;
+    rec_sz = 0;
+    rec_sz += 1 + sizeof(addr.s_addr);
+    rec_sz += 1 + sizeof(int);
+    rec_sz += 1 + sizeof(int);
+    ex->seen = ex->used + size;
+    debug(37, 3) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
+    if (!cbdataValid(ex->p)) {
+	netdbExchangeDone(ex);
+	return;
+    }
+    p = buf;
+    if (0 == ex->used) {
+	/* skip reply headers */
+	if ((hdr_sz = headersEnd(p, size))) {
+	    rep = ex->e->mem_obj->reply;
+	    if (0 == rep->sline.status)
+		httpReplyParse(rep, buf);
+	    if (HTTP_OK != rep->sline.status) {
+		netdbExchangeDone(ex);
+		return;
+	    }
+	    assert(size >= hdr_sz);
+	    ex->used += hdr_sz;
+	    size -= hdr_sz;
+	    p += hdr_sz;
+	} else {
+	    size = 0;
+	}
+    }
+    while (size >= rec_sz) {
+	addr.s_addr = any_addr.s_addr;
+	hops = rtt = 0.0;
+	for (o = 0; o < rec_sz;) {
+	    switch ((int) *(p + o)) {
+	    case NETDB_EX_NETWORK:
+		o++;
+		xmemcpy(&addr.s_addr, p + o, sizeof(addr.s_addr));
+		o += sizeof(addr.s_addr);
+		break;
+	    case NETDB_EX_RTT:
+		o++;
+		xmemcpy(&j, p + o, sizeof(int));
+		o += sizeof(int);
+		rtt = (double) ntohl(j) / 1000.0;
+		break;
+	    case NETDB_EX_HOPS:
+		o++;
+		xmemcpy(&j, p + o, sizeof(int));
+		o += sizeof(int);
+		hops = (double) ntohl(j) / 1000.0;
+		break;
+	    }
+	}
+	if (addr.s_addr != any_addr.s_addr && rtt > 0)
+	    netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
+	assert(o == rec_sz);
+	ex->used += rec_sz;
+	size -= rec_sz;
+	p += rec_sz;
+    }
+    if (ex->e->store_status != STORE_OK) {
+	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
+	    ex->buf, netdbExchangeHandleReply, ex);
+    }
+}
+
+static void
+netdbExchangeDone(void *data)
+{
+    netdbExchangeState * ex = data;
+    memFree(MEM_4K_BUF, ex->buf);
+    requestUnlink(ex->r);
+    storeUnregister(ex->e, ex);
+    storeUnlockObject(ex->e);
+    cbdataUnlock(ex->p);
+    cbdataFree(ex);
+}
 
 #endif /* USE_ICMP */
 
@@ -539,22 +644,6 @@ netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
 	n->rtt,
 	n->hops);
 #endif
-}
-
-static void
-netdbFreeNetdbEntry(void *data)
-{
-    netdbEntry *n = data;
-    safe_free(n->peers);
-    memFree(MEM_NETDBENTRY, n);
-}
-
-static void
-netdbFreeNameEntry(void *data)
-{
-    net_db_name *x = data;
-    xfree(x->name);
-    memFree(MEM_NET_DB_NAME, x);
 }
 
 void
@@ -921,6 +1010,7 @@ netdbBinaryExchange(StoreEntry * s)
 void
 netdbExchangeStart(void *data)
 {
+#if USE_ICMP
     peer *p = data;
     char *uri;
     netdbExchangeState *ex = xcalloc(1, sizeof(*ex));
@@ -947,94 +1037,5 @@ netdbExchangeStart(void *data)
     storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
 	ex->buf, netdbExchangeHandleReply, ex);
     httpStart(ex->r, ex->e, NULL);
-}
-
-static void
-netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
-{
-    netdbExchangeState *ex = data;
-    int rec_sz = 0;
-    off_t o;
-    struct in_addr addr;
-    double rtt;
-    double hops;
-    char *p;
-    int j;
-    HttpReply *rep;
-    size_t hdr_sz;
-    rec_sz = 0;
-    rec_sz += 1 + sizeof(addr.s_addr);
-    rec_sz += 1 + sizeof(int);
-    rec_sz += 1 + sizeof(int);
-    ex->seen = ex->used + size;
-    debug(37, 3) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
-    if (!cbdataValid(ex->p)) {
-	netdbExchangeDone(ex);
-	return;
-    }
-    p = buf;
-    if (0 == ex->used) {
-	/* skip reply headers */
-	if ((hdr_sz = headersEnd(p, size))) {
-	    rep = ex->e->mem_obj->reply;
-	    if (0 == rep->sline.status)
-		httpReplyParse(rep, buf);
-	    if (HTTP_OK != rep->sline.status) {
-		netdbExchangeDone(ex);
-		return;
-	    }
-	    assert(size >= hdr_sz);
-	    ex->used += hdr_sz;
-	    size -= hdr_sz;
-	    p += hdr_sz;
-	} else {
-	    size = 0;
-	}
-    }
-    while (size >= rec_sz) {
-	addr.s_addr = any_addr.s_addr;
-	hops = rtt = 0.0;
-	for (o = 0; o < rec_sz;) {
-	    switch ((int) *(p + o)) {
-	    case NETDB_EX_NETWORK:
-		o++;
-		xmemcpy(&addr.s_addr, p + o, sizeof(addr.s_addr));
-		o += sizeof(addr.s_addr);
-		break;
-	    case NETDB_EX_RTT:
-		o++;
-		xmemcpy(&j, p + o, sizeof(int));
-		o += sizeof(int);
-		rtt = (double) ntohl(j) / 1000.0;
-		break;
-	    case NETDB_EX_HOPS:
-		o++;
-		xmemcpy(&j, p + o, sizeof(int));
-		o += sizeof(int);
-		hops = (double) ntohl(j) / 1000.0;
-		break;
-	    }
-	}
-	if (addr.s_addr != any_addr.s_addr && rtt > 0)
-	    netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
-	assert(o == rec_sz);
-	ex->used += rec_sz;
-	size -= rec_sz;
-	p += rec_sz;
-    }
-    if (ex->e->store_status != STORE_OK) {
-	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
-	    ex->buf, netdbExchangeHandleReply, ex);
-    }
-}
-
-static void
-netdbExchangeDone(netdbExchangeState * ex)
-{
-    memFree(MEM_4K_BUF, ex->buf);
-    requestUnlink(ex->r);
-    storeUnregister(ex->e, ex);
-    storeUnlockObject(ex->e);
-    cbdataUnlock(ex->p);
-    cbdataFree(ex);
+#endif
 }
