@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.64 2003/09/07 07:35:50 adrian Exp $
+ * $Id: store_dir_ufs.cc,v 1.65 2004/11/06 21:51:57 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -76,12 +76,14 @@ UFSSwapDir::parseSizeL1L2()
         fatal("UFSSwapDir::parseSizeL1L2: invalid size value");
 
     /* just reconfigure it */
-    if (size == max_size)
-        debug(3, 1) ("Cache dir '%s' size remains unchanged at %d KB\n",
-                     path, size);
-    else
-        debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
-                     path, size);
+    if (reconfiguring) {
+        if (size == max_size)
+            debug(3, 2) ("Cache dir '%s' size remains unchanged at %d KB\n",
+                         path, size);
+        else
+            debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
+                         path, size);
+    }
 
     max_size = size;
 
