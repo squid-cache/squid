@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.188 1997/05/15 01:28:44 wessels Exp $
+ * $Id: cache_cf.cc,v 1.189 1997/05/15 23:30:58 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1155,8 +1155,8 @@ parseConfigFile(const char *file_name)
 
 	else if (!strcmp(token, "pid_filename"))
 	    parsePathname(&Config.pidFilename, 0);
-        else if (!strcmp(token, "mime_table"))
-           parsePathname(&Config.mimeTablePathname, 1);
+	else if (!strcmp(token, "mime_table"))
+	    parsePathname(&Config.mimeTablePathname, 1);
 	else if (!strcmp(token, "visible_hostname"))
 	    parseVisibleHostnameLine();
 
