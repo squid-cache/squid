@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.213 1998/03/28 20:03:14 wessels Exp $
+ * $Id: ftp.cc,v 1.214 1998/03/28 20:29:49 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -245,7 +245,7 @@ ftpStateFree(int fdnotused, void *data)
     FtpStateData *ftpState = data;
     if (ftpState == NULL)
 	return;
-    debug(9, 3) ("ftpStateFree: %d\n", storeUrl(ftpState->entry));
+    debug(9, 3) ("ftpStateFree: %s\n", storeUrl(ftpState->entry));
     storeUnregisterAbort(ftpState->entry);
     storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
@@ -1202,7 +1202,9 @@ ftpReadWelcome(FtpStateData * ftpState)
 		EBIT_SET(ftpState->flags, FTP_SKIP_WHITESPACE);
 	ftpSendUser(ftpState);
     } else if (code == 120) {
-	debug(9, 3) ("FTP server is busy: %s\n", ftpState->ctrl.message);
+	if (NULL != ftpState->ctrl.message)
+	    debug(9, 3) ("FTP server is busy: %s\n",
+		ftpState->ctrl.message->key);
 	return;
     } else {
 	ftpFail(ftpState);
@@ -1399,7 +1401,7 @@ ftpReadMkdir(FtpStateData * ftpState)
     char *path = ftpState->filepath;
     int code = ftpState->ctrl.replycode;
 
-    debug(9, 3) ("Here, with code %d\n", path, code);
+    debug(9, 3) ("ftpReadMkdir: path %s, code %d\n", path, code);
     if (code == 257) {		/* success */
 	ftpSendCwd(ftpState);
     } else if (code == 550) {	/* dir exists */
@@ -1927,7 +1929,8 @@ ftpReadTransferDone(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadTransferDone\n");
     if (code != 226) {
-	debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n");
+	debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n",
+	    code);
 	debug(9, 1) ("--> releasing '%s'\n", storeUrl(ftpState->entry));
 	storeReleaseRequest(ftpState->entry);
     }
@@ -2048,7 +2051,8 @@ ftpSendReply(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     int http_code;
     int err_code = ERR_NONE;
-    debug(9, 5) ("ftpSendReply for %x (%d)\n", ftpState, code);
+    debug(9, 5) ("ftpSendReply: %s, code %d\n",
+	storeUrl(ftpState->entry), code);
     if (cbdataValid(ftpState))
 	debug(9, 5) ("ftpSendReply: ftpState (%p) is valid!\n", ftpState);
     if (code == 226) {
