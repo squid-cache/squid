@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.49 1996/10/13 06:19:42 wessels Exp $
+ * $Id: acl.cc,v 1.50 1996/10/13 09:16:32 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -208,9 +208,9 @@ aclParseMethodList(void)
 static int
 decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 {
-    ipcache_addrs *ia = NULL;
     u_num32 a;
     int a1, a2, a3, a4;
+    struct hostent *hp;
 
     switch (sscanf(asc, "%d.%d.%d.%d", &a1, &a2, &a3, &a4)) {
     case 4:			/* a dotted quad */
@@ -226,11 +226,13 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 	    break;
 	}
     default:
-	if ((ia = ipcache_gethostbyname(asc, IP_BLOCKING_LOOKUP)) != NULL) {
-	    *addr = ia->in_addrs[0];
+	/* Note, must use plain gethostbyname() here because at startup
+	   ipcache hasn't been initialized */
+	if ((hp = gethostbyname(asc)) != NULL) {
+	    *addr = inaddrFromHostent(hp);
 	} else {
 	    /* XXX: Here we could use getnetbyname */
-	    debug(28, 0, "decode_addr: Invalid IP address or hostname  '%s'\n", asc);
+	    debug(28, 0, "decode_addr: Invalid IP address or hostname '%s'\n", asc);
 	    return 0;		/* This is not valid address */
 	}
 	break;
