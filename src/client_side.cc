@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.564 2002/02/26 15:48:13 adrian Exp $
+ * $Id: client_side.cc,v 1.565 2002/03/07 12:11:26 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1504,18 +1504,21 @@ clientAlwaysAllowResponse(http_status sline)
  * such, writes processed message to the client's socket
  */
 static void
-clientSendMoreData(void *data, char *buf, ssize_t size)
+clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
     ConnStateData *conn = http->conn;
     int fd = conn->fd;
     HttpReply *rep = NULL;
+    char *buf = http->reqbuf;
     const char *body_buf = buf;
+    ssize_t size = http->reqofs + retsize;
     ssize_t body_size = size;
     MemBuf mb;
     ssize_t check_size = 0;
-    debug(33, 5) ("clientSendMoreData: %s, %d bytes\n", http->uri, (int) size);
+
+    debug(33, 5) ("clientSendMoreData: %s, %d bytes (%d new bytes)\n", http->uri, (int) size, retsize);
     assert(size <= HTTP_REQBUF_SZ);
     assert(http->request != NULL);
     dlinkDelete(&http->active, &ClientActiveRequests);
@@ -1523,7 +1526,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     debug(33, 5) ("clientSendMoreData: FD %d '%s', out.offset=%ld \n",
 	fd, storeUrl(entry), (long int) http->out.offset);
     /* update size of the request */
-    http->reqsize = size + http->reqofs;
+    http->reqsize = size;
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
 	debug(33, 2) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
@@ -1532,11 +1535,11 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	return;
-    } else if (size < 0) {
+    } else if (retsize < 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	return;
-    } else if (size == 0) {
+    } else if (retsize == 0) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	return;
@@ -1597,9 +1600,9 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 		return;
 	    }
 	    aclChecklistFree(ch);
-	} else if (size + http->reqofs < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
+	} else if (size < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
 	    /* wait for more to arrive */
-            http->reqofs += size;
+            http->reqofs += retsize;
             assert(http->reqofs <= HTTP_REQBUF_SZ);
 	    storeClientCopy(http->sc, entry,
 		http->out.offset + http->reqofs,
@@ -1610,12 +1613,12 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    return;
 	}
     } else {
-	/* Avoid copying to MemBuf if we know "rep" is NULL, and we only have a body */
-	http->out.offset += body_size;
+       /* Avoid copying to MemBuf if we know "rep" is NULL, and we only have a body */
+       http->out.offset += body_size;
         assert(rep == NULL);
-	comm_write(fd, buf, size, clientWriteBodyComplete, http, NULL);
-	/* NULL because clientWriteBodyComplete frees it */
-	return;
+       comm_write(fd, buf, size, clientWriteBodyComplete, http, NULL);
+       /* NULL because clientWriteBodyComplete frees it */
+       return;
     }
     if (http->request->method == METHOD_HEAD) {
 	if (rep) {
