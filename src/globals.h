@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.35 1998/02/07 08:13:37 wessels Exp $
+ * $Id: globals.h,v 1.36 1998/02/10 21:44:33 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -27,7 +27,7 @@ extern const char *const localhost;	/* "127.0.0.1" */
 extern const char *const null_string;	/* "" */
 extern const char *const version_string;	/* SQUID_VERSION */
 extern const char *const w_space;	/* " \t\n\r" */
-extern const char *fdstatTypeStr[];
+extern const char *fdTypeStr[];
 extern const char *hier_strings[];
 extern const char *memStatusStr[];
 extern const char *pingStatusStr[];
