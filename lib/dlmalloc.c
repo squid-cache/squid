@@ -1,5 +1,5 @@
 /*
- * $Id: dlmalloc.c,v 1.5 2003/01/23 00:37:01 robertc Exp $
+ * $Id: dlmalloc.c,v 1.6 2003/12/23 07:59:03 robertc Exp $
  */
 
 /* ---------- To make a malloc.h, start cutting here ------------ */
@@ -864,7 +864,7 @@ Void_t* cALLOc(size_t, size_t);
 void    cfree(Void_t*);
 int     malloc_trim(size_t);
 size_t  malloc_usable_size(Void_t*);
-void    malloc_stats();
+void    malloc_stats(void);
 int     mALLOPt(int, int);
 struct mallinfo mALLINFo(void);
 #else
