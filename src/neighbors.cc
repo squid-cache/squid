@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.12 1996/04/08 19:32:40 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.13 1996/04/10 17:57:44 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -214,51 +214,6 @@ edge *getFirstEdge()
     return friends->edges_head;
 }
 
-void neighbors_install(host, type, ascii_port, udp_port, proxy_only, domains)
-     char *host;
-     char *type;
-     int ascii_port;
-     int udp_port;
-     int proxy_only;
-     dom_list *domains;
-{
-    edge *e;
-
-    debug(15, 1, "Adding a %s: %s\n", type, host);
-
-    e = (edge *) xcalloc(1, sizeof(edge));
-
-    e->ack_deficit = 0;
-    e->ascii_port = ascii_port;
-    e->udp_port = udp_port;
-    e->proxy_only = proxy_only;
-    e->host = xstrdup(host);
-    e->domains = domains;
-    e->num_pings = 0;
-    e->pings_sent = 0;
-    e->pings_acked = 0;
-    e->neighbor_up = 1;
-    e->hits = 0;
-    e->misses = 0;
-
-    if (!strcmp(type, "parent")) {
-	friends->n_parent++;
-	e->type = is_a_parent;
-    } else {
-	friends->n_neighbor++;
-	e->type = is_a_neighbor;
-    }
-
-    /* Append edge */
-    if (!friends->edges_head)
-	friends->edges_head = e;
-    if (friends->edges_tail)
-	friends->edges_tail->next = e;
-    friends->edges_tail = e;
-
-    friends->n++;
-}
-
 void neighborsDestroy()
 {
     edge *e = NULL;
@@ -302,7 +257,6 @@ void neighbors_open(fd)
     struct sockaddr_in our_socket_name;
     struct sockaddr_in *ap;
     int sock_name_length = sizeof(our_socket_name);
-    char *fname = NULL;
     char **list = NULL;
     edge *e = NULL;
     struct in_addr *ina = NULL;
@@ -313,9 +267,6 @@ void neighbors_open(fd)
 	    fd, &our_socket_name, &sock_name_length);
     }
     friends->fd = fd;
-
-    if ((fname = getHierarchyLogFile()))
-	neighborsOpenLog(fname);
 
     /* Prepare neighbor connections, one at a time */
     for (e = friends->edges_head; e; e = e->next) {
@@ -382,20 +333,6 @@ void neighbors_open(fd)
 	    echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
 	}
     }
-}
-
-neighbors *neighbors_create()
-{
-    neighbors *f;
-
-    f = (neighbors *) xcalloc(1, sizeof(neighbors));
-    f->n = 0;
-    f->n_parent = 0;
-    f->n_neighbor = 0;
-    f->edges_head = (edge *) NULL;
-    f->edges_tail = (edge *) NULL;
-    f->first_ping = (edge *) NULL;
-    return (friends = f);
 }
 
 
@@ -719,22 +656,52 @@ int neighbors_cf_domain(host, domain)
 
 void neighbors_init()
 {
-    struct neighbor_cf *t, *next;
+    struct neighbor_cf *t = NULL;
+    struct neighbor_cf *next = NULL;
+    char *me = getMyHostname();
+    edge *e = NULL;
+    char *fname = NULL;
+
+    debug(15, 1, "neighbors_init: Initializing Neighbors...\n");
+
+    if (friends == NULL)
+	friends = (neighbors *) xcalloc(1, sizeof(neighbors));
+
+    if ((fname = getHierarchyLogFile()))
+	neighborsOpenLog(fname);
 
     for (t = Neighbor_cf; t; t = next) {
 	next = t->next;
-	if (strncmp(t->host, getMyHostname(), SQUIDHOSTNAMELEN) ||
-	    t->ascii_port != getAsciiPortNum()) {
-	    neighbors_install(t->host, t->type,
-		t->ascii_port, t->udp_port, t->proxy_only,
-		t->domains);
-	} else {
+	if (!strcmp(t->host, me) && t->ascii_port == getAsciiPortNum()) {
 	    debug(15, 0, "neighbors_init: skipping cache_host %s %s %d %d\n",
 		t->type, t->host, t->ascii_port, t->udp_port);
-	    debug(15, 0, "neighbors_init: because it seems to be identical to this cached\n");
+	    continue;
 	}
-	xfree(t->host);
-	xfree(t->type);
+	debug(15, 1, "Adding a %s: %s\n", t->type, t->host);
+
+	e = (edge *) xcalloc(1, sizeof(edge));
+	e->ascii_port = t->ascii_port;
+	e->udp_port = t->udp_port;
+	e->proxy_only = t->proxy_only;
+	e->host = t->host;
+	e->domains = t->domains;
+	e->neighbor_up = 1;
+	if (!strcmp(t->type, "parent")) {
+	    friends->n_parent++;
+	    e->type = is_a_parent;
+	} else {
+	    friends->n_neighbor++;
+	    e->type = is_a_neighbor;
+	}
+
+	/* Append edge */
+	if (!friends->edges_head)
+	    friends->edges_head = e;
+	if (friends->edges_tail)
+	    friends->edges_tail->next = e;
+	friends->edges_tail = e;
+	friends->n++;
+
 	xfree(t);
     }
 }
