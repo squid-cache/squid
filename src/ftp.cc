@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.146 1997/10/23 16:38:10 wessels Exp $
+ * $Id: ftp.cc,v 1.147 1997/10/23 20:41:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -967,7 +967,8 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
 	    err->request = requestLink(ftpState->request);
 	    errorAppendEntry(entry, err);
 	}
-	storeAbort(entry, 0);
+	if (entry->store_status == STORE_PENDING)
+	    storeAbort(entry, 0);
 	comm_close(fd);
     }
 }
@@ -1045,7 +1046,8 @@ ftpReadControlReply(int fd, void *data)
 		err->request = requestLink(ftpState->request);
 		errorAppendEntry(entry, err);
 	    }
-	    storeAbort(entry, 0);
+	    if (entry->store_status == STORE_PENDING)
+		storeAbort(entry, 0);
 	    comm_close(fd);
 	}
 	return;
