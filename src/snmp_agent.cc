@@ -190,7 +190,7 @@ long		*ireqid;
 		}
 	    } else if( ret > 0 ) {
 		increment_stat( ret );
-		debug(49,5)("snmp_agent_parse: authorization failed>0 ");
+		debug(49,5)("snmp_agent_parse: authorization failed ret=%d\n", ret);
 		return 0;
 	    }
 
@@ -447,7 +447,7 @@ parse_var_op_list(sn_data, length, out_sn_data, out_length, index, msgtype, acti
     int	    var_name_len, var_val_len;
     u_char  var_val_type, *var_val, statType;
     u_char *statP;
-    int	    statLen;
+    int	    statLen = 0;
     u_short acl;
     int	    rw, exact, err;
     int	    (*write_method)();
@@ -779,7 +779,7 @@ int get_community(sessionid)
 u_char      *sessionid;
 {
     communityEntry *cp;
-	debug(49,5)("get_community: %s on %d\n",sessionid, getpid());
+	debug(49,5)("get_community: %s\n",sessionid);
     for( cp = Config.Snmp.communities; cp; cp = cp->next ) {
 		debug(49,5)("get_community: %s\n", cp->name);
         if (!strcmp(cp->name, (char *)sessionid))
