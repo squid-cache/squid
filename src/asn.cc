@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.30 1998/04/09 17:56:14 wessels Exp $
+ * $Id: asn.cc,v 1.31 1998/04/25 07:07:42 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -88,6 +88,7 @@ static CNCB whoisConnectDone;
 static PF whoisReadReply;
 static STCB asHandleReply;
 static int destroyRadixNode(struct radix_node *rn, void *w);
+static void asnAclInitialize(acl * acls);
 
 static void destroyRadixNodeInfo(as_info *);
 
@@ -129,7 +130,7 @@ asnMatchIp(void *data, struct in_addr addr)
     return 0;
 }
 
-void
+static void
 asnAclInitialize(acl * acls)
 {
     acl *a;
@@ -152,6 +153,7 @@ asnInit(void)
     max_keylen = 40;
     rn_init();
     rn_inithead((void **) &AS_tree_head, 8);
+    asnAclInitialize(Config.aclList);
 }
 
 void
