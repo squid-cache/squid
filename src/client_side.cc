@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.513 2000/11/15 02:32:53 wessels Exp $
+ * $Id: client_side.cc,v 1.514 2000/12/05 09:15:58 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -603,7 +603,7 @@ clientPurgeRequest(clientHttpRequest * http)
      */
     http->entry = clientCreateStoreEntry(http, http->request->method, null_request_flags);
     httpReplyReset(r = http->entry->mem_obj->reply);
-    httpBuildVersion(&version,1,0);
+    httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(r, version, status, NULL, NULL, 0, 0, -1);
     httpReplySwapOut(r, http->entry);
     storeComplete(http->entry);
@@ -1279,7 +1279,7 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
     size_t k = headersEnd(buf, size);
     if (k && httpReplyParse(rep, buf, k)) {
 	/* enforce 1.0 reply version */
-	httpBuildVersion(&rep->sline.version,1,0);
+	httpBuildVersion(&rep->sline.version, 1, 0);
 	/* do header conversions */
 	clientBuildReplyHeader(http, rep);
 	/* if we do ranges, change status to "Partial Content" */
@@ -2094,7 +2094,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    storeReleaseRequest(http->entry);
 	    storeBuffer(http->entry);
 	    rep = httpReplyCreate();
-            httpBuildVersion(&version,1,0);
+	    httpBuildVersion(&version, 1, 0);
 	    httpReplySetHeaders(rep, version, HTTP_OK, NULL, "text/plain",
 		httpRequestPrefixLen(r), 0, squid_curtime);
 	    httpReplySwapOut(rep, http->entry);
@@ -2308,16 +2308,16 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if (token == NULL) {
 	debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
 #if RELAXED_HTTP_PARSER
-	httpBuildVersion(&http_ver,0,9);	/* wild guess */
+	httpBuildVersion(&http_ver, 0, 9);	/* wild guess */
 #else
 	return parseHttpRequestAbort(conn, "error:missing-http-ident");
 #endif
     } else {
-        if (sscanf(token+5, "%d.%d", &http_ver.major, &http_ver.minor)!=2){
-            debug(33, 3) ("parseHttpRequest: Invalid HTTP identifier.\n");
-            return parseHttpRequestAbort(conn, "error: invalid HTTP-ident");
-        }
-        debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n",http_ver.major, http_ver.minor);
+	if (sscanf(token + 5, "%d.%d", &http_ver.major, &http_ver.minor) != 2) {
+	    debug(33, 3) ("parseHttpRequest: Invalid HTTP identifier.\n");
+	    return parseHttpRequestAbort(conn, "error: invalid HTTP-ident");
+	}
+	debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n", http_ver.major, http_ver.minor);
     }
 
     /*

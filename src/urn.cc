@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.61 2000/11/13 12:25:13 adrian Exp $
+ * $Id: urn.cc,v 1.62 2000/12/05 09:16:02 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -273,7 +273,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	full_appname_string, getMyHostname());
     rep = e->mem_obj->reply;
     httpReplyReset(rep);
-    httpBuildVersion(&version,1,0);
+    httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(rep, version, HTTP_MOVED_TEMPORARILY, NULL,
 	"text/html", mb.size, 0, squid_curtime);
     if (urnState->flags.force_menu) {

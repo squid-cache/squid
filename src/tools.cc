@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.198 2000/11/15 12:53:50 adrian Exp $
+ * $Id: tools.cc,v 1.199 2000/12/05 09:16:01 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -449,11 +449,11 @@ getMyHostname(void)
 		inet_ntoa(Config.Sockaddr.http->s.sin_addr),
 		host);
 	    present = 1;
-            if( strchr( host, '.' ) )
-                return host;
+	    if (strchr(host, '.'))
+		return host;
 
 	}
-        debug(50, 1) ("WARNING: failed to resolve %s to a fully qualified hostname\n",
+	debug(50, 1) ("WARNING: failed to resolve %s to a fully qualified hostname\n",
 	    inet_ntoa(Config.Sockaddr.http->s.sin_addr));
     }
     /*
@@ -470,8 +470,8 @@ getMyHostname(void)
 	/* use the official name from DNS lookup */
 	xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
 	present = 1;
-        if( strchr( host, '.' ) )
-            return host;
+	if (strchr(host, '.'))
+	    return host;
     }
     fatal("Could not determine fully qualified hostname.  Please set 'visible_hostname'\n");
     return NULL;		/* keep compiler happy */

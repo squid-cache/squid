@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.156 2000/11/13 12:25:11 adrian Exp $
+ * $Id: errorpage.cc,v 1.157 2000/12/05 09:15:59 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -576,7 +576,7 @@ errorBuildReply(ErrorState * err)
     MemBuf content = errorBuildContent(err);
     http_version_t version;
     /* no LMT for error pages; error pages expire immediately */
-    httpBuildVersion(&version,1,0);
+    httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(rep, version, err->http_status, NULL, "text/html", content.size, 0, squid_curtime);
     /*
      * include some information for downstream caches. Implicit
