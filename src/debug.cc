@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.21 1996/08/19 22:44:51 wessels Exp $
+ * $Id: debug.cc,v 1.22 1996/09/11 22:39:24 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -110,8 +110,6 @@ int _db_line = 0;
 
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
-static time_t last_squid_curtime = 0;
-static char the_time[81];
 
 #define MAX_DEBUG_SECTIONS 50
 static int debugLevels[MAX_DEBUG_SECTIONS];
@@ -131,7 +129,6 @@ void _db_print(va_alist)
 #endif
     LOCAL_ARRAY(char, f, BUFSIZ);
     LOCAL_ARRAY(char, tmpbuf, BUFSIZ);
-    char *s = NULL;
 
     if (debug_log == NULL)
 	return;
@@ -149,18 +146,17 @@ void _db_print(va_alist)
 	va_end(args);
 	return;
     }
-    /* don't compute the curtime too much */
-    if (last_squid_curtime != squid_curtime) {
-	last_squid_curtime = squid_curtime;
-	the_time[0] = '\0';
-	s = mkhttpdlogtime(&squid_curtime);
-	strcpy(the_time, s);
-    }
-    sprintf(f, "[%s] %s:%d:\t %s",
-	the_time,
+#ifdef LOG_FILE_AND_LINE
+    sprintf(f, "%s %-10.10s %4d| %s",
+	accessLogTime(squid_curtime),
 	_db_file,
 	_db_line,
 	format);
+#else
+    sprintf(f, "%s| %s",
+	accessLogTime(squid_curtime),
+	format);
+#endif
 
 #if HAVE_SYSLOG
     /* level 0 go to syslog */
@@ -175,7 +171,6 @@ void _db_print(va_alist)
     vfprintf(debug_log, f, args);
     if (unbuffered_logs)
 	fflush(debug_log);
-
     va_end(args);
 }
 
