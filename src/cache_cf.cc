@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.145 1996/11/25 18:50:28 wessels Exp $
+ * $Id: cache_cf.cc,v 1.146 1996/11/26 23:22:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -957,7 +957,7 @@ parseVizHackLine(void)
 }
 
 static void
-parseProxyLine(edge **E)
+parseProxyLine(edge ** E)
 {
     char *token;
     char *t;
@@ -969,7 +969,7 @@ parseProxyLine(edge **E)
 	edgeDestroy(*E);
 	*E = NULL;
     }
-    e = xcalloc (1, sizeof(edge));
+    e = xcalloc(1, sizeof(edge));
     if ((t = strchr(token, ':'))) {
 	*t++ = '\0';
 	e->http_port = atoi(t);
