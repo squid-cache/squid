@@ -18,6 +18,7 @@ typedef unsigned char uchar;
 #include "ntlm.h"
 #include "util.h"		/* from Squid */
 #include "valid.h"
+#include "smbencrypt.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -196,7 +197,7 @@ char *
 ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 {
     int rv;
-    char pass[25], encrypted_pass[40];
+    char pass[25] /*, encrypted_pass[40] */;
     char *domain = credentials;
     char *user;
     lstring tmp;
