@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.42 1996/10/13 06:19:42 wessels Exp $
+ * $Id: client_side.cc,v 1.43 1996/10/14 21:27:57 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -409,7 +409,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     /* unregister this handler */
     storeUnregister(entry, fd);
     if (entry->store_status == STORE_ABORTED) {
-	debug(33, 0, "icpHandleIMSReply: abort_code=%d\n",
+	debug(33, 3, "icpHandleIMSReply: abort_code=%d\n",
 	    entry->mem_obj->abort_code);
 	icpSendERROR(fd,
 	    entry->mem_obj->abort_code,
@@ -419,7 +419,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	return 0;
     }
     if (mem->reply->code == 0) {
-	debug(33, 0, "icpHandleIMSReply: Incomplete headers for '%s'\n",
+	debug(33, 3, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
 	storeRegister(entry,
 	    fd,
