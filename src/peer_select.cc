@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.21 1997/07/17 05:32:27 wessels Exp $
+ * $Id: peer_select.cc,v 1.22 1997/07/19 04:01:24 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -86,9 +86,9 @@ int
 peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
 {
     int n;
-    debug(44,3)("peerSelectIcpPing: %s\n", entry->url);
     if (entry == NULL)
 	return 0;
+    debug(44,3)("peerSelectIcpPing: %s\n", entry->url);
     if (entry->ping_status != PING_NONE)
 	return 0;
     if (direct == DIRECT_YES)
@@ -138,7 +138,10 @@ peerSelect(request_t * request,
     void *callback_data)
 {
     ps_state *psstate = xcalloc(1, sizeof(ps_state));
-    debug(44,3)("peerSelect: %s\n", entry->url);
+    if (entry)
+        debug(44,3)("peerSelect: %s\n", entry->url);
+    else
+        debug(44,3)("peerSelect: %s\n", RequestMethodStr[request->method]);
     cbdataAdd(psstate);
     psstate->request = requestLink(request);
     psstate->entry = entry;
@@ -175,8 +178,8 @@ peerSelectCallback(ps_state * psstate, peer * p)
 {
     StoreEntry *entry = psstate->entry;
     void *data = psstate->callback_data;
-    debug(44, 3) ("peerSelectCallback: %s\n", entry->url);
     if (entry) {
+        debug(44, 3) ("peerSelectCallback: %s\n", entry->url);
 	if (entry->ping_status == PING_WAITING)
 	    eventDelete(peerPingTimeout, psstate);
 	entry->ping_status = PING_DONE;
@@ -296,7 +299,8 @@ peerPingTimeout(void *data)
 {
     ps_state *psstate = data;
     StoreEntry *entry = psstate->entry;
-    debug(44, 3) ("peerPingTimeout: '%s'\n", entry->url);
+    if (entry)
+        debug(44, 3) ("peerPingTimeout: '%s'\n", entry->url);
     entry->ping_status = PING_TIMEOUT;
     PeerStats.timeouts++;
     psstate->icp.timeout = 1;
