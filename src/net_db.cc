@@ -256,8 +256,9 @@ netdbDump(StoreEntry * sentry)
     int k;
     int i;
     storeAppendPrintf(sentry, "{Network DB Statistics:\n");
-    storeAppendPrintf(sentry, "{%-16.16s %7s %5s %s}\n",
+    storeAppendPrintf(sentry, "{%-16.16s %7s %9s %5s %s}\n",
 	"Network",
+	"recv/sent",
 	"RTT",
 	"Hops",
 	"Hostnames");
@@ -271,8 +272,10 @@ netdbDump(StoreEntry * sentry)
 	(QS) sortByHops);
     for (k = 0; k < i; k++) {
 	n = *(list + k);
-	storeAppendPrintf(sentry, "{%-16.16s %7.1f %5.1f",
+	storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f",
 	    n->network,
+	    n->pings_recv,
+	    n->pings_sent,
 	    n->rtt,
 	    n->hops);
 	for (x = n->hosts; x; x = x->next)
@@ -287,8 +290,10 @@ int
 netdbHops(struct in_addr addr)
 {
     netdbEntry *n = netdbLookupAddr(addr);
-    if (n && n->pings_recv)
+    if (n && n->pings_recv) {
+	n->last_use_time = squid_curtime;
 	return (int) (n->hops + 0.5);
+    }
     return 256;
 }
 #endif /* USE_ICMP */
