@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.124 1997/10/21 03:12:07 wessels Exp $
+ * $Id: tools.cc,v 1.125 1997/10/25 16:49:06 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -658,8 +658,6 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
-	    /* NOTE: couldn't figure size of tmp_error_buf, thus 
-	     * assuming ERROR_BUF_SZ */
 	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"setrlimit: RLIMIT_NOFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
@@ -673,8 +671,6 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-	    /* NOTE: couldn't figure size of tmp_error_buf, thus
-	     * assuming ERROR_BUF_SZ  */
 	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"setrlimit: RLIMIT_OFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
@@ -691,8 +687,6 @@ setMaxFD(void)
     } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
-	    /* NOTE: couldn't figure size of tmp_error_buf, thus d
-	     * assuming ERROR_BUF_SZ  */
 	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"setrlimit: RLIMIT_DATA: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
@@ -705,8 +699,6 @@ setMaxFD(void)
     } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
-	    /* NOTE: couldn't figure size of tmp_error_buf, thus 
-	     * assuming ERROR_BUF_SZ  */
 	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"setrlimit: RLIMIT_VMEM: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
