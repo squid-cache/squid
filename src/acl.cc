@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.277 2002/06/16 17:46:25 hno Exp $
+ * $Id: acl.cc,v 1.278 2002/06/16 19:32:01 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1654,7 +1654,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	/* NOTREACHED */
     case ACL_PROXY_AUTH:
     case ACL_PROXY_AUTH_REGEX:
-	if ((ti = aclAuthenticated(checklist)) != 0)
+	if ((ti = aclAuthenticated(checklist)) != 1)
 	    return ti;
 	ti = aclMatchProxyAuth(ae->data, checklist->auth_user_request,
 	    checklist, ae->type);
@@ -1662,7 +1662,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return ti;
 	/* NOTREACHED */
     case ACL_MAX_USER_IP:
-	if ((ti = aclAuthenticated(checklist)) != 0)
+	if ((ti = aclAuthenticated(checklist)) != 1)
 	    return ti;
 	ti = aclMatchUserMaxIP(ae->data, checklist->auth_user_request,
 	    checklist->src_addr);
