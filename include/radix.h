@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.14 2002/10/13 20:34:51 robertc Exp $
+ * $Id: radix.h,v 1.15 2002/10/14 07:50:38 hno Exp $
  */
 
 #ifndef SQUID_RADIX_H
@@ -80,7 +80,7 @@ struct squid_radix_node {
  * Annotations to tree concerning potential routes applying to subtrees.
  */
 
-SQUIDCEXTERN struct squid_radix_mask {
+struct squid_radix_mask {
     short rm_b;			/* bit offset; -1-index(netmask) */
     char rm_unused;		/* cf. rn_bmask */
     unsigned char rm_flags;	/* cf. rn_flags */
