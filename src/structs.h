@@ -34,6 +34,15 @@ struct _acl_deny_info_list {
     struct _acl_deny_info_list *next;
 };
 
+#if USE_ARP_ACL
+struct _acl_arp_data {
+	unsigned char eth[6];
+#ifndef USE_SPLAY_TREE
+	struct _acl_arp_data *next;
+#endif
+};
+#endif
+
 #if SQUID_SNMP
 struct _snmpconf {
     char *line;
