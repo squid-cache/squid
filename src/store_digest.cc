@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.47 2001/02/07 19:00:10 hno Exp $
+ * $Id: store_digest.cc,v 1.48 2001/02/07 19:09:25 hno Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -406,8 +406,8 @@ storeDigestRewriteFinish(StoreEntry * e)
     e->mem_obj->request = NULL;
     storeUnlockObject(e);
     cbdataFree(sd_state.rewrite_lock);
-    sd_state.rewrite_lock = CBDATA_ALLOC(generic_cbdata, NULL);
-    sd_state.rewrite_lock->data = e;
+    e = NULL;
+    sd_state.rewrite_lock = NULL;
     sd_state.rewrite_count++;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)
 	Config.digest.rewrite_period, 1);
