@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.69 2000/03/06 16:23:31 wessels Exp $
+ * $Id: forward.cc,v 1.70 2000/05/02 18:32:41 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -133,13 +133,20 @@ fwdServerClosed(int fd, void *data)
 	    fwdState->n_tries,
 	    (int) (squid_curtime - fwdState->start));
 	if (fwdState->servers->next) {
-	    /* cycle */
+	    /* use next, or cycle if origin server isn't last */
 	    FwdServer *fs = fwdState->servers;
-	    FwdServer **T;
+	    FwdServer **T, *T2 = NULL;
 	    fwdState->servers = fs->next;
-	    for (T = &fwdState->servers; *T; T = &(*T)->next);
-	    *T = fs;
-	    fs->next = NULL;
+	    for (T = &fwdState->servers; *T; T2=*T, T = &(*T)->next);
+	    if (T2 && T2->peer)  {
+		/* cycle */
+		*T = fs;
+		fs->next = NULL;
+	    } else {
+		/* Use next. The last "direct" entry is retried multiple times */
+		fwdState->servers = fs->next;
+		fwdServerFree(fs);
+	    }
 	}
 	/* use eventAdd to break potential call sequence loops */
 	eventAdd("fwdConnectStart", fwdConnectStart, fwdState, 0.0, 0);
@@ -182,12 +189,14 @@ fwdConnectDone(int server_fd, int status, void *data)
 	err->request = requestLink(request);
 	fwdFail(fwdState, err);
 	if (fs->peer)
-	    peerCheckConnectStart(fs->peer);
+	    peerConnectFailed(fs->peer);
 	comm_close(server_fd);
     } else {
 	debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(fwdState->entry));
 	fd_note(server_fd, storeUrl(fwdState->entry));
 	fd_table[server_fd].uses++;
+	if (fs->peer)
+	    peerConnectSucceded(fs->peer);
 	fwdDispatch(fwdState);
     }
     current = NULL;
@@ -211,7 +220,7 @@ fwdConnectTimeout(int fd, void *data)
 	 */
 	if (fwdState->servers)
 	    if (fwdState->servers->peer)
-		peerCheckConnectStart(fwdState->servers->peer);
+		peerConnectFailed(fwdState->servers->peer);
     }
     comm_close(fd);
 }

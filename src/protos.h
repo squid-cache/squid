@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.358 2000/03/25 04:58:40 wessels Exp $
+ * $Id: protos.h,v 1.359 2000/05/02 18:32:41 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -641,7 +641,8 @@ extern int neighborUp(const peer * e);
 extern CBDUNL peerDestroy;
 extern char *neighborTypeStr(const peer * e);
 extern peer_t neighborType(const peer *, const request_t *);
-extern void peerCheckConnectStart(peer *);
+extern void peerConnectFailed(peer *);
+extern void peerConnectSucceded(peer *);
 extern void dump_peer_options(StoreEntry *, peer *);
 extern int peerHTTPOkay(const peer *, request_t *);
 extern peer *whichPeer(const struct sockaddr_in *from);

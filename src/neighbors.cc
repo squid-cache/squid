@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.279 2000/05/02 18:23:48 hno Exp $
+ * $Id: neighbors.cc,v 1.280 2000/05/02 18:32:41 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -48,9 +48,9 @@ static void neighborAliveHtcp(peer *, const MemObject *, const htcpReplyData *);
 static void neighborCountIgnored(peer *);
 static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
-static EVH peerCheckConnect;
-static IPH peerCheckConnect2;
-static CNCB peerCheckConnectDone;
+static void peerProbeConnect(peer *);
+static IPH peerProbeConnect2;
+static CNCB peerProbeConnectDone;
 static void peerCountMcastPeersDone(void *data);
 static void peerCountMcastPeersStart(void *data);
 static void peerCountMcastPeersSchedule(peer * p, time_t when);
@@ -866,8 +866,10 @@ peerFindByNameAndPort(const char *name, unsigned short port)
 int
 neighborUp(const peer * p)
 {
-    if (!p->tcp_up)
+    if (!p->tcp_up) {
+	peerProbeConnect((peer *)p);
 	return 0;
+    }
     if (p->options.no_query)
 	return 1;
     if (p->stats.probe_start != 0 &&
@@ -967,60 +969,80 @@ peerRefreshDNS(void *data)
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600.0, 1);
 }
 
+void
+peerConnectFailed(peer *p)
+{
+    p->stats.last_connect_failure = squid_curtime;
+    if (!p->tcp_up) {
+	debug(15, 2) ("TCP connection to %s/%d dead\n", p->host, p->http_port);
+	return;
+    }
+    debug(15, 1) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
+    p->tcp_up--;
+    if (!p->tcp_up) {
+	debug(15, 1) ("Detected DEAD %s: %s/%d/%d\n",
+	    neighborTypeStr(p),
+	    p->host, p->http_port, p->icp.port);
+	p->stats.logged_state = PEER_DEAD;
+    }
+}
+
+void
+peerConnectSucceded(peer *p)
+{
+    if (!p->tcp_up) {
+	debug(15, 2) ("TCP connection to %s/%d succeded\n", p->host, p->http_port);
+	debug(15, 1) ("Detected REVIVED %s: %s/%d/%d\n",
+	    neighborTypeStr(p),
+	    p->host, p->http_port, p->icp.port);
+	p->stats.logged_state = PEER_ALIVE;
+    }
+    p->tcp_up = PEER_TCP_MAGIC_COUNT;
+}
+
 /*
- * peerCheckConnect will NOT be called by eventRun if the peer/data
- * pointer becomes invalid.
+ * peerProbeConnect will be called on dead peers by neighborUp 
  */
 static void
-peerCheckConnect(void *data)
+peerProbeConnect(peer *p)
 {
-    peer *p = data;
     int fd;
+    if (p->test_fd != -1)
+	return; /* probe already running */
+    if (squid_curtime - p->stats.last_connect_probe < Config.Timeout.connect)
+	return; /* don't probe to often */
     fd = comm_open(SOCK_STREAM, 0, Config.Addrs.tcp_outgoing,
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)
 	return;
     p->test_fd = fd;
-    ipcache_nbgethostbyname(p->host, peerCheckConnect2, p);
+    p->stats.last_connect_probe = squid_curtime;
+    ipcache_nbgethostbyname(p->host, peerProbeConnect2, p);
 }
 
 static void
-peerCheckConnect2(const ipcache_addrs * ianotused, void *data)
+peerProbeConnect2(const ipcache_addrs * ianotused, void *data)
 {
     peer *p = data;
     commConnectStart(p->test_fd,
 	p->host,
 	p->http_port,
-	peerCheckConnectDone,
+	peerProbeConnectDone,
 	p);
 }
 
 static void
-peerCheckConnectDone(int fd, int status, void *data)
+peerProbeConnectDone(int fd, int status, void *data)
 {
     peer *p = data;
     if (status == COMM_OK) {
-	p->tcp_up = PEER_TCP_MAGIC_COUNT;
-	debug(15, 1) ("TCP connection to %s/%d succeeded\n",
-	    p->host, p->http_port);
+	peerConnectSucceded(p);
     } else {
-	eventAdd("peerCheckConnect", peerCheckConnect, p, 60.0, 1);
+	peerConnectFailed(p);
     }
     comm_close(fd);
+    p->test_fd = -1;
     return;
-}
-
-void
-peerCheckConnectStart(peer * p)
-{
-    if (!p->tcp_up)
-	return;
-    debug(15, 1) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
-    p->tcp_up--;
-    if (p->tcp_up != (PEER_TCP_MAGIC_COUNT - 1))
-	return;
-    p->last_fail_time = squid_curtime;
-    eventAdd("peerCheckConnect", peerCheckConnect, p, 30.0, 1);
 }
 
 static void
@@ -1225,9 +1247,9 @@ dump_peers(StoreEntry * sentry, peer * peers)
 #if USE_HTCP
 	}
 #endif
-	if (e->last_fail_time) {
+	if (e->stats.last_connect_failure) {
 	    storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
-		mkhttpdlogtime(&(e->last_fail_time)));
+		mkhttpdlogtime(&(e->stats.last_connect_failure)));
 	}
 	if (e->peer_domain != NULL) {
 	    storeAppendPrintf(sentry, "DOMAIN LIST: ");

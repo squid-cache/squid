@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.337 2000/03/06 16:23:29 wessels Exp $
+ * $Id: cache_cf.cc,v 1.338 2000/05/02 18:32:40 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1014,6 +1014,7 @@ parse_peer(peer ** head)
 	p->weight = 1;
     p->icp.version = ICP_VERSION_CURRENT;
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
+    p->test_fd = -1;
 #if USE_CARP
     if (p->carp.load_factor) {
 	/* calculate this peers hash for use in CARP */
