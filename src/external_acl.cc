@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.7 2002/08/21 09:12:44 hno Exp $
+ * $Id: external_acl.cc,v 1.8 2002/08/21 22:36:56 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -317,6 +317,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 		DUMP_EXT_ACL_TYPE(DST);
 		DUMP_EXT_ACL_TYPE(PROTO);
 		DUMP_EXT_ACL_TYPE(PORT);
+		DUMP_EXT_ACL_TYPE(PATH);
 		DUMP_EXT_ACL_TYPE(METHOD);
 	    }
 	}
@@ -520,7 +521,7 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	    str = buf;
 	    break;
 	case EXT_ACL_PATH:
-	    str = strStr(request->urlpath);
+	    str = strBuf(request->urlpath);
 	    break;
 	case EXT_ACL_METHOD:
 	    str = RequestMethodStr[request->method];
