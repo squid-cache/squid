@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.394 1998/09/14 21:28:00 wessels Exp $
+ * $Id: client_side.cc,v 1.395 1998/09/15 06:23:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -606,8 +606,6 @@ httpRequestFree(void *data)
 	clientUpdateCounters(http);
 	clientdbUpdate(conn->peer.sin_addr, http->log_type, PROTO_HTTP, http->out.size);
     }
-    if (http->redirect_state == REDIRECT_PENDING)
-	redirectUnregister(http->uri, http);
     if (http->acl_checklist)
 	aclChecklistFree(http->acl_checklist);
     if (request)
