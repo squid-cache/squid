@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.1 1998/03/05 00:01:08 rousskov Exp $
+ * $Id: HttpHeaderTools.cc,v 1.2 1998/03/05 20:55:56 rousskov Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -55,7 +55,7 @@ httpHeaderInitAttrTable(field_attrs_t * table, int count)
     for (i = 0; i < count; ++i) {
 	assert(table[i].name);
 	table[i].name_len = strlen(table[i].name);
-	debug(55, 5) ("hdr table entry[%d]: %s (%d)\n", i, table[i].name, table[i].name_len);
+	debug(66, 5) ("hdr table entry[%d]: %s (%d)\n", i, table[i].name, table[i].name_len);
 	assert(table[i].name_len);
 	/* init stats */
 	memset(&table[i].stat, 0, sizeof(table[i].stat));
@@ -141,4 +141,30 @@ getStringPrefix(const char *str)
     LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
     xstrncpy(buf, str, SHORT_PREFIX_SIZE);
     return buf;
+}
+
+/*
+ * parses an int field, complains if soemthing went wrong, returns true on
+ * success
+ */
+int
+httpHeaderParseInt(const char *start, int *value)
+{
+    assert(value);
+    *value = atoi(start);
+    if (!*value && !isdigit(*start)) {
+	debug(66, 2) ("failed to parse an int header field near '%s'\n", start);
+            return 0;
+    }
+    return 1;
+}
+
+int
+httpHeaderParseSize(const char *start, size_t *value)
+{
+    int v;
+    const int res = httpHeaderParseInt(start, &v);
+    assert(value);
+    *value = res ? v : 0;
+    return res;
 }

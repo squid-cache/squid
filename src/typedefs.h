@@ -53,6 +53,8 @@ typedef struct _HttpStatusLine HttpStatusLine;
 typedef struct _field_attrs_t field_attrs_t;
 typedef struct _HttpHeader HttpHeader;
 typedef struct _HttpHdrCc HttpHdrCc;
+typedef struct _HttpHdrRangeSpec HttpHdrRangeSpec;
+typedef struct _HttpHdrRange HttpHdrRange;
 typedef struct _HttpHeaderExtField HttpHeaderExtField;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
 typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
