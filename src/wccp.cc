@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.18 2001/01/12 00:37:23 wessels Exp $
+ * $Id: wccp.cc,v 1.19 2001/02/17 07:30:44 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -208,7 +208,7 @@ wccpHandleUdp(int sock, void *not_used)
 {
     struct sockaddr_in from;
     socklen_t from_len;
-    size_t len;
+    int len;
 
     debug(80, 6) ("wccpHandleUdp: Called.\n");
 
