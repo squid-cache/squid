@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.109 1996/11/15 17:26:21 wessels Exp $
+ * $Id: http.cc,v 1.110 1996/11/18 18:22:02 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -603,7 +603,6 @@ httpSendRequest(int fd, void *data)
     const char *const crlf = "\r\n";
     int len = 0;
     int buflen;
-    int cfd = -1;
     request_t *req = httpState->request;
     const char *Method = RequestMethodStr[req->method];
     int buftype = 0;
@@ -670,19 +669,9 @@ httpSendRequest(int fd, void *data)
 	}
 	xfree(xbuf);
     }
-    /* Add Forwarded: header */
-    ybuf = get_free_4k_page();
-    if (entry->mem_obj)
-	cfd = storeFirstClientFD(entry->mem_obj);
-    if (cfd > -1 && opt_forwarded_for) {
-	sprintf(ybuf, "%s for %s\r\n", ForwardedBy, fd_table[cfd].ipaddr);
-    } else {
-	sprintf(ybuf, "%s\r\n", ForwardedBy);
-    }
-    strcat(buf, ybuf);
-    len += strlen(ybuf);
-    put_free_4k_page(ybuf);
-    ybuf = NULL;
+    /* Add Via: header */
+    strcat(buf, ViaString);
+    len += strlen(ViaString);
 
     /* Add Host: header */
     /* Don't add Host: if proxying, mainly because req->host is
