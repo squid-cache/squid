@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.16 1998/08/13 18:32:01 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.17 1998/08/13 20:53:54 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -80,7 +80,7 @@ requestUnlink(request_t * request)
 {
     if (!request)
 	return;
-    assert(link_count > 0);
+    assert(request->link_count > 0);
     if (--request->link_count > 0)
 	return;
     requestDestroy(request);
