@@ -1,6 +1,6 @@
 
 /*
- * $Id: heap.c,v 1.2 1999/06/30 06:31:18 wessels Exp $
+ * $Id: heap.c,v 1.3 1999/07/05 21:27:07 wessels Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -452,7 +452,6 @@ _heap_grow(heap * hp)
     hp->nodes = newNodes;
 #endif
     hp->size = newSize;
-    u
 }
 
 
