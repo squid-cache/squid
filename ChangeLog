@@ -2,6 +2,8 @@
 	  on Solaris 2.4.
 	- Fixed copy-by-ref bug for request->headers in
 	  clientRedirectDone() (Michael O'Reilly).
+	- Workaround for Solaris pthreads closing FD 0 upon fork()
+	  (Michael O'Reilly).
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
 
