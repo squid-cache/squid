@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.64 2003/09/29 10:24:00 robertc Exp $
+ * $Id: HttpReply.cc,v 1.65 2003/12/22 10:45:32 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -353,7 +353,7 @@ httpReplyValidatorsMatch(HttpReply const * rep, HttpReply const * otherRep)
 
     two = httpHeaderGetStrOrList(&otherRep->header, HDR_CONTENT_MD5);
 
-    if (strcasecmp (one.buf(), two.buf())) {
+    if (!one.buf() || !two.buf() || strcasecmp (one.buf(), two.buf())) {
         one.clean();
         two.clean();
         return 0;
