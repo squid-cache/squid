@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.6 1998/03/20 18:07:35 rousskov Exp $
+ * $Id: Array.h,v 1.1 1998/03/20 18:07:34 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -27,19 +27,24 @@
  *  
  */
 
-#ifndef _STACK_H_
-#define _STACK_H_
+#ifndef _ARRAY_H_
+#define _ARRAY_H_
 
-#include "Array.h"
+/* see Array.c for more documentation */
 
-typedef Array Stack;
+typedef struct {
+    int capacity;
+    int count;
+    void **items;
+} Array;
 
-#define stackCreate arrayCreate
-#define stackInit arrayInit
-#define stackClean arrayClean
-#define stackDestroy arrayDestroy
-extern void *stackPop(Stack *s);
-#define stackPush arrayAppend
-#define stackPrePush arrayPreAppend
 
-#endif /* ndef _STACK_H_ */
+extern Array *arrayCreate();
+extern void arrayInit(Array * s);
+extern void arrayClean(Array * s);
+extern void arrayDestroy(Array *s);
+extern void arrayAppend(Array *s, void *obj);
+extern void arrayPreAppend(Array * s, int app_count);
+
+
+#endif /* ndef _ARRAY_H_ */

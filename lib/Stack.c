@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.c,v 1.4 1998/03/03 00:30:57 rousskov Exp $
+ * $Id: Stack.c,v 1.5 1998/03/20 18:07:36 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -28,7 +28,7 @@
  */
 
 /*
- * Stack is a (void*) stack with unlimited capacity and limited accounting.
+ * Stack is a (void*) stack with unlimited capacity; based on Array
  */
 
 
@@ -42,39 +42,6 @@
 #include "util.h"
 #include "Stack.h"
 
-static void stackGrow(Stack * s, int min_capacity);
-
-Stack *
-stackCreate()
-{
-    Stack *s = xmalloc(sizeof(Stack));
-    stackInit(s);
-    return s;
-}
-
-void
-stackInit(Stack * s)
-{
-    assert(s);
-    memset(s, 0, sizeof(Stack));
-}
-
-void
-stackClean(Stack * s)
-{
-    assert(s);
-    /* could also warn if some objects are left */
-    xfree(s->items);
-    s->items = NULL;
-}
-
-void
-stackDestroy(Stack * s)
-{
-    assert(s);
-    stackClean(s);
-    xfree(s);
-}
 
 void *
 stackPop(Stack * s)
@@ -82,44 +49,4 @@ stackPop(Stack * s)
     assert(s);
     assert(s->count);
     return s->items[--s->count];
-}
-
-void
-stackPush(Stack * s, void *obj)
-{
-    assert(s);
-    if (s->count >= s->capacity)
-	stackGrow(s, s->count+1);
-    s->items[s->count++] = obj;
-}
-
-/* if you are going to push a known and large number of items, call this first */
-void
-stackPrePush(Stack * s, int push_count)
-{
-    assert(s);
-    if (s->count + push_count > s->capacity)
-	stackGrow(s, s->count + push_count);
-}
-
-/* grows internal buffer to satisfy required minimal capacity */
-static void
-stackGrow(Stack * s, int min_capacity)
-{
-    static const int min_delta = 16;
-    int delta;
-    assert(s->capacity < min_capacity);
-    delta = min_capacity;
-    /* make delta a multiple of min_delta */
-    delta += min_delta-1;
-    delta /= min_delta;
-    delta *= min_delta;
-    /* actual grow */
-    assert(delta > 0);
-    s->capacity += delta;
-    s->items = s->items ?
-	xrealloc(s->items, s->capacity * sizeof(void*)) :
-	xmalloc(s->capacity * sizeof(void*));
-    /* reset, just in case */
-    memset(s->items+s->count, 0, (s->capacity-s->count) * sizeof(void*));
 }
