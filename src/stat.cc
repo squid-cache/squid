@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.68 1996/09/15 05:04:43 wessels Exp $
+ * $Id: stat.cc,v 1.69 1996/09/15 05:41:47 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -137,7 +137,6 @@ char *close_bracket = "}\n";
 
 static void dummyhandler __P((cacheinfo *, StoreEntry *));
 static void info_get __P((cacheinfo *, StoreEntry *));
-static void info_get_mallstat __P((int, int, StoreEntry *));
 static void logReadEndHandler __P((int, int, log_read_data_t *));
 static void log_clear __P((cacheinfo *, StoreEntry *));
 static void log_disable __P((cacheinfo *, StoreEntry *));
@@ -146,22 +145,29 @@ static void log_get_start __P((cacheinfo *, StoreEntry *));
 static void log_status_get __P((cacheinfo *, StoreEntry *));
 static void parameter_get __P((cacheinfo *, StoreEntry *));
 static void proto_count __P((cacheinfo *, protocol_t, log_type));
-static void proto_newobj __P((cacheinfo *, protocol_t, int, int));
-static void proto_purgeobj __P((cacheinfo *, protocol_t, int));
-static void proto_touchobj __P((cacheinfo *, protocol_t, int));
+static void proto_newobject __P((cacheinfo *, protocol_t, int, int));
+static void proto_purgeobject __P((cacheinfo *, protocol_t, int));
+static void proto_touchobject __P((cacheinfo *, protocol_t, int));
 static void server_list __P((cacheinfo *, StoreEntry *));
 static void squidReadEndHandler __P((int, int, squid_read_data_t *));
 static void squid_get_start __P((cacheinfo *, StoreEntry *));
 static void statFiledescriptors __P((StoreEntry *));
 static void stat_get __P((cacheinfo *, char *req, StoreEntry *));
 static void stat_io_get __P((StoreEntry *));
-static void stat_obj __P((cacheinfo *, StoreEntry *, int vm_or_not));
+static void stat_objects_get __P((cacheinfo *, StoreEntry *, int vm_or_not));
 static void stat_utilization_get __P((cacheinfo *, StoreEntry *, char *desc));
 static int cache_size_get __P((cacheinfo *));
 static int logReadHandler __P((int, char *, int, log_read_data_t *));
 static int squidReadHandler __P((int, char *, int, squid_read_data_t *));
 static int memoryAccounted __P((void));
+
+#ifdef UNUSED_CODE
 static int mallinfoTotal __P((void));
+#endif
+
+#ifdef XMALLOC_STATISTICS
+static void info_get_mallstat __P((int, int, StoreEntry *));
+#endif
 
 /* process utilization information */
 static void
@@ -637,6 +643,7 @@ memoryAccounted()
 	meta_data.misc;
 }
 
+#ifdef UNUSED_CODE
 static int
 mallinfoTotal()
 {
@@ -648,6 +655,7 @@ mallinfoTotal()
 #endif
     return total;
 }
+#endif
 
 static void
 info_get(cacheinfo * obj, StoreEntry * sentry)
