@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.205 2001/01/07 23:36:37 hno Exp $
+# $Id: cf.data.pre,v 1.206 2001/01/09 14:41:33 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -228,7 +228,7 @@ DOC_START
 		     no-digest
 		     no-netdb-exchange
 		     no-delay
-		     login=user:password|PASS
+		     login=user:password | PASS | *:password
 		     connect-timeout=nn
 		     digest-url=url
 		     allow-miss
@@ -286,6 +286,15 @@ DOC_START
 		     database as HTTP only allows for one proxy login.
 		     Also be warned that this will expose your users proxy
 		     password to the parent. USE WITH CAUTION
+
+		     use 'login=*:password' to pass the username to the
+		     upstream cache, but with a fixed password. This is meant
+		     to be used when the peer is in another administrative
+		     domain, but it is still needed to identify each user.
+		     The star can optionally be followed by some extra
+		     information which is added to the username. This can
+		     be used to identify this proxy to the peer, similar to
+		     the login=username:password option above.
 
 		     use 'connect-timeout=nn' to specify a peer
 		     specific connect timeout (also see the
