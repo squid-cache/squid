@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.54 1996/04/16 05:05:32 wessels Exp $ */
-#ident "$Id: store.cc,v 1.54 1996/04/16 05:05:32 wessels Exp $"
+/* $Id: store.cc,v 1.55 1996/04/16 20:53:33 wessels Exp $ */
+#ident "$Id: store.cc,v 1.55 1996/04/16 20:53:33 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -38,9 +38,6 @@
 #define SWAP_BUF		DISK_PAGE_SIZE
 #define FATAL_BUF_SIZE		1024
 #define SWAP_DIRECTORIES	100
-#ifndef DEFAULT_SWAP_DIR
-#define DEFAULT_SWAP_DIR	"/tmp/cache"
-#endif
 
 #define WITH_MEMOBJ	1
 #define WITHOUT_MEMOBJ	0
@@ -2504,7 +2501,7 @@ void storeSanityCheck()
     int i;
 
     if (ncache_dirs < 1)
-	storeAddSwapDisk(DEFAULT_SWAP_DIR);
+	storeAddSwapDisk(DefaultSwapDir);
 
     for (i = 0; i < SWAP_DIRECTORIES; i++) {
 	sprintf(name, "%s/%02d", swappath(i), i);
