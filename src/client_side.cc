@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.517 2000/12/16 16:52:32 adrian Exp $
+ * $Id: client_side.cc,v 1.518 2000/12/17 07:18:56 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2265,7 +2265,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     char *token = NULL;
     char *t = NULL;
     char *end;
-    int free_request = 0;
     size_t header_sz;		/* size of headers, not including first line */
     size_t prefix_sz;		/* size of whole request (req-line + headers) */
     size_t url_sz;
@@ -2502,8 +2501,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     else
 	http->log_uri = xstrndup(rfc1738_escape_unescaped(http->uri), MAX_URL);
     debug(33, 5) ("parseHttpRequest: Complete request received\n");
-    if (free_request)
-	safe_free(url);
     xfree(inbuf);
     *status = 1;
     return http;
