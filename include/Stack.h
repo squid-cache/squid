@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.10 2001/01/12 00:37:12 wessels Exp $
+ * $Id: Stack.h,v 1.11 2001/10/08 16:18:31 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -31,8 +31,8 @@
  *  
  */
 
-#ifndef _STACK_H_
-#define _STACK_H_
+#ifndef SQUID_STACK_H
+#define SQUID_STACK_H
 
 #include "Array.h"
 
@@ -47,4 +47,4 @@ extern void *stackPop(Stack * s);
 #define stackPrePush arrayPreAppend
 extern void *stackTop(Stack * s);
 
-#endif /* ndef _STACK_H_ */
+#endif /* SQUID_STACK_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.2 2001/05/04 13:37:42 hno Exp $
+ * $Id: ssl_support.h,v 1.3 2001/10/08 16:18:33 hno Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -32,8 +32,8 @@
  *
  */
 
-#ifndef SSL_SUPPORT_H
-#define SSL_SUPPORT_H
+#ifndef SQUID_SSL_SUPPORT_H
+#define SQUID_SSL_SUPPORT_H
 
 #include "config.h"
 #if HAVE_OPENSSL_SSL_H
@@ -47,4 +47,4 @@ SSL_CTX *sslLoadCert(const char *certfile, const char *keyfile);
 int ssl_read_method(int, char *, int);
 int ssl_write_method(int, const char *, int);
 
-#endif /* SSL_SUPPORT_H */
+#endif /* SQUID_SSL_SUPPORT_H */

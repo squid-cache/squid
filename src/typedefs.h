@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.130 2001/08/03 15:13:04 adrian Exp $
+ * $Id: typedefs.h,v 1.131 2001/10/08 16:18:33 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,8 +31,8 @@
  *
  */
 
-#ifndef _TYPEDEFS_H_
-#define _TYPEDEFS_H_
+#ifndef SQUID_TYPEDEFS_H
+#define SQUID_TYPEDEFS_H
 
 typedef unsigned int store_status_t;
 typedef unsigned int mem_status_t;
@@ -358,4 +358,4 @@ typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
 typedef int STDIRSELECT(const StoreEntry *);
 
-#endif /* _TYPEDEFS_H_ */
+#endif /* SQUID_TYPEDEFS_H */

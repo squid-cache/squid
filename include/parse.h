@@ -1,9 +1,9 @@
 /*
- * $Id: parse.h,v 1.9 2001/05/10 07:17:34 hno Exp $
+ * $Id: parse.h,v 1.10 2001/10/08 16:18:31 hno Exp $
  */
 
-#ifndef _HAVE_PARSE_H_
-#define _HAVE_PARSE_H_
+#ifndef SQUID_PARSE_H
+#define SQUID_PARSE_H
 
 /***********************************************************
 	Copyright 1989 by Carnegie Mellon University
@@ -90,4 +90,5 @@ extern "C" {
 }
 
 #endif
-#endif				/* _HAVE_PARSE_H_ */
+
+#endif				/* SQUID_PARSE_H */

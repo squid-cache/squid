@@ -14,7 +14,7 @@
 
 
 /*
- * $Id: rfc2617.h,v 1.2 2001/04/14 00:03:20 hno Exp $
+ * $Id: rfc2617.h,v 1.3 2001/10/08 16:18:31 hno Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -47,8 +47,8 @@
  *
  */
 
-#ifndef RFC2617_H
-#define RFC2617_H
+#ifndef SQUID_RFC2617_H
+#define SQUID_RFC2617_H
 
 #define HASHLEN 16
 typedef char HASH[HASHLEN];
@@ -84,4 +84,4 @@ void CvtHex(const HASH Bin, HASHHEX Hex);
 
 void CvtBin(const HASHHEX Hex, HASH Bin);
 
-#endif /* RFC 2617 */
+#endif /* SQUID_RFC2617_H */

@@ -1,9 +1,9 @@
 /*
- * $Id: snmp_debug.h,v 1.6 1999/01/11 21:55:34 wessels Exp $
+ * $Id: snmp_debug.h,v 1.7 2001/10/08 16:18:31 hno Exp $
  */
 
-#ifndef SNMP_DEBUG_H
-#define SNMP_DEBUG_H
+#ifndef SQUID_SNMP_DEBUG_H
+#define SQUID_SNMP_DEBUG_H
 
 #if STDC_HEADERS
 extern void snmplib_debug(int, char *,...);
@@ -11,4 +11,4 @@ extern void snmplib_debug(int, char *,...);
 extern void snmplib_debug(va_alist);
 #endif
 
-#endif
+#endif /* SQUID_SNMP_DEBUG_H */

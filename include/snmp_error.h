@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
-#ifndef _SNMP_ERROR_H_
-#define _SNMP_ERROR_H_
+#ifndef SQUID_SNMP_ERROR_H
+#define SQUID_SNMP_ERROR_H
 
 /**********************************************************************
  *
@@ -24,7 +24,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp_error.h,v 1.2 1998/04/04 01:43:46 kostas Exp $
+ * $Id: snmp_error.h,v 1.3 2001/10/08 16:18:31 hno Exp $
  * 
  **********************************************************************/
 
@@ -63,6 +63,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-
 #endif
-#endif				/* _SNMP_ERROR_H_ */
+
+#endif				/* SQUID_SNMP_ERROR_H */

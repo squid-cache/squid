@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
-#ifndef _SNMP_COEXISTANCE_H_
-#define _SNMP_COEXISTANCE_H_
+#ifndef SQUID_SNMP_COEXISTANCE_H
+#define SQUID_SNMP_COEXISTANCE_H
 
 /**********************************************************************
  *
@@ -26,7 +26,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_coexist.h,v 1.2 1998/04/04 01:43:44 kostas Exp $
+ * $Id: snmp_coexist.h,v 1.3 2001/10/08 16:18:31 hno Exp $
  * 
  **********************************************************************/
 
@@ -39,6 +39,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-
 #endif
-#endif				/* _SNMP_COEXISTANCE_H_ */
+
+#endif				/* SQUID_SNMP_COEXISTANCE_H */

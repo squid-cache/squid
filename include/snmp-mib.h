@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
-#ifndef _SNMP_MIB_H_
-#define _SNMP_MIB_H_
+#ifndef SQUID_SNMP_MIB_H
+#define SQUID_SNMP_MIB_H
 
 /***************************************************************************
  *
@@ -26,7 +26,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp-mib.h,v 1.2 1998/04/04 01:43:42 kostas Exp $
+ * $Id: snmp-mib.h,v 1.3 2001/10/08 16:18:31 hno Exp $
  * 
  ***************************************************************************/
 
@@ -35,4 +35,5 @@
 #if 0
 #include <mib.h>		/* Then the function definitions */
 #endif
-#endif /* _SNMP_MIB_H_ */
+
+#endif /* SQUID_SNMP_MIB_H */

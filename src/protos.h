@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.412 2001/09/09 19:57:10 hno Exp $
+ * $Id: protos.h,v 1.413 2001/10/08 16:18:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,6 +30,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#ifndef SQUID_PROTOS_H
+#define SQUID_PROTOS_H
 
 extern void accessLogLog(AccessLogEntry *);
 extern void accessLogRotate(void);
@@ -1315,3 +1318,5 @@ int varyEvaluateMatch(StoreEntry * entry, request_t * req);
 extern int WIN32_Subsystem_Init(void);
 extern void WIN32_Exit(void);
 #endif
+
+#endif /* SQUID_PROTOS_H */

@@ -1,6 +1,9 @@
 /*
- * $Id: snprintf.h,v 1.5 2001/01/10 20:16:36 hno Exp $
+ * $Id: snprintf.h,v 1.6 2001/10/08 16:18:31 hno Exp $
  */
+
+#ifndef SQUID_SNPRINTF_H
+#define SQUID_SNPRINTF_H
 
 /* if you have configure you can use this */
 #if defined(HAVE_CONFIG_H)
@@ -47,3 +50,5 @@ int vsnprintf(char *str, size_t count, const char *fmt, va_list arg);
 int vsnprintf();
 #endif
 #endif
+
+#endif /* SQUID_SNPRINTF_H */

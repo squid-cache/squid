@@ -1,10 +1,11 @@
 /*
- * $Id: cache_snmp.h,v 1.24 1999/06/11 22:40:32 wessels Exp $
+ * $Id: cache_snmp.h,v 1.25 2001/10/08 16:18:31 hno Exp $
  */
 
+#ifndef SQUID_SNMP_H
+#define SQUID_SNMP_H
+
 #ifdef SQUID_SNMP
-#ifndef CACHE_SNMP_H
-#define CACHE_SNMP_H
 
 #if SIZEOF_LONG == 8
 #define snint int
@@ -253,5 +254,6 @@ enum {
     PERF_MEDIAN_END
 };
 
-#endif
-#endif
+#endif /* SQUID_SNMP */
+
+#endif /* SQUID_SNMP_H */

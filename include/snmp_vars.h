@@ -1,5 +1,5 @@
-#ifndef _SNMP_VARS_H_
-#define _SNMP_VARS_H_
+#ifndef SQUID_SNMP_VARS_H
+#define SQUID_SNMP_VARS_H
 
 /**********************************************************************
  *
@@ -25,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_vars.h,v 1.10 2001/01/07 10:57:14 hno Exp $
+ * $Id: snmp_vars.h,v 1.11 2001/10/08 16:18:31 hno Exp $
  * 
  **********************************************************************/
 
@@ -73,4 +73,4 @@ u_char *snmp_var_DecodeVarBind(u_char *, int *, struct variable_list **, int);
 typedef struct variable variable;
 typedef struct variable_list variable_list;
 
-#endif /* _SNMP_VARS_H_ */
+#endif /* SQUID_SNMP_VARS_H */

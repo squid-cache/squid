@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.195 2001/09/07 18:02:44 adrian Exp $
+ * $Id: enums.h,v 1.196 2001/10/08 16:18:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,6 +30,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#ifndef SQUID_ENUMS_H
+#define SQUID_ENUMS_H
 
 typedef enum {
     LOG_TAG_NONE,
@@ -723,3 +726,5 @@ enum {
     VARY_OTHER,
     VARY_CANCEL
 };
+
+#endif /* SQUID_ENUMS_H */

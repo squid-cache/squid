@@ -1,9 +1,9 @@
 /*
- * $Id: snmp_api.h,v 1.11 1998/09/23 17:20:01 wessels Exp $
+ * $Id: snmp_api.h,v 1.12 2001/10/08 16:18:31 hno Exp $
  */
 
-#ifndef _SNMP_API_H_
-#define _SNMP_API_H_
+#ifndef SQUID_SNMP_API_H
+#define SQUID_SNMP_API_H
 
 #include "config.h"
 #ifdef HAVE_SYS_TIME_H
@@ -187,4 +187,5 @@ extern "C" {
 }
 
 #endif
-#endif				/* _SNMP_API_H_ */
+
+#endif				/* SQUID_SNMP_API_H */

@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
-#ifndef _SNMP_MSG_H_
-#define _SNMP_MSG_H_
+#ifndef SQUID_SNMP_MSG_H
+#define SQUID_SNMP_MSG_H
 
 /**********************************************************************
  *
@@ -26,7 +26,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_msg.h,v 1.2 1998/04/04 01:43:48 kostas Exp $
+ * $Id: snmp_msg.h,v 1.3 2001/10/08 16:18:31 hno Exp $
  * 
  **********************************************************************/
 
@@ -46,4 +46,5 @@ extern "C" {
 }
 
 #endif
-#endif				/* _SNMP_MSG_H_ */
+
+#endif	/* SQUID_SNMP_MSG_H */

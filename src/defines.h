@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.94 2001/08/16 00:16:16 hno Exp $
+ * $Id: defines.h,v 1.95 2001/10/08 16:18:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,6 +30,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#ifndef SQUID_STRUCTS_H
+#define SQUID_STRUCTS_H
 
 #ifndef TRUE
 #define TRUE 1
@@ -303,3 +306,5 @@
 #define _WIN_OS_WIN2K	5
 #define _WIN_OS_WINXP	6
 #endif
+
+#endif /* SQUID_STRUCTS_H */
