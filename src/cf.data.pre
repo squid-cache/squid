@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.259 2002/04/21 14:07:05 hno Exp $
+# $Id: cf.data.pre,v 1.260 2002/05/03 14:25:29 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -455,7 +455,7 @@ NAME: minimum_icp_query_timeout
 COMMENT: (msec)
 DEFAULT: 5
 TYPE: int
-LOC: Config.Timeout.icp_query_max
+LOC: Config.Timeout.icp_query_min
 DOC_START
 	Normally the ICP query timeout is determined dynamically.  But
 	sometimes it can lead to very small timeouts, even lower than
