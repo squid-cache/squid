@@ -1,5 +1,5 @@
 /*
- * $Id: errorpage.cc,v 1.22 1996/07/09 03:41:23 wessels Exp $
+ * $Id: errorpage.cc,v 1.23 1996/07/15 23:12:36 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -124,8 +124,9 @@ static char *tbuf = NULL;
 void errorInitialize()
 {
     tmp_error_buf = xmalloc(MAX_URL * 4);
+    meta_data.misc += MAX_URL * 4;
     tbuf = xmalloc(MAX_URL * 3);
-    meta_data.misc += MAX_URL * 7;
+    meta_data.misc += MAX_URL * 3;
 }
 
 void squid_error_entry(entry, type, msg)
