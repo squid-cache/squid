@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.27 1998/03/31 09:03:45 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.28 1998/03/31 17:52:08 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -267,6 +267,12 @@ httpHeaderClean(HttpHeader * hdr)
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
 	/* fix this for req headers @?@ */
 	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
+	/* tmp hack to avoid coredumps */
+	if (e->id < 0 || e->id >= HDR_ENUM_END)
+	    debug(55, 0) ("httpHeaderClean BUG: entry[%d] is invalid (%d). Ignored.\n",
+		pos, e->id);
+	else
+	/* end of hack */
 	/* yes, this destroy() leaves us in an incosistent state */
 	httpHeaderEntryDestroy(e);
     }
