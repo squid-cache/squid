@@ -1,6 +1,6 @@
 
 /*
- * $Id: VirtualDeleteOperator.cc,v 1.1 2003/07/16 06:41:34 robertc Exp $
+ * $Id: VirtualDeleteOperator.cc,v 1.2 2004/08/15 17:41:28 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -126,6 +126,12 @@ main (int argc, char *argv)
     assert (ChildVirtual::Calls.news() == 1);
     assert (ChildVirtual::Calls.deletes() == 0);
     BaseVirtual::DeleteABase(aBase);
+    assert (BaseVirtual::Calls.news() == 0);
+    assert (BaseVirtual::Calls.deletes() == 0);
+    assert (ChildVirtual::Calls.news() == 1);
+    assert (ChildVirtual::Calls.deletes() == 1);
+    // deleting NULL works.
+    BaseVirtual::DeleteABase(NULL);
     assert (BaseVirtual::Calls.news() == 0);
     assert (BaseVirtual::Calls.deletes() == 0);
     assert (ChildVirtual::Calls.news() == 1);
