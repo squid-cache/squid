@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.71 1996/09/04 22:03:23 wessels Exp $
+ * $Id: http.cc,v 1.72 1996/09/05 19:02:56 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -207,10 +207,9 @@ static void httpMakePrivate(entry)
 static void httpCacheNegatively(entry)
      StoreEntry *entry;
 {
-    entry->expires = squid_curtime + Config.negativeTtl;
+    storeNegativeCache(entry);
     if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
-    /* XXX: mark object "not to store on disk"? */
 }
 
 
