@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.30 2000/07/14 17:45:54 wessels Exp $
+ * $Id: dns_internal.cc,v 1.31 2000/07/18 06:16:41 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
 #define DOMAIN_PORT 53
 #endif
 
+#define IDNS_MAX_TRIES 20
 #define MAX_RCODE 6
 #define MAX_ATTEMPT 3
 static int RcodeMatrix[MAX_RCODE][MAX_ATTEMPT];
@@ -331,7 +332,7 @@ idnsRead(int fd, void *data)
     ssize_t len;
     struct sockaddr_in from;
     socklen_t from_len;
-    int max = 10;
+    int max = INCOMING_DNS_MAX;
     static char rbuf[512];
     int ns;
     while (max--) {
@@ -447,6 +448,10 @@ idnsInit(void)
     idnsParseNameservers();
     if (0 == nns)
 	idnsParseResolvConf();
+    if (0 == nns)
+	fatal("Could not find any nameservers.\n"
+	    "       Please check your /etc/resolv.conf file\n"
+	    "       or use the 'dns_nameservers' option in squid.conf.");
     if (!init) {
 	memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
 	cachemgrRegister("idns",

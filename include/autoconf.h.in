@@ -374,6 +374,9 @@
 /* Define if you have the pthread_setschedparam function.  */
 #undef HAVE_PTHREAD_SETSCHEDPARAM
 
+/* Define if you have the pthread_sigmask function.  */
+#undef HAVE_PTHREAD_SIGMASK
+
 /* Define if you have the putenv function.  */
 #undef HAVE_PUTENV
 
@@ -491,6 +494,9 @@
 /* Define if you have the <ip_fil.h> header file.  */
 #undef HAVE_IP_FIL_H
 
+/* Define if you have the <ip_fil_compat.h> header file.  */
+#undef HAVE_IP_FIL_COMPAT_H
+
 /* Define if you have the <ip_nat.h> header file.  */
 #undef HAVE_IP_NAT_H
 
@@ -532,6 +538,9 @@
 
 /* Define if you have the <netinet/ip_fil.h> header file.  */
 #undef HAVE_NETINET_IP_FIL_H
+
+/* Define if you have the <netinet/ip_fil_compat.h> header file.  */
+#undef HAVE_NETINET_IP_FIL_COMPAT_H
 
 /* Define if you have the <netinet/ip_nat.h> header file.  */
 #undef HAVE_NETINET_IP_NAT_H

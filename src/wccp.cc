@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.16 2000/06/27 22:06:05 hno Exp $
+ * $Id: wccp.cc,v 1.17 2000/07/18 06:16:42 wessels Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -103,8 +103,6 @@ void
 wccpInit(void)
 {
     debug(80, 5) ("wccpInit: Called\n");
-    if (eventFind(wccpHereIam, NULL))
-	return;
     memset(&wccp_here_i_am, '\0', sizeof(wccp_here_i_am));
     wccp_here_i_am.type = htonl(WCCP_HERE_I_AM);
     wccp_here_i_am.version = htonl(Config.Wccp.version);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.494 2000/07/16 05:29:43 wessels Exp $
+ * $Id: client_side.cc,v 1.495 2000/07/18 06:16:41 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -41,7 +41,11 @@
 #endif
 #include <netinet/tcp.h>
 #include <net/if.h>
-#if HAVE_IP_COMPAT_H
+#if HAVE_IP_FIL_COMPAT_H
+#include <ip_fil_compat.h>
+#elif HAVE_NETINET_IP_FIL_COMPAT_H
+#include <netinet/ip_fil_compat.h>
+#elif HAVE_IP_COMPAT_H
 #include <ip_compat.h>
 #elif HAVE_NETINET_IP_COMPAT_H
 #include <netinet/ip_compat.h>
@@ -2340,6 +2344,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     else if (Config2.Accel.on && *url == '/') {
 	/* prepend the accel prefix */
 	if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
+	    int vport = (int) Config.Accel.port;
+	    char *q;
 	    /* If a Host: header was specified, use it to build the URL 
 	     * instead of the one in the Config file. */
 	    /*
@@ -2349,16 +2355,25 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	     * refer to www.playboy.com.  The 'dst' and/or 'dst_domain' ACL 
 	     * types should be used to prevent httpd-accelerators 
 	     * handling requests for non-local servers */
-	    strtok(t, " :/;@");
+	    strtok(t, " /;@");
+	    if ((q = strchr(t, ':'))) {
+		*q++ = '\0';
+		vport = atoi(q);
+	    }
 	    url_sz = strlen(url) + 32 + Config.appendDomainLen +
 		strlen(t);
 	    http->uri = xcalloc(url_sz, 1);
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
-		t, (int) Config.Accel.port, url);
+		t, vport, url);
 	} else if (vhost_mode) {
+	    int vport;
 	    /* Put the local socket IP address as the hostname */
 	    url_sz = strlen(url) + 32 + Config.appendDomainLen;
 	    http->uri = xcalloc(url_sz, 1);
+	    if (vport_mode)
+		vport = (int) ntohs(http->conn->me.sin_port);
+	    else
+		vport = (int) Config.Accel.port;
 #if IPF_TRANSPARENT
 	    natLookup.nl_inport = http->conn->me.sin_port;
 	    natLookup.nl_outport = http->conn->peer.sin_port;
@@ -2381,18 +2396,15 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		} else
 		    snprintf(http->uri, url_sz, "http://%s:%d%s",
 			inet_ntoa(http->conn->me.sin_addr),
-			(int) Config.Accel.port,
-			url);
+			vport, url);
 	    } else
 		snprintf(http->uri, url_sz, "http://%s:%d%s",
 		    inet_ntoa(natLookup.nl_realip),
-		    (int) Config.Accel.port,
-		    url);
+		    vport, url);
 #else
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		inet_ntoa(http->conn->me.sin_addr),
-		(int) Config.Accel.port,
-		url);
+		vport, url);
 #endif
 	    debug(33, 5) ("VHOST REWRITE: '%s'\n", http->uri);
 	} else {
@@ -2932,6 +2944,11 @@ clientHttpConnectionsOpen(void)
     sockaddr_in_list *s;
     int fd;
     for (s = Config.Sockaddr.http; s; s = s->next) {
+	if (MAXHTTPPORTS == NHttpSockets) {
+	    debug(1, 1) ("WARNING: You have too many 'http_port' lines.\n");
+	    debug(1, 1) ("         The limit is %d\n", MAXHTTPPORTS);
+	    continue;
+	}
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
 	    0,

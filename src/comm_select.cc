@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.45 2000/06/27 22:06:00 hno Exp $
+ * $Id: comm_select.cc,v 1.46 2000/07/18 06:16:41 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -320,9 +320,9 @@ comm_poll(int msec)
     int calldns = 0;
     static time_t last_timeout = 0;
     double timeout = current_dtime + (msec / 1000.0);
-    double start;
     do {
 #if !ALARM_UPDATES_TIME
+	double start;
 	getCurrentTime();
 	start = current_dtime;
 #endif
