@@ -9,6 +9,8 @@
 		--enable-store-key=sha|md5
 		--enable-xmalloc-statistics
 		--enable-xmalloc-debug
+		--enable-xmalloc-debug-count 
+		--async-io 
 
 Changes to squid-1.2.beta10 (Dec 30, 1997):
 
