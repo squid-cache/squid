@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.6 2001/11/30 10:07:30 hno Exp $
+# $Id: Makefile.in,v 1.7 2001/12/27 13:11:57 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -123,10 +123,22 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects VERSION=1.5
-DIST_SUBDIRS = lib snmplib scripts src icons errors contrib
-SUBDIRS = lib @makesnmplib@ scripts src icons errors
+DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc
+SUBDIRS = lib @makesnmplib@ scripts src icons errors doc
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
+
+EXTRA_DIST = \
+	ChangeLog \
+	CONTRIBUTORS \
+	COPYING \
+	COPYRIGHT \
+	CREDITS \
+	INSTALL \
+	QUICKSTART \
+	README \
+	SPONSORS
+
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
