@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.297 1997/10/20 22:49:25 wessels Exp $
+ * $Id: store.cc,v 1.298 1997/10/20 22:59:48 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -759,7 +759,7 @@ storeUnregister(StoreEntry * e, void *data)
     if (sc == NULL)
 	return 0;
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
-    	storeCheckSwapOut(e);
+	storeCheckSwapOut(e);
     sc->seen_offset = 0;
     sc->copy_offset = 0;
     if (sc->swapin_fd > -1)
@@ -922,9 +922,9 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
     if (!storeCheckCachable(e)) {
 	storeReleaseRequest(e);
     } else {
-    	e->swap_status = SWAPOUT_DONE;
-    	storeLog(STORE_LOG_SWAPOUT, e);
-        storeDirSwapLog(e);
+	e->swap_status = SWAPOUT_DONE;
+	storeLog(STORE_LOG_SWAPOUT, e);
+	storeDirSwapLog(e);
     }
     HTTPCacheInfo->proto_newobject(HTTPCacheInfo,
 	mem->request->protocol,
@@ -982,9 +982,9 @@ storeCheckSwapOut(StoreEntry * e)
     if (e->swap_status == SWAPOUT_NONE) {
 	assert(mem->swapout.fd == -1);
 	if (storeCheckCachable(e))
-		storeSwapOutStart(e);
+	    storeSwapOutStart(e);
 	/* else ENTRY_CACHABLE will be cleared and we'll never get
-	  here again */
+	 * here again */
 	return;
     }
     if (e->swap_status == SWAPOUT_OPENING)
@@ -2015,7 +2015,7 @@ storeClientCopyHandleRead(int fd, const char *buf, int len, int flag, void *data
     MemObject *mem = sc->mem;
     debug(20, 3) ("storeClientCopyHandleRead: FD %d, len %d\n", fd, len);
     if (len > 0 && sc->copy_offset == 0)
-        httpParseReplyHeaders(buf, mem->reply);
+	httpParseReplyHeaders(buf, mem->reply);
     sc->callback(sc->callback_data, sc->copy_buf, len);
 }
 

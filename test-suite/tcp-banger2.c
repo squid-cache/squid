@@ -1,3 +1,4 @@
+
 #define FD_SETSIZE 1024
 
 #include <stdio.h>
@@ -43,7 +44,7 @@ int maxfd = 0;
 
 char *
 mkrfc850(t)
-    time_t *t;
+     time_t *t;
 {
     static char buf[128];
     struct tm *gmt = gmtime(t);
@@ -61,13 +62,13 @@ fd_close(int fd)
     nfds--;
     if (fd == maxfd) {
 	while (FD[fd].cb == NULL)
-		fd--;
+	    fd--;
 	maxfd = fd;
     }
 }
 
 void
-fd_open(int fd, CB *cb, void *data)
+fd_open(int fd, CB * cb, void *data)
 {
     FD[fd].cb = cb;
     FD[fd].data = data;
@@ -79,25 +80,25 @@ fd_open(int fd, CB *cb, void *data)
 void
 sig_intr(int sig)
 {
-	fd_close(0);
-	printf ("\rWaiting for open connections to finish...\n");
-	signal(sig, SIG_DFL);
+    fd_close(0);
+    printf("\rWaiting for open connections to finish...\n");
+    signal(sig, SIG_DFL);
 }
 
-void 
+void
 read_reply(int fd, void *data)
 {
-	static char buf[READ_BUF_SZ];
-	if (read(fd, buf, READ_BUF_SZ) <= 0) {
-		fd_close(fd);
-		reqpersec++;
-		nrequests++;
-	}
+    static char buf[READ_BUF_SZ];
+    if (read(fd, buf, READ_BUF_SZ) <= 0) {
+	fd_close(fd);
+	reqpersec++;
+	nrequests++;
+    }
 }
 
 int
 request(url)
-    char *url;
+     char *url;
 {
     int s;
     char buf[4096];
@@ -112,7 +113,7 @@ request(url)
     S.sin_family = AF_INET;
     S.sin_port = htons(proxy_port);
     S.sin_addr.s_addr = inet_addr(proxy_addr);
-    if (connect(s, (struct sockaddr *) & S, sizeof(S)) < 0) {
+    if (connect(s, (struct sockaddr *) &S, sizeof(S)) < 0) {
 	close(s);
 	perror("connect");
 	return -1;
@@ -136,9 +137,9 @@ request(url)
 	return -1;
     }
 /*
-    if (fcntl(s, F_SETFL, O_NDELAY) < 0)
-	perror("fcntl O_NDELAY");
-*/
+ * if (fcntl(s, F_SETFL, O_NDELAY) < 0)
+ * perror("fcntl O_NDELAY");
+ */
     return s;
 }
 
@@ -157,7 +158,7 @@ read_url(int fd, void *junk)
 	*t = '\0';
     s = request(buf);
     if (s < 0) {
-	max_connections = nfds-1;
+	max_connections = nfds - 1;
 	printf("NOTE: max_connections set at %d\n", max_connections);
     }
     fd_open(s, read_reply, NULL);
@@ -166,13 +167,13 @@ read_url(int fd, void *junk)
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s: -p port -h host -n max\n", progname);
+    fprintf(stderr, "usage: %s: -p port -h host -n max\n", progname);
 }
 
-int 
+int
 main(argc, argv)
-    int argc;
-    char *argv[];
+     int argc;
+     char *argv[];
 {
     int i;
     int c;
@@ -188,23 +189,23 @@ main(argc, argv)
     gettimeofday(&start, NULL);
     last = start;
     while ((c = getopt(argc, argv, "p:h:n:i")) != -1) {
-        switch (c) {
+	switch (c) {
 	case 'p':
-		proxy_port = atoi(optarg);
-		break;
+	    proxy_port = atoi(optarg);
+	    break;
 	case 'h':
-		proxy_addr = strdup(optarg);
-		break;
+	    proxy_addr = strdup(optarg);
+	    break;
 	case 'n':
-		max_connections = atoi(optarg);
-		break;
+	    max_connections = atoi(optarg);
+	    break;
 	case 'i':
-		opt_ims = 1;
-		break;
+	    opt_ims = 1;
+	    break;
 	default:
-		usage();
-		return 1;
-        }
+	    usage();
+	    return 1;
+	}
     }
     fd_open(0, read_url, NULL);
     signal(SIGINT, sig_intr);
@@ -221,7 +222,7 @@ main(argc, argv)
 	}
 	if (select(maxfd + 1, &R, NULL, NULL, &to) < 0) {
 	    if (errno != EINTR)
-	        perror("select");
+		perror("select");
 	    continue;
 	}
 	for (i = 0; i <= maxfd; i++) {
@@ -231,15 +232,15 @@ main(argc, argv)
 	}
 	gettimeofday(&now, NULL);
 	if (now.tv_sec > last.tv_sec) {
-		last = now;
-		dt = (int) (now.tv_sec - start.tv_sec);
-		printf ("T+ %6d: %9d req (%+4d), %4d conn, %3d/sec avg\n",
-			dt,
-			nrequests,
-			reqpersec,
-			nfds,
-			(int) (nrequests / dt));
-		reqpersec = 0;
+	    last = now;
+	    dt = (int) (now.tv_sec - start.tv_sec);
+	    printf("T+ %6d: %9d req (%+4d), %4d conn, %3d/sec avg\n",
+		dt,
+		nrequests,
+		reqpersec,
+		nfds,
+		(int) (nrequests / dt));
+	    reqpersec = 0;
 	}
     }
     return 0;

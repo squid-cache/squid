@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.128 1997/10/17 23:31:10 wessels Exp $
+ * $Id: client_side.cc,v 1.129 1997/10/20 22:59:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -280,8 +280,8 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
     }
     http->old_entry = NULL;	/* done with old_entry */
     /* use clientCacheHit() here as the callback because we might
-       be swapping in from disk, and the file might not really be
-       there */
+     * be swapping in from disk, and the file might not really be
+     * there */
     storeClientCopy(entry,
 	http->out.offset,
 	http->out.offset,
