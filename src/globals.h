@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.71 1998/11/13 21:02:04 rousskov Exp $
+ * $Id: globals.h,v 1.72 1998/11/25 09:00:21 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -130,7 +130,7 @@ extern int hot_obj_count;	/* 0 */
 extern int _db_level;
 extern const int CacheDigestHashFuncCount;	/* 4 */
 extern CacheDigest *store_digest;	/* NULL */
-extern const char *StoreDigestFileName;	/* "store_digest" */
+extern const char *StoreDigestFileName;		/* "store_digest" */
 extern const char *StoreDigestMimeStr;	/* "application/cache-digest" */
 #if USE_CACHE_DIGESTS
 extern const Version CacheDigestVer;	/* { 5, 3 } */

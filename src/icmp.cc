@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.67 1998/11/13 20:50:51 wessels Exp $
+ * $Id: icmp.cc,v 1.68 1998/11/25 09:00:22 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -139,6 +139,7 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
     /* call neighborsUdpAck even if ping_status != PING_WAITING */
     neighborsUdpAck(key, &header, from);
 }
+
 #endif
 
 #endif /* USE_ICMP */

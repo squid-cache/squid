@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.32 1998/11/13 21:02:10 rousskov Exp $
+ * $Id: store_digest.cc,v 1.33 1998/11/25 09:00:26 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -367,8 +367,8 @@ storeDigestRewriteResume(void)
     httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, "Cache Digest OK",
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + StoreDigestRewritePeriod);
-    debug(71, 3) ("storeDigestRewrite: entry expires on %d (%+d)\n", 
-	e->mem_obj->reply->expires, e->mem_obj->reply->expires-squid_curtime);
+    debug(71, 3) ("storeDigestRewrite: entry expires on %d (%+d)\n",
+	e->mem_obj->reply->expires, e->mem_obj->reply->expires - squid_curtime);
     storeBuffer(e);
     httpReplySwapOut(e->mem_obj->reply, e);
     storeDigestCBlockSwapOut(e);
@@ -384,7 +384,7 @@ storeDigestRewriteFinish(StoreEntry * e)
     storeComplete(e);
     storeTimestampsSet(e);
     debug(71, 2) ("storeDigestRewriteFinish: digest expires at %d (%+d)\n",
-	e->expires, e->expires-squid_curtime);
+	e->expires, e->expires - squid_curtime);
     /* is this the write order? @?@ */
     requestUnlink(e->mem_obj->request);
     e->mem_obj->request = NULL;

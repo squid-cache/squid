@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.278 1998/11/13 21:02:04 rousskov Exp $
+ * $Id: main.cc,v 1.279 1998/11/25 09:00:22 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -175,7 +175,7 @@ mainParseOptions(int argc, char *argv[])
 	    else if (!strncmp(optarg, "check", strlen(optarg)))
 		opt_send_signal = 0;	/* SIGNULL */
 	    else if (!strncmp(optarg, "parse", strlen(optarg)))
-		opt_parse_cfg_only = 1;	/* parse cfg file only */
+		opt_parse_cfg_only = 1;		/* parse cfg file only */
 	    else
 		usage();
 	    break;
@@ -526,12 +526,12 @@ main(int argc, char **argv)
 	int parse_err;
 	if (!ConfigFile)
 	    ConfigFile = xstrdup(DefaultConfigFile);
-	if (!configured_once) /* is it ever false? */ {
+	if (!configured_once) {	/* is it ever false? */
 	    cbdataInit();
-	    memInit(); /* memInit is required for config parsing */
+	    memInit();		/* memInit is required for config parsing */
 	}
 	parse_err = parseConfigFile(ConfigFile);
-	
+
 	if (opt_parse_cfg_only)
 	    return parse_err;
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.18 1998/11/18 00:16:39 glenn Exp $
+ * $Id: snmp_core.cc,v 1.19 1998/11/25 09:00:25 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -63,12 +63,12 @@ snmpUdpData *snmpUdpTail = NULL;
 #ifdef __STDC__
 static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...);
 static oid *snmpCreateOid(int length,...);
-#else 
+#else
 static mib_tree_entry *snmpAddNode();
 static oid *snmpCreateOid();
-#endif 
+#endif
 extern void (*snmplib_debug_hook) (int, char *);
-static void snmpDecodePacket(snmp_request_t * rq); 
+static void snmpDecodePacket(snmp_request_t * rq);
 static void snmpConstructReponse(snmp_request_t * rq, struct snmp_session *Session);
 static struct snmp_pdu *snmpAgentResponse(struct snmp_pdu *PDU);
 static void snmpUdpSend(int, const struct sockaddr_in *, void *, int);
@@ -206,8 +206,8 @@ snmpInit(void)
 						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 13),
 						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
-                                                snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 14),
-                                                    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
+						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 14),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 15),
 						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0)),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 2, 2),
@@ -218,82 +218,82 @@ snmpInit(void)
 							LEN_SQ_PRF + 4, NULL, 3,
 							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 1, 1),
 							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 1, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 1, 60),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 1, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 1, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 2),
 							LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 2, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 2, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),  
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 2, 60),  
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 2, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 2, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 2, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 3),
 							LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 3, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 3, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),  
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 3, 60),  
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 3, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 3, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 3, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 4),
 							LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 4, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 4, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),  
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 4, 60),  
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 4, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 4, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 4, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 5),
 							LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 5, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 5, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),  
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 5, 60),  
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 5, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 5, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 5, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 6),
 							LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 6, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 6, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),  
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 6, 60),  
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 6, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 6, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 6, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 7),
 							LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 7, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 7, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),  
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 7, 60),  
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
-                                                    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 8),
-                                                        LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 8, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 8, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 8, 60),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
-                                                    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 9),
-                                                        LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 9, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 9, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 9, 60),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
-                                                    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 10),
-                                                        LEN_SQ_PRF + 4, NULL, 3,
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 10, 1),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 10, 5),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
-                                                        snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 10, 60),
-                                                            LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)))))),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 7, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 7, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 7, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 8),
+							LEN_SQ_PRF + 4, NULL, 3,
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 8, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 8, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 8, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 9),
+							LEN_SQ_PRF + 4, NULL, 3,
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 9, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 9, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 9, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)),
+						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 10),
+							LEN_SQ_PRF + 4, NULL, 3,
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 10, 1),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 10, 5),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0),
+							snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 5, SQ_PRF, 2, 2, 1, 10, 60),
+							    LEN_SQ_PRF + 5, snmp_prfProtoFn, 0)))))),
 				    snmpAddNode(snmpCreateOid(LEN_SQ_NET, SQ_NET),
 					LEN_SQ_NET, NULL, 3,
 					snmpAddNode(snmpCreateOid(LEN_SQ_NET + 1, SQ_NET, 1),
@@ -717,14 +717,14 @@ snmpTreeGet(oid * Current, snint CurrentLen)
 
     mibTreeEntry = mib_tree_head;
     if (Current[count] == mibTreeEntry->name[count]) {
-        count++;
-        while ((mibTreeEntry) && (count < CurrentLen)) {
-            mibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
-            count++;
-        }
+	count++;
+	while ((mibTreeEntry) && (count < CurrentLen)) {
+	    mibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
+	    count++;
+	}
     }
     if (mibTreeEntry) {
-        Fn = mibTreeEntry->parsefunction;
+	Fn = mibTreeEntry->parsefunction;
     }
     debug(49, 5) ("snmpTreeGet: return\n");
     return (Fn);
@@ -754,26 +754,26 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 	if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
 	    count--;
 	    nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
-	    if(nextoid){
+	    if (nextoid) {
 		mibTreeEntry = nextoid;
 		count++;
-	    }else{
+	    } else {
 		debug(49, 5) ("snmpTreeNext: Attempting to recurse up for next object\n");
-		while(!nextoid){
+		while (!nextoid) {
 		    count--;
 		    nextoid = mibTreeEntry->parent;
 		    mibTreeEntry = snmpTreeEntry(Current[count] + 1, count, nextoid->parent);
-		    if(!mibTreeEntry){
-			mibTreeEntry = nextoid;	
+		    if (!mibTreeEntry) {
+			mibTreeEntry = nextoid;
 			nextoid = NULL;
-    		    }
+		    }
 		}
 	    }
 	}
 	debug(49, 5) ("snmpTreeNext: Past Second\n");
 
 	while ((mibTreeEntry) && (!mibTreeEntry->parsefunction)) {
-	   mibTreeEntry = mibTreeEntry->leaves[0]; 
+	    mibTreeEntry = mibTreeEntry->leaves[0];
 	}
     }
     if (mibTreeEntry) {
@@ -790,16 +790,16 @@ snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current)
 {
     mib_tree_entry *next = NULL;
     int count = 0;
-    
+
     while ((!next) && (count < current->children)) {
-        if (current->leaves[count]->name[len] == entry) {
-            next = current->leaves[count];
-        }
-        count++;
+	if (current->leaves[count]->name[len] == entry) {
+	    next = current->leaves[count];
+	}
+	count++;
     }
-    if(count < current->children){
+    if (count < current->children) {
 	next = current->leaves[count];
-    }else{
+    } else {
 	next = NULL;
     }
     return (next);
@@ -950,7 +950,7 @@ snmpAppendUdp(snmpUdpData * item)
 /* 
  * Returns the list of parameters in an oid[]
  */
-#ifdef __STDC__ 
+#ifdef __STDC__
 oid *
 snmpCreateOid(int length,...)
 {
@@ -960,18 +960,18 @@ snmpCreateOid(int length,...)
 
     va_start(args, length);
 #else
-oid *   
+oid *
 snmpCreateOid(va_alist)
      va_dcl
 {
     va_list args;
     int length = 0, loop;
     oid *new_oid;
-    
+
     va_start(args);
     length va_arg(args, int);
 #endif
-    
+
     new_oid = xmalloc(sizeof(oid) * length);
 
     if (length > 0) {

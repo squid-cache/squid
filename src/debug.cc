@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.72 1998/11/13 06:00:30 wessels Exp $
+ * $Id: debug.cc,v 1.73 1998/11/25 09:00:20 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -232,10 +232,10 @@ debugLogTime(time_t t)
 
 void
 xassert(const char *msg, const char *file, int line)
-{   
+{
     debug(0, 0) ("assertion failed: %s:%d: \"%s\"\n", file, line, msg);
     if (!shutting_down)
-        abort();
+	abort();
 }
 
 /*

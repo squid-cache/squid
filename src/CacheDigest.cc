@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.27 1998/11/13 21:02:01 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.28 1998/11/25 09:00:17 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -253,7 +253,6 @@ cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, c
 	storeAppendPrintf(sentry, "no guess stats for %s available\n", label);
 	return;
     }
-
     storeAppendPrintf(sentry, "Digest guesses stats for %s:\n", label);
     storeAppendPrintf(sentry, "guess\t hit\t\t miss\t\t total\t\t\n");
     storeAppendPrintf(sentry, " \t #\t %%\t #\t %%\t #\t %%\t\n");
