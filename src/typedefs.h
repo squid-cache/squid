@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.69 1998/08/17 23:00:43 wessels Exp $
+ * $Id: typedefs.h,v 1.70 1998/08/18 21:15:44 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -162,7 +162,7 @@ typedef struct _usecEntry usecEntry;
 #endif
 
 /* define AIOCB even without USE_ASYNC_IO */
-typedef void AIOCB(void *, int aio_return, int aio_errno);
+typedef void AIOCB(int fd, void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
 typedef void CNCB(int fd, int status, void *);
 
