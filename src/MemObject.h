@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.5 2003/05/19 23:16:48 robertc Exp $
+ * $Id: MemObject.h,v 1.6 2003/07/12 07:22:09 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -100,14 +100,16 @@ public:
 
     int nclients;
 
-    struct
+    class SwapOut
     {
+
+    public:
         off_t queue_offset;     /* relative to in-mem data */
         mem_node *memnode;      /* which node we're currently paging out */
         StoreIOState::Pointer sio;
-    }
+    };
 
-    swapout;
+    SwapOut swapout;
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
     request_t *request;
