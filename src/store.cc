@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.302 1997/10/23 04:04:54 wessels Exp $
+ * $Id: store.cc,v 1.303 1997/10/23 20:43:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1660,7 +1660,7 @@ storeGetBucketNum(void)
 #define SWAP_LRU_REMOVE_COUNT	64
 
 /* Clear Swap storage to accommodate the given object len */
-int
+void
 storeGetSwapSpace(int size)
 {
     static int fReduceSwap = 0;
@@ -1669,27 +1669,28 @@ storeGetSwapSpace(int size)
     int scanned = 0;
     int removed = 0;
     int locked = 0;
+    int expired = 0;
     int locked_size = 0;
     int list_count = 0;
     int scan_count = 0;
     int max_list_count = SWAP_LRUSCAN_COUNT << 1;
     int i;
+    static int DL = 3;
     StoreEntry **LRU_list;
     hash_link *link_ptr = NULL, *next = NULL;
     int kb_size = ((size + 1023) >> 10);
 
     if (store_swap_size + kb_size <= store_swap_low)
 	fReduceSwap = 0;
-    if (!fReduceSwap && (store_swap_size + kb_size <= store_swap_high)) {
-	return 0;
-    }
-    debug(20, 2) ("storeGetSwapSpace: Starting...\n");
+    if (!fReduceSwap && (store_swap_size + kb_size <= store_swap_high))
+	return;
+    debug(20, DL) ("storeGetSwapSpace: Starting...\n");
 
     /* Set flag if swap size over high-water-mark */
     if (store_swap_size + kb_size > store_swap_high)
 	fReduceSwap = 1;
 
-    debug(20, 2) ("storeGetSwapSpace: Need %d bytes...\n", size);
+    debug(20, DL) ("storeGetSwapSpace: Need %d bytes...\n", size);
 
     LRU_list = xcalloc(max_list_count, sizeof(StoreEntry *));
     /* remove expired objects until recover enough or no expired objects */
@@ -1707,8 +1708,9 @@ storeGetSwapSpace(int size)
 	    if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
 		continue;
 	    if (storeCheckExpired(e, 0)) {
-		debug(20, 3) ("storeGetSwapSpace: Expired '%s'\n", e->url);
+		debug(20, DL) ("storeGetSwapSpace: Expired '%s'\n", e->url);
 		storeRelease(e);
+		expired++;
 	    } else if (!storeEntryLocked(e)) {
 		*(LRU_list + list_count) = e;
 		list_count++;
@@ -1728,56 +1730,51 @@ storeGetSwapSpace(int size)
 	    break;
     }				/* for */
 
-#ifdef LOTSA_DEBUGGING
     /* end of candidate selection */
-    debug(20, 2) ("storeGetSwapSpace: Current Size:   %7d kbytes\n",
+    debug(20, DL) ("storeGetSwapSpace: Current Size:   %7d kbytes\n",
 	store_swap_size);
-    debug(20, 2) ("storeGetSwapSpace: High W Mark:    %7d kbytes\n",
+    debug(20, DL) ("storeGetSwapSpace: High W Mark:    %7d kbytes\n",
 	store_swap_high);
-    debug(20, 2) ("storeGetSwapSpace: Low W Mark:     %7d kbytes\n",
+    debug(20, DL) ("storeGetSwapSpace: Low W Mark:     %7d kbytes\n",
 	store_swap_low);
-    debug(20, 2) ("storeGetSwapSpace: Entry count:    %7d items\n",
+    debug(20, DL) ("storeGetSwapSpace: Entry count:    %7d items\n",
 	meta_data.store_entries);
-    debug(20, 2) ("storeGetSwapSpace: Visited:        %7d buckets\n",
+    debug(20, DL) ("storeGetSwapSpace: Visited:        %7d buckets\n",
 	i + 1);
-    debug(20, 2) ("storeGetSwapSpace: Scanned:        %7d items\n",
+    debug(20, DL) ("storeGetSwapSpace: Scanned:        %7d items\n",
 	scanned);
-    debug(20, 2) ("storeGetSwapSpace: Expired:        %7d items\n",
+    debug(20, DL) ("storeGetSwapSpace: Expired:        %7d items\n",
 	expired);
-    debug(20, 2) ("storeGetSwapSpace: Locked:         %7d items\n",
+    debug(20, DL) ("storeGetSwapSpace: Locked:         %7d items\n",
 	locked);
-    debug(20, 2) ("storeGetSwapSpace: Locked Space:   %7d bytes\n",
+    debug(20, DL) ("storeGetSwapSpace: Locked Space:   %7d bytes\n",
 	locked_size);
-    debug(20, 2) ("storeGetSwapSpace: Scan in array:  %7d bytes\n",
-	scan_in_objs);
-    debug(20, 2) ("storeGetSwapSpace: LRU candidate:  %7d items\n",
-	LRU_list->index);
-#endif /* LOTSA_DEBUGGING */
+    debug(20, DL) ("storeGetSwapSpace: LRU candidate:  %7d items\n",
+	list_count);
 
     for (i = 0; i < list_count; i++)
 	removed += storeRelease(*(LRU_list + i));
     if (store_swap_size + kb_size <= store_swap_low)
 	fReduceSwap = 0;
-    debug(20, 2) ("storeGetSwapSpace: After Freeing Size:   %7d kbytes\n",
+    debug(20, DL) ("storeGetSwapSpace: After Freeing Size:   %7d kbytes\n",
 	store_swap_size);
     /* free the list */
     safe_free(LRU_list);
 
     if ((store_swap_size + kb_size > store_swap_high)) {
-	i = 2;
 	if (++swap_help > SWAP_MAX_HELP) {
-	    debug(20, 0) ("WARNING: Repeated failures to free up disk space!\n");
-	    i = 0;
+	    debug(20, DL) ("WARNING: Repeated failures to free up disk space!\n");
+	    DL = 1;
 	}
-	debug(20, i) ("storeGetSwapSpace: Disk usage is over high water mark\n");
-	debug(20, i) ("--> store_swap_high = %d KB\n", store_swap_high);
-	debug(20, i) ("--> store_swap_size = %d KB\n", store_swap_size);
-	debug(20, i) ("--> asking for        %d KB\n", kb_size);
+	debug(20, DL) ("storeGetSwapSpace: Disk usage is over high water mark\n");
+	debug(20, DL) ("--> store_swap_high = %d KB\n", store_swap_high);
+	debug(20, DL) ("--> store_swap_size = %d KB\n", store_swap_size);
+	debug(20, DL) ("--> asking for        %d KB\n", kb_size);
     } else {
 	swap_help = 0;
+	DL = 3;
     }
-    debug(20, 2) ("Removed %d objects\n", removed);
-    return 0;
+    debug(20, DL) ("Removed %d objects\n", removed);
 }
 
 
