@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.6 2002/08/21 05:56:10 hno Exp $
+ * $Id: external_acl.cc,v 1.7 2002/08/21 09:12:44 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -101,6 +101,7 @@ struct _external_acl_format {
 	EXT_ACL_DST,
 	EXT_ACL_PROTO,
 	EXT_ACL_PORT,
+	EXT_ACL_PATH,
 	EXT_ACL_METHOD,
 	EXT_ACL_HEADER,
 	EXT_ACL_HEADER_MEMBER,
@@ -206,7 +207,7 @@ parse_externalAclHelper(external_acl ** list)
 	    char *header, *member, *end;
 	    header = token + 2;
 	    end = strchr(header, '}');
-	    /* cut away the terminating } */
+	    /* cut away the closing brace */
 	    if (end && strlen(end) == 1)
 		*end = '\0';
 	    else
@@ -250,6 +251,8 @@ parse_externalAclHelper(external_acl ** list)
 	    format->type = EXT_ACL_PROTO;
 	else if (strcmp(token, "%PORT") == 0)
 	    format->type = EXT_ACL_PORT;
+	else if (strcmp(token, "%PATH") == 0)
+	    format->type = EXT_ACL_PATH;
 	else if (strcmp(token, "%METHOD") == 0)
 	    format->type = EXT_ACL_METHOD;
 	else {
@@ -515,6 +518,9 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	case EXT_ACL_PORT:
 	    snprintf(buf, sizeof(buf), "%d", request->port);
 	    str = buf;
+	    break;
+	case EXT_ACL_PATH:
+	    str = strStr(request->urlpath);
 	    break;
 	case EXT_ACL_METHOD:
 	    str = RequestMethodStr[request->method];
