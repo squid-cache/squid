@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.6 2003/08/10 11:00:40 robertc Exp $
+ * $Id: ESI.cc,v 1.7 2004/08/15 17:42:37 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -1452,6 +1452,7 @@ ESIContext::freeResources ()
     ESISegmentFreeList (outbound);
     ESISegmentFreeList (outboundtail);
     delete varState;
+    varState=NULL;
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
