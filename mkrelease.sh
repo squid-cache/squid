@@ -4,6 +4,7 @@ if [ $# -ne 1 -a $# -ne 2 ]; then
 	exit 1
 fi
 package=squid
+module=squid3
 rev=`echo $1 | sed -e "s/^${package}-//"`
 name=${package}-${rev}
 tag=`echo ${name} | tr a-z.- A-Z__`
@@ -19,9 +20,9 @@ export CVSROOT
 rm -rf $name.tar.gz $tmpdir
 trap "rm -rf $tmpdir" 0
 
-cvs -Q export -d $tmpdir -r $tag $package
+cvs -Q export -d $tmpdir -r $tag $module
 if [ ! -f $tmpdir/configure ]; then
-	echo "ERROR! Tag $tag not found in $package"
+	echo "ERROR! Tag $tag not found in $module"
 fi
 
 cd $tmpdir
