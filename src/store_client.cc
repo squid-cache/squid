@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.60 1999/04/14 06:15:21 wessels Exp $
+ * $Id: store_client.cc,v 1.61 1999/04/14 06:36:09 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -262,7 +262,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy2: Need to open swap in file\n");
 	assert(sc->type == STORE_DISK_CLIENT);
 	/* gotta open the swapin file */
-	if (store_open_disk_fd > Config.max_open_disk_fds) {
+	if (storeTooManyDiskFilesOpen()) {
 	    /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
 	    sc->callback = NULL;
 	    callback(sc->callback_data, sc->copy_buf, -1);
