@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.179 1998/04/09 20:33:10 rousskov Exp $
+ * $Id: ipcache.cc,v 1.180 1998/04/22 01:40:15 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -659,6 +659,7 @@ ipcache_init(void)
     debug(14, 3) ("Initializing IP Cache...\n");
 
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
+    memset(&lru_list, '\0', sizeof(lru_list));
 
     /* test naming lookup */
     if (!opt_dns_tests) {
