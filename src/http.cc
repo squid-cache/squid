@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.135 1996/12/13 20:33:41 wessels Exp $
+ * $Id: http.cc,v 1.136 1996/12/13 22:10:30 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -658,7 +658,6 @@ httpBuildRequestHeader(request_t * request,
     size_t len = 0;
     size_t hdr_len = 0;
     size_t in_sz;
-    size_t content_length = 0;
     size_t l;
     int hdr_flags = 0;
     const char *url = NULL;
@@ -680,8 +679,6 @@ httpBuildRequestHeader(request_t * request,
     in_sz = strlen(hdr_in);
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	hdr_len = t - hdr_in;
-	if (in_sz - hdr_len <= content_length)
-	    break;
 	l = strcspn(t, crlf) + 1;
 	if (l > 4096)
 	    l = 4096;
@@ -691,34 +688,28 @@ httpBuildRequestHeader(request_t * request,
 	    continue;
 	if (strncasecmp(xbuf, "Connection:", 11) == 0)
 	    continue;
-	if (strncasecmp(xbuf, "Host:", 5) == 0)
+	if (strncasecmp(xbuf, "Host:", 5) == 0) {
 	    EBIT_SET(hdr_flags, HDR_HOST);
-	if (strncasecmp(xbuf, "Content-length:", 15) == 0) {
-	    for (s = xbuf + 15; *s && isspace(*s); s++);
-	    content_length = (size_t) atoi(s);
-	}
-	if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
+	} else if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
 	    for (s = xbuf + 14; *s && isspace(*s); s++);
 	    if (strncasecmp(s, "Max-age=", 8) == 0)
 		EBIT_SET(hdr_flags, HDR_MAXAGE);
-	}
-	if (strncasecmp(xbuf, "Via:", 4) == 0) {
+	} else if (strncasecmp(xbuf, "Via:", 4) == 0) {
 	    for (s = xbuf + 4; *s && isspace(*s); s++);
 	    if (strlen(viabuf) + strlen(s) < 4000)
 		strcat(viabuf, s);
 	    strcat(viabuf, ", ");
 	    continue;
-	}
-	if (strncasecmp(xbuf, "X-Forwarded-For:", 16) == 0) {
+	} else if (strncasecmp(xbuf, "X-Forwarded-For:", 16) == 0) {
 	    for (s = xbuf + 16; *s && isspace(*s); s++);
 	    if (strlen(fwdbuf) + strlen(s) < 4000)
 		strcat(fwdbuf, s);
 	    strcat(fwdbuf, ", ");
 	    continue;
-	}
-	if (strncasecmp(xbuf, "If-Modified-Since:", 18) == 0)
+	} else if (strncasecmp(xbuf, "If-Modified-Since:", 18) == 0) {
 	    if (EBIT_TEST(hdr_flags, HDR_IMS))
 		continue;
+	}
 	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512);
     }
     hdr_len = t - hdr_in;
