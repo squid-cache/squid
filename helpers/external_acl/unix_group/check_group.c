@@ -1,5 +1,5 @@
 /*
- * $Id: check_group.c,v 1.3 2003/01/23 00:36:13 robertc Exp $
+ * $Id: check_group.c,v 1.4 2004/08/14 22:54:53 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
@@ -29,6 +29,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  * Change Log:
+ * Revision 1.7  2004/08/15 00:29:33  hno
+ * helper protocol changed to URL-escaped strings in Squid-3.0
+ *
  * Revision 1.6  2002/08/12 15:48:32  hno
  * imported strwordtok from Squid, added man page, some minor fixes
  *
@@ -58,61 +61,11 @@
 #include <pwd.h>
 #include <ctype.h>
 
+#include "util.h"
 
 #define BUFSIZE 8192		/* the stdin buffer size */
 #define MAX_GROUP 10		/* maximum number of groups specified 
 				 * on the command line */
-
-
-/*
- * Library function to split external_acl messages into tokens
- * Copied from the Squid sources
- */
-static char *
-strwordtok(char *buf, char **t)
-{
-    unsigned char *word = NULL;
-    unsigned char *p = (unsigned char *) buf;
-    unsigned char *d;
-    unsigned char ch;
-    int quoted = 0;
-    if (!p)
-	p = (unsigned char *) *t;
-    if (!p)
-	goto error;
-    while (*p && isspace(*p))
-	p++;
-    if (!*p)
-	goto error;
-    word = d = p;
-    while ((ch = *p)) {
-	switch (ch) {
-	case '\\':
-	    p++;
-	    *d++ = ch = *p;
-	    if (ch)
-		p++;
-	    break;
-	case '"':
-	    quoted = !quoted;
-	    p++;
-	    break;
-	default:
-	    if (!quoted && isspace(*p)) {
-		p++;
-		goto done;
-	    }
-	    *d++ = *p++;
-	    break;
-	}
-    }
-  done:
-    *d++ = '\0';
-  error:
-    *t = (char *) p;
-    return (char *) word;
-}
-
 
 /* 
  * Verify if user´s primary group matches groupname
@@ -181,7 +134,7 @@ usage(char *program)
 int
 main(int argc, char *argv[])
 {
-    char *user, *p, *t;
+    char *user, *p;
     char buf[BUFSIZE];
     char *grents[MAX_GROUP];
     int check_pw = 0, ch, i = 0, j = 0;
@@ -224,26 +177,27 @@ main(int argc, char *argv[])
 	usage(argv[0]);
 	exit(1);
     }
-    while (fgets(buf, BUFSIZE, stdin)) {
+    while (fgets(buf, sizeof(buf), stdin)) {
 	j = 0;
-	if ((p = strchr(buf, '\n')) != NULL) {
-	    *p = '\0';
-	} else {
+	if ((p = strchr(buf, '\n')) == NULL) {
 	    /* too large message received.. skip and deny */
 	    fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
-	    while (fgets(buf, BUFSIZE, stdin)) {
+	    while (fgets(buf, sizeof(buf), stdin)) {
 		fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
 		if (strchr(buf, '\n') != NULL)
 		    break;
 	    }
 	    goto error;
 	}
-	if ((p = strwordtok(buf, &t)) == NULL) {
+	*p = '\0';
+	if ((p = strtok(buf, " ")) == NULL) {
 	    goto error;
 	} else {
 	    user = p;
+	    rfc1738_unescape(user);
 	    /* check groups supplied by Squid */
-	    while ((p = strwordtok(NULL, &t)) != NULL) {
+	    while ((p = strtok(NULL, " ")) != NULL) {
+		rfc1738_unescape(p);
 		if (check_pw == 1)
 		    j += validate_user_pw(user, p);
 

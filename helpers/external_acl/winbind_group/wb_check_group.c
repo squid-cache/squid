@@ -31,6 +31,9 @@
  *
  * History:
  *
+ * Version 1.21
+ * 15-08-2004 Henrik Nordstrom
+ * 		Helper protocol changed to use URL escaped strings in Squid-3.0
  * Version 1.20
  * 10-05-2003 Roberto Moreda
  *              Added support for domain-qualified group Microsoft notation
@@ -78,52 +81,6 @@ char debug_enabled=0;
 const char *myname;
 pid_t mypid;
 static int use_case_insensitive_compare=0;
-
-static char *
-strwordtok(char *buf, char **t)
-{
-    unsigned char *word = NULL;
-    unsigned char *p = (unsigned char *) buf;
-    unsigned char *d;
-    unsigned char ch;
-    int quoted = 0;
-    if (!p)
-	p = (unsigned char *) *t;
-    if (!p)
-	goto error;
-    while (*p && isspace(*p))
-	p++;
-    if (!*p)
-	goto error;
-    word = d = p;
-    while ((ch = *p)) {
-	switch (ch) {
-	case '\\':
-	    p++;
-	    *d++ = ch = *p;
-	    if (ch)
-		p++;
-	    break;
-	case '"':
-	    quoted = !quoted;
-	    p++;
-	    break;
-	default:
-	    if (!quoted && isspace(*p)) {
-		p++;
-		goto done;
-	    }
-	    *d++ = *p++;
-	    break;
-	}
-    }
-  done:
-    *d++ = '\0';
-  error:
-    *t = (char *) p;
-    return (char *) word;
-}
-
 
 static int strCaseCmp (const char *s1, const char *s2)
 {
@@ -317,11 +274,10 @@ check_winbindd()
 int
 main (int argc, char *argv[])
 {
-    char *p, *t;
+    char *p;
     char buf[BUFSIZE];
     char *username;
     char *group;
-    int err = 0;
     const char *groups[512];
     int n;
 
@@ -348,14 +304,16 @@ main (int argc, char *argv[])
     check_winbindd();
 
     /* Main Loop */
-    while (fgets (buf, BUFSIZE, stdin))
+    while (fgets (buf, sizeof(buf), stdin))
     {
 	if (NULL == strchr(buf, '\n')) {
-	    err = 1;
-	    continue;
-	}
-	if (err) {
-	    warn("Oversized message\n");
+	    /* too large message received.. skip and deny */
+	    fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
+	    while (fgets(buf, sizeof(buf), stdin)) {
+		fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
+		if (strchr(buf, '\n') != NULL)
+		    break;
+	    }
 	    goto error;
 	}
 	
@@ -371,15 +329,18 @@ main (int argc, char *argv[])
 	    goto error;
 	}
 
-	username = strwordtok(buf, &t);
-	for (n = 0; (group = strwordtok(NULL, &t)) != NULL; n++)
+	username = strtok(buf, " ");
+	for (n = 0; (group = strtok(NULL, " ")) != NULL; n++) {
+	    rfc1738_unescape(group);
 	    groups[n] = group;
+	}
 	groups[n] = NULL;
 
         if (NULL == username) {
             warn("Invalid Request\n");
             goto error;
         }
+	rfc1738_unescape(username);
 
 	if (Valid_Groups(username, groups)) {
 	    printf ("OK\n");
@@ -387,7 +348,6 @@ main (int argc, char *argv[])
 error:
 	    printf ("ERR\n");
 	}
-	err = 0;
     }
     return 0;
 }

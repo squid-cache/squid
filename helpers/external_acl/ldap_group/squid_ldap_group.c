@@ -43,6 +43,8 @@
 #include <sys/time.h>
 #endif
 
+#include "util.h"
+
 #define PROGRAM_NAME "squid_ldap_group"
 
 /* Globals */
@@ -162,51 +164,6 @@ squid_ldap_memfree(char *p)
   #endif
 #endif
 
-static char *
-strwordtok(char *buf, char **t)
-{
-    unsigned char *word = NULL;
-    unsigned char *p = (unsigned char *) buf;
-    unsigned char *d;
-    unsigned char ch;
-    int quoted = 0;
-    if (!p)
-	p = (unsigned char *) *t;
-    if (!p)
-	goto error;
-    while (*p && isspace(*p))
-	p++;
-    if (!*p)
-	goto error;
-    word = d = p;
-    while ((ch = *p)) {
-	switch (ch) {
-	case '\\':
-	    p++;
-	    *d++ = ch = *p;
-	    if (ch)
-		p++;
-	    break;
-	case '"':
-	    quoted = !quoted;
-	    p++;
-	    break;
-	default:
-	    if (!quoted && isspace(*p)) {
-		p++;
-		goto done;
-	    }
-	    *d++ = *p++;
-	    break;
-	}
-    }
-  done:
-    *d++ = '\0';
-  error:
-    *t = (char *) p;
-    return (char *) word;
-}
-
 int
 main(int argc, char **argv)
 {
@@ -218,6 +175,7 @@ main(int argc, char **argv)
     int port = LDAP_PORT;
     int use_extension_dn = 0;
     int strip_nt_domain = 0;
+    int err = 0;
 
     setbuf(stdout, NULL);
 
@@ -430,20 +388,41 @@ main(int argc, char **argv)
 	exit(1);
     }
     while (fgets(buf, 256, stdin) != NULL) {
-	char *tptr;
 	int found = 0;
-	user = strwordtok(buf, &tptr);
-	if (user && strip_nt_domain) {
+	if (!strchr(buf, '\n')) {
+	    /* too large message received.. skip and deny */
+	    fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
+	    while (fgets(buf, sizeof(buf), stdin)) {
+		fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
+		if (strchr(buf, '\n') != NULL)
+		    break;
+	    }
+	    goto error;
+	}
+	user = strtok(buf, " \n");
+	if (!user) {
+	    fprintf(stderr, "%s: Invalid request\n", argv[0]);
+	    goto error;
+	}
+	rfc1738_unescape(user);
+	if (strip_nt_domain) {
 	    char *u = strchr(user, '\\');
 	    if (!u)
 		u = strchr(user, '/');
 	    if (u && u[1])
 		user = u + 1;
 	}
-	if (use_extension_dn)
-		extension_dn = strwordtok(NULL, &tptr);
+	if (use_extension_dn) {
+	    extension_dn = strtok(NULL, " \n");
+	    if (!extension_dn) {
+		fprintf(stderr, "%s: Invalid request\n", argv[0]);
+		goto error;
+	    }
+	    rfc1738_unescape(extension_dn);
+	}
 
-	while (!found && user && (group = strwordtok(NULL, &tptr)) != NULL) {
+	while (!found && user && (group = strtok(NULL, " \n")) != NULL) {
+	    rfc1738_unescape(group);
 
 	  recover:
 	    if (ld == NULL) {
@@ -528,8 +507,10 @@ main(int argc, char **argv)
 	}
 	if (found)
 	    printf("OK\n");
-	else
+	else {
+error:
 	    printf("ERR\n");
+}
 
 	if (ld != NULL) {
 	    if (!persistent || (squid_ldap_errno(ld) != LDAP_SUCCESS && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS)) {
@@ -539,6 +520,7 @@ main(int argc, char **argv)
 		tryagain = 1;
 	    }
 	}
+	err = 0;
     }
     if (ld)
 	ldap_unbind(ld);

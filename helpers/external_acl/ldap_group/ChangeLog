@@ -1,6 +1,23 @@
+Version 2.15
+
+2004-08-15 Henrik Nordstrom <hno@squid-cache.org>
+	Helper format changed in Squid-3.0 to use URL escaped
+	strings. Simplifies things a bit and well known encoding.
+
+Version 2.14
+
+2004-03-02 Henrik Nordstrom <hno@squid-cache.org>
+	Added -d (debug) flag
+
+2004-02-09 Henrik Nordstrom <hno@squid-cache.org>
+	-E and -S options mismatch
+
+2004-01-08 Henrik Nordstrom <hno@squid-cache.org>
+	Increase buffer size when reading group lookups from Squid
+
 Version 2.13
 
-2003-01-05 Henrik Nordstrom <hno@squid-cache.org>
+2004-01-05 Henrik Nordstrom <hno@squid-cache.org>
 	Corrected TLS mode (-Z)
 
 Version 2.12
