@@ -1,3 +1,16 @@
+	- Fixed 'quick_abort' percent calculation bug.
+	- Fixed quick_abort FPE bug.
+	- Changed more errno-checking functions to use ignoreErrno().
+	- Added ERESTART to ignoreErrno() because of report from
+	  a Solaris system.
+	- Fixed '#elsif' typo.
+	- Fixed MemPool assertion by moving memInit() to before
+	  configuration parsing functions.
+	- Fixed default 'announce_period' value (was 1 day, should
+	  be 0) (Joe Ramey).
+	- Added configure warning for low filedescriptors and pointer
+	  to FAQ.
+
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
 	- Added French Error pages by Frank DENIS.
