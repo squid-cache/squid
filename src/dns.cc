@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.5 1996/08/14 21:54:20 wessels Exp $
+ * $Id: dns.cc,v 1.6 1996/08/30 22:37:23 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -127,7 +127,7 @@ static int dnsOpenServer(command)
     int cfd;
     int sfd;
     int len;
-    int fd;
+    LOCAL_ARRAY(char, buf, 128);
 
     cfd = comm_open(COMM_NOCLOEXEC,
 	local_addr,
@@ -162,15 +162,25 @@ static int dnsOpenServer(command)
 	    comm_close(sfd);
 	    return -1;
 	}
+	if (write(sfd, "$hello\n", 7) < 0) {
+	    debug(34, 0, "dnsOpenServer: $hello write test failed\n");
+	    comm_close(sfd);
+	    return -1;
+	}
+	memset(buf, '\0', 128);
+	if (read(sfd, buf, 128) < 0 || strcmp(buf, "$alive\n$end\n")) {
+	    debug(34, 0, "dnsOpenServer: $hello read test failed\n");
+	    comm_close(sfd);
+	    return -1;
+	}
 	comm_set_fd_lifetime(sfd, -1);
 	return sfd;
     }
     /* child */
-
     no_suid();			/* give up extra priviliges */
+    dup2(fileno(debug_log), 2);
     dup2(cfd, 3);
-    for (fd = FD_SETSIZE; fd > 3; fd--)
-	close(fd);
+    close(cfd);
     execlp(command, "(dnsserver)", "-t", NULL);
     debug(34, 0, "dnsOpenServer: %s: %s\n", command, xstrerror());
     _exit(1);
@@ -269,6 +279,9 @@ void dnsShutdownServers()
 
     debug(34, 3, "dnsShutdownServers:\n");
 
+    k = ipcacheQueueDrain();
+    if (fqdncacheQueueDrain() || k)
+	return;
     for (k = 0; k < NDnsServersAlloc; k++) {
 	dnsData = *(dns_child_table + k);
 	if (!(dnsData->flags & DNS_FLAG_ALIVE)) {
