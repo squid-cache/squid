@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.10 1998/09/04 23:04:59 wessels Exp $
+ * $Id: snmp_core.cc,v 1.11 1998/09/23 21:26:06 glenn Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -641,13 +641,15 @@ snmpAgentResponse(struct snmp_pdu *PDU)
 void
 snmpDebugOid(int lvl, oid * Name, snint Len)
 {
-    static char mbuf[16], objid[1024];
+    char mbuf[16], objid[1024];
     int x;
     objid[0] = '\0';
+
     for (x = 0; x < Len; x++) {
-	snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned char) Name[x]);
+	snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);
 	strncat(objid, mbuf, sizeof(objid));
     }
+
     debug(49, lvl) ("   oid = %s\n", objid);
 }
 
@@ -767,6 +769,9 @@ oidlist_Find(oid * Src, snint SrcLen)
  *
  * Returns a pointer to the parser function, and copies the oid to dest.
  * 
+ * This is just plain ugly and needs a total rewrite, these changes are
+ * to make it work, nothing else!
+ *
  */
 oid_ParseFn *
 oidlist_Next(oid * Src, snint SrcLen, oid ** DestP, snint * DestLenP)
@@ -811,7 +816,18 @@ oidlist_Next(oid * Src, snint SrcLen, oid ** DestP, snint * DestLenP)
 	     * the next in this MIB.
 	     */
 	    debug(49, 3) ("oidlist_Next: Passed mib.  Checking this one.\n");
-	    return ((*Ptr->GetNextFn) (Src, SrcLen, DestP, DestLenP));
+	    while (Ptr != NULL && Ptr->GetNextFn) {
+		Fn = ((*Ptr->GetNextFn) (Src, SrcLen, DestP, DestLenP));
+		if (Fn == NULL && oidncmp(Src, SrcLen, Ptr->Name, Ptr->NameLen, Ptr->NameLen) < 0) {
+		    debug(49, 6) ("oidlist_Next: Not in this entry. Trying next.\n");
+		    Ptr++;
+		    continue;
+		} else {
+		    return Fn;
+		}
+	    }
+	    debug(49, 3) ("oidlist_Next: No next mib.\n");
+	    return NULL;
 	}
     }
 
@@ -832,17 +848,3 @@ gen_getMax()
     return &maddr;
 }
 
-int
-fd_getMax()
-{
-    fde *f;
-    int cnt = 0, num = 0;
-    while (cnt < Squid_MaxFD) {
-	f = &fd_table[cnt++];
-	if (!f->open)
-	    continue;
-	if (f->type != FD_SOCKET)
-	    num++;
-    }
-    return num;
-}
