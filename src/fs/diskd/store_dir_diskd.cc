@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.64 2002/04/07 11:52:33 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.65 2002/04/14 16:10:03 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -434,6 +434,7 @@ storeDiskdDirInit(SwapDir * sd)
 	started_clean_event = 1;
     }
     (void) storeDirGetBlkSize(sd->path, &sd->fs.blksize);
+    comm_quick_poll_required();
 }
 
 
