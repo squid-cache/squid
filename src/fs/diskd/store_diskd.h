@@ -84,27 +84,7 @@ class diskdstate_t : public UFSStoreState {
     void doCallback(int);
 };
 
-enum {
-    _MQD_NOP,
-    _MQD_OPEN,
-    _MQD_CREATE,
-    _MQD_CLOSE,
-    _MQD_READ,
-    _MQD_WRITE,
-    _MQD_UNLINK
-};
-
-struct _diomsg {
-    mtyp_t mtype;
-    int id;
-    int seq_no;
-    void * callback_data;
-    int size;
-    int offset;
-    int status;
-    bool newstyle;
-    int shm_offset;
-};
+#include "dio.h"
 
 struct _diskd_stats {
     int open_fail_queue_len;
@@ -123,9 +103,6 @@ struct _diskd_stats {
 };
 
 typedef struct _diskd_stats diskd_stats_t;
-
-
-static const int msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
 
 extern void storeDiskdHandle(diomsg * M);
 

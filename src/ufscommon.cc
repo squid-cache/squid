@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.7 2003/01/23 00:37:27 robertc Exp $
+ * $Id: ufscommon.cc,v 1.8 2003/01/23 20:59:10 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -108,7 +108,7 @@ void
 RebuildState::rebuildFromDirectory()
 {
     LOCAL_ARRAY(char, hdr_buf, SM_PAGE_SIZE);
-    StoreEntry *e = NULL;
+    currentEntry(NULL);
     StoreEntry tmpe;
     cache_key key[MD5_DIGEST_CHARS];
     struct stat sb;
@@ -241,10 +241,22 @@ RebuildState::RebuildFromSwapLog(void *data)
     rb->rebuildFromSwapLog();
 }
 
+StoreEntry *
+RebuildState::currentEntry() const
+{
+    return e;
+}
+
+void
+RebuildState::currentEntry(StoreEntry *newValue)
+{
+    e = newValue;
+}
+
 void
 RebuildState::rebuildFromSwapLog()
 {
-    StoreEntry *e = NULL;
+    currentEntry (NULL);
     double x;
     /* load a number of objects per invocation */
     for (int count = 0; count < speed; count++) {
@@ -280,7 +292,8 @@ RebuildState::rebuildFromSwapLog()
 	    (void) 0;
 	} else if (s.op == SWAP_LOG_DEL) {
 	    /* Delete unless we already have a newer copy */
-	    if ((e = storeGet(s.key)) != NULL && s.lastref > e->lastref) {
+	    currentEntry (storeGet(s.key));
+	    if (currentEntry() != NULL && s.lastref > e->lastref) {
 		/*
 		 * Make sure we don't unlink the file, it might be
 		 * in use by a subsequent entry.  Also note that
@@ -288,15 +301,17 @@ RebuildState::rebuildFromSwapLog()
 		 * because adding to store_swap_size happens in
 		 * the cleanup procedure.
 		 */
-		storeExpireNow(e);
-		storeReleaseRequest(e);
-		if (e->swap_filen > -1) {
-		    sd->replacementRemove(e);
-		    sd->mapBitReset(e->swap_filen);
-		    e->swap_filen = -1;
-		    e->swap_dirn = -1;
+		storeExpireNow(currentEntry());
+		storeReleaseRequest(currentEntry());
+		if (currentEntry()->swap_filen > -1) {
+		    UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
+		    assert (sdForThisEntry);
+		    sdForThisEntry->replacementRemove(currentEntry());
+		    sdForThisEntry->mapBitReset(currentEntry()->swap_filen);
+		    currentEntry()->swap_filen = -1;
+		    currentEntry()->swap_dirn = -1;
 		}
-		storeRelease(e);
+		storeRelease(currentEntry());
 		counts.objcount--;
 		counts.cancelcount++;
 	    }
@@ -323,28 +338,28 @@ RebuildState::rebuildFromSwapLog()
 	    counts.badflags++;
 	    continue;
 	}
-	e = storeGet(s.key);
+	currentEntry(storeGet(s.key));
         int used;			/* is swapfile already in use? */
 	used = sd->mapBitTest(s.swap_filen);
 	/* If this URL already exists in the cache, does the swap log
 	 * appear to have a newer entry?  Compare 'lastref' from the
 	 * swap log to e->lastref. */
     	/* is the log entry newer than current entry? */
-	int disk_entry_newer = e ? (s.lastref > e->lastref ? 1 : 0) : 0;
+	int disk_entry_newer = currentEntry() ? (s.lastref > currentEntry()->lastref ? 1 : 0) : 0;
 	if (used && !disk_entry_newer) {
 	    /* log entry is old, ignore it */
 	    counts.clashcount++;
 	    continue;
-	} else if (used && e && e->swap_filen == s.swap_filen && e->swap_dirn == sd->index) {
+	} else if (used && currentEntry() && currentEntry()->swap_filen == s.swap_filen && currentEntry()->swap_dirn == sd->index) {
 	    /* swapfile taken, same URL, newer, update meta */
-	    if (e->store_status == STORE_OK) {
-		e->lastref = s.timestamp;
-		e->timestamp = s.timestamp;
-		e->expires = s.expires;
-		e->lastmod = s.lastmod;
-		e->flags = s.flags;
-		e->refcount += s.refcount;
-		sd->dereference(*e);
+	    if (currentEntry()->store_status == STORE_OK) {
+		currentEntry()->lastref = s.timestamp;
+		currentEntry()->timestamp = s.timestamp;
+		currentEntry()->expires = s.expires;
+		currentEntry()->lastmod = s.lastmod;
+		currentEntry()->flags = s.flags;
+		currentEntry()->refcount += s.refcount;
+		sd->dereference(*currentEntry());
 	    } else {
 		debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
 		debug(47, 1) ("\tSee %s:%d\n", __FILE__, __LINE__);
@@ -370,24 +385,25 @@ RebuildState::rebuildFromSwapLog()
 	    assert(flags.need_to_validate);
 	    counts.clashcount++;
 	    continue;
-	} else if (e && !disk_entry_newer) {
+	} else if (currentEntry() && !disk_entry_newer) {
 	    /* key already exists, current entry is newer */
 	    /* keep old, ignore new */
 	    counts.dupcount++;
 	    continue;
-	} else if (e) {
+	} else if (currentEntry()) {
 	    /* key already exists, this swapfile not being used */
 	    /* junk old, load new */
-	    storeExpireNow(e);
-	    storeReleaseRequest(e);
-	    if (e->swap_filen > -1) {
-		sd->replacementRemove(e);
+	    storeExpireNow(currentEntry());
+	    storeReleaseRequest(currentEntry());
+	    if (currentEntry()->swap_filen > -1) {
+		UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
+		sdForThisEntry->replacementRemove(currentEntry());
 		/* Make sure we don't actually unlink the file */
-		sd->mapBitReset(e->swap_filen);
-		e->swap_filen = -1;
-		e->swap_dirn = -1;
+		sdForThisEntry->mapBitReset(currentEntry()->swap_filen);
+		currentEntry()->swap_filen = -1;
+		currentEntry()->swap_dirn = -1;
 	    }
-	    storeRelease(e);
+	    storeRelease(currentEntry());
 	    counts.dupcount++;
 	} else {
 	    /* URL doesnt exist, swapfile not in use */
@@ -396,7 +412,7 @@ RebuildState::rebuildFromSwapLog()
 	}
 	/* update store_swap_size */
 	counts.objcount++;
-	e = sd->addDiskRestore(s.key,
+	currentEntry(sd->addDiskRestore(s.key,
 	    s.swap_filen,
 	    s.swap_file_sz,
 	    s.expires,
@@ -405,8 +421,8 @@ RebuildState::rebuildFromSwapLog()
 	    s.lastmod,
 	    s.refcount,
 	    s.flags,
-	    (int) flags.clean);
-	storeDirSwapLog(e, SWAP_LOG_ADD);
+	    (int) flags.clean));
+	storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
     }
     eventAdd("storeRebuild", RebuildFromSwapLog, this, 0.0, 1);
 }

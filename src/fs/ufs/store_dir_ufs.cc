@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.54 2003/01/23 00:38:22 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.55 2003/01/23 20:59:11 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -645,7 +645,7 @@ void
 UFSSwapDir::rebuild()
 {
     int clean = 0;
-    int zero = 0;
+    int zeroLengthLog = 0;
     FILE *fp;
     EVH *func = NULL;
     RebuildState *rb = new RebuildState;
@@ -657,8 +657,8 @@ UFSSwapDir::rebuild()
      * use commonUfsDirRebuildFromDirectory() to open up each file
      * and suck in the meta data.
      */
-    fp = openTmpSwapLog(&clean, &zero);
-    if (fp == NULL || zero) {
+    fp = openTmpSwapLog(&clean, &zeroLengthLog);
+    if (fp == NULL || zeroLengthLog) {
 	if (fp != NULL)
 	    fclose(fp);
 	func = RebuildState::RebuildFromDirectory;
