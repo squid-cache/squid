@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.78 2002/06/16 20:10:29 hno Exp $
+ * $Id: HttpHeader.cc,v 1.79 2002/06/24 06:07:38 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -112,6 +112,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Server", HDR_SERVER, ftStr},
     {"Set-Cookie", HDR_SET_COOKIE, ftStr},
     {"Title", HDR_TITLE, ftStr},
+    {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
     {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
     {"User-Agent", HDR_USER_AGENT, ftStr},
     {"Vary", HDR_VARY, ftStr},	/* for now */
@@ -149,7 +150,7 @@ static http_hdr_type ListHeadersArr[] =
     HDR_IF_MATCH, HDR_IF_NONE_MATCH,
     HDR_LINK, HDR_PRAGMA,
     HDR_PROXY_CONNECTION,
-    /* HDR_TRANSFER_ENCODING, */
+    HDR_TRANSFER_ENCODING,
     HDR_UPGRADE,
     HDR_VARY,
     HDR_VIA,
@@ -168,7 +169,7 @@ static http_hdr_type ListHeadersArr[] =
 static http_hdr_type GeneralHeadersArr[] =
 {
     HDR_CACHE_CONTROL, HDR_CONNECTION, HDR_DATE, HDR_PRAGMA,
-    /* HDR_TRANSFER_ENCODING, */
+    HDR_TRANSFER_ENCODING,
     HDR_UPGRADE,
     /* HDR_TRAILER, */
     HDR_VIA
