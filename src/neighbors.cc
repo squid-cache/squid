@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.312 2003/02/13 20:52:42 wessels Exp $
+ * $Id: neighbors.cc,v 1.313 2003/02/15 00:15:51 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -548,9 +548,8 @@ neighborsUdpPing(request_t * request,
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
 	    if (p->stats.logged_state == PEER_ALIVE) {
-		debug(15, 1) ("Detected DEAD %s: %s/%d/%d\n",
-		    neighborTypeStr(p),
-		    p->host, p->http_port, p->icp.port);
+		debug(15, 1) ("Detected DEAD %s: %s\n",
+		    neighborTypeStr(p), p->name);
 		p->stats.logged_state = PEER_DEAD;
 	    }
 	}
@@ -727,9 +726,8 @@ static void
 neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-	debug(15, 1) ("Detected REVIVED %s: %s/%d/%d\n",
-	    neighborTypeStr(p),
-	    p->host, p->http_port, p->icp.port);
+	debug(15, 1) ("Detected REVIVED %s: %s\n",
+	    neighborTypeStr(p), p->name);
 	p->stats.logged_state = PEER_ALIVE;
     }
     p->stats.last_reply = squid_curtime;
@@ -763,9 +761,8 @@ static void
 neighborAliveHtcp(peer * p, const MemObject * mem, const htcpReplyData * htcp)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-	debug(15, 1) ("Detected REVIVED %s: %s/%d/%d\n",
-	    neighborTypeStr(p),
-	    p->host, p->http_port, p->icp.port);
+	debug(15, 1) ("Detected REVIVED %s: %s\n",
+	    neighborTypeStr(p), p->name);
 	p->stats.logged_state = PEER_ALIVE;
     }
     p->stats.last_reply = squid_curtime;
@@ -956,7 +953,7 @@ peerFindByName(const char *name)
 {
     peer *p = NULL;
     for (p = Config.peers; p; p = p->next) {
-	if (!strcasecmp(name, p->host))
+	if (!strcasecmp(name, p->name))
 	    break;
     }
     return p;
@@ -967,7 +964,7 @@ peerFindByNameAndPort(const char *name, unsigned short port)
 {
     peer *p = NULL;
     for (p = Config.peers; p; p = p->next) {
-	if (strcasecmp(name, p->host))
+	if (strcasecmp(name, p->name))
 	    continue;
 	if (port != p->http_port)
 	    continue;
@@ -1011,6 +1008,8 @@ peerDestroy(void *data)
 	safe_free(l);
     }
     safe_free(p->host);
+    safe_free(p->name);
+    safe_free(p->domain);
 #if USE_CACHE_DIGESTS
     cbdataReferenceDone(p->digest);
 #endif
@@ -1090,9 +1089,8 @@ peerConnectFailed(peer * p)
     debug(15, 1) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
     p->tcp_up--;
     if (!p->tcp_up) {
-	debug(15, 1) ("Detected DEAD %s: %s/%d/%d\n",
-	    neighborTypeStr(p),
-	    p->host, p->http_port, p->icp.port);
+	debug(15, 1) ("Detected DEAD %s: %s\n",
+	    neighborTypeStr(p), p->name);
 	p->stats.logged_state = PEER_DEAD;
     }
 }
@@ -1102,9 +1100,8 @@ peerConnectSucceded(peer * p)
 {
     if (!p->tcp_up) {
 	debug(15, 2) ("TCP connection to %s/%d succeded\n", p->host, p->http_port);
-	debug(15, 1) ("Detected REVIVED %s: %s/%d/%d\n",
-	    neighborTypeStr(p),
-	    p->host, p->http_port, p->icp.port);
+	debug(15, 1) ("Detected REVIVED %s: %s\n",
+	    neighborTypeStr(p), p->name);
 	p->stats.logged_state = PEER_ALIVE;
     }
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
@@ -1302,6 +1299,20 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 	storeAppendPrintf(sentry, " login=%s", p->login);
     if (p->mcast.ttl > 0)
 	storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
+    if (p->connect_timeout > 0)
+	storeAppendPrintf(sentry, " connect-timeout=%d", (int) p->connect_timeout);
+#if USE_CACHE_DIGESTS
+    if (p->digest_url)
+	storeAppendPrintf(sentry, " digest-url=%s", p->digest_url);
+#endif
+    if (p->options.allow_miss)
+	storeAppendPrintf(sentry, " allow-miss");
+    if (p->max_conn > 0)
+	storeAppendPrintf(sentry, " max-conn=%d", p->max_conn);
+    if (p->options.originserver)
+	storeAppendPrintf(sentry, " originserver");
+    if (p->domain)
+	storeAppendPrintf(sentry, " forceddomain=%s", p->domain);
     storeAppendPrintf(sentry, "\n");
 }
 
@@ -1316,8 +1327,10 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	storeAppendPrintf(sentry, "There are no neighbors installed.\n");
     for (e = peers; e; e = e->next) {
 	assert(e->host != NULL);
-	storeAppendPrintf(sentry, "\n%-11.11s: %s/%d/%d\n",
+	storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
 	    neighborTypeStr(e),
+	    e->name);
+	storeAppendPrintf(sentry, "Host       : %s/%d/%d\n",
 	    e->host,
 	    e->http_port,
 	    e->icp.port);

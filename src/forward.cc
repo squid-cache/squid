@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.94 2003/02/12 06:11:03 robertc Exp $
+ * $Id: forward.cc,v 1.95 2003/02/15 00:15:51 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -557,9 +557,11 @@ fwdDispatch(FwdState * fwdState)
     if (fwdState->servers && (p = fwdState->servers->_peer)) {
 	p->stats.fetches++;
 	fwdState->request->peer_login = p->login;
+	fwdState->request->peer_domain = p->domain;
 	httpStart(fwdState);
     } else {
 	fwdState->request->peer_login = NULL;
+	fwdState->request->peer_domain = NULL;
 	switch (request->protocol) {
 #if USE_SSL
 	case PROTO_HTTPS:

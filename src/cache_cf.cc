@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.429 2003/02/12 06:11:00 robertc Exp $
+ * $Id: cache_cf.cc,v 1.430 2003/02/15 00:15:51 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1332,7 +1332,7 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 		d->domain);
 	}
 	if (p->access) {
-	    snprintf(xname, 128, "cache_peer_access %s", p->host);
+	    snprintf(xname, 128, "cache_peer_access %s", p->name);
 	    dump_acl_access(entry, xname, p->access);
 	}
 	for (t = p->typelist; t; t = t->next) {
@@ -1360,6 +1360,7 @@ parse_peer(peer ** head)
     if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
     p->host = xstrdup(token);
+    p->name = xstrdup(token);
     if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
     p->type = parseNeighborType(token);
@@ -1425,6 +1426,16 @@ parse_peer(peer ** head)
 	    p->options.allow_miss = 1;
 	} else if (!strncasecmp(token, "max-conn=", 9)) {
 	    p->max_conn = xatoi(token + 9);
+	} else if (!strcasecmp(token, "originserver")) {
+	    p->options.originserver = 1;
+	} else if (!strncasecmp(token, "name=", 5)) {
+	    safe_free(p->name);
+	    if (token[5])
+		p->name = xstrdup(token + 5);
+	} else if (!strncasecmp(token, "forceddomain=", 13)) {
+	    safe_free(p->domain);
+	    if (token[13])
+		p->domain = xstrdup(token + 13);
 #if USE_SSL
 	} else if (strcmp(token, "ssl") == 0) {
 	    p->use_ssl = 1;
@@ -1466,6 +1477,8 @@ parse_peer(peer ** head)
 	    self_destruct();
 	}
     }
+    if (peerFindByName(p->name))
+	fatalf("ERROR: cache_peer %s specified twice\n", p->name);
     if (p->weight < 1)
 	p->weight = 1;
     p->icp.version = ICP_VERSION_CURRENT;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.408 2003/02/13 22:20:37 robertc Exp $
+ * $Id: http.cc,v 1.409 2003/02/15 00:15:51 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -68,7 +68,7 @@ static void httpMakePublic(StoreEntry *);
 static int httpCachableReply(HttpStateData *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, request_t * request, request_t * orig_request,
-HttpHeader * hdr_out, int we_do_ranges, bool);
+HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
 static int decideIfWeDoRanges (request_t * orig_request);
 
 
@@ -910,7 +910,7 @@ httpBuildRequestHeader(request_t * request,
 
     strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
     while ((e = httpHeaderGetEntry(hdr_in, &pos)))
-	copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, orig_request, hdr_out, we_do_ranges, flags.front_end_https);
+	copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, orig_request, hdr_out, we_do_ranges, flags);
 
     /* Abstraction break: We should interpret myultipart/byterange responses
      * into offset-length data, and this works around our inability to do so.
@@ -947,8 +947,10 @@ httpBuildRequestHeader(request_t * request,
 
     /* append Host if not there already */
     if (!httpHeaderHas(hdr_out, HDR_HOST)) {
-	/* use port# only if not default */
-	if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
+	if (orig_request->peer_domain) {
+	    httpHeaderPutStr(hdr_out, HDR_HOST, orig_request->peer_domain);
+	} else if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
+	    /* use port# only if not default */
 	    httpHeaderPutStr(hdr_out, HDR_HOST, orig_request->host);
 	} else {
 	    httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
@@ -964,8 +966,7 @@ httpBuildRequestHeader(request_t * request,
     }
     /* append Proxy-Authorization if configured for peer, and proxying */
     if (request->flags.proxying && orig_request->peer_login &&
-	!httpHeaderHas(hdr_out, HDR_PROXY_AUTHORIZATION) &&
-	strcmp(orig_request->peer_login, "PASS") != 0) {
+	!httpHeaderHas(hdr_out, HDR_PROXY_AUTHORIZATION)) {
 	if (*orig_request->peer_login == '*') {
 	    /* Special mode, to pass the username to the upstream cache */
 	    char loginbuf[256];
@@ -975,8 +976,39 @@ httpBuildRequestHeader(request_t * request,
 	    snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 	    httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
 		base64_encode(loginbuf));
+	} else if (strcmp(orig_request->peer_login, "PASS") == 0) {
+	    /* Nothing to do */
+	} else if (strcmp(orig_request->peer_login, "PROXYPASS") == 0) {
+	    /* Nothing to do */
 	} else {
 	    httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
+		base64_encode(orig_request->peer_login));
+	}
+    }
+    /* append WWW-Authorization if configured for peer */
+    if (flags.originpeer && orig_request->peer_login &&
+	    !httpHeaderHas(hdr_out, HDR_AUTHORIZATION)) {
+	if (strcmp(orig_request->peer_login, "PASS") == 0) {
+	    /* No credentials to forward.. (should have been done above if available) */
+	} else if (strcmp(orig_request->peer_login, "PROXYPASS") == 0) {
+	    /* Special mode, convert proxy authentication to WWW authentication
+	     */
+	    const char *auth = httpHeaderGetStr(hdr_in, HDR_PROXY_AUTHORIZATION);
+	    if (auth && strncasecmp(auth, "basic ", 6) == 0) {
+		httpHeaderPutStr(hdr_out, HDR_AUTHORIZATION, auth);
+	    }
+	} else if (*orig_request->peer_login == '*') {
+	    /* Special mode, to pass the username to the upstream cache */
+	    char loginbuf[256];
+	    const char *username = "-";
+	    if (orig_request->auth_user_request)
+	    username = authenticateUserRequestUsername(orig_request->auth_user_request);
+	    snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
+	    httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
+		base64_encode(loginbuf));
+	} else {
+	    /* Fixed login string */
+	    httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
 		base64_encode(orig_request->peer_login));
 	}
     }
@@ -1017,7 +1049,7 @@ httpBuildRequestHeader(request_t * request,
 
 
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, request_t * request, request_t * orig_request, HttpHeader * hdr_out, int we_do_ranges, bool front_end_https)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, request_t * request, request_t * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
 {
     debug(11, 5) ("httpBuildRequestHeader: %s: %s\n",
        e->name.buf(), e->value.buf());
@@ -1026,78 +1058,77 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
        return;
     }
     switch (e->id) {
-      case HDR_PROXY_AUTHORIZATION:
-      /* Only pass on proxy authentication to peers for which
-       * authentication forwarding is explicitly enabled
-       */
-      if (request->flags.proxying && orig_request->peer_login &&
-         strcmp(orig_request->peer_login, "PASS") == 0) {
-         httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
-      }
-      break;
-      case HDR_AUTHORIZATION:
-      /* Pass on WWW authentication even if used locally. If this is
-       * not wanted in an accelerator then the header can be removed
-       * using the anonymization functions
-       */
-      httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
-      /* XXX Some accelerators might want to strip the header
-       * and regard the reply as cacheable, but authentication
-       * is not normally enabled for accelerators without reading
-       * the code, so there is not much use in adding logics here
-       * without first defining the concept of having authentication
-       * in the accelerator...
-       */
-      break;
-      case HDR_HOST:
-      /*
-       * Normally Squid does not copy the Host: header from
-       * a client request into the forwarded request headers.
-       * However, there is one case when we do: If the URL
-       * went through our redirector and the admin configured
-       * 'redir_rewrites_host' to be off.
-       */
-      if (request->flags.redirected)
-         if (!Config.onoff.redir_rewrites_host)
-             httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
-      break;
-      case HDR_IF_MODIFIED_SINCE:
-      /* append unless we added our own;
-       * note: at most one client's ims header can pass through */
-      if (!httpHeaderHas(hdr_out, HDR_IF_MODIFIED_SINCE))
-         httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
-      break;
-      case HDR_MAX_FORWARDS:
-      if (orig_request->method == METHOD_TRACE) {
-         const int hops = httpHeaderEntryGetInt(e);
-         if (hops > 0)
-             httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops - 1);
-      }
-      break;
-      case HDR_VIA:
-      /* If Via is disabled then forward any received header as-is */
-      if (!Config.onoff.via)
-         httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
-      break;
-      case HDR_RANGE:
-      case HDR_IF_RANGE:
-      case HDR_REQUEST_RANGE:
-      if (!we_do_ranges)
-         httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
-      break;
-      case HDR_PROXY_CONNECTION:
-      case HDR_CONNECTION:
-      case HDR_X_FORWARDED_FOR:
-      case HDR_CACHE_CONTROL:
-      /* append these after the loop if needed */
-      break;
-      case HDR_FRONT_END_HTTPS:
-      if (!front_end_https)
-	  httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
-      break;
-      default:
-      /* pass on all other header fields */
-      httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+    case HDR_PROXY_AUTHORIZATION:
+	/* Only pass on proxy authentication to peers for which
+	 * authentication forwarding is explicitly enabled
+	 */
+	if (flags.proxying && orig_request->peer_login &&
+		strcmp(orig_request->peer_login, "PASS") == 0) {
+	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	}
+	break;
+    case HDR_AUTHORIZATION:
+	/* Pass on WWW authentication */
+	if (!flags.originpeer) {
+	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	} else {
+	    /* In accelerators, only forward authentication if enabled
+	     * (see also below for proxy->server authentication)
+	     */
+	    if (orig_request->peer_login && (strcmp(orig_request->peer_login, "PASS") == 0 || strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	    }
+	}
+	break;
+    case HDR_HOST:
+	/*
+	 * Normally Squid does not copy the Host: header from
+	 * a client request into the forwarded request headers.
+	 * However, there is one case when we do: If the URL
+	 * went through our redirector and the admin configured
+	 * 'redir_rewrites_host' to be off.
+	 */
+	if (request->flags.redirected)
+	    if (!Config.onoff.redir_rewrites_host)
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	break;
+    case HDR_IF_MODIFIED_SINCE:
+	/* append unless we added our own;
+	 * note: at most one client's ims header can pass through */
+	if (!httpHeaderHas(hdr_out, HDR_IF_MODIFIED_SINCE))
+	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	break;
+    case HDR_MAX_FORWARDS:
+	if (orig_request->method == METHOD_TRACE) {
+	    const int hops = httpHeaderEntryGetInt(e);
+	if (hops > 0)
+	    httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops - 1);
+	}
+	break;
+    case HDR_VIA:
+	/* If Via is disabled then forward any received header as-is */
+	if (!Config.onoff.via)
+	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	break;
+    case HDR_RANGE:
+    case HDR_IF_RANGE:
+    case HDR_REQUEST_RANGE:
+	if (!we_do_ranges)
+	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	break;
+    case HDR_PROXY_CONNECTION:
+    case HDR_CONNECTION:
+    case HDR_X_FORWARDED_FOR:
+    case HDR_CACHE_CONTROL:
+	/* append these after the loop if needed */
+	break;
+    case HDR_FRONT_END_HTTPS:
+	if (!flags.front_end_https)
+	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	break;
+    default:
+	/* pass on all other header fields */
+	httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
     }
 }
 
@@ -1171,10 +1202,18 @@ httpSendRequest(HttpStateData * httpState)
     else
 	sendHeaderDone = HttpStateData::SendComplete;
 
-    if (p != NULL)
-	httpState->flags.proxying = 1;
-    else
+    if (p != NULL) {
+	if (p->options.originserver) {
+	    httpState->flags.proxying = 0;
+	    httpState->flags.originpeer = 1;
+	} else {
+	    httpState->flags.proxying = 1;
+	    httpState->flags.originpeer = 0;
+	}
+    } else {
 	httpState->flags.proxying = 0;
+	httpState->flags.originpeer = 0;
+    }
     /*
      * Is keep-alive okay for all request methods?
      */
@@ -1221,8 +1260,13 @@ httpStart(FwdState * fwd)
     if (fwd->servers)
 	httpState->_peer = fwd->servers->_peer;		/* might be NULL */
     if (httpState->_peer) {
+	const char *url;
+	if (httpState->_peer->options.originserver)
+	    url = orig_req->urlpath.buf();
+	else
+	    url = storeUrl(httpState->entry);
 	proxy_req = requestCreate(orig_req->method,
-	    orig_req->protocol, storeUrl(httpState->entry));
+	    orig_req->protocol, url);
 	xstrncpy(proxy_req->host, httpState->_peer->host, SQUIDHOSTNAMELEN);
 	proxy_req->port = httpState->_peer->http_port;
 	proxy_req->flags = orig_req->flags;
