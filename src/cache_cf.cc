@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.146 1996/11/26 23:22:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.147 1996/11/30 23:09:49 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -940,20 +940,23 @@ parseVizHackLine(void)
     int i;
     const struct hostent *hp;
     token = strtok(NULL, w_space);
-    memset((char *) &Config.vizHackAddr, '\0', sizeof(struct sockaddr_in));
-    Config.vizHackAddr.sin_family = AF_INET;
     if (token == NULL)
 	self_destruct();
     if (inet_addr(token) != INADDR_NONE)
-	Config.vizHackAddr.sin_addr.s_addr = inet_addr(token);
+	Config.vizHack.addr.s_addr = inet_addr(token);
     else if ((hp = gethostbyname(token)))	/* dont use ipcache */
-	Config.vizHackAddr.sin_addr = inaddrFromHostent(hp);
+	Config.vizHack.addr = inaddrFromHostent(hp);
     else
 	self_destruct();
     if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
     if (sscanf(token, "%d", &i) == 1)
-	Config.vizHackAddr.sin_port = htons(i);
+	Config.vizHack.port = i;
+    Config.vizHack.mcast_ttl = 64;
+    if ((token = strtok(NULL, w_space)) != NULL)
+	return;
+    if (sscanf(token, "%d", &i) == 1)
+	Config.vizHack.mcast_ttl = i;
 }
 
 static void

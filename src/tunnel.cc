@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.28 1996/11/25 18:47:19 wessels Exp $
+ * $Id: tunnel.cc,v 1.29 1996/11/30 23:09:56 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -385,7 +385,7 @@ sslConnectDone(int fd, int status, void *data)
 	sslProxyConnected(sslState->server.fd, sslState);
     else
 	sslConnected(sslState->server.fd, sslState);
-    if (Config.vizHackAddr.sin_port)
+    if (vizSock > -1)
 	vizHackSendPkt(&sslState->connectState.S, 2);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.87 1996/11/25 02:36:02 wessels Exp $
+ * $Id: ftp.cc,v 1.88 1996/11/30 23:09:50 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -642,7 +642,7 @@ ftpConnectDone(int fd, int status, void *data)
 	(void *) ftpData, 0);
     if (opt_no_ipcache)
 	ipcacheInvalidate(ftpData->request->host);
-    if (Config.vizHackAddr.sin_port)
+    if (vizSock > -1)
 	vizHackSendPkt(&ftpData->connectState.S, 2);
 }
 

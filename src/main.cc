@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.118 1996/11/29 03:28:52 wessels Exp $
+ * $Id: main.cc,v 1.119 1996/11/30 23:09:54 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -109,6 +109,7 @@ time_t squid_starttime = 0;
 int theHttpConnection = -1;
 int theInIcpConnection = -1;
 int theOutIcpConnection = -1;
+int vizSock = -1;
 int do_reuse = 1;
 int opt_unlink_on_reload = 0;
 int opt_reload_hit_only = 0;	/* only UDP_HIT during store relaod */
@@ -397,6 +398,39 @@ serverConnectionsOpen(void)
 	    else
 		theOutICPAddr = xaddr.sin_addr;
 	}
+    }
+    if (Config.vizHack.port) {
+	vizSock = comm_open(SOCK_DGRAM,
+	    0,
+	    any_addr,
+	    0,
+	    COMM_NONBLOCKING,
+	    "VizHack Port");
+	if (vizSock < 0)
+	    fatal("Could not open Viz Socket");
+#if defined(IP_ADD_MEMBERSHIP) && defined(IP_MULTICAST_TTL)
+	if (Config.vizHack.addr.s_addr > inet_addr("224.0.0.0")) {
+	    struct ip_mreq mr;
+	    mr.imr_multiaddr.s_addr = Config.vizHack.addr.s_addr;
+	    mr.imr_interface.s_addr = INADDR_ANY;
+	    x = setsockopt(vizSock,
+		IPPROTO_IP,
+		IP_ADD_MEMBERSHIP,
+		(char *) &mr,
+		sizeof(struct ip_mreq));
+	    if (x < 0)
+		debug(5, 1, "IP_ADD_MEMBERSHIP: FD %d, addr %s: %s\n",
+		    vizSock, inet_ntoa(Config.vizHack.addr), xstrerror());
+	    if (setsockopt(vizSock, IPPROTO_IP, IP_MULTICAST_TTL,
+		    (char *) &Config.vizHack.mcast_ttl, sizeof(char)) < 0)
+		     debug(50, 1, "IP_MULTICAST_TTL: FD %d, TTL %d: %s\n",
+		    vizSock, Config.vizHack.mcast_ttl, xstrerror());
+	}
+	memset((char *) &Config.vizHack.S, '\0', sizeof(struct sockaddr_in));
+#endif
+	Config.vizHack.S.sin_family = AF_INET;
+	Config.vizHack.S.sin_addr = Config.vizHack.addr;
+	Config.vizHack.S.sin_port = htons(Config.vizHack.port);
     }
     clientdbInit();
     icmpOpen();

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.77 1996/11/25 23:36:50 wessels Exp $
+ * $Id: squid.h,v 1.78 1996/11/30 23:09:56 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -295,6 +295,7 @@ extern int do_reuse;		/* main.c */
 extern int theHttpConnection;	/* main.c */
 extern int theInIcpConnection;	/* main.c */
 extern int theOutIcpConnection;	/* main.c */
+extern int vizSock;
 extern volatile int shutdown_pending;	/* main.c */
 extern volatile int reread_pending;	/* main.c */
 extern int opt_unlink_on_reload;	/* main.c */
