@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.14 1996/04/15 22:55:02 wessels Exp $ */
+/* $Id: url.cc,v 1.15 1996/04/15 23:02:28 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -101,60 +101,6 @@ char *url_escape(url)
     *q++ = '\0';
     return tmpline;
 }
-
-
-#ifdef NOT_YET_USED
-/*
- * Strip the url from e->key, return a pointer to a static copy of it.
- * Planning ahead for removing e->url from meta-data
- */
-char *the_url(e)
-     StoreEntry *e;
-{
-    char *URL;
-    char *token;
-    static char line_in[MAX_URL + 1];
-    static char delim[] = "/";
-    int i;
-
-    strcpy(line_in, e->key);
-    token = strtok(line_in, delim);
-
-    if (!(e->flag & CACHABLE) && (sscanf(token, "%d", &i))) {
-	URL = strtok(NULL, "~");	/* Non_CACHABLE, key = /%d/url */
-	return URL;
-    }
-    if ((e->flag & KEY_CHANGE) && (sscanf(token, "x%d", &i))) {
-	/* key is changed, key = /x%d/url or /x%d/head/url or /x%d/post/url */
-	/* Now key is url or head/url or post/url */
-	token = strtok(NULL, "~");
-    } else {
-	/* key is url or /head/url or /post/url */
-	strcpy(token, e->key);
-    }
-
-    if (e->method == METHOD_GET) {
-	/* key is url */
-	return token;
-    } else if ((e->method == METHOD_POST) &&
-	(!(strncmp(token, "post/", 5)) || !(strncmp(token, "/post/", 6)))) {
-	URL = strtok(token, delim);
-	URL = strtok(NULL, "~");
-	/* discard "/post/" or "post/" from the key and get url */
-	return URL;
-    } else if ((e->method == METHOD_HEAD) &&
-	(!(strncmp(token, "head/", 5)) || !(strncmp(token, "/head/", 6)))) {
-	URL = strtok(token, delim);
-	URL = strtok(NULL, "~");
-	/* discard "/head/" or "head/" from the key and get url */
-	return URL;
-    } else {
-	debug(23, 0, "Should not be here. Unknown format of the key: %s\n",
-	    e->key);
-	return (NULL);
-    }
-}
-#endif
 
 method_t urlParseMethod(s)
      char *s;
