@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.253 1998/04/03 22:05:10 rousskov Exp $
+ * $Id: client_side.cc,v 1.254 1998/04/04 00:23:13 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -437,7 +437,7 @@ clientPurgeRequest(clientHttpRequest * http)
     StoreEntry *entry;
     ErrorState *err = NULL;
     const cache_key *k;
-    MemBuf mb;
+    HttpReply *r;
     debug(33, 3) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
     if (!Config.onoff.enable_purge) {
 	http->log_type = LOG_TCP_DENIED;
@@ -462,10 +462,10 @@ clientPurgeRequest(clientHttpRequest * http)
      * Make a new entry to hold the reply to be written
      * to the client.
      */
-    mb = httpPackedReply(1.0, http->http_code, NULL, 0, 0, -1);
     http->entry = clientCreateStoreEntry(http, http->request->method, 0);
-    httpReplyParse(http->entry->mem_obj->reply, mb.buf);
-    storeAppend(http->entry, mb.buf, mb.size);
+    httpReplyReset(r = http->entry->mem_obj->reply);
+    httpReplySetHeaders(r, 1.0, http->http_code, NULL, NULL, 0, 0, -1);
+    httpReplySwapOut(r, http->entry);
     storeComplete(http->entry);
 }
 
@@ -486,6 +486,9 @@ clientUpdateCounters(clientHttpRequest * http)
 {
     int svc_time = tvSubMsec(http->start, current_time);
     icp_ping_data *i;
+#if CACHE_DIGEST
+    char *t;
+#endif
     Counter.client_http.requests++;
     kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
     kb_incr(&Counter.client_http.kbytes_out, http->out.size);
@@ -521,6 +524,29 @@ clientUpdateCounters(clientHttpRequest * http)
     i = &http->request->hier.icp;
     if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
 	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
+#if CACHE_DIGEST
+	assert(http->request->hier.used_icp + http->request->hier.used_cd < 2);
+	if (http->request->hier.used_icp) {
+		statHistCount(&Counter.icp.client_svc_time, svc_time);
+		Counter.icp.times_used++;
+	}
+	if (http->request->hier.used_cd) {
+		statHistCount(&Counter.cd.client_svc_time, svc_time);
+		Counter.cd.times_used++;
+	}
+	t = httpHeaderGetLastStr(, HDR_X_CACHE);
+	if (NULL != t && 0 == strncmp(t, "HIT", 3)) {
+		if (http->request->hier.cd_hit)
+			Counter.cd.true_hits++;
+		else
+			Counter.cd.false_miss++;
+	} else {
+		if (http->request->hier.cd_hit)
+			Counter.cd.false_hit++;
+		else
+			Counter.cd.true_miss++;
+	}
+#endif
 }
 
 static void
@@ -1221,6 +1247,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
     http->entry = clientCreateStoreEntry(http, http->request->method, 0);
     httpReplyParse(http->entry->mem_obj->reply, mb.buf);
     storeAppend(http->entry, mb.buf, mb.size);
+    memBufClean(&mb);
     storeComplete(http->entry);
 }
 
