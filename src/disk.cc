@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.54 1997/02/07 04:57:12 wessels Exp $
+ * $Id: disk.cc,v 1.55 1997/02/19 17:07:10 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -260,7 +260,6 @@ diskHandleWrite(int fd, FileEntry * entry)
 	    if (entry->wrt_handle) {
 		entry->wrt_handle(fd,
 		    errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR,
-		    rlen,
 		    entry->wrt_handle_data);
 	    }
 	    return DISK_ERROR;
