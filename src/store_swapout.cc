@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.49 1999/05/19 21:57:51 wessels Exp $
+ * $Id: store_swapout.cc,v 1.50 1999/05/22 02:31:20 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -136,13 +136,6 @@ storeSwapOut(StoreEntry * e)
 #if OLD_CODE
 	if (e->store_status == STORE_OK) {
 	    debug(20, 1) ("storeSwapOut: nothing to write for STORE_OK\n");
-	    if (e->swap_file_number > -1) {
-		storeUnlink(e->swap_file_number);
-		storeDirMapBitReset(e->swap_file_number);
-		e->swap_file_number = -1;
-	    }
-	    e->swap_status = SWAPOUT_NONE;
-	    storeReleaseRequest(e);
 	    storeSwapOutFileClose(e);
 	}
 #endif
@@ -195,6 +188,9 @@ storeSwapOut(StoreEntry * e)
 	swap_buf_len, (int) mem->swapout.queue_offset);
     mem->swapout.queue_offset += swap_buf_len - hdr_len;
     storeWrite(mem->swapout.sio, swap_buf, swap_buf_len, -1, memFreeDISK);
+    if (e->store_status == STORE_OK)
+	if (mem->inmem_hi == mem->swapout.queue_offset)
+	    storeSwapOutFileClose(e);
 }
 
 void

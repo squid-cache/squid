@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.499 1999/05/19 19:57:53 wessels Exp $
+ * $Id: store.cc,v 1.500 1999/05/22 02:31:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -584,8 +584,6 @@ storeComplete(StoreEntry * e)
 #endif
     InvokeHandlers(e);
     storeSwapOut(e);
-    if (e->mem_obj->swapout.sio)
-	storeClose(e->mem_obj->swapout.sio);
 }
 
 /*
