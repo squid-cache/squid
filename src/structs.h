@@ -679,6 +679,7 @@ struct _ConnStateData {
 	char ident[ICP_IDENT_SZ];
 	IDCB *callback;
 	int state;
+	void *callback_data;
     } ident;
     CommWriteStateData *commWriteState;
     int nrequests;

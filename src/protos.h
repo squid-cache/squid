@@ -547,7 +547,7 @@ extern void start_announce(void *unused);
 extern void sslStart(int fd, const char *, request_t *, size_t * sz);
 extern void waisStart(request_t *, StoreEntry *);
 extern void passStart(int, const char *, request_t *, size_t *);
-extern void identStart(int, ConnStateData *, IDCB * callback);
+extern void identStart(int, ConnStateData *, IDCB * callback, void *);
 
 extern void statInit(void);
 extern void pconnHistCount(int, int);

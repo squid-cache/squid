@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.228 1998/03/16 21:59:55 wessels Exp $
+ * $Id: client_side.cc,v 1.229 1998/03/17 00:38:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -92,7 +92,7 @@ clientAccessCheck(void *data)
     ConnStateData *conn = http->conn;
     char *browser;
     if (Config.onoff.ident_lookup && conn->ident.state == IDENT_NONE) {
-	identStart(-1, conn, clientAccessCheck);
+	identStart(-1, conn, clientAccessCheck, http);
 	return;
     }
     if (checkAccelOnly(http)) {
