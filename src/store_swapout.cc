@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.52 1999/05/26 03:08:12 wessels Exp $
+ * $Id: store_swapout.cc,v 1.53 1999/05/26 05:01:05 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -178,10 +178,19 @@ storeSwapOut(StoreEntry * e)
 	if (e->swap_status != SWAPOUT_WRITING)
 	    break;
 	swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
-    } while (swapout_size >= DISK_PAGE_SIZE);
-    if (e->store_status == STORE_OK)
-	if (mem->inmem_hi == mem->swapout.queue_offset)
-	    storeSwapOutFileClose(e);
+	if (e->store_status == STORE_PENDING)
+	    if (swapout_size < DISK_PAGE_SIZE)
+		break;
+    } while (swapout_size > 0);
+    if (e->store_status == STORE_OK) {
+	/*
+	 * If the state is STORE_OK, then all data must have been given
+	 * to the filesystem at this point because storeSwapOut() is
+	 * not going to be called again for this entry.
+	 */
+	assert(mem->inmem_hi == mem->swapout.queue_offset);
+	storeSwapOutFileClose(e);
+    }
 }
 
 void
@@ -282,5 +291,8 @@ storeSwapOutAble(const StoreEntry * e)
     for (sc = e->mem_obj->clients; sc; sc = sc->next)
 	if (sc->type == STORE_DISK_CLIENT)
 	    return 1;
+    if (store_dirs_rebuilding)
+	if (!EBIT_TEST(e->flags, ENTRY_SPECIAL))
+	    return 0;
     return EBIT_TEST(e->flags, ENTRY_CACHABLE);
 }
