@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+Mentre s'intentava llegir la URL:
+<A HREF="%U">%U</A>
+<P>
+S'ha produ&iuml;t el seg&uuml;ent error:
+<UL>
+<LI>
+<STRONG>
+No ha estat possible de reenviar aquesta petici&oacute;
+</STRONG>
+</UL>
+<P>
+Aquesta petició no s'ha pogut enviar al servidor d'origen o
+a una <i>cache</i> superior. La causa m&eacute;s probable per
+aquest error &eacute;s:
+<UL>
+<LI>L'administrador de la <i>cache</i> no permet connexions
+directes amb els servidors d'origen, o
+<LI>No hi ha cap <i>cache</i> superior disponible.
+</UL>
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.

@@ -1,0 +1,26 @@
+<HTML><HEAD>
+TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+Mentre s'intentava llegir la URL:
+<A HREF="%U">%U</A>
+<P>
+S'ha produ&iuml;t el seg&uuml;ent error:
+<UL>
+<LI>
+<STRONG>
+Error d'escriptura
+</STRONG>
+</UL>
+
+<P>
+El sistema diu:
+<PRE><I>    %E</I></PRE>
+
+<P>
+S'ha produ&iuml;t un error mentre s'intentava escriure a la xarxa.
+Reintenteu-ho en breus instants.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.

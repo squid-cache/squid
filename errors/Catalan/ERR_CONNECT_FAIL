@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+Mentre s'intentava llegir la URL:
+<A HREF="%U">%U</A>
+<P>
+S'ha produ&iuml;t el seg&uuml;ent error:
+<UL>
+<LI>
+<STRONG>
+Ha fallat la connexi&oacute;.
+</STRONG>
+</UL>
+
+<P>
+El sistema diu:
+<PRE><I>    %E</I></PRE>
+
+<P>
+El servidor o la xarxa remota no es troben disponibles.
+Torneu-ho a provar d'aqui a una estona. 
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.

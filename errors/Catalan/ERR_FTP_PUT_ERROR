@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>ERROR: Ha fallat l'enviament del fitxer FTP</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>Ha fallat la comanda FTP d'enviament de fitxer</H2>
+<HR>
+<P>
+Mentre s'intentava la comanda PUT a la URL:
+<A HREF="%U">%U</A>
+<P>
+La <i>cache</i> ha enviat la comanda FTP:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+i ha rebut aquesta resposta:
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+<PRE>
+Verifiqueu cam&iacute;, permisos, espai de disc i proveu de nou.
+</PRE>
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.

@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+Mentre s'intentava llegir la URL:
+<A HREF="%U">%U</A>
+<P>
+S'ha produ&iuml;t el seg&uuml;ent error:
+<UL>
+<LI>
+<STRONG>
+URL incorrecte.
+</STRONG>
+</UL>
+
+<P>
+Alguna part de la URL no &eacute;s correcte.  Possibles problemes:
+<UL>
+<LI>Protocol d'acc&eacute;s absent o incorrecte ( http:// o similar )
+<LI>Falta el nom del servidor.
+<LI>La URL cont&eacute; un doble car&agrave;cter d'escapament.
+<LI>Car&agrave;cter no perm&egrave;s en el nom del servidor.
+</UL>
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
