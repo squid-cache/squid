@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.40 1996/07/15 23:13:33 wessels Exp $
+ * $Id: stat.cc,v 1.41 1996/07/17 17:03:20 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -357,14 +357,15 @@ int logReadHandler(fd_unused, buf, size_unused, data)
 
 /* log convert end handler */
 /* call when a walk is completed or error. */
-void logReadEndHandler(fd_unused, errflag_unused, data)
-     int fd_unused;
+void logReadEndHandler(fd, errflag_unused, data)
+     int fd;
      int errflag_unused;
      log_read_data_t *data;
 {
     storeAppendPrintf(data->sentry, close_bracket);
     storeComplete(data->sentry);
     safe_free(data);
+    file_close(fd);
 }
 
 
@@ -375,6 +376,7 @@ void log_get_start(obj, sentry)
      StoreEntry *sentry;
 {
     log_read_data_t *data = NULL;
+    int fd;
 
     if (obj->logfile_status == LOG_DISABLE) {
 	/* Manufacture status when logging is disabled */
@@ -382,11 +384,20 @@ void log_get_start(obj, sentry)
 	storeComplete(sentry);
 	return;
     }
+    fd = file_open(obj->logfilename, NULL, O_RDONLY);
+    if (fd < 0) {
+	debug(18, 0, "Cannot open logfile: %s: %s\n",
+	    obj->logfilename, xstrerror());
+	return;
+    }
     data = xcalloc(1, sizeof(log_read_data_t));
     data->sentry = sentry;
     storeAppendPrintf(sentry, "{\n");
-    file_walk(obj->logfile_fd, (FILE_WALK_HD) logReadEndHandler,
-	(void *) data, (FILE_WALK_LHD) logReadHandler, (void *) data);
+    file_walk(fd,
+	(FILE_WALK_HD) logReadEndHandler,
+	(void *) data,
+	(FILE_WALK_LHD) logReadHandler,
+	(void *) data);
     return;
 }
 
@@ -885,6 +896,7 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
 {
     static char tmp[6000];	/* MAX_URL is 4096 */
     char *buf = NULL;
+    int x;
 
     getCurrentTime();
 
@@ -934,8 +946,14 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
 		method,
 		url,
 		ident);
-	if (file_write(obj->logfile_fd, buf = xstrdup(tmp), strlen(tmp),
-		obj->logfile_access, NULL, NULL) != DISK_OK) {
+	x = file_write(obj->logfile_fd,
+	    buf = xstrdup(tmp),
+	    strlen(tmp),
+	    obj->logfile_access,
+	    NULL,
+	    NULL,
+	    xfree);
+	if (x != DISK_OK) {
 	    debug(18, 1, "log_append: File write failed.\n");
 	    safe_free(buf);
 	}
@@ -950,7 +968,7 @@ void log_enable(obj, sentry)
 	obj->logfile_status = LOG_ENABLE;
 
 	/* open the logfile */
-	obj->logfile_fd = file_open(obj->logfilename, NULL, O_RDWR | O_CREAT);
+	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
 	if (obj->logfile_fd == DISK_ERROR) {
 	    debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	    obj->logfile_status = LOG_DISABLE;
@@ -987,7 +1005,7 @@ void log_clear(obj, sentry)
     unlink(obj->logfilename);
 
     /* reopen it anyway */
-    obj->logfile_fd = file_open(obj->logfilename, NULL, O_RDWR | O_CREAT);
+    obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
     if (obj->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	obj->logfile_status = LOG_DISABLE;
@@ -1084,7 +1102,7 @@ void stat_init(object, logfilename)
     obj->server_list = server_list;
 
     xmemcpy(obj->logfilename, logfilename, (int) (strlen(logfilename) + 1) % 256);
-    obj->logfile_fd = file_open(obj->logfilename, NULL, O_RDWR | O_CREAT);
+    obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
     if (obj->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "%s: %s\n", obj->logfilename, xstrerror());
 	fatal("Cannot open logfile.");
@@ -1317,7 +1335,7 @@ void stat_rotate_log()
     /* Close and reopen the log.  It may have been renamed "manually"
      * before HUP'ing us. */
     file_close(CacheInfo->logfile_fd);
-    CacheInfo->logfile_fd = file_open(fname, NULL, O_RDWR | O_CREAT | O_APPEND);
+    CacheInfo->logfile_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
     if (CacheInfo->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "stat_rotate_log: Cannot open logfile: %s\n", fname);
 	CacheInfo->logfile_status = LOG_DISABLE;
