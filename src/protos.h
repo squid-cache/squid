@@ -880,6 +880,7 @@ void htcpSocketClose(void);
 #define strRChr(s,ch) ((const char*)strrchr(strBuf(s), (ch)))
 #define strStr(s,str) ((const char*)strstr(strBuf(s), (str)))
 #define strCmp(s,str)     strcmp(strBuf(s), (str))
+#define strNCmp(s,str,n)     strncmp(strBuf(s), (str), (n))
 #define strCaseCmp(s,str) strcasecmp(strBuf(s), (str))
 #define strSet(s,ptr,ch) (s).buf[ptr-(s).buf] = (ch)
 #define strCut(s,pos) (s).buf[pos] = '\0'
