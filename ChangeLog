@@ -1,3 +1,6 @@
+	- Fixed storeCheckPurgeMem() to both 'purge' *and* 'release'
+	  objects as needed. 
+
 Changes to squid-1.1.alpha17:
 
 	- Added more IMS support.  Now Squid issues IMS requests for
