@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.3 2003/02/13 08:07:46 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.4 2003/02/16 02:23:18 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -114,6 +114,10 @@ class ACLChecklist {
     PF *callback;
     void *callback_data;
     external_acl_entry *extacl_entry;
+    bool destinationDomainChecked() const;
+    void markDestinationDomainChecked();
+    bool sourceDomainChecked() const;
+    void markSourceDomainChecked();
 private:
     CBDATA_CLASS(ACLChecklist);
     ConnStateData *conn_;	/* hack for ident and NTLM */
@@ -121,6 +125,8 @@ private:
     bool finished_;
     allow_t allow_;
     AsyncState *state_;
+    bool destinationDomainChecked_;
+    bool sourceDomainChecked_;
 };
 
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,

@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ACLDestinationDomain.h,v 1.1 2003/02/16 02:23:18 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,48 +33,49 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLIDENT_H
-#define SQUID_ACLIDENT_H
+#ifndef SQUID_ACLDESTINATIONDOMAIN_H
+#define SQUID_ACLDESTINATIONDOMAIN_H
 #include "ACL.h"
-#include "ACLChecklist.h"
 #include "ACLData.h"
+#include "ACLChecklist.h"
 
-class IdentLookup : public ACLChecklist::AsyncState {
+class DestinationDomainLookup : public ACLChecklist::AsyncState {
   public:
-    static IdentLookup *Instance();
+    static DestinationDomainLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
   private:
-    static IdentLookup instance_;
-    static void LookupDone(const char *ident, void *data);
+    static DestinationDomainLookup instance_;
+    static void LookupDone(const char *, void *);
 };
 
-class ACLIdent : public ACL {
+class ACLDestinationDomain : public ACL {
   public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
 
-    ACLIdent(ACLData *newData, char const *);
-    ACLIdent (ACLIdent const &old);
-    ACLIdent & operator= (ACLIdent const &rhs);
-    ~ACLIdent();
+    ~ACLDestinationDomain();
+    ACLDestinationDomain(ACLData *, char const *);
+    ACLDestinationDomain (ACLDestinationDomain const &);
+    ACLDestinationDomain &operator= (ACLDestinationDomain const &);
     
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return ACL_DERIVED;}
     virtual void parse();
-    virtual bool isProxyAuth() const {return true;}
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
     virtual bool valid () const;
+    virtual bool requiresRequest() const {return true;}
     virtual ACL *clone()const;
   private:
     static MemPool *Pool;
-    static Prototype UserRegistryProtoype;
-    static ACLIdent UserRegistryEntry_;
+    static Prototype LiteralRegistryProtoype;
+    static Prototype LegacyRegistryProtoype;
+    static ACLDestinationDomain LiteralRegistryEntry_;
     static Prototype RegexRegistryProtoype;
-    static ACLIdent RegexRegistryEntry_;
+    static ACLDestinationDomain RegexRegistryEntry_;
     ACLData *data;
     char const *type_;
 };
 
-#endif /* SQUID_ACLIDENT_H */
+#endif /* SQUID_ACLDESTINATIONDOMAIN_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.224 2003/02/13 08:07:47 robertc Exp $
+ * $Id: enums.h,v 1.225 2003/02/16 02:23:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -98,19 +98,11 @@ typedef enum {
 
 typedef enum {
     ACL_NONE,
-    ACL_SRC_DOMAIN,
-    ACL_DST_DOMAIN,
-    ACL_SRC_DOM_REGEX,
-    ACL_DST_DOM_REGEX,
     ACL_TIME,
     ACL_URLPATH_REGEX,
     ACL_URL_REGEX,
     ACL_URL_PORT,
     ACL_MY_PORT,
-#if USE_IDENT
-    ACL_IDENT,
-    ACL_IDENT_REGEX,
-#endif
     ACL_PROTO,
     ACL_METHOD,
     ACL_BROWSER,

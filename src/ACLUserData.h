@@ -49,7 +49,7 @@ class ACLUserData : public ACLData {
     bool match(char const *user);
     wordlist *dump();
     void parse();
-    virtual ACLUserData *clone() const;
+    virtual ACLData *clone() const;
     
     SplayNode<char *> *names;
     struct {

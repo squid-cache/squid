@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.289 2003/02/14 14:04:01 robertc Exp $
+#  $Id: Makefile.in,v 1.290 2003/02/16 02:23:18 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -237,9 +237,15 @@ EXTRA_squid_SOURCES = \
 
 
 squid_ACLSOURCES = \
+	ACLCertificateData.cc \
+	ACLCertificateData.h \
 	ACLData.h \
+	ACLDestinationDomain.cc \
+	ACLDestinationDomain.h \
 	ACLDestinationIP.cc \
 	ACLDestinationIP.h \
+	ACLDomainData.h \
+	ACLDomainData.cc \
 	ACLIP.cc \
 	ACLIP.h \
 	ACLMyIP.cc \
@@ -248,6 +254,8 @@ squid_ACLSOURCES = \
 	ACLProxyAuth.h \
 	ACLRegexData.cc \
 	ACLRegexData.h \
+	ACLSourceDomain.cc \
+	ACLSourceDomain.h \
 	ACLSourceIP.cc \
 	ACLSourceIP.h \
 	ACLUserData.cc \
@@ -750,62 +758,65 @@ recv_announce_OBJECTS = $(am_recv_announce_OBJECTS)
 recv_announce_LDADD = $(LDADD)
 recv_announce_DEPENDENCIES =
 recv_announce_LDFLAGS =
-am__objects_4 = ACLDestinationIP.$(OBJEXT) ACLIP.$(OBJEXT) \
-	ACLMyIP.$(OBJEXT) ACLProxyAuth.$(OBJEXT) ACLRegexData.$(OBJEXT) \
-	ACLSourceIP.$(OBJEXT) ACLUserData.$(OBJEXT)
-@USE_DELAY_POOLS_FALSE@am__objects_5 =
-@USE_DELAY_POOLS_TRUE@am__objects_5 = delay_pools.$(OBJEXT) \
+am__objects_1 = ACLCertificateData.$(OBJEXT) \
+	ACLDestinationDomain.$(OBJEXT) ACLDestinationIP.$(OBJEXT) \
+	ACLDomainData.$(OBJEXT) ACLIP.$(OBJEXT) ACLMyIP.$(OBJEXT) \
+	ACLProxyAuth.$(OBJEXT) ACLRegexData.$(OBJEXT) \
+	ACLSourceDomain.$(OBJEXT) ACLSourceIP.$(OBJEXT) \
+	ACLUserData.$(OBJEXT)
+@USE_DELAY_POOLS_TRUE@am__objects_2 = delay_pools.$(OBJEXT) \
 @USE_DELAY_POOLS_TRUE@	DelayId.$(OBJEXT) DelayBucket.$(OBJEXT) \
 @USE_DELAY_POOLS_TRUE@	DelayConfig.$(OBJEXT) DelayPool.$(OBJEXT) \
 @USE_DELAY_POOLS_TRUE@	DelaySpec.$(OBJEXT) DelayUser.$(OBJEXT) \
 @USE_DELAY_POOLS_TRUE@	DelayVector.$(OBJEXT) \
 @USE_DELAY_POOLS_TRUE@	NullDelayId.$(OBJEXT)
-@USE_DNSSERVER_FALSE@am__objects_6 = dns_internal.$(OBJEXT)
-@USE_DNSSERVER_TRUE@am__objects_6 = dns.$(OBJEXT)
-@ENABLE_HTCP_TRUE@am__objects_7 = htcp.$(OBJEXT)
-@ENABLE_IDENT_TRUE@am__objects_8 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
-@ENABLE_IDENT_FALSE@am__objects_8 =
-@MAKE_LEAKFINDER_TRUE@am__objects_9 = leakfinder.$(OBJEXT)
-@MAKE_LEAKFINDER_FALSE@am__objects_9 =
-@ENABLE_XPROF_STATS_TRUE@am__objects_3 = ProfStats.$(OBJEXT)
-@ENABLE_XPROF_STATS_FALSE@am__objects_3 =
-@USE_SNMP_TRUE@am__objects_10 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
-@USE_SNMP_FALSE@am__objects_10 =
-@ENABLE_SSL_FALSE@am__objects_11 =
-@ENABLE_SSL_TRUE@am__objects_11 = ssl_support.$(OBJEXT)
-@ENABLE_UNLINKD_TRUE@am__objects_12 = unlinkd.$(OBJEXT)
-@ENABLE_UNLINKD_FALSE@am__objects_12 =
-@ENABLE_WIN32SPECIFIC_FALSE@am__objects_13 =
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_13 = win32.$(OBJEXT)
+@USE_DELAY_POOLS_FALSE@am__objects_2 =
+@USE_DNSSERVER_TRUE@am__objects_3 = dns.$(OBJEXT)
+@USE_DNSSERVER_FALSE@am__objects_3 = dns_internal.$(OBJEXT)
+@ENABLE_HTCP_TRUE@am__objects_4 = htcp.$(OBJEXT)
+@ENABLE_IDENT_TRUE@am__objects_5 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
+@ENABLE_IDENT_FALSE@am__objects_5 =
+@MAKE_LEAKFINDER_TRUE@am__objects_6 = leakfinder.$(OBJEXT)
+@MAKE_LEAKFINDER_FALSE@am__objects_6 =
+@ENABLE_XPROF_STATS_TRUE@am__objects_7 = ProfStats.$(OBJEXT)
+@ENABLE_XPROF_STATS_FALSE@am__objects_7 =
+@USE_SNMP_TRUE@am__objects_8 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_FALSE@am__objects_8 =
+@ENABLE_SSL_TRUE@am__objects_9 = ssl_support.$(OBJEXT)
+@ENABLE_SSL_FALSE@am__objects_9 =
+@ENABLE_UNLINKD_TRUE@am__objects_10 = unlinkd.$(OBJEXT)
+@ENABLE_UNLINKD_FALSE@am__objects_10 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_11 = win32.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_11 =
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
-	ACLChecklist.$(OBJEXT) $(am__objects_4) asn.$(OBJEXT) \
+	ACLChecklist.$(OBJEXT) $(am__objects_1) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
 	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) debug.$(OBJEXT) \
-	$(am__objects_5) disk.$(OBJEXT) $(am__objects_6) \
+	$(am__objects_2) disk.$(OBJEXT) $(am__objects_3) \
 	errorpage.$(OBJEXT) ETag.$(OBJEXT) event.$(OBJEXT) \
 	external_acl.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
 	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
 	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_7) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	$(am__objects_4) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
 	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
 	HttpHdrContRange.$(OBJEXT) HttpHeader.$(OBJEXT) \
 	HttpHeaderTools.$(OBJEXT) HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) \
 	HttpReply.$(OBJEXT) HttpRequest.$(OBJEXT) icmp.$(OBJEXT) \
-	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_8) \
+	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_5) \
 	int.$(OBJEXT) internal.$(OBJEXT) ipc.$(OBJEXT) \
-	ipcache.$(OBJEXT) IPInterception.$(OBJEXT) $(am__objects_9) \
+	ipcache.$(OBJEXT) IPInterception.$(OBJEXT) $(am__objects_6) \
 	logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
 	mem_node.$(OBJEXT) MemBuf.$(OBJEXT) MemObject.$(OBJEXT) \
 	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
-	net_db.$(OBJEXT) Packer.$(OBJEXT) $(am__objects_3) \
+	net_db.$(OBJEXT) Packer.$(OBJEXT) $(am__objects_7) \
 	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
 	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	send-announce.$(OBJEXT) $(am__objects_10) tunnel.$(OBJEXT) \
-	$(am__objects_11) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	send-announce.$(OBJEXT) $(am__objects_8) tunnel.$(OBJEXT) \
+	$(am__objects_9) stat.$(OBJEXT) StatHist.$(OBJEXT) \
 	String.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
 	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
 	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
@@ -885,83 +896,101 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/ACLChecklist.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ACLDestinationIP.Po $(DEPDIR)/ACLIP.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ACLIdent.Po $(DEPDIR)/ACLMyIP.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ACLProxyAuth.Po $(DEPDIR)/ACLRegexData.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ACLSourceIP.Po $(DEPDIR)/ACLUserData.Po \
-@AMDEP_TRUE@	$(DEPDIR)/CacheDigest.Po $(DEPDIR)/DelayBucket.Po \
-@AMDEP_TRUE@	$(DEPDIR)/DelayConfig.Po $(DEPDIR)/DelayId.Po \
-@AMDEP_TRUE@	$(DEPDIR)/DelayPool.Po $(DEPDIR)/DelaySpec.Po \
-@AMDEP_TRUE@	$(DEPDIR)/DelayUser.Po $(DEPDIR)/DelayVector.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ETag.Po $(DEPDIR)/HttpBody.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpHdrCc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpHdrContRange.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpHdrRange.Po $(DEPDIR)/HttpHeader.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpHeaderTools.Po $(DEPDIR)/HttpMsg.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpReply.Po $(DEPDIR)/HttpRequest.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po \
-@AMDEP_TRUE@	$(DEPDIR)/IPInterception.Po $(DEPDIR)/MemBuf.Po \
-@AMDEP_TRUE@	$(DEPDIR)/MemObject.Po $(DEPDIR)/NullDelayId.Po \
-@AMDEP_TRUE@	$(DEPDIR)/Packer.Po $(DEPDIR)/ProfStats.Po \
-@AMDEP_TRUE@	$(DEPDIR)/StatHist.Po $(DEPDIR)/StoreIOState.Po \
-@AMDEP_TRUE@	$(DEPDIR)/StoreMeta.Po $(DEPDIR)/StoreMetaMD5.Po \
-@AMDEP_TRUE@	$(DEPDIR)/StoreMetaSTD.Po $(DEPDIR)/StoreMetaURL.Po \
-@AMDEP_TRUE@	$(DEPDIR)/StoreMetaUnpacker.Po \
-@AMDEP_TRUE@	$(DEPDIR)/StoreMetaVary.Po $(DEPDIR)/String.Po \
-@AMDEP_TRUE@	$(DEPDIR)/SwapDir.Po $(DEPDIR)/access_log.Po \
-@AMDEP_TRUE@	$(DEPDIR)/acl.Po $(DEPDIR)/asn.Po \
-@AMDEP_TRUE@	$(DEPDIR)/auth_modules.Po $(DEPDIR)/authenticate.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cache_cf.Po $(DEPDIR)/cache_manager.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cachemgr.Po $(DEPDIR)/carp.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cbdata.Po $(DEPDIR)/cf_gen.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client.Po $(DEPDIR)/clientStream.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client_db.Po $(DEPDIR)/client_side.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client_side_reply.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client_side_request.Po $(DEPDIR)/comm.Po \
-@AMDEP_TRUE@	$(DEPDIR)/comm_kqueue.Po $(DEPDIR)/comm_poll.Po \
-@AMDEP_TRUE@	$(DEPDIR)/comm_select.Po $(DEPDIR)/debug.Po \
-@AMDEP_TRUE@	$(DEPDIR)/delay_pools.Po $(DEPDIR)/disk.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dns.Po $(DEPDIR)/dns_internal.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dnsserver.Po $(DEPDIR)/errorpage.Po \
-@AMDEP_TRUE@	$(DEPDIR)/event.Po $(DEPDIR)/external_acl.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fd.Po $(DEPDIR)/fde.Po \
-@AMDEP_TRUE@	$(DEPDIR)/filemap.Po $(DEPDIR)/forward.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fqdncache.Po $(DEPDIR)/ftp.Po \
-@AMDEP_TRUE@	$(DEPDIR)/globals.Po $(DEPDIR)/gopher.Po \
-@AMDEP_TRUE@	$(DEPDIR)/helper.Po $(DEPDIR)/htcp.Po \
-@AMDEP_TRUE@	$(DEPDIR)/http.Po $(DEPDIR)/icmp.Po \
-@AMDEP_TRUE@	$(DEPDIR)/icp_v2.Po $(DEPDIR)/icp_v3.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ident.Po $(DEPDIR)/int.Po \
-@AMDEP_TRUE@	$(DEPDIR)/internal.Po $(DEPDIR)/ipc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ipcache.Po $(DEPDIR)/leakfinder.Po \
-@AMDEP_TRUE@	$(DEPDIR)/logfile.Po $(DEPDIR)/main.Po \
-@AMDEP_TRUE@	$(DEPDIR)/mem.Po $(DEPDIR)/mem_node.Po \
-@AMDEP_TRUE@	$(DEPDIR)/mime.Po $(DEPDIR)/multicast.Po \
-@AMDEP_TRUE@	$(DEPDIR)/neighbors.Po $(DEPDIR)/net_db.Po \
-@AMDEP_TRUE@	$(DEPDIR)/pconn.Po $(DEPDIR)/peer_digest.Po \
-@AMDEP_TRUE@	$(DEPDIR)/peer_select.Po $(DEPDIR)/pinger.Po \
-@AMDEP_TRUE@	$(DEPDIR)/recv-announce.Po $(DEPDIR)/redirect.Po \
-@AMDEP_TRUE@	$(DEPDIR)/referer.Po $(DEPDIR)/refresh.Po \
-@AMDEP_TRUE@	$(DEPDIR)/repl_modules.Po \
-@AMDEP_TRUE@	$(DEPDIR)/send-announce.Po $(DEPDIR)/snmp_agent.Po \
-@AMDEP_TRUE@	$(DEPDIR)/snmp_core.Po $(DEPDIR)/ssl_support.Po \
-@AMDEP_TRUE@	$(DEPDIR)/stat.Po $(DEPDIR)/stmem.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store.Po $(DEPDIR)/store_client.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_digest.Po $(DEPDIR)/store_dir.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_io.Po $(DEPDIR)/store_key_md5.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_log.Po $(DEPDIR)/store_modules.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_rebuild.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_swapin.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_swapmeta.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_swapout.Po \
-@AMDEP_TRUE@	$(DEPDIR)/string_arrays.Po $(DEPDIR)/tools.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tunnel.Po $(DEPDIR)/ufscommon.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ufsdump.Po $(DEPDIR)/unlinkd-unlinkd.Po \
-@AMDEP_TRUE@	$(DEPDIR)/unlinkd.Po $(DEPDIR)/url.Po \
-@AMDEP_TRUE@	$(DEPDIR)/urn.Po $(DEPDIR)/useragent.Po \
-@AMDEP_TRUE@	$(DEPDIR)/wais.Po $(DEPDIR)/wccp.Po \
-@AMDEP_TRUE@	$(DEPDIR)/whois.Po $(DEPDIR)/win32.Po
+am__depfiles_maybe = depfiles
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/ACLCertificateData.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLChecklist.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLDestinationDomain.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLDestinationIP.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLDomainData.Po ./$(DEPDIR)/ACLIP.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLIdent.Po ./$(DEPDIR)/ACLMyIP.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLProxyAuth.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLRegexData.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLSourceDomain.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLSourceIP.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ACLUserData.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/CacheDigest.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/DelayBucket.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/DelayConfig.Po ./$(DEPDIR)/DelayId.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/DelayPool.Po ./$(DEPDIR)/DelaySpec.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/DelayUser.Po ./$(DEPDIR)/DelayVector.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ETag.Po ./$(DEPDIR)/HttpBody.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpHdrCc.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpHdrContRange.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpHdrRange.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpHeader.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpHeaderTools.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpMsg.Po ./$(DEPDIR)/HttpReply.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpRequest.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/HttpStatusLine.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/IPInterception.Po ./$(DEPDIR)/MemBuf.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/MemObject.Po ./$(DEPDIR)/NullDelayId.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/Packer.Po ./$(DEPDIR)/ProfStats.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StatHist.Po ./$(DEPDIR)/StoreIOState.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreMeta.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreMetaMD5.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreMetaSTD.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreMetaURL.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreMetaUnpacker.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreMetaVary.Po ./$(DEPDIR)/String.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/SwapDir.Po ./$(DEPDIR)/access_log.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/acl.Po ./$(DEPDIR)/asn.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/auth_modules.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/authenticate.Po ./$(DEPDIR)/cache_cf.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/cache_manager.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/cachemgr.Po ./$(DEPDIR)/carp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/cbdata.Po ./$(DEPDIR)/cf_gen.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/client.Po ./$(DEPDIR)/clientStream.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/client_db.Po ./$(DEPDIR)/client_side.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/client_side_reply.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/client_side_request.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/comm.Po ./$(DEPDIR)/comm_kqueue.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/comm_poll.Po ./$(DEPDIR)/comm_select.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/debug.Po ./$(DEPDIR)/delay_pools.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/disk.Po ./$(DEPDIR)/dns.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dns_internal.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dnsserver.Po ./$(DEPDIR)/errorpage.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/event.Po ./$(DEPDIR)/external_acl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/fd.Po ./$(DEPDIR)/fde.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/filemap.Po ./$(DEPDIR)/forward.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/fqdncache.Po ./$(DEPDIR)/ftp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/globals.Po ./$(DEPDIR)/gopher.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/helper.Po ./$(DEPDIR)/htcp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/http.Po ./$(DEPDIR)/icmp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/icp_v2.Po ./$(DEPDIR)/icp_v3.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ident.Po ./$(DEPDIR)/int.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/internal.Po ./$(DEPDIR)/ipc.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ipcache.Po ./$(DEPDIR)/leakfinder.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/logfile.Po ./$(DEPDIR)/main.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/mem.Po ./$(DEPDIR)/mem_node.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/mime.Po ./$(DEPDIR)/multicast.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/neighbors.Po ./$(DEPDIR)/net_db.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/pconn.Po ./$(DEPDIR)/peer_digest.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/peer_select.Po ./$(DEPDIR)/pinger.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/recv-announce.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/redirect.Po ./$(DEPDIR)/referer.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/refresh.Po ./$(DEPDIR)/repl_modules.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/send-announce.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/snmp_agent.Po ./$(DEPDIR)/snmp_core.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ssl_support.Po ./$(DEPDIR)/stat.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/stmem.Po ./$(DEPDIR)/store.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_client.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_digest.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_dir.Po ./$(DEPDIR)/store_io.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_key_md5.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_log.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_modules.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_rebuild.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_swapin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_swapmeta.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/store_swapout.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/string_arrays.Po ./$(DEPDIR)/tools.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tunnel.Po ./$(DEPDIR)/ufscommon.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ufsdump.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/unlinkd-unlinkd.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/unlinkd.Po ./$(DEPDIR)/url.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/urn.Po ./$(DEPDIR)/useragent.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/wais.Po ./$(DEPDIR)/wccp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/whois.Po ./$(DEPDIR)/win32.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -1109,158 +1138,162 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLChecklist.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLDestinationIP.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLIP.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLIdent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLMyIP.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLProxyAuth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLRegexData.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLSourceIP.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ACLUserData.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/CacheDigest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayBucket.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayConfig.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayId.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayPool.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelaySpec.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayUser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayVector.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ETag.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpBody.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrCc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrContRange.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrRange.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHeader.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHeaderTools.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpMsg.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpReply.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpRequest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpStatusLine.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/IPInterception.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemBuf.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemObject.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/NullDelayId.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Packer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ProfStats.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StatHist.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreIOState.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreMeta.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreMetaMD5.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreMetaSTD.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreMetaURL.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreMetaUnpacker.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreMetaVary.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/String.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/SwapDir.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/access_log.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/acl.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/asn.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/auth_modules.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/authenticate.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cache_cf.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cache_manager.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cachemgr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/carp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cbdata.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cf_gen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/clientStream.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_db.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_side.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_side_reply.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/client_side_request.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm_kqueue.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm_poll.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/comm_select.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/debug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/delay_pools.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/disk.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dns.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dns_internal.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dnsserver.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/errorpage.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/event.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/external_acl.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fde.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/filemap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/forward.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fqdncache.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ftp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/globals.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/gopher.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/helper.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/htcp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/http.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icmp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icp_v2.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icp_v3.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ident.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/int.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/internal.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ipc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ipcache.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/leakfinder.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/logfile.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mem.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mem_node.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mime.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/multicast.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/neighbors.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/net_db.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/pconn.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/peer_digest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/peer_select.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/pinger.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/recv-announce.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/redirect.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/referer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/refresh.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/repl_modules.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/send-announce.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snmp_agent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snmp_core.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ssl_support.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stmem.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_client.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_digest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_dir.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_io.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_key_md5.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_log.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_modules.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_rebuild.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_swapin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_swapmeta.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/store_swapout.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/string_arrays.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tools.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tunnel.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ufscommon.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ufsdump.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unlinkd-unlinkd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unlinkd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/url.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/urn.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/useragent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wais.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wccp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/whois.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/win32.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLCertificateData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLChecklist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDestinationDomain.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDestinationIP.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDomainData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIP.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIdent.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLMyIP.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLProxyAuth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLRegexData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLSourceDomain.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLSourceIP.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLUserData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CacheDigest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayBucket.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayConfig.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayId.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayPool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelaySpec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayUser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayVector.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ETag.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpBody.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHdrCc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHdrContRange.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHdrRange.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHeader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHeaderTools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpMsg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpReply.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpRequest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpStatusLine.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IPInterception.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemBuf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemObject.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NullDelayId.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Packer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ProfStats.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StatHist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreIOState.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMeta.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaMD5.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaSTD.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaURL.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaUnpacker.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaVary.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/String.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SwapDir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access_log.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auth_modules.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/authenticate.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cache_cf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cache_manager.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cachemgr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/carp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cbdata.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cf_gen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clientStream.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client_db.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client_side.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client_side_reply.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client_side_request.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/comm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/comm_kqueue.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/comm_poll.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/comm_select.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/delay_pools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/disk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dns.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dns_internal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dnsserver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/errorpage.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/external_acl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fde.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/filemap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/forward.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fqdncache.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gopher.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/helper.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/htcp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icmp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icp_v2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icp_v3.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ident.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/int.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/internal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipcache.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leakfinder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logfile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mem.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mem_node.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mime.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/multicast.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/neighbors.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net_db.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pconn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/peer_digest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/peer_select.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pinger.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/recv-announce.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/redirect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/referer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/refresh.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/repl_modules.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/send-announce.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snmp_agent.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snmp_core.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssl_support.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stmem.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_digest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_dir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_io.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_key_md5.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_log.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_modules.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_rebuild.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_swapin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_swapmeta.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_swapout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/string_arrays.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tunnel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ufscommon.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ufsdump.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlinkd-unlinkd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlinkd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/url.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/useragent.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wais.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wccp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whois.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/win32.Po@am__quote@
 
 distclean-depend:
-	-rm -rf $(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 
 .c.o:
 @AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+	$(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
 
 .c.obj:
 @AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@

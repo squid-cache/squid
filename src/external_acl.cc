@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.27 2003/02/14 23:17:06 hno Exp $
+ * $Id: external_acl.cc,v 1.28 2003/02/16 02:23:19 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -47,6 +47,9 @@
 #include "fde.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
+#if USE_IDENT
+#include "ACLIdent.h"
+#endif
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
@@ -533,7 +536,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 	case _external_acl_format::EXT_ACL_IDENT:
 	    str = ch->rfc931;
 	    if (!str) {
-		ch->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
+		ch->changeState(IdentLookup::Instance());
 		return NULL;
 	    }
 	    break;
