@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.6 2000/05/29 00:19:45 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.7 2000/05/29 00:24:59 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -460,8 +460,11 @@ storeDiskdStats(StoreEntry * sentry)
 static void
 storeDiskdDirSync(SwapDir * SD)
 {
-    /* XXX NOT DONE YET! */
-#warning "storeDiskdSync() needs to be written"
+    diskdinfo_t *diskdinfo = SD->fsdata;
+    while (diskdinfo->away > 0) {
+	debug(47, 1) ("storeDiskdDirSync: %d messages away\n", diskdinfo->away);
+	storeDiskdDirCallback(SD);
+    }
 }
 
 
