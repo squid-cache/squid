@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.304 1998/08/12 22:32:57 wessels Exp $
+ * $Id: http.cc,v 1.305 1998/08/14 09:22:37 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -360,6 +360,10 @@ httpReadReply(int fd, void *data)
     int len;
     int bin;
     int clen;
+    size_t read_sz;
+#if DELAY_POOLS
+    delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
+#endif
     if (fwdAbortFetch(entry)) {
 	storeAbort(entry, 0);
 	comm_close(fd);
@@ -367,10 +371,18 @@ httpReadReply(int fd, void *data)
     }
     /* check if we want to defer reading */
     errno = 0;
-    len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
+    read_sz = SQUID_TCP_SO_RCVBUF;
+#if DELAY_POOLS
+    read_sz = delayBytesWanted(delay_id, read_sz);
+    assert(read_sz > 0);
+#endif
+    len = read(fd, buf, read_sz);
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
+#if DELAY_POOLS
+	delayBytesIn(delay_id, len);
+#endif
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.http.kbytes_in, len);
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
@@ -723,10 +735,9 @@ httpStart(FwdState * fwdState, int fd)
 	    storeReleaseRequest(httpState->entry);
 #if DELAY_POOLS
 	if (EBIT_TEST(httpState->peer->options, NEIGHBOR_NO_DELAY)) {
-	    proxy_req->delay.class = 0;
+	    proxy_req->delay_id = 0;
 	} else {
-	    proxy_req->delay.class = orig_req->delay.class;
-	    proxy_req->delay.position = orig_req->delay.position;
+	    proxy_req->delay_id = orig_req->delay_id;
 	}
 #endif
     } else {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.375 1998/08/05 06:04:59 wessels Exp $
+ * $Id: client_side.cc,v 1.376 1998/08/14 09:22:32 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -154,6 +154,9 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
 	h->request = requestLink(requestCreate(m, PROTO_NONE, NULL));
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     storeClientListAdd(e, h);
+#if DELAY_POOLS
+    delaySetStoreClient(e, h, h->request->delay_id);
+#endif
     storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF), clientSendMoreData, h);
     return e;
 }
@@ -256,6 +259,10 @@ clientProcessExpired(void *data)
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
     storeClientListAdd(entry, http);
     storeClientListAdd(http->old_entry, http);
+#if DELAY_POOLS
+    delaySetStoreClient(entry, http, http->request->delay_id);
+    delaySetStoreClient(http->old_entry, http, http->request->delay_id);
+#endif
     entry->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
     entry->refcount++;		/* EXPIRED CASE */
@@ -330,6 +337,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
 	entry->refcount++;
+#if DELAY_POOLS
+	http->request->delay_id = 0;
+#endif
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	if (size >= 4096) {
@@ -341,6 +351,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
 	    entry->refcount++;
+#if DELAY_POOLS
+	    http->request->delay_id = 0;
+#endif
 	    /* continue */
 	} else {
 	    storeClientCopy(entry,
@@ -376,6 +389,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    requestUnlink(entry->mem_obj->request);
 	    entry->mem_obj->request = NULL;
 	}
+#if DELAY_POOLS
+	http->request->delay_id = 0;
+#endif
     } else {
 	/* the client can handle this reply, whatever it is */
 	http->log_type = LOG_TCP_REFRESH_MISS;
@@ -725,7 +741,8 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 #if DELAY_POOLS
     if (delayClient(http)) {
 	debug(33, 5) ("clientInterpretRequestHeaders: delay request class %d position %d\n",
-	    request->delay.class, request->delay.position);
+	    request->delay_id >> 16,
+	    request->delay_id & 0xFFFF);
     }
 #endif
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_NOCACHE = %s\n",
@@ -1120,6 +1137,9 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     assert(http->log_type == LOG_TCP_HIT);
     if (checkNegativeHit(e)) {
 	http->log_type = LOG_TCP_NEGATIVE_HIT;
+#if DELAY_POOLS
+	http->request->delay_id = 0;
+#endif
 	clientSendMoreData(data, buf, size);
     } else if (refreshCheck(e, r, 0) && !http->flags.internal) {
 	/*
@@ -1171,6 +1191,9 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 */
 	if (e->mem_status == IN_MEMORY)
 	    http->log_type = LOG_TCP_MEM_HIT;
+#if DELAY_POOLS
+	http->request->delay_id = 0;
+#endif
 	clientSendMoreData(data, buf, size);
     }
 }
@@ -1642,6 +1665,9 @@ clientProcessRequest(clientHttpRequest * http)
 	storeLockObject(http->entry);
 	storeCreateMemObject(http->entry, http->uri, http->log_uri);
 	storeClientListAdd(http->entry, http);
+#if DELAY_POOLS
+	delaySetStoreClient(http->entry, http, http->request->delay_id);
+#endif
 	http->entry->refcount++;
 	storeClientCopy(http->entry,
 	    http->out.offset,

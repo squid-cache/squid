@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.85 1998/07/22 20:37:51 wessels Exp $
+ * $Id: tunnel.cc,v 1.86 1998/08/14 09:22:40 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -66,6 +66,9 @@ static void sslStateFree(SslStateData * sslState);
 static void sslConnected(int fd, void *);
 static void sslProxyConnected(int fd, void *);
 static void sslSetSelect(SslStateData * sslState);
+#if DELAY_POOLS
+static DEFER sslDeferServerRead;
+#endif
 
 static void
 sslServerClosed(int fd, void *data)
@@ -105,9 +108,19 @@ sslStateFree(SslStateData * sslState)
     cbdataFree(sslState);
 }
 
+#if DELAY_POOLS
+static int
+sslDeferServerRead(int fdnotused, void *data)
+{
+    request_t *r = data;
+    return delayBytesWanted(r->delay_id, 1) == 0;
+}
+#endif
+
 static void
 sslSetSelect(SslStateData * sslState)
 {
+    size_t read_sz = SQUID_TCP_SO_RCVBUF;
     assert(sslState->server.fd > -1 || sslState->client.fd > -1);
     if (sslState->client.fd > -1) {
 	if (sslState->server.len > 0) {
@@ -117,7 +130,7 @@ sslSetSelect(SslStateData * sslState)
 		sslState,
 		0);
 	}
-	if (sslState->client.len < SQUID_TCP_SO_RCVBUF) {
+	if (sslState->client.len < read_sz) {
 	    commSetSelect(sslState->client.fd,
 		COMM_SELECT_READ,
 		sslReadClient,
@@ -135,7 +148,11 @@ sslSetSelect(SslStateData * sslState)
 		sslState,
 		0);
 	}
-	if (sslState->server.len < SQUID_TCP_SO_RCVBUF) {
+#if DELAY_POOLS
+	read_sz = delayBytesWanted(sslState->request->delay_id, read_sz);
+	assert(read_sz > 0);
+#endif
+	if (sslState->server.len < read_sz) {
 	    /* Have room to read more */
 	    commSetSelect(sslState->server.fd,
 		COMM_SELECT_READ,
@@ -156,16 +173,22 @@ sslReadServer(int fd, void *data)
 {
     SslStateData *sslState = data;
     int len;
+    size_t read_sz = SQUID_TCP_SO_RCVBUF - sslState->server.len;
     assert(fd == sslState->server.fd);
     debug(26, 3) ("sslReadServer: FD %d, reading %d bytes at offset %d\n",
-	fd, SQUID_TCP_SO_RCVBUF - sslState->server.len,
-	sslState->server.len);
-    len = read(fd,
-	sslState->server.buf + sslState->server.len,
-	SQUID_TCP_SO_RCVBUF - sslState->server.len);
+	fd, read_sz, sslState->server.len);
+    errno = 0;
+#if DELAY_POOLS
+    read_sz = delayBytesWanted(sslState->request->delay_id, read_sz);
+    assert(read_sz > 0);
+#endif
+    len = read(fd, sslState->server.buf + sslState->server.len, read_sz);
     debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
+#if DELAY_POOLS
+	delayBytesIn(sslState->request->delay_id, len);
+#endif
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.other.kbytes_in, len);
 	sslState->server.len += len;
@@ -360,6 +383,9 @@ sslConnectDone(int fdnotused, int status, void *data)
 	    Config.Timeout.read,
 	    sslTimeout,
 	    sslState);
+#if DELAY_POOLS
+	commSetDefer(sslState->server.fd, sslDeferServerRead, sslState->request);
+#endif
     }
 }
 

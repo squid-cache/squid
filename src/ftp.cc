@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.242 1998/07/23 23:52:35 wessels Exp $
+ * $Id: ftp.cc,v 1.243 1998/08/14 09:22:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -793,6 +793,10 @@ ftpDataRead(int fd, void *data)
     int bin;
     StoreEntry *entry = ftpState->entry;
     MemObject *mem = entry->mem_obj;
+    size_t read_sz;
+#if DELAY_POOLS
+    delay_id delay_id = delayMostBytesAllowed(mem);
+#endif
     assert(fd == ftpState->data.fd);
     if (fwdAbortFetch(entry)) {
 	storeAbort(entry, 0);
@@ -800,13 +804,18 @@ ftpDataRead(int fd, void *data)
 	return;
     }
     errno = 0;
-    memset(ftpState->data.buf + ftpState->data.offset, '\0',
-	ftpState->data.size - ftpState->data.offset);
-    len = read(fd,
-	ftpState->data.buf + ftpState->data.offset,
-	ftpState->data.size - ftpState->data.offset);
+    read_sz = ftpState->data.size - ftpState->data.offset;
+#if DELAY_POOLS
+    read_sz = delayBytesWanted(delay_id, read_sz);
+    assert(read_sz > 0);
+#endif
+    memset(ftpState->data.buf + ftpState->data.offset, '\0', read_sz);
+    len = read(fd, ftpState->data.buf + ftpState->data.offset, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
+#if DELAY_POOLS
+	delayBytesIn(delay_id, len);
+#endif
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.ftp.kbytes_in, len);
 	ftpState->data.offset += len;

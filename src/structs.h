@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.195 1998/08/11 05:53:50 wessels Exp $
+ * $Id: structs.h,v 1.196 1998/08/14 09:22:41 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1112,6 +1112,9 @@ struct _store_client {
 	int copy_event_pending:1;
     } flags;
     store_client *next;
+#if DELAY_POOLS
+    delay_id delay_id;
+#endif
 };
 
 
@@ -1205,10 +1208,7 @@ struct _request_t {
     HierarchyLogEntry hier;
     err_type err_type;
 #if DELAY_POOLS
-    struct {
-	int position;
-	char class;
-    } delay;
+    delay_id delay_id;
 #endif
 };
 

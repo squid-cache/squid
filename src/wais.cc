@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.115 1998/07/30 22:29:36 wessels Exp $
+ * $Id: wais.cc,v 1.116 1998/08/14 09:22:43 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -85,8 +85,11 @@ waisReadReply(int fd, void *data)
     StoreEntry *entry = waisState->entry;
     int len;
     int clen;
-    int off;
     int bin;
+    size_t read_sz;
+#if DELAY_POOLS
+    delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
+#endif
     if (fwdAbortFetch(entry)) {
 	ErrorState *err;
 	err = errorCon(ERR_CLIENT_ABORT, HTTP_INTERNAL_SERVER_ERROR);
@@ -95,11 +98,18 @@ waisReadReply(int fd, void *data)
 	comm_close(fd);
 	return;
     }
-    /* check if we want to defer reading */
-    off = storeLowestMemReaderOffset(entry);
-    len = read(fd, buf, 4096);
+    errno = 0;
+    read_sz = 4096;
+#if DELAY_POOLS
+    read_sz = delayBytesWanted(delay_id, read_sz);
+    assert(read_sz > 0);
+#endif
+    len = read(fd, buf, read_sz);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
+#if DELAY_POOLS
+	delayBytesIn(delay_id, len);
+#endif
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.other.kbytes_in, len);
     }
