@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.46 1996/10/17 11:14:44 wessels Exp $
+ * $Id: client_side.cc,v 1.47 1996/10/17 11:17:42 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -296,7 +296,7 @@ proxyAuthenticate(char *headers)
 		} else {
 		    /* First time around, 7921 should be big enough */
 		    if ((validated = hash_create(urlcmp, 7921, hash_string)) < 0) {
-			debug(1, 1, "ERK: can't create hash table. Turning auth off");
+			debug(33, 1, "ERK: can't create hash table. Turning auth off");
 			xfree(Config.proxyAuthFile);
 			Config.proxyAuthFile = NULL;
 			return (dash_str);
@@ -326,7 +326,7 @@ proxyAuthenticate(char *headers)
 		xfree(passwords);
 	    }
 	} else {
-	    debug(1, 1, "ERK: can't access proxy_auth file %s. Turning authentication off", Config.proxyAuthFile);
+	    debug(33, 1, "ERK: can't access proxy_auth file %s. Turning authentication off", Config.proxyAuthFile);
 	    xfree(Config.proxyAuthFile);
 	    Config.proxyAuthFile = NULL;
 	    return (dash_str);
@@ -409,7 +409,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     /* unregister this handler */
     storeUnregister(entry, fd);
     if (entry->store_status == STORE_ABORTED) {
-	debug(33, 1, "icpHandleIMSReply: ABORTED/%s '%s'\n",
+	debug(33, 3, "icpHandleIMSReply: ABORTED/%s '%s'\n",
 	    log_tags[entry->mem_obj->abort_code], entry->url);
 	/* We have an existing entry, but failed to validate it,
 	 * so send the old one anyway */
@@ -417,7 +417,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	storeUnlockObject(entry);
 	icpState->entry = icpState->old_entry;
     } else if (mem->reply->code == 0) {
-	debug(33, 1, "icpHandleIMSReply: Incomplete headers for '%s'\n",
+	debug(33, 3, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
 	storeRegister(entry,
 	    fd,
