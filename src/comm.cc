@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.135 1997/02/07 04:57:12 wessels Exp $
+ * $Id: comm.cc,v 1.136 1997/02/19 00:06:14 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1053,6 +1053,10 @@ comm_select(time_t sec)
 void
 commSetSelect(int fd, unsigned int type, PF handler, void *client_data, time_t timeout)
 {
+    if (fd < 0) {
+	debug_trap("commSetSelect: FD < 0");
+	return;
+    }
     if (type & COMM_SELECT_TIMEOUT) {
 	fd_table[fd].timeout_time = (getCurrentTime() + timeout);
 	fd_table[fd].timeout_delta = timeout;
