@@ -1,8 +1,8 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.2 1998/03/07 23:42:57 rousskov Exp $
+ * $Id: HttpHdrRange.cc,v 1.3 1998/03/08 21:02:08 rousskov Exp $
  *
- * DEBUG: section 64    HTTP Content-Range Header
+ * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -60,6 +60,7 @@
 #define size_diff(a,b) ((a) >= (b) ? ((a)-(b)) : 0)
 static HttpHdrRangeSpec *httpHdrRangeSpecDup(const HttpHdrRangeSpec *spec);
 static int httpHdrRangeSpecCanonize(HttpHdrRangeSpec *spec, size_t clen);
+static void httpHdrRangeSpecPackInto(const HttpHdrRangeSpec *spec, Packer *p);
 
 /* globals */
 static int RangeParsedCount = 0;
@@ -67,7 +68,6 @@ static int RangeParsedCount = 0;
 /*
  * Range-Spec
  */
-
 
 static HttpHdrRangeSpec *
 httpHdrRangeSpecCreate()
@@ -126,6 +126,19 @@ httpHdrRangeSpecDup(const HttpHdrRangeSpec *spec)
     dup->offset = spec->offset;
     dup->length = spec->length;
     return dup;
+}
+
+static void
+httpHdrRangeSpecPackInto(const HttpHdrRangeSpec *spec, Packer *p)
+{
+    if (!known_spec(spec->offset)) /* suffix */
+	packerPrintf(p, "-%d", spec->length);
+    else
+    if (!known_spec(spec->length)) /* trailer */
+	packerPrintf(p, "%d-", spec->offset);
+    else                           /* range */
+	packerPrintf(p, "%d-%d", 
+	    spec->offset, spec->offset+spec->length-1);
 }
 
 /* fills "absent" positions in range specification based on response body size 
@@ -218,14 +231,15 @@ httpHdrRangeDup(const HttpHdrRange * range)
 }
 
 void
-httpHdrRangePackValueInto(const HttpHdrRange * range, Packer * p)
+httpHdrRangePackInto(const HttpHdrRange * range, Packer * p)
 {
     HttpHdrRangePos pos = HttpHdrRangeInitPos;
     HttpHdrRangeSpec spec;
     assert(range);
     while (httpHdrRangeGetSpec(range, &spec, &pos)) {
-	packerPrintf(p, (pos == HttpHdrRangeInitPos) ? "%d-%d" : ",%d-%d",
-	    spec.offset, spec.offset+spec.length-1);
+	if (pos != HttpHdrRangeInitPos)
+	    packerAppend(p, ",", 1);
+	httpHdrRangeSpecPackInto(&spec, p);
     }
 }
 

@@ -273,7 +273,7 @@ extern HttpHdrCc *httpHdrCcCreate();
 extern HttpHdrCc *httpHdrCcParseCreate(const char *str);
 extern void httpHdrCcDestroy(HttpHdrCc * cc);
 extern HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
-extern void httpHdrCcPackValueInto(const HttpHdrCc * cc, Packer * p);
+extern void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
 extern void httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc);
 extern void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
@@ -284,11 +284,18 @@ extern HttpHdrRange *httpHdrRangeParseCreate(const char *range_spec);
 extern int httpHdrRangeParseInit(HttpHdrRange *range, const char *range_spec);
 extern void httpHdrRangeDestroy(HttpHdrRange *range);
 extern HttpHdrRange *httpHdrRangeDup(const HttpHdrRange * range);
-extern void httpHdrRangePackValueInto(const HttpHdrRange * range, Packer * p);
+extern void httpHdrRangePackInto(const HttpHdrRange * range, Packer * p);
 extern void httpHdrRangeJoinWith(HttpHdrRange * range, const HttpHdrRange * new_range);
 /* iterate through specs */
 extern int httpHdrRangeGetSpec(const HttpHdrRange *range, HttpHdrRangeSpec *spec, int *pos);
 
+/* Http Content Range Header Field */
+extern HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
+/* returns true if range is valid; inits HttpHdrContRange */
+extern int httpHdrContRangeParseInit(HttpHdrContRange *crange, const char *crange_spec);
+extern void httpHdrContRangeDestroy(HttpHdrContRange *crange);
+extern HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
+extern void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
 
 /* Http Header Tools */
 extern int httpHeaderIdByName(const char *name, int name_len, const field_attrs_t * attrs, int end, int mask);
@@ -324,6 +331,7 @@ extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
 extern HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
 extern HttpHdrRange *httpHeaderGetRange(const HttpHeader * hdr);
+extern HttpHdrContRange *httpHeaderGetContRange(const HttpHeader * hdr);
 extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
 int httpHeaderDelFields(HttpHeader * hdr, const char *name);
 /* store report about current header usage and other stats */

@@ -1,8 +1,8 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.1 1998/03/08 18:59:11 rousskov Exp $
+ * $Id: HttpHdrExtField.cc,v 1.2 1998/03/08 21:02:07 rousskov Exp $
  *
- * DEBUG: section 6?    HTTP Header: Extension Field
+ * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
