@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.36 2005/01/28 09:05:25 serassio Exp $
+ * $Id: wccp.cc,v 1.37 2005/01/28 22:54:16 wessels Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -39,7 +39,6 @@
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
-#define WCCP_RESPONSE_SIZE 12448
 #define WCCP_ACTIVE_CACHES 32
 #define WCCP_HASH_SIZE 32
 #define WCCP_BUCKETS 256
@@ -257,7 +256,7 @@ wccpHandleUdp(int sock, void *not_used)
 
     len = comm_udp_recvfrom(sock,
                             (void *) &wccp_i_see_you,
-                            WCCP_RESPONSE_SIZE,
+                            sizeof(wccp_i_see_you),
                             0,
 
                             (struct sockaddr *) &from,
