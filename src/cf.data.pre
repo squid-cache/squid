@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.118 1998/10/09 17:52:54 wessels Exp $
+# $Id: cf.data.pre,v 1.119 1998/10/12 22:02:40 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1907,23 +1907,43 @@ DOC_START
 
 	Usage: cachemgr_passwd password action action ...
 
-	valid actions are:
-		shutdown *
-		info
-		objects
-		vm_objects
-		utilization
-		ipcache
-		fqdncache
-		dns
-		redirector
-		io
-		reply_headers
-		filedescriptors
-		netdb
-		server_list
+	Some valid actions are (see cache manager menu for a full list):
+		5min
+		60min
+		asndb
+		authenticator
+		cbdata
 		client_list
+		comm_incoming
 		config *
+		counters
+		delay
+		digest_stats
+		dns
+		events
+		filedescriptors
+		fqdncache
+		histograms
+		http_headers
+		info
+		io
+		ipcache
+		mem
+		menu
+		netdb
+		non_peers
+		objects
+		pconn
+		peer_select
+		redirector
+		refresh
+		server_list
+		shutdown *
+		store_digest
+		storedir
+		utilization
+		via_headers
+		vm_objects
 
 	* Indicates actions which will not be performed without a
 	  valid password, others can be performed if not listed here.
