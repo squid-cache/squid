@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.478 2000/05/02 20:24:44 hno Exp $
+ * $Id: client_side.cc,v 1.479 2000/05/02 22:32:37 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -142,7 +142,7 @@ clientAclChecklistCreate(const acl_access *acl, const clientHttpRequest *http)
 {
     aclCheck_t *ch;
     ConnStateData *conn = http->conn;
-    ch = aclChecklistCreate(Config.accessList.http,
+    ch = aclChecklistCreate(acl,
 	http->request,
 	conn->ident);
 #if USE_IDENT
@@ -161,7 +161,7 @@ clientAccessCheck(void *data)
 {
     clientHttpRequest *http = data;
     if (checkAccelOnly(http)) {
-	clientAccessCheckDone(0, http);
+	clientAccessCheckDone(ACCESS_ALLOWED, http);
 	return;
     }
     http->acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
