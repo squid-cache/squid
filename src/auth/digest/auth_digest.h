@@ -30,24 +30,15 @@ struct _digest_user_h {
 
 /* the digest_request structure is what follows the http_request around */
 struct _digest_request_h {
-    char *nonceb64;		// = "dcd98b7102dd2f0e8b11d0f600bfb0c093";
-
-    char *cnonce;		// = "0a4f113b";
-
-    char *realm;		// = "testrealm@host.com";
-
-    char *pszPass;		// = "Circle Of Life";
-
-    char *algorithm;		// = "md5";
-
-    char nc[9];			// = "00000001";
-
-    char *pszMethod;		// = "GET";
-
-    char *qop;			// = "auth";
-
-    char *uri;			// = "/dir/index.html";
-
+    char *nonceb64;		/* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
+    char *cnonce;		/* "0a4f113b" */
+    char *realm;		/* = "testrealm@host.com" */
+    char *pszPass;		/* = "Circle Of Life" */
+    char *algorithm;		/* = "md5" */
+    char nc[9];			/* = "00000001" */
+    char *pszMethod;		/* = "GET" */
+    char *qop;			/* = "auth" */
+    char *uri;			/* = "/dir/index.html" */
     char *response;
     struct {
 	unsigned int authinfo_sent:1;

@@ -23,6 +23,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "std-includes.h"
+
 
 void RFCNB_CvtPad_Name(char *name1, char *name2);
 

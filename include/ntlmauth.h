@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.h,v 1.3 2001/02/25 21:49:09 hno Exp $
+ * $Id: ntlmauth.h,v 1.4 2001/03/10 00:55:36 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -133,7 +133,7 @@ typedef struct _lstring {
  * among the different signature types. */
 typedef struct _ntlmhdr {
     char signature[8];		/* "NTLMSSP" */
-    int32_t type;		/* LSWAP(0x1) */
+    int32_t type;		/* One of the NTLM_* types above. */
 } ntlmhdr;
 
 /* Negotiation request sent by client */

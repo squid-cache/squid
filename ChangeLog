@@ -4,7 +4,7 @@ Changes to squid-2.5
 	- Major rewrite of proxy authentication to support other schemes
 	  than basic. First in the line is NTLM support but others can
 	  easily be added (digest is on the way). See Programmers Guide.
-	  (Robert Collins & Chemolli Francesco)
+	  (Robert Collins & Francesco Chemolli)
 	- Reworked how request bodies are passed down to the protocols.
 	  Now all client side processing is inside client_side.c, and
 	  the pass and pump modules is no longer used.

@@ -28,11 +28,7 @@
 
 #include "std-defines.h"
 #include "smblib-common.h"
-#include <sys/types.h>
 #include <unistd.h>
-
-typedef unsigned short uint16;
-typedef unsigned int uint32;
 
 #include "byteorder.h"		/* Hmmm ... hot good */
 

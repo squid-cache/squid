@@ -38,7 +38,7 @@ int RFCNB_saved_errno = 0;
 
 /* global data structures */
 
-static char *RFCNB_Error_Strings[] =
+char *RFCNB_Error_Strings[] =
 {
 
     "RFCNBE_OK: Routine completed successfully.",

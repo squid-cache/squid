@@ -1,5 +1,5 @@
 /*
- * $Id: ntlm.h,v 1.2 2001/01/12 00:37:31 wessels Exp $
+ * $Id: ntlm.h,v 1.3 2001/03/10 00:55:39 hno Exp $
  *
  * AUTHOR: Andy Doran <ad@netbsd.org>
  *
@@ -55,19 +55,6 @@
 #define NTLM_AUTHENTICATE	3
 #define NTLM_ANY          0
 
-/* Header proceeding each request */
-typedef struct ntlmhdr {
-    char signature[8];		/* NTLMSSP */
-    int32_t type;		/* One of NTLM_* from above */
-} ntlmhdr;
-
-/* String header. String data resides at the end of the request */
-typedef struct strhdr {
-    int16_t len;		/* Length in bytes */
-    int16_t maxlen;		/* Allocated space in bytes */
-    int32_t offset;		/* Offset from start of request */
-} strhdr;
-
 /* Negotiation request sent by client */
 struct ntlm_negotiate {
     ntlmhdr hdr;		/* NTLM header */
@@ -102,7 +89,7 @@ struct ntlm_authenticate {
 
 char *ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags);
 void ntlmMakeChallenge(struct ntlm_challenge *chal);
-int ntlmCheckHeader(struct ntlmhdr *hdr, int type);
+int ntlmCheckHeader(ntlmhdr * hdr, int type);
 int ntlmCheckNegotiation(struct ntlm_negotiate *neg);
 int ntlmAuthenticate(struct ntlm_authenticate *neg);
 

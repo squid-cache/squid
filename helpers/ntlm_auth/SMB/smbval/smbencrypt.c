@@ -22,10 +22,8 @@
 
 #include <string.h>
 #include <ctype.h>
-//#include <arpa/inet.h>
 #include <dirent.h>
 #include <string.h>
-//#include <sys/vfs.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 

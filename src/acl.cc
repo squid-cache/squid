@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.250 2001/03/03 10:39:30 hno Exp $
+ * $Id: acl.cc,v 1.251 2001/03/10 00:55:36 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -574,8 +574,7 @@ aclParseTimeSpec(void *curlist)
 		default:
 		    debug(28, 0) ("%s line %d: %s\n",
 			cfg_filename, config_lineno, config_input_line);
-		    debug(28, 0) ("aclParseTimeSpec: Bad Day '%c'\n",
-			*t);
+		    debug(28, 0) ("aclParseTimeSpec: Bad Day '%c'\n", *t);
 		    break;
 		}
 	    }
@@ -1101,8 +1100,7 @@ aclMatchUser(void *proxyauth_acl, char *user)
     Top = splay_splay(user, Top, (SPLAYCMP *) strcmp);
     /* Top=splay_splay(user,Top,(SPLAYCMP *)dumping_strcmp); */
     debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
-	!splayLastResult,
-	Top, (Top ? Top->data : "Unavailable"));
+	!splayLastResult, Top, (Top ? Top->data : "Unavailable"));
     data->names = Top;
     return !splayLastResult;
 }
@@ -1134,8 +1132,7 @@ aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
     while (link) {
 	auth_match = link->data;
 	if (auth_match->acl_data == data) {
-	    debug(28, 4) ("aclCacheMatchAcl: cache hit on acl '%d'\n",
-		data);
+	    debug(28, 4) ("aclCacheMatchAcl: cache hit on acl '%d'\n", data);
 	    return auth_match->matchrv;
 	}
 	link = link->next;
@@ -1184,7 +1181,8 @@ aclCacheMatchFlush(dlink_list * cache)
  */
 static int
 aclMatchProxyAuth(void *data, http_hdr_type headertype,
-    auth_user_request_t * auth_user_request, aclCheck_t * checklist, squid_acl acltype)
+    auth_user_request_t * auth_user_request, aclCheck_t * checklist,
+    squid_acl acltype)
 {
     /* checklist is used to register user name when identified, nothing else */
     const char *proxy_auth;
@@ -1209,7 +1207,14 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
 	 */
 	return 0;
     }
-    if (((proxy_auth == NULL) && (checklist->conn->auth_type == AUTH_UNKNOWN)) || (checklist->conn->auth_type == AUTH_BROKEN)) {
+    /*
+     * a note on proxy_auth logix here:
+     * proxy_auth==NULL -> unauthenticated request || already authenticated connection
+     * so we test for an authenticated connection when we recieve no authentication
+     * header.
+     */
+    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(auth_user_request)))
+	|| (checklist->conn->auth_type == AUTH_BROKEN)) {
 	/* no header or authentication failed/got corrupted - restart */
 	checklist->conn->auth_type = AUTH_UNKNOWN;
 	debug(28, 4) ("aclMatchProxyAuth: broken auth or no proxy_auth header. Requesting auth header.\n");
@@ -1226,11 +1231,14 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
      * not had bungled connection oriented authentication happen on it. */
     debug(28, 9) ("aclMatchProxyAuth: header %s.\n", proxy_auth);
     if (auth_user_request == NULL) {
-	debug(28, 9) ("aclMatchProxyAuth: This is a new request on FD:%d\n", checklist->conn->fd);
-	if ((!checklist->request->auth_user_request) && (checklist->conn->auth_type == AUTH_UNKNOWN)) {
+	debug(28, 9) ("aclMatchProxyAuth: This is a new request on FD:%d\n",
+	    checklist->conn->fd);
+	if ((!checklist->request->auth_user_request)
+	    && (checklist->conn->auth_type == AUTH_UNKNOWN)) {
 	    /* beginning of a new request check */
 	    debug(28, 4) ("aclMatchProxyAuth: no connection authentication type\n");
-	    if (!authenticateValidateUser(auth_user_request = authenticateGetAuthUser(proxy_auth))) {
+	    if (!authenticateValidateUser(auth_user_request =
+		    authenticateGetAuthUser(proxy_auth))) {
 		/* the decode might have left a username for logging, or a message to
 		 * the user */
 		if (authenticateUserRequestUsername(auth_user_request)) {
@@ -1254,7 +1262,9 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
 		authenticateAuthUserRequestLock(auth_user_request);
 	    } else {
 		/* failed connection based authentication */
-		debug(28, 4) ("aclMatchProxyAuth: Aauth user request %d conn-auth user request %d conn type %d authentication failed.\n", auth_user_request, checklist->conn->auth_user_request, checklist->conn->auth_type);
+		debug(28, 4) ("aclMatchProxyAuth: Auth user request %d conn-auth user request %d conn type %d authentication failed.\n",
+		    auth_user_request, checklist->conn->auth_user_request,
+		    checklist->conn->auth_type);
 		return -2;
 	    }
 	}
@@ -1263,8 +1273,10 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
     checklist->auth_user_request = NULL;
     if (!authenticateUserAuthenticated(auth_user_request)) {
 	/* User not logged in. Log them in */
-	authenticateAuthUserRequestSetIp(auth_user_request, checklist->src_addr);
-	authenticateAuthenticateUser(auth_user_request, checklist->request, checklist->conn, headertype);
+	authenticateAuthUserRequestSetIp(auth_user_request,
+	    checklist->src_addr);
+	authenticateAuthenticateUser(auth_user_request, checklist->request,
+	    checklist->conn, headertype);
 	switch (authenticateDirection(auth_user_request)) {
 	case 1:
 	    /* this ACL check is finished. Unlock. */
@@ -1313,8 +1325,9 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
 	/* this ACL check completed */
 	authenticateAuthUserRequestUnlock(auth_user_request);
 	/* check to see if we have matched the user-acl before */
-	return aclCacheMatchAcl(&auth_user_request->auth_user->proxy_match_cache,
-	    acltype, data, authenticateUserRequestUsername(auth_user_request));
+	return aclCacheMatchAcl(&auth_user_request->auth_user->
+	    proxy_match_cache, acltype, data,
+	    authenticateUserRequestUsername(auth_user_request));
     }
     /* this acl check completed */
     authenticateAuthUserRequestUnlock(auth_user_request);
@@ -1666,8 +1679,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     case ACL_REP_MIME_TYPE:
 	if (!checklist->reply)
 	    return 0;
-	header = httpHeaderGetStr(&checklist->reply->header,
-	    HDR_CONTENT_TYPE);
+	header = httpHeaderGetStr(&checklist->reply->header, HDR_CONTENT_TYPE);
 	if (NULL == header)
 	    header = "";
 	return aclMatchRegex(ae->data, header);
@@ -1736,20 +1748,17 @@ aclCheck(aclCheck_t * checklist)
 	if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
 	    ipcache_nbgethostbyname(checklist->request->host,
-		aclLookupDstIPDone,
-		checklist);
+		aclLookupDstIPDone, checklist);
 	    return;
 	} else if (checklist->state[ACL_DST_ASN] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_PENDING;
 	    ipcache_nbgethostbyname(checklist->request->host,
-		aclLookupDstIPforASNDone,
-		checklist);
+		aclLookupDstIPforASNDone, checklist);
 	    return;
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
 	    fqdncache_nbgethostbyaddr(checklist->src_addr,
-		aclLookupSrcFQDNDone,
-		checklist);
+		aclLookupSrcFQDNDone, checklist);
 	    return;
 	} else if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEEDED) {
 	    ia = ipcacheCheckNumeric(checklist->request->host);
@@ -1760,8 +1769,7 @@ aclCheck(aclCheck_t * checklist)
 	    checklist->dst_addr = ia->in_addrs[0];
 	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
 	    fqdncache_nbgethostbyaddr(checklist->dst_addr,
-		aclLookupDstFQDNDone,
-		checklist);
+		aclLookupDstFQDNDone, checklist);
 	    return;
 	} else if (checklist->state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED) {
 	    debug(28, 3)
@@ -1927,9 +1935,7 @@ aclLookupProxyAuthDone(void *data, char *result)
 }
 
 aclCheck_t *
-aclChecklistCreate(const acl_access * A,
-    request_t * request,
-    const char *ident)
+aclChecklistCreate(const acl_access * A, request_t * request, const char *ident)
 {
     int i;
     aclCheck_t *checklist;
@@ -2302,10 +2308,7 @@ aclDumpTimeSpecList(acl_time_data * t)
 	    t->weekbits & ACL_THURSDAY ? 'H' : '-',
 	    t->weekbits & ACL_FRIDAY ? 'F' : '-',
 	    t->weekbits & ACL_SATURDAY ? 'A' : '-',
-	    t->start / 60,
-	    t->start % 60,
-	    t->stop / 60,
-	    t->stop % 60);
+	    t->start / 60, t->start % 60, t->stop / 60, t->stop % 60);
 	wordlistAdd(&W, buf);
 	t = t->next;
     }
@@ -2662,8 +2665,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
 	    arpReq.arp_ha.sa_data[2] & 0xff,
 	    arpReq.arp_ha.sa_data[3] & 0xff,
 	    arpReq.arp_ha.sa_data[4] & 0xff,
-	    arpReq.arp_ha.sa_data[5] & 0xff,
-	    ifr->ifr_name);
+	    arpReq.arp_ha.sa_data[5] & 0xff, ifr->ifr_name);
 	/* Do lookup */
 	*Top = splay_splay(&arpReq.arp_ha.sa_data, *Top, aclArpCompare);
 	/* Return if match, otherwise continue to other interfaces */
@@ -2703,8 +2705,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
 	    arpReq.arp_ha.sa_data[1] == 0 &&
 	    arpReq.arp_ha.sa_data[2] == 0 &&
 	    arpReq.arp_ha.sa_data[3] == 0 &&
-	    arpReq.arp_ha.sa_data[4] == 0 &&
-	    arpReq.arp_ha.sa_data[5] == 0)
+	    arpReq.arp_ha.sa_data[4] == 0 && arpReq.arp_ha.sa_data[5] == 0)
 	    return 0;
 	debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
 	    arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
