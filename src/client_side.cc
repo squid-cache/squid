@@ -51,7 +51,6 @@ void clientAccessCheck(icpState, handler)
     int answer = 1;
     request_t *r = icpState->request;
     aclCheck_t *ch = NULL;
-    squid_acl i;
     if (icpState->aclChecklist == NULL) {
 	icpState->aclChecklist = xcalloc(1, sizeof(aclCheck_t));
 	icpState->aclChecklist->src_addr = icpState->peer.sin_addr;
@@ -66,22 +65,21 @@ void clientAccessCheck(icpState, handler)
     } else {
 	answer = aclCheck(HTTPAccessList, ch);
 	if (ch->state[ACL_DST_IP] == ACL_LOOKUP_NEED) {
+	    ch->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;		/* first */
 	    ipcache_nbgethostbyname(icpState->request->host,
 		icpState->fd,
 		clientLookupDstIPDone,
 		icpState);
-	    ch->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
+	    return;
 	} else if (ch->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEED) {
+	    ch->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;	/* first */
 	    fqdncache_nbgethostbyaddr(icpState->peer.sin_addr,
 		icpState->fd,
 		clientLookupSrcFQDNDone,
 		icpState);
-	    ch->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
+	    return;
 	}
     }
-    for (i = ACL_NONE + 1; i < ACL_ENUM_MAX; i++)
-	if (ch->state[i] == ACL_LOOKUP_PENDING)
-	    return;
     requestUnlink(icpState->aclChecklist->request);
     safe_free(icpState->aclChecklist);
     icpState->aclHandler = NULL;
