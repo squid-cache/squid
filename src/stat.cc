@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.234 1998/04/10 00:39:33 rousskov Exp $
+ * $Id: stat.cc,v 1.235 1998/04/10 00:45:22 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1141,7 +1141,7 @@ statDigestBlob(StoreEntry * sentry)
     statCountersHistograms(sentry);
     storeAppendPrintf(sentry, "\nPeer Digests:\n");
     statPeerSelect(sentry);
-    storeAppendPrintf(sentry, "\nDigest Report:\n");
+    storeAppendPrintf(sentry, "\nLocal Digest:\n");
     storeDigestReport(sentry);
 }
 
