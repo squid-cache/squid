@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.262 2002/04/13 14:11:43 hno Exp $
+dnl  $Id: configure.in,v 1.263 2002/04/13 14:16:04 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AC_INIT(src/main.c)
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 2.6-DEVEL)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.262 $)dnl
+AC_REVISION($Revision: 1.263 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1364,6 +1364,9 @@ AC_CHECK_TYPE(ssize_t, int)
 AC_CHECK_TYPE(off_t, int)
 AC_CHECK_TYPE(mode_t, u_short)
 AC_CHECK_TYPE(fd_mask, int)
+
+AC_CHECK_SIZEOF_SYSTYPE(off_t, 4)
+AC_CHECK_SIZEOF_SYSTYPE(size_t, 4)
 
 dnl Check for special functions
 AC_FUNC_ALLOCA
