@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.178 2001/01/05 09:51:37 adrian Exp $
+ * $Id: enums.h,v 1.179 2001/01/06 11:45:46 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -684,6 +684,7 @@ enum {
  */
 typedef enum {
     CBDATA_UNKNOWN = 0,
+    CBDATA_UNDEF = 0,
     CBDATA_acl_access,
     CBDATA_aclCheck_t,
     CBDATA_clientHttpRequest,
@@ -702,5 +703,5 @@ typedef enum {
     CBDATA_RemovalPurgeWalker,
     CBDATA_store_client,
     CBDATA_storeIOState,
-    CBDATA_FIRST_CUSTOM_TYPE
+    CBDATA_FIRST_CUSTOM_TYPE = 1000
 } cbdata_type;
