@@ -49,11 +49,9 @@ extern void aioUnlink _PARAMS((const char *, AIOCB *, void *));
 extern void aioCheckCallbacks _PARAMS((void));
 
 extern int parseConfigFile _PARAMS((const char *file_name));
-extern int setCacheSwapMax _PARAMS((int size));
 extern void intlistDestroy _PARAMS((intlist **));
 extern void wordlistDestroy _PARAMS((wordlist **));
 extern void configFreeMemory _PARAMS((void));
-extern char *cachemgr_getpassword _PARAMS((cachemgr_passwd **, char *));
 extern void dump_all _PARAMS((void));
 
 extern void cbdataInit _PARAMS((void));
@@ -68,6 +66,7 @@ extern void clientdbInit _PARAMS((void));
 extern void clientdbUpdate _PARAMS((struct in_addr, log_type, protocol_t));
 extern int clientdbDeniedPercent _PARAMS((struct in_addr));
 extern void clientdbDump _PARAMS((StoreEntry *));
+extern CWCB clientWriteComplete;
 
 extern void clientAccessCheck _PARAMS((void *));
 extern void clientAccessCheckDone _PARAMS((int, void *));
@@ -101,7 +100,6 @@ extern void comm_add_close_handler _PARAMS((int fd, PF *, void *));
 extern void comm_remove_close_handler _PARAMS((int fd, PF *, void *));
 extern int comm_udp_send _PARAMS((int fd, const char *host, u_short port, const char *buf, int len));
 extern int comm_udp_sendto _PARAMS((int fd, const struct sockaddr_in *, int size, const char *buf, int len));
-extern int fd_of_first_client _PARAMS((StoreEntry *));
 extern void comm_set_stall _PARAMS((int, int));
 extern void comm_write _PARAMS((int fd,
 	char *buf,
@@ -124,7 +122,6 @@ extern void _db_print _PARAMS(());
 
 
 extern int file_open _PARAMS((const char *path, int mode, FOCB *, void *callback_data));
-extern void file_must_close _PARAMS((int fd));
 extern void file_close _PARAMS((int fd));
 extern int file_write _PARAMS((int fd,
 	char *buf,
@@ -142,18 +139,14 @@ extern int file_walk _PARAMS((int fd, FILE_WALK_HD *, void *, FILE_WALK_LHD *, v
 extern int disk_init _PARAMS((void));
 extern int diskWriteIsComplete _PARAMS((int));
 
-extern void statDns _PARAMS((StoreEntry *));
 extern void dnsShutdownServers _PARAMS((void));
 extern void dnsOpenServers _PARAMS((void));
-extern void dnsEnqueue _PARAMS((void *));
-extern void *dnsDequeue _PARAMS((void));
 extern dnsserver_t *dnsGetFirstAvailable _PARAMS((void));
 extern void dnsStats _PARAMS((StoreEntry *));
 extern void dnsFreeMemory _PARAMS((void));
 
 extern char *squid_error_url _PARAMS((const char *, int, int, const char *, int, const char *));
 extern char *squid_error_request _PARAMS((const char *, int, int));
-extern void errorInitialize _PARAMS((void));
 extern char *access_denied_msg _PARAMS((int, int, const char *, const char *));
 extern char *access_denied_redirect _PARAMS((int, int, const char *, const char *, const char *));
 #if USE_PROXY_AUTH
@@ -179,7 +172,6 @@ extern void fdFreeMemory _PARAMS((void));
 extern void fdDumpOpen _PARAMS((void));
 
 extern void fdstat_init _PARAMS((void));
-extern void fdstat_open _PARAMS((int fd, unsigned int type));
 extern int fdstat_are_n_free_fd _PARAMS((int));
 
 extern fileMap *file_map_create _PARAMS((int));
@@ -195,8 +187,6 @@ extern int fqdncacheUnregister _PARAMS((struct in_addr, void *));
 extern const char *fqdncache_gethostbyaddr _PARAMS((struct in_addr, int flags));
 extern void fqdncache_init _PARAMS((void));
 extern void fqdnStats _PARAMS((StoreEntry *));
-extern void fqdncacheShutdownServers _PARAMS((void));
-extern void fqdncacheOpenServers _PARAMS((void));
 extern void fqdncacheReleaseInvalid _PARAMS((const char *));
 extern const char *fqdnFromAddr _PARAMS((struct in_addr));
 extern int fqdncacheQueueDrain _PARAMS((void));
@@ -240,6 +230,15 @@ extern size_t httpBuildRequestHeader _PARAMS((request_t * request,
 	char *hdr_out,
 	size_t out_sz,
 	int cfd));
+extern int httpAnonAllowed _PARAMS((const char *line));
+extern int httpAnonDenied _PARAMS((const char *line));
+extern char *httpReplyHeader _PARAMS((double ver,
+	http_status status,
+	char *ctype,
+	int clen,
+	time_t lmt,
+	time_t expires));
+
 
 extern void icmpOpen _PARAMS((void));
 extern void icmpClose _PARAMS((void));
@@ -269,7 +268,7 @@ extern void AppendUdp _PARAMS((icpUdpData *));
 extern void icpParseRequestHeaders _PARAMS((clientHttpRequest *));
 extern void icpProcessRequest _PARAMS((int, clientHttpRequest *));
 extern PF icpUdpReply;
-extern CWCB icpSendERRORComplete;
+extern ERCB icpErrorComplete;
 extern STCB icpSendMoreData;
 
 
@@ -280,7 +279,6 @@ extern EVH ipcache_purgelru;
 extern const ipcache_addrs *ipcache_gethostbyname _PARAMS((const char *, int flags));
 extern void ipcacheInvalidate _PARAMS((const char *));
 extern void ipcacheReleaseInvalid _PARAMS((const char *));
-extern void ipcacheOpenServers _PARAMS((void));
 extern void ipcacheShutdownServers _PARAMS((void));
 extern void ipcache_init _PARAMS((void));
 extern void stat_ipcache_get _PARAMS((StoreEntry *));
@@ -303,7 +301,6 @@ extern char mimeGetTransferMode _PARAMS((const char *fn));
 
 extern int mcastSetTtl _PARAMS((int, int));
 extern IPH mcastJoinGroups;
-extern void mcastJoinVizSock _PARAMS((void));
 
 /* Labels for hierachical log file */
 /* put them all here for easier reference when writing a logfile analyzer */
@@ -319,15 +316,11 @@ extern int neighborsUdpPing _PARAMS((request_t *,
 	IRCB * callback,
 	void *data,
 	int *exprep));
-extern void neighborAddDomainPing _PARAMS((const char *, const char *));
-extern void neighborAddDomainType _PARAMS((const char *, const char *, const char *));
 extern void neighborAddAcl _PARAMS((const char *, const char *));
 extern void neighborsUdpAck _PARAMS((int, const char *, icp_common_t *, const struct sockaddr_in *, StoreEntry *, char *, int));
 extern void neighborAdd _PARAMS((const char *, const char *, int, int, int, int, int));
 extern void neighbors_open _PARAMS((int));
-extern void neighborsDestroy _PARAMS((void));
 extern peer *peerFindByName _PARAMS((const char *));
-extern void neighbors_init _PARAMS((void));
 extern peer *getDefaultParent _PARAMS((request_t * request));
 extern peer *getRoundRobinParent _PARAMS((request_t * request));
 extern int neighborUp _PARAMS((const peer * e));
@@ -352,16 +345,13 @@ extern void objcacheStart _PARAMS((int fd, StoreEntry *));
 
 
 extern void peerSelect _PARAMS((request_t *, StoreEntry *, PSC *, PSC *, void *data));
-extern int peerSelectDirect _PARAMS((request_t *));
 extern peer *peerGetSomeParent _PARAMS((request_t *, hier_code *));
-extern int matchInsideFirewall _PARAMS((const char *));
 extern void peerSelectInit _PARAMS((void));
 
 extern void protoDispatch _PARAMS((int, StoreEntry *, request_t *));
 
 extern int protoUnregister _PARAMS((StoreEntry *, request_t *, struct in_addr));
 extern void protoStart _PARAMS((int, StoreEntry *, peer *, request_t *));
-extern void protoCancelTimeout _PARAMS((int fd, StoreEntry *));
 extern int protoAbortFetch _PARAMS((StoreEntry * entry));
 
 
@@ -372,7 +362,6 @@ extern void redirectStats _PARAMS((StoreEntry *));
 extern int redirectUnregister _PARAMS((const char *url, void *));
 extern void redirectFreeMemory _PARAMS((void));
 
-extern void refreshFreeMemory _PARAMS((void));
 extern void refreshAddToList _PARAMS((const char *, int, time_t, int, time_t));
 extern int refreshCheck _PARAMS((const StoreEntry *, const request_t *, time_t delta));
 extern time_t getMaxAge _PARAMS((const char *url));
@@ -384,13 +373,11 @@ extern void shut_down _PARAMS((int));
 
 
 extern void start_announce _PARAMS((void *unused));
-extern void sslStart _PARAMS((int fd, const char *, request_t *, size_t *sz));
+extern void sslStart _PARAMS((int fd, const char *, request_t *, size_t * sz));
 extern void waisStart _PARAMS((request_t *, StoreEntry *));
 extern void storeDirClean _PARAMS((void *unused));
 extern void passStart _PARAMS((int, const char *, request_t *, size_t *));
 extern void identStart _PARAMS((int, ConnStateData *, IDCB * callback));
-extern int httpAnonAllowed _PARAMS((const char *line));
-extern int httpAnonDenied _PARAMS((const char *line));
 
 extern void *pop _PARAMS((Stack *));
 extern int empty_stack _PARAMS((const Stack *));
@@ -401,15 +388,10 @@ extern void stackFreeMemory _PARAMS((Stack *));
 
 extern void stat_init _PARAMS((cacheinfo **, const char *));
 extern void stat_get _PARAMS((const char *req, StoreEntry *));
-extern void log_clear _PARAMS((StoreEntry *));
-extern void log_disable _PARAMS((StoreEntry *));
 extern void log_enable _PARAMS((StoreEntry *));
-extern void log_get_start _PARAMS((StoreEntry *));
-extern void log_status_get _PARAMS((StoreEntry *));
 extern void info_get _PARAMS((StoreEntry *));
 extern void server_list _PARAMS((StoreEntry *));
 extern void parameter_get _PARAMS((StoreEntry *));
-extern void squid_get_start _PARAMS((StoreEntry *));
 
 /* To reduce memory fragmentation, we now store the memory version of an
  * object in fixed size blocks of size PAGE_SIZE and instead of calling 
@@ -443,17 +425,11 @@ extern StoreEntry *storeCreateEntry _PARAMS((const char *, const char *, int, me
 extern void storeSetPublicKey _PARAMS((StoreEntry *));
 extern StoreEntry *storeGetFirst _PARAMS((void));
 extern StoreEntry *storeGetNext _PARAMS((void));
-extern StoreEntry *storeLRU _PARAMS((void));
-extern int storeWalkThrough _PARAMS((int (*proc) _PARAMS((void)), void *data));
-extern EVH storePurgeOld;
 extern void storeComplete _PARAMS((StoreEntry *));
 extern void storeInit _PARAMS((void));
-extern int storeReleaseEntry _PARAMS((StoreEntry *));
 extern int storeClientWaiting _PARAMS((const StoreEntry *));
-extern void storeAbort _PARAMS((StoreEntry *, log_type, const char *, int));
+extern void storeAbort _PARAMS((StoreEntry *, int));
 extern void storeAppend _PARAMS((StoreEntry *, const char *, int));
-extern int storeGetMemSize _PARAMS((void));
-extern int storeGetSwapSize _PARAMS((void));
 extern int storeGetSwapSpace _PARAMS((int));
 extern void storeLockObject _PARAMS((StoreEntry *));
 extern void storeSwapInStart _PARAMS((StoreEntry *, SIH *, void *data));
@@ -501,16 +477,6 @@ extern void storeAppendPrintf _PARAMS(());
 
 extern char *storeSwapFullPath _PARAMS((int, char *));
 extern char *storeSwapSubSubDir _PARAMS((int, char *));
-extern int storeAddSwapDisk _PARAMS((const char *,
-	int size,
-	int l1,
-	int l2,
-	int read_only));
-extern void storeReconfigureSwapDisk _PARAMS((const char *,
-	int size,
-	int l1,
-	int l2,
-	int read_only));
 extern int storeVerifySwapDirs _PARAMS((void));
 extern void storeCreateSwapSubDirs _PARAMS((int));
 extern const char *storeSwapPath _PARAMS((int));
@@ -549,7 +515,6 @@ extern void normal_shutdown _PARAMS((void));
 extern int percent _PARAMS((int, int));
 extern void squid_signal _PARAMS((int sig, void (*func) _PARAMS((int)), int flags));
 extern pid_t readPidFile _PARAMS((void));
-extern void _debug_trap _PARAMS((const char *message));
 extern struct in_addr inaddrFromHostent _PARAMS((const struct hostent * hp));
 extern int intAverage _PARAMS((int, int, int, int));
 extern double doubleAverage _PARAMS((double, double, int, int));
@@ -574,9 +539,14 @@ extern int matchDomainName _PARAMS((const char *d, const char *h));
 extern int urlCheckRequest _PARAMS((const request_t *));
 extern int urlDefaultPort _PARAMS((protocol_t p));
 extern char *urlClean _PARAMS((char *));
+extern char *urlCanonicalClean _PARAMS((const request_t *));
 
 
 extern void useragentOpenLog _PARAMS((void));
 extern void useragentRotateLog _PARAMS((void));
 extern void logUserAgent _PARAMS((const char *, const char *));
 extern peer_t parseNeighborType _PARAMS((const char *s));
+
+extern void errorSend _PARAMS((int fd, ErrorState *));
+extern void errorAppendEntry _PARAMS((StoreEntry *, ErrorState *));
+extern void errorInitialize _PARAMS((void));

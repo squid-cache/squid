@@ -1862,6 +1862,14 @@ DOC_START
 	XXX
 DOC_END
 
+NAME: error_directory
+TYPE: pathname_stat
+LOC: Config.errorDirectory
+DEFAULT: @DEFAULT_ERROR_DIR@
+DOC_START
+	XXX
+DOC_END
+
 NAME: icon_content_type
 TYPE: string
 LOC: Config.icons.content_type

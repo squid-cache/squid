@@ -27,7 +27,6 @@
 
 #define COMM_OK		  (0)
 #define COMM_ERROR	 (-1)
-#define COMM_NO_HANDLER	 (-2)
 #define COMM_NOMESSAGE	 (-3)
 #define COMM_TIMEOUT	 (-4)
 #define COMM_SHUTDOWN	 (-5)
@@ -55,7 +54,6 @@
 #define DISK_OK                   (0)
 #define DISK_ERROR               (-1)
 #define DISK_EOF                 (-2)
-#define DISK_FILE_NOT_FOUND      (-5)
 #define DISK_NO_SPACE_LEFT       (-6)
 
 #define DNS_FLAG_ALIVE          0x01
@@ -72,7 +70,6 @@
 
 #define FQDN_BLOCKING_LOOKUP	0x01
 #define FQDN_LOOKUP_IF_MISS	0x02
-#define FQDN_LOCK_ENTRY		0x04
 
 #define FQDN_MAX_NAMES 5
 
@@ -108,10 +105,6 @@
 #define ANONYMIZER_STANDARD	1
 #define ANONYMIZER_PARANOID	2
 
-#define ERR_MIN ERR_READ_TIMEOUT
-#define ERR_MAX ERR_PROXY_DENIED
-
-
 #define ICP_IDENT_SZ 64
 #define IDENT_NONE 0
 #define IDENT_PENDING 1
@@ -119,7 +112,6 @@
 
 #define IP_BLOCKING_LOOKUP	0x01
 #define IP_LOOKUP_IF_MISS	0x02
-#define IP_LOCK_ENTRY		0x04
 
 #define IPCACHE_AV_FACTOR 1000
 
@@ -138,15 +130,7 @@
 #define ICP_FLAG_HIT_OBJ     0x80000000ul
 #define ICP_FLAG_SRC_RTT     0x40000000ul
 
-#define ICP_COMMON_SZ (sizeof(icp_common_t))
-#define ICP_HDR_SZ (sizeof(icp_common_t)+sizeof(u_num32))
-
-#define ICP_OP_HIGHEST (ICP_OP_END - 1)		/* highest valid opcode */
-
-#define ICP_ERROR_MSGLEN	256	/* max size for string, incl '\0' */
-
 /* Version */
-#define ICP_VERSION_1		1
 #define ICP_VERSION_2		2
 #define ICP_VERSION_3		3
 #define ICP_VERSION_CURRENT	ICP_VERSION_2
@@ -155,17 +139,11 @@
 #define DIRECT_MAYBE 1
 #define DIRECT_YES   2
 
-#define OUTSIDE_FIREWALL 0
-#define INSIDE_FIREWALL  1
-#define NO_FIREWALL      2
-
 #define REDIRECT_AV_FACTOR 1000
 
 #define REDIRECT_NONE 0
 #define REDIRECT_PENDING 1
 #define REDIRECT_DONE 2
-
-#define REFRESH_ICASE 0x01
 
 #define  CONNECT_PORT        443
 
@@ -178,7 +156,6 @@
 #define SM_PAGE_SIZE 4096
 #define DISK_PAGE_SIZE  8192
 
-#define MIN_PENDING 		1
 #define MIN_CLIENT 		1
 
 #define BIT_SET(flag, bit) 	((flag) |= (bit))
@@ -206,7 +183,7 @@
 #define ENTRY_CACHABLE   	(1<<7)
 #define REFRESH_REQUEST   	(1<<6)
 #define RELEASE_REQUEST 	(1<<5)
-#define ABORT_MSG_PENDING 	(1<<4)
+#define ENTRY_UNUSED04	 	(1<<4)
 #define DELAY_SENDING 		(1<<3)
 #define ENTRY_REVALIDATE 	(1<<2)
 #define DELETE_BEHIND   	(1<<1)
@@ -236,17 +213,10 @@
 #define PEER_COUNT_EVENT_PENDING 1
 #define PEER_COUNTING		 2
 #define ICP_AUTH_SIZE (2)	/* size of authenticator field */
-#define ICP_QUERY_SZ (sizeof(icp_query_t))
-#define ICP_HIT_SZ (sizeof(icp_hit_t))
-#define ICP_MISS_SZ (sizeof(icp_miss_t))
-#define ICP_ERROR_SZ (sizeof(icp_error_t))
-#define ICP_SEND_SZ (sizeof(icp_send_t))
-#define ICP_SENDA_SZ (sizeof(icp_senda_t))
-#define ICP_DATAB_SZ (sizeof(icp_datab_t))
-#define ICP_DATA_SZ (sizeof(icp_databe_t))
-#define ICP_MESSAGE_SZ (sizeof(icp_message_t))
-#define ICP_MESSAGE_SZ (sizeof(icp_message_t))
 
 #define ICON_MENU	"anthony-dir.gif"
 #define ICON_DIRUP	"anthony-dirup.gif"
 #define ICON_LINK	"anthony-link.gif"
+
+#define AUTH_MSG_SZ 4096
+#define HTTP_REPLY_BUF_SZ 4096

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.119 1997/07/26 04:48:25 wessels Exp $
+ * $Id: client_side.cc,v 1.120 1997/07/28 06:40:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -129,8 +129,8 @@ clientAccessCheckDone(int answer, void *data)
     clientHttpRequest *http = data;
     ConnStateData *conn = http->conn;
     int fd = conn->fd;
-    char *buf = NULL;
     char *redirectUrl = NULL;
+    ErrorState *err = NULL;
     debug(33, 5) ("clientAccessCheckDone: '%s' answer=%d\n", http->url, answer);
     http->acl_checklist = NULL;
     if (answer) {
@@ -142,21 +142,17 @@ clientAccessCheckDone(int answer, void *data)
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->url);
 	redirectUrl = aclGetDenyInfoUrl(&Config.denyInfoList, AclMatchedName);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_ACCESS_DENIED;
+	err->request = requestLink(http->request);
+	err->src_addr = http->conn->peer.sin_addr;
 	if (redirectUrl) {
-	    http->http_code = 302,
-		buf = access_denied_redirect(http->http_code,
-		http->request->method,
-		http->url,
-		fd_table[fd].ipaddr,
-		redirectUrl);
+	    err->http_status = HTTP_MOVED_TEMPORARILY;
+	    err->redirect_url = xstrdup(redirectUrl);
 	} else {
-	    http->http_code = 400;
-	    buf = access_denied_msg(http->http_code,
-		http->request->method,
-		http->url,
-		fd_table[fd].ipaddr);
+	    err->http_status = HTTP_UNAUTHORIZED;
 	}
-	icpSendERROR(fd, LOG_TCP_DENIED, buf, http, http->http_code);
+	errorSend(fd, err);
     }
 }
 
@@ -406,8 +402,7 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
     debug(33, 3) ("icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
     /* unregister this handler */
     if (entry->store_status == STORE_ABORTED) {
-	debug(33, 3) ("icpHandleIMSReply: ABORTED/%s '%s'\n",
-	    log_tags[entry->mem_obj->abort_code], entry->url);
+	debug(33, 3) ("icpHandleIMSReply: ABORTED '%s'\n", entry->url);
 	/* We have an existing entry, but failed to validate it */
 	if (BIT_SET(entry->flag, ENTRY_REVALIDATE)) {
 	    /* We can't send the old one, so send the abort message */
@@ -416,7 +411,7 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnlockObject(http->old_entry);
 	} else {
 	    /* Its okay to send the old one anyway */
-	    http->log_type = entry->mem_obj->abort_code;
+	    http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
 	    storeUnregister(entry, http);
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
@@ -542,38 +537,29 @@ clientConstructTraceEcho(clientHttpRequest * http)
 void
 clientPurgeRequest(clientHttpRequest * http)
 {
-    char *buf;
     int fd = http->conn->fd;
-    LOCAL_ARRAY(char, msg, 8192);
-    LOCAL_ARRAY(char, line, 256);
+    char *msg;
     StoreEntry *entry;
-    debug(0, 0) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
+    ErrorState *err = NULL;
+    debug(33, 3) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
     if (!Config.onoff.enable_purge) {
-	buf = access_denied_msg(http->http_code = 401,
-	    http->request->method,
-	    http->url,
-	    fd_table[fd].ipaddr);
-	icpSendERROR(fd, LOG_TCP_DENIED, buf, http, http->http_code);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_ACCESS_DENIED;
+	err->request = requestLink(http->request);
+	err->src_addr = http->conn->peer.sin_addr;
+	err->http_status = HTTP_UNAUTHORIZED;
+	errorSend(fd, err);
 	return;
     }
     http->log_type = LOG_TCP_MISS;
     if ((entry = storeGet(http->url)) == NULL) {
-	sprintf(msg, "HTTP/1.0 404 Not Found\r\n");
-	http->http_code = 404;
+	http->http_code = HTTP_NOT_FOUND;
     } else {
 	storeRelease(entry);
-	sprintf(msg, "HTTP/1.0 200 OK\r\n");
-	http->http_code = 200;
+	http->http_code = HTTP_OK;
     }
-    sprintf(line, "Date: %s\r\n", mkrfc1123(squid_curtime));
-    strcat(msg, line);
-    sprintf(line, "Server: Squid/%s\r\n", SQUID_VERSION);
-    strcat(msg, line);
-    strcat(msg, "\r\n");
-    comm_write(fd,
-	msg,
-	strlen(msg),
-	icpSendERRORComplete,
-	http,
-	NULL);
+    msg = httpReplyHeader(1.0, http->http_code, NULL, 0, 0, -1);
+    if (strlen(msg) < 8190)
+	strcat(msg, "\r\n");
+    comm_write(fd, xstrdup(msg), strlen(msg), clientWriteComplete, http, xfree);
 }

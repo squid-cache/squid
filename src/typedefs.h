@@ -71,6 +71,7 @@ typedef struct _AccessLogEntry AccessLogEntry;
 typedef struct _cachemgr_passwd cachemgr_passwd;
 typedef struct _refresh_t refresh_t;
 typedef struct _CommWriteStateData CommWriteStateData;
+typedef struct _ErrorState ErrorState;
 
 typedef void AIOCB _PARAMS((void *, int aio_return, int aio_errno));
 typedef void CWCB _PARAMS((int fd, char *, int size, int errflag, void *data));
@@ -96,3 +97,4 @@ typedef void SIH _PARAMS((void *, int));	/* swap in */
 typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
 typedef void STABH _PARAMS((void *));
+typedef void ERCB _PARAMS((int fd, void *, int size));

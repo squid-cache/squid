@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.179 1997/07/26 04:48:29 wessels Exp $
+ * $Id: http.cc,v 1.180 1997/07/28 06:40:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -208,6 +208,7 @@ static void httpAppendRequestHeader _PARAMS((char *hdr, const char *line, size_t
 static void httpCacheNegatively _PARAMS((StoreEntry *));
 static void httpMakePrivate _PARAMS((StoreEntry *));
 static void httpMakePublic _PARAMS((StoreEntry *));
+static char *httpStatusString _PARAMS((int status));
 static STABH httpAbort;
 
 static void
@@ -244,8 +245,16 @@ httpTimeout(int fd, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
+    ErrorState *err;
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url);
-    storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
+    if (entry->object_len == 0) {
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_READ_TIMEOUT;
+	err->http_status = HTTP_GATEWAY_TIMEOUT;
+	err->request = requestLink(httpState->request);
+	errorAppendEntry(entry, err);
+    }
+    storeAbort(entry, 0);
     comm_close(fd);
 }
 
@@ -562,8 +571,9 @@ httpReadReply(int fd, void *data)
     int bin;
     int clen;
     int off;
+    ErrorState *err;
     if (protoAbortFetch(entry)) {
-	storeAbort(entry, ERR_CLIENT_ABORT, NULL, 0);
+	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     }
@@ -605,21 +615,30 @@ httpReadReply(int fd, void *data)
     }
     if (len < 0) {
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    /* reinstall handlers */
-	    /* XXX This may loop forever */
-	    commSetSelect(fd, COMM_SELECT_READ,
-		httpReadReply, httpState, 0);
+	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
 	} else {
-	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
-	    storeReleaseRequest(entry);
-	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
+	    if (entry->object_len == 0) {
+		err = xcalloc(1, sizeof(ErrorState));
+		err->type = ERR_READ_ERROR;
+		err->errno = errno;
+		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+		err->request = requestLink(httpState->request);
+		errorAppendEntry(entry, err);
+	    }
+	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
 	httpState->eof = 1;
-	storeAbort(entry, ERR_ZERO_SIZE_OBJECT, errno ? xstrerror() : NULL, 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_ZERO_SIZE_OBJECT;
+	err->errno = errno;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->request = requestLink(httpState->request);
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -646,14 +665,18 @@ static void
 httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     HttpStateData *httpState = data;
-    StoreEntry *entry = NULL;
-
-    entry = httpState->entry;
+    StoreEntry *entry = httpState->entry;
+    ErrorState *err;
     debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
-
     if (errflag) {
-	storeAbort(entry, ERR_CONNECT_FAIL, xstrerror(), 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_WRITE_ERROR;
+	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err->errno = errno;
+	err->request = requestLink(httpState->request);
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     } else {
@@ -874,6 +897,7 @@ proxyhttpStart(request_t * orig_request,
     HttpStateData *httpState;
     request_t *request;
     int fd;
+    ErrorState *err;
     debug(11, 3) ("proxyhttpStart: \"%s %s\"\n",
 	RequestMethodStr[orig_request->method], entry->url);
     if (e->options & NEIGHBOR_PROXY_ONLY)
@@ -891,7 +915,12 @@ proxyhttpStart(request_t * orig_request,
 	entry->url);
     if (fd == COMM_ERROR) {
 	debug(11, 4) ("proxyhttpStart: Failed because we're out of sockets.\n");
-	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_SOCKET_FAILURE;
+	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err->errno = errno;
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	return;
     }
     storeLockObject(entry);
@@ -926,12 +955,27 @@ httpConnectDone(int fd, int status, void *data)
     HttpStateData *httpState = data;
     request_t *request = httpState->request;
     StoreEntry *entry = httpState->entry;
+    ErrorState *err;
     if (status == COMM_ERR_DNS) {
 	debug(11, 4) ("httpConnectDone: Unknown host: %s\n", request->host);
-	storeAbort(entry, ERR_DNS_FAIL, dns_error_message, 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_DNS_FAIL;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->dnsserver_msg = xstrdup(dns_error_message);
+	err->request = requestLink(request);
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	storeAbort(entry, ERR_CONNECT_FAIL, xstrerror(), 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_CONNECT_FAIL;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err->errno = errno;
+	err->host = xstrdup(request->host);
+	err->port = request->port;
+	err->request = requestLink(request);
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	if (httpState->neighbor)
 	    peerCheckConnectStart(httpState->neighbor);
 	comm_close(fd);
@@ -946,6 +990,7 @@ httpStart(request_t * request, StoreEntry * entry)
 {
     int fd;
     HttpStateData *httpState;
+    ErrorState *err;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
 	RequestMethodStr[request->method], entry->url);
     /* Create socket. */
@@ -957,7 +1002,13 @@ httpStart(request_t * request, StoreEntry * entry)
 	entry->url);
     if (fd == COMM_ERROR) {
 	debug(11, 4) ("httpStart: Failed because we're out of sockets.\n");
-	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
+	err = xcalloc(1, sizeof(ErrorState));
+	err->type = ERR_SOCKET_FAILURE;
+	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+	err->errno = errno;
+	err->request = requestLink(request);
+	errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
 	return;
     }
     storeLockObject(entry);
@@ -1004,4 +1055,160 @@ httpAbort(void *data)
     HttpStateData *httpState = data;
     debug(11, 1) ("httpAbort: %s\n", httpState->entry->url);
     comm_close(httpState->fd);
+}
+
+static char *
+httpStatusString(int status)
+{
+    char *p = NULL;
+    switch (status) {
+    case 100:
+	p = "Continue";
+	break;
+    case 101:
+	p = "Switching Protocols";
+	break;
+    case 200:
+	p = "OK";
+	break;
+    case 201:
+	p = "Created";
+	break;
+    case 202:
+	p = "Accepted";
+	break;
+    case 203:
+	p = "Non-Authoritative Information";
+	break;
+    case 204:
+	p = "No Content";
+	break;
+    case 205:
+	p = "Reset Content";
+	break;
+    case 206:
+	p = "Partial Content";
+	break;
+    case 300:
+	p = "Multiple Choices";
+	break;
+    case 301:
+	p = "Moved Permanently";
+	break;
+    case 302:
+	p = "Moved Temporarily";
+	break;
+    case 303:
+	p = "See Other";
+	break;
+    case 304:
+	p = "Not Modified";
+	break;
+    case 305:
+	p = "Use Proxy";
+	break;
+    case 400:
+	p = "Bad Request";
+	break;
+    case 401:
+	p = "Unauthorized";
+	break;
+    case 402:
+	p = "Payment Required";
+	break;
+    case 403:
+	p = "Forbidden";
+	break;
+    case 404:
+	p = "Not Found";
+	break;
+    case 405:
+	p = "Method Not Allowed";
+	break;
+    case 406:
+	p = "Not Acceptable";
+	break;
+    case 407:
+	p = "Proxy Authentication Required";
+	break;
+    case 408:
+	p = "Request Time-out";
+	break;
+    case 409:
+	p = "Conflict";
+	break;
+    case 410:
+	p = "Gone";
+	break;
+    case 411:
+	p = "Length Required";
+	break;
+    case 412:
+	p = "Precondition Failed";
+	break;
+    case 413:
+	p = "Request Entity Too Large";
+	break;
+    case 414:
+	p = "Request-URI Too Large";
+	break;
+    case 415:
+	p = "Unsupported Media Type";
+	break;
+    case 500:
+	p = "Internal Server Error";
+	break;
+    case 501:
+	p = "Not Implemented";
+	break;
+    case 502:
+	p = "Bad Gateway";
+	break;
+    case 503:
+	p = "Service Unavailable";
+	break;
+    case 504:
+	p = "Gateway Time-out";
+	break;
+    case 505:
+	p = "HTTP Version not supported";
+	break;
+    default:
+	p = "Unknown";
+	debug(11, 0) ("Unknown HTTP status code: %d\n", status);
+	break;
+    }
+    return p;
+}
+
+char *
+httpReplyHeader(double ver,
+    http_status status,
+    char *ctype,
+    int clen,
+    time_t lmt,
+    time_t expires)
+{
+    LOCAL_ARRAY(char, buf, HTTP_REPLY_BUF_SZ);
+    LOCAL_ARRAY(char, float_buf, 64);
+    int l = 0;
+    int s = HTTP_REPLY_BUF_SZ;
+    /* argh, ../lib/snprintf.c doesn't support '%f' */
+    sprintf(float_buf, "%3.1f", ver);
+    assert(strlen(float_buf) == 3);
+    l += snprintf(buf + l, s - l, "HTTP/%s %d %s\r\n",
+	float_buf,
+	(int) status,
+	httpStatusString(status));
+    l += snprintf(buf + l, s - l, "Server: Squid/%s\r\n", SQUID_VERSION);
+    l += snprintf(buf + l, s - l, "Date: %s\r\n", mkrfc1123(squid_curtime));
+    if (expires >= 0)
+	l += snprintf(buf + l, s - l, "Expires: %s\r\n", mkrfc1123(expires));
+    if (lmt)
+	l += snprintf(buf + l, s - l, "Last-Modified: %s\r\n", mkrfc1123(lmt));
+    if (clen > 0)
+	l += snprintf(buf + l, s - l, "Content-Length: %d\r\n", clen);
+    if (ctype)
+	l += snprintf(buf + l, s - l, "Content-Type: %s\r\n", ctype);
+    return buf;
 }

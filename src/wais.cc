@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.79 1997/07/14 23:45:08 wessels Exp $
+ * $Id: wais.cc,v 1.80 1997/07/28 06:41:07 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -144,7 +144,8 @@ waisTimeout(int fd, void *data)
     WaisStateData *waisState = data;
     StoreEntry *entry = waisState->entry;
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, entry->url);
-    storeAbort(entry, ERR_READ_TIMEOUT, NULL, 0);
+    assert(!ERR_READ_TIMEOUT);
+    storeAbort(entry, 0);
     comm_close(fd);
 }
 
@@ -163,13 +164,15 @@ waisReadReply(int fd, void *data)
     int off;
     int bin;
     if (protoAbortFetch(entry)) {
-	storeAbort(entry, ERR_CLIENT_ABORT, NULL, 0);
+	assert(!ERR_CLIENT_ABORT);
+	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     }
     if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
 	/* we can terminate connection right now */
-	storeAbort(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL, 0);
+	assert(!ERR_NO_CLIENTS);
+	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
     }
@@ -218,11 +221,13 @@ waisReadReply(int fd, void *data)
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
-	    storeAbort(entry, ERR_READ_ERROR, xstrerror(), 0);
+	    assert(!ERR_READ_ERROR);
+	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	storeAbort(entry, ERR_ZERO_SIZE_OBJECT, errno ? xstrerror() : NULL, 0);
+	assert(!ERR_ZERO_SIZE_OBJECT);
+	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
@@ -248,7 +253,8 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
     debug(24, 5) ("waisSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	storeAbort(entry, ERR_CONNECT_FAIL, xstrerror(), 0);
+	assert(!ERR_CONNECT_FAIL);
+	storeAbort(entry, 0);
 	comm_close(fd);
     } else {
 	/* Schedule read reply. */
@@ -303,7 +309,8 @@ waisStart(request_t * request, StoreEntry * entry)
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     if (!Config.Wais.relayHost) {
 	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");
-	storeAbort(entry, ERR_NO_RELAY, NULL, 0);
+	assert(!ERR_NO_RELAY);
+	storeAbort(entry, 0);
 	return;
     }
     fd = comm_open(SOCK_STREAM,
@@ -314,7 +321,8 @@ waisStart(request_t * request, StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(24, 4) ("waisStart: Failed because we're out of sockets.\n");
-	storeAbort(entry, ERR_NO_FDS, xstrerror(), 0);
+	assert(!ERR_SOCKET_FAILURE);
+	storeAbort(entry, 0);
 	return;
     }
     waisState = xcalloc(1, sizeof(WaisStateData));
@@ -342,10 +350,12 @@ waisConnectDone(int fd, int status, void *data)
 {
     WaisStateData *waisState = data;
     if (status == COMM_ERR_DNS) {
-	storeAbort(waisState->entry, ERR_DNS_FAIL, dns_error_message, 0);
+	assert(!ERR_DNS_FAIL);
+	storeAbort(waisState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	storeAbort(waisState->entry, ERR_CONNECT_FAIL, xstrerror(), 0);
+	assert(!ERR_CONNECT_FAIL);
+	storeAbort(waisState->entry, 0);
 	comm_close(fd);
     } else {
 	commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);

@@ -9,7 +9,8 @@ extern cacheinfo *ICPCacheInfo;
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
 extern char *dns_error_message;	/* NULL */
-extern char *log_tags[];
+extern const char *log_tags[];
+extern const char *err_string[];
 extern char *tmp_error_buf;	/* NULL */
 extern char *volatile debug_options;	/* NULL */
 extern char ThisCache[SQUIDHOSTNAMELEN << 1];

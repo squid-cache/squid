@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.277 1997/07/19 01:33:58 wessels Exp $
+ * $Id: store.cc,v 1.278 1997/07/28 06:41:05 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -362,7 +362,6 @@ destroy_MemObject(MemObject * mem)
     meta_data.url_strings -= strlen(mem->log_url);
     safe_free(mem->clients);
     safe_free(mem->reply);
-    safe_free(mem->e_abort_msg);
     safe_free(mem->log_url);
     requestUnlink(mem->request);
     mem->request = NULL;
@@ -558,7 +557,6 @@ storeReleaseRequest(StoreEntry * e)
 int
 storeUnlockObject(StoreEntry * e)
 {
-    MemObject *mem = e->mem_obj;
     e->lock_count--;
     debug(20, 3) ("storeUnlockObject: key '%s' count=%d\n",
 	e->key, e->lock_count);
@@ -571,17 +569,6 @@ storeUnlockObject(StoreEntry * e)
     assert(storePendingNClients(e) == 0);
     if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
 	storeRelease(e);
-    } else if (BIT_TEST(e->flag, ABORT_MSG_PENDING)) {
-	/* This is where the negative cache gets storeAppended */
-	/* Briefly lock to replace content with abort message */
-	e->lock_count++;
-	destroy_MemObjectData(mem);
-	e->object_len = 0;
-	mem->data = new_MemObjectData();
-	storeAppend(e, mem->e_abort_msg, strlen(mem->e_abort_msg));
-	e->object_len = mem->e_current_len = strlen(mem->e_abort_msg);
-	BIT_RESET(e->flag, ABORT_MSG_PENDING);
-	e->lock_count--;
     } else if (storeShouldPurgeMem(e)) {
 	storePurgeMem(e);
     }
@@ -1679,16 +1666,12 @@ storeComplete(StoreEntry * e)
  * entry for releasing 
  */
 void
-storeAbort(StoreEntry * e, log_type abort_code, const char *msg, int cbflag)
+storeAbort(StoreEntry * e, int cbflag)
 {
     MemObject *mem = e->mem_obj;
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
-    safe_free(mem->e_abort_msg);
-    if (msg)
-	mem->e_abort_msg = xstrdup(msg);
-    debug(20, 6) ("storeAbort: %s %s\n", log_tags[abort_code], e->key);
-    mem->abort_code = abort_code;
+    debug(20, 6) ("storeAbort: %s\n", e->key);
     storeNegativeCache(e);
     storeReleaseRequest(e);
     e->store_status = STORE_ABORTED;
@@ -2524,7 +2507,8 @@ storeWriteCleanLogs(void)
 static int
 swapInError(int fd_unused, StoreEntry * entry)
 {
-    storeAbort(entry, ERR_DISK_IO, xstrerror(), 1);
+    debug(20, 0) ("swapInError: %s\n", entry->url);
+    storeAbort(entry, 1);
     return 0;
 }
 
@@ -2799,11 +2783,6 @@ storeMemObjectDump(MemObject * mem)
 	mem->e_swap_buf_len);
     debug(20, 1) ("MemObject->pending_list_size: %d\n",
 	mem->pending_list_size);
-    debug(20, 1) ("MemObject->e_abort_msg: %p %s\n",
-	mem->e_abort_msg,
-	checkNullString(mem->e_abort_msg));
-    debug(20, 1) ("MemObject->abort_code: %d %s\n",
-	mem->abort_code, log_tags[mem->abort_code]);
     debug(20, 1) ("MemObject->e_current_len: %d\n",
 	mem->e_current_len);
     debug(20, 1) ("MemObject->e_lowest_offset: %d\n",

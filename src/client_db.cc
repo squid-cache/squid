@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.15 1997/07/26 04:48:24 wessels Exp $
+ * $Id: client_db.cc,v 1.16 1997/07/28 06:40:52 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -36,7 +36,7 @@ typedef struct _client_info {
     struct client_info *next;
     struct in_addr addr;
     struct {
-	int result_hist[ERR_MAX];
+	int result_hist[LOG_TYPE_MAX];
 	int n_requests;
     } Http, Icp;
 } ClientInfo;
@@ -118,7 +118,7 @@ clientdbDump(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "{Name: %s}\n", fqdnFromAddr(c->addr));
 	storeAppendPrintf(sentry, "{    ICP Requests %d}\n",
 	    c->Icp.n_requests);
-	for (l = LOG_TAG_NONE; l < ERR_MAX; l++) {
+	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
 	    if (c->Icp.result_hist[l] == 0)
 		continue;
 	    storeAppendPrintf(sentry,
@@ -129,7 +129,7 @@ clientdbDump(StoreEntry * sentry)
 	}
 	storeAppendPrintf(sentry, "{    HTTP Requests %d}\n",
 	    c->Http.n_requests);
-	for (l = LOG_TAG_NONE; l < ERR_MAX; l++) {
+	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
 	    if (c->Http.result_hist[l] == 0)
 		continue;
 	    storeAppendPrintf(sentry,
