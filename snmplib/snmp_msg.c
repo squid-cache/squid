@@ -136,7 +136,8 @@ u_char *snmp_msg_Encode(u_char *Buffer, int *BufLenP,
   u_char *MsgPtr;
   int FakeArg = 1024;
 
-   snmplib_debug(4, "Buffer=%x BufLenP=%x, buflen=%d\n",*BufLenP);
+   snmplib_debug(4, "Buffer=%x BufLenP=%x, buflen=%d\n",Buffer, BufLenP,
+		*BufLenP);
   /* Header for the entire thing, with a false, large length */
   bufp = asn_build_header(Buffer, BufLenP, 
 			  (u_char)(ASN_SEQUENCE |
