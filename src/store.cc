@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.299 1997/10/21 16:13:51 wessels Exp $
+ * $Id: store.cc,v 1.300 1997/10/22 17:07:24 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -119,8 +119,6 @@
 #define STORE_LOG_SWAPIN	1
 #define STORE_LOG_SWAPOUT	2
 #define STORE_LOG_RELEASE	3
-
-#define ENTRY_INMEM_SIZE(X) ((X)->inmem_hi - (X)->inmem_lo)
 
 static char *storeLogTags[] =
 {
@@ -388,7 +386,6 @@ destroy_MemObjectData(MemObject * mem)
 {
     debug(20, 3) ("destroy_MemObjectData: destroying %p, %d bytes\n",
 	mem->data, mem->inmem_hi);
-    store_mem_size -= ENTRY_INMEM_SIZE(mem);
     if (mem->data) {
 	memFree(mem->data);
 	mem->data = NULL;
@@ -1033,7 +1030,6 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     if (len) {
 	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n", len, e->key);
 	storeGetMemSpace(len);
-	store_mem_size += len;
 	memAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
     }
