@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.13 1998/01/12 04:29:55 wessels Exp $
+ * $Id: asn.cc,v 1.14 1998/01/12 04:30:35 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -108,7 +108,7 @@ asnMatchIp(void *data, struct in_addr addr)
     lh = ntohl(addr.s_addr);
     debug(53, 4) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
 
-    if (AS_tree_head == 0 || !memcmp(&addr, &no_addr,sizeof(addr)))
+    if (AS_tree_head == 0 || !memcmp(&addr, &no_addr, sizeof(addr)))
 	return 0;
     store_m_int(lh, m_addr);
     rn = rn_match(m_addr, AS_tree_head);
@@ -158,7 +158,7 @@ asnFreeMemory(void)
 {
     debug(0, 0) ("asnFreeMemory: Calling asnCleanup()!\n");
 
-	/* XXX - Cleanup is enough.   */ 
+    /* XXX - Cleanup is enough.   */
 
     asnCleanup();
 }
@@ -246,7 +246,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	while (*s && isspace(*s))
 	    s++;
     }
-	/* XXX why assert that ? */
+    /* XXX why assert that ? */
 #if 0
     assert(e->mem_obj->reply);
 #endif

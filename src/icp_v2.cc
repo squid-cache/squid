@@ -191,9 +191,9 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	debug(12, 5) ("icpHandleIcpV2: OPCODE %s\n", icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
 	    pkt_len = sizeof(icp_common_t) + strlen(url) + 1 + 2 + entry->object_len;
-		reply = icpCreateMessage(ICP_HIT, flags, url, header.reqnum, src_rtt);
-		icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
-		break;
+	    reply = icpCreateMessage(ICP_HIT, flags, url, header.reqnum, src_rtt);
+	    icpUdpSend(fd, &from, reply, LOG_UDP_HIT, icp_request->protocol);
+	    break;
 	}
 	/* if store is rebuilding, return a UDP_HIT, but not a MISS */
 	if (store_rebuilding && opt_reload_hit_only) {

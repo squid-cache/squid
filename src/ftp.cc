@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.186 1998/01/12 04:30:01 wessels Exp $
+ * $Id: ftp.cc,v 1.187 1998/01/12 04:30:38 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -564,7 +564,6 @@ ftpHtmlifyListEntry(char *line, int flags)
 	    *(parts->showname + width - 0) = '\0';
 	}
     }
-    
     switch (parts->type) {
     case 'd':
 	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
