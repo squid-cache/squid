@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.112 1997/12/08 15:14:37 wessels Exp $
+ * $Id: errorpage.cc,v 1.113 1997/12/27 18:15:05 kostas Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -77,6 +77,14 @@ errorInitialize(void)
 	    fatal("failed to fully read error text file");
 	file_close(fd);
     }
+}
+
+void
+errorFree(void)
+{
+    int i;
+    for (i = ERR_NONE + 1; i < ERR_MAX; i++)
+	safe_free(error_text[i]);
 }
 
 /*
@@ -237,7 +245,7 @@ errorConvert(char token, ErrorState * err)
 	break;
     case 'E':
 	if (err->xerrno)
-	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->xerrno, strerror(err->xerrno));
+	    snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->xerrno, strerror(err->xerrno));
 	else
 	    snprintf(buf, CVT_BUF_SZ, "[No Error]");
 	break;

@@ -1,4 +1,4 @@
-#if SQUID_SNMP
+#ifdef SQUID_SNMP
 /*
  * Simple Network Management Protocol (RFC 1067).
  *
@@ -373,7 +373,7 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 	    create_toobig(out_auth, *out_length, reqid, pi);
 	    break;
 	}			/* else FALLTHRU */
-#endif
+#lendif
     case SNMP_ERR_NOACCESS:
     case SNMP_ERR_WRONGTYPE:
     case SNMP_ERR_WRONGLENGTH:
@@ -655,31 +655,6 @@ create_identical(snmp_in, snmp_out, snmp_length, errstat, errindex)
     packet_end = snmp_out + snmp_length;
     return 1;
 }
-
-#ifdef KINETICS
-struct pbuf *
-definitelyGetBuf()
-{
-    struct pbuf *p;
-
-    K_PGET(PT_DATA, p);
-    while (p == 0) {
-#ifdef notdef
-	if (pq->pq_head != NULL) {
-	    K_PDEQ(SPLIMP, pq, p);
-	    if (p)
-		K_PFREE(p);
-	} else if (sendq->pq_head != NULL) {
-	    K_PDEQ(SPLIMP, sendq, p);
-	    if (p)
-		K_PFREE(p);
-	}
-#endif
-	K_PGET(PT_DATA, p);
-    }
-    return p;
-}
-#endif
 
 static int
 check_auth(session, sn_data, length, pp, plen, ueret)
@@ -1015,5 +990,4 @@ bulk_var_op_list(sn_data, length, out_sn_data, out_length, non_repeaters, max_re
     *index = 0;
     return SNMP_ERR_NOERROR;
 }
-
 #endif

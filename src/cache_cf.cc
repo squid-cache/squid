@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.238 1997/12/03 01:29:56 wessels Exp $
+ * $Id: cache_cf.cc,v 1.239 1997/12/27 18:15:07 kostas Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -485,6 +485,12 @@ check_null_cachedir(struct _cacheSwap swap)
     return swap.swapDirs == NULL;
 }
 
+static int
+check_null_string(char *s)
+{
+    return s == NULL;
+}
+
 static void
 parse_cachedir(struct _cacheSwap *swap)
 {
@@ -719,6 +725,7 @@ parse_peeracl(void)
 {
     char *host = NULL;
     char *aclname = NULL;
+
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
     while ((aclname = strtok(NULL, list_sep))) {

@@ -254,6 +254,7 @@ typedef enum {
     PROTO_CACHEOBJ,
     PROTO_ICP,
     PROTO_URN,
+    PROTO_WHOIS,
     PROTO_MAX
 } protocol_t;
 

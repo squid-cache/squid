@@ -16,14 +16,16 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 -- definitions included for standalone agent/managers
 --
 
-mgmt           	OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) 2 }
-mib            	OBJECT IDENTIFIER ::= { mgmt 1 }
-directory      	OBJECT IDENTIFIER ::= { internet 1 }
-experimental   	OBJECT IDENTIFIER ::= { internet 3 }
-private        	OBJECT IDENTIFIER ::= { internet 4 }
-enterprises    	OBJECT IDENTIFIER ::= { private 1 }
-nsfnet		OBJECT IDENTIFIER ::= { experimental 25 } 
-squid 		OBJECT IDENTIFIER ::= { nsfnet 17 }
+--mgmt           	OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) 2 }
+--mib            	OBJECT IDENTIFIER ::= { mgmt 1 }
+--directory      	OBJECT IDENTIFIER ::= { internet 1 }
+--experimental   	OBJECT IDENTIFIER ::= { internet 3 }
+--private        	OBJECT IDENTIFIER ::= { internet 4 }
+--enterprises    	OBJECT IDENTIFIER ::= { private 1 }
+--nsfnet		OBJECT IDENTIFIER ::= { experimental 25 } 
+squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) nsfnet(25) 17 }
+-- squid 		OBJECT IDENTIFIER ::= { nsfnet 17 }
+
 
 --
 -- Major MIB groups

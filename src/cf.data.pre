@@ -2091,4 +2091,13 @@ DOC_START
 		snmp_agent_conf community readwrite all all
 DOC_END
 
+NAME: as_whois_server
+TYPE: string
+LOC: Config.as_whois_server
+DEFAULT: whois.ra.net
+DEFAULT_IF_NONE: whois.ra.net
+DOC_START
+	WHOIS server to query for AS numbers.
+DOC_END
+
 EOF

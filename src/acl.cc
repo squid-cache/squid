@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.122 1997/12/05 21:02:06 wessels Exp $
+ * $Id: acl.cc,v 1.123 1997/12/27 18:15:08 kostas Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -55,6 +55,7 @@ static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
 static void aclCheckCallback(aclCheck_t * checklist, allow_t answer);
 static IPH aclLookupDstIPDone;
+static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
 static int aclReadProxyAuth(struct _acl_proxy_auth *p);
@@ -1272,9 +1273,22 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	}
 	/* NOTREACHED */
     case ACL_SRC_ASN:
-	return asnMatchIp(&acl->data, checklist->src_addr);
+	return asnMatchIp(acl->data, checklist->src_addr);
     case ACL_DST_ASN:
-	assert(0);
+	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
+	if (ia) {
+	    for (k = 0; k < (int) ia->count; k++) {
+		if (asnMatchIp(acl->data, ia->in_addrs[k]))
+		    return 1;
+	    }
+	    return 0;
+	} else if (checklist->state[ACL_DST_ASN] == ACL_LOOKUP_NONE) {
+	    debug(28, 3) ("asnMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+		acl->name, r->host);
+	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_NEEDED;
+	} else {
+	    return asnMatchIp(&acl->data, no_addr);
+	}
 	return 0;
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
@@ -1330,10 +1344,17 @@ aclCheck(aclCheck_t * checklist)
 	debug(28, 3) ("aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
 	match = aclMatchAclList(A->acl_list, checklist);
+
 	if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
 	    ipcache_nbgethostbyname(checklist->request->host,
 		aclLookupDstIPDone,
+		checklist);
+	    return;
+	} else if (checklist->state[ACL_DST_ASN] == ACL_LOOKUP_NEEDED) {
+	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_PENDING;
+	    ipcache_nbgethostbyname(checklist->request->host,
+		aclLookupDstIPforASNDone,
 		checklist);
 	    return;
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
@@ -1403,6 +1424,13 @@ aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
     checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
+static void
+aclLookupDstIPforASNDone(const ipcache_addrs * ia, void *data)
+{
+    aclCheck_t *checklist = data;
+    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_DONE;
+    aclCheck(checklist);
+}
 
 static void
 aclLookupSrcFQDNDone(const char *fqdn, void *data)
@@ -1427,15 +1455,19 @@ aclChecklistCreate(const struct _acl_access *A,
     char *user_agent,
     char *ident)
 {
+    int i;
     aclCheck_t *checklist = xcalloc(1, sizeof(aclCheck_t));;
     cbdataAdd(checklist);
     checklist->access_list = A;
     checklist->request = requestLink(request);
     checklist->src_addr = src_addr;
+    for (i = 0; i < ACL_ENUM_MAX; i++)
+	checklist->state[i] = ACL_LOOKUP_NONE;
     if (user_agent)
 	xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
     if (ident)
 	xstrncpy(checklist->ident, ident, ICP_IDENT_SZ);
+    debug(28, 6) ("aclChecklistCreate: %x\n", checklist);
     return checklist;
 }
 
@@ -1445,6 +1477,7 @@ aclNBCheck(aclCheck_t * checklist, PF callback, void *callback_data)
     checklist->callback = callback;
     checklist->callback_data = callback_data;
     cbdataLock(callback_data);
+    debug(28, 5) ("aclNBCheck: calling aclCheck with %x\n", checklist);
     aclCheck(checklist);
 }
 
@@ -1976,7 +2009,7 @@ decode_eth(const char *asc, char *eth)
 {
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
     if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
-	debug(28, 0)("decode_eth: Invalid ethernet address '%s'\n", asc);
+	debug(28, 0) ("decode_eth: Invalid ethernet address '%s'\n", asc);
 	return 0;		/* This is not valid address */
     }
     eth[0] = (u_char) a1;
@@ -1993,16 +2026,16 @@ aclParseArpData(const char *t)
 {
     LOCAL_ARRAY(char, eth, 256);	/* addr1 ---> eth */
     struct _acl_arp_data *q = xcalloc(1, sizeof(struct _acl_arp_data));
-    debug(28, 5)( "aclParseArpData: %s\n", t);
+    debug(28, 5) ("aclParseArpData: %s\n", t);
     if (sscanf(t, "%[0-9a-f:]", eth) != 1) {
-	debug(28, 0)( "aclParseArpData: Bad ethernet address: '%s'\n", t);
+	debug(28, 0) ("aclParseArpData: Bad ethernet address: '%s'\n", t);
 	safe_free(q);
 	return NULL;
     }
     if (!decode_eth(eth, q->eth)) {
-	debug(28, 0)( "%s line %d: %s\n",
+	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0)( "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '%s'\n", q);
+	debug(28, 0) ("aclParseArpData: Ignoring invalid ARP acl entry: can't parse '%s'\n", q);
 	safe_free(q);
 	return NULL;
     }
@@ -2069,7 +2102,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
 {
     splayNode **Top = dataptr;
     *Top = splay_splay(&eth, *Top, aclArpNetworkCompare);
-    debug(28, 3)( "aclMatchArp: '%s' %s\n",
+    debug(28, 3) ("aclMatchArp: '%s' %s\n",
 	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
@@ -2079,10 +2112,10 @@ aclMatchArp(void *dataptr, struct in_addr c)
 {
     tree **data = dataptr;
     if (tree_srch(data, bintreeArpNetworkCompare, &c)) {
-	debug(28, 3)( "aclMatchArp: '%s' found\n", inet_ntoa(c));
+	debug(28, 3) ("aclMatchArp: '%s' found\n", inet_ntoa(c));
 	return 1;
     }
-    debug(28, 3)( "aclMatchArp: '%s' NOT found\n", inet_ntoa(c));
+    debug(28, 3) ("aclMatchArp: '%s' NOT found\n", inet_ntoa(c));
     return 0;
 }
 #else
@@ -2095,12 +2128,12 @@ aclMatchArp(void *dataptr, struct in_addr c)
     first = data;		/* remember first element, will never be moved */
     prev = NULL;		/* previous element in the list */
     while (data) {
-	debug(28, 3)( "aclMatchArp: ip    = %s\n", inet_ntoa(c));
-	debug(28, 3)( "aclMatchArp: arp   = %x:%x:%x:%x:%x:%x\n",
+	debug(28, 3) ("aclMatchArp: ip    = %s\n", inet_ntoa(c));
+	debug(28, 3) ("aclMatchArp: arp   = %x:%x:%x:%x:%x:%x\n",
 	    data->eth[0], data->eth[1], data->eth[2], data->eth[3],
 	    data->eth[4], data->eth[5]);
 	if (checkARP(c.s_addr, data->eth)) {
-	    debug(28, 3)( "aclMatchArp: returning 1\n");
+	    debug(28, 3) ("aclMatchArp: returning 1\n");
 	    if (prev != NULL) {
 		/* shift the element just found to the second position
 		 * in the list */
@@ -2113,7 +2146,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
 	prev = data;
 	data = data->next;
     }
-    debug(28, 3)( "aclMatchArp: returning 0\n");
+    debug(28, 3) ("aclMatchArp: returning 0\n");
     return 0;
 }
 #endif /* USE_SPLAY_TREE */
@@ -2141,15 +2174,15 @@ checkARP(u_long ip, char *eth)
     struct sockaddr_inarp *sin;
     struct sockaddr_dl *sdl;
     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-	debug(28, 0)( "Can't estimate ARP table size!");
+	debug(28, 0) ("Can't estimate ARP table size!");
 	return 0;
     }
     if ((buf = malloc(needed)) == NULL) {
-	debug(28, 0)( "Can't allocate temporary ARP table!");
+	debug(28, 0) ("Can't allocate temporary ARP table!");
 	return 0;
     }
     if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-	debug(28, 0)( "Can't retrieve ARP table!");
+	debug(28, 0) ("Can't retrieve ARP table!");
 	return 0;
     }
     lim = buf + needed;

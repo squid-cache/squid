@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.71 1997/12/06 19:25:42 wessels Exp $
+ * $Id: url.cc,v 1.72 1997/12/27 18:14:59 kostas Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -53,12 +53,13 @@ const char *ProtocolStr[] =
     "cache_object",
     "icp",
     "urn",
+    "whois",
     "TOTAL"
 };
 
 static int url_acceptable[256];
 static const char *const hex = "0123456789abcdef";
-static request_t * urnParse(method_t method, char *urn);
+static request_t *urnParse(method_t method, char *urn);
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -105,7 +106,7 @@ urlInitialize(void)
 	url_acceptable[i] = 0;
     for (; *good; good++)
 	url_acceptable[(unsigned int) *good] = 1;
-	assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
+    assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
 }
 
 
@@ -173,6 +174,8 @@ urlParseProtocol(const char *s)
 	return PROTO_CACHEOBJ;
     if (strncasecmp(s, "urn", 3) == 0)
 	return PROTO_URN;
+    if (strncasecmp(s, "whois", 5) == 0)
+	return PROTO_WHOIS;
     return PROTO_NONE;
 }
 
@@ -191,6 +194,8 @@ urlDefaultPort(protocol_t p)
 	return 210;
     case PROTO_CACHEOBJ:
 	return CACHE_HTTP_PORT;
+    case PROTO_WHOIS:
+	return 43;
     default:
 	return 0;
     }
@@ -283,7 +288,7 @@ static request_t *
 urnParse(method_t method, char *urn)
 {
     request_t *request = NULL;
-    debug(50,5)("urnParse: %s\n", urn);
+    debug(50, 5) ("urnParse: %s\n", urn);
     request = get_free_request_t();
     request->method = method;
     request->protocol = PROTO_URN;
@@ -302,23 +307,24 @@ urlCanonical(const request_t * request, char *buf)
 	buf = urlbuf;
     if (request->protocol == PROTO_URN) {
 	snprintf(buf, MAX_URL, "urn:%s", request->urlpath);
-    } else switch (request->method) {
-    case METHOD_CONNECT:
-	snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
-	break;
-    default:
-	portbuf[0] = '\0';
-	if (request->port != urlDefaultPort(request->protocol))
-	    snprintf(portbuf, 32, ":%d", request->port);
-	snprintf(buf, MAX_URL, "%s://%s%s%s%s%s",
-	    ProtocolStr[request->protocol],
-	    request->login,
-	    *request->login ? "@" : null_string,
-	    request->host,
-	    portbuf,
-	    request->urlpath);
-	break;
-    }
+    } else
+	switch (request->method) {
+	case METHOD_CONNECT:
+	    snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
+	    break;
+	default:
+	    portbuf[0] = '\0';
+	    if (request->port != urlDefaultPort(request->protocol))
+		snprintf(portbuf, 32, ":%d", request->port);
+	    snprintf(buf, MAX_URL, "%s://%s%s%s%s%s",
+		ProtocolStr[request->protocol],
+		request->login,
+		*request->login ? "@" : null_string,
+		request->host,
+		portbuf,
+		request->urlpath);
+	    break;
+	}
     return buf;
 }
 
@@ -331,31 +337,32 @@ urlCanonicalClean(const request_t * request)
     char *t;
     if (request->protocol == PROTO_URN) {
 	snprintf(buf, MAX_URL, "urn:%s", request->urlpath);
-    } else switch (request->method) {
-    case METHOD_CONNECT:
-	snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
-	break;
-    default:
-	portbuf[0] = '\0';
-	if (request->port != urlDefaultPort(request->protocol))
-	    snprintf(portbuf, 32, ":%d", request->port);
-	loginbuf[0] = '\0';
-	if (strlen(request->login) > 0) {
-	    strcpy(loginbuf, request->login);
-	    if ((t = strchr(loginbuf, ':')))
+    } else
+	switch (request->method) {
+	case METHOD_CONNECT:
+	    snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
+	    break;
+	default:
+	    portbuf[0] = '\0';
+	    if (request->port != urlDefaultPort(request->protocol))
+		snprintf(portbuf, 32, ":%d", request->port);
+	    loginbuf[0] = '\0';
+	    if (strlen(request->login) > 0) {
+		strcpy(loginbuf, request->login);
+		if ((t = strchr(loginbuf, ':')))
+		    *t = '\0';
+		strcat(loginbuf, "@");
+	    }
+	    snprintf(buf, MAX_URL, "%s://%s%s%s%s",
+		ProtocolStr[request->protocol],
+		loginbuf,
+		request->host,
+		portbuf,
+		request->urlpath);
+	    if ((t = strchr(buf, '?')))
 		*t = '\0';
-	    strcat(loginbuf, "@");
+	    break;
 	}
-	snprintf(buf, MAX_URL, "%s://%s%s%s%s",
-	    ProtocolStr[request->protocol],
-	    loginbuf,
-	    request->host,
-	    portbuf,
-	    request->urlpath);
-	if ((t = strchr(buf, '?')))
-	    *t = '\0';
-	break;
-    }
     return buf;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.134 1997/12/06 05:17:03 wessels Exp $
+ * $Id: tools.cc,v 1.135 1997/12/27 18:15:00 kostas Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -396,6 +396,7 @@ normal_shutdown(void)
     netdbFreeMemory();
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
+    asndbFreeMemory();
 #endif
     file_close(0);
     file_close(1);
