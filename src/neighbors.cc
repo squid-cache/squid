@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.120 1997/02/24 23:43:57 wessels Exp $
+ * $Id: neighbors.cc,v 1.121 1997/02/25 00:18:52 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -975,6 +975,7 @@ peerDNSConfigure(int fd, const ipcache_addrs *ia, void *data)
         if (e->type == PEER_MULTICAST)
 	    debug(15, 1, "    Multicast TTL = %d\n", e->mcast_ttl);
     }
+    e->n_addresses = 0;
     if (ia == NULL) {
 	debug(0, 0, "WARNING: DNS lookup for '%s' failed!\n", e->host);
 #ifdef DONT
@@ -983,12 +984,7 @@ peerDNSConfigure(int fd, const ipcache_addrs *ia, void *data)
 #endif
 	return;
     }
-    e->n_addresses = 0;
-    for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
-	e->addresses[j] = ia->in_addrs[j];
-	e->n_addresses++;
-    }
-    if (e->n_addresses < 1) {
+    if ((int) ia->count < 1) {
 	debug(0, 0, "WARNING: No IP address found for '%s'!\n", e->host);
 #ifdef DONT
 	debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
@@ -996,11 +992,11 @@ peerDNSConfigure(int fd, const ipcache_addrs *ia, void *data)
 #endif
 	return;
     }
-    for (j = 0; j < e->n_addresses; j++) {
-	debug(15, 2, "--> IP address #%d: %s\n",
-	    j, inet_ntoa(e->addresses[j]));
+    for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
+	e->addresses[j] = ia->in_addrs[j];
+	debug(15, 2, "--> IP address #%d: %s\n", j, inet_ntoa(e->addresses[j]));
+	e->n_addresses++;
     }
-    e->stats.rtt = 0;
     ap = &e->in_addr;
     memset(ap, '\0', sizeof(struct sockaddr_in));
     ap->sin_family = AF_INET;
