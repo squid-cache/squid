@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.71 1997/12/02 00:17:34 wessels Exp $
+ * $Id: fqdncache.cc,v 1.72 1997/12/02 03:19:28 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -135,13 +135,12 @@ static struct {
     int ghba_calls;		/* # calls to blocking gethostbyaddr() */
 } FqdncacheStats;
 
-static QS fqdncache_compareLastRef;
+static dlink_list lru_list;
+
 static void fqdncache_dnsHandleRead(int, void *);
 static fqdncache_entry *fqdncache_parsebuffer(const char *buf, dnsserver_t *);
-static int fqdncache_purgelru(void);
+static void fqdncache_purgelru(void);
 static void fqdncache_release(fqdncache_entry *);
-fqdncache_entry *fqdncache_GetFirst(void);
-fqdncache_entry *fqdncache_GetNext(void);
 static fqdncache_entry *fqdncache_create(const char *name);
 static void fqdncache_add_to_hash(fqdncache_entry *);
 static void fqdncache_call_pending(fqdncache_entry *);
@@ -219,6 +218,7 @@ fqdncache_release(fqdncache_entry * f)
 	debug(35, 5) ("fqdncache_release: Released FQDN record for '%s'.\n",
 	    f->name);
     }
+    dlinkDelete(&f->lru, &lru_list);
     safe_free(f->name);
     safe_free(f->error_message);
     safe_free(f);
@@ -240,31 +240,6 @@ fqdncache_get(const char *name)
     return f;
 }
 
-fqdncache_entry *
-fqdncache_GetFirst(void)
-{
-    return (fqdncache_entry *) hash_first(fqdn_table);
-}
-
-fqdncache_entry *
-fqdncache_GetNext(void)
-{
-    return (fqdncache_entry *) hash_next(fqdn_table);
-}
-
-static int
-fqdncache_compareLastRef(const void *A, const void *B)
-{
-    fqdncache_entry *const *e1 = A;
-    fqdncache_entry *const *e2 = B;
-    assert(e1 != NULL && e2 != NULL);
-    if ((*e1)->lastref > (*e2)->lastref)
-	return (1);
-    if ((*e1)->lastref < (*e2)->lastref)
-	return (-1);
-    return (0);
-}
-
 static int
 fqdncacheExpiredEntry(const fqdncache_entry * f)
 {
@@ -279,69 +254,28 @@ fqdncacheExpiredEntry(const fqdncache_entry * f)
     return 1;
 }
 
-/* finds the LRU and deletes */
-static int
+static void
 fqdncache_purgelru(void)
 {
-    fqdncache_entry *f = NULL;
-    int local_fqdn_count = 0;
-    int local_fqdn_notpending_count = 0;
+    dlink_node *m;
+    dlink_node *prev = NULL;
+    fqdncache_entry *f;
     int removed = 0;
-    int k;
-    fqdncache_entry **LRU_list = NULL;
-    int LRU_list_count = 0;
-    int LRU_cur_size = meta_data.fqdncache_count;
-
-    LRU_list = xcalloc(LRU_cur_size, sizeof(fqdncache_entry *));
-
-    for (f = fqdncache_GetFirst(); f; f = fqdncache_GetNext()) {
-	if (fqdncacheExpiredEntry(f)) {
-	    fqdncache_release(f);
-	    removed++;
-	    continue;
-	}
-	local_fqdn_count++;
-
-	if (LRU_list_count >= LRU_cur_size) {
-	    /* have to realloc  */
-	    LRU_cur_size += 16;
-	    debug(35, 3) ("fqdncache_purgelru: Have to grow LRU_list to %d. This shouldn't happen.\n",
-		LRU_cur_size);
-	    LRU_list = xrealloc((char *) LRU_list,
-		LRU_cur_size * sizeof(fqdncache_entry *));
-	}
+    for (m = lru_list.tail; m; m = prev) {
+	if (meta_data.fqdncache_count < fqdncache_low)
+	    break;
+	prev = m->prev;
+	f = m->data;
 	if (f->status == FQDN_PENDING)
 	    continue;
 	if (f->status == FQDN_DISPATCHED)
 	    continue;
-	local_fqdn_notpending_count++;
-	LRU_list[LRU_list_count++] = f;
-    }
-
-    debug(35, 3) ("fqdncache_purgelru: fqdncache_count: %5d\n", meta_data.fqdncache_count);
-    debug(35, 3) ("                  actual count : %5d\n", local_fqdn_count);
-    debug(35, 3) ("                   high W mark : %5d\n", fqdncache_high);
-    debug(35, 3) ("                   low  W mark : %5d\n", fqdncache_low);
-    debug(35, 3) ("                   not pending : %5d\n", local_fqdn_notpending_count);
-    debug(35, 3) ("                LRU candidates : %5d\n", LRU_list_count);
-
-    /* sort LRU candidate list */
-    qsort((char *) LRU_list,
-	LRU_list_count,
-	sizeof(fqdncache_entry *),
-	fqdncache_compareLastRef);
-    for (k = 0; k < LRU_list_count; k++) {
-	if (meta_data.fqdncache_count < fqdncache_low)
-	    break;
-	if (LRU_list[k] == NULL)
-	    break;
-	fqdncache_release(LRU_list[k]);
+	if (f->locks != 0)
+	    continue;
+	fqdncache_release(f);
 	removed++;
     }
-
-    debug(35, 3) ("                       removed : %5d\n", removed);
-    safe_free(LRU_list);
-    return (removed > 0) ? 0 : -1;
+    debug(14, 3) ("fqdncache_purgelru: removed %d entries\n", removed);
 }
 
 
@@ -349,18 +283,16 @@ fqdncache_purgelru(void)
 static fqdncache_entry *
 fqdncache_create(const char *name)
 {
-    static fqdncache_entry *new;
-
-    if (meta_data.fqdncache_count > fqdncache_high) {
-	if (fqdncache_purgelru() < 0)
-	    debug(35, 0) ("HELP!! FQDN Cache is overflowing!\n");
-    }
+    static fqdncache_entry *f;
+    if (meta_data.fqdncache_count > fqdncache_high)
+	fqdncache_purgelru();
     meta_data.fqdncache_count++;
-    new = xcalloc(1, sizeof(fqdncache_entry));
-    new->name = xstrdup(name);
-    new->expires = squid_curtime + Config.negativeDnsTtl;
-    fqdncache_add_to_hash(new);
-    return new;
+    f = xcalloc(1, sizeof(fqdncache_entry));
+    f->name = xstrdup(name);
+    f->expires = squid_curtime + Config.negativeDnsTtl;
+    fqdncache_add_to_hash(f);
+    dlinkAdd(f, &f->lru, &lru_list);
+    return f;
 }
 
 static void
@@ -586,7 +518,7 @@ fqdncacheAddPending(fqdncache_entry * f, FQDNH * handler, void *handlerData)
     pending->handlerData = handlerData;
     for (I = &(f->pending_head); *I; I = &((*I)->next));
     *I = pending;
-    if (f->status == IP_PENDING)
+    if (f->status == FQDN_PENDING)
 	fqdncacheNudgeQueue();
 }
 
@@ -691,7 +623,7 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
     dns->dispatch_time = current_time;
     DnsStats.requests++;
     DnsStats.hist[dns->id - 1]++;
-    fqdncacheLockEntry(f);	/* lock while IP_DISPATCHED */
+    fqdncacheLockEntry(f);	/* lock while FQDN_DISPATCHED */
 }
 
 
@@ -779,12 +711,11 @@ void
 fqdnStats(StoreEntry * sentry)
 {
     fqdncache_entry *f = NULL;
+    fqdncache_entry *next = NULL;
     int k;
     int ttl;
-
-    if (!fqdn_table)
+    if (fqdn_table == NULL)
 	return;
-
     storeAppendPrintf(sentry, "{FQDN Cache Statistics:\n");
     storeAppendPrintf(sentry, "{FQDNcache Entries: %d}\n",
 	meta_data.fqdncache_count);
@@ -805,7 +736,9 @@ fqdnStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "}\n\n");
     storeAppendPrintf(sentry, "{FQDN Cache Contents:\n\n");
 
-    for (f = fqdncache_GetFirst(); f; f = fqdncache_GetNext()) {
+    next = (fqdncache_entry *) hash_first(fqdn_table);
+    while ((f = next) != NULL) {
+	next = (fqdncache_entry *) hash_next(fqdn_table);
 	if (f->status == FQDN_PENDING || f->status == FQDN_DISPATCHED)
 	    ttl = 0;
 	else
@@ -877,7 +810,10 @@ fqdncacheQueueDrain(void)
 static void
 fqdncacheLockEntry(fqdncache_entry * f)
 {
-    f->locks++;
+    if (f->locks++ == 0) {
+	dlinkDelete(&f->lru, &lru_list);
+	dlinkAdd(f, &f->lru, &lru_list);
+    }
 }
 
 static void
