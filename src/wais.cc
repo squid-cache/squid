@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.86 1997/10/21 19:38:54 wessels Exp $
+ * $Id: wais.cc,v 1.87 1997/10/23 05:13:46 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -182,28 +182,6 @@ waisReadReply(int fd, void *data)
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
     off = storeLowestMemReaderOffset(entry);
-    if ((clen - off) > READ_AHEAD_GAP) {
-	IOStats.Wais.reads_deferred++;
-	debug(24, 3) ("waisReadReply: Read deferred for Object: %s\n",
-	    entry->url);
-	debug(24, 3) ("                Current Gap: %d bytes\n", clen - off);
-	/* reschedule, so it will automatically reactivated
-	 * when Gap is big enough. */
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    waisReadReply,
-	    waisState, 0);
-	/* don't install read handler while we're above the gap */
-	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
-	    BIT_SET(entry->flag, READ_DEFERRED);
-	}
-	/* dont try reading again for a while */
-	comm_set_stall(fd, 1);
-	return;
-    } else {
-	BIT_RESET(entry->flag, READ_DEFERRED);
-    }
     len = read(fd, buf, 4096);
     fd_bytes(fd, len, FD_READ);
     debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, len);
@@ -290,6 +268,7 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    waisReadReply,
 	    waisState, 0);
+	commSetDefer(fd, protoCheckDeferRead);
     }
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.100 1997/10/22 05:50:29 wessels Exp $
+ * $Id: gopher.cc,v 1.101 1997/10/23 05:13:39 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -684,28 +684,6 @@ gopherReadReply(int fd, void *data)
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
     off = storeLowestMemReaderOffset(entry);
-    if ((clen - off) > READ_AHEAD_GAP) {
-	IOStats.Gopher.reads_deferred++;
-	debug(10, 3) ("gopherReadReply: Read deferred for Object: %s\n",
-	    entry->url);
-	debug(10, 3) ("                Current Gap: %d bytes\n", clen - off);
-	/* reschedule, so it will automatically reactivated when
-	 * Gap is big enough.  */
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    gopherReadReply,
-	    data, 0);
-	/* don't install read timeout until we are below the GAP */
-	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
-	    BIT_SET(entry->flag, READ_DEFERRED);
-	}
-	/* dont try reading again for a while */
-	comm_set_stall(fd, 1);
-	return;
-    } else {
-	BIT_RESET(entry->flag, READ_DEFERRED);
-    }
     buf = get_free_4k_page();
     errno = 0;
     /* leave one space for \0 in gopherToHTML */
@@ -833,6 +811,7 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
     }
     /* Schedule read reply. */
     commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
+    commSetDefer(fd, protoCheckDeferRead);
     if (buf)
 	put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
 }

@@ -1,5 +1,6 @@
+
 /*
- * $Id: comm.cc,v 1.189 1997/10/23 04:01:23 wessels Exp $
+ * $Id: comm.cc,v 1.190 1997/10/23 05:13:37 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -154,6 +155,7 @@ static PF commHandleWrite;
 static int fdIsHttpOrIcp _PARAMS((int fd));
 static IPH commConnectDnsHandle;
 static void commConnectCallback _PARAMS((ConnectStateData * cs, int status));
+static int commDeferRead(int fd);
 
 static struct timeval zero_tv;
 
@@ -628,13 +630,20 @@ comm_udp_sendto(int fd,
 }
 
 void
-comm_set_stall(int fd, int delta)
+commSetDefer(int fd, DEFER * func)
 {
-    if (fd < 0)
-	return;
-    fd_table[fd].stall_until = squid_curtime + delta;
+    fde *F = &fd_table[fd];
+    F->defer_check = func;
 }
 
+static int
+commDeferRead(int fd)
+{
+    fde *F = &fd_table[fd];
+    if (F->defer_check == NULL)
+	return 0;
+    return F->defer_check(fd, F->read_data);
+}
 
 #if HAVE_POLL
 
@@ -661,7 +670,7 @@ comm_poll_incoming(void)
     for (j = 0; j < NHttpSockets; j++) {
 	if (HttpSockets[j] < 0)
 	    continue;
-	if (fd_table[HttpSockets[j]].stall_until > squid_curtime)
+	if (commDeferRead(HttpSockets[j]))
 	    continue;
 	fds[N++] = HttpSockets[j];
     }
@@ -724,7 +733,7 @@ comm_select_incoming(void)
     for (i = 0; i < NHttpSockets; i++) {
 	if (HttpSockets[i] < 0)
 	    continue;
-	if (fd_table[HttpSockets[i]].stall_until > squid_curtime)
+	if (commDeferRead(HttpSockets[i]))
 	    continue;
 	fds[N++] = HttpSockets[i];
     }
@@ -826,7 +835,7 @@ comm_poll(time_t sec)
 	    int events;
 	    events = 0;
 	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler && fd_table[i].stall_until <= squid_curtime)
+	    if (fd_table[i].read_handler && !commDeferRead(i))
 		events |= POLLRDNORM;
 	    if (fd_table[i].write_handler)
 		events |= POLLWRNORM;
@@ -971,9 +980,7 @@ comm_select(time_t sec)
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
 	    /* Check each open socket for a handler. */
-	    if (fd_table[i].stall_until > squid_curtime)
-		continue;
-	    if (fd_table[i].read_handler) {
+	    if (fd_table[i].read_handler && !commDeferRead(i)) {
 		nfds++;
 		FD_SET(i, &readfds);
 	    }

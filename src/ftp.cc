@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.144 1997/10/22 18:51:15 wessels Exp $
+ * $Id: ftp.cc,v 1.145 1997/10/23 05:13:39 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -623,21 +623,6 @@ ftpReadData(int fd, void *data)
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
     off = storeLowestMemReaderOffset(entry);
-    if ((clen - off) > READ_AHEAD_GAP) {
-	IOStats.Ftp.reads_deferred++;
-	debug(9, 3) ("ftpReadData: Read deferred for Object: %s\n",
-	    entry->url);
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, 0);
-	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
-	    BIT_SET(entry->flag, READ_DEFERRED);
-	}
-	/* dont try reading again for a while */
-	comm_set_stall(fd, 1);
-	return;
-    } else {
-	BIT_RESET(entry->flag, READ_DEFERRED);
-    }
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
 	if (!EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
 	    ftpListingStart(ftpState);
@@ -1446,6 +1431,7 @@ ftpReadList(FtpStateData * ftpState)
 	    ftpReadData,
 	    ftpState,
 	    0);
+	commSetDefer(ftpState->data.fd, protoCheckDeferRead);
 	ftpState->state = READING_DATA;
 	return;
     } else if (!EBIT_TEST(ftpState->flags, FTP_TRIED_NLST)) {
@@ -1472,6 +1458,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	    ftpReadData,
 	    ftpState,
 	    0);
+	commSetDefer(ftpState->data.fd, protoCheckDeferRead);
 	ftpState->state = READING_DATA;
     } else {
 	ftpFail(ftpState);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.160 1997/10/20 22:49:42 wessels Exp $
+ * $Id: stat.cc,v 1.161 1997/10/23 05:13:44 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -311,8 +311,6 @@ describeFlags(const StoreEntry * entry)
 	strcat(buf, "HI,");
     if (BIT_TEST(flags, ENTRY_NEGCACHED))
 	strcat(buf, "NG,");
-    if (BIT_TEST(flags, READ_DEFERRED))
-	strcat(buf, "RD,");
     if ((t = strrchr(buf, ',')))
 	*t = '\0';
     return buf;

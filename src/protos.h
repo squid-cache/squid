@@ -99,7 +99,6 @@ extern void comm_add_close_handler _PARAMS((int fd, PF *, void *));
 extern void comm_remove_close_handler _PARAMS((int fd, PF *, void *));
 extern int comm_udp_send _PARAMS((int fd, const char *host, u_short port, const char *buf, int len));
 extern int comm_udp_sendto _PARAMS((int fd, const struct sockaddr_in *, int size, const char *buf, int len));
-extern void comm_set_stall _PARAMS((int, int));
 extern void comm_write _PARAMS((int fd,
 	char *buf,
 	int size,
@@ -108,6 +107,7 @@ extern void comm_write _PARAMS((int fd,
 	FREE *));
 extern void commCallCloseHandlers _PARAMS((int fd));
 extern int commSetTimeout _PARAMS((int fd, int, PF *, void *));
+extern void commSetDefer(int fd, DEFER * func);
 
 extern void _db_init _PARAMS((const char *logfile, const char *options));
 extern void _db_rotate_log _PARAMS((void));
@@ -257,6 +257,7 @@ extern void icpUdpSend _PARAMS((int fd,
 	protocol_t));
 extern PF icpHandleUdp;
 extern PF httpAccept;
+extern DEFER httpAcceptDefer;
 #ifdef SQUID_SNMP
 extern PF snmpAccept;
 #endif /* SQUID_SNMP */
@@ -354,7 +355,7 @@ extern void protoDispatch _PARAMS((int, StoreEntry *, request_t *));
 extern int protoUnregister _PARAMS((StoreEntry *, request_t *, struct in_addr));
 extern void protoStart _PARAMS((int, StoreEntry *, peer *, request_t *));
 extern int protoAbortFetch _PARAMS((StoreEntry * entry));
-
+extern DEFER protoCheckDeferRead;
 
 extern void redirectStart _PARAMS((clientHttpRequest *, RH *, void *));
 extern void redirectOpenServers _PARAMS((void));
