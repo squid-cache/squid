@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.27 1997/04/29 22:12:59 wessels Exp $
+ * $Id: ident.cc,v 1.28 1997/04/30 18:30:55 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -35,7 +35,7 @@
 static void identRequestComplete _PARAMS((int, char *, int, int, void *));
 static PF identReadReply;
 static PF identClose;
-static CCH identConnectDone;
+static CNCB identConnectDone;
 static void identCallback _PARAMS((icpStateData * icpState));
 
 static void
@@ -90,7 +90,6 @@ identConnectDone(int fd, int status, void *data)
     comm_write(fd,
 	reqbuf,
 	strlen(reqbuf),
-	5,			/* timeout */
 	identRequestComplete,
 	icpState,
 	NULL);
@@ -116,6 +115,7 @@ identReadReply(int fd, void *data)
 
     buf[0] = '\0';
     len = read(fd, buf, BUFSIZ);
+    fd_bytes(fd, len, FD_READ);
     if (len > 0) {
 	if ((t = strchr(buf, '\r')))
 	    *t = '\0';

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.145 1997/04/30 03:12:00 wessels Exp $
+ * $Id: comm.cc,v 1.146 1997/04/30 18:30:44 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -120,16 +120,14 @@ int RESERVED_FD = 64;
 #define min(x,y) ((x)<(y)? (x) : (y))
 #define max(a,b) ((a)>(b)? (a) : (b))
 
-struct _RWStateData {
+typedef struct _RWStateData {
     char *buf;
     long size;
     long offset;
-    int timeout;		/* XXX Not used at present. */
-    time_t time;		/* XXX Not used at present. */
-    rw_complete_handler *handler;
+    RWCB *handler;
     void *handler_data;
     void (*free) (void *);
-};
+} RWStateData;
 
 /* GLOBAL */
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
@@ -171,7 +169,7 @@ static void
 RWStateCallbackAndFree(int fd, int code)
 {
     RWStateData *RWState = fd_table[fd].rwstate;
-    rw_complete_handler *callback = NULL;
+    RWCB *callback = NULL;
     fd_table[fd].rwstate = NULL;
     if (RWState == NULL)
 	return;
@@ -313,7 +311,7 @@ comm_listen(int sock)
 }
 
 void
-commConnectStart(int fd, const char *host, u_short port, CCH callback, void *data)
+commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
 {
     ConnectStateData *cs = xcalloc(1, sizeof(ConnectStateData));
     cs->host = xstrdup(host);
@@ -375,28 +373,28 @@ commConnectHandle(int fd, void *data)
     }
 }
 int
-commSetTimeout(int fd, int timeout, PF *handler, void *data)
+commSetTimeout(int fd, int timeout, PF * handler, void *data)
 {
     FD_ENTRY *fde;
     debug(5, 3, "commSetTimeout: FD %d timeout %d\n", fd, timeout);
     if (fd < 0 || fd > Squid_MaxFD)
-        fatal_dump("commSetTimeout: bad FD");
+	fatal_dump("commSetTimeout: bad FD");
     fde = &fd_table[fd];
     if (timeout < 0) {
-        fde->timeout_handler = NULL;
-        fde->timeout_data = NULL;
-        return fde->timeout = 0;
+	fde->timeout_handler = NULL;
+	fde->timeout_data = NULL;
+	return fde->timeout = 0;
     }
     if (shutdown_pending || reread_pending) {
-        /* don't increase the timeout if something pending */
-        if (fde->timeout > 0 && (int) (fde->timeout - squid_curtime) < timeout)
-            return fde->timeout;
+	/* don't increase the timeout if something pending */
+	if (fde->timeout > 0 && (int) (fde->timeout - squid_curtime) < timeout)
+	    return fde->timeout;
     }
     if (handler || data) {
-        fde->timeout_handler = handler;
-        fde->timeout_data = data;
+	fde->timeout_handler = handler;
+	fde->timeout_data = data;
     } else if (fde->timeout_handler == NULL) {
-        debug_trap("commSetTimeout: setting timeout, but no handler");
+	debug_trap("commSetTimeout: setting timeout, but no handler");
     }
     return fde->timeout = squid_curtime + (time_t) timeout;
 }
@@ -524,9 +522,9 @@ comm_close(int fd)
     FD_ENTRY *fde = NULL;
     debug(5, 5, "comm_close: FD %d\n", fd);
     if (fd < 0)
-    	fatal_dump("comm_close: bad FD");
+	fatal_dump("comm_close: bad FD");
     if (fd >= Squid_MaxFD)
-    	fatal_dump("comm_close: bad FD");
+	fatal_dump("comm_close: bad FD");
     fde = &fd_table[fd];
     if (!fde->open)
 	return;
@@ -1063,18 +1061,18 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
 {
     FD_ENTRY *fde;
     if (fd < 0)
-        fatal_dump("commSetSelect: bad FD");
+	fatal_dump("commSetSelect: bad FD");
     fde = &fd_table[fd];
     if (type & COMM_SELECT_READ) {
-        fde->read_handler = handler;
-        fde->read_data = client_data;
+	fde->read_handler = handler;
+	fde->read_data = client_data;
     }
     if (type & COMM_SELECT_WRITE) {
-        fde->write_handler = handler;
-        fde->write_data = client_data;
+	fde->write_handler = handler;
+	fde->write_data = client_data;
     }
     if (timeout)
-        fde->timeout = squid_curtime + timeout;
+	fde->timeout = squid_curtime + timeout;
 }
 
 void
@@ -1194,17 +1192,10 @@ commSetNonBlocking(int fd)
 	debug(50, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
-#if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
-	debug(50, 0, "FD %d: error setting O_NONBLOCK: %s\n", fd, xstrerror());
+    if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
+	debug(50, 0, "commSetNonBlocking: FD %d: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
-#else
-    if (fcntl(fd, F_SETFL, flags | O_NDELAY) < 0) {
-	debug(50, 0, "FD %d: error setting O_NDELAY: %s\n", fd, xstrerror());
-	return COMM_ERROR;
-    }
-#endif
     return 0;
 }
 
@@ -1329,7 +1320,6 @@ checkTimeouts(void)
     FD_ENTRY *fde = NULL;
     PF *callback;
     for (fd = 0; fd <= Biggest_FD; fd++) {
-	debug(5, 5, "checkTimeouts: Checking FD %d\n", fd);
 	fde = &fd_table[fd];
 	if (fde->open != FD_OPEN)
 	    continue;
@@ -1432,7 +1422,7 @@ commHandleWrite(int fd, void *data)
 /* Select for Writing on FD, until SIZE bytes are sent.  Call
  * * HANDLER when complete. */
 void
-comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handler, void *handler_data, void (*free_func) (void *))
+comm_write(int fd, char *buf, int size, RWCB * handler, void *handler_data, void (*free_func) (void *))
 {
     RWStateData *state = NULL;
 
@@ -1448,8 +1438,6 @@ comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handl
     state->size = size;
     state->offset = 0;
     state->handler = handler;
-    state->timeout = timeout;
-    state->time = squid_curtime;
     state->handler_data = handler_data;
     state->free = free_func;
     fd_table[fd].rwstate = state;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.66 1997/04/30 03:12:17 wessels Exp $
+ * $Id: wais.cc,v 1.67 1997/04/30 18:31:05 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -126,7 +126,7 @@ static PF waisReadReply;
 static void waisSendComplete _PARAMS((int, char *, int, int, void *));
 static PF waisSendRequest;
 static void waisConnect _PARAMS((int, const ipcache_addrs *, void *));
-static CCH waisConnectDone;
+static CNCB waisConnectDone;
 
 static void
 waisStateFree(int fd, void *data)
@@ -203,6 +203,7 @@ waisReadReply(int fd, void *data)
 	BIT_RESET(entry->flag, READ_DEFERRED);
     }
     len = read(fd, buf, 4096);
+    fd_bytes(fd, len, FD_READ);
     debug(24, 5, "waisReadReply: FD %d read len:%d\n", fd, len);
     if (len > 0) {
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
@@ -291,7 +292,6 @@ waisSendRequest(int fd, void *data)
     comm_write(fd,
 	buf,
 	len,
-	30,
 	waisSendComplete,
 	(void *) waisState,
 	xfree);

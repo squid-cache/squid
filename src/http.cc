@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.156 1997/04/30 03:12:07 wessels Exp $
+ * $Id: http.cc,v 1.157 1997/04/30 18:30:53 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -587,9 +587,10 @@ httpReadReply(int fd, void *data)
     }
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
+    fd_bytes(fd, len, FD_READ);
     debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
-        commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
+	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -844,7 +845,6 @@ httpSendRequest(int fd, void *data)
     comm_write(fd,
 	buf,
 	len,
-	30,
 	httpSendComplete,
 	httpState,
 	buftype == BUF_TYPE_8K ? put_free_8k_page : xfree);

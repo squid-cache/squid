@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.106 1997/04/29 23:34:52 wessels Exp $
+ * $Id: squid.h,v 1.107 1997/04/30 18:31:00 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -269,9 +269,9 @@ typedef void SIH _PARAMS((void *, int));	/* swap in */
 typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 
 #include "cache_cf.h"
+#include "fd.h"
 #include "comm.h"
 #include "disk.h"
-#include "fd.h"
 #include "debug.h"
 #include "fdstat.h"
 #include "hash.h"

@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.63 1997/04/30 03:44:41 wessels Exp $
+ * $Id: disk.cc,v 1.64 1997/04/30 18:30:46 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -160,11 +160,7 @@ file_open(const char *path, int (*handler) _PARAMS((void)), int mode, void (*cal
 
     if (mode & O_WRONLY)
 	mode |= O_APPEND;
-#if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
-    mode |= O_NONBLOCK;
-#else
-    mode |= O_NDELAY;
-#endif
+    mode |= SQUID_NONBLOCK;
 
     /* Open file */
 #if USE_ASYNC_IO
@@ -205,7 +201,6 @@ file_open_complete(void *data, int fd, int errcode)
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, ctrlp->path);
     fde = &fd_table[fd];
-    xstrncpy(fde->disk.filename, ctrlp->path, SQUID_MAXPATHLEN);
     if (ctrlp->callback)
 	(ctrlp->callback) (ctrlp->callback_data, fd);
     xfree(ctrlp->path);
@@ -241,16 +236,6 @@ file_must_close(int fd)
     commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     file_close(fd);
 }
-
-void
-file_open_fd(int fd, const char *name, unsigned int type)
-{
-    FD_ENTRY *fde = &fd_table[fd];
-    fd_open(fd, type, name);
-    commSetCloseOnExec(fd);
-    xstrncpy(fde->disk.filename, name, SQUID_MAXPATHLEN);
-}
-
 
 /* close a disk file. */
 void
@@ -479,14 +464,14 @@ diskHandleRead(int fd, void *data)
 }
 
 static int
-diskHandleReadComplete(void *data, int retcode, int errcode)
+diskHandleReadComplete(void *data, int len, int errcode)
 {
     disk_ctrl_t *ctrlp = data;
     dread_ctrl *ctrl_dat = ctrlp->data;
     int fd = ctrlp->fd;
-    int len = retcode;
     errno = errcode;
     xfree(data);
+    fd_bytes(fd, len, FD_READ);
     if (len < 0) {
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    commSetSelect(fd,

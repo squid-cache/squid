@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.32 1997/04/30 03:12:03 wessels Exp $
+ * $Id: dns.cc,v 1.33 1997/04/30 18:30:47 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -134,7 +134,7 @@ dnsOpenServer(const char *command)
 	local_addr,
 	0,
 	COMM_NOCLOEXEC,
-	"socket to dnsserver");
+	"dnsserver listen socket");
     if (cfd == COMM_ERROR) {
 	debug(34, 0, "dnsOpenServer: Failed to create dnsserver\n");
 	return -1;
@@ -160,7 +160,7 @@ dnsOpenServer(const char *command)
 	    local_addr,
 	    0,			/* port */
 	    0,			/* flags */
-	    NULL);		/* blocking! */
+	    "squid <-> dnsserver");
 	if (sfd == COMM_ERROR)
 	    return -1;
 	if (comm_connect_addr(sfd, &S) == COMM_ERROR) {
@@ -247,6 +247,7 @@ dnsOpenServers(void)
     int k;
     int dnssocket;
     LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
+    char *s;
 
     dnsFreeMemory();
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));
@@ -272,7 +273,11 @@ dnsOpenServers(void)
 	    dns_child_table[k]->offset = 0;
 	    dns_child_table[k]->ip_inbuf = xcalloc(DNS_INBUF_SZ, 1);
 	    /* update fd_stat */
-	    sprintf(fd_note_buf, "%s #%d", prg, dns_child_table[k]->id);
+	    if ((s = strrchr(prg, '/')))
+		s++;
+	    else
+		s = prg;
+	    sprintf(fd_note_buf, "%s #%d", s, dns_child_table[k]->id);
 	    fd_note(dns_child_table[k]->inpipe, fd_note_buf);
 	    commSetNonBlocking(dns_child_table[k]->inpipe);
 	    debug(34, 3, "dnsOpenServers: 'dns_server' %d started\n", k);
@@ -362,7 +367,6 @@ dnsShutdownServers(void)
 	comm_write(dnsData->outpipe,
 	    xstrdup(shutdown_cmd),
 	    strlen(shutdown_cmd),
-	    0,			/* timeout */
 	    NULL,		/* Handler */
 	    NULL,		/* Handler-data */
 	    xfree);
