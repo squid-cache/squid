@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.225 1998/09/14 22:27:59 wessels Exp $
+ * $Id: structs.h,v 1.226 1998/09/14 22:38:27 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -463,10 +463,10 @@ struct _dread_ctrl {
 };
 
 struct _helper_flags {
-    int alive:1;
-    int busy:1;
-    int closing:1;
-    int shutdown:1;
+    unsigned int alive:1;
+    unsigned int busy:1;
+    unsigned int closing:1;
+    unsigned int shutdown:1;
 };
 
 struct _dnsserver_t {
@@ -706,8 +706,8 @@ struct _HttpReply {
 };
 
 struct _http_state_flags {
-	int proxying:1;
-	int keepalive:1;
+    unsigned int proxying:1;
+    unsigned int keepalive:1;
 };
 
 struct _HttpStateData {
@@ -960,11 +960,11 @@ struct _cd_guess_stats {
 struct _PeerDigest {
     CacheDigest *cd;
     struct {
-	int inited:1;		/* initialized */
-	int usable:1;		/* ready to use */
-	int requested:1;	/* in process of receiving [fresh] digest */
-	int disabled:1;		/* do not use/validate the digest */
-	int init_pending:1;
+	unsigned int inited:1;	/* initialized */
+	unsigned int usable:1;	/* ready to use */
+	unsigned int requested:1;	/* in process of receiving [fresh] digest */
+	unsigned int disabled:1;	/* do not use/validate the digest */
+	unsigned int init_pending:1;
     } flags;
     time_t last_fetch_resp_time;
     time_t last_req_timestamp;
@@ -1012,19 +1012,19 @@ struct _peer {
     domain_type *typelist;
     acl_access *access;
     struct {
-	int proxy_only:1;
-	int no_query:1;
-	int no_digest:1;
-	int default_parent:1;
-	int roundrobin:1;
-	int mcast_responder:1;
-	int closest_only:1;
+	unsigned int proxy_only:1;
+	unsigned int no_query:1;
+	unsigned int no_digest:1;
+	unsigned int default_parent:1;
+	unsigned int roundrobin:1;
+	unsigned int mcast_responder:1;
+	unsigned int closest_only:1;
 #if USE_HTCP
-	int htcp:1;
+	unsigned int htcp:1;
 #endif
-	int no_netdb_exchange:1;
+	unsigned int no_netdb_exchange:1;
 #if DELAY_POOLS
-	int no_delay:1;
+	unsigned int no_delay:1;
 #endif
     } options;
     int weight;
@@ -1035,8 +1035,8 @@ struct _peer {
 	int ttl;
 	int id;
 	struct {
-		int count_event_pending:1;
-		int counting:1;
+	    unsigned int count_event_pending:1;
+	    unsigned int counting:1;
 	} flags;
     } mcast;
     PeerDigest digest;
@@ -1220,22 +1220,22 @@ struct _store_flags {
      * NOTE: These flags are written to swap.state, so think very carefully
      * about deleting or re-assigning!
      */
-    int entry_special:1;
-    int entry_revalidate:1;
-    int delay_sending:1;
-    int release_request:1;
-    int refresh_request:1;
-    int entry_cachable:1;
-    int entry_dispatched:1;
-    int key_private:1;
+    unsigned int entry_special:1;
+    unsigned int entry_revalidate:1;
+    unsigned int delay_sending:1;
+    unsigned int release_request:1;
+    unsigned int refresh_request:1;
+    unsigned int entry_cachable:1;
+    unsigned int entry_dispatched:1;
+    unsigned int key_private:1;
 #ifndef PPNR_WIP
-    int entry_unused_08:1;
+    unsigned int entry_unused_08:1;
 #else
-    int entry_fwd_hdr_wait:1;
+    unsigned int entry_fwd_hdr_wait:1;
 #endif				/* PPNR_WIP */
-    int entry_negcached:1;
-    int entry_validated:1;
-    int entry_bad_length:1;
+    unsigned int entry_negcached:1;
+    unsigned int entry_validated:1;
+    unsigned int entry_bad_length:1;
 };
 
 struct _StoreEntry {
@@ -1367,7 +1367,7 @@ struct _ErrorState {
     ERCB *callback;
     void *callback_data;
     struct {
-	int flag_cbdata:1;
+	unsigned int flag_cbdata:1;
     } flags;
     struct {
 	char *request;
