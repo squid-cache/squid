@@ -104,8 +104,7 @@ init_agent_auth()
 	memcpy( &_agentID[4], hp->h_addr, hp->h_length );
 
 	if( (f = fopen( Config.Snmp.agentInfo, "r+" )) == NULL ) {
-	    debug(49,5) (
-		    "init_agent_auth: Agent not installed properly, cannot open '%s'\n", 
+	    debug(49,5) ("init_agent_auth: Agent not installed properly, cannot open '%s'\n", 
 		    Config.Snmp.agentInfo );
 	    debug(49,5)("init_agent_auth: Create a empty file '%s'. This is used for\n",
 		    snmp_agentinfo );
@@ -151,12 +150,12 @@ long		*ireqid;
     sn_data = snmp_auth_parse(sn_data, &length, sid, &sidlen, &version);
     if (sn_data == NULL){
 	increment_stat( SNMP_STAT_ENCODING_ERRORS );
-	debug(49,5)("snmp_agent_parse: bad auth encoding");
+	debug(49,5)("snmp_agent_parse: bad auth encoding\n");
 	return 0;
     }
     if( version != SNMP_VERSION_1 && version != SNMP_VERSION_2C && version != SNMP_VERSION_2 ) {
 	increment_stat( SNMP_STAT_ENCODING_ERRORS );
-	debug(49,5)("snmp_agent_parse: wrong version");
+	debug(49,5)("snmp_agent_parse: wrong version\n");
 #ifdef linux
 	snmp_inbadversions++;
 #endif
@@ -202,7 +201,7 @@ long		*ireqid;
 	    session->version = SNMP_VERSION_1;
     } else {
 	increment_stat( SNMP_STAT_ENCODING_ERRORS );
-	debug(49,5)("snmp_agent_parse : wrong version");
+	debug(49,5)("snmp_agent_parse : wrong version\n");
 #ifdef linux
 	snmp_inbadversions++;
 #endif
@@ -212,7 +211,7 @@ long		*ireqid;
     sn_data = asn_parse_header(sn_data, &length, &msgtype);
     if (sn_data == NULL){
 	increment_stat( SNMP_STAT_ENCODING_ERRORS );
-	debug(49,5)("snmp_agent_parse: bad header");
+	debug(49,5)("snmp_agent_parse: bad header\n");
 	return 0;
     }
 
@@ -236,13 +235,13 @@ long		*ireqid;
     sn_data = asn_parse_int(sn_data, &length, &type, &reqid, sizeof(reqid));
     if (sn_data == NULL){
 	increment_stat( SNMP_STAT_ENCODING_ERRORS );
-	debug(49,5)("snmp_agent_parse: bad parse of reqid");
+	debug(49,5)("snmp_agent_parse: bad parse of reqid\n");
 	return 0;
     }
     sn_data = asn_parse_int(sn_data, &length, &type, &errstat, sizeof(errstat));
     if (sn_data == NULL){
 	increment_stat( SNMP_STAT_ENCODING_ERRORS );
-	debug(49,5)("snmp_agent_parse: bad parse of errstat");
+	debug(49,5)("snmp_agent_parse: bad parse of errstat\n");
 #ifdef linux
 	snmp_inasnparseerrors++;
 #endif
@@ -251,7 +250,7 @@ long		*ireqid;
     sn_data = asn_parse_int(sn_data, &length, &type, &errindex, sizeof(errindex));
     if (sn_data == NULL){
 	increment_stat( SNMP_STAT_ENCODING_ERRORS );
-	debug(49,5)("bad parse of errindex");
+	debug(49,5)("bad parse of errindex\n");
 	return 0;
     }
     /*
@@ -269,7 +268,7 @@ long		*ireqid;
     out_auth = out_sn_data;
     out_header = snmp_auth_build( out_auth, out_length, session, 1, 0 );
     if (out_header == NULL){
-	debug(49,5)("snmp_agent_parse: snmp_auth_build failed");
+	debug(49,5)("snmp_agent_parse: snmp_auth_build failed\n");
 #ifdef linux
 	snmp_inasnparseerrors++;
 #endif
@@ -278,7 +277,7 @@ long		*ireqid;
 
     out_reqid = asn_build_sequence(out_header, out_length, (u_char)GET_RSP_MSG, 0);
     if (out_reqid == NULL){
-	debug(49,5)("snmp_agent_parse; out_reqid == NULL");
+	debug(49,5)("snmp_agent_parse; out_reqid == NULL\n");
 	return 0;
     }
 
@@ -286,21 +285,21 @@ long		*ireqid;
     /* return identical request id */
     out_sn_data = asn_build_int(out_reqid, out_length, type, &reqid, sizeof(reqid));
     if (out_sn_data == NULL){
-	debug(49,5)("snmp_agent_parse; build reqid failed");
+	debug(49,5)("snmp_agent_parse; build reqid failed\n");
 	return 0;
     }
 
     /* assume that error status will be zero */
     out_sn_data = asn_build_int(out_sn_data, out_length, type, &zero, sizeof(zero));
     if (out_sn_data == NULL){
-	debug(49,5)("snmp_agent_parse: build errstat failed");
+	debug(49,5)("snmp_agent_parse: build errstat failed\n");
 	return 0;
     }
 
     /* assume that error index will be zero */
     out_sn_data = asn_build_int(out_sn_data, out_length, type, &zero, sizeof(zero));
     if (out_sn_data == NULL){
-	debug(49,5)("snmp_agent_parse: build errindex failed");
+	debug(49,5)("snmp_agent_parse: build errindex failed\n");
 	return 0;
     }
 
@@ -356,7 +355,7 @@ long		*ireqid;
 	    out_sn_data = asn_build_sequence(out_header, out_length, GET_RSP_MSG,
 					packet_end - out_reqid);
 	    if (out_sn_data != out_reqid){
-		debug(49,5)("snmp_agent_parse: internal error: header");
+		debug(49,5)("snmp_agent_parse: internal error: header\n");
 		return 0;
 	    }
 
@@ -459,18 +458,18 @@ parse_var_op_list(sn_data, length, out_sn_data, out_length, index, msgtype, acti
     }
     sn_data = asn_parse_header(sn_data, &length, &type);
     if (sn_data == NULL){
-	debug(49,5)("parse_var_op_list: not enough space for varlist");
+	debug(49,5)("parse_var_op_list: not enough space for varlist\n");
 	return PARSE_ERROR;
     }
     if (type != (u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR)){
-	debug(49,5)("parse_var_op_list: wrong type");
+	debug(49,5)("parse_var_op_list: wrong type\n");
 	return PARSE_ERROR;
     }
     headerP = out_sn_data;
     out_sn_data = asn_build_sequence(out_sn_data, &out_length,
 				(u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR), 0);
     if (out_sn_data == (u_char *)NULL){
-    	debug(49,5)("parse_var_op_list: not enough space in output packet");
+    	debug(49,5)("parse_var_op_list: not enough space in output packet\n");
 	return BUILD_ERROR;
     }
     var_list_start = out_sn_data;
@@ -489,7 +488,7 @@ parse_var_op_list(sn_data, length, out_sn_data, out_length, index, msgtype, acti
 		msgtype==SET_REQ_MSG ? session->writeView : session->readView );
 	if (session->version == SNMP_VERSION_1 && statP == NULL
 	    && (msgtype != SET_REQ_MSG || !write_method)){
-	    debug(49,5)("parse_var_op_list: internal v1_error");
+	    debug(49,5)("parse_var_op_list: internal v1_error\n");
 	    return SNMP_ERR_NOSUCHNAME;
 	}
 
@@ -870,12 +869,12 @@ bulk_var_op_list(sn_data, length, out_sn_data, out_length, non_repeaters, max_re
 
     sn_data = asn_parse_header(sn_data, &length, &type);
     if (sn_data == NULL){
-	debug(49,5)("bulk_var_op_list: not enough space for varlist");
+	debug(49,5)("bulk_var_op_list: not enough space for varlist\n");
 	snmp_inasnparseerrors++;
 	return PARSE_ERROR;
     }
     if (type != (u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR)){
-	debug(49,5)("bulk_var_op_list: wrong type");
+	debug(49,5)("bulk_var_op_list: wrong type\n");
 	snmp_inasnparseerrors++;
 	return PARSE_ERROR;
     }
@@ -883,7 +882,7 @@ bulk_var_op_list(sn_data, length, out_sn_data, out_length, non_repeaters, max_re
     out_sn_data = asn_build_sequence(out_sn_data, &out_length,
 				(u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR), 0);
     if (out_sn_data == NULL){
-    	debug(49,5)("bulk_var_op_list: not enough space in output packet");
+    	debug(49,5)("bulk_var_op_list: not enough space in output packet\n");
 	return BUILD_ERROR;
     }
     var_list_start = out_sn_data;
