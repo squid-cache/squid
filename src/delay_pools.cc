@@ -1,9 +1,9 @@
 
 /*
- * $Id: delay_pools.cc,v 1.18 2001/01/12 00:37:16 wessels Exp $
+ * $Id: delay_pools.cc,v 1.19 2001/03/19 06:18:42 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
- * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
+ * AUTHOR: David Luyer <david@luyer.net>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -437,7 +437,7 @@ static void
 delayUpdateClass2(class2DelayPool * class2, delaySpecSet * rates, int incr)
 {
     int restore_bytes;
-    unsigned int i;
+    unsigned char i;		/* depends on 255 + 1 = 0 */
     /* delaySetSpec may be pointer to partial structure so MUST pass by
      * reference.
      */
@@ -448,18 +448,17 @@ delayUpdateClass2(class2DelayPool * class2, delaySpecSet * rates, int incr)
     if ((restore_bytes = rates->individual.restore_bps) == -1)
 	return;
     restore_bytes *= incr;
-    if (class2->individual_255_used)
-	i = 255;
-    else
-	i = 0;
-    for (;;) {
-	assert(i < IND_MAP_SZ);
+    /* i < IND_MAP_SZ is enforced by data type (unsigned chars are all < 256).
+     * this loop starts at 0 or 255 and ends at 254 unless terminated earlier
+     * by finding the end of the map.  note as above that 255 + 1 = 0.
+     */
+    for (i = (class2->individual_255_used ? 255 : 0);; i++) {
 	if (i != 255 && class2->individual_map[i] == 255)
 	    return;
 	if (class2->individual[i] != rates->individual.max_bytes &&
 	    (class2->individual[i] += restore_bytes) > rates->individual.max_bytes)
 	    class2->individual[i] = rates->individual.max_bytes;
-	if (++i == (IND_MAP_SZ - 1))
+	if (i == 254)
 	    return;
     }
 }
@@ -469,8 +468,7 @@ delayUpdateClass3(class3DelayPool * class3, delaySpecSet * rates, int incr)
 {
     int individual_restore_bytes, network_restore_bytes;
     int mpos;
-    unsigned int i, j;
-    char individual_255_used;
+    unsigned char i, j;		/* depends on 255 + 1 = 0 */
     /* delaySetSpec may be pointer to partial structure so MUST pass by
      * reference.
      */
@@ -486,18 +484,34 @@ delayUpdateClass3(class3DelayPool * class3, delaySpecSet * rates, int incr)
 	return;
     individual_restore_bytes *= incr;
     network_restore_bytes *= incr;
-    for (i = 0; i < ((class3->network_255_used) ? NET_MAP_SZ : NET_MAP_SZ - 1); ++i) {
-	assert(i < NET_MAP_SZ);
+    /* i < NET_MAP_SZ is enforced by data type (unsigned chars are all < 256).
+     * this loop starts at 0 or 255 and ends at 254 unless terminated earlier
+     * by finding the end of the map.  note as above that 255 + 1 = 0.
+     */
+    for (i = (class3->network_255_used ? 0 : 255);; ++i) {
 	if (i != 255 && class3->network_map[i] == 255)
 	    return;
 	if (individual_restore_bytes != -incr) {
 	    mpos = i << 8;
-	    individual_255_used = class3->individual_255_used[i / 8] & (1 << (i % 8));
-	    for (j = 0; j < ((individual_255_used) ? IND_MAP_SZ : IND_MAP_SZ - 1); ++j, ++mpos) {
-		assert(i < NET_MAP_SZ);
-		assert(j < IND_MAP_SZ);
-		if (j != 255 && class3->individual_map[i][j] == 255)
+	    /* this is not as simple as the outer loop as mpos doesn't wrap like
+	     * i and j do.  so the net 255 increment is done as a separate special
+	     * case.  the alternative would be overlapping a union of two chars on
+	     * top of a 16-bit unsigned int, but that wouldn't really be worth the
+	     * effort.
+	     */
+	    for (j = 0;; ++j, ++mpos) {
+		if (class3->individual_map[i][j] == 255)
 		    break;
+		assert(mpos < C3_IND_SZ);
+		if (class3->individual[mpos] != rates->individual.max_bytes &&
+		    (class3->individual[mpos] += individual_restore_bytes) >
+		    rates->individual.max_bytes)
+		    class3->individual[mpos] = rates->individual.max_bytes;
+		if (j == 254)
+		    break;
+	    }
+	    if (class3->individual_255_used[i / 8] & (1 << (i % 8))) {
+		mpos |= 255;	/* this will set mpos to network 255 */
 		assert(mpos < C3_IND_SZ);
 		if (class3->individual[mpos] != rates->individual.max_bytes &&
 		    (class3->individual[mpos] += individual_restore_bytes) >
@@ -510,7 +524,7 @@ delayUpdateClass3(class3DelayPool * class3, delaySpecSet * rates, int incr)
 	    (class3->network[i] += network_restore_bytes) >
 	    rates->network.max_bytes)
 	    class3->network[i] = rates->network.max_bytes;
-	if (++i == (NET_MAP_SZ - 1))
+	if (i == 254)
 	    return;
     }
 }
