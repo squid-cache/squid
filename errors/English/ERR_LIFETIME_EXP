@@ -19,3 +19,4 @@ Connection Lifetime Expired
 <P>
 Squid has terminated the request because it has exceeded the maximum
 connection lifetime.
+</P>

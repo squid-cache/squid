@@ -21,4 +21,5 @@ and then received this reply
 This might be caused by an FTP URL with an absolute path (which does
 not comply with RFC 1738).  If this is the cause, then the file
 can be found at <A HREF="%B">%B</A>.
+</P>
 

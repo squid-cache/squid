@@ -20,3 +20,4 @@ Forwarding Denied.
 This cache will not forward your request because it is trying to enforce a
 sibling relationship.  Perhaps the client at %i is a cache which has been
 misconfigured.
+</P>
