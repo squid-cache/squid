@@ -448,7 +448,7 @@ storeGetNextFile(rebuild_dir * d, int *sfileno, int *size)
 	    }
 	    d->entry = readdir(d->td);	/* skip . and .. */
 	    d->entry = readdir(d->td);
-	    if (errno == ENOENT)
+	    if (d->entry == NULL && errno == ENOENT)
 		debug(20, 1) ("storeGetNextFile: directory does not exist!.\n");
 	    debug(20, 3) ("storeGetNextFile: Directory %s\n", d->fullpath);
 	}
