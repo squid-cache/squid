@@ -22,6 +22,9 @@ struct _ntlm_user {
 };
 
 struct _ntlm_request {
+    struct {
+        unsigned int credentials_ok:2;  /*0=unchecked,1=ok,2=failed */
+    } flags;
     /* what negotiate string did the client use? */
     char *ntlmnegotiate;
     /* what challenge did we give the client? */

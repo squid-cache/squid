@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.3 2001/08/03 15:13:10 adrian Exp $
+ * $Id: auth_digest.cc,v 1.4 2001/09/03 10:33:03 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -619,7 +619,8 @@ authDigestConfigured()
 int
 authDigestAuthenticated(auth_user_request_t * auth_user_request)
 {
-    if (auth_user_request->auth_user->flags.credentials_ok == 1)
+    digest_user_h *digest_user = auth_user_request->auth_user->scheme_data;
+    if (digest_user->flags.credentials_ok == 1)
 	return 1;
     else
 	return 0;
@@ -641,19 +642,20 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
     assert(auth_user_request->auth_user != NULL);
     auth_user = auth_user_request->auth_user;
 
-    /* if the check has corrupted the user, just return */
-    if (auth_user_request->auth_user->flags.credentials_ok == 3) {
-	return;
-    }
     assert(auth_user->scheme_data != NULL);
     digest_user = auth_user->scheme_data;
+
+     /* if the check has corrupted the user, just return */
+    if (digest_user->flags.credentials_ok == 3) {
+	return;
+    }
 
     assert(auth_user_request->scheme_data != NULL);
     digest_request = auth_user_request->scheme_data;
 
     /* do we have the HA1 */
     if (!digest_user->HA1created) {
-	auth_user_request->auth_user->flags.credentials_ok = 2;
+	digest_user->flags.credentials_ok = 2;
 	return;
     }
     if (digest_request->nonce == NULL) {
@@ -661,8 +663,10 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
 	/* TODO: record breaks in authentication at the request level 
 	 * This is probably best done with support changes at the auth_rewrite level -RBC
 	 * and can wait for auth_rewrite V2.
+	 * RBC 20010902 further note: flags.credentials ok is now a local scheme
+	 * flag, so we can move this to the request level at any time.
 	 */
-	auth_user->flags.credentials_ok = 3;
+	digest_user->flags.credentials_ok = 3;
 	return;
     }
     DigestCalcHA1(digest_request->algorithm, NULL, NULL, NULL,
@@ -677,10 +681,10 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
 	"squid is = '%s'\n", digest_request->response, Response);
 
     if (strcasecmp(digest_request->response, Response)) {
-	auth_user->flags.credentials_ok = 3;
+	digest_user->flags.credentials_ok = 3;
 	return;
     }
-    auth_user->flags.credentials_ok = 1;
+    digest_user->flags.credentials_ok = 1;
     /* password was checked and did match */
     debug(29, 4) ("authenticateDigestAuthenticateuser: user '%s' validated OK\n",
 	digest_user->username);
@@ -695,8 +699,9 @@ int
 authenticateDigestDirection(auth_user_request_t * auth_user_request)
 {
     digest_request_h *digest_request;
-/* null auth_user is checked for by authenticateDirection */
-    switch (auth_user_request->auth_user->flags.credentials_ok) {
+    digest_user_h *digest_user = auth_user_request->auth_user->scheme_data;
+    /* null auth_user is checked for by authenticateDirection */
+    switch (digest_user->flags.credentials_ok) {
     case 0:			/* not checked */
 	return -1;
     case 1:			/* checked & ok */
@@ -831,7 +836,7 @@ authenticateDigestHandleReply(void *data, char *reply)
     digest_request = auth_user_request->scheme_data;
     digest_user = auth_user_request->auth_user->scheme_data;
     if (reply && (strncasecmp(reply, "ERR", 3) == 0))
-	auth_user_request->auth_user->flags.credentials_ok = 3;
+	digest_user->flags.credentials_ok = 3;
     else {
 	CvtBin(reply, digest_user->HA1);
 	digest_user->HA1created = 1;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.28 2001/08/29 14:57:34 robertc Exp $
+ * $Id: authenticate.cc,v 1.29 2001/09/03 10:33:02 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -467,7 +467,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
     if (proxy_auth && conn->auth_user_request &&
 	authenticateUserAuthenticated(conn->auth_user_request) &&
 	strcmp(proxy_auth, authscheme_list[conn->auth_user_request->auth_user->auth_module - 1].authConnLastHeader(conn->auth_user_request))) {
-	debug(28, 1) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %x, Current user '%s' proxy_auth %s\n", conn->auth_user_request, authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
+	debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %x, Current user '%s' proxy_auth %s\n", conn->auth_user_request, authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
 	/* remove this request struct - the link is already authed and it can't be to 
 	 * reauth.
 	 */

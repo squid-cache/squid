@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.258 2001/08/21 05:54:13 wessels Exp $
+ * $Id: acl.cc,v 1.259 2001/09/03 10:33:02 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1844,14 +1844,21 @@ static void
 aclCheckCallback(aclCheck_t * checklist, allow_t answer)
 {
     debug(28, 3) ("aclCheckCallback: answer=%d\n", answer);
+    /* During reconfigure, we can end up not finishing call sequences into the auth code */
+    if (checklist->auth_user_request) {
+	/* the checklist lock */
+	authenticateAuthUserRequestUnlock(checklist->auth_user_request);
+	/* it might have been connection based */
+	assert(checklist->conn);
+	checklist->conn->auth_user_request = NULL;
+	checklist->conn->auth_type = AUTH_BROKEN;
+	checklist->auth_user_request = NULL;
+    }
     if (cbdataValid(checklist->callback_data))
 	checklist->callback(answer, checklist->callback_data);
     cbdataUnlock(checklist->callback_data);
     checklist->callback = NULL;
     checklist->callback_data = NULL;
-    /* XXX: this assert is here to check for misbehaved acl authentication code. 
-     * It can probably go sometime soon. */
-    assert(checklist->auth_user_request == NULL);
     aclChecklistFree(checklist);
 }
 
@@ -1914,21 +1921,19 @@ static void
 aclLookupProxyAuthDone(void *data, char *result)
 {
     aclCheck_t *checklist = data;
-    auth_user_request_t *auth_user_request;
     checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
     if (result != NULL)
 	fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
-    auth_user_request = checklist->auth_user_request;
-    if (!authenticateValidateUser(auth_user_request) || checklist->conn == NULL) {
+    if (!authenticateValidateUser(checklist->auth_user_request) || checklist->conn == NULL) {
 	/* credentials could not be checked either way
 	 * restart the whole process */
 	/* OR the connection was closed, there's no way to continue */
-	checklist->conn->auth_user_request = NULL;
-	checklist->conn->auth_type = AUTH_BROKEN;
+	authenticateAuthUserRequestUnlock(checklist->auth_user_request);
+	if (checklist->conn) {
+	    checklist->conn->auth_user_request = NULL;
+	    checklist->conn->auth_type = AUTH_BROKEN;
+	}
 	checklist->auth_user_request = NULL;
-	authenticateAuthUserRequestUnlock(auth_user_request);
-	aclCheck(checklist);
-	return;
     }
     aclCheck(checklist);
 }
