@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.202 1997/01/24 22:20:08 wessels Exp $
+ * $Id: store.cc,v 1.203 1997/01/31 20:14:53 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -280,7 +280,7 @@ static int store_buckets;
 int store_maintain_rate;
 static int store_maintain_buckets;
 int scan_revolutions;
-static unsigned int *MaintBucketsOrder;
+static unsigned int *MaintBucketsOrder = NULL;
 
 static MemObject *
 new_MemObject(void)
@@ -1927,7 +1927,7 @@ storeGetSwapSpace(int size)
     int i;
     StoreEntry **LRU_list;
     hash_link *link_ptr = NULL, *next = NULL;
-    unsigned int kb_size = ((size + 1023) >> 10);
+    int kb_size = ((size + 1023) >> 10);
 
     if (store_swap_size + kb_size <= store_swap_low)
 	fReduceSwap = 0;
@@ -2026,18 +2026,15 @@ storeGetSwapSpace(int size)
     safe_free(LRU_list);
 
     if ((store_swap_size + kb_size > store_swap_high)) {
+	i = 2;
 	if (++swap_help > SWAP_MAX_HELP) {
-	    debug(20, 0, "storeGetSwapSpace: Nothing to free with %d Kbytes in use.\n",
-		store_swap_size);
-	    debug(20, 0, "--> Asking for %d bytes\n", size);
-	    debug(20, 0, "WARNING! Repeated failures to allocate swap space!\n");
-	    debug(20, 0, "WARNING! Please check your disk space.\n");
-	    swap_help = 0;
-	} else {
-	    debug(20, 2, "storeGetSwapSpace: Nothing to free with %d Kbytes in use.\n",
-		store_swap_size);
-	    debug(20, 2, "--> Asking for %d bytes\n", size);
+	    debug(20, 0, "WARNING! Repeated failures to free up disk space!\n");
+	    i = 0;
 	}
+	debug(20, i, "storeGetSwapSpace: Disk usage is over high water mark\n");
+	debug(20, i, "--> store_swap_high = %d KB\n", store_swap_high);
+	debug(20, i, "--> store_swap_size = %d KB\n", store_swap_size);
+	debug(20, i, "--> asking for        %d KB\n", kb_size);
     } else {
 	swap_help = 0;
     }
@@ -2397,6 +2394,20 @@ storeCreateSwapSubDirs(void)
 }
 
 static void
+storeRandomizeBuckets(void)
+{
+    int i;
+    if (MaintBucketsOrder == NULL)
+        MaintBucketsOrder = xcalloc(store_buckets, sizeof(unsigned int));
+    for (i = 0; i < store_buckets; i++)
+	*(MaintBucketsOrder + i) = (unsigned int) i;
+    qsort((char *) MaintBucketsOrder,
+	store_buckets,
+	sizeof(unsigned int),
+	(QS) compareRandom);
+}
+
+static void
 storeInitHashValues(void)
 {
     int i;
@@ -2419,13 +2430,7 @@ storeInitHashValues(void)
     else
 	store_buckets = 65357, store_maintain_rate = 1;
     store_maintain_buckets = 1;
-    MaintBucketsOrder = xcalloc(store_buckets, sizeof(unsigned int));
-    for (i = 0; i < store_buckets; i++)
-	*(MaintBucketsOrder + i) = (unsigned int) i;
-    qsort((char *) MaintBucketsOrder,
-	store_buckets,
-	sizeof(unsigned int),
-	    (QS) compareRandom);
+    storeRandomizeBuckets();
     debug(20, 1, "Using %d Store buckets, maintain %d bucket%s every %d second%s\n",
 	store_buckets,
 	store_maintain_buckets,
@@ -2570,6 +2575,7 @@ storeMaintainSwapSpace(void *unused)
 		scan_revolutions++;
 		debug(20, 1, "Completed %d full expiration scans of store table\n",
 		    scan_revolutions);
+    		storeRandomizeBuckets();
 	    }
 	    bucket = *(MaintBucketsOrder + bucket_index);
 	    bucket_index++;
