@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.386 1998/08/21 04:03:46 wessels Exp $
+ * $Id: client_side.cc,v 1.387 1998/08/21 06:52:32 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1508,16 +1508,6 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    kb_incr(&Counter.client_http.hit_kbytes_out, size);
     }
     if (errflag) {
-#if DONT_DO_THIS
-	/*
-	 * Not sure why this CheckQuickAbort() would be needed here.
-	 * We also call CheckQuickAbort() in httpRequestFree(), which
-	 * gets called as a comm_close handler.  We need to be careful
-	 * that CheckQuickAbort() gets called only ONCE, and AFTER
-	 * storeUnregister() has been called.  [DW/1.2.beta18]
-	 */
-	CheckQuickAbort(http);
-#endif
 	comm_close(fd);
     } else if (NULL == entry) {
 	comm_close(fd);		/* yuk */
