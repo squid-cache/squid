@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.24 2002/06/23 13:32:23 hno Exp $
+#  $Id: Makefile.am,v 1.25 2002/07/01 15:51:32 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -59,6 +59,7 @@ WIN32SOURCE =
 endif
 
 SUBDIRS		= fs repl auth
+CGIEXT = @CGIEXT@
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include
 
@@ -78,12 +79,13 @@ libexec_PROGRAMS = \
 	@OPT_PINGER@ \
 	$(DNSSERVER) \
 	$(UNLINKD) \
-	cachemgr
+	cachemgr$(CGIEXT)
 
 cf_gen_SOURCES = cf_gen.c defines.h
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
 squidclient_SOURCES = client.c
+cachemgr__CGIEXT__SOURCES = cachemgr.c
 
 EXTRA_squid_SOURCES = \
 	delay_pools.c \
