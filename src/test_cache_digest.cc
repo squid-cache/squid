@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.9 1998/04/01 06:22:04 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.10 1998/04/01 07:07:17 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -355,7 +355,7 @@ cacheReport(Cache * cache)
 	    cache->name, 
 	    cache->digest->count, cache->digest->capacity,
 	    xpercentInt(cache->digest->count, cache->digest->capacity),
-	    bit_count*8
+	    bit_count/8
 	);
 	fprintf(stdout, "%s: digest bits: on: %d cap: %d util: %d%%\n", 
 	    cache->name,
