@@ -302,7 +302,7 @@ netdbHops(struct in_addr addr)
 void
 netdbFreeMemory(void)
 {
-    netdbEntry *e;
+    netdbEntry *n;
     netdbEntry **L1;
     hash_link *h;
     hash_link **L2;
@@ -311,14 +311,20 @@ netdbFreeMemory(void)
     int j;
 
     L1 = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry));
-    e = (netdbEntry *) hash_first(addr_table);
-    while (e && i < meta_data.netdb_addrs) {
-	*(L1 + i) = e;
+    n = (netdbEntry *) hash_first(addr_table);
+    while (n && i < meta_data.netdb_addrs) {
+	*(L1 + i) = n;
 	i++;
-	e = (netdbEntry *) hash_next(addr_table);
+	n = (netdbEntry *) hash_next(addr_table);
     }
-    for (j = 0; j < i; j++)
-	xfree(*(L1 + j));
+    for (j = 0; j < i; j++) {
+	n = *(L1 + j);
+        while ((x = n->hosts)) {
+	    n->hosts = x->next;
+	    safe_free(x);
+        }
+	xfree(n);
+    }
     xfree(L1);
 
     i = 0;
@@ -331,9 +337,7 @@ netdbFreeMemory(void)
     }
     for (j = 0; j < i; j++) {
 	h = *(L2 + j);
-	x = (struct _net_db_name *) h->item;
-	xfree(x->name);
-	xfree(x);
+	xfree(h->key);
 	xfree(h);
     }
     xfree(L2);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.81 1996/10/10 16:38:50 wessels Exp $
+ * $Id: stat.cc,v 1.82 1996/10/10 18:48:51 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -705,7 +705,7 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
     storeAppendPrintf(sentry, "{\tStorage Swap size:\t%d MB}\n",
 	storeGetSwapSize() >> 10);
     storeAppendPrintf(sentry, "{\tStorage Mem size:\t%d KB}\n",
-	storeGetMemSize() >> 10);
+	store_mem_size >> 10);
 
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);

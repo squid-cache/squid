@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.107 1996/10/10 16:33:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.108 1996/10/10 18:48:47 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@
 
 struct SquidConfig Config;
 
-#define DefaultMemMaxSize 	(16 << 20)	/* 16 MB */
+#define DefaultMemMaxSize 	(8 << 20)	/* 8 MB */
 #define DefaultMemHighWaterMark 90	/* 90% */
 #define DefaultMemLowWaterMark  75	/* 75% */
 #define DefaultSwapMaxSize	(100 << 10)	/* 100 MB (100*1024 kbytes) */
@@ -196,7 +196,6 @@ struct SquidConfig Config;
 #define DefaultIpcacheSize	1024
 #define DefaultIpcacheLow	90
 #define DefaultIpcacheHigh	95
-#define DefaultMaxHotvmObjSize	(256<<10)	/* 256k */
 #define DefaultMinDirectHops	4
 
 int httpd_accel_mode = 0;	/* for fast access */
@@ -1383,9 +1382,6 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "forwarded_for"))
 	    parseOnOff(&opt_forwarded_for);
 
-	else if (!strcmp(token, "max_hotvm_obj_size"))
-	    parseIntegerValue(&Config.maxHotvmObjSize);
-
 	else if (!strcmp(token, "minimum_direct_hops"))
 	    parseIntegerValue(&Config.minDirectHops);
 
@@ -1591,7 +1587,6 @@ configSetFactoryDefaults(void)
     Config.ipcache.size = DefaultIpcacheSize;
     Config.ipcache.low = DefaultIpcacheLow;
     Config.ipcache.high = DefaultIpcacheHigh;
-    Config.maxHotvmObjSize = DefaultMaxHotvmObjSize;
     Config.minDirectHops = DefaultMinDirectHops;
 }
 

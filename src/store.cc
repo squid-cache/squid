@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.126 1996/10/09 15:34:39 wessels Exp $
+ * $Id: store.cc,v 1.127 1996/10/10 18:48:52 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -250,9 +250,10 @@ static HashID store_table = 0;
 static HashID in_mem_table = 0;
 
 /* current memory storage size */
-static unsigned long store_mem_size = 0;
-static unsigned long store_mem_high = 0;
-static unsigned long store_mem_low = 0;
+unsigned long store_mem_size = 0;
+
+static int store_pages_high = 0;
+static int store_pages_low = 0;
 
 /* current file name, swap file, use number as a filename */
 static unsigned long swapfileno = 0;
@@ -356,12 +357,9 @@ new_MemObjectData(void)
 static void
 destroy_MemObjectData(MemObject * mem)
 {
-    debug(20, 3, "destroy_MemObjectData: destroying %p\n", mem->data);
+    debug(20, 3, "destroy_MemObjectData: destroying %p, %d bytes\n",
+	mem->data, mem->e_current_len);
     store_mem_size -= mem->e_current_len - mem->e_lowest_offset;
-    debug(20, 8, "destroy_MemObjectData: Freeing %d in-memory bytes\n",
-	mem->e_current_len);
-    debug(20, 8, "destroy_MemObjectData: store_mem_size = %d\n",
-	store_mem_size);
     if (mem->data) {
 	mem->data->mem_free(mem->data);
 	mem->data = NULL;
@@ -603,6 +601,8 @@ storeUnlockObject(StoreEntry * e)
 	e->lock_count--;
     } else if (storeShouldPurgeMem(e)) {
 	storePurgeMem(e);
+    } else {
+	requestUnlink(mem->request);
     }
     return 0;
 }
@@ -1654,13 +1654,6 @@ storeGetSwapSize(void)
     return store_swap_size;
 }
 
-/* return current swap size in bytes */
-int
-storeGetMemSize(void)
-{
-    return store_mem_size;
-}
-
 static int
 storeCheckSwapable(StoreEntry * e)
 {
@@ -1870,15 +1863,17 @@ storeGetMemSpace(int size)
     int i;
     static time_t last_warning = 0;
     static time_t last_check = 0;
+    int pages_needed;
 
     if (squid_curtime == last_check)
 	return 0;
     last_check = squid_curtime;
-    if ((store_mem_size + size) < store_mem_high)
+    pages_needed = (size / SM_PAGE_SIZE) + 1;
+    if (sm_stats.n_pages_in_use + pages_needed < sm_stats.max_pages)
 	return 0;
     if (store_rebuilding == STORE_REBUILDING_FAST)
 	return 0;
-    debug(20, 2, "storeGetMemSpace: Starting...\n");
+    debug(20, 2, "storeGetMemSpace: Starting, need %d pages\n", pages_needed);
 
     list = xcalloc(meta_data.mem_obj_count, sizeof(ipcache_entry *));
     for (e = storeGetInMemFirst(); e; e = storeGetInMemNext()) {
@@ -1900,12 +1895,6 @@ storeGetMemSpace(int size)
 	}
 	debug(20, 3, "storeGetMemSpace: Adding '%s'\n", e->url);
     }
-#ifdef EXTRA_DEBUGGING
-    debug(20, 5, "storeGetMemSpace: Current size:     %7d bytes\n", store_mem_size);
-    debug(20, 5, "storeGetMemSpace: High W Mark:      %7d bytes\n", store_mem_high);
-    debug(20, 5, "storeGetMemSpace: Low W Mark:       %7d bytes\n", store_mem_low);
-    debug(20, 5, "storeGetMemSpace: Entry count:      %7d items\n", meta_data.store_entries);
-#endif
     debug(20, 5, "storeGetMemSpace: Sorting LRU_list: %7d items\n", list_count);
     qsort((char *) list,
 	list_count,
@@ -1914,13 +1903,14 @@ storeGetMemSpace(int size)
 
     /* Kick LRU out until we have enough memory space */
     for (i = 0; i < list_count; i++) {
-	if (store_mem_size + size < store_mem_low)
+	if (sm_stats.n_pages_in_use + pages_needed < store_pages_low)
 	    break;
 	e = *(list + i);
 	if (storeCheckPurgeMem(e)) {
 	    storePurgeMem(e);
 	    n_purged++;
 	} else if (!storeEntryLocked(e)) {
+	    /* These will be neg-cached objects */
 	    storeRelease(e);
 	    n_released++;
 	} else {
@@ -1929,11 +1919,12 @@ storeGetMemSpace(int size)
     }
 
     i = 3;
-    if (store_mem_size + size > store_mem_high) {
+    if (sm_stats.n_pages_in_use + pages_needed > store_pages_high) {
 	if (squid_curtime - last_warning > 600) {
-	    debug(20, 0, "WARNING: Over store_mem high-water mark (%d > %d)\n",
-		store_mem_size + size, store_mem_high);
+	    debug(20, 0, "WARNING: Over store_pages high-water mark (%d > %d)\n",
+		sm_stats.n_pages_in_use + pages_needed, store_pages_high);
 	    last_warning = squid_curtime;
+	    debug(20, 0, "Perhaps you should increase cache_mem?\n");
 	    i = 0;
 	}
     }
@@ -2553,6 +2544,8 @@ storeInit(void)
 void
 storeConfigure(void)
 {
+    int store_mem_high = 0;
+    int store_mem_low = 0;
     store_mem_high = (long) (Config.Mem.maxSize / 100) *
 	Config.Mem.highWaterMark;
     store_mem_low = (long) (Config.Mem.maxSize / 100) *
@@ -2562,6 +2555,9 @@ storeConfigure(void)
 	    (float) Config.Swap.highWaterMark) / (float) 100);
     store_swap_low = (long) (((float) Config.Swap.maxSize *
 	    (float) Config.Swap.lowWaterMark) / (float) 100);
+
+    store_pages_high = store_mem_high / SM_PAGE_SIZE;
+    store_pages_low = store_mem_low / SM_PAGE_SIZE;
 }
 
 /* 
@@ -2810,7 +2806,7 @@ storeShouldPurgeMem(StoreEntry * e)
 {
     if (storeCheckPurgeMem(e) == 0)
 	return 0;
-    if (e->object_len > Config.maxHotvmObjSize)
+    if (sm_stats.n_pages_in_use > store_pages_low)
 	return 1;
     return 0;
 }
