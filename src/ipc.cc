@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.32 2002/10/21 05:54:36 adrian Exp $
+ * $Id: ipc.cc,v 1.33 2002/10/21 06:43:07 adrian Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -206,7 +206,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 	}
 	memset(hello_buf, '\0', HELLO_BUF_SZ);
 	if (type == IPC_UDP_SOCKET)
-	    x = comm_recv(prfd, hello_buf, HELLO_BUF_SZ - 1, 0);
+	    x = comm_udp_recv(prfd, hello_buf, HELLO_BUF_SZ - 1, 0);
 	else
 	    x = read(prfd, hello_buf, HELLO_BUF_SZ - 1);
 	if (x < 0) {
@@ -259,7 +259,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 	    return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
     if (type == IPC_UDP_SOCKET) {
-	x = comm_send(cwfd, hello_string, strlen(hello_string) + 1, 0);
+	x = comm_udp_send(cwfd, hello_string, strlen(hello_string) + 1, 0);
 	if (x < 0) {
 	    debug(50, 0) ("sendto FD %d: %s\n", cwfd, xstrerror());
 	    debug(50, 0) ("ipcCreate: CHILD: hello write test failed\n");

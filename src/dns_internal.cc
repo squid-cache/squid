@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.49 2002/10/21 05:45:30 adrian Exp $
+ * $Id: dns_internal.cc,v 1.50 2002/10/21 06:43:07 adrian Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -502,7 +502,7 @@ idnsRead(int fd, void *data)
     while (max--) {
 	from_len = sizeof(from);
 	memset(&from, '\0', from_len);
-	len = comm_recvfrom(fd, rbuf, 512, 0, (struct sockaddr *) &from, &from_len);
+	len = comm_udp_recvfrom(fd, rbuf, 512, 0, (struct sockaddr *) &from, &from_len);
 	if (len == 0)
 	    break;
 	if (len < 0) {
