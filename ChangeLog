@@ -88,6 +88,11 @@ Changes to Squid-2.4.DEVEL4 ():
 	  this defines the watermark where objects transit from being true
 	  hot objects to being in-transit objects in memory. It currently
 	  defaults to 8 KB.
+	- Change to the fqdn code which changes how pending DNS requests
+	  are treated as private and only become public once they are
+	  completed. This can add extra load on DNS servers but prevents
+	  all the pending clients blocking if one of the queries got
+	  stuck. (Duane Wessels)
 	- Converted more code to use MemPools, from Andres Kroonmaa.
 	- Added more CYGWIN patches from Robert Collins.
 
