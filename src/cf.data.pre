@@ -1,3 +1,28 @@
+#
+# If you use the NAME arbtext AND the LOC arbtext, you can use teh
+# DOC_START function to insert text into the generated squid.conf file
+# for headings and the like - oskar
+#
+
+NAME: arbtext
+LOC: arbtext
+DOC_START
+        WELCOME TO SQUID 1.2
+        --------------------
+
+        This is the default squid configuration file. You may wish
+        to look at http://cache.is.co.za/squid/ for documentation,
+        or the squid home page (http://squid.nlanr.net/) for the FAQ
+
+DOC_END
+
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ NETWORK OPTIONS
+ -----------------------------------------------------------------------------
+DOC_END
+
 NAME: http_port ascii_port
 TYPE: ushortlist
 DEFAULT: none
@@ -104,9 +129,12 @@ udp_incoming_address 0.0.0.0
 udp_outgoing_address 0.0.0.0
 DOC_END
 
-
-# OPTIONS WHICH AFFECT THE NEIGHBOR SELECTION ALGORITHM
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ OPTIONS WHICH AFFECT THE NEIGHBOR SELECTION ALGORITHM
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: cache_peer
 TYPE: peer
@@ -358,9 +386,12 @@ cache_stoplist_pattern
 DOC_END
 
 
-# OPTIONS WHICH AFFECT THE CACHE SIZE
-#-----------------------------------------------------------------------------
-
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ OPTIONS WHICH AFFECT THE CACHE SIZE
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: cache_mem
 COMMENT: (bytes)
@@ -482,9 +513,12 @@ ipcache_low  90
 ipcache_high 95
 DOC_END
 
-
-# LOGFILE PATHNAMES AND CACHE DIRECTORIES
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ LOGFILE PATHNAMES AND CACHE DIRECTORIES
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: cache_dir
 TYPE: cachedir
@@ -681,8 +715,12 @@ client_netmask 255.255.255.255
 DOC_END
 
 
-# OPTIONS FOR EXTERNAL SUPPORT PROGRAMS
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ OPTIONS FOR EXTERNAL SUPPORT PROGRAMS
+ -----------------------------------------------------------------------------
+DOC_END
 
 #  TAG: ftpget_program
 #	Where to find the 'ftpget' program that retrieves FTP data (HTTP
@@ -821,9 +859,13 @@ DOC_START
 redirect_children 5
 DOC_END
 
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ OPTIONS FOR TUNING THE CACHE
+ -----------------------------------------------------------------------------
+DOC_END
 
-# OPTIONS FOR TUNING THE CACHE
-#-----------------------------------------------------------------------------
 NAME: wais_relay_host
 TYPE: string
 DEFAULT: none
@@ -998,9 +1040,12 @@ DOC_START
 negative_dns_ttl 5 minutes
 DOC_END
 
-
-# TIMEOUTS
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ TIMEOUTS
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: connect_timeout
 COMMENT: (in seconds)
@@ -1097,9 +1142,12 @@ DOC_START
 shutdown_lifetime 30 seconds
 DOC_END
 
-
-# ACCESS CONTROLS
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ ACCESS CONTROLS
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: acl
 TYPE: acl
@@ -1249,9 +1297,12 @@ DOC_START
 		* There are no defaults.
 DOC_END
 
-
-# ADMINISTRATIVE PARAMETERS
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ ADMINISTRATIVE PARAMETERS
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: cache_mgr
 TYPE: string
@@ -1297,29 +1348,31 @@ DOC_START
 visible_hostname www-cache.foo.org
 DOC_END
 
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ OPTIONS FOR THE CACHE REGISTRATION SERVICE
+ -----------------------------------------------------------------------------
 
-# OPTIONS FOR THE CACHE REGISTRATION SERVICE
-#-----------------------------------------------------------------------------
+	This section contains parameters for the (optional) cache
+	announcement service.  This service is provided to help
+	cache administrators locate one another in order to join or
+	create cache hierarchies.
 
-#	This section contains parameters for the (optional) cache
-#	announcement service.  This service is provided to help
-#	cache administrators locate one another in order to join or
-#	create cache hierarchies.
-#
-#	An 'announcement' message is sent (via UDP) to the registration
-#	service by Squid.  By default, the annoucement message is NOT
-#	SENT unless you enable it with 'cache_announce' below.
-#
-#	The announcement message includes your hostname, plus the
-#	following information from this configuration file:
-#
-#		http_port
-#		icp_port
-#		cache_mgr
-#
-#	All current information is processed regularly and made
-#	available on the Web at http://www.nlanr.net/Cache/Tracker/.
+	An 'announcement' message is sent (via UDP) to the registration
+	service by Squid.  By default, the annoucement message is NOT
+	SENT unless you enable it with 'cache_announce' below.
 
+	The announcement message includes your hostname, plus the
+	following information from this configuration file:
+
+		http_port
+		icp_port
+		cache_mgr
+
+	All current information is processed regularly and made
+	available on the Web at http://www.nlanr.net/Cache/Tracker/.
+DOC_END
 
 NAME: announce_period
 TYPE: time_t
@@ -1365,9 +1418,12 @@ DEFAULT: /dev/null
 LOC: Config.Announce.file
 DOC_NONE
 
-
-# HTTPD-ACCELERATOR OPTIONS
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ HTTPD-ACCELERATOR OPTIONS
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: httpd_accel_host
 TYPE: string
@@ -1420,9 +1476,12 @@ DOC_START
 httpd_accel_uses_host_header off
 DOC_END
 
-
-# MISCELLANEOUS
-#-----------------------------------------------------------------------------
+NAME: arbtext
+LOC: arbtext
+DOC_START
+ MISCELLANEOUS
+ -----------------------------------------------------------------------------
+DOC_END
 
 NAME: dns_testnames
 TYPE: wordlist

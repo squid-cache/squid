@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.11 1997/10/22 19:25:17 wessels Exp $
+ * $Id: cf_gen.cc,v 1.12 1997/10/24 04:56:35 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -31,6 +31,7 @@
 /*****************************************************************************
  * Abstract:	This program parses the input file and generates code and
  *		files used to configure the variables in squid.
+ *		(ie it creates the squid.conf file from the cf.data file)
  *
  *		The output files are as follows:
  *		cf_parser.c - this file contains, default_all() which
@@ -302,6 +303,9 @@ gen_default(Entry * head, FILE * fp)
 	);
     for (entry = head; entry != NULL; entry = entry->next) {
 	assert(entry->name);
+
+	if (!strcmp(entry->name, "arbtext"))
+	    continue;
 	if (entry->loc == NULL) {
 	    fprintf(stderr, "NO LOCATION FOR %s\n", entry->name);
 	    rc |= 1;
@@ -378,7 +382,7 @@ gen_parse(Entry * head, FILE * fp)
 		"\t\tparse_%s();\n",
 		entry->type
 		);
-	} else {
+	} else if (strcmp(entry->loc, "arbtext")) {
 	    fprintf(fp,
 		"\t\tparse_%s(&%s);\n",
 		entry->type, entry->loc
@@ -408,6 +412,8 @@ gen_dump(Entry * head, FILE * fp)
 	assert(entry->loc);
 	if (strcmp(entry->loc, "none") == 0)
 	    continue;
+	if (strcmp(entry->name, "arbtext") == 0)
+	    continue;
 	fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
 	    entry->type,
 	    entry->name,
@@ -429,6 +435,8 @@ gen_free(Entry * head, FILE * fp)
 	assert(entry->loc);
 	if (strcmp(entry->loc, "none") == 0)
 	    continue;
+	if (strcmp(entry->name, "arbtext") == 0)
+	    continue;
 	fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
     }
     fprintf(fp, "}\n\n");
@@ -442,7 +450,8 @@ gen_conf(Entry * head, FILE * fp)
     for (entry = head; entry != NULL; entry = entry->next) {
 	Line *line;
 
-	fprintf(fp, "#  TAG: %s", entry->name);
+	if (strcmp(entry->name, "arbtext"))
+		fprintf(fp, "#  TAG: %s", entry->name);
 	if (entry->comment)
 	    fprintf(fp, "\t%s", entry->comment);
 	fprintf(fp, "\n");
