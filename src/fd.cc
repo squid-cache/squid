@@ -66,3 +66,9 @@ fd_bytes(int fd, int len, unsigned int type)
     else
 	fatal_dump("fd_bytes: bad type");
 }
+
+void
+fdFreeMemory(void)
+{
+	safe_free(fd_table);
+}

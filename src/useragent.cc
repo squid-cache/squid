@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.5 1997/02/26 19:46:27 wessels Exp $
+ * $Id: useragent.cc,v 1.6 1997/05/02 21:34:18 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -48,7 +48,7 @@ useragentOpenLog(void)
 	cache_useragent_log = NULL;
     }
     if (fname && strcmp(fname, "none") != 0) {
-	log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND, NULL, NULL);
+	log_fd = file_open(fname, O_WRONLY | O_CREAT | O_APPEND, NULL, NULL);
 	if (log_fd < 0) {
 	    debug(50, 0, "useragentOpenLog: %s: %s\n", fname, xstrerror());
 	} else if ((cache_useragent_log = fdopen(log_fd, "a")) == NULL) {

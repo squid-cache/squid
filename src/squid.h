@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.107 1997/04/30 18:31:00 wessels Exp $
+ * $Id: squid.h,v 1.108 1997/05/02 21:34:13 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -234,6 +234,7 @@ typedef struct _request request_t;
 typedef struct _MemObject MemObject;
 typedef struct _cachemgr_passwd cachemgr_passwd;
 typedef struct _fileMap fileMap;
+typedef struct _cwstate CommWriteStateData;
 
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4

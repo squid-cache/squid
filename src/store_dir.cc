@@ -269,7 +269,7 @@ storeDirOpenSwapLogs(void)
     for (i = 0; i < ncache_dirs; i++) {
 	SD = &SwapDirs[i];
 	path = storeDirSwapLogFile(i, NULL);
-	fd = file_open(path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
+	fd = file_open(path, O_WRONLY | O_CREAT, NULL, NULL);
 	if (fd < 0) {
 	    debug(50, 1, "%s: %s\n", path, xstrerror());
 	    fatal("storeDirOpenSwapLogs: Failed to open swap log.");
@@ -314,7 +314,7 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
     if (SD->swaplog_fd >= 0)
 	file_close(SD->swaplog_fd);
     /* open a write-only FD for the new log */
-    fd = file_open(new_path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
+    fd = file_open(new_path, O_WRONLY | O_CREAT, NULL, NULL);
     if (fd < 0) {
 	debug(50, 1, "%s: %s\n", new_path, xstrerror());
 	fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
@@ -351,7 +351,7 @@ storeDirCloseTmpSwapLog(int dirn)
 	fatal("storeDirCloseTmpSwapLog: rename failed");
     }
     file_close(SD->swaplog_fd);
-    fd = file_open(swaplog_path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
+    fd = file_open(swaplog_path, O_WRONLY | O_CREAT, NULL, NULL);
     if (fd < 0) {
 	debug(50, 1, "%s: %s\n", swaplog_path, xstrerror());
 	fatal("storeDirCloseTmpSwapLog: Failed to open swap log.");

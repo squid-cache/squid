@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.102 1997/04/30 18:31:03 wessels Exp $
+ * $Id: tools.cc,v 1.103 1997/05/02 21:34:17 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -362,7 +362,7 @@ normal_shutdown(void)
 #if PURIFY
     configFreeMemory();
     storeFreeMemory();
-    commFreeMemory();
+    fdFreeMemory();
     dnsFreeMemory();
     redirectFreeMemory();
     errorpageFreeMemory();
