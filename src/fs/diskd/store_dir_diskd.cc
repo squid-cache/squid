@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.60 2002/04/01 21:53:21 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.61 2002/04/04 23:59:28 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -410,12 +410,7 @@ storeDiskdDirInit(SwapDir * sd)
     args[2] = skey2;
     args[3] = skey3;
     args[4] = NULL;
-#if HAVE_POLL && defined(_SQUID_OSF_)
-    /* pipes and poll() don't get along on DUNIX -DW */
-    x = ipcCreate(IPC_TCP_SOCKET,
-#else
-    x = ipcCreate(IPC_FIFO,
-#endif
+    x = ipcCreate(IPC_STREAM,
 	Config.Program.diskd,
 	args,
 	"diskd",

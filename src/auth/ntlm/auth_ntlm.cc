@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.18 2002/02/18 23:32:53 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.19 2002/04/04 23:59:27 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -242,7 +242,7 @@ authNTLMInit(authScheme * scheme)
 	assert(proxy_auth_cache);
 	ntlmauthenticators->cmdline = ntlmConfig->authenticate;
 	ntlmauthenticators->n_to_start = ntlmConfig->authenticateChildren;
-	ntlmauthenticators->ipc_type = IPC_TCP_SOCKET;
+	ntlmauthenticators->ipc_type = IPC_STREAM;
 	ntlmauthenticators->datapool = ntlm_helper_state_pool;
 	ntlmauthenticators->IsAvailable = authenticateNTLMHelperServerAvailable;
 	ntlmauthenticators->OnEmptyQueue = authenticateNTLMHelperServerOnEmpty;

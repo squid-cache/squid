@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.99 2002/02/26 15:48:14 adrian Exp $
+ * $Id: defines.h,v 1.100 2002/04/04 23:59:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -193,6 +193,16 @@
 #define IPC_TCP_SOCKET 1
 #define IPC_UDP_SOCKET 2
 #define IPC_FIFO 3
+#define IPC_UNIX_STREAM 4
+#define IPC_UNIX_DGRAM 5
+
+#if HAVE_SOCKETPAIR && defined (AF_UNIX)
+#define IPC_STREAM IPC_UNIX_STREAM
+#define IPC_DGRAM IPC_UNIX_DGRAM
+#else
+#define IPC_STREAM IPC_TCP_SOCKET
+#define IPC_DGRAM IPC_UDP_SOCKET
+#endif
 
 #define STORE_META_KEY STORE_META_KEY_MD5
 
