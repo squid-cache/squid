@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.281 2003/02/08 17:08:39 hno Exp $
+#  $Id: Makefile.in,v 1.282 2003/02/11 13:07:27 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -533,7 +533,7 @@ ufsdump_SOURCES = debug.cc \
 	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
-	ssl.cc \
+	tunnel.cc \
 	$(SSLSOURCE) \
 	stat.cc \
 	StatHist.cc \
@@ -825,7 +825,7 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	net_db.$(OBJEXT) Packer.$(OBJEXT) $(am__objects_3) \
 	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
 	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	send-announce.$(OBJEXT) $(am__objects_8) ssl.$(OBJEXT) \
+	send-announce.$(OBJEXT) $(am__objects_8) tunnel.$(OBJEXT) \
 	$(am__objects_9) stat.$(OBJEXT) StatHist.$(OBJEXT) \
 	String.$(OBJEXT) stmem.$(OBJEXT) store_io.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
@@ -907,13 +907,12 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/referer.Po $(DEPDIR)/refresh.Po \
 @AMDEP_TRUE@	$(DEPDIR)/repl_modules.Po \
 @AMDEP_TRUE@	$(DEPDIR)/send-announce.Po $(DEPDIR)/snmp_agent.Po \
-@AMDEP_TRUE@	$(DEPDIR)/snmp_core.Po $(DEPDIR)/ssl.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ssl_support.Po $(DEPDIR)/stat.Po \
-@AMDEP_TRUE@	$(DEPDIR)/stmem.Po $(DEPDIR)/store.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_client.Po $(DEPDIR)/store_digest.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_dir.Po $(DEPDIR)/store_io.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_key_md5.Po $(DEPDIR)/store_log.Po \
-@AMDEP_TRUE@	$(DEPDIR)/store_modules.Po \
+@AMDEP_TRUE@	$(DEPDIR)/snmp_core.Po $(DEPDIR)/ssl_support.Po \
+@AMDEP_TRUE@	$(DEPDIR)/stat.Po $(DEPDIR)/stmem.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store.Po $(DEPDIR)/store_client.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_digest.Po $(DEPDIR)/store_dir.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_io.Po $(DEPDIR)/store_key_md5.Po \
+@AMDEP_TRUE@	$(DEPDIR)/store_log.Po $(DEPDIR)/store_modules.Po \
 @AMDEP_TRUE@	$(DEPDIR)/store_rebuild.Po \
 @AMDEP_TRUE@	$(DEPDIR)/store_swapin.Po \
 @AMDEP_TRUE@	$(DEPDIR)/store_swapmeta.Po \
@@ -1177,7 +1176,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/send-announce.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snmp_agent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snmp_core.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ssl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ssl_support.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stmem.Po@am__quote@
