@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.8 1997/08/25 03:51:48 wessels Exp $
+ * $Id: cf_gen.cc,v 1.9 1997/08/25 03:52:17 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -409,9 +409,9 @@ gen_dump(Entry * head, FILE * fp)
 	if (strcmp(entry->loc, "none") == 0)
 	    continue;
 	fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
-		entry->type,
-		entry->name,
-		entry->loc);
+	    entry->type,
+	    entry->name,
+	    entry->loc);
     }
     fprintf(fp, "}\n\n");
 }
