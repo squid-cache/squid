@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.31 1998/09/14 21:28:16 wessels Exp $
+ * $Id: store_swapout.cc,v 1.32 1998/09/18 15:15:25 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -371,6 +371,8 @@ storeSwapOutObjectBytesOnDisk(const MemObject * mem)
 static int
 storeSwapOutAble(const StoreEntry * e)
 {
+    if (e->swap_status == SWAPOUT_OPENING)
+	return 1;
     if (e->mem_obj->swapout.fd > -1)
 	return 1;
     if (e->mem_obj->inmem_lo > 0)
