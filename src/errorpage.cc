@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.67 1997/08/25 02:19:32 wessels Exp $
+ * $Id: errorpage.cc,v 1.68 1997/08/25 02:38:52 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -166,11 +166,12 @@ errorBuildBuf(ErrorState * err, int *len)
     int clen;
     int tlen;
     char *m;
+    char *mx;
     char *p;
     char *t;
     assert(err != NULL);
     assert(err->type > ERR_NONE && err->type < ERR_MAX);
-    m = xstrdup(error_text[err->type]);
+    mx = m = xstrdup(error_text[err->type]);
     clen = 0;
     while ((p = strchr(m, '%'))) {
 	*p = '\0';		/* terminate */
@@ -204,7 +205,7 @@ errorBuildBuf(ErrorState * err, int *len)
     tlen = snprintf(buf, ERROR_BUF_SZ, "%s\r\n%s", hdr, content);
     if (len)
 	*len = tlen;
-    xfree(m);
+    xfree(mx);
     return buf;
 }
 
