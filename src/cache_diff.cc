@@ -1,5 +1,5 @@
 /*
- * $Id: cache_diff.cc,v 1.5 1998/03/29 20:42:46 rousskov Exp $
+ * $Id: cache_diff.cc,v 1.6 1998/03/29 21:01:49 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -48,7 +48,8 @@ typedef struct {
 typedef struct _CacheEntry {
     const cache_key *key;
     struct _CacheEntry *next;
-    storeSwapLogData s;
+    /* storeSwapLogData s; */
+    unsigned char key_arr[MD5_DIGEST_CHARS];
 } CacheEntry;
 
 
@@ -74,8 +75,9 @@ cacheEntryCreate(const storeSwapLogData *s)
 {
     CacheEntry *e = xcalloc(1, sizeof(CacheEntry));
     assert(s);
-    e->s = *s;
-    e->key = &e->s.key[0];
+    /* e->s = *s; */
+    xmemcpy(e->key_arr, s->key, MD5_DIGEST_CHARS);
+    e->key = &e->key_arr[0];
     return e;
 }
 
