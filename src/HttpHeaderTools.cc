@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.31 2001/02/07 18:56:51 hno Exp $
+ * $Id: HttpHeaderTools.cc,v 1.32 2001/09/06 19:51:56 hno Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -413,16 +413,20 @@ httpHdrMangle(HttpHeaderEntry * e, request_t * request)
     assert(e);
     hm = &Config.header_access[e->id];
     checklist = aclChecklistCreate(hm->access_list, request, NULL);
-    /* aclCheckFast returns 1 for allow. */
-    if (1 == aclCheckFast(hm->access_list, checklist))
+    if (1 == aclCheckFast(hm->access_list, checklist)) {
+	/* aclCheckFast returns 1 for allow. */
 	retval = 1;
-    /* It was denied; Do we replace it with something else? */
-    else if (NULL == hm->replacement)
+    } else if (NULL == hm->replacement) {
+	/* It was denied, and we don't have any replacement */
 	retval = 0;
-    /* yes, we do */
-    else
+    } else {
+	/* It was denied, but we have a replacement. Replace the
+	 * header on the fly, and return that the new header
+	 * is allowed.
+	 */
 	stringReset(&e->value, hm->replacement);
-    retval = 1;
+	retval = 1;
+    }
 
     aclChecklistFree(checklist);
     return retval;
