@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.45 1996/07/22 17:20:59 wessels Exp $
+ * $Id: stat.cc,v 1.46 1996/07/22 17:24:12 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -907,8 +907,10 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
     LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
     int x;
     static char *dash = "-";
-    char *client = fqdncache_gethostbyaddr(caddr, 0);
+    char *client = NULL;
 
+    if (opt_log_fqdn)
+	client = fqdncache_gethostbyaddr(caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(caddr);
 
