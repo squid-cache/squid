@@ -1,0 +1,4 @@
+
+	- ftpget daemon mode
+	- use cached_error() instead of CACHED_RETRIEVE_ERROR_MSG
+	- fix some fd discprencies in the cachemgr/info page
