@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.33 1996/05/01 22:38:57 wessels Exp $ */
+/* $Id: stat.cc,v 1.34 1996/05/15 05:13:25 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -696,8 +696,14 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident)
 
     if (obj->logfile_status == LOG_ENABLE) {
 	if (emulate_httpd_log)
-	    sprintf(tmp, "%s - - [%s] \"%s %s\" %s %d\n",
-		id, mkhttpdlogtime(&squid_curtime), method, url, action, size);
+	    sprintf(tmp, "%s %s - [%s] \"%s %s\" %s %d\n",
+		id,
+		ident,
+		mkhttpdlogtime(&squid_curtime),
+		method,
+		url,
+		action,
+		size);
 	else
 	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s\n",
 		(int) current_time.tv_sec,
