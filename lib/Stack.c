@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.c,v 1.2 1998/02/21 00:56:38 rousskov Exp $
+ * $Id: Stack.c,v 1.3 1998/02/26 17:49:54 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -41,23 +41,25 @@
 
 #if 0
 
-Synopsis:
+Synopsis(void)
+{
 
-	/*
-	 * creating a stack that can hold up to objCnt pointers. 
-	 * If objCnt is zero, the stack is always full (disabled)
-	 */
-	Stack *s1 = stackCreate(objCnt);
-	Stack *s2 = stackCreate(objCnt*2);
+    /*
+     * creating a stack that can hold up to objCnt pointers. 
+     * If objCnt is zero, the stack is always full (disabled)
+     */
+    Stack *s1 = stackCreate(objCnt);
+    Stack *s2 = stackCreate(objCnt * 2);
 
-	/*
-	 * pop/push works as expected; it is OK to push a null pointer
-	 */
-	if (!s2->is_full && s1->count)
-		stackPush(s2, stackPop(s1));
+    /*
+     * pop/push works as expected; it is OK to push a null pointer
+     */
+    if (!s2->is_full && s1->count)
+	stackPush(s2, stackPop(s1));
 
-	/* destroying a stack */
-	stackDestroy(s1);
+    /* destroying a stack */
+    stackDestroy(s1);
+}
 
 #endif /* Synopsis */
 
@@ -75,16 +77,16 @@ Stack *
 stackCreate(size_t capacity)
 {
     Stack *s = xcalloc(1, sizeof(Stack));
-    s->buf = capacity > 0 ? xcalloc(capacity, sizeof(void*)) : NULL;
+    s->buf = capacity > 0 ? xcalloc(capacity, sizeof(void *)) : NULL;
     s->capacity = capacity;
-	s->count = 0;
-	s->is_full = stackIsFull(s);
-	/* other members are set to 0 in calloc */
+    s->count = 0;
+    s->is_full = stackIsFull(s);
+    /* other members are set to 0 in calloc */
     return s;
 }
 
 void
-stackDestroy(Stack *s)
+stackDestroy(Stack * s)
 {
     assert(s);
     /* could also warn if some objects are left */
@@ -94,23 +96,23 @@ stackDestroy(Stack *s)
 }
 
 void *
-stackPop(Stack *s)
+stackPop(Stack * s)
 {
     void *popped;
     assert(s);
     assert(s->count);
     popped = s->buf[--s->count];
     s->is_full = stackIsFull(s);
-    s->pop_count++; /* might overflow eventually, but ok */
+    s->pop_count++;		/* might overflow eventually, but ok */
     return popped;
 }
 
 void
-stackPush(Stack *s, void *obj)
+stackPush(Stack * s, void *obj)
 {
     assert(s);
     assert(!s->is_full);
     s->buf[s->count++] = obj;
     s->is_full = stackIsFull(s);
-    s->push_count++; /* might overflow eventually, but ok */
+    s->push_count++;		/* might overflow eventually, but ok */
 }
