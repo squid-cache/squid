@@ -1,33 +1,34 @@
 -- File: SQUID.MIB
 -- kostas@nlanr.net
 -- Created    : 11/ 2/97 kostas@nlanr.net
--- Last Update:  2/11/98 kostas@nlanr.net
+-- Last Update:  2/21/98 kostas@nlanr.net
 
-SQUID-MIB DEFINITIONS ::= BEGIN
-		IMPORTS
-              	TimeTicks,
-              	Counter                FROM RFC1155-SMI
-             	DisplayString          FROM RFC1158-MIB
-            	mib-2                  FROM RFC1213-MIB
-           	OBJECT-TYPE            FROM RFC-1212
-          	TRAP-TYPE              FROM RFC-1215;
+-- SQUID-MIB DEFINITIONS ::= BEGIN
+-- 		IMPORTS
+--             	TimeTicks,
+--             	Counter                FROM RFC1155-SMI
+--            	DisplayString          FROM RFC1158-MIB
+--            	mib-2                  FROM RFC1213-MIB
+--           	OBJECT-TYPE            FROM RFC-1212
+--          	TRAP-TYPE              FROM RFC-1215;
 
 -- 
 -- definitions included for standalone agent/managers
 --
 
-squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) nsfnet(25) 17 }
+	squid OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) nsfnet(25) 17 }
 
 
 --
 -- Major MIB groups
 --
+
 	cacheSystem	OBJECT IDENTIFIER ::= { squid 1 }
 	cacheConfig  	OBJECT IDENTIFIER ::= { squid 2 }
 	cachePerf	OBJECT IDENTIFIER ::= { squid 3 }
-	cacheAccounting	OBJECT IDENTIFIER ::= { squid 6 }
-	cacheSecurity	OBJECT IDENTIFIER ::= { squid 5 }
 	cacheNetwork	OBJECT IDENTIFIER ::= { squid 4 } 
+	cacheSecurity	OBJECT IDENTIFIER ::= { squid 5 }
+	cacheAccounting	OBJECT IDENTIFIER ::= { squid 6 }
 
 
 --
@@ -38,9 +39,11 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 -- with the other MIBs carefully!
 -- One reason to keep this information here is for dedicated 
 -- hardware as offered by today's commercial caching solutions
+-- (0..2147483647) 
 
-	cacheSysVMsize OBJECT-TYPE
-	       SYNTAX      INTEGER (0..2147483647)
+
+        cacheSysVMsize OBJECT-TYPE
+	        SYNTAX INTEGER 
 		ACCESS read-only
 		STATUS mandatory
 		DESCRIPTION
@@ -54,6 +57,88 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 DESCRIPTION
                         " Diskspace in MB"
                 ::= { cacheSystem 2 }
+
+        -- fd table
+
+        cacheFdTable OBJECT-TYPE
+                SYNTAX SEQUENCE OF cacheFdEntry
+                ACCESS read-only
+                STATUS current
+                DESCRIPTION
+                        " This table contains an enumeration of
+                          registered filedescriptors , complete with info "
+                ::= { cacheSystem 3 }
+
+        cacheFdEntry OBJECT-TYPE
+                SYNTAX CacheFdEntry
+                MAX-ACCESS not-accessible
+                STATUS current
+                DESCRIPTION 
+                        " An entry in cacheFdTable " 
+                INDEX   { cacheFdNumber }
+                ::= { cacheFdTable 1 }
+
+        CacheFdEntry ::= SEQUENCE {
+                cacheFdNumber    INTEGER,
+                cacheFdType      INTEGER,
+                cacheFdTout      INTEGER,
+                cacheFdNread     INTEGER,
+                cacheFdNwrite    INTEGER,
+                cacheFdAddress   IpAddress,
+                cacheFdName      DisplayString
+        }
+
+        cacheFdNumber OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS current
+        ::= { cacheFdEntry 1 }
+
+        cacheFdType OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS current
+        ::= { cacheFdEntry 2 }
+
+        cacheFdTout OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS current
+        ::= { cacheFdEntry 3 }
+
+        cacheFdNread OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS current
+        ::= { cacheFdEntry 4 }
+
+        cacheFdNwrite OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS current
+        ::= { cacheFdEntry 5 }
+
+        cacheFdAddress OBJECT-TYPE
+                SYNTAX IpAddress
+                ACCESS read-only
+                STATUS current
+        ::= { cacheFdEntry 6 }
+
+        cacheFdName OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS read-only
+                STATUS current
+        ::= { cacheFdEntry 7 }
+
+
+        cacheFdType OBJECT-TYPE
+                SYNTAX INTEGER { icp(1), http(2), ftp(3),
+                                          wais(4), gopher (5), Swap (6) }
+                MAX-ACCESS  read-write
+                STATUS      current
+                DESCRIPTION
+                        " type of file descriptor " 
+                ::= { cacheFdEntry 2  }
 
 
 --
@@ -78,7 +163,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                         " Number of minutes since cache started "
 		::= { cacheConfig 2 }
 
-	cacheStorageConfig OBJECT IDENTIFIER ::= { cacheConfig 3  }
+	cacheStorageConfig OBJECT IDENTIFIER ::= { cacheConfig 7  }
 
 	cacheMemMaxSize OBJECT-TYPE
                 SYNTAX INTEGER
@@ -134,7 +219,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS mandatory
                 DESCRIPTION
                         " Cache WAIS relay host address "
-                ::= { cacheConfig 4 }
+                ::= { cacheConfig 3 }
 
         cacheWaisRelayPort OBJECT-TYPE
                 SYNTAX Integer
@@ -142,9 +227,9 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS mandatory
                 DESCRIPTION
                         " Cache WAIS relay host Port "
-                ::= { cacheConfig 5 }
+                ::= { cacheConfig 4 }
 
-	cacheTimeoutValues OBJECT IDENTIFIER ::= { cacheConfig 6 }
+	cacheTimeoutValues OBJECT IDENTIFIER ::= { cacheConfig 8 }
 
 	cacheReadTimeout  OBJECT-TYPE
                 SYNTAX Integer
@@ -178,7 +263,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 		STATUS mandatory
 		DESCRIPTION
 			" Logging level " 
-		::= { cacheConfig 7 } 
+		::= { cacheConfig 5 } 
 
 	--
 	-- config group : table of peers 
@@ -191,7 +276,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 		DESCRIPTION
 			" This table contains an enumeration of
 			  the peer caches, complete with info "
-                ::= { cacheConfig 8 }
+                ::= { cacheConfig 6 }
 
 	cachePeerEntry OBJECT-TYPE
 		SYNTAX CachePeerEntry
@@ -269,9 +354,11 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 --
 -- cacheNetwork group
 --
--- contains ip/fqdn cache info, network statistics and probe results
+-- contains dns (ip/fqdn cache etc) info, network statistics and probe results
 --
 -- 
+
+	cacheDns OBJECT IDENTIFIER ::= { cacheNetwork 2 }
 
 	-- NetDB info
 
@@ -361,7 +448,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 DESCRIPTION
                         " This table contains an enumeration of
                           the peer caches, complete with info "
-                ::= { cacheNetwork 2 }
+                ::= { cacheDns 1 }
 
         iPcacheEntry OBJECT-TYPE
                 SYNTAX IPcacheEntry
@@ -421,7 +508,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 DESCRIPTION
                         " This table contains an enumeration of
                           the peer caches, complete with info "
-                ::= { cacheNetwork 3 }
+                ::= { cacheDns 2 }
 
         fQDNcacheEntry OBJECT-TYPE
                 SYNTAX FQDNcacheEntry
@@ -478,7 +565,6 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
         ::= { fQDNcacheEntry 6}
 
 
-
 	FQDNcacheEntryState OBJECT-TYPE
                 SYNTAX INTEGER { 
                                 pending(1), expired(2), ok(3) }
@@ -488,6 +574,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                         "  state of  FQDN cache entry "
                 ::= { fQDNcacheEntry 7  }
 
+        cacheNetStat OBJECT IDENTIFIER ::= { cacheNetwork 3 }
 
 	cacheTCPconnections OBJECT-TYPE
                 SYNTAX Counter32
@@ -495,7 +582,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS current
                 DESCRIPTION
                         " Number of TCP connections since start-up "
-		::= { cacheNetwork 4 }
+		::= { cacheNetStat 1 }
 
 	cacheUDPconnections OBJECT-TYPE
 		SYNTAX Counter32
@@ -503,30 +590,14 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS current
                 DESCRIPTION
                         " Number of UDP connections since start-up "
-                ::= { cacheNetwork 5 }
-
-	cacheInThroughput OBJECT-TYPE
-		SYNTAX Integer32
-		ACCESS read-only
-		STATUS current
-		DESCRIPTION
-			" Throughput of incoming traffic in 5 min intervals "
-		::= { cacheNetwork 6 } 
-
-	cacheOutThroughput OBJECT-TYPE
-		SYNTAX Integer32
-                ACCESS read-only
-                STATUS current
-                DESCRIPTION 
-			" Throughput of outgoing traffic in 5 min intevals"
-		::= { cacheNetwork 7 }
+                ::= { cacheNetStat 2 }
 
 --
 -- performance group { squid 3 }
 --
 
-	cacheSysPerf OBJECT IDENTIFIER ::= { cachePerf 1 } 
-	cacheProtoStats OBJECT IDENTIFIER ::= { cachePerf 2 }
+	cacheSysPerf    OBJECT IDENTIFIER ::= { cachePerf 1 } 
+        cacheProtoStats OBJECT IDENTIFIER ::= { cachePerf 2 }
 	cachePeerStats	OBJECT IDENTIFIER ::= { cachePerf 3 } 
 
 	--
@@ -547,7 +618,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS current 
                 DESCRIPTION
                         " Number of Reads " 
-        ::= { cacheSysPerf 2 }
+        	::= { cacheSysPerf 2 }
 
         cacheSysDefReads OBJECT-TYPE
                 SYNTAX Counter32
@@ -555,89 +626,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS current
 		DESCRIPTION
 			" see cachemgr "
-        ::= { cacheSysPerf 3 }
-
-        -- fd table
-
-        cacheFdTable OBJECT-TYPE
-                SYNTAX SEQUENCE OF cacheFdEntry
-                ACCESS read-only
-                STATUS current
-                DESCRIPTION
-                        " This table contains an enumeration of
-                          the peer caches, complete with info "
-                ::= { cacheSysPerf 4 }
-
-        cacheFdEntry OBJECT-TYPE
-                SYNTAX CacheFdEntry
-                MAX-ACCESS not-accessible
-                STATUS current
-                DESCRIPTION 
-                        " An entry in cachePeerTable " 
-                INDEX   { cacheFdNumber }
-                ::= { cacheFdTable 1 }
-
-        CacheFdEntry ::= SEQUENCE {
-                cacheFdNumber    INTEGER,
-                cacheFdType      INTEGER,
-		cacheFdTout	 INTEGER,
-		cacheFdNread	 INTEGER,
-		cacheFdNwrite	 INTEGER,
-		cacheFdAddress	 IpAddress,
-		cacheFdName	 DisplayString
-        }
-
-	cacheFdNumber OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS current
-	::= { cacheFdEntry 1 }
-
-	cacheFdType OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS current
-        ::= { cacheFdEntry 2 }
-
-	cacheFdTout OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS current
-        ::= { cacheFdEntry 3 }
-
-	cacheFdNread OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS current
-        ::= { cacheFdEntry 4 }
-
-	cacheFdNwrite OBJECT-TYPE
-                SYNTAX INTEGER
-                ACCESS read-only
-                STATUS current
-        ::= { cacheFdEntry 5 }
-
-	cacheFdAddress OBJECT-TYPE
-                SYNTAX IpAddress
-                ACCESS read-only
-                STATUS current
-        ::= { cacheFdEntry 6 }
-
-	cacheFdName OBJECT-TYPE
-                SYNTAX DisplayString
-                ACCESS read-only
-                STATUS current
-        ::= { cacheFdEntry 7 }
-
-
-        cacheFdType OBJECT-TYPE
-                SYNTAX INTEGER { icp(1), http(2), ftp(3),
-                                          wais(4), gopher (5), Swap (6) }
-                MAX-ACCESS  read-write
-                STATUS      current
-                DESCRIPTION
-                        " type of file descriptor " 
-                ::= { cacheFdEntry 2  }
+        	::= { cacheSysPerf 3 }
 
 
 	cacheMemUsage OBJECT-TYPE
@@ -646,7 +635,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 		STATUS 	current
 		DESCRIPTION
 			" Amount of system memory allocated by the cache"
-		::= { cacheSysPerf 5 } 
+		::= { cacheSysPerf 4 } 
 
 	cacheCpuUsage OBJECT-TYPE
 		SYNTAX Integer32
@@ -654,7 +643,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS  current
                 DESCRIPTION
                         " Amount of cpu seconds consumed"
-		::= { cacheSysPerf 6 }
+		::= { cacheSysPerf 5 }
 
 	cacheMaxResSize OBJECT-TYPE
                 SYNTAX Integer32
@@ -662,7 +651,7 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS  current
                 DESCRIPTION
                         " Maximum Resident Size"
-                ::= { cacheSysPerf 7 }
+                ::= { cacheSysPerf 6 }
 
 	cacheNumObjCount OBJECT-TYPE
                 SYNTAX Counter32                 
@@ -670,129 +659,37 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS  current
                 DESCRIPTION
                         " Number of objects "
-                ::= { cacheSysPerf 8 }
-
-        cacheCurrentMemSize OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                ::= { cacheSysPerf 9 }
+                ::= { cacheSysPerf 7 }
 
         cacheCurrentLRUExpiration OBJECT-TYPE
                 SYNTAX TimeTicks
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheSysPerf 10 }
+                ::= { cacheSysPerf 8 }
 
         cacheCurrentUnlinkRequests OBJECT-TYPE
                 SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheSysPerf 11 }
+                ::= { cacheSysPerf 9 }
 
         cacheCurrentUnusedFileDescrCount OBJECT-TYPE
                 SYNTAX Gauge32
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheSysPerf 12 }
+                ::= { cacheSysPerf 10 }
 
 	cacheCurrentReservedFileDescrCount  OBJECT-TYPE
                 SYNTAX Gauge32
                 ACCESS read-only
                 STATUS mandatory
-                ::= { cacheSysPerf 13 }
+                ::= { cacheSysPerf 11 }
 
 	--
 	-- cacheProtoStats
 	--
 
-
-	cacheProtoStatTable OBJECT-TYPE
-		SYNTAX SEQUENCE OF CacheProtoStatEntry
-		ACCESS not-accessible
-		STATUS current
-		DESCRIPTION
-			" Table containing aggregate statistics 
-			  per supported protocol "
-		::= { cacheProtoStats 1 }
-
-	cacheProtoStatEntry   OBJECT-TYPE
-                SYNTAX CacheProtoStatEntry
-                ACCESS not-accessible
-                STATUS current
-                DESCRIPTION
-                        " An entry in cacheProtoStatTable "
-		INDEX { cacheProtoId }
-		::= { cacheProtoStatTable 1 } 
-
-
-        CacheProtoStatEntry ::= SEQUENCE {
-		cacheProtoId 		Integer32,
-                cacheProtoKbMax   	Counter32,
-                cacheProtoKbMin   	Counter32,
-                cacheProtoKbAvg   	Gauge,
-                cacheProtoKbNow   	Counter32,
-                cacheProtoHit     	Gauge,
-                cacheProtoMiss    	Gauge,
-                cacheProtoRefCount 	Counter32,
-                cacheProtoTranferBytes 	Counter32,
-        }
-	cacheProtoId OBJECT-TYPE
-                SYNTAX Integer32
-                ACCESS read-only
-		STATUS mandatory
-                ::= { cacheProtoStatEntry 1 }
-
-	cacheProtoKbMax OBJECT-TYPE
-		SYNTAX Counter32 
-		ACCESS read-only
-                STATUS mandatory
-		::= { cacheProtoStatEntry 2 }
-
-	cacheProtoKbMin OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                ::= { cacheProtoStatEntry 3 }
-
-	cacheProtoKbAvg OBJECT-TYPE
-                SYNTAX Gauge
-                ACCESS read-only
-                STATUS mandatory
-                ::= { cacheProtoStatEntry 4 }
-
-	cacheProtoKbNow OBJECT-TYPE
-                SYNTAX Counter32
-                ACCESS read-only
-                STATUS mandatory
-                ::= { cacheProtoStatEntry 5 }
-
-	cacheProtoHit OBJECT-TYPE
-                SYNTAX Gauge
-                ACCESS read-only
-                STATUS mandatory
-                ::= { cacheProtoStatEntry 6 }
-
-	cacheProtoMiss OBJECT-TYPE       
-                SYNTAX Gauge
-                ACCESS read-only        
-                STATUS mandatory
-                ::= { cacheProtoStatEntry 7 }   
-
-	cacheProtoRefCount OBJECT-TYPE              
-                SYNTAX Counter32                
-                ACCESS read-only                
-                STATUS mandatory
-                ::= { cacheProtoStatEntry 8 }           
-
-	cacheProtoTranferBytes OBJECT-TYPE                  
-                SYNTAX Counter32                        
-                ACCESS read-only                        
-                STATUS mandatory
-                ::= { cacheProtoStatEntry 9 }
-	
-
-	cacheProtoAggregateStats OBJECT IDENTIFIER ::= { cacheProtoStats 2 }
+	cacheProtoAggregateStats OBJECT IDENTIFIER ::= { cacheProtoStats 1 }
 
 	cacheClientHttpRequests  OBJECT-TYPE
                 SYNTAX Counter32
@@ -854,6 +751,42 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 STATUS mandatory
                 ::= { cacheProtoAggregateStats 10 }
 
+	cacheHttpMedianSvcFiveMin OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 11 }
+
+        cacheHttpMedianSvcHour OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 12 }
+
+        cacheICPMedianSvcFiveMin OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 13 }
+
+        cacheICPMedianSvcHour OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 14 }
+
+        cacheDNSMedianSvcFiveMin OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 15 }
+
+        cacheDNSMedianSvcHour OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                ::= { cacheProtoAggregateStats 16 }
+
 
 	
 	-- 
@@ -880,14 +813,14 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 
 
         CachePeerStatEntry ::= SEQUENCE {
-                cachePeerStatId     Integer,	
-		peerPingsSent	Integer32,
-		peerPingsAcked	Integer32,
-		peerFetches	Integer32,
+                cachePeerStatId Integer,	
+		peerPingsSent	Counter32,
+		peerPingsAcked	Counter32,
+		peerFetches	Counter32,
 		peerRtt		Integer32,
-		peerIgnored	Integer32,
-		peerKeepAlSent	Integer32,
-		peerKeepAlRecv	Integer32
+		peerIgnored	Counter32,
+		peerKeepAlSent	Counter32,
+		peerKeepAlRecv	Counter32
         }
 
 	cachePeerStatId OBJECT-TYPE
@@ -898,19 +831,19 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 
 
 	peerPingsSent OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cachePeerStatEntry 2 }
 
 	peerPingsAcked OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cachePeerStatEntry 3 }
 
 	peerFetches OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cachePeerStatEntry 4 }
@@ -922,19 +855,19 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
                 ::= { cachePeerStatEntry 5 }
 
 	peerIgnored OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cachePeerStatEntry 6 }
 
 	peerKeepAlSent OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cachePeerStatEntry 7 }
 
 	peerKeepAlRecv OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX Counter32
                 ACCESS read-only
                 STATUS mandatory
                 ::= { cachePeerStatEntry 8 }
@@ -985,4 +918,4 @@ squid 		OBJECT IDENTIFIER ::= { iso org(3) dod(6) internet(1) experimental(3) ns
 	  cacheProtoAclMask	IpAddress
           cacheProtoAclType     INTEGER
         }
-END
+--END
