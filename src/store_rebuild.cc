@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.48 1998/09/14 21:28:15 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.49 1998/09/14 23:42:37 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -677,7 +677,7 @@ storeValidate(StoreEntry * e, STVLDCB * callback, void *callback_data, void *tag
     return;
 }
 
-void
+static void
 storeValidateComplete(int fd, void *data, int retcode, int errcode)
 {
     valid_ctrl_t *ctrlp = data;
