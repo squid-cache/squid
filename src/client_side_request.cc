@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.15 2003/02/12 06:11:02 robertc Exp $
+ * $Id: client_side_request.cc,v 1.16 2003/02/13 08:07:47 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -346,7 +346,7 @@ clientAccessCheck(ClientHttpRequest *http)
     }
     context->acl_checklist =
 	clientAclChecklistCreate(Config.accessList.http, http);
-    aclNBCheck(context->acl_checklist, clientAccessCheckDone, context);
+    context->acl_checklist->nonBlockingCheck(clientAccessCheckDone, context);
 }
 
 void
@@ -698,7 +698,7 @@ ClientRequestContext::checkNoCache()
     if (Config.accessList.noCache && http->request->flags.cachable) {
 	acl_checklist =
 	    clientAclChecklistCreate(Config.accessList.noCache, http);
-	aclNBCheck(acl_checklist, CheckNoCacheDone, cbdataReference(this));
+	acl_checklist->nonBlockingCheck(CheckNoCacheDone, cbdataReference(this));
     } else {
 	CheckNoCacheDone(http->request->flags.cachable, cbdataReference(this));
     }

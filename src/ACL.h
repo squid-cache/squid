@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.3 2003/02/12 06:10:58 robertc Exp $
+ * $Id: ACL.h,v 1.4 2003/02/13 08:07:46 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -66,12 +66,18 @@ SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
 SQUIDCEXTERN void aclDestroyRegexList(struct _relist *data);
 SQUIDCEXTERN int aclMatchRegex(relist * data, const char *word);
+wordlist *aclDumpRegexList(relist * data);
 SQUIDCEXTERN void aclParseRegexList(void *curlist);
 SQUIDCEXTERN wordlist *aclDumpGeneric(const acl *);
 SQUIDCEXTERN int aclPurgeMethodInUse(acl_access *);
 SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
-SQUIDCEXTERN int aclAuthenticated(ACLChecklist * checklist);
-void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
+extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
+IPH aclLookupDstIPforASNDone;
+#if USE_IDENT
+IDCB aclLookupIdentDone;
+#endif
+FQDNH aclLookupSrcFQDNDone;
+FQDNH aclLookupDstFQDNDone;
 
 class ACL {
   public:
@@ -81,6 +87,10 @@ class ACL {
 
     static ACL *Factory (char const *);
     static void ParseAclLine(acl ** head);
+    static ACL* FindByName(const char *name);
+
+    /* temporary until we subclass external acl's */
+    static void ExternalAclLookup(ACLChecklist * ch, ACL *, EAH * callback, void *callback_data);
 
     ACL();
     ACL (squid_acl const);
@@ -95,7 +105,6 @@ class ACL {
     virtual wordlist *dumpGeneric() const;
     virtual wordlist *dump() const;
     virtual bool valid () const;
-    virtual void startExternal(ACLChecklist *);
     int checklistMatches(ACLChecklist *);
     
     /* only relevant to METHOD acl's */
@@ -104,6 +113,8 @@ class ACL {
     /* only relecant to ASN acl's */
     void startCache();
     
+    int cacheMatchAcl(dlink_list * cache, ACLChecklist *);
+    virtual int matchForCache(ACLChecklist *checklist);
 
     char name[ACL_NAME_SZ];
     char *cfgline;

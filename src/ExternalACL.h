@@ -1,6 +1,6 @@
 
 /*
- * $Id$
+ * $Id: ExternalACL.h,v 1.1 2003/02/13 08:07:47 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,31 +33,15 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLUSERDATA_H
-#define SQUID_ACLUSERDATA_H
-#include "splay.h"
-#include "ACL.h"
-#include "ACLData.h"
-
-class ACLUserData : public ACLData {
+#ifndef SQUID_EXTERNALACL_H
+#define SQUID_EXTERNALACL_H
+#include "ACLChecklist.h"
+class ExternalACLLookup : public ACLChecklist::AsyncState {
   public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
-
-    virtual ~ACLUserData();
-    bool match(char const *user);
-    wordlist *dump();
-    void parse();
-    virtual ACLUserData *clone() const;
-    
-    SplayNode<char *> *names;
-    struct {
-	unsigned int case_insensitive:1;
-	unsigned int required:1;
-    } flags;
+    static ExternalACLLookup *Instance();
+    virtual void checkForAsync(ACLChecklist *)const;
   private:
-    static MemPool *Pool;
+    static ExternalACLLookup instance_;
+    static void LookupDone(void *data, void *result);
 };
-
-#endif /* SQUID_ACLUSERDATA_H */
+#endif /* SQUID_EXTERNALACL_H */
