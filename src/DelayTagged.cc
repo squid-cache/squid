@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.cc,v 1.1 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayTagged.cc,v 1.2 2003/05/22 10:14:09 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -240,6 +240,12 @@ void
 DelayTagged::Id::bytesIn(int qty)
 {
     theBucket->theBucket.bytesIn(qty);
+}
+
+void
+DelayTagged::Id::delayRead(DeferredRead const &aRead)
+{
+    theTagged->delayRead(aRead);
 }
 
 #endif
