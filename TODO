@@ -7,6 +7,7 @@
 + ETag support (makes metadata bigger--ack!)
 + Incorporate Pelletier's latest retry patch for 1.1
 + FTP PUT
++ REST for failed ftp transfers.
 + be more persistent in forwarding requests; return fewer error pages
 + AS # routing
 + Send full HTTP requests in ICP messages
