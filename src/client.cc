@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.16 1996/12/17 07:16:52 wessels Exp $
+ * $Id: client.cc,v 1.17 1997/05/22 17:29:08 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -135,6 +135,7 @@ main(int argc, char *argv[])
 {
     int conn, c, len, bytesWritten;
     int port, to_stdout, reload;
+    int keep_alive = 0;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ], hostname[BUFSIZ];
     const char *method = "GET";
     extern char *optarg;
@@ -153,7 +154,7 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "fsrnp:c:h:i:m:t:?")) != -1)
+	while ((c = getopt(argc, argv, "fsrnkp:c:h:i:m:t:?")) != -1)
 	    switch (c) {
 	    case 'h':		/* host:arg */
 	    case 'c':		/* backward compat */
@@ -163,6 +164,9 @@ main(int argc, char *argv[])
 	    case 's':		/* silent */
 	    case 'n':		/* backward compat */
 		to_stdout = 0;
+		break;
+	    case 'k':		/* backward compat */
+		keep_alive = 1;
 		break;
 	    case 'r':		/* reload */
 		reload = 1;
@@ -218,6 +222,10 @@ main(int argc, char *argv[])
     }
     if (max_forwards > -1) {
 	sprintf(buf, "Max-Forwards: %d\r\n", max_forwards);
+	strcat(msg, buf);
+    }
+    if (keep_alive) {
+	sprintf(buf, "Proxy-Connection: Keep-Alive\r\n");
 	strcat(msg, buf);
     }
     sprintf(buf, "\r\n");
