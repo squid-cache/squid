@@ -1,7 +1,8 @@
 /*
  * digest_pw_auth.c
  *
- * AUTHOR: Robert Collins. Based on ncsa_auth.c by Arjan de Vet <Arjan.deVet@adv.iae.nl>
+ * AUTHOR: Robert Collins. Based on ncsa_auth.c by Arjan de Vet
+ * <Arjan.deVet@adv.iae.nl>
  *
  * Example digest authentication program for Squid, based on the original
  * proxy_auth code from client_side.c, written by
@@ -11,17 +12,19 @@
  * - empty or blank lines are possible;
  * - file format is username:password
  * 
- * To build a directory integrated backend, you need to be able to 
+ * To build a directory integrated backend, you need to be able to
  * calculate the HA1 returned to squid. To avoid storing a plaintext
- * password you can calculate MD5(username:realm:password) when the user changes their 
- * password, and store the tuple username:realm:HA1. then find the matching
- * username:realm when squid asks for the HA1. 
+ * password you can calculate MD5(username:realm:password) when the
+ * user changes their password, and store the tuple username:realm:HA1.
+ * then find the matching username:realm when squid asks for the
+ * HA1.
  *
- * This implementation could be improved by using such a triple for the file format.
- * However storing such a triple does little to improve security: If compromised the
- * username:realm:HA1 combination is "plaintext equivalent" - for the purposes of 
- * digest authentication they allow the user access. Password syncronisation
- * is not tackled by digest - just preventing on the wire compromise.
+ * This implementation could be improved by using such a triple for
+ * the file format.  However storing such a triple does little to
+ * improve security: If compromised the username:realm:HA1 combination
+ * is "plaintext equivalent" - for the purposes of digest authentication
+ * they allow the user access. Password syncronisation is not tackled
+ * by digest - just preventing on the wire compromise.
  *
  */
 
@@ -56,9 +59,7 @@ static hash_table *hash = NULL;
 static HASHFREE my_free;
 
 typedef struct _user_data {
-    /* first two items must be same as hash_link */
-    char *user;
-    struct _user_data *next;
+    hash_link hash;
     char *passwd;
     char *realm;
 } user_data;
@@ -67,7 +68,7 @@ static void
 my_free(void *p)
 {
     user_data *u = p;
-    xfree(u->user);
+    xfree(u->hash.key);
     xfree(u->passwd);
     xfree(u);
 }
@@ -98,9 +99,9 @@ read_passwd_file(const char *passwdfile)
 	passwd = strtok(NULL, ":\n");
 	if ((strlen(user) > 0) && passwd) {
 	    u = xmalloc(sizeof(*u));
-	    u->user = xstrdup(user);
+	    u->hash.key = xstrdup(user);
 	    u->passwd = xstrdup(passwd);
-	    hash_join(hash, (hash_link *) u);
+	    hash_join(hash, &u->hash);
 	}
     }
     fclose(f);
