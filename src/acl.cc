@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.115 1997/11/12 18:58:38 wessels Exp $
+ * $Id: acl.cc,v 1.116 1997/11/12 22:49:36 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1083,6 +1083,7 @@ aclMatchProxyAuth(struct _acl_proxy_auth *p, aclCheck_t * checklist)
     passwd[0] &= (~0x80);
     if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
 	/* Passwords differ, deny access */
+	p->last_time = 0;	/* Trigger a check of the password file */
 	debug(28, 4) ("aclMatchProxyAuth: authentication failed: user %s: "
 	    "passwords differ\n", sent_user);
 	return 0;
