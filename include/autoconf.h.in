@@ -466,6 +466,9 @@
 /* Define if you have the getpagesize function.  */
 #undef HAVE_GETPAGESIZE
 
+/* Define if you have the getpass function.  */
+#undef HAVE_GETPASS
+
 /* Define if you have the getrlimit function.  */
 #undef HAVE_GETRLIMIT
 
