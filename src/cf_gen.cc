@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.36 2000/06/06 19:34:31 hno Exp $
+ * $Id: cf_gen.cc,v 1.37 2000/11/25 16:02:14 adrian Exp $
  *
  * DEBUG: none          Generate squid.conf and cf_parser.c
  * AUTHOR: Max Okumoto
@@ -608,8 +608,8 @@ gen_conf(Entry * head, FILE * fp)
 		line = def;
 		def = line->next;
 		fprintf(fp, "# %s\n", line->data);
-		free(line->data);
-		free(line);
+		xfree(line->data);
+		xfree(line);
 	    }
 	    blank = 1;
 	}

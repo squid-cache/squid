@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.73 2000/10/20 23:50:59 hno Exp $
+ * $Id: util.c,v 1.74 2000/11/25 16:02:14 adrian Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -177,7 +177,7 @@ size_t xmalloc_total = 0;
 #endif
 
 #if XMALLOC_DEBUG
-#define DBG_ARRY_SZ (1<<10)
+#define DBG_ARRY_SZ (1<<11)
 #define DBG_ARRY_BKTS (1<<8)
 static void *(*malloc_ptrs)[DBG_ARRY_SZ];
 static int malloc_size[DBG_ARRY_BKTS][DBG_ARRY_SZ];
@@ -474,7 +474,8 @@ xfree(void *s)
 #endif
 
 #if XMALLOC_DEBUG
-    check_free(s);
+    if (s != NULL)
+        check_free(s);
 #endif
     if (s != NULL)
 	free(s);
