@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+Acceso Denegado.
+</STRONG>
+<P>
+Las reglas de control de acceso impiden que su petición sea
+permitida en este momento. Contacte con su proveedor de servicios
+si cree que esto es incorrecto.
+</UL>
+

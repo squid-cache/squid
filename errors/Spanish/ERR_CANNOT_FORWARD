@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+Imposibilidad de envíar la petición en este momento.
+</STRONG>
+</UL>
+
+<P>
+La petición no ha podido ser enviada al servidor origen o a alguna
+de las cachés padres. Las razones más probables de que haya ocurrido
+este error son:
+<UL>
+<LI>El administrador de la caché no permite que esta
+    caché realice conexiones directas a los servidores
+    origen, y
+<LI>Todas las cachés configuradas como padres están siendo
+    inalcanzables.
+</UL>

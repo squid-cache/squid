@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+Ha expirado el tiempo de vida de la conexión.
+</STRONG>
+</UL>
+
+<P>
+Squid ha dado por terminada una petición porque se ha excedido
+el máximo tiempo de conexión permitido.

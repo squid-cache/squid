@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+Método de la petición y protocolo no soportados
+</STRONG>
+</UL>
+
+<P>
+Squid no admite todos los métodos para todos los protocolos de acceso.
+Por ejemplo, Usted no puede hacer un POST a un servidor Gopher.

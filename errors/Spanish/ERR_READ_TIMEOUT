@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+Ha saltado la alarma de tiempo excesivo en la lectura.
+</STRONG>
+</UL>
+
+<P>
+El sistema ha devuelto el siguiente mensaje:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Mientras se esperaba a leer datos de la red ha saltado una alarma
+avisansdo de un exceso en el tiempo transcurrido para la lectura.
+La red o el servidor pueden estar congestionados.
+Por favor, inténtelo de nuevo.

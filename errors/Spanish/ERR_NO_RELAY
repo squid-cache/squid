@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>ERROR: El URL solicitado no se ha podido conseguir</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>El URL solicitado no se ha podido conseguir</H2>
+<HR>
+<P>
+Mientras se intentaba traer el URL:
+<A HREF="%U">%U</A>
+<P>
+Ha ocurrido el siguiente problema:
+<UL>
+<LI>
+<STRONG>
+No hay un retransmisor de protocolo Wais.
+</STRONG>
+</UL>
+
+<P>
+Esta caché no tiene definido ningún retransmisor para el protocolo WAIS !!
+Gríteselo al administrador de la caché !!
