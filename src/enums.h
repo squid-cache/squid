@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.117 1998/08/17 19:19:34 wessels Exp $
+ * $Id: enums.h,v 1.118 1998/08/17 22:04:58 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -113,7 +113,10 @@ typedef enum {
     ACL_LOOKUP_NONE,
     ACL_LOOKUP_NEEDED,
     ACL_LOOKUP_PENDING,
-    ACL_LOOKUP_DONE
+    ACL_LOOKUP_DONE,
+    ACL_PROXY_AUTH_NEEDED,
+    ACL_PROXY_AUTH_USED,
+    ACL_PROXY_AUTH_CHECK
 } acl_lookup_state;
 
 enum {

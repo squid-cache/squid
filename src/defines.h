@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.62 1998/07/22 20:53:54 wessels Exp $
+ * $Id: defines.h,v 1.63 1998/08/17 22:04:57 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -53,6 +53,7 @@
 
 #define DefaultDnsChildrenMax		32	/* 32 processes */
 #define DefaultRedirectChildrenMax	32	/* 32 processes */
+#define DefaultAuthenticateChildrenMax	32	/* 32 processes */
 #define MAXHTTPPORTS			12
 
 #define COMM_OK		  (0)
@@ -149,6 +150,12 @@
 #define REDIRECT_NONE 0
 #define REDIRECT_PENDING 1
 #define REDIRECT_DONE 2
+
+#define AUTHENTICATE_AV_FACTOR 1000
+
+#define AUTHENTICATE_NONE 0
+#define AUTHENTICATE_PENDING 1
+#define AUTHENTICATE_DONE 2
 
 #define  CONNECT_PORT        443
 

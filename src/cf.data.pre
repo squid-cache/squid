@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.96 1998/08/17 21:27:31 wessels Exp $
+# $Id: cf.data.pre,v 1.97 1998/08/17 22:04:56 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -921,6 +921,47 @@ DOC_START
 redirect_children 5
 DOC_END
 
+NAME: authenticate_program
+TYPE: string
+LOC: Config.Program.authenticate
+DEFAULT: none
+DOC_START
+	Specify the location of the executable for the authenticator.
+	Such a program reads a line containing "username password"
+	and replies "OK" or "ERR" in an endless loop.
+	If you use an authenticator, make sure you have 1 acl of type
+	proxy_auth.
+	By default, the authenticator_program is not used.
+
+authenticate_program @DEFAULT_AUTH_PROGRAM@
+DOC_END
+
+
+NAME: authenticate_options
+TYPE: wordlist
+LOC: Config.Program.authenticate_options
+DEFAULT: none
+DOC_START
+	Command line options for the authenticate program.
+
+authenticate_options @DEFAULT_PASSWD_FILE@
+DOC_END
+
+
+NAME: authenticate_children
+TYPE: int
+DEFAULT: 5
+LOC: Config.authenticateChildren
+DOC_START
+	The number of authenticator processes to spawn (default 5). If you
+	start too few Squid will have to wait for them to process a backlog
+	of usercode/password verifications, slowing it down. When password
+	verifications are done via a (slow) network you are likely to need
+	lots of authenticator processes.
+
+authenticate_children 5
+DOC_END
+
 COMMENT_START
  OPTIONS FOR TUNING THE CACHE
  -----------------------------------------------------------------------------
@@ -1300,17 +1341,22 @@ DOC_START
 	  # cache_peer_acl mycache.mydomain.net asexample
 	  # cache_peer_acl mycache_mydomain.net !all
 
-	acl aclname proxy_auth passwd_file [ refresh ]
-	  # 'passwd_file' is an Apache-style file of passwords for
-	  # authenticated proxy access. Looks like user:password, with
-	  # the password being standard crypt() format.  'refresh' is
-	  # the time in seconds to check for a changes in the file
-	  # (default = 300 secs).  When using a proxy_auth ACL in an
-	  # ACL list, make sure it is the *last* in the list and the
-	  # only proxy_auth ACL in the list.  NOTE: when a
-	  # Proxy-Authentication header is sent but it is not needed
-	  # during ACL checking the username is NOT logged in
-	  # access.log.
+	acl aclname proxy_auth [ refresh ]
+	  # Use an EXTERNAL authentication program to check username/password
+	  # combinations (see authenticate_program).
+	  #
+	  # 'timeout' is the time a checked username/password combination
+	  # remains cached (default = 3600 secs). If a wrong password
+	  # is given for a cached user, the user gets removed from the
+	  # username/password cache forcing a revalidation.
+	  #
+	  # When using a proxy_auth ACL in an http_access rule, make sure
+	  # it is the *last* in the list and the only proxy_auth ACL in
+	  # the list.
+	  #
+	  # NOTE: when a Proxy-Authentication header is sent but it is not
+	  # needed during ACL checking the username is NOT logged
+	  # in access.log.
 
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
@@ -1319,6 +1365,7 @@ acl myexample dst_as 1241
 acl SSL_ports port 443 563
 acl Dangerous_ports port 7 9 19
 acl CONNECT method CONNECT
+acl password proxy_auth 300
 DOC_END
 
 NAME: http_access
