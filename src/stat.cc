@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.86 1996/10/14 23:45:31 wessels Exp $
+ * $Id: stat.cc,v 1.87 1996/10/15 04:57:57 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -378,10 +378,8 @@ stat_get(cacheinfo * obj, char *req, StoreEntry * sentry)
 	httpReplyHeaderStats(sentry);
     } else if (strcmp(req, "filedescriptors") == 0) {
 	statFiledescriptors(sentry);
-#if USE_ICMP
     } else if (strcmp(req, "netdb") == 0) {
 	netdbDump(sentry);
-#endif
     }
 }
 
@@ -644,10 +642,8 @@ memoryAccounted(void)
 	request_pool.total_pages_allocated * request_pool.page_size +
 	mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
 	meta_data.url_strings +
-#if USE_ICMP
 	meta_data.netdb_addrs * sizeof(netdbEntry) +
 	meta_data.netdb_hosts * sizeof(struct _net_db_name) +
-#endif
 	meta_data.client_info * client_info_sz +
                  meta_data.misc;
 }
@@ -841,7 +837,6 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 	disk_stats.total_pages_allocated * disk_stats.page_size >> 10,
 	(disk_stats.total_pages_allocated - disk_stats.n_pages_in_use) * disk_stats.page_size >> 10);
 
-#if USE_ICMP
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
 	"NetDB Address Entries",
 	meta_data.netdb_addrs,
@@ -853,7 +848,7 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 	meta_data.netdb_hosts,
 	(int) sizeof(struct _net_db_name),
 	             (int) (meta_data.netdb_hosts * sizeof(struct _net_db_name) >> 10));
-#endif
+
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
 	"ClientDB Entries",
 	meta_data.client_info,
