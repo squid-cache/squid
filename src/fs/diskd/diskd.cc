@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.7 2000/11/09 03:32:59 wessels Exp $
+ * $Id: diskd.cc,v 1.8 2000/11/14 09:55:49 adrian Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -45,7 +45,7 @@
 #include <assert.h>
 
 
-#define DEBUG(LEVEL) if (LEVEL > DebugLevel)
+#define DEBUG(LEVEL) if (LEVEL <= DebugLevel)
 
 typedef struct _file_state file_state;
 
