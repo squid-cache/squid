@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.47 1998/06/25 22:54:50 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.48 1998/07/06 19:49:35 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -403,12 +403,10 @@ httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
 {
     assert(hdr && pos);
     assert(*pos >= HttpHeaderInitPos && *pos < hdr->entries.count);
-    debug(55, 8) ("searching for next e in hdr %p from %d\n", hdr, *pos);
     for ((*pos)++; *pos < hdr->entries.count; (*pos)++) {
 	if (hdr->entries.items[*pos])
 	    return hdr->entries.items[*pos];
     }
-    debug(55, 8) ("no more entries in hdr %p\n", hdr);
     return NULL;
 }
 
@@ -426,7 +424,6 @@ httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id)
     assert_eid(id);
     assert(!CBIT_TEST(ListHeadersMask, id));
 
-    debug(55, 8) ("finding entry %d in hdr %p\n", id, hdr);
     /* check mask first */
     if (!CBIT_TEST(hdr->mask, id))
 	return NULL;
@@ -453,7 +450,6 @@ httpHeaderFindLastEntry(const HttpHeader * hdr, http_hdr_type id)
     assert_eid(id);
     assert(!CBIT_TEST(ListHeadersMask, id));
 
-    debug(55, 8) ("finding entry %d in hdr %p\n", id, hdr);
     /* check mask first */
     if (!CBIT_TEST(hdr->mask, id))
 	return NULL;
