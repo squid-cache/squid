@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.160 1997/06/04 07:00:31 wessels Exp $
+ * $Id: comm.cc,v 1.161 1997/06/04 07:02:55 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1045,8 +1045,8 @@ comm_select(time_t sec)
 	for (fd = 0; fd < maxfd; fd++) {
 	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
 		continue;
-	    if ((incoming_counter++ & (lastinc > 0 ? 1 : 7) == 0)
-		comm_poll_incoming();
+	    if ((incoming_counter++ & (lastinc > 0 ? 1 : 7)) == 0)
+		comm_select_incoming();
 	    if (fdIsHttpOrIcp(fd))
 		continue;
 	    if (FD_ISSET(fd, &readfds)) {
