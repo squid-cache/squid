@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.72 1996/10/24 06:12:46 wessels Exp $
+ * $Id: neighbors.cc,v 1.73 1996/10/27 07:11:58 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -109,6 +109,7 @@ static int edgeWouldBePinged _PARAMS((edge *, request_t *));
 static void neighborRemove _PARAMS((edge *));
 static edge *whichEdge _PARAMS((struct sockaddr_in * from));
 static void neighborAlive _PARAMS((edge *, MemObject *, icp_common_t *));
+static void neighborCountIgnored _PARAMS((edge * e, icp_opcode op_unused));
 
 static neighbors *friends = NULL;
 static struct neighbor_cf *Neighbor_cf = NULL;
@@ -550,6 +551,14 @@ neighborAlive(edge * e, MemObject * mem, icp_common_t * header)
     }
 }
 
+static void 
+neighborCountIgnored(edge * e, icp_opcode op_unused)
+{
+    if (e == NULL)
+	return;
+    e->stats.ignored_replies++;
+}
+
 /* I should attach these records to the entry.  We take the first
  * hit we get our wait until everyone misses.  The timeout handler
  * call needs to nip this shopping list or call one of the misses.
@@ -565,29 +574,33 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
     HttpStateData *httpState = NULL;
     neighbor_t ntype = EDGE_NONE;
     char *opcode_d;
+    icp_opcode opcode = (icp_opcode) header->opcode;
 
-    debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n",
-	(int) header->opcode, url);
+    debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n", (int) opcode, url);
     if ((e = whichEdge(from)))
 	neighborAlive(e, mem, header);
-    if ((icp_opcode) header->opcode > ICP_OP_END)
+    if (opcode > ICP_OP_END)
 	return;
-    opcode_d = IcpOpcodeStr[header->opcode];
+    opcode_d = IcpOpcodeStr[opcode];
     if (mem == NULL) {
 	debug(15, 1, "Ignoring %s for missing mem_obj: %s\n", opcode_d, url);
+	neighborCountIgnored(e, opcode);
 	return;
     }
     /* check if someone is already fetching it */
     if (BIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
 	debug(15, 5, "neighborsUdpAck: '%s' already being fetched.\n", url);
+	neighborCountIgnored(e, opcode);
 	return;
     }
     if (entry->ping_status != PING_WAITING) {
 	debug(15, 5, "neighborsUdpAck: Unexpected %s for %s\n", opcode_d, url);
+	neighborCountIgnored(e, opcode);
 	return;
     }
     if (entry->lock_count == 0) {
 	debug(12, 3, "neighborsUdpAck: '%s' has no locks\n", url);
+	neighborCountIgnored(e, opcode);
 	return;
     }
     debug(15, 3, "neighborsUdpAck: %s for '%s' from %s \n",
@@ -595,10 +608,11 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
     mem->e_pings_n_acks++;
     if (e)
 	ntype = neighborType(e, mem->request);
-    if (header->opcode == ICP_OP_SECHO) {
+    if (opcode == ICP_OP_SECHO) {
 	/* Received source-ping reply */
 	if (e) {
 	    debug(15, 1, "Ignoring SECHO from neighbor %s\n", e->host);
+	    neighborCountIgnored(e, opcode);
 	} else {
 	    /* if we reach here, source-ping reply is the first 'parent',
 	     * so fetch directly from the source */
@@ -611,7 +625,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	    protoStart(0, entry, NULL, entry->mem_obj->request);
 	    return;
 	}
-    } else if (header->opcode == ICP_OP_HIT_OBJ) {
+    } else if (opcode == ICP_OP_HIT_OBJ) {
 	if (e == NULL) {
 	    debug(15, 0, "Ignoring ICP_OP_HIT_OBJ from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
@@ -636,7 +650,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	    safe_free(httpState);
 	    return;
 	}
-    } else if (header->opcode == ICP_OP_HIT) {
+    } else if (opcode == ICP_OP_HIT) {
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring HIT from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
@@ -649,7 +663,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 	    protoStart(0, entry, e, entry->mem_obj->request);
 	    return;
 	}
-    } else if (header->opcode == ICP_OP_DECHO) {
+    } else if (opcode == ICP_OP_DECHO) {
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring DECHO from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
@@ -663,7 +677,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 		mem->w_rtt = w_rtt;
 	    }
 	}
-    } else if (header->opcode == ICP_OP_MISS) {
+    } else if (opcode == ICP_OP_MISS) {
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring MISS from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
@@ -674,7 +688,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 		mem->w_rtt = w_rtt;
 	    }
 	}
-    } else if (header->opcode == ICP_OP_DENIED) {
+    } else if (opcode == ICP_OP_DENIED) {
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring DENIED from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
@@ -684,8 +698,9 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 		debug(15, 0, "Disabling '%s', please check your configuration.\n", e->host);
 		neighborRemove(e);
 	    }
+	    neighborCountIgnored(e, opcode);
 	}
-    } else if (header->opcode == ICP_OP_RELOADING) {
+    } else if (opcode == ICP_OP_RELOADING) {
 	if (e)
 	    debug(15, 3, "neighborsUdpAck: %s is RELOADING\n", e->host);
     } else {

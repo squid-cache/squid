@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.87 1996/10/25 02:15:18 wessels Exp $
+ * $Id: http.cc,v 1.88 1996/10/27 07:11:55 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -186,7 +186,6 @@ httpLifetimeExpire(int fd, void *data)
 static void
 httpMakePublic(StoreEntry * entry)
 {
-    ttlSet(entry);
     if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
 }
@@ -328,6 +327,7 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
 	httpParseHeaders(httpState->reply_hdr, reply);
+        timestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	if (reply->code)
 	    debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);

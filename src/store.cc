@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.140 1996/10/25 17:34:55 wessels Exp $
+ * $Id: store.cc,v 1.141 1996/10/27 07:12:01 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -137,9 +137,6 @@
 
 #define WITH_MEMOBJ	1
 #define WITHOUT_MEMOBJ	0
-
-/* rate of checking expired objects in main loop */
-#define STORE_MAINTAIN_RATE	(10)
 
 #define STORE_IN_MEM_BUCKETS		(143)
 
@@ -469,13 +466,14 @@ static void
 storeLog(int tag, StoreEntry * e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
-    time_t t;
+    time_t t = -1;
     int expect_len = 0;
     int actual_len = 0;
     int code = 0;
     if (storelog_fd < 0)
 	return;
-    t = e->expires - squid_curtime;
+    if (-1 < e->expires)
+         t = e->expires - squid_curtime;
     if (e->mem_obj) {
 	code = e->mem_obj->reply->code;
 	expect_len = (int) e->mem_obj->reply->content_length;
@@ -792,7 +790,7 @@ storeCreateEntry(char *url,
     mem->data = new_MemObjectData();
     e->refcount = 0;
     e->lastref = squid_curtime;
-    e->timestamp = 0;		/* set in ttlSet() */
+    e->timestamp = 0;		/* set in timestampsSet() */
     e->ping_status = PING_NONE;
 
     /* allocate pending list */
@@ -1464,16 +1462,9 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 
 	if (store_rebuilding != STORE_REBUILDING_FAST) {
 	    if (stat(swapfile, &sb) < 0) {
-		if (squid_curtime - expires > Config.expireAge) {
-		    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-		    if (opt_unlink_on_reload)
-			safeunlink(swapfile, 1);
-		    data->expcount++;
-		} else {
 		    debug(20, 3, "storeRebuildFromDisk: Swap file missing: <URL:%s>: %s: %s.\n", url, swapfile, xstrerror());
 		    if (opt_unlink_on_reload)
 			safeunlink(swapfile, 1);
-		}
 		continue;
 	    }
 	    /* Empty swap file? */
@@ -1516,13 +1507,6 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 	    storeRelease(e);
 	    data->objcount--;
 	    data->dupcount++;
-	}
-	if (squid_curtime - expires > Config.expireAge) {
-	    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-	    if (opt_unlink_on_reload)
-		safeunlink(swapfile, 1);
-	    data->expcount++;
-	    continue;
 	}
 	/* Is the swap file number already taken? */
 	if (file_map_bit_test(sfileno)) {
@@ -1669,9 +1653,7 @@ storeGetSwapSize(void)
 static int
 storeCheckSwapable(StoreEntry * e)
 {
-    if (squid_curtime - e->expires > Config.expireAge) {
-	debug(20, 2, "storeCheckSwapable: NO: expires now\n");
-    } else if (e->method != METHOD_GET) {
+    if (e->method != METHOD_GET) {
 	debug(20, 2, "storeCheckSwapable: NO: non-GET method\n");
     } else if (!BIT_TEST(e->flag, ENTRY_CACHABLE)) {
 	debug(20, 2, "storeCheckSwapable: NO: not cachable\n");
@@ -2347,21 +2329,6 @@ storeClientCopy(StoreEntry * e, int stateoffset, int maxSize, char *buf, int *si
     return *size;
 }
 
-
-int
-storeEntryValidToSend(StoreEntry * e)
-{
-    if (squid_curtime < e->expires)
-	return 1;
-    if (e->expires != 0)
-	return 0;		/* Expired! */
-    if (e->store_status != STORE_PENDING)
-	return 0;
-    if (e->mem_status != IN_MEMORY)
-	return 0;
-    return 1;			/* STORE_PENDING, IN_MEMORY, exp=0 */
-}
-
 static int
 storeEntryValidLength(StoreEntry * e)
 {
@@ -2483,17 +2450,12 @@ static void
 storeInitHashValues(void)
 {
     int i;
-#define	AVG_OBJECT_SIZE	20
-#define	OBJECTS_PER_BUCKET	10
-
-    /* Calculate size of hash table.  Target is an arbitrary 10
-     * objects per bucket (maximum currently 64k buckets).  */
-    i = Config.Swap.maxSize / AVG_OBJECT_SIZE;
+    /* Calculate size of hash table (maximum currently 64k buckets).  */
+    i = Config.Swap.maxSize / Config.storeHash.avgObjectSize;
     debug(20, 1, "Swap maxSize %d, estimated %d objects\n",
 	Config.Swap.maxSize, i);
-    i /= OBJECTS_PER_BUCKET;
+    i /= Config.storeHash.objectsPerBucket;
     debug(20, 1, "Target number of buckets: %d\n", i);
-
     /* ideally the full scan period should be configurable, for the
      * moment it remains at approximately 24 hours.  */
     if (i < 8192)
@@ -2507,7 +2469,6 @@ storeInitHashValues(void)
     else
 	store_buckets = 65357, store_maintain_rate = 1;
     store_maintain_buckets = 1;
-
     debug(20, 1, "Using %d Store buckets, maintain %d bucket%s every %d second%s\n",
 	store_buckets,
 	store_maintain_buckets,
@@ -2855,8 +2816,6 @@ storeCheckExpired(StoreEntry * e)
 	return 0;
     if (Config.referenceAge && squid_curtime - e->lastref > Config.referenceAge)
 	return 1;
-    if (squid_curtime - e->expires > Config.expireAge)
-	return 1;
     return 0;
 }
 
@@ -2906,4 +2865,12 @@ storeFreeMemory(void)
 	destroy_StoreEntry(*(list + j));
     xfree(list);
     hashFreeMemory(store_table);
+}
+
+int
+expiresMoreThan(time_t expires, time_t when)
+{
+    if (expires < 0)
+	return 0;
+    return (expires > squid_curtime + when);
 }

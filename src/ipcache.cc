@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.78 1996/10/25 00:24:21 wessels Exp $
+ * $Id: ipcache.cc,v 1.79 1996/10/27 07:11:57 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -159,6 +159,7 @@ static ipcache_addrs *ipcacheCheckNumeric _PARAMS((char *name));
 static void ipcacheStatPrint _PARAMS((ipcache_entry *, StoreEntry *));
 static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
 static void ipcacheLockEntry _PARAMS((ipcache_entry *));
+static void ipcacheNudgeQueue _PARAMS((void));
 
 static ipcache_addrs static_addrs;
 static HashID ip_table = 0;
@@ -543,6 +544,15 @@ ipcache_parsebuffer(char *inbuf, dnsserver_t * dnsData)
     return &i;
 }
 
+static void
+ipcacheNudgeQueue()
+{
+    dnsserver_t *dnsData;
+    ipcache_entry *i = NULL;
+    while ((dnsData = dnsGetFirstAvailable()) && (i = ipcacheDequeue()))
+	ipcache_dnsDispatch(dnsData, i);
+}
+
 static int
 ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 {
@@ -605,8 +615,7 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	COMM_SELECT_READ,
 	(PF) ipcache_dnsHandleRead,
 	dnsData, 0);
-    while ((dnsData = dnsGetFirstAvailable()) && (i = ipcacheDequeue()))
-	ipcache_dnsDispatch(dnsData, i);
+    ipcacheNudgeQueue();
     return 0;
 }
 
@@ -621,6 +630,8 @@ ipcacheAddPending(ipcache_entry * i, int fd, IPH handler, void *handlerData)
     pending->handlerData = handlerData;
     for (I = &(i->pending_head); *I; I = &((*I)->next));
     *I = pending;
+    if (i->status == IP_PENDING)
+	ipcacheNudgeQueue();
 }
 
 void
@@ -968,12 +979,9 @@ ipcacheCheckNumeric(char *name)
 int
 ipcacheQueueDrain(void)
 {
-    ipcache_entry *i;
-    dnsserver_t *dnsData;
     if (!ipcacheQueueHead)
 	return 0;
-    while ((dnsData = dnsGetFirstAvailable()) && (i = ipcacheDequeue()))
-	ipcache_dnsDispatch(dnsData, i);
+    ipcacheNudgeQueue();
     return 1;
 }
 
