@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.377 2000/10/03 22:38:14 wessels Exp $
+ * $Id: protos.h,v 1.378 2000/10/04 00:24:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -555,7 +555,6 @@ extern void ipcacheMarkGoodAddr(const char *name, struct in_addr);
 extern void ipcacheFreeMemory(void);
 extern ipcache_addrs *ipcacheCheckNumeric(const char *name);
 extern void ipcache_restart(void);
-extern int ipcacheUnregister(const char *name, void *data);
 
 /* MemBuf */
 /* init with specific sizes */

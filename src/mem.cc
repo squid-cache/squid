@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.47 2000/10/03 22:38:14 wessels Exp $
+ * $Id: mem.cc,v 1.48 2000/10/04 00:24:17 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -245,8 +245,6 @@ memInit(void)
     memDataInit(MEM_ICP_PING_DATA, "ping_data", sizeof(ping_data), 0);
     memDataInit(MEM_INTLIST, "intlist", sizeof(intlist), 0);
     memDataInit(MEM_IOSTATS, "iostats", sizeof(iostats), 0);
-    memDataInit(MEM_IPCACHE_PENDING, "ip_pending", sizeof(ip_pending), 0);
-    memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
     memDataInit(MEM_MEMOBJECT, "MemObject", sizeof(MemObject),
 	Squid_MaxFD >> 3);
     memDataInit(MEM_MEM_NODE, "mem_node", sizeof(mem_node), 0);

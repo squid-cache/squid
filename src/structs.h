@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.351 2000/10/03 22:38:15 wessels Exp $
+ * $Id: structs.h,v 1.352 2000/10/04 00:24:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -922,27 +922,6 @@ struct _ipcache_addrs {
     unsigned char count;
     unsigned char cur;
     unsigned char badcount;
-};
-
-struct _ip_pending {
-    IPH *handler;
-    void *handlerData;
-    ip_pending *next;
-};
-
-struct _ipcache_entry {
-    /* first two items must be equivalent to hash_link */
-    char *name;
-    ipcache_entry *next;
-    time_t lastref;
-    time_t expires;
-    ipcache_addrs addrs;
-    ip_pending *pending_head;
-    char *error_message;
-    struct timeval request_time;
-    dlink_node lru;
-    u_char locks;
-    ipcache_status_t status:3;
 };
 
 struct _domain_ping {
