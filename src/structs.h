@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.321 2000/05/02 19:35:24 hno Exp $
+ * $Id: structs.h,v 1.322 2000/05/02 20:28:30 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -324,6 +324,7 @@ struct _SquidConfig {
     int authenticateTTL;
     int authenticateIpTTL;
     struct {
+	int single_host;
 	char *host;
 	u_short port;
     } Accel;
