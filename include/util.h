@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.31 1997/07/16 20:31:53 wessels Exp $
+ * $Id: util.h,v 1.32 1997/10/16 19:22:36 kostas Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -133,6 +133,7 @@ extern const char *mkrfc1123 _PARAMS((time_t));
 extern char *uudecode _PARAMS((const char *));
 extern char *xstrdup _PARAMS((const char *));
 extern const char *xstrerror _PARAMS((void));
+extern const char *xbstrerror _PARAMS((int));
 extern int tvSubMsec _PARAMS((struct timeval, struct timeval));
 extern int tvSubUsec _PARAMS((struct timeval, struct timeval));
 extern char *xstrncpy _PARAMS((char *, const char *, size_t));

@@ -298,6 +298,50 @@ chapter.
 <!-- %%%% Chapter : IP CACHE %%%% -->
 <sect>IP Cache
 
+<P>
+The IP cache is a built-in component of squid providing
+Hostname to IP-Number translation functionality and managing 
+the involved data-structures . It usually 
+doesn't block on a request except for special cases where this
+is desired (explained below).
+The data structure used for storing name-address mappings
+is a small hashtable (<em>static hash_table *ip_table</em>),
+where structures of type <em>ipcache_entry</em> whose most
+interesting members are:
+<verb>
+struct _ipcache_entry {
+char *name;
+time_t lastref;
+ipcache_addrs addrs;
+struct _ip_pending *pending_head;
+char *error_message;
+unsigned char locks;
+ipcache_status_t status:3;
+}
+</verb>
+
+Main functionality
+is provided through calls to:
+<descrip>
+<tag>ipcache_nbgethostbyname(const char *name, IPH *handler, void *handlerdata)
+</tag>
+where <em/name/ is the name of the host to resolve, <em/handler/ is a 
+pointer to the function to be called when the reply from the IP cache (or
+the DNS if the IP cache misses) and <em/handlerdata/ is information that
+is passed to the handler and does not affect the IP cache.
+<tag>ipcache_gethostbyname(const char *name,int flags)</tag>
+is different in that
+it only checks if an entry exists in it's data-structures and does not by
+default contact the DNS, unless this is requested, by setting the <em/flags/ to
+<em/IP_BLOCKING_LOOKUP/ or <em/IP_LOOKUP_IF_MISS/.
+<tag>ipcache_init()</tag> is called from <em/mainInitialize()/ after disk
+initialization and prior to the reverse fqdn cache initialization
+<tag>ipcache_restart()</tag> is called to clear the IP cache's data structures,
+cancel all pending requests. Currently, it is only called from
+<em/mainReconfigure/.
+</descrip>
+
+
 <!-- %%%% Chapter : SERVER PROTOCOLS %%%% -->
 <sect>Server Protocols
 <sect1>HTTP

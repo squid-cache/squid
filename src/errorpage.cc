@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.71 1997/10/14 18:24:32 wessels Exp $
+ * $Id: errorpage.cc,v 1.72 1997/10/16 19:22:38 kostas Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -131,7 +131,13 @@ errorConvert(char token, ErrorState * err)
 	p=buf;
 	break;
     case 'E':
-	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->errno, xstrerror());
+	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->errno,xbstrerror(err->errno));
+	break;
+    case 'w':
+	snprintf(buf, CVT_BUF_SZ, "%s",Config.adminEmail);
+	break;
+    case 'h':
+	snprintf(buf, CVT_BUF_SZ, "%s", getMyHostname());
 	break;
 /*
  * e - errno            			x
@@ -142,10 +148,10 @@ errorConvert(char token, ErrorState * err)
  * I - server IP address
  * i - client IP address
  * L - HREF link for more info/contact
- * w - cachemgr email address
- * h - cache hostname
+ * w - cachemgr email address			x
+ * h - cache hostname				x
  * d - seconds elapsed since request received
- * p - URL port #
+ * p - URL port #				x
  */
     default:
 	p = "%UNKNOWN%";
@@ -156,8 +162,6 @@ errorConvert(char token, ErrorState * err)
     debug(4, 3) ("errorConvert: %%%c --> '%s'\n", token, p);
     return p;
 }
-
-#define ERROR_BUF_SZ (MAX_URL<<2)
 
 static char *
 errorBuildBuf(ErrorState * err, int *len)

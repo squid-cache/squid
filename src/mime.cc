@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.38 1997/10/13 22:09:16 kostas Exp $
+ * $Id: mime.cc,v 1.39 1997/10/16 19:22:39 kostas Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -223,7 +223,7 @@ mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
 	/* NOTE: don't know size of result thus didn't change
 	   to snprintf(). Should be done sometime! */
 
-    sprintf(result, "Server: %s/%s\r\n%s%s%sContent-Type: %s\r\n%s",
+    snprintf(result, MAX_MIME, "Server: %s/%s\r\n%s%s%sContent-Type: %s\r\n%s",
 	appname,
 	version_string,
 	date,
