@@ -465,11 +465,12 @@ struct _HttpBody {
 };
 
 
-/* server cache control */
-struct _HttpScc {
+/* http cache control header field*/
+struct _HttpHdrCc {
     int mask;
     time_t max_age;
 };
+
 
 /* a storage for an entry of one of possible types (for lower level routines) */
 union _field_store {
@@ -477,8 +478,26 @@ union _field_store {
     time_t v_time;
     char *v_pchar;
     const char *v_pcchar;
-    HttpScc *v_pscc;
+    HttpHdrCc *v_pcc;
     HttpHeaderExtField *v_pefield;
+};
+
+/* per field statistics */
+struct _HttpHeaderFieldStat {
+    int aliveCount;       /* created but not destroyed (count) */
+    int parsCount;        /* #parsing attempts */
+    int errCount;         /* #pasring errors */
+    int repCount;         /* #repetitons */
+};
+
+
+/* constant attributes of http header fields */
+struct _field_attrs_t {
+    const char *name;
+    http_hdr_type id;
+    field_type type;
+    int name_len;
+    HttpHeaderFieldStat stat;
 };
 
 struct _HttpHeader {

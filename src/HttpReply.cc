@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.9 1998/03/04 05:39:27 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.10 1998/03/05 00:01:08 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -295,28 +295,28 @@ httpReplyContentType(const HttpReply * rep)
 time_t
 httpReplyExpires(const HttpReply * rep)
 {
-    HttpScc *scc;
+    HttpHdrCc *cc;
     time_t exp = -1;
     assert(rep);
     /* The max-age directive takes priority over Expires, check it first */
-    scc = httpHeaderGetScc(&rep->hdr);
-    if (scc)
-	exp = scc->max_age;
+    cc = httpHeaderGetCc(&rep->hdr);
+    if (cc)
+	exp = cc->max_age;
     if (exp < 0)
 	exp = httpHeaderGetTime(&rep->hdr, HDR_EXPIRES);
     return exp;
 }
 
 int
-httpReplyHasScc(const HttpReply * rep, http_scc_type type)
+httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type)
 {
-    HttpScc *scc;
+    HttpHdrCc *cc;
     assert(rep);
-    assert(type >= 0 && type < SCC_ENUM_END);
+    assert(type >= 0 && type < CC_ENUM_END);
 
-    scc = httpHeaderGetScc(&rep->hdr);
-    return scc &&		/* scc header is present */
-	EBIT_TEST(scc->mask, type);
+    cc = httpHeaderGetCc(&rep->hdr);
+    return cc &&		/* scc header is present */
+	EBIT_TEST(cc->mask, type);
 }
 
 

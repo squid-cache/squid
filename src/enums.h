@@ -194,16 +194,26 @@ typedef enum {
 
 /* server cache-control */
 typedef enum {
-    SCC_PUBLIC,
-    SCC_PRIVATE,
-    SCC_NO_CACHE,
-    SCC_NO_STORE,
-    SCC_NO_TRANSFORM,
-    SCC_MUST_REVALIDATE,
-    SCC_PROXY_REVALIDATE,
-    SCC_MAX_AGE,
-    SCC_ENUM_END
-} http_scc_type;
+    CC_PUBLIC,
+    CC_PRIVATE,
+    CC_NO_CACHE,
+    CC_NO_STORE,
+    CC_NO_TRANSFORM,
+    CC_MUST_REVALIDATE,
+    CC_PROXY_REVALIDATE,
+    CC_MAX_AGE,
+    CC_ENUM_END
+} http_hdr_cc_type;
+
+/* possible types for http header fields */
+typedef enum {
+    ftInvalid = HDR_ENUM_END,   /* to catch nasty errors with hdr_id<->fld_type clashes */
+    ftInt,
+    ftPChar,
+    ftDate_1123,
+    ftPSCC,
+    ftPExtField
+} field_type;
 
 typedef enum {
     HIER_NONE,
@@ -464,7 +474,7 @@ typedef enum {
 #else
     MEM_HTTPREPLY,
 #endif
-    MEM_HTTP_SCC,
+    MEM_HTTP_HDR_CC,
     MEM_HTTPSTATEDATA,
     MEM_ICPUDPDATA,
     MEM_CLIENTHTTPREQUEST,
