@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.212 2001/02/22 21:05:56 wessels Exp $
+ * $Id: squid.h,v 1.213 2001/02/22 21:38:56 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -447,7 +447,6 @@ struct rusage {
  * properly detecting EOF on FIFOs.  So now we assume that if 
  * its defined, it works correctly on all operating systems.
  */
-#if defined(O_NONBLOCK)
 #define SQUID_NONBLOCK O_NONBLOCK
 /*
  * O_NDELAY is our fallback.
