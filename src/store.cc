@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.216 1997/04/02 04:39:59 wessels Exp $
+ * $Id: store.cc,v 1.217 1997/04/02 05:22:15 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -317,7 +317,6 @@ static int swapfileno = 0;
 static int store_swap_size = 0;	/* kilobytes !! */
 static int store_swap_high = 0;
 static int store_swap_low = 0;
-static int swaplog_fd = -1;
 static int storelog_fd = -1;
 
 /* key temp buffer */
@@ -495,30 +494,6 @@ storeSetMemStatus(StoreEntry * e, mem_status_t status)
 }
 
 /* -------------------------------------------------------------------------- */
-
-#ifdef OLD_CODE
-static char *
-time_describe(time_t t)
-{
-    LOCAL_ARRAY(char, buf, 128);
-    if (t < 60) {
-	sprintf(buf, "%ds", (int) t);
-    } else if (t < 3600) {
-	sprintf(buf, "%dm", (int) t / 60);
-    } else if (t < 86400) {
-	sprintf(buf, "%dh", (int) t / 3600);
-    } else if (t < 604800) {
-	sprintf(buf, "%dD", (int) t / 86400);
-    } else if (t < 2592000) {
-	sprintf(buf, "%dW", (int) t / 604800);
-    } else if (t < 31536000) {
-	sprintf(buf, "%dM", (int) t / 2592000);
-    } else {
-	sprintf(buf, "%dY", (int) t / 31536000);
-    }
-    return buf;
-}
-#endif
 
 static void
 storeLog(int tag, const StoreEntry * e)
@@ -1232,26 +1207,6 @@ storeSwapInStartComplete(void *data, int fd)
     (ctrlp->callback) (ctrlp->callback_data, 0);
     xfree(ctrlp->path);
     xfree(ctrlp);
-}
-
-static void
-storeSwapLog(const StoreEntry * e)
-{
-    LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
-    /* Note this printf format appears in storeWriteCleanLog() too */
-    sprintf(logmsg, "%08x %08x %08x %08x %9d %s\n",
-	(int) e->swap_file_number,
-	(int) e->timestamp,
-	(int) e->expires,
-	(int) e->lastmod,
-	e->object_len,
-	e->url);
-    file_write(swaplog_fd,
-	xstrdup(logmsg),
-	strlen(logmsg),
-	NULL,
-	NULL,
-	xfree);
 }
 
 static void
@@ -2509,16 +2464,7 @@ storeInit(void)
     if (ncache_dirs < 1)
 	fatal("No cache_dir's specified in config file");
     dir_created = storeVerifySwapDirs();
-    if (Config.Log.swap)
-	xstrncpy(swaplog_file, Config.Log.swap, SQUID_MAXPATHLEN);
-    else
-	sprintf(swaplog_file, "%s/log", storeSwapDir(0));
-    swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT, NULL, NULL);
-    debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, swaplog_file);
-    if (swaplog_fd < 0) {
-	sprintf(tmp_error_buf, "Cannot open swap logfile: %s", swaplog_file);
-	fatal(tmp_error_buf);
-    }
+
     if (!opt_zap_disk_store)
 	storeStartRebuildFromDisk();
     else
