@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.103 2003/01/23 00:37:17 robertc Exp $
+ * $Id: client.cc,v 1.104 2003/02/03 21:33:15 robertc Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -47,8 +47,10 @@ static int Now(struct timeval *);
 static SIGHDLR catchSignal;
 static SIGHDLR pipe_handler;
 static void set_our_signal(void);
+#ifndef _SQUID_MSWIN_
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
+#endif
 static int put_fd;
 static char *put_file = NULL;
 static struct stat sb;
@@ -210,6 +212,12 @@ main(int argc, char *argv[])
 		break;
 	    }
     }
+#ifdef _SQUID_MSWIN_
+    {
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+    }
+#endif
     /* Build the HTTP request */
     if (strncmp(url, "mgr:", 4) == 0) {
 	char *t = xstrdup(url + 4);
@@ -304,7 +312,7 @@ main(int argc, char *argv[])
 	    (void) sigaction(SIGINT, &sa, NULL);
 	}
 #else
-	void (*osig) ();
+	void (*osig) (int);
 	if ((osig = signal(SIGINT, catchSignal)) != SIG_DFL)
 	    (void) signal(SIGINT, osig);
 #endif
@@ -333,7 +341,11 @@ main(int argc, char *argv[])
 	    exit(1);
 	}
 	/* Send the HTTP request */
+#ifdef _SQUID_MSWIN_
+	bytesWritten = send(conn, msg, strlen(msg), 0);
+#else
 	bytesWritten = mywrite(conn, msg, strlen(msg));
+#endif
 	if (bytesWritten < 0) {
 	    perror("client: ERROR: write");
 	    exit(1);
@@ -344,8 +356,13 @@ main(int argc, char *argv[])
 	if (put_file) {
 	    int x;
 	    lseek(put_fd, 0, SEEK_SET);
+#ifdef _SQUID_MSWIN_
+	    while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
+		x = write(conn, buf, x);
+#else
 	    while ((x = myread(put_fd, buf, sizeof(buf))) > 0) {
 		x = mywrite(conn, buf, x);
+#endif
 		total_bytes += x;
 		if (x <= 0)
 		    break;
@@ -355,11 +372,19 @@ main(int argc, char *argv[])
 	}
 	/* Read the data */
 
+#ifdef _SQUID_MSWIN_
+	setmode(1, O_BINARY);
+	while ((len = recv(conn, buf, sizeof(buf), 0)) > 0) {
+#else
 	while ((len = myread(conn, buf, sizeof(buf))) > 0) {
+#endif
 	    fsize += len;
 	    if (to_stdout)
 		fwrite(buf, len, 1, stdout);
 	}
+#ifdef _SQUID_MSWIN_
+	setmode(1, O_TEXT);
+#endif
 	(void) close(conn);	/* done with socket */
 
 	if (interrupted)
@@ -489,6 +514,7 @@ set_our_signal(void)
 
 }
 
+#ifndef _SQUID_MSWIN_
 static ssize_t
 myread(int fd, void *buf, size_t len)
 {
@@ -502,3 +528,4 @@ mywrite(int fd, void *buf, size_t len)
     alarm(io_timeout);
     return write(fd, buf, len);
 }
+#endif
