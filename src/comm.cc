@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.195 1997/10/26 01:46:08 wessels Exp $
+ * $Id: comm.cc,v 1.196 1997/10/26 02:33:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -569,7 +569,7 @@ comm_close(int fd)
     assert(F->open);
     assert(F->type != FD_FILE);
     BIT_SET(F->flags, FD_CLOSING);
-    CommWriteStateCallbackAndFree(fd, COMM_ERROR);
+    CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
 	pconnHistCount(1, F->uses);

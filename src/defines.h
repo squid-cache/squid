@@ -33,6 +33,7 @@
 #define COMM_INPROGRESS  (-6)
 #define COMM_ERR_CONNECT (-7)
 #define COMM_ERR_DNS     (-8)
+#define COMM_ERR_CLOSING (-9)
 
 #define COMM_NONBLOCKING  (0x1)
 #define COMM_NOCLOEXEC	  (0x8)
