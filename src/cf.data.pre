@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.366 2004/12/20 16:30:34 robertc Exp $
+# $Id: cf.data.pre,v 1.367 2004/12/21 17:52:53 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2787,6 +2787,19 @@ DOC_START
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
+DOC_END
+
+NAME: reply_header_max_size
+COMMENT: (KB)
+TYPE: b_size_t
+DEFAULT: 20 KB
+LOC: Config.maxReplyHeaderSize
+DOC_START
+	This specifies the maximum size for HTTP headers in a reply.
+	Reply headers are usually relatively small (about 512 bytes).
+	Placing a limit on the reply header size will catch certain
+	bugs (for example with persistent connections) and possibly
+	buffer-overflow or denial-of-service attacks.
 DOC_END
 
 NAME: reply_body_max_size

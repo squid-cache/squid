@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.9 2003/08/10 11:00:43 robertc Exp $
+ * $Id: http.h,v 1.10 2004/12/21 17:52:53 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,7 +42,8 @@ class HttpStateData
 
 public:
     static CWCB SendComplete;
-    void processReplyHeader(const char *, int);
+    /* should be private */
+    void processReplyHeader(const char *buf, int size);
     void processReplyData(const char *, size_t);
     IOCB readReply;
     void maybeReadData();
@@ -50,8 +51,7 @@ public:
 
     StoreEntry *entry;
     HttpRequest *request;
-    char *reply_hdr;
-    size_t reply_hdr_size;
+    MemBuf reply_hdr;
     int reply_hdr_state;
     peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
@@ -75,6 +75,7 @@ private:
     };
     ConnectionStatus statusIfComplete() const;
     ConnectionStatus persistentConnStatus() const;
+    void failReply (HttpReply *reply, http_status const &status);
 };
 
 #endif /* SQUID_HTTP_H */
