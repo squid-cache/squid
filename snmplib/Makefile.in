@@ -43,7 +43,7 @@ $(ALIB):    ${OBJS}
 mib.o:		mib.c
 	$(CC) $(CFLAGS) $(MIBDEFS)	-c mib.c 
 
-distclean: celan
+distclean: clean
 	-rm -f Makefile
 clean:
 	rm -f core *.o ${TARG} shared/*.o *.a *.so*
