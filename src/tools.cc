@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.77 1996/10/24 06:11:56 wessels Exp $
+ * $Id: tools.cc,v 1.78 1996/10/24 20:58:51 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -123,6 +123,12 @@ Thanks!\n"
 static void fatal_common _PARAMS((char *));
 static void mail_warranty _PARAMS((void));
 
+#ifdef _SQUID_SOLARIS_
+int getrusage _PARAMS((int, struct rusage *));
+int getpagesize _PARAMS((void));
+int gethostname _PARAMS((char *, int));
+#endif
+
 static char *
 dead_msg(void)
 {
@@ -239,6 +245,11 @@ death(int sig)
     signal(SIGBUS, SIG_DFL);
     signal(sig, SIG_DFL);
 #endif
+    /* Release the main ports as early as possible */
+    if (theHttpConnection >= 0)
+	(void) close(theHttpConnection);
+    if (theInIcpConnection >= 0)
+	(void) close(theInIcpConnection);
     storeWriteCleanLog();
     PrintRusage(NULL, debug_log);
     if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
