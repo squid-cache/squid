@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.252 2001/03/21 23:41:10 hno Exp $
+ * $Id: acl.cc,v 1.253 2001/04/06 01:49:58 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1831,12 +1831,10 @@ aclChecklistFree(aclCheck_t * checklist)
     if (checklist->request)
 	requestUnlink(checklist->request);
     checklist->request = NULL;
-#if USE_IDENT
     if (checklist->conn) {
 	cbdataUnlock(checklist->conn);
 	checklist->conn = NULL;
     }
-#endif
     cbdataFree(checklist);
 }
 
