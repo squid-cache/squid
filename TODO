@@ -3,8 +3,6 @@ Squid-3.0:
   Feature freeze:
 
   - overlapping helper feature implementation (plain or stateful or both). 
-  - reply_body_max_size syntax cleanups. 
-  - always/never direct syntax cleanups. 
   - Someone other than Robert to review the draft squid 3 release notes (in CVS already).
 
   Other?
@@ -16,6 +14,7 @@ Squid-3.0:
 
   Done items:
 
+  - reply_body_max_size syntax cleanups. (done)
   - Other sponsored work that needs to get into mainline sooner rather
     than later (None known of - RC).
   - Update automake and autoconf on squid-cache.org for the squid-3 CVS snapshot generation.  (done)
@@ -28,6 +27,9 @@ Squid-3.0:
 
 Squid-3.1
   
+  - always/never direct syntax cleanups. 
+  - refactoring of acl driven types to reduce amount of duplicated
+    code (acl_check, acl_tos, acl_address, acl_size_t, ...)
   - Go over the old TODO (below) and sort out what has
      o) Been done
      o) Needs to be done, and when
