@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.84 1997/10/24 18:10:36 wessels Exp $
+ * $Id: errorpage.cc,v 1.85 1997/10/25 16:41:22 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -276,6 +276,8 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 	mem->reply->code = err->http_status;
 }
 
+/* If there is a callback, the callback is responsible to close
+ * the FD, otherwise we do it ourseves. */
 static void
 errorSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
@@ -283,7 +285,8 @@ errorSendComplete(int fd, char *buf, int size, int errflag, void *data)
     debug(4, 3) ("errorSendComplete: FD %d, size=%d\n", fd, size);
     if (err->callback)
 	err->callback(fd, err->callback_data, size);
+    else
+	comm_close(fd);
     cbdataUnlock(err);
     errorStateFree(err);
-    comm_close(fd);
 }
