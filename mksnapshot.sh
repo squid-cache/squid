@@ -46,6 +46,7 @@ echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
 echo ${PACKAGE}-${VERSION}-${date}.tar.bz2 >>${tag}.out
 
 if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
-  cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $package >${PACKAGE}-${VERSION}-${date}.diff
+  echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
+  cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $package >>${PACKAGE}-${VERSION}-${date}.diff
   echo ${PACKAGE}-${VERSION}-${date}.diff >>${tag}.out
 fi
