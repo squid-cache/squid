@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.7 1999/07/22 21:03:45 glenn Exp $
+ * $Id: wccp.cc,v 1.8 1999/07/23 19:30:00 glenn Exp $
  *
  * DEBUG: section 80     WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -77,8 +77,6 @@ struct wccp_assign_bucket_t {
     int type;
     int id;
     int number;
-    int ip_addr[WCCP_ACTIVE_CACHES];
-    char bucket[WCCP_BUCKETS];
 };
 
 static int theInWccpConnection = -1;
@@ -120,28 +118,24 @@ wccpConnectionOpen(void)
 
     debug(80, 5) ("wccpConnectionOpen: Called\n");
     if (Config.Wccp.router.s_addr != inet_addr("0.0.0.0")) {
-	enter_suid();
 	theInWccpConnection = comm_open(SOCK_DGRAM,
 	    0,
 	    Config.Wccp.incoming,
 	    port,
 	    COMM_NONBLOCKING,
 	    "WCCP Port");
-	leave_suid();
 	if (theInWccpConnection < 0)
 	    fatal("Cannot open WCCP Port");
 	commSetSelect(theInWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
 	debug(1, 1) ("Accepting WCCP messages on port %d, FD %d.\n",
 	    (int) port, theInWccpConnection);
 	if (Config.Wccp.outgoing.s_addr != no_addr.s_addr) {
-	    enter_suid();
 	    theOutWccpConnection = comm_open(SOCK_DGRAM,
 		0,
 		Config.Wccp.outgoing,
 		port,
 		COMM_NONBLOCKING,
 		"WCCP Port");
-	    leave_suid();
 	    if (theOutWccpConnection < 0)
 		fatal("Cannot open Outgoing WCCP Port");
 	    commSetSelect(theOutWccpConnection,
@@ -275,31 +269,41 @@ void
 wccpAssignBuckets(void *voidnotused)
 {
     struct wccp_assign_bucket_t wccp_assign_bucket;
-    int number_buckets, loop_buckets, loop, number_caches, bucket = 0;
-    struct in_addr in;
+    int number_buckets, loop_buckets, loop, number_caches, \
+		bucket = 0, *caches, offset;
+    char buckets[WCCP_BUCKETS];
+    void *buf;
 
     debug(80, 6) ("wccpAssignBuckets: Called\n");
     memset(&wccp_assign_bucket, '\0', sizeof(wccp_assign_bucket));
-    memset(&wccp_assign_bucket.bucket, 0xFF, sizeof(wccp_assign_bucket.bucket));
+    memset(buckets, 0xFF, WCCP_BUCKETS);
 
     number_caches = ntohl(wccp_i_see_you.number);
     if (number_caches > WCCP_ACTIVE_CACHES)
 	number_caches = WCCP_ACTIVE_CACHES;
+    caches = xmalloc(sizeof(int) * number_caches);
 
     number_buckets = WCCP_BUCKETS / number_caches;
     for (loop = 0; loop < number_caches; loop++) {
-	in.s_addr = wccp_i_see_you.wccp_cache_entry[loop].ip_addr;
-	wccp_assign_bucket.ip_addr[loop] = wccp_i_see_you.wccp_cache_entry[loop].ip_addr;
+	caches[loop] = wccp_i_see_you.wccp_cache_entry[loop].ip_addr;
 	for (loop_buckets = 0; loop_buckets < number_buckets; loop_buckets++) {
-	    wccp_assign_bucket.bucket[bucket++] = loop;
+	    buckets[bucket++] = loop;
 	}
     }
+    offset = sizeof(wccp_assign_bucket);
+    buf = xmalloc(offset + WCCP_BUCKETS + (sizeof(*caches) * number_caches));
     wccp_assign_bucket.type = htonl(WCCP_ASSIGN_BUCKET);
     wccp_assign_bucket.id = wccp_i_see_you.id;
     wccp_assign_bucket.number = wccp_i_see_you.number;
+
+    memcpy(buf, &wccp_assign_bucket, offset);
+    memcpy(buf + offset, caches, (sizeof(*caches) * number_caches));
+    offset += (sizeof(*caches) * number_caches);
+    memcpy(buf + offset, buckets, WCCP_BUCKETS);
+    offset += WCCP_BUCKETS;
     send(theOutWccpConnection,
-	&wccp_assign_bucket,
-	sizeof(wccp_assign_bucket),
+	buf,
+	offset,
 	0);
     change = 0;
 }
