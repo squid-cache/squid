@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.348 1997/11/24 22:36:24 wessels Exp $
+ * $Id: store.cc,v 1.349 1997/11/28 08:11:59 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -259,8 +259,6 @@ static SIH storeClientCopyFileOpened;
 static DRCB storeClientCopyHandleRead;
 static FOCB storeSwapInFileOpened;
 static void storeClientCopyFileRead(store_client * sc);
-static void storeEntryListAdd(StoreEntry * e, dlink_node *, dlink_list *);
-static void storeEntryListDelete(dlink_node *, dlink_list *);
 static void storeSetMemStatus(StoreEntry * e, int);
 static void storeClientCopy2(StoreEntry *, store_client *);
 static void storeHashInsert(StoreEntry * e, const cache_key *);
@@ -375,14 +373,14 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
 	e, storeKeyText(key));
     e->key = storeKeyDup(key);
     hash_join(store_table, (hash_link *) e);
-    storeEntryListAdd(e, &e->lru, &all_list);
+    dlinkAdd(e, &e->lru, &all_list);
 }
 
 static void
 storeHashDelete(StoreEntry * e)
 {
     hash_remove_link(store_table, (hash_link *) e);
-    storeEntryListDelete(&e->lru, &all_list);
+    dlinkDelete(&e->lru, &all_list);
     storeKeyFree(e->key);
     e->key = NULL;
 }
@@ -417,7 +415,7 @@ storeLog(int tag, const StoreEntry * e)
 	reply->content_type[0] ? reply->content_type : "unknown",
 	reply->content_length,
 	(int) (mem->inmem_hi - mem->reply->hdr_sz),
-	RequestMethodStr[e->method],
+	RequestMethodStr[mem->method],
 	mem->log_url);
     file_write(storelog_fd,
 	xstrdup(logmsg),
@@ -448,8 +446,8 @@ void
 storeLockObject(StoreEntry * e)
 {
     if (e->lock_count++ == 0) {
-	storeEntryListDelete(&e->lru, &all_list);
-	storeEntryListAdd(e, &e->lru, &all_list);
+	dlinkDelete(&e->lru, &all_list);
+	dlinkAdd(e, &e->lru, &all_list);
     }
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
 	storeKeyText(e->key), (int) e->lock_count);
@@ -522,7 +520,7 @@ storeSetPrivateKey(StoreEntry * e)
 	storeHashDelete(e);
     if (mem != NULL) {
 	mem->reqnum = getKeyCounter();
-	newkey = storeKeyPrivate(mem->url, e->method, mem->reqnum);
+	newkey = storeKeyPrivate(mem->url, mem->method, mem->reqnum);
     } else {
 	newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter());
     }
@@ -540,12 +538,12 @@ storeSetPublicKey(StoreEntry * e)
     if (e->key && !EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
     assert(mem);
-    newkey = storeKeyPublic(mem->url, e->method);
+    newkey = storeKeyPublic(mem->url, mem->method);
     if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
 	debug(20, 3) ("storeSetPublicKey: Making old '%s' private.\n", mem->url);
 	storeSetPrivateKey(e2);
 	storeRelease(e2);
-	newkey = storeKeyPublic(mem->url, e->method);
+	newkey = storeKeyPublic(mem->url, mem->method);
     }
     if (e->key)
 	storeHashDelete(e);
@@ -563,7 +561,7 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     e = new_StoreEntry(WITH_MEMOBJ, url, log_url);
     e->lock_count = 1;		/* Note lock here w/o calling storeLock() */
     mem = e->mem_obj;
-    e->method = method;
+    mem->method = method;
     if (neighbors_do_private_keys || !EBIT_TEST(flags, REQ_HIERARCHICAL))
 	storeSetPrivateKey(e);
     else
@@ -611,7 +609,6 @@ storeAddDiskRestore(const cache_key * key,
     /* if you call this you'd better be sure file_number is not 
      * already in use! */
     e = new_StoreEntry(WITHOUT_MEMOBJ, NULL, NULL);
-    e->method = METHOD_GET;
     storeHashInsert(e, key);
     e->store_status = STORE_OK;
     storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -1388,9 +1385,12 @@ storeStartRebuildFromDisk(void)
 static int
 storeCheckCachable(StoreEntry * e)
 {
-    if (e->method != METHOD_GET) {
+#if CACHE_ALL_METHODS
+    if (e->mem_obj->method != METHOD_GET) {
 	debug(20, 2) ("storeCheckCachable: NO: non-GET method\n");
-    } else if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
+    } else
+#endif
+    if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
 	debug(20, 2) ("storeCheckCachable: NO: not cachable\n");
     } else if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
 	debug(20, 2) ("storeCheckCachable: NO: release requested\n");
@@ -2297,33 +2297,6 @@ storeMemObjectDump(MemObject * mem)
 	checkNullString(mem->log_url));
 }
 
-static void
-storeEntryListAdd(StoreEntry * e, dlink_node * m, dlink_list * list)
-{
-    debug(20, 3) ("storeEntryListAdd: %s\n", storeKeyText(e->key));
-    m->data = e;
-    m->prev = NULL;
-    m->next = list->head;
-    if (list->head)
-	list->head->prev = m;
-    list->head = m;
-    if (list->tail == NULL)
-	list->tail = m;
-}
-
-static void
-storeEntryListDelete(dlink_node * m, dlink_list * list)
-{
-    if (m->next)
-	m->next->prev = m->prev;
-    if (m->prev)
-	m->prev->next = m->next;
-    if (m == list->head)
-	list->head = m->next;
-    if (m == list->tail)
-	list->tail = m->prev;
-}
-
 /* NOTE, this function assumes only two mem states */
 static void
 storeSetMemStatus(StoreEntry * e, int new_status)
@@ -2334,10 +2307,10 @@ storeSetMemStatus(StoreEntry * e, int new_status)
     assert(mem != NULL);
     if (new_status == IN_MEMORY) {
 	assert(mem->inmem_lo == 0);
-	storeEntryListAdd(e, &mem->lru, &inmem_list);
+	dlinkAdd(e, &mem->lru, &inmem_list);
 	meta_data.hot_vm++;
     } else {
-	storeEntryListDelete(&mem->lru, &inmem_list);
+	dlinkDelete(&mem->lru, &inmem_list);
 	meta_data.hot_vm--;
     }
     e->mem_status = new_status;
