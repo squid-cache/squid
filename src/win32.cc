@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.4 2001/11/17 11:09:25 hno Exp $
+ * $Id: win32.cc,v 1.5 2002/06/25 11:43:34 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -56,6 +56,10 @@ GetOSVersion()
 	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 1)) {
 	    WIN32_OS_string = xstrdup("Windows XP");
 	    return _WIN_OS_WINXP;
+	}
+	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 2)) {
+	    WIN32_OS_string = xstrdup("Windows .NET");
+	    return _WIN_OS_WINNET;
 	}
 	break;
     case VER_PLATFORM_WIN32_WINDOWS:
