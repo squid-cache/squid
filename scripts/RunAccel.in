@@ -1,13 +1,14 @@
 #!/bin/sh
 #
-#  $Id: RunAccel.in,v 1.3 1996/05/03 22:56:19 wessels Exp $
+#  $Id: RunAccel.in,v 1.4 1996/07/09 03:41:15 wessels Exp $
 
 # enable HTTP requests on port 80
 port="-a 80"
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-PATH=@bindir@:/bin
+logdir=@localstatedir@
+PATH=@bindir@:/bin:/usr/bin
 export PATH
 
 if test $# = 1 ; then
@@ -17,9 +18,9 @@ fi
 
 failcount=0
 while : ; do
-	echo "Running: squid $port -s $conf >> squid.out 2>&1"
+	echo "Running: squid $port -s $conf >> $logdir/squid.out 2>&1"
 	start=`date '+%d%H%M%S'`
-	squid $port -s $conf >> squid.out 2>&1
+	squid $port -s $conf >> $logdir/squid.out 2>&1
 	stop=`date '+%d%H%M%S'`
 	t=`expr $stop - $start`
 	if test 0 -le $t -a $t -lt 5 ; then

@@ -1,47 +1,139 @@
-/* $Id: http.cc,v 1.58 1996/05/03 22:56:27 wessels Exp $ */
+/*
+ * $Id: http.cc,v 1.59 1996/07/09 03:41:28 wessels Exp $
+ *
+ * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
+ * AUTHOR: Harvest Derived
+ *
+ * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
 
 /*
- * DEBUG: Section 11          http: HTTP
+ * Copyright (c) 1994, 1995.  All rights reserved.
+ *  
+ *   The Harvest software was developed by the Internet Research Task
+ *   Force Research Group on Resource Discovery (IRTF-RD):
+ *  
+ *         Mic Bowman of Transarc Corporation.
+ *         Peter Danzig of the University of Southern California.
+ *         Darren R. Hardy of the University of Colorado at Boulder.
+ *         Udi Manber of the University of Arizona.
+ *         Michael F. Schwartz of the University of Colorado at Boulder.
+ *         Duane Wessels of the University of Colorado at Boulder.
+ *  
+ *   This copyright notice applies to software in the Harvest
+ *   ``src/'' directory only.  Users should consult the individual
+ *   copyright notices in the ``components/'' subdirectories for
+ *   copyright information about other software bundled with the
+ *   Harvest source code distribution.
+ *  
+ * TERMS OF USE
+ *   
+ *   The Harvest software may be used and re-distributed without
+ *   charge, provided that the software origin and research team are
+ *   cited in any use of the system.  Most commonly this is
+ *   accomplished by including a link to the Harvest Home Page
+ *   (http://harvest.cs.colorado.edu/) from the query page of any
+ *   Broker you deploy, as well as in the query result pages.  These
+ *   links are generated automatically by the standard Broker
+ *   software distribution.
+ *   
+ *   The Harvest software is provided ``as is'', without express or
+ *   implied warranty, and with no support nor obligation to assist
+ *   in its use, correction, modification or enhancement.  We assume
+ *   no liability with respect to the infringement of copyrights,
+ *   trade secrets, or any patents, and are not responsible for
+ *   consequential damages.  Proper use of the Harvest software is
+ *   entirely the responsibility of the user.
+ *  
+ * DERIVATIVE WORKS
+ *  
+ *   Users may make derivative works from the Harvest software, subject 
+ *   to the following constraints:
+ *  
+ *     - You must include the above copyright notice and these 
+ *       accompanying paragraphs in all forms of derivative works, 
+ *       and any documentation and other materials related to such 
+ *       distribution and use acknowledge that the software was 
+ *       developed at the above institutions.
+ *  
+ *     - You must notify IRTF-RD regarding your distribution of 
+ *       the derivative work.
+ *  
+ *     - You must clearly notify users that your are distributing 
+ *       a modified version and not the original Harvest software.
+ *  
+ *     - Any derivative product is also subject to these copyright 
+ *       and use restrictions.
+ *  
+ *   Note that the Harvest software is NOT in the public domain.  We
+ *   retain copyright, as specified above.
+ *  
+ * HISTORY OF FREE SOFTWARE STATUS
+ *  
+ *   Originally we required sites to license the software in cases
+ *   where they were going to build commercial products/services
+ *   around Harvest.  In June 1995 we changed this policy.  We now
+ *   allow people to use the core Harvest software (the code found in
+ *   the Harvest ``src/'' directory) for free.  We made this change
+ *   in the interest of encouraging the widest possible deployment of
+ *   the technology.  The Harvest software is really a reference
+ *   implementation of a set of protocols and formats, some of which
+ *   we intend to standardize.  We encourage commercial
+ *   re-implementations of code complying to this set of standards.  
  */
 
 #include "squid.h"
 
-#define READBUFSIZ	(1<<14)
 #define HTTP_DELETE_GAP   (1<<18)
 
-typedef struct _httpdata {
-    StoreEntry *entry;
-    request_t *request;
-    char *req_hdr;
-    char *icp_page_ptr;		/* Used to send proxy-http request: 
-				 * put_free_8k_page(me) if the lifetime
-				 * expires */
-    char *icp_rwd_ptr;		/* When a lifetime expires during the
-				 * middle of an icpwrite, don't lose the
-				 * icpReadWriteData */
-    char *reply_hdr;
-    int reply_hdr_state;
-    int free_request;
-} HttpData;
+struct {
+    int parsed;
+    int date;
+    int lm;
+    int exp;
+    int clen;
+    int ctype;
+} ReplyHeaderStats;
 
 static int httpStateFree(fd, httpState)
      int fd;
-     HttpData *httpState;
+     HttpStateData *httpState;
 {
     if (httpState == NULL)
 	return 1;
+    storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
 	put_free_8k_page(httpState->reply_hdr);
 	httpState->reply_hdr = NULL;
     }
-    if (httpState->icp_page_ptr) {
-	put_free_8k_page(httpState->icp_page_ptr);
-	httpState->icp_page_ptr = NULL;
+    if (httpState->reqbuf && httpState->buf_type == BUF_TYPE_8K) {
+	put_free_8k_page(httpState->reqbuf);
+	httpState->reqbuf = NULL;
+    } else {
+	safe_free(httpState->reqbuf)
     }
-    if (httpState->icp_rwd_ptr)
-	safe_free(httpState->icp_rwd_ptr);
-    if (httpState->free_request)
-	safe_free(httpState->request);
+    requestUnlink(httpState->request);
     xfree(httpState);
     return 0;
 }
@@ -67,13 +159,13 @@ int httpCachable(url, method)
 }
 
 /* This will be called when timeout on read. */
-static void httpReadReplyTimeout(fd, data)
+static void httpReadReplyTimeout(fd, httpState)
      int fd;
-     HttpData *data;
+     HttpStateData *httpState;
 {
     StoreEntry *entry = NULL;
 
-    entry = data->entry;
+    entry = httpState->entry;
     debug(11, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
@@ -81,13 +173,13 @@ static void httpReadReplyTimeout(fd, data)
 }
 
 /* This will be called when socket lifetime is expired. */
-static void httpLifetimeExpire(fd, data)
+static void httpLifetimeExpire(fd, httpState)
      int fd;
-     HttpData *data;
+     HttpStateData *httpState;
 {
     StoreEntry *entry = NULL;
 
-    entry = data->entry;
+    entry = httpState->entry;
     debug(11, 4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
@@ -95,128 +187,194 @@ static void httpLifetimeExpire(fd, data)
     comm_close(fd);
 }
 
+/* This object can be cached for a long time */
+static void httpMakePublic(entry)
+     StoreEntry *entry;
+{
+    entry->expires = squid_curtime + ttlSet(entry);
+    if (BIT_TEST(entry->flag, CACHABLE))
+	storeSetPublicKey(entry);
+}
 
-static void httpProcessReplyHeader(data, buf, size)
-     HttpData *data;
+/* This object should never be cached at all */
+static void httpMakePrivate(entry)
+     StoreEntry *entry;
+{
+    storeSetPrivateKey(entry);
+    storeExpireNow(entry);
+    BIT_RESET(entry->flag, CACHABLE);
+    storeReleaseRequest(entry);	/* delete object when not used */
+}
+
+/* This object may be negatively cached */
+static void httpCacheNegatively(entry)
+     StoreEntry *entry;
+{
+    entry->expires = squid_curtime + getNegativeTTL();
+    if (BIT_TEST(entry->flag, CACHABLE))
+	storeSetPublicKey(entry);
+    /* XXX: mark object "not to store on disk"? */
+}
+
+
+/* Build a reply structure from HTTP reply headers */
+void httpParseHeaders(buf, reply)
+     char *buf;
+     struct _http_reply *reply;
+{
+    char *headers = NULL;
+    char *t = NULL;
+    char *s = NULL;
+
+    ReplyHeaderStats.parsed++;
+    headers = xstrdup(buf);
+    t = strtok(headers, "\n");
+    while (t) {
+	s = t + strlen(t);
+	while (*s == '\r')
+	    *s-- = '\0';
+	if (!strncasecmp(t, "HTTP", 4)) {
+	    sscanf(t + 1, "%lf", &reply->version);
+	    if ((t = strchr(t, ' '))) {
+		t++;
+		reply->code = atoi(t);
+	    }
+	} else if (!strncasecmp(t, "Content-type:", 13)) {
+	    if ((t = strchr(t, ' '))) {
+		t++;
+		strncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ - 1);
+		ReplyHeaderStats.ctype++;
+	    }
+	} else if (!strncasecmp(t, "Content-length:", 15)) {
+	    if ((t = strchr(t, ' '))) {
+		t++;
+		reply->content_length = atoi(t);
+		ReplyHeaderStats.clen++;
+	    }
+	} else if (!strncasecmp(t, "Date:", 5)) {
+	    if ((t = strchr(t, ' '))) {
+		t++;
+		strncpy(reply->date, t, HTTP_REPLY_FIELD_SZ - 1);
+		ReplyHeaderStats.date++;
+	    }
+	} else if (!strncasecmp(t, "Expires:", 8)) {
+	    if ((t = strchr(t, ' '))) {
+		t++;
+		strncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ - 1);
+		ReplyHeaderStats.exp++;
+	    }
+	} else if (!strncasecmp(t, "Last-Modified:", 14)) {
+	    if ((t = strchr(t, ' '))) {
+		t++;
+		strncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ - 1);
+		ReplyHeaderStats.lm++;
+	    }
+	}
+	t = strtok(NULL, "\n");
+    }
+    safe_free(headers);
+}
+
+
+void httpProcessReplyHeader(httpState, buf, size)
+     HttpStateData *httpState;
      char *buf;			/* chunk just read by httpReadReply() */
      int size;
 {
-    char *s = NULL;
     char *t = NULL;
-    char *t1 = NULL;
-    char *t2 = NULL;
-    StoreEntry *entry = data->entry;
-    char *headers = NULL;
+    StoreEntry *entry = httpState->entry;
     int room;
     int hdr_len;
     struct _http_reply *reply = NULL;
 
     debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
 
-    if (data->reply_hdr == NULL) {
-	data->reply_hdr = get_free_8k_page();
-	memset(data->reply_hdr, '\0', 8192);
+    if (httpState->reply_hdr == NULL) {
+	httpState->reply_hdr = get_free_8k_page();
+	memset(httpState->reply_hdr, '\0', 8192);
     }
-    if (data->reply_hdr_state == 0) {
-	hdr_len = strlen(data->reply_hdr);
+    if (httpState->reply_hdr_state == 0) {
+	hdr_len = strlen(httpState->reply_hdr);
 	room = 8191 - hdr_len;
-	strncat(data->reply_hdr, buf, room < size ? room : size);
+	strncat(httpState->reply_hdr, buf, room < size ? room : size);
 	hdr_len += room < size ? room : size;
-	if (hdr_len > 4 && strncmp(data->reply_hdr, "HTTP/", 5)) {
+	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
 	    debug(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
-	    data->reply_hdr_state += 2;
+	    httpState->reply_hdr_state += 2;
 	    return;
 	}
-	/* need to take the lowest, non-zero pointer to the end of the headers.
-	 * some objects have \n\n separating header and body, but \r\n\r\n in
-	 * body text. */
-	t1 = strstr(data->reply_hdr, "\r\n\r\n");
-	t2 = strstr(data->reply_hdr, "\n\n");
-	if (t1 && t2)
-	    t = t2 < t1 ? t2 : t1;
-	else
-	    t = t2 ? t2 : t1;
+	/* Find the end of the headers */
+	t = mime_headers_end(httpState->reply_hdr);
 	if (!t)
+	    /* XXX: Here we could check for buffer overflow... */
 	    return;		/* headers not complete */
-	t += (t == t1 ? 4 : 2);
+	/* Cut after end of headers */
 	*t = '\0';
 	reply = entry->mem_obj->reply;
-	reply->hdr_sz = t - data->reply_hdr;
+	reply->hdr_sz = t - httpState->reply_hdr;
 	debug(11, 7, "httpProcessReplyHeader: hdr_sz = %d\n", reply->hdr_sz);
-	data->reply_hdr_state++;
+	httpState->reply_hdr_state++;
     }
-    if (data->reply_hdr_state == 1) {
-	headers = xstrdup(data->reply_hdr);
-	data->reply_hdr_state++;
+    if (httpState->reply_hdr_state == 1) {
+	httpState->reply_hdr_state++;
 	debug(11, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
-	    data->reply_hdr);
-	t = strtok(headers, "\n");
-	while (t) {
-	    s = t + strlen(t);
-	    while (*s == '\r')
-		*s-- = '\0';
-	    if (!strncasecmp(t, "HTTP", 4)) {
-		sscanf(t + 1, "%lf", &reply->version);
-		if ((t = strchr(t, ' '))) {
-		    t++;
-		    reply->code = atoi(t);
-		}
-	    } else if (!strncasecmp(t, "Content-type:", 13)) {
-		if ((t = strchr(t, ' '))) {
-		    t++;
-		    strncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ - 1);
-		}
-	    } else if (!strncasecmp(t, "Content-length:", 15)) {
-		if ((t = strchr(t, ' '))) {
-		    t++;
-		    reply->content_length = atoi(t);
-		}
-	    } else if (!strncasecmp(t, "Date:", 5)) {
-		if ((t = strchr(t, ' '))) {
-		    t++;
-		    strncpy(reply->date, t, HTTP_REPLY_FIELD_SZ - 1);
-		}
-	    } else if (!strncasecmp(t, "Expires:", 8)) {
-		if ((t = strchr(t, ' '))) {
-		    t++;
-		    strncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ - 1);
-		}
-	    } else if (!strncasecmp(t, "Last-Modified:", 14)) {
-		if ((t = strchr(t, ' '))) {
-		    t++;
-		    strncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ - 1);
-		}
-	    }
-	    t = strtok(NULL, "\n");
-	}
-	safe_free(headers);
+	    httpState->reply_hdr);
+	/* Parse headers into reply structure */
+	httpParseHeaders(httpState->reply_hdr, reply);
+	/* Check if object is cacheable or not based on reply code */
 	if (reply->code)
 	    debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
 	switch (reply->code) {
+	    /* Responses that are cacheable */
 	case 200:		/* OK */
 	case 203:		/* Non-Authoritative Information */
 	case 300:		/* Multiple Choices */
 	case 301:		/* Moved Permanently */
 	case 410:		/* Gone */
-	    /* These can be cached for a long time, make the key public */
-	    entry->expires = squid_curtime + ttlSet(entry);
-	    if (BIT_TEST(entry->flag, CACHABLE))
-		storeSetPublicKey(entry);
+	    /* don't cache objects from neighbors w/o LMT, Date, or Expires */
+	    if (*reply->date)
+		httpMakePublic(entry);
+	    else if (*reply->last_modified)
+		httpMakePublic(entry);
+	    else if (!httpState->neighbor)
+		httpMakePublic(entry);
+	    else if (*reply->expires)
+		httpMakePublic(entry);
+	    else
+		httpMakePrivate(entry);
 	    break;
+	    /* Responses that only are cacheable if the server says so */
+	case 302:		/* Moved temporarily */
+	    if (*reply->expires)
+		httpMakePublic(entry);
+	    else
+		httpMakePrivate(entry);
+	    break;
+	    /* Errors can be negatively cached */
+	case 204:		/* No Content */
+	case 305:		/* Use Proxy (proxy redirect) */
+	case 400:		/* Bad Request */
+	case 403:		/* Forbidden */
+	case 404:		/* Not Found */
+	case 405:		/* Method Now Allowed */
+	case 414:		/* Request-URI Too Long */
+	case 500:		/* Internal Server Error */
+	case 501:		/* Not Implemented */
+	case 502:		/* Bad Gateway */
+	case 503:		/* Service Unavailable */
+	case 504:		/* Gateway Timeout */
+	    if (*reply->expires)
+		httpMakePublic(entry);
+	    else
+		httpCacheNegatively(entry);
+	    break;
+	    /* Some responses can never be cached */
+	case 303:		/* See Other */
 	case 304:		/* Not Modified */
 	case 401:		/* Unauthorized */
 	case 407:		/* Proxy Authentication Required */
-	    /* These should never be cached at all */
-	    storeSetPrivateKey(entry);
-	    storeExpireNow(entry);
-	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry);
-	    break;
-	default:
-	    /* These can be negative cached, make key public */
-	    entry->expires = squid_curtime + getNegativeTTL();
-	    if (BIT_TEST(entry->flag, CACHABLE))
-		storeSetPublicKey(entry);
+	default:		/* Unknown status code */
+	    httpMakePrivate(entry);
 	    break;
 	}
     }
@@ -226,17 +384,18 @@ static void httpProcessReplyHeader(data, buf, size)
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 /* XXX this function is too long! */
-static void httpReadReply(fd, data)
+static void httpReadReply(fd, httpState)
      int fd;
-     HttpData *data;
+     HttpStateData *httpState;
 {
-    static char buf[READBUFSIZ];
+    static char buf[SQUID_TCP_SO_RCVBUF];
     int len;
+    int bin;
     int clen;
     int off;
     StoreEntry *entry = NULL;
 
-    entry = data->entry;
+    entry = httpState->entry;
     if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
 	/* we can terminate connection right now */
 	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
@@ -247,6 +406,12 @@ static void httpReadReply(fd, data)
     clen = entry->mem_obj->e_current_len;
     off = storeGetLowestReaderOffset(entry);
     if ((clen - off) > HTTP_DELETE_GAP) {
+	if (entry->flag & CLIENT_ABORT_REQUEST) {
+	    squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	    comm_close(fd);
+	    return;
+	}
+	IOStats.Http.reads_deferred++;
 	debug(11, 3, "httpReadReply: Read deferred for Object: %s\n",
 	    entry->url);
 	debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
@@ -255,21 +420,28 @@ static void httpReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
-	    (void *) data);
-	/* don't install read timeout until we are below the GAP */
+	    (void *) httpState);
+	/* disable read timeout until we are below the GAP */
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) NULL,
 	    (void *) NULL,
 	    (time_t) 0);
+	comm_set_fd_lifetime(fd, 3600);		/* limit during deferring */
 	/* dont try reading again for a while */
 	comm_set_stall(fd, getStallDelay());
 	return;
     }
     errno = 0;
-    len = read(fd, buf, READBUFSIZ);
+    IOStats.Http.reads++;
+    len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
-
+    comm_set_fd_lifetime(fd, 86400);	/* extend after good read */
+    if (len > 0) {
+	for (clen = len - 1, bin = 0; clen; bin++)
+	    clen >>= 1;
+	IOStats.Http.read_hist[bin]++;
+    }
     if (len < 0) {
 	debug(11, 2, "httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
@@ -277,9 +449,9 @@ static void httpReadReply(fd, data)
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) httpReadReply, (void *) data);
+		(PF) httpReadReply, (void *) httpState);
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-		(PF) httpReadReplyTimeout, (void *) data, getReadTimeout());
+		(PF) httpReadReplyTimeout, (void *) httpState, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
@@ -303,11 +475,11 @@ static void httpReadReply(fd, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
-	    (void *) data);
+	    (void *) httpState);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (void *) data, getReadTimeout());
+	    (void *) httpState, getReadTimeout());
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
@@ -315,16 +487,16 @@ static void httpReadReply(fd, data)
 	comm_close(fd);
     } else {
 	storeAppend(entry, buf, len);
-	if (data->reply_hdr_state < 2 && len > 0)
-	    httpProcessReplyHeader(data, buf, len);
+	if (httpState->reply_hdr_state < 2 && len > 0)
+	    httpProcessReplyHeader(httpState, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
-	    (void *) data);
+	    (void *) httpState);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (void *) data,
+	    (void *) httpState,
 	    getReadTimeout());
     }
 }
@@ -336,20 +508,21 @@ static void httpSendComplete(fd, buf, size, errflag, data)
      char *buf;
      int size;
      int errflag;
-     HttpData *data;
+     void *data;
 {
+    HttpStateData *httpState = data;
     StoreEntry *entry = NULL;
 
-    entry = data->entry;
+    entry = httpState->entry;
     debug(11, 5, "httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
 
-    if (buf) {
-	put_free_8k_page(buf);	/* Allocated by httpSendRequest. */
-	buf = NULL;
+    if (httpState->reqbuf && httpState->buf_type == BUF_TYPE_8K) {
+	put_free_8k_page(httpState->reqbuf);
+	httpState->reqbuf = NULL;
+    } else {
+	safe_free(httpState->reqbuf);
     }
-    data->icp_page_ptr = NULL;	/* So lifetime expire doesn't re-free */
-    data->icp_rwd_ptr = NULL;	/* Don't double free in lifetimeexpire */
 
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -360,20 +533,20 @@ static void httpSendComplete(fd, buf, size, errflag, data)
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
-	    (void *) data);
+	    (void *) httpState);
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (void *) data,
+	    (void *) httpState,
 	    getReadTimeout());
-	comm_set_fd_lifetime(fd, -1);	/* disable lifetime DPW */
+	comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     }
 }
 
 /* This will be called when connect completes. Write request. */
-static void httpSendRequest(fd, data)
+static void httpSendRequest(fd, httpState)
      int fd;
-     HttpData *data;
+     HttpStateData *httpState;
 {
     char *xbuf = NULL;
     char *ybuf = NULL;
@@ -385,34 +558,37 @@ static void httpSendRequest(fd, data)
     int len = 0;
     int buflen;
     int cfd = -1;
-    request_t *req = data->request;
+    request_t *req = httpState->request;
     char *Method = RequestMethodStr[req->method];
 
-    debug(11, 5, "httpSendRequest: FD %d: data %p.\n", fd, data);
+    debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(Method) + strlen(req->urlpath);
-    if (data->req_hdr)
-	buflen += strlen(data->req_hdr);
+    if (httpState->req_hdr)
+	buflen += strlen(httpState->req_hdr);
     buflen += 512;		/* lots of extra */
 
-    if (req->method == METHOD_POST && data->req_hdr) {
-	if ((t = strstr(data->req_hdr, "\r\n\r\n"))) {
-	    post_buf = xstrdup(t + 4);
-	    *(t + 4) = '\0';
+    if ((req->method == METHOD_POST || req->method == METHOD_PUT) && httpState->req_hdr) {
+	if ((t = mime_headers_end(httpState->req_hdr))) {
+	    post_buf = xstrdup(t);
+	    *t = '\0';
 	}
     }
-    /* Since we limit the URL read to a 4K page, I doubt that the
-     * mime header could be longer than an 8K page */
-    buf = (char *) get_free_8k_page();
-    data->icp_page_ptr = buf;
-    if (buflen > DISK_PAGE_SIZE) {
-	debug(11, 0, "Mime header length %d is breaking ICP code\n", buflen);
+    if (buflen < DISK_PAGE_SIZE) {
+	httpState->reqbuf = get_free_8k_page();
+	memset(httpState->reqbuf, '\0', buflen);
+	httpState->buf_type = BUF_TYPE_8K;
+    } else {
+	httpState->reqbuf = xcalloc(buflen, 1);
+	httpState->buf_type = BUF_TYPE_MALLOC;
     }
-    memset(buf, '\0', buflen);
+    buf = httpState->reqbuf;
 
-    sprintf(buf, "%s %s HTTP/1.0\r\n", Method, req->urlpath);
+    sprintf(buf, "%s %s HTTP/1.0\r\n",
+	Method,
+	*req->urlpath ? req->urlpath : "/");
     len = strlen(buf);
-    if (data->req_hdr) {	/* we have to parse the request header */
-	xbuf = xstrdup(data->req_hdr);
+    if (httpState->req_hdr) {	/* we have to parse the request header */
+	xbuf = xstrdup(httpState->req_hdr);
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
 	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
 		ybuf = (char *) get_free_4k_page();
@@ -434,14 +610,12 @@ static void httpSendRequest(fd, data)
     }
     /* Add Forwarded: header */
     ybuf = get_free_4k_page();
-    if (data->entry->mem_obj)
-	cfd = data->entry->mem_obj->fd_of_first_client;
+    if (httpState->entry->mem_obj)
+	cfd = httpState->entry->mem_obj->fd_of_first_client;
     if (cfd < 0) {
-	sprintf(ybuf, "Forwarded: by http://%s:%d/\r\n",
-	    getMyHostname(), getAsciiPortNum());
+	sprintf(ybuf, "%s\r\n", ForwardedBy);
     } else {
-	sprintf(ybuf, "Forwarded: by http://%s:%d/ for %s\r\n",
-	    getMyHostname(), getAsciiPortNum(), fd_table[cfd].ipaddr);
+	sprintf(ybuf, "%s for %s\r\n", ForwardedBy, fd_table[cfd].ipaddr);
     }
     strcat(buf, ybuf);
     len += strlen(ybuf);
@@ -456,22 +630,22 @@ static void httpSendRequest(fd, data)
 	xfree(post_buf);
     }
     debug(11, 6, "httpSendRequest: FD %d: buf '%s'\n", fd, buf);
-    data->icp_rwd_ptr = icpWrite(fd,
+    comm_write(fd,
 	buf,
 	len,
 	30,
 	httpSendComplete,
-	(void *) data);
+	httpState);
 }
 
-static void httpConnInProgress(fd, data)
+static void httpConnInProgress(fd, httpState)
      int fd;
-     HttpData *data;
+     HttpStateData *httpState;
 {
-    StoreEntry *entry = data->entry;
-    request_t *req = data->request;
+    StoreEntry *entry = httpState->entry;
+    request_t *req = httpState->request;
 
-    debug(11, 5, "httpConnInProgress: FD %d data=%p\n", fd, data);
+    debug(11, 5, "httpConnInProgress: FD %d httpState=%p\n", fd, httpState);
 
     if (comm_connect(fd, req->host, req->port) != COMM_OK) {
 	debug(11, 5, "httpConnInProgress: FD %d: %s\n", fd, xstrerror());
@@ -482,7 +656,7 @@ static void httpConnInProgress(fd, data)
 	    comm_set_select_handler(fd,
 		COMM_SELECT_WRITE,
 		(PF) httpConnInProgress,
-		(void *) data);
+		(void *) httpState);
 	    return;
 	default:
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -492,7 +666,7 @@ static void httpConnInProgress(fd, data)
     }
     /* Call the real write handler, now that we're fully connected */
     comm_set_select_handler(fd, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (void *) data);
+	(PF) httpSendRequest, (void *) httpState);
 }
 
 int proxyhttpStart(e, url, entry)
@@ -502,7 +676,7 @@ int proxyhttpStart(e, url, entry)
 {
     int sock;
     int status;
-    HttpData *data = NULL;
+    HttpStateData *httpState = NULL;
     request_t *request = NULL;
 
     debug(11, 3, "proxyhttpStart: \"%s %s\"\n",
@@ -510,37 +684,36 @@ int proxyhttpStart(e, url, entry)
     debug(11, 10, "proxyhttpStart: HTTP request header:\n%s\n",
 	entry->mem_obj->mime_hdr);
 
-    if (e->proxy_only)
+    if (e->options & NEIGHBOR_PROXY_ONLY)
 	storeStartDeleteBehind(entry);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
+    sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return COMM_ERROR;
     }
-    data = (HttpData *) xcalloc(1, sizeof(HttpData));
-    data->entry = entry;
-    data->req_hdr = entry->mem_obj->mime_hdr;
-    request = (request_t *) xcalloc(1, sizeof(request_t));
-    data->free_request = 1;
-    data->request = request;
+    httpState = xcalloc(1, sizeof(HttpStateData));
+    storeLockObject(httpState->entry = entry, NULL, NULL);
+    httpState->req_hdr = entry->mem_obj->mime_hdr;
+    request = get_free_request_t();
+    httpState->request = requestLink(request);
+    httpState->neighbor = e;
     /* register the handler to free HTTP state data when the FD closes */
-    comm_set_select_handler(sock,
-	COMM_SELECT_CLOSE,
+    comm_add_close_handler(sock,
 	(PF) httpStateFree,
-	(void *) data);
+	(void *) httpState);
 
     request->method = entry->method;
     strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
-    request->port = e->ascii_port;
+    request->port = e->http_port;
     strncpy(request->urlpath, url, MAX_URL);
 
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(request->host)) {
+    if (!ipcache_gethostbyname(request->host, IP_BLOCKING_LOOKUP)) {
 	debug(11, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(sock);
@@ -557,18 +730,18 @@ int proxyhttpStart(e, url, entry)
 	} else {
 	    debug(11, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", sock);
 	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-		(PF) httpLifetimeExpire, (void *) data);
+		(PF) httpLifetimeExpire, (void *) httpState);
 	    comm_set_select_handler(sock, COMM_SELECT_WRITE,
-		(PF) httpConnInProgress, (void *) data);
+		(PF) httpConnInProgress, (void *) httpState);
 	    return COMM_OK;
 	}
     }
     /* Install connection complete handler. */
     fd_note(sock, entry->url);
     comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-	(PF) httpLifetimeExpire, (void *) data);
+	(PF) httpLifetimeExpire, (void *) httpState);
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (void *) data);
+	(PF) httpSendRequest, (void *) httpState);
     return COMM_OK;
 }
 
@@ -581,32 +754,31 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
 {
     /* Create state structure. */
     int sock, status;
-    HttpData *data = NULL;
+    HttpStateData *httpState = NULL;
 
     debug(11, 3, "httpStart: \"%s %s\"\n",
 	RequestMethodStr[request->method], url);
     debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
+    sock = comm_open(COMM_NONBLOCKING, getTcpOutgoingAddr(), 0, url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return COMM_ERROR;
     }
-    data = (HttpData *) xcalloc(1, sizeof(HttpData));
-    data->entry = entry;
-    data->req_hdr = req_hdr;
-    data->request = request;
-    comm_set_select_handler(sock,
-	COMM_SELECT_CLOSE,
+    httpState = xcalloc(1, sizeof(HttpStateData));
+    storeLockObject(httpState->entry = entry, NULL, NULL);
+    httpState->req_hdr = req_hdr;
+    httpState->request = requestLink(request);
+    comm_add_close_handler(sock,
 	(PF) httpStateFree,
-	(void *) data);
+	(void *) httpState);
 
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
-    if (!ipcache_gethostbyname(request->host)) {
+    if (!ipcache_gethostbyname(request->host, 0)) {
 	debug(11, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(sock);
@@ -621,17 +793,37 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
 	} else {
 	    debug(11, 5, "httpStart: FD %d: EINPROGRESS.\n", sock);
 	    comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-		(PF) httpLifetimeExpire, (void *) data);
+		(PF) httpLifetimeExpire, (void *) httpState);
 	    comm_set_select_handler(sock, COMM_SELECT_WRITE,
-		(PF) httpConnInProgress, (void *) data);
+		(PF) httpConnInProgress, (void *) httpState);
 	    return COMM_OK;
 	}
     }
     /* Install connection complete handler. */
     fd_note(sock, entry->url);
     comm_set_select_handler(sock, COMM_SELECT_LIFETIME,
-	(PF) httpLifetimeExpire, (void *) data);
+	(PF) httpLifetimeExpire, (void *) httpState);
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (void *) data);
+	(PF) httpSendRequest, (void *) httpState);
     return COMM_OK;
+}
+
+void httpReplyHeaderStats(entry)
+     StoreEntry *entry;
+{
+    storeAppendPrintf(entry, open_bracket);
+    storeAppendPrintf(entry, "{HTTP Reply Headers}\n");
+    storeAppendPrintf(entry, "{Headers parsed: %d}\n",
+	ReplyHeaderStats.parsed);
+    storeAppendPrintf(entry, "{          Date: %d}\n",
+	ReplyHeaderStats.date);
+    storeAppendPrintf(entry, "{ Last-Modified: %d}\n",
+	ReplyHeaderStats.lm);
+    storeAppendPrintf(entry, "{       Expires: %d}\n",
+	ReplyHeaderStats.exp);
+    storeAppendPrintf(entry, "{  Content-Type: %d}\n",
+	ReplyHeaderStats.ctype);
+    storeAppendPrintf(entry, "{Content-Length: %d}\n",
+	ReplyHeaderStats.clen);
+    storeAppendPrintf(entry, close_bracket);
 }

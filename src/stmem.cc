@@ -1,13 +1,114 @@
-/* $Id: stmem.cc,v 1.9 1996/04/12 21:41:40 wessels Exp $ */
+/*
+ * $Id: stmem.cc,v 1.10 1996/07/09 03:41:42 wessels Exp $
+ *
+ * DEBUG: section 19    Memory Primitives
+ * AUTHOR: Harvest Derived
+ *
+ * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
 
-/* 
- * DEBUG: Section 19          stmem:
+/*
+ * Copyright (c) 1994, 1995.  All rights reserved.
+ *  
+ *   The Harvest software was developed by the Internet Research Task
+ *   Force Research Group on Resource Discovery (IRTF-RD):
+ *  
+ *         Mic Bowman of Transarc Corporation.
+ *         Peter Danzig of the University of Southern California.
+ *         Darren R. Hardy of the University of Colorado at Boulder.
+ *         Udi Manber of the University of Arizona.
+ *         Michael F. Schwartz of the University of Colorado at Boulder.
+ *         Duane Wessels of the University of Colorado at Boulder.
+ *  
+ *   This copyright notice applies to software in the Harvest
+ *   ``src/'' directory only.  Users should consult the individual
+ *   copyright notices in the ``components/'' subdirectories for
+ *   copyright information about other software bundled with the
+ *   Harvest source code distribution.
+ *  
+ * TERMS OF USE
+ *   
+ *   The Harvest software may be used and re-distributed without
+ *   charge, provided that the software origin and research team are
+ *   cited in any use of the system.  Most commonly this is
+ *   accomplished by including a link to the Harvest Home Page
+ *   (http://harvest.cs.colorado.edu/) from the query page of any
+ *   Broker you deploy, as well as in the query result pages.  These
+ *   links are generated automatically by the standard Broker
+ *   software distribution.
+ *   
+ *   The Harvest software is provided ``as is'', without express or
+ *   implied warranty, and with no support nor obligation to assist
+ *   in its use, correction, modification or enhancement.  We assume
+ *   no liability with respect to the infringement of copyrights,
+ *   trade secrets, or any patents, and are not responsible for
+ *   consequential damages.  Proper use of the Harvest software is
+ *   entirely the responsibility of the user.
+ *  
+ * DERIVATIVE WORKS
+ *  
+ *   Users may make derivative works from the Harvest software, subject 
+ *   to the following constraints:
+ *  
+ *     - You must include the above copyright notice and these 
+ *       accompanying paragraphs in all forms of derivative works, 
+ *       and any documentation and other materials related to such 
+ *       distribution and use acknowledge that the software was 
+ *       developed at the above institutions.
+ *  
+ *     - You must notify IRTF-RD regarding your distribution of 
+ *       the derivative work.
+ *  
+ *     - You must clearly notify users that your are distributing 
+ *       a modified version and not the original Harvest software.
+ *  
+ *     - Any derivative product is also subject to these copyright 
+ *       and use restrictions.
+ *  
+ *   Note that the Harvest software is NOT in the public domain.  We
+ *   retain copyright, as specified above.
+ *  
+ * HISTORY OF FREE SOFTWARE STATUS
+ *  
+ *   Originally we required sites to license the software in cases
+ *   where they were going to build commercial products/services
+ *   around Harvest.  In June 1995 we changed this policy.  We now
+ *   allow people to use the core Harvest software (the code found in
+ *   the Harvest ``src/'' directory) for free.  We made this change
+ *   in the interest of encouraging the widest possible deployment of
+ *   the technology.  The Harvest software is really a reference
+ *   implementation of a set of protocols and formats, some of which
+ *   we intend to standardize.  We encourage commercial
+ *   re-implementations of code complying to this set of standards.  
  */
 
 #include "squid.h"
 
 stmem_stats sm_stats;
 stmem_stats disk_stats;
+stmem_stats request_pool;
+stmem_stats mem_obj_pool;
 
 #define min(x,y) ((x)<(y)? (x) : (y))
 
@@ -117,7 +218,7 @@ int memAppend(mem, data, len)
     if (mem->head && mem->tail && (mem->tail->len < SM_PAGE_SIZE)) {
 	avail_len = SM_PAGE_SIZE - (mem->tail->len);
 	len_to_copy = min(avail_len, len);
-	memcpy((mem->tail->data + mem->tail->len), data, len_to_copy);
+	xmemcpy((mem->tail->data + mem->tail->len), data, len_to_copy);
 	/* Adjust the ptr and len according to what was deposited in the page */
 	data += len_to_copy;
 	len -= len_to_copy;
@@ -125,11 +226,11 @@ int memAppend(mem, data, len)
     }
     while (len > 0) {
 	len_to_copy = min(len, SM_PAGE_SIZE);
-	p = (mem_node) xcalloc(1, sizeof(Mem_Node));
+	p = xcalloc(1, sizeof(Mem_Node));
 	p->next = NULL;
 	p->len = len_to_copy;
 	p->data = get_free_4k_page();
-	memcpy(p->data, data, len_to_copy);
+	xmemcpy(p->data, data, len_to_copy);
 
 	if (!mem->head) {
 	    /* The chain is empty */
@@ -205,11 +306,14 @@ int memCopy(mem, offset, buf, size)
     mem_node p = mem->head;
     int t_off = mem->origin_offset;
     int bytes_to_go = size;
-    char *ptr_to_buf;
+    char *ptr_to_buf = NULL;
     int bytes_from_this_packet = 0;
     int bytes_into_this_packet = 0;
 
     debug(19, 6, "memCopy: offset %d: size %d\n", offset, size);
+
+    if (p == NULL)
+	fatal_dump("memCopy: NULL mem_node");
 
     if (size <= 0)
 	return size;
@@ -232,18 +336,18 @@ int memCopy(mem, offset, buf, size)
     bytes_from_this_packet = min(bytes_to_go,
 	p->len - bytes_into_this_packet);
 
-    memcpy(buf, p->data + bytes_into_this_packet, bytes_from_this_packet);
+    xmemcpy(buf, p->data + bytes_into_this_packet, bytes_from_this_packet);
     bytes_to_go -= bytes_from_this_packet;
     ptr_to_buf = buf + bytes_from_this_packet;
     p = p->next;
 
     while (p && bytes_to_go > 0) {
 	if (bytes_to_go > p->len) {
-	    memcpy(ptr_to_buf, p->data, p->len);
+	    xmemcpy(ptr_to_buf, p->data, p->len);
 	    ptr_to_buf += p->len;
 	    bytes_to_go -= p->len;
 	} else {
-	    memcpy(ptr_to_buf, p->data, bytes_to_go);
+	    xmemcpy(ptr_to_buf, p->data, bytes_to_go);
 	    bytes_to_go -= bytes_to_go;
 	}
 	p = p->next;
@@ -256,18 +360,65 @@ int memCopy(mem, offset, buf, size)
 /* Do whatever is necessary to begin storage of new object */
 mem_ptr memInit()
 {
-    mem_ptr new = (mem_ptr) xcalloc(1, sizeof(Mem_Hdr));
-
+    mem_ptr new = xcalloc(1, sizeof(Mem_Hdr));
     new->tail = new->head = NULL;
-
     new->mem_free = memFree;
     new->mem_free_data = memFreeData;
     new->mem_free_data_upto = memFreeDataUpto;
     new->mem_append = memAppend;
     new->mem_copy = memCopy;
     new->mem_grep = memGrep;
-
     return new;
+}
+
+void *get_free_request_t()
+{
+    void *req = NULL;
+    if (!empty_stack(&request_pool.free_page_stack)) {
+	req = pop(&request_pool.free_page_stack);
+    } else {
+	req = xmalloc(sizeof(request_t));
+	request_pool.total_pages_allocated++;
+    }
+    request_pool.n_pages_in_use++;
+    if (req == NULL)
+	fatal_dump("get_free_request_t: Null pointer?");
+    memset(req, '\0', sizeof(request_t));
+    return (req);
+}
+
+void put_free_request_t(req)
+     void *req;
+{
+    if (full_stack(&request_pool.free_page_stack))
+	request_pool.total_pages_allocated--;
+    request_pool.n_pages_in_use--;
+    push(&request_pool.free_page_stack, req);
+}
+
+void *get_free_mem_obj()
+{
+    void *mem = NULL;
+    if (!empty_stack(&mem_obj_pool.free_page_stack)) {
+	mem = pop(&mem_obj_pool.free_page_stack);
+    } else {
+	mem = xmalloc(sizeof(MemObject));
+	mem_obj_pool.total_pages_allocated++;
+    }
+    mem_obj_pool.n_pages_in_use++;
+    if (mem == NULL)
+	fatal_dump("get_free_mem_obj: Null pointer?");
+    memset(mem, '\0', sizeof(MemObject));
+    return (mem);
+}
+
+void put_free_mem_obj(mem)
+     void *mem;
+{
+    if (full_stack(&mem_obj_pool.free_page_stack))
+	mem_obj_pool.total_pages_allocated--;
+    mem_obj_pool.n_pages_in_use--;
+    push(&mem_obj_pool.free_page_stack, mem);
 }
 
 
@@ -276,16 +427,15 @@ mem_ptr memInit()
 char *get_free_4k_page()
 {
     char *page = NULL;
-
     if (!empty_stack(&sm_stats.free_page_stack)) {
 	page = pop(&sm_stats.free_page_stack);
     } else {
 #if USE_MEMALIGN
-	page = (char *) memalign(SM_PAGE_SIZE, SM_PAGE_SIZE);
+	page = memalign(SM_PAGE_SIZE, SM_PAGE_SIZE);
 	if (!page)
 	    fatal_dump(NULL);
 #else
-	page = (char *) xmalloc(SM_PAGE_SIZE);
+	page = xmalloc(SM_PAGE_SIZE);
 #endif
 	sm_stats.total_pages_allocated++;
     }
@@ -298,38 +448,28 @@ char *get_free_4k_page()
 void put_free_4k_page(page)
      char *page;
 {
-    static stack_overflow_warning_toggle;
-
 #if USE_MEMALIGN
     if ((int) page % SM_PAGE_SIZE)
 	fatal_dump("Someone tossed a string into the 4k page pool");
 #endif
-    if (full_stack(&sm_stats.free_page_stack)) {
+    if (full_stack(&sm_stats.free_page_stack))
 	sm_stats.total_pages_allocated--;
-	if (!stack_overflow_warning_toggle) {
-	    debug(19, 0, "Stack of free stmem pages overflowed.  Resize it?");
-	    stack_overflow_warning_toggle++;
-	}
-    }
     sm_stats.n_pages_in_use--;
-    /* Call push regardless if it's full, cause it's just going to release the
-     * page if stack is full */
     push(&sm_stats.free_page_stack, page);
 }
 
 char *get_free_8k_page()
 {
     char *page = NULL;
-
     if (!empty_stack(&disk_stats.free_page_stack)) {
 	page = pop(&disk_stats.free_page_stack);
     } else {
 #if USE_MEMALIGN
-	page = (char *) memalign(DISK_PAGE_SIZE, DISK_PAGE_SIZE);
+	page = memalign(DISK_PAGE_SIZE, DISK_PAGE_SIZE);
 	if (!page)
 	    fatal_dump(NULL);
 #else
-	page = (char *) xmalloc(DISK_PAGE_SIZE);
+	page = xmalloc(DISK_PAGE_SIZE);
 #endif
 	disk_stats.total_pages_allocated++;
     }
@@ -342,23 +482,13 @@ char *get_free_8k_page()
 void put_free_8k_page(page)
      char *page;
 {
-    static stack_overflow_warning_toggle;
-
 #if USE_MEMALIGN
     if ((int) page % DISK_PAGE_SIZE)
 	fatal_dump("Someone tossed a string into the 8k page pool");
 #endif
-
-    if (full_stack(&disk_stats.free_page_stack)) {
+    if (full_stack(&disk_stats.free_page_stack))
 	disk_stats.total_pages_allocated--;
-	if (!stack_overflow_warning_toggle) {
-	    debug(19, 0, "Stack of free disk pages overflowed.  Resize it?");
-	    stack_overflow_warning_toggle++;
-	}
-    }
     disk_stats.n_pages_in_use--;
-    /* Call push regardless if it's full, cause it's just going to release the
-     * page if stack is full */
     push(&disk_stats.free_page_stack, page);
 }
 
@@ -374,18 +504,29 @@ void stmemInit()
     disk_stats.n_pages_free = 0;
     disk_stats.n_pages_in_use = 0;
 
+    request_pool.page_size = sizeof(request_t);
+    request_pool.total_pages_allocated = 0;
+    request_pool.n_pages_free = 0;
+    request_pool.n_pages_in_use = 0;
+
+    mem_obj_pool.page_size = sizeof(MemObject);
+    mem_obj_pool.total_pages_allocated = 0;
+    mem_obj_pool.n_pages_free = 0;
+    mem_obj_pool.n_pages_in_use = 0;
+
 /* use -DPURIFY=1 on the compile line to enable Purify checks */
 
 #if !PURIFY
-    /* 4096 * 10000 pages = 40MB + CacheMemMax in pages */
-    init_stack(&sm_stats.free_page_stack, 10000 + (getCacheMemMax() / SM_PAGE_SIZE));
-    /* 8096 * 1000 pages = 8MB */
+    init_stack(&sm_stats.free_page_stack, (getCacheMemMax() / SM_PAGE_SIZE) >> 1);
     init_stack(&disk_stats.free_page_stack, 1000);
-#else
+    init_stack(&request_pool.free_page_stack, FD_SETSIZE >> 3);
+    init_stack(&mem_obj_pool.free_page_stack, FD_SETSIZE >> 3);
+#else /* !PURIFY */
     /* Declare a zero size page stack so that purify checks for 
-     * FMRs/UMRs etc.
-     */
+     * FMRs/UMRs etc.  */
     init_stack(&sm_stats.free_page_stack, 0);
     init_stack(&disk_stats.free_page_stack, 0);
-#endif
+    init_stack(&request_pool.free_page_stack, 0);
+    init_stack(&mem_obj_pool.free_page_stack, 0);
+#endif /* !PURIFY */
 }

@@ -16,7 +16,34 @@ $|=1;
 $host=(shift || 'localhost') ;
 $port=(shift || '3130') ;
 
-@CODES=('xxx', 'QUERY', 'HIT', 'MISS', 'ERROR');
+# just copy this from src/proto.c
+@CODES=(
+    "ICP_INVALID",
+    "ICP_QUERY",
+    "UDP_HIT",
+    "UDP_MISS",
+    "ICP_ERR",
+    "ICP_SEND",
+    "ICP_SENDA",
+    "ICP_DATABEG",
+    "ICP_DATA",
+    "ICP_DATAEND",
+    "ICP_SECHO",
+    "ICP_DECHO",
+    "ICP_OP_UNUSED0",
+    "ICP_OP_UNUSED1",
+    "ICP_OP_UNUSED2",
+    "ICP_OP_UNUSED3",
+    "ICP_OP_UNUSED4",
+    "ICP_OP_UNUSED5",
+    "ICP_OP_UNUSED6",
+    "ICP_OP_UNUSED7",
+    "ICP_OP_UNUSED8",
+    "ICP_OP_UNUSED9",
+    "UDP_DENIED",
+    "UDP_HIT_OBJ",
+    "ICP_END"
+);
 
 require 'sys/socket.ph';
 
@@ -34,13 +61,15 @@ die "socket: $!\n" unless
 
 while (<>) {
 	chop;
-	$request_template = 'CCnx4x8x4a4a' . length;
-	$request = pack($request_template, 1, 1, 24 + length, $myip, $_);
+	$request_template = 'CCnx4Nx4x4a4a' . length;
+	$request = pack($request_template, 1, 1, 24 + length, ~0, $myip, $_);
 	die "send: $!\n" unless
 		send(SOCK, $request, 0, $them);
 	die "recv: $!\n" unless
-		recv(SOCK, $reply, 1024, 0);
-	($type,$ver,$len,$payload) = unpack('CCnx4x8x4A', $reply);
-	print $CODES[$type] . " $_\n";
+                $theiraddr = recv(SOCK, $reply, 1024, 0);
+  	($junk, $junk, $sourceaddr, $junk) = unpack($sockaddr, $theiraddr);
+  	@theirip = unpack('C4', $sourceaddr);
+        ($type,$ver,$len,$payload) = unpack('CCnx4x8x4A', $reply);
+        print join('.', @theirip) . ' ' . $CODES[$type] . " $_\n";
 }
 

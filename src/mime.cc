@@ -1,8 +1,106 @@
-
-/* $Id: mime.cc,v 1.12 1996/04/16 05:05:25 wessels Exp $ */
+/*
+ * $Id: mime.cc,v 1.13 1996/07/09 03:41:33 wessels Exp $
+ *
+ * DEBUG: section 25    MIME Parsing
+ * AUTHOR: Harvest Derived
+ *
+ * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
 
 /*
- * DEBUG: Section 25          mime
+ * Copyright (c) 1994, 1995.  All rights reserved.
+ *  
+ *   The Harvest software was developed by the Internet Research Task
+ *   Force Research Group on Resource Discovery (IRTF-RD):
+ *  
+ *         Mic Bowman of Transarc Corporation.
+ *         Peter Danzig of the University of Southern California.
+ *         Darren R. Hardy of the University of Colorado at Boulder.
+ *         Udi Manber of the University of Arizona.
+ *         Michael F. Schwartz of the University of Colorado at Boulder.
+ *         Duane Wessels of the University of Colorado at Boulder.
+ *  
+ *   This copyright notice applies to software in the Harvest
+ *   ``src/'' directory only.  Users should consult the individual
+ *   copyright notices in the ``components/'' subdirectories for
+ *   copyright information about other software bundled with the
+ *   Harvest source code distribution.
+ *  
+ * TERMS OF USE
+ *   
+ *   The Harvest software may be used and re-distributed without
+ *   charge, provided that the software origin and research team are
+ *   cited in any use of the system.  Most commonly this is
+ *   accomplished by including a link to the Harvest Home Page
+ *   (http://harvest.cs.colorado.edu/) from the query page of any
+ *   Broker you deploy, as well as in the query result pages.  These
+ *   links are generated automatically by the standard Broker
+ *   software distribution.
+ *   
+ *   The Harvest software is provided ``as is'', without express or
+ *   implied warranty, and with no support nor obligation to assist
+ *   in its use, correction, modification or enhancement.  We assume
+ *   no liability with respect to the infringement of copyrights,
+ *   trade secrets, or any patents, and are not responsible for
+ *   consequential damages.  Proper use of the Harvest software is
+ *   entirely the responsibility of the user.
+ *  
+ * DERIVATIVE WORKS
+ *  
+ *   Users may make derivative works from the Harvest software, subject 
+ *   to the following constraints:
+ *  
+ *     - You must include the above copyright notice and these 
+ *       accompanying paragraphs in all forms of derivative works, 
+ *       and any documentation and other materials related to such 
+ *       distribution and use acknowledge that the software was 
+ *       developed at the above institutions.
+ *  
+ *     - You must notify IRTF-RD regarding your distribution of 
+ *       the derivative work.
+ *  
+ *     - You must clearly notify users that your are distributing 
+ *       a modified version and not the original Harvest software.
+ *  
+ *     - Any derivative product is also subject to these copyright 
+ *       and use restrictions.
+ *  
+ *   Note that the Harvest software is NOT in the public domain.  We
+ *   retain copyright, as specified above.
+ *  
+ * HISTORY OF FREE SOFTWARE STATUS
+ *  
+ *   Originally we required sites to license the software in cases
+ *   where they were going to build commercial products/services
+ *   around Harvest.  In June 1995 we changed this policy.  We now
+ *   allow people to use the core Harvest software (the code found in
+ *   the Harvest ``src/'' directory) for free.  We made this change
+ *   in the interest of encouraging the widest possible deployment of
+ *   the technology.  The Harvest software is really a reference
+ *   implementation of a set of protocols and formats, some of which
+ *   we intend to standardize.  We encourage commercial
+ *   re-implementations of code complying to this set of standards.  
  */
 
 #include "squid.h"
@@ -50,19 +148,36 @@ char *mime_get_header(char *mime, char *name)
     return NULL;
 }
 
-int mime_refresh_request(mime)
-     char *mime;
+/* need to take the lowest, non-zero pointer to the end of the headers.
+ * The headers end at the first empty line */
+char *mime_headers_end(char *mime)
 {
-    char *pr = NULL;
-    if (mime == NULL)
+    char *p1, *p2;
+    char *end = NULL;
+
+    p1 = strstr(mime, "\r\n\r\n");
+    p2 = strstr(mime, "\n\n");
+
+    if (p1 && p2)
+	end = p1 < p2 ? p1 : p2;
+    else
+	end = p1 ? p1 : p2;
+    if (end)
+	end += (end == p1 ? 4 : 2);
+
+    return end;
+}
+
+int mime_headers_size(char *mime)
+{
+    char *end;
+
+    end = mime_headers_end(mime);
+
+    if (end)
+	return end - mime;
+    else
 	return 0;
-    if (mime_get_header(mime, "If-Modified-Since"))
-	return 1;
-    if ((pr = mime_get_header(mime, "pragma"))) {
-	if (strcasecmp(pr, "no-cache"))
-	    return 1;
-    }
-    return 0;
 }
 
 ext_table_entry *mime_ext_to_type(extension)
@@ -106,27 +221,39 @@ ext_table_entry *mime_ext_to_type(extension)
  *  returns non-zero on error, or 0 on success.
  */
 int mk_mime_hdr(result, ttl, size, lmt, type)
-     char *result, *type;
+     char *result;
+     char *type;
      int size;
-     time_t ttl, lmt;
+     time_t ttl;
+     time_t lmt;
 {
     time_t expiretime;
     time_t t;
     static char date[100];
-    static char expire[100];
-    static char last_modified_time[100];
+    static char expires[100];
+    static char last_modified[100];
+    static char content_length[100];
 
     if (result == NULL)
 	return 1;
-
     t = squid_curtime;
-    expiretime = t + ttl;
-
-    date[0] = expire[0] = last_modified_time[0] = result[0] = '\0';
-    strncpy(date, mkrfc850(&t), 100);
-    strncpy(expire, mkrfc850(&expiretime), 100);
-    strncpy(last_modified_time, mkrfc850(&lmt), 100);
-
-    sprintf(result, "Content-Type: %s\r\nContent-Size: %d\r\nDate: %s\r\nExpires: %s\r\nLast-Modified-Time: %s\r\n", type, size, date, expire, last_modified_time);
+    expiretime = ttl ? t + ttl : 0;
+    date[0] = expires[0] = last_modified[0] = '\0';
+    content_length[0] = result[0] = '\0';
+    sprintf(date, "Date: %s\r\n", mkrfc850(&t));
+    if (ttl >= 0)
+	sprintf(expires, "Expires: %s\r\n", mkrfc850(&expiretime));
+    if (lmt)
+	sprintf(last_modified, "Last-Modified: %s\r\n", mkrfc850(&lmt));
+    if (size > 0)
+	sprintf(content_length, "Content-Length: %d\r\n", size);
+    sprintf(result, "Server: %s/%s\r\n%s%s%sContent-Type: %s\r\n%s",
+	appname,
+	version_string,
+	date,
+	expires,
+	last_modified,
+	type,
+	content_length);
     return 0;
 }

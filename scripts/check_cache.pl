@@ -7,7 +7,7 @@
 # Version 1 did all this in memory, but the log file can be a
 # little on the large side... 8-(
 
-# $Id: check_cache.pl,v 1.2 1996/05/01 22:36:22 wessels Exp $
+# $Id: check_cache.pl,v 1.3 1996/07/09 03:41:16 wessels Exp $
 
 require "getopts.pl";
 &Getopts("c:dl:rt:v");
