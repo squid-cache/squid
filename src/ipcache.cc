@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.107 1997/02/26 19:46:17 wessels Exp $
+ * $Id: ipcache.cc,v 1.108 1997/03/04 05:16:35 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -255,7 +255,6 @@ ipcache_release(ipcache_entry * i)
     }
     safe_free(i->name);
     safe_free(i->error_message);
-    memset(i, '\0', sizeof(ipcache_entry));
     safe_free(i);
     --meta_data.ipcache_count;
     return;
@@ -465,7 +464,6 @@ ipcache_call_pending(ipcache_entry * i)
 		i->status == IP_CACHED ? &i->addrs : NULL,
 		p->handlerData);
 	}
-	memset(p, '\0', sizeof(struct _ip_pending));
 	safe_free(p);
     }
     i->pending_head = NULL;	/* nuke list */
@@ -741,6 +739,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     sprintf(buf, "%1.254s\n", i->name);
     dns->flags |= DNS_FLAG_BUSY;
     dns->data = i;
+    dns->lastcall = squid_curtime;
     i->status = IP_DISPATCHED;
     comm_write(dns->outpipe,
 	buf,
@@ -857,6 +856,14 @@ ipcache_gethostbyname(const char *name, int flags)
 	    /* good address, cached */
 	    if (i == NULL) {
 		i = ipcacheAddNew(name, hp, IP_CACHED);
+	    } else if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
+		/* only dnsHandleRead() can change from DISPATCHED to CACHED */
+		static_addrs.count = 1;
+		static_addrs.cur = 0;
+		xmemcpy(&static_addrs.in_addrs[0].s_addr,
+		    *(hp->h_addr_list),
+		    hp->h_length);
+		return &static_addrs;
 	    } else {
 		ipcacheAddHostent(i, hp);
 	    }

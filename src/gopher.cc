@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.72 1997/02/27 02:57:08 wessels Exp $
+ * $Id: gopher.cc,v 1.73 1997/03/04 05:16:30 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -156,7 +156,6 @@ typedef struct gopher_ds {
     int cso_recno;
     int len;
     char *buf;			/* pts to a 4k page */
-    ConnectStateData connectState;
 } GopherStateData;
 
 static int gopherStateFree _PARAMS((int fd, GopherStateData *));
@@ -958,7 +957,6 @@ gopherStartComplete(void *datap, int status)
 	    &data->type_id, data->request)) {
 	squid_error_entry(entry, ERR_INVALID_URL, NULL);
 	gopherStateFree(-1, data);
-	xfree(url);
 	return;
     }
     /* Create socket. */
@@ -972,7 +970,6 @@ gopherStartComplete(void *datap, int status)
 	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	gopherStateFree(-1, data);
-	xfree(url);
 	return;
     }
     comm_add_close_handler(sock,
@@ -985,7 +982,6 @@ gopherStartComplete(void *datap, int status)
 	debug(10, 4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(sock);
-	xfree(url);
 	return;
     }
     if (((data->type_id == GOPHER_INDEX) || (data->type_id == GOPHER_CSO))
@@ -1006,17 +1002,13 @@ gopherStartComplete(void *datap, int status)
 	gopherToHTML(data, (char *) NULL, 0);
 	storeComplete(entry);
 	comm_close(sock);
-	xfree(url);
 	return;
     }
-    data->connectState.fd = sock;
-    data->connectState.host = data->host;
-    data->connectState.port = data->port;
-    data->connectState.handler = gopherConnectDone;
-    data->connectState.data = data;
-    comm_nbconnect(sock, &data->connectState);
-    xfree(url);
-    return;
+    commConnectStart(sock,
+	data->host,
+	data->port,
+	gopherConnectDone,
+	data);
 }
 
 static void
@@ -1039,8 +1031,6 @@ gopherConnectDone(int fd, int status, void *data)
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
 	(void *) gopherState, 0);
-    if (vizSock > -1)
-	vizHackSendPkt(&gopherState->connectState.S, 2);
 }
 
 

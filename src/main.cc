@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.137 1997/02/27 06:29:14 wessels Exp $
+ * $Id: main.cc,v 1.138 1997/03/04 05:16:36 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -134,7 +134,6 @@ const char *const appname = "squid";
 const char *const localhost = "127.0.0.1";
 struct in_addr local_addr;
 struct in_addr no_addr;
-struct in_addr any_addr;
 struct in_addr theOutICPAddr;
 const char *const dash_str = "-";
 const char *const null_string = "";
@@ -147,6 +146,7 @@ extern void (*failure_notify) _PARAMS((const char *));
 static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
+static struct in_addr any_addr;
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
 #endif
@@ -193,7 +193,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFRUVYa:bf:hik:m:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFRUVYXa:bf:hik:m:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -212,6 +212,10 @@ mainParseOptions(int argc, char *argv[])
 	    break;
 	case 'V':
 	    vhost_mode = 1;
+	    break;
+	case 'X':
+	    /* force full debugging */
+	    sigusr2_handle(SIGUSR2);
 	    break;
 	case 'Y':
 	    opt_reload_hit_only = 1;
@@ -420,7 +424,7 @@ serverConnectionsOpen(void)
 	if (Config.vizHack.addr.s_addr > inet_addr("224.0.0.0")) {
 	    struct ip_mreq mr;
 	    char ttl = (char) Config.vizHack.mcast_ttl;
-	    memset((char *) &mr, '\0', sizeof(struct ip_mreq));
+	    memset(&mr, '\0', sizeof(struct ip_mreq));
 	    mr.imr_multiaddr.s_addr = Config.vizHack.addr.s_addr;
 	    mr.imr_interface.s_addr = INADDR_ANY;
 	    x = setsockopt(vizSock,
@@ -447,7 +451,7 @@ serverConnectionsOpen(void)
 #else
 	debug(1, 0, "vizSock: Could not join multicast group\n");
 #endif
-	memset((char *) &Config.vizHack.S, '\0', sizeof(struct sockaddr_in));
+	memset(&Config.vizHack.S, '\0', sizeof(struct sockaddr_in));
 	Config.vizHack.S.sin_family = AF_INET;
 	Config.vizHack.S.sin_addr = Config.vizHack.addr;
 	Config.vizHack.S.sin_port = htons(Config.vizHack.port);
@@ -601,7 +605,7 @@ mainInitialize(void)
 	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
 	eventAdd("storeDirClean", storeDirClean, NULL, 15);
 	if (Config.Announce.on)
-	    eventAdd("send_announce", send_announce, NULL, 3600);
+	    eventAdd("start_announce", start_announce, NULL, 3600);
 	eventAdd("ipcache_purgelru", (EVH) ipcache_purgelru, NULL, 10);
 	eventAdd("peerUpdateFudge", peerUpdateFudge, NULL, 10);
     }
@@ -721,7 +725,6 @@ main(int argc, char **argv)
 	    }
 	    if (shutdown_pending) {
 		normal_shutdown();
-		exit(0);
 	    } else if (reread_pending) {
 		mainReinitialize();
 		reread_pending = 0;	/* reset */

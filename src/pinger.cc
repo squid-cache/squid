@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.19 1997/01/24 22:18:39 wessels Exp $
+ * $Id: pinger.cc,v 1.20 1997/03/04 05:16:39 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -286,7 +286,7 @@ pingerReadRequest(void)
     static pingerEchoData pecho;
     int n;
     int guess_size;
-    memset((char *) &pecho, '\0', sizeof(pecho));
+    memset(&pecho, '\0', sizeof(pecho));
     n = recv(0, (char *) &pecho, sizeof(pecho), 0);
     if (n < 0) {
 	perror("recv");
