@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.49 1998/04/12 06:10:07 rousskov Exp $
+ * $Id: peer_select.cc,v 1.50 1998/04/16 17:48:50 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -49,7 +49,7 @@ const char *hier_strings[] =
     "ROUNDROBIN_PARENT",
 #if SQUID_PEER_DIGEST
     "CACHE_DIGEST_HIT",
-    "CACHE_DIGEST_MISS",
+    "NO_CACHE_DIGEST_DIRECT",
 #endif
     "INVALID CODE"
 };
@@ -327,7 +327,7 @@ peerSelectFoo(ps_state * psstate)
 		peerSelectCallback(psstate, p); /* @?@: p used to be NULL */
 		return;
 	    case LOOKUP_MISS:
-		code = CACHE_DIGEST_MISS_DIRECT;
+		code = NO_CACHE_DIGEST_DIRECT;
 		/* fall through */
 	    case LOOKUP_NONE:
 		/* go direct */
