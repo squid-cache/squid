@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.353 2000/07/18 06:16:40 wessels Exp $
+ * $Id: cache_cf.cc,v 1.354 2000/09/17 23:41:55 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1759,6 +1759,7 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
 	storeAppendPrintf(entry, " %s", args->key);
 	args = args->next;
     }
+    storeAppendPrintf(entry, "\n");
 }
 
 
