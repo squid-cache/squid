@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.100 1996/09/05 22:14:07 wessels Exp $
+ * $Id: store.cc,v 1.101 1996/09/11 22:40:15 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -965,22 +965,22 @@ static void InvokeHandlers(e)
 {
     int i;
     MemObject *mem = e->mem_obj;
-
+    struct pentry *p = NULL;
+    PIF handler = NULL;
+    void *data = NULL;
     /* walk the entire list looking for valid handlers */
     for (i = 0; i < (int) mem->pending_list_size; i++) {
-	if (mem->pending[i] && mem->pending[i]->handler) {
-	    /* 
-	     *  Once we call the handler, it is no longer needed 
-	     *  until the write process sends all available data 
-	     *  from the object entry. 
-	     */
-	    (mem->pending[i]->handler)
-		(mem->pending[i]->fd, e, mem->pending[i]->data);
-	    safe_free(mem->pending[i]);
-	    mem->pending[i] = NULL;
-	}
+	p = mem->pending[i];
+	if (p == NULL)
+	    continue;
+	if ((handler = p->handler) == NULL)
+	    continue;
+	data = p->data;
+	memset(p, '\0', sizeof(struct pentry));
+	safe_free(p);
+	mem->pending[i] = NULL;
+	handler(mem->pending[i]->fd, e, data);
     }
-
 }
 
 /* Mark object as expired */
