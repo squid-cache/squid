@@ -85,6 +85,9 @@
 /* Define if we should use GNU regex */
 #undef USE_GNUREGEX
 
+/* signed size_t, grr */
+#undef ssize_t
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
@@ -162,6 +165,9 @@
 
 /* Define if you have the sigaction function.  */
 #undef HAVE_SIGACTION
+
+/* Define if you have the snprintf function.  */
+#undef HAVE_SNPRINTF
 
 /* Define if you have the srand48 function.  */
 #undef HAVE_SRAND48
