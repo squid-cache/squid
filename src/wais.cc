@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.101 1998/02/24 21:17:09 wessels Exp $
+ * $Id: wais.cc,v 1.102 1998/03/04 23:52:41 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -175,7 +175,8 @@ waisReadReply(int fd, void *data)
     len = read(fd, buf, 4096);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.server.kbytes_in, len);
+	kb_incr(&Counter.server.all.kbytes_in, len);
+	kb_incr(&Counter.server.other.kbytes_in, len);
     }
     debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, len);
     if (len > 0) {
@@ -234,7 +235,8 @@ waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	fd, size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.kbytes_out, size);
+	kb_incr(&Counter.server.all.kbytes_out, size);
+        kb_incr(&Counter.server.other.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -290,6 +292,8 @@ waisStart(request_t * request, StoreEntry * entry)
     const char *url = storeUrl(entry);
     method_t method = request->method;
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
+    Counter.server.all.requests++;
+    Counter.server.other.requests++;
     if (!Config.Wais.relayHost) {
 	ErrorState *err;
 	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.210 1998/02/26 18:00:53 wessels Exp $
+ * $Id: stat.cc,v 1.211 1998/03/04 23:52:37 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -112,7 +112,7 @@ static const char *describeStatuses(const StoreEntry *);
 static const char *describeFlags(const StoreEntry *);
 static const char *describeTimestamps(const StoreEntry *);
 static void statAvgTick(void *notused);
-static void statAvgDump(StoreEntry *, int minutes);
+static void statAvgDump(StoreEntry *, int minutes, int hours);
 static void statCountersInit(StatCounters *);
 static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
@@ -131,14 +131,55 @@ static OBJH statAvg60min;
 static void info_get_mallstat(int, int, StoreEntry *);
 #endif
 
-/*
- * An hour's worth, plus the 'current' counter
- */
-#if 0				/* moved to defines.h to get from snmp_oidlist.c */
-#define N_COUNT_HIST 61
-#endif
 StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
+static StatCounters CountHourHist[N_COUNT_HOUR_HIST];
+static int NCountHourHist = 0;
+
+void
+stat_utilization_get(StoreEntry * e)
+{
+    storeAppendPrintf(e, "Cache Utilisation:\n");
+    storeAppendPrintf(e, "\n");
+    storeAppendPrintf(e, "Last 5 minutes:\n");
+    if (NCountHist >= 5)
+	statAvgDump(e, 5, 0);
+    else
+	storeAppendPrintf(e, "(no values recorded yet)\n");
+    storeAppendPrintf(e, "\n");
+    storeAppendPrintf(e, "Last 15 minutes:\n");
+    if (NCountHist >= 15)
+	statAvgDump(e, 15, 0);
+    else
+	storeAppendPrintf(e, "(no values recorded yet)\n");
+    storeAppendPrintf(e, "\n");
+    storeAppendPrintf(e, "Last hour:\n");
+    if (NCountHist >= 60)
+	statAvgDump(e, 60, 0);
+    else
+	storeAppendPrintf(e, "(no values recorded yet)\n");
+    storeAppendPrintf(e, "\n");
+    storeAppendPrintf(e, "Last 8 hours:\n");
+    if (NCountHourHist >= 8)
+	statAvgDump(e, 0, 8);
+    else
+	storeAppendPrintf(e, "(no values recorded yet)\n");
+    storeAppendPrintf(e, "\n");
+    storeAppendPrintf(e, "Last day:\n");
+    if (NCountHourHist >= 24)
+	statAvgDump(e, 0, 24);
+    else
+	storeAppendPrintf(e, "(no values recorded yet)\n");
+    storeAppendPrintf(e, "\n");
+    storeAppendPrintf(e, "Last 3 days:\n");
+    if (NCountHourHist >= 72)
+	statAvgDump(e, 0, 72);
+    else
+	storeAppendPrintf(e, "(no values recorded yet)\n");
+    storeAppendPrintf(e, "\n");
+    storeAppendPrintf(e, "Totals since cache startup:\n");
+    statCountersDump(e);
+}
 
 void
 stat_io_get(StoreEntry * sentry)
@@ -570,7 +611,7 @@ info_get(StoreEntry * sentry)
 
 #define XAVG(X) (dt ? (double) (f->X - l->X) / dt : 0.0)
 static void
-statAvgDump(StoreEntry * sentry, int minutes)
+statAvgDump(StoreEntry * sentry, int minutes, int hours)
 {
     StatCounters *f;
     StatCounters *l;
@@ -578,13 +619,35 @@ statAvgDump(StoreEntry * sentry, int minutes)
     double ct;
     double x;
     assert(N_COUNT_HIST > 1);
-    assert(minutes > 0);
+    assert(minutes > 0 || hours > 0);
     f = &CountHist[0];
-    if (minutes > N_COUNT_HIST - 1)
-	minutes = N_COUNT_HIST - 1;
-    l = &CountHist[minutes];
+    l = f;
+    if (minutes > 0 && hours == 0) {
+	/* checking minute readings ... */
+	if (minutes > N_COUNT_HIST - 1)
+	    minutes = N_COUNT_HIST - 1;
+	l = &CountHist[minutes];
+    } else if (minutes == 0 && hours > 0) {
+	/* checking hour readings ... */
+	if (hours > N_COUNT_HOUR_HIST - 1)
+	    hours = N_COUNT_HOUR_HIST - 1;
+	l = &CountHourHist[hours];
+    } else {
+	debug(18,1)("statAvgDump: Invalid args, minutes=%d, hours=%d\n",
+		minutes, hours);
+	return;
+    }
     dt = tvSubDsec(l->timestamp, f->timestamp);
     ct = f->cputime - l->cputime;
+
+     storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
+        f->timestamp.tv_sec,
+	f->timestamp.tv_usec,
+	mkrfc1123(f->timestamp.tv_sec));
+     storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
+        l->timestamp.tv_sec,
+	l->timestamp.tv_usec,
+	mkrfc1123(l->timestamp.tv_sec));
 
     storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
 	XAVG(client_http.requests));
@@ -614,14 +677,41 @@ statAvgDump(StoreEntry * sentry, int minutes)
     storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
 	x / 1000.0);
 
-    storeAppendPrintf(sentry, "server.requests = %f/sec\n",
-	XAVG(server.requests));
-    storeAppendPrintf(sentry, "server.errors = %f/sec\n",
-	XAVG(server.errors));
-    storeAppendPrintf(sentry, "server.kbytes_in = %f/sec\n",
-	XAVG(server.kbytes_in.kb));
-    storeAppendPrintf(sentry, "server.kbytes_out = %f/sec\n",
-	XAVG(server.kbytes_out.kb));
+    storeAppendPrintf(sentry, "server.all.requests = %f/sec\n",
+	XAVG(server.all.requests));
+    storeAppendPrintf(sentry, "server.all.errors = %f/sec\n",
+	XAVG(server.all.errors));
+    storeAppendPrintf(sentry, "server.all.kbytes_in = %f/sec\n",
+	XAVG(server.all.kbytes_in.kb));
+    storeAppendPrintf(sentry, "server.all.kbytes_out = %f/sec\n",
+	XAVG(server.all.kbytes_out.kb));
+
+    storeAppendPrintf(sentry, "server.http.requests = %f/sec\n",
+	XAVG(server.http.requests));
+    storeAppendPrintf(sentry, "server.http.errors = %f/sec\n",
+	XAVG(server.http.errors));
+    storeAppendPrintf(sentry, "server.http.kbytes_in = %f/sec\n",
+	XAVG(server.http.kbytes_in.kb));
+    storeAppendPrintf(sentry, "server.http.kbytes_out = %f/sec\n",
+	XAVG(server.http.kbytes_out.kb));
+
+    storeAppendPrintf(sentry, "server.ftp.requests = %f/sec\n",
+	XAVG(server.ftp.requests));
+    storeAppendPrintf(sentry, "server.ftp.errors = %f/sec\n",
+	XAVG(server.ftp.errors));
+    storeAppendPrintf(sentry, "server.ftp.kbytes_in = %f/sec\n",
+	XAVG(server.ftp.kbytes_in.kb));
+    storeAppendPrintf(sentry, "server.ftp.kbytes_out = %f/sec\n",
+	XAVG(server.ftp.kbytes_out.kb));
+
+    storeAppendPrintf(sentry, "server.other.requests = %f/sec\n",
+	XAVG(server.other.requests));
+    storeAppendPrintf(sentry, "server.other.errors = %f/sec\n",
+	XAVG(server.other.errors));
+    storeAppendPrintf(sentry, "server.other.kbytes_in = %f/sec\n",
+	XAVG(server.other.kbytes_in.kb));
+    storeAppendPrintf(sentry, "server.other.kbytes_out = %f/sec\n",
+	XAVG(server.other.kbytes_out.kb));
 
     storeAppendPrintf(sentry, "icp.pkts_sent = %f/sec\n",
 	XAVG(icp.pkts_sent));
@@ -656,13 +746,12 @@ statInit(void)
 {
     int i;
     debug(18, 5) ("statInit: Initializing...\n");
-#if 0				/* we do it in statCountersInit */
-    memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
-#endif
     for (i = 0; i < N_COUNT_HIST; i++)
 	statCountersInit(&CountHist[i]);
+    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
+	statCountersInit(&CountHourHist[i]);
     statCountersInit(&Counter);
-    eventAdd("statAvgTick", statAvgTick, NULL, 60);
+    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL);
     cachemgrRegister("info",
 	"General Runtime Information",
 	info_get, 0);
@@ -696,7 +785,7 @@ statAvgTick(void *notused)
     StatCounters *p = &CountHist[1];
     StatCounters *c = &Counter;
     struct rusage rusage;
-    eventAdd("statAvgTick", statAvgTick, NULL, 60);
+    eventAdd("statAvgTick", statAvgTick, NULL, COUNT_INTERVAL);
     squid_getrusage(&rusage);
     c->page_faults = rusage_pagefaults(&rusage);
     c->cputime = rusage_cputime(&rusage);
@@ -704,11 +793,18 @@ statAvgTick(void *notused)
     /* even if NCountHist is small, we already Init()ed the tail */
     statCountersClean(CountHist + N_COUNT_HIST - 1);
     xmemmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
-#if 0
-    memcpy(t, c, sizeof(StatCounters));
-#endif
     statCountersCopy(t, c);
     NCountHist++;
+
+    if ((NCountHist % COUNT_INTERVAL) == 0) {
+	/* we have an hours worth of readings.  store previous hour */
+	StatCounters *p = &CountHourHist[0];
+	StatCounters *t = &CountHourHist[1];
+	StatCounters *c = &CountHist[N_COUNT_HIST];
+	xmemmove(p, t, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
+	memcpy(t, c, sizeof(StatCounters));
+	NCountHourHist++;
+    }
 }
 
 static void
@@ -717,7 +813,6 @@ statCountersInit(StatCounters * C)
     assert(C);
     memset(C, 0, sizeof(*C));
     C->timestamp = current_time;
-
     statCountersInitSpecial(C);
 }
 
@@ -786,6 +881,10 @@ statCountersDump(StoreEntry * sentry)
     f->page_faults = rusage_pagefaults(&rusage);
     f->cputime = rusage_cputime(&rusage);
 
+    storeAppendPrintf(sentry, "sample_time = %d.%d (%s)\n",
+        f->timestamp.tv_sec,
+	f->timestamp.tv_usec,
+	mkrfc1123(f->timestamp.tv_sec));
     storeAppendPrintf(sentry, "client_http.requests = %d\n",
 	f->client_http.requests);
     storeAppendPrintf(sentry, "client_http.hits = %d\n",
@@ -805,14 +904,41 @@ statCountersDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
     statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
 
-    storeAppendPrintf(sentry, "server.requests = %d\n",
-	(int) f->server.requests);
-    storeAppendPrintf(sentry, "server.errors = %d\n",
-	(int) f->server.errors);
-    storeAppendPrintf(sentry, "server.kbytes_in = %d\n",
-	(int) f->server.kbytes_in.kb);
-    storeAppendPrintf(sentry, "server.kbytes_out = %d\n",
-	(int) f->server.kbytes_out.kb);
+    storeAppendPrintf(sentry, "server.all.requests = %d\n",
+	(int) f->server.all.requests);
+    storeAppendPrintf(sentry, "server.all.errors = %d\n",
+	(int) f->server.all.errors);
+    storeAppendPrintf(sentry, "server.all.kbytes_in = %d\n",
+	(int) f->server.all.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.all.kbytes_out = %d\n",
+	(int) f->server.all.kbytes_out.kb);
+
+    storeAppendPrintf(sentry, "server.http.requests = %d\n",
+	(int) f->server.http.requests);
+    storeAppendPrintf(sentry, "server.http.errors = %d\n",
+	(int) f->server.http.errors);
+    storeAppendPrintf(sentry, "server.http.kbytes_in = %d\n",
+	(int) f->server.http.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.http.kbytes_out = %d\n",
+	(int) f->server.http.kbytes_out.kb);
+
+    storeAppendPrintf(sentry, "server.ftp.requests = %d\n",
+	(int) f->server.ftp.requests);
+    storeAppendPrintf(sentry, "server.ftp.errors = %d\n",
+	(int) f->server.ftp.errors);
+    storeAppendPrintf(sentry, "server.ftp.kbytes_in = %d\n",
+	(int) f->server.ftp.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.ftp.kbytes_out = %d\n",
+	(int) f->server.ftp.kbytes_out.kb);
+
+    storeAppendPrintf(sentry, "server.other.requests = %d\n",
+	(int) f->server.other.requests);
+    storeAppendPrintf(sentry, "server.other.errors = %d\n",
+	(int) f->server.other.errors);
+    storeAppendPrintf(sentry, "server.other.kbytes_in = %d\n",
+	(int) f->server.other.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.other.kbytes_out = %d\n",
+	(int) f->server.other.kbytes_out.kb);
 
     storeAppendPrintf(sentry, "icp.pkts_sent = %d\n",
 	f->icp.pkts_sent);
@@ -850,13 +976,13 @@ statCounters(StoreEntry * e)
 void
 statAvg5min(StoreEntry * e)
 {
-    statAvgDump(e, 5);
+    statAvgDump(e, 5, 0);
 }
 
 void
 statAvg60min(StoreEntry * e)
 {
-    statAvgDump(e, 60);
+    statAvgDump(e, 60, 0);
 }
 
 

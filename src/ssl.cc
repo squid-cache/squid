@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.74 1998/02/24 21:17:07 wessels Exp $
+ * $Id: ssl.cc,v 1.75 1998/03/04 23:52:42 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -117,7 +117,8 @@ sslReadServer(int fd, void *data)
     len = read(sslState->server.fd, sslState->server.buf, SQUID_TCP_SO_RCVBUF);
     if (len > 0) {
 	fd_bytes(sslState->server.fd, len, FD_READ);
-	kb_incr(&Counter.server.kbytes_in, len);
+	kb_incr(&Counter.server.all.kbytes_in, len);
+	kb_incr(&Counter.server.other.kbytes_in, len);
     }
     debug(26, 5) ("sslReadServer FD %d, read %d bytes\n", fd, len);
     if (len < 0) {
@@ -202,7 +203,8 @@ sslWriteServer(int fd, void *data)
 	sslState->client.len - sslState->client.offset);
     if (len > 0) {
 	fd_bytes(sslState->server.fd, len, FD_WRITE);
-	kb_incr(&Counter.server.kbytes_out, len);
+	kb_incr(&Counter.server.all.kbytes_out, len);
+	kb_incr(&Counter.server.other.kbytes_out, len);
     }
     debug(26, 5) ("sslWriteServer FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
@@ -364,6 +366,8 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
     ErrorState *err = NULL;
     debug(26, 3) ("sslStart: '%s %s'\n",
 	RequestMethodStr[request->method], url);
+    Counter.server.all.requests++;
+    Counter.server.other.requests++;
     /* Create socket. */
     sock = comm_open(SOCK_STREAM,
 	0,

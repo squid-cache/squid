@@ -1044,10 +1044,12 @@ struct _StatCounters {
 	StatHist all_svc_time;
     } client_http;
     struct {
-	int requests;
-	int errors;
-	kb_t kbytes_in;
-	kb_t kbytes_out;
+	struct {
+	    int requests;
+	    int errors;
+	    kb_t kbytes_in;
+	    kb_t kbytes_out;
+	} all,http,ftp,other;
     } server;
     struct {
 	int pkts_sent;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.199 1998/03/03 00:31:05 rousskov Exp $
+ * $Id: ftp.cc,v 1.200 1998/03/04 23:52:39 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -135,17 +135,10 @@ static PF ftpStateFree;
 static PF ftpTimeout;
 static PF ftpReadControlReply;
 static CWCB ftpWriteCommandCallback;
-#if 0
-static char *ftpGetBasicAuth(const char *);
-#endif
 static void ftpLoginParser(const char *, FtpStateData *);
 static wordlist *ftpParseControlReply(char *buf, size_t len, int *code);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
-#if 0
-static char *ftpAuthRequired(const request_t *, const char *);
-#else
 static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
-#endif
 static STABH ftpAbort;
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 
@@ -775,7 +768,8 @@ ftpDataRead(int fd, void *data)
 	ftpState->data.size - ftpState->data.offset);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.server.kbytes_in, len);
+	kb_incr(&Counter.server.all.kbytes_in, len);
+	kb_incr(&Counter.server.ftp.kbytes_in, len);
     }
     debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
@@ -818,26 +812,6 @@ ftpDataRead(int fd, void *data)
 		Config.Timeout.read);
     }
 }
-
-#if 0				/* moved to mime.c because cachemgr needs it too */
-static char *
-ftpGetBasicAuth(const char *req_hdr)
-{
-    char *auth_hdr;
-    char *t;
-    if (req_hdr == NULL)
-	return NULL;
-    if ((auth_hdr = mime_get_header(req_hdr, "Authorization")) == NULL)
-	return NULL;
-    if ((t = strtok(auth_hdr, " \t")) == NULL)
-	return NULL;
-    if (strcasecmp(t, "Basic") != 0)
-	return NULL;
-    if ((t = strtok(NULL, " \t")) == NULL)
-	return NULL;
-    return base64_decode(t);
-}
-#endif
 
 /*
  * ftpCheckAuth
@@ -930,13 +904,13 @@ ftpStart(request_t * request, StoreEntry * entry)
     LOCAL_ARRAY(char, realm, 8192);
     const char *url = storeUrl(entry);
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
-#if 0
-    char *response;
-#endif
     int fd;
     ErrorState *err;
+    HttpReply *reply;
     cbdataAdd(ftpState, MEM_NONE);
     debug(9, 3) ("FtpStart: '%s'\n", url);
+    Counter.server.all.requests++;
+    Counter.server.ftp.requests++;
     storeLockObject(entry);
     ftpState->entry = entry;
     ftpState->request = requestLink(request);
@@ -952,20 +926,12 @@ ftpStart(request_t * request, StoreEntry * entry)
 	    snprintf(realm, 8192, "ftp %s port %d",
 		ftpState->user, request->port);
 	}
-#if 0
-	response = ftpAuthRequired(request, realm);
-	storeAppend(entry, response, strlen(response));
-	httpParseReplyHeaders(response, entry->mem_obj->reply);
-#else
 	/* create reply */
-	{
-	    HttpReply *reply = entry->mem_obj->reply;
-	    assert(reply);
-	    /* create appropreate reply */
-	    ftpAuthRequired(reply, request, realm);
-	    httpReplySwapOut(reply, entry);
-	}
-#endif
+	reply = entry->mem_obj->reply;
+	assert(reply != NULL);
+	/* create appropriate reply */
+	ftpAuthRequired(reply, request, realm);
+	httpReplySwapOut(reply, entry);
 	storeComplete(entry);
 	ftpStateFree(-1, ftpState);
 	return;
@@ -1065,7 +1031,8 @@ ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.kbytes_out, size);
+	kb_incr(&Counter.server.all.kbytes_out, size);
+        kb_incr(&Counter.server.ftp.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -1137,7 +1104,8 @@ ftpReadControlReply(int fd, void *data)
 	ftpState->ctrl.size - ftpState->ctrl.offset);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.server.kbytes_in, len);
+	kb_incr(&Counter.server.all.kbytes_in, len);
+        kb_incr(&Counter.server.ftp.kbytes_in,len);
     }
     debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
     if (len < 0) {
@@ -1984,30 +1952,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	}
     }
     storeBuffer(e);
-#if 0				/* old code */
-    storeAppendPrintf(e, "HTTP/1.0 200 Gatewaying\r\n");
-    reply->code = 200;
-    reply->version = 1.0;
-    storeAppendPrintf(e, "Date: %s\r\n", mkrfc1123(squid_curtime));
-    reply->date = squid_curtime;
-    storeAppendPrintf(e, "MIME-Version: 1.0\r\n");
-    storeAppendPrintf(e, "Server: Squid %s\r\n", version_string);
-    if (ftpState->size > 0) {
-	storeAppendPrintf(e, "Content-Length: %d\r\n", ftpState->size);
-	reply->content_length = ftpState->size;
-    }
-    if (mime_type) {
-	storeAppendPrintf(e, "Content-Type: %s\r\n", mime_type);
-	xstrncpy(reply->content_type, mime_type, HTTP_REPLY_FIELD_SZ);
-    }
-    if (mime_enc)
-	storeAppendPrintf(e, "Content-Encoding: %s\r\n", mime_enc);
-    if (ftpState->mdtm > 0) {
-	storeAppendPrintf(e, "Last-Modified: %s\r\n", mkrfc1123(ftpState->mdtm));
-	reply->last_modified = ftpState->mdtm;
-    }
-    storeAppendPrintf(e, "\r\n");
-#else
     httpReplyReset(reply);
     /* set standard stuff */
     httpReplySetHeaders(reply, 1.0, HTTP_OK, "Gatewaying",
@@ -2016,7 +1960,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     if (mime_enc)
 	httpHeaderSetStr(&reply->hdr, HDR_CONTENT_ENCODING, mime_enc);
     httpReplySwapOut(reply, e);
-#endif
     storeBufferFlush(e);
     reply->hdr_sz = e->mem_obj->inmem_hi;
     storeTimestampsSet(e);
@@ -2034,57 +1977,6 @@ ftpAbort(void *data)
     }
     comm_close(ftpState->ctrl.fd);
 }
-
-#if 0				/* use new interfaces instead */
-static char *
-ftpAuthRequired(const request_t * request, const char *realm)
-{
-    LOCAL_ARRAY(char, content, AUTH_MSG_SZ);
-    LOCAL_ARRAY(char, buf, AUTH_MSG_SZ);
-    char *hdr;
-    int s = AUTH_MSG_SZ;
-    int l = 0;
-    /* Generate the reply body */
-    l += snprintf(content + l, s - l,
-	"<HTML><HEAD><TITLE>Authorization needed</TITLE>\n"
-	"</HEAD><BODY><H1>Authorization needed</H1>\n"
-	"<P>Sorry, you have to authorize yourself to request:\n"
-	"<PRE>    ftp://%s@%s%256.256s</PRE>\n"
-	"<P>from this cache.  Please check with the\n"
-	"<A HREF=\"mailto:%s\">cache administrator</A>\n"
-	"if you believe this is incorrect.\n"
-	"<P>\n"
-	"%s\n"
-	"<HR>\n"
-	"<ADDRESS>\n"
-	"Generated by %s/%s@%s\n"
-	"</ADDRESS></BODY></HTML>\n"
-	"\n",
-	request->login,
-	request->host,
-	request->urlpath,
-	Config.adminEmail,
-	Config.errHtmlText,
-	appname,
-	version_string,
-	getMyHostname());
-    /* Now generate reply headers with correct content length */
-    hdr = httpReplyHeader(1.0, HTTP_UNAUTHORIZED,
-	"text/html",
-	strlen(content),
-	squid_curtime,
-	squid_curtime + Config.negativeTtl);
-    /* Now stuff them together and add Authenticate header */
-    l = 0;
-    s = AUTH_MSG_SZ;
-    l += snprintf(buf + l, s - l, "%s", hdr);
-    l += snprintf(buf + l, s - l,
-	"WWW-Authenticate: Basic realm=\"%s\"\r\n",
-	realm);
-    l += snprintf(buf + l, s - l, "\r\n%s", content);
-    return buf;
-}
-#endif
 
 static void
 ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)

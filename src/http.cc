@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.243 1998/03/03 00:31:07 rousskov Exp $
+ * $Id: http.cc,v 1.244 1998/03/04 23:52:40 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -661,7 +661,8 @@ httpReadReply(int fd, void *data)
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.server.kbytes_in, len);
+	kb_incr(&Counter.server.all.kbytes_in, len);
+	kb_incr(&Counter.server.http.kbytes_in, len);
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
@@ -740,7 +741,8 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	fd, size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.kbytes_out, size);
+	kb_incr(&Counter.server.all.kbytes_out, size);
+        kb_incr(&Counter.server.http.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -1047,6 +1049,8 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
     int fd;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
 	RequestMethodStr[request->method], storeUrl(entry));
+    Counter.server.all.requests++;
+    Counter.server.http.requests++;
     if (e) {
 	if (e->options & NEIGHBOR_PROXY_ONLY)
 	    storeReleaseRequest(entry);
