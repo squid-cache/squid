@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.10 1997/11/12 23:36:20 wessels Exp $
+ * $Id: access_log.cc,v 1.11 1997/11/20 06:25:25 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -195,7 +195,7 @@ accessLogLog(AccessLogEntry * al)
     if (!al->cache.ident || *al->cache.ident == '\0')
 	al->cache.ident = dash_str;
     if (al->icp.opcode)
-	al->private.method_str = IcpOpcodeStr[al->icp.opcode];
+	al->private.method_str = icp_opcode_str[al->icp.opcode];
     else
 	al->private.method_str = RequestMethodStr[al->http.method];
     if (al->hier.host[0] == '\0')

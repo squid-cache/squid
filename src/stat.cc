@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.174 1997/11/18 01:02:40 wessels Exp $
+ * $Id: stat.cc,v 1.175 1997/11/20 06:25:31 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -418,11 +418,11 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	    e->stats.ignored_replies,
 	    percent(e->stats.ignored_replies, e->stats.pings_acked));
 	storeAppendPrintf(sentry, "{Histogram of PINGS ACKED:}\n");
-	for (op = ICP_OP_INVALID; op < ICP_OP_END; op++) {
+	for (op = ICP_INVALID; op < ICP_END; op++) {
 	    if (e->stats.counts[op] == 0)
 		continue;
 	    storeAppendPrintf(sentry, "{    %12.12s : %8d %3d%%}\n",
-		IcpOpcodeStr[op],
+		icp_opcode_str[op],
 		e->stats.counts[op],
 		percent(e->stats.counts[op], e->stats.pings_acked));
 	}

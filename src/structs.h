@@ -550,7 +550,7 @@ struct _peer {
 	int ack_deficit;
 	int fetches;
 	int rtt;
-	int counts[ICP_OP_END];
+	int counts[ICP_END];
 	int ignored_replies;
 	int n_keepalives_sent;
 	int n_keepalives_recv;

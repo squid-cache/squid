@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.101 1997/11/12 00:08:49 wessels Exp $
+ * $Id: errorpage.cc,v 1.102 1997/11/20 06:25:26 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -38,29 +38,6 @@
 
 #include "squid.h"
 
-static const char *err_string[] =
-{
-    "ERR_NONE",
-    "ERR_READ_TIMEOUT",
-    "ERR_LIFETIME_EXP",
-    "ERR_READ_ERROR",
-    "ERR_WRITE_ERROR",
-    "ERR_CLIENT_ABORT",
-    "ERR_CONNECT_FAIL",
-    "ERR_INVALID_REQ",
-    "ERR_UNSUP_REQ",
-    "ERR_INVALID_URL",
-    "ERR_SOCKET_FAILURE",
-    "ERR_DNS_FAIL",
-    "ERR_CANNOT_FORWARD",
-    "ERR_NO_RELAY",
-    "ERR_ZERO_SIZE_OBJECT",
-    "ERR_FTP_DISABLED",
-    "ERR_FTP_FAILURE",
-    "ERR_ACCESS_DENIED",
-    "ERR_MAX"
-};
-
 static char *error_text[ERR_MAX];
 
 static void errorStateFree(ErrorState * err);
@@ -84,10 +61,9 @@ errorInitialize(void)
     int fd;
     char path[MAXPATHLEN];
     struct stat sb;
-    assert(sizeof(err_string) == (ERR_MAX + 1) * sizeof(char *));
     for (i = ERR_NONE + 1; i < ERR_MAX; i++) {
 	snprintf(path, MAXPATHLEN, "%s/%s",
-	    Config.errorDirectory, err_string[i]);
+	    Config.errorDirectory, err_type_str[i]);
 	fd = file_open(path, O_RDONLY, NULL, NULL);
 	if (fd < 0) {
 	    debug(4, 0) ("errorInitialize: %s: %s\n", path, xstrerror());

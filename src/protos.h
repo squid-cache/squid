@@ -329,7 +329,6 @@ extern void peerSelectInit(void);
 extern void protoDispatch(int, StoreEntry *, request_t *);
 
 extern int protoUnregister(StoreEntry *, request_t *);
-extern void protoStart(int, StoreEntry *, peer *, request_t *);
 extern int protoAbortFetch(StoreEntry * entry);
 extern DEFER protoCheckDeferRead;
 
