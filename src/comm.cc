@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.163 1997/06/17 03:03:21 wessels Exp $
+ * $Id: comm.cc,v 1.164 1997/06/18 00:19:52 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -140,7 +140,6 @@ typedef struct {
     struct in_addr in_addr;
     int locks;
     int fd;
-    callback_meta *cbm_list;
 } ConnectStateData;
 
 /* GLOBAL */
@@ -331,14 +330,16 @@ void
 commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
 {
     ConnectStateData *cs = xcalloc(1, sizeof(ConnectStateData));
+    cbdataAdd(cs);
     cs->fd = fd;
     cs->host = xstrdup(host);
     cs->port = port;
     cs->callback = callback;
     cs->data = data;
+    cbdataLock(data);
     comm_add_close_handler(fd, commConnectFree, cs);
     cs->locks++;
-    ipcache_nbgethostbyname(host, commConnectDnsHandle, cs, &cs->cbm_list);
+    ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
 }
 
 static void
@@ -364,16 +365,19 @@ commConnectCallback(ConnectStateData * cs, int status)
     int fd = cs->fd;
     comm_remove_close_handler(fd, commConnectFree, cs);
     commConnectFree(fd, cs);
-    callback(fd, status, data);
+    if (cbdataValid(data))
+        callback(fd, status, data);
+    cbdataUnlock(data);
 }
 
 static void
 commConnectFree(int fdunused, void *data)
 {
     ConnectStateData *cs = data;
-    callbackUnlinkList(cs->cbm_list);
-    xfree(cs->host);
-    xfree(cs);
+    if (cs->locks)
+       ipcacheUnregister(cs->host, cs);
+    safe_free(cs->host);
+    cbdataFree(cs);
 }
 
 static int
@@ -425,7 +429,7 @@ commConnectHandle(int fd, void *data)
 	    cs->S.sin_addr.s_addr = 0;
 	    ipcacheCycleAddr(cs->host);
 	    cs->locks++;
-	    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs, &cs->cbm_list);
+	    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
 	} else {
 	    ipcacheRemoveBadAddr(cs->host, cs->S.sin_addr);
 	    commConnectCallback(cs, COMM_ERR_CONNECT);

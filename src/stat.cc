@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.142 1997/06/04 07:00:33 wessels Exp $
+ * $Id: stat.cc,v 1.143 1997/06/18 00:20:04 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -441,6 +441,8 @@ stat_get(const cacheinfo * obj, const char *req, StoreEntry * sentry)
 	netdbDump(sentry);
     } else if (strcmp(req, "storedir") == 0) {
 	storeDirStats(sentry);
+    } else if (strcmp(req, "cbdata") == 0) {
+	cbdataDump(sentry);
     }
 }
 
