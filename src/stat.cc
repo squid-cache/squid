@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.37 1996/07/09 23:00:55 wessels Exp $
+ * $Id: stat.cc,v 1.38 1996/07/11 17:42:54 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -314,8 +314,8 @@ void stat_get(obj, req, sentry)
 	stat_objects_get(obj, sentry, 1);
     } else if (strcmp(req, "general") == 0) {
 	stat_ipcache_get(sentry);
-    } else if (strcmp(req, "general") == 0) {
-	stat_ipcache_get(sentry);
+    } else if (strcmp(req, "redirector") == 0) {
+	redirectStats(sentry);
     } else if (strcmp(req, "utilization") == 0) {
 	stat_utilization_get(obj, sentry);
     } else if (strcmp(req, "io") == 0) {
@@ -507,17 +507,17 @@ void info_get_mallstat(size, number, sentry)
 }
 #endif
 
-static char *host_port_fmt (host, port)
-	char *host;
-	u_short port;
+static char *host_port_fmt(host, port)
+     char *host;
+     u_short port;
 {
-	static char buf[32];
-	sprintf (buf, "%s.%d", host, (int) port);
-	return buf;
+    static char buf[32];
+    sprintf(buf, "%s.%d", host, (int) port);
+    return buf;
 }
 
 static void statFiledescriptors(sentry)
-	StoreEntry *sentry;
+     StoreEntry *sentry;
 {
     int i;
     int j;
@@ -541,8 +541,8 @@ static void statFiledescriptors(sentry)
 	    continue;
 	j = fdstatGetType(i);
 	storeAppendPrintf(sentry, "{%4d %-6s ",
-		i,
-		fdstatTypeStr[j]);
+	    i,
+	    fdstatTypeStr[j]);
 	switch (j) {
 	case FD_SOCKET:
 	    if ((lft = comm_get_fd_lifetime(i)) < 0)
@@ -612,8 +612,8 @@ void info_get(obj, sentry)
     storeAppendPrintf(sentry, "{\tNumber of UDP connections:\t%lu}\n",
 	nudpconn);
 
-	f = squid_curtime - squid_starttime;
-	storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n",
+    f = squid_curtime - squid_starttime;
+    storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n",
 	f == 0.0 ? 0.0 : ((ntcpconn + nudpconn) / (f / 3600)));
 
     storeAppendPrintf(sentry, "{Cache information for %s:}\n",

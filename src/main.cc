@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.48 1996/07/09 04:46:52 wessels Exp $
+ * $Id: main.cc,v 1.49 1996/07/11 17:42:44 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -372,6 +372,7 @@ static void mainReinitialize()
     _db_init(getCacheLogFile(), getDebugOptions());
     neighbors_init();
     ipcacheOpenServers();
+    redirectOpenServers();
     serverConnectionsOpen();
     (void) ftpInitialize();
     if (theOutIcpConnection >= 0 && (!httpd_accel_mode || getAccelWithProxy()))
@@ -417,6 +418,7 @@ static void mainInitialize()
 	writePidFile();		/* write PID file */
     }
     ipcache_init();
+    redirectOpenServers();
     neighbors_init();
     (void) ftpInitialize();
 

@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.2 1996/07/09 03:41:37 wessels Exp $
+ * $Id: redirect.cc,v 1.3 1996/07/11 17:42:50 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -34,11 +34,9 @@
 #define REDIRECT_FLAG_BUSY		0x02
 #define REDIRECT_FLAG_CLOSING	0x04
 
-typedef void (*RH) _PARAMS((int, char *));
-
-
 typedef struct {
     int fd;
+    void *data;
     char *orig_url;
     RH handler;
 } redirectStateData;
@@ -50,13 +48,27 @@ typedef struct _redirector {
     char *inbuf;
     unsigned int size;
     unsigned int offset;
+    struct timeval dispatch_time;
     redirectStateData *redirectState;
 } redirector_t;
+
+static struct {
+    int requests;
+    int replies;
+    int errors;
+    int avg_svc_time;
+    int queue_size;
+    int use_hist[DefaultRedirectChildrenMax];
+} RedirectStats;
+
 
 struct redirectQueueData {
     struct redirectQueueData *next;
     redirectStateData *redirectState;
 };
+
+/* GLOBALS */
+int do_redirect = 0;
 
 static redirector_t *GetFirstAvailable _PARAMS((void));
 static int redirectCreateRedirector _PARAMS((char *command));
@@ -71,8 +83,7 @@ static int NRedirectors = 0;
 static struct redirectQueueData *redirectQueueHead = NULL;
 static struct redirectQueueData **redirectQueueTailP = &redirectQueueHead;
 
-/* TCP SOCKET VERSION */
-int redirectCreateRedirector(command)
+static int redirectCreateRedirector(command)
      char *command;
 {
     int pid;
@@ -88,21 +99,20 @@ int redirectCreateRedirector(command)
 	0,
 	"socket to redirector");
     if (cfd == COMM_ERROR) {
-	debug(14, 0, "redirect_create_redirector: Failed to create redirector\n");
+	debug(29, 0, "redirect_create_redirector: Failed to create redirector\n");
 	return -1;
     }
     len = sizeof(S);
     memset(&S, '\0', len);
     if (getsockname(cfd, (struct sockaddr *) &S, &len) < 0) {
-	debug(14, 0, "redirect_create_redirector: getsockname: %s\n", xstrerror());
+	debug(29, 0, "redirect_create_redirector: getsockname: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
     port = ntohs(S.sin_port);
-    debug(14, 4, "redirect_create_redirector: bind to local host.\n");
     listen(cfd, 1);
     if ((pid = fork()) < 0) {
-	debug(14, 0, "redirect_create_redirector: fork: %s\n", xstrerror());
+	debug(29, 0, "redirect_create_redirector: fork: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
@@ -117,38 +127,46 @@ int redirectCreateRedirector(command)
 	    return -1;
 	}
 	comm_set_fd_lifetime(sfd, -1);
-	debug(14, 4, "redirect_create_redirector: FD %d connected to %s #%d.\n",
-	    sfd, command, n_redirector);
+	debug(29, 4, "redirect_create_redirector: FD %d connected to %s #%d.\n",
+	    sfd, command, n_redirector++);
 	return sfd;
     }
     /* child */
     no_suid();			/* give up extra priviliges */
-    dup2(cfd, 3);
-    for (fd = FD_SETSIZE; fd > 3; fd--)
+    if ((fd = accept(cfd, NULL, NULL)) < 0) {
+	debug(29, 0, "redirect_create_redirector: FD %d accept: %s\n",
+	    cfd, xstrerror());
+	_exit(1);
+    }
+    dup2(fd, 0);
+    dup2(fd, 1);
+    for (fd = 3; fd < FD_SETSIZE; fd++)
 	close(fd);
-    execlp(command, "(redirector)", "-t", NULL);
-    debug(14, 0, "redirect_create_redirector: %s: %s\n", command, xstrerror());
+    execlp(command, "(redirector)", NULL);
+    debug(29, 0, "redirect_create_redirector: %s: %s\n", command, xstrerror());
     _exit(1);
     return 0;
 }
 
-
-
-int redirectHandleRead(fd, redirector)
+static int redirectHandleRead(fd, redirector)
      int fd;
      redirector_t *redirector;
 {
     int len;
     redirectStateData *r = redirector->redirectState;
     char *t = NULL;
+    int n;
+    int svc_time;
 
     len = read(fd,
 	redirector->inbuf + redirector->offset,
 	redirector->size - redirector->offset);
-    debug(14, 5, "redirectHandleRead: Result from Redirector %d.\n",
-	redirector->index + 1);
+    debug(29, 5, "redirectHandleRead: %d bytes from Redirector #%d.\n",
+	len, redirector->index + 1);
     if (len <= 0) {
-	debug(14, redirector->flags & REDIRECT_FLAG_CLOSING ? 5 : 1,
+	if (len < 0)
+	    debug(29, 1, "redirectHandleRead: FD %d read: %s\n", fd, xstrerror());
+	debug(29, redirector->flags & REDIRECT_FLAG_CLOSING ? 5 : 1,
 	    "FD %d: Connection from Redirector #%d is closed, disabling\n",
 	    fd, redirector->index + 1);
 	redirector->flags = 0;
@@ -165,36 +183,25 @@ int redirectHandleRead(fd, redirector)
     if ((t = strchr(redirector->inbuf, '\n'))) {
 	/* end of record found */
 	*t = '\0';
-	if (t == redirector->inbuf)
-	    r->handler(r->fd, r->orig_url);
-	else
-	    r->handler(r->fd, redirector->inbuf);
+	debug(29, 5, "redirectHandleRead: reply: '%s'\n", redirector->inbuf);
+	if (r->handler) {
+	    r->handler(r->data,
+		t == redirector->inbuf ? NULL : redirector->inbuf);
+	}
+	safe_free(r);
 	redirector->redirectState = NULL;
 	redirector->flags &= ~REDIRECT_FLAG_BUSY;
+	redirector->offset = 0;
+	n = ++RedirectStats.replies;
+	svc_time = tvSubMsec(redirector->dispatch_time, current_time);
+	if (n > REDIRECT_AV_FACTOR)
+	    n = REDIRECT_AV_FACTOR;
+	RedirectStats.avg_svc_time
+	    = (RedirectStats.avg_svc_time * (n - 1) + svc_time) / n;
     }
-    while ((r = Dequeue()) && (redirector = GetFirstAvailable()))
+    while ((redirector = GetFirstAvailable()) && (r = Dequeue()))
 	redirectDispatch(redirector, r);
     return 0;
-}
-
-void redirectStart(url, fd, handler)
-     char *url;
-     int fd;
-     RH handler;
-{
-    redirectStateData *r = NULL;
-    redirector_t *redirector = NULL;
-
-    if (!handler)
-	fatal_dump("redirectStart: NULL handler");
-    r = xcalloc(1, sizeof(redirectStateData));
-    r->fd = fd;
-    r->orig_url = url;
-    r->handler = handler;
-    if ((redirector = GetFirstAvailable()))
-	redirectDispatch(redirector, r);
-    else
-	Enqueue(r);
 }
 
 static void Enqueue(r)
@@ -204,6 +211,7 @@ static void Enqueue(r)
     new->redirectState = r;
     *redirectQueueTailP = new;
     redirectQueueTailP = &new->next;
+    RedirectStats.queue_size++;
 }
 
 static redirectStateData *Dequeue()
@@ -217,6 +225,7 @@ static redirectStateData *Dequeue()
 	if (redirectQueueHead == NULL)
 	    redirectQueueTailP = &redirectQueueHead;
 	safe_free(old);
+	RedirectStats.queue_size--;
     }
     return r;
 }
@@ -239,18 +248,59 @@ static void redirectDispatch(redirect, r)
      redirectStateData *r;
 {
     char *buf = NULL;
+    int len;
+    if (r->handler == NULL) {
+	debug(29, 1, "redirectDispatch: skipping '%s' because no handler\n",
+	    r->orig_url);
+	safe_free(r);
+	return;
+    }
     redirect->flags |= REDIRECT_FLAG_BUSY;
     redirect->redirectState = r;
+    redirect->dispatch_time = current_time;
+    len = strlen(r->orig_url) + 1;
+    buf = xmalloc(len + 1);
+    sprintf(buf, "%s\n", r->orig_url);
     comm_write(redirect->fd,
-	xstrdup(buf),
-	strlen(buf),
+	buf,
+	len,
 	0,			/* timeout */
 	NULL,			/* Handler */
 	NULL);			/* Handler-data */
-    debug(14, 5, "redirectDispatch: Request sent to Redirector #%d.\n",
-	redirect->index + 1);
+    debug(29, 5, "redirectDispatch: Request sent to Redirector #%d, %d bytes\n",
+	redirect->index + 1, len);
+    RedirectStats.use_hist[redirect->index]++;
+    RedirectStats.requests++;
 }
 
+
+/**** PUBLIC FUNCTIONS ****/
+
+
+void redirectStart(url, fd, handler, data)
+     char *url;
+     int fd;
+     RH handler;
+     void *data;
+{
+    redirectStateData *r = NULL;
+    redirector_t *redirector = NULL;
+    if (!handler)
+	fatal_dump("redirectStart: NULL handler");
+    if (!do_redirect) {
+	(*handler) (data, NULL);
+	return;
+    }
+    r = xcalloc(1, sizeof(redirectStateData));
+    r->fd = fd;
+    r->orig_url = url;
+    r->handler = handler;
+    r->data = data;
+    if ((redirector = GetFirstAvailable()))
+	redirectDispatch(redirector, r);
+    else
+	Enqueue(r);
+}
 
 void redirectOpenServers()
 {
@@ -258,7 +308,10 @@ void redirectOpenServers()
     int k;
     int redirectsocket;
     static char fd_note_buf[FD_ASCII_NOTE_SZ];
+    static int first_time = 0;
 
+    if (!do_redirect)
+	return;
     /* free old structures if present */
     if (redirect_child_table) {
 	for (k = 0; k < NRedirectors; k++)
@@ -267,59 +320,122 @@ void redirectOpenServers()
     }
     NRedirectors = getRedirectChildren();
     redirect_child_table = xcalloc(NRedirectors, sizeof(redirector_t *));
-    debug(14, 1, "redirectOpenServers: Starting %d '%s' processes\n",
+    debug(29, 1, "redirectOpenServers: Starting %d '%s' processes\n",
 	NRedirectors, prg);
     for (k = 0; k < NRedirectors; k++) {
 	redirect_child_table[k] = xcalloc(1, sizeof(redirector_t));
 	if ((redirectsocket = redirectCreateRedirector(prg)) < 0) {
-	    debug(14, 1, "WARNING: Cannot run '%s' process.\n", prg);
+	    debug(29, 1, "WARNING: Cannot run '%s' process.\n", prg);
 	    redirect_child_table[k]->flags &= ~REDIRECT_FLAG_ALIVE;
 	} else {
 	    redirect_child_table[k]->flags |= REDIRECT_FLAG_ALIVE;
 	    redirect_child_table[k]->index = k;
 	    redirect_child_table[k]->fd = redirectsocket;
+	    redirect_child_table[k]->inbuf = get_free_4k_page();
+	    redirect_child_table[k]->size = 4096;
+	    redirect_child_table[k]->offset = 0;
 	    sprintf(fd_note_buf, "%s #%d",
 		prg,
 		redirect_child_table[k]->index + 1);
 	    fd_note(redirect_child_table[k]->fd, fd_note_buf);
 	    commSetNonBlocking(redirect_child_table[k]->fd);
-
 	    /* set handler for incoming result */
 	    comm_set_select_handler(redirect_child_table[k]->fd,
 		COMM_SELECT_READ,
 		(PF) redirectHandleRead,
 		(void *) redirect_child_table[k]);
-	    debug(14, 3, "redirectOpenServers: 'redirect_server' %d started\n",
+	    debug(29, 3, "redirectOpenServers: 'redirect_server' %d started\n",
 		k);
 	}
     }
+    if (first_time == 0) {
+	first_time++;
+	memset(&RedirectStats, '\0', sizeof(RedirectStats));
+    }
 }
+
+void redirectShutdownServers()
+{
+    redirector_t *redirect = NULL;
+    int k;
+    if (!do_redirect)
+	return;
+    for (k = 0; k < NRedirectors; k++) {
+	redirect = *(redirect_child_table + k);
+	if (!(redirect->flags & REDIRECT_FLAG_ALIVE))
+	    continue;
+	if (redirect->flags & REDIRECT_FLAG_BUSY)
+	    continue;
+	if (redirect->flags & REDIRECT_FLAG_CLOSING)
+	    continue;
+	debug(29, 3, "redirectShutdownServers: closing redirector #%d, FD %d\n",
+	    redirect->index + 1, redirect->fd);
+	comm_close(redirect->fd);
+	redirect->flags |= REDIRECT_FLAG_CLOSING;
+    }
+}
+
 
 int redirectUnregister(url, fd)
      char *url;
      int fd;
 {
-    return 0;
+    redirector_t *redirect = NULL;
+    redirectStateData *r = NULL;
+    struct redirectQueueData *rq = NULL;
+    int k;
+    int n = 0;
+    if (!do_redirect)
+	return 0;
+    debug(29, 3, "redirectUnregister: FD %d '%s'\n", fd, url);
+    for (k = 0; k < NRedirectors; k++) {
+	redirect = *(redirect_child_table + k);
+	if ((r = redirect->redirectState) == NULL)
+	    continue;
+	if (r->fd != fd)
+	    continue;
+	if (strcmp(r->orig_url, url))
+	    continue;
+	debug(29, 3, "redirectUnregister: Found match\n");
+	r->handler = NULL;
+	n++;
+    }
+    for (rq = redirectQueueHead; rq; rq = rq->next) {
+	if ((r = rq->redirectState) == NULL)
+	    continue;
+	if (r->fd != fd)
+	    continue;
+	if (strcmp(r->orig_url, url))
+	    continue;
+	debug(29, 3, "redirectUnregister: Found match.\n");
+	r->handler = NULL;
+	n++;
+    }
+    debug(29, 3, "redirectUnregister: Unregistered %d handlers\n", n);
+    return n;
 }
 
-void redirectShutdownServers()
+void redirectStats(sentry)
+     StoreEntry *sentry;
 {
-    redirector_t *redirector = NULL;
     int k;
-    static char *shutdown = "$shutdown\n";
-
-    debug(14, 3, "redirectShutdownServers:\n");
-
-    for (k = 0; k < getRedirectChildren(); k++) {
-	redirector = *(redirect_child_table + k);
-	debug(14, 3, "redirectShutdownServers: sending '$shutdown' to redirector #%d\n", k);
-	debug(14, 3, "redirectShutdownServers: --> FD %d\n", redirector->fd);
-	comm_write(redirector->fd,
-	    xstrdup(shutdown),
-	    strlen(shutdown),
-	    0,			/* timeout */
-	    NULL,		/* Handler */
-	    NULL);		/* Handler-data */
-	redirector->flags |= REDIRECT_FLAG_CLOSING;
+    storeAppendPrintf(sentry, open_bracket);
+    storeAppendPrintf(sentry, "{Redirector Statistics:}\n");
+    storeAppendPrintf(sentry, "{requests: %d}\n",
+	RedirectStats.requests);
+    storeAppendPrintf(sentry, "{replies: %d}\n",
+	RedirectStats.replies);
+    storeAppendPrintf(sentry, "{queue length: %d}\n",
+	RedirectStats.queue_size);
+    storeAppendPrintf(sentry, "{avg service time: %d msec}\n",
+	RedirectStats.avg_svc_time);
+    storeAppendPrintf(sentry, "{number of redirectors: %d}\n",
+	NRedirectors);
+    storeAppendPrintf(sentry, "{use histogram:}\n");
+    for (k = 0; k < NRedirectors; k++) {
+	storeAppendPrintf(sentry, "{    redirector #%d: %d}\n",
+	    k + 1,
+	    RedirectStats.use_hist[k]);
     }
+    storeAppendPrintf(sentry, close_bracket);
 }

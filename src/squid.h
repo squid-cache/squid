@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.25 1996/07/09 04:47:23 wessels Exp $
+ * $Id: squid.h,v 1.26 1996/07/11 17:42:53 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -230,6 +230,7 @@ typedef void (*SIH) _PARAMS((int, void *));	/* swap in */
 #include "acl.h"
 #include "util.h"
 #include "background.h"
+#include "redirect.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
@@ -258,6 +259,7 @@ extern char appname[];		/* main.c */
 extern struct in_addr local_addr;	/* main.c */
 extern char localhost[];
 extern struct in_addr any_addr;	/* comm.c */
+extern int do_redirect;		/* redirect.c */
 
 
 /* Prototypes and definitions which don't really deserve a seaprate
