@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.76 1998/03/24 17:29:47 wessels Exp $
+ * $Id: net_db.cc,v 1.77 1998/03/25 09:21:47 kostas Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -699,48 +699,58 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 #endif
 }
 
-#ifdef SQUID_SNMP
-int
-netdb_getMax()
-{
-    int i = 0;
-#if USE_ICMP
-    static netdbEntry *n = NULL;
+#if SQUID_SNMP
 
-    n = (netdbEntry *) hash_first(addr_table);
-    if (n != NULL) {
-	i = 1;
-	while ((n = (netdbEntry *) hash_next(addr_table)))
-	    i++;
-    }
+int netdbGetRowFn(oid *New,oid *Oid)
+{
+        netdbEntry *c = NULL;
+	static struct in_addr maddr;
+        static char key[15];
+	
+#if USE_ICMP
+        if (!Oid[0]&&!Oid[1]&&!Oid[2]&&!Oid[3])
+                c = (netdbEntry *)hash_first(addr_table);
+        else {
+                snprintf(key,15,"%d.%d.%d.%d", Oid[0],Oid[1],Oid[2],Oid[3]);
+                c = (netdbEntry *) hash_lookup(addr_table, key);
+                if (!c) return 0;
+		debug(49,8)("netdbGetRowFn: [%s] found\n",key);
+                c= (netdbEntry *)hash_next(addr_table);
+		if (!c) debug(49,8)("netdbGetRowFn: next does not exist!\n");
+        }
 #endif
-    return i;
+        if (!c) return 0;
+	debug(49,8)("netdbGetRowFn: [%s] is returned\n",c->network);
+	safe_inet_addr(c->network, &maddr);
+        addr2oid(maddr, New);
+        return 1;
 }
+
 
 variable_list *
 snmp_netdbFn(variable_list * Var, snint *ErrP)
 {
     variable_list *Answer;
+#if 0
     int cnt;
+#endif
+    static char key[15];
+
     static netdbEntry *n = NULL;
 #if USE_ICMP
     struct in_addr addr;
 #endif
-    debug(49, 5) ("snmp_netdbFn: Processing request with %d.%d!\n", Var->name[10],
-	Var->name[11]);
+    snprintf(key,15,"%d.%d.%d.%d", Var->name[11], Var->name[12],
+                        Var->name[13],Var->name[14]);
+
+    debug(49, 5) ("snmp_netdbFn: request with %d. (%s)!\n", Var->name[10],key);
 
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 
-    cnt = Var->name[11];
 #if USE_ICMP
-    n = (netdbEntry *) hash_first(addr_table);
+    n = (netdbEntry *) hash_lookup(addr_table,key);
 
-    while (n != NULL)
-	if (--cnt != 0)
-	    n = (netdbEntry *) hash_next(addr_table);
-	else
-	    break;
 #endif
     if (n == NULL) {
 	debug(49, 8) ("snmp_netdbFn: Requested past end of netdb table.\n");
@@ -752,10 +762,6 @@ snmp_netdbFn(variable_list * Var, snint *ErrP)
     Answer->val_len = sizeof(snint);
     Answer->val.integer = xmalloc(Answer->val_len);
     switch (Var->name[10]) {
-    case NETDB_ID:
-	Answer->type = SMI_INTEGER;
-	*(Answer->val.integer) = (snint) Var->name[11];
-	break;
     case NETDB_NET:
 	Answer->type = SMI_IPADDRESS;
 	safe_inet_addr(n->network, &addr);
