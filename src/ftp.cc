@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.255 1998/11/21 16:54:27 wessels Exp $
+ * $Id: ftp.cc,v 1.256 1998/11/23 22:43:30 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -962,7 +962,7 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
     StoreEntry *pe = NULL;
     const cache_key *key = NULL;
     cbdataAdd(ftpState, MEM_NONE);
-    debug(9, 3) ("FtpStart: '%s'\n", url);
+    debug(9, 3) ("ftpStart: '%s'\n", url);
     Counter.server.all.requests++;
     Counter.server.ftp.requests++;
     storeLockObject(entry);
@@ -999,7 +999,7 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
     }
     ftpCheckUrlpath(ftpState);
     ftpBuildTitleUrl(ftpState);
-    debug(9, 5) ("FtpStart: host=%s, path=%s, user=%s, passwd=%s\n",
+    debug(9, 5) ("ftpStart: host=%s, path=%s, user=%s, passwd=%s\n",
 	ftpState->request->host, strBuf(ftpState->request->urlpath),
 	ftpState->user, ftpState->password);
     comm_add_close_handler(fd, ftpStateFree, ftpState);
