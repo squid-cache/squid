@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.259 1998/04/07 22:37:44 wessels Exp $
+ * $Id: client_side.cc,v 1.260 1998/04/07 23:40:34 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -57,6 +57,7 @@ static RH clientRedirectDone;
 static STCB clientHandleIMSReply;
 static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
 static int checkAccelOnly(clientHttpRequest *);
+static int clientOnlyIfCached(clientHttpRequest * http);
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
 static void clientParseRequestHeaders(clientHttpRequest *);
@@ -105,6 +106,23 @@ clientAccessCheck(void *data)
 	browser,
 	conn->ident.ident);
     aclNBCheck(http->acl_checklist, clientAccessCheckDone, http);
+}
+
+/*
+ * returns true if client specified that the object must come from the cache
+ * witout contacting origin server
+ */
+static int
+clientOnlyIfCached(clientHttpRequest * http)
+{
+    const request_t *r = http->request;
+    assert(r);
+    if (EBIT_TEST(r->flags, REQ_CC_ONLY_IF_CACHED)) {
+	/* future interface: 
+	 * if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) { */
+	return 1;
+    } else
+	return 0;
 }
 
 static HttpReply *
@@ -228,6 +246,15 @@ clientProcessExpired(void *data)
     char *url = http->uri;
     StoreEntry *entry = NULL;
     debug(33, 3) ("clientProcessExpired: '%s'\n", http->uri);
+    /*
+     * check if we are allowed to contact other servers
+     * @?@: Instead of a 504 (Gateway Timeout) reply, we may want to return 
+     *      stale entry *if* it matches client requirements
+     */
+    if (clientOnlyIfCached(http)) {
+	clientProcessOnlyIfCachedMiss(http);
+	return;
+    }
     EBIT_SET(http->request->flags, REQ_REFRESH);
     http->old_entry = http->entry;
     entry = storeCreateEntry(url,
@@ -491,8 +518,8 @@ clientUpdateCounters(clientHttpRequest * http)
 {
     int svc_time = tvSubMsec(http->start, current_time);
     icp_ping_data *i;
-#if CACHE_DIGEST
-    char *t;
+#if SQUID_PEER_DIGEST
+    const HttpReply *reply = NULL;
 #endif
     Counter.client_http.requests++;
     kb_incr(&Counter.client_http.kbytes_in, http->req_sz);
@@ -529,27 +556,35 @@ clientUpdateCounters(clientHttpRequest * http)
     i = &http->request->hier.icp;
     if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
 	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
-#if CACHE_DIGEST
-    assert(http->request->hier.used_icp + http->request->hier.used_cd < 2);
-    if (http->request->hier.used_icp) {
+#if SQUID_PEER_DIGEST
+    if (http->request->hier.alg == PEER_SA_ICP) {
 	statHistCount(&Counter.icp.client_svc_time, svc_time);
 	Counter.icp.times_used++;
-    }
-    if (http->request->hier.used_cd) {
+    } else
+    if (http->request->hier.alg == PEER_SA_DIGEST) {
 	statHistCount(&Counter.cd.client_svc_time, svc_time);
 	Counter.cd.times_used++;
-    }
-    t = httpHeaderGetLastStr(, HDR_X_CACHE);
-    if (NULL != t && 0 == strncmp(t, "HIT", 3)) {
-	if (http->request->hier.cd_hit)
-	    Counter.cd.true_hits++;
-	else
-	    Counter.cd.false_miss++;
     } else {
-	if (http->request->hier.cd_hit)
-	    Counter.cd.false_hit++;
+	assert(http->request->hier.alg == PEER_SA_NONE);
+    }
+    if (/* we used ICP or CD for peer selecton */
+	http->request->hier.alg != PEER_SA_NONE &&
+	/* a CD lookup found peers with digests */
+	http->request->hier.cd_lookup != LOOKUP_NONE &&
+	/* paranoid: we have a reply pointer */
+	(reply = storeEntryReply(http->entry))) {
+	const char *x_cache_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE);
+	const int real_hit = x_cache_fld && !strncmp(x_cache_fld, "HIT", 3);
+	const int guess_hit = http->request->hier.cd_lookup == LOOKUP_HIT;
+	peer *peer = peerFindByName(http->request->hier.host);
+
+	cacheDigestGuessStatsUpdate(&Counter.cd.guess_stats,
+	    real_hit, guess_hit);
+	if (peer)
+	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
+		real_hit, guess_hit);
 	else
-	    Counter.cd.true_miss++;
+	    debug(33,1) ("clientUpdateCounters: lost peer: %s!\n", storeUrl(http->entry));
     }
 #endif
 }
@@ -1386,7 +1421,6 @@ clientProcessRequest(clientHttpRequest * http)
 	storeClientListAdd(entry, http);
     }
     http->out.offset = 0;
-    /* "pure" hit? (will not contact other servers) */
     switch (http->log_type) {
     case LOG_TCP_HIT:
     case LOG_TCP_NEGATIVE_HIT:
@@ -1403,19 +1437,6 @@ clientProcessRequest(clientHttpRequest * http)
 	    clientCacheHit,
 	    http);
 	return;
-    default:
-	break;
-    }
-    /* ok, it is a miss or a "dirty" hit (will contact other servers) */
-    /* note: bug: LOG_TCP_IMS_MISS may result in a "pure" hit @?@ */
-    /* are we allowed to contact other servers? */
-    if (EBIT_TEST(r->flags, REQ_CC_ONLY_IF_CACHED)) {
-	/* future interface: if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) { */
-	/* nope, bailing out */
-	clientProcessOnlyIfCachedMiss(http);
-	return;
-    }
-    switch (http->log_type) {
     case LOG_TCP_IMS_MISS:
 	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientProcessRequest 2: entry->swap_status == STORE_ABORTED\n");
@@ -1461,6 +1482,13 @@ clientProcessMiss(clientHttpRequest * http)
 	storeUnregister(http->entry, http);
 	storeUnlockObject(http->entry);
 	http->entry = NULL;
+    }
+    /*
+     * Check if client tolerates misses
+     */
+    if (clientOnlyIfCached(http)) {
+	clientProcessOnlyIfCachedMiss(http);
+	return;
     }
     /*
      * Check if this host is allowed to fetch MISSES from us (miss_access)
@@ -1770,7 +1798,7 @@ clientReadRequest(int fd, void *data)
 	    comm_close(fd);
 	    return;
 	} else if (conn->in.offset == 0) {
-	    debug(50, 2) ("clientReadRequest: FD %d: no data to process\n", fd);
+	    debug(50, 2) ("clientReadRequest: FD %d: no data to process (%s)\n", fd, xstrerror());
 	    return;
 	}
 	/* Continue to process previously read data */
