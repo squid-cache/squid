@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.65 1998/12/15 23:51:20 wessels Exp $
+ * $Id: peer_digest.cc,v 1.66 1998/12/16 00:07:20 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -659,6 +659,7 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
 	else
 	    debug(72, 2) ("received valid digest from %s\n", host);
     }
+    fetch->pd = NULL;
     cbdataUnlock(pd);
 }
 
@@ -688,6 +689,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     requestUnlink(fetch->request);
     fetch->entry = NULL;
     fetch->request = NULL;
+    assert(fetch->pd == NULL);
     cbdataUnlock(fetch);
     cbdataFree(fetch);
 }
