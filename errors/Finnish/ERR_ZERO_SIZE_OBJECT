@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava ongelma:
+<UL>
+<LI>
+<STRONG>
+Nollan pituinen vastaus
+</STRONG>
+</UL>
+
+<P>
+Haku ei tuonut Squidille mit&auml;&auml;n tietoa.
+</P>

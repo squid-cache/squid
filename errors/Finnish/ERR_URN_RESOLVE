@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava ongelma:
+<UL>
+<LI>
+<STRONG>
+URN:&auml;&auml; ei voitu selvitt&auml;&auml;
+</STRONG>
+</UL>
+
+<P>
+Hei, &auml;l&auml; odota liikaa URN:ilt&auml; kun kyseess&auml; on %T :-)
+</P>

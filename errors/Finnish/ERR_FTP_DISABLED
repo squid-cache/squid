@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta:
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava virhe:
+<UL>
+<LI>
+<STRONG>
+FTP on poistettu k&auml;yt&ouml;st&auml;.
+</STRONG>
+</UL>
+
+<P>
+T&auml;m&auml; v&auml;lityspalvelin ei tue FTP:t&auml;.
+</P>

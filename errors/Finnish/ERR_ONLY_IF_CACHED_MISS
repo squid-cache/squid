@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava ongelma:
+<UL>
+<LI>
+<STRONG>
+Sopivaa dokumenttia ei l&ouml;ytynyt v&auml;lityspalvelimesta, ja pyynn&ouml;ss&auml;si oli
+<code>vain v&auml;lityspalvelimesta (only-if-cached)</code> -m&auml;&auml;ritys.
+</STRONG>
+</UL>
+
+<P>
+Olet l&auml;hett&auml;nyt hakupyynn&ouml;n, jossa on <code>vain v&auml;lityspalvelimesta (only-if-cached)</code>
+-v&auml;lityspalvelinm&auml;&auml;ritys. Pyydetty&auml; dokumenttia ei l&ouml;ytynyt v&auml;lityspalvelimesta <em>tai</em>
+se vaati uudellenvahvistuksen, jonka <code>vain v&auml;lityspalvelimesta</code> -m&auml;&auml;ritys kielt&auml;&auml;.
+</P>

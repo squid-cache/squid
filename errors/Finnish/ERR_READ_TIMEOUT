@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava ongelma:
+<UL>
+<LI>
+<STRONG>
+Lukemisen aikakatkaisu
+</STRONG>
+</UL>
+
+<P>
+J&auml;rjestelm&auml; palautti viestin:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Odotettaessa tietoa verkosta yhteys aikakatkaistiin. Verkko tai palvelin
+saattaa olla alhaalla tai ruuhkautunut. Uusi hakupyynt&ouml;si.
+</P>
