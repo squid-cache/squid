@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.207 1998/02/25 09:54:01 rousskov Exp $
+ * $Id: stat.cc,v 1.208 1998/02/25 23:56:54 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -114,6 +114,7 @@ static const char *describeTimestamps(const StoreEntry *);
 static void statAvgTick(void *notused);
 static void statAvgDump(StoreEntry *, int minutes);
 static void statCountersInit(StatCounters *);
+static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
 static void statCountersCopy(StatCounters *dest, const StatCounters *orig);
 static void statCountersDump(StoreEntry * sentry);
@@ -653,7 +654,9 @@ statInit(void)
 {
     int i;
     debug(18, 5) ("statInit: Initializing...\n");
+#if 0 /* we do it in statCountersInit */
     memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
+#endif
     for (i = 0; i < N_COUNT_HIST; i++)
 	statCountersInit(&CountHist[i]);
     statCountersInit(&Counter);
@@ -706,12 +709,20 @@ statAvgTick(void *notused)
     NCountHist++;
 }
 
-/* add special cases here as they arrive */
 static void
 statCountersInit(StatCounters *C)
 {
     assert(C);
+    memset(C, 0, sizeof(*C));
     C->timestamp = current_time;
+
+    statCountersInitSpecial(C);
+}
+
+/* add special cases here as they arrive */
+static void
+statCountersInitSpecial(StatCounters *C)
+{
     /*
      * HTTP svc_time hist is kept in milli-seconds; max of 3 hours.
      */
@@ -749,12 +760,12 @@ void
 statCountersCopy(StatCounters *dest, const StatCounters *orig)
 {
     assert(dest && orig);
-    /* prepare space where to copy */
-    statCountersInit(dest);
-    /* this should take care of most of the fields */
+    /* this should take care of all the fields, but "special" ones */
     memcpy(dest, orig, sizeof(*dest));
-    /* now handle spacial cases */
-    /* note: we assume that histogram capacities do not change */
+    /* prepare space where to copy special entries */
+    statCountersInitSpecial(dest);
+    /* now handle special cases */
+    /* note: we assert that histogram capacities do not change */
     statHistCopy(&dest->client_http.all_svc_time, &orig->client_http.all_svc_time);
     statHistCopy(&dest->client_http.miss_svc_time, &orig->client_http.miss_svc_time);
     statHistCopy(&dest->client_http.nm_svc_time, &orig->client_http.nm_svc_time);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.117 1998/02/21 00:56:54 rousskov Exp $
+ * $Id: errorpage.cc,v 1.118 1998/02/25 23:56:53 rousskov Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -38,16 +38,31 @@
 
 #include "squid.h"
 
+/*
+ * note: hard coded error messages are not appended with %S automagically
+ * to give you more control on the format
+ */
+static const struct { err_type type; const char *text; } error_hard_text[] = {
+    { ERR_SQUID_SIGNATURE,
+	"\n<br clear=\"all\">\n"
+	"<hr noshade size=1>\n"
+	"Generated on %T by <a href=\"http://squid.nlanr.net/\">%s</a>@%h"
+    }
+};
+static const int error_hard_text_count = sizeof(error_hard_text)/sizeof(*error_hard_text);
 static char *error_text[ERR_MAX];
 
-static const char *errorBuildContent(ErrorState * err, int *len);
+static char *errorTryLoadText(err_type type, const char *dir);
+static char *errorLoadText(err_type type);
+static const char *errorFindHardText(err_type type);
+static MemBuf errorBuildContent(ErrorState * err);
 static const char *errorConvert(char token, ErrorState * err);
 static CWCB errorSendComplete;
 
 /*
  * Function:  errorInitialize
  *
- * Abstract:  This function reads in the error messages formats, and stores
+ * Abstract:  This function finds the error messages formats, and stores
  *            them in error_text[];
  *
  * Global effects:
@@ -57,25 +72,71 @@ void
 errorInitialize(void)
 {
     err_type i;
+    const char *text;
+    /* find this one first so we can append it to others in errorTryLoadText() */
+    for (i = ERR_NONE + 1; i < ERR_MAX; i++) {
+	safe_free(error_text[i]);
+	/* hard-coded ? */
+	if ((text = errorFindHardText(i)))
+	    error_text[i] = xstrdup(text);
+	else
+	    error_text[i] = errorLoadText(i);
+	assert(error_text[i]);
+    }
+}
+
+static const char *
+errorFindHardText(err_type type)
+{
+    int i;
+    for (i = 0; i < error_hard_text_count; i++)
+	if (error_hard_text[i].type == type)
+	    return error_hard_text[i].text;
+    return NULL;
+}
+
+
+static char *
+errorLoadText(err_type type)
+{
+    /* test configured location */
+    char *text = errorTryLoadText(type, Config.errorDirectory);
+    /* test default location if failed */
+    if (!text && strcmp(Config.errorDirectory, DEFAULT_SQUID_ERROR_DIR))
+	text = errorTryLoadText(type, DEFAULT_SQUID_ERROR_DIR);
+    /* giving up if failed */
+    if (!text)
+	fatal("failed to find or read error text file.");
+    return text;
+}
+
+static char *
+errorTryLoadText(err_type type, const char *dir)
+{
     int fd;
     char path[MAXPATHLEN];
     struct stat sb;
-    for (i = ERR_NONE + 1; i < ERR_MAX; i++) {
-	snprintf(path, MAXPATHLEN, "%s/%s",
-	    Config.errorDirectory, err_type_str[i]);
-	fd = file_open(path, O_RDONLY, NULL, NULL, NULL);
-	if (fd < 0) {
-	    debug(4, 0) ("errorInitialize: %s: %s\n", path, xstrerror());
-	    fatal("Failed to open error text file");
-	}
-	if (fstat(fd, &sb) < 0)
-	    fatal("fstat() failed on error text file");
-	safe_free(error_text[i]);
-	error_text[i] = xcalloc(sb.st_size + 1, 1);
-	if (read(fd, error_text[i], sb.st_size) != sb.st_size)
-	    fatal("failed to fully read error text file");
-	file_close(fd);
+    char *text;
+
+    snprintf(path, MAXPATHLEN, "%s/%s",
+	dir, err_type_str[type]);
+    fd = file_open(path, O_RDONLY, NULL, NULL, NULL);
+    if (fd < 0 || fstat(fd, &sb) < 0) {
+	debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
+	if (fd >= 0)
+	    file_close(fd);
+	return NULL;
     }
+    text = xcalloc(sb.st_size + 2 + 1, 1);
+    if (read(fd, text, sb.st_size) != sb.st_size) {
+	debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
+	    path, xstrerror());
+	xfree(text);
+	text = NULL;
+    }
+    file_close(fd);
+    strcat(text, "%S"); /* add signature */
+    return text;
 }
 
 void
@@ -232,9 +293,9 @@ errorStateFree(ErrorState * err)
 #define CVT_BUF_SZ 512
 
 /*
- * B - URL with FTP %2f hack                  x
- * c - Squid error code
- * d - seconds elapsed since request received
+ * B - URL with FTP %2f hack                    x
+ * c - Squid error code                         x
+ * d - seconds elapsed since request received   x
  * e - errno                                    x
  * E - strerror()                               x
  * f - FTP request line                         x
@@ -248,6 +309,8 @@ errorStateFree(ErrorState * err)
  * p - URL port #                               x
  * P - Protocol                                 x
  * R - Full HTTP Request                        x
+ * S - squid signature from ERR_SIGNATURE       x
+ * s - caching proxy software with version      x
  * t - local time                               x
  * T - UTC                                      x
  * U - URL without password                     x
@@ -326,6 +389,24 @@ errorConvert(char token, ErrorState * err)
     case 'R':
 	p = err->request_hdrs ? err->request_hdrs : "[no request]";
 	break;
+    case 's':
+	p = full_appname_string;
+	break;
+    case 'S':
+	/* signature may contain %-escapes, recursion */
+	if (err->type != ERR_SQUID_SIGNATURE) {
+	    const err_type saved_et = err->type;
+	    MemBuf mb;
+	    err->type = ERR_SQUID_SIGNATURE;
+	    mb = errorBuildContent(err);
+	    snprintf(buf, CVT_BUF_SZ, "%s", mb.buf);
+	    memBufClean(&mb);
+	    err->type = saved_et;
+	} else {
+	    /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
+	    p = "[%S]";
+	}
+	break;
     case 't':
 	xstrncpy(buf, mkhttpdlogtime(&squid_curtime), 128);
 	break;
@@ -363,29 +444,39 @@ errorConvert(char token, ErrorState * err)
 HttpReply *
 errorBuildReply(ErrorState *err)
 {
-    int clen;
     HttpReply *rep = httpReplyCreate();
-    const char *content = errorBuildContent(err, &clen);
+    MemBuf content = errorBuildContent(err);
     /* no LMT for error pages; error pages expire immediately */
-    httpReplySetHeaders(rep, 1.0, err->http_status, NULL, "text/html", clen, 0, squid_curtime);
-    httpBodySet(&rep->body, content, clen+1, NULL);
+    httpReplySetHeaders(rep, 1.0, err->http_status, NULL, "text/html", content.size, 0, squid_curtime);
+    httpBodySet(&rep->body, content.buf, content.size+1, NULL);
+    memBufClean(&content);
     return rep;
 }
 
-static const char *
-errorBuildContent(ErrorState * err, int *len)
+static MemBuf
+errorBuildContent(ErrorState * err)
 {
+    MemBuf content;
+#if 0 /* use MemBuf so we can support recursion;  const pointers: no xstrdup */
     LOCAL_ARRAY(char, content, ERROR_BUF_SZ);
     int clen;
     char *m;
     char *mx;
     char *p;
+#endif
+    const char *m;
+    const char *p;
     const char *t;
     assert(err != NULL);
     assert(err->type > ERR_NONE && err->type < ERR_MAX);
+#if 0 /* use MemBuf so we can support recursion */
     mx = m = xstrdup(error_text[err->type]);
-    clen = 0;
+#endif
+    memBufDefInit(&content);
+    m = error_text[err->type];
+    assert(m);
     while ((p = strchr(m, '%'))) {
+#if 0 /* use MemBuf so we can support recursion */
 	*p = '\0';		/* terminate */
 	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);	/* copy */
 	clen += (p - m);	/* advance */
@@ -398,7 +489,13 @@ errorBuildContent(ErrorState * err, int *len)
 	clen += strlen(t);	/* advance */
 	if (clen >= ERROR_BUF_SZ)
 	    break;
+#endif
+	memBufAppend(&content, m, p - m);                       /* copy */
+	t = errorConvert(*++p, err);                         /* convert */
+	memBufPrintf(&content, "%s", t);                        /* copy */
+        m = p + 1;                                           /* advance */
     }
+#if 0 /* use MemBuf so we can support recursion */
     if (clen < ERROR_BUF_SZ && m != NULL) {
 	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);
 	clen += strlen(m);
@@ -411,6 +508,10 @@ errorBuildContent(ErrorState * err, int *len)
     if (len)
 	*len = clen;
     xfree(mx);
+#endif
+    if (*m)
+	memBufPrintf(&content, "%s", m);                     /* copy tail */
+    assert(content.size == strlen(content.buf));
     return content;
 }
 
