@@ -1,14 +1,26 @@
-.TH squid_ldap_auth 8 "30 April 2001" "Squid LDAP Auth"
+.TH squid_ldap_auth 8 "25 September 2001" "Squid LDAP Auth"
+.
 .SH NAME
 squid_ldap_auth - Squid LDAP authentication helper
+.
 .SH SYNOPSIS
-squid_ldap_auth [options] ldap_server_name
+squid_ldap_auth -b "base DN" [-u attribute] [options] ldap_server_name
+.P
+squid_ldap_auth -b "base DN" -f "LDAP search filter" [options] ldap_server_name
+.
 .SH DESCRIPTION
 This helper allows Squid to connect to a LDAP directory to
 validate the user name and password of Basic HTTP authentication.
+.P
+The program has two major modes of operation. In the default mode
+of operation the users DN is constructed using the base DN and
+user attribute. In the other mode of operation a search
+filter is used to locate valid user DN's below the base DN.
+.
 .TP
 .BI "-b " "basedn " (REQUIRED)
 Specifies the base DN under which the users are located.
+.
 .TP
 .BI "-f " filter
 LDAP search filter to locate the user DN. Required if the users
@@ -17,21 +29,25 @@ not what builds the user specific part of the users DN.
 .IP
 The search filter can contain up to 15 occurrences of %s
 which will be replaced by the username, as in "uid=%s" for
-RFC2037 directories.
+RFC2037 directories. For a detailed description of LDAP search
+filter syntax see RFC2254.
+.
 .TP
 .BI "-u " userattr
-The name of the DN attribute which makes the username.
-Defaults to RFC2307 standard "uid". Some LDAP directories uses
-"cn" instead of "uid" (for example Microsoft Active Directory).
+Specifies the name of the DN attribute that contains the username/login.
+Combined with the base DN to construct the users DN when no search filter
+is specified (-f option). Defaults to 'uid'
 .IP
-This is used to directly construct a user DN when the
-.B -f
-search option is not used.
+Note: This can only be done if all your users are located directly under
+the same position in the LDAP tree and the login name is used for naming
+each user object. If your LDAP tree does not match these criterias or if
+you want to filter who are valid users then you need to use a search filter
+to search for your users DN (-f option).
+.
 .TP
 .BI "-s " base|one|sub
 search scope when performing user DN searches specified
-by the -f option.
-.
+by the -f option. Defaults to 'sub'.
 .IP
 .B base
 object only,
@@ -50,6 +66,7 @@ As the password needs to be printed in plain text in your Squid configuration
 it is strongly recommended to use a account with minimal associated privileges.
 This to limit the damage in case someone could get hold of a copy of your
 Squid configuration file.
+.
 .TP
 .BI -P
 Use a persistent LDAP connection. Normally the LDAP connection
@@ -57,12 +74,14 @@ is only open while validating a username to preserve resources
 at the LDAP server. This option causes the LDAP connection to
 be kept open, allowing it to be reused for further user
 validations. Recommended for larger installations.
+.
 .TP
 .BI -R
 do not follow referrals
+.
 .TP
 .BI "-a " never|always|search|find
-when to dereference aliases
+when to dereference aliases. Defaults to 'never'
 .IP
 .BI never
 dereference aliases (default),
@@ -72,22 +91,29 @@ dereference aliases, only while
 or only to
 .B find
 the base object
+.
 .TP
 .BI -p " ldapport"
-Specify an alternate TCP port where the ldap server is listening
+Specify an alternate TCP port where the ldap server is listening if
+other than the default LDAP port 389.
 .
 .SH EXAMPLES
 For directories using the RFC2307 layout with a single domain, all
 you need to specify is usually the base DN under where your users
-are located, and the server name.
-.
+are located and the server name:
 .IP
 squid_ldap_auth -b ou=people,dc=your,dc=domain ldapserver
 .P
-If you have sub-domains then you need to use a search filter to locate
-the users
+If you have sub-domains then you need to use a search filter approach
+to locate your user DNs as these can no longer be constructed direcly
+from the base DN and login name alone:
 .IP
 squid_ldap_auth -b dc=your,dc=domain -f uid=%s ldapserver
+.P
+And similarily if you only want to allow access to users having a
+specific attribute
+.IP
+squid_ldap_auth -b dc=your,dc=domain -f (&(uid=%s)(specialattribute=value)) ldapserver
 .P
 Or if the user attribute of the user DN is "cn" instead of "uid" and
 you do not want to have to search for the users then you could use something
@@ -100,7 +126,13 @@ anonymous searches then you must also use the -D and -w flags to specify
 a user DN and password to log in as to perform the searches, as in the
 following complex Active Directory example
 .IP
-squid_ldap_auth -p -R -b dc=your,dc=domain -D cn=squid,cn=users,dc=your,dc=domain -w secretsquidpassword -f userPrincipalName=%s activedirectoryserver
+squid_ldap_auth -p -R -b dc=your,dc=domain -D cn=squid,cn=users,dc=your,dc=domain -w secretsquidpassword -f (&(userPrincipalName=%s)(objectClass=Person)) activedirectoryserver
+.
+.SH NOTES
+.
+When constructing search filters it is strongly recommended to test the filter
+using ldapsearch before you attempt to use squid_ldap_auth. This to verify
+that the filter matches what you expect.
 .
 .SH AUTHOR
 This manual page was written by 
@@ -118,10 +150,24 @@ is used.
 .SH QUESTIONS
 Any questions on usage can be sent to 
 .IR "Squid Users <squid-users@squid-cache.org>" ,
-or to
-your favorite LDAP list/friend if the question is more related to LDAP than
-Squid.
+or to your favorite LDAP list/friend if the question is more related to
+LDAP than Squid.
 .
 .SH REPORTING BUGS
 Report bugs or bug-fixes to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+or ideas for new improvements to 
 .I Squid Developers <squid-dev@squid-cache.org>
+.
+.SH COPYRIGHT
+Copyright \(co 2000-2001 Henrik Nordstrom & Glenn Newton
+.P
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.
+.SH "SEE ALSO"
+.BR ldapsearch ( 1 ),
+.br
+Your favorite LDAP documentation
+.br
+.BR RFC2254 " - The String Representation of LDAP Search Filters,"
