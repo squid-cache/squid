@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.313 1999/01/29 21:28:19 wessels Exp $
+ * $Id: protos.h,v 1.314 1999/01/29 23:39:21 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1103,14 +1103,23 @@ extern peer *carpSelectParent(request_t *);
 #endif
 
 #if DELAY_POOLS
-extern int delayClient(clientHttpRequest *);
 extern void delayPoolsInit(void);
+extern void delayInitDelayData(unsigned short pools);
+extern void delayFreeDelayData();
+extern void delayCreateDelayPool(unsigned short pool, u_char class);
+extern void delayInitDelayPool(unsigned short pool, u_char class, delaySpecSet * rates);
+extern void delayFreeDelayPool(unsigned short pool);
+extern void delayPoolsReconfigure();
+extern void delaySetNoDelay(int fd);
+extern void delayClearNoDelay(int fd);
+extern int delayIsNoDelay(int fd);
+extern delay_id delayClient(request_t *);
 extern EVH delayPoolsUpdate;
-extern int delayMostBytesWanted(const MemObject * mem, int max);
-extern int delayMostBytesAllowed(const MemObject * mem);
-extern void delayBytesIn(delay_id, int qty);
-extern void delaySetStoreClient(StoreEntry * e, void *data, delay_id delay_id);
 extern int delayBytesWanted(delay_id d, int min, int max);
+extern void delayBytesIn(delay_id, int qty);
+extern int delayMostBytesWanted(const MemObject * mem, int max);
+extern delay_id delayMostBytesAllowed(const MemObject * mem);
+extern void delaySetStoreClient(StoreEntry * e, void *data, delay_id delay_id);
 #endif
 
 /* helper.c */

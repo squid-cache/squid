@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.142 1999/01/29 21:28:08 wessels Exp $
+# $Id: cf.data.pre,v 1.143 1999/01/29 23:39:13 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2484,186 +2484,151 @@ DOC_END
 COMMENT_START
  DELAY POOL PARAMETERS (all require DELAY_POOLS compilation option)
  -----------------------------------------------------------------------------
-
- A general note on delay pools - the first matched delay pool is used,
- that is, if a request falls into class1 then it isn't checked for class2
- or class3 (and similarly a class2 request isn't checked for class3).
 COMMENT_END
 
-NAME: delay_class1_access
-TYPE: acl_access
+NAME: delay_pools
+TYPE: delay_pool_count
+DEFAULT: 0
+IFDEF: DELAY_POOLS
+LOC: Config.Delay
+DOC_START
+	This represents the number of delay pools to be used.  For example,
+	if you have one class 2 delay pool and one class 3 delays pool, you
+	have a total of 2 delay pools.
+
+delay_pools 0
+DOC_END
+
+NAME: delay_class
+TYPE: delay_pool_class
 DEFAULT: none
 IFDEF: DELAY_POOLS
-LOC: Config.Delay.class1.access
+LOC: Config.Delay
 DOC_START
-	This is used to select what client requests are processed via
-	the first ("class 1") delay pool.  In this delay pool only the
-	aggregate traffic allowance is configurable.
+	This defines the class of each delay pool.  There must be exactly one
+	delay_class line for each delay pool.  For example, to define two
+	delay pools, one of class 2 and one of class 3, the settings above
+	and here would be:
+
+delay_pools 2      # 2 delay pools
+delay_class 1 2    # pool 1 is a class 2 pool
+delay_class 2 3    # pool 2 is a class 3 pool
+
+	The delay pool classes are:
+
+		class 1		Everything is limited by a single aggregate
+				bucket.
+
+		class 2 	Everything is limited by a single aggregate
+				bucket as well as an "individual" bucket chosen
+				from bits 25 through 32 of the IP address.
+
+		class 3		Everything is limited by a single aggregate
+				bucket as well as a "network" bucket chosen
+				from bits 17 through 24 of the IP address and a
+				"individual" bucket chosen from bits 17 through
+				32 of the IP address.
+
+	NOTE: If an IP address is a.b.c.d
+		-> bits 25 through 32 are "d"
+		-> bits 17 through 24 are "c"
+		-> bits 17 through 32 are "c * 256 + d"
 DOC_END
 
-NAME: delay_class2_access
-TYPE: acl_access
+NAME: delay_access
+TYPE: delay_pool_access
 DEFAULT: none
 IFDEF: DELAY_POOLS
-LOC: Config.Delay.class2.access
+LOC: Config.Delay
 DOC_START
-	This is used to select what client requests are processed via
-	the first ("class 2") delay pool.  In this delay pool both the
-	aggregate and per-host traffic allowance are configurable.
-	There are 254 individual delay pools based on the last 8 bits
-	of the client IP address (addresses ending in 0 and 255 are not
-	permitted).
+	This is used to determine which delay pool a request falls into.
+	The first matched delay pool is always used, ie, if a request falls
+	into delay pool number one, no more delay are checked, otherwise the
+	rest are checked in order of their delay pool number until they have
+	all been checked.  For example, if you want some_big_clients in delay
+	pool 1 and lotsa_little_clients in delay pool 2:
+
+delay_access 1 allow some_big_clients
+delay_access 1 deny all
+delay_access 2 allow lotsa_little_clients
+delay_access 2 deny all
 DOC_END
 
-NAME: delay_class3_access
-TYPE: acl_access
+NAME: delay_parameters
+TYPE: delay_pool_rates
 DEFAULT: none
 IFDEF: DELAY_POOLS
-LOC: Config.Delay.class3.access
+LOC: Config.Delay
 DOC_START
-	This is used to select what client requests are processed via
-	the first ("class 3") delay pool.  In this delay pool, the
-	aggregate, network and per-host traffic allowance are
-	configurable.  There are 255 network delay pools based on the
-	17th to 24th bit of the client IP address (network 255 is not
-	permitted), and individual delay pools based on the last 16
-	bits of the client IP address (network 255 and hosts ending in
-	0 and 255 are not permitted).
+	This defines the parameters for a delay pool.  Each delay pool has
+	a number of "buckets" associated with it, as explained in the
+	description of delay_class.  For a class 1 delay pool, the syntax is:
+
+delay_parameters pool aggregate
+
+	For a class 2 delay pool:
+
+delay_parameters pool aggregate individual
+
+	For a class 3 delay pool:
+
+delay_parameters pool aggregate network individual
+
+	The variables here are:
+
+		pool		a pool number - ie, a number between 1 and the
+				number specified in delay_pools as used in
+				delay_class lines.
+
+		aggregate	the "delay parameters" for the aggregate bucket
+				(class 1, 2, 3).
+
+		individual	the "delay parameters" for the individual
+				buckets (class 2, 3).
+
+		network		the "delay parameters" for the network buckets
+				(class 3).
+
+	A pair of delay parameters is written restore/maximum, where restore is
+	the number of bytes (not bits - modem and network speeds are usually
+	quoted in bits) per second placed into the bucket, and maximum is the
+	maximum number of bytes which can be in the bucket at any time.
+
+	For example, if delay pool number 1 is a class 2 delay pool as in the
+	above example, and is being used to strictly limit each host to 64kbps
+	(plus overheads), with no overall limit, the line is:
+
+delay_parameters 1 -1/-1 8000/8000
+
+	Note that the figure -1 is used to represent "unlimited".
+
+	And, if delay pool number 2 is a class 3 delay pool as in the above
+	example, and you want to limit it to a total of 256kbps (strict limit)
+	with each 8-bit network permitted 64kbps (strict limit) and each
+	individual host permitted 4800bps with a bucket maximum size of 64kb
+	to permit a decent web page to be downloaded at a decent speed
+	(if the network is not being limited due to overuse) but slow down
+	large downloads more significantly:
+
+delay_parameters 2 32000/32000 8000/8000 600/64000
+
+	There must be one delay_parameters line for each delay pool.
 DOC_END
 
-NAME: delay_class1_aggregate_restore
-TYPE: int
-DEFAULT: -1
+NAME: delay_initial_bucket_level
+COMMENT: (percent, 0-100)
+TYPE: ushort
+DEFAULT: 50
 IFDEF: DELAY_POOLS
-COMMENT: (bps)
-LOC: Config.Delay.class1.aggregate.restore_bps
+LOC: Config.Delay.initial
 DOC_START
-	The number of bytes per second added to the class 1 aggregate
-	delay pool traffic allowance (-1 to disable the delay pool).
-DOC_END
+	The initial bucket percentage is used to determine how much is put
+	in each bucket when squid starts, is reconfigured, or first notices
+	a host accessing it (in class 2 and class 3, individual hosts and
+	networks only have buckets associated with them once they have been
+	"seen" by squid).
 
-NAME: delay_class1_aggregate_max
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bytes)
-LOC: Config.Delay.class1.aggregate.max_bytes
-DOC_START
-	The maximum number of bytes which can be in the class 1
-	aggregate delay pool traffic allowance.
-DOC_END
-
-NAME: delay_class2_aggregate_restore
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bps)
-LOC: Config.Delay.class2.aggregate.restore_bps
-DOC_START
-	The number of bytes per second added to the class 2 aggregate
-	delay pool traffic allowance (-1 to disable the delay pool).
-DOC_END
-
-NAME: delay_class2_aggregate_max
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bytes)
-LOC: Config.Delay.class2.aggregate.max_bytes
-DOC_START
-	The maximum number of bytes which can be in the class 2
-	aggregate delay pool traffic allowance.
-DOC_END
-
-NAME: delay_class2_individual_restore
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bps)
-LOC: Config.Delay.class2.individual.restore_bps
-DOC_START
-	The number of bytes per second added to the class 2 individual
-	host delay pool traffic allowances (-1 to disable these delay
-	pools).
-DOC_END
-
-NAME: delay_class2_individual_max
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bytes)
-LOC: Config.Delay.class2.individual.max_bytes
-DOC_START
-	The maximum number of bytes which can be in the class 2
-	individual host delay pool traffic allowances.
-DOC_END
-
-NAME: delay_class3_aggregate_restore
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bps)
-LOC: Config.Delay.class3.aggregate.restore_bps
-DOC_START
-	The number of bytes per second added to the class 3 aggregate
-	delay pool traffic allowance (-1 to disable the delay pool).
-DOC_END
-
-NAME: delay_class3_aggregate_max
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bytes)
-LOC: Config.Delay.class3.aggregate.max_bytes
-DOC_START
-	The maximum number of bytes which can be in the class 3
-	aggregate delay pool traffic allowance.
-DOC_END
-
-NAME: delay_class3_network_restore
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bps)
-LOC: Config.Delay.class3.network.restore_bps
-DOC_START
-	The number of bytes per second added to the class 3 8-bit
-	network delay pool traffic allowances (-1 to disable these
-	delay pools).
-DOC_END
-
-NAME: delay_class3_network_max
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bytes)
-LOC: Config.Delay.class3.network.max_bytes
-DOC_START
-	The maximum number of bytes which can be in the class 3 8-bit
-	network delay pool traffic allowances.
-DOC_END
-
-NAME: delay_class3_individual_restore
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bps)
-LOC: Config.Delay.class3.individual.restore_bps
-DOC_START
-	The number of bytes per second added to the class 3 individual
-	host delay pool traffic allowances (-1 to disable these delay
-	pools).
-DOC_END
-
-NAME: delay_class3_individual_max
-TYPE: int
-DEFAULT: -1
-IFDEF: DELAY_POOLS
-COMMENT: (bytes)
-LOC: Config.Delay.class3.individual.max_bytes
-DOC_START
-	The maximum number of bytes which can be in the class 3
-	individual host delay pool traffic allowances.
+delay_initial_bucket_level 50
 DOC_END
 
 NAME: incoming_icp_average

@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.51 1999/01/29 21:28:22 wessels Exp $
+ * $Id: urn.cc,v 1.52 1999/01/29 23:39:25 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -144,8 +144,7 @@ urnStart(request_t * r, StoreEntry * e)
 	storeClientListAdd(urlres_e, urnState);
     }
 #if DELAY_POOLS
-    urlres_r->delay_id = r->delay_id;
-    delaySetStoreClient(urlres_e, urnState, r->delay_id);
+    delaySetStoreClient(urlres_e, urnState, 0);
 #endif
     urnState->urlres_e = urlres_e;
     urnState->urlres_r = requestLink(urlres_r);

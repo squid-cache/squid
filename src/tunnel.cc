@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.91 1998/12/05 00:54:40 wessels Exp $
+ * $Id: tunnel.cc,v 1.92 1999/01/29 23:39:23 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -47,6 +47,9 @@ typedef struct {
     } client, server;
     size_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
     int proxying;
+#if DELAY_POOLS
+    delay_id delay_id;
+#endif
 } SslStateData;
 
 static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
@@ -111,8 +114,8 @@ sslStateFree(SslStateData * sslState)
 static int
 sslDeferServerRead(int fdnotused, void *data)
 {
-    request_t *r = data;
-    return delayBytesWanted(r->delay_id, 0, 1) == 0;
+    SslStateData *s = data;
+    return delayBytesWanted(s->delay_id, 0, 1) == 0;
 }
 #endif
 
@@ -154,7 +157,7 @@ sslSetSelect(SslStateData * sslState)
 	 * no data flowing in the other direction.  Hence the argument of
 	 * 1 as min.
 	 */
-	read_sz = delayBytesWanted(sslState->request->delay_id, 1, read_sz);
+	read_sz = delayBytesWanted(sslState->delay_id, 1, read_sz);
 #endif
 	if (sslState->server.len < read_sz) {
 	    /* Have room to read more */
@@ -183,7 +186,7 @@ sslReadServer(int fd, void *data)
 	fd, read_sz, sslState->server.len);
     errno = 0;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(sslState->request->delay_id, 1, read_sz);
+    read_sz = delayBytesWanted(sslState->delay_id, 1, read_sz);
 #endif
     Counter.syscalls.sock.reads++;
     len = read(fd, sslState->server.buf + sslState->server.len, read_sz);
@@ -191,7 +194,7 @@ sslReadServer(int fd, void *data)
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 #if DELAY_POOLS
-	delayBytesIn(sslState->request->delay_id, len);
+	delayBytesIn(sslState->delay_id, len);
 #endif
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.other.kbytes_in, len);
@@ -391,7 +394,7 @@ sslConnectDone(int fdnotused, int status, void *data)
 	    sslTimeout,
 	    sslState);
 #if DELAY_POOLS
-	commSetDefer(sslState->server.fd, sslDeferServerRead, sslState->request);
+	commSetDefer(sslState->server.fd, sslDeferServerRead, sslState);
 #endif
     }
 }
@@ -424,6 +427,9 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
     }
     sslState = xcalloc(1, sizeof(SslStateData));
     cbdataAdd(sslState, cbdataXfree, 0);
+#if DELAY_POOLS
+    sslState->delay_id = delayClient(request);
+#endif
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
     sslState->size_ptr = size_ptr;
@@ -517,6 +523,11 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
     } else {
 	sslState->port = CACHE_HTTP_PORT;
     }
+#if DELAY_POOLS
+    /* no point using the delayIsNoDelay stuff since ssl is nice and simple */
+    if (g && g->options.no_delay)
+	sslState->delay_id = 0;
+#endif
     commConnectStart(sslState->server.fd,
 	sslState->host,
 	sslState->port,

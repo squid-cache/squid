@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.439 1999/01/29 23:01:04 wessels Exp $
+ * $Id: client_side.cc,v 1.440 1999/01/29 23:39:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -173,7 +173,7 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     storeClientListAdd(e, h);
 #if DELAY_POOLS
-    delaySetStoreClient(e, h, h->request->delay_id);
+    delaySetStoreClient(e, h, delayClient(h->request));
 #endif
     storeClientCopy(e, 0, 0, CLIENT_SOCK_SZ,
 	memAllocate(MEM_CLIENT_SOCK_BUF), clientSendMoreData, h);
@@ -297,8 +297,8 @@ clientProcessExpired(void *data)
     storeClientListAdd(entry, http);
     storeClientListAdd(http->old_entry, http);
 #if DELAY_POOLS
-    delaySetStoreClient(entry, http, http->request->delay_id);
-    delaySetStoreClient(http->old_entry, http, http->request->delay_id);
+    /* delay_id is already set on original store client */
+    delaySetStoreClient(entry, http, delayClient(http->request));
 #endif
     entry->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
@@ -792,13 +792,6 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	request->flags.cachable = 1;
     if (clientHierarchical(http))
 	request->flags.hierarchical = 1;
-#if DELAY_POOLS
-    if (delayClient(http)) {
-	debug(33, 5) ("clientInterpretRequestHeaders: delay request class %d position %d\n",
-	    request->delay_id >> 16,
-	    request->delay_id & 0xFFFF);
-    }
-#endif
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_NOCACHE = %s\n",
 	request->flags.nocache ? "SET" : "NOT SET");
     debug(33, 5) ("clientInterpretRequestHeaders: REQ_CACHABLE = %s\n",
@@ -1794,7 +1787,7 @@ clientProcessRequest(clientHttpRequest * http)
 	storeCreateMemObject(http->entry, http->uri, http->log_uri);
 	storeClientListAdd(http->entry, http);
 #if DELAY_POOLS
-	delaySetStoreClient(http->entry, http, http->request->delay_id);
+	delaySetStoreClient(http->entry, http, delayClient(r));
 #endif
 	http->entry->refcount++;
 	storeClientCopy(http->entry,
