@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.27 1996/04/05 00:58:54 wessels Exp $ */
+/* $Id: http.cc,v 1.28 1996/04/05 01:01:52 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -170,7 +170,7 @@ static void httpProcessReplyHeader(data, buf, size)
     int room;
     int hdr_len;
 
-debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
+    debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
 
     if (data->reply_hdr == NULL) {
 	data->reply_hdr = get_free_8k_page(__FILE__, __LINE__);
@@ -178,30 +178,30 @@ debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
     }
     if (data->reply_hdr_state == 0) {
 	hdr_len = strlen(data->reply_hdr);
- 	room = 8191 - hdr_len;
+	room = 8191 - hdr_len;
 	strncat(data->reply_hdr, buf, room < size ? room : size);
 	hdr_len += room < size ? room : size;
 	if (hdr_len > 4 && strncmp(data->reply_hdr, "HTTP/", 5)) {
-		debug(11,1,"httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
-		data->reply_hdr_state += 2;
-		return;
+	    debug(11, 1, "httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
+	    data->reply_hdr_state += 2;
+	    return;
 	}
 	/* need to take the lowest, non-zero pointer to the end of the headers.
-	some objects have \n\n separating header and body, but \r\n\r\n in
-	   body text. */
+	 * some objects have \n\n separating header and body, but \r\n\r\n in
+	 * body text. */
 	t1 = strstr(data->reply_hdr, "\r\n\r\n");
 	t2 = strstr(data->reply_hdr, "\n\n");
 	if (t1 && t2)
-		t = t2 < t1 ? t2 : t1;
+	    t = t2 < t1 ? t2 : t1;
 	else
-		t = t2 ? t2 : t1;
+	    t = t2 ? t2 : t1;
 	if (t) {
-            data->reply_hdr_state++;
-            t += (t == t1 ? 4 : 2);
-            *t = '\0';
-            hdr_sz = t - data->reply_hdr;
+	    data->reply_hdr_state++;
+	    t += (t == t1 ? 4 : 2);
+	    *t = '\0';
+	    hdr_sz = t - data->reply_hdr;
 	}
-        debug(11, 7, "httpProcessReplyHeader: hdr_sz = %d\n", hdr_sz);
+	debug(11, 7, "httpProcessReplyHeader: hdr_sz = %d\n", hdr_sz);
     }
     if (data->reply_hdr_state == 1) {
 	headers = xstrdup(data->reply_hdr);
