@@ -1,8 +1,8 @@
 Squid-3.0:
   - Update automake and autoconf on squid-cache.org for the squid-3 CVS snapshot generation. 
-  - Someone other than Robert to review my draft squid 3 release notes (in CVS already).
-  - epoll linkage.
+  - Someone other than Robert to review the draft squid 3 release notes (in CVS already).
 
+  - epoll linkage.
   - Windows port (Merging in process, won't delay 3.0).
   - ESI client side streams support framework (done).
   - ESI (done).
