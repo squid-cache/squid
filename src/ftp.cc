@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.82 1996/11/14 19:02:16 wessels Exp $
+ * $Id: ftp.cc,v 1.83 1996/11/15 07:51:08 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -113,6 +113,7 @@
 static int ftpget_server_read = -1;
 static int ftpget_server_write = -1;
 static u_short ftpget_port = 0;
+static const char *const w_space = " \t\n\r";
 
 typedef struct _Ftpdata {
     StoreEntry *entry;

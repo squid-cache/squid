@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.85 1996/11/12 22:37:09 wessels Exp $
+ * $Id: ipcache.cc,v 1.86 1996/11/15 07:51:10 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -176,6 +176,7 @@ static char ipcache_status_char[] =
 
 static long ipcache_low = 180;
 static long ipcache_high = 200;
+static const char *const w_space = " \t\n\r";
 
 #if LIBRESOLV_DNS_TTL_HACK
 extern int _dns_ttl_;

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.107 1996/11/15 00:36:19 wessels Exp $
+ * $Id: http.cc,v 1.108 1996/11/15 07:51:09 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -106,6 +106,8 @@
 #include "squid.h"
 
 #define HTTP_DELETE_GAP   (1<<18)
+
+static const char *const w_space = " \t\n\r";
 
 typedef enum {
     SCC_PUBLIC,
@@ -295,23 +297,24 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 		ReplyHeaderStats.lm++;
 	    }
 	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
-	    if ((t = strtok(NULL, w_space))) {
-		if (!strncasecmp(t, "public", 6)) {
-		    EBIT_SET(reply->cache_control, SCC_PUBLIC);
-		    ReplyHeaderStats.cc[SCC_PUBLIC]++;
-		} else if (!strncasecmp(t, "private", 7)) {
-		    EBIT_SET(reply->cache_control, SCC_PRIVATE);
-		    ReplyHeaderStats.cc[SCC_PRIVATE]++;
-		} else if (!strncasecmp(t, "no-cache", 8)) {
-		    EBIT_SET(reply->cache_control, SCC_NOCACHE);
-		    ReplyHeaderStats.cc[SCC_NOCACHE]++;
-		} else if (!strncasecmp(t, "max-age", 7)) {
-		    if ((t = strchr(t, '='))) {
-			delta = atoi(++t);
-			EBIT_SET(reply->cache_control, SCC_MAXAGE);
-			ReplyHeaderStats.cc[SCC_MAXAGE]++;
-			strcpy(reply->expires, mkrfc1123(squid_curtime + delta));
-		    }
+	    t += 14;
+	    while (*t == ' ' || *t == '\t')
+		t++;
+	    if (!strncasecmp(t, "public", 6)) {
+		EBIT_SET(reply->cache_control, SCC_PUBLIC);
+		ReplyHeaderStats.cc[SCC_PUBLIC]++;
+	    } else if (!strncasecmp(t, "private", 7)) {
+		EBIT_SET(reply->cache_control, SCC_PRIVATE);
+		ReplyHeaderStats.cc[SCC_PRIVATE]++;
+	    } else if (!strncasecmp(t, "no-cache", 8)) {
+		EBIT_SET(reply->cache_control, SCC_NOCACHE);
+		ReplyHeaderStats.cc[SCC_NOCACHE]++;
+	    } else if (!strncasecmp(t, "max-age", 7)) {
+		if ((t = strchr(t, '='))) {
+		    delta = atoi(++t);
+		    EBIT_SET(reply->cache_control, SCC_MAXAGE);
+		    ReplyHeaderStats.cc[SCC_MAXAGE]++;
+		    strcpy(reply->expires, mkrfc1123(squid_curtime + delta));
 		}
 	    }
 	}
@@ -877,7 +880,7 @@ httpReplyHeaderStats(StoreEntry * entry)
 	ReplyHeaderStats.ctype);
     storeAppendPrintf(entry, "{       Content-Length: %d}\n",
 	ReplyHeaderStats.clen);
-    for (i = 0; i < SCC_ENUM_END; i++)
+    for (i = SCC_PUBLIC; i < SCC_ENUM_END; i++)
 	storeAppendPrintf(entry, "{Cache-Control %7.7s: %d}\n",
 	    HttpServerCCStr[i],
 	    ReplyHeaderStats.cc[i]);

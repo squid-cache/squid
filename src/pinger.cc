@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: pinger.cc,v 1.16 1996/11/14 18:38:46 wessels Exp $
+ * $Id: pinger.cc,v 1.17 1996/11/15 07:51:11 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -36,7 +36,6 @@
 /* Junk so we can link with debug.o */
 int opt_syslog_enable = 0;
 volatile int unbuffered_logs = 1;
-const char *const w_space = " \t\n\r";
 const char *const appname = "pinger";
 struct timeval current_time;
 time_t squid_curtime;
