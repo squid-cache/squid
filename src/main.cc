@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.403 2005/01/08 10:09:31 serassio Exp $
+ * $Id: main.cc,v 1.404 2005/03/13 09:23:33 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -424,10 +424,10 @@ shut_down(int sig)
 #ifdef KILL_PARENT_OPT
 
     if (getppid() > 1) {
-        debug(1, 1) ("Killing RunCache, pid %d\n", getppid());
+        debugs(1, 1, "Killing RunCache, pid " << getppid());
 
         if (kill(getppid(), sig) < 0)
-            debug(1, 1) ("kill %d: %s\n", getppid(), xstrerror());
+            debugs(1, 1, "kill " << getppid() << ": " << xstrerror());
     }
 
 #endif
@@ -695,7 +695,7 @@ mainInitialize(void)
 
 #endif
 
-    debug(1, 1) ("Process ID %d\n", (int) getpid());
+    debugs(1, 1, "Process ID " << getpid());
 
     debug(1, 1) ("With %d file descriptors available\n", Squid_MaxFD);
 

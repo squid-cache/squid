@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.251 2005/02/06 09:37:15 serassio Exp $
+ * $Id: tools.cc,v 1.252 2005/03/13 09:23:33 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -640,7 +640,7 @@ uniqueHostname(void)
 void
 leave_suid(void)
 {
-    debug(21, 3) ("leave_suid: PID %d called\n", (int) getpid());
+    debugs(21, 3, "leave_suid: PID " << getpid() << " called");
 
     if (Config.effectiveGroup) {
 
@@ -662,8 +662,7 @@ leave_suid(void)
     if (Config.effectiveUser == NULL)
         return;
 
-    debug(21, 3) ("leave_suid: PID %d giving up root, becoming '%s'\n",
-                  (int) getpid(), Config.effectiveUser);
+    debugs(21, 3, "leave_suid: PID " << getpid() << " giving up root, becoming '" << Config.effectiveUser << "'");
 
     if (!Config.effectiveGroup) {
 
@@ -699,7 +698,7 @@ leave_suid(void)
 void
 enter_suid(void)
 {
-    debug(21, 3) ("enter_suid: PID %d taking root priveleges\n", (int) getpid());
+    debugs(21, 3, "enter_suid: PID " << getpid() << " taking root priveleges");
 #if HAVE_SETRESUID
 
     setresuid((uid_t)-1, 0, (uid_t)-1);
@@ -718,7 +717,7 @@ no_suid(void)
     uid_t uid;
     leave_suid();
     uid = geteuid();
-    debug(21, 3) ("leave_suid: PID %d giving up root priveleges forever\n", (int) getpid());
+    debugs(21, 3, "leave_suid: PID " << getpid() << " giving up root priveleges forever");
 #if HAVE_SETRESUID
 
     if (setresuid(uid, uid, uid) < 0)
