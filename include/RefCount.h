@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.3 2003/01/23 00:36:47 robertc Exp $
+ * $Id: RefCount.h,v 1.4 2003/03/10 04:56:20 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -37,58 +37,98 @@
 #define _SQUID_REFCOUNT_H_
 
 template <class C>
-class RefCount {
+
+class RefCount
+{
+
 public:
-  RefCount () : p_ (NULL) {}
-  RefCount (C const *p) : p_(p) { if (p_) p_->RefCountReference(); }
-  ~RefCount()
+    RefCount () : p_ (NULL) {}
+
+    RefCount (C const *p) : p_(p) { reference (*this); }
+
+    ~RefCount()
     {
-      dereference();
+        dereference();
     }
-  RefCount (const RefCount &p) : p_(p.p_) 
+
+    RefCount (const RefCount &p) : p_(p.p_)
     {
-      reference (p);
+        reference (p);
     }
-  RefCount& operator = (const RefCount& p)
+
+    RefCount& operator = (const RefCount& p)
     {
-      // DO NOT CHANGE THE ORDER HERE!!!
-      // This preserves semantics on self assignment
-      reference(p);
-      dereference();
-      p_ = p.p_;
-      return *this;
+        // DO NOT CHANGE THE ORDER HERE!!!
+        // This preserves semantics on self assignment
+        C const *newP_ = p.p_;
+        reference(p);
+        dereference();
+        p_ = newP_;
+        return *this;
     }
-  C const * operator-> () const {return p_; }
-  C * operator-> () {return const_cast<C *>(p_); }
-  C const & operator * () const {return *p_; }
-  C & operator * () {return *const_cast<C *>(p_); }
-  C const * getRaw() const{return p_; }
-  C * getRaw() {return const_cast<C *>(p_); }
-  bool operator == (const RefCount& p) const
+
+    C const * operator-> () const {return p_; }
+
+    C * operator-> () {return const_cast<C *>(p_); }
+
+    C const & operator * () const {return *p_; }
+
+    C & operator * () {return *const_cast<C *>(p_); }
+
+    C const * getRaw() const{return p_; }
+
+    C * getRaw() {return const_cast<C *>(p_); }
+
+    bool operator == (const RefCount& p) const
     {
-      return p.p_ == p_;
+        return p.p_ == p_;
     }
+
 private:
-  void dereference()
+    void dereference()
     {
-      if (p_ && p_->RefCountDereference() == 0) p_->deleteSelf();
+        if (p_ && p_->RefCountDereference() == 0)
+            p_->deleteSelf();
+
+        p_ = NULL;
     }
-  void reference (const RefCount& p)
+
+    void reference (const RefCount& p)
     {
-      if (p.p_) p.p_->RefCountReference();
+        if (p.p_)
+            p.p_->RefCountReference();
     }
-  C const *p_;
+
+    C const *p_;
 
 };
 
 struct RefCountable_
 {
     RefCountable_():count_(0){}
+
     virtual ~RefCountable_(){}
+
     virtual void deleteSelf() const = 0;
     /* Not private, to allow class hierarchies */
-    void RefCountReference() const { ++count_; }
-    unsigned RefCountDereference() const { return --count_; }
+    void RefCountReference() const
+    {
+#if REFCOUNT_DEBUG
+        debug (0,1)("Incrementing this %p from count %u\n",this,count_);
+#endif
+
+        ++count_;
+    }
+
+    unsigned RefCountDereference() const
+    {
+#if REFCOUNT_DEBUG
+        debug (0,1)("Decrementing this %p from count %u\n",this,count_);
+#endif
+
+        return --count_;
+    }
+
 private:
     mutable unsigned count_;
 };

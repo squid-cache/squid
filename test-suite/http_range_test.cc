@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.4 2003/02/12 06:11:41 robertc Exp $
+ * $Id: http_range_test.cc,v 1.5 2003/03/10 04:57:29 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -41,9 +41,9 @@
 #include "ACLChecklist.h"
 
 /* Stub routines */
-SQUIDCEXTERN void 
-cachemgrRegister(const char *, const char *, OBJH *, int, int){
-}
+SQUIDCEXTERN void
+cachemgrRegister(const char *, const char *, OBJH *, int, int)
+{}
 
 SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str)
 {
@@ -119,8 +119,8 @@ SQUIDCEXTERN void fatal (char const *msg)
 }
 
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
-    request_t *,
-    const char *ident)
+        request_t *,
+        const char *ident)
 {
     fatal ("dummy function\n");
     return NULL;
@@ -129,7 +129,7 @@ SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
 SQUIDCEXTERN String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
 {
     fatal ("dummy function\n");
-    return StringNull;
+    return String();
 }
 
 SQUIDCEXTERN int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type)
@@ -164,14 +164,18 @@ testRangeParser(char const *rangestring)
 {
     String aString (rangestring);
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
+
     if (!range)
-	exit (1);
+        exit (1);
+
     HttpHdrRange copy(*range);
+
     assert (copy.specs.count == range->specs.count);
 
     HttpHdrRange::iterator pos = range->begin();
+
     assert (*pos);
-    
+
     range->deleteSelf();
 }
 
@@ -180,8 +184,10 @@ rangeFromString(char const *rangestring)
 {
     String aString (rangestring);
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
+
     if (!range)
-	exit (1);
+        exit (1);
+
     return range;
 }
 
@@ -192,10 +198,12 @@ testRangeIter ()
     assert (range->specs.count == 3);
     size_t counter = 0;
     HttpHdrRange::iterator i = range->begin();
+
     while (i != range->end()) {
-	++counter;
-	++i;
+        ++counter;
+        ++i;
     }
+
     assert (counter == 3);
     i = range->begin();
     assert (i - range->begin() == 0);
@@ -212,37 +220,53 @@ testRangeCanonization()
 
     /* 0-3 needs a content length of 4 */
     /* This passes in the extant code - but should it? */
+
     if (!range->canonize(3))
-	exit(1);
+        exit(1);
+
     assert (range->specs.count == 3);
+
     range->deleteSelf();
-    
+
     range=rangeFromString("bytes=0-3, 1-, -2");
+
     assert (range->specs.count == 3);
+
     /* 0-3 needs a content length of 4 */
     if (!range->canonize(4))
-	exit(1);
-    range->deleteSelf();
-    
-    range=rangeFromString("bytes=3-6");
-    assert (range->specs.count == 1);
-    /* 3-6 needs a content length of 4 or more */
-    if (range->canonize(3))
-	exit(1);
+        exit(1);
+
     range->deleteSelf();
 
     range=rangeFromString("bytes=3-6");
+
     assert (range->specs.count == 1);
+
+    /* 3-6 needs a content length of 4 or more */
+    if (range->canonize(3))
+        exit(1);
+
+    range->deleteSelf();
+
+    range=rangeFromString("bytes=3-6");
+
+    assert (range->specs.count == 1);
+
     /* 3-6 needs a content length of 4 or more */
     if (!range->canonize(4))
-	exit(1);
+        exit(1);
+
     range->deleteSelf();
-    
+
     range=rangeFromString("bytes=1-1,2-3");
+
     assert (range->specs.count == 2);
+
     if (!range->canonize(4))
-	exit(1);
+        exit(1);
+
     assert (range->specs.count == 2);
+
     range->deleteSelf();
 }
 
@@ -251,8 +275,8 @@ main (int argc, char **argv)
 {
     Mem::Init();
     /* enable for debugging to console */
-//    _db_init (NULL, NULL);
-//    Debug::Levels[64] = 9;
+    //    _db_init (NULL, NULL);
+    //    Debug::Levels[64] = 9;
     testRangeParser ("bytes=0-3");
     testRangeParser ("bytes=-3");
     testRangeParser ("bytes=1-");

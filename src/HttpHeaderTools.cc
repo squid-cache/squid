@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.40 2003/03/06 11:51:55 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.41 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -337,6 +337,37 @@ httpHeaderParseSize(const char *start, ssize_t * value)
     return res;
 }
 
+
+/* Parses a quoted-string field (RFC 2616 section 2.2), complains if
+ * something went wrong, returns non-zero on success.
+ * start should point at the first ".
+ * RC TODO: This is too looose. We should honour the BNF and exclude CTL's
+ */
+int
+httpHeaderParseQuotedString (const char *start, String *val)
+{
+    const char *end, *pos;
+    val->clean();
+    assert (*start == '"');
+    pos = start + 1;
+
+    while (1) {
+        if (!(end = index (pos,'"'))) {
+            debug (66, 2) ("failed to parse a quoted-string header field near '%s'\n", start);
+            return 0;
+        }
+
+        /* check for quoted-chars */
+        if (*(end - 1) != '\\') {
+            /* done */
+            val->append(start + 1, end-start-1);
+            return 1;
+        }
+
+        /* try for the end again */
+        pos = end + 1;
+    }
+}
 
 /*
  * parses a given string then packs compiled headers and compares the result

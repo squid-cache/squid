@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.231 2003/02/23 00:08:04 robertc Exp $
+ * $Id: squid.h,v 1.232 2003/03/10 04:56:38 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -366,8 +366,28 @@ extern "C"
 #include "snprintf.h"
 #endif
 
-#define XMIN(x,y) ((x)<(y)? (x) : (y))
-#define XMAX(a,b) ((a)>(b)? (a) : (b))
+template<class A>
+inline A const &
+min(A const & lhs, A const & rhs)
+{
+    if (rhs < lhs)
+        return rhs;
+
+    return lhs;
+}
+
+#define XMIN(x,y) (min (x,y))
+template<class A>
+inline A const &
+max(A const & lhs, A const & rhs)
+{
+    if (rhs > lhs)
+        return rhs;
+
+    return lhs;
+}
+
+#define XMAX(a,b) (max (a,b))
 
 /*
  * Squid source files should not call these functions directly.

@@ -1,7 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.9 2003/02/05 10:36:39 robertc Exp $
+#  $Id: Makefile.am,v 1.10 2003/03/10 04:56:21 robertc Exp $
 #
+
+SUBDIRS = libTrie
 
 if ENABLE_XPROF_STATS
 XPROF_STATS_SOURCE = Profiler.c
@@ -55,6 +57,8 @@ libmiscutil_a_SOURCES = \
 	uudecode.c \
 	$(XPROF_STATS_SOURCE)
 libmiscutil_a_LIBADD = \
+	libTrie/src/Trie.o \
+	libTrie/src/TrieNode.o \
 	@LIBOBJS@
 # $(top_srcdir)/include/version.h should be a dependency
 libregex_a_SOURCES = \

@@ -45,6 +45,9 @@
 /* Define if you have problems with memPools and want to disable Pools */
 #undef DISABLE_POOLS
 
+/* Compile the ESI processor and Surrogate header support */
+#undef ESI
+
 /* Enable Forw/Via database */
 #undef FORW_VIA_DB
 

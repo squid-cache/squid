@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.55 2003/03/04 01:40:25 robertc Exp $
+ * $Id: cbdata.cc,v 1.56 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -72,9 +72,14 @@ public:
 
 #endif
 
-typedef struct _cbdata
+#define OFFSET_OF(TYPE, MEMBER) ((size_t) &(((TYPE) *)0)->(MEMBER))
+
+class cbdata
 {
+
+public:
 #if CBDATA_DEBUG
+
     void dump(StoreEntry *)const;
 #endif
 
@@ -86,7 +91,7 @@ typedef struct _cbdata
 
     void addHistory(char const *label, char const *file, int line) const
     {
-        if (calls->count > 100)
+        if (calls->count > 1000)
             return;
 
         stackPush (calls, new CBDataCall(label, file, line));
@@ -98,15 +103,28 @@ typedef struct _cbdata
     Stack *calls;
 #endif
 
-    long y;			/* cookie used while debugging */
-    union {
-        void *pointer;
-        double double_float;
-        int integer;
-    } data;
-}
+    /* cookie used while debugging */
+    long cookie;
+    /* MUST be the last per-instance member */
+    void *data;
+void check() const { assert(cookie == ((long)this ^ Cookie));}
 
-cbdata;
+    size_t dataSize() const { return sizeof(data);}
+
+    static const long Cookie = (long)0xDEADBEEF;
+    static long MakeOffset();
+    static const long Offset;
+};
+
+const long cbdata::Offset(MakeOffset());
+
+long
+cbdata::MakeOffset()
+{
+    cbdata *zero = (cbdata *)0L;
+    void **dataOffset = &zero->data;
+    return (long)dataOffset;
+}
 
 static OBJH cbdataDump;
 #ifdef CBDATA_DEBUG
@@ -122,12 +140,8 @@ struct CBDataIndex
 *cbdata_index = NULL;
 int cbdata_types = 0;
 
-#define OFFSET_OF(type, member) ((int)(char *)&((type *)0L)->member)
-#define CBDATA_COOKIE	(long)0xDEADBEEF
-#define CBDATA_CHECK(c) assert(c->y == ((long)c ^ CBDATA_COOKIE))
-
 void
-_cbdata::deleteSelf()
+cbdata::deleteSelf()
 {
 #if CBDATA_DEBUG
     CBDataCall *aCall;
@@ -166,9 +180,9 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 
     snprintf(label, strlen(name) + 20, "cbdata %s (%d)", name, (int) type);
 
-    assert(OFFSET_OF(cbdata, data) == (sizeof(cbdata) - sizeof(((cbdata *) NULL)->data)));
+    assert((size_t)cbdata::Offset == (sizeof(cbdata) - ((cbdata *)NULL)->dataSize()));
 
-    cbdata_index[type].pool = memPoolCreate(label, size + OFFSET_OF(cbdata, data));
+    cbdata_index[type].pool = memPoolCreate(label, size + cbdata::Offset);
 
     cbdata_index[type].free_func = free_func;
 }
@@ -231,7 +245,7 @@ cbdataInternalAlloc(cbdata_type type)
     p->type = type;
     p->valid = 1;
     p->locks = 0;
-    p->y = (long) p ^ CBDATA_COOKIE;
+    p->cookie = (long) p ^ cbdata::Cookie;
     cbdataCount++;
 #if CBDATA_DEBUG
 
@@ -254,7 +268,7 @@ cbdataInternalFree(void *p)
 #endif
 {
     cbdata *c;
-    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
+    c = (cbdata *) (((char *) p) - cbdata::Offset);
 #if CBDATA_DEBUG
 
     debug(45, 3) ("cbdataFree: %p %s:%d\n", p, file, line);
@@ -263,7 +277,7 @@ cbdataInternalFree(void *p)
     debug(45, 3) ("cbdataFree: %p\n", p);
 #endif
 
-    CBDATA_CHECK(c);
+    c->check();
     c->valid = 0;
 #if CBDATA_DEBUG
 
@@ -299,7 +313,7 @@ cbdataInternalLock(const void *p)
     if (p == NULL)
         return;
 
-    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
+    c = (cbdata *) (((char *) p) - cbdata::Offset);
 
 #if CBDATA_DEBUG
 
@@ -313,7 +327,7 @@ cbdataInternalLock(const void *p)
 
 #endif
 
-    CBDATA_CHECK(c);
+    c->check();
 
     assert(c->locks < 65535);
 
@@ -332,7 +346,7 @@ cbdataInternalUnlock(const void *p)
     if (p == NULL)
         return;
 
-    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
+    c = (cbdata *) (((char *) p) - cbdata::Offset);
 
 #if CBDATA_DEBUG
 
@@ -346,7 +360,7 @@ cbdataInternalUnlock(const void *p)
 
 #endif
 
-    CBDATA_CHECK(c);
+    c->check();
 
     assert(c != NULL);
 
@@ -380,9 +394,9 @@ cbdataReferenceValid(const void *p)
 
     debug(45, 3) ("cbdataReferenceValid: %p\n", p);
 
-    c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
+    c = (cbdata *) (((char *) p) - cbdata::Offset);
 
-    CBDATA_CHECK(c);
+    c->check();
 
     assert(c->locks > 0);
 
@@ -418,17 +432,17 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
 
 #if CBDATA_DEBUG
 void
-_cbdata::dump(StoreEntry *sentry) const
+cbdata::dump(StoreEntry *sentry) const
 {
     storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", valid ? ' ' :
                       '!', &data, type, locks, file, line);
 }
 
-struct CBDataDumper : public unary_function<_cbdata, void>
+struct CBDataDumper : public unary_function<cbdata, void>
 {
     CBDataDumper(StoreEntry *anEntry):where(anEntry){}
 
-    void operator()(_cbdata const &x)
+    void operator()(cbdata const &x)
     {
         x.dump(where);
     }
@@ -454,7 +468,7 @@ cbdataDump(StoreEntry * sentry)
         MemPool *pool = cbdata_index[i].pool;
 
         if (pool) {
-            int obj_size = pool->obj_size - OFFSET_OF(cbdata, data);
+            int obj_size = pool->obj_size - cbdata::Offset;
             storeAppendPrintf(sentry, "%s\t%d\t%d\t%d\n", pool->label + 7, obj_size, pool->meter.inuse.level, obj_size * pool->meter.inuse.level);
         }
     }
@@ -494,7 +508,7 @@ struct CBDataHistoryDumper : public CBDataDumper
 {
     CBDataHistoryDumper(StoreEntry *anEntry):CBDataDumper(anEntry),where(anEntry), callDumper(anEntry){}
 
-    void operator()(_cbdata const &x)
+    void operator()(cbdata const &x)
     {
         CBDataDumper::operator()(x);
         storeAppendPrintf(where, "\n");

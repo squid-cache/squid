@@ -17,7 +17,8 @@ static inline hrtime_t
 get_tick(void)
 {
     hrtime_t regs;
-    asm volatile ("rdtsc":"=A" (regs));
+
+asm volatile ("rdtsc":"=A" (regs));
     return regs;
     /* We need return value, we rely on CC to optimise out needless subf calls */
     /* Note that "rdtsc" is relatively slow OP and stalls the CPU pipes, so use it wisely */
@@ -28,22 +29,25 @@ static inline hrtime_t
 get_tick(void)
 {
     hrtime_t regs;
-    asm volatile ("rpcc $0":"=A" (regs));	/* I'm not sure of syntax */
+
+asm volatile ("rpcc $0":"=A" (regs));	/* I'm not sure of syntax */
     return regs;
 }
+
 #elif defined(_M_IX86) && defined(_MSC_VER) /* x86 platform on Microsoft C Compiler ONLY */
-static __inline hrtime_t 
+static __inline hrtime_t
 get_tick(void)
 {
     hrtime_t regs;
     __asm {
-	cpuid
-	rdtsc
-	mov eax,DWORD PTR regs[0]
-	mov edx,DWORD PTR regs[4]
+        cpuid
+        rdtsc
+        mov eax,DWORD PTR regs[0]
+        mov edx,DWORD PTR regs[4]
     }
     return regs;
 }
+
 #else
 #warning Unsupported CPU. Define function get_tick(). Disabling USE_XPROF_STATS...
 #undef USE_XPROF_STATS
@@ -96,15 +100,22 @@ typedef enum {
     XPROF_file_read,
     XPROF_file_write,
     XPROF_file_close,
+#ifdef ESI
+    XPROF_esiExpressionEval,
+    XPROF_esiProcessing,
+    XPROF_esiParsing,
+#endif
     XPROF_LAST
 } xprof_type;
 
 #define XP_NOBEST (hrtime_t)-1
 
 typedef struct _xprof_stats_node xprof_stats_node;
+
 typedef struct _xprof_stats_data xprof_stats_data;
 
-struct _xprof_stats_data {
+struct _xprof_stats_data
+{
     hrtime_t start;
     hrtime_t stop;
     hrtime_t delta;
@@ -114,7 +125,8 @@ struct _xprof_stats_data {
     int64_t summ;
 };
 
-struct _xprof_stats_node {
+struct _xprof_stats_node
+{
     const char *name;
     xprof_stats_data accu;
     xprof_stats_data hist;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.h,v 1.4 2003/02/21 22:50:07 robertc Exp $
+ * $Id: clientStream.h,v 1.5 2003/03/10 04:56:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,7 +36,7 @@
 
 #include "StoreIOBuffer.h"
 
-typedef struct _clientStreamNode clientStreamNode;
+class clientStreamNode;
 
 class ClientHttpRequest;
 /* client stream read callback */
@@ -48,15 +48,12 @@ typedef void CSD(clientStreamNode *, ClientHttpRequest *);
 typedef clientStream_status_t CSS(clientStreamNode *, ClientHttpRequest *);
 
 
-struct _clientStreamNode
+class clientStreamNode
 {
-#ifdef __cplusplus
 
 public:
-    _clientStreamNode *prev() const;
-    _clientStreamNode *next() const;
-#endif
-
+    clientStreamNode *prev() const;
+    clientStreamNode *next() const;
     dlink_node node;
     dlink_list *head;		/* sucks I know, but hey, the interface is limited */
     CSR *readfunc;

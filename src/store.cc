@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.563 2003/03/08 09:35:15 robertc Exp $
+ * $Id: store.cc,v 1.564 2003/03/10 04:56:38 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -402,14 +402,23 @@ storeLockObject(StoreEntry * e)
 }
 
 void
+StoreEntry::setReleaseFlag()
+{
+    if (EBIT_TEST(flags, RELEASE_REQUEST))
+        return;
+
+    debug(20, 3) ("StoreEntry::setReleaseFlag: '%s'\n", getMD5Text());
+
+    EBIT_SET(flags, RELEASE_REQUEST);
+}
+
+void
 storeReleaseRequest(StoreEntry * e)
 {
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
         return;
 
-    debug(20, 3) ("storeReleaseRequest: '%s'\n", e->getMD5Text());
-
-    EBIT_SET(e->flags, RELEASE_REQUEST);
+    e->setReleaseFlag();
 
     /*
      * Clear cachable flag here because we might get called before
@@ -434,7 +443,7 @@ storeUnlockObject(StoreEntry * e)
         return (int) e->lock_count;
 
     if (e->store_status == STORE_PENDING)
-        EBIT_SET(e->flags, RELEASE_REQUEST);
+        e->setReleaseFlag();
 
     assert(storePendingNClients(e) == 0);
 
@@ -1178,7 +1187,7 @@ storeRelease(StoreEntry * e)
              * we'll just call storeUnlockObject() on these.
              */
             e->lock_count++;
-            EBIT_SET(e->flags, RELEASE_REQUEST);
+            e->setReleaseFlag();
             stackPush(&LateReleaseStack, e);
             PROF_stop(storeRelease);
             return;
@@ -1862,6 +1871,12 @@ char const *
 NullStoreEntry::getMD5Text() const
 {
     return "N/A";
+}
+
+void
+NullStoreEntry::operator delete(void*)
+{
+    fatal ("Attempt to delete NullStoreEntry\n");
 }
 
 char const *

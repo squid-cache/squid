@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.229 2003/03/06 11:51:55 robertc Exp $
+ * $Id: enums.h,v 1.230 2003/03/10 04:56:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,6 +93,7 @@ typedef enum {
     ERR_ONLY_IF_CACHED_MISS,	/* failure to satisfy only-if-cached request */
     ERR_TOO_BIG,
     TCP_RESET,
+    ERR_ESI,                    /* Failure to perform ESI processing */
     ERR_MAX
 } err_type;
 
@@ -189,6 +190,8 @@ typedef enum {
 #if X_ACCELERATOR_VARY
     HDR_X_ACCELERATOR_VARY,
 #endif
+    HDR_SURROGATE_CAPABILITY,
+    HDR_SURROGATE_CONTROL,
     HDR_FRONT_END_HTTPS,
     HDR_OTHER,
     HDR_ENUM_END
@@ -211,6 +214,15 @@ typedef enum {
     CC_ENUM_END
 } http_hdr_cc_type;
 
+typedef enum {
+    SC_NO_STORE,
+    SC_NO_STORE_REMOTE,
+    SC_MAX_AGE,
+    SC_CONTENT,
+    SC_OTHER,
+    SC_ENUM_END
+} http_hdr_sc_type;
+
 /* possible types for http header fields */
 typedef enum {
     ftInvalid = HDR_ENUM_END,	/* to catch nasty errors with hdr_id<->fld_type clashes */
@@ -221,6 +233,7 @@ typedef enum {
     ftPCc,
     ftPContRange,
     ftPRange,
+    ftPSc,
     ftDate_1123_or_ETag
 } field_type;
 
@@ -549,6 +562,8 @@ typedef enum {
     MEM_HELPER_STATEFUL_REQUEST,
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_CONTENT_RANGE,
+    MEM_HTTP_HDR_SC,
+    MEM_HTTP_HDR_SCTARGET,
     MEM_IPCACHE_ENTRY,
     MEM_MD5_DIGEST,
     MEM_NETDBENTRY,

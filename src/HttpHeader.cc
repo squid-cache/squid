@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.88 2003/03/09 12:29:40 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.89 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -133,6 +133,8 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
 #if X_ACCELERATOR_VARY
         {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
 #endif
+        {"Surrogate-Capability", HDR_SURROGATE_CAPABILITY, ftStr},
+        {"Surrogate-Control", HDR_SURROGATE_CONTROL, ftPSc},
         {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
         {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
     };
@@ -176,6 +178,8 @@ static http_hdr_type ListHeadersArr[] =
 #if X_ACCELERATOR_VARY
         HDR_X_ACCELERATOR_VARY,
 #endif
+        HDR_SURROGATE_CAPABILITY,
+        HDR_SURROGATE_CONTROL,
         HDR_X_FORWARDED_FOR
     };
 
@@ -186,7 +190,7 @@ static http_hdr_type GeneralHeadersArr[] =
         HDR_TRANSFER_ENCODING,
         HDR_UPGRADE,
         /* HDR_TRAILER, */
-        HDR_VIA
+        HDR_VIA,
     };
 
 /* entity-headers */
@@ -212,7 +216,8 @@ static http_hdr_type ReplyHeadersArr[] =
 #if X_ACCELERATOR_VARY
         HDR_X_ACCELERATOR_VARY,
 #endif
-        HDR_X_SQUID_ERROR
+        HDR_X_SQUID_ERROR,
+        HDR_SURROGATE_CONTROL
     };
 
 static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
@@ -222,7 +227,7 @@ static http_hdr_type RequestHeadersArr[] =
         HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
         HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
         HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
-        HDR_USER_AGENT, HDR_X_FORWARDED_FOR
+        HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
     };
 
 /* header accounting */
@@ -308,6 +313,8 @@ httpHeaderInitModule(void)
     /* init dependent modules */
     httpHdrCcInitModule();
 
+    httpHdrScInitModule();
+
     /* register with cache manager */
     cachemgrRegister("http_headers",
                      "HTTP Header Statistics", httpHeaderStoreReport, 0, 1);
@@ -319,6 +326,7 @@ httpHeaderCleanModule(void)
     httpHeaderDestroyFieldsInfo(Headers, HDR_ENUM_END);
     Headers = NULL;
     httpHdrCcCleanModule();
+    httpHdrScCleanModule();
 }
 
 static void
@@ -331,6 +339,7 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
     statHistEnumInit(&hs->hdrUCountDistr, 32);	/* not a real enum */
     statHistEnumInit(&hs->fieldTypeDistr, HDR_ENUM_END);
     statHistEnumInit(&hs->ccTypeDistr, CC_ENUM_END);
+    statHistEnumInit(&hs->scTypeDistr, SC_ENUM_END);
 }
 
 /*
@@ -898,6 +907,25 @@ httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range)
     memBufClean(&mb);
 }
 
+void
+httpHeaderPutSc(HttpHeader *hdr, const HttpHdrSc *sc)
+{
+    MemBuf mb;
+    Packer p;
+    assert(hdr && sc);
+    /* remove old directives if any */
+    httpHeaderDelById(hdr, HDR_RANGE);
+    /* pack into mb */
+    memBufDefInit(&mb);
+    packerToMemInit(&p, &mb);
+    httpHdrScPackInto(sc, &p);
+    /* put */
+    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_SURROGATE_CONTROL, NULL, mb.buf));
+    /* cleanup */
+    packerClean(&p);
+    memBufClean(&mb);
+}
+
 /* add extension header (these fields are not parsed/analyzed/joined, etc.) */
 void
 httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value)
@@ -1026,6 +1054,26 @@ httpHeaderGetRange(const HttpHeader * hdr)
     }
 
     return r;
+}
+
+HttpHdrSc *
+httpHeaderGetSc(const HttpHeader *hdr)
+{
+    if (!CBIT_TEST(hdr->mask, HDR_SURROGATE_CONTROL))
+        return NULL;
+
+    String s (httpHeaderGetList(hdr, HDR_SURROGATE_CONTROL));
+
+    HttpHdrSc *sc = httpHdrScParseCreate(&s);
+
+    HttpHeaderStats[hdr->owner].ccParsedCount++;
+
+    if (sc)
+        httpHdrScUpdateStats(sc, &HttpHeaderStats[hdr->owner].scTypeDistr);
+
+    httpHeaderNoteParsedEntry(HDR_SURROGATE_CONTROL, s, !sc);
+
+    return sc;
 }
 
 HttpHdrContRange *
@@ -1314,6 +1362,10 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/cc_field");
     statHistDump(&hs->ccTypeDistr, e, httpHdrCcStatDumper);
+    storeAppendPrintf(e, "\nSurrogate-control directives distribution\n");
+    storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
+                      "id", "name", "count", "#/sc_field");
+    statHistDump(&hs->scTypeDistr, e, httpHdrScStatDumper);
     storeAppendPrintf(e, "\nNumber of fields per header distribution\n");
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
                       "id", "#flds", "count", "%total");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.437 2003/03/08 09:43:49 robertc Exp $
+ * $Id: cache_cf.cc,v 1.438 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -42,6 +42,9 @@
 
 #if SQUID_SNMP
 #include "snmp.h"
+#endif
+#if ESI
+#include "ESIParser.h"
 #endif
 
 static const char *const T_SECOND_STR = "second";

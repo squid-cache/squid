@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.187 2003/03/09 12:29:41 robertc Exp $
+ * $Id: errorpage.cc,v 1.188 2003/03/10 04:56:38 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -475,6 +475,8 @@ errorStateFree(ErrorState * err)
 
     err->auth_user_request = NULL;
 
+    safe_free(err->err_msg);
+
     cbdataFree(err);
 }
 
@@ -584,6 +586,7 @@ errorDump(ErrorState * err, MemBuf * mb)
  * w - cachemgr email address                   x
  * W - error data (to be included in the mailto links)
  * z - dns server error message                 x
+ * Z - Preformatted error message               x
  */
 
 static const char *
@@ -774,6 +777,14 @@ errorConvert(char token, ErrorState * err)
     case 'z':
         if (err->dnsserver_msg)
             p = err->dnsserver_msg;
+        else
+            p = "[unknown]";
+
+        break;
+
+    case 'Z':
+        if (err->err_msg)
+            p = err->err_msg;
         else
             p = "[unknown]";
 

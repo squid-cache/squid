@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.630 2003/03/07 04:40:59 adrian Exp $
+ * $Id: client_side.cc,v 1.631 2003/03/10 04:56:37 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2445,7 +2445,7 @@ clientAbortBody(request_t * request)
         requestUnlink(request);
     }
 
-    clientReadBodyAbortHandler(NULL, -1, conn);		/* Install abort handler */
+    clientReadBodyAbortHandler(NULL, -1, conn);	/* Install abort handler */
     /* clientProcessBody() */
     return 1;			/* Aborted */
 }

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.306 2003/02/22 14:59:33 hno Exp $
+# $Id: cf.data.pre,v 1.307 2003/03/10 04:56:36 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2701,6 +2701,41 @@ DOC_START
 	default default to 3131.  If the 'filename' argument is given,
 	the contents of that file will be included in the announce
 	message.
+DOC_END
+
+NAME: httpd_accel_surrogate_id
+IFDEF: ESI
+TYPE:  string
+LOC: Config.Accel.surrogate_id
+DEFAULT: none
+DOC_START
+	Surrogates (http://www.esi.org/architecture_spec_1.0.html)
+	need an identification token to allow control targeting. Because
+	a farm of surrogates may all perform the same tasks, they may share
+	an identification token.
+DOC_END
+
+NAME: http_accel_surrogate_remote
+IFDEF: ESI
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.surrogate_is_remote
+DOC_START
+	Remote surrogates (such as those in a CDN) honour Surrogate-Control: no-store-remote.
+	Set this to on to have squid behave as a remote surrogate.
+DOC_END
+
+NAME: esi_parser
+IFDEF: ESI
+COMMENT: expat|custom
+TYPE: string
+LOC: ESIParser::Type
+DEFAULT: custom
+DOC_START
+	ESI markup is not strictly XML compatible. The custom ESI parser
+	will give higher performance, but cannot handle non ASCII character
+	encodings.
 DOC_END
 
 COMMENT_START

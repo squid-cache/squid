@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.4 2003/03/06 11:51:55 robertc Exp $
+ * $Id: SquidString.h,v 1.5 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -95,6 +95,7 @@ public:
     void reset(char const *str);
     void append(char const *buf, int len);
     void append(char const *buf);
+    void append(char const);
     void append (String const &);
     void absorb(String &old);
     _SQUID_INLINE_ const char * pos(char const *) const;

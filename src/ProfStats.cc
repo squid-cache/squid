@@ -1,6 +1,6 @@
 
 /*
- * $Id: ProfStats.cc,v 1.4 2003/02/21 22:50:06 robertc Exp $
+ * $Id: ProfStats.cc,v 1.5 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa
@@ -61,6 +61,7 @@ static TimersArray *xprof_stats_avg5hour = NULL;
 static TimersArray *xprof_stats_avg24hour = NULL;
 
 static xprof_stats_node *sortlist[XPROF_LAST + 2];
+static void xprof_summary(StoreEntry * sentry);
 
 static void
 xprof_reset(xprof_stats_data * head)
@@ -122,7 +123,7 @@ xprof_show_item(StoreEntry * sentry, const char *name, xprof_stats_data * hist)
 }
 
 static void
-xprof_summary_item(StoreEntry * sentry, char *descr, TimersArray * list)
+xprof_summary_item(StoreEntry * sentry, char const *descr, TimersArray * list)
 {
     int i;
     xprof_stats_node **hist;

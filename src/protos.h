@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.472 2003/03/08 09:35:15 robertc Exp $
+ * $Id: protos.h,v 1.473 2003/03/10 04:56:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -132,7 +132,7 @@ extern int comm_listen(int fd);
 SQUIDCEXTERN int commSetNonBlocking(int fd);
 SQUIDCEXTERN int commUnsetNonBlocking(int fd);
 SQUIDCEXTERN void commSetCloseOnExec(int fd);
-extern void _comm_close(int fd, char *file, int line);
+extern void _comm_close(int fd, char const *file, int line);
 #define comm_close(fd) (_comm_close((fd), __FILE__, __LINE__))
 SQUIDCEXTERN void comm_reset_close(int fd);
 #if LINGERING_CLOSE
@@ -344,6 +344,33 @@ SQUIDCEXTERN void httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age);
 SQUIDCEXTERN void httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage);
 SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 SQUIDCEXTERN void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+
+/* Http Surrogate Control Header Field */
+extern void httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+extern void httpHdrScInitModule (void);
+extern void httpHdrScCleanModule (void);
+extern HttpHdrSc *httpHdrScCreate(void);
+extern HttpHdrSc *httpHdrScParseCreate(String const *);
+extern void httpHdrScDestroy(HttpHdrSc * sc);
+extern HttpHdrSc *httpHdrScDup(const HttpHdrSc * sc);
+extern void httpHdrScPackInto(const HttpHdrSc * sc, Packer * p);
+extern void httpHdrScJoinWith(HttpHdrSc *, const HttpHdrSc *);
+extern void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
+extern void httpHdrScUpdateStats(const HttpHdrSc *, StatHist *);
+extern HttpHdrScTarget * httpHdrScFindTarget (HttpHdrSc *sc, const char *target);
+extern HttpHdrScTarget * httpHdrScGetMergedTarget (HttpHdrSc *sc, const char *ourtarget);
+
+/* Http Surrogate control header field 'targets' */
+extern HttpHdrScTarget * httpHdrScTargetCreate (const char *);
+extern void httpHdrScTargetDestroy(HttpHdrScTarget *);
+extern HttpHdrScTarget *httpHdrScTargetDup(const HttpHdrScTarget *);
+extern void httpHdrScTargetPackInto(const HttpHdrScTarget *, Packer *);
+extern void httpHdrScTargetSetMaxAge(HttpHdrScTarget *, int);
+extern void httpHdrScTargetUpdateStats(const HttpHdrScTarget *, StatHist *);
+extern void httpHdrScTargetJoinWith(HttpHdrScTarget *, const HttpHdrScTarget *);
+extern void httpHdrScTargetMergeWith(HttpHdrScTarget *, const HttpHdrScTarget *);
+extern void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+
 
 /* Http Header Tools */
 SQUIDCEXTERN HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);

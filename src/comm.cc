@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.371 2003/03/08 16:18:45 robertc Exp $
+ * $Id: comm.cc,v 1.372 2003/03/10 04:56:37 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -217,7 +217,7 @@ public:
 
 protected:
     CommCommonCallback result;
-    friend void _comm_close(int fd, char *file, int line);
+    friend void _comm_close(int fd, char const *file, int line);
     friend void comm_calliocallback(void);
 
 private:
@@ -294,7 +294,7 @@ private:
 
 struct _fd_debug_t
 {
-    char *close_file;
+    char const *close_file;
     int close_line;
 };
 
@@ -839,7 +839,7 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
  * + accept() poll time is 250ms
  */
 void
-fdc_open(int fd, unsigned int type, char *desc)
+fdc_open(int fd, unsigned int type, char const *desc)
 {
     assert(fdc_table[fd].active == 0);
 
@@ -1732,7 +1732,7 @@ AcceptFD::doCallback(int fd, int newfd, comm_err_t errcode, int xerrno, Connecti
  * DeferredReadManager.
  */
 void
-_comm_close(int fd, char *file, int line)
+_comm_close(int fd, char const *file, int line)
 {
     fde *F = NULL;
     dlink_node *node;
