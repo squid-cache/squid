@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.1 1997/07/19 03:20:10 wessels Exp $
+# $Id: Makefile.in,v 1.2 1997/07/19 04:52:55 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -9,9 +9,13 @@ sysconfdir	= @sysconfdir@
 localstatedir   = @localstatedir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-
 SH		= @SH@
 RM		= @RM@
+SHELL		= @SH@
+
+INSTALL         	= @INSTALL@
+INSTALL_FILE    	= @INSTALL_DATA@
+DEFAULT_ICON_DIR        = $(sysconfdir)/icons
 
 SHARFILE	= icons.shar
 ICONS		= anthony-binhex.gif \
@@ -42,15 +46,37 @@ ICONS		= anthony-binhex.gif \
 		  anthony-xbm.gif \
 		  anthony-xpm.gif
 
-all: unshar
+all: anthony-xpm.gif
 
-unshar:
+anthony-xpm.gif: $(SHARFILE)
 	$(SH) $(SHARFILE)
 
-shar: icons.shar
+$(SHARFILE):
+	shar --no-timestamp $(ICONS) > $@
 
-$(SHARFILE): $(ICONS)
-	shar $(ICONS) > $@
+install: install-mkdirs anthony-xpm.gif
+	@for f in $(ICONS); do \
+		if test -f $(DEFAULT_ICON_DIR)/$$f ; then \
+			echo "$@ will not overwrite existing $(DEFAULT_ICON_DIR)/$$f" ; \
+		else \
+			echo "$(INSTALL_FILE) $$f $(DEFAULT_ICON_DIR)"; \
+			$(INSTALL_FILE) $$f $(DEFAULT_ICON_DIR); \
+		fi \
+	done
+
+install-mkdirs:
+	-@if test ! -d $(prefix); then \
+		echo "mkdir $(prefix)"; \
+		mkdir $(prefix); \
+	fi
+	-@if test ! -d $(sysconfdir); then \
+		echo "mkdir $(sysconfdir)"; \
+		mkdir $(sysconfdir); \
+	fi
+	-@if test ! -d $(DEFAULT_ICON_DIR); then \
+		echo "mkdir $(DEFAULT_ICON_DIR)"; \
+		mkdir $(DEFAULT_ICON_DIR); \
+	fi
 
 clean:
 	$(RM) -f $(ICONS)
