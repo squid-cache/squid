@@ -1,14 +1,14 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>Begärd URL kunde inte hämtas</H2>
+<H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-Vid försöket att hämta URL:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>
 <P>
-Mottogs följande fel:
+Mottogs f&ouml;ljande fel:
 <UL>
 <LI>
 <STRONG>
@@ -17,6 +17,6 @@ Vidarebefodran Nekad.
 </UL>
 
 <P>
-Denna cache kommer inte vidarebefodra en begäran eftersom den försöker att tvinga sig till en rättighet som den inte har.
- Kanske klienten vid %i är en cache som är felkonfigurerad.
+Denna cache kommer inte vidarebefodra en beg&auml;ran eftersom den f&ouml;rs&ouml;ker att tvinga sig till en r&auml;ttighet som den inte har.
+ Kanske klienten vid %i &auml;r en cache som &auml;r felkonfigurerad.
 </P>

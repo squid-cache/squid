@@ -1,26 +1,26 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>Begärd URL kunde inte hämtas</H2>
+<H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-Vid försöket att hämta URL:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>
 <P>
-Mottogs följande fel:
+Mottogs f&ouml;ljande fel:
 <UL>
 <LI>
 <STRONG>
-Senaste dokumentet återfanns inte i cachen och <code>bara-om-i-cache</code>
-direktivet är satt.
+Senaste dokumentet &aring;terfanns inte i cachen och <code>bara-om-i-cache</code>
+direktivet &auml;r satt.
 </STRONG>
 </UL>
 
 <P>
 
-Du har begärt ett dokument med <code>bara-om-i-cache</code> cache kontroll 
-direktivet. Dokumentet återfanns inte i cache databasen, <em>eller</em> det krävs en uppdatering av cache databasen, men förhindras av 
+Du har beg&auml;rt ett dokument med <code>bara-om-i-cache</code> cache kontroll 
+direktivet. Dokumentet &aring;terfanns inte i cache databasen, <em>eller</em> det kr&auml;vs en uppdatering av cache databasen, men f&ouml;rhindras av 
 <code>bara-om-i-cache</code> direktivet.
 
 </P>

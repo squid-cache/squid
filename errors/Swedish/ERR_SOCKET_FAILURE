@@ -1,14 +1,14 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>Begärd URL kunde inte hämtas</H2>
+<H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-Vid försöket att hämta URL:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>
 <P>
-Mottogs följande fel:
+Mottogs f&ouml;ljande fel:
 <UL>
 <LI>
 <STRONG>
@@ -21,6 +21,6 @@ Systemet returnerade:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Squid kan inte skapa en TCP socket, gissningsvis på grund av tung last.
-Vänligen försök igen.
+Squid kan inte skapa en TCP socket, gissningsvis p&aring; grund av tung last.
+V&auml;nligen f&ouml;rs&ouml;k igen.
 </P>

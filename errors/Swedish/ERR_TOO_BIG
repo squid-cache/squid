@@ -1,26 +1,26 @@
 <HTML><HEAD>
-<TITLE>FEL: Den beg\xe4rda URL:en kunde inte h\xe4mtas</TITLE>
+<TITLE>FEL: Den beg&auml;rda URL:en kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>Den beg\xe4rda URL:en kunde inte h\xe4mtas</H2>
+<H2>Den beg&auml;rda URL:en kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-När följande URL försöktes hämtas:
+N&auml;r f&ouml;ljande URL f&ouml;rs&ouml;ktes h&auml;mtas:
 <A HREF="%U">%U</A>
 <P>
-Inträffade följande fel:
+Intr&auml;ffade f&ouml;ljande fel:
 <UL>
 <LI>
 <STRONG>
-Begäran är för stor.
+Beg&auml;ran &auml;r f&ouml;r stor.
 </STRONG>
 <P>
-Ifall du utför en POST eller PUT begäran, så är begäran
-(det du försöker ladda upp) för stor. Ifall du utförde
-en GET begäran, så är svaret (det du försöker ladda ned)
-för stort.   Dessa gränser är inställda av den internet
-leverantör som handhar den här cacheservern. Var vänlig
-kontakta dem direkt ifall du anser att detta är ett fel.
+Ifall du utf&ouml;r en POST eller PUT beg&auml;ran, s&aring; &auml;r beg&auml;ran
+(det du f&ouml;rs&ouml;ker ladda upp) f&ouml;r stor. Ifall du utf&ouml;rde
+en GET beg&auml;ran, s&aring; &auml;r svaret (det du f&ouml;rs&ouml;ker ladda ned)
+f&ouml;r stort.   Dessa gr&auml;nser &auml;r inst&auml;llda av den internet
+leverant&ouml;r som handhar den h&auml;r cacheservern. Var v&auml;nlig
+kontakta dem direkt ifall du anser att detta &auml;r ett fel.
 </UL>
 <P>
-Din cacheserver administratör är <A HREF="mailto:%w">%w</A>.
+Din cacheserver administrat&ouml;r &auml;r <A HREF="mailto:%w">%w</A>.

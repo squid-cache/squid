@@ -1,21 +1,21 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>Begärd URL kunde inte hämtas</H2>
+<H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-Följande URL kunde inte hämtas:
+F&ouml;ljande URL kunde inte h&auml;mtas:
 <A HREF="%U">%U</A>
 <P>
-Squid sände följande FTP kommando:
+Squid s&auml;nde f&ouml;ljande FTP kommando:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
 och fick till svar
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
-Detta kan orsakas av en FTP URL med en absolut sökväg (vilket inte 
-överensstämmer med RFC 1738). Om detta är orsaken, kan filen 
-återfinnas vid <A HREF="%B">%B</A>.
+Detta kan orsakas av en FTP URL med en absolut s&ouml;kv&auml;g (vilket inte 
+&ouml;verensst&auml;mmer med RFC 1738). Om detta &auml;r orsaken, kan filen 
+&aring;terfinnas vid <A HREF="%B">%B</A>.
 </P>
 

@@ -1,14 +1,14 @@
 <HTML><HEAD>
-<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+<TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
 </HEAD><BODY>
 <H1>FEL</H1>
-<H2>Begärd URL kunde inte hämtas</H2>
+<H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
 <HR>
 <P>
-Vid försöket att hämta URL:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>
 <P>
-Mottogs följande fel:
+Mottogs f&ouml;ljande fel:
 <UL>
 <LI>
 <STRONG>
@@ -21,5 +21,5 @@ Systemet returnerade:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Ett fel inträffade vid försök att skriva till nätverket. Vänligen försök igen.
+Ett fel intr&auml;ffade vid f&ouml;rs&ouml;k att skriva till n&auml;tverket. V&auml;nligen f&ouml;rs&ouml;k igen.
 </P>
