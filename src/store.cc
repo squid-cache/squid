@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.341 1997/11/14 05:16:23 wessels Exp $
+ * $Id: store.cc,v 1.342 1997/11/14 16:05:48 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1724,15 +1724,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     if (e->store_status == STORE_ABORTED) {
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
-	return;
-    }
-    assert(sc->seen_offset <= mem->inmem_hi || e->store_status == STORE_OK);
-    if (e->store_status == STORE_PENDING && sc->seen_offset == mem->inmem_hi) {
+    } else if (e->store_status == STORE_OK && sc->copy_offset == mem->inmem_hi) {
+	/* There is no more to send! */
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, 0);
+    } else if (e->store_status == STORE_PENDING && sc->seen_offset == mem->inmem_hi) {
 	/* client has already seen this, wait for more */
 	debug(20, 3) ("storeClientCopy2: Waiting for more\n");
-	return;
-    }
-    if (sc->copy_offset >= mem->inmem_lo && mem->inmem_lo < mem->inmem_hi) {
+    } else if (sc->copy_offset >= mem->inmem_lo && mem->inmem_lo < mem->inmem_hi) {
 	/* What the client wants is in memory */
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
 	sz = memCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
@@ -2132,7 +2131,7 @@ storeExpiredReferenceAge(void)
     time_t age;
     x = (double) (store_swap_high - store_swap_size) / (store_swap_high - store_swap_low);
     x = x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x;
-    z = pow((double) (Config.referenceAge/60), x);
+    z = pow((double) (Config.referenceAge / 60), x);
     age = (time_t) (z * 60.0);
     if (age < 60)
 	age = 60;
