@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.257 1998/04/06 22:32:13 wessels Exp $
+ * $Id: client_side.cc,v 1.258 1998/04/07 04:50:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -259,10 +259,14 @@ clientProcessExpired(void *data)
 static int
 clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * request)
 {
+    const http_status status = new_entry->mem_obj->reply->sline.status;
+    if (0 == status) {
+	debug(33, 5) ("clientGetsOldEntry: YES, broken HTTP reply\n");
+	return 1;
+    }
     /* If the reply is anything but "Not Modified" then
      * we must forward it to the client */
-    const http_status status = new_entry->mem_obj->reply->sline.status;
-    if (status != 304) {
+    if (HTTP_NOT_MODIFIED != status) {
 	debug(33, 5) ("clientGetsOldEntry: NO, reply=%d\n", status);
 	return 0;
     }
@@ -293,6 +297,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
+    const http_status status = mem->reply->sline.status;
     debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
     memFree(MEM_4K_BUF, buf);
     buf = NULL;
@@ -306,7 +311,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
 	entry->refcount++;
-    } else if (mem->reply->sline.status == 0) {
+    } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	if (entry->store_status == STORE_ABORTED)
 	    debug(33, 0) ("clientHandleIMSReply: entry->swap_status == STORE_ABORTED\n");
@@ -332,7 +337,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	 * www.thegist.com (Netscape/1.13) returns a content-length for
 	 * 304's which seems to be the length of the 304 HEADERS!!! and
 	 * not the body they refer to.  */
-	httpReplyUpdateOnNotModified(oldentry->mem_obj->reply, entry->mem_obj->reply);
+	httpReplyUpdateOnNotModified(oldentry->mem_obj->reply, mem->reply);
 	storeTimestampsSet(oldentry);
 	storeUnregister(entry, http);
 	storeUnlockObject(entry);
@@ -345,7 +350,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     } else {
 	/* the client can handle this reply, whatever it is */
 	http->log_type = LOG_TCP_REFRESH_MISS;
-	if (mem->reply->sline.status == 304) {
+	if (HTTP_NOT_MODIFIED == mem->reply->sline.status) {
 	    http->old_entry->timestamp = squid_curtime;
 	    http->old_entry->refcount++;
 	    http->log_type = LOG_TCP_REFRESH_HIT;
