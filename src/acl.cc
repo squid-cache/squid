@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.89 1997/03/02 05:34:45 wessels Exp $
+ * $Id: acl.cc,v 1.90 1997/03/04 05:16:24 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,13 +41,11 @@
 /* Global */
 const char *AclMatchedName = NULL;
 
-/* for reading ACL's from files */
-int aclFromFile = 0;
-FILE *aclFile;
-
 static struct _acl *AclList = NULL;
 static struct _acl **AclListTail = &AclList;
 static const char *const w_space = " \t\n\r";	/* Jasper sez so */
+static int aclFromFile = 0;
+static FILE *aclFile;
 
 static void aclDestroyAclList _PARAMS((struct _acl_list * list));
 static void aclDestroyTimeList _PARAMS((struct _acl_time_data * data));
@@ -98,8 +96,9 @@ static void aclParseWordList _PARAMS((void *curlist));
 static void aclParseProtoList _PARAMS((void *curlist));
 static void aclParseMethodList _PARAMS((void *curlist));
 static void aclParseTimeSpec _PARAMS((void *curlist));
+static char *strtokFile _PARAMS((void));
 
-char *
+static char *
 strtokFile(void)
 {
     char *t, *fn;
@@ -290,6 +289,7 @@ aclParseIpData(const char *t)
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
     struct _acl_ip_data *q = xcalloc(1, sizeof(struct _acl_ip_data));
+    debug(28, 5, "aclParseIpData: %s\n", t);
     if (!strcasecmp(t, "all")) {
 	q->addr1.s_addr = 0;
 	q->addr2.s_addr = 0;
@@ -449,8 +449,7 @@ aclParseTimeSpec(void *curlist)
 	    if (sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) {
 		debug(28, 0, "%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseTimeSpec: Bad time range '%s'\n",
-		    t);
+		debug(28, 0, "aclParseTimeSpec: IGNORING Bad time range\n");
 		xfree(q);
 		return;
 	    }
@@ -459,8 +458,7 @@ aclParseTimeSpec(void *curlist)
 	    if (q->start > q->stop) {
 		debug(28, 0, "%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
-		debug(28, 0, "aclParseTimeSpec: Reversed time range '%s'\n",
-		    t);
+		debug(28, 0, "aclParseTimeSpec: IGNORING Reversed time range\n");
 		xfree(q);
 		return;
 	    }
@@ -580,6 +578,7 @@ aclParseAclLine(void)
     struct _acl *A = NULL;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     squid_acl acltype;
+    int new_acl = 0;
 
     /* snarf the ACL name */
     if ((t = strtok(NULL, w_space)) == NULL) {
@@ -608,14 +607,14 @@ aclParseAclLine(void)
 	xstrncpy(A->name, aclname, ACL_NAME_SZ);
 	A->type = acltype;
 	A->cfgline = xstrdup(config_input_line);
-	*AclListTail = A;
-	AclListTail = &A->next;
+	new_acl = 1;
     } else {
 	if (acltype != A->type) {
 	    debug(28, 0, "aclParseAclLine: ACL '%s' already exists with different type, skipping.\n", A->name);
 	    return;
 	}
 	debug(28, 3, "aclParseAclLine: Appending to '%s'\n", aclname);
+	new_acl = 0;
     }
     switch (A->type) {
     case ACL_SRC_IP:
@@ -654,6 +653,16 @@ aclParseAclLine(void)
 	debug_trap("Bad ACL type");
 	break;
     }
+    if (!new_acl)
+	return;
+    if (A->data == NULL) {
+	debug(28, 0, "aclParseAclLine: IGNORING invalid ACL: %s\n",
+	    A->cfgline);
+	xfree(A);
+	return;
+    }
+    *AclListTail = A;
+    AclListTail = &A->next;
 }
 
 /* maex@space.net (06.09.96)
@@ -1016,7 +1025,8 @@ aclMatchTime(struct _acl_time_data *data, time_t when)
     static time_t last_when = 0;
     static struct tm tm;
     time_t t;
-
+    if (data == NULL)
+	fatal_dump("aclMatchTime: NULL data");
     if (when != last_when) {
 	last_when = when;
 	xmemcpy(&tm, localtime(&when), sizeof(struct tm));
@@ -1085,7 +1095,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEED;
 	    return 0;
 	} else {
-	    return aclMatchDomainList(acl->data, "none");
+	    return aclMatchDomainList(&acl->data, "none");
 	}
 	/* NOTREACHED */
     case ACL_TIME:
@@ -1545,7 +1555,7 @@ networkCompare(struct _acl_ip_data *net, struct _acl_ip_data *data)
     struct in_addr addr;
     struct _acl_ip_data acl_ip;
     int rc = 0;
-    memcpy(&acl_ip, net, sizeof(acl_ip));
+    xmemcpy(&acl_ip, net, sizeof(acl_ip));
     addr = acl_ip.addr1;
     addr.s_addr &= data->mask.s_addr;	/* apply netmask */
     if (data->addr2.s_addr == 0) {	/* single address check */
@@ -1652,7 +1662,7 @@ bintreeIpNetworkCompare(void *t1, void *t2)
 {
     struct in_addr addr;
     struct _acl_ip_data *data;
-    memcpy(&addr, t1, sizeof(addr));
+    xmemcpy(&addr, t1, sizeof(addr));
     data = (struct _acl_ip_data *) t2;
     return aclIpNetworkCompare(addr, data);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.41 1997/02/28 21:33:42 wessels Exp $
+ * $Id: tunnel.cc,v 1.42 1997/03/04 05:16:42 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -45,7 +45,6 @@ typedef struct {
     } client, server;
     time_t timeout;
     int *size_ptr;		/* pointer to size in an icpStateData for logging */
-    ConnectStateData connectState;
     int proxying;
 } SslStateData;
 
@@ -119,7 +118,6 @@ sslStateFree(int fd, void *data)
     safe_free(sslState->client.buf);
     xfree(sslState->url);
     requestUnlink(sslState->request);
-    memset(sslState, '\0', sizeof(SslStateData));
     safe_free(sslState);
 }
 
@@ -372,12 +370,11 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
 	COMM_SELECT_LIFETIME,
 	sslLifetimeExpire,
 	(void *) sslState, 0);
-    sslState->connectState.fd = fd;
-    sslState->connectState.host = sslState->host;
-    sslState->connectState.port = sslState->port;
-    sslState->connectState.handler = sslConnectDone;
-    sslState->connectState.data = sslState;
-    comm_nbconnect(fd, &sslState->connectState);
+    commConnectStart(fd,
+	sslState->host,
+	sslState->port,
+	sslConnectDone,
+	sslState);
 }
 
 static void
@@ -407,8 +404,6 @@ sslConnectDone(int fd, int status, void *data)
 	sslProxyConnected(sslState->server.fd, sslState);
     else
 	sslConnected(sslState->server.fd, sslState);
-    if (vizSock > -1)
-	vizHackSendPkt(&sslState->connectState.S, 2);
 }
 
 int

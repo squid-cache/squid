@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.139 1997/02/26 19:46:10 wessels Exp $
+ * $Id: comm.cc,v 1.140 1997/03/04 05:16:27 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -151,6 +151,8 @@ static void RWStateCallbackAndFree _PARAMS((int fd, int code));
 static void commSetTcpNoDelay _PARAMS((int));
 #endif
 static void commSetTcpRcvbuf _PARAMS((int, int));
+static void commConnectFree _PARAMS((int fd, void *data));
+static void commConnectHandle _PARAMS((int fd, void *data));
 
 static int *fd_lifetime = NULL;
 static struct timeval zero_tv;
@@ -317,18 +319,38 @@ comm_listen(int sock)
     return sock;
 }
 
-/* Connect SOCK to specified DEST_PORT at DEST_HOST. */
 void
-comm_nbconnect(int fd, void *data)
+commConnectStart(int fd, const char *host, u_short port, CCH callback, void *data)
+{
+    ConnectStateData *cs = xcalloc(1, sizeof(ConnectStateData));
+    cs->host = xstrdup(host);
+    cs->port = port;
+    cs->callback = callback;
+    cs->data = data;
+    comm_add_close_handler(fd, commConnectFree, cs);
+    commConnectHandle(fd, cs);
+}
+
+static void
+commConnectFree(int fd, void *data)
+{
+    ConnectStateData *cs = data;
+    xfree(cs->host);
+    xfree(cs);
+}
+
+/* Connect SOCK to specified DEST_PORT at DEST_HOST. */
+static void
+commConnectHandle(int fd, void *data)
 {
     ConnectStateData *connectState = data;
     const ipcache_addrs *ia = NULL;
     if (connectState->S.sin_addr.s_addr == 0) {
 	ia = ipcache_gethostbyname(connectState->host, IP_BLOCKING_LOOKUP);
 	if (ia == NULL) {
-	    debug(5, 3, "comm_nbconnect: Unknown host: %s\n",
+	    debug(5, 3, "commConnectHandle: Unknown host: %s\n",
 		connectState->host);
-	    connectState->handler(fd,
+	    connectState->callback(fd,
 		COMM_ERROR,
 		connectState->data);
 	    return;
@@ -343,17 +365,19 @@ comm_nbconnect(int fd, void *data)
     case COMM_INPROGRESS:
 	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
-	    comm_nbconnect,
+	    commConnectHandle,
 	    (void *) connectState,
 	    0);
 	break;
     case COMM_OK:
-	connectState->handler(fd, COMM_OK, connectState->data);
+	if (vizSock > -1)
+	    vizHackSendPkt(&connectState->S, 2);
 	ipcacheCycleAddr(connectState->host);
+	connectState->callback(fd, COMM_OK, connectState->data);
 	break;
     default:
 	ipcacheRemoveBadAddr(connectState->host, connectState->S.sin_addr);
-	connectState->handler(fd, COMM_ERROR, connectState->data);
+	connectState->callback(fd, COMM_ERROR, connectState->data);
 	break;
     }
 }
@@ -1173,7 +1197,7 @@ comm_join_mcast_groups(int fd)
 	    debug(5, 0, "Unknown host: %s\n", s->key);
 	    continue;
 	}
-	for (i = 0; i < ia->count; i++) {
+	for (i = 0; i < (int) ia->count; i++) {
 	    mr.imr_multiaddr.s_addr = (ia->in_addrs + i)->s_addr;
 	    mr.imr_interface.s_addr = INADDR_ANY;
 	    x = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,

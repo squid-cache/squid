@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.31 1997/02/26 19:46:15 wessels Exp $
+ * $Id: icmp.cc,v 1.32 1997/03/04 05:16:32 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -81,7 +81,7 @@ icmpRecv(int unused1, void *unused2)
 	COMM_SELECT_READ,
 	(PF) icmpRecv,
 	(void *) -1, 0);
-    memset((char *) &preply, '\0', sizeof(pingerReplyData));
+    memset(&preply, '\0', sizeof(pingerReplyData));
     n = recv(icmp_sock,
 	(char *) &preply,
 	sizeof(pingerReplyData),
@@ -316,6 +316,8 @@ icmpClose(void)
 {
 #if USE_ICMP
     icmpQueueData *queue;
+    if (icmp_sock < 0)
+	return;
     debug(29, 0, "Closing ICMP socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     commSetSelect(icmp_sock, COMM_SELECT_READ, NULL, NULL, 0);

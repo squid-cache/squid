@@ -8,7 +8,7 @@ $port = 3128;
 
 $url = "http://$url/" if ($url =~ /^[-\w\.]+$/);
 print "Querying cache path to $url\n";
-$host = $1 if ($url =~ /^[^:]+:\/\/([^\/:])+/);
+$host = $1 if ($url =~ /^[^:]+:\/\/([^\/:]+)/);
 
 $sockaddr = 'S n a4 x8';
 ($name, $aliases, $proto) = getprotobyname("tcp");

@@ -16,8 +16,31 @@ Changes to squid-1.2.alpha1 ():
 	- Added the EINTR error response to handle badly interrupted
 	  system calls (Stewart Forster).
 
+==============================================================================
 
-Changes to squid-1.1.7 (February 25 1997):
+Changes to squid-1.1.8 (March 3, 1997):
+
+	- Fixed neighborsUdpAck() coredump bug for source-ping and
+	  non-peer ICP replies.
+	- Prevent ipcache_gethostbyname from changing an IP_DISPATCHED
+	  entry to IP_CACHED; fqdncache too.
+	- Made send_announce non-blocking.
+	- Force release of negative-cached objects upon receipt of
+	  no-cache request.
+	- Ignore ACLs which fail to parse.
+	- Added 'proxy_auth_ignore' regular expression list (Andreas
+	  Lamprecht).
+	- Changed how failed TCP connections affects peer up/down
+	  status.  Now retry TCP connections at regular intervals in the
+	  background and don't mark the peer as 'up' until a connection
+	  succeeds.
+	- Okay to increase FD_SETSIZE on FreeBSD 2.2.x (Peter Wemm).
+	- Fixed HTTP anonymizer bug in 'standard' mode.
+	- Fixed aclMatchDomainList() coredump for unresolvable addresses.
+	- Changed default disk low/high water marks to 90/95%.
+	- Prevent ftpget buffer overflow (Riku Saikkonen).
+
+Changes to squid-1.1.7 (February 25, 1997):
 
 	- Fixed urlParse to leave trailing slashes on FTP URLs.  Although
 	  stripping the slashes offers a slight hit rate increase, it

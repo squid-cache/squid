@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.96 1997/02/27 02:57:06 wessels Exp $
+ * $Id: ftp.cc,v 1.97 1997/03/04 05:16:28 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -125,7 +125,6 @@ typedef struct _Ftpdata {
     int got_marker;		/* denotes end of successful request */
     int reply_hdr_state;
     int authenticated;		/* This ftp request is authenticated */
-    ConnectStateData connectState;
 } FtpStateData;
 
 typedef struct ftp_ctrl_t {
@@ -212,10 +211,8 @@ ftpProcessReplyHeader(FtpStateData * data, const char *buf, int size)
 
     debug(11, 3, "ftpProcessReplyHeader: key '%s'\n", entry->key);
 
-    if (data->reply_hdr == NULL) {
+    if (data->reply_hdr == NULL)
 	data->reply_hdr = get_free_8k_page();
-	memset(data->reply_hdr, '\0', 8192);
-    }
     if (data->reply_hdr_state == 0) {
 	hdr_len = strlen(data->reply_hdr);
 	room = 8191 - hdr_len;
@@ -467,8 +464,7 @@ ftpSendRequest(int fd, FtpStateData * data)
     debug(9, 5, "ftpSendRequest: FD %d\n", fd);
 
     buflen = strlen(data->request->urlpath) + 256;
-    buf = (char *) get_free_8k_page();
-    memset(buf, '\0', buflen);
+    buf = get_free_8k_page();
 
     path = data->request->urlpath;
     mode = ftpTransferMode(path);
@@ -601,7 +597,6 @@ ftpStartComplete(void *data, int status)
 	    httpParseReplyHeaders(response, entry->mem_obj->reply);
 	    storeComplete(entry);
 	    ftpStateFree(-1, ftpData);
-	    xfree(url);
 	    return;
 	}
     }
@@ -617,7 +612,6 @@ ftpStartComplete(void *data, int status)
     if (ftpData->ftp_fd == COMM_ERROR) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	ftpStateFree(-1, ftpData);
-	xfree(url);
 	return;
     }
     /* Pipe/socket created ok */
@@ -626,14 +620,11 @@ ftpStartComplete(void *data, int status)
 	(PF) ftpStateFree,
 	(void *) ftpData);
     /* Now connect ... */
-    ftpData->connectState.fd = ftpData->ftp_fd;
-    ftpData->connectState.host = localhost;
-    ftpData->connectState.port = ftpget_port;
-    ftpData->connectState.handler = ftpConnectDone;
-    ftpData->connectState.data = ftpData;
-    comm_nbconnect(ftpData->ftp_fd, &ftpData->connectState);
-    xfree(url);
-    return;
+    commConnectStart(ftpData->ftp_fd,
+	localhost,
+	ftpget_port,
+	ftpConnectDone,
+	ftpData);
 }
 
 static void
@@ -662,8 +653,6 @@ ftpConnectDone(int fd, int status, void *data)
 	(void *) ftpData, 0);
     if (opt_no_ipcache)
 	ipcacheInvalidate(ftpData->request->host);
-    if (vizSock > -1)
-	vizHackSendPkt(&ftpData->connectState.S, 2);
 }
 
 static void

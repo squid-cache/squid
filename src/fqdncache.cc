@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.46 1997/02/26 19:46:12 wessels Exp $
+ * $Id: fqdncache.cc,v 1.47 1997/03/04 05:16:28 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -747,6 +747,7 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
     fqdncache_entry *f = NULL;
     const struct hostent *hp = NULL;
     unsigned int ip;
+    static char *static_name = NULL;
 
     if (!name)
 	fatal_dump("fqdncache_gethostbyaddr: NULL name");
@@ -775,6 +776,11 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
 	ip = inet_addr(name);
 	hp = gethostbyaddr((char *) &ip, 4, AF_INET);
 	if (hp && hp->h_name && (hp->h_name[0] != '\0') && fqdn_table) {
+	    if (f->status == FQDN_PENDING || f->status == FQDN_DISPATCHED) {
+		xfree(static_name);
+		static_name = xstrdup(hp->h_name);
+		return static_name;
+	    }
 	    /* good address, cached */
 	    fqdncache_add(name, fqdncache_create(), hp, 1);
 	    f = fqdncache_get(name);
