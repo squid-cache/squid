@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.37 1998/10/17 04:34:12 rousskov Exp $
+ * $Id: refresh.cc,v 1.38 1998/10/17 04:41:48 rousskov Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -266,9 +266,9 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
     storeAppendPrintf(sentry, "revalidate_stale\t%6d\t%6.2f\n",
 	rc->revalidate_stale, xpercent(rc->revalidate_stale, rc->total));
     storeAppendPrintf(sentry, "request_max_age_stale\t%6d\t%6.2f\n",
-	rc->request_max_age_stale, xpercent(rc->revalidate_stale, rc->total));
+	rc->request_max_age_stale, xpercent(rc->request_max_age_stale, rc->total));
     storeAppendPrintf(sentry, "response_expires_stale\t%6d\t%6.2f\n",
-	rc->response_expires_stale, xpercent(rc->revalidate_stale, rc->total));
+	rc->response_expires_stale, xpercent(rc->response_expires_stale, rc->total));
     storeAppendPrintf(sentry, "response_expires_fresh\t%6d\t%6.2f\n",
 	rc->response_expires_fresh, xpercent(rc->response_expires_fresh, rc->total));
     storeAppendPrintf(sentry, "conf_max_age_stale\t%6d\t%6.2f\n",
