@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.204 1998/10/10 14:57:40 wessels Exp $
+ * $Id: ipcache.cc,v 1.205 1998/10/19 04:44:38 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -266,7 +266,7 @@ ipcacheParse(const char *inbuf)
     int ttl;
     char A[32][16];
     xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(14, 5) ("ipcacheParse: parsing:\n%s", buf);
+    debug(14, 5) ("ipcacheParse: parsing:%s\n", buf);
     memset(&i, '\0', sizeof(i));
     i.expires = squid_curtime;
     i.status = IP_NEGATIVE_CACHED;
