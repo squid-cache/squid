@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.125 1998/04/21 20:41:20 wessels Exp $
+ * $Id: errorpage.cc,v 1.126 1998/04/22 02:07:32 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -61,7 +61,7 @@ static const struct {
 	ERR_SQUID_SIGNATURE,
 	    "\n<br clear=\"all\">\n"
 	    "<hr noshade size=1>\n"
-	    "Generated on %T by <a href=\"http://squid.nlanr.net/\">%s</a>@%h\n"
+	    "Generated %T by %h (<a href=\"http://squid.nlanr.net/Squid/\">%s</a>)\n"
 	    "</BODY></HTML>\n"
     }
 };
