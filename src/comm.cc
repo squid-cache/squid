@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.261 1998/05/28 04:42:28 wessels Exp $
+ * $Id: comm.cc,v 1.262 1998/05/28 04:44:01 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -898,7 +898,7 @@ comm_incoming(void)
 {
     int j;
     incame = 0;
-    if (theInIcpConnection > 0)
+    if (theInIcpConnection > 0) {
 	icpHandleUdp(theInIcpConnection, &incame);
         if (theInIcpConnection != theOutIcpConnection)
 	    icpHandleUdp(theOutIcpConnection, &incame);
