@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.9 2003/07/07 22:44:28 robertc Exp $
+#  $Id: Makefile.am,v 1.10 2003/07/08 22:50:15 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -45,6 +45,7 @@ MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
 
 DEBUG_OBJECTS = $(top_builddir)/src/debug.o\
+		$(top_builddir)/src/tools.o\
 		$(top_builddir)/src/globals.o
 
 http_range_test_SOURCES = http_range_test.cc
