@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.5 2001/12/27 13:09:35 hno Exp $
+# $Id: Makefile.am,v 1.6 2002/05/06 06:25:14 hno Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects VERSION=1.5
@@ -17,6 +17,7 @@ dist-hook:
 	    || exit 1; \
 	    cp -p $(srcdir)/$$subdir/*.h  $(distdir)/$$subdir \
 	      || exit 1; \
+	    rm $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
 
