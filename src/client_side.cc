@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.160 1997/11/29 08:03:17 wessels Exp $
+ * $Id: client_side.cc,v 1.161 1997/11/30 04:00:53 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -866,9 +866,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	fd, storeUrl(entry), http->out.offset);
     if (conn->chr != http) {
 	/* there is another object in progress, defer this one */
-	debug(0, 0) ("clientSendMoreData: Deferring delivery of\n");
-	debug(0, 0) ("--> %s\n", storeUrl(entry));
-	debug(0, 0) ("--> because other requests are in front\n");
+	debug(0, 0) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
 	freefunc(buf);
 	return;
     } else if (entry->store_status == STORE_ABORTED) {
@@ -1868,9 +1866,7 @@ clientHttpConnectionsOpen(void)
 {
     ushortlist *u;
     int fd;
-    debug(0, 0) ("clientHttpConnectionsOpen\n");
     for (u = Config.Port.http; u; u = u->next) {
-	debug(0, 0) ("clientHttpConnectionsOpen: port=%d\n", (int) u->i);
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
 	    0,
