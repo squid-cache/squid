@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.428 2003/09/21 00:30:47 robertc Exp $
+ * $Id: http.cc,v 1.429 2003/10/22 21:40:40 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -665,7 +665,8 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     /* DO NOT USE reply now */
     reply = NULL;
 
-    if (entry->getReply()->content_range)
+    if (entry->getReply()->sline.status == HTTP_PARTIAL_CONTENT &&
+            entry->getReply()->content_range)
         currentOffset = entry->getReply()->content_range->spec.offset;
 
     storeTimestampsSet(entry);
