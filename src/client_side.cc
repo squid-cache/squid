@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.270 1998/04/09 20:42:05 rousskov Exp $
+ * $Id: client_side.cc,v 1.271 1998/04/09 21:15:01 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -605,10 +605,10 @@ clientUpdateCounters(clientHttpRequest * http)
 	debug(33,2) ("clientUpdateCounters: peer %s real/guess: %d/%d for %s!\n",
 	    H->cd_host, real_hit, guess_hit, http->request->host);
 	cacheDigestGuessStatsUpdate(&Counter.cd.guess, real_hit, guess_hit);
-	if (peer)
+	if (peer) {
 	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
 		real_hit, guess_hit);
-	else {
+	} else {
 	    /* temporary paranoid debug */
 	    static int max_count = 200;
 	    if (max_count > 0) {

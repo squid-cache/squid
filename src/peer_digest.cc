@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.7 1998/04/09 20:42:06 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.8 1998/04/09 21:15:02 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -515,9 +515,12 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
     peer->digest.last_req_timestamp = squid_curtime;
     peer->digest.last_fetch_resp_time = fetch_resp_time;
     EBIT_CLR(peer->digest.flags, PD_REQUESTED);
-    /* update stats */
+    /* update global stats */
     kb_incr(&Counter.cd.kbytes_recv, (size_t)b_read);
     Counter.cd.msgs_recv++;
+    /* update peer stats */
+    kb_incr(&peer->digest.stats.kbytes_recv, (size_t)b_read);
+    peer->digest.stats.msgs_recv++;
     debug(72, 2) ("peerDigestFetchFinish: %s done; took: %d secs; expires: %s\n",
 	peer->host, fetch_resp_time, mkrfc1123(expires));
 }
