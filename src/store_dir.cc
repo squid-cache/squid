@@ -12,6 +12,7 @@ int ncache_dirs = 0;
 
 /* LOCALS */
 static int SwapDirsAllocated = 0;
+static SwapDir *SwapDirs = NULL;
 
 /* return full name to swapfile */
 char *
@@ -58,22 +59,23 @@ storeAddSwapDisk(const char *path, int size, int l1, int l2, int read_only)
 	fatal_dump("cache_dir pathname is too long");
     if (SwapDirs == NULL) {
 	SwapDirsAllocated = 4;
-	SwapDirs = xcalloc(SwapDirsAllocated, sizeof(char *));
+	SwapDirs = xcalloc(SwapDirsAllocated, sizeof(SwapDir *));
     }
     if (SwapDirsAllocated == ncache_dirs) {
 	SwapDirsAllocated <<= 1;
-	tmp = xcalloc(SwapDirsAllocated, sizeof(char *));
+	tmp = xcalloc(SwapDirsAllocated, sizeof(SwapDir *));
 	for (i = 0; i < ncache_dirs; i++)
 	    tmp[i] = SwapDirs[i];
 	xfree(SwapDirs);
 	SwapDirs = tmp;
     }
-    SwapDirs[ncache_dirs].path = xstrdup(path);
-    SwapDirs[ncache_dirs].max_size = size;
-    SwapDirs[ncache_dirs].l1 = l1;
-    SwapDirs[ncache_dirs].l2 = l2;
-    SwapDirs[ncache_dirs].read_only = read_only;
-    SwapDirs[ncache_dirs].map = file_map_create(MAX_FILES_PER_DIR);
+    tmp = SwapDirs+ncache_dirs;
+    tmp->path = xstrdup(path);
+    tmp->max_size = size;
+    tmp->l1 = l1;
+    tmp->l2 = l2;
+    tmp->read_only = read_only;
+    tmp->map = file_map_create(MAX_FILES_PER_DIR);
     return ++ncache_dirs;
 }
 
@@ -81,7 +83,7 @@ static int
 storeVerifyOrCreateDir(const char *path)
 {
     struct stat sb;
-    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode) == 0)
+    if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode))
 	return 0;
     safeunlink(path, 0);
     if (mkdir(path, 0777) < 0) {
@@ -94,9 +96,9 @@ storeVerifyOrCreateDir(const char *path)
     }
     debug(20, 1, "Created directory %s\n", path);
     if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode) != 0) {
-        sprintf(tmp_error_buf,
+	sprintf(tmp_error_buf,
 	    "Failed to create directory %s: %s", path, xstrerror());
-        fatal(tmp_error_buf);
+	fatal(tmp_error_buf);
     }
     return 1;
 }
@@ -196,6 +198,12 @@ storeSwapDir(int dirn)
     return SwapDirs[dirn].path;
 }
 
+int
+storeDirNumber(int swap_file_number)
+{
+    return swap_file_number >> SWAP_DIR_SHIFT;
+}
+
 void
 storeDirSwapLog(const StoreEntry * e)
 {
@@ -206,22 +214,22 @@ storeDirSwapLog(const StoreEntry * e)
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     /* Note this printf format appears in storeWriteCleanLog() too */
     sprintf(logmsg, "%08x %08x %08x %08x %9d %s\n",
-        (int) e->swap_file_number,
-        (int) e->timestamp,
-        (int) e->expires,
-        (int) e->lastmod,
-        e->object_len,
-        e->url);
+	(int) e->swap_file_number,
+	(int) e->timestamp,
+	(int) e->expires,
+	(int) e->lastmod,
+	e->object_len,
+	e->url);
     file_write(SwapDirs[dirn].swaplog_fd,
-        xstrdup(logmsg),
-        strlen(logmsg),
-        NULL,
-        NULL,
-        xfree);
+	xstrdup(logmsg),
+	strlen(logmsg),
+	NULL,
+	NULL,
+	xfree);
 }
 
-static char *
-storeDirSwapLogFile(int dirn)
+char *
+storeDirSwapLogFile(int dirn, const char *ext)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
     LOCAL_ARRAY(char, digit, 32);
@@ -229,11 +237,13 @@ storeDirSwapLogFile(int dirn)
 	xstrncpy(path, Config.Log.swap, SQUID_MAXPATHLEN - 64);
 	strcat(path, ".");
 	sprintf(digit, "%02d", dirn);
-	strncat(path, digit, 32);
+	strncat(path, digit, 3);
     } else {
 	xstrncpy(path, storeSwapDir(dirn), SQUID_MAXPATHLEN - 64);
 	strcat(path, "/log");
     }
+    if (ext)
+	strncat(path, ext, 16);
     return path;
 }
 
@@ -241,12 +251,12 @@ void
 storeDirOpenSwapLogs(void)
 {
     int i;
-    int fd;
     char *path;
+    int fd;
     SwapDir *SD;
     for (i = 0; i < ncache_dirs; i++) {
 	SD = &SwapDirs[i];
-	path = storeDirSwapLogFile(i);
+	path = storeDirSwapLogFile(i, NULL);
 	fd = file_open(path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
 	if (fd < 0) {
 	    debug(50, 1, "%s: %s\n", path, xstrerror());
@@ -254,4 +264,82 @@ storeDirOpenSwapLogs(void)
 	}
 	SD->swaplog_fd = fd;
     }
+}
+
+void
+storeDirCloseSwapLogs(void)
+{
+    int i;
+    SwapDir *SD;
+    for (i = 0; i < ncache_dirs; i++) {
+	SD = &SwapDirs[i];
+	file_close(SD->swaplog_fd);
+    }
+}
+
+FILE *
+storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
+{
+    char *swaplog_path = xstrdup(storeDirSwapLogFile(dirn, NULL));
+    char *clean_path = xstrdup(storeDirSwapLogFile(dirn, ".last-clean"));
+    char *new_path = xstrdup(storeDirSwapLogFile(dirn, ".new"));
+    struct stat log_sb;
+    struct stat clean_sb;
+    SwapDir *SD = &SwapDirs[dirn];
+    FILE *fp;
+    int fd;
+    if (stat(swaplog_path, &log_sb) < 0) {
+	debug(20, 1, "Cache Dir #%d: No log file\n", dirn);
+	safe_free(swaplog_path);
+	safe_free(clean_path);
+	safe_free(new_path);
+	return NULL;
+    }
+    debug(20, 1, "Rebuilding storage from %s\n", swaplog_path);
+    /* close the existing write-only FD */
+    file_close(SD->swaplog_fd);
+    /* open a write-only FD for the new log */
+    fd = file_open(new_path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
+    if (fd < 0) {
+	debug(50, 1, "%s: %s\n", new_path, xstrerror());
+	fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
+    }
+    SD->swaplog_fd = fd;
+    /* open a read-only stream of the old log */
+    fp = fopen(swaplog_path, "r");
+    if (fp == NULL) {
+	debug(50, 0, "%s: %s\n", swaplog_path, xstrerror());
+	fatal("Failed to open swap log for reading");
+    }
+    if (stat(clean_path, &clean_sb) < 0)
+	*clean_flag = 0;
+    else if (clean_sb.st_mtime < log_sb.st_mtime)
+	*clean_flag = 0;
+    else
+	*clean_flag = 1;
+    safeunlink(clean_path, 1);
+    safe_free(swaplog_path);
+    safe_free(clean_path);
+    safe_free(new_path);
+    return fp;
+}
+
+void
+storeDirCloseTmpSwapLog(int dirn)
+{
+    char *swaplog_path = xstrdup(storeDirSwapLogFile(dirn, NULL));
+    char *new_path = xstrdup(storeDirSwapLogFile(dirn, ".new"));
+    SwapDir *SD = &SwapDirs[dirn];
+    int fd;
+    if (rename(new_path, swaplog_path) < 0) {
+	debug(50, 0, "%s,%s: %s\n", new_path, swaplog_path, xstrerror());
+	fatal("storeDirCloseTmpSwapLog: rename failed");
+    }
+    file_close(SD->swaplog_fd);
+    fd = file_open(swaplog_path, NULL, O_WRONLY | O_CREAT, NULL, NULL);
+    if (fd < 0) {
+	debug(50, 1, "%s: %s\n", swaplog_path, xstrerror());
+	fatal("storeDirCloseTmpSwapLog: Failed to open swap log.");
+    }
+    SD->swaplog_fd = fd;
 }

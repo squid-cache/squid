@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.139 1997/03/29 04:45:17 wessels Exp $
+ * $Id: main.cc,v 1.140 1997/04/25 06:38:21 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -692,7 +692,7 @@ main(int argc, char **argv)
 	    ftpServerClose();
 	    icmpClose();
 	    _db_rotate_log();	/* cache.log */
-	    storeWriteCleanLog();
+	    storeWriteCleanLogs();
 	    storeRotateLog();	/* store.log */
 	    stat_rotate_log();	/* access.log */
 	    useragentRotateLog();	/* useragent.log */

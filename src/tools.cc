@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.97 1997/02/26 19:46:26 wessels Exp $
+ * $Id: tools.cc,v 1.98 1997/04/25 06:38:25 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -277,7 +277,7 @@ death(int sig)
 	(void) close(theHttpConnection);
     if (theInIcpConnection >= 0)
 	(void) close(theInIcpConnection);
-    storeWriteCleanLog();
+    storeWriteCleanLogs();
     PrintRusage(NULL, debug_log);
     if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
 	/* skip if more than 10 days old */
@@ -335,7 +335,7 @@ normal_shutdown(void)
 	safeunlink(Config.pidFilename, 0);
 	leave_suid();
     }
-    storeWriteCleanLog();
+    storeWriteCleanLogs();
     PrintRusage(NULL, debug_log);
     storeCloseLog();
     statCloseLog();
@@ -382,7 +382,7 @@ fatal(const char *message)
      * used in early initialization phases, long before we ever
      * get to the store log. */
     if (!store_rebuilding)
-	storeWriteCleanLog();
+	storeWriteCleanLogs();
     fatal_common(message);
     exit(1);
 }
@@ -394,7 +394,7 @@ fatal_dump(const char *message)
     if (message)
 	fatal_common(message);
     if (opt_catch_signals)
-	storeWriteCleanLog();
+	storeWriteCleanLogs();
     abort();
 }
 
@@ -471,7 +471,7 @@ safeunlink(const char *s, int quiet)
 	quiet ? NULL : xstrdup(s));
 #else
     if (unlink(s) < 0 && !quiet)
-	debug(50, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+	debug(50, 1, "safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
 #endif
 }
 
