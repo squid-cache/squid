@@ -623,11 +623,17 @@
 /* Define to 1 if you have the <varargs.h> header file. */
 #undef HAVE_VARARGS_H
 
+/* If your system have va_copy */
+#undef HAVE_VA_COPY
+
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
 /* __int64 is defined in system headers */
 #undef HAVE___INT64
+
+/* Some systems have __va_copy instead of va_copy */
+#undef HAVE___VA_COPY
 
 /* By default (for now anyway) Squid includes options which allows the cache
    administrator to violate the HTTP protocol specification in terms of cache
