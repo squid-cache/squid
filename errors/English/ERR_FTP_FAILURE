@@ -10,13 +10,10 @@ while trying to retrieve the URL:
 <A HREF="%U">%U</A>
 <P>
 Squid sent the following FTP command:
-<PRE><STRONG>
-	%f
-</STRONG></PRE>
+<blockquote><strong><pre>%f</pre></strong></blockquote>
 and then received this reply
-<PRE><STRONG>
-	%F
-</STRONG></PRE>
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
 This might be caused by an FTP URL with an absolute path (which does
 not comply with RFC 1738).  If this is the cause, then the file
