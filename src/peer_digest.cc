@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.16 1998/04/22 16:21:58 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.17 1998/04/23 03:21:17 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -592,10 +592,15 @@ peerDigestSetCBlock(peer *peer, const char *buf)
     debug(72,2) ("\t size: %d bytes, e-cnt: %d, e-util: %d%%\n",
 	cblock.mask_size, cblock.count,
 	xpercentInt(cblock.count, cblock.capacity));
-    /* check version requirements */
+    /* check version requirements (both ways) */
     if (cblock.ver.required > CacheDigestVer.current) {
 	debug(72,1) ("%s digest requires version %d; have: %d\n",
 	    peer->host, cblock.ver.required, CacheDigestVer.current);
+	return 0;
+    }
+    if (cblock.ver.current < CacheDigestVer.required) {
+	debug(72,1) ("%s digest is version %d; we require: %d\n",
+	    peer->host, cblock.ver.current, CacheDigestVer.required);
 	return 0;
     }
     /* check consistency */
