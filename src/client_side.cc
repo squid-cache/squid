@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.417 1998/10/18 08:10:05 wessels Exp $
+ * $Id: client_side.cc,v 1.418 1998/10/19 04:40:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1656,7 +1656,7 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
 static log_type
 clientProcessRequest2(clientHttpRequest * http)
 {
-    const request_t *r = http->request;
+    request_t *r = http->request;
     StoreEntry *e;
     e = http->entry = storeGetPublic(http->uri, r->method);
     if (r->method == METHOD_HEAD && e == NULL) {
@@ -1693,6 +1693,11 @@ clientProcessRequest2(clientHttpRequest * http)
 	assert(!r->flags.nocache);
 	ipcacheReleaseInvalid(r->host);
 	/* continue! */
+    }
+    if (r->flags.nocache && e->store_status == STORE_PENDING) {
+	debug(33, 3) ("Clearing no-cache for STORE_PENDING request\n\t%s\n",
+	    storeUrl(e));
+	r->flags.nocache = 0;
     }
 #endif
     if (r->flags.nocache) {
