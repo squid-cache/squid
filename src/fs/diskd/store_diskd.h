@@ -27,7 +27,7 @@ struct _diskdinfo_t {
     int away;
     struct {
 	char *buf;
-	link_list *stack;
+	char *inuse_map;
 	int id;
     } shm;
     int magic1;
