@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.26 2003/01/23 00:38:04 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.27 2003/02/04 23:24:42 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -963,6 +963,14 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
     assert(auth_user_request->scheme_data != NULL);
     ntlm_user = static_cast<ntlm_user_t *>(auth_user->scheme_data);
     ntlm_request = static_cast< ntlm_request_t *>(auth_user_request->scheme_data);
+    /* Check that we are in the client side, where we can generate
+     * auth challenges */
+    if (!conn) {
+	ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
+	debug(29, 1) ("authenticateNTLMAuthenticateUser: attempt to perform authentication without a connection!\n");
+	return;
+    }
+    
     switch (ntlm_request->auth_state) {
     case AUTHENTICATE_STATE_NONE:
 	/* we've recieved a negotiate request. pass to a helper */
