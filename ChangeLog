@@ -1,3 +1,26 @@
+Future/Current Changes to squid-1.2.beta16 (Feb 23, 1998):
+
+	- Replaced _http_reply with HttpReply. HttpReply is a stand-alone object
+	  that is responsible for parsing, swapping, and comm_writing of HTTP
+	  replies. Moved these functions from various modules into HttpReply
+	  module.
+
+	- Added HttpStatusLine, HttpHeader, HttpBody.
+
+	- All HTTP headers are now parsed and stored in a "compiled" form in the
+	  HttpHeader object.  This allows for a great flexibility in header
+	  processing and builds basis for support of yet unsupported HTTP headers.
+
+	- Added Packer, a memory/store redirector with a printf interface.  Packer
+	  allows to comm_write() or swap() an object using a single routine.
+
+	- Added MemBuf, a auto-growing memory buffer with printf capabilities.
+	  MemBuf replaces most of old local buffers for compiling text messages.
+	
+	- Added MemPool that maintains a pre-allocated pool of opaque objects.
+	  Used to eliminate memory thrashing when allocating small objects (e.g.
+	  field-names and field-value in http headers).
+
 Changes to squid-1.2.beta15 (Feb 13, 1998):
 
 	NOTE: This version has changes which may cause all or part
