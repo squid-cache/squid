@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.20 2002/12/06 23:19:15 hno Exp $
+ * $Id: external_acl.cc,v 1.21 2002/12/09 16:55:24 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -334,12 +334,14 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 		DUMP_EXT_ACL_TYPE(PORT);
 		DUMP_EXT_ACL_TYPE(PATH);
 		DUMP_EXT_ACL_TYPE(METHOD);
+#if USE_SSL
 	    case _external_acl_format::EXT_ACL_USER_CERT:
 		storeAppendPrintf(sentry, " %%USER_CERT_%s", format->header);
 		break;
 	    case _external_acl_format::EXT_ACL_CA_CERT:
 		storeAppendPrintf(sentry, " %%USER_CERT_%s", format->header);
 		break;
+#endif
 	    case _external_acl_format::EXT_ACL_UNKNOWN:
 	    case _external_acl_format::EXT_ACL_END:
 		fatal("unknown external_acl format error");
