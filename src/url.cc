@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.97 1998/06/24 23:04:59 wessels Exp $
+ * $Id: url.cc,v 1.98 1998/07/15 23:56:24 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -59,7 +59,6 @@ const char *ProtocolStr[] =
     "TOTAL"
 };
 
-static int url_ok[256];
 static const char *const hex = "0123456789abcdef";
 static request_t *urnParse(method_t method, char *urn);
 static const char *const valid_hostname_chars =
@@ -72,8 +71,6 @@ static const char *const valid_hostname_chars =
 "abcdefghijklmnopqrstuvwxyz"
 "0123456789-.";
 #endif
-static const char *const valid_url_chars =
-"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$";
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -109,31 +106,6 @@ urlInitialize(void)
     int i;
     debug(23, 5) ("urlInitialize: Initializing...\n");
     assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
-    for (i = 0; i < 256; i++)
-	url_ok[i] = strchr(valid_url_chars, (char) i) ? 1 : 0;
-
-}
-
-/* Encode prohibited char in string */
-/* return the pointer to new (allocated) string */
-char *
-url_escape(const char *url)
-{
-    const char *p;
-    char *q;
-    char *tmpline = xcalloc(1, MAX_URL);
-    q = tmpline;
-    for (p = url; *p; p++) {
-	if (url_ok[(int) (*p)])
-	    *q++ = *p;
-	else {
-	    *q++ = '%';		/* Means hex coming */
-	    *q++ = hex[(int) ((*p) >> 4)];
-	    *q++ = hex[(int) ((*p) & 15)];
-	}
-    }
-    *q++ = '\0';
-    return tmpline;
 }
 
 method_t
