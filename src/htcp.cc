@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.15 1998/08/25 19:04:00 wessels Exp $
+ * $Id: htcp.cc,v 1.16 1998/08/26 05:34:51 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -41,6 +41,7 @@ typedef struct _htcpDataHeader htcpDataHeader;
 typedef struct _htcpAuthHeader htcpAuthHeader;
 typedef struct _htcpStuff htcpStuff;
 typedef struct _htcpSpecifier htcpSpecifier;
+typedef struct _htcpDetail htcpDetail;
 
 struct _Countstr {
     u_short length;
@@ -94,18 +95,19 @@ struct _htcpSpecifier {
     char *req_hdrs;
 };
 
+struct _htcpDetail {
+    char *resp_hdrs;
+    char *entity_hdrs;
+    char *cache_hdrs;
+};
+
 struct _htcpStuff {
     int op;
     int rr;
     int f1;
     int response;
-    const char *method;
-    const char *uri;
-    const char *version;
-    const char *req_hdrs;
-    const char *resp_hdrs;
-    const char *entity_hdrs;
-    const char *cache_hdrs;
+    htcpSpecifier S;
+    htcpDetail D;
 };
 
 enum {
@@ -153,6 +155,7 @@ static int htcpOutSocket = -1;
 
 static char *htcpBuildPacket(htcpStuff * stuff, ssize_t * len);
 static htcpSpecifier *htcpUnpackSpecifier(char *buf, int sz);
+static htcpDetail *htcpUnpackDetail(char *buf, int sz);
 static int htcpUnpackCountstr(char *buf, int sz, char **str);
 static ssize_t htcpBuildAuth(char *buf, size_t buflen);
 static ssize_t htcpBuildCountstr(char *buf, size_t buflen, const char *s);
@@ -162,6 +165,7 @@ static ssize_t htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static void htcpFreeSpecifier(htcpSpecifier * s);
+static void htcpFreeDetail(htcpDetail * s);
 static void htcpHandle(char *buf, int sz, struct sockaddr_in *from);
 static void htcpHandleData(char *buf, int sz, struct sockaddr_in *from);
 static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
@@ -239,19 +243,19 @@ htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
     ssize_t s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->method);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.method);
     if (s < 0)
 	return s;
     off += s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->uri);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.uri);
     if (s < 0)
 	return s;
     off += s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->version);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.version);
     if (s < 0)
 	return s;
     off += s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->req_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.req_hdrs);
     if (s < 0)
 	return s;
     off += s;
@@ -264,15 +268,15 @@ htcpBuildDetail(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
     ssize_t s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->resp_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.resp_hdrs);
     if (s < 0)
 	return s;
     off += s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->entity_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.entity_hdrs);
     if (s < 0)
 	return s;
     off += s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->cache_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.cache_hdrs);
     if (s < 0)
 	return s;
     off += s;
@@ -405,6 +409,15 @@ htcpFreeSpecifier(htcpSpecifier * s)
     xfree(s);
 }
 
+static void
+htcpFreeDetail(htcpDetail * d)
+{
+    safe_free(d->resp_hdrs);
+    safe_free(d->entity_hdrs);
+    safe_free(d->cache_hdrs);
+    xfree(d);
+}
+
 static int
 htcpUnpackCountstr(char *buf, int sz, char **str)
 {
@@ -446,7 +459,6 @@ htcpUnpackSpecifier(char *buf, int sz)
     }
     buf += o;
     sz -= o;
-
     o = htcpUnpackCountstr(buf, sz, &s->uri);
     if (o < 0) {
 	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack URI\n");
@@ -455,7 +467,6 @@ htcpUnpackSpecifier(char *buf, int sz)
     }
     buf += o;
     sz -= o;
-
     o = htcpUnpackCountstr(buf, sz, &s->version);
     if (o < 0) {
 	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack VERSION\n");
@@ -464,7 +475,6 @@ htcpUnpackSpecifier(char *buf, int sz)
     }
     buf += o;
     sz -= o;
-
     o = htcpUnpackCountstr(buf, sz, &s->req_hdrs);
     if (o < 0) {
 	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack REQ-HDRS\n");
@@ -473,9 +483,42 @@ htcpUnpackSpecifier(char *buf, int sz)
     }
     buf += o;
     sz -= o;
-
     debug(31, 1) ("htcpUnpackSpecifier: %d bytes left\n", sz);
     return s;
+}
+
+static htcpDetail *
+htcpUnpackDetail(char *buf, int sz)
+{
+    htcpDetail *d = xcalloc(1, sizeof(htcpDetail));
+    int o;
+    debug(31, 1) ("htcpUnpackDetail: %d bytes\n", (int) sz);
+    o = htcpUnpackCountstr(buf, sz, &d->resp_hdrs);
+    if (o < 0) {
+	debug(31, 1) ("htcpUnpackDetail: failed to unpack RESP_HDRS\n");
+	htcpFreeDetail(d);
+	return NULL;
+    }
+    buf += o;
+    sz -= o;
+    o = htcpUnpackCountstr(buf, sz, &d->entity_hdrs);
+    if (o < 0) {
+	debug(31, 1) ("htcpUnpackDetail: failed to unpack ENTITY_HDRS\n");
+	htcpFreeDetail(d);
+	return NULL;
+    }
+    buf += o;
+    sz -= o;
+    o = htcpUnpackCountstr(buf, sz, &d->cache_hdrs);
+    if (o < 0) {
+	debug(31, 1) ("htcpUnpackDetail: failed to unpack CACHE_HDRS\n");
+	htcpFreeDetail(d);
+	return NULL;
+    }
+    buf += o;
+    sz -= o;
+    debug(31, 1) ("htcpUnpackDetail: %d bytes left\n", sz);
+    return d;
 }
 
 static void
@@ -499,16 +542,16 @@ htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 	memBufDefInit(&mb);
 	packerToMemInit(&p, &mb);
 	httpHeaderInit(&hdr, hoHtcpReply);
-	stuff.method = spec->method;
-	stuff.uri = spec->uri;
-	stuff.version = spec->version;
-	stuff.req_hdrs = spec->req_hdrs;
+	stuff.S.method = spec->method;
+	stuff.S.uri = spec->uri;
+	stuff.S.version = spec->version;
+	stuff.S.req_hdrs = spec->req_hdrs;
 	httpHeaderPutInt(&hdr, HDR_AGE,
 	    e->timestamp <= squid_curtime ?
 	    squid_curtime - e->timestamp : 0);
 	httpHeaderPackInto(&hdr, &p);
-	stuff.resp_hdrs = xstrdup(mb.buf);
-	debug(31,1)("htcpTstReply: resp_hdrs = {%s}\n", stuff.resp_hdrs);
+	stuff.D.resp_hdrs = xstrdup(mb.buf);
+	debug(31,1)("htcpTstReply: resp_hdrs = {%s}\n", stuff.D.resp_hdrs);
 	memBufReset(&mb);
 	httpHeaderReset(&hdr);
 	if (e->expires > -1)
@@ -516,8 +559,8 @@ htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 	if (e->lastmod > -1)
 	    httpHeaderPutTime(&hdr, HDR_LAST_MODIFIED, e->lastmod);
 	httpHeaderPackInto(&hdr, &p);
-	stuff.entity_hdrs = xstrdup(mb.buf);
-	debug(31,1)("htcpTstReply: entity_hdrs = {%s}\n", stuff.entity_hdrs);
+	stuff.D.entity_hdrs = xstrdup(mb.buf);
+	debug(31,1)("htcpTstReply: entity_hdrs = {%s}\n", stuff.D.entity_hdrs);
 	memBufReset(&mb);
 	httpHeaderReset(&hdr);
 	if ((host = urlHostname(spec->uri))) {
@@ -529,8 +572,8 @@ htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 	    }
 	}
 	httpHeaderPackInto(&hdr, &p);
-	stuff.cache_hdrs = xstrdup(mb.buf);
-	debug(31,1)("htcpTstReply: cache_hdrs = {%s}\n", stuff.cache_hdrs);
+	stuff.D.cache_hdrs = xstrdup(mb.buf);
+	debug(31,1)("htcpTstReply: cache_hdrs = {%s}\n", stuff.D.cache_hdrs);
 	memBufClean(&mb);
 	httpHeaderClean(&hdr);
 	packerClean(&p);
@@ -563,16 +606,32 @@ htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 static void
 htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
-    peer *p = whichPeer(from);
-    if (NULL == p) {
-	debug(31, 1) ("htcpHandle: HTCP message from non-peer: %s:%d\n",
-	    inet_ntoa(from->sin_addr), (int) ntohs(from->sin_port));
-	return;
-    }
+    htcpReplyData htcpReply;
+    cache_key *key = NULL;
+    htcpDetail *d;
+    char *t;
+    memset(&htcpReply, '\0', sizeof(htcpReply));
+    httpHeaderInit(&htcpReply.hdr, hoHtcpReply);
+    htcpReply.msg_id = ntohl(hdr->msg_id);
+    htcpReply.hit = hdr->F1 ? 0 : 1;
     if (hdr->F1)
 	debug(31, 1) ("htcpHandleTstResponse: MISS\n");
     else
 	debug(31, 1) ("htcpHandleTstResponse: HIT\n");
+    d = htcpUnpackDetail(buf, sz);
+    if (d == NULL) {
+	debug(31,1)("htcpHandleTstResponse: bad DETAIL\n");
+	return;
+    }
+    if ((t = d->resp_hdrs))
+        httpHeaderParse(&htcpReply.hdr, t, t+strlen(t));
+    if ((t = d->entity_hdrs))
+        httpHeaderParse(&htcpReply.hdr, t, t+strlen(t));
+    if ((t = d->cache_hdrs))
+        httpHeaderParse(&htcpReply.hdr, t, t+strlen(t));
+    assert(key);
+    neighborsHtcpReply(key, &htcpReply, from);
+    htcpFreeDetail(d);
 }
 
 static void
@@ -778,16 +837,16 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     stuff.rr = RR_REQUEST;
     stuff.f1 = 1;
     stuff.response = 0;
-    stuff.method = RequestMethodStr[req->method];
-    stuff.uri = storeUrl(e);
-    stuff.version = vbuf;
+    stuff.S.method = RequestMethodStr[req->method];
+    stuff.S.uri = storeUrl(e);
+    stuff.S.version = vbuf;
     httpBuildRequestHeader(req, req, e, &hdr, -1, 0);
     memBufDefInit(&mb);
     packerToMemInit(&pa, &mb);
     httpHeaderPackInto(&hdr, &pa);
     httpHeaderClean(&hdr);
     packerClean(&pa);
-    stuff.req_hdrs = mb.buf;
+    stuff.S.req_hdrs = mb.buf;
     pkt = htcpBuildPacket(&stuff, &pktlen);
     if (pkt == NULL) {
 	debug(31, 0) ("htcpQuery: htcpBuildPacket() failed\n");
