@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: gopher.cc,v 1.2 1996/02/23 05:41:23 wessels Exp $";
+static char rcsid[] = "$Id: gopher.cc,v 1.3 1996/02/23 06:56:31 wessels Exp $";
 /* 
  * File:         gopher.c
  * Description:  state machine for gopher retrieval protocol.  Based on Anawat's
@@ -683,7 +683,7 @@ int gopherReadReplyTimeout(fd, data)
     CacheInfo->log_append(CacheInfo,
 	entry->url,
 	"0.0.0.0",
-	store_mem_obj(entry, e_current_len),
+	entry->mem_obj->e_current_len,
 	"ERR_203",		/* GOPHER READ TIMEOUT */
 	"GET");
 #endif
@@ -719,7 +719,7 @@ void gopherLifetimeExpire(fd, data)
     CacheInfo->log_append(CacheInfo,
 	entry->url,
 	"0.0.0.0",
-	store_mem_obj(entry, e_current_len),
+	entry->mem_obj->e_current_len,
 	"ERR_210",		/* GOPHER LIFETIME EXPIRE */
 	"GET");
 #endif
@@ -744,8 +744,8 @@ int gopherReadReply(fd, data)
     entry = data->entry;
     if (entry->flag & DELETE_BEHIND) {
 	if (storeClientWaiting(entry)) {
-	    clen = store_mem_obj(entry, e_current_len);
-	    off = store_mem_obj(entry, e_lowest_offset);
+	    clen = entry->mem_obj->e_current_len;
+	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > GOPHER_DELETE_GAP) {
 		debug(3, "gopherReadReply: Read deferred for Object: %s\n",
 		    entry->key);
@@ -791,7 +791,7 @@ int gopherReadReply(fd, data)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_219",	/* GOPHER NO CLIENTS, BIG OBJ */
 		"GET");
 #endif
@@ -803,7 +803,7 @@ int gopherReadReply(fd, data)
     len = read(fd, buf, TEMP_BUF_SIZE - 1);	/* leave one space for \0 in gopherToHTML */
     debug(5, "gopherReadReply - fd: %d read len:%d\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (store_mem_obj(entry, e_current_len) == 0))) {
+    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	debug(1, "gopherReadReply - error reading: %s\n",
 	    xstrerror());
 	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
@@ -821,7 +821,7 @@ int gopherReadReply(fd, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_205",		/* GOPHER READ FAIL */
 	    "GET");
 #endif
@@ -839,7 +839,7 @@ int gopherReadReply(fd, data)
 	comm_close(fd);
 	freeGopherData(data);
 
-    } else if (((store_mem_obj(entry, e_current_len) + len) > getGopherMax()) &&
+    } else if (((entry->mem_obj->e_current_len + len) > getGopherMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -878,7 +878,7 @@ int gopherReadReply(fd, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_207",		/* GOPHER CLIENT ABORT */
 	    "GET");
 #endif
@@ -927,7 +927,7 @@ int gopherSendComplete(fd, buf, size, errflag, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_201",		/* GOPHER CONNECT FAIL */
 	    "GET");
 #endif
@@ -1056,7 +1056,7 @@ int gopherStart(unusedfd, url, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_208",		/* GOPHER INVALID URL */
 	    "GET");
 #endif
@@ -1082,7 +1082,7 @@ int gopherStart(unusedfd, url, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_211",		/* GOPHER NO FD'S */
 	    "GET");
 #endif
@@ -1109,7 +1109,7 @@ int gopherStart(unusedfd, url, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_202",		/* GOPHER DNS FAIL */
 	    "GET");
 #endif
@@ -1156,7 +1156,7 @@ int gopherStart(unusedfd, url, entry)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_204",	/* GOPHER CONNECT FAIL */
 		"GET");
 #endif

@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: comm.cc,v 1.1 1996/02/22 06:23:53 wessels Exp $";
+static char rcsid[] = "$Id: comm.cc,v 1.2 1996/02/23 06:56:30 wessels Exp $";
 /* 
  * File:         comm.c
  * Description:  socket-based communication facility.  Adapted from DHT
@@ -1246,7 +1246,7 @@ int fd_of_first_client(e)
 {
     int fd;
 
-    fd = store_mem_obj(e, fd_of_first_client);
+    fd = e->mem_obj->fd_of_first_client;
 
     if (fd > 0) {
 	if (e == fd_table[fd].store_entry) {

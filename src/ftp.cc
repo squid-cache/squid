@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: ftp.cc,v 1.2 1996/02/23 05:41:22 wessels Exp $";
+static char rcsid[] = "$Id: ftp.cc,v 1.3 1996/02/23 06:56:31 wessels Exp $";
 /* 
  *  File:         ftp.c
  *  Description:  state machine for ftp retrieval protocol.  Based on John's
@@ -227,7 +227,7 @@ void ftpLifetimeExpire(fd, data)
     CacheInfo->log_append(CacheInfo,
 	entry->url,
 	"0.0.0.0",
-	store_mem_obj(entry, e_current_len),
+	entry->mem_obj->e_current_len,
 	"ERR_210",		/* FTP LIFETIME EXPIRE */
 	data->type ? data->type : "NULL");
 #endif
@@ -252,8 +252,8 @@ int ftpReadReply(fd, data)
     if (entry->flag & DELETE_BEHIND) {
 	if (storeClientWaiting(entry)) {
 	    /* check if we want to defer reading */
-	    clen = store_mem_obj(entry, e_current_len);
-	    off = store_mem_obj(entry, e_lowest_offset);
+	    clen = entry->mem_obj->e_current_len;
+	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > FTP_DELETE_GAP) {
 		debug(3, "ftpReadReply: Read deferred for Object: %s\n",
 		    entry->key);
@@ -286,7 +286,7 @@ int ftpReadReply(fd, data)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_319",	/* FTP NO CLIENTS, BIG OBJECT */
 		data->type ? data->type : "NULL");
 #endif
@@ -297,7 +297,7 @@ int ftpReadReply(fd, data)
     len = read(fd, buf, 4096);
     debug(5, "ftpReadReply FD %d, len=%d\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (store_mem_obj(entry, e_current_len) == 0))) {
+    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	if (len < 0)
 	    debug(1, "ftpReadReply - error reading: %s\n", xstrerror());
 	sprintf(tmp_error_buf, CACHED_RETRIEVE_ERROR_MSG,
@@ -316,7 +316,7 @@ int ftpReadReply(fd, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_305",		/* FTP READ ERROR */
 	    data->type ? data->type : "NULL");
 #endif
@@ -336,7 +336,7 @@ int ftpReadReply(fd, data)
 	comm_close(fd);
 	storeComplete(entry);
 	safe_free(data);
-    } else if (((store_mem_obj(entry, e_current_len) + len) > getFtpMax()) &&
+    } else if (((entry->mem_obj->e_current_len + len) > getFtpMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -366,7 +366,7 @@ int ftpReadReply(fd, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_307",		/* FTP CLIENT ABORT */
 	    data->type ? data->type : "NULL");
 #endif
@@ -442,7 +442,7 @@ int ftpStart(unusedfd, url, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_309",		/* FTP INVALID URL */
 	    data->type ? data->type : "NULL");
 #endif
@@ -477,7 +477,7 @@ int ftpStart(unusedfd, url, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_308",		/* FTP FTPGET FAIL */
 	    data->type ? data->type : "NULL");
 #endif

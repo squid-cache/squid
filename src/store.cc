@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: store.cc,v 1.2 1996/02/23 05:41:28 wessels Exp $";
+static char rcsid[] = "$Id: store.cc,v 1.3 1996/02/23 06:56:35 wessels Exp $";
 /* 
  *  File:         store.c
  *  Description:  Storage manager for the Cache
@@ -245,7 +245,7 @@ void destroy_store_mem_obj(e)
      StoreEntry *e;
 {
     if (e && e->mem_obj) {
-	safe_free(store_mem_obj(e, mime_hdr));
+	safe_free(e->mem_obj->mime_hdr);
 	safe_free(e->mem_obj);
 	meta_data.store_in_mem_objects--;
     }
@@ -355,13 +355,13 @@ void storeFreeEntry(e)
     debug(5, "storeFreeEntry: Freeing %s\n", e->url);
 
     if (has_mem_obj(e)) {
-	store_mem_size -= store_mem_obj(e, e_current_len) - store_mem_obj(e, e_lowest_offset);
+	store_mem_size -= e->mem_obj->e_current_len - e->mem_obj->e_lowest_offset;
 	debug(8, "storeFreeEntry: Freeing %d in-memory bytes\n",
-	    store_mem_obj(e, e_current_len));
+	    e->mem_obj->e_current_len);
 	debug(8, "storeFreeEntry: store_mem_size = %d\n", store_mem_size);
-	if (store_mem_obj(e, data)) {
-	    store_mem_obj(e, data)->mem_free(store_mem_obj(e, data));
-	    store_mem_obj(e, data) = NULL;
+	if (e->mem_obj->data) {
+	    e->mem_obj->data->mem_free(e->mem_obj->data);
+	    e->mem_obj->data = NULL;
 	    --meta_data.hot_vm;
 	}
     }
@@ -370,19 +370,19 @@ void storeFreeEntry(e)
     if (!(e->flag & KEY_URL))
 	safe_free(e->key);
     if (has_mem_obj(e)) {
-	safe_free(store_mem_obj(e, mime_hdr));
+	safe_free(e->mem_obj->mime_hdr);
 	/* Leave an unzeroed pointer to the abort msg for posterity */
-	if (store_mem_obj(e, e_abort_msg))
-	    free(store_mem_obj(e, e_abort_msg));
-	safe_free(store_mem_obj(e, pending));
+	if (e->mem_obj->e_abort_msg)
+	    free(e->mem_obj->e_abort_msg);
+	safe_free(e->mem_obj->pending);
 	/* look up to free client_list */
-	if (store_mem_obj(e, client_list)) {
+	if (e->mem_obj->client_list) {
 	    int i;
-	    for (i = 0; i < store_mem_obj(e, client_list_size); ++i) {
-		if (store_mem_obj(e, client_list[i]))
-		    safe_free(store_mem_obj(e, client_list[i]));
+	    for (i = 0; i < e->mem_obj->client_list_size; ++i) {
+		if (e->mem_obj->client_list[i])
+		    safe_free(e->mem_obj->client_list[i]);
 	    }
-	    safe_free(store_mem_obj(e, client_list));
+	    safe_free(e->mem_obj->client_list);
 	}
     }
     destroy_StoreEntry(e);
@@ -394,15 +394,15 @@ void storeFreeEntryData(e)
      StoreEntry *e;
 {
     debug(5, "storeFreeEntryData: Freeing data-buffer only %s\n", e->url);
-    store_mem_size -= store_mem_obj(e, e_current_len) - store_mem_obj(e, e_lowest_offset);
+    store_mem_size -= e->mem_obj->e_current_len - e->mem_obj->e_lowest_offset;
     debug(8, "storeFreeEntryData: Freeing %d in-memory bytes\n",
-	store_mem_obj(e, e_current_len));
+	e->mem_obj->e_current_len);
     debug(8, "storeFreeEntryData: store_mem_size = %d\n", store_mem_size);
     e->object_len = 0;
-    store_mem_obj(e, e_current_len) = 0;
-    if (store_mem_obj(e, data)) {
-	store_mem_obj(e, data)->mem_free(store_mem_obj(e, data));
-	store_mem_obj(e, data) = NULL;
+    e->mem_obj->e_current_len = 0;
+    if (e->mem_obj->data) {
+	e->mem_obj->data->mem_free(e->mem_obj->data);
+	e->mem_obj->data = NULL;
     }
 }
 
@@ -421,28 +421,28 @@ void storePurgeMem(e)
 	fatal_dump(NULL);
     }
     /* free up memory data */
-    if (store_mem_obj(e, data)) {
-	store_mem_obj(e, data)->mem_free(store_mem_obj(e, data));
-	store_mem_obj(e, data) = NULL;
+    if (e->mem_obj->data) {
+	e->mem_obj->data->mem_free(e->mem_obj->data);
+	e->mem_obj->data = NULL;
 	--meta_data.hot_vm;
     }
-    store_mem_size -= e->object_len - store_mem_obj(e, e_lowest_offset);
+    store_mem_size -= e->object_len - e->mem_obj->e_lowest_offset;
     debug(8, "storePurgeMem: Freeing %d in-memory bytes\n",
 	e->object_len);
     debug(8, "storePurgeMem: store_mem_size = %d\n", store_mem_size);
     storeSetMemStatus(e, NOT_IN_MEMORY);
-    store_mem_obj(e, e_current_len) = 0;
+    e->mem_obj->e_current_len = 0;
     /* free up pending list table */
-    safe_free(store_mem_obj(e, pending));
-    store_mem_obj(e, pending_list_size) = 0;
+    safe_free(e->mem_obj->pending);
+    e->mem_obj->pending_list_size = 0;
     /* free up client list table and entries */
-    if (store_mem_obj(e, client_list)) {
+    if (e->mem_obj->client_list) {
 	int i;
-	for (i = 0; i < store_mem_obj(e, client_list_size); ++i) {
-	    if (store_mem_obj(e, client_list[i]))
-		safe_free(store_mem_obj(e, client_list[i]));
+	for (i = 0; i < e->mem_obj->client_list_size; ++i) {
+	    if (e->mem_obj->client_list[i])
+		safe_free(e->mem_obj->client_list[i]);
 	}
-	safe_free(store_mem_obj(e, client_list));
+	safe_free(e->mem_obj->client_list);
     }
     destroy_store_mem_obj(e);
 }
@@ -509,10 +509,10 @@ int storeUnlockObject(e)
 	    /* Briefly lock to replace content with abort message */
 	    e->lock_count++;
 	    storeFreeEntryData(e);
-	    store_mem_obj(e, data) = memInit();
-	    storeAppend(e, store_mem_obj(e, e_abort_msg), strlen(store_mem_obj(e, e_abort_msg)));
-	    e->object_len = store_mem_obj(e, e_current_len)
-		= strlen(store_mem_obj(e, e_abort_msg));
+	    e->mem_obj->data = memInit();
+	    storeAppend(e, e->mem_obj->e_abort_msg, strlen(e->mem_obj->e_abort_msg));
+	    e->object_len = e->mem_obj->e_current_len
+		= strlen(e->mem_obj->e_abort_msg);
 	    BIT_RESET(e->flag, ABORT_MSG_PENDING);
 	    e->lock_count--;
 	}
@@ -578,7 +578,7 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
     e->flag = 0;
     e->type_id = request_type_id;
     if (mime_hdr) {
-	store_mem_obj(e, mime_hdr) = xstrdup(mime_hdr);
+	e->mem_obj->mime_hdr = xstrdup(mime_hdr);
 	if (mime_refresh_request(mime_hdr))
 	    BIT_SET(e->flag, REFRESH_REQUEST);
 	else
@@ -605,7 +605,7 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
     e->lock_count = 0;
     BIT_RESET(e->flag, KEY_CHANGE);
     BIT_RESET(e->flag, CLIENT_ABORT_REQUEST);
-    store_mem_obj(e, data) = memInit();
+    e->mem_obj->data = memInit();
     meta_data.hot_vm++;
     e->refcount = 0;
     e->lastref = cached_curtime;
@@ -629,14 +629,14 @@ StoreEntry *storeAdd(url, type_notused, mime_hdr, cachable, html_request, reques
     }
 
     /* allocate pending list */
-    store_mem_obj(e, pending_list_size) = MIN_PENDING;
-    store_mem_obj(e, pending) = (struct pentry **)
-	xcalloc(store_mem_obj(e, pending_list_size), sizeof(struct pentry *));
+    e->mem_obj->pending_list_size = MIN_PENDING;
+    e->mem_obj->pending = (struct pentry **)
+	xcalloc(e->mem_obj->pending_list_size, sizeof(struct pentry *));
 
     /* allocate client list */
-    store_mem_obj(e, client_list_size) = MIN_CLIENT;
-    store_mem_obj(e, client_list) = (ClientStatusEntry **)
-	xcalloc(store_mem_obj(e, client_list_size), sizeof(ClientStatusEntry *));
+    e->mem_obj->client_list_size = MIN_CLIENT;
+    e->mem_obj->client_list = (ClientStatusEntry **)
+	xcalloc(e->mem_obj->client_list_size, sizeof(ClientStatusEntry *));
 
     if (table == (HashID) 0) {
 	storeCreateHashTable(urlcmp);
@@ -726,34 +726,34 @@ int storeRegister(e, fd, handler, data)
      *  it'll grow the array.
      */
     /* find an empty slot */
-    for (i = 0; i < (int) store_mem_obj(e, pending_list_size); i++)
-	if (store_mem_obj(e, pending[i]) == NULL)
+    for (i = 0; i < (int) e->mem_obj->pending_list_size; i++)
+	if (e->mem_obj->pending[i] == NULL)
 	    break;
 
-    if (i == store_mem_obj(e, pending_list_size)) {
+    if (i == e->mem_obj->pending_list_size) {
 	/* grow the array */
 	struct pentry **tmp = NULL;
 
-	old_size = store_mem_obj(e, pending_list_size);
+	old_size = e->mem_obj->pending_list_size;
 
 	/* set list_size to an appropriate amount */
-	store_mem_obj(e, pending_list_size) += MIN_PENDING;
+	e->mem_obj->pending_list_size += MIN_PENDING;
 
 	/* allocate, and copy old pending list over to the new one */
-	tmp = (struct pentry **) xcalloc(store_mem_obj(e, pending_list_size),
+	tmp = (struct pentry **) xcalloc(e->mem_obj->pending_list_size,
 	    sizeof(struct pentry *));
 	for (j = 0; j < old_size; j++)
-	    tmp[j] = store_mem_obj(e, pending[j]);
+	    tmp[j] = e->mem_obj->pending[j];
 
 	/* free the old list and set the new one */
-	safe_free(store_mem_obj(e, pending));
-	store_mem_obj(e, pending) = tmp;
+	safe_free(e->mem_obj->pending);
+	e->mem_obj->pending = tmp;
 
 	debug(10, "storeRegister: grew pending list to %d for slot %d.\n",
-	    store_mem_obj(e, pending_list_size), i);
+	    e->mem_obj->pending_list_size, i);
 
     }
-    store_mem_obj(e, pending[i]) = pe;
+    e->mem_obj->pending[i] = pe;
     return 0;
 }
 
@@ -770,21 +770,21 @@ int storeUnregister(e, fd)
     debug(10, "storeUnregister: called for FD %d <URL:%s>\n", fd, e->url);
 
     /* look for entry in client_list */
-    if (store_mem_obj(e, client_list)) {
-	for (i = 0; i < store_mem_obj(e, client_list_size); ++i) {
-	    if (store_mem_obj(e, client_list[i]) && (store_mem_obj(e, client_list[i]->fd) == fd)) {
+    if (e->mem_obj->client_list) {
+	for (i = 0; i < e->mem_obj->client_list_size; ++i) {
+	    if (e->mem_obj->client_list[i] && (e->mem_obj->client_list[i]->fd == fd)) {
 		/* reset fd to zero as a mark for empty slot */
-		safe_free(store_mem_obj(e, client_list[i]));
-		store_mem_obj(e, client_list[i]) = NULL;
+		safe_free(e->mem_obj->client_list[i]);
+		e->mem_obj->client_list[i] = NULL;
 	    }
 	}
     }
     /* walk the entire list looking for matched fd */
-    for (i = 0; i < (int) store_mem_obj(e, pending_list_size); i++) {
-	if (store_mem_obj(e, pending[i]) && (store_mem_obj(e, pending[i])->fd == fd)) {
+    for (i = 0; i < (int) e->mem_obj->pending_list_size; i++) {
+	if (e->mem_obj->pending[i] && (e->mem_obj->pending[i]->fd == fd)) {
 	    /* found the match fd */
-	    safe_free(store_mem_obj(e, pending[i]));
-	    store_mem_obj(e, pending[i]) = NULL;
+	    safe_free(e->mem_obj->pending[i]);
+	    e->mem_obj->pending[i] = NULL;
 	    freed++;
 	}
     }
@@ -805,35 +805,35 @@ void storeDeleteBehind(e)
     int i;
 
     debug(3, "storeDeleteBehind: Object: %s\n", e->key);
-    debug(3, "storeDeleteBehind:\tOriginal Lowest Offset: %d \n", store_mem_obj(e, e_lowest_offset));
+    debug(3, "storeDeleteBehind:\tOriginal Lowest Offset: %d \n", e->mem_obj->e_lowest_offset);
 
-    free_up_to = store_mem_obj(e, e_lowest_offset);
+    free_up_to = e->mem_obj->e_lowest_offset;
     target_offset = 0;
 
-    for (i = 0; i < store_mem_obj(e, client_list_size); ++i) {
-	if (store_mem_obj(e, client_list[i]) == NULL)
+    for (i = 0; i < e->mem_obj->client_list_size; ++i) {
+	if (e->mem_obj->client_list[i] == NULL)
 	    continue;
-	if (((store_mem_obj(e, client_list[i]->last_offset) < target_offset) ||
+	if (((e->mem_obj->client_list[i]->last_offset < target_offset) ||
 		(target_offset == 0))) {
 	    n_client++;
-	    target_offset = store_mem_obj(e, client_list[i]->last_offset);
+	    target_offset = e->mem_obj->client_list[i]->last_offset;
 	}
     }
 
     if (n_client == 0) {
 	debug(3, "storeDeleteBehind:\tThere is no client in the list.\n");
 	debug(3, "\t\tTry to delete as fast as possible.\n");
-	target_offset = store_mem_obj(e, e_current_len);
+	target_offset = e->mem_obj->e_current_len;
     }
     debug(3, "storeDeleteBehind:\tThe target offset is : %d\n", target_offset);
     if (target_offset) {
-	free_up_to = (int) store_mem_obj(e, data)->mem_free_data_upto(store_mem_obj(e, data),
+	free_up_to = (int) e->mem_obj->data->mem_free_data_upto(e->mem_obj->data,
 	    target_offset);
 	debug(3, "                   Object is freed upto : %d\n", free_up_to);
-	store_mem_size -= free_up_to - store_mem_obj(e, e_lowest_offset);
+	store_mem_size -= free_up_to - e->mem_obj->e_lowest_offset;
     }
     debug(3, "storeDeleteBehind:\tOutgoing Lowest Offset : %d\n", free_up_to);
-    store_mem_obj(e, e_lowest_offset) = free_up_to;
+    e->mem_obj->e_lowest_offset = free_up_to;
 }
 
 /* Call handlers waiting for  data to be appended to E. */
@@ -843,17 +843,17 @@ static void InvokeHandlers(e)
     int i;
 
     /* walk the entire list looking for valid handlers */
-    for (i = 0; i < (int) store_mem_obj(e, pending_list_size); i++) {
-	if (store_mem_obj(e, pending[i]) && store_mem_obj(e, pending[i])->handler) {
+    for (i = 0; i < (int) e->mem_obj->pending_list_size; i++) {
+	if (e->mem_obj->pending[i] && e->mem_obj->pending[i]->handler) {
 	    /* 
 	     *  Once we call the handler, it is no longer needed 
 	     *  until the write process sends all available data 
 	     *  from the object entry. 
 	     */
-	    (store_mem_obj(e, pending[i])->handler)
-		(store_mem_obj(e, pending[i])->fd, e, store_mem_obj(e, pending[i])->data);
-	    safe_free(store_mem_obj(e, pending[i]));
-	    store_mem_obj(e, pending[i]) = NULL;
+	    (e->mem_obj->pending[i]->handler)
+		(e->mem_obj->pending[i]->fd, e, e->mem_obj->pending[i]->data);
+	    safe_free(e->mem_obj->pending[i]);
+	    e->mem_obj->pending[i] = NULL;
 	}
     }
 
@@ -886,7 +886,7 @@ int storeAppend(e, data, len)
      int len;
 {
     /* validity check -- sometimes it's called with bogus values */
-    if (e == NULL || !has_mem_obj(e) || store_mem_obj(e, data) == NULL) {
+    if (e == NULL || !has_mem_obj(e) || e->mem_obj->data == NULL) {
 	debug(0, "storeAppend (len = %d): Invalid StoreEntry, aborting...\n",
 	    len);
 	if (len < 512)
@@ -903,11 +903,11 @@ int storeAppend(e, data, len)
 	debug(8, "storeAppend: growing store_mem_size by %d\n", len);
 	debug(8, "storeAppend: store_mem_size = %d\n", store_mem_size);
 
-	(void) store_mem_obj(e, data)->mem_append(store_mem_obj(e, data),
+	(void) e->mem_obj->data->mem_append(e->mem_obj->data,
 	    data, len);
-	store_mem_obj(e, e_current_len) += len;
+	e->mem_obj->e_current_len += len;
 	debug(8, "storeAppend: e_current_len = %d\n",
-	    store_mem_obj(e, e_current_len));
+	    e->mem_obj->e_current_len);
     }
     if ((e->status != STORE_ABORTED) && !(e->flag & DELAY_SENDING))
 	InvokeHandlers(e);
@@ -968,47 +968,47 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
 
     if ((flag < 0) && (flag != DISK_EOF)) {
 	debug(0, "storeSwapInHandle: SwapIn failure (err code = %d).\n", flag);
-	put_free_8k_page(store_mem_obj(e, e_swap_buf));
+	put_free_8k_page(e->mem_obj->e_swap_buf);
 	storeSetMemStatus(e, NOT_IN_MEMORY);
-	file_close(store_mem_obj(e, swap_fd));
+	file_close(e->mem_obj->swap_fd);
 	swapInError(-1, e);	/* Invokes storeAbort() and completes the I/O */
 	return -1;
     }
     debug(5, "storeSwapInHandle: e->swap_offset   = %d\n",
-	store_mem_obj(e, swap_offset));
+	e->mem_obj->swap_offset);
     debug(5, "storeSwapInHandle: len              = %d\n",
 	len);
     debug(5, "storeSwapInHandle: e->e_current_len = %d\n",
-	store_mem_obj(e, e_current_len));
+	e->mem_obj->e_current_len);
     debug(5, "storeSwapInHandle: e->object_len    = %d\n",
 	e->object_len);
 
     /* always call these, even if len == 0 */
-    store_mem_obj(e, swap_offset) += len;
+    e->mem_obj->swap_offset += len;
     storeAppend(e, buf, len);
 
-    if (store_mem_obj(e, e_current_len) < e->object_len && flag != DISK_EOF) {
+    if (e->mem_obj->e_current_len < e->object_len && flag != DISK_EOF) {
 	/* some more data to swap in, reschedule */
-	file_read(store_mem_obj(e, swap_fd),
-	    store_mem_obj(e, e_swap_buf),
+	file_read(e->mem_obj->swap_fd,
+	    e->mem_obj->e_swap_buf,
 	    SWAP_BUF,
-	    store_mem_obj(e, swap_offset),
+	    e->mem_obj->swap_offset,
 	    (FILE_READ_HD) storeSwapInHandle,
 	    (caddr_t) e);
     } else {
 	/* complete swapping in */
 	storeSetMemStatus(e, IN_MEMORY);
-	put_free_8k_page(store_mem_obj(e, e_swap_buf));
-	file_close(store_mem_obj(e, swap_fd));
+	put_free_8k_page(e->mem_obj->e_swap_buf);
+	file_close(e->mem_obj->swap_fd);
 	debug(5, "storeSwapInHandle: SwapIn complete: <URL:%s> from %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
-	if (store_mem_obj(e, e_current_len) != e->object_len) {
+	if (e->mem_obj->e_current_len != e->object_len) {
 	    debug(0, "storeSwapInHandle: WARNING! Object size mismatch.\n");
 	    debug(0, "  --> <URL:%s>\n", e->url);
 	    debug(0, "  --> Expecting %d bytes from file: %s\n", e->object_len,
 		storeSwapFullPath(e->swap_file_number, NULL));
 	    debug(0, "  --> Only read %d bytes\n",
-		store_mem_obj(e, e_current_len));
+		e->mem_obj->e_current_len);
 	}
 	if (e->flag & RELEASE_REQUEST)
 	    storeRelease(e);
@@ -1026,13 +1026,13 @@ int storeSwapInStart(e)
     if ((e->swap_status != SWAP_OK) || (e->swap_file_number < 0)) {
 	debug(0, "storeSwapInStart: <No filename:%d> ? <URL:%s>\n", e->swap_file_number, e->url);
 	if (has_mem_obj(e))
-	    store_mem_obj(e, swap_fd) = -1;
+	    e->mem_obj->swap_fd = -1;
 	return -1;
     }
     /* create additional structure for object in memory */
     create_store_mem_obj(e);
 
-    store_mem_obj(e, swap_fd) = fd =
+    e->mem_obj->swap_fd = fd =
 	file_open(storeSwapFullPath(e->swap_file_number, NULL), NULL, O_RDONLY);
     if (fd < 0) {
 	debug(0, "storeSwapInStart: Unable to open swapfile: %s for\n\t<URL:%s>\n",
@@ -1044,19 +1044,19 @@ int storeSwapInStart(e)
     debug(5, "storeSwapInStart: initialized swap file '%s' for <URL:%s>\n",
 	storeSwapFullPath(e->swap_file_number, NULL), e->url);
 
-    store_mem_obj(e, data) = memInit();
+    e->mem_obj->data = memInit();
     ++meta_data.hot_vm;
 
     storeSetMemStatus(e, SWAPPING_IN);
-    store_mem_obj(e, swap_offset) = 0;
+    e->mem_obj->swap_offset = 0;
 
-    store_mem_obj(e, e_swap_buf) = get_free_8k_page();
+    e->mem_obj->e_swap_buf = get_free_8k_page();
 
     /* start swapping daemon */
-    file_read(store_mem_obj(e, swap_fd),
-	store_mem_obj(e, e_swap_buf),
+    file_read(e->mem_obj->swap_fd,
+	e->mem_obj->e_swap_buf,
 	SWAP_BUF,
-	store_mem_obj(e, swap_offset),
+	e->mem_obj->swap_offset,
 	(FILE_READ_HD) storeSwapInHandle,
 	(caddr_t) e);
     return 0;
@@ -1075,7 +1075,7 @@ void storeSwapOutHandle(fd, flag, e)
 
     e->timestamp = cached_curtime;
     storeSwapFullPath(e->swap_file_number, filename);
-    page_ptr = store_mem_obj(e, e_swap_buf);
+    page_ptr = e->mem_obj->e_swap_buf;
 
     if (flag < 0) {
 	debug(1, "storeSwapOutHandle: SwapOut failure (err code = %d).\n",
@@ -1100,21 +1100,21 @@ void storeSwapOutHandle(fd, flag, e)
 	return;
     }
     debug(6, "storeSwapOutHandle: e->swap_offset    = %d\n",
-	store_mem_obj(e, swap_offset));
+	e->mem_obj->swap_offset);
     debug(6, "storeSwapOutHandle: e->e_swap_buf_len = %d\n",
-	store_mem_obj(e, e_swap_buf_len));
+	e->mem_obj->e_swap_buf_len);
     debug(6, "storeSwapOutHandle: e->object_len     = %d\n",
 	e->object_len);
     debug(6, "storeSwapOutHandle: store_swap_size   = %dk\n",
 	store_swap_size);
 
-    store_mem_obj(e, swap_offset) += store_mem_obj(e, e_swap_buf_len);
+    e->mem_obj->swap_offset += e->mem_obj->e_swap_buf_len;
     /* round up */
-    store_swap_size += ((store_mem_obj(e, e_swap_buf_len) + 1023) >> 10);
-    if (store_mem_obj(e, swap_offset) >= e->object_len) {
+    store_swap_size += ((e->mem_obj->e_swap_buf_len + 1023) >> 10);
+    if (e->mem_obj->swap_offset >= e->object_len) {
 	/* swapping complete */
 	e->swap_status = SWAP_OK;
-	file_close(store_mem_obj(e, swap_fd));
+	file_close(e->mem_obj->swap_fd);
 	debug(5, "storeSwapOutHandle: SwapOut complete: <URL:%s> to %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
 	put_free_8k_page(page_ptr);
@@ -1137,10 +1137,10 @@ void storeSwapOutHandle(fd, flag, e)
 	return;
     }
     /* write some more data, reschedule itself. */
-    storeCopy(e, store_mem_obj(e, swap_offset), SWAP_BUF,
-	store_mem_obj(e, e_swap_buf), &(store_mem_obj(e, e_swap_buf_len)));
-    file_write(store_mem_obj(e, swap_fd), store_mem_obj(e, e_swap_buf),
-	store_mem_obj(e, e_swap_buf_len), store_mem_obj(e, e_swap_access),
+    storeCopy(e, e->mem_obj->swap_offset, SWAP_BUF,
+	e->mem_obj->e_swap_buf, &(e->mem_obj->e_swap_buf_len));
+    file_write(e->mem_obj->swap_fd, e->mem_obj->e_swap_buf,
+	e->mem_obj->e_swap_buf_len, e->mem_obj->e_swap_access,
 	storeSwapOutHandle, e);
     return;
 
@@ -1168,12 +1168,12 @@ int storeSwapOutStart(e)
 	e->swap_file_number = -1;
 	return -1;
     }
-    store_mem_obj(e, swap_fd) = fd;
+    e->mem_obj->swap_fd = fd;
     debug(5, "storeSwapOutStart: Begin SwapOut <URL:%s> to FD %d FILE %s.\n",
 	e->url, fd, swapfilename);
 
     e->swap_file_number = swapfileno;
-    if ((store_mem_obj(e, e_swap_access) = file_write_lock(store_mem_obj(e, swap_fd))) < 0) {
+    if ((e->mem_obj->e_swap_access = file_write_lock(e->mem_obj->swap_fd)) < 0) {
 	debug(0, "storeSwapOutStart: Unable to lock swapfile: %s\n",
 	    swapfilename);
 	file_map_bit_reset(e->swap_file_number);
@@ -1181,18 +1181,18 @@ int storeSwapOutStart(e)
 	return -1;
     }
     e->swap_status = SWAPPING_OUT;
-    store_mem_obj(e, swap_offset) = 0;
-    store_mem_obj(e, e_swap_buf) = get_free_8k_page();
-    store_mem_obj(e, e_swap_buf_len) = 0;
+    e->mem_obj->swap_offset = 0;
+    e->mem_obj->e_swap_buf = get_free_8k_page();
+    e->mem_obj->e_swap_buf_len = 0;
 
-    storeCopy(e, 0, SWAP_BUF, store_mem_obj(e, e_swap_buf),
-	&(store_mem_obj(e, e_swap_buf_len)));
+    storeCopy(e, 0, SWAP_BUF, e->mem_obj->e_swap_buf,
+	&(e->mem_obj->e_swap_buf_len));
 
     /* start swapping daemon */
-    if (file_write(store_mem_obj(e, swap_fd),
-	    store_mem_obj(e, e_swap_buf),
-	    store_mem_obj(e, e_swap_buf_len),
-	    store_mem_obj(e, e_swap_access),
+    if (file_write(e->mem_obj->swap_fd,
+	    e->mem_obj->e_swap_buf,
+	    e->mem_obj->e_swap_buf_len,
+	    e->mem_obj->e_swap_access,
 	    storeSwapOutHandle,
 	    e) != DISK_OK) {
 	/* This shouldn't happen */
@@ -1386,7 +1386,7 @@ void storeComplete(e)
 {
     debug(5, "storeComplete: <URL:%s>\n", e->url);
 
-    e->object_len = store_mem_obj(e, e_current_len);
+    e->object_len = e->mem_obj->e_current_len;
     InvokeHandlers(e);
     e->lastref = cached_curtime;
     e->status = STORE_OK;
@@ -1400,7 +1400,7 @@ void storeComplete(e)
 	storeSwapOutStart(e);
     }
     /* free up incoming MIME */
-    safe_free(store_mem_obj(e, mime_hdr));
+    safe_free(e->mem_obj->mime_hdr);
     CacheInfo->proto_newobject(CacheInfo, CacheInfo->proto_id(e->url),
 	e->object_len, FALSE);
     if (e->flag & RELEASE_REQUEST)
@@ -1435,9 +1435,9 @@ int storeAbort(e, msg)
 
     /* Count bytes faulted through cache but not moved to disk */
     CacheInfo->proto_touchobject(CacheInfo, CacheInfo->proto_id(e->url),
-	store_mem_obj(e, e_current_len));
+	e->mem_obj->e_current_len);
     CacheInfo->proto_touchobject(CacheInfo, CacheInfo->proto_id("abort:"),
-	store_mem_obj(e, e_current_len));
+	e->mem_obj->e_current_len);
 
     mk_mime_hdr(mime_hdr,
 	(time_t) getNegativeTTL(),
@@ -1452,13 +1452,13 @@ int storeAbort(e, msg)
 	    debug(0, "storeAbort: WARNING: Must increase msg length!");
 	}
 	storeAppend(e, abort_msg, strlen(abort_msg));
-	store_mem_obj(e, e_abort_msg) = xstrdup(abort_msg);
+	e->mem_obj->e_abort_msg = xstrdup(abort_msg);
 	/* Set up object for negative caching */
 	BIT_SET(e->flag, ABORT_MSG_PENDING);
     }
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
-    e->object_len = store_mem_obj(e, e_current_len);
+    e->object_len = e->mem_obj->e_current_len;
 
     /* Call handlers so they can report error. */
     InvokeHandlers(e);
@@ -1639,9 +1639,9 @@ int storeGetMemSpace(size, check_vm_number)
 	    insert_dynamic_array(LRU_list, e);
 	} else {
 	    n_cantpurge++;
-	    mem_cantpurge += store_mem_obj(e, e_current_len);
+	    mem_cantpurge += e->mem_obj->e_current_len;
 	    debug(5, "storeGetMemSpace: Can't purge %7d bytes: %s\n",
-		store_mem_obj(e, e_current_len), e->url);
+		e->mem_obj->e_current_len, e->url);
 	    if (e->swap_status != SWAP_OK)
 		debug(5, "storeGetMemSpace: --> e->swap_status != SWAP_OK\n");
 	    if (e->lock_count)
@@ -1758,10 +1758,10 @@ int compareSize(e1, e2)
 	debug(1, "compareSize: Called with at least one null argument, shouldn't happen.\n");
 	return 0;
     }
-    if (store_mem_obj(*e1, e_current_len) > store_mem_obj(*e2, e_current_len))
+    if ((*e1)->mem_obj->e_current_len > (*e2)->mem_obj->e_current_len)
 	return (1);
 
-    if (store_mem_obj(*e1, e_current_len) < store_mem_obj(*e2, e_current_len))
+    if ((*e1)->mem_obj->e_current_len < (*e2)->mem_obj->e_current_len)
 	return (-1);
 
     return (0);
@@ -1877,7 +1877,7 @@ int storeGetSwapSpace(size)
 		    debug(2, "\t\te->swap_status == SWAPPING_OUT\n");
 		}
 		locked++;
-		locked_size += store_mem_obj(e, e_current_len);
+		locked_size += e->mem_obj->e_current_len;
 	    }
 	    link_ptr = next;
 	}			/* while, end of one bucket of hash table */
@@ -2098,12 +2098,12 @@ int storeCopy(e, stateoffset, maxSize, buf, size)
 {
     int available_to_write = 0;
 
-    available_to_write = store_mem_obj(e, e_current_len) - stateoffset;
+    available_to_write = e->mem_obj->e_current_len - stateoffset;
 
-    if (stateoffset < store_mem_obj(e, e_lowest_offset)) {
+    if (stateoffset < e->mem_obj->e_lowest_offset) {
 	/* this should not happen. Logic race !!! */
 	debug(1, "storeCopy: Client Request a chunk of data in area lower than the lowest_offset\n");
-	debug(1, "           Current Lowest offset : %d\n", store_mem_obj(e, e_lowest_offset));
+	debug(1, "           Current Lowest offset : %d\n", e->mem_obj->e_lowest_offset);
 	debug(1, "           Requested offset      : %d\n", stateoffset);
 	/* can't really do anything here. Client may hang until lifetime runout. */
 	return 0;
@@ -2115,7 +2115,7 @@ int storeCopy(e, stateoffset, maxSize, buf, size)
 	*size, stateoffset);
 
     if (*size > 0)
-	(void) store_mem_obj(e, data)->mem_copy(store_mem_obj(e, data), stateoffset, buf, *size);
+	(void) e->mem_obj->data->mem_copy(e->mem_obj->data, stateoffset, buf, *size);
 
     return *size;
 }
@@ -2127,15 +2127,15 @@ int storeClientWaiting(e)
 {
     int i;
 
-    if (store_mem_obj(e, client_list)) {
-	for (i = 0; i < store_mem_obj(e, client_list_size); ++i) {
-	    if (store_mem_obj(e, client_list[i]))
+    if (e->mem_obj->client_list) {
+	for (i = 0; i < e->mem_obj->client_list_size; ++i) {
+	    if (e->mem_obj->client_list[i])
 		return 1;
 	}
     }
-    if (store_mem_obj(e, pending)) {
-	for (i = 0; i < (int) store_mem_obj(e, pending_list_size); ++i) {
-	    if (store_mem_obj(e, pending[i]))
+    if (e->mem_obj->pending) {
+	for (i = 0; i < (int) e->mem_obj->pending_list_size; ++i) {
+	    if (e->mem_obj->pending[i])
 		return 1;
 	}
     }
@@ -2149,11 +2149,11 @@ int storeClientListSearch(e, fd)
 {
     int i;
 
-    if (!store_mem_obj(e, client_list))
+    if (!e->mem_obj->client_list)
 	return -1;
-    for (i = 0; i < store_mem_obj(e, client_list_size); ++i) {
-	if (store_mem_obj(e, client_list[i]) &&
-	    (fd == store_mem_obj(e, client_list[i]->fd)))
+    for (i = 0; i < e->mem_obj->client_list_size; ++i) {
+	if (e->mem_obj->client_list[i] &&
+	    (fd == e->mem_obj->client_list[i]->fd))
 	    return i;
     }
     return -1;
@@ -2168,24 +2168,24 @@ void storeClientListAdd(e, fd, last_offset)
     int i;
     /* look for empty slot */
 
-    if (store_mem_obj(e, client_list)) {
-	for (i = 0; (i < store_mem_obj(e, client_list_size))
-	    && (store_mem_obj(e, client_list[i]) != NULL); ++i);
+    if (e->mem_obj->client_list) {
+	for (i = 0; (i < e->mem_obj->client_list_size)
+	    && (e->mem_obj->client_list[i] != NULL); ++i);
 
-	if (i == store_mem_obj(e, client_list_size)) {
+	if (i == e->mem_obj->client_list_size) {
 	    /* have to expand client_list */
-	    store_mem_obj(e, client_list_size) += MIN_CLIENT;
-	    store_mem_obj(e, client_list) = (ClientStatusEntry **) xrealloc(store_mem_obj(e, client_list), store_mem_obj(e, client_list_size) * sizeof(ClientStatusEntry *));
+	    e->mem_obj->client_list_size += MIN_CLIENT;
+	    e->mem_obj->client_list = (ClientStatusEntry **) xrealloc(e->mem_obj->client_list, e->mem_obj->client_list_size * sizeof(ClientStatusEntry *));
 	}
     } else {
-	store_mem_obj(e, client_list_size) += MIN_CLIENT;
-	store_mem_obj(e, client_list) = (ClientStatusEntry **) xcalloc(store_mem_obj(e, client_list_size), sizeof(ClientStatusEntry *));
+	e->mem_obj->client_list_size += MIN_CLIENT;
+	e->mem_obj->client_list = (ClientStatusEntry **) xcalloc(e->mem_obj->client_list_size, sizeof(ClientStatusEntry *));
 	i = 0;
     }
 
-    store_mem_obj(e, client_list[i]) = (ClientStatusEntry *) xcalloc(1, sizeof(ClientStatusEntry));
-    store_mem_obj(e, client_list[i]->fd) = fd;
-    store_mem_obj(e, client_list[i]->last_offset) = last_offset;
+    e->mem_obj->client_list[i] = (ClientStatusEntry *) xcalloc(1, sizeof(ClientStatusEntry));
+    e->mem_obj->client_list[i]->fd = fd;
+    e->mem_obj->client_list[i]->last_offset = last_offset;
 }
 
 /* same to storeCopy but also register client fd and last requested offset
@@ -2200,13 +2200,13 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
 {
     int next_offset;
     int client_list_index;
-    int available_to_write = store_mem_obj(e, e_current_len) - stateoffset;
+    int available_to_write = e->mem_obj->e_current_len - stateoffset;
 
-    if (stateoffset < store_mem_obj(e, e_lowest_offset)) {
+    if (stateoffset < e->mem_obj->e_lowest_offset) {
 	/* this should not happen. Logic race !!! */
 	debug(1, "storeClientCopy: Client Request a chunk of data in area lower than the lowest_offset\n");
 	debug(1, "                              fd : %d\n", fd);
-	debug(1, "           Current Lowest offset : %d\n", store_mem_obj(e, e_lowest_offset));
+	debug(1, "           Current Lowest offset : %d\n", e->mem_obj->e_lowest_offset);
 	debug(1, "           Requested offset      : %d\n", stateoffset);
 	/* can't really do anything here. Client may hang until lifetime runout. */
 	return 0;
@@ -2220,13 +2220,13 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
     /* update the lowest requested offset */
     next_offset = (stateoffset + *size);
     if ((client_list_index = storeClientListSearch(e, fd)) >= 0) {
-	store_mem_obj(e, client_list[client_list_index]->last_offset) = next_offset;
+	e->mem_obj->client_list[client_list_index]->last_offset = next_offset;
     } else {
 	storeClientListAdd(e, fd, next_offset);
     }
 
     if (*size > 0)
-	(void) store_mem_obj(e, data)->mem_copy(store_mem_obj(e, data), stateoffset, buf, *size);
+	(void) e->mem_obj->data->mem_copy(e->mem_obj->data, stateoffset, buf, *size);
 
     /* see if we can get rid of some data if we are in "delete behind" mode . */
     if (e->flag & DELETE_BEHIND) {
@@ -2277,8 +2277,8 @@ int storeGrep(e, string, nbytes)
      char *string;
      int nbytes;
 {
-    if (e && has_mem_obj(e) && store_mem_obj(e, data) && (nbytes > 0))
-	return store_mem_obj(e, data)->mem_grep(store_mem_obj(e, data), string, nbytes);
+    if (e && has_mem_obj(e) && e->mem_obj->data && (nbytes > 0))
+	return e->mem_obj->data->mem_grep(e->mem_obj->data, string, nbytes);
 
     return 0;
 }
@@ -2654,8 +2654,8 @@ int storePendingNClients(e)
 
     if (!e->mem_obj)
 	return 0;
-    for (npend = i = 0; i < (int) store_mem_obj(e, pending_list_size); i++) {
-	if (store_mem_obj(e, pending[i]))
+    for (npend = i = 0; i < (int) e->mem_obj->pending_list_size; i++) {
+	if (e->mem_obj->pending[i])
 	    npend++;
     }
     return npend;

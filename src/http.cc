@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: http.cc,v 1.2 1996/02/23 05:41:24 wessels Exp $";
+static char rcsid[] = "$Id: http.cc,v 1.3 1996/02/23 06:56:32 wessels Exp $";
 /* 
  *  File:         http.c
  *  Description:  state machine for http retrieval protocol.  
@@ -212,7 +212,7 @@ void httpReadReplyTimeout(fd, data)
     CacheInfo->log_append(CacheInfo,
 	entry->url,
 	"0.0.0.0",
-	store_mem_obj(entry, e_current_len),
+	entry->mem_obj->e_current_len,
 	"ERR_103",		/* HTTP READ TIMEOUT */
 	data->type ? data->type : "NULL");
 #endif
@@ -252,7 +252,7 @@ void httpLifetimeExpire(fd, data)
     CacheInfo->log_append(CacheInfo,
 	entry->url,
 	"0.0.0.0",
-	store_mem_obj(entry, e_current_len),
+	entry->mem_obj->e_current_len,
 	"ERR_110",		/* HTTP LIFETIME EXPIRE */
 	data->type ? data->type : "NULL");
 #endif
@@ -277,8 +277,8 @@ void httpReadReply(fd, data)
     if (entry->flag & DELETE_BEHIND) {
 	if (storeClientWaiting(entry)) {
 	    /* check if we want to defer reading */
-	    clen = store_mem_obj(entry, e_current_len);
-	    off = store_mem_obj(entry, e_lowest_offset);
+	    clen = entry->mem_obj->e_current_len;
+	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > HTTP_DELETE_GAP) {
 		debug(3, "httpReadReply: Read deferred for Object: %s\n",
 		    entry->key);
@@ -325,7 +325,7 @@ void httpReadReply(fd, data)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_119",	/* HTTP NO CLIENTS, BIG OBJ */
 		data->type ? data->type : "NULL");
 #endif
@@ -336,7 +336,7 @@ void httpReadReply(fd, data)
     len = read(fd, buf, 4096);
     debug(5, "httpReadReply: FD %d: len %d.\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (store_mem_obj(entry, e_current_len) == 0))) {
+    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
 	/* XXX we we should log when len==0 and current_len==0 */
 	debug(2, "httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
@@ -365,7 +365,7 @@ void httpReadReply(fd, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_105",		/* HTTP READ ERROR */
 	    data->type ? data->type : "NULL");
 #endif
@@ -377,7 +377,7 @@ void httpReadReply(fd, data)
 	storeComplete(entry);
 	comm_close(fd);
 	safe_free(data);
-    } else if (((store_mem_obj(entry, e_current_len) + len) > getHttpMax()) &&
+    } else if (((entry->mem_obj->e_current_len + len) > getHttpMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
@@ -406,7 +406,7 @@ void httpReadReply(fd, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_107",		/* HTTP CLIENT ABORT */
 	    data->type ? data->type : "NULL");
 #endif
@@ -458,7 +458,7 @@ void httpSendComplete(fd, buf, size, errflag, data)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_101",		/* HTTP CONNECT FAIL */
 	    data->type ? data->type : "NULL");
 #endif
@@ -581,7 +581,7 @@ void httpConnInProgress(fd, data)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_104",	/* HTTP CONNECT FAIL */
 		data->type ? data->type : "NULL");
 #endif
@@ -605,7 +605,7 @@ int proxyhttpStart(e, url, entry)
 
     debug(3, "proxyhttpStart: <URL:%s>\n", url);
     debug(10, "proxyhttpStart: HTTP request header:\n%s\n",
-	store_mem_obj(entry, mime_hdr));
+	entry->mem_obj->mime_hdr);
 
     memset(data, '\0', sizeof(HttpData));
     data->entry = entry;
@@ -613,7 +613,7 @@ int proxyhttpStart(e, url, entry)
     strncpy(data->request, url, sizeof(data->request) - 1);
     data->type = HTTP_OPS[entry->type_id];
     data->port = e->ascii_port;
-    data->mime_hdr = store_mem_obj(entry, mime_hdr);
+    data->mime_hdr = entry->mem_obj->mime_hdr;
     strncpy(data->host, e->host, sizeof(data->host) - 1);
 
     if (e->proxy_only)
@@ -637,7 +637,7 @@ int proxyhttpStart(e, url, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_111",		/* HTTP NO FD'S */
 	    data->type ? data->type : "NULL");
 #endif
@@ -664,7 +664,7 @@ int proxyhttpStart(e, url, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_102",		/* HTTP DNS FAIL */
 	    data->type ? data->type : "NULL");
 #endif
@@ -689,7 +689,7 @@ int proxyhttpStart(e, url, entry)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_104",	/* HTTP CONNECT FAIL */
 		data->type ? data->type : "NULL");
 #endif
@@ -751,7 +751,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_110",		/* HTTP INVALID URL */
 	    data->type ? data->type : "NULL");
 #endif
@@ -776,7 +776,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_111",		/* HTTP NO FD'S */
 	    data->type ? data->type : "NULL");
 #endif
@@ -803,7 +803,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 	CacheInfo->log_append(CacheInfo,
 	    entry->url,
 	    "0.0.0.0",
-	    store_mem_obj(entry, e_current_len),
+	    entry->mem_obj->e_current_len,
 	    "ERR_108",		/* HTTP DNS FAIL */
 	    data->type ? data->type : "NULL");
 #endif
@@ -828,7 +828,7 @@ int httpStart(unusedfd, url, type, mime_hdr, entry)
 	    CacheInfo->log_append(CacheInfo,
 		entry->url,
 		"0.0.0.0",
-		store_mem_obj(entry, e_current_len),
+		entry->mem_obj->e_current_len,
 		"ERR_109",	/* HTTP CONNECT FAIL */
 		data->type ? data->type : "NULL");
 #endif
