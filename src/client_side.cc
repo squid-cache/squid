@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.215 1998/02/25 09:53:55 rousskov Exp $
+ * $Id: client_side.cc,v 1.216 1998/02/26 06:42:29 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -890,6 +890,10 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	hdr_len = t - hdr_in;
 	l = strcspn(t, crlf) + 1;
 	xstrncpy(xbuf, t, l > 4096 ? 4096 : l);
+	/* enforce 1.0 reply version, this hack will be rewritten */
+	if (!hdr_len && !strncasecmp(xbuf, "HTTP/", 5) && l > 8 && 
+	    ( isspace(xbuf[8]) || isspace(xbuf[9])))
+	    xmemmove(xbuf+5, "1.0 ", 4);
 #if 0
 	if (strncasecmp(xbuf, "Accept-Ranges:", 14) == 0)
 	    continue;
