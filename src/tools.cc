@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.189 2000/03/06 16:23:36 wessels Exp $
+ * $Id: tools.cc,v 1.190 2000/04/17 17:24:57 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -848,7 +848,7 @@ debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
 int
 stringHasWhitespace(const char *s)
 {
-    return (strcspn(s, w_space) != strlen(s));
+    return strpbrk(s, w_space) != NULL;
 }
 
 void
