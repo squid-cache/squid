@@ -240,7 +240,7 @@ hash_init()
 #define NBUCKET(x)   (x & 0x7F)
 struct node *nbuckets[NHASHSIZE];
 
-static void 
+static void
 init_node_hash(nodes)
      struct node *nodes;
 {
@@ -301,7 +301,7 @@ print_subtree(tree, count)
 
 int translation_table[40];
 
-static void 
+static void
 build_translation_table()
 {
     int count;
