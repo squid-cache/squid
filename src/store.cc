@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.243 1997/05/23 16:56:30 wessels Exp $
+ * $Id: store.cc,v 1.244 1997/05/23 19:48:06 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -243,7 +243,7 @@ typedef struct swapout_ctrl_t {
 } swapout_ctrl_t;
 
 /* initializtion flag */
-int store_rebuilding = STORE_REBUILDING_DIRTY;
+int store_rebuilding = 1;
 
 /* Static Functions */
 static HashID storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const char *))));
@@ -271,7 +271,8 @@ static StoreEntry *storeAddDiskRestore _PARAMS((const char *,
 	int,
 	time_t,
 	time_t,
-	time_t));
+	time_t,
+	int));
 static StoreEntry *storeGetInMemFirst _PARAMS((void));
 static StoreEntry *storeGetInMemNext _PARAMS((void));
 static unsigned int storeGetBucketNum _PARAMS((void));
@@ -297,7 +298,6 @@ static void storeRebuiltFromDisk _PARAMS((struct storeRebuildState * data));
 static unsigned int getKeyCounter _PARAMS((void));
 static void storePutUnusedFileno _PARAMS((int fileno));
 static int storeGetUnusedFileno _PARAMS((void));
-static int storeSwapInCheck _PARAMS((StoreEntry * e));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -797,7 +797,7 @@ storeCreateEntry(const char *url,
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
 static StoreEntry *
-storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod)
+storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, time_t timestamp, time_t lastmod, int clean)
 {
     StoreEntry *e = NULL;
 
@@ -829,7 +829,7 @@ storeAddDiskRestore(const char *url, int file_number, int size, time_t expires, 
     e->expires = expires;
     e->lastmod = lastmod;
     e->ping_status = PING_NONE;
-    if (store_rebuilding == STORE_REBUILDING_CLEAN) {
+    if (clean) {
 	BIT_SET(e->flag, ENTRY_VALIDATED);
 	/* Only set the file bit if we know its a valid entry */
 	/* otherwise, set it in the validation procedure */
@@ -1001,6 +1001,7 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
 {
     StoreEntry *e = data;
     MemObject *mem = e->mem_obj;
+    assert(mem);
     debug(20, 2, "storeSwapInHandle: '%s'\n", e->key);
     if ((flag < 0) && (flag != DISK_EOF)) {
 	debug(20, 0, "storeSwapInHandle: SwapIn failure (err code = %d).\n", flag);
@@ -1057,29 +1058,25 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
     }
 }
 
-static int
-storeSwapInCheck(StoreEntry * e)
-{
-    if (e->mem_status != NOT_IN_MEMORY)
-	return 0;
-    if (e->store_status == STORE_PENDING)
-	return 0;
-    if (BIT_TEST(e->flag, ENTRY_VALIDATED))
-	return 1;
-    if (storeDirMapBitTest(e->swap_file_number))
-	/* someone took our file while we weren't looking */
-	return 0;
-    return 1;
-}
-
 /* start swapping in */
 void
 storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
-    if (!storeSwapInCheck(e)) {
+    if (e->mem_status != NOT_IN_MEMORY) {
 	callback(callback_data, 0);
 	return;
+    }
+    if (e->store_status == STORE_PENDING) {
+	callback(callback_data, 0);
+	return;
+    }
+    if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
+        if (storeDirMapBitTest(e->swap_file_number)) {
+	    /* someone took our file while we weren't looking */
+	    callback(callback_data, -1);
+	    return;
+	}
     }
     assert(e->swap_status == SWAP_OK);
     assert(e->swap_file_number >= 0);
@@ -1438,7 +1435,8 @@ storeDoRebuildFromDisk(void *data)
 	    (int) size,
 	    expires,
 	    timestamp,
-	    lastmod);
+	    lastmod,
+	    d->clean);
 	storeDirSwapLog(e);
 	HTTPCacheInfo->proto_newobject(HTTPCacheInfo,
 	    urlParseProtocol(url),
@@ -1472,8 +1470,7 @@ storeCleanup(void *data)
 	link_ptr = hash_get_bucket(store_table, bucketnum);
 	for (; link_ptr; link_ptr = link_ptr->next) {
 	    e = (StoreEntry *) link_ptr;
-	    if ((curr = xcalloc(1, sizeof(storeCleanList))) == NULL)
-		break;
+	    curr = xcalloc(1, sizeof(storeCleanList));
 	    curr->key = xstrdup(e->key);
 	    curr->next = list;
 	    list = curr;
@@ -1583,7 +1580,7 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
     debug(20, 1, "  Took %d seconds (%6.1lf objects/sec).\n",
 	r > 0 ? r : 0, (double) data->objcount / (r > 0 ? r : 1));
     debug(20, 1, "  store_swap_size = %dk\n", store_swap_size);
-    store_rebuilding = STORE_NOT_REBUILDING;
+    store_rebuilding = 0;
     safe_free(data->line_in);
     safe_free(data);
     if (store_validating) {
@@ -1821,7 +1818,7 @@ storeGetMemSpace(int size)
     pages_needed = (size / SM_PAGE_SIZE) + 1;
     if (sm_stats.n_pages_in_use + pages_needed < store_pages_high)
 	return;
-    if (store_rebuilding == STORE_REBUILDING_CLEAN)
+    if (store_rebuilding)
 	return;
     debug(20, 2, "storeGetMemSpace: Starting, need %d pages\n", pages_needed);
 
@@ -2081,7 +2078,7 @@ storeRelease(StoreEntry * e)
 	if ((hentry = (StoreEntry *) hash_lookup(store_table, hkey)))
 	    storeExpireNow(hentry);
     }
-    if (store_rebuilding == STORE_REBUILDING_CLEAN) {
+    if (store_rebuilding) {
 	debug(20, 2, "storeRelease: Delaying release until store is rebuilt: '%s'\n",
 	    e->key ? e->key : e->url ? e->url : "NO URL");
 	storeExpireNow(e);
@@ -2348,7 +2345,7 @@ storeInit(void)
     if (!opt_zap_disk_store)
 	storeStartRebuildFromDisk();
     else
-	store_rebuilding = STORE_NOT_REBUILDING;
+	store_rebuilding = 0;
 }
 
 void
@@ -2400,7 +2397,7 @@ storeMaintainSwapSpace(void *unused)
 
     eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
     /* We can't delete objects while rebuilding swap */
-    if (store_rebuilding == STORE_REBUILDING_CLEAN)
+    if (store_rebuilding)
 	return;
 
     /* Purges expired objects, check one bucket on each calling */
