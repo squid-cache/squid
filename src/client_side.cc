@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.531 2001/03/03 10:39:31 hno Exp $
+ * $Id: client_side.cc,v 1.532 2001/03/04 00:54:48 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1284,7 +1284,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	    (void) 0;
 	else if (http->entry->timestamp < 0)
 	    (void) 0;
-	else if (http->entry->timestamp > squid_curtime)
+	else if (http->entry->timestamp < squid_curtime)
 	    httpHeaderPutInt(hdr, HDR_AGE,
 		squid_curtime - http->entry->timestamp);
     }
