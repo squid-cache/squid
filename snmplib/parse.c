@@ -200,6 +200,7 @@ struct tok tokens[] = {
 	{ "DESCRIPTION", sizeof ("DESCRIPTION")-1, DESCRIPTION },
 	{ "INDEX", sizeof ("INDEX")-1, INDEX },
 	{ "\"", sizeof ("\"")-1, QUOTE },
+	{ "END", sizeof("END")-1, ENDOFFILE },
 /* Hacks for easier MIBFILE coercing */
 	{ "read-create", sizeof ("read-create")-1, READWRITE },
 	{ NULL }
@@ -1088,10 +1089,25 @@ read_mib(filename)
     FILE *fp;
     struct node *nodes;
     struct snmp_mib_tree *tree;
+    char mbuf[256];
+    char *p;
 
     fp = fopen(filename, "r");
     if (fp == NULL)
 	return(NULL);
+
+    mbuf[0]='\0';
+    while ( (p=fgets(mbuf, 256, fp)) && strncmp(mbuf, CURRENT_MIB_VERSION,
+		strlen(CURRENT_MIB_VERSION)));
+    if (!p) {
+        snmplib_debug(0, "Bad MIB version or tag missing,install original!\n");
+        exit(1);
+    }
+
+    if (!strcmp(mbuf, CURRENT_MIB_VERSION)) {
+	snmplib_debug(0, "You need to update your MIB!\n");	
+	exit(1);
+    }
     nodes = parse(fp);
     if (!nodes){
 	snmplib_debug(0, "Mib table is bad.  Exiting\n");
