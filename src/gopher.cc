@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.28 1996/04/17 18:06:25 wessels Exp $ */
+/* $Id: gopher.cc,v 1.29 1996/05/01 22:36:31 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -840,7 +840,7 @@ void gopherSendRequest(fd, data)
 	30,
 	gopherSendComplete,
 	(void *) data);
-    if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
+    if (BIT_TEST(data->entry->flag, CACHABLE))
 	storeSetPublicKey(data->entry);		/* Make it public */
 }
 

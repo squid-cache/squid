@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.19 1996/04/16 18:28:47 wessels Exp $ */
+/* $Id: url.cc,v 1.20 1996/05/01 22:36:42 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -23,9 +23,6 @@ char *ProtocolStr[] =
     "gopher",
     "wais",
     "cache_object",
-#ifdef NEED_PROTO_CONNECT
-    "connect",
-#endif
     "TOTAL"
 };
 
@@ -130,14 +127,12 @@ protocol_t urlParseProtocol(s)
 #endif
     if (strncasecmp(s, "gopher", 6) == 0)
 	return PROTO_GOPHER;
+    if (strncasecmp(s, "wais", 4) == 0)
+	return PROTO_WAIS;
     if (strncasecmp(s, "cache_object", 12) == 0)
 	return PROTO_CACHEOBJ;
     if (strncasecmp(s, "file", 4) == 0)
 	return PROTO_FTP;
-#ifdef NEED_PROTO_CONNECT
-    if (strncasecmp(s, "connect", 7) == 0)
-	return PROTO_CONNECT;
-#endif
     return PROTO_NONE;
 }
 
@@ -152,12 +147,10 @@ int urlDefaultPort(p)
 	return 21;
     case PROTO_GOPHER:
 	return 70;
+    case PROTO_WAIS:
+	return 210;
     case PROTO_CACHEOBJ:
 	return CACHE_HTTP_PORT;
-#ifdef NEED_PROTO_CONNECT
-    case PROTO_CONNECT:
-	return CONNECT_PORT;
-#endif
     default:
 	return 0;
     }
@@ -180,14 +173,12 @@ request_t *urlParse(method, url)
 	port = CONNECT_PORT;
 	if (sscanf(url, "%[^:]:%d", host, &port) < 1)
 	    return NULL;
-	if (!aclMatchInteger(connect_port_list, port))
-	    return NULL;
     } else {
 	if (sscanf(url, "%[^:]://%[^/]%s", proto, host, urlpath) < 2)
 	    return NULL;
 	protocol = urlParseProtocol(proto);
 	port = urlDefaultPort(protocol);
-	if ((t = strchr(host, ':')) && *(t + 1) != '\0') {
+	if ((t = strrchr(host, ':')) && *(t + 1) != '\0') {
 	    *t = '\0';
 	    port = atoi(t + 1);
 	}

@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.28 1996/04/17 18:06:25 wessels Exp $ */
+/* $Id: wais.cc,v 1.29 1996/05/01 22:36:43 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -219,7 +219,7 @@ void waisSendRequest(fd, data)
 	30,
 	waisSendComplete,
 	(void *) data);
-    if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
+    if (BIT_TEST(data->entry->flag, CACHABLE))
 	storeSetPublicKey(data->entry);		/* Make it public */
 }
 
@@ -243,7 +243,6 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 	squid_error_entry(entry, ERR_NO_RELAY, NULL);
 	return COMM_ERROR;
     }
-
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
@@ -251,7 +250,6 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return COMM_ERROR;
     }
-
     data = (WAISData *) xcalloc(1, sizeof(WAISData));
     data->entry = entry;
     data->method = method;

@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.22 1996/04/16 18:29:40 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.23 1996/05/01 22:36:35 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -104,15 +104,17 @@ void hierarchy_log_append(url, code, timeout, cache_host)
 	}
     } else {
 	if (cache_host) {
-	    fprintf(cache_hierarchy_log, "%d %s %s%s %s\n",
-		(int) squid_curtime,
+	    fprintf(cache_hierarchy_log, "%d.%03d %s %s%s %s\n",
+		(int) current_time.tv_sec,
+		(int) current_time.tv_usec / 1000,
 		url,
 		timeout ? "TIMEOUT_" : "",
 		hier_strings[code],
 		cache_host);
 	} else {
-	    fprintf(cache_hierarchy_log, "%d %s %s%s\n",
-		(int) squid_curtime,
+	    fprintf(cache_hierarchy_log, "%d.%03d %s %s%s\n",
+		(int) current_time.tv_sec,
+		(int) current_time.tv_usec / 1000,
 		url,
 		timeout ? "TIMEOUT_" : "",
 		hier_strings[code]);
@@ -233,22 +235,25 @@ void neighborsDestroy()
 static void neighborsOpenLog(fname)
      char *fname;
 {
-    int log_fd;
-
+    int log_fd = -1;
     /* Close and reopen the log.  It may have been renamed "manually"
      * before HUP'ing us. */
     if (cache_hierarchy_log) {
 	file_close(fileno(cache_hierarchy_log));
 	fclose(cache_hierarchy_log);
+	cache_hierarchy_log = NULL;
     }
-    log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
-    if (log_fd < 0) {
-	debug(15, 0, "rotate_logs: %s: %s\n", fname, xstrerror());
-	debug(15, 1, "Hierachical logging is disabled.\n");
-    } else if ((cache_hierarchy_log = fdopen(log_fd, "a")) == NULL) {
-	debug(15, 0, "rotate_logs: %s: %s\n", fname, xstrerror());
-	debug(15, 1, "Hierachical logging is disabled.\n");
+    if (strcmp(fname, "none") != 0) {
+	log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
+	if (log_fd < 0) {
+	    debug(15, 0, "neighborsOpenLog: %s: %s\n", fname, xstrerror());
+	} else if ((cache_hierarchy_log = fdopen(log_fd, "a")) == NULL) {
+	    file_close(log_fd);
+	    debug(15, 0, "neighborsOpenLog: %s: %s\n", fname, xstrerror());
+	}
     }
+    if (log_fd < 0 || cache_hierarchy_log == NULL)
+	debug(15, 1, "Hierachical logging is disabled.\n");
 }
 
 void neighbors_open(fd)

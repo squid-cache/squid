@@ -3,10 +3,13 @@
 #  Cache Manager is a manager program for Internet Object Cache.
 #
 
-prefix = @prefix@
-INSTALL_BINDIR	= $(prefix)/bin
-INSTALL_LIBDIR	= $(prefix)/lib
-INSTALL_MANDIR 	= $(prefix)/man
+prefix		= @prefix@
+exec_prefix     = @exec_prefix@
+top_srcdir      = @top_srcdir@
+bindir          = @bindir@
+sysconfdir      = @sysconfdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 CC		= @CC@
 INSTALL		= @INSTALL@
@@ -22,12 +25,12 @@ install:
 		echo "mkdir $(prefix)"; \
 		mkdir $(prefix); \
 	fi
-	@if test ! -d $(INSTALL_BINDIR); then \
-		echo "mkdir $(INSTALL_BINDIR)"; \
-		mkdir $(INSTALL_BINDIR); \
+	@if test ! -d $(bindir); then \
+		echo "mkdir $(bindir)"; \
+		mkdir $(bindir); \
 	fi
-	$(INSTALL_BIN) RunCache $(INSTALL_BINDIR)
-	$(INSTALL_BIN) RunAccel $(INSTALL_BINDIR)
+	$(INSTALL_BIN) RunCache $(bindir)
+	$(INSTALL_BIN) RunAccel $(bindir)
 
 clean:
 

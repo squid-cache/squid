@@ -7,7 +7,7 @@
 # Version 1 did all this in memory, but the log file can be a
 # little on the large side... 8-(
 
-# $Id: check_cache.pl,v 1.1 1996/02/22 06:23:57 wessels Exp $
+# $Id: check_cache.pl,v 1.2 1996/05/01 22:36:22 wessels Exp $
 
 require "getopts.pl";
 &Getopts("c:dl:rt:v");
@@ -22,7 +22,7 @@ $tmpdir = $opt_t || $ENV{TMPDIR} || "/var/tmp";
 chdir($tmpdir);
 
 # snarf filenames from Harvest log & sort em
-system("cut -f2 -d' ' $logfile >pl$$");
+system("cut -f1 -d' ' $logfile >pl$$");
 system("sort -T $tmpdir pl$$ >spl$$; rm pl$$");
 
 # get list of files in cache & sort em

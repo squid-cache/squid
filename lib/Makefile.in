@@ -3,12 +3,12 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.7 1996/03/26 05:12:07 wessels Exp $
+#  $Id: Makefile.in,v 1.8 1996/05/01 22:36:21 wessels Exp $
 #
-prefix = @prefix@
-INSTALL_BINDIR	= $(prefix)/bin
-INSTALL_LIBDIR	= $(prefix)/lib
-INSTALL_MANDIR 	= $(prefix)/man
+prefix		= @prefix@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
 
 CC		= @CC@
 INSTALL		= @INSTALL@
@@ -20,7 +20,7 @@ STD_LDFLAGS	= @STD_LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 XTRA_CFLAGS     = @XTRA_CFLAGS@
 
-INCLUDE		= -I../include
+INCLUDE		= -I../include -I$(srcdir)/../include
 UTILOBJS	= rfc850.o \
 		  rfc1738.o \
 		  util.o \

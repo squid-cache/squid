@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.30 1996/04/17 23:48:38 wessels Exp $ */
+/* $Id: comm.cc,v 1.31 1996/05/01 22:36:26 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -568,6 +568,8 @@ int comm_select(sec, failtime)
 	if (!fdstat_are_n_free_fd(RESERVED_FD)) {
 	    FD_CLR(theAsciiConnection, &readfds);
 	}
+	if (shutdown_pending || reread_pending)
+	    debug(5, 1, "comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
 	while (1) {
@@ -1016,15 +1018,15 @@ static void checkLifetimes()
 	    }
 	    if (tmp_local) {
 		if (use_lifetime_handler) {
-		    debug(5, 2, "comm_select: FD %d lifetime expire: %d < %d (Lifetime handler %p)\n",
+		    debug(5, 2, "checkLifetimes: FD %d lifetime expire: %d < %d (Lifetime handler %p)\n",
 			fd, lft, squid_curtime, tmp_local);
 		} else {
-		    debug(5, 2, "comm_select: FD %d lifetime expire: %d < %d (%s handler %p)\n",
+		    debug(5, 2, "checkLifetimes: FD %d lifetime expire: %d < %d (%s handler %p)\n",
 			fd, lft, squid_curtime,
 			use_read ? "read" : "write", tmp_local);
 		}
 	    } else {
-		debug(5, 1, "comm_select: FD %d lifetime expire: %d < %d (handler not available.)\n",
+		debug(5, 1, "checkLifetimes: FD %d lifetime expire: %d < %d (handler not available.)\n",
 		    fd, lft, squid_curtime);
 	    }
 
@@ -1037,25 +1039,26 @@ static void checkLifetimes()
 		     *  deallocates the structure.
 		     */
 		    (void) close(fd);
+		    debug(5, 0, "checkLifetimes: Forcing close on FD %d\n", fd);
 		    tmp_local(fd, use_read ? fd_table[fd].read_data :
 			fd_table[fd].write_data);
 		}
 		if (fd_table[fd].openned) {
 		    /* hmm.. still openned. do full comm_close */
-		    debug(5, 5, "comm_select: FD %d lifetime expire: %d < %d : Handler did not close the socket.\n comm_select will do.\n",
+		    debug(5, 5, "checkLifetimes: FD %d lifetime expire: %d < %d : Handler did not close the socket.\n comm_select will do.\n",
 			fd, lft, squid_curtime);
 		    comm_close(fd);
 		} else {
 		    /* seems like handle closed it. 
 		     * clean up fd_table just to make sure */
-		    debug(5, 5, "comm_select: FD %d lifetime expire: %d : Handler closed the socket.\n",
+		    debug(5, 5, "checkLifetimes: FD %d lifetime expire: %d : Handler closed the socket.\n",
 			fd, lft);
 		    /* just to make sure here */
 		    comm_cleanup_fd_entry(fd);
 		}
 	    } else {
 		/* no handle. do full comm_close */
-		debug(5, 5, "comm_select: FD %d lifetime expire: %d < %d : No handler to close the socket.\n comm_select will do.\n",
+		debug(5, 5, "checkLifetimes: FD %d lifetime expire: %d < %d : No handler to close the socket.\n comm_select will do.\n",
 		    fd, lft, squid_curtime);
 		comm_close(fd);
 	    }

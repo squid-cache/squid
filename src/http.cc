@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.56 1996/04/17 21:03:14 wessels Exp $ */
+/* $Id: http.cc,v 1.57 1996/05/01 22:36:31 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -6,8 +6,8 @@
 
 #include "squid.h"
 
-#define HTTP_DELETE_GAP   (64*1024)
-#define READBUFSIZ	4096
+#define READBUFSIZ	(1<<14)
+#define HTTP_DELETE_GAP   (1<<18)
 
 typedef struct _httpdata {
     StoreEntry *entry;
@@ -200,14 +200,14 @@ static void httpProcessReplyHeader(data, buf, size)
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
 	    entry->expires = squid_curtime + ttlSet(entry);
-	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+	    if (BIT_TEST(entry->flag, CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
+	case 304:		/* Not Modified */
 	case 401:		/* Unauthorized */
 	case 407:		/* Proxy Authentication Required */
 	    /* These should never be cached at all */
-	    if (BIT_TEST(entry->flag, ENTRY_PRIVATE))
-		storeSetPrivateKey(entry);
+	    storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
@@ -215,7 +215,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	default:
 	    /* These can be negative cached, make key public */
 	    entry->expires = squid_curtime + getNegativeTTL();
-	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+	    if (BIT_TEST(entry->flag, CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
 	}
@@ -237,37 +237,34 @@ static void httpReadReply(fd, data)
     StoreEntry *entry = NULL;
 
     entry = data->entry;
-    if (entry->flag & DELETE_BEHIND) {
-	if (storeClientWaiting(entry)) {
-	    /* check if we want to defer reading */
-	    clen = entry->mem_obj->e_current_len;
-	    off = entry->mem_obj->e_lowest_offset;
-	    if ((clen - off) > HTTP_DELETE_GAP) {
-		debug(11, 3, "httpReadReply: Read deferred for Object: %s\n",
-		    entry->url);
-		debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
-		/* reschedule, so it will be automatically reactivated
-		 * when Gap is big enough. */
-		comm_set_select_handler(fd,
-		    COMM_SELECT_READ,
-		    (PF) httpReadReply,
-		    (void *) data);
-		/* don't install read timeout until we are below the GAP */
-		comm_set_select_handler_plus_timeout(fd,
-		    COMM_SELECT_TIMEOUT,
-		    (PF) NULL,
-		    (void *) NULL,
-		    (time_t) 0);
-		/* dont try reading again for a while */
-		comm_set_stall(fd, getStallDelay());
-		return;
-	    }
-	} else {
-	    /* we can terminate connection right now */
-	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    comm_close(fd);
-	    return;
-	}
+    if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
+	/* we can terminate connection right now */
+	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+	comm_close(fd);
+	return;
+    }
+    /* check if we want to defer reading */
+    clen = entry->mem_obj->e_current_len;
+    off = storeGetLowestReaderOffset(entry);
+    if ((clen - off) > HTTP_DELETE_GAP) {
+	debug(11, 3, "httpReadReply: Read deferred for Object: %s\n",
+	    entry->url);
+	debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
+	/* reschedule, so it will be automatically reactivated
+	 * when Gap is big enough. */
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) httpReadReply,
+	    (void *) data);
+	/* don't install read timeout until we are below the GAP */
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) NULL,
+	    (void *) NULL,
+	    (time_t) 0);
+	/* dont try reading again for a while */
+	comm_set_stall(fd, getStallDelay());
+	return;
     }
     errno = 0;
     len = read(fd, buf, READBUFSIZ);
@@ -310,8 +307,7 @@ static void httpReadReply(fd, data)
 	comm_set_select_handler_plus_timeout(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) httpReadReplyTimeout,
-	    (void *) data,
-	    getReadTimeout());
+	    (void *) data, getReadTimeout());
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
@@ -385,7 +381,7 @@ static void httpSendRequest(fd, data)
     char *t = NULL;
     char *post_buf = NULL;
     static char *crlf = "\r\n";
-    static char *VIA_PROXY_TEXT = "via Sqiud Cache version";
+    static char *VIA_PROXY_TEXT = "via Squid Cache version";
     int len = 0;
     int buflen;
     int cfd = -1;

@@ -25,11 +25,17 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
-/* Define struct tm has tm_gmtoff member */
+/* Define if struct tm has tm_gmtoff member */
 #undef HAVE_TM_GMTOFF
 
-/* Define struct mallinfo has mxfast member */
+/* Define if struct mallinfo has mxfast member */
 #undef HAVE_EXT_MALLINFO
+
+/* Define if signal handlers must be reset after invocation */
+#undef RESET_SIGNAL_HANDLER
+
+/* Maximum number of open filedescriptors */
+#undef SQUID_FD_SETSIZE
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
@@ -54,6 +60,12 @@
 
 /* Define if you have the regfree function.  */
 #undef HAVE_REGFREE
+
+/* Define if you have the seteuid function.  */
+#undef HAVE_SETEUID
+
+/* Define if you have the setresuid function.  */
+#undef HAVE_SETRESUID
 
 /* Define if you have the setrlimit function.  */
 #undef HAVE_SETRLIMIT
@@ -126,6 +138,9 @@
 
 /* Define if you have the <sys/select.h> header file.  */
 #undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/syscall.h> header file.  */
+#undef HAVE_SYS_SYSCALL_H
 
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
