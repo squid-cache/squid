@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.435 1999/01/24 02:22:56 wessels Exp $
+ * $Id: client_side.cc,v 1.436 1999/01/24 02:44:11 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2404,6 +2404,7 @@ httpAccept(int sock, void *data)
     struct sockaddr_in peer;
     struct sockaddr_in me;
     int max = INCOMING_HTTP_MAX;
+    static aclCheck_t identChecklist;
     commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
     while (max-- && !httpAcceptDefer()) {
 	memset(&peer, '\0', sizeof(struct sockaddr_in));
@@ -2429,7 +2430,8 @@ httpAccept(int sock, void *data)
 	if (Config.onoff.log_fqdn)
 	    fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
 	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
-	if (Config.onoff.ident_lookup)
+	identChecklist.src_addr = peer.sin_addr;
+	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
 	    identStart(&me, &peer, clientIdentDone, connState);
 	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
 	commSetDefer(fd, clientReadDefer, connState);
