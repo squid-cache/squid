@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.42 1998/07/22 20:38:00 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.43 1998/07/25 03:46:12 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -595,12 +595,12 @@ storeCleanup(void *datanotused)
 	e = (StoreEntry *) link_ptr;
 	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	    continue;
-	if (e->swap_file_number < 0)
-	    continue;
 	if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
 	    storeRelease(e);
 	    continue;
 	}
+	if (e->swap_file_number < 0)
+	    continue;
 	if (opt_store_doublecheck) {
 	    struct stat sb;
 	    if (stat(storeSwapFullPath(e->swap_file_number, NULL), &sb) < 0) {
