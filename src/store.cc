@@ -1,7 +1,7 @@
 
 /*
- * $Id: store.cc,v 1.496 1999/05/04 19:22:28 wessels Exp $
- * $Id: store.cc,v 1.496 1999/05/04 19:22:28 wessels Exp $
+ * $Id: store.cc,v 1.497 1999/05/04 19:39:00 wessels Exp $
+ * $Id: store.cc,v 1.497 1999/05/04 19:39:00 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1042,10 +1042,10 @@ storeEntryValidToSend(StoreEntry * e)
 void
 storeTimestampsSet(StoreEntry * entry)
 {
-    time_t served_date = -1;
     const HttpReply *reply = entry->mem_obj->reply;
-    served_date = reply->date;
-    if (served_date < 0)
+    time_t served_date = reply->date;
+    /* make sure that 0 <= served_date <= squid_curtime */
+    if (served_date < 0 || served_date > squid_curtime)
 	served_date = squid_curtime;
     entry->expires = reply->expires;
     entry->lastmod = reply->last_modified;
