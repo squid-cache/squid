@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.43 2000/11/01 04:50:25 wessels Exp $
+ * $Id: store_digest.cc,v 1.44 2000/11/14 07:06:19 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -367,6 +367,7 @@ static void
 storeDigestRewriteResume(void)
 {
     StoreEntry *e = sd_state.rewrite_lock;
+    http_version_t version;
 
     assert(sd_state.rewrite_lock);
     assert(!sd_state.rebuild_lock);
@@ -376,7 +377,8 @@ storeDigestRewriteResume(void)
     storeSetPublicKey(e);
     /* fake reply */
     httpReplyReset(e->mem_obj->reply);
-    httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, "Cache Digest OK",
+    httpBuildVersion(&version, 1, 0);
+    httpReplySetHeaders(e->mem_obj->reply, version, 200, "Cache Digest OK",
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + Config.digest.rewrite_period);
     debug(71, 3) ("storeDigestRewrite: entry expires on %d (%+d)\n",
