@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.119 1998/10/12 22:02:40 wessels Exp $
+# $Id: cf.data.pre,v 1.120 1998/10/13 17:40:36 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -362,6 +362,14 @@ DOC_START
 	expect to receive any further ICP replies.  However, it
 	continues to send ICP queries, and will mark the peer as
 	alive upon receipt of the first subsequent ICP reply.
+
+	This timeout also affects when Squid expects to receive ICP
+	replies from peers.  If more than 'dead_peer' seconds have
+	passed since the last ICP reply was received, Squid will not
+	expect to receive an ICP reply on the next query.  Thus, if
+	your time between requests is greater than this timeout, you
+	will see a lot of requests sent DIRECT to origin servers
+	instead of to your parents.
 
 dead_peer_timeout 10 seconds
 DOC_END
