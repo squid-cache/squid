@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.188 2001/03/03 10:39:31 hno Exp $
+ * $Id: enums.h,v 1.189 2001/04/09 21:55:50 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -573,9 +573,6 @@ typedef enum {
     MEM_CLOSE_HANDLER,
     MEM_COMMWRITESTATEDATA,
     MEM_CONNSTATEDATA,
-#if USE_CACHE_DIGESTS
-    MEM_DIGEST_FETCH_STATE,
-#endif
     MEM_LINK_LIST,
     MEM_DLINK_LIST,
     MEM_DLINK_NODE,

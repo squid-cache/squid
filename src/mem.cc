@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.55 2001/02/17 07:28:50 hno Exp $
+ * $Id: mem.cc,v 1.56 2001/04/09 21:55:50 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -223,9 +223,6 @@ memInit(void)
     memDataInit(MEM_COMMWRITESTATEDATA, "CommWriteStateData",
 	sizeof(CommWriteStateData), 0);
     memDataInit(MEM_CONNSTATEDATA, "ConnStateData", sizeof(ConnStateData), 0);
-#if USE_CACHE_DIGESTS
-    memDataInit(MEM_DIGEST_FETCH_STATE, "DigestFetchState", sizeof(DigestFetchState), 0);
-#endif
     memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
     memDataInit(MEM_DLINK_LIST, "dlink_list", sizeof(dlink_list), 10);
     memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
@@ -264,7 +261,6 @@ memInit(void)
     memDataInit(MEM_PEER, "peer", sizeof(peer), 0);
 #if USE_CACHE_DIGESTS
     memDataInit(MEM_PEER_DIGEST, "PeerDigest", sizeof(PeerDigest), 0);
-    memDataInit(MEM_DIGEST_FETCH_STATE, "DigestFetchState", sizeof(DigestFetchState), 0);
 #endif
 #if USE_ICMP
     memDataInit(MEM_PINGERECHODATA, "pingerEchoData",
