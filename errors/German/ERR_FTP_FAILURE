@@ -13,7 +13,7 @@ w&auml;hrend des Versuches, den URL:
 zu laden.
 
 <P>
-Squid sendete das folgende FTP-Befehl:
+Squid sendete den folgenden FTP-Befehl:
 <PRE><STRONG>	%f</STRONG></PRE>
 und erhielt die Antwort:
 <PRE><STRONG>	%F</STRONG></PRE>
@@ -23,4 +23,5 @@ absoluter Pfad ist (was nicht der RFC 1738 entspricht).
 Wenn dies der Fall sein sollte, kann die Datei unter <A
 HREF="%B">%B</A> gefunden werden.
 </P>
-
+<P>
+Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.

@@ -17,7 +17,7 @@ zu laden, trat der folgende Fehler auf:
 
 <P>
 Diese Anfrage konnte nicht zum WWW-Server oder einem
-Parent-Cache weitergeleitet werden. Der wahrscheinlichste Grund für
+Parent-Cache weitergeleitet werden. Der wahrscheinlichste Grund f&uuml;r
 diesen Fehler ist:
 <UL>
 <LI>Der Cache-Administrator erlaubt nicht, da&szlig; dieser Server
@@ -25,3 +25,5 @@ diesen Fehler ist:
 <LI>alle konfigurierten Parent-Caches sind zur Zeit nicht erreichbar.
 </UL>
 </P>
+<P>
+Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
