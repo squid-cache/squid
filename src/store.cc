@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.129 1996/10/10 19:04:19 wessels Exp $
+ * $Id: store.cc,v 1.130 1996/10/10 22:19:36 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -601,9 +601,6 @@ storeUnlockObject(StoreEntry * e)
 	e->lock_count--;
     } else if (storeShouldPurgeMem(e)) {
 	storePurgeMem(e);
-    } else {
-	requestUnlink(mem->request);
-        mem->request = NULL;
     }
     return 0;
 }
@@ -1187,6 +1184,10 @@ storeSwapInHandle(int fd_notused, char *buf, int len, int flag, StoreEntry * e, 
 	}
 	if (e->flag & RELEASE_REQUEST)
 	    storeRelease(e);
+	else {
+	    requestUnlink(mem->request);
+	    mem->request = NULL;
+	}
     }
     return 0;
 }
@@ -1320,6 +1321,10 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	    storeRelease(e);
 	else if (storeShouldPurgeMem(e))
 	    storePurgeMem(e);
+	else {
+	    requestUnlink(mem->request);
+	    mem->request = NULL;
+	}
 	return;
     }
     /* write some more data, reschedule itself. */
@@ -1694,12 +1699,15 @@ storeComplete(StoreEntry * e)
     e->store_status = STORE_OK;
     storeSetMemStatus(e, IN_MEMORY);
     e->swap_status = NO_SWAP;
-    if (storeCheckSwapable(e))
-	storeSwapOutStart(e);
-    /* free up incoming MIME */
     safe_free(e->mem_obj->mime_hdr);
     if (e->flag & RELEASE_REQUEST)
 	storeRelease(e);
+    else if (storeCheckSwapable(e))
+	storeSwapOutStart(e);
+    else {
+	requestUnlink(e->mem_obj->request);
+	e->mem_obj->request = NULL;
+    }
 }
 
 /*
