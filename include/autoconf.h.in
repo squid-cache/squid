@@ -541,6 +541,9 @@
 /* Define if you have the rint function.  */
 #undef HAVE_RINT
 
+/* Define if you have the select function.  */
+#undef HAVE_SELECT
+
 /* Define if you have the seteuid function.  */
 #undef HAVE_SETEUID
 
