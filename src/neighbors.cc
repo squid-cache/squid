@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.287 2000/10/31 23:48:14 wessels Exp $
+ * $Id: neighbors.cc,v 1.288 2000/11/07 22:04:38 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -165,6 +165,8 @@ peerWouldBePinged(const peer * p, request_t * request)
     if (p->options.mcast_responder)
 	return 0;
     if (p->n_addresses == 0)
+	return 0;
+    if (p->icp.port == 0)
 	return 0;
     /* the case below seems strange, but can happen if the
      * URL host is on the other side of a firewall */
