@@ -15,7 +15,7 @@
 
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.16 2002/09/24 10:49:11 robertc Exp $
+#  $Id: Makefile.in,v 1.17 2002/09/30 00:24:10 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -94,10 +94,6 @@ MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
 OPT_DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
-OPT_DISKD_EXE = @OPT_DISKD_EXE@
-OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
-OPT_PINGER = @OPT_PINGER@
-OPT_PINGER_EXE = @OPT_PINGER_EXE@
 PACKAGE = @PACKAGE@
 PERL = @PERL@
 RANLIB = @RANLIB@

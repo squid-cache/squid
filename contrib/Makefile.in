@@ -94,10 +94,6 @@ MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
 OPT_DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
-OPT_DISKD_EXE = @OPT_DISKD_EXE@
-OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
-OPT_PINGER = @OPT_PINGER@
-OPT_PINGER_EXE = @OPT_PINGER_EXE@
 PACKAGE = @PACKAGE@
 PERL = @PERL@
 RANLIB = @RANLIB@
@@ -124,6 +120,24 @@ makesnmplib = @makesnmplib@
 
 SQUID_RC = squid.rc
 SQUID_OPTIONS = squid.options
+
+EXTRA_DIST = \
+	squid.options \
+	config.site \
+	squid.rc \
+	rredir.c \
+	rredir.pl \
+	user-agents.pl \
+	url-normalizer.pl \
+	nextstep/Makefile \
+	nextstep/Makefile.real \
+	nextstep/README \
+	nextstep/Squid.pkg.README \
+	nextstep/info.in \
+	nextstep/makepkg \
+	nextstep/post_install \
+	nextstep/pre_install
+
 subdir = contrib
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
@@ -151,6 +165,7 @@ top_distdir = ..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
+	$(mkinstalldirs) $(distdir)/nextstep
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
