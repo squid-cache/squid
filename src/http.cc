@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.52 1996/04/16 18:30:45 wessels Exp $ */
+/* $Id: http.cc,v 1.53 1996/04/17 17:51:51 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -24,27 +24,26 @@ typedef struct _httpdata {
     int free_request;
 } HttpData;
 
-static void httpCloseAndFree(fd, data)
+static int httpStateFree(fd, httpState)
      int fd;
-     HttpData *data;
+     HttpData *httpState;
 {
-    if (fd >= 0)
-	comm_close(fd);
-    if (data) {
-	if (data->reply_hdr) {
-	    put_free_8k_page(data->reply_hdr);
-	    data->reply_hdr = NULL;
-	}
-	if (data->icp_page_ptr) {
-	    put_free_8k_page(data->icp_page_ptr);
-	    data->icp_page_ptr = NULL;
-	}
-	if (data->icp_rwd_ptr)
-	    safe_free(data->icp_rwd_ptr);
-	if (data->free_request)
-	    safe_free(data->REQ);
-	xfree(data);
+    if (httpState == NULL)
+	return 1;
+    if (httpState->reply_hdr) {
+	put_free_8k_page(httpState->reply_hdr);
+	httpState->reply_hdr = NULL;
     }
+    if (httpState->icp_page_ptr) {
+	put_free_8k_page(httpState->icp_page_ptr);
+	httpState->icp_page_ptr = NULL;
+    }
+    if (httpState->icp_rwd_ptr)
+	safe_free(httpState->icp_rwd_ptr);
+    if (httpState->free_request)
+	safe_free(httpState->REQ);
+    xfree(httpState);
+    return 0;
 }
 
 int httpCachable(url, method)
@@ -78,7 +77,7 @@ static void httpReadReplyTimeout(fd, data)
     debug(11, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
     squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
-    httpCloseAndFree(fd, data);
+    comm_close(fd);
 }
 
 /* This will be called when socket lifetime is expired. */
@@ -93,7 +92,7 @@ static void httpLifetimeExpire(fd, data)
 
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
-    httpCloseAndFree(fd, data);
+    comm_close(fd);
 }
 
 
@@ -266,7 +265,7 @@ static void httpReadReply(fd, data)
 	} else {
 	    /* we can terminate connection right now */
 	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    httpCloseAndFree(fd, data);
+	    comm_close(fd);
 	    return;
 	}
     }
@@ -288,17 +287,17 @@ static void httpReadReply(fd, data)
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
 	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
-	    httpCloseAndFree(fd, data);
+	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
 	squid_error_entry(entry,
 	    ERR_ZERO_SIZE_OBJECT,
 	    errno ? xstrerror() : NULL);
-	httpCloseAndFree(fd, data);
+	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	storeComplete(entry);
-	httpCloseAndFree(fd, data);
+	comm_close(fd);
     } else if ((entry->mem_obj->e_current_len + len) > getHttpMax() &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
@@ -317,7 +316,7 @@ static void httpReadReply(fd, data)
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	httpCloseAndFree(fd, data);
+	comm_close(fd);
     } else {
 	storeAppend(entry, buf, len);
 	if (data->reply_hdr_state < 2 && len > 0)
@@ -358,7 +357,7 @@ static void httpSendComplete(fd, buf, size, errflag, data)
 
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	httpCloseAndFree(fd, data);
+	comm_close(fd);
 	return;
     } else {
 	/* Schedule read reply. */
@@ -493,7 +492,7 @@ static void httpConnInProgress(fd, data)
 	    break;		/* cool, we're connected */
 	default:
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    httpCloseAndFree(fd, data);
+	    comm_close(fd);
 	    return;
 	}
     }
@@ -540,20 +539,25 @@ int proxyhttpStart(e, url, entry)
 	safe_free(data);
 	return COMM_ERROR;
     }
+    /* register the handler to free HTTP state data when the FD closes */
+    comm_set_select_handler(sock,
+	COMM_SELECT_CLOSE,
+	httpStateFree,
+	(void *) data);
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(request->host)) {
 	debug(11, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	httpCloseAndFree(sock, data);
+	comm_close(sock);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, request->host, request->port))) {
 	if (status != EINPROGRESS) {
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    httpCloseAndFree(sock, data);
+	    comm_close(sock);
 	    e->last_fail_time = squid_curtime;
 	    e->neighbor_up = 0;
 	    return COMM_ERROR;
@@ -609,14 +613,14 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
     if (!ipcache_gethostbyname(request->host)) {
 	debug(11, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	httpCloseAndFree(sock, data);
+	comm_close(sock);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, request->host, request->port))) {
 	if (status != EINPROGRESS) {
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    httpCloseAndFree(sock, data);
+	    comm_close(sock);
 	    return COMM_ERROR;
 	} else {
 	    debug(11, 5, "httpStart: FD %d: EINPROGRESS.\n", sock);
