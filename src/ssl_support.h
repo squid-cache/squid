@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.4 2001/10/19 22:34:49 hno Exp $
+ * $Id: ssl_support.h,v 1.5 2002/12/06 23:19:16 hno Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -42,10 +42,18 @@
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
+#if HAVE_OPENSSL_ENGINE_H
+#include <openssl/engine.h>
+#endif
 
-SSL_CTX *sslCreateContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options);
+SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath);
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath);
 int ssl_read_method(int, char *, int);
 int ssl_write_method(int, const char *, int);
 void ssl_shutdown_method(int);
+
+const char *sslGetUserEmail(SSL *ssl);
+const char *sslGetUserAttribute(SSL *ssl, const char *attribute);
+const char *sslGetCAAttribute(SSL *ssl, const char *attribute);
 
 #endif /* SQUID_SSL_SUPPORT_H */

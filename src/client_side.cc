@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.608 2002/11/15 13:12:36 hno Exp $
+ * $Id: client_side.cc,v 1.609 2002/12/06 23:19:14 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -409,6 +409,9 @@ clientLogRequest(clientHttpRequest * http)
 	    clientPrepareLogWithRequestDetails(http->request, &http->al);
 	if (http->conn && http->conn->rfc931[0])
 	    http->al.cache.rfc931 = http->conn->rfc931;
+#if USE_SSL
+	http->al.cache.ssluser = sslGetUserEmail(fd_table[http->conn->fd].ssl);
+#endif
 	accessLogLog(&http->al);
 	accessLogFreeMemory(&http->al);
 	clientUpdateCounters(http);
@@ -1838,21 +1841,25 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
     X509 *client_cert;
+    SSL *ssl = fd_table[fd].ssl;
     int ret;
 
-    if ((ret = SSL_accept(fd_table[fd].ssl)) <= 0) {
-	if (BIO_sock_should_retry(ret)) {
+    if ((ret = SSL_accept(ssl)) <= 0) {
+	int ssl_error = SSL_get_error(ssl, ret);
+	switch (ssl_error) {
+	case SSL_ERROR_WANT_READ:
 	    commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
 	    return;
+	case SSL_ERROR_WANT_WRITE:
+	    commSetSelect(fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
+	    return;
+	default:
+	    debug(81, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d/%d)\n",
+		    fd, ERR_error_string(ERR_get_error(), NULL), ssl_error, ret);
+	    comm_close(fd);
+	    return;
 	}
-	ret = ERR_get_error();
-	if (ret) {
-	    debug(83, 1)
-		("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s\n",
-		fd, ERR_error_string(ret, NULL));
-	}
-	comm_close(fd);
-	return;
+	/* NOTREACHED */
     }
     debug(83, 5) ("clientNegotiateSSL: FD %d negotiated cipher %s\n", fd,
 	SSL_get_cipher(fd_table[fd].ssl));
@@ -2038,11 +2045,9 @@ clientHttpsConnectionsOpen(void)
 	    continue;
 	CBDATA_INIT_TYPE(https_port_data);
 	https_port = cbdataAlloc(https_port_data);
-	https_port->sslContext =
-	    sslCreateContext(s->cert, s->key, s->version, s->cipher,
-	    s->options);
+	https_port->sslContext = s->sslContext;
 	comm_listen(fd);
-	comm_accept(fd, httpsAccept, NULL);
+	comm_accept(fd, httpsAccept, https_port);
 	commSetDefer(fd, httpAcceptDefer, NULL);
 	debug(1, 1) ("Accepting HTTPS connections at %s, port %d, FD %d.\n",
 	    inet_ntoa(s->s.sin_addr), (int) ntohs(s->s.sin_port), fd);

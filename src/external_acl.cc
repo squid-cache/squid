@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.19 2002/11/15 14:54:50 hno Exp $
+ * $Id: external_acl.cc,v 1.20 2002/12/06 23:19:15 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -95,7 +95,8 @@ struct _external_acl {
 
 struct _external_acl_format {
     enum {
-	EXT_ACL_LOGIN = 1,
+	EXT_ACL_UNKNOWN,
+	EXT_ACL_LOGIN,
 #if USE_IDENT
 	EXT_ACL_IDENT,
 #endif
@@ -108,7 +109,12 @@ struct _external_acl_format {
 	EXT_ACL_HEADER,
 	EXT_ACL_HEADER_MEMBER,
 	EXT_ACL_HEADER_ID,
-	EXT_ACL_HEADER_ID_MEMBER
+	EXT_ACL_HEADER_ID_MEMBER,
+#if USE_SSL
+	EXT_ACL_USER_CERT,
+	EXT_ACL_CA_CERT,
+#endif
+	EXT_ACL_END
     } type;
     external_acl_format *next;
     char *header;
@@ -256,6 +262,15 @@ parse_externalAclHelper(external_acl ** list)
 	    format->type = _external_acl_format::EXT_ACL_PATH;
 	else if (strcmp(token, "%METHOD") == 0)
 	    format->type = _external_acl_format::EXT_ACL_METHOD;
+#if USE_SSL
+	else if (strncmp(token, "%USER_CERT_", 11)) {
+	    format->type = _external_acl_format::EXT_ACL_USER_CERT;
+	    format->header = xstrdup(token + 11);
+	} else if (strncmp(token, "%CA_CERT_", 11)) {
+	    format->type = _external_acl_format::EXT_ACL_USER_CERT;
+	    format->header = xstrdup(token + 11);
+	}
+#endif
 	else {
 	    self_destruct();
 	}
@@ -319,6 +334,16 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 		DUMP_EXT_ACL_TYPE(PORT);
 		DUMP_EXT_ACL_TYPE(PATH);
 		DUMP_EXT_ACL_TYPE(METHOD);
+	    case _external_acl_format::EXT_ACL_USER_CERT:
+		storeAppendPrintf(sentry, " %%USER_CERT_%s", format->header);
+		break;
+	    case _external_acl_format::EXT_ACL_CA_CERT:
+		storeAppendPrintf(sentry, " %%USER_CERT_%s", format->header);
+		break;
+	    case _external_acl_format::EXT_ACL_UNKNOWN:
+	    case _external_acl_format::EXT_ACL_END:
+		fatal("unknown external_acl format error");
+		break;
 	    }
 	}
 	for (word = node->cmdline; word; word = word->next)
@@ -541,6 +566,26 @@ makeExternalAclKey(aclCheck_t * ch, external_acl_data * acl_data)
 	case _external_acl_format::EXT_ACL_HEADER_ID_MEMBER:
 	    sb = httpHeaderGetListMember(&request->header, format->header_id, format->member, format->separator);
 	    str = strBuf(sb);
+	    break;
+#if USE_SSL
+	case _external_acl_format::EXT_ACL_USER_CERT:
+	    if (cbdataReferenceValid(ch->conn)) {
+		SSL *ssl = fd_table[ch->conn->fd].ssl;
+		if (ssl)
+		    str = sslGetUserAttribute(ssl, format->header);
+	    }
+	    break;
+	case _external_acl_format::EXT_ACL_CA_CERT:
+	    if (cbdataReferenceValid(ch->conn)) {
+		SSL *ssl = fd_table[ch->conn->fd].ssl;
+		if (ssl)
+		    str = sslGetCAAttribute(ssl, format->header);
+	    }
+	    break;
+#endif
+	case _external_acl_format::EXT_ACL_UNKNOWN:
+	case _external_acl_format::EXT_ACL_END:
+	    fatal("unknown external_acl format error");
 	    break;
 	}
 	if (str)

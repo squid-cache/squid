@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.421 2002/11/15 13:09:31 hno Exp $
+ * $Id: cache_cf.cc,v 1.422 2002/12/06 23:19:13 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -503,6 +503,9 @@ configDoConfigure(void)
 	    debug(22, 0) ("WARNING: 'maxconn' ACL (%s) won't work with client_db disabled\n", a->name);
 	}
     }
+#if USE_SSL
+    Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath);
+#endif
 }
 
 /* Parse a time specification from the config file.  Store the
@@ -1541,6 +1544,42 @@ parse_peer(peer ** head)
 	    p->options.allow_miss = 1;
 	} else if (!strncasecmp(token, "max-conn=", 9)) {
 	    p->max_conn = xatoi(token + 9);
+#if USE_SSL
+	} else if (strcmp(token, "ssl") == 0) {
+	    p->use_ssl = 1;
+	} else if (strncmp(token, "sslcert=", 8) == 0) {
+	    safe_free(p->sslcert);
+	    p->sslcert = xstrdup(token + 8);
+	} else if (strncmp(token, "sslkey=", 7) == 0) {
+	    safe_free(p->sslkey);
+	    p->sslkey = xstrdup(token + 7);
+	} else if (strncmp(token, "sslversion=", 11) == 0) {
+	    p->sslversion = atoi(token + 11);
+	} else if (strncmp(token, "ssloptions=", 11) == 0) {
+	    safe_free(p->ssloptions);
+	    p->ssloptions = xstrdup(token + 11);
+	} else if (strncmp(token, "sslcipher=", 10) == 0) {
+	    safe_free(p->sslcipher);
+	    p->sslcipher = xstrdup(token + 10);
+	} else if (strncmp(token, "sslcafile=", 10) == 0) {
+	    safe_free(p->sslcafile);
+	    p->sslcipher = xstrdup(token + 10);
+	} else if (strncmp(token, "sslcapath=", 10) == 0) {
+	    safe_free(p->sslcapath);
+	    p->sslcipher = xstrdup(token + 10);
+	} else if (strncmp(token, "sslflags=", 9) == 0) {
+	    safe_free(p->sslflags);
+	    p->sslflags = xstrdup(token + 9);
+	} else if (strncmp(token, "ssldomain=", 10) == 0) {
+	    safe_free(p->ssldomain);
+	    p->ssldomain = xstrdup(token + 10);
+#endif
+	} else if (strcmp(token, "front-end-https") == 0) {
+	    p->front_end_https = 1;
+	} else if (strcmp(token, "front-end-https=on") == 0) {
+	    p->front_end_https = 1;
+	} else if (strcmp(token, "front-end-https=auto") == 0) {
+	    p->front_end_https = 2;
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();
@@ -1558,6 +1597,11 @@ parse_peer(peer ** head)
 	 */
 	PeerDigest *pd = peerDigestCreate(p);
 	p->digest = cbdataReference(pd);
+    }
+#endif
+#if USE_SSL
+    if (p->use_ssl) {
+	p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath);
     }
 #endif
     while (*head != NULL)
@@ -2405,12 +2449,25 @@ parse_https_port_list(https_port_list ** head)
 	} else if (strncmp(token, "cipher=", 7) == 0) {
 	    safe_free(s->cipher);
 	    s->cipher = xstrdup(token + 7);
+	} else if (strncmp(token, "clientca=", 9) == 0) {
+	    safe_free(s->clientca);
+	    s->clientca = xstrdup(token + 9);
+	} else if (strncmp(token, "cafile=", 7) == 0) {
+	    safe_free(s->cafile);
+	    s->cafile = xstrdup(token + 7);
+	} else if (strncmp(token, "capath=", 7) == 0) {
+	    safe_free(s->capath);
+	    s->capath = xstrdup(token + 7);
+	} else if (strncmp(token, "sslflags=", 9) == 0) {
+	    safe_free(s->sslflags);
+	    s->sslflags = xstrdup(token + 9);
 	} else {
 	    self_destruct();
 	}
     }
     while (*head)
 	head = &(*head)->next;
+    s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath);
     *head = s;
 }
 
@@ -2418,18 +2475,26 @@ static void
 dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
 {
     while (s) {
-	storeAppendPrintf(e, "%s %s:%d cert=\"%s\" key=\"%s\"",
+	storeAppendPrintf(e, "%s %s:%d",
 	    n,
 	    inet_ntoa(s->s.sin_addr),
-	    ntohs(s->s.sin_port),
-	    s->cert,
-	    s->key);
+	    ntohs(s->s.sin_port));
+	if (s->cert)
+	    storeAppendPrintf(e, " cert=%s", s->cert);
+	if (s->key)
+	    storeAppendPrintf(e, " key=%s", s->cert);
 	if (s->version)
 	    storeAppendPrintf(e, " version=%d", s->version);
 	if (s->options)
 	    storeAppendPrintf(e, " options=%s", s->options);
 	if (s->cipher)
 	    storeAppendPrintf(e, " cipher=%s", s->cipher);
+	if (s->cafile)
+	    storeAppendPrintf(e, " cafile=%s", s->cafile);
+	if (s->capath)
+	    storeAppendPrintf(e, " capath=%s", s->capath);
+	if (s->sslflags)
+	    storeAppendPrintf(e, " sslflags=%s", s->sslflags);
 	storeAppendPrintf(e, "\n");
 	s = s->next;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.438 2002/11/15 13:12:36 hno Exp $
+ * $Id: structs.h,v 1.439 2002/12/06 23:19:16 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,6 +47,13 @@ struct _dlink_list {
     dlink_node *head;
     dlink_node *tail;
 };
+
+#if USE_SSL
+struct _acl_cert_data {
+    splayNode *values;
+    char *attribute;
+};
+#endif
 
 struct _acl_user_data {
     splayNode *names;
@@ -238,8 +245,12 @@ struct _https_port_list {
     int version;
     char *cipher;
     char *options;
+    char *clientca;
+    char *cafile;
+    char *capath;
+    char *sslflags;
+    SSL_CTX *sslContext;
 };
-
 #endif
 
 #if DELAY_POOLS
@@ -587,6 +598,7 @@ struct _SquidConfig {
 #if USE_SSL
     struct {
 	int unclean_shutdown;
+	char *ssl_engine;
     } SSL;
 #endif
     wordlist *ext_methods;
@@ -598,6 +610,19 @@ struct _SquidConfig {
     char *store_dir_select_algorithm;
     int sleep_after_fork;	/* microseconds */
     external_acl *externalAclHelperList;
+#if USE_SSL
+    struct {
+	char *cert;
+	char *key;
+	int version;
+	char *options;
+	char *cipher;
+	char *cafile;
+	char *capath;
+	char *flags;
+	SSL_CTX *sslContext;
+    } ssl_client;
+#endif
 };
 
 struct _SquidConfig2 {
@@ -868,6 +893,7 @@ struct _http_state_flags {
     unsigned int proxying:1;
     unsigned int keepalive:1;
     unsigned int only_if_cached:1;
+    unsigned int front_end_https:2;
 };
 
 struct _ping_data {
@@ -913,6 +939,9 @@ struct _AccessLogEntry {
 	int msec;
 	const char *rfc931;
 	const char *authuser;
+#if USE_SSL
+	const char *ssluser;
+#endif
     } cache;
     struct {
 	char *request;
@@ -1186,6 +1215,20 @@ struct _peer {
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
     int max_conn;
+#if USE_SSL
+    int use_ssl;
+    char *sslcert;
+    char *sslkey;
+    int sslversion;
+    char *ssloptions;
+    char *sslcipher;
+    char *sslcafile;
+    char *sslcapath;
+    char *sslflags;
+    char *ssldomain;
+    SSL_CTX *sslContext;
+#endif
+    int front_end_https;
 };
 
 struct _net_db_name {

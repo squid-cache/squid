@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.81 2002/10/13 20:34:56 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.82 2002/12/06 23:19:13 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -131,6 +131,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
 #if X_ACCELERATOR_VARY
     {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
 #endif
+    {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
     {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
 };
 static HttpHeaderFieldInfo *Headers = NULL;

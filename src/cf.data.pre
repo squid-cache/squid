@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.291 2002/11/15 13:12:36 hno Exp $
+# $Id: cf.data.pre,v 1.292 2002/12/06 23:19:14 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -133,6 +133,26 @@ DOC_START
 			    NO_TLSv1  Disallow the use of TLSv1
 			See src/ssl_support.c or OpenSSL documentation
 			for a more complete list.
+
+	   clientca=	File containing the list of CAs to use when
+			requesting a client certificate
+
+	   cafile=	File containing additional CA certificates to
+			use when verifying client certificates. If unset
+			clientca will be used.
+
+	   capath=	Directory containing additional CA certificates
+			to use when verifying client certificates
+
+	   sslflags=	Various flags modifying the use of SSL:
+			    DELAYED_AUTH
+				Don't request client certificates
+				immediately, but wait until acl processing
+				requires a certificate
+			    NO_DEFAULT_CA	
+				Don't use the default CA list built in
+				to OpenSSL.
+
 DOC_END
 
 NAME: ssl_unclean_shutdown
@@ -143,6 +163,85 @@ LOC: Config.SSL.unclean_shutdown
 DOC_START
 	Some browsers (especially MSIE) bugs out on SSL shutdown
 	messages.
+DOC_END
+
+NAME: ssl_engine
+IFDEF: USE_SSL
+TYPE: string
+LOC: Config.SSL.ssl_engine
+DEFAULT: none
+DOC_START
+	The openssl engine to use. You will need to set this if you
+	would like to use hardware SSL acceleration for example.
+DOC_END
+
+NAME: sslproxy_client_certificate
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.cert
+TYPE: string
+DOC_START
+	Client SSL Certificate to use when proxying https:// URLs
+DOC_END
+
+NAME: sslproxy_client_key
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.key
+TYPE: string
+DOC_START
+	Client SSL Key to use when proxying https:// URLs
+DOC_END
+
+NAME: sslproxy_version
+IFDEF: USE_SSL
+DEFAULT: 1
+LOC: Config.ssl_client.version
+TYPE: int
+DOC_START
+	SSL version level to use when proxying https:// URLs
+DOC_END
+
+NAME: sslproxy_options
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.options
+TYPE: string
+DOC_START
+	SSL engine options to use when proxying https:// URLs
+DOC_END
+
+NAME: sslproxy_cipher
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.cipher
+TYPE: string
+DOC_START
+	SSL cipher list to use when proxying https:// URLs
+DOC_END
+
+NAME: sslproxy_cafile
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.cafile
+TYPE: string
+DOC_START
+DOC_END
+
+NAME: sslproxy_capath
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.capath
+TYPE: string
+DOC_START
+DOC_END
+
+NAME: sslproxy_flags
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.flags
+TYPE: string
+DOC_START
 DOC_END
 
 NAME: icp_port udp_port
@@ -238,7 +337,7 @@ LOC: Config.peers
 DOC_START
 	To specify other caches in a hierarchy, use the format:
 
-		cache_peer hostname type http_port icp_port
+		cache_peer hostname type http_port icp_port [options]
 
 	For example,
 
@@ -279,6 +378,13 @@ DOC_START
 		     digest-url=url
 		     allow-miss
 		     max-conn
+		     ssl
+		     sslcert=/path/to/ssl/certificate
+		     sslkey=/path/to/ssl/key
+		     sslversion=1|2|3|4
+		     sslcipher=...
+		     ssloptions=...
+		     front-end-https[=on|auto]
 
 		     use 'proxy-only' to specify that objects fetched
 		     from this cache should not be saved locally.
@@ -384,6 +490,64 @@ DOC_START
 
 		     use 'max-conn' to limit the amount of connections Squid
 		     may open to this peer.
+
+		     use 'ssl' to indicate that connections to this peer should
+		     bs SSL/TLS encrypted.
+
+		     use 'sslcert=/path/to/ssl/certificate' to specify a client
+		     SSL certificate to use when connecting to this peer.
+
+		     use 'sslkey=/path/to/ssl/key' to specify the private SSL
+		     key corresponding to sslcert above. If 'sslkey' is not
+		     specified then 'sslcert' is assumed to reference a
+		     combined file containing both the certificate and the key.
+
+		     use sslversion=1|2|3|4 to specify the SSL version to use
+		     when connecting to this peer
+			1 = automatic (default)
+			2 = SSL v2 only
+			3 = SSL v3 only
+			4 = TLS v1 only
+
+		     use sslcipher=... to specify the list of valid SSL chipers
+		     to use when connecting to this peer
+
+		     use ssloptions=... to specify various SSL engine options:
+			NO_SSLv2  Disallow the use of SSLv2
+			NO_SSLv3  Disallow the use of SSLv3
+			NO_TLSv1  Disallow the use of TLSv1
+		     See src/ssl_support.c or the OpenSSL documentation for
+		     a more complete list.
+
+		     use cafile=... to specify a file containing additional
+		     CA certificates to use when verifying the peer certificate
+
+		     use capath=... to specify a directory containing additional
+		     CA certificates to use when verifying the peer certificate
+
+		     use sslflags=... to specify various flags modifying the
+		     SSL implementation:
+			DONT_VERIFY_PEER
+				Accept certificates even if they fail to
+				verify.
+			NO_DEFAULT_CA	
+				Don't use the default CA list built in
+				to OpenSSL.
+			DONT_VERIFY_DOMAIN
+				Don't verify that the peer certificate
+				matches the server name
+
+		     use sslname= to specify the peer name as advertised
+		     in it's certificate. Used for verifying the correctness
+		     of the received peer certificate. If not specified the
+		     peer hostname will be used.
+
+		     use front-end-https to enable the "Front-End-Https: On"
+		     header needed when using Squid as a SSL frontend infront
+		     of Microsoft OWA. See MS KB document Q307347 for details
+		     on this header. If set to auto then the header will
+		     only be added if the request is forwarded as a https://
+		     URL.
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 DOC_END
@@ -1529,6 +1693,8 @@ DOC_START
 	  %PORT		Requested port
 	  %PATH		Requested URL path
 	  %METHOD	Request method
+	  %USER_CERT_xx	SSL User certificate attribute xx
+	  %USER_CA_xx	SSL User certificate CA attribute xx
 	  %{Header}	HTTP request header
 	  %{Hdr:member}	HTTP request header list member
 	  %{Hdr:;member}
@@ -2061,6 +2227,14 @@ DOC_START
 	acl acl_name external class_name [arguments...]
 	  # external ACL lookup via a helper class defined by the
 	  # external_acl_type directive.
+
+	acl aclname user_cert attribute values...
+	  # match against attributes in a user SSL certificate
+	  # attribute is one of DN/C/O/CN/L/ST
+
+	acl aclname ca_cert attribute values...
+	  # match against attributes a users issuing CA SSL certificate
+	  # attribute is one of DN/C/O/CN/L/ST
 
 Examples:
 acl myexample dst_as 1241
