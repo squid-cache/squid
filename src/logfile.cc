@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.16 2005/03/02 20:57:35 hno Exp $
+ * $Id: logfile.cc,v 1.17 2005/03/06 21:48:55 serassio Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -46,11 +46,15 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 
     xstrncpy(lf->path, path, MAXPATHLEN);
 
+#if HAVE_SYSLOG
+
     if (strcmp(path, "syslog") == 0) {
         lf->flags.syslog = 1;
         lf->syslog_priority = LOG_INFO;
         lf->fd = -1;
-    } else {
+    } else
+#endif
+    {
         fd = file_open(path, O_WRONLY | O_CREAT | O_TEXT);
 
         if (DISK_ERROR == fd) {
@@ -153,10 +157,14 @@ logfileRotate(Logfile * lf)
 void
 logfileWrite(Logfile * lf, void *buf, size_t len)
 {
+#if HAVE_SYSLOG
+
     if (lf->flags.syslog) {
         syslog(lf->syslog_priority, "%s", (char *)buf);
         return;
     }
+
+#endif
 
     if (0 == lf->bufsz) {
         /* buffering disabled */
