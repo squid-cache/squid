@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.558 2001/11/15 00:52:42 hno Exp $
+ * $Id: client_side.cc,v 1.559 2001/11/18 10:20:28 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2552,8 +2552,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     dlinkAdd(http, &http->active, &ClientActiveRequests);
 
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n", (*prefix_p) + *req_line_sz_p);
+#if THIS_VIOLATES_HTTP_SPECS_ON_URL_TRANSFORMATION
     if ((t = strchr(url, '#')))	/* remove HTML anchors */
 	*t = '\0';
+#endif
 
     /* handle internal objects */
     if (internalCheck(url)) {
