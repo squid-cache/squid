@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.23 1998/03/06 22:19:30 wessels Exp $
+ * $Id: client_db.cc,v 1.24 1998/03/13 05:38:13 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -156,4 +156,28 @@ clientdbDump(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "\n");
 	c = (ClientInfo *) hash_next(client_table);
     }
+}
+
+void
+clientdbFreeMemory(void)
+{
+    ClientInfo *c;
+    ClientInfo **C;
+    int i = 0;
+    int j;
+    int n = memInUse(MEM_CLIENT_INFO);
+    C = xcalloc(n, sizeof(ClientInfo *));
+    c = (ClientInfo *) hash_first(client_table);
+    while (c && i < n) {
+        *(C + i) = c;
+        i++;
+        c = (ClientInfo *) hash_next(client_table);
+    }
+    for (j = 0; j < i; j++) {
+        c = *(C + j);
+        memFree(MEM_CLIENT_INFO, c);
+    }
+    xfree(C);
+    hashFreeMemory(client_table);
+    client_table = NULL;
 }
