@@ -7,6 +7,8 @@ Changes to squid-1.1.alpha18:
 	- Added 'deny_info' support for redirecting denied requests to
 	  a specific URL (maex@space.net).  
 	- Fixed protoUnregister() to not abort objects being swapped in.
+	- Fixed parent-stays-dead-bug by removing PING_WAITING
+	  check in icpHandleIcpV?().
 	- Changed debug log timestamp format.
 	- Fixed coredump-causing bugs in icpHandleIMSReply().
 	- Fixed FMR bug in neighborsUdpAck() for UDP_HIT_OBJ replies.
