@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.2 1996/02/29 07:23:05 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.3 1996/03/26 05:14:46 wessels Exp $ */
 
 #include "config.h"
 #include <stdio.h>
@@ -71,6 +71,7 @@ static struct {
     int commonLogFormat;
     int debugLevel;
     int neighborTimeout;
+    int stallDelay;
     int singleParentBypass;
     struct {
 	char *host;
@@ -136,6 +137,7 @@ static struct {
 #define DefaultCommonLogFormat	1	/* default on */
 #define DefaultQuickAbort	0	/* default off */
 #define DefaultNeighborTimeout  2	/* 2 seconds */
+#define DefaultStallDelay	3	/* 3 seconds */
 #define DefaultSingleParentBypass 0	/* default off */
 
 stoplist *http_stoplist = NULL;
@@ -1556,6 +1558,10 @@ int getDebugLevel()
 {
     return Config.debugLevel;
 }
+int getStallDelay()
+{
+    return Config.stallDelay;
+}
 char *getAppendDomain()
 {
     return Config.appendDomain;
@@ -1625,6 +1631,7 @@ static void configSetFactoryDefaults()
     Config.commonLogFormat = DefaultCommonLogFormat;
     Config.debugLevel = DefaultDebugLevel;
     Config.neighborTimeout = DefaultNeighborTimeout;
+    Config.stallDelay = DefaultStallDelay;
     Config.singleParentBypass = DefaultSingleParentBypass;
     Config.adminEmail = safe_xstrdup(DefaultAdminEmail);
     Config.effectiveUser = safe_xstrdup(DefaultEffectiveUser);
