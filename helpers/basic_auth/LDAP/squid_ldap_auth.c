@@ -30,6 +30,9 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * 2003-03-01: Juerg Michel
+ *             - Added support for ldap URI via the -H option
+ *               (requires OpenLDAP)
  * 2001-12-12: Michael Cunningham <m.cunningham@xpedite.com>
  *             - Added TLS support and partial ldap version 3 support. 
  * 2001-10-04: Henrik Nordstrom <hno@squid-cache.org>
@@ -134,6 +137,12 @@ squid_ldap_memfree(char *p)
 }
 #endif
 
+#ifdef LDAP_API_FEATURE_X_OPENLDAP
+  #if LDAP_VENDOR_VERSION > 194
+    #define HAS_URI_SUPPORT 1
+  #endif
+#endif
+
 int
 main(int argc, char **argv)
 {
@@ -169,6 +178,12 @@ main(int argc, char **argv)
 	argv++;
 	argc--;
 	switch (option) {
+	case 'H':
+#if !HAS_URI_SUPPORT
+	    fprintf(stderr, "ERROR: Your LDAP library does not have URI support\n");
+	    exit(1);
+#endif
+	    /* Fall thru to -h */
 	case 'h':
 	    if (ldapServer) {
 		int len = strlen(ldapServer) + 1 + strlen(value) + 1;
@@ -283,13 +298,18 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
+#if HAS_URI_SUPPORT
+	fprintf(stderr, "\t-H URI\t\t\tLDAPURI (defaults to ldap://localhost)\n");
+#endif
 	fprintf(stderr, "\t-h server\t\tLDAP server (defaults to localhost)\n");
 	fprintf(stderr, "\t-p port\t\t\tLDAP server port\n");
 	fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
-	fprintf(stderr, "\t-v 1|2\t\t\tLDAP version\n");
+#ifdef LDAP_VERSION3
+	fprintf(stderr, "\t-v 2|3\t\t\tLDAP version\n");
 	fprintf(stderr, "\t-Z\t\t\tTLS encrypt the LDAP connection, requires LDAP version 3\n");
+#endif
 	fprintf(stderr, "\n");
 	fprintf(stderr, "\tIf no search filter is specified, then the dn <userattr>=user,basedn\n\twill be used (same as specifying a search filter of '<userattr>=',\n\tbut quicker as as there is no need to search for the user DN)\n\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
@@ -308,11 +328,21 @@ main(int argc, char **argv)
 	tryagain = 1;
       recover:
 	if (ld == NULL) {
+#if HAS_URI_SUPPORT
+	    if (strstr(ldapServer, "://") != NULL) {
+		rc = ldap_initialize( &ld, ldapServer );
+		if( rc != LDAP_SUCCESS ) {
+		    fprintf(stderr, "\nUnable to connect to LDAPURI:%s\n", ldapServer);
+		    break;
+		}
+	    } else
+#endif
 	    if ((ld = ldap_init(ldapServer, port)) == NULL) {
 		fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n",
 		    ldapServer, port);
 		exit(1);
 	    }
+	}
 
         if (version == -1 ) {
                 version = LDAP_VERSION2;
