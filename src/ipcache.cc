@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.77 1996/10/25 00:22:13 wessels Exp $
+ * $Id: ipcache.cc,v 1.78 1996/10/25 00:24:21 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -740,7 +740,7 @@ ipcache_init(void)
 	debug(14, 1, "Successful DNS name lookup tests...\n");
     }
 
-    ip_table = hash_create(urlcmp, 229, hash4);	/* small hash table */
+    ip_table = hash_create(urlcmp, 229, hash4);		/* small hash table */
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
     static_addrs.in_addrs = xcalloc(1, sizeof(struct in_addr));
 
