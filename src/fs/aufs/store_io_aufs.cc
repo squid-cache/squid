@@ -291,6 +291,8 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
 	storeAufsKickWriteQueue(sio);
     else if (sio->mode == O_RDONLY)
 	storeAufsKickReadQueue(sio);
+    if (aiostate->flags.close_request)
+	storeAufsIOCallback(sio, errflag);
     debug(78, 3) ("storeAufsOpenDone: exiting\n");
 }
 
