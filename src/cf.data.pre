@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.286 2002/09/29 19:04:15 hno Exp $
+# $Id: cf.data.pre,v 1.287 2002/10/07 05:06:43 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1351,7 +1351,7 @@ DOC_START
 	to replay attacks unless you are using an one-time password
 	system (such as SecureID).  If you are using such a system,
 	you will be vulnerable to replay attacks unless you also
-	enable the IP ttl is strict option.
+	use the max_user_ip ACL in an http_access rule.
 
 	=== Parameters for the digest scheme follow ===
 
