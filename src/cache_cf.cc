@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.54 1996/05/01 22:36:24 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.55 1996/05/03 22:56:21 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -892,13 +892,46 @@ static void parseBindAddressLine()
     wordlistAdd(&Config.bind_addr_list, token);
 }
 
+static void parseLocalDomainFile(fname)
+     char *fname;
+{
+    char tmp_line[BUFSIZ];
+    FILE *fp = NULL;
+    char *t = NULL;
+
+    if ((fp = fopen(fname, "r")) == NULL) {
+	debug(3, 1, "parseLocalDomainFile: %s: %s\n", fname, xstrerror());
+	return;
+    }
+    memset(tmp_line, '\0', BUFSIZ);
+    while (fgets(tmp_line, BUFSIZ, fp)) {
+	if (tmp_line[0] == '#')
+	    continue;
+	if (tmp_line[0] == '\0')
+	    continue;
+	if (tmp_line[0] == '\n')
+	    continue;
+	for (t = strtok(tmp_line, w_space); t; t = strtok(NULL, w_space)) {
+	    debug(3, 1, "parseLocalDomainFileLine: adding %s\n", t);
+	    wordlistAdd(&Config.local_domain_list, t);
+	}
+    }
+    fclose(fp);
+}
+
 static void parseLocalDomainLine()
 {
-    char *token;
+    char *token = NULL;
+    struct stat sb;
     while ((token = strtok(NULL, w_space))) {
-	wordlistAdd(&Config.local_domain_list, token);
+	if (stat(token, &sb) < 0) {
+	    wordlistAdd(&Config.local_domain_list, token);
+	} else {
+	    parseLocalDomainFile(token);
+	}
     }
 }
+
 
 static void parseInsideFirewallLine()
 {
@@ -1628,6 +1661,7 @@ static void configFreeMemory()
     safe_free(Config.Log.log);
     safe_free(Config.Log.access);
     safe_free(Config.Log.hierarchy);
+    safe_free(Config.Log.store);
     safe_free(Config.adminEmail);
     safe_free(Config.effectiveUser);
     safe_free(Config.effectiveGroup);

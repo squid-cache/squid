@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.20 1996/05/01 22:36:42 wessels Exp $ */
+/* $Id: url.cc,v 1.21 1996/05/03 22:56:33 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -161,13 +161,14 @@ request_t *urlParse(method, url)
      char *url;
 {
     static char proto[MAX_URL + 1];
+    static char login[MAX_URL + 1];
     static char host[MAX_URL + 1];
     static char urlpath[MAX_URL + 1];
     request_t *request = NULL;
     char *t = NULL;
     int port;
     protocol_t protocol = PROTO_NONE;
-    proto[0] = host[0] = urlpath[0] = '\0';
+    proto[0] = host[0] = urlpath[0] = login[0] = '\0';
 
     if (method == METHOD_CONNECT) {
 	port = CONNECT_PORT;
@@ -178,6 +179,13 @@ request_t *urlParse(method, url)
 	    return NULL;
 	protocol = urlParseProtocol(proto);
 	port = urlDefaultPort(protocol);
+	/* Is there any login informaiton? */
+	if ((t = strrchr(host, '@'))) {
+	    strcpy(login, host);
+	    t = strrchr(login, '@');
+	    *t = 0;
+	    strcpy(host, t + 1);
+	}
 	if ((t = strrchr(host, ':')) && *(t + 1) != '\0') {
 	    *t = '\0';
 	    port = atoi(t + 1);
@@ -193,6 +201,7 @@ request_t *urlParse(method, url)
     request->method = method;
     request->protocol = protocol;
     strncpy(request->host, host, SQUIDHOSTNAMELEN);
+    strncpy(request->login, login, MAX_LOGIN_SZ);
     request->port = port;
     strncpy(request->urlpath, urlpath, MAX_URL);
     return request;
@@ -214,8 +223,10 @@ char *urlCanonical(request, buf)
 	portbuf[0] = '\0';
 	if (request->port != urlDefaultPort(request->protocol))
 	    sprintf(portbuf, ":%d", request->port);
-	sprintf(buf, "%s://%s%s%s",
+	sprintf(buf, "%s://%s%s%s%s%s",
 	    ProtocolStr[request->protocol],
+	    request->login,
+	    *request->login ? "@" : "",
 	    request->host,
 	    portbuf,
 	    request->urlpath);

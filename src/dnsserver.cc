@@ -1,4 +1,4 @@
-/* $Id: dnsserver.cc,v 1.5 1996/04/16 05:05:20 wessels Exp $ */
+/* $Id: dnsserver.cc,v 1.6 1996/05/03 22:56:24 wessels Exp $ */
 
 #include "squid.h"
 
@@ -199,4 +199,5 @@ int main(argc, argv)
 
     exit(0);
     /*NOTREACHED */
+    return 0;
 }

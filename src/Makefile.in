@@ -1,21 +1,31 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.24 1996/05/01 22:38:55 wessels Exp $
+#  $Id: Makefile.in,v 1.25 1996/05/03 22:56:20 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
-LOG_OPT		= # -DNO_LOGGGING
 HOST_OPT	= # -DCACHEMGR_HOSTNAME="getfullhostname()"
-DEFINES		= $(LOG_OPT) $(HOST_OPT)
+DEFINES         = $(HOST_OPT)
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
 top_srcdir	= @top_srcdir@
 bindir		= @bindir@
+libexecdir      = @libexecdir@
 sysconfdir	= @sysconfdir@
+localstatedir   = @localstatedir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+
+DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
+DEFAULT_FTPGET          = $(libexecdir)/ftpget
+DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver
+DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
+DEFAULT_ACCESS_LOG      = $(localstatedir)/logs/access.log
+DEFAULT_HIERARCHY_LOG   = $(localstatedir)/logs/hierarchy.log
+DEFAULT_STORE_LOG       = $(localstatedir)/logs/store.log
+DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 
 CC		= @CC@
 INSTALL		= @INSTALL@
@@ -23,7 +33,7 @@ INSTALL_BIN 	= @INSTALL_PROGRAM@
 INSTALL_FILE 	= @INSTALL_DATA@
 RANLIB		= @RANLIB@
 LN_S		= @LN_S@
-PERL		= @CMD_PERL@
+PERL            = @PERL@
 CRYPT_LIB	= @CRYPT_LIB@
 STD_CFLAGS	= @STD_CFLAGS@
 STD_LDFLAGS	= @STD_LDFLAGS@
@@ -39,29 +49,29 @@ LDFLAGS         = $(STD_LDFLAGS)
 LIBS		= -L../lib -lregex -lutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lutil $(XTRA_LIBS)
 
-PROGS		= squid 
-UTILS		= client dnsserver ftpget
+PROGS           = squid client
+UTILS           = dnsserver ftpget
 CGIPROGS	= cachemgr.cgi
 OBJS	 	= acl.o background.o cache_cf.o errorpage.o comm.o \
-		connect.o debug.o disk.o dynamic_array.o \
+		debug.o disk.o dynamic_array.o \
 		fdstat.o filemap.o ftp.o gopher.o \
 		hash.o http.o icp.o ident.o ipcache.o \
 		main.o mime.o neighbors.o objcache.o \
-		proto.o send-announce.o stack.o stat.o stmem.o \
+		proto.o send-announce.o ssl.o stack.o stat.o stmem.o \
 		store.o storetoString.o tools.o ttl.o \
 		url.o wais.o $(XTRA_OBJS)
 
 DEFAULTS        = \
-	-DDEFAULT_CONFIG_FILE=\"$(sysconfdir)/squid.conf\" \
-	-DDEFAULT_FTPGET=\"$(bindir)/ftpget\" \
-	-DDEFAULT_DNSSERVER=\"$(bindir)/dnsserver\" \
-	-DDEFAULT_CACHE_LOG=\"$(prefix)/logs/cache.log\" \
-	-DDEFAULT_ACCESS_LOG=\"$(prefix)/logs/access.log\" \
-	-DDEFAULT_HIERARCHY_LOG=\"$(prefix)/logs/hierarchy.log\" \
-	-DDEFAULT_STORE_LOG=\"$(prefix)/logs/store.log\" \
-	-DDEFAULT_SWAP_DIR=\"$(prefix)/cache\"
+	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
+	-DDEFAULT_FTPGET=\"$(DEFAULT_FTPGET)\" \
+	-DDEFAULT_DNSSERVER=\"$(DEFAULT_DNSSERVER)\" \
+	-DDEFAULT_CACHE_LOG=\"$(DEFAULT_CACHE_LOG)\" \
+	-DDEFAULT_ACCESS_LOG=\"$(DEFAULT_ACCESS_LOG)\" \
+	-DDEFAULT_HIERARCHY_LOG=\"$(DEFAULT_HIERARCHY_LOG)\" \
+	-DDEFAULT_STORE_LOG=\"$(DEFAULT_STORE_LOG)\" \
+	-DDEFAULT_SWAP_DIR=\"$(DEFAULT_SWAP_DIR)\"
 
-all:	$(PROGS) $(UTILS) $(CGIPROGS)
+all:    squid.conf $(PROGS) $(UTILS) $(CGIPROGS)
 
 squid:	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(CRYPT_LIB) $(LIBS)
@@ -81,6 +91,17 @@ cachemgr.cgi:	cachemgr.o
 ftpget: ftpget.o
 	$(CC) -o $@ $(LDFLAGS) ftpget.o $(LIBS)
 
+squid.conf: squid.conf.pre
+	sed "\
+	s%@DEFAULT_CONFIG_FILE@%$(DEFAULT_CONFIG_FILE)%g;\
+	s%@DEFAULT_FTPGET@%$(DEFAULT_FTPGET)%g;\
+	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
+	s%@DEFAULT_CACHE_LOG@%$(DEFAULT_CACHE_LOG)%g;\
+	s%@DEFAULT_ACCESS_LOG@%$(DEFAULT_ACCESS_LOG)%g;\
+	s%@DEFAULT_HIERARCHY_LOG@%$(DEFAULT_HIERARCHY_LOG)%g;\
+	s%@DEFAULT_STORE_LOG@%$(DEFAULT_STORE_LOG)%g;\
+	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g" <$? >$@
+
 install-mkdirs:
 	@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
@@ -94,13 +115,21 @@ install-mkdirs:
 		echo "mkdir $(bindir)"; \
 		mkdir $(bindir); \
 	fi
+	@if test ! -d $(libexecdir); then \
+		echo "mkdir $(libexecdir)"; \
+		mkdir $(libexecdir); \
+	fi
 	@if test ! -d $(sysconfdir); then \
 		echo "mkdir $(sysconfdir)"; \
 		mkdir $(sysconfdir); \
 	fi
-	@if test ! -d $(exec_prefix)/logs; then \
-		echo "mkdir $(exec_prefix)/logs"; \
-		mkdir $(exec_prefix)/logs; \
+	@if test ! -d $(localstatedir); then \
+		echo "mkdir $(localstatedir)"; \
+		mkdir $(localstatedir); \
+	fi
+	@if test ! -d $(localstatedir)/logs; then \
+		echo "mkdir $(localstatedir)/logs"; \
+		mkdir $(localstatedir)/logs; \
 	fi
 
 install: all install-mkdirs
@@ -109,12 +138,12 @@ install: all install-mkdirs
 		$(INSTALL_BIN) $$f $(bindir); \
 	done
 	@for f in $(UTILS); do \
-		echo $(INSTALL_BIN) $$f $(bindir); \
-		$(INSTALL_BIN) $$f $(bindir); \
+		echo $(INSTALL_BIN) $$f $(libexecdir); \
+		$(INSTALL_BIN) $$f $(libexecdir); \
 	done
 	@for f in $(CGIPROGS); do \
-		echo $(INSTALL_BIN) $$f $(bindir); \
-		$(INSTALL_BIN) $$f $(bindir); \
+		echo $(INSTALL_BIN) $$f $(libexecdir); \
+		$(INSTALL_BIN) $$f $(libexecdir); \
 	done
 	$(INSTALL_FILE) squid.conf $(sysconfdir)/squid.conf.default
 	@if test -f $(sysconfdir)/squid.conf ; then \
@@ -128,4 +157,4 @@ clean:
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS)
 
 realclean:	clean
-	-rm -f Makefile squid.conf
+	-rm -f Makefile squid.conf squid.conf.pre

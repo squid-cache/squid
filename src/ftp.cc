@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.38 1996/05/01 22:36:29 wessels Exp $ */
+/* $Id: ftp.cc,v 1.39 1996/05/03 22:56:25 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -18,11 +18,9 @@ static int ftpget_server_pipe = -1;
 
 typedef struct _Ftpdata {
     StoreEntry *entry;
-    char host[SQUIDHOSTNAMELEN + 1];
-    char request[MAX_URL];
+    request_t *request;
     char user[MAX_URL];
     char password[MAX_URL];
-    int port;
     char *reply_hdr;
     int ftp_fd;
     char *icp_page_ptr;		/* Used to send proxy-http request: 
@@ -34,6 +32,21 @@ typedef struct _Ftpdata {
     int got_marker;		/* denotes end of successful request */
     int reply_hdr_state;
 } FtpData;
+
+
+/* Local functions */
+static int ftpStateFree _PARAMS((int fd, FtpData * ftpState));
+static void ftpProcessReplyHeader _PARAMS((FtpData * data, char *buf, int size));
+static void ftpServerClosed _PARAMS((int fd, void *nodata));
+static void ftp_login_parser _PARAMS((char *login, FtpData * data));
+
+/* Global functions not declared in ftp.h */
+void ftpLifetimeExpire _PARAMS((int fd, FtpData * data));
+int ftpReadReply _PARAMS((int fd, FtpData * data));
+void ftpSendComplete _PARAMS((int fd, char *buf, int size, int errflag, FtpData * data));
+void ftpSendRequest _PARAMS((int fd, FtpData * data));
+void ftpConnInProgress _PARAMS((int fd, FtpData * data));
+void ftpServerClose _PARAMS((void));
 
 static int ftpStateFree(fd, ftpState)
      int fd;
@@ -55,69 +68,27 @@ static int ftpStateFree(fd, ftpState)
     return 0;
 }
 
-int ftp_url_parser(url, data)
-     char *url;
+static void ftp_login_parser(login, data)
+     char *login;
      FtpData *data;
 {
-    static char proto[MAX_URL];
-    static char hostbuf[MAX_URL];
-    char *s = NULL;
-    int t;
-    char *host = data->host;
-    char *request = data->request;
     char *user = data->user;
     char *password = data->password;
+    char *s = NULL;
 
-    debug(9, 3, "ftp_url_parser: parsing '%s'\n", url);
-
-    /* initialize everything */
-    proto[0] = hostbuf[0] = '\0';
-
-    t = sscanf(url, "%[a-zA-Z]://%[^/]%s", proto, hostbuf, request);
-    if (t < 2)
-	return -1;
-    if (strcasecmp(proto, "ftp") && strcasecmp(proto, "file"))
-	return -1;
-    if (t == 2)			/* no request */
-	strcpy(request, "/");
-    (void) url_convert_hex(request, 0);		/* convert %xx to char */
-
-    /* hostbuf is of the format  userid:password@host:port  */
-
-    /* separate into user-part and host-part */
-    if ((s = strchr(hostbuf, '@'))) {
-	*s = '\0';
-	strcpy(user, hostbuf);
-	strcpy(hostbuf, s + 1);
-    }
-    /* separate into user and password */
-    if ((s = strchr(user, ':'))) {
-	*s = '\0';
+    strcpy(user, login);
+    s = strchr(user, ':');
+    if (s) {
+	*s = 0;
 	strcpy(password, s + 1);
+    } else {
+	strcpy(password, "");
     }
-    /* separate into host and port */
-    if ((s = strchr(hostbuf, ':'))) {
-	*s = '\0';
-	data->port = atoi(s + 1);
-    }
-    strncpy(host, hostbuf, SQUIDHOSTNAMELEN);
-    if (*user == '\0')
+
+    if (!*user && !*password) {
 	strcpy(user, "anonymous");
-    if (*password == '\0')
 	strcpy(password, getFtpUser());
-
-    /* we need to convert user and password for URL encodings */
-    (void) url_convert_hex(user, 0);
-
-    (void) url_convert_hex(password, 0);
-
-    debug(9, 5, "ftp_url_parser: proto = %s\n", proto);
-    debug(9, 5, "ftp_url_parser:  user = %s\n", data->user);
-    debug(9, 5, "ftp_url_parser:  pass = %s\n", data->password);
-    debug(9, 5, "ftp_url_parser:  host = %s\n", data->host);
-    debug(9, 5, "ftp_url_parser:  port = %d\n", data->port);
-
-    return 0;
+    }
 }
 
 int ftpCachable(url)
@@ -451,12 +422,12 @@ void ftpSendRequest(fd, data)
 
     debug(9, 5, "ftpSendRequest: FD %d\n", fd);
 
-    buflen = strlen(data->request) + 256;
+    buflen = strlen(data->request->urlpath) + 256;
     buf = (char *) get_free_8k_page();
     data->icp_page_ptr = buf;
     memset(buf, '\0', buflen);
 
-    path = data->request;
+    path = data->request->urlpath;
     l = strlen(path);
     if (path[l - 1] == '/')
 	mode = ftpASCII;
@@ -470,6 +441,7 @@ void ftpSendRequest(fd, data)
 	    mode = ftpBinary;
     }
 
+#ifdef NO_NEED_TO_DO_THIS
     /* Remove leading slash from FTP url-path so that we can
      *  handle ftp://user:pw@host/path objects where path and /path
      *  are quite different.         -DW */
@@ -477,6 +449,7 @@ void ftpSendRequest(fd, data)
 	*path = '.';
     if (*path == '/')
 	path++;
+#endif
 
     /* Start building the buffer ... */
 
@@ -500,13 +473,13 @@ void ftpSendRequest(fd, data)
 	sprintf(tbuf, "-n %d ", getNegativeTTL());
 	strcat(buf, tbuf);
     }
-    if (data->port) {
-	sprintf(tbuf, "-P %d ", data->port);
+    if (data->request->port) {
+	sprintf(tbuf, "-P %d ", data->request->port);
 	strcat(buf, tbuf);
     }
     strcat(buf, "-h ");		/* httpify */
     strcat(buf, "- ");		/* stdout */
-    strcat(buf, data->host);
+    strcat(buf, data->request->host);
     strcat(buf, space);
     strcat(buf, *path ? path : "\"\"");
     strcat(buf, space);
@@ -533,7 +506,7 @@ void ftpConnInProgress(fd, data)
 
     debug(9, 5, "ftpConnInProgress: FD %d\n", fd);
 
-    if (comm_connect(fd, localhost, CACHE_FTP_PORT) != COMM_OK)
+    if (comm_connect(fd, localhost, CACHE_FTP_PORT) != COMM_OK) {
 	switch (errno) {
 	case EINPROGRESS:
 	case EALREADY:
@@ -543,14 +516,12 @@ void ftpConnInProgress(fd, data)
 		(PF) ftpConnInProgress,
 		(void *) data);
 	    return;
-	case EISCONN:
-	    debug(9, 5, "ftpConnInProgress: FD %d is now connected.", fd);
-	    break;		/* cool, we're connected */
 	default:
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    comm_close(fd);
 	    return;
 	}
+    }
     /* Call the real write handler, now that we're fully connected */
     comm_set_select_handler(fd,
 	COMM_SELECT_WRITE,
@@ -559,9 +530,10 @@ void ftpConnInProgress(fd, data)
 }
 
 
-int ftpStart(unusedfd, url, entry)
+int ftpStart(unusedfd, url, request, entry)
      int unusedfd;
      char *url;
+     request_t *request;
      StoreEntry *entry;
 {
     FtpData *data = NULL;
@@ -571,15 +543,14 @@ int ftpStart(unusedfd, url, entry)
 
     data = (FtpData *) xcalloc(1, sizeof(FtpData));
     data->entry = entry;
+    data->request = request;
 
-    /* Parse url. */
-    if (ftp_url_parser(url, data)) {
-	squid_error_entry(entry, ERR_INVALID_URL, NULL);
-	safe_free(data);
-	return COMM_ERROR;
-    }
-    debug(9, 5, "FtpStart: FD %d, host=%s, request=%s, user=%s, passwd=%s\n",
-	unusedfd, data->host, data->request, data->user, data->password);
+    /* Parse login info. */
+    ftp_login_parser(request->login, data);
+
+    debug(9, 5, "FtpStart: FD %d, host=%s, path=%s, user=%s, passwd=%s\n",
+	unusedfd, data->request->host, data->request->urlpath,
+	data->user, data->password);
 
     data->ftp_fd = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (data->ftp_fd == COMM_ERROR) {
@@ -592,7 +563,7 @@ int ftpStart(unusedfd, url, entry)
     /* register close handler */
     comm_set_select_handler(data->ftp_fd,
 	COMM_SELECT_CLOSE,
-	ftpStateFree,
+	(PF) ftpStateFree,
 	(void *) data);
 
     /* Now connect ... */
