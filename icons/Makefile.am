@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.7 2003/02/21 20:52:51 hno Exp $
+# $Id: Makefile.am,v 1.8 2003/05/21 07:19:29 hno Exp $
 #
 
 ICON1	=	anthony-binhex.gif
@@ -43,7 +43,8 @@ $(ICON1):
 ##	@$(SHELL) -c "cd $(srcdir); $(SHELL) icons.shar"
 
 icons.shar:
-	shar --no-timestamp $(ICON1) $(ICON2) > $@
+	shar --no-timestamp $(ICON1) $(ICON2) > $@ 2>/dev/null || \
+	shar $(ICON1) $(ICON2) > $@
 
 ## DEFAULT_ICON_DIR        = $(sysconfdir)/icons
 
