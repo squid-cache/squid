@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.5 2000/05/28 22:42:39 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.6 2000/05/29 00:19:45 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -149,7 +149,7 @@ storeDiskdDirMapBitTest(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
     diskdinfo_t *diskdinfo;
-    diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo = SD->fsdata;
     return file_map_bit_test(diskdinfo->map, filn);
 }
 
@@ -158,7 +158,7 @@ storeDiskdDirMapBitSet(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
     diskdinfo_t *diskdinfo;
-    diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo = SD->fsdata;
     file_map_bit_set(diskdinfo->map, filn);
 }
 
@@ -167,14 +167,14 @@ storeDiskdDirMapBitReset(SwapDir * SD, int fn)
 {
     sfileno filn = fn;
     diskdinfo_t *diskdinfo;
-    diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo = SD->fsdata;
     file_map_bit_reset(diskdinfo->map, filn);
 }
 
 int
 storeDiskdDirMapBitAllocate(SwapDir * SD)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo_t *diskdinfo = SD->fsdata;
     int fn;
     fn = file_map_allocate(diskdinfo->map, diskdinfo->suggest);
     file_map_bit_set(diskdinfo->map, fn);
@@ -191,7 +191,7 @@ storeDiskdDirMapBitAllocate(SwapDir * SD)
 static void
 storeDiskdDirInitBitmap(SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
 
     if (diskdinfo->map == NULL) {
 	/* First time */
@@ -206,7 +206,7 @@ storeDiskdDirInitBitmap(SwapDir * sd)
 static char *
 storeDiskdDirSwapSubDir(SwapDir * sd, int subdirn)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
 
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     assert(0 <= subdirn && subdirn < diskdinfo->l1);
@@ -259,7 +259,7 @@ storeDiskdDirVerifyDirectory(const char *path)
 static int
 storeDiskdDirVerifyCacheDirs(SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     int j;
     const char *path = sd->path;
 
@@ -276,7 +276,7 @@ storeDiskdDirVerifyCacheDirs(SwapDir * sd)
 static void
 storeDiskdDirCreateSwapSubDirs(SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     int i, k;
     int should_exist;
     LOCAL_ARRAY(char, name, MAXPATHLEN);
@@ -326,7 +326,7 @@ storeDiskdDirSwapLogFile(SwapDir * sd, const char *ext)
 static void
 storeDiskdDirOpenSwapLog(SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     char *path;
     int fd;
     path = storeDiskdDirSwapLogFile(sd, NULL);
@@ -346,7 +346,7 @@ storeDiskdDirOpenSwapLog(SwapDir * sd)
 static void
 storeDiskdDirCloseSwapLog(SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     if (diskdinfo->swaplog_fd < 0)	/* not open */
 	return;
     file_close(diskdinfo->swaplog_fd);
@@ -371,7 +371,7 @@ storeDiskdDirInit(SwapDir * sd)
     char skey1[32];
     char skey2[32];
     char skey3[32];
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     static const char *errmsg =
     "\tFailed to verify one of the swap directories, Check cache.log\n"
     "\tfor details.  Run 'squid -z' to create swap directories\n"
@@ -477,7 +477,7 @@ storeDiskdDirCallback(SwapDir * SD)
 {
     diomsg M;
     int x;
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo_t *diskdinfo = SD->fsdata;
 
     if (diskdinfo->away >= diskdinfo->magic2)
 	diskd_stats.block_queue_len++;
@@ -823,7 +823,7 @@ static int
 storeDiskdDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 {
     SwapDir *SD = rb->sd;
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo_t *diskdinfo = SD->fsdata;
     int fd = -1;
     int used = 0;
     int dirs_opened = 0;
@@ -990,7 +990,7 @@ storeDiskdDirRebuild(SwapDir * sd)
 static void
 storeDiskdDirCloseTmpSwapLog(SwapDir * sd)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     char *swaplog_path = xstrdup(storeDiskdDirSwapLogFile(sd, NULL));
     char *new_path = xstrdup(storeDiskdDirSwapLogFile(sd, ".new"));
     int fd;
@@ -1018,7 +1018,7 @@ storeDiskdDirCloseTmpSwapLog(SwapDir * sd)
 static FILE *
 storeDiskdDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     char *swaplog_path = xstrdup(storeDiskdDirSwapLogFile(sd, NULL));
     char *clean_path = xstrdup(storeDiskdDirSwapLogFile(sd, ".last-clean"));
     char *new_path = xstrdup(storeDiskdDirSwapLogFile(sd, ".new"));
@@ -1204,7 +1204,7 @@ storeDiskdDirWriteCleanClose(SwapDir * sd)
 static void
 storeDiskdDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     storeSwapLogData *s = xcalloc(1, sizeof(storeSwapLogData));
     s->op = (char) op;
     s->swap_filen = e->swap_filen;
@@ -1263,7 +1263,7 @@ storeDiskdDirClean(int swap_index)
     N0 = n_diskd_dirs;
     D0 = diskd_dir_index[swap_index % N0];
     SD = &Config.cacheSwap.swapDirs[D0];
-    diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo = SD->fsdata;
     N1 = diskdinfo->l1;
     D1 = (swap_index / N0) % N1;
     N2 = diskdinfo->l2;
@@ -1342,7 +1342,7 @@ storeDiskdDirCleanEvent(void *unused)
 	    if (!storeDiskdDirIs(sd))
 		continue;
 	    diskd_dir_index[n++] = i;
-	    diskdinfo = (diskdinfo_t *) sd->fsdata;
+	    diskdinfo = sd->fsdata;
 	    j += (diskdinfo->l1 * diskdinfo->l2);
 	}
 	assert(n == n_diskd_dirs);
@@ -1381,7 +1381,7 @@ storeDiskdFilenoBelongsHere(int fn, int F0, int F1, int F2)
     int filn = fn;
     diskdinfo_t *diskdinfo;
     assert(F0 < Config.cacheSwap.n_configured);
-    diskdinfo = (diskdinfo_t *) Config.cacheSwap.swapDirs[F0].fsdata;
+    diskdinfo = Config.cacheSwap.swapDirs[F0].fsdata;
     L1 = diskdinfo->l1;
     L2 = diskdinfo->l2;
     D1 = ((filn / L2) / L2) % L1;
@@ -1396,7 +1396,7 @@ storeDiskdFilenoBelongsHere(int fn, int F0, int F1, int F2)
 int
 storeDiskdDirValidFileno(SwapDir * SD, sfileno filn)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo_t *diskdinfo = SD->fsdata;
     if (filn < 0)
 	return 0;
     if (filn > diskdinfo->map->max_n_files)
@@ -1567,7 +1567,7 @@ storeDiskdDirCheckObj(SwapDir * SD, const StoreEntry * e)
 {
     int loadav;
 
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo_t *diskdinfo = SD->fsdata;
 #if !HEAP_REPLACEMENT
     if (storeDiskdDirExpiredReferenceAge(SD) < 300) {
 	debug(20, 3) ("storeDiskdDirCheckObj: NO: LRU Age = %d\n",
@@ -1766,7 +1766,7 @@ void *
 storeDiskdShmGet(SwapDir * sd, int *shm_offset)
 {
     char *buf;
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     buf = linklistShift(&diskdinfo->shm.stack);
     assert(buf);
     *shm_offset = buf - diskdinfo->shm.buf;
@@ -1779,7 +1779,7 @@ void
 storeDiskdShmPut(SwapDir * sd, int offset)
 {
     char *buf;
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo_t *diskdinfo = sd->fsdata;
     assert(offset >= 0);
     assert(offset < SHMBUFS * SHMBUF_BLKSZ);
     buf = diskdinfo->shm.buf + offset;
@@ -1799,7 +1799,7 @@ storeDiskdDirStats(SwapDir * SD, StoreEntry * sentry)
 #if HAVE_STATVFS
     struct statvfs sfs;
 #endif
-    diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo = SD->fsdata;
     storeAppendPrintf(sentry, "First level subdirectories: %d\n", diskdinfo->l1);
     storeAppendPrintf(sentry, "Second level subdirectories: %d\n", diskdinfo->l2);
     storeAppendPrintf(sentry, "Maximum Size: %d KB\n", SD->max_size);
@@ -1893,7 +1893,7 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
     if (sd->flags.read_only != read_only)
 	debug(3, 1) ("Cache dir '%s' now %s\n",
 	    path, read_only ? "Read-Only" : "Read-Write");
-    diskdinfo = (diskdinfo_t *) sd->fsdata;
+    diskdinfo = sd->fsdata;
     diskdinfo->magic1 = magic1;
     diskdinfo->magic2 = magic2;
     sd->flags.read_only = read_only;
@@ -1903,7 +1903,7 @@ storeDiskdDirReconfigure(SwapDir * sd, int index, char *path)
 void
 storeDiskdDirDump(StoreEntry * entry, const char *name, SwapDir * s)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) s->fsdata;
+    diskdinfo_t *diskdinfo = s->fsdata;
     storeAppendPrintf(entry, "%s %s %s %d %d %d\n",
 	name,
 	"diskd",
@@ -1919,7 +1919,7 @@ storeDiskdDirDump(StoreEntry * entry, const char *name, SwapDir * s)
 static void
 storeDiskdDirFree(SwapDir * s)
 {
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) s->fsdata;
+    diskdinfo_t *diskdinfo = s->fsdata;
     if (diskdinfo->swaplog_fd > -1) {
 	file_close(diskdinfo->swaplog_fd);
 	diskdinfo->swaplog_fd = -1;
@@ -1934,7 +1934,7 @@ char *
 storeDiskdDirFullPath(SwapDir * SD, sfileno filn, char *fullpath)
 {
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
-    diskdinfo_t *diskdinfo = (diskdinfo_t *) SD->fsdata;
+    diskdinfo_t *diskdinfo = SD->fsdata;
     int L1 = diskdinfo->l1;
     int L2 = diskdinfo->l2;
     if (!fullpath)
