@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_heap_replacement.cc,v 1.9 2002/10/13 20:35:29 robertc Exp $
+ * $Id: store_heap_replacement.cc,v 1.10 2002/10/15 08:03:36 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Heap-based replacement
  * AUTHOR: John Dilley
@@ -80,7 +80,7 @@ HeapKeyGen_StoreEntry_LFUDA(void *entry, double heap_age)
 	tie = 1.0 - exp((double) (e->lastref - squid_curtime) / 86400.0);
     key = heap_age + (double) e->refcount - tie;
     debug(81, 3) ("HeapKeyGen_StoreEntry_LFUDA: %s refcnt=%d lastref=%ld heap_age=%f tie=%f -> %f\n",
-	storeKeyText((const cache_key *)e->hash.key), (int)e->refcount, e->lastref, heap_age, tie, key);
+	e->getMD5Text(), (int)e->refcount, e->lastref, heap_age, tie, key);
     if (e->mem_obj && e->mem_obj->url)
 	debug(81, 3) ("HeapKeyGen_StoreEntry_LFUDA: url=%s\n",
 	    e->mem_obj->url);
@@ -116,7 +116,7 @@ HeapKeyGen_StoreEntry_GDSF(void *entry, double heap_age)
     double tie = (e->lastref > 1) ? (1.0 / e->lastref) : 1.0;
     key = heap_age + ((double) e->refcount / size) - tie;
     debug(81, 3) ("HeapKeyGen_StoreEntry_GDSF: %s size=%f refcnt=%d lastref=%ld heap_age=%f tie=%f -> %f\n",
-	storeKeyText((const cache_key *)e->hash.key), size, (int)e->refcount, e->lastref, heap_age, tie, key);
+	e->getMD5Text(), size, (int)e->refcount, e->lastref, heap_age, tie, key);
     if (e->mem_obj && e->mem_obj->url)
 	debug(81, 3) ("HeapKeyGen_StoreEntry_GDSF: url=%s\n",
 	    e->mem_obj->url);
@@ -135,7 +135,7 @@ HeapKeyGen_StoreEntry_LRU(void *entry, double heap_age)
 {
     StoreEntry *e = (StoreEntry *)entry;
     debug(81, 3) ("HeapKeyGen_StoreEntry_LRU: %s heap_age=%f lastref=%f\n",
-	storeKeyText((const cache_key *)e->hash.key), heap_age, (double) e->lastref);
+	e->getMD5Text(), heap_age, (double) e->lastref);
     if (e->mem_obj && e->mem_obj->url)
 	debug(81, 3) ("HeapKeyGen_StoreEntry_LRU: url=%s\n",
 	    e->mem_obj->url);

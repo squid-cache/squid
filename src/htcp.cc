@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.43 2002/10/13 20:35:01 robertc Exp $
+ * $Id: htcp.cc,v 1.44 2002/10/15 08:03:29 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -992,7 +992,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     }
     htcpSend(pkt, (int) pktlen, &p->in_addr);
     save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
-    storeKeyCopy(save_key, (unsigned char const *)e->hash.key);
+    storeKeyCopy(save_key, (const cache_key *)e->key);
     debug(31, 3) ("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
     xfree(pkt);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.52 2002/10/13 20:35:05 robertc Exp $
+ * $Id: store_digest.cc,v 1.53 2002/10/15 08:03:30 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -137,17 +137,17 @@ storeDigestDel(const StoreEntry * entry)
     }
     assert(entry && store_digest);
     debug(71, 6) ("storeDigestDel: checking entry, key: %s\n",
-	storeKeyText( (const cache_key *)entry->hash.key));
+	entry->getMD5Text());
     if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-	if (!cacheDigestTest(store_digest,  (const cache_key *)entry->hash.key)) {
+	if (!cacheDigestTest(store_digest,  (const cache_key *)entry->key)) {
 	    sd_stats.del_lost_count++;
 	    debug(71, 6) ("storeDigestDel: lost entry, key: %s url: %s\n",
-		storeKeyText( (const cache_key *)entry->hash.key), storeUrl(entry));
+		entry->getMD5Text(), storeUrl(entry));
 	} else {
 	    sd_stats.del_count++;
-	    cacheDigestDel(store_digest,  (const cache_key *)entry->hash.key);
+	    cacheDigestDel(store_digest,  (const cache_key *)entry->key);
 	    debug(71, 6) ("storeDigestDel: deled entry, key: %s\n",
-		storeKeyText((const cache_key *)entry->hash.key));
+		entry->getMD5Text());
 	}
     }
 #endif
@@ -189,7 +189,7 @@ storeDigestAddable(const StoreEntry * e)
     /* add some stats! XXX */
 
     debug(71, 6) ("storeDigestAddable: checking entry, key: %s\n",
-	storeKeyText((const cache_key *)e->hash.key));
+	e->getMD5Text());
 
     /* check various entry flags (mimics storeCheckCachable XXX) */
     if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
@@ -247,14 +247,14 @@ storeDigestAdd(const StoreEntry * entry)
 
     if (storeDigestAddable(entry)) {
 	sd_stats.add_count++;
-	if (cacheDigestTest(store_digest, (const cache_key *)entry->hash.key))
+	if (cacheDigestTest(store_digest, (const cache_key *)entry->key))
 	    sd_stats.add_coll_count++;
-	cacheDigestAdd(store_digest,  (const cache_key *)entry->hash.key);
+	cacheDigestAdd(store_digest,  (const cache_key *)entry->key);
 	debug(71, 6) ("storeDigestAdd: added entry, key: %s\n",
-	    storeKeyText( (const cache_key *)entry->hash.key));
+	    entry->getMD5Text());
     } else {
 	sd_stats.rej_count++;
-	if (cacheDigestTest(store_digest,  (const cache_key *)entry->hash.key))
+	if (cacheDigestTest(store_digest,  (const cache_key *)entry->key))
 	    sd_stats.rej_coll_count++;
     }
 }
@@ -356,7 +356,7 @@ storeDigestRewriteStart(void *datanotused)
     assert(e);
     sd_state.rewrite_lock = cbdataAlloc(generic_cbdata);
     sd_state.rewrite_lock->data = e;
-    debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText( (const cache_key *)e->hash.key));
+    debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, e->getMD5Text());
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
     /* wait for rebuild (if any) to finish */
     if (sd_state.rebuild_lock) {

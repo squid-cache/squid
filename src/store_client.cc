@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.117 2002/10/14 08:16:59 robertc Exp $
+ * $Id: store_client.cc,v 1.118 2002/10/15 08:03:30 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -192,7 +192,7 @@ storeClientCopy(store_client * sc,
 {
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     debug(20, 3) ("storeClientCopy: %s, from %lu, for length %d, cb %p, cbdata %p\n",
-	storeKeyText((const cache_key *)e->hash.key),
+	e->getMD5Text(),
 	(unsigned long) copyInto.offset,
 	(int) copyInto.length,
 	callback,
@@ -252,7 +252,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	return;
     }
     sc->flags.store_copying = 1;
-    debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText((const cache_key *)e->hash.key));
+    debug(20, 3) ("storeClientCopy2: %s\n", e->getMD5Text());
     assert(sc->callback != NULL);
     /*
      * We used to check for ENTRY_ABORTED here.  But there were some
@@ -423,10 +423,10 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	case STORE_META_KEY:
 	    assert(t->length == MD5_DIGEST_CHARS);
 	    if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
-		memcmp(t->value, e->hash.key, MD5_DIGEST_CHARS)) {
+		memcmp(t->value, e->key, MD5_DIGEST_CHARS)) {
 		debug(20, 2) ("storeClientReadHeader: swapin MD5 mismatch\n");
 		debug(20, 2) ("\t%s\n", storeKeyText((const cache_key *)t->value));
-		debug(20, 2) ("\t%s\n", storeKeyText((const cache_key *)e->hash.key));
+		debug(20, 2) ("\t%s\n", e->getMD5Text());
 		if (isPowTen(++md5_mismatches))
 		    debug(20, 1) ("WARNING: %d swapin MD5 mismatches\n",
 			md5_mismatches);
@@ -526,7 +526,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 #endif
     if (mem == NULL)
 	return 0;
-    debug(20, 3) ("storeUnregister: called for '%s'\n", storeKeyText((const cache_key *)e->hash.key));
+    debug(20, 3) ("storeUnregister: called for '%s'\n", e->getMD5Text());
     if (sc == NULL)
 	return 0;
     if (mem->clients.head == NULL)
@@ -599,7 +599,7 @@ InvokeHandlers(StoreEntry * e)
     dlink_node *nx = NULL;
     dlink_node *node;
 
-    debug(20, 3) ("InvokeHandlers: %s\n", storeKeyText((const cache_key *)e->hash.key));
+    debug(20, 3) ("InvokeHandlers: %s\n", e->getMD5Text());
     /* walk the entire list looking for valid callbacks */
     for (node = mem->clients.head; node; node = nx) {
 	sc = (store_client *)node->data;
