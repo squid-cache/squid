@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.87 1996/11/22 04:37:59 wessels Exp $
+ * $Id: ipcache.cc,v 1.88 1996/11/22 08:38:51 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -539,7 +539,7 @@ ipcache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
 		fatal_dump("Invalid $ttl");
 	    i.expires = squid_curtime + atoi(token);
 	} else {
-	    debug(14,0,"--> %s <--\n", inbuf);
+	    debug(14, 0, "--> %s <--\n", inbuf);
 	    debug_trap("Invalid dnsserver output");
 	}
     }
