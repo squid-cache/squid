@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.258 1998/03/16 21:45:00 wessels Exp $
+ * $Id: cache_cf.cc,v 1.259 1998/03/17 05:12:34 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -57,14 +57,12 @@ static void self_destruct(void);
 static void wordlistAdd(wordlist **, const char *);
 
 static void configDoConfigure(void);
-#if SQUID_SNMP
-static void parse_snmp_conf(snmpconf **);
-#endif
 static void parse_refreshpattern(refresh_t **);
 static int parseTimeUnits(const char *unit);
 static void parseTimeLine(time_t * tptr, const char *units);
 static void parse_string(char **);
 static void parse_wordlist(wordlist **);
+static void parse_stringlist(wordlist **);
 static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
@@ -379,53 +377,6 @@ dump_acl(StoreEntry * entry, const char *name, acl * acl)
 	acl = acl->next;
     }
 }
-
-#if SQUID_SNMP
-static void
-parse_snmp_conf(snmpconf ** s)
-{
-    static char buff[256];
-    static char *tokens[10], *p;
-
-    if (Mib == NULL) {
-	if (Config.Snmp.mibPath)
-	    init_mib(Config.Snmp.mibPath);
-	else
-	    fatal("snmp_mib_path should be defined before any snmp_agent_conf\n");
-    }
-    p = strtok(NULL, null_string);
-    xstrncpy(buff, p, 256);
-    tokenize(buff, tokens, 10);
-    if (!strcmp("view", tokens[0])) {
-	if (create_view(tokens) < 0)
-	    debug(49, 5) ("snmp: parse_snmpconf(): error\n");
-    } else if (!strcmp("user", tokens[0])) {
-	if (create_user(tokens) < 0)
-	    debug(49, 5) ("snmp: parse_snmpconf(): error\n");
-    } else if (!strcmp("community", tokens[0])) {
-	if (create_community(tokens) < 0)
-	    debug(49, 5) ("snmp: parse_snmpconf(): error\n");
-    } else
-	debug(49, 5) ("snmp: unknown directive %s\n", tokens[0]);
-}
-
-static void
-dump_snmp_conf(StoreEntry * entry, const char *name, snmpconf * head)
-{
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
-}
-
-static void
-free_snmp_conf(snmpconf ** head)
-{
-    snmpconf *t;
-    while ((t = *head) != NULL) {
-	*head = t->next;
-	safe_free(t->line);
-	safe_free(t);
-    }
-}
-#endif
 
 static void
 parse_acl(acl ** acl)
@@ -1296,10 +1247,19 @@ static void
 parse_wordlist(wordlist ** list)
 {
     char *token;
-
     while ((token = strtok(NULL, w_space)))
 	wordlistAdd(list, token);
 }
+
+static void
+parse_stringlist(wordlist ** list)
+{
+    char *token;
+    while ((token = strtok(NULL, null_string)))
+	wordlistAdd(list, token);
+}
+#define free_stringlist free_wordlist
+#define dump_stringlist dump_wordlist
 
 #define free_wordlist wordlistDestroy
 

@@ -2075,7 +2075,7 @@ snmp_enable_authen_traps off
 DOC_END
 
 NAME: snmp_agent_conf
-TYPE: snmp_conf
+TYPE: stringlist
 LOC: Config.Snmp.snmpconf
 DEFAULT: none
 IFDEF: SQUID_SNMP

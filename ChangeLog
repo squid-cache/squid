@@ -3,6 +3,10 @@
 	- Extended String object to use memory pools.  Most fixed size char
 	  array fields will be replaced using string pools. Same for most
 	  malloc()-ed buffers.
+	- Changed icon handling to use the hostname and port of the squid
+	  server, instead of the special hostname "internal.squid".
+	- All icons are now configured in mime.conf. No hardcoded icons,
+	  including gohper icons.
 	- Fixed ICP bug when we send queries, but expect zero
 	  replies.
 	- Fixed alignment/casting bugs for ICP messages.
@@ -12,6 +16,20 @@
 	  Code is still beta and interoperability with browsers etc has
 	  not been tested.
 	- Put #ifdefs around 'source_ping' code.
+	- Added missing typedef for _arp_ip_data (Wesha).
+	- Added regular-expression-based ACLs for client and server
+	  domain names (Henrik Nordstrom).
+	- Fixed ident-related coredumps from incorrect callback data.
+	- Fixed parse_rfc1123() "space" bug.
+	- Fixed xrealloc() XMALLOC_DEBUG bug (not calling check_free())..
+	- Fixed some src/asn.c end-of-reply bugs and memory leaks.
+	- Fixed some peer->options flag-setting bugs.
+	- Fixed single-parent feature to work again
+	- Removed 'single_parent_bypass' configuration option; instead
+	  just use 'no-query'.
+	- Surrounded 'source_ping' code with #ifdefs.
+	- Changed 'deny_info URL' to use a custom Error page.
+	- Modified src/client.c for testing POST requests.
 
 Changes to squid-1.2.beta16 (Mar 4, 1998):
 
