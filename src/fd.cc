@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.23 1998/03/04 06:14:54 rousskov Exp $
+ * $Id: fd.cc,v 1.24 1998/05/26 15:29:56 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -70,6 +70,7 @@ fd_close(int fd)
 	assert(F->read_handler == NULL);
 	assert(F->write_handler == NULL);
     }
+    debug(51, 3) ("fd_close FD %d %s\n", fd, F->desc);
     fdUpdateBiggest(fd, F->open = FD_CLOSE);
     Number_FD--;
     memset(F, '\0', sizeof(fde));
