@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.318 2002/02/17 00:38:22 hno Exp $
+ * $Id: ftp.cc,v 1.319 2002/04/13 22:56:21 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2153,6 +2153,8 @@ ftpReadTransferDone(FtpStateData * ftpState)
 	/* Connection closed; retrieval done. */
 	if (ftpState->flags.html_header_sent)
 	    ftpListingFinish(ftpState);
+	fwdUnregister(ftpState->ctrl.fd, ftpState->fwd);
+	fwdComplete(ftpState->fwd);
 	ftpSendQuit(ftpState);
     } else {			/* != 226 */
 	debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n",
