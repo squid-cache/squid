@@ -250,10 +250,10 @@ extern PF snmpHandleUdp;
 extern void snmpInit(void);
 extern void snmpConnectionOpen(void);
 extern void snmpConnectionClose(void);
-extern int create_view (char **);
-extern int create_user (char **);
-extern int create_community (char **);
-extern void tokenize (char *, char **, int);
+extern int create_view(char **);
+extern int create_user(char **);
+extern int create_community(char **);
+extern void tokenize(char *, char **, int);
 #endif /* SQUID_SNMP */
 
 extern void AppendUdp(icpUdpData *);
@@ -322,6 +322,8 @@ extern int neighborUp(const peer * e);
 extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
 extern void peerCheckConnectStart(peer *);
+
+extern void netdbInit(void);
 
 extern void netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt);
 extern void netdbPingSite(const char *hostname);
@@ -581,7 +583,7 @@ extern void pconnInit(void);
 
 extern int asnMatchIp(void *, struct in_addr);
 extern void asnAclInitialize(acl *);
-
+extern void asndbInit();
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
 
