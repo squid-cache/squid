@@ -1,5 +1,5 @@
 /*
- * $Id: squid_types.h,v 1.5 2002/08/09 10:57:42 robertc Exp $
+ * $Id: squid_types.h,v 1.6 2002/10/07 14:15:32 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -48,12 +48,13 @@
  * Here are defined several known-width types, obtained via autoconf
  * from system locations or various attempts. This is just a convenience
  * header to include which takes care of proper preprocessor stuff
+ *
+ * This file is only intended to be included via config.h, do
+ * not include directly.
  */
 
 #ifndef SQUID_TYPES_H
 #define SQUID_TYPES_H
-
-#include "autoconf.h"
 
 /* This should be in synch with what we have in acinclude.m4 */
 #if HAVE_SYS_TYPES_H
