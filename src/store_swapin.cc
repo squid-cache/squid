@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.14 1998/09/19 17:06:16 wessels Exp $
+ * $Id: store_swapin.cc,v 1.15 1999/01/18 22:23:44 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -108,6 +108,7 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
 	xfree(ctrlp);
 	return;
     }
+    fdTouch(fd);
     assert(mem != NULL);
     assert(e->mem_status == NOT_IN_MEMORY);
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);

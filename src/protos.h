@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.303 1999/01/15 06:11:45 wessels Exp $
+ * $Id: protos.h,v 1.304 1999/01/18 22:23:38 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -225,6 +225,7 @@ extern void fdFreeMemory(void);
 extern void fdDumpOpen(void);
 extern int fdNFree(void);
 extern void fdAdjustReserved(void);
+extern void fdTouchFL(int, const char *, int);
 
 extern fileMap *file_map_create(int);
 extern int file_map_allocate(fileMap *, int);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.28 1999/01/13 23:24:10 wessels Exp $
+ * $Id: comm_select.cc,v 1.29 1999/01/18 22:23:33 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -48,9 +48,6 @@
 #endif
 #define FD_MASK_BYTES sizeof(fd_mask)
 #define FD_MASK_BITS (FD_MASK_BYTES*NBBY)
-
-/* GLOBAL */
-int current_hdl_fd = -1;
 
 /* STATIC */
 #if !HAVE_POLL
@@ -362,12 +359,9 @@ comm_poll(int msec)
 		debug(5, 6) ("comm_poll: FD %d ready for reading\n", fd);
 		if ((hdl = F->read_handler)) {
 		    F->read_handler = NULL;
-		    hdl(current_hdl_fd = fd, F->read_data);
-		    current_hdl_fd = -1;
+		    hdl(fd, F->read_data);
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close)
-		    comm_close(fd);
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
 		if (commCheckHTTPIncoming)
@@ -377,12 +371,9 @@ comm_poll(int msec)
 		debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
 		if ((hdl = F->write_handler)) {
 		    F->write_handler = NULL;
-		    hdl(current_hdl_fd = fd, F->write_data);
-		    current_hdl_fd = -1;
+		    hdl(fd, F->write_data);
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close)
-		    comm_close(fd);
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
 		if (commCheckHTTPIncoming)
@@ -672,12 +663,9 @@ comm_select(int msec)
 		    hdl = F->read_handler;
 		    F->read_handler = NULL;
 		    commUpdateReadBits(fd, NULL);
-		    hdl(current_hdl_fd = fd, F->read_data);
-		    current_hdl_fd = -1;
+		    hdl(fd, F->read_data);
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close)
-		    comm_close(fd);
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)
@@ -714,12 +702,9 @@ comm_select(int msec)
 		    hdl = F->write_handler;
 		    F->write_handler = NULL;
 		    commUpdateWriteBits(fd, NULL);
-		    hdl(current_hdl_fd = fd, F->write_data);
-		    current_hdl_fd = -1;
+		    hdl(fd, F->write_data);
 		    Counter.select_fds++;
 		}
-		if (F->flags.delayed_comm_close)
-		    comm_close(fd);
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)

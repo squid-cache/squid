@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.54 1999/01/13 05:56:08 wessels Exp $
+ * $Id: store_client.cc,v 1.55 1999/01/18 22:23:44 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -295,6 +295,7 @@ storeClientFileOpened(int fd, void *data)
 	callback(sc->callback_data, sc->copy_buf, -1);
 	return;
     }
+    fdTouch(fd);
     sc->swapin_fd = fd;
     storeClientFileRead(sc);
 }
@@ -307,6 +308,7 @@ storeClientFileRead(store_client * sc)
 #ifdef OPTIMISTIC_IO
     sc->flags.disk_io_pending = 1;
 #endif
+    fdTouch(sc->swapin_fd);
     if (mem->swap_hdr_sz == 0) {
 	file_read(sc->swapin_fd,
 	    sc->copy_buf,
@@ -335,6 +337,7 @@ storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *dat
     store_client *sc = data;
     MemObject *mem = sc->entry->mem_obj;
     STCB *callback = sc->callback;
+    fdTouch(fd);
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
@@ -356,6 +359,7 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
     size_t body_sz;
     size_t copy_sz;
     tlv *tlv_list;
+    fdTouch(fd);
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
@@ -366,6 +370,7 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
 	callback(sc->callback_data, sc->copy_buf, len);
 	return;
     }
+    fdTouch(fd);
     tlv_list = storeSwapMetaUnpack(buf, &swap_hdr_sz);
     if (tlv_list == NULL) {
 	debug(20, 1) ("storeClientReadHeader: failed to unpack meta data\n");
@@ -373,6 +378,7 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
 	callback(sc->callback_data, sc->copy_buf, -1);
 	return;
     }
+    fdTouch(fd);
     /*
      * XXX Here we should check the meta data and make sure we got
      * the right object.
@@ -399,6 +405,7 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
 	callback(sc->callback_data, sc->copy_buf, copy_sz);
 	return;
     }
+    fdTouch(fd);
     /*
      * we don't have what the client wants, but at least we now
      * know the swap header size.
@@ -444,6 +451,7 @@ storeUnregister(StoreEntry * e, void *data)
     *S = sc->next;
     mem->nclients--;
     sc->flags.disk_io_pending = 0;
+    fdTouch(sc->swapin_fd);
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
 	storeCheckSwapOut(e);
     if (sc->swapin_fd > -1) {
