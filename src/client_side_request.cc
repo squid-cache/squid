@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.19 2003/03/04 01:40:27 robertc Exp $
+ * $Id: client_side_request.cc,v 1.20 2003/03/15 04:17:39 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -49,6 +49,9 @@
 #include "ACLChecklist.h"
 #include "ACL.h"
 #include "client_side.h"
+#include "client_side_reply.h"
+#include "Store.h"
+#include "HttpReply.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -56,7 +59,7 @@
 
 static const char *const crlf = "\r\n";
 
-class ClientRequestContext
+class ClientRequestContext : public RefCountable
 {
 
 public:
@@ -174,6 +177,18 @@ ClientHttpRequest::ClientHttpRequest()
 }
 
 /*
+ * returns true if client specified that the object must come from the cache
+ * without contacting origin server
+ */
+bool
+ClientHttpRequest::onlyIfCached()const
+{
+    assert(request);
+    return request->cache_control &&
+           EBIT_TEST(request->cache_control->mask, CC_ONLY_IF_CACHED);
+}
+
+/*
  * This function is designed to serve a fairly specific purpose.
  * Occasionally our vBNS-connected caches can talk to each other, but not
  * the rest of the world.  Here we try to detect frequent failures which
@@ -267,7 +282,7 @@ ClientHttpRequest::~ClientHttpRequest()
  */
 int				/* returns nonzero on failure */
 clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
-                   CSD * streamdetach, void *streamdata, HttpHeader const *header,
+                   CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
                    char *tailbuf, size_t taillen)
 {
     size_t url_sz;
@@ -285,7 +300,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     tempBuffer.data = tailbuf;
     /* client stream setup */
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
-                     clientReplyStatus, clientReplyNewContext(http), streamcallback,
+                     clientReplyStatus, new clientReplyContext(http), streamcallback,
                      streamdetach, streamdata, tempBuffer);
     /* make it visible in the 'current acctive requests list' */
     dlinkAdd(http, &http->active, &ClientActiveRequests);
@@ -426,12 +441,14 @@ clientAccessCheckDone(int answer, void *data)
                 page_id = ERR_ACCESS_DENIED;
         }
 
-        clientSetReplyToError(node->data, page_id, status,
-                              http->request->method, NULL,
-                              http->conn ? &http->conn->peer.sin_addr : &no_addr, http->request,
-                              NULL, http->conn
-                              && http->conn->auth_user_request ? http->conn->
-                              auth_user_request : http->request->auth_user_request);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(page_id, status,
+                                    http->request->method, NULL,
+                                    http->conn ? &http->conn->peer.sin_addr : &no_addr, http->request,
+                                    NULL, http->conn
+                                    && http->conn->auth_user_request ? http->conn->
+                                    auth_user_request : http->request->auth_user_request);
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
     }
@@ -846,3 +863,17 @@ ClientHttpRequest::httpStart()
     clientStreamNode *node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }
+
+bool
+ClientHttpRequest::gotEnough() const
+{
+    int contentLength =
+        httpReplyBodySize(request->method, entry->mem_obj->getReply());
+    assert(contentLength >= 0);
+
+    if (out.offset < contentLength)
+        return false;
+
+    return true;
+}
+

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.9 2003/03/10 04:56:36 robertc Exp $
+ * $Id: Store.h,v 1.10 2003/03/15 04:17:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -72,6 +72,7 @@ public:
     void delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data);
 
     void setNoDelay (bool const);
+    bool modifiedSince(request_t * request) const;
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;

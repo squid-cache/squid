@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.633 2003/03/13 07:51:38 hno Exp $
+ * $Id: client_side.cc,v 1.634 2003/03/15 04:17:39 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -69,6 +69,7 @@
 #include "client_side_request.h"
 #include "ACLChecklist.h"
 #include "ConnectionDetail.h"
+#include "client_side_reply.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -93,73 +94,32 @@
 
 /* our socket-related context */
 
-class ClientSocketContext
+
+CBDATA_CLASS_INIT(ClientSocketContext);
+
+void *
+ClientSocketContext::operator new (size_t byteCount)
 {
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (ClientSocketContext));
+    CBDATA_INIT_TYPE(ClientSocketContext);
+    return cbdataAlloc(ClientSocketContext);
+}
 
-public:
-    clientHttpRequest *http;	/* we own this */
-    char reqbuf[HTTP_REQBUF_SZ];
-    ClientSocketContext *next;
+void
+ClientSocketContext::operator delete (void *address)
+{
+    cbdataFree (address);
+}
 
-    struct
-    {
-
-int deferred:
-        1; /* This is a pipelined request waiting for the current object to complete */
-
-int parsed_ok:
-        1; /* Was this parsed correctly? */
-    }
-
-    flags;
-    bool mayUseConnection() const {return mayUseConnection_;}
-
-    void mayUseConnection(bool aBool)
-    {
-        mayUseConnection_ = aBool;
-        debug (33,3)("ClientSocketContext::mayUseConnection: This %p marked %d\n",
-                     this, aBool);
-    }
-
-    struct
-    {
-        clientStreamNode *node;
-        HttpReply *rep;
-        StoreIOBuffer queuedBuffer;
-    }
-
-    deferredparams;
-    off_t writtenToSocket;
-    void pullData();
-    off_t getNextRangeOffset() const;
-    bool canPackMoreRanges() const;
-    clientStream_status_t socketState();
-    void sendBody(HttpReply * rep, StoreIOBuffer bodyData);
-    void sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData);
-    size_t lengthToSend(size_t maximum);
-    void noteSentBodyBytes(size_t);
-    void buildRangeHeader(HttpReply * rep);
-    int fd() const;
-    clientStreamNode * getTail() const;
-    clientStreamNode * getClientReplyContext() const;
-    void removeFromConnectionList(ConnStateData * conn);
-    void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData);
-    bool multipartRangeRequest() const;
-    void packRange(const char **buf,
-                   size_t size,
-                   MemBuf * mb);
-
-private:
-    void prepareReply(HttpReply * rep);
-    bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
-};
-
-CBDATA_TYPE(ClientSocketContext);
-
+void
+ClientSocketContext::deleteSelf() const
+{
+    delete this;
+}
 
 /* Local functions */
 /* ClientSocketContext */
-static FREE ClientSocketContextFree;
 static ClientSocketContext *ClientSocketContextNew(clientHttpRequest *);
 /* other */
 static CWCB clientWriteComplete;
@@ -189,10 +149,8 @@ static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 static void clientPrepareLogWithRequestDetails(request_t *, AccessLogEntry *);
 static int connIsUsable(ConnStateData * conn);
-static ClientSocketContext *connGetCurrentContext(ConnStateData const * conn);
 static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &recievedData);
-static int contextStartOfOutput(ClientSocketContext * context);
-static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext * deferredRequest, ConnStateData * conn);
+static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn);
 static void clientUpdateSocketStats(log_type logType, size_t size);
 
 static ClientSocketContext *clientParseRequestMethod(char *inbuf, method_t * method_p, ConnStateData * conn);
@@ -203,8 +161,6 @@ static void trimTrailingSpaces(char *aString, size_t len);
 #endif
 static ClientSocketContext *parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p, ConnStateData * conn, char *http_version_str);
 static void setLogUri(clientHttpRequest * http, char const *uri);
-static void connAddContextToQueue(ConnStateData * conn, ClientSocketContext * context);
-static int connGetConcurrentRequestCount(ConnStateData * conn);
 static int connReadWasError(ConnStateData * conn, comm_err_t, int size, int xerrno);
 static int connFinishedWithConn(ConnStateData * conn, int size);
 static void connNoteUseOfBuffer(ConnStateData * conn, size_t byteCount);
@@ -224,7 +180,10 @@ ClientSocketContext::fd() const
 clientStreamNode *
 ClientSocketContext::getTail() const
 {
-    return (clientStreamNode *)http->client_stream.tail->data;
+    if (http->client_stream.tail)
+        return (clientStreamNode *)http->client_stream.tail->data;
+
+    return NULL;
 }
 
 clientStreamNode *
@@ -260,39 +219,85 @@ ConnStateData::readSomeData()
 void
 ClientSocketContext::removeFromConnectionList(ConnStateData * conn)
 {
-    ClientSocketContext **tempContextPointer;
+    ClientSocketContext::Pointer *tempContextPointer;
     assert(conn);
-    assert(connGetCurrentContext(conn) != NULL);
+    assert(conn->getCurrentContext().getRaw() != NULL);
     /* Unlink us from the connection request list */
-    tempContextPointer = (ClientSocketContext **) & conn->currentobject;
+    tempContextPointer = & conn->currentobject;
 
-    while (*tempContextPointer) {
+    while (tempContextPointer->getRaw()) {
         if (*tempContextPointer == this)
             break;
 
         tempContextPointer = &(*tempContextPointer)->next;
     }
 
-    assert(*tempContextPointer != NULL);
+    assert(tempContextPointer->getRaw() != NULL);
     *tempContextPointer = next;
     next = NULL;
 }
 
-void
-ClientSocketContextFree(void *data)
+ClientSocketContext::~ClientSocketContext()
 {
-    ClientSocketContext *context = (ClientSocketContext *)data;
-    ConnStateData *conn = context->http->conn;
-    clientStreamNode *node = context->getTail();
-    /* We are *always* the tail - prevent recursive free */
-    assert(context == node->data);
-    node->data = NULL;
-    httpRequestFree(context->http);
-    /* clean up connection links to us */
-    assert(context != context->next);
+    clientStreamNode *node = getTail();
 
-    if (conn)
-        context->removeFromConnectionList(conn);
+    if (node) {
+        ClientSocketContext *streamContext = dynamic_cast<ClientSocketContext *> (node->data.getRaw());
+
+        if (streamContext) {
+            /* We are *always* the tail - prevent recursive free */
+            assert(this == streamContext);
+            node->data = NULL;
+        }
+    }
+
+    if (connRegistered_)
+        deRegisterWithConn();
+
+    httpRequestFree(http);
+
+    /* clean up connection links to us */
+    assert(this != next.getRaw());
+}
+
+void
+ClientSocketContext::registerWithConn()
+{
+    assert (!connRegistered_);
+    assert (http);
+    assert (http->conn);
+    connRegistered_ = true;
+    http->conn->addContextToQueue(this);
+}
+
+void
+ClientSocketContext::deRegisterWithConn()
+{
+    assert (connRegistered_);
+    removeFromConnectionList(http->conn);
+    connRegistered_ = false;
+}
+
+void
+ClientSocketContext::connIsFinished()
+{
+    assert (http);
+    assert (http->conn);
+    deRegisterWithConn();
+    /* we can't handle any more stream data - detach */
+    clientStreamDetach(getTail(), http);
+}
+
+ClientSocketContext::ClientSocketContext() : http(NULL), next(NULL),
+        writtenToSocket(0),
+        mayUseConnection_ (false),
+        connRegistered_ (false)
+{
+    memset (reqbuf, '\0', sizeof (reqbuf));
+    flags.deferred = 0;
+    flags.parsed_ok = 0;
+    deferredparams.node = NULL;
+    deferredparams.rep = NULL;
 }
 
 ClientSocketContext *
@@ -300,8 +305,7 @@ ClientSocketContextNew(clientHttpRequest * http)
 {
     ClientSocketContext *newContext;
     assert(http != NULL);
-    CBDATA_INIT_TYPE_FREECB(ClientSocketContext, ClientSocketContextFree);
-    newContext = cbdataAlloc(ClientSocketContext);
+    newContext = new ClientSocketContext;
     newContext->http = http;
     return newContext;
 }
@@ -544,9 +548,9 @@ bool
 ConnStateData::areAllContextsForThisConnection() const
 {
     assert(this != NULL);
-    ClientSocketContext *context = connGetCurrentContext(this);
+    ClientSocketContext::Pointer context = getCurrentContext();
 
-    while (context) {
+    while (context.getRaw()) {
         if (context->http->conn != this)
             return false;
 
@@ -559,12 +563,13 @@ ConnStateData::areAllContextsForThisConnection() const
 void
 ConnStateData::freeAllContexts()
 {
-    ClientSocketContext *context;
+    ClientSocketContext::Pointer context;
 
-    while ((context = connGetCurrentContext(this)) != NULL) {
-        assert(connGetCurrentContext(this) !=
-               connGetCurrentContext(this)->next);
-        cbdataFree(context);
+    while ((context = getCurrentContext()).getRaw() != NULL) {
+        assert(getCurrentContext() !=
+               getCurrentContext()->next);
+        context->connIsFinished();
+        assert (context != currentobject);
     }
 }
 
@@ -679,11 +684,11 @@ connIsUsable(ConnStateData * conn)
     return 1;
 }
 
-ClientSocketContext *
-connGetCurrentContext(ConnStateData const * conn)
+ClientSocketContext::Pointer
+ConnStateData::getCurrentContext() const
 {
-    assert(conn);
-    return (ClientSocketContext *)conn->currentobject;
+    assert(this);
+    return currentobject;
 }
 
 void
@@ -707,10 +712,10 @@ responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const & recievedData)
     return 0;
 }
 
-int
-contextStartOfOutput(ClientSocketContext * context)
+bool
+ClientSocketContext::startOfOutput() const
 {
-    return context->http->out.size == 0 ? 1 : 0;
+    return http->out.size == 0;
 }
 
 size_t
@@ -1154,7 +1159,6 @@ clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer recievedData)
 {
     int fd;
-    ClientSocketContext *context;
     /* Test preconditions */
     assert(node != NULL);
     /* TODO: handle this rather than asserting
@@ -1163,24 +1167,24 @@ clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
      * However, that itself shouldn't happen, so it stays as an assert for now. 
      */
     assert(cbdataReferenceValid(node));
-    assert(node->data != NULL);
     assert(node->node.next == NULL);
-    context = (ClientSocketContext *)node->data;
+    ClientSocketContext::Pointer context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
+    assert(context.getRaw() != NULL);
     assert(connIsUsable(http->conn));
     fd = http->conn->fd;
     /* TODO: check offset is what we asked for */
 
-    if (connGetCurrentContext(http->conn) != context) {
+    if (context != http->conn->getCurrentContext()) {
         context->deferRecipientForLater(node, rep, recievedData);
         return;
     }
 
     if (responseFinishedOrFailed(rep, recievedData)) {
-        clientWriteComplete(fd, NULL, 0, COMM_OK, context);
+        context->writeComplete(fd, NULL, 0, COMM_OK);
         return;
     }
 
-    if (!contextStartOfOutput(context))
+    if (!context->startOfOutput())
         context->sendBody(rep, recievedData);
     else
         context->sendStartOfMessage(rep, recievedData);
@@ -1193,7 +1197,6 @@ clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
 void
 clientSocketDetach(clientStreamNode * node, clientHttpRequest * http)
 {
-    ClientSocketContext *context;
     /* Test preconditions */
     assert(node != NULL);
     /* TODO: handle this rather than asserting
@@ -1203,9 +1206,10 @@ clientSocketDetach(clientStreamNode * node, clientHttpRequest * http)
      */
     assert(cbdataReferenceValid(node));
     /* Set null by ContextFree */
-    assert(node->data == NULL);
     assert(node->node.next == NULL);
-    context = (ClientSocketContext *)node->data;
+    ClientSocketContext *context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
+    /* this is the assert discussed above */
+    assert(context == NULL);
     /* We are only called when the client socket shutsdown.
      * Tell the prev pipeline member we're finished
      */
@@ -1233,7 +1237,7 @@ ConnStateData::readNextRequest()
 }
 
 void
-ClientSocketContextPushDeferredIfNeeded(ClientSocketContext * deferredRequest, ConnStateData * conn)
+ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn)
 {
     debug(33, 2) ("ClientSocketContextPushDeferredIfNeeded: FD %d Sending next\n",
                   conn->fd);
@@ -1253,17 +1257,17 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext * deferredRequest, C
      */
 }
 
-static void
-clientKeepaliveNextRequest(ClientSocketContext * context)
+void
+ClientSocketContext::keepaliveNextRequest()
 {
-    clientHttpRequest *http = context->http;
     ConnStateData *conn = http->conn;
-    ClientSocketContext *deferredRequest;
 
-    debug(33, 3) ("clientKeepaliveNextRequest: FD %d\n", conn->fd);
-    cbdataFree(context);
+    debug(33, 3) ("ClientSocketContext::keepaliveNextRequest: FD %d\n", conn->fd);
+    connIsFinished();
 
-    if ((deferredRequest = connGetCurrentContext(conn)) == NULL)
+    ClientSocketContext::Pointer deferredRequest;
+
+    if ((deferredRequest = conn->getCurrentContext()).getRaw() == NULL)
         conn->readNextRequest();
     else
         ClientSocketContextPushDeferredIfNeeded(deferredRequest, conn);
@@ -1403,7 +1407,12 @@ void
 clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
     ClientSocketContext *context = (ClientSocketContext *)data;
-    clientHttpRequest *http = context->http;
+    context->writeComplete (fd, bufnotused, size, errflag);
+}
+
+void
+ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag)
+{
     StoreEntry *entry = http->entry;
     http->out.size += size;
     assert(fd > -1);
@@ -1418,15 +1427,15 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, v
         return;
     }
 
-    switch (context->socketState()) {
+    switch (socketState()) {
 
     case STREAM_NONE:
-        context->pullData();
+        pullData();
         break;
 
     case STREAM_COMPLETE:
         debug(33, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
-        clientKeepaliveNextRequest(context);
+        keepaliveNextRequest();
         return;
 
     case STREAM_UNPLANNED_COMPLETE:
@@ -1460,7 +1469,7 @@ parseHttpRequestAbort(ConnStateData * conn, const char *uri)
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
-                     clientReplyStatus, clientReplyNewContext(http), clientSocketRecipient,
+                     clientReplyStatus, new clientReplyContext(http), clientSocketRecipient,
                      clientSocketDetach, context, tempBuffer);
     dlinkAdd(http, &http->active, &ClientActiveRequests);
     return context;
@@ -1826,9 +1835,13 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
 
     tempBuffer.length = HTTP_REQBUF_SZ;
 
+    ClientStreamData newServer = new clientReplyContext(http);
+
+    ClientStreamData newClient = result;
+
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
-                     clientReplyStatus, clientReplyNewContext(http), clientSocketRecipient,
-                     clientSocketDetach, result, tempBuffer);
+                     clientReplyStatus, newServer, clientSocketRecipient,
+                     clientSocketDetach, newClient, tempBuffer);
 
     *prefix_p = (char *)xmalloc(prefix_sz + 1);
 
@@ -1893,27 +1906,27 @@ ConnStateData::makeSpaceAvailable()
 }
 
 void
-connAddContextToQueue(ConnStateData * conn, ClientSocketContext * context)
+ConnStateData::addContextToQueue(ClientSocketContext * context)
 {
-    ClientSocketContext **S;
+    ClientSocketContext::Pointer *S;
 
-    for (S = (ClientSocketContext **) & conn->currentobject; *S;
+    for (S = (ClientSocketContext::Pointer *) & currentobject; S->getRaw();
             S = &(*S)->next)
 
         ;
     *S = context;
 
-    ++conn->nrequests;
+    ++nrequests;
 }
 
 int
-connGetConcurrentRequestCount(ConnStateData * conn)
+ConnStateData::getConcurrentRequestCount() const
 {
     int result = 0;
-    ClientSocketContext **T;
+    ClientSocketContext::Pointer *T;
 
-    for (T = (ClientSocketContext **) & conn->currentobject;
-            *T; T = &(*T)->next, ++result)
+    for (T = (ClientSocketContext::Pointer *) &currentobject;
+            T->getRaw(); T = &(*T)->next, ++result)
 
         ;
     return result;
@@ -1944,7 +1957,7 @@ int
 connFinishedWithConn(ConnStateData * conn, int size)
 {
     if (size == 0) {
-        if (connGetConcurrentRequestCount(conn) == 0 && conn->in.notYetUsed == 0) {
+        if (conn->getConcurrentRequestCount() == 0 && conn->in.notYetUsed == 0) {
             /* no current or pending requests */
             debug(33, 4) ("connFinishedWithConn: FD %d closed\n", conn->fd);
             return 1;
@@ -1990,10 +2003,12 @@ connCancelIncompleteRequests(ConnStateData * conn)
                   (unsigned) conn->in.notYetUsed);
     debug(33, 1) ("Config 'request_header_max_size'= %ld bytes.\n",
                   (long int) Config.maxRequestHeaderSize);
-    clientSetReplyToError(node->data, ERR_TOO_BIG,
-                          HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
-                          &conn->peer.sin_addr, NULL, NULL, NULL);
-    connAddContextToQueue(conn, context);
+    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+    assert (repContext);
+    repContext->setReplyToError(ERR_TOO_BIG,
+                                HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
+                                &conn->peer.sin_addr, NULL, NULL, NULL);
+    context->registerWithConn();
     context->pullData();
 }
 
@@ -2035,14 +2050,15 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
     /* setup our private context */
     connNoteUseOfBuffer(conn, http->req_sz);
 
-    connAddContextToQueue(conn, context);
+    context->registerWithConn();
 
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
         debug(33, 1) ("clientReadRequest: Invalid Request\n");
-        clientSetReplyToError(node->data,
-                              ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL,
-                              &conn->peer.sin_addr, NULL, conn->in.buf, NULL);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL,
+                                    &conn->peer.sin_addr, NULL, conn->in.buf, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = 0;
@@ -2052,9 +2068,11 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
     if ((request = urlParse(method, http->uri)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debug(33, 5) ("Invalid URL: %s\n", http->uri);
-        clientSetReplyToError(node->data,
-                              ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
-                              &conn->peer.sin_addr, NULL, NULL, NULL);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(
+            ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
+            &conn->peer.sin_addr, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = 0;
@@ -2098,9 +2116,11 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
     if (!urlCheckRequest(request) ||
             httpHeaderHas(&request->header, HDR_TRANSFER_ENCODING)) {
         clientStreamNode *node = context->getClientReplyContext();
-        clientSetReplyToError(node->data, ERR_UNSUP_REQ,
-                              HTTP_NOT_IMPLEMENTED, request->method, NULL,
-                              &conn->peer.sin_addr, request, NULL, NULL);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(ERR_UNSUP_REQ,
+                                    HTTP_NOT_IMPLEMENTED, request->method, NULL,
+                                    &conn->peer.sin_addr, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = 0;
@@ -2110,9 +2130,11 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
 
     if (!clientIsContentLengthValid(request)) {
         clientStreamNode *node = context->getClientReplyContext();
-        clientSetReplyToError(node->data, ERR_INVALID_REQ,
-                              HTTP_LENGTH_REQUIRED, request->method, NULL,
-                              &conn->peer.sin_addr, request, NULL, NULL);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(ERR_INVALID_REQ,
+                                    HTTP_LENGTH_REQUIRED, request->method, NULL,
+                                    &conn->peer.sin_addr, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = 0;
@@ -2131,9 +2153,11 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
         if (!clientIsRequestBodyValid(request->content_length) ||
                 clientIsRequestBodyTooLargeForPolicy(request->content_length)) {
             clientStreamNode *node = context->getClientReplyContext();
-            clientSetReplyToError(node->data, ERR_TOO_BIG,
-                                  HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
-                                  &conn->peer.sin_addr, http->request, NULL, NULL);
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            repContext->setReplyToError(ERR_TOO_BIG,
+                                        HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
+                                        &conn->peer.sin_addr, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             conn->flags.readMoreRequests = 0;
@@ -2162,7 +2186,7 @@ connStripBufferWhitespace (ConnStateData *conn)
 static int
 connOkToAddRequest(ConnStateData *conn)
 {
-    int result = connGetConcurrentRequestCount(conn) < (Config.onoff.pipeline_prefetch ? 2 : 1);
+    int result = conn->getConcurrentRequestCount() < (Config.onoff.pipeline_prefetch ? 2 : 1);
 
     if (!result) {
         debug(33, 3) ("clientReadRequest: FD %d max concurrent requests reached\n",
@@ -2241,7 +2265,7 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
         clientProcessBody(conn);
 
     /* Process next request */
-    if (connGetConcurrentRequestCount(conn) == 0)
+    if (conn->getConcurrentRequestCount() == 0)
         fd_note(conn->fd, "Reading next request");
 
     /* XXX: if we read *exactly* two requests, and the client sends no more,
@@ -2482,9 +2506,11 @@ requestTimeout(int fd, void *data)
         clientHttpRequest *http =
             parseHttpRequestAbort(conn, "error:Connection%20lifetime%20expired");
         node = http->client_stream.tail->prev->data;
-        clientSetReplyToError(node->data, ERR_LIFETIME_EXP,
-                              HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &conn->peer.sin_addr,
-                              NULL, NULL, NULL);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(ERR_LIFETIME_EXP,
+                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &conn->peer.sin_addr,
+                                    NULL, NULL, NULL);
         /* No requests can be outstanded */
         assert(conn->chr == NULL);
         /* add to the client request queue */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.473 2003/03/10 04:56:38 robertc Exp $
+ * $Id: protos.h,v 1.474 2003/03/15 04:17:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -120,10 +120,6 @@ SQUIDCEXTERN int clientAbortBody(request_t * req);
 SQUIDCEXTERN void httpRequestFree(void *);
 
 extern void clientAccessCheck(void *);
-
-/* client_side_reply.c - client side reply related routines (pure logic, no comms) */
-
-SQUIDCEXTERN void clientSetReplyToError(void *, err_type, http_status, method_t, char const *, struct in_addr *, request_t *, char *, auth_user_request_t * auth_user_request);
 
 /* comm.c */
 extern void comm_calliocallback(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.1 2003/03/04 02:57:50 robertc Exp $
+ * $Id: client_side.h,v 1.2 2003/03/15 04:17:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,89 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "StoreIOBuffer.h"
+
+class ConnStateData;
+
+class ClientHttpRequest;
+
+class clientStreamNode;
+
+class ClientSocketContext : public RefCountable
+{
+
+public:
+    typedef RefCount<ClientSocketContext> Pointer;
+    void *operator new(size_t);
+    void operator delete(void *);
+    void deleteSelf() const;
+    ClientSocketContext();
+    ~ClientSocketContext();
+    bool startOfOutput() const;
+    void writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag);
+    void keepaliveNextRequest();
+    ClientHttpRequest *http;	/* we own this */
+    char reqbuf[HTTP_REQBUF_SZ];
+    Pointer next;
+
+    struct
+    {
+
+int deferred:
+        1; /* This is a pipelined request waiting for the current object to complete */
+
+int parsed_ok:
+        1; /* Was this parsed correctly? */
+    }
+
+    flags;
+    bool mayUseConnection() const {return mayUseConnection_;}
+
+    void mayUseConnection(bool aBool)
+    {
+        mayUseConnection_ = aBool;
+        debug (33,3)("ClientSocketContext::mayUseConnection: This %p marked %d\n",
+                     this, aBool);
+    }
+
+    struct
+    {
+        clientStreamNode *node;
+        HttpReply *rep;
+        StoreIOBuffer queuedBuffer;
+    }
+
+    deferredparams;
+    off_t writtenToSocket;
+    void pullData();
+    off_t getNextRangeOffset() const;
+    bool canPackMoreRanges() const;
+    clientStream_status_t socketState();
+    void sendBody(HttpReply * rep, StoreIOBuffer bodyData);
+    void sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData);
+    size_t lengthToSend(size_t maximum);
+    void noteSentBodyBytes(size_t);
+    void buildRangeHeader(HttpReply * rep);
+    int fd() const;
+    clientStreamNode * getTail() const;
+    clientStreamNode * getClientReplyContext() const;
+    void connIsFinished();
+    void removeFromConnectionList(ConnStateData * conn);
+    void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData);
+    bool multipartRangeRequest() const;
+    void packRange(const char **buf,
+                   size_t size,
+                   MemBuf * mb);
+    void registerWithConn();
+
+private:
+    CBDATA_CLASS(ClientSocketContext);
+    void prepareReply(HttpReply * rep);
+    void deRegisterWithConn();
+    bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
+    bool connRegistered_;
+};
+
 class ConnStateData
 {
 
@@ -51,6 +134,9 @@ public:
     void freeAllContexts();
     void readNextRequest();
     void makeSpaceAvailable();
+    ClientSocketContext::Pointer getCurrentContext() const;
+    void addContextToQueue(ClientSocketContext * context);
+    int getConcurrentRequestCount() const;
 
     int fd;
 
@@ -81,7 +167,8 @@ public:
     /* note this is ONLY connection based because NTLM is against HTTP spec */
     /* the user details for connection based authentication */
     auth_user_request_t *auth_user_request;
-    void *currentobject;	/* used by the owner of the connection. Opaque otherwise */
+    /* TODO: generalise the connection owner concept */
+    ClientSocketContext::Pointer currentobject;	/* used by the owner of the connection. Opaque otherwise */
 
     struct sockaddr_in peer;
 

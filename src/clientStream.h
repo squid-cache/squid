@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.h,v 1.5 2003/03/10 04:56:37 robertc Exp $
+ * $Id: clientStream.h,v 1.6 2003/03/15 04:17:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,9 @@
 #define SQUID_CLIENTSTREAM_H
 
 #include "StoreIOBuffer.h"
+#include "RefCount.h"
+
+typedef RefCount<RefCountable_> ClientStreamData;
 
 class clientStreamNode;
 
@@ -54,20 +57,21 @@ class clientStreamNode
 public:
     clientStreamNode *prev() const;
     clientStreamNode *next() const;
+    void removeFromStream();
     dlink_node node;
     dlink_list *head;		/* sucks I know, but hey, the interface is limited */
     CSR *readfunc;
     CSCB *callback;
     CSD *detach;		/* tell this node the next one downstream wants no more data */
     CSS *status;
-    void *data;			/* Context for the node */
+    ClientStreamData data;			/* Context for the node */
     StoreIOBuffer readBuffer;	/* what, where and how much this node wants */
 };
 
 /* clientStream.c */
-SQUIDCEXTERN void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, void *, CSCB *, CSD *, void *, StoreIOBuffer tailBuffer);
-SQUIDCEXTERN void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, void *);
-SQUIDCEXTERN clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, void *);
+SQUIDCEXTERN void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, ClientStreamData, CSCB *, CSD *, ClientStreamData, StoreIOBuffer tailBuffer);
+SQUIDCEXTERN void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
+SQUIDCEXTERN clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
 SQUIDCEXTERN void clientStreamCallback(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer replyBuffer);
 SQUIDCEXTERN void clientStreamRead(clientStreamNode *, ClientHttpRequest *, StoreIOBuffer readBuffer);
 SQUIDCEXTERN void clientStreamDetach(clientStreamNode *, ClientHttpRequest *);

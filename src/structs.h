@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.459 2003/03/10 04:56:39 robertc Exp $
+ * $Id: structs.h,v 1.460 2003/03/15 04:17:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -947,6 +947,7 @@ class HttpReply
 public:
     void *operator new (size_t);
     void operator delete (void *);
+    bool isBodyTooLarge(ssize_t clen) const;
     /* unsupported, writable, may disappear/change in the future */
     int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
 

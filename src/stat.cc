@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.371 2003/03/04 01:40:29 robertc Exp $
+ * $Id: stat.cc,v 1.372 2003/03/15 04:17:41 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1596,8 +1596,12 @@ statClientRequests(StoreEntry * s)
         storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);
         e = http->entry;
         storeAppendPrintf(s, "entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
+#if 0
+        /* Not a member anymore */
         e = http->old_entry;
         storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
+#endif
+
         storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
                           (long int) http->start.tv_sec,
                           (int) http->start.tv_usec,
