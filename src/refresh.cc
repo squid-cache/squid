@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.40 1998/10/18 01:30:09 rousskov Exp $
+ * $Id: refresh.cc,v 1.41 1998/10/18 21:09:52 rousskov Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -56,6 +56,7 @@ static struct RefreshCounts {
     int conf_max_age_stale;
     int last_modified_factor_fresh;
     int last_modified_factor_stale;
+    int response_lmt_now_stale;
     int conf_min_age_fresh;
     int default_stale;
 } refreshCounts[rcCount];
@@ -225,7 +226,14 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta, struct
 	    rc->last_modified_factor_stale++;
 	    return 1;
 	}
+    } else if (entry->lastmod > -1 && entry->timestamp == entry->lastmod) {
+	debug(22, 3) ("refreshCheck: YES: last-modified 'now'\n");
+	rc->response_lmt_now_stale++;
+	return 1;
+    } else if (entry->lastmod > -1 && entry->timestamp < entry->lastmod) {
+	debug(22, 3) ("refreshCheck: MAYBE: last-modified in the future\n");
     }
+    
     if (age <= min) {
 	debug(22, 3) ("refreshCheck: NO: age <= min\n");
 	rc->conf_min_age_fresh++;
@@ -291,6 +299,7 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
     refreshCountsStatsEntry(min_age_override_lmt_fresh);
     refreshCountsStatsEntry(last_modified_factor_fresh);
     refreshCountsStatsEntry(last_modified_factor_stale);
+    refreshCountsStatsEntry(response_lmt_now_stale);
     refreshCountsStatsEntry(conf_min_age_fresh);
     refreshCountsStatsEntry(default_stale);
     tot = sum; /* paranoid: "total" line shows 100% if we forgot nothing */
