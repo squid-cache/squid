@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.4 2000/05/12 04:06:34 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.5 2000/05/28 22:42:39 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -2022,14 +2022,10 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
 	if (!strcasecmp(token, "read-only"))
 	    read_only = 1;
 
-    diskdinfo = xmalloc(sizeof(diskdinfo_t));
-    if (diskdinfo == NULL)
-	fatal("storeDiskdDirParse: couldn't xmalloc() diskdinfo_t!\n");
-
+    sd->fsdata = diskdinfo = xcalloc(1, sizeof(*diskdinfo));
     sd->index = index;
     sd->path = xstrdup(path);
     sd->max_size = size;
-    sd->fsdata = diskdinfo;
     diskdinfo->l1 = l1;
     diskdinfo->l2 = l2;
     diskdinfo->swaplog_fd = -1;
