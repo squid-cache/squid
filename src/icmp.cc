@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.8 1996/09/20 07:31:02 wessels Exp $
+ * $Id: icmp.cc,v 1.9 1996/09/20 07:38:15 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -244,7 +244,6 @@ icmpRecv(int unused1, void *unused2)
 	&fromlen);
     debug(37, 9, "icmpRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
     ip = (struct iphdr *) (void *) pkt;
-    iphdrlen = ip->ip_hl << 2;
 #if HAVE_IP_HL 
     iphdrlen = ip->ip_hl << 2;
 #else
