@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.42 2001/04/14 00:03:22 hno Exp $
+ * $Id: fd.cc,v 1.43 2001/08/26 22:24:56 hno Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -83,12 +83,6 @@ fd_close(int fd)
 	assert(F->read_handler == NULL);
 	assert(F->write_handler == NULL);
     }
-    F->read_method = &default_read_method;
-    F->write_method = &default_write_method;
-#if USE_SSL
-    safe_free(F->ssl);
-    F->ssl = NULL;
-#endif
     debug(51, 3) ("fd_close FD %d %s\n", fd, F->desc);
     F->flags.open = 0;
     fdUpdateBiggest(fd, 0);
