@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.261 1998/04/07 23:51:36 wessels Exp $
+ * $Id: client_side.cc,v 1.262 1998/04/08 00:34:01 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1607,7 +1607,9 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     for (t = token; t && *t && *t != '\n' && *t != '\r'; t++);
     if (t == NULL || *t == '\0' || t == token || strncmp(token, "HTTP/", 5)) {
 	debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
-#if STRICT_HTTP_PARSER
+#if RELAXED_HTTP_PARSER
+	http_ver = (float) 0.9;	/* wild guess */
+#else
 	http = xcalloc(1, sizeof(clientHttpRequest));
 	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
@@ -1619,8 +1621,6 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	*headers_p = inbuf;
 	*status = -1;
 	return http;
-#else
-	http_ver = (float) 0.9;	/* wild guess */
 #endif
     } else
 	http_ver = (float) atof(token + 5);
