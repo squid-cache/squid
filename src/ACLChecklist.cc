@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.1 2003/02/13 08:07:46 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.2 2003/02/14 11:56:51 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -52,6 +52,7 @@ ACLChecklist::authenticated()
     http_hdr_type headertype;
     if (NULL == request) {
 	fatal ("requiresRequest SHOULD have been true for this ACL!!");
+	return 0;
     } else if (!request->flags.accelerated) {
 	/* Proxy authorization on proxy requests */
 	headertype = HDR_PROXY_AUTHORIZATION;
