@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.40 1996/11/06 23:14:27 wessels Exp $
+ * $Id: disk.cc,v 1.41 1996/11/14 18:38:41 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -164,7 +164,7 @@ file_open(const char *path, int (*handler) _PARAMS((void)), int mode)
 
     /* Open file */
     if ((fd = open(path, mode, 0644)) < 0) {
-	debug(6, 0, "file_open: error opening file %s: %s\n",
+	debug(50, 0, "file_open: error opening file %s: %s\n",
 	    path, xstrerror());
 	return (DISK_ERROR);
     }
@@ -294,7 +294,7 @@ diskHandleWrite(int fd, FileEntry * entry)
 		return DISK_OK;
 	    } else {
 		/* disk i/o failure--flushing all outstanding writes  */
-		debug(6, 1, "diskHandleWrite: FD %d: disk write error: %s\n",
+		debug(50, 1, "diskHandleWrite: FD %d: disk write error: %s\n",
 		    fd, xstrerror());
 		entry->write_daemon = NOT_PRESENT;
 		entry->write_pending = NO_WRT_PENDING;
@@ -419,7 +419,7 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 	case EWOULDBLOCK:
 	    break;
 	default:
-	    debug(6, 1, "diskHandleRead: FD %d: error reading: %s\n",
+	    debug(50, 1, "diskHandleRead: FD %d: error reading: %s\n",
 		fd, xstrerror());
 	    ctrl_dat->handler(fd, ctrl_dat->buf,
 		ctrl_dat->cur_len, DISK_ERROR,
@@ -515,7 +515,7 @@ diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
 	case EWOULDBLOCK:
 	    break;
 	default:
-	    debug(6, 1, "diskHandleWalk: FD %d: error readingd: %s\n",
+	    debug(50, 1, "diskHandleWalk: FD %d: error readingd: %s\n",
 		fd, xstrerror());
 	    walk_dat->handler(fd, DISK_ERROR, walk_dat->client_data);
 	    safe_free(walk_dat->buf);

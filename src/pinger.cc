@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: pinger.cc,v 1.15 1996/11/06 23:14:49 wessels Exp $
+ * $Id: pinger.cc,v 1.16 1996/11/14 18:38:46 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -127,7 +127,7 @@ pingerOpen(void)
     }
     icmp_sock = socket(PF_INET, SOCK_RAW, proto->p_proto);
     if (icmp_sock < 0) {
-	debug(37, 0, "pingerOpen: icmp_sock: %s\n", xstrerror());
+	debug(50, 0, "pingerOpen: icmp_sock: %s\n", xstrerror());
 	exit(1);
     }
     icmp_ident = getpid() & 0xffff;
@@ -308,7 +308,7 @@ pingerSendtoSquid(pingerReplyData * preply)
 {
     int len = sizeof(pingerReplyData) - 8192 + preply->psize;
     if (send(1, (char *) preply, len, 0) < 0) {
-	debug(37, 0, "pinger: send: %s\n", xstrerror());
+	debug(50, 0, "pinger: send: %s\n", xstrerror());
 	exit(1);
     }
 }

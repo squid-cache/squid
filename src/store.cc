@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.163 1996/11/14 03:00:55 wessels Exp $
+ * $Id: store.cc,v 1.164 1996/11/14 18:38:50 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1411,7 +1411,7 @@ storeDoRebuildFromDisk(void *data)
 
 	if (store_rebuilding != STORE_REBUILDING_FAST) {
 	    if (stat(swapfile, &sb) < 0) {
-		debug(20, 3, "storeRebuildFromDisk: Swap file missing: '%s': %s: %s.\n", url, swapfile, xstrerror());
+		debug(50, 3, "storeRebuildFromDisk: Swap file missing: '%s': %s: %s.\n", url, swapfile, xstrerror());
 		if (opt_unlink_on_reload)
 		    safeunlink(swapfile, 1);
 		continue;
@@ -1511,7 +1511,7 @@ storeRebuiltFromDisk(struct storeRebuild_data *data)
     safe_free(data);
     sprintf(tmp_filename, "%s.new", swaplog_file);
     if (rename(tmp_filename, swaplog_file) < 0) {
-	debug(20, 0, "storeRebuiltFromDisk: %s,%s: %s\n",
+	debug(50, 0, "storeRebuiltFromDisk: %s,%s: %s\n",
 	    tmp_filename, swaplog_file, xstrerror());
 	fatal_dump("storeRebuiltFromDisk: rename failed");
     }
@@ -1562,7 +1562,7 @@ storeStartRebuildFromDisk(void)
     swaplog_fd = file_open(tmp_filename, NULL, O_WRONLY | O_CREAT | O_TRUNC);
     debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, tmp_filename);
     if (swaplog_fd < 0) {
-	debug(20, 0, "storeStartRebuildFromDisk: %s: %s\n",
+	debug(50, 0, "storeStartRebuildFromDisk: %s: %s\n",
 	    tmp_filename, xstrerror());
 	fatal("storeStartRebuildFromDisk: Can't open tmp swaplog");
     }
@@ -2590,7 +2590,7 @@ storeWriteCleanLog(void)
     start = getCurrentTime();
     sprintf(tmp_filename, "%s_clean", swaplog_file);
     if ((fp = fopen(tmp_filename, "a+")) == NULL) {
-	debug(20, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
+	debug(50, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
 	return 0;
     }
     for (e = storeGetFirst(); e; e = storeGetNext()) {
@@ -2612,7 +2612,7 @@ storeWriteCleanLog(void)
 	    e->object_len,
 	    e->url);
 	if (x < 0) {
-	    debug(20, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
+	    debug(50, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
 	    debug(20, 0, "storeWriteCleanLog: Current swap logfile not replaced.\n");
 	    fclose(fp);
 	    safeunlink(tmp_filename, 0);
@@ -2624,7 +2624,7 @@ storeWriteCleanLog(void)
 	}
     }
     if (fclose(fp) < 0) {
-	debug(20, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
+	debug(50, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
 	debug(20, 0, "storeWriteCleanLog: Current swap logfile not replaced.\n");
 	safeunlink(tmp_filename, 0);
 	return 0;
@@ -2635,7 +2635,7 @@ storeWriteCleanLog(void)
 	return 0;
     }
     if (rename(tmp_filename, swaplog_file) < 0) {
-	debug(20, 0, "storeWriteCleanLog: rename failed: %s\n",
+	debug(50, 0, "storeWriteCleanLog: rename failed: %s\n",
 	    xstrerror());
 	return 0;
     }
@@ -2716,7 +2716,7 @@ storeRotateLog(void)
     }
     storelog_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
     if (storelog_fd < 0) {
-	debug(20, 0, "storeRotateLog: %s: %s\n", fname, xstrerror());
+	debug(50, 0, "storeRotateLog: %s: %s\n", fname, xstrerror());
 	debug(20, 1, "Store logging disabled\n");
     }
 }

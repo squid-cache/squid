@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.25 1996/11/13 06:52:27 wessels Exp $
+ * $Id: send-announce.cc,v 1.26 1996/11/14 18:38:47 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ send_announce(void *unused)
 	    l += n;
 	    sndbuf[l] = '\0';
 	} else {
-	    debug(27, 1, "send_announce: %s: %s\n", file, xstrerror());
+	    debug(50, 1, "send_announce: %s: %s\n", file, xstrerror());
 	}
     }
     qdata = xcalloc(1, sizeof(icpUdpData));

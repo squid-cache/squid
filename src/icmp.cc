@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.28 1996/11/06 23:14:40 wessels Exp $
+ * $Id: icmp.cc,v 1.29 1996/11/14 18:38:44 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -87,7 +87,7 @@ icmpRecv(int unused1, void *unused2)
 	sizeof(pingerReplyData),
 	0);
     if (n < 0) {
-	debug(37, 0, "icmpRecv: recv: %s\n", xstrerror());
+	debug(50, 0, "icmpRecv: recv: %s\n", xstrerror());
 	if (++fail_count == 10) {
 	    commSetSelect(icmp_sock,
 		COMM_SELECT_READ,
@@ -158,7 +158,7 @@ icmpSend(int fd, icmpQueueData * queue)
 	    if (errno == EWOULDBLOCK || errno == EAGAIN)
 		break;		/* don't de-queue */
 	    else
-		debug(37, 0, "icmpSend: send: %s\n", xstrerror());
+		debug(50, 0, "icmpSend: send: %s\n", xstrerror());
 	} else if (x != queue->len) {
 	    debug(37, 0, "icmpSend: Wrote %d of %d bytes\n", x, queue->len);
 	}
@@ -265,7 +265,7 @@ icmpOpen(void)
 	COMM_NONBLOCKING,
 	"ICMP Socket");
     if (icmp_sock < 0) {
-	debug(37, 0, "icmpOpen: icmp_sock: %s\n", xstrerror());
+	debug(50, 0, "icmpOpen: icmp_sock: %s\n", xstrerror());
 	return;
     }
     child_sock = comm_open(SOCK_DGRAM,
@@ -275,7 +275,7 @@ icmpOpen(void)
 	0,
 	"ICMP Socket");
     if (child_sock < 0) {
-	debug(37, 0, "icmpOpen: child_sock: %s\n", xstrerror());
+	debug(50, 0, "icmpOpen: child_sock: %s\n", xstrerror());
 	return;
     }
     getsockname(icmp_sock, (struct sockaddr *) &S, &namelen);
@@ -285,7 +285,7 @@ icmpOpen(void)
     if (comm_connect_addr(icmp_sock, &S) != COMM_OK)
 	fatal_dump(xstrerror());
     if ((pid = fork()) < 0) {
-	debug(29, 0, "icmpOpen: fork: %s\n", xstrerror());
+	debug(50, 0, "icmpOpen: fork: %s\n", xstrerror());
 	comm_close(icmp_sock);
 	comm_close(child_sock);
 	return;
@@ -302,7 +302,7 @@ icmpOpen(void)
 	fclose(debug_log);
 	enter_suid();
 	execlp(Config.Program.pinger, "(pinger)", NULL);
-	debug(29, 0, "icmpOpen: %s: %s\n", Config.Program.pinger, xstrerror());
+	debug(50, 0, "icmpOpen: %s: %s\n", Config.Program.pinger, xstrerror());
 	_exit(1);
     }
     comm_close(child_sock);

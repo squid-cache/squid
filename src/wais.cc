@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.54 1996/11/14 18:16:34 wessels Exp $
+ * $Id: wais.cc,v 1.55 1996/11/14 18:38:52 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -230,7 +230,7 @@ waisReadReply(int fd, WaisStateData * waisState)
 	IOStats.Wais.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(24, 1, "waisReadReply: FD %d: read failure: %s.\n", xstrerror());
+	debug(50, 1, "waisReadReply: FD %d: read failure: %s.\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */

@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.64 1996/11/14 18:16:32 wessels Exp $
+ * $Id: gopher.cc,v 1.65 1996/11/14 18:38:43 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -771,7 +771,7 @@ gopherReadReply(int fd, GopherStateData * data)
 	IOStats.Gopher.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(10, 1, "gopherReadReply: error reading: %s\n", xstrerror());
+	debug(50, 1, "gopherReadReply: error reading: %s\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */

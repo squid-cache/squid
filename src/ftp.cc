@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.80 1996/11/14 18:16:32 wessels Exp $
+ * $Id: ftp.cc,v 1.81 1996/11/14 18:38:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -328,7 +328,7 @@ ftpReadReply(int fd, FtpStateData * data)
 	IOStats.Ftp.read_hist[bin]++;
     }
     if (len < 0) {
-	debug(9, 1, "ftpReadReply: read error: %s\n", xstrerror());
+	debug(50, 1, "ftpReadReply: read error: %s\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
@@ -704,11 +704,11 @@ ftpInitialize(void)
     }
     debug(9, 5, "ftpInitialize: Initializing...\n");
     if (pipe(squid_to_ftpget) < 0) {
-	debug(9, 0, "ftpInitialize: pipe: %s\n", xstrerror());
+	debug(50, 0, "ftpInitialize: pipe: %s\n", xstrerror());
 	return -1;
     }
     if (pipe(ftpget_to_squid) < 0) {
-	debug(9, 0, "ftpInitialize: pipe: %s\n", xstrerror());
+	debug(50, 0, "ftpInitialize: pipe: %s\n", xstrerror());
 	return -1;
     }
     cfd = comm_open(SOCK_STREAM,
@@ -725,14 +725,14 @@ ftpInitialize(void)
     len = sizeof(S);
     memset(&S, '\0', len);
     if (getsockname(cfd, (struct sockaddr *) &S, &len) < 0) {
-	debug(9, 0, "ftpInitialize: getsockname: %s\n", xstrerror());
+	debug(50, 0, "ftpInitialize: getsockname: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
     ftpget_port = ntohs(S.sin_port);
     listen(cfd, FD_SETSIZE >> 2);
     if ((pid = fork()) < 0) {
-	debug(9, 0, "ftpInitialize: fork: %s\n", xstrerror());
+	debug(50, 0, "ftpInitialize: fork: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
@@ -775,7 +775,7 @@ ftpInitialize(void)
 	(void) close(cfd);
     sprintf(pbuf, "%d", ftpget_port);
     execlp(ftpget, ftpget, "-S", pbuf, NULL);
-    debug(9, 0, "ftpInitialize: %s: %s\n", ftpget, xstrerror());
+    debug(50, 0, "ftpInitialize: %s: %s\n", ftpget, xstrerror());
     _exit(1);
     return (1);			/* eliminate compiler warning */
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.29 1996/11/08 00:46:46 wessels Exp $
+ * $Id: redirect.cc,v 1.30 1996/11/14 18:38:47 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -107,13 +107,13 @@ redirectCreateRedirector(const char *command)
     len = sizeof(S);
     memset(&S, '\0', len);
     if (getsockname(cfd, (struct sockaddr *) &S, &len) < 0) {
-	debug(29, 0, "redirect_create_redirector: getsockname: %s\n", xstrerror());
+	debug(50, 0, "redirect_create_redirector: getsockname: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
     listen(cfd, 1);
     if ((pid = fork()) < 0) {
-	debug(29, 0, "redirect_create_redirector: fork: %s\n", xstrerror());
+	debug(50, 0, "redirect_create_redirector: fork: %s\n", xstrerror());
 	comm_close(cfd);
 	return -1;
     }
@@ -143,7 +143,7 @@ redirectCreateRedirector(const char *command)
     /* child */
     no_suid();			/* give up extra priviliges */
     if ((fd = accept(cfd, NULL, NULL)) < 0) {
-	debug(29, 0, "redirect_create_redirector: FD %d accept: %s\n",
+	debug(50, 0, "redirect_create_redirector: FD %d accept: %s\n",
 	    cfd, xstrerror());
 	_exit(1);
     }
@@ -154,7 +154,7 @@ redirectCreateRedirector(const char *command)
     close(fd);
     close(cfd);
     execlp(command, "(redirector)", NULL);
-    debug(29, 0, "redirect_create_redirector: %s: %s\n", command, xstrerror());
+    debug(50, 0, "redirect_create_redirector: %s: %s\n", command, xstrerror());
     _exit(1);
     return 0;
 }
@@ -175,7 +175,7 @@ redirectHandleRead(int fd, redirector_t * redirector)
 	len, redirector->index + 1);
     if (len <= 0) {
 	if (len < 0)
-	    debug(29, 1, "redirectHandleRead: FD %d read: %s\n", fd, xstrerror());
+	    debug(50, 1, "redirectHandleRead: FD %d read: %s\n", fd, xstrerror());
 	debug(29, redirector->flags & REDIRECT_FLAG_CLOSING ? 5 : 1,
 	    "FD %d: Connection from Redirector #%d is closed, disabling\n",
 	    fd, redirector->index + 1);

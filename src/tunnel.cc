@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.25 1996/11/06 23:14:55 wessels Exp $
+ * $Id: tunnel.cc,v 1.26 1996/11/14 18:38:48 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -137,7 +137,7 @@ sslReadServer(int fd, void *data)
     len = read(sslState->server.fd, sslState->server.buf, SQUID_TCP_SO_RCVBUF);
     debug(26, 5, "sslReadServer FD %d, read %d bytes\n", fd, len);
     if (len < 0) {
-	debug(26, 1, "sslReadServer: FD %d: read failure: %s\n",
+	debug(50, 1, "sslReadServer: FD %d: read failure: %s\n",
 	    sslState->server.fd, xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
@@ -177,7 +177,7 @@ sslReadClient(int fd, void *data)
     debug(26, 5, "sslReadClient FD %d, read %d bytes\n",
 	sslState->client.fd, len);
     if (len < 0) {
-	debug(26, 1, "sslReadClient: FD %d: read failure: %s\n",
+	debug(50, 1, "sslReadClient: FD %d: read failure: %s\n",
 	    fd, xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
@@ -213,7 +213,7 @@ sslWriteServer(int fd, void *data)
 	sslState->client.len - sslState->client.offset);
     debug(26, 5, "sslWriteServer FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
-	debug(26, 2, "sslWriteServer: FD %d: write failure: %s.\n",
+	debug(50, 2, "sslWriteServer: FD %d: write failure: %s.\n",
 	    sslState->server.fd, xstrerror());
 	sslClose(sslState);
 	return;
@@ -253,7 +253,7 @@ sslWriteClient(int fd, void *data)
 	sslState->server.len - sslState->server.offset);
     debug(26, 5, "sslWriteClient FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
-	debug(26, 2, "sslWriteClient: FD %d: write failure: %s.\n",
+	debug(50, 2, "sslWriteClient: FD %d: write failure: %s.\n",
 	    sslState->client.fd, xstrerror());
 	sslClose(sslState);
 	return;

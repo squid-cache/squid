@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.112 1996/11/14 02:56:38 wessels Exp $
+ * $Id: main.cc,v 1.113 1996/11/14 18:38:45 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -392,7 +392,7 @@ serverConnectionsOpen(void)
 	    x = getsockname(theOutIcpConnection,
 		(struct sockaddr *) &xaddr, &len);
 	    if (x < 0)
-		debug(1, 1, "theOutIcpConnection FD %d: getsockname: %s\n",
+		debug(50, 1, "theOutIcpConnection FD %d: getsockname: %s\n",
 		    theOutIcpConnection, xstrerror());
 	    else
 		theOutICPAddr = xaddr.sin_addr;
@@ -522,7 +522,7 @@ mainInitialize(void)
 	    /* we were probably started as root, so cd to a swap
 	     * directory in case we dump core */
 	    if (chdir(swappath(0)) < 0) {
-		debug(1, 0, "%s: %s\n", swappath(0), xstrerror());
+		debug(50, 0, "%s: %s\n", swappath(0), xstrerror());
 		fatal_dump("Cannot cd to swap directory?");
 	    }
 	}

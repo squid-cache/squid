@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.103 1996/11/14 02:59:15 wessels Exp $
+ * $Id: comm.cc,v 1.104 1996/11/14 18:38:40 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -205,7 +205,7 @@ comm_local_port(int fd)
 	return fde->local_port;
     addr_len = sizeof(addr);
     if (getsockname(fd, (struct sockaddr *) &addr, &addr_len)) {
-	debug(5, 1, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD %d: %s\n", fd, xstrerror());
+	debug(50, 1, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD %d: %s\n", fd, xstrerror());
 	return 0;
     }
     debug(5, 6, "comm_local_port: FD %d: sockaddr %u.\n", fd, addr.sin_addr.s_addr);
@@ -224,7 +224,7 @@ commBind(int s, struct in_addr in_addr, u_short port)
     S.sin_addr = in_addr;
     if (bind(s, (struct sockaddr *) &S, sizeof(S)) == 0)
 	return COMM_OK;
-    debug(5, 0, "commBind: Cannot bind socket FD %d to %s:%d: %s\n",
+    debug(50, 0, "commBind: Cannot bind socket FD %d to %s:%d: %s\n",
 	s,
 	S.sin_addr.s_addr == INADDR_ANY ? "*" : inet_ntoa(S.sin_addr),
 	port, xstrerror());
@@ -253,11 +253,11 @@ comm_open(int sock_type,
 	switch (errno) {
 	case ENFILE:
 	case EMFILE:
-	    debug(5, 1, "comm_open: socket failure: %s\n", xstrerror());
+	    debug(50, 1, "comm_open: socket failure: %s\n", xstrerror());
 	    Reserve_More_FDs();
 	    break;
 	default:
-	    debug(5, 0, "comm_open: socket failure: %s\n", xstrerror());
+	    debug(50, 0, "comm_open: socket failure: %s\n", xstrerror());
 	}
 	return (COMM_ERROR);
     }
@@ -307,7 +307,7 @@ comm_listen(int sock)
 {
     int x;
     if ((x = listen(sock, FD_SETSIZE >> 2)) < 0) {
-	debug(5, 0, "comm_listen: listen(%d, %d): %s\n",
+	debug(50, 0, "comm_listen: listen(%d, %d): %s\n",
 	    FD_SETSIZE >> 2,
 	    sock, xstrerror());
 	return x;
@@ -425,7 +425,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 	    if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *) &x, &len) >= 0)
 		errno = x;
 	default:
-	    debug(5, 3, "connect: %s:%d: %s.\n",
+	    debug(50, 2, "connect: %s:%d: %s.\n",
 		fqdnFromAddr(address->sin_addr),
 		ntohs(address->sin_port),
 		xstrerror());
@@ -476,7 +476,7 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 	    Reserve_More_FDs();
 	    return COMM_ERROR;
 	default:
-	    debug(5, 1, "comm_accept: FD %d: accept failure: %s\n",
+	    debug(50, 1, "comm_accept: FD %d: accept failure: %s\n",
 		fd, xstrerror());
 	    return COMM_ERROR;
 	}
@@ -562,7 +562,7 @@ comm_udp_send(int fd, const char *host, u_short port, const char *buf, int len)
     to_addr.sin_family = AF_INET;
 
     if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP)) == 0) {
-	debug(5, 1, "comm_udp_send: gethostbyname failure: %s: %s\n",
+	debug(50, 1, "comm_udp_send: gethostbyname failure: %s: %s\n",
 	    host, xstrerror());
 	return (COMM_ERROR);
     }
@@ -570,7 +570,7 @@ comm_udp_send(int fd, const char *host, u_short port, const char *buf, int len)
     to_addr.sin_port = htons(port);
     if ((bytes_sent = sendto(fd, buf, len, 0, (struct sockaddr *) &to_addr,
 		sizeof(to_addr))) < 0) {
-	debug(5, 1, "comm_udp_send: sendto failure: FD %d: %s\n",
+	debug(50, 1, "comm_udp_send: sendto failure: FD %d: %s\n",
 	    fd, xstrerror());
 	return COMM_ERROR;
     }
@@ -588,7 +588,7 @@ comm_udp_sendto(int fd,
     int x;
     x = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len);
     if (x < 0) {
-	debug(5, 1, "comm_udp_sendto: FD %d, %s, port %d: %s\n",
+	debug(50, 1, "comm_udp_sendto: FD %d, %s, port %d: %s\n",
 	    fd,
 	    inet_ntoa(to_addr->sin_addr),
 	    (int) htons(to_addr->sin_port),
@@ -740,7 +740,7 @@ comm_select(time_t sec)
 		break;
 	    if (errno == EINTR)
 		break;
-	    debug(5, 0, "comm_select: select failure: %s\n",
+	    debug(50, 0, "comm_select: select failure: %s\n",
 		xstrerror());
 	    examine_select(&readfds, &writefds);
 	    return COMM_ERROR;
@@ -897,7 +897,7 @@ comm_set_mcast_ttl(int fd, int mcast_ttl)
 	mcast_ttl, fd);
     if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL,
 	    (char *) &mcast_ttl, sizeof(char)) < 0)
-	     debug(5, 1, "comm_set_mcast_ttl: FD %d, TTL: %d: %s\n",
+	     debug(50, 1, "comm_set_mcast_ttl: FD %d, TTL: %d: %s\n",
 	    fd, mcast_ttl, xstrerror());
 #endif
     return 0;
@@ -931,7 +931,7 @@ commSetNoLinger(int fd)
     L.l_onoff = 0;		/* off */
     L.l_linger = 0;
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
-	debug(5, 0, "commSetNoLinger: FD %d: %s\n", fd, xstrerror());
+	debug(50, 0, "commSetNoLinger: FD %d: %s\n", fd, xstrerror());
 }
 
 static void
@@ -939,14 +939,14 @@ commSetReuseAddr(int fd)
 {
     int on = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0)
-	debug(5, 1, "commSetReuseAddr: FD %d: %s\n", fd, xstrerror());
+	debug(50, 1, "commSetReuseAddr: FD %d: %s\n", fd, xstrerror());
 }
 
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
     if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0)
-	debug(5, 1, "commSetTcpRcvbuf: FD %d, SIZE %d: %s\n",
+	debug(50, 1, "commSetTcpRcvbuf: FD %d, SIZE %d: %s\n",
 	    fd, size, xstrerror());
 }
 
@@ -955,17 +955,17 @@ commSetNonBlocking(int fd)
 {
     int flags;
     if ((flags = fcntl(fd, F_GETFL)) < 0) {
-	debug(5, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+	debug(50, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
-	debug(5, 0, "FD %d: error setting O_NONBLOCK: %s\n", fd, xstrerror());
+	debug(50, 0, "FD %d: error setting O_NONBLOCK: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
 #else
     if (fcntl(fd, F_SETFL, flags | O_NDELAY) < 0) {
-	debug(5, 0, "FD %d: error setting O_NDELAY: %s\n", fd, xstrerror());
+	debug(50, 0, "FD %d: error setting O_NDELAY: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
 #endif
@@ -978,11 +978,11 @@ commSetCloseOnExec(int fd)
 #ifdef FD_CLOEXEC
     int flags;
     if ((flags = fcntl(fd, F_GETFL)) < 0) {
-	debug(5, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+	debug(50, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
 	return;
     }
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0)
-	debug(5, 0, "FD %d: set close-on-exec failed: %s\n", fd, xstrerror());
+	debug(50, 0, "FD %d: set close-on-exec failed: %s\n", fd, xstrerror());
 #endif
 }
 
@@ -992,7 +992,7 @@ commSetTcpNoDelay(int fd)
 {
     int on = 1;
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
-	debug(5, 1, "commSetTcpNoDelay: FD %d: %s\n", fd, xstrerror());
+	debug(50, 1, "commSetTcpNoDelay: FD %d: %s\n", fd, xstrerror());
 }
 #endif
 
@@ -1207,7 +1207,7 @@ commHandleRead(int fd, RWStateData * state)
 	} else {
 	    /* Len == 0 means connection closed; otherwise would not have been
 	     * called by comm_select(). */
-	    debug(5, len == 0 ? 2 : 1,
+	    debug(50, len == 0 ? 2 : 1,
 		"commHandleRead: FD %d: read failure: %s\n",
 		fd,
 		len == 0 ? "connection closed" : xstrerror());
@@ -1291,7 +1291,7 @@ commHandleWrite(int fd, RWStateData * state)
     } else if (len < 0) {
 	/* An error */
 	if (errno == EWOULDBLOCK || errno == EAGAIN) {
-	    debug(5, 10, "commHandleWrite: FD %d: write failure: %s.\n",
+	    debug(50, 10, "commHandleWrite: FD %d: write failure: %s.\n",
 		fd, xstrerror());
 	    commSetSelect(fd,
 		COMM_SELECT_WRITE,
@@ -1299,7 +1299,7 @@ commHandleWrite(int fd, RWStateData * state)
 		state,
 		0);
 	} else {
-	    debug(5, 2, "commHandleWrite: FD %d: write failure: %s.\n",
+	    debug(50, 2, "commHandleWrite: FD %d: write failure: %s.\n",
 		fd, xstrerror());
 	    RWStateCallbackAndFree(fd, COMM_ERROR);
 	}
