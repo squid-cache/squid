@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.6 2002/04/01 11:59:55 hno Exp $
+# $Id: Makefile.am,v 1.7 2002/04/02 01:28:22 hno Exp $
 #
 
 errordir = $(datadir)/errors
@@ -27,7 +27,6 @@ LANGUAGES	= \
 		Italian \
 		Japanese \
 		Korean \
-		list \
 		Makefile.am \
 		Makefile.in \
 		Polish \
