@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.113 1998/03/28 23:24:45 wessels Exp $
+ * $Id: disk.cc,v 1.114 1998/05/20 22:39:44 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -210,8 +210,8 @@ file_close(int fd)
     assert(fd >= 0);
 #endif
     assert(F->open);
-    if (EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
-	EBIT_SET(F->flags, FD_CLOSE_REQUEST);
+    if (F->flags.write_daemon) {
+	F->flags.close_request = 1;
 	debug(6, 2) ("file_close: FD %d, delaying close\n", fd);
 	return;
     }
@@ -220,7 +220,7 @@ file_close(int fd)
 #else
     close(fd);
 #endif
-    debug(6, EBIT_TEST(F->flags, FD_CLOSE_REQUEST) ? 2 : 5)
+    debug(6, F->flags.close_request ? 2 : 5)
 	("file_close: FD %d, really closing\n", fd);
     fd_close(fd);
 }
@@ -388,14 +388,14 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (fdd->write_q == NULL) {
 	/* no more data */
 	fdd->write_q_tail = NULL;
-	EBIT_CLR(F->flags, FD_WRITE_DAEMON);
+	F->flags.write_daemon = 0;
     } else {
 	/* another block is queued */
 	cbdataLock(fdd->wrt_handle_data);
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
-	EBIT_SET(F->flags, FD_WRITE_DAEMON);
+	F->flags.write_daemon = 1;
     }
-    do_close = EBIT_TEST(F->flags, FD_CLOSE_REQUEST);
+    do_close = F->flags.close_request;
     if (fdd->wrt_handle) {
 	if (fdd->wrt_handle_data == NULL)
 	    do_callback = 1;
@@ -453,14 +453,14 @@ file_write(int fd,
 	F->disk.write_q_tail->next = wq;
 	F->disk.write_q_tail = wq;
     }
-    if (!EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
+    if (!F->flags.write_daemon) {
 	cbdataLock(F->disk.wrt_handle_data);
 #if USE_ASYNC_IO
 	diskHandleWrite(fd, NULL);
 #else
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
 #endif
-	EBIT_SET(F->flags, FD_WRITE_DAEMON);
+	F->flags.write_daemon = 1;
     }
 }
 
