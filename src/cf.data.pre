@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.254 2002/04/05 08:55:22 hno Exp $
+# $Id: cf.data.pre,v 1.255 2002/04/07 03:35:30 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -446,6 +446,21 @@ DOC_START
 	Normally the ICP query timeout is determined dynamically.  But
 	sometimes it can lead to very large values (say 5 seconds).
 	Use this option to put an upper limit on the dynamic timeout
+	value.  Do NOT use this option to always use a fixed (instead
+	of a dynamic) timeout value. To set a fixed timeout see the
+	'icp_query_timeout' directive.
+DOC_END
+
+NAME: minimum_icp_query_timeout
+COMMENT: (msec)
+DEFAULT: 5
+TYPE: int
+LOC: Config.Timeout.icp_query_max
+DOC_START
+	Normally the ICP query timeout is determined dynamically.  But
+	sometimes it can lead to very small timeouts, even lower than
+	the normal latency variance on your link due to traffic.
+	Use this option to put an lower limit on the dynamic timeout
 	value.  Do NOT use this option to always use a fixed (instead
 	of a dynamic) timeout value. To set a fixed timeout see the
 	'icp_query_timeout' directive.
