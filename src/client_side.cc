@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.345 1998/07/14 06:12:58 wessels Exp $
+ * $Id: client_side.cc,v 1.346 1998/07/14 17:03:53 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1962,8 +1962,6 @@ clientProcessMiss(clientHttpRequest * http)
 {
     char *url = http->uri;
     request_t *r = http->request;
-    aclCheck_t ch;
-    int answer;
     ErrorState *err = NULL;
     debug(33, 4) ("clientProcessMiss: '%s %s'\n",
 	RequestMethodStr[r->method], url);
