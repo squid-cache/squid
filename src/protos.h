@@ -914,7 +914,7 @@ extern protocol_t urlParseProtocol(const char *);
 extern method_t urlParseMethod(const char *);
 extern void urlInitialize(void);
 extern request_t *urlParse(method_t, char *);
-extern char *urlCanonical(const request_t *);
+extern const char *urlCanonical(request_t *);
 extern char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
 extern char *urlInternal(const char *dir, const char *name);
 extern int matchDomainName(const char *d, const char *h);
