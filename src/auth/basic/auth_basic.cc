@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.9 2001/08/03 15:13:06 adrian Exp $
+ * $Id: auth_basic.cc,v 1.10 2001/08/30 23:00:36 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -515,6 +515,10 @@ authenticateBasicDecodeAuth(auth_user_request_t * auth_user_request, const char 
 	    basic_auth->passwd = local_basic.passwd;
 	} else
 	    xfree(local_basic.passwd);
+	if (auth_user->flags.credentials_ok == 3) {
+	    debug(29, 4) ("authBasicDecodeAuth: last attempt to authenticate this user failed, resetting auth state to unchecked\n");
+	    auth_user->flags.credentials_ok = 0;
+	}
     }
     /* link the request to the user */
     auth_user_request->auth_user = auth_user;
