@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.406 1998/04/20 23:26:17 wessels Exp $
+ * $Id: store.cc,v 1.407 1998/04/21 02:20:07 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -672,6 +672,17 @@ storeMaintainSwapSpace(void *datanotused)
 	prev = m->prev;
 	e = m->data;
 	if (storeEntryLocked(e)) {
+	    /*
+	     * If there is a locked entry at the tail of the LRU list,
+	     * move it to the beginning to get it out of the way.
+	     * Theoretically, we might have all locked objects at the
+	     * tail, and then we'll never remove anything here and the
+	     * LRU age will go to zero.
+	     */
+	    if (memInUse(MEM_STOREENTRY) > max_scan) {
+	        dlinkDelete(&e->lru, &store_list);
+	        dlinkAdd(e, &e->lru, &store_list);
+	    }
 	    locked++;
 	} else if (storeCheckExpired(e, 1)) {
 	    expired++;
