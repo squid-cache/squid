@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.35 2002/10/13 20:35:01 robertc Exp $
+ * $Id: icp_v3.cc,v 1.36 2003/01/17 05:49:34 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -63,7 +63,7 @@ doV3Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     state->fd = fd;
     state->from = from;
     state->url = xstrdup (url);
-    _StoreEntry::getPublic (state, url, METHOD_GET);
+    StoreEntry::getPublic (state, url, METHOD_GET);
 }
 
 ICP3State::~ICP3State ()

@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.48 2003/01/04 01:12:49 hno Exp $
+ * $Id: htcp.cc,v 1.49 2003/01/17 05:49:34 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -95,7 +95,7 @@ public:
     void *operator new (unsigned int byteCount);
     void operator delete (void *address);
 
-    void created (_StoreEntry *newEntry);
+    void created (StoreEntry *newEntry);
     void checkHit();
     void checkedHit(StoreEntry *e);
     void setFrom (struct sockaddr_in *from);
@@ -674,11 +674,11 @@ htcpSpecifier::checkHit()
 	checkedHit(NullStoreEntry::getInstance());
 	return;
     }
-    _StoreEntry::getPublicByRequest(this, checkHitRequest);
+    StoreEntry::getPublicByRequest(this, checkHitRequest);
 }
 
 void
-htcpSpecifier::created (_StoreEntry *e)
+htcpSpecifier::created (StoreEntry *e)
 {
     StoreEntry *hit=NULL;
     assert (e);

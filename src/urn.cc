@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.79 2002/10/25 07:36:32 robertc Exp $
+ * $Id: urn.cc,v 1.80 2003/01/17 05:49:35 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -41,7 +41,7 @@
 
 class UrnState : public StoreClient {
 public:
-    void created (_StoreEntry *newEntry);
+    void created (StoreEntry *newEntry);
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     void start (request_t *, StoreEntry *);
@@ -211,11 +211,11 @@ UrnState::start(request_t * r, StoreEntry * e)
     setUriResFromRequest(r);
     if (urlres_r == NULL)
 	return;
-    _StoreEntry::getPublic (this, urlres, METHOD_GET);
+    StoreEntry::getPublic (this, urlres, METHOD_GET);
 }
 
 void
-UrnState::created(_StoreEntry *newEntry)
+UrnState::created(StoreEntry *newEntry)
 {
     urlres_e = newEntry;
     if (urlres_e->isNull()) {

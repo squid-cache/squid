@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.29 2003/01/09 12:24:22 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.30 2003/01/17 05:49:34 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -50,14 +50,14 @@ public:
     void purgeRequest ();
     void purgeRequestFindObjectToPurge();
     void purgeDoMissPurge();
-    void purgeFoundGet(_StoreEntry *newEntry);
-    void purgeFoundHead(_StoreEntry *newEntry);
-    void purgeFoundObject(_StoreEntry *entry);
-    void purgeDoPurgeGet(_StoreEntry *entry);
-    void purgeDoPurgeHead(_StoreEntry *entry);
+    void purgeFoundGet(StoreEntry *newEntry);
+    void purgeFoundHead(StoreEntry *newEntry);
+    void purgeFoundObject(StoreEntry *entry);
+    void purgeDoPurgeGet(StoreEntry *entry);
+    void purgeDoPurgeHead(StoreEntry *entry);
     void doGetMoreData();
     void identifyStoreObject();
-    void identifyFoundObject(_StoreEntry *entry);
+    void identifyFoundObject(StoreEntry *entry);
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
     
@@ -65,7 +65,7 @@ public:
 
     /* state variable - replace with class to handle storeentries at some point */
     int lookingforstore;
-    virtual void created (_StoreEntry *newEntry);
+    virtual void created (StoreEntry *newEntry);
   
     clientHttpRequest *http;
     int headers_sz;
@@ -815,11 +815,11 @@ clientReplyContext::purgeRequestFindObjectToPurge()
     /* Try to find a base entry */
     http->flags.purging = 1;
     lookingforstore = 1;
-    _StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_GET);
+    StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_GET);
 }
 
 void
-clientReplyContext::created(_StoreEntry *newEntry)
+clientReplyContext::created(StoreEntry *newEntry)
 {
     if (lookingforstore == 1)
 	purgeFoundGet(newEntry);
@@ -834,17 +834,17 @@ clientReplyContext::created(_StoreEntry *newEntry)
 }
 
 void
-clientReplyContext::purgeFoundGet(_StoreEntry *newEntry)
+clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
 {
     if (newEntry->isNull()) {
 	lookingforstore = 2;
-	_StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_HEAD);
+	StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_HEAD);
     } else
 	purgeFoundObject (newEntry);
 }
 
 void
-clientReplyContext::purgeFoundHead(_StoreEntry *newEntry)
+clientReplyContext::purgeFoundHead(StoreEntry *newEntry)
 {
     if (newEntry->isNull())
 	purgeDoMissPurge();
@@ -853,7 +853,7 @@ clientReplyContext::purgeFoundHead(_StoreEntry *newEntry)
 }
 	
 void
-clientReplyContext::purgeFoundObject(_StoreEntry *entry)
+clientReplyContext::purgeFoundObject(StoreEntry *entry)
 {
     assert (entry && !entry->isNull());
 	StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
@@ -900,11 +900,11 @@ clientReplyContext::purgeDoMissPurge()
 {
     http->logType = LOG_TCP_MISS;
     lookingforstore = 3;
-    _StoreEntry::getPublicByRequestMethod(this,http->request, METHOD_GET);
+    StoreEntry::getPublicByRequestMethod(this,http->request, METHOD_GET);
 }
 
 void
-clientReplyContext::purgeDoPurgeGet(_StoreEntry *newEntry)
+clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
     assert (newEntry);
     /* Move to new() when that is created */
@@ -917,11 +917,11 @@ clientReplyContext::purgeDoPurgeGet(_StoreEntry *newEntry)
 	purgeStatus = HTTP_OK;
     }
     lookingforstore = 4;
-    _StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_HEAD);
+    StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_HEAD);
 }
 
 void
-clientReplyContext::purgeDoPurgeHead(_StoreEntry *newEntry)
+clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
     if (newEntry) {
 	debug(88, 4) ("clientPurgeRequest: HEAD '%s'\n", storeUrl(newEntry));
@@ -1355,7 +1355,7 @@ clientReplyContext::identifyStoreObject()
     request_t *r = http->request;
     if (r->flags.cachable || r->flags.internal) {
 	lookingforstore = 5;
-	_StoreEntry::getPublicByRequest (this, r);
+	StoreEntry::getPublicByRequest (this, r);
     } else
 	identifyFoundObject (NullStoreEntry::getInstance());
 }

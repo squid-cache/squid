@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.4 2002/12/27 10:26:33 robertc Exp $
+ * $Id: StoreClient.h,v 1.5 2003/01/17 05:49:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,14 +39,14 @@
 typedef void STCB(void *, StoreIOBuffer);	/* store callback */
 
 #ifdef __cplusplus
-class _StoreEntry;
+class StoreEntry;
 #endif
 
 #ifdef __cplusplus
 class StoreClient {
 public:
   virtual ~StoreClient () {}
-  virtual void created (_StoreEntry *newEntry) = 0;
+  virtual void created (StoreEntry *newEntry) = 0;
 };
 #endif
 

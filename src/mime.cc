@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.108 2002/11/10 04:43:04 hno Exp $
+ * $Id: mime.cc,v 1.109 2003/01/17 05:49:34 robertc Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -46,7 +46,7 @@ public:
     char const * getName () const;
     void _free();
     void load();
-    void created (_StoreEntry *newEntry);
+    void created (StoreEntry *newEntry);
 private:
     char *icon;
     char *url;
@@ -451,7 +451,7 @@ MimeIcon::load()
     const char *type = mimeGetContentType(icon);
     if (type == NULL)
 	fatal("Unknown icon format while reading mime.conf\n");
-    _StoreEntry::getPublic(this, url, METHOD_GET);
+    StoreEntry::getPublic(this, url, METHOD_GET);
 }
 
 void
