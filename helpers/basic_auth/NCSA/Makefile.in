@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.43 2003/05/29 00:13:12 hno Exp $
+#  $Id: Makefile.in,v 1.44 2003/05/31 11:34:59 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -211,7 +211,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 libexec_PROGRAMS = ncsa_auth
-ncsa_auth_SOURCES = ncsa_auth.c crypt_md5.c crtpe_md5.h
+ncsa_auth_SOURCES = ncsa_auth.c crypt_md5.c crypt_md5.h
 LDADD = -L$(top_builddir)/lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS) $(SSLLIB)
 INCLUDES = -I$(top_srcdir)/include
 subdir = helpers/basic_auth/NCSA
