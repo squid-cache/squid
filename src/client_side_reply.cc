@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.54 2003/06/20 01:01:00 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.55 2003/06/22 09:30:00 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -514,6 +514,9 @@ clientReplyContext::handleIMSGiveClientNewEntry()
 void
 clientReplyContext::handleIMSReply(StoreIOBuffer result)
 {
+    if (deleting)
+        return;
+
     debug(88, 3) ("clientHandleIMSReply: %s, %lu bytes\n",
                   storeUrl(http->storeEntry()),
                   (long unsigned) result.length);
@@ -559,8 +562,13 @@ clientReplyContext::CacheHit(void *data, StoreIOBuffer result)
 void
 clientReplyContext::cacheHit(StoreIOBuffer result)
 {
+    if (deleting)
+        return;
+
     StoreEntry *e = http->storeEntry();
+
     request_t *r = http->request;
+
     debug(88, 3) ("clientCacheHit: %s, %ud bytes\n", http->uri, (unsigned int)result.length);
 
     if (http->storeEntry() == NULL) {
