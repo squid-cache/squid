@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.69 1999/01/11 16:50:36 wessels Exp $
+ * $Id: peer_digest.cc,v 1.70 1999/01/29 21:28:17 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -317,7 +317,7 @@ peerDigestRequest(PeerDigest * pd)
 
     /* push towards peer cache */
     debug(72, 3) ("peerDigestRequest: forwarding to fwdStart...\n");
-    fwdStart(-1, e, req, no_addr);
+    fwdStart(-1, e, req, no_addr, no_addr);
     cbdataLock(fetch);
     cbdataLock(fetch->pd);
     storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF),

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.437 1999/01/24 04:03:50 wessels Exp $
+ * $Id: client_side.cc,v 1.438 1999/01/29 21:28:10 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -133,6 +133,7 @@ clientAccessCheck(void *data)
     http->acl_checklist = aclChecklistCreate(Config.accessList.http,
 	http->request,
 	conn->peer.sin_addr,
+	conn->me.sin_addr,
 	browser,
 	conn->ident);
 #if USE_IDENT
@@ -304,7 +305,7 @@ clientProcessExpired(void *data)
     http->entry = entry;
     http->out.offset = 0;
     fwdStart(http->conn->fd, http->entry, http->request,
-	http->conn->peer.sin_addr);
+	http->conn->peer.sin_addr, http->conn->me.sin_addr);
     /* Register with storage manager to receive updates when data comes in. */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	debug(33, 0) ("clientProcessExpired: found ENTRY_ABORTED object\n");
@@ -852,6 +853,7 @@ clientCachable(clientHttpRequest * http)
      * This may not work yet for 'dst' and 'dst_domain' ACLs.
      */
     ch.src_addr = http->conn->peer.sin_addr;
+    ch.my_addr = http->conn->me.sin_addr;
     ch.request = http->request;
     /*
      * aclCheckFast returns 1 for ALLOW and 0 for DENY.  The default
@@ -1860,7 +1862,8 @@ clientProcessMiss(clientHttpRequest * http)
     }
     if (http->flags.internal)
 	r->protocol = PROTO_INTERNAL;
-    fwdStart(http->conn->fd, http->entry, r, http->conn->peer.sin_addr);
+    fwdStart(http->conn->fd, http->entry, r,
+	http->conn->peer.sin_addr, http->conn->me.sin_addr);
 }
 
 static clientHttpRequest *

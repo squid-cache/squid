@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.144 1999/01/24 04:03:51 wessels Exp $
+ * $Id: enums.h,v 1.145 1999/01/29 21:28:11 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -89,6 +89,7 @@ typedef enum {
     ACL_NONE,
     ACL_SRC_IP,
     ACL_DST_IP,
+    ACL_MY_IP,
     ACL_SRC_DOMAIN,
     ACL_DST_DOMAIN,
     ACL_SRC_DOM_REGEX,
