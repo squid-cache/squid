@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.434 2004/11/06 22:20:47 hno Exp $
+ * $Id: http.cc,v 1.435 2004/11/16 23:11:46 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -649,6 +649,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     if (hdr_len > 4 && strncmp(reply_hdr, "HTTP/", 5)) {
         debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", reply_hdr);
         reply_hdr_state += 2;
+        reply->sline.version = HttpVersion(1, 0);
         reply->sline.status = HTTP_INVALID_HEADER;
         storeEntryReplaceObject (entry, reply);
 
@@ -688,6 +689,21 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     /* Parse headers into reply structure */
     /* what happens if we fail to parse here? */
     httpReplyParse(reply, reply_hdr, hdr_len);
+
+    if (reply->sline.status >= HTTP_INVALID_HEADER) {
+        debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", reply_hdr);
+        reply->sline.version = HttpVersion(1, 0);
+        reply->sline.status = HTTP_INVALID_HEADER;
+        storeEntryReplaceObject (entry, reply);
+
+        if (eof == 1) {
+            fwdComplete(fwd);
+            comm_close(fd);
+        }
+
+        return;
+    }
+
     processSurrogateControl (reply);
     /* TODO: we need our own reply * in the httpState, as we probably don't want to replace
      * the storeEntry with interim headers
@@ -972,7 +988,13 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
              */
             /* doesn't return */
             processReplyHeader(buf, len);
-        else {
+        else if (entry->getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != entry->getReply()->sline.version) {
+            ErrorState *err;
+            err = errorCon(ERR_INVALID_REQ, HTTP_BAD_GATEWAY);
+            err->request = requestLink((HttpRequest *) request);
+            fwdFail(fwd, err);
+            do_next_read = 0;
+        } else {
             fwdComplete(fwd);
             do_next_read = 0;
             comm_close(fd);
@@ -983,9 +1005,22 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 
             if (reply_hdr_state == 2) {
                 http_status s = entry->getReply()->sline.status;
+                HttpVersion httpver = entry->getReply()->sline.version;
+
+                if (s == HTTP_INVALID_HEADER && httpver != HttpVersion(0,9)) {
+                    ErrorState *err;
+                    storeEntryReset(entry);
+                    err = errorCon(ERR_INVALID_REQ, HTTP_BAD_GATEWAY);
+                    err->request = requestLink((HttpRequest *) request);
+                    fwdFail(fwd, err);
+                    comm_close(fd);
+                    return;
+                }
+
 #if WIP_FWD_LOG
 
                 fwdStatus(fwd, s);
+
 #endif
                 /*
                  * If its not a reply that we will re-forward, then

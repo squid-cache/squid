@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.98 2004/09/26 16:38:01 hno Exp $
+ * $Id: HttpHeader.cc,v 1.99 2004/11/16 23:11:46 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -496,15 +496,25 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
 
         e = httpHeaderEntryParseCreate(field_start, field_end);
 
-        if (e != NULL)
-            httpHeaderAddEntry(hdr, e);
-        else
-            debug(55, 2) ("warning: ignoring unparseable http header field near '%s'\n",
+        if (NULL == e) {
+            debug(55, 1) ("WARNING: ignoring unparseable HTTP header field near '%s'\n",
                           getStringPrefix(field_start, field_end));
+        } else if (e->id == HDR_CONTENT_LENGTH && httpHeaderHas(hdr, HDR_CONTENT_LENGTH)) {
+            debug(55, 1) ("WARNING: found double content-length header\n");
+            httpHeaderEntryDestroy(e);
+            return httpHeaderReset(hdr);
+        } else if (e->id == HDR_OTHER && stringHasWhitespace(e->name.buf())) {
+            debug(55, 1) ("WARNING: found whitespace in HTTP header {%s}\n", e->name.buf());
+            httpHeaderEntryDestroy(e);
+            return httpHeaderReset(hdr);
+        } else {
+            httpHeaderAddEntry(hdr, e);
+        }
 
         field_start = field_end;
 
         /* skip CRLF */
+
         if (*field_start == '\r')
             field_start++;
 
