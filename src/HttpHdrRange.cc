@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.18 1999/01/19 21:40:39 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.19 1999/01/19 23:16:48 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -442,7 +442,7 @@ httpHdrRangeLowestOffset(const HttpHdrRange * range, size_t size)
 	current = spec->offset;
 	if (!known_spec(current)) {
 	    if (spec->length > size || !known_spec(spec->length))
-		return 0; /* Unknown. Assume start of file */
+		return 0;	/* Unknown. Assume start of file */
 	    current = size - spec->length;
 	}
 	if (current < offset || !known_spec(offset))
