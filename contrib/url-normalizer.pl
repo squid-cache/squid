@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/local/bin/perl -Tw
 
 # From:    Markus Gyger <mgyger@itr.ch>
 #
