@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.110 1998/12/09 04:16:48 wessels Exp $
+ * $Id: url.cc,v 1.111 1998/12/15 17:33:59 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -351,8 +351,9 @@ urlCanonicalClean(const request_t * request)
 	    /*
 	     * strip arguments AFTER a question-mark
 	     */
-	    if ((t = strchr(buf, '?')))
-		*(++t) = '\0';
+	    if (Config.onoff.strip_query_terms)
+	        if ((t = strchr(buf, '?')))
+		    *(++t) = '\0';
 	    break;
 	}
     }

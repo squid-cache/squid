@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.253 1998/12/11 20:06:52 wessels Exp $
+ * $Id: structs.h,v 1.254 1998/12/15 17:33:58 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -352,6 +352,7 @@ struct _SquidConfig {
 	int redir_rewrites_host;
 	int persistent_client_posts;
 	int prefer_direct;
+	int strip_query_terms;
     } onoff;
     acl *aclList;
     struct {
