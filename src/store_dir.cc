@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.135 2001/10/24 08:19:09 hno Exp $
+ * $Id: store_dir.cc,v 1.136 2002/03/19 23:40:46 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -84,7 +84,8 @@ storeCreateSwapDirectories(void)
 	if (fork())
 	    continue;
 	sd = &Config.cacheSwap.swapDirs[i];
-	sd->newfs(sd);
+	if (NULL != sd->newfs)
+	    sd->newfs(sd);
 	exit(0);
     }
     do {
