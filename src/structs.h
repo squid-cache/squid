@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.372 2001/01/05 03:58:18 wessels Exp $
+ * $Id: structs.h,v 1.373 2001/01/07 14:47:17 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -31,6 +31,9 @@
  *
  */
 
+#include "config.h"
+#include "splay.h"
+
 struct _dlink_node {
     void *data;
     dlink_node *prev;
@@ -41,6 +44,15 @@ struct _dlink_list {
     dlink_node *head;
     dlink_node *tail;
 };
+
+struct _acl_proxy_auth_data {
+    splayNode *names;
+    struct {
+	unsigned int case_insensitive:1;
+	unsigned int required:1;
+    } flags;
+};
+
 
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
