@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.39 1996/04/15 19:20:23 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.40 1996/04/15 22:50:41 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -428,9 +428,9 @@ static void parseCacheHostLine()
 	if (!strcasecmp(token, "proxy-only")) {
 	    proxy_only = 1;
 	} else if (!strcasecmp(token, "weight=")) {
-		weight = atoi(token+7);
+	    weight = atoi(token + 7);
 	} else {
-		self_destruct();
+	    self_destruct();
 	}
     }
     neighbors_cf_add(hostname, type, ascii_port, udp_port, proxy_only, weight);
