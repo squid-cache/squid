@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.205 1998/02/24 21:43:45 wessels Exp $
+ * $Id: stat.cc,v 1.206 1998/02/24 23:26:39 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -127,6 +127,7 @@ static OBJH info_get;
 static OBJH statFiledescriptors;
 static OBJH statCounters;
 static OBJH statAvg5min;
+static OBJH statAvg60min;
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -135,7 +136,7 @@ static void info_get_mallstat(int, int, StoreEntry *);
 /*
  * An hour's worth, plus the 'current' counter
  */
-#define N_COUNT_HIST 6
+#define N_COUNT_HIST 61
 StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
 
@@ -767,6 +768,9 @@ statInit(void)
     cachemgrRegister("5min",
 	"5 Minute Average of Counters",
 	statAvg5min, 0);
+    cachemgrRegister("60min",
+	"60 Minute Average of Counters",
+	statAvg60min, 0);
 }
 
 static void
@@ -796,6 +800,12 @@ void
 statAvg5min(StoreEntry * e)
 {
     statAvgDump(e, 5);
+}
+
+void
+statAvg60min(StoreEntry * e)
+{
+    statAvgDump(e, 60);
 }
 
 void
