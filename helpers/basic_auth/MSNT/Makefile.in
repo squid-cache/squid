@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.16 2002/06/26 11:03:49 hno Exp $
+#  $Id: Makefile.in,v 1.17 2002/06/26 18:45:31 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -135,9 +135,13 @@ msnt_auth_SOURCES = md4.c rfcnb-io.c rfcnb-util.c session.c msntauth.c \
 
 EXTRA_DIST = \
 	COPYING-2.0 \
-	msntauth.conf \
+	msntauth.conf.default \
 	msntauth-v2.0.lsm \
 	README.html
+
+
+sysconf_DATA = \
+	msntauth.conf.default
 
 
 LDADD = @XTRA_LIBS@
@@ -181,6 +185,8 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(msnt_auth_SOURCES)
+DATA = $(sysconf_DATA)
+
 DIST_COMMON = Makefile.am Makefile.in
 SOURCES = $(msnt_auth_SOURCES)
 
@@ -259,6 +265,23 @@ distclean-depend:
 	$(COMPILE) -c `cygpath -w $<`
 CCDEPMODE = @CCDEPMODE@
 uninstall-info-am:
+install-sysconfDATA: $(sysconf_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(sysconfdir)
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(sysconfdir)/$$f"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(sysconfdir)/$$f; \
+	done
+
+uninstall-sysconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(sysconfdir)/$$f"; \
+	  rm -f $(DESTDIR)$(sysconfdir)/$$f; \
+	done
 
 tags: TAGS
 
@@ -315,10 +338,10 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(DATA)
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir) $(DESTDIR)$(sysconfdir)
 
 install: install-am
 install-exec: install-exec-am
@@ -360,9 +383,9 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-data-local
 
-install-exec-am: install-libexecPROGRAMS
+install-exec-am: install-libexecPROGRAMS install-sysconfDATA
 
 install-info: install-info-am
 
@@ -378,19 +401,33 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
-uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS
+uninstall-am: uninstall-info-am uninstall-libexecPROGRAMS \
+	uninstall-sysconfDATA
 
 .PHONY: GTAGS all all-am check check-am clean clean-generic \
 	clean-libexecPROGRAMS distclean distclean-compile \
 	distclean-depend distclean-generic distclean-tags distdir dvi \
 	dvi-am info info-am install install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-libexecPROGRAMS install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic tags uninstall \
-	uninstall-am uninstall-info-am uninstall-libexecPROGRAMS
+	install-data-am install-data-local install-exec install-exec-am \
+	install-info install-info-am install-libexecPROGRAMS \
+	install-man install-strip install-sysconfDATA installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic tags uninstall uninstall-am \
+	uninstall-info-am uninstall-libexecPROGRAMS \
+	uninstall-sysconfDATA
 
+
+confload.o: confload.c
+	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@
+
+install-data-local:
+	@if test -f $(DESTDIR)$(sysconfdir)/msntauth.conf ; then \
+		echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/msntauth.conf" ; \
+	else \
+		echo "$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf" ; \
+		$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf ; \
+	fi
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
