@@ -1116,6 +1116,7 @@ struct _StatCounters {
 	int pkts_recv;
 	int hits_sent;
 	int hits_recv;
+	int replies_queued;
 	kb_t kbytes_sent;
 	kb_t kbytes_recv;
 	StatHist query_svc_time;
