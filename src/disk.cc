@@ -1,15 +1,10 @@
-/* $Id: disk.cc,v 1.2 1996/02/29 07:23:09 wessels Exp $ */
+/* $Id: disk.cc,v 1.3 1996/03/23 00:01:51 wessels Exp $ */
 
 #include "config.h"
 
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#ifdef OLD_CODE
-#if !defined(_SQUID_LINUX_)
-#include <sys/uio.h>
-#endif
-#endif /* OLD_CODE */
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
