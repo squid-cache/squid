@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.291 2002/10/24 23:22:29 adrian Exp $
+ * $Id: acl.cc,v 1.292 2002/11/10 04:19:39 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1810,7 +1810,7 @@ aclCheck(aclCheck_t * checklist)
 	    } else {
 		debug(28, 1) ("aclCheck: Can't start ident lookup. No client connection\n");
 		cbdataReferenceDone(checklist->conn);
-		allow = 0;
+		allow = ACCESS_DENIED;
 		match = -1;
 	    }
 	}
@@ -1880,7 +1880,7 @@ aclCheckCallback(aclCheck_t * checklist, allow_t answer)
 static void
 aclLookupIdentDone(const char *ident, void *data)
 {
-    aclCheck_t *checklist = data;
+    aclCheck_t *checklist = (aclCheck_t *)data;
     if (ident) {
 	xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
 #if DONT
@@ -2481,9 +2481,9 @@ aclDumpGeneric(const acl * a)
 #endif
 #if USE_IDENT
     case ACL_IDENT:
-	return aclDumpUserList(a->data);
+	return aclDumpUserList((acl_user_data *)a->data);
     case ACL_IDENT_REGEX:
-	return aclDumpRegexList(a->data);
+	return aclDumpRegexList((relist *)a->data);
 #endif
     case ACL_PROXY_AUTH:
 	return aclDumpUserList((acl_user_data *)a->data);
