@@ -48,6 +48,12 @@ Later:
   - Buffer management (required by store API and comm code improvements)
   - Improved reply processing to not reparse the reply headers several
     times
+  - Implement HTCP authentication
+  - Log HTCP queries somewhere, like htcp_query.log
+  - There are various places where ICP means ICP/HTCP, and
+    other places where it does not.  For example, cachemgr 'counters'
+    stats like icp.pkts_sent count only ICP.  However, in 'peer_select'
+    stats, ICP does include HTCP as well.
 
 
 
