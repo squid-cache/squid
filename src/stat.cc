@@ -1,6 +1,5 @@
-
 /*
- * $Id: stat.cc,v 1.379 2003/07/17 22:22:53 wessels Exp $
+ * $Id: stat.cc,v 1.380 2003/08/27 22:45:37 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1639,7 +1638,7 @@ statClientRequests(StoreEntry * s)
 
 #define GRAPH_PER_MIN(Y) \
     for (i=0;i<(N_COUNT_HIST-2);i++) { \
-	dt = tvSubDsec(CountHist[i].timestamp, CountHist[i+1].timestamp); \
+	dt = tvSubDsec(CountHist[i+1].timestamp, CountHist[i].timestamp); \
 	if (dt <= 0.0) \
 	    break; \
 	storeAppendPrintf(e, "%lu,%0.2f:", \
@@ -1649,7 +1648,7 @@ statClientRequests(StoreEntry * s)
 
 #define GRAPH_PER_HOUR(Y) \
     for (i=0;i<(N_COUNT_HOUR_HIST-2);i++) { \
-	dt = tvSubDsec(CountHourHist[i].timestamp, CountHourHist[i+1].timestamp); \
+	dt = tvSubDsec(CountHourHist[i+1].timestamp, CountHourHist[i].timestamp); \
 	if (dt <= 0.0) \
 	    break; \
 	storeAppendPrintf(e, "%lu,%0.2f:", \
