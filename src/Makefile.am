@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.84 2003/07/15 12:21:36 robertc Exp $
+#  $Id: Makefile.am,v 1.85 2003/07/15 13:15:04 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -505,6 +505,8 @@ ufsdump_SOURCES = debug.cc \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
+	StoreSwapLogData.cc \
+	StoreSwapLogData.h \
 	access_log.cc \
 	acl.cc \
 	ACLChecklist.cc \
@@ -539,6 +541,7 @@ ufsdump_SOURCES = debug.cc \
 	ETag.cc \
 	event.cc \
 	external_acl.cc \
+	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
 	fde.h \

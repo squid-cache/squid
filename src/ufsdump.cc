@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.2 2003/02/21 22:50:12 robertc Exp $
+ * $Id: ufsdump.cc,v 1.3 2003/07/15 13:15:04 robertc Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -43,6 +43,7 @@
 #undef free
 #include <stdexcept>
 #include <iostream>
+#include <cassert>
 
 void shut_down(int)
 {}
