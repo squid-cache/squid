@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.18 1996/09/15 05:04:25 wessels Exp $
+ * $Id: fqdncache.cc,v 1.19 1996/09/16 16:28:38 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -111,7 +111,6 @@
 #define MAX_FQDN		 1024	/* Maximum cached FQDN */
 #define FQDN_LOW_WATER       90
 #define FQDN_HIGH_WATER      95
-#define MAX_HOST_NAME	  256
 
 struct _fqdn_pending {
     int fd;
@@ -158,7 +157,6 @@ static void fqdncacheEnqueue __P((fqdncache_entry *));
 static void *fqdncacheDequeue __P((void));
 static void fqdncache_dnsDispatch __P((dnsserver_t *, fqdncache_entry *));
 
-static struct hostent *static_result = NULL;
 static HashID fqdn_table = 0;
 static struct fqdncacheQueueData *fqdncacheQueueHead = NULL;
 static struct fqdncacheQueueData **fqdncacheQueueTailP = &fqdncacheQueueHead;
@@ -689,17 +687,9 @@ void
 fqdncache_init()
 {
     debug(35, 3, "Initializing FQDN Cache...\n");
-
     memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
-
-    fqdn_table = hash_create(urlcmp, 229, hash_string);		/* small hash table */
-    /* init static area */
-    static_result = xcalloc(1, sizeof(struct hostent));
-    static_result->h_length = 4;
-    static_result->h_addr_list = xcalloc(2, sizeof(char *));
-    *(static_result->h_addr_list + 0) = xcalloc(1, 4);
-    static_result->h_name = xcalloc(1, MAX_HOST_NAME + 1);
-
+    /* small hash table */
+    fqdn_table = hash_create(urlcmp, 229, hash_string);
     fqdncache_high = (long) (((float) MAX_FQDN *
 	    (float) FQDN_HIGH_WATER) / (float) 100);
     fqdncache_low = (long) (((float) MAX_FQDN *
