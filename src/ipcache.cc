@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.10 1996/03/29 21:19:22 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.11 1996/04/04 01:30:47 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -98,6 +98,7 @@ void update_dns_child_alive()
 int ipcache_testname()
 {
     int success, i;
+    debug(14, 1, "Performing DNS Tests...\n");
 
     for (success = i = 0; i < TEST_SITE; i++) {
 	if (gethostbyname(test_site[i]) != NULL)
@@ -1085,7 +1086,7 @@ void ipcache_init()
 	fprintf(stderr, "ipcache_init: DNS name lookup appears to be broken on this machine.\n");
 	exit(-1);
     } else {
-	debug(14, 4, "ipcache_init: Successful DNS name lookup tests...\n");
+	debug(14, 1, "ipcache_init: Successful DNS name lookup tests...\n");
     }
 
     ip_table = hash_create(urlcmp, 229);	/* small hash table */

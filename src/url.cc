@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.5 1996/03/29 21:19:28 wessels Exp $ */
+/* $Id: url.cc,v 1.6 1996/04/04 01:30:53 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -114,16 +114,16 @@ char *the_url(e)
 	strcpy(token, e->key);
     }
 
-    if (e->type_id == REQUEST_OP_GET) {
+    if (e->type_id == METHOD_GET) {
 	/* key is url */
 	return token;
-    } else if ((e->type_id == REQUEST_OP_POST) &&
+    } else if ((e->type_id == METHOD_POST) &&
 	(!(strncmp(token, "post/", 5)) || !(strncmp(token, "/post/", 6)))) {
 	URL = strtok(token, delim);
 	URL = strtok(NULL, "~");
 	/* discard "/post/" or "post/" from the key and get url */
 	return URL;
-    } else if ((e->type_id == REQUEST_OP_HEAD) &&
+    } else if ((e->type_id == METHOD_HEAD) &&
 	(!(strncmp(token, "head/", 5)) || !(strncmp(token, "/head/", 6)))) {
 	URL = strtok(token, delim);
 	URL = strtok(NULL, "~");

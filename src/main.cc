@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.17 1996/04/01 18:23:52 wessels Exp $ */
+/* $Id: main.cc,v 1.18 1996/04/04 01:30:48 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -191,7 +191,7 @@ int main(argc, argv)
 	0,
 	"Ascii Port");
     if (theAsciiConnection < 0) {
-	fatal("Cannot open ascii Port\n");
+	fatal("Cannot open ascii Port");
     }
     fdstat_open(theAsciiConnection, Socket);
     fd_note(theAsciiConnection, "HTTP (Ascii) socket");
@@ -210,7 +210,7 @@ int main(argc, argv)
 		0,
 		"Ping Port");
 	    if (theUdpConnection < 0)
-		fatal("Cannot open UDP Port\n");
+		fatal("Cannot open UDP Port");
 	    fdstat_open(theUdpConnection, Socket);
 	    fd_note(theUdpConnection, "ICP (UDP) socket");
 	    comm_set_select_handler(theUdpConnection,
@@ -258,7 +258,7 @@ int main(argc, argv)
 	    errcount++;
 	    debug(1, 0, "Select loop Error. Retry. %d\n", errcount);
 	    if (errcount == 10)
-		fatal_dump("Select Loop failed.!\n");
+		fatal_dump("Select Loop failed.!");
 	    break;
 	case COMM_TIMEOUT:
 	    /* this happens after 1 minute of idle time, or
@@ -273,7 +273,7 @@ int main(argc, argv)
 	    /* house keeping */
 	    break;
 	default:
-	    fatal_dump("MAIN: Internal error -- this should never happen.\n");
+	    fatal_dump("MAIN: Internal error -- this should never happen.");
 	    break;
 	}
     }

@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.24 1996/04/02 21:50:22 wessels Exp $ */
+/* $Id: http.cc,v 1.25 1996/04/04 01:30:45 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -34,8 +34,13 @@ typedef struct _httpdata {
     char content_type[128];
 } HttpData;
 
-char *HTTP_OPS[] =
-{"GET", "POST", "HEAD", ""};
+char *RequestMethodStr[] =
+{
+    "NONE",
+    "GET",
+    "POST",
+    "HEAD"
+};
 
 static void httpCloseAndFree(fd, data)
      int fd;
@@ -75,28 +80,21 @@ static int http_url_parser(url, host, port, request)
     return 0;
 }
 
-int httpCachable(url, type, req_hdr)
+int httpCachable(url, method, req_hdr)
      char *url;
-     char *type;
+     int method;
      char *req_hdr;
 {
     stoplist *p = NULL;
 
     /* GET and HEAD are cachable. Others are not. */
-    if (((strncasecmp(type, "GET", 3) != 0)) &&
-	(strncasecmp(type, "HEAD", 4) != 0))
-	return 0;
-
-    /* url's requiring authentication are uncachable */
-    if (req_hdr && (strstr(req_hdr, "Authorization")))
+    if (method != METHOD_GET && method != METHOD_HEAD)
 	return 0;
 
     /* scan stop list */
-    p = http_stoplist;
-    while (p) {
+    for (p = http_stoplist; p; p = p->next) {
 	if (strstr(url, p->key))
 	    return 0;
-	p = p->next;
     }
 
     /* else cachable */
@@ -210,11 +208,14 @@ static void httpProcessReplyHeader(data, buf)
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
 	    entry->expires = cached_curtime + ttlSet(entry);
-	    storeAddEntry(entry);
+	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+		storeSetPublicKey(entry);
 	    break;
 	case 401:		/* Unauthorized */
 	case 407:		/* Proxy Authentication Required */
 	    /* These should never be cached at all */
+	    if (BIT_TEST(entry->flag, ENTRY_PRIVATE))
+		storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
@@ -222,7 +223,8 @@ static void httpProcessReplyHeader(data, buf)
 	default:
 	    /* These can be negative cached, make key public */
 	    entry->expires = cached_curtime + getNegativeTTL();
-	    storeAddEntry(entry);
+	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
+		storeSetPublicKey(entry);
 	    break;
 	}
 	entry->mem_obj->http_code = data->http_code;
@@ -424,7 +426,7 @@ static void httpSendRequest(fd, data)
     }
     memset(buf, '\0', buflen);
 
-    sprintf(buf, "%s %s ", data->type, data->request);
+    sprintf(buf, "%s %s HTTP/1.0\r\n", data->type, data->request);
     len = strlen(buf);
     if (data->req_hdr) {	/* we have to parse the request header */
 	xbuf = xstrdup(data->req_hdr);
@@ -435,10 +437,6 @@ static void httpSendRequest(fd, data)
 		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, SQUID_VERSION);
 		t = ybuf;
 	    }
-#ifdef 0
-	    if (strncasecmp(t, "If-Modified-Since:", 18) == 0)
-		continue;
-#endif
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
 	    strcat(buf, t);
@@ -511,7 +509,7 @@ int proxyhttpStart(e, url, entry)
     data->entry = entry;
 
     strncpy(data->request, url, sizeof(data->request) - 1);
-    data->type = HTTP_OPS[entry->type_id];
+    data->type = RequestMethodStr[entry->type_id];
     data->port = e->ascii_port;
     data->req_hdr = entry->mem_obj->mime_hdr;
     strncpy(data->host, e->host, sizeof(data->host) - 1);
