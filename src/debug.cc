@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.54 1997/10/30 00:51:03 wessels Exp $
+ * $Id: debug.cc,v 1.55 1998/01/05 21:44:40 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -113,6 +113,9 @@ static char *accessLogTime(time_t);
 void
 _db_print(const char *format,...)
 {
+#if defined(__QNX__)
+    va_list eargs;
+#endif
     va_list args;
 #else
 void
@@ -129,6 +132,9 @@ _db_print(va_alist)
 
 #ifdef __STDC__
     va_start(args, format);
+#if defined(__QNX__)
+    va_start(eargs, format);
+#endif
 #else
     va_start(args);
     format = va_arg(args, const char *);
@@ -149,11 +155,23 @@ _db_print(va_alist)
     }
 #endif /* HAVE_SYSLOG */
     /* write to log file */
+#if defined(__QNX__)
+    vfprintf(debug_log, f, eargs);
+#else
     vfprintf(debug_log, f, args);
+#endif
     if (!Config.onoff.buffered_logs)
 	fflush(debug_log);
-    if (opt_debug_stderr && debug_log != stderr)
+    if (opt_debug_stderr && debug_log != stderr) {
+#if defined(__QNX__)
+      vfprintf(stderr, f, eargs);
+#else
 	vfprintf(stderr, f, args);
+#endif
+    }
+#if defined(__QNX__)
+    va_end(eargs);
+#endif
     va_end(args);
 }
 

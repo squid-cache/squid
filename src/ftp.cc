@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.183 1997/12/31 20:32:32 wessels Exp $
+ * $Id: ftp.cc,v 1.184 1998/01/05 21:44:41 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -355,6 +355,11 @@ ftpListPartsFree(ftpListParts ** parts)
 
 #define MAX_TOKENS 64
 
+#define SCAN_FTP1       "%[0123456789]"
+#define SCAN_FTP2       "%[0123456789:]"
+#define SCAN_FTP3       "%[0123456789]-%[0123456789]-%[0123456789]"
+#define SCAN_FTP4       "%[0123456789]:%[0123456789]%[AaPp]%[Mm]"
+
 static ftpListParts *
 ftpListParseParts(const char *buf, int flags)
 {
@@ -382,11 +387,11 @@ ftpListParseParts(const char *buf, int flags)
     for (i = 3; i < n_tokens - 3; i++) {
 	if (!is_month(tokens[i]))	/* Month */
 	    continue;
-	if (!sscanf(tokens[i - 1], "%[0-9]", sbuf))	/* Size */
+	if (!sscanf(tokens[i - 1], SCAN_FTP1, sbuf))	/* Size */
 	    continue;
-	if (!sscanf(tokens[i + 1], "%[0-9]", sbuf))	/* Day */
+	if (!sscanf(tokens[i + 1], SCAN_FTP1, sbuf))	/* Day */
 	    continue;
-	if (!sscanf(tokens[i + 2], "%[0-9:]", sbuf))	/* Yr | hh:mm */
+	if (!sscanf(tokens[i + 2], SCAN_FTP2, sbuf))	/* Yr | hh:mm */
 	    continue;
 	p->type = *tokens[0];
 	p->size = atoi(tokens[i - 1]);
@@ -417,9 +422,9 @@ ftpListParseParts(const char *buf, int flags)
     }
     /* try it as a DOS listing */
     if (n_tokens > 3 && p->name == NULL &&
-	sscanf(tokens[0], "%[0-9]-%[0-9]-%[0-9]", sbuf, sbuf, sbuf) == 3 &&
+	sscanf(tokens[0], SCAN_FTP3, sbuf, sbuf, sbuf) == 3 &&
     /* 04-05-70 */
-	sscanf(tokens[1], "%[0-9]:%[0-9]%[AaPp]%[Mm]", sbuf, sbuf, sbuf, sbuf) == 4) {
+	sscanf(tokens[1], SCAN_FTP4, sbuf, sbuf, sbuf, sbuf) == 4) {
 	/* 09:33PM */
 	if (!strcasecmp(tokens[2], "<dir>")) {
 	    p->type = 'd';
