@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.183 1998/01/06 05:40:43 wessels Exp $
+ * $Id: stat.cc,v 1.184 1998/01/08 03:39:22 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -972,6 +972,6 @@ statAvgDump(StoreEntry * sentry)
 	XAVG(select_loops));
     storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
     storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
-    storeAppendPrintf(sentry, "cpu_usage %f%%\n", 100.0*ct/dt);
+    storeAppendPrintf(sentry, "cpu_usage = %f%%\n", 100.0*ct/dt);
     storeBufferFlush(sentry);
 }
