@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.285 1999/05/19 19:57:45 wessels Exp $
+ * $Id: ftp.cc,v 1.286 1999/06/24 21:12:22 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1290,7 +1290,7 @@ ftpHandleControlReply(FtpStateData * ftpState)
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
-    debug(9, 8) ("ftpReadControlReply: state=%d, code=%d\n", ftpState->state,
+    debug(9, 8) ("ftpHandleControlReply: state=%d, code=%d\n", ftpState->state,
 	ftpState->ctrl.replycode);
     FTP_SM_FUNCS[ftpState->state] (ftpState);
 }
@@ -1364,13 +1364,13 @@ ftpReadPass(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("ftpReadPass\n");
-    if (ftpState->ctrl.message) {
-	if (ftpState->cwd_message)
-	    wordlistDestroy(&ftpState->cwd_message);
-	ftpState->cwd_message = ftpState->ctrl.message;
-	ftpState->ctrl.message = NULL;
-    }
     if (code == 230) {
+	if (ftpState->ctrl.message) {
+	    if (ftpState->cwd_message)
+		wordlistDestroy(&ftpState->cwd_message);
+	    ftpState->cwd_message = ftpState->ctrl.message;
+	    ftpState->ctrl.message = NULL;
+	}
 	ftpSendType(ftpState);
     } else {
 	ftpFail(ftpState);
