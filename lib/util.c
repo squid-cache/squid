@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.66 1999/04/15 06:15:39 wessels Exp $
+ * $Id: util.c,v 1.67 1999/05/04 21:20:43 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -700,7 +700,7 @@ xpercentInt(double part, double whole)
     return (int) rint(xpercent(part, whole));
 #else
     /* SCO 3.2v4.2 doesn't have rint() -- mauri@mbp.ee */
-    return (int) floor(xpercent(part, whole)+0.5);
+    return (int) floor(xpercent(part, whole) + 0.5);
 #endif
 }
 
@@ -715,7 +715,7 @@ xdiv(double nom, double denom)
 const char *
 xitoa(int num)
 {
-    static char buf[24]; /* 2^64 = 18446744073709551616 */
+    static char buf[24];	/* 2^64 = 18446744073709551616 */
     snprintf(buf, sizeof(buf), "%d", num);
     return buf;
 }

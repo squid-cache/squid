@@ -1,5 +1,5 @@
 /*
- * $Id: splay.c,v 1.10 1998/09/23 17:14:23 wessels Exp $
+ * $Id: splay.c,v 1.11 1999/05/04 21:20:42 wessels Exp $
  */
 
 #include "config.h"
@@ -100,7 +100,7 @@ splay_splay(const void *data, splayNode * top, SPLAYCMP * compare)
 }
 
 void
-splay_destroy(splayNode * top, SPLAYFREE *free_func)
+splay_destroy(splayNode * top, SPLAYFREE * free_func)
 {
     if (top->left)
 	splay_destroy(top->left, free_func);
@@ -111,7 +111,7 @@ splay_destroy(splayNode * top, SPLAYFREE *free_func)
 }
 
 void
-splay_walk(splayNode *top, SPLAYWALKEE *walkee, void *state)
+splay_walk(splayNode * top, SPLAYWALKEE * walkee, void *state)
 {
     if (top->left)
 	splay_walk(top->left, walkee, state);

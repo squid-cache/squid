@@ -1,5 +1,5 @@
 /*
- * $Id: Array.cc,v 1.3 1998/07/22 20:36:32 wessels Exp $
+ * $Id: Array.cc,v 1.4 1999/05/04 21:20:36 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -89,7 +89,7 @@ arrayAppend(Array * a, void *obj)
 {
     assert(a);
     if (a->count >= a->capacity)
-	arrayGrow(a, a->count+1);
+	arrayGrow(a, a->count + 1);
     a->items[a->count++] = obj;
 }
 
@@ -111,15 +111,15 @@ arrayGrow(Array * a, int min_capacity)
     assert(a->capacity < min_capacity);
     delta = min_capacity;
     /* make delta a multiple of min_delta */
-    delta += min_delta-1;
+    delta += min_delta - 1;
     delta /= min_delta;
     delta *= min_delta;
     /* actual grow */
     assert(delta > 0);
     a->capacity += delta;
     a->items = a->items ?
-	xrealloc(a->items, a->capacity * sizeof(void*)) :
-	xmalloc(a->capacity * sizeof(void*));
+	xrealloc(a->items, a->capacity * sizeof(void *)) :
+         xmalloc(a->capacity * sizeof(void *));
     /* reset, just in case */
-    memset(a->items+a->count, 0, (a->capacity-a->count) * sizeof(void*));
+    memset(a->items + a->count, 0, (a->capacity - a->count) * sizeof(void *));
 }

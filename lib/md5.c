@@ -1,5 +1,5 @@
 /*
- * $Id: md5.c,v 1.8 1998/09/23 17:14:21 wessels Exp $
+ * $Id: md5.c,v 1.9 1999/05/04 21:20:39 wessels Exp $
  */
 
 /* taken from RFC-1321/Appendix A.3 */
@@ -358,4 +358,5 @@ MD5_memset(char *output, int value, unsigned int len)
     for (i = 0; i < len; i++)
 	output[i] = (char) value;
 }
+
 #endif
