@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.389 1998/03/03 22:17:56 rousskov Exp $
+ * $Id: store.cc,v 1.390 1998/03/03 22:56:45 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -170,7 +170,6 @@ static int store_pages_low = 0;
 static int store_swap_high = 0;
 static int store_swap_low = 0;
 static int store_maintain_rate;
-static int store_maintain_buckets;
 
 static MemObject *
 new_MemObject(const char *url, const char *log_url)
@@ -805,10 +804,8 @@ storeInitHashValues(void)
     store_hash_buckets = storeKeyHashBuckets(i);
     store_maintain_rate = 86400 / store_hash_buckets;
     assert(store_maintain_rate > 0);
-    debug(20, 1) ("Using %d Store buckets, maintain %d bucket%s every %d second%s\n",
+    debug(20, 1) ("Using %d Store buckets, replacement runs every %d second%s\n",
 	store_hash_buckets,
-	store_maintain_buckets,
-	store_maintain_buckets == 1 ? null_string : "s",
 	store_maintain_rate,
 	store_maintain_rate == 1 ? null_string : "s");
     debug(20, 1) ("Max Mem  size: %d KB\n", Config.Mem.maxSize >> 10);
