@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.10 2003/05/11 13:53:03 hno Exp $
+ * $Id: client_side_request.h,v 1.11 2003/06/20 01:01:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -62,12 +62,14 @@ public:
     void freeResources();
     void updateCounters();
     void logRequest();
-    MemObject * memObject() const;
+    _SQUID_INLINE_ MemObject * memObject() const;
     bool multipartRangeRequest() const;
     void processRequest();
     void httpStart();
     bool onlyIfCached()const;
     bool gotEnough() const;
+    _SQUID_INLINE_ StoreEntry *storeEntry() const;
+    void storeEntry(StoreEntry *);
 
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
@@ -84,7 +86,6 @@ public:
     out;
     HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
     size_t req_sz;		/* raw request size on input, not current request size */
-    StoreEntry *entry;
     log_type logType;
 
     struct timeval start;
@@ -128,8 +129,9 @@ unsigned int purging:
     bool isReplyBodyTooLarge(ssize_t len) const;
 
 private:
-    ssize_t maxReplyBodySize_;
     CBDATA_CLASS(ClientHttpRequest);
+    ssize_t maxReplyBodySize_;
+    StoreEntry *entry_;
 };
 
 /* client http based routines */
@@ -142,5 +144,9 @@ SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 SQUIDCEXTERN void redirectStart(clientHttpRequest *, RH *, void *);
 
 SQUIDCEXTERN void sslStart(clientHttpRequest *, size_t *, int *);
+
+#ifdef _USE_INLINE_
+#include "client_side_request.cci"
+#endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */

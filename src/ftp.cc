@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.349 2003/06/09 04:51:10 robertc Exp $
+ * $Id: ftp.cc,v 1.350 2003/06/20 01:01:00 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -44,6 +44,7 @@
 #include "HttpHeader.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
+#include "MemObject.h"
 #endif
 #include "ConnectionDetail.h"
 

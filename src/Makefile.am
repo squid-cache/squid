@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.78 2003/05/21 02:58:10 robertc Exp $
+#  $Id: Makefile.am,v 1.79 2003/06/20 01:00:57 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -431,6 +431,7 @@ squid_SOURCES = \
 	$(WIN32SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
+	client_side_request.cci \
 	MemBuf.cci \
 	MemBuf.h \
 	Store.cci \
