@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.296 1998/05/01 22:06:35 wessels Exp $
+ * $Id: client_side.cc,v 1.297 1998/05/02 06:41:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1645,6 +1645,8 @@ clientProcessMiss(clientHttpRequest * http)
     ch.request = r;
     answer = aclCheckFast(Config.accessList.miss, &ch);
     if (answer == 0 || http->flags.internal) {
+	debug(33,1)("clientProcessMiss: Can't forward internal request '%s'\n",
+		r->urlpath);
 	http->al.http.code = HTTP_FORBIDDEN;
 	err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(r);
