@@ -4,6 +4,14 @@
 	  (Michael O'Reilly).
 	- Fixed memory leaks in pconn.c (Max Okumoto).
 	- Enhanced 'client' program with 'ping' behaviour (Ron Gomes).
+	- Fixed InvokeHandlers() from calling memCopy() for ALL
+	  store_client's with callbacks.  A store_client might be reading
+	  from disk.
+	- Rewrote storeGetSwapSpace().  No longer will we scan one
+	  bucket at a time.  Instead we'll maintain a single LRU
+	  list.  When an object is 'touched' we move it to the
+	  top of this list.  When we need disk space, we delete
+	  from the bottom.
 	
 Changes to squid-1.2.beta1 ():
 
