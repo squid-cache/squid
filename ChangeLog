@@ -11,6 +11,9 @@
 		--enable-xmalloc-debug
 		--enable-xmalloc-debug-count 
 		--async-io 
+	- Fixed confusing with the use/meaning of ERR_CANNOT_FORWARD
+	  by creating ERR_FORWARDING_DENIED and changing the
+	  content of the ERR_CANNOT_FORWARD text.
 
 Changes to squid-1.2.beta10 (Dec 30, 1997):
 
