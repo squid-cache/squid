@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.131 2003/07/14 14:16:02 robertc Exp $
+ * $Id: store_client.cc,v 1.132 2003/07/28 09:27:28 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -493,7 +493,15 @@ void
 store_client::fail()
 {
     object_ok = false;
-    callback(0, true);
+    /* synchronous open failures callback from the store,
+     * before startSwapin detects the failure.
+     * TODO: fix this inconsistent behaviour - probably by
+     * having storeSwapInStart become a callback functions, 
+     * not synchronous
+     */
+
+    if (callbackPending())
+        callback(0, true);
 }
 
 static void

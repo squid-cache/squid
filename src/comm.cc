@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.383 2003/07/14 11:03:38 robertc Exp $
+ * $Id: comm.cc,v 1.384 2003/07/28 09:27:28 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1030,7 +1030,7 @@ comm_accept_check_event(void *data)
     }
 
     eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
-             1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1);
+             1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1, false);
 }
 
 
@@ -2381,7 +2381,7 @@ fdc_t::acceptOne(int fd) {
     if (fdNFree() < RESERVED_FD) {
         debug(5, 3) ("comm_accept_try: we're out of fds - deferring io!\n");
         eventAdd("comm_accept_check_event", comm_accept_check_event, this,
-                 1000.0 / (double)(accept.accept.check_delay), 1);
+                 1000.0 / (double)(accept.accept.check_delay), 1, false);
         accept.accept.finished(true);
         return;
     }

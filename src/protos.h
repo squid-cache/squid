@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.485 2003/07/22 15:23:02 robertc Exp $
+ * $Id: protos.h,v 1.486 2003/07/28 09:27:28 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -242,7 +242,7 @@ SQUIDCEXTERN void idnsALookup(const char *, IDNSCB *, void *);
 
 SQUIDCEXTERN void idnsPTRLookup(const struct in_addr, IDNSCB *, void *);
 
-SQUIDCEXTERN void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
+extern void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
 SQUIDCEXTERN void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
 SQUIDCEXTERN void eventRun(void);
 SQUIDCEXTERN int eventNextTime(void);
