@@ -190,3 +190,6 @@ typedef ssize_t HttpHeaderPos;
 
 /* big mask for http headers */
 typedef char HttpHeaderMask[8];
+
+/* a common objPackInto interface; used by debugObj */
+typedef void (*ObjPackMethod)(void *obj, Packer *p);
