@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.347 2000/07/13 06:13:43 wessels Exp $
+ * $Id: structs.h,v 1.349 2000/08/10 21:44:44 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1418,6 +1418,7 @@ struct _SwapDir {
 	    STLOGCLEANDONE *done;
 	    void *state;
 	} clean;
+        int writes_since_clean;
     } log;
     void *fsdata;
 };
@@ -1441,6 +1442,7 @@ struct _request_flags {
 #endif
     unsigned int accelerated:1;
     unsigned int internal:1;
+    unsigned int we_dont_do_ranges:1;
 };
 
 struct _link_list {
