@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.356 2000/03/06 16:23:32 wessels Exp $
+ * $Id: http.cc,v 1.357 2000/03/25 04:58:39 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -393,6 +393,9 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 		httpState->request->host, skew);
     }
     ctx_exit(ctx);
+#if HEADERS_LOG
+    headersLog(1, 0, httpState->request->method, reply);
+#endif
 }
 
 static int
