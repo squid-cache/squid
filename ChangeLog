@@ -1,19 +1,31 @@
-	- use squid_error() instead of CACHED_RETRIEVE_ERROR_MSG
-	- fix some fd discprencies in the cachemgr/info page
-	- Fixed "defer/spin" problem
-	- Changed ftpget to be a server so squid never forks
-	- Added blocklist patch
-	- Changed #includes and such.
-	- the -d (debug) option is now gone.  Use new "debug" in the
-	  config file instead.  Debugging is section,level.
-	- Added 'pid_filename' to squid.conf
-	- Changed default behaviour to unbuffered, use -b to make buffered.
-	- fix byte order conversion bug on echo port
-	- Removed all code and references to binary port
-	- WAIS fully compiled in always.
-	- Implemented IMS-GET and change-key-until-headers-read
-	- added 'visible_hostname' config option
-	- Made check_valid_url() do URL equivalencing
+Changes from version Harvest cached-1.4.pl3
+
+	- Added squid_error_*() functions for error handling instead
+	  of using CACHED_RETRIEVE_ERROR_MSG everywhere.
+	- Fixed discrepancy with setting "fd_note" for dnsservers.
+	- Fixed bug where cache process would "spin" on large objects
+	  being deferred.
+	- Added a "server mode" to ftpget.  Now the (much smaller)
+	  ftpget process forks for each FTP request.
+	- Removed the command line -d (debug) option.
+
+	# config file changes
+	- Added (section,level) debugging and 'debug_options' config line.
+	- Added 'pid_filename' to configuration file.
+	- Added 'visible_hostname' config option.
+
+	- Changed meaning of command line -b (buffered logs) option.
+	  Now the default behaviour is unbuffered logs, use -b to make
+	  them buffered.
+	- Fixed byte order conversion bug on setting echo port.
+	- Removed all code and references to binary port.
+	- Changed WAIS code to always be fully compiled in.
+	- Added the notion of private and public keys.  Requests
+	  are now private until the reply headers have been read.
+	- Added support for If-Modified-Since GET requests.
+	- Added urlParse() which strips off default ports and 
+	  makes hostnames all lowercase.
+
 	- Fixed logging:  Now logging to "access.log" occurs when the
 	  client data structure gets destroyed. This should mean that
 	  every client connection results in a log entry. The
