@@ -538,6 +538,7 @@ extern int netdbHostPeerRtt(const char *host, peer * peer);
 extern void netdbBinaryExchange(StoreEntry *);
 extern EVH netdbExchangeStart;
 extern void netdbExchangeUpdatePeer(struct in_addr, peer *, double, double);
+extern peer *netdbClosestParent(const char *host);
 
 extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int);
@@ -548,7 +549,7 @@ extern peer *peerGetSomeParent(request_t *, hier_code *);
 extern void peerSelectInit(void);
 
 /* peer_digest.c */
-extern void peerDigestInit(peer * p);
+extern EVH peerDigestInit;
 
 extern void protoDispatch(int, StoreEntry *, request_t *);
 

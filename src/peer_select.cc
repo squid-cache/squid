@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.55 1998/04/24 18:47:42 wessels Exp $
+ * $Id: peer_select.cc,v 1.56 1998/05/14 16:33:53 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -43,6 +43,7 @@ const char *hier_strings[] =
     "NO_PARENT_DIRECT",
     "FIRST_PARENT_MISS",
     "CLOSEST_PARENT_MISS",
+    "CLOSEST_PARENT",
     "CLOSEST_DIRECT",
     "NO_DIRECT_FAIL",
     "SOURCE_FASTEST",
@@ -279,63 +280,45 @@ peerSelectFoo(ps_state * psstate)
     psstate->single_parent = getSingleParent(request);
     if (psstate->single_parent != NULL) {
 	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
+#if USE_CACHE_DIGESTS
+    } else if ((p = neighborsDigestSelect(request, entry))) {
+	debug(44, 2) ("peerSelect: Using Cache Digest\n");
+	request->hier.alg = PEER_SA_DIGEST;
+	code = CACHE_DIGEST_HIT;
+	debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
+	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	peerSelectCallback(psstate, p);
+	return;
+#endif
+    } else if ((p = netdbClosestParent(request->host))) {
+	request->hier.alg = PEER_SA_NETDB;
+	code = CLOSEST_PARENT;
+	debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
+        hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+        peerSelectCallback(psstate, p);
+        return;
     } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
-#if USE_CACHE_DIGESTS
-	/* which algorithm to use? */
-	if (squid_random() & 1) {
-	    debug(44, 2) ("peerSelect: Using Cache Digest\n");
-	    request->hier.alg = PEER_SA_DIGEST;
-	    if (1 /* global_digested_peer_count */ )
-		p = neighborsDigestSelect(request, entry);
-	    /* update counters */
-	    statHistCount(&Counter.cd.peer_choice_count, request->hier.n_choices);
-	    statHistCount(&Counter.cd.peer_ichoice_count, request->hier.n_ichoices);
-	    code = DIRECT;
-	    switch (request->hier.cd_lookup) {
-	    case LOOKUP_HIT:
-		assert(p);
-		code = CACHE_DIGEST_HIT;
-		debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-		hierarchyNote(&request->hier, code, &psstate->icp, p->host);
-		peerSelectCallback(psstate, p);		/* @?@: p used to be NULL */
-		return;
-	    case LOOKUP_MISS:
-		code = NO_CACHE_DIGEST_DIRECT;
-		/* fall through */
-	    case LOOKUP_NONE:
-		/* go direct */
-		debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
-		hierarchyNote(&request->hier, code, &psstate->icp, request->host);
-		peerSelectCallback(psstate, NULL);
-		return;
-	    default:
-		assert(0);	/* invalid lookup code */
-	    }
-	    assert(0);		/* never reached */
-	} else {
-	    request->hier.alg = PEER_SA_ICP;
-#endif
-	    debug(44, 3) ("peerSelect: Doing ICP pings\n");
-	    psstate->icp.start = current_time;
-	    psstate->icp.n_sent = neighborsUdpPing(request,
-		entry,
-		peerHandleIcpReply,
+	request->hier.alg = PEER_SA_ICP;
+	debug(44, 3) ("peerSelect: Doing ICP pings\n");
+	psstate->icp.start = current_time;
+	psstate->icp.n_sent = neighborsUdpPing(request,
+	    entry,
+	    peerHandleIcpReply,
+	    psstate,
+	    &psstate->icp.n_replies_expected);
+	if (psstate->icp.n_sent == 0)
+	    debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
+	debug(44,3)("peerSelectFoo: %d ICP replies expected\n",
+		psstate->icp.n_replies_expected);
+	if (psstate->icp.n_replies_expected > 0) {
+	    entry->ping_status = PING_WAITING;
+	    eventAdd("peerPingTimeout",
+		peerPingTimeout,
 		psstate,
-		&psstate->icp.n_replies_expected);
-	    if (psstate->icp.n_sent == 0)
-		debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
-	    if (psstate->icp.n_replies_expected > 0) {
-		entry->ping_status = PING_WAITING;
-		eventAdd("peerPingTimeout",
-		    peerPingTimeout,
-		    psstate,
-		    Config.neighborTimeout);
-		return;
-	    }
-#if USE_CACHE_DIGESTS
+		Config.neighborTimeout);
+	    return;
 	}
-#endif
     }
     debug(44, 3) ("peerSelectFoo: After peerSelectIcpPing.\n");
     if (peerCheckNetdbDirect(psstate)) {
@@ -433,7 +416,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	icp_opcode_str[op],
 	storeUrl(psstate->entry));
-#if USE_CACHE_DIGESTS
+#if USE_CACHE_DIGESTS && 0
     /* do cd lookup to count false misses */
     if (p && request)
 	peerNoteDigestLookup(request, p,

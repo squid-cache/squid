@@ -612,7 +612,6 @@ struct _HierarchyLogEntry {
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
     icp_ping_data icp;
-#if USE_CACHE_DIGESTS
     char cd_host[SQUIDHOSTNAMELEN];	/* the host of selected by cd peer */
     peer_select_alg_t alg;	/* peer selection algorithm */
     lookup_t cd_lookup;		/* cd prediction: none, miss, hit */
@@ -620,7 +619,6 @@ struct _HierarchyLogEntry {
     int n_ichoices;		/* #peers with known rtt we selected from (cd only) */
     struct timeval peer_select_start;
     struct timeval store_complete_stop;
-#endif
 };
 
 struct _AccessLogEntry {
@@ -1221,11 +1219,7 @@ struct _StatCounters {
 	StatHist query_svc_time;
 	StatHist reply_svc_time;
 	int query_timeouts;
-#if USE_CACHE_DIGESTS
-	StatHist client_svc_time;
-	StatHist server_svc_time;
 	int times_used;
-#endif
     } icp;
     struct {
 	int requests;
@@ -1233,7 +1227,6 @@ struct _StatCounters {
     struct {
 	StatHist svc_time;
     } dns;
-#if USE_CACHE_DIGESTS
     struct {
 	int times_used;
 	kb_t kbytes_sent;
@@ -1242,13 +1235,11 @@ struct _StatCounters {
 	int msgs_sent;
 	int msgs_recv;
 	cd_guess_stats guess;
-	StatHist client_svc_time;
-	StatHist server_svc_time;
-	StatHist peer_choice_count;	/* #peer select choices in peerSelectFoo */
-	StatHist peer_ichoice_count;	/* #peer select choices with rtt > 0 */
-	StatHist on_xition_count;	/* #(0->1) transitions during cacheDigestAdd */
+	StatHist on_xition_count;
     } cd;
-#endif
+    struct {
+	int times_used;
+    } netdb;
     int page_faults;
     int select_loops;
     double cputime;

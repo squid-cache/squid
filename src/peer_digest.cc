@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.27 1998/05/12 22:07:36 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.28 1998/05/14 16:33:52 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -67,20 +67,22 @@ static const time_t GlobalDigestRequestMinGap = 1 * 60;		/* seconds */
 static time_t global_last_req_timestamp = 0;
 
 void
-peerDigestInit(peer * p)
+peerDigestInit(void *data)
 {
+    peer *p = data;
     assert(p);
-    assert(!p->digest.flags);
+    assert(p->digest.flags == (1<<PD_INIT_PENDING));
     assert(!p->digest.cd);
     assert(SM_PAGE_SIZE == 4096);	/* we use MEM_4K_BUF */
-    /* set "init" flag here so we are not called after peerDigestValidate */
-    EBIT_SET(p->digest.flags, PD_INITED);
+debug(0,0)("peerDigestInit: called for %s\n", p->host);
     if (EBIT_TEST(p->options, NEIGHBOR_NO_DIGEST)) {
 	peerDigestDisable(p);
     } else {
 	cbdataLock(p);
 	peerDigestValidate(p);
     }
+    EBIT_SET(p->digest.flags, PD_INITED);
+    EBIT_CLR(p->digest.flags, PD_INIT_PENDING);
 }
 
 /* no pending events or requests should exist when you call this */

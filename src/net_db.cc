@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.99 1998/05/11 20:35:32 wessels Exp $
+ * $Id: net_db.cc,v 1.100 1998/05/14 16:33:52 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1067,4 +1067,41 @@ netdbExchangeStart(void *data)
 	ex->buf, netdbExchangeHandleReply, ex);
     httpStart(ex->r, ex->e, NULL);
 #endif
+}
+
+peer *
+netdbClosestParent(const char *host)
+{
+    peer *p = NULL;
+#if USE_ICMP
+    netdbEntry *n;
+    const ipcache_addrs *ia;
+    net_db_peer *h;
+    int i;
+    n = netdbLookupHost(host);
+    if (NULL == n) {
+	/* try IP addr */
+	ia = ipcache_gethostbyname(host, 0);
+	if (NULL != ia)
+	    n = netdbLookupAddr(ia->in_addrs[ia->cur]);
+    }
+    if (NULL == n)
+	return NULL;
+    if (0 == n->n_peers)
+	return NULL;
+    /* 
+     * Find the parent with the least RTT to the origin server.
+     * Make sure we don't return a parent who is farther away than
+     * we are.  Note, the n->peers list is pre-sorted by RTT.
+     */
+    for (i = 0; i < n->n_peers; i++) {
+	h = &n->peers[i];
+	if (n->rtt > 0)
+	    if (n->rtt < h->rtt)
+		break;
+	if ((p = peerFindByName(h->peername)))
+	    return p;
+    }
+#endif
+    return NULL;
 }

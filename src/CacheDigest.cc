@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.20 1998/05/13 22:59:44 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.21 1998/05/14 16:33:47 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -161,9 +161,7 @@ cacheDigestAdd(CacheDigest * cd, const cache_key * key)
 	    CBIT_SET(cd->mask, hashed_keys[3]);
 	    on_xition_cnt++;
 	}
-#if USE_CACHE_DIGESTS
 	statHistCount(&Counter.cd.on_xition_count, on_xition_cnt);
-#endif
     }
 #endif
     cd->count++;

@@ -131,7 +131,8 @@ typedef enum {
 typedef enum {
     PEER_SA_NONE,
     PEER_SA_DIGEST,
-    PEER_SA_ICP
+    PEER_SA_ICP,
+    PEER_SA_NETDB
 } peer_select_alg_t;
 
 typedef enum {
@@ -267,6 +268,7 @@ typedef enum {
     NO_PARENT_DIRECT,
     FIRST_PARENT_MISS,
     CLOSEST_PARENT_MISS,
+    CLOSEST_PARENT,
     CLOSEST_DIRECT,
     NO_DIRECT_FAIL,
     SOURCE_FASTEST,
@@ -409,7 +411,8 @@ enum {
     PD_INITED,			/* initialized */
     PD_USABLE,			/* ready to use */
     PD_REQUESTED,		/* we are in the process of receiving a [fresh] digest */
-    PD_DISABLED			/* do not use/validate the digest */
+    PD_DISABLED,		/* do not use/validate the digest */
+    PD_INIT_PENDING
 } peer_cd_t;
 
 /* These are for StoreEntry->flag, which is defined as a SHORT */
