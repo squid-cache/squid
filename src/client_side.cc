@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.529 2001/02/23 20:59:50 hno Exp $
+ * $Id: client_side.cc,v 1.530 2001/03/01 23:02:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -288,7 +288,7 @@ clientRedirectDone(void *data, char *result)
     assert(http->redirect_state == REDIRECT_PENDING);
     http->redirect_state = REDIRECT_DONE;
     if (result) {
-	http_status status = (http_status)atoi(result);
+	http_status status = (http_status) atoi(result);
 	if (status == HTTP_MOVED_PERMANENTLY || status == HTTP_MOVED_TEMPORARILY) {
 	    char *t = result;
 	    if ((t = strchr(result, ':')) != NULL) {
@@ -1280,10 +1280,13 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	 * the objects age, so a Age: 0 header does not add any useful
 	 * information to the reply in any case.
 	 */
-	if (http->entry->timestamp > -1)
-	    if (http->entry->timestamp < squid_curtime)
-		httpHeaderPutInt(hdr, HDR_AGE,
-		    squid_curtime - http->entry->timestamp);
+	if (NULL == http->entry)
+	    (void) 0;
+	else if (http->entry->timestamp < 0)
+	    (void) 0;
+	else if (http->entry->timestamp > squid_curtime)
+	    httpHeaderPutInt(hdr, HDR_AGE,
+		squid_curtime - http->entry->timestamp);
     }
     /* Handle authentication headers */
     if (request->auth_user_request)
