@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.418 2002/04/28 12:18:07 hno Exp $
+ * $Id: structs.h,v 1.419 2002/06/18 22:52:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1175,7 +1175,7 @@ struct _DigestFetchState {
 	int bytes;
     } sent, recv;
     char buf[SM_PAGE_SIZE];
-    int bufofs;
+    ssize_t bufofs;
     digest_read_state_t state;
 };
 
