@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.404 1998/04/16 17:47:27 wessels Exp $
+ * $Id: store.cc,v 1.405 1998/04/17 04:24:25 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -729,6 +729,7 @@ storeRelease(StoreEntry * e)
     storeLog(STORE_LOG_RELEASE, e);
     if (e->swap_file_number > -1) {
 	storeUnlinkFileno(e->swap_file_number);
+	storeDirMapBitReset(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
 	    if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 		storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, -1);
