@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>ERROR: FTP upload failed </TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>FTP PUT/upload failed</H2>
+<HR>
+<P>
+While trying to PUT the following URL:
+<A HREF="%U">%U</A>
+<P>
+Squid sent the following FTP command:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+and then received this reply
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+This means that:
+<PRE>
+Check path, permissions, diskspace and try again.
+</PRE>
+</P>
+
