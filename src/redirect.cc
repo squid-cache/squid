@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.20 1996/09/26 19:19:20 wessels Exp $
+ * $Id: redirect.cc,v 1.21 1996/09/26 19:54:45 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -184,6 +184,7 @@ redirectHandleRead(int fd, redirector_t * redirector)
 	    fd, redirector->index + 1);
 	redirector->flags = 0;
 	put_free_4k_page(redirector->inbuf);
+	redirector->inbuf = NULL;
 	comm_close(fd);
 	if (--NRedirectorsOpen == 0 && !shutdown_pending && !reread_pending)
 	    fatal_dump("All redirectors have exited!");
@@ -343,7 +344,8 @@ redirectFreeMemory(void)
     /* free old structures if present */
     if (redirect_child_table) {
 	for (k = 0; k < NRedirectors; k++) {
-	    put_free_4k_page(redirect_child_table[k]->inbuf);
+	    if (redirect_child_table[k]->inbuf)
+	        put_free_4k_page(redirect_child_table[k]->inbuf);
 	    safe_free(redirect_child_table[k]);
 	}
 	safe_free(redirect_child_table);
