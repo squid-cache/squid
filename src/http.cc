@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.240 1998/02/21 18:46:36 rousskov Exp $
+ * $Id: http.cc,v 1.241 1998/02/24 21:17:05 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -113,7 +113,7 @@
 
 static const char *const crlf = "\r\n";
 
-#if 0 /* moved to HttpHeader */
+#if 0				/* moved to HttpHeader */
 typedef enum {
     SCC_PUBLIC,
     SCC_PRIVATE,
@@ -125,6 +125,7 @@ typedef enum {
     SCC_MAXAGE,
     SCC_ENUM_END
 } http_server_cc_t;
+
 #endif
 
 enum {
@@ -137,7 +138,7 @@ enum {
     CCC_ENUM_END
 };
 
-#if 0 /* moved to HttpHeader.h */
+#if 0				/* moved to HttpHeader.h */
 typedef enum {
     HDR_ACCEPT,
     HDR_AGE,
@@ -200,6 +201,7 @@ static struct {
     int misc[HDR_MISC_END];
     int cc[SCC_ENUM_END];
 } ReplyHeaderStats;
+
 #endif /* if 0 */
 
 static CNCB httpConnectDone;
@@ -212,7 +214,7 @@ static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, si
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
-#if 0 /* moved to HttpResponse */
+#if 0				/* moved to HttpResponse */
 static char *httpStatusString(int status);
 #endif
 static STABH httpAbort;
@@ -552,7 +554,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	/* Parse headers into reply structure */
 	/* Old code never parsed headers if mime_headers_end failed, was it intentional ? @?@ @?@ */
 	/* what happens if we fail to parse here? @?@ @?@ */
-	httpReplyParse(reply, httpState->reply_hdr); /* httpState->eof); */
+	httpReplyParse(reply, httpState->reply_hdr);	/* httpState->eof); */
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->sline.status);
@@ -656,9 +658,10 @@ httpReadReply(int fd, void *data)
     clen = entry->mem_obj->inmem_hi;
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
-    fd_bytes(fd, len, FD_READ);
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
+	fd_bytes(fd, len, FD_READ);
+	kb_incr(&Counter.server.kbytes_in, len);
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
@@ -735,6 +738,10 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
     ErrorState *err;
     debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
+    if (size > 0) {
+	fd_bytes(fd, size, FD_WRITE);
+	kb_incr(&Counter.server.kbytes_out, size);
+    }
     if (errflag == COMM_ERR_CLOSING)
 	return;
     if (errflag) {
@@ -1135,7 +1142,7 @@ httpConnectDone(int fd, int status, void *data)
     }
 }
 
-#if 0 /* moved to httpHeader */
+#if 0				/* moved to httpHeader */
 void
 httpReplyHeaderStats(StoreEntry * entry)
 {
@@ -1171,7 +1178,7 @@ httpAbort(void *data)
     comm_close(httpState->fd);
 }
 
-#if 0 /* moved to httpResponse.c */
+#if 0				/* moved to httpResponse.c */
 static char *
 httpStatusString(int status)
 {
@@ -1297,7 +1304,7 @@ httpStatusString(int status)
 }
 #endif
 
-#if 0 /* moved to HttpResponse.c */
+#if 0				/* moved to HttpResponse.c */
 char *
 httpReplyHeader(double ver,
     http_status status,

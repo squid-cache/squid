@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.37 1998/02/03 04:21:19 wessels Exp $
+ * $Id: peer_select.cc,v 1.38 1998/02/24 21:17:07 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -210,6 +210,7 @@ peerSelectCallback(ps_state * psstate, peer * p)
 	    eventDelete(peerPingTimeout, psstate);
 	entry->ping_status = PING_DONE;
     }
+    psstate->icp.stop = current_time;
     if (cbdataValid(data))
 	psstate->callback(p, data);
     cbdataUnlock(data);

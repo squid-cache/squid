@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.118 1998/01/12 04:30:02 wessels Exp $
+ * $Id: gopher.cc,v 1.119 1998/02/24 21:17:04 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -684,7 +684,10 @@ gopherReadReply(int fd, void *data)
     errno = 0;
     /* leave one space for \0 in gopherToHTML */
     len = read(fd, buf, TEMP_BUF_SIZE - 1);
-    fd_bytes(fd, len, FD_READ);
+    if (len > 0) {
+	fd_bytes(fd, len, FD_READ);
+	kb_incr(&Counter.server.kbytes_in, len);
+    }
     debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, len);
     if (len > 0) {
 	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
@@ -748,6 +751,10 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
     StoreEntry *entry = gopherState->entry;
     debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
+    if (size > 0) {
+	fd_bytes(fd, size, FD_WRITE);
+	kb_incr(&Counter.server.kbytes_out, size);
+    }
     if (errflag) {
 	ErrorState *err;
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);

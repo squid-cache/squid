@@ -433,13 +433,13 @@ struct _hash_table {
 #include "Packer.h"
 #include "HttpReply.h"
 
-# if 0 /* tmp moved to HttpReply.h */
+#if 0				/* tmp moved to HttpReply.h */
 #define Const const
 struct _http_reply {
     double version;
     int code;
     int content_length;
-    int hdr_sz;             /* includes _stored_ status-line, headers, and <CRLF> */
+    int hdr_sz;			/* includes _stored_ status-line, headers, and <CRLF> */
     /* Note: fields below may not match info stored on disk */
     Const int cache_control;
     Const int misc_headers;
@@ -447,10 +447,11 @@ struct _http_reply {
     Const time_t expires;
     Const time_t last_modified;
     Const char content_type[HTTP_REPLY_FIELD_SZ];
-#if 0 /* unused 512 bytes? */
+#if 0				/* unused 512 bytes? */
     Const char user_agent[HTTP_REPLY_FIELD_SZ << 2];
 #endif
 };
+
 #endif
 
 
@@ -492,7 +493,7 @@ struct _icp_ping_data {
 struct _HierarchyLogEntry {
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
-    struct _icp_ping_data icp;
+    icp_ping_data icp;
 };
 
 struct _AccessLogEntry {
@@ -747,12 +748,13 @@ struct _icp_common_t {
     u_num32 shostid;		/* sender host id */
 };
 
-#if 0 /* this struct is not used */
+#if 0				/* this struct is not used */
 struct _Stack {
     void **base;
     void **top;
     int stack_size;
 };
+
 #endif
 
 struct _Meta_data {
@@ -956,7 +958,10 @@ struct _StatCounters {
 	kb_t kbytes_in;
 	kb_t kbytes_out;
 	kb_t hit_kbytes_out;
-	StatLogHist svc_time;
+	StatLogHist miss_svc_time;
+	StatLogHist nm_svc_time;
+	StatLogHist hit_svc_time;
+	StatLogHist all_svc_time;
     } client_http;
     struct {
 	int requests;
@@ -971,7 +976,8 @@ struct _StatCounters {
 	int hits_recv;
 	kb_t kbytes_sent;
 	kb_t kbytes_recv;
-	StatLogHist svc_time;
+	StatLogHist query_svc_time;
+	StatLogHist reply_svc_time;
     } icp;
     struct {
 	int requests;

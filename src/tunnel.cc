@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.73 1998/01/12 04:30:11 wessels Exp $
+ * $Id: tunnel.cc,v 1.74 1998/02/24 21:17:07 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -115,7 +115,10 @@ sslReadServer(int fd, void *data)
     SslStateData *sslState = data;
     int len;
     len = read(sslState->server.fd, sslState->server.buf, SQUID_TCP_SO_RCVBUF);
-    fd_bytes(sslState->server.fd, len, FD_READ);
+    if (len > 0) {
+	fd_bytes(sslState->server.fd, len, FD_READ);
+	kb_incr(&Counter.server.kbytes_in, len);
+    }
     debug(26, 5) ("sslReadServer FD %d, read %d bytes\n", fd, len);
     if (len < 0) {
 	debug(50, 1) ("sslReadServer: FD %d: read failure: %s\n",
@@ -156,7 +159,10 @@ sslReadClient(int fd, void *data)
     SslStateData *sslState = data;
     int len;
     len = read(sslState->client.fd, sslState->client.buf, SQUID_TCP_SO_RCVBUF);
-    fd_bytes(sslState->client.fd, len, FD_READ);
+    if (len > 0) {
+	fd_bytes(sslState->client.fd, len, FD_READ);
+	kb_incr(&Counter.client_http.kbytes_in, len);
+    }
     debug(26, 5) ("sslReadClient FD %d, read %d bytes\n",
 	sslState->client.fd, len);
     if (len < 0) {
@@ -194,7 +200,10 @@ sslWriteServer(int fd, void *data)
     len = write(sslState->server.fd,
 	sslState->client.buf + sslState->client.offset,
 	sslState->client.len - sslState->client.offset);
-    fd_bytes(fd, len, FD_WRITE);
+    if (len > 0) {
+	fd_bytes(sslState->server.fd, len, FD_WRITE);
+	kb_incr(&Counter.server.kbytes_out, len);
+    }
     debug(26, 5) ("sslWriteServer FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
 	if (ignoreErrno(errno)) {
@@ -241,7 +250,10 @@ sslWriteClient(int fd, void *data)
     len = write(sslState->client.fd,
 	sslState->server.buf + sslState->server.offset,
 	sslState->server.len - sslState->server.offset);
-    fd_bytes(fd, len, FD_WRITE);
+    if (len > 0) {
+	fd_bytes(sslState->client.fd, len, FD_WRITE);
+	kb_incr(&Counter.client_http.kbytes_out, len);
+    }
     debug(26, 5) ("sslWriteClient FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
 	if (ignoreErrno(errno)) {
