@@ -1,3 +1,8 @@
+	- Added a simple but very effective hack to cachemgr.cgi that tries to
+	  interpret lines with '\t' as table records and formats them
+	  accordingly. With a few exceptions (see source code), first line
+	  becomes a table heading ("<th>" html tag) and the rest is formated
+	  with "<td>" tags.
 	- Added "mem_pools_limit" configuration option. Semantics of
 	  "mem_pools" option has also changed a bit to reflect new memory
 	  management policy.
