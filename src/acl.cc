@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.176 1998/08/17 22:04:54 wessels Exp $
+ * $Id: acl.cc,v 1.177 1998/08/17 23:26:58 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -670,11 +670,8 @@ aclParseProxyAuth(void *data)
 	p->timeout = 10;
 
     /* First time around, 7921 should be big enough */
-    if ((p->hash = hash_create((HASHCMP *) strcmp, 7921, hash_string)) < 0) {
-	debug(28, 0) ("aclParseProxyAuth: cannot create hash table, turning proxy_auth off\n");
-	*q = NULL;
-	return;
-    }
+    p->hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+    assert(p->hash);
     *q = p;
     return;
 }
