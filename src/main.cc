@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.74 1996/09/15 05:04:36 wessels Exp $
+ * $Id: main.cc,v 1.75 1996/09/16 17:21:43 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -130,7 +130,7 @@ struct in_addr local_addr;
 char *dash_str = "-";
 
 /* for error reporting from xmalloc and friends */
-extern void (*failure_notify)  __P((char *));
+extern void (*failure_notify) __P((char *));
 
 static int rotate_pending = 0;	/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
