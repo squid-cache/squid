@@ -69,8 +69,11 @@ ACLIdent::typeString() const
 void
 ACLIdent::parse()
 {
-    debug(28, 3) ("aclParseUserList: current is null. Creating\n");
-    data = new ACLUserData;
+    if (!data) {
+        debug(28, 3) ("aclParseUserList: current is null. Creating\n");
+        data = new ACLUserData;
+    }
+
     data->parse();
 }
 
@@ -79,7 +82,10 @@ ACLIdent::match(ACLChecklist *checklist)
 {
     if (checklist->rfc931[0]) {
         return data->match(checklist->rfc931);
+    } else if (checklist->conn().getRaw() != NULL && checklist->conn()->rfc931[0]) {
+        return data->match(checklist->conn()->rfc931);
     } else {
+        debug(28, 3) ("ACLIdent::match() - switching to ident lookup state\n");
         checklist->changeState(IdentLookup::Instance());
         return 0;
     }
