@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.88 2000/05/16 07:06:03 wessels Exp $
+ * $Id: client.cc,v 1.89 2000/08/15 02:37:14 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -47,16 +47,19 @@ static int Now(struct timeval *);
 static SIGHDLR catch;
 static SIGHDLR pipe_handler;
 static void set_our_signal();
+static ssize_t myread(int fd, void *buf, size_t len);
+static ssize_t mywrite(int fd, void *buf, size_t len);
 static int put_fd;
 static char *put_file = NULL;
 static struct stat sb;
 int total_bytes = 0;
+int io_timeout = 120;
 
 static void
 usage(const char *progname)
 {
     fprintf(stderr,
-	"Usage: %s [-arsv] [-i IMS] [-h remote host] [-l local host] [-p port] [-m method] [-t count] [-I ping-interval] [-H 'strings'] url\n"
+	"Usage: %s [-arsv] [-i IMS] [-h remote host] [-l local host] [-p port] [-m method] [-t count] [-I ping-interval] [-H 'strings'] [-T timeout] url\n"
 	"Options:\n"
 	"    -P file      PUT request.\n"
 	"    -a           Do NOT include Accept: header.\n"
@@ -71,7 +74,8 @@ usage(const char *progname)
 	"    -t count     Trace count cache-hops\n"
 	"    -g count     Ping mode, \"count\" iterations (0 to loop until interrupted).\n"
 	"    -I interval  Ping interval in seconds (default 1 second).\n"
-	"    -H 'string'  Extra headers to send. Use '\\n' for new lines.\n",
+	"    -H 'string'  Extra headers to send. Use '\\n' for new lines.\n"
+	"    -T timeout   Timeout value (seconds) for read/write operations.\n",
 	progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -275,7 +279,7 @@ main(int argc, char *argv[])
 	    exit(1);
 	}
 	/* Send the HTTP request */
-	bytesWritten = write(conn, msg, strlen(msg));
+	bytesWritten = mywrite(conn, msg, strlen(msg));
 	if (bytesWritten < 0) {
 	    perror("client: ERROR: write");
 	    exit(1);
@@ -286,8 +290,8 @@ main(int argc, char *argv[])
 	if (put_file) {
 	    int x;
 	    lseek(put_fd, 0, SEEK_SET);
-	    while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
-		x = write(conn, buf, x);
+	    while ((x = myread(put_fd, buf, sizeof(buf))) > 0) {
+		x = mywrite(conn, buf, x);
 		total_bytes += x;
 		if (x <= 0)
 		    break;
@@ -297,7 +301,7 @@ main(int argc, char *argv[])
 	}
 	/* Read the data */
 
-	while ((len = read(conn, buf, sizeof(buf))) > 0) {
+	while ((len = myread(conn, buf, sizeof(buf))) > 0) {
 	    fsize += len;
 	    if (to_stdout)
 		fwrite(buf, len, 1, stdout);
@@ -429,4 +433,18 @@ set_our_signal(void)
     signal(SIGPIPE, pipe_handler);
 #endif
 
+}
+
+static ssize_t
+myread(int fd, void *buf, size_t len)
+{
+    alarm(io_timeout);
+    return read(fd, buf, len);
+}
+
+static ssize_t
+mywrite(int fd, void *buf, size_t len)
+{
+    alarm(io_timeout);
+    return write(fd, buf, len);
 }
