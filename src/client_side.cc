@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.177 1997/12/07 00:48:12 wessels Exp $
+ * $Id: client_side.cc,v 1.178 1997/12/30 02:47:03 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1208,7 +1208,7 @@ clientProcessRequest(clientHttpRequest * http)
     StoreEntry *entry = NULL;
     request_t *r = http->request;
     int fd = http->conn->fd;
-    char *reply;
+    char *hdr;
     debug(12, 4) ("clientProcessRequest: %s '%s'\n",
 	RequestMethodStr[r->method],
 	url);
@@ -1219,13 +1219,19 @@ clientProcessRequest(clientHttpRequest * http)
 	return clientPurgeRequest(http);
     } else if (r->method == METHOD_TRACE) {
 	if (r->max_forwards == 0) {
-	    reply = clientConstructTraceEcho(http);
-	    comm_write(fd,
-		xstrdup(reply),
-		strlen(reply),
-		clientWriteComplete,
-		http,
-		xfree);
+	    http->entry = clientCreateStoreEntry(http, r->method, 0);
+	    storeReleaseRequest(http->entry);
+	    storeBuffer(http->entry);
+	    hdr = httpReplyHeader(1.0,
+        	HTTP_OK,
+        	"text/plain",
+        	r->headers_sz,
+        	0,
+        	squid_curtime);
+	    storeAppend(http->entry, hdr, strlen(hdr));
+	    storeAppend(http->entry, "\r\n", 2);
+	    storeAppend(http->entry, r->headers, r->headers_sz);
+	    storeComplete(http->entry);
 	    return;
 	}
 	/* yes, continue */
