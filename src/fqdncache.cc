@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.61 1997/10/25 17:22:41 wessels Exp $
+ * $Id: fqdncache.cc,v 1.62 1997/10/27 22:48:56 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -667,14 +667,12 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
 
     if ((dnsData = dnsGetFirstAvailable())) {
 	fqdncache_dnsDispatch(dnsData, f);
-	return;
-    }
-    if (NDnsServersAlloc > 0) {
+    } else if (NDnsServersAlloc > 0) {
 	fqdncacheEnqueue(f);
-	return;
+    } else {
+	/* abort if we get here */
+	assert(NDnsServersAlloc);
     }
-    fqdncache_gethostbyaddr(addr, FQDN_BLOCKING_LOOKUP);
-    fqdncache_call_pending(f);
 }
 
 static void
@@ -693,7 +691,7 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
     if (f->status != FQDN_PENDING)
 	debug_trap("fqdncache_dnsDispatch: status != FQDN_PENDING");
     buf = xcalloc(1, 256);
-    snprintf(buf, 256, "%1.254s\n", f->name);
+    snprintf(buf, 256, "s\n", f->name);
     dns->flags |= DNS_FLAG_BUSY;
     dns->data = f;
     f->status = FQDN_DISPATCHED;
@@ -778,12 +776,7 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
 	}
     }
     if (f) {
-	if (f->status == FQDN_PENDING || f->status == FQDN_DISPATCHED) {
-	    if (!BIT_TEST(flags, IP_BLOCKING_LOOKUP)) {
-		FqdncacheStats.pending_hits++;
-		return NULL;
-	    }
-	} else if (f->status == FQDN_NEGATIVE_CACHED) {
+	if (f->status == FQDN_NEGATIVE_CACHED) {
 	    FqdncacheStats.negative_hits++;
 	    dns_error_message = f->error_message;
 	    return NULL;
@@ -797,33 +790,6 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
     if (!safe_inet_addr(name, &ip))
 	return name;
     FqdncacheStats.misses++;
-    if (BIT_TEST(flags, FQDN_BLOCKING_LOOKUP)) {
-	if (NDnsServersAlloc)
-	    debug(14, 0) ("WARNING: blocking on gethostbyaddr() for '%s'\n", name);
-	FqdncacheStats.ghba_calls++;
-	hp = gethostbyaddr((char *) &ip.s_addr, 4, AF_INET);
-	if (hp && hp->h_name && (hp->h_name[0] != '\0') && fqdn_table) {
-	    if (f == NULL) {
-		f = fqdncacheAddNew(name, hp, FQDN_CACHED);
-	    } else if (f->status == FQDN_DISPATCHED) {
-		/* only dnsHandleRead() can change from DISPATCHED to CACHED */
-		xfree(static_name);
-		static_name = xstrdup(hp->h_name);
-		return static_name;
-	    } else {
-		fqdncacheAddHostent(f, hp);
-		f->status = FQDN_CACHED;
-	    }
-	    f->expires = squid_curtime + Config.positiveDnsTtl;
-	    return f->names[0];
-	}
-	/* bad address, negative cached */
-	if (fqdn_table && f == NULL) {
-	    f = fqdncacheAddNew(name, hp, FQDN_NEGATIVE_CACHED);
-	    f->expires = squid_curtime + Config.negativeDnsTtl;
-	    return NULL;
-	}
-    }
     if (flags & FQDN_LOOKUP_IF_MISS)
 	fqdncache_nbgethostbyaddr(addr, dummy_handler, NULL);
     return NULL;
