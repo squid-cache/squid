@@ -874,7 +874,6 @@ struct _peer {
     int n_addresses;
     int rr_count;
     peer *next;
-    int ck_conn_event_pend;
     int test_fd;
 };
 

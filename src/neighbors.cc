@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.198 1998/04/22 16:24:15 rousskov Exp $
+ * $Id: neighbors.cc,v 1.199 1998/04/23 19:29:12 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -887,8 +887,6 @@ peerDestroy(peer * p)
     struct _domain_ping *nl = NULL;
     if (p == NULL)
 	return;
-    if (p->ck_conn_event_pend)
-	eventDelete(peerCheckConnect, p);
     if (p->type == PEER_MULTICAST) {
 	if (p->mcast.flags & PEER_COUNT_EVENT_PENDING)
 	    eventDelete(peerCountMcastPeersStart, p);
@@ -959,9 +957,10 @@ peerCheckConnect(void *data)
 {
     peer *p = data;
     int fd;
-    if (p->ck_conn_event_pend != 1)
-	debug_trap("bad ck_conn_event_pend counter");
-    p->ck_conn_event_pend--;
+    int valid = cbdataValid(p);
+    cbdataUnlock(p);
+    if (!valid)
+	return;
     fd = comm_open(SOCK_STREAM, 0, Config.Addrs.tcp_outgoing,
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)
@@ -990,7 +989,7 @@ peerCheckConnectDone(int fd, int status, void *data)
 	debug(15, 0) ("TCP connection to %s/%d succeeded\n",
 	    p->host, p->http_port);
     } else {
-	p->ck_conn_event_pend++;
+	cbdataLock(p);
 	eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
     }
     comm_close(fd);
@@ -1005,7 +1004,7 @@ peerCheckConnectStart(peer * p)
     debug(15, 0) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
     p->tcp_up = 0;
     p->last_fail_time = squid_curtime;
-    p->ck_conn_event_pend++;
+    cbdataLock(p);
     eventAdd("peerCheckConnect", peerCheckConnect, p, 80);
 }
 
