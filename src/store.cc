@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.471 1998/11/13 20:50:57 wessels Exp $
+ * $Id: store.cc,v 1.472 1998/11/13 22:06:36 rousskov Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -529,6 +529,8 @@ storeCheckCachable(StoreEntry * e)
 static void
 storeCheckCachableStats(StoreEntry * sentry)
 {
+    storeAppendPrintf(sentry, "Category\t Count\n");
+
     storeAppendPrintf(sentry, "no.non_get\t%d\n",
 	store_check_cachable_hist.no.non_get);
     storeAppendPrintf(sentry, "no.not_entry_cachable\t%d\n",
