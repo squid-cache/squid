@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.352 2000/01/05 23:32:21 wessels Exp $
+ * $Id: protos.h,v 1.353 2000/01/11 05:00:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -861,6 +861,7 @@ extern HttpReply *storeEntryReply(StoreEntry *);
 extern int storeTooManyDiskFilesOpen(void);
 extern void storeEntryReset(StoreEntry *);
 extern void storeHeapPositionUpdate(StoreEntry *);
+extern void storeSwapFileNumberSet(StoreEntry *e, sfileno filn);
 
 /* store_io.c */
 extern STOBJOPEN storeOpen;
@@ -965,6 +966,8 @@ extern void storeDirMapBitSet(int fn);
 extern void storeDirOpenSwapLogs(void);
 extern void storeDirSwapLog(const StoreEntry *, int op);
 extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
+extern void storeDirLRUDelete(StoreEntry *);
+extern void storeDirLRUAdd(StoreEntry *);
 
 /*
  * store_dir_ufs.c
