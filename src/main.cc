@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.165 1997/07/16 20:32:11 wessels Exp $
+ * $Id: main.cc,v 1.166 1997/07/19 02:56:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -593,6 +593,7 @@ main(int argc, char **argv)
 	sendSignal();
 	/* NOTREACHED */
     }
+
     setMaxFD();
 
     if (opt_catch_signals)
@@ -607,8 +608,6 @@ main(int argc, char **argv)
     fd_open(0, FD_LOG, "stdin");
     fd_open(1, FD_LOG, "stdout");
     fd_open(2, FD_LOG, "stderr");
-
-    hash_init(0);
 
     mainInitialize();
 
@@ -674,6 +673,7 @@ sendSignal(void)
     debug_log = stderr;
     if (ConfigFile == NULL)
 	ConfigFile = xstrdup(DefaultConfigFile);
+    cbdataInit();
     parseConfigFile(ConfigFile);
     pid = readPidFile();
     if (pid > 1) {

@@ -358,7 +358,7 @@ DOC_END
 
 NAME: cache_mem
 COMMENT: (bytes)
-TYPE: size_t
+TYPE: b_size_t
 DEFAULT: 8 MB
 LOC: Config.Mem.maxSize
 DOC_START
@@ -438,7 +438,7 @@ DOC_END
 
 NAME: maximum_object_size
 COMMENT: (bytes)
-TYPE: size_t
+TYPE: b_size_t
 DEFAULT: 4096 KB
 LOC: Config.Store.maxObjectSize
 DOC_START
@@ -715,7 +715,7 @@ ftp_user squid@
 DOC_END
 
 NAME: ftp_list_width
-TYPE: int
+TYPE: size_t
 DEFAULT: 32
 LOC: Config.Ftp.list_width
 DOC_START
@@ -1458,7 +1458,7 @@ DOC_END
 
 NAME: tcp_recv_bufsize
 COMMENT: (bytes)
-TYPE: size_t
+TYPE: b_size_t
 DEFAULT: 0 bytes
 LOC: Config.tcpRcvBufsz
 DOC_START
@@ -1546,7 +1546,7 @@ DOC_END
 
 NAME: udp_hit_obj_size
 COMMENT: (bytes)
-TYPE: size_t
+TYPE: b_size_t
 LOC: Config.udpMaxHitObjsz
 DEFAULT: 0 bytes
 DOC_START

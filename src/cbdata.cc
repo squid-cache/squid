@@ -41,6 +41,7 @@ cbdataAdd(void *p)
     cbdata *c;
     assert(p);
     debug(45, 3) ("cbdataAdd: %p\n", p);
+    assert(htable != NULL);
     assert(hash_lookup(htable, p) == NULL);
     c = xcalloc(1, sizeof(cbdata));
     c->key = p;
