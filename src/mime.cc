@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.43 1997/11/12 00:08:56 wessels Exp $
+ * $Id: mime.cc,v 1.44 1997/11/14 05:13:29 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -392,6 +392,7 @@ mimeLoadIconFile(const char *icon)
     int fd;
     int n;
     int l;
+    int flags;
     struct stat sb;
     StoreEntry *e;
     LOCAL_ARRAY(char, path, MAXPATHLEN);
@@ -412,9 +413,11 @@ mimeLoadIconFile(const char *icon)
 	debug(50, 0) ("mimeLoadIconFile: FD %d: fstat: %s\n", fd, xstrerror());
 	return;
     }
+    flags = 0;
+    EBIT_SET(flags, REQ_CACHABLE);
     e = storeCreateEntry(url,
 	url,
-	REQ_CACHABLE,
+	flags,
 	METHOD_GET);
     assert(e != NULL);
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
