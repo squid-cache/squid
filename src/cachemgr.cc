@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.35 1996/10/14 23:45:25 wessels Exp $
+ * $Id: cachemgr.cc,v 1.36 1996/10/14 23:50:49 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -233,6 +233,7 @@ typedef enum {
     STATS_IO,
     STATS_HDRS,
     STATS_FDS,
+    STATS_NETDB,
     SHUTDOWN,
     REFRESH,
 #ifdef REMOVE_OBJECT
@@ -259,6 +260,7 @@ static char *op_cmds[] =
     "stats/io",
     "stats/reply_headers",
     "stats/filedescriptors",
+    "stats/netdb",
     "shutdown",
     "refresh",
 #ifdef REMOVE_OBJECT
@@ -285,6 +287,7 @@ static char *op_cmds_descr[] =
     "I/O",
     "HTTP Reply Headers",
     "Filedescriptor Usage",
+    "Network Probe Database",
     "Shutdown Cache (password required)",
     "Refresh Object (URL required)",
 #ifdef REMOVE_OBJECT
@@ -367,6 +370,7 @@ noargs_html(char *host, int port, char *url)
     print_option(op, STATS_IO);
     print_option(op, STATS_HDRS);
     print_option(op, STATS_FDS);
+    print_option(op, STATS_NETDB);
     print_option(op, STATS_O);
     print_option(op, STATS_VM);
     print_option(op, SERVER);
@@ -697,6 +701,7 @@ main(int argc, char *argv[])
     case STATS_IO:
     case STATS_HDRS:
     case STATS_FDS:
+    case STATS_NETDB:
 	sprintf(msg, "GET cache_object://%s/%s HTTP/1.0\r\n\r\n",
 	    hostname, op_cmds[op]);
 	break;
@@ -739,6 +744,7 @@ main(int argc, char *argv[])
     print_option(op, STATS_IO);
     print_option(op, STATS_HDRS);
     print_option(op, STATS_FDS);
+    print_option(op, STATS_NETDB);
     print_option(op, STATS_O);
     print_option(op, STATS_VM);
     print_option(op, SERVER);
@@ -794,6 +800,7 @@ main(int argc, char *argv[])
     case STATS_IO:
     case STATS_HDRS:
     case STATS_FDS:
+    case STATS_NETDB:
     case SHUTDOWN:
     case REFRESH:
 	break;
@@ -865,6 +872,7 @@ main(int argc, char *argv[])
 		case STATS_IO:
 		case STATS_HDRS:
 		case STATS_FDS:
+		case STATS_NETDB:
 		case SHUTDOWN:
 		    p_state = 1;
 		    printf("%s", reserve);
