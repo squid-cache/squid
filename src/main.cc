@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.349 2002/04/06 08:49:27 adrian Exp $
+ * $Id: main.cc,v 1.350 2002/05/22 20:48:14 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -267,7 +267,8 @@ shut_down(int sig)
 #ifdef KILL_PARENT_OPT
     if (getppid() > 1) {
 	debug(1, 1) ("Killing RunCache, pid %d\n", getppid());
-	kill(getppid(), sig);
+	if (kill(getppid(), sig) < 0)
+	    debug(1, 1) ("kill %d: %s\n", getppid(), xstrerror());
     }
 #endif
 #if SA_RESETHAND == 0
