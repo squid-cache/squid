@@ -238,6 +238,11 @@
 #undef IPF_TRANSPARENT
 
 /*
+ * Enable code for assiting in finding memory leaks.  Hacker stuff only.
+ */
+#undef USE_LEAKFINDER
+
+/*
  * type of fd_set array
  */
 #undef fd_mask

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.294 1998/12/05 00:54:36 wessels Exp $
+ * $Id: protos.h,v 1.295 1998/12/11 21:01:15 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1108,6 +1108,13 @@ extern void helperStats(StoreEntry * sentry, helper * hlp);
 extern void helperShutdown(helper * hlp);
 extern helper *helperCreate(const char *);
 extern void helperFree(helper *);
+
+#if USE_LEAKFINDER
+extern void leakInit(void);
+extern void *leakAddFL(void *, const char *, int);
+extern void *leakTouchFL(void *, const char *, int);
+extern void *leakFree(void *);
+#endif
 
 /*
  * prototypes for system functions missing from system includes
