@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.5 1996/02/29 07:23:21 wessels Exp $ */
+/* $Id: stat.cc,v 1.6 1996/02/29 08:08:05 wessels Exp $ */
 
 #include "config.h"
 #include <stdio.h>
@@ -659,16 +659,16 @@ void info_get(obj, sentry)
     storeAppend(sentry, line, strlen(line));
     sprintf(line, "{Meta Data:}\n");
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tStoreEntry %ld x %d}\n", sizeof(StoreEntry),
+    sprintf(line, "{\t\tStoreEntry %d x %d}\n", (int) sizeof(StoreEntry),
 	meta_data.store_entries);
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tStoreMemObject %ld x %d}\n", sizeof(MemObject),
+    sprintf(line, "{\t\tStoreMemObject %d x %d}\n", (int) sizeof(MemObject),
 	meta_data.store_in_mem_objects);
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tIPCacheEntry %ld x %d}\n", sizeof(ipcache_entry),
+    sprintf(line, "{\t\tIPCacheEntry %d x %d}\n", (int) sizeof(ipcache_entry),
 	meta_data.ipcache_count);
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\t\tHash link  %ld x %d}\n", sizeof(hash_link),
+    sprintf(line, "{\t\tHash link  %d x %d}\n", (int) sizeof(hash_link),
 	meta_data.hash_links = hash_links_allocated);
     storeAppend(sentry, line, strlen(line));
     sprintf(line, "{\t\tURL strings %d}\n", meta_data.url_strings);
@@ -685,8 +685,8 @@ void info_get(obj, sentry)
 	(sm_stats.total_pages_allocated * sm_stats.page_size) / (1 << 10),
 	((sm_stats.total_pages_allocated - sm_stats.n_pages_in_use) * sm_stats.page_size) / (1 << 10));
     storeAppend(sentry, line, strlen(line));
-    sprintf(line, "{\tTotal Accounted %ld KB}\n",
-	(meta_data.store_entries * sizeof(StoreEntry) +
+    sprintf(line, "{\tTotal Accounted %d KB}\n",
+	(int) (meta_data.store_entries * sizeof(StoreEntry) +
 	    meta_data.store_in_mem_objects * sizeof(MemObject) +
 	    meta_data.ipcache_count * sizeof(ipcache_entry) +
 	    meta_data.hash_links * sizeof(hash_link) +
