@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.184 1998/05/13 21:24:47 wessels Exp $
+ * $Id: ipcache.cc,v 1.185 1998/05/13 21:25:54 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -724,6 +724,8 @@ ipcache_gethostbyname(const char *name, int flags)
 	    IpcacheStats.negative_hits++;
 	    dns_error_message = i->error_message;
 	    return NULL;
+	} else if (i->addrs.count == 0) {
+	    (void) 0;
 	} else {
 	    IpcacheStats.hits++;
 	    i->lastref = squid_curtime;
