@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.167 2000/03/14 22:54:32 wessels Exp $
+# $Id: cf.data.pre,v 1.168 2000/03/14 22:59:13 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3199,6 +3199,20 @@ DOC_START
 client_persistent_connections on
 server_persistent_connections on
 DOC_END
+
+NAME: diskd_magic1
+IFDEF: USE_DISKD
+TYPE: int
+LOC: Config.diskd.magic1
+DEFAULT: 64
+DOC_NONE
+
+NAME: diskd_magic2
+IFDEF: USE_DISKD
+TYPE: int
+LOC: Config.diskd.magic2
+DEFAULT: 72
+DOC_NONE
 
 EOF
 
