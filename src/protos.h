@@ -438,16 +438,13 @@ extern void storeBuffer(StoreEntry *);
 extern void storeBufferFlush(StoreEntry *);
 extern void storeHashInsert(StoreEntry * e, const cache_key *);
 extern void storeSetMemStatus(StoreEntry * e, int);
-#if !MONOTONIC_STORE
-extern int storeGetUnusedFileno(void);
-extern void storePutUnusedFileno(StoreEntry * e);
-#endif
 #ifdef __STDC__
 extern void storeAppendPrintf(StoreEntry *, const char *,...);
 #else
 extern void storeAppendPrintf();
 #endif
 extern int storeCheckCachable(StoreEntry * e);
+extern void storeUnlinkFileno(int fileno);
 
 /*
  * store_log.c
@@ -468,6 +465,8 @@ extern const char *storeKeyText(const cache_key *);
 extern const cache_key *storeKeyPublic(const char *, method_t);
 extern const cache_key *storeKeyPrivate(const char *, method_t, int);
 extern int storeKeyHashBuckets(int);
+extern int storeKeyNull(const cache_key *);
+extern void storeKeyInit(void);
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;
 
@@ -488,7 +487,7 @@ extern void storeDirMapBitSet(int fn);
 extern void storeDirMapBitReset(int fn);
 extern int storeDirMapAllocate(void);
 extern char *storeSwapDir(int);
-extern FILE *storeDirOpenTmpSwapLog(int dirn, int *clean_flag);
+extern FILE *storeDirOpenTmpSwapLog(int dirn, int *clean, int *zero);
 extern void storeDirCloseTmpSwapLog(int dirn);
 extern void storeDirOpenSwapLogs(void);
 extern void storeDirCloseSwapLogs(void);
@@ -599,6 +598,10 @@ extern void squid_getrusage(struct rusage *r);
 extern double rusage_cputime(struct rusage *r);
 extern int rusage_maxrss(struct rusage *r);
 extern int rusage_pagefaults(struct rusage *r);
+extern void releaseServerSockets(void);
+extern void PrintRusage(void);
+extern void dumpMallocStats(void);
+
 
 extern void unlinkdInit(void);
 extern void unlinkdClose(void);
