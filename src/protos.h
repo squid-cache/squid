@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.240 1998/07/22 21:24:41 wessels Exp $
+ * $Id: protos.h,v 1.241 1998/07/23 19:57:52 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -751,7 +751,6 @@ extern void storeClientCopy(StoreEntry * e,
     STCB * callback,
     void *data);
 extern int storePendingNClients(const StoreEntry *);
-extern HASHCMP urlcmp;
 extern EVH storeMaintainSwapSpace;
 extern void storeExpireNow(StoreEntry *);
 extern void storeReleaseRequest(StoreEntry *);

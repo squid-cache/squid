@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.172 1998/07/22 20:36:57 wessels Exp $
+ * $Id: acl.cc,v 1.173 1998/07/23 19:57:47 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1824,7 +1824,7 @@ aclReadProxyAuth(acl_proxy_auth * p)
 	hashFreeItems(p->hash, aclFreeProxyAuthUser);
 	hashFreeMemory(p->hash);
     }
-    p->hash = hash_create(urlcmp, 7921, hash_string);
+    p->hash = hash_create((HASHCMP*) strcmp, 7921, hash_string);
     assert(NULL != p->hash);
     passwords = xmalloc((size_t) buf.st_size + 2);
     f = fopen(p->filename, "r");
