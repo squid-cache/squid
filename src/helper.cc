@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.40 2002/07/20 23:56:01 hno Exp $
+ * $Id: helper.cc,v 1.41 2002/08/11 22:59:56 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -503,8 +503,9 @@ void
 helperShutdown(helper * hlp)
 {
     dlink_node *link = hlp->servers.head;
-    helper_server *srv;
     while (link) {
+	int wfd;
+	helper_server *srv;
 	srv = link->data;
 	link = link->next;
 	if (!srv->flags.alive) {
@@ -524,8 +525,9 @@ helperShutdown(helper * hlp)
 	    continue;
 	}
 	srv->flags.closing = 1;
-	comm_close(srv->wfd);
+	wfd = srv->wfd;
 	srv->wfd = -1;
+	comm_close(wfd);
     }
 }
 
@@ -738,8 +740,9 @@ helperHandleRead(int fd, void *data)
 	    tvSubUsec(srv->dispatch_time, current_time),
 	    hlp->stats.replies, REDIRECT_AV_FACTOR);
 	if (srv->flags.shutdown) {
-	    comm_close(srv->wfd);
+	    int wfd = srv->wfd;
 	    srv->wfd = -1;
+	    comm_close(wfd);
 	} else
 	    helperKickQueue(hlp);
     } else {
@@ -833,8 +836,9 @@ helperStatefulHandleRead(int fd, void *data)
 	if (srv->flags.shutdown
 	    && srv->flags.reserved == S_HELPER_FREE
 	    && !srv->deferred_requests) {
-	    comm_close(srv->wfd);
+	    int wfd = srv->wfd;
 	    srv->wfd = -1;
+	    comm_close(wfd);
 	} else {
 	    if (srv->queue.head)
 		helperStatefulServerKickQueue(srv);
