@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.139 1998/02/11 03:14:36 wessels Exp $
+ * $Id: acl.cc,v 1.140 1998/02/19 19:27:40 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -42,11 +42,11 @@
 static int aclFromFile = 0;
 static FILE *aclFile;
 
-static void aclDestroyAclList(struct _acl_list *list);
-static void aclDestroyTimeList(struct _acl_time_data *data);
-static int aclMatchAclList(const struct _acl_list *, aclCheck_t *);
+static void aclDestroyAclList(acl_list * list);
+static void aclDestroyTimeList(acl_time_data * data);
+static int aclMatchAclList(const acl_list *, aclCheck_t *);
 static int aclMatchInteger(intlist * data, int i);
-static int aclMatchTime(struct _acl_time_data *data, time_t when);
+static int aclMatchTime(acl_time_data * data, time_t when);
 static int aclMatchIdent(wordlist * data, const char *ident);
 static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
@@ -58,23 +58,25 @@ static IPH aclLookupDstIPDone;
 static IPH aclLookupDstIPforASNDone;
 static FQDNH aclLookupSrcFQDNDone;
 static FQDNH aclLookupDstFQDNDone;
-static int aclReadProxyAuth(struct _acl_proxy_auth *p);
+static int aclReadProxyAuth(acl_proxy_auth * p);
 static wordlist *aclDumpIpList(acl_ip_data * ip);
 static wordlist *aclDumpDomainList(void *data);
-static wordlist *aclDumpTimeSpec(acl_time_data *);
-static wordlist *aclDumpRegexList(void *data);
-static wordlist *aclDumpIntlist(void *data);
+static wordlist *aclDumpTimeSpecList(acl_time_data *);
+static wordlist *aclDumpRegexList(relist * data);
+static wordlist *aclDumpIntlistList(intlist * data);
 static wordlist *aclDumpWordList(wordlist * data);
-static wordlist *aclDumpProtoList(void *data);
-static wordlist *aclDumpMethodList(void *data);
-static wordlist *aclDumpProxyAuth(void *data);
+static wordlist *aclDumpProtoList(intlist * data);
+static wordlist *aclDumpMethodList(intlist * data);
+static wordlist *aclDumpProxyAuthList(acl_proxy_auth * data);
+#if USE_BIN_TREE || USE_SPLAY_TREE
 static wordlist *aclDumpUnimplemented(void);
+#endif
 
 #if USE_ARP_ACL
 static int checkARP(u_long ip, char *eth);
 static int decode_eth(const char *asc, char *eth);
 static int aclMatchArp(void *dataptr, struct in_addr c);
-static const char *aclDumpArpList(void *data);
+static const char *aclDumpArp(acl_arp_data *);
 #endif
 
 #if defined(USE_SPLAY_TREE)
@@ -245,10 +247,10 @@ aclTypeToStr(squid_acl type)
     return "ERROR";
 }
 
-struct _acl *
+acl *
 aclFindByName(const char *name)
 {
-    struct _acl *a;
+    acl *a;
     for (a = Config.aclList; a; a = a->next)
 	if (!strcasecmp(a->name, name))
 	    return a;
@@ -480,12 +482,12 @@ aclParseIpList(void *curlist)
 static void
 aclParseTimeSpec(void *curlist)
 {
-    struct _acl_time_data *q = NULL;
-    struct _acl_time_data **Tail;
+    acl_time_data *q = NULL;
+    acl_time_data **Tail;
     int h1, m1, h2, m2;
     char *t = NULL;
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    q = xcalloc(1, sizeof(struct _acl_time_data));
+    q = xcalloc(1, sizeof(acl_time_data));
     while ((t = strtokFile())) {
 	if (*t < '0' || *t > '9') {
 	    /* assume its day-of-week spec */
@@ -663,12 +665,12 @@ aclParseDomainList(void *curlist)
 static void
 aclParseProxyAuth(void *data)
 {
-    struct _acl_proxy_auth *p;
-    struct _acl_proxy_auth **q = data;
+    acl_proxy_auth *p;
+    acl_proxy_auth **q = data;
     char *t;
     t = strtok(NULL, w_space);
     if (t) {
-	p = xcalloc(1, sizeof(struct _acl_proxy_auth));
+	p = xcalloc(1, sizeof(acl_proxy_auth));
 	p->filename = xstrdup(t);
 	p->last_time = 0;
 	p->change_time = 0;
@@ -699,7 +701,7 @@ aclParseAclLine(acl ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
-    struct _acl *A = NULL;
+    acl *A = NULL;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     squid_acl acltype;
     int new_acl = 0;
@@ -727,7 +729,7 @@ aclParseAclLine(acl ** head)
     }
     if ((A = aclFindByName(aclname)) == NULL) {
 	debug(28, 3) ("aclParseAclLine: Creating ACL '%s'\n", aclname);
-	A = xcalloc(1, sizeof(struct _acl));
+	A = xcalloc(1, sizeof(acl));
 	xstrncpy(A->name, aclname, ACL_NAME_SZ);
 	A->type = acltype;
 	A->cfgline = xstrdup(config_input_line);
@@ -806,10 +808,10 @@ aclParseAclLine(acl ** head)
  */
 
 char *
-aclGetDenyInfoUrl(struct _acl_deny_info_list **head, const char *name)
+aclGetDenyInfoUrl(acl_deny_info_list ** head, const char *name)
 {
-    struct _acl_deny_info_list *A = NULL;
-    struct _acl_name_list *L = NULL;
+    acl_deny_info_list *A = NULL;
+    acl_name_list *L = NULL;
 
     A = *head;
     if (NULL == *head)		/* empty list */
@@ -838,14 +840,14 @@ aclGetDenyInfoUrl(struct _acl_deny_info_list **head, const char *name)
  */
 
 void
-aclParseDenyInfoLine(struct _acl_deny_info_list **head)
+aclParseDenyInfoLine(acl_deny_info_list ** head)
 {
     char *t = NULL;
-    struct _acl_deny_info_list *A = NULL;
-    struct _acl_deny_info_list *B = NULL;
-    struct _acl_deny_info_list **T = NULL;
-    struct _acl_name_list *L = NULL;
-    struct _acl_name_list **Tail = NULL;
+    acl_deny_info_list *A = NULL;
+    acl_deny_info_list *B = NULL;
+    acl_deny_info_list **T = NULL;
+    acl_name_list *L = NULL;
+    acl_name_list **Tail = NULL;
 
     /* first expect an url */
     if ((t = strtok(NULL, w_space)) == NULL) {
@@ -854,13 +856,13 @@ aclParseDenyInfoLine(struct _acl_deny_info_list **head)
 	debug(28, 0) ("aclParseDenyInfoLine: missing 'url' parameter.\n");
 	return;
     }
-    A = xcalloc(1, sizeof(struct _acl_deny_info_list));
+    A = xcalloc(1, sizeof(acl_deny_info_list));
     xstrncpy(A->url, t, MAX_URL);
-    A->next = (struct _acl_deny_info_list *) NULL;
+    A->next = (acl_deny_info_list *) NULL;
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
     while ((t = strtok(NULL, w_space))) {
-	L = xcalloc(1, sizeof(struct _acl_name_list));
+	L = xcalloc(1, sizeof(acl_name_list));
 	xstrncpy(L->name, t, ACL_NAME_SZ);
 	*Tail = L;
 	Tail = &L->next;
@@ -877,15 +879,15 @@ aclParseDenyInfoLine(struct _acl_deny_info_list **head)
 }
 
 void
-aclParseAccessLine(struct _acl_access **head)
+aclParseAccessLine(acl_access ** head)
 {
     char *t = NULL;
-    struct _acl_access *A = NULL;
-    struct _acl_access *B = NULL;
-    struct _acl_access **T = NULL;
-    struct _acl_list *L = NULL;
-    struct _acl_list **Tail = NULL;
-    struct _acl *a = NULL;
+    acl_access *A = NULL;
+    acl_access *B = NULL;
+    acl_access **T = NULL;
+    acl_list *L = NULL;
+    acl_list **Tail = NULL;
+    acl *a = NULL;
 
     /* first expect either 'allow' or 'deny' */
     if ((t = strtok(NULL, w_space)) == NULL) {
@@ -894,7 +896,7 @@ aclParseAccessLine(struct _acl_access **head)
 	debug(28, 0) ("aclParseAccessLine: missing 'allow' or 'deny'.\n");
 	return;
     }
-    A = xcalloc(1, sizeof(struct _acl_access));
+    A = xcalloc(1, sizeof(acl_access));
     if (!strcmp(t, "allow"))
 	A->allow = 1;
     else if (!strcmp(t, "deny"))
@@ -911,7 +913,7 @@ aclParseAccessLine(struct _acl_access **head)
      * by '!' for negation */
     Tail = &A->acl_list;
     while ((t = strtok(NULL, w_space))) {
-	L = xcalloc(1, sizeof(struct _acl_list));
+	L = xcalloc(1, sizeof(acl_list));
 	L->op = 1;		/* defaults to non-negated */
 	if (*t == '!') {
 	    /* negated ACL */
@@ -1136,7 +1138,7 @@ aclMatchIdent(wordlist * data, const char *ident)
 }
 
 static int
-aclMatchProxyAuth(struct _acl_proxy_auth *p, aclCheck_t * checklist)
+aclMatchProxyAuth(acl_proxy_auth * p, aclCheck_t * checklist)
 {
     LOCAL_ARRAY(char, sent_user, ICP_IDENT_SZ);
     char *s;
@@ -1219,7 +1221,7 @@ aclMatchInteger(intlist * data, int i)
 }
 
 static int
-aclMatchTime(struct _acl_time_data *data, time_t when)
+aclMatchTime(acl_time_data * data, time_t when)
 {
     static time_t last_when = 0;
     static struct tm tm;
@@ -1239,7 +1241,7 @@ aclMatchTime(struct _acl_time_data *data, time_t when)
 }
 
 int
-aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
+aclMatchAcl(acl * acl, aclCheck_t * checklist)
 {
     request_t *r = checklist->request;
     const ipcache_addrs *ia = NULL;
@@ -1364,7 +1366,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 }
 
 static int
-aclMatchAclList(const struct _acl_list *list, aclCheck_t * checklist)
+aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
 {
     while (list) {
 	AclMatchedName = list->acl->name;
@@ -1381,7 +1383,7 @@ aclMatchAclList(const struct _acl_list *list, aclCheck_t * checklist)
 }
 
 int
-aclCheckFast(const struct _acl_access *A, aclCheck_t * checklist)
+aclCheckFast(const acl_access * A, aclCheck_t * checklist)
 {
     int allow = 0;
     while (A) {
@@ -1397,7 +1399,7 @@ static void
 aclCheck(aclCheck_t * checklist)
 {
     allow_t allow = ACCESS_DENIED;
-    const struct _acl_access *A;
+    const acl_access *A;
     int match;
     ipcache_addrs *ia;
     while ((A = checklist->access_list) != NULL) {
@@ -1530,7 +1532,7 @@ aclLookupDstFQDNDone(const char *fqdn, void *data)
 }
 
 aclCheck_t *
-aclChecklistCreate(const struct _acl_access *A,
+aclChecklistCreate(const acl_access * A,
     request_t * request,
     struct in_addr src_addr,
     char *user_agent,
@@ -1608,9 +1610,9 @@ aclDestroyIpList(acl_ip_data * data)
 #endif /* USE_SPLAY_TREE */
 
 static void
-aclDestroyTimeList(struct _acl_time_data *data)
+aclDestroyTimeList(acl_time_data * data)
 {
-    struct _acl_time_data *next = NULL;
+    acl_time_data *next = NULL;
     for (; data; data = next) {
 	next = data->next;
 	safe_free(data);
@@ -1618,9 +1620,9 @@ aclDestroyTimeList(struct _acl_time_data *data)
 }
 
 void
-aclDestroyRegexList(struct _relist *data)
+aclDestroyRegexList(relist * data)
 {
-    struct _relist *next = NULL;
+    relist *next = NULL;
     for (; data; data = next) {
 	next = data->next;
 	regfree(&data->regex);
@@ -1630,7 +1632,7 @@ aclDestroyRegexList(struct _relist *data)
 }
 
 static void
-aclDestroyProxyAuth(struct _acl_proxy_auth *p)
+aclDestroyProxyAuth(acl_proxy_auth * p)
 {
     hash_link *hashr = NULL;
     /* destroy hash list contents */
@@ -1646,8 +1648,8 @@ aclDestroyProxyAuth(struct _acl_proxy_auth *p)
 void
 aclDestroyAcls(acl ** head)
 {
-    struct _acl *a = NULL;
-    struct _acl *next = NULL;
+    acl *a = NULL;
+    acl *next = NULL;
     for (a = *head; a; a = next) {
 	next = a->next;
 	debug(28, 3) ("aclDestroyAcls: '%s'\n", a->cfgline);
@@ -1705,9 +1707,9 @@ aclDestroyAcls(acl ** head)
 }
 
 static void
-aclDestroyAclList(struct _acl_list *list)
+aclDestroyAclList(acl_list * list)
 {
-    struct _acl_list *next = NULL;
+    acl_list *next = NULL;
     for (; list; list = next) {
 	next = list->next;
 	safe_free(list);
@@ -1715,10 +1717,10 @@ aclDestroyAclList(struct _acl_list *list)
 }
 
 void
-aclDestroyAccessList(struct _acl_access **list)
+aclDestroyAccessList(acl_access ** list)
 {
-    struct _acl_access *l = NULL;
-    struct _acl_access *next = NULL;
+    acl_access *l = NULL;
+    acl_access *next = NULL;
     for (l = *list; l; l = next) {
 	debug(28, 3) ("aclDestroyAccessList: '%s'\n", l->cfgline);
 	next = l->next;
@@ -1734,12 +1736,12 @@ aclDestroyAccessList(struct _acl_access **list)
  *    destroy an _acl_deny_info_list */
 
 void
-aclDestroyDenyInfoList(struct _acl_deny_info_list **list)
+aclDestroyDenyInfoList(acl_deny_info_list ** list)
 {
-    struct _acl_deny_info_list *a = NULL;
-    struct _acl_deny_info_list *a_next = NULL;
-    struct _acl_name_list *l = NULL;
-    struct _acl_name_list *l_next = NULL;
+    acl_deny_info_list *a = NULL;
+    acl_deny_info_list *a_next = NULL;
+    acl_name_list *l = NULL;
+    acl_name_list *l_next = NULL;
 
     for (a = *list; a; a = a_next) {
 	for (l = a->acl_list; l; l = l_next) {
@@ -1799,7 +1801,7 @@ aclDomainCompare(const char *d1, const char *d2)
 /* Original ProxyAuth code by Jon Thackray <jrmt@uk.gdscorp.com> */
 /* Generalized to ACL's by Arjan.deVet <Arjan.deVet@adv.IAEhv.nl> */
 static int
-aclReadProxyAuth(struct _acl_proxy_auth *p)
+aclReadProxyAuth(acl_proxy_auth * p)
 {
     struct stat buf;
     static char *passwords = NULL;
@@ -2091,15 +2093,15 @@ aclDumpDomainList(void *data)
     return aclDumpWordList(data);
 #endif
 }
+
 static wordlist *
-aclDumpTimeSpec(acl_time_data * t)
+aclDumpTimeSpecList(acl_time_data * t)
 {
     wordlist *W = NULL;
     wordlist **T = &W;
     wordlist *w;
     char buf[128];
     while (t != NULL) {
-	w = xcalloc(1, sizeof(wordlist));
 	snprintf(buf, 128, "%c%c%c%c%c%c%c %02d:%02d-%02d:%02d",
 	    t->weekbits & ACL_SUNDAY ? 'S' : '-',
 	    t->weekbits & ACL_MONDAY ? 'M' : '-',
@@ -2112,6 +2114,7 @@ aclDumpTimeSpec(acl_time_data * t)
 	    t->start % 60,
 	    t->stop / 60,
 	    t->stop % 60);
+	w = xcalloc(1, sizeof(wordlist));
 	w->key = xstrdup(buf);
 	*T = w;
 	T = &w->next;
@@ -2119,16 +2122,41 @@ aclDumpTimeSpec(acl_time_data * t)
     }
     return W;
 }
+
 static wordlist *
-aclDumpRegexList(void *data)
+aclDumpRegexList(relist * data)
 {
-    return aclDumpUnimplemented();
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    while (data != NULL) {
+	w = xcalloc(1, sizeof(wordlist));
+	w->key = xstrdup(data->pattern);
+	*T = w;
+	T = &w->next;
+	data = data->next;
+    }
+    return W;
 }
+
 static wordlist *
-aclDumpIntlist(void *data)
+aclDumpIntlistList(intlist * data)
 {
-    return aclDumpUnimplemented();
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    char buf[32];
+    while (data != NULL) {
+	snprintf(buf, 32, "%d", data->i);
+	w = xcalloc(1, sizeof(wordlist));
+	w->key = xstrdup(buf);
+	*T = w;
+	T = &w->next;
+	data = data->next;
+    }
+    return W;
 }
+
 static wordlist *
 aclDumpWordList(wordlist * data)
 {
@@ -2144,21 +2172,56 @@ aclDumpWordList(wordlist * data)
     }
     return W;
 }
+
 static wordlist *
-aclDumpProtoList(void *data)
+aclDumpProtoList(intlist * data)
 {
-    return aclDumpUnimplemented();
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    while (data != NULL) {
+	w = xcalloc(1, sizeof(wordlist));
+	w->key = xstrdup(ProtocolStr[data->i]);
+	*T = w;
+	T = &w->next;
+	data = data->next;
+    }
+    return W;
 }
+
 static wordlist *
-aclDumpMethodList(void *data)
+aclDumpMethodList(intlist * data)
 {
-    return aclDumpUnimplemented();
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    while (data != NULL) {
+	w = xcalloc(1, sizeof(wordlist));
+	w->key = xstrdup(RequestMethodStr[data->i]);
+	*T = w;
+	T = &w->next;
+	data = data->next;
+    }
+    return W;
 }
+
 static wordlist *
-aclDumpProxyAuth(void *data)
+aclDumpProxyAuthList(acl_proxy_auth * data)
 {
-    return aclDumpUnimplemented();
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    char buf[MAXPATHLEN];
+    assert(data != NULL);
+    snprintf(buf, MAXPATHLEN, "%s %d\n", data->filename, data->check_interval);
+    w = xcalloc(1, sizeof(wordlist));
+    w->key = xstrdup(buf);
+    *T = w;
+    T = &w->next;
+    return W;
 }
+
+#if USE_BIN_TREE || USE_SPLAY_TREE
 static wordlist *
 aclDumpUnimplemented(void)
 {
@@ -2166,6 +2229,7 @@ aclDumpUnimplemented(void)
     w->key = xstrdup("UNIMPLEMENTED");
     return w;
 }
+#endif
 
 wordlist *
 aclDumpGeneric(const acl * a)
@@ -2177,10 +2241,11 @@ aclDumpGeneric(const acl * a)
 	break;
     case ACL_SRC_DOMAIN:
     case ACL_DST_DOMAIN:
+    case ACL_USER:
 	return aclDumpDomainList(a->data);
 	break;
     case ACL_TIME:
-	return aclDumpTimeSpec(a->data);
+	return aclDumpTimeSpecList(a->data);
 	break;
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
@@ -2190,10 +2255,7 @@ aclDumpGeneric(const acl * a)
     case ACL_URL_PORT:
     case ACL_SRC_ASN:
     case ACL_DST_ASN:
-	return aclDumpIntlist(a->data);
-	break;
-    case ACL_USER:
-	return aclDumpWordList(a->data);
+	return aclDumpIntlistList(a->data);
 	break;
     case ACL_PROTO:
 	return aclDumpProtoList(a->data);
@@ -2202,7 +2264,7 @@ aclDumpGeneric(const acl * a)
 	return aclDumpMethodList(a->data);
 	break;
     case ACL_PROXY_AUTH:
-	return aclDumpProxyAuth(a->data);
+	return aclDumpProxyAuthList(a->data);
 	break;
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
@@ -2271,11 +2333,11 @@ decode_eth(const char *asc, char *eth)
     return 1;
 }
 
-static struct _acl_arp_data *
+static acl_arp_data *
 aclParseArpData(const char *t)
 {
     LOCAL_ARRAY(char, eth, 256);	/* addr1 ---> eth */
-    struct _acl_arp_data *q = xcalloc(1, sizeof(struct _acl_arp_data));
+    acl_arp_data *q = xcalloc(1, sizeof(acl_arp_data));
     debug(28, 5) ("aclParseArpData: %s\n", t);
     if (sscanf(t, "%[0-9a-f:]", eth) != 1) {
 	debug(28, 0) ("aclParseArpData: Bad ethernet address: '%s'\n", t);
@@ -2302,7 +2364,7 @@ aclParseArpList(void *curlist)
 {
     char *t = NULL;
     splayNode **Top = curlist;
-    struct _acl_arp_data *q = NULL;
+    acl_arp_data *q = NULL;
     while ((t = strtokFile())) {
 	if ((q = aclParseArpData(t)) == NULL)
 	    continue;
@@ -2315,7 +2377,7 @@ aclParseArpList(void **curtree)
 {
     tree **Tree;
     char *t = NULL;
-    struct _acl_arp_data *q;
+    acl_arp_data *q;
     Tree = xmalloc(sizeof(tree *));
     *curtree = Tree;
     tree_init(Tree);
@@ -2330,8 +2392,8 @@ static void
 aclParseArpList(void *curlist)
 {
     char *t = NULL;
-    struct _acl_arp_data **Tail;
-    struct _acl_arp_data *q = NULL;
+    acl_arp_data **Tail;
+    acl_arp_data *q = NULL;
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
 	if ((q = aclParseArpData(t)) == NULL)
@@ -2372,9 +2434,9 @@ aclMatchArp(void *dataptr, struct in_addr c)
 static int
 aclMatchArp(void *dataptr, struct in_addr c)
 {
-    struct _acl_arp_data **D = dataptr;
-    struct _acl_arp_data *data = *D;
-    struct _acl_arp_data *first, *prev;
+    acl_arp_data **D = dataptr;
+    acl_arp_data *data = *D;
+    acl_arp_data *first, *prev;
     first = data;		/* remember first element, will never be moved */
     prev = NULL;		/* previous element in the list */
     while (data) {
@@ -2406,9 +2468,9 @@ static int
 bintreeArpNetworkCompare(void *t1, void *t2)
 {
     struct in_addr addr;
-    struct _acl_arp_data *data;
+    acl_arp_data *data;
     xmemcpy(&addr, t1, sizeof(addr));
-    data = (struct _acl_arp_data *) t2;
+    data = (acl_arp_data *) t2;
     return aclArpNetworkCompare(addr, data);
 }
 #endif
@@ -2455,9 +2517,23 @@ checkARP(u_long ip, char *eth)
 }
 
 static const char *
-aclDumpArpList(void *data)
+aclDumpArp(acl_arp_data * data)
 {
-    return "UNIMPLEMENTED";
+    wordlist *W = NULL;
+    wordlist **T = &W;
+    wordlist *w;
+    char buf[24];
+    while (data != NULL) {
+	snprintf(buf, 24, "%02x:%02x:02x:02x:02x:02x",
+	    data->eth[0], data->eth[1], data->eth[2], data->eth[3],
+	    data->eth[4], data->eth[5]);
+	w = xcalloc(1, sizeof(wordlist));
+	w->key = xstrdup(buf);
+	*T = w;
+	T = &w->next;
+	data = data->next;
+    }
+    return W;
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */
