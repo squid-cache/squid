@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.33 1998/09/19 17:06:16 wessels Exp $
+ * $Id: store_swapout.cc,v 1.34 1998/09/20 01:14:25 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -43,7 +43,6 @@ typedef struct swapout_ctrl_t {
 
 static FOCB storeSwapOutFileOpened;
 static off_t storeSwapOutObjectBytesOnDisk(const MemObject *);
-static int storeSwapOutAble(const StoreEntry * e);
 
 /* start swapping object to disk */
 void
@@ -368,9 +367,10 @@ storeSwapOutObjectBytesOnDisk(const MemObject * mem)
 /*
  * Is this entry a candidate for writing to disk?
  */
-static int
+int
 storeSwapOutAble(const StoreEntry * e)
 {
+    store_client *sc;
     if (e->swap_status == SWAPOUT_OPENING)
 	return 1;
     if (e->mem_obj->swapout.fd > -1)
@@ -378,5 +378,12 @@ storeSwapOutAble(const StoreEntry * e)
     if (e->mem_obj->inmem_lo > 0)
 	return 0;
     /* swapout.fd == -1 && inmem_lo == 0 */
+    /*
+     * If there are DISK clients, we must write to disk
+     * even if its not cachable
+     */
+    for (sc = e->mem_obj->clients; sc; sc=sc->next)
+	if (sc->type == STORE_DISK_CLIENT)
+	    return 1;
     return EBIT_TEST(e->flags, ENTRY_CACHABLE);
 }
