@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.48 2004/12/27 11:30:59 hno Exp $
+#  $Id: Makefile.in,v 1.49 2005/02/08 01:11:08 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -172,8 +172,6 @@ USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@
 USE_DELAY_POOLS_TRUE = @USE_DELAY_POOLS_TRUE@
 USE_DNSSERVER_FALSE = @USE_DNSSERVER_FALSE@
 USE_DNSSERVER_TRUE = @USE_DNSSERVER_TRUE@
-USE_EPOLL_FALSE = @USE_EPOLL_FALSE@
-USE_EPOLL_TRUE = @USE_EPOLL_TRUE@
 USE_ESI_FALSE = @USE_ESI_FALSE@
 USE_ESI_TRUE = @USE_ESI_TRUE@
 USE_SNMP_FALSE = @USE_SNMP_FALSE@
