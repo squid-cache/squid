@@ -107,8 +107,10 @@ DOC_END
 # OPTIONS WHICH AFFECT THE NEIGHBOR SELECTION ALGORITHM
 #-----------------------------------------------------------------------------
 
-NAME: cache_host
-TYPE: cachehost
+NAME: cache_peer cache_host
+TYPE: cache_peer
+DEFAULT: NULL
+LOC: Config.peers
 DOC_START
 	To specify other caches in a hierarchy, use the format:
 
@@ -303,6 +305,7 @@ DOC_END
 
 NAME: hierarchy_stoplist
 TYPE: wordlist
+DEFAULT: NULL
 LOC: Config.hierarchy_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
@@ -318,6 +321,7 @@ DOC_END
 
 NAME: cache_stoplist
 TYPE: wordlist
+DEFAULT: NULL
 LOC: Config.cache_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
@@ -332,18 +336,13 @@ DOC_END
 
 
 NAME: cache_stoplist_pattern
-COMMENT: # case sensitive
 TYPE: regexlist
 LOC: Config.cache_stop_relist
-DOC_NONE
-
-NAME: cache_stoplist_pattern/i
-COMMENT: # case insensitive
-TYPE: regexlist_icase
-LOC: Config.cache_stop_relist
+DEFAULT: NULL
 DOC_START
 	Just like 'cache_stoplist' but you can use regular expressions
 	instead of simple string matching.  There is no default.
+	Insert -i to get case-insensitive regular expressions.
 
 cache_stoplist_pattern
 DOC_END
@@ -478,6 +477,7 @@ DOC_END
 
 NAME: cache_dir
 TYPE: cachedir
+DEFAULT: NULL
 DOC_START
 	Directory for on-disk cache storage.  The cache will change into
 	this directory when running.  The default is
@@ -486,7 +486,7 @@ DOC_START
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
 
-cache_dir /usr/local/squid/cache 256 16 16
+cache_dir /usr/local/squid/cache 1000 256 16
 DOC_END
 
 
@@ -504,31 +504,32 @@ DOC_END
 
 NAME: cache_log
 TYPE: string
-DEFAULT: /usr/local/squid/logs/cache.log
+DEFAULT: @DEFAULT_CACHE_LOG@
 LOC: Config.Log.log
 DOC_START
 	Cache logging file.  Set logging levels with "debug_options" below.
 
-cache_log /usr/local/squid/logs/cache.log
+cache_log @DEFAULT_CACHE_LOG@
 DOC_END
 
 
 NAME: cache_store_log
 TYPE: string
-DEFAULT: /usr/local/squid/logs/store.log
+DEFAULT: @DEFAULT_STORE_LOG@
 LOC: Config.Log.store
 DOC_START
 	Logs the activities of the storage manager.  Shows which
 	objects are ejected from the cache, and which objects are
 	saved and for how long.  To disable, enter "none".
 
-cache_store_log /usr/local/squid/logs/store.log
+cache_store_log @DEFAULT_STORE_LOG@
 DOC_END
 
 
 NAME: cache_swap_log
 TYPE: string
 LOC: Config.Log.swap
+DEFAULT: NULL
 DOC_START
 	Location for the cache "swap log."  This log file holds the
 	metadata of objects saved on disk.  It is used to rebuild the
@@ -557,15 +558,15 @@ DOC_END
 
 
 NAME: mime_table
-TYPE: pathname_check
-DEFAULT: /usr/local/squid/etc/mime.conf
+TYPE: pathname_stat
+DEFAULT: @DEFAULT_MIME_TABLE@
 LOC: Config.mimeTablePathname
 DOC_START
 	Pathname to Squid's MIME table which has the format
 
 	    regex content-type icon content-encoding transfer-mode
 
-mime_table /usr/local/squid/etc/mime.conf
+mime_table @DEFAULT_MIME_TABLE@
 DOC_END
 
 
@@ -602,12 +603,12 @@ DOC_END
 
 NAME: pid_filename
 TYPE: string
-DEFAULT: /usr/local/squid/logs/squid.pid
+DEFAULT: @DEFAULT_PID_FILE@
 LOC: Config.pidFilename
 DOC_START
        A pathname to write the process-id to.  To disable, enter "none".
 
-pid_filename /usr/local/squid/logs/squid.pid
+pid_filename @DEFAULT_PID_FILE@
 DOC_END
 
 
@@ -706,13 +707,13 @@ DOC_END
 
 
 NAME: cache_dns_program
-TYPE: pathname_check
-DEFAULT: /usr/local/squid/bin/dnsserver
+TYPE: pathname_stat
+DEFAULT: @DEFAULT_DNSSERVER@
 LOC: Config.Program.dnsserver
 DOC_START
 	Specify the location of the executable for dnslookup process.
 
-cache_dns_program /usr/local/squid/bin/dnsserver
+cache_dns_program @DEFAULT_DNSSERVER@
 DOC_END
 
 
@@ -751,30 +752,31 @@ DOC_END
 
 
 NAME: unlinkd_program
-TYPE: pathname_check
-DEFAULT: /usr/local/squid/bin/unlinkd
+TYPE: pathname_stat
+DEFAULT: @DEFAULT_UNLINKD@
 LOC: Config.Program.unlinkd
 DOC_START
 	Specify the location of the executable for file deletion process.
 
-unlinkd_program /usr/local/squid/bin/unlinkd
+unlinkd_program @DEFAULT_UNLINKD@
 DOC_END
 
 
 NAME: pinger_program
-TYPE: pathname_check
-DEFAULT: /usr/local/squid/bin/pinger
+TYPE: pathname_stat
+DEFAULT: @DEFAULT_PINGER@
 LOC: Config.Program.pinger
 DOC_START
 	Specify the location of the executable for the pinger process.
 
-pinger_program /usr/local/squid/bin/pinger
+pinger_program @DEFAULT_PINGER@
 DOC_END
 
 
 NAME: redirect_program
-TYPE: pathname_check
+TYPE: pathname_stat
 LOC: Config.Program.redirect
+DEFAULT: /bin/false
 DOC_START
 	Specify the location of the executable for the URL redirector.
 	Currently, you must provide your own redirector program.
@@ -798,13 +800,21 @@ DOC_END
 
 # OPTIONS FOR TUNING THE CACHE
 #-----------------------------------------------------------------------------
+NAME: wais_relay_host
+TYPE: string
+DEFAULT: NULL
+LOC: Config.Wais.relayHost
+DOC_NONE
 
-NAME: wais_relay
-TYPE: waisrelay
+NAME: wais_relay_port
+TYPE: ushort
+DEFAULT: 0
+LOC: Config.Wais.relayPort
 DOC_START
 	Relay WAIS request to host (1st arg) at port (2 arg).
 
-wais_relay localhost 8000
+wais_relay_host localhost
+wais_relay_port 8000
 DOC_END
 
 
@@ -877,8 +887,25 @@ reference_age 1 year
 DOC_END
 
 
-NAME: quick_abort
-TYPE: quickabort
+NAME: quick_abort_min
+COMMENT: (kbytes)
+TYPE: int
+DEFAULT: -1
+LOC: Config.quickAbort.min
+DOC_NONE
+
+NAME: quick_abort_pct
+COMMENT: (percent)
+TYPE: int
+DEFAULT: 0
+LOC: Config.quickAbort.pct
+DOC_NONE
+
+NAME: quick_abort_max
+COMMENT: (kbytes)
+TYPE: int
+DEFAULT: 0
+LOC: Config.quickAbort.max
 DOC_START
 	By default the cache continues to retrieve objects from
 	aborted requests.  This may be undesirable on slow (e.g. SLIP)
@@ -902,7 +929,9 @@ DOC_START
 	If more than 'percent' of the transfer has completed, it will
 	finish the retrieval.
 
-quick_abort    -1 0 0
+quick_abort_min -1
+quick_abort_pct 0
+quick_abort_max 0
 DOC_END
 
 
@@ -1196,13 +1225,22 @@ DOC_END
 
 
 NAME: cache_effective_user
-TYPE: effectiveuser
+TYPE: string
+DEFAULT: NONE
+LOC: Config.effectiveUser
+DOC_NONE
+
+NAME: cache_effective_group
+TYPE: string
+DEFAULT: NONE
+LOC: Config.effectiveGroup
 DOC_START
 	If the cache is run as root, it will change its effective/real
 	UID/GID to the UID/GID specified below.  The default is not to
 	change UID/GID.
 
-cache_effective_user nobody nogroup
+cache_effective_user nobody
+cache_effective_group nogroup
 DOC_END
 
 
@@ -1370,52 +1408,69 @@ DOC_END
 
 
 NAME: ssl_proxy
-TYPE: proxy
+TYPE: cache_peer
 LOC: Config.sslProxy
+DEFAULT: NULL
 DOC_START
-	Specify the name of a 'cache_host' listed above, or a hostname
-	and port number where all SSL requests should be forwarded to.
+	Specify a hostname and port number where all SSL requests
+	should be forwarded to.
 
-	Usage: ssl_proxy cache_host
-	       ssl_proxy host:port
+	XXX For now, ssl_proxy has the same format as cache_peer
+	because they share the same data structure.  All files
+	must be present in the config file, but some will be ignored.
+
+	Usage: ssl_proxy hostname type-ignored port icpport-ignored
 
 ssl_proxy
 DOC_END
 
 
 NAME: passthrough_proxy
-TYPE: proxy
+TYPE: cache_peer
 LOC: Config.passProxy
+DEFAULT: NULL
 DOC_START
-	Specify the name of a 'cache_host' listed above, or a hostname
-	and port number where all non-GET (i.e. POST, PUT) requests
-	should be forwarded to.
+	Specify a hostname and port number where all non-GET (i.e.
+	POST, PUT) requests should be forwarded to.
 
-	Usage: passthrough_proxy cache_host
-	       passthrough_proxy host:port
+	XXX For now, ssl_proxy has the same format as cache_peer
+	because they share the same data structure.  All files
+	must be present in the config file, but some will be ignored.
+
+	Usage: passthrough_proxy hostname type-ignored port icpport-ignored
 
 passthrough_proxy
 DOC_END
 
 
-NAME: proxy_auth
-TYPE: proxyauth
-DOC_START
-	Usage: proxy_auth passwd_file [ ignore-domain ]
+NAME: proxy_auth_passwd
+TYPE: string
+LOC: Config.proxyAuth.File
+DEFAULT: NULL
+DOC_NONE
 
+NAME: proxy_auth_ignore
+TYPE: regexlist
+LOC: Config.proxyAuth.IgnoreDomains
+DEFAULT: NULL
+DOC_START
 	'passwd_file' is an apache-style file of passwords for
 	authenticated proxy access Looks like user:password, with the
 	password being standard crypt() format.  Proxy authentication
 	is disabled by default.
 
-	'ignore-domain' is a domain name for which authorization will
-	*not* be required.
+	'proxy_auth_ignore' is a regular-expression list of domain names
+	(source or destination??)
+	for which authorization will *not* be required.
 
 	NOTE, proxy_auth support is not compiled into Squid by default.
 	To use this feature you must enable the USE_PROXY_AUTH option
 	near the top of src/Makefile.
 
-proxy_auth /dev/null
+	Insert -i to get case-insensitive regular expressions.
+
+proxy_auth_passwd /dev/null
+proxy_auth_ignore
 DOC_END
 
 

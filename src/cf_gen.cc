@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.2 1997/06/26 23:02:15 wessels Exp $
+ * $Id: cf_gen.cc,v 1.3 1997/07/06 05:14:10 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -79,6 +79,7 @@ static const char WS[] = " \t";
 static void gen_default(Entry *, FILE *);
 static void gen_parse(Entry *, FILE *);
 static void gen_dump(Entry *, FILE *);
+static void gen_free(Entry *, FILE *);
 static void gen_conf(Entry *, FILE *);
 
 int
@@ -243,6 +244,7 @@ main(int argc, char *argv[])
      * Generate default_all()
      * Generate parse_line()
      * Generate dump_all()
+     * Generate free_all()
      * Generate example squid.conf file
      *-------------------------------------------------------------------*/
 
@@ -264,6 +266,7 @@ main(int argc, char *argv[])
     gen_default(entries, fp);
     gen_parse(entries, fp);
     gen_dump(entries, fp);
+    gen_free(entries, fp);
     fclose(fp);
 
     /* Open output x.conf file */
@@ -366,13 +369,11 @@ static void
 gen_dump(Entry * head, FILE * fp)
 {
     Entry *entry;
-
     fprintf(fp,
 	"void\n"
 	"dump_all(void)\n"
 	"{\n"
 	);
-
     for (entry = head; entry != NULL; entry = entry->next) {
 	if (entry->loc == NULL) {
 	    fprintf(fp, "\tprintf(\"%s = \");\n", entry->type);
@@ -383,6 +384,25 @@ gen_dump(Entry * head, FILE * fp)
 	}
 	fprintf(fp, "\tprintf(\"\\n\");\n");
 	fprintf(fp, "\n");
+    }
+    fprintf(fp, "}\n\n");
+}
+
+static void
+gen_free(Entry * head, FILE * fp)
+{
+    Entry *entry;
+    fprintf(fp,
+	"void\n"
+	"free_all(void)\n"
+	"{\n"
+	);
+    for (entry = head; entry != NULL; entry = entry->next) {
+	if (entry->loc == NULL) {
+	    fprintf(fp, "\tfree_%s();\n", entry->type);
+	} else {
+	    fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
+	}
     }
     fprintf(fp, "}\n\n");
 }

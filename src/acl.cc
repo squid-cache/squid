@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.100 1997/06/26 22:35:37 wessels Exp $
+ * $Id: acl.cc,v 1.101 1997/07/06 05:14:08 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -118,7 +118,7 @@ strtokFile(void)
 	    }
 	    aclFromFile = 1;
 	} else {
-	    return (t);
+	    return t;
 	}
     }
     /* aclFromFile */
@@ -132,7 +132,7 @@ strtokFile(void)
 	/* skip leading and trailing white space */
 	t += strspn(buf, w_space);
 	t[strcspn(t, w_space)] = '\0';
-	return (t);
+	return t;
     }
 }
 
@@ -471,7 +471,7 @@ aclParseTimeSpec(void *curlist)
 }
 
 void
-aclParseRegexList(void *curlist, int icase)
+aclParseRegexList(void *curlist)
 {
     relist **Tail;
     relist *q = NULL;
@@ -480,9 +480,15 @@ aclParseRegexList(void *curlist, int icase)
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    if (icase)
-	flags |= REG_ICASE;
     while ((t = strtokFile())) {
+	if (strcmp(t, "-i") == 0) {
+		flags |= REG_ICASE;
+		continue;
+	}
+	if (strcmp(t, "+i") == 0) {
+		flags &= ~REG_ICASE;
+		continue;
+	}
 	if ((errcode = regcomp(&comp, t, flags)) != 0) {
 	    char errbuf[256];
 	    regerror(errcode, &comp, errbuf, sizeof errbuf);
