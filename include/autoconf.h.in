@@ -126,14 +126,6 @@
 #undef SQUID_SNMP
 
 /*
- * Normally Squid's ACL information is stored as singly-linked lists.
- * When matches are found, they are moved to the top of the list.
- * However, these options allow you to explore other searching structures
- * such as splay trees and binary trees.  Define only one of these.
- */
-#undef USE_SPLAY_TREE
-
-/*
  * Squid frequently calls gettimeofday() for accurate timestamping.
  * If you are concerned that gettimeofday() is called too often, and
  * could be causing performance degradation, then you can define

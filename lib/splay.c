@@ -1,8 +1,6 @@
 
 #include "config.h"
 
-#if USE_SPLAY_TREE
-
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -156,5 +154,3 @@ main(int argc, char *argv[])
     return 0;
 }
 #endif /* DRIVER */
-
-#endif /* USE_SPLAY_TREE */
