@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.242 1997/05/23 05:30:36 wessels Exp $
+ * $Id: store.cc,v 1.243 1997/05/23 16:56:30 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2166,6 +2166,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     MemObject *mem = e->mem_obj;
     struct _store_client *oldlist = NULL;
     int oldsize;
+    assert(mem != NULL);
     /* look for empty slot */
     if (mem->clients == NULL) {
 	mem->nclients = MIN_CLIENT;
