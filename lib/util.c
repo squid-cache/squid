@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.57 1998/03/11 22:18:43 rousskov Exp $
+ * $Id: util.c,v 1.58 1998/03/13 05:45:35 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -570,7 +570,6 @@ xrealloc(void *s, size_t sz)
 	exit(1);
     }
 #if XMALLOC_DEBUG
-    fprintf(stderr, "realloc: ``mallocing'' %p\n", s);
     check_malloc(p, sz);
 #endif
 #if XMALLOC_STATISTICS
