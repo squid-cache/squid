@@ -1,7 +1,7 @@
 -- File: SQUID.MIB
 -- Maintained by: kostas@nlanr.net
 --
--- NOTE: This version (1.13) of the mib is supported as of squid1.2beta19. 
+-- NOTE: This version (1.14) of the mib is supported as of squid1.2beta19. 
 --
 
 SQUID-MIB DEFINITIONS ::= BEGIN
@@ -15,7 +15,7 @@ SQUID-MIB DEFINITIONS ::= BEGIN
 
 -- Do NOT remove the following line
 
--- v 1.13 1998/03/22 kostas@nlanr.net
+-- v 1.14 1998/04/03 kostas@nlanr.net
 
 -- 
 -- definition of squid mib subtree
@@ -263,7 +263,7 @@ SQUID-MIB DEFINITIONS ::= BEGIN
                 ACCESS read-only
                 STATUS mandatory
                 DESCRIPTION
-                        " Cache Memory High Water Mark "
+                        " Cache Memory Low Water Mark "
         ::= { cacheStorageConfig 3 }
 
         cacheSwapMaxSize OBJECT-TYPE
@@ -287,7 +287,7 @@ SQUID-MIB DEFINITIONS ::= BEGIN
                 ACCESS read-only
                 STATUS mandatory
                 DESCRIPTION
-                        " Cache Swap High Water Mark "
+                        " Cache Swap Low Water Mark "
         ::= { cacheStorageConfig 6 }
 
 -- end of  cacheStorageConfig group

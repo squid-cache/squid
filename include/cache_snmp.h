@@ -26,7 +26,7 @@
 /* mib stuff here */
 
 #ifndef CURRENT_MIB_VERSION
-#define CURRENT_MIB_VERSION "-- v 1.13 1998/03/22 kostas@nlanr.net"
+#define CURRENT_MIB_VERSION "-- v 1.14 1998/04/03 kostas@nlanr.net"
 #endif
 
 /* MIB definitions
