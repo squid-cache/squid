@@ -10,9 +10,17 @@
 	  be 0) (Joe Ramey).
 	- Added configure warning for low filedescriptors and pointer
 	  to FAQ.
+	- Fixed httpBodySet() bug causing URN related coredumps.
+	- Changed ipcacheCycleAddr() to always cycle through all all
+	  available addresses, and not just advance when one of
+	  them goes BAD.
+	- Fixed squid-internal bug for mixed-case hostnames (Henrik
+	  Nordstrom).
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
+	- Squid-1.2.beta19 compiles and runs on Windows/NT with
+	  Cygnus Gnu-WIN32 b19 (Henrik Nordstrom).
 	- Added French Error pages by Frank DENIS.
 	- Added Dutch Error pages by Mark Visser
 	- Added German Error pages by Mark Visser
