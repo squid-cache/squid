@@ -3,9 +3,16 @@ Changes to squid-1.1.beta24 ():
 	- Added 'cache_stoplist_pattern' to squid.conf
 	- Remove trailing slashes from FTP URLs.
 	- Added 'passthrough_proxy' support.
-	- Added 'default' option for cache_host line.
+	- Added "default parent" support with a 'default' option for
+	  cache_host config line.
 	- Upgraded autoconf to 2.10.
 	- Strip Proxy-Connection request headers.
+	- Do not return UDP_HIT for objects which will soon be stale.
+	- Parse/Filter HTTP request headers in passthrough module.
+	- Fixed parsing hostnames with dashes in 'src' ACLs.
+	- Added warning message when forwarding loops detected.
+	- Split getSingleParent() into getSingleParent() and
+	  neighborsCount().
 
 Changes to squid-1.1.beta23 (November 25, 1996):
 
