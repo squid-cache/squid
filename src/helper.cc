@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.31 2001/10/17 20:25:02 hno Exp $
+ * $Id: helper.cc,v 1.32 2001/10/24 06:16:16 hno Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -264,7 +264,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     }
     cbdataLock(r->data);
     if ((buf != NULL) && lastserver) {
-	debug(29, 5) ("StatefulSubmit with lastserver %d\n", lastserver);
+	debug(29, 5) ("StatefulSubmit with lastserver %p\n", lastserver);
 	/* the queue doesn't count for this assert because queued requests
 	 * have already gone through here and been tested.
 	 * It's legal to have deferred_requests == 0 and queue entries 
@@ -464,7 +464,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
 	hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\t%7s\n",
 	"#",
 	"FD",
 	"PID",

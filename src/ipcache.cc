@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.234 2001/03/03 10:39:32 hno Exp $
+ * $Id: ipcache.cc,v 1.235 2001/10/24 06:16:16 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -766,7 +766,7 @@ variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_netIpFn: Processing request:\n", Var->name[LEN_SQ_NET + 1]);
+    debug(49, 5) ("snmp_netIpFn: Processing request:\n");
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
     switch (Var->name[LEN_SQ_NET + 1]) {

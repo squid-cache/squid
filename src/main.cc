@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.343 2001/10/23 12:14:49 hno Exp $
+ * $Id: main.cc,v 1.344 2001/10/24 06:16:16 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -705,7 +705,7 @@ main(int argc, char **argv)
 	    debug(1, 1) ("Preparing for shutdown after %d requests\n",
 		statCounter.client_http.requests);
 	    debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
-		wait);
+		(int)wait);
 	    do_shutdown = 0;
 	    shutting_down = 1;
 	    serverConnectionsClose();
