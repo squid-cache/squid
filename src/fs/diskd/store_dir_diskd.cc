@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.18 2000/10/06 05:21:58 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.19 2000/10/13 06:35:19 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -165,7 +165,15 @@ storeDiskdDirMapBitReset(SwapDir * SD, int fn)
     sfileno filn = fn;
     diskdinfo_t *diskdinfo;
     diskdinfo = SD->fsdata;
-    file_map_bit_reset(diskdinfo->map, filn);
+    /* 
+     * We have to test the bit before calling file_map_bit_reset.
+     * file_map_bit_reset doesn't do bounds checking.  It assumes
+     * filn in a valid file number, but it might not be because
+     * the map is dynamic in size.  Also clearing an already clear
+     * bit puts the map counter of-of-whack.
+     */
+    if (file_map_bit_test(diskdinfo->map, filn))
+	file_map_bit_reset(diskdinfo->map, filn);
 }
 
 int
