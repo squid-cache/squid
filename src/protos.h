@@ -269,6 +269,7 @@ extern HttpHdrExtField *httpHdrExtFieldDup(HttpHdrExtField * f);
 
 /* Http Cache Control Header Field */
 extern void httpHdrCcInitModule();
+extern void httpHdrCcCleanModule();
 extern HttpHdrCc *httpHdrCcCreate();
 extern HttpHdrCc *httpHdrCcParseCreate(const char *str);
 extern void httpHdrCcDestroy(HttpHdrCc * cc);
@@ -285,7 +286,6 @@ extern int httpHdrRangeParseInit(HttpHdrRange *range, const char *range_spec);
 extern void httpHdrRangeDestroy(HttpHdrRange *range);
 extern HttpHdrRange *httpHdrRangeDup(const HttpHdrRange * range);
 extern void httpHdrRangePackInto(const HttpHdrRange * range, Packer * p);
-extern void httpHdrRangeJoinWith(HttpHdrRange * range, const HttpHdrRange * new_range);
 /* iterate through specs */
 extern int httpHdrRangeGetSpec(const HttpHdrRange *range, HttpHdrRangeSpec *spec, int *pos);
 
@@ -298,8 +298,9 @@ extern HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
 extern void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
 
 /* Http Header Tools */
-extern int httpHeaderIdByName(const char *name, int name_len, const field_attrs_t * attrs, int end, int mask);
-extern void httpHeaderInitAttrTable(field_attrs_t * table, int count);
+extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
+extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo *info, int count);
+extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo* attrs, int end, int mask);
 extern int httpHeaderCalcMask(const int *enums, int count);
 extern int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 extern const char *getStringPrefix(const char *str);
@@ -315,13 +316,13 @@ extern void httpHeaderInit(HttpHeader * hdr);
 extern void httpHeaderClean(HttpHeader * hdr);
 extern void httpHeaderDestroy(HttpHeader * hdr);
 /* clone */
-HttpHeader *httpHeaderClone(HttpHeader * hdr);
+void httpHeaderCopy(HttpHeader *dest, const HttpHeader *src);
 /* parse/pack */
 extern int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
 extern void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
 /* field manipulation */
 extern int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type);
-extern void httpHeaderDel(HttpHeader * hdr, http_hdr_type id);
+extern HttpHeaderEntry *httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id, HttpHeaderPos * pos);
 extern void httpHeaderSetInt(HttpHeader * hdr, http_hdr_type type, int number);
 extern void httpHeaderSetTime(HttpHeader * hdr, http_hdr_type type, time_t time);
 extern void httpHeaderSetStr(HttpHeader * hdr, http_hdr_type type, const char *str);
@@ -333,6 +334,7 @@ extern HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
 extern HttpHdrRange *httpHeaderGetRange(const HttpHeader * hdr);
 extern HttpHdrContRange *httpHeaderGetContRange(const HttpHeader * hdr);
 extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
+extern void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 int httpHeaderDelFields(HttpHeader * hdr, const char *name);
 /* store report about current header usage and other stats */
 extern void httpHeaderStoreReport(StoreEntry * e);

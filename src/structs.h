@@ -513,10 +513,10 @@ union _field_store {
     int v_int;
     time_t v_time;
     String v_str;
+    const String *v_cpstr;
     HttpHdrCc *v_pcc;
     HttpHdrRange *v_prange;
     HttpHdrContRange *v_pcont_range;
-    HttpHdrExtField *v_pefield;
 };
 
 /* per field statistics */
@@ -528,11 +528,17 @@ struct _HttpHeaderFieldStat {
 };
 
 /* constant attributes of http header fields */
-struct _field_attrs_t {
+struct _HttpHeaderFieldAttrs {
     const char *name;
     http_hdr_type id;
     field_type type;
-    int name_len;
+};
+
+/* compiled version HttpHeaderFieldAttrs plus stats */
+struct _HttpHeaderFieldInfo {
+    http_hdr_type id;
+    String name;
+    field_type type;
     HttpHeaderFieldStat stat;
 };
 
@@ -554,7 +560,7 @@ struct _HttpReply {
     /* public, readable */
     HttpMsgParseState pstate;	/* the current parsing state */
 
-    /* public, writable, but use interfaces below when possible */
+    /* public, writable, but use httpReply* interfaces when possible */
     HttpStatusLine sline;
     HttpHeader hdr;
     HttpBody body;		/* used for small constant memory-resident text bodies only */

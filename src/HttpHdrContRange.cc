@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.2 1998/03/08 21:40:20 rousskov Exp $
+ * $Id: HttpHdrContRange.cc,v 1.3 1998/03/11 22:18:44 rousskov Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -65,14 +65,14 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec *spec, const char *field, int fle
 	return 0;
     /* is spec given ? */
     if (*field == '*')
-	return 0;
+	return 1;
     /* check format, must be %d-%d */
     if (!((p = strchr(field, '-')) && (p-field < flen))) {
-	debug(68, 2) ("invalid resp-range-spec near: '%s'\n", field);
+	debug(68, 2) ("invalid (no '-') resp-range-spec near: '%s'\n", field);
 	return 0;
     }
     /* parse offset */
-    if (!httpHeaderParseSize(field+1, &spec->offset))
+    if (!httpHeaderParseSize(field, &spec->offset))
 	    return 0;
     p++;
     /* do we have last-pos ? */
@@ -80,11 +80,12 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec *spec, const char *field, int fle
 	size_t last_pos;
 	if (!httpHeaderParseSize(p, &last_pos))
 	    return 0;
-	spec->length = size_diff(last_pos, spec->offset);
+	spec->length = size_diff(last_pos+1, spec->offset);
     }
     /* we managed to parse, check if the result makes sence */
     if (known_spec(spec->length) && !spec->length) {
-	debug(68, 2) ("invalid resp-range-spec near: '%s'\n", field);
+	debug(68, 2) ("invalid range (%d += %d) in resp-range-spec near: '%s'\n",
+	    spec->offset, spec->length, field);
 	return 0;
     }
     return 1;
@@ -130,6 +131,11 @@ httpHdrContRangeParseInit(HttpHdrContRange *range, const char *str)
 {
     const char *p;
     assert(range && str);
+    debug(68, 8) ("parsing content-range field: '%s'\n", str);
+    /* check range type */
+    if (strncasecmp(str, "bytes ", 6))
+	return 0;
+    str += 6;
     /* split */
     if (!(p = strchr(str, '/')))
 	return 0;
@@ -144,6 +150,9 @@ httpHdrContRangeParseInit(HttpHdrContRange *range, const char *str)
     else
     if (!httpHeaderParseSize(p, &range->elength))
 	return 0;
+    debug(68, 8) ("parsed content-range field: %d-%d / %d\n", 
+	range->spec.offset, range->spec.offset+range->spec.length-1,
+	range->elength);
     return 1;
 }
 

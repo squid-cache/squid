@@ -168,6 +168,7 @@ typedef enum {
 /* recognized or "known" header fields; @?@ add more! */
 typedef enum {
     HDR_ACCEPT,
+    HDR_ACCEPT_RANGES,
     HDR_AGE,
     HDR_CACHE_CONTROL,
     HDR_CONNECTION,
@@ -188,10 +189,12 @@ typedef enum {
     HDR_PUBLIC,
     HDR_RANGE,
     HDR_RETRY_AFTER,
+    HDR_SERVER,
     HDR_SET_COOKIE,
     HDR_UPGRADE,
     HDR_WARNING,
     HDR_WWW_AUTHENTICATE,
+    HDR_X_CACHE,
     HDR_PROXY_KEEPALIVE,
     HDR_OTHER,
     HDR_ENUM_END

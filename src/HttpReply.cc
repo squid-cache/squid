@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.11 1998/03/05 00:42:43 wessels Exp $
+ * $Id: HttpReply.cc,v 1.12 1998/03/11 22:18:46 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -173,33 +173,21 @@ httpPackedReply(double ver, http_status status, const char *ctype,
 MemBuf
 httpPacked304Reply(const HttpReply * rep)
 {
+    static const http_hdr_type ImsEntries[] = { HDR_DATE, HDR_CONTENT_LENGTH, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER };
+    http_hdr_type t;
     MemBuf mb;
+    Packer p;
+    HttpHeaderEntry *e;
     assert(rep);
 
     memBufDefInit(&mb);
+    packerToMemInit(&p, &mb);
     memBufPrintf(&mb, "%s", "HTTP/1.0 304 Not Modified\r\n");
-
-    if (httpHeaderHas(&rep->hdr, HDR_DATE))
-	memBufPrintf(&mb, "Date: %s\r\n", mkrfc1123(
-		httpHeaderGetTime(&rep->hdr, HDR_DATE)));
-
-    if (httpHeaderHas(&rep->hdr, HDR_CONTENT_TYPE))
-	memBufPrintf(&mb, "Content-type: %s\r\n",
-	    httpHeaderGetStr(&rep->hdr, HDR_CONTENT_TYPE));
-
-    if (httpHeaderHas(&rep->hdr, HDR_CONTENT_LENGTH))
-	memBufPrintf(&mb, "Content-Length: %d\r\n",
-	    httpReplyContentLen(rep));
-
-    if (httpHeaderHas(&rep->hdr, HDR_EXPIRES))
-	memBufPrintf(&mb, "Expires: %s\r\n", mkrfc1123(
-		httpHeaderGetTime(&rep->hdr, HDR_EXPIRES)));
-
-    if (httpHeaderHas(&rep->hdr, HDR_LAST_MODIFIED))
-	memBufPrintf(&mb, "Last-modified: %s\r\n", mkrfc1123(
-		httpHeaderGetTime(&rep->hdr, HDR_LAST_MODIFIED)));
-
+    for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
+	if ((e = httpHeaderFindEntry(&rep->hdr, ImsEntries[t], NULL)))
+	    httpHeaderEntryPackInto(e, &p);
     memBufAppend(&mb, "\r\n", 2);
+    packerClean(&p);
     return mb;
 }
 
@@ -216,7 +204,7 @@ httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const cha
     httpHeaderSetTime(hdr, HDR_DATE, squid_curtime);
     if (ctype)
 	httpHeaderSetStr(hdr, HDR_CONTENT_TYPE, ctype);
-    if (clen > 0)
+    if (clen >= 0)
 	httpHeaderSetInt(hdr, HDR_CONTENT_LENGTH, clen);
     if (expires >= 0)
 	httpHeaderSetTime(hdr, HDR_EXPIRES, expires);
@@ -233,8 +221,8 @@ httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const cha
  *    if you, for example, assume that HDR_EXPIRES contains expire info
  *
  * if you think about it, in most cases, you are not looking for the information
- *    in the header, but rather for current state of the reply, which may or maynot
- *    depend on headers. 
+ *    in the header, but rather for current state of the reply, which may or may 
+ *    not depend on headers. 
  *
  * For example, the _real_ question is
  *        "when does this object expire?" 
@@ -245,7 +233,7 @@ httpReplySetHeaders(HttpReply * reply, double ver, http_status status, const cha
 void
 httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
 {
-#if 0				/* this is what we want: */
+#if 0 /* this is what we want: */
     rep->cache_control = freshRep->cache_control;
     rep->misc_headers = freshRep->misc_headers;
     if (freshRep->date > -1)
@@ -265,8 +253,9 @@ httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply * freshRep)
     lmt = httpHeaderGetTime(&rep->hdr, HDR_LAST_MODIFIED);
     /* clean old headers */
     httpHeaderClean(&rep->hdr);
-    /* clone */
-    rep->hdr = *httpHeaderClone(&freshRep->hdr);
+    httpHeaderInit(&rep->hdr);
+    /* copy */
+    httpHeaderCopy(&rep->hdr, &freshRep->hdr);
     /* restore missing info if needed */
     if (!httpHeaderHas(&rep->hdr, HDR_DATE))
 	httpHeaderSetTime(&rep->hdr, HDR_DATE, date);
@@ -291,7 +280,6 @@ httpReplyContentType(const HttpReply * rep)
     return httpHeaderGetStr(&rep->hdr, HDR_CONTENT_TYPE);
 }
 
-/* does it make sense to cache these computations ? @?@ */
 time_t
 httpReplyExpires(const HttpReply * rep)
 {
@@ -370,8 +358,6 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 	rep->hdr_sz = *parse_end_ptr - buf;
 	rep->pstate++;
     }
-    /* could check here for a _small_ body that we could parse right away?? @?@ */
-
     return 1;
 }
 

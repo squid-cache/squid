@@ -51,7 +51,8 @@ typedef struct _hash_link hash_link;
 typedef struct _hash_table hash_table;
 typedef struct _HttpReply http_reply;
 typedef struct _HttpStatusLine HttpStatusLine;
-typedef struct _field_attrs_t field_attrs_t;
+typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
+typedef struct _HttpHeaderFieldInfo HttpHeaderFieldInfo;
 typedef struct _HttpHeader HttpHeader;
 typedef struct _HttpHdrCc HttpHdrCc;
 typedef struct _HttpHdrRangeSpec HttpHdrRangeSpec;
@@ -164,3 +165,6 @@ typedef size_t mb_size_t;
 
 /* iteration for HttpHdrRange */
 typedef int HttpHdrRangePos;
+
+/*iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
+typedef ssize_t HttpHeaderPos;

@@ -1,5 +1,5 @@
 /*
- * $Id: Stack.h,v 1.4 1998/03/03 00:30:55 rousskov Exp $
+ * $Id: Stack.h,v 1.5 1998/03/11 22:18:42 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -37,7 +37,7 @@ struct _Stack {
     size_t capacity;
 
     /* protected, do not use these, use interface functions instead */
-    size_t count;
+    int count;
     void **items;
 };
 
