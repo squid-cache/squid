@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.185 1998/01/01 19:29:17 wessels Exp $
+ * $Id: client_side.cc,v 1.186 1998/01/02 02:06:03 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1026,7 +1026,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 		 * Set the timeout BEFORE calling clientReadRequest().
 		 */
 		commSetTimeout(fd, 15, requestTimeout, conn);
-		clientReadRequest(fd, conn); /* Read next request */
+		clientReadRequest(fd, conn);	/* Read next request */
 		/*
 		 * Note, the FD may be closed at this point.
 		 */
@@ -1580,12 +1580,12 @@ clientReadRequest(int fd, void *data)
 	    debug(50, 2) ("clientReadRequest: FD %d: %s\n", fd, xstrerror());
 	    comm_close(fd);
 	    return;
-	} else if(conn->in.offset == 0) {
+	} else if (conn->in.offset == 0) {
 	    debug(50, 2) ("clientReadRequest: FD %d: no data to process\n");
 	    return;
 	}
 	/* Continue to process previously read data */
-	size=0;
+	size = 0;
     }
     conn->in.offset += size;
     conn->in.buf[conn->in.offset] = '\0';	/* Terminate the string */
@@ -1596,7 +1596,7 @@ clientReadRequest(int fd, void *data)
 	if (nrequests >= 2) {
 	    debug(12, 2) ("clientReadRequest: FD %d max concurrent requests reached\n", fd);
 	    debug(12, 5) ("clientReadRequest: FD %d defering new request until one is done\n", fd);
-	    conn->defer.until = squid_curtime + 100; /* Reset when a request is complete */
+	    conn->defer.until = squid_curtime + 100;	/* Reset when a request is complete */
 	    break;
 	}
 	/* Process request */
@@ -1614,7 +1614,7 @@ clientReadRequest(int fd, void *data)
 	     * data to the beginning
 	     */
 	    if (conn->in.offset > 0)
-	        memmove(conn->in.buf, conn->in.buf + http->req_sz, conn->in.size);
+		memmove(conn->in.buf, conn->in.buf + http->req_sz, conn->in.size);
 	    /* add to the client request queue */
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;

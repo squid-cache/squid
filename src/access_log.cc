@@ -1,6 +1,7 @@
 
+
 /*
- * $Id: access_log.cc,v 1.14 1997/12/03 01:28:17 wessels Exp $
+ * $Id: access_log.cc,v 1.15 1998/01/02 02:06:01 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
