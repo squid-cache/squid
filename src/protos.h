@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.347 1999/10/04 05:05:22 wessels Exp $
+ * $Id: protos.h,v 1.348 1999/12/01 04:28:08 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -250,13 +250,12 @@ extern void fdDumpOpen(void);
 extern int fdNFree(void);
 extern void fdAdjustReserved(void);
 
-extern fileMap *file_map_create(int);
+extern fileMap *file_map_create(void);
 extern int file_map_allocate(fileMap *, int);
 extern int file_map_bit_set(fileMap *, int);
 extern int file_map_bit_test(fileMap *, int);
 extern void file_map_bit_reset(fileMap *, int);
 extern void filemapFreeMemory(fileMap *);
-extern void filemapCopy(fileMap * old, fileMap * new);
 
 
 extern void fqdncache_nbgethostbyaddr(struct in_addr, FQDNH *, void *);
@@ -948,7 +947,7 @@ extern int storeDirMapBitTest(int fn);
 extern int storeDirMapBitsInUse(void);
 extern int storeDirNumber(int fileno);
 extern int storeDirProperFileno(int dirn, int fn);
-extern int storeDirValidFileno(int fn);
+extern int storeDirValidFileno(int fn, int);
 extern int storeDirWriteCleanLogs(int reopen);
 extern int storeVerifySwapDirs(void);
 extern void storeCreateSwapDirectories(void);

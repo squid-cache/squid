@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.98 1999/06/24 20:20:14 wessels Exp $
+ * $Id: store_dir.cc,v 1.99 1999/12/01 04:28:08 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -167,7 +167,7 @@ storeDirSelectSwapDir(void)
 }
 
 int
-storeDirValidFileno(int fn)
+storeDirValidFileno(int fn, int flag)
 {
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
@@ -177,8 +177,13 @@ storeDirValidFileno(int fn)
 	return 0;
     if (filn < 0)
 	return 0;
-    if (filn > Config.cacheSwap.swapDirs[dirn].map->max_n_files)
-	return 0;
+    /*
+     * If flag is set it means out-of-range file number should
+     * be considered invalid.
+     */
+    if (flag)
+	if (filn > Config.cacheSwap.swapDirs[dirn].map->max_n_files)
+	    return 0;
     return 1;
 }
 
@@ -309,25 +314,13 @@ void
 storeDirConfigure(void)
 {
     SwapDir *SD;
-    int n;
     int i;
-    fileMap *fm;
     Config.Swap.maxSize = 0;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	SD = &Config.cacheSwap.swapDirs[i];;
 	Config.Swap.maxSize += SD->max_size;
-	n = 2 * SD->max_size / Config.Store.avgObjectSize;
-	if (NULL == SD->map) {
-	    /* first time */
-	    SD->map = file_map_create(n);
-	} else if (n > SD->map->max_n_files) {
-	    /* it grew, need to expand */
-	    fm = file_map_create(n);
-	    filemapCopy(SD->map, fm);
-	    filemapFreeMemory(SD->map);
-	    SD->map = fm;
-	}
-	/* else it shrunk, and we leave the old one in place */
+	if (NULL == SD->map)
+	    SD->map = file_map_create();
     }
 }
 
