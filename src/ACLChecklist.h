@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.4 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.5 2003/02/17 07:01:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,7 +80,7 @@ class ACLChecklist {
 
     void nonBlockingCheck(PF * callback, void *callback_data);
     void checkCallback(allow_t answer);
-    bool matchAclList(const acl_list * list);
+    bool matchAclList(const acl_list * list, bool const fast = false);
     ConnStateData *conn();
     void conn(ConnStateData *);
     int authenticated();

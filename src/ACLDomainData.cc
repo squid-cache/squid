@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLDomainData.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -169,7 +169,7 @@ ACLDomainData::parse()
 }
 
 
-ACLData *
+ACLData<char const *> *
 ACLDomainData::clone() const
 {
     /* Splay trees don't clone yet. */

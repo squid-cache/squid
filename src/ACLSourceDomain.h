@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLSourceDomain.h,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLSourceDomain.h,v 1.2 2003/02/17 07:01:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,22 @@
 #include "ACL.h"
 #include "ACLData.h"
 #include "ACLChecklist.h"
+#include "ACLStrategised.h"
+
+class ACLSourceDomainStrategy : public ACLMatchStrategy<char const *>
+{
+  public:
+    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
+    static ACLSourceDomainStrategy *Instance();
+    /* Not implemented to prevent copies of the instance. */
+    /* Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends */
+    ACLSourceDomainStrategy(ACLSourceDomainStrategy const &);
+  private:
+    static ACLSourceDomainStrategy Instance_;
+    ACLSourceDomainStrategy(){}
+    ACLSourceDomainStrategy&operator=(ACLSourceDomainStrategy const &);
+};
 
 class SourceDomainLookup : public ACLChecklist::AsyncState {
   public:
@@ -48,33 +64,12 @@ class SourceDomainLookup : public ACLChecklist::AsyncState {
     static void LookupDone(const char *, void *);
 };
 
-class ACLSourceDomain : public ACL {
-  public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    virtual void deleteSelf() const;
-
-    ~ACLSourceDomain();
-    ACLSourceDomain(ACLData *, char const *);
-    ACLSourceDomain (ACLSourceDomain const &);
-    ACLSourceDomain &operator= (ACLSourceDomain const &);
-    
-    virtual char const *typeString() const;
-    virtual squid_acl aclType() const { return ACL_DERIVED;}
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool valid () const;
-    virtual ACL *clone()const;
+class ACLSourceDomain {
   private:
-    static MemPool *Pool;
-    static Prototype LiteralRegistryProtoype;
-    static Prototype LegacyRegistryProtoype;
-    static ACLSourceDomain LiteralRegistryEntry_;
-    static Prototype RegexRegistryProtoype;
-    static ACLSourceDomain RegexRegistryEntry_;
-    ACLData *data;
-    char const *type_;
+    static ACL::Prototype LiteralRegistryProtoype;
+    static ACLStrategised<char const *> LiteralRegistryEntry_;
+    static ACL::Prototype RegexRegistryProtoype;
+    static ACLStrategised<char const *> RegexRegistryEntry_;
 };
 
 #endif /* SQUID_ACLSOURCEDOMAIN_H */

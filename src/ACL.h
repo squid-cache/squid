@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.5 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACL.h,v 1.6 2003/02/17 07:01:34 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -102,6 +102,7 @@ class ACL {
     squid_acl type;
   protected:
     void *data;
+  public:
     class Prototype {
       public:
 	Prototype ();

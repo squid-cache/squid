@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.6 2003/01/23 00:37:25 robertc Exp $
+ * $Id: ssl_support.h,v 1.7 2003/02/17 07:01:37 robertc Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -53,7 +53,8 @@ int ssl_write_method(int, const char *, int);
 void ssl_shutdown_method(int);
 
 const char *sslGetUserEmail(SSL *ssl);
-const char *sslGetUserAttribute(SSL *ssl, const char *attribute);
-const char *sslGetCAAttribute(SSL *ssl, const char *attribute);
+typedef char const *SSLGETATTRIBUTE(SSL *, const char *);
+SSLGETATTRIBUTE sslGetUserAttribute;
+SSLGETATTRIBUTE sslGetCAAttribute;
 
 #endif /* SQUID_SSL_SUPPORT_H */

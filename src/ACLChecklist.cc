@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.3 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.4 2003/02/17 07:01:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -215,12 +215,15 @@ ACLChecklist::checkCallback(allow_t answer)
     delete this;
 }
 bool
-ACLChecklist::matchAclList(const acl_list * head)
+ACLChecklist::matchAclList(const acl_list * head, bool const fast)
 {
     PROF_start(aclMatchAclList);
     const acl_list *node = head;
     while (node) {
-	if (!node->matches(this)) {
+	bool nodeMatched = node->matches(this);
+	if (fast)
+	    changeState(NullState::Instance());
+	if (!nodeMatched) {
 	    debug(28, 3) ("aclmatchAclList: returning false (AND list entry failed to match)\n");
 	    PROF_stop(aclMatchAclList);
 	    return false;

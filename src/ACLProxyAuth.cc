@@ -69,7 +69,7 @@ ACLProxyAuth::~ACLProxyAuth()
     data->deleteSelf();
 }
 
-ACLProxyAuth::ACLProxyAuth(ACLData *newData, char const *theType) : data (newData), type_(theType) {}
+ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}
 ACLProxyAuth::ACLProxyAuth (ACLProxyAuth const &old) : data (old.data->clone()), type_(old.type_)
 {
 }

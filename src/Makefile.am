@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.60 2003/02/16 02:23:18 robertc Exp $
+#  $Id: Makefile.am,v 1.61 2003/02/17 07:01:35 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -78,7 +78,12 @@ PINGER =
 endif
 
 if ENABLE_SSL
-SSLSOURCE = ssl_support.cc
+SSLSOURCE = \
+	ACLCertificateData.cc \
+	ACLCertificateData.h  \
+	ACLCertificate.cc \
+	ACLCertificate.h  \
+	ssl_support.cc
 else
 SSLSOURCE = 
 endif
@@ -147,8 +152,8 @@ EXTRA_squid_SOURCES = \
 	win32.cc
 
 squid_ACLSOURCES = \
-	ACLCertificateData.cc \
-	ACLCertificateData.h \
+	ACLBrowser.cc \
+	ACLBrowser.h \
 	ACLData.h \
 	ACLDestinationDomain.cc \
 	ACLDestinationDomain.h \
@@ -158,16 +163,32 @@ squid_ACLSOURCES = \
 	ACLDomainData.cc \
 	ACLIP.cc \
 	ACLIP.h \
+	ACLMatchStrategy.h \
 	ACLMyIP.cc \
 	ACLMyIP.h \
 	ACLProxyAuth.cc \
 	ACLProxyAuth.h \
+	ACLReferer.cc \
+	ACLReferer.h \
 	ACLRegexData.cc \
 	ACLRegexData.h \
+	ACLRequestHeaderStrategy.h \
+	ACLRequestMIMEType.cc \
+	ACLRequestMIMEType.h \
 	ACLSourceDomain.cc \
 	ACLSourceDomain.h \
 	ACLSourceIP.cc \
 	ACLSourceIP.h \
+	ACLStrategised.cc \
+	ACLStrategised.h \
+	ACLTime.cc \
+	ACLTime.h \
+	ACLTimeData.cc \
+	ACLTimeData.h \
+	ACLUrl.cc \
+	ACLUrl.h \
+	ACLUrlPath.cc \
+	ACLUrlPath.h \
 	ACLUserData.cc \
 	ACLUserData.h 
 
