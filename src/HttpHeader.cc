@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.66 2000/03/06 16:23:28 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.67 2000/09/11 22:10:02 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -101,6 +101,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
     {"Pragma", HDR_PRAGMA, ftStr},
     {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
+    {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
     {"Proxy-Authorization", HDR_PROXY_AUTHORIZATION, ftStr},
     {"Proxy-Connection", HDR_PROXY_CONNECTION, ftStr},
     {"Public", HDR_PUBLIC, ftStr},
@@ -117,6 +118,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Via", HDR_VIA, ftStr},	/* for now */
     {"Warning", HDR_WARNING, ftStr},	/* for now */
     {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
+    {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
     {"X-Cache", HDR_X_CACHE, ftStr},
     {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
     {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
@@ -149,6 +151,8 @@ static http_hdr_type ListHeadersArr[] =
     HDR_VIA,
     /* HDR_WARNING, */
     HDR_WWW_AUTHENTICATE,
+    HDR_AUTHENTICATION_INFO,
+    HDR_PROXY_AUTHENTICATION_INFO,
     /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
     HDR_X_FORWARDED_FOR
 };
