@@ -33,17 +33,48 @@
  * or (at your option) any later version.
  */
 
+#include "util.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#ifdef _SQUID_MSWIN_ /* Native Windows port and MinGW */
+
+#define snprintf _snprintf
+#include <windows.h>
+#include <winldap.h>
+#ifndef LDAPAPI
+#define LDAPAPI __cdecl
+#endif
+#ifdef LDAP_VERSION3
+#define LDAP_OPT_SUCCESS LDAP_SUCCESS
+/* Some tricks to allow dynamic bind with ldap_start_tls_s entry point at
+   run time.
+ */
+#undef ldap_start_tls_s
+#if LDAP_UNICODE
+#define LDAP_START_TLS_S "ldap_start_tls_sW"
+typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
+#else
+#define LDAP_START_TLS_S "ldap_start_tls_sA"
+typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
+#endif /* LDAP_UNICODE */
+PFldap_start_tls_s Win32_ldap_start_tls_s;
+#define ldap_start_tls_s(l,s,c) Win32_ldap_start_tls_s(l,NULL,NULL,s,c)
+#endif /* LDAP_VERSION3 */
+
+#else
+
 #include <lber.h>
 #include <ldap.h>
+
+#endif
+
 #if defined(LDAP_OPT_NETWORK_TIMEOUT)
 #include <sys/time.h>
 #endif
-
-#include "util.h"
 
 #define PROGRAM_NAME "squid_ldap_group"
 
@@ -387,6 +418,23 @@ main(int argc, char **argv)
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd or -D binddn -W secretfile options\n\n");
 	exit(1);
     }
+
+/* On Windows ldap_start_tls_s is available starting from Windows XP, 
+   so we need to bind at run-time with the function entry point
+ */
+#ifdef _SQUID_MSWIN_
+    if (use_tls) {
+
+    	HMODULE WLDAP32Handle;
+
+	WLDAP32Handle = GetModuleHandle("wldap32");
+        if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
+            fprintf( stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
+	    exit(1);
+        }
+    }
+#endif
+
     while (fgets(buf, 256, stdin) != NULL) {
 	int found = 0;
 	if (!strchr(buf, '\n')) {
