@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.365 2003/02/06 23:13:00 robertc Exp $
+ * $Id: main.cc,v 1.366 2003/02/15 18:13:35 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -362,12 +362,7 @@ mainReconfigure(void)
     wccpInit();
 #endif
     serverConnectionsOpen();
-    if (theOutIcpConnection >= 0) {
-	if (!Config2.Accel.on || Config.onoff.accel_with_proxy)
-	    neighbors_open(theOutIcpConnection);
-	else
-	    debug(1, 1) ("ICP port disabled in httpd_accelerator mode\n");
-    }
+    neighbors_init();
     storeDirOpenSwapLogs();
     mimeInit(Config.mimeTablePathname);
     writePidFile();		/* write PID file */
@@ -526,12 +521,7 @@ mainInitialize(void)
     wccpInit();
 #endif
     serverConnectionsOpen();
-    if (theOutIcpConnection >= 0) {
-	if (!Config2.Accel.on || Config.onoff.accel_with_proxy)
-	    neighbors_open(theOutIcpConnection);
-	else
-	    debug(1, 1) ("ICP port disabled in httpd_accelerator mode\n");
-    }
+    neighbors_init();
     if (Config.chroot_dir)
 	no_suid();
     if (!configured_once)
