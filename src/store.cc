@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.431 1998/07/22 20:37:55 wessels Exp $
+ * $Id: store.cc,v 1.432 1998/07/22 22:25:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -829,6 +829,8 @@ storeCheckExpired(const StoreEntry * e)
 {
     if (storeEntryLocked(e))
 	return 0;
+    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+	return 1;
     if (EBIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
     if (squid_curtime - e->lastref > storeExpiredReferenceAge())
