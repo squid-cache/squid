@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.197 1998/07/31 20:52:57 wessels Exp $
+ * $Id: ipcache.cc,v 1.198 1998/07/31 21:15:57 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -893,6 +893,11 @@ static void
 ipcacheFreeEntry(void *data)
 {
     ipcache_entry *i = data;
+    ip_pending *p;
+    while ((p = i->pending_head)) {
+	i->pending_head = p->next;
+	memFree(MEM_IPCACHE_PENDING, p);
+    }
     safe_free(i->addrs.in_addrs);
     safe_free(i->addrs.bad_mask);
     safe_free(i->name);

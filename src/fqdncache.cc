@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.110 1998/07/29 03:57:38 wessels Exp $
+ * $Id: fqdncache.cc,v 1.111 1998/07/31 21:15:58 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -730,7 +730,12 @@ static void
 fqdncacheFreeEntry(void *data)
 {
     fqdncache_entry *f = data;
+    fqdn_pending *p = NULL;
     int k;
+    while ((p = f->pending_head)) {
+	f->pending_head = p->next;
+	memFree(MEM_FQDNCACHE_PENDING, p);
+    }
     for (k = 0; k < (int) f->name_count; k++)
 	safe_free(f->names[k]);
     safe_free(f->name);
