@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.66 1998/05/11 18:44:33 rousskov Exp $
+ * $Id: client.cc,v 1.67 1998/05/15 20:02:10 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -343,6 +343,7 @@ main(int argc, char *argv[])
 	}
 	if (put_file) {
 	    int x;
+	    lseek(put_fd, 0, SEEK_SET);
 	    while ((x = read(put_fd, msg, BUFSIZ)) > 0) {
 		x = write(conn, msg, x);
 		total_bytes += x;
@@ -351,7 +352,6 @@ main(int argc, char *argv[])
 	    }
 	    if (x != 0)
 		fprintf(stderr, "client: ERROR: Cannot send file.\n");
-	    close(put_fd);
 	}
 	/* Read the data */
 
