@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid SASL authentication helper
 #
-#  $Id: Makefile.in,v 1.8 2002/04/13 15:37:57 hno Exp $
+#  $Id: Makefile.in,v 1.9 2002/04/15 00:17:19 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -127,6 +127,7 @@ INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 
 libexec_PROGRAMS = sasl_auth
 LDADD = -lsasl $(XTRA_LIBS)
+EXTRA_DIST = squid_sasl_auth squid_sasl_auth.conf
 subdir = src/auth/basic/helpers/SASL
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
