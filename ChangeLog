@@ -1,6 +1,9 @@
+Changes to squid-1.1.beta12 (October 31, 1996):
 
 	- Fixed ICMP 'pinger' failure detection.
 	- Fixed handling of no-cache for negative-cached objects.
+	- Replaced protoUnregister() call in icpDetectClientClose().
+	- Fixed calling storeReleaseRequest() on unlocked objects.
 
 Changes to squid-1.1.beta11 (October 29, 1996):
 
