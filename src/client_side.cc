@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.581 2002/06/24 06:07:38 hno Exp $
+ * $Id: client_side.cc,v 1.582 2002/07/20 12:30:04 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -213,7 +213,7 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     h->sc = storeClientListAdd(e, h);
 #if DELAY_POOLS
-    delaySetStoreClient(h->sc, delayClient(h->request));
+    delaySetStoreClient(h->sc, delayClient(h));
 #endif
     h->reqofs = 0;
     h->reqsize = 0;
@@ -404,7 +404,7 @@ clientProcessExpired(void *data)
     http->sc = storeClientListAdd(entry, http);
 #if DELAY_POOLS
     /* delay_id is already set on original store client */
-    delaySetStoreClient(http->sc, delayClient(http->request));
+    delaySetStoreClient(http->sc, delayClient(http));
 #endif
     http->request->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %ld\n", (long int) entry->lastmod);
@@ -1924,7 +1924,6 @@ clientProcessRequest(clientHttpRequest * http)
 {
     char *url = http->uri;
     request_t *r = http->request;
-    int fd = http->conn->fd;
     HttpReply *rep;
     http_version_t version;
     debug(33, 4) ("clientProcessRequest: %s '%s'\n",
@@ -1932,7 +1931,7 @@ clientProcessRequest(clientHttpRequest * http)
 	url);
     if (r->method == METHOD_CONNECT) {
 	http->log_type = LOG_TCP_MISS;
-	sslStart(fd, url, r, &http->out.size, &http->al.http.code);
+	sslStart(http, &http->out.size, &http->al.http.code);
 	return;
     } else if (r->method == METHOD_PURGE) {
 	clientPurgeRequest(http);
@@ -1967,7 +1966,7 @@ clientProcessRequest(clientHttpRequest * http)
 	http->entry->mem_obj->method = r->method;
 	http->sc = storeClientListAdd(http->entry, http);
 #if DELAY_POOLS
-	delaySetStoreClient(http->sc, delayClient(r));
+	delaySetStoreClient(http->sc, delayClient(http));
 #endif
 	assert(http->log_type == LOG_TCP_HIT);
 	http->reqofs = 0;
