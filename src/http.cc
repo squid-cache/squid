@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.361 2000/05/16 07:06:04 wessels Exp $
+ * $Id: http.cc,v 1.362 2000/05/16 07:09:34 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -329,7 +329,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     assert(httpState->reply_hdr_state == 0);
     hdr_len = httpState->reply_hdr_size;
     room = 8191 - hdr_len;
-    memcpy(httpState->reply_hdr + hdr_len, buf, room < size ? room : size);
+    xmemcpy(httpState->reply_hdr + hdr_len, buf, room < size ? room : size);
     hdr_len += room < size ? room : size;
     httpState->reply_hdr[hdr_len] = '\0';
     httpState->reply_hdr_size = hdr_len;

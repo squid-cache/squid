@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.218 2000/05/12 00:29:06 wessels Exp $
+ * $Id: acl.cc,v 1.219 2000/05/16 07:09:33 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -2419,7 +2419,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
     ipAddr.sin_port = 0;
     ipAddr.sin_addr = c;
     memset(&arpReq, '\0', sizeof(arpReq));
-    memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
     /* Query ARP table */
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
 	/* Skip non-ethernet interfaces */
@@ -2465,7 +2465,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
 	ipAddr.sin_port = 0;
 	ipAddr.sin_addr = c;
 	memset(&arpReq, '\0', sizeof(arpReq));
-	memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+	xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
 	strncpy(arpReq.arp_dev, ifr->ifr_name, sizeof(arpReq.arp_dev) - 1);
 	arpReq.arp_dev[sizeof(arpReq.arp_dev) - 1] = '\0';
 	/* Query ARP table */
@@ -2522,7 +2522,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
     ipAddr.sin_port = 0;
     ipAddr.sin_addr = c;
     memset(&arpReq, '\0', sizeof(arpReq));
-    memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
     /* Query ARP table */
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
 	/*
