@@ -97,6 +97,7 @@ static int opt_ims = 0;
 static int opt_range = 0;
 static int max_connections = 64;
 static time_t lifetime = 60;
+static time_t process_lifetime = 86400;
 static struct timeval now;
 static long total_bytes_written = 0;
 static long total_bytes_read = 0;
@@ -446,7 +447,7 @@ main(argc, argv)
     progname = strdup(argv[0]);
     gettimeofday(&now, NULL);
     start = last = now;
-    while ((c = getopt(argc, argv, "p:h:n:icrl:t:")) != -1) {
+    while ((c = getopt(argc, argv, "p:h:n:icrl:L:t:")) != -1) {
 	switch (c) {
 	case 'p':
 	    proxy_port = atoi(optarg);
@@ -462,6 +463,9 @@ main(argc, argv)
 	    break;
 	case 'l':
 	    lifetime = (time_t) atoi(optarg);
+	    break;
+	case 'L':
+	    process_lifetime = (time_t) atoi(optarg);
 	    break;
 	case 'c':
 	    opt_checksum = 1;
@@ -532,6 +536,8 @@ main(argc, argv)
 		(int)total_bytes_read / 1024 / 1024,
 		(int)total_bytes_read / 1024 / dt);
 	    reqpersec = 0;
+	    if (dt > process_lifetime)
+		exit(0);
 	}
     }
     return 0;
