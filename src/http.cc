@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.283 1998/06/04 20:03:07 wessels Exp $
+ * $Id: http.cc,v 1.284 1998/06/09 05:22:05 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -128,7 +128,6 @@ static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
 static STABH httpAbort;
-static HttpStateData *httpBuildState(int, StoreEntry *, request_t *, peer *);
 static int httpSocketOpen(StoreEntry *, request_t *);
 static void httpRestart(HttpStateData *);
 static int httpTryRestart(HttpStateData *);
@@ -141,7 +140,6 @@ httpStateFree(int fdnotused, void *data)
     if (httpState == NULL)
 	return;
     storeUnregisterAbort(httpState->entry);
-    assert(httpState->entry->store_status != STORE_PENDING);
     storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
 	memFree(MEM_8K_BUF, httpState->reply_hdr);
@@ -436,7 +434,6 @@ httpReadReply(int fd, void *data)
     int len;
     int bin;
     int clen;
-    ErrorState *err;
     if (fwdAbortFetch(entry)) {
 	storeAbort(entry, 0);
 	comm_close(fd);
@@ -472,29 +469,17 @@ httpReadReply(int fd, void *data)
 	    fd, xstrerror());
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
-	} else if (entry->mem_obj->inmem_hi == 0 && httpTryRestart(httpState)) {
-	    httpRestart(httpState);
-	} else if (clen == 0) {
-	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
-	    err->xerrno = errno;
-	    err->request = requestLink(httpState->orig_request);
-	    errorAppendEntry(entry, err);
+	} else if (entry->mem_obj->inmem_hi == 0) {
+	    fwdFail(httpState->fwdState, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
 	    comm_close(fd);
 	} else {
 	    storeAbort(entry, 0);
 	    comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
-	if (httpTryRestart(httpState)) {
-	    httpRestart(httpState);
-	} else {
-	    httpState->eof = 1;
-	    err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
-	    err->xerrno = errno;
-	    err->request = requestLink(httpState->orig_request);
-	    errorAppendEntry(entry, err);
-	    comm_close(fd);
-	}
+	fwdFail(httpState->fwdState, ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, errno);
+	httpState->eof = 1;
+	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	httpState->eof = 1;
@@ -827,46 +812,49 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
     return fd;
 }
 
-static HttpStateData *
-httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
+void
+httpStart(FwdState * fwdState, int fd)
 {
     HttpStateData *httpState = memAllocate(MEM_HTTP_STATE_DATA);
-    request_t *request;
-    storeLockObject(entry);
-    cbdataAdd(httpState, MEM_HTTP_STATE_DATA);
-    httpState->entry = entry;
-    httpState->fd = fd;
-    if (e) {
-	request = requestCreate(
-	    orig_request->method, PROTO_NONE, storeUrl(entry));
-	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
-	request->port = e->http_port;
-	httpState->request = requestLink(request);
-	httpState->peer = e;
-	httpState->orig_request = requestLink(orig_request);
-	EBIT_SET(request->flags, REQ_PROXYING);
-    } else {
-	httpState->request = requestLink(orig_request);
-	httpState->orig_request = requestLink(orig_request);
-    }
-    /* register the handler to free HTTP state data when the FD closes */
-    comm_add_close_handler(httpState->fd, httpStateFree, httpState);
-    storeRegisterAbort(entry, httpAbort, httpState);
-    return httpState;
-}
-
-void
-httpStart(request_t * request, StoreEntry * entry, peer * e, int fd)
-{
-    HttpStateData *httpState;
+    request_t *proxy_req;
+    request_t *orig_req = fwdState->request;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
-	RequestMethodStr[request->method], storeUrl(entry));
+	RequestMethodStr[orig_req->method],
+	storeUrl(fwdState->entry));
+    cbdataAdd(httpState, MEM_HTTP_STATE_DATA);
+    storeLockObject(fwdState->entry);
+    httpState->fwdState = fwdState;
+    httpState->entry = fwdState->entry;
+    httpState->fd = fd;
+    if (fwdState->servers)
+	httpState->peer = fwdState->servers->peer;	/* might be NULL */
+    if (httpState->peer) {
+	proxy_req = requestCreate(orig_req->method,
+	    PROTO_NONE, storeUrl(httpState->entry));
+	xstrncpy(proxy_req->host, httpState->peer->host, SQUIDHOSTNAMELEN);
+	proxy_req->port = httpState->peer->http_port;
+	httpState->request = requestLink(proxy_req);
+	httpState->peer = httpState->peer;
+	httpState->orig_request = requestLink(orig_req);
+	EBIT_SET(proxy_req->flags, REQ_PROXYING);
+	/*
+	 * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
+	 * We might end up getting the object from somewhere else if,
+	 * for example, the request to this neighbor fails.
+	 */
+	if (EBIT_TEST(httpState->peer->options, NEIGHBOR_PROXY_ONLY))
+	    storeReleaseRequest(httpState->entry);
+    } else {
+	httpState->request = requestLink(orig_req);
+	httpState->orig_request = requestLink(orig_req);
+    }
+    /*
+     * register the handler to free HTTP state data when the FD closes
+     */
+    comm_add_close_handler(fd, httpStateFree, httpState);
+    storeRegisterAbort(httpState->entry, httpAbort, httpState);
     Counter.server.all.requests++;
     Counter.server.http.requests++;
-    if (e)
-	if (EBIT_TEST(e->options, NEIGHBOR_PROXY_ONLY))
-	    storeReleaseRequest(entry);
-    httpState = httpBuildState(fd, entry, request, e);
     httpConnectDone(fd, COMM_OK, httpState);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.12 1998/06/03 15:52:16 rousskov Exp $
+ * $Id: HttpStatusLine.cc,v 1.13 1998/06/09 05:22:03 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -34,11 +34,6 @@
 
 /* local constants */
 const char *HttpStatusLineFormat = "HTTP/%3.1f %3d %s\r\n";
-
-/* local routines */
-static const char *httpStatusString(http_status status);
-
-
 
 void
 httpStatusLineInit(HttpStatusLine * sline)
@@ -101,7 +96,7 @@ httpStatusLineReason(const HttpStatusLine * sline)
     return sline->reason ? sline->reason : httpStatusString(sline->status);
 }
 
-static const char *
+const char *
 httpStatusString(http_status status)
 {
     /* why not to return matching string instead of using "p" ? @?@ */

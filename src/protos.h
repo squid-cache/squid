@@ -226,7 +226,7 @@ extern HASHHASH hash_url;
 extern HASHHASH hash4;
 
 extern int httpCachable(method_t);
-extern void httpStart(request_t *, StoreEntry *, peer *, int);
+extern void httpStart(FwdState *, int fd);
 extern void httpParseReplyHeaders(const char *, http_reply *);
 extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
 extern size_t httpBuildRequestPrefix(request_t * request,
@@ -258,6 +258,7 @@ extern int httpStatusLineParse(HttpStatusLine * sline, const char *start,
     const char *end);
 /* pack fields using Packer */
 extern void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
+extern const char *httpStatusString(http_status status);
 
 /* Http Body */
 /* init/clean */
@@ -590,6 +591,7 @@ extern void fwdStart(int, StoreEntry *, request_t *);
 extern int fwdUnregister(StoreEntry *, request_t *);
 extern int fwdAbortFetch(StoreEntry * entry);
 extern DEFER fwdCheckDeferRead;
+extern void fwdFail(FwdState *, int, http_status, int);
 
 extern void urnStart(request_t *, StoreEntry *);
 

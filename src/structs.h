@@ -642,6 +642,7 @@ struct _HttpStateData {
     request_t *orig_request;
     int fd;
     int flags;
+    FwdState *fwdState;
 };
 
 struct _icpUdpData {
@@ -1365,4 +1366,23 @@ struct _CacheDigest {
     int bits_per_entry;		/* number of bits allocated for each entry from capacity */
     int count;			/* number of digested entries */
     int del_count;		/* number of deletions performed so far */
+};
+
+struct _FwdState {
+    int client_fd;
+    StoreEntry *entry;
+    request_t *request;
+    FwdServer *servers;
+    struct {
+        int err_code;
+        http_status http_code;
+	int xerrno;
+    } fail;
+};
+
+struct _FwdServer {
+    char *host;
+    u_short port;
+    peer *peer;
+    struct _FwdServer *next;
 };
