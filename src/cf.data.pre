@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.171 2000/05/02 19:35:23 hno Exp $
+# $Id: cf.data.pre,v 1.172 2000/05/02 19:43:30 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -701,14 +701,19 @@ DEFAULT: none
 DOC_START
 	Location for the cache "swap.log."  This log file holds the
 	metadata of objects saved on disk.  It is used to rebuild the
-	cache during startup.  Normally this file resides in the first
+	cache during startup.  Normally this file resides in each
 	'cache_dir' directory, but you may specify an alternate
 	pathname here.  Note you must give a full filename, not just
 	a directory. Since this is the index for the whole object
 	list you CANNOT periodically rotate it!
 
-	If you have more than one 'cache_dir', these swap logs will
-	have names such as:
+	If %s can be used in the file name then it will be replaced with a
+	a representation of the cache_dir name where each / is replaced
+	with '.'. This is needed to allow adding/removing cache_dir
+	lines when cache_swap_log is being used.
+	    
+	If have more than one 'cache_dir', and %s is not used in the name
+	then these swap logs will have names such as:
 
 		cache_swap_log.00
 		cache_swap_log.01
