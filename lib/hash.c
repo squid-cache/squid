@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.5 1998/09/23 20:45:10 wessels Exp $
+ * $Id: hash.c,v 1.6 1998/10/08 20:10:13 wessels Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -335,10 +335,10 @@ hashPrime(int n)
     int I = sizeof(hash_primes) / sizeof(int);
     int i;
     int best_prime = hash_primes[0];
-    double min = fabs(log(n) - log(hash_primes[0]));
+    double min = fabs(log((double) n) - log((double) hash_primes[0]));
     double d;
     for (i = 0; i < I; i++) {
-	d = fabs(log(n) - log(hash_primes[i]));
+	d = fabs(log((double) n) - log((double) hash_primes[i]));
 	if (d > min)
 	    continue;
 	min = d;

@@ -55,6 +55,10 @@ Changes to Squid-2.0 (October 2, 1998):
 	- Fixed ncsa_auth hash bugs when re-reading password file.
 	- Changed clientHierarchical() so that by default SSL/CONNECT
 	  requests do NOT go to neighbor caches.
+	- Changed clientHandleIMSReply() to not call storeAbort()
+	  because there can be more than one client hanging on the
+	  StoreEntry.  This hopefully fixes "store_status !=
+	  STORE_ABORTED" assertions.
 
 Changes to squid-1.2.beta25 (September 21, 1998):
 

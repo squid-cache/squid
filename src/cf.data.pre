@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.116 1998/09/30 02:53:20 wessels Exp $
+# $Id: cf.data.pre,v 1.117 1998/10/08 20:10:15 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1362,8 +1362,8 @@ DOC_START
 	  # example for routing all requests for AS#1241 and only 
 	  # those to mycache.mydomain.net:
 	  # acl asexample dst_as 1241
-	  # cache_peer_access allow mycache.mydomain.net asexample
-	  # cache_peer_access deny mycache_mydomain.net all
+	  # cache_peer_access mycache.mydomain.net allow asexample
+	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname proxy_auth [ refresh ]
 	  # Use an EXTERNAL authentication program to check username/password
