@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.13 1997/06/04 06:16:05 wessels Exp $
+ * $Id: peer_select.cc,v 1.14 1997/06/18 00:20:01 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -73,7 +73,8 @@ peerSelectStateFree(ps_state * psstate)
 	aclChecklistFree(psstate->acl_checklist);
     }
     requestUnlink(psstate->request);
-    xfree(psstate);
+    psstate->request = NULL;
+    cbdataFree(psstate);
 }
 
 int
@@ -138,11 +139,13 @@ peerSelect(request_t * request,
     void *callback_data)
 {
     ps_state *psstate = xcalloc(1, sizeof(ps_state));
+    cbdataAdd(psstate);
     psstate->request = requestLink(request);
     psstate->entry = entry;
     psstate->callback = callback;
     psstate->fail_callback = fail_callback;
     psstate->callback_data = callback_data;
+    cbdataLock(callback_data);
     psstate->icp.start = current_time;
     peerSelectFoo(psstate);
 }
@@ -171,12 +174,15 @@ static void
 peerSelectCallback(ps_state * psstate, peer * p)
 {
     StoreEntry *entry = psstate->entry;
+    void *data = psstate->callback_data;
     if (entry) {
 	if (entry->ping_status == PING_WAITING)
 	    eventDelete(peerPingTimeout, psstate);
 	entry->ping_status = PING_DONE;
     }
-    psstate->callback(p, psstate->callback_data);
+    if (cbdataValid(data))
+        psstate->callback(p, data);
+    cbdataUnlock(data);
     peerSelectStateFree(psstate);
 }
 
@@ -184,12 +190,15 @@ static void
 peerSelectCallbackFail(ps_state * psstate)
 {
     request_t *request = psstate->request;
+    void *data = psstate->callback_data;
     char *url = psstate->entry ? psstate->entry->url : urlCanonical(request, NULL);
     debug(44, 1) ("Failed to select source for '%s'\n", url);
     debug(44, 1) ("  always_direct = %d\n", psstate->always_direct);
     debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);
     debug(44, 1) ("        timeout = %d\n", psstate->icp.timeout);
-    psstate->fail_callback(NULL, psstate->callback_data);
+    if (cbdataValid(data))
+        psstate->fail_callback(NULL, data);
+    cbdataUnlock(data);
     peerSelectStateFree(psstate);
 }
 

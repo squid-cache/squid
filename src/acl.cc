@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.98 1997/06/17 03:03:20 wessels Exp $
+ * $Id: acl.cc,v 1.99 1997/06/18 00:19:51 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1176,8 +1176,7 @@ aclCheck(aclCheck_t * checklist)
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
 	    ipcache_nbgethostbyname(checklist->request->host,
 		aclLookupDstIPDone,
-		checklist,
-		&checklist->cbm_list);
+		checklist);
 	    return;
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
@@ -1216,16 +1215,20 @@ aclChecklistFree(aclCheck_t * checklist)
 	fqdncacheUnregister(checklist->src_addr, checklist);
     if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_PENDING)
 	fqdncacheUnregister(checklist->dst_addr, checklist);
+    if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_PENDING)
+        ipcacheUnregister(checklist->request->host, checklist);
     requestUnlink(checklist->request);
-    callbackUnlinkList(checklist->cbm_list);
-    xfree(checklist);
+    checklist->request = NULL;
+    cbdataFree(checklist);
 }
 
 static void
 aclCheckCallback(aclCheck_t * checklist, int answer)
 {
     debug(28, 3) ("aclCheckCallback: answer=%d\n", answer);
-    checklist->callback(answer, checklist->callback_data);
+    if (cbdataValid(checklist->callback_data))
+        checklist->callback(answer, checklist->callback_data);
+    cbdataUnlock(checklist->callback_data);
     checklist->callback = NULL;
     checklist->callback_data = NULL;
     aclChecklistFree(checklist);
@@ -1263,6 +1266,7 @@ aclChecklistCreate(const struct _acl_access *A,
     char *ident)
 {
     aclCheck_t *checklist = xcalloc(1, sizeof(aclCheck_t));;
+    cbdataAdd(checklist);
     checklist->access_list = A;
     checklist->request = requestLink(request);
     checklist->src_addr = src_addr;
@@ -1278,6 +1282,7 @@ aclNBCheck(aclCheck_t * checklist, PF callback, void *callback_data)
 {
     checklist->callback = callback;
     checklist->callback_data = callback_data;
+    cbdataLock(callback_data);
     aclCheck(checklist);
 }
 

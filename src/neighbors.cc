@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.145 1997/06/17 03:03:24 wessels Exp $
+ * $Id: neighbors.cc,v 1.146 1997/06/18 00:19:58 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -757,6 +757,7 @@ neighborAdd(const char *host,
 	}
     }
     p = xcalloc(1, sizeof(peer));
+    cbdataAdd(p);
     p->http_port = http_port;
     p->icp_port = icp_port;
     p->mcast.ttl = mcast_ttl;
@@ -923,9 +924,10 @@ peerDestroy(peer * p)
 	safe_free(l->domain);
 	safe_free(l);
     }
-    callbackUnlinkList(p->cbm_list);
+    if (p->ip_lookup_pending)
+        ipcacheUnregister(p->host, p);
     safe_free(p->host);
-    safe_free(p);
+    cbdataFree(p);
 }
 
 static void
@@ -934,6 +936,7 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     peer *p = data;
     struct sockaddr_in *ap;
     int j;
+    p->ip_lookup_pending = 0;
     if (p->n_addresses == 0) {
 	debug(15, 1) ("Configuring %s %s/%d/%d\n", neighborTypeStr(p),
 	    p->host, p->http_port, p->icp_port);
@@ -970,9 +973,10 @@ peerRefreshDNS(void *junk)
     peer *next = Peers.peers_head;
     while ((p = next)) {
 	next = p->next;
+        p->ip_lookup_pending = 1;
 	/* some random, bogus FD for ipcache */
 	p->test_fd = Squid_MaxFD + current_time.tv_usec;
-	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p, &p->cbm_list);
+	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     }
     /* Reconfigure the peers every hour */
     eventAdd("peerRefreshDNS", peerRefreshDNS, NULL, 3600);
@@ -987,14 +991,16 @@ peerCheckConnect(void *data)
 	0, COMM_NONBLOCKING, p->host);
     if (fd < 0)
 	return;
+    p->ip_lookup_pending = 1;
     p->test_fd = fd;
-    ipcache_nbgethostbyname(p->host, peerCheckConnect2, p, &p->cbm_list);
+    ipcache_nbgethostbyname(p->host, peerCheckConnect2, p);
 }
 
 static void
 peerCheckConnect2(const ipcache_addrs * ia, void *data)
 {
     peer *p = data;
+    p->ip_lookup_pending = 0;
     commConnectStart(p->test_fd,
 	p->host,
 	p->http_port,

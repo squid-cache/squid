@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.123 1997/06/17 04:54:11 wessels Exp $
+ * $Id: ipcache.cc,v 1.124 1997/06/18 00:19:56 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -108,7 +108,7 @@
 
 struct _ip_pending {
     IPH *handler;
-    callback_meta *cbm;
+    void *handlerData;
     struct _ip_pending *next;
 };
 
@@ -147,7 +147,7 @@ static int ipcacheHasPending _PARAMS((ipcache_entry *));
 static ipcache_entry *ipcache_get _PARAMS((const char *));
 static IPH dummy_handler;
 static int ipcacheExpiredEntry _PARAMS((ipcache_entry *));
-static void ipcacheAddPending _PARAMS((ipcache_entry *, IPH *, void *, callback_meta **));
+static void ipcacheAddPending _PARAMS((ipcache_entry *, IPH *, void *));
 static void ipcacheEnqueue _PARAMS((ipcache_entry *));
 static void *ipcacheDequeue _PARAMS((void));
 static void ipcache_dnsDispatch _PARAMS((dnsserver_t *, ipcache_entry *));
@@ -156,7 +156,6 @@ static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
 static void ipcacheLockEntry _PARAMS((ipcache_entry *));
 static void ipcacheNudgeQueue _PARAMS((void));
 static void ipcacheChangeKey _PARAMS((ipcache_entry * i));
-static UNREG ipcacheUnregister;
 
 static ipcache_addrs static_addrs;
 static hash_table * ip_table = NULL;
@@ -448,25 +447,27 @@ ipcache_call_pending(ipcache_entry * i)
 {
     struct _ip_pending *p = NULL;
     int nhandler = 0;
-    void *handlerData;
     i->lastref = squid_curtime;
     ipcacheLockEntry(i);
     while (i->pending_head != NULL) {
-	p = i->pending_head;
-	i->pending_head = p->next;
-	handlerData = callbackCheck(p->cbm);
-	if (p->handler && handlerData) {
-	    nhandler++;
-	    dns_error_message = i->error_message;
-	    p->handler(i->status == IP_CACHED ? &i->addrs : NULL, handlerData);
-	}
-        callbackUnlink(p->cbm);
-	safe_free(p);
+        p = i->pending_head;
+        i->pending_head = p->next;
+        if (p->handler) {
+            nhandler++;
+            dns_error_message = i->error_message;
+ 	    if (cbdataValid(p->handlerData)) {
+                p->handler(i->status == IP_CACHED ? &i->addrs : NULL,
+                    p->handlerData);
+	    }
+            cbdataUnlock(p->handlerData);
+        }
+        safe_free(p);
     }
-    i->pending_head = NULL;	/* nuke list */
+    i->pending_head = NULL;     /* nuke list */
     debug(14, 10) ("ipcache_call_pending: Called %d handlers.\n", nhandler);
     ipcacheUnlockEntry(i);
 }
+
 
 static ipcache_entry *
 ipcache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
@@ -627,13 +628,14 @@ ipcache_dnsHandleRead(int fd, void *data)
 }
 
 static void
-ipcacheAddPending(ipcache_entry * i, IPH * handler, void *handlerData, callback_meta **head)
+ipcacheAddPending(ipcache_entry * i, IPH * handler, void *handlerData)
 {
     struct _ip_pending *pending = xcalloc(1, sizeof(struct _ip_pending));
     struct _ip_pending **I = NULL;
     i->lastref = squid_curtime;
     pending->handler = handler;
-    pending->cbm = callbackRegister(handlerData, ipcacheUnregister, pending, head);
+    pending->handlerData = handlerData;
+    cbdataLock(handlerData);
     for (I = &(i->pending_head); *I; I = &((*I)->next));
     *I = pending;
     if (i->status == IP_PENDING)
@@ -641,7 +643,7 @@ ipcacheAddPending(ipcache_entry * i, IPH * handler, void *handlerData, callback_
 }
 
 void
-ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, callback_meta **cbmhead)
+ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 {
     ipcache_entry *i = NULL;
     dnsserver_t *dnsData = NULL;
@@ -673,7 +675,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, call
 	debug(14, 5) ("ipcache_nbgethostbyname: MISS for '%s'\n", name);
 	IpcacheStats.misses++;
 	i = ipcacheAddNew(name, NULL, IP_PENDING);
-	ipcacheAddPending(i, handler, handlerData, cbmhead);
+	ipcacheAddPending(i, handler, handlerData);
     } else if (i->status == IP_CACHED || i->status == IP_NEGATIVE_CACHED) {
 	/* HIT */
 	debug(14, 4) ("ipcache_nbgethostbyname: HIT for '%s'\n", name);
@@ -681,13 +683,13 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, call
 	    IpcacheStats.negative_hits++;
 	else
 	    IpcacheStats.hits++;
-	ipcacheAddPending(i, handler, handlerData, cbmhead);
+	ipcacheAddPending(i, handler, handlerData);
 	ipcache_call_pending(i);
 	return;
     } else if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
 	debug(14, 4) ("ipcache_nbgethostbyname: PENDING for '%s'\n", name);
 	IpcacheStats.pending_hits++;
-	ipcacheAddPending(i, handler, handlerData, cbmhead);
+	ipcacheAddPending(i, handler, handlerData);
 	if (squid_curtime - i->expires > 600) {
 	    debug(14, 0) ("ipcache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name, squid_curtime + Config.negativeDnsTtl - i->expires);
 	    ipcacheChangeKey(i);
@@ -778,12 +780,27 @@ ipcache_init(void)
 	    (float) Config.ipcache.low) / (float) 100);
 }
 
-static void
-ipcacheUnregister(void *data)
+int
+ipcacheUnregister(const char *name, void *data)
 {
-    struct _ip_pending *p = data;
-    p->handler = NULL;
-    debug(14, 3) ("ipcacheUnregister: unregistered something\n");
+    ipcache_entry *i = NULL;
+    struct _ip_pending *p = NULL;
+    int n = 0;
+    debug(14, 3) ("ipcacheUnregister: FD %d, name '%s'\n", name);
+    if ((i = ipcache_get(name)) == NULL)
+        return 0;
+    if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
+        for (p = i->pending_head; p; p = p->next) {
+            if (p->handlerData != data)
+                continue;
+            p->handler = NULL;
+            n++;
+        }
+    }
+    if (n == 0)
+        debug_trap("ipcacheUnregister: callback data not found");
+    debug(14, 3) ("ipcacheUnregister: unregistered %d handlers\n", n);
+    return n;
 }
 
 const ipcache_addrs *
@@ -858,7 +875,7 @@ ipcache_gethostbyname(const char *name, int flags)
 	}
     }
     if (flags & IP_LOOKUP_IF_MISS)
-	ipcache_nbgethostbyname(name, dummy_handler, NULL, NULL);
+	ipcache_nbgethostbyname(name, dummy_handler, NULL);
     return NULL;
 }
 
