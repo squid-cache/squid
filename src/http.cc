@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.228 1997/12/04 23:07:52 wessels Exp $
+ * $Id: http.cc,v 1.229 1997/12/06 01:26:16 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -222,6 +222,7 @@ httpStateFree(int fdnotused, void *data)
     if (httpState == NULL)
 	return;
     storeUnregisterAbort(httpState->entry);
+    assert(httpState->entry->store_status != STORE_PENDING);
     storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
 	put_free_8k_page(httpState->reply_hdr);
