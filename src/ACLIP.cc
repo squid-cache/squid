@@ -399,7 +399,7 @@ ACLIP::match(struct in_addr &clientip)
     return !splayLastResult;
 }
 
-MemPool *acl_ip_data::Pool(NULL);
+MemPool (*acl_ip_data::Pool)(NULL);
 void *
 acl_ip_data::operator new (size_t byteCount)
 {

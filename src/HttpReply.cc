@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.60 2003/05/11 13:53:03 hno Exp $
+ * $Id: HttpReply.cc,v 1.61 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -599,7 +599,7 @@ httpReplyBodySize(method_t method, HttpReply const * reply)
     return reply->content_length;
 }
 
-MemPool *HttpReply::Pool(NULL);
+MemPool (*HttpReply::Pool)(NULL);
 void *
 HttpReply::operator new (size_t byteCount)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.2 2003/03/01 11:04:45 hno Exp $
+ * $Id: ACLARP.cc,v 1.3 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -84,7 +84,7 @@ ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
     assert (!old.data);
 }
 
-MemPool *ACLARP::Pool(NULL);
+MemPool (*ACLARP::Pool)(NULL);
 void *
 ACLARP::operator new (size_t byteCount)
 {

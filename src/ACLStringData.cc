@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStringData.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLStringData.cc,v 1.2 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,7 +38,7 @@
 #include "ACLStringData.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLStringData::Pool(NULL);
+MemPool (*ACLStringData::Pool)(NULL);
 void *
 ACLStringData::operator new (size_t byteCount)
 {

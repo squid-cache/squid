@@ -42,7 +42,7 @@
 #include "ACLUserData.h"
 #include "client_side.h"
 
-MemPool *ACLIdent::Pool(NULL);
+MemPool (*ACLIdent::Pool)(NULL);
 void *
 ACLIdent::operator new (size_t byteCount)
 {

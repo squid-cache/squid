@@ -1,5 +1,5 @@
 /*
- * $Id: ACLProtocolData.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLProtocolData.cc,v 1.2 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,7 +38,7 @@
 #include "ACLProtocolData.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLProtocolData::Pool(NULL);
+MemPool (*ACLProtocolData::Pool)(NULL);
 void *
 ACLProtocolData::operator new (size_t byteCount)
 {

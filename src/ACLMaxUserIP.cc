@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.2 2003/03/10 20:12:43 robertc Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.3 2003/07/14 08:21:57 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -54,7 +54,7 @@ ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(0
 ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) :class_ (old.class_), maximum (old.maximum), flags (old.flags)
 {}
 
-MemPool *ACLMaxUserIP::Pool(NULL);
+MemPool (*ACLMaxUserIP::Pool)(NULL);
 void *
 ACLMaxUserIP::operator new (size_t byteCount)
 {

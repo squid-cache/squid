@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.94 2003/07/11 04:55:40 robertc Exp $
+ * $Id: debug.cc,v 1.95 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -537,4 +537,4 @@ Debug::finishDebug() {
     CurrentDebug = NULL;
 }
 
-std::ostringstream *Debug::CurrentDebug = NULL;
+std::ostringstream (*Debug::CurrentDebug)(NULL);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.50 2003/07/13 23:00:09 robertc Exp $
+ * $Id: external_acl.cc,v 1.51 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -1231,7 +1231,7 @@ ACLExternal::ACLExternal (ACLExternal const & old) : data (NULL), class_ (old.cl
     assert (!old.data);
 }
 
-MemPool *ACLExternal::Pool(NULL);
+MemPool (*ACLExternal::Pool)(NULL);
 void *
 ACLExternal::operator new (size_t byteCount)
 {

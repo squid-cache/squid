@@ -1,5 +1,5 @@
 /*
- * $Id: ACLExtUser.cc,v 1.2 2003/07/11 01:40:34 robertc Exp $
+ * $Id: ACLExtUser.cc,v 1.3 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -43,7 +43,7 @@
 #include "client_side.h"
 #include "HttpRequest.h"
 
-MemPool *ACLExtUser::Pool(NULL);
+MemPool (*ACLExtUser::Pool)(NULL);
 void *
 ACLExtUser::operator new (size_t byteCount)
 {

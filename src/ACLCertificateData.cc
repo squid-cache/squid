@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.4 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLCertificateData.cc,v 1.5 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,7 +39,7 @@
 #include "authenticate.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLCertificateData::Pool(NULL);
+MemPool (*ACLCertificateData::Pool)(NULL);
 void *
 ACLCertificateData::operator new (size_t byteCount)
 {

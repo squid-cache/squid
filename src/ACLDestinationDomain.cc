@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.4 2003/07/11 01:40:34 robertc Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.5 2003/07/14 08:21:56 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -42,7 +42,7 @@
 #include "ACLDomainData.h"
 #include "HttpRequest.h"
 
-MemPool *ACLDestinationDomain::Pool(NULL);
+MemPool (*ACLDestinationDomain::Pool)(NULL);
 void *
 ACLDestinationDomain::operator new (size_t byteCount)
 {

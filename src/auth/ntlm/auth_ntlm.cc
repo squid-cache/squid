@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.32 2003/07/11 01:40:42 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.33 2003/07/14 08:21:58 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -1235,7 +1235,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
     return;
 }
 
-MemPool *ntlm_request_t::Pool(NULL);
+MemPool (*ntlm_request_t::Pool)(NULL);
 void *
 ntlm_request_t::operator new (size_t byteCount)
 {
