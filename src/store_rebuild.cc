@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.34 1998/04/22 16:24:16 rousskov Exp $
+ * $Id: store_rebuild.cc,v 1.35 1998/04/27 19:16:12 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -34,7 +34,7 @@
 
 
 typedef struct _rebuild_dir rebuild_dir;
-typedef RBHD(rebuild_dir * d);
+typedef int RBHD(rebuild_dir * d);
 
 struct _rebuild_dir {
     int dirn;

@@ -1564,11 +1564,12 @@ regex_compile(pattern, size, syntax, bufp)
 		if (syntax & RE_NO_BK_PARENS)
 		    goto normal_backslash;
 
-		if (COMPILE_STACK_EMPTY)
+		if (COMPILE_STACK_EMPTY) {
 		    if (syntax & RE_UNMATCHED_RIGHT_PAREN_ORD)
 			goto normal_backslash;
 		    else
 			return REG_ERPAREN;
+		}
 
 	      handle_close:
 		if (fixup_alt_jump) {	/* Push a dummy failure point at the end of the
@@ -1582,11 +1583,12 @@ regex_compile(pattern, size, syntax, bufp)
 		    STORE_JUMP(jump_past_alt, fixup_alt_jump, b - 1);
 		}
 		/* See similar code for backslashed left paren above.  */
-		if (COMPILE_STACK_EMPTY)
+		if (COMPILE_STACK_EMPTY) {
 		    if (syntax & RE_UNMATCHED_RIGHT_PAREN_ORD)
 			goto normal_char;
 		    else
 			return REG_ERPAREN;
+		}
 
 		/* Since we just checked for an empty stack above, this
 		 * ``can't happen''.  */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.19 1998/04/24 07:09:40 wessels Exp $
+ * $Id: peer_digest.cc,v 1.20 1998/04/27 19:16:10 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -208,7 +208,7 @@ peerDigestValidate(peer * p)
     }
     /* start request if needed */
     if (do_request) {
-	static nest_level = 0;
+	static int nest_level = 0;
 	nest_level++;
 	assert(nest_level == 1);
 	debug(72, 2) ("peerDigestValidate: %s requesting; old entry expires: %s\n",

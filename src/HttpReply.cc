@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.15 1998/04/06 22:32:09 wessels Exp $
+ * $Id: HttpReply.cc,v 1.16 1998/04/27 19:16:06 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -327,11 +327,12 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
 	rep->pstate++;
     }
     if (rep->pstate == psReadyToParseHeaders) {
-	if (!httpReplyIsolateHeaders(&parse_start, &blk_start, &blk_end))
+	if (!httpReplyIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
 	    if (atEnd)
 		blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
 	    else
 		return 0;
+	}
 	if (!httpHeaderParse(&rep->header, blk_start, blk_end))
 	    return httpReplyParseError(rep);
 

@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.9 1998/04/24 07:09:28 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.10 1998/04/27 19:16:05 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -119,13 +119,14 @@ strListGetItem(const char *str, char del, const char **item, int *ilen, const ch
 {
     size_t len;
     assert(str && item && pos);
-    if (*pos)
+    if (*pos) {
 	if (!**pos)		/* end of string */
 	    return 0;
 	else
 	    (*pos)++;
-    else
+    } else {
 	*pos = str;
+    }
 
     /* skip leading ws (ltrim) */
     *pos += xcountws(*pos);

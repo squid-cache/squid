@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.3 1998/04/08 17:22:13 wessels Exp $
+ * $Id: snmp_core.cc,v 1.4 1998/04/27 19:16:11 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -67,7 +67,7 @@ int snmp_dump_packet;
 void *users, *communities;
 
 static struct sockaddr_in local_snmpd;
-static snmp_init_config = 0;
+static int snmp_init_config = 0;
 struct snmp_session *Session;
 struct snmp_pdu *snmpAgentResponse(struct snmp_pdu *PDU);
 
