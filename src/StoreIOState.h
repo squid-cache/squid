@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.h,v 1.1 2002/12/27 10:26:33 robertc Exp $
+ * $Id: StoreIOState.h,v 1.2 2002/12/27 12:37:52 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -70,6 +70,7 @@ public:
 };
 
 class StoreIOState {
+public:
     typedef RefCount<storeIOState> Pointer;
 };
 
