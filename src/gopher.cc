@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.87 1997/07/14 23:45:00 wessels Exp $
+ * $Id: gopher.cc,v 1.88 1997/07/14 23:50:17 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -913,9 +913,8 @@ static void
 gopherConnectDone(int fd, int status, void *data)
 {
     GopherStateData *gopherState = data;
-    request_t *request = gopherState->request;
     if (status == COMM_ERR_DNS) {
-	debug(10, 4) ("gopherConnectDone: Unknown host: %s\n", request->host);
+	debug(10, 4) ("gopherConnectDone: Unknown host: %s\n", gopherState->host);
 	storeAbort(gopherState->entry, ERR_DNS_FAIL, dns_error_message, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
