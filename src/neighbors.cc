@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.132 1997/04/29 22:13:02 wessels Exp $
+ * $Id: neighbors.cc,v 1.133 1997/04/30 03:44:16 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -662,12 +662,6 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	debug(12, 1, "neighborsUdpAck: '%s' has no locks\n", url);
 	neighborCountIgnored(e, opcode);
 	return;
-    }
-    if (e && BIT_TEST(e->options, NEIGHBOR_MCAST_RESPONDER)) {
-	if (!peerHTTPOkay(e, mem->request)) {
-	    neighborCountIgnored(e, opcode);
-	    return;
-	}
     }
     debug(15, 3, "neighborsUdpAck: %s for '%s' from %s \n",
 	opcode_d, url, e ? e->host : "source");
