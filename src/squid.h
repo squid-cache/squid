@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.5 1996/03/28 03:02:11 wessels Exp $ */
+/* $Id: squid.h,v 1.6 1996/03/28 05:21:28 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -45,10 +45,6 @@
 #include <crypt.h>
 #endif
 
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
-
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -57,6 +53,11 @@
 #include <stdarg.h>
 #else
 #include <varargs.h>
+#endif
+
+/* Make sure syslog goes after stdarg/varargs */
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
 #endif
 
 #if !defined(MAXHOSTNAMELEN) || (MAXHOSTNAMELEN < 128)
