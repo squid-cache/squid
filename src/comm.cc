@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.389 2003/09/06 12:47:34 robertc Exp $
+ * $Id: comm.cc,v 1.390 2003/10/06 01:20:07 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1972,6 +1972,7 @@ comm_add_close_handler(int fd, PF * handler, void *data)
 void
 comm_remove_close_handler(int fd, PF * handler, void *data)
 {
+    assert (fdc_table[fd].active);
     close_handler *p;
     close_handler *last = NULL;
     /* Find handler in list */
