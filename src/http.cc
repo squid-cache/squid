@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.443 2005/01/06 13:16:39 serassio Exp $
+ * $Id: http.cc,v 1.444 2005/02/14 22:12:57 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -643,6 +643,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
      * not do 
      */
     HttpReply *reply = httpReplyCreate();
+    Ctx ctx = ctx_enter(entry->mem_obj->url);
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
                   entry->getMD5Text());
 
@@ -663,6 +664,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         reply_hdr_state += 2;
         memBufClean(&reply_hdr);
         failReply (reply, HTTP_INVALID_HEADER);
+        ctx_exit(ctx);
         return;
     }
 
@@ -680,6 +682,10 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
         failReply (reply, HTTP_HEADER_TOO_LARGE);
 
+        reply_hdr_state += 2;
+
+        ctx_exit(ctx);
+
         return;
     }
 
@@ -687,8 +693,10 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     if (!hdr_size) {
         if (eof)
             hdr_size = hdr_len;
-        else
+        else {
+            ctx_exit(ctx);
             return;		/* headers not complete */
+        }
     }
 
     /* Cut away any excess body data (only needed for debug?) */
@@ -699,8 +707,6 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     reply_hdr_state++;
 
     assert(reply_hdr_state == 1);
-
-    Ctx ctx = ctx_enter(entry->mem_obj->url);
 
     reply_hdr_state++;
 
@@ -714,6 +720,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     if (reply->sline.status >= HTTP_INVALID_HEADER) {
         debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'");
         failReply (reply, HTTP_INVALID_HEADER);
+        ctx_exit(ctx);
         return;
     }
 
