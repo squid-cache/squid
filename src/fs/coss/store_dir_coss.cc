@@ -1,8 +1,8 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.35 2002/06/26 09:55:57 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.36 2002/07/20 23:51:05 hno Exp $
  *
- * DEBUG: section 81    Store COSS Directory Routines
+ * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -132,10 +132,10 @@ storeCossDirOpenSwapLog(SwapDir * sd)
     path = storeCossDirSwapLogFile(sd, NULL);
     fd = file_open(path, O_WRONLY | O_CREAT | O_BINARY);
     if (fd < 0) {
-	debug(81, 1) ("%s: %s\n", path, xstrerror());
+	debug(79, 1) ("%s: %s\n", path, xstrerror());
 	fatal("storeCossDirOpenSwapLog: Failed to open swap log.");
     }
-    debug(81, 3) ("Cache COSS Dir #%d log opened on FD %d\n", sd->index, fd);
+    debug(79, 3) ("Cache COSS Dir #%d log opened on FD %d\n", sd->index, fd);
     cs->swaplog_fd = fd;
 }
 
@@ -146,7 +146,7 @@ storeCossDirCloseSwapLog(SwapDir * sd)
     if (cs->swaplog_fd < 0)	/* not open */
 	return;
     file_close(cs->swaplog_fd);
-    debug(81, 3) ("Cache COSS Dir #%d log closed on FD %d\n",
+    debug(79, 3) ("Cache COSS Dir #%d log closed on FD %d\n",
 	sd->index, cs->swaplog_fd);
     cs->swaplog_fd = -1;
 }
@@ -160,7 +160,7 @@ storeCossDirInit(SwapDir * sd)
     storeCossDirRebuild(sd);
     cs->fd = file_open(sd->path, O_RDWR | O_CREAT);
     if (cs->fd < 0) {
-	debug(81, 1) ("%s: %s\n", sd->path, xstrerror());
+	debug(79, 1) ("%s: %s\n", sd->path, xstrerror());
 	fatal("storeCossDirInit: Failed to open a COSS directory.");
     }
     n_coss_dirs++;
@@ -214,7 +214,7 @@ storeCossRebuildFromSwapLog(void *data)
     /* load a number of objects per invocation */
     for (count = 0; count < rb->speed; count++) {
 	if (fread(&s, ss, 1, rb->log) != 1) {
-	    debug(81, 1) ("Done reading %s swaplog (%d entries)\n",
+	    debug(79, 1) ("Done reading %s swaplog (%d entries)\n",
 		rb->sd->path, rb->n_read);
 	    fclose(rb->log);
 	    rb->log = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.46 2002/04/04 23:59:26 hno Exp $
+ * $Id: unlinkd.cc,v 1.47 2002/07/20 23:51:03 hno Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -128,12 +128,12 @@ unlinkdUnlink(const char *path)
     buf[l++] = '\n';
     x = write(unlinkd_wfd, buf, l);
     if (x < 0) {
-	debug(50, 1) ("unlinkdUnlink: write FD %d failed: %s\n",
+	debug(2, 1) ("unlinkdUnlink: write FD %d failed: %s\n",
 	    unlinkd_wfd, xstrerror());
 	safeunlink(path, 0);
 	return;
     } else if (x != l) {
-	debug(50, 1) ("unlinkdUnlink: FD %d only wrote %d of %d bytes\n",
+	debug(2, 1) ("unlinkdUnlink: FD %d only wrote %d of %d bytes\n",
 	    unlinkd_wfd, x, l);
 	safeunlink(path, 0);
 	return;
@@ -147,7 +147,7 @@ unlinkdClose(void)
 {
     if (unlinkd_wfd < 0)
 	return;
-    debug(12, 1) ("Closing unlinkd pipe on FD %d\n", unlinkd_wfd);
+    debug(2, 1) ("Closing unlinkd pipe on FD %d\n", unlinkd_wfd);
     file_close(unlinkd_wfd);
     if (unlinkd_wfd != unlinkd_rfd)
 	file_close(unlinkd_rfd);
@@ -194,7 +194,7 @@ unlinkdInit(void)
     assert(fd_table[unlinkd_rfd].flags.nonblocking);
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
 	commUnsetNonBlocking(unlinkd_wfd);
-    debug(12, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
+    debug(2, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
 }
 
 #endif /* ndef UNLINK_DAEMON */
