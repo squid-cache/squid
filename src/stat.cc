@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.111 1996/12/03 20:26:59 wessels Exp $
+ * $Id: stat.cc,v 1.112 1996/12/11 07:50:19 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1086,9 +1086,9 @@ log_append(const cacheinfo * obj,
 	method = dash_str;
     if (!url)
 	url = dash_str;
-    if (!content_type)
+    if (!content_type || *content_type == '\0')
 	content_type = dash_str;
-    if (!ident || ident[0] == '\0')
+    if (!ident || *ident == '\0')
 	ident = dash_str;
     if (hierData) {
 	hier_code = hierData->code;
