@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.79 1996/09/17 02:30:00 wessels Exp $
+ * $Id: main.cc,v 1.80 1996/09/17 16:32:42 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -120,9 +120,9 @@ int opt_syslog_enable = 0;	/* disabled by default */
 int opt_no_ipcache = 0;		/* use ipcache by default */
 static int opt_send_signal = -1;	/* no signal to send */
 int vhost_mode = 0;
-int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
-int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
-int reread_pending = 0;		/* set by SIGHUP handler */
+volatile int unbuffered_logs = 1;        /* debug and hierarchy unbuffered by default */
+volatile int shutdown_pending = 0;       /* set by SIGTERM handler (shut_down()) */
+volatile int reread_pending = 0;         /* set by SIGHUP handler */
 char version_string[] = SQUID_VERSION;
 char appname[] = "squid";
 char localhost[] = "127.0.0.1";
@@ -132,7 +132,7 @@ char *dash_str = "-";
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) __P((char *));
 
-static int rotate_pending = 0;	/* set by SIGUSR1 handler */
+volatile static int rotate_pending = 0;  /* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 #if MALLOC_DBG
@@ -540,29 +540,29 @@ static time_t
 mainMaintenance(void)
 {
     time_t next;
-    int n;
     if (squid_curtime >= next_maintain) {
 	storeMaintainSwapSpace();
 	next_maintain = squid_curtime + 1;
     }
-    if (store_rebuilding != STORE_NOT_REBUILDING)
-	goto maintenance_done;
-    if (squid_curtime >= next_ip_purge) {
-	ipcache_purgelru();
-	next_ip_purge = squid_curtime + 10;
-    } else if (squid_curtime >= next_dirclean) {
-	/* clean a cache directory every 15 seconds */
-	/* 15 * 16 * 256 = 17 hrs */
-	storeDirClean();
-	next_dirclean = squid_curtime + 15;
-    } else if (squid_curtime >= next_cleaning) {
-	n = storePurgeOld();
-	next_cleaning = squid_curtime + Config.cleanRate;
-    } else if (squid_curtime >= next_announce) {
-	send_announce();
-	next_announce = squid_curtime + Config.Announce.rate;
+
+    if (store_rebuilding == STORE_NOT_REBUILDING) {
+	if (squid_curtime >= next_ip_purge) {
+	    ipcache_purgelru();
+	    next_ip_purge = squid_curtime + 10;
+	} else if (squid_curtime >= next_dirclean) {
+	    /* clean a cache directory every 15 seconds */
+	    /* 15 * 16 * 256 = 17 hrs */
+	    storeDirClean();
+	    next_dirclean = squid_curtime + 15;
+	} else if (squid_curtime >= next_cleaning) {
+	    storePurgeOld();
+	    next_cleaning = squid_curtime + Config.cleanRate;
+	} else if (squid_curtime >= next_announce) {
+	    send_announce();
+	    next_announce = squid_curtime + Config.Announce.rate;
+	}
     }
-  maintenance_done:
+
     next = next_ip_purge;
     if (next_dirclean < next)
 	next = next_dirclean;

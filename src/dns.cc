@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.11 1996/09/17 02:29:54 wessels Exp $
+ * $Id: dns.cc,v 1.12 1996/09/17 16:32:38 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -285,7 +285,7 @@ dnsShutdownServers(void)
 {
     dnsserver_t *dnsData = NULL;
     int k;
-    static char *shutdown = "$shutdown\n";
+    static char *shutdown_cmd = "$shutdown\n";
 
     debug(34, 3, "dnsShutdownServers:\n");
 
@@ -309,8 +309,8 @@ dnsShutdownServers(void)
 	debug(34, 3, "dnsShutdownServers: sending '$shutdown' to dnsserver #%d\n", dnsData->id);
 	debug(34, 3, "dnsShutdownServers: --> FD %d\n", dnsData->outpipe);
 	comm_write(dnsData->outpipe,
-	    xstrdup(shutdown),
-	    strlen(shutdown),
+	    xstrdup(shutdown_cmd),
+	    strlen(shutdown_cmd),
 	    0,			/* timeout */
 	    NULL,		/* Handler */
 	    NULL,		/* Handler-data */

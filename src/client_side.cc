@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.29 1996/09/17 02:29:51 wessels Exp $
+ * $Id: client_side.cc,v 1.30 1996/09/17 16:32:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -225,7 +225,7 @@ clientRedirectDone(void *data, char *result)
 #define CHECK_PROXY_FILE_TIME 300
 
 char *
-proxyAuthenticate(void)
+proxyAuthenticate(char *headers)
 {
     /* Keep the time measurements and the hash
      * table of users and passwords handy */

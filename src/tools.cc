@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.60 1996/09/17 02:30:06 wessels Exp $
+ * $Id: tools.cc,v 1.61 1996/09/17 16:32:49 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -613,7 +613,7 @@ accessLogTime(time_t t)
 {
     struct tm *tm;
     static char buf[128];
-    static char last_t = 0;
+    static time_t last_t = 0;
     if (t != last_t) {
 	tm = localtime(&t);
 	strftime(buf, 127, "%y/%m/%d %T", tm);

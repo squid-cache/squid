@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.26 1996/09/17 02:29:53 wessels Exp $
+ * $Id: disk.cc,v 1.27 1996/09/17 16:32:37 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -338,7 +338,7 @@ file_write(int fd,
     int access_code,
     void (*handle) (),
     void *handle_data,
-    void (*free) (void *))
+    void (*free_func) (void *))
 {
     dwrite_q *wq = NULL;
 
@@ -355,7 +355,7 @@ file_write(int fd,
     wq->len = len;
     wq->cur_offset = 0;
     wq->next = NULL;
-    wq->free = free;
+    wq->free = free_func;
     file_table[fd].wrt_handle = handle;
     file_table[fd].wrt_handle_data = handle_data;
 

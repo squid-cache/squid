@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.73 1996/09/17 02:29:52 wessels Exp $
+ * $Id: comm.cc,v 1.74 1996/09/17 16:32:35 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1328,7 +1328,7 @@ commHandleWrite(int fd, RWStateData * state)
 /* Select for Writing on FD, until SIZE bytes are sent.  Call
  * * HANDLER when complete. */
 void
-comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handler, void *handler_data, void (*free) (void *))
+comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handler, void *handler_data, void (*free_func) (void *))
 {
     RWStateData *state = NULL;
 
@@ -1347,7 +1347,7 @@ comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handl
     state->timeout = timeout;
     state->time = squid_curtime;
     state->handler_data = handler_data;
-    state->free = free;
+    state->free = free_func;
     fd_table[fd].rwstate = state;
     comm_set_select_handler(fd,
 	COMM_SELECT_WRITE,

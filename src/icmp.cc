@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.5 1996/09/17 05:16:57 wessels Exp $
+ * $Id: icmp.cc,v 1.6 1996/09/17 16:32:40 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -174,7 +174,7 @@ icmpSendEcho(struct in_addr to, int opcode, char *payload, int len)
     int icmp_pktsize = sizeof(struct icmphdr);
     pkt = get_free_8k_page();
     memset(pkt, '\0', 8192);
-    icmp = (struct icmphdr *) pkt;
+    icmp = (struct icmphdr *) (void *) pkt;
     icmp->icmp_type = ICMP_ECHO;
     icmp->icmp_code = 0;
     icmp->icmp_cksum = 0;
@@ -242,9 +242,9 @@ icmpRecv(int unused1, void *unused2)
 	(struct sockaddr *) &from,
 	&fromlen);
     debug(37, 9, "icmpRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
-    ip = (struct iphdr *) pkt;
+    ip = (struct iphdr *) (void *) pkt;
     iphdrlen = ip->ip_hl << 2;
-    icmp = (struct icmphdr *) (pkt + iphdrlen);
+    icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
     if (icmp->icmp_type == ICMP_ECHOREPLY) {
 	if (icmp->icmp_id == icmp_ident) {
 	    hops = ipHops(ip->ip_ttl);
@@ -301,7 +301,7 @@ icmpQueueSend(struct in_addr to,
 	(void *) IcmpQueueHead);
 }
 
-void
+static void
 icmpSend(int fd, icmpQueueData * queue)
 {
     int x;
@@ -321,7 +321,7 @@ icmpSend(int fd, icmpQueueData * queue)
 	    debug(37, 0, "icmpSend: Wrote %d of %d bytes\n", x, queue->len);
 	}
 	IcmpQueueHead = queue->next;
-	icmpLog((struct icmphdr *) queue->msg, queue->to.sin_addr, 0, 0);
+	icmpLog((struct icmphdr *) (void *) queue->msg, queue->to.sin_addr, 0, 0);
 	if (queue->free)
 	    queue->free(queue->msg);
 	safe_free(queue);
