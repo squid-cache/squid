@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.644 2003/06/27 22:32:30 hno Exp $
+ * $Id: client_side.cc,v 1.645 2003/07/06 21:43:36 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2128,6 +2128,7 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->peer.sin_addr;
+    request->client_port = ntohs(conn->peer.sin_port);
     request->my_addr = conn->me.sin_addr;
     request->my_port = ntohs(conn->me.sin_port);
     request->http_ver = http->http_ver;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.24 2003/06/27 22:32:31 hno Exp $
+ * $Id: client_side_request.cc,v 1.25 2003/07/06 21:43:36 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -758,6 +758,7 @@ clientRedirectDone(void *data, char *result)
         new_request->http_ver = old_request->http_ver;
         httpHeaderAppend(&new_request->header, &old_request->header);
         new_request->client_addr = old_request->client_addr;
+        new_request->client_port = old_request->client_port;
         new_request->my_addr = old_request->my_addr;
         new_request->my_port = old_request->my_port;
         new_request->flags = old_request->flags;
