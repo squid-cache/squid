@@ -41,6 +41,8 @@ Our Todo List
 	known content types added to StoreEntry.  Unknown types will lose.
 (4)	Write binary headers as metadata?
 (4)	Configurable proxy-auth realm
+(4)	Configurable FQDN cache size
+(4)	HTML-escape special characters in errorConvert().
 
 (5)	X-Proxy-hops header?
 (5)	internalize redirectors?

@@ -28,6 +28,9 @@
 	- Fixed 'you are running out of filedescriptors' bug which
 	  could cause the HTTP incoming connection handler to not
 	  be reset.
+	- Changed syslog logging.  Now squid debug levels 0 and 1 go
+	  to syslog.  Level 0 gets LOG_WARNING and level 1 gets LOG_ERR
+	  (this needs more work!)
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
