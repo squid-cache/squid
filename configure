@@ -59,7 +59,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-icmp           Enable ICMP pinging"
 ac_help="$ac_help
-  --enable-delay-pools    Enable delay pools to limit bandwith usage"
+  --enable-delay-pools    Enable delay pools to limit bandwidth usage"
 ac_help="$ac_help
   --enable-mem-gen-trace  Do trace of memory stuff"
 ac_help="$ac_help
@@ -132,7 +132,7 @@ ac_help="$ac_help
                           filesystem inodes than unlink.."
 ac_help="$ac_help
   --enable-underscores    Squid by default rejects any host names with _
-                          in their name to conform with internet standars.
+                          in their name to conform with internet standards.
                           If you disagree with this you may allow _ in
                           hostnames by using this switch, provided that
                           the resolver library on the host where Squid runs
