@@ -71,11 +71,21 @@ while ($ARGV[0] =~ /([^:]+):(\d+)/) {
 	shift;
 }
 
+$rn = 0;
 while (<>) {
 	print;
 	chop;
-	$request_template = 'CCnx4Nx4x4a4a' . length;
-	$request = pack($request_template, 1, 2, 24 + length, $flags, $myip, $_);
+	$len = length($_) + 1;
+	$request_template = sprintf 'CCnNNa4a4x4a%d', $len;
+	$request = pack($request_template,
+		1,              # C opcode
+		2,              # C version
+		24 + $len,      # n length
+		++$rn,          # N reqnum
+		$flags,         # N flags
+		'',             # a4 pad
+		$myip,          # a4 shostid
+		$_);            # a%d payload
 	$n = 0;
 	foreach $host (keys %ADDR) {
 		$port = $PORT{$host};
