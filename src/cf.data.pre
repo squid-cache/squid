@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.273 2002/07/22 11:48:32 adrian Exp $
+# $Id: cf.data.pre,v 1.274 2002/08/11 01:09:41 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2199,7 +2199,7 @@ DOC_START
 	See http_access for details
 
 NOCOMMENT_START
-#Allow ICP queries from eveyone
+#Allow ICP queries from everyone
 icp_access allow all
 NOCOMMENT_END
 DOC_END
