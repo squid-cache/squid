@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.432 1998/07/22 22:25:18 wessels Exp $
+ * $Id: store.cc,v 1.433 1998/07/23 19:57:54 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -804,13 +804,6 @@ storeConfigure(void)
 
     store_pages_high = store_mem_high / SM_PAGE_SIZE;
     store_pages_low = store_mem_low / SM_PAGE_SIZE;
-}
-
-int
-urlcmp(const void *url1, const void *url2)
-{
-    assert(url1 && url2);
-    return (strcmp(url1, url2));
 }
 
 static int
