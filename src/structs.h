@@ -959,6 +959,9 @@ struct _StatCounters {
     struct {
 	int requests;
     } unlink;
+    struct {
+	StatLogHist svc_time;
+    } dns;
     int page_faults;
     int select_loops;
     double cputime;

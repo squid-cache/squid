@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.198 1998/02/18 19:50:01 wessels Exp $
+ * $Id: stat.cc,v 1.199 1998/02/18 22:54:02 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -119,6 +119,7 @@ static void statLogHistInit(StatLogHist *, double, double);
 static int statLogHistBin(StatLogHist *, double);
 static double statLogHistVal(StatLogHist *, double);
 static double statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B);
+static void statLogHistDump(StoreEntry *sentry, StatLogHist * H);
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -651,6 +652,8 @@ statCountersDump(StoreEntry * sentry)
 	(int) f->client_http.kbytes_in.kb);
     storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
 	(int) f->client_http.kbytes_out.kb);
+    storeAppendPrintf(sentry, "client_http.svc_time histogram:\n");
+    statLogHistDump(sentry, &f->client_http.svc_time);
     storeAppendPrintf(sentry, "icp.pkts_sent = %d\n",
 	f->icp.pkts_sent);
     storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
@@ -659,6 +662,10 @@ statCountersDump(StoreEntry * sentry)
 	(int) f->icp.kbytes_sent.kb);
     storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
 	(int) f->icp.kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.svc_time histogram:\n");
+    statLogHistDump(sentry, &f->icp.svc_time);
+    storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
+    statLogHistDump(sentry, &f->dns.svc_time);
     storeAppendPrintf(sentry, "unlink.requests = %d\n",
 	f->unlink.requests);
     storeAppendPrintf(sentry, "page_faults = %d\n",
@@ -712,6 +719,9 @@ statAvgDump(StoreEntry * sentry, int minutes)
     x = statLogHistDeltaMedian(&l->icp.svc_time, &f->icp.svc_time);
     storeAppendPrintf(sentry, "icp.median_svc_time = %f seconds\n",
 	x / 1000000.0);
+    x = statLogHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
+    storeAppendPrintf(sentry, "dns.median_svc_time = %f seconds\n",
+	x / 1000000.0);
     storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
 	XAVG(unlink.requests));
     storeAppendPrintf(sentry, "page_faults = %f/sec\n",
@@ -735,6 +745,10 @@ statCounterInit(StatCounters * C)
      * ICP svc_time hist is kept in micro-seconds; max of 1 minute.
      */
     statLogHistInit(&C->icp.svc_time, 0.0, 1000000.0 * 60.0);
+    /*
+     * DNS svc_time hist is kept in milli-seconds; max of 10 minutes.
+     */
+    statLogHistInit(&C->dns.svc_time, 0.0, 60000.0 * 10.0);
 }
 
 void
@@ -843,6 +857,7 @@ void
 statLogHistCount(StatLogHist * H, double val)
 {
     int bin = statLogHistBin(H, val);
+    assert(H->scale != 0.0);	/* make sure it got initialized */
     assert(0 <= bin && bin < STAT_LOG_HIST_BINS);
     H->bins[bin]++;
 }
@@ -914,4 +929,18 @@ static double
 statLogHistVal(StatLogHist * H, double bin)
 {
     return exp(bin / H->scale) + H->min - 1.0;
+}
+
+static void
+statLogHistDump(StoreEntry *sentry, StatLogHist * H)
+{
+	int i;
+	for (i=0; i<STAT_LOG_HIST_BINS; i++) {
+		if (H->bins[i] == 0)
+			continue;
+		storeAppendPrintf(sentry, "\t%3d/%f\t%d\n",
+			i,
+			statLogHistVal(H, 0.5 + i),
+			H->bins[i]);
+	}
 }
