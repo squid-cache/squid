@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.537 2001/02/22 20:53:15 wessels Exp $
+ * $Id: store.cc,v 1.538 2001/03/23 20:19:11 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1033,7 +1033,7 @@ storeTimestampsSet(StoreEntry * entry)
      * squid_curtime because it results in a negative served_date.
      */
     if (age > squid_curtime - served_date)
-	if (squid_curtime < age)
+	if (squid_curtime > age)
 	    served_date = squid_curtime - age;
     entry->expires = reply->expires;
     entry->lastmod = reply->last_modified;
