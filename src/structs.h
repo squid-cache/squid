@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.203 1998/08/18 19:19:57 wessels Exp $
+ * $Id: structs.h,v 1.204 1998/08/18 20:48:52 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -35,7 +35,7 @@ struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
     struct in_addr mask;
-    acl_ip_data *next;
+    acl_ip_data *next;		/* used for parsing, not for storing */
 };
 
 struct _acl_snmp_comm {
