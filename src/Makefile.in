@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.210 2001/09/03 23:38:34 robertc Exp $
+#  $Id: Makefile.in,v 1.211 2001/09/04 01:02:50 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -94,6 +94,7 @@ MKDIR = @MKDIR@
 MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
+OPT_DISKD_EXE = @OPT_DISKD_EXE@
 OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
 OPT_PINGER = @OPT_PINGER@
 OPT_PINGER_EXE = @OPT_PINGER_EXE@
@@ -130,6 +131,7 @@ libexecdir = ${prefix}/libexec/squid
 @USE_DNSSERVER_TRUE@DNSSOURCE = dns.c
 @USE_DNSSERVER_FALSE@DNSSOURCE = dns_internal.c
 @USE_DNSSERVER_TRUE@DNSSERVER = dnsserver
+@USE_DNSSERVER_FALSE@DNSSERVER = 
 
 @USE_SNMP_TRUE@SNMPSOURCE = snmp_core.c snmp_agent.c
 @USE_SNMP_FALSE@SNMPSOURCE = 
@@ -146,6 +148,8 @@ libexecdir = ${prefix}/libexec/squid
 @ENABLE_UNLINKD_FALSE@UNLINKDSOURCE = 
 @ENABLE_UNLINKD_TRUE@UNLINKD = unlinkd
 @ENABLE_UNLINKD_FALSE@UNLINKD = 
+@ENABLE_UNLINKD_TRUE@UNLINKD_EXE = unlinkd$(EXEEXT)
+@ENABLE_UNLINKD_FALSE@UNLINKD_EXE = 
 
 @ENABLE_SSL_TRUE@SSLSOURCE = ssl_support.c
 @ENABLE_SSL_FALSE@SSLSOURCE = 
@@ -212,7 +216,7 @@ EXTRA_DIST = cf_gen_defines cf.data.pre mk-globals-c.pl mk-string-arrays.pl \
 DEFAULT_PREFIX = $(prefix)
 DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE = $(sysconfdir)/mime.conf
-DEFAULT_DNSSERVER = $(libexecdir)/$(DNSSERVER_EXE)
+DEFAULT_DNSSERVER = $(libexecdir)/@OPT_DNSSERVER_EXE@
 DEFAULT_CACHE_LOG = $(localstatedir)/logs/cache.log
 DEFAULT_ACCESS_LOG = $(localstatedir)/logs/access.log
 DEFAULT_STORE_LOG = $(localstatedir)/logs/store.log
@@ -220,7 +224,7 @@ DEFAULT_PID_FILE = $(localstatedir)/logs/squid.pid
 DEFAULT_SWAP_DIR = $(localstatedir)/cache
 DEFAULT_PINGER = $(libexecdir)/@OPT_PINGER_EXE@
 DEFAULT_UNLINKD = $(libexecdir)/$(UNLINKD_EXE)
-DEFAULT_DISKD = $(libexecdir)/$(DISKD_EXE)
+DEFAULT_DISKD = $(libexecdir)/@OPT_DISKD_EXE@
 DEFAULT_ICON_DIR = $(sysconfdir)/icons
 DEFAULT_ERROR_DIR = $(sysconfdir)/errors
 DEFAULT_MIB_PATH = $(sysconfdir)/mib.txt
