@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.197 2000/01/03 19:39:16 wessels Exp $
+ * $Id: squid.h,v 1.198 2000/01/05 06:23:46 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -323,6 +323,7 @@ struct rusage {
 #if USE_LEAKFINDER
 #define leakAdd(p) leakAddFL(p,__FILE__,__LINE__)
 #define leakTouch(p) leakTouchFL(p,__FILE__,__LINE__)
+#define leakFree(p) leakFreeFL(p,__FILE__,__LINE__)
 #else
 #define leakAdd(p) p
 #define leakTouch(p) p

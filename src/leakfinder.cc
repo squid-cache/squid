@@ -1,6 +1,6 @@
 
 /*
- * $Id: leakfinder.cc,v 1.1 1998/12/11 21:01:12 wessels Exp $
+ * $Id: leakfinder.cc,v 1.2 2000/01/05 06:23:44 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -98,7 +98,7 @@ leakTouchFL(void *p, const char *file, int line)
 }
 
 void *
-leakFree(void *p)
+leakFreeFL(void *p, const char *file, int line)
 {
     ptr *c = (ptr *) hash_lookup(htable, p);
     assert(p);

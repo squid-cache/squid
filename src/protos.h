@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.349 1999/12/30 17:36:46 wessels Exp $
+ * $Id: protos.h,v 1.350 2000/01/05 06:23:45 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1220,7 +1220,7 @@ extern void helperFree(helper *);
 extern void leakInit(void);
 extern void *leakAddFL(void *, const char *, int);
 extern void *leakTouchFL(void *, const char *, int);
-extern void *leakFree(void *);
+extern void *leakFreeFL(void *, const char *, int);
 #endif
 
 /*
