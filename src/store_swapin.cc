@@ -15,15 +15,11 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
     assert(e->mem_status == NOT_IN_MEMORY);
-#if OLD_CODE
     if (!EBIT_TEST(e->flag, ENTRY_VALIDATED)) {
-	if (storeDirMapBitTest(e->swap_file_number)) {
-	    /* someone took our file while we weren't looking */
-	    callback(-1, callback_data);
-	    return;
-	}
+	/* We're still reloading and haven't validated this entry yet */
+	callback(-1, callback_data);
+	return;
     }
-#endif
     debug(20, 3) ("storeSwapInStart: called for %08X %s \n",
 	e->swap_file_number, storeKeyText(e->key));
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
