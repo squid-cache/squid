@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.125 1997/12/30 21:58:05 kostas Exp $
+ * $Id: acl.cc,v 1.126 1998/01/02 19:52:23 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -697,6 +697,8 @@ aclParseAclLine(acl ** head)
 	aclParseRegexList(&A->data);
 	break;
     case ACL_URL_PORT:
+    case ACL_SRC_ASN:
+    case ACL_DST_ASN:
 	aclParseIntlist(&A->data);
 	break;
     case ACL_USER:
@@ -714,10 +716,6 @@ aclParseAclLine(acl ** head)
 	break;
     case ACL_PROXY_AUTH:
 	aclParseProxyAuth(&A->data);
-	break;
-    case ACL_SRC_ASN:
-    case ACL_DST_ASN:
-	aclParseIntlist(&A->data);
 	break;
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
@@ -1602,14 +1600,12 @@ aclDestroyAcls(acl ** head)
 	case ACL_URL_PORT:
 	case ACL_PROTO:
 	case ACL_METHOD:
+	case ACL_SRC_ASN:
+	case ACL_DST_ASN:
 	    intlistDestroy((intlist **) & a->data);
 	    break;
 	case ACL_PROXY_AUTH:
 	    aclDestroyProxyAuth(a->data);
-	    break;
-	case ACL_SRC_ASN:
-	case ACL_DST_ASN:
-	    intlistDestroy(a->data);
 	    break;
 	case ACL_NONE:
 	default:
