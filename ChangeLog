@@ -1,3 +1,15 @@
+	- Fixed xstrncpy() bug in mime_get_header().
+	- Fixed Via: header.
+	- Fixed Host: header for proxy requests.
+	- Fixed re-initializing client_db and net_db hash tables upon
+	  SIGHUP (Cord Beermann).
+	- Mucked with regex stuff so HP users don't have to put up with
+	  GNUregex (Markus Gyger).
+	- Changed SQUID_MAXFD back to FD_SETSIZE.
+	- Fixed checking Max-age in httpSendRequest().
+	- Made failure to fork ftpget fatal.
+	- Call *FreeMemory() routines only if debugging.
+
 Changes to squid-1.1.beta21 (November 22, 1996):
 
 	- Fixed setting entry->timestamp for NOT MODIFIED replies.
