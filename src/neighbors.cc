@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.16 1996/04/12 21:22:57 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.17 1996/04/15 18:06:31 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -163,7 +163,7 @@ edge *getSingleParent(host, n)
     for (e = friends->edges_head; e; e = e->next) {
 	if (edgeWouldBePinged(e, host)) {
 	    count++;
-	    if (e->type != is_a_parent) {
+	    if (e->type != EDGE_PARENT) {
 		/* we matched a neighbor, not a parent.  There
 		 * can be no single parent */
 		if (n == NULL)
@@ -196,7 +196,7 @@ edge *getFirstParent(host)
     if (friends->n_parent < 1)
 	return NULL;
     for (e = friends->edges_head; e; e = e->next) {
-	if (e->type != is_a_parent)
+	if (e->type != EDGE_PARENT)
 	    continue;
 	if (edgeWouldBePinged(e, host))
 	    return e;
@@ -307,7 +307,7 @@ void neighbors_open(fd)
 	ap->sin_addr = e->addresses[0];
 	ap->sin_port = htons(e->udp_port);
 
-	if (e->type == is_a_parent) {
+	if (e->type == EDGE_PARENT) {
 	    debug(15, 3, "parent_install: host %s addr %s port %d\n",
 		e->host, inet_ntoa(ap->sin_addr),
 		e->udp_port);
@@ -363,7 +363,7 @@ int neighborsUdpPing(proto)
 
 	/* Don't resolve refreshes through neighbors because we don't resolve
 	 * misses through neighbors */
-	if ((e->type == is_a_neighbor) && (entry->flag & REFRESH_REQUEST))
+	if ((e->type == EDGE_SIBLING) && (entry->flag & REFRESH_REQUEST))
 	    continue;
 
 	/* skip dumb caches where we failed to connect() w/in the last 60s */
@@ -411,7 +411,7 @@ int neighborsUdpPing(proto)
 		inet_ntoa(e->in_addr.sin_addr));
 	    /* log it once at the threshold */
 	    if ((e->ack_deficit == HIER_MAX_DEFICIT)) {
-		if (e->type == is_a_neighbor) {
+		if (e->type == EDGE_SIBLING) {
 		    hierarchy_log_append("Detect: ",
 			HIER_DEAD_NEIGHBOR, 0,
 			e->host);
@@ -479,7 +479,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	/* reset the deficit. It's alive now. */
 	/* Don't care about exact count. */
 	if ((e->ack_deficit >= HIER_MAX_DEFICIT)) {
-	    if (e->type == is_a_neighbor) {
+	    if (e->type == EDGE_SIBLING) {
 		hierarchy_log_append("Detect: ",
 		    HIER_REVIVE_NEIGHBOR, 0, e->host);
 	    } else {
@@ -540,7 +540,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	}
 	/* GOT a HIT here */
 	debug(15, 6, "HIT: Getting %s from host: %s\n", entry->url, e->host);
-	if (e->type == is_a_neighbor) {
+	if (e->type == EDGE_SIBLING) {
 	    hierarchy_log_append(entry->url, HIER_NEIGHBOR_HIT, 0, e->host);
 	} else {
 	    hierarchy_log_append(entry->url, HIER_PARENT_HIT, 0, e->host);
@@ -564,7 +564,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 		    inet_ntoa(e->in_addr.sin_addr));
 		debug(15, 6, "Good.");
 
-		if (e->type == is_a_parent) {
+		if (e->type == EDGE_PARENT) {
 		    if (entry->mem_obj->e_pings_first_miss == NULL) {
 			debug(15, 6, "OK. We got dumb-cached parent as the first miss here.\n");
 			entry->mem_obj->e_pings_first_miss = e;
@@ -582,7 +582,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 
 	} else {
 	    /* ICP_OP_MISS from a cache */
-	    if ((entry->mem_obj->e_pings_first_miss == NULL) && e && e->type == is_a_parent) {
+	    if ((entry->mem_obj->e_pings_first_miss == NULL) && e && e->type == EDGE_PARENT) {
 		entry->mem_obj->e_pings_first_miss = e;
 
 	    }
@@ -692,10 +692,10 @@ void neighbors_init()
 	e->neighbor_up = 1;
 	if (!strcmp(t->type, "parent")) {
 	    friends->n_parent++;
-	    e->type = is_a_parent;
+	    e->type = EDGE_PARENT;
 	} else {
 	    friends->n_neighbor++;
-	    e->type = is_a_neighbor;
+	    e->type = EDGE_SIBLING;
 	}
 
 	/* Append edge */
