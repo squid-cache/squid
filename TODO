@@ -51,7 +51,7 @@ Our Todo List
 (5)	return "ERR_TOO_LARGE" messages for replies with
 	content-lengths larger than some limit.
 (5)	Bind HTTP/ICP sockets to multiple interfaces
-(5) 	multirange requests with out-of-order ranges (AR)
+(5)	Custom X-Forwarded-For
 
 DONE:
 + s/sprintf/snprintf/g

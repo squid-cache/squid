@@ -6,6 +6,18 @@
 	  Kbytes, not bytes.
 	- Changed storeDirSelectSwapDir() to skip swap directories
 	  when their utilization is over the high water mark ratio.
+	- fixed bugs in Content-Range header generation
+	- changed the way Range requests are handled:
+	        - do not "advertise" our ability to process ranges at all
+	        - on hits, handle simple ranges and forward complex ones
+	        - on misses, fetch the whole document for simple ranges
+	          and forward range request for complex ranges
+	  The change is supposed to decrease the number of cases when clients
+	  such as Adobe acrobat reader get confused when we send a "200"
+	  response instead of "206" (because we cannot handle complex ranges,
+	  even for hits) Note: Support for complex ranges requires storage of
+	  partial objects.
+
 
 Changes to squid-1.2.beta25 (September 21, 1998):
 
