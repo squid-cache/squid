@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.246 1998/04/22 16:21:39 rousskov Exp $
+ * $Id: main.cc,v 1.247 1998/04/24 18:27:50 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -578,6 +578,7 @@ main(int argc, char **argv)
 	if (ConfigFile == NULL)
 	    ConfigFile = xstrdup(DefaultConfigFile);
 	cbdataInit();
+	memInit();		/* memInit is required for config parsing */
 	parseConfigFile(ConfigFile);
 	setEffectiveUser();
 	debug(0, 0) ("Creating Swap Directories\n");
