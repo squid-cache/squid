@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.678 2004/12/21 15:03:01 robertc Exp $
+ * $Id: client_side.cc,v 1.679 2005/01/23 11:32:42 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2244,8 +2244,10 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
             }
         }
 
-        if (http->flags.internal)
+        if (http->flags.internal) {
             request->protocol = PROTO_HTTP;
+            request->login[0] = '\0';
+        }
     }
 
     request->flags.internal = http->flags.internal;
