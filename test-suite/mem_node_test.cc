@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node_test.cc,v 1.1 2003/01/23 00:38:34 robertc Exp $
+ * $Id: mem_node_test.cc,v 1.2 2003/06/23 20:53:47 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -51,6 +51,9 @@ main (int argc, char *argv)
 {
     mem_node *aNode = new mem_node(0);
     assert (aNode);
+    /* This will fail if MemPools are disabled. A knock on effect is that
+     * the store will never trim memory
+     */
     assert (mem_node::InUseCount() == 1);
     assert (SM_PAGE_SIZE > 50);
     aNode->nodeBuffer.length = 45;
