@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.1 1998/02/19 23:09:48 wessels Exp $
+ * $Id: cache_manager.cc,v 1.2 1998/02/19 23:11:48 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -62,7 +62,10 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
 {
     action_table *a;
     action_table **A;
-    assert(cachemgrFindAction(action) == NULL);
+    if (cachemgrFindAction(action) != NULL) {
+	debug(16, 3)("cachemgrRegister: Duplicate '%s'\n", action);
+	return;
+    }
     a = xcalloc(1, sizeof(action_table));
     a->action = xstrdup(action);
     a->desc = xstrdup(desc);
@@ -70,7 +73,7 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
     a->pw_req_flag = pw_req_flag;
     for (A = &ActionTable; *A; A = &(*A)->next);
     *A = a;
-    debug(16, 1)("cachemgrRegister: registered %s\n", action);
+    debug(16, 3)("cachemgrRegister: registered %s\n", action);
 }
 
 static action_table *
