@@ -83,6 +83,7 @@ SOFTWARE.
 
 #include "util.h"
 
+#include "cache_snmp.h"
 /*
  * This is one element of an object identifier with either an integer subidentifier,
  * or a textual string label, or both.
@@ -113,8 +114,10 @@ int Line = 1;
 #define LABEL	    1
 #define SUBTREE	    2
 #define SYNTAX	    3
+#undef OBJID
 #define OBJID	    4
 #define OCTETSTR    5
+#undef INTEGER
 #define INTEGER	    6
 #define NETADDR	    7
 #define	IPADDR	    8
@@ -130,6 +133,7 @@ int Line = 1;
 #define READONLY    18
 #define READWRITE   19
 #define	WRITEONLY   20
+#undef NOACCESS
 #define NOACCESS    21
 #define STATUS	    22
 #define MANDATORY   23
