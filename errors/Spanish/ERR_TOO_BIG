@@ -1,28 +1,29 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
-<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+<HTML><HEAD>
+<TITLE>ERROR: La direcci&oacute;n solicitada no puede ser obtenida</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H2>La direcci&oacute;n solicitada no puede ser obtenida</H2>
 <HR noshade size="1px">
 <P>
-While trying to retrieve the URL:
+Mientras se descargaba la direcci&oacute;n:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+Se encontr&oacute; el siguiente error:
 <UL>
 <LI>
 <STRONG>
-The request or reply is too large.
+La direcci&oacute;n solicitada es demasiado larga.
 </STRONG>
 <P>
-If you are making a POST or PUT request, then your request body
-(the thing you are trying to upload) is too large.  If you are 
-making a GET request, then the reply body (what you are trying
-to download) is too large.   These limits have been established
-by the Internet Service Provider who operates this cache.  Please
-contact them directly if you feel this is an error.
+Si est&aacute; haciendo una petici&oacute;n POST o PUT, el cuerpo (lo
+que est&aacute; intentando subir) es demasiado grande. Si est&aacute;
+haciendo una petici&oacute;n GET, entonces el cuerpo de la respuesta
+(que est&aacute; tratando de bajar) es demasiado grande. Estos
+l&iacute;mites fueron establecidos por el Proveedor de Servicios de
+Internet que opera este cach&eacute;. Por favor, contacte con &eacute;l
+directamente si cree que esto es un error.
 </UL>
 <P>
-Your cache administrator is <A HREF="mailto:%w%W">%w</A>.
+Su administrdor del cach&eacute; es <A HREF="mailto:%w">%w</A>.
