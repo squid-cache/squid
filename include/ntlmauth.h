@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.h,v 1.9 2002/10/06 02:05:22 robertc Exp $
+ * $Id: ntlmauth.h,v 1.10 2003/01/23 00:36:47 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *

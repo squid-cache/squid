@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.27 2002/10/13 20:35:05 robertc Exp $
+ * $Id: store_key_md5.cc,v 1.28 2003/01/23 00:37:26 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -40,12 +40,11 @@ static cache_key null_key[MD5_DIGEST_CHARS];
 const char *
 storeKeyText(const unsigned char *key)
 {
-    static MemBuf mb = MemBufNULL;
+    static char buf[MD5_DIGEST_CHARS * 2+1];
     int i;
-    memBufReset(&mb);
     for (i = 0; i < MD5_DIGEST_CHARS; i++)
-	memBufPrintf(&mb, "%02X", *(key + i));
-    return mb.buf;
+	snprintf(&buf[i*2],sizeof(buf) - i*2, "%02X", *(key + i));
+    return buf;
 }
 
 const cache_key *

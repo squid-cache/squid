@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.2 2002/10/21 14:00:01 adrian Exp $
+ * $Id: ICP.h,v 1.3 2003/01/23 00:37:13 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,9 +35,6 @@
 #define SQUID_ICP_H
 
 #include "StoreClient.h"
-
-#ifdef __cplusplus
-#endif
 
 /* This struct is the wire-level header.
  * DO NOT add ore move fields on pain of breakage.

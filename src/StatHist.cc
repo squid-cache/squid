@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.28 2002/10/14 09:04:25 hno Exp $
+ * $Id: StatHist.cc,v 1.29 2003/01/23 00:37:14 robertc Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels

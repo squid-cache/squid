@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.109 2003/01/17 05:49:34 robertc Exp $
+ * $Id: mime.cc,v 1.110 2003/01/23 00:37:23 robertc Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -36,6 +36,10 @@
 #include "squid.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
+#include "fde.h"
 
 #define GET_HDR_SZ 1024
 
@@ -466,7 +470,6 @@ MimeIcon::created (StoreEntry *newEntry)
     struct stat sb;
     LOCAL_ARRAY(char, path, MAXPATHLEN);
     char *buf;
-    HttpReply *reply;
     http_version_t version;
 	
 				
@@ -494,7 +497,7 @@ MimeIcon::created (StoreEntry *newEntry)
     if (NULL == r)
 	fatal("mimeLoadIcon: cannot parse internal URL");
     e->mem_obj->request = requestLink(r);
-    httpReplyReset(reply = e->mem_obj->reply);
+    HttpReply *reply = httpReplyCreate();
     httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(reply, version, HTTP_OK, NULL,
 	mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);
@@ -502,14 +505,13 @@ MimeIcon::created (StoreEntry *newEntry)
     httpHdrCcSetMaxAge(reply->cache_control, 86400);
     httpHeaderPutCc(&reply->header, reply->cache_control);
     httpReplySwapOut(reply, e);
-    reply->hdr_sz = e->mem_obj->inmem_hi;	/* yuk */
     /* read the file into the buffer and append it to store */
     buf = (char *)memAllocate(MEM_4K_BUF);
     while ((n = FD_READ_METHOD(fd, buf, 4096)) > 0)
 	storeAppend(e, buf, n);
     file_close(fd);
     storeBufferFlush(e);
-    storeComplete(e);
+    e->complete();
     storeTimestampsSet(e);
     debug(25, 3) ("Loaded icon %s\n", url);
     storeUnlockObject(e);

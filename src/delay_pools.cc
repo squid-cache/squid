@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.29 2002/10/14 08:43:46 hno Exp $
+ * $Id: delay_pools.cc,v 1.30 2003/01/23 00:37:19 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -39,6 +39,8 @@
 #include "squid.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "MemObject.h"
+#include "client_side_request.h"
 
 struct _class1DelayPool {
     int delay_class;
@@ -655,9 +657,10 @@ delayMostBytesWanted(const MemObject * mem, int max)
     dlink_node *node;
     for (node = mem->clients.head; node; node = node->next) {
 	sc = (store_client *) node->data;
-	if (sc->callback_data == NULL)	/* not waiting for more data */
+	if (!sc->callbackPending())
+	    /* not waiting for more data */
 	    continue;
-	if (sc->type != STORE_MEM_CLIENT)
+	if (sc->getType() != STORE_MEM_CLIENT)
 	    continue;
 	wanted = sc->copyInto.length;
 	if (wanted > max)
@@ -678,9 +681,10 @@ delayMostBytesAllowed(const MemObject * mem)
     delay_id d = 0;
     for (node = mem->clients.head; node; node = node->next) {
 	sc = (store_client *) node->data;
-	if (sc->callback_data == NULL)	/* not waiting for more data */
+	if (!sc->callbackPending())
+	    /* not waiting for more data */
 	    continue;
-	if (sc->type != STORE_MEM_CLIENT)
+	if (sc->getType() != STORE_MEM_CLIENT)
 	    continue;
 	j = delayBytesWanted(sc->delayId, 0, sc->copyInto.length);
 	if (j > jmax) {

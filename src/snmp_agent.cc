@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.85 2003/01/17 05:49:34 robertc Exp $
+ * $Id: snmp_agent.cc,v 1.86 2003/01/23 00:37:25 robertc Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "cache_snmp.h"
 #include "Store.h"
+#include "mem_node.h"
 
 /************************************************************************
 
@@ -54,7 +55,7 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
     switch (Var->name[LEN_SQ_SYS]) {
     case SYSVMSIZ:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    store_mem_size >> 10,
+	    mem_node::store_mem_size >> 10,
 	    ASN_INTEGER);
 	break;
     case SYSSTOR:

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.14 2002/12/27 10:26:39 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.15 2003/01/23 00:38:22 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -273,7 +273,7 @@ UFSFile::write(char const *buf, size_t size, off_t offset, FREE *free_func)
 }
 
 void
-UFSStoreState::write(char *buf, size_t size, off_t offset, FREE * free_func)
+UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
 {
     debug(79, 3) ("UFSStoreState::write: dirn %d, fileno %08X\n", swap_dirn, swap_filen);
     if (!theFile->canWrite() || writing) {
@@ -406,7 +406,7 @@ UFSStoreState::~UFSStoreState()
     struct _queued_write *qw;
     while ((qw = (struct _queued_write *)linklistShift(&pending_writes))) {
 	if (qw->free_func)
-	    qw->free_func(qw->buf);
+	    qw->free_func(const_cast<char *>(qw->buf));
 	delete qw;
     }
 }
@@ -481,13 +481,13 @@ UFSStoreState::kickWriteQueue()
 	return false;
     debug(79, 3) ("storeAufsKickWriteQueue: writing queued chunk of %ld bytes\n",
 	(long int) q->size);
-    write(q->buf, q->size, q->offset, q->free_func);
+    write(const_cast<char *>(q->buf), q->size, q->offset, q->free_func);
     delete q;
     return true;
 }
 
 void
-UFSStoreState::queueWrite(char *buf, size_t size, off_t offset, FREE * free_func)
+UFSStoreState::queueWrite(char const *buf, size_t size, off_t offset, FREE * free_func)
 {
     debug(79, 3) ("UFSStoreState::queueWrite: queuing write\n");
     struct _queued_write *q;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.90 2002/12/06 23:19:15 hno Exp $
+ * $Id: forward.cc,v 1.91 2003/01/23 00:37:20 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -36,7 +36,9 @@
 
 #include "squid.h"
 #include "Store.h"
-
+#include "HttpRequest.h"
+#include "fde.h"
+#include "MemObject.h"
 
 static PSC fwdStartComplete;
 static void fwdDispatch(FwdState *);
@@ -87,19 +89,19 @@ fwdStateFree(FwdState * fwdState)
     debug(17, 3) ("fwdStateFree: %p\n", fwdState);
     assert(e->mem_obj);
 #if URL_CHECKSUM_DEBUG
-    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+    e->mem_obj->checkUrlChecksum();
 #endif
 #if WIP_FWD_LOG
     fwdLog(fwdState);
 #endif
     if (e->store_status == STORE_PENDING) {
-	if (e->mem_obj->inmem_hi == 0) {
+	if (e->isEmpty()) {
 	    assert(fwdState->err);
 	    errorAppendEntry(e, fwdState->err);
 	    fwdState->err = NULL;
 	} else {
 	    EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
-	    storeComplete(e);
+	    e->complete();
 	    storeReleaseRequest(e);
 	}
     }
@@ -131,7 +133,7 @@ fwdCheckRetry(FwdState * fwdState)
 {
     if (fwdState->entry->store_status != STORE_PENDING)
 	return 0;
-    if (fwdState->entry->mem_obj->inmem_hi > 0)
+    if (!fwdState->entry->isEmpty())
 	return 0;
     if (fwdState->n_tries > 10)
 	return 0;
@@ -338,7 +340,7 @@ fwdConnectTimeout(int fd, void *data)
     peer *p = fwdStateServerPeer(fwdState);
     debug(17, 2) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(fd == fwdState->server_fd);
-    if (entry->mem_obj->inmem_hi == 0) {
+    if (entry->isEmpty()) {
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT);
 	err->request = requestLink(fwdState->request);
 	err->xerrno = ETIMEDOUT;
@@ -429,6 +431,7 @@ fwdConnectStart(void *data)
 	ctimeout = fs->_peer->connect_timeout > 0 ? fs->_peer->connect_timeout
 	    : Config.Timeout.peer_connect;
     } else if (fwdState->request->flags.accelerated &&
+	!fwdState->request->flags.internalclient &&
 	Config.Accel.single_host && Config.Accel.host) {
 	host = Config.Accel.host;
 	port = Config.Accel.port;
@@ -447,7 +450,7 @@ fwdConnectStart(void *data)
 	return;
     }
 #if URL_CHECKSUM_DEBUG
-    assert(fwdState->entry->mem_obj->chksum == url_checksum(url));
+    fwdState->entry->mem_obj->checkUrlChecksum();
 #endif
     outgoing = getOutgoingAddr(fwdState->request);
     tos = getOutgoingTOS(fwdState->request);
@@ -614,7 +617,7 @@ fwdReforward(FwdState * fwdState)
     assert(e->store_status == STORE_PENDING);
     assert(e->mem_obj);
 #if URL_CHECKSUM_DEBUG
-    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+    e->mem_obj->checkUrlChecksum();
 #endif
     debug(17, 3) ("fwdReforward: %s?\n", storeUrl(e));
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
@@ -632,7 +635,7 @@ fwdReforward(FwdState * fwdState)
 	debug(17, 3) ("fwdReforward: No forward-servers left\n");
 	return 0;
     }
-    s = e->mem_obj->reply->sline.status;
+    s = e->getReply()->sline.status;
     debug(17, 3) ("fwdReforward: status %d\n", (int) s);
     return fwdReforwardableStatus(s);
 }
@@ -683,7 +686,7 @@ fwdStart(int fd, StoreEntry * e, request_t * r)
     e->mem_obj->request = requestLink(r);
     e->mem_obj->fd = fd;
 #if URL_CHECKSUM_DEBUG
-    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+    e->mem_obj->checkUrlChecksum();
 #endif
     if (shutting_down) {
 	/* more yuck */
@@ -718,40 +721,6 @@ fwdStart(int fd, StoreEntry * e, request_t * r)
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
     storeRegisterAbort(e, fwdAbort, fwdState);
     peerSelect(r, e, fwdStartComplete, fwdState);
-}
-
-int
-fwdCheckDeferRead(int fd, void *data)
-{
-    StoreEntry *e = (StoreEntry *)data;
-    MemObject *mem = e->mem_obj;
-    int rc = 0;
-    if (mem == NULL)
-	return 0;
-#if URL_CHECKSUM_DEBUG
-    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
-#endif
-#if DELAY_POOLS
-    if (fd < 0)
-	(void) 0;
-    else if (delayIsNoDelay(fd))
-	(void) 0;
-    else {
-	int i = delayMostBytesWanted(mem, INT_MAX);
-	if (0 == i)
-	    return 1;
-	/* was: rc = -(rc != INT_MAX); */
-	else if (INT_MAX == i)
-	    rc = 0;
-	else
-	    rc = -1;
-    }
-#endif
-    if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
-	return rc;
-    if ((size_t)mem->inmem_hi - storeLowestMemReaderOffset(e) < Config.readAheadGap)
-	return rc;
-    return 1;
 }
 
 void
@@ -803,14 +772,14 @@ fwdComplete(FwdState * fwdState)
     StoreEntry *e = fwdState->entry;
     assert(e->store_status == STORE_PENDING);
     debug(17, 3) ("fwdComplete: %s\n\tstatus %d\n", storeUrl(e),
-	e->mem_obj->reply->sline.status);
+	e->getReply()->sline.status);
 #if URL_CHECKSUM_DEBUG
-    assert(e->mem_obj->chksum == url_checksum(e->mem_obj->url));
+    e->mem_obj->checkUrlChecksum();
 #endif
-    fwdLogReplyStatus(fwdState->n_tries, e->mem_obj->reply->sline.status);
+    fwdLogReplyStatus(fwdState->n_tries, e->getReply()->sline.status);
     if (fwdReforward(fwdState)) {
 	debug(17, 3) ("fwdComplete: re-forwarding %d %s\n",
-	    e->mem_obj->reply->sline.status,
+	    e->getReply()->sline.status,
 	    storeUrl(e));
 	if (fwdState->server_fd > -1)
 	    fwdUnregister(fwdState->server_fd, fwdState);
@@ -818,9 +787,9 @@ fwdComplete(FwdState * fwdState)
 	fwdStartComplete(fwdState->servers, fwdState);
     } else {
 	debug(17, 3) ("fwdComplete: not re-forwarding status %d\n",
-	    e->mem_obj->reply->sline.status);
+	    e->getReply()->sline.status);
 	EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
-	storeComplete(e);
+	e->complete();
 	/*
 	 * If fwdState isn't associated with a server FD, it
 	 * won't get freed unless we do it here.

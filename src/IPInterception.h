@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.h,v 1.3 2002/10/13 20:34:57 robertc Exp $
+ * $Id: IPInterception.h,v 1.4 2003/01/23 00:37:13 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

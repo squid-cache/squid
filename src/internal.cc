@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.26 2002/10/13 20:35:02 robertc Exp $
+ * $Id: internal.cc,v 1.27 2003/01/23 00:37:22 robertc Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -35,6 +35,8 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
 
 /* called when we "miss" on an internal object;
  * generate known dynamic objects, 
@@ -44,7 +46,7 @@ void
 internalStart(request_t * request, StoreEntry * entry)
 {
     ErrorState *err;
-    const char *upath = strBuf(request->urlpath);
+    const char *upath = request->urlpath.buf();
     http_version_t version;
     debug(76, 3) ("internalStart: %s requesting '%s'\n",
 	inet_ntoa(request->client_addr), upath);
@@ -57,7 +59,8 @@ internalStart(request_t * request, StoreEntry * entry)
 	const char *msgbuf = "This cache does not suport Cache Digests.\n";
 #endif
 	httpBuildVersion(&version, 1, 0);
-	httpReplySetHeaders(entry->mem_obj->reply,
+	HttpReply *reply = httpReplyCreate ();
+	httpReplySetHeaders(reply,
 	    version,
 	    HTTP_NOT_FOUND,
 	    "Not Found",
@@ -65,9 +68,9 @@ internalStart(request_t * request, StoreEntry * entry)
 	    strlen(msgbuf),
 	    squid_curtime,
 	    -2);
-	httpReplySwapOut(entry->mem_obj->reply, entry);
+	httpReplySwapOut(reply, entry);
 	storeAppend(entry, msgbuf, strlen(msgbuf));
-	storeComplete(entry);
+	entry->complete();
     } else {
 	debugObj(76, 1, "internalStart: unknown request:\n",
 	    request, (ObjPackMethod) & httpRequestPack);

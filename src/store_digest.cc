@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.54 2002/10/25 07:36:32 robertc Exp $
+ * $Id: store_digest.cc,v 1.55 2003/01/23 00:37:26 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -41,10 +41,12 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-
-
 #if USE_CACHE_DIGESTS
+
+#include "Store.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "MemObject.h"
 
 /*
  * local types
@@ -379,15 +381,15 @@ storeDigestRewriteResume(void)
     /* setting public key will purge old digest entry if any */
     storeSetPublicKey(e);
     /* fake reply */
-    httpReplyReset(e->mem_obj->reply);
+    HttpReply *rep = httpReplyCreate ();
     httpBuildVersion(&version, 1, 0);
-    httpReplySetHeaders(e->mem_obj->reply, version, HTTP_OK, "Cache Digest OK",
+    httpReplySetHeaders(rep, version, HTTP_OK, "Cache Digest OK",
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + Config.digest.rewrite_period);
     debug(71, 3) ("storeDigestRewrite: entry expires on %ld (%+d)\n",
-	(long int) e->mem_obj->reply->expires, (int) (e->mem_obj->reply->expires - squid_curtime));
+	(long int) rep->expires, (int) (rep->expires - squid_curtime));
     storeBuffer(e);
-    httpReplySwapOut(e->mem_obj->reply, e);
+    httpReplySwapOut(rep, e);
     storeDigestCBlockSwapOut(e);
     storeBufferFlush(e);
     eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0.0, 1);
@@ -398,16 +400,14 @@ static void
 storeDigestRewriteFinish(StoreEntry * e)
 {
     assert(sd_state.rewrite_lock && e == sd_state.rewrite_lock->data);
-    storeComplete(e);
+    e->complete();
     storeTimestampsSet(e);
     debug(71, 2) ("storeDigestRewriteFinish: digest expires at %ld (%+d)\n",
 	(long int) e->expires, (int) (e->expires - squid_curtime));
     /* is this the write order? @?@ */
-    requestUnlink(e->mem_obj->request);
-    e->mem_obj->request = NULL;
+    e->mem_obj->unlinkRequest();
     storeUnlockObject(e);
     cbdataFree(sd_state.rewrite_lock);
-    e = NULL;
     sd_state.rewrite_lock = NULL;
     sd_state.rewrite_count++;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)
@@ -467,7 +467,7 @@ storeDigestCalcCap(void)
      */
     const int hi_cap = Config.Swap.maxSize / Config.Store.avgObjectSize;
     const int lo_cap = 1 + store_swap_size / Config.Store.avgObjectSize;
-    const int e_count = storeEntryInUse();
+    const int e_count = StoreEntry::inUseCount();
     int cap = e_count ? e_count : hi_cap;
     debug(71, 2) ("storeDigestCalcCap: have: %d, want %d entries; limits: [%d, %d]\n",
 	e_count, cap, lo_cap, hi_cap);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.69 2002/12/06 23:19:16 hno Exp $
+ * $Id: mem.cc,v 1.70 2003/01/23 00:37:23 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Mem.h"
 #include "memMeter.h"
 #include "Store.h"
 
@@ -41,8 +42,6 @@
 
 /* local prototypes */
 static void memStringStats(StoreEntry * sentry);
-static void memStats(StoreEntry * sentry);
-static void memPoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEntry * e);
 
 /* module locals */
 static MemPool *MemPools[MEM_MAX];
@@ -115,11 +114,11 @@ memBufStats(StoreEntry * sentry)
 	HugeBufVolumeMeter.level / 1024);
 }
 
-static void
-memStats(StoreEntry * sentry)
+void
+Mem::Stats(StoreEntry * sentry)
 {
     storeBuffer(sentry);
-    memReport(sentry);
+    Report(sentry);
     memStringStats(sentry);
     memBufStats(sentry);
     storeBufferFlush(sentry);
@@ -295,10 +294,10 @@ memFreeBuf(size_t size, void *buf)
 static double clean_interval = 15.0;	/* time to live of idle chunk before release */
 
 void
-memPoolCleanIdlePools(void *unused)
+Mem::CleanIdlePools(void *unused)
 {
     memPoolClean(static_cast<time_t>(clean_interval));
-    eventAdd("memPoolCleanIdlePools", memPoolCleanIdlePools, NULL, clean_interval, 1);
+    eventAdd("memPoolCleanIdlePools", CleanIdlePools, NULL, clean_interval, 1);
 }
 
 static int mem_idle_limit = 0;
@@ -321,8 +320,11 @@ memConfigure(void)
     mem_idle_limit = new_pool_limit;
 }
 
+/* XXX make these classes do their own memory management */
+#include "HttpHdrContRange.h"
+
 void
-memInit(void)
+Mem::Init(void)
 {
     int i;
 
@@ -368,13 +370,8 @@ memInit(void)
     memDataInit(MEM_HTTP_REPLY, "HttpReply", sizeof(HttpReply), 0);
     memDataInit(MEM_HTTP_HDR_ENTRY, "HttpHeaderEntry", sizeof(HttpHeaderEntry), 0);
     memDataInit(MEM_HTTP_HDR_CC, "HttpHdrCc", sizeof(HttpHdrCc), 0);
-    memDataInit(MEM_HTTP_HDR_RANGE_SPEC, "HttpHdrRangeSpec", sizeof(HttpHdrRangeSpec), 0);
-    memDataInit(MEM_HTTP_HDR_RANGE, "HttpHdrRange", sizeof(HttpHdrRange), 0);
     memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_INTLIST, "intlist", sizeof(intlist), 0);
-    memDataInit(MEM_MEMOBJECT, "MemObject", sizeof(MemObject),
-	Squid_MaxFD >> 3);
-    memDataInit(MEM_MEM_NODE, "mem_node", sizeof(mem_node), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);
@@ -388,7 +385,6 @@ memInit(void)
 	sizeof(helper_request), 0);
     memDataInit(MEM_HELPER_STATEFUL_REQUEST, "helper_stateful_request",
 	sizeof(helper_stateful_request), 0);
-    memDataInit(MEM_TLV, "storeSwapTLV", sizeof(tlv), 0);
     memDataInit(MEM_SWAP_LOG_DATA, "storeSwapLogData", sizeof(storeSwapLogData), 0);
 
     /* init string pools */
@@ -397,7 +393,7 @@ memInit(void)
     }
     cachemgrRegister("mem",
 	"Memory Utilization",
-	memStats, 0, 1);
+	Mem::Stats, 0, 1);
 }
 
 mem_type &operator++ (mem_type &aMem)
@@ -519,8 +515,8 @@ memFreeBufFunc(size_t size)
 
 /* MemPoolMeter */
 
-static void
-memPoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEntry * e)
+void
+Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEntry * e)
 {
     int excess = 0;
     int needed = 0;
@@ -580,7 +576,7 @@ memPoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEn
 }
 
 void
-memReport(StoreEntry * e)
+Mem::Report(StoreEntry * e)
 {
     static char buf[64];
     static MemPoolStats mp_stats;
@@ -623,7 +619,7 @@ memReport(StoreEntry * e)
 	if (!mp_stats.pool)	/* pool destroyed */
 	    continue;
 	if (mp_stats.pool->meter.gb_saved.count > 0)	/* this pool has been used */
-	    memPoolReport(&mp_stats, mp_total.TheMeter, e);
+	    PoolReport(&mp_stats, mp_total.TheMeter, e);
 	else
 	    not_used++;
     }
@@ -644,7 +640,7 @@ memReport(StoreEntry * e)
     mp_stats.items_idle = mp_total.tot_items_idle;
     mp_stats.overhead = mp_total.tot_overhead;
 
-    memPoolReport(&mp_stats, mp_total.TheMeter, e);
+    PoolReport(&mp_stats, mp_total.TheMeter, e);
 
     /* Cumulative */
     storeAppendPrintf(e, "Cumulative allocated volume: %s\n", double_to_str(buf, 64, mp_total.TheMeter->gb_saved.bytes));

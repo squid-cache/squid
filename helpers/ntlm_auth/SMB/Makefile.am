@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2001/08/31 11:19:26 robertc Exp $
+#  $Id: Makefile.am,v 1.2 2003/01/23 00:36:27 robertc Exp $
 #
 
 SUBDIRS = smbval

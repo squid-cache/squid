@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.9 2001/01/12 00:37:13 wessels Exp $
+ * $Id: HttpHdrExtField.cc,v 1.10 2003/01/23 00:37:12 robertc Exp $
  *
  * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov
@@ -85,8 +85,8 @@ void
 httpHdrExtFieldDestroy(HttpHdrExtField * f)
 {
     assert(f);
-    stringClean(&f->name);
-    stringClean(&f->value);
+    f->name.clean();
+    f->value.clean();
     xfree(f);
 }
 
@@ -95,6 +95,6 @@ httpHdrExtFieldDup(HttpHdrExtField * f)
 {
     assert(f);
     return httpHdrExtFieldDoCreate(
-	strBuf(f->name), strLen(f->name),
-	strBuf(f->value), strLen(f->value));
+	f->name.buf(), f->name.size(),
+	f->value.buf(), f->value.size());
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.91 2002/12/27 10:26:33 robertc Exp $
+ * $Id: store_swapout.cc,v 1.92 2003/01/23 00:37:27 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -36,9 +36,11 @@
 #include "squid.h"
 #include "StoreClient.h"
 #include "Store.h"
+/* FIXME: Abstract the use of this more */
+#include "mem_node.h"
+#include "MemObject.h"
 #include "SwapDir.h"
 
-static off_t storeSwapOutObjectBytesOnDisk(const MemObject *);
 static void storeSwapOutStart(StoreEntry * e);
 static STIOCB storeSwapOutFileClosed;
 static STIOCB storeSwapOutFileNotify;
@@ -47,11 +49,7 @@ static STIOCB storeSwapOutFileNotify;
 static void
 storeSwapOutStart(StoreEntry * e)
 {
-    generic_cbdata *c;
     MemObject *mem = e->mem_obj;
-    int swap_hdr_sz = 0;
-    tlv *tlv_list;
-    char *buf;
     StoreIOState::Pointer sio;
     assert(mem);
     /* Build the swap metadata, so the filesystem will know how much
@@ -60,29 +58,36 @@ storeSwapOutStart(StoreEntry * e)
     debug(20, 5) ("storeSwapOutStart: Begin SwapOut '%s' to dirno %d, fileno %08X\n",
 	storeUrl(e), e->swap_dirn, e->swap_filen);
     e->swap_status = SWAPOUT_WRITING;
-    tlv_list = storeSwapMetaBuild(e);
-    buf = storeSwapMetaPack(tlv_list, &swap_hdr_sz);
-    storeSwapTLVFree(tlv_list);
-    mem->swap_hdr_sz = (size_t) swap_hdr_sz;
+    /* If we start swapping out objects with OutOfBand Metadata,
+     * then this code needs changing
+     */
     /* Create the swap file */
-    c = cbdataAlloc(generic_cbdata);
+    generic_cbdata *c = cbdataAlloc(generic_cbdata);
     c->data = e;
     sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
-    mem->swapout.sio = sio;
-    if (mem->swapout.sio == NULL) {
+    if (NULL == sio.getRaw()) {
 	e->swap_status = SWAPOUT_NONE;
 	cbdataFree(c);
-	xfree(buf);
 	storeLog(STORE_LOG_SWAPOUTFAIL, e);
 	return;
     }
-    storeLockObject(e);		/* Don't lock until after create, or the replacement
-				 * code might get confused */
+    mem->swapout.sio = sio;
+    /* Don't lock until after create, or the replacement
+     * code might get confused */
+    storeLockObject(e);
     /* Pick up the file number if it was assigned immediately */
     e->swap_filen = mem->swapout.sio->swap_filen;
     e->swap_dirn = mem->swapout.sio->swap_dirn;
     /* write out the swap metadata */
-    storeWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree);
+    /* TODO: make some sort of data,size refcounted immutable buffer
+     * for use by this sort of function.
+     */
+    char const *buf = e->getSerialisedMetaData ();
+    /* If we start swapping out with out of band metadata, this assert
+     * will catch it - this code needs to be adjusted if that happens
+     */
+    assert (buf);
+    storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree);
 }
 
 static void
@@ -99,137 +104,10 @@ storeSwapOutFileNotify(void *data, int errflag, storeIOState * sio)
     e->swap_dirn = mem->swapout.sio->swap_dirn;
 }
 
-void
-storeSwapOut(StoreEntry * e)
+static void
+doPages(StoreEntry *anEntry)
 {
-    MemObject *mem = e->mem_obj;
-    off_t lowest_offset;
-    off_t new_mem_lo;
-    off_t on_disk = 0;
-    ssize_t swapout_size;
-    ssize_t swap_buf_len;
-    if (mem == NULL)
-	return;
-    /* should we swap something out to disk? */
-    debug(20, 7) ("storeSwapOut: %s\n", storeUrl(e));
-    debug(20, 7) ("storeSwapOut: store_status = %s\n",
-	storeStatusStr[e->store_status]);
-    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
-	assert(EBIT_TEST(e->flags, RELEASE_REQUEST));
-	storeSwapOutFileClose(e);
-	return;
-    }
-    if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-	debug(20, 3) ("storeSwapOut: %s SPECIAL\n", storeUrl(e));
-	return;
-    }
-    debug(20, 7) ("storeSwapOut: mem->inmem_lo = %d\n",
-	(int) mem->inmem_lo);
-    debug(20, 7) ("storeSwapOut: mem->inmem_hi = %d\n",
-	(int) mem->inmem_hi);
-    debug(20, 7) ("storeSwapOut: swapout.queue_offset = %d\n",
-	(int) mem->swapout.queue_offset);
-    if (mem->swapout.sio.getRaw())
-	debug(20, 7) ("storeSwapOut: offset() = %d\n",
-	    (int) mem->swapout.sio->offset());
-    assert(mem->inmem_hi >= mem->swapout.queue_offset);
-    lowest_offset = storeLowestMemReaderOffset(e);
-    debug(20, 7) ("storeSwapOut: lowest_offset = %d\n",
-	(int) lowest_offset);
-    /*
-     * Grab the swapout_size and check to see whether we're going to defer
-     * the swapout based upon size
-     */
-    swapout_size = (ssize_t) (mem->inmem_hi - mem->swapout.queue_offset);
-    if ((e->store_status != STORE_OK) && (swapout_size < store_maxobjsize)) {
-	/*
-	 * NOTE: the store_maxobjsize here is the max of optional
-	 * max-size values from 'cache_dir' lines.  It is not the
-	 * same as 'maximum_object_size'.  By default, store_maxobjsize
-	 * will be set to -1.  However, I am worried that this
-	 * deferance may consume a lot of memory in some cases.
-	 * It would be good to make this decision based on reply
-	 * content-length, rather than wait to accumulate huge
-	 * amounts of object data in memory.
-	 */
-	debug(20, 5) ("storeSwapOut: Deferring starting swapping out\n");
-	return;
-    }
-    /*
-     * Careful.  lowest_offset can be greater than inmem_hi, such
-     * as in the case of a range request.
-     */
-    if (mem->inmem_hi < lowest_offset)
-	new_mem_lo = lowest_offset;
-    else if (mem->inmem_hi - mem->inmem_lo > (ssize_t)Config.Store.maxInMemObjSize)
-	new_mem_lo = lowest_offset;
-    else
-	new_mem_lo = mem->inmem_lo;
-    assert(new_mem_lo >= mem->inmem_lo);
-    if (storeSwapOutAble(e)) {
-	/*
-	 * We should only free up to what we know has been written
-	 * to disk, not what has been queued for writing.  Otherwise
-	 * there will be a chunk of the data which is not in memory
-	 * and is not yet on disk.
-	 * The -1 makes sure the page isn't freed until storeSwapOut has
-	 * walked to the next page. (mem->swapout.memnode)
-	 */
-	if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) - 1 < new_mem_lo)
-	    new_mem_lo = on_disk - 1;
-	if (new_mem_lo == -1)
-	    new_mem_lo = 0;	/* the above might become -1 */
-    } else if (new_mem_lo > 0) {
-	/*
-	 * Its not swap-able, and we're about to delete a chunk,
-	 * so we must make it PRIVATE.  This is tricky/ugly because
-	 * for the most part, we treat swapable == cachable here.
-	 */
-	storeReleaseRequest(e);
-    }
-    stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
-    mem->inmem_lo = new_mem_lo;
-#if SIZEOF_OFF_T == 4
-    if (mem->inmem_hi > 0x7FFF0000) {
-	debug(20, 0) ("WARNING: preventing off_t overflow for %s\n", storeUrl(e));
-	storeAbort(e);
-	return;
-    }
-#endif
-    if (e->swap_status == SWAPOUT_WRITING)
-	assert(mem->inmem_lo <= on_disk);
-    if (!storeSwapOutAble(e))
-	return;
-    debug(20, 7) ("storeSwapOut: swapout_size = %d\n",
-	(int) swapout_size);
-    if (swapout_size == 0) {
-	if (e->store_status == STORE_OK)
-	    storeSwapOutFileClose(e);
-	return;			/* Nevermore! */
-    }
-    if (e->store_status == STORE_PENDING) {
-	/* wait for a full block to write */
-	if (swapout_size < SM_PAGE_SIZE)
-	    return;
-	/*
-	 * Wait until we are below the disk FD limit, only if the
-	 * next server-side read won't be deferred.
-	 */
-	if (storeTooManyDiskFilesOpen() && !fwdCheckDeferRead(-1, e))
-	    return;
-    }
-    /* Ok, we have stuff to swap out.  Is there a swapout.sio open? */
-    if (e->swap_status == SWAPOUT_NONE) {
-	assert(mem->swapout.sio == NULL);
-	assert(mem->inmem_lo == 0);
-	if (storeCheckCachable(e))
-	    storeSwapOutStart(e);
-	else
-	    return;
-	/* ENTRY_CACHABLE will be cleared and we'll never get here again */
-    }
-    if (mem->swapout.sio == NULL)
-	return;
+    MemObject *mem = anEntry->mem_obj;
     do {
 	/*
 	 * Evil hack time.
@@ -253,23 +131,118 @@ storeSwapOut(StoreEntry * e)
 	 * but we can look at this at a later date or whenever the code results
 	 * in bad swapouts, whichever happens first. :-)
 	 */
-	swap_buf_len = mem->swapout.memnode->len;
+	ssize_t swap_buf_len = mem->swapout.memnode->nodeBuffer.length;
 
 	debug(20, 3) ("storeSwapOut: swap_buf_len = %d\n", (int) swap_buf_len);
 	assert(swap_buf_len > 0);
 	debug(20, 3) ("storeSwapOut: swapping out %ld bytes from %ld\n",
 	    (long int) swap_buf_len, (long int) mem->swapout.queue_offset);
 	mem->swapout.queue_offset += swap_buf_len;
-	storeWrite(mem->swapout.sio, mem->swapout.memnode->data, swap_buf_len, -1, NULL);
+	storeIOWrite(mem->swapout.sio, mem->swapout.memnode->data, swap_buf_len, -1, NULL);
 	/* the storeWrite() call might generate an error */
-	if (e->swap_status != SWAPOUT_WRITING)
+	if (anEntry->swap_status != SWAPOUT_WRITING)
 	    break;
-	swapout_size = (ssize_t) (mem->inmem_hi - mem->swapout.queue_offset);
-	if (e->store_status == STORE_PENDING)
+	ssize_t swapout_size = (ssize_t) (mem->endOffset() - mem->swapout.queue_offset);
+	if (anEntry->store_status == STORE_PENDING)
 	    if (swapout_size < SM_PAGE_SIZE)
 		break;
-    } while (swapout_size > 0);
+	if (swapout_size <= 0)
+	    return;
+    } while (true);
+}
+
+
+/* This routine is called every time data is sent to the client side.
+ * It's overhead is therefor, significant.
+ */
+void
+storeSwapOut(StoreEntry * e)
+{
+    if (!e->mem_obj)
+	return;
+    if (!e->swapoutPossible())
+	return;
+
+    MemObject *mem = e->mem_obj;
+
+    debug(20, 7) ("storeSwapOut: mem->inmem_lo = %d\n",
+	(int) mem->inmem_lo);
+    debug(20, 7) ("storeSwapOut: mem->endOffset() = %d\n",
+	(int) mem->endOffset());
+    debug(20, 7) ("storeSwapOut: swapout.queue_offset = %d\n",
+	(int) mem->swapout.queue_offset);
+    if (mem->swapout.sio.getRaw())
+	debug(20, 7) ("storeSwapOut: storeOffset() = %d\n",
+	    (int) mem->swapout.sio->offset());
+    
+    ssize_t swapout_maxsize = (ssize_t) (mem->endOffset() - mem->swapout.queue_offset);
+    assert(swapout_maxsize >= 0);
+    off_t const lowest_offset = mem->lowestMemReaderOffset();
+    
+    debug(20, 7) ("storeSwapOut: lowest_offset = %d\n",
+	(int) lowest_offset);
+    /*
+     * Grab the swapout_size and check to see whether we're going to defer
+     * the swapout based upon size
+     */
+    if ((e->store_status != STORE_OK) && (swapout_maxsize < store_maxobjsize)) {
+	/*
+	 * NOTE: the store_maxobjsize here is the max of optional
+	 * max-size values from 'cache_dir' lines.  It is not the
+	 * same as 'maximum_object_size'.  By default, store_maxobjsize
+	 * will be set to -1.  However, I am worried that this
+	 * deferance may consume a lot of memory in some cases.
+	 * It would be good to make this decision based on reply
+	 * content-length, rather than wait to accumulate huge
+	 * amounts of object data in memory.
+	 */
+	debug(20, 5) ("storeSwapOut: Deferring starting swapping out\n");
+	return;
+    }
+    e->trimMemory();
+#if SIZEOF_OFF_T == 4
+    if (mem->endOffset() > 0x7FFF0000) {
+	debug(20, 0) ("WARNING: preventing off_t overflow for %s\n", storeUrl(e));
+	storeAbort(e);
+	return;
+    }
+#endif
+    if (e->swap_status == SWAPOUT_WRITING)
+	assert(mem->inmem_lo <=  (off_t)mem->objectBytesOnDisk() );
+    if (!storeSwapOutAble(e))
+	return;
+    debug(20, 7) ("storeSwapOut: swapout_size = %d\n",
+	(int) swapout_maxsize);
+    if (swapout_maxsize == 0) {
+	if (e->store_status == STORE_OK)
+	    storeSwapOutFileClose(e);
+	return;			/* Nevermore! */
+    }
+    if (e->store_status == STORE_PENDING) {
+	/* wait for a full block to write */
+	if (swapout_maxsize < SM_PAGE_SIZE)
+	    return;
+	/*
+	 * Wait until we are below the disk FD limit, only if the
+	 * next server-side read won't be deferred.
+	 */
+	if (storeTooManyDiskFilesOpen() && !StoreEntry::CheckDeferRead(-1, e))
+	    return;
+    }
+    /* Ok, we have stuff to swap out.  Is there a swapout.sio open? */
+    if (e->swap_status == SWAPOUT_NONE) {
+	assert(mem->swapout.sio == NULL);
+	assert(mem->inmem_lo == 0);
+	if (storeCheckCachable(e))
+	    storeSwapOutStart(e);
+	else
+	    return;
+	/* ENTRY_CACHABLE will be cleared and we'll never get here again */
+    }
     if (mem->swapout.sio == NULL)
+	return;
+    doPages(e);
+    if (NULL == mem->swapout.sio.getRaw())
 	/* oops, we're not swapping out any more */
 	return;
     if (e->store_status == STORE_OK) {
@@ -278,7 +251,7 @@ storeSwapOut(StoreEntry * e)
 	 * to the filesystem at this point because storeSwapOut() is
 	 * not going to be called again for this entry.
 	 */
-	assert(mem->inmem_hi == mem->swapout.queue_offset);
+	assert(mem->endOffset() == mem->swapout.queue_offset);
 	storeSwapOutFileClose(e);
     }
 }
@@ -336,31 +309,6 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 }
 
 /*
- * How much of the object data is on the disk?
- */
-static off_t
-storeSwapOutObjectBytesOnDisk(const MemObject * mem)
-{
-    /*
-     * NOTE: offset() represents the disk file size,
-     * not the amount of object data on disk.
-     * 
-     * If we don't have at least 'swap_hdr_sz' bytes
-     * then none of the object data is on disk.
-     *
-     * This should still be safe if swap_hdr_sz == 0,
-     * meaning we haven't even opened the swapout file
-     * yet.
-     */
-    if (mem->swapout.sio == NULL)
-	return 0;
-    off_t nwritten = mem->swapout.sio->offset();
-    if (nwritten <= (off_t)mem->swap_hdr_sz)
-	return 0;
-    return nwritten - mem->swap_hdr_sz;
-}
-
-/*
  * Is this entry a candidate for writing to disk?
  */
 int
@@ -374,13 +322,19 @@ storeSwapOutAble(const StoreEntry * e)
     /*
      * If there are DISK clients, we must write to disk
      * even if its not cachable
+     * RBC: Surely we should not create disk client on non cacheable objects?
+     * therefore this should be an assert?
      */
     for (node = e->mem_obj->clients.head; node; node = node->next) {
-	if (((store_client *) node->data)->type == STORE_DISK_CLIENT)
+	if (((store_client *) node->data)->getType() == STORE_DISK_CLIENT)
 	    return 1;
     }
     /* Don't pollute the disk with icons and other special entries */
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
 	return 0;
-    return EBIT_TEST(e->flags, ENTRY_CACHABLE);
+    if (!EBIT_TEST(e->flags, ENTRY_CACHABLE))
+	return 0;
+    if (!e->mem_obj->isContiguous())
+	return 0;
+    return 1;
 }

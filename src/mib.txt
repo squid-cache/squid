@@ -2,7 +2,7 @@ SQUID-MIB  { iso org(3) dod(6) internet(1) private(4) enterprises(1) 3495 }
 
 DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.25 2000/05/16 07:06:05 wessels Exp $
+-- $Id: mib.txt,v 1.26 2003/01/23 00:37:23 robertc Exp $
 --
 
 IMPORTS

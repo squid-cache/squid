@@ -1,5 +1,5 @@
 /*
- * $Id: Array.cc,v 1.9 2003/01/18 14:06:32 robertc Exp $
+ * $Id: Array.cc,v 1.10 2003/01/23 00:37:00 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *

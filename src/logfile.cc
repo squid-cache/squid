@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.12 2002/10/13 20:35:02 robertc Exp $
+ * $Id: logfile.cc,v 1.13 2003/01/23 00:37:23 robertc Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "authenticate.h"
+#include "fde.h"
 
 static void logfileWriteWrapper(Logfile * lf, const void *buf, size_t len);
 

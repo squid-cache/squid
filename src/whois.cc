@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.22 2002/10/21 15:21:52 adrian Exp $
+ * $Id: whois.cc,v 1.23 2003/01/23 00:37:29 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -35,16 +35,21 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "HttpReply.h"
 #include "comm.h"
 
 #define WHOIS_PORT 43
 
-typedef struct {
+class WhoisState {
+public:
+    void readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno);
+    void setReplyToOK(StoreEntry *entry);
     StoreEntry *entry;
     request_t *request;
     FwdState *fwd;
     char buf[BUFSIZ];
-} WhoisState;
+    bool dataWritten;
+};
 
 static PF whoisClose;
 static PF whoisTimeout;
@@ -72,11 +77,12 @@ whoisStart(FwdState * fwd)
     p->request = fwd->request;
     p->entry = fwd->entry;
     p->fwd = fwd;
+    p->dataWritten = 0;
     storeLockObject(p->entry);
     comm_add_close_handler(fd, whoisClose, p);
-    l = strLen(p->request->urlpath) + 3;
+    l = p->request->urlpath.size() + 3;
     buf = (char *)xmalloc(l);
-    snprintf(buf, l, "%s\r\n", strBuf(p->request->urlpath) + 1);
+    snprintf(buf, l, "%s\r\n", p->request->urlpath.buf() + 1);
     comm_write(fd, buf, strlen(buf), whoisWriteComplete, p);
     comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);
     commSetTimeout(fd, Config.Timeout.read, whoisTimeout, p);
@@ -96,8 +102,22 @@ static void
 whoisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     WhoisState *p = (WhoisState *)data;
-    StoreEntry *entry = p->entry;
-    MemObject *mem = entry->mem_obj;
+    p->readReply(fd, buf, len, flag, xerrno);
+}
+
+void
+WhoisState::setReplyToOK(StoreEntry *entry)
+{
+     HttpReply *reply = httpReplyCreate();
+     http_version_t version;
+     httpBuildVersion(&version, 1, 0);
+     httpReplySetHeaders(reply, version, HTTP_OK, NULL, NULL, 0, 0, -1);
+     storeEntryReplaceObject (entry, reply);
+}
+
+void
+WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno)
+{
     int do_next_read = 0;
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
@@ -109,10 +129,12 @@ whoisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
     debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, (int)len);
     debug(75, 5) ("{%s}\n", buf);
     if (flag == COMM_OK && len > 0) {
-	if (0 == mem->inmem_hi)
-	    mem->reply->sline.status = HTTP_OK;
+	if (!dataWritten)
+	    setReplyToOK(entry);
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.http.kbytes_in, len);
+	/* No range support, we always grab it all */
+	dataWritten = 1;
 	storeAppend(entry, buf, len);
         do_next_read = 1;
     } else if (flag != COMM_OK || len < 0) {
@@ -120,11 +142,11 @@ whoisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 	    fd, xstrerror());
 	if (ignoreErrno(errno)) {
             do_next_read = 1;
-	} else if (mem->inmem_hi == 0) {
+	} else if (!dataWritten) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;
-	    fwdFail(p->fwd, err);
+	    fwdFail(fwd, err);
 	    comm_close(fd);
             do_next_read = 0;
 	} else {
@@ -136,13 +158,13 @@ whoisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 	storeBufferFlush(entry);
 	if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
 	    storeSetPublicKey(entry);
-	fwdComplete(p->fwd);
+	fwdComplete(fwd);
 	debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
 	comm_close(fd);
         do_next_read = 0;
     }
     if (do_next_read)
-        comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);
+        comm_read(fd, buf, BUFSIZ, whoisReadReply, this);
 }
 
 static void

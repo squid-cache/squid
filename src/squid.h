@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.228 2002/12/27 10:26:33 robertc Exp $
+ * $Id: squid.h,v 1.229 2003/01/23 00:37:25 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *

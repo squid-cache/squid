@@ -1,5 +1,5 @@
 /*
- * $Id: splay.c,v 1.14 2002/10/18 22:42:00 hno Exp $
+ * $Id: splay.c,v 1.15 2003/01/23 00:37:01 robertc Exp $
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl

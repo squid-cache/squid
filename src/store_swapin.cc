@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.33 2002/12/27 10:26:33 robertc Exp $
+ * $Id: store_swapin.cc,v 1.34 2003/01/23 00:37:27 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -70,19 +70,13 @@ static void
 storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 {
     store_client *sc = (store_client *)data;
-    StoreIOBuffer result =
-    {
-	{0}, 0, 0, sc->copyInto.data};
-    STCB *callback;
     debug(20, 3) ("storeSwapInFileClosed: sio=%p, errflag=%d\n",
 	sio, errflag);
-    if (errflag)
-	result.flags.error = 1;
     sc->swapin_sio = NULL;
-    if ((callback = sc->callback)) {
-	assert(errflag <= 0);
-	sc->callback = NULL;
-	callback(sc->callback_data, result);
+    /* why this assert */
+    if (sc->callbackPending()) {
+	assert (errflag <= 0);
+        sc->callback(0, errflag ? true : false);
     }
     statCounter.swap.ins++;
 }

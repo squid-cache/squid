@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.8 2002/10/28 01:12:28 adrian Exp $
+ * $Id: comm_poll.cc,v 1.9 2003/01/23 00:37:19 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "fde.h"
 
 #ifdef USE_POLL
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.3 2002/10/15 09:25:33 robertc Exp $
+ * $Id: authenticate.h,v 1.4 2003/01/23 00:37:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

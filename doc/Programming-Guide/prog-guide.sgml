@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.53 2002/12/16 19:53:06 robertc Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.54 2003/01/23 00:34:54 robertc Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory

@@ -1,5 +1,5 @@
 /*
- * $Id: hash.h,v 1.7 2002/10/15 09:25:32 robertc Exp $
+ * $Id: hash.h,v 1.8 2003/01/23 00:36:47 robertc Exp $
  */
 
 #ifndef SQUID_HASH_H

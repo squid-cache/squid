@@ -6,7 +6,7 @@
 # - i.e. those for which there is a "Content-length:" HTTP header,
 #   and this does not match the size of the cached object
 
-# $Id: flag_truncs.pl,v 1.1 1996/02/22 06:23:57 wessels Exp $
+# $Id: flag_truncs.pl,v 1.2 2003/01/23 00:37:06 robertc Exp $
 
 require "getopts.pl";
 require "stat.pl";

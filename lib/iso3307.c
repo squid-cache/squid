@@ -1,5 +1,5 @@
 /*
- * $Id: iso3307.c,v 1.5 2001/02/07 18:56:50 hno Exp $
+ * $Id: iso3307.c,v 1.6 2003/01/23 00:37:01 robertc Exp $
  */
 
 #include "config.h"

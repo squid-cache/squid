@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.2 2002/12/27 10:26:34 robertc Exp $
+ * $Id: ufscommon.h,v 1.3 2003/01/23 00:37:27 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -185,7 +185,7 @@ class UFSStoreState : public storeIOState, public IORequestor {
     bool reading;
     bool writing;
     void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-    void write(char *buf, size_t size, off_t offset, FREE * free_func);
+    void write(char const *buf, size_t size, off_t offset, FREE * free_func);
   protected:
     class _queued_read {
       public:
@@ -203,7 +203,7 @@ class UFSStoreState : public storeIOState, public IORequestor {
       public:
 	void *operator new(size_t);
 	void operator delete (void *);
-	char *buf;
+	char const *buf;
 	size_t size;
 	off_t offset;
 	FREE *free_func;
@@ -213,7 +213,7 @@ class UFSStoreState : public storeIOState, public IORequestor {
     link_list *pending_reads;
     link_list *pending_writes;
     void queueRead(char *, size_t, off_t, STRCB *, void *);
-    void queueWrite(char *, size_t, off_t, FREE *);
+    void queueWrite(char const *, size_t, off_t, FREE *);
     bool kickReadQueue();
     bool kickWriteQueue();
     char *read_buf;
@@ -254,5 +254,8 @@ private:
     int getNextFile(sfileno *, int *size);
 };
 
+#ifdef _USE_INLINE_
+#include "ufscommon.cci"
+#endif
 
 #endif /* SQUID_UFSCOMMON_H */

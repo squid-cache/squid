@@ -1,5 +1,5 @@
 /*
- * $Id: html_quote.c,v 1.4 2001/10/17 19:46:43 hno Exp $
+ * $Id: html_quote.c,v 1.5 2003/01/23 00:37:01 robertc Exp $
  * 
  * DEBUG:
  * AUTHOR: Robert Collins

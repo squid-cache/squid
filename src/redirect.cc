@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.92 2002/10/13 20:35:03 robertc Exp $
+ * $Id: redirect.cc,v 1.93 2003/01/23 00:37:25 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "authenticate.h"
 #include "Store.h"
+#include "client_side_request.h"
 
 typedef struct {
     void *data;

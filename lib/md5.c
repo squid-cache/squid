@@ -1,5 +1,5 @@
 /*
- * $Id: md5.c,v 1.15 2002/08/09 10:57:42 robertc Exp $
+ * $Id: md5.c,v 1.16 2003/01/23 00:37:01 robertc Exp $
  */
 
 /* taken from RFC-1321/Appendix A.3 */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.26 2001/07/16 21:35:05 wessels Exp $
+ * $Id: useragent.cc,v 1.27 2003/01/23 00:37:29 robertc Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>

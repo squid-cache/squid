@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.1 2002/09/24 10:46:43 robertc Exp $
+ * $Id: client_side_request.h,v 1.2 2003/01/23 00:37:18 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,7 +34,79 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
+#include "HttpHeader.h"
+#include "clientStream.h"
+
 /* client_side_request.c - client side request related routines (pure logic) */
 extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, void *, HttpHeader const *, char *, size_t);
+
+typedef class ClientHttpRequest clientHttpRequest;
+
+class ClientHttpRequest {
+public:
+    void *operator new (size_t);
+    void operator delete (void *);
+    void deleteSelf() const;
+
+    ClientHttpRequest();
+    ~ClientHttpRequest();
+    /* Not implemented - present to prevent synthetic operations */
+    ClientHttpRequest(ClientHttpRequest const &);
+    ClientHttpRequest& operator=(ClientHttpRequest const &);
+    
+    String rangeBoundaryStr() const;
+    void freeResources();
+    void updateCounters();
+    void logRequest();
+    MemObject * memObject() const;
+    bool multipartRangeRequest() const;
+    ConnStateData *conn;
+    request_t *request;		/* Parsed URL ... */
+    char *uri;
+    char *log_uri;
+    struct {
+	off_t offset;
+	size_t size;
+	size_t headers_sz;
+    } out;
+    HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
+    size_t req_sz;		/* raw request size on input, not current request size */
+    StoreEntry *entry;
+    StoreEntry *old_entry;
+    log_type logType;
+    struct timeval start;
+    http_version_t http_ver;
+    AccessLogEntry al;
+    struct {
+	unsigned int accel:1;
+	unsigned int internal:1;
+	unsigned int done_copying:1;
+	unsigned int purging:1;
+    } flags;
+    struct {
+	http_status status;
+	char *location;
+    } redirect;
+    dlink_node active;
+    dlink_list client_stream;
+    int mRangeCLen();
+private:
+    CBDATA_CLASS(ClientHttpRequest);
+};
+
+/* client http based routines */
+SQUIDCEXTERN char *clientConstructTraceEcho(clientHttpRequest *);
+SQUIDCEXTERN aclCheck_t *clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http);
+SQUIDCEXTERN void *clientReplyNewContext(clientHttpRequest *);
+SQUIDCEXTERN int clientHttpRequestStatus(int fd, clientHttpRequest const *http);
+
+/* ones that should be elsewhere */
+SQUIDCEXTERN void redirectStart(clientHttpRequest *, RH *, void *);
+
+SQUIDCEXTERN void sslStart(clientHttpRequest *, size_t *, int *);
+
+#if DELAY_POOLS
+SQUIDCEXTERN delay_id delayClient(clientHttpRequest *);
+#endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */

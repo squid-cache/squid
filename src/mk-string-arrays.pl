@@ -1,5 +1,5 @@
 #******************************************************************************
-# $Id: mk-string-arrays.pl,v 1.4 1998/04/07 23:31:51 rousskov Exp $
+# $Id: mk-string-arrays.pl,v 1.5 2003/01/23 00:37:23 robertc Exp $
 #
 # File:		mk-strs.pl
 #

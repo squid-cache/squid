@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.5 2003/01/17 05:49:35 robertc Exp $
+ * $Id: StoreClient.h,v 1.6 2003/01/23 00:37:14 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,24 +38,31 @@
 
 typedef void STCB(void *, StoreIOBuffer);	/* store callback */
 
-#ifdef __cplusplus
 class StoreEntry;
-#endif
 
-#ifdef __cplusplus
 class StoreClient {
 public:
   virtual ~StoreClient () {}
   virtual void created (StoreEntry *newEntry) = 0;
 };
-#endif
 
 /* keep track each client receiving data from that particular StoreEntry */
-struct _store_client {
-    int type;
+class store_client {
+public:
+    void *operator new (size_t);
+    void operator delete(void *);
+    store_client(StoreEntry *);
+    bool memReaderHasLowerOffset(off_t) const;
+    int getType() const;
+    void fail();
+    void callback(ssize_t len, bool error = false);
+    void doCopy (StoreEntry *e);
+    void readHeader(const char *buf, ssize_t len);
+    bool callbackPending() const;
+    void copy(StoreEntry *, StoreIOBuffer, STCB *, void *);
+    void dumpStats(StoreEntry * output, int clientNumber) const;
+
     off_t cmp_offset;
-    STCB *callback;
-    void *callback_data;
 #if STORE_CLIENT_LIST_DEBUG
     void *owner;
 #endif
@@ -72,11 +79,23 @@ struct _store_client {
     dlink_node node;
     /* Below here is private - do no alter outside storeClient calls */
     StoreIOBuffer copyInto;
-#ifdef __cplusplus
-#endif
+private:
+    static MemPool *pool;
+
+    void fileRead();
+    void unpackHeader(char const *buf, ssize_t len);
+    
+    int type;
+    bool object_ok;
+    struct Callback {
+	Callback ():callback_handler(NULL), callback_data(NULL){}
+	Callback (STCB *, void *);
+	STCB *callback_handler;
+	void *callback_data;
+    } _callback;
 };
 
 SQUIDCEXTERN void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
-SQUIDCEXTERN void storeClientDumpStats(store_client * thisClient, StoreEntry * output, int clientNumber);
+
 
 #endif /* SQUID_STORECLIENT_H */

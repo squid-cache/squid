@@ -1,5 +1,6 @@
 #include "squid.h"
 #include "Store.h"
+#include "MemObject.h"
 #include "SwapDir.h"
 
 static struct {
@@ -81,7 +82,7 @@ storeRead(StoreIOState::Pointer sio, char *buf, size_t size, off_t offset, STRCB
 }
 
 void
-storeWrite(StoreIOState::Pointer sio, char *buf, size_t size, off_t offset, FREE * free_func)
+storeIOWrite(StoreIOState::Pointer sio, char const *buf, size_t size, off_t offset, FREE * free_func)
 {
     sio->write(buf,size,offset,free_func);
 }

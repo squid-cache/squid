@@ -9,7 +9,7 @@ typedef void IOWCB(int fd, char *data, size_t len, comm_err_t flag, int xerrno, 
 extern void comm_fill_immediate(int fd, StoreIOBuffer sb, IOFCB *callback, void *data);
 
 extern int comm_has_pending_read_callback(int fd);
-extern int comm_has_pending_read(int fd);
+extern bool comm_has_pending_read(int fd);
 extern void comm_read_cancel(int fd, IOCB *callback, void *data);
 extern void fdc_open(int fd, unsigned int type, char *desc);
 extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,

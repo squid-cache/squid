@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.89 2002/11/15 13:28:33 hno Exp $
+ * $Id: dns.cc,v 1.90 2003/01/23 00:37:19 robertc Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived

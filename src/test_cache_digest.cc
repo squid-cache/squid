@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.28 2002/10/13 20:35:05 robertc Exp $
+ * $Id: test_cache_digest.cc,v 1.29 2003/01/23 00:37:27 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *

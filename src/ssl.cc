@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.131 2002/12/05 15:02:24 hno Exp $
+ * $Id: ssl.cc,v 1.132 2003/01/23 00:37:25 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -34,7 +34,10 @@
  */
 
 #include "squid.h"
+#include "HttpRequest.h"
+#include "fde.h"
 #include "comm.h"
+#include "client_side_request.h"
 
 typedef struct {
     char *url;

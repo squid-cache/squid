@@ -11,7 +11,7 @@
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
  *
- * $Id: async_io.cc,v 1.12 2002/10/13 20:35:25 robertc Exp $
+ * $Id: async_io.cc,v 1.13 2003/01/23 00:38:13 robertc Exp $
  */
 
 #include "squid.h"

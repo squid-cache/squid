@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.12 2002/12/27 10:26:37 robertc Exp $
+ * $Id: diskd.cc,v 1.13 2003/01/23 00:38:15 robertc Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived

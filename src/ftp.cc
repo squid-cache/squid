@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.337 2002/10/21 15:35:12 adrian Exp $
+ * $Id: ftp.cc,v 1.338 2003/01/23 00:37:21 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -35,8 +35,13 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "fde.h"
 #include "comm.h"
-
+#include "HttpHeaderRange.h"
+#include "HttpHdrContRange.h"
+#include "HttpHeader.h"
 
 static const char *const crlf = "\r\n";
 static char cbuf[1024];
@@ -296,8 +301,8 @@ ftpStateFree(int fdnotused, void *data)
     safe_free(ftpState->old_request);
     safe_free(ftpState->old_reply);
     safe_free(ftpState->old_filepath);
-    stringClean(&ftpState->title_url);
-    stringClean(&ftpState->base_href);
+    ftpState->title_url.clean();
+    ftpState->base_href.clean();
     safe_free(ftpState->filepath);
     safe_free(ftpState->data.host);
     if (ftpState->data.fd > -1) {
@@ -360,12 +365,12 @@ ftpListingStart(FtpStateData * ftpState)
     storeAppendPrintf(e, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
     storeAppendPrintf(e, "<HTML><HEAD><TITLE>\n");
     storeAppendPrintf(e, "FTP Directory: %s\n",
-	html_quote(strBuf(ftpState->title_url)));
+	html_quote(ftpState->title_url.buf()));
     storeAppendPrintf(e, "</TITLE>\n");
     storeAppendPrintf(e, "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}--></STYLE>\n");
     if (ftpState->flags.need_base_href)
 	storeAppendPrintf(e, "<BASE HREF=\"%s\">\n",
-	    html_quote(strBuf(ftpState->base_href)));
+	    html_quote(ftpState->base_href.buf()));
     storeAppendPrintf(e, "</HEAD><BODY>\n");
     if (ftpState->cwd_message) {
 	storeAppendPrintf(e, "<PRE>\n");
@@ -378,8 +383,8 @@ ftpListingStart(FtpStateData * ftpState)
     storeAppendPrintf(e, "<H2>\n");
     storeAppendPrintf(e, "FTP Directory: ");
     /* "ftp://" == 6 characters */
-    assert(strLen(ftpState->title_url) >= 6);
-    title = html_quote(strBuf(ftpState->title_url));
+    assert(ftpState->title_url.size() >= 6);
+    title = html_quote(ftpState->title_url.buf());
     for (i = 6, j = 0; title[i]; j = i) {
 	storeAppendPrintf(e, "<A HREF=\"");
 	i += strcspn(&title[i], "/");
@@ -390,7 +395,7 @@ ftpListingStart(FtpStateData * ftpState)
 	storeAppendPrintf(e, "\">");
 	for (k = j; k < i - 1; k++)
 	    storeAppendPrintf(e, "%c", title[k]);
-	if (strBuf(ftpState->title_url)[k] != '/')
+	if (ftpState->title_url.buf()[k] != '/')
 	    storeAppendPrintf(e, "%c", title[k++]);
 	storeAppendPrintf(e, "</A>");
 	if (k < i)
@@ -398,8 +403,8 @@ ftpListingStart(FtpStateData * ftpState)
 	if (i == j) {
 	    /* Error guard, or "assert" */
 	    storeAppendPrintf(e, "ERROR: Failed to parse URL: %s\n",
-		html_quote(strBuf(ftpState->title_url)));
-	    debug(9, 0) ("Failed to parse URL: %s\n", strBuf(ftpState->title_url));
+		html_quote(ftpState->title_url.buf()));
+	    debug(9, 0) ("Failed to parse URL: %s\n", ftpState->title_url.buf());
 	    break;
 	}
     }
@@ -882,8 +887,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
     StoreEntry *entry = ftpState->entry;
     size_t read_sz;
 #if DELAY_POOLS
-    MemObject *mem = entry->mem_obj;
-    delay_id delayId = delayMostBytesAllowed(mem);
+    delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
 #endif
     assert(fd == ftpState->data.fd);
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
@@ -989,7 +993,7 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 	    strCutPtr(request->urlpath, t);
 	}
     }
-    l = strLen(request->urlpath);
+    l = request->urlpath.size();
     ftpState->flags.need_base_href = 1;
     /* check for null path */
     if (!l) {
@@ -1000,7 +1004,7 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 	ftpState->flags.need_base_href = 0;
 	ftpState->flags.isdir = 1;
 	ftpState->flags.root_dir = 1;
-    } else if ((l >= 1) && (*(strBuf(request->urlpath) + l - 1) == '/')) {
+    } else if ((l >= 1) && (*(request->urlpath.buf() + l - 1) == '/')) {
 	/* Directory URL, ending in / */
 	ftpState->flags.isdir = 1;
 	ftpState->flags.need_base_href = 0;
@@ -1014,34 +1018,34 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
 {
     request_t *request = ftpState->request;
 
-    stringReset(&ftpState->title_url, "ftp://");
+    ftpState->title_url = "ftp://";
     if (strcmp(ftpState->user, "anonymous")) {
-	strCat(ftpState->title_url, ftpState->user);
-	strCat(ftpState->title_url, "@");
+	ftpState->title_url.append(ftpState->user);
+	ftpState->title_url.append("@");
     }
-    strCat(ftpState->title_url, request->host);
+    ftpState->title_url.append(request->host);
     if (request->port != urlDefaultPort(PROTO_FTP)) {
-	strCat(ftpState->title_url, ":");
-	strCat(ftpState->title_url, xitoa(request->port));
+	ftpState->title_url.append(":");
+	ftpState->title_url.append(xitoa(request->port));
     }
-    strCat(ftpState->title_url, strBuf(request->urlpath));
+    ftpState->title_url.append (request->urlpath);
 
-    stringReset(&ftpState->base_href, "ftp://");
+    ftpState->base_href = "ftp://";
     if (strcmp(ftpState->user, "anonymous") != 0) {
-	strCat(ftpState->base_href, rfc1738_escape_part(ftpState->user));
+	ftpState->base_href.append(rfc1738_escape_part(ftpState->user));
 	if (ftpState->password_url) {
-	    strCat(ftpState->base_href, ":");
-	    strCat(ftpState->base_href, rfc1738_escape_part(ftpState->password));
+	    ftpState->base_href.append (":");
+	    ftpState->base_href.append(rfc1738_escape_part(ftpState->password));
 	}
-	strCat(ftpState->base_href, "@");
+	ftpState->base_href.append("@");
     }
-    strCat(ftpState->base_href, request->host);
+    ftpState->base_href.append(request->host);
     if (request->port != urlDefaultPort(PROTO_FTP)) {
-	strCat(ftpState->base_href, ":");
-	strCat(ftpState->base_href, xitoa(request->port));
+	ftpState->base_href.append(":");
+	ftpState->base_href.append(xitoa(request->port));
     }
-    strCat(ftpState->base_href, strBuf(request->urlpath));
-    strCat(ftpState->base_href, "/");
+    ftpState->base_href.append(request->urlpath);
+    ftpState->base_href.append("/");
 }
 
 CBDATA_TYPE(FtpStateData);
@@ -1088,7 +1092,7 @@ ftpStart(FwdState * fwd)
 		ftpState->user, request->port);
 	}
 	/* create reply */
-	reply = entry->mem_obj->reply;
+	reply = httpReplyCreate ();
 	assert(reply != NULL);
 	/* create appropriate reply */
 	ftpAuthRequired(reply, request, realm);
@@ -1100,7 +1104,7 @@ ftpStart(FwdState * fwd)
     ftpCheckUrlpath(ftpState);
     ftpBuildTitleUrl(ftpState);
     debug(9, 5) ("ftpStart: host=%s, path=%s, user=%s, passwd=%s\n",
-	ftpState->request->host, strBuf(ftpState->request->urlpath),
+	ftpState->request->host, ftpState->request->urlpath.buf(),
 	ftpState->user, ftpState->password);
     ftpState->state = BEGIN;
     ftpState->ctrl.last_command = xstrdup("Connect to server");
@@ -1419,7 +1423,7 @@ ftpSendType(FtpStateData * ftpState)
 	    mode = 'A';
 	} else {
 	    t = strRChr(ftpState->request->urlpath, '/');
-	    filename = t ? t + 1 : strBuf(ftpState->request->urlpath);
+	    filename = t ? t + 1 : ftpState->request->urlpath.buf();
 	    mode = mimeGetTransferMode(filename);
 	}
 	break;
@@ -1441,7 +1445,7 @@ ftpReadType(FtpStateData * ftpState)
     char *d, *p;
     debug(9, 3) ("This is ftpReadType\n");
     if (code == 200) {
-	p = path = xstrdup(strBuf(ftpState->request->urlpath));
+	p = path = xstrdup(ftpState->request->urlpath.buf());
 	if (*p == '/')
 	    p++;
 	while (*p) {
@@ -1575,7 +1579,7 @@ ftpListDir(FtpStateData * ftpState)
 {
     if (!ftpState->flags.isdir) {
 	debug(9, 3) ("Directory path did not end in /\n");
-	strCat(ftpState->title_url, "/");
+	ftpState->title_url.append("/");
 	ftpState->flags.isdir = 1;
 	ftpState->flags.need_base_href = 1;
     }
@@ -1632,7 +1636,7 @@ ftpReadSize(FtpStateData * ftpState)
 	if (ftpState->size == 0) {
 	    debug(9, 2) ("ftpReadSize: SIZE reported %s on %s\n",
 		ftpState->ctrl.last_reply,
-		strBuf(ftpState->title_url));
+		ftpState->title_url.buf());
 	    ftpState->size = -1;
 	}
     } else if (code < 0) {
@@ -2034,7 +2038,7 @@ ftpRestartable(FtpStateData * ftpState)
     if (ftpState->size <= 0)
 	return 0;
 
-    ftpState->restart_offset = httpHdrRangeLowestOffset(ftpState->request->range, (size_t) ftpState->size);
+    ftpState->restart_offset = ftpState->request->range->lowestOffset((size_t) ftpState->size);
     if (ftpState->restart_offset <= 0)
 	return 0;
     return 1;
@@ -2096,7 +2100,7 @@ ftpReadList(FtpStateData * ftpState)
 	/* XXX what about Config.Timeout.read? */
 	assert(ftpState->data.offset == 0);
 	comm_read(ftpState->data.fd, ftpState->data.buf, ftpState->data.size, ftpDataRead, ftpState);
-	commSetDefer(ftpState->data.fd, fwdCheckDeferRead, ftpState->entry);
+	commSetDefer(ftpState->data.fd, StoreEntry::CheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	/*
 	 * Cancel the timeout on the Control socket and establish one
@@ -2148,7 +2152,7 @@ ftpReadRetr(FtpStateData * ftpState)
 #endif
 	comm_read(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset,
 		  read_sz, ftpDataRead, ftpState);
-	commSetDefer(ftpState->data.fd, fwdCheckDeferRead, ftpState->entry);
+	commSetDefer(ftpState->data.fd, StoreEntry::CheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
 	/*
 	 * Cancel the timeout on the Control socket and establish one
@@ -2283,7 +2287,7 @@ ftpTrySlashHack(FtpStateData * ftpState)
 	wordlistDestroy(&ftpState->pathcomps);
     safe_free(ftpState->filepath);
     /* Build the new path (urlpath begins with /) */
-    path = xstrdup(strBuf(ftpState->request->urlpath));
+    path = xstrdup(ftpState->request->urlpath.buf());
     rfc1738_unescape(path);
     ftpState->filepath = path;
     /* And off we go */
@@ -2348,7 +2352,7 @@ ftpFail(FtpStateData * ftpState)
     if (!ftpState->flags.isdir &&	/* Not a directory */
 	!ftpState->flags.try_slash_hack &&	/* Not in slash hack */
 	ftpState->mdtm <= 0 && ftpState->size < 0 &&	/* Not known as a file */
-	strNCaseCmp(ftpState->request->urlpath, "/%2f", 4) != 0) {	/* No slash encoded */
+	ftpState->request->urlpath.nCaseCmp("/%2f", 4) != 0) {	/* No slash encoded */
 	switch (ftpState->state) {
 	case SENT_CWD:
 	case SENT_RETR:
@@ -2381,7 +2385,7 @@ static void
 ftpFailed(FtpStateData * ftpState, err_type error)
 {
     StoreEntry *entry = ftpState->entry;
-    if (entry->mem_obj->inmem_hi == 0)
+    if (entry->isEmpty())
 	ftpFailedErrorMessage(ftpState, error);
     if (ftpState->data.fd > -1) {
 	comm_close(ftpState->data.fd);
@@ -2493,15 +2497,15 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     const char *filename = NULL;
     const char *t = NULL;
     StoreEntry *e = ftpState->entry;
-    http_reply *reply = e->mem_obj->reply;
+    http_reply *reply = httpReplyCreate ();
     http_version_t version;
 
     if (ftpState->flags.http_header_sent)
 	return;
     ftpState->flags.http_header_sent = 1;
-    assert(e->mem_obj->inmem_hi == 0);
+    assert(e->isEmpty());
     EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
-    filename = (t = strRChr(urlpath, '/')) ? t + 1 : strBuf(urlpath);
+    filename = (t = strRChr(urlpath, '/')) ? t + 1 : urlpath.buf();
     if (ftpState->flags.isdir) {
 	mime_type = "text/html";
     } else {
@@ -2520,7 +2524,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	}
     }
     storeBuffer(e);
-    httpReplyReset(reply);
+    reply = httpReplyCreate();
     /* set standard stuff */
     if (ftpState->restarted_offset) {
 	/* Partial reply */
@@ -2542,7 +2546,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	httpHeaderPutStr(&reply->header, HDR_CONTENT_ENCODING, mime_enc);
     httpReplySwapOut(reply, e);
     storeBufferFlush(e);
-    reply->hdr_sz = e->mem_obj->inmem_hi;
     storeTimestampsSet(e);
     if (ftpState->flags.authenticated) {
 	/*
@@ -2595,7 +2598,7 @@ ftpUrlWith2f(const request_t * request)
 	request->host,
 	portbuf,
 	"/%2f",
-	strBuf(request->urlpath));
+	request->urlpath.buf());
     if ((t = strchr(buf, '?')))
 	*t = '\0';
     return buf;

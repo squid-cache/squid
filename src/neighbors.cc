@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.308 2002/10/25 07:36:32 robertc Exp $
+ * $Id: neighbors.cc,v 1.309 2003/01/23 00:37:23 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -36,6 +36,8 @@
 #include "squid.h"
 #include "Store.h"
 #include "ICP.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.361 2003/01/09 12:27:14 robertc Exp $
+ * $Id: comm.cc,v 1.362 2003/01/23 00:37:18 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "StoreIOBuffer.h"
 #include "comm.h"
+#include "fde.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -443,6 +444,8 @@ comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
 	assert(fdc_table[fd].read.handler == NULL);
         assert(!fd_table[fd].flags.closing);
 
+	debug(5,4)("comm_read, queueing read for FD %d\n",fd);
+
 	/* Queue a read */
 	fdc_table[fd].read.buf = buf;
 	fdc_table[fd].read.size = size;
@@ -559,8 +562,9 @@ comm_has_pending_read_callback(int fd)
  * return whether a file descriptor has a read handler
  *
  * Assumptions: the fd is open
+ * 		the fd is a comm fd.
  */
-int
+bool
 comm_has_pending_read(int fd)
 {
 	assert(fd_table[fd].flags.open == 1);

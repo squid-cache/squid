@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.9 2002/12/07 01:55:22 hno Exp $
+ * $Id: ssl_support.cc,v 1.10 2003/01/23 00:37:25 robertc Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "fde.h"
 
 extern int commUnsetNonBlocking(int fd);
 extern int commSetNonBlocking(int fd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.140 2002/12/27 10:26:33 robertc Exp $
+ * $Id: store_dir.cc,v 1.141 2003/01/23 00:37:26 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "MemObject.h"
 #include "SwapDir.h"
 
 #if HAVE_STATVFS
@@ -286,7 +287,7 @@ storeDirStats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries          : %lu\n",
-	(unsigned long int)storeEntryInUse());
+	(unsigned long int)StoreEntry::inUseCount());
     storeAppendPrintf(sentry, "Maximum Swap Size      : %8ld KB\n",
 	(long int) Config.Swap.maxSize);
     storeAppendPrintf(sentry, "Current Store Swap Size: %8lu KB\n",

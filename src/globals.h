@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.117 2003/01/18 02:10:40 hno Exp $
+ * $Id: globals.h,v 1.118 2003/01/23 00:37:21 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -117,7 +117,6 @@ extern int shutting_down;	/* 0 */
 extern int reconfiguring;	/* 0 */
 extern int store_dirs_rebuilding;	/* 1 */
 extern unsigned long store_swap_size;	/* 0 */
-extern unsigned long store_mem_size;	/* 0 */
 extern time_t hit_only_mode_until;	/* 0 */
 extern StatCounters statCounter;
 extern char *err_type_str[];
@@ -129,8 +128,6 @@ extern double current_dtime;
 extern int store_hash_buckets;	/* 0 */
 extern hash_table *store_table;	/* NULL */
 extern dlink_list ClientActiveRequests;
-extern const String StringNull;	/* { 0, 0, NULL } */
-extern const MemBuf MemBufNull;	/* MemBufNULL */
 extern int hot_obj_count;	/* 0 */
 extern const int CacheDigestHashFuncCount;	/* 4 */
 extern CacheDigest *store_digest;	/* NULL */
@@ -150,7 +147,7 @@ extern storefs_entry_t *storefs_list;	/* NULL */
 extern storerepl_entry_t *storerepl_list;	/* NULL */
 extern int store_swap_low;	/* 0 */
 extern int store_swap_high;	/* 0 */
-extern int store_pages_max;	/* 0 */
+extern size_t store_pages_max;	/* 0 */
 extern ssize_t store_maxobjsize;	/* -1 */
 extern RemovalPolicy *mem_policy;
 extern hash_table *proxy_auth_username_cache;	/* NULL */

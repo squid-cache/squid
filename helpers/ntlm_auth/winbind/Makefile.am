@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.5 2002/05/23 14:01:20 hno Exp $
+#  $Id: Makefile.am,v 1.6 2003/01/23 00:36:40 robertc Exp $
 #
 
 libexec_PROGRAMS = wb_ntlmauth

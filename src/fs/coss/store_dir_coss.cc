@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.42 2003/01/09 11:49:53 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.43 2003/01/23 00:38:13 robertc Exp $
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -39,6 +39,7 @@
 
 #include "async_io.h"
 #include "store_coss.h"
+#include "fde.h"
 #include "SwapDir.h"
 
 #define STORE_META_BUFSZ 4096

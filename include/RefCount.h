@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.2 2002/12/13 03:41:28 robertc Exp $
+ * $Id: RefCount.h,v 1.3 2003/01/23 00:36:47 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins

@@ -1,6 +1,6 @@
 
 /*
- * $Id: multicast.cc,v 1.9 2001/01/12 00:37:19 wessels Exp $
+ * $Id: multicast.cc,v 1.10 2003/01/23 00:37:23 robertc Exp $
  *
  * DEBUG: section 7     Multicast
  * AUTHOR: Martin Hamilton

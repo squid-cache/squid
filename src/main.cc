@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.361 2003/01/18 02:10:40 hno Exp $
+ * $Id: main.cc,v 1.362 2003/01/23 00:37:23 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -37,6 +37,8 @@
 #include "authenticate.h"
 #include "Store.h"
 #include "ICP.h"
+#include "HttpReply.h"
+#include "Mem.h"
 
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) (const char *);
@@ -553,7 +555,7 @@ mainInitialize(void)
 	eventAdd("cpuProfiling", xprof_event, NULL, 1.0, 1);
 #endif
 	  
-	eventAdd("memPoolCleanIdlePools", memPoolCleanIdlePools, NULL, 15.0, 1);
+	eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, NULL, 15.0, 1);
     }
     configured_once = 1;
 }
@@ -631,7 +633,7 @@ main(int argc, char **argv)
 #if USE_LEAKFINDER
 	leakInit();
 #endif
-	memInit();
+	Mem::Init();
 	cbdataInit();
 	eventInit();		/* eventInit() is required for config parsing */
 	storeFsInit();		/* required for config parsing */

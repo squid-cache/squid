@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.8 2002/10/22 21:16:11 hno Exp $
+ * $Id: client_side_request.cc,v 1.9 2003/01/23 00:37:18 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -45,6 +45,7 @@
 #include "clientStream.h"
 #include "client_side_request.h"
 #include "authenticate.h"
+#include "HttpRequest.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -77,6 +78,7 @@ void clientProcessRequest(clientHttpRequest *);
 extern "C" CSR clientGetMoreData;
 extern "C" CSS clientReplyStatus;
 extern "C" CSD clientReplyDetach;
+static void checkFailureRatio(err_type, hier_code);
 
 void
 clientRequestContextFree(void *data)
@@ -98,6 +100,106 @@ clientRequestContextNew(clientHttpRequest * http)
     return rv;
 }
 
+CBDATA_CLASS_INIT(ClientHttpRequest);
+void *
+ClientHttpRequest::operator new (size_t size)
+{
+    assert (size == sizeof (ClientHttpRequest));
+    CBDATA_INIT_TYPE(ClientHttpRequest);
+    ClientHttpRequest *result = cbdataAlloc(ClientHttpRequest);
+    /* Mark result as being owned - we want the refcounter to do the delete
+     * call */
+    cbdataReference(result);
+    return result;
+}
+
+void 
+ClientHttpRequest::operator delete (void *address)
+{
+    ClientHttpRequest *temp = static_cast<ClientHttpRequest *>(address);
+    cbdataFree(address);
+    /* And allow the memory to be freed */
+    cbdataReferenceDone (temp);
+}
+
+void
+ClientHttpRequest::deleteSelf() const
+{
+    delete this;
+}
+
+ClientHttpRequest::ClientHttpRequest()
+{
+    /* reset range iterator */
+    start = current_time;
+}
+
+/*
+ * This function is designed to serve a fairly specific purpose.
+ * Occasionally our vBNS-connected caches can talk to each other, but not
+ * the rest of the world.  Here we try to detect frequent failures which
+ * make the cache unusable (e.g. DNS lookup and connect() failures).  If
+ * the failure:success ratio goes above 1.0 then we go into "hit only"
+ * mode where we only return UDP_HIT or UDP_MISS_NOFETCH.  Neighbors
+ * will only fetch HITs from us if they are using the ICP protocol.  We
+ * stay in this mode for 5 minutes.
+ * 
+ * Duane W., Sept 16, 1996
+ */
+
+#define FAILURE_MODE_TIME 300
+
+static void
+checkFailureRatio(err_type etype, hier_code hcode)
+{
+    static double magic_factor = 100.0;
+    double n_good;
+    double n_bad;
+    if (hcode == HIER_NONE)
+	return;
+    n_good = magic_factor / (1.0 + request_failure_ratio);
+    n_bad = magic_factor - n_good;
+    switch (etype) {
+    case ERR_DNS_FAIL:
+    case ERR_CONNECT_FAIL:
+    case ERR_READ_ERROR:
+	n_bad++;
+	break;
+    default:
+	n_good++;
+    }
+    request_failure_ratio = n_bad / n_good;
+    if (hit_only_mode_until > squid_curtime)
+	return;
+    if (request_failure_ratio < 1.0)
+	return;
+    debug(33, 0) ("Failure Ratio at %4.2f\n", request_failure_ratio);
+    debug(33, 0) ("Going into hit-only-mode for %d minutes...\n",
+	FAILURE_MODE_TIME / 60);
+    hit_only_mode_until = squid_curtime + FAILURE_MODE_TIME;
+    request_failure_ratio = 0.8;	/* reset to something less than 1.0 */
+}
+
+ClientHttpRequest::~ClientHttpRequest()
+{
+    debug(33, 3) ("httpRequestFree: %s\n", uri);
+    /* if body_connection !NULL, then ProcessBody has not
+     * found the end of the body yet
+     */
+    if (request && request->body_connection)
+	clientAbortBody(request);	/* abort body transter */
+    /* the ICP check here was erroneous
+     * - storeReleaseRequest was always called if entry was valid 
+     */
+    assert(logType < LOG_TYPE_MAX);
+    logRequest();
+    if (request)
+	checkFailureRatio(request->errType, al.hier.code);
+    freeResources();
+    /* moving to the next connection is handled by the context free */
+    dlinkDelete(&active, &ClientActiveRequests);
+}
+    
 /* Create a request and kick it off */
 /*
  * TODO: Pass in the buffers to be used in the inital Read request, as they are
@@ -111,9 +213,9 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     size_t url_sz;
     http_version_t http_ver =
     {1, 0};
-    clientHttpRequest *http = cbdataAlloc(clientHttpRequest);
+    clientHttpRequest *http = new ClientHttpRequest;
     request_t *request;
-    StoreIOBuffer tempBuffer = EMPTYIOBUFFER;
+    StoreIOBuffer tempBuffer;
     http->http_ver = http_ver;
     http->conn = NULL;
     http->start = current_time;
@@ -372,7 +474,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
 	if (strListIsMember(&s, "no-cache", ','))
 	    no_cache++;
-	stringClean(&s);
+	s.clean();
     }
     request->cache_control = httpHeaderGetCc(req_hdr);
     if (request->cache_control)
@@ -412,15 +514,20 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     }
     /* ignore range header in non-GETs */
     if (request->method == METHOD_GET) {
-	/*
-	 * Since we're not doing ranges atm, just set the flag if the header
-	 * exists, and then free the range header info -- adrian
-	 */
 	request->range = httpHeaderGetRange(req_hdr);
 	if (request->range) {
 	    request->flags.range = 1;
-	    httpHdrRangeDestroy(request->range);
-	    request->range = NULL;
+	    clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->data;
+	    /* XXX: This is suboptimal. We should give the stream the range set,
+	     * and thereby let the top of the stream set the offset when the
+	     * size becomes known. As it is, we will end up requesting from 0 
+	     * for evey -X range specification.
+	     * RBC - this may be somewhat wrong. We should probably set the range
+	     * iter up at this point.
+	     */
+	    node->readBuffer.offset = request->range->lowestOffset(0);
+	    http->range_iter.pos = request->range->begin();
+	    http->range_iter.valid = true;
 	}
     }
     if (httpHeaderHas(req_hdr, HDR_AUTHORIZATION))
@@ -440,9 +547,9 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	    request->flags.loopdetect = 1;
 	}
 #if FORW_VIA_DB
-	fvdbCountVia(strBuf(s));
+	fvdbCountVia(s.buf());
 #endif
-	stringClean(&s);
+	s.clean();
     }
 #if USE_USERAGENT_LOG
     if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)))
@@ -455,8 +562,8 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 #if FORW_VIA_DB
     if (httpHeaderHas(req_hdr, HDR_X_FORWARDED_FOR)) {
 	String s = httpHeaderGetList(req_hdr, HDR_X_FORWARDED_FOR);
-	fvdbCountForw(strBuf(s));
-	stringClean(&s);
+	fvdbCountForw(s.buf());
+	s.clean();
     }
 #endif
     if (request->method == METHOD_TRACE) {
@@ -568,7 +675,6 @@ void
 clientProcessRequest(clientHttpRequest * http)
 {
     request_t *r = http->request;
-    clientStreamNode *node;
     debug(85, 4) ("clientProcessRequest: %s '%s'\n",
 	RequestMethodStr[r->method], http->uri);
     if (r->method == METHOD_CONNECT) {
@@ -583,6 +689,6 @@ clientProcessRequest(clientHttpRequest * http)
     /* no one should have touched this */
     assert(http->out.offset == 0);
     /* Use the Stream Luke */
-    node = (clientStreamNode *)http->client_stream.tail->data;
+    clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->data;
     clientStreamRead(node, http, node->readBuffer);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.6 2002/10/28 00:37:36 adrian Exp $
+ * $Id: comm_kqueue.cc,v 1.7 2003/01/23 00:37:19 robertc Exp $
  *
  * DEBUG: section 5    Socket functions
  *

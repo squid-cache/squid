@@ -2,7 +2,7 @@
 <article>
 <title>Squid 2.5 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-2.5.sgml,v 1.4 2002/09/07 10:17:00 hno Exp $</date>
+<date>$Id: release-2.5.sgml,v 1.5 2003/01/23 00:34:59 robertc Exp $</date>
 
 <abstract>
 This document contains the release notes for version 2.5 of Squid.

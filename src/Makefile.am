@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.47 2003/01/17 05:37:24 robertc Exp $
+#  $Id: Makefile.am,v 1.48 2003/01/23 00:37:13 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -79,7 +79,8 @@ EXTRA_PROGRAMS = \
 	unlinkd \
 	pinger \
 	dnsserver \
-	recv-announce
+	recv-announce \
+	ufsdump
 
 noinst_PROGRAMS = \
 	cf_gen
@@ -89,6 +90,7 @@ sbin_PROGRAMS = \
 
 bin_PROGRAMS = \
 	squidclient
+
 
 libexec_PROGRAMS = \
 	$(PINGER) \
@@ -152,6 +154,8 @@ squid_SOURCES = \
 	event.cc \
 	external_acl.cc \
 	fd.cc \
+	fde.cc \
+	fde.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -189,7 +193,11 @@ squid_SOURCES = \
 	logfile.cc \
 	main.cc \
 	mem.cc \
+	mem_node.cc \
+	mem_node.h \
 	MemBuf.cc \
+	MemObject.cc \
+	MemObject.h \
 	mime.cc \
 	multicast.cc \
 	neighbors.cc \
@@ -228,6 +236,18 @@ squid_SOURCES = \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
+	StoreMeta.cc \
+	StoreMeta.h \
+	StoreMetaMD5.cc \
+	StoreMetaMD5.h \
+	StoreMetaSTD.cc \
+	StoreMetaSTD.h \
+	StoreMetaUnpacker.cc \
+	StoreMetaUnpacker.h \
+	StoreMetaURL.cc \
+	StoreMetaURL.h \
+	StoreMetaVary.cc \
+	StoreMetaVary.h \
 	structs.h \
 	SwapDir.cc \
 	SwapDir.h \
@@ -243,6 +263,13 @@ squid_SOURCES = \
 	wccp.cc \
 	whois.cc \
 	$(WIN32SOURCE)
+
+noinst_HEADERS = MemBuf.cci \
+	MemBuf.h \
+	Store.cci \
+	String.cci \
+	String.h \
+	ufscommon.cci 
 
 nodist_squid_SOURCES = \
 	repl_modules.cc \
@@ -276,6 +303,161 @@ pinger_SOURCES = \
 
 dnsserver_SOURCES = dnsserver.cc
 recv_announce_SOURCES = recv-announce.cc
+
+ufsdump_SOURCES = debug.cc \
+	int.cc \
+	ufsdump.cc \
+	store.cc \
+	StoreMeta.cc \
+	StoreMeta.h \
+	StoreMetaMD5.cc \
+	StoreMetaMD5.h \
+	StoreMetaSTD.cc \
+	StoreMetaSTD.h \
+	StoreMetaUnpacker.cc \
+	StoreMetaUnpacker.h \
+	StoreMetaURL.cc \
+	StoreMetaURL.h \
+	StoreMetaVary.cc \
+	StoreMetaVary.h \
+	access_log.cc \
+	acl.cc \
+	asn.cc \
+	authenticate.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	cache_manager.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	client_side_request.h \
+	clientStream.cc \
+	clientStream.h \
+	comm.cc \
+	comm.h \
+	comm_select.cc \
+	comm_poll.cc \
+	comm_kqueue.cc \
+	defines.h \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	enums.h \
+	errorpage.cc \
+	ETag.cc \
+	event.cc \
+	external_acl.cc \
+	fd.cc \
+	fde.cc \
+	fde.h \
+	filemap.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	gopher.cc \
+	helper.cc \
+	$(HTCPSOURCE) \
+	http.cc \
+	HttpStatusLine.cc \
+	HttpHdrCc.cc \
+	HttpHdrRange.cc \
+	HttpHdrContRange.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpBody.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpRequest.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	ident.cc \
+	internal.cc \
+	ipc.cc \
+	ipcache.cc \
+	IPInterception.cc \
+	IPInterception.h \
+	$(LEAKFINDERSOURCE) \
+	logfile.cc \
+	mem.cc \
+	mem_node.cc \
+	mem_node.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemObject.h \
+	mime.cc \
+	multicast.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
+	$(XPROF_STATS_SOURCE) \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	protos.h \
+	redirect.cc \
+	referer.cc \
+	refresh.cc \
+	send-announce.cc \
+	$(SNMPSOURCE) \
+	squid.h \
+	ssl.cc \
+	$(SSLSOURCE) \
+	stat.cc \
+	StatHist.cc \
+	String.cc \
+	stmem.cc \
+	store_io.cc \
+	StoreIOBuffer.h \
+	StoreIOState.cc \
+	store_client.cc \
+	StoreClient.h \
+	store_digest.cc \
+	store_dir.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	structs.h \
+	SwapDir.cc \
+	tools.cc \
+	typedefs.h \
+	ufscommon.cc \
+	ufscommon.h \
+	$(UNLINKDSOURCE) \
+	url.cc \
+	urn.cc \
+	useragent.cc \
+	wais.cc \
+	wccp.cc \
+	whois.cc \
+	$(WIN32SOURCE)
+ufsdump_LDADD = \
+	-L../lib \
+	@XTRA_OBJS@ \
+	@REPL_OBJS@ \
+	@STORE_OBJS@ \
+	@AUTH_OBJS@ \
+	@CRYPTLIB@ \
+	@REGEXLIB@ \
+	@SNMPLIB@ \
+	@LIB_MALLOC@ \
+	@SSLLIB@ \
+	-lmiscutil \
+	@XTRA_LIBS@
+ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
+nodist_ufsdump_SOURCES = \
+	repl_modules.cc \
+	auth_modules.cc \
+	store_modules.cc \
+	cf_parser.h \
+	globals.cc \
+	string_arrays.c
 
 nodist_pinger_SOURCES = \
 	globals.cc

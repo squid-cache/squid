@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.21 2003/01/09 12:27:18 robertc Exp $
+ * $Id: aiops.cc,v 1.22 2003/01/23 00:38:09 robertc Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
