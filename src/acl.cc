@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.205 1999/06/24 22:40:21 wessels Exp $
+ * $Id: acl.cc,v 1.206 1999/07/07 02:13:40 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1906,7 +1906,7 @@ aclDomainCompare(const void *data, splayNode * n)
 	l2--;
 	if (0 == l1) {
 	    if ('.' == d2[l2 - 1]) {
-		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d1, d2);
+		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d2, d1);
 		debug(28, 0) ("WARNING: This may break Splay tree searching\n");
 		debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d2, AclMatchedName);
 	    }
@@ -1914,7 +1914,7 @@ aclDomainCompare(const void *data, splayNode * n)
 	}
 	if (0 == l2) {
 	    if ('.' == d1[l1 - 1]) {
-		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d2, d1);
+		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d1, d2);
 		debug(28, 0) ("WARNING: This may break Splay tree searching\n");
 		debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
 	    }
