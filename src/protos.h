@@ -415,7 +415,7 @@ extern void ipcacheShutdownServers(void);
 extern void ipcache_init(void);
 extern void stat_ipcache_get(StoreEntry *);
 extern int ipcacheQueueDrain(void);
-extern void ipcacheCycleAddr(const char *name);
+extern void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 extern void ipcacheMarkBadAddr(const char *name, struct in_addr);
 extern void ipcacheMarkGoodAddr(const char *name, struct in_addr);
 extern void ipcacheFreeMemory(void);

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.248 1998/04/08 22:48:47 wessels Exp $
+ * $Id: comm.cc,v 1.249 1998/04/09 08:25:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -342,7 +342,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     }
     assert(ia->cur < ia->count);
     cs->in_addr = ia->in_addrs[ia->cur];
-    ipcacheCycleAddr(cs->host);
+    ipcacheCycleAddr(cs->host, NULL);
     cs->addrcount = ia->count;
     cs->connstart = squid_curtime;
     commSetConnectTimeout(cs->fd, commBackoffTimeout((int) ia->count));
