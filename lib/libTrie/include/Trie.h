@@ -45,6 +45,11 @@ int TrieAdd (void *, char const *, size_t, void *);
 /* C++ bindings */
 #else
 
+/* MinGW needs NULL definition */
+#ifndef NULL
+#define NULL 0
+#endif
+
 class TrieCharTransform;
 
 class TrieNode;
