@@ -1,3 +1,32 @@
+/*
+ * $Id: pconn.cc,v 1.3 1997/08/24 00:37:04 wessels Exp $
+ *
+ * DEBUG: section 48    Persistent Connections
+ * AUTHOR: Duane Wessels
+ *
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
 
 #include "squid.h"
 
@@ -32,7 +61,7 @@ pconnNew(const char *key)
 {
     struct _pconn *p = xcalloc(1, sizeof(struct _pconn));
     p->key = xstrdup(key);
-    debug(0, 0) ("pconnNew: adding %s\n", p->key);
+    debug(48, 3) ("pconnNew: adding %s\n", p->key);
     hash_join(table, (hash_link *) p);
     return p;
 }
@@ -42,7 +71,7 @@ pconnDelete(struct _pconn *p)
 {
     hash_link *hptr = hash_lookup(table, p->key);
     assert(hptr != NULL);
-    debug(0, 0) ("pconnDelete: deleting %s\n", p->key);
+    debug(48, 3) ("pconnDelete: deleting %s\n", p->key);
     hash_remove_link(table, hptr);
 }
 
@@ -55,7 +84,7 @@ pconnRemoveFD(struct _pconn *p, int fd)
 	    break;
     }
     assert(i < p->nfds);
-    debug(0, 0) ("pconnRemoveFD: found FD %d at index %d\n", fd, i);
+    debug(48, 3) ("pconnRemoveFD: found FD %d at index %d\n", fd, i);
     for (; i < p->nfds - 1; i++)
 	p->fds[i] = p->fds[i + 1];
     if (--p->nfds == 0)
@@ -67,7 +96,7 @@ pconnTimeout(int fd, void *data)
 {
     struct _pconn *p = data;
     assert(table != NULL);
-    debug(0, 0) ("pconnTimeout: FD %d %s\n", fd, p->key);
+    debug(48, 3) ("pconnTimeout: FD %d %s\n", fd, p->key);
     pconnRemoveFD(p, fd);
     comm_close(fd);
 }
@@ -80,7 +109,7 @@ pconnRead(int fd, void *data)
     int n;
     assert(table != NULL);
     n = read(fd, buf, 256);
-    debug(0, 0) ("pconnRead: %d bytes from FD %d, %s\n", n, fd, p->key);
+    debug(48, 3) ("pconnRead: %d bytes from FD %d, %s\n", n, fd, p->key);
     pconnRemoveFD(p, fd);
     comm_close(fd);
 }
@@ -94,7 +123,7 @@ pconnInit(void)
 {
     assert(table == NULL);
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
-    debug(0, 0) ("persistent connection module initialized\n");
+    debug(48, 3) ("persistent connection module initialized\n");
 }
 
 void
@@ -107,7 +136,7 @@ pconnPush(int fd, const char *host, u_short port)
     if (p == NULL)
 	p = pconnNew(key);
     if (p->nfds == PCONN_MAX_FDS) {
-	debug(0, 0) ("pconnPush: %s already has %d unused connections\n",
+	debug(48, 3) ("pconnPush: %s already has %d unused connections\n",
 	    key, p->nfds);
 	close(fd);
 	xfree(key);
@@ -116,7 +145,7 @@ pconnPush(int fd, const char *host, u_short port)
     p->fds[p->nfds++] = fd;
     commSetSelect(fd, COMM_SELECT_READ, pconnRead, p, 0);
     commSetTimeout(fd, Config.Timeout.pconn, pconnTimeout, p);
-    debug(0, 0) ("pconnPush: pushed FD %d for %s\n", fd, key);
+    debug(48, 3) ("pconnPush: pushed FD %d for %s\n", fd, key);
 }
 
 int

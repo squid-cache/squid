@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.183 1997/08/11 02:29:08 wessels Exp $
+ * $Id: http.cc,v 1.184 1997/08/24 00:37:03 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -566,10 +566,10 @@ httpPconnTransferDone(HttpStateData * httpState)
     /* return 1 if we got the last of the data on a persistent connection */
     MemObject *mem = httpState->entry->mem_obj;
     struct _http_reply *reply = mem->reply;
-    debug(0, 0) ("httpPconnTransferDone: FD %d\n", httpState->fd);
+    debug(11, 3) ("httpPconnTransferDone: FD %d\n", httpState->fd);
     if (!BIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	return 0;
-    debug(0, 0) ("httpPconnTransferDone: content_length=%d\n",
+    debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
 	reply->content_length);
     /*
      * !200 replies maybe don't have content-length, so
@@ -587,8 +587,8 @@ httpPconnTransferDone(HttpStateData * httpState)
      * If there is a content_length, see if we've got all of it.  If so,
      * then we can recycle this connection.
      */
-    debug(0, 0) ("httpPconnTransferDone: hdr_sz=%d\n", reply->hdr_sz);
-    debug(0, 0) ("httpPconnTransferDone: e_current_len=%d\n",
+    debug(11, 5) ("httpPconnTransferDone: hdr_sz=%d\n", reply->hdr_sz);
+    debug(11, 5) ("httpPconnTransferDone: e_current_len=%d\n",
 	mem->e_current_len);
     if (mem->e_current_len < reply->content_length + reply->hdr_sz)
 	return 0;
@@ -1020,7 +1020,7 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	    storeStartDeleteBehind(entry);
 #endif
 	if ((fd = pconnPop(e->host, e->http_port)) >= 0) {
-	    debug(0, 0) ("httpStart: reusing pconn FD %d\n", fd);
+	    debug(11, 3) ("httpStart: reusing pconn FD %d\n", fd);
 	    httpState = httpBuildState(fd, entry, request, e);
 	    commSetTimeout(httpState->fd,
 		Config.Timeout.connect,
@@ -1031,7 +1031,7 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	}
     } else {
 	if ((fd = pconnPop(request->host, request->port)) >= 0) {
-	    debug(0, 0) ("httpStart: reusing pconn FD %d\n", fd);
+	    debug(11, 3) ("httpStart: reusing pconn FD %d\n", fd);
 	    httpState = httpBuildState(fd, entry, request, e);
 	    commSetTimeout(httpState->fd,
 		Config.Timeout.connect,
@@ -1060,7 +1060,7 @@ static void
 httpRestart(HttpStateData * httpState)
 {
     /* restart a botched request from a persistent connection */
-    debug(0, 0) ("Retrying HTTP request for %s\n", httpState->entry->url);
+    debug(11, 1) ("Retrying HTTP request for %s\n", httpState->entry->url);
     if (httpState->fd >= 0) {
 	comm_remove_close_handler(httpState->fd, httpStateFree, httpState);
 	comm_close(httpState->fd);
