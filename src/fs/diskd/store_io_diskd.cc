@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.14 2000/07/16 07:28:38 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.15 2000/07/18 07:34:32 wessels Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -307,10 +307,10 @@ storeDiskdOpenDone(diomsg * M)
     debug(81, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
-	diskd_stats.open.fail++;
+	sio->mode == O_RDONLY ? diskd_stats.open.fail++ : diskd_stats.create.fail++;
 	storeDiskdIOCallback(sio, DISK_ERROR);
     } else {
-	diskd_stats.open.success++;
+	sio->mode == O_RDONLY ? diskd_stats.open.success++ : diskd_stats.create.success++;
     }
 }
 
