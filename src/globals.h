@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.127 2004/08/30 03:28:59 robertc Exp $
+ * $Id: globals.h,v 1.128 2005/02/05 22:49:43 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,7 +77,6 @@ extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
 extern int icmp_sock;		/* -1 */
 extern int neighbors_do_private_keys;	/* 1 */
-extern int opt_accel_uses_host;	/* 0 */
 extern int opt_catch_signals;	/* 1 */
 extern int opt_debug_stderr;	/* -1 */
 extern int opt_dns_tests;	/* 1 */
