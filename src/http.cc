@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.26 1996/04/04 18:41:25 wessels Exp $ */
+/* $Id: http.cc,v 1.27 1996/04/05 00:58:54 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -49,8 +49,10 @@ static void httpCloseAndFree(fd, data)
     if (fd > 0)
 	comm_close(fd);
     if (data) {
-	if (data->reply_hdr)
+	if (data->reply_hdr) {
 	    put_free_8k_page(data->reply_hdr, __FILE__, __LINE__);
+	    data->reply_hdr = NULL;
+	}
 	if (data->icp_page_ptr) {
 	    put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
 	    data->icp_page_ptr = NULL;
@@ -153,30 +155,53 @@ static void httpLifetimeExpire(fd, data)
 }
 
 
-static void httpProcessReplyHeader(data, buf)
+static void httpProcessReplyHeader(data, buf, size)
      HttpData *data;
      char *buf;			/* chunk just read by httpReadReply() */
+     int size;
 {
     char *s = NULL;
     char *t = NULL;
+    char *t1 = NULL;
+    char *t2 = NULL;
     StoreEntry *entry = data->entry;
     char *headers = NULL;
+    int hdr_sz = 0;
+    int room;
+    int hdr_len;
+
+debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
 
     if (data->reply_hdr == NULL) {
 	data->reply_hdr = get_free_8k_page(__FILE__, __LINE__);
 	memset(data->reply_hdr, '\0', 8192);
     }
     if (data->reply_hdr_state == 0) {
-	strncat(data->reply_hdr, buf, 8191 - strlen(data->reply_hdr));
-	if ((t = strstr(data->reply_hdr, "\r\n\r\n"))) {
-	    data->reply_hdr_state++;
-	    t += 4;
-	    *t = '\0';
-	} else if ((t = strstr(data->reply_hdr, "\n\n"))) {
-	    data->reply_hdr_state++;
-	    t += 2;
-	    *t = '\0';
+	hdr_len = strlen(data->reply_hdr);
+ 	room = 8191 - hdr_len;
+	strncat(data->reply_hdr, buf, room < size ? room : size);
+	hdr_len += room < size ? room : size;
+	if (hdr_len > 4 && strncmp(data->reply_hdr, "HTTP/", 5)) {
+		debug(11,1,"httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
+		data->reply_hdr_state += 2;
+		return;
 	}
+	/* need to take the lowest, non-zero pointer to the end of the headers.
+	some objects have \n\n separating header and body, but \r\n\r\n in
+	   body text. */
+	t1 = strstr(data->reply_hdr, "\r\n\r\n");
+	t2 = strstr(data->reply_hdr, "\n\n");
+	if (t1 && t2)
+		t = t2 < t1 ? t2 : t1;
+	else
+		t = t2 ? t2 : t1;
+	if (t) {
+            data->reply_hdr_state++;
+            t += (t == t1 ? 4 : 2);
+            *t = '\0';
+            hdr_sz = t - data->reply_hdr;
+	}
+        debug(11, 7, "httpProcessReplyHeader: hdr_sz = %d\n", hdr_sz);
     }
     if (data->reply_hdr_state == 1) {
 	headers = xstrdup(data->reply_hdr);
@@ -238,6 +263,8 @@ static void httpProcessReplyHeader(data, buf)
 	    break;
 	}
 	entry->mem_obj->http_code = data->http_code;
+	entry->mem_obj->content_length = data->content_length;
+	entry->mem_obj->hdr_sz = hdr_sz;
     }
 }
 
@@ -345,8 +372,8 @@ static void httpReadReply(fd, data)
 	httpCloseAndFree(fd, data);
     } else {
 	storeAppend(entry, buf, len);
-	if (data->reply_hdr_state < 2)
-	    httpProcessReplyHeader(data, buf);
+	if (data->reply_hdr_state < 2 && len > 0)
+	    httpProcessReplyHeader(data, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
 	    (PF) httpReadReply,
