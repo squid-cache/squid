@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.14 1998/04/14 15:16:25 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.15 1998/04/21 02:10:26 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -531,7 +531,6 @@ peerDigestFetchFinish(DigestFetchState *fetch, char *buf, const char *err_msg)
 	   debug(72, 2) ("re-used old digest from %s\n", peer->host);
 	} else {
 	   debug(72, 2) ("received valid digest from %s\n", peer->host);
-           storeComplete(fetch->entry);
 	}
 	EBIT_SET(peer->digest.flags, PD_USABLE);
 	EBIT_CLR(peer->digest.flags, PD_DISABLED);
