@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: tools.cc,v 1.1 1996/02/22 06:23:56 wessels Exp $";
+static char rcsid[] = "$Id: tools.cc,v 1.2 1996/02/23 05:41:28 wessels Exp $";
 /*
  **********************************************************************
  *  Copyright (c) 1994, 1995.  All rights reserved.
@@ -155,7 +155,7 @@ Thanks!\n"
 static char *dead_msg()
 {
     static char msg[1024];
-    sprintf(msg, DEAD_MSG, HARVEST_VERSION, HARVEST_VERSION);
+    sprintf(msg, DEAD_MSG, SQUID_VERSION, SQUID_VERSION);
     return msg;
 }
 
@@ -209,7 +209,7 @@ void shut_down(sig)
     storeWriteCleanLog();
     PrintRusage(NULL, stderr);
     debug(0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
-	HARVEST_VERSION, sig);
+	SQUID_VERSION, sig);
     exit(1);
 }
 
@@ -220,13 +220,13 @@ void fatal_common(message)
 	syslog(LOG_ALERT, message);
     fprintf(stderr, "FATAL: %s\n", message);
     fprintf(stderr, "Harvest Cache (Version %s): Terminated abnormally.\n",
-	HARVEST_VERSION);
+	SQUID_VERSION);
     fflush(stderr);
     PrintRusage(NULL, stderr);
     if (debug_log != stderr) {
 	debug(0, "FATAL: %s\n", message);
 	debug(0, "Harvest Cache (Version %s): Terminated abnormally.\n",
-	    HARVEST_VERSION);
+	    SQUID_VERSION);
     }
 }
 

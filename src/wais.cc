@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: wais.cc,v 1.1 1996/02/22 06:23:56 wessels Exp $";
+static char rcsid[] = "$Id: wais.cc,v 1.2 1996/02/23 05:41:29 wessels Exp $";
 /*
  *  File:         wais.c
  *  Description:  state machine for wais retrieval protocol (just open a
@@ -145,7 +145,7 @@ void waisReadReplyTimeout(fd, data)
 	403,
 	"Read timeout",
 	"The Network/Remote site may be down.  Try again later.",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
     storeAbort(entry, tmp_error_buf);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
@@ -177,7 +177,7 @@ void waisLifetimeExpire(fd, data)
 	410,
 	"Transaction Timeout",
 	"The Network/Remote site may be down or too slow.  Try again later.",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
     storeAbort(entry, tmp_error_buf);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
@@ -232,7 +232,7 @@ void waisReadReply(fd, data)
 		419,
 		"No Client",
 		"All Clients went away before tranmission is complete and object is too big to cache.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 	    comm_close(fd);
@@ -270,7 +270,7 @@ void waisReadReply(fd, data)
 		405,
 		"Read error",
 		"Network/Remote site is down.  Try again later.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 	}
@@ -329,7 +329,7 @@ void waisSendComplete(fd, buf, size, errflag, data)
 	    401,
 	    "Cannot connect to the original site",
 	    "The remote site may be down.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 	comm_close(fd);
@@ -406,7 +406,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	    412,
 	    "Configuration error.  No WAIS relay host is defined.",
 	    "",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -436,7 +436,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	    411,
 	    "Cached short of file-descriptors, sorry",
 	    "",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -463,7 +463,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	    402,
 	    "DNS name lookup failure",
 	    dns_error_message,
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -488,7 +488,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 		401,
 		"Cannot connect to the original site",
 		"The remote site may be down.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS

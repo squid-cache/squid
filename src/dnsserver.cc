@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: dnsserver.cc,v 1.1 1996/02/22 06:23:54 wessels Exp $";
+static char rcsid[] = "$Id: dnsserver.cc,v 1.2 1996/02/23 05:41:21 wessels Exp $";
 /*
  *  File:         dnsserver.c
  *  Description:  dnsserver process for non-blocking DNS lookup.
@@ -166,7 +166,7 @@ int main(argc, argv)
 	switch (c) {
 	case 'v':
 	case 'h':
-	    printf("dnsserver version %s\n", HARVEST_VERSION);
+	    printf("dnsserver version %s\n", SQUID_VERSION);
 	    exit(0);
 	    break;
 	case 'd':

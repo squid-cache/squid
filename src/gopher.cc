@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: gopher.cc,v 1.1 1996/02/22 06:23:54 wessels Exp $";
+static char rcsid[] = "$Id: gopher.cc,v 1.2 1996/02/23 05:41:23 wessels Exp $";
 /* 
  * File:         gopher.c
  * Description:  state machine for gopher retrieval protocol.  Based on Anawat's
@@ -230,7 +230,7 @@ void gopherMimeCreate(data)
     sprintf(tempMIME, "\
 HTTP/1.0 200 OK Gatewaying\r\n\
 Server: HarvestCache/%s\r\n\
-MIME-version: 1.0\r\n", HARVEST_VERSION);
+MIME-version: 1.0\r\n", SQUID_VERSION);
 
     switch (data->type_id) {
 
@@ -671,7 +671,7 @@ int gopherReadReplyTimeout(fd, data)
 	203,
 	"Read timeout",
 	"Network/Remote site may be down.  Try again later.",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
     storeAbort(entry, tmp_error_buf);
     if (data->icp_page_ptr)
@@ -706,7 +706,7 @@ void gopherLifetimeExpire(fd, data)
 	210,
 	"Transaction Timeout",
 	"The Network/Remote site may be down or too slow.  Try again later.",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
     storeAbort(entry, tmp_error_buf);
     if (data->icp_page_ptr)
@@ -783,7 +783,7 @@ int gopherReadReply(fd, data)
 		219,
 		"No Client",
 		"All Clients went away before tranmission is complete and object is too big to cache.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 	    comm_close(fd);
@@ -813,7 +813,7 @@ int gopherReadReply(fd, data)
 	    205,
 	    "Read error",
 	    "Network/Remote Site is down.  Try again later.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 	comm_close(fd);
@@ -867,7 +867,7 @@ int gopherReadReply(fd, data)
 	    207,
 	    "Client Aborted",
 	    "Client(s) dropped connection before transmission is complete.\nObject fetching is aborted.\n",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	if (data->conversion != NORMAL)
 	    gopherEndHTML(data);
@@ -919,7 +919,7 @@ int gopherSendComplete(fd, buf, size, errflag, data)
 	    201,
 	    "Cannot connect to the original site",
 	    "The remote site may be down.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 	comm_close(fd);
@@ -1049,7 +1049,7 @@ int gopherStart(unusedfd, url, entry)
 	    208,
 	    "Invalid URL syntax: Cannot parse.",
 	    "Contact your system adminstrator for further help.",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -1075,7 +1075,7 @@ int gopherStart(unusedfd, url, entry)
 	    211,
 	    "Cached short of file-descriptors, sorry",
 	    "",
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -1102,7 +1102,7 @@ int gopherStart(unusedfd, url, entry)
 	    202,
 	    "DNS name lookup failure",
 	    dns_error_message,
-	    HARVEST_VERSION,
+	    SQUID_VERSION,
 	    comm_hostname());
 	storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS
@@ -1149,7 +1149,7 @@ int gopherStart(unusedfd, url, entry)
 		204,
 		"Cannot connect to the original site",
 		"The remote site may be down.",
-		HARVEST_VERSION,
+		SQUID_VERSION,
 		comm_hostname());
 	    storeAbort(entry, tmp_error_buf);
 #ifdef LOG_ERRORS

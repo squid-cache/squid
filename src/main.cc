@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: main.cc,v 1.1 1996/02/22 06:23:55 wessels Exp $";
+static char rcsid[] = "$Id: main.cc,v 1.2 1996/02/23 05:41:25 wessels Exp $";
 /* 
  *  File:         main.c
  *  Description:  main loop for cache
@@ -246,7 +246,7 @@ int main(argc, argv)
     while ((c = getopt(argc, argv, "vCDRVseif:a:p:u:d:m:zh?")) != -1)
 	switch (c) {
 	case 'v':
-	    printf("Harvest Cache: Version %s\n", HARVEST_VERSION);
+	    printf("Harvest Cache: Version %s\n", SQUID_VERSION);
 	    exit(0);
 	    /* NOTREACHED */
 	case 'V':
@@ -359,7 +359,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
     fdstat_open(fileno(debug_log), LOG);
     fd_note(fileno(debug_log), getCacheLogFile());
 
-    debug(0, "Starting Harvest Cache (version %s)...\n", HARVEST_VERSION);
+    debug(0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
 
     /* init ipcache */
     ipcache_init();

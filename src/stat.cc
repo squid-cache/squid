@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: stat.cc,v 1.1 1996/02/22 06:23:55 wessels Exp $";
+static char rcsid[] = "$Id: stat.cc,v 1.2 1996/02/23 05:41:27 wessels Exp $";
 /* 
  *  File:         stat.c
  *  Description:  stat module for object cache
@@ -520,7 +520,7 @@ void info_get(obj, sentry)
 
     storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
 
-    sprintf(line, "{Harvest Object Cache: Version %s}\n", HARVEST_VERSION);
+    sprintf(line, "{Harvest Object Cache: Version %s}\n", SQUID_VERSION);
     storeAppend(sentry, line, strlen(line));
 
     tod = mkrfc850(&cached_starttime);

@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: store.cc,v 1.1 1996/02/22 06:23:55 wessels Exp $";
+static char rcsid[] = "$Id: store.cc,v 1.2 1996/02/23 05:41:28 wessels Exp $";
 /* 
  *  File:         store.c
  *  Description:  Storage manager for the Cache
@@ -2640,7 +2640,7 @@ int swapInError(fd_unused, entry)
 	102,
 	"Cache Disk I/O Failure",
 	"",
-	HARVEST_VERSION,
+	SQUID_VERSION,
 	comm_hostname());
     storeAbort(entry, tmp_error_buf);
     return 0;
