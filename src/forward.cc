@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.13 1998/06/28 16:18:21 wessels Exp $
+ * $Id: forward.cc,v 1.14 1998/06/29 15:22:50 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -97,6 +97,9 @@ fwdCheckRetry(FwdState * fwdState)
 	return 0;
     if (squid_curtime - fwdState->start > 120)
 	return 0;
+    if (pumpMethod(fwdState->request->method))
+	if (0 == pumpRestart(fwdState->request))
+	    return 0;
     return 1;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.288 1998/06/28 02:01:44 wessels Exp $
+ * $Id: http.cc,v 1.289 1998/06/29 15:22:51 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -128,8 +128,6 @@ static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
 static int httpSocketOpen(StoreEntry *, request_t *);
-static void httpRestart(HttpStateData *);
-static int httpTryRestart(HttpStateData *);
 static int httpCachableReply(HttpStateData *);
 
 static void
@@ -854,51 +852,6 @@ httpStart(FwdState * fwdState, int fd)
     Counter.server.all.requests++;
     Counter.server.http.requests++;
     httpConnectDone(fd, COMM_OK, httpState);
-}
-
-static int
-httpTryRestart(HttpStateData * httpState)
-{
-    /*
-     * We only retry the request if it looks like it was
-     * on a persistent/pipelined connection
-     */
-    if (fd_table[httpState->fd].uses < 2)
-	return 0;
-    if (pumpMethod(httpState->orig_request->method))
-	if (0 == pumpRestart(httpState->orig_request))
-	    return 0;
-    return 1;
-}
-
-static void
-httpRestart(HttpStateData * httpState)
-{
-    /* restart a botched request from a persistent connection */
-    debug(11, 2) ("Retrying HTTP request for %s\n", storeUrl(httpState->entry));
-    if (pumpMethod(httpState->orig_request->method)) {
-	debug(11, 3) ("Potential Coredump: httpRestart %s %s\n",
-	    RequestMethodStr[httpState->orig_request->method],
-	    storeUrl(httpState->entry));
-    }
-    if (httpState->fd >= 0) {
-	comm_remove_close_handler(httpState->fd, httpStateFree, httpState);
-	comm_close(httpState->fd);
-	httpState->fd = -1;
-    }
-    httpState->fd = httpSocketOpen(httpState->entry, httpState->orig_request);
-    if (httpState->fd < 0)
-	return;
-    comm_add_close_handler(httpState->fd, httpStateFree, httpState);
-    commSetTimeout(httpState->fd,
-	Config.Timeout.connect,
-	httpTimeout,
-	httpState);
-    commConnectStart(httpState->fd,
-	httpState->request->host,
-	httpState->request->port,
-	httpConnectDone,
-	httpState);
 }
 
 static void
