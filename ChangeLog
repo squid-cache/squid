@@ -15,6 +15,7 @@ Changes to squid-1.1.1 ():
 	  neighbors.
 	- Ensure pid file is world-readable if umask is set otherwise
 	  (Doug Urner).
+	- Collect statistics on a few more HTTP headers.
 
 Changes to squid-1.1.0 (December 6, 1996):
 
