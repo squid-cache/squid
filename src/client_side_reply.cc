@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.2 2002/09/15 06:40:57 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.3 2002/09/15 07:34:20 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -51,6 +51,7 @@ typedef struct _clientReplyContext {
     struct {
 	int storelogiccomplete:1;
 	int complete:1;		/* we have read all we can from upstream */
+	int headersSent:1;
     } flags;
     clientStreamNode *ourNode;	/* This will go away if/when this file gets refactored some more */
 } clientReplyContext;
@@ -1399,7 +1400,7 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
     /* FIXME: Adrian says this is a dodgy artifact from the rearrangement of
      * HEAD and may not be true for pipelining.
      * */
-    if (http->out.offset != 0) {
+    if (context->flags.headersSent != 0) {
 	if (retsize == 0)
 	    context->flags.complete = 1;
 	clientStreamCallback(http->client_stream.head->data, http, NULL, buf,
@@ -1487,6 +1488,8 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
 	    next->readbuf + context->reqofs, clientSendMoreData, context);
 	return;
     }
+    if (!context->flags.headersSent)
+	context->flags.headersSent = 1;
     if (http->request->method == METHOD_HEAD) {
 	if (rep) {
 	    /* do not forward body for HEAD replies */
