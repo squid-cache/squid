@@ -13,7 +13,7 @@ typedef struct _client_info {
 
 int client_info_sz;
 
-static HashID client_table;
+static HashID client_table = 0;
 
 static ClientInfo *clientdbAdd _PARAMS((struct in_addr addr));
 
@@ -32,6 +32,8 @@ clientdbAdd(struct in_addr addr)
 void
 clientdbInit(void)
 {
+    if (client_table)
+	return;
     client_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp,
 	229,
 	hash_string);

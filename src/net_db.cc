@@ -3,8 +3,8 @@
 
 #if USE_ICMP
 
-static HashID addr_table;
-static HashID host_table;
+static HashID addr_table = 0;
+static HashID host_table = 0;
 
 static struct in_addr networkFromInaddr _PARAMS((struct in_addr a));
 static void netdbRelease _PARAMS((netdbEntry * n));
@@ -215,6 +215,8 @@ void
 netdbInit(void)
 {
 #if USE_ICMP
+    if (addr_table)
+	return;
     addr_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp, 229, hash_string);
     host_table = hash_create((int (*)_PARAMS((const char *, const char *))) strcmp, 467, hash_string);
 #endif
