@@ -131,5 +131,6 @@ README		text/plain			anthony-text.gif	-	ascii	+download
 \.core$		application/octet-stream	anthony-bomb.gif	-	image
 \.png$		image/png			anthony-image.gif	-	image
 \.cab$		application/octet-stream	anthony-compressed.gif	-	image	+view
+\.xpi$		application/x-xpinstall		anthony-unknown.gif	-	image
 # the default
 .		text/plain			anthony-unknown.gif	-	image	+view +download
