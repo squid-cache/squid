@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.2 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLRegexData.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -46,8 +46,10 @@ ACLRegexData::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLRegexData));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLRegexData", sizeof (ACLRegexData));
+        Pool = memPoolCreate("ACLRegexData", sizeof (ACLRegexData));
+
     return memPoolAlloc(Pool);
 }
 
@@ -66,7 +68,7 @@ ACLRegexData::deleteSelf() const
 ACLRegexData::~ACLRegexData()
 {
     aclDestroyRegexList(data);
-} 
+}
 
 bool
 ACLRegexData::match(char const *user)

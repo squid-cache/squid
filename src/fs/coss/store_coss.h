@@ -21,21 +21,33 @@
 #define COSS_ALLOC_NOTIFY		0
 #define COSS_ALLOC_ALLOCATE		1
 #define COSS_ALLOC_REALLOC		2
+
 class CossSwapDir;
-struct _cossmembuf {
+
+struct _cossmembuf
+{
     dlink_node node;
     size_t diskstart;		/* in blocks */
     size_t diskend;		/* in blocks */
     CossSwapDir *SD;
     int lockcount;
     char buffer[COSS_MEMBUF_SZ];
-    struct _cossmembuf_flags {
-	unsigned int full:1;
-	unsigned int writing:1;
-    } flags;
+
+    struct _cossmembuf_flags
+    {
+
+unsigned int full:
+        1;
+
+unsigned int writing:
+        1;
+    }
+
+    flags;
 };
 
-struct _cossindex {
+struct _cossindex
+{
     /* Note: the dlink_node MUST be the first member of the structure.
      * This member is later pointer typecasted to coss_index_node *.
      */
@@ -45,9 +57,13 @@ struct _cossindex {
 
 
 /* Per-storeiostate info */
-class CossState : public storeIOState {
+
+class CossState : public storeIOState
+{
+
 public:
     virtual void deleteSelf() const {delete this;}
+
     void * operator new (size_t);
     void operator delete (void *);
     CossState(CossSwapDir *);
@@ -58,21 +74,31 @@ public:
     size_t requestlen;
     size_t requestoffset;	/* in blocks */
     sfileno reqdiskoffset;	/* in blocks */
-    struct {
-	unsigned int reading:1;
-	unsigned int writing:1;
-    } flags;
+
+    struct
+    {
+
+unsigned int reading:
+        1;
+
+unsigned int writing:
+        1;
+    }
+
+    flags;
     size_t st_size;
     void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
     void write(char const *buf, size_t size, off_t offset, FREE * free_func);
     void close();
 
     CossSwapDir *SD;
+
 private:
     static MemPool *Pool;
 };
 
 typedef struct _cossmembuf CossMemBuf;
+
 typedef struct _cossindex CossIndexNode;
 
 /* Whether the coss system has been setup or not */
@@ -80,8 +106,9 @@ extern int coss_initialised;
 extern MemPool *coss_membuf_pool;
 extern MemPool *coss_index_pool;
 
-class CossSwapDir : public SwapDir 
+class CossSwapDir : public SwapDir
 {
+
 public:
     CossSwapDir();
     virtual void init();
@@ -102,11 +129,12 @@ public:
     virtual void logEntry(const StoreEntry & e, int op) const;
     virtual void parse (int index, char *path);
     virtual void reconfigure (int, char *);
-//private:
+    //private:
     int fd;
     int swaplog_fd;
     int count;
     dlink_list membufs;
+
     struct _cossmembuf *current_membuf;
     size_t current_offset;	/* in Blocks */
     int numcollisions;

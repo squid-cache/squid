@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLASN.h,v 1.1 2003/02/16 02:23:18 robertc Exp $
+ * $Id: ACLASN.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,12 +38,16 @@
 #include "ACLChecklist.h"
 #include "ACLIP.h"
 
-class ASNLookup : public ACLChecklist::AsyncState {
-  public:
+class ASNLookup : public ACLChecklist::AsyncState
+{
+
+public:
     static ASNLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static ASNLookup instance_;
     static IPH LookupDone;
 };
+
 #endif /* SQUID_ACLASN_H */

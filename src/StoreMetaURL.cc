@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaURL.cc,v 1.1 2003/01/23 00:37:15 robertc Exp $
+ * $Id: StoreMetaURL.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -45,8 +45,10 @@ StoreMetaURL::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (StoreMetaURL));
+
     if (!pool)
-	pool = memPoolCreate("StoreMetaURL", sizeof (StoreMetaURL));
+        pool = memPoolCreate("StoreMetaURL", sizeof (StoreMetaURL));
+
     return memPoolAlloc(pool);
 }
 
@@ -62,16 +64,19 @@ StoreMetaURL::deleteSelf()
     delete this;
 }
 
-bool 
+bool
 StoreMetaURL::checkConsistency(StoreEntry *e) const
 {
     assert (getType() == STORE_META_URL);
+
     if (!e->mem_obj->url)
-	return true;
+        return true;
+
     if (strcasecmp(e->mem_obj->url, (char *)value)) {
-	debug(20, 1) ("storeClientReadHeader: URL mismatch\n");
-	debug(20, 1) ("\t{%s} != {%s}\n", (char *) value, e->mem_obj->url);
-	return false;
+        debug(20, 1) ("storeClientReadHeader: URL mismatch\n");
+        debug(20, 1) ("\t{%s} != {%s}\n", (char *) value, e->mem_obj->url);
+        return false;
     }
+
     return true;
 }

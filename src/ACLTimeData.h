@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLTimeData.h,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLTimeData.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,8 +39,10 @@
 #include "ACL.h"
 #include "ACLData.h"
 
-class ACLTimeData : public ACLData<time_t> {
-  public:
+class ACLTimeData : public ACLData<time_t>
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -53,8 +55,8 @@ class ACLTimeData : public ACLData<time_t> {
     wordlist *dump();
     void parse();
     virtual ACLData<time_t> *clone() const;
-    
-  private:
+
+private:
     static MemPool *Pool;
     int weekbits;
     int start;

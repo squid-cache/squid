@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.22 2003/01/23 00:37:17 robertc Exp $
+ * $Id: carp.cc,v 1.23 2003/02/21 22:50:07 robertc Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -64,45 +64,65 @@ carpInit(void)
     peer **P;
     char *t;
     /* Clean up */
+
     for (k = 0; k < n_carp_peers; k++) {
-	cbdataReferenceDone(carp_peers[k]);
+        cbdataReferenceDone(carp_peers[k]);
     }
+
     safe_free(carp_peers);
     n_carp_peers = 0;
     /* find out which peers we have */
+
     for (p = Config.peers; p; p = p->next) {
-	if (!p->options.carp)
-	    continue;
-	assert(p->type == PEER_PARENT);
-	if (p->weight == 0)
-	    continue;
-	n_carp_peers++;
-	W += p->weight;
+        if (!p->options.carp)
+            continue;
+
+        assert(p->type == PEER_PARENT);
+
+        if (p->weight == 0)
+            continue;
+
+        n_carp_peers++;
+
+        W += p->weight;
     }
+
     if (n_carp_peers == 0)
-	return;
+        return;
+
     carp_peers = (peer **)xcalloc(n_carp_peers, sizeof(*carp_peers));
+
     /* Build a list of the found peers and calculate hashes and load factors */
     for (P = carp_peers, p = Config.peers; p; p = p->next) {
-	if (!p->options.carp)
-	    continue;
-	if (p->weight == 0)
-	    continue;
-	/* calculate this peers hash */
-	p->carp.hash = 0;
-	for (t = p->host; *t != 0; t++)
-	    p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *t;
-	p->carp.hash += p->carp.hash * 0x62531965;
-	p->carp.hash = ROTATE_LEFT(p->carp.hash, 21);
-	/* and load factor */
-	p->carp.load_factor = ((double) p->weight) / (double) W;
-	if (floor(p->carp.load_factor * 1000.0) == 0.0)
-	    p->carp.load_factor = 0.0;
-	/* add it to our list of peers */
-	*P++ = cbdataReference(p);
+        if (!p->options.carp)
+            continue;
+
+        if (p->weight == 0)
+            continue;
+
+        /* calculate this peers hash */
+        p->carp.hash = 0;
+
+        for (t = p->host; *t != 0; t++)
+            p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *t;
+
+        p->carp.hash += p->carp.hash * 0x62531965;
+
+        p->carp.hash = ROTATE_LEFT(p->carp.hash, 21);
+
+        /* and load factor */
+        p->carp.load_factor = ((double) p->weight) / (double) W;
+
+        if (floor(p->carp.load_factor * 1000.0) == 0.0)
+            p->carp.load_factor = 0.0;
+
+        /* add it to our list of peers */
+        *P++ = cbdataReference(p);
     }
+
     /* Sort our list on weight */
     qsort(carp_peers, n_carp_peers, sizeof(*carp_peers), peerSortWeight);
+
     /* Calculate the load factor multipliers X_k
      *
      * X_1 = pow ((K*p_1), (1/K))
@@ -112,19 +132,24 @@ carpInit(void)
      * simplified to have X_1 part of the loop
      */
     K = n_carp_peers;
+
     P_last = 0.0;		/* Empty P_0 */
+
     Xn = 1.0;			/* Empty starting point of X_1 * X_2 * ... * X_{x-1} */
+
     X_last = 0.0;		/* Empty X_0, nullifies the first pow statement */
+
     for (k = 1; k <= K; k++) {
-	double Kk1 = (double) (K - k + 1);
-	p = carp_peers[k - 1];
-	p->carp.load_multiplier = (Kk1 * (p->carp.load_factor - P_last)) / Xn;
-	p->carp.load_multiplier += pow(X_last, Kk1);
-	p->carp.load_multiplier = pow(p->carp.load_multiplier, 1.0 / Kk1);
-	Xn *= p->carp.load_multiplier;
-	X_last = p->carp.load_multiplier;
-	P_last = p->carp.load_factor;
+        double Kk1 = (double) (K - k + 1);
+        p = carp_peers[k - 1];
+        p->carp.load_multiplier = (Kk1 * (p->carp.load_factor - P_last)) / Xn;
+        p->carp.load_multiplier += pow(X_last, Kk1);
+        p->carp.load_multiplier = pow(p->carp.load_multiplier, 1.0 / Kk1);
+        Xn *= p->carp.load_multiplier;
+        X_last = p->carp.load_multiplier;
+        P_last = p->carp.load_factor;
     }
+
     cachemgrRegister("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
@@ -142,30 +167,35 @@ carpSelectParent(request_t * request)
     const char *key = NULL;
 
     if (n_carp_peers == 0)
-	return NULL;
+        return NULL;
 
     key = urlCanonical(request);
 
     /* calculate hash key */
     debug(39, 2) ("carpSelectParent: Calculating hash for %s\n", key);
+
     for (c = key; *c != 0; c++)
-	user_hash += ROTATE_LEFT(user_hash, 19) + *c;
+        user_hash += ROTATE_LEFT(user_hash, 19) + *c;
+
     /* select peer */
     for (k = 0; k < n_carp_peers; k++) {
-	tp = carp_peers[k];
-	combined_hash = (user_hash ^ tp->carp.hash);
-	combined_hash += combined_hash * 0x62531965;
-	combined_hash = ROTATE_LEFT(combined_hash, 21);
-	score = combined_hash * tp->carp.load_multiplier;
-	debug(39, 3) ("carpSelectParent: %s combined_hash %u score %.0f\n",
-	    tp->host, combined_hash, score);
-	if ((score > high_score) && peerHTTPOkay(tp, request)) {
-	    p = tp;
-	    high_score = score;
-	}
+        tp = carp_peers[k];
+        combined_hash = (user_hash ^ tp->carp.hash);
+        combined_hash += combined_hash * 0x62531965;
+        combined_hash = ROTATE_LEFT(combined_hash, 21);
+        score = combined_hash * tp->carp.load_multiplier;
+        debug(39, 3) ("carpSelectParent: %s combined_hash %u score %.0f\n",
+                      tp->host, combined_hash, score);
+
+        if ((score > high_score) && peerHTTPOkay(tp, request)) {
+            p = tp;
+            high_score = score;
+        }
     }
+
     if (p)
-	debug(39, 2) ("carpSelectParent: selected %s\n", p->host);
+        debug(39, 2) ("carpSelectParent: selected %s\n", p->host);
+
     return p;
 }
 
@@ -175,19 +205,21 @@ carpCachemgr(StoreEntry * sentry)
     peer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
-	"Hostname",
-	"Hash",
-	"Multiplier",
-	"Factor",
-	"Actual");
+                      "Hostname",
+                      "Hash",
+                      "Multiplier",
+                      "Factor",
+                      "Actual");
+
     for (p = Config.peers; p; p = p->next)
-	sumfetches += p->stats.fetches;
+        sumfetches += p->stats.fetches;
+
     for (p = Config.peers; p; p = p->next) {
-	storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
-	    p->host, p->carp.hash,
-	    p->carp.load_multiplier,
-	    p->carp.load_factor,
-	    sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
+        storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
+                          p->host, p->carp.hash,
+                          p->carp.load_multiplier,
+                          p->carp.load_factor,
+                          sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
     }
 }
 

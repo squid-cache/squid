@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.cc,v 1.2 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StoreIOState.cc,v 1.3 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -35,7 +35,7 @@
 
 #include "squid.h"
 #include "StoreIOState.h"
-    
+
 void *
 storeIOState::operator new (size_t amount)
 {
@@ -43,7 +43,7 @@ storeIOState::operator new (size_t amount)
     return (void *)1;
 }
 
-void 
+void
 storeIOState::operator delete (void *address){assert (0);}
 
 storeIOState::storeIOState()
@@ -60,7 +60,8 @@ storeIOState::offset() const
 storeIOState::~storeIOState()
 {
     if (read.callback_data)
-	cbdataReferenceDone(read.callback_data);
+        cbdataReferenceDone(read.callback_data);
+
     if (callback_data)
-	cbdataReferenceDone(callback_data);
+        cbdataReferenceDone(callback_data);
 }

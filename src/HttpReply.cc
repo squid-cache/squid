@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.53 2003/02/12 06:10:58 robertc Exp $
+ * $Id: HttpReply.cc,v 1.54 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -45,11 +45,11 @@
 /* these entity-headers must be ignored if a bogus server sends them in 304 */
 static HttpHeaderMask Denied304HeadersMask;
 static http_hdr_type Denied304HeadersArr[] =
-{
-    HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
-    HDR_CONTENT_LOCATION, HDR_CONTENT_RANGE, HDR_LAST_MODIFIED, HDR_LINK,
-    HDR_OTHER
-};
+    {
+        HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
+        HDR_CONTENT_LOCATION, HDR_CONTENT_RANGE, HDR_LAST_MODIFIED, HDR_LINK,
+        HDR_OTHER
+    };
 
 HttpMsgParseState &operator++ (HttpMsgParseState &aState)
 {
@@ -213,7 +213,7 @@ httpReplySwapOut(HttpReply * rep, StoreEntry * e)
 
 MemBuf
 httpPackedReply(http_version_t ver, http_status status, const char *ctype,
-    int clen, time_t lmt, time_t expires)
+                int clen, time_t lmt, time_t expires)
 {
     HttpReply *rep = httpReplyCreate();
     MemBuf mb;
@@ -226,8 +226,8 @@ httpPackedReply(http_version_t ver, http_status status, const char *ctype,
 HttpReply *
 httpReplyMake304 (const HttpReply * rep)
 {
-    static const http_hdr_type ImsEntries[] =
-      {HDR_DATE, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER};
+    static const http_hdr_type ImsEntries[] = {HDR_DATE, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER};
+
     HttpReply *rv;
     int t;
     HttpHeaderEntry *e;
@@ -245,9 +245,12 @@ httpReplyMake304 (const HttpReply * rep)
     /* rv->keep_alive */
     httpBuildVersion(&ver, 1, 0);
     httpStatusLineSet(&rv->sline, ver,
-        HTTP_NOT_MODIFIED, "");
+                      HTTP_NOT_MODIFIED, "");
+
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
-	if ((e = httpHeaderFindEntry(&rep->header, ImsEntries[t])))httpHeaderAddEntry(&rv->header, httpHeaderEntryClone(e));
+        if ((e = httpHeaderFindEntry(&rep->header, ImsEntries[t])))
+            httpHeaderAddEntry(&rv->header, httpHeaderEntryClone(e));
+
     /* rv->body */
     return rv;
 }
@@ -269,7 +272,7 @@ httpPacked304Reply(const HttpReply * rep)
 
 void
 httpReplySetHeaders(HttpReply * reply, http_version_t ver, http_status status, const char *reason,
-    const char *ctype, int clen, time_t lmt, time_t expires)
+                    const char *ctype, int clen, time_t lmt, time_t expires)
 {
     HttpHeader *hdr;
     assert(reply);
@@ -278,20 +281,28 @@ httpReplySetHeaders(HttpReply * reply, http_version_t ver, http_status status, c
     httpHeaderPutStr(hdr, HDR_SERVER, full_appname_string);
     httpHeaderPutStr(hdr, HDR_MIME_VERSION, "1.0");
     httpHeaderPutTime(hdr, HDR_DATE, squid_curtime);
+
     if (ctype) {
-	httpHeaderPutStr(hdr, HDR_CONTENT_TYPE, ctype);
-	reply->content_type = ctype;
+        httpHeaderPutStr(hdr, HDR_CONTENT_TYPE, ctype);
+        reply->content_type = ctype;
     } else
-	reply->content_type = StringNull;
+        reply->content_type = StringNull;
+
     if (clen >= 0)
-	httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, clen);
+        httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, clen);
+
     if (expires >= 0)
-	httpHeaderPutTime(hdr, HDR_EXPIRES, expires);
+        httpHeaderPutTime(hdr, HDR_EXPIRES, expires);
+
     if (lmt > 0)		/* this used to be lmt != 0 @?@ */
-	httpHeaderPutTime(hdr, HDR_LAST_MODIFIED, lmt);
+        httpHeaderPutTime(hdr, HDR_LAST_MODIFIED, lmt);
+
     reply->date = squid_curtime;
+
     reply->content_length = clen;
+
     reply->expires = expires;
+
     reply->last_modified = lmt;
 }
 
@@ -317,34 +328,44 @@ httpRedirectReply(HttpReply * reply, http_status status, const char *loc)
  * 0 = they do not match
  */
 int
-httpReplyValidatorsMatch(HttpReply const * rep, HttpReply const * otherRep) {
+httpReplyValidatorsMatch(HttpReply const * rep, HttpReply const * otherRep)
+{
     String one,two;
     assert (rep && otherRep);
     /* Numbers first - easiest to check */
     /* Content-Length */
     /* TODO: remove -1 bypass */
+
     if (rep->content_length != otherRep->content_length
-       && rep->content_length > -1 &&
-       otherRep->content_length > -1)
-       return 0;
+            && rep->content_length > -1 &&
+            otherRep->content_length > -1)
+        return 0;
+
     /* ETag */
     one = httpHeaderGetStrOrList(&rep->header, HDR_ETAG);
+
     two = httpHeaderGetStrOrList(&otherRep->header, HDR_ETAG);
+
     if (!one.buf() || !two.buf() || strcasecmp (one.buf(), two.buf())) {
-       one.clean();
-       two.clean();
-       return 0;
+        one.clean();
+        two.clean();
+        return 0;
     }
+
     if (rep->last_modified != otherRep->last_modified)
-       return 0;
+        return 0;
+
     /* MD5 */
     one = httpHeaderGetStrOrList(&rep->header, HDR_CONTENT_MD5);
+
     two = httpHeaderGetStrOrList(&otherRep->header, HDR_CONTENT_MD5);
+
     if (strcasecmp (one.buf(), two.buf())) {
-       one.clean();
-       two.clean();
-       return 0;
+        one.clean();
+        two.clean();
+        return 0;
     }
+
     return 1;
 }
 
@@ -359,7 +380,7 @@ httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply const * freshRep)
     httpReplyHdrCacheClean(rep);
     /* update raw headers */
     httpHeaderUpdate(&rep->header, &freshRep->header,
-	(const HttpHeaderMask *) &Denied304HeadersMask);
+                     (const HttpHeaderMask *) &Denied304HeadersMask);
     /* init cache */
     httpReplyHdrCacheInit(rep);
 }
@@ -378,39 +399,47 @@ static time_t
 httpReplyHdrExpirationTime(const HttpReply * rep)
 {
     /* The s-maxage and max-age directive takes priority over Expires */
+
     if (rep->cache_control) {
-	if (rep->date >= 0) {
-	    if (rep->cache_control->s_maxage >= 0)
-		return rep->date + rep->cache_control->s_maxage;
-	    if (rep->cache_control->max_age >= 0)
-		return rep->date + rep->cache_control->max_age;
-	} else {
-	    /*
-	     * Conservatively handle the case when we have a max-age
-	     * header, but no Date for reference?
-	     */
-	    if (rep->cache_control->s_maxage >= 0)
-		return squid_curtime;
-	    if (rep->cache_control->max_age >= 0)
-		return squid_curtime;
-	}
+        if (rep->date >= 0) {
+            if (rep->cache_control->s_maxage >= 0)
+                return rep->date + rep->cache_control->s_maxage;
+
+            if (rep->cache_control->max_age >= 0)
+                return rep->date + rep->cache_control->max_age;
+        } else {
+            /*
+             * Conservatively handle the case when we have a max-age
+             * header, but no Date for reference?
+             */
+
+            if (rep->cache_control->s_maxage >= 0)
+                return squid_curtime;
+
+            if (rep->cache_control->max_age >= 0)
+                return squid_curtime;
+        }
     }
+
     if (Config.onoff.vary_ignore_expire &&
-	httpHeaderHas(&rep->header, HDR_VARY)) {
-	const time_t d = httpHeaderGetTime(&rep->header, HDR_DATE);
-	const time_t e = httpHeaderGetTime(&rep->header, HDR_EXPIRES);
-	if (d == e)
-	    return -1;
+            httpHeaderHas(&rep->header, HDR_VARY)) {
+        const time_t d = httpHeaderGetTime(&rep->header, HDR_DATE);
+        const time_t e = httpHeaderGetTime(&rep->header, HDR_EXPIRES);
+
+        if (d == e)
+            return -1;
     }
+
     if (httpHeaderHas(&rep->header, HDR_EXPIRES)) {
-	const time_t e = httpHeaderGetTime(&rep->header, HDR_EXPIRES);
-	/*
-	 * HTTP/1.0 says that robust implementations should consider
-	 * bad or malformed Expires header as equivalent to "expires
-	 * immediately."
-	 */
-	return e < 0 ? squid_curtime : e;
+        const time_t e = httpHeaderGetTime(&rep->header, HDR_EXPIRES);
+        /*
+         * HTTP/1.0 says that robust implementations should consider
+         * bad or malformed Expires header as equivalent to "expires
+         * immediately."
+         */
+        return e < 0 ? squid_curtime : e;
     }
+
     return -1;
 }
 
@@ -424,13 +453,18 @@ httpReplyHdrCacheInit(HttpReply * rep)
     rep->date = httpHeaderGetTime(hdr, HDR_DATE);
     rep->last_modified = httpHeaderGetTime(hdr, HDR_LAST_MODIFIED);
     str = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE);
+
     if (str)
-	rep->content_type.limitInit(str, strcspn(str, ";\t "));
+        rep->content_type.limitInit(str, strcspn(str, ";\t "));
     else
-	rep->content_type = StringNull;
+        rep->content_type = StringNull;
+
     rep->cache_control = httpHeaderGetCc(hdr);
+
     rep->content_range = httpHeaderGetContRange(hdr);
+
     rep->keep_alive = httpMsgIsPersistent(rep->sline.version, &rep->header);
+
     /* be sure to set expires after date and cache-control */
     rep->expires = httpReplyHdrExpirationTime(rep);
 }
@@ -440,10 +474,12 @@ static void
 httpReplyHdrCacheClean(HttpReply * rep)
 {
     rep->content_type.clean();
+
     if (rep->cache_control)
-	httpHdrCcDestroy(rep->cache_control);
+        httpHdrCcDestroy(rep->cache_control);
+
     if (rep->content_range)
-	httpHdrContRangeDestroy(rep->content_range);
+        httpHdrContRangeDestroy(rep->content_range);
 }
 
 /*
@@ -464,32 +500,41 @@ httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
     assert(rep->pstate < psParsed);
 
     *parse_end_ptr = parse_start;
+
     if (rep->pstate == psReadyToParseStartLine) {
-	if (!httpReplyIsolateStart(&parse_start, &blk_start, &blk_end))
-	    return 0;
-	if (!httpStatusLineParse(&rep->sline, blk_start, blk_end))
-	    return httpReplyParseError(rep);
+        if (!httpReplyIsolateStart(&parse_start, &blk_start, &blk_end))
+            return 0;
 
-	*parse_end_ptr = parse_start;
-	rep->hdr_sz = *parse_end_ptr - buf;
-	++rep->pstate;
+        if (!httpStatusLineParse(&rep->sline, blk_start, blk_end))
+            return httpReplyParseError(rep);
+
+        *parse_end_ptr = parse_start;
+
+        rep->hdr_sz = *parse_end_ptr - buf;
+
+        ++rep->pstate;
     }
+
     if (rep->pstate == psReadyToParseHeaders) {
-	if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
-	    if (atEnd)
-		blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
-	    else
-		return 0;
-	}
-	if (!httpHeaderParse(&rep->header, blk_start, blk_end))
-	    return httpReplyParseError(rep);
+        if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
+            if (atEnd)
+                blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
+            else
+                return 0;
+        }
 
-	httpReplyHdrCacheInit(rep);
+        if (!httpHeaderParse(&rep->header, blk_start, blk_end))
+            return httpReplyParseError(rep);
 
-	*parse_end_ptr = parse_start;
-	rep->hdr_sz = *parse_end_ptr - buf;
-	++rep->pstate;
+        httpReplyHdrCacheInit(rep);
+
+        *parse_end_ptr = parse_start;
+
+        rep->hdr_sz = *parse_end_ptr - buf;
+
+        ++rep->pstate;
     }
+
     return 1;
 }
 
@@ -510,17 +555,22 @@ static int
 httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end)
 {
     int slen = strcspn(*parse_start, "\r\n");
+
     if (!(*parse_start)[slen])	/* no CRLF found */
-	return 0;
+        return 0;
 
     *blk_start = *parse_start;
+
     *blk_end = *blk_start + slen;
+
     while (**blk_end == '\r')	/* CR */
-	(*blk_end)++;
+        (*blk_end)++;
+
     if (**blk_end == '\n')	/* LF */
-	(*blk_end)++;
+        (*blk_end)++;
 
     *parse_start = *blk_end;
+
     return 1;
 }
 
@@ -531,15 +581,16 @@ int
 httpReplyBodySize(method_t method, HttpReply const * reply)
 {
     if (METHOD_HEAD == method)
-	return 0;
+        return 0;
     else if (reply->sline.status == HTTP_OK)
-	(void) 0;		/* common case, continue */
+        (void) 0;		/* common case, continue */
     else if (reply->sline.status == HTTP_NO_CONTENT)
-	return 0;
+        return 0;
     else if (reply->sline.status == HTTP_NOT_MODIFIED)
-	return 0;
+        return 0;
     else if (reply->sline.status < HTTP_OK)
-	return 0;
+        return 0;
+
     return reply->content_length;
 }
 
@@ -552,18 +603,21 @@ httpReplyBodyBuildSize(request_t * request, HttpReply * reply, dlink_list * body
     body_size *bs;
     ACLChecklist *checklist;
     bs = (body_size *) bodylist->head;
+
     while (bs) {
-	checklist = aclChecklistCreate(bs->access_list, request, NULL);
-	checklist->reply = reply;
-	if (1 != aclCheckFast(bs->access_list, checklist)) {
-	    /* deny - skip this entry */
-	    bs = (body_size *) bs->node.next;
-	} else {
-	    /* Allow - use this entry */
-	    reply->maxBodySize = bs->maxsize;
-	    bs = NULL;
-	    debug(58, 3) ("httpReplyBodyBuildSize: Setting maxBodySize to %ld\n", (long int) reply->maxBodySize);
-	}
-	delete checklist;
+        checklist = aclChecklistCreate(bs->access_list, request, NULL);
+        checklist->reply = reply;
+
+        if (1 != aclCheckFast(bs->access_list, checklist)) {
+            /* deny - skip this entry */
+            bs = (body_size *) bs->node.next;
+        } else {
+            /* Allow - use this entry */
+            reply->maxBodySize = bs->maxsize;
+            bs = NULL;
+            debug(58, 3) ("httpReplyBodyBuildSize: Setting maxBodySize to %ld\n", (long int) reply->maxBodySize);
+        }
+
+        delete checklist;
     }
 }

@@ -16,10 +16,15 @@
  * is 75% of SHMBUFS. magic1 is the number of messages away which we
  * stop allowing open/create for.
  */
+
 typedef struct _diomsg diomsg;
+
 class DiskdIO;
-class DiskdFile : public DiskFile {
-  public:
+
+class DiskdFile : public DiskFile
+{
+
+public:
     virtual void deleteSelf() const;
     void * operator new (size_t);
     void operator delete (void *);
@@ -35,15 +40,16 @@ class DiskdFile : public DiskFile {
 
     /* Temporary */
     int getID() const {return id;}
+
     void completed (diomsg *);
-      
-  private:
+
+private:
     int id;
     char const *path_;
     bool errorOccured;
     DiskdIO *IO;
     IORequestor::Pointer ioRequestor;
-    CBDATA_CLASS(DiskdFile); 
+    CBDATA_CLASS(DiskdFile);
     void openDone(diomsg *);
     void createDone (diomsg *);
     void readDone (diomsg *);
@@ -54,39 +60,53 @@ class DiskdFile : public DiskFile {
     bool canNotifyClient() const;
 };
 
-class SharedMemory{
+class SharedMemory
+{
+
 public:
     void put(off_t);
-    void *get(off_t *);
+
+    void *get
+    (off_t *);
+
     void init (int ikey, int magic2);
+
     int nbufs;
+
     char *buf;
+
     char *inuse_map;
+
     int id;
 };
 
-class diskdstate_t : public UFSStoreState {
-  public:
+class diskdstate_t : public UFSStoreState
+{
+
+public:
     virtual void deleteSelf() const {delete this;}
+
     void * operator new (size_t);
     void operator delete (void *);
     diskdstate_t(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data);
     ~diskdstate_t();
 
     void close();
-    
+
     void ioCompletedNotification();
     void readCompleted(const char *buf, int len, int errflag);
     void writeCompleted(int errflag, size_t len);
     void closeCompleted();
-  private:
+
+private:
     CBDATA_CLASS(diskdstate_t);
     void doCallback(int);
 };
 
 #include "dio.h"
 
-struct _diskd_stats {
+struct _diskd_stats
+{
     int open_fail_queue_len;
     int block_queue_len;
     int max_away;
@@ -95,11 +115,15 @@ struct _diskd_stats {
     int sent_count;
     int recv_count;
     int sio_id;
-    struct {
-	int ops;
-	int success;
-	int fail;
-    } open, create, close, unlink, read, write;
+
+    struct
+    {
+        int ops;
+        int success;
+        int fail;
+    }
+
+    open, create, close, unlink, read, write;
 };
 
 typedef struct _diskd_stats diskd_stats_t;
@@ -107,8 +131,10 @@ typedef struct _diskd_stats diskd_stats_t;
 extern void storeDiskdHandle(diomsg * M);
 
 #include "SwapDir.h"
+
 class DiskdSwapDir : public UFSSwapDir
 {
+
 public:
     virtual void init();
     virtual void dump(StoreEntry &)const;
@@ -125,8 +151,10 @@ public:
 #define SHMBUF_BLKSZ SM_PAGE_SIZE
 
 extern diskd_stats_t diskd_stats;
+
 class DiskdIO : public UFSStrategy
 {
+
 public:
     DiskdIO();
     virtual bool shedLoad();

@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.23 2003/01/23 00:37:29 robertc Exp $
+ * $Id: whois.cc,v 1.24 2003/02/21 22:50:13 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -40,7 +40,9 @@
 
 #define WHOIS_PORT 43
 
-class WhoisState {
+class WhoisState
+{
+
 public:
     void readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno);
     void setReplyToOK(StoreEntry *entry);
@@ -62,7 +64,7 @@ CBDATA_TYPE(WhoisState);
 static void
 whoisWriteComplete(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
-	xfree(buf);
+    xfree(buf);
 }
 
 void
@@ -108,11 +110,11 @@ whoisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 void
 WhoisState::setReplyToOK(StoreEntry *entry)
 {
-     HttpReply *reply = httpReplyCreate();
-     http_version_t version;
-     httpBuildVersion(&version, 1, 0);
-     httpReplySetHeaders(reply, version, HTTP_OK, NULL, NULL, 0, 0, -1);
-     storeEntryReplaceObject (entry, reply);
+    HttpReply *reply = httpReplyCreate();
+    http_version_t version;
+    httpBuildVersion(&version, 1, 0);
+    httpReplySetHeaders(reply, version, HTTP_OK, NULL, NULL, 0, 0, -1);
+    storeEntryReplaceObject (entry, reply);
 }
 
 void
@@ -121,6 +123,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
     int do_next_read = 0;
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
@@ -128,41 +131,54 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
     buf[len] = '\0';
     debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, (int)len);
     debug(75, 5) ("{%s}\n", buf);
+
     if (flag == COMM_OK && len > 0) {
-	if (!dataWritten)
-	    setReplyToOK(entry);
-	kb_incr(&statCounter.server.all.kbytes_in, len);
-	kb_incr(&statCounter.server.http.kbytes_in, len);
-	/* No range support, we always grab it all */
-	dataWritten = 1;
-	storeAppend(entry, buf, len);
+        if (!dataWritten)
+            setReplyToOK(entry);
+
+        kb_incr(&statCounter.server.all.kbytes_in, len);
+
+        kb_incr(&statCounter.server.http.kbytes_in, len);
+
+        /* No range support, we always grab it all */
+        dataWritten = 1;
+
+        storeAppend(entry, buf, len);
+
         do_next_read = 1;
     } else if (flag != COMM_OK || len < 0) {
-	debug(50, 2) ("whoisReadReply: FD %d: read failure: %s.\n",
-	    fd, xstrerror());
-	if (ignoreErrno(errno)) {
+        debug(50, 2) ("whoisReadReply: FD %d: read failure: %s.\n",
+                      fd, xstrerror());
+
+        if (ignoreErrno(errno)) {
             do_next_read = 1;
-	} else if (!dataWritten) {
-	    ErrorState *err;
-	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
-	    err->xerrno = errno;
-	    fwdFail(fwd, err);
-	    comm_close(fd);
+        } else if (!dataWritten) {
+            ErrorState *err;
+            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+            err->xerrno = errno;
+            fwdFail(fwd, err);
+            comm_close(fd);
             do_next_read = 0;
-	} else {
-	    comm_close(fd);
+        } else {
+            comm_close(fd);
             do_next_read = 0;
-	}
+        }
     } else {
-	storeTimestampsSet(entry);
-	storeBufferFlush(entry);
-	if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
-	    storeSetPublicKey(entry);
-	fwdComplete(fwd);
-	debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
-	comm_close(fd);
+        storeTimestampsSet(entry);
+        storeBufferFlush(entry);
+
+        if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
+            storeSetPublicKey(entry);
+
+        fwdComplete(fwd);
+
+        debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
+
+        comm_close(fd);
+
         do_next_read = 0;
     }
+
     if (do_next_read)
         comm_read(fd, buf, BUFSIZ, whoisReadReply, this);
 }

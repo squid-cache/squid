@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.12 2003/01/23 00:37:15 robertc Exp $
+ * $Id: String.cc,v 1.13 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -49,10 +49,11 @@ void
 String::init(char const *str)
 {
     assert(this);
+
     if (str)
-	limitInit(str, strlen(str));
+        limitInit(str, strlen(str));
     else
-	clean();
+        clean();
 }
 
 String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
@@ -72,11 +73,13 @@ String &
 String::operator = (String const &old)
 {
     clean ();
+
     if (old.len_)
-	limitInit (old.buf_, old.len_);
+        limitInit (old.buf_, old.len_);
+
     return *this;
 }
-  
+
 void
 String::limitInit(const char *str, int len)
 {
@@ -96,10 +99,14 @@ void
 String::clean()
 {
     assert(this);
+
     if (buf_)
-	memFreeString(size_, buf_);
+        memFreeString(size_, buf_);
+
     len_ = 0;
+
     size_ = 0;
+
     buf_ = NULL;
 }
 
@@ -120,19 +127,24 @@ String::append(const char *str, int len)
 {
     assert(this);
     assert(str && len >= 0);
+
     if (len_ + len < size_) {
-	strncat(buf_, str, len);
-	len_ += len;
+        strncat(buf_, str, len);
+        len_ += len;
     } else {
-	String snew;
-	snew.len_ = len_ + len;
-	snew.initBuf(snew.len_ + 1);
-	if (buf_)
-	    xmemcpy(snew.buf_, buf_, len_);
-	if (len)
-	    xmemcpy(snew.buf_ + len_, str, len);
-	snew.buf_[snew.len_] = '\0';
-	absorb(snew);
+        String snew;
+        snew.len_ = len_ + len;
+        snew.initBuf(snew.len_ + 1);
+
+        if (buf_)
+            xmemcpy(snew.buf_, buf_, len_);
+
+        if (len)
+            xmemcpy(snew.buf_ + len_, str, len);
+
+        snew.buf_[snew.len_] = '\0';
+
+        absorb(snew);
     }
 }
 

@@ -17,7 +17,8 @@ extern bool comm_has_pending_read(int fd);
 extern void comm_read_cancel(int fd, IOCB *callback, void *data);
 extern void fdc_open(int fd, unsigned int type, char *desc);
 extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
-  struct sockaddr *from, socklen_t *fromlen);
+
+                                 struct sockaddr *from, socklen_t *fromlen);
 extern int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 extern ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
 extern void comm_accept_setcheckperiod(int fd, int mdelay);
@@ -25,28 +26,34 @@ extern void comm_accept_setcheckperiod(int fd, int mdelay);
 extern void comm_write(int s, const char *buf, size_t len, IOWCB *callback, void *callback_data);
 
 /* Where should this belong? */
-class CommIO {
+
+class CommIO
+{
+
 public:
-  static inline void NotifyIOCompleted();
-  static void ResetNotifications();
-  static void Initialise();
+    static inline void NotifyIOCompleted();
+    static void ResetNotifications();
+    static void Initialise();
+
 private:
-  static void NULLFDHandler(int, void *);
-  static void FlushPipe();
-  static bool Initialised;
-  static bool DoneSignalled;
-  static int DoneFD;
-  static int DoneReadFD;
+    static void NULLFDHandler(int, void *);
+    static void FlushPipe();
+    static bool Initialised;
+    static bool DoneSignalled;
+    static int DoneFD;
+    static int DoneReadFD;
 };
 
 /* Inline code. TODO: make structued approach to inlining */
 void
-CommIO::NotifyIOCompleted() {
+CommIO::NotifyIOCompleted()
+{
     if (!Initialised)
-	Initialise();
+        Initialise();
+
     if (!DoneSignalled) {
-	DoneSignalled = true;
-	write(DoneFD, "!", 1);
+        DoneSignalled = true;
+        write(DoneFD, "!", 1);
     }
 };
 

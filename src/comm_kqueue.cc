@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.7 2003/01/23 00:37:19 robertc Exp $
+ * $Id: comm_kqueue.cc,v 1.8 2003/02/21 22:50:07 robertc Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -78,6 +78,7 @@
 
 static void kq_update_events(int, short, PF *);
 static int kq;
+
 static struct timespec zero_timespec;
 
 static struct kevent *kqlst;        /* kevent buffer */
@@ -96,16 +97,20 @@ kq_update_events(int fd, short filter, PF * handler)
     int kep_flags;
 
 #if 0
+
     int retval;
 #endif
 
     switch (filter) {
+
     case EVFILT_READ:
         cur_handler = fd_table[fd].read_handler;
         break;
+
     case EVFILT_WRITE:
         cur_handler = fd_table[fd].write_handler;
         break;
+
     default:
         /* XXX bad! -- adrian */
         return;
@@ -113,7 +118,8 @@ kq_update_events(int fd, short filter, PF * handler)
     }
 
     if ((cur_handler == NULL && handler != NULL)
-        || (cur_handler != NULL && handler == NULL)) {
+            || (cur_handler != NULL && handler == NULL)) {
+
         struct kevent *kep;
 
         kep = kqlst + kqoff;
@@ -131,22 +137,28 @@ kq_update_events(int fd, short filter, PF * handler)
 
             ret = kevent(kq, kqlst, kqoff, NULL, 0, &zero_timespec);
             /* jdc -- someone needs to do error checking... */
+
             if (ret == -1) {
                 perror("kq_update_events(): kevent()");
                 return;
             }
+
             kqoff = 0;
         } else {
             kqoff++;
         }
+
 #if 0
         if (retval < 0) {
             /* Error! */
+
             if (ke.flags & EV_ERROR) {
                 errno = ke.data;
             }
         }
+
 #endif
+
     }
 }
 
@@ -166,10 +178,13 @@ void
 comm_select_init(void)
 {
     kq = kqueue();
+
     if (kq < 0) {
         fatal("comm_select_init: Couldn't open kqueue fd!\n");
     }
+
     kqmax = getdtablesize();
+
     kqlst = (struct kevent *)xmalloc(sizeof(*kqlst) * kqmax);
     zero_timespec.tv_sec = 0;
     zero_timespec.tv_nsec = 0;
@@ -183,7 +198,7 @@ comm_select_init(void)
  */
 void
 commSetSelect(int fd, unsigned int type, PF * handler,
-    void *client_data, time_t timeout)
+              void *client_data, time_t timeout)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
@@ -194,11 +209,13 @@ commSetSelect(int fd, unsigned int type, PF * handler,
         F->read_handler = handler;
         F->read_data = client_data;
     }
+
     if (type & COMM_SELECT_WRITE) {
         kq_update_events(fd, EVFILT_WRITE, handler);
         F->write_handler = handler;
         F->write_data = client_data;
     }
+
     if (timeout)
         F->timeout = squid_curtime + timeout;
 
@@ -223,7 +240,9 @@ comm_err_t
 comm_select(int msec)
 {
     int num, i;
+
     static struct kevent ke[KE_LENGTH];
+
     struct timespec poll_time;
 
     /*
@@ -231,24 +250,34 @@ comm_select(int msec)
      * why jlemon used a timespec, but hey, he wrote the interface, not I
      *   -- Adrian
      */
+
     if (msec > max_poll_time)
         msec = max_poll_time;
+
     poll_time.tv_sec = msec / 1000;
+
     poll_time.tv_nsec = (msec % 1000) * 1000000;
+
     for (;;) {
         num = kevent(kq, kqlst, kqoff, ke, KE_LENGTH, &poll_time);
         statCounter.select_loops++;
         kqoff = 0;
+
         if (num >= 0)
             break;
+
         if (ignoreErrno(errno))
             break;
+
         getCurrentTime();
+
         return COMM_ERROR;
+
         /* NOTREACHED */
     }
 
     getCurrentTime();
+
     if (num == 0)
         return COMM_OK;		/* No error.. */
 
@@ -262,25 +291,34 @@ comm_select(int msec)
             /* XXX error == bad! -- adrian */
             continue;        /* XXX! */
         }
+
         switch (ke[i].filter) {
-            case EVFILT_READ:
-                if ((hdl = F->read_handler) != NULL) {
-                    F->read_handler = NULL;
-                    hdl(fd, F->read_data);
-                }
-		break;
-            case EVFILT_WRITE:
-                if ((hdl = F->write_handler) != NULL) {
-                    F->write_handler = NULL;
-                    hdl(fd, F->write_data);
-                }
-		break;
-            default:
-                /* Bad! -- adrian */
-		debug(5, 1) ("comm_select: kevent returned %d!\n", ke[i].filter);
-                break;
+
+        case EVFILT_READ:
+
+            if ((hdl = F->read_handler) != NULL) {
+                F->read_handler = NULL;
+                hdl(fd, F->read_data);
+            }
+
+            break;
+
+        case EVFILT_WRITE:
+
+            if ((hdl = F->write_handler) != NULL) {
+                F->write_handler = NULL;
+                hdl(fd, F->write_data);
+            }
+
+            break;
+
+        default:
+            /* Bad! -- adrian */
+            debug(5, 1) ("comm_select: kevent returned %d!\n", ke[i].filter);
+            break;
         }
     }
+
     return COMM_OK;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMatchStrategy.h,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLMatchStrategy.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,13 +39,19 @@
 #include "ACLData.h"
 
 /* Perhaps this should live in ACL? */
+
 template<class M>
-class ACLMatchStrategy {
-  public:
+
+class ACLMatchStrategy
+{
+
+public:
     typedef M MatchType;
     virtual int match (ACLData<M> * &, ACLChecklist *) = 0;
     virtual bool requiresRequest() const {return false;}
-    virtual ~ACLMatchStrategy(){}
-};
+
+    virtual ~ACLMatchStrategy(){}}
+
+;
 
 #endif /* SQUID_ACLMATCHSTRATEGY_H */

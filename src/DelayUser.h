@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.h,v 1.2 2003/02/08 01:45:47 robertc Exp $
+ * $Id: DelayUser.h,v 1.3 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -49,12 +49,15 @@
 #include "Array.h"
 #include "splay.h"
 
-class DelayUserBucket : public RefCountable {
-  public:
+class DelayUserBucket : public RefCountable
+{
+
+public:
     typedef RefCount<DelayUserBucket> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const {delete this;}
+
     void stats(StoreEntry *)const;
     DelayUserBucket(AuthUser *);
     ~DelayUserBucket();
@@ -62,7 +65,9 @@ class DelayUserBucket : public RefCountable {
     AuthUser *authUser;
 };
 
-class DelayUser : public CompositePoolNode {
+class DelayUser : public CompositePoolNode
+{
+
 public:
     typedef RefCount<DelayUser> Pointer;
     void *operator new(size_t);
@@ -74,23 +79,30 @@ public:
     virtual void dump(StoreEntry *entry) const;
     virtual void update(int incr);
     virtual void parse();
+
     virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
 
 private:
-    class Id:public DelayIdComposite {
-      public:
-	void *operator new(size_t);
-	void operator delete (void *);
-	virtual void deleteSelf() const;
-	Id (DelayUser::Pointer, AuthUser *);
-	~Id();
-	virtual int bytesWanted (int min, int max) const;
-	virtual void bytesIn(int qty);
-      private:
-	DelayUser::Pointer theUser;
-	DelayUserBucket::Pointer theBucket;
+
+class Id:public DelayIdComposite
+    {
+
+    public:
+        void *operator new(size_t);
+        void operator delete (void *);
+        virtual void deleteSelf() const;
+        Id (DelayUser::Pointer, AuthUser *);
+        ~Id();
+        virtual int bytesWanted (int min, int max) const;
+        virtual void bytesIn(int qty);
+
+    private:
+        DelayUser::Pointer theUser;
+        DelayUserBucket::Pointer theBucket;
     };
+
     DelaySpec spec;
     Splay<DelayUserBucket::Pointer> buckets;
 };
+
 #endif /* DELAYUSER_H */

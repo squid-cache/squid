@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.1 2003/01/23 00:37:26 robertc Exp $
+ * $Id: stmem.h,v 1.2 2003/02/21 22:50:11 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,8 +35,12 @@
 #define SQUID_STMEM_H
 
 class mem_node;
+
 class StoreIOBuffer;
-class mem_hdr {
+
+class mem_hdr
+{
+
 public:
     void freeContent();
     int lowestOffset () const;
@@ -51,6 +55,7 @@ public:
     void internalAppend(const char *data, int len);
     mem_node *head;
     mem_node *tail;
+
 private:
     void unlinkHead();
     void makeAppendSpace();

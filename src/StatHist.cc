@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.29 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StatHist.cc,v 1.30 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -54,10 +54,10 @@ static int statHistBin(const StatHist * H, double v);
 static double statHistVal(const StatHist * H, int bin);
 static StatHistBinDumper statHistBinDumper;
 #if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-    /*
-     * HP-UX and GCC (2.8?) give strange errors when these simple
-     * functions are static.
-     */
+/*
+ * HP-UX and GCC (2.8?) give strange errors when these simple
+ * functions are static.
+ */
 static hbase_f Log;
 static hbase_f Exp;
 static hbase_f Null;
@@ -111,7 +111,7 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
     assert(Dest->bins);
     /* better be safe than sorry */
     debug(62, 3) ("statHistCopy: capacity %d %d\n",
-	Dest->capacity, Orig->capacity);
+                  Dest->capacity, Orig->capacity);
     assert(Dest->capacity == Orig->capacity);
     debug(62, 3) ("statHistCopy: min %f %f\n", Dest->min, Orig->min);
     assert(Dest->min == Orig->min);
@@ -123,9 +123,9 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
     assert(Dest->val_out == Orig->val_out);
     /* actual copy */
     debug(62, 3) ("statHistCopy: copying %ld bytes to %p from %p\n",
-	(long int) (Dest->capacity * sizeof(*Dest->bins)),
-	Dest->bins,
-	Orig->bins);
+                  (long int) (Dest->capacity * sizeof(*Dest->bins)),
+                  Dest->bins,
+                  Orig->bins);
     xmemcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
 }
 
@@ -139,8 +139,9 @@ statHistSafeCopy(StatHist * Dest, const StatHist * Orig)
 {
     assert(Dest && Orig);
     assert(Dest->bins);
+
     if (Dest->capacity == Orig->capacity)
-	statHistCopy(Dest, Orig);
+        statHistCopy(Dest, Orig);
 }
 
 void
@@ -157,17 +158,24 @@ statHistBin(const StatHist * H, double v)
 {
     int bin;
 #if BROKEN_STAT_HIST_BIN
+
     return 0;
     /* NOTREACHED */
 #endif
+
     v -= H->min;		/* offset */
+
     if (v <= 0.0)		/* too small */
-	return 0;
+        return 0;
+
     bin = (int) floor(H->scale * H->val_in(v) + 0.5);
+
     if (bin < 0)		/* should not happen */
-	bin = 0;
+        bin = 0;
+
     if (bin >= H->capacity)	/* too big */
-	bin = H->capacity - 1;
+        bin = H->capacity - 1;
+
     return bin;
 }
 
@@ -191,32 +199,47 @@ statHistDeltaMedian(const StatHist * A, const StatHist * B)
     double f;
     int *D = (int *)xcalloc(A->capacity, sizeof(int));
     assert(A->capacity == B->capacity);
+
     for (i = 0; i < A->capacity; i++) {
-	D[i] = B->bins[i] - A->bins[i];
-	assert(D[i] >= 0);
+        D[i] = B->bins[i] - A->bins[i];
+        assert(D[i] >= 0);
     }
+
     for (i = 0; i < A->capacity; i++)
-	s1 += D[i];
+        s1 += D[i];
+
     h = s1 >> 1;
+
     for (i = 0; i < A->capacity; i++) {
-	J = i;
-	b += D[J];
-	if (a <= h && h <= b)
-	    break;
-	I = i;
-	a += D[I];
+        J = i;
+        b += D[J];
+
+        if (a <= h && h <= b)
+            break;
+
+        I = i;
+
+        a += D[I];
     }
+
     xfree(D);
+
     if (s1 == 0)
-	return 0.0;
+        return 0.0;
+
     if (a > h)
-	return 0.0;
+        return 0.0;
+
     if (a >= b)
-	return 0.0;
+        return 0.0;
+
     if (I >= J)
-	return 0.0;
+        return 0.0;
+
     f = (h - a) / (b - a);
+
     K = (int) floor(f * (double) (J - I) + I);
+
     return statHistVal(A, K);
 }
 
@@ -224,8 +247,8 @@ static void
 statHistBinDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
-	storeAppendPrintf(sentry, "\t%3d/%f\t%d\t%f\n",
-	    idx, val, count, count / size);
+        storeAppendPrintf(sentry, "\t%3d/%f\t%d\t%f\n",
+                          idx, val, count, count / size);
 }
 
 void
@@ -233,13 +256,15 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
 {
     int i;
     double left_border = H->min;
+
     if (!bd)
-	bd = statHistBinDumper;
+        bd = statHistBinDumper;
+
     for (i = 0; i < H->capacity; i++) {
-	const double right_border = statHistVal(H, i + 1);
-	assert(right_border - left_border > 0.0);
-	bd(sentry, i, left_border, right_border - left_border, H->bins[i]);
-	left_border = right_border;
+        const double right_border = statHistVal(H, i + 1);
+        assert(right_border - left_border > 0.0);
+        bd(sentry, i, left_border, right_border - left_border, H->bins[i]);
+        left_border = right_border;
     }
 }
 
@@ -290,8 +315,8 @@ void
 statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
-	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
-	    idx, (int) val, count);
+        storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
+                          idx, (int) val, count);
 }
 
 void
@@ -304,5 +329,5 @@ void
 statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
-	storeAppendPrintf(sentry, "%9d\t%9d\n", (int) val, count);
+        storeAppendPrintf(sentry, "%9d\t%9d\n", (int) val, count);
 }

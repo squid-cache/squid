@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLRequestHeaderStrategy.h,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLRequestHeaderStrategy.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,19 +40,24 @@
 #include "ACLMatchStrategy.h"
 
 template <http_hdr_type header>
+
 class ACLRequestHeaderStrategy : public ACLMatchStrategy<char const *>
 {
-  public:
+
+public:
     virtual int match (ACLData<char const *> * &, ACLChecklist *);
     virtual bool requiresRequest() const {return true;}
+
     static ACLRequestHeaderStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
      * private constructors with no friends */
     ACLRequestHeaderStrategy(ACLRequestHeaderStrategy const &);
-  private:
+
+private:
     static ACLRequestHeaderStrategy Instance_;
     ACLRequestHeaderStrategy(){}
+
     ACLRequestHeaderStrategy&operator=(ACLRequestHeaderStrategy const &);
 };
 
@@ -61,8 +66,10 @@ int
 ACLRequestHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {
     char const *theHeader = httpHeaderGetStr(&checklist->request->header, header);
+
     if (NULL == theHeader)
-	return 0;
+        return 0;
+
     return data->match(theHeader);
 }
 

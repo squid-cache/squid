@@ -1,6 +1,6 @@
 
 /*
- * $Id: leakfinder.cc,v 1.8 2003/01/23 00:37:23 robertc Exp $
+ * $Id: leakfinder.cc,v 1.9 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -44,14 +44,18 @@ static hash_table *htable = NULL;
 
 static int leakCount = 0;
 
-typedef struct _ptr {
+typedef struct _ptr
+{
     hash_link hash;		/* must be first */
     void *key;
+
     struct _ptr *next;
     const char *file;
     int line;
     time_t when;
-} ptr;
+}
+
+ptr;
 
 static HASHCMP ptr_cmp;
 static HASHHASH ptr_hash;
@@ -65,8 +69,8 @@ leakInit(void)
     debug(45, 3) ("ptrInit\n");
     htable = hash_create(ptr_cmp, 1 << 8, ptr_hash);
     cachemgrRegister("leaks",
-	"Memory Leak Tracking",
-	ptrDump, 0, 1);
+                     "Memory Leak Tracking",
+                     ptrDump, 0, 1);
 }
 
 void *
@@ -133,9 +137,10 @@ ptrDump(StoreEntry * sentry)
     ptr *c;
     storeAppendPrintf(sentry, "Tracking %d pointers\n", leakCount);
     hash_first(htable);
+
     while ((hptr = (hash_link *)hash_next(htable))) {
-	c = (ptr *) hptr;
-	storeAppendPrintf(sentry, "%20p last used %9d seconds ago by %s:%d\n",
-	    c->key, (int)(squid_curtime - c->when), c->file, c->line);
+        c = (ptr *) hptr;
+        storeAppendPrintf(sentry, "%20p last used %9d seconds ago by %s:%d\n",
+                          c->key, (int)(squid_curtime - c->when), c->file, c->line);
     }
 }

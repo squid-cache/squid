@@ -11,7 +11,7 @@
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
  *
- * $Id: async_io.cc,v 1.13 2003/01/23 00:38:13 robertc Exp $
+ * $Id: async_io.cc,v 1.14 2003/02/21 22:50:39 robertc Exp $
  */
 
 #include "squid.h"
@@ -39,11 +39,13 @@ a_file_findslot(async_queue_t * q)
     int i;
 
     /* Later we should use something a little more .. efficient :) */
+
     for (i = 0; i < MAX_ASYNCOP; i++) {
-	if (q->aq_queue[i].aq_e_state == AQ_ENTRY_FREE)
-	    /* Found! */
-	    return i;
+        if (q->aq_queue[i].aq_e_state == AQ_ENTRY_FREE)
+            /* Found! */
+            return i;
     }
+
     /* found nothing */
     return -1;
 }
@@ -55,7 +57,7 @@ a_file_findslot(async_queue_t * q)
 
 void
 a_file_read(async_queue_t * q, int fd, void *buf, int req_len, off_t offset,
-    DRCB * callback, void *data)
+            DRCB * callback, void *data)
 {
     int slot;
     async_queue_entry_t *qe;
@@ -63,27 +65,40 @@ a_file_read(async_queue_t * q, int fd, void *buf, int req_len, off_t offset,
     assert(q->aq_state == AQ_STATE_SETUP);
 
 #if 0
+
     file_read(fd, buf, req_len, offset, callback, data);
 #endif
     /* Find a free slot */
     slot = a_file_findslot(q);
+
     if (slot < 0) {
-	/* No free slot? Callback error, and return */
-	fatal("Aiee! out of aiocb slots!\n");
+        /* No free slot? Callback error, and return */
+        fatal("Aiee! out of aiocb slots!\n");
     }
+
     /* Mark slot as ours */
     qe = &q->aq_queue[slot];
+
     qe->aq_e_state = AQ_ENTRY_USED;
+
     qe->aq_e_callback.read = callback;
+
     qe->aq_e_callback_data = cbdataReference(data);
+
     qe->aq_e_type = AQ_ENTRY_READ;
+
     qe->aq_e_free = NULL;
+
     qe->aq_e_buf = buf;
+
     qe->aq_e_fd = fd;
 
     qe->aq_e_aiocb.aio_fildes = fd;
+
     qe->aq_e_aiocb.aio_nbytes = req_len;
+
     qe->aq_e_aiocb.aio_offset = offset;
+
     qe->aq_e_aiocb.aio_buf = buf;
 
     /* Account */
@@ -91,14 +106,14 @@ a_file_read(async_queue_t * q, int fd, void *buf, int req_len, off_t offset,
 
     /* Initiate aio */
     if (aio_read(&qe->aq_e_aiocb) < 0) {
-	fatalf("Aiee! aio_read() returned error (%d)!\n", errno);
+        fatalf("Aiee! aio_read() returned error (%d)!\n", errno);
     }
 }
 
 
 void
 a_file_write(async_queue_t * q, int fd, off_t offset, void *buf, int len,
-    DWCB * callback, void *data, FREE * freefunc)
+             DWCB * callback, void *data, FREE * freefunc)
 {
     int slot;
     async_queue_entry_t *qe;
@@ -106,27 +121,40 @@ a_file_write(async_queue_t * q, int fd, off_t offset, void *buf, int len,
     assert(q->aq_state == AQ_STATE_SETUP);
 
 #if 0
+
     file_write(fd, offset, buf, len, callback, data, freefunc);
 #endif
     /* Find a free slot */
     slot = a_file_findslot(q);
+
     if (slot < 0) {
-	/* No free slot? Callback error, and return */
-	fatal("Aiee! out of aiocb slots!\n");
+        /* No free slot? Callback error, and return */
+        fatal("Aiee! out of aiocb slots!\n");
     }
+
     /* Mark slot as ours */
     qe = &q->aq_queue[slot];
+
     qe->aq_e_state = AQ_ENTRY_USED;
+
     qe->aq_e_callback.write = callback;
+
     qe->aq_e_callback_data = cbdataReference(data);
+
     qe->aq_e_type = AQ_ENTRY_WRITE;
+
     qe->aq_e_free = freefunc;
+
     qe->aq_e_buf = buf;
+
     qe->aq_e_fd = fd;
 
     qe->aq_e_aiocb.aio_fildes = fd;
+
     qe->aq_e_aiocb.aio_nbytes = len;
+
     qe->aq_e_aiocb.aio_offset = offset;
+
     qe->aq_e_aiocb.aio_buf = buf;
 
     /* Account */
@@ -134,8 +162,8 @@ a_file_write(async_queue_t * q, int fd, off_t offset, void *buf, int len,
 
     /* Initiate aio */
     if (aio_write(&qe->aq_e_aiocb) < 0) {
-	fatalf("Aiee! aio_read() returned error (%d)!\n", errno);
-	assert(1 == 0);
+        fatalf("Aiee! aio_read() returned error (%d)!\n", errno);
+        assert(1 == 0);
     }
 }
 
@@ -167,44 +195,51 @@ a_file_callback(async_queue_t * q)
     assert(q->aq_state == AQ_STATE_SETUP);
 
     /* Loop through all slots */
+
     for (i = 0; i < MAX_ASYNCOP; i++) {
-	if (q->aq_queue[i].aq_e_state == AQ_ENTRY_USED) {
-	    aqe = &q->aq_queue[i];
-	    /* Active, get status */
-	    reterr = aio_error(&aqe->aq_e_aiocb);
-	    if (reterr < 0) {
-		fatal("aio_error returned an error!\n");
-	    }
-	    if (reterr != EINPROGRESS) {
-		/* Get the return code */
-		retval = aio_return(&aqe->aq_e_aiocb);
+        if (q->aq_queue[i].aq_e_state == AQ_ENTRY_USED) {
+            aqe = &q->aq_queue[i];
+            /* Active, get status */
+            reterr = aio_error(&aqe->aq_e_aiocb);
 
-		/* Get the callback parameters */
-		freefunc = aqe->aq_e_free;
-		rc = aqe->aq_e_callback.read;
-		wc = aqe->aq_e_callback.write;
-		buf = aqe->aq_e_buf;
-		fd = aqe->aq_e_fd;
-		type = aqe->aq_e_type;
-		callback_valid = cbdataReferenceValidDone(aqe->aq_e_callback_data, &cbdata);
+            if (reterr < 0) {
+                fatal("aio_error returned an error!\n");
+            }
 
-		/* Free slot */
-		bzero(aqe, sizeof(async_queue_entry_t));
-		aqe->aq_e_state = AQ_ENTRY_FREE;
-		q->aq_numpending--;
+            if (reterr != EINPROGRESS) {
+                /* Get the return code */
+                retval = aio_return(&aqe->aq_e_aiocb);
 
-		/* Callback */
-		if (callback_valid) {
-		    if (type == AQ_ENTRY_READ)
-			rc(fd, (char *)buf, retval, reterr, cbdata);
-		    if (type == AQ_ENTRY_WRITE)
-			wc(fd, reterr, retval, cbdata);
-		}
-		if (type == AQ_ENTRY_WRITE && freefunc)
-		    freefunc(buf);
-	    }
-	}
+                /* Get the callback parameters */
+                freefunc = aqe->aq_e_free;
+                rc = aqe->aq_e_callback.read;
+                wc = aqe->aq_e_callback.write;
+                buf = aqe->aq_e_buf;
+                fd = aqe->aq_e_fd;
+                type = aqe->aq_e_type;
+                callback_valid = cbdataReferenceValidDone(aqe->aq_e_callback_data, &cbdata);
+
+                /* Free slot */
+                bzero(aqe, sizeof(async_queue_entry_t));
+                aqe->aq_e_state = AQ_ENTRY_FREE;
+                q->aq_numpending--;
+
+                /* Callback */
+
+                if (callback_valid) {
+                    if (type == AQ_ENTRY_READ)
+                        rc(fd, (char *)buf, retval, reterr, cbdata);
+
+                    if (type == AQ_ENTRY_WRITE)
+                        wc(fd, reterr, retval, cbdata);
+                }
+
+                if (type == AQ_ENTRY_WRITE && freefunc)
+                    freefunc(buf);
+            }
+        }
     }
+
     return completed;
 }
 
@@ -232,8 +267,9 @@ a_file_syncqueue(async_queue_t * q)
      * We can't quit when callback returns 0 - some calls may not
      * return any completed pending events, but they're still pending!
      */
+
     while (q->aq_numpending)
-	a_file_callback(q);
+        a_file_callback(q);
 }
 
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.63 2003/02/04 21:57:15 robertc Exp $
+ * $Id: dnsserver.cc,v 1.64 2003/02/21 22:50:08 robertc Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -155,6 +155,7 @@ extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
  * Workaround bug in gethostbyname which sets h_errno wrong
  * WARNING: This hack queries only the resolver and not NetInfo or YP
  */
+
 struct hostent *_res_gethostbyname(char *name);
 #define gethostbyname _res_gethostbyname
 #endif /* _SQUID_NEXT_ */
@@ -162,8 +163,11 @@ struct hostent *_res_gethostbyname(char *name);
 static struct in_addr no_addr;
 
 #ifdef _SQUID_OS2_
+
 struct state _res =
-{0};				/* it's not in any of the libraries */
+    {0}
+
+    ;				/* it's not in any of the libraries */
 #endif
 
 /* error messages from gethostbyname() */
@@ -171,15 +175,15 @@ static char *
 my_h_msgs(int x)
 {
     if (x == HOST_NOT_FOUND)
-	return "Host not found (authoritative)";
+        return "Host not found (authoritative)";
     else if (x == TRY_AGAIN)
-	return "Host not found (non-authoritative)";
+        return "Host not found (non-authoritative)";
     else if (x == NO_RECOVERY)
-	return "Non recoverable errors";
+        return "Non recoverable errors";
     else if (x == NO_DATA || x == NO_ADDRESS)
-	return "Valid name, no data record of requested type";
+        return "Valid name, no data record of requested type";
     else
-	return "Unknown DNS problem";
+        return "Unknown DNS problem";
 }
 
 #define REQ_SZ 512
@@ -187,61 +191,80 @@ my_h_msgs(int x)
 static void
 lookup(const char *buf)
 {
+
     const struct hostent *result = NULL;
     int reverse = 0;
     int ttl = 0;
     int retry = 0;
     int i;
+
     struct in_addr addr;
+
     if (0 == strcmp(buf, "$shutdown"))
-	exit(0);
+        exit(0);
+
     if (0 == strcmp(buf, "$hello")) {
-	printf("$alive\n");
-	return;
+        printf("$alive\n");
+        return;
     }
+
     /* check if it's already an IP address in text form. */
     for (;;) {
-	if (safe_inet_addr(buf, &addr)) {
-	    reverse = 1;
-	    result = gethostbyaddr((char *) &addr.s_addr, 4, AF_INET);
-	} else {
-	    result = gethostbyname(buf);
-	}
-	if (NULL != result)
-	    break;
-	if (h_errno != TRY_AGAIN)
-	    break;
-	if (++retry == 3)
-	    break;
-	sleep(1);
+        if (safe_inet_addr(buf, &addr)) {
+            reverse = 1;
+            result = gethostbyaddr((char *) &addr.s_addr, 4, AF_INET);
+        } else {
+            result = gethostbyname(buf);
+        }
+
+        if (NULL != result)
+            break;
+
+        if (h_errno != TRY_AGAIN)
+            break;
+
+        if (++retry == 3)
+            break;
+
+        sleep(1);
     }
+
     if (NULL == result) {
-	if (h_errno == TRY_AGAIN) {
-	    printf("$fail Name Server for domain '%s' is unavailable.\n", buf);
-	} else {
-	    printf("$fail DNS Domain '%s' is invalid: %s.\n",
-		buf, my_h_msgs(h_errno));
-	}
-	return;
+        if (h_errno == TRY_AGAIN) {
+            printf("$fail Name Server for domain '%s' is unavailable.\n", buf);
+        } else {
+            printf("$fail DNS Domain '%s' is invalid: %s.\n",
+                   buf, my_h_msgs(h_errno));
+        }
+
+        return;
     }
+
 #if LIBRESOLV_DNS_TTL_HACK
     /* DNS TTL handling - bne@CareNet.hu
      * for first try it's a dirty hack, by hacking getanswer
      * to place the ttl in a global variable */
     if (_dns_ttl_ > -1)
-	ttl = _dns_ttl_;
+        ttl = _dns_ttl_;
+
 #endif
+
     if (reverse) {
-	printf("$name %d %s\n", ttl, result->h_name);
-	return;
+        printf("$name %d %s\n", ttl, result->h_name);
+        return;
     }
+
     printf("$addr %d", ttl);
+
     for (i = 0; NULL != result->h_addr_list[i]; i++) {
-	if (32 == i)
-	    break;
-	xmemcpy(&addr, result->h_addr_list[i], sizeof(addr));
-	printf(" %s", inet_ntoa(addr));
+        if (32 == i)
+            break;
+
+        xmemcpy(&addr, result->h_addr_list[i], sizeof(addr));
+
+        printf(" %s", inet_ntoa(addr));
     }
+
     printf("\n");
 }
 
@@ -249,11 +272,11 @@ static void
 usage(void)
 {
     fprintf(stderr, "usage: dnsserver -Dhv -s nameserver\n"
-	"\t-D             Enable resolver RES_DEFNAMES and RES_DNSRCH options\n"
-	"\t-h             Help\n"
-	"\t-v             Version\n"
-	"\t-s nameserver  Specify alternate name server(s).  'nameserver'\n"
-	"\t               must be an IP address, -s option may be repeated\n");
+            "\t-D             Enable resolver RES_DEFNAMES and RES_DNSRCH options\n"
+            "\t-h             Help\n"
+            "\t-v             Version\n"
+            "\t-s nameserver  Specify alternate name server(s).  'nameserver'\n"
+            "\t               must be an IP address, -s option may be repeated\n");
 }
 
 int
@@ -263,8 +286,10 @@ main(int argc, char *argv[])
     char *t = NULL;
     int c;
 #if HAVE_RES_INIT
+
     int opt_s = 0;
 #if HAVE_RES_NSADDR_LIST || HAVE_RES_NS_LIST
+
     extern char *optarg;
 #endif
 #endif
@@ -272,95 +297,135 @@ main(int argc, char *argv[])
     safe_inet_addr("255.255.255.255", &no_addr);
 
 #if HAVE_RES_INIT
+
     res_init();
 #ifdef RES_DEFAULT
+
     _res.options = RES_DEFAULT;
 #endif
 #ifdef RES_DEFNAMES
+
     _res.options &= ~RES_DEFNAMES;
 #endif
 #ifdef RES_DNSRCH
+
     _res.options &= ~RES_DNSRCH;
 #endif
 #endif
 
     while ((c = getopt(argc, argv, "Dhs:v")) != -1) {
-	switch (c) {
-	case 'D':
+        switch (c) {
+
+        case 'D':
 #ifdef RES_DEFNAMES
-	    _res.options |= RES_DEFNAMES;
+
+            _res.options |= RES_DEFNAMES;
 #endif
 #ifdef RES_DNSRCH
-	    _res.options |= RES_DNSRCH;
+
+            _res.options |= RES_DNSRCH;
 #endif
-	    break;
-	case 's':
+
+            break;
+
+        case 's':
 #if HAVE_RES_INIT
-	    if (opt_s == 0) {
-		_res.nscount = 0;
-		/*
-		 * Setting RES_INIT here causes coredumps when -s is
-		 * used with -D option.  It looks to me like setting
-		 * RES_INIT is wrong.  The resolver code sets RES_INIT
-		 * after calling res_init().  When we change the _res
-		 * structure and set RES_INIT, some internal resolver
-		 * structures get confused.             -DW 2.1.p1
-		 */
+
+            if (opt_s == 0) {
+                _res.nscount = 0;
+                /*
+                 * Setting RES_INIT here causes coredumps when -s is
+                 * used with -D option.  It looks to me like setting
+                 * RES_INIT is wrong.  The resolver code sets RES_INIT
+                 * after calling res_init().  When we change the _res
+                 * structure and set RES_INIT, some internal resolver
+                 * structures get confused.             -DW 2.1.p1
+                 */
 #if SEEMS_WRONG
-		_res.options |= RES_INIT;
+
+                _res.options |= RES_INIT;
 #endif
-		opt_s = 1;
-	    } else if (_res.nscount == MAXNS) {
-		fprintf(stderr, "Too many -s options, only %d are allowed\n",
-		    MAXNS);
-		break;
-	    }
+
+                opt_s = 1;
+            } else if (_res.nscount == MAXNS) {
+                fprintf(stderr, "Too many -s options, only %d are allowed\n",
+                        MAXNS);
+                break;
+            }
+
 #if HAVE_RES_NSADDR_LIST
-	    _res.nsaddr_list[_res.nscount] = _res.nsaddr_list[0];
-	    safe_inet_addr(optarg, &_res.nsaddr_list[_res.nscount++].sin_addr);
+            _res.nsaddr_list[_res.nscount] = _res.nsaddr_list[0];
+
+            safe_inet_addr(optarg, &_res.nsaddr_list[_res.nscount++].sin_addr);
+
 #elif HAVE_RES_NS_LIST
-	    _res.ns_list[_res.nscount] = _res.ns_list[0];
-	    safe_inet_addr(optarg, &_res.ns_list[_res.nscount++].addr.sin_addr);
+
+            _res.ns_list[_res.nscount] = _res.ns_list[0];
+
+            safe_inet_addr(optarg, &_res.ns_list[_res.nscount++].addr.sin_addr);
+
 #else /* Unknown NS list format */
-	    fprintf(stderr, "-s is not supported on this resolver\n");
+
+            fprintf(stderr, "-s is not supported on this resolver\n");
+
 #endif
 #else /* !HAVE_RES_INIT */
-	    fprintf(stderr, "-s is not supported on this resolver\n");
+
+            fprintf(stderr, "-s is not supported on this resolver\n");
+
 #endif /* HAVE_RES_INIT */
-	    break;
-	case 'v':
-	    printf("dnsserver version %s\n", VERSION);
-	    exit(0);
-	    break;
-	case 'h':
-	default:
-	    usage();
-	    exit(1);
-	    break;
-	}
+
+            break;
+
+        case 'v':
+            printf("dnsserver version %s\n", VERSION);
+
+            exit(0);
+
+            break;
+
+        case 'h':
+
+        default:
+            usage();
+
+            exit(1);
+
+            break;
+        }
     }
 
 #ifdef _SQUID_MSWIN_
     {
-	WSADATA wsaData;
+        WSADATA wsaData;
 
-	WSAStartup(2, &wsaData);
+        WSAStartup(2, &wsaData);
     }
+
     fflush(stderr);
 #endif
+
     for (;;) {
-	memset(request, '\0', REQ_SZ);
-	if (fgets(request, REQ_SZ, stdin) == NULL)
-	    exit(1);
-	t = strrchr(request, '\n');
-	if (t == NULL)		/* Ignore if no newline */
-	    continue;
-	*t = '\0';		/* strip NL */
-	if ((t = strrchr(request, '\r')) != NULL)
-	    *t = '\0';		/* strip CR */
-	lookup(request);
-	fflush(stdout);
+        memset(request, '\0', REQ_SZ);
+
+        if (fgets(request, REQ_SZ, stdin) == NULL)
+            exit(1);
+
+        t = strrchr(request, '\n');
+
+        if (t == NULL)		/* Ignore if no newline */
+            continue;
+
+        *t = '\0';		/* strip NL */
+
+        if ((t = strrchr(request, '\r')) != NULL)
+            *t = '\0';		/* strip CR */
+
+        lookup(request);
+
+        fflush(stdout);
     }
+
     /* NOTREACHED */
     return 0;
 }

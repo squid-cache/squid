@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.cc,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StoreMeta.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -46,37 +46,45 @@ bool
 StoreMeta::validType(char type)
 {
     /* VOID is reserved, and new types have to be added as classes */
+
     if (type <= STORE_META_VOID || type >= STORE_META_END) {
-	debug(20, 0) ("storeSwapMetaUnpack: bad type (%d)!\n", type);
-	return false;
+        debug(20, 0) ("storeSwapMetaUnpack: bad type (%d)!\n", type);
+        return false;
     }
+
     /* Unused in any current squid code */
     if (type == STORE_META_KEY_URL ||
-	type == STORE_META_KEY_SHA ||
-	type == STORE_META_HITMETERING || 
-	type == STORE_META_VALID) {
-	debug (20,0)("Obsolete and unused type (%d) in disk metadata\n", type);
-	return false;
+            type == STORE_META_KEY_SHA ||
+            type == STORE_META_HITMETERING ||
+            type == STORE_META_VALID) {
+        debug (20,0)("Obsolete and unused type (%d) in disk metadata\n", type);
+        return false;
     }
+
     return true;
 }
 
-class IntRange{
+class IntRange
+{
+
 public:
-    IntRange (int minimum, int maximum) : _min (minimum), _max (maximum) 
-      {
-	if (_min > _max) {
-	    int temp = _min;
-	    _min = _max;
-	    _max = temp;
-	}
-      }
+    IntRange (int minimum, int maximum) : _min (minimum), _max (maximum)
+    {
+        if (_min > _max) {
+            int temp = _min;
+            _min = _max;
+            _max = temp;
+        }
+    }
+
     bool includes (int anInt) const
-      {
-	if (anInt < _min || anInt > _max)
-	    return false;
-	return true;
-      }
+    {
+        if (anInt < _min || anInt > _max)
+            return false;
+
+        return true;
+    }
+
 private:
     int _min;
     int _max;
@@ -88,10 +96,11 @@ const int StoreMeta::MaximumTLVLength = 1 << 16;
 bool
 StoreMeta::validLength(int length) const
 {
-    if (!IntRange (MinimumTLVLength, MaximumTLVLength).includes(length)){
-	debug(20, 0) ("storeSwapMetaUnpack: insane length (%d)!\n", length);
-	return false;
+    if (!IntRange (MinimumTLVLength, MaximumTLVLength).includes(length)) {
+        debug(20, 0) ("storeSwapMetaUnpack: insane length (%d)!\n", length);
+        return false;
     }
+
     return true;
 }
 
@@ -101,28 +110,37 @@ StoreMeta::Factory (char type, size_t len, void const *value)
 {
     if (!validType(type))
         return NULL;
+
     StoreMeta *result;
+
     switch (type) {
-      case STORE_META_KEY:
-      result = new StoreMetaMD5;
-      break;
-      case STORE_META_URL:
-      result = new StoreMetaURL;
-      break;
-      case STORE_META_STD:
-      result = new StoreMetaSTD;
-      break;
-      case STORE_META_VARY_HEADERS:
-      result = new StoreMetaVary;
-      break;
-      default:
-      debug (20,0)("Attempt to create unknown concrete StoreMeta\n");
-      return NULL;
+
+    case STORE_META_KEY:
+        result = new StoreMetaMD5;
+        break;
+
+    case STORE_META_URL:
+        result = new StoreMetaURL;
+        break;
+
+    case STORE_META_STD:
+        result = new StoreMetaSTD;
+        break;
+
+    case STORE_META_VARY_HEADERS:
+        result = new StoreMetaVary;
+        break;
+
+    default:
+        debug (20,0)("Attempt to create unknown concrete StoreMeta\n");
+        return NULL;
     }
+
     if (!result->validLength(len)) {
-	result->deleteSelf();
-	return NULL;
+        result->deleteSelf();
+        return NULL;
     }
+
     result->length = len;
     result->value = xmalloc(len);
     xmemcpy(result->value, value, len);
@@ -133,10 +151,11 @@ void
 StoreMeta::FreeList(StoreMeta **head)
 {
     StoreMeta *node;
+
     while ((node = *head) != NULL) {
-	*head = node->next;
-	xfree(node->value);
-	node->deleteSelf();
+        *head = node->next;
+        xfree(node->value);
+        node->deleteSelf();
     }
 }
 
@@ -148,22 +167,27 @@ StoreMeta::Add(StoreMeta **tail, StoreMeta *aNode)
     return &aNode->next;		/* return new tail pointer */
 }
 
-bool 
+bool
 StoreMeta::checkConsistency(StoreEntry *e) const
 {
-    switch (getType())
-      {
-	case STORE_META_KEY:
-	case STORE_META_URL:
-	case STORE_META_VARY_HEADERS:
-	    assert(0);
-	    break;
-	case STORE_META_STD:
-	    break;
-	default:
-	    debug(20, 1) ("WARNING: got unused STORE_META type %d\n", getType());
-	    break;
-	}
+    switch (getType()) {
+
+    case STORE_META_KEY:
+
+    case STORE_META_URL:
+
+    case STORE_META_VARY_HEADERS:
+        assert(0);
+        break;
+
+    case STORE_META_STD:
+        break;
+
+    default:
+        debug(20, 1) ("WARNING: got unused STORE_META type %d\n", getType());
+        break;
+    }
+
     return true;
 }
 

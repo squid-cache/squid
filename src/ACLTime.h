@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLTime.h,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLTime.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,21 +42,26 @@
 
 class ACLTimeStrategy : public ACLMatchStrategy<time_t>
 {
-  public:
+
+public:
     virtual int match (ACLData<MatchType> * &, ACLChecklist *);
     static ACLTimeStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
      * private constructors with no friends */
     ACLTimeStrategy(ACLTimeStrategy const &);
-  private:
+
+private:
     static ACLTimeStrategy Instance_;
     ACLTimeStrategy(){}
+
     ACLTimeStrategy&operator=(ACLTimeStrategy const &);
 };
 
-class ACLTime {
-  public:
+class ACLTime
+{
+
+public:
     static ACL::Prototype RegistryProtoype;
     static ACLStrategised<time_t> RegistryEntry_;
 };

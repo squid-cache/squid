@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.h,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: MemBuf.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,8 +36,11 @@
 
 /* auto-growing memory-resident buffer with printf interface */
 /* note: when updating this struct, update MemBufNULL #define */
-class MemBuf {
-  public:
+
+class MemBuf
+{
+
+public:
     _SQUID_INLINE_ MemBuf();
     /* public, read-only */
     char *buf;
@@ -46,7 +49,9 @@ class MemBuf {
     /* private, stay away; use interface function instead */
     mb_size_t max_capacity;	/* when grows: assert(new_capacity <= max_capacity) */
     mb_size_t capacity;		/* allocated space */
-    unsigned stolen:1;		/* the buffer has been stolen for use by someone else */
+
+unsigned stolen:
+    1;		/* the buffer has been stolen for use by someone else */
 };
 
 /* to initialize static variables (see also MemBufNull) */

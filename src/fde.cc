@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.cc,v 1.1 2003/01/23 00:37:20 robertc Exp $
+ * $Id: fde.cc,v 1.2 2003/02/21 22:50:08 robertc Exp $
  *
  * DEBUG: section ??	FDE
  * AUTHOR: Robert Collins
@@ -42,7 +42,8 @@ bool
 fde::readPending(int fdNumber)
 {
     if (type == FD_SOCKET)
-	return comm_has_pending_read(fdNumber);
+        return comm_has_pending_read(fdNumber);
+
     return read_handler ? true : false ;
 }
 
@@ -50,17 +51,18 @@ void
 fde::dumpStats (StoreEntry &dumpEntry, int fdNumber)
 {
     if (!flags.open)
-	return;
+        return;
+
     storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7d%c %7d%c %-21s %s\n",
-        fdNumber,
-        fdTypeStr[type],
-        timeout_handler ? (int) (timeout - squid_curtime) / 60 : 0,
-        bytes_read,
-        readPending(fdNumber) ? '*' : ' ',
-        bytes_written,
-        write_handler ? '*' : ' ',
-        remoteAddr(),
-        desc);
+                      fdNumber,
+                      fdTypeStr[type],
+                      timeout_handler ? (int) (timeout - squid_curtime) / 60 : 0,
+                      bytes_read,
+                      readPending(fdNumber) ? '*' : ' ',
+                      bytes_written,
+                      write_handler ? '*' : ' ',
+                      remoteAddr(),
+                      desc);
 }
 
 void
@@ -69,14 +71,15 @@ fde::DumpStats (StoreEntry *dumpEntry)
     int i;
     storeAppendPrintf(dumpEntry, "Active file descriptors:\n");
     storeAppendPrintf(dumpEntry, "%-4s %-6s %-4s %-7s* %-7s* %-21s %s\n",
-        "File",
-        "Type",
-        "Tout",
-        "Nread",
-        "Nwrite",
-        "Remote Address",
-        "Description");
+                      "File",
+                      "Type",
+                      "Tout",
+                      "Nread",
+                      "Nwrite",
+                      "Remote Address",
+                      "Description");
     storeAppendPrintf(dumpEntry, "---- ------ ---- -------- -------- --------------------- ------------------------------\n");
+
     for (i = 0; i < Squid_MaxFD; i++) {
         fd_table[i].dumpStats(*dumpEntry, i);
     }
@@ -86,9 +89,12 @@ char const *
 fde::remoteAddr() const
 {
     LOCAL_ARRAY(char, buf, 32);
+
     if (type != FD_SOCKET)
-	return null_string;
+        return null_string;
+
     snprintf(buf, 32, "%s.%d", ipaddr, (int) remote_port);
+
     return buf;
 }
 

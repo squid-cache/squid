@@ -37,17 +37,21 @@
 #define SQUID_ACLSOURCEIP_H
 #include "ACLIP.h"
 
-class ACLSourceIP : public ACLIP {
-  public:
+class ACLSourceIP : public ACLIP
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
 
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return ACL_DERIVED;}
+
     virtual int match(ACLChecklist *checklist);
     virtual ACL *clone()const;
-  private:
+
+private:
     static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLSourceIP RegistryEntry_;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.24 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpHdrCc.cc,v 1.25 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -39,20 +39,22 @@
 
 /* this table is used for parsing cache control header */
 static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] =
-{
-    {"public", (http_hdr_type)CC_PUBLIC},
-    {"private", (http_hdr_type)CC_PRIVATE},
-    {"no-cache", (http_hdr_type)CC_NO_CACHE},
-    {"no-store", (http_hdr_type)CC_NO_STORE},
-    {"no-transform", (http_hdr_type)CC_NO_TRANSFORM},
-    {"must-revalidate", (http_hdr_type)CC_MUST_REVALIDATE},
-    {"proxy-revalidate", (http_hdr_type)CC_PROXY_REVALIDATE},
-    {"only-if-cached", (http_hdr_type)CC_ONLY_IF_CACHED},
-    {"max-age", (http_hdr_type)CC_MAX_AGE},
-    {"s-maxage", (http_hdr_type)CC_S_MAXAGE},
-    {"max-stale", (http_hdr_type)CC_MAX_STALE},
-    {"Other,", (http_hdr_type)CC_OTHER}	/* ',' will protect from matches */
-};
+    {
+        {"public", (http_hdr_type)CC_PUBLIC},
+
+        {"private", (http_hdr_type)CC_PRIVATE},
+        {"no-cache", (http_hdr_type)CC_NO_CACHE},
+        {"no-store", (http_hdr_type)CC_NO_STORE},
+        {"no-transform", (http_hdr_type)CC_NO_TRANSFORM},
+        {"must-revalidate", (http_hdr_type)CC_MUST_REVALIDATE},
+        {"proxy-revalidate", (http_hdr_type)CC_PROXY_REVALIDATE},
+        {"only-if-cached", (http_hdr_type)CC_ONLY_IF_CACHED},
+        {"max-age", (http_hdr_type)CC_MAX_AGE},
+        {"s-maxage", (http_hdr_type)CC_S_MAXAGE},
+        {"max-stale", (http_hdr_type)CC_MAX_STALE},
+        {"Other,", (http_hdr_type)CC_OTHER}	/* ',' will protect from matches */
+    };
+
 HttpHeaderFieldInfo *CcFieldsInfo = NULL;
 
 http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
@@ -96,10 +98,12 @@ HttpHdrCc *
 httpHdrCcParseCreate(const String * str)
 {
     HttpHdrCc *cc = httpHdrCcCreate();
+
     if (!httpHdrCcParseInit(cc, str)) {
-	httpHdrCcDestroy(cc);
-	cc = NULL;
+        httpHdrCcDestroy(cc);
+        cc = NULL;
     }
+
     return cc;
 }
 
@@ -115,52 +119,72 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
     assert(cc && str);
 
     /* iterate through comma separated list */
+
     while (strListGetItem(str, ',', &item, &ilen, &pos)) {
-	/* strip '=' statements @?@ */
-	if ((p = strchr(item, '=')) && (p - item < ilen))
-	    ilen = p++ - item;
-	/* find type */
-	type = (http_hdr_cc_type ) httpHeaderIdByName(item, ilen,
-	    CcFieldsInfo, CC_ENUM_END);
-	if (type < 0) {
-	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str->buf());
-	    type = CC_OTHER;
-	}
-	if (EBIT_TEST(cc->mask, type)) {
-	    if (type != CC_OTHER)
-		debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str->buf());
-	    CcFieldsInfo[type].stat.repCount++;
-	    continue;
-	}
-	/* update mask */
-	EBIT_SET(cc->mask, type);
-	/* post-processing special cases */
-	switch (type) {
-	case CC_MAX_AGE:
-	    if (!p || !httpHeaderParseInt(p, &cc->max_age)) {
-		debug(65, 2) ("cc: invalid max-age specs near '%s'\n", item);
-		cc->max_age = -1;
-		EBIT_CLR(cc->mask, type);
-	    }
-	    break;
-	case CC_S_MAXAGE:
-	    if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
-		debug(65, 2) ("cc: invalid s-maxage specs near '%s'\n", item);
-		cc->s_maxage = -1;
-		EBIT_CLR(cc->mask, type);
-	    }
-	    break;
-	case CC_MAX_STALE:
-	    if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
-		debug(65, 2) ("cc: max-stale directive is valid without value\n");
-		cc->max_stale = -1;
-	    }
-	    break;
-	default:
-	    /* note that we ignore most of '=' specs */
-	    break;
-	}
+        /* strip '=' statements @?@ */
+
+        if ((p = strchr(item, '=')) && (p - item < ilen))
+            ilen = p++ - item;
+
+        /* find type */
+        type = (http_hdr_cc_type ) httpHeaderIdByName(item, ilen,
+                CcFieldsInfo, CC_ENUM_END);
+
+        if (type < 0) {
+            debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str->buf());
+            type = CC_OTHER;
+        }
+
+        if (EBIT_TEST(cc->mask, type)) {
+            if (type != CC_OTHER)
+                debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str->buf());
+
+            CcFieldsInfo[type].stat.repCount++;
+
+            continue;
+        }
+
+        /* update mask */
+        EBIT_SET(cc->mask, type);
+
+        /* post-processing special cases */
+        switch (type) {
+
+        case CC_MAX_AGE:
+
+            if (!p || !httpHeaderParseInt(p, &cc->max_age)) {
+                debug(65, 2) ("cc: invalid max-age specs near '%s'\n", item);
+                cc->max_age = -1;
+                EBIT_CLR(cc->mask, type);
+            }
+
+            break;
+
+        case CC_S_MAXAGE:
+
+            if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
+                debug(65, 2) ("cc: invalid s-maxage specs near '%s'\n", item);
+                cc->s_maxage = -1;
+                EBIT_CLR(cc->mask, type);
+            }
+
+            break;
+
+        case CC_MAX_STALE:
+
+            if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
+                debug(65, 2) ("cc: max-stale directive is valid without value\n");
+                cc->max_stale = -1;
+            }
+
+            break;
+
+        default:
+            /* note that we ignore most of '=' specs */
+            break;
+        }
     }
+
     return cc->mask != 0;
 }
 
@@ -190,24 +214,26 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     http_hdr_cc_type flag;
     int pcount = 0;
     assert(cc && p);
+
     for (flag = CC_PUBLIC; flag < CC_ENUM_END; ++flag) {
-	if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
+        if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 
-	    /* print option name */
-	    packerPrintf(p, (pcount ? ", %s" : "%s"), CcFieldsInfo[flag].name.buf());
+            /* print option name */
+            packerPrintf(p, (pcount ? ", %s" : "%s"), CcFieldsInfo[flag].name.buf());
 
-	    /* handle options with values */
-	    if (flag == CC_MAX_AGE)
-		packerPrintf(p, "=%d", (int) cc->max_age);
+            /* handle options with values */
 
-	    if (flag == CC_S_MAXAGE)
-		packerPrintf(p, "=%d", (int) cc->s_maxage);
+            if (flag == CC_MAX_AGE)
+                packerPrintf(p, "=%d", (int) cc->max_age);
 
-	    if (flag == CC_MAX_STALE)
-		packerPrintf(p, "=%d", (int) cc->max_stale);
+            if (flag == CC_S_MAXAGE)
+                packerPrintf(p, "=%d", (int) cc->s_maxage);
 
-	    pcount++;
-	}
+            if (flag == CC_MAX_STALE)
+                packerPrintf(p, "=%d", (int) cc->max_stale);
+
+            pcount++;
+        }
     }
 }
 
@@ -215,12 +241,16 @@ void
 httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc)
 {
     assert(cc && new_cc);
+
     if (cc->max_age < 0)
-	cc->max_age = new_cc->max_age;
+        cc->max_age = new_cc->max_age;
+
     if (cc->s_maxage < 0)
-	cc->s_maxage = new_cc->s_maxage;
+        cc->s_maxage = new_cc->s_maxage;
+
     if (cc->max_stale < 0)
-	cc->max_stale = new_cc->max_stale;
+        cc->max_stale = new_cc->max_stale;
+
     cc->mask |= new_cc->mask;
 }
 
@@ -230,10 +260,11 @@ httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age)
 {
     assert(cc);
     cc->max_age = max_age;
+
     if (max_age >= 0)
-	EBIT_SET(cc->mask, CC_MAX_AGE);
+        EBIT_SET(cc->mask, CC_MAX_AGE);
     else
-	EBIT_CLR(cc->mask, CC_MAX_AGE);
+        EBIT_CLR(cc->mask, CC_MAX_AGE);
 }
 
 /* negative s_maxage will clean old s-maxage setting */
@@ -242,10 +273,11 @@ httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage)
 {
     assert(cc);
     cc->s_maxage = s_maxage;
+
     if (s_maxage >= 0)
-	EBIT_SET(cc->mask, CC_S_MAXAGE);
+        EBIT_SET(cc->mask, CC_S_MAXAGE);
     else
-	EBIT_CLR(cc->mask, CC_S_MAXAGE);
+        EBIT_CLR(cc->mask, CC_S_MAXAGE);
 }
 
 void
@@ -253,9 +285,10 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 {
     http_hdr_cc_type c;
     assert(cc);
+
     for (c = CC_PUBLIC; c < CC_ENUM_END; ++c)
-	if (EBIT_TEST(cc->mask, c))
-	    statHistCount(hist, c);
+        if (EBIT_TEST(cc->mask, c))
+            statHistCount(hist, c);
 }
 
 void
@@ -265,7 +298,8 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
     const char *name = valid_id ? CcFieldsInfo[id].name.buf() : "INVALID";
+
     if (count || valid_id)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-	    id, name, count, xdiv(count, dump_stat->ccParsedCount));
+        storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+                          id, name, count, xdiv(count, dump_stat->ccParsedCount));
 }

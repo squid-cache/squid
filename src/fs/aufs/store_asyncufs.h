@@ -38,7 +38,8 @@ enum _squidaio_request_type {
 };
 typedef enum _squidaio_request_type squidaio_request_type;
 
-struct _squidaio_result_t {
+struct _squidaio_result_t
+{
     int aio_return;
     int aio_errno;
     enum _squidaio_request_type result_type;
@@ -55,6 +56,7 @@ int squidaio_open(const char *, int, mode_t, squidaio_result_t *);
 int squidaio_read(int, char *, int, off_t, int, squidaio_result_t *);
 int squidaio_write(int, char *, int, off_t, int, squidaio_result_t *);
 int squidaio_close(int, squidaio_result_t *);
+
 int squidaio_stat(const char *, struct stat *, squidaio_result_t *);
 int squidaio_unlink(const char *, squidaio_result_t *);
 int squidaio_truncate(const char *, off_t length, squidaio_result_t *);
@@ -73,6 +75,7 @@ void aioOpen(const char *, int, mode_t, AIOCB *, void *);
 void aioClose(int);
 void aioWrite(int, int offset, char *, int size, AIOCB *, void *, FREE *);
 void aioRead(int, int offset, int size, AIOCB *, void *);
+
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
 void aioTruncate(const char *, off_t length, AIOCB *, void *);
@@ -81,8 +84,11 @@ int aioQueueSize(void);
 #include "ufscommon.h"
 
 class AufsIO;
-class AUFSFile : public DiskFile {
-  public:
+
+class AUFSFile : public DiskFile
+{
+
+public:
     virtual void deleteSelf() const;
     void * operator new (size_t);
     void operator delete (void *);
@@ -95,19 +101,26 @@ class AUFSFile : public DiskFile {
     void close();
     virtual bool error() const;
     virtual int getFD() const { return fd;}
+
     virtual bool canRead() const;
     virtual bool canWrite() const;
-  private:
+
+private:
 #if ASYNC_READ
-static AIOCB ReadDone;
+
+    static AIOCB ReadDone;
 #else
-static DRCB ReadDone;
+
+    static DRCB ReadDone;
 #endif
 #if ASYNC_WRITE
-static AIOCB WriteDone;
+
+    static AIOCB WriteDone;
 #else
-static DWCB WriteDone;
+
+    static DWCB WriteDone;
 #endif
+
     int fd;
     bool errorOccured;
     char const *path_;
@@ -117,14 +130,17 @@ static DWCB WriteDone;
     IORequestor::Pointer ioRequestor;
     CBDATA_CLASS(AUFSFile);
     void doClose();
-    
+
     void readDone(int fd, const char *buf, int len, int errflag);
     void writeDone (int fd, int errflag, size_t len);
 };
 
-class squidaiostate_t : public UFSStoreState {
-  public:
+class squidaiostate_t : public UFSStoreState
+{
+
+public:
     virtual void deleteSelf() const {delete this;}
+
     void * operator new (size_t);
     void operator delete (void *);
     squidaiostate_t(SwapDir *, StoreEntry *, STIOCB *, void *);
@@ -132,17 +148,28 @@ class squidaiostate_t : public UFSStoreState {
 
     void close();
     int fd;
-    struct {
-	unsigned int write_kicking:1;
-	unsigned int read_kicking:1;
-	unsigned int inreaddone:1;
-    } flags;
+
+    struct
+    {
+
+unsigned int write_kicking:
+        1;
+
+unsigned int read_kicking:
+        1;
+
+unsigned int inreaddone:
+        1;
+    }
+
+    flags;
     void ioCompletedNotification();
     void closeCompleted();
     void readCompleted(const char *buf, int len, int errflag);
     void writeCompleted(int errflag, size_t len);
     void writeDone(int fd, int errflag, size_t len);
-  private:
+
+private:
     CBDATA_CLASS(squidaiostate_t);
     void openDone();
 };
@@ -151,27 +178,30 @@ class squidaiostate_t : public UFSStoreState {
  * Store IO stuff
  */
 #include "SwapDir.h"
+
 class AUFSSwapDir : public UFSSwapDir
 {
+
 public:
-  virtual void dump(StoreEntry &)const;
-  virtual void unlink(StoreEntry &);
-  virtual int canStore(StoreEntry const &)const;
-  virtual int callback();
-  virtual void sync();
-  virtual void parse (int index, char *path);
-  virtual void reconfigure(int, char *);
-  virtual void unlinkFile(char const *);
+    virtual void dump(StoreEntry &)const;
+    virtual void unlink(StoreEntry &);
+    virtual int canStore(StoreEntry const &)const;
+    virtual int callback();
+    virtual void sync();
+    virtual void parse (int index, char *path);
+    virtual void reconfigure(int, char *);
+    virtual void unlinkFile(char const *);
 };
 
 class AufsIO : public UFSStrategy
 {
+
 public:
-   virtual bool shedLoad();
-   virtual void deleteSelf() const;
-   virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
-   virtual DiskFile::Pointer newFile(char const *path);
-   static AufsIO Instance;
+    virtual bool shedLoad();
+    virtual void deleteSelf() const;
+    virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
+    virtual DiskFile::Pointer newFile(char const *path);
+    static AufsIO Instance;
 };
 
 #endif

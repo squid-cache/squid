@@ -38,48 +38,62 @@
 #include "ACL.h"
 #include "splay.h"
 
-class acl_ip_data {
-  public:
+class acl_ip_data
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
     static acl_ip_data *FactoryParse(char const *);
     static int NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b);
-  
+
     acl_ip_data ();
+
     acl_ip_data (struct in_addr const &, struct in_addr const &, struct in_addr const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
+
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
+
     struct in_addr addr2;
+
     struct in_addr mask;
     acl_ip_data *next;		/* used for parsing, not for storing */
-  private:
+
+private:
+
     static bool DecodeAddress(const char *asc, struct in_addr *addr, struct in_addr *mask);
     static MemPool *Pool;
 };
 
-class ACLIP : public ACL {
-  public:
+class ACLIP : public ACL
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const = 0;
 
     ACLIP() : data(NULL){}
+
     ~ACLIP();
-    
+
     typedef SplayNode<acl_ip_data *> IPSplay;
 
     virtual char const *typeString() const = 0;
     virtual squid_acl aclType() const = 0;
     virtual void parse();
-//    virtual bool isProxyAuth() const {return true;}
+    //    virtual bool isProxyAuth() const {return true;}
     virtual int match(ACLChecklist *checklist) = 0;
     virtual wordlist *dump() const;
     virtual bool valid () const;
-  protected:
+
+protected:
+
     int match(struct in_addr &);
     IPSplay *data;
-  private:
+
+private:
     static void DumpIpListWalkee(acl_ip_data * const & ip, void *state);
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayId.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,8 +39,10 @@
 class ClientHttpRequest;
 #include "DelayIdComposite.h"
 
-class DelayId {
-  public:
+class DelayId
+{
+
+public:
     static DelayId DelayClient (ClientHttpRequest *);
     DelayId ();
     DelayId (unsigned short);
@@ -53,8 +55,10 @@ class DelayId {
     operator bool() const;
     int bytesWanted(int min, int max) const;
     void bytesIn (int qty);
-  private:
+
+private:
     unsigned short pool_;
     DelayIdComposite::Pointer compositeId;
 };
+
 #endif /* SQUID_DELAYID_H */

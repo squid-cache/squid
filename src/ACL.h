@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.6 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACL.h,v 1.7 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,8 +46,11 @@ SQUIDCEXTERN void aclParseAccessLine(acl_access **);
 SQUIDCEXTERN void aclParseAclList(acl_list **);
 SQUIDCEXTERN int aclIsProxyAuth(const char *name);
 SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
+
 SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
+
 SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
+
 SQUIDCEXTERN void aclDestroyRegexList(struct _relist *data);
 SQUIDCEXTERN int aclMatchRegex(relist * data, const char *word);
 wordlist *aclDumpRegexList(relist * data);
@@ -57,8 +60,10 @@ SQUIDCEXTERN int aclPurgeMethodInUse(acl_access *);
 SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
 extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 
-class ACL {
-  public:
+class ACL
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -77,6 +82,7 @@ class ACL {
     virtual void parse();
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return type;}
+
     virtual bool isProxyAuth() const;
     virtual bool requiresRequest() const;
     virtual int match(ACLChecklist * checklist);
@@ -84,46 +90,56 @@ class ACL {
     virtual wordlist *dump() const;
     virtual bool valid () const;
     int checklistMatches(ACLChecklist *);
-    
+
     /* only relevant to METHOD acl's */
     virtual bool containsPURGE() const;
 
     /* only relecant to ASN acl's */
     void startCache();
-    
+
     int cacheMatchAcl(dlink_list * cache, ACLChecklist *);
     virtual int matchForCache(ACLChecklist *checklist);
 
     char name[ACL_NAME_SZ];
     char *cfgline;
     ACL *next;
-  private:
+
+private:
     static MemPool *Pool;
     squid_acl type;
-  protected:
+
+protected:
     void *data;
-  public:
-    class Prototype {
-      public:
-	Prototype ();
-	Prototype (ACL const *, char const *);
-	~Prototype();
-	static bool Registered(char const *);
-	static ACL *Factory (char const *);
-      private:
-	ACL const*prototype;
-	char const *typeString;
-      private:
-	static Vector<Prototype const *> * Registry;
-	static void *Initialized;
-	typedef Vector<Prototype const*>::iterator iterator;
-	typedef Vector<Prototype const*>::const_iterator const_iterator;
-	void registerMe();
+
+public:
+
+    class Prototype
+    {
+
+    public:
+        Prototype ();
+        Prototype (ACL const *, char const *);
+        ~Prototype();
+        static bool Registered(char const *);
+        static ACL *Factory (char const *);
+
+    private:
+        ACL const*prototype;
+        char const *typeString;
+
+    private:
+        static Vector<Prototype const *> * Registry;
+        static void *Initialized;
+        typedef Vector<Prototype const*>::iterator iterator;
+        typedef Vector<Prototype const*>::const_iterator const_iterator;
+        void registerMe();
     };
 };
 
-class acl_access {
-  public:
+class acl_access
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -132,12 +148,15 @@ class acl_access {
     acl_list *aclList;
     char *cfgline;
     acl_access *next;
-  private:
+
+private:
     CBDATA_CLASS(acl_access);
 };
 
-class ACLList {
-  public:
+class ACLList
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -148,7 +167,8 @@ class ACLList {
     int op;
     acl *_acl;
     ACLList *next;
-  private:
+
+private:
     static MemPool *Pool;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.h,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StoreMeta.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,8 +35,12 @@
 #define SQUID_TYPELENGTHVALUE_H
 
 class StoreEntry;
+
 typedef class StoreMeta tlv;
-class StoreMeta {
+
+class StoreMeta
+{
+
 public:
     virtual void deleteSelf() = 0;
     static bool validType(char);
@@ -45,15 +49,16 @@ public:
     static StoreMeta *Factory (char type, size_t len, void const *value);
     static StoreMeta **Add(StoreMeta **tail, StoreMeta *aNode);
     static void FreeList (StoreMeta **head);
-    
+
     virtual char getType() const = 0;
     virtual bool validLength(int) const;
     virtual bool checkConsistency(StoreEntry *) const;
     virtual ~StoreMeta(){}
-    
+
     int length;
     void *value;
     tlv *next;
+
 private:
 };
 

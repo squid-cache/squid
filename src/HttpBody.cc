@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpBody.cc,v 1.19 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpBody.cc,v 1.20 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -46,8 +46,9 @@ void
 httpBodyClean(HttpBody * body)
 {
     assert(body);
+
     if (!memBufIsNull(&body->mb))
-	memBufClean(&body->mb);
+        memBufClean(&body->mb);
 }
 
 /* set body by absorbing mb */
@@ -63,8 +64,9 @@ void
 httpBodyPackInto(const HttpBody * body, Packer * p)
 {
     assert(body && p);
+
     if (body->mb.size)
-	packerAppend(p, body->mb.buf, body->mb.size);
+        packerAppend(p, body->mb.buf, body->mb.size);
 }
 
 #if UNUSED_CODE
@@ -73,4 +75,5 @@ httpBodyPtr(const HttpBody * body)
 {
     return body->mb.buf ? body->mb.buf : "";
 }
+
 #endif

@@ -38,27 +38,35 @@
 #include "ACLChecklist.h"
 #include "ACLIP.h"
 
-class DestinationIPLookup : public ACLChecklist::AsyncState {
-  public:
+class DestinationIPLookup : public ACLChecklist::AsyncState
+{
+
+public:
     static DestinationIPLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static DestinationIPLookup instance_;
     static IPH LookupDone;
 };
 
-class ACLDestinationIP : public ACLIP {
-  public:
+class ACLDestinationIP : public ACLIP
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
 
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return ACL_DERIVED;}
+
     virtual int match(ACLChecklist *checklist);
     virtual bool requiresRequest() const {return true;}
+
     virtual ACL *clone()const;
-  private:
+
+private:
     static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLDestinationIP RegistryEntry_;

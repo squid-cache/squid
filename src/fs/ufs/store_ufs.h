@@ -8,8 +8,11 @@
 #define __STORE_UFS_H__
 
 #include "ufscommon.h"
-class UFSFile : public DiskFile {
-  public:
+
+class UFSFile : public DiskFile
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -22,8 +25,10 @@ class UFSFile : public DiskFile {
     virtual void close ();
     virtual bool error() const;
     virtual int getFD() const { return fd;}
+
     virtual bool canRead() const;
-  private:
+
+private:
     static DRCB ReadDone;
     static DWCB WriteDone;
     CBDATA_CLASS(UFSFile);
@@ -35,9 +40,12 @@ class UFSFile : public DiskFile {
     void writeDone(int fd, int errflag, size_t len);
 };
 
-class ufsstate_t : public UFSStoreState {
-  public:
+class ufsstate_t : public UFSStoreState
+{
+
+public:
     virtual void deleteSelf() const {delete this;}
+
     void * operator new (size_t);
     void operator delete (void *);
     ufsstate_t(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data);
@@ -47,7 +55,8 @@ class ufsstate_t : public UFSStoreState {
     void readCompleted(const char *buf, int len, int errflag);
     void writeCompleted(int errflag, size_t len);
     void closeCompleted();
-  private:
+
+private:
     CBDATA_CLASS(ufsstate_t);
     void doCallback (int);
 };
@@ -58,7 +67,9 @@ class ufsstate_t : public UFSStoreState {
  * Store IO stuff
  */
 /* For things that aren't factored well yet */
-class UfsSwapDir: public UFSSwapDir {
+
+class UfsSwapDir: public UFSSwapDir
+{
     virtual void dump(StoreEntry &)const;
     virtual void unlink(StoreEntry &);
     virtual int canStore(StoreEntry const&)const;
@@ -69,12 +80,13 @@ class UfsSwapDir: public UFSSwapDir {
 
 class UfsIO : public UFSStrategy
 {
+
 public:
-   virtual bool shedLoad();
-   virtual void deleteSelf() const;
-   virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
-   virtual DiskFile::Pointer newFile (char const *path);
-   static UfsIO Instance;
+    virtual bool shedLoad();
+    virtual void deleteSelf() const;
+    virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
+    virtual DiskFile::Pointer newFile (char const *path);
+    static UfsIO Instance;
 };
 
 #endif

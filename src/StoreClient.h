@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.8 2003/02/06 09:57:36 robertc Exp $
+ * $Id: StoreClient.h,v 1.9 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,10 +40,13 @@ typedef void STCB(void *, StoreIOBuffer);	/* store callback */
 
 class StoreEntry;
 
-class StoreClient {
+class StoreClient
+{
+
 public:
-  virtual ~StoreClient () {}
-  virtual void created (StoreEntry *newEntry) = 0;
+    virtual ~StoreClient () {}
+
+    virtual void created (StoreEntry *newEntry) = 0;
 };
 
 #if DELAY_POOLS
@@ -51,7 +54,10 @@ public:
 #endif
 
 /* keep track each client receiving data from that particular StoreEntry */
-class store_client {
+
+class store_client
+{
+
 public:
     void *operator new (size_t);
     void operator delete(void *);
@@ -69,36 +75,56 @@ public:
 
     off_t cmp_offset;
 #if STORE_CLIENT_LIST_DEBUG
+
     void *owner;
 #endif
+
     StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
     StoreIOState::Pointer swapin_sio;
-    struct {
-	unsigned int disk_io_pending:1;
-	unsigned int store_copying:1;
-	unsigned int copy_event_pending:1;
-    } flags;
+
+    struct
+    {
+
+unsigned int disk_io_pending:
+        1;
+
+unsigned int store_copying:
+        1;
+
+unsigned int copy_event_pending:
+        1;
+    }
+
+    flags;
 #if DELAY_POOLS
+
     DelayId delayId;
     void setDelayId(DelayId delay_id);
 #endif
+
     dlink_node node;
     /* Below here is private - do no alter outside storeClient calls */
     StoreIOBuffer copyInto;
+
 private:
     static MemPool *pool;
 
     void fileRead();
     void unpackHeader(char const *buf, ssize_t len);
-    
+
     int type;
     bool object_ok;
-    struct Callback {
-	Callback ():callback_handler(NULL), callback_data(NULL){}
-	Callback (STCB *, void *);
-	STCB *callback_handler;
-	void *callback_data;
-    } _callback;
+
+    struct Callback
+    {
+        Callback ():callback_handler(NULL), callback_data(NULL){}
+
+        Callback (STCB *, void *);
+        STCB *callback_handler;
+        void *callback_data;
+    }
+
+    _callback;
 };
 
 SQUIDCEXTERN void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);

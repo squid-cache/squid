@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.15 2003/01/23 00:37:14 robertc Exp $
+ * $Id: Packer.cc,v 1.16 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -151,7 +151,7 @@ packerPrintf(Packer * p, const char *fmt,...)
 #else
 void
 packerPrintf(va_alist)
-     va_dcl
+va_dcl
 {
     va_list args;
     Packer *p = NULL;
@@ -161,6 +161,7 @@ packerPrintf(va_alist)
     p = va_arg(args, Packer *);
     fmt = va_arg(args, char *);
 #endif
+
     assert(p);
     assert(p->real_handler && p->vprintf);
     p->vprintf(p->real_handler, fmt, args);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOBuffer.h,v 1.2 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StoreIOBuffer.h,v 1.3 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,17 +34,26 @@
 #ifndef SQUID_STOREIORESULT_H
 #define SQUID_STOREIORESULT_H
 
-class StoreIOBuffer {
+class StoreIOBuffer
+{
+
 public:
     StoreIOBuffer():length(0), offset (0), data (NULL){flags.error = 0;}
+
     StoreIOBuffer(size_t aLength, off_t anOffset, char *someData) :
-      length (aLength), offset (anOffset), data (someData)
-      {
-	flags.error = 0;
-      }
-    struct {
-	int error:1;
-    } flags;
+            length (aLength), offset (anOffset), data (someData)
+    {
+        flags.error = 0;
+    }
+
+    struct
+    {
+
+int error:
+        1;
+    }
+
+    flags;
     size_t length;
     off_t offset;
     char *data;

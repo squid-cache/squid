@@ -1,6 +1,6 @@
 
 /*
- * $Id: Config.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: Config.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +35,12 @@
 
 #ifndef SQUID_CONFIG_H_
 #define SQUID_CONFIG_H_
-  
-class ConfigParser {
+
+class ConfigParser
+{
+
 public:
-  static void ParseUShort(u_short *var);
+    static void ParseUShort(u_short *var);
 };
 
 #endif /* SQUID_CONFIG_H_ */

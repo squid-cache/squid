@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.163 2003/01/23 00:37:19 robertc Exp $
+ * $Id: disk.cc,v 1.164 2003/02/21 22:50:08 robertc Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -45,6 +45,7 @@ diskWriteIsComplete(int fd)
 {
     return fd_table[fd].disk.write_q ? 0 : 1;
 }
+
 #endif
 
 void
@@ -62,21 +63,28 @@ file_open(const char *path, int mode)
 {
     int fd;
     PROF_start(file_open);
+
     if (FILE_MODE(mode) == O_WRONLY)
-	mode |= O_APPEND;
+        mode |= O_APPEND;
+
     mode |= SQUID_NONBLOCK;
+
     errno = 0;
+
     fd = open(path, mode, 0644);
+
     statCounter.syscalls.disk.opens++;
+
     if (fd < 0) {
-	debug(50, 3) ("file_open: error opening file %s: %s\n", path,
-	    xstrerror());
-	fd = DISK_ERROR;
+        debug(50, 3) ("file_open: error opening file %s: %s\n", path,
+                      xstrerror());
+        fd = DISK_ERROR;
     } else {
-	debug(6, 5) ("file_open: FD %d\n", fd);
-	commSetCloseOnExec(fd);
-	fd_open(fd, FD_FILE, path);
+        debug(6, 5) ("file_open: FD %d\n", fd);
+        commSetCloseOnExec(fd);
+        fd_open(fd, FD_FILE, path);
     }
+
     PROF_stop(file_open);
     return fd;
 }
@@ -91,39 +99,59 @@ file_close(int fd)
     PROF_start(file_close);
     assert(fd >= 0);
     assert(F->flags.open);
+
     if ((read_callback = F->read_handler)) {
-	F->read_handler = NULL;
-	read_callback(-1, F->read_data);
+        F->read_handler = NULL;
+        read_callback(-1, F->read_data);
     }
+
     if (F->flags.write_daemon) {
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_OS2_) || defined(_SQUID_CYGWIN_)
-	/*
-	 * on some operating systems, you can not delete or rename
-	 * open files, so we won't allow delayed close.
-	 */
-	while (!diskWriteIsComplete(fd))
-	    diskHandleWrite(fd, NULL);
+        /*
+         * on some operating systems, you can not delete or rename
+         * open files, so we won't allow delayed close.
+         */
+
+        while (!diskWriteIsComplete(fd))
+            diskHandleWrite(fd, NULL);
+
 #else
-	F->flags.close_request = 1;
-	debug(6, 2) ("file_close: FD %d, delaying close\n", fd);
-	PROF_stop(file_close);
-	return;
+
+        F->flags.close_request = 1;
+
+        debug(6, 2) ("file_close: FD %d, delaying close\n", fd);
+
+        PROF_stop(file_close);
+
+        return;
+
 #endif
+
     }
+
     /*
      * Assert there is no write callback.  Otherwise we might be
      * leaking write state data by closing the descriptor
      */
     assert(F->write_handler == NULL);
+
     F->flags.closing = 1;
+
 #if CALL_FSYNC_BEFORE_CLOSE
+
     fsync(fd);
+
 #endif
+
     close(fd);
+
     debug(6, F->flags.close_request ? 2 : 5)
-	("file_close: FD %d, really closing\n", fd);
+    ("file_close: FD %d, really closing\n", fd);
+
     fd_close(fd);
+
     statCounter.syscalls.disk.closes++;
+
     PROF_stop(file_close);
 }
 
@@ -138,6 +166,7 @@ file_close(int fd)
  * select() loop.       --SLF
  */
 static void
+
 diskCombineWrites(struct _fde_disk *fdd)
 {
     int len = 0;
@@ -148,31 +177,45 @@ diskCombineWrites(struct _fde_disk *fdd)
      * queue But only if we don't need to seek() in between them, ugh!
      * XXX This currently ignores any seeks (file_offset)
      */
-    if (fdd->write_q != NULL && fdd->write_q->next != NULL) {
-	len = 0;
-	for (q = fdd->write_q; q != NULL; q = q->next)
-	    len += q->len - q->buf_offset;
-	wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
-	wq->buf = (char *)xmalloc(len);
-	wq->len = 0;
-	wq->buf_offset = 0;
-	wq->next = NULL;
-	wq->free_func = xfree;
-	do {
-	    q = fdd->write_q;
-	    len = q->len - q->buf_offset;
-	    xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
-	    wq->len += len;
-	    fdd->write_q = q->next;
-	    if (q->free_func)
-		(q->free_func) (q->buf);
-	    if (q) {
-		memFree(q, MEM_DWRITE_Q);
-		q = NULL;
-	    }
-	} while (fdd->write_q != NULL);
-	fdd->write_q_tail = wq;
-	fdd->write_q = wq;
+
+    if (fdd->write_q != NULL && fdd->write_q->next != NULL)
+    {
+        len = 0;
+
+        for (q = fdd->write_q; q != NULL; q = q->next)
+            len += q->len - q->buf_offset;
+
+        wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
+
+        wq->buf = (char *)xmalloc(len);
+
+        wq->len = 0;
+
+        wq->buf_offset = 0;
+
+        wq->next = NULL;
+
+        wq->free_func = xfree;
+
+        do {
+            q = fdd->write_q;
+            len = q->len - q->buf_offset;
+            xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
+            wq->len += len;
+            fdd->write_q = q->next;
+
+            if (q->free_func)
+                (q->free_func) (q->buf);
+
+            if (q) {
+                memFree(q, MEM_DWRITE_Q);
+                q = NULL;
+            }
+        } while (fdd->write_q != NULL);
+
+        fdd->write_q_tail = wq;
+
+        fdd->write_q = wq;
     }
 }
 
@@ -182,110 +225,142 @@ diskHandleWrite(int fd, void *notused)
 {
     int len = 0;
     fde *F = &fd_table[fd];
+
     struct _fde_disk *fdd = &F->disk;
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     int do_close;
+
     if (NULL == q)
-	return;
+        return;
+
     PROF_start(diskHandleWrite);
+
     debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
+
     F->flags.write_daemon = 0;
+
     assert(fdd->write_q != NULL);
+
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
+
     debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
-	fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
+                 fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
+
     errno = 0;
+
     if (fdd->write_q->file_offset != -1)
-	lseek(fd, fdd->write_q->file_offset, SEEK_SET);
+        lseek(fd, fdd->write_q->file_offset, SEEK_SET);
+
     len = FD_WRITE_METHOD(fd,
-	fdd->write_q->buf + fdd->write_q->buf_offset,
-	fdd->write_q->len - fdd->write_q->buf_offset);
+                          fdd->write_q->buf + fdd->write_q->buf_offset,
+                          fdd->write_q->len - fdd->write_q->buf_offset);
+
     debug(6, 3) ("diskHandleWrite: FD %d len = %d\n", fd, len);
+
     statCounter.syscalls.disk.writes++;
+
     fd_bytes(fd, len, FD_WRITE);
+
     if (len < 0) {
-	if (!ignoreErrno(errno)) {
-	    status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-	    debug(50, 1) ("diskHandleWrite: FD %d: disk write error: %s\n",
-		fd, xstrerror());
-	    /*
-	     * If there is no write callback, then this file is
-	     * most likely something important like a log file, or
-	     * an interprocess pipe.  Its not a swapfile.  We feel
-	     * that a write failure on a log file is rather important,
-	     * and Squid doesn't otherwise deal with this condition.
-	     * So to get the administrators attention, we exit with
-	     * a fatal message.
-	     */
-	    if (fdd->wrt_handle == NULL)
-		fatal("Write failure -- check your disk space and cache.log");
-	    /*
-	     * If there is a write failure, then we notify the
-	     * upper layer via the callback, at the end of this
-	     * function.  Meanwhile, flush all pending buffers
-	     * here.  Let the upper layer decide how to handle the
-	     * failure.  This will prevent experiencing multiple,
-	     * repeated write failures for the same FD because of
-	     * the queued data.
-	     */
-	    do {
-		fdd->write_q = q->next;
-		if (q->free_func)
-		    (q->free_func) (q->buf);
-		if (q) {
-		    memFree(q, MEM_DWRITE_Q);
-		    q = NULL;
-		}
-	    } while ((q = fdd->write_q));
-	}
-	len = 0;
+        if (!ignoreErrno(errno)) {
+            status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
+            debug(50, 1) ("diskHandleWrite: FD %d: disk write error: %s\n",
+                          fd, xstrerror());
+            /*
+             * If there is no write callback, then this file is
+             * most likely something important like a log file, or
+             * an interprocess pipe.  Its not a swapfile.  We feel
+             * that a write failure on a log file is rather important,
+             * and Squid doesn't otherwise deal with this condition.
+             * So to get the administrators attention, we exit with
+             * a fatal message.
+             */
+
+            if (fdd->wrt_handle == NULL)
+                fatal("Write failure -- check your disk space and cache.log");
+
+            /*
+             * If there is a write failure, then we notify the
+             * upper layer via the callback, at the end of this
+             * function.  Meanwhile, flush all pending buffers
+             * here.  Let the upper layer decide how to handle the
+             * failure.  This will prevent experiencing multiple,
+             * repeated write failures for the same FD because of
+             * the queued data.
+             */
+            do {
+                fdd->write_q = q->next;
+
+                if (q->free_func)
+                    (q->free_func) (q->buf);
+
+                if (q) {
+                    memFree(q, MEM_DWRITE_Q);
+                    q = NULL;
+                }
+            } while ((q = fdd->write_q));
+        }
+
+        len = 0;
     }
+
     if (q != NULL) {
-	/* q might become NULL from write failure above */
-	q->buf_offset += len;
-	if (q->buf_offset > q->len)
-	    debug(50, 1) ("diskHandleWriteComplete: q->buf_offset > q->len (%p,%d, %d, %d FD %d)\n",
-		q, (int) q->buf_offset, q->len, len, fd);
-	assert(q->buf_offset <= q->len);
-	if (q->buf_offset == q->len) {
-	    /* complete write */
-	    fdd->write_q = q->next;
-	    if (q->free_func)
-		(q->free_func) (q->buf);
-	    if (q) {
-		memFree(q, MEM_DWRITE_Q);
-		q = NULL;
-	    }
-	}
+        /* q might become NULL from write failure above */
+        q->buf_offset += len;
+
+        if (q->buf_offset > q->len)
+            debug(50, 1) ("diskHandleWriteComplete: q->buf_offset > q->len (%p,%d, %d, %d FD %d)\n",
+                          q, (int) q->buf_offset, q->len, len, fd);
+
+        assert(q->buf_offset <= q->len);
+
+        if (q->buf_offset == q->len) {
+            /* complete write */
+            fdd->write_q = q->next;
+
+            if (q->free_func)
+                (q->free_func) (q->buf);
+
+            if (q) {
+                memFree(q, MEM_DWRITE_Q);
+                q = NULL;
+            }
+        }
     }
+
     if (fdd->write_q == NULL) {
-	/* no more data */
-	fdd->write_q_tail = NULL;
+        /* no more data */
+        fdd->write_q_tail = NULL;
     } else {
-	/* another block is queued */
-	diskCombineWrites(fdd);
-	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
-	F->flags.write_daemon = 1;
+        /* another block is queued */
+        diskCombineWrites(fdd);
+        commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+        F->flags.write_daemon = 1;
     }
+
     do_close = F->flags.close_request;
+
     if (fdd->wrt_handle) {
-	DWCB *callback = fdd->wrt_handle;
-	void *cbdata;
-	fdd->wrt_handle = NULL;
-	if (cbdataReferenceValidDone(fdd->wrt_handle_data, &cbdata)) {
-	    callback(fd, status, len, cbdata);
-	    /*
-	     * NOTE, this callback can close the FD, so we must
-	     * not touch 'F', 'fdd', etc. after this.
-	     */
-	    PROF_stop(diskHandleWrite);
-	    return;
-	    /* XXX But what about close_request??? */
-	}
+        DWCB *callback = fdd->wrt_handle;
+        void *cbdata;
+        fdd->wrt_handle = NULL;
+
+        if (cbdataReferenceValidDone(fdd->wrt_handle_data, &cbdata)) {
+            callback(fd, status, len, cbdata);
+            /*
+             * NOTE, this callback can close the FD, so we must
+             * not touch 'F', 'fdd', etc. after this.
+             */
+            PROF_stop(diskHandleWrite);
+            return;
+            /* XXX But what about close_request??? */
+        }
     }
+
     if (do_close)
-	file_close(fd);
+        file_close(fd);
+
     PROF_stop(diskHandleWrite);
 }
 
@@ -295,12 +370,12 @@ diskHandleWrite(int fd, void *notused)
 /* call a handle when writing is complete. */
 void
 file_write(int fd,
-    off_t file_offset,
-    void const *ptr_to_buf,
-    int len,
-    DWCB * handle,
-    void *handle_data,
-    FREE * free_func)
+           off_t file_offset,
+           void const *ptr_to_buf,
+           int len,
+           DWCB * handle,
+           void *handle_data,
+           FREE * free_func)
 {
     dwrite_q *wq = NULL;
     fde *F = &fd_table[fd];
@@ -315,24 +390,28 @@ file_write(int fd,
     wq->buf_offset = 0;
     wq->next = NULL;
     wq->free_func = free_func;
+
     if (!F->disk.wrt_handle_data) {
-	F->disk.wrt_handle = handle;
-	F->disk.wrt_handle_data = cbdataReference(handle_data);
+        F->disk.wrt_handle = handle;
+        F->disk.wrt_handle_data = cbdataReference(handle_data);
     } else {
-	/* Detect if there is multiple concurrent users of this fd.. we only support one callback */
-	assert(F->disk.wrt_handle_data == handle_data && F->disk.wrt_handle == handle);
+        /* Detect if there is multiple concurrent users of this fd.. we only support one callback */
+        assert(F->disk.wrt_handle_data == handle_data && F->disk.wrt_handle == handle);
     }
+
     /* add to queue */
     if (F->disk.write_q == NULL) {
-	/* empty queue */
-	F->disk.write_q = F->disk.write_q_tail = wq;
+        /* empty queue */
+        F->disk.write_q = F->disk.write_q_tail = wq;
     } else {
-	F->disk.write_q_tail->next = wq;
-	F->disk.write_q_tail = wq;
+        F->disk.write_q_tail->next = wq;
+        F->disk.write_q_tail = wq;
     }
+
     if (!F->flags.write_daemon) {
-	diskHandleWrite(fd, NULL);
+        diskHandleWrite(fd, NULL);
     }
+
     PROF_stop(file_write);
 }
 
@@ -358,46 +437,59 @@ diskHandleRead(int fd, void *data)
      * FD < 0 indicates premature close; we just have to free
      * the state data.
      */
+
     if (fd < 0) {
-	memFree(ctrl_dat, MEM_DREAD_CTRL);
-	return;
+        memFree(ctrl_dat, MEM_DREAD_CTRL);
+        return;
     }
+
     PROF_start(diskHandleRead);
+
     if (F->disk.offset != ctrl_dat->offset) {
-	debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
-	    fd, (int) ctrl_dat->offset);
-	lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
-	statCounter.syscalls.disk.seeks++;
-	F->disk.offset = ctrl_dat->offset;
+        debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
+                     fd, (int) ctrl_dat->offset);
+        lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
+        statCounter.syscalls.disk.seeks++;
+        F->disk.offset = ctrl_dat->offset;
     }
+
     errno = 0;
     len = FD_READ_METHOD(fd, ctrl_dat->buf, ctrl_dat->req_len);
+
     if (len > 0)
-	F->disk.offset += len;
+        F->disk.offset += len;
+
     statCounter.syscalls.disk.reads++;
+
     fd_bytes(fd, len, FD_READ);
+
     if (len < 0) {
-	if (ignoreErrno(errno)) {
-	    commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
-	    PROF_stop(diskHandleRead);
-	    return;
-	}
-	debug(50, 1) ("diskHandleRead: FD %d: %s\n", fd, xstrerror());
-	len = 0;
-	rc = DISK_ERROR;
+        if (ignoreErrno(errno)) {
+            commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
+            PROF_stop(diskHandleRead);
+            return;
+        }
+
+        debug(50, 1) ("diskHandleRead: FD %d: %s\n", fd, xstrerror());
+        len = 0;
+        rc = DISK_ERROR;
     } else if (len == 0) {
-	rc = DISK_EOF;
+        rc = DISK_EOF;
     }
+
     if (cbdataReferenceValid(ctrl_dat->client_data))
-	ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
+        ctrl_dat->handler(fd, ctrl_dat->buf, len, rc, ctrl_dat->client_data);
+
     cbdataReferenceDone(ctrl_dat->client_data);
+
     memFree(ctrl_dat, MEM_DREAD_CTRL);
+
     PROF_stop(diskHandleRead);
 }
 
 
 /* start read operation */
-/* buffer must be allocated from the caller. 
+/* buffer must be allocated from the caller.
  * It must have at least req_len space in there. 
  * call handler when a reading is complete. */
 void

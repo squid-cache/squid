@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaMD5.h,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StoreMetaMD5.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,16 +36,19 @@
 
 #include "StoreMeta.h"
 
-class StoreMetaMD5 : public StoreMeta {
+class StoreMetaMD5 : public StoreMeta
+{
+
 public:
     void *operator new (size_t);
     void operator delete (void *);
     void deleteSelf();
-    
+
     char getType() const {return STORE_META_KEY_MD5;}
+
     bool validLength(int) const;
     bool checkConsistency(StoreEntry *) const;
-    
+
 private:
     static MemPool *pool;
     static int md5_mismatches;

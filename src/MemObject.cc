@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.4 2003/02/13 22:20:37 robertc Exp $
+ * $Id: MemObject.cc,v 1.5 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -59,6 +59,7 @@ url_checksum(const char *url)
     xmemcpy(&ck, digest, sizeof(ck));
     return ck;
 }
+
 #endif
 
 MemPool *MemObject::pool = NULL;
@@ -68,8 +69,10 @@ MemObject::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (MemObject));
+
     if (!pool)
-	pool = memPoolCreate("MemObject", sizeof (MemObject));
+        pool = memPoolCreate("MemObject", sizeof (MemObject));
+
     return memPoolAlloc(pool);
 }
 
@@ -83,19 +86,24 @@ size_t
 MemObject::inUseCount()
 {
     if (!pool)
-	return 0;
+        return 0;
+
     MemPoolStats stats;
+
     memPoolGetStats (&stats, pool);
+
     return stats.items_inuse;
 }
 
 MemObject::MemObject(char const *aUrl, char const *aLog_url) :
-_reply (httpReplyCreate())
+        _reply (httpReplyCreate())
 {
     url = xstrdup(aUrl);
 #if URL_CHECKSUM_DEBUG
+
     chksum = url_checksum(url);
 #endif
+
     log_url = xstrdup(aLog_url);
     object_sz = -1;
     fd = -1;
@@ -108,22 +116,33 @@ MemObject::~MemObject()
     const Ctx ctx = ctx_enter(url);
     debug(20, 3) ("destroy_MemObject: destroying %p\n", this);
 #if URL_CHECKSUM_DEBUG
+
     assert(chksum == url_checksum(url));
 #endif
+
     if (!shutting_down)
         assert(swapout.sio == NULL);
+
     data_hdr.freeContent();
+
     /*
      * There is no way to abort FD-less clients, so they might
      * still have mem->clients set if mem->fd == -1
      */
     assert(fd == -1 || clients.head == NULL);
+
     httpReplyDestroy((HttpReply *)_reply);
+
     requestUnlink(request);
+
     request = NULL;
+
     ctx_exit(ctx);              /* must exit before we free mem->url */
+
     safe_free(url);
+
     safe_free(log_url);    /* XXX account log_url */
+
     safe_free(vary_headers);
 }
 
@@ -156,30 +175,31 @@ void
 MemObject::dump() const
 {
     debug(20, 1) ("MemObject->data.head: %p\n",
-	data_hdr.head);
+                  data_hdr.head);
     debug(20, 1) ("MemObject->data.tail: %p\n",
-	data_hdr.tail);
+                  data_hdr.tail);
 #if 0
     /* do we want this one? */
     debug(20, 1) ("MemObject->data.origin_offset: %d\n",
-	data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0);
+                  data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0);
 #endif
+
     debug(20, 1) ("MemObject->start_ping: %d.%06d\n",
-	(int) start_ping.tv_sec,
-	(int) start_ping.tv_usec);
+                  (int) start_ping.tv_sec,
+                  (int) start_ping.tv_usec);
     debug(20, 1) ("MemObject->inmem_hi: %d\n",
-	(int) data_hdr.endOffset());
+                  (int) data_hdr.endOffset());
     debug(20, 1) ("MemObject->inmem_lo: %d\n",
-	(int) inmem_lo);
+                  (int) inmem_lo);
     debug(20, 1) ("MemObject->nclients: %d\n",
-	nclients);
+                  nclients);
     debug(20, 1) ("MemObject->reply: %p\n",
-	_reply);
+                  _reply);
     debug(20, 1) ("MemObject->request: %p\n",
-	request);
+                  request);
     debug(20, 1) ("MemObject->log_url: %p %s\n",
-	log_url,
-	checkNullString(log_url));
+                  log_url,
+                  checkNullString(log_url));
 }
 
 HttpReply const *
@@ -191,19 +211,25 @@ MemObject::getReply() const
 struct LowestMemReader : public unary_function<store_client, void>
 {
     LowestMemReader(off_t seed):current(seed){}
-    void operator() (store_client const &x) 
-      { 
-	if (x.memReaderHasLowerOffset(current))
-	    current = x.copyInto.offset; }
+
+    void operator() (store_client const &x)
+    {
+        if (x.memReaderHasLowerOffset(current))
+            current = x.copyInto.offset;
+    }
+
     off_t current;
 };
 
 struct StoreClientStats : public unary_function<store_client, void>
 {
     StoreClientStats(StoreEntry *anEntry):where(anEntry),index(0){}
-    void operator()(store_client const &x) {
-	x.dumpStats(where, index++);
+
+    void operator()(store_client const &x)
+    {
+        x.dumpStats(where, index++);
     }
+
     StoreEntry *where;
     size_t index;
 };
@@ -212,15 +238,18 @@ void
 MemObject::stat (StoreEntry *s) const
 {
     storeAppendPrintf(s, "\t%s %s\n",
-	RequestMethodStr[method], log_url);
+                      RequestMethodStr[method], log_url);
     storeAppendPrintf(s, "\tinmem_lo: %d\n", (int) inmem_lo);
     storeAppendPrintf(s, "\tinmem_hi: %d\n", (int) data_hdr.endOffset());
     storeAppendPrintf(s, "\tswapout: %d bytes queued\n",
-	(int) swapout.queue_offset);
+                      (int) swapout.queue_offset);
+
     if (swapout.sio.getRaw())
-	storeAppendPrintf(s, "\tswapout: %d bytes written\n",
-	    (int) swapout.sio->offset());
+        storeAppendPrintf(s, "\tswapout: %d bytes written\n",
+                          (int) swapout.sio->offset());
+
     StoreClientStats statsVisitor(s);
+
     for_each(clients, statsVisitor);
 }
 
@@ -233,8 +262,9 @@ MemObject::endOffset () const
 size_t
 MemObject::size() const
 {
-    if (object_sz < 0) 
-	return endOffset();
+    if (object_sz < 0)
+        return endOffset();
+
     return object_sz;
 }
 
@@ -254,7 +284,7 @@ MemObject::lowestMemReaderOffset() const
     LowestMemReader lowest (endOffset() + 1);
 
     for_each (clients, lowest);
-    
+
     return lowest.current;
 }
 
@@ -278,6 +308,7 @@ MemObject::checkUrlChecksum () const
 {
     assert(chksum == url_checksum(url));
 }
+
 #endif
 
 /*
@@ -297,11 +328,15 @@ MemObject::objectBytesOnDisk() const
      * meaning we haven't even opened the swapout file
      * yet.
      */
+
     if (swapout.sio.getRaw() == NULL)
-	return 0;
+        return 0;
+
     off_t nwritten = swapout.sio->offset();
+
     if (nwritten <= (off_t)swap_hdr_sz)
-	return 0;
+        return 0;
+
     return (size_t) (nwritten - swap_hdr_sz);
 }
 
@@ -313,10 +348,11 @@ MemObject::policyLowestOffsetToKeep() const
      * as in the case of a range request.
      */
     off_t lowest_offset = lowestMemReaderOffset();
+
     if (endOffset() < lowest_offset ||
-	endOffset() - inmem_lo > (ssize_t)Config.Store.maxInMemObjSize)
-	return lowest_offset;
-    
+            endOffset() - inmem_lo > (ssize_t)Config.Store.maxInMemObjSize)
+        return lowest_offset;
+
     return inmem_lo;
 }
 
@@ -333,11 +369,15 @@ MemObject::trimSwappable()
      * walked to the next page. (mem->swapout.memnode)
      */
     off_t on_disk;
+
     if ((on_disk = objectBytesOnDisk()) - 1 < new_mem_lo)
-	new_mem_lo = on_disk - 1;
+        new_mem_lo = on_disk - 1;
+
     if (new_mem_lo == -1)
-	new_mem_lo = 0;	/* the above might become -1 */
+        new_mem_lo = 0;	/* the above might become -1 */
+
     data_hdr.freeDataUpto(new_mem_lo);
+
     inmem_lo = new_mem_lo;
 }
 
@@ -358,7 +398,7 @@ MemObject::isContiguous() const
     bool result = data_hdr.hasContigousContentRange (inmem_lo, endOffset());
     /* XXX : make this higher level */
     debug (19, result ? 2 : 1) ("MemObject::isContiguous: Returning %s\n",
-				result ? "true" : "false");
+                                result ? "true" : "false");
     return result;
 }
 
@@ -368,21 +408,27 @@ MemObject::mostBytesWanted(int max) const
 #if DELAY_POOLS
 #if 0
     int i = -1;
+
     for (dlink_node *node = clients.head; node; node = node->next) {
-	store_client *sc = (store_client *) node->data;
-	if (!sc->callbackPending())
-	    /* not waiting for more data */
-	    continue;
-	if (sc->getType() != STORE_MEM_CLIENT)
-	    continue;
-	i = sc->delayId.bytesWanted(i, XMIN(sc->copyInto.length, (size_t)max));
+        store_client *sc = (store_client *) node->data;
+
+        if (!sc->callbackPending())
+            /* not waiting for more data */
+            continue;
+
+        if (sc->getType() != STORE_MEM_CLIENT)
+            continue;
+
+        i = sc->delayId.bytesWanted(i, XMIN(sc->copyInto.length, (size_t)max));
     }
+
     return XMAX(i, 0);
 #endif
     /* identify delay id with largest allowance */
     DelayId largestAllowance = mostBytesAllowed ();
     return largestAllowance.bytesWanted(0, max);
 #else
+
     return max;
 #endif
 }
@@ -394,28 +440,36 @@ MemObject::mostBytesAllowed() const
     int j;
     int jmax = -1;
     DelayId result;
+
     for (dlink_node *node = clients.head; node; node = node->next) {
-	store_client *sc = (store_client *) node->data;
+        store_client *sc = (store_client *) node->data;
 #if 0
-	/* This test is invalid because the client may be writing data
-	 * and thus will want data immediately.
-	 * If we include the test, there is a race condition when too much
-	 * data is read - if all sc's are writing when a read is scheduled.
-	 * XXX: fixme.
-	 */
-	if (!sc->callbackPending())
-	    /* not waiting for more data */
-	    continue;
+        /* This test is invalid because the client may be writing data
+         * and thus will want data immediately.
+         * If we include the test, there is a race condition when too much
+         * data is read - if all sc's are writing when a read is scheduled.
+         * XXX: fixme.
+         */
+
+        if (!sc->callbackPending())
+            /* not waiting for more data */
+            continue;
+
 #endif
-	if (sc->getType() != STORE_MEM_CLIENT)
-	    /* reading off disk */
-	    continue;
-	j = sc->delayId.bytesWanted(0, sc->copyInto.length);
-	if (j > jmax) {
-	    jmax = j;
-	    result = sc->delayId;
-	}
+
+        if (sc->getType() != STORE_MEM_CLIENT)
+            /* reading off disk */
+            continue;
+
+        j = sc->delayId.bytesWanted(0, sc->copyInto.length);
+
+        if (j > jmax) {
+            jmax = j;
+            result = sc->delayId;
+        }
     }
+
     return result;
 }
+
 #endif

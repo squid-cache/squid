@@ -1,6 +1,6 @@
 
 /*
- * $Id: CompositePoolNode.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: CompositePoolNode.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -48,19 +48,26 @@
 #include "DelayIdComposite.h"
 
 class StoreEntry;
+
 class AuthUserRequest;
-class CompositePoolNode : public RefCountable, public Updateable {
+
+class CompositePoolNode : public RefCountable, public Updateable
+{
+
 public:
     typedef RefCount<CompositePoolNode> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const;
     virtual ~CompositePoolNode(){}
+
     virtual void stats(StoreEntry * sentry) =0;
     virtual void dump(StoreEntry *entry) const =0;
     virtual void update(int incr) =0;
     virtual void parse() = 0;
+
     virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *) = 0;
 };
+
 #endif
 #endif /* COMPOSITEPOOLNODE_H */

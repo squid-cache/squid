@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLUrlPath.h,v 1.1 2003/02/17 07:01:35 robertc Exp $
+ * $Id: ACLUrlPath.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,22 +42,28 @@
 
 class ACLUrlPathStrategy : public ACLMatchStrategy<char const *>
 {
-  public:
+
+public:
     virtual int match (ACLData<char const *> * &, ACLChecklist *);
     virtual bool requiresRequest() const {return true;}
+
     static ACLUrlPathStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
      * private constructors with no friends */
     ACLUrlPathStrategy(ACLUrlPathStrategy const &);
-  private:
+
+private:
     static ACLUrlPathStrategy Instance_;
     ACLUrlPathStrategy(){}
+
     ACLUrlPathStrategy&operator=(ACLUrlPathStrategy const &);
 };
 
-class ACLUrlPath {
-  public:
+class ACLUrlPath
+{
+
+public:
     static ACL::Prototype RegistryProtoype;
     static ACL::Prototype LegacyRegistryProtoype;
     static ACLStrategised<char const *> RegistryEntry_;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelaySpec.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelaySpec.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,8 +34,10 @@
 #ifndef SQUID_DELAYSPEC_H
 #define SQUID_DELAYSPEC_H
 
-class DelaySpec {
-  public:
+class DelaySpec
+{
+
+public:
     DelaySpec();
     void stats (StoreEntry * sentry, char const *) const;
     void dump (StoreEntry *) const;

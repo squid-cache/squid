@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.1 2003/01/23 00:37:13 robertc Exp $
+ * $Id: HttpReply.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -56,10 +56,10 @@ extern MemBuf httpReplyPack(const HttpReply * rep);
 extern void httpReplySwapOut(HttpReply * rep, StoreEntry * e);
 /* set commonly used info with one call */
 extern void httpReplySetHeaders(HttpReply * rep, http_version_t ver, http_status status,
-    const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
+                                    const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
 /* do everything in one call: init, set, pack, clean, return MemBuf */
 extern MemBuf httpPackedReply(http_version_t ver, http_status status, const char *ctype,
-    int clen, time_t lmt, time_t expires);
+                                  int clen, time_t lmt, time_t expires);
 /* construct 304 reply and pack it into MemBuf, return MemBuf */
 extern MemBuf httpPacked304Reply(const HttpReply * rep);
 /* construct a 304 reply and return it */

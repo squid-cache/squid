@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.226 2003/02/17 07:01:36 robertc Exp $
+ * $Id: enums.h,v 1.227 2003/02/21 22:50:08 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -499,13 +499,13 @@ typedef enum {
     STREAM_NONE,		/* No particular status */
     STREAM_COMPLETE,		/* All data has been flushed, no more reads allowed */
     STREAM_UNPLANNED_COMPLETE,	/* an unpredicted end has occured, no more
-				 * reads occured, but no need to tell 
-				 * downstream that an error occured
-				 */
+                    				 * reads occured, but no need to tell 
+                    				 * downstream that an error occured
+                    				 */
     STREAM_FAILED		/* An error has occured in this node or an above one,
-				 * and the node is not generating an error body / it's 
-				 * midstream
-				 */
+                    				 * and the node is not generating an error body / it's 
+                    				 * midstream
+                    				 */
 } clientStream_status_t;
 
 typedef enum {

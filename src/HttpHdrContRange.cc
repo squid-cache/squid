@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.16 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpHdrContRange.cc,v 1.17 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -66,36 +66,46 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
     const char *p;
     assert(spec);
     spec->offset = spec->length = range_spec_unknown;
+
     if (flen < 2)
-	return 0;
+        return 0;
+
     /* is spec given ? */
     if (*field == '*')
-	return 1;
+        return 1;
+
     /* check format, must be %d-%d */
     if (!((p = strchr(field, '-')) && (p - field < flen))) {
-	debug(68, 2) ("invalid (no '-') resp-range-spec near: '%s'\n", field);
-	return 0;
+        debug(68, 2) ("invalid (no '-') resp-range-spec near: '%s'\n", field);
+        return 0;
     }
+
     /* parse offset */
     if (!httpHeaderParseSize(field, &spec->offset))
-	return 0;
+        return 0;
+
     p++;
+
     /* do we have last-pos ? */
     if (p - field < flen) {
-	ssize_t last_pos;
-	if (!httpHeaderParseSize(p, &last_pos))
-	    return 0;
-	spec->length = size_diff(last_pos + 1, spec->offset);
+        ssize_t last_pos;
+
+        if (!httpHeaderParseSize(p, &last_pos))
+            return 0;
+
+        spec->length = size_diff(last_pos + 1, spec->offset);
     }
+
     /* Ensure typecast is safe */
     assert (spec->length >= 0);
-	   
+
     /* we managed to parse, check if the result makes sence */
     if (known_spec((size_t)spec->length) && spec->length == 0) {
-	debug(68, 2) ("invalid range (%ld += %ld) in resp-range-spec near: '%s'\n",
-	    (long int) spec->offset, (long int) spec->length, field);
-	return 0;
+        debug(68, 2) ("invalid range (%ld += %ld) in resp-range-spec near: '%s'\n",
+                      (long int) spec->offset, (long int) spec->length, field);
+        return 0;
     }
+
     return 1;
 }
 
@@ -105,12 +115,12 @@ httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
     /* Ensure typecast is safe */
     assert (spec->length >= 0);
     assert (spec->length >= 0);
-	
+
     if (!known_spec((size_t)spec->offset) || !known_spec((size_t)spec->length))
-	packerPrintf(p, "*");
+        packerPrintf(p, "*");
     else
-	packerPrintf(p, "bytes %ld-%ld",
-	    (long int) spec->offset, (long int) spec->offset + spec->length - 1);
+        packerPrintf(p, "bytes %ld-%ld",
+                     (long int) spec->offset, (long int) spec->offset + spec->length - 1);
 }
 
 /*
@@ -130,10 +140,12 @@ HttpHdrContRange *
 httpHdrContRangeParseCreate(const char *str)
 {
     HttpHdrContRange *r = httpHdrContRangeCreate();
+
     if (!httpHdrContRangeParseInit(r, str)) {
-	httpHdrContRangeDestroy(r);
-	r = NULL;
+        httpHdrContRangeDestroy(r);
+        r = NULL;
     }
+
     return r;
 }
 
@@ -145,24 +157,32 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
     assert(range && str);
     debug(68, 8) ("parsing content-range field: '%s'\n", str);
     /* check range type */
+
     if (strncasecmp(str, "bytes ", 6))
-	return 0;
+        return 0;
+
     str += 6;
+
     /* split */
     if (!(p = strchr(str, '/')))
-	return 0;
+        return 0;
+
     if (*str == '*')
-	range->spec.offset = range->spec.length = range_spec_unknown;
+        range->spec.offset = range->spec.length = range_spec_unknown;
     else if (!httpHdrRangeRespSpecParseInit(&range->spec, str, p - str))
-	return 0;
+        return 0;
+
     p++;
+
     if (*p == '*')
-	range->elength = range_spec_unknown;
+        range->elength = range_spec_unknown;
     else if (!httpHeaderParseSize(p, &range->elength))
-	return 0;
+        return 0;
+
     debug(68, 8) ("parsed content-range field: %ld-%ld / %ld\n",
-	(long int) range->spec.offset, (long int) range->spec.offset + range->spec.length - 1,
-	(long int) range->elength);
+                  (long int) range->spec.offset, (long int) range->spec.offset + range->spec.length - 1,
+                  (long int) range->elength);
+
     return 1;
 }
 
@@ -190,10 +210,11 @@ httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
     httpHdrRangeRespSpecPackInto(&range->spec, p);
     /* Ensure typecast is safe */
     assert (range->elength >= 0);
+
     if (!known_spec((size_t)range->elength))
-	packerPrintf(p, "/*");
+        packerPrintf(p, "/*");
     else
-	packerPrintf(p, "/%ld", (long int) range->elength);
+        packerPrintf(p, "/%ld", (long int) range->elength);
 }
 
 void

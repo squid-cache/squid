@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.1 2003/02/02 13:27:43 robertc Exp $
+ * $Id: SquidString.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -36,17 +36,19 @@
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
 
-class String {
+class String
+{
+
 public:
     static const String Null;
     _SQUID_INLINE_ String();
     String (char const *);
     String (String const &);
     ~String();
-    
+
     String &operator =(char const *);
     String &operator =(String const &);
-    
+
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * buf() const;
     void init (char const *);
@@ -59,9 +61,11 @@ public:
     void append (String const &);
     void absorb(String &old);
     _SQUID_INLINE_ int nCaseCmp (char const *aString, int aLen) const;
+
 private:
     /* never reference these directly! */
     unsigned short int size_;	/* buffer size; 64K limit */
+
 public:
     unsigned short int len_;	/* current length  */
     char *buf_;

@@ -1,5 +1,5 @@
 /*
- * $Id: ConnectionDetail.h,v 1.1 2003/02/14 13:59:50 robertc Exp $
+ * $Id: ConnectionDetail.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Robert Collins
@@ -37,9 +37,13 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
-class ConnectionDetail {
-  public:
+class ConnectionDetail
+{
+
+public:
+
     struct sockaddr_in me;
+
     struct sockaddr_in peer;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommonPool.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: CommonPool.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -50,17 +50,22 @@
  * Then we have a legacy composite which returns class 1/2/3, and new 
  * composites which return a descriptor of some sort.
  */
-class CommonPool {
-  public:
+
+class CommonPool
+{
+
+public:
     void *operator new(size_t);
     void operator delete (void *);
     void deleteSelf() const;
     static CommonPool *Factory (unsigned char _class, CompositePoolNode::Pointer&);
     char const* theClassTypeLabel() const {return typeLabel.buf();}
+
 protected:
     CommonPool();
     String typeLabel;
 };
+
 #endif
 #endif /* COMMONPOOL_H */
 

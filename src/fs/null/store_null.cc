@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.5 2003/01/23 00:38:19 robertc Exp $
+ * $Id: store_null.cc,v 1.6 2003/02/21 22:50:44 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -42,8 +42,9 @@
 #include "SwapDir.h"
 #include "Store.h"
 
-class NullSwapDir : public SwapDir 
+class NullSwapDir : public SwapDir
 {
+
 public:
     virtual void init();
     virtual int canStore(StoreEntry const &)const;
@@ -83,7 +84,7 @@ NullSwapDir::init()
 {
     store_dirs_rebuilding++;
     eventAdd("storeNullDirRebuildComplete", storeNullDirRebuildComplete,
-	NULL, 0.0, 1);
+             NULL, 0.0, 1);
 }
 
 StoreIOState::Pointer
@@ -103,6 +104,7 @@ NullSwapDir::openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *)
 static void
 storeNullDirRebuildComplete(void *unused)
 {
+
     struct _store_rebuild_data counts;
     memset(&counts, '\0', sizeof(counts));
     store_dirs_rebuilding--;

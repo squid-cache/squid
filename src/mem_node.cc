@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.1 2003/01/23 00:37:23 robertc Exp $
+ * $Id: mem_node.cc,v 1.2 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -44,8 +44,10 @@ mem_node::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (mem_node));
+
     if (!pool)
-	pool = memPoolCreate("mem_node", sizeof (mem_node));
+        pool = memPoolCreate("mem_node", sizeof (mem_node));
+
     return memPoolAlloc(pool);
 }
 
@@ -56,8 +58,7 @@ mem_node::operator delete (void *address)
 }
 
 mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data), next (NULL)
-{
-}
+{}
 
 mem_node::~mem_node()
 {
@@ -68,9 +69,12 @@ size_t
 mem_node::InUseCount()
 {
     if (!pool)
-	return 0;
+        return 0;
+
     MemPoolStats stats;
+
     memPoolGetStats (&stats, pool);
+
     return stats.items_inuse;
 }
 
@@ -97,7 +101,8 @@ bool
 mem_node::contains (size_t const &location) const
 {
     if (start() <= location && end() > location)
-	return true;
+        return true;
+
     return false;
 }
 
@@ -106,6 +111,7 @@ bool
 mem_node::canAccept (size_t const &location) const
 {
     if (location == end() && space() > 0)
-	return true;
+        return true;
+
     return false;
 }

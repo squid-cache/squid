@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.1 2003/01/23 00:37:20 robertc Exp $
+ * $Id: fde.h,v 1.2 2003/02/21 22:50:08 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,10 +34,12 @@
 #ifndef SQUID_FDE_H
 #define SQUID_FDE_H
 
-class fde {
+class fde
+{
+
 public:
     static void DumpStats (StoreEntry *);
-  
+
     char const *remoteAddr() const;
     void dumpStats (StoreEntry &, int);
     bool readPending(int);
@@ -45,27 +47,57 @@ public:
     unsigned int type;
     u_short local_port;
     u_short remote_port;
+
     struct in_addr local_addr;
     unsigned char tos;
     char ipaddr[16];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
-    struct {
-        unsigned int open:1;
-        unsigned int close_request:1;
-        unsigned int write_daemon:1;
-        unsigned int closing:1;
-        unsigned int socket_eof:1;
-        unsigned int nolinger:1;
-        unsigned int nonblocking:1;
-        unsigned int ipc:1;
-        unsigned int called_connect:1;
-        unsigned int nodelay:1;
-        unsigned int close_on_exec:1;
-        unsigned int read_pending:1;
-    } flags;
+
+    struct
+    {
+
+unsigned int open:
+        1;
+
+unsigned int close_request:
+        1;
+
+unsigned int write_daemon:
+        1;
+
+unsigned int closing:
+        1;
+
+unsigned int socket_eof:
+        1;
+
+unsigned int nolinger:
+        1;
+
+unsigned int nonblocking:
+        1;
+
+unsigned int ipc:
+        1;
+
+unsigned int called_connect:
+        1;
+
+unsigned int nodelay:
+        1;
+
+unsigned int close_on_exec:
+        1;
+
+unsigned int read_pending:
+        1;
+    }
+
+    flags;
     int bytes_read;
     int bytes_written;
     int uses;                   /* ie # req's over persistent conn */
+
     struct _fde_disk disk;
     PF *read_handler;
     void *read_data;
@@ -82,8 +114,11 @@ public:
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
 #if USE_SSL
+
     SSL *ssl;
-    int ssl_shutdown:1;
+
+int ssl_shutdown:
+    1;
 #endif
 };
 

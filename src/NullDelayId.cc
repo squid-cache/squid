@@ -1,6 +1,6 @@
 
 /*
- * $Id: NullDelayId.cc,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: NullDelayId.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -63,5 +63,6 @@ NullDelayId::deleteSelf() const
 {
     delete this;
 }
+
 #endif
 

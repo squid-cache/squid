@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.73 2003/02/17 07:01:36 robertc Exp $
+ * $Id: mem.cc,v 1.74 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -50,24 +50,32 @@ static double xm_deltat = 0;
 
 /* string pools */
 #define mem_str_pool_count 3
-static const struct {
+
+static const struct
+{
     const char *name;
     size_t obj_size;
-} StrPoolsAttrs[mem_str_pool_count] = {
+}
 
-    {
-	"Short Strings", 36,
-    },				/* to fit rfc1123 and similar */
-    {
-	"Medium Strings", 128,
-    },				/* to fit most urls */
-    {
-	"Long Strings", 512
-    }				/* other */
-};
-static struct {
+StrPoolsAttrs[mem_str_pool_count] = {
+
+                                        {
+                                            "Short Strings", 36,
+                                        },				/* to fit rfc1123 and similar */
+                                        {
+                                            "Medium Strings", 128,
+                                        },				/* to fit most urls */
+                                        {
+                                            "Long Strings", 512
+                                        }				/* other */
+                                    };
+
+static struct
+{
     MemPool *pool;
-} StrPools[mem_str_pool_count];
+}
+
+StrPools[mem_str_pool_count];
 static MemMeter StrCountMeter;
 static MemMeter StrVolumeMeter;
 
@@ -85,24 +93,27 @@ memStringStats(StoreEntry * sentry)
     size_t pooled_volume = 0;
     /* heading */
     storeAppendPrintf(sentry,
-	"String Pool\t Impact\t\t\n"
-	" \t (%%strings)\t (%%volume)\n");
+                      "String Pool\t Impact\t\t\n"
+                      " \t (%%strings)\t (%%volume)\n");
     /* table body */
+
     for (i = 0; i < mem_str_pool_count; i++) {
-	const MemPool *pool = StrPools[i].pool;
-	const int plevel = pool->meter.inuse.level;
-	storeAppendPrintf(sentry, pfmt,
-	    pool->label,
-	    xpercentInt(plevel, StrCountMeter.level),
-	    xpercentInt(plevel * pool->obj_size, StrVolumeMeter.level));
-	pooled_count += plevel;
-	pooled_volume += plevel * pool->obj_size;
+        const MemPool *pool = StrPools[i].pool;
+        const int plevel = pool->meter.inuse.level;
+        storeAppendPrintf(sentry, pfmt,
+                          pool->label,
+                          xpercentInt(plevel, StrCountMeter.level),
+                          xpercentInt(plevel * pool->obj_size, StrVolumeMeter.level));
+        pooled_count += plevel;
+        pooled_volume += plevel * pool->obj_size;
     }
+
     /* malloc strings */
     storeAppendPrintf(sentry, pfmt,
-	"Other Strings",
-	xpercentInt(StrCountMeter.level - pooled_count, StrCountMeter.level),
-	xpercentInt(StrVolumeMeter.level - pooled_volume, StrVolumeMeter.level));
+                      "Other Strings",
+                      xpercentInt(StrCountMeter.level - pooled_count, StrCountMeter.level),
+                      xpercentInt(StrVolumeMeter.level - pooled_volume, StrVolumeMeter.level));
+
     storeAppendPrintf(sentry, "\n");
 }
 
@@ -110,8 +121,8 @@ static void
 memBufStats(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "Large buffers: %d (%d KB)\n",
-	HugeBufCountMeter.level,
-	HugeBufVolumeMeter.level / 1024);
+                      HugeBufCountMeter.level,
+                      HugeBufVolumeMeter.level / 1024);
 }
 
 void
@@ -179,12 +190,14 @@ memAllocString(size_t net_size, size_t * gross_size)
     int i;
     MemPool *pool = NULL;
     assert(gross_size);
+
     for (i = 0; i < mem_str_pool_count; i++) {
-	if (net_size <= StrPoolsAttrs[i].obj_size) {
-	    pool = StrPools[i].pool;
-	    break;
-	}
+        if (net_size <= StrPoolsAttrs[i].obj_size) {
+            pool = StrPools[i].pool;
+            break;
+        }
     }
+
     *gross_size = pool ? pool->obj_size : net_size;
     assert(*gross_size >= net_size);
     memMeterInc(StrCountMeter);
@@ -199,13 +212,15 @@ memFreeString(size_t size, void *buf)
     int i;
     MemPool *pool = NULL;
     assert(size && buf);
+
     for (i = 0; i < mem_str_pool_count; i++) {
-	if (size <= StrPoolsAttrs[i].obj_size) {
-	    assert(size == StrPoolsAttrs[i].obj_size);
-	    pool = StrPools[i].pool;
-	    break;
-	}
+        if (size <= StrPoolsAttrs[i].obj_size) {
+            assert(size == StrPoolsAttrs[i].obj_size);
+            pool = StrPools[i].pool;
+            break;
+        }
     }
+
     memMeterDec(StrCountMeter);
     memMeterDel(StrVolumeMeter, size);
     pool ? memPoolFree(pool, buf) : xfree(buf);
@@ -217,30 +232,33 @@ memFindBufSizeType(size_t net_size, size_t * gross_size)
 {
     mem_type type;
     size_t size;
+
     if (net_size <= 2 * 1024) {
-	type = MEM_2K_BUF;
-	size = 2 * 1024;
+        type = MEM_2K_BUF;
+        size = 2 * 1024;
     } else if (net_size <= 4 * 1024) {
-	type = MEM_4K_BUF;
-	size = 4 * 1024;
+        type = MEM_4K_BUF;
+        size = 4 * 1024;
     } else if (net_size <= 8 * 1024) {
-	type = MEM_8K_BUF;
-	size = 8 * 1024;
+        type = MEM_8K_BUF;
+        size = 8 * 1024;
     } else if (net_size <= 16 * 1024) {
-	type = MEM_16K_BUF;
-	size = 16 * 1024;
+        type = MEM_16K_BUF;
+        size = 16 * 1024;
     } else if (net_size <= 32 * 1024) {
-	type = MEM_32K_BUF;
-	size = 32 * 1024;
+        type = MEM_32K_BUF;
+        size = 32 * 1024;
     } else if (net_size <= 64 * 1024) {
-	type = MEM_64K_BUF;
-	size = 64 * 1024;
+        type = MEM_64K_BUF;
+        size = 64 * 1024;
     } else {
-	type = MEM_NONE;
-	size = net_size;
+        type = MEM_NONE;
+        size = net_size;
     }
+
     if (gross_size)
-	*gross_size = size;
+        *gross_size = size;
+
     return type;
 }
 
@@ -249,12 +267,13 @@ void *
 memAllocBuf(size_t net_size, size_t * gross_size)
 {
     mem_type type = memFindBufSizeType(net_size, gross_size);
+
     if (type != MEM_NONE)
-	return memAllocate(type);
+        return memAllocate(type);
     else {
-	memMeterInc(HugeBufCountMeter);
-	memMeterAdd(HugeBufVolumeMeter, *gross_size);
-	return xcalloc(1, net_size);
+        memMeterInc(HugeBufCountMeter);
+        memMeterAdd(HugeBufVolumeMeter, *gross_size);
+        return xcalloc(1, net_size);
     }
 }
 
@@ -266,13 +285,18 @@ memReallocBuf(void *oldbuf, size_t net_size, size_t * gross_size)
     /* TODO: if the existing gross size is >= new gross size, do nothing */
     size_t new_gross_size;
     void *newbuf = memAllocBuf(net_size, &new_gross_size);
+
     if (oldbuf) {
-	size_t data_size = *gross_size;
-	if (data_size > net_size)
-	    data_size = net_size;
-	memcpy(newbuf, oldbuf, data_size);
-	memFreeBuf(*gross_size, oldbuf);
+        size_t data_size = *gross_size;
+
+        if (data_size > net_size)
+            data_size = net_size;
+
+        memcpy(newbuf, oldbuf, data_size);
+
+        memFreeBuf(*gross_size, oldbuf);
     }
+
     *gross_size = new_gross_size;
     return newbuf;
 }
@@ -282,12 +306,13 @@ void
 memFreeBuf(size_t size, void *buf)
 {
     mem_type type = memFindBufSizeType(size, NULL);
+
     if (type != MEM_NONE)
-	memFree(buf, type);
+        memFree(buf, type);
     else {
-	xfree(buf);
-	memMeterDec(HugeBufCountMeter);
-	memMeterDel(HugeBufVolumeMeter, size);
+        xfree(buf);
+        memMeterDec(HugeBufCountMeter);
+        memMeterDel(HugeBufVolumeMeter, size);
     }
 }
 
@@ -307,16 +332,19 @@ memConfigure(void)
 {
     int new_pool_limit;
     /* set to configured value first */
+
     if (!Config.onoff.mem_pools)
-	new_pool_limit = 0;
+        new_pool_limit = 0;
     else if (Config.MemPools.limit > 0)
-	new_pool_limit = Config.MemPools.limit;
+        new_pool_limit = Config.MemPools.limit;
     else
-	new_pool_limit = mem_unlimited_size;
+        new_pool_limit = mem_unlimited_size;
 
     if (mem_idle_limit > new_pool_limit)
-	debug(13, 1) ("Shrinking idle mem pools to %.2f MB\n", toMB(new_pool_limit));
+        debug(13, 1) ("Shrinking idle mem pools to %.2f MB\n", toMB(new_pool_limit));
+
     memPoolSetIdleLimit(new_pool_limit);
+
     mem_idle_limit = new_pool_limit;
 }
 
@@ -329,7 +357,7 @@ Mem::Init(void)
     int i;
 
     debug(13, 1) ("Memory pools are '%s'; limit: %.2f MB\n",
-	(Config.onoff.mem_pools ? "on" : "off"), toMB(mem_idle_limit));
+                  (Config.onoff.mem_pools ? "on" : "off"), toMB(mem_idle_limit));
 
     /* set all pointers to null */
     memset(MemPools, '\0', sizeof(MemPools));
@@ -346,13 +374,15 @@ Mem::Init(void)
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10);
     memDataInit(MEM_ACL_DENY_INFO_LIST, "acl_deny_info_list",
-	sizeof(acl_deny_info_list), 0);
+                sizeof(acl_deny_info_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
     memDataInit(MEM_ACL_PROXY_AUTH_MATCH, "acl_proxy_auth_match_cache",
-	sizeof(acl_proxy_auth_match_cache), 0);
+                sizeof(acl_proxy_auth_match_cache), 0);
 #if USE_CACHE_DIGESTS
+
     memDataInit(MEM_CACHE_DIGEST, "CacheDigest", sizeof(CacheDigest), 0);
 #endif
+
     memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
     memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
@@ -367,24 +397,26 @@ Mem::Init(void)
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);
     memDataInit(MEM_REQUEST_T, "request_t", sizeof(request_t),
-	Squid_MaxFD >> 3);
+                Squid_MaxFD >> 3);
     memDataInit(MEM_WORDLIST, "wordlist", sizeof(wordlist), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", MD5_DIGEST_CHARS, 0);
     memPoolSetChunkSize(MemPools[MEM_MD5_DIGEST], 512 * 1024);
     memDataInit(MEM_HELPER_REQUEST, "helper_request",
-	sizeof(helper_request), 0);
+                sizeof(helper_request), 0);
     memDataInit(MEM_HELPER_STATEFUL_REQUEST, "helper_stateful_request",
-	sizeof(helper_stateful_request), 0);
+                sizeof(helper_stateful_request), 0);
     memDataInit(MEM_SWAP_LOG_DATA, "storeSwapLogData", sizeof(storeSwapLogData), 0);
 
     /* init string pools */
+
     for (i = 0; i < mem_str_pool_count; i++) {
-	StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
+        StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
     }
+
     cachemgrRegister("mem",
-	"Memory Utilization",
-	Mem::Stats, 0, 1);
+                     "Memory Utilization",
+                     Mem::Stats, 0, 1);
 }
 
 mem_type &operator++ (mem_type &aMem)
@@ -400,14 +432,16 @@ void
 memCheckInit(void)
 {
     mem_type t;
+
     for (t = MEM_NONE, ++t; t < MEM_MAX; ++t) {
-	if (MEM_DONTFREE == t)
-	    continue;
-	/*
-	 * If you hit this assertion, then you forgot to add a
-	 * memDataInit() line for type 't'.
-	 */
-	assert(MemPools[t]);
+        if (MEM_DONTFREE == t)
+            continue;
+
+        /*
+         * If you hit this assertion, then you forgot to add a
+         * memDataInit() line for type 't'.
+         */
+        assert(MemPools[t]);
     }
 }
 
@@ -419,8 +453,8 @@ memPoolDescribe(const MemPool * pool)
 {
     assert(pool);
     debug(13, 2) ("%-20s: %6d x %4d bytes = %5d KB\n",
-	pool->label, memPoolInUseCount(pool), pool->obj_size,
-	toKB(pool->obj_size * pool->meter.inuse.level));
+                  pool->label, memPoolInUseCount(pool), pool->obj_size,
+                  toKB(pool->obj_size * pool->meter.inuse.level));
 }
 
 #endif
@@ -432,9 +466,10 @@ memClean(void)
     memPoolSetIdleLimit(0);
     memPoolClean(0);
     memPoolGetGlobalStats(&stats);
+
     if (stats.tot_items_inuse)
-	debug(13, 2) ("memCleanModule: %d items in %d chunks and %d pools are left dirty\n", stats.tot_items_inuse,
-	    stats.tot_chunks_inuse, stats.tot_pools_inuse);
+        debug(13, 2) ("memCleanModule: %d items in %d chunks and %d pools are left dirty\n", stats.tot_items_inuse,
+                      stats.tot_chunks_inuse, stats.tot_pools_inuse);
 }
 
 int
@@ -485,22 +520,29 @@ FREE *
 memFreeBufFunc(size_t size)
 {
     switch (size) {
+
     case 2 * 1024:
-	return memFree2K;
+        return memFree2K;
+
     case 4 * 1024:
-	return memFree4K;
+        return memFree4K;
+
     case 8 * 1024:
-	return memFree8K;
+        return memFree8K;
+
     case 16 * 1024:
-	return memFree16K;
+        return memFree16K;
+
     case 32 * 1024:
-	return memFree32K;
+        return memFree32K;
+
     case 64 * 1024:
-	return memFree64K;
+        return memFree64K;
+
     default:
-	memMeterDec(HugeBufCountMeter);
-	memMeterDel(HugeBufVolumeMeter, size);
-	return xfree;
+        memMeterDec(HugeBufCountMeter);
+        memMeterDel(HugeBufVolumeMeter, size);
+        return xfree;
     }
 }
 
@@ -514,55 +556,58 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, Store
     MemPoolMeter *pm = mp_st->meter;
 
     storeAppendPrintf(e, "%-20s\t %4d\t ",
-	mp_st->label, mp_st->obj_size);
+                      mp_st->label, mp_st->obj_size);
 
     /* Chunks */
     storeAppendPrintf(e, "%4d\t %4d\t ",
-	toKB(mp_st->obj_size * mp_st->chunk_capacity), mp_st->chunk_capacity);
+                      toKB(mp_st->obj_size * mp_st->chunk_capacity), mp_st->chunk_capacity);
 
     if (mp_st->chunk_capacity) {
-	needed = mp_st->items_inuse / mp_st->chunk_capacity;
-	if (mp_st->items_inuse % mp_st->chunk_capacity)
-	    needed++;
-	excess = mp_st->chunks_inuse - needed;
+        needed = mp_st->items_inuse / mp_st->chunk_capacity;
+
+        if (mp_st->items_inuse % mp_st->chunk_capacity)
+            needed++;
+
+        excess = mp_st->chunks_inuse - needed;
     }
+
     storeAppendPrintf(e, "%4d\t %4d\t %4d\t %4d\t %.1f\t ",
-	mp_st->chunks_alloc, mp_st->chunks_inuse, mp_st->chunks_free, mp_st->chunks_partial,
-	xpercent(excess, needed));
-/*
- *  Fragmentation calculation:
- *    needed = inuse.level / chunk_capacity
- *    excess = used - needed
- *    fragmentation = excess / needed * 100%
- *
- *    Fragm = (alloced - (inuse / obj_ch) ) / alloced
- */
+                      mp_st->chunks_alloc, mp_st->chunks_inuse, mp_st->chunks_free, mp_st->chunks_partial,
+                      xpercent(excess, needed));
+    /*
+     *  Fragmentation calculation:
+     *    needed = inuse.level / chunk_capacity
+     *    excess = used - needed
+     *    fragmentation = excess / needed * 100%
+     *
+     *    Fragm = (alloced - (inuse / obj_ch) ) / alloced
+     */
 
     storeAppendPrintf(e,
-	"%d\t %d\t %d\t %.2f\t %.1f\t"	/* alloc */
-	"%d\t %d\t %d\t %.1f\t"	/* in use */
-	"%d\t %d\t %d\t"	/* idle */
-	"%.0f\t %.1f\t %.1f\t %.1f\n",	/* saved */
-    /* alloc */
-	mp_st->items_alloc,
-	toKB(mp_st->obj_size * pm->alloc.level),
-	toKB(mp_st->obj_size * pm->alloc.hwater_level),
-	(double) ((squid_curtime - pm->alloc.hwater_stamp) / 3600.),
-	xpercent(mp_st->obj_size * pm->alloc.level, AllMeter->alloc.level),
-    /* in use */
-	mp_st->items_inuse,
-	toKB(mp_st->obj_size * pm->inuse.level),
-	toKB(mp_st->obj_size * pm->inuse.hwater_level),
-	xpercent(pm->inuse.level, pm->alloc.level),
-    /* idle */
-	mp_st->items_idle,
-	toKB(mp_st->obj_size * pm->idle.level),
-	toKB(mp_st->obj_size * pm->idle.hwater_level),
-    /* saved */
-	pm->gb_saved.count,
-	xpercent(pm->gb_saved.count, AllMeter->gb_saved.count),
-	xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes),
-	xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat));
+                      "%d\t %d\t %d\t %.2f\t %.1f\t"	/* alloc */
+                      "%d\t %d\t %d\t %.1f\t"	/* in use */
+                      "%d\t %d\t %d\t"	/* idle */
+                      "%.0f\t %.1f\t %.1f\t %.1f\n",	/* saved */
+                      /* alloc */
+                      mp_st->items_alloc,
+                      toKB(mp_st->obj_size * pm->alloc.level),
+                      toKB(mp_st->obj_size * pm->alloc.hwater_level),
+                      (double) ((squid_curtime - pm->alloc.hwater_stamp) / 3600.),
+                      xpercent(mp_st->obj_size * pm->alloc.level, AllMeter->alloc.level),
+                      /* in use */
+                      mp_st->items_inuse,
+                      toKB(mp_st->obj_size * pm->inuse.level),
+                      toKB(mp_st->obj_size * pm->inuse.hwater_level),
+                      xpercent(pm->inuse.level, pm->alloc.level),
+                      /* idle */
+                      mp_st->items_idle,
+                      toKB(mp_st->obj_size * pm->idle.level),
+                      toKB(mp_st->obj_size * pm->idle.hwater_level),
+                      /* saved */
+                      pm->gb_saved.count,
+                      xpercent(pm->gb_saved.count, AllMeter->gb_saved.count),
+                      xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes),
+                      xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat));
     pm->gb_osaved.count = pm->gb_saved.count;
 }
 
@@ -580,23 +625,23 @@ Mem::Report(StoreEntry * e)
     storeAppendPrintf(e, "Current memory usage:\n");
     /* heading */
     storeAppendPrintf(e,
-	"Pool\t Obj Size\t"
-	"Chunks\t\t\t\t\t\t\t"
-	"Allocated\t\t\t\t\t"
-	"In Use\t\t\t\t"
-	"Idle\t\t\t"
-	"Allocations Saved\t\t\t"
-	"Hit Rate\t"
-	"\n"
-	" \t (bytes)\t"
-	"KB/ch\t obj/ch\t"
-	"(#)\t used\t free\t part\t %%Frag\t "
-	"(#)\t (KB)\t high (KB)\t high (hrs)\t %%Tot\t"
-	"(#)\t (KB)\t high (KB)\t %%alloc\t"
-	"(#)\t (KB)\t high (KB)\t"
-	"(#)\t %%cnt\t %%vol\t"
-	"(#) / sec\t"
-	"\n");
+                      "Pool\t Obj Size\t"
+                      "Chunks\t\t\t\t\t\t\t"
+                      "Allocated\t\t\t\t\t"
+                      "In Use\t\t\t\t"
+                      "Idle\t\t\t"
+                      "Allocations Saved\t\t\t"
+                      "Hit Rate\t"
+                      "\n"
+                      " \t (bytes)\t"
+                      "KB/ch\t obj/ch\t"
+                      "(#)\t used\t free\t part\t %%Frag\t "
+                      "(#)\t (KB)\t high (KB)\t high (hrs)\t %%Tot\t"
+                      "(#)\t (KB)\t high (KB)\t %%alloc\t"
+                      "(#)\t (KB)\t high (KB)\t"
+                      "(#)\t %%cnt\t %%vol\t"
+                      "(#) / sec\t"
+                      "\n");
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
 
@@ -605,15 +650,19 @@ Mem::Report(StoreEntry * e)
 
     /* main table */
     iter = memPoolIterate();
+
     while ((pool = memPoolIterateNext(iter))) {
-	memPoolGetStats(&mp_stats, pool);
-	if (!mp_stats.pool)	/* pool destroyed */
-	    continue;
-	if (mp_stats.pool->meter.gb_saved.count > 0)	/* this pool has been used */
-	    PoolReport(&mp_stats, mp_total.TheMeter, e);
-	else
-	    not_used++;
+        memPoolGetStats(&mp_stats, pool);
+
+        if (!mp_stats.pool)	/* pool destroyed */
+            continue;
+
+        if (mp_stats.pool->meter.gb_saved.count > 0)	/* this pool has been used */
+            PoolReport(&mp_stats, mp_total.TheMeter, e);
+        else
+            not_used++;
     }
+
     memPoolIterateDone(&iter);
 
     mp_stats.pool = NULL;
@@ -637,7 +686,7 @@ Mem::Report(StoreEntry * e)
     storeAppendPrintf(e, "Cumulative allocated volume: %s\n", double_to_str(buf, 64, mp_total.TheMeter->gb_saved.bytes));
     /* overhead */
     storeAppendPrintf(e, "Current overhead: %d bytes (%.3f%%)\n",
-	mp_total.tot_overhead, xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level));
+                      mp_total.tot_overhead, xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level));
     /* limits */
     storeAppendPrintf(e, "Idle pool limit: %.2f MB\n", toMB(mp_total.mem_idle_limit));
     /* limits */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaSTD.cc,v 1.1 2003/01/23 00:37:15 robertc Exp $
+ * $Id: StoreMetaSTD.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -45,8 +45,10 @@ StoreMetaSTD::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (StoreMetaSTD));
+
     if (!pool)
-	pool = memPoolCreate("StoreMetaSTD", sizeof (StoreMetaSTD));
+        pool = memPoolCreate("StoreMetaSTD", sizeof (StoreMetaSTD));
+
     return memPoolAlloc(pool);
 }
 

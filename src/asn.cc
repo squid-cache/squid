@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.89 2003/02/12 06:11:00 robertc Exp $
+ * $Id: asn.cc,v 1.90 2003/02/21 22:50:06 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -55,6 +55,7 @@ typedef u_char m_int[1 + sizeof(unsigned int)];
 /* END of definitions for radix tree entries */
 
 /* Head for ip to asn radix tree */
+
 struct squid_radix_node_head *AS_tree_head;
 
 /*
@@ -62,12 +63,15 @@ struct squid_radix_node_head *AS_tree_head;
  * an intlist but it's coded as a structure for future
  * enhancements (e.g. expires)
  */
-struct _as_info {
+
+struct _as_info
+{
     intlist *as_number;
     time_t expires;		/* NOTUSED */
 };
 
-struct _ASState {
+struct _ASState
+{
     StoreEntry *entry;
     store_client *sc;
     request_t *request;
@@ -79,10 +83,14 @@ struct _ASState {
 };
 
 typedef struct _ASState ASState;
+
 typedef struct _as_info as_info;
 
 /* entry into the radix tree */
-struct _rtentry {
+
+struct _rtentry
+{
+
     struct squid_radix_node e_nodes[2];
     as_info *e_info;
     m_int e_addr;
@@ -94,7 +102,9 @@ typedef struct _rtentry rtentry_t;
 static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
 static STCB asHandleReply;
+
 static int destroyRadixNode(struct squid_radix_node *rn, void *w);
+
 static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 static void asnAclInitialize(acl * acls);
 static void asStateFree(void *data);
@@ -104,9 +114,11 @@ static OBJH asnStats;
 /* PUBLIC */
 
 int
+
 asnMatchIp(void *data, struct in_addr addr)
 {
     unsigned long lh;
+
     struct squid_radix_node *rn;
     as_info *e;
     m_int m_addr;
@@ -116,26 +128,36 @@ asnMatchIp(void *data, struct in_addr addr)
     debug(53, 3) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
 
     if (AS_tree_head == NULL)
-	return 0;
+        return 0;
+
     if (addr.s_addr == no_addr.s_addr)
-	return 0;
+        return 0;
+
     if (addr.s_addr == any_addr.s_addr)
-	return 0;
+        return 0;
+
     store_m_int(lh, m_addr);
+
     rn = squid_rn_match(m_addr, AS_tree_head);
-    if (rn == NULL) {
-	debug(53, 3) ("asnMatchIp: Address not in as db.\n");
-	return 0;
+
+    if (rn == NULL)
+    {
+        debug(53, 3) ("asnMatchIp: Address not in as db.\n");
+        return 0;
     }
+
     debug(53, 3) ("asnMatchIp: Found in db!\n");
     e = ((rtentry_t *) rn)->e_info;
     assert(e);
+
     for (a = (intlist *) data; a; a = a->next)
-	for (b = e->as_number; b; b = b->next)
-	    if (a->i == b->i) {
-		debug(53, 5) ("asnMatchIp: Found a match!\n");
-		return 1;
-	    }
+        for (b = e->as_number; b; b = b->next)
+            if (a->i == b->i)
+            {
+                debug(53, 5) ("asnMatchIp: Found a match!\n");
+                return 1;
+            }
+
     debug(53, 5) ("asnMatchIp: AS not in as db.\n");
     return 0;
 }
@@ -145,10 +167,12 @@ asnAclInitialize(acl * acls)
 {
     acl *a;
     debug(53, 3) ("asnAclInitialize\n");
+
     for (a = acls; a; a = a->next) {
-	if (a->aclType() != ACL_DST_ASN && a->aclType() != ACL_SRC_ASN)
-	    continue;
-	a->startCache();
+        if (a->aclType() != ACL_DST_ASN && a->aclType() != ACL_SRC_ASN)
+            continue;
+
+        a->startCache();
     }
 }
 
@@ -156,8 +180,9 @@ void
 ACL::startCache()
 {
     assert (aclType() == ACL_DST_ASN || aclType() == ACL_SRC_ASN);
+
     for (intlist *i = (intlist *)data; i; i = i->next)
-	asnCacheStart(i->i);
+        asnCacheStart(i->i);
 }
 
 /* initialize the radix tree structure */
@@ -171,10 +196,14 @@ asnInit(void)
     static int inited = 0;
     squid_max_keylen = 40;
     CBDATA_INIT_TYPE(ASState);
+
     if (0 == inited++)
-	squid_rn_init();
+        squid_rn_init();
+
     squid_rn_inithead((void **) &AS_tree_head, 8);
+
     asnAclInitialize(Config.aclList);
+
     cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
 }
 
@@ -182,6 +211,7 @@ void
 asnFreeMemory(void)
 {
     squid_rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
+
     destroyRadixNode((struct squid_radix_node *) 0, (void *) AS_tree_head);
 }
 
@@ -210,23 +240,25 @@ asnCacheStart(int as)
     req = urlParse(METHOD_GET, asres);
     assert(NULL != req);
     asState->request = requestLink(req);
+
     if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
-	e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
-	asState->sc = storeClientListAdd(e, asState);
-	fwdStart(-1, e, asState->request);
+        e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
+        asState->sc = storeClientListAdd(e, asState);
+        fwdStart(-1, e, asState->request);
     } else {
-	storeLockObject(e);
-	asState->sc = storeClientListAdd(e, asState);
+        storeLockObject(e);
+        asState->sc = storeClientListAdd(e, asState);
     }
+
     asState->entry = e;
     asState->offset = 0;
     asState->reqofs = 0;
     StoreIOBuffer readBuffer (AS_REQBUF_SZ, asState->offset, asState->reqbuf);
     storeClientCopy(asState->sc,
-	e,
-	readBuffer,
-	asHandleReply,
-	asState);
+                    e,
+                    readBuffer,
+                    asHandleReply,
+                    asState);
 }
 
 static void
@@ -243,45 +275,52 @@ asHandleReply(void *data, StoreIOBuffer result)
     debug(53, 3) ("asHandleReply: buffer='%s'\n", buf);
 
     /* First figure out whether we should abort the request */
+
     if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
-	asStateFree(asState);
-	return;
+        asStateFree(asState);
+        return;
     }
+
     if (result.length == 0 && asState->dataRead) {
-	debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
-	asStateFree(asState);
-	return;
+        debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
+        asStateFree(asState);
+        return;
     } else if (result.flags.error) {
-	debug(53, 1) ("asHandleReply: Called with Error set and size=%u\n", (unsigned int) result.length);
-	asStateFree(asState);
-	return;
+        debug(53, 1) ("asHandleReply: Called with Error set and size=%u\n", (unsigned int) result.length);
+        asStateFree(asState);
+        return;
     } else if (HTTP_OK != e->getReply()->sline.status) {
-	debug(53, 1) ("WARNING: AS %d whois request failed\n",
-	    asState->as_number);
-	asStateFree(asState);
-	return;
+        debug(53, 1) ("WARNING: AS %d whois request failed\n",
+                      asState->as_number);
+        asStateFree(asState);
+        return;
     }
+
     /*
      * Next, attempt to parse our request
      * Remembering that the actual buffer size is retsize + reqofs!
      */
     s = buf;
+
     while (s - buf < (off_t)(result.length + asState->reqofs) && *s != '\0') {
-	while (*s && xisspace(*s))
-	    s++;
-	for (t = s; *t; t++) {
-	    if (xisspace(*t))
-		break;
-	}
-	if (*t == '\0') {
-	    /* oof, word should continue on next block */
-	    break;
-	}
-	*t = '\0';
-	debug(53, 3) ("asHandleReply: AS# %s (%d)\n", s, asState->as_number);
-	asnAddNet(s, asState->as_number);
-	s = t + 1;
-	asState->dataRead = 1;
+        while (*s && xisspace(*s))
+            s++;
+
+        for (t = s; *t; t++) {
+            if (xisspace(*t))
+                break;
+        }
+
+        if (*t == '\0') {
+            /* oof, word should continue on next block */
+            break;
+        }
+
+        *t = '\0';
+        debug(53, 3) ("asHandleReply: AS# %s (%d)\n", s, asState->as_number);
+        asnAddNet(s, asState->as_number);
+        s = t + 1;
+        asState->dataRead = 1;
     }
 
     /*
@@ -290,6 +329,7 @@ asHandleReply(void *data, StoreIOBuffer result)
      * around for the next request
      */
     leftoversz = (asState->reqofs + result.length) - (s - buf);
+
     assert(leftoversz >= 0);
 
     /*
@@ -302,29 +342,32 @@ asHandleReply(void *data, StoreIOBuffer result)
      * Next, update our offset and reqofs, and kick off a copy if required
      */
     asState->offset += result.length;
+
     asState->reqofs = leftoversz;
+
     debug(53, 3) ("asState->offset = %ld\n", (long int) asState->offset);
+
     if (e->store_status == STORE_PENDING) {
-	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
-	StoreIOBuffer tempBuffer (AS_REQBUF_SZ - asState->reqofs,
-				  asState->offset, 
-				  asState->reqbuf + asState->reqofs);
-	storeClientCopy(asState->sc,
-	    e,
-	    tempBuffer,
-	    asHandleReply,
-	    asState);
+        debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
+        StoreIOBuffer tempBuffer (AS_REQBUF_SZ - asState->reqofs,
+                                  asState->offset,
+                                  asState->reqbuf + asState->reqofs);
+        storeClientCopy(asState->sc,
+                        e,
+                        tempBuffer,
+                        asHandleReply,
+                        asState);
     } else {
-	StoreIOBuffer tempBuffer;
-	debug(53, 3) ("asHandleReply: store complete, but data recieved %s\n", storeUrl(e));
-	tempBuffer.offset = asState->offset;
-	tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
-	tempBuffer.data = asState->reqbuf + asState->reqofs;
-	storeClientCopy(asState->sc,
-	    e,
-	    tempBuffer,
-	    asHandleReply,
-	    asState);
+        StoreIOBuffer tempBuffer;
+        debug(53, 3) ("asHandleReply: store complete, but data recieved %s\n", storeUrl(e));
+        tempBuffer.offset = asState->offset;
+        tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
+        tempBuffer.data = asState->reqbuf + asState->reqofs;
+        storeClientCopy(asState->sc,
+                        e,
+                        tempBuffer,
+                        asHandleReply,
+                        asState);
     }
 }
 
@@ -347,86 +390,119 @@ static int
 asnAddNet(char *as_string, int as_number)
 {
     rtentry_t *e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
+
     struct squid_radix_node *rn;
     char dbg1[32], dbg2[32];
     intlist **Tail = NULL;
     intlist *q = NULL;
     as_info *asinfo = NULL;
+
     struct in_addr in_a, in_m;
     long mask, addr;
     char *t;
     int bitl;
 
     t = strchr(as_string, '/');
+
     if (t == NULL) {
-	debug(53, 3) ("asnAddNet: failed, invalid response from whois server.\n");
-	return 0;
+        debug(53, 3) ("asnAddNet: failed, invalid response from whois server.\n");
+        return 0;
     }
+
     *t = '\0';
     addr = inet_addr(as_string);
     bitl = atoi(t + 1);
+
     if (bitl < 0)
-	bitl = 0;
+        bitl = 0;
+
     if (bitl > 32)
-	bitl = 32;
+        bitl = 32;
+
     mask = bitl ? 0xfffffffful << (32 - bitl) : 0;
 
     in_a.s_addr = addr;
+
     in_m.s_addr = mask;
+
     xstrncpy(dbg1, inet_ntoa(in_a), 32);
+
     xstrncpy(dbg2, inet_ntoa(in_m), 32);
+
     addr = ntohl(addr);
+
     /*mask = ntohl(mask); */
     debug(53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
+
     memset(e, '\0', sizeof(rtentry_t));
+
     store_m_int(addr, e->e_addr);
+
     store_m_int(mask, e->e_mask);
+
     rn = squid_rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
+
     if (rn != NULL) {
-	asinfo = ((rtentry_t *) rn)->e_info;
-	if (intlistFind(asinfo->as_number, as_number)) {
-	    debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
-		dbg1, bitl, as_number);
-	} else {
-	    debug(53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
-	    for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next);
-	    q = (intlist *)xcalloc(1, sizeof(intlist));
-	    q->i = as_number;
-	    *(Tail) = q;
-	    e->e_info = asinfo;
-	}
+        asinfo = ((rtentry_t *) rn)->e_info;
+
+        if (intlistFind(asinfo->as_number, as_number)) {
+            debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
+                          dbg1, bitl, as_number);
+        } else {
+            debug(53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
+
+            for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next)
+
+                ;
+            q = (intlist *)xcalloc(1, sizeof(intlist));
+
+            q->i = as_number;
+
+            *(Tail) = q;
+
+            e->e_info = asinfo;
+        }
     } else {
-	q = (intlist *)xcalloc(1, sizeof(intlist));
-	q->i = as_number;
-	asinfo = (as_info *)xmalloc(sizeof(asinfo));
-	asinfo->as_number = q;
-	rn = squid_rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
-	rn = squid_rn_match(e->e_addr, AS_tree_head);
-	assert(rn != NULL);
-	e->e_info = asinfo;
+        q = (intlist *)xcalloc(1, sizeof(intlist));
+        q->i = as_number;
+        asinfo = (as_info *)xmalloc(sizeof(asinfo));
+        asinfo->as_number = q;
+        rn = squid_rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
+        rn = squid_rn_match(e->e_addr, AS_tree_head);
+        assert(rn != NULL);
+        e->e_info = asinfo;
     }
+
     if (rn == 0) {
-	xfree(e);
-	debug(53, 3) ("asnAddNet: Could not add entry.\n");
-	return 0;
+        xfree(e);
+        debug(53, 3) ("asnAddNet: Could not add entry.\n");
+        return 0;
     }
+
     e->e_info = asinfo;
     return 1;
 }
 
 static int
+
 destroyRadixNode(struct squid_radix_node *rn, void *w)
 {
+
     struct squid_radix_node_head *rnh = (struct squid_radix_node_head *) w;
 
-    if (rn && !(rn->rn_flags & RNF_ROOT)) {
-	rtentry_t *e = (rtentry_t *) rn;
-	rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
-	if (rn == 0)
-	    debug(53, 3) ("destroyRadixNode: internal screwup\n");
-	destroyRadixNodeInfo(e->e_info);
-	xfree(rn);
+    if (rn && !(rn->rn_flags & RNF_ROOT))
+    {
+        rtentry_t *e = (rtentry_t *) rn;
+        rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
+
+        if (rn == 0)
+            debug(53, 3) ("destroyRadixNode: internal screwup\n");
+
+        destroyRadixNodeInfo(e->e_info);
+
+        xfree(rn);
     }
+
     return 1;
 }
 
@@ -435,11 +511,13 @@ destroyRadixNodeInfo(as_info * e_info)
 {
     intlist *prev = NULL;
     intlist *data = e_info->as_number;
+
     while (data) {
-	prev = data;
-	data = data->next;
-	xfree(prev);
+        prev = data;
+        data = data->next;
+        xfree(prev);
     }
+
     xfree(data);
 }
 
@@ -447,34 +525,43 @@ static int
 mask_len(u_long mask)
 {
     int len = 32;
+
     if (mask == 0)
-	return 0;
+        return 0;
+
     while ((mask & 1) == 0) {
-	len--;
-	mask >>= 1;
+        len--;
+        mask >>= 1;
     }
+
     return len;
 }
 
 static int
+
 printRadixNode(struct squid_radix_node *rn, void *_sentry)
 {
     StoreEntry *sentry = (StoreEntry *)_sentry;
     rtentry_t *e = (rtentry_t *) rn;
     intlist *q;
     as_info *asinfo;
+
     struct in_addr addr;
+
     struct in_addr mask;
     assert(e);
     assert(e->e_info);
     (void) get_m_int(addr.s_addr, e->e_addr);
     (void) get_m_int(mask.s_addr, e->e_mask);
     storeAppendPrintf(sentry, "%15s/%d\t",
-	inet_ntoa(addr), mask_len(ntohl(mask.s_addr)));
+                      inet_ntoa(addr), mask_len(ntohl(mask.s_addr)));
     asinfo = e->e_info;
     assert(asinfo->as_number);
+
     for (q = asinfo->as_number; q; q = q->next)
-	storeAppendPrintf(sentry, " %d", q->i);
+        storeAppendPrintf(sentry, " %d", q->i);
+
     storeAppendPrintf(sentry, "\n");
+
     return 0;
 }

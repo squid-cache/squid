@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.6 2003/02/13 10:28:01 robertc Exp $
+ * $Id: authenticate.h,v 1.7 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,30 +36,36 @@
 
 class AuthUser;
 
-struct AuthUserHashPointer : public hash_link {
+struct AuthUserHashPointer : public hash_link
+{
     /* first two items must be same as hash_link */
+
 public:
     static void removeFromCache (void *anAuthUserHashPointer);
-    
+
     AuthUserHashPointer (AuthUser *);
-    
+
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     AuthUser *user() const;
+
 private:
     static MemPool *pool;
 
     AuthUser *auth_user;
 };
 
-struct AuthUserIP {
+struct AuthUserIP
+{
     dlink_node node;
     /* IP addr this user authenticated from */
+
     struct in_addr ipaddr;
     time_t ip_expiretime;
 };
 
-struct AuthUser {
+struct AuthUser
+{
     /* extra fields for proxy_auth */
     /* this determines what scheme owns the user data. */
     auth_type_t auth_type;
@@ -81,30 +87,36 @@ struct AuthUser {
     /* the auth_user_request structures that link to this. Yes it could be a splaytree
      * but how many requests will a single username have in parallel? */
     dlink_list requests;
+
 public:
     static void cacheInit ();
     static void CachedACLsReset();
-    
+
     void absorb(auth_user_t *from);
     AuthUser (const char *);
     ~AuthUser ();
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     char const *username() const;
+
 private:
     static void cacheCleanup (void *unused);
     static MemPool *pool;
 };
 
-class AuthUserRequest {
-  public:
+class AuthUserRequest
+{
+
+public:
     /* this is the object passed around by client_side and acl functions */
     /* it has request specific data, and links to user specific data */
     /* the user */
     auth_user_t *auth_user;
     /* any scheme specific request related data */
     void *scheme_data;
+
 public:
+
     static auth_acl_t tryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
     static void addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal);
 
@@ -115,15 +127,24 @@ public:
     void setDenyMessage (char const *);
     char const * getDenyMessage ();
     size_t refCount() const;
-    void lock ();
+
+    void lock ()
+
+        ;
     void unlock ();
+
     char const *username() const;
+
 private:
+
     static auth_acl_t authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr);
+
     static auth_user_request_t *createAuthUser (const char *proxy_auth);
+
     static MemPool *pool;
 
     AuthUserRequest();
+
     void decodeAuth (const char *proxy_auth);
 
     /* return a message on the 407 error pages */
@@ -131,8 +152,8 @@ private:
 
     /* how many 'processes' are working on this data */
     size_t references;
-    
-    /* We only attempt authentication once per http request. This 
+
+    /* We only attempt authentication once per http request. This
      * is to allow multiple auth acl references from different _access areas
      * when using connection based authentication
      */
@@ -163,47 +184,51 @@ typedef void AUTHSSTART(auth_user_request_t *, RH *, void *);
 typedef void AUTHSSTATS(StoreEntry *);
 typedef const char *AUTHSCONNLASTHEADER(auth_user_request_t *);
 
-extern "C" {
-/* subsumed by the C++ interface */
-extern void authenticateAuthUserMerge(auth_user_t *, auth_user_t *);
-extern auth_user_t *authenticateAuthUserNew(const char *);
+extern "C"
+{
+    /* subsumed by the C++ interface */
+    extern void authenticateAuthUserMerge(auth_user_t *, auth_user_t *);
+    extern auth_user_t *authenticateAuthUserNew(const char *);
 
-/* AuthUserRequest */
-extern void authenticateStart(auth_user_request_t *, RH *, void *);
-extern auth_acl_t authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
-extern void authenticateSetDenyMessage (auth_user_request_t *, char const *);
-extern size_t authenticateRequestRefCount (auth_user_request_t *);
-extern char const *authenticateAuthUserRequestMessage(auth_user_request_t *);
+    /* AuthUserRequest */
+    extern void authenticateStart(auth_user_request_t *, RH *, void *);
 
-extern int authenticateAuthSchemeId(const char *typestr);
-extern void authenticateSchemeInit(void);
-extern void authenticateInit(authConfig *); 
-extern void authenticateShutdown(void);
-extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, request_t *, int, int);
-extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, request_t *, int);
-extern void authenticateAuthUserUnlock(auth_user_t * auth_user);
-extern void authenticateAuthUserLock(auth_user_t * auth_user);
-extern void authenticateAuthUserRequestUnlock(auth_user_request_t *);
-extern void authenticateAuthUserRequestLock(auth_user_request_t *);
-extern int authenticateAuthUserInuse(auth_user_t * auth_user);
-extern void authenticateAuthUserRequestRemoveIp(auth_user_request_t *, struct in_addr);
-extern void authenticateAuthUserRequestClearIp(auth_user_request_t *);
-extern size_t authenticateAuthUserRequestIPCount(auth_user_request_t *);
-extern int authenticateDirection(auth_user_request_t *);
-extern void authenticateFreeProxyAuthUserACLResults(void *data);
-extern int authenticateActiveSchemeCount(void);
-extern int authenticateSchemeCount(void);
-extern void authenticateUserNameCacheAdd(auth_user_t * auth_user);
-extern int authenticateCheckAuthUserIP(struct in_addr request_src_addr, auth_user_request_t * auth_user);
-extern int authenticateUserAuthenticated(auth_user_request_t *);
-extern void authenticateUserCacheRestart(void);
-extern char const *authenticateUserRequestUsername(auth_user_request_t *);
-extern int authenticateValidateUser(auth_user_request_t *);
-extern void authenticateOnCloseConnection(ConnStateData * conn);
-extern void authSchemeAdd(const char *type, AUTHSSETUP * setup);
+    extern auth_acl_t authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
+    extern void authenticateSetDenyMessage (auth_user_request_t *, char const *);
+    extern size_t authenticateRequestRefCount (auth_user_request_t *);
+    extern char const *authenticateAuthUserRequestMessage(auth_user_request_t *);
 
-/* AuthUserHashPointer */
-extern auth_user_t* authUserHashPointerUser(auth_user_hash_pointer *);
+    extern int authenticateAuthSchemeId(const char *typestr);
+    extern void authenticateSchemeInit(void);
+    extern void authenticateInit(authConfig *);
+    extern void authenticateShutdown(void);
+    extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, request_t *, int, int);
+    extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, request_t *, int);
+    extern void authenticateAuthUserUnlock(auth_user_t * auth_user);
+    extern void authenticateAuthUserLock(auth_user_t * auth_user);
+    extern void authenticateAuthUserRequestUnlock(auth_user_request_t *);
+    extern void authenticateAuthUserRequestLock(auth_user_request_t *);
+    extern int authenticateAuthUserInuse(auth_user_t * auth_user);
+
+    extern void authenticateAuthUserRequestRemoveIp(auth_user_request_t *, struct in_addr);
+    extern void authenticateAuthUserRequestClearIp(auth_user_request_t *);
+    extern size_t authenticateAuthUserRequestIPCount(auth_user_request_t *);
+    extern int authenticateDirection(auth_user_request_t *);
+    extern void authenticateFreeProxyAuthUserACLResults(void *data);
+    extern int authenticateActiveSchemeCount(void);
+    extern int authenticateSchemeCount(void);
+    extern void authenticateUserNameCacheAdd(auth_user_t * auth_user);
+
+    extern int authenticateCheckAuthUserIP(struct in_addr request_src_addr, auth_user_request_t * auth_user);
+    extern int authenticateUserAuthenticated(auth_user_request_t *);
+    extern void authenticateUserCacheRestart(void);
+    extern char const *authenticateUserRequestUsername(auth_user_request_t *);
+    extern int authenticateValidateUser(auth_user_request_t *);
+    extern void authenticateOnCloseConnection(ConnStateData * conn);
+    extern void authSchemeAdd(const char *type, AUTHSSETUP * setup);
+
+    /* AuthUserHashPointer */
+    extern auth_user_t* authUserHashPointerUser(auth_user_hash_pointer *);
 
 }
 
@@ -214,7 +239,8 @@ SQUIDCEXTERN void authSchemeSetup(void);
  * This defines an auth scheme module
  */
 
-struct _authscheme_entry {
+struct _authscheme_entry
+{
     const char *typestr;
     AUTHSACTIVE *Active;
     AUTHSADDHEADER *AddHeader;
@@ -238,13 +264,15 @@ struct _authscheme_entry {
     AUTHSSTART *authStart;
     AUTHSSTATS *authStats;
 };
-    
-/*  
+
+/*
  * This is a configured auth scheme
  */
-    
+
 /* private data types */
-struct _authScheme {
+
+struct _authScheme
+{
     /* pointer to the authscheme_list's string entry */
     const char *typestr;
     /* the scheme id in the authscheme_list */

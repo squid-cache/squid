@@ -39,8 +39,10 @@
 #include "ACL.h"
 #include "ACLData.h"
 
-class ACLUserData : public ACLData<char const *> {
-  public:
+class ACLUserData : public ACLData<char const *>
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -50,13 +52,22 @@ class ACLUserData : public ACLData<char const *> {
     wordlist *dump();
     void parse();
     virtual ACLData<char const *> *clone() const;
-    
+
     SplayNode<char *> *names;
-    struct {
-	unsigned int case_insensitive:1;
-	unsigned int required:1;
-    } flags;
-  private:
+
+    struct
+    {
+
+unsigned int case_insensitive:
+        1;
+
+unsigned int required:
+        1;
+    }
+
+    flags;
+
+private:
     static MemPool *Pool;
 };
 

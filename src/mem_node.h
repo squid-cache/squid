@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.1 2003/01/23 00:37:23 robertc Exp $
+ * $Id: mem_node.h,v 1.2 2003/02/21 22:50:10 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,7 +35,10 @@
 #define SQUID_MEM_NODE_H
 
 #include "StoreIOBuffer.h"
-class mem_node {
+
+class mem_node
+{
+
 public:
     static size_t InUseCount();
     static unsigned long store_mem_size;	/* 0 */
@@ -45,7 +48,7 @@ public:
     mem_node(off_t);
     ~mem_node();
     size_t space() const;
-    size_t start() const;  
+    size_t start() const;
     size_t end() const;
     bool contains (size_t const &location) const;
     bool canAccept (size_t const &location) const;
@@ -54,6 +57,7 @@ public:
     mem_node *next;
     /* Private */
     char data[SM_PAGE_SIZE];
+
 private:
     static MemPool *pool;
 };

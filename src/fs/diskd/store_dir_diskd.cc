@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.75 2003/01/23 00:38:15 robertc Exp $
+ * $Id: store_dir_diskd.cc,v 1.76 2003/02/21 22:50:40 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -72,15 +72,19 @@ DiskdSwapDir::init()
     ikey = (getpid() << 10) + (index << 2);
     ikey &= 0x7fffffff;
     DIO->smsgid = msgget((key_t) ikey, 0700 | IPC_CREAT);
+
     if (DIO->smsgid < 0) {
-	debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
-	fatal("msgget failed");
+        debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
+        fatal("msgget failed");
     }
+
     DIO->rmsgid = msgget((key_t) (ikey + 1), 0700 | IPC_CREAT);
+
     if (DIO->rmsgid < 0) {
-	debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
-	fatal("msgget failed");
+        debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
+        fatal("msgget failed");
     }
+
     DIO->shm.init(ikey, DIO->magic2);
     snprintf(skey1, 32, "%d", ikey);
     snprintf(skey2, 32, "%d", ikey + 1);
@@ -91,21 +95,26 @@ DiskdSwapDir::init()
     args[3] = skey3;
     args[4] = NULL;
     x = ipcCreate(IPC_STREAM,
-	Config.Program.diskd,
-	args,
-	"diskd",
-	&rfd,
-	&DIO->wfd);
+                  Config.Program.diskd,
+                  args,
+                  "diskd",
+                  &rfd,
+                  &DIO->wfd);
+
     if (x < 0)
-	fatalf("execl: %s", Config.Program.diskd);
+        fatalf("execl: %s", Config.Program.diskd);
+
     if (rfd != DIO->wfd)
-	comm_close(rfd);
+        comm_close(rfd);
+
     fd_note(DIO->wfd, "squid -> diskd");
+
     commSetTimeout(DIO->wfd, -1, NULL, NULL);
+
     commSetNonBlocking(DIO->wfd);
-    
+
     UFSSwapDir::init();
-    
+
     comm_quick_poll_required();
 }
 
@@ -122,17 +131,17 @@ storeDiskdStats(StoreEntry * sentry)
     diskd_stats.max_away = diskd_stats.max_shmuse = 0;
     storeAppendPrintf(sentry, "\n             OPS SUCCESS    FAIL\n");
     storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
-	"open", diskd_stats.open.ops, diskd_stats.open.success, diskd_stats.open.fail);
+                      "open", diskd_stats.open.ops, diskd_stats.open.success, diskd_stats.open.fail);
     storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
-	"create", diskd_stats.create.ops, diskd_stats.create.success, diskd_stats.create.fail);
+                      "create", diskd_stats.create.ops, diskd_stats.create.success, diskd_stats.create.fail);
     storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
-	"close", diskd_stats.close.ops, diskd_stats.close.success, diskd_stats.close.fail);
+                      "close", diskd_stats.close.ops, diskd_stats.close.success, diskd_stats.close.fail);
     storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
-	"unlink", diskd_stats.unlink.ops, diskd_stats.unlink.success, diskd_stats.unlink.fail);
+                      "unlink", diskd_stats.unlink.ops, diskd_stats.unlink.success, diskd_stats.unlink.fail);
     storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
-	"read", diskd_stats.read.ops, diskd_stats.read.success, diskd_stats.read.fail);
+                      "read", diskd_stats.read.ops, diskd_stats.read.success, diskd_stats.read.fail);
     storeAppendPrintf(sentry, "%7s %7d %7d %7d\n",
-	"write", diskd_stats.write.ops, diskd_stats.write.success, diskd_stats.write.fail);
+                      "write", diskd_stats.write.ops, diskd_stats.write.success, diskd_stats.write.fail);
 }
 
 /*
@@ -146,13 +155,15 @@ DiskdSwapDir::sync()
 {
     static time_t lastmsg = 0;
     DiskdIO *DIO = dynamic_cast<DiskdIO *>(IO);
+
     while (DIO->away > 0) {
-	if (squid_curtime > lastmsg) {
-	    debug(47, 1) ("storeDiskdDirSync: %d messages away\n",
-		DIO->away);
-	    lastmsg = squid_curtime;
-	}
-	callback();
+        if (squid_curtime > lastmsg) {
+            debug(47, 1) ("storeDiskdDirSync: %d messages away\n",
+                          DIO->away);
+            lastmsg = squid_curtime;
+        }
+
+        callback();
     }
 }
 
@@ -172,34 +183,42 @@ DiskdSwapDir::callback()
     int retval = 0;
 
     DiskdIO *DIO = dynamic_cast<DiskdIO *>(IO);
+
     if (DIO->away >= DIO->magic2) {
-	diskd_stats.block_queue_len++;
-	retval = 1;		/* We might not have anything to do, but our queue
-				 * is full.. */
+        diskd_stats.block_queue_len++;
+        retval = 1;		/* We might not have anything to do, but our queue
+        				                				 * is full.. */
     }
+
     if (diskd_stats.sent_count - diskd_stats.recv_count >
-	diskd_stats.max_away) {
-	diskd_stats.max_away = diskd_stats.sent_count - diskd_stats.recv_count;
+            diskd_stats.max_away) {
+        diskd_stats.max_away = diskd_stats.sent_count - diskd_stats.recv_count;
     }
+
     while (1) {
 #ifdef	ALWAYS_ZERO_BUFFERS
-	memset(&M, '\0', sizeof(M));
+        memset(&M, '\0', sizeof(M));
 #endif
-	x = msgrcv(DIO->rmsgid, &M, msg_snd_rcv_sz, 0, IPC_NOWAIT);
-	if (x < 0)
-	    break;
-	else if (x != msg_snd_rcv_sz) {
-	    debug(47, 1) ("storeDiskdDirCallback: msgget returns %d\n",
-		x);
-	    break;
-	}
-	diskd_stats.recv_count++;
-	--DIO->away;
-	storeDiskdHandle(&M);
-	retval = 1;		/* Return that we've actually done some work */
-	if (M.shm_offset > -1)
-	    DIO->shm.put ((off_t) M.shm_offset);
+
+        x = msgrcv(DIO->rmsgid, &M, msg_snd_rcv_sz, 0, IPC_NOWAIT);
+
+        if (x < 0)
+            break;
+        else if (x != msg_snd_rcv_sz) {
+            debug(47, 1) ("storeDiskdDirCallback: msgget returns %d\n",
+                          x);
+            break;
+        }
+
+        diskd_stats.recv_count++;
+        --DIO->away;
+        storeDiskdHandle(&M);
+        retval = 1;		/* Return that we've actually done some work */
+
+        if (M.shm_offset > -1)
+            DIO->shm.put ((off_t) M.shm_offset);
     }
+
     return retval;
 }
 
@@ -214,7 +233,8 @@ int
 DiskdSwapDir::canStore(StoreEntry const &e)const
 {
     if (IO->shedLoad())
-	return -1;
+        return -1;
+
     return IO->load();
 }
 
@@ -224,11 +244,13 @@ DiskdSwapDir::unlinkFile(char const *path)
 #if USE_UNLINKD
     unlinkdUnlink(path);
 #elif USE_TRUNCATE
+
     truncate(path, 0);
 #else
+
     unlink(path);
 #endif
-		
+
 }
 
 /* ========== LOCAL FUNCTIONS ABOVE, GLOBAL FUNCTIONS BELOW ========== */
@@ -247,23 +269,26 @@ storeDiskdDirParseQ1(SwapDir * sd, const char *name, const char *value, int reco
     DiskdIO *IO = dynamic_cast<DiskdIO *>(((DiskdSwapDir *)sd)->IO);
     int old_magic1 = IO->magic1;
     IO->magic1 = atoi(value);
+
     if (!reconfiguring)
-	return;
+        return;
+
     if (old_magic1 < IO->magic1) {
-       /*
-	* This is because shm.nbufs is computed at startup, when
-	* we call shmget().  We can't increase the Q1/Q2 parameters
-	* beyond their initial values because then we might have
-	* more "Q2 messages" than shared memory chunks, and this
-	* will cause an assertion in storeDiskdShmGet().
-	*/
-       debug(3, 1) ("WARNING: cannot increase cache_dir '%s' Q1 value while Squid is running.\n", sd->path);
-       IO->magic1 = old_magic1;
-       return;
+        /*
+        * This is because shm.nbufs is computed at startup, when
+        * we call shmget().  We can't increase the Q1/Q2 parameters
+        * beyond their initial values because then we might have
+        * more "Q2 messages" than shared memory chunks, and this
+        * will cause an assertion in storeDiskdShmGet().
+        */
+        debug(3, 1) ("WARNING: cannot increase cache_dir '%s' Q1 value while Squid is running.\n", sd->path);
+        IO->magic1 = old_magic1;
+        return;
     }
+
     if (old_magic1 != IO->magic1)
-	debug(3, 1) ("cache_dir '%s' new Q1 value '%d'\n",
-	    sd->path, IO->magic1);
+        debug(3, 1) ("cache_dir '%s' new Q1 value '%d'\n",
+                     sd->path, IO->magic1);
 }
 
 static void
@@ -280,17 +305,20 @@ storeDiskdDirParseQ2(SwapDir * sd, const char *name, const char *value, int reco
     assert (IO);
     int old_magic2 = IO->magic2;
     IO->magic2 = atoi(value);
+
     if (!reconfiguring)
-       return;
+        return;
+
     if (old_magic2 < IO->magic2) {
-       /* See comments in Q1 function above */
-       debug(3, 1) ("WARNING: cannot increase cache_dir '%s' Q2 value while Squid is running.\n", sd->path);
-       IO->magic2 = old_magic2;
-       return;
+        /* See comments in Q1 function above */
+        debug(3, 1) ("WARNING: cannot increase cache_dir '%s' Q2 value while Squid is running.\n", sd->path);
+        IO->magic2 = old_magic2;
+        return;
     }
+
     if (old_magic2 != IO->magic2)
-	debug(3, 1) ("cache_dir '%s' new Q2 value '%d'\n",
-	    sd->path, IO->magic2);
+        debug(3, 1) ("cache_dir '%s' new Q2 value '%d'\n",
+                     sd->path, IO->magic2);
 }
 
 static void
@@ -301,15 +329,15 @@ storeDiskdDirDumpQ2(StoreEntry * e, const char *option, SwapDir const * sd)
 }
 
 struct cache_dir_option options[] =
-{
+    {
 #if NOT_YET
-    {"L1", storeDiskdDirParseL1, storeDiskdDirDumpL1},
-    {"L2", storeDiskdDirParseL2, storeDiskdDirDumpL2},
+        {"L1", storeDiskdDirParseL1, storeDiskdDirDumpL1},
+        {"L2", storeDiskdDirParseL2, storeDiskdDirDumpL2},
 #endif
-    {"Q1", storeDiskdDirParseQ1, storeDiskdDirDumpQ1},
-    {"Q2", storeDiskdDirParseQ2, storeDiskdDirDumpQ2},
-    {NULL, NULL}
-};
+        {"Q1", storeDiskdDirParseQ1, storeDiskdDirDumpQ1},
+        {"Q2", storeDiskdDirParseQ2, storeDiskdDirDumpQ2},
+        {NULL, NULL}
+    };
 
 /*
  * storeDiskdDirReconfigure

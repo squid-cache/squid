@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.37 2003/01/23 00:37:22 robertc Exp $
+ * $Id: icp_v3.cc,v 1.38 2003/02/21 22:50:09 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -38,95 +38,124 @@
 #include "ICP.h"
 #include "HttpRequest.h"
 
-class ICP3State : public ICPState, public StoreClient {
+class ICP3State : public ICPState, public StoreClient
+{
+
 public:
     ICP3State(icp_common_t &aHeader):ICPState(aHeader){}
+
     ~ICP3State();
     void created (StoreEntry *newEntry);
 };
 
 static void
+
 doV3Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
 {
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
     request_t *icp_request = icpGetRequest (url, header.reqnum, fd, &from);
+
     if (!icp_request)
-	return;
-    if (!icpAccessAllowed(&from, icp_request)) {
-	icpDenyAccess (&from, url, header.reqnum, fd);
-	requestDestroy(icp_request);
-	return;
+        return;
+
+    if (!icpAccessAllowed(&from, icp_request))
+    {
+        icpDenyAccess (&from, url, header.reqnum, fd);
+        requestDestroy(icp_request);
+        return;
     }
+
     /* The peer is allowed to use this cache */
     ICP3State *state = new ICP3State (header);
+
     state->request = icp_request;
+
     state->fd = fd;
+
     state->from = from;
+
     state->url = xstrdup (url);
+
     StoreEntry::getPublic (state, url, METHOD_GET);
 }
 
 ICP3State::~ICP3State ()
-{
-}
+{}
 
 void
 ICP3State::created (StoreEntry *newEntry)
 {
     StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
     debug(12, 5) ("icpHandleIcpV3: OPCODE %s\n",
-	icp_opcode_str[header.opcode]);
+                  icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
+
     if (icpCheckUdpHit(entry, request)) {
-	codeToSend = ICP_HIT;
+        codeToSend = ICP_HIT;
     } else if (icpGetCommonOpcode() == ICP_ERR)
-	codeToSend = ICP_MISS;
+        codeToSend = ICP_MISS;
     else
-	codeToSend = icpGetCommonOpcode();
+        codeToSend = icpGetCommonOpcode();
+
     icpCreateAndSend (codeToSend, 0, url, header.reqnum, 0, fd, &from);
+
     delete this;
 }
 
 /* Currently Harvest cached-2.x uses ICP_VERSION_3 */
 void
+
 icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 {
-    if (len <= 0) {
-	debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
-	return;
+    if (len <= 0)
+    {
+        debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
+        return;
     }
+
     icp_common_t header (buf, len);
     /*
      * Length field should match the number of bytes read
      */
-    if (len != header.length) {
-	debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
-	return;
+
+    if (len != header.length)
+    {
+        debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
+        return;
     }
-    switch (header.opcode) {
+
+    switch (header.opcode)
+    {
+
     case ICP_QUERY:
-	doV3Query(fd, from,buf, header);
-	break;
+        doV3Query(fd, from,buf, header);
+        break;
 
     case ICP_HIT:
 #if ALLOW_SOURCE_PING
+
     case ICP_SECHO:
 #endif
+
     case ICP_DECHO:
+
     case ICP_MISS:
+
     case ICP_DENIED:
+
     case ICP_MISS_NOFETCH:
-	header.handleReply(buf, &from);
-	break;
+        header.handleReply(buf, &from);
+        break;
 
     case ICP_INVALID:
+
     case ICP_ERR:
-	break;
+        break;
 
     default:
-	debug(12, 0) ("icpHandleIcpV3: UNKNOWN OPCODE: %d from %s\n",
-	    header.opcode, inet_ntoa(from.sin_addr));
-	break;
+        debug(12, 0) ("icpHandleIcpV3: UNKNOWN OPCODE: %d from %s\n",
+                      header.opcode, inet_ntoa(from.sin_addr));
+        break;
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.6 2003/02/21 12:02:30 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.7 2003/02/21 22:50:04 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,8 +36,10 @@
 
 #include "typedefs.h"
 
-class ACLChecklist {
-  public:
+class ACLChecklist
+{
+
+public:
 
     /* State class.
      * This abstract class defines the behaviour of
@@ -52,22 +54,28 @@ class ACLChecklist {
      * refcounted objects.
      */
 
-    class AsyncState {
-      public:
-	virtual void checkForAsync(ACLChecklist *) const = 0;
-      protected:
-	void changeState (ACLChecklist *, AsyncState *) const;
+    class AsyncState
+    {
+
+    public:
+        virtual void checkForAsync(ACLChecklist *) const = 0;
+
+    protected:
+        void changeState (ACLChecklist *, AsyncState *) const;
     };
 
-    class NullState : public AsyncState {
-      public:
-	static NullState *Instance();
-	virtual void checkForAsync(ACLChecklist *) const;
-      private:
-	static NullState _instance;
+class NullState : public AsyncState
+    {
+
+    public:
+        static NullState *Instance();
+        virtual void checkForAsync(ACLChecklist *) const;
+
+    private:
+        static NullState _instance;
     };
-    
-    
+
+
     void *operator new(size_t);
     void operator delete(void *);
     void deleteSelf() const;
@@ -96,10 +104,13 @@ class ACLChecklist {
     void checkForAsync();
     void changeState (AsyncState *);
     AsyncState *asyncState() const;
-    
+
     const acl_access *accessList;
+
     struct in_addr src_addr;
+
     struct in_addr dst_addr;
+
     struct in_addr my_addr;
     unsigned short my_port;
     request_t *request;
@@ -109,8 +120,10 @@ class ACLChecklist {
     auth_user_request_t *auth_user_request;
     acl_lookup_state state[ACL_ENUM_MAX];
 #if SQUID_SNMP
+
     char *snmp_community;
 #endif
+
     PF *callback;
     void *callback_data;
     external_acl_entry *extacl_entry;
@@ -118,6 +131,7 @@ class ACLChecklist {
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;
     void markSourceDomainChecked();
+
 private:
     CBDATA_CLASS(ACLChecklist);
     ConnStateData *conn_;	/* hack for ident and NTLM */
@@ -133,8 +147,8 @@ private:
 };
 
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
-    request_t *,
-    const char *ident);
+        request_t *,
+        const char *ident);
 SQUIDCEXTERN int aclCheckFast(const acl_access *A, ACLChecklist *);
 
 #endif /* SQUID_ACLCHECKLIST_H */

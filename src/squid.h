@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.229 2003/01/23 00:37:25 robertc Exp $
+ * $Id: squid.h,v 1.230 2003/02/21 22:50:10 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -248,8 +248,12 @@
  * source code cleaner, so we don't need lots of #ifdefs in other
  * places
  */
-struct rusage {
+
+struct rusage
+{
+
     struct timeval ru_stime;
+
     struct timeval ru_utime;
     int ru_maxrss;
     int ru_majflt;
@@ -306,11 +310,13 @@ struct rusage {
 
 #ifdef USE_GNUREGEX
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 #include "GNUregex.h"
 #ifdef __cplusplus
 }
+
 #endif
 #elif HAVE_REGEX_H
 #include <regex.h>
@@ -396,15 +402,15 @@ extern "C" {
 #define SQUID_NONBLOCK O_NDELAY
 #elif defined(O_NONBLOCK)
 /*
- * We used to assume O_NONBLOCK was broken on Solaris, but evidence
- * now indicates that its fine on Solaris 8, and in fact required for
- * properly detecting EOF on FIFOs.  So now we assume that if 
- * its defined, it works correctly on all operating systems.
- */
+* We used to assume O_NONBLOCK was broken on Solaris, but evidence
+* now indicates that its fine on Solaris 8, and in fact required for
+* properly detecting EOF on FIFOs.  So now we assume that if
+* its defined, it works correctly on all operating systems.
+*/
 #define SQUID_NONBLOCK O_NONBLOCK
 /*
- * O_NDELAY is our fallback.
- */
+* O_NDELAY is our fallback.
+*/
 #else
 #define SQUID_NONBLOCK O_NDELAY
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.2 2003/02/06 09:57:36 robertc Exp $
+ * $Id: DelayVector.h,v 1.3 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +38,9 @@
 
 #include "CompositePoolNode.h"
 
-class DelayVector : public CompositePoolNode{
+class DelayVector : public CompositePoolNode
+{
+
 public:
     typedef RefCount<DelayVector> Pointer;
     void *operator new(size_t);
@@ -49,24 +51,32 @@ public:
     virtual void dump(StoreEntry *entry) const;
     virtual void update(int incr);
     virtual void parse();
+
     virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
     void push_back (CompositePoolNode::Pointer);
+
 private:
-    class Id:public DelayIdComposite {
-      public:
-	void *operator new(size_t);
-	void operator delete (void *);
-	virtual void deleteSelf() const;
-	Id (DelayVector::Pointer,struct in_addr &src_addr, AuthUserRequest *);
-	~Id();
-	virtual int bytesWanted (int min, int max) const;
-	virtual void bytesIn(int qty);
-      private:
-	DelayVector::Pointer theVector;
-	Vector<DelayIdComposite::Pointer> ids;
-	typedef Vector<DelayIdComposite::Pointer>::iterator iterator;
-	typedef Vector<DelayIdComposite::Pointer>::const_iterator const_iterator;
+
+class Id:public DelayIdComposite
+    {
+
+    public:
+        void *operator new(size_t);
+        void operator delete (void *);
+        virtual void deleteSelf() const;
+
+        Id (DelayVector::Pointer,struct in_addr &src_addr, AuthUserRequest *);
+        ~Id();
+        virtual int bytesWanted (int min, int max) const;
+        virtual void bytesIn(int qty);
+
+    private:
+        DelayVector::Pointer theVector;
+        Vector<DelayIdComposite::Pointer> ids;
+        typedef Vector<DelayIdComposite::Pointer>::iterator iterator;
+        typedef Vector<DelayIdComposite::Pointer>::const_iterator const_iterator;
     };
+
     Vector<CompositePoolNode::Pointer> pools;
     typedef Vector<CompositePoolNode::Pointer>::iterator iterator;
     typedef Vector<CompositePoolNode::Pointer>::const_iterator const_iterator;

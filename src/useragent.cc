@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.27 2003/01/23 00:37:29 robertc Exp $
+ * $Id: useragent.cc,v 1.28 2003/02/21 22:50:13 robertc Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -44,10 +44,12 @@ useragentOpenLog(void)
 {
 #if USE_USERAGENT_LOG
     assert(NULL == useragentlog);
+
     if (!Config.Log.useragent || (0 == strcmp(Config.Log.useragent, "none"))) {
-	debug(40, 1) ("User-Agent logging is disabled.\n");
-	return;
+        debug(40, 1) ("User-Agent logging is disabled.\n");
+        return;
     }
+
     useragentlog = logfileOpen(Config.Log.useragent, 0, 1);
 #endif
 }
@@ -56,9 +58,12 @@ void
 useragentRotateLog(void)
 {
 #if USE_USERAGENT_LOG
+
     if (NULL == useragentlog)
-	return;
+        return;
+
     logfileRotate(useragentlog);
+
 #endif
 }
 
@@ -69,17 +74,20 @@ logUserAgent(const char *client, const char *agent)
     static time_t last_time = 0;
     static char time_str[128];
     const char *s;
+
     if (NULL == useragentlog)
-	return;
+        return;
+
     if (squid_curtime != last_time) {
-	s = mkhttpdlogtime(&squid_curtime);
-	strcpy(time_str, s);
-	last_time = squid_curtime;
+        s = mkhttpdlogtime(&squid_curtime);
+        strcpy(time_str, s);
+        last_time = squid_curtime;
     }
+
     logfilePrintf(useragentlog, "%s [%s] \"%s\"\n",
-	client,
-	time_str,
-	agent);
+                  client,
+                  time_str,
+                  agent);
 #endif
 }
 
@@ -87,9 +95,13 @@ void
 useragentLogClose(void)
 {
 #if USE_USERAGENT_LOG
+
     if (NULL == useragentlog)
-	return;
+        return;
+
     logfileClose(useragentlog);
+
     useragentlog = NULL;
+
 #endif
 }

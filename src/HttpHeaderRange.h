@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.1 2003/01/23 00:37:12 robertc Exp $
+ * $Id: HttpHeaderRange.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,14 +38,17 @@
 
 typedef struct _HttpReply HttpReply;
 /* http byte-range-spec */
-class HttpHdrRangeSpec {
-  public:
+
+class HttpHdrRangeSpec
+{
+
+public:
     void *operator new(size_t);
     void operator delete (void *);
     void deleteSelf() const;
     typedef Range<ssize_t> HttpRange;
     static ssize_t const UnknownPosition;
-    
+
     HttpHdrRangeSpec();
     static HttpHdrRangeSpec *Create(const char *field, int fieldLen);
 
@@ -56,6 +59,7 @@ class HttpHdrRangeSpec {
     bool mergeWith(const HttpHdrRangeSpec * donor);
     ssize_t offset;
     ssize_t length;
+
 private:
     static MemPool *Pool;
 };
@@ -64,7 +68,10 @@ private:
  * This object holds all range specs in order of their appearence
  * in the request because we SHOULD preserve that order.
  */
-class HttpHdrRange {
+
+class HttpHdrRange
+{
+
 public:
     void *operator new(size_t);
     void operator delete (void *);
@@ -85,7 +92,7 @@ public:
     const_iterator begin () const;
     iterator end();
     const_iterator end() const;
-    
+
     /* adjust specs after the length is known */
     int canonize(size_t);
     int canonize(HttpReply *rep);
@@ -99,6 +106,7 @@ public:
     ssize_t lowestOffset(ssize_t) const;
     bool offsetLimitExceeded() const;
     Vector<HttpHdrRangeSpec *> specs;
+
 private:
     static MemPool *Pool;
     void getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy);
@@ -107,8 +115,11 @@ private:
 };
 
 /* data for iterating thru range specs */
-class HttpHdrRangeIter {
-  public:
+
+class HttpHdrRangeIter
+{
+
+public:
     HttpHdrRange::iterator pos;
     const HttpHdrRangeSpec *currentSpec() const;
     void updateSpec();
@@ -118,4 +129,5 @@ class HttpHdrRangeIter {
     String boundary;		/* boundary for multipart responses */
     bool valid;
 };
+
 #endif /* SQUID_HTTPHEADERRANGE_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.3 2003/01/23 00:37:13 robertc Exp $
+ * $Id: ICP.h,v 1.4 2003/02/21 22:50:05 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,7 +40,9 @@
  * DO NOT add ore move fields on pain of breakage.
  * DO NOT add virtual methods.
  */
-struct _icp_common_t {
+
+struct _icp_common_t
+{
     unsigned char opcode;	/* opcode */
     unsigned char version;	/* version number */
     unsigned short length;	/* total length (bytes) */
@@ -49,8 +51,10 @@ struct _icp_common_t {
     u_int32_t pad;
     u_int32_t shostid;		/* sender host id */
 #ifdef __cplusplus
-              _icp_common_t();
-              _icp_common_t(char *buf, unsigned int len);
+
+    _icp_common_t();
+    _icp_common_t(char *buf, unsigned int len);
+
     void handleReply(char *buf, struct sockaddr_in *from);
     static _icp_common_t *createMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
     icp_opcode getOpCode() const;
@@ -59,20 +63,25 @@ struct _icp_common_t {
 
 #ifdef __cplusplus
 
-inline icp_opcode & operator++ (icp_opcode & aCode) {
+inline icp_opcode & operator++ (icp_opcode & aCode)
+{
     aCode = (icp_opcode) (++(int) aCode);
     return aCode;
 }
 
 
 /* todo: mempool this */
-class ICPState {
-    public:
+
+class ICPState
+{
+
+public:
     ICPState(icp_common_t &);
     virtual ~ ICPState();
     icp_common_t header;
     request_t *request;
     int fd;
+
     struct sockaddr_in from;
     char *url;
 };
@@ -80,30 +89,41 @@ class ICPState {
 #endif
 
 typedef struct _icpUdpData icpUdpData;
-struct _icpUdpData {
+
+struct _icpUdpData
+{
+
     struct sockaddr_in address;
     void *msg;
     size_t len;
     icpUdpData *next;
 #ifndef LESS_TIMING
+
     struct timeval start;
 #endif
+
     log_type logcode;
+
     struct timeval queue_time;
 };
 
 
 request_t *
-          icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in *from);
+
+icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in *from);
+
 int icpAccessAllowed(struct sockaddr_in *from, request_t * icp_request);
+
 SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const struct sockaddr_in *from);
 extern icp_opcode icpGetCommonOpcode();
 
 SQUIDCEXTERN int icpUdpSend(int, const struct sockaddr_in *, icp_common_t *, log_type, int);
 SQUIDCEXTERN log_type icpLogFromICPCode(icp_opcode opcode);
+
 void icpDenyAccess(struct sockaddr_in *from, char *url, int reqnum, int fd);
 SQUIDCEXTERN PF icpHandleUdp;
 SQUIDCEXTERN PF icpUdpSendQueue;
+
 SQUIDCEXTERN void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
 SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, request_t * request);
 SQUIDCEXTERN void icpConnectionsOpen(void);

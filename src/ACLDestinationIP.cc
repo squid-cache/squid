@@ -43,8 +43,10 @@ ACLDestinationIP::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLDestinationIP));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLDestinationIP", sizeof (ACLDestinationIP));
+        Pool = memPoolCreate("ACLDestinationIP", sizeof (ACLDestinationIP));
+
     return memPoolAlloc(Pool);
 }
 
@@ -70,21 +72,24 @@ int
 ACLDestinationIP::match(ACLChecklist *checklist)
 {
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->host, IP_LOOKUP_IF_MISS);
+
     if (ia) {
-	/* Entry in cache found */
-	for (int k = 0; k < (int) ia->count; k++) {
-	    if (ACLIP::match(ia->in_addrs[k]))
-		return 1;
-	}
-	return 0;
+        /* Entry in cache found */
+
+        for (int k = 0; k < (int) ia->count; k++) {
+            if (ACLIP::match(ia->in_addrs[k]))
+                return 1;
+        }
+
+        return 0;
     } else if (!checklist->request->flags.destinationIPLookedUp()) {
-	/* No entry in cache, lookup not attempted */
-	debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-		      name, checklist->request->host);
-	checklist->changeState (DestinationIPLookup::Instance());
-	return 0;
+        /* No entry in cache, lookup not attempted */
+        debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+                      name, checklist->request->host);
+        checklist->changeState (DestinationIPLookup::Instance());
+        return 0;
     } else {
-	return ACLIP::match(no_addr);
+        return ACLIP::match(no_addr);
     }
 }
 

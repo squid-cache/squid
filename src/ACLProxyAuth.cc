@@ -47,8 +47,10 @@ ACLProxyAuth::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
     assert (byteCount == sizeof (ACLProxyAuth));
+
     if (!Pool)
-	Pool = memPoolCreate("ACLProxyAuth", sizeof (ACLProxyAuth));
+        Pool = memPoolCreate("ACLProxyAuth", sizeof (ACLProxyAuth));
+
     return memPoolAlloc(Pool);
 }
 
@@ -70,9 +72,10 @@ ACLProxyAuth::~ACLProxyAuth()
 }
 
 ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}
+
 ACLProxyAuth::ACLProxyAuth (ACLProxyAuth const &old) : data (old.data->clone()), type_(old.type_)
-{
-}
+{}
+
 ACLProxyAuth &
 ACLProxyAuth::operator= (ACLProxyAuth const &rhs)
 {
@@ -91,15 +94,17 @@ void
 ACLProxyAuth::parse()
 {
     if (authenticateSchemeCount() == 0) {
-	debug(28, 0) ("aclProxyAuth::parse: IGNORING: Proxy Auth ACL '%s' "
-		      "because no authentication schemes were compiled.\n", cfgline);
-	return;
+        debug(28, 0) ("aclProxyAuth::parse: IGNORING: Proxy Auth ACL '%s' "
+                      "because no authentication schemes were compiled.\n", cfgline);
+        return;
     }
+
     if (authenticateActiveSchemeCount() == 0) {
-	debug(28, 0) ("aclProxyAuth::parse: IGNORING: Proxy Auth ACL '%s' "
-		      "because no authentication schemes are fully configured.\n", cfgline);
-	return;
+        debug(28, 0) ("aclProxyAuth::parse: IGNORING: Proxy Auth ACL '%s' "
+                      "because no authentication schemes are fully configured.\n", cfgline);
+        return;
     }
+
     data->parse();
 }
 
@@ -107,9 +112,12 @@ int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
     int ti;
+
     if ((ti = checklist->authenticated()) != 1)
-	return ti;
+        return ti;
+
     ti = matchProxyAuth(checklist);
+
     return ti;
 }
 
@@ -146,7 +154,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *checklist)const
 {
     checklist->asyncInProgress(true);
     debug(28, 3)
-      ("ACLChecklist::checkForAsync: checking password via authenticator\n");
+    ("ACLChecklist::checkForAsync: checking password via authenticator\n");
 
     auth_user_request_t *auth_user_request;
     /* make sure someone created auth_user_request for us */
@@ -164,18 +172,22 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
     assert (checklist->asyncState() == ProxyAuthLookup::Instance());
 
     if (result != NULL)
-	fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
+        fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
+
     if (!authenticateValidateUser(checklist->auth_user_request) || checklist->conn() == NULL) {
-	/* credentials could not be checked either way
-	 * restart the whole process */
-	/* OR the connection was closed, there's no way to continue */
-	authenticateAuthUserRequestUnlock(checklist->auth_user_request);
-	if (checklist->conn()) {
-	    checklist->conn()->auth_user_request = NULL;
-	    checklist->conn()->auth_type = AUTH_BROKEN;
-	}
-	checklist->auth_user_request = NULL;
+        /* credentials could not be checked either way
+         * restart the whole process */
+        /* OR the connection was closed, there's no way to continue */
+        authenticateAuthUserRequestUnlock(checklist->auth_user_request);
+
+        if (checklist->conn()) {
+            checklist->conn()->auth_user_request = NULL;
+            checklist->conn()->auth_type = AUTH_BROKEN;
+        }
+
+        checklist->auth_user_request = NULL;
     }
+
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->check();
@@ -221,7 +233,7 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *checklist)
     checkAuthForCaching(checklist);
     /* check to see if we have matched the user-acl before */
     int result = cacheMatchAcl(&checklist->auth_user_request->auth_user->
-	proxy_match_cache, checklist);
+                               proxy_match_cache, checklist);
     checklist->auth_user_request = NULL;
     return result;
 }

@@ -39,25 +39,33 @@
 #include "ACLData.h"
 #include "ACLChecklist.h"
 
-class ProxyAuthLookup : public ACLChecklist::AsyncState {
-  public:
+class ProxyAuthLookup : public ACLChecklist::AsyncState
+{
+
+public:
     static ProxyAuthLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static ProxyAuthLookup instance_;
     static void LookupDone(void *data, char *result);
 };
 
-class ProxyAuthNeeded : public ACLChecklist::AsyncState {
-  public:
+class ProxyAuthNeeded : public ACLChecklist::AsyncState
+{
+
+public:
     static ProxyAuthNeeded *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
-  private:
+
+private:
     static ProxyAuthNeeded instance_;
 };
 
-class ACLProxyAuth : public ACL {
-  public:
+class ACLProxyAuth : public ACL
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -66,18 +74,22 @@ class ACLProxyAuth : public ACL {
     ACLProxyAuth(ACLData<char const *> *, char const *);
     ACLProxyAuth (ACLProxyAuth const &);
     ACLProxyAuth &operator= (ACLProxyAuth const &);
-    
+
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return ACL_DERIVED;}
+
     virtual void parse();
     virtual bool isProxyAuth() const {return true;}
+
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
     virtual bool valid () const;
     virtual bool requiresRequest() const {return true;}
+
     virtual ACL *clone()const;
     virtual int matchForCache(ACLChecklist *checklist);
-  private:
+
+private:
     static MemPool *Pool;
     static Prototype UserRegistryProtoype;
     static ACLProxyAuth UserRegistryEntry_;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayPool.h,v 1.1 2003/02/05 10:36:48 robertc Exp $
+ * $Id: DelayPool.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -47,11 +47,15 @@
 #include "CompositePoolNode.h"
 
 class StoreEntry;
+
 class CommonPool;
+
 class acl_access;
 
-class DelayPool {
-  public:
+class DelayPool
+{
+
+public:
     DelayPool();
     ~DelayPool();
     void freeData();
@@ -60,10 +64,14 @@ class DelayPool {
     void dump (StoreEntry *, unsigned int poolNumberMinusOne) const;
     CommonPool *pool;
     CompositePoolNode::Pointer theComposite() {return theComposite_;}
+
     CompositePoolNode::Pointer const theComposite() const{return theComposite_;}
+
     acl_access *access;
-  private:
+
+private:
     CompositePoolNode::Pointer theComposite_;
 };
+
 #endif
 #endif /* DELAYPOOL_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.49 2003/01/23 00:37:17 robertc Exp $
+ * $Id: cf_gen.cc,v 1.50 2003/02/21 22:50:07 robertc Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -87,17 +87,26 @@ enum State {
     sEXIT
 };
 
-typedef struct Line {
+typedef struct Line
+{
     char *data;
-    struct Line *next;
-} Line;
 
-typedef struct EntryAlias {
+    struct Line *next;
+}
+
+Line;
+
+typedef struct EntryAlias
+{
+
     struct EntryAlias *next;
     char *name;
-} EntryAlias;
+}
 
-typedef struct Entry {
+EntryAlias;
+
+typedef struct Entry
+{
     char *name;
     EntryAlias *alias;
     char *type;
@@ -109,8 +118,11 @@ typedef struct Entry {
     Line *doc;
     Line *nocomment;
     int array_flag;
+
     struct Entry *next;
-} Entry;
+}
+
+Entry;
 
 
 static const char WS[] = " \t";
@@ -127,8 +139,10 @@ static void
 lineAdd(Line ** L, const char *str)
 {
     while (*L)
-	L = &(*L)->next;
+        L = &(*L)->next;
+
     *L = (Line *)xcalloc(1, sizeof(Line));
+
     (*L)->data = xstrdup(str);
 }
 
@@ -146,8 +160,10 @@ main(int argc, char *argv[])
     int rc = 0;
     char *ptr = NULL;
 #ifdef _SQUID_OS2_
+
     const char *rmode = "rt";
 #else
+
     const char *rmode = "r";
 #endif
 
@@ -156,182 +172,221 @@ main(int argc, char *argv[])
      *-------------------------------------------------------------------*/
 
     /* Open input file */
+
     if ((fp = fopen(input_filename, rmode)) == NULL) {
-	perror(input_filename);
-	exit(1);
+        perror(input_filename);
+        exit(1);
     }
+
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
+
 #endif
+
     state = sSTART;
+
     while (feof(fp) == 0 && state != sEXIT) {
-	char buff[MAX_LINE];
-	char *t;
-	if (NULL == fgets(buff, MAX_LINE, fp))
-	    break;
-	linenum++;
-	if ((t = strchr(buff, '\n')))
-	    *t = '\0';
-	switch (state) {
-	case sSTART:
-	    if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
-		/* ignore empty and comment lines */
-		(void) 0;
-	    } else if (!strncmp(buff, "NAME:", 5)) {
-		char *name, *aliasname;
-		if ((name = strtok(buff + 5, WS)) == NULL) {
-		    printf("Error in input file\n");
-		    exit(1);
-		}
-		curr = (Entry *)calloc(1, sizeof(Entry));
-		curr->name = xstrdup(name);
-		while ((aliasname = strtok(NULL, WS)) != NULL) {
-		    EntryAlias *alias = (EntryAlias *)calloc(1, sizeof(EntryAlias));
-		    alias->next = curr->alias;
-		    alias->name = xstrdup(aliasname);
-		    curr->alias = alias;
-		}
-		state = s1;
-	    } else if (!strcmp(buff, "EOF")) {
-		state = sEXIT;
-	    } else if (!strcmp(buff, "COMMENT_START")) {
-		curr = (Entry *)calloc(1, sizeof(Entry));
-		curr->name = xstrdup("comment");
-		curr->loc = xstrdup("none");
-		state = sDOC;
-	    } else {
-		printf("Error on line %d\n", linenum);
-		printf("--> %s\n", buff);
-		exit(1);
-	    }
-	    break;
+        char buff[MAX_LINE];
+        char *t;
 
-	case s1:
-	    if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
-		/* ignore empty and comment lines */
-		(void) 0;
-	    } else if (!strncmp(buff, "COMMENT:", 8)) {
-		ptr = buff + 8;
-		while (xisspace(*ptr))
-		    ptr++;
-		curr->comment = xstrdup(ptr);
-	    } else if (!strncmp(buff, "DEFAULT:", 8)) {
-		ptr = buff + 8;
-		while (xisspace(*ptr))
-		    ptr++;
-		curr->default_value = xstrdup(ptr);
-	    } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
-		ptr = buff + 16;
-		while (xisspace(*ptr))
-		    ptr++;
-		lineAdd(&curr->default_if_none, ptr);
-	    } else if (!strncmp(buff, "LOC:", 4)) {
-		if ((ptr = strtok(buff + 4, WS)) == NULL) {
-		    printf("Error on line %d\n", linenum);
-		    exit(1);
-		}
-		curr->loc = xstrdup(ptr);
-	    } else if (!strncmp(buff, "TYPE:", 5)) {
-		if ((ptr = strtok(buff + 5, WS)) == NULL) {
-		    printf("Error on line %d\n", linenum);
-		    exit(1);
-		}
-		/* hack to support arrays, rather than pointers */
-		if (0 == strcmp(ptr + strlen(ptr) - 2, "[]")) {
-		    curr->array_flag = 1;
-		    *(ptr + strlen(ptr) - 2) = '\0';
-		}
-		curr->type = xstrdup(ptr);
-	    } else if (!strncmp(buff, "IFDEF:", 6)) {
-		if ((ptr = strtok(buff + 6, WS)) == NULL) {
-		    printf("Error on line %d\n", linenum);
-		    exit(1);
-		}
-		curr->ifdef = xstrdup(ptr);
-	    } else if (!strcmp(buff, "DOC_START")) {
-		state = sDOC;
-	    } else if (!strcmp(buff, "DOC_NONE")) {
-		/* add to list of entries */
-		curr->next = entries;
-		entries = curr;
-		state = sSTART;
-	    } else {
-		printf("Error on line %d\n", linenum);
-		exit(1);
-	    }
-	    break;
+        if (NULL == fgets(buff, MAX_LINE, fp))
+            break;
 
-	case sDOC:
-	    if (!strcmp(buff, "DOC_END") || !strcmp(buff, "COMMENT_END")) {
-		Line *head = NULL;
-		Line *line = curr->doc;
-		/* reverse order of doc lines */
-		while (line != NULL) {
-		    Line *tmp;
-		    tmp = line->next;
-		    line->next = head;
-		    head = line;
-		    line = tmp;
-		}
-		curr->doc = head;
-		/* add to list of entries */
-		curr->next = entries;
-		entries = curr;
-		state = sSTART;
-	    } else if (!strcmp(buff, "NOCOMMENT_START")) {
-		state = sNOCOMMENT;
-	    } else {
-		Line *line = (Line *)calloc(1, sizeof(Line));
-		line->data = xstrdup(buff);
-		line->next = curr->doc;
-		curr->doc = line;
-	    }
-	    break;
+        linenum++;
 
-	case sNOCOMMENT:
-	    if (!strcmp(buff, "NOCOMMENT_END")) {
-		Line *head = NULL;
-		Line *line = curr->nocomment;
-		/* reverse order of lines */
-		while (line != NULL) {
-		    Line *tmp;
-		    tmp = line->next;
-		    line->next = head;
-		    head = line;
-		    line = tmp;
-		}
-		curr->nocomment = head;
-		state = sDOC;
-	    } else {
-		Line *line = (Line *)calloc(1, sizeof(Line));
-		line->data = xstrdup(buff);
-		line->next = curr->nocomment;
-		curr->nocomment = line;
-	    }
-	    break;
+        if ((t = strchr(buff, '\n')))
+            *t = '\0';
 
-	case sEXIT:
-	    assert(0);		/* should never get here */
-	    break;
-	}
+        switch (state) {
+
+        case sSTART:
+
+            if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
+                /* ignore empty and comment lines */
+                (void) 0;
+            } else if (!strncmp(buff, "NAME:", 5)) {
+                char *name, *aliasname;
+
+                if ((name = strtok(buff + 5, WS)) == NULL) {
+                    printf("Error in input file\n");
+                    exit(1);
+                }
+
+                curr = (Entry *)calloc(1, sizeof(Entry));
+                curr->name = xstrdup(name);
+
+                while ((aliasname = strtok(NULL, WS)) != NULL) {
+                    EntryAlias *alias = (EntryAlias *)calloc(1, sizeof(EntryAlias));
+                    alias->next = curr->alias;
+                    alias->name = xstrdup(aliasname);
+                    curr->alias = alias;
+                }
+
+                state = s1;
+            } else if (!strcmp(buff, "EOF")) {
+                state = sEXIT;
+            } else if (!strcmp(buff, "COMMENT_START")) {
+                curr = (Entry *)calloc(1, sizeof(Entry));
+                curr->name = xstrdup("comment");
+                curr->loc = xstrdup("none");
+                state = sDOC;
+            } else {
+                printf("Error on line %d\n", linenum);
+                printf("--> %s\n", buff);
+                exit(1);
+            }
+
+            break;
+
+        case s1:
+
+            if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
+                /* ignore empty and comment lines */
+                (void) 0;
+            } else if (!strncmp(buff, "COMMENT:", 8)) {
+                ptr = buff + 8;
+
+                while (xisspace(*ptr))
+                    ptr++;
+
+                curr->comment = xstrdup(ptr);
+            } else if (!strncmp(buff, "DEFAULT:", 8)) {
+                ptr = buff + 8;
+
+                while (xisspace(*ptr))
+                    ptr++;
+
+                curr->default_value = xstrdup(ptr);
+            } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
+                ptr = buff + 16;
+
+                while (xisspace(*ptr))
+                    ptr++;
+
+                lineAdd(&curr->default_if_none, ptr);
+            } else if (!strncmp(buff, "LOC:", 4)) {
+                if ((ptr = strtok(buff + 4, WS)) == NULL) {
+                    printf("Error on line %d\n", linenum);
+                    exit(1);
+                }
+
+                curr->loc = xstrdup(ptr);
+            } else if (!strncmp(buff, "TYPE:", 5)) {
+                if ((ptr = strtok(buff + 5, WS)) == NULL) {
+                    printf("Error on line %d\n", linenum);
+                    exit(1);
+                }
+
+                /* hack to support arrays, rather than pointers */
+                if (0 == strcmp(ptr + strlen(ptr) - 2, "[]")) {
+                    curr->array_flag = 1;
+                    *(ptr + strlen(ptr) - 2) = '\0';
+                }
+
+                curr->type = xstrdup(ptr);
+            } else if (!strncmp(buff, "IFDEF:", 6)) {
+                if ((ptr = strtok(buff + 6, WS)) == NULL) {
+                    printf("Error on line %d\n", linenum);
+                    exit(1);
+                }
+
+                curr->ifdef = xstrdup(ptr);
+            } else if (!strcmp(buff, "DOC_START")) {
+                state = sDOC;
+            } else if (!strcmp(buff, "DOC_NONE")) {
+                /* add to list of entries */
+                curr->next = entries;
+                entries = curr;
+                state = sSTART;
+            } else {
+                printf("Error on line %d\n", linenum);
+                exit(1);
+            }
+
+            break;
+
+        case sDOC:
+
+            if (!strcmp(buff, "DOC_END") || !strcmp(buff, "COMMENT_END")) {
+                Line *head = NULL;
+                Line *line = curr->doc;
+                /* reverse order of doc lines */
+
+                while (line != NULL) {
+                    Line *tmp;
+                    tmp = line->next;
+                    line->next = head;
+                    head = line;
+                    line = tmp;
+                }
+
+                curr->doc = head;
+                /* add to list of entries */
+                curr->next = entries;
+                entries = curr;
+                state = sSTART;
+            } else if (!strcmp(buff, "NOCOMMENT_START")) {
+                state = sNOCOMMENT;
+            } else {
+                Line *line = (Line *)calloc(1, sizeof(Line));
+                line->data = xstrdup(buff);
+                line->next = curr->doc;
+                curr->doc = line;
+            }
+
+            break;
+
+        case sNOCOMMENT:
+
+            if (!strcmp(buff, "NOCOMMENT_END")) {
+                Line *head = NULL;
+                Line *line = curr->nocomment;
+                /* reverse order of lines */
+
+                while (line != NULL) {
+                    Line *tmp;
+                    tmp = line->next;
+                    line->next = head;
+                    head = line;
+                    line = tmp;
+                }
+
+                curr->nocomment = head;
+                state = sDOC;
+            } else {
+                Line *line = (Line *)calloc(1, sizeof(Line));
+                line->data = xstrdup(buff);
+                line->next = curr->nocomment;
+                curr->nocomment = line;
+            }
+
+            break;
+
+        case sEXIT:
+            assert(0);		/* should never get here */
+            break;
+        }
     }
+
     if (state != sEXIT) {
-	printf("Error unexpected EOF\n");
-	exit(1);
+        printf("Error unexpected EOF\n");
+        exit(1);
     } else {
-	/* reverse order of entries */
-	Entry *head = NULL;
+        /* reverse order of entries */
+        Entry *head = NULL;
 
-	while (entries != NULL) {
-	    Entry *tmp;
+        while (entries != NULL) {
+            Entry *tmp;
 
-	    tmp = entries->next;
-	    entries->next = head;
-	    head = entries;
-	    entries = tmp;
-	}
-	entries = head;
+            tmp = entries->next;
+            entries->next = head;
+            head = entries;
+            entries = tmp;
+        }
+
+        entries = head;
     }
+
     fclose(fp);
 
     /*-------------------------------------------------------------------*
@@ -343,39 +398,53 @@ main(int argc, char *argv[])
      *-------------------------------------------------------------------*/
 
     /* Open output x.c file */
+
     if ((fp = fopen(output_filename, "w")) == NULL) {
-	perror(output_filename);
-	exit(1);
+        perror(output_filename);
+        exit(1);
     }
+
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
+
 #endif
+
     fprintf(fp,
-	"/*\n"
-	" * Generated automatically from %s by %s\n"
-	" *\n"
-	" * Abstract: This file contains routines used to configure the\n"
-	" *           variables in the squid server.\n"
-	" */\n"
-	"\n",
-	input_filename, argv[0]
-	);
+            "/*\n"
+            " * Generated automatically from %s by %s\n"
+            " *\n"
+            " * Abstract: This file contains routines used to configure the\n"
+            " *           variables in the squid server.\n"
+            " */\n"
+            "\n",
+            input_filename, argv[0]
+           );
+
     rc = gen_default(entries, fp);
+
     gen_default_if_none(entries, fp);
+
     gen_parse(entries, fp);
+
     gen_dump(entries, fp);
+
     gen_free(entries, fp);
+
     fclose(fp);
 
     /* Open output x.conf file */
     if ((fp = fopen(conf_filename, "w")) == NULL) {
-	perror(conf_filename);
-	exit(1);
+        perror(conf_filename);
+        exit(1);
     }
+
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
+
 #endif
+
     gen_conf(entries, fp);
+
     fclose(fp);
 
     return (rc);
@@ -387,52 +456,60 @@ gen_default(Entry * head, FILE * fp)
     Entry *entry;
     int rc = 0;
     fprintf(fp,
-	"static void\n"
-	"default_line(const char *s)\n"
-	"{\n"
-	"\tLOCAL_ARRAY(char, tmp_line, BUFSIZ);\n"
-	"\txstrncpy(tmp_line, s, BUFSIZ);\n"
-	"\txstrncpy(config_input_line, s, BUFSIZ);\n"
-	"\tconfig_lineno++;\n"
-	"\tparse_line(tmp_line);\n"
-	"}\n"
-	);
+            "static void\n"
+            "default_line(const char *s)\n"
+            "{\n"
+            "\tLOCAL_ARRAY(char, tmp_line, BUFSIZ);\n"
+            "\txstrncpy(tmp_line, s, BUFSIZ);\n"
+            "\txstrncpy(config_input_line, s, BUFSIZ);\n"
+            "\tconfig_lineno++;\n"
+            "\tparse_line(tmp_line);\n"
+            "}\n"
+           );
     fprintf(fp,
-	"static void\n"
-	"default_all(void)\n"
-	"{\n"
-	"\tcfg_filename = \"Default Configuration\";\n"
-	"\tconfig_lineno = 0;\n"
-	);
-    for (entry = head; entry != NULL; entry = entry->next) {
-	assert(entry->name);
-	assert(entry != entry->next);
+            "static void\n"
+            "default_all(void)\n"
+            "{\n"
+            "\tcfg_filename = \"Default Configuration\";\n"
+            "\tconfig_lineno = 0;\n"
+           );
 
-	if (!strcmp(entry->name, "comment"))
-	    continue;
-	if (entry->loc == NULL) {
-	    fprintf(stderr, "NO LOCATION FOR %s\n", entry->name);
-	    rc |= 1;
-	    continue;
-	}
-	if (entry->default_value == NULL) {
-	    fprintf(stderr, "NO DEFAULT FOR %s\n", entry->name);
-	    rc |= 1;
-	    continue;
-	}
-	assert(entry->default_value);
-	if (entry->ifdef)
-	    fprintf(fp, "#if %s\n", entry->ifdef);
-	if (strcmp(entry->default_value, "none") == 0) {
-	    fprintf(fp, "\t/* No default for %s */\n", entry->name);
-	} else {
-	    fprintf(fp, "\tdefault_line(\"%s %s\");\n",
-		entry->name,
-		entry->default_value);
-	}
-	if (entry->ifdef)
-	    fprintf(fp, "#endif\n");
+    for (entry = head; entry != NULL; entry = entry->next) {
+        assert(entry->name);
+        assert(entry != entry->next);
+
+        if (!strcmp(entry->name, "comment"))
+            continue;
+
+        if (entry->loc == NULL) {
+            fprintf(stderr, "NO LOCATION FOR %s\n", entry->name);
+            rc |= 1;
+            continue;
+        }
+
+        if (entry->default_value == NULL) {
+            fprintf(stderr, "NO DEFAULT FOR %s\n", entry->name);
+            rc |= 1;
+            continue;
+        }
+
+        assert(entry->default_value);
+
+        if (entry->ifdef)
+            fprintf(fp, "#if %s\n", entry->ifdef);
+
+        if (strcmp(entry->default_value, "none") == 0) {
+            fprintf(fp, "\t/* No default for %s */\n", entry->name);
+        } else {
+            fprintf(fp, "\tdefault_line(\"%s %s\");\n",
+                    entry->name,
+                    entry->default_value);
+        }
+
+        if (entry->ifdef)
+            fprintf(fp, "#endif\n");
     }
+
     fprintf(fp, "\tcfg_filename = NULL;\n");
     fprintf(fp, "}\n\n");
     return rc;
@@ -444,99 +521,117 @@ gen_default_if_none(Entry * head, FILE * fp)
     Entry *entry;
     Line *line;
     fprintf(fp,
-	"static void\n"
-	"defaults_if_none(void)\n"
-	"{\n"
-	);
+            "static void\n"
+            "defaults_if_none(void)\n"
+            "{\n"
+           );
+
     for (entry = head; entry != NULL; entry = entry->next) {
-	assert(entry->name);
-	assert(entry->loc);
-	if (entry->default_if_none == NULL)
-	    continue;
-	if (entry->ifdef)
-	    fprintf(fp, "#if %s\n", entry->ifdef);
-	if (entry->default_if_none) {
-	    fprintf(fp,
-		"\tif (check_null_%s(%s)) {\n",
-		entry->type,
-		entry->loc);
-	    for (line = entry->default_if_none; line; line = line->next)
-		fprintf(fp,
-		    "\t\tdefault_line(\"%s %s\");\n",
-		    entry->name,
-		    line->data);
-	    fprintf(fp, "\t}\n");
-	}
-	if (entry->ifdef)
-	    fprintf(fp, "#endif\n");
+        assert(entry->name);
+        assert(entry->loc);
+
+        if (entry->default_if_none == NULL)
+            continue;
+
+        if (entry->ifdef)
+            fprintf(fp, "#if %s\n", entry->ifdef);
+
+        if (entry->default_if_none) {
+            fprintf(fp,
+                    "\tif (check_null_%s(%s)) {\n",
+                    entry->type,
+                    entry->loc);
+
+            for (line = entry->default_if_none; line; line = line->next)
+                fprintf(fp,
+                        "\t\tdefault_line(\"%s %s\");\n",
+                        entry->name,
+                        line->data);
+
+            fprintf(fp, "\t}\n");
+        }
+
+        if (entry->ifdef)
+            fprintf(fp, "#endif\n");
     }
+
     fprintf(fp, "}\n\n");
 }
 
 void
 gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, FILE *fp)
 {
-	fprintf(fp, "\tif (!strcmp(token, \"%s\")) {\n", name);
-	if (strcmp(entry->loc, "none") == 0) {
-	    fprintf(fp,
-		"\t\tparse_%s();\n",
-		entry->type
-		);
-	} else {
-	    fprintf(fp,
-		"\t\tparse_%s(&%s%s);\n",
-		entry->type, entry->loc,
-		entry->array_flag ? "[0]" : ""
-		);
-	}
-	fprintf(fp,"\t\treturn 1;\n");
-	fprintf(fp,"\t};\n");
+    fprintf(fp, "\tif (!strcmp(token, \"%s\")) {\n", name);
+
+    if (strcmp(entry->loc, "none") == 0) {
+        fprintf(fp,
+                "\t\tparse_%s();\n",
+                entry->type
+               );
+    } else {
+        fprintf(fp,
+                "\t\tparse_%s(&%s%s);\n",
+                entry->type, entry->loc,
+                entry->array_flag ? "[0]" : ""
+               );
+    }
+
+    fprintf(fp,"\t\treturn 1;\n");
+    fprintf(fp,"\t};\n");
 }
 
 void
 gen_parse_entry(Entry *entry, FILE *fp)
 {
-	if (strcmp(entry->name, "comment") == 0)
-	    return;
-	if (entry->ifdef)
-	    fprintf(fp, "#if %s\n", entry->ifdef);
-	char *name = entry->name;
-	EntryAlias *alias = entry->alias;
-	assert (entry->loc);
-	bool more;
-	do {
-	    gen_parse_alias (name, alias,entry, fp);
-	    more = false;
-	    if (alias) {
-		name = alias->name;
-		alias = alias->next;
-		more = true;
-	    }
-	} while (more);
-	if (entry->ifdef)
-	    fprintf(fp, "#endif\n");
+    if (strcmp(entry->name, "comment") == 0)
+        return;
+
+    if (entry->ifdef)
+        fprintf(fp, "#if %s\n", entry->ifdef);
+
+    char *name = entry->name;
+
+    EntryAlias *alias = entry->alias;
+
+    assert (entry->loc);
+
+    bool more;
+
+    do {
+        gen_parse_alias (name, alias,entry, fp);
+        more = false;
+
+        if (alias) {
+            name = alias->name;
+            alias = alias->next;
+            more = true;
+        }
+    } while (more);
+
+    if (entry->ifdef)
+        fprintf(fp, "#endif\n");
 }
 
 static void
 gen_parse(Entry * head, FILE * fp)
 {
     fprintf(fp,
-	"static int\n"
-	"parse_line(char *buff)\n"
-	"{\n"
-	"\tchar\t*token;\n"
-	"\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
-	"\tif ((token = strtok(buff, w_space)) == NULL) \n"
-	"\t\treturn 1;\t/* ignore empty lines */\n"
-	);
+            "static int\n"
+            "parse_line(char *buff)\n"
+            "{\n"
+            "\tchar\t*token;\n"
+            "\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
+            "\tif ((token = strtok(buff, w_space)) == NULL) \n"
+            "\t\treturn 1;\t/* ignore empty lines */\n"
+           );
 
     for (Entry *entry = head; entry != NULL; entry = entry->next)
-	gen_parse_entry (entry, fp);
+        gen_parse_entry (entry, fp);
 
     fprintf(fp,
-	"\treturn 0; /* failure */\n"
-	"}\n\n"
-	);
+            "\treturn 0; /* failure */\n"
+            "}\n\n"
+           );
 }
 
 static void
@@ -544,25 +639,32 @@ gen_dump(Entry * head, FILE * fp)
 {
     Entry *entry;
     fprintf(fp,
-	"static void\n"
-	"dump_config(StoreEntry *entry)\n"
-	"{\n"
-	);
+            "static void\n"
+            "dump_config(StoreEntry *entry)\n"
+            "{\n"
+           );
+
     for (entry = head; entry != NULL; entry = entry->next) {
-	assert(entry->loc);
-	if (strcmp(entry->loc, "none") == 0)
-	    continue;
-	if (strcmp(entry->name, "comment") == 0)
-	    continue;
-	if (entry->ifdef)
-	    fprintf(fp, "#if %s\n", entry->ifdef);
-	fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
-	    entry->type,
-	    entry->name,
-	    entry->loc);
-	if (entry->ifdef)
-	    fprintf(fp, "#endif\n");
+        assert(entry->loc);
+
+        if (strcmp(entry->loc, "none") == 0)
+            continue;
+
+        if (strcmp(entry->name, "comment") == 0)
+            continue;
+
+        if (entry->ifdef)
+            fprintf(fp, "#if %s\n", entry->ifdef);
+
+        fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
+                entry->type,
+                entry->name,
+                entry->loc);
+
+        if (entry->ifdef)
+            fprintf(fp, "#endif\n");
     }
+
     fprintf(fp, "}\n\n");
 }
 
@@ -571,24 +673,31 @@ gen_free(Entry * head, FILE * fp)
 {
     Entry *entry;
     fprintf(fp,
-	"static void\n"
-	"free_all(void)\n"
-	"{\n"
-	);
+            "static void\n"
+            "free_all(void)\n"
+            "{\n"
+           );
+
     for (entry = head; entry != NULL; entry = entry->next) {
-	assert(entry->loc);
-	if (strcmp(entry->loc, "none") == 0)
-	    continue;
-	if (strcmp(entry->name, "comment") == 0)
-	    continue;
-	if (entry->ifdef)
-	    fprintf(fp, "#if %s\n", entry->ifdef);
-	fprintf(fp, "\tfree_%s(&%s%s);\n",
-	    entry->type, entry->loc,
-	    entry->array_flag ? "[0]" : "");
-	if (entry->ifdef)
-	    fprintf(fp, "#endif\n");
+        assert(entry->loc);
+
+        if (strcmp(entry->loc, "none") == 0)
+            continue;
+
+        if (strcmp(entry->name, "comment") == 0)
+            continue;
+
+        if (entry->ifdef)
+            fprintf(fp, "#if %s\n", entry->ifdef);
+
+        fprintf(fp, "\tfree_%s(&%s%s);\n",
+                entry->type, entry->loc,
+                entry->array_flag ? "[0]" : "");
+
+        if (entry->ifdef)
+            fprintf(fp, "#endif\n");
     }
+
     fprintf(fp, "}\n\n");
 }
 
@@ -596,11 +705,14 @@ static int
 defined(char *name)
 {
     int i = 0;
+
     if (!name)
-	return 1;
+        return 1;
+
     for (i = 0; strcmp(defines[i].name, name) != 0; i++) {
-	assert(defines[i].name);
+        assert(defines[i].name);
     }
+
     return defines[i].defined;
 }
 
@@ -609,9 +721,11 @@ available_if(char *name)
 {
     int i = 0;
     assert(name);
+
     for (i = 0; strcmp(defines[i].name, name) != 0; i++) {
-	assert(defines[i].name);
+        assert(defines[i].name);
     }
+
     return defines[i].enable;
 }
 
@@ -623,58 +737,73 @@ gen_conf(Entry * head, FILE * fp)
     Line *def = NULL;
 
     for (entry = head; entry != NULL; entry = entry->next) {
-	Line *line;
-	int blank = 1;
+        Line *line;
+        int blank = 1;
 
-	if (!strcmp(entry->name, "comment"))
-	    (void) 0;
-	else
-	    fprintf(fp, "#  TAG: %s", entry->name);
-	if (entry->comment)
-	    fprintf(fp, "\t%s", entry->comment);
-	fprintf(fp, "\n");
-	if (!defined(entry->ifdef)) {
-	    fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
-	    fprintf(fp, "#       %s option\n#\n", available_if(entry->ifdef));
-	}
-	for (line = entry->doc; line != NULL; line = line->next) {
-	    fprintf(fp, "#%s\n", line->data);
-	}
-	if (entry->default_value && strcmp(entry->default_value, "none") != 0) {
-	    sprintf(buf, "%s %s", entry->name, entry->default_value);
-	    lineAdd(&def, buf);
-	}
-	if (entry->default_if_none) {
-	    for (line = entry->default_if_none; line; line = line->next) {
-		sprintf(buf, "%s %s", entry->name, line->data);
-		lineAdd(&def, buf);
-	    }
-	}
-	if (entry->nocomment)
-	    blank = 0;
-	if (!def && entry->doc && !entry->nocomment &&
-	    strcmp(entry->name, "comment") != 0)
-	    lineAdd(&def, "none");
-	if (def && (entry->doc || entry->nocomment)) {
-	    if (blank)
-		fprintf(fp, "#\n");
-	    fprintf(fp, "#Default:\n");
-	    while (def != NULL) {
-		line = def;
-		def = line->next;
-		fprintf(fp, "# %s\n", line->data);
-		xfree(line->data);
-		xfree(line);
-	    }
-	    blank = 1;
-	}
-	if (entry->nocomment && blank)
-	    fprintf(fp, "#\n");
-	for (line = entry->nocomment; line != NULL; line = line->next) {
-	    fprintf(fp, "%s\n", line->data);
-	}
-	if (entry->doc != NULL) {
-	    fprintf(fp, "\n");
-	}
+        if (!strcmp(entry->name, "comment"))
+            (void) 0;
+        else
+            fprintf(fp, "#  TAG: %s", entry->name);
+
+        if (entry->comment)
+            fprintf(fp, "\t%s", entry->comment);
+
+        fprintf(fp, "\n");
+
+        if (!defined(entry->ifdef)) {
+            fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
+            fprintf(fp, "#       %s option\n#\n", available_if(entry->ifdef));
+        }
+
+        for (line = entry->doc; line != NULL; line = line->next) {
+            fprintf(fp, "#%s\n", line->data);
+        }
+
+        if (entry->default_value && strcmp(entry->default_value, "none") != 0) {
+            sprintf(buf, "%s %s", entry->name, entry->default_value);
+            lineAdd(&def, buf);
+        }
+
+        if (entry->default_if_none) {
+            for (line = entry->default_if_none; line; line = line->next) {
+                sprintf(buf, "%s %s", entry->name, line->data);
+                lineAdd(&def, buf);
+            }
+        }
+
+        if (entry->nocomment)
+            blank = 0;
+
+        if (!def && entry->doc && !entry->nocomment &&
+                strcmp(entry->name, "comment") != 0)
+            lineAdd(&def, "none");
+
+        if (def && (entry->doc || entry->nocomment)) {
+            if (blank)
+                fprintf(fp, "#\n");
+
+            fprintf(fp, "#Default:\n");
+
+            while (def != NULL) {
+                line = def;
+                def = line->next;
+                fprintf(fp, "# %s\n", line->data);
+                xfree(line->data);
+                xfree(line);
+            }
+
+            blank = 1;
+        }
+
+        if (entry->nocomment && blank)
+            fprintf(fp, "#\n");
+
+        for (line = entry->nocomment; line != NULL; line = line->next) {
+            fprintf(fp, "%s\n", line->data);
+        }
+
+        if (entry->doc != NULL) {
+            fprintf(fp, "\n");
+        }
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.64 2003/01/23 00:37:25 robertc Exp $
+ * $Id: send-announce.cc,v 1.65 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -42,10 +42,13 @@ void
 start_announce(void *datanotused)
 {
     if (0 == Config.onoff.announce)
-	return;
+        return;
+
     if (theOutIcpConnection < 0)
-	return;
+        return;
+
     ipcache_nbgethostbyname(Config.Announce.host, send_announce, NULL);
+
     eventAdd("send_announce", start_announce, NULL, (double) Config.Announce.period, 1);
 }
 
@@ -54,6 +57,7 @@ send_announce(const ipcache_addrs * ia, void *junk)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
+
     struct sockaddr_in S;
     char *host = Config.Announce.host;
     char *file = NULL;
@@ -62,49 +66,57 @@ send_announce(const ipcache_addrs * ia, void *junk)
     int n;
     int fd;
     int x;
+
     if (ia == NULL) {
-	debug(27, 1) ("send_announce: Unknown host '%s'\n", host);
-	return;
+        debug(27, 1) ("send_announce: Unknown host '%s'\n", host);
+        return;
     }
+
     debug(27, 1) ("Sending Announcement to %s\n", host);
     sndbuf[0] = '\0';
     snprintf(tbuf, 256, "cache_version SQUID/%s\n", version_string);
     strcat(sndbuf, tbuf);
     assert(Config.Sockaddr.http);
     snprintf(tbuf, 256, "Running on %s %d %d\n",
-	getMyHostname(),
-	getMyPort(),
-	(int) Config.Port.icp);
+             getMyHostname(),
+             getMyPort(),
+             (int) Config.Port.icp);
     strcat(sndbuf, tbuf);
+
     if (Config.adminEmail) {
-	snprintf(tbuf, 256, "cache_admin: %s\n", Config.adminEmail);
-	strcat(sndbuf, tbuf);
+        snprintf(tbuf, 256, "cache_admin: %s\n", Config.adminEmail);
+        strcat(sndbuf, tbuf);
     }
+
     snprintf(tbuf, 256, "generated %d [%s]\n",
-	(int) squid_curtime,
-	mkhttpdlogtime(&squid_curtime));
+             (int) squid_curtime,
+             mkhttpdlogtime(&squid_curtime));
     strcat(sndbuf, tbuf);
     l = strlen(sndbuf);
+
     if ((file = Config.Announce.file) != NULL) {
-	fd = file_open(file, O_RDONLY | O_TEXT);
-	if (fd > -1 && (n = FD_READ_METHOD(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
-	    fd_bytes(fd, n, FD_READ);
-	    l += n;
-	    sndbuf[l] = '\0';
-	    file_close(fd);
-	} else {
-	    debug(50, 1) ("send_announce: %s: %s\n", file, xstrerror());
-	}
+        fd = file_open(file, O_RDONLY | O_TEXT);
+
+        if (fd > -1 && (n = FD_READ_METHOD(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
+            fd_bytes(fd, n, FD_READ);
+            l += n;
+            sndbuf[l] = '\0';
+            file_close(fd);
+        } else {
+            debug(50, 1) ("send_announce: %s: %s\n", file, xstrerror());
+        }
     }
+
     memset(&S, '\0', sizeof(S));
     S.sin_family = AF_INET;
     S.sin_port = htons(port);
     S.sin_addr = ia->in_addrs[0];
     assert(theOutIcpConnection > 0);
     x = comm_udp_sendto(theOutIcpConnection,
-	&S, sizeof(S),
-	sndbuf, strlen(sndbuf) + 1);
+                        &S, sizeof(S),
+                        sndbuf, strlen(sndbuf) + 1);
+
     if (x < 0)
-	debug(27, 1) ("send_announce: FD %d: %s\n", theOutIcpConnection,
-	    xstrerror());
+        debug(27, 1) ("send_announce: FD %d: %s\n", theOutIcpConnection,
+                      xstrerror());
 }

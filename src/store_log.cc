@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.26 2003/01/23 00:37:27 robertc Exp $
+ * $Id: store_log.cc,v 1.27 2003/02/21 22:50:12 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -38,13 +38,13 @@
 #include "MemObject.h"
 
 static const char *storeLogTags[] =
-{
-    "CREATE",
-    "SWAPIN",
-    "SWAPOUT",
-    "RELEASE",
-    "SO_FAIL",
-};
+    {
+        "CREATE",
+        "SWAPIN",
+        "SWAPOUT",
+        "RELEASE",
+        "SO_FAIL",
+    };
 
 static Logfile *storelog = NULL;
 
@@ -53,49 +53,55 @@ storeLog(int tag, const StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     HttpReply const *reply;
+
     if (NULL == storelog)
-	return;
+        return;
+
 #if UNUSED_CODE
+
     if (EBIT_TEST(e->flags, ENTRY_DONT_LOG))
-	return;
+        return;
+
 #endif
+
     if (mem != NULL) {
-	if (mem->log_url == NULL) {
-	    debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
-	    mem->dump();
-	    mem->log_url = xstrdup(mem->url);
-	}
-	reply = e->getReply();
-	/*
-	 * XXX Ok, where should we print the dir number here?
-	 * Because if we print it before the swap file number, it'll break
-	 * the existing log format.
-	 */
-	logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s %4d %9d %9d %9d %s %d/%d %s %s\n",
-	    (int) current_time.tv_sec,
-	    (int) current_time.tv_usec / 1000,
-	    storeLogTags[tag],
-	    e->swap_dirn,
-	    e->swap_filen,
-	    e->getMD5Text(),
-	    reply->sline.status,
-	    (int) reply->date,
-	    (int) reply->last_modified,
-	    (int) reply->expires,
-	    reply->content_type.size() ? reply->content_type.buf() : "unknown",
-	    reply->content_length,
-	    contentLen(e),
-	    RequestMethodStr[mem->method],
-	    mem->log_url);
+        if (mem->log_url == NULL) {
+            debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
+            mem->dump();
+            mem->log_url = xstrdup(mem->url);
+        }
+
+        reply = e->getReply();
+        /*
+         * XXX Ok, where should we print the dir number here?
+         * Because if we print it before the swap file number, it'll break
+         * the existing log format.
+         */
+        logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s %4d %9d %9d %9d %s %d/%d %s %s\n",
+                      (int) current_time.tv_sec,
+                      (int) current_time.tv_usec / 1000,
+                      storeLogTags[tag],
+                      e->swap_dirn,
+                      e->swap_filen,
+                      e->getMD5Text(),
+                      reply->sline.status,
+                      (int) reply->date,
+                      (int) reply->last_modified,
+                      (int) reply->expires,
+                      reply->content_type.size() ? reply->content_type.buf() : "unknown",
+                      reply->content_length,
+                      contentLen(e),
+                      RequestMethodStr[mem->method],
+                      mem->log_url);
     } else {
-	/* no mem object. Most RELEASE cases */
-	logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s   ?         ?         ?         ? ?/? ?/? ? ?\n",
-	    (int) current_time.tv_sec,
-	    (int) current_time.tv_usec / 1000,
-	    storeLogTags[tag],
-	    e->swap_dirn,
-	    e->swap_filen,
-	    e->getMD5Text());
+        /* no mem object. Most RELEASE cases */
+        logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s   ?         ?         ?         ? ?/? ?/? ? ?\n",
+                      (int) current_time.tv_sec,
+                      (int) current_time.tv_usec / 1000,
+                      storeLogTags[tag],
+                      e->swap_dirn,
+                      e->swap_filen,
+                      e->getMD5Text());
     }
 }
 
@@ -103,7 +109,8 @@ void
 storeLogRotate(void)
 {
     if (NULL == storelog)
-	return;
+        return;
+
     logfileRotate(storelog);
 }
 
@@ -111,8 +118,10 @@ void
 storeLogClose(void)
 {
     if (NULL == storelog)
-	return;
+        return;
+
     logfileClose(storelog);
+
     storelog = NULL;
 }
 
@@ -120,8 +129,9 @@ void
 storeLogOpen(void)
 {
     if (strcmp(Config.Log.store, "none") == 0) {
-	debug(20, 1) ("Store logging disabled\n");
-	return;
+        debug(20, 1) ("Store logging disabled\n");
+        return;
     }
+
     storelog = logfileOpen(Config.Log.store, 0, 1);
 }

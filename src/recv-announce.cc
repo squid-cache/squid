@@ -1,6 +1,6 @@
 
 /*
- * $Id: recv-announce.cc,v 1.25 2003/01/23 00:37:25 robertc Exp $
+ * $Id: recv-announce.cc,v 1.26 2003/02/21 22:50:10 robertc Exp $
  *
  * DEBUG: section 0     Announcement Server
  * AUTHOR: Harvest Derived
@@ -66,7 +66,7 @@
  * 
  */
 
-/* 
+/*
  * usage: recv-announce logfile
  */
 
@@ -85,47 +85,53 @@ int
 main(int argc, char *argv[])
 {
     char buf[RECV_BUF_SIZE];
+
     struct sockaddr_in R;
     socklen_t len;
+
     struct hostent *hp = NULL;
     char logfile[BUFSIZ];
     char ip[4];
 
     for (len = 0; len < 32; len++) {
-	signal(len, sig_handle);
+        signal(len, sig_handle);
     }
 
 
     if (argc > 1)
-	strcpy(logfile, argv[1]);
+        strcpy(logfile, argv[1]);
     else
-	strcpy(logfile, "/tmp/recv-announce.log");
+        strcpy(logfile, "/tmp/recv-announce.log");
 
     close(1);
+
     if (open(logfile, O_WRONLY | O_CREAT | O_APPEND, 0660) < 0) {
-	perror(logfile);
-	exit(1);
+        perror(logfile);
+        exit(1);
     }
+
     close(2);
     dup(1);
 
 
     for (;;) {
-	memset(buf, '\0', RECV_BUF_SIZE);
-	memset(&R, '\0', len = sizeof(R));
+        memset(buf, '\0', RECV_BUF_SIZE);
+        memset(&R, '\0', len = sizeof(R));
 
-	if (recvfrom(0, buf, RECV_BUF_SIZE, 0, (sockaddr *)&R, &len) < 0) {
-	    perror("recv");
-	    exit(2);
-	}
-	xmemcpy(ip, &R.sin_addr.s_addr, 4);
-	hp = gethostbyaddr(ip, 4, AF_INET);
-	printf("==============================================================================\n");
-	printf("Received from %s [%s]\n",
-	    inet_ntoa(R.sin_addr),
-	    (hp && hp->h_name) ? hp->h_name : "Unknown");
-	fputs(buf, stdout);
-	fflush(stdout);
+        if (recvfrom(0, buf, RECV_BUF_SIZE, 0, (sockaddr *)&R, &len) < 0) {
+            perror("recv");
+            exit(2);
+        }
+
+        xmemcpy(ip, &R.sin_addr.s_addr, 4);
+        hp = gethostbyaddr(ip, 4, AF_INET);
+        printf("==============================================================================\n");
+        printf("Received from %s [%s]\n",
+               inet_ntoa(R.sin_addr),
+               (hp && hp->h_name) ? hp->h_name : "Unknown");
+        fputs(buf, stdout);
+        fflush(stdout);
     }
+
     return 0;
 }

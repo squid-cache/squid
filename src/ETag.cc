@@ -1,6 +1,6 @@
 
 /*
- * $Id: ETag.cc,v 1.9 2003/01/23 00:37:12 robertc Exp $
+ * $Id: ETag.cc,v 1.10 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: none          ETag parsing support
  * AUTHOR: Alex Rousskov
@@ -49,12 +49,16 @@ etagParseInit(ETag * etag, const char *str)
     assert(etag && str);
     etag->str = NULL;
     etag->weak = !strncmp(str, "W/", 2);
+
     if (etag->weak)
-	str += 2;
+        str += 2;
+
     /* check format (quoted-string) */
     len = strlen(str);
+
     if (len >= 2 && str[0] == '"' && str[len - 1] == '"')
-	etag->str = str;
+        etag->str = str;
+
     return etag->str != NULL;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayBucket.cc,v 1.2 2003/02/13 22:20:37 robertc Exp $
+ * $Id: DelayBucket.cc,v 1.3 2003/02/21 22:50:05 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -72,8 +72,8 @@ void
 DelayBucket::update (DelaySpec const &rate, int incr)
 {
     if (rate.restore_bps != -1 &&
-	(level() += rate.restore_bps * incr) > rate.max_bytes)
-	level() = rate.max_bytes;
+            (level() += rate.restore_bps * incr) > rate.max_bytes)
+        level() = rate.max_bytes;
 }
 
 int
@@ -93,8 +93,8 @@ void
 DelayBucket::init (DelaySpec const &rate)
 {
     level() = (int) (((double)rate.max_bytes *
-	      Config.Delay.initial) / 100);
+                      Config.Delay.initial) / 100);
 }
- 
+
 #endif
 

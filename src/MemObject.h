@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.2 2003/02/05 10:36:48 robertc Exp $
+ * $Id: MemObject.h,v 1.3 2003/02/21 22:50:06 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,10 +44,12 @@ class store_client;
 #include "DelayId.h"
 #endif
 
-class MemObject {
+class MemObject
+{
+
 public:
     static size_t inUseCount();
-  
+
     void dump() const;
     void *operator new (size_t);
     void operator delete (void *);
@@ -59,12 +61,12 @@ public:
     HttpReply const *getReply() const;
     void stat (StoreEntry *s) const;
     off_t endOffset () const;
-    size_t size() const;   
+    size_t size() const;
     void reset();
     off_t lowestMemReaderOffset() const;
     bool readAheadPolicyCanRead() const;
     void addClient(store_client *);
-    /* XXX belongs in MemObject::swapout, once swaphdrsz is managed 
+    /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
      * better
      */
     size_t objectBytesOnDisk() const;
@@ -74,11 +76,13 @@ public:
     bool isContiguous() const;
     int mostBytesWanted(int max) const;
 #if DELAY_POOLS
+
     DelayId mostBytesAllowed() const;
 #endif
 
 
 #if URL_CHECKSUM_DEBUG
+
     void checkUrlChecksum() const;
 #endif
 
@@ -88,31 +92,43 @@ public:
     off_t inmem_lo;
     dlink_list clients;
     int nclients;
-    struct {
+
+    struct
+    {
         off_t queue_offset;     /* relative to in-mem data */
         mem_node *memnode;      /* which node we're currently paging out */
-	StoreIOState::Pointer sio;
-    } swapout;
+        StoreIOState::Pointer sio;
+    }
+
+    swapout;
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
     request_t *request;
+
     struct timeval start_ping;
     IRCB *ping_reply_callback;
     void *ircb_data;
     int fd;                     /* FD of client creating this entry */
-    struct {
+
+    struct
+    {
         STABH *callback;
         void *data;
-    } abort;
+    }
+
+    abort;
     char *log_url;
     RemovalPolicyNode repl;
     int id;
     ssize_t object_sz;
     size_t swap_hdr_sz;
 #if URL_CHECKSUM_DEBUG
+
     unsigned int chksum;
 #endif
+
     const char *vary_headers;
+
 private:
     static MemPool *pool;
 

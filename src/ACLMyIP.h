@@ -37,8 +37,10 @@
 #define SQUID_ACLMYIP_H
 #include "ACLIP.h"
 
-class ACLMyIP : public ACLIP {
-  public:
+class ACLMyIP : public ACLIP
+{
+
+public:
     void *operator new(size_t);
     void operator delete(void *);
     virtual void deleteSelf() const;
@@ -46,9 +48,11 @@ class ACLMyIP : public ACLIP {
 
     virtual char const *typeString() const;
     virtual squid_acl aclType() const { return ACL_DERIVED;}
+
     virtual int match(ACLChecklist *checklist);
     virtual ACL *clone()const;
-  private:
+
+private:
     static MemPool *Pool;
     static Prototype RegistryProtoype;
     static ACLMyIP RegistryEntry_;
