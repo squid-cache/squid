@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.46 2001/03/04 01:12:13 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.47 2001/03/14 22:28:40 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1700,15 +1700,6 @@ storeDiskdDirStats(SwapDir * SD, StoreEntry * sentry)
     if (SD->flags.read_only)
 	storeAppendPrintf(sentry, " READ-ONLY");
     storeAppendPrintf(sentry, "\n");
-#if OLD_UNUSED_CODE
-#if !HEAP_REPLACEMENT
-    storeAppendPrintf(sentry, "LRU Expiration Age: %6.2f days\n",
-	(double) storeDiskdDirExpiredReferenceAge(SD) / 86400.0);
-#else
-    storeAppendPrintf(sentry, "Storage Replacement Threshold:\t%f\n",
-	heap_peepminkey(sd.repl.heap.heap));
-#endif
-#endif /* OLD_UNUSED_CODE */
     storeAppendPrintf(sentry, "Pending operations: %d\n", diskdinfo->away);
 }
 

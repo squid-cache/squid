@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.32 2001/03/04 01:12:16 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.33 2001/03/14 22:28:41 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1354,14 +1354,6 @@ storeUfsDirMaintain(SwapDir * SD)
 int
 storeUfsDirCheckObj(SwapDir * SD, const StoreEntry * e)
 {
-#if OLD_UNUSED_CODE
-    if (storeUfsDirExpiredReferenceAge(SD) < 300) {
-	debug(20, 3) ("storeUfsDirCheckObj: NO: LRU Age = %d\n",
-	    storeUfsDirExpiredReferenceAge(SD));
-	/* store_check_cachable_hist.no.lru_age_too_low++; */
-	return -1;
-    }
-#endif
     /* Return 999 (99.9%) constant load */
     return 999;
 }
@@ -1478,15 +1470,6 @@ storeUfsDirStats(SwapDir * SD, StoreEntry * sentry)
     if (SD->flags.read_only)
 	storeAppendPrintf(sentry, " READ-ONLY");
     storeAppendPrintf(sentry, "\n");
-#if OLD_UNUSED_CODE
-#if !HEAP_REPLACEMENT
-    storeAppendPrintf(sentry, "LRU Expiration Age: %6.2f days\n",
-	(double) storeUfsDirExpiredReferenceAge(SD) / 86400.0);
-#else
-    storeAppendPrintf(sentry, "Storage Replacement Threshold:\t%f\n",
-	heap_peepminkey(sd.repl.heap.heap));
-#endif
-#endif /* OLD_UNUSED_CODE */
 }
 
 static struct cache_dir_option options[] =
