@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.11 1996/04/01 04:16:11 wessels Exp $ */
+/* $Id: stat.cc,v 1.12 1996/04/01 04:31:11 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -130,7 +130,6 @@ void stat_general_get(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-
     /* have to use old method for this guy, 
      * otherwise we have to make ipcache know about StoreEntry */
     stat_ipcache_get(sentry, obj);
@@ -144,9 +143,10 @@ void stat_objects_get(obj, sentry, vm_or_not)
      int vm_or_not;
 {
     static char tempbuf[MAX_LINELEN];
-    static char space[40], space2[40];
+    static char space[40];
+    static char space2[40];
     int npend = 0;
-    StoreEntry *entry;
+    StoreEntry *entry = NULL;
     int N = 0;
     int obj_size;
 
