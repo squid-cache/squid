@@ -1,9 +1,5 @@
-
-
-
-
 /*
- * $Id: client.cc,v 1.52 1998/02/04 23:42:46 wessels Exp $
+ * $Id: client.cc,v 1.53 1998/02/06 17:33:44 kostas Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -118,6 +114,9 @@ static int client_comm_connect(int, char *, u_short, struct timeval *);
 static void usage(const char *progname);
 static int Now(struct timeval *);
 static SIGHDLR catch;
+static int put_fd;
+static char *put_file = NULL;
+static struct stat p;
 
 static void
 usage(const char *progname)
@@ -125,6 +124,7 @@ usage(const char *progname)
     fprintf(stderr,
 	"Usage: %s [-ars] [-i IMS] [-h host] [-p port] [-m method] [-t count] [-I ping-interval] url\n"
 	"Options:\n"
+	"    -P file      PUT request.\n"
 	"    -a           Do NOT include Accept: header.\n"
 	"    -r           Force cache to reload URL.\n"
 	"    -s           Silent.  Do not print data to stdout.\n"
@@ -148,6 +148,7 @@ main(int argc, char *argv[])
     int ping, pcount;
     int keep_alive = 0;
     int opt_noaccept = 0;
+    int opt_put = 0;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ], hostname[BUFSIZ];
     const char *method = "GET";
     extern char *optarg;
@@ -173,7 +174,7 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "ah:i:km:p:rst:g:I:?")) != -1)
+	while ((c = getopt(argc, argv, "ah:P:i:km:p:rst:g:p:I:?")) != -1)
 	    switch (c) {
 	    case 'a':
 		opt_noaccept = 1;
@@ -195,6 +196,9 @@ main(int argc, char *argv[])
 		sscanf(optarg, "%d", &port);
 		if (port < 1)
 		    port = CACHE_HTTP_PORT;	/* default */
+		break;
+	    case 'P':
+		put_file=xstrdup(optarg);
 		break;
 	    case 'i':		/* IMS */
 		ims = (time_t) atoi(optarg);
@@ -227,9 +231,24 @@ main(int argc, char *argv[])
 	snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
 	xfree(t);
     }
+    if (put_file) {
+	opt_put=1;
+	method=xstrdup("PUT");
+	put_fd=open(put_file,O_RDONLY);
+	if (put_fd<0) {
+		fprintf(stderr,"%s: can't open file (%s)\n", argv[0],
+			xstrerror());
+		exit(-1);
+	}
+	fstat(put_fd, &p);
+    }
     snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);
     if (reload) {
 	snprintf(buf, BUFSIZ, "Pragma: no-cache\r\n");
+	strcat(msg, buf);
+    }
+    if (put_fd>0) {
+	snprintf(buf, BUFSIZ, "Content-length: %d\r\n", p.st_size);
 	strcat(msg, buf);
     }
     if (opt_noaccept == 0) {
@@ -295,6 +314,18 @@ main(int argc, char *argv[])
 	} else if (bytesWritten != strlen(msg)) {
 	    fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
 	    exit(1);
+	}
+	if (put_file) {
+		int x;
+		while ((x=read(put_fd,msg, BUFSIZ))>0) {
+				x=write(conn, msg, x);
+				if (x<=0) break;
+		} 
+		if (x!=0) {
+			fprintf(stderr,"client: ERROR: Cannot send file.\n");
+			exit(1);
+		}
+		close(put_fd);
 	}
 	/* Read the data */
 	while ((len = read(conn, buf, sizeof(buf))) > 0) {
