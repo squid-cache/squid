@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.42 1996/07/18 20:27:10 wessels Exp $
+ * $Id: stat.cc,v 1.43 1996/07/20 03:16:55 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -882,7 +882,7 @@ void parameter_get(obj, sentry)
 }
 
 
-void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier)
+void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier, neighbor)
      cacheinfo *obj;
      char *url;
      char *id;
@@ -893,10 +893,11 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
      int msec;
      char *ident;
      hier_code hier;
+     char *neighbor;
 {
     LOCAL_ARRAY(char, tmp, 6000);	/* MAX_URL is 4096 */
-    char *buf = NULL;
     int x;
+    static char *dash = "-";
 
     getCurrentTime();
 
@@ -917,11 +918,13 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
 #endif
 
     if (!method)
-	method = "-";
+	method = dash;
     if (!url)
-	url = "-";
+	url = dash;
     if (!ident || ident[0] == '\0')
-	ident = "-";
+	ident = dash;
+    if (!neighbor)
+	neighbor = dash;
 
     if (obj->logfile_status == LOG_ENABLE) {
 	if (emulate_httpd_log)
@@ -934,29 +937,28 @@ void log_append(obj, url, id, size, action, method, http_code, msec, ident, hier
 		action,
 		size);
 	else
-	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d/%s %d %s %s %s\n",
+	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s/%s\n",
 		(int) current_time.tv_sec,
 		(int) current_time.tv_usec / 1000,
 		msec,
 		id,
 		action,
 		http_code,
-		hier_strings[hier],
 		size,
 		method,
 		url,
-		ident);
+		ident,
+		hier_strings[hier],
+		neighbor);
 	x = file_write(obj->logfile_fd,
-	    buf = xstrdup(tmp),
+	    xstrdup(tmp),
 	    strlen(tmp),
 	    obj->logfile_access,
 	    NULL,
 	    NULL,
 	    xfree);
-	if (x != DISK_OK) {
+	if (x != DISK_OK)
 	    debug(18, 1, "log_append: File write failed.\n");
-	    safe_free(buf);
-	}
     }
 }
 

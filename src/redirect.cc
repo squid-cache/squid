@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.5 1996/07/18 20:27:07 wessels Exp $
+ * $Id: redirect.cc,v 1.6 1996/07/20 03:16:54 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -269,7 +269,8 @@ static void redirectDispatch(redirect, r)
 	len,
 	0,			/* timeout */
 	NULL,			/* Handler */
-	NULL);			/* Handler-data */
+	NULL,			/* Handler-data */
+	xfree);
     debug(29, 5, "redirectDispatch: Request sent to Redirector #%d, %d bytes\n",
 	redirect->index + 1, len);
     RedirectStats.use_hist[redirect->index]++;

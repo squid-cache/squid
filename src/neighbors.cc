@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.32 1996/07/19 17:35:23 wessels Exp $
+ * $Id: neighbors.cc,v 1.33 1996/07/20 03:16:53 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -182,6 +182,8 @@ void hierarchy_log_append(entry, code, timeout, cache_host)
 	code = HIER_MAX;
     if (mem)
 	mem->hierarchy_code = code;
+    if (mem && cache_host)
+	mem->hierarchy_host = xstrdup(cache_host);
 
     if (emulate_httpd_log) {
 	if (squid_curtime != last_time) {

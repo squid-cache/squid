@@ -1,5 +1,5 @@
 /*
- * $Id: wais.cc,v 1.33 1996/07/18 20:27:13 wessels Exp $
+ * $Id: wais.cc,v 1.34 1996/07/20 03:16:58 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -297,7 +297,6 @@ static void waisSendComplete(fd, buf, size, errflag, data)
 	    (void *) waisState,
 	    getReadTimeout());
     }
-    safe_free(buf);		/* Allocated by waisSendRequest. */
 }
 
 /* This will be called when connect completes. Write request. */
@@ -329,7 +328,8 @@ static void waisSendRequest(fd, waisState)
 	len,
 	30,
 	waisSendComplete,
-	(void *) waisState);
+	(void *) waisState,
+	xfree);
     if (BIT_TEST(waisState->entry->flag, CACHABLE))
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }

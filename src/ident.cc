@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.5 1996/07/18 20:27:04 wessels Exp $
+ * $Id: ident.cc,v 1.6 1996/07/20 03:16:52 wessels Exp $
  *
  * DEBUG: section 31    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -83,7 +83,8 @@ void identStart(sock, icpState)
 	strlen(reqbuf),
 	5,			/* timeout */
 	identRequestComplete,
-	(void *) icpState);
+	(void *) icpState,
+	NULL);
     comm_set_select_handler(sock,
 	COMM_SELECT_READ,
 	(PF) identReadReply,
