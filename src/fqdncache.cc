@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.155 2003/02/21 22:50:08 robertc Exp $
+ * $Id: fqdncache.cc,v 1.156 2003/10/11 22:33:51 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -333,7 +333,7 @@ fqdncacheParse(rfc1035_rr * answers, int nr)
     int k;
     int na = 0;
     memset(&f, '\0', sizeof(f));
-    f.expires = squid_curtime;
+    f.expires = squid_curtime + Config.negativeDnsTtl;
     f.flags.negcached = 1;
 
     if (nr < 0) {
