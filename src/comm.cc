@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.308 2000/10/05 12:30:10 adrian Exp $
+ * $Id: comm.cc,v 1.309 2000/10/10 02:22:25 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -84,8 +84,11 @@ CommWriteStateCallbackAndFree(int fd, int code)
     if (CommWriteState == NULL)
 	return;
     if (CommWriteState->free_func) {
-	CommWriteState->free_func(CommWriteState->buf);
+	FREE *free_func = CommWriteState->free_func;
+	void *free_buf = CommWriteState->buf;
+	CommWriteState->free_func = NULL;
 	CommWriteState->buf = NULL;
+	free_func(free_buf);
     }
     callback = CommWriteState->handler;
     data = CommWriteState->handler_data;
