@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.158 1996/12/18 00:02:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.159 1996/12/20 16:21:30 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -919,7 +919,6 @@ parseAnnounceToLine(void)
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
-    Config.Announce.on = 1;
     safe_free(Config.Announce.host);
     Config.Announce.host = xstrdup(token);
     if ((token = strchr(Config.Announce.host, ':'))) {
