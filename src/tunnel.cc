@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.136 2003/02/21 22:50:12 robertc Exp $
+ * $Id: tunnel.cc,v 1.137 2003/02/23 00:08:04 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -535,7 +535,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
     statCounter.server.other.requests++;
     /* Create socket. */
     sock = comm_openex(SOCK_STREAM,
-                       0,
+                       IPPROTO_TCP,
                        getOutgoingAddr(request),
                        0,
                        COMM_NONBLOCKING,

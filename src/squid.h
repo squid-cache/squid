@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.230 2003/02/21 22:50:10 robertc Exp $
+ * $Id: squid.h,v 1.231 2003/02/23 00:08:04 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -422,5 +422,13 @@ extern "C"
 
 #define FD_READ_METHOD(fd, buf, len) (*fd_table[fd].read_method)(fd, buf, len)
 #define FD_WRITE_METHOD(fd, buf, len) (*fd_table[fd].write_method)(fd, buf, len)
+
+#ifndef IPPROTO_UDP
+#define IPPROTO_UDP 0
+#endif
+
+#ifndef IPPROTO_TCP
+#define IPPROTO_TCP 0
+#endif
 
 #endif /* SQUID_H */

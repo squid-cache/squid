@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.97 2003/02/21 22:50:08 robertc Exp $
+ * $Id: forward.cc,v 1.98 2003/02/23 00:08:04 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -555,7 +555,7 @@ fwdConnectStart(void *data)
                   inet_ntoa(outgoing), tos);
 
     fd = comm_openex(SOCK_STREAM,
-                     0,
+                     IPPROTO_TCP,
                      outgoing,
                      0,
                      COMM_NONBLOCKING,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.33 2003/02/21 22:50:13 robertc Exp $
+ * $Id: wccp.cc,v 1.34 2003/02/23 00:08:04 robertc Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -142,7 +142,7 @@ wccpConnectionOpen(void)
     }
 
     theInWccpConnection = comm_open(SOCK_DGRAM,
-                                    0,
+                                    IPPROTO_UDP,
                                     Config.Wccp.incoming,
                                     port,
                                     COMM_NONBLOCKING,
@@ -162,7 +162,7 @@ wccpConnectionOpen(void)
 
     if (Config.Wccp.outgoing.s_addr != no_addr.s_addr) {
         theOutWccpConnection = comm_open(SOCK_DGRAM,
-                                         0,
+                                         IPPROTO_UDP,
                                          Config.Wccp.outgoing,
                                          port,
                                          COMM_NONBLOCKING,

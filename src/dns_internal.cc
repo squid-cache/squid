@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.53 2003/02/21 22:50:08 robertc Exp $
+ * $Id: dns_internal.cc,v 1.54 2003/02/23 00:08:03 robertc Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -761,7 +761,7 @@ idnsInit(void)
             addr = Config.Addrs.udp_incoming;
 
         DnsSocket = comm_open(SOCK_DGRAM,
-                              0,
+                              IPPROTO_UDP,
                               addr,
                               0,
                               COMM_NONBLOCKING,
