@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.26 2003/02/13 08:07:48 robertc Exp $
+ * $Id: external_acl.cc,v 1.27 2003/02/14 23:17:06 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -575,15 +575,15 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 	    break;
 #if USE_SSL
 	case _external_acl_format::EXT_ACL_USER_CERT:
-	    if (cbdataReferenceValid(ch->conn)) {
-		SSL *ssl = fd_table[ch->conn->fd].ssl;
+	    if (cbdataReferenceValid(ch->conn())) {
+		SSL *ssl = fd_table[ch->conn()->fd].ssl;
 		if (ssl)
 		    str = sslGetUserAttribute(ssl, format->header);
 	    }
 	    break;
 	case _external_acl_format::EXT_ACL_CA_CERT:
-	    if (cbdataReferenceValid(ch->conn)) {
-		SSL *ssl = fd_table[ch->conn->fd].ssl;
+	    if (cbdataReferenceValid(ch->conn())) {
+		SSL *ssl = fd_table[ch->conn()->fd].ssl;
 		if (ssl)
 		    str = sslGetCAAttribute(ssl, format->header);
 	    }
