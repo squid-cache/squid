@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.142 2002/10/14 08:16:59 robertc Exp $
+ * $Id: wais.cc,v 1.143 2002/10/14 08:52:23 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -113,7 +113,7 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
 	kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delay_id, 1, read_sz);
+    read_sz = delayBytesWanted(delayId, 1, read_sz);
 #endif
     debug(24, 5) ("waisReadReply: FD %d read len:%d\n", fd, (int)len);
     if (flag == COMM_OK && len > 0) {
