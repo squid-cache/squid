@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.88 1997/01/03 22:45:16 wessels Exp $
+ * $Id: squid.h,v 1.89 1997/01/03 22:59:17 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -245,7 +245,7 @@ typedef unsigned long u_num32;
 
 #include "ansiproto.h"
 
-#if HAVE_REGEX_H
+#if HAVE_REGEX_H && !defined(_SQUID_NEXT_)
 #include <regex.h>
 #else /* HAVE_REGEX_H */
 #include "GNUregex.h"

@@ -16,6 +16,9 @@
 /* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
 #undef HAVE_ALLOCA_H
 
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef mode_t
+
 /* Define to `long' if <sys/types.h> doesn't define.  */
 #undef off_t
 
