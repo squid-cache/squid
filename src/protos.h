@@ -590,7 +590,6 @@ extern int memPoolWasUsed(const MemPool * pool);
 extern int memPoolInUseCount(const MemPool * pool);
 extern size_t memPoolInUseSize(const MemPool * pool);
 extern int memPoolUsedCount(const MemPool * pool);
-extern void memPoolDescribe(const MemPool * pool);
 extern void memPoolReport(const MemPool * pool, StoreEntry * e);
 
 /* Mem */
