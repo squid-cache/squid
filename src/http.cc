@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.53 1996/04/17 17:51:51 wessels Exp $ */
+/* $Id: http.cc,v 1.54 1996/04/17 17:52:22 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -11,7 +11,7 @@
 
 typedef struct _httpdata {
     StoreEntry *entry;
-    request_t *REQ;
+    request_t *request;
     char *req_hdr;
     char *icp_page_ptr;		/* Used to send proxy-http request: 
 				 * put_free_8k_page(me) if the lifetime
@@ -41,7 +41,7 @@ static int httpStateFree(fd, httpState)
     if (httpState->icp_rwd_ptr)
 	safe_free(httpState->icp_rwd_ptr);
     if (httpState->free_request)
-	safe_free(httpState->REQ);
+	safe_free(httpState->request);
     xfree(httpState);
     return 0;
 }
@@ -389,7 +389,7 @@ static void httpSendRequest(fd, data)
     int len = 0;
     int buflen;
     int cfd = -1;
-    request_t *req = data->REQ;
+    request_t *req = data->request;
     char *Method = RequestMethodStr[req->method];
 
     debug(11, 5, "httpSendRequest: FD %d: data %p.\n", fd, data);
@@ -473,7 +473,7 @@ static void httpConnInProgress(fd, data)
      HttpData *data;
 {
     StoreEntry *entry = data->entry;
-    request_t *req = data->REQ;
+    request_t *req = data->request;
 
     debug(11, 5, "httpConnInProgress: FD %d data=%p\n", fd, data);
 
@@ -521,7 +521,7 @@ int proxyhttpStart(e, url, entry)
     data->req_hdr = entry->mem_obj->mime_hdr;
     request = (request_t *) xcalloc(1, sizeof(request_t));
     data->free_request = 1;
-    data->REQ = request;
+    data->request = request;
 
     request->method = entry->method;
     strncpy(request->host, e->host, SQUIDHOSTNAMELEN);
@@ -597,7 +597,7 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
     data->req_hdr = req_hdr;
-    data->REQ = request;
+    data->request = request;
 
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
