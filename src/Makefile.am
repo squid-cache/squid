@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.15 2001/11/30 15:34:37 hno Exp $
+#  $Id: Makefile.am,v 1.16 2001/11/30 16:22:35 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -72,7 +72,7 @@ noinst_PROGRAMS = \
 
 bin_PROGRAMS = \
 	squid \
-	client
+	squidclient
 
 libexec_PROGRAMS = \
 	@OPT_PINGER@ \
@@ -83,6 +83,7 @@ libexec_PROGRAMS = \
 cf_gen_SOURCES = cf_gen.c defines.h
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
+squidclient_SOURCES = client.c
 
 EXTRA_squid_SOURCES = \
 	delay_pools.c \
