@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.103 1996/09/12 00:31:43 wessels Exp $
+ * $Id: store.cc,v 1.104 1996/09/12 04:49:44 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -252,7 +252,8 @@ static char swaplog_file[MAX_FILE_NAME_LEN];
 static char tmp_filename[MAX_FILE_NAME_LEN];
 
 /* patch cache_dir to accomodate multiple disk storage */
-dynamic_array *cache_dirs = NULL;
+char **CacheDirs = NULL;
+static int CacheDirsAllocated = 0;
 int ncache_dirs = 0;
 
 static MemObject *new_MemObject()
@@ -1063,11 +1064,21 @@ void storeAppendPrintf(va_alist)
 int storeAddSwapDisk(path)
      char *path;
 {
-    if (cache_dirs == NULL)
-	cache_dirs = create_dynamic_array(5, 5);
-    /* XXX note xstrdup here prob means we
-     * can't use destroy_dynamic_array() */
-    insert_dynamic_array(cache_dirs, xstrdup(path));
+    char **tmp = NULL;
+    int i;
+    if (CacheDirs == NULL) {
+	CacheDirsAllocated = 4;
+	CacheDirs = xcalloc(CacheDirsAllocated, sizeof(char *));
+    }
+    if (CacheDirsAllocated == ncache_dirs) {
+	CacheDirsAllocated <<= 1;
+	tmp = xcalloc(CacheDirsAllocated, sizeof(char *));
+	for (i=0; i<ncache_dirs; i++)
+		*(tmp+i) = *(CacheDirs+i);
+	xfree(CacheDirs);
+	CacheDirs = tmp;
+    }
+    *(CacheDirs+ncache_dirs) = xstrdup(path);
     return ++ncache_dirs;
 }
 
@@ -1075,7 +1086,7 @@ int storeAddSwapDisk(path)
 char *swappath(n)
      int n;
 {
-    return (char *) cache_dirs->collection[n % ncache_dirs];
+    return *(CacheDirs+(n % ncache_dirs));
 }
 
 
@@ -1965,10 +1976,8 @@ unsigned int storeGetBucketNum()
 #define SWAP_MAX_HELP STORE_BUCKETS/2
 
 /* The maximum objects to scan for maintain storage space */
-#define SWAP_LRUSCAN_COUNT	(256)
-
-/* Removes at most 30 LRU objects for one loop */
-#define SWAP_LRU_REMOVE_COUNT	(8)
+#define SWAP_LRUSCAN_COUNT	256
+#define SWAP_LRU_REMOVE_COUNT	8
 
 /* Clear Swap storage to accommodate the given object len */
 int storeGetSwapSpace(size)
@@ -1976,16 +1985,17 @@ int storeGetSwapSpace(size)
 {
     static int fReduceSwap = 0;
     static int swap_help = 0;
-    StoreEntry *LRU = NULL, *e = NULL;
+    StoreEntry *e = NULL;
     int scanned = 0;
     int removed = 0;
     int expired = 0;
     int locked = 0;
     int locked_size = 0;
-    int scan_in_objs = 0;
+    int list_count = 0;
+    int scan_count = 0;
+    int max_list_count = SWAP_LRUSCAN_COUNT << 1;
     int i;
-    int LRU_cur_size = meta_data.store_entries;
-    dynamic_array *LRU_list;
+    StoreEntry **LRU_list;
     hash_link *link_ptr = NULL, *next = NULL;
     unsigned int kb_size = ((size + 1023) >> 10);
 
@@ -2002,8 +2012,8 @@ int storeGetSwapSpace(size)
 
     debug(20, 2, "storeGetSwapSpace: Need %d bytes...\n", size);
 
-    LRU_list = create_dynamic_array(LRU_cur_size, LRU_cur_size);
-    /* remove expired objects until recover enough space or no expired objects */
+    LRU_list = xcalloc(max_list_count, sizeof(StoreEntry *));
+    /* remove expired objects until recover enough or no expired objects */
     for (i = 0; i < STORE_BUCKETS; i++) {
 	int expired_in_one_bucket = 0;
 	link_ptr = hash_get_bucket(store_table, storeGetBucketNum());
@@ -2012,16 +2022,19 @@ int storeGetSwapSpace(size)
 	/* this while loop handles one bucket of hash table */
 	expired_in_one_bucket = 0;
 	for (; link_ptr; link_ptr = next) {
+	    if (list_count == max_list_count)
+		break;
 	    scanned++;
 	    next = link_ptr->next;
 	    e = (StoreEntry *) link_ptr;
 	    if (storeCheckExpired(e)) {
-		debug(20, 2, "storeGetSwapSpace: Expired: <URL:%s>\n", e->url);
+		debug(20, 3, "storeGetSwapSpace: Expired '%s'\n", e->url);
 		++expired_in_one_bucket;
 		storeRelease(e);
 	    } else if (!storeEntryLocked(e)) {
-		insert_dynamic_array(LRU_list, e);
-		++scan_in_objs;
+		*(LRU_list+list_count) = e;
+		list_count++;
+		scan_count++;
 	    } else {
 		locked++;
 		locked_size += e->mem_obj->e_current_len;
@@ -2033,20 +2046,17 @@ int storeGetSwapSpace(size)
 		(fReduceSwap && (store_swap_size + kb_size <= store_swap_low)))
 	    ) {
 	    fReduceSwap = 0;
-	    destroy_dynamic_array(LRU_list);
+	    safe_free(LRU_list);
 	    debug(20, 2, "storeGetSwapSpace: Finished, %d objects expired.\n",
 		expired);
 	    return 0;
 	}
-	qsort((char *) LRU_list->collection,
-	    LRU_list->index,
+	qsort((char *) LRU_list,
+	    list_count,
 	    sizeof(StoreEntry *),
 	    (QS) compareLastRef);
-	/* keep the first n LRU objects only */
-	cut_dynamic_array(LRU_list, SWAP_LRU_REMOVE_COUNT);
-
-	/* Scan in about SWAP_LRU_COUNT for one call */
-	if (scan_in_objs >= SWAP_LRUSCAN_COUNT)
+	list_count = SWAP_LRU_REMOVE_COUNT;	/* chop list */
+	if (scan_count > SWAP_LRUSCAN_COUNT)
 	    break;
     }				/* for */
 
@@ -2076,26 +2086,17 @@ int storeGetSwapSpace(size)
 	LRU_list->index);
 #endif /* LOTSA_DEBUGGING */
 
-    /* Although all expired objects removed, still didn't recover enough */
-    /* space.  Kick LRU out until we have enough swap space */
-    for (i = 0; i < LRU_list->index; i++) {
-	if (store_swap_size + kb_size <= store_swap_low) {
-	    fReduceSwap = 0;
-	    break;
-	}
-	if ((LRU = LRU_list->collection[i]) != NULL) {
-	    if (storeRelease(LRU) == 0) {
-		removed++;
-	    } else {
-		debug(20, 2, "storeGetSwapSpace: Help! Can't remove objects. <%s>\n",
-		    LRU->url);
-	    }
-	}
+    /* Kick LRU out until we have enough swap space */
+    for (i = 0; i < list_count; i++) {
+	if (storeRelease(*(LRU_list+i)) == 0)
+	    removed++;
     }
-    debug(20, 2, "storeGetSwapSpace: After Freeing Size:   %7d kbytes\n", store_swap_size);
-
+    if (store_swap_size + kb_size <= store_swap_low)
+        fReduceSwap = 0;
+    debug(20, 2, "storeGetSwapSpace: After Freeing Size:   %7d kbytes\n",
+	store_swap_size);
     /* free the list */
-    destroy_dynamic_array(LRU_list);
+    safe_free(LRU_list);
 
     if ((store_swap_size + kb_size > store_swap_high)) {
 	if (++swap_help > SWAP_MAX_HELP) {
