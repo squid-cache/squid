@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.31 1996/04/10 20:53:44 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.32 1996/04/11 04:47:19 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -187,7 +187,6 @@ void self_destruct(in_string)
     fatal(fatal_str);
 }
 
-#ifndef IPACL_INTS
 int ip_acl_match(c, a)
      struct in_addr c;
      ip_acl *a;
@@ -314,105 +313,6 @@ void addToIPACL(list, ip_str, access)
     q->addr.s_addr = htonl(a1 * 0x1000000 + a2 * 0x10000 + a3 * 0x100 + a4);
     q->mask.s_addr = lmask.s_addr;
 }
-
-#else /* original code using ints */
-
-int ip_acl_match(c1, c2, c3, c4, a1, a2, a3, a4)
-     int c1;
-     int c2;
-     int c3;
-     int c4;
-     int a1;
-     int a2;
-     int a3;
-     int a4;
-{
-    if (!((a1 == 0) || (a1 == c1)))
-	return 0;
-    if (!((a2 == 0) || (a2 == c2)))
-	return 0;
-    if (!((a3 == 0) || (a3 == c3)))
-	return 0;
-    if (!((a4 == 0) || (a4 == c4)))
-	return 0;
-
-    return 1;
-}
-
-ip_access_type ip_access_check(address, list)
-     struct in_addr address;
-     ip_acl *list;
-{
-    int c1, c2, c3, c4;
-    ip_acl *p;
-    unsigned int naddr = 0;	/* network byte-order IP addr */
-
-    if (!list)
-	return IP_ALLOW;
-
-    naddr = htonl(address.s_addr);
-    c1 = ((int) naddr & 0xff000000) >> 24;
-    c2 = ((int) naddr & 0x00ff0000) >> 16;
-    c3 = ((int) naddr & 0x0000ff00) >> 8;
-    c4 = ((int) naddr & 0x000000ff);
-
-    debug(3, 10, "ip_access_check: Using %d.%d.%d.%d\n", c1, c2, c3, c4);
-
-    if ((c1 == 127) && (c2 == 0) && (c3 == 0) && (c4 == 1))
-	return IP_ALLOW;	/* always allow localhost */
-
-    for (p = list; p; p = p->next) {
-	debug(3, 10, "ip_access_check: %d.%d.%d.%d vs %d.%d.%d.%d\n",
-	    c1, c2, c3, c4, p->a1, p->a2, p->a3, p->a4);
-	if (ip_acl_match(c1, c2, c3, c4, p->a1, p->a2, p->a3, p->a4))
-	    return p->access;
-    }
-    return IP_ALLOW;
-}
-
-void addToIPACL(list, ip_str, access)
-     ip_acl **list;
-     char *ip_str;
-     ip_access_type access;
-{
-    ip_acl *p, *q;
-    int a1, a2, a3, a4;
-
-    if (!ip_str) {
-	return;
-    }
-    if (!(*list)) {
-	/* empty list */
-	*list = (ip_acl *) xcalloc(1, sizeof(ip_acl));
-	(*list)->next = NULL;
-	q = *list;
-    } else {
-	p = *list;
-	while (p->next)
-	    p = p->next;
-	q = (ip_acl *) xcalloc(1, sizeof(ip_acl));
-	q->next = NULL;
-	p->next = q;
-    }
-
-    /* decode ip address */
-    if (strstr(ip_str, "all") || strstr(ip_str, "ALL") ||
-	strstr(ip_str, "All")) {
-	a1 = a2 = a3 = a4 = 0;
-    } else {
-	a1 = a2 = a3 = a4 = 0;
-	sscanf(ip_str, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-    }
-
-    q->access = access;
-    q->a1 = a1;
-    q->a2 = a2;
-    q->a3 = a3;
-    q->a4 = a4;
-
-}
-
-#endif /* ndef IPACL_INTS */
 
 static void wordlistDestroy(list)
      wordlist **list;
@@ -1369,6 +1269,12 @@ int parseConfigFile(file_name)
 	/* Parse a manager_deny line */
 	else if (!strcmp(token, "manager_deny"))
 	    parseManagerDenyLine(line_in);
+
+	else if (!strcmp(token, "acl"))
+	    aclParseAclLine(line_in);
+
+	else if (!strcmp(token, "access"))
+	    aclParseAccessLine(line_in);
 
 	/* Parse a http_stop line */
 	else if (!strcmp(token, "http_stop"))

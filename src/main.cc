@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.30 1996/04/10 20:53:04 wessels Exp $ */
+/* $Id: main.cc,v 1.31 1996/04/11 04:47:24 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -17,6 +17,7 @@ int vhost_mode = 0;
 int unbuffered_logs = 1;	/* debug and hierarhcy unbuffered by default */
 int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
 int reread_pending = 0;		/* set by SIGHUP handler */
+char *version_string = SQUID_VERSION;
 
 extern void (*failure_notify) ();	/* for error reporting from xmalloc */
 
@@ -54,7 +55,7 @@ static void mainParseOptions(argc, argv)
     while ((c = getopt(argc, argv, "vCDRVbsif:a:p:u:m:zh?")) != -1) {
 	switch (c) {
 	case 'v':
-	    printf("Harvest Cache: Version %s\n", SQUID_VERSION);
+	    printf("Harvest Cache: Version %s\n", version_string);
 	    exit(0);
 	    /* NOTREACHED */
 	case 'b':
@@ -167,7 +168,7 @@ void serverConnectionsClose()
 
 static void mainReinitialize()
 {
-    debug(1, 0, "Retarting Harvest Cache (version %s)...\n", SQUID_VERSION);
+    debug(1, 0, "Retarting Harvest Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     neighborsDestroy();
 
@@ -194,7 +195,7 @@ static void mainInitialize()
     fdstat_open(fileno(debug_log), LOG);
     fd_note(fileno(debug_log), getCacheLogFile());
 
-    debug(1, 0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
+    debug(1, 0, "Starting Harvest Cache (version %s)...\n", version_string);
 
     ipcache_init();
     neighbors_init();

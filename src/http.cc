@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.36 1996/04/10 20:45:27 wessels Exp $ */
+/* $Id: http.cc,v 1.37 1996/04/11 04:47:23 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -454,7 +454,7 @@ static void httpSendRequest(fd, data)
 	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
 		ybuf = (char *) get_free_4k_page(__FILE__, __LINE__);
 		memset(ybuf, '\0', SM_PAGE_SIZE);
-		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, SQUID_VERSION);
+		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, version_string);
 		t = ybuf;
 	    }
 	    if (len + (int) strlen(t) > buflen - 10)

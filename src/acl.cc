@@ -1,4 +1,8 @@
-#ident "$Id: acl.cc,v 1.3 1996/04/11 03:22:13 wessels Exp $"
+#ident "$Id: acl.cc,v 1.4 1996/04/11 04:46:49 wessels Exp $"
+
+/*
+ * DEBUG: Section 28          acl
+ */
 
 #include "squid.h"
 
@@ -169,7 +173,8 @@ wordlist *aclParseWordList()
 
 
 
-void aclParseAclLine()
+void aclParseAclLine(line_in)
+     char *line_in;
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
@@ -218,16 +223,18 @@ void aclParseAclLine()
 	return;
 	break;
     }
+    A->cfgline = xstrdup(line_in);
     *AclListTail = A;
     AclListTail = &A->next;
 }
 
-void aclParseAccessLine()
+void aclParseAccessLine(line_in)
+     char *line_in;
 {
     char *t = NULL;
     struct _acl_access *A = NULL;
     struct _acl_list *L = NULL;
-    struct _acl_list **Tail = &L;
+    struct _acl_list **Tail = NULL;
     struct _acl *a = NULL;
 
     /* first expect either 'allow' or 'deny' */
@@ -248,6 +255,7 @@ void aclParseAccessLine()
 
     /* next expect a list of ACL names, possibly preceeded
      * by '!' for negation */
+    Tail = &A->acl_list;
     while ((t = strtok(NULL, w_space))) {
 	L = (struct _acl_list *) xcalloc(1, sizeof(struct _acl_list));
 	L->op = 1;		/* defaults to non-negated */
@@ -256,6 +264,8 @@ void aclParseAccessLine()
 	    L->op = 0;
 	    t++;
 	}
+	debug(28, 1, "aclParseAccessLine: looking for ACL name '%s'\n",
+	    t);
 	a = aclFindByName(t);
 	if (a == NULL) {
 	    debug(28, 1, "aclParseAccessLine: ACL name '%s' not found.\n", t);
@@ -266,6 +276,7 @@ void aclParseAccessLine()
 	*Tail = L;
 	Tail = &L->next;
     }
+    A->cfgline = xstrdup(line_in);
     *AccessListTail = A;
     AccessListTail = &A->next;
 }
@@ -288,8 +299,10 @@ int aclMatchWord(data, word)
      wordlist *data;
      char *word;
 {
+    debug(28, 1, "aclMatchWord: looking for '%s'\n", word);
     while (data) {
-	if (!strcasecmp(data->key, word))
+	debug(28, 1, "aclMatchWord: checking '%s'\n", data->key);
+	if (strstr(word, data->key))
 	    return 1;
 	data = data->next;
     }
@@ -328,6 +341,7 @@ int aclMatchAcl(acl, c, pr, h, po, r)
 {
     if (!acl)
 	return 0;
+    debug(28, 1, "aclMatchAcl: checking '%s'\n", acl->cfgline);
     switch (acl->type) {
     case ACL_SRC_IP:
 	return aclMatchIp(acl->data, c);
@@ -370,6 +384,7 @@ int aclMatchAclList(list, c, pr, h, po, r)
      int po;
      char *r;
 {
+    debug(28, 1, "aclMatchAclList: list=%p\n", list);
     while (list) {
 	if (aclMatchAcl(list->acl, c, pr, h, po, r) != list->op)
 	    return 0;
@@ -388,10 +403,19 @@ int aclCheck(cli_addr, proto, host, port, request)
     struct _acl_access *A = NULL;
     int allow = 0;
 
+    debug(28, 1, "aclCheck: cli_addr=%s\n", inet_ntoa(cli_addr));
+    debug(28, 1, "aclCheck: proto=%d\n", proto);
+    debug(28, 1, "aclCheck: host=%s\n", host);
+    debug(28, 1, "aclCheck: port=%d\n", port);
+    debug(28, 1, "aclCheck: request=%s\n", request);
+
     for (A = AccessList; A; A = A->next) {
+	debug(28, 1, "aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
-	if (aclMatchAclList(A->acl_list, cli_addr, proto, host, port, request))
+	if (aclMatchAclList(A->acl_list, cli_addr, proto, host, port, request)) {
+	    debug(28, 1, "aclCheck: match found, returning %d\n", allow);
 	    return allow;
+	}
     }
     return !allow;
 }

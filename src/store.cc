@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.42 1996/04/10 20:57:26 wessels Exp $ */
-#ident "$Id: store.cc,v 1.42 1996/04/10 20:57:26 wessels Exp $"
+/* $Id: store.cc,v 1.43 1996/04/11 04:47:27 wessels Exp $ */
+#ident "$Id: store.cc,v 1.43 1996/04/11 04:47:27 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -2252,41 +2252,6 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
     }
     return *size;
 }
-
-#ifdef UNUSED_CODE
-/*
- * Go through the first 300 bytes of MIME header of a cached object, returning
- * fields that match.
- */
-char *storeMatchMime(e, mimehdr, buf, buf_len)
-     StoreEntry *e;
-     char *mimehdr;
-     char *buf;
-     int buf_len;
-{
-    int i;
-    int offset = 0;
-
-    offset = storeGrep(e, mimehdr, 300);
-
-    buf[0] = '\0';
-
-    if (offset) {
-	storeCopy(e, offset, buf_len, buf, &buf_len);
-	for (i = 0; i < buf_len; ++i) {
-	    if (buf[i] == '\r') {
-		buf[i] = ' ';
-	    }			/* strip \r */
-	    if (buf[i] == '\n') {
-		buf[i] = '\0';
-		break;
-	    }
-	}
-	buf[buf_len - 1] = '\0';	/* always terminate at the end */
-    }
-    return (buf);
-}
-#endif
 
 int storeGrep(e, string, nbytes)
      StoreEntry *e;

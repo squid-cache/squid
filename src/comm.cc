@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.20 1996/04/10 20:45:26 wessels Exp $ */
+/* $Id: comm.cc,v 1.21 1996/04/11 04:47:21 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -21,10 +21,6 @@ FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int *fd_lifetime = NULL;
-#ifdef UNUSED_CODE
-static fd_set send_sockets;
-static fd_set receive_sockets;
-#endif
 static int (*app_handler) ();
 static void checkTimeouts();
 static void checkLifetimes();
@@ -188,9 +184,6 @@ int comm_listen(sock)
      int sock;
 {
     int x;
-#ifdef UNUSED_CODE
-    FD_SET(sock, &receive_sockets);
-#endif
     if ((x = listen(sock, 50)) < 0) {
 	debug(5, 0, "comm_listen: listen(%d, 50): %s\n",
 	    sock, xstrerror());
@@ -301,9 +294,6 @@ int comm_connect_addr(sock, address)
 	    sock, lft);
     }
     /* Add new socket to list of open sockets. */
-#ifdef UNUSED_CODE
-    FD_SET(sock, &send_sockets);
-#endif
     conn->sender = 1;
     return status;
 }
@@ -360,9 +350,6 @@ int comm_accept(fd, peer, me)
     conn->comm_type = listener->comm_type;
     strcpy(conn->ipaddr, inet_ntoa(P.sin_addr));
 
-#ifdef UNUSED_CODE
-    FD_SET(sock, &receive_sockets);
-#endif
     commSetNonBlocking(sock);
 
     return sock;
@@ -381,11 +368,6 @@ int comm_close(fd)
 	fatal_dump(NULL);
     }
     conn = &fd_table[fd];
-
-#ifdef UNUSED_SOCKETS
-    FD_CLR(fd, &receive_sockets);
-    FD_CLR(fd, &send_sockets);
-#endif
 
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
     debug(5, 10, "comm_close: FD %d\n", fd);

@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.23 1996/04/10 20:45:27 wessels Exp $ */
+/* $Id: gopher.cc,v 1.24 1996/04/11 04:47:22 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -138,7 +138,7 @@ void gopherMimeCreate(data)
     sprintf(tempMIME, "\
 HTTP/1.0 200 OK Gatewaying\r\n\
 Server: HarvestCache/%s\r\n\
-MIME-version: 1.0\r\n", SQUID_VERSION);
+MIME-version: 1.0\r\n", version_string);
 
     switch (data->type_id) {
 
