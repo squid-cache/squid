@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.4 2000/10/17 08:06:07 adrian Exp $
+ * $Id: store_dir_coss.cc,v 1.5 2000/10/18 04:00:23 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -52,20 +52,9 @@ struct _RebuildState {
     int n_read;
     FILE *log;
     int speed;
-    int curlvl1;
-    int curlvl2;
     struct {
-	unsigned int need_to_validate:1;
 	unsigned int clean:1;
-	unsigned int init:1;
     } flags;
-    int done;
-    int in_dir;
-    int fn;
-    struct dirent *entry;
-    DIR *td;
-    char fullpath[SQUID_MAXPATHLEN];
-    char fullfilename[SQUID_MAXPATHLEN];
     struct _store_rebuild_data counts;
 };
 
