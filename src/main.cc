@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.25 1996/04/09 18:20:28 wessels Exp $ */
+/* $Id: main.cc,v 1.26 1996/04/09 23:27:58 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -198,8 +198,6 @@ static void mainInitialize()
     malloc_debug(0, malloc_debug_level);
 #endif
 
-    serverConnectionsOpen();
-
     /* do suid checking here */
     check_suid();
 
@@ -219,6 +217,7 @@ static void mainInitialize()
 	/* after this point we want to see the mallinfo() output */
 	do_mallinfo = 1;
     }
+    serverConnectionsOpen();
     debug(1, 0, "Ready to serve requests.\n");
 }
 

@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.32 1996/04/08 18:28:57 wessels Exp $ */
+/* $Id: http.cc,v 1.33 1996/04/09 23:27:56 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -26,9 +26,6 @@ typedef struct _httpdata {
 				 * icpReadWriteData */
     char *reply_hdr;
     int reply_hdr_state;
-    int content_length;
-    int http_code;
-    char content_type[128];
 } HttpData;
 
 char *RequestMethodStr[] =
@@ -147,9 +144,9 @@ static void httpProcessReplyHeader(data, buf, size)
     char *t2 = NULL;
     StoreEntry *entry = data->entry;
     char *headers = NULL;
-    int hdr_sz = 0;
     int room;
     int hdr_len;
+    struct _http_reply *reply = NULL;
 
     debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
 
@@ -176,13 +173,14 @@ static void httpProcessReplyHeader(data, buf, size)
 	    t = t2 < t1 ? t2 : t1;
 	else
 	    t = t2 ? t2 : t1;
-	if (t) {
-	    data->reply_hdr_state++;
-	    t += (t == t1 ? 4 : 2);
-	    *t = '\0';
-	    hdr_sz = t - data->reply_hdr;
-	}
-	debug(11, 7, "httpProcessReplyHeader: hdr_sz = %d\n", hdr_sz);
+	if (!t)
+		return; 	/* headers not complete */
+	t += (t == t1 ? 4 : 2);
+	*t = '\0';
+	reply = entry->mem_obj->reply;
+	reply->hdr_sz = t - data->reply_hdr;
+	debug(11, 7, "httpProcessReplyHeader: hdr_sz = %d\n", reply->hdr_sz);
+	data->reply_hdr_state++;
     }
     if (data->reply_hdr_state == 1) {
 	headers = xstrdup(data->reply_hdr);
@@ -195,28 +193,42 @@ static void httpProcessReplyHeader(data, buf, size)
 	    while (*s == '\r')
 		*s-- = '\0';
 	    if (!strncasecmp(t, "HTTP", 4)) {
+		sscanf (t+1, "%lf", &reply->version);
 		if ((t = strchr(t, ' '))) {
 		    t++;
-		    data->http_code = atoi(t);
+		    reply->code = atoi(t);
 		}
 	    } else if (!strncasecmp(t, "Content-type:", 13)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
-		    strncpy(data->content_type, t, 127);
+		    strncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ-1);
 		}
 	    } else if (!strncasecmp(t, "Content-length:", 15)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
-		    data->content_length = atoi(t);
+		    reply->content_length = atoi(t);
+		}
+	    } else if (!strncasecmp(t, "Date:", 5)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(reply->date, t, HTTP_REPLY_FIELD_SZ-1);
+		}
+	    } else if (!strncasecmp(t, "Expires:", 8)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ-1);
+		}
+	    } else if (!strncasecmp(t, "Last-Modified:", 14)) {
+		if ((t = strchr(t, ' '))) {
+		    t++;
+		    strncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ-1);
 		}
 	    }
 	    t = strtok(NULL, "\n");
 	}
-	if (data->http_code)
-	    debug(11, 3, "httpReadReply: HTTP CODE: %d\n", data->http_code);
-	if (data->content_length)
-	    debug(11, 3, "httpReadReply: Content Length: %d\n", data->content_length);
-	switch (data->http_code) {
+	if (reply->code)
+	    debug(11, 3, "httpReadReply: HTTP CODE: %d\n", reply->code);
+	switch (reply->code) {
 	case 200:		/* OK */
 	case 203:		/* Non-Authoritative Information */
 	case 300:		/* Multiple Choices */
@@ -234,7 +246,7 @@ static void httpProcessReplyHeader(data, buf, size)
 		storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
-	    BIT_SET(entry->flag, RELEASE_REQUEST);
+	    storeReleaseRequest(entry, __FILE__,__LINE__);
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
@@ -243,9 +255,6 @@ static void httpProcessReplyHeader(data, buf, size)
 		storeSetPublicKey(entry);
 	    break;
 	}
-	entry->mem_obj->http_code = data->http_code;
-	entry->mem_obj->content_length = data->content_length;
-	entry->mem_obj->hdr_sz = hdr_sz;
     }
 }
 
@@ -312,7 +321,7 @@ static void httpReadReply(fd, data)
 		(PF) httpReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    BIT_SET(entry->flag, RELEASE_REQUEST);
+	    storeReleaseRequest(entry, __FILE__,__LINE__);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    httpCloseAndFree(fd, data);
 	}
