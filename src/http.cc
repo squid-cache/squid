@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.429 2003/10/22 21:40:40 robertc Exp $
+ * $Id: http.cc,v 1.430 2004/04/03 14:17:36 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -532,6 +532,14 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         char *name = (char *)xmalloc(ilen + 1);
         xstrncpy(name, item, ilen + 1);
         Tolower(name);
+
+        if (strcmp(name, "*") == 0) {
+            /* Can not handle "Vary: *" withtout ETag support */
+            safe_free(name);
+            vstr.clean();
+            break;
+        }
+
         strListAdd(&vstr, name, ',');
         hdr = httpHeaderGetByName(&request->header, name);
         safe_free(name);
