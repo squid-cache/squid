@@ -1,10 +1,19 @@
+	- Fixed setting entry->timestamp for NOT MODIFIED replies.
+	- Changed old HTTP/1.1 Forwarded: header to new Via:.
+	- Changed urlCheckRequest() to allow all FTP requests, including
+	  PUT which should get handled by the passthrough module.
+	- Fixed needlessly calling storeSwapFullPath() in
+	  storeSwapOutHandle() (Mark Treacy).
+	- Simplified hash linking (Mark Treacy).
+	- Write pid_filename by default (Markus Gyger).
+	- Changed "Invalid dnsserver output" to non-fatal debug_trap()
+	  (Joe Ramey).
+	- Changed STORE_IN_MEM_BUCKETS to the prime 229 (Neil Murray).
 
-Changes to squid-1.1.beta20 (November 13, 1996):
+Changes to squid-1.1.beta20 (November 17, 1996):
 
 	- Changed neighbor_domain_type to neighbor_type_domain in
 	  squid.conf.
-	- Protect squid_error_entry() calls with check that store_status
-	  == STORE_PENDING.
 	- Changed all 'xstrerror' debug messages to section 50.
 	- More const fixes (Markus Gyger).
 	- Added xstrncpy() which null-terminates (Markus Gyger).

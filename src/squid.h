@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.74 1996/11/12 22:37:16 wessels Exp $
+ * $Id: squid.h,v 1.75 1996/11/22 05:07:15 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -32,10 +32,6 @@
 #define SQUID_H
 
 #include "config.h"
-
-#if SQUID_FD_SETSIZE > 256
-#define FD_SETSIZE SQUID_FD_SETSIZE
-#endif
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.33 1996/11/06 23:14:59 wessels Exp $
+ * $Id: stmem.cc,v 1.34 1996/11/22 05:07:16 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -421,12 +421,12 @@ stmemInit(void)
     request_pool.page_size = sizeof(request_t);
     request_pool.total_pages_allocated = 0;
     request_pool.n_pages_in_use = 0;
-    request_pool.max_pages = FD_SETSIZE >> 3;
+    request_pool.max_pages = SQUID_MAXFD >> 3;
 
     mem_obj_pool.page_size = sizeof(MemObject);
     mem_obj_pool.total_pages_allocated = 0;
     mem_obj_pool.n_pages_in_use = 0;
-    mem_obj_pool.max_pages = FD_SETSIZE >> 3;
+    mem_obj_pool.max_pages = SQUID_MAXFD >> 3;
 
 #if PURIFY
     debug(19, 0, "Disabling stacks under purify\n");
