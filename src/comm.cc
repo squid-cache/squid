@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.253 1998/05/08 22:20:45 wessels Exp $
+ * $Id: comm.cc,v 1.254 1998/05/11 21:34:10 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -618,6 +618,41 @@ commCallCloseHandlers(int fd)
 	safe_free(ch);
     }
 }
+
+#if LINGERING_CLOSE
+static void
+commLingerClose(int fd, void *unused)
+{
+    LOCAL_ARRAY(char, buf, 1024);
+    int n;
+    n = read(fd, buf, 1024);
+    if (n < 0)
+	debug(5, 3) ("commLingerClose: FD %d read: %s\n", fd, xstrerror());
+    comm_close(fd);
+}
+
+static void
+commLingerTimeout(int fd, void *unused)
+{
+    debug(5, 3) ("commLingerTimeout: FD %d\n", fd);
+    comm_close(fd);
+}
+
+/*
+ * Inspired by apache
+ */
+void
+comm_lingering_close(int fd)
+{
+    if (shutdown(fd, 1) < 0) {
+	comm_close(fd);
+	return;
+    }
+    fd_note(fd, "lingering close");
+    commSetTimeout(fd, 10, commLingerTimeout, NULL);
+    commSetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
+}
+#endif
 
 void
 comm_close(int fd)

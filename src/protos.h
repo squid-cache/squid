@@ -96,6 +96,9 @@ extern int commSetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
 extern int comm_accept(int fd, struct sockaddr_in *, struct sockaddr_in *);
 extern void comm_close(int fd);
+#if LINGERING_CLOSE
+extern void comm_lingering_close(int fd);
+#endif
 extern void commConnectStart(int fd, const char *, u_short, CNCB *, void *);
 extern int comm_connect_addr(int sock, const struct sockaddr_in *);
 extern int comm_init(void);
