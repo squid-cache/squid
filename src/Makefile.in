@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.145 1998/04/08 06:21:58 wessels Exp $
+#  $Id: Makefile.in,v 1.146 1998/04/08 22:48:54 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -129,6 +129,7 @@ OBJS	 	= \
 		Packer.o \
 		pass.o \
 		pconn.o \
+		peer_digest.o \
 		peer_select.o \
 		proto.o \
 		pump.o \
