@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.67 1996/11/18 17:40:36 wessels Exp $
+ * $Id: client_side.cc,v 1.68 1996/11/24 02:37:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -208,14 +208,16 @@ clientRedirectDone(void *data, char *result)
     icpStateData *icpState = data;
     int fd = icpState->fd;
     request_t *new_request = NULL;
+    request_t *old_request = icpState->request;
     debug(33, 5, "clientRedirectDone: '%s' result=%s\n", icpState->url,
 	result ? result : "NULL");
     if (result)
-	new_request = urlParse(icpState->request->method, result);
+	new_request = urlParse(old_request->method, result);
     if (new_request) {
 	safe_free(icpState->url);
 	icpState->url = xstrdup(result);
-	requestUnlink(icpState->request);
+	new_request->http_ver = old_request->http_ver;
+	requestUnlink(old_request);
 	icpState->request = requestLink(new_request);
 	urlCanonical(icpState->request, icpState->url);
     }
