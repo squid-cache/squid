@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.58 1999/05/04 20:49:38 wessels Exp $
+ * $Id: forward.cc,v 1.59 1999/05/04 20:58:31 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -210,8 +210,6 @@ fwdConnectTimeout(int fd, void *data)
 	err->request = requestLink(fwdState->request);
 	err->xerrno = ETIMEDOUT;
 	fwdFail(fwdState, err);
-	if (fwdState->servers->peer)
-	    peerConnectFailed(fwdState->servers->peer);
     }
     comm_close(fd);
 }
