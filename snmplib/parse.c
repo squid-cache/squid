@@ -1098,13 +1098,13 @@ read_mib(char *filename)
 	return (NULL);
     }
     mbuf[0] = '\0';
-    while ((p = fgets(mbuf, 256, fp)) && strncmp(mbuf, CURRENT_MIB_VERSION,
-	    strlen(CURRENT_MIB_VERSION)));
+    while ((p = fgets(mbuf, 256, fp)) && strncmp(mbuf, "DUMMY",
+	    strlen("DUMMY")));
     if (!p) {
 	snmplib_debug(0, "Bad MIB version or tag missing, install original!\n");
 	return NULL;
     }
-    if (!strcmp(mbuf, CURRENT_MIB_VERSION)) {
+    if (!strcmp(mbuf, "DUMMY")) {
 	snmplib_debug(0, "You need to update your MIB!\n");
 	return NULL;
     }
