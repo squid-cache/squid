@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.9 2003/04/22 15:06:11 hno Exp $
+ * $Id: win32.cc,v 1.10 2003/08/03 21:02:41 robertc Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -52,14 +52,13 @@ static void WIN32_build_argv (char *);
 #endif
 extern "C" void WINAPI SquidMain(DWORD, char **);
 
+static int Squid_Aborting = 0;
 #if USE_WIN32_SERVICE
 static SERVICE_STATUS svcStatus;
 static SERVICE_STATUS_HANDLE svcHandle;
 static int WIN32_argc;
 static char ** WIN32_argv;
 static char * WIN32_module_name;
-#endif
-static int Squid_Aborting = 0;
 
 #define VENDOR "GNU"
 static char VENDORString[] = VENDOR;
@@ -78,7 +77,6 @@ typedef BOOL (WINAPI * PFChangeServiceConfig2) (SC_HANDLE, DWORD, LPVOID);
 #else
 #define CHANGESERVICECONFIG2 "ChangeServiceConfig2A"
 #endif
-#if USE_WIN32_SERVICE
 static SC_ACTION Squid_SCAction[] = { { SC_ACTION_RESTART, 60000 } };
 static char Squid_ServiceDescriptionString[] = SOFTWARENAME " " VERSION " WWW Proxy Server";
 static SERVICE_DESCRIPTION Squid_ServiceDescription = { Squid_ServiceDescriptionString };
