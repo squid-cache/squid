@@ -97,7 +97,7 @@ void clientAccessCheckDone(icpState, answer)
     debug(33, 5, "clientAccessCheckDone: '%s' answer=%d\n", icpState->url, answer);
     if (answer) {
 	urlCanonical(icpState->request, icpState->url);
-	redirectStart(icpState->url, fd, clientRedirectDone, icpState);
+	redirectStart(fd, icpState, clientRedirectDone, icpState);
     } else {
 	debug(33, 5, "Access Denied: %s\n", icpState->url);
 	buf = access_denied_msg(icpState->http_code = 400,
@@ -114,11 +114,16 @@ static void clientRedirectDone(data, result)
 {
     icpStateData *icpState = data;
     int fd = icpState->fd;
+    request_t *new_request = NULL;
     debug(33, 5, "clientRedirectDone: '%s' result=%s\n", icpState->url,
 	result ? result : "NULL");
-    if (result) {
+    if (result)
+	new_request = urlParse(icpState->request->method, result);
+    if (new_request) {
 	safe_free(icpState->url);
 	icpState->url = xstrdup(result);
+	requestUnlink(icpState->request);
+	icpState->request = requestLink(new_request);
 	urlCanonical(icpState->request, icpState->url);
     }
     icpParseRequestHeaders(icpState);
