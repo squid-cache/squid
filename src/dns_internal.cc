@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.41 2001/10/01 14:20:02 hno Exp $
+ * $Id: dns_internal.cc,v 1.42 2001/10/12 23:33:00 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -631,7 +631,7 @@ idnsInit(void)
 	 * statement. Doing so messes up the internal _db_level
 	 */
 	port = comm_local_port(DnsSocket);
-	debug(78, 1) ("DNS Socket created at %s, port %d, FD %d\n", 
+	debug(78, 1) ("DNS Socket created at %s, port %d, FD %d\n",
 	    inet_ntoa(addr),
 	    port, DnsSocket);
     }
