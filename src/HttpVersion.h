@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpVersion.h,v 1.2 2004/11/16 23:11:46 wessels Exp $
+ * $Id: HttpVersion.h,v 1.3 2004/12/11 22:07:31 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -63,6 +63,11 @@ public:
             return false;
 
         return true;
+    }
+
+    bool operator!=(const HttpVersion& that) const
+    {
+        return ((this->major != that.major) || (this->minor != that.minor));
     }
 
 };
