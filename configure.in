@@ -3,13 +3,13 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.94 1998/01/06 00:27:45 wessels Exp $
+dnl  $Id: configure.in,v 1.95 1998/01/07 21:16:26 wessels Exp $
 dnl
 dnl
 dnl
 AC_INIT(src/main.c)
 AC_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.94 $)dnl
+AC_REVISION($Revision: 1.95 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AC_CONFIG_AUX_DIR(aux)
 
@@ -243,7 +243,8 @@ AC_ARG_ENABLE(async_io,
     echo "Async I/O enabled"
     AC_DEFINE(USE_ASYNC_IO)
     ASYNC_OBJS='$(ASYNC_OBJS)'
-    SQUID_PTHREAD_LIB='$(PTHREAD_LIB)'
+    SQUID_PTHREAD_LIB='$(PTHREADLIB)'
+    CFLAGS="$CFLAGS -D_REENTRANT"
   fi
 ])
 AC_SUBST(ASYNC_OBJS)
@@ -273,8 +274,9 @@ AC_ARG_ENABLE(useragent_log,
   fi
 ])
 
-AC_ARG_ENABLE(kill_parent,
-[  --enable-kill-parent    Kill parent on shutdown],
+AC_ARG_ENABLE(kill_parent_hack,
+[  --enable-kill-parent-hack
+                          Kill parent on shutdown],
 [ if test "$enableval" = "yes" ; then
     echo "Kill parent on shutdown"
     AC_DEFINE(KILL_PARENT_OPT)

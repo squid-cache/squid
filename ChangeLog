@@ -1,3 +1,7 @@
+	- -D_REENTRANT when linking with -lpthreads (Henrik Nordstrom)
+	- Show symlink destinations as a hyperlink in FTP listings
+	  (Henrik Nordstrom)
+
 Changes to squid-1.2.beta11 (Jan 6, 1998):
 
 	- Fixed fake 'struct rusage' definition which prevented compling

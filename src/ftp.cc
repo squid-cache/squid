@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.184 1998/01/05 21:44:41 wessels Exp $
+ * $Id: ftp.cc,v 1.185 1998/01/07 21:16:30 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -502,9 +502,9 @@ static char *
 ftpHtmlifyListEntry(char *line, int flags)
 {
     LOCAL_ARRAY(char, link, 2048 + 40);
+    LOCAL_ARRAY(char, link2, 2048 + 40);
     LOCAL_ARRAY(char, icon, 2048);
     LOCAL_ARRAY(char, html, 8192);
-    char *ename = NULL;
     size_t width = Config.Ftp.list_width;
     ftpListParts *parts;
     if (strlen(line) > 1024) {
@@ -564,7 +564,7 @@ ftpHtmlifyListEntry(char *line, int flags)
 	    *(parts->showname + width - 0) = '\0';
 	}
     }
-    ename = xstrdup(rfc1738_escape(parts->name));
+    
     switch (parts->type) {
     case 'd':
 	snprintf(icon, 2048, "<IMG SRC=\"%s%s\" ALT=\"%-6s\">",
@@ -572,7 +572,7 @@ ftpHtmlifyListEntry(char *line, int flags)
 	    ICON_MENU,
 	    "[DIR]");
 	snprintf(link, 2048, "<A HREF=\"%s/\">%s</A>%s",
-	    ename,
+	    rfc1738_escape(parts->name),
 	    parts->showname,
 	    dots_fill(strlen(parts->showname)));
 	snprintf(html, 8192, "%s %s  [%s]\n",
@@ -586,13 +586,17 @@ ftpHtmlifyListEntry(char *line, int flags)
 	    ICON_LINK,
 	    "[LINK]");
 	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
-	    ename,
+	    rfc1738_escape(parts->name),
 	    parts->showname,
 	    dots_fill(strlen(parts->showname)));
-	snprintf(html, 8192, "%s %s  [%s]\n",
+	snprintf(link2, 2048, "<A HREF=\"%s\">%s</A>",
+	    rfc1738_escape(parts->link),
+	    parts->link);
+	snprintf(html, 8192, "%s %s  [%s] -> %s\n",
 	    icon,
 	    link,
-	    parts->date);
+	    parts->date,
+	    link2);
 	break;
     case '-':
     default:
@@ -601,7 +605,7 @@ ftpHtmlifyListEntry(char *line, int flags)
 	    mimeGetIcon(parts->name),
 	    "[FILE]");
 	snprintf(link, 2048, "<A HREF=\"%s\">%s</A>%s",
-	    ename,
+	    rfc1738_escape(parts->name),
 	    parts->showname,
 	    dots_fill(strlen(parts->showname)));
 	snprintf(html, 8192, "%s %s  [%s] %6dk\n",
@@ -612,7 +616,6 @@ ftpHtmlifyListEntry(char *line, int flags)
 	break;
     }
     ftpListPartsFree(&parts);
-    xfree(ename);
     return html;
 }
 
