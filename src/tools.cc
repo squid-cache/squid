@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.106 1997/05/15 23:43:31 wessels Exp $
+ * $Id: tools.cc,v 1.107 1997/05/23 20:46:13 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -218,9 +218,6 @@ dumpMallocStats()
     fprintf(debug_log, "\tbytes used in maintaining the free tree:\t%d\n",
 	mp.treeoverhead);
 #endif /* HAVE_EXT_MALLINFO */
-#if PRINT_MMAP
-    mallocmap();
-#endif /* PRINT_MMAP */
 #endif /* HAVE_MALLINFO */
 }
 
