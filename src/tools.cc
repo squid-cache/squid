@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.34 1996/04/16 05:05:33 wessels Exp $ */
+/* $Id: tools.cc,v 1.35 1996/04/16 05:13:06 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -339,7 +339,7 @@ void check_suid()
     if ((pwd = getpwnam(getEffectiveUser())) == NULL)
 	return;
     /* change current directory to swap space so we can get core */
-    if (chdir(swappath(0)))
+    if (chdir(swappath(0)) < 0) {
 	debug(21, 0, "%s: %s\n", swappath(0), xstrerror());
 	fatal_dump("Cannot cd to swap directory?");
     }
