@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.21 1999/01/11 21:55:37 wessels Exp $
+ * $Id: MemBuf.cc,v 1.22 1999/01/19 02:24:19 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -104,11 +104,7 @@
 
 /* default values for buffer sizes, used by memBufDefInit */
 #define MEM_BUF_INIT_SIZE   (2*1024)
-#if CLIENT_SOCK_SZ < 16384
-#define MEM_BUF_MAX_SIZE   (32*1024)
-#else
-#define MEM_BUF_MAX_SIZE   (CLIENT_SOCK_SZ<<1)
-#endif
+#define MEM_BUF_MAX_SIZE    (2*1000*1024*1024)
 
 
 /* local routines */
@@ -173,13 +169,13 @@ memBufReset(MemBuf * mb)
     }
 }
 
-/* unfirtunate hack to test if the buffer has been Init()ialized */
+/* unfortunate hack to test if the buffer has been Init()ialized */
 int
 memBufIsNull(MemBuf * mb)
 {
     assert(mb);
     if (!mb->buf && !mb->max_capacity && !mb->capacity && !mb->size)
-	return 1;		/* null, not initialized */
+	return 1;		/* is null (not initialized) */
     assert(mb->buf && mb->max_capacity && mb->capacity);	/* paranoid */
     return 0;
 }

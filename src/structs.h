@@ -1,8 +1,7 @@
 
 
-
 /*
- * $Id: structs.h,v 1.261 1999/01/18 22:23:46 wessels Exp $
+ * $Id: structs.h,v 1.262 1999/01/19 02:24:34 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -783,7 +782,6 @@ struct _clientHttpRequest {
     char *uri;
     char *log_uri;
     struct {
-	char *buf;
 	off_t offset;
 	size_t size;
     } out;
@@ -832,7 +830,6 @@ struct _ConnStateData {
 	int state;
 	void *callback_data;
     } ident;
-    CommWriteStateData *commWriteState;
     int nrequests;
     int persistent;
     struct {

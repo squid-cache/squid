@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.341 1999/01/18 22:23:37 wessels Exp $
+ * $Id: http.cc,v 1.342 1999/01/19 02:24:27 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -767,7 +767,7 @@ httpBuildRequestPrefix(request_t * request,
 	packerClean(&p);
     }
     /* append header terminator */
-    memBufAppend(mb, "\r\n", 2);
+    memBufAppend(mb, crlf, 2);
     return mb->size - offset;
 }
 /* This will be called when connect completes. Write request. */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.285 1999/01/16 00:03:39 glenn Exp $
+ * $Id: main.cc,v 1.286 1999/01/19 02:24:28 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -340,7 +340,7 @@ mainReconfigure(void)
 	    debug(1, 1) ("ICP port disabled in httpd_accelerator mode\n");
     }
     storeDirOpenSwapLogs();
-    writePidFile();         /* write PID file */
+    writePidFile();		/* write PID file */
     debug(1, 1) ("Ready to serve requests.\n");
     reconfiguring = 0;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.128 1999/01/18 22:23:48 wessels Exp $
+ * $Id: wais.cc,v 1.129 1999/01/19 02:24:36 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -92,8 +92,8 @@ waisReadReply(int fd, void *data)
     delay_id delay_id = delayMostBytesAllowed(entry->mem_obj);
 #endif
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        comm_close(fd);
-        return;
+	comm_close(fd);
+	return;
     }
     errno = 0;
     read_sz = 4096;
