@@ -1,4 +1,5 @@
 
+
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -36,11 +37,12 @@ struct _acl_deny_info_list {
 
 #if USE_ARP_ACL
 struct _acl_arp_data {
-	unsigned char eth[6];
+    unsigned char eth[6];
 #ifndef USE_SPLAY_TREE
-	struct _acl_arp_data *next;
+    struct _acl_arp_data *next;
 #endif
 };
+
 #endif
 
 #if SQUID_SNMP
@@ -193,6 +195,7 @@ struct _SquidConfig {
 	communityEntry *communities;
     } Snmp;
 #endif
+    char *as_whois_server;
     struct {
 	char *log;
 	char *access;
@@ -289,6 +292,7 @@ struct _SquidConfig {
 	struct _acl_access *miss;
 	struct _acl_access *NeverDirect;
 	struct _acl_access *AlwaysDirect;
+	struct _acl_access *ASlists;
     } accessList;
     struct _acl_deny_info_list *denyInfoList;
     struct {
