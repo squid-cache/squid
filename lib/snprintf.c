@@ -424,7 +424,7 @@ conv_fp(register char format, register double num,
 	*is_negative = FALSE;
 	return (buf);
     }
-    if (format == 'f')
+    if (format == 'f') {
 	if (decimal_point <= 0) {
 	    *s++ = '0';
 	    if (precision > 0) {
@@ -438,6 +438,7 @@ conv_fp(register char format, register double num,
 		*s++ = *p++;
 	    if (precision > 0 || add_dp)
 		*s++ = '.';
+	}
     } else {
 	*s++ = *p++;
 	if (precision > 0 || add_dp)
