@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.24 2001/01/05 00:28:22 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.25 2001/01/05 03:58:21 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -370,10 +370,7 @@ storeAufsDirInit(SwapDir * sd)
 	eventAdd("storeDirClean", storeAufsDirCleanEvent, NULL, 15.0, 1);
 	started_clean_event = 1;
     }
-    if (0 == storeDirGetBlkSize(sd->path, &sd->fs.blksize))
-	sd->fs.kperblk = sd->fs.blksize >> 10;
-    if (sd->fs.kperblk < 1)
-	sd->fs.kperblk = 1;
+    (void) storeDirGetBlkSize(sd->path, &sd->fs.blksize);
 }
 
 static void

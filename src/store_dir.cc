@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.121 2001/01/04 21:55:42 wessels Exp $
+ * $Id: store_dir.cc,v 1.122 2001/01/05 03:58:18 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -259,7 +259,7 @@ void
 storeDirUpdateSwapSize(SwapDir * SD, size_t size, int sign)
 {
     int blks = (size + SD->fs.blksize - 1) / SD->fs.blksize;
-    int k = blks * SD->fs.kperblk * sign;
+    int k = (blks * SD->fs.blksize >> 10) * sign;
     SD->cur_size += k;
     store_swap_size += k;
     if (sign > 0)
@@ -291,8 +291,8 @@ storeDirStats(StoreEntry * sentry)
 	SD = &(Config.cacheSwap.swapDirs[i]);
 	storeAppendPrintf(sentry, "Store Directory #%d (%s): %s\n", i, SD->type,
 	    storeSwapDir(i));
-	storeAppendPrintf(sentry, "FS Block Size %d KB\n",
-	    SD->fs.kperblk);
+	storeAppendPrintf(sentry, "FS Block Size %d Bytes\n",
+	    SD->fs.blksize);
 	SD->statfs(SD, sentry);
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.371 2001/01/04 21:09:02 wessels Exp $
+ * $Id: structs.h,v 1.372 2001/01/05 03:58:18 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1394,7 +1394,6 @@ struct _SwapDir {
     } log;
     struct {
 	int blksize;
-	int kperblk;
     } fs;
     void *fsdata;
 };
