@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.276 1999/01/22 04:28:17 wessels Exp $
+ * $Id: ftp.cc,v 1.277 1999/01/22 04:29:01 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -286,14 +286,8 @@ ftpStateFree(int fdnotused, void *data)
     safe_free(ftpState->filepath);
     safe_free(ftpState->data.host);
     if (ftpState->data.fd > -1) {
-	if (fd_table[ftpState->data.fd].flags.open) {
-	    comm_close(ftpState->data.fd);
-	    ftpState->data.fd = -1;
-	} else {
-	    debug(9,1)("ftpStateFree: data FD %d somehow got closed\n",
-		ftpState->data.fd);
-	    ftpState->data.fd = -1;
-	}
+	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
     }
     cbdataFree(ftpState);
 }
