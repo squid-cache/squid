@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.37 2003/08/10 11:00:52 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.38 2003/10/15 12:03:08 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -954,13 +954,10 @@ authenticateNTLMOnCloseConnection(ConnStateData * conn)
         /* unlock the connection based lock */
         debug(29, 9) ("authenticateNTLMOnCloseConnection: Unlocking auth_user from the connection.\n");
 
-        /* This still breaks the abstraction, but is at least read only now */
-        /* Ensure that the auth user request will be getting closed */
-        /* IFF we start persisting the struct after the conn closes - say for logging
-         * then this test may become invalid
-         */
-        assert(authenticateRequestRefCount(conn->auth_user_request) == 1);
-
+        /* This still breaks the abstraction, but is at least read only now.
+        * If needed, this could be ignored, as the conn deletion will also unlock
+        * the auth user request.
+        */
         authenticateAuthUserRequestUnlock(conn->auth_user_request);
 
         conn->auth_user_request = NULL;
