@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.c,v 1.4 1999/04/14 06:38:03 wessels Exp $
+ * $Id: rfc1035.c,v 1.5 1999/04/18 05:10:07 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -319,9 +319,19 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t off, rfc1035_rr * RR)
     RR->ttl = ntohl(i);
     memcpy(&s, buf + off, sizeof(s));
     off += sizeof(s);
-    RR->rdlength = ntohs(s);
-    RR->rdata = malloc(RR->rdlength);
-    memcpy(RR->rdata, buf + off, RR->rdlength);
+    switch (RR->type) {
+    case RFC1035_TYPE_PTR:
+	RR->rdata = malloc(RFC1035_MAXHOSTNAMESZ);
+	rfc1035NameUnpack(buf, sz, off, RR->rdata, RFC1035_MAXHOSTNAMESZ);
+	RR->rdlength = strlen(RR->rdata);
+	break;
+    case RFC1035_TYPE_A:
+    default:
+	RR->rdlength = ntohs(s);
+	RR->rdata = malloc(RR->rdlength);
+	memcpy(RR->rdata, buf + off, RR->rdlength);
+	break;
+    }
     off += RR->rdlength;
     assert(off <= sz);
     return off;
@@ -428,7 +438,7 @@ rfc1035AnswersUnpack(const char *buf,
 }
 
 /*
- * rfc1035BuildQuery()
+ * rfc1035BuildAQuery()
  * 
  * Builds a message buffer with a QUESTION to lookup A records
  * for a hostname.  Caller must allocate 'buf' which should
@@ -460,17 +470,59 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
     return h.id;
 }
 
+/*
+ * rfc1035BuildPTRQuery()
+ * 
+ * Builds a message buffer with a QUESTION to lookup PTR records
+ * for an address.  Caller must allocate 'buf' which should
+ * probably be at least 512 octets.  The 'szp' initially
+ * specifies the size of the buffer, on return it contains
+ * the size of the message (i.e. how much to write).
+ * Return value is the query ID.
+ */
+unsigned short
+rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t * szp)
+{
+    static rfc1035_header h;
+    off_t offset = 0;
+    size_t sz = *szp;
+    static char rev[32];
+    unsigned int i;
+    memset(&h, '\0', sizeof(h));
+    i = (unsigned int) addr.s_addr;
+    snprintf(rev, 32, "%u.%u.%u.%u.in-addr.arpa",
+	(i >> 24) & 255,
+	(i >> 16) & 255,
+	(i >> 8) & 255,
+	i & 255);
+    printf("rfc1035BuildPTRQuery: {%s}\n", rev);
+    h.id = rfc1035Qid();
+    h.qr = 0;
+    h.rd = 1;
+    h.opcode = 0;		/* QUERY */
+    h.qdcount = (unsigned int) 1;
+    offset += rfc1035HeaderPack(buf + offset, sz - offset, &h);
+    offset += rfc1035QuestionPack(buf + offset,
+	sz - offset,
+	rev,
+	RFC1035_TYPE_PTR,
+	RFC1035_CLASS_IN);
+    assert(offset <= sz);
+    *szp = (size_t) offset;
+    return h.id;
+}
+
 #if DRIVER
+#include <sys/socket.h>
+#include <sys/time.h>
 int
 main(int argc, char *argv[])
 {
-    rfc1035_header h;
     char input[512];
     char buf[512];
     char rbuf[512];
     size_t sz = 512;
     unsigned short sid;
-    off_t offset = 0;
     int s;
     int rl;
     struct sockaddr_in S;
@@ -482,26 +534,20 @@ main(int argc, char *argv[])
 	return 1;
     }
     while (fgets(input, 512, stdin)) {
+	struct in_addr junk;
 	strtok(input, "\r\n");
 	memset(buf, '\0', 512);
-	memset(&h, '\0', sizeof(h));
-	offset = 0;
-	h.id = sid = (unsigned short) 0x1234;
-	h.qr = 0;
-	h.rd = 1;
-	h.opcode = 0;
-	h.qdcount = (unsigned int) 1;
-	offset += rfc1035HeaderPack(buf + offset, sz - offset, &h);
-	offset += rfc1035QuestionPack(buf + offset,
-	    sz - offset,
-	    input,
-	    RFC1035_TYPE_A,
-	    RFC1035_CLASS_IN);
+	sz = 512;
+	if (inet_aton(input, &junk)) {
+	    sid = rfc1035BuildPTRQuery(junk, buf, &sz);
+	} else {
+	    sid = rfc1035BuildAQuery(input, buf, &sz);
+	}
 	memset(&S, '\0', sizeof(S));
 	S.sin_family = AF_INET;
 	S.sin_port = htons(53);
 	S.sin_addr.s_addr = inet_addr("128.117.28.219");
-	sendto(s, buf, (size_t) offset, 0, (struct sockaddr *) &S, sizeof(S));
+	sendto(s, buf, sz, 0, (struct sockaddr *) &S, sizeof(S));
 	do {
 	    fd_set R;
 	    struct timeval to;
@@ -521,24 +567,31 @@ main(int argc, char *argv[])
 	    unsigned short rid;
 	    int i;
 	    int n;
-	    struct in_addr addrs[10];
-	    time_t ttl = 0;
-	    char rname[RFC1035_MAXHOSTNAMESZ];
-	    n = rfc1035ARecordsUnpack(rbuf,
+	    rfc1035_rr *answers = NULL;
+	    n = rfc1035AnswersUnpack(rbuf,
 		rl,
-		addrs, 10,
-		rname, RFC1035_MAXHOSTNAMESZ,
-		&rid,
-		&ttl);
+		&answers,
+		&rid);
 	    if (rid != sid) {
 		printf("ERROR, ID mismatch (%#hx, %#hx)\n", sid, rid);
 	    } else if (n < 0) {
 		printf("ERROR %d\n", rfc1035_errno);
 	    } else {
-		printf("name\t%s, %d A records\n", rname, n);
-		printf("ttl\t%d\n", (int) ttl);
-		for (i = 0; i < n; i++)
-		    printf("addr %d\t%s\n", i, inet_ntoa(addrs[i]));
+		printf("%d answers\n", n);
+		for (i = 0; i < n; i++) {
+		    if (answers[i].type == RFC1035_TYPE_A) {
+			struct in_addr a;
+			memcpy(&a, answers[i].rdata, 4);
+			printf("A\t%d\t%s\n", answers[i].ttl, inet_ntoa(a));
+		    } else if (answers[i].type == RFC1035_TYPE_PTR) {
+			char ptr[128];
+			strncpy(ptr, answers[i].rdata, answers[i].rdlength);
+			printf("PTR\t%d\t%s\n", answers[i].ttl, ptr);
+		    } else {
+			fprintf(stderr, "can't print answer type %d\n",
+			    (int) answers[i].type);
+		    }
+		}
 	    }
 	}
     }
