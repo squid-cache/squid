@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.23 1998/09/21 06:52:13 wessels Exp $
+ * $Id: htcp.cc,v 1.24 1998/09/22 19:59:15 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -655,7 +655,6 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
     /* buf should be a SPECIFIER */
     htcpSpecifier *s;
     StoreEntry *e;
-    const cache_key *key;
     method_t m;
     if (sz == 0) {
 	debug(31, 1) ("htcpHandleTst: nothing to do\n");
@@ -850,16 +849,18 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     HttpHeader hdr;
     Packer pa;
     MemBuf mb;
+    http_state_flags flags;
+    memset(&flags, '\0', sizeof(flags));
     snprintf(vbuf, sizeof(vbuf), "%3.1f", req->http_ver);
     stuff.op = HTCP_TST;
     stuff.rr = RR_REQUEST;
     stuff.f1 = 1;
     stuff.response = 0;
     stuff.msg_id = ++msg_id_counter;
-    stuff.S.method = RequestMethodStr[req->method];
-    stuff.S.uri = storeUrl(e);
+    stuff.S.method = (char *) RequestMethodStr[req->method];
+    stuff.S.uri = (char *) storeUrl(e);
     stuff.S.version = vbuf;
-    httpBuildRequestHeader(req, req, e, &hdr, -1, 0);
+    httpBuildRequestHeader(req, req, e, &hdr, -1, flags);
     memBufDefInit(&mb);
     packerToMemInit(&pa, &mb);
     httpHeaderPackInto(&hdr, &pa);
