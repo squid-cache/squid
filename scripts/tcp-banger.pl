@@ -38,7 +38,7 @@ while (<>) {
         select (SOCK); $| = 1;
         select (STDOUT);
 
-	print SOCK "GET $url HTTP/1.0\r\n\r\n";
+	print SOCK "GET $url HTTP/1.0\r\nAccept: */*\r\n\r\n";
 	$_ = <SOCK>;
 	($ver,$code,$junk) = split;
 	printf "%s %s\n", $code ? $code : 'FAIL', $url;
