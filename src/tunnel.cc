@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.75 1998/03/04 23:52:42 wessels Exp $
+ * $Id: tunnel.cc,v 1.76 1998/03/27 22:44:25 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -130,11 +130,8 @@ sslReadServer(int fd, void *data)
 	    commSetSelect(sslState->server.fd,
 		COMM_SELECT_READ,
 		sslReadServer,
-		sslState, 0);
-	    commSetTimeout(sslState->server.fd,
-		Config.Timeout.read,
-		NULL,
-		NULL);
+		sslState,
+		Config.Timeout.read);
 	} else {
 	    sslClose(sslState);
 	}
@@ -145,11 +142,11 @@ sslReadServer(int fd, void *data)
 	sslState->server.offset = 0;
 	sslState->server.len = len;
 	/* extend server read timeout */
-	commSetTimeout(sslState->server.fd, Config.Timeout.read, NULL, NULL);
 	commSetSelect(sslState->client.fd,
 	    COMM_SELECT_WRITE,
 	    sslWriteClient,
-	    sslState, 0);
+	    sslState,
+	    Config.Timeout.read);
     }
 }
 
@@ -225,11 +222,8 @@ sslWriteServer(int fd, void *data)
 	commSetSelect(sslState->client.fd,
 	    COMM_SELECT_READ,
 	    sslReadClient,
-	    sslState, 0);
-	commSetTimeout(sslState->server.fd,
-	    Config.Timeout.read,
-	    NULL,
-	    NULL);
+	    sslState,
+	    Config.Timeout.read);
     } else {
 	/* still have more to write */
 	commSetSelect(sslState->server.fd,
@@ -277,11 +271,8 @@ sslWriteClient(int fd, void *data)
 	commSetSelect(sslState->server.fd,
 	    COMM_SELECT_READ,
 	    sslReadServer,
-	    sslState, 0);
-	commSetTimeout(sslState->server.fd,
-	    Config.Timeout.read,
-	    NULL,
-	    NULL);
+	    sslState,
+	    Config.Timeout.read);
     } else {
 	/* still have more to write */
 	commSetSelect(sslState->client.fd,
@@ -307,7 +298,6 @@ sslConnected(int fd, void *data)
     xstrncpy(sslState->server.buf, conn_established, SQUID_TCP_SO_RCVBUF);
     sslState->server.len = strlen(conn_established);
     sslState->server.offset = 0;
-    commSetTimeout(sslState->server.fd, Config.Timeout.read, NULL, NULL);
     commSetSelect(sslState->client.fd,
 	COMM_SELECT_WRITE,
 	sslWriteClient,
@@ -354,6 +344,10 @@ sslConnectDone(int fdnotused, int status, void *data)
 	    sslProxyConnected(sslState->server.fd, sslState);
 	else
 	    sslConnected(sslState->server.fd, sslState);
+    commSetTimeout(sslState->server.fd,
+	Config.Timeout.read,
+	sslTimeout,
+	sslState);
     }
 }
 
@@ -427,15 +421,14 @@ sslProxyConnected(int fd, void *data)
 	COMM_SELECT_WRITE,
 	sslWriteServer,
 	sslState, 0);
-    commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
+    commSetTimeout(sslState->server.fd,
+	Config.Timeout.read,
+	sslTimeout,
+	sslState);
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_READ,
 	sslReadServer,
 	sslState, 0);
-    commSetTimeout(sslState->server.fd,
-	Config.Timeout.read,
-	NULL,
-	NULL);
 }
 
 static void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.38 1998/03/17 00:38:53 wessels Exp $
+ * $Id: ident.cc,v 1.39 1998/03/27 22:44:23 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 static PF identReadReply;
 static PF identClose;
+static PF identTimeout;
 static CNCB identConnectDone;
 static void identCallback(ConnStateData * connState);
 
@@ -43,6 +44,15 @@ identClose(int fdnotused, void *data)
 {
     ConnStateData *connState = data;
     connState->ident.fd = -1;
+}
+
+static void
+identTimeout(int fd, void *data)
+{
+    ConnStateData *connState = data;
+    debug(30,3)("identTimeout: FD %d, %s\n", fd,
+	inet_ntoa(connState->peer.sin_addr));
+    comm_close(fd);
 }
 
 /* start a TCP connection to the peer host on port 113 */
@@ -90,6 +100,7 @@ identConnectDone(int fd, int status, void *data)
 	ntohs(connState->me.sin_port));
     comm_write(fd, xstrdup(reqbuf), strlen(reqbuf), NULL, connState, xfree);
     commSetSelect(fd, COMM_SELECT_READ, identReadReply, connState, 0);
+    commSetTimeout(fd, Config.Timeout.read, identTimeout, connState);
 }
 
 static void

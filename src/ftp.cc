@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.211 1998/03/27 19:41:58 wessels Exp $
+ * $Id: ftp.cc,v 1.212 1998/03/27 22:44:20 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1013,7 +1013,8 @@ ftpConnectDone(int fd, int status, void *data)
 	ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
 	ftpState->data.size = SQUID_TCP_SO_RCVBUF;
 	ftpState->data.freefunc = xfree;
-	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, Config.Timeout.read);
+	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
+        commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
     }
 }
 
