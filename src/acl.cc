@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.66 1996/11/26 19:04:23 wessels Exp $
+ * $Id: acl.cc,v 1.67 1996/11/26 19:05:10 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -295,34 +295,34 @@ aclParseIpList(void)
 	    }
 #endif
 #ifndef NEW_CODE
-        for (;;) {
-            if (sscanf(t, "%[0-9.]-%[0-9.]/%[0-9.]", addr1, addr2, mask) == 3)
-                break;
-            if (sscanf(t, "%[0-9.]-%[0-9.]", addr1, addr2) == 2) {
-                mask[0] = '\0';
-                break;
-            }
-            if (sscanf(t, "%[0-9.]/%[0-9.]", addr1, mask) == 2) {
-                addr2[0] = '\0';
-                break;
-            }
-            if (sscanf(t, "%[0-9.]", addr1) == 1) {
-                addr2[0] = '\0';
-                mask[0] = '\0';
-                break;
-            }
-            if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
-                addr2[0] = '\0';
-                break;
-            }
-            if (sscanf(t, "%s", addr1) == 1) {
-                addr2[0] = '\0';
-                mask[0] = '\0';
-                break;
-            }
-            debug(28,0,"aclParseIpList: Bad host/IP: '%s'\n", t);
-            break;
-        }
+	    for (;;) {
+		if (sscanf(t, "%[0-9.]-%[0-9.]/%[0-9.]", addr1, addr2, mask) == 3)
+		    break;
+		if (sscanf(t, "%[0-9.]-%[0-9.]", addr1, addr2) == 2) {
+		    mask[0] = '\0';
+		    break;
+		}
+		if (sscanf(t, "%[0-9.]/%[0-9.]", addr1, mask) == 2) {
+		    addr2[0] = '\0';
+		    break;
+		}
+		if (sscanf(t, "%[0-9.]", addr1) == 1) {
+		    addr2[0] = '\0';
+		    mask[0] = '\0';
+		    break;
+		}
+		if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
+		    addr2[0] = '\0';
+		    break;
+		}
+		if (sscanf(t, "%s", addr1) == 1) {
+		    addr2[0] = '\0';
+		    mask[0] = '\0';
+		    break;
+		}
+		debug(28, 0, "aclParseIpList: Bad host/IP: '%s'\n", t);
+		break;
+	    }
 #endif
 	    /* Decode addr1 */
 	    if (!decode_addr(addr1, &q->addr1, &q->mask)) {
