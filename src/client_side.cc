@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.88 1997/02/07 04:57:10 wessels Exp $
+ * $Id: client_side.cc,v 1.89 1997/02/13 18:38:28 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -430,6 +430,7 @@ icpProcessExpired(int fd, void *data)
 	icpState->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
     storeClientListAdd(entry, fd, 0);
+    storeClientListAdd(icpState->old_entry, fd, 0);
 
     entry->lastmod = icpState->old_entry->lastmod;
     debug(33, 5, "icpProcessExpired: setting lmt = %d\n",
