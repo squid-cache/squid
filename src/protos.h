@@ -21,7 +21,11 @@ extern void aclDestroyAcls(acl **);
 extern void aclParseAccessLine(struct _acl_access **);
 extern void aclParseAclLine(acl **);
 extern struct _acl *aclFindByName(const char *name);
+#if 0
 extern char *aclGetDenyInfoUrl(struct _acl_deny_info_list **, const char *name);
+#else
+extern int aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
+#endif
 extern void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 extern void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
 extern void aclDestroyRegexList(struct _relist *data);
@@ -262,19 +266,23 @@ extern void httpBodyPackInto(const HttpBody * body, Packer * p);
 extern void httpHdrCcInitModule();
 extern HttpHdrCc *httpHdrCcCreate();
 extern HttpHdrCc *httpHdrCcParseCreate(const char *str);
-extern void httpHdrCcDestroy(HttpHdrCc * scc);
-extern HttpHdrCc *httpHdrCcDup(HttpHdrCc * scc);
-extern void httpHdrCcPackValueInto(HttpHdrCc * scc, Packer * p);
-extern void httpHdrCcJoinWith(HttpHdrCc * scc, HttpHdrCc * new_scc);
-extern void httpHdrCcUpdateStats(const HttpHdrCc * scc, StatHist * hist);
+extern void httpHdrCcDestroy(HttpHdrCc * cc);
+extern HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
+extern void httpHdrCcPackValueInto(const HttpHdrCc * cc, Packer * p);
+extern void httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc);
+extern void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 /* Http Range Header Field */
 extern HttpHdrRange *httpHdrRangeParseCreate(const char *range_spec);
 /* returns true if ranges are valid; inits HttpHdrRange */
-extern int httpHdrRangeParseInit(HttpHdrRange * range, const char *range_spec);
-extern void httpHdrRangeDestroy(HttpHdrRange * range);
-
+extern int httpHdrRangeParseInit(HttpHdrRange *range, const char *range_spec);
+extern void httpHdrRangeDestroy(HttpHdrRange *range);
+extern HttpHdrRange *httpHdrRangeDup(const HttpHdrRange * range);
+extern void httpHdrRangePackValueInto(const HttpHdrRange * range, Packer * p);
+extern void httpHdrRangeJoinWith(HttpHdrRange * range, const HttpHdrRange * new_range);
+/* iterate through specs */
+extern int httpHdrRangeGetSpec(const HttpHdrRange *range, HttpHdrRangeSpec *spec, int *pos);
 
 
 /* Http Header Tools */
@@ -310,6 +318,7 @@ extern void httpHeaderAddExt(HttpHeader * hdr, const char *name, const char *val
 extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
 extern HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
+extern HttpHdrRange *httpHeaderGetRange(const HttpHeader * hdr);
 extern const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
 int httpHeaderDelFields(HttpHeader * hdr, const char *name);
 /* store report about current header usage and other stats */
@@ -533,23 +542,30 @@ void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd)
 void statHistLogInit(StatHist * H, int capacity, double min, double max);
 void statHistEnumInit(StatHist * H, int last_enum);
 
+/* MemMeter */
+#define memMeterCheckHWater(m) { if ((m).hwater < (m).level) (m).hwater = (m).level; }
+#define memMeterInc(m) { (m).level++; memMeterCheckHWater(m); }
+#define memMeterDec(m) { (m).level--; memMeterCheckHWater(m); }
+#define memMeterAdd(m, sz) { (m).level += (sz); memMeterCheckHWater(m); }
+#define memMeterDel(m, sz) { (m).level -= (sz); memMeterCheckHWater(m); }
 
+/* mem */
 extern void memInit(void);
 extern void memClean();
 extern void memInitModule();
 extern void memCleanModule();
 extern void memConfigure();
 extern void *memAllocate(mem_type);
+extern void *memAllocBuf(size_t net_size, size_t *gross_size);
 extern void memFree(mem_type, void *);
+extern void memFreeBuf(size_t size, void *);
 extern void memFree4K(void *);
 extern void memFree8K(void *);
 extern void memFreeDISK(void *);
 extern int memInUse(mem_type);
+extern size_t memTotalAllocated();
 
-extern DynPool *dynPoolCreate();
-extern void dynPoolDestroy(DynPool * pool);
-extern void *dynPoolAlloc(DynPool * pool, size_t size);
-extern void dynPoolFree(DynPool * pool, void *obj, size_t size);
+/* MemPool */
 extern MemPool *memPoolCreate(const char *label, size_t obj_size);
 extern void memPoolDestroy(MemPool * pool);
 extern void *memPoolAlloc(MemPool * pool);
@@ -798,10 +814,11 @@ extern peer_t parseNeighborType(const char *s);
 extern HttpReply *errorBuildReply(ErrorState * err);
 extern void errorSend(int fd, ErrorState *);
 extern void errorAppendEntry(StoreEntry *, ErrorState *);
-void errorStateFree(ErrorState * err);
+extern void errorStateFree(ErrorState * err);
 extern void errorInitialize(void);
+extern int errorReservePageId(const char *page_name);
 extern void errorFree(void);
-extern ErrorState *errorCon(err_type, http_status);
+extern ErrorState *errorCon(int type, http_status);
 
 extern void pconnPush(int, const char *host, u_short port);
 extern int pconnPop(const char *host, u_short port);
@@ -818,6 +835,23 @@ extern void kb_incr(kb_t *, size_t);
 extern double gb_to_double(const gb_t *);
 extern const char *gb_to_str(const gb_t *);
 extern void gb_flush(gb_t *);	/* internal, do not use this */
+
+/* String */
+#define strLen(s)     ((const int)(s).len)
+#define strBuf(s)     ((const char*)(s).buf)
+#define strChr(s,ch)  ((const char*)strchr(strBuf(s), (ch)))
+#define strRChr(s,ch) ((const char*)strrchr(strBuf(s), (ch)))
+#define strStr(s,str) ((const char*)strstr(strBuf(s), (str)))
+#define strCmp(s,str) strcmp(strBuf(s), (str))
+#define strSet(s,ptr,ch) (s).buf[ptr-(s).buf] = (ch)
+#define strCut(s,pos) (s).buf[pos] = '\0'
+/* #define strCat(s,str)  stringAppend(&(s), (str), strlen(str)+1) */
+extern void stringInit(String *s, const char *str);
+extern String stringDup(const String *s);
+extern void stringClean(String *s);
+extern void stringReset(String *s, const char *str);
+/* extern void stringAppend(String *s, const char *buf, size_t size); */
+/* extern void stringAppendf(String *s, const char *fmt, ...); */
 
 /*
  * prototypes for system functions missing from system includes

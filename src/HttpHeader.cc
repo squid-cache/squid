@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.17 1998/03/05 20:55:56 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.18 1998/03/07 23:42:58 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -100,7 +100,7 @@ static field_attrs_t Headers[] =
 {
     {"Accept", HDR_ACCEPT, ftPChar},
     {"Age", HDR_AGE, ftInt},
-    {"Cache-Control", HDR_CACHE_CONTROL, ftPSCC},
+    {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
     {"Connection", HDR_CONNECTION, ftPChar},	/* for now */
     {"Content-Encoding", HDR_CONTENT_ENCODING, ftPChar},
     {"Content-Length", HDR_CONTENT_LENGTH, ftInt},
@@ -115,14 +115,14 @@ static field_attrs_t Headers[] =
     {"Location", HDR_LOCATION, ftPChar},
     {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
     {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftPChar},
+    {"Proxy-Connection", HDR_PROXY_KEEPALIVE, ftInt},	/* true/false */
     {"Public", HDR_PUBLIC, ftPChar},
+    {"Range", HDR_RANGE, ftPRange},
     {"Retry-After", HDR_RETRY_AFTER, ftPChar},	/* for now */
-    /* fix this: make count-but-treat as OTHER mask @?@ @?@ */
-    {"Set-Cookie:", HDR_SET_COOKIE, ftPChar},
+    {"Set-Cookie", HDR_SET_COOKIE, ftPChar},
     {"Upgrade", HDR_UPGRADE, ftPChar},	/* for now */
     {"Warning", HDR_WARNING, ftPChar},	/* for now */
     {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftPChar},
-    {"Proxy-Connection", HDR_PROXY_KEEPALIVE, ftInt},	/* true/false */
     {"Other:", HDR_OTHER, ftPExtField}	/* ':' will not allow matches */
 };
 
@@ -808,6 +808,12 @@ httpHeaderGetCc(const HttpHeader * hdr)
     return httpHeaderGet(hdr, HDR_CACHE_CONTROL).v_pcc;
 }
 
+HttpHdrRange *
+httpHeaderGetRange(const HttpHeader * hdr)
+{
+    return httpHeaderGet(hdr, HDR_RANGE).v_prange;
+}
+
 /* updates header masks */
 static void
 httpHeaderSyncMasks(HttpHeader * hdr, const HttpHeaderEntry * e, int add)
@@ -873,9 +879,13 @@ httpHeaderEntryClean(HttpHeaderEntry * e)
     case ftPChar:
 	freeShortString(e->field.v_pchar);
 	break;
-    case ftPSCC:
+    case ftPCc:
 	if (e->field.v_pcc)
 	    httpHdrCcDestroy(e->field.v_pcc);
+	break;
+    case ftPRange:
+	if (e->field.v_prange)
+	    httpHdrRangeDestroy(e->field.v_prange);
 	break;
     case ftPExtField:
 	if (e->field.v_pefield)
@@ -1000,10 +1010,20 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
 	 */
 	break;
 
-    case ftPSCC:
+    case ftPCc:
 	field.v_pcc = httpHdrCcParseCreate(f->value);
 	if (!field.v_pcc) {
-	    debug(55, 2) ("failed to parse scc hdr: id: %d, field: '%s: %s'\n",
+	    debug(55, 2) ("failed to parse cc hdr: id: %d, field: '%s: %s'\n",
+		id, f->name, f->value);
+	    Headers[id].stat.errCount++;
+	    return 0;
+	}
+	break;
+
+    case ftPRange:
+	field.v_prange = httpHdrRangeParseCreate(f->value);
+	if (!field.v_prange) {
+	    debug(55, 2) ("failed to parse range hdr: id: %d, field: '%s: %s'\n",
 		id, f->name, f->value);
 	    Headers[id].stat.errCount++;
 	    return 0;
@@ -1073,8 +1093,11 @@ httpHeaderEntryPackByType(const HttpHeaderEntry * e, Packer * p)
     case ftDate_1123:
 	packerPrintf(p, "%s", mkrfc1123(e->field.v_time));
 	break;
-    case ftPSCC:
+    case ftPCc:
 	httpHdrCcPackValueInto(e->field.v_pcc, p);
+	break;
+    case ftPRange:
+	httpHdrRangePackValueInto(e->field.v_prange, p);
 	break;
     case ftPExtField:
 	packerPrintf(p, "%s", e->field.v_pefield->value);
@@ -1099,8 +1122,11 @@ httpHeaderEntryJoinWith(HttpHeaderEntry * e, const HttpHeaderEntry * newe)
     case ftPChar:
 	e->field.v_pchar = appShortStr(e->field.v_pchar, newe->field.v_pchar);
 	break;
-    case ftPSCC:
+    case ftPCc:
 	httpHdrCcJoinWith(e->field.v_pcc, newe->field.v_pcc);
+	break;
+    case ftPRange:
+	httpHdrRangeJoinWith(e->field.v_prange, newe->field.v_prange);
 	break;
     default:
 	debug(55, 0) ("join for invalid/unknown type: id: %d, type: %d\n", e->id, type);
@@ -1126,8 +1152,10 @@ httpHeaderEntryIsValid(const HttpHeaderEntry * e)
 	return e->field.v_pchar != NULL;
     case ftDate_1123:
 	return e->field.v_time >= 0;
-    case ftPSCC:
+    case ftPCc:
 	return e->field.v_pcc != NULL;
+    case ftPRange:
+	return e->field.v_prange != NULL;
     case ftPExtField:
 	return e->field.v_pefield != NULL;
     default:
@@ -1167,8 +1195,10 @@ httpHeaderFieldDup(field_type type, field_store value)
 	return value;
     case ftPChar:
 	return ptrField(dupShortStr(value.v_pchar));
-    case ftPSCC:
+    case ftPCc:
 	return ptrField(httpHdrCcDup(value.v_pcc));
+    case ftPRange:
+	return ptrField(httpHdrRangeDup(value.v_prange));
     case ftPExtField:
 	return ptrField(httpHeaderExtFieldDup(value.v_pefield));
     default:
@@ -1190,7 +1220,8 @@ httpHeaderFieldBadValue(field_type type)
     case ftDate_1123:
 	return timeField(-1);
     case ftPChar:
-    case ftPSCC:
+    case ftPCc:
+    case ftPRange:
     case ftPExtField:
 	return ptrField(NULL);
     case ftInvalid:
@@ -1199,136 +1230,6 @@ httpHeaderFieldBadValue(field_type type)
     }
     return ptrField(NULL);	/* not reached */
 }
-
-#if 0				/* moved to HttpHdrCC.c */
-
-/*
- * HttpScc (server cache control)
- */
-
-static HttpScc *
-httpSccCreate()
-{
-    HttpScc *scc = memAllocate(MEM_HTTP_SCC);
-    scc->max_age = -1;
-    return scc;
-}
-
-/* creates an scc object from a 0-terminating string */
-static HttpScc *
-httpSccParseCreate(const char *str)
-{
-    HttpScc *scc = httpSccCreate();
-    httpSccParseInit(scc, str);
-    return scc;
-}
-
-/* parses a 0-terminating string and inits scc */
-static void
-httpSccParseInit(HttpScc * scc, const char *str)
-{
-    const char *item;
-    const char *p;		/* '=' parameter */
-    const char *pos = NULL;
-    int type;
-    int ilen;
-    assert(scc && str);
-
-    CcPasredCount++;
-    /* iterate through comma separated list */
-    while (strListGetItem(str, ',', &item, &ilen, &pos)) {
-	/* strip '=' statements @?@ */
-	if ((p = strchr(item, '=')) && (p - item < ilen))
-	    ilen = p++ - item;
-	/* find type */
-	type = httpHeaderIdByName(item, ilen,
-	    SccAttrs, SCC_ENUM_END, -1);
-	if (type < 0) {
-	    debug(55, 2) ("cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
-	    continue;
-	}
-	if (EBIT_TEST(scc->mask, type)) {
-	    debug(55, 2) ("cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
-	    SccAttrs[type].stat.repCount++;
-	    continue;
-	}
-	/* update mask */
-	EBIT_SET(scc->mask, type);
-	/* post-processing special cases */
-	switch (type) {
-	case SCC_MAX_AGE:
-	    if (p)
-		scc->max_age = (time_t) atoi(p);
-	    if (scc->max_age < 0) {
-		debug(55, 2) ("scc: invalid max-age specs near '%s'\n", item);
-		scc->max_age = -1;
-		EBIT_CLR(scc->mask, type);
-	    }
-	    break;
-	default:
-	    /* note that we ignore most of '=' specs @?@ */
-	    break;
-	}
-    }
-    return;
-}
-
-static void
-httpSccDestroy(HttpScc * scc)
-{
-    assert(scc);
-    memFree(MEM_HTTP_SCC, scc);
-}
-
-static HttpScc *
-httpSccDup(HttpScc * scc)
-{
-    HttpScc *dup;
-    assert(scc);
-    dup = httpSccCreate();
-    dup->mask = scc->mask;
-    dup->max_age = scc->max_age;
-    return dup;
-}
-
-static void
-httpSccPackValueInto(HttpScc * scc, Packer * p)
-{
-    http_scc_type flag;
-    int pcount = 0;
-    assert(scc && p);
-    if (scc->max_age >= 0) {
-	packerPrintf(p, "max-age=%d", scc->max_age);
-	pcount++;
-    }
-    for (flag = 0; flag < SCC_ENUM_END; flag++) {
-	if (EBIT_TEST(scc->mask, flag)) {
-	    packerPrintf(p, pcount ? ", %s" : "%s", SccAttrs[flag].name);
-	    pcount++;
-	}
-    }
-}
-
-static void
-httpSccJoinWith(HttpScc * scc, HttpScc * new_scc)
-{
-    assert(scc && new_scc);
-    if (scc->max_age < 0)
-	scc->max_age = new_scc->max_age;
-    scc->mask |= new_scc->mask;
-}
-
-static void
-httpSccUpdateStats(const HttpScc * scc, StatHist * hist)
-{
-    http_scc_type c;
-    assert(scc);
-    for (c = 0; c < SCC_ENUM_END; c++)
-	if (EBIT_TEST(scc->mask, c))
-	    statHistCount(hist, c);
-}
-
-#endif
 
 /*
  * HttpHeaderExtField
@@ -1404,19 +1305,6 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
 	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
 	    id, name, count, xdiv(count, HeaderParsedCount));
 }
-
-#if 0
-static void
-httpHeaderCCStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
-{
-    const int id = (int) val;
-    const int valid_id = id >= 0 && id < SCC_ENUM_END;
-    const char *name = valid_id ? SccAttrs[id].name : "INVALID";
-    if (count || valid_id)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-	    id, name, count, xdiv(count, CcPasredCount));
-}
-#endif
 
 static void
 httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size, int count)
@@ -1560,55 +1448,3 @@ freeShortString(char *str)
     }
 }
 
-#if 0
-/*
- * other routines (move these into lib if you need them somewhere else?)
- */
-
-/*
- * iterates through a 0-terminated string of items separated by 'del's.
- * white space around 'del' is considered to be a part of 'del'
- * like strtok, but preserves the source.
- *
- * returns true if next item is found.
- * init pos with NULL to start iteration.
- */
-static int
-strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos)
-{
-    size_t len;
-    assert(str && item && pos);
-    if (*pos)
-	if (!**pos)		/* end of string */
-	    return 0;
-	else
-	    (*pos)++;
-    else
-	*pos = str;
-
-    /* skip leading ws (ltrim) */
-    *pos += xcountws(*pos);
-    *item = *pos;		/* remember item's start */
-    /* find next delimiter */
-    *pos = strchr(*item, del);
-    if (!*pos)			/* last item */
-	*pos = *item + strlen(*item);
-    len = *pos - *item;		/* *pos points to del or '\0' */
-    /* rtrim */
-    while (len > 0 && isspace((*item)[len - 1]))
-	len--;
-    if (ilen)
-	*ilen = len;
-    return len > 0;
-}
-
-/* handy to printf prefixes of potentially very long buffers */
-static const char *
-getStringPrefix(const char *str)
-{
-#define SHORT_PREFIX_SIZE 256
-    LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
-    xstrncpy(buf, str, SHORT_PREFIX_SIZE);
-    return buf;
-}
-#endif

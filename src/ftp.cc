@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.203 1998/03/06 23:22:27 wessels Exp $
+ * $Id: ftp.cc,v 1.204 1998/03/07 23:43:06 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -866,24 +866,24 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 {
     request_t *request = ftpState->request;
     int l;
-    char *t;
-    if ((t = strrchr(request->urlpath, ';')) != NULL) {
+    const char *t;
+    if ((t = strRChr(request->urlpath, ';')) != NULL) {
 	if (strncasecmp(t + 1, "type=", 5) == 0) {
 	    ftpState->typecode = (char) toupper((int) *(t + 6));
-	    *t = '\0';
+	    strSet(request->urlpath, t, '\0');
 	}
     }
-    l = strlen(request->urlpath);
+    l = strLen(request->urlpath);
     EBIT_SET(ftpState->flags, FTP_USE_BASE);
     /* check for null path */
-    if (*request->urlpath == '\0') {
-	xstrncpy(request->urlpath, "/", MAX_URL);
+    if (!l) {
+	stringReset(&request->urlpath, "/");
 	EBIT_SET(ftpState->flags, FTP_ISDIR);
 	EBIT_SET(ftpState->flags, FTP_ROOT_DIR);
-    } else if (!strcmp(request->urlpath, "/%2f/")) {
+    } else if (!strCmp(request->urlpath, "/%2f/")) {
 	EBIT_SET(ftpState->flags, FTP_ISDIR);
 	EBIT_SET(ftpState->flags, FTP_ROOT_DIR);
-    } else if ((l >= 1) && (*(request->urlpath + l - 1) == '/')) {
+    } else if ((l >= 1) && (*(strBuf(request->urlpath) + l - 1) == '/')) {
 	EBIT_SET(ftpState->flags, FTP_ISDIR);
 	EBIT_CLR(ftpState->flags, FTP_USE_BASE);
 	if (l == 1)
@@ -901,7 +901,7 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
 	+ strlen(ftpState->user)
 	+ strlen(ftpState->password)
 	+ strlen(request->host)
-	+ strlen(request->urlpath);
+	+ strLen(request->urlpath);
     t = ftpState->title_url = xcalloc(len, 1);
     strcat(t, "ftp://");
     if (strcmp(ftpState->user, "anonymous")) {
@@ -911,7 +911,7 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
     strcat(t, request->host);
     if (request->port != urlDefaultPort(PROTO_FTP))
 	snprintf(&t[strlen(t)], len - strlen(t), ":%d", request->port);
-    strcat(t, request->urlpath);
+    strcat(t, strBuf(request->urlpath));
 }
 
 void
@@ -957,7 +957,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     ftpCheckUrlpath(ftpState);
     ftpBuildTitleUrl(ftpState);
     debug(9, 5) ("FtpStart: host=%s, path=%s, user=%s, passwd=%s\n",
-	ftpState->request->host, ftpState->request->urlpath,
+	ftpState->request->host, strBuf(ftpState->request->urlpath),
 	ftpState->user, ftpState->password);
     fd = comm_open(SOCK_STREAM,
 	0,
@@ -1260,8 +1260,8 @@ ftpReadPass(FtpStateData * ftpState)
 static void
 ftpSendType(FtpStateData * ftpState)
 {
-    char *t;
-    char *filename;
+    const char *t;
+    const char *filename;
     char mode;
     /*
      * Ref section 3.2.2 of RFC 1738
@@ -1277,8 +1277,8 @@ ftpSendType(FtpStateData * ftpState)
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	    mode = 'A';
 	} else {
-	    t = strrchr(ftpState->request->urlpath, '/');
-	    filename = t ? t + 1 : ftpState->request->urlpath;
+	    t = strRChr(ftpState->request->urlpath, '/');
+	    filename = t ? t + 1 : strBuf(ftpState->request->urlpath);
 	    mode = mimeGetTransferMode(filename);
 	}
 	break;
@@ -1300,7 +1300,7 @@ ftpReadType(FtpStateData * ftpState)
     char *d;
     debug(9, 3) ("This is ftpReadType\n");
     if (code == 200) {
-	path = xstrdup(ftpState->request->urlpath);
+	path = xstrdup(strBuf(ftpState->request->urlpath));
 	T = &ftpState->pathcomps;
 	for (d = strtok(path, "/"); d; d = strtok(NULL, "/")) {
 	    rfc1738_unescape(d);
@@ -1952,7 +1952,7 @@ ftpTrySlashHack(FtpStateData * ftpState)
 	wordlistDestroy(&ftpState->pathcomps);
     safe_free(ftpState->filepath);
     /* Build the new path (urlpath begins with /) */
-    path = xstrdup(ftpState->request->urlpath);
+    path = xstrdup(strBuf(ftpState->request->urlpath));
     rfc1738_unescape(path);
     ftpState->filepath = path;
     /* And off we go */
@@ -2065,16 +2065,16 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 {
     char *mime_type = NULL;
     char *mime_enc = NULL;
-    char *urlpath = ftpState->request->urlpath;
-    char *filename = NULL;
-    char *t = NULL;
+    String urlpath = ftpState->request->urlpath;
+    const char *filename = NULL;
+    const char *t = NULL;
     StoreEntry *e = ftpState->entry;
     http_reply *reply = e->mem_obj->reply;
     if (EBIT_TEST(ftpState->flags, FTP_HTTP_HEADER_SENT))
 	return;
     EBIT_SET(ftpState->flags, FTP_HTTP_HEADER_SENT);
     assert(e->mem_obj->inmem_hi == 0);
-    filename = (t = strrchr(urlpath, '/')) ? t + 1 : urlpath;
+    filename = (t = strRChr(urlpath, '/')) ? t + 1 : strBuf(urlpath);
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	mime_type = "text/html";
     } else {
@@ -2158,7 +2158,7 @@ ftpUrlWith2f(const request_t * request)
 	request->host,
 	portbuf,
 	"/%2f",
-	request->urlpath);
+	strBuf(request->urlpath));
     if ((t = strchr(buf, '?')))
 	*t = '\0';
     return buf;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.256 1998/03/05 17:43:32 rousskov Exp $
+ * $Id: cache_cf.cc,v 1.257 1998/03/07 23:43:01 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -823,7 +823,7 @@ dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
 {
     acl_name_list *a;
     while (var != NULL) {
-	storeAppendPrintf(entry, "%s %s", name, var->url);
+	storeAppendPrintf(entry, "%s %s", name, var->err_page_name);
 	for (a = var->acl_list; a != NULL; a = a->next)
 	    storeAppendPrintf(entry, " %s", a->name);
 	storeAppendPrintf(entry, "\n");

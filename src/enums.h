@@ -185,6 +185,7 @@ typedef enum {
     HDR_MAX_FORWARDS,
     HDR_PROXY_AUTHENTICATE,
     HDR_PUBLIC,
+    HDR_RANGE,
     HDR_RETRY_AFTER,
     HDR_SET_COOKIE,
     HDR_UPGRADE,
@@ -214,7 +215,8 @@ typedef enum {
     ftInt,
     ftPChar,
     ftDate_1123,
-    ftPSCC,
+    ftPCc,
+    ftPRange,
     ftPExtField
 } field_type;
 

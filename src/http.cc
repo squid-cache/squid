@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.249 1998/03/07 05:48:38 wessels Exp $
+ * $Id: http.cc,v 1.250 1998/03/07 23:43:07 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -604,7 +604,7 @@ httpBuildRequestHeader(request_t * request,
     xstrncpy(viabuf, "Via: ", 4096);
     snprintf(ybuf, YBUF_SZ, "%s %s HTTP/1.0",
 	RequestMethodStr[request->method],
-	*request->urlpath ? request->urlpath : "/");
+	strLen(request->urlpath) ? strBuf(request->urlpath) : "/");
     httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     /* Add IMS header */
     if (entry && entry->lastmod && request->method == METHOD_GET) {
@@ -682,8 +682,8 @@ httpBuildRequestHeader(request_t * request,
 	url = entry ? storeUrl(entry) : urlCanonical(orig_request, NULL);
 	snprintf(ybuf, YBUF_SZ, "Cache-control: Max-age=%d", (int) getMaxAge(url));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
-	if (request->urlpath[0])
-	    assert(strstr(url, request->urlpath));
+	if (strLen(request->urlpath))
+	    assert(strstr(url, strBuf(request->urlpath)));
     }
     /* maybe append Connection: Keep-Alive */
     if (EBIT_TEST(flags, HTTP_KEEPALIVE)) {
@@ -723,7 +723,7 @@ httpSendRequest(int fd, void *data)
     peer *p = httpState->peer;
 
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
-    buflen = strlen(req->urlpath);
+    buflen = strLen(req->urlpath);
     if (req->headers)
 	buflen += req->headers_sz + 1;
     buflen += 512;		/* lots of extra */
@@ -813,7 +813,11 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
 	request->method = orig_request->method;
 	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
 	request->port = e->http_port;
+#if 0
 	xstrncpy(request->urlpath, storeUrl(entry), MAX_URL);
+#else
+	stringReset(&request->urlpath, storeUrl(entry));
+#endif
 	httpState->request = requestLink(request);
 	httpState->peer = e;
 	httpState->orig_request = requestLink(orig_request);

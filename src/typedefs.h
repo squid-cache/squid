@@ -90,7 +90,6 @@ typedef struct _mem_node mem_node;
 typedef struct _mem_hdr mem_hdr;
 typedef struct _store_client store_client;
 typedef struct _MemObject MemObject;
-typedef struct _MemPool MemPool;
 typedef struct _StoreEntry StoreEntry;
 typedef struct _SwapDir SwapDir;
 typedef struct _request_t request_t;
@@ -106,6 +105,10 @@ typedef struct _tlv tlv;
 typedef struct _storeSwapLogData storeSwapLogData;
 typedef struct _cacheSwap cacheSwap;
 typedef struct _StatHist StatHist;
+typedef struct _String String;
+typedef struct _MemMeter MemMeter;
+typedef struct _MemPoolMeter MemPoolMeter;
+typedef struct _MemPool MemPool;
 typedef struct _ClientInfo ClientInfo;
 
 /* define AIOCB even without USE_ASYNC_IO */
@@ -157,3 +160,6 @@ typedef int Ctx;
 
 /* in case we want to change it later */
 typedef size_t mb_size_t;
+
+/* iteration for HttpHdrRange */
+typedef int HttpHdrRangePos;

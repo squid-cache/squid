@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.43 1998/03/03 00:30:56 rousskov Exp $
+ * $Id: util.h,v 1.44 1998/03/07 23:42:55 rousskov Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -178,6 +178,7 @@ extern time_t parse_iso3307_time(const char *buf);
 extern char *base64_decode(const char *coded);
 extern const char *base64_encode(const char *decoded);
 
+#if 0 /* trying new "pool"ed strings */
 typedef struct _String {
     char *buf;
     off_t off;
@@ -189,8 +190,10 @@ extern String *stringCreate(size_t);
 extern void stringAppend(String *, const char *, size_t);
 extern void stringFree(String *);
 #define stringLength(S) (S)->off
+#endif
 
 extern double xpercent(double part, double whole);
+extern int xpercentInt(double part, double whole);
 extern double xdiv(double nom, double denom);
 
 
