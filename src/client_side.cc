@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.524 2001/02/07 18:56:52 hno Exp $
+ * $Id: client_side.cc,v 1.525 2001/02/09 19:35:11 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1761,12 +1761,39 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    httpReplyDestroy(rep);
 	    return;
 	} else if (rep) {
-	    body_size = size - rep->hdr_sz;
+	    aclCheck_t *ch;
+	    int rv;
+ 	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
 	    body_buf = buf + rep->hdr_sz;
 	    http->range_iter.prefix_size = rep->hdr_sz;
 	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
 		body_size, rep->hdr_sz);
+	    ch = aclChecklistCreate(Config.accessList.reply, http->request, NULL);
+	    ch->reply = rep;
+	    rv = aclCheckFast(Config.accessList.reply, ch);
+	    debug(33, 2) ("The reply for %s %s is %s, because it matched '%s'\n",
+		RequestMethodStr[http->request->method], http->uri,
+		rv ? "ALLOWED" : "DENIED",
+		AclMatchedName ? AclMatchedName : "NO ACL's");
+	    if (!rv && rep->sline.status!=HTTP_FORBIDDEN) {
+		/* the if above is slightly broken( 403 responses from upstream
+		 * will always be permitted, but AFAIK there is no way
+		 * to tell if this is a squid generated error page, or one from 
+		 * upstream at this point. */
+		ErrorState *err;
+		err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
+		err->request = requestLink(http->request);
+		storeUnregister(http->sc, http->entry, http);
+		http->sc = NULL;
+		storeUnlockObject(http->entry);
+		http->entry = clientCreateStoreEntry(http, http->request->method,
+		    null_request_flags);
+		errorAppendEntry(http->entry, err);
+		httpReplyDestroy(rep);
+		return;
+	    }
+	    aclChecklistFree(ch);
 	} else if (size < CLIENT_SOCK_SZ && entry->store_status == STORE_PENDING) {
 	    /* wait for more to arrive */
 	    storeClientCopy(http->sc, entry,

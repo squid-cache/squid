@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.246 2001/02/07 18:56:51 hno Exp $
+ * $Id: acl.cc,v 1.247 2001/02/09 19:35:10 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -216,6 +216,8 @@ aclStrToType(const char *s)
 #endif
     if (!strcmp(s, "req_mime_type"))
 	return ACL_REQ_MIME_TYPE;
+    if (!strcmp(s, "rep_mime_type"))
+	return ACL_REP_MIME_TYPE;
     return ACL_NONE;
 }
 
@@ -280,6 +282,8 @@ aclTypeToStr(squid_acl type)
 #endif
     if (type == ACL_REQ_MIME_TYPE)
 	return "req_mime_type";
+    if (type == ACL_REP_MIME_TYPE)
+	return "rep_mime_type";
     return "ERROR";
 }
 
@@ -769,6 +773,7 @@ aclParseAclLine(acl ** head)
     case ACL_SRC_DOM_REGEX:
     case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:
+    case ACL_REP_MIME_TYPE:
 	aclParseRegexList(&A->data);
 	break;
     case ACL_SRC_ASN:
@@ -1643,6 +1648,15 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 #endif
     case ACL_REQ_MIME_TYPE:
 	header = httpHeaderGetStr(&checklist->request->header,
+	    HDR_CONTENT_TYPE);
+	if (NULL == header)
+	    header = "";
+	return aclMatchRegex(ae->data, header);
+	/* NOTREACHED */
+    case ACL_REP_MIME_TYPE:
+	if (!checklist->reply)
+	    return 0;
+	header = httpHeaderGetStr(&checklist->reply->header,
 	    HDR_CONTENT_TYPE);
 	if (NULL == header)
 	    header = "";
