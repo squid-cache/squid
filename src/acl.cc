@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.213 2000/05/01 05:11:55 wessels Exp $
+ * $Id: acl.cc,v 1.214 2000/05/02 19:58:13 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -182,6 +182,8 @@ aclStrToType(const char *s)
 #if USE_IDENT
     if (!strcmp(s, "ident"))
 	return ACL_IDENT;
+    if (!strcmp(s, "ident_regex"))
+	return ACL_IDENT_REGEX;
 #endif
     if (!strncmp(s, "proto", 5))
 	return ACL_PROTO;
@@ -191,6 +193,8 @@ aclStrToType(const char *s)
 	return ACL_BROWSER;
     if (!strcmp(s, "proxy_auth"))
 	return ACL_PROXY_AUTH;
+    if (!strcmp(s, "proxy_auth_regex"))
+	return ACL_PROXY_AUTH_REGEX;
     if (!strcmp(s, "src_as"))
 	return ACL_SRC_ASN;
     if (!strcmp(s, "dst_as"))
@@ -240,6 +244,8 @@ aclTypeToStr(squid_acl type)
 #if USE_IDENT
     if (type == ACL_IDENT)
 	return "ident";
+    if (type == ACL_IDENT_REGEX)
+	return "ident_regex";
 #endif
     if (type == ACL_PROTO)
 	return "proto";
@@ -249,6 +255,8 @@ aclTypeToStr(squid_acl type)
 	return "browser";
     if (type == ACL_PROXY_AUTH)
 	return "proxy_auth";
+    if (type == ACL_PROXY_AUTH_REGEX)
+	return "proxy_auth_regex";
     if (type == ACL_SRC_ASN)
 	return "src_as";
     if (type == ACL_DST_ASN)
@@ -718,6 +726,9 @@ aclParseAclLine(acl ** head)
     case ACL_IDENT:
 	aclParseWordList(&A->data);
 	break;
+    case ACL_IDENT_REGEX:
+	aclParseRegexList(&A->data);
+	break;
 #endif
     case ACL_PROTO:
 	aclParseProtoList(&A->data);
@@ -727,6 +738,14 @@ aclParseAclLine(acl ** head)
 	break;
     case ACL_PROXY_AUTH:
 	aclParseWordList(&A->data);
+	if (!proxy_auth_cache) {
+	    /* First time around, 7921 should be big enough */
+	    proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+	    assert(proxy_auth_cache);
+	}
+	break;
+    case ACL_PROXY_AUTH_REGEX:
+	aclParseRegexList(&A->data);
 	if (!proxy_auth_cache) {
 	    /* First time around, 7921 should be big enough */
 	    proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -1049,7 +1068,7 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
  */
 
 static int
-aclMatchProxyAuth(wordlist * data, const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist)
+aclMatchProxyAuth(void * data, const char *proxy_auth, acl_proxy_auth_user * auth_user, aclCheck_t * checklist, squid_acl acltype)
 {
     /* checklist is used to register user name when identified, nothing else */
     LOCAL_ARRAY(char, login_buf, USER_IDENT_SZ);
@@ -1116,7 +1135,15 @@ aclMatchProxyAuth(wordlist * data, const char *proxy_auth, acl_proxy_auth_user *
 	    auth_user->ipaddr = checklist->src_addr;
 	    /* copy username to request for logging on client-side */
 	    xstrncpy(checklist->request->user_ident, user, USER_IDENT_SZ);
-	    return aclMatchUser(data, user);
+	    switch(acltype) {
+	    case ACL_PROXY_AUTH:
+		return aclMatchUser(data, user);
+	    case ACL_PROXY_AUTH_REGEX:
+		return aclMatchRegex(data, user);
+	    default:
+		fatal("aclMatchProxyAuth: unknown ACL type");
+		return 0; /* NOTREACHED */
+	    }
 	} else {
 	    /* user has switched to another IP addr */
 	    debug(28, 1) ("aclMatchProxyAuth: user '%s' has changed IP address\n", user);
@@ -1389,6 +1416,14 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	    return 0;
 	}
 	/* NOTREACHED */
+    case ACL_IDENT_REGEX:
+	if (checklist->ident[0]) {
+	    return aclMatchRegex(ae->data, checklist->ident);
+	} else {
+	    checklist->state[ACL_IDENT] = ACL_LOOKUP_NEEDED;
+	    return 0;
+	}
+	/* NOTREACHED */
 #endif
     case ACL_PROTO:
 	return aclMatchInteger(ae->data, r->protocol);
@@ -1403,6 +1438,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return aclMatchRegex(ae->data, browser);
 	/* NOTREACHED */
     case ACL_PROXY_AUTH:
+    case ACL_PROXY_AUTH_REGEX:
 	if (NULL == r) {
 	    return -1;
 	} else if (!r->flags.accelerated) {
@@ -1432,7 +1468,8 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	switch (aclMatchProxyAuth(ae->data,
 		header,
 		checklist->auth_user,
-		checklist)) {
+		checklist,
+		ae->type)) {
 	case 0:
 	    /* Correct password, but was not allowed in this ACL */
 	    return 0;
@@ -1840,6 +1877,10 @@ aclDestroyAcls(acl ** head)
 	case ACL_TIME:
 	    aclDestroyTimeList(a->data);
 	    break;
+#if USE_IDENT
+	case ACL_IDENT_REGEX:
+#endif
+	case ACL_PROXY_AUTH_REGEX:
 	case ACL_URL_REGEX:
 	case ACL_URLPATH_REGEX:
 	case ACL_BROWSER:
@@ -2165,6 +2206,11 @@ aclDumpGeneric(const acl * a)
 #endif
 #if USE_IDENT
     case ACL_IDENT:
+	return wordlistDup(a->data);
+	break;
+    case ACL_IDENT_REGEX:
+	return aclDumpRegexList(a->data);
+	break;
 #endif
     case ACL_PROXY_AUTH:
 	return wordlistDup(a->data);
@@ -2172,6 +2218,7 @@ aclDumpGeneric(const acl * a)
     case ACL_TIME:
 	return aclDumpTimeSpecList(a->data);
 	break;
+    case ACL_PROXY_AUTH_REGEX:
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
     case ACL_BROWSER:

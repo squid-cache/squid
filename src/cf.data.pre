@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.172 2000/05/02 19:43:30 hno Exp $
+# $Id: cf.data.pre,v 1.173 2000/05/02 19:58:13 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1651,6 +1651,7 @@ DOC_START
 	acl aclname browser  [-i] regexp
 	  # pattern match on User-Agent header
 	acl aclname ident    username ...
+	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output.
 	  # use REQUIRED to accept any non-null ident.
 	acl aclname src_as   number ... 
@@ -1664,6 +1665,7 @@ DOC_START
 	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname proxy_auth username ...
+	acl aclname proxy_auth_regex [-i] pattern ...
 	  # list of valid usernames
 	  # use REQUIRED to accept any valid username.
 	  #
