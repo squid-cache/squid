@@ -1,11 +1,11 @@
 <HTML><HEAD>
-<TITLE>錯誤；欲連結之網站/網頁位置無法正確的傳回</TITLE>
+<TITLE>錯誤；欲連結之網址（URL）無法正確的傳回</TITLE>
 </HEAD><BODY>
 <H1>錯誤</H1>
-<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<H2>欲連結之網址（URL）無法正確的傳回</H2>
 <HR>
 <P>
-當嘗試傳回下面的位置時：
+當嘗試傳回下面的網址（URL）時：
 <A HREF="%U">%U</A>
 <P>
 發生了下列的錯誤：
@@ -13,21 +13,24 @@
 <LI>
 <STRONG>
 Unable to forward this request at this time.
-<BR>
-無法替您轉送您的網站連結要求
+<LI>
+目前無法替您的網站連結要求進行轉向動作
 </STRONG>
 </UL>
 
 <P>
 This request could not be forwarded to the origin server or to any
 parent caches.  The most likely cause for this error is that:
-您的連結要求無法被指向原始網站伺服器或是其他的 PROXY 伺服器，最可能發生這
-個問題的原因可能是：
 <UL>
 <LI>The cache administrator does not allow this cache to make 
     direct connections to origin servers, and
-<BR>PROXY 伺服器管理者不允許您直接連結原始的網頁位置，或是
 <LI>All configured parent caches are currently unreachable.
-<BR>所有的 PROXY 伺服器都暫時無法連結上。
+</UL>
+</P>
+<P>
+您的連結要求無法被轉向原始網站伺服器或其他的上層快取伺服器，發生這個問題的最可能的原因可能是：
+<UL>
+<LI>網路快取伺服器管理者不允許本伺服器逕行直接連結原始的網頁位置，或是
+<LI>所有本伺服器設定的上層伺服器目前都暫時無法連結上。
 </UL>
 </P>

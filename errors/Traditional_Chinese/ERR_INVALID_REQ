@@ -1,11 +1,11 @@
 <HTML><HEAD>
-<TITLE>錯誤：欲連結之網站/網頁位置無法正確的傳回</TITLE>
+<TITLE>錯誤：欲連結之網址（URL）無法正確的傳回</TITLE>
 </HEAD><BODY>
 <H1>錯誤</H1>
-<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<H2>欲連結之網址（URL）無法正確的傳回</H2>
 <HR>
 <P>
-當嘗試進行下列您所要求的程序時：
+當嘗試進行您所要求的下列程序時：
 <PRE>
 %R
 </PRE>
@@ -15,7 +15,7 @@
 <LI>
 <STRONG>
 Invalid Request
-<BR>
+<LI>
 不正確的要求
 </STRONG>
 </UL>
@@ -26,11 +26,11 @@ Some aspect of the HTTP Request is invalid.  Possible problems:
 發生了一些不正確的 HTTP 要求。可能是下列的問題：
 <UL>
 <LI>Missing or unknown request method
-<BR>遺失或是未知的要求方式
+<BR>要求方式遺失或是未知
 <LI>Missing URL
-<BR>遺失網站位置
+<BR>網站位置遺失
 <LI>Missing HTTP Identifier (HTTP/1.0)
-<BR>遺失 HTTP 標準的宣告
+<BR>HTTP 標準的宣告遺失（HTTP/1.0）
 <LI>Request is too large
 <BR>要求命令過長
 <LI>Content-Length missing for POST or PUT requests

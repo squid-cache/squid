@@ -2,13 +2,13 @@
 <TITLE>錯誤：檔案上傳失敗</TITLE>
 </HEAD><BODY>
 <H1>錯誤</H1>
-<H2>檔案傳輸 PUT/上傳失敗</H2>
+<H2>檔案傳輸上傳（PUT）失敗</H2>
 <HR>
 <P>
-當嘗試 PUT/上傳下列位置時：
+當嘗試上傳（PUT）下列位置時：
 <A HREF="%U">%U</A>
 <P>
-PROXY 伺服器替您轉送出下列檔案傳輸命令：
+快取伺服器替您轉送出下列檔案傳輸命令：
 <PRE><STRONG>
         %f
 </STRONG></PRE>
@@ -21,7 +21,7 @@ PROXY 伺服器替您轉送出下列檔案傳輸命令：
 <PRE>
 Check path, permissions, diskspace and try again.
 <BR>
-請檢查上傳路徑，上傳位置的讀寫權限，可使用的空間之後再試一遍。
+請您檢查上傳路徑，上傳位置的讀寫權限，可使用的空間之後再試一遍。
 </PRE>
 </P>
 

@@ -1,12 +1,12 @@
 <HTML><HEAD>
-<TITLE>錯誤：使用 PORXY 管理程式被拒絕</TITLE>
+<TITLE>錯誤：使用快取伺服器管理程式被拒絕</TITLE>
 </HEAD>
 <BODY>
 <H1>錯誤</H1>
-<H2>使用 PORXY 管理程式被拒絕</H2>
+<H2>使用快取伺服器管理程式被拒絕</H2>
 <HR>
 <P>
-當嘗試傳回下面的位置時： 
+當嘗試傳回下面的網址（URL）時： 
 <A HREF="%U">%U</A>
 <P>
 發生了下列的錯誤： 
@@ -14,18 +14,15 @@
 <LI>
 <STRONG>
 Cache Manager Access Denied.
-<BR>
-PORXY 管理程式使用被拒
+<LI>
+快取伺服器管理程式使用被拒
 </STRONG>
 </UL>
 </P>
 
-<P>Sorry, you are not currently allowed to request:
-<BR>
-抱歉，您不被允許透過我們這個 PROXY 伺服器傳回下列位置： 
+<P>
+抱歉，您不被允許透過我們這個快取伺服器管理程式傳回下列位置： 
 <BR>    %U<BR>
-from this cache manager until you have authenticated yourself.
-<BR>
 除非您通過我們的身份驗證。
 </P>
 
@@ -35,9 +32,11 @@ contact the <A HREF="mailto:%w">cache administrator</a> if you have
 difficulties authenticating yourself or, if you <em>are</em> the
 administrator, read Squid documentation on cache manager interface and check
 cache log for more detailed error messages.
-<BR>
+</P>
+<P>
 您需要使用 Netscape version 2.0 或最新的版本，或是使用 Microsoft Internet 
-Explorer 3.0 或更新的版本。 如果您是在身份驗證上發生問題，請先確定您有權對
-本 PROXY 伺服器使用管理程式。或是與<A HREF="mailto:%w">管理者</a>聯繫。
-如果您<em>就是</em>管理者，請詳細閱讀相關文件。
+Explorer，或是一個相容 HTTP/1.1 的瀏覽器來進行工作。如果您是在身份驗證上發
+生問題，請先確定您有權對快取伺服器使用管理程式。
+或是與<A HREF="mailto:%w">管理者</a>聯繫。如果您<em>就是</em>管理者，請詳細閱讀 Squid 所附文件中與
+cache manager 有關部份或檢查 cache log 以便得到更詳盡的細節。
 </P>

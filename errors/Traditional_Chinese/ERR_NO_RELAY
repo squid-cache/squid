@@ -1,11 +1,11 @@
 <HTML><HEAD>
-<TITLE>錯誤：欲連結之網站/網頁位置無法正確的傳回</TITLE>
+<TITLE>錯誤：欲連結之網址（URL）無法正確的傳回</TITLE>
 </HEAD><BODY>
 <H1>錯誤</H1>
-<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<H2>欲連結之網址（URL）無法正確的傳回</H2>
 <HR>
 <P>
-當嘗試傳回下面的位置時：
+當嘗試傳回下面的網址（URL）時：
 <A HREF="%U">%U</A>
 <P>
 發生了下列的錯誤：
@@ -13,7 +13,7 @@
 <LI>
 <STRONG>
 No Wais Relay
-<BR>
+<LI>
 不提供 Wais（廣域資訊伺服器）轉接
 </STRONG>
 </UL>
@@ -21,5 +21,5 @@ No Wais Relay
 <P>
 There is no WAIS Relay host defined for this Cache!  Yell at the administrator.
 <BR>
-本 PROXY 不提供 WAIS 廣域資訊伺服器服務！如有疑問請洽管理者。
+本快取伺服器未提供 WAIS 廣域資訊伺服器服務！如有疑問請洽快取伺服器管理者。
 </P>
