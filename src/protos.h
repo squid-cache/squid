@@ -114,6 +114,10 @@ extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
 extern int ignoreErrno(int);
 
+/* see debug.c for info on context-based debugging */
+extern Ctx ctx_enter(const char *descr);
+extern void ctx_exit(Ctx ctx);
+
 extern void _db_init(const char *logfile, const char *options);
 extern void _db_rotate_log(void);
 

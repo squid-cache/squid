@@ -86,9 +86,6 @@
 /* Define to use async disk I/O operations */
 #undef USE_ASYNC_IO
 
-/* Define to use alex's code */
-#undef USE_ALEX_CODE
-
 /*
  * If you want to use Squid's ICMP features (highly recommended!) then
  * define this.  When USE_ICMP is defined, Squid will send ICMP pings

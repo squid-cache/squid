@@ -1,5 +1,11 @@
 Future/Current Changes to squid-1.2.beta16 (Feb 23, 1998):
 
+	- Added simple context-based debugging to debug.c. Currently, the
+	  context is defined as a constant string. Context reporting is
+	  triggered by debug() calls.  Context debugging routines print
+	  minimal amount of information sufficient to describe current
+	  context. The interface will be enhanced in the future.
+
 	- Replaced _http_reply with HttpReply. HttpReply is a stand-alone object
 	  that is responsible for parsing, swapping, and comm_writing of HTTP
 	  replies. Moved these functions from various modules into HttpReply

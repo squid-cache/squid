@@ -1,7 +1,7 @@
 /*
- * $Id: HttpHeader.cc,v 1.2 1998/02/21 00:56:41 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.3 1998/02/21 18:46:32 rousskov Exp $
  *
- * DEBUG: section 55    General HTTP Header
+ * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1645,12 +1645,12 @@ freeShortString(char *str)
  */
 
 /*
- * iterates through a 0-terminated string of items separated by 'del'
+ * iterates through a 0-terminated string of items separated by 'del's.
  * white space around 'del' is considered to be a part of 'del'
- * like strtok, but preserves the source
+ * like strtok, but preserves the source.
  *
- * returns true if next item is found
- * init pos with NULL to start iteration
+ * returns true if next item is found.
+ * init pos with NULL to start iteration.
  */
 static int
 strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos)

@@ -429,10 +429,6 @@ struct _hash_table {
     hash_link *current_ptr;
 };
 
-#if ! USE_ALEX_CODE
-#error must USE_ALEX_CODE
-#endif
-
 #include "MemBuf.h"
 #include "Packer.h"
 #include "HttpReply.h"

@@ -1,7 +1,7 @@
 /*
- * $Id: HttpReply.cc,v 1.2 1998/02/21 00:56:43 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.3 1998/02/21 18:46:33 rousskov Exp $
  *
- * DEBUG: section ??    HTTP Reply
+ * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
