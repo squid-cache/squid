@@ -9,6 +9,10 @@
 	- Fixed SNMP sizeof(int) / sizeof(long) bugs for 64-bit
 	  systems.
 	- Added support for 'Cache-Control: Only-If-Cached' request header.
+	- Fixed CheckQuickAbort() bugs for multiple clients on one
+	  StoreEntry.  Also changed storePendingNClients() to return
+	  mem->nclients instead of counting the number of store_client
+	  entries with pending callback functions.
 
 Changes to squid-1.2.beta17 (Mar 17, 1998):
 
