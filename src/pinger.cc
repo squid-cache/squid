@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.33 1998/03/05 20:07:44 wessels Exp $
+ * $Id: pinger.cc,v 1.34 1998/06/08 17:26:30 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -49,7 +49,6 @@
 #define icmp_cksum checksum
 #define icmp_id un.echo.id
 #define icmp_seq un.echo.sequence
-#define icmp_gwaddr un.gateway
 #define ip_hl ihl
 #define ip_v version
 #define ip_tos tos
