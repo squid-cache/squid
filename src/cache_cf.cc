@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.187 1997/05/15 01:27:09 wessels Exp $
+ * $Id: cache_cf.cc,v 1.188 1997/05/15 01:28:44 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1453,7 +1453,7 @@ configDoConfigure(void)
     else
 	Config.appendDomainLen = 0;
     if (Config.Port.n_http == 0)
-	Config.Port.http[Config.Port.n_http++] = DefaultHttpPort;
+	Config.Port.http[Config.Port.n_http++] = DefaultHttpPortNum;
 }
 
 /* Parse a time specification from the config file.  Store the
