@@ -219,6 +219,7 @@ helperServerFree(int fd, void *data)
 	if (cbdataValid(r->data))
 	    r->callback(r->data, srv->buf);
 	helperRequestFree(r);
+	srv->request = NULL;
     }
     if (srv->wfd != srv->rfd)
 	comm_close(srv->wfd);
@@ -274,6 +275,7 @@ helperHandleRead(int fd, void *data)
 	srv->flags.busy = 0;
 	srv->offset = 0;
 	helperRequestFree(r);
+	srv->request = NULL;
 	hlp->stats.replies++;
 	hlp->stats.avg_svc_time =
 	    intAverage(hlp->stats.avg_svc_time,
