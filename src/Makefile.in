@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.307 2003/05/18 00:29:55 hno Exp $
+#  $Id: Makefile.in,v 1.308 2003/05/21 00:35:16 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -237,6 +237,8 @@ DELAY_POOL_ALL_SOURCE = \
 	DelaySpec.h \
 	DelayUser.cc \
 	DelayUser.h \
+	DelayTagged.cc \
+	DelayTagged.h \
 	DelayVector.cc \
 	DelayVector.h \
 	NullDelayId.cc \
@@ -481,6 +483,8 @@ squid_SOURCES = \
 	event.cc \
 	external_acl.cc \
 	ExternalACL.h \
+	ExternalACLEntry.cc \
+	ExternalACLEntry.h \
 	fd.cc \
 	fde.cc \
 	fde.h \
@@ -976,17 +980,19 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	DelayId.cc DelayId.h DelayIdComposite.h DelayBucket.cc \
 	DelayBucket.h DelayConfig.cc DelayConfig.h DelayPool.cc \
 	DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h DelayUser.cc \
-	DelayUser.h DelayVector.cc DelayVector.h NullDelayId.cc \
-	NullDelayId.h disk.cc dns_internal.cc dns.cc enums.h \
-	errorpage.cc ElementList.h ESI.cc ESI.h ESIAttempt.h \
-	ESIContext.cc ESIContext.h ESICustomParser.cc ESICustomParser.h \
-	ESIElement.h ESIExcept.h ESIExpatParser.cc ESIExpatParser.h \
-	ESIExpression.cc ESILiteral.h ESIParser.cc ESIParser.h \
-	ESISegment.cc ESISegment.h ESISequence.cc ESISequence.h ETag.cc \
-	event.cc external_acl.cc ExternalACL.h fd.cc fde.cc fde.h \
-	filemap.cc forward.cc fqdncache.cc ftp.cc Generic.h globals.h \
-	gopher.cc helper.cc htcp.cc http.cc http.h HttpStatusLine.cc \
-	HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
+	DelayUser.h DelayTagged.cc DelayTagged.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
+	dns_internal.cc dns.cc enums.h errorpage.cc ElementList.h \
+	ESI.cc ESI.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ETag.cc event.cc \
+	external_acl.cc ExternalACL.h ExternalACLEntry.cc \
+	ExternalACLEntry.h fd.cc fde.cc fde.h filemap.cc forward.cc \
+	fqdncache.cc ftp.cc Generic.h globals.h gopher.cc helper.cc \
+	htcp.cc http.cc http.h HttpStatusLine.cc HttpHdrCc.cc \
+	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
 	HttpHdrContRange.cc HttpHdrContRange.h HttpHeader.cc \
 	HttpHeader.h HttpHeaderRange.h HttpHeaderTools.cc HttpBody.cc \
 	HttpMsg.cc HttpReply.cc HttpReply.h HttpRequest.cc \
@@ -1029,8 +1035,8 @@ am__objects_3 = $(am__objects_2) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
 	ACLUrlPath.$(OBJEXT) ACLUrlPort.$(OBJEXT) ACLUserData.$(OBJEXT)
 am__objects_4 = delay_pools.$(OBJEXT) DelayId.$(OBJEXT) \
 	DelayBucket.$(OBJEXT) DelayConfig.$(OBJEXT) DelayPool.$(OBJEXT) \
-	DelaySpec.$(OBJEXT) DelayUser.$(OBJEXT) DelayVector.$(OBJEXT) \
-	NullDelayId.$(OBJEXT)
+	DelaySpec.$(OBJEXT) DelayUser.$(OBJEXT) DelayTagged.$(OBJEXT) \
+	DelayVector.$(OBJEXT) NullDelayId.$(OBJEXT)
 @USE_DELAY_POOLS_TRUE@am__objects_5 = $(am__objects_4)
 @USE_DELAY_POOLS_FALSE@am__objects_5 =
 @USE_DNSSERVER_TRUE@am__objects_6 = dns.$(OBJEXT)
@@ -1070,11 +1076,11 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	debug.$(OBJEXT) $(am__objects_5) disk.$(OBJEXT) \
 	$(am__objects_6) errorpage.$(OBJEXT) $(am__objects_8) \
 	ETag.$(OBJEXT) event.$(OBJEXT) external_acl.$(OBJEXT) \
-	fd.$(OBJEXT) fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
-	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
-	helper.$(OBJEXT) $(am__objects_9) http.$(OBJEXT) \
-	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
+	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
+	$(am__objects_9) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
@@ -1145,35 +1151,35 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	DelayId.cc DelayId.h DelayIdComposite.h DelayBucket.cc \
 	DelayBucket.h DelayConfig.cc DelayConfig.h DelayPool.cc \
 	DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h DelayUser.cc \
-	DelayUser.h DelayVector.cc DelayVector.h NullDelayId.cc \
-	NullDelayId.h disk.cc dns_internal.cc dns.cc enums.h \
-	errorpage.cc ElementList.h ESI.cc ESI.h ESIAttempt.h \
-	ESIContext.cc ESIContext.h ESICustomParser.cc ESICustomParser.h \
-	ESIElement.h ESIExcept.h ESIExpatParser.cc ESIExpatParser.h \
-	ESIExpression.cc ESILiteral.h ESIParser.cc ESIParser.h \
-	ESISegment.cc ESISegment.h ESISequence.cc ESISequence.h ETag.cc \
-	event.cc external_acl.cc fd.cc fde.cc fde.h filemap.cc \
-	forward.cc fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc \
-	http.cc HttpStatusLine.cc HttpHdrCc.cc HttpHdrRange.cc \
-	HttpHdrSc.cc HttpHdrScTarget.cc HttpHdrContRange.cc \
-	HttpHeader.cc HttpHeaderTools.cc HttpBody.cc HttpMsg.cc \
-	HttpReply.cc HttpRequest.cc HttpRequest.h icmp.cc icp_v2.cc \
-	icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc internal.cc ipc.cc \
-	ipcache.cc IPInterception.cc IPInterception.h leakfinder.cc \
-	logfile.cc mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc \
-	MemObject.cc MemObject.h mime.cc multicast.cc neighbors.cc \
-	net_db.cc Packer.cc ProfStats.cc pconn.cc peer_digest.cc \
-	peer_select.cc protos.h redirect.cc referer.cc refresh.cc \
-	send-announce.cc snmp_core.cc snmp_agent.cc squid.h \
-	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
-	ACLCertificate.h ssl_support.cc ssl_support.h tunnel.cc stat.cc \
-	StatHist.cc String.cc stmem.cc store_io.cc StoreIOBuffer.h \
-	StoreIOState.cc store_client.cc StoreClient.h store_digest.cc \
-	store_dir.cc store_key_md5.cc store_log.cc store_rebuild.cc \
-	store_swapin.cc store_swapmeta.cc store_swapout.cc structs.h \
-	SwapDir.cc tools.cc typedefs.h ufscommon.cc ufscommon.h \
-	unlinkd.cc url.cc urn.cc useragent.cc wais.cc wccp.cc whois.cc \
-	win32.cc
+	DelayUser.h DelayTagged.cc DelayTagged.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
+	dns_internal.cc dns.cc enums.h errorpage.cc ElementList.h \
+	ESI.cc ESI.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ETag.cc event.cc \
+	external_acl.cc fd.cc fde.cc fde.h filemap.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc http.cc \
+	HttpStatusLine.cc HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc HttpHdrContRange.cc HttpHeader.cc \
+	HttpHeaderTools.cc HttpBody.cc HttpMsg.cc HttpReply.cc \
+	HttpRequest.cc HttpRequest.h icmp.cc icp_v2.cc icp_v3.cc \
+	ACLIdent.cc ACLIdent.h ident.cc internal.cc ipc.cc ipcache.cc \
+	IPInterception.cc IPInterception.h leakfinder.cc logfile.cc \
+	mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc MemObject.cc \
+	MemObject.h mime.cc multicast.cc neighbors.cc net_db.cc \
+	Packer.cc ProfStats.cc pconn.cc peer_digest.cc peer_select.cc \
+	protos.h redirect.cc referer.cc refresh.cc send-announce.cc \
+	snmp_core.cc snmp_agent.cc squid.h ACLCertificateData.cc \
+	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
+	ssl_support.cc ssl_support.h tunnel.cc stat.cc StatHist.cc \
+	String.cc stmem.cc store_io.cc StoreIOBuffer.h StoreIOState.cc \
+	store_client.cc StoreClient.h store_digest.cc store_dir.cc \
+	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
+	store_swapmeta.cc store_swapout.cc structs.h SwapDir.cc \
+	tools.cc typedefs.h ufscommon.cc ufscommon.h unlinkd.cc url.cc \
+	urn.cc useragent.cc wais.cc wccp.cc whois.cc win32.cc
 am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store.$(OBJEXT) StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
@@ -1263,13 +1269,15 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/DelayBucket.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/DelayConfig.Po ./$(DEPDIR)/DelayId.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/DelayPool.Po ./$(DEPDIR)/DelaySpec.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/DelayUser.Po ./$(DEPDIR)/DelayVector.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ESI.Po ./$(DEPDIR)/ESIContext.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/DelayTagged.Po ./$(DEPDIR)/DelayUser.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/DelayVector.Po ./$(DEPDIR)/ESI.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESIContext.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESICustomParser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIExpatParser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIExpression.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIParser.Po ./$(DEPDIR)/ESISegment.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESISequence.Po ./$(DEPDIR)/ETag.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ExternalACLEntry.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/HttpBody.Po ./$(DEPDIR)/HttpHdrCc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/HttpHdrContRange.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/HttpHdrRange.Po \
@@ -1537,6 +1545,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayId.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayPool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelaySpec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayTagged.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayUser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayVector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESI.Po@am__quote@
@@ -1548,6 +1557,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESISegment.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESISequence.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ETag.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ExternalACLEntry.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpBody.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHdrCc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHdrContRange.Po@am__quote@
