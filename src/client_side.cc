@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.56 1996/11/04 18:12:16 wessels Exp $
+ * $Id: client_side.cc,v 1.57 1996/11/04 22:51:35 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -411,7 +411,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     debug(33, 3, "icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
     /* unregister this handler */
     if (entry->store_status == STORE_ABORTED) {
-	debug(33, 1, "icpHandleIMSReply: ABORTED/%s '%s'\n",
+	debug(33, 3, "icpHandleIMSReply: ABORTED/%s '%s'\n",
 	    log_tags[entry->mem_obj->abort_code], entry->url);
 	/* We have an existing entry, but failed to validate it,
 	 * so send the old one anyway */
@@ -421,7 +421,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	icpState->entry = icpState->old_entry;
 	icpState->entry->refcount++;
     } else if (mem->reply->code == 0) {
-	debug(33, 1, "icpHandleIMSReply: Incomplete headers for '%s'\n",
+	debug(33, 3, "icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
 	storeRegister(entry,
 	    fd,

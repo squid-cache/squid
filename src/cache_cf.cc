@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.127 1996/11/04 22:07:24 wessels Exp $
+ * $Id: cache_cf.cc,v 1.128 1996/11/04 22:51:34 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1439,7 +1439,6 @@ configFreeMemory(void)
     ip_acl_destroy(&Config.local_ip_list);
     ip_acl_destroy(&Config.firewall_ip_list);
     objcachePasswdDestroy(&Config.passwd_list);
-    ttlFreeList();
     refreshFreeMemory();
 }
 
