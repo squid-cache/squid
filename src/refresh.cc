@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.2 1996/10/28 07:44:25 wessels Exp $
+ * $Id: refresh.cc,v 1.3 1996/11/04 17:02:49 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -138,9 +138,14 @@ refreshCheck(StoreEntry * entry, request_t * request_unused)
 	debug(22, 3, "refreshCheck: NO: age < min\n");
 	return 0;
     }
-    if (-1 < entry->expires && entry->expires <= squid_curtime) {
-	debug(22, 3, "refreshCheck: YES: expires <= curtime\n");
-	return 1;
+    if (-1 < entry->expires) {
+	if (entry->expires <= squid_curtime) {
+	    debug(22, 3, "refreshCheck: YES: expires <= curtime\n");
+	    return 1;
+	} else {
+	    debug(22, 3, "refreshCheck: NO: expires > curtime\n");
+	    return 0;
+	}
     }
     if (age > max) {
 	debug(22, 3, "refreshCheck: YES: age > max\n");
