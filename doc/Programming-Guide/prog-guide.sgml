@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.25 2000/03/27 21:56:20 wessels Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.26 2000/04/27 07:58:09 adrian Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -54,7 +54,7 @@ or improve it.
 	Note that the Squid source changes rapidly, and some parts
 	of this document may become out-of-date.  If you find any
 	inconsistencies, please feel free to notify <url
-	url="mailto:squid-dev@nlanr.net" name="the Squid Developers">.
+	url="mailto:squid-dev@squid-cache.org" name="the Squid Developers">.
 
 <sect1>Conventions
 
