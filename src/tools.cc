@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.148 1998/02/27 07:24:57 kostas Exp $
+ * $Id: tools.cc,v 1.149 1998/02/27 07:28:57 kostas Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -340,17 +340,19 @@ sigusr2_handle(int sig)
     static int state = 0;
     /* no debug() here; bad things happen if the signal is delivered during _db_print() */
     if (state == 0) {
+#ifndef MEM_GEN_TRACE
 	_db_init(Config.Log.log, "ALL,10");
-	state = 1;
-#if MEM_GEN_TRACE
+#else
 	log_trace_done();
 #endif
+	state = 1;
     } else {
+#ifndef MEM_GEN_TRACE
 	_db_init(Config.Log.log, Config.debugOptions);
-	state = 0;
-#if MEM_GEN_TRACE
+#else
 	log_trace_init("/tmp/squid.alloc");
 #endif
+	state = 0;
     }
 #if !HAVE_SIGACTION
     signal(sig, sigusr2_handle);	/* reinstall */
