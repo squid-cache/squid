@@ -1,29 +1,28 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
-<H2>The requested URL could not be retrieved</H2>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
 <HR noshade size="1px">
 <P>
-While trying to retrieve the URL:
+Mentre si cercava di recuperare la URL:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+&Egrave; avvenuto il seguente errore:
 <BLOCKQUOTE>
-ESI Processing failed.
+Elaborazione ESI fallita.
 </BLOCKQUOTE>
 
 <P>
-The ESI processor returned:
+Il processore ESI ha risposto:
 <BLOCKQUOTE>
 %Z
 </BLOCKQUOTE>
 
 <P>
-This means that:
+Ci&ograve; significa che:
 <PRE>
- The surrogate was not able to process the ESI template. Please report this error to the webmaster. 
+ Il "surrogate" server non ha potuto elaborare la template ESI. Si prega di segnalare questo errore al webmaster.
 </PRE>
-<P>Your webmaster is <A HREF="mailto:%w">%w</A>.</P>
-<P>This page is in english because a translation has not been made. If you are able to, please create a translation and contact the squid project to get it included.</P>
+<P>Il vostro webmaster &egrave; <A HREF="mailto:%w">%w</A>.</P>

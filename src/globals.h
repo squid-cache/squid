@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.121 2003/02/25 12:22:34 robertc Exp $
+ * $Id: globals.h,v 1.122 2003/04/20 05:28:58 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -157,9 +157,19 @@ extern ssize_t store_maxobjsize;	/* -1 */
 extern RemovalPolicy *mem_policy;
 extern hash_table *proxy_auth_username_cache;	/* NULL */
 extern int incoming_sockets_accepted;
+#ifdef _SQUID_MSWIN_
+extern unsigned int WIN32_Socks_initialized;	/* 0 */
+#endif
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
 extern unsigned int WIN32_OS_version;	/* 0 */
-extern char *WIN32_OS_string;	/* NULL */
+extern char *WIN32_OS_string;           /* NULL */
+extern char *WIN32_Service_name;        /* NULL */
+extern char *WIN32_Command_Line;        /* NULL */
+extern char *WIN32_Service_Command_Line; /* NULL */
+extern unsigned int WIN32_run_mode;     /* _WIN_SQUID_RUN_MODE_INTERACTIVE */
+#if defined(_SQUID_MSWIN_) && defined(_DEBUG)
+extern int do_debug;	                /* 0 */
+#endif
 #endif
 #if HAVE_SBRK
 extern void *sbrk_start;	/* 0 */
