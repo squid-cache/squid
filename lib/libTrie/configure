@@ -310,7 +310,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC SET_MAKE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK am__leading_dot DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT RANLIB ac_ct_RANLIB CPP EGREP LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC SET_MAKE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK am__leading_dot DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT RANLIB ac_ct_RANLIB TRIE_CFLAGS TRIE_CXXFLAGS CPP EGREP LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -857,13 +857,13 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-inline        Don't compile trivial methods as inline. Squid
-                            is coded with much of the code able to be inlined.<                             Inlining is good for production builds, but not
-                            good for development. During development, use
-                            --disable-inline to reduce compilation times and
-                            allow incremental builds to be quick. For
-                            production builds, or load tests, use
-                            --enable-inline to have squid make all trivial
-                            methods inlinable by the compiler.
+                             is coded with much of the code able to be inlined.<                             Inlining is good for production builds, but not
+                             good for development. During development, use
+                             --disable-inline to reduce compilation times and
+                             allow incremental builds to be quick. For
+                             production builds, or load tests, use
+                             --enable-inline to have squid make all trivial
+                             methods inlinable by the compiler.
   --disable-dependency-tracking Speeds up one-time builds
   --enable-dependency-tracking  Do not reject slow dependency extractors
   --enable-maintainer-mode enable make rules and dependencies not useful
@@ -1302,16 +1302,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 SquidInline="yes"
-# Check whether --enable-inline or --disable-inline was given.
+            # Check whether --enable-inline or --disable-inline was given.
 if test "${enable_inline+set}" = set; then
   enableval="$enable_inline"
    if test "$enableval" = "no" ; then
-     SquidInline="no"
-   fi
+                             SquidInline="no"
+                             fi
 
 fi;
 
-if test "$SquidInline" = "yes" ; then
+                             if test "$SquidInline" = "yes" ; then
 
 cat >>confdefs.h <<\_ACEOF
 #define _SQUID_INLINE_ inline
@@ -1322,16 +1322,16 @@ cat >>confdefs.h <<\_ACEOF
 #define _USE_INLINE_
 _ACEOF
 
-else
+                             else
 
 cat >>confdefs.h <<\_ACEOF
 #define _SQUID_INLINE_
 _ACEOF
 
-fi
+                             fi
 
 # Checks for programs.
-ac_ext=cc
+                             ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -1854,7 +1854,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-ac_ext=c
+                             ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -2519,7 +2519,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
+                             echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
 echo $ECHO_N "checking whether ${MAKE-make} sets \$(MAKE)... $ECHO_C" >&6
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y,./+-,__p_,'`
 if eval "test \"\${ac_cv_prog_make_${ac_make}_set+set}\" = set"; then
@@ -2549,7 +2549,7 @@ echo "${ECHO_T}no" >&6
 fi
 
 # for old automakes - like squid-cache.orgs!
-am__api_version="1.7"
+                             am__api_version="1.7"
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -3157,7 +3157,7 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking whether to enable maintainer-specific portions of Makefiles" >&5
+                             echo "$as_me:$LINENO: checking whether to enable maintainer-specific portions of Makefiles" >&5
 echo $ECHO_N "checking whether to enable maintainer-specific portions of Makefiles... $ECHO_C" >&6
     # Check whether --enable-maintainer-mode or --disable-maintainer-mode was given.
 if test "${enable_maintainer_mode+set}" = set; then
@@ -3181,7 +3181,7 @@ fi
   MAINT=$MAINTAINER_MODE_TRUE
 
 
-if test -n "$ac_tool_prefix"; then
+                             if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
 set dummy ${ac_tool_prefix}ranlib; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -3260,6 +3260,16 @@ fi
 else
   RANLIB="$ac_cv_prog_RANLIB"
 fi
+
+
+                                                          if test "$GCC" = "yes"; then
+                             TRIE_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
+                             TRIE_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wcomments"
+                             else
+                             TRIE_CFLAGS=
+                             TRIE_CXXFLAGS=
+                             fi
+
 
 
 # Checks for libraries.
@@ -3366,7 +3376,7 @@ _ACEOF
 
 fi
 
-ac_ext=c
+                             ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -3899,9 +3909,9 @@ fi
 
 # Checks for library functions.
 
-                                        ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile test/Makefile"
+                                                                     ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile test/Makefile"
 
-cat >confcache <<\_ACEOF
+                             cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
 # scripts and configure runs, see configure's option --config-cache.
@@ -4600,6 +4610,8 @@ s,@MAINTAINER_MODE_FALSE@,$MAINTAINER_MODE_FALSE,;t t
 s,@MAINT@,$MAINT,;t t
 s,@RANLIB@,$RANLIB,;t t
 s,@ac_ct_RANLIB@,$ac_ct_RANLIB,;t t
+s,@TRIE_CFLAGS@,$TRIE_CFLAGS,;t t
+s,@TRIE_CXXFLAGS@,$TRIE_CXXFLAGS,;t t
 s,@CPP@,$CPP,;t t
 s,@EGREP@,$EGREP,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t

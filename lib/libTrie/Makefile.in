@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.6 2003/05/29 00:13:12 hno Exp $
+# $Id: Makefile.in,v 1.7 2003/07/14 15:14:42 robertc Exp $
 #
 
 srcdir = @srcdir@
@@ -87,6 +87,8 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+TRIE_CFLAGS = @TRIE_CFLAGS@
+TRIE_CXXFLAGS = @TRIE_CXXFLAGS@
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@

@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.312 2003/07/08 00:12:52 hno Exp $
+#  $Id: Makefile.in,v 1.313 2003/07/14 15:14:48 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -251,6 +251,8 @@ ESI_ALL_SOURCE = \
 	ElementList.h \
 	ESI.cc \
 	ESI.h \
+	ESIAssign.cc \
+	ESIAssign.h \
 	ESIAttempt.h \
 	ESIContext.cc \
 	ESIContext.h \
@@ -261,13 +263,19 @@ ESI_ALL_SOURCE = \
 	ESIExpatParser.cc \
 	ESIExpatParser.h \
 	ESIExpression.cc \
+	ESIExpression.h \
+	ESIInclude.cc \
+	ESIInclude.h \
 	ESILiteral.h \
 	ESIParser.cc \
 	ESIParser.h \
 	ESISegment.cc \
 	ESISegment.h \
 	ESISequence.cc \
-	ESISequence.h
+	ESISequence.h \
+	ESIVar.h \
+	ESIVarState.cc \
+	ESIVarState.h
 
 @USE_ESI_TRUE@ESI_SOURCE = $(ESI_ALL_SOURCE)
 @USE_ESI_FALSE@ESI_SOURCE = 
@@ -275,7 +283,7 @@ ESI_ALL_SOURCE = \
 @ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = ProfStats.cc
 @ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
 
-@ENABLE_HTCP_TRUE@HTCPSOURCE = htcp.cc
+@ENABLE_HTCP_TRUE@HTCPSOURCE = htcp.cc htcp.h
 
 @MAKE_LEAKFINDER_TRUE@LEAKFINDERSOURCE = leakfinder.cc
 @MAKE_LEAKFINDER_FALSE@LEAKFINDERSOURCE = 
@@ -990,15 +998,17 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
 	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
 	disk.cc dns_internal.cc dns.cc enums.h errorpage.cc \
-	ElementList.h ESI.cc ESI.h ESIAttempt.h ESIContext.cc \
-	ESIContext.h ESICustomParser.cc ESICustomParser.h ESIElement.h \
-	ESIExcept.h ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
-	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
-	ESISegment.h ESISequence.cc ESISequence.h ETag.cc event.cc \
+	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
+	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
+	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
+	ESIExpatParser.h ESIExpression.cc ESIExpression.h ESIInclude.cc \
+	ESIInclude.h ESILiteral.h ESIParser.cc ESIParser.h \
+	ESISegment.cc ESISegment.h ESISequence.cc ESISequence.h \
+	ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc event.cc \
 	external_acl.cc ExternalACL.h ExternalACLEntry.cc \
 	ExternalACLEntry.h fd.cc fde.cc fde.h filemap.cc forward.cc \
 	fqdncache.cc ftp.cc Generic.h globals.h gopher.cc helper.cc \
-	htcp.cc http.cc http.h HttpStatusLine.cc HttpHdrCc.cc \
+	htcp.cc htcp.h http.cc http.h HttpStatusLine.cc HttpHdrCc.cc \
 	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
 	HttpHdrContRange.cc HttpHdrContRange.h HttpHeader.cc \
 	HttpHeader.h HttpHeaderRange.h HttpHeaderTools.cc HttpBody.cc \
@@ -1049,10 +1059,11 @@ am__objects_4 = delay_pools.$(OBJEXT) DelayId.$(OBJEXT) \
 @USE_DELAY_POOLS_FALSE@am__objects_5 =
 @USE_DNSSERVER_TRUE@am__objects_6 = dns.$(OBJEXT)
 @USE_DNSSERVER_FALSE@am__objects_6 = dns_internal.$(OBJEXT)
-am__objects_7 = ESI.$(OBJEXT) ESIContext.$(OBJEXT) \
+am__objects_7 = ESI.$(OBJEXT) ESIAssign.$(OBJEXT) ESIContext.$(OBJEXT) \
 	ESICustomParser.$(OBJEXT) ESIExpatParser.$(OBJEXT) \
-	ESIExpression.$(OBJEXT) ESIParser.$(OBJEXT) \
-	ESISegment.$(OBJEXT) ESISequence.$(OBJEXT)
+	ESIExpression.$(OBJEXT) ESIInclude.$(OBJEXT) \
+	ESIParser.$(OBJEXT) ESISegment.$(OBJEXT) ESISequence.$(OBJEXT) \
+	ESIVarState.$(OBJEXT)
 @USE_ESI_TRUE@am__objects_8 = $(am__objects_7)
 @USE_ESI_FALSE@am__objects_8 =
 @ENABLE_HTCP_TRUE@am__objects_9 = htcp.$(OBJEXT)
@@ -1163,13 +1174,15 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
 	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
 	disk.cc dns_internal.cc dns.cc enums.h errorpage.cc \
-	ElementList.h ESI.cc ESI.h ESIAttempt.h ESIContext.cc \
-	ESIContext.h ESICustomParser.cc ESICustomParser.h ESIElement.h \
-	ESIExcept.h ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
-	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
-	ESISegment.h ESISequence.cc ESISequence.h ETag.cc event.cc \
+	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
+	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
+	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
+	ESIExpatParser.h ESIExpression.cc ESIExpression.h ESIInclude.cc \
+	ESIInclude.h ESILiteral.h ESIParser.cc ESIParser.h \
+	ESISegment.cc ESISegment.h ESISequence.cc ESISequence.h \
+	ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc event.cc \
 	external_acl.cc fd.cc fde.cc fde.h filemap.cc forward.cc \
-	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc http.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
 	HttpStatusLine.cc HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpHdrContRange.cc HttpHeader.cc \
 	HttpHeaderTools.cc HttpBody.cc HttpMsg.cc HttpReply.cc \
@@ -1283,12 +1296,14 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/DelayPool.Po ./$(DEPDIR)/DelaySpec.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/DelayTagged.Po ./$(DEPDIR)/DelayUser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/DelayVector.Po ./$(DEPDIR)/ESI.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ESIContext.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESIAssign.Po ./$(DEPDIR)/ESIContext.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESICustomParser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIExpatParser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ESIExpression.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ESIParser.Po ./$(DEPDIR)/ESISegment.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ESISequence.Po ./$(DEPDIR)/ETag.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESIInclude.Po ./$(DEPDIR)/ESIParser.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESISegment.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESISequence.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ESIVarState.Po ./$(DEPDIR)/ETag.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ExternalACLEntry.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/HttpBody.Po ./$(DEPDIR)/HttpHdrCc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/HttpHdrContRange.Po \
@@ -1564,13 +1579,16 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayUser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayVector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESI.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIAssign.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIContext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESICustomParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIExpatParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIExpression.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIInclude.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESISegment.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESISequence.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIVarState.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ETag.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ExternalACLEntry.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpBody.Po@am__quote@
