@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.79 1997/06/26 22:41:35 wessels Exp $
+#  $Id: Makefile.in,v 1.80 1997/07/06 05:14:07 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -129,15 +129,7 @@ OBJS	 	= \
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
-	-DDEFAULT_MIME_TABLE=\"$(DEFAULT_MIME_TABLE)\" \
-	-DDEFAULT_DNSSERVER=\"$(DEFAULT_DNSSERVER)\" \
-	-DDEFAULT_CACHE_LOG=\"$(DEFAULT_CACHE_LOG)\" \
-	-DDEFAULT_ACCESS_LOG=\"$(DEFAULT_ACCESS_LOG)\" \
-	-DDEFAULT_STORE_LOG=\"$(DEFAULT_STORE_LOG)\" \
-	-DDEFAULT_PID_FILE=\"$(DEFAULT_PID_FILE)\" \
-	-DDEFAULT_SWAP_DIR=\"$(DEFAULT_SWAP_DIR)\" \
-	-DDEFAULT_PINGER=\"$(DEFAULT_PINGER)\" \
-	-DDEFAULT_UNLINKD=\"$(DEFAULT_UNLINKD)\"
+	-DDEFAULT_SWAP_DIR=\"$(DEFAULT_SWAP_DIR)\"
 
 all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 
@@ -164,22 +156,9 @@ pinger: pinger.o
 unlinkd: unlinkd.c
 	$(CC) $(CFLAGS) -DUNLINK_DAEMON $(srcdir)/unlinkd.c -o $@ $(LDFLAGS)
 
-squid.conf: squid.conf.pre Makefile
-	sed "\
-	s%@DEFAULT_CONFIG_FILE@%$(DEFAULT_CONFIG_FILE)%g;\
-	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
-	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
-	s%@DEFAULT_UNLINKD@%$(DEFAULT_UNLINKD)%g;\
-	s%@DEFAULT_PINGER@%$(DEFAULT_PINGER)%g;\
-	s%@DEFAULT_CACHE_LOG@%$(DEFAULT_CACHE_LOG)%g;\
-	s%@DEFAULT_ACCESS_LOG@%$(DEFAULT_ACCESS_LOG)%g;\
-	s%@DEFAULT_STORE_LOG@%$(DEFAULT_STORE_LOG)%g;\
-	s%@DEFAULT_PID_FILE@%$(DEFAULT_PID_FILE)%g;\
-	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g" < squid.conf.pre >$@
-
 cache_cf.o: cf_parser.c
 
-cf_parser.c: cf.data cf_gen
+squid.conf cf_parser.c: cf.data cf_gen
 	./cf_gen cf.data
 
 cf_gen: cf_gen.o
@@ -187,7 +166,6 @@ cf_gen: cf_gen.o
 
 cf.data: cf.data.pre Makefile
 	sed "\
-	s%@DEFAULT_CONFIG_FILE@%$(DEFAULT_CONFIG_FILE)%g;\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
 	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
 	s%@DEFAULT_UNLINKD@%$(DEFAULT_UNLINKD)%g;\

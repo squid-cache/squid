@@ -16,6 +16,8 @@ Changes to squid-1.2.alpha4 ():
 	- Replace frequent gettimeofday() calls with alarm(3) based
 	  clock.  Need to add more gettimeofday() calls to get back
 	  high-resolution timestamp logging (Andres Kroonmaa).
+	- Added support for Cache-control: proxy-revalidate;
+	  based on squid-1.1 patch from Mike Mitchell.
 
 Changes to squid-1.2.alpha3 ():
 

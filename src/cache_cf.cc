@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.198 1997/06/26 22:41:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.199 1997/07/06 05:14:09 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -107,109 +107,6 @@
 
 struct SquidConfig Config;
 
-#define DefaultMemMaxSize 	(8 << 20)	/* 8 MB */
-#define DefaultMemHighWaterMark 90	/* 90% */
-#define DefaultMemLowWaterMark  75	/* 75% */
-#define DefaultSwapMaxSize	0
-#define DefaultSwapHighWaterMark 95	/* 95% */
-#define DefaultSwapLowWaterMark  90	/* 90% */
-#define DefaultNetdbHigh	1000	/* counts, not percents */
-#define DefaultNetdbLow		 900
-#define DefaultNetdbPeriod       300	/* 5 minutes */
-
-#define DefaultWaisRelayHost	(char *)NULL
-#define DefaultWaisRelayPort	0
-
-#define DefaultReferenceAge	(86400*365)	/* 1 year */
-#define DefaultNegativeTtl	(5 * 60)	/* 5 min */
-#define DefaultNegativeDnsTtl	(2 * 60)	/* 2 min */
-#define DefaultPositiveDnsTtl	(360 * 60)	/* 6 hours */
-#define DefaultReadTimeout      (15 * 60)	/* 15 min */
-#define DefaultConnectTimeout   120	/* 2 min */
-#define DefaultDeferTimeout     3600	/* 1 hour */
-#define DefaultRequestTimeout   30	/* 30 seconds */
-#define DefaultClientLifetime   86400	/* 1 day */
-#define DefaultShutdownLifetime 30	/* 30 seconds */
-#define DefaultCleanRate        -1	/* disabled */
-#define DefaultDnsChildren	5	/* 5 processes */
-#define DefaultOptionsResDefnames 0	/* default off */
-#define DefaultOptionsAnonymizer  0	/* default off */
-#define DefaultRedirectChildren	5	/* 5 processes */
-#define DefaultMaxRequestSize	(100 << 10)	/* 100Kb */
-
-#define DefaultHttpPortNum	CACHE_HTTP_PORT
-#define DefaultIcpPortNum	CACHE_ICP_PORT
-
-#define DefaultLogLogFqdn      0	/* default off */
-#define DefaultCacheLogFile	DEFAULT_CACHE_LOG
-#define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
-#define DefaultUseragentLogFile	(char *)NULL	/* default NONE */
-#define DefaultStoreLogFile	DEFAULT_STORE_LOG
-#define DefaultSwapLogFile	(char *)NULL	/* default swappath(0) */
-#if USE_PROXY_AUTH
-#define DefaultProxyAuthFile    (char *)NULL	/* default NONE */
-#endif /* USE_PROXY_AUTH */
-#define DefaultLogRotateNumber  10
-#define DefaultAdminEmail	"webmaster"
-#define DefaultDnsserverProgram DEFAULT_DNSSERVER
-#define DefaultPingerProgram    DEFAULT_PINGER
-#define DefaultUnlinkdProgram   DEFAULT_UNLINKD
-#define DefaultRedirectProgram  (char *)NULL	/* default NONE */
-#define DefaultEffectiveUser	(char *)NULL	/* default NONE */
-#define DefaultEffectiveGroup	(char *)NULL	/* default NONE */
-#define DefaultAppendDomain	(char *)NULL	/* default NONE */
-#define DefaultErrHtmlText	(char *)NULL	/* default NONE */
-
-#define DefaultDebugOptions	"ALL,1"		/* All sections at level 1 */
-#define DefaultAccelHost	(char *)NULL	/* default NONE */
-#define DefaultAccelPrefix	(char *)NULL	/* default NONE */
-#define DefaultAccelPort	0	/* default off */
-#define DefaultAccelWithProxy	0	/* default off */
-#define DefaultSourcePing	0	/* default off */
-#define DefaultCommonLogFormat	0	/* default off */
-#define DefaultLogMimeHdrs	0	/* default off */
-#define DefaultIdentLookup	0	/* default off */
-#define DefaultQuickAbortMin	-1	/* default off */
-#define DefaultQuickAbortPct	0	/* default off */
-#define DefaultQuickAbortMax	0	/* default off */
-#define DefaultNeighborTimeout  2	/* 2 seconds */
-#define DefaultStallDelay	1	/* 1 seconds */
-#define DefaultSingleParentBypass 0	/* default off */
-#define DefaultPidFilename      DEFAULT_PID_FILE
-#define DefaultMimeTable        DEFAULT_MIME_TABLE
-#define DefaultVisibleHostname  (char *)NULL	/* default NONE */
-#define DefaultFtpAnonUser	"squid@"	/* Default without domain */
-#define DefaultAnnounceHost	"sd.cache.nlanr.net"
-#define DefaultAnnouncePort	3131
-#define DefaultAnnounceFile	(char *)NULL	/* default NONE */
-#define DefaultAnnounceRate	0	/* Default off */
-#define DefaultTcpRcvBufsz	0	/* use system default */
-#define DefaultUdpMaxHitObjsz	SQUID_UDP_SO_SNDBUF	/* from configure */
-#define DefaultTcpIncomingAddr	INADDR_ANY
-#define DefaultTcpOutgoingAddr	no_addr.s_addr
-#define DefaultUdpIncomingAddr	INADDR_ANY
-#define DefaultUdpOutgoingAddr	no_addr.s_addr
-#define DefaultClientNetmask    0xFFFFFFFFul
-#define DefaultPassProxy	NULL
-#define DefaultSslProxy		NULL
-#define DefaultIpcacheSize	1024
-#define DefaultIpcacheLow	90
-#define DefaultIpcacheHigh	95
-#define DefaultMinDirectHops	4
-#define DefaultMaxObjectSize	(4<<20)		/* 4Mb */
-#define DefaultAvgObjectSize	20	/* 20k */
-#define DefaultObjectsPerBucket	50
-
-#define DefaultOptionsLogUdp	1	/* on */
-#define DefaultOptionsEnablePurge 0	/* default off */
-#define DefaultOptionsClientDb	1	/* default on */
-#define DefaultOptionsQueryIcmp	0	/* default off */
-
-#define DefaultFtpIconPrefix	"internal-"
-#define DefaultFtpIconSuffix	null_string
-#define DefaultFtpListWidth	32
-#define DefaultFtpListWrap	0
-
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
 static const char *const T_HOUR_STR = "hour";
@@ -231,12 +128,10 @@ char config_input_line[BUFSIZ];
 int config_lineno = 0;
 
 static char fatal_str[BUFSIZ];
-static char *safe_xstrdup _PARAMS((const char *p));
 static void self_destruct _PARAMS((void));
 static void wordlistAdd _PARAMS((wordlist **, const char *));
 
 static void configDoConfigure _PARAMS((void));
-static void configSetFactoryDefaults _PARAMS((void));
 static void parseRefreshPattern _PARAMS((int icase));
 static int parseTimeUnits _PARAMS((const char *unit));
 static void parseTimeLine _PARAMS((int *iptr, const char *units));
@@ -245,7 +140,12 @@ static void parse_string _PARAMS((char **));
 static void parse_wordlist _PARAMS((wordlist **));
 static void dump_all _PARAMS((void));
 static void default_all _PARAMS((void));
-static int parse_line _PARAMS((char[]));
+static int parse_line _PARAMS((char *));
+
+/* These come from cf_gen.c */
+static void default_all _PARAMS((void));
+static void dump_all _PARAMS((void));
+static void free_all _PARAMS((void));
 
 static void
 self_destruct(void)
@@ -345,8 +245,8 @@ parseConfigFile(const char *file_name)
     char *token = NULL;
     LOCAL_ARRAY(char, tmp_line, BUFSIZ);
 
-    configFreeMemory();
-    configSetFactoryDefaults();
+    free_all();
+    default_all();
     aclDestroyAcls();
     aclDestroyDenyInfoList(&Config.denyInfoList);
     aclDestroyAccessList(&Config.accessList.HTTP);
@@ -428,162 +328,6 @@ parseConfigFile(const char *file_name)
     configDoConfigure();
     dump_all();
     return 0;
-}
-
-static char *
-safe_xstrdup(const char *p)
-{
-    return p ? xstrdup(p) : NULL;
-}
-
-void
-configFreeMemory(void)
-{
-    safe_free(Config.Wais.relayHost);
-    safe_free(Config.Log.log);
-    safe_free(Config.Log.access);
-    safe_free(Config.Log.store);
-    safe_free(Config.Log.swap);
-    safe_free(Config.adminEmail);
-    safe_free(Config.effectiveUser);
-    safe_free(Config.effectiveGroup);
-    safe_free(Config.Program.dnsserver);
-    safe_free(Config.Program.redirect);
-    safe_free(Config.Program.unlinkd);
-    safe_free(Config.Program.pinger);
-    safe_free(Config.Accel.host);
-    safe_free(Config.Accel.prefix);
-    safe_free(Config.appendDomain);
-    safe_free(Config.debugOptions);
-    safe_free(Config.pidFilename);
-    safe_free(Config.mimeTablePathname);
-    safe_free(Config.visibleHostname);
-#if USE_PROXY_AUTH
-    safe_free(Config.proxyAuth.File);
-    aclDestroyRegexList(Config.proxyAuth.IgnoreDomains);
-    Config.proxyAuth.IgnoreDomains = NULL;
-#endif /* USE_PROXY_AUTH */
-    safe_free(Config.Announce.host);
-    safe_free(Config.Announce.file);
-    safe_free(Config.errHtmlText);
-    safe_free(Config.Ftp.icon_prefix);
-    safe_free(Config.Ftp.icon_suffix);
-    safe_free(Config.Ftp.anon_user);
-    peerDestroy(Config.sslProxy);
-    peerDestroy(Config.passProxy);
-    wordlistDestroy(&Config.hierarchy_stoplist);
-    wordlistDestroy(&Config.mcast_group_list);
-    wordlistDestroy(&Config.dns_testname_list);
-    wordlistDestroy(&Config.cache_stoplist);
-    objcachePasswdDestroy(&Config.passwd_list);
-    refreshFreeMemory();
-}
-
-
-static void
-configSetFactoryDefaults(void)
-{
-    memset(&Config, '\0', sizeof(Config));
-    Config.Mem.maxSize = DefaultMemMaxSize;
-    Config.Mem.highWaterMark = DefaultMemHighWaterMark;
-    Config.Mem.lowWaterMark = DefaultMemLowWaterMark;
-    Config.Swap.maxSize = DefaultSwapMaxSize;
-    Config.Swap.highWaterMark = DefaultSwapHighWaterMark;
-    Config.Swap.lowWaterMark = DefaultSwapLowWaterMark;
-    Config.Netdb.high = DefaultNetdbHigh;
-    Config.Netdb.low = DefaultNetdbLow;
-    Config.Netdb.period = DefaultNetdbPeriod;
-
-    Config.Wais.relayHost = safe_xstrdup(DefaultWaisRelayHost);
-    Config.Wais.relayPort = DefaultWaisRelayPort;
-
-    Config.referenceAge = DefaultReferenceAge;
-    Config.negativeTtl = DefaultNegativeTtl;
-    Config.negativeDnsTtl = DefaultNegativeDnsTtl;
-    Config.positiveDnsTtl = DefaultPositiveDnsTtl;
-    Config.Timeout.read = DefaultReadTimeout;
-    Config.Timeout.connect = DefaultConnectTimeout;
-    Config.Timeout.defer = DefaultDeferTimeout;
-    Config.Timeout.request = DefaultRequestTimeout;
-    Config.Timeout.lifetime = DefaultClientLifetime;
-    Config.shutdownLifetime = DefaultShutdownLifetime;
-    Config.maxRequestSize = DefaultMaxRequestSize;
-    Config.cleanRate = DefaultCleanRate;
-    Config.dnsChildren = DefaultDnsChildren;
-    Config.redirectChildren = DefaultRedirectChildren;
-    Config.sourcePing = DefaultSourcePing;
-    Config.quickAbort.min = DefaultQuickAbortMin;
-    Config.quickAbort.pct = DefaultQuickAbortPct;
-    Config.quickAbort.max = DefaultQuickAbortMax;
-    Config.commonLogFormat = DefaultCommonLogFormat;
-    Config.logMimeHdrs = DefaultLogMimeHdrs;
-    Config.identLookup = DefaultIdentLookup;
-    Config.debugOptions = safe_xstrdup(DefaultDebugOptions);
-    Config.neighborTimeout = DefaultNeighborTimeout;
-    Config.stallDelay = DefaultStallDelay;
-    Config.singleParentBypass = DefaultSingleParentBypass;
-    Config.adminEmail = safe_xstrdup(DefaultAdminEmail);
-    Config.effectiveUser = safe_xstrdup(DefaultEffectiveUser);
-    Config.effectiveGroup = safe_xstrdup(DefaultEffectiveGroup);
-    Config.appendDomain = safe_xstrdup(DefaultAppendDomain);
-    Config.errHtmlText = safe_xstrdup(DefaultErrHtmlText);
-    Config.Port.icp = DefaultIcpPortNum;
-    Config.Log.log_fqdn = DefaultLogLogFqdn;
-    Config.Log.log = safe_xstrdup(DefaultCacheLogFile);
-    Config.Log.access = safe_xstrdup(DefaultAccessLogFile);
-    Config.Log.store = safe_xstrdup(DefaultStoreLogFile);
-    Config.Log.swap = safe_xstrdup(DefaultSwapLogFile);
-#if USE_USERAGENT_LOG
-    Config.Log.useragent = safe_xstrdup(DefaultUseragentLogFile);
-#endif
-    Config.Log.rotateNumber = DefaultLogRotateNumber;
-    Config.Program.dnsserver = safe_xstrdup(DefaultDnsserverProgram);
-    Config.Program.redirect = safe_xstrdup(DefaultRedirectProgram);
-    Config.Program.pinger = safe_xstrdup(DefaultPingerProgram);
-    Config.Program.unlinkd = safe_xstrdup(DefaultUnlinkdProgram);
-    Config.Accel.host = safe_xstrdup(DefaultAccelHost);
-    Config.Accel.prefix = safe_xstrdup(DefaultAccelPrefix);
-    Config.Accel.port = DefaultAccelPort;
-    Config.Accel.withProxy = DefaultAccelWithProxy;
-    Config.pidFilename = safe_xstrdup(DefaultPidFilename);
-    Config.mimeTablePathname = safe_xstrdup(DefaultMimeTable);
-    Config.visibleHostname = safe_xstrdup(DefaultVisibleHostname);
-#if USE_PROXY_AUTH
-    Config.proxyAuth.File = safe_xstrdup(DefaultProxyAuthFile);
-/*    Config.proxyAuth.IgnoreDomains = safe_xstrdup(DefaultproxyAuthIgnoreDomains); */
-#endif /* USE_PROXY_AUTH */
-    Config.Announce.host = safe_xstrdup(DefaultAnnounceHost);
-    Config.Announce.port = DefaultAnnouncePort;
-    Config.Announce.file = safe_xstrdup(DefaultAnnounceFile);
-    Config.Announce.rate = DefaultAnnounceRate;
-    Config.Announce.on = 0;
-    Config.tcpRcvBufsz = DefaultTcpRcvBufsz;
-    Config.udpMaxHitObjsz = DefaultUdpMaxHitObjsz;
-    Config.Addrs.tcp_outgoing.s_addr = DefaultTcpOutgoingAddr;
-    Config.Addrs.tcp_incoming.s_addr = DefaultTcpIncomingAddr;
-    Config.Addrs.udp_outgoing.s_addr = DefaultUdpOutgoingAddr;
-    Config.Addrs.udp_incoming.s_addr = DefaultUdpIncomingAddr;
-    Config.Addrs.client_netmask.s_addr = DefaultClientNetmask;
-    Config.passProxy = DefaultPassProxy;
-    Config.sslProxy = DefaultSslProxy;
-    Config.ipcache.size = DefaultIpcacheSize;
-    Config.ipcache.low = DefaultIpcacheLow;
-    Config.ipcache.high = DefaultIpcacheHigh;
-    Config.minDirectHops = DefaultMinDirectHops;
-    Config.Store.maxObjectSize = DefaultMaxObjectSize;
-    Config.Store.avgObjectSize = DefaultAvgObjectSize;
-    Config.Store.objectsPerBucket = DefaultObjectsPerBucket;
-    Config.Options.log_udp = DefaultOptionsLogUdp;
-    Config.Options.res_defnames = DefaultOptionsResDefnames;
-    Config.Options.anonymizer = DefaultOptionsAnonymizer;
-    Config.Options.enable_purge = DefaultOptionsEnablePurge;
-    Config.Options.client_db = DefaultOptionsClientDb;
-    Config.Options.query_icmp = DefaultOptionsQueryIcmp;
-    Config.Ftp.icon_prefix = safe_xstrdup(DefaultFtpIconPrefix);
-    Config.Ftp.icon_suffix = safe_xstrdup(DefaultFtpIconSuffix);
-    Config.Ftp.list_width = DefaultFtpListWidth;
-    Config.Ftp.list_wrap = DefaultFtpListWrap;
-    Config.Ftp.anon_user = safe_xstrdup(DefaultFtpAnonUser);
 }
 
 static void
@@ -685,6 +429,12 @@ parse_acl_access(struct _acl_access **head)
 }
 
 static void
+free_acl_access(struct _acl_access **head)
+{
+	aclDestroyAccessList(head);
+}
+
+static void
 dump_address(struct in_addr addr)
 {
     printf("%s", inet_ntoa(addr));
@@ -704,6 +454,12 @@ parse_address(struct in_addr *addr)
 	*addr = inaddrFromHostent(hp);
     else
 	self_destruct();
+}
+
+static void
+free_address(struct in_addr *addr)
+{
+	memset(addr, '\0', sizeof(struct in_addr));
 }
 
 static void
@@ -808,61 +564,75 @@ parse_cachedir(void)
 }
 
 static void
-dump_cachehost(void)
+dump_cache_peer(struct cache_peer *p)
 {
     debug(0,0)("XXX need to fix\n");
 }
 
 static void
-parse_cachehost(void)
+parse_cache_peer(struct cache_peer **head)
 {
-    char *type = NULL;
-    char *hostname = NULL;
     char *token = NULL;
-    u_short http_port = CACHE_HTTP_PORT;
-    u_short icp_port = CACHE_ICP_PORT;
-    int options = 0;
-    int weight = 1;
-    int mcast_ttl = 0;
+    struct cache_peer peer;
+    struct cache_peer *p;
     int i;
-
-    if (!(hostname = strtok(NULL, w_space)))
+    memset(&peer, '\0', sizeof(struct cache_peer));
+    peer.http = CACHE_HTTP_PORT;
+    peer.icp = CACHE_ICP_PORT;
+    peer.weight = 1;
+    if (!(peer.host = strtok(NULL, w_space))) 
 	self_destruct();
-    if (!(type = strtok(NULL, w_space)))
+    if (!(peer.type = strtok(NULL, w_space)))
 	self_destruct();
-
     GetInteger(i);
-    http_port = (u_short) i;
+    peer.http = (u_short) i;
     GetInteger(i);
-    icp_port = (u_short) i;
+    peer.icp = (u_short) i;
     while ((token = strtok(NULL, w_space))) {
 	if (!strcasecmp(token, "proxy-only")) {
-	    options |= NEIGHBOR_PROXY_ONLY;
+	    peer.options |= NEIGHBOR_PROXY_ONLY;
 	} else if (!strcasecmp(token, "no-query")) {
-	    options |= NEIGHBOR_NO_QUERY;
+	    peer.options |= NEIGHBOR_NO_QUERY;
 	} else if (!strcasecmp(token, "multicast-responder")) {
-	    options |= NEIGHBOR_MCAST_RESPONDER;
+	    peer.options |= NEIGHBOR_MCAST_RESPONDER;
 	} else if (!strncasecmp(token, "weight=", 7)) {
-	    weight = atoi(token + 7);
+	    peer.weight = atoi(token + 7);
 	} else if (!strncasecmp(token, "ttl=", 4)) {
-	    mcast_ttl = atoi(token + 4);
-	    if (mcast_ttl < 0)
-		mcast_ttl = 0;
-	    if (mcast_ttl > 128)
-		mcast_ttl = 128;
+	    peer.mcast_ttl = atoi(token + 4);
+	    if (peer.mcast_ttl < 0)
+		peer.mcast_ttl = 0;
+	    if (peer.mcast_ttl > 128)
+		peer.mcast_ttl = 128;
 	} else if (!strncasecmp(token, "default", 7)) {
-	    options |= NEIGHBOR_DEFAULT_PARENT;
+	    peer.options |= NEIGHBOR_DEFAULT_PARENT;
 	} else if (!strncasecmp(token, "round-robin", 11)) {
-	    options |= NEIGHBOR_ROUNDROBIN;
+	    peer.options |= NEIGHBOR_ROUNDROBIN;
 	} else {
-	    debug(3, 0) ("parseCacheHostLine: token='%s'\n", token);
+	    debug(3, 0) ("parse_cache_peer: token='%s'\n", token);
 	    self_destruct();
 	}
     }
-    if (weight < 1)
-	weight = 1;
-    neighborAdd(hostname, type, http_port, icp_port, options,
-	weight, mcast_ttl);
+    if (peer.weight < 1)
+	peer.weight = 1;
+    p = xcalloc(1, sizeof(struct cache_peer));
+    *p = peer;
+    p->host = xstrdup(peer.host);
+    p->type = xstrdup(peer.type);
+    while (*head != NULL)
+	head = &(*head)->next;
+    *head = p;
+}
+
+static void
+free_cache_peer(struct cache_peer **P)
+{
+	struct cache_peer *p;
+	while ((p = *P)) {
+		*P = p->next;
+		xfree(p->host);
+		xfree(p->type);
+		xfree(p);
+	}
 }
 
 static void
@@ -892,28 +662,6 @@ static void
 parse_denyinfo(struct _acl_deny_info_list **var)
 {
     aclParseDenyInfoLine(var);
-}
-
-static void
-dump_effectiveuser(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_effectiveuser(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.effectiveUser);
-    safe_free(Config.effectiveGroup);
-    Config.effectiveUser = xstrdup(token);
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	return;			/* group is optional */
-    Config.effectiveGroup = xstrdup(token);
 }
 
 static void
@@ -1069,6 +817,16 @@ parse_ushortlist(ushortlist ** P)
 }
 
 static void
+free_ushortlist(ushortlist **P)
+{
+	ushortlist *u;
+	while ((u = *P)) {
+		*P = u->next;
+		xfree(u);
+	}
+}
+
+static void
 dump_int(int var)
 {
     printf("%d", var);
@@ -1082,6 +840,12 @@ parse_int(int *var)
 
     GetInteger(i);
     *var = i;
+}
+
+static void
+free_int(int *var)
+{
+	*var = 0;
 }
 
 static void
@@ -1103,104 +867,18 @@ parse_onoff(int *var)
 	*var = 0;
 }
 
-static void
-dump_pathname_check(char path[])
-{
-    printf("%s", path);
-}
+#define free_onoff free_int
+#define dump_pathname_stat dump_string
+#define free_pathname_stat free_string
 
 static void
-parse_pathname_check(char *path[])
+parse_pathname_stat(char **path)
 {
     struct stat sb;
-
     parse_string(path);
-
     if (stat(*path, &sb) < 0) {
-	debug(50, 1) ("parse_pathname_check: %s: %s\n", *path, xstrerror());
+	debug(50, 1) ("parse_pathname_stat: %s: %s\n", *path, xstrerror());
 	self_destruct();
-    }
-}
-
-static void
-dump_proxy(peer * E)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_proxy(peer ** E)
-{
-    char *token;
-    char *t;
-    peer *e;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    if (*E) {
-	peerDestroy(*E);
-	*E = NULL;
-    }
-    e = xcalloc(1, sizeof(peer));
-    if ((t = strchr(token, ':'))) {
-	*t++ = '\0';
-	e->http_port = atoi(t);
-    }
-    e->host = xstrdup(token);
-    e->tcp_up = 1;
-    *E = e;
-}
-
-#if USE_PROXY_AUTH
-static void
-dump_proxyauth(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_proxyauth(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.proxyAuth.File);
-    aclDestroyRegexList(Config.proxyAuth.IgnoreDomains);
-    Config.proxyAuth.IgnoreDomains = NULL;
-    Config.proxyAuth.File = xstrdup(token);
-    aclParseRegexList(&Config.proxyAuth.IgnoreDomains, 1);
-}
-#endif /* USE_PROXY_AUTH */
-
-static void
-dump_quickabort(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_quickabort(void)
-{
-    char *token;
-    int i;
-    token = strtok(NULL, w_space);
-    if (!strcasecmp(token, "on")) {
-	Config.quickAbort.min = 10 << 10;	/* 10k */
-	Config.quickAbort.pct = 64;	/* 50% */
-	Config.quickAbort.max = 100 << 10;	/* 100k */
-    } else if (!strcasecmp(token, "off")) {
-	Config.quickAbort.min = -1;
-	Config.quickAbort.pct = 0;
-	Config.quickAbort.max = 0;
-    } else {
-	if (sscanf(token, "%d", &i) != 1)
-	    self_destruct();
-	Config.quickAbort.min = i * 1024;
-	GetInteger(i);
-	Config.quickAbort.pct = i * 128 / 100;	/* 128 is full scale */
-	GetInteger(i);
-	Config.quickAbort.max = i * 1024;
     }
 }
 
@@ -1237,32 +915,26 @@ dump_regexlist(relist * var)
 static void
 parse_regexlist(relist ** var)
 {
-    aclParseRegexList(var, 0);
+    aclParseRegexList(var);
 }
 
 static void
-dump_regexlist_icase(relist * var)
+free_regexlist(relist ** var)
 {
-    debug(0,0)("XXX need to fix\n");
+    aclDestroyRegexList(*var);
+    *var = NULL;
 }
 
 static void
-parse_regexlist_icase(relist ** var)
-{
-    aclParseRegexList(var, 1);
-}
-
-static void
-dump_string(char var[])
+dump_string(char *var)
 {
     printf("%s", var);
 }
 
 static void
-parse_string(char *var[])
+parse_string(char **var)
 {
     char *token = strtok(NULL, w_space);
-
     safe_free(*var);
     if (token == NULL)
 	self_destruct();
@@ -1270,16 +942,21 @@ parse_string(char *var[])
 }
 
 static void
+free_string(char **var)
+{
+	xfree(*var);
+	*var = NULL;
+}
+static void
 dump_string_optional(const char *var)
 {
     printf("%s", var);
 }
 
 static void
-parse_string_optional(char *volatile *var)
+parse_volatile_string(char *volatile *var)
 {
     char *token = strtok(NULL, null_string);
-
     safe_free(*var);
     if (token == NULL) {
 	*var = NULL;
@@ -1316,6 +993,12 @@ static void
 dump_ushort(u_short var)
 {
     printf("%d", var);
+}
+
+static void
+free_ushort(u_short *u)
+{
+    *u = 0;
 }
 
 static void
@@ -1363,26 +1046,6 @@ parse_vizhack(void)
 }
 
 static void
-dump_waisrelay(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_waisrelay(void)
-{
-    char *token;
-    int i;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Wais.relayHost);
-    Config.Wais.relayHost = xstrdup(token);
-    GetInteger(i);
-    Config.Wais.relayPort = (u_short) i;
-}
-
-static void
 dump_wordlist(wordlist * list)
 {
     printf("{");
@@ -1402,16 +1065,6 @@ parse_wordlist(wordlist ** list)
 	wordlistAdd(list, token);
 }
 
-static void
-parse_proxyauth(void)
-{
-	fatal("not implemented");
-}
-
-static void
-dump_proxyauth(void)
-{
-	fatal("not implemented");
-}
+#define free_wordlist wordlistDestroy
 
 #include "cf_parser.c"
