@@ -149,7 +149,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     assert(callback != NULL);
     if (e->store_status == STORE_ABORTED) {
 #if USE_ASYNC_IO
-	if (sc->flags.disk_io_pending == 1) {
+	if (sc->flags.disk_io_pending) {
 	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
@@ -162,7 +162,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     } else if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 #if USE_ASYNC_IO
-	if (sc->flags.disk_io_pending == 1) {
+	if (sc->flags.disk_io_pending) {
 	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
@@ -180,7 +180,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
 	sz = stmemCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
 #if USE_ASYNC_IO
-	if (sc->flags.disk_io_pending == 1) {
+	if (sc->flags.disk_io_pending) {
 	    if (sc->swapin_fd >= 0)
 		aioCancel(sc->swapin_fd, NULL);
 	    else
@@ -195,7 +195,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	assert(sc->type == STORE_DISK_CLIENT);
 	/* gotta open the swapin file */
 	/* assert(sc->copy_offset == 0); */
-	if (sc->flags.disk_io_pending == 0) {
+	if (!sc->flags.disk_io_pending) {
 	    sc->flags.disk_io_pending = 1;
 	    storeSwapInStart(e, storeClientFileOpened, sc);
 	} else {
@@ -205,7 +205,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	debug(20, 3) ("storeClientCopy: reading from disk FD %d\n",
 	    sc->swapin_fd);
 	assert(sc->type == STORE_DISK_CLIENT);
-	if (sc->flags.disk_io_pending == 0) {
+	if (!sc->flags.disk_io_pending) {
 	    storeClientFileRead(sc);
 	} else {
 	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
@@ -259,7 +259,7 @@ storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *dat
     store_client *sc = data;
     MemObject *mem = sc->entry->mem_obj;
     STCB *callback = sc->callback;
-    assert(sc->flags.disk_io_pending != 0);
+    assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadBody: FD %d, len %d\n", fd, len);
@@ -280,7 +280,7 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
     size_t body_sz;
     size_t copy_sz;
     tlv *tlv_list;
-    assert(sc->flags.disk_io_pending != 0);
+    assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadHeader: FD %d, len %d\n", fd, len);
