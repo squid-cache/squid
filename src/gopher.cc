@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.112 1997/11/12 00:08:51 wessels Exp $
+ * $Id: gopher.cc,v 1.113 1997/11/14 17:21:19 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -689,13 +689,8 @@ gopherReadReply(int fd, void *data)
     }
     if (len < 0) {
 	debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
-	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    /* reinstall handlers */
-	    /* XXX This may loop forever */
-	    commSetSelect(fd,
-		COMM_SELECT_READ,
-		gopherReadReply,
-		data, 0);
+	if (ignoreErrno(errno)) {
+	    commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, data, 0);
 	} else {
 	    /* was  assert */
 	    ErrorState *err;

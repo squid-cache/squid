@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.97 1997/11/12 00:09:13 wessels Exp $
+ * $Id: wais.cc,v 1.98 1997/11/14 17:21:24 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -186,7 +186,7 @@ waisReadReply(int fd, void *data)
     }
     if (len < 0) {
 	debug(50, 1) ("waisReadReply: FD %d: read failure: %s.\n", xstrerror());
-	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+	if (ignoreErrno(errno)) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    commSetSelect(fd, COMM_SELECT_READ,

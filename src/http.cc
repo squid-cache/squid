@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.221 1997/11/12 18:58:41 wessels Exp $
+ * $Id: http.cc,v 1.222 1997/11/14 17:21:20 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -627,7 +627,7 @@ httpReadReply(int fd, void *data)
 	IOStats.Http.read_hist[bin]++;
     }
     if (len < 0) {
-	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, httpReadReply, httpState, 0);
 	} else {
 	    if (clen == 0) {
