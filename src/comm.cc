@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.144 1997/04/29 23:34:46 wessels Exp $
+ * $Id: comm.cc,v 1.145 1997/04/30 03:12:00 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -141,7 +141,6 @@ static int comm_cleanup_fd_entry _PARAMS((int));
 static int examine_select _PARAMS((fd_set *, fd_set *));
 #endif
 static void checkTimeouts _PARAMS((void));
-static void checkLifetimes _PARAMS((void));
 static void Reserve_More_FDs _PARAMS((void));
 static void commSetReuseAddr _PARAMS((int));
 static void commSetNoLinger _PARAMS((int));
@@ -267,14 +266,8 @@ comm_open(int sock_type,
 	return (COMM_ERROR);
     }
     /* update fdstat */
-    fdstat_open(new_socket, FD_SOCKET);
-
+    fd_open(new_socket, FD_SOCKET, note);
     fde = &fd_table[new_socket];
-    memset(fde, '\0', sizeof(FD_ENTRY));
-    if (note)
-	fd_note(new_socket, note);
-    fde->open = 1;
-    fde->lifetime = -1;
     if (!BIT_TEST(flags, COMM_NOCLOEXEC))
 	commSetCloseOnExec(new_socket);
     if (port > (u_short) 0) {
@@ -381,23 +374,31 @@ commConnectHandle(int fd, void *data)
 	break;
     }
 }
-
 int
-comm_set_fd_lifetime(int fd, int lifetime)
+commSetTimeout(int fd, int timeout, PF *handler, void *data)
 {
-    FD_ENTRY *f;
-    debug(5, 3, "comm_set_fd_lifetime: FD %d lft %d\n", fd, lifetime);
+    FD_ENTRY *fde;
+    debug(5, 3, "commSetTimeout: FD %d timeout %d\n", fd, timeout);
     if (fd < 0 || fd > Squid_MaxFD)
-	return 0;
-    f = &fd_table[fd];
-    if (lifetime < 0)
-	return f->lifetime = -1;
-    if (shutdown_pending || reread_pending) {
-	/* don't increase the lifetime if something pending */
-	if (f->lifetime > -1 && (f->lifetime - squid_curtime) < lifetime)
-	    return f->lifetime;
+        fatal_dump("commSetTimeout: bad FD");
+    fde = &fd_table[fd];
+    if (timeout < 0) {
+        fde->timeout_handler = NULL;
+        fde->timeout_data = NULL;
+        return fde->timeout = 0;
     }
-    return f->lifetime = (int) squid_curtime + lifetime;
+    if (shutdown_pending || reread_pending) {
+        /* don't increase the timeout if something pending */
+        if (fde->timeout > 0 && (int) (fde->timeout - squid_curtime) < timeout)
+            return fde->timeout;
+    }
+    if (handler || data) {
+        fde->timeout_handler = handler;
+        fde->timeout_data = data;
+    } else if (fde->timeout_handler == NULL) {
+        debug_trap("commSetTimeout: setting timeout, but no handler");
+    }
+    return fde->timeout = squid_curtime + (time_t) timeout;
 }
 
 int
@@ -407,8 +408,6 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     FD_ENTRY *fde = &fd_table[sock];
     int len;
     int x;
-    int lft;
-
     /* sanity check */
     if (ntohs(address->sin_port) == 0) {
 	debug(5, 10, "comm_connect_addr: %s:%d: URL uses port 0?\n",
@@ -447,15 +446,11 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     }
     xstrncpy(fde->ipaddr, inet_ntoa(address->sin_addr), 16);
     fde->remote_port = ntohs(address->sin_port);
-    /* set the lifetime for this client */
     if (status == COMM_OK) {
-	lft = comm_set_fd_lifetime(sock, Config.lifetimeDefault);
-	debug(5, 10, "comm_connect_addr: FD %d connected to %s:%d, lifetime %d.\n",
-	    sock, fde->ipaddr, fde->remote_port, lft);
+	debug(5, 10, "comm_connect_addr: FD %d connected to %s:%d\n",
+	    sock, fde->ipaddr, fde->remote_port);
     } else if (status == COMM_INPROGRESS) {
-	lft = comm_set_fd_lifetime(sock, Config.connectTimeout);
-	debug(5, 10, "comm_connect_addr: FD %d connection pending, lifetime %d\n",
-	    sock, lft);
+	debug(5, 10, "comm_connect_addr: FD %d connection pending\n", sock);
     }
     /* Add new socket to list of open sockets. */
     return status;
@@ -501,9 +496,8 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 	*me = M;
     commSetCloseOnExec(sock);
     /* fdstat update */
-    fdstat_open(sock, FD_SOCKET);
+    fd_open(sock, FD_SOCKET, "HTTP Request");
     fde = &fd_table[sock];
-    fde->open = 1;
     strcpy(fde->ipaddr, inet_ntoa(P.sin_addr));
     fde->remote_port = htons(P.sin_port);
     fde->local_port = htons(M.sin_port);
@@ -540,13 +534,11 @@ comm_close(int fd)
 	fatal_dump("comm_close: not a SOCKET");
     fde->open = 0;
     RWStateCallbackAndFree(fd, COMM_ERROR);
-    fdstat_close(fd);		/* update fdstat */
     commCallCloseHandlers(fd);
-    memset(fde, '\0', sizeof(FD_ENTRY));
+    fd_close(fd);		/* update fdstat */
 #if USE_ASYNC_IO
     aioClose(fd);
 #else
-    fde->lifetime = -1;
     close(fd);
 #endif
 }
@@ -556,9 +548,8 @@ comm_close(int fd)
 static int
 comm_cleanup_fd_entry(int fd)
 {
-    FD_ENTRY *fde = &fd_table[fd];
     RWStateCallbackAndFree(fd, COMM_ERROR);
-    memset(fde, 0, sizeof(FD_ENTRY));
+    fd_close(fd);
     return 0;
 }
 
@@ -776,7 +767,7 @@ comm_select(time_t sec)
 	     * -1 for SIGINT */
 	    /* reread_pending always == 1 when SIGHUP received */
 	    if (shutdown_pending > 0 || reread_pending > 0)
-		setSocketShutdownLifetimes(Config.lifetimeShutdown);
+		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
 		setSocketShutdownLifetimes(0);
 	}
@@ -810,7 +801,7 @@ comm_select(time_t sec)
 		debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
 	    if (pending_time == 0)
 		pending_time = squid_curtime;
-	    if ((squid_curtime - pending_time) > (Config.lifetimeShutdown + 5)) {
+	    if ((squid_curtime - pending_time) > (Config.shutdownLifetime + 5)) {
 		pending_time = 0;
 		for (i = 1; i < maxfd; i++) {
 		    if ((fd = pfds[i].fd) < 0)
@@ -854,12 +845,10 @@ comm_select(time_t sec)
 	getCurrentTime();
 	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
 	    num, (int) squid_curtime);
-	/* Check lifetime and timeout handlers ONCE each second.
-	 * Replaces brain-dead check every time through the loop! */
+	/* Check timeout handlers ONCE each second. */
 	if (squid_curtime > last_timeout) {
 	    last_timeout = squid_curtime;
 	    checkTimeouts();
-	    checkLifetimes();
 	}
 	if (num == 0)
 	    continue;
@@ -893,35 +882,30 @@ comm_select(time_t sec)
 	    if (revents & POLLNVAL) {
 		struct close_handler *ch;
 		struct close_handler *next;
-		FD_ENTRY *f = &fd_table[fd];
+		FD_ENTRY *fde = &fd_table[fd];
 		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
 		debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fd_table[fd].type]);
 		debug(5, 0, "--> %s\n", fd_note(fd, NULL));
-		debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p\n",
-		    f->lifetime_handler,
-		    f->timeout_handler,
-		    f->read_handler,
-		    f->write_handler);
-		for (ch = f->close_handler; ch; ch = ch->next)
+		debug(5, 0, "tmout:%p read:%p write:%p\n",
+		    fde->timeout_handler,
+		    fde->read_handler,
+		    fde->write_handler);
+		for (ch = fde->close_handler; ch; ch = ch->next)
 		    debug(5, 0, " close handler: %p\n", ch->handler);
-		if (f->close_handler) {
-		    for (ch = f->close_handler; ch; ch = next) {
+		if (fde->close_handler) {
+		    for (ch = fde->close_handler; ch; ch = next) {
 			next = ch->next;
 			ch->handler(fd, ch->data);
 			safe_free(ch);
 		    }
-		} else if (f->lifetime_handler) {
-		    debug(5, 0, "examine_select: Calling Lifetime Handler\n");
-		    f->lifetime_handler(fd, f->lifetime_data);
-		} else if (f->timeout_handler) {
+		} else if (fde->timeout_handler) {
 		    debug(5, 0, "examine_select: Calling Timeout Handler\n");
-		    f->timeout_handler(fd, f->timeout_data);
+		    fde->timeout_handler(fd, fde->timeout_data);
 		}
-		f->close_handler = NULL;
-		f->lifetime_handler = NULL;
-		f->timeout_handler = NULL;
-		f->read_handler = NULL;
-		f->write_handler = NULL;
+		fde->close_handler = NULL;
+		fde->timeout_handler = NULL;
+		fde->read_handler = NULL;
+		fde->write_handler = NULL;
 	    }
 	}
 	return COMM_OK;
@@ -970,7 +954,7 @@ comm_select(time_t sec)
 	     * -1 for SIGINT */
 	    /* reread_pending always == 1 when SIGHUP received */
 	    if (shutdown_pending > 0 || reread_pending > 0)
-		setSocketShutdownLifetimes(Config.lifetimeShutdown);
+		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
 		setSocketShutdownLifetimes(0);
 	}
@@ -1025,7 +1009,6 @@ comm_select(time_t sec)
 	if (squid_curtime > last_timeout) {
 	    last_timeout = squid_curtime;
 	    checkTimeouts();
-	    checkLifetimes();
 	}
 	if (num == 0)
 	    continue;
@@ -1078,56 +1061,20 @@ comm_select(time_t sec)
 void
 commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
-    if (fd < 0) {
-	debug_trap("commSetSelect: FD < 0");
-	return;
-    }
-    if (type & COMM_SELECT_TIMEOUT) {
-	fd_table[fd].timeout_time = (getCurrentTime() + timeout);
-	fd_table[fd].timeout_delta = timeout;
-	fd_table[fd].timeout_handler = handler;
-	fd_table[fd].timeout_data = client_data;
-	if ((timeout <= 0) && handler) {
-	    debug(5, 2, "commSetSelect: Zero timeout doesn't make sense\n");
-	}
-    }
+    FD_ENTRY *fde;
+    if (fd < 0)
+        fatal_dump("commSetSelect: bad FD");
+    fde = &fd_table[fd];
     if (type & COMM_SELECT_READ) {
-	fd_table[fd].read_handler = handler;
-	fd_table[fd].read_data = client_data;
+        fde->read_handler = handler;
+        fde->read_data = client_data;
     }
     if (type & COMM_SELECT_WRITE) {
-	fd_table[fd].write_handler = handler;
-	fd_table[fd].write_data = client_data;
+        fde->write_handler = handler;
+        fde->write_data = client_data;
     }
-    if (type & COMM_SELECT_LIFETIME) {
-	fd_table[fd].lifetime_handler = handler;
-	fd_table[fd].lifetime_data = client_data;
-    }
-}
-
-int
-comm_get_select_handler(int fd,
-    unsigned int type,
-    void (**handler_ptr) _PARAMS((int, void *)),
-    void **client_data_ptr)
-{
-    if (type & COMM_SELECT_TIMEOUT) {
-	*handler_ptr = fd_table[fd].timeout_handler;
-	*client_data_ptr = fd_table[fd].timeout_data;
-    }
-    if (type & COMM_SELECT_READ) {
-	*handler_ptr = fd_table[fd].read_handler;
-	*client_data_ptr = fd_table[fd].read_data;
-    }
-    if (type & COMM_SELECT_WRITE) {
-	*handler_ptr = fd_table[fd].write_handler;
-	*client_data_ptr = fd_table[fd].write_data;
-    }
-    if (type & COMM_SELECT_LIFETIME) {
-	*handler_ptr = fd_table[fd].lifetime_handler;
-	*client_data_ptr = fd_table[fd].lifetime_data;
-    }
-    return 0;			/* XXX What is meaningful? */
+    if (timeout)
+        fde->timeout = squid_curtime + timeout;
 }
 
 void
@@ -1285,18 +1232,9 @@ commSetTcpNoDelay(int fd)
 }
 #endif
 
-/*
- *  the fd_lifetime is used as a hardlimit to timeout dead sockets.
- *  The basic problem is that many WWW clients are abusive and
- *  it results in squid having lots of CLOSE_WAIT states.  Until
- *  we can find a better solution, we give all asciiPort or
- *  squid initiated clients a maximum lifetime.
- */
 int
 comm_init(void)
 {
-    int i;
-
     fd_table = xcalloc(Squid_MaxFD, sizeof(FD_ENTRY));
     meta_data.misc += Squid_MaxFD * sizeof(FD_ENTRY);
     /* Keep a few file descriptors free so that we don't run out of FD's
@@ -1304,8 +1242,6 @@ comm_init(void)
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = min(100, Squid_MaxFD / 4);
     /* hardwired lifetimes */
-    for (i = 0; i < Squid_MaxFD; i++)
-	comm_set_fd_lifetime(i, -1);	/* denotes invalid */
     meta_data.misc += Squid_MaxFD * sizeof(int);
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
@@ -1334,7 +1270,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
     struct timeval tv;
     struct close_handler *ch = NULL;
     struct close_handler *next = NULL;
-    FD_ENTRY *f = NULL;
+    FD_ENTRY *fde = NULL;
 
     debug(5, 0, "examine_select: Examining open file descriptors...\n");
     for (fd = 0; fd < Squid_MaxFD; fd++) {
@@ -1352,38 +1288,33 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	    debug(5, 5, "FD %d is valid.\n", fd);
 	    continue;
 	}
-	f = &fd_table[fd];
+	fde = &fd_table[fd];
 	debug(5, 0, "FD %d: %s\n", fd, xstrerror());
 	debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
 	debug(5, 0, "FD %d is a %s called '%s'\n",
 	    fd,
 	    fdstatTypeStr[fd_table[fd].type],
-	    fd_note(fd, NULL));
-	debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p\n",
-	    f->lifetime_handler,
-	    f->timeout_handler,
-	    f->read_handler,
-	    f->write_handler);
-	for (ch = f->close_handler; ch; ch = ch->next)
+	    fde->desc);
+	debug(5, 0, "tmout:%p read:%p write:%p\n",
+	    fde->timeout_handler,
+	    fde->read_handler,
+	    fde->write_handler);
+	for (ch = fde->close_handler; ch; ch = ch->next)
 	    debug(5, 0, " close handler: %p\n", ch->handler);
-	if (f->close_handler) {
-	    for (ch = f->close_handler; ch; ch = next) {
+	if (fde->close_handler) {
+	    for (ch = fde->close_handler; ch; ch = next) {
 		next = ch->next;
 		ch->handler(fd, ch->data);
 		safe_free(ch);
 	    }
-	} else if (f->lifetime_handler) {
-	    debug(5, 0, "examine_select: Calling Lifetime Handler\n");
-	    f->lifetime_handler(fd, f->lifetime_data);
-	} else if (f->timeout_handler) {
+	} else if (fde->timeout_handler) {
 	    debug(5, 0, "examine_select: Calling Timeout Handler\n");
-	    f->timeout_handler(fd, f->timeout_data);
+	    fde->timeout_handler(fd, fde->timeout_data);
 	}
-	f->close_handler = NULL;
-	f->lifetime_handler = NULL;
-	f->timeout_handler = NULL;
-	f->read_handler = NULL;
-	f->write_handler = NULL;
+	fde->close_handler = NULL;
+	fde->timeout_handler = NULL;
+	fde->read_handler = NULL;
+	fde->write_handler = NULL;
 	FD_CLR(fd, readfds);
 	FD_CLR(fd, writefds);
     }
@@ -1391,76 +1322,39 @@ examine_select(fd_set * readfds, fd_set * writefds)
 }
 #endif
 
-char *
-fd_note(int fd, const char *s)
-{
-    if (s == NULL)
-	return (fd_table[fd].ascii_note);
-    xstrncpy(fd_table[fd].ascii_note, s, FD_ASCII_NOTE_SZ);
-    return (NULL);
-}
-
 static void
 checkTimeouts(void)
 {
     int fd;
-    PF *hdl = NULL;
-    FD_ENTRY *f = NULL;
-    void *data;
-    /* scan for timeout */
-    for (fd = 0; fd <= Biggest_FD; fd++) {
-	f = &fd_table[fd];
-	if (!f->open)
-	    continue;
-	if ((hdl = f->timeout_handler) == NULL)
-	    continue;
-	if (f->timeout_time > squid_curtime)
-	    continue;
-	debug(5, 5, "checkTimeouts: FD %d timeout at %d\n", fd, squid_curtime);
-	data = f->timeout_data;
-	f->timeout_handler = NULL;
-	f->timeout_data = NULL;
-	hdl(fd, data);
-    }
-}
-
-static void
-checkLifetimes(void)
-{
-    int fd;
     FD_ENTRY *fde = NULL;
-
-    PF *hdl = NULL;
-
+    PF *callback;
     for (fd = 0; fd <= Biggest_FD; fd++) {
+	debug(5, 5, "checkTimeouts: Checking FD %d\n", fd);
 	fde = &fd_table[fd];
-	if (!fde->open)
+	if (fde->open != FD_OPEN)
 	    continue;
-	if (fde->lifetime < 0)
+	if (fde->timeout == 0)
 	    continue;
-	if (fde->lifetime > squid_curtime)
+	if (fde->timeout > squid_curtime)
 	    continue;
-	debug(5, 5, "checkLifetimes: FD %d Expired\n", fd);
-	if ((hdl = fde->lifetime_handler) != NULL) {
-	    debug(5, 5, "checkLifetimes: FD %d: Calling lifetime handler\n", fd);
-	    hdl(fd, fde->lifetime_data);
-	    fde->lifetime_handler = NULL;
-	} else if ((hdl = fde->read_handler) != NULL) {
-	    debug(5, 5, "checkLifetimes: FD %d: Calling read handler\n", fd);
-	    hdl(fd, fd_table[fd].read_data);
-	    fd_table[fd].read_handler = NULL;
-	} else if ((hdl = fd_table[fd].write_handler)) {
-	    debug(5, 5, "checkLifetimes: FD %d: Calling write handler\n", fd);
-	    hdl(fd, fde->write_data);
+	debug(5, 5, "checkTimeouts: FD %d Expired\n", fd);
+	if (fde->timeout_handler) {
+	    debug(5, 5, "checkTimeouts: FD %d: Call timeout handler\n", fd);
+	    callback = fde->timeout_handler;
+	    fde->timeout_handler = NULL;
+	    callback(fd, fde->timeout_data);
+	} else if (fde->read_handler) {
+	    debug(5, 5, "checkTimeouts: FD %d: Call read handler\n", fd);
+	    callback = fde->read_handler;
+	    fde->read_handler = NULL;
+	    callback(fd, fde->read_data);
+	} else if (fde->write_handler) {
+	    debug(5, 5, "checkTimeouts: FD %d: Call write handler\n", fd);
+	    callback = fde->write_handler;
 	    fde->write_handler = NULL;
+	    callback(fd, fde->write_data);
 	} else {
-	    debug(5, 5, "checkLifetimes: FD %d: No handlers, calling comm_close()\n", fd);
-	    comm_close(fd);
-	    comm_cleanup_fd_entry(fd);
-	}
-	if (fde->open) {
-	    /* still opened */
-	    debug(5, 5, "checkLifetimes: FD %d: Forcing comm_close()\n", fd);
+	    debug(5, 5, "checkTimeouts: FD %d: Forcing comm_close()\n", fd);
 	    comm_close(fd);
 	    comm_cleanup_fd_entry(fd);
 	}

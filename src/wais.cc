@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.65 1997/04/29 22:13:12 wessels Exp $
+ * $Id: wais.cc,v 1.66 1997/04/30 03:12:17 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -121,8 +121,7 @@ typedef struct {
 
 static PF waisStateFree;
 static void waisStartComplete _PARAMS((void *, int));
-static PF waisReadReplyTimeout;
-static PF waisLifetimeExpire;
+static PF waisTimeout;
 static PF waisReadReply;
 static void waisSendComplete _PARAMS((int, char *, int, int, void *));
 static PF waisSendRequest;
@@ -141,27 +140,14 @@ waisStateFree(int fd, void *data)
     xfree(waisState);
 }
 
-/* This will be called when timeout on read. */
-static void
-waisReadReplyTimeout(int fd, void *data)
-{
-    WaisStateData *waisState = data;
-    StoreEntry *entry = waisState->entry;
-    debug(24, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
-    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
-    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-    comm_close(fd);
-}
-
 /* This will be called when socket lifetime is expired. */
 static void
-waisLifetimeExpire(int fd, void *data)
+waisTimeout(int fd, void *data)
 {
     WaisStateData *waisState = data;
     StoreEntry *entry = waisState->entry;
-    debug(24, 4, "waisLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    commSetSelect(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, NULL, NULL, 0);
+    debug(24, 4, "waisTimeout: FD %d: '%s'\n", fd, entry->url);
+    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_close(fd);
 }
 
@@ -206,13 +192,8 @@ waisReadReply(int fd, void *data)
 	    waisReadReply,
 	    waisState, 0);
 	/* don't install read handler while we're above the gap */
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    NULL,
-	    NULL,
-	    0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
+	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
@@ -224,6 +205,7 @@ waisReadReply(int fd, void *data)
     len = read(fd, buf, 4096);
     debug(24, 5, "waisReadReply: FD %d read len:%d\n", fd, len);
     if (len > 0) {
+	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Wais.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -236,8 +218,6 @@ waisReadReply(int fd, void *data)
 	    /* XXX This may loop forever */
 	    commSetSelect(fd, COMM_SELECT_READ,
 		waisReadReply, waisState, 0);
-	    commSetSelect(fd, COMM_SELECT_TIMEOUT,
-		waisReadReplyTimeout, waisState, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
@@ -260,11 +240,6 @@ waisReadReply(int fd, void *data)
 	    COMM_SELECT_READ,
 	    waisReadReply,
 	    waisState, 0);
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    waisReadReplyTimeout,
-	    waisState,
-	    Config.readTimeout);
     }
 }
 
@@ -286,11 +261,6 @@ waisSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    waisReadReply,
 	    waisState, 0);
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    waisReadReplyTimeout,
-	    waisState,
-	    Config.readTimeout);
     }
 }
 
@@ -361,6 +331,10 @@ waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
     waisState->fd = fd;
     waisState->entry = entry;
     xstrncpy(waisState->request, url, MAX_URL);
+    comm_add_close_handler(waisState->fd,
+	waisStateFree,
+	waisState);
+    commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
     storeLockObject(entry, waisStartComplete, waisState);
     return COMM_OK;
 }
@@ -370,10 +344,6 @@ static void
 waisStartComplete(void *data, int status)
 {
     WaisStateData *waisState = data;
-
-    comm_add_close_handler(waisState->fd,
-	waisStateFree,
-	waisState);
     waisState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(waisState->relayhost,
 	waisState->fd,
@@ -393,6 +363,7 @@ waisConnect(int fd, const ipcache_addrs * ia, void *data)
 	comm_close(waisState->fd);
 	return;
     }
+    commSetTimeout(fd, Config.Timeout.connect, waisTimeout, waisState);
     commConnectStart(fd,
 	waisState->relayhost,
 	waisState->relayport,
@@ -412,10 +383,6 @@ waisConnectDone(int fd, int status, void *data)
     /* Install connection complete handler. */
     if (opt_no_ipcache)
 	ipcacheInvalidate(waisState->relayhost);
-    commSetSelect(fd,
-	COMM_SELECT_LIFETIME,
-	waisLifetimeExpire,
-	waisState, 0);
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	waisSendRequest,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.45 1997/04/28 05:32:49 wessels Exp $
+ * $Id: ssl.cc,v 1.46 1997/04/30 03:12:12 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -51,8 +51,7 @@ typedef struct {
 
 static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
 
-static void sslLifetimeExpire _PARAMS((int fd, void *));
-static void sslReadTimeout _PARAMS((int fd, void *));
+static PF sslTimeout;
 static void sslReadServer _PARAMS((int fd, void *));
 static void sslReadClient _PARAMS((int fd, void *));
 static void sslWriteServer _PARAMS((int fd, void *));
@@ -124,16 +123,6 @@ sslStateFree(int fd, void *data)
     safe_free(sslState);
 }
 
-/* This will be called when the server lifetime is expired. */
-static void
-sslLifetimeExpire(int fd, void *data)
-{
-    SslStateData *sslState = data;
-    debug(26, 4, "sslLifeTimeExpire: FD %d: URL '%s'>\n",
-	fd, sslState->url);
-    sslClose(sslState);
-}
-
 /* Read from server side and queue it for writing to the client */
 static void
 sslReadServer(int fd, void *data)
@@ -152,11 +141,6 @@ sslReadServer(int fd, void *data)
 		COMM_SELECT_READ,
 		sslReadServer,
 		sslState, 0);
-	    commSetSelect(sslState->server.fd,
-		COMM_SELECT_TIMEOUT,
-		sslReadTimeout,
-		sslState,
-		sslState->timeout);
 	} else {
 	    sslClose(sslState);
 	}
@@ -166,6 +150,8 @@ sslReadServer(int fd, void *data)
     } else {
 	sslState->server.offset = 0;
 	sslState->server.len = len;
+        /* extend server read timeout */
+        commSetTimeout(sslState->server.fd, Config.Timeout.read, NULL, NULL);
 	commSetSelect(sslState->client.fd,
 	    COMM_SELECT_WRITE,
 	    sslWriteClient,
@@ -237,11 +223,6 @@ sslWriteServer(int fd, void *data)
 	    COMM_SELECT_READ,
 	    sslReadClient,
 	    sslState, 0);
-	commSetSelect(sslState->server.fd,
-	    COMM_SELECT_TIMEOUT,
-	    sslReadTimeout,
-	    sslState,
-	    sslState->timeout);
     } else {
 	/* still have more to write */
 	commSetSelect(sslState->server.fd,
@@ -296,10 +277,10 @@ sslWriteClient(int fd, void *data)
 }
 
 static void
-sslReadTimeout(int fd, void *data)
+sslTimeout(int fd, void *data)
 {
     SslStateData *sslState = data;
-    debug(26, 3, "sslReadTimeout: FD %d\n", fd);
+    debug(26, 3, "sslTimeout: FD %d\n", fd);
     sslClose(sslState);
 }
 
@@ -311,7 +292,7 @@ sslConnected(int fd, void *data)
     strcpy(sslState->server.buf, conn_established);
     sslState->server.len = strlen(conn_established);
     sslState->server.offset = 0;
-    comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
+    commSetTimeout(sslState->server.fd, Config.Timeout.read, NULL, NULL);
     commSetSelect(sslState->client.fd,
 	COMM_SELECT_WRITE,
 	sslWriteClient,
@@ -361,19 +342,10 @@ sslConnect(int fd, const ipcache_addrs * ia, void *data)
     debug(26, 5, "sslConnect: client=%d server=%d\n",
 	sslState->client.fd,
 	sslState->server.fd);
-    /* Install lifetime handler */
-    commSetSelect(sslState->server.fd,
-	COMM_SELECT_LIFETIME,
-	sslLifetimeExpire,
-	sslState, 0);
-    /* NOTE this changes the lifetime handler for the client side.
-     * It used to be asciiConnLifetimeHandle, but it does funny things
-     * like looking for read handlers and assuming it was still reading
-     * the HTTP request.  sigh... */
-    commSetSelect(sslState->client.fd,
-	COMM_SELECT_LIFETIME,
-	sslLifetimeExpire,
-	sslState, 0);
+    commSetTimeout(sslState->server.fd,
+        Config.Timeout.read,
+        sslTimeout,
+        sslState);
     commConnectStart(fd,
 	sslState->host,
 	sslState->port,
@@ -447,7 +419,7 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
     sslState->mime_hdr = mime_hdr;
-    sslState->timeout = Config.readTimeout;
+    sslState->timeout = Config.Timeout.read;
     sslState->size_ptr = size_ptr;
     sslState->client.fd = fd;
     sslState->server.fd = sock;
@@ -459,6 +431,10 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     comm_add_close_handler(sslState->client.fd,
 	sslClientClosed,
 	sslState);
+    commSetTimeout(sslState->client.fd,
+        Config.Timeout.lifetime,
+        sslTimeout,
+        sslState);
     peerSelect(request,
 	NULL,
 	sslPeerSelectComplete,
@@ -476,11 +452,11 @@ sslProxyConnected(int fd, void *data)
     debug(26, 3, "sslProxyConnected: Sending 'CONNECT %s HTTP/1.0'\n", sslState->url);
     sslState->client.len = strlen(sslState->client.buf);
     sslState->client.offset = 0;
-    comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_WRITE,
 	sslWriteServer,
 	sslState, 0);
+    commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_READ,
 	sslReadServer,

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.142 1997/04/29 22:13:02 wessels Exp $
+ * $Id: main.cc,v 1.143 1997/04/30 03:12:10 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -301,7 +301,7 @@ reconfigure(int sig)
 {
     debug(1, 1, "reconfigure: SIGHUP received\n");
     debug(1, 1, "Waiting %d seconds for active connections to finish\n",
-	Config.lifetimeShutdown);
+	Config.shutdownLifetime);
     reread_pending = 1;
 #if !HAVE_SIGACTION
     signal(sig, reconfigure);
@@ -315,7 +315,7 @@ shut_down(int sig)
     debug(1, 1, "Preparing for shutdown after %d connections\n",
 	ntcpconn + nudpconn);
     debug(1, 1, "Waiting %d seconds for active connections to finish\n",
-	shutdown_pending > 0 ? Config.lifetimeShutdown : 0);
+	shutdown_pending > 0 ? Config.shutdownLifetime : 0);
 #ifdef KILL_PARENT_OPT
     debug(1, 1, "Killing RunCache, pid %d\n", getppid());
     kill(getppid(), sig);
@@ -545,8 +545,7 @@ mainInitialize(void)
 	Config.Port.icp = (u_short) icpPortNumOverride;
 
     _db_init(Config.Log.log, Config.debugOptions);
-    fdstat_open(fileno(debug_log), FD_LOG);
-    fd_note(fileno(debug_log), Config.Log.log);
+    fd_open(fileno(debug_log), FD_LOG, Config.Log.log);
 
     debug(1, 0, "Starting Squid Cache version %s for %s...\n",
 	version_string,
@@ -676,12 +675,9 @@ main(int argc, char **argv)
 
     /* we have to init fdstat here. */
     fdstat_init();
-    fdstat_open(0, FD_LOG);
-    fdstat_open(1, FD_LOG);
-    fdstat_open(2, FD_LOG);
-    fd_note(0, "STDIN");
-    fd_note(1, "STDOUT");
-    fd_note(2, "STDERR");
+    fd_open(0, FD_LOG, "stdin");
+    fd_open(1, FD_LOG, "stdout");
+    fd_open(2, FD_LOG, "stderr");
 
     /* preinit for debug module */
     debug_log = stderr;
