@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.28 1996/04/05 01:00:33 wessels Exp $ */
+/* $Id: store.cc,v 1.29 1996/04/05 16:53:28 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -452,22 +452,24 @@ void storeSetPrivateKey(e)
 {
     StoreEntry *e2 = NULL;
     hash_link *table_entry = NULL;
+    char *newkey = NULL;
 
     if (e->key && BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
 
-    if (e->key) {
-	if ((table_entry = hash_lookup(table, e->key)))
-	    e2 = (StoreEntry *) table_entry;
-	if (e2 != e) {
-	    debug(20, 0, "storeSetPrivateKey: non-unique key: '%s'\n", e->key);
-	    return;
-	}
-	storeHashDelete(table_entry);
-	if (!BIT_TEST(e->flag, KEY_URL))
-	    safe_free(e->key);
+    newkey = storeGeneratePrivateKey(e->url, e->type_id, 0);
+    if ((table_entry = hash_lookup(table, newkey))) {
+	e2 = (StoreEntry *) table_entry;
+	debug(20, 0, "storeSetPrivateKey: Entry already exists with key '%s'\n",
+	    newkey);
+	debug(20, 0, "storeSetPrivateKey: Entry Dump:\n%s\n", storeToString(e2));
+	fatal_dump("Private key already exists.");
     }
-    e->key = xstrdup(storeGeneratePrivateKey(e->url, e->type_id, 0));
+    if (e->key)
+	storeHashDelete(e);
+    if (e->key && !BIT_TEST(e->flag, KEY_URL))
+	safe_free(e->key);
+    e->key = xstrdup(newkey);
     storeHashInsert(e);
     BIT_RESET(e->flag, KEY_URL);
     BIT_SET(e->flag, KEY_CHANGE);
@@ -479,30 +481,32 @@ void storeSetPublicKey(e)
 {
     StoreEntry *e2 = NULL;
     hash_link *table_entry = NULL;
+    char *newkey = NULL;
 
     if (e->key && !BIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
 
-    if (e->key) {
-	if ((table_entry = hash_lookup(table, e->key)))
-	    e2 = (StoreEntry *) table_entry;
-	if (e2 != e) {
-	    debug(20, 0, "storeSetPublicKey: non-unique key: '%s'\n", e->key);
-	    return;
-	}
-	storeHashDelete(table_entry);
-	if (!BIT_TEST(e->flag, KEY_URL))
-	    safe_free(e->key);
+    newkey = storeGeneratePublicKey(e->url, e->type_id);
+    while ((table_entry = hash_lookup(table, newkey))) {
+	debug(20, 0, "storeSetPublicKey: Making old '%s' private.\n", newkey);
+	e2 = (StoreEntry *) table_entry;
+	storeSetPrivateKey(e2);
+	BIT_SET(e2->flag, RELEASE_REQUEST);
     }
+    if (e->key)
+	storeHashDelete(e);
+    if (e->key && !BIT_TEST(e->flag, KEY_URL))
+	safe_free(e->key);
     if (e->type_id == METHOD_GET) {
 	e->key = e->url;
 	BIT_SET(e->flag, KEY_URL);
 	BIT_RESET(e->flag, KEY_CHANGE);
     } else {
-	e->key = xstrdup(storeGeneratePublicKey(e->url, e->type_id));
+	e->key = xstrdup(newkey);
 	BIT_RESET(e->flag, KEY_URL);
 	BIT_SET(e->flag, KEY_CHANGE);
     }
+    BIT_RESET(e->flag, KEY_PRIVATE);
     storeHashInsert(e);
 }
 
@@ -1070,7 +1074,7 @@ void storeSwapOutHandle(fd, flag, e)
 
 
 /* start swapping object to disk */
-int storeSwapOutStart(e)
+static int storeSwapOutStart(e)
      StoreEntry *e;
 {
     int fd;
