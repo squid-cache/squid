@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.58 1998/03/30 23:00:12 wessels Exp $
+ * $Id: icmp.cc,v 1.59 1998/03/31 22:36:32 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -45,7 +45,7 @@ static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf
 static void
 icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
 {
-    pingerEchoData pecho;
+    static pingerEchoData pecho;
     if (payload && len == 0)
 	len = strlen(payload);
     pecho.to = to;
