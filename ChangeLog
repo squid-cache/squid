@@ -102,6 +102,10 @@ Changes to Squid-2.2 ():
 		  question (used to be all set to 1 second worth
 		  of traffic).  Pools are restored to this level
 		  on reconfiguratoin.
+	- Changed storeClientCopy to give a swap-in failure if 
+	  the number of open disk FD's is above the 'max_open_disk_fds'
+	  limit.  Otherwise, a very loaded cache will end up with
+	  all disk files open for reading, and none for writing.
 
 Changes to Squid-2.1 (November 16, 1998):
 
