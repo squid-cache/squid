@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.16 1996/04/01 23:34:43 wessels Exp $ */
+/* $Id: ftp.cc,v 1.17 1996/04/02 00:51:53 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -32,6 +32,15 @@ typedef struct _Ftpdata {
 				 * icpReadWriteData */
     int got_marker;		/* denotes end of successful request */
 } FtpData;
+
+static void ftpCloseAndFree(fd, data)
+     int fd;
+     FtpData *data;
+{
+    if (fd > -1)
+	comm_close(fd);
+    xfree(data);
+}
 
 /* XXX: this does not support FTP on a different port! */
 int ftp_url_parser(url, data)
@@ -122,8 +131,7 @@ void ftpLifetimeExpire(fd, data)
     }
     safe_free(data->icp_rwd_ptr);
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    comm_close(fd);
-    safe_free(data);
+    ftpCloseAndFree(fd, data);
 }
 
 
@@ -147,7 +155,8 @@ int ftpReadReply(fd, data)
 	    clen = entry->mem_obj->e_current_len;
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > FTP_DELETE_GAP) {
-		debug(9, 3, "ftpReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(9, 3, "ftpReadReply: Read deferred for Object: %s\n",
+		    entry->url);
 		debug(9, 3, "--> Current Gap: %d bytes\n", clen - off);
 		/* reschedule, so it will automatically be reactivated when
 		 * Gap is big enough. */
@@ -161,8 +170,7 @@ int ftpReadReply(fd, data)
 	} else {
 	    /* we can terminate connection right now */
 	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    comm_close(fd);
-	    safe_free(data);
+	    ftpCloseAndFree(fd, data);
 	    return 0;
 	}
     }
@@ -170,20 +178,9 @@ int ftpReadReply(fd, data)
     len = read(fd, buf, READBUFSIZ);
     debug(9, 5, "ftpReadReply: FD %d, Read %d bytes\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
-	if (len < 0)
-	    debug(9, 1, "ftpReadReply: read error: %s\n", xstrerror());
-	if (errno == ECONNRESET) {
-	    /* Connection reset by peer */
-	    /* consider it as a EOF */
-	    if (!(entry->flag & DELETE_BEHIND))
-		entry->expires = cached_curtime + ttlSet(entry);
-	    sprintf(tmp_error_buf, "\nWarning: The Remote Server sent RESET at the end of transmission.\n");
-	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
-	    storeComplete(entry);
-	    comm_close(fd);
-	    safe_free(data);
-	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (len < 0) {
+	debug(9, 1, "ftpReadReply: read error: %s\n", xstrerror());
+	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
@@ -191,15 +188,22 @@ int ftpReadReply(fd, data)
 	    /* note there is no ftpReadReplyTimeout.  Timeouts are handled
 	     * by `ftpget'. */
 	} else {
+	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_SET(entry->flag, RELEASE_REQUEST);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
-	    comm_close(fd);
-	    safe_free(data);
+	    ftpCloseAndFree(fd, data);
 	}
+    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+	cached_error_entry(entry,
+	    ERR_ZERO_SIZE_OBJECT,
+	    errno ? xstrerror() : NULL);
+	ftpCloseAndFree(fd, data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	if (!data->got_marker) {
-	    /* If we didn't see the magic marker, assume the transfer failed and arrange
-	     * so the object gets ejected and never gets to disk. */
+	    /* If we didn't see the magic marker, assume the transfer
+	     * failed and arrange so the object gets ejected and
+	     * never gets to disk. */
 	    debug(9, 1, "ftpReadReply: Didn't see magic marker, purging <URL:%s>.\n", entry->url);
 	    entry->expires = cached_curtime + getNegativeTTL();
 	    BIT_RESET(entry->flag, CACHABLE);
@@ -208,9 +212,8 @@ int ftpReadReply(fd, data)
 	    entry->expires = cached_curtime + ttlSet(entry);
 	}
 	/* update fdstat and fdtable */
-	comm_close(fd);
 	storeComplete(entry);
-	safe_free(data);
+	ftpCloseAndFree(fd, data);
     } else if (((entry->mem_obj->e_current_len + len) > getFtpMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
@@ -224,10 +227,10 @@ int ftpReadReply(fd, data)
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
 	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
-	comm_close(fd);
-	safe_free(data);
+	ftpCloseAndFree(fd, data);
     } else {
 	/* check for a magic marker at the end of the read */
+	data->got_marker = 0;
 	if (len >= MAGIC_MARKER_SZ) {
 	    if (!memcmp(MAGIC_MARKER, buf + len - MAGIC_MARKER_SZ, MAGIC_MARKER_SZ)) {
 		data->got_marker = 1;
@@ -270,8 +273,7 @@ void ftpSendComplete(fd, buf, size, errflag, data)
 
     if (errflag) {
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	comm_close(fd);
-	safe_free(data);
+	ftpCloseAndFree(fd, data);
 	return;
     } else {
 	comm_set_select_handler(data->ftp_fd,
@@ -392,9 +394,8 @@ void ftpConnInProgress(fd, data)
 	    debug(9, 5, "ftpConnInProgress: FD %d is now connected.", fd);
 	    break;		/* cool, we're connected */
 	default:
-	    comm_close(fd);
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    safe_free(data);
+	    ftpCloseAndFree(fd, data);
 	    return;
 	}
     /* Call the real write handler, now that we're fully connected */
@@ -438,9 +439,8 @@ int ftpStart(unusedfd, url, entry)
     /* Now connect ... */
     if ((status = comm_connect(data->ftp_fd, "localhost", 3131))) {
 	if (status != EINPROGRESS) {
-	    comm_close(data->ftp_fd);
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    safe_free(data);
+	    ftpCloseAndFree(data->ftp_fd, data);
 	    return COMM_ERROR;
 	} else {
 	    debug(9, 5, "ftpStart: FD %d: EINPROGRESS.\n", data->ftp_fd);

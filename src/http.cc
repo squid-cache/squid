@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.22 1996/04/01 23:34:44 wessels Exp $ */
+/* $Id: http.cc,v 1.23 1996/04/02 00:51:54 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -249,7 +249,8 @@ static void httpReadReply(fd, data)
 	    clen = entry->mem_obj->e_current_len;
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > HTTP_DELETE_GAP) {
-		debug(11, 3, "httpReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(11, 3, "httpReadReply: Read deferred for Object: %s\n",
+		    entry->url);
 		debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
 		/* reschedule, so it will be automatically reactivated
 		 * when Gap is big enough. */
@@ -285,20 +286,10 @@ static void httpReadReply(fd, data)
     len = read(fd, buf, READBUFSIZ);
     debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
-	/* XXX we we should log when len==0 and current_len==0 */
+    if (len < 0) {
 	debug(11, 2, "httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
-	if (errno == ECONNRESET) {
-	    /* Connection reset by peer, junk the object */
-	    /* XXX this line we add assumes HTML.  Should we lose it?  -DPW */
-	    sprintf(tmp_error_buf, "\n<p>Warning: The Remote Server sent RESET at the end of transmission.\n");
-	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
-	    BIT_RESET(entry->flag, CACHABLE);
-	    BIT_SET(entry->flag, RELEASE_REQUEST);
-	    storeComplete(entry);
-	    httpCloseAndFree(fd, data);
-	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
@@ -306,24 +297,34 @@ static void httpReadReply(fd, data)
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
 		(PF) httpReadReplyTimeout, (caddr_t) data, getReadTimeout());
 	} else {
+	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_SET(entry->flag, RELEASE_REQUEST);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    httpCloseAndFree(fd, data);
 	}
+    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+	cached_error_entry(entry,
+	    ERR_ZERO_SIZE_OBJECT,
+	    errno ? xstrerror() : NULL);
+	httpCloseAndFree(fd, data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	storeComplete(entry);
 	httpCloseAndFree(fd, data);
-    } else if (((entry->mem_obj->e_current_len + len) > getHttpMax()) &&
+    } else if ((entry->mem_obj->e_current_len + len) > getHttpMax() &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
-
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd, COMM_SELECT_READ,
-	    (PF) httpReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-	    (PF) httpReadReplyTimeout, (caddr_t) data, getReadTimeout());
-
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) httpReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) httpReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
@@ -333,10 +334,15 @@ static void httpReadReply(fd, data)
 	storeAppend(entry, buf, len);
 	if (data->reply_hdr_state < 2)
 	    httpProcessReplyHeader(data, buf);
-	comm_set_select_handler(fd, COMM_SELECT_READ,
-	    (PF) httpReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
-	    (PF) httpReadReplyTimeout, (caddr_t) data, getReadTimeout());
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) httpReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) httpReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
     }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.12 1996/04/01 23:34:43 wessels Exp $ */
+/* $Id: gopher.cc,v 1.13 1996/04/02 00:51:54 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -53,7 +53,6 @@ typedef struct gopher_ds {
     } conversion;
     int HTML_header_added;
     int port;
-    char *mime_hdr;
     char type_id;
     char request[MAX_URL];
     int data_in;
@@ -66,10 +65,20 @@ typedef struct gopher_ds {
 
 GopherData *CreateGopherData();
 
-static void freeGopherData _PARAMS((GopherData *));
 
 char def_gopher_bin[] = "www/unknown";
 char def_gopher_text[] = "text/plain";
+
+static void gopherCloseAndFree(fd, data)
+     int fd;
+     GopherData *data;
+{
+    if (fd > 0)
+	comm_close(fd);
+    put_free_4k_page(data->buf);
+    xfree(data);
+}
+
 
 /* figure out content type from file extension */
 static void gopher_mime_content(buf, name, def)
@@ -245,7 +254,7 @@ int gopherCachable(url, type, mime_hdr)
     default:
 	cachable = 1;
     }
-    freeGopherData(data);
+    gopherCloseAndFree(-1, data);
 
     return cachable;
 }
@@ -571,8 +580,7 @@ int gopherReadReplyTimeout(fd, data)
 	put_free_4k_page(data->icp_page_ptr);
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
-    comm_close(fd);
-    freeGopherData(data);
+    gopherCloseAndFree(fd, data);
     return 0;
 }
 
@@ -593,8 +601,7 @@ void gopherLifetimeExpire(fd, data)
 	COMM_SELECT_READ | COMM_SELECT_WRITE,
 	0,
 	0);
-    comm_close(fd);
-    freeGopherData(data);
+    gopherCloseAndFree(fd, data);
 }
 
 
@@ -619,7 +626,7 @@ int gopherReadReply(fd, data)
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > GOPHER_DELETE_GAP) {
 		debug(10, 3, "gopherReadReply: Read deferred for Object: %s\n",
-		    entry->key);
+		    entry->url);
 		debug(10, 3, "                Current Gap: %d bytes\n",
 		    clen - off);
 
@@ -649,8 +656,7 @@ int gopherReadReply(fd, data)
 	} else {
 	    /* we can terminate connection right now */
 	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    comm_close(fd);
-	    freeGopherData(data);
+	    gopherCloseAndFree(fd, data);
 	    return 0;
 	}
     }
@@ -659,20 +665,9 @@ int gopherReadReply(fd, data)
     len = read(fd, buf, TEMP_BUF_SIZE - 1);	/* leave one space for \0 in gopherToHTML */
     debug(10, 5, "gopherReadReply: FD %d read len=%d\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
-	debug(10, 1, "gopherReadReply: error reading: %s\n",
-	    xstrerror());
-	if (errno == ECONNRESET) {
-	    /* Connection reset by peer */
-	    /* consider it as a EOF */
-	    if (!(entry->flag & DELETE_BEHIND))
-		entry->expires = cached_curtime + ttlSet(entry);
-	    sprintf(tmp_error_buf, "\nWarning: The Remote Server sent RESET at the end of transmission.\n");
-	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
-	    storeComplete(entry);
-	    comm_close(fd);
-	    freeGopherData(data);
-	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (len < 0) {
+	debug(10, 1, "gopherReadReply: error reading: %s\n", xstrerror());
+	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
@@ -680,10 +675,16 @@ int gopherReadReply(fd, data)
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
 		(PF) gopherReadReplyTimeout, (caddr_t) data, getReadTimeout());
 	} else {
+	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_SET(entry->flag, RELEASE_REQUEST);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
-	    comm_close(fd);
-	    freeGopherData(data);
+	    gopherCloseAndFree(fd, data);
 	}
+    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+	cached_error_entry(entry,
+	    ERR_ZERO_SIZE_OBJECT,
+	    errno ? xstrerror() : NULL);
+	gopherCloseAndFree(fd, data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	/* flush the rest of data in temp buf if there is one. */
@@ -693,8 +694,7 @@ int gopherReadReply(fd, data)
 	    entry->expires = cached_curtime + ttlSet(entry);
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
-	comm_close(fd);
-	freeGopherData(data);
+	gopherCloseAndFree(fd, data);
     } else if (((entry->mem_obj->e_current_len + len) > getGopherMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
@@ -705,10 +705,15 @@ int gopherReadReply(fd, data)
 	} else {
 	    storeAppend(entry, buf, len);
 	}
-	comm_set_select_handler(fd, COMM_SELECT_READ, (PF) gopherReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT, (PF) gopherReadReplyTimeout,
-	    (caddr_t) data, getReadTimeout());
-
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) gopherReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) gopherReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we got */
 	if (data->conversion != NORMAL) {
@@ -720,17 +725,22 @@ int gopherReadReply(fd, data)
 	if (data->conversion != NORMAL)
 	    gopherEndHTML(data);
 	BIT_RESET(entry->flag, DELAY_SENDING);
-	comm_close(fd);
-	freeGopherData(data);
+	gopherCloseAndFree(fd, data);
     } else {
 	if (data->conversion != NORMAL) {
 	    gopherToHTML(data, buf, len);
 	} else {
 	    storeAppend(entry, buf, len);
 	}
-	comm_set_select_handler(fd, COMM_SELECT_READ, (PF) gopherReadReply, (caddr_t) data);
-	comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT, (PF) gopherReadReplyTimeout,
-	    (caddr_t) data, getReadTimeout());
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) gopherReadReply,
+	    (caddr_t) data);
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) gopherReadReplyTimeout,
+	    (caddr_t) data,
+	    getReadTimeout());
     }
     put_free_4k_page(buf);
     return 0;
@@ -751,8 +761,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
 	fd, size, errflag);
     if (errflag) {
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	comm_close(fd);
-	freeGopherData(data);
+	gopherCloseAndFree(fd, data);
 	if (buf)
 	    put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
 	return;
@@ -868,7 +877,7 @@ int gopherStart(unusedfd, url, entry)
     if (gopher_url_parser(url, data->host, &data->port,
 	    &data->type_id, data->request)) {
 	cached_error_entry(entry, ERR_INVALID_URL, NULL);
-	freeGopherData(data);
+	gopherCloseAndFree(-1, data);
 	return COMM_ERROR;
     }
     /* Create socket. */
@@ -876,7 +885,7 @@ int gopherStart(unusedfd, url, entry)
     if (sock == COMM_ERROR) {
 	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
 	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
-	freeGopherData(data);
+	gopherCloseAndFree(-1, data);
 	return COMM_ERROR;
     }
     /* check if IP is already in cache. It must be. 
@@ -884,9 +893,8 @@ int gopherStart(unusedfd, url, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
 	debug(10, 4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
-	comm_close(sock);
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	freeGopherData(data);
+	gopherCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     if (((data->type_id == GOPHER_INDEX) || (data->type_id == GOPHER_CSO))
@@ -907,16 +915,14 @@ int gopherStart(unusedfd, url, entry)
 	}
 	gopherToHTML(data, (char *) NULL, 0);
 	storeComplete(entry);
-	freeGopherData(data);
-	comm_close(sock);
+	gopherCloseAndFree(sock, data);
 	return COMM_OK;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, data->host, data->port)) != 0) {
 	if (status != EINPROGRESS) {
-	    comm_close(sock);
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    freeGopherData(data);
+	    gopherCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {
 	    debug(10, 5, "startGopher: conn %d EINPROGRESS\n", sock);
@@ -942,11 +948,4 @@ GopherData *CreateGopherData()
     GopherData *gd = (GopherData *) xcalloc(1, sizeof(GopherData));
     gd->buf = get_free_4k_page();
     return (gd);
-}
-
-static void freeGopherData(gd)
-     GopherData *gd;
-{
-    put_free_4k_page(gd->buf);
-    safe_free(gd);
 }
