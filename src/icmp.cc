@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.10 1996/09/20 23:26:56 wessels Exp $
+ * $Id: icmp.cc,v 1.11 1996/09/20 23:33:17 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -84,10 +84,10 @@ icmpOpen(void)
 	debug(37, 0, "icmpOpen: child_sock: %s\n", xstrerror());
 	return;
     }
-    getsockname(icmp_sock, &S, &namelen);
+    getsockname(icmp_sock, (struct sockaddr *) &S, &namelen);
     if (comm_connect_addr(child_sock, &S) != COMM_OK)
 	fatal_dump(xstrerror());
-    getsockname(child_sock, &S, &namelen);
+    getsockname(child_sock, (struct sockaddr *) &S, &namelen);
     if (comm_connect_addr(icmp_sock, &S) != COMM_OK)
 	fatal_dump(xstrerror());
     if ((pid = fork()) < 0) {
