@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.20 1998/03/29 08:51:01 wessels Exp $
+ * $Id: mem.cc,v 1.21 1998/04/07 23:43:04 rousskov Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -41,7 +41,6 @@ static const struct {
     const char *name;
     size_t obj_size;
 } StrPoolsAttrs[mem_str_pool_count] = {
-
     {
 	"Short Strings", 36,
     },				/* to fit rfc1123 and similar */
@@ -201,6 +200,7 @@ memInit(void)
     memDataInit(MEM_AIO_RESULT_T, "aio_result_t", sizeof(aio_result_t), 0);
     memDataInit(MEM_CACHEMGR_PASSWD, "cachemgr_passwd",
 	sizeof(cachemgr_passwd), 0);
+    memDataInit(MEM_CACHE_DIGEST, "CacheDigest", sizeof(CacheDigest), 0);
     memDataInit(MEM_CLIENTHTTPREQUEST, "clientHttpRequest",
 	sizeof(clientHttpRequest), 0);
     memDataInit(MEM_CLOSE_HANDLER, "close_handler", sizeof(close_handler), 0);
@@ -247,6 +247,7 @@ memInit(void)
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_NET_DB_PEER, "net_db_peer", sizeof(net_db_peer), 0);
+    memDataInit(MEM_DIGEST_FETCH_STATE, "DigestFetchState", sizeof(DigestFetchState), 0);
     memDataInit(MEM_PEER, "peer", sizeof(peer), 0);
     memDataInit(MEM_PINGERECHODATA, "pingerEchoData",
 	sizeof(pingerEchoData), 0);
