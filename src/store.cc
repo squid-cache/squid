@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.219 1997/04/25 20:15:34 wessels Exp $
+ * $Id: store.cc,v 1.220 1997/04/25 21:43:59 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1248,7 +1248,7 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
     debug(20, 6, "storeSwapOutHandle: store_swap_size   = %dk\n", store_swap_size);
     mem->swap_offset += mem->e_swap_buf_len;
     /* round up */
-    storeDirUpdateSwapSize(e->swap_file_number, mem->e_swap_buf_len);
+    storeDirUpdateSwapSize(e->swap_file_number, mem->e_swap_buf_len, 1);
     if (mem->swap_offset >= e->object_len) {
 	/* swapping complete */
 	e->swap_status = SWAP_OK;
@@ -1383,7 +1383,6 @@ static void
 storeDoRebuildFromDisk(void *data)
 {
     struct storeRebuildState *RB = data;
-    LOCAL_ARRAY(char, swapfile, MAXPATHLEN);
     LOCAL_ARRAY(char, url, MAX_URL);
     StoreEntry *e = NULL;
     time_t expires;
@@ -1425,7 +1424,6 @@ storeDoRebuildFromDisk(void *data)
 	if (RB->line_in[0] == '#')
 	    continue;
 	url[0] = '\0';
-	swapfile[0] = '\0';
 	sfileno = 0;
 	scan1 = 0;
 	scan2 = 0;
@@ -1442,9 +1440,7 @@ storeDoRebuildFromDisk(void *data)
 	    continue;
 	if (sfileno < 0)
 	    continue;
-	if (sfileno >= MAX_FILES_PER_DIR)
-	    continue;
-	storeSwapFullPath(sfileno, swapfile);
+	sfileno = storeDirProperFileno(d->dirn, sfileno);
 	timestamp = (time_t) scan1;
 	expires = (time_t) scan2;
 	lastmod = (time_t) scan3;
@@ -1474,7 +1470,7 @@ storeDoRebuildFromDisk(void *data)
 	    continue;
 	}
 	/* update store_swap_size */
-	storeDirUpdateSwapSize(sfileno, size);
+	storeDirUpdateSwapSize(sfileno, size, 1);
 	RB->objcount++;
 	e = storeAddDiskRestore(url,
 	    sfileno,
@@ -2163,7 +2159,7 @@ storeRelease(StoreEntry * e)
 
     if (e->swap_status == SWAP_OK && (e->swap_file_number > -1)) {
 	(void) safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
-	storeDirUpdateSwapSize(e->swap_file_number, -(e->object_len));
+	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
 	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
 	HTTPCacheInfo->proto_purgeobject(HTTPCacheInfo,
@@ -2402,7 +2398,7 @@ storeInitHashValues(void)
     int i;
     /* Calculate size of hash table (maximum currently 64k buckets).  */
     i = Config.Swap.maxSize / Config.Store.avgObjectSize;
-    debug(20, 1, "Swap maxSize %d, estimated %d objects\n",
+    debug(20, 1, "Swap maxSize %d kB, estimated %d objects\n",
 	Config.Swap.maxSize, i);
     i /= Config.Store.objectsPerBucket;
     debug(20, 1, "Target number of buckets: %d\n", i);
