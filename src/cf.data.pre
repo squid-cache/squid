@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.233 2001/10/19 22:34:48 hno Exp $
+# $Id: cf.data.pre,v 1.234 2001/10/19 23:40:28 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -99,28 +99,33 @@ DOC_START
         squid in accelerator mode and you want to do the SSL work at the
         accelerator level.
 
-	If key is not specified then the given certificate is assumed to be a
-	combined certificate and key file.
-
-	Other options:
-
-	  version=	The version of SSL/TLS supported
-		  1	automatic (default)
-		  2	SSLv2 only
-		  3	SSLv3 only
-		  4	TLSv1 only
-
-	  cipher=	Colon separated list of supported ciphers
-
-	  options=	Varions SSL engine options. The most important being:
-		  NO_SSLv2  Disallow the use of SSLv2
-		  NO_SSLv3  Disallow the use of SSLv3
-		  NO_TLSv1  Disallow the use of TLSv1
-			See src/ssl_support.c or OpenSSL documentation for
-			a more complete list.
-
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate.
+			      
+	Options:
+
+	   cert=	Path to SSL certificate (PEM format)
+		
+	   key=		Path to SSL private key file (PEM format)
+			if not specified, the certificate file is
+			assumed to be a combined certificate and
+			key file
+
+	   version=	The version of SSL/TLS supported
+			    1	automatic (default)
+			    2	SSLv2 only
+			    3	SSLv3 only
+			    4	TLSv1 only
+
+	   cipher=	Colon separated list of supported ciphers
+
+	   options=	Varions SSL engine options. The most important
+			being:
+			    NO_SSLv2  Disallow the use of SSLv2
+			    NO_SSLv3  Disallow the use of SSLv3
+			    NO_TLSv1  Disallow the use of TLSv1
+			See src/ssl_support.c or OpenSSL documentation
+			for a more complete list.
 DOC_END
 
 NAME: ssl_unclean_shutdown
