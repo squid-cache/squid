@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.23 1998/03/11 22:18:45 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.24 1998/03/17 07:08:26 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -345,7 +345,7 @@ httpHeaderClean(HttpHeader * hdr)
 	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
 	if (e->id == HDR_CACHE_CONTROL)
 	    httpHdrCcUpdateStats(e->cache.v_pcc, &HttpHeaderStats[0].ccTypeDistr);
-	httpHeaderEntryClean(e); /* yes, this leaves us in incosistent state */
+	httpHeaderEntryClean(e); /* yes, this leaves us in inconsistent state */
     }
     xfree(hdr->entries);
     hdr->emask = 0;
@@ -857,6 +857,9 @@ httpHeaderEntryParseInit(HttpHeaderEntry * e, const char *field_start, const cha
     Headers[e->id].stat.parsCount++;
     Headers[e->id].stat.aliveCount++;
     if (e->id != HDR_OTHER) {
+	/* get rid of name copy */
+	stringClean(&e->name);
+	e->name = Headers[e->id].name;
 	/* we got something interesting, parse and cache the value */
 	httpHeaderEntrySyncCache(e);
     }
