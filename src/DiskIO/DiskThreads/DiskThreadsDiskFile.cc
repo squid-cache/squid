@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.3 2005/01/03 16:08:27 robertc Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.4 2005/03/27 21:47:38 serassio Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -309,7 +309,7 @@ DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, R
 void
 DiskThreadsDiskFile::
 #if ASYNC_WRITE
-WriteDone(int fd, void *my_data, int len, int errflag)
+WriteDone(int fd, void *my_data, const char *buf, int len, int errflag)
 #else
 WriteDone(int fd, int errflag, size_t len, void *my_data)
 #endif
@@ -325,19 +325,19 @@ DiskThreadsDiskFile::writeDone (int rvfd, int errflag, size_t len, WriteRequest:
 {
     assert (rvfd == fd);
     static int loop_detect = 0;
-    debug(79, 3) ("storeAufsWriteDone: FD %d, len %ld, err=%d\n",
-                  fd, (long int) len, errflag);
 
 #if ASYNC_WRITE
     /* Translate from errno to Squid disk error */
-    errno = errflag;
 
     if (errflag)
-        errflag = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
+        errflag = errflag == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
     else
         errflag = DISK_OK;
 
 #endif
+
+    debug(79, 3) ("storeAufsWriteDone: FD %d, len %ld, err=%d\n",
+                  fd, (long int) len, errflag);
 
     assert(++loop_detect < 10);
 
