@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.125 1997/06/26 22:41:46 wessels Exp $
+ * $Id: squid.h,v 1.126 1997/06/26 22:43:51 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -319,6 +319,10 @@ typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
+#endif
+
+#if !HAVE_SNPRINTF
+#include "snprintf.h"
 #endif
 
 extern void serverConnectionsClose _PARAMS((void));
