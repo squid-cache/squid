@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.404 2001/10/17 19:43:39 hno Exp $
+ * $Id: structs.h,v 1.405 2001/10/17 20:25:03 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -146,7 +146,7 @@ struct _auth_user_request_t {
  */
 
 struct _authscheme_entry {
-    char *typestr;
+    const char *typestr;
     AUTHSACTIVE *Active;
     AUTHSADDHEADER *AddHeader;
     AUTHSADDTRAILER *AddTrailer;
@@ -177,7 +177,7 @@ struct _authscheme_entry {
 /* private data types */
 struct _authScheme {
     /* pointer to the authscheme_list's string entry */
-    char *typestr;
+    const char *typestr;
     /* the scheme id in the authscheme_list */
     int Id;
     /* the scheme's configuration details. */
@@ -1520,7 +1520,7 @@ struct _StoreEntry {
 };
 
 struct _SwapDir {
-    char *type;
+    const char *type;
     int cur_size;
     int low_size;
     int max_size;
@@ -1658,7 +1658,7 @@ struct _cachemgr_passwd {
 };
 
 struct _refresh_t {
-    char *pattern;
+    const char *pattern;
     regex_t compiled_pattern;
     time_t min;
     double pct;
@@ -2108,7 +2108,7 @@ struct _store_rebuild_data {
  */
 
 struct _storefs_entry {
-    char *typestr;
+    const char *typestr;
     STFSPARSE *parsefunc;
     STFSRECONFIGURE *reconfigurefunc;
     STFSSHUTDOWN *donefunc;
@@ -2119,7 +2119,7 @@ struct _storefs_entry {
  */
 
 struct _storerepl_entry {
-    char *typestr;
+    const char *typestr;
     REMOVALPOLICYCREATE *create;
 };
 

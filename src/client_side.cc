@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.547 2001/10/12 23:33:01 hno Exp $
+ * $Id: client_side.cc,v 1.548 2001/10/17 20:25:01 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2559,7 +2559,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	if (opt_accel_uses_host && (t = mime_get_header(req_hdr, "Host"))) {
 	    int vport;
 	    char *q;
-	    char *protocol_name = "http";
+	    const char *protocol_name = "http";
 	    if (vport_mode)
 		vport = (int) ntohs(http->conn->me.sin_port);
 	    else

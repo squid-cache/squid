@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.382 2001/09/18 19:04:28 hno Exp $
+ * $Id: http.cc,v 1.383 2001/10/17 20:25:02 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -878,7 +878,7 @@ httpBuildRequestHeader(request_t * request,
 	if (*orig_request->peer_login == '*') {
 	    /* Special mode, to pass the username to the upstream cache */
 	    char loginbuf[256];
-	    char *username = "-";
+	    const char *username = "-";
 	    if (orig_request->auth_user_request)
 		username = authenticateUserRequestUsername(orig_request->auth_user_request);
 	    snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);

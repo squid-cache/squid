@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.298 2001/10/10 15:17:41 adrian Exp $
+ * $Id: neighbors.cc,v 1.299 2001/10/17 20:25:02 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -66,7 +66,7 @@ static u_short echo_port;
 static int NLateReplies = 0;
 static peer *first_ping = NULL;
 
-char *
+const char *
 neighborTypeStr(const peer * p)
 {
     if (p->type == PEER_NONE)

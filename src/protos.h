@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.417 2001/10/17 19:43:39 hno Exp $
+ * $Id: protos.h,v 1.418 2001/10/17 20:25:03 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -163,7 +163,7 @@ extern void comm_add_close_handler(int fd, PF *, void *);
 extern void comm_remove_close_handler(int fd, PF *, void *);
 extern int comm_udp_sendto(int, const struct sockaddr_in *, int, const void *, int);
 extern void comm_write(int fd,
-    char *buf,
+    const char *buf,
     int size,
     CWCB * handler,
     void *handler_data,
@@ -666,7 +666,7 @@ extern void peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup)
 extern void peerNoteDigestGone(peer * p);
 extern int neighborUp(const peer * e);
 extern CBDUNL peerDestroy;
-extern char *neighborTypeStr(const peer * e);
+extern const char *neighborTypeStr(const peer * e);
 extern peer_t neighborType(const peer *, const request_t *);
 extern void peerConnectFailed(peer *);
 extern void peerConnectSucceded(peer *);
@@ -769,7 +769,7 @@ extern char *authenticateUserUsername(auth_user_t *);
 extern char *authenticateUserRequestUsername(auth_user_request_t *);
 extern int authenticateValidateUser(auth_user_request_t *);
 extern void authenticateOnCloseConnection(ConnStateData * conn);
-extern void authSchemeAdd(char *type, AUTHSSETUP * setup);
+extern void authSchemeAdd(const char *type, AUTHSSETUP * setup);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
 extern int refreshIsCachable(const StoreEntry *);
@@ -929,8 +929,8 @@ extern void storeHeapPositionUpdate(StoreEntry *, SwapDir *);
 extern void storeSwapFileNumberSet(StoreEntry * e, sfileno filn);
 extern void storeFsInit(void);
 extern void storeFsDone(void);
-extern void storeFsAdd(char *, STSETUP *);
-extern void storeReplAdd(char *, REMOVALPOLICYCREATE *);
+extern void storeFsAdd(const char *, STSETUP *);
+extern void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
 
 /* store_modules.c */
 extern void storeFsSetup(void);
@@ -1082,7 +1082,7 @@ extern int intAverage(int, int, int, int);
 extern double doubleAverage(double, double, int, int);
 extern void debug_trap(const char *);
 extern void logsFlush(void);
-extern char *checkNullString(char *p);
+extern const char *checkNullString(const char *p);
 extern void squid_getrusage(struct rusage *r);
 extern double rusage_cputime(struct rusage *r);
 extern int rusage_maxrss(struct rusage *r);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.22 2001/02/17 07:28:50 hno Exp $
+ * $Id: store_log.cc,v 1.23 2001/10/17 20:25:03 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -35,7 +35,7 @@
 
 #include "squid.h"
 
-static char *storeLogTags[] =
+static const char *storeLogTags[] =
 {
     "CREATE",
     "SWAPIN",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.81 2001/08/31 11:19:12 robertc Exp $
+ * $Id: snmp_agent.cc,v 1.82 2001/10/17 20:25:03 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -77,7 +77,7 @@ variable_list *
 snmp_confFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    char *cp = NULL;
+    const char *cp = NULL;
     debug(49, 5) ("snmp_confFn: Processing request with magic %d!\n", Var->name[8]);
     *ErrP = SNMP_ERR_NOERROR;
     switch (Var->name[LEN_SQ_CONF]) {

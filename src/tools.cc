@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.209 2001/08/16 00:16:19 hno Exp $
+ * $Id: tools.cc,v 1.210 2001/10/17 20:25:03 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -761,8 +761,8 @@ logsFlush(void)
 	fflush(debug_log);
 }
 
-char *
-checkNullString(char *p)
+const char *
+checkNullString(const char *p)
 {
     return p ? p : "(NULL)";
 }
