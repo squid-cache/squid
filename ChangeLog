@@ -1,9 +1,6 @@
 
-Changes to Squid-2.4.DEVEL3 ():
+Changes to Squid ():
 
-	- Added Logfile module.
-	- Added DISKD stats via cachemgr.
-	- Added squid.conf options for DISKD magic constants.
 	- Added --enable-auth-modules=... configure option
 	- Improved ICP dead peer detection to also work when the workload
 	  is low
@@ -61,8 +58,16 @@ Changes to Squid-2.4.DEVEL3 ():
 	  a more modular fashion. The object replacement and IO is now
 	  responsibility of the storage directory, and not of the storage
 	  manager.
+	- Fixed a bogous MD5 mismatch warning sometimes seen when using
+	  aufs or diskd stores
 
-Changes to Squid-2.4.DEVEL2 ():
+Changes to Squid-2.4.DEVEL3 ():
+
+	- Added Logfile module.
+	- Added DISKD stats via cachemgr.
+	- Added squid.conf options for DISKD magic constants.
+
+Changes to Squid-2.4.DEVEL2 (Feb 29, 2000):
 
 Changes to Squid-2.4.DEVEL1 ():
 
