@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.4 1996/03/22 17:47:40 wessels Exp $ */
+/* $Id: main.cc,v 1.5 1996/03/22 20:56:36 wessels Exp $ */
 
 #include "config.h"
 #include <stdlib.h>
@@ -86,6 +86,9 @@ int main(argc, argv)
 
     cached_starttime = cached_curtime = time((time_t *) NULL);
     failure_notify = fatal_dump;
+
+    for (n = getMaxFD(); n > 2; n--)
+	close(n);
 
     /* try to use as many file descriptors as possible */
     /* System V uses RLIMIT_NOFILE and BSD uses RLIMIT_OFILE */
