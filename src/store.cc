@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.293 1997/10/17 23:32:38 wessels Exp $
+ * $Id: store.cc,v 1.294 1997/10/17 23:57:41 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -231,10 +231,6 @@ static void storeCreateHashTable _PARAMS((int (*)_PARAMS((const char *, const ch
 static int compareLastRef _PARAMS((StoreEntry **, StoreEntry **));
 static int compareBucketOrder _PARAMS((struct _bucketOrder *, struct _bucketOrder *));
 static int storeCheckExpired _PARAMS((const StoreEntry *, int flag));
-#if OLD_CODE
-static int storeCheckPurgeMem _PARAMS((const StoreEntry *));
-static int compareSize _PARAMS((StoreEntry **, StoreEntry **));
-#endif
 static struct _store_client *storeClientListSearch _PARAMS((const MemObject *, void *));
 static int storeCopy _PARAMS((const StoreEntry *, off_t, size_t, char *, size_t *));
 static int storeEntryLocked _PARAMS((const StoreEntry *));
@@ -1034,12 +1030,6 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     if (len) {
 	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n", len, e->key);
 	storeGetMemSpace(len);
-#if OLD_CODE
-	if (sm_stats.n_pages_in_use > store_pages_low) {
-	    if (mem->inmem_hi > Config.Store.maxObjectSize)
-		storeStartDeleteBehind(e);
-	}
-#endif
 	store_mem_size += len;
 	memAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
@@ -1597,13 +1587,6 @@ storeGetMemSpace(int size)
     int n_expired = 0;
     int n_purged = 0;
     int n_released = 0;
-#if OLD_CODE
-    int n_locked = 0;
-    StoreEntry **list = NULL;
-    int list_count = 0;
-    int i;
-    static int last_warning = 0;
-#endif
     static time_t last_check = 0;
     int pages_needed;
     struct _mem_entry *m;
@@ -1633,87 +1616,11 @@ storeGetMemSpace(int size)
 	if (sm_stats.n_pages_in_use + pages_needed < store_pages_low)
 	    break;
     }
-
-#if OLD_CODE
-    list = xcalloc(meta_data.mem_obj_count, sizeof(ipcache_entry *));
-    for (e = storeGetInMemFirst(); e; e = storeGetInMemNext()) {
-	if (list_count == meta_data.mem_obj_count)
-	    break;
-	if (storeEntryLocked(e))
-	    continue;
-	if (storeCheckExpired(e, 0)) {
-	    debug(20, 2) ("storeGetMemSpace: Expired: %s\n", e->url);
-	    n_expired++;
-	    storeRelease(e);
-	} else if (storeCheckPurgeMem(e)) {
-	    debug(20, 3) ("storeGetMemSpace: Adding '%s'\n", e->url);
-	    *(list + list_count) = e;
-	    list_count++;
-	} else if (!storeEntryLocked(e)) {
-	    debug(20, 3) ("storeGetMemSpace: Adding '%s'\n", e->url);
-	    *(list + list_count) = e;
-	    list_count++;
-	} else {
-	    n_locked++;
-	}
-    }
-    debug(20, 5) ("storeGetMemSpace: Sorting LRU_list: %7d items\n", list_count);
-    qsort((char *) list,
-	list_count,
-	sizeof(StoreEntry *),
-	(QS *) compareSize);
-    /* Kick LRU out until we have enough memory space */
-    for (i = 0; i < list_count; i++) {
-	if (sm_stats.n_pages_in_use + pages_needed < store_pages_low)
-	    break;
-	e = *(list + i);
-	if (storeCheckPurgeMem(e)) {
-	    storePurgeMem(e);
-	    n_purged++;
-	} else if (!storeEntryLocked(e)) {
-	    /* These will be neg-cached objects */
-	    n_released += storeRelease(e);
-	} else {
-	    fatal_dump("storeGetMemSpace: Bad Entry in LRU list");
-	}
-    }
-    i = 3;
-    if (sm_stats.n_pages_in_use > store_pages_max) {
-	if (sm_stats.n_pages_in_use > last_warning * 1.10) {
-	    debug(20, 0) ("WARNING: Exceeded 'cache_mem' size (%dK > %dK)\n",
-		sm_stats.n_pages_in_use * 4, store_pages_max * 4);
-	    last_warning = sm_stats.n_pages_in_use;
-	    debug(20, 0) ("Perhaps you should increase cache_mem?\n");
-	    i = 0;
-	}
-    }
-    debug(20, i) ("storeGetMemSpace stats:\n");
-    debug(20, i) ("  %6d objects locked in memory\n", n_locked);
-    debug(20, i) ("  %6d LRU candidates\n", list_count);
-    debug(20, i) ("  %6d were purged\n", n_purged);
-    debug(20, i) ("  %6d were released\n", n_released);
-    xfree(list);
-#endif
-
     debug(20, 0) ("storeGetMemSpace stats:\n");
     debug(20, 0) ("  %6d HOT objects\n", meta_data.hot_vm);
     debug(20, 0) ("  %6d were purged\n", n_purged);
     debug(20, 0) ("  %6d were released\n", n_released);
 }
-
-#if OLD_CODE
-static int
-compareSize(StoreEntry ** e1, StoreEntry ** e2)
-{
-    if (!e1 || !e2)
-	fatal_dump(NULL);
-    if ((*e1)->mem_obj->inmem_hi > (*e2)->mem_obj->inmem_hi)
-	return (1);
-    if ((*e1)->mem_obj->inmem_hi < (*e2)->mem_obj->inmem_hi)
-	return (-1);
-    return (0);
-}
-#endif
 
 static int
 compareLastRef(StoreEntry ** e1, StoreEntry ** e2)
@@ -1981,6 +1888,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     int i;
     MemObject *mem = e->mem_obj;
     struct _store_client *oldlist = NULL;
+    struct _store_client *sc;
     int oldsize;
     if (mem == NULL)
 	mem = e->mem_obj = new_MemObject(urlClean(e->url));
@@ -2006,10 +1914,12 @@ storeClientListAdd(StoreEntry * e, void *data)
 	safe_free(oldlist);
 	i = oldsize;
     }
-    mem->clients[i].callback_data = data;
-    mem->clients[i].seen_offset = 0;
-    mem->clients[i].copy_offset = 0;
-    mem->clients[i].swapin_fd = -1;
+    sc = &mem->clients[i];
+    sc->callback_data = data;
+    sc->seen_offset = 0;
+    sc->copy_offset = 0;
+    sc->swapin_fd = -1;
+    sc->mem = mem;
     return i;
 }
 
@@ -2097,14 +2007,12 @@ static void
 storeClientCopyHandleRead(int fd, const char *buf, int len, int flag, void *data)
 {
     struct _store_client *sc = data;
-    debug(20, 3) ("storeClientCopyHandleRead: FD %d\n", fd);
-    debug(20, 3) ("storeClientCopyHandleRead: buf = %p\n", buf);
-    debug(20, 3) ("storeClientCopyHandleRead: len = %d\n", len);
-    debug(20, 3) ("storeClientCopyHandleRead: flag = %d\n", flag);
-    debug(20, 3) ("storeClientCopyHandleRead: data = %p\n", data);
+    MemObject *mem = sc->mem;
+    debug(20, 3) ("storeClientCopyHandleRead: FD %d, len %d\n", fd, len);
+    if (len > 0 && sc->copy_offset == 0)
+        httpParseReplyHeaders(buf, mem->reply);
     sc->callback(sc->callback_data, sc->copy_buf, len);
 }
-
 
 static int
 storeEntryValidLength(const StoreEntry * e)
@@ -2504,25 +2412,6 @@ storeKeepInMemory(const StoreEntry * e)
 	return 0;
     return mem->inmem_lo == 0;
 }
-
-#if OLD_CODE
-/*
- * Check if its okay to remove the memory data for this object, but 
- * leave the StoreEntry around.  Designed to be called from
- * storeUnlockObject() and storeSwapOutHandle().
- */
-static int
-storeCheckPurgeMem(const StoreEntry * e)
-{
-    if (storeEntryLocked(e))
-	return 0;
-    if (e->store_status != STORE_OK)
-	return 0;
-    if (e->swap_status != SWAPOUT_DONE)
-	return 0;
-    return 1;
-}
-#endif
 
 static int
 storeCheckExpired(const StoreEntry * e, int check_lru_age)
