@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.43 1996/12/20 23:45:39 wessels Exp $
+ * $Id: fqdncache.cc,v 1.44 1997/02/04 23:18:16 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -657,6 +657,8 @@ static void
 fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 {
     char *buf = NULL;
+    if (!BIT_TEST(dns->flags, DNS_FLAG_ALIVE))
+        debug_trap("Dispatching a dead DNS server");
     if (!fqdncacheHasPending(f)) {
 	debug(35, 0, "fqdncache_dnsDispatch: skipping '%s' because no handler.\n",
 	    f->name);
