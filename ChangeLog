@@ -8,6 +8,11 @@ UPCOMING CHANGES:
 	- Experiment with returning network probe measurments in ICP
 	  replies.
 
+Changes to squid-1.1.beta15 ():
+
+	- Fixed entry->clients[].fd initialization bug causing all
+	  large objects to get stuck.
+
 Changes to squid-1.1.beta14 ():
 
 	- Added pw_encrypt() check to configure.
