@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.594 2002/09/24 11:31:19 robertc Exp $
+ * $Id: client_side.cc,v 1.595 2002/09/26 13:33:08 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -171,7 +171,7 @@ static void connNoteUseOfBuffer(ConnStateData * conn, int byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
 static ConnStateData *connStateCreate(struct sockaddr_in peer, struct sockaddr_in me, int fd);
-static clientStreamNode * getClientReplyContext(clientSocketContext * context);
+static clientStreamNode *getClientReplyContext(clientSocketContext * context);
 static int connAreAllContextsForThisConnection(ConnStateData * connState);
 static void connFreeAllContexts(ConnStateData * connState);
 static void clientPullData(clientSocketContext * context);
@@ -412,14 +412,14 @@ httpRequestFree(void *data)
     assert(http != NULL);
     request = http->request;
     debug(33, 3) ("httpRequestFree: %s\n", http->uri);
-    /* FIXME: This needs to use the stream */
-    if (!clientCheckTransferDone(http)) {
-	if (request && request->body_connection)
-	    clientAbortBody(request);	/* abort body transter */
-	/* the ICP check here was erroneous
-	 * - storeReleaseRequest was always called if entry was valid 
-	 */
-    }
+    /* if body_connection !NULL, then ProcessBody has not
+     * found the end of the body yet
+     */
+    if (request && request->body_connection)
+	clientAbortBody(request);	/* abort body transter */
+    /* the ICP check here was erroneous
+     * - storeReleaseRequest was always called if entry was valid 
+     */
     assert(http->logType < LOG_TYPE_MAX);
     clientLogRequest(http);
     if (request)
@@ -608,6 +608,8 @@ contextSendStartOfMessage(clientSocketContext * context, HttpReply * rep, StoreI
     /* init mb; put status line and headers if any */
     if (rep) {
 	mb = httpReplyPack(rep);
+	/* Save length of headers for persistent conn checks */
+	context->http->out.headers_sz = mb.size;
 #if HEADERS_LOG
 	headersLog(0, 0, context->http->request->method, rep);
 #endif

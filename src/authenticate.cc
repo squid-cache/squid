@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.39 2002/07/15 22:13:27 hno Exp $
+ * $Id: authenticate.cc,v 1.40 2002/09/26 13:33:08 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -44,6 +44,7 @@ CBDATA_TYPE(auth_user_ip_t);
 
 static void
      authenticateDecodeAuth(const char *proxy_auth, auth_user_request_t * auth_user_request);
+static auth_acl_t authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr);
 
 /*
  *
@@ -424,6 +425,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 {
     const char *proxy_auth;
     assert(headertype != 0);
+
     proxy_auth = httpHeaderGetStr(&request->header, headertype);
 
     if (conn == NULL) {
@@ -569,6 +571,27 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
     /* Unlock the request - we've authenticated it */
     authenticateAuthUserRequestUnlock(*auth_user_request);
     return AUTH_AUTHENTICATED;
+}
+
+auth_acl_t
+authenticateTryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
+{
+    /* If we have already been called, return the cached value */
+    auth_user_request_t *t = *auth_user_request ? *auth_user_request : conn->auth_user_request;
+    auth_acl_t result;
+    if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
+	&& t->lastReply != AUTH_ACL_HELPER) {
+	if (!*auth_user_request)
+	    *auth_user_request = t;
+	return t->lastReply;
+    }
+    /* ok, call the actual authenticator routine. */
+    result = authenticateAuthenticate(auth_user_request, headertype, request, conn, src_addr);
+    t = *auth_user_request ? *auth_user_request : conn->auth_user_request;
+    if (t && result != AUTH_ACL_CANNOT_AUTHENTICATE &&
+	result != AUTH_ACL_HELPER)
+	t->lastReply = result;
+    return result;
 }
 
 
@@ -733,6 +756,8 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
     if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0)
 	&& (authscheme_list[auth_user_request->auth_user->auth_module - 1].AddHeader))
 	authscheme_list[auth_user_request->auth_user->auth_module - 1].AddHeader(auth_user_request, rep, accelerated);
+    if (auth_user_request != NULL)
+	auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
 }
 
 /* call the active auth module and allow it to add a trailer to the request */
