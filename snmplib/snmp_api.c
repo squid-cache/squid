@@ -955,7 +955,8 @@ snmp_read(fdset)
     struct snmp_internal_session *isp;
     u_char packet[PACKET_LENGTH];
     struct sockaddr_in from;
-    ssize_t length, fromlength;
+    ssize_t length;
+    int fromlength;
     struct snmp_pdu *pdu;
     struct request_list *rp /**, *orp **/ ;
 
@@ -964,7 +965,12 @@ snmp_read(fdset)
 	    sp = slp->session;
 	    isp = slp->internal;
 	    fromlength = sizeof(from);
-	    length = recvfrom(isp->sd, (char *) packet, PACKET_LENGTH, 0, (struct sockaddr *) &from, &fromlength);
+	    length = recvfrom(isp->sd,
+		(char *) packet,
+		PACKET_LENGTH,
+		0,
+		(struct sockaddr *) &from,
+		&fromlength);
 	    if (length == -1) {
 		perror("recvfrom");
 		return;
