@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.109 1998/07/23 19:57:49 wessels Exp $
+ * $Id: fqdncache.cc,v 1.110 1998/07/29 03:57:38 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -82,6 +82,7 @@ static FREE fqdncacheFreeEntry;
 static hash_table *fqdn_table = NULL;
 static struct fqdncacheQueueData *fqdncacheQueueHead = NULL;
 static struct fqdncacheQueueData **fqdncacheQueueTailP = &fqdncacheQueueHead;
+static int queue_length = 0;
 
 static char fqdncache_status_char[] =
 {
@@ -97,10 +98,24 @@ static long fqdncache_high = 200;
 static void
 fqdncacheEnqueue(fqdncache_entry * f)
 {
+    static time_t last_warning = 0;
     struct fqdncacheQueueData *new = xcalloc(1, sizeof(struct fqdncacheQueueData));
     new->f = f;
     *fqdncacheQueueTailP = new;
     fqdncacheQueueTailP = &new->next;
+    queue_length++;
+    if (queue_length < NDnsServersAlloc)
+	return;
+    if (squid_curtime - last_warning < 600)
+	return;
+    last_warning = squid_curtime;
+    debug(35, 0) ("fqdncacheEnqueue: WARNING: All dnsservers are busy.\n");
+    debug(35, 0) ("fqdncacheEnqueue: WARNING: %d DNS lookups queued\n", queue_length);
+    if (queue_length > NDnsServersAlloc * 2)
+	fatal("Too many queued DNS lookups");
+    if (Config.dnsChildren >= DefaultDnsChildrenMax)
+	return;
+    debug(35, 1) ("fqdncacheEnqueue: Consider increasing 'dns_children' in your config file.\n");
 }
 
 static void *
@@ -115,6 +130,7 @@ fqdncacheDequeue(void)
 	if (fqdncacheQueueHead == NULL)
 	    fqdncacheQueueTailP = &fqdncacheQueueHead;
 	safe_free(old);
+	queue_length--;
     }
     if (f && f->status != FQDN_PENDING)
 	debug_trap("fqdncacheDequeue: status != FQDN_PENDING");
@@ -193,7 +209,7 @@ fqdncache_purgelru(void *notused)
 	fqdncache_release(f);
 	removed++;
     }
-    debug(14, 3) ("fqdncache_purgelru: removed %d entries\n", removed);
+    debug(35, 3) ("fqdncache_purgelru: removed %d entries\n", removed);
 }
 
 
@@ -228,7 +244,7 @@ fqdncacheAddNew(const char *name, const struct hostent *hp, fqdncache_status_t s
 {
     fqdncache_entry *f;
     assert(fqdncache_get(name) == NULL);
-    debug(14, 10) ("fqdncacheAddNew: Adding '%s', status=%c\n",
+    debug(35, 10) ("fqdncacheAddNew: Adding '%s', status=%c\n",
 	name,
 	fqdncache_status_char[status]);
     f = fqdncache_create(name);
@@ -274,13 +290,13 @@ fqdncacheParse(const char *inbuf, dnsserver_t * dnsData)
     static fqdncache_entry f;
     int ttl;
     xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(14, 5) ("fqdncacheParse: parsing:\n%s", buf);
+    debug(35, 5) ("fqdncacheParse: parsing:\n%s", buf);
     memset(&f, '\0', sizeof(f));
     f.expires = squid_curtime;
     f.status = FQDN_NEGATIVE_CACHED;
     token = strtok(buf, w_space);
     if (NULL == token) {
-	debug(14, 1) ("fqdncacheParse: Got <NULL>, expecting '$name'\n");
+	debug(35, 1) ("fqdncacheParse: Got <NULL>, expecting '$name'\n");
 	return &f;
     }
     if (0 == strcmp(token, "$fail")) {
@@ -291,12 +307,12 @@ fqdncacheParse(const char *inbuf, dnsserver_t * dnsData)
 	return &f;
     }
     if (0 != strcmp(token, "$name")) {
-	debug(14, 1) ("fqdncacheParse: Got '%s', expecting '$name'\n", token);
+	debug(35, 1) ("fqdncacheParse: Got '%s', expecting '$name'\n", token);
 	return &f;
     }
     token = strtok(NULL, w_space);
     if (NULL == token) {
-	debug(14, 1) ("fqdncacheParse: Got <NULL>, expecting TTL\n");
+	debug(35, 1) ("fqdncacheParse: Got <NULL>, expecting TTL\n");
 	return &f;
     }
     f.status = FQDN_CACHED;
@@ -383,7 +399,7 @@ fqdncache_dnsHandleRead(int fd, void *data)
 	}
 	fqdncacheUnlockEntry(f);	/* unlock from FQDN_DISPATCHED */
     } else {
-	debug(14, 5) ("fqdncache_dnsHandleRead: Incomplete reply\n");
+	debug(35, 5) ("fqdncache_dnsHandleRead: Incomplete reply\n");
 	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    fqdncache_dnsHandleRead,
@@ -459,7 +475,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
 	FqdncacheStats.pending_hits++;
 	fqdncacheAddPending(f, handler, handlerData);
 	if (squid_curtime - f->expires > 600) {
-	    debug(14, 0) ("fqdncache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name,
+	    debug(35, 0) ("fqdncache_nbgethostbyname: '%s' PENDING for %d seconds, aborting\n", name,
 		(int) (squid_curtime + Config.negativeDnsTtl - f->expires));
 	    fqdncacheChangeKey(f);
 	    fqdncache_call_pending(f);
@@ -536,7 +552,7 @@ fqdncache_init(void)
     fqdncache_low = (long) (((float) MAX_FQDN *
 	    (float) FQDN_LOW_WATER) / (float) 100);
     n = hashPrime(fqdncache_high / 4);
-    fqdn_table = hash_create((HASHCMP*) strcmp, n, hash4);
+    fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
     cachemgrRegister("fqdncache",
 	"FQDN Cache Stats and Contents",
 	fqdnStats, 0, 1);
@@ -629,6 +645,7 @@ fqdnStats(StoreEntry * sentry)
 	FqdncacheStats.misses);
     storeAppendPrintf(sentry, "Blocking calls to gethostbyaddr(): %d\n",
 	FqdncacheStats.ghba_calls);
+    storeAppendPrintf(sentry, "pending queue length: %d\n", queue_length);
     storeAppendPrintf(sentry, "FQDN Cache Contents:\n\n");
 
     hash_first(fqdn_table);
@@ -736,7 +753,7 @@ fqdncacheChangeKey(fqdncache_entry * f)
     LOCAL_ARRAY(char, new_key, 256);
     hash_link *table_entry = hash_lookup(fqdn_table, f->name);
     if (table_entry == NULL) {
-	debug(14, 0) ("fqdncacheChangeKey: Could not find key '%s'\n", f->name);
+	debug(35, 0) ("fqdncacheChangeKey: Could not find key '%s'\n", f->name);
 	return;
     }
     if (f != (fqdncache_entry *) table_entry) {
@@ -746,7 +763,7 @@ fqdncacheChangeKey(fqdncache_entry * f)
     hash_remove_link(fqdn_table, table_entry);
     snprintf(new_key, 256, "%d/", ++index);
     strncat(new_key, f->name, 128);
-    debug(14, 1) ("fqdncacheChangeKey: from '%s' to '%s'\n", f->name, new_key);
+    debug(35, 1) ("fqdncacheChangeKey: from '%s' to '%s'\n", f->name, new_key);
     safe_free(f->name);
     f->name = xstrdup(new_key);
     hash_join(fqdn_table, (hash_link *) f);
