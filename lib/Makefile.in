@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.1 1996/02/22 06:23:57 wessels Exp $
+#  $Id: Makefile.in,v 1.2 1996/02/23 05:46:17 wessels Exp $
 #
 prefix = @prefix@
 INSTALL_BINDIR	= $(prefix)/bin
@@ -25,22 +25,32 @@ DEBUG_LIBS	=
 CFLAGS		= $(DEBUG) $(CACHE_FLAGS) -I../include $(XTRA_CFLAGS)
 
 LIBDIR		= .
-UTILOBJS	= rfc850.o rfc1738.o util.o host_cache.o getfullhostname.o \
-		  debug.o log.o
-LIBS		= libutil.a
+UTILOBJS	= rfc850.o \
+		  rfc1738.o \
+		  util.o \
+		  host_cache.o \
+		  getfullhostname.o \
+		  debug.o \
+		  log.o
+REGEXOBJS	= regex.o
+LIBS		= libutil.a libregex.a
 
 
-all:	$(LIBS)
+all: $(LIBS)
 
 libutil.a: $(UTILOBJS)
 	ar r $@ $(UTILOBJS)
 	$(RANLIB) $@
 
+libregex.a: $(REGEXOBJS)
+	ar r $@ $(REGEXOBJS)
+	$(RANLIB) $@
+
 clean:
 	-rm -f $(UTILOBJS) $(LIBS) core
 
-realclean:	clean
+realclean: clean
 	-rm -f libregex.a
 	-rm -f Makefile
 
-install:	all
+install: all
