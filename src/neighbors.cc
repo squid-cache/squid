@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.273 1999/05/04 21:58:28 wessels Exp $
+ * $Id: neighbors.cc,v 1.274 1999/05/11 18:45:46 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -565,7 +565,8 @@ neighborsDigestSelect(request_t * request, StoreEntry * entry)
     peer *p;
     int p_rtt;
     int i;
-
+    if (!request->flags.hierarchical)
+	return NULL;
     key = storeKeyPublic(storeUrl(entry), request->method);
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	lookup_t lookup;
