@@ -1,0 +1,108 @@
+#
+#  Makefile for the Harvest Object Cache server
+#
+#  $Id: Makefile.in,v 1.1 1996/02/22 06:23:53 wessels Exp $
+#
+#  Uncomment and customize the following to suit your needs:
+#
+WAIS_OPT	= # -DUSE_WAIS_RELAY 
+LOG_OPT		= # -DNO_LOGGGING
+PORT_OPT	= # -DCACHE_HTTP_PORT=3128 -DCACHE_ICP_PORT=3130
+HOST_OPT	= # -DCACHEMGR_HOSTNAME="getfullhostname()"
+DEFINES		= $(WAIS_OPT) $(LOG_OPT) $(PORT_OPT) $(HOST_OPT)
+
+prefix = @prefix@
+top_srcdir = @top_srcdir@
+INSTALL_BINDIR	= $(prefix)/bin
+INSTALL_LIBDIR	= $(prefix)/lib
+INSTALL_MANDIR 	= $(prefix)/man
+INSTALL_CGIDIR  = $(prefix)/cgi-bin
+
+CC		= @CC@
+INSTALL		= @INSTALL@
+INSTALL_BIN 	= @INSTALL_PROGRAM@
+INSTALL_FILE 	= @INSTALL_DATA@
+RANLIB		= @RANLIB@
+YACC		= @YACC@
+LEX		= @LEX@
+LEXLIB		= @LEXLIB@
+LN_S		= @LN_S@
+PERL		= @CMD_PERL@
+CRYPT_LIB	= @CRYPT_LIB@
+XTRA_CFLAGS	= @XTRA_CFLAGS@
+XTRA_LIBS	= @XTRA_LIBS@
+XTRA_OBJS 	= @XTRA_OBJS@
+DEBUG_TOP 	= @DEBUG_TOP@
+
+
+## AIX users might need to use these values
+#
+#CC		= cc
+#XTRA_CFLAGS	= -D_HARVEST_HPUX_ -d_AIX -D_ALL_SOURCE
+#
+# In addition, add -DBUGGY_AIX_SOCKETS if you suspect your sockets
+# implementation is broken.
+
+## LINUX users might need to use these values
+#
+#XTRA_CFLAGS	= -D_ALL_SOURCE
+
+DEBUG		= $(DEBUG_TOP) #-O #-g #-DDEBUG
+INCLUDE		= -I. -I../include	# MUST use -I. first
+CFLAGS 		= $(CCOPTS) $(DEBUG) $(INCLUDE) $(DEFINES) $(XTRA_CFLAGS) 
+LDFLAGS         = $(DEBUG_TOP) $(LDOPTS) -L../lib
+LIBS		= -lregex -lutil $(XTRA_LIBS) $(CRYPT_LIB)
+CLIENT_LIBS	= -lutil $(XTRA_LIBS)
+
+PROGS		= cached 
+UTILS		= client dnsserver
+CGIPROGS	= cachemgr.cgi
+OBJS	 	= comm.o cache_cf.o debug.o disk.o dynamic_array.o \
+		  fdstat.o filemap.o ftp.o gopher.o hash.o \
+		  http.o icp.o ipcache.o mime.o neighbors.o objcache.o \
+		  proto.o stack.o stat.o stmem.o store.o storetoString.o \
+		  tools.o ttl.o url.o wais.o $(XTRA_OBJS)
+
+MK_TABLE_H	= ../url/mk-mime-table-h.pl
+MIME_TABLE	= ../url/mime.table
+
+all:	$(PROGS) $(UTILS) $(CGIPROGS)
+
+cached:	../include/mime_table.h main.o $(OBJS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) main.o $(LIBS)
+
+client:	client.o
+	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)
+
+dnsserver: dnsserver.o
+	$(CC) -o $@ $(LDFLAGS) $@.o $(LIBS)
+
+cachemgr.cgi:	cachemgr.o
+	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
+
+../include/mime_table.h: $(MK_TABLE_H) $(MIME_TABLE)
+	$(PERL) $(MK_TABLE_H) < $(MIME_TABLE) > $@
+
+install: all
+	@for f in $(PROGS); do \
+		echo $(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
+		$(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
+	done
+	@for f in $(UTILS); do \
+		echo $(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
+		$(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
+	done
+	@for f in $(CGIPROGS); do \
+		echo $(INSTALL_BIN) $$f $(INSTALL_CGIDIR); \
+		$(INSTALL_BIN) $$f $(INSTALL_CGIDIR); \
+	done
+
+clean: 
+	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS)
+
+realclean:	clean
+	-rm -f Makefile ../include/mime_table.h
+
+tar:
+	-rm -f cache.tar
+	tar cf cache.tar *.c *.h cached.conf Makefile*

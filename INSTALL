@@ -1,0 +1,40 @@
+Change the prefix variable in ./Makefile to be the directory in which
+you would like to install the Harvest Cache.  The default is
+/usr/local/harvest.
+
+To build and install the Harvest Cache, type:
+
+        % make all
+        % make install
+
+To run a Cache, you will need to:
+
+	1. set the HARVEST_HOME environment variable, as appropriate:
+	      % setenv HARVEST_HOME /usr/local/harvest
+
+	2. customize the cached.conf configuration file:
+	      % vi $HARVEST_HOME/lib/cached.conf
+
+	3. start the cache:
+	      % $HARVEST_HOME/bin/RunCache
+
+If you want to use the WWW interface to the Cache Manager, copy
+the cachemgr.cgi program into your httpd server's cgi-bin
+directory.
+
+Alternatively, you can configure your HTTP server to recognize CGI
+scripts in $HARVEST_HOME/cgi-bin.  For example, with NCSA httpd, add
+this line to the srm.conf file:
+
+        ScriptAlias /Harvest/cgi-bin/ Your-HARVEST_HOME/cgi-bin/
+
+Then, use <URL:http://host/Harvest/cgi-bin/cachemgr.cgi> to access the
+WWW interface to the Cache Manager.
+
+For further or more detailed instructions on how to run the Cache, 
+refer to the Harvest User's Manual:
+        http://harvest.cs.colorado.edu/harvest/doc.html
+
+To run the Cache as an httpd accelerator, follow the instructions here:
+        http://harvest.cs.colorado.edu/harvest/httpd_accel.html
+

@@ -1,0 +1,29 @@
+#
+#  This file is a Makefile for compiling and installing Cache Manager. 
+#  Cache Manager is a manager program for Internet Object Cache.
+#
+
+prefix = @prefix@
+INSTALL_BINDIR	= $(prefix)/bin
+INSTALL_LIBDIR	= $(prefix)/lib
+INSTALL_MANDIR 	= $(prefix)/man
+
+CC		= @CC@
+INSTALL		= @INSTALL@
+INSTALL_BIN 	= @INSTALL_PROGRAM@
+INSTALL_FILE 	= @INSTALL_DATA@
+RANLIB		= @RANLIB@
+LN_S		= @LN_S@
+
+all: 
+
+install:	
+	$(INSTALL_BIN) RunCache $(INSTALL_BINDIR)
+	$(INSTALL_BIN) RunAccel $(INSTALL_BINDIR)
+	$(INSTALL_BIN) CachedMosaic $(INSTALL_BINDIR)
+	$(INSTALL_BIN) CachedLynx $(INSTALL_BINDIR)
+
+clean:
+
+realclean:
+	-rm -f RunCache RunAccel

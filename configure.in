@@ -1,0 +1,214 @@
+dnl
+dnl  Configuration input file for Harvest
+dnl
+dnl  Darren Hardy, hardy@cs.colorado.edu, July 1994 (autoconf v1.11)
+dnl  Darren Hardy, hardy@cs.colorado.edu, July 1995 (autoconf v2.4)
+dnl
+dnl  $Id: configure.in,v 1.1 1996/02/22 06:23:53 wessels Exp $
+dnl
+dnl
+dnl TODO:
+dnl
+dnl	- use -lgen instead of -lregex on Solaris if available.
+dnl
+AC_INIT(include/config.h)
+AC_CONFIG_HEADER(include/autoconf.h)
+AC_REVISION($Revision: 1.1 $)dnl
+AC_PREFIX_DEFAULT(/usr/local/harvest)
+
+dnl Build a copy of prefix
+
+if test -n "$prefix"; then
+  myprefix="$prefix";
+else
+  myprefix='/usr/local/harvest';
+fi
+
+INSTALL_TOPDIR="$myprefix";
+INSTALL_LIBDIR="$myprefix/lib";
+INSTALL_BINDIR="$myprefix/bin";
+INSTALL_MANDIR="$myprefix/man";
+
+THIS_HOST="`hostname`"
+XTRA_CFLAGS=''
+XTRA_LIBS=''
+CRYPT_LIB=''
+
+SOCKET_PH_TYPE='default'
+
+echo '-----------------------'
+echo "Installing Harvest in $myprefix"
+echo '-----------------------'
+
+dnl Subsitutions
+AC_SUBST(INSTALL_TOPDIR)
+AC_SUBST(INSTALL_LIBDIR)
+AC_SUBST(INSTALL_BINDIR)
+AC_SUBST(INSTALL_MANDIR)
+AC_SUBST(DEFS)
+AC_SUBST(XTRA_CFLAGS)
+AC_SUBST(THIS_HOST)
+AC_SUBST(SOCKET_PH_TYPE)
+
+dnl Check for GNU cc
+AC_PROG_CC
+
+dnl Warn if not using GNU cc
+XXXCC=`echo $CC | awk '{print $1}'`
+if test "`basename $XXXCC`" != "gcc"
+then
+        echo '**************************************************************';
+        echo '**************************************************************';
+        echo '**************************************************************';
+        echo '**************************************************************';
+        echo '**************************************************************';
+        echo '**';
+        echo '**   WARNING:  You should compile Harvest using GNU cc.';
+        echo "**   Currently, you're using $CC";
+        echo '**   ';
+        echo '**   For more information about the platforms on which';
+        echo '**   Harvest works, see: ';
+        echo '**    http://harvest.cs.colorado.edu/harvest/FAQ.html#platforms';
+        echo '**   ';
+        echo '**************************************************************';
+        echo '**************************************************************';
+        echo '**************************************************************';
+        echo '**************************************************************';
+        echo '**************************************************************';
+	sleep 5
+fi
+
+dnl Check for programs
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_RANLIB
+AC_PROG_LN_S
+AC_PATH_PROG(RM, rm, /bin/false)
+AC_PATH_PROG(MV, mv, /bin/false)
+AC_PATH_PROG(MKDIR, mkdir, /bin/false)
+AC_PATH_PROG(LN, ln, cp)
+AC_PATH_PROG(CMD_GZIP, gzip, /bin/false)
+AC_PATH_PROG(CMD_GUNZIP, gunzip, /bin/false)
+AC_PATH_PROG(CMD_UNZIP, unzip, /bin/false)
+AC_PATH_PROG(CMD_UNCOMPRESS, uncompress, /bin/false)
+AC_PATH_PROG(CMD_PERL, perl, /bin/false)
+
+dnl Set PERL too
+PERL="$CMD_PERL"
+AC_SUBST(PERL)
+
+dnl Check for headers
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADERS(config.h fcntl.h memory.h stdlib.h string.h unistd.h \
+                 syslog.h sys/file.h sys/types.h sys/syslog.h sys/time.h \
+                 regex.h netinet/in.h arpa/inet.h crypt.h alloca.h)
+AC_EGREP_HEADER(mxfast, malloc.h, [XTRA_CFLAGS="$XTRA_CFLAGS -DLNG_MALLINFO"], [XTRA_CFLAGS="$XTRA_CFLAGS"])
+
+dnl Check for typedefs
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+
+
+dnl Decide if we should really use -lmalloc.  It is known to have
+dnl problems on SunOS 5.4 at least.
+dnl
+if test -x "/bin/uname"; then
+        if /bin/uname -sr | grep ['SunOS 5.[0-9]'] >/dev/null 2>&1; then
+                NO_LIBMALLOC=x
+		XTRA_CFLAGS="-DUSE_MALLINFO=0 -DUSE_MALLOPT=0 $XTRA_CFLAGS"
+        fi
+fi
+
+
+dnl Check for library functions
+AC_CHECK_FUNCS(getdtablesize sysconf strerror setrlimit strdup \
+               regcomp regexec regfree timegm)
+
+dnl Check for needed libraries
+AC_CHECK_LIB(socket, main, [XTRA_LIBS="$XTRA_LIBS -lsocket"])
+if test x$NO_LIBMALLOC = x ; then
+	AC_CHECK_LIB(malloc, main, [XTRA_LIBS="$XTRA_LIBS -lmalloc"])
+fi
+AC_CHECK_LIB(nsl, main, [XTRA_LIBS="$XTRA_LIBS -lnsl"])
+AC_CHECK_LIB(resolv, main, [XTRA_LIBS="$XTRA_LIBS -lresolv"])
+AC_CHECK_LIB(bsd, main, [XTRA_LIBS="$XTRA_LIBS -lbsd"])
+
+dnl We found a version of libresolv on SunOS 4.x which requires -l44bsd
+dnl We have to first check to see if -l44bsd is present and has the
+dnl function inet_aton 
+AC_CHECK_LIB(44bsd, inet_aton, [HAVE_44BSD="yes"])
+AC_CHECK_LIB(resolv, inet_aton, [if test "$HAVE_44BSD" = "yes"; then XTRA_LIBS="$XTRA_LIBS -l44bsd"; fi])
+
+dnl Check for libcrypt
+dnl cached uses crypt(3) which may be in libc, or in libcrypt (eg FreeBSD)
+AC_CHECK_LIB(crypt, crypt, [CRYPT_LIB="-lcrypt"])
+
+dnl Need the debugging version of malloc if available
+XTRA_OBJS=''
+if test x$NO_LIBMALLOC != x ; then
+	if test -r /usr/lib/debug/malloc.o ; then
+		XTRA_OBJS="$XTRA_OBJS /usr/lib/debug/malloc.o"
+	fi
+	if test -r /usr/lib/debug/mallocmap.o ; then
+		XTRA_OBJS="$XTRA_OBJS /usr/lib/debug/mallocmap.o"
+	fi
+fi
+AC_SUBST(XTRA_OBJS)
+
+AC_SUBST(CRYPT_LIB)
+
+dnl Override XTRA_LIBS
+if test -n "$XTRA_LIBS_OVERRIDE"; then
+  XTRA_LIBS="$XTRA_LIBS_OVERRIDE";
+fi
+AC_SUBST(XTRA_LIBS)
+
+dnl Set the XXMyOs variable
+dnl
+if test -x "/bin/uname"; then
+        XXMyOs=`/bin/uname`;
+fi
+
+dnl Set DEBUG_TOP
+if test -z "$DEBUG_TOP"; then
+    if test "HP-UX" = "$XXMyOs"; then
+    	DEBUG_TOP='#-g #-O'
+    else
+    	DEBUG_TOP='-g #-O'
+    fi
+fi
+AC_SUBST(DEBUG_TOP)
+
+dnl Disable ranlib if on HP-UX
+dnl
+if test "HP-UX" = "$XXMyOs"; then
+	RANLIB=":";
+fi
+
+dnl Additions for IRIX
+dnl	- add ANSI compile flag
+if test "IRIX" = "$XXMyOs"; then
+	XXXCC=`echo $CC | awk '{print $1}'`
+	if test "`basename $XXXCC`" = "gcc"; then
+		[XTRA_CFLAGS="$XTRA_CFLAGS -ansi"]
+	else
+		[XTRA_CFLAGS="$XTRA_CFLAGS -D__STRICT_ANSI__"]
+	fi
+fi
+
+
+dnl Clean up after OSF/1 core dump bug
+rm -f core 
+
+AC_OUTPUT(\
+	./lib/Makefile \
+	./server/Makefile \
+	./include/paths.h \
+	./regex/Makefile \
+	./url/Makefile \
+	./scripts/Makefile \
+	./scripts/RunCache \
+	./scripts/RunAccel \
+	./announce/Makefile \
+)
