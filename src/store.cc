@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.127 1996/10/10 18:48:52 wessels Exp $
+ * $Id: store.cc,v 1.128 1996/10/10 18:52:23 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -603,6 +603,7 @@ storeUnlockObject(StoreEntry * e)
 	storePurgeMem(e);
     } else {
 	requestUnlink(mem->request);
+        mem->request = NULL;
     }
     return 0;
 }
