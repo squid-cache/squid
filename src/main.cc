@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.119 1996/11/30 23:09:54 wessels Exp $
+ * $Id: main.cc,v 1.120 1996/12/01 00:19:00 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -411,6 +411,8 @@ serverConnectionsOpen(void)
 #if defined(IP_ADD_MEMBERSHIP) && defined(IP_MULTICAST_TTL)
 	if (Config.vizHack.addr.s_addr > inet_addr("224.0.0.0")) {
 	    struct ip_mreq mr;
+	    char ttl = (char) Config.vizHack.mcast_ttl;
+	    memset((char *) &mr, '\0', sizeof(struct ip_mreq));
 	    mr.imr_multiaddr.s_addr = Config.vizHack.addr.s_addr;
 	    mr.imr_interface.s_addr = INADDR_ANY;
 	    x = setsockopt(vizSock,
@@ -419,15 +421,25 @@ serverConnectionsOpen(void)
 		(char *) &mr,
 		sizeof(struct ip_mreq));
 	    if (x < 0)
-		debug(5, 1, "IP_ADD_MEMBERSHIP: FD %d, addr %s: %s\n",
+		debug(50, 1, "IP_ADD_MEMBERSHIP: FD %d, addr %s: %s\n",
 		    vizSock, inet_ntoa(Config.vizHack.addr), xstrerror());
-	    if (setsockopt(vizSock, IPPROTO_IP, IP_MULTICAST_TTL,
-		    (char *) &Config.vizHack.mcast_ttl, sizeof(char)) < 0)
-		     debug(50, 1, "IP_MULTICAST_TTL: FD %d, TTL %d: %s\n",
+	    x = setsockopt(vizSock,
+		IPPROTO_IP,
+		IP_MULTICAST_TTL,
+		&ttl,
+		sizeof(char));
+	    if (x < 0)
+		debug(50, 1, "IP_MULTICAST_TTL: FD %d, TTL %d: %s\n",
 		    vizSock, Config.vizHack.mcast_ttl, xstrerror());
+	    ttl = 0;
+	    x = sizeof(char);
+	    getsockopt(vizSock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, &x);
+	    debug(0,0,"vizSock on FD %d, ttl=%d\n", vizSock, (int) ttl);
 	}
-	memset((char *) &Config.vizHack.S, '\0', sizeof(struct sockaddr_in));
+#else
+	debug(1,0,"vizSock: Could not join multicast group\n");
 #endif
+	memset((char *) &Config.vizHack.S, '\0', sizeof(struct sockaddr_in));
 	Config.vizHack.S.sin_family = AF_INET;
 	Config.vizHack.S.sin_addr = Config.vizHack.addr;
 	Config.vizHack.S.sin_port = htons(Config.vizHack.port);
