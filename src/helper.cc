@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.64 2004/12/22 15:10:37 serassio Exp $
+ * $Id: helper.cc,v 1.65 2005/01/27 19:57:09 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -607,7 +607,7 @@ helperShutdown(helper * hlp)
         srv = (helper_server *)link->data;
         link = link->next;
 
-        if (!srv->flags.shutdown) {
+        if (srv->flags.shutdown) {
             debug(84, 3) ("helperShutdown: %s #%d has already SHUT DOWN.\n",
                           hlp->id_name, srv->index + 1);
             continue;
@@ -631,6 +631,8 @@ helperShutdown(helper * hlp)
         }
 
         srv->flags.closing = 1;
+        debug(84, 3) ("helperShutdown: %s #%d shutting down.\n",
+                      hlp->id_name, srv->index + 1);
         /* the rest of the details is dealt with in the helperServerFree
          * close handler
          */
@@ -648,7 +650,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         srv = (helper_stateful_server *)link->data;
         link = link->next;
 
-        if (!srv->flags.shutdown) {
+        if (srv->flags.shutdown) {
             debug(84, 3) ("helperStatefulShutdown: %s #%d has already SHUT DOWN.\n",
                           hlp->id_name, srv->index + 1);
             continue;
@@ -683,6 +685,8 @@ helperStatefulShutdown(statefulhelper * hlp)
         }
 
         srv->flags.closing = 1;
+        debug(84, 3) ("helperStatefulShutdown: %s #%d shutting down.\n",
+                      hlp->id_name, srv->index + 1);
         /* the rest of the details is dealt with in the helperStatefulServerFree
          * close handler
          */
