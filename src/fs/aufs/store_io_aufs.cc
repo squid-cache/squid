@@ -71,7 +71,6 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 #else
     storeAufsOpenDone(fd, sio, fd, 0);
 #endif
-    store_open_disk_fd++;
     return sio;
 }
 
@@ -126,7 +125,6 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 #else
     storeAufsOpenDone(fd, sio, fd, 0);
 #endif
-    store_open_disk_fd++;
 
     /* now insert into the replacement policy */
     storeAufsDirReplAdd(SD, e);
@@ -284,6 +282,7 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
 	storeAufsIOCallback(sio, DISK_ERROR);
 	return;
     }
+    store_open_disk_fd++;
     aiostate->fd = fd;
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, storeAufsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
@@ -409,12 +408,12 @@ storeAufsIOCallback(storeIOState * sio, int errflag)
     cbdataUnlock(their_data);
     aiostate->fd = -1;
     cbdataFree(sio);
-    store_open_disk_fd--;
     if (fd < 0)
 	return;
     debug(78, 3) ("%s:%d\n", __FILE__, __LINE__);
     aioClose(fd);
     fd_close(fd);
+    store_open_disk_fd--;
     debug(78, 3) ("%s:%d\n", __FILE__, __LINE__);
 }
 
