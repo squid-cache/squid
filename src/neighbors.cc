@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.183 1998/03/28 05:09:13 wessels Exp $
+ * $Id: neighbors.cc,v 1.184 1998/03/28 05:28:54 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -442,7 +442,10 @@ neighborsUdpPing(request_t * request,
 	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText(entry->key));
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
-	if (p->icp_port == echo_port) {
+	if (p->htcp_port > 0) {
+	    debug(15, 0)("neighborsUdpPing: sending HTCP query\n");
+	    htcpQuery(entry, request, p);
+	} else if (p->icp_port == echo_port) {
 	    debug(15, 4) ("neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    echo_hdr.reqnum = reqnum;
 	    query = icpCreateMessage(ICP_DECHO, 0, url, reqnum, 0);
