@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.102 1998/05/15 15:16:28 wessels Exp $
+ * $Id: net_db.cc,v 1.103 1998/05/20 21:06:23 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1058,6 +1058,7 @@ netdbExchangeStart(void *data)
 #else
     httpRequestSetHeaders(ex->r, METHOD_GET, uri, "");
 #endif
+    ex->r->http_ver = 1.0;
     ex->e = storeCreateEntry(uri, uri, 0, METHOD_GET);
     ex->buf_sz = 4096;;
     ex->buf = memAllocate(MEM_4K_BUF);
