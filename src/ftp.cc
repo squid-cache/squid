@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.259 1999/01/11 20:05:50 wessels Exp $
+ * $Id: ftp.cc,v 1.260 1999/01/11 20:09:38 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1395,8 +1395,11 @@ ftpReadType(FtpStateData * ftpState)
     char *d, *p;
     debug(9, 3) ("This is ftpReadType\n");
     if (code == 200) {
-	path = xstrdup(strBuf(ftpState->request->urlpath));
-	for (d = p = path; *p; d = p) {
+	p = path = xstrdup(strBuf(ftpState->request->urlpath));
+	if (*p == '/')
+	    p++;
+	while (*p) {
+	    d = p;
 	    p += strcspn(p, "/");
 	    if (*p)
 		*p++ = '\0';
