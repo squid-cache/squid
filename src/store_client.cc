@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.127 2003/05/19 23:16:48 robertc Exp $
+ * $Id: store_client.cc,v 1.128 2003/06/24 12:42:27 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -249,10 +249,16 @@ store_client::copy(StoreEntry * anEntry,
     copyInto.length = copyRequest.length;
     copyInto.offset = copyRequest.offset;
 
+    static bool copying (false);
+    assert (!copying);
+    copying = true;
+    PROF_start(storeClient_kickReads);
     /* we might be blocking comm reads due to readahead limits
      * now we have a new offset, trigger those reads...
      */
     entry->mem_obj->kickReads();
+    PROF_stop(storeClient_kickReads);
+    copying = false;
 
     storeClientCopy2(entry, this);
 }

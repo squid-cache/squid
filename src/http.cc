@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.415 2003/06/19 13:47:25 hno Exp $
+ * $Id: http.cc,v 1.416 2003/06/24 12:42:25 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -821,7 +821,9 @@ httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno,void *d
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     assert (fd == httpState->fd);
+    PROF_start(HttpStateData_readReply);
     httpState->readReply (fd, buf, len, flag, xerrno, data);
+    PROF_stop(HttpStateData_readReply);
 }
 
 void
@@ -952,7 +954,9 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             }
         }
 
+        PROF_start(HttpStateData_processReplyData);
         processReplyData(buf, len);
+        PROF_stop(HttpStateData_processReplyData);
     }
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.37 2003/05/18 00:34:49 robertc Exp $
+ * $Id: event.cc,v 1.38 2003/06/24 12:42:25 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -139,6 +139,8 @@ eventRun(void)
     if (tasks->when > current_dtime)
         return;
 
+    PROF_start(eventRun);
+
     run_id++;
 
     debug(41, 5) ("eventRun: RUN ID %d\n", run_id);
@@ -173,6 +175,8 @@ eventRun(void)
 
         memFree(event, MEM_EVENT);
     }
+
+    PROF_stop(eventRun);
 }
 
 int

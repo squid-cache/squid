@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.77 2003/06/24 12:30:59 robertc Exp $
+ * $Id: stmem.cc,v 1.78 2003/06/24 12:42:25 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -372,11 +372,13 @@ mem_hdr::nodeToRecieve(off_t offset)
 bool
 mem_hdr::write (StoreIOBuffer const &writeBuffer)
 {
+    PROF_start(mem_hdr_write);
     //    mem_node *tempNode;
     debug(19, 6) ("mem_hdr::write: offset %lu len %ld, object end %lu\n", (unsigned long)writeBuffer.offset, (long)writeBuffer.length, (unsigned long)endOffset());
 
     if (unionNotEmpty(writeBuffer)) {
         fatal("Attempt to overwrite already in-memory data\n");
+        PROF_stop(mem_hdr_write);
         return false;
     }
 
@@ -395,6 +397,7 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
         currentSource += wrote;
     }
 
+    PROF_stop(mem_hdr_write);
     return true;
 }
 

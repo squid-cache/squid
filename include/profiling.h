@@ -105,6 +105,20 @@ typedef enum {
     XPROF_esiProcessing,
     XPROF_esiParsing,
 #endif
+    XPROF_storeClient_kickReads,
+    XPROF_eventRun,
+    XPROF_comm_calliocallback,
+    XPROF_CommReadCallbackData_callCallback,
+    XPROF_CommAcceptCallbackData_callCallback,
+    XPROF_CommWriteCallbackData_callCallback,
+    XPROF_CommFillCallbackData_callCallback,
+    XPROF_HttpStateData_readReply,
+    XPROF_HttpStateData_processReplyData,
+    XPROF_StoreEntry_write,
+    XPROF_storeGetMemSpace,
+    XPROF_MemObject_write,
+    XPROF_storeWriteComplete,
+    XPROF_mem_hdr_write,
     XPROF_LAST
 } xprof_type;
 

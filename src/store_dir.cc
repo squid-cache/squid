@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.145 2003/02/21 22:50:12 robertc Exp $
+ * $Id: store_dir.cc,v 1.146 2003/06/24 12:42:27 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -522,23 +522,25 @@ storeDirSync(void)
 }
 
 /*
- * handle callbacks all avaliable fs'es ..
+ * handle callbacks all avaliable fs'es 
  */
 void
 storeDirCallback(void)
 {
-    int i, j;
-    SwapDir *SD;
+    int j;
     static int ndir = 0;
+
+    /* This will likely double count. Thats ok. */
+    PROF_start(storeDirCallback);
 
     do {
         j = 0;
 
-        for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+        for (int i = 0; i < Config.cacheSwap.n_configured; i++) {
             if (ndir >= Config.cacheSwap.n_configured)
                 ndir = ndir % Config.cacheSwap.n_configured;
 
-            SD = INDEXSD(ndir);
+            SwapDir *SD = INDEXSD(ndir);
 
             ++ndir;
 
@@ -547,6 +549,8 @@ storeDirCallback(void)
     } while (j > 0);
 
     ndir++;
+
+    PROF_stop(storeDirCallback);
 }
 
 int

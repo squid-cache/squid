@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.378 2003/06/23 14:13:03 robertc Exp $
+ * $Id: comm.cc,v 1.379 2003/06/24 12:42:25 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -510,25 +510,33 @@ comm_add_write_callback(int fd, size_t retval, comm_err_t errcode, int xerrno)
 void
 CommReadCallbackData::callCallback()
 {
+    PROF_start(CommReadCallbackData_callCallback);
     callback.handler(result.fd, buf, retval, result.errcode, result.xerrno, callback.data);
+    PROF_stop(CommReadCallbackData_callCallback);
 }
 
 void
 CommAcceptCallbackData::callCallback()
 {
+    PROF_start(CommAcceptCallbackData_callCallback);
     callback.handler(result.fd, newfd, &details, result.errcode, result.xerrno, callback.data);
+    PROF_stop(CommAcceptCallbackData_callCallback);
 }
 
 void
 CommWriteCallbackData::callCallback()
 {
+    PROF_start(CommWriteCallbackData_callCallback);
     callback.handler(result.fd, buf, retval, result.errcode, result.xerrno, callback.data);
+    PROF_stop(CommWriteCallbackData_callCallback);
 }
 
 void
 CommFillCallbackData::callCallback()
 {
+    PROF_start(CommFillCallbackData_callCallback);
     callback.handler(result.fd, sb, result.errcode, result.xerrno, callback.data);
+    PROF_stop(CommFillCallbackData_callCallback);
 }
 
 void
@@ -561,18 +569,25 @@ void
 comm_calliocallback(void)
 {
     CommCallbackData *cio;
-    dlink_node *node;
     int oldseqnum = CommCallbackSeqnum++;
 
     /* Call our callbacks until we hit NULL or the seqnum changes */
 
-    while (CommCallbackList.head != NULL && oldseqnum != ((CommCallbackData *)CommCallbackList.head->data)->result.seqnum) {
+    /* This will likely rap other counts - again, thats ok (for now)
+     * What we should see is the total of the various callback subclasses
+     * equaling this counter.
+     * If they don't, someone has added a class but not profiled it.
+     */
+    PROF_start(comm_calliocallback);
 
-        node = (dlink_node *)CommCallbackList.head;
+    while (CommCallbackList.head != NULL && oldseqnum != ((CommCallbackData *)CommCallbackList.head->data)->result.seqnum) {
+        dlink_node *node = (dlink_node *)CommCallbackList.head;
         cio = (CommCallbackData *)node->data;
         cio->callACallback();
         cio->deleteSelf();
     }
+
+    PROF_stop(comm_calliocallback);
 }
 
 void
