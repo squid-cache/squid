@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.13 1996/09/14 16:14:25 wessels Exp $
+ * $Id: util.c,v 1.14 1996/09/15 07:04:02 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -129,7 +129,7 @@
 
 #include "util.h"
 
-void (*failure_notify) (char *) = NULL;
+void (*failure_notify) __P((char *)) = NULL;
 static char msg[128];
 
 extern int sys_nerr;
