@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.40 2002/04/30 07:59:49 hno Exp $
+ * $Id: htcp.cc,v 1.41 2002/08/09 10:57:43 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -44,18 +44,18 @@ typedef struct _htcpSpecifier htcpSpecifier;
 typedef struct _htcpDetail htcpDetail;
 
 struct _Countstr {
-    u_short length;
+    u_int16_t length;
     char *text;
 };
 
 struct _htcpHeader {
-    u_short length;
+    u_int16_t length;
     u_char major;
     u_char minor;
 };
 
 struct _htcpDataHeader {
-    u_short length;
+    u_int16_t length;
 #if !WORDS_BIGENDIAN
     unsigned int opcode:4;
     unsigned int response:4;
@@ -72,7 +72,7 @@ struct _htcpDataHeader {
     unsigned int F1:1;
     unsigned int reserved:6;
 #endif
-    u_num32 msg_id;
+    u_int32_t msg_id;
 };
 
     /* RR == 0 --> F1 = RESPONSE DESIRED FLAG */
@@ -81,7 +81,7 @@ struct _htcpDataHeader {
     /* RR == 1 --> RESPONSE */
 
 struct _htcpAuthHeader {
-    u_short length;
+    u_int16_t length;
     time_t sig_time;
     time_t sig_expire;
     Countstr key_name;
@@ -106,7 +106,7 @@ struct _htcpStuff {
     int rr;
     int f1;
     int response;
-    u_num32 msg_id;
+    u_int32_t msg_id;
     htcpSpecifier S;
     htcpDetail D;
 };
@@ -150,7 +150,7 @@ enum {
     RR_RESPONSE
 };
 
-static u_num32 msg_id_counter = 0;
+static u_int32_t msg_id_counter = 0;
 static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 #define N_QUERIED_KEYS 256
@@ -214,7 +214,7 @@ htcpBuildAuth(char *buf, size_t buflen)
 {
     htcpAuthHeader auth;
     size_t copy_sz = 0;
-    assert(2 == sizeof(u_short));
+    assert(2 == sizeof(u_int16_t));
     auth.length = htons(2);
     copy_sz += 2;
     assert(buflen >= copy_sz);
@@ -225,7 +225,7 @@ htcpBuildAuth(char *buf, size_t buflen)
 static ssize_t
 htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 {
-    u_short length;
+    u_int16_t length;
     size_t len;
     off_t off = 0;
     if (buflen - off < 2)
@@ -236,7 +236,7 @@ htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 	len = 0;
     debug(31, 3) ("htcpBuildCountstr: LENGTH = %d\n", len);
     debug(31, 3) ("htcpBuildCountstr: TEXT = {%s}\n", s ? s : "<NULL>");
-    length = htons((u_short) len);
+    length = htons((u_int16_t) len);
     xmemcpy(buf + off, &length, 2);
     off += 2;
     if (buflen - off < len)
@@ -344,7 +344,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
 	return op_data_sz;
     off += op_data_sz;
     debug(31, 3) ("htcpBuildData: hdr.length = %d\n", (int) off);
-    hdr.length = (u_short) off;
+    hdr.length = (u_int16_t) off;
     hdr.opcode = stuff->op;
     hdr.response = stuff->response;
     hdr.RR = stuff->rr;
@@ -385,7 +385,7 @@ htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
 	return NULL;
     }
     off += s;
-    hdr.length = htons((u_short) off);
+    hdr.length = htons((u_int16_t) off);
     hdr.major = 0;
     hdr.minor = 0;
     xmemcpy(buf, &hdr, hdr_sz);
@@ -436,7 +436,7 @@ htcpFreeDetail(htcpDetail * d)
 static int
 htcpUnpackCountstr(char *buf, int sz, char **str)
 {
-    u_short l;
+    u_int16_t l;
     debug(31, 3) ("htcpUnpackCountstr: sz = %d\n", sz);
     if (sz < 2) {
 	debug(31, 3) ("htcpUnpackCountstr: sz < 2\n");

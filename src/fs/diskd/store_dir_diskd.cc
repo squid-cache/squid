@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.69 2002/07/21 00:25:46 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.70 2002/08/09 10:57:46 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -91,8 +91,8 @@ static StoreEntry *storeDiskdDirAddDiskRestore(SwapDir * SD, const cache_key * k
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_short flags,
+    u_int32_t refcount,
+    u_int16_t flags,
     int clean);
 static void storeDiskdDirRebuild(SwapDir * sd);
 static void storeDiskdDirCloseTmpSwapLog(SwapDir * sd);
@@ -970,8 +970,8 @@ storeDiskdDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_short flags,
+    u_int32_t refcount,
+    u_int16_t flags,
     int clean)
 {
     StoreEntry *e = NULL;

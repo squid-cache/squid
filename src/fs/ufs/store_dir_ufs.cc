@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.47 2002/07/22 00:05:20 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.48 2002/08/09 10:57:46 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -85,8 +85,8 @@ static StoreEntry *storeUfsDirAddDiskRestore(SwapDir * SD, const cache_key * key
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_short flags,
+    u_int32_t refcount,
+    u_int16_t flags,
     int clean);
 static void storeUfsDirRebuild(SwapDir * sd);
 static void storeUfsDirCloseTmpSwapLog(SwapDir * sd);
@@ -782,8 +782,8 @@ storeUfsDirAddDiskRestore(SwapDir * SD, const cache_key * key,
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_short flags,
+    u_int32_t refcount,
+    u_int16_t flags,
     int clean)
 {
     StoreEntry *e = NULL;
