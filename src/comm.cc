@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.152 1997/05/15 23:32:27 wessels Exp $
+ * $Id: comm.cc,v 1.153 1997/05/16 07:42:49 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -387,7 +387,7 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 	fde->timeout_data = NULL;
 	return fde->timeout = 0;
     }
-    if (shutdown_pending || reread_pending) {
+    if (shutdown_pending || reconfigure_pending) {
 	/* don't increase the timeout if something pending */
 	if (fde->timeout > 0 && (int) (fde->timeout - squid_curtime) < timeout)
 	    return fde->timeout;
@@ -772,7 +772,7 @@ comm_poll(time_t sec)
     do {
 	if (sec > 60)
 	    fatal_dump(NULL);
-	if (shutdown_pending || reread_pending) {
+	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
 	    ftpServerClose();
 	    dnsShutdownServers();
@@ -780,8 +780,8 @@ comm_poll(time_t sec)
 	    /* shutdown_pending will be set to
 	     * +1 for SIGTERM
 	     * -1 for SIGINT */
-	    /* reread_pending always == 1 when SIGHUP received */
-	    if (shutdown_pending > 0 || reread_pending > 0)
+	    /* reconfigure_pending always == 1 when SIGHUP received */
+	    if (shutdown_pending > 0 || reconfigure_pending > 0)
 		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
 		setSocketShutdownLifetimes(1);
@@ -803,7 +803,7 @@ comm_poll(time_t sec)
 		nfds++;
 	    }
 	}
-	if (shutdown_pending || reread_pending)
+	if (shutdown_pending || reconfigure_pending)
 	    debug(5, 2, "comm_poll: Still waiting on %d FDs\n", nfds);
 #ifdef WTFISTHIS
 	if (pending_time == 0)
@@ -942,7 +942,7 @@ comm_select(time_t sec)
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
 
-	if (shutdown_pending || reread_pending) {
+	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
 	    ftpServerClose();
 	    dnsShutdownServers();
@@ -950,8 +950,8 @@ comm_select(time_t sec)
 	    /* shutdown_pending will be set to
 	     * +1 for SIGTERM
 	     * -1 for SIGINT */
-	    /* reread_pending always == 1 when SIGHUP received */
-	    if (shutdown_pending > 0 || reread_pending > 0)
+	    /* reconfigure_pending always == 1 when SIGHUP received */
+	    if (shutdown_pending > 0 || reconfigure_pending > 0)
 		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
 		setSocketShutdownLifetimes(0);
@@ -971,7 +971,7 @@ comm_select(time_t sec)
 		FD_SET(i, &writefds);
 	    }
 	}
-	if (shutdown_pending || reread_pending)
+	if (shutdown_pending || reconfigure_pending)
 	    debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
