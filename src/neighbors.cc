@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.295 2001/04/14 00:25:18 hno Exp $
+ * $Id: neighbors.cc,v 1.296 2001/06/26 17:17:53 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -151,6 +151,10 @@ peerAllowedToUse(const peer * p, request_t * request)
     checklist.my_addr = request->my_addr;
     checklist.my_port = request->my_port;
     checklist.request = request;
+#if USE_IDENT
+    if (request->user_ident[0])
+	xstrncpy(checklist.ident, request->user_ident, USER_IDENT_SZ);
+#endif
     return aclCheckFast(p->access, &checklist);
 }
 
