@@ -99,17 +99,8 @@
 #undef CACHE_ICP_PORT
 #endif
 
-/* Define to do simple malloc debugging */
-#undef XMALLOC_DEBUG
-
-/* Define for log file trace of mem alloc/free */
-#undef MEM_GEN_TRACE
-
 /* Define to have malloc statistics */
 #undef XMALLOC_STATISTICS
-
-/* Define to have a detailed trace of memory allocations */
-#undef XMALLOC_TRACE
 
 #undef FORW_VIA_DB
 
@@ -161,15 +152,6 @@
  * Define to enable WCCP
  */
 #define USE_WCCP 1
-
-/*
- * Squid frequently calls gettimeofday() for accurate timestamping.
- * If you are concerned that gettimeofday() is called too often, and
- * could be causing performance degradation, then you can define
- * ALARM_UPDATES_TIME and cause Squid's clock to be updated at regular
- * intervals (one second) with ALARM signals.
- */
-#undef ALARM_UPDATES_TIME
 
 /*
  * Define this to include code which lets you specify access control
