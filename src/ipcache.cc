@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.92 1996/12/21 00:43:52 wessels Exp $
+ * $Id: ipcache.cc,v 1.93 1997/01/03 21:04:27 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -686,8 +686,7 @@ ipcache_nbgethostbyname(const char *name, int fd, IPH handler, void *handlerData
 	ipcacheAddPending(i, fd, handler, handlerData);
         if (squid_curtime - i->expires > 60) {
 	    i->status = IP_NEGATIVE_CACHED;
-	    ipcache_call_pending(i);
-	    ipcache_release(i);
+	    ipcache_call_pending(i);	/* will also release it */
 	}
 	return;
     } else {
