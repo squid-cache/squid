@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.27 2003/08/10 11:00:45 robertc Exp $
+ * $Id: whois.cc,v 1.28 2003/09/01 03:49:40 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -113,8 +113,7 @@ void
 WhoisState::setReplyToOK(StoreEntry *entry)
 {
     HttpReply *reply = httpReplyCreate();
-    http_version_t version;
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1, 0);
     httpReplySetHeaders(reply, version, HTTP_OK, NULL, NULL, 0, 0, -1);
     storeEntryReplaceObject (entry, reply);
 }

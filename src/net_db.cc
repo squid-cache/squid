@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.172 2003/08/10 11:00:44 robertc Exp $
+ * $Id: net_db.cc,v 1.173 2003/09/01 03:49:39 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1187,7 +1187,6 @@ void
 netdbBinaryExchange(StoreEntry * s)
 {
     HttpReply *reply = httpReplyCreate();
-    http_version_t version;
 #if USE_ICMP
 
     netdbEntry *n;
@@ -1198,7 +1197,7 @@ netdbBinaryExchange(StoreEntry * s)
 
     struct in_addr addr;
     storeBuffer(s);
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1, 0);
     httpReplySetHeaders(reply, version, HTTP_OK, "OK",
                         NULL, -1, squid_curtime, -2);
     httpReplySwapOut(reply, s);
@@ -1258,7 +1257,7 @@ netdbBinaryExchange(StoreEntry * s)
     memFree(buf, MEM_4K_BUF);
 #else
 
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1,0);
     httpReplySetHeaders(reply, version, HTTP_BAD_REQUEST, "Bad Request",
                         NULL, -1, squid_curtime, -2);
     httpReplySwapOut(reply, s);
@@ -1295,7 +1294,7 @@ netdbExchangeStart(void *data)
 
     requestLink(ex->r);
     assert(NULL != ex->r);
-    httpBuildVersion(&ex->r->http_ver, 1, 0);
+    ex->r->http_ver = HttpVersion(1,0);
     ex->connstate = STATE_HEADER;
     ex->e = storeCreateEntry(uri, uri, request_flags(), METHOD_GET);
     ex->buf_sz = NETDB_REQBUF_SZ;

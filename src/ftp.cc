@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.353 2003/08/10 11:00:43 robertc Exp $
+ * $Id: ftp.cc,v 1.354 2003/09/01 03:49:38 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3048,7 +3048,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     const char *t = NULL;
     StoreEntry *e = ftpState->entry;
     HttpReply *reply = httpReplyCreate ();
-    http_version_t version;
 
     if (ftpState->flags.http_header_sent)
         return;
@@ -3091,13 +3090,13 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
         HttpHdrRangeSpec range_spec;
         range_spec.offset = ftpState->restarted_offset;
         range_spec.length = ftpState->size - ftpState->restarted_offset;
-        httpBuildVersion(&version, 1, 0);
+        HttpVersion version(1, 0);
         httpReplySetHeaders(reply, version, HTTP_PARTIAL_CONTENT, "Gatewaying",
                             mime_type, ftpState->size - ftpState->restarted_offset, ftpState->mdtm, -2);
         httpHeaderAddContRange(&reply->header, range_spec, ftpState->size);
     } else {
         /* Full reply */
-        httpBuildVersion(&version, 1, 0);
+        HttpVersion version(1, 0);
         httpReplySetHeaders(reply, version, HTTP_OK, "Gatewaying",
                             mime_type, ftpState->size, ftpState->mdtm, -2);
     }

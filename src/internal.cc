@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.29 2003/08/10 11:00:43 robertc Exp $
+ * $Id: internal.cc,v 1.30 2003/09/01 03:49:39 robertc Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -47,7 +47,6 @@ internalStart(HttpRequest * request, StoreEntry * entry)
 {
     ErrorState *err;
     const char *upath = request->urlpath.buf();
-    http_version_t version;
     debug(76, 3) ("internalStart: %s requesting '%s'\n",
                   inet_ntoa(request->client_addr), upath);
 
@@ -61,7 +60,7 @@ internalStart(HttpRequest * request, StoreEntry * entry)
         const char *msgbuf = "This cache does not suport Cache Digests.\n";
 #endif
 
-        httpBuildVersion(&version, 1, 0);
+        HttpVersion version(1, 0);
         HttpReply *reply = httpReplyCreate ();
         httpReplySetHeaders(reply,
                             version,

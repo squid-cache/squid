@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.56 2003/02/21 22:50:12 robertc Exp $
+ * $Id: store_digest.cc,v 1.57 2003/09/01 03:49:40 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -420,7 +420,6 @@ static void
 storeDigestRewriteResume(void)
 {
     StoreEntry *e;
-    http_version_t version;
 
     assert(sd_state.rewrite_lock);
     assert(!sd_state.rebuild_lock);
@@ -431,7 +430,7 @@ storeDigestRewriteResume(void)
     storeSetPublicKey(e);
     /* fake reply */
     HttpReply *rep = httpReplyCreate ();
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1, 0);
     httpReplySetHeaders(rep, version, HTTP_OK, "Cache Digest OK",
                         "application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
                         squid_curtime, squid_curtime + Config.digest.rewrite_period);

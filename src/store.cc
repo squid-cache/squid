@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.573 2003/08/10 11:00:44 robertc Exp $
+ * $Id: store.cc,v 1.574 2003/09/01 03:49:39 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -649,10 +649,9 @@ storeSetPublicKey(StoreEntry * e)
 
         if (mem->vary_headers && !storeGetPublic(mem->url, mem->method)) {
             /* Create "vary" base object */
-            http_version_t version;
             String vary;
             pe = storeCreateEntry(mem->url, mem->log_url, request->flags, request->method);
-            httpBuildVersion(&version, 1, 0);
+            HttpVersion version(1, 0);
             /* We are allowed to do this typecast */
             httpReplySetHeaders((HttpReply *)pe->getReply(), version, HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
             vary = httpHeaderGetList(&mem->getReply()->header, HDR_VARY);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.491 2003/08/17 13:42:04 robertc Exp $
+ * $Id: protos.h,v 1.492 2003/09/01 03:49:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,15 +34,6 @@
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
 
-SQUIDCEXTERN void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
-SQUIDCEXTERN void accessLogRotate(void);
-SQUIDCEXTERN void accessLogClose(void);
-SQUIDCEXTERN void accessLogInit(void);
-SQUIDCEXTERN void accessLogFreeMemory(AccessLogEntry * aLogEntry);
-SQUIDCEXTERN const char *accessLogTime(time_t);
-SQUIDCEXTERN int accessLogParseLogFormat(logformat_token ** fmt, char *def);
-SQUIDCEXTERN void accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definitions);
-SQUIDCEXTERN void accessLogFreeLogFormat(logformat_token ** fmt);
 SQUIDCEXTERN void hierarchyNote(HierarchyLogEntry *, hier_code, const char *);
 #if FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
@@ -304,27 +295,12 @@ SQUIDCEXTERN void httpAnonInitModule(void);
 SQUIDCEXTERN int httpAnonHdrAllowed(http_hdr_type hdr_id);
 SQUIDCEXTERN int httpAnonHdrDenied(http_hdr_type hdr_id);
 SQUIDCEXTERN void httpBuildRequestHeader(HttpRequest *, HttpRequest *, StoreEntry *, HttpHeader *, http_state_flags);
-SQUIDCEXTERN void httpBuildVersion(http_version_t * version, unsigned int major, unsigned int minor);
 SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 /* ETag */
 SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
 SQUIDCEXTERN int etagIsEqual(const ETag * tag1, const ETag * tag2);
 
-/* Http Status Line */
-/* init/clean */
-SQUIDCEXTERN void httpStatusLineInit(HttpStatusLine * sline);
-SQUIDCEXTERN void httpStatusLineClean(HttpStatusLine * sline);
-/* set/get values */
-SQUIDCEXTERN void httpStatusLineSet(HttpStatusLine * sline, http_version_t version,
-                                    http_status status, const char *reason);
-SQUIDCEXTERN const char *httpStatusLineReason(const HttpStatusLine * sline);
-/* parse/pack */
-/* parse a 0-terminating buffer and fill internal structires; returns true on success */
-SQUIDCEXTERN int httpStatusLineParse(HttpStatusLine * sline, const char *start,
-                                     const char *end);
-/* pack fields using Packer */
-SQUIDCEXTERN void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
 /* Http Body */
@@ -459,7 +435,6 @@ SQUIDCEXTERN void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *);
 
 /* Http Msg (currently in HttpReply.c @?@ ) */
-SQUIDCEXTERN int httpMsgIsPersistent(http_version_t http_ver, const HttpHeader * hdr);
 SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
 
 SQUIDCEXTERN void icmpOpen(void);

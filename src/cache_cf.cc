@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.449 2003/08/31 21:20:08 robertc Exp $
+ * $Id: cache_cf.cc,v 1.450 2003/09/01 03:49:37 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2987,6 +2987,8 @@ strtok_again:
     }
 }
 
+#include "AccessLogEntry.h"
+/* TODO: split out parsing somehow ...*/
 static void
 parse_logformat(logformat ** logformat_definitions)
 {

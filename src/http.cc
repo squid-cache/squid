@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.426 2003/08/10 11:00:43 robertc Exp $
+ * $Id: http.cc,v 1.427 2003/09/01 03:49:38 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1492,8 +1492,7 @@ httpBuildRequestPrefix(HttpRequest * request,
                        http_state_flags flags)
 {
     const int offset = mb->size;
-    http_version_t httpver;
-    httpBuildVersion(&httpver, 1, 0);
+    HttpVersion httpver(1, 0);
     memBufPrintf(mb, "%s %s HTTP/%d.%d\r\n",
                  RequestMethodStr[request->method],
                  request->urlpath.size() ? request->urlpath.buf() : "/",
@@ -1733,7 +1732,7 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
 }
 
 void
-httpBuildVersion(http_version_t * version, unsigned int major, unsigned int minor)
+httpBuildVersion(HttpVersion * version, unsigned int major, unsigned int minor)
 {
     version->major = major;
     version->minor = minor;

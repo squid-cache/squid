@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.85 2003/08/10 11:00:45 robertc Exp $
+ * $Id: urn.cc,v 1.86 2003/09/01 03:49:40 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -315,11 +315,13 @@ urnHandleReply(void *data, StoreIOBuffer result)
     ErrorState *err;
     int i;
     int urlcnt = 0;
-    http_version_t version;
     char *buf = urnState->reqbuf;
     StoreIOBuffer tempBuffer;
 
     debug(52, 3) ("urnHandleReply: Called with size=%u.\n", (unsigned int)result.length);
+
+    /* Can't be lower because of the goto's */
+    HttpVersion version(1, 0);
 
     if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED)) {
         goto error;
@@ -433,7 +435,6 @@ urnHandleReply(void *data, StoreIOBuffer result)
                  "</ADDRESS>\n",
                  full_appname_string, getMyHostname());
     rep = httpReplyCreate();
-    httpBuildVersion(&version, 1, 0);
     httpReplySetHeaders(rep, version, HTTP_MOVED_TEMPORARILY, NULL,
                         "text/html", mb.size, 0, squid_curtime);
 

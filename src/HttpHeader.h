@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.6 2003/07/15 06:50:39 robertc Exp $
+ * $Id: HttpHeader.h,v 1.7 2003/09/01 03:49:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,12 +46,15 @@ struct _HttpHeaderFieldAttrs
     field_type type;
 };
 
+class HttpVersion;
+
 extern int httpHeaderParseQuotedString (const char *start, String *val);
 extern void httpHeaderPutSc(HttpHeader *hdr, const HttpHdrSc *sc);
 extern HttpHdrSc *httpHeaderGetSc(const HttpHeader *hdr);
 SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, ssize_t);
 extern int httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator);
 SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
+int httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr);
 
 class HttpHeader
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.30 2003/08/10 11:00:42 robertc Exp $
+ * $Id: cache_manager.cc,v 1.31 2003/09/01 03:49:38 robertc Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -316,9 +316,8 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
         storeBuffer(entry);
 
     {
-        http_version_t version;
+        HttpVersion version(1,0);
         HttpReply *rep = httpReplyCreate();
-        httpBuildVersion(&version, 1, 0);
         httpReplySetHeaders(rep,
                             version,
                             HTTP_OK,

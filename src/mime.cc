@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.113 2003/08/10 11:00:43 robertc Exp $
+ * $Id: mime.cc,v 1.114 2003/09/01 03:49:39 robertc Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -570,9 +570,6 @@ MimeIcon::created (StoreEntry *newEntry)
 
     char *buf;
 
-    http_version_t version;
-
-
     snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
 
     fd = file_open(path, O_RDONLY | O_BINARY);
@@ -606,7 +603,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     HttpReply *reply = httpReplyCreate();
 
-    httpBuildVersion(&version, 1, 0);
+    HttpVersion version(1, 0);
 
     httpReplySetHeaders(reply, version, HTTP_OK, NULL,
                         mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);

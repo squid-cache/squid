@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.657 2003/08/14 12:15:04 robertc Exp $
+ * $Id: client_side.cc,v 1.658 2003/09/01 03:49:38 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -153,7 +153,7 @@ static char *findTrailingHTTPVersion(char *uriAndHTTPVersion);
 #if UNUSED_CODE
 static void trimTrailingSpaces(char *aString, size_t len);
 #endif
-static ClientSocketContext *parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p, ConnStateData::Pointer& conn, char *http_version_str);
+static ClientSocketContext *parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p, ConnStateData::Pointer& conn, char *http_version_str);
 static void setLogUri(clientHttpRequest * http, char const *uri);
 static int connReadWasError(ConnStateData::Pointer& conn, comm_err_t, int size, int xerrno);
 static int connFinishedWithConn(ConnStateData::Pointer& conn, int size);
@@ -640,8 +640,7 @@ clientSetKeepaliveFlag(clientHttpRequest * http)
     if (!Config.onoff.client_pconns)
         request->flags.proxy_keepalive = 0;
     else {
-        http_version_t http_ver;
-        httpBuildVersion(&http_ver, 1, 0);
+        HttpVersion http_ver(1,0);
         /* we are HTTP/1.0, no matter what the client requests... */
 
         if (httpMsgIsPersistent(http_ver, req_hdr))
@@ -1601,7 +1600,7 @@ trimTrailingSpaces(char *aString, size_t len)
 #endif
 
 static ClientSocketContext *
-parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p,
+parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p,
                        ConnStateData::Pointer & conn, char *http_version_str)
 {
     char *url;
@@ -1643,7 +1642,7 @@ parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p,
         debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n",
                       http_ver_p->major, http_ver_p->minor);
     } else {
-        httpBuildVersion(http_ver_p, 0, 9);	/* wild guess */
+        *http_ver_p = HttpVersion(0,9);	/* wild guess */
     }
 
     return NULL;
@@ -1652,7 +1651,7 @@ parseURIandHTTPVersion(char **url_p, http_version_t * http_ver_p,
 /* Utility function to perform part of request parsing */
 static ClientSocketContext *
 clientParseHttpRequestLine(char *reqline, ConnStateData::Pointer &conn,
-                           method_t * method_p, char **url_p, http_version_t * http_ver_p, char * http_version_str)
+                           method_t * method_p, char **url_p, HttpVersion * http_ver_p, char * http_version_str)
 {
     ClientSocketContext *result = NULL;
     /* XXX: This sequence relies on strtok() */
@@ -1798,7 +1797,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
     char *url = NULL;
     char *req_hdr = NULL;
     char *t;
-    http_version_t http_ver;
+    HttpVersion http_ver;
     char *end;
     size_t header_sz;		/* size of headers, not including first line */
     size_t prefix_sz;		/* size of whole request (req-line + headers) */

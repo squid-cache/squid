@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.62 2003/07/15 06:50:39 robertc Exp $
+ * $Id: HttpReply.cc,v 1.63 2003/09/01 03:49:37 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -207,7 +207,7 @@ httpReplySwapOut(HttpReply * rep, StoreEntry * e)
 }
 
 MemBuf
-httpPackedReply(http_version_t ver, http_status status, const char *ctype,
+httpPackedReply(HttpVersion ver, http_status status, const char *ctype,
                 int clen, time_t lmt, time_t expires)
 {
     HttpReply *rep = httpReplyCreate();
@@ -226,7 +226,6 @@ httpReplyMake304 (const HttpReply * rep)
     HttpReply *rv;
     int t;
     HttpHeaderEntry *e;
-    http_version_t ver;
     assert(rep);
 
     rv = httpReplyCreate ();
@@ -238,7 +237,7 @@ httpReplyMake304 (const HttpReply * rep)
     /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
-    httpBuildVersion(&ver, 1, 0);
+    HttpVersion ver(1,0);
     httpStatusLineSet(&rv->sline, ver,
                       HTTP_NOT_MODIFIED, "");
 
@@ -266,7 +265,7 @@ httpPacked304Reply(const HttpReply * rep)
 }
 
 void
-httpReplySetHeaders(HttpReply * reply, http_version_t ver, http_status status, const char *reason,
+httpReplySetHeaders(HttpReply * reply, HttpVersion ver, http_status status, const char *reason,
                     const char *ctype, int clen, time_t lmt, time_t expires)
 {
     HttpHeader *hdr;
@@ -305,9 +304,8 @@ void
 httpRedirectReply(HttpReply * reply, http_status status, const char *loc)
 {
     HttpHeader *hdr;
-    http_version_t ver;
     assert(reply);
-    httpBuildVersion(&ver, 1, 0);
+    HttpVersion ver(1,0);
     httpStatusLineSet(&reply->sline, ver, status, httpStatusString(status));
     hdr = &reply->header;
     httpHeaderPutStr(hdr, HDR_SERVER, full_appname_string);

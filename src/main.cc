@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.387 2003/08/31 01:22:05 robertc Exp $
+ * $Id: main.cc,v 1.388 2003/09/01 03:49:39 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "authenticate.h"
 #include "Store.h"
 #include "ICP.h"
