@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.29 1998/05/14 20:48:07 wessels Exp $
+ * $Id: peer_digest.cc,v 1.30 1998/05/15 15:16:29 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -71,10 +71,10 @@ peerDigestInit(void *data)
 {
     peer *p = data;
     assert(p);
-    assert(p->digest.flags == (1<<PD_INIT_PENDING));
+    assert(p->digest.flags == (1 << PD_INIT_PENDING));
     assert(!p->digest.cd);
     assert(SM_PAGE_SIZE == 4096);	/* we use MEM_4K_BUF */
-debug(0,0)("peerDigestInit: called for %s\n", p->host);
+    debug(0, 0) ("peerDigestInit: called for %s\n", p->host);
     if (EBIT_TEST(p->options, NEIGHBOR_NO_DIGEST)) {
 	peerDigestDisable(p);
     } else {
@@ -142,7 +142,7 @@ peerDigestDelay(peer * p, int disable, time_t delay)
 	    disable ? "disabling" : "delaying",
 	    p->host ? p->host : "<null>",
 	    delay, mkrfc1123(squid_curtime + delay));
-	eventAdd("peerDigestValidate", peerDigestValidate, p, delay, 1);
+	eventAdd("peerDigestValidate", peerDigestValidate, p, (double) delay, 1);
     } else {
 	assert(disable);
 	debug(72, 2) ("peerDigestDisable: disabling peer %s for good\n",
@@ -154,7 +154,7 @@ peerDigestDelay(peer * p, int disable, time_t delay)
 
 /* request new digest if our copy is too old; schedule next validation */
 static void
-peerDigestValidate(void * data)
+peerDigestValidate(void *data)
 {
     peer *p = data;
     StoreEntry *e = NULL;
@@ -244,8 +244,8 @@ peerDigestRequest(peer * p)
     debug(72, 2) ("peerDigestRequest: %s key: %s\n", url, storeKeyText(key));
     req = urlParse(METHOD_GET, url);
     if (NULL == req) {
-	debug(72,1)("peerDigestRequest: Bad URI: %s\n", url);
-	return;		/* @?@ */
+	debug(72, 1) ("peerDigestRequest: Bad URI: %s\n", url);
+	return;			/* @?@ */
     }
     requestLink(req);
     assert(req);

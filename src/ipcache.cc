@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.186 1998/05/14 20:48:01 wessels Exp $
+ * $Id: ipcache.cc,v 1.187 1998/05/15 15:16:23 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -284,7 +284,7 @@ ipcache_purgelru(void *voidnotused)
     dlink_node *prev = NULL;
     ipcache_entry *i;
     int removed = 0;
-    eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10, 1);
+    eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
     for (m = lru_list.tail; m; m = prev) {
 	if (memInUse(MEM_IPCACHE_ENTRY) < ipcache_low)
 	    break;

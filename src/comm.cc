@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.254 1998/05/11 21:34:10 wessels Exp $
+ * $Id: comm.cc,v 1.255 1998/05/15 15:16:19 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -110,6 +110,12 @@
 
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif
+
+#if USE_ASYNC_IO
+#define MAX_POLL_TIME 50
+#else
+#define MAX_POLL_TIME 1000
 #endif
 
 typedef struct {
@@ -893,7 +899,7 @@ fdIsHttpOrIcp(int fd)
 #if HAVE_POLL
 /* poll all sockets; call handlers for those that are ready. */
 int
-comm_poll(time_t sec)
+comm_poll(int msec)
 {
     struct pollfd pfds[SQUID_MAXFD];
     PF *hdl = NULL;
@@ -904,10 +910,8 @@ comm_poll(time_t sec)
     int num;
     static time_t last_timeout = 0;
     static int lastinc = 0;
-    int poll_time;
     static int incoming_counter = 0;
-    time_t timeout;
-    timeout = squid_curtime + sec;
+    double timeout = current_dtime + (msec / 1000.0);
     do {
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
@@ -949,13 +953,10 @@ comm_poll(time_t sec)
 	    debug(5, 2) ("comm_poll: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
-#if USE_ASYNC_IO
-	poll_time = sec > 0 ? 50 : 0;
-#else
-	poll_time = sec > 0 ? 1000 : 0;
-#endif
+	if (msec > MAX_POLL_TIME)
+	    msec = MAX_POLL_TIME;
 	for (;;) {
-	    num = poll(pfds, nfds, poll_time);
+	    num = poll(pfds, nfds, msec);
 	    Counter.select_loops++;
 	    if (num >= 0)
 		break;
@@ -1029,7 +1030,7 @@ comm_poll(time_t sec)
 	    lastinc = polledinc;
 	}
 	return COMM_OK;
-    } while (timeout > squid_curtime);
+    } while (timeout > current_dtime);
     debug(5, 8) ("comm_poll: time out: %d.\n", squid_curtime);
     return COMM_TIMEOUT;
 }
@@ -1038,7 +1039,7 @@ comm_poll(time_t sec)
 
 /* Select on all sockets; call handlers for those that are ready. */
 int
-comm_select(time_t sec)
+comm_select(int msec)
 {
     fd_set readfds;
     fd_set writefds;
@@ -1052,12 +1053,7 @@ comm_select(time_t sec)
     static time_t last_timeout = 0;
     struct timeval poll_time;
     static int lastinc;
-    time_t timeout;
-
-    /* assume all process are very fast (less than 1 second). Call
-     * time() only once */
-    /* use only 1 second granularity */
-    timeout = squid_curtime + sec;
+    double timeout = current_dtime + (msec / 1000.0);
 
     do {
 #if !ALARM_UPDATES_TIME
@@ -1100,14 +1096,11 @@ comm_select(time_t sec)
 	    debug(5, 2) ("comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
+	if (msec > MAX_POLL_TIME)
+	    msec = MAX_POLL_TIME;
 	for (;;) {
-#if USE_ASYNC_IO
-	    poll_time.tv_sec = 0;
-	    poll_time.tv_usec = sec > 0 ? 50000 : 0;	/* 50 ms */
-#else
-	    poll_time.tv_sec = sec > 0 ? 1 : 0;		/* 1 sec */
-	    poll_time.tv_usec = 0;
-#endif
+	    poll_time.tv_sec = msec / 1000;
+	    poll_time.tv_usec = (msec % 1000) * 1000;
 	    num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
 	    Counter.select_loops++;
 	    if (num >= 0)
@@ -1166,7 +1159,7 @@ comm_select(time_t sec)
 	    lastinc = polledinc;
 	}
 	return COMM_OK;
-    } while (timeout > squid_curtime);
+    } while (timeout > current_dtime);
     debug(5, 8) ("comm_select: time out: %d\n", (int) squid_curtime);
     return COMM_TIMEOUT;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: store_rebuild.cc,v 1.37 1998/05/14 20:48:18 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.38 1998/05/15 15:16:38 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -395,7 +395,7 @@ storeRebuildADirectory(void *unused)
     if (opt_foreground_rebuild)
 	storeRebuildADirectory(NULL);
     else
-	eventAdd("storeRebuild", storeRebuildADirectory, NULL, 0, 1);
+	eventAdd("storeRebuild", storeRebuildADirectory, NULL, 0.0, 1);
 }
 
 #if TEMP_UNUSED_CODE
@@ -627,7 +627,7 @@ storeCleanup(void *datanotused)
 	if ((++validnum & 0xFFFF) == 0)
 	    debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
     }
-    eventAdd("storeCleanup", storeCleanup, NULL, 0, 1);
+    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }
 
 void
@@ -720,7 +720,7 @@ storeRebuildComplete(void)
 	r > 0 ? (int) r : 0,
 	(double) RebuildState.objcount / (r > 0 ? r : 1));
     debug(20, 1) ("Beginning Validation Procedure\n");
-    eventAdd("storeCleanup", storeCleanup, NULL, 0, 1);
+    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }
 
 void
@@ -760,5 +760,5 @@ storeRebuildStart(void)
 	debug(20, 1) ("Rebuilding storage in Cache Dir #%d (%s)\n",
 	    i, clean ? "CLEAN" : "DIRTY");
     }
-    eventAdd("storeRebuild", storeRebuildADirectory, NULL, 0, 1);
+    eventAdd("storeRebuild", storeRebuildADirectory, NULL, 0.0, 1);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.414 1998/05/14 20:48:15 wessels Exp $
+ * $Id: store.cc,v 1.415 1998/05/15 15:16:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -657,7 +657,7 @@ storeMaintainSwapSpace(void *datanotused)
     int max_scan;
     int max_remove;
     static time_t last_warn_time = 0;
-    eventAdd("storeMaintainSwapSpace", storeMaintainSwapSpace, NULL, 1, 1);
+    eventAdd("storeMaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
     /* We can't delete objects while rebuilding swap */
     if (store_rebuilding)
 	return;

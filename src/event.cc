@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.16 1998/05/14 20:47:59 wessels Exp $
+ * $Id: event.cc,v 1.17 1998/05/15 15:16:20 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -36,7 +36,7 @@ struct ev_entry {
     EVH *func;
     void *arg;
     const char *name;
-    time_t when;
+    double when;
     struct ev_entry *next;
     int weight;
 };
@@ -45,18 +45,18 @@ static struct ev_entry *tasks = NULL;
 static OBJH eventDump;
 
 void
-eventAdd(const char *name, EVH * func, void *arg, time_t when, int weight)
+eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
 {
     struct ev_entry *event = xcalloc(1, sizeof(struct ev_entry));
     struct ev_entry **E;
     event->func = func;
     event->arg = arg;
     event->name = name;
-    event->when = squid_curtime + when;
+    event->when = current_dtime + when;
     event->weight = weight;
     if (NULL != arg)
-        cbdataLock(arg);
-    debug(41, 7) ("eventAdd: Adding '%s', in %d seconds\n", name, (int) when);
+	cbdataLock(arg);
+    debug(41, 7) ("eventAdd: Adding '%s', in %f seconds\n", name, when);
     /* Insert after the last event with the same or earlier time */
     for (E = &tasks; *E; E = &(*E)->next) {
 	if ((*E)->when > event->when)
@@ -68,11 +68,15 @@ eventAdd(const char *name, EVH * func, void *arg, time_t when, int weight)
 
 /* same as eventAdd but adds a random offset within +-1/3 of delta_ish */
 void
-eventAddIsh(const char *name, EVH * func, void *arg, time_t delta_ish, int weight)
+eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weight)
 {
-    if (delta_ish >= 3) {
-	const time_t two_third = (2 * delta_ish) / 3;
-	delta_ish = two_third + (squid_random() % two_third);
+    if (delta_ish >= 3.0) {
+	const double two_third = (2.0 * delta_ish) / 3.0;
+	delta_ish = two_third + (drand48() * two_third);
+	/*
+	 * I'm sure drand48() isn't portable.  Tell me what function
+	 * you have that returns a random double value in the range 0,1.
+	 */
     }
     eventAdd(name, func, arg, delta_ish, weight);
 }
@@ -104,25 +108,25 @@ eventRun(void)
     void *arg;
     int weight = 0;
     while (0 == weight) {
-        if ((event = tasks) == NULL)
+	if ((event = tasks) == NULL)
 	    break;
-        if (event->when > squid_curtime)
+	if (event->when > current_dtime)
 	    break;
-        func = event->func;
-        arg = event->arg;
-        event->func = NULL;
-        event->arg = NULL;
-        tasks = event->next;
-        if (NULL != arg) {
-            int valid = cbdataValid(arg);
-            cbdataUnlock(arg);
-            if (!valid)
-	        return;
-        }
-        weight += event->weight;
-        debug(41, 7) ("eventRun: Running '%s'\n", event->name);
-        func(arg);
-        safe_free(event);
+	func = event->func;
+	arg = event->arg;
+	event->func = NULL;
+	event->arg = NULL;
+	tasks = event->next;
+	if (NULL != arg) {
+	    int valid = cbdataValid(arg);
+	    cbdataUnlock(arg);
+	    if (!valid)
+		return;
+	}
+	weight += event->weight;
+	debug(41, 7) ("eventRun: Running '%s'\n", event->name);
+	func(arg);
+	safe_free(event);
     }
 }
 
@@ -131,7 +135,7 @@ eventNextTime(void)
 {
     if (!tasks)
 	return (time_t) 10;
-    return tasks->when - squid_curtime;
+    return (time_t) ((tasks->when - current_dtime) * 1000);
 }
 
 void
@@ -150,8 +154,8 @@ eventDump(StoreEntry * sentry)
 	"Operation",
 	"Next Execution");
     while (e != NULL) {
-	storeAppendPrintf(sentry, "%s\t%d seconds\n",
-	    e->name, (int) (e->when - squid_curtime));
+	storeAppendPrintf(sentry, "%s\t%f seconds\n",
+	    e->name, e->when - current_dtime);
 	e = e->next;
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.57 1998/05/14 20:48:08 wessels Exp $
+ * $Id: peer_select.cc,v 1.58 1998/05/15 15:16:30 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -238,6 +238,7 @@ peerSelectFoo(ps_state * psstate)
     StoreEntry *entry = psstate->entry;
     request_t *request = psstate->request;
     int direct;
+    double expected_rtt;
     debug(44, 3) ("peerSelectFoo: '%s %s'\n",
 	RequestMethodStr[request->method],
 	request->host);
@@ -294,9 +295,9 @@ peerSelectFoo(ps_state * psstate)
 	request->hier.alg = PEER_SA_NETDB;
 	code = CLOSEST_PARENT;
 	debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-        hierarchyNote(&request->hier, code, &psstate->icp, p->host);
-        peerSelectCallback(psstate, p);
-        return;
+	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	peerSelectCallback(psstate, p);
+	return;
     } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
 	request->hier.alg = PEER_SA_ICP;
@@ -306,17 +307,19 @@ peerSelectFoo(ps_state * psstate)
 	    entry,
 	    peerHandleIcpReply,
 	    psstate,
-	    &psstate->icp.n_replies_expected);
+	    &psstate->icp.n_replies_expected,
+	    &expected_rtt);
 	if (psstate->icp.n_sent == 0)
 	    debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
-	debug(44,3)("peerSelectFoo: %d ICP replies expected\n",
-		psstate->icp.n_replies_expected);
+	debug(44, 3) ("peerSelectFoo: %d ICP replies expected, RTT %f\n",
+	    psstate->icp.n_replies_expected, expected_rtt);
 	if (psstate->icp.n_replies_expected > 0) {
 	    entry->ping_status = PING_WAITING;
 	    eventAdd("peerPingTimeout",
 		peerPingTimeout,
 		psstate,
-		Config.neighborTimeout, 0);
+		expected_rtt,
+		0);
 	    return;
 	}
     }
