@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.310 2000/01/05 23:32:22 wessels Exp $
+ * $Id: structs.h,v 1.311 2000/01/11 05:32:58 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1310,10 +1310,13 @@ struct _SwapDir {
     swapdir_t type;
     fileMap *map;
     int cur_size;
+    int high_size;
     int max_size;
     char *path;
     int index;			/* This entry's index into the swapDirs array */
-    int suggest;
+    sfileno suggest;
+    int removals;
+    int scanned;
     struct {
 	unsigned int selected:1;
 	unsigned int read_only:1;
@@ -1337,6 +1340,10 @@ struct _SwapDir {
 	    void *state;
 	} clean;
     } log;
+#if !HEAP_REPLACEMENT
+    dlink_list lru_list;
+    dlink_node *lru_walker;
+#endif
     union {
 	struct {
 	    int l1;
