@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.4 2003/03/06 06:21:37 robertc Exp $
+ * $Id: SwapDir.h,v 1.5 2003/07/15 23:12:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,7 +42,7 @@ typedef void STFSSTARTUP(void);
 typedef void STFSSHUTDOWN(void);
 typedef SwapDir *STFSNEW(void);
 
-struct SwapDir
+class SwapDir
 {
 
 public:

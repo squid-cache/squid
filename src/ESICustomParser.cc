@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.2 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESICustomParser.cc,v 1.3 2003/07/15 23:12:02 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -79,7 +79,7 @@ char const *
 ESICustomParser::findTag(char const *buffer, size_t bufferLength)
 {
     size_t myOffset (0);
-    void *resulttype (NULL);
+    void *resulttype = NULL;
 
     while (myOffset < bufferLength &&
             (resulttype =GetTrie()->findPrefix (buffer + myOffset, bufferLength - myOffset)) == NULL)
@@ -109,7 +109,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
     size_t openESITags (0);
     char const *currentPos = content.buf();
     size_t remainingCount = content.size();
-    char const *tag (NULL);
+    char const *tag = NULL;
 
     while ((tag = findTag(currentPos, remainingCount))) {
         if (tag - currentPos)
