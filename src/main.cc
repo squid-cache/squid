@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.5 1996/03/22 20:56:36 wessels Exp $ */
+/* $Id: main.cc,v 1.6 1996/03/22 21:13:16 wessels Exp $ */
 
 #include "config.h"
 #include <stdlib.h>
@@ -56,6 +56,7 @@ extern void fatal_dump _PARAMS((char *));
 extern void fatal _PARAMS((char *));
 extern void kill_zombie();
 extern int ftpInitialize _PARAMS((void));
+extern int getMaxFD _PARAMS((void));
 
 static int asciiPortNumOverride = 0;
 static int binaryPortNumOverride = 0;

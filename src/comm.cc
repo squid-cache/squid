@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.5 1996/03/22 17:48:15 wessels Exp $ */
+/* $Id: comm.cc,v 1.6 1996/03/22 21:13:15 wessels Exp $ */
 
 #include "config.h"
 
@@ -8,21 +8,16 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#ifdef OLD_CODE
-#if !defined(_SQUID_LINUX_)
-#include <sys/uio.h>
-#endif
-#endif /* OLD_CODE */
 #include <sys/socket.h>
 #include <sys/errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-#ifdef _SQUID_AIX_
+#if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
 
-#ifdef _SQUID_SGI_
+#if HAVE_BSTRING_H
 #include <bstring.h>
 #endif
 
@@ -37,8 +32,7 @@
  * running shy of free file descriptors.  For example, under SunOS, we'll keep
  * 64 file descriptors free for disk-i/o and connections to remote servers */
 
-int RESERVED_FD;
-
+int RESERVED_FD = 64;
 
 #define min(x,y) ((x)<(y)? (x) : (y))
 #define max(a,b) ((a)>(b)? (a) : (b))
