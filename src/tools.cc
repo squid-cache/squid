@@ -1,67 +1,13 @@
-/* $Id: tools.cc,v 1.5 1996/03/25 21:25:18 wessels Exp $ */
 
-#include "config.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <unistd.h>		/* for sysconf() stuff */
-#include <malloc.h>
-#include <syslog.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <sys/param.h>		/* has NOFILE */
-#include <sys/types.h>
+/* $Id: tools.cc,v 1.6 1996/03/27 01:46:26 wessels Exp $ */
 
-#include "debug.h"
-#include "cache_cf.h"
-#include "autoconf.h"
+#include "squid.h"
 
-void death(), deathb(), neighbors_rotate_log(), stat_rotate_log();
-void mail_warranty(), print_warranty(), _db_rotate_log();
 int do_mallinfo = 0;		/* don't do mallinfo() unless this gets set */
-int PrintRusage _PARAMS((void (*)(), FILE *));
 
-extern int catch_signals;	/* main.c */
-extern int storeWriteCleanLog _PARAMS((void));
+static int PrintRusage _PARAMS((void (*)(), FILE *));
 
-/*-------------------------------------------------------------------------
---
---  death, deathb
---
---  Function: These functions catch and report fatal system violations.
---
---  Inputs:   None.
---
---  Output:   None.
---
---  Comments: None.
---
---------------------------------------------------------------------------*/
-void death()
-{
-    fprintf(stderr, "FATAL: Received Segment Violation...dying.\n");
-    signal(SIGSEGV, SIG_DFL);
-    signal(SIGBUS, SIG_DFL);
-    storeWriteCleanLog();
-    PrintRusage(NULL, stderr);
-    print_warranty();
-    abort();
-}
-
-
-void deathb()
-{
-    fprintf(stderr, "FATAL: Received bus error...dying.\n");
-    signal(SIGSEGV, SIG_DFL);
-    signal(SIGBUS, SIG_DFL);
-    signal(SIGBUS, SIG_DFL);
-    storeWriteCleanLog();
-    PrintRusage(NULL, stderr);
-    print_warranty();
-    abort();
-}
+extern int gethostname _PARAMS((char *name, int namelen));
 
 #define DEAD_MSG "\
 The Harvest Cache (version %s) died.\n\
@@ -107,6 +53,30 @@ void print_warranty()
 	mail_warranty();
     else
 	puts(dead_msg());
+}
+
+void death()
+{
+    fprintf(stderr, "FATAL: Received Segment Violation...dying.\n");
+    signal(SIGSEGV, SIG_DFL);
+    signal(SIGBUS, SIG_DFL);
+    storeWriteCleanLog();
+    PrintRusage(NULL, stderr);
+    print_warranty();
+    abort();
+}
+
+
+void deathb()
+{
+    fprintf(stderr, "FATAL: Received bus error...dying.\n");
+    signal(SIGSEGV, SIG_DFL);
+    signal(SIGBUS, SIG_DFL);
+    signal(SIGBUS, SIG_DFL);
+    storeWriteCleanLog();
+    PrintRusage(NULL, stderr);
+    print_warranty();
+    abort();
 }
 
 void rotate_logs(sig)
@@ -298,4 +268,40 @@ int getMaxFD()
 	debug(10, "getMaxFD set MaxFD at %d\n", i);
     }
     return (i);
+}
+
+char *getMyHostname()
+{
+    static char host[SQUIDHOSTNAMELEN + 1];
+    static int present = 0;
+    struct hostent *h = NULL;
+
+    /* Get the host name and store it in host to return */
+    if (!present) {
+	host[0] = '\0';
+	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
+	    debug(1, "comm_hostname: gethostname failed: %s\n",
+		xstrerror());
+	    return NULL;
+	} else {
+	    if ((h = ipcache_gethostbyname(host)) != NULL) {
+		/* DNS lookup successful */
+		/* use the official name from DNS lookup */
+		strcpy(host, h->h_name);
+	    }
+	    present = 1;
+	}
+    }
+    return host;
+}
+
+int safeunlink(s, quiet)
+     char *s;
+     int quiet;
+{
+    int err;
+    if ((err = unlink(s)) < 0)
+	if (!quiet)
+	    debug(1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+    return (err);
 }

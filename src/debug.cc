@@ -1,28 +1,14 @@
-/* $Id: debug.cc,v 1.2 1996/02/29 07:23:08 wessels Exp $ */
+/* $Id: debug.cc,v 1.3 1996/03/27 01:45:58 wessels Exp $ */
 
-#include "config.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#if defined(__STRICT_ANSI__)
-#include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
-#include <syslog.h>
-#include <sys/param.h>		/* For  MAXPATHLEN. */
+#include "squid.h"
 
-#include "debug.h"
-#include "util.h"
-#include "cache_cf.h"
+extern int getLogfileRotateNumber _PARAMS((void));
 
 static char *_db_modules = 0;	/* colon separated list of modules to debug. */
 int _db_level = 0;
 char *_db_file = __FILE__;
 int _db_line = 0;
 
-extern time_t cached_curtime;
 extern char *mkrfc850();
 extern int unbuffered_logs;	/* main.c */
 

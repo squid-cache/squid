@@ -1,22 +1,6 @@
-/* $Id: http.cc,v 1.9 1996/03/26 05:17:21 wessels Exp $ */
+/* $Id: http.cc,v 1.10 1996/03/27 01:46:08 wessels Exp $ */
 
-#include "config.h"
-#include <sys/errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "ansihelp.h"
-#include "comm.h"
-#include "store.h"
-#include "stat.h"
-#include "url.h"
-#include "ipcache.h"
-#include "cache_cf.h"
-#include "ttl.h"
-#include "icp.h"
-#include "util.h"
-#include "cached_error.h"
+#include "squid.h"
 
 #define HTTP_PORT         80
 #define HTTP_DELETE_GAP   (64*1024)
@@ -24,7 +8,6 @@
 
 extern int errno;
 extern char *dns_error_message;
-extern time_t cached_curtime;
 
 typedef struct _httpdata {
     StoreEntry *entry;
@@ -41,8 +24,6 @@ typedef struct _httpdata {
 				 * middle of an icpwrite, don't lose the
 				 * icpReadWriteData */
 } HttpData;
-
-extern char *tmp_error_buf;
 
 char *HTTP_OPS[] =
 {"GET", "POST", "HEAD", ""};
@@ -366,7 +347,7 @@ void httpSendRequest(fd, data)
 	xfree(post_buf);
     }
     debug(6, "httpSendRequest: FD %d: buf '%s'\n", fd, buf);
-    data->icp_rwd_ptr = icpWrite(fd, buf, len, 30, httpSendComplete, data);
+    data->icp_rwd_ptr = icpWrite(fd, buf, len, 30, httpSendComplete, (caddr_t) data);
 }
 
 void httpConnInProgress(fd, data)

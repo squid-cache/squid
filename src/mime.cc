@@ -1,17 +1,8 @@
 
-/* $Id: mime.cc,v 1.3 1996/03/22 17:48:18 wessels Exp $ */
+/* $Id: mime.cc,v 1.4 1996/03/27 01:46:13 wessels Exp $ */
 
-#include "config.h"
-#include <string.h>
-#include <ctype.h>
-#include <sys/types.h>
-
-#include "ansihelp.h"		/* goes first */
-#include "debug.h"
-#include "mime.h"
+#include "squid.h"
 #include "mime_table.h"
-
-extern time_t cached_curtime;
 
 int mime_refresh_request(mime)
      char *mime;

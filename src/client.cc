@@ -1,17 +1,7 @@
 
-/* $Id: client.cc,v 1.3 1996/03/22 17:48:14 wessels Exp $ */
+/* $Id: client.cc,v 1.4 1996/03/27 01:45:56 wessels Exp $ */
 
-#include "config.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
+#include "squid.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ 8192

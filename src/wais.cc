@@ -1,21 +1,8 @@
-/* $Id: wais.cc,v 1.8 1996/03/26 05:17:22 wessels Exp $ */
+/* $Id: wais.cc,v 1.9 1996/03/27 01:46:29 wessels Exp $ */
 
-#include "config.h"
+#include "squid.h"
+
 #if USE_WAIS_RELAY
-#include <sys/errno.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "ansihelp.h"
-#include "comm.h"
-#include "store.h"
-#include "stat.h"
-#include "neighbors.h"
-#include "url.h"
-#include "ipcache.h"
-#include "cache_cf.h"
-#include "util.h"
-#include "cached_error.h"
 
 #define  WAIS_DELETE_GAP  (64*1024)
 
@@ -29,9 +16,7 @@ typedef struct _waisdata {
     char request[MAX_URL];
 } WAISData;
 
-extern char *tmp_error_buf;
 extern char *dns_error_message;
-extern time_t cached_curtime;
 
 int wais_url_parser(url, host, port, request)
      char *url;
@@ -289,5 +274,15 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
 	(PF) waisSendRequest, (caddr_t) data);
     return COMM_OK;
+}
+#else
+int waisStart(unusedfd, url, type, mime_hdr, entry)
+     int unusedfd;
+     char *url;
+     char *type;
+     char *mime_hdr;
+     StoreEntry *entry;
+{
+    return 1;
 }
 #endif

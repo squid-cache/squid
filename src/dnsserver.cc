@@ -1,22 +1,6 @@
-/* $Id: dnsserver.cc,v 1.3 1996/02/29 07:23:09 wessels Exp $ */
+/* $Id: dnsserver.cc,v 1.4 1996/03/27 01:46:00 wessels Exp $ */
 
-#include "config.h"
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <errno.h>
-#include <signal.h>
-
-#include "util.h"
+#include "squid.h"
 
 extern int h_errno;
 
