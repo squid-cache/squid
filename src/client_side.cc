@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.235 1998/03/25 09:23:19 kostas Exp $
+ * $Id: client_side.cc,v 1.236 1998/03/27 04:41:32 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -67,7 +67,6 @@ static void clientProcessOnlyIfCachedMiss(clientHttpRequest * http);
 static HttpReply *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
-static int isTcpHit(log_type code);
 static int clientCheckContentLength(request_t * r);
 
 static int
@@ -772,7 +771,7 @@ clientHierarchical(clientHttpRequest * http)
     return 1;
 }
 
-static int
+int
 isTcpHit(log_type code)
 {
     /* this should be a bitmap for better optimization */
