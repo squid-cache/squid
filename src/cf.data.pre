@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.200 2000/12/09 00:09:04 wessels Exp $
+# $Id: cf.data.pre,v 1.201 2000/12/18 21:52:40 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -721,7 +721,7 @@ DEFAULT: @DEFAULT_ACCESS_LOG@
 LOC: Config.Log.access
 DOC_START
 	Logs the client request activity.  Contains an entry for
-	every HTTP and ICP queries received.
+	every HTTP and ICP queries received. To disable, enter "none".
 DOC_END
 
 
