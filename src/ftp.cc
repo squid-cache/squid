@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.204 1998/03/07 23:43:06 rousskov Exp $
+ * $Id: ftp.cc,v 1.205 1998/03/14 23:29:20 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -932,6 +932,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     ftpState->request = requestLink(request);
     ftpState->ctrl.fd = -1;
     ftpState->data.fd = -1;
+    ftpState->size = -1;
     EBIT_SET(ftpState->flags, FTP_PASV_SUPPORTED);
     EBIT_SET(ftpState->flags, FTP_REST_SUPPORTED);
     if (ftpState->request->method == METHOD_PUT)
