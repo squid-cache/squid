@@ -1,3 +1,5 @@
+	- Simpler cacheobj implementation.
+
 Changes to squid-1.2.alpha5 ():
 
 	- New configuration system.  Everything is generated from

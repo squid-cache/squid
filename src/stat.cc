@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.150 1997/07/28 06:41:03 wessels Exp $
+ * $Id: stat.cc,v 1.151 1997/08/09 04:48:09 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -131,10 +131,6 @@ static void proto_count _PARAMS((cacheinfo *, protocol_t, log_type));
 static void proto_newobject _PARAMS((cacheinfo *, protocol_t, int, int));
 static void proto_purgeobject _PARAMS((cacheinfo *, protocol_t, int));
 static void proto_touchobject _PARAMS((cacheinfo *, protocol_t, int));
-static void statFiledescriptors _PARAMS((StoreEntry *));
-static void stat_io_get _PARAMS((StoreEntry *));
-static void stat_objects_get _PARAMS((StoreEntry *, int vm_or_not));
-static void stat_utilization_get _PARAMS((cacheinfo *, StoreEntry *, const char *desc));
 static int memoryAccounted _PARAMS((void));
 
 #ifdef XMALLOC_STATISTICS
@@ -143,13 +139,12 @@ static void info_get_mallstat _PARAMS((int, int, StoreEntry *));
 
 /* process utilization information */
 static void
-stat_utilization_get(cacheinfo * obj, StoreEntry * sentry, const char *desc)
+statUtilization(cacheinfo * obj, StoreEntry * sentry, const char *desc)
 {
     protocol_t proto_id;
     proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
     proto_stat *q = NULL;
     int secs = 0;
-
     secs = (int) (squid_curtime - squid_starttime);
     storeAppendPrintf(sentry, "{ %s\n", desc);	/* } */
     strcpy(p->protoname, "TOTAL");
@@ -198,7 +193,14 @@ stat_utilization_get(cacheinfo * obj, StoreEntry * sentry, const char *desc)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-static void
+void
+stat_utilization_get(StoreEntry *e)
+{
+	statUtilization(HTTPCacheInfo, e, "HTTP");
+	statUtilization(ICPCacheInfo, e, "ICP");
+}
+
+void
 stat_io_get(StoreEntry * sentry)
 {
     int i;
@@ -328,14 +330,12 @@ describeTimestamps(const StoreEntry * entry)
 
 /* process objects list */
 static void
-stat_objects_get(StoreEntry * sentry, int vm_or_not)
+statObjects(StoreEntry * sentry, int vm_or_not)
 {
     StoreEntry *entry = NULL;
     MemObject *mem;
     int N = 0;
-
     storeAppendPrintf(sentry, open_bracket);
-
     for (entry = storeGetFirst(); entry != NULL; entry = storeGetNext()) {
 	mem = entry->mem_obj;
 	if (vm_or_not && mem == NULL)
@@ -356,40 +356,16 @@ stat_objects_get(StoreEntry * sentry, int vm_or_not)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-
-/* process a requested object into a manager format */
 void
-stat_get(const char *req, StoreEntry * sentry)
+stat_objects_get(StoreEntry *e)
 {
+	statObjects(e, 0);
+}
 
-    if (strcmp(req, "objects") == 0) {
-	stat_objects_get(sentry, 0);
-    } else if (strcmp(req, "vm_objects") == 0) {
-	stat_objects_get(sentry, 1);
-    } else if (strcmp(req, "ipcache") == 0) {
-	stat_ipcache_get(sentry);
-    } else if (strcmp(req, "fqdncache") == 0) {
-	fqdnStats(sentry);
-    } else if (strcmp(req, "dns") == 0) {
-	dnsStats(sentry);
-    } else if (strcmp(req, "redirector") == 0) {
-	redirectStats(sentry);
-    } else if (strcmp(req, "utilization") == 0) {
-	stat_utilization_get(HTTPCacheInfo, sentry, "HTTP");
-	stat_utilization_get(ICPCacheInfo, sentry, "ICP");
-    } else if (strcmp(req, "io") == 0) {
-	stat_io_get(sentry);
-    } else if (strcmp(req, "reply_headers") == 0) {
-	httpReplyHeaderStats(sentry);
-    } else if (strcmp(req, "filedescriptors") == 0) {
-	statFiledescriptors(sentry);
-    } else if (strcmp(req, "netdb") == 0) {
-	netdbDump(sentry);
-    } else if (strcmp(req, "storedir") == 0) {
-	storeDirStats(sentry);
-    } else if (strcmp(req, "cbdata") == 0) {
-	cbdataDump(sentry);
-    }
+void
+stat_vmobjects_get(StoreEntry *e)
+{
+	statObjects(e, 1);
 }
 
 void
@@ -469,12 +445,11 @@ fdRemoteAddr(const fde * f)
     return buf;
 }
 
-static void
+void
 statFiledescriptors(StoreEntry * sentry)
 {
     int i;
     fde *f;
-
     storeAppendPrintf(sentry, open_bracket);
     storeAppendPrintf(sentry, "{Active file descriptors:}\n");
     storeAppendPrintf(sentry, "{%-4s %-6s %-4s %-7s %-7s %-21s %s}\n",

@@ -98,3 +98,4 @@ typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
 typedef void STABH _PARAMS((void *));
 typedef void ERCB _PARAMS((int fd, void *, int size));
+typedef void OBJH _PARAMS((StoreEntry *));

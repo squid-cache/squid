@@ -387,11 +387,6 @@ extern void init_stack _PARAMS((Stack *, int));
 extern void stackFreeMemory _PARAMS((Stack *));
 
 extern void stat_init _PARAMS((cacheinfo **, const char *));
-extern void stat_get _PARAMS((const char *req, StoreEntry *));
-extern void log_enable _PARAMS((StoreEntry *));
-extern void info_get _PARAMS((StoreEntry *));
-extern void server_list _PARAMS((StoreEntry *));
-extern void parameter_get _PARAMS((StoreEntry *));
 
 /* To reduce memory fragmentation, we now store the memory version of an
  * object in fixed size blocks of size PAGE_SIZE and instead of calling 
@@ -494,7 +489,6 @@ extern void storeDirSwapLog _PARAMS((const StoreEntry *));
 extern int storeDirNumber _PARAMS((int fileno));
 extern void storeDirUpdateSwapSize _PARAMS((int fn, size_t size, int sign));
 extern int storeDirProperFileno _PARAMS((int dirn, int fn));
-extern void storeDirStats _PARAMS((StoreEntry * sentry));
 
 
 extern const char *getMyHostname _PARAMS((void));
@@ -550,3 +544,14 @@ extern peer_t parseNeighborType _PARAMS((const char *s));
 extern void errorSend _PARAMS((int fd, ErrorState *));
 extern void errorAppendEntry _PARAMS((StoreEntry *, ErrorState *));
 extern void errorInitialize _PARAMS((void));
+
+extern OBJH stat_io_get;
+extern OBJH stat_objects_get;
+extern OBJH stat_vmobjects_get;
+extern OBJH stat_utilization_get;
+extern OBJH statFiledescriptors;
+extern OBJH log_enable;
+extern OBJH info_get;
+extern OBJH server_list;
+extern OBJH parameter_get;
+extern OBJH storeDirStats;
