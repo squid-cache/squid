@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.16 1998/07/13 21:37:15 wessels Exp $
+ * $Id: forward.cc,v 1.17 1998/07/14 06:12:59 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -310,39 +310,52 @@ fwdDispatch(FwdState * fwdState)
 /* PUBLIC FUNCTIONS */
 
 void
-fwdStart(int fd, StoreEntry * entry, request_t * request)
+fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr peer_addr)
 {
     FwdState *fwdState;
-    debug(17, 3) ("fwdStart: '%s'\n", storeUrl(entry));
-    entry->mem_obj->request = requestLink(request);
-    entry->mem_obj->fd = fd;
-    switch (request->protocol) {
+    aclCheck_t ch;
+    int answer;
+    ErrorState *err;
+    /*      
+     * Check if this host is allowed to fetch MISSES from us (miss_access)
+     */
+    memset(&ch, '\0', sizeof(aclCheck_t));  
+    ch.src_addr = peer_addr;
+    ch.request = r;
+    answer = aclCheckFast(Config.accessList.miss, &ch);
+    if (answer == 0) {
+        err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
+        err->request = requestLink(r);
+        err->src_addr = peer_addr;
+        errorAppendEntry(e, err);
+        return;
+    }
+    debug(17, 3) ("fwdStart: '%s'\n", storeUrl(e));
+    e->mem_obj->request = requestLink(r);
+    e->mem_obj->fd = fd;
+    switch (r->protocol) {
     /*
      * Note, don't create fwdState for these requests
      */
     case PROTO_INTERNAL:
-	internalStart(request, entry);
+	internalStart(r, e);
 	return;
     case PROTO_CACHEOBJ:
-	cachemgrStart(fd, request, entry);
+	cachemgrStart(fd, r, e);
 	return;
     default:
 	break;
     }
     fwdState = memAllocate(MEM_FWD_STATE);
     cbdataAdd(fwdState, MEM_FWD_STATE);
-    fwdState->entry = entry;
+    fwdState->entry = e;
     fwdState->client_fd = fd;
     fwdState->server_fd = -1;
-    fwdState->request = requestLink(request);
+    fwdState->request = requestLink(r);
     fwdState->start = squid_curtime;
-    storeLockObject(entry);
-    storeRegisterAbort(entry, fwdAbort, fwdState);
-    peerSelect(request,
-	entry,
-	fwdStartComplete,
-	fwdStartFail,
-	fwdState);
+    storeLockObject(e);
+    storeRegisterAbort(e, fwdAbort, fwdState);
+    peerSelect(r, e, fwdStartComplete, fwdStartFail, fwdState);
 }
 
 /* This is called before reading data from the server side to

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.344 1998/07/09 19:21:00 rousskov Exp $
+ * $Id: client_side.cc,v 1.345 1998/07/14 06:12:58 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -269,7 +269,8 @@ clientProcessExpired(void *data)
     entry->refcount++;		/* EXPIRED CASE */
     http->entry = entry;
     http->out.offset = 0;
-    fwdStart(http->conn->fd, http->entry, http->request);
+    fwdStart(http->conn->fd, http->entry, http->request,
+	http->conn->peer.sin_addr);
     /* Register with storage manager to receive updates when data comes in. */
     if (entry->store_status == STORE_ABORTED)
 	debug(33, 0) ("clientProcessExpired: entry->swap_status == STORE_ABORTED\n");
@@ -1996,28 +1997,12 @@ clientProcessMiss(clientHttpRequest * http)
 	errorAppendEntry(http->entry, err);
 	return;
     }
-    /*
-     * Check if this host is allowed to fetch MISSES from us (miss_access)
-     */
-    memset(&ch, '\0', sizeof(aclCheck_t));
-    ch.src_addr = http->conn->peer.sin_addr;
-    ch.request = r;
-    answer = aclCheckFast(Config.accessList.miss, &ch);
-    if (answer == 0) {
-	http->al.http.code = HTTP_FORBIDDEN;
-	err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
-	err->request = requestLink(r);
-	err->src_addr = http->conn->peer.sin_addr;
-	http->entry = clientCreateStoreEntry(http, r->method, 0);
-	errorAppendEntry(http->entry, err);
-	return;
-    }
     assert(http->out.offset == 0);
     http->entry = clientCreateStoreEntry(http, r->method, r->flags);
     http->entry->refcount++;
     if (http->flags.internal)
 	r->protocol = PROTO_INTERNAL;
-    fwdStart(http->conn->fd, http->entry, r);
+    fwdStart(http->conn->fd, http->entry, r, http->conn->peer.sin_addr);
 }
 
 static clientHttpRequest *
