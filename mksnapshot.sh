@@ -6,7 +6,7 @@ fi
 package=squid
 tag=${1:-HEAD}
 startdir=$PWD
-date=`date +%Y%m%d`
+date=`env TZ=GMT date +%Y%m%d`
 
 tmpdir=$PWD/${package}-${tag}-mksnapshot
 
