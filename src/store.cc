@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.240 1997/05/22 23:16:40 wessels Exp $
+ * $Id: store.cc,v 1.241 1997/05/23 05:21:02 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -365,7 +365,7 @@ destroy_MemObject(MemObject * mem)
     debug(20, 3, "destroy_MemObject: destroying %p\n", mem);
     destroy_MemObjectData(mem);
     safe_free(mem->clients);
-    safe_free(mem->mime_hdr);
+    safe_free(mem->request_hdr);
     safe_free(mem->reply);
     safe_free(mem->e_abort_msg);
     requestUnlink(mem->request);
@@ -754,10 +754,10 @@ storeCreateEntry(const char *url,
     meta_data.url_strings += strlen(url);
     e->method = method;
     if (req_hdr) {
-	mem->mime_hdr_sz = req_hdr_sz;
-	mem->mime_hdr = xmalloc(req_hdr_sz + 1);
-	xmemcpy(mem->mime_hdr, req_hdr, req_hdr_sz);
-	*(mem->mime_hdr + req_hdr_sz) = '\0';
+	mem->request_hdr_sz = req_hdr_sz;
+	mem->request_hdr = xmalloc(req_hdr_sz + 1);
+	xmemcpy(mem->request_hdr, req_hdr, req_hdr_sz);
+	*(mem->request_hdr + req_hdr_sz) = '\0';
     }
     if (BIT_TEST(flags, REQ_CACHABLE)) {
 	BIT_SET(e->flag, ENTRY_CACHABLE);
@@ -949,20 +949,11 @@ storeStartDeleteBehind(StoreEntry * e)
 
 /* Append incoming data from a primary server to an entry. */
 void
-storeAppend(StoreEntry * e, const char *data, int len)
+storeAppend(StoreEntry * e, const char *buf, int len)
 {
-    MemObject *mem;
-    /* sanity check */
-    if (e == NULL) {
-	debug_trap("storeAppend: NULL entry.");
-	return;
-    } else if ((mem = e->mem_obj) == NULL) {
-	debug_trap("storeAppend: NULL entry->mem_obj");
-	return;
-    } else if (mem->data == NULL) {
-	debug_trap("storeAppend: NULL entry->mem_obj->data");
-	return;
-    }
+    MemObject *mem = e->mem_obj;
+    assert(mem != NULL);
+    assert(len >= 0);
     if (len) {
 	debug(20, 5, "storeAppend: appending %d bytes for '%s'\n", len, e->key);
 	storeGetMemSpace(len);
@@ -971,7 +962,7 @@ storeAppend(StoreEntry * e, const char *data, int len)
 		storeStartDeleteBehind(e);
 	}
 	store_mem_size += len;
-	(void) memAppend(mem->data, data, len);
+	memAppend(mem->data, buf, len);
 	mem->e_current_len += len;
     }
     if (e->store_status != STORE_ABORTED && !BIT_TEST(e->flag, DELAY_SENDING))
@@ -1669,12 +1660,12 @@ storeComplete(StoreEntry * e)
 {
     debug(20, 3, "storeComplete: '%s'\n", e->key);
     e->object_len = e->mem_obj->e_current_len;
-    InvokeHandlers(e);
     e->lastref = squid_curtime;
     e->store_status = STORE_OK;
     storeSetMemStatus(e, IN_MEMORY);
     e->swap_status = NO_SWAP;
-    safe_free(e->mem_obj->mime_hdr);
+    InvokeHandlers(e);
+    safe_free(e->mem_obj->request_hdr);
     if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	storeRelease(e);
     else if (storeCheckSwapable(e))
