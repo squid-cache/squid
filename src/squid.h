@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.114 1997/05/15 23:43:12 wessels Exp $
+ * $Id: squid.h,v 1.115 1997/05/16 07:43:08 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -326,7 +326,7 @@ extern int theInIcpConnection;	/* main.c */
 extern int theOutIcpConnection;	/* main.c */
 extern int vizSock;
 extern volatile int shutdown_pending;	/* main.c */
-extern volatile int reread_pending;	/* main.c */
+extern volatile int reconfigure_pending;/* main.c */
 extern int opt_reload_hit_only;	/* main.c */
 extern int opt_dns_tests;	/* main.c */
 extern int opt_foreground_rebuild;	/* main.c */
@@ -348,6 +348,7 @@ extern int opt_udp_hit_obj;	/* main.c */
 extern int opt_mem_pools;	/* main.c */
 extern int opt_forwarded_for;	/* main.c */
 extern int opt_accel_uses_host;	/* main.c */
+extern int configured_once;	/* main.c */
 extern char ThisCache[];	/* main.c */
 
 /* Prototypes and definitions which don't really deserve a separate
