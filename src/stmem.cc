@@ -1,4 +1,4 @@
-/* $Id: stmem.cc,v 1.7 1996/04/04 21:34:25 wessels Exp $ */
+/* $Id: stmem.cc,v 1.8 1996/04/05 00:59:27 wessels Exp $ */
 
 /* 
  * DEBUG: Section 19          stmem:
@@ -6,6 +6,8 @@
 
 #include "squid.h"
 
+stmem_stats sm_stats;
+stmem_stats disk_stats;
 
 #define min(x,y) ((x)<(y)? (x) : (y))
 
