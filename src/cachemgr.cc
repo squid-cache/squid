@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.91 2002/04/10 22:09:40 hno Exp $
+ * $Id: cachemgr.cc,v 1.92 2002/04/10 22:12:31 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -532,8 +532,10 @@ process_request(cachemgr_request * req)
     }
     memset(&S, '\0', sizeof(struct sockaddr_in));
     S.sin_family = AF_INET;
-    if ((hp = gethostbyname(req->hostname)) != NULL)
+    if ((hp = gethostbyname(req->hostname)) != NULL) {
+	assert(hp->h_length <= sizeof(S.sin_addr.s_addr));
 	xmemcpy(&S.sin_addr.s_addr, hp->h_addr, hp->h_length);
+    }
     else if (safe_inet_addr(req->hostname, &S.sin_addr))
 	(void) 0;
     else {
