@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.485 2000/05/16 07:06:03 wessels Exp $
+ * $Id: client_side.cc,v 1.486 2000/05/29 00:52:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -750,6 +750,7 @@ httpRequestFree(void *data)
     if ((e = http->entry)) {
 	http->entry = NULL;
 	storeUnregister(http->sc, e, http);
+	http->sc = NULL;
 	storeUnlockObject(e);
     }
     /* old_entry might still be set if we didn't yet get the reply
@@ -757,6 +758,7 @@ httpRequestFree(void *data)
     if ((e = http->old_entry)) {
 	http->old_entry = NULL;
 	storeUnregister(http->sc, e, http);
+	http->old_sc = NULL;
 	storeUnlockObject(e);
     }
     requestUnlink(http->request);
@@ -1311,6 +1313,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	if ((e = http->entry)) {
 	    http->entry = NULL;
 	    storeUnregister(http->sc, e, http);
+	    http->sc = NULL;
 	    storeUnlockObject(e);
 	}
 	clientProcessMiss(http);
@@ -1420,6 +1423,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    http->log_type = LOG_TCP_IMS_HIT;
 	    memFree(buf, MEM_CLIENT_SOCK_BUF);
 	    storeUnregister(http->sc, e, http);
+	    http->sc = NULL;
 	    storeUnlockObject(e);
 	    e = clientCreateStoreEntry(http, http->request->method, null_request_flags);
 	    /*
@@ -1690,6 +1694,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
 	    err->request = requestLink(http->request);
 	    storeUnregister(http->sc, http->entry, http);
+	    http->sc = NULL;
 	    storeUnlockObject(http->entry);
 	    http->entry = clientCreateStoreEntry(http, http->request->method,
 		null_request_flags);
@@ -1915,6 +1920,7 @@ clientProcessOnlyIfCachedMiss(clientHttpRequest * http)
     err->src_addr = http->conn->peer.sin_addr;
     if (http->entry) {
 	storeUnregister(http->sc, http->entry, http);
+	http->sc = NULL;
 	storeUnlockObject(http->entry);
     }
     http->entry = clientCreateStoreEntry(http, r->method, null_request_flags);
@@ -2081,6 +2087,7 @@ clientProcessMiss(clientHttpRequest * http)
 	    storeEntryDump(http->entry, 1);
 	}
 	storeUnregister(http->sc, http->entry, http);
+	http->sc = NULL;
 	storeUnlockObject(http->entry);
 	http->entry = NULL;
     }
