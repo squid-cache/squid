@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.90 1996/12/02 05:55:11 wessels Exp $
+ * $Id: tools.cc,v 1.91 1996/12/15 03:22:28 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -526,11 +526,14 @@ writePidFile(void)
 {
     FILE *pid_fp = NULL;
     const char *f = NULL;
+    mode_t old_umask;
 
     if ((f = Config.pidFilename) == NULL || !strcmp(Config.pidFilename, "none"))
 	return;
     enter_suid();
+    old_umask = umask(022);
     pid_fp = fopen(f, "w");
+    umask(old_umask);
     leave_suid();
     if (pid_fp != NULL) {
 	fprintf(pid_fp, "%d\n", (int) getpid());
