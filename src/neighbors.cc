@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.293 2001/03/03 10:39:33 hno Exp $
+ * $Id: neighbors.cc,v 1.294 2001/03/25 18:08:25 adrian Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -275,7 +275,7 @@ peerClearRR(void *data)
     if (p->rr_count < 0)
 	p->rr_count = 0;
     p->rr_lastcount = p->rr_count;
-    eventAdd("peerClearRR", peerClearRR, p, 5 * 60, 0);
+    eventAdd("peerClearRR", peerClearRR, p, 5 * 60.0, 0);
 }
 
 peer *
