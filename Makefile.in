@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.16 2002/06/13 00:10:44 hno Exp $
+# $Id: Makefile.in,v 1.17 2002/06/23 14:53:34 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -132,7 +132,8 @@ EXTRA_DIST = \
 	INSTALL \
 	QUICKSTART \
 	README \
-	SPONSORS
+	SPONSORS \
+	bootstrap.sh
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
