@@ -2,6 +2,7 @@
 #define __COMM_H__
 
 #include "StoreIOBuffer.h"
+#include "Array.h"
 
 typedef void IOFCB(int fd, StoreIOBuffer recievedData, comm_err_t flag, int xerrno, void *data);
 typedef void IOWCB(int fd, char *buffer, size_t len, comm_err_t flag, int xerrno, void *data);
