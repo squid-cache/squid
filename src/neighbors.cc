@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.43 1996/08/23 21:29:57 wessels Exp $
+ * $Id: neighbors.cc,v 1.44 1996/08/26 19:57:08 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -319,7 +319,6 @@ void neighbors_open(fd)
     memset(&name, '\0', sizeof(struct sockaddr_in));
     if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
 	debug(15, 1, "getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
-    friends->fd = fd;
 
     /* Prepare neighbor connections, one at a time */
     E = &friends->edges_head;
@@ -420,7 +419,12 @@ int neighborsUdpPing(proto)
 
     if (friends->edges_head == NULL)
 	return 0;
-
+    if (theOutIcpConnection < 0) {
+	debug(15, 0, "neighborsUdpPing: There is no ICP socket!\n");
+	debug(15, 0, "Cannot query neighbors for '%s'.\n", url);
+	debug(15, 0, "Check 'icp_port' in your config file\n");
+	fatal_dump(NULL);
+    }
     for (i = 0, e = friends->first_ping; i++ < friends->n; e = e->next) {
 	if (entry->swap_status != NO_SWAP)
 	    fatal_dump("neighborsUdpPing: bad swap_status");
@@ -455,7 +459,7 @@ int neighborsUdpPing(proto)
 	if (e->icp_port == echo_port) {
 	    debug(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    echo_hdr.reqnum = reqnum;
-	    icpUdpSend(friends->fd,
+	    icpUdpSend(theOutIcpConnection,
 		url,
 		&echo_hdr,
 		&e->in_addr,
@@ -464,7 +468,7 @@ int neighborsUdpPing(proto)
 		LOG_TAG_NONE);
 	} else {
 	    e->header.reqnum = reqnum;
-	    icpUdpSend(friends->fd,
+	    icpUdpSend(theOutIcpConnection,
 		url,
 		&e->header,
 		&e->in_addr,
@@ -508,7 +512,7 @@ int neighborsUdpPing(proto)
 	    xmemcpy(&to_addr.sin_addr, hep->h_addr, hep->h_length);
 	    to_addr.sin_port = htons(echo_port);
 	    echo_hdr.reqnum = reqnum;
-	    icpUdpSend(friends->fd,
+	    icpUdpSend(theOutIcpConnection,
 		url,
 		&echo_hdr,
 		&to_addr,

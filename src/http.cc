@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.68 1996/08/26 19:16:06 wessels Exp $
+ * $Id: http.cc,v 1.69 1996/08/26 19:57:05 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -337,6 +337,12 @@ void httpProcessReplyHeader(httpState, buf, size)
 		httpMakePublic(entry);
 	    else if (*reply->expires)
 		httpMakePublic(entry);
+	    else if (entry->mem_obj->request->protocol != PROTO_HTTP)
+		/* XXX Remove this check after a while.  DW 8/21/96
+		 * We won't keep some FTP objects from neighbors running
+		 * 1.0.8 or earlier because their ftpget's don't 
+		 * add a Date: field */
+		httpMakePublic(entry);
 	    else
 		httpMakePrivate(entry);
 	    break;
@@ -585,7 +591,8 @@ static void httpSendRequest(fd, httpState)
 		memset(ybuf, '\0', SM_PAGE_SIZE);
 		sprintf(ybuf, "%s %s %s", t, VIA_PROXY_TEXT, version_string);
 		t = ybuf;
-	    }
+	    } else if (strncasecmp(t, "Connection:", 11) == 0)
+		continue;
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
 	    strcat(buf, t);

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.8 1996/07/22 16:41:04 wessels Exp $
+ * $Id: util.h,v 1.9 1996/08/26 19:56:59 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -181,34 +181,6 @@ extern int Harvest_debug_levels[];
 #endif
 
 void debug_flag _PARAMS((char *));
-#ifdef UNUSED_CODE
-void debug_enable _PARAMS((int, int));
-void debug_disable _PARAMS((int));
-void debug_reset _PARAMS((void));
-int debug_ok _PARAMS((int, int));
-#endif /* UNUSED_CODE */
-
-#define HOST_CACHE_TTL 3600
-
-typedef struct _host {
-    char key[SQUIDHOSTNAMELEN];	/* www.bar.com */
-    char fqdn[SQUIDHOSTNAMELEN];	/* real.bar.com */
-    char dotaddr[16];		/* 128.138.213.10 */
-    char ipaddr[4];
-    time_t last_t;		/* last access of this info */
-    int n;			/* # of requests for this host */
-    int addrlen;		/* length of 'ipaddr', always 4 */
-    struct _host *next;
-} Host;
-
-extern Host *thisHost;
-
-Host *get_host _PARAMS((char *hostname));
-int delete_host _PARAMS((Host * h));
-int expire_host_cache _PARAMS((time_t timeout));
-#ifdef UNUSED_CODE
-void dump_host_cache _PARAMS((int, int));
-#endif
 
 char *mkhttpdlogtime _PARAMS((time_t *));
 extern char *mkrfc850 _PARAMS((time_t *));

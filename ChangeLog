@@ -7,6 +7,7 @@ Changes to squid-1.1.alpha12:
 	- report all error pages to the debug log
 	- Added -i option which forces IP cache entry to be invalidated
 	  just after an object retrieval begins.
+	- Includes all squid-1.0 changes up to squid-1.0.10.
 
 Changes to squid-1.1.alpha11:
 
@@ -115,6 +116,30 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+
+Changes to squid-1.0.10 (August 26, 1996):
+
+	- Fixed INADDR_NONE not being set for ftpget.c.
+	- Remove "Connection: Keep-Alive" lines from HTTP requests
+	  since Squid doesn't support them.
+	- Fixed IP Address/netmask bug.  Now 1.2.3.4/255.255.255.0 is
+	  equivalent to 1.2.3.0/255.255.255.0.
+
+Changes to squid-1.0.9 (August 22, 1996):
+
+	- Cleaned up ipcache_purgerlu().
+	- Fixed ipcache_gethostbyname() to release expired entries.
+	- Added check for numeric addresses to ipcache_nbgethostbyname().
+	- Added Date: field to ftpget's HTTP header output.
+	- Added temporary hack to httpProcessReplyHeaders() to allow
+	  caching of non-HTTP objects fetched from neighbors when
+	  the header does not have Date, Expires, or Last-Modified.
+	- Added a check for a valid ICP socket before sending ICP
+	  queries.
+	- Fixed SSL code to unregister DNS lookups if client aborts.
+	- Removed lib/host_cache.c from distribution.
+	- Made IP cache stats output sorted by last reference.
+	- Added ICP internet-draft to docs directory.
 
 Changes to squid-1.0.8 (August 19, 1996):
 
