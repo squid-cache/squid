@@ -1,6 +1,7 @@
 print "#include \"squid.h\"\n";
 while (<>) {
 	$init = undef;
+	next if (/ SQUID_GLOBALS_H/);
 	if (/^#/) {
 		print;
 		next;
