@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.270 1998/06/09 23:34:00 wessels Exp $
+ * $Id: comm.cc,v 1.271 1998/06/10 05:47:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1094,7 +1094,7 @@ comm_add_close_handler(int fd, PF * handler, void *data)
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
 	fd, handler, data);
     for (c = fd_table[fd].close_handler; c; c=c->next)
-	assert(c->handler != handler && c->data != data);
+	assert(c->handler != handler || c->data != data);
     new->handler = handler;
     new->data = data;
     new->next = fd_table[fd].close_handler;
