@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.301 1999/01/12 15:47:54 wessels Exp $
+ * $Id: protos.h,v 1.302 1999/01/12 23:37:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -761,7 +761,7 @@ extern void storeSetPublicKey(StoreEntry *);
 extern void storeComplete(StoreEntry *);
 extern void storeInit(void);
 extern int storeClientWaiting(const StoreEntry *);
-extern void storeAbort(StoreEntry *, int);
+extern void storeAbort(StoreEntry *);
 extern void storeAppend(StoreEntry *, const char *, int);
 extern void storeLockObject(StoreEntry *);
 extern void storeSwapInStart(StoreEntry *, SIH *, void *data);

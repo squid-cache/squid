@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.41 1999/01/11 16:50:43 wessels Exp $
+ * $Id: store_swapout.cc,v 1.42 1999/01/12 23:37:51 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -156,7 +156,7 @@ storeCheckSwapOut(StoreEntry * e)
 	(int) mem->swapout.done_offset);
 #if USE_ASYNC_IO
     if (mem->inmem_hi < mem->swapout.queue_offset) {
-	storeAbort(e, 0);
+	storeAbort(e);
 	assert(EBIT_TEST(e->flags, RELEASE_REQUEST));
 	storeSwapOutFileClose(e);
 	return;

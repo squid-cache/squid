@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.480 1999/01/12 16:23:22 wessels Exp $
+ * $Id: store.cc,v 1.481 1999/01/12 23:37:49 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -591,7 +591,7 @@ storeComplete(StoreEntry * e)
  * entry for releasing 
  */
 void
-storeAbort(StoreEntry * e, int cbflag)
+storeAbort(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     STABH *callback;
@@ -613,7 +613,7 @@ storeAbort(StoreEntry * e, int cbflag)
      */
     mem->object_sz = mem->inmem_hi;
     /* Notify the server side */
-    if (cbflag && mem->abort.callback) {
+    if (mem->abort.callback) {
 	callback = mem->abort.callback;
 	data = mem->abort.data;
 	mem->abort.callback = NULL;

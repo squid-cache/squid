@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.43 1999/01/11 23:29:42 wessels Exp $
+ * $Id: forward.cc,v 1.44 1999/01/12 23:37:42 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -48,6 +48,7 @@ static int fwdReforward(FwdState *);
 static void fwdStartFail(FwdState *);
 static void fwdLogReplyStatus(int tries, http_status status);
 static OBJH fwdStats;
+static STABH fwdAbort;
 
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
@@ -396,6 +397,9 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
 	    return;
 	}
     }
+    debug(17, 3) ("fwdStart: '%s'\n", storeUrl(e));
+    e->mem_obj->request = requestLink(r);
+    e->mem_obj->fd = fd;
     if (shutting_down) {
 	/* more yuck */
 	err = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
@@ -403,9 +407,6 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
 	errorAppendEntry(e, err);
 	return;
     }
-    debug(17, 3) ("fwdStart: '%s'\n", storeUrl(e));
-    e->mem_obj->request = requestLink(r);
-    e->mem_obj->fd = fd;
     switch (r->protocol) {
 	/*
 	 * Note, don't create fwdState for these requests
@@ -430,6 +431,7 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
     fwdState->request = requestLink(r);
     fwdState->start = squid_curtime;
     storeLockObject(e);
+    storeRegisterAbort(e, fwdAbort, fwdState);
     peerSelect(r, e, fwdStartComplete, fwdState);
 }
 
@@ -460,6 +462,17 @@ fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
     fwdState->fail.err_code = err_code;
     fwdState->fail.http_code = http_code;
     fwdState->fail.xerrno = xerrno;
+}
+
+/*
+ * Called when someone else calls StoreAbort() on this entry
+ */
+void
+fwdAbort(void *data)
+{
+    FwdState *fwdState = data;
+    debug(17, 3) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
+    fwdStateFree(fwdState);
 }
 
 /*
