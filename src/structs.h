@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.190 1998/07/22 20:54:05 wessels Exp $
+ * $Id: structs.h,v 1.191 1998/07/23 05:39:32 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1132,10 +1132,9 @@ struct _StoreEntry {
     size_t swap_file_sz;
     u_short refcount;
     u_short flag;
-
     int swap_file_number;
     dlink_node lru;
-    u_char lock_count;		/* Assume < 256! */
+    u_short lock_count;		/* Assume < 65536! */
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;
     store_status_t store_status:3;
