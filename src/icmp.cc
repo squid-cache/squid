@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.21 1996/10/15 04:57:52 wessels Exp $
+ * $Id: icmp.cc,v 1.22 1996/10/15 23:32:51 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -66,7 +66,7 @@ icmpSendEcho(struct in_addr to, int opcode, char *payload, int len)
     pecho->to = to;
     pecho->opcode = (unsigned char) opcode;
     pecho->psize = len;
-    memcpy(pecho->payload, payload, len);
+    xmemcpy(pecho->payload, payload, len);
     icmpQueueSend(pecho, sizeof(pingerEchoData) - 8192 + len, xfree);
 }
 
@@ -177,7 +177,7 @@ icmpHandleSourcePing(struct sockaddr_in *from, char *buf)
     StoreEntry *entry;
     icp_common_t header;
     char *url;
-    memcpy(&header, buf, sizeof(icp_common_t));
+    xmemcpy(&header, buf, sizeof(icp_common_t));
     url = buf + sizeof(icp_common_t);
     if (neighbors_do_private_keys && header.reqnum) {
 	key = storeGeneratePrivateKey(url, METHOD_GET, header.reqnum);
@@ -222,7 +222,7 @@ icmpSourcePing(struct in_addr to, icp_common_t * header, char *url)
 	return;
     payload = get_free_8k_page();
     len = sizeof(icp_common_t);
-    memcpy(payload, header, len);
+    xmemcpy(payload, header, len);
     strcpy(payload + len, url);
     len += ulen + 1;
     icmpSendEcho(to, S_ICMP_ICP, payload, len);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.36 1996/10/14 23:50:49 wessels Exp $
+ * $Id: cachemgr.cc,v 1.37 1996/10/15 23:32:51 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -517,16 +517,16 @@ parse_object(char *string)
     sscanf(token, "%d", &obj_size);
 
     token = strtok(tmp_line, w_space);
-    store_time = strdup(token);
+    store_time = xstrdup(token);
 
     token = strtok(tmp_line, w_space);
-    obj_status = strdup(token);
+    obj_status = xstrdup(token);
 
     token = strtok(tmp_line, w_space);
-    last_ref = strdup(token);
+    last_ref = xstrdup(token);
 
     token = strtok(tmp_line, w_space);
-    ttl = strdup(token);
+    ttl = xstrdup(token);
 
     token = strtok(tmp_line, w_space);
     /* Active */
@@ -535,10 +535,10 @@ parse_object(char *string)
     sscanf(token, "%d", &ref_cnt);
 
     token = strtok(tmp_line, w_space);
-    sto = strdup(token);
+    sto = xstrdup(token);
 
     token = strtok(tmp_line, w_space);
-    status = strdup(token);
+    status = xstrdup(token);
 
     printf("<LI>Cache: <A HREF=\"%s\">%s</A><BR>",
 	url, url);
@@ -589,11 +589,11 @@ main(int argc, char *argv[])
     time_t time_val;
 
     if ((s = strrchr(argv[0], '/')))
-	progname = strdup(s + 1);
+	progname = xstrdup(s + 1);
     else
-	progname = strdup(argv[0]);
+	progname = xstrdup(argv[0]);
     if ((s = getenv("SCRIPT_NAME")) != NULL) {
-	script_name = strdup(s);
+	script_name = xstrdup(s);
     }
     strcpy(hostname, CACHEMGR_HOSTNAME);
 

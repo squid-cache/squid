@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.74 1996/10/15 18:06:24 wessels Exp $
+ * $Id: ipcache.cc,v 1.75 1996/10/15 23:32:53 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -418,7 +418,7 @@ ipcacheAddHostent(ipcache_entry * i, struct hostent *hp)
     i->addrs.count = (unsigned char) addr_count;
     i->addrs.in_addrs = xcalloc(addr_count, sizeof(struct in_addr));
     for (k = 0; k < addr_count; k++)
-	memcpy(&i->addrs.in_addrs[k].s_addr,
+	xmemcpy(&i->addrs.in_addrs[k].s_addr,
 	    *(hp->h_addr_list + k),
 	    hp->h_length);
     i->status = IP_CACHED;

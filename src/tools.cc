@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.73 1996/10/15 04:57:58 wessels Exp $
+ * $Id: tools.cc,v 1.74 1996/10/15 23:32:55 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -622,6 +622,6 @@ struct in_addr
 inaddrFromHostent(struct hostent *hp)
 {
     struct in_addr s;
-    memcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));
+    xmemcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));
     return s;
 }
