@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.42 2002/10/08 03:07:46 wessels Exp $
+ * $Id: authenticate.cc,v 1.43 2002/10/08 03:30:41 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -438,9 +438,9 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
     }
     /*
      * a note on proxy_auth logix here:
-     * proxy_auth==NULL -> unauthenticated request || already authenticated connection
-     * so we test for an authenticated connection when we recieve no authentication
-     * header.
+     * proxy_auth==NULL -> unauthenticated request || already
+     * authenticated connection so we test for an authenticated
+     * connection when we recieve no authentication header.
      */
     if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(*auth_user_request ? *auth_user_request : conn->auth_user_request)))
 	|| (conn->auth_type == AUTH_BROKEN)) {
@@ -750,8 +750,9 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	    }
 	}
     }
-    /* allow protocol specific headers to be _added_ to the existing response - ie
-     * digest auth
+    /*
+     * allow protocol specific headers to be _added_ to the existing
+     * response - ie digest auth
      */
     if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0)
 	&& (authscheme_list[auth_user_request->auth_user->auth_module - 1].AddHeader))
@@ -827,17 +828,23 @@ authenticateAuthUserInuse(auth_user_t * auth_user)
     return auth_user->references;
 }
 
-/* Combine two user structs. ONLY to be called from within a scheme module.
- * The scheme module is responsible for ensuring that the two users _can_ be merged 
- * without invalidating all the request scheme data. 
- * the scheme is also responsible for merging any user related scheme data itself. */
+/*
+ * Combine two user structs. ONLY to be called from within a scheme
+ * module.  The scheme module is responsible for ensuring that the
+ * two users _can_ be merged without invalidating all the request
+ * scheme data. the scheme is also responsible for merging any user
+ * related scheme data itself.
+ */
 void
 authenticateAuthUserMerge(auth_user_t * from, auth_user_t * to)
 {
     dlink_node *link, *tmplink;
     auth_user_request_t *auth_user_request;
-/* XXX combine two authuser structs. Incomplete: it should merge in hash references 
- * too and ask the module to merge in scheme data */
+    /*
+     * XXX combine two authuser structs. Incomplete: it should merge
+     * in hash references too and ask the module to merge in scheme
+     * data
+     */
     debug(29, 5) ("authenticateAuthUserMerge auth_user '%p' into auth_user '%p'.\n", from, to);
     link = from->requests.head;
     while (link) {
