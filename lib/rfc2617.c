@@ -13,7 +13,7 @@
 
 
 /*
- * $Id: rfc2617.c,v 1.7 2003/01/23 00:37:01 robertc Exp $
+ * $Id: rfc2617.c,v 1.8 2003/07/12 00:34:01 hno Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -114,8 +114,10 @@ DigestCalcHA1(
 	MD5Final((unsigned char *) HA1, &Md5Ctx);
     }
     if (strcasecmp(pszAlg, "md5-sess") == 0) {
+	HASHHEX HA1Hex;
+	CvtHex(HA1, HA1Hex);	/* RFC2617 errata */
 	MD5Init(&Md5Ctx);
-	MD5Update(&Md5Ctx, HA1, HASHLEN);
+	MD5Update(&Md5Ctx, HA1Hex, HASHHEXLEN);
 	MD5Update(&Md5Ctx, ":", 1);
 	MD5Update(&Md5Ctx, pszNonce, strlen(pszNonce));
 	MD5Update(&Md5Ctx, ":", 1);
