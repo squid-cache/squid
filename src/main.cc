@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.398 2004/12/21 17:28:29 robertc Exp $
+ * $Id: main.cc,v 1.399 2004/12/27 16:59:14 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1064,10 +1064,6 @@ main(int argc, char **argv)
 
     setMaxFD();
 
-    if (opt_catch_signals)
-        for (n = Squid_MaxFD; n > 2; n--)
-            close(n);
-
     /* init comm module */
     comm_init();
 
@@ -1360,10 +1356,6 @@ watch_child(char *argv[])
         dup2(nullfd, 1);
         dup2(nullfd, 2);
     }
-
-    /* Close all else */
-    for (i = 3; i < Squid_MaxFD; i++)
-        close(i);
 
     for (;;) {
         mainStartScript(argv[0]);
