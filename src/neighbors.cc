@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.253 1998/09/24 20:29:14 rousskov Exp $
+ * $Id: neighbors.cc,v 1.254 1998/09/25 05:35:31 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -830,7 +830,7 @@ neighborUp(const peer * p)
 	return 0;
     if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
 	return 1;
-    if (p->stats.last_query - p->stats.last_reply >= Config.Timeout.deadPeer)
+    if (p->stats.last_query - p->stats.last_reply > Config.Timeout.deadPeer)
 	return 0;
     return 1;
 }
