@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.14 1998/08/25 07:02:42 wessels Exp $
+ * $Id: htcp.cc,v 1.15 1998/08/25 19:04:00 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -483,18 +483,57 @@ htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 {
     htcpStuff stuff;
     char *pkt;
+    HttpHeader hdr;
+    MemBuf mb;
+    Packer p;
     ssize_t pktlen;
+    char *host;
+    int rtt = 0;
+    int hops = 0;
+    int samp = 0;
+    char cto_buf[128];
     stuff.op = HTCP_TST;
     stuff.rr = RR_RESPONSE;
     stuff.f1 = e ? 0 : 1;
     if (spec) {
+	memBufDefInit(&mb);
+	packerToMemInit(&p, &mb);
+	httpHeaderInit(&hdr, hoHtcpReply);
 	stuff.method = spec->method;
 	stuff.uri = spec->uri;
 	stuff.version = spec->version;
 	stuff.req_hdrs = spec->req_hdrs;
-	stuff.resp_hdrs = NULL;
-	stuff.entity_hdrs = NULL;
-	stuff.cache_hdrs = NULL;
+	httpHeaderPutInt(&hdr, HDR_AGE,
+	    e->timestamp <= squid_curtime ?
+	    squid_curtime - e->timestamp : 0);
+	httpHeaderPackInto(&hdr, &p);
+	stuff.resp_hdrs = xstrdup(mb.buf);
+	debug(31,1)("htcpTstReply: resp_hdrs = {%s}\n", stuff.resp_hdrs);
+	memBufReset(&mb);
+	httpHeaderReset(&hdr);
+	if (e->expires > -1)
+	    httpHeaderPutTime(&hdr, HDR_EXPIRES, e->expires);
+	if (e->lastmod > -1)
+	    httpHeaderPutTime(&hdr, HDR_LAST_MODIFIED, e->lastmod);
+	httpHeaderPackInto(&hdr, &p);
+	stuff.entity_hdrs = xstrdup(mb.buf);
+	debug(31,1)("htcpTstReply: entity_hdrs = {%s}\n", stuff.entity_hdrs);
+	memBufReset(&mb);
+	httpHeaderReset(&hdr);
+	if ((host = urlHostname(spec->uri))) {
+	    netdbHostData(host, &samp, &rtt, &hops);
+	    if (rtt || hops) {
+		snprintf(cto_buf, 128, "%s %d %f %d",
+			host, samp, 0.001 * rtt, hops);
+		httpHeaderPutExt(&hdr, "Cache-to-Origin", cto_buf);
+	    }
+	}
+	httpHeaderPackInto(&hdr, &p);
+	stuff.cache_hdrs = xstrdup(mb.buf);
+	debug(31,1)("htcpTstReply: cache_hdrs = {%s}\n", stuff.cache_hdrs);
+	memBufClean(&mb);
+	httpHeaderClean(&hdr);
+	packerClean(&p);
     }
     pkt = htcpBuildPacket(&stuff, &pktlen);
     if (pkt == NULL) {
