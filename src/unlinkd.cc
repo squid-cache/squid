@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.49 2003/01/23 00:37:29 robertc Exp $
+ * $Id: unlinkd.cc,v 1.50 2003/02/13 21:22:28 wessels Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -141,6 +141,12 @@ unlinkdUnlink(const char *path)
 	return;
     }
     statCounter.unlink.requests++;
+    /*
+     * Increment this syscalls counter here, even though the syscall
+     * is executed by the helper process.  We try to be consistent
+     * in counting unlink operations.
+     */
+    syscalls.disk.unlinks++;
     queuelen++;
 }
 
