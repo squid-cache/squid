@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.20 2000/12/05 09:11:30 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.21 2000/12/09 00:35:01 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -971,13 +971,14 @@ storeAufsDirWriteCleanStart(SwapDir * sd)
     struct stat sb;
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
+    state->new = xstrdup(storeAufsDirSwapLogFile(sd, ".clean"));
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
     if (state->fd < 0) {
+	xfree(state->new);
 	xfree(state);
 	return -1;
     }
     state->cur = xstrdup(storeAufsDirSwapLogFile(sd, NULL));
-    state->new = xstrdup(storeAufsDirSwapLogFile(sd, ".clean"));
     state->cln = xstrdup(storeAufsDirSwapLogFile(sd, ".last-clean"));
     state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
