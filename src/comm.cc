@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.243 1998/04/04 05:17:40 wessels Exp $
+ * $Id: comm.cc,v 1.244 1998/04/08 16:34:23 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -650,7 +650,7 @@ comm_close(int fd)
      * network sockets never blocks.
      */
     close(fd);
-#elsif USE_ASYNC_IO
+#elif USE_ASYNC_IO
     aioClose(fd);
 #else
     close(fd);
