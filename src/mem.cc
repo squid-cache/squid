@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.63 2002/04/06 08:49:27 adrian Exp $
+ * $Id: mem.cc,v 1.64 2002/04/06 15:24:41 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -517,7 +517,7 @@ memFreeBufFunc(size_t size)
 static void
 memPoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEntry * e)
 {
-    int excess;
+    int excess = 0;
     int needed = 0;
     MemPoolMeter *pm = mp_st->meter;
 
