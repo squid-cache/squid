@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta2 (Oct 28, 1997):
+
 	- Fixed aiops.c and async_iu.c so that they actually compile
 	  with USE_ASYNC_IO (Arjan de Vet).
 	- Fixed errState->errno causing problems with some macros
@@ -7,11 +9,12 @@
 	- Fixed InvokeHandlers() from calling memCopy() for ALL
 	  store_client's with callbacks.  A store_client might be reading
 	  from disk.
-	- Rewrote storeGetSwapSpace().  No longer will we scan one
+	- Rewrote storeMaintainSwapSpace().  No longer will we scan one
 	  bucket at a time.  Instead we'll maintain a single LRU
 	  list.  When an object is 'touched' we move it to the
 	  top of this list.  When we need disk space, we delete
 	  from the bottom.
+	- Removed storeGetSwapSpace().
 	
 Changes to squid-1.2.beta1 ():
 

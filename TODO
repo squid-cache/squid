@@ -28,6 +28,10 @@
   #    x milliseconds, then deny.
   distant_peer_deny   200  75  10
 
++ #ifdefs to disable IP caching
++ convert ipcache/fqdncache to double-linked list
+  and lose qsort() calls.
+
 
 DONE:
 + s/sprintf/snprintf/g
