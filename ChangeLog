@@ -5,6 +5,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Added DISKD stats via cachemgr.
 	- Added squid.conf options for DISKD magic constants.
 	- Added --enable-auth-modules=... configure option
+	- Improved ICP dead peer detection to also work when the workload
+	  is low
 
 Changes to Squid-2.4.DEVEL2 ():
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.316 2000/03/14 23:07:51 wessels Exp $
+ * $Id: structs.h,v 1.317 2000/05/02 18:23:49 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1054,6 +1054,7 @@ struct _peer {
 	int ignored_replies;
 	int n_keepalives_sent;
 	int n_keepalives_recv;
+	time_t probe_start;
 	time_t last_query;
 	time_t last_reply;
 	int logged_state;	/* so we can print dead/revived msgs */
