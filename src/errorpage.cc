@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.1 1996/03/26 05:20:47 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.2 1996/03/26 21:58:42 wessels Exp $ */
 
 #include "config.h"
 #include <strings.h>
@@ -91,6 +91,9 @@ error_data ErrorData[] =
     {"ERR_DISK_IO",
 	"Cache Disk I/O Failure",
 	"The system disk is out of space or failing."},
+    {"ERR_URL_BLOCKED",
+	"Access Denied",
+	"You are not allowed to access this URL."},
     {"ERR_MAX"
 	"",
 	""}

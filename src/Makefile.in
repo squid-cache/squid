@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.8 1996/03/25 19:01:04 wessels Exp $
+#  $Id: Makefile.in,v 1.9 1996/03/26 21:58:40 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -58,7 +58,7 @@ CLIENT_LIBS	= -L../lib -lutil $(XTRA_LIBS)
 PROGS		= cached 
 UTILS		= client dnsserver ftpget
 CGIPROGS	= cachemgr.cgi
-OBJS	 	= cached_error.o \
+OBJS	 	= blocklist.o cached_error.o \
 		  comm.o cache_cf.o debug.o disk.o dynamic_array.o \
 		  fdstat.o filemap.o ftp.o gopher.o hash.o \
 		  http.o icp.o ipcache.o mime.o neighbors.o objcache.o \
