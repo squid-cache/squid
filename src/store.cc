@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.419 1998/05/26 23:04:15 wessels Exp $
+ * $Id: store.cc,v 1.420 1998/05/27 16:15:24 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -148,7 +148,7 @@ typedef struct lock_ctrl_t {
 /*
  * local function prototypes
  */
-static int storeCheckExpired(const StoreEntry *, int flag);
+static int storeCheckExpired(const StoreEntry *);
 static int storeEntryLocked(const StoreEntry *);
 static int storeEntryValidLength(const StoreEntry *);
 static void storeGetMemSpace(int);
@@ -689,7 +689,7 @@ storeMaintainSwapSpace(void *datanotused)
 		dlinkAdd(e, &e->lru, &store_list);
 	    }
 	    locked++;
-	} else if (storeCheckExpired(e, 1)) {
+	} else if (storeCheckExpired(e)) {
 	    expired++;
 	    storeRelease(e);
 	}
@@ -903,14 +903,12 @@ storeKeepInMemory(const StoreEntry * e)
 }
 
 static int
-storeCheckExpired(const StoreEntry * e, int check_lru_age)
+storeCheckExpired(const StoreEntry * e)
 {
     if (storeEntryLocked(e))
 	return 0;
     if (EBIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
-    if (!check_lru_age)
-	return 0;
     if (squid_curtime - e->lastref > storeExpiredReferenceAge())
 	return 1;
     return 0;
