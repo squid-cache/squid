@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.24 2001/03/04 00:50:26 wessels Exp $
+ * $Id: useragent.cc,v 1.25 2001/05/20 00:09:25 hno Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -80,5 +80,14 @@ logUserAgent(const char *client, const char *agent)
 	client,
 	time_str,
 	agent);
+#endif
+}
+
+void
+useragentLogClose(void)
+{
+#if USE_USERAGENT_LOG
+    logfileClose(useragentlog);
+    useragentlog = NULL;
 #endif
 }

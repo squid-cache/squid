@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.338 2001/05/19 19:32:02 hno Exp $
+ * $Id: main.cc,v 1.339 2001/05/20 00:09:25 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -956,6 +956,7 @@ SquidShutdown(void *unused)
     storeDirSync();		/* Flush log writes */
     storeLogClose();
     accessLogClose();
+    useragentLogClose();
 #if WIP_FWD_LOG
     fwdUninit();
 #endif
