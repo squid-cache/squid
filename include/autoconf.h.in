@@ -88,6 +88,9 @@
 /* Define if you have the getrusage function.  */
 #undef HAVE_GETRUSAGE
 
+/* Define if you have the getspnam function.  */
+#undef HAVE_GETSPNAM
+
 /* Define if you have the lrand48 function.  */
 #undef HAVE_LRAND48
 
@@ -186,6 +189,9 @@
 
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
+
+/* Define if you have the <getopt.h> header file.  */
+#undef HAVE_GETOPT_H
 
 /* Define if you have the <grp.h> header file.  */
 #undef HAVE_GRP_H

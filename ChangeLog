@@ -1,6 +1,11 @@
+Changes to squid-1.1.beta13 (November 1, 1996):
+
 	- Fixed base64_code[] typo bug (Joe Ramey).
 	- Fixed errors being returned as empty objects.
 	- Changed order of sanity checks in neighborsUdpAck().
+	- Made swap log pathname configurable with 'store_swap_log'.
+	- Made 'http_accel virtual 80' same as -V on command line.
+	- Fixed string termination bug in base64_decode() (Joe Ramey).
 
 Changes to squid-1.1.beta12 (October 31, 1996):
 
