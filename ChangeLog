@@ -39,6 +39,7 @@
 	  memory and not yet written to disk.  A client could
 	  recieve a partial object because file_read() unexpectedly
 	  returns EOF.
+	- Fixed proxy-authentication hangs (Henrik Nordstrom).
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
