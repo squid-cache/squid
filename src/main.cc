@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.253 1998/07/06 19:18:30 wessels Exp $
+ * $Id: main.cc,v 1.254 1998/07/17 01:02:25 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -342,6 +342,9 @@ serverConnectionsOpen(void)
     netdbInit();
     asnInit();
     peerSelectInit();
+#if USE_CARP
+    carpInit();
+#endif
 }
 
 void

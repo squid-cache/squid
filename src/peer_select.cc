@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.69 1998/07/16 22:22:50 wessels Exp $
+ * $Id: peer_select.cc,v 1.70 1998/07/17 01:02:26 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -51,6 +51,9 @@ const char *hier_strings[] =
 #if USE_CACHE_DIGESTS
     "CACHE_DIGEST_HIT",
     "NO_CACHE_DIGEST_DIRECT",
+#endif
+#if USE_CARP
+    "CARP",
 #endif
     "INVALID CODE"
 };
@@ -299,6 +302,12 @@ peerSelectFoo(ps_state * psstate)
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
 	return;
+#endif
+#if USE_CARP
+    } else if ((p = carpSelectParent(request))) {
+        hierarchyNote(&request->hier, CARP, &psstate->icp, p->host);
+        peerSelectCallback(psstate, p);
+        return;
 #endif
     } else if ((p = netdbClosestParent(request))) {
 	request->hier.alg = PEER_SA_NETDB;

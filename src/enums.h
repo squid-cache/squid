@@ -292,6 +292,9 @@ typedef enum {
     CACHE_DIGEST_HIT,
     NO_CACHE_DIGEST_DIRECT,
 #endif
+#if USE_CARP
+    CARP,
+#endif
     HIER_MAX
 } hier_code;
 

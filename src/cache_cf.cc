@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.287 1998/07/16 02:39:59 wessels Exp $
+ * $Id: cache_cf.cc,v 1.288 1998/07/17 01:02:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -783,6 +783,13 @@ parse_peer(peer ** head)
 #endif
 	} else if (!strncasecmp(token, "no-netdb-exchange", 17)) {
 	    EBIT_SET(p->options, NEIGHBOR_NO_NETDB_EXCHANGE);
+#if USE_CARP
+	} else if (!strncasecmp(token, "carp-load-factor=", 17)) {
+	    if (p->type != PEER_PARENT)
+		debug(3,0)("parse_peer: Ignoring carp-load-factor for non-parent %s/%d\n", p->host, p->http_port);
+	    else 
+	        p->carp.load_factor = atof(token + 17);
+#endif
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();
@@ -792,6 +799,16 @@ parse_peer(peer ** head)
 	p->weight = 1;
     p->icp_version = ICP_VERSION_CURRENT;
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
+#if USE_CARP
+    if (p->carp.load_factor) {
+        /*
+         * calculate this peers hash for use in CARP
+         */
+        p->carp.hash = 0;
+        for (token = p->host; *token != 0;token++)
+            p->carp.hash += (p->carp.hash << 19) + *token;
+    }
+#endif
     cbdataAdd(p, MEM_NONE);
     while (*head != NULL)
 	head = &(*head)->next;
