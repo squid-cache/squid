@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.109 2003/08/10 11:00:43 robertc Exp $
+ * $Id: forward.cc,v 1.110 2003/08/13 21:49:45 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -567,7 +567,6 @@ fwdConnectStart(void *data)
 
         if (fs->_peer->options.originserver) {
             domain = fwdState->request->host;
-            port = fwdState->request->port;
         }
     } else {
         host = fwdState->request->host;
