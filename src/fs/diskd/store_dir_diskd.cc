@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.34 2001/01/09 00:18:46 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.35 2001/01/11 23:30:48 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -415,7 +415,7 @@ storeDiskdDirInit(SwapDir * sd)
 #else
     x = ipcCreate(IPC_FIFO,
 #endif
-	SQUID_PREFIX "/bin/diskd",
+	SQUID_PREFIX "/libexec/squid/diskd",
 	args,
 	"diskd",
 	&rfd,
