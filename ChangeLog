@@ -1,8 +1,11 @@
 Changes to squid-1.1.beta25 ():
 
-	- Check for if we should delete behind when above LOW water mark.
+	- Check if we should delete-behind large objects when above LOW
+	  water mark.
 	- Merged request header parsing code from http.c and pass.c
 	  into httpBuildRequestHeader().
+	- Fixed 'rm -rf' command in store.c.
+	- Changed viz_hack stuff to use multicast.
 
 Changes to squid-1.1.beta24 ():
 
