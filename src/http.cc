@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.113 1996/11/24 02:42:03 wessels Exp $
+ * $Id: http.cc,v 1.114 1996/11/25 02:35:21 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -612,6 +612,7 @@ httpSendRequest(int fd, void *data)
     char *buf = NULL;
     char *viabuf = NULL;
     char *t = NULL;
+    char *s = NULL;
     const char *const crlf = "\r\n";
     int len = 0;
     int buflen;
@@ -657,6 +658,7 @@ httpSendRequest(int fd, void *data)
 	strcat(buf, ybuf);
 	len += strlen(ybuf);
 	put_free_4k_page(ybuf);
+	ybuf = NULL;
 	did_ims = 1;
     }
     if (httpState->req_hdr) {	/* we have to parse the request header */
@@ -666,8 +668,11 @@ httpSendRequest(int fd, void *data)
 		continue;
 	    if (strncasecmp(t, "Host:", 5) == 0)
 		saw_host = 1;
-	    if (strncasecmp(t, "Cache-control: Max-age", 5) == 0)
-		saw_max_age = 1;
+	    if (strncasecmp(t, "Cache-Control:", 14) == 0) {
+		for (s = t + 14; *s && isspace(*s); s++);
+		if (strncasecmp(s, "Max-age=", 8) == 0)
+		    saw_max_age = 1;
+	    }
 	    if (strncasecmp(t, "Via:", 4) == 0) {
 		viabuf = get_free_4k_page();
 		xstrncpy(viabuf, t, 4096);
