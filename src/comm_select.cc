@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm_select.cc,v 1.5 1998/08/14 09:22:33 wessels Exp $
+ * $Id: comm_select.cc,v 1.6 1998/09/03 03:37:33 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -265,9 +265,11 @@ comm_poll(int msec)
     int callicp = 0, callhttp = 0;
     static time_t last_timeout = 0;
     double timeout = current_dtime + (msec / 1000.0);
+    double start;
     do {
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
+	start = current_dtime;
 #endif
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
@@ -346,6 +348,7 @@ comm_poll(int msec)
 		if ((hdl = fd_table[fd].read_handler)) {
 		    fd_table[fd].read_handler = NULL;
 		    hdl(fd, fd_table[fd].read_data);
+		    Counter.select_fds++;
 		}
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
@@ -357,6 +360,7 @@ comm_poll(int msec)
 		if ((hdl = fd_table[fd].write_handler)) {
 		    fd_table[fd].write_handler = NULL;
 		    hdl(fd, fd_table[fd].write_data);
+		    Counter.select_fds++;
 		}
 		if (commCheckICPIncoming)
 		    comm_poll_icp_incoming();
@@ -393,6 +397,10 @@ comm_poll(int msec)
 	    comm_poll_icp_incoming();
 	if (callhttp)
 	    comm_poll_http_incoming();
+#if !ALARM_UPDATES_TIME
+	getCurrentTime();
+	Counter.select_time += (current_dtime - start);
+#endif
 	return COMM_OK;
     } while (timeout > current_dtime);
     debug(5, 8) ("comm_poll: time out: %d.\n", squid_curtime);
@@ -608,6 +616,7 @@ comm_select(int msec)
 		    hdl = fd_table[fd].read_handler;
 		    fd_table[fd].read_handler = NULL;
 		    hdl(fd, fd_table[fd].read_data);
+	            Counter.select_fds++;
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
@@ -620,6 +629,7 @@ comm_select(int msec)
 		    hdl = fd_table[fd].write_handler;
 		    fd_table[fd].write_handler = NULL;
 		    hdl(fd, fd_table[fd].write_data);
+	            Counter.select_fds++;
 		}
 		if (commCheckICPIncoming)
 		    comm_select_icp_incoming();
