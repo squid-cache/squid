@@ -76,7 +76,7 @@ storeClientCopy(StoreEntry * e,
     store_client *sc;
     static int recurse_detect = 0;
     assert(e->store_status != STORE_ABORTED);
-    assert(recurse_detect < 3);	/* could == 1 for IMS not modified's */
+    assert(++recurse_detect < 3);	/* could == 1 for IMS not modified's */
     debug(20, 3) ("storeClientCopy: %s, seen %d, want %d, size %d, cb %p, cbdata %p\n",
 	storeKeyText(e->key),
 	(int) seen_offset,
