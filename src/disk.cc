@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.38 1996/11/06 08:14:33 wessels Exp $
+ * $Id: disk.cc,v 1.39 1996/11/06 08:17:31 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -202,7 +202,6 @@ file_close(int fd)
 	debug_trap("file_close: bad file number");
 	return DISK_ERROR;
     }
-
     /* we might have to flush all the write back queue before we can
      * close it */
     /* save it for later */
