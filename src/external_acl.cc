@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.35 2003/03/19 18:03:04 hno Exp $
+ * $Id: external_acl.cc,v 1.36 2003/05/06 00:13:39 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -860,7 +860,7 @@ externalAclHandleReply(void *data, char *reply)
     char *t;
     char *user = NULL;
     char *error = NULL;
-    external_acl_entry *entry;
+    external_acl_entry *entry = NULL;
 
     debug(82, 2) ("externalAclHandleReply: reply=\"%s\"\n", reply);
 
@@ -890,13 +890,16 @@ externalAclHandleReply(void *data, char *reply)
         if (reply)
             entry = external_acl_cache_add(state->def, state->key, result, user, error);
         else {
-            entry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);
+            if (reply)
+                entry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);
+            else {
+                external_acl_entry *oldentry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);
 
-            if (entry)
-                external_acl_cache_delete(state->def, entry);
+                if (oldentry)
+                    external_acl_cache_delete(state->def, oldentry);
+            }
         }
-    } else
-        entry = NULL;
+    }
 
     do {
         void *cbdata;
