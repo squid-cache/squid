@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.326 2000/05/02 21:04:01 hno Exp $
+ * $Id: structs.h,v 1.327 2000/05/02 21:21:09 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -778,6 +778,7 @@ struct _HttpStateData {
     StoreEntry *entry;
     request_t *request;
     char *reply_hdr;
+    size_t reply_hdr_size;
     int reply_hdr_state;
     peer *peer;			/* peer request made to */
     int eof;			/* reached end-of-object? */
