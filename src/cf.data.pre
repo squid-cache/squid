@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.276 2002/08/21 09:12:44 hno Exp $
+# $Id: cf.data.pre,v 1.277 2002/08/24 01:54:34 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1090,6 +1090,16 @@ DOC_START
 	data connection is to the requested server. If you need to allow
 	FTP connections to servers using another IP address for the data
 	connection then turn this off.
+DOC_END
+
+NAME: check_hostnames
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.check_hostnames
+DOC_START
+	For security and stability reasons Squid by default checks
+	hostnames for Internet standard RFC compliance. If you do not want
+	Squid to perform these checks then turn this directive off.
 DOC_END
 
 NAME: cache_dns_program
@@ -3809,12 +3819,11 @@ LOC: Config.onoff.pipeline_prefetch
 DEFAULT: off
 DOC_START
 	To boost the performance of pipelined requests to closer
-	match that of a non-proxied environment Squid tries to fetch
+	match that of a non-proxied environment Squid can try to fetch
 	up to two requests in parallell from a pipeline.
 
-	Note: This is known to be broken in Squid-DEVEL due to changes
-	in the internal store_client_copy() interface. Do not enable
-	for now.
+	Defaults to off for bandwidth management and access logging
+	reasons.
 DOC_END
 
 NAME: extension_methods
