@@ -1,5 +1,5 @@
 
-/* $Id: mime.cc,v 1.9 1996/04/01 04:51:33 wessels Exp $ */
+/* $Id: mime.cc,v 1.10 1996/04/01 04:56:50 wessels Exp $ */
 
 #include "squid.h"
 #include "mime_table.h"
@@ -47,7 +47,7 @@ int mime_refresh_request(mime)
     char *pr = NULL;
     if (mime == NULL)
 	return 0;
-    if (mime_get_header("If-Modified-Since"))
+    if (mime_get_header(mime, "If-Modified-Since"))
 	return 1;
     if ((pr = mime_get_header(mime, "pragma"))) {
 	/* why strstr and not strcmp? -DPW */
