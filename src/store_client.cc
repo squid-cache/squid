@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.132 2003/07/28 09:27:28 robertc Exp $
+ * $Id: store_client.cc,v 1.133 2003/08/10 05:11:22 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -657,14 +657,6 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     if (mem->clientCount() == 0) {
         debug(90, 3) ("storeUnregister: Consistency failure - store client being unregistered is not in the mem object's list for '%s'\n", e->getMD5Text());
         return 0;
-    }
-
-    if (mem->clientIsFirst(sc)) {
-        /*
-         * If we are unregistering the _first_ client for this
-         * entry, then we have to reset the client FD to -1.
-         */
-        mem->fd = -1;
     }
 
     dlinkDelete(&sc->node, &mem->clients);
