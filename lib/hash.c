@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.2 1998/08/17 23:26:28 wessels Exp $
+ * $Id: hash.c,v 1.3 1998/08/18 03:09:50 wessels Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -54,6 +54,9 @@
 #endif
 #if HAVE_ASSERT_H
 #include <assert.h>
+#endif
+#if HAVE_MATH_H
+#include <math.h>
 #endif
 
 #include "hash.h"
