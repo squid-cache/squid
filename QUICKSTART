@@ -1,7 +1,7 @@
 
 Squid QUICKSTART
 
-$Id: QUICKSTART,v 1.4 2001/11/19 09:02:57 adrian Exp $
+$Id: QUICKSTART,v 1.5 2002/07/25 19:19:02 hno Exp $
 
 This document is intended only for people who want to get Squid running
 quickly It is not a substitute for the real documentation.  Squid has
@@ -77,8 +77,8 @@ visible_hostname
 After editing squid.conf to your liking, run Squid from the command
 line TWICE:
 
-    % /usr/local/squid/bin/squid -z
-    % /usr/local/squid/bin/squid 
+    % /usr/local/squid/sbin/squid -z
+    % /usr/local/squid/sbin/squid 
 
 Check in the cache.log (/usr/local/squid/logs/cache.log) that
 everything is all right.  Note that "WARNING: Cannot write to swap

@@ -5,7 +5,7 @@ TIMESTAMP=.pkg_made
 PKGNAME=${PRG}.pkg
 TARNAME=${PRG}-${VERSION}.${ARCHS}.tar.gz
 
-${TIMESTAMP}: /usr/local/squid/bin/squid Squid.pkg.README info.in post_install \
+${TIMESTAMP}: /usr/local/squid/sbin/squid Squid.pkg.README info.in post_install \
 	pre_install makepkg Makefile.real
 	./makepkg
 	touch ${TIMESTAMP}
