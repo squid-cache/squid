@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.436 2003/02/25 15:07:53 hno Exp $
+ * $Id: cache_cf.cc,v 1.437 2003/03/08 09:43:49 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -37,7 +37,7 @@
 #include "authenticate.h"
 #include "Store.h"
 #include "SwapDir.h"
-#include "Config.h"
+#include "ConfigParser.h"
 #include "ACL.h"
 
 #if SQUID_SNMP
