@@ -38,8 +38,6 @@
 	  file and read the swap metadata.
 	- Changed store_client->mem to ->entry because we need
 	  e->swap_file_sz to set mem->object_sz at swapin.
-	- Removed some superfluous checks for e->key != NULL in 
-	  storeSet*Key().
 	- Renamed storeSwapData structure to storeSwapLogData.
 	- Fixed storeGetNextFile to not increment d->dirn.  Added
 	  check for opendir() failure.
