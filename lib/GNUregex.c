@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.c,v 1.14 2003/06/19 22:25:18 robertc Exp $
+ * $Id: GNUregex.c,v 1.15 2003/06/20 00:05:11 hno Exp $
  */
 
 /* Extended regular expression matching and search library,
@@ -87,7 +87,7 @@ extern char *re_syntax_table;
 static char re_syntax_table[CHAR_SET_SIZE];
 
 static void
-init_syntax_once()
+init_syntax_once(void)
 {
     register int c;
     static int done = 0;
@@ -819,12 +819,6 @@ static const char *re_error_msg[] =
 
 /* Subroutine declarations and macros for regex_compile.  */
 
-static void store_op1(), store_op2();
-static void insert_op1(), insert_op2();
-static boolean at_begline_loc_p(), at_endline_loc_p();
-static boolean group_in_compile_stack();
-static reg_errcode_t compile_range();
-
 /* Fetch the next character in the uncompiled pattern---translating it 
  * if necessary.  Also cast from a signed character in the constant
  * string passed to us by the user to an unsigned char that we can use
@@ -975,6 +969,14 @@ typedef struct {
     unsigned avail;		/* Offset of next open position.  */
 } compile_stack_type;
 
+static void store_op1(re_opcode_t op, unsigned char *loc, int arg);
+static void store_op2( re_opcode_t op, unsigned char *loc, int arg1, int arg2);
+static void insert_op1(re_opcode_t op, unsigned char *loc, int arg, unsigned char *end);
+static void insert_op2(re_opcode_t op, unsigned char *loc, int arg1, int arg2, unsigned char *end);
+static boolean at_begline_loc_p(const char * pattern, const char *p, reg_syntax_t syntax);
+static boolean at_endline_loc_p(const char *p, const char *pend, int syntax);
+static boolean group_in_compile_stack(compile_stack_type compile_stack, regnum_t regnum);
+static reg_errcode_t compile_range(const char **p_ptr, const char *pend, char *translate, reg_syntax_t syntax, unsigned char *b);
 
 #define INIT_COMPILE_STACK_SIZE 32
 
@@ -1037,11 +1039,7 @@ typedef struct {
  * examined nor set.  */
 
 static reg_errcode_t
-regex_compile(pattern, size, syntax, bufp)
-     const char *pattern;
-     int size;
-     reg_syntax_t syntax;
-     struct re_pattern_buffer *bufp;
+regex_compile(const char *pattern, int size, reg_syntax_t syntax, struct re_pattern_buffer *bufp)
 {
     /* We fetch characters from PATTERN here.  Even though PATTERN is
      * `char *' (i.e., signed), we declare these variables as unsigned, so
@@ -1989,14 +1987,6 @@ regex_compile(pattern, size, syntax, bufp)
 }				/* regex_compile */
 
 /* Subroutines for `regex_compile'.  */
-static void store_op1(re_opcode_t op, unsigned char *loc, int arg);
-static void store_op2( re_opcode_t op, unsigned char *loc, int arg1, int arg2);
-static void insert_op1(re_opcode_t op, unsigned char *loc, int arg, unsigned char *end);
-static void insert_op2(re_opcode_t op, unsigned char *loc, int arg1, int arg2, unsigned char *end);
-static boolean at_begline_loc_p(const char * pattern, const char *p, reg_syntax_t syntax);
-static boolean at_endline_loc_p(const char *p, const char *pend, int syntax);
-static boolean group_in_compile_stack(compile_stack_type compile_stack, regnum_t regnum);
-static reg_errcode_t compile_range(const char **p_ptr, const char *pend, char *translate, reg_syntax_t syntax, unsigned char *b);
 
 /* Store OP at LOC followed by two-byte integer parameter ARG.  */
 
@@ -2883,8 +2873,6 @@ re_search_2(bufp, string1, size1, string2, size2, startpos, range, regs, stop)
 
 /* Declarations and macros for re_match_2.  */
 
-static boolean group_match_null_string_p();
-
 /* Structure for per-register (a.k.a. per-group) information.
  * This must not be longer than one word, because we push this value
  * onto the failure stack.  Other register information, such as the
@@ -2911,6 +2899,7 @@ typedef union {
 static boolean alt_match_null_string_p(unsigned char *p, unsigned char *end, register_info_type *reg_info);
 static boolean common_op_match_null_string_p( unsigned char **p, unsigned char *end, register_info_type *reg_info);
 static int bcmp_translate(unsigned char const *s1, unsigned char const *s2, register int len, char *translate);
+static boolean group_match_null_string_p(unsigned char **p, unsigned char *end, register_info_type *reg_info);
 
 #define REG_MATCH_NULL_STRING_P(R)  ((R).bits.match_null_string_p)
 #define IS_ACTIVE(R)  ((R).bits.is_active)
@@ -4158,8 +4147,6 @@ re_match_2(bufp, string1, size1, string2, size2, pos, regs, stop)
 }				/* re_match_2 */
 
 /* Subroutine definitions for re_match_2.  */
-static boolean group_match_null_string_p(unsigned char **p, unsigned char *end, register_info_type *reg_info);
-
 
 /* We are passed P pointing to a register number after a start_memory.
  * 
