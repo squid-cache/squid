@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.464 2003/05/20 12:17:39 robertc Exp $
+ * $Id: structs.h,v 1.465 2003/05/29 15:54:08 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -407,6 +407,7 @@ struct _SquidConfig
 #endif
 
     int redirectChildren;
+    int redirectConcurrency;
     time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;
@@ -2125,6 +2126,8 @@ struct _helper_request
     char *buf;
     HLPCB *callback;
     void *data;
+
+    struct timeval dispatch_time;
 };
 
 struct _helper_stateful_request
@@ -2145,6 +2148,7 @@ struct _helper
     int n_to_start;
     int n_running;
     int ipc_type;
+    unsigned int concurrency;
     time_t last_queue_warn;
 
     struct
@@ -2189,24 +2193,23 @@ struct _helper_server
     int pid;
     int rfd;
     int wfd;
-    char *buf;
-    size_t buf_sz;
-    off_t offset;
+    MemBuf wqueue;
+    MemBuf writebuf;
+    char *rbuf;
+    size_t rbuf_sz;
+    off_t roffset;
 
-    struct timeval dispatch_time;
-
-    struct timeval answer_time;
     dlink_node link;
     helper *parent;
-    helper_request *request;
+    helper_request **requests;
 
     struct _helper_flags
     {
 
-unsigned int alive:
+unsigned int writing:
         1;
 
-unsigned int busy:
+unsigned int alive:
         1;
 
 unsigned int closing:
@@ -2221,6 +2224,7 @@ unsigned int shutdown:
     struct
     {
         int uses;
+        unsigned int pending;
     }
 
     stats;
@@ -2233,9 +2237,11 @@ struct _helper_stateful_server
     int pid;
     int rfd;
     int wfd;
-    char *buf;
-    size_t buf_sz;
-    off_t offset;
+    /* MemBuf wqueue; */
+    /* MemBuf writebuf; */
+    char *rbuf;
+    size_t rbuf_sz;
+    off_t roffset;
 
     struct timeval dispatch_time;
 

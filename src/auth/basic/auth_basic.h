@@ -58,6 +58,7 @@ class auth_basic_config
 
 public:
     int authenticateChildren;
+    int authenticateConcurrency;
     char *basicAuthRealm;
     wordlist *authenticate;
     time_t credentialsTTL;

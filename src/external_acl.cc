@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.41 2003/05/20 12:17:39 robertc Exp $
+ * $Id: external_acl.cc,v 1.42 2003/05/29 15:54:08 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -94,6 +94,8 @@ public:
     wordlist *cmdline;
 
     int children;
+
+    int concurrency;
 
     helper *theHelper;
 
@@ -211,8 +213,10 @@ parse_externalAclHelper(external_acl ** list)
             a->ttl = atoi(token + 4);
         } else if (strncmp(token, "negative_ttl=", 13) == 0) {
             a->negative_ttl = atoi(token + 13);
-        } else if (strncmp(token, "children=", 12) == 0) {
-            a->children = atoi(token + 12);
+        } else if (strncmp(token, "children=", 9) == 0) {
+            a->children = atoi(token + 9);
+        } else if (strncmp(token, "concurrency=", 12) == 0) {
+            a->concurrency = atoi(token + 12);
         } else if (strncmp(token, "cache=", 6) == 0) {
             a->cache_size = atoi(token + 6);
         } else {
@@ -358,6 +362,9 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 
         if (node->children != DEFAULT_EXTERNAL_ACL_CHILDREN)
             storeAppendPrintf(sentry, " children=%d", node->children);
+
+        if (node->concurrency)
+            storeAppendPrintf(sentry, " concurrency=%d", node->concurrency);
 
         for (format = node->format; format; format = format->next) {
             switch (format->type) {
@@ -831,11 +838,7 @@ free_externalAclState(void *data)
 
 /*
  * The helper program receives queries on stdin, one
- * per line, and must return the result on on stdout as
- *   OK user="Users login name"
- * on success, and
- *   ERR error="Description of the error"
- * on error (the user/error options are optional)
+ * per line, and must return the result on on stdout
  *
  * General result syntax:
  *
@@ -1044,6 +1047,8 @@ externalAclInit(void)
         p->theHelper->cmdline = p->cmdline;
 
         p->theHelper->n_to_start = p->children;
+
+        p->theHelper->concurrency = p->concurrency;
 
         p->theHelper->ipc_type = IPC_TCP_SOCKET;
 
