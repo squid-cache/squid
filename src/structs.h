@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.444 2003/01/28 01:29:35 robertc Exp $
+ * $Id: structs.h,v 1.445 2003/02/02 13:12:36 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -699,7 +699,7 @@ struct _HttpBody {
     MemBuf mb;
 };
 
-#include "String.h"
+#include "SquidString.h"
 /* http header extention field */
 struct _HttpHdrExtField {
     String name;		/* field-name  from HTTP/1.1 (no column after name) */
