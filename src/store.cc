@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.253 1997/06/04 07:00:34 wessels Exp $
+ * $Id: store.cc,v 1.254 1997/06/17 03:44:35 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1404,6 +1404,7 @@ storeDoRebuildFromDisk(void *data)
 	    /* junk old, load new */
 	    storeRelease(e);	/* release old entry */
 	    RB->dupcount++;
+	    continue;
 	} else {
 	    /* URL doesnt exist, swapfile not in use */
 	    /* load new */
@@ -2759,8 +2760,7 @@ storeGetUnusedFileno(void)
 static void
 storePutUnusedFileno(int fileno)
 {
-    if (!storeDirMapBitTest(fileno))
-	fatal_dump("storePutUnusedFileno: fileno not in use");
+    assert(storeDirMapBitTest(fileno));
     storeDirMapBitReset(fileno);
     if (fileno_stack_count < FILENO_STACK_SIZE)
 	fileno_stack[fileno_stack_count++] = fileno;
