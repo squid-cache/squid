@@ -1,0 +1,33 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html"; charset=EUC-KR">
+<TITLE>에러: 캐쉬 매니저 이용 불가</TITLE>
+</HEAD><BODY>
+<H1>에러</H1>
+<H2>캐쉬 메니저 이용 불가</H2>
+<HR>
+<P>
+다음 URL을 처리 하던 중:
+<A HREF="%U">%U</A>
+<P>
+아래와 같은 에러가 발생했습니다:
+<UL>
+<LI>
+<STRONG>
+캐쉬 매니저 이용 요청이 거절되었습니다.
+</STRONG>
+</UL>
+</P>
+
+<P>죄송합니다. 이 캐쉬 매니저를 통해 다음 서비스를 받기 위해서는
+<PRE>	%U</PRE>
+인증절차를 거쳐야 합니다.
+</P>
+
+<P>
+인증 절차를 위해서는 Netscape 2.0 이상의 버젼이나, Microsoft 
+Internet Explorer 3.0 또는 HTTP/1.1이 지원되는 브라우져를 
+사용해야 합니다. 문제가 있을 때는 <A HREF="mailto:%w">캐쉬 관리자</a> 
+에게 도움을 요청하십시오. <em>관리자의 경우에는 </em> 캐쉬 매니저
+인터페이스에 관한 Squid 문서를 참조하시고, 자세한 에러 메시지를  
+위해서는 캐쉬 로그를 참조하십시오.
+</P>

@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html"; charset=EUC-KR">
+<TITLE>에러: FTP upload 실패</TITLE>
+</HEAD><BODY>
+<H1>에러</H1>
+<H2>FTP PUT/upload 실패</H2>
+<HR>
+<P>
+다음 URL을 전송하던 중:
+<A HREF="%U">%U</A>
+<P>
+Squid는 다음과 같은 FTP 명령어를 전송했고:
+<PRE><STRONG>
+	%f
+</STRONG></PRE>
+아래의 응답을 받았습니다.
+<PRE><STRONG>
+	%F
+</STRONG></PRE>
+
+<P>
+이것의 의미는 다음과 같습니다:
+<PRE>
+경로와 퍼미션과 디스크 용량를 확인하고 다시 시도하십시오.   
+</PRE>
+</P>
+

@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html"; charset=EUC-KR">
+<TITLE>에러: 요청된 URL을 가져올 수 없습니다.</TITLE>
+</HEAD><BODY>
+<H1>에러</H1>
+<H2>요청된 URL을 가져올 수 없습니다.</H2>
+<HR>
+<P>
+다음 URL을 처리 하던 중:
+<A HREF="%U">%U</A>
+<P>
+아래와 같은 에러가 발생했습니다:
+<UL>
+<LI>
+<STRONG>
+포워딩 불가
+</STRONG>
+</UL>
+
+<P>
+이 캐쉬는 sibling 관계로 설정되어 있기 때문에 이 요청을 처리할 수 
+없습니다. %i 의 client가 잘못 설정된 캐쉬일 수 있습니다.
+</P>
+

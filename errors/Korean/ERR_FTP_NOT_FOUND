@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html"; charset=EUC-KR">
+<TITLE>에러: 요청된 URL을 가져올 수 없습니다.</TITLE>
+</HEAD><BODY>
+<H1>에러</H1>
+<H2>요청된 URL을 가져올 수 없습니다.</H2>
+<HR>
+<P>
+다음 URL이 처리되지 못했습니다:
+<A HREF="%U">%U</A>
+<P>
+Squid는 다음과 같은 FTP 명령어를 전송했고:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+아래의 응답을 받았습니다.
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+FTP URL을 절대 경로로 지정하였을 때 (RFC 1738에 어긋납니다) 
+이러한 문제가 발생될 수 있습니다. 이 경우에는, 파일이
+<A HREF="%B">%B</A>에 있을 수 있습니다.
+</P>
