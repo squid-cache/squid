@@ -60,7 +60,10 @@ acver=`find_version autoconf ${acversions}`
 
 # Bootstrap the autotool subsystems
 bootstrap aclocal$amver
-perl -i -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregex/g;' aclocal.m4
+#workaround for Automake 1.5
+if grep m4_regex aclocal.m4 >/dev/null; then
+    perl -ibak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
+fi
 bootstrap autoheader$acver
 bootstrap automake$amver --foreign --add-missing
 bootstrap autoconf$acver
