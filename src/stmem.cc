@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.53 1997/11/12 23:47:41 wessels Exp $
+ * $Id: stmem.cc,v 1.54 1998/01/05 21:18:15 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -106,8 +106,6 @@
 
 #include "squid.h"
 
-#define min(x,y) ((x)<(y)? (x) : (y))
-
 #ifndef USE_MEMALIGN
 #define USE_MEMALIGN 0
 #endif
@@ -187,7 +185,7 @@ memAppend(mem_hdr * mem, const char *data, int len)
      * allocation loop */
     if (mem->head && mem->tail && (mem->tail->len < SM_PAGE_SIZE)) {
 	avail_len = SM_PAGE_SIZE - (mem->tail->len);
-	len_to_copy = min(avail_len, len);
+	len_to_copy = XMIN(avail_len, len);
 	xmemcpy((mem->tail->data + mem->tail->len), data, len_to_copy);
 	/* Adjust the ptr and len according to what was deposited in the page */
 	data += len_to_copy;
@@ -195,7 +193,7 @@ memAppend(mem_hdr * mem, const char *data, int len)
 	mem->tail->len += len_to_copy;
     }
     while (len > 0) {
-	len_to_copy = min(len, SM_PAGE_SIZE);
+	len_to_copy = XMIN(len, SM_PAGE_SIZE);
 	p = xcalloc(1, sizeof(mem_node));
 	p->next = NULL;
 	p->len = len_to_copy;
@@ -237,7 +235,7 @@ memCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
     /* Start copying begining with this block until
      * we're satiated */
     bytes_into_this_packet = offset - t_off;
-    bytes_from_this_packet = min(bytes_to_go, p->len - bytes_into_this_packet);
+    bytes_from_this_packet = XMIN(bytes_to_go, p->len - bytes_into_this_packet);
     xmemcpy(buf, p->data + bytes_into_this_packet, bytes_from_this_packet);
     bytes_to_go -= bytes_from_this_packet;
     ptr_to_buf = buf + bytes_from_this_packet;

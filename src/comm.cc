@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.219 1998/01/05 00:45:45 wessels Exp $
+ * $Id: comm.cc,v 1.220 1998/01/05 21:18:13 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -110,9 +110,6 @@
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
 #endif
-
-#define min(x,y) ((x)<(y)? (x) : (y))
-#define max(a,b) ((a)>(b)? (a) : (b))
 
 typedef struct {
     char *host;
@@ -1230,7 +1227,7 @@ comm_init(void)
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
-    RESERVED_FD = min(100, Squid_MaxFD / 4);
+    RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
     /* hardwired lifetimes */
     meta_data.misc += Squid_MaxFD * sizeof(int);
     zero_tv.tv_sec = 0;

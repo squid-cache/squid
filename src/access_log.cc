@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.15 1998/01/02 02:06:01 wessels Exp $
+ * $Id: access_log.cc,v 1.16 1998/01/05 21:18:12 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -58,7 +58,6 @@ const char *log_tags[] =
 };
 
 #define MAX_LINELEN (4096)
-#define max(a,b)  ((a)>(b)? (a): (b))
 
 static int LogfileStatus = LOG_DISABLE;
 static int LogfileFD = -1;
