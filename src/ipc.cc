@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.7 1998/07/22 20:37:30 wessels Exp $
+ * $Id: ipc.cc,v 1.8 1998/08/03 19:28:23 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -70,6 +70,10 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
     int tmp_s;
     char *env_str;
     int x;
+
+#if HAVE_POLL && defined(_SQUID_OSF_)
+    assert(type != IPC_FIFO);
+#endif
 
     if (rfd)
 	*rfd = -1;
