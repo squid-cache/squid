@@ -1,0 +1,56 @@
+# $Id: Makefile.in,v 1.1 1997/07/19 03:20:10 wessels Exp $
+#
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+libexecdir      = @libexecdir@
+sysconfdir	= @sysconfdir@
+localstatedir   = @localstatedir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+SH		= @SH@
+RM		= @RM@
+
+SHARFILE	= icons.shar
+ICONS		= anthony-binhex.gif \
+		  anthony-bomb.gif \
+		  anthony-box.gif \
+		  anthony-box2.gif \
+		  anthony-c.gif \
+		  anthony-compressed.gif \
+		  anthony-dir.gif \
+		  anthony-dirup.gif \
+		  anthony-dvi.gif \
+		  anthony-f.gif \
+		  anthony-image.gif \
+		  anthony-image2.gif \
+		  anthony-layout.gif \
+		  anthony-link.gif \
+		  anthony-movie.gif \
+		  anthony-pdf.gif \
+		  anthony-portal.gif \
+		  anthony-ps.gif \
+		  anthony-quill.gif \
+		  anthony-script.gif \
+		  anthony-sound.gif \
+		  anthony-tar.gif \
+		  anthony-tex.gif \
+		  anthony-text.gif \
+		  anthony-unknown.gif \
+		  anthony-xbm.gif \
+		  anthony-xpm.gif
+
+all: unshar
+
+unshar:
+	$(SH) $(SHARFILE)
+
+shar: icons.shar
+
+$(SHARFILE): $(ICONS)
+	shar $(ICONS) > $@
+
+clean:
+	$(RM) -f $(ICONS)
