@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.366 2000/05/16 07:06:06 wessels Exp $
+ * $Id: protos.h,v 1.367 2000/05/31 01:04:50 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1012,9 +1012,11 @@ extern void pumpStart(int, FwdState *, CWCB * callback, void *);
 extern int pumpMethod(method_t method);
 extern int pumpRestart(request_t *);
 
+#if USE_UNLINKD
 extern void unlinkdInit(void);
 extern void unlinkdClose(void);
 extern void unlinkdUnlink(const char *);
+#endif
 
 extern char *url_convert_hex(char *org_url, int allocate);
 extern char *url_escape(const char *url);

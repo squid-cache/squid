@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.185 2000/05/03 17:15:40 adrian Exp $
+#  $Id: Makefile.in,v 1.186 2000/05/31 01:04:48 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -25,7 +25,8 @@ SUBDIRS		= fs
 SQUID_EXE	= squid$(exec_suffix)
 CLIENT_EXE	= client$(exec_suffix)
 DNSSERVER_EXE	= dnsserver$(exec_suffix)
-UNLINKD_EXE	= unlinkd$(exec_suffix)
+OPT_UNLINKD_EXE	= unlinkd$(exec_suffix)
+UNLINKD_EXE	= @OPT_UNLINKD_EXE@
 PINGER_EXE	= pinger$(exec_suffix)
 CACHEMGR_EXE	= cachemgr$(cgi_suffix)
 
@@ -170,7 +171,7 @@ OBJS	 	= \
 		store_heap_replacement.o \
 		string_arrays.o \
 		tools.o \
-		unlinkd.o \
+		@UNLINKD_OBJS@ \
 		url.o \
 		urn.o \
 		useragent.o \

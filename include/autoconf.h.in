@@ -285,6 +285,15 @@
 /* Define if you want to set the COSS membuf size */
 #undef COSS_MEMBUF_SZ
 
+/* Print stacktraces on fatal errors */
+#undef PRINT_STACK_TRACE
+
+/*
+ * Define this if unlinkd is required
+ * (strongly recommended for ufs storage type)
+ */
+#undef USE_UNLINKD
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
@@ -293,6 +302,9 @@
 
 /* The number of bytes in a void *.  */
 #undef SIZEOF_VOID_P
+
+/* Define if you have the backtrace_symbols_fd function.  */
+#undef HAVE_BACKTRACE_SYMBOLS_FD
 
 /* Define if you have the bcopy function.  */
 #undef HAVE_BCOPY
@@ -455,6 +467,9 @@
 
 /* Define if you have the <errno.h> header file.  */
 #undef HAVE_ERRNO_H
+
+/* Define if you have the <execinfo.h> header file.  */
+#undef HAVE_EXECINFO_H
 
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H

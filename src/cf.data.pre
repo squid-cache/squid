@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.184 2000/05/29 23:29:32 hno Exp $
+# $Id: cf.data.pre,v 1.185 2000/05/31 01:04:49 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -944,6 +944,7 @@ DOC_END
 
 
 NAME: unlinkd_program
+IFDEF: USE_UNLINKD
 TYPE: string
 DEFAULT: @DEFAULT_UNLINKD@
 LOC: Config.Program.unlinkd
