@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.35 1996/04/16 05:13:06 wessels Exp $ */
+/* $Id: tools.cc,v 1.36 1996/04/16 16:35:31 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -14,12 +14,12 @@ struct timeval current_time;
 extern void serverConnectionsClose _PARAMS((void));
 
 #define DEAD_MSG "\
-The Harvest Cache (version %s) died.\n\
+The Squid Cache (version %s) died.\n\
 \n\
-You've encountered a fatal error in the Harvest Cache version %s.\n\
+You've encountered a fatal error in the Squid Cache version %s.\n\
 If a core file was created (possibly in the swap directory),\n\
 please execute 'gdb squid core' or 'dbx squid core', then type 'where',\n\
-and report the trace back to harvest-dvl@cs.colorado.edu.\n\
+and report the trace back to squid@nlanr.net.\n\
 \n\
 Thanks!\n"
 
@@ -158,7 +158,7 @@ void normal_shutdown()
 	safeunlink(getPidFilename(), 0);
     storeWriteCleanLog();
     PrintRusage(NULL, debug_log);
-    debug(21, 0, "Harvest Cache (Version %s): Exiting normally.\n",
+    debug(21, 0, "Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     exit(0);
 }
@@ -187,7 +187,7 @@ void fatal_common(message)
 	syslog(LOG_ALERT, message);
 #endif
     fprintf(debug_log, "FATAL: %s\n", message);
-    fprintf(debug_log, "Harvest Cache (Version %s): Terminated abnormally.\n",
+    fprintf(debug_log, "Squid Cache (Version %s): Terminated abnormally.\n",
 	version_string);
     fflush(debug_log);
     PrintRusage(NULL, debug_log);

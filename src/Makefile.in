@@ -1,7 +1,7 @@
 #
-#  Makefile for the Harvest Object Cache server
+#  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.19 1996/04/16 05:05:16 wessels Exp $
+#  $Id: Makefile.in,v 1.20 1996/04/16 16:35:25 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -30,16 +30,6 @@ XTRA_LIBS	= @XTRA_LIBS@
 XTRA_OBJS 	= @XTRA_OBJS@
 SHELL		= /bin/sh
 
-
-## AIX users might need to use these values
-#
-#CC		= cc
-#XTRA_CFLAGS	= -D_HARVEST_HPUX_ -d_AIX -D_ALL_SOURCE
-#
-
-## LINUX users might need to use these values
-#
-#XTRA_CFLAGS	= -D_ALL_SOURCE
 
 INCLUDE		= -I. -I../include	# MUST use -I. first
 CFLAGS 		= $(STD_CFLAGS) $(XTRA_CFLAGS) $(INCLUDE) $(DEFINES)
@@ -131,7 +121,7 @@ install: all install-mkdirs
 	fi
 
 clean: 
-	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) squid.conf
+	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS)
 
 realclean:	clean
-	-rm -f Makefile
+	-rm -f Makefile squid.conf

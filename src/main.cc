@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.36 1996/04/16 05:48:58 wessels Exp $ */
+/* $Id: main.cc,v 1.37 1996/04/16 16:35:29 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -55,7 +55,7 @@ static void mainParseOptions(argc, argv)
     while ((c = getopt(argc, argv, "vCDRVbsif:a:p:u:m:zh?")) != -1) {
 	switch (c) {
 	case 'v':
-	    printf("Harvest Cache: Version %s\n", version_string);
+	    printf("Squid Cache: Version %s\n", version_string);
 	    exit(0);
 	    /* NOTREACHED */
 	case 'b':
@@ -168,7 +168,7 @@ void serverConnectionsClose()
 
 static void mainReinitialize()
 {
-    debug(1, 0, "Retarting Harvest Cache (version %s)...\n", version_string);
+    debug(1, 0, "Retarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     neighborsDestroy();
 
@@ -204,7 +204,7 @@ static void mainInitialize()
     fdstat_open(fileno(debug_log), LOG);
     fd_note(fileno(debug_log), getCacheLogFile());
 
-    debug(1, 0, "Starting Harvest Cache (version %s)...\n", version_string);
+    debug(1, 0, "Starting Squid Cache (version %s)...\n", version_string);
 
     ipcache_init();
     neighbors_init();

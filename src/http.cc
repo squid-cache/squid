@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.50 1996/04/16 05:13:34 wessels Exp $ */
+/* $Id: http.cc,v 1.51 1996/04/16 16:35:28 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -386,7 +386,7 @@ static void httpSendRequest(fd, data)
     char *t = NULL;
     char *post_buf = NULL;
     static char *crlf = "\r\n";
-    static char *HARVEST_PROXY_TEXT = "via Harvest Cache version";
+    static char *VIA_PROXY_TEXT = "via Sqiud Cache version";
     int len = 0;
     int buflen;
     int cfd = -1;
@@ -422,7 +422,7 @@ static void httpSendRequest(fd, data)
 	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
 		ybuf = (char *) get_free_4k_page();
 		memset(ybuf, '\0', SM_PAGE_SIZE);
-		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, version_string);
+		sprintf(ybuf, "%s %s %s", t, VIA_PROXY_TEXT, version_string);
 		t = ybuf;
 	    }
 	    if (len + (int) strlen(t) > buflen - 10)
