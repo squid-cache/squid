@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.363 2000/06/27 22:06:02 hno Exp $
+ * $Id: http.cc,v 1.364 2000/07/16 04:24:21 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -661,8 +661,15 @@ httpBuildRequestHeader(request_t * request,
      *  serving this request, so it is better to forward ranges to 
      *  the server and fetch only the requested content) 
      */
-    we_do_ranges =
-	orig_request->range && orig_request->flags.cachable && !httpHdrRangeWillBeComplex(orig_request->range) && (Config.rangeOffsetLimit == -1 || httpHdrRangeFirstOffset(orig_request->range) <= Config.rangeOffsetLimit);
+    if (NULL == orig_request->range)
+	we_do_ranges = 0;
+    else if (!orig_request->flags.cachable)
+	we_do_ranges = 0;
+    else if (orig_request->flags.we_dont_do_ranges)
+	we_do_ranges = 0;
+    else
+	we_do_ranges = 1;
+    debug(0, 0) ("%s:%d: we_do_ranges=%d\n", __FILE__, __LINE__, we_do_ranges);
     debug(11, 8) ("httpBuildRequestHeader: range specs: %p, cachable: %d; we_do_ranges: %d\n",
 	orig_request->range, orig_request->flags.cachable, we_do_ranges);
 
