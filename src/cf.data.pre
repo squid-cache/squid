@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.180 2000/05/03 19:36:37 hno Exp $
+# $Id: cf.data.pre,v 1.181 2000/05/12 03:11:40 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -3130,22 +3130,6 @@ DOC_START
 	default, Squid uses persistent connections (when allowed)
 	with its clients and servers.  You can use these options to
 	disable persistent connections with clients and/or servers.
-DOC_END
-
-NAME: diskd_magic1
-IFDEF: USE_DISKD
-TYPE: int
-LOC: Config.diskd.magic1
-DEFAULT: 64
-DOC_NONE
-
-NAME: diskd_magic2
-IFDEF: USE_DISKD
-TYPE: int
-LOC: Config.diskd.magic2
-DEFAULT: 72
-DOC_START
-	Macic constants for the diskd daemon..
 DOC_END
 
 EOF
