@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.256 1998/07/21 03:16:05 wessels Exp $
+ * $Id: main.cc,v 1.257 1998/07/21 17:04:55 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -599,6 +599,7 @@ main(int argc, char **argv)
 
     /*init comm module */
     comm_init();
+    comm_select_init();
 
     /* we have to init fdstat here. */
     fd_open(0, FD_LOG, "stdin");

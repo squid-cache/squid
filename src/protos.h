@@ -104,11 +104,7 @@ extern void comm_init(void);
 extern int comm_listen(int sock);
 extern int comm_open(int, int, struct in_addr, u_short port, int, const char *note);
 extern u_short comm_local_port(int fd);
-#if HAVE_POLL
-extern int comm_poll(int);
-#else
-extern int comm_select(int);
-#endif
+
 extern void commSetSelect(int, unsigned int, PF *, void *, time_t);
 extern void comm_add_close_handler(int fd, PF *, void *);
 extern void comm_remove_close_handler(int fd, PF *, void *);
@@ -124,6 +120,16 @@ extern void commCallCloseHandlers(int fd);
 extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
 extern int ignoreErrno(int);
+
+/*
+ * comm_select.c
+ */
+extern void comm_select_init(void);
+#if HAVE_POLL
+extern int comm_poll(int);
+#else
+extern int comm_select(int);
+#endif
 
 extern void packerToStoreInit(Packer * p, StoreEntry * e);
 extern void packerToMemInit(Packer * p, MemBuf * mb);
