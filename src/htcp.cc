@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.18 1998/08/26 19:53:39 wessels Exp $
+ * $Id: htcp.cc,v 1.19 1998/08/27 06:28:28 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -540,7 +540,8 @@ htcpTstReply(htcpDataHeader *dhdr, StoreEntry * e, htcpSpecifier * spec, struct 
     char cto_buf[128];
     stuff.op = HTCP_TST;
     stuff.rr = RR_RESPONSE;
-    stuff.f1 = e ? 0 : 1;
+    stuff.f1 = 0;
+    stuff.response = e ? 0 : 1;
     stuff.msg_id = dhdr->msg_id;
     if (spec) {
 	memBufDefInit(&mb);
@@ -614,11 +615,15 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
     cache_key *key = NULL;
     htcpDetail *d = NULL;
     char *t;
+    if (hdr->F1 == 1) {
+	debug(31,1)("htcpHandleTstResponse: error condition, F1/MO == 1\n");
+	return;
+    }
     memset(&htcpReply, '\0', sizeof(htcpReply));
     httpHeaderInit(&htcpReply.hdr, hoHtcpReply);
     htcpReply.msg_id = hdr->msg_id;
     debug(31,1)("htcpHandleTstResponse: msg_id = %d\n", (int) htcpReply.msg_id);
-    htcpReply.hit = hdr->F1 ? 0 : 1;
+    htcpReply.hit = hdr->response ? 0 : 1;
     if (hdr->F1) {
 	debug(31, 1) ("htcpHandleTstResponse: MISS\n");
     } else {
@@ -654,6 +659,8 @@ htcpHandleTstRequest(htcpDataHeader *dhdr, char *buf, int sz, struct sockaddr_in
 	debug(31, 1) ("htcpHandleTst: nothing to do\n");
 	return;
     }
+    if (dhdr->F1 == 0)
+	return;
     s = htcpUnpackSpecifier(buf, sz);
     if (NULL == s) {
 	debug(31, 1) ("htcpHandleTstRequest: htcpUnpackSpecifier failed\n");
