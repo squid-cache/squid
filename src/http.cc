@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.320 1998/09/15 20:36:15 wessels Exp $
+ * $Id: http.cc,v 1.321 1998/09/15 22:05:09 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -161,10 +161,18 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 	return;
     assert(e->mem_obj);
     key = storeKeyPublic(e->mem_obj->url, e->mem_obj->method);
-    if ((pe = storeGet(key)) == NULL)
-	return;
-    assert(e != pe);
-    storeRelease(pe);
+    if ((pe = storeGet(key)) != NULL) {
+	assert(e != pe);
+	storeRelease(pe);
+    }
+    if (e->mem_obj->method == METHOD_GET) {
+	/* A fresh GET should eject old HEAD objects */
+	key = storeKeyPublic(e->mem_obj->url, METHOD_HEAD);
+	if ((pe = storeGet(key)) != NULL) {
+	    assert(e != pe);
+	    storeRelease(pe);
+	}
+    }
 }
 
 static int
@@ -357,15 +365,17 @@ httpPconnTransferDone(HttpStateData * httpState)
      * Deal with gross HTTP stuff
      *    - If we haven't seen the end of the reply headers, we can't
      *      be persistent.
+     *    - For HEAD requests we're done.
      *    - For "200 OK" check the content-length in the next block.
      *    - For "204 No Content" (even with content-length) we're done.
      *    - For "304 Not Modified" (even with content-length) we're done.
      *    - 1XX replies never have a body; we're done.
-     *    - For HEAD requests with content-length we're done.
      *    - For all other replies, check content length in next block.
      */
     if (httpState->reply_hdr_state < 2)
 	return 0;
+    else if (httpState->request->method == METHOD_HEAD)
+	return 1;
     else if (reply->sline.status == HTTP_OK)
 	(void) 0;		/* common case, continue */
     else if (reply->sline.status == HTTP_NO_CONTENT)
@@ -373,8 +383,6 @@ httpPconnTransferDone(HttpStateData * httpState)
     else if (reply->sline.status == HTTP_NOT_MODIFIED)
 	return 1;
     else if (reply->sline.status < HTTP_OK)
-	return 1;
-    else if (httpState->request->method == METHOD_HEAD)
 	return 1;
     /*
      * If there is no content-length, then we can't be
