@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.440 2004/12/20 16:30:35 robertc Exp $
+ * $Id: http.cc,v 1.441 2004/12/21 17:52:53 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -81,9 +81,8 @@ httpStateFree(int fd, void *data)
 
     storeUnlockObject(httpState->entry);
 
-    if (httpState->reply_hdr) {
-        memFree(httpState->reply_hdr, MEM_8K_BUF);
-        httpState->reply_hdr = NULL;
+    if (!memBufIsNull(&httpState->reply_hdr)) {
+        memBufClean(&httpState->reply_hdr);
     }
 
     requestUnlink(httpState->request);
@@ -523,6 +522,8 @@ HttpStateData::cacheableReply()
     case HTTP_PROXY_AUTHENTICATION_REQUIRED:
 
     case HTTP_INVALID_HEADER:	/* Squid header parsing error */
+
+    case HTTP_HEADER_TOO_LARGE:
         return 0;
 
     default:			/* Unknown status code */
@@ -614,93 +615,105 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     return vstr.buf();
 }
 
-/* rewrite this later using new interfaces @?@ */
+void
+HttpStateData::failReply(HttpReply *reply, http_status const & status)
+{
+    reply->sline.version = HttpVersion(1, 0);
+    reply->sline.status = status;
+    storeEntryReplaceObject (entry, reply);
+
+    if (eof == 1) {
+        fwdComplete(fwd);
+        comm_close(fd);
+    }
+}
+
+/* rewrite this later using new interfaces @?@
+ * This creates the error page itself.. its likely
+ * that the forward ported reply header max size patch
+ * generates non http conformant error pages - in which
+ * case the errors where should be 'BAD_GATEWAY' etc
+ */
 void
 HttpStateData::processReplyHeader(const char *buf, int size)
 {
-    char *t = NULL;
-    int room;
     size_t hdr_len;
+    size_t hdr_size = headersEnd(buf, size);
     /* Creates a blank header. If this routine is made incremental, this will
      * not do 
      */
     HttpReply *reply = httpReplyCreate();
-    Ctx ctx;
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
                   entry->getMD5Text());
 
-    if (reply_hdr == NULL)
-        reply_hdr = (char *)memAllocate(MEM_8K_BUF);
+    if (memBufIsNull(&reply_hdr))
+        memBufDefInit(&reply_hdr);
 
     assert(reply_hdr_state == 0);
 
-    hdr_len = reply_hdr_size;
+    if (hdr_size)
+        memBufAppend(&reply_hdr, buf, hdr_size);
+    else
+        memBufAppend(&reply_hdr, buf, size);
 
-    room = 8191 - hdr_len;
+    hdr_len = reply_hdr.size;
 
-    xmemcpy(reply_hdr + hdr_len, buf, room < size ? room : size);
-
-    hdr_len += room < size ? room : size;
-
-    reply_hdr[hdr_len] = '\0';
-
-    reply_hdr_size = hdr_len;
-
-    if (hdr_len > 4 && strncmp(reply_hdr, "HTTP/", 5)) {
-        debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", reply_hdr);
+    if (hdr_len > 4 && strncmp(reply_hdr.buf, "HTTP/", 5)) {
+        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'\n");
         reply_hdr_state += 2;
-        reply->sline.version = HttpVersion(1, 0);
-        reply->sline.status = HTTP_INVALID_HEADER;
-        storeEntryReplaceObject (entry, reply);
+        memBufClean(&reply_hdr);
+        failReply (reply, HTTP_INVALID_HEADER);
+        return;
+    }
 
-        if (eof == 1) {
-            fwdComplete(fwd);
-            comm_close(fd);
-        }
+    if (hdr_size != hdr_len)
+        hdr_size = headersEnd(reply_hdr.buf, hdr_len);
+
+    if (hdr_size)
+        hdr_len = hdr_size;
+
+    if (hdr_len > Config.maxReplyHeaderSize) {
+        debugs(11, 1, "httpProcessReplyHeader: Too large reply header\n");
+
+        if (!memBufIsNull(&reply_hdr))
+            memBufClean(&reply_hdr);
+
+        failReply (reply, HTTP_HEADER_TOO_LARGE);
 
         return;
     }
 
-    t = reply_hdr + hdr_len;
     /* headers can be incomplete only if object still arriving */
-
-    if (!eof) {
-        size_t k = headersEnd(reply_hdr, 8192);
-
-        if (0 == k) {
-            if (eof == 1) {
-                fwdComplete(fwd);
-                comm_close(fd);
-            }
-
+    if (!hdr_size) {
+        if (eof)
+            hdr_size = hdr_len;
+        else
             return;		/* headers not complete */
-        }
-
-        t = reply_hdr + k;
     }
 
-    *t = '\0';
+    /* Cut away any excess body data (only needed for debug?) */
+    memBufAppend(&reply_hdr, "\0", 1);
+
+    reply_hdr.buf[hdr_size] = '\0';
+
     reply_hdr_state++;
+
     assert(reply_hdr_state == 1);
-    ctx = ctx_enter(entry->mem_obj->url);
+
+    Ctx ctx = ctx_enter(entry->mem_obj->url);
+
     reply_hdr_state++;
+
     debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
-                  reply_hdr);
+                  reply_hdr.buf);
+
     /* Parse headers into reply structure */
     /* what happens if we fail to parse here? */
-    httpReplyParse(reply, reply_hdr, hdr_len);
+    httpReplyParse(reply, reply_hdr.buf, hdr_size);
 
     if (reply->sline.status >= HTTP_INVALID_HEADER) {
-        debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", reply_hdr);
-        reply->sline.version = HttpVersion(1, 0);
-        reply->sline.status = HTTP_INVALID_HEADER;
-        storeEntryReplaceObject (entry, reply);
-
-        if (eof == 1) {
-            fwdComplete(fwd);
-            comm_close(fd);
-        }
-
+        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'\n");
+        failReply (reply, HTTP_INVALID_HEADER);
         return;
     }
 
@@ -934,7 +947,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         IOStats.Http.read_hist[bin]++;
     }
 
-    if (!reply_hdr && flag == COMM_OK && len > 0) {
+    if (!memBufIsNull(&reply_hdr) && flag == COMM_OK && len > 0) {
         /* Skip whitespace */
 
         while (len > 0 && xisspace(*buf))
@@ -956,7 +969,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             do_next_read = 1;
         } else if (entry->isEmpty()) {
             ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+            err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY);
             err->request = requestLink((HttpRequest *) request);
             err->xerrno = errno;
             fwdFail(fwd, err);
@@ -968,7 +981,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         }
     } else if (flag == COMM_OK && len == 0 && entry->isEmpty()) {
         ErrorState *err;
-        err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
+        err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
         err->request = requestLink((HttpRequest *) request);
         fwdFail(fwd, err);
@@ -995,7 +1008,17 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             fwdFail(fwd, err);
             do_next_read = 0;
         } else {
-            fwdComplete(fwd);
+            if (entry->mem_obj->getReply()->sline.status == HTTP_HEADER_TOO_LARGE) {
+                ErrorState *err;
+                storeEntryReset(entry);
+                err = errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY);
+                err->request = requestLink((HttpRequest *) request);
+                fwdFail(fwd, err);
+                fwd->flags.dont_retry = 1;
+            } else {
+                fwdComplete(fwd);
+            }
+
             do_next_read = 0;
             comm_close(fd);
         }
@@ -1163,7 +1186,7 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
         return;
 
     if (errflag) {
-        err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
         err->request = requestLink(httpState->orig_request);
         errorAppendEntry(entry, err);
@@ -1796,7 +1819,7 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
         return;
 
     if (errflag) {
-        err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
         err->request = requestLink(httpState->orig_request);
         errorAppendEntry(entry, err);

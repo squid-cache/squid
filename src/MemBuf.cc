@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.36 2004/06/06 15:09:55 hno Exp $
+ * $Id: MemBuf.cc,v 1.37 2004/12/21 17:52:53 robertc Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -161,7 +161,7 @@ memBufClean(MemBuf * mb)
 
     memFreeBuf(mb->capacity, mb->buf);
     mb->buf = NULL;
-    mb->size = mb->capacity = 0;
+    mb->size = mb->capacity = mb->max_capacity = 0;
 }
 
 /* cleans the buffer without changing its capacity
