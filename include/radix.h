@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.12 2001/11/13 19:24:34 hno Exp $
+ * $Id: radix.h,v 1.13 2002/04/19 22:23:01 hno Exp $
  */
 
 #ifndef SQUID_RADIX_H
@@ -73,12 +73,8 @@ struct squid_radix_node {
 #endif
 };
 
-#define rn_dupedkey rn_u.rn_leaf.rn_Dupedkey
 #define rn_key rn_u.rn_leaf.rn_Key
 #define rn_mask rn_u.rn_leaf.rn_Mask
-#define rn_off rn_u.rn_node.rn_Off
-#define rn_l rn_u.rn_node.rn_L
-#define rn_r rn_u.rn_node.rn_R
 
 /*
  * Annotations to tree concerning potential routes applying to subtrees.
@@ -95,18 +91,6 @@ extern struct squid_radix_mask {
     } rm_rmu;
     int rm_refs;		/* # of references to this struct */
 }         *squid_rn_mkfreelist;
-
-#define rm_mask rm_rmu.rmu_mask
-#define rm_leaf rm_rmu.rmu_leaf	/* extra field would make 32 bytes */
-
-#define squid_MKGet(m) {\
-	if (squid_rn_mkfreelist) {\
-		m = squid_rn_mkfreelist; \
-		squid_rn_mkfreelist = (m)->rm_mklist; \
-	} else \
-		squid_R_Malloc(m, struct squid_radix_mask *, sizeof (*(m))); }\
-
-#define squid_MKFree(m) { (m)->rm_mklist = squid_rn_mkfreelist; squid_rn_mkfreelist = (m);}
 
 struct squid_radix_node_head {
     struct squid_radix_node *rnh_treetop;
@@ -134,12 +118,6 @@ struct squid_radix_node_head {
 };
 
 
-#define squid_Bcmp(a, b, n) memcmp(((char *)(a)), ((char *)(b)), (n))
-#define squid_Bcopy(a, b, n) memcpy(((char *)(b)), ((char *)(a)), (unsigned)(n))
-#define squid_Bzero(p, n) memset((char *)(p),'\0', (int)(n))
-#define squid_R_Malloc(p, t, n) (p = (t) xmalloc((unsigned int)(n)))
-#define squid_Free(p) xfree((char *)p)
-
 extern void squid_rn_init (void);
 extern int squid_rn_inithead(void **, int);
 extern int squid_rn_refines(void *, void *);
@@ -153,6 +131,5 @@ extern struct squid_radix_node *squid_rn_newpair(void *, int, struct squid_radix
 extern struct squid_radix_node *squid_rn_search(void *, struct squid_radix_node *);
 extern struct squid_radix_node *squid_rn_search_m(void *, struct squid_radix_node *, void *);
 extern struct squid_radix_node *squid_rn_lookup(void *, void *, struct squid_radix_node_head *);
-#define min(x,y) ((x)<(y)? (x) : (y))
 
 #endif /* SQUID_RADIX_H */
