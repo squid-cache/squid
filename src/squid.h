@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.43 1996/09/03 18:54:09 wessels Exp $
+ * $Id: squid.h,v 1.44 1996/09/03 19:24:04 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -293,7 +293,7 @@ extern int sslStart _PARAMS((int fd, char *, request_t *, char *, int *sz));
 extern char *storeToString _PARAMS((StoreEntry *));
 extern void ttlSet _PARAMS((StoreEntry *));
 extern void ttlFreeList _PARAMS((void));
-extern void ttlAddToList _PARAMS((char *, time_t, int, time_t));
+extern void ttlAddToList _PARAMS((char *, int, int, time_t, int, time_t));
 extern void ttlAddToForceList _PARAMS((char *, time_t, time_t));
 extern int waisStart _PARAMS((int, char *, method_t, char *, StoreEntry *));
 extern void storeDirClean _PARAMS((void));

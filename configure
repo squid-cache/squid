@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.30 
+# From configure.in Revision: 1.31 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2309,7 +2309,7 @@ EOF
 
 echo $ac_n "checking Default UDP send buffer size""... $ac_c" 1>&6
 if test "$cross_compiling" = yes; then
-  SQUID_UDP_SO_SNDBUF=8192
+  SQUID_UDP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
 #line 2316 "configure"
@@ -2333,7 +2333,7 @@ eval $ac_link
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_UDP_SO_SNDBUF=`cat conftestval`
 else
-  SQUID_UDP_SO_SNDBUF=8192
+  SQUID_UDP_SO_SNDBUF=16384
 fi
 fi
 rm -fr conftest*
@@ -2345,7 +2345,7 @@ EOF
 
 echo $ac_n "checking Default UDP receive buffer size""... $ac_c" 1>&6
 if test "$cross_compiling" = yes; then
-  SQUID_UDP_SO_RCVBUF=8192
+  SQUID_UDP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
 #line 2352 "configure"
@@ -2369,7 +2369,7 @@ eval $ac_link
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_UDP_SO_RCVBUF=`cat conftestval`
 else
-  SQUID_UDP_SO_RCVBUF=8192
+  SQUID_UDP_SO_RCVBUF=16384
 fi
 fi
 rm -fr conftest*
@@ -2381,7 +2381,7 @@ EOF
 
 echo $ac_n "checking Default TCP send buffer size""... $ac_c" 1>&6
 if test "$cross_compiling" = yes; then
-  SQUID_TCP_SO_SNDBUF=8192
+  SQUID_TCP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
 #line 2388 "configure"
@@ -2405,7 +2405,7 @@ eval $ac_link
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_TCP_SO_SNDBUF=`cat conftestval`
 else
-  SQUID_TCP_SO_SNDBUF=8192
+  SQUID_TCP_SO_SNDBUF=16384
 fi
 fi
 rm -fr conftest*
@@ -2417,7 +2417,7 @@ EOF
 
 echo $ac_n "checking Default TCP receive buffer size""... $ac_c" 1>&6
 if test "$cross_compiling" = yes; then
-  SQUID_TCP_SO_RCVBUF=8192
+  SQUID_TCP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
 #line 2424 "configure"
@@ -2441,7 +2441,7 @@ eval $ac_link
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_TCP_SO_RCVBUF=`cat conftestval`
 else
-  SQUID_TCP_SO_RCVBUF=8192
+  SQUID_TCP_SO_RCVBUF=16384
 fi
 fi
 rm -fr conftest*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.51 1996/08/30 22:39:08 wessels Exp $
+ * $Id: ftp.cc,v 1.52 1996/09/03 19:24:02 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -253,7 +253,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
 	    ttlSet(entry);
-	    if (BIT_TEST(entry->flag, CACHABLE))
+	    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
 	case 302:		/* Moved Temporarily */
@@ -263,13 +263,13 @@ static void ftpProcessReplyHeader(data, buf, size)
 	    /* These should never be cached at all */
 	    storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
-	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
 	    entry->expires = squid_curtime + Config.negativeTtl;
-	    if (BIT_TEST(entry->flag, CACHABLE))
+	    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
 		storeSetPublicKey(entry);
 	    break;
 	}
@@ -339,7 +339,7 @@ int ftpReadReply(fd, data)
 	    /* note there is no ftpReadReplyTimeout.  Timeouts are handled
 	     * by `ftpget'. */
 	} else {
-	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    comm_close(fd);
@@ -357,7 +357,7 @@ int ftpReadReply(fd, data)
 	     * never gets to disk. */
 	    debug(9, 1, "ftpReadReply: Purging '%s'\n", entry->url);
 	    entry->expires = squid_curtime + Config.negativeTtl;
-	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	} else if (!(entry->flag & DELETE_BEHIND)) {
 	    ttlSet(entry);

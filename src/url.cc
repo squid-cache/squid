@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.31 1996/08/30 23:23:36 wessels Exp $
+ * $Id: url.cc,v 1.32 1996/09/03 19:24:08 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -230,6 +230,9 @@ request_t *urlParse(method, url)
     }
     for (t = host; *t; t++)
 	*t = tolower(*t);
+    /* remove trailing dots from hostnames */
+    while ((l = strlen(host)) && host[--l] == '.')
+	host[l] = '\0';
     if (port == 0) {
 	debug(23, 0, "urlParse: Invalid port == 0\n");
 	return NULL;
@@ -313,6 +316,8 @@ int urlCheckRequest(r)
      request_t *r;
 {
     int rc = 0;
+    if (r->method == METHOD_CONNECT)
+	return 1;
     switch (r->protocol) {
     case PROTO_HTTP:
     case PROTO_CACHEOBJ:
