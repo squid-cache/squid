@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.105 2000/03/06 16:23:33 wessels Exp $
+ * $Id: peer_select.cc,v 1.106 2000/05/02 18:32:41 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -276,8 +276,8 @@ peerSelectFoo(ps_state * ps)
     if (Config.onoff.prefer_direct)
 	peerGetSomeDirect(ps);
     peerGetSomeParent(ps);
-    if (!Config.onoff.prefer_direct)
-	peerGetSomeDirect(ps);
+    /* Have direct as a last resort if possible.. */
+    peerGetSomeDirect(ps);
     peerSelectCallback(ps);
 }
 

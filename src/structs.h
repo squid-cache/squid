@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.317 2000/05/02 18:23:49 hno Exp $
+ * $Id: structs.h,v 1.318 2000/05/02 18:32:41 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1057,6 +1057,8 @@ struct _peer {
 	time_t probe_start;
 	time_t last_query;
 	time_t last_reply;
+	time_t last_connect_failure;
+	time_t last_connect_probe;
 	int logged_state;	/* so we can print dead/revived msgs */
     } stats;
     struct {
@@ -1108,7 +1110,6 @@ struct _peer {
     char *digest_url;
 #endif
     int tcp_up;			/* 0 if a connect() fails */
-    time_t last_fail_time;
     struct in_addr addresses[10];
     int n_addresses;
     int rr_count;
