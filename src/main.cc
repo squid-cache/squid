@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.303 1999/07/13 14:51:15 wessels Exp $
+ * $Id: main.cc,v 1.304 1999/08/02 06:18:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -349,6 +349,9 @@ mainReconfigure(void)
 #endif
     redirectInit();
     authenticateInit();
+#if USE_WCCP
+    wccpInit();
+#endif
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0) {
 	if (!Config2.Accel.on || Config.onoff.accel_with_proxy)
@@ -468,14 +471,14 @@ mainInitialize(void)
 #ifdef SQUID_SNMP
     snmpInit();
 #endif
-#if USE_WCCP
-    wccpInit();
-#endif
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);
 #endif
 
     if (!configured_once) {
+#if USE_ASYNC_IO
+	aioInit();
+#endif
 	unlinkdInit();
 	urlInitialize();
 	cachemgrInit();
@@ -493,6 +496,9 @@ mainInitialize(void)
 #endif
 	fwdInit();
     }
+#if USE_WCCP
+    wccpInit();
+#endif
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0) {
 	if (!Config2.Accel.on || Config.onoff.accel_with_proxy)
@@ -525,10 +531,6 @@ mainInitialize(void)
 	    eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
 	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15.0, 1);
-#if USE_WCCP
-	if (Config.Wccp.router.s_addr != inet_addr("0.0.0.0"))
-	    eventAdd("wccpHereIam", wccpHereIam, NULL, 10.0, 1);
-#endif
     }
     configured_once = 1;
 }

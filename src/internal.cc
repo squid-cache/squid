@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.15 1998/11/12 06:28:11 wessels Exp $
+ * $Id: internal.cc,v 1.16 1999/08/02 06:18:38 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -46,10 +46,28 @@ internalStart(request_t * request, StoreEntry * entry)
     const char *upath = strBuf(request->urlpath);
     debug(76, 3) ("internalStart: %s requesting '%s'\n",
 	inet_ntoa(request->client_addr), upath);
-    if (0 == strcmp(upath, "/squid-internal-dynamic/netdb"))
+    if (0 == strcmp(upath, "/squid-internal-dynamic/netdb")) {
 	netdbBinaryExchange(entry);
-    else {
-	debugObj(76, 1, "internalStart: unknown request:\n", request, (ObjPackMethod) & httpRequestPack);
+    } else if (0 == strcmp(upath, "/squid-internal-periodic/store_digest")) {
+#if USE_CACHE_DIGESTS
+	const char *msgbuf = "This cache is currently building its digest.\n";
+#else
+	const char *msgbuf = "This cache does not suport Cache Digests.\n";
+#endif
+	httpReplySetHeaders(entry->mem_obj->reply,
+	    1.0,
+	    HTTP_NOT_FOUND,
+	    "Not Found",
+	    "text/plain",
+	    strlen(msgbuf),
+	    squid_curtime,
+	    -2);
+	httpReplySwapOut(entry->mem_obj->reply, entry);
+	storeAppend(entry, msgbuf, strlen(msgbuf));
+	storeComplete(entry);
+    } else {
+	debugObj(76, 1, "internalStart: unknown request:\n",
+	    request, (ObjPackMethod) & httpRequestPack);
 	err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND);
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
@@ -109,4 +127,16 @@ internalHostname(void)
     xstrncpy(host, getMyHostname(), SQUIDHOSTNAMELEN);
     Tolower(host);
     return host;
+}
+
+int
+internalHostnameIs(const char *arg)
+{
+    wordlist *w;
+    if (0 == strcmp(arg, internalHostname()))
+	return 1;
+    for (w = Config.hostnameAliases; w; w = w->next)
+	if (0 == strcmp(arg, w->key))
+	    return 1;
+    return 0;
 }

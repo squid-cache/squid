@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.117 1999/06/18 04:25:01 wessels Exp $
+ * $Id: url.cc,v 1.118 1999/08/02 06:18:49 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -45,6 +45,7 @@ const char *RequestMethodStr[] =
     "CONNECT",
     "TRACE",
     "PURGE",
+    "OPTIONS",
 #ifndef RFC_2518
     "PROPFIND",
     "PROPPATCH",
@@ -141,6 +142,8 @@ urlParseMethod(const char *s)
 	return METHOD_TRACE;
     } else if (strcasecmp(s, "PURGE") == 0) {
 	return METHOD_PURGE;
+    } else if (strcasecmp(s, "OPTIONS") == 0) {
+	return METHOD_OPTIONS;
 #ifndef RFC_2518
     } else if (strcasecmp(s, "PROPFIND") == 0) {
 	return METHOD_PROPFIND;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.63 1999/06/24 22:53:45 wessels Exp $
+ * $Id: forward.cc,v 1.64 1999/08/02 06:18:36 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -112,7 +112,7 @@ fwdCheckRetry(FwdState * fwdState)
 	return 0;
     if (fwdState->flags.dont_retry)
 	return 0;
-    if (fwdState->request->body)
+    if (fwdState->request->content_length >= 0)
 	if (0 == pumpRestart(fwdState->request))
 	    return 0;
     return 1;
@@ -296,6 +296,7 @@ fwdDispatch(FwdState * fwdState)
     peer *p;
     request_t *request = fwdState->request;
     StoreEntry *entry = fwdState->entry;
+    ErrorState *err;
     debug(17, 3) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
 	fwdState->client_fd,
 	RequestMethodStr[request->method],
@@ -313,6 +314,7 @@ fwdDispatch(FwdState * fwdState)
     assert(fwdState->server_fd > -1);
     if (fwdState->servers && (p = fwdState->servers->peer)) {
 	p->stats.fetches++;
+	fwdState->request->peer_login = p->login;
 	httpStart(fwdState);
     } else {
 	switch (request->protocol) {
@@ -339,7 +341,20 @@ fwdDispatch(FwdState * fwdState)
 	default:
 	    debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
 		storeUrl(entry));
-	    fwdFail(fwdState, errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST));
+	    err = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST);
+	    err->request = requestLink(request);
+	    fwdFail(fwdState, err);
+	    /*
+	     * Force a persistent connection to be closed because
+	     * some Netscape browsers have a bug that sends CONNECT
+	     * requests as GET's over persistent connections.
+	     */
+	    request->flags.proxy_keepalive = 0;
+	    /*
+	     * Set the dont_retry flag becuase this is not a
+	     * transient (network) error; its a bug.
+	     */
+	    fwdState->flags.dont_retry = 1;
 	    comm_close(fwdState->server_fd);
 	    break;
 	}
@@ -361,7 +376,7 @@ fwdReforward(FwdState * fwdState)
     }
     if (fwdState->n_tries > 9)
 	return 0;
-    if (fwdState->request->body)
+    if (fwdState->request->content_length >= 0)
 	if (0 == pumpRestart(fwdState->request))
 	    return 0;
     assert(fs);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.7 1999/05/26 17:08:04 wessels Exp $
+ * $Id: store_log.cc,v 1.8 1999/08/02 06:18:46 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -111,12 +111,12 @@ storeLogRotate(void)
 	i--;
 	snprintf(from, MAXPATHLEN, "%s.%d", fname, i - 1);
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
-	rename(from, to);
+	xrename(from, to);
     }
     /* Rotate the current log to .0 */
     if (Config.Log.rotateNumber > 0) {
 	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
-	rename(fname, to);
+	xrename(fname, to);
     }
     storelog_fd = file_open(fname, O_WRONLY | O_CREAT);
     if (storelog_fd < 0) {

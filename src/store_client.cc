@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.74 1999/07/13 14:51:23 wessels Exp $
+ * $Id: store_client.cc,v 1.75 1999/08/02 06:18:43 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -253,7 +253,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	    callback(sc->callback_data, sc->copy_buf, -1);
 	} else if (!sc->flags.disk_io_pending) {
 	    sc->flags.disk_io_pending = 1;
-	    sc->swapin_sio = storeSwapInStart(e);
+	    storeSwapInStart(sc);
 	    if (NULL == sc->swapin_sio) {
 		sc->flags.disk_io_pending = 0;
 		sc->callback = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.75 1999/04/15 06:15:51 wessels Exp $
+ * $Id: debug.cc,v 1.76 1999/08/02 06:18:33 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -202,6 +202,11 @@ _db_rotate_log(void)
 	    return;
 #endif
 
+    /*
+     * NOTE: we cannot use xrename here without having it in a
+     * separate file -- tools.c has too many dependencies to be
+     * used everywhere debug.c is used.
+     */
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
 	i--;
