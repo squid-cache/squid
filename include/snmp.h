@@ -27,7 +27,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.10 1998/02/22 20:02:27 kostas Exp $
+ * $Id: snmp.h,v 1.11 1998/02/23 21:05:17 kostas Exp $
  * 
  **********************************************************************/
 
@@ -69,12 +69,6 @@
 #include <mib.h>
 #include <parse.h>
 #include <snmp_compat.h>
+#include <snmp_debug.h>
 
-#ifndef SQUID_H
-#ifdef __STDC__
-void (*snmplib_debug) (int,char *, ...); 
-#else
-void (*snmplib_debug) (va_alist));
-#endif
-#endif
 #endif /* _SNMP_H_ */

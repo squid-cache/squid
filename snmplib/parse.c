@@ -72,10 +72,10 @@ SOFTWARE.
 #include <netdb.h>
 #endif
 
-
 #include "asn1.h"
 #include "snmp_vars.h"
 #include "parse.h"
+#include "snmp_debug.h"
 
 #include "util.h"
 
@@ -256,7 +256,7 @@ print_error(string, token, type)
     char *token;
     int type;
 {
-    if (type == ENDOFFILE)
+    if (type == ENDOFFILE && snmplib_debug)
 	snmplib_debug(0, "%s(EOF): On or around line %d\n", string, Line);
     else if (token)
 	snmplib_debug(0, "%s(%s): On or around line %d\n", string, token, Line);
