@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.94 2001/10/17 20:25:01 hno Exp $
+ * $Id: client.cc,v 1.95 2002/06/13 08:41:01 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "ah:l:P:i:km:p:rsvt:g:p:I:H:?")) != -1)
+	while ((c = getopt(argc, argv, "ah:l:P:i:km:p:rsvt:g:p:I:H:T:?")) != -1)
 	    switch (c) {
 	    case 'a':
 		opt_noaccept = 1;
@@ -175,6 +175,9 @@ main(int argc, char *argv[])
 		    while ((t = strstr(extra_hdrs, "\\n")))
 			*t = '\r', *(t + 1) = '\n';
 		}
+		break;
+	    case 'T*:
+		io_timeout = atoi(optarg);
 		break;
 	    case 'v':
 		/* undocumented: may increase verb-level by giving more -v's */
