@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.37 2003/08/09 12:31:41 hno Exp $
+ * $Id: store_io_diskd.cc,v 1.38 2003/08/23 12:33:04 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -630,6 +630,7 @@ DiskdIO::storeDiskdHandle(diomsg * M)
 
     if (M->newstyle) {
         DiskdFile *theFile = (DiskdFile *)M->callback_data;
+        theFile->RefCountDereference();
         theFile->completed (M);
     } else
         switch (M->mtype) {
@@ -668,6 +669,7 @@ storeDiskdSend(int mtype, DiskdIO *IO, int id, DiskdFile *theFile, int size, int
     static int seq_no = 0;
     M.mtype = mtype;
     M.callback_data = cbdataReference(theFile);
+    theFile->RefCountReference();
     M.size = size;
     M.offset = offset;
     M.status = -1;
