@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.346 2002/10/21 14:08:22 adrian Exp $
+ * $Id: comm.cc,v 1.347 2002/10/21 14:48:15 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -665,7 +665,7 @@ comm_write_try(int fd, void *data)
  * completes, on error, or on file descriptor close.
  */
 void
-comm_write(int fd, char *buf, int size, IOWCB *handler, void *handler_data)
+comm_write(int fd, char *buf, size_t size, IOWCB *handler, void *handler_data)
 {
 	/* Make sure we're not writing anything and we're not closing */
 	assert(fdc_table[fd].active == 1);
