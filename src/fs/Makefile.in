@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.44 2003/05/05 22:57:37 hno Exp $
+#  $Id: Makefile.in,v 1.45 2003/07/23 00:14:52 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -147,7 +147,7 @@ SQUID_CFLAGS = @SQUID_CFLAGS@
 SQUID_CXXFLAGS = @SQUID_CXXFLAGS@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
-STORE_MODULES = @STORE_MODULES@
+STORE_LINKOBJS = @STORE_LINKOBJS@
 STORE_MODULE_SUBDIRS = @STORE_MODULE_SUBDIRS@
 STORE_OBJS = @STORE_OBJS@
 STORE_PROGRAMS = @STORE_PROGRAMS@
@@ -217,12 +217,12 @@ EXTRA_LIBRARIES = libaufs.a libcoss.a libdiskd.a libnull.a libufs.a
 noinst_LIBRARIES = @STORE_LIBS@
 
 libaufs_a_SOURCES = aufs/aiops.cc aufs/async_io.cc aufs/store_asyncufs.h \
-	aufs/store_dir_aufs.cc aufs/store_io_aufs.cc
+	aufs/store_io_aufs.cc
 
 libcoss_a_SOURCES = coss/store_coss.h   coss/store_io_coss.cc coss/store_dir_coss.cc \
 	coss/async_io.cc coss/async_io.h
 
-libdiskd_a_SOURCES = diskd/diskd.cc diskd/store_dir_diskd.cc \
+libdiskd_a_SOURCES = diskd/diskd.cc \
 	diskd/store_diskd.h \
 	diskd/store_io_diskd.cc
 
@@ -240,7 +240,9 @@ libnull_a_SOURCES = null/store_null.cc
 libufs_a_SOURCES = ufs/store_dir_ufs.cc ufs/store_io_ufs.cc ufs/store_ufs.h
 
 EXTRA_DIST = \
-	coss/coss-notes.txt
+	coss/coss-notes.txt \
+	ufs/IOModule.h \
+	ufs/StoreFSufs.h
 
 
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
@@ -257,7 +259,7 @@ libaufs_a_AR = $(AR) cru
 libaufs_a_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libaufs_a_OBJECTS = aufs/aiops.$(OBJEXT) aufs/async_io.$(OBJEXT) \
-	aufs/store_dir_aufs.$(OBJEXT) aufs/store_io_aufs.$(OBJEXT)
+	aufs/store_io_aufs.$(OBJEXT)
 libaufs_a_OBJECTS = $(am_libaufs_a_OBJECTS)
 libcoss_a_AR = $(AR) cru
 libcoss_a_LIBADD =
@@ -267,7 +269,7 @@ libcoss_a_OBJECTS = $(am_libcoss_a_OBJECTS)
 libdiskd_a_AR = $(AR) cru
 libdiskd_a_LIBADD =
 am_libdiskd_a_OBJECTS = diskd/diskd.$(OBJEXT) \
-	diskd/store_dir_diskd.$(OBJEXT) diskd/store_io_diskd.$(OBJEXT)
+	diskd/store_io_diskd.$(OBJEXT)
 libdiskd_a_OBJECTS = $(am_libdiskd_a_OBJECTS)
 libnull_a_AR = $(AR) cru
 libnull_a_LIBADD =
@@ -292,13 +294,11 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = aufs/$(DEPDIR)/aiops.Po \
 @AMDEP_TRUE@	aufs/$(DEPDIR)/async_io.Po \
-@AMDEP_TRUE@	aufs/$(DEPDIR)/store_dir_aufs.Po \
 @AMDEP_TRUE@	aufs/$(DEPDIR)/store_io_aufs.Po \
 @AMDEP_TRUE@	coss/$(DEPDIR)/async_io.Po \
 @AMDEP_TRUE@	coss/$(DEPDIR)/store_dir_coss.Po \
 @AMDEP_TRUE@	coss/$(DEPDIR)/store_io_coss.Po \
 @AMDEP_TRUE@	diskd/$(DEPDIR)/diskd.Po \
-@AMDEP_TRUE@	diskd/$(DEPDIR)/store_dir_diskd.Po \
 @AMDEP_TRUE@	diskd/$(DEPDIR)/store_io_diskd.Po \
 @AMDEP_TRUE@	null/$(DEPDIR)/store_null.Po \
 @AMDEP_TRUE@	ufs/$(DEPDIR)/store_dir_ufs.Po \
@@ -340,8 +340,6 @@ aufs/aiops.$(OBJEXT): aufs/$(am__dirstamp) \
 	aufs/$(DEPDIR)/$(am__dirstamp)
 aufs/async_io.$(OBJEXT): aufs/$(am__dirstamp) \
 	aufs/$(DEPDIR)/$(am__dirstamp)
-aufs/store_dir_aufs.$(OBJEXT): aufs/$(am__dirstamp) \
-	aufs/$(DEPDIR)/$(am__dirstamp)
 aufs/store_io_aufs.$(OBJEXT): aufs/$(am__dirstamp) \
 	aufs/$(DEPDIR)/$(am__dirstamp)
 libaufs.a: $(libaufs_a_OBJECTS) $(libaufs_a_DEPENDENCIES) 
@@ -371,8 +369,6 @@ diskd/$(DEPDIR)/$(am__dirstamp):
 	@$(mkinstalldirs) diskd/$(DEPDIR)
 	@: > diskd/$(DEPDIR)/$(am__dirstamp)
 diskd/diskd.$(OBJEXT): diskd/$(am__dirstamp) \
-	diskd/$(DEPDIR)/$(am__dirstamp)
-diskd/store_dir_diskd.$(OBJEXT): diskd/$(am__dirstamp) \
 	diskd/$(DEPDIR)/$(am__dirstamp)
 diskd/store_io_diskd.$(OBJEXT): diskd/$(am__dirstamp) \
 	diskd/$(DEPDIR)/$(am__dirstamp)
@@ -438,13 +434,11 @@ mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
 	-rm -f aufs/aiops.$(OBJEXT)
 	-rm -f aufs/async_io.$(OBJEXT)
-	-rm -f aufs/store_dir_aufs.$(OBJEXT)
 	-rm -f aufs/store_io_aufs.$(OBJEXT)
 	-rm -f coss/async_io.$(OBJEXT)
 	-rm -f coss/store_dir_coss.$(OBJEXT)
 	-rm -f coss/store_io_coss.$(OBJEXT)
 	-rm -f diskd/diskd.$(OBJEXT)
-	-rm -f diskd/store_dir_diskd.$(OBJEXT)
 	-rm -f diskd/store_io_diskd.$(OBJEXT)
 	-rm -f null/store_null.$(OBJEXT)
 	-rm -f ufs/store_dir_ufs.$(OBJEXT)
@@ -455,13 +449,11 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@aufs/$(DEPDIR)/aiops.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@aufs/$(DEPDIR)/async_io.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@aufs/$(DEPDIR)/store_dir_aufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@aufs/$(DEPDIR)/store_io_aufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/async_io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/store_dir_coss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/store_io_coss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@diskd/$(DEPDIR)/diskd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@diskd/$(DEPDIR)/store_dir_diskd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@diskd/$(DEPDIR)/store_io_diskd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@null/$(DEPDIR)/store_null.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ufs/$(DEPDIR)/store_dir_ufs.Po@am__quote@
@@ -535,28 +527,6 @@ aufs/async_io.obj: aufs/async_io.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='aufs/$(DEPDIR)/async_io.Po' tmpdepfile='aufs/$(DEPDIR)/async_io.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o aufs/async_io.obj `if test -f 'aufs/async_io.cc'; then $(CYGPATH_W) 'aufs/async_io.cc'; else $(CYGPATH_W) '$(srcdir)/aufs/async_io.cc'; fi`
-
-aufs/store_dir_aufs.o: aufs/store_dir_aufs.cc
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT aufs/store_dir_aufs.o -MD -MP -MF "aufs/$(DEPDIR)/store_dir_aufs.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o aufs/store_dir_aufs.o `test -f 'aufs/store_dir_aufs.cc' || echo '$(srcdir)/'`aufs/store_dir_aufs.cc; \
-@am__fastdepCXX_TRUE@	then mv -f "aufs/$(DEPDIR)/store_dir_aufs.Tpo" "aufs/$(DEPDIR)/store_dir_aufs.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "aufs/$(DEPDIR)/store_dir_aufs.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='aufs/store_dir_aufs.cc' object='aufs/store_dir_aufs.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='aufs/$(DEPDIR)/store_dir_aufs.Po' tmpdepfile='aufs/$(DEPDIR)/store_dir_aufs.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o aufs/store_dir_aufs.o `test -f 'aufs/store_dir_aufs.cc' || echo '$(srcdir)/'`aufs/store_dir_aufs.cc
-
-aufs/store_dir_aufs.obj: aufs/store_dir_aufs.cc
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT aufs/store_dir_aufs.obj -MD -MP -MF "aufs/$(DEPDIR)/store_dir_aufs.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o aufs/store_dir_aufs.obj `if test -f 'aufs/store_dir_aufs.cc'; then $(CYGPATH_W) 'aufs/store_dir_aufs.cc'; else $(CYGPATH_W) '$(srcdir)/aufs/store_dir_aufs.cc'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "aufs/$(DEPDIR)/store_dir_aufs.Tpo" "aufs/$(DEPDIR)/store_dir_aufs.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "aufs/$(DEPDIR)/store_dir_aufs.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='aufs/store_dir_aufs.cc' object='aufs/store_dir_aufs.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='aufs/$(DEPDIR)/store_dir_aufs.Po' tmpdepfile='aufs/$(DEPDIR)/store_dir_aufs.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o aufs/store_dir_aufs.obj `if test -f 'aufs/store_dir_aufs.cc'; then $(CYGPATH_W) 'aufs/store_dir_aufs.cc'; else $(CYGPATH_W) '$(srcdir)/aufs/store_dir_aufs.cc'; fi`
 
 aufs/store_io_aufs.o: aufs/store_io_aufs.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT aufs/store_io_aufs.o -MD -MP -MF "aufs/$(DEPDIR)/store_io_aufs.Tpo" \
@@ -667,28 +637,6 @@ diskd/diskd.obj: diskd/diskd.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='diskd/$(DEPDIR)/diskd.Po' tmpdepfile='diskd/$(DEPDIR)/diskd.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o diskd/diskd.obj `if test -f 'diskd/diskd.cc'; then $(CYGPATH_W) 'diskd/diskd.cc'; else $(CYGPATH_W) '$(srcdir)/diskd/diskd.cc'; fi`
-
-diskd/store_dir_diskd.o: diskd/store_dir_diskd.cc
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT diskd/store_dir_diskd.o -MD -MP -MF "diskd/$(DEPDIR)/store_dir_diskd.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o diskd/store_dir_diskd.o `test -f 'diskd/store_dir_diskd.cc' || echo '$(srcdir)/'`diskd/store_dir_diskd.cc; \
-@am__fastdepCXX_TRUE@	then mv -f "diskd/$(DEPDIR)/store_dir_diskd.Tpo" "diskd/$(DEPDIR)/store_dir_diskd.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "diskd/$(DEPDIR)/store_dir_diskd.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='diskd/store_dir_diskd.cc' object='diskd/store_dir_diskd.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='diskd/$(DEPDIR)/store_dir_diskd.Po' tmpdepfile='diskd/$(DEPDIR)/store_dir_diskd.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o diskd/store_dir_diskd.o `test -f 'diskd/store_dir_diskd.cc' || echo '$(srcdir)/'`diskd/store_dir_diskd.cc
-
-diskd/store_dir_diskd.obj: diskd/store_dir_diskd.cc
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT diskd/store_dir_diskd.obj -MD -MP -MF "diskd/$(DEPDIR)/store_dir_diskd.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o diskd/store_dir_diskd.obj `if test -f 'diskd/store_dir_diskd.cc'; then $(CYGPATH_W) 'diskd/store_dir_diskd.cc'; else $(CYGPATH_W) '$(srcdir)/diskd/store_dir_diskd.cc'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "diskd/$(DEPDIR)/store_dir_diskd.Tpo" "diskd/$(DEPDIR)/store_dir_diskd.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "diskd/$(DEPDIR)/store_dir_diskd.Tpo"; exit 1; \
-@am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='diskd/store_dir_diskd.cc' object='diskd/store_dir_diskd.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='diskd/$(DEPDIR)/store_dir_diskd.Po' tmpdepfile='diskd/$(DEPDIR)/store_dir_diskd.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o diskd/store_dir_diskd.obj `if test -f 'diskd/store_dir_diskd.cc'; then $(CYGPATH_W) 'diskd/store_dir_diskd.cc'; else $(CYGPATH_W) '$(srcdir)/diskd/store_dir_diskd.cc'; fi`
 
 diskd/store_io_diskd.o: diskd/store_io_diskd.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT diskd/store_io_diskd.o -MD -MP -MF "diskd/$(DEPDIR)/store_io_diskd.Tpo" \
@@ -838,7 +786,7 @@ top_distdir = ../..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
-	$(mkinstalldirs) $(distdir)/coss
+	$(mkinstalldirs) $(distdir)/coss $(distdir)/ufs
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -899,9 +847,9 @@ distclean-generic:
 	-rm -f null/$(DEPDIR)/$(am__dirstamp)
 	-rm -f coss/$(am__dirstamp)
 	-rm -f ufs/$(DEPDIR)/$(am__dirstamp)
-	-rm -f aufs/$(DEPDIR)/$(am__dirstamp)
-	-rm -f diskd/$(DEPDIR)/$(am__dirstamp)
 	-rm -f null/$(am__dirstamp)
+	-rm -f diskd/$(DEPDIR)/$(am__dirstamp)
+	-rm -f aufs/$(DEPDIR)/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"

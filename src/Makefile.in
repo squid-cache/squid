@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.315 2003/07/15 13:22:34 robertc Exp $
+#  $Id: Makefile.in,v 1.316 2003/07/23 00:14:48 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -151,7 +151,7 @@ SQUID_CFLAGS = @SQUID_CFLAGS@
 SQUID_CXXFLAGS = @SQUID_CXXFLAGS@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
-STORE_MODULES = @STORE_MODULES@
+STORE_LINKOBJS = @STORE_LINKOBJS@
 STORE_MODULE_SUBDIRS = @STORE_MODULE_SUBDIRS@
 STORE_OBJS = @STORE_OBJS@
 STORE_PROGRAMS = @STORE_PROGRAMS@
@@ -210,8 +210,9 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@USE_DNSSERVER_FALSE@DNSSOURCE = dns_internal.cc
 
+AUTOMAKE_OPTIONS = subdir-objects
+@USE_DNSSERVER_FALSE@DNSSOURCE = dns_internal.cc
 @USE_DNSSERVER_TRUE@DNSSOURCE = dns.cc
 @USE_DNSSERVER_FALSE@DNSSERVER = 
 @USE_DNSSERVER_TRUE@DNSSERVER = dnsserver
@@ -357,7 +358,16 @@ nodist_cf_gen_HEADER = cf_gen_defines.h
 squidclient_SOURCES = client.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 
+all_FSMODULES = \
+	fs/aufs/StoreFSaufs.cc \
+	fs/coss/StoreFScoss.cc \
+	fs/diskd/StoreFSdiskd.cc \
+	fs/null/StoreFSnull.cc \
+	fs/ufs/StoreFSufs.cc
+
+
 EXTRA_squid_SOURCES = \
+	$(all_FSMODULES) \
 	$(ARP_ACL_ALL_SOURCE) \
 	$(DELAY_POOL_ALL_SOURCE) \
 	dns.cc \
@@ -574,6 +584,8 @@ squid_SOURCES = \
 	stmem.h \
 	store.cc \
 	Store.h \
+	StoreFileSystem.cc \
+	StoreFileSystem.h \
 	store_io.cc \
 	StoreIOBuffer.h \
 	StoreIOState.cc \
@@ -600,6 +612,7 @@ squid_SOURCES = \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
+	$(STORE_SOURCES) \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
 	structs.h \
@@ -633,7 +646,6 @@ noinst_HEADERS = ACLChecklist.cci \
 nodist_squid_SOURCES = \
 	repl_modules.cc \
 	auth_modules.cc \
-	store_modules.cc \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c
@@ -643,6 +655,7 @@ squid_LDADD = \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
+	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
 	@AUTH_OBJS@ \
 	@CRYPTLIB@ \
@@ -654,7 +667,7 @@ squid_LDADD = \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@
 
-squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@
+squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKOBJS@
 
 unlinkd_SOURCES = unlinkd.cc SquidNew.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
@@ -833,7 +846,6 @@ ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
 	auth_modules.cc \
-	store_modules.cc \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c
@@ -849,8 +861,7 @@ BUILT_SOURCES = \
 	globals.cc \
 	string_arrays.c \
 	repl_modules.cc \
-	auth_modules.cc \
-	store_modules.cc
+	auth_modules.cc
 
 
 sysconf_DATA = \
@@ -870,7 +881,6 @@ EXTRA_DIST = \
 	mk-globals-c.pl \
 	mk-string-arrays.pl \
 	auth_modules.sh \
-	store_modules.sh \
 	repl_modules.sh \
 	mib.txt \
 	mime.conf.default
@@ -901,7 +911,7 @@ DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
 #		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 #	fi
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
-	globals.cc string_arrays.c repl_modules.cc auth_modules.cc store_modules.cc
+	globals.cc string_arrays.c repl_modules.cc auth_modules.cc 
 
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -1030,11 +1040,12 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	tunnel.cc ACLCertificateData.cc ACLCertificateData.h \
 	ACLCertificate.cc ACLCertificate.h ssl_support.cc ssl_support.h \
 	stat.cc StatHist.cc String.cc stmem.cc stmem.h store.cc Store.h \
-	store_io.cc StoreIOBuffer.h StoreIOState.cc StoreIOState.h \
-	store_client.cc StoreClient.h store_digest.cc store_dir.cc \
-	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
-	store_swapmeta.cc store_swapout.cc StoreMeta.cc StoreMeta.h \
-	StoreMetaMD5.cc StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
+	StoreFileSystem.cc StoreFileSystem.h store_io.cc \
+	StoreIOBuffer.h StoreIOState.cc StoreIOState.h store_client.cc \
+	StoreClient.h store_digest.cc store_dir.cc store_key_md5.cc \
+	store_log.cc store_rebuild.cc store_swapin.cc store_swapmeta.cc \
+	store_swapout.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
+	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
 	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
 	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h \
 	StoreSwapLogData.cc StoreSwapLogData.h structs.h SwapDir.cc \
@@ -1087,10 +1098,10 @@ am__objects_15 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
 	ssl_support.$(OBJEXT)
 @ENABLE_SSL_TRUE@am__objects_16 = $(am__objects_15)
 @ENABLE_SSL_FALSE@am__objects_16 =
-@ENABLE_UNLINKD_TRUE@am__objects_17 = unlinkd.$(OBJEXT)
-@ENABLE_UNLINKD_FALSE@am__objects_17 =
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_18 = win32.$(OBJEXT)
-@ENABLE_WIN32SPECIFIC_FALSE@am__objects_18 =
+@ENABLE_UNLINKD_TRUE@am__objects_18 = unlinkd.$(OBJEXT)
+@ENABLE_UNLINKD_FALSE@am__objects_18 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_19 = win32.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_19 =
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) $(am__objects_3) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
@@ -1123,21 +1134,22 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	$(am__objects_14) SquidNew.$(OBJEXT) tunnel.$(OBJEXT) \
 	$(am__objects_16) stat.$(OBJEXT) StatHist.$(OBJEXT) \
 	String.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
-	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) store_io.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) SwapDir.$(OBJEXT) tools.$(OBJEXT) \
-	ufscommon.$(OBJEXT) $(am__objects_17) url.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_18)
+	$(am__objects_17) StoreSwapLogData.$(OBJEXT) SwapDir.$(OBJEXT) \
+	tools.$(OBJEXT) ufscommon.$(OBJEXT) $(am__objects_18) \
+	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
+	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_19)
+am__dirstamp = $(am__leading_dot)dirstamp
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
-	store_modules.$(OBJEXT) globals.$(OBJEXT) \
-	string_arrays.$(OBJEXT)
+	globals.$(OBJEXT) string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
 squid_LDFLAGS =
 am_squidclient_OBJECTS = client.$(OBJEXT)
@@ -1253,12 +1265,11 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) ufscommon.$(OBJEXT) \
-	$(am__objects_17) url.$(OBJEXT) urn.$(OBJEXT) \
+	$(am__objects_18) url.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_18)
+	whois.$(OBJEXT) $(am__objects_19)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
-	store_modules.$(OBJEXT) globals.$(OBJEXT) \
-	string_arrays.$(OBJEXT)
+	globals.$(OBJEXT) string_arrays.$(OBJEXT)
 ufsdump_OBJECTS = $(am_ufsdump_OBJECTS) $(nodist_ufsdump_OBJECTS)
 ufsdump_LDFLAGS =
 am_unlinkd_OBJECTS = unlinkd-unlinkd.$(OBJEXT) \
@@ -1328,6 +1339,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/MemObject.Po ./$(DEPDIR)/NullDelayId.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/Packer.Po ./$(DEPDIR)/ProfStats.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/SquidNew.Po ./$(DEPDIR)/StatHist.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/StoreFileSystem.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreIOState.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMeta.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/StoreMetaMD5.Po \
@@ -1382,7 +1394,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/store_dir.Po ./$(DEPDIR)/store_io.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/store_key_md5.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/store_log.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/store_modules.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/store_rebuild.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/store_swapin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/store_swapmeta.Po \
@@ -1395,7 +1406,12 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/unlinkd.Po ./$(DEPDIR)/url.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/urn.Po ./$(DEPDIR)/useragent.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/wais.Po ./$(DEPDIR)/wccp.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/whois.Po ./$(DEPDIR)/win32.Po
+@AMDEP_TRUE@	./$(DEPDIR)/whois.Po ./$(DEPDIR)/win32.Po \
+@AMDEP_TRUE@	fs/aufs/$(DEPDIR)/StoreFSaufs.Po \
+@AMDEP_TRUE@	fs/coss/$(DEPDIR)/StoreFScoss.Po \
+@AMDEP_TRUE@	fs/diskd/$(DEPDIR)/StoreFSdiskd.Po \
+@AMDEP_TRUE@	fs/null/$(DEPDIR)/StoreFSnull.Po \
+@AMDEP_TRUE@	fs/ufs/$(DEPDIR)/StoreFSufs.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -1524,6 +1540,46 @@ pinger$(EXEEXT): $(pinger_OBJECTS) $(pinger_DEPENDENCIES)
 recv-announce$(EXEEXT): $(recv_announce_OBJECTS) $(recv_announce_DEPENDENCIES) 
 	@rm -f recv-announce$(EXEEXT)
 	$(CXXLINK) $(recv_announce_LDFLAGS) $(recv_announce_OBJECTS) $(recv_announce_LDADD) $(LIBS)
+fs/aufs/$(am__dirstamp):
+	@$(mkinstalldirs) fs/aufs
+	@: > fs/aufs/$(am__dirstamp)
+fs/aufs/$(DEPDIR)/$(am__dirstamp):
+	@$(mkinstalldirs) fs/aufs/$(DEPDIR)
+	@: > fs/aufs/$(DEPDIR)/$(am__dirstamp)
+fs/aufs/StoreFSaufs.$(OBJEXT): fs/aufs/$(am__dirstamp) \
+	fs/aufs/$(DEPDIR)/$(am__dirstamp)
+fs/coss/$(am__dirstamp):
+	@$(mkinstalldirs) fs/coss
+	@: > fs/coss/$(am__dirstamp)
+fs/coss/$(DEPDIR)/$(am__dirstamp):
+	@$(mkinstalldirs) fs/coss/$(DEPDIR)
+	@: > fs/coss/$(DEPDIR)/$(am__dirstamp)
+fs/coss/StoreFScoss.$(OBJEXT): fs/coss/$(am__dirstamp) \
+	fs/coss/$(DEPDIR)/$(am__dirstamp)
+fs/diskd/$(am__dirstamp):
+	@$(mkinstalldirs) fs/diskd
+	@: > fs/diskd/$(am__dirstamp)
+fs/diskd/$(DEPDIR)/$(am__dirstamp):
+	@$(mkinstalldirs) fs/diskd/$(DEPDIR)
+	@: > fs/diskd/$(DEPDIR)/$(am__dirstamp)
+fs/diskd/StoreFSdiskd.$(OBJEXT): fs/diskd/$(am__dirstamp) \
+	fs/diskd/$(DEPDIR)/$(am__dirstamp)
+fs/null/$(am__dirstamp):
+	@$(mkinstalldirs) fs/null
+	@: > fs/null/$(am__dirstamp)
+fs/null/$(DEPDIR)/$(am__dirstamp):
+	@$(mkinstalldirs) fs/null/$(DEPDIR)
+	@: > fs/null/$(DEPDIR)/$(am__dirstamp)
+fs/null/StoreFSnull.$(OBJEXT): fs/null/$(am__dirstamp) \
+	fs/null/$(DEPDIR)/$(am__dirstamp)
+fs/ufs/$(am__dirstamp):
+	@$(mkinstalldirs) fs/ufs
+	@: > fs/ufs/$(am__dirstamp)
+fs/ufs/$(DEPDIR)/$(am__dirstamp):
+	@$(mkinstalldirs) fs/ufs/$(DEPDIR)
+	@: > fs/ufs/$(DEPDIR)/$(am__dirstamp)
+fs/ufs/StoreFSufs.$(OBJEXT): fs/ufs/$(am__dirstamp) \
+	fs/ufs/$(DEPDIR)/$(am__dirstamp)
 squid$(EXEEXT): $(squid_OBJECTS) $(squid_DEPENDENCIES) 
 	@rm -f squid$(EXEEXT)
 	$(CXXLINK) $(squid_LDFLAGS) $(squid_OBJECTS) $(squid_LDADD) $(LIBS)
@@ -1539,6 +1595,11 @@ unlinkd$(EXEEXT): $(unlinkd_OBJECTS) $(unlinkd_DEPENDENCIES)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
+	-rm -f fs/aufs/StoreFSaufs.$(OBJEXT)
+	-rm -f fs/coss/StoreFScoss.$(OBJEXT)
+	-rm -f fs/diskd/StoreFSdiskd.$(OBJEXT)
+	-rm -f fs/null/StoreFSnull.$(OBJEXT)
+	-rm -f fs/ufs/StoreFSufs.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -1621,6 +1682,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ProfStats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SquidNew.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StatHist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreFileSystem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreIOState.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMeta.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaMD5.Po@am__quote@
@@ -1712,7 +1774,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_key_md5.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_log.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_modules.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_rebuild.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_swapin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/store_swapmeta.Po@am__quote@
@@ -1732,9 +1793,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wccp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whois.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/win32.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@fs/aufs/$(DEPDIR)/StoreFSaufs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@fs/coss/$(DEPDIR)/StoreFScoss.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@fs/diskd/$(DEPDIR)/StoreFSdiskd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@fs/null/$(DEPDIR)/StoreFSnull.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@fs/ufs/$(DEPDIR)/StoreFSufs.Po@am__quote@
 
 distclean-depend:
-	-rm -rf ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/null/$(DEPDIR) fs/ufs/$(DEPDIR)
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -1745,7 +1811,7 @@ distclean-depend:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
+@am__fastdepCC_FALSE@	$(COMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
 
 .c.obj:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -1756,7 +1822,7 @@ distclean-depend:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+@am__fastdepCC_FALSE@	$(COMPILE) -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
 
 .cc.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
@@ -1779,6 +1845,116 @@ distclean-depend:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+
+fs/aufs/StoreFSaufs.o: fs/aufs/StoreFSaufs.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/aufs/StoreFSaufs.o -MD -MP -MF "fs/aufs/$(DEPDIR)/StoreFSaufs.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/aufs/StoreFSaufs.o `test -f 'fs/aufs/StoreFSaufs.cc' || echo '$(srcdir)/'`fs/aufs/StoreFSaufs.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/aufs/$(DEPDIR)/StoreFSaufs.Tpo" "fs/aufs/$(DEPDIR)/StoreFSaufs.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/aufs/$(DEPDIR)/StoreFSaufs.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/aufs/StoreFSaufs.cc' object='fs/aufs/StoreFSaufs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/aufs/$(DEPDIR)/StoreFSaufs.Po' tmpdepfile='fs/aufs/$(DEPDIR)/StoreFSaufs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/aufs/StoreFSaufs.o `test -f 'fs/aufs/StoreFSaufs.cc' || echo '$(srcdir)/'`fs/aufs/StoreFSaufs.cc
+
+fs/aufs/StoreFSaufs.obj: fs/aufs/StoreFSaufs.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/aufs/StoreFSaufs.obj -MD -MP -MF "fs/aufs/$(DEPDIR)/StoreFSaufs.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/aufs/StoreFSaufs.obj `if test -f 'fs/aufs/StoreFSaufs.cc'; then $(CYGPATH_W) 'fs/aufs/StoreFSaufs.cc'; else $(CYGPATH_W) '$(srcdir)/fs/aufs/StoreFSaufs.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/aufs/$(DEPDIR)/StoreFSaufs.Tpo" "fs/aufs/$(DEPDIR)/StoreFSaufs.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/aufs/$(DEPDIR)/StoreFSaufs.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/aufs/StoreFSaufs.cc' object='fs/aufs/StoreFSaufs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/aufs/$(DEPDIR)/StoreFSaufs.Po' tmpdepfile='fs/aufs/$(DEPDIR)/StoreFSaufs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/aufs/StoreFSaufs.obj `if test -f 'fs/aufs/StoreFSaufs.cc'; then $(CYGPATH_W) 'fs/aufs/StoreFSaufs.cc'; else $(CYGPATH_W) '$(srcdir)/fs/aufs/StoreFSaufs.cc'; fi`
+
+fs/coss/StoreFScoss.o: fs/coss/StoreFScoss.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/coss/StoreFScoss.o -MD -MP -MF "fs/coss/$(DEPDIR)/StoreFScoss.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/coss/StoreFScoss.o `test -f 'fs/coss/StoreFScoss.cc' || echo '$(srcdir)/'`fs/coss/StoreFScoss.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/coss/$(DEPDIR)/StoreFScoss.Tpo" "fs/coss/$(DEPDIR)/StoreFScoss.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/coss/$(DEPDIR)/StoreFScoss.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/coss/StoreFScoss.cc' object='fs/coss/StoreFScoss.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/coss/$(DEPDIR)/StoreFScoss.Po' tmpdepfile='fs/coss/$(DEPDIR)/StoreFScoss.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/coss/StoreFScoss.o `test -f 'fs/coss/StoreFScoss.cc' || echo '$(srcdir)/'`fs/coss/StoreFScoss.cc
+
+fs/coss/StoreFScoss.obj: fs/coss/StoreFScoss.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/coss/StoreFScoss.obj -MD -MP -MF "fs/coss/$(DEPDIR)/StoreFScoss.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/coss/StoreFScoss.obj `if test -f 'fs/coss/StoreFScoss.cc'; then $(CYGPATH_W) 'fs/coss/StoreFScoss.cc'; else $(CYGPATH_W) '$(srcdir)/fs/coss/StoreFScoss.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/coss/$(DEPDIR)/StoreFScoss.Tpo" "fs/coss/$(DEPDIR)/StoreFScoss.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/coss/$(DEPDIR)/StoreFScoss.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/coss/StoreFScoss.cc' object='fs/coss/StoreFScoss.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/coss/$(DEPDIR)/StoreFScoss.Po' tmpdepfile='fs/coss/$(DEPDIR)/StoreFScoss.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/coss/StoreFScoss.obj `if test -f 'fs/coss/StoreFScoss.cc'; then $(CYGPATH_W) 'fs/coss/StoreFScoss.cc'; else $(CYGPATH_W) '$(srcdir)/fs/coss/StoreFScoss.cc'; fi`
+
+fs/diskd/StoreFSdiskd.o: fs/diskd/StoreFSdiskd.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/diskd/StoreFSdiskd.o -MD -MP -MF "fs/diskd/$(DEPDIR)/StoreFSdiskd.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/diskd/StoreFSdiskd.o `test -f 'fs/diskd/StoreFSdiskd.cc' || echo '$(srcdir)/'`fs/diskd/StoreFSdiskd.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/diskd/$(DEPDIR)/StoreFSdiskd.Tpo" "fs/diskd/$(DEPDIR)/StoreFSdiskd.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/diskd/$(DEPDIR)/StoreFSdiskd.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/diskd/StoreFSdiskd.cc' object='fs/diskd/StoreFSdiskd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/diskd/$(DEPDIR)/StoreFSdiskd.Po' tmpdepfile='fs/diskd/$(DEPDIR)/StoreFSdiskd.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/diskd/StoreFSdiskd.o `test -f 'fs/diskd/StoreFSdiskd.cc' || echo '$(srcdir)/'`fs/diskd/StoreFSdiskd.cc
+
+fs/diskd/StoreFSdiskd.obj: fs/diskd/StoreFSdiskd.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/diskd/StoreFSdiskd.obj -MD -MP -MF "fs/diskd/$(DEPDIR)/StoreFSdiskd.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/diskd/StoreFSdiskd.obj `if test -f 'fs/diskd/StoreFSdiskd.cc'; then $(CYGPATH_W) 'fs/diskd/StoreFSdiskd.cc'; else $(CYGPATH_W) '$(srcdir)/fs/diskd/StoreFSdiskd.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/diskd/$(DEPDIR)/StoreFSdiskd.Tpo" "fs/diskd/$(DEPDIR)/StoreFSdiskd.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/diskd/$(DEPDIR)/StoreFSdiskd.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/diskd/StoreFSdiskd.cc' object='fs/diskd/StoreFSdiskd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/diskd/$(DEPDIR)/StoreFSdiskd.Po' tmpdepfile='fs/diskd/$(DEPDIR)/StoreFSdiskd.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/diskd/StoreFSdiskd.obj `if test -f 'fs/diskd/StoreFSdiskd.cc'; then $(CYGPATH_W) 'fs/diskd/StoreFSdiskd.cc'; else $(CYGPATH_W) '$(srcdir)/fs/diskd/StoreFSdiskd.cc'; fi`
+
+fs/null/StoreFSnull.o: fs/null/StoreFSnull.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/null/StoreFSnull.o -MD -MP -MF "fs/null/$(DEPDIR)/StoreFSnull.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/null/StoreFSnull.o `test -f 'fs/null/StoreFSnull.cc' || echo '$(srcdir)/'`fs/null/StoreFSnull.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/null/$(DEPDIR)/StoreFSnull.Tpo" "fs/null/$(DEPDIR)/StoreFSnull.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/null/$(DEPDIR)/StoreFSnull.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/null/StoreFSnull.cc' object='fs/null/StoreFSnull.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/null/$(DEPDIR)/StoreFSnull.Po' tmpdepfile='fs/null/$(DEPDIR)/StoreFSnull.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/null/StoreFSnull.o `test -f 'fs/null/StoreFSnull.cc' || echo '$(srcdir)/'`fs/null/StoreFSnull.cc
+
+fs/null/StoreFSnull.obj: fs/null/StoreFSnull.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/null/StoreFSnull.obj -MD -MP -MF "fs/null/$(DEPDIR)/StoreFSnull.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/null/StoreFSnull.obj `if test -f 'fs/null/StoreFSnull.cc'; then $(CYGPATH_W) 'fs/null/StoreFSnull.cc'; else $(CYGPATH_W) '$(srcdir)/fs/null/StoreFSnull.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/null/$(DEPDIR)/StoreFSnull.Tpo" "fs/null/$(DEPDIR)/StoreFSnull.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/null/$(DEPDIR)/StoreFSnull.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/null/StoreFSnull.cc' object='fs/null/StoreFSnull.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/null/$(DEPDIR)/StoreFSnull.Po' tmpdepfile='fs/null/$(DEPDIR)/StoreFSnull.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/null/StoreFSnull.obj `if test -f 'fs/null/StoreFSnull.cc'; then $(CYGPATH_W) 'fs/null/StoreFSnull.cc'; else $(CYGPATH_W) '$(srcdir)/fs/null/StoreFSnull.cc'; fi`
+
+fs/ufs/StoreFSufs.o: fs/ufs/StoreFSufs.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/ufs/StoreFSufs.o -MD -MP -MF "fs/ufs/$(DEPDIR)/StoreFSufs.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/ufs/StoreFSufs.o `test -f 'fs/ufs/StoreFSufs.cc' || echo '$(srcdir)/'`fs/ufs/StoreFSufs.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/ufs/$(DEPDIR)/StoreFSufs.Tpo" "fs/ufs/$(DEPDIR)/StoreFSufs.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/ufs/$(DEPDIR)/StoreFSufs.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/ufs/StoreFSufs.cc' object='fs/ufs/StoreFSufs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/ufs/$(DEPDIR)/StoreFSufs.Po' tmpdepfile='fs/ufs/$(DEPDIR)/StoreFSufs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/ufs/StoreFSufs.o `test -f 'fs/ufs/StoreFSufs.cc' || echo '$(srcdir)/'`fs/ufs/StoreFSufs.cc
+
+fs/ufs/StoreFSufs.obj: fs/ufs/StoreFSufs.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fs/ufs/StoreFSufs.obj -MD -MP -MF "fs/ufs/$(DEPDIR)/StoreFSufs.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o fs/ufs/StoreFSufs.obj `if test -f 'fs/ufs/StoreFSufs.cc'; then $(CYGPATH_W) 'fs/ufs/StoreFSufs.cc'; else $(CYGPATH_W) '$(srcdir)/fs/ufs/StoreFSufs.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "fs/ufs/$(DEPDIR)/StoreFSufs.Tpo" "fs/ufs/$(DEPDIR)/StoreFSufs.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "fs/ufs/$(DEPDIR)/StoreFSufs.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fs/ufs/StoreFSufs.cc' object='fs/ufs/StoreFSufs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='fs/ufs/$(DEPDIR)/StoreFSufs.Po' tmpdepfile='fs/ufs/$(DEPDIR)/StoreFSufs.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fs/ufs/StoreFSufs.obj `if test -f 'fs/ufs/StoreFSufs.cc'; then $(CYGPATH_W) 'fs/ufs/StoreFSufs.cc'; else $(CYGPATH_W) '$(srcdir)/fs/ufs/StoreFSufs.cc'; fi`
 
 unlinkd-unlinkd.o: unlinkd.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unlinkd_CXXFLAGS) $(CXXFLAGS) -MT unlinkd-unlinkd.o -MD -MP -MF "$(DEPDIR)/unlinkd-unlinkd.Tpo" \
@@ -2058,6 +2234,16 @@ clean-generic:
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f fs/coss/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/null/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/coss/$(am__dirstamp)
+	-rm -f fs/ufs/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/null/$(am__dirstamp)
+	-rm -f fs/diskd/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/aufs/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/ufs/$(am__dirstamp)
+	-rm -f fs/aufs/$(am__dirstamp)
+	-rm -f fs/diskd/$(am__dirstamp)
 	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
@@ -2185,9 +2371,6 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;\
 	s%@[V]ERSION@%$(VERSION)%g;"\
 	< $(srcdir)/cf.data.pre >$@
-
-store_modules.cc: store_modules.sh Makefile
-	$(SHELL) $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.cc
 
 repl_modules.cc: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
