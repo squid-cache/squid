@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.202 2001/05/05 17:49:54 hno Exp $
+#  $Id: Makefile.in,v 1.203 2001/08/19 03:49:38 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -206,7 +206,7 @@ SSL_OBJS 	= ssl_support.o
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
-all:    squid.conf
+all:    squid.conf.default
 	@for dir in $(SUBDIRS); do \
 		echo "Making $@ in $$dir..."; \
 		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
@@ -255,8 +255,8 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 
 cache_cf.o: cf_parser.c
 
-squid.conf: cf_parser.c
-	@sh -c "test -f squid.conf || ./cf_gen cf.data"
+squid.conf.default: cf_parser.c
+	@sh -c "test -f squid.conf.default || ./cf_gen cf.data"
 
 cf_parser.c: cf.data cf_gen
 	./cf_gen cf.data
@@ -393,12 +393,12 @@ install: all install-mkdirs
 		fi; \
 	done
 	$(INSTALL_FILE) $(srcdir)/mib.txt $(DEFAULT_MIB_PATH)
-	$(INSTALL_FILE) squid.conf $(sysconfdir)/squid.conf.default
+	$(INSTALL_FILE) squid.conf.default $(sysconfdir)/squid.conf.default
 	@if test -f $(sysconfdir)/squid.conf ; then \
 		echo "$@ will not overwrite existing $(sysconfdir)/squid.conf" ; \
 	else \
-		echo "$(INSTALL_FILE) squid.conf $(sysconfdir)"; \
-		$(INSTALL_FILE) squid.conf $(sysconfdir); \
+		echo "$(INSTALL_FILE) squid.conf.default $(sysconfdir)"; \
+		$(INSTALL_FILE) squid.conf.default $(sysconfdir); \
 	fi
 
 	$(INSTALL_FILE) $(srcdir)/mime.conf $(sysconfdir)/mime.conf.default
@@ -425,7 +425,7 @@ install-pinger:
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
 	-rm -f cf_gen cf_gen_defines.h cf_parser.c cf.data globals.c string_arrays.c
-	-rm -f store_modules.c repl_modules.c auth_modules.c squid.conf
+	-rm -f store_modules.c repl_modules.c auth_modules.c squid.conf.default
 	@for dir in $(SUBDIRS); do \
 		echo "Making $@ in $$dir..."; \
 		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \

@@ -1,8 +1,8 @@
 
 /*
- * $Id: cf_gen.cc,v 1.40 2001/01/12 00:37:15 wessels Exp $
+ * $Id: cf_gen.cc,v 1.41 2001/08/19 03:49:38 robertc Exp $
  *
- * DEBUG: none          Generate squid.conf and cf_parser.c
+ * DEBUG: none          Generate squid.conf.default and cf_parser.c
  * AUTHOR: Max Okumoto
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,15 +36,15 @@
 /*****************************************************************************
  * Abstract:	This program parses the input file and generates code and
  *		files used to configure the variables in squid.
- *		(ie it creates the squid.conf file from the cf.data file)
+ *		(ie it creates the squid.conf.default file from the cf.data file)
  *
  *		The output files are as follows:
  *		cf_parser.c - this file contains, default_all() which
  *			  initializes variables with the default
  *			  values, parse_line() that parses line from
- *			  squid.conf, dump_config that dumps the
+ *			  squid.conf.default, dump_config that dumps the
  *			  current the values of the variables.
- *		squid.conf - default configuration file given to the server
+ *		squid.conf.default - default configuration file given to the server
  *			 administrator.
  *****************************************************************************/
 
@@ -77,7 +77,7 @@
 
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.c"
-#define _PATH_SQUID_CONF	"squid.conf"
+#define _PATH_SQUID_CONF	"squid.conf.default"
 
 enum State {
     sSTART,
@@ -325,7 +325,7 @@ main(int argc, char *argv[])
      * Generate parse_line()
      * Generate dump_config()
      * Generate free_all()
-     * Generate example squid.conf file
+     * Generate example squid.conf.default file
      *-------------------------------------------------------------------*/
 
     /* Open output x.c file */
