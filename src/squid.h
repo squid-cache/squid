@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.26 1996/07/11 17:42:53 wessels Exp $
+ * $Id: squid.h,v 1.27 1996/07/15 23:48:36 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -230,6 +230,7 @@ typedef void (*SIH) _PARAMS((int, void *));	/* swap in */
 #include "acl.h"
 #include "util.h"
 #include "background.h"
+#include "async_io.h"
 #include "redirect.h"
 
 #if !HAVE_TEMPNAM

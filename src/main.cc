@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.50 1996/07/14 05:35:54 wessels Exp $
+ * $Id: main.cc,v 1.51 1996/07/15 23:48:34 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -390,6 +390,8 @@ static void mainInitialize()
     squid_signal(SIGPIPE, SIG_IGN, SA_RESTART);
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
 #if USE_ASYNC_IO
+    if (first_time)
+	aio_init();
     squid_signal(SIGIO, aioSigHandler, SA_RESTART);
 #endif
 
@@ -414,6 +416,7 @@ static void mainInitialize()
     debug(1, 1, "With %d file descriptors available\n", FD_SETSIZE);
 
     if (first_time) {
+	stmemInit();		/* stmem must go before at least redirect */
 	disk_init();		/* disk_init must go before ipcache_init() */
 	writePidFile();		/* write PID file */
     }
@@ -432,7 +435,6 @@ static void mainInitialize()
 	urlInitialize();
 	stat_init(&CacheInfo, getAccessLogFile());
 	storeInit();
-	stmemInit();
 
 	if (getEffectiveUser()) {
 	    /* we were probably started as root, so cd to a swap
