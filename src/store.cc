@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.436 1998/07/25 17:48:33 wessels Exp $
+ * $Id: store.cc,v 1.437 1998/07/26 06:39:25 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -600,6 +600,7 @@ storeMaintainSwapSpace(void *datanotused)
     for (m = store_list.tail; m; m = prev) {
 	prev = m->prev;
 	e = m->data;
+	scanned++;
 	if (storeEntryLocked(e)) {
 	    /*
 	     * If there is a locked entry at the tail of the LRU list,
@@ -617,9 +618,9 @@ storeMaintainSwapSpace(void *datanotused)
 	    expired++;
 	    storeRelease(e);
 	}
-	if (expired > max_remove)
+	if (expired >= max_remove)
 	    break;
-	if (++scanned > max_scan)
+	if (scanned >= max_scan)
 	    break;
     }
     debug(20, 3) ("storeMaintainSwapSpace stats:\n");
