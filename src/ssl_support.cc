@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.17 2004/11/06 22:03:57 hno Exp $
+ * $Id: ssl_support.cc,v 1.18 2004/12/08 00:06:04 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -465,8 +465,6 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     if (!CAfile)
         CAfile = clientCA;
 
-    debug(83, 1) ("Initialising SSL.\n");
-
     switch (version) {
 
     case 2:
@@ -626,8 +624,6 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     if (!certfile)
         certfile = keyfile;
-
-    debug(83, 1) ("Initialising SSL.\n");
 
     switch (version) {
 

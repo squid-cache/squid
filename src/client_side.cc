@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.674 2004/11/16 23:11:46 wessels Exp $
+ * $Id: client_side.cc,v 1.675 2004/12/08 00:06:04 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -3050,6 +3050,11 @@ clientHttpsConnectionsOpen(void)
             debug(1, 1) ("WARNING: You have too many 'https_port' lines.\n");
             debug(1, 1) ("         The limit is %d\n", MAXHTTPPORTS);
             continue;
+        }
+
+        if (s->sslContext == NULL) {
+            debug(1, 1) ("Can not accept HTTPS connections at %s, port %d\n",
+                         inet_ntoa(s->http.s.sin_addr), (int) ntohs(s->http.s.sin_port));
         }
 
         enter_suid();
