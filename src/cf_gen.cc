@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.3 1997/07/06 05:14:10 wessels Exp $
+ * $Id: cf_gen.cc,v 1.4 1997/07/07 05:29:41 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -76,7 +76,7 @@ typedef struct Entry {
 
 
 static const char WS[] = " \t";
-static void gen_default(Entry *, FILE *);
+static int gen_default(Entry *, FILE *);
 static void gen_parse(Entry *, FILE *);
 static void gen_dump(Entry *, FILE *);
 static void gen_free(Entry *, FILE *);
@@ -93,6 +93,7 @@ main(int argc, char *argv[])
     Entry *entries = NULL;
     Entry *curr = NULL;
     enum State state;
+    int rc = 0;
 
     /*-------------------------------------------------------------------*
      * Parse input file
@@ -263,7 +264,7 @@ main(int argc, char *argv[])
 	"\n",
 	input_filename, argv[0]
 	);
-    gen_default(entries, fp);
+    rc = gen_default(entries, fp);
     gen_parse(entries, fp);
     gen_dump(entries, fp);
     gen_free(entries, fp);
@@ -277,13 +278,14 @@ main(int argc, char *argv[])
     gen_conf(entries, fp);
     fclose(fp);
 
-    return (0);
+    return (rc);
 }
 
-static void
+static int
 gen_default(Entry * head, FILE * fp)
 {
     Entry *entry;
+    int rc = 0;
     fprintf(fp,
 	"void\n"
 	"default_all(void)\n"
@@ -293,33 +295,25 @@ gen_default(Entry * head, FILE * fp)
 	assert(entry->name);
 	if (entry->loc == NULL) {
 	    fprintf(stderr, "NO LOCATION FOR %s\n", entry->name);
+	    rc |= 1;
 	    continue;
 	}
 	if (entry->default_value == NULL) {
 	    fprintf(stderr, "NO DEFAULT FOR %s\n", entry->name);
+	    rc |= 1;
 	    continue;
 	}
-#ifdef OLD
-	if (!strcmp(entry->type, "string")) {
-	    fprintf(fp, "\t%s = xstrdup(\"%s\");\n",
-		entry->loc, entry->default_value);
-	} else if (!strcmp(entry->type, "string_optional")) {
-	    fprintf(fp, "\t%s = xstrdup(\"%s\");\n",
-		entry->loc, entry->default_value);
-	} else if (!strcmp(entry->type, "pathname_check")) {
-	    fprintf(fp, "\t%s = xstrdup(\"%s\");\n",
-		entry->loc, entry->default_value);
+	assert(entry->default_value);
+	if (strcmp(entry->default_value, "none") == 0) {
+	    fprintf(fp, "\t/* No default for %s */\n", entry->name);
 	} else {
-	    fprintf(fp, "\t%s = %s;\n",
-		entry->loc, entry->default_value);
-	}
-#else
-	fprintf(fp, "\tparse_line(\"%s %s\");\n",
+	    fprintf(fp, "\tparse_line(\"%s %s\");\n",
 		entry->name,
 		entry->default_value);
-#endif
+	}
     }
     fprintf(fp, "}\n\n");
+    return rc;
 }
 
 static void
@@ -343,7 +337,8 @@ gen_parse(Entry * head, FILE * fp)
 	    "\t} else if (!strcmp(token, \"%s\")) {\n",
 	    entry->name
 	    );
-	if (entry->loc == NULL) {
+	assert(entry->loc);
+	if (strcmp(entry->loc, "none") == 0) {
 	    fprintf(fp,
 		"\t\tparse_%s();\n",
 		entry->type
@@ -375,15 +370,12 @@ gen_dump(Entry * head, FILE * fp)
 	"{\n"
 	);
     for (entry = head; entry != NULL; entry = entry->next) {
-	if (entry->loc == NULL) {
-	    fprintf(fp, "\tprintf(\"%s = \");\n", entry->type);
-	    fprintf(fp, "\tdump_%s();\n", entry->type);
-	} else {
-	    fprintf(fp, "\tprintf(\"%s = \");\n", entry->loc);
-	    fprintf(fp, "\tdump_%s(%s);\n", entry->type, entry->loc);
-	}
+	assert(entry->loc);
+	if (strcmp(entry->loc, "none") == 0)
+	    continue;
+	fprintf(fp, "\tprintf(\"%s = \");\n", entry->loc);
+	fprintf(fp, "\tdump_%s(%s);\n", entry->type, entry->loc);
 	fprintf(fp, "\tprintf(\"\\n\");\n");
-	fprintf(fp, "\n");
     }
     fprintf(fp, "}\n\n");
 }
@@ -398,11 +390,10 @@ gen_free(Entry * head, FILE * fp)
 	"{\n"
 	);
     for (entry = head; entry != NULL; entry = entry->next) {
-	if (entry->loc == NULL) {
-	    fprintf(fp, "\tfree_%s();\n", entry->type);
-	} else {
-	    fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
-	}
+	assert(entry->loc);
+	if (strcmp(entry->loc, "none") == 0)
+	    continue;
+	fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
     }
     fprintf(fp, "}\n\n");
 }

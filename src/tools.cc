@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.110 1997/06/21 02:38:18 wessels Exp $
+ * $Id: tools.cc,v 1.111 1997/07/07 05:29:57 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -324,7 +324,7 @@ shutdownTimeoutHandler(int fd, void *data)
 void
 setSocketShutdownLifetimes(int to)
 {
-    FD_ENTRY *f = NULL;
+    fde *f = NULL;
     int i;
     for (i = Biggest_FD; i >= 0; i--) {
 	f = &fd_table[i];

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.157 1997/06/26 22:41:43 wessels Exp $
+ * $Id: main.cc,v 1.158 1997/07/07 05:29:48 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -105,49 +105,10 @@
 
 #include "squid.h"
 
-time_t squid_starttime = 0;
-int HttpSockets[MAXHTTPPORTS];
-int NHttpSockets = 0;
-int theInIcpConnection = -1;
-int theOutIcpConnection = -1;
-int vizSock = -1;
-int do_reuse = 1;
-int opt_reload_hit_only = 0;	/* only UDP_HIT during store relaod */
-int opt_catch_signals = 1;
-int opt_dns_tests = 1;
-int opt_foreground_rebuild = 0;
-int opt_zap_disk_store = 0;
-int opt_syslog_enable = 0;	/* disabled by default */
-int opt_no_ipcache = 0;		/* use ipcache by default */
-static int opt_send_signal = -1;	/* no signal to send */
-int opt_udp_hit_obj = 0;	/* ask for HIT_OBJ's */
-int opt_mem_pools = 1;
-int opt_forwarded_for = 1;
-int opt_accel_uses_host = 0;
-int opt_debug_stderr = 0;
-int vhost_mode = 0;
-int Squid_MaxFD = SQUID_MAXFD;
-int Biggest_FD = -1;
-int select_loops = 0;		/* how many times thru select loop */
-int configured_once = 0;
-volatile int unbuffered_logs = 1;	/* debug and hierarchy unbuffered by default */
-volatile int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
-volatile int reconfigure_pending = 0;	/* set by SIGHUP handler */
-const char *const version_string = SQUID_VERSION;
-const char *const appname = "squid";
-const char *const localhost = "127.0.0.1";
-struct in_addr local_addr;
-struct in_addr no_addr;
-struct in_addr any_addr;
-struct in_addr theOutICPAddr;
-const char *const dash_str = "-";
-const char *const null_string = "";
-const char *const w_space = " \t\n\r";
-char ThisCache[SQUIDHOSTNAMELEN << 1];
-
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) _PARAMS((const char *));
 
+static int opt_send_signal = -1;
 static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
@@ -373,7 +334,7 @@ serverConnectionsOpen(void)
     }
     if (NHttpSockets < 1)
 	fatal("Cannot open HTTP Port");
-    if (!httpd_accel_mode || Config.Accel.withProxy) {
+    if (!Config2.Accel.on || Config.Accel.withProxy) {
 	if ((port = Config.Port.icp) > (u_short) 0) {
 	    enter_suid();
 	    theInIcpConnection = comm_open(SOCK_DGRAM,
@@ -428,21 +389,6 @@ serverConnectionsOpen(void)
 	    else
 		theOutICPAddr = xaddr.sin_addr;
 	}
-    }
-    if (Config.vizHack.port) {
-	vizSock = comm_open(SOCK_DGRAM,
-	    0,
-	    any_addr,
-	    0,
-	    COMM_NONBLOCKING,
-	    "VizHack Port");
-	if (vizSock < 0)
-	    fatal("Could not open Viz Socket");
-	mcastJoinVizSock();
-	memset(&Config.vizHack.S, '\0', sizeof(struct sockaddr_in));
-	Config.vizHack.S.sin_family = AF_INET;
-	Config.vizHack.S.sin_addr = Config.vizHack.addr;
-	Config.vizHack.S.sin_port = htons(Config.vizHack.port);
     }
     clientdbInit();
     icmpOpen();
@@ -499,7 +445,7 @@ mainReconfigure(void)
     dnsOpenServers();
     redirectOpenServers();
     serverConnectionsOpen();
-    if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
+    if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
     debug(1, 0) ("Ready to serve requests.\n");
 }
@@ -577,7 +523,7 @@ mainInitialize(void)
 	mimeInit(Config.mimeTablePathname);
     }
     serverConnectionsOpen();
-    if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
+    if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
 
     if (!configured_once)
@@ -593,7 +539,6 @@ mainInitialize(void)
     debug(1, 0) ("Ready to serve requests.\n");
 
     if (!configured_once) {
-	eventAdd("storePurgeOld", storePurgeOld, NULL, Config.cleanRate);
 	eventAdd("storeMaintain", storeMaintainSwapSpace, NULL, 1);
 	eventAdd("storeDirClean", storeDirClean, NULL, 15);
 	if (Config.Announce.on)

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.148 1997/06/26 22:41:44 wessels Exp $
+ * $Id: neighbors.cc,v 1.149 1997/07/07 05:29:49 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -115,7 +115,6 @@ static void neighborRemove _PARAMS((peer *));
 static peer *whichPeer _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((peer *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((peer *, icp_opcode op_unused));
-static peer_t parseNeighborType _PARAMS((const char *s));
 static void peerRefreshDNS _PARAMS((void *));
 static IPH peerDNSConfigure;
 static void peerCheckConnect _PARAMS((void *));
@@ -137,6 +136,8 @@ static struct {
     peer *peers_tail;
     peer *first_ping;
     peer *removed;
+    peer *ssl_parent;
+    peer *pass_parent;
 } Peers = {
 
     0, NULL, NULL, NULL
@@ -340,6 +341,18 @@ getDefaultParent(request_t * request)
 	return p;
     }
     return NULL;
+}
+
+peer *
+getSslParent(void)
+{
+	return Peers.ssl_parent;
+}
+
+peer *
+getPassParent(void)
+{
+	return Peers.pass_parent;
 }
 
 peer *
@@ -767,90 +780,6 @@ neighborAdd(const char *host,
 	Peers.first_ping = p;
 }
 
-void
-neighborAddDomainPing(const char *host, const char *domain)
-{
-    struct _domain_ping *l = NULL;
-    struct _domain_ping **L = NULL;
-    peer *p;
-    if ((p = neighborFindByName(host)) == NULL) {
-	debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
-	    cfg_filename, config_lineno, host);
-	return;
-    }
-    l = xmalloc(sizeof(struct _domain_ping));
-    l->do_ping = 1;
-    if (*domain == '!') {	/* check for !.edu */
-	l->do_ping = 0;
-	domain++;
-    }
-    l->domain = xstrdup(domain);
-    l->next = NULL;
-    for (L = &(p->pinglist); *L; L = &((*L)->next));
-    *L = l;
-}
-
-void
-neighborAddDomainType(const char *host, const char *domain, const char *type)
-{
-    struct _domain_type *l = NULL;
-    struct _domain_type **L = NULL;
-    peer *p;
-    if ((p = neighborFindByName(host)) == NULL) {
-	debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
-	    cfg_filename, config_lineno, host);
-	return;
-    }
-    l = xmalloc(sizeof(struct _domain_type));
-    l->type = parseNeighborType(type);
-    l->domain = xstrdup(domain);
-    l->next = NULL;
-    for (L = &(p->typelist); *L; L = &((*L)->next));
-    *L = l;
-}
-
-void
-neighborAddAcl(const char *host, const char *aclname)
-{
-    peer *p;
-    struct _acl_list *L = NULL;
-    struct _acl_list **Tail = NULL;
-    struct _acl *a = NULL;
-
-    if ((p = neighborFindByName(host)) == NULL) {
-	debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
-	    cfg_filename, config_lineno, host);
-	return;
-    }
-    L = xcalloc(1, sizeof(struct _acl_list));
-    L->op = 1;
-    if (*aclname == '!') {
-	L->op = 0;
-	aclname++;
-    }
-    debug(15, 3) ("neighborAddAcl: looking for ACL name '%s'\n", aclname);
-    a = aclFindByName(aclname);
-    if (a == NULL) {
-	debug(15, 0) ("%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(15, 0) ("neighborAddAcl: ACL name '%s' not found.\n", aclname);
-	xfree(L);
-	return;
-    }
-#ifdef NOW_SUPPORTED
-    if (a->type == ACL_SRC_IP) {
-	debug(15, 0) ("%s line %d: %s\n",
-	    cfg_filename, config_lineno, config_input_line);
-	debug(15, 0) ("neighborAddAcl: 'src' ACL's not supported for 'cache_host_acl'\n");
-	xfree(L);
-	return;
-    }
-#endif
-    L->acl = a;
-    for (Tail = &(p->acls); *Tail; Tail = &((*Tail)->next));
-    *Tail = L;
-}
-
 peer *
 neighborFindByName(const char *name)
 {
@@ -860,23 +789,6 @@ neighborFindByName(const char *name)
 	    break;
     }
     return p;
-}
-
-static peer_t
-parseNeighborType(const char *s)
-{
-    if (!strcasecmp(s, "parent"))
-	return PEER_PARENT;
-    if (!strcasecmp(s, "neighbor"))
-	return PEER_SIBLING;
-    if (!strcasecmp(s, "neighbour"))
-	return PEER_SIBLING;
-    if (!strcasecmp(s, "sibling"))
-	return PEER_SIBLING;
-    if (!strcasecmp(s, "multicast"))
-	return PEER_MULTICAST;
-    debug(15, 0) ("WARNING: Unknown neighbor type: %s\n", s);
-    return PEER_SIBLING;
 }
 
 int

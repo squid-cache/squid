@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.6 1997/06/04 06:16:15 wessels Exp $
+ * $Id: unlinkd.cc,v 1.7 1997/07/07 05:29:58 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -74,7 +74,6 @@ main(int argc, char *argv[])
 #include "squid.h"
 
 static int unlinkd_fd = -1;
-int unlinkd_count;
 
 static int unlinkdCreate _PARAMS((void));
 

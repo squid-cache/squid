@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.199 1997/07/06 05:14:09 wessels Exp $
+ * $Id: cache_cf.cc,v 1.200 1997/07/07 05:29:39 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -28,84 +28,7 @@
  *  
  */
 
-/*
- * Copyright (c) 1994, 1995.  All rights reserved.
- *  
- *   The Harvest software was developed by the Internet Research Task
- *   Force Research Group on Resource Discovery (IRTF-RD):
- *  
- *         Mic Bowman of Transarc Corporation.
- *         Peter Danzig of the University of Southern California.
- *         Darren R. Hardy of the University of Colorado at Boulder.
- *         Udi Manber of the University of Arizona.
- *         Michael F. Schwartz of the University of Colorado at Boulder.
- *         Duane Wessels of the University of Colorado at Boulder.
- *  
- *   This copyright notice applies to software in the Harvest
- *   ``src/'' directory only.  Users should consult the individual
- *   copyright notices in the ``components/'' subdirectories for
- *   copyright information about other software bundled with the
- *   Harvest source code distribution.
- *  
- * TERMS OF USE
- *   
- *   The Harvest software may be used and re-distributed without
- *   charge, provided that the software origin and research team are
- *   cited in any use of the system.  Most commonly this is
- *   accomplished by including a link to the Harvest Home Page
- *   (http://harvest.cs.colorado.edu/) from the query page of any
- *   Broker you deploy, as well as in the query result pages.  These
- *   links are generated automatically by the standard Broker
- *   software distribution.
- *   
- *   The Harvest software is provided ``as is'', without express or
- *   implied warranty, and with no support nor obligation to assist
- *   in its use, correction, modification or enhancement.  We assume
- *   no liability with respect to the infringement of copyrights,
- *   trade secrets, or any patents, and are not responsible for
- *   consequential damages.  Proper use of the Harvest software is
- *   entirely the responsibility of the user.
- *  
- * DERIVATIVE WORKS
- *  
- *   Users may make derivative works from the Harvest software, subject 
- *   to the following constraints:
- *  
- *     - You must include the above copyright notice and these 
- *       accompanying paragraphs in all forms of derivative works, 
- *       and any documentation and other materials related to such 
- *       distribution and use acknowledge that the software was 
- *       developed at the above institutions.
- *  
- *     - You must notify IRTF-RD regarding your distribution of 
- *       the derivative work.
- *  
- *     - You must clearly notify users that your are distributing 
- *       a modified version and not the original Harvest software.
- *  
- *     - Any derivative product is also subject to these copyright 
- *       and use restrictions.
- *  
- *   Note that the Harvest software is NOT in the public domain.  We
- *   retain copyright, as specified above.
- *  
- * HISTORY OF FREE SOFTWARE STATUS
- *  
- *   Originally we required sites to license the software in cases
- *   where they were going to build commercial products/services
- *   around Harvest.  In June 1995 we changed this policy.  We now
- *   allow people to use the core Harvest software (the code found in
- *   the Harvest ``src/'' directory) for free.  We made this change
- *   in the interest of encouraging the widest possible deployment of
- *   the technology.  The Harvest software is really a reference
- *   implementation of a set of protocols and formats, some of which
- *   we intend to standardize.  We encourage commercial
- *   re-implementations of code complying to this set of standards.  
- */
-
 #include "squid.h"
-
-struct SquidConfig Config;
 
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
@@ -117,30 +40,23 @@ static const char *const T_MONTH_STR = "month";
 static const char *const T_YEAR_STR = "year";
 static const char *const T_DECADE_STR = "decade";
 
-int httpd_accel_mode = 0;	/* for fast access */
-const char *DefaultSwapDir = DEFAULT_SWAP_DIR;
-const char *DefaultConfigFile = DEFAULT_CONFIG_FILE;
-char *ConfigFile = NULL;	/* the whole thing */
-const char *cfg_filename = NULL;	/* just the last part */
-
 static const char *const list_sep = ", \t\n\r";
-char config_input_line[BUFSIZ];
-int config_lineno = 0;
 
 static char fatal_str[BUFSIZ];
 static void self_destruct _PARAMS((void));
 static void wordlistAdd _PARAMS((wordlist **, const char *));
 
 static void configDoConfigure _PARAMS((void));
-static void parseRefreshPattern _PARAMS((int icase));
+static void parse_refreshpattern _PARAMS((refresh_t **));
 static int parseTimeUnits _PARAMS((const char *unit));
-static void parseTimeLine _PARAMS((int *iptr, const char *units));
+static void parseTimeLine _PARAMS((time_t *tptr, const char *units));
 
 static void parse_string _PARAMS((char **));
 static void parse_wordlist _PARAMS((wordlist **));
 static void dump_all _PARAMS((void));
 static void default_all _PARAMS((void));
 static int parse_line _PARAMS((char *));
+static cache_peer *configFindPeer _PARAMS((const char *name));
 
 /* These come from cf_gen.c */
 static void default_all _PARAMS((void));
@@ -215,48 +131,14 @@ intlistDestroy(intlist ** list)
 	if (sscanf(token, "%d", &var) != 1) \
 		self_destruct();
 
-static void
-parseRefreshPattern(int icase)
-{
-    char *token;
-    char *pattern;
-    time_t min = 0;
-    int pct = 0;
-    time_t max = 0;
-    int i;
-    token = strtok(NULL, w_space);	/* token: regex pattern */
-    if (token == NULL)
-	self_destruct();
-    pattern = xstrdup(token);
-    GetInteger(i);		/* token: min */
-    min = (time_t) (i * 60);	/* convert minutes to seconds */
-    GetInteger(i);		/* token: pct */
-    pct = i;
-    GetInteger(i);		/* token: max */
-    max = (time_t) (i * 60);	/* convert minutes to seconds */
-    refreshAddToList(pattern, icase, min, pct, max);
-    safe_free(pattern);
-}
-
 int
 parseConfigFile(const char *file_name)
 {
     FILE *fp = NULL;
     char *token = NULL;
     LOCAL_ARRAY(char, tmp_line, BUFSIZ);
-
     free_all();
     default_all();
-    aclDestroyAcls();
-    aclDestroyDenyInfoList(&Config.denyInfoList);
-    aclDestroyAccessList(&Config.accessList.HTTP);
-    aclDestroyAccessList(&Config.accessList.ICP);
-    aclDestroyAccessList(&Config.accessList.MISS);
-    aclDestroyAccessList(&Config.accessList.NeverDirect);
-    aclDestroyAccessList(&Config.accessList.AlwaysDirect);
-    aclDestroyRegexList(Config.cache_stop_relist);
-    Config.cache_stop_relist = NULL;
-
     if ((fp = fopen(file_name, "r")) == NULL) {
 	sprintf(fatal_str, "Unable to open configuration file: %s: %s",
 	    file_name, xstrerror());
@@ -296,10 +178,8 @@ parseConfigFile(const char *file_name)
 	printf("         Change your configuration file.\n");
 	fflush(stdout);		/* print message */
     }
-    if (Config.cleanRate < 1)
-	Config.cleanRate = 86400 * 365;		/* one year */
-    if (Config.Announce.rate < 1) {
-	Config.Announce.rate = 86400 * 365;	/* one year */
+    if (Config.Announce.period < 1) {
+	Config.Announce.period = 86400 * 365;	/* one year */
 	Config.Announce.on = 0;
     }
     if (Config.dnsChildren < 0)
@@ -333,11 +213,20 @@ parseConfigFile(const char *file_name)
 static void
 configDoConfigure(void)
 {
-    httpd_accel_mode = Config.Accel.prefix ? 1 : 0;
+    LOCAL_ARRAY(char, buf, BUFSIZ);
+    memset(&Config2, '\0', sizeof(SquidConfig2));
+    if (Config.Accel.host) {
+        snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
+        Config2.Accel.prefix = xstrdup(buf);
+        Config2.Accel.on = 1;
+    }
+    if (Config.appendDomain)
+	if (*Config.appendDomain != '.')
+	    fatal("append_domain must begin with a '.'");
     if (Config.errHtmlText == NULL)
 	Config.errHtmlText = xstrdup(null_string);
     storeConfigure();
-    if (httpd_accel_mode && !strcmp(Config.Accel.host, "virtual"))
+    if (Config2.Accel.on && !strcmp(Config.Accel.host, "virtual"))
 	vhost_mode = 1;
     if (Config.Port.http == NULL)
 	fatal("No http_port specified!");
@@ -351,17 +240,19 @@ configDoConfigure(void)
 	Config.appendDomainLen = strlen(Config.appendDomain);
     else
 	Config.appendDomainLen = 0;
+    safe_free(debug_options)
+	debug_options = xstrdup(Config.debugOptions);
 }
 
 /* Parse a time specification from the config file.  Store the
- * result in 'iptr', after converting it to 'units' */
+ * result in 'tptr', after converting it to 'units' */
 static void
-parseTimeLine(int *iptr, const char *units)
+parseTimeLine(time_t *tptr, const char *units)
 {
     char *token;
     double d;
-    int m;
-    int u;
+    time_t m;
+    time_t u;
     if ((u = parseTimeUnits(units)) == 0)
 	self_destruct();
     if ((token = strtok(NULL, w_space)) == NULL)
@@ -372,7 +263,7 @@ parseTimeLine(int *iptr, const char *units)
 	if ((m = parseTimeUnits(token)) == 0)
 	    self_destruct();
     }
-    *iptr = m * d / u;
+    *tptr = m * d / u;
 }
 
 static int
@@ -405,15 +296,21 @@ parseTimeUnits(const char *unit)
  *****************************************************************************/
 
 static void
-dump_acl(void)
+dump_acl(acl *acl)
 {
     debug(0,0)("XXX need to fix\n");
 }
 
 static void
-parse_acl(void)
+parse_acl(acl **acl)
 {
-    aclParseAclLine();
+    aclParseAclLine(acl);
+}
+
+static void
+free_acl(acl **acl)
+{
+    aclDestroyAcls(acl);
 }
 
 static void
@@ -463,93 +360,28 @@ free_address(struct in_addr *addr)
 }
 
 static void
-dump_announceto(void)
+dump_cachedir(struct _cacheSwap swap)
 {
     debug(0,0)("XXX need to fix\n");
 }
 
 static void
-parse_announceto(void)
+parse_cachedir(struct _cacheSwap *swap)
 {
     char *token;
-    int i;
-
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Announce.host);
-    Config.Announce.host = xstrdup(token);
-    if ((token = strchr(Config.Announce.host, ':'))) {
-	*token++ = '\0';
-	if (sscanf(token, "%d", &i) != 1)
-	    Config.Announce.port = i;
-    }
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	return;
-    safe_free(Config.Announce.file);
-    Config.Announce.file = xstrdup(token);
-}
-
-static void
-dump_appenddomain(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_appenddomain(void)
-{
-    char *token = strtok(NULL, w_space);
-
-    if (token == NULL)
-	self_destruct();
-    if (*token != '.')
-	self_destruct();
-    safe_free(Config.appendDomain);
-    Config.appendDomain = xstrdup(token);
-}
-
-static void
-dump_cacheannounce(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_cacheannounce(void)
-{
-    char *token;
-    int i;
-    GetInteger(i);
-    Config.Announce.rate = i * 3600;	/* hours to seconds */
-    if (Config.Announce.rate > 0)
-	Config.Announce.on = 1;
-}
-
-static void
-dump_cachedir(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_cachedir(void)
-{
-    char *token;
-    char *dir;
+    char *path;
     int i;
     int size;
     int l1;
     int l2;
     int readonly = 0;
-
-    if ((token = strtok(NULL, w_space)) == NULL)
+    SwapDir *tmp = NULL;
+    if ((path = strtok(NULL, w_space)) == NULL)
 	self_destruct();
-    dir = token;
+    if (strlen(path) > (SQUID_MAXPATHLEN - 32))
+	fatal_dump("cache_dir pathname is too long");
     GetInteger(i);
     size = i << 10;		/* Mbytes to kbytes */
-    Config.Swap.maxSize += size;
     GetInteger(i);
     l1 = i;
     GetInteger(i);
@@ -557,26 +389,57 @@ parse_cachedir(void)
     if ((token = strtok(NULL, w_space)))
 	if (!strcasecmp(token, "read-only"))
 	    readonly = 1;
-    if (configured_once)
-	storeReconfigureSwapDisk(dir, size, l1, l2, readonly);
-    else
-	storeAddSwapDisk(dir, size, l1, l2, readonly);
+    for (i = 0; i < swap->n_configured; i++) {
+	tmp = swap->swapDirs+i;
+	if (!strcmp(path, tmp->path)) {
+	    /* just reconfigure it */
+            tmp->max_size = size;
+            tmp->read_only = readonly;
+	    return;
+	}
+    }
+    if (swap->swapDirs == NULL) {
+	swap->n_allocated = 4;
+	swap->swapDirs = xcalloc(swap->n_allocated, sizeof(SwapDir));
+    }
+    if (swap->n_allocated == swap->n_configured) {
+	swap->n_allocated <<= 1;
+	tmp = xcalloc(swap->n_allocated, sizeof(SwapDir));
+	xmemcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir));
+	xfree(swap->swapDirs);
+	swap->swapDirs = tmp;
+    }
+    debug(20, 1) ("Creating Swap Dir #%d in %s\n", swap->n_configured + 1, path);
+    tmp = swap->swapDirs + swap->n_configured;
+    tmp->path = xstrdup(path);
+    tmp->max_size = size;
+    tmp->l1 = l1;
+    tmp->l2 = l2;
+    tmp->read_only = readonly;
+    tmp->map = file_map_create(MAX_FILES_PER_DIR);
+    tmp->swaplog_fd = -1;
 }
 
 static void
-dump_cache_peer(struct cache_peer *p)
+free_cachedir(struct _cacheSwap *swap)
+{
+	assert(0);
+}
+
+static void
+dump_cache_peer(cache_peer *p)
 {
     debug(0,0)("XXX need to fix\n");
 }
 
 static void
-parse_cache_peer(struct cache_peer **head)
+parse_cache_peer(cache_peer **head)
 {
     char *token = NULL;
-    struct cache_peer peer;
-    struct cache_peer *p;
+    cache_peer peer;
+    cache_peer *p;
     int i;
-    memset(&peer, '\0', sizeof(struct cache_peer));
+    memset(&peer, '\0', sizeof(cache_peer));
     peer.http = CACHE_HTTP_PORT;
     peer.icp = CACHE_ICP_PORT;
     peer.weight = 1;
@@ -614,7 +477,7 @@ parse_cache_peer(struct cache_peer **head)
     }
     if (peer.weight < 1)
 	peer.weight = 1;
-    p = xcalloc(1, sizeof(struct cache_peer));
+    p = xcalloc(1, sizeof(cache_peer));
     *p = peer;
     p->host = xstrdup(peer.host);
     p->type = xstrdup(peer.type);
@@ -624,9 +487,9 @@ parse_cache_peer(struct cache_peer **head)
 }
 
 static void
-free_cache_peer(struct cache_peer **P)
+free_cache_peer(cache_peer **P)
 {
-	struct cache_peer *p;
+	cache_peer *p;
 	while ((p = *P)) {
 		*P = p->next;
 		xfree(p->host);
@@ -636,21 +499,28 @@ free_cache_peer(struct cache_peer **P)
 }
 
 static void
-dump_cachemgrpasswd(void)
+dump_cachemgrpasswd(cachemgr_passwd *list)
 {
     debug(0,0)("XXX need to fix\n");
 }
 
 static void
-parse_cachemgrpasswd(void)
+parse_cachemgrpasswd(cachemgr_passwd **head)
 {
     char *passwd = NULL;
     wordlist *actions = NULL;
     parse_string(&passwd);
     parse_wordlist(&actions);
-    objcachePasswdAdd(&Config.passwd_list, passwd, actions);
+    objcachePasswdAdd(head, passwd, actions);
     wordlistDestroy(&actions);
 }
+
+static void
+free_cachemgrpasswd(cachemgr_passwd **head)
+{
+	assert(0);
+}
+
 
 static void
 dump_denyinfo(struct _acl_deny_info_list *var)
@@ -665,40 +535,59 @@ parse_denyinfo(struct _acl_deny_info_list **var)
 }
 
 static void
-dump_errhtml(void)
+free_denyinfo(acl_deny_info_list **head)
 {
-    debug(0,0)("XXX need to fix\n");
+	assert(0);
 }
 
-static void
-parse_errhtml(void)
-{
-    char *token;
-    if ((token = strtok(NULL, null_string)))
-	Config.errHtmlText = xstrdup(token);
-}
 
 static void
-dump_hostacl(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_hostacl(void)
+parse_peeracl(void)
 {
     char *host = NULL;
     char *aclname = NULL;
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
-    while ((aclname = strtok(NULL, list_sep)))
-	neighborAddAcl(host, aclname);
+    while ((aclname = strtok(NULL, list_sep))) {
+	cache_peer *p;
+	acl_list *L = NULL;
+	acl_list **Tail = NULL;
+	acl *a = NULL;
+	if ((p = configFindPeer(host)) == NULL) {
+	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
+		cfg_filename, config_lineno, host);
+	    return;
+	}
+	L = xcalloc(1, sizeof(struct _acl_list));
+	L->op = 1;
+	if (*aclname == '!') {
+	    L->op = 0;
+	    aclname++;
+	}
+	debug(15, 3) ("neighborAddAcl: looking for ACL name '%s'\n", aclname);
+	a = aclFindByName(aclname);
+	if (a == NULL) {
+	    debug(15, 0) ("%s line %d: %s\n",
+		cfg_filename, config_lineno, config_input_line);
+	    debug(15, 0) ("neighborAddAcl: ACL name '%s' not found.\n", aclname);
+	    xfree(L);
+	    return;
+	}
+	L->acl = a;
+	for (Tail = &p->acls; *Tail; Tail = &(*Tail)->next);
+	*Tail = L;
+    }
 }
 
-static void
-dump_hostdomain(void)
+static cache_peer *
+configFindPeer (const char *name)
 {
-    debug(0,0)("XXX need to fix\n");
+    cache_peer *p = NULL;
+    for (p = Config.peers; p; p = p->next) {
+        if (!strcasecmp(name, p->host))
+            break;
+    }
+    return p;
 }
 
 static void
@@ -708,14 +597,25 @@ parse_hostdomain(void)
     char *domain = NULL;
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
-    while ((domain = strtok(NULL, list_sep)))
-	neighborAddDomainPing(host, domain);
-}
-
-static void
-dump_hostdomaintype(void)
-{
-    debug(0,0)("XXX need to fix\n");
+    while ((domain = strtok(NULL, list_sep))) {
+	domain_ping *l = NULL;
+	domain_ping **L = NULL;
+	cache_peer *p;
+	if ((p = configFindPeer(host)) == NULL) {
+	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
+		cfg_filename, config_lineno, host);
+	    continue;
+	}
+	l = xcalloc(1, sizeof(struct _domain_ping));
+	l->do_ping = 1;
+	if (*domain == '!') {	/* check for !.edu */
+	    l->do_ping = 0;
+	    domain++;
+	}
+	l->domain = xstrdup(domain);
+	for (L = &(p->pinglist); *L; L = &((*L)->next));
+	*L = l;
+    }
 }
 
 static void
@@ -728,8 +628,21 @@ parse_hostdomaintype(void)
 	self_destruct();
     if (!(type = strtok(NULL, w_space)))
 	self_destruct();
-    while ((domain = strtok(NULL, list_sep)))
-	neighborAddDomainType(host, domain, type);
+    while ((domain = strtok(NULL, list_sep))) {
+	domain_type *l = NULL;
+	domain_type **L = NULL;
+	cache_peer *p;
+	if ((p = configFindPeer(host)) == NULL) {
+	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
+		cfg_filename, config_lineno, host);
+	    return;
+	}
+	l = xcalloc(1, sizeof(struct _domain_type));
+	l->type = parseNeighborType(type);
+	l->domain = xstrdup(domain);
+	for (L = &(p->typelist); *L; L = &((*L)->next));
+	*L = l;
+    }
 }
 
 static void
@@ -763,30 +676,6 @@ parse_httpanonymizer(int *var)
 	*var = ANONYMIZER_STANDARD;
 }
 
-static void
-dump_httpdaccel(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_httpdaccel(void)
-{
-    char *token;
-    LOCAL_ARRAY(char, buf, BUFSIZ);
-    int i;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Accel.host);
-    Config.Accel.host = xstrdup(token);
-    GetInteger(i);
-    Config.Accel.port = i;
-    safe_free(Config.Accel.prefix);
-    sprintf(buf, "http://%s:%d", Config.Accel.host, Config.Accel.port);
-    Config.Accel.prefix = xstrdup(buf);
-    httpd_accel_mode = 1;
-}
 
 static void
 dump_ushortlist(ushortlist *u)
@@ -868,8 +757,11 @@ parse_onoff(int *var)
 }
 
 #define free_onoff free_int
+#define free_httpanonymizer free_int
 #define dump_pathname_stat dump_string
 #define free_pathname_stat free_string
+#define dump_eol dump_string
+#define free_eol free_string
 
 static void
 parse_pathname_stat(char **path)
@@ -883,27 +775,76 @@ parse_pathname_stat(char **path)
 }
 
 static void
-dump_refreshpattern(void)
+dump_refreshpattern(refresh_t *head)
 {
     debug(0,0)("XXX need to fix\n");
 }
 
 static void
-parse_refreshpattern(void)
+parse_refreshpattern(refresh_t ** head)
 {
-    parseRefreshPattern(0);
+    char *token;
+    char *pattern;
+    time_t min = 0;
+    int pct = 0;
+    time_t max = 0;
+    int i;
+    refresh_t *t;
+    regex_t comp;
+    int errcode;
+    int flags = REG_EXTENDED | REG_NOSUB;
+    if ((token = strtok(NULL, w_space)) == NULL)
+	self_destruct();
+    if (strcmp(token, "-i") == 0) {
+	flags |= REG_ICASE;
+	token = strtok(NULL, w_space);
+    } else if (strcmp(token, "+i") == 0) {
+	flags &= ~REG_ICASE;
+	token = strtok(NULL, w_space);
+    }
+    if (token == NULL)
+	self_destruct();
+    pattern = xstrdup(token);
+    GetInteger(i);		/* token: min */
+    min = (time_t) (i * 60);	/* convert minutes to seconds */
+    GetInteger(i);		/* token: pct */
+    pct = i;
+    GetInteger(i);		/* token: max */
+    max = (time_t) (i * 60);	/* convert minutes to seconds */
+    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
+	char errbuf[256];
+	regerror(errcode, &comp, errbuf, sizeof errbuf);
+	debug(22, 0) ("%s line %d: %s\n",
+	    cfg_filename, config_lineno, config_input_line);
+	debug(22, 0) ("refreshAddToList: Invalid regular expression '%s': %s\n",
+	    pattern, errbuf);
+	return;
+    }
+    pct = pct < 0 ? 0 : pct;
+    max = max < 0 ? 0 : max;
+    t = xcalloc(1, sizeof(refresh_t));
+    t->pattern = (char *) xstrdup(pattern);
+    t->compiled_pattern = comp;
+    t->min = min;
+    t->pct = pct;
+    t->max = max;
+    t->next = NULL;
+    while (*head)
+	head = &(*head)->next;
+    *head = t;
+    safe_free(pattern);
 }
 
 static void
-dump_refreshpattern_icase(void)
+free_refreshpattern(refresh_t **head)
 {
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_refreshpattern_icase(void)
-{
-    parseRefreshPattern(1);
+    refresh_t *t;
+    while ((t = *head)) {
+	*head = t->next;
+	safe_free(t->pattern);
+	regfree(&t->compiled_pattern);
+	safe_free(t);
+    }
 }
 
 static void
@@ -947,47 +888,35 @@ free_string(char **var)
 	xfree(*var);
 	*var = NULL;
 }
-static void
-dump_string_optional(const char *var)
-{
-    printf("%s", var);
-}
 
 static void
-parse_volatile_string(char *volatile *var)
+parse_eol(char *volatile *var)
 {
     char *token = strtok(NULL, null_string);
     safe_free(*var);
-    if (token == NULL) {
-	*var = NULL;
-	return;
-    }
+    if (token == NULL)
+	self_destruct();
     *var = xstrdup(token);
 }
 
 static void
-dump_time_min(int var)
+dump_time_t(time_t var)
 {
-    printf("%d", var / 60);
+    printf("%d", (int) var);
 }
 
 static void
-parse_time_min(int *var)
-{
-    parseTimeLine(var, T_MINUTE_STR);
-}
-
-static void
-dump_time_sec(int var)
-{
-    printf("%d", var);
-}
-
-static void
-parse_time_sec(int *var)
+parse_time_t(time_t *var)
 {
     parseTimeLine(var, T_SECOND_STR);
 }
+
+static void
+free_time_t(time_t *var)
+{
+	*var = 0;
+}
+	
 
 static void
 dump_ushort(u_short var)
@@ -1014,38 +943,6 @@ parse_ushort(u_short * var)
 }
 
 static void
-dump_vizhack(void)
-{
-    debug(0,0)("XXX need to fix\n");
-}
-
-static void
-parse_vizhack(void)
-{
-    char *token;
-    int i;
-    const struct hostent *hp;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    if (safe_inet_addr(token, &Config.vizHack.addr) == 1)
-	(void) 0;
-    else if ((hp = gethostbyname(token)))	/* dont use ipcache */
-	Config.vizHack.addr = inaddrFromHostent(hp);
-    else
-	self_destruct();
-    if ((token = strtok(NULL, w_space)) == NULL)
-	self_destruct();
-    if (sscanf(token, "%d", &i) == 1)
-	Config.vizHack.port = i;
-    Config.vizHack.mcast_ttl = 64;
-    if ((token = strtok(NULL, w_space)) == NULL)
-	return;
-    if (sscanf(token, "%d", &i) == 1)
-	Config.vizHack.mcast_ttl = i;
-}
-
-static void
 dump_wordlist(wordlist * list)
 {
     printf("{");
@@ -1068,3 +965,21 @@ parse_wordlist(wordlist ** list)
 #define free_wordlist wordlistDestroy
 
 #include "cf_parser.c"
+
+peer_t
+parseNeighborType(const char *s)
+{
+    if (!strcasecmp(s, "parent"))
+	return PEER_PARENT;
+    if (!strcasecmp(s, "neighbor"))
+	return PEER_SIBLING;
+    if (!strcasecmp(s, "neighbour"))
+	return PEER_SIBLING;
+    if (!strcasecmp(s, "sibling"))
+	return PEER_SIBLING;
+    if (!strcasecmp(s, "multicast"))
+	return PEER_MULTICAST;
+    debug(15, 0) ("WARNING: Unknown neighbor type: %s\n", s);
+    return PEER_SIBLING;
+}
+

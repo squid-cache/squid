@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.75 1997/06/26 22:35:44 wessels Exp $
+ * $Id: disk.cc,v 1.76 1997/07/07 05:29:43 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -181,7 +181,7 @@ static void
 file_open_complete(void *data, int fd, int errcode)
 {
     open_ctrl_t *ctrlp = (open_ctrl_t *) data;
-    FD_ENTRY *fde;
+    fde *fde;
     if (fd < 0) {
 	errno = errcode;
 	debug(50, 0) ("file_open: error opening file %s: %s\n", ctrlp->path,
@@ -206,7 +206,7 @@ file_open_complete(void *data, int fd, int errcode)
 void
 file_close(int fd)
 {
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
     assert(fd >= 0);
     assert(fde->open);
     if (BIT_TEST(fde->flags, FD_WRITE_DAEMON)) {
@@ -235,7 +235,7 @@ diskHandleWrite(int fd, void *unused)
     disk_ctrl_t *ctrlp;
     dwrite_q *q = NULL;
     dwrite_q *wq = NULL;
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
     struct _fde_disk *fdd = &fde->disk;
     if (!fdd->write_q)
 	return;
@@ -284,7 +284,7 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 {
     disk_ctrl_t *ctrlp = data;
     int fd = ctrlp->fd;
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
     struct _fde_disk *fdd = &fde->disk;
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
@@ -350,7 +350,7 @@ file_write(int fd,
     FREE * free_func)
 {
     dwrite_q *wq = NULL;
-    FD_ENTRY *fde;
+    fde *fde;
     if (fd < 0)
 	fatal_dump("file_write: bad FD");
     fde = &fd_table[fd];

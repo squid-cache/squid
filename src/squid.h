@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.126 1997/06/26 22:43:51 wessels Exp $
+ * $Id: squid.h,v 1.127 1997/07/07 05:29:53 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -224,21 +224,6 @@
 #define SA_RESETHAND SA_ONESHOT
 #endif
 
-typedef struct sentry StoreEntry;
-typedef struct mem_hdr *mem_ptr;
-typedef struct _peer peer;
-typedef struct icp_common_s icp_common_t;
-typedef struct _cacheinfo cacheinfo;
-typedef struct _aclCheck_t aclCheck_t;
-typedef struct _request request_t;
-typedef struct _MemObject MemObject;
-typedef struct _cachemgr_passwd cachemgr_passwd;
-typedef struct _fileMap fileMap;
-typedef struct _cwstate CommWriteStateData;
-typedef struct _ipcache_addrs ipcache_addrs;
-typedef struct _AccessLogEntry AccessLogEntry;
-typedef struct _HierarchyLogEntry HierarchyLogEntry;
-
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
 typedef int num32;
@@ -269,53 +254,14 @@ typedef unsigned long u_num32;
 #include <regex.h>
 #endif
 
-typedef void SIH _PARAMS((void *, int));	/* swap in */
-typedef int QS _PARAMS((const void *, const void *));	/* qsort */
-typedef void STCB _PARAMS((void *, char *, ssize_t));	/* store callback */
-
+#include "defines.h"
 #include "enums.h"
-#include "cache_cf.h"
-#include "fd.h"
-#include "comm.h"
-#include "disk.h"
-#include "debug.h"
-#include "fdstat.h"
-#include "hash.h"
-#include "proto.h"		/* must go before neighbors.h */
-#include "peer_select.h"	/* must go before neighbors.h */
-#include "neighbors.h"		/* must go before url.h */
-#include "access_log.h"
-#include "url.h"
-#include "icp.h"
-#include "errorpage.h"		/* must go after icp.h */
-#include "dns.h"
-#include "event.h"
-#include "ipcache.h"
-#include "fqdncache.h"
-#include "mime.h"
-#include "stack.h"
-#include "stat.h"
-#include "stmem.h"
-#include "store.h"
-#include "store_dir.h"
-#include "tools.h"
-#include "http.h"
-#include "ftp.h"
-#include "gopher.h"
+#include "typedefs.h"
+#include "structs.h"
+#include "protos.h"
+#include "globals.h"
+
 #include "util.h"
-#include "acl.h"
-#include "async_io.h"
-#include "redirect.h"
-#include "client_side.h"
-#include "useragent.h"
-#include "icmp.h"
-#include "net_db.h"
-#include "client_db.h"
-#include "objcache.h"
-#include "refresh.h"
-#include "unlinkd.h"
-#include "multicast.h"
-#include "cbdata.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

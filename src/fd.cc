@@ -22,20 +22,20 @@ fdUpdateBiggest(int fd, unsigned int status)
 void
 fd_close(int fd)
 {
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
     if (fde->type == FD_FILE) {
 	assert(fde->read_handler == NULL);
 	assert(fde->write_handler == NULL);
     }
     fdUpdateBiggest(fd, fde->open = FD_CLOSE);
-    memset(fde, '\0', sizeof(FD_ENTRY));
+    memset(fde, '\0', sizeof(fde));
     fde->timeout = 0;
 }
 
 void
 fd_open(int fd, unsigned int type, const char *desc)
 {
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
     assert(fde->open == 0);
     fde->type = type;
     fdUpdateBiggest(fd, fde->open = FD_OPEN);
@@ -46,14 +46,14 @@ fd_open(int fd, unsigned int type, const char *desc)
 void
 fd_note(int fd, const char *s)
 {
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
     xstrncpy(fde->desc, s, FD_DESC_SZ);
 }
 
 void
 fd_bytes(int fd, int len, unsigned int type)
 {
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
     if (len < 0)
 	return;
     assert(type == FD_READ || type == FD_WRITE);
@@ -73,7 +73,7 @@ void
 fdDumpOpen(void)
 {
     int i;
-    FD_ENTRY *fde;
+    fde *fde;
     for (i = 0; i < Squid_MaxFD; i++) {
 	fde = &fd_table[i];
 	if (!fde->open)

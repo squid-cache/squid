@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.37 1997/06/04 06:15:58 wessels Exp $
+ * $Id: icmp.cc,v 1.38 1997/07/07 05:29:46 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -31,7 +31,6 @@
 
 
 #include "squid.h"
-#include "pinger.h"
 
 int icmp_sock = -1;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.44 1997/06/20 00:00:15 wessels Exp $
+ * $Id: stmem.cc,v 1.45 1997/07/07 05:29:55 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -122,9 +122,10 @@ static void put_free_thing _PARAMS((stmem_stats *, void *));
 static void stmemFreeThingMemory _PARAMS((stmem_stats *));
 
 void
-memFree(mem_ptr mem)
+memFree(mem_hdr * mem)
 {
-    mem_node lastp, p = mem->head;
+    mem_node *lastp;
+    mem_node *p = mem->head;
 
     if (p) {
 	while (p && (p != mem->tail)) {
@@ -141,15 +142,16 @@ memFree(mem_ptr mem)
 	    safe_free(p);
 	}
     }
-    memset(mem, '\0', sizeof(mem_ptr));		/* nuke in case ref'ed again */
+    memset(mem, '\0', sizeof(mem_hdr *));		/* nuke in case ref'ed again */
     safe_free(mem);
 }
 
 #ifdef UNUSED_CODE
 void
-memFreeData(mem_ptr mem)
+memFreeData(mem_hdr * mem)
 {
-    mem_node lastp, p = mem->head;
+    mem_node *lastp;
+    mem_node *p = mem->head;
     while (p != mem->tail) {
 	lastp = p;
 	p = p->next;
@@ -167,10 +169,11 @@ memFreeData(mem_ptr mem)
 #endif
 
 int
-memFreeDataUpto(mem_ptr mem, int target_offset)
+memFreeDataUpto(mem_hdr * mem, int target_offset)
 {
     int current_offset = mem->origin_offset;
-    mem_node lastp, p = mem->head;
+    mem_node *lastp;
+    mem_node *p = mem->head;
 
     while (p && ((current_offset + p->len) <= target_offset)) {
 	if (p == mem->tail) {
@@ -204,9 +207,9 @@ memFreeDataUpto(mem_ptr mem, int target_offset)
 
 /* Append incoming data. */
 void
-memAppend(mem_ptr mem, const char *data, int len)
+memAppend(mem_hdr * mem, const char *data, int len)
 {
-    mem_node p;
+    mem_node *p;
     int avail_len;
     int len_to_copy;
 
@@ -227,7 +230,7 @@ memAppend(mem_ptr mem, const char *data, int len)
     }
     while (len > 0) {
 	len_to_copy = min(len, SM_PAGE_SIZE);
-	p = xcalloc(1, sizeof(Mem_Node));
+	p = xcalloc(1, sizeof(mem_node));
 	p->next = NULL;
 	p->len = len_to_copy;
 	p->data = get_free_4k_page();
@@ -247,9 +250,9 @@ memAppend(mem_ptr mem, const char *data, int len)
 }
 
 ssize_t
-memCopy(const mem_ptr mem, off_t offset, char *buf, size_t size)
+memCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
 {
-    mem_node p = mem->head;
+    mem_node *p = mem->head;
     off_t t_off = mem->origin_offset;
     size_t bytes_to_go = size;
     char *ptr_to_buf = NULL;
@@ -290,10 +293,10 @@ memCopy(const mem_ptr mem, off_t offset, char *buf, size_t size)
 
 
 /* Do whatever is necessary to begin storage of new object */
-mem_ptr
+mem_hdr *
 memInit(void)
 {
-    mem_ptr new = xcalloc(1, sizeof(Mem_Hdr));
+    mem_hdr * new = xcalloc(1, sizeof(mem_hdr));
     new->tail = new->head = NULL;
     return new;
 }

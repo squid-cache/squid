@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.171 1997/06/26 22:35:43 wessels Exp $
+ * $Id: comm.cc,v 1.172 1997/07/07 05:29:42 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -143,7 +143,7 @@ typedef struct {
 } ConnectStateData;
 
 /* GLOBAL */
-FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
+fde *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int commBind _PARAMS((int s, struct in_addr, u_short port));
@@ -210,7 +210,7 @@ comm_local_port(int fd)
 {
     struct sockaddr_in addr;
     int addr_len = 0;
-    FD_ENTRY *fde = &fd_table[fd];
+    fde *fde = &fd_table[fd];
 
     /* If the fd is closed already, just return */
     if (!fde->open) {
@@ -259,7 +259,7 @@ comm_open(int sock_type,
     const char *note)
 {
     int new_socket;
-    FD_ENTRY *fde = NULL;
+    fde *fde = NULL;
     int tcp_rcv_bufsz = Config.tcpRcvBufsz;
 
     /* Create socket for accepting new connections. */
@@ -419,8 +419,6 @@ commConnectHandle(int fd, void *data)
 	commSetSelect(fd, COMM_SELECT_WRITE, commConnectHandle, cs, 0);
 	break;
     case COMM_OK:
-	if (vizSock > -1)
-	    vizHackSendPkt(&cs->S, 2);
 	ipcacheCycleAddr(cs->host);
 	commConnectCallback(cs, COMM_OK);
 	break;
@@ -442,7 +440,7 @@ commConnectHandle(int fd, void *data)
 int
 commSetTimeout(int fd, int timeout, PF * handler, void *data)
 {
-    FD_ENTRY *fde;
+    fde *fde;
     debug(5, 3) ("commSetTimeout: FD %d timeout %d\n", fd, timeout);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
@@ -469,7 +467,7 @@ int
 comm_connect_addr(int sock, const struct sockaddr_in *address)
 {
     int status = COMM_OK;
-    FD_ENTRY *fde = &fd_table[sock];
+    fde *fde = &fd_table[sock];
     int len;
     int x;
     assert(ntohs(address->sin_port) != 0);
@@ -522,7 +520,7 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
     struct sockaddr_in P;
     struct sockaddr_in M;
     int Slen;
-    FD_ENTRY *fde = NULL;
+    fde *fde = NULL;
 
     Slen = sizeof(P);
     while ((sock = accept(fd, (struct sockaddr *) &P, &Slen)) < 0) {
@@ -564,8 +562,8 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 void
 commCallCloseHandlers(int fd)
 {
-    FD_ENTRY *fde = &fd_table[fd];
-    struct close_handler *ch;
+    fde *fde = &fd_table[fd];
+    close_handler *ch;
     debug(5, 5) ("commCallCloseHandlers: FD %d\n", fd);
     while ((ch = fde->close_handler) != NULL) {
 	fde->close_handler = ch->next;
@@ -577,7 +575,7 @@ commCallCloseHandlers(int fd)
 void
 comm_close(int fd)
 {
-    FD_ENTRY *fde = NULL;
+    fde *fde = NULL;
     debug(5, 5) ("comm_close: FD %d\n", fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
@@ -910,9 +908,9 @@ comm_poll(time_t sec)
 		}
 	    }
 	    if (revents & POLLNVAL) {
-		struct close_handler *ch;
-		struct close_handler *next;
-		FD_ENTRY *fde = &fd_table[fd];
+		close_handler *ch;
+		close_handler *next;
+		fde *fde = &fd_table[fd];
 		debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
 		debug(5, 0) ("FD %d is a %s\n", fd, fdstatTypeStr[fd_table[fd].type]);
 		debug(5, 0) ("--> %s\n", fd_table[fd].desc);
@@ -1076,7 +1074,7 @@ comm_select(time_t sec)
 void
 commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
-    FD_ENTRY *fde;
+    fde *fde;
     assert(fd >= 0);
     fde = &fd_table[fd];
     debug(5, 5) ("commSetSelect: FD %d, handler=%p, data=%p\n", fd, handler, client_data);
@@ -1095,7 +1093,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t
 void
 comm_add_close_handler(int fd, PF * handler, void *data)
 {
-    struct close_handler *new = xmalloc(sizeof(*new));
+    close_handler *new = xmalloc(sizeof(*new));
     debug(5, 5) ("comm_add_close_handler: FD %d, handler=%p, data=%p\n",
 	fd, handler, data);
     new->handler = handler;
@@ -1107,8 +1105,8 @@ comm_add_close_handler(int fd, PF * handler, void *data)
 void
 comm_remove_close_handler(int fd, PF * handler, void *data)
 {
-    struct close_handler *p;
-    struct close_handler *last = NULL;
+    close_handler *p;
+    close_handler *last = NULL;
     /* Find handler in list */
     for (p = fd_table[fd].close_handler; p != NULL; last = p, p = p->next)
 	if (p->handler == handler && p->data == data)
@@ -1191,8 +1189,8 @@ commSetTcpNoDelay(int fd)
 int
 comm_init(void)
 {
-    fd_table = xcalloc(Squid_MaxFD, sizeof(FD_ENTRY));
-    meta_data.misc += Squid_MaxFD * sizeof(FD_ENTRY);
+    fd_table = xcalloc(Squid_MaxFD, sizeof(fde));
+    meta_data.misc += Squid_MaxFD * sizeof(fde);
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
@@ -1224,9 +1222,9 @@ examine_select(fd_set * readfds, fd_set * writefds)
     fd_set write_x;
     int num;
     struct timeval tv;
-    struct close_handler *ch = NULL;
-    struct close_handler *next = NULL;
-    FD_ENTRY *fde = NULL;
+    close_handler *ch = NULL;
+    close_handler *next = NULL;
+    fde *fde = NULL;
 
     debug(5, 0) ("examine_select: Examining open file descriptors...\n");
     for (fd = 0; fd < Squid_MaxFD; fd++) {
@@ -1282,7 +1280,7 @@ static void
 checkTimeouts(void)
 {
     int fd;
-    FD_ENTRY *fde = NULL;
+    fde *fde = NULL;
     PF *callback;
     for (fd = 0; fd <= Biggest_FD; fd++) {
 	fde = &fd_table[fd];

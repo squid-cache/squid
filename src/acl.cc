@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.101 1997/07/06 05:14:08 wessels Exp $
+ * $Id: acl.cc,v 1.102 1997/07/07 05:29:38 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,8 +41,6 @@
 /* Global */
 const char *AclMatchedName = NULL;
 
-static struct _acl *AclList = NULL;
-static struct _acl **AclListTail = &AclList;
 static int aclFromFile = 0;
 static FILE *aclFile;
 
@@ -174,7 +172,7 @@ struct _acl *
 aclFindByName(const char *name)
 {
     struct _acl *a;
-    for (a = AclList; a; a = a->next)
+    for (a = Config.aclList; a; a = a->next)
 	if (!strcasecmp(a->name, name))
 	    return a;
     return NULL;
@@ -575,7 +573,7 @@ aclParseDomainList(void *curlist)
 #endif /* USE_SPLAY_TREE */
 
 void
-aclParseAclLine(void)
+aclParseAclLine(acl **head)
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
@@ -634,7 +632,7 @@ aclParseAclLine(void)
 	break;
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
-	aclParseRegexList(&A->data, 0);
+	aclParseRegexList(&A->data);
 	break;
     case ACL_URL_PORT:
 	aclParseIntlist(&A->data);
@@ -650,7 +648,7 @@ aclParseAclLine(void)
 	aclParseMethodList(&A->data);
 	break;
     case ACL_BROWSER:
-	aclParseRegexList(&A->data, 0);
+	aclParseRegexList(&A->data);
 	break;
     case ACL_NONE:
     default:
@@ -665,8 +663,10 @@ aclParseAclLine(void)
 	xfree(A);
 	return;
     }
-    *AclListTail = A;
-    AclListTail = &A->next;
+    /* append */
+    while (*head)
+	head = &(*head)->next;
+    *head = A;
 }
 
 /* maex@space.net (06.09.96)
@@ -1355,11 +1355,11 @@ aclDestroyRegexList(struct _relist *data)
 }
 
 void
-aclDestroyAcls(void)
+aclDestroyAcls(acl **head)
 {
     struct _acl *a = NULL;
     struct _acl *next = NULL;
-    for (a = AclList; a; a = next) {
+    for (a = *head; a; a = next) {
 	next = a->next;
 	debug(28, 3) ("aclDestroyAcls: '%s'\n", a->cfgline);
 	switch (a->type) {
@@ -1407,8 +1407,7 @@ aclDestroyAcls(void)
 	safe_free(a->cfgline);
 	safe_free(a);
     }
-    AclList = NULL;
-    AclListTail = &AclList;
+    *head = NULL;
 }
 
 static void

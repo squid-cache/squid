@@ -183,6 +183,8 @@ DOC_END
 
 NAME: cache_host_domain
 TYPE: hostdomain
+DEFAULT: none
+LOC: none
 DOC_START
 	Use to limit the domains for which a neighbor cache will be queried.
 	Usage:
@@ -214,6 +216,8 @@ DOC_END
 
 NAME: neighbor_type_domain
 TYPE: hostdomaintype
+DEFAULT: none
+LOC: none
 DOC_START
 	usage: neighbor_type_domain parent|sibling domain domain ...
 
@@ -233,7 +237,7 @@ DOC_END
 NAME: single_parent_bypass
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.singleParentBypass
 DOC_START
 	This tag specifies that it is okay to bypass the hierarchy
@@ -267,7 +271,7 @@ DOC_END
 NAME: source_ping
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.sourcePing
 DOC_START
 	If source_ping is enabled, then squid will include the source
@@ -290,7 +294,7 @@ DOC_END
 NAME: neighbor_timeout neighbour_timeout
 COMMENT: (seconds)
 DEFAULT: 2
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.neighborTimeout
 DOC_START
 	This controls how long to wait for replies from neighbor caches.
@@ -477,7 +481,8 @@ DOC_END
 
 NAME: cache_dir
 TYPE: cachedir
-DEFAULT: NULL
+DEFAULT: none
+LOC: Config.cacheSwap
 DOC_START
 	Directory for on-disk cache storage.  The cache will change into
 	this directory when running.  The default is
@@ -545,7 +550,7 @@ DOC_END
 NAME: emulate_httpd_log
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.commonLogFormat
 DOC_START
 	The Cache can emulate the log file format which many 'httpd'
@@ -574,6 +579,7 @@ NAME: log_mime_hdrs
 COMMENT: on|off
 TYPE: onoff
 LOC: Config.logMimeHdrs
+DEFAULT: off
 DOC_START
 	The Cache can record both the request and the response
 	MIME headers for each HTTP transaction.  The headers are
@@ -592,6 +598,7 @@ DOC_END
 NAME: useragent_log
 TYPE: string
 LOC: Config.Log.useragent
+DEFAULT: none
 DOC_START
 	If compiled with "-DUSE_USERAGENT_LOG=1" Squid will write
 	the User-Agent field from HTTP requests to the filename
@@ -613,7 +620,7 @@ DOC_END
 
 
 NAME: debug_options
-TYPE: string_optional
+TYPE: eol
 DEFAULT: ALL,1
 LOC: Config.debugOptions
 DOC_START
@@ -631,7 +638,7 @@ DOC_END
 NAME: ident_lookup
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.identLookup
 DOC_START
 	If you wish to make an RFC931/ident lookup of the client username
@@ -644,7 +651,7 @@ DOC_END
 NAME: log_fqdn
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.Log.log_fqdn
 DOC_START
 	Turn this on if you wish to log fully qualified domain names
@@ -657,6 +664,7 @@ DOC_END
 NAME: client_netmask
 TYPE: address
 LOC: Config.Addrs.client_netmask
+DEFAULT: 255.255.255.255
 DOC_START
 	A netmask for client addresses in logfiles and cachemgr output.
 	Change this to protect the privacy of your cache clients.
@@ -738,7 +746,7 @@ DOC_END
 NAME: dns_defnames
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.Options.res_defnames
 DOC_START
 	Normally the 'dnsserver' disables the RES_DEFNAMES resolver
@@ -832,13 +840,9 @@ DOC_END
 
 
 NAME: refresh_pattern
-COMMENT: # case sensitive
 TYPE: refreshpattern
-DOC_NONE
-
-NAME: refresh_pattern/i
-COMMENT: # case insensitive
-TYPE: refreshpattern_icase
+LOC: Config.Refresh
+DEFAULT: NONE
 DOC_START
 	usage: refresh_pattern regex min percent max
 
@@ -864,8 +868,9 @@ DOC_END
 
 
 NAME: reference_age
-TYPE: time_min
+TYPE: time_t
 LOC: Config.referenceAge
+DEFAULT: 1 year
 DOC_START
 	As a part of normal operation, Squid performs Least Recently
 	Used removal of cached objects.  The LRU age for removal is
@@ -883,7 +888,7 @@ DOC_START
 		4 months
 		2.2 hours
 
-reference_age 1 year
+reference_age 1 month
 DOC_END
 
 
@@ -937,8 +942,9 @@ DOC_END
 
 NAME: negative_ttl
 COMMENT: (in minutes)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.negativeTtl
+DEFAULT: 300
 DOC_START
 	Time-to-Live (TTL) for failed requests.  Certain types of
 	failures (such as "connection refused" and "404 Not Found") are
@@ -952,8 +958,9 @@ DOC_END
 
 NAME: positive_dns_ttl
 COMMENT: (in minutes)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.positiveDnsTtl
+DEFAULT: 21600
 DOC_START
 	Time-to-Live (TTL) for positive caching of successful DNS lookups.
 	Default is 6 hours (360 minutes).  If you want to minimize the
@@ -965,8 +972,9 @@ DOC_END
 
 NAME: negative_dns_ttl
 COMMENT: (in minutes)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.negativeDnsTtl
+DEFAULT: 300
 DOC_START
 	Time-to-Live (TTL) for negative caching of failed DNS lookups.
 
@@ -979,8 +987,9 @@ DOC_END
 
 NAME: connect_timeout
 COMMENT: (in seconds)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.Timeout.connect
+DEFAULT: 120
 DOC_START
 	Some systems (notably Linux) can not be relied upon to properly
 	time out connect(2) requests.  Therefore the squid process
@@ -994,8 +1003,9 @@ DOC_END
 
 NAME: read_timeout
 COMMENT: (in minutes)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.Timeout.read
+DEFAULT: 900
 DOC_START
 	The read_timeout is applied on server-side connections.  After
 	each successful read(), the timeout will be extended by this
@@ -1009,8 +1019,9 @@ DOC_END
 
 NAME: defer_timeout
 COMMENT: (in minutes)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.Timeout.defer
+DEFAULT: 3600
 DOC_START
 	If your clients are behind slow (e.g. PPP/SLIP) connections,
 	then data may come in from the server-side faster than it can
@@ -1025,8 +1036,9 @@ DOC_END
 
 
 NAME: request_timeout
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.Timeout.request
+DEFAULT: 30
 DOC_START
 	How long to wait for an HTTP request after connection
 	establishment.  For persistent connections, wait this long
@@ -1038,8 +1050,9 @@ DOC_END
 
 NAME: client_lifetime
 COMMENT: (in minutes)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.Timeout.lifetime
+DEFAULT: 86400
 DOC_START
 	The maximum amount of time that a client (browser) is allowed to
 	remain connected to the cache process.  This protects the Cache
@@ -1062,8 +1075,9 @@ DOC_END
 
 NAME: shutdown_lifetime
 COMMENT: (in seconds)
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.shutdownLifetime
+DEFAULT: 30
 DOC_START
 	When SIGTERM or SIGHUP is received, the cache is put into
 	"shutdown pending" mode until all active sockets are closed.
@@ -1080,6 +1094,8 @@ DOC_END
 
 NAME: acl
 TYPE: acl
+LOC: Config.aclList
+DEFAULT: none
 DOC_START
 	Defining an Access List
 
@@ -1127,7 +1143,8 @@ DOC_END
 
 NAME: http_access
 TYPE: acl_access
-LOC: Config.accessList.HTTP
+LOC: Config.accessList.http
+DEFAULT: none
 DOC_START
 	Allowing or Denying access based on defined access lists
 
@@ -1162,7 +1179,8 @@ DOC_END
 
 NAME: icp_access
 TYPE: acl_access
-LOC: Config.accessList.ICP
+LOC: Config.accessList.icp
+DEFAULT: none
 DOC_START
 	Reply to all ICP queries we receive
 
@@ -1172,7 +1190,8 @@ DOC_END
 
 NAME: miss_access
 TYPE: acl_access
-LOC: Config.accessList.MISS
+LOC: Config.accessList.miss
+DEFAULT: none
 DOC_START
 	Use to force your neighbors to use you as a sibling instead of
 	a parent.  For example:
@@ -1192,7 +1211,9 @@ DOC_END
 
 
 NAME: cache_host_acl
-TYPE: hostacl
+TYPE: peeracl
+DEFAULT: none
+LOC: none
 DOC_START
 	Just like 'cache_host_domain' but provides more flexibility by
 	using ACL's.
@@ -1247,6 +1268,7 @@ DOC_END
 NAME: visible_hostname
 TYPE: string
 LOC: Config.visibleHostname
+DEFAULT: none
 DOC_START
 	If you want to present a special hostname in error messages, etc,
 	then define this.  Otherwise, the return value of gethostname()
@@ -1279,20 +1301,30 @@ DOC_END
 #	available on the Web at http://www.nlanr.net/Cache/Tracker/.
 
 
-NAME: cache_announce
-TYPE: cacheannounce
+NAME: announce_period
+TYPE: time_t
+LOC: Config.Announce.period
+DEFAULT: 86400
 DOC_START
 	This is how frequently to send cache announcements.  The default
 	is `0' which disables sending the announcement messages.
 
 	To enable announcing your cache, just uncomment the line below.
 
-cache_announce 24
+announce_period 24 hours
 DOC_END
 
 
-NAME: announce_to
-TYPE: announceto
+NAME: announce_host
+TYPE: string
+DEFAULT: sd.cache.nlanr.net
+LOC: Config.Announce.host
+DOC_NONE
+
+NAME: announce_port
+TYPE: ushort
+DEFAULT: 3131
+LOC: Config.Announce.port
 DOC_START
 	This is the hostname and portnumber where the registration message
 	will be sent.
@@ -1303,15 +1335,30 @@ DOC_START
 	to 3131.  If the 'filename' argument is given, the contents of that
 	file will be included in the announce message.
 
-announce_to sd.cache.nlanr.net:3131
+announce_host sd.cache.nlanr.net
+announce_port 3131
 DOC_END
+
+NAME: announce_file
+TYPE: pathname_stat
+DEFAULT: /dev/null
+LOC: Config.Announce.file
+DOC_NONE
 
 
 # HTTPD-ACCELERATOR OPTIONS
 #-----------------------------------------------------------------------------
 
-NAME: httpd_accel
-TYPE: httpdaccel
+NAME: httpd_accel_host
+TYPE: string
+LOC: Config.Accel.host
+DEFAULT: none
+DOC_NONE
+
+NAME: httpd_accel_port
+TYPE: ushort
+LOC: Config.Accel.port
+DEFAULT: 0
 DOC_START
 	If you want to run squid as an httpd accelerator, define the
 	host name and port number where the real HTTP server is.
@@ -1319,14 +1366,15 @@ DOC_START
 	If you want virtual host support then specify the hostname
 	as "virtual".
 
-httpd_accel real_httpd_host real_httpd_port
+httpd_accel_host hostname
+httpd_accel_port port
 DOC_END
 
 
 NAME: httpd_accel_with_proxy
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.Accel.withProxy
 DOC_START
 	If you want to use squid as both a local httpd accelerator
@@ -1339,6 +1387,7 @@ DOC_END
 NAME: httpd_accel_uses_host_header
 COMMENT: on|off
 TYPE: onoff
+DEFAULT: off
 LOC: opt_accel_uses_host
 DOC_START
 	HTTP/1.1 requests include a Host: header which is basically the
@@ -1358,6 +1407,7 @@ DOC_END
 NAME: dns_testnames
 TYPE: wordlist
 LOC: Config.dns_testname_list
+DEFAULT: none
 DOC_START
 	The DNS tests exit as soon as the first site is successfully looked up
 
@@ -1385,7 +1435,9 @@ DOC_END
 
 
 NAME: append_domain
-TYPE: appenddomain
+TYPE: string
+LOC:  Config.appendDomain
+DEFAULT: none
 DOC_START
 	Appends local domain name to hostnames without any dots in them.
 	append_domain must begin with a period.
@@ -1475,7 +1527,9 @@ DOC_END
 
 
 NAME: err_html_text
-TYPE: errhtml
+TYPE: eol
+LOC: Config.errHtmlText
+DEFAULT: none
 DOC_START
 	HTML text to include in error messages.  Make this a "mailto"
 	URL to your admin address, or maybe just a link to your
@@ -1488,6 +1542,7 @@ DOC_END
 NAME: deny_info
 TYPE: denyinfo
 LOC: Config.denyInfoList
+DEFAULT: none
 DOC_START
 	Usage: deny_info URL acl
 
@@ -1501,6 +1556,7 @@ DOC_END
 NAME: udp_hit_obj
 COMMENT: on|off
 TYPE: onoff
+DEFAULT: off
 LOC: opt_udp_hit_obj
 DOC_START
 	If set, Squid will request UDP_HIT_OBJ replies from its
@@ -1517,6 +1573,7 @@ DOC_END
 NAME: udp_hit_obj_size
 TYPE: int
 LOC: Config.udpMaxHitObjsz
+DEFAULT: 0
 DOC_START
 	If set, Squid will limit UDP_HIT_OBJ size to be less than
 	this value.  Setting this value to more than SQUID_UDP_SO_SNDBUF
@@ -1529,6 +1586,7 @@ DOC_END
 NAME: memory_pools
 COMMENT: on|off
 TYPE: onoff
+DEFAULT: on
 LOC: opt_mem_pools
 DOC_START
 	If set, Squid will keep pools of allocated (but unused) memory
@@ -1541,6 +1599,7 @@ DOC_END
 NAME: forwarded_for
 COMMENT: on|off
 TYPE: onoff
+DEFAULT: on
 LOC: opt_forwarded_for
 DOC_START
 	If set, Squid will include your system's IP address or name
@@ -1559,7 +1618,7 @@ DOC_END
 NAME: log_icp_queries
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 1
+DEFAULT: on
 LOC: Config.Options.log_udp
 DOC_START
 	If set, ICP queries are logged to access.log.  ICP logging
@@ -1584,6 +1643,8 @@ DOC_END
 
 NAME: cachemgr_passwd
 TYPE: cachemgrpasswd
+DEFAULT: disable all
+LOC: Config.passwd_list
 DOC_START
 	Specify passwords for cachemgr operations.
 
@@ -1668,6 +1729,7 @@ DOC_END
 NAME: http_anonymizer
 TYPE: httpanonymizer
 LOC: Config.Options.anonymizer
+DEFAULT: off
 DOC_START
 	If you want to filter out certain HTTP request headers for
 	privacy reasons, enable this option.  There are three
@@ -1685,7 +1747,7 @@ DOC_END
 NAME: client_db
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 1
+DEFAULT: on
 LOC: Config.Options.client_db
 DOC_START
 	If you want to disable collecting per-client statistics, then
@@ -1717,8 +1779,9 @@ DOC_END
 
 
 NAME: netdb_ping_period
-TYPE: time_sec
+TYPE: time_t
 LOC: Config.Netdb.period
+DEFAULT: 300
 DOC_START
 	The minimum period for measuring a site.  There will be at
 	least this much delay between successive pings to the same
@@ -1731,7 +1794,7 @@ DOC_END
 NAME: query_icmp
 COMMENT: on|off
 TYPE: onoff
-DEFAULT: 0
+DEFAULT: off
 LOC: Config.Options.query_icmp
 DOC_START
 	If you want to ask your peers to include ICMP data in their ICP
@@ -1749,16 +1812,10 @@ DOC_START
 query_icmp off
 DOC_END
 
-NAME: clean_rate
-TYPE: time_sec
-LOC: Config.cleanRate
-DOC_START
-	XXX need docs
-DOC_END
-
 NAME: always_direct
 TYPE: acl_access
 LOC: Config.accessList.AlwaysDirect
+DEFAULT: none
 DOC_START
 	XXX need docs
 DOC_END
@@ -1766,12 +1823,7 @@ DOC_END
 NAME: never_direct
 TYPE: acl_access
 LOC: Config.accessList.NeverDirect
-DOC_START
-	XXX need docs
-DOC_END
-
-NAME: viz_hack_addr
-TYPE: vizhack
+DEFAULT: none
 DOC_START
 	XXX need docs
 DOC_END
