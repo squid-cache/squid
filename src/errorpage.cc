@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.42 1996/09/26 19:19:15 wessels Exp $
+ * $Id: errorpage.cc,v 1.43 1996/09/26 19:19:43 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -414,7 +414,7 @@ proxy_denied_msg(int code, int method, char *url, char *client)
 void
 errorpageFreeMemory(void)
 {
-	safe_free(tmp_error_buf);
-	safe_free(tbuf);
-	safe_free(auth_msg);
+    safe_free(tmp_error_buf);
+    safe_free(tbuf);
+    safe_free(auth_msg);
 }

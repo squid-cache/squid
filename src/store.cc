@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.121 1996/09/26 19:19:23 wessels Exp $
+ * $Id: store.cc,v 1.122 1996/09/26 19:19:48 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2656,7 +2656,7 @@ storeWriteCleanLog(void)
 	    continue;
 	if (e->object_len <= 0)
 	    continue;
-        if (BIT_TEST(e->flag, RELEASE_REQUEST))
+	if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	    continue;
 	if (BIT_TEST(e->flag, KEY_PRIVATE))
 	    continue;
