@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.119 1996/11/28 07:31:49 wessels Exp $
+ * $Id: http.cc,v 1.120 1996/11/30 22:01:47 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -108,6 +108,7 @@
 #define HTTP_DELETE_GAP   (1<<18)
 
 static const char *const w_space = " \t\n\r";
+static const char *const crlf = "\r\n";
 
 typedef enum {
     SCC_PUBLIC,
@@ -121,7 +122,7 @@ typedef enum {
     SCC_ENUM_END
 } http_server_cc_t;
 
-typedef enum {
+enum {
     CCC_NOCACHE,
     CCC_NOSTORE,
     CCC_MAXAGE,
@@ -129,7 +130,13 @@ typedef enum {
     CCC_MINFRESH,
     CCC_ONLYIFCACHED,
     CCC_ENUM_END
-} http_client_cc_t;
+};
+
+enum {
+    HDR_IMS,
+    HDR_HOST,
+    HDR_MAXAGE
+};
 
 char *HttpServerCCStr[] =
 {
@@ -165,6 +172,8 @@ static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
 static void httpSendRequest _PARAMS((int fd, void *));
 static void httpConnect _PARAMS((int fd, const ipcache_addrs *, void *));
 static void httpConnectDone _PARAMS((int fd, int status, void *data));
+static void httpAppendRequestHeader _PARAMS((char *hdr, const char *line, size_t * sz, size_t max));
+
 
 static void
 httpStateFree(int fd, void *data)
@@ -602,32 +611,149 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
     }
 }
 
+static void
+httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max)
+{
+    size_t n = *sz + strlen(line) + 2;
+    if (n >= max)
+	return;
+    debug(11, 5, "httpAppendRequestHeader: %s\n", line);
+    strcat(hdr + (*sz), line);
+    strcat(hdr + (*sz), crlf);
+    *sz = n;
+}
+
+size_t
+httpBuildRequestHeader(request_t * request,
+    request_t * orig_request,
+    StoreEntry * entry,
+    char *hdr_in,
+    size_t * in_len,
+    char *hdr_out,
+    size_t out_sz,
+    int cfd)
+{
+    char *xbuf = get_free_4k_page();
+    char *ybuf = get_free_4k_page();
+    char *viabuf = get_free_4k_page();
+    char *fwdbuf = get_free_4k_page();
+    char *t = NULL;
+    char *s = NULL;
+    char *end = NULL;
+    size_t len = 0;
+    size_t hdr_len = 0;
+    size_t in_sz;
+    size_t content_length = 0;
+    size_t l;
+    int hdr_flags = 0;
+    const char *url = NULL;
+
+    debug(11, 3, "httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
+    xstrncpy(fwdbuf, "X-Forwarded-For: ", 4096);
+    xstrncpy(viabuf, "Via: ", 4096);
+    sprintf(ybuf, "%s %s HTTP/1.0",
+	RequestMethodStr[request->method],
+	*request->urlpath ? request->urlpath : "/");
+    httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+    /* Add IMS header */
+    if (entry && entry->lastmod && request->method == METHOD_GET) {
+	sprintf(ybuf, "If-Modified-Since: %s", mkrfc1123(entry->lastmod));
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+	EBIT_SET(hdr_flags, HDR_IMS);
+    }
+    if ((end = mime_headers_end(hdr_in)) == NULL)
+	return 0;
+    in_sz = strlen(hdr_in);
+    for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
+	hdr_len = t - hdr_in;
+	if (in_sz - hdr_len <= content_length)
+	    break;
+	l = strcspn(t, crlf) + 1;
+	if (l > 4096)
+	    l = 4096;
+	xstrncpy(xbuf, t, l);
+	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
+	    continue;
+	if (strncasecmp(xbuf, "Connection:", 11) == 0)
+	    continue;
+	if (strncasecmp(xbuf, "Host:", 5) == 0)
+	    EBIT_SET(hdr_flags, HDR_HOST);
+	if (strncasecmp(xbuf, "Content-length:", 15) == 0) {
+	    for (s = xbuf + 15; *s && isspace(*s); s++);
+	    content_length = (size_t) atoi(s);
+	}
+	if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
+	    for (s = xbuf + 14; *s && isspace(*s); s++);
+	    if (strncasecmp(s, "Max-age=", 8) == 0)
+		EBIT_SET(hdr_flags, HDR_MAXAGE);
+	}
+	if (strncasecmp(xbuf, "Via:", 4) == 0) {
+	    for (s = xbuf + 4; *s && isspace(*s); s++);
+	    if (strlen(viabuf) + strlen(s) < 4000)
+		strcat(viabuf, s);
+	    strcat(viabuf, ", ");
+	    continue;
+	}
+	if (strncasecmp(xbuf, "X-Forwarded-For:", 16) == 0) {
+	    for (s = xbuf + 16; *s && isspace(*s); s++);
+	    if (strlen(fwdbuf) + strlen(s) < 4000)
+		strcat(fwdbuf, s);
+	    strcat(fwdbuf, ", ");
+	    continue;
+	}
+	if (strncasecmp(xbuf, "If-Modified-Since:", 18))
+	    if (EBIT_TEST(hdr_flags, HDR_IMS))
+		continue;
+	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512);
+    }
+    hdr_len = t - hdr_in;
+    /* Append Via: */
+    sprintf(ybuf, "%3.1f %s:%d (Squid/%s)",
+	orig_request->http_ver,
+	getMyHostname(),
+	(int) Config.Port.http,
+	SQUID_VERSION);
+    strcat(viabuf, ybuf);
+    httpAppendRequestHeader(hdr_out, viabuf, &len, out_sz);
+    /* Append to X-Forwarded-For: */
+    if (cfd >= 0)
+	strcat(fwdbuf, fd_table[cfd].ipaddr);
+    httpAppendRequestHeader(hdr_out, fwdbuf, &len, out_sz);
+    if (!EBIT_TEST(hdr_flags, HDR_HOST)) {
+	sprintf(ybuf, "Host: %s", orig_request->host);
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+    }
+    if (!EBIT_TEST(hdr_flags, HDR_MAXAGE)) {
+	url = entry ? entry->url : urlCanonical(orig_request, NULL);
+	sprintf(ybuf, "Cache-control: Max-age=%d", (int) getMaxAge(url));
+	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz);
+    }
+    httpAppendRequestHeader(hdr_out, null_string, &len, out_sz);
+    put_free_4k_page(xbuf);
+    put_free_4k_page(ybuf);
+    put_free_4k_page(viabuf);
+    put_free_4k_page(fwdbuf);
+    if (in_len)
+	*in_len = hdr_len;
+    debug(11, 3, "httpBuildRequestHeader: OUTPUT:\n%s\n", hdr_out);
+    return len;
+}
+
 /* This will be called when connect completes. Write request. */
 static void
 httpSendRequest(int fd, void *data)
 {
     HttpStateData *httpState = data;
-    char *xbuf = NULL;
-    char *ybuf = NULL;
     char *buf = NULL;
-    char *viabuf = NULL;
-    char *fwdbuf = NULL;
-    char *t = NULL;
-    char *s = NULL;
-    const char *const crlf = "\r\n";
     int len = 0;
     int buflen;
     request_t *req = httpState->request;
-    request_t *orig_req;
-    const char *Method = RequestMethodStr[req->method];
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
-    int hdr_flags = 0;
     int cfd;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
-    orig_req = httpState->orig_request ? httpState->orig_request : req;
-    buflen = strlen(Method) + strlen(req->urlpath);
+    buflen = strlen(req->urlpath);
     if (httpState->req_hdr)
 	buflen += httpState->req_hdr_sz + 1;
     buflen += 512;		/* lots of extra */
@@ -640,119 +766,25 @@ httpSendRequest(int fd, void *data)
 	buf = get_free_8k_page();
 	memset(buf, '\0', buflen);
 	buftype = BUF_TYPE_8K;
+	buflen = DISK_PAGE_SIZE;
     } else {
 	buf = xcalloc(buflen, 1);
 	buftype = BUF_TYPE_MALLOC;
     }
-
-    sprintf(buf, "%s %s HTTP/1.0\r\n",
-	Method,
-	*req->urlpath ? req->urlpath : "/");
-    len = strlen(buf);
-    /* Add IMS header */
-    if (entry->lastmod && req->method == METHOD_GET) {
-	debug(11, 3, "httpSendRequest: Adding IMS: %s\r\n",
-	    mkrfc1123(entry->lastmod));
-	ybuf = get_free_4k_page();
-	sprintf(ybuf, "If-Modified-Since: %s\r\n", mkrfc1123(entry->lastmod));
-	strcat(buf, ybuf);
-	len += strlen(ybuf);
-	put_free_4k_page(ybuf);
-	ybuf = NULL;
-	EBIT_SET(hdr_flags, HDR_IMS);
-    }
-    if (httpState->req_hdr) {	/* we have to parse the request header */
-	xbuf = xstrdup(httpState->req_hdr);
-	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
-	    if (strncasecmp(t, "Proxy-Connection:", 17) == 0)
-		continue;
-	    if (strncasecmp(t, "Connection:", 11) == 0)
-		continue;
-	    if (strncasecmp(t, "Host:", 5) == 0)
-		EBIT_SET(hdr_flags, HDR_HOST);
-	    if (strncasecmp(t, "Cache-Control:", 14) == 0) {
-		for (s = t + 14; *s && isspace(*s); s++);
-		if (strncasecmp(s, "Max-age=", 8) == 0)
-		    EBIT_SET(hdr_flags, HDR_MAXAGE);
-	    }
-	    if (strncasecmp(t, "Via:", 4) == 0) {
-		viabuf = get_free_4k_page();
-		xstrncpy(viabuf, t, 4096);
-		strcat(viabuf, ", ");
-		continue;
-	    }
-	    if (strncasecmp(t, "X-Forwarded-For:", 16) == 0) {
-		fwdbuf = get_free_4k_page();
-		xstrncpy(fwdbuf, t, 4096);
-		strcat(fwdbuf, ", ");
-		continue;
-	    }
-	    if (EBIT_TEST(hdr_flags, HDR_IMS))
-		if (!strncasecmp(t, "If-Modified-Since:", 18))
-		    continue;
-	    if (len + (int) strlen(t) > buflen - 10)
-		continue;
-	    strcat(buf, t);
-	    strcat(buf, crlf);
-	    len += strlen(t) + 2;
-	}
-	xfree(xbuf);
-    }
-    /* Add Via: header */
-    if (viabuf == NULL) {
-	viabuf = get_free_4k_page();
-	strcpy(viabuf, "Via: ");
-    }
-    ybuf = get_free_4k_page();
-    sprintf(ybuf, "%3.1f %s:%d (Squid/%s)\r\n",
-	orig_req->http_ver,
-	getMyHostname(),
-	(int) Config.Port.http,
-	SQUID_VERSION);
-    strcat(viabuf, ybuf);
-    strcat(buf, viabuf);
-    len += strlen(viabuf);
-    put_free_4k_page(viabuf);
-    put_free_4k_page(ybuf);
-    viabuf = ybuf = NULL;
-
-    /* Append to X-Forwarded-For: */
-    if (fwdbuf == NULL) {
-	fwdbuf = get_free_4k_page();
-	strcpy(fwdbuf, "X-Forwarded-For: ");
-    }
-    ybuf = get_free_4k_page();
     if (!opt_forwarded_for)
-	strcat(fwdbuf, "unknown");
+	cfd = -1;
     else if (entry->mem_obj == NULL)
-	strcat(fwdbuf, "unknown");
-    else if ((cfd = storeFirstClientFD(entry->mem_obj)) < 0)
-	strcat(fwdbuf, "unknown");
+	cfd = -1;
     else
-	strcat(fwdbuf, fd_table[cfd].ipaddr);
-    strcat(fwdbuf, ybuf);
-    len += strlen(fwdbuf);
-    put_free_4k_page(fwdbuf);
-    put_free_4k_page(ybuf);
-    fwdbuf = ybuf = NULL;
-
-    if (EBIT_TEST(hdr_flags, HDR_HOST)) {
-	ybuf = get_free_4k_page();
-	sprintf(ybuf, "Host: %s\r\n", orig_req->host);
-	strcat(buf, ybuf);
-	len += strlen(ybuf);
-	put_free_4k_page(ybuf);
-    }
-    if (!EBIT_TEST(hdr_flags, HDR_MAXAGE)) {
-	ybuf = get_free_4k_page();
-	sprintf(ybuf, "Cache-control: Max-age=%d\r\n",
-	    (int) getMaxAge(entry->url));
-	strcat(buf, ybuf);
-	len += strlen(ybuf);
-	put_free_4k_page(ybuf);
-    }
-    strcat(buf, crlf);
-    len += 2;
+	cfd = storeFirstClientFD(entry->mem_obj);
+    len = httpBuildRequestHeader(req,
+	httpState->orig_request ? httpState->orig_request : req,
+	entry,
+	httpState->req_hdr,
+	NULL,
+	buf,
+	buflen,
+	cfd);
     debug(11, 6, "httpSendRequest: FD %d:\n%s\n", fd, buf);
     comm_write(fd,
 	buf,
