@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.446 1999/04/26 21:06:13 wessels Exp $
+ * $Id: client_side.cc,v 1.447 1999/04/26 21:09:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1165,7 +1165,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	getMyHostname(), Config.Port.http->i);
 #endif
     if (httpReplyBodySize(request->method, http->entry->mem_obj->reply) < 0) {
-	debug(0, 0) ("persistent connection lossage\n");
+	debug(33, 3) ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
 	request->flags.proxy_keepalive = 0;
     }
     /* Signal keep-alive if needed */
