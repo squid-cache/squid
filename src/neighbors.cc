@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.91 1996/11/26 23:21:52 wessels Exp $
+ * $Id: neighbors.cc,v 1.92 1996/11/27 22:19:20 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -196,6 +196,9 @@ edgeWouldBePinged(const edge * e, request_t * request)
     aclCheck_t checklist;
 
     if (BIT_TEST(request->flags, REQ_NOCACHE))
+	if (neighborType(e, request) == EDGE_SIBLING)
+	    return 0;
+    if (BIT_TEST(request->flags, REQ_REFRESH))
 	if (neighborType(e, request) == EDGE_SIBLING)
 	    return 0;
     if (e->pinglist == NULL && e->acls == NULL)
