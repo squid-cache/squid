@@ -1,0 +1,139 @@
+
+/*
+ * $Id: leakfinder.cc,v 1.1 1998/12/11 21:01:12 wessels Exp $
+ *
+ * DEBUG: section 45    Callback Data Registry
+ * AUTHOR: Duane Wessels
+ *
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * ----------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by the
+ *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
+ *  Duane Wessels and the University of California San Diego.  Please
+ *  see the COPYRIGHT file for full details.  Squid incorporates
+ *  software developed and/or copyrighted by other sources.  Please see
+ *  the CREDITS file for full details.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ *
+ */
+
+/*
+ * Use these to find memory leaks
+ */
+
+#include "squid.h"
+
+static hash_table *htable = NULL;
+
+static int leakCount = 0;
+
+typedef struct _ptr {
+    void *key;
+    struct _ptr *next;
+    const char *file;
+    int line;
+    time_t when;
+} ptr;
+
+static HASHCMP ptr_cmp;
+static HASHHASH ptr_hash;
+static OBJH ptrDump;
+
+/* ========================================================================= */
+
+void
+leakInit(void)
+{
+    debug(45, 3) ("ptrInit\n");
+    htable = hash_create(ptr_cmp, 1 << 8, ptr_hash);
+    cachemgrRegister("leaks",
+	"Memory Leak Tracking",
+	ptrDump, 0, 1);
+}
+
+void *
+leakAddFL(void *p, const char *file, int line)
+{
+    ptr *c;
+    assert(p);
+    assert(htable != NULL);
+    assert(hash_lookup(htable, p) == NULL);
+    c = xcalloc(1, sizeof(*c));
+    c->key = p;
+    c->file = file;
+    c->line = line;
+    c->when = squid_curtime;
+    hash_join(htable, (hash_link *) c);
+    leakCount++;
+    return p;
+}
+
+void *
+leakTouchFL(void *p, const char *file, int line)
+{
+    ptr *c = (ptr *) hash_lookup(htable, p);
+    assert(p);
+    assert(htable != NULL);
+    assert(c);
+    c->file = file;
+    c->line = line;
+    c->when = squid_curtime;
+    return p;
+}
+
+void *
+leakFree(void *p)
+{
+    ptr *c = (ptr *) hash_lookup(htable, p);
+    assert(p);
+    assert(c != NULL);
+    hash_remove_link(htable, (hash_link *) c);
+    leakCount--;
+    xfree(c);
+    return p;
+}
+
+/* ========================================================================= */
+
+static int
+ptr_cmp(const void *p1, const void *p2)
+{
+    return (char *) p1 - (char *) p2;
+}
+
+static unsigned int
+ptr_hash(const void *p, unsigned int mod)
+{
+    return ((unsigned long) p >> 8) % mod;
+}
+
+
+static void
+ptrDump(StoreEntry * sentry)
+{
+    hash_link *hptr;
+    ptr *c;
+    storeAppendPrintf(sentry, "Tracking %d pointers\n", leakCount);
+    hash_first(htable);
+    while ((hptr = hash_next(htable))) {
+	c = (ptr *) hptr;
+	storeAppendPrintf(sentry, "%20p last used %9d seconds ago by %s:%d\n",
+	    c->key, squid_curtime - c->when, c->file, c->line);
+    }
+}
