@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.92 1998/05/06 20:09:15 wessels Exp $
+ * $Id: net_db.cc,v 1.93 1998/05/08 16:40:35 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -898,10 +898,14 @@ netdbBinaryExchange(StoreEntry * s)
 	j = htonl((int) (n->hops * 1000));
 	xmemcpy(&buf[i], &j, sizeof(int));
 	i += sizeof(int);
-	if (i + rec_sz > 4096 || next == NULL) {
+	if (i + rec_sz > 4096) {
 	    storeAppend(s, buf, i);
 	    i = 0;
 	}
+    }
+    if (i > 0) {
+	storeAppend(s, buf, i);
+	i = 0;
     }
     assert(0 == i);
     storeBufferFlush(s);
