@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.159 2001/01/12 00:37:18 wessels Exp $
+ * $Id: gopher.cc,v 1.160 2001/03/03 10:39:32 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -818,7 +818,7 @@ CreateGopherStateData(void)
 {
     GopherStateData *gd;
     CBDATA_INIT_TYPE(GopherStateData);
-    gd = CBDATA_ALLOC(GopherStateData, NULL);
+    gd = cbdataAlloc(GopherStateData);
     gd->buf = memAllocate(MEM_4K_BUF);
     return (gd);
 }

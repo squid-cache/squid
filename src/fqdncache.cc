@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.147 2001/02/23 20:59:51 hno Exp $
+ * $Id: fqdncache.cc,v 1.148 2001/03/03 10:39:31 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -387,7 +387,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
     f->handlerData = handlerData;
     cbdataLock(handlerData);
     f->request_time = current_time;
-    c = CBDATA_ALLOC(generic_cbdata, NULL);
+    c = cbdataAlloc(generic_cbdata);
     c->data = f;
 #if USE_DNSSERVERS
     dnsSubmit(hashKeyStr(&f->hash), fqdncacheHandleReply, c);

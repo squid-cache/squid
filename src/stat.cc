@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.344 2001/02/07 18:56:52 hno Exp $
+ * $Id: stat.cc,v 1.345 2001/03/03 10:39:33 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -345,7 +345,7 @@ static void
 statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 {
     StatObjectsState *state;
-    state = CBDATA_ALLOC(StatObjectsState, NULL);
+    state = cbdataAlloc(StatObjectsState);
     state->sentry = sentry;
     state->filter = filter;
     storeLockObject(sentry);

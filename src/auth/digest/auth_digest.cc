@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.1 2001/01/31 22:16:41 hno Exp $
+ * $Id: auth_digest.cc,v 1.2 2001/03/03 10:39:36 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -200,7 +200,7 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
     }
 }
 
-void 
+void
 authenticateDigestNonceSetup()
 {
     if (!digest_nonce_pool)
@@ -212,7 +212,7 @@ authenticateDigestNonceSetup()
     }
 }
 
-void 
+void
 authenticateDigestNonceShutdown()
 {
     /* 
@@ -235,7 +235,7 @@ authenticateDigestNonceShutdown()
     debug(29, 2) ("authenticateDigestNonceShutdown: Nonce cache shutdown\n");
 }
 
-void 
+void
 authenticateDigestNonceReconfigure()
 {
 }
@@ -690,7 +690,7 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
     return;
 }
 
-int 
+int
 authenticateDigestDirection(auth_user_request_t * auth_user_request)
 {
     digest_request_h *digest_request;
@@ -1313,7 +1313,7 @@ authenticateDigestStart(auth_user_request_t * auth_user_request, RH * handler, v
 	handler(data, NULL);
 	return;
     }
-    r = CBDATA_ALLOC(authenticateStateData, NULL);
+    r = cbdataAlloc(authenticateStateData);
     r->handler = handler;
     cbdataLock(data);
     r->data = data;

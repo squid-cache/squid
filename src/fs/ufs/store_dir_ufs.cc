@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.30 2001/02/19 23:10:07 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.31 2001/03/03 10:39:39 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -825,7 +825,7 @@ storeUfsDirRebuild(SwapDir * sd)
     FILE *fp;
     EVH *func = NULL;
     CBDATA_INIT_TYPE(RebuildState);
-    rb = CBDATA_ALLOC(RebuildState, NULL);
+    rb = cbdataAlloc(RebuildState);
     rb->sd = sd;
     rb->speed = opt_foreground_rebuild ? 1 << 30 : 50;
     /*

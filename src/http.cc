@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.377 2001/01/12 00:37:18 wessels Exp $
+ * $Id: http.cc,v 1.378 2001/03/03 10:39:32 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -928,7 +928,7 @@ httpStart(FwdState * fwd)
     debug(11, 3) ("httpStart: \"%s %s\"\n",
 	RequestMethodStr[orig_req->method],
 	storeUrl(fwd->entry));
-    httpState = CBDATA_ALLOC(HttpStateData, NULL);
+    httpState = cbdataAlloc(HttpStateData);
     storeLockObject(fwd->entry);
     httpState->fwd = fwd;
     httpState->entry = fwd->entry;

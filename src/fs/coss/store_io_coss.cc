@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.7 2001/01/12 00:37:33 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.8 2001/03/03 10:39:37 hno Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -48,6 +48,8 @@ static CossMemBuf *storeCossCreateMemBuf(SwapDir * SD, size_t start,
     sfileno curfn, int *collision);
 static CBDUNL storeCossIOFreeEntry;
 static CBDUNL storeCossMembufFree;
+
+CBDATA_TYPE(storeIOState);
 
 /* === PUBLIC =========================================================== */
 
@@ -128,7 +130,8 @@ storeCossCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
     CossState *cstate;
     storeIOState *sio;
 
-    sio = CBDATA_ALLOC(storeIOState, storeCossIOFreeEntry);
+    CBDATA_INIT_TYPE_FREECB(storeIOState, storeCossIOFreeEntry);
+    sio = cbdataAlloc(storeIOState);
     cstate = memPoolAlloc(coss_state_pool);
     sio->fsstate = cstate;
     sio->offset = 0;
@@ -172,7 +175,8 @@ storeCossOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 
     debug(81, 3) ("storeCossOpen: offset %d\n", f);
 
-    sio = CBDATA_ALLOC(storeIOState, storeCossIOFreeEntry);
+    CBDATA_INIT_TYPE_FREECB(storeIOState, storeCossIOFreeEntry);
+    sio = cbdataAlloc(storeIOState);
     cstate = memPoolAlloc(coss_state_pool);
 
     sio->fsstate = cstate;
@@ -477,8 +481,8 @@ storeCossCreateMemBuf(SwapDir * SD, size_t start,
     int numreleased = 0;
     CossInfo *cs = (CossInfo *) SD->fsdata;
 
-    CBDATA_INIT_TYPE(CossMemBuf);
-    newmb = CBDATA_ALLOC(CossMemBuf, storeCossMembufFree);
+    CBDATA_INIT_TYPE_FREECB(CossMemBuf, storeCossMembufFree);
+    newmb = cbdataAlloc(CossMemBuf);
     newmb->diskstart = start;
     debug(81, 3) ("storeCossCreateMemBuf: creating new membuf at %d\n", newmb->diskstart);
     newmb->diskend = newmb->diskstart + COSS_MEMBUF_SZ - 1;

@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.35 2001/01/31 22:16:36 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.36 2001/03/03 10:39:29 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2411,7 +2411,7 @@ coupling between the storage layer and the replacement policy.
 <verb>
 	type_of_data callback_data;
 	...
-	callback_data = CBDATA_ALLOC(type_of_data, free_handler);
+	callback_data = cbdataAlloc(type_of_data);
 	...
 	cbdataLock(callback_data);
 	fooOperationStart(bar, callback_func, callback_data);
@@ -2427,7 +2427,7 @@ coupling between the storage layer and the replacement policy.
 	With this scheme, nothing bad happens if <tt/cbdataFree/ gets called
 	before <tt/cbdataUnlock/:
 <verb>
-	callback_data = CBDATA_ALLOC(...);
+	callback_data = cbdataAlloc(...);
 	...
 	cbdataLock(callback_data);
 	fooOperationStart(bar, callback_func, callback_data);
@@ -2449,7 +2449,7 @@ coupling between the storage layer and the replacement policy.
 	<P>
 	To add new module specific data types to the allocator one uses the
 	macros CBDATA_TYPE and CBDATA_INIT_TYPE. These creates a local cbdata
-	definition (file or block scope). Any CBDATA_ALLOC calls must be made
+	definition (file or block scope). Any cbdataAlloc calls must be made
 	within this scope. However, cbdataFree might be called from anywhere.
 
 <verb>
@@ -2463,6 +2463,8 @@ coupling between the storage layer and the replacement policy.
 	 * (can be called multiple times with only a minimal overhead)
 	 */
 	CBDATA_INIT_TYPE(type_of_data);
+	/* Or if a free function is associated with the data type */
+	CBDATA_INIT_TYPE_FREECB(type_of_data, free_function);
 </verb>
 
 	<P>
@@ -2475,10 +2477,6 @@ coupling between the storage layer and the replacement policy.
 <verb>
 	extern CBDATA_GLOBAL_TYPE(type_of_data);	/* CBDATA_UNDEF */
 </verb>
-
-	<P>
-	TODO: Restructure the free function so there is one free function
-	associated with the whole cbdata type rather than per allocation.
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager

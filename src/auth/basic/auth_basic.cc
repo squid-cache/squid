@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_basic.cc,v 1.6 2001/02/07 18:56:53 hno Exp $
+ * $Id: auth_basic.cc,v 1.7 2001/03/03 10:39:36 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -378,6 +378,7 @@ static void
 authBasicDataFree(basic_data * basic_auth)
 {
 }
+
 #endif
 
 static auth_user_t *
@@ -588,7 +589,7 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
 	cbdataLock(data);
 	return;
     } else {
-	r = CBDATA_ALLOC(authenticateStateData, NULL);
+	r = cbdataAlloc(authenticateStateData);
 	r->handler = handler;
 	cbdataLock(data);
 	r->data = data;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.292 2001/01/12 00:37:19 wessels Exp $
+ * $Id: neighbors.cc,v 1.293 2001/03/03 10:39:33 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1123,7 +1123,7 @@ peerCountMcastPeersStart(void *data)
     p->mcast.flags.count_event_pending = 0;
     snprintf(url, MAX_URL, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
     fake = storeCreateEntry(url, url, null_request_flags, METHOD_GET);
-    psstate = CBDATA_ALLOC(ps_state, NULL);
+    psstate = cbdataAlloc(ps_state);
     psstate->request = requestLink(urlParse(METHOD_GET, url));
     psstate->entry = fake;
     psstate->callback = NULL;

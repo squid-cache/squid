@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.70 2001/02/07 19:04:08 hno Exp $
+ * $Id: asn.cc,v 1.71 2001/03/03 10:39:30 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -187,7 +187,7 @@ asnCacheStart(int as)
     StoreEntry *e;
     request_t *req;
     ASState *asState;
-    asState = CBDATA_ALLOC(ASState, NULL);
+    asState = cbdataAlloc(ASState);
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.111 2001/01/12 00:37:21 wessels Exp $
+ * $Id: ssl.cc,v 1.112 2001/03/03 10:39:33 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -484,7 +484,7 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr, int *s
 	return;
     }
     CBDATA_INIT_TYPE(SslStateData);
-    sslState = CBDATA_ALLOC(SslStateData, NULL);
+    sslState = cbdataAlloc(SslStateData);
 #if DELAY_POOLS
     sslState->delay_id = delayClient(request);
     delayRegisterDelayIdPtr(&sslState->delay_id);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.5 2001/02/07 18:56:56 hno Exp $
+ * $Id: store_repl_heap.cc,v 1.6 2001/03/03 10:39:39 hno Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -151,7 +151,7 @@ heap_walkInit(RemovalPolicy * policy)
     RemovalPolicyWalker *walker;
     HeapWalkData *heap_walk;
     heap->nwalkers += 1;
-    walker = CBDATA_ALLOC(RemovalPolicyWalker, NULL);
+    walker = cbdataAlloc(RemovalPolicyWalker);
     heap_walk = xcalloc(1, sizeof(*heap_walk));
     heap_walk->current = 0;
     walker->_policy = policy;
@@ -224,7 +224,7 @@ heap_purgeInit(RemovalPolicy * policy, int max_scan)
     RemovalPurgeWalker *walker;
     HeapPurgeData *heap_walk;
     heap->nwalkers += 1;
-    walker = CBDATA_ALLOC(RemovalPurgeWalker, NULL);
+    walker = cbdataAlloc(RemovalPurgeWalker);
     heap_walk = xcalloc(1, sizeof(*heap_walk));
     heap_walk->min_age = 0.0;
     heap_walk->locked_entries = NULL;
@@ -262,7 +262,7 @@ createRemovalPolicy_heap(wordlist * args)
     HeapPolicyData *heap_data;
     char *keytype;
     /* Allocate the needed structures */
-    policy = CBDATA_ALLOC(RemovalPolicy, NULL);
+    policy = cbdataAlloc(RemovalPolicy);
     heap_data = xcalloc(1, sizeof(*heap_data));
     /* Initialize the policy data */
     heap_data->policy = policy;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.25 2001/01/31 22:16:38 hno Exp $
+ * $Id: helper.cc,v 1.26 2001/03/03 10:39:32 hno Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -103,7 +103,7 @@ helperOpenServers(helper * hlp)
 	    continue;
 	}
 	hlp->n_running++;
-	srv = CBDATA_ALLOC(helper_server, NULL);
+	srv = cbdataAlloc(helper_server);
 	srv->flags.alive = 1;
 	srv->index = k;
 	srv->rfd = rfd;
@@ -179,7 +179,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 	    continue;
 	}
 	hlp->n_running++;
-	srv = CBDATA_ALLOC(helper_stateful_server, NULL);
+	srv = cbdataAlloc(helper_stateful_server);
 	srv->flags.alive = 1;
 	srv->flags.reserved = S_HELPER_FREE;
 	srv->deferred_requests = 0;
@@ -537,7 +537,7 @@ helper *
 helperCreate(const char *name)
 {
     helper *hlp;
-    hlp = CBDATA_ALLOC(helper, NULL);
+    hlp = cbdataAlloc(helper);
     hlp->id_name = name;
     return hlp;
 }
@@ -546,7 +546,7 @@ statefulhelper *
 helperStatefulCreate(const char *name)
 {
     statefulhelper *hlp;
-    hlp = CBDATA_ALLOC(statefulhelper, NULL);
+    hlp = cbdataAlloc(statefulhelper);
     hlp->id_name = name;
     return hlp;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.6 2001/01/31 22:16:43 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.7 2001/03/03 10:39:36 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -625,7 +625,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 	return;
     }
 #ifdef NTLMHELPPROTOCOLV2
-    r = CBDATA_ALLOC(authenticateStateData, NULL);
+    r = cbdataAlloc(authenticateStateData);
     r->handler = handler;
     cbdataLock(data);
     r->data = data;
@@ -663,7 +663,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 	debug(29, 9) ("authenticateNTLMStart: helper '%d' assigned\n", server);
 	/* valid challenge? */
 	if ((server == NULL) || !authenticateNTLMValidChallenge(helperstate)) {
-	    r = CBDATA_ALLOC(authenticateStateData, NULL);
+	    r = cbdataAlloc(authenticateStateData);
 	    r->handler = handler;
 	    cbdataLock(data);
 	    r->data = data;
@@ -687,7 +687,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
 
 	break;
     case AUTHENTICATE_STATE_RESPONSE:
-	r = CBDATA_ALLOC(authenticateStateData, NULL);
+	r = cbdataAlloc(authenticateStateData);
 	r->handler = handler;
 	cbdataLock(data);
 	r->data = data;

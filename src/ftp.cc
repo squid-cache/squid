@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.307 2001/01/12 00:37:17 wessels Exp $
+ * $Id: ftp.cc,v 1.308 2001/03/03 10:39:32 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1047,7 +1047,7 @@ ftpStart(FwdState * fwd)
     HttpReply *reply;
 
     CBDATA_INIT_TYPE(FtpStateData);
-    ftpState = CBDATA_ALLOC(FtpStateData, NULL);
+    ftpState = cbdataAlloc(FtpStateData);
     debug(9, 3) ("ftpStart: '%s'\n", url);
     statCounter.server.all.requests++;
     statCounter.server.ftp.requests++;

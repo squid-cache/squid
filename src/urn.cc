@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.66 2001/02/23 20:59:51 hno Exp $
+ * $Id: urn.cc,v 1.67 2001/03/03 10:39:34 hno Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -108,7 +108,7 @@ urnStart(request_t * r, StoreEntry * e)
     ErrorState *err;
     debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
     CBDATA_INIT_TYPE(UrnState);
-    urnState = CBDATA_ALLOC(UrnState, NULL);
+    urnState = cbdataAlloc(UrnState);
     urnState->entry = e;
     urnState->request = requestLink(r);
     storeLockObject(urnState->entry);

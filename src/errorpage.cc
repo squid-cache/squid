@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.162 2001/01/12 00:37:17 wessels Exp $
+ * $Id: errorpage.cc,v 1.163 2001/03/03 10:39:31 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -235,7 +235,7 @@ ErrorState *
 errorCon(err_type type, http_status status)
 {
     ErrorState *err;
-    err = CBDATA_ALLOC(ErrorState, NULL);
+    err = cbdataAlloc(ErrorState);
     err->page_id = type;	/* has to be reset manually if needed */
     err->type = type;
     err->http_status = status;
