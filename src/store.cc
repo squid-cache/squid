@@ -1,5 +1,6 @@
+
 /*
- * $Id: store.cc,v 1.98 1996/09/05 19:02:59 wessels Exp $
+ * $Id: store.cc,v 1.99 1996/09/05 19:03:48 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2008,15 +2009,15 @@ int storeGetSwapSpace(size)
 	    next = link_ptr->next;
 	    e = (StoreEntry *) link_ptr;
 	    if (storeCheckExpired(e)) {
-                debug(20, 2, "storeGetSwapSpace: Expired: <URL:%s>\n", e->url);
-                ++expired_in_one_bucket;
-                storeRelease(e);
+		debug(20, 2, "storeGetSwapSpace: Expired: <URL:%s>\n", e->url);
+		++expired_in_one_bucket;
+		storeRelease(e);
 	    } else if (!storeEntryLocked(e)) {
-                insert_dynamic_array(LRU_list, e);
-                ++scan_in_objs;
+		insert_dynamic_array(LRU_list, e);
+		++scan_in_objs;
 	    } else {
-                locked++;
-                locked_size += e->mem_obj->e_current_len;
+		locked++;
+		locked_size += e->mem_obj->e_current_len;
 	    }
 	}			/* while, end of one bucket of hash table */
 	expired += expired_in_one_bucket;
@@ -2638,7 +2639,7 @@ int storeMaintainSwapSpace()
 	if (bucket >= STORE_BUCKETS)
 	    bucket = 0;
 	link_ptr = hash_get_bucket(store_table, bucket++);
-	for (;link_ptr; link_ptr = next) {
+	for (; link_ptr; link_ptr = next) {
 	    next = link_ptr->next;
 	    e = (StoreEntry *) link_ptr;
 	    if (!storeCheckExpired(e))
@@ -2858,6 +2859,6 @@ void storeCloseLog()
 void storeNegativeCache(e)
      StoreEntry *e;
 {
-	e->expires = squid_curtime + Config.negativeTtl;
-	BIT_SET(e->flag, ENTRY_NEGCACHED);
+    e->expires = squid_curtime + Config.negativeTtl;
+    BIT_SET(e->flag, ENTRY_NEGCACHED);
 }
