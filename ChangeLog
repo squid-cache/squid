@@ -1,4 +1,4 @@
-Changes to squid-1.1.beta2 (:
+Changes to squid-1.1.beta2 ():
 
 	- Fixed UDP_HIT_OBJ objects ignoring 'proxy-only' setting.
 	- Added setting cachemgr.cgi fields from query string
@@ -12,6 +12,7 @@ Changes to squid-1.1.beta2 (:
 	- Placed call to proto_count() just after log_append()
 	  so we only need it in one place.
 	- Made a lot of proto.c functions static and added prototypes.
+	- Switched to ANSI style coding.
 
 Changes to squid-1.1.beta1 (September 12, 1996):
 
