@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.75 1996/10/30 09:28:02 wessels Exp $
+ * $Id: neighbors.cc,v 1.76 1996/10/31 18:30:20 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -699,7 +699,7 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 		neighborRemove(e);
 		e = NULL;
 	    } else {
-	        neighborCountIgnored(e, opcode);
+		neighborCountIgnored(e, opcode);
 	    }
 	}
     } else if (opcode == ICP_OP_RELOADING) {
