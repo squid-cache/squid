@@ -1,3 +1,5 @@
+Changes to squid-1.1.alpha16:
+
 	- Fixed ipcache TTL bug from new ipcache_parsebuffer().
 	- Copied recent ipcache.c changes to fqdncache.c
 	- Copied icpHandleIcpV2() fix to icpHandleIcpV3().
@@ -187,6 +189,17 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+
+Changes to squid-1.0.12 (September 3, 1996):
+
+	- Fixed urlCheckRequest() to allow CONNECT/SSL requests.
+	- Change default socket send/receive buffers to 16k (in
+	  configure) instead of 8k, mainly for Solaris.
+	- Fixed urlParse() to remove trailing dots from hostnames.
+	- Added 'ttl_pattern/i' config tag for case-insensitive
+	  regular expressions.
+	- Fixed swapin_complete_handler FMW bug in storeSwapInHandle().
+	- Removed 'Invalid object detected' trap in storeValidToSend().
 
 Changes to squid-1.0.11 (August 30, 1996):
 

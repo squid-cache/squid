@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.36 1996/08/26 19:16:08 wessels Exp $
+ * $Id: wais.cc,v 1.37 1996/09/03 19:24:09 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -226,7 +226,7 @@ static void waisReadReply(fd, waisState)
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
 		(PF) waisReadReplyTimeout, (void *) waisState, Config.readTimeout);
 	} else {
-	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    comm_close(fd);
@@ -331,7 +331,7 @@ static void waisSendRequest(fd, waisState)
 	waisSendComplete,
 	(void *) waisState,
 	xfree);
-    if (BIT_TEST(waisState->entry->flag, CACHABLE))
+    if (BIT_TEST(waisState->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
 

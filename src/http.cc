@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.69 1996/08/26 19:57:05 wessels Exp $
+ * $Id: http.cc,v 1.70 1996/09/03 19:24:03 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -189,7 +189,7 @@ static void httpMakePublic(entry)
      StoreEntry *entry;
 {
     ttlSet(entry);
-    if (BIT_TEST(entry->flag, CACHABLE))
+    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
 }
 
@@ -199,7 +199,7 @@ static void httpMakePrivate(entry)
 {
     storeSetPrivateKey(entry);
     storeExpireNow(entry);
-    BIT_RESET(entry->flag, CACHABLE);
+    BIT_RESET(entry->flag, ENTRY_CACHABLE);
     storeReleaseRequest(entry);	/* delete object when not used */
 }
 
@@ -208,7 +208,7 @@ static void httpCacheNegatively(entry)
      StoreEntry *entry;
 {
     entry->expires = squid_curtime + Config.negativeTtl;
-    if (BIT_TEST(entry->flag, CACHABLE))
+    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
     /* XXX: mark object "not to store on disk"? */
 }
@@ -269,6 +269,13 @@ void httpParseHeaders(buf, reply)
 	}
 	t = strtok(NULL, "\n");
     }
+#if LOG_TIMESTAMPS
+    fprintf(timestamp_log, "T %9d D %9d L %9d E %9d\n",
+	squid_curtime,
+	parse_rfc850(reply->date),
+	parse_rfc850(reply->last_modified),
+	parse_rfc850(reply->expires));
+#endif /* LOG_TIMESTAMPS */
     safe_free(headers);
 }
 
@@ -456,7 +463,7 @@ static void httpReadReply(fd, httpState)
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
 		(PF) httpReadReplyTimeout, (void *) httpState, Config.readTimeout);
 	} else {
-	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    comm_close(fd);
