@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.174 2002/07/18 23:43:14 hno Exp $
+ * $Id: errorpage.cc,v 1.175 2002/09/10 09:54:53 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -65,7 +65,9 @@ static const struct {
 	ERR_SQUID_SIGNATURE,
 	    "\n<BR clear=\"all\">\n"
 	    "<HR noshade size=\"1px\">\n"
+	    "<ADDRESS>\n"
 	    "Generated %T by %h (%s)\n"
+	    "</ADDRESS>\n"
 	    "</BODY></HTML>\n"
     },
     {
@@ -88,6 +90,7 @@ static const char *errorFindHardText(err_type type);
 static ErrorDynamicPageInfo *errorDynamicPageInfoCreate(int id, const char *page_name);
 static void errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info);
 static MemBuf errorBuildContent(ErrorState * err);
+static int errorDump(ErrorState * err, MemBuf * mb);
 static const char *errorConvert(char token, ErrorState * err);
 static CWCB errorSendComplete;
 
@@ -407,6 +410,71 @@ errorStateFree(ErrorState * err)
     cbdataFree(err);
 }
 
+static int
+errorDump(ErrorState * err, MemBuf * mb)
+{
+    request_t *r = err->request;
+    MemBuf str = MemBufNULL;
+    const char *p = NULL;	/* takes priority over mb if set */
+    memBufReset(&str);
+    /* email subject line */
+    memBufPrintf(&str, "CacheErrorInfo - %s", errorPageName(err->type));
+    memBufPrintf(mb, "?subject=%s", rfc1738_escape_part(str.buf));
+    memBufReset(&str);
+    /* email body */
+    memBufPrintf(&str, "CacheHost: %s\r\n", getMyHostname());
+    /* - Err Msgs */
+    memBufPrintf(&str, "ErrPage: %s\r\n", errorPageName(err->type));
+    if (err->xerrno) {
+	memBufPrintf(&str, "Err: (%d) %s\r\n", err->xerrno, strerror(err->xerrno));
+    } else {
+	memBufPrintf(&str, "Err: [none]\r\n");
+    }
+    if (authenticateAuthUserRequestMessage(err->auth_user_request)) {
+	memBufPrintf(&str, "extAuth ErrMsg: %s\r\n", authenticateAuthUserRequestMessage(err->auth_user_request));
+    }
+    if (err->dnsserver_msg) {
+	memBufPrintf(&str, "DNS Server ErrMsg: %s\r\n", err->dnsserver_msg);
+    }
+    /* - TimeStamp */
+    memBufPrintf(&str, "TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
+    /* - IP stuff */
+    memBufPrintf(&str, "ClientIP: %s\r\n", inet_ntoa(err->src_addr));
+    if (err->host) {
+	memBufPrintf(&str, "ServerIP: %s\r\n", err->host);
+    }
+    memBufPrintf(&str, "\r\n");
+    /* - HTTP stuff */
+    memBufPrintf(&str, "HTTP Request:\r\n");
+    if (NULL != r) {
+	Packer p;
+	memBufPrintf(&str, "%s %s HTTP/%d.%d\n",
+	    RequestMethodStr[r->method],
+	    strLen(r->urlpath) ? strBuf(r->urlpath) : "/",
+	    r->http_ver.major, r->http_ver.minor);
+	packerToMemInit(&p, &str);
+	httpHeaderPackInto(&r->header, &p);
+	packerClean(&p);
+    } else if (err->request_hdrs) {
+	p = err->request_hdrs;
+    } else {
+	p = "[none]";
+    }
+    memBufPrintf(&str, "\r\n");
+    /* - FTP stuff */
+    if (err->ftp.request) {
+	memBufPrintf(&str, "FTP Request: %s\r\n", err->ftp.request);
+	memBufPrintf(&str, "FTP Reply: %s\r\n", err->ftp.reply);
+	memBufPrintf(&str, "FTP Msg: ");
+	wordlistCat(err->ftp.server_msg, &str);
+	memBufPrintf(&str, "\r\n");
+    }
+    memBufPrintf(&str, "\r\n");
+    memBufPrintf(mb, "&body=%s", rfc1738_escape_part(str.buf));
+    memBufClean(&str);
+    return 0;
+}
+
 #define CVT_BUF_SZ 512
 
 /*
@@ -435,6 +503,7 @@ errorStateFree(ErrorState * err)
  * U - URL without password                     x
  * u - URL with password                        x
  * w - cachemgr email address                   x
+ * W - error data (to be included in the mailto links)
  * z - dns server error message                 x
  */
 
@@ -571,6 +640,10 @@ errorConvert(char token, ErrorState * err)
 	    memBufPrintf(&mb, "%s", Config.adminEmail);
 	else
 	    p = "[unknown]";
+	break;
+    case 'W':
+	if (Config.adminEmail && Config.onoff.emailErrData)
+	    errorDump(err, &mb);
 	break;
     case 'z':
 	if (err->dnsserver_msg)
