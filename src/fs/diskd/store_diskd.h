@@ -25,7 +25,6 @@ class DiskdFile : public DiskFile
 {
 
 public:
-    virtual void deleteSelf() const;
     void * operator new (size_t);
     void operator delete (void *);
     DiskdFile (char const *path, DiskdIO *);
@@ -139,7 +138,6 @@ class DiskdIO : public UFSStrategy
 public:
     DiskdIO();
     virtual bool shedLoad();
-    virtual void deleteSelf() const;
     virtual void openFailed();
     virtual int load();
     virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;

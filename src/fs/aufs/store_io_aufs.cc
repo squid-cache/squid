@@ -50,12 +50,6 @@ AufsIO::load()
     return loadav;
 }
 
-void
-AufsIO::deleteSelf() const
-{
-    /* do nothing, we use a single instance */
-}
-
 StoreIOState::Pointer
 AufsIO::createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const
 {
@@ -129,9 +123,6 @@ AUFSFile::operator delete (void *address)
     /* And allow the memory to be freed */
     cbdataReferenceDone (t);
 }
-
-void
-AUFSFile::deleteSelf() const {delete this;}
 
 AUFSFile::AUFSFile (char const *aPath, AufsIO *anIO):fd(-1), errorOccured (false), IO(anIO),
         inProgressIOs (0)

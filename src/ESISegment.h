@@ -1,5 +1,5 @@
 /*
- * $Id: ESISegment.h,v 1.2 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESISegment.h,v 1.3 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,7 +49,6 @@ public:
     static void ListTransfer (Pointer &from, Pointer &to);
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
 
     ESISegment();
     ESISegment(ESISegment const &);

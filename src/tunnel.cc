@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.143 2003/07/15 06:50:43 robertc Exp $
+ * $Id: tunnel.cc,v 1.144 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -52,7 +52,6 @@ public:
     class Connection;
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
     static void ReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
     static void ReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
     static void WriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
@@ -159,7 +158,7 @@ sslStateFree(SslStateData * sslState)
     sslState->host = NULL;
     requestUnlink(sslState->request);
     sslState->request = NULL;
-    sslState->deleteSelf();
+    delete sslState;
 }
 
 SslStateData::Connection::~Connection()
@@ -734,12 +733,6 @@ SslStateData::operator delete (void *address)
 {
     SslStateData *t = static_cast<SslStateData *>(address);
     cbdataFree(t);
-}
-
-void
-SslStateData::deleteSelf () const
-{
-    delete this;
 }
 
 void

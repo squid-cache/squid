@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.5 2003/07/12 12:39:56 robertc Exp $
+ * $Id: client_side.h,v 1.6 2003/08/04 22:14:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,7 +50,6 @@ public:
     typedef RefCount<ClientSocketContext> Pointer;
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
     ClientSocketContext();
     ~ClientSocketContext();
     bool startOfOutput() const;
@@ -127,7 +126,6 @@ public:
     typedef RefCount<ConnStateData> Pointer;
     void * operator new (size_t);
     void operator delete (void *);
-    void deleteSelf() const;
 
     ConnStateData();
     ~ConnStateData();

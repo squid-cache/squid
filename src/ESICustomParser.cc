@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.3 2003/07/15 23:12:02 robertc Exp $
+ * $Id: ESICustomParser.cc,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -59,12 +59,6 @@ ESICustomParser::GetTrie()
             ("<!--",4,(void *)ESICOMMENT));
 
     return SearchTrie;
-}
-
-void
-ESICustomParser::deleteSelf() const
-{
-    delete this;
 }
 
 ESICustomParser::ESICustomParser(ESIParserClient *aClient) : theClient (aClient)

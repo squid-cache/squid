@@ -1,5 +1,5 @@
 /*
- * $Id: ESICustomParser.h,v 1.3 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESICustomParser.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,7 +41,6 @@ class ESICustomParser : public ESIParser
 {
 
 public:
-    virtual void deleteSelf() const;
     ESICustomParser(ESIParserClient *);
     ~ESICustomParser();
     /* true on success */

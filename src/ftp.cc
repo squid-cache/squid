@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.350 2003/06/20 01:01:00 robertc Exp $
+ * $Id: ftp.cc,v 1.351 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -136,7 +136,6 @@ class FtpStateData
 public:
     void *operator new (size_t);
     void operator delete (void *);
-    void deleteSelf() const;
     ~FtpStateData();
     StoreEntry *entry;
     request_t *request;
@@ -213,12 +212,6 @@ FtpStateData::operator delete (void *address)
 {
     FtpStateData *t = static_cast<FtpStateData *>(address);
     cbdataFree(t);
-}
-
-void
-FtpStateData::deleteSelf () const
-{
-    delete this;
 }
 
 typedef struct
@@ -359,7 +352,7 @@ static void
 ftpStateFree(int fdnotused, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
-    ftpState->deleteSelf();
+    delete ftpState;
 }
 
 FtpStateData::~FtpStateData()

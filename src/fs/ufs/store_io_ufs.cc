@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.21 2003/07/28 09:27:29 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.22 2003/08/04 22:14:53 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -52,12 +52,6 @@ UfsIO::load()
 {
     /* Return 999 (99.9%) constant load */
     return 999;
-}
-
-void
-UfsIO::deleteSelf() const
-{
-    /* Do nothing, we use a single instance */
 }
 
 StoreIOState::Pointer
@@ -121,9 +115,6 @@ UFSFile::operator delete (void *address)
     /* And allow the memory to be freed */
     cbdataReferenceDone (t);
 }
-
-void
-UFSFile::deleteSelf() const {delete this;}
 
 UFSFile::UFSFile (char const *aPath) : fd (-1), closed (true), error_(false)
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.cc,v 1.3 2003/05/22 11:14:43 robertc Exp $
+ * $Id: DelayTagged.cc,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -56,12 +56,6 @@ DelayTagged::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (DelayTagged);
     ::operator delete (address);
-}
-
-void
-DelayTagged::deleteSelf() const
-{
-    delete this;
 }
 
 DelayTagged::DelayTagged()
@@ -173,12 +167,6 @@ DelayTagged::Id::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (Id);
     ::operator delete (address);
-}
-
-void
-DelayTagged::Id::deleteSelf() const
-{
-    delete this;
 }
 
 void *

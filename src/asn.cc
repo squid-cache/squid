@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.95 2003/07/14 14:15:58 robertc Exp $
+ * $Id: asn.cc,v 1.96 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -497,10 +497,10 @@ destroyRadixNodeInfo(as_info * e_info)
     while (data) {
         prev = data;
         data = data->next;
-        prev->deleteSelf();
+        delete prev;
     }
 
-    data->deleteSelf();
+    delete data;
 }
 
 static int
@@ -567,16 +567,10 @@ ACLASN::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLASN::deleteSelf() const
-{
-    delete this;
-}
-
 ACLASN::~ACLASN()
 {
     if (data)
-        data->deleteSelf();
+        delete data;
 }
 
 bool

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStringData.cc,v 1.2 2003/07/14 08:21:56 robertc Exp $
+ * $Id: ACLStringData.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -56,13 +56,6 @@ ACLStringData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
 }
-
-void
-ACLStringData::deleteSelf() const
-{
-    delete this;
-}
-
 
 ACLStringData::ACLStringData() : values (NULL)
 {}

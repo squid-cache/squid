@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.61 2003/08/03 10:05:20 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.62 2003/08/04 22:14:53 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -196,7 +196,7 @@ UFSSwapDir::~UFSSwapDir()
     filemapFreeMemory(map);
 
     if (IO)
-        IO->deleteSelf();
+        delete IO;
 
     IO = NULL;
 }

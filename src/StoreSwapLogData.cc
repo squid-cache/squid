@@ -1,5 +1,5 @@
 /*
- * $Id: StoreSwapLogData.cc,v 1.1 2003/07/15 11:33:21 robertc Exp $
+ * $Id: StoreSwapLogData.cc,v 1.2 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -57,10 +57,4 @@ void
 StoreSwapLogData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-StoreSwapLogData::deleteSelf() const
-{
-    delete this;
 }

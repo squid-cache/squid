@@ -56,12 +56,6 @@ ACLSourceIP::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLSourceIP::deleteSelf() const
-{
-    delete this;
-}
-
 char const *
 ACLSourceIP::typeString() const
 {

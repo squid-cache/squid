@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.15 2003/07/14 14:16:00 robertc Exp $
+ * $Id: client_side_request.h,v 1.16 2003/08/04 22:14:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,6 @@ class ClientHttpRequest
 public:
     void *operator new (size_t);
     void operator delete (void *);
-    void deleteSelf() const;
 
     ClientHttpRequest();
     ~ClientHttpRequest();

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACLEntry.h,v 1.4 2003/07/09 14:14:57 hno Exp $
+ * $Id: ExternalACLEntry.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -77,7 +77,6 @@ class ExternalACLEntry: public hash_link
 public:
     void *operator new (size_t bytesToAllocate);
     void operator delete (void *address);
-    void deleteSelf() const;
 
     ExternalACLEntry();
     ~ExternalACLEntry();

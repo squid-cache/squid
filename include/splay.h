@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.21 2003/06/26 12:51:57 robertc Exp $
+ * $Id: splay.h,v 1.22 2003/08/04 22:14:37 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -42,7 +42,7 @@ public:
     typedef int SPLAYCMP(Value const &a, Value const &b);
     typedef void SPLAYFREE(Value &);
     typedef void SPLAYWALKEE(Value const & nodedata, void *state);
-    static void DefaultFree (Value &aValue) {aValue->deleteSelf();}
+    static void DefaultFree (Value &aValue) {delete aValue;}
 
     Value data;
     mutable SplayNode<V> *left;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.51 2003/07/14 08:21:56 robertc Exp $
+ * $Id: external_acl.cc,v 1.52 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -882,7 +882,7 @@ external_acl_cache_delete(external_acl * def, external_acl_entry * entry)
     hash_remove_link(def->cache, entry);
     dlinkDelete(&entry->lru, &def->lru_list);
     def->cache_entries -= 1;
-    entry->deleteSelf();
+    delete entry;
 }
 
 /******************************************************************
@@ -1248,12 +1248,6 @@ void
 ACLExternal::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-ACLExternal::deleteSelf() const
-{
-    delete this;
 }
 
 char const *

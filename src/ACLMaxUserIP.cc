@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.3 2003/07/14 08:21:57 robertc Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.4 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -71,12 +71,6 @@ void
 ACLMaxUserIP::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-ACLMaxUserIP::deleteSelf() const
-{
-    delete this;
 }
 
 ACLMaxUserIP::~ACLMaxUserIP()

@@ -28,7 +28,6 @@ class digest_user_h
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
 
     digest_user_h();
     ~digest_user_h();
@@ -53,7 +52,6 @@ public:
     enum CredentialsState {Unchecked, Ok, Pending, Failed};
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
 
     digest_request_h();
     digest_request_h(auth_user_t *);

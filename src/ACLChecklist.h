@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.14 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.15 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -83,7 +83,6 @@ class NullState : public AsyncState
 
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
 
     ACLChecklist();
     ~ACLChecklist();

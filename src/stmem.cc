@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.79 2003/06/26 12:51:57 robertc Exp $
+ * $Id: stmem.cc,v 1.80 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -75,7 +75,7 @@ void
 mem_hdr::unlink(mem_node *aNode)
 {
     nodes.remove (aNode, NodeCompare);
-    aNode->deleteSelf();
+    delete aNode;
 }
 
 int

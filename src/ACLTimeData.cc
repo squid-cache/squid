@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.3 2003/07/14 08:21:57 robertc Exp $
+ * $Id: ACLTimeData.cc,v 1.4 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -58,12 +58,6 @@ ACLTimeData::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLTimeData::deleteSelf() const
-{
-    delete this;
-}
-
 ACLTimeData::ACLTimeData () : weekbits (0), start (0), stop (0), next (NULL) {}
 
 ACLTimeData::ACLTimeData(ACLTimeData const &old) : weekbits(old.weekbits), start (old.start), stop (old.stop), next (NULL)
@@ -89,7 +83,7 @@ ACLTimeData::operator=(ACLTimeData const &old)
 ACLTimeData::~ACLTimeData()
 {
     if (next)
-        next->deleteSelf();
+        delete next;
 }
 
 bool
@@ -224,7 +218,7 @@ ACLTimeData::parse()
                 debug(28, 0) ("aclParseTimeSpec: IGNORING Bad time range\n");
 
                 if (q != this)
-                    q->deleteSelf();
+                    delete q;
 
                 return;
             }
@@ -238,7 +232,7 @@ ACLTimeData::parse()
                 debug(28, 0) ("aclParseTimeSpec: IGNORING Reversed time range\n");
 
                 if (q != this)
-                    q->deleteSelf();
+                    delete q;
 
                 return;
             }

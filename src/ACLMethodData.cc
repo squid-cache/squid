@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.2 2003/07/14 08:21:57 robertc Exp $
+ * $Id: ACLMethodData.cc,v 1.3 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -57,13 +57,6 @@ ACLMethodData::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLMethodData::deleteSelf() const
-{
-    delete this;
-}
-
-
 ACLMethodData::ACLMethodData() : values (NULL)
 {}
 
@@ -75,7 +68,7 @@ ACLMethodData::ACLMethodData(ACLMethodData const &old) : values (NULL)
 ACLMethodData::~ACLMethodData()
 {
     if (values)
-        values->deleteSelf();
+        delete values;
 }
 
 bool

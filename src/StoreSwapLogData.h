@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreSwapLogData.h,v 1.1 2003/07/15 11:33:21 robertc Exp $
+ * $Id: StoreSwapLogData.h,v 1.2 2003/08/04 22:14:41 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -51,7 +51,6 @@ class StoreSwapLogData
 public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
     StoreSwapLogData();
     char op;
     sfileno swap_filen;

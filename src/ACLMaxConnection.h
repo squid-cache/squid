@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMaxConnection.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLMaxConnection.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,7 +44,6 @@ class ACLMaxConnection : public ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ACLMaxConnection(char const *);
     ACLMaxConnection(ACLMaxConnection const &);

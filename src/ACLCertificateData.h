@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLCertificateData.h,v 1.4 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLCertificateData.h,v 1.5 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,7 +47,6 @@ class ACLCertificateData : public ACLData<SSL *>
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ACLCertificateData(SSLGETATTRIBUTE *);
     ACLCertificateData(ACLCertificateData const &);

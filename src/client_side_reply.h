@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.4 2003/06/20 01:01:00 robertc Exp $
+ * $Id: client_side_reply.h,v 1.5 2003/08/04 22:14:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,7 +49,6 @@ class clientReplyContext : public RefCountable, public StoreClient
 public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
     static STCB CacheHit;
     static STCB HandleIMSReply;
     static STCB SendMoreData;

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.5 2003/07/14 08:21:56 robertc Exp $
+ * $Id: ACLCertificateData.cc,v 1.6 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -57,13 +57,6 @@ ACLCertificateData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
 }
-
-void
-ACLCertificateData::deleteSelf() const
-{
-    delete this;
-}
-
 
 ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (), sslAttributeCall (sslStrategy)
 {}

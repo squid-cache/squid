@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.2 2003/07/23 10:41:20 robertc Exp $
+ * $Id: ESIInclude.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -251,12 +251,6 @@ ESIStreamContext::operator delete (void *address)
     cbdataReferenceDone (address);
 }
 
-void
-ESIStreamContext::deleteSelf() const
-{
-    delete this;
-}
-
 ESIStreamContext *
 ESIStreamContextNew (ESIIncludePtr include)
 {
@@ -299,12 +293,6 @@ void
 ESIInclude::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-ESIInclude::deleteSelf() const
-{
-    delete this;
 }
 
 ESIElement::Pointer

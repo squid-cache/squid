@@ -1,5 +1,5 @@
 /*
- * $Id: ESIExpatParser.h,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESIExpatParser.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,7 +40,6 @@ class ESIExpatParser : public ESIParser
 {
 
 public:
-    virtual void deleteSelf() const;
     ESIExpatParser(ESIParserClient *);
     ~ESIExpatParser();
     /* true on success */

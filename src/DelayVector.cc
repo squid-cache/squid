@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.8 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayVector.cc,v 1.9 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -56,12 +56,6 @@ DelayVector::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (DelayVector);
     ::operator delete (address);
-}
-
-void
-DelayVector::deleteSelf() const
-{
-    delete this;
 }
 
 DelayVector::DelayVector()
@@ -142,12 +136,6 @@ DelayVector::Id::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (Id);
     ::operator delete (address);
-}
-
-void
-DelayVector::Id::deleteSelf() const
-{
-    delete this;
 }
 
 DelayVector::Id::Id(DelayVector::Pointer aDelayVector, CompositeSelectionDetails &details) : theVector(aDelayVector)

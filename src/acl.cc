@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.309 2003/07/16 05:27:17 robertc Exp $
+ * $Id: acl.cc,v 1.310 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -149,7 +149,7 @@ ACL::ParseAclLine(acl ** head)
     if (!A->valid()) {
         debug(28, 0) ("aclParseAclLine: IGNORING invalid ACL: %s\n",
                       A->cfgline);
-        A->deleteSelf();
+        delete A;
         /* Do we need this? */
         A = NULL;
         return;
@@ -359,7 +359,7 @@ aclParseAclList(acl_list ** head)
             debug(28, 0) ("%s line %d: %s\n",
                           cfg_filename, config_lineno, config_input_line);
             debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
-            L->deleteSelf();
+            delete L;
             continue;
         }
 
@@ -559,7 +559,7 @@ aclDestroyAcls(acl ** head)
 
     for (acl *a = *head; a; a = next) {
         next = a->next;
-        a->deleteSelf();
+        delete a;
     }
 
     *head = NULL;
@@ -578,7 +578,7 @@ aclDestroyAclList(acl_list ** head)
 
     for (l = *head; l; l = *head) {
         *head = l->next;
-        l->deleteSelf();
+        delete l;
     }
 }
 
@@ -687,12 +687,6 @@ ACLList::operator delete (void *address)
     memPoolFree (Pool, address);
 }
 
-void
-ACLList::deleteSelf() const
-{
-    delete this;
-}
-
 CBDATA_CLASS_INIT(acl_access);
 
 void *
@@ -708,12 +702,6 @@ acl_access::operator delete (void *address)
 {
     acl_access *t = static_cast<acl_access *>(address);
     cbdataFree(t);
-}
-
-void
-acl_access::deleteSelf () const
-{
-    delete this;
 }
 
 ACL::Prototype::Prototype() : prototype (NULL), typeString (NULL) {}

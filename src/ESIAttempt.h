@@ -1,5 +1,5 @@
 /*
- * $Id: ESIAttempt.h,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESIAttempt.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -46,7 +46,6 @@ struct esiAttempt : public esiSequence
 {
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
-    void deleteSelf() const;
     esiAttempt(esiTreeParentPtr aParent) : esiSequence (aParent) {}}
 
 ;

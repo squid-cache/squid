@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.651 2003/07/15 06:50:41 robertc Exp $
+ * $Id: client_side.cc,v 1.652 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -110,12 +110,6 @@ void
 ClientSocketContext::operator delete (void *address)
 {
     cbdataFree (address);
-}
-
-void
-ClientSocketContext::deleteSelf() const
-{
-    delete this;
 }
 
 /* Local functions */
@@ -1088,7 +1082,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     if (range_err) {
         /* XXX Why do we do this here, and not when parsing the request ? */
         debug(33, 3) ("clientBuildRangeHeader: will not do ranges: %s.\n", range_err);
-        http->request->range->deleteSelf();
+        delete http->request->range;
         http->request->range = NULL;
     } else {
         /* XXX: TODO: Review, this unconditional set may be wrong. - TODO: review. */
@@ -3069,12 +3063,6 @@ ConnStateData::operator delete (void *address)
 {
     ConnStateData *t = static_cast<ConnStateData *>(address);
     cbdataFree(t);
-}
-
-void
-ConnStateData::deleteSelf () const
-{
-    delete this;
 }
 
 ConnStateData::ConnStateData() : transparent_ (false), reading_ (false), openReference (this)

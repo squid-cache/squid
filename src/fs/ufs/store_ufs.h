@@ -15,7 +15,6 @@ class UFSFile : public DiskFile
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     UFSFile (char const *path);
     ~UFSFile();
     virtual void open (int, mode_t, IORequestor::Pointer);
@@ -56,7 +55,6 @@ class UfsIO : public UFSStrategy
 public:
     virtual bool shedLoad();
     virtual int load();
-    virtual void deleteSelf() const;
     virtual StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
     virtual DiskFile::Pointer newFile (char const *path);
     virtual void unlinkFile (char const *);

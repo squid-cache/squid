@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayPool.cc,v 1.4 2003/03/04 01:40:25 robertc Exp $
+ * $Id: DelayPool.cc,v 1.5 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -99,7 +99,7 @@ DelayPool::createPool(u_char delay_class)
 void
 DelayPool::freeData()
 {
-    pool->deleteSelf();
+    delete pool;
     pool = NULL;
 }
 

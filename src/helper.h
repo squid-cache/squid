@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.1 2003/07/15 11:33:21 robertc Exp $
+ * $Id: helper.h,v 1.2 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -44,7 +44,6 @@ class helper_request
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
     char *buf;
     HLPCB *callback;
     void *data;
@@ -61,7 +60,6 @@ class helper_stateful_request
 public:
     void *operator new(size_t);
     void operator delete (void *);
-    void deleteSelf() const;
     char *buf;
     HLPSCB *callback;
     int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available for deferred requests.*/

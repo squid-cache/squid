@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpatParser.cc,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id: ESIExpatParser.cc,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -35,12 +35,6 @@
 
 #include "squid.h"
 #include "ESIExpatParser.h"
-
-void
-ESIExpatParser::deleteSelf() const
-{
-    delete this;
-}
 
 ESIExpatParser::ESIExpatParser(ESIParserClient *aClient) : theClient (aClient)
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.9 2003/07/06 21:50:55 hno Exp $
+ * $Id: ACL.h,v 1.10 2003/08/04 22:14:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,7 +61,6 @@ class ACL
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const = 0;
 
     static ACL *Factory (char const *);
     static void ParseAclLine(acl ** head);
@@ -122,7 +121,6 @@ class acl_access
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     bool containsPURGE() const;
     allow_t allow;
     acl_list *aclList;
@@ -139,7 +137,6 @@ class ACLList
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     ACLList();
     void negated(bool isNegated);

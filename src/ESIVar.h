@@ -1,5 +1,5 @@
 /*
- * $Id: ESIVar.h,v 1.1 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ESIVar.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -48,7 +48,6 @@ class ESIVar:public esiSequence
 public:
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
-    void deleteSelf() const;
     ESIVar(esiTreeParentPtr aParent) : esiSequence (aParent)
     {
         flags.dovars = 1;

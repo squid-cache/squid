@@ -63,8 +63,6 @@ class CossState : public storeIOState
 {
 
 public:
-    virtual void deleteSelf() const {delete this;}
-
     void * operator new (size_t);
     void operator delete (void *);
     CossState(CossSwapDir *);

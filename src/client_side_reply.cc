@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.62 2003/07/23 11:21:37 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.63 2003/08/04 22:14:41 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -153,12 +153,6 @@ clientReplyContext::operator delete (void *address)
 {
     clientReplyContext * tmp = (clientReplyContext *)address;
     cbdataFree (tmp);
-}
-
-void
-clientReplyContext::deleteSelf() const
-{
-    delete this;
 }
 
 void

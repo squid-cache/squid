@@ -1,5 +1,5 @@
 /*
- * $Id: ESIAssign.h,v 1.1 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ESIAssign.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -66,7 +66,6 @@ class ESIAssign : public ESIElement
 public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    void deleteSelf() const;
     ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
     ESIAssign (ESIAssign const &);
     ESIAssign &operator=(ESIAssign const &);

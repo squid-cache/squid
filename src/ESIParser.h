@@ -1,5 +1,5 @@
 /*
- * $Id: ESIParser.h,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id: ESIParser.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,7 +50,6 @@ public:
     typedef RefCount<ESIParser> Pointer;
     static Pointer NewParser(ESIParserClient *aClient);
     static char *Type;
-    virtual void deleteSelf() const =0;
     /* true on success */
     virtual bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream) = 0;
     virtual size_t lineNumber() const =0;

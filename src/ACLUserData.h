@@ -45,7 +45,6 @@ class ACLUserData : public ACLData<char const *>
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     virtual ~ACLUserData();
     bool match(char const *user);

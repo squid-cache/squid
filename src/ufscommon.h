@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.7 2003/07/22 15:23:03 robertc Exp $
+ * $Id: ufscommon.h,v 1.8 2003/08/04 22:14:42 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -151,7 +151,6 @@ class DiskFile : public RefCountable
 
 public:
     typedef RefCount<DiskFile> Pointer;
-    virtual void deleteSelf() const = 0;
     virtual void open (int, mode_t, IORequestor::Pointer) = 0;
     virtual void create (int, mode_t, IORequestor::Pointer) = 0;
     virtual void read(char *, off_t, size_t) = 0;
@@ -176,7 +175,6 @@ class UFSStrategy
 
 public:
     virtual bool shedLoad() = 0;
-    virtual void deleteSelf() const = 0;
     virtual void openFailed(){}
 
     virtual int load(){return -1;}
@@ -259,9 +257,6 @@ public:
 
     operator C *() {return const_cast<C *>(theInstance);}
 
-    // This will go when we remove the deleteSelf idiom
-    virtual void deleteSelf() const {delete const_cast<InstanceToSingletonAdapter*>(this);}
-
 private:
     C const *theInstance;
 };
@@ -272,8 +267,6 @@ class UFSStoreState : public storeIOState, public IORequestor
 {
 
 public:
-    virtual void deleteSelf() const {delete this;}
-
     void * operator new (size_t);
     void operator delete (void *);
     UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_);
@@ -354,7 +347,6 @@ class RebuildState : public RefCountable
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    void deleteSelf() const;
     static EVH RebuildFromDirectory;
     static EVH RebuildFromSwapLog;
 

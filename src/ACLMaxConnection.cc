@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxConnection.cc,v 1.2 2003/07/14 08:21:56 robertc Exp $
+ * $Id: ACLMaxConnection.cc,v 1.3 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -70,12 +70,6 @@ void
 ACLMaxConnection::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-ACLMaxConnection::deleteSelf() const
-{
-    delete this;
 }
 
 ACLMaxConnection::~ACLMaxConnection()

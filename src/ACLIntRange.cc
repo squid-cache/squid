@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLIntRange.cc,v 1.2 2003/08/04 22:14:38 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -97,12 +97,6 @@ ACLIntRange::match(int i)
     return false;
 }
 
-void
-ACLIntRange::deleteSelf() const
-{
-    delete this;
-}
-
 ACLData<int> *
 ACLIntRange::clone() const
 {
@@ -115,7 +109,7 @@ ACLIntRange::clone() const
 ACLIntRange::~ACLIntRange ()
 {
     if (ranges)
-        ranges->deleteSelf();
+        delete ranges;
 }
 
 wordlist *

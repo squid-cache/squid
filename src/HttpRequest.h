@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.5 2003/07/15 11:33:21 robertc Exp $
+ * $Id: HttpRequest.h,v 1.6 2003/08/04 22:14:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -58,7 +58,6 @@ class HttpRequest
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
     HttpRequest();
     virtual ~HttpRequest() {}
 

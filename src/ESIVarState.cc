@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.2 2003/07/23 10:41:20 robertc Exp $
+ * $Id: ESIVarState.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -200,12 +200,6 @@ void
 ESIVarState::operator delete (void *address)
 {
     cbdataFree (address);
-}
-
-void
-ESIVarState::deleteSelf() const
-{
-    delete this;
 }
 
 char *

@@ -56,7 +56,6 @@ class ACLDestinationIP : public ACLIP
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    virtual void deleteSelf() const;
 
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);

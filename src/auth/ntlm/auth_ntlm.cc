@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.35 2003/08/03 08:09:30 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.36 2003/08/04 22:14:53 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -1253,10 +1253,4 @@ void
 ntlm_request_t::operator delete (void *address)
 {
     memPoolFree (Pool, address);
-}
-
-void
-ntlm_request_t::deleteSelf() const
-{
-    delete this;
 }

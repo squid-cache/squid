@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.97 2003/07/16 20:22:26 wessels Exp $
+ * $Id: peer_digest.cc,v 1.98 2003/08/04 22:14:42 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -122,12 +122,6 @@ PeerDigest::operator delete (void *address)
     cbdataFree(t);
 }
 
-void
-PeerDigest::deleteSelf () const
-{
-    delete this;
-}
-
 /* allocate new peer digest, call Init, and lock everything */
 PeerDigest *
 peerDigestCreate(peer * p)
@@ -156,7 +150,7 @@ peerDigestDestroy(PeerDigest * pd)
 
     peerDigestClean(pd);
 
-    pd->deleteSelf();
+    delete pd;
 }
 
 /* called by peer to indicate that somebody actually needs this digest */
