@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.35 2001/01/12 00:37:15 wessels Exp $
+ * $Id: cbdata.cc,v 1.36 2001/01/31 21:44:42 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -71,7 +71,7 @@ static int cbdataCount = 0;
 typedef struct _cbdata {
     int valid;
     int locks;
-    CBDUNL *unlock_func;
+    CBDUNL *free_func;
     int type;			/* move to CBDATA_DEBUG with type argument to cbdataFree */
 #if CBDATA_DEBUG
     const char *file;
@@ -151,16 +151,16 @@ cbdataInit(void)
 
 void *
 #if CBDATA_DEBUG
-cbdataInternalAllocDbg(cbdata_type type, CBDUNL * unlock_func, const char *file, int line)
+cbdataInternalAllocDbg(cbdata_type type, CBDUNL * free_func, const char *file, int line)
 #else
-cbdataInternalAlloc(cbdata_type type, CBDUNL * unlock_func)
+cbdataInternalAlloc(cbdata_type type, CBDUNL * free_func)
 #endif
 {
     cbdata *p;
     assert(type > 0 && type < cbdata_types);
     p = memPoolAlloc(cbdata_memory_pool[type]);
     p->type = type;
-    p->unlock_func = unlock_func;
+    p->free_func = unlock_func;
     p->valid = 1;
     p->locks = 0;
 #if CBDATA_DEBUG
@@ -189,8 +189,8 @@ cbdataFree(void *p)
     }
     cbdataCount--;
     debug(45, 3) ("cbdataFree: Freeing %p\n", p);
-    if (c->unlock_func)
-	c->unlock_func((void *) p);
+    if (c->free_func)
+	c->free_func((void *) p);
     memPoolFree(cbdata_memory_pool[c->type], c);
 }
 
@@ -239,8 +239,8 @@ cbdataUnlock(const void *p)
 	return;
     cbdataCount--;
     debug(45, 3) ("cbdataUnlock: Freeing %p\n", p);
-    if (c->unlock_func)
-	c->unlock_func((void *) p);
+    if (c->free_func)
+	c->free_func((void *) p);
     memPoolFree(cbdata_memory_pool[c->type], c);
 }
 
