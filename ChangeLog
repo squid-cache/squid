@@ -1,3 +1,12 @@
+Changes to squid-1.1.beta27 (December 4, 1996):
+
+	- Fixed wrong number of args to debug().
+	- Make failure to start any dnsservers fatal.
+	- Fixed dnsGetFirstAvailable() to skip dead dnsservers.
+	- Fixed loop detection for two squids on the same host (Mark
+	  Treacy)
+	- Fixed strcasecmp bug which broke some POST requests.
+
 Changes to squid-1.1.beta26 (December 3, 1996):
 
 	- Another 'rm -rf' fix for store.c (Bernd Ernesti).
