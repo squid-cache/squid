@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.143 1997/04/30 03:12:10 wessels Exp $
+ * $Id: main.cc,v 1.144 1997/05/15 01:06:58 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -106,7 +106,8 @@
 #include "squid.h"
 
 time_t squid_starttime = 0;
-int theHttpConnection = -1;
+int HttpSockets[MAXHTTPPORTS];
+int NHttpSockets = 0;
 int theInIcpConnection = -1;
 int theOutIcpConnection = -1;
 int vizSock = -1;
@@ -334,26 +335,26 @@ serverConnectionsOpen(void)
     u_short port;
     int len;
     int x;
-    enter_suid();
-    theHttpConnection = comm_open(SOCK_STREAM,
-	0,
-	Config.Addrs.tcp_incoming,
-	Config.Port.http,
-	COMM_NONBLOCKING,
-	"HTTP Port");
-    leave_suid();
-    if (theHttpConnection < 0) {
-	fatal("Cannot open HTTP Port");
+    int fd;
+    for (x = 0; x< Config.Port.n_http; x++) {
+        enter_suid();
+        fd = comm_open(SOCK_STREAM,
+	    0,
+	    Config.Addrs.tcp_incoming,
+	    Config.Port.http[x],
+	    COMM_NONBLOCKING,
+	    "HTTP Socket");
+        leave_suid();
+	if (fd < 0)
+		continue;
+        comm_listen(fd);
+        commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
+        debug(1, 1, "Accepting HTTP connections on port %d, FD %d.\n",
+    	    (int) Config.Port.http[x], fd);
+	HttpSockets[NHttpSockets++] = fd;
     }
-    fd_note(theHttpConnection, "HTTP socket");
-    comm_listen(theHttpConnection);
-    commSetSelect(theHttpConnection,
-	COMM_SELECT_READ,
-	asciiHandleConn,
-	NULL, 0);
-    debug(1, 1, "Accepting HTTP connections on FD %d.\n",
-	theHttpConnection);
-
+    if (NHttpSockets < 1)
+	fatal("Cannot open HTTP Port");
     if (!httpd_accel_mode || Config.Accel.withProxy) {
 	if ((port = Config.Port.icp) > (u_short) 0) {
 	    enter_suid();
@@ -465,15 +466,18 @@ serverConnectionsClose(void)
 {
     /* NOTE, this function will be called repeatedly while shutdown
      * is pending */
-    if (theHttpConnection >= 0) {
-	debug(1, 1, "FD %d Closing HTTP connection\n",
-	    theHttpConnection);
-	comm_close(theHttpConnection);
-	commSetSelect(theHttpConnection,
-	    COMM_SELECT_READ,
-	    NULL,
-	    NULL, 0);
-	theHttpConnection = -1;
+    int i;
+    for (i=0; i<NHttpSockets; i++) {
+        if (HttpSockets[i] >= 0) {
+	    debug(1, 1, "FD %d Closing HTTP connection\n", HttpSockets[i]);
+	    comm_close(HttpSockets[i]);
+	    commSetSelect(HttpSockets[i],
+	        COMM_SELECT_READ,
+	        NULL,
+	        NULL, 0);
+	    HttpSockets[i] = -1;
+	}
+	NHttpSockets = 0;
     }
     if (theInIcpConnection >= 0) {
 	/* NOTE, don't close outgoing ICP connection, we need to write to
@@ -540,7 +544,7 @@ mainInitialize(void)
 	fatal("Don't run Squid as root, set 'cache_effective_user'!");
     }
     if (httpPortNumOverride != 1)
-	Config.Port.http = (u_short) httpPortNumOverride;
+	Config.Port.http[0] = (u_short) httpPortNumOverride;
     if (icpPortNumOverride != 1)
 	Config.Port.icp = (u_short) icpPortNumOverride;
 
@@ -585,6 +589,7 @@ mainInitialize(void)
 	}
 	/* after this point we want to see the mallinfo() output */
 	do_mallinfo = 1;
+	mimeInit(Config.mimeTablePathname);
     }
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
@@ -702,7 +707,11 @@ main(int argc, char **argv)
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
 	    loop_delay = 0;
+#if HAVE_POLL
+	switch (comm_poll(loop_delay)) {
+#else
 	switch (comm_select(loop_delay)) {
+#endif
 	case COMM_OK:
 	    errcount = 0;	/* reset if successful */
 	    break;

@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.27 1996/12/18 03:50:24 wessels Exp $
+ * $Id: mime.cc,v 1.28 1997/05/15 01:06:59 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -104,9 +104,25 @@
  */
 
 #include "squid.h"
-#include "mime_table.h"
 
 #define GET_HDR_SZ 1024
+
+typedef struct _mime_entry {
+    char *pattern;
+    regex_t compiled_pattern;
+    char *icon;
+    char *content_type;
+    char *content_encoding;
+    char transfer_mode;
+    struct _mime_entry *next;
+} mimeEntry;
+
+static mimeEntry *MimeTable = NULL;
+static mimeEntry **MimeTableTail = NULL;
+
+static const char *const w_space = " \t\n\r";
+static const char *const dash_str = "-";
+
 
 char *
 mime_get_header(const char *mime, const char *name)
@@ -172,49 +188,6 @@ mime_headers_end(const char *mime)
     return (char *) end;
 }
 
-#ifdef OLD_CODE
-int
-mime_headers_size(const char *mime)
-{
-    const char *end;
-    end = mime_headers_end(mime);
-    if (end)
-	return end - mime;
-    else
-	return 0;
-}
-#endif
-
-const ext_table_entry *
-mime_ext_to_type(const char *extension)
-{
-    int i;
-    int low;
-    int high;
-    int comp;
-    LOCAL_ARRAY(char, ext, 16);
-    char *cp = NULL;
-
-    if (!extension || strlen(extension) >= (sizeof(ext) - 1))
-	return NULL;
-    strcpy(ext, extension);
-    for (cp = ext; *cp; cp++)
-	if (isupper(*cp))
-	    *cp = tolower(*cp);
-    low = 0;
-    high = EXT_TABLE_LEN - 1;
-    while (low <= high) {
-	i = (low + high) / 2;
-	if ((comp = strcmp(ext, ext_mime_table[i].name)) == 0)
-	    return &ext_mime_table[i];
-	if (comp > 0)
-	    low = i + 1;
-	else
-	    high = i - 1;
-    }
-    return NULL;
-}
-
 /*
  *  mk_mime_hdr - Generates a MIME header using the given parameters.
  *  You can call mk_mime_hdr with a 'lmt = time(NULL) - ttl' to
@@ -257,4 +230,146 @@ mk_mime_hdr(char *result, const char *type, int size, time_t ttl, time_t lmt)
 	type,
 	content_length);
     return 0;
+}
+
+
+char *
+mimeGetIcon(const char *fn)
+{
+    mimeEntry *m;
+    for (m = MimeTable; m; m = m->next) {
+	if (m->icon == NULL)
+	    continue;
+	if (regexec(&m->compiled_pattern, fn, 0, 0, 0) == 0)
+	    break;
+    }
+    if (m == NULL)
+	return NULL;
+    if (!strcmp(m->icon, dash_str))
+	return NULL;
+    return m->icon;
+}
+
+char *
+mimeGetContentType(const char *fn)
+{
+    mimeEntry *m;
+    char *name = xstrdup(fn);
+    char *t;
+    if (mimeGetContentEncoding(name)) {
+	/* Assume we matched /\.\w$/ and cut off the last extension */
+	if ((t = strrchr(name, '.')))
+	    *t = '\0';
+    }
+    for (m = MimeTable; m; m = m->next) {
+	if (m->content_type == NULL)
+	    continue;
+	if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
+	    break;
+    }
+    xfree(name);
+    if (m == NULL)
+	return NULL;
+    if (!strcmp(m->content_type, dash_str))
+	return NULL;
+    return m->content_type;
+}
+
+char *
+mimeGetContentEncoding(const char *fn)
+{
+    mimeEntry *m;
+    for (m = MimeTable; m; m = m->next) {
+	if (m->content_encoding == NULL)
+	    continue;
+	if (regexec(&m->compiled_pattern, fn, 0, 0, 0) == 0)
+	    break;
+    }
+    if (m == NULL)
+	return NULL;
+    if (!strcmp(m->content_encoding, dash_str))
+	return NULL;
+    return m->content_encoding;
+}
+
+char
+mimeGetTransferMode(const char *fn)
+{
+    mimeEntry *m;
+    for (m = MimeTable; m; m = m->next) {
+	if (regexec(&m->compiled_pattern, fn, 0, 0, 0) == 0)
+	    break;
+    }
+    return m ? m->transfer_mode : 'I';
+}
+
+void
+mimeInit(char *filename)
+{
+    FILE *fp;
+    char buf[BUFSIZ];
+    char chopbuf[BUFSIZ];
+    char *t;
+    char *pattern;
+    char *icon;
+    char *type;
+    char *encoding;
+    char *mode;
+    regex_t re;
+    mimeEntry *m;
+    int re_flags = REG_EXTENDED | REG_NOSUB | REG_ICASE;
+    if (filename == NULL)
+	return;
+    if ((fp = fopen(filename, "r")) == NULL) {
+	debug(50, 1, "mimeInit: %s: %s\n", filename, xstrerror());
+	return;
+    }
+    if (MimeTableTail == NULL)
+	MimeTableTail = &MimeTable;
+    while (fgets(buf, BUFSIZ, fp)) {
+	if ((t = strchr(buf, '#')))
+	    *t = '\0';
+	if (buf[0] == '\0')
+	    continue;
+	xstrncpy(chopbuf, buf, BUFSIZ);
+	if ((pattern = strtok(chopbuf, w_space)) == NULL) {
+	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    continue;
+	}
+	if ((type = strtok(NULL, w_space)) == NULL) {
+	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    continue;
+	}
+	if ((icon = strtok(NULL, w_space)) == NULL) {
+	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    continue;
+	}
+	if ((encoding = strtok(NULL, w_space)) == NULL) {
+	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    continue;
+	}
+	if ((mode = strtok(NULL, w_space)) == NULL) {
+	    debug(25, 1, "mimeInit: parse error: '%s'\n", buf);
+	    continue;
+	}
+	if (regcomp(&re, pattern, re_flags) != 0) {
+	    debug(25, 1, "mimeInit: regcomp error: '%s'\n", buf);
+	    continue;
+	}
+	m = xcalloc(1, sizeof(mimeEntry));
+	m->pattern = xstrdup(pattern);
+	m->content_type = xstrdup(type);
+	m->icon = xstrdup(icon);
+	m->content_encoding = xstrdup(encoding);
+	m->compiled_pattern = re;
+	if (!strcasecmp(mode, "ascii"))
+	    m->transfer_mode = 'A';
+	else if (!strcasecmp(mode, "text"))
+	    m->transfer_mode = 'A';
+	else
+	    m->transfer_mode = 'I';
+	debug(25, 5, "mimeInit: added '%s'\n", buf);
+	*MimeTableTail = m;
+	MimeTableTail = &m->next;
+    }
 }

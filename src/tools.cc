@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.104 1997/05/05 03:43:50 wessels Exp $
+ * $Id: tools.cc,v 1.105 1997/05/15 01:07:04 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -137,9 +137,12 @@ int gethostname _PARAMS((char *, int));
 static void
 releaseServerSockets(void)
 {
+    int i;
     /* Release the main ports as early as possible */
-    if (theHttpConnection >= 0)
-	(void) close(theHttpConnection);
+    for (i = 0; i < NHttpSockets; i++) {
+	if (HttpSockets[i] >= 0)
+	    (void) close(HttpSockets[i]);
+    }
     if (theInIcpConnection >= 0)
 	(void) close(theInIcpConnection);
     if (theOutIcpConnection >= 0 && theOutIcpConnection != theInIcpConnection)

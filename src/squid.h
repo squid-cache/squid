@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.110 1997/05/14 21:07:22 wessels Exp $
+ * $Id: squid.h,v 1.111 1997/05/15 01:07:02 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -162,12 +162,8 @@
 #include <getopt.h>
 #endif
 
-#if defined(USE_POLL) && HAVE_POLL
 #if HAVE_POLL_H
 #include <poll.h>
-#endif /* HAVE_POLL_H */
-#else
-#undef USE_POLL
 #endif
 
 #ifdef __STDC__
@@ -319,7 +315,8 @@ extern void shut_down _PARAMS((int));
 
 extern time_t squid_starttime;	/* main.c */
 extern int do_reuse;		/* main.c */
-extern int theHttpConnection;	/* main.c */
+extern int HttpSockets[];	/* main.c */
+extern int NHttpSockets;	/* main.c */
 extern int theInIcpConnection;	/* main.c */
 extern int theOutIcpConnection;	/* main.c */
 extern int vizSock;
