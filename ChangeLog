@@ -1,4 +1,4 @@
-Changes to squid-1.1.alpha19:
+Changes to squid-1.1.beta1 (September 12, 1996):
 
 	- Fixed stupid coredump bug in storeGetSwapSpace().
 	- Cleaned up gopher.c; prototypes, make functions static, etc.
