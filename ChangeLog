@@ -1,3 +1,7 @@
+	- Fixed base64_code[] typo bug (Joe Ramey).
+	- Fixed errors being returned as empty objects.
+	- Changed order of sanity checks in neighborsUdpAck().
+
 Changes to squid-1.1.beta12 (October 31, 1996):
 
 	- Fixed ICMP 'pinger' failure detection.
