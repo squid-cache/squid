@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.32 2003/07/23 00:14:09 hno Exp $
+#  $Id: Makefile.in,v 1.33 2004/08/15 00:10:34 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -215,7 +215,8 @@ man_MANS = squid_ldap_group.8
 EXTRA_DIST = squid_ldap_group.8
 squid_ldap_group_SOURCES = squid_ldap_group.c
 
-LDADD = -lldap -llber $(XTRA_LIBS)
+LDADD = -L$(top_builddir)/lib -lmiscutil -lldap -llber @XTRA_LIBS@
+INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include
 subdir = helpers/external_acl/ldap_group
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs

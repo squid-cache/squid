@@ -17,7 +17,7 @@
 #
 #  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.in,v 1.30 2003/07/23 00:14:07 hno Exp $
+#  $Id: Makefile.in,v 1.31 2004/08/15 00:10:33 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -228,11 +228,8 @@ EXTRA_DIST = \
 
 
 # sysconf_DATA = 
-LDADD = @XTRA_LIBS@
-
-INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		-I$(top_srcdir)/src/
-
+LDADD = -L$(top_builddir)/lib -lmiscutil @XTRA_LIBS@
+INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include
 subdir = helpers/external_acl/ip_user
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs

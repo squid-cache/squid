@@ -17,7 +17,7 @@
 #
 #  Makefile for the wb_group external_acl helper
 #
-#  $Id: Makefile.in,v 1.31 2003/07/23 00:14:15 hno Exp $
+#  $Id: Makefile.in,v 1.32 2004/08/15 00:10:34 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -211,10 +211,9 @@ target_alias = @target_alias@
 libexec_PROGRAMS = wb_group
 wb_group_SOURCES = wb_check_group.c wb_common.c wbntlm.h wb_common.h
 EXTRA_DIST = readme.txt
-INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-    -I$(top_srcdir)/src -I@SAMBASOURCES@
 
-LDADD = -L$(top_builddir)/lib $(XTRA_LIBS)
+LDADD = -L$(top_builddir)/lib -lmiscutil @XTRA_LIBS@
+INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include -I@SAMBASOURCES@
 subdir = helpers/external_acl/winbind_group
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
