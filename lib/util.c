@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.77 2001/01/12 00:37:13 wessels Exp $
+ * $Id: util.c,v 1.78 2001/04/10 17:00:50 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -574,7 +574,7 @@ xcalloc(int n, size_t sz)
     check_malloc(p, sz * n);
 #endif
 #if XMALLOC_STATISTICS
-    malloc_stat(sz);
+    malloc_stat(sz * n);
 #endif
 #if XMALLOC_TRACE
     xmalloc_show_trace(p, 1);
