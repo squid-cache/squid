@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.359 2000/12/05 08:55:47 wessels Exp $
+ * $Id: cache_cf.cc,v 1.360 2000/12/05 10:10:57 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1106,14 +1106,14 @@ parse_peer(peer ** head)
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
     p->test_fd = -1;
 #if USE_CARP
-#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> ((sizeof(u_long)*8)-(n))))
+#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
     if (p->carp.load_factor) {
 	/* calculate this peers hash for use in CARP */
 	p->carp.hash = 0;
 	for (token = p->host; *token != 0; token++)
-	    p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + *token;
+	    p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *token;
 	p->carp.hash += p->carp.hash * 0x62531965;
-	p->carp.hash += ROTATE_LEFT(p->carp.hash, 21);
+	p->carp.hash = ROTATE_LEFT(p->carp.hash, 21);
     }
 #endif
     /* This must preceed peerDigestCreate */

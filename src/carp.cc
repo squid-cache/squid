@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.13 2000/10/20 23:50:59 hno Exp $
+ * $Id: carp.cc,v 1.14 2000/12/05 10:10:57 wessels Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -37,15 +37,18 @@
 
 #if USE_CARP
 
+static OBJH carpCachemgr;
+
 void
 carpInit(void)
 {
     /* calculate load factors */
     int K = 0;
-    float a = 0.0;
-    float Xn;
-    float P_last;
-    float X_last;
+    double a = 0.0;
+    double dJ;
+    double Xn;
+    double P_last;
+    double X_last;
     int k;
     peer *p;
     for (p = Config.peers; p; p = p->next) {
@@ -54,7 +57,7 @@ carpInit(void)
     }
     if (a == 0.0) {
 	for (p = Config.peers; p; p = p->next)
-	    p->carp.load_multiplier = 1;
+	    p->carp.load_multiplier = 1.0;
 	return;
     }
     /*
@@ -66,21 +69,23 @@ carpInit(void)
     k = 1;
     P_last = 0;
     p = Config.peers;
-    p->carp.load_multiplier = pow(K * p->carp.load_factor, 1 / K);
+    p->carp.load_multiplier = pow(p->carp.load_factor * K, 1.0 / K);
     Xn = p->carp.load_multiplier;
     P_last = p->carp.load_factor;
     X_last = p->carp.load_multiplier;
     if (!p->next)
 	return;
     for (p = p->next; p; p = p->next) {
-	p->carp.load_multiplier = ((K - k + 1) * (p->carp.load_factor - P_last)) / Xn;
-	p->carp.load_multiplier += pow(X_last, K - k + 1);
-	p->carp.load_multiplier = pow(p->carp.load_multiplier, 1 / (K - k + 1));
+	k++;
+	dJ = (double) (K - k + 1);
+	p->carp.load_multiplier = (dJ * (p->carp.load_factor - P_last)) / Xn;
+	p->carp.load_multiplier += pow(X_last, dJ);
+	p->carp.load_multiplier = pow(p->carp.load_multiplier, 1 / dJ);
 	Xn *= p->carp.load_multiplier;
 	X_last = p->carp.load_multiplier;
-	k++;
 	P_last = p->carp.load_factor;
     }
+    cachemgrRegister("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 peer *
@@ -120,4 +125,28 @@ carpSelectParent(request_t * request)
 	debug(39, 3) ("carpSelectParent: selected CARP %s\n", p->host);
     return p;
 }
+
+static void
+carpCachemgr(StoreEntry * sentry)
+{
+    peer *p;
+    int sumfetches = 0;
+    storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
+	"Hostname",
+	"Hash",
+	"Multiplier",
+	"Factor",
+	"Actual");
+    for (p = Config.peers; p; p = p->next)
+	sumfetches += p->stats.fetches;
+    for (p = Config.peers; p; p = p->next) {
+	storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
+	    p->host, p->carp.hash,
+	    p->carp.load_multiplier,
+	    p->carp.load_factor,
+	    sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
+    }
+
+}
+
 #endif
