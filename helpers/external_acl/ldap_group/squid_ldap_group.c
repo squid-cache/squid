@@ -226,6 +226,7 @@ main(int argc, char **argv)
 	case 'R':
 	case 'z':
 	case 'Z':
+	case 'd':
 	case 'g':
 	case 'S':
 	    break;
@@ -555,7 +556,7 @@ ldap_escape_value(char *escaped, int size, const char *src)
 	    size -= 3;
 	    if (size > 0) {
 		*escaped++ = '\\';
-		snprintf(escaped, 3, "%02x", (int)*src++);
+		snprintf(escaped, 3, "%02x", (unsigned char)*src++);
 		escaped+=2;
 	    }
 	    break;
