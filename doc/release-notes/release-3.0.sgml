@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.5 2003/05/28 22:45:12 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.6 2003/06/09 22:06:24 wessels Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -113,6 +113,8 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
  <item>Disable pipeline_prefetch in HEAD as it is known to be broken due to the store_client_copy() api change (Henrik Nordstrom)
  <item>Fixup some SNMP variable types for more useful reporting. (Henrik Nordstrom)
  <item>ncsa_auth extened with support for MD5 hashes. (Henrik Nordstrom)
+ <item>Complain if open of /dev/null fails; avoids infinite loop in ipcCreate().
+ <item>Properly quote the quoting character '%' in log_quote() and username_quote().
 </itemize>
 
 <sect>Changes to squid.conf
