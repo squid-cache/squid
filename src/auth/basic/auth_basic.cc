@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.10 2001/08/30 23:00:36 robertc Exp $
+ * $Id: auth_basic.cc,v 1.11 2001/09/03 10:33:03 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -149,7 +149,7 @@ static int
 authenticateBasicAuthenticated(auth_user_request_t * auth_user_request)
 {
     basic_data *basic_auth = auth_user_request->auth_user->scheme_data;
-    if ((auth_user_request->auth_user->flags.credentials_ok == 1) && (basic_auth->credentials_checkedtime + basicConfig->credentialsTTL > squid_curtime))
+    if ((basic_auth->flags.credentials_ok == 1) && (basic_auth->credentials_checkedtime + basicConfig->credentialsTTL > squid_curtime))
 	return 1;
     debug(29, 4) ("User not authenticated or credentials need rechecking.\n");
     return 0;
@@ -174,12 +174,12 @@ authenticateBasicAuthenticateUser(auth_user_request_t * auth_user_request, reque
     assert(auth_user_request->auth_user != NULL);
     auth_user = auth_user_request->auth_user;
 
-    /* if the password is not ok, do an identity */
-    if (auth_user->flags.credentials_ok != 1)
-	return;
-
     assert(auth_user->scheme_data != NULL);
     basic_auth = auth_user->scheme_data;
+    
+    /* if the password is not ok, do an identity */
+    if (basic_auth->flags.credentials_ok != 1)
+	return;
 
     /* are we about to recheck the credentials externally? */
     if ((basic_auth->credentials_checkedtime + basicConfig->credentialsTTL) <= squid_curtime) {
@@ -202,7 +202,7 @@ authenticateBasicDirection(auth_user_request_t * auth_user_request)
 /* null auth_user is checked for by authenticateDirection */
     auth_user_t *auth_user = auth_user_request->auth_user;
     basic_data *basic_auth = auth_user->scheme_data;
-    switch (auth_user->flags.credentials_ok) {
+    switch (basic_auth->flags.credentials_ok) {
     case 0:			/* not checked */
 	return -1;
     case 1:			/* checked & ok */
@@ -275,9 +275,9 @@ authenticateBasicHandleReply(void *data, char *reply)
     auth_user = r->auth_user_request->auth_user;
     basic_auth = auth_user->scheme_data;
     if (reply && (strncasecmp(reply, "OK", 2) == 0))
-	auth_user->flags.credentials_ok = 1;
+	basic_auth->flags.credentials_ok = 1;
     else
-	auth_user->flags.credentials_ok = 3;
+	basic_auth->flags.credentials_ok = 3;
     basic_auth->credentials_checkedtime = squid_curtime;
     valid = cbdataValid(r->data);
     if (valid)
@@ -510,14 +510,14 @@ authenticateBasicDecodeAuth(auth_user_request_t * auth_user_request, const char 
 	basic_auth = auth_user->scheme_data;
 	if (strcmp(local_basic.passwd, basic_auth->passwd)) {
 	    debug(29, 4) ("authBasicDecodeAuth: new password found. Updating in user master record and resetting auth state to unchecked\n");
-	    auth_user->flags.credentials_ok = 0;
+	    basic_auth->flags.credentials_ok = 0;
 	    xfree(basic_auth->passwd);
 	    basic_auth->passwd = local_basic.passwd;
 	} else
 	    xfree(local_basic.passwd);
-	if (auth_user->flags.credentials_ok == 3) {
+	if (basic_auth->flags.credentials_ok == 3) {
 	    debug(29, 4) ("authBasicDecodeAuth: last attempt to authenticate this user failed, resetting auth state to unchecked\n");
-	    auth_user->flags.credentials_ok = 0;
+	    basic_auth->flags.credentials_ok = 0;
 	}
     }
     /* link the request to the user */
@@ -574,7 +574,7 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
 	return;
     }
     /* check to see if the auth_user already has a request outstanding */
-    if (auth_user_request->auth_user->flags.credentials_ok == 2) {
+    if (basic_auth->flags.credentials_ok == 2) {
 	/* there is a request with the same credentials already being verified */
 	auth_basic_queue_node *node;
 	node = xmalloc(sizeof(auth_basic_queue_node));
@@ -594,7 +594,7 @@ authenticateBasicStart(auth_user_request_t * auth_user_request, RH * handler, vo
 	r->data = data;
 	r->auth_user_request = auth_user_request;
 	/* mark the user as haveing verification in progress */
-	auth_user_request->auth_user->flags.credentials_ok = 2;
+	basic_auth->flags.credentials_ok = 2;
 	snprintf(buf, 8192, "%s %s\n", basic_auth->username, basic_auth->passwd);
 	helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply, r);
     }

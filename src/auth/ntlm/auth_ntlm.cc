@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.11 2001/08/29 14:57:36 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.12 2001/09/03 10:33:04 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -75,7 +75,6 @@ static HLPSAVAIL authenticateNTLMHelperServerAvailable;
 static HLPSONEQ authenticateNTLMHelperServerOnEmpty;
 
 static statefulhelper *ntlmauthenticators = NULL;
-static wordlist *ntlmprevauthline = NULL;
 
 CBDATA_TYPE(authenticateStateData);
 
@@ -94,34 +93,17 @@ static hash_table *proxy_auth_cache = NULL;
  *
  */
 
-static int
-wordliststrcmp(wordlist * a, wordlist * b)
-{
-    int i;
-    while (a && b) {
-	if ((i = strcmp(a->key, b->key)))
-	    return i;
-	a = a->next;
-	b = b->next;
-    }
-    if (a && !b)
-	return -1;
-    if (b && !a)
-	return 1;
-    return 0;
-}
-
 void
 authNTLMDone(void)
 {
     debug(29, 2) ("authNTLMDone: shutting down NTLM authentication.\n");
+    if (ntlmauthenticators)
+	helperStatefulShutdown(ntlmauthenticators);
     authntlm_initialised = 0;
     if (!shutting_down)
 	return;
-    if (ntlmauthenticators) {
-	helperStatefulShutdown(ntlmauthenticators);
+    if (ntlmauthenticators)
 	helperStatefulFree(ntlmauthenticators);
-    }
     ntlmauthenticators = NULL;
     if (ntlm_helper_state_pool) {
 	assert(memPoolInUseCount(ntlm_helper_state_pool) == 0);
@@ -262,13 +244,7 @@ authNTLMInit(authScheme * scheme)
 	ntlmauthenticators->datapool = ntlm_helper_state_pool;
 	ntlmauthenticators->IsAvailable = authenticateNTLMHelperServerAvailable;
 	ntlmauthenticators->OnEmptyQueue = authenticateNTLMHelperServerOnEmpty;
-	if (wordliststrcmp(ntlmprevauthline, ntlmConfig->authenticate)) {
-	    helperStatefulShutdown(ntlmauthenticators);
-	    helperStatefulOpenServers(ntlmauthenticators);
-	    if (ntlmprevauthline)
-		wordlistDestroy(&ntlmprevauthline);
-	    ntlmprevauthline = wordlistDup(ntlmConfig->authenticate);
-	}
+	helperStatefulOpenServers(ntlmauthenticators);
 	/* TODO: In here send the initial YR to preinitialise the challenge cache */
 	/* Think about this... currently we ask when the challenge is needed. Better? */
 	if (!ntlminit) {
@@ -303,10 +279,10 @@ int
 authenticateNTLMDirection(auth_user_request_t * auth_user_request)
 {
     ntlm_request_t *ntlm_request = auth_user_request->scheme_data;
-/* null auth_user is checked for by authenticateDirection */
+    /* null auth_user is checked for by authenticateDirection */
     switch (ntlm_request->auth_state) {
     case AUTHENTICATE_STATE_NONE:	/* no progress at all. */
-        if (auth_user_request->auth_user->flags.credentials_ok != 2)
+        if (ntlm_request->flags.credentials_ok != 2)
 	  debug(29, 1) ("authenticateNTLMDirection: called before NTLM Authenticate!. Report a bug to squid-dev. au %x\n", auth_user_request);
 	return -2;
     case AUTHENTICATE_STATE_NEGOTIATE:		/* send to helper */
@@ -510,7 +486,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	assert(ntlm_request->auth_state == AUTHENTICATE_STATE_RESPONSE);
 	ntlm_user->username = xstrndup(reply, MAX_LOGIN_SZ);
 	ntlm_request->authserver = NULL;
-	auth_user->flags.credentials_ok = 1;	/* login ok */
+	ntlm_request->flags.credentials_ok = 1;	/* login ok */
 #ifdef NTLM_FAIL_OPEN
     } else if (strncasecmp(reply, "LD ", 3) == 0) {
 	/* This is a variant of BH, which rather than deny access
@@ -537,7 +513,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	ntlm_user->username = xstrndup(reply, MAX_LOGIN_SZ);
 	helperstate = helperStatefulServerGetData(ntlm_request->authserver);
 	ntlm_request->authserver = NULL;
-	auth_user->flags.credentials_ok = 1;	/* login ok */
+	ntlm_request->flags.credentials_ok = 1;	/* login ok */
 	/* BH code: mark helper as broken */
 	/* Not a valid helper response to a YR request. Assert so the helper
 	 * programmer will fix their bugs! */
@@ -558,7 +534,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	/* todo: action of Negotiate state on error */
 	result = S_HELPER_RELEASE;	/*some error has occured. no more requests */
 	ntlm_request->authserver = NULL;
-	auth_user->flags.credentials_ok = 2;	/* Login/Usercode failed */
+	ntlm_request->flags.credentials_ok = 2;	/* Login/Usercode failed */
 	debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
 	ntlm_request->auth_state = AUTHENTICATE_STATE_NONE;
 	if ((t = strchr(reply, ' ')))	/* strip after a space */
@@ -588,7 +564,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	if (ntlm_request->auth_state == AUTHENTICATE_STATE_NEGOTIATE) {
 	    /* The helper broke on YR. It automatically
 	     * resets */
-	    auth_user->flags.credentials_ok = 3;	/* cannot process */
+	    ntlm_request->flags.credentials_ok = 3;	/* cannot process */
 	    debug(29, 1) ("authenticateNTLMHandleReply: Error obtaining challenge from helper: %d. Error returned '%s'\n", lastserver, reply);
 	    /* mark it for starving */
 	    helperstate->starve = 1;
@@ -603,7 +579,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	} else {
 	    /* the helper broke on a KK */
 	    /* first the standard KK stuff */
-	    auth_user->flags.credentials_ok = 2;	/* Login/Usercode failed */
+	    ntlm_request->flags.credentials_ok = 2;	/* Login/Usercode failed */
 	    debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
 	    if ((t = strchr(reply, ' ')))	/* strip after a space */
 		*t = '\0';
@@ -624,7 +600,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	debug(29, 1) ("authenticateNTLMHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
 	/* restart the authentication process */
 	ntlm_request->auth_state = AUTHENTICATE_STATE_NONE;
-	auth_user->flags.credentials_ok = 3;	/* cannot process */
+	ntlm_request->flags.credentials_ok = 3;	/* cannot process */
 	assert (ntlm_request->authserver ? ntlm_request->authserver == lastserver : 1);
 	ntlm_request->authserver = NULL;
     }
@@ -987,7 +963,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
     case AUTHENTICATE_STATE_NONE:
 	/* we've recieved a negotiate request. pass to a helper */
 	debug(29, 9) ("authenticateNTLMAuthenticateUser: auth state ntlm none. %s\n", proxy_auth);
-	if (auth_user->flags.credentials_ok == 2) {
+	if (ntlm_request->flags.credentials_ok == 2) {
 	    /* the authentication fialed badly... */
 	    return;
 	}
@@ -1047,7 +1023,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	    /* get the existing entries details */
 	    ntlm_user = auth_user->scheme_data;
 	    debug(29, 9) ("Username to be used is %s\n", ntlm_user->username);
-	    auth_user->flags.credentials_ok = 1;	/* authenticated ok */
+	    ntlm_request->flags.credentials_ok = 1;	/* authenticated ok */
 	    /* on ntlm auth we do not unlock the auth_user until the
 	     * connection is dropped. Thank MS for this quirk */
 	    auth_user->expiretime = current_time.tv_sec;
@@ -1093,7 +1069,7 @@ authenticateNTLMAuthenticateUser(auth_user_request_t * auth_user_request, reques
 	/* set these to now because this is either a new login from an 
 	 * existing user or a new user */
 	auth_user->expiretime = current_time.tv_sec;
-	auth_user->flags.credentials_ok = 1;	/*authenticated ok */
+	ntlm_request->flags.credentials_ok = 1;	/*authenticated ok */
 	return;
 	break;
     case AUTHENTICATE_STATE_DONE:

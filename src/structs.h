@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.397 2001/08/29 14:57:35 robertc Exp $
+ * $Id: structs.h,v 1.398 2001/09/03 10:33:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -111,11 +111,9 @@ struct _auth_user_t {
     /* we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
+    /* what ip addresses has this user been seen at?, plus a list length cache */
     dlink_list ip_list;
     size_t ipcount;
-    struct {
-	unsigned int credentials_ok:2;	/*0=unchecked,1=ok,2=failed */
-    } flags;
     long expiretime;
     /* how many references are outstanding to this instance */
     size_t references;
