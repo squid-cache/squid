@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.207 2001/01/05 09:51:40 adrian Exp $
+ * $Id: squid.h,v 1.208 2001/01/06 11:14:42 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -432,4 +432,3 @@ struct rusage {
 #define INDEXSD(i)   (&Config.cacheSwap.swapDirs[(i)])
 
 #endif /* SQUID_H */
-#define CREATE_CBDATA(type) cbdataInitType(CBDATA_##type, #type, sizeof(type))
