@@ -1,7 +1,7 @@
 /*
- * $Id: String.cc,v 1.2 1998/03/08 08:16:43 rousskov Exp $
+ * $Id: String.cc,v 1.3 1998/03/08 20:42:00 rousskov Exp $
  *
- * DEBUG: section 61    String
+ * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
