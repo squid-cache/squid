@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.198 1999/04/07 19:52:14 wessels Exp $
+ * $Id: acl.cc,v 1.199 1999/04/07 20:03:48 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1786,6 +1786,8 @@ aclDestroyAcls(acl ** head)
 	    break;
 	case ACL_URL_REGEX:
 	case ACL_URLPATH_REGEX:
+	case ACL_SRC_DOM_REGEX:
+	case ACL_DST_DOM_REGEX:
 	case ACL_BROWSER:
 	    aclDestroyRegexList(a->data);
 	    break;
