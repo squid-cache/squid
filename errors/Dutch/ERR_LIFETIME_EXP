@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+De levensduur van de verbindings is verstreken
+</STRONG>
+</UL>
+
+<P>
+Squid heeft het verzoek afgebroken omdat het de maximale verbindings levensduur heeft overschreden.
+</P>
+</BODY>
+</HTML>

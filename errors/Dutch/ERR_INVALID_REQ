@@ -1,0 +1,34 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het verwerken van het verzoek:
+<PRE>
+%R
+</PRE>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+Ongeldig verzoek
+</STRONG>
+</UL>
+
+<P>
+
+Een gedeelte van het HTTP verzoek is ongeldig. Mogelijke problemen:
+<UL>
+<LI>Ontbrekende of onbekende verzoekmethode (GET, POST)
+<LI>Ontbrekende URL
+<LI>Ontbrekende HTTP identificatie (HTTP/1.0)
+<LI>Het verzoek is mogelijk te lang
+<LI>De Content-Length ontbreekt voor het POST of PUT verzoek
+<LI>Er staat een ogeldig teken in de host naam; Het teken '_' is niet toegestaan
+</UL>
+</P>
+</BODY>
+</HTML>

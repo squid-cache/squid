@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+@SHORT_DESCRIPTION@
+</STRONG>
+</UL>
+
+<P>
+Het systeem gaf als antwoord:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Dit betekent dat:
+<PRE>
+    @LONG_DESCRIPTION@
+</PRE>
+</P>
+</BODY>
+</HTML>

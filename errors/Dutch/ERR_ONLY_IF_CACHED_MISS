@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+Een geldig document werd niet gevonden in de cache, en de <code>only-if-cached</code> richtlijn was ingesteld.
+</STRONG>
+</UL>
+
+<P>
+U heeft een verzoek gedaan met een <code>only-if-cached</code> cache beheer richtlijn. Het document werd niet gevonden in de cache <em>of</em> er was een herbevestiging nodig die niet werd toegestaan door de <code>only-if-cached</code> richtlijn.
+</P>
+</BODY>
+</HTML>

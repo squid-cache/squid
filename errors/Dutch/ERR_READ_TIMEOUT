@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+Lees Timeout
+</STRONG>
+</UL>
+
+<P>
+Het systeem gaf terug:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Een timeout kwam voor bij het lezen van data van het netwerk. Het netwerk of de server kan niet beschikbaar of overbelast zijn. Probeer uw verzoek opnieuw.
+</P>
+</BODY>
+</HTML>

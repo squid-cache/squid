@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+Doorsturen niet toegestaan.
+</STRONG>
+</UL>
+
+<P>
+Deze cache zal uw verzoek niet doorsturen, omdat het een sibling relatie tracht te bewerkstelligen. Wellicht dat de client op %i een fout ingestelde cache is.
+</P>
+</BODY>
+</HTML>

@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>FOUT: De gevraagde URL kon niet worden opgehaald</TITLE>
+</HEAD><BODY>
+<H1>FOUT</H1>
+<H2>De gevraagde URL kon niet worden opgehaald</H2>
+<HR>
+<P>
+Tijdens het opvragen van de URL:
+<A HREF="%U">%U</A>
+<P>
+kwam de volgende fout voor:
+<UL>
+<LI>
+<STRONG>
+Socket Fout
+</STRONG>
+</UL>
+
+<P>
+Het systeem gaf terug:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Squid is niet in staat een TCP socket aan te maken, waarschijnlijk als gevolg van een hoge bezettingsgraad. Probeer uw verzoek opnieuw.
+</P>
+</BODY>
+</HTML>
