@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.301 1999/06/30 05:23:44 wessels Exp $
+ * $Id: structs.h,v 1.302 1999/06/30 05:49:44 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1317,6 +1317,19 @@ struct _SwapDir {
 	    int l2;
 	    int swaplog_fd;
 	} ufs;
+#if USE_DISKD
+	struct {
+	    int l1;
+	    int l2;
+	    int swaplog_fd;
+	    int smsgid;
+	    int rmsgid;
+	    int wfd;
+	    int send_no;
+	    int recv_no;
+	    int away;
+	} diskd;
+#endif
     } u;
 };
 
@@ -1380,6 +1393,16 @@ struct _storeIOState {
 	    const char *read_buf;
 	    link_list *pending_writes;
 	} aufs;
+#if USE_DISKD
+	struct {
+	    int id;
+	    struct {
+		unsigned int reading:1;
+		unsigned int writing:1;
+	    } flags;
+	    char *read_buf;
+	} diskd;
+#endif
     } type;
 };
 

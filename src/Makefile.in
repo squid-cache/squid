@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.176 1999/05/27 05:56:31 wessels Exp $
+#  $Id: Makefile.in,v 1.177 1999/06/30 05:49:37 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -26,6 +26,7 @@ DNSSERVER_EXE	= dnsserver$(exec_suffix)
 UNLINKD_EXE	= unlinkd$(exec_suffix)
 PINGER_EXE	= pinger$(exec_suffix)
 CACHEMGR_EXE	= cachemgr$(cgi_suffix)
+DISKD_EXE	= diskd$(exec_suffix)
 
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
@@ -71,6 +72,7 @@ SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_PTHREAD_LIB@ \
 		  $(SNMPLIB) $(MALLOCLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
+DISKD_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
 
@@ -154,6 +156,7 @@ OBJS	 	= \
 		store.o \
 		store_io.o \
 		store_io_ufs.o \
+		diskd.o \
 		store_client.o \
 		store_digest.o \
 		store_dir.o \
@@ -220,6 +223,12 @@ $(CLIENT_EXE): client.o
 
 $(DNSSERVER_EXE): dnsserver.o
 	$(CC) -o $@ $(LDFLAGS) dnsserver.o $(DNSSERVER_LIBS)
+
+$(DISKD_EXE): diskd-daemon.o
+	$(CC) -o $@ $(LDFLAGS) diskd.o $(DISKD_LIBS)
+
+diskd-daemon.o: diskd.c
+	$(CC) -c $(CFLAGS) -DDISKD_DAEMON=1 $(srcdir)/diskd.c -o $@
 
 $(CACHEMGR_EXE): cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)

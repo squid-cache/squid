@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.340 1999/06/24 20:20:05 wessels Exp $
+ * $Id: protos.h,v 1.341 1999/06/30 05:49:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -885,6 +885,19 @@ extern void storeAufsWrite(storeIOState *, char *, size_t, off_t, FREE *);
 extern void storeAufsUnlink(int fileno);
 #endif
 
+#if USE_DISKD
+/*
+ * diskd.c
+ */
+extern storeIOState *storeDiskdOpen(sfileno, mode_t, STIOCB *, void *);
+extern void storeDiskdClose(storeIOState * sio);
+extern void storeDiskdRead(storeIOState *, char *, size_t, off_t, STRCB *, void *);
+extern void storeDiskdWrite(storeIOState *, char *, size_t, off_t, FREE *);
+extern void storeDiskdUnlink(int fileno);
+extern STINIT storeDiskdInit;
+extern void storeDiskdReadQueue(void);
+#endif
+
 /*
  * store_log.c
  */
@@ -956,8 +969,12 @@ extern void storeUfsDirParse(cacheSwap * swap);
 extern void storeUfsDirDump(StoreEntry * entry, const char *name, SwapDir * s);
 extern void storeUfsDirFree(SwapDir *);
 extern char *storeUfsFullPath(sfileno fn, char *fullpath);
+extern STINIT storeUfsDirInit;
 #if USE_ASYNC_IO
 extern void storeAufsDirParse(cacheSwap * swap);
+#endif
+#if USE_DISKD
+extern void storeDiskdDirParse(cacheSwap *);
 #endif
 
 
