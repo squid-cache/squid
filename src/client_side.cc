@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.35 1996/09/20 06:28:30 wessels Exp $
+ * $Id: client_side.cc,v 1.36 1996/09/23 22:13:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -395,6 +395,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     char *hbuf;
     int len;
     int unlink_request = 0;
+    StoreEntry *oldentry;
     debug(33, 3, "icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
     /* unregister this handler */
     storeUnregister(entry, fd);
@@ -418,25 +419,34 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	return 0;
     }
     if (mem->reply->code == 304 && !BIT_TEST(icpState->request->flags, REQ_IMS)) {
-	icpState->log_type = LOG_TCP_EXPIRED_HIT;
 	/* We initiated the IMS request, the client is not expecting
-	 * 304, so put the good one back */
-	if (icpState->old_entry->mem_obj->request == NULL) {
-	    icpState->old_entry->mem_obj->request = requestLink(mem->request);
+	 * 304, so put the good one back.  First, make sure the old entry
+	 * headers have been loaded from disk. */
+	oldentry = icpState->old_entry;
+	if (oldentry->mem_obj->e_current_len == 0) {
+	    storeRegister(entry,
+		fd,
+		(PIF) icpHandleIMSReply,
+		(void *) icpState);
+	    return 0;
+	}
+	icpState->log_type = LOG_TCP_EXPIRED_HIT;
+	hbuf = get_free_8k_page();
+	storeClientCopy(oldentry, 0, 8191, hbuf, &len, fd);
+	if (oldentry->mem_obj->request == NULL) {
+	    oldentry->mem_obj->request = requestLink(mem->request);
 	    unlink_request = 1;
 	}
 	storeUnlockObject(entry);
-	entry = icpState->entry = icpState->old_entry;
-	/* Extend the TTL
-	 * XXX race condition here.  Assumes old_entry has been swapped 
-	 * in by the time this 304 reply arrives.  */
-	hbuf = get_free_8k_page();
-	storeClientCopy(entry, 0, 8191, hbuf, &len, fd);
-	if (!mime_headers_end(hbuf))
-	    fatal_dump("icpHandleIMSReply: failed to load headers, lost race");
-	httpParseHeaders(hbuf, entry->mem_obj->reply);
+	entry = icpState->entry = oldentry;
+	if (mime_headers_end(hbuf)) {
+	    httpParseHeaders(hbuf, entry->mem_obj->reply);
+	    ttlSet(entry);
+	} else {
+	    debug(33,1,"icpHandleIMSReply: No end-of-headers, len=%d\n", len);
+	    debug(33,1,"  --> '%s'\n", entry->url);
+	}
 	put_free_8k_page(hbuf);
-	ttlSet(entry);
 	if (unlink_request) {
 	    requestUnlink(entry->mem_obj->request);
 	    entry->mem_obj->request = NULL;
