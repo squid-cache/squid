@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.10 2003/05/19 09:11:31 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.11 2003/05/20 12:17:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,8 @@
 #define SQUID_ACLCHECKLIST_H
 
 #include "typedefs.h"
+
+class ExternalACLEntry;
 
 class ACLChecklist
 {
@@ -126,7 +128,7 @@ class NullState : public AsyncState
 
     PF *callback;
     void *callback_data;
-    external_acl_entry *extacl_entry;
+    ExternalACLEntry *extacl_entry;
     bool destinationDomainChecked() const;
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;

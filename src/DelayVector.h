@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.h,v 1.6 2003/05/15 07:06:24 robertc Exp $
+ * $Id: DelayVector.h,v 1.7 2003/05/20 12:17:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,7 @@ public:
     virtual void update(int incr);
     virtual void parse();
 
-    virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
+    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
     void push_back (CompositePoolNode::Pointer);
 
 private:
@@ -66,7 +66,7 @@ class Id:public DelayIdComposite
         void operator delete (void *);
         virtual void deleteSelf() const;
 
-        Id (DelayVector::Pointer,struct in_addr &src_addr, AuthUserRequest *);
+        Id (DelayVector::Pointer,CompositeSelectionDetails &);
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);

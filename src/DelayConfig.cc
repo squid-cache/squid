@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayConfig.cc,v 1.5 2003/03/08 09:43:49 robertc Exp $
+ * $Id: DelayConfig.cc,v 1.6 2003/05/20 12:17:38 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -71,8 +71,8 @@ DelayConfig::parsePoolClass()
     ushort delay_class_;
     ConfigParser::ParseUShort(&delay_class_);
 
-    if (delay_class_ < 1 || delay_class_ > 4) {
-        debug(3, 0) ("parse_delay_pool_class: Ignoring pool %d class %d not in 1 .. 4\n", pool, delay_class_);
+    if (delay_class_ < 1 || delay_class_ > 5) {
+        debug(3, 0) ("parse_delay_pool_class: Ignoring pool %d class %d not in 1 .. 5\n", pool, delay_class_);
         return;
     }
 
