@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.95 1999/05/25 22:05:56 wessels Exp $
+ * $Id: store_dir.cc,v 1.96 1999/05/25 22:10:13 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -375,7 +375,8 @@ storeDirWriteCleanLogs(int reopen)
 {
     StoreEntry *e = NULL;
     int n = 0;
-    time_t start, stop, r;
+    struct timeval start;
+    double dt;
     SwapDir *sd;
     int dirn;
     int N = Config.cacheSwap.n_configured;
@@ -386,7 +387,8 @@ storeDirWriteCleanLogs(int reopen)
 	return 0;
     }
     debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");
-    start = squid_curtime;
+    getCurrentTime();
+    start = current_time;
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	sd = &Config.cacheSwap.swapDirs[dirn];
 	if (sd->log.clean.open(sd) < 0) {
@@ -427,12 +429,11 @@ storeDirWriteCleanLogs(int reopen)
     }
     if (reopen)
 	storeDirOpenSwapLogs();
-    stop = squid_curtime;
-    r = stop - start;
+    getCurrentTime();
+    dt = tvSubDsec(start, current_time);
     debug(20, 1) ("  Finished.  Wrote %d entries.\n", n);
-    debug(20, 1) ("  Took %d seconds (%6.1f entries/sec).\n",
-	r > 0 ? (int) r : 0,
-	(double) n / (r > 0 ? r : 1));
+    debug(20, 1) ("  Took %3.1f seconds (%6.1f entries/sec).\n",
+	dt, (double) n / (dt > 0.0 ? dt : 1.0));
     return n;
 }
 #undef CLEAN_BUF_SZ
