@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.133 1997/04/30 03:44:16 wessels Exp $
+ * $Id: neighbors.cc,v 1.134 1997/04/30 16:18:43 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -177,12 +177,13 @@ hierarchyNote(request_t * request,
     icp_ping_data * icpdata,
     const char *cache_host)
 {
-    if (request) {
-	request->hierarchy.code = code;
-	request->hierarchy.icp = *icpdata;
-	request->hierarchy.host = xstrdup(cache_host);
-	request->hierarchy.icp.stop = current_time;
-    }
+    if (request == NULL)
+	return;
+    request->hierarchy.code = code;
+    if (icpdata)
+        request->hierarchy.icp = *icpdata;
+    request->hierarchy.host = xstrdup(cache_host);
+    request->hierarchy.icp.stop = current_time;
 }
 
 static peer_t
@@ -1068,6 +1069,7 @@ peerCountMcastPeersStart(void *data)
     psstate->callback_data = p;
     psstate->icp.start = current_time;
     mem = fake->mem_obj;
+    mem->request = requestLink(psstate->request);
     mem->start_ping = current_time;
     mem->icp_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
@@ -1082,7 +1084,7 @@ peerCountMcastPeersStart(void *data)
     fake->ping_status = PING_WAITING;
     eventAdd("peerCountMcastPeersDone",
 	peerCountMcastPeersDone,
-	p,
+	psstate,
 	Config.neighborTimeout);
     p->mcast.flags |= PEER_COUNTING;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
@@ -1112,6 +1114,7 @@ peerCountMcastPeersDone(void *data)
     fake->store_status = STORE_ABORTED;
     storeReleaseRequest(fake);
     storeUnlockObject(fake);
+    xfree(psstate);
 }
 
 static void
