@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.53 1997/12/02 17:59:35 kostas Exp $
+ * $Id: net_db.cc,v 1.54 1997/12/03 01:33:15 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -31,8 +31,8 @@
 
 #include "squid.h"
 
-
 #if USE_ICMP
+
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
