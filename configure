@@ -566,7 +566,7 @@ fi
 
 
 
-# From configure.in Revision: 1.123 
+# From configure.in Revision: 1.124 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -1235,7 +1235,7 @@ if test "${enable_err_language+set}" = set; then
     fi
 ERR_
 else
-  LANGUAGE="English"
+  ERR_LANGUAGE="English"
 fi
 
 
