@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.345 2004/04/03 14:07:38 hno Exp $
+# $Id: cf.data.pre,v 1.346 2004/04/04 13:57:30 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1225,14 +1225,14 @@ DOC_START
 DOC_END
 
 
-NAME: cache_swap_log
+NAME: cache_swap_state cache_swap_log
 TYPE: string
 LOC: Config.Log.swap
 DEFAULT: none
 DOC_START
-	Location for the cache "swap.log."  This log file holds the
-	metadata of objects saved on disk.  It is used to rebuild the
-	cache during startup.  Normally this file resides in each
+	Location for the cache "swap.state" file. This index file holds
+	the metadata of objects saved on disk.  It is used to rebuild
+	the cache during startup.  Normally this file resides in each
 	'cache_dir' directory, but you may specify an alternate
 	pathname here.  Note you must give a full filename, not just
 	a directory. Since this is the index for the whole object
