@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.9 1998/04/09 23:22:52 wessels Exp $
+ * $Id: peer_digest.cc,v 1.10 1998/04/09 23:43:27 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -175,7 +175,8 @@ peerDigestValidate(peer *p)
     }
     /* currently we rely on entry->expire information */
     {
-	const time_t exp_delay = peerDigestExpiresDelay(p, e);
+	const int loaded = p->digest.cd != NULL;
+	const time_t exp_delay = loaded ? peerDigestExpiresDelay(p, e) : 0;
 	do_request = exp_delay <= 0;
 	req_time = squid_curtime + exp_delay;
 	if (req_time < squid_curtime)
@@ -397,6 +398,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
     if (size >= StoreDigestCBlockSize) {
 	if (peerDigestSetCBlock(peer, buf)) {
 	    fetch->offset += StoreDigestCBlockSize;
+	    /* switch to CD buffer */
 	    memFree(MEM_4K_BUF, buf);
 	    buf = NULL;
 	    assert(peer->digest.cd->mask);
@@ -425,8 +427,9 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
     DigestFetchState *fetch = data;
     peer *peer = fetch->peer;
     HttpReply *rep = fetch->entry->mem_obj->reply;
-    size_t copy_sz;
+    size_t buf_sz;
     assert(peer && buf && rep);
+    assert(peer->digest.cd && peer->digest.cd->mask);
     /*
      * NOTE! buf points to the middle of peer->digest.cd->mask!
      */
@@ -435,18 +438,18 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
     fetch->offset += size;
     fetch->mask_offset += size;
     if (fetch->mask_offset >= peer->digest.cd->mask_size) {
-	debug(72, 1) ("peerDigestSwapInMask: Done! Got %d, expected %d\n",
+	debug(72, 2) ("peerDigestSwapInMask: Done! Got %d, expected %d\n",
 	    fetch->mask_offset, peer->digest.cd->mask_size);
  	assert(fetch->mask_offset == peer->digest.cd->mask_size);
 	peerDigestFetchFinish(fetch, NULL, NULL);
 	return;
     }
-    copy_sz = peer->digest.cd->mask_size - fetch->mask_offset;
-    assert(copy_sz > 0);
+    buf_sz = peer->digest.cd->mask_size - fetch->mask_offset;
+    assert(buf_sz > 0);
     storeClientCopy(fetch->entry,
-	fetch->mask_offset,
-	fetch->mask_offset,
-	copy_sz,
+	fetch->offset,
+	fetch->offset,
+	buf_sz,
 	peer->digest.cd->mask + fetch->mask_offset,
 	peerDigestSwapInMask, fetch);
 }
