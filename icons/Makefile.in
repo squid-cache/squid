@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.5 1998/01/08 21:01:04 wessels Exp $
+# $Id: Makefile.in,v 1.6 1998/02/02 19:39:25 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -17,7 +17,7 @@ INSTALL         	= @INSTALL@
 INSTALL_FILE    	= @INSTALL_DATA@
 DEFAULT_ICON_DIR        = $(sysconfdir)/icons
 
-SHARFILE	= icons.shar
+SHARFILE	= $(srcdir)/icons.shar
 ICONS		= anthony-binhex.gif \
 		  anthony-bomb.gif \
 		  anthony-box.gif \

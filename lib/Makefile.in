@@ -1,7 +1,8 @@
 #
-#  $Id: Makefile.in,v 1.31 1998/01/06 00:27:50 wessels Exp $
+#  $Id: Makefile.in,v 1.32 1998/02/02 19:39:26 wessels Exp $
 #
 prefix		= @prefix@
+top_srcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
@@ -19,7 +20,7 @@ RM		= @RM@
 LIBOBJS		= @LIBOBJS@
 AR_R		= @AR_R@
 
-INCLUDE		= -I../include -I$(srcdir)/../include
+INCLUDE		= -I../include -I$(top_srcdir)/include
 UTILOBJS	= rfc1123.o \
 		  rfc1738.o \
 		  util.o \
@@ -45,7 +46,7 @@ CFLAGS		= $(AC_CFLAGS) $(INCLUDE)
 
 all: $(LIBS)
 
-$(UTILOBJS): ../include/version.h
+$(UTILOBJS): $(top_srcdir)/include/version.h
 
 libmiscutil.a: $(UTILOBJS)
 	$(RM) -f $@

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.116 1998/01/31 05:31:52 wessels Exp $
+#  $Id: Makefile.in,v 1.117 1998/02/02 19:39:27 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -43,6 +43,7 @@ CRYPTLIB	= @CRYPTLIB@
 REGEXLIB	= @REGEXLIB@
 PTHREADLIB	= @PTHREADLIB@
 SNMPLIB		= @SNMPLIB@
+MALLOCLIB	= @LIB_MALLOC@
 AC_CFLAGS	= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
@@ -52,10 +53,10 @@ RM		= @RM@
 SHELL		= /bin/sh
 
 
-INCLUDE		= -I. -I../include -I$(srcdir)/../include
+INCLUDE		= -I. -I../include -I$(top_srcdir)/include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
 SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_PTHREAD_LIB@ \
-		  $(SNMPLIB) -lmiscutil $(XTRA_LIBS)
+		  $(SNMPLIB) $(MALLOCLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
@@ -141,19 +142,19 @@ DEFAULTS        = \
 
 all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 
-$(OBJS): ../include/version.h
+$(OBJS): $(top_srcdir)/include/version.h
 
 squid:	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
 
 globals.o: globals.c Makefile
-	$(CC) -c $< $(CFLAGS) $(DEFAULTS)
+	$(CC) -c $< $(CFLAGS) -I$(srcdir) $(DEFAULTS)
 
 globals.c: globals.h mk-globals-c.pl
-	$(PERL) mk-globals-c.pl < globals.h > $@
+	$(PERL) $(srcdir)/mk-globals-c.pl < $(srcdir)/globals.h > $@
 
 string_arrays.c: enums.h mk-string-arrays.pl
-	$(PERL) mk-string-arrays.pl < enums.h > $@
+	$(PERL) $(srcdir)/mk-string-arrays.pl < $(srcdir)/enums.h > $@
 
 client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)
@@ -191,7 +192,7 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
         s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
-	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g" < cf.data.pre >$@
+	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g" < $(srcdir)/cf.data.pre >$@
 
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
