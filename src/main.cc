@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.57 1996/07/27 07:07:43 wessels Exp $
+ * $Id: main.cc,v 1.58 1996/08/12 23:37:24 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -423,7 +423,6 @@ static void mainInitialize()
     if (first_time) {
 	stmemInit();		/* stmem must go before at least redirect */
 	disk_init();		/* disk_init must go before ipcache_init() */
-	writePidFile();		/* write PID file */
     }
     ipcache_init();
     fqdncache_init();
@@ -437,7 +436,6 @@ static void mainInitialize()
 #endif
 
     if (first_time) {
-	first_time = 0;
 	/* module initialization */
 	urlInitialize();
 	stat_init(&CacheInfo, Config.Log.access);
@@ -458,12 +456,16 @@ static void mainInitialize()
     if (theOutIcpConnection >= 0 && (!httpd_accel_mode || Config.Accel.withProxy))
 	neighbors_open(theOutIcpConnection);
 
+    if (first_time)
+	writePidFile();		/* write PID file */
+
     squid_signal(SIGUSR1, rotate_logs, SA_RESTART);
     squid_signal(SIGUSR2, sigusr2_handle, SA_RESTART);
     squid_signal(SIGHUP, reconfigure, SA_RESTART);
     squid_signal(SIGTERM, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     debug(1, 0, "Ready to serve requests.\n");
+    first_time = 0;
 }
 
 

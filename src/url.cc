@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.28 1996/08/12 23:22:39 wessels Exp $
+ * $Id: url.cc,v 1.29 1996/08/12 23:37:25 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -199,6 +199,10 @@ request_t *urlParse(method, url)
     protocol_t protocol = PROTO_NONE;
     proto[0] = host[0] = urlpath[0] = login[0] = '\0';
 
+    if (strlen(url) > MAX_URL) {
+	debug(23, 0, "urlParse: URL too large (%d bytes)\n", strlen(url));
+	return NULL;
+    }
     if (method == METHOD_CONNECT) {
 	port = CONNECT_PORT;
 	if (sscanf(url, "%[^:]:%d", host, &port) < 1)

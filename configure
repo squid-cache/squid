@@ -517,7 +517,7 @@ fi
 
 
 
-# From configure.in Revision: 1.23 
+# From configure.in Revision: 1.24 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2234,6 +2234,8 @@ main() {
         i = _NFILE;
 #else
 	while((j=open("/dev/null", 0)) > 0) i=j;
+        close(i); close(i-1);
+	i++;
 #endif
 	fprintf (fopen("conftestval", "w"), "%d\n", i);
 	exit(0);
@@ -2259,7 +2261,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_SNDBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2263 "configure"
+#line 2265 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2295,7 +2297,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_RCVBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2299 "configure"
+#line 2301 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2331,7 +2333,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_SNDBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2335 "configure"
+#line 2337 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2367,7 +2369,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_RCVBUF=8192
 else
 cat > conftest.$ac_ext <<EOF
-#line 2371 "configure"
+#line 2373 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2400,7 +2402,7 @@ EOF
 
 echo $ac_n "checking if sys_errlist is already defined""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2404 "configure"
+#line 2406 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 int main() { return 0; }
