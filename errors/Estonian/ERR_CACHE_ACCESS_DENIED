@@ -28,5 +28,5 @@ Autoriseerimiseks on teil vaja brauserit mis toetab HTTP/1.1 standardit,
 nagu Netscape versioon 2.0 v&otilde;i uuem, v&otilde;i MS Internet Explorer
 3.0. Palun kontakteeruge <A HREF="mailto:%w">vahemälu serveri administraatoriga</a>,
 kui teil on probleeme autoriseerimisega v&otilde;i
-<A HREF="http://%h/cgi-bin/chpasswd.cgi">vahetage/a> oma parool.
+<A HREF="http://%h/cgi-bin/chpasswd.cgi">vahetage</a> oma parool.
 </P>
