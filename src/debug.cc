@@ -1,4 +1,4 @@
-/* $Id: debug.cc,v 1.6 1996/03/27 18:16:28 wessels Exp $ */
+/* $Id: debug.cc,v 1.7 1996/03/27 18:50:22 wessels Exp $ */
 
 #include "squid.h"
 
@@ -6,7 +6,6 @@ char *_db_file = __FILE__;
 int _db_line = 0;
 
 int syslog_enable = 0;
-int stderr_enable = 0;
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
 static time_t last_cached_curtime = 0;
@@ -69,16 +68,12 @@ void _db_print(va_alist)
 	syslog(LOG_ERR, tmpbuf);
     }
 #endif /* HAVE_SYSLOG */
+
     /* write to log file */
     vfprintf(debug_log, f, args);
     if (unbuffered_logs)
 	fflush(debug_log);
 
-    /* if requested, dump it to stderr also */
-    if (stderr_enable) {
-	vfprintf(stderr, f, args);
-	fflush(stderr);
-    }
     va_end(args);
 }
 
@@ -106,8 +101,27 @@ static void debugArg(arg)
 	debugLevels[i] = l;
 }
 
-void _db_init(prefix, logfile)
-     char *prefix;
+static void debugOpenLog(logfile)
+     char *logfile;
+{
+    if (logfile == NULL) {
+	debug_log = stderr;
+	return;
+    }
+    if (debug_log_file)
+	free(debug_log_file);
+    debug_log_file = xstrdup(logfile);	/* keep a static copy */
+    debug_log = fopen(logfile, "a+");
+    if (!debug_log) {
+	fprintf(stderr, "WARNING: Cannot write log file: %s\n", logfile);
+	perror(logfile);
+	fprintf(stderr, "         messages will be sent to 'stderr'.\n");
+	fflush(stderr);
+	debug_log = stderr;
+    }
+}
+
+void _db_init(logfile)
      char *logfile;
 {
     int i;
@@ -124,28 +138,8 @@ void _db_init(prefix, logfile)
 	}
 	xfree(p);
     }
-    /* open error logging file */
-    if (logfile != NULL) {
-	if (debug_log_file)
-	    free(debug_log_file);
-	debug_log_file = strdup(logfile);	/* keep a static copy */
-	debug_log = fopen(logfile, "a+");
-	if (!debug_log) {
-	    fprintf(stderr, "WARNING: Cannot write log file: %s\n", logfile);
-	    perror(logfile);
-	    fprintf(stderr, "         messages will be sent to 'stderr'.\n");
-	    fflush(stderr);
-	    debug_log = stderr;
-	    /* avoid reduntancy */
-	    stderr_enable = 0;
-	}
-    } else {
-	fprintf(stderr, "WARNING: No log file specified?\n");
-	fprintf(stderr, "         messages will be sent to 'stderr'.\n");
-	fflush(stderr);
-	debug_log = stderr;
-	stderr_enable = 0;
-    }
+
+    debugOpenLog(logfile);
 
 #if HAVE_SYSLOG
     if (syslog_enable)
@@ -154,7 +148,6 @@ void _db_init(prefix, logfile)
 
 }
 
-/* gack!  would be nice to use _db_init() instead */
 void _db_rotate_log()
 {
     int i;
@@ -178,16 +171,8 @@ void _db_rotate_log()
     }
     /* Close and reopen the log.  It may have been renamed "manually"
      * before HUP'ing us. */
-    fclose(debug_log);
-    debug_log = fopen(debug_log_file, "a+");
-    if (debug_log == NULL) {
-	fprintf(stderr, "WARNING: Cannot write log file: %s\n",
-	    debug_log_file);
-	perror(debug_log_file);
-	fprintf(stderr, "         messages will be sent to 'stderr'.\n");
-	fflush(stderr);
-	debug_log = stderr;
-	/* avoid redundancy */
-	stderr_enable = 0;
+    if (debug_log != stderr) {
+	fclose(debug_log);
+	debugOpenLog(debug_log_file);
     }
 }

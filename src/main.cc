@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.10 1996/03/27 18:15:49 wessels Exp $ */
+/* $Id: main.cc,v 1.11 1996/03/27 18:50:23 wessels Exp $ */
 
 #include "squid.h"
 
@@ -35,6 +35,26 @@ static int asciiPortNumOverride = 0;
 static int binaryPortNumOverride = 0;
 static int udpPortNumOverride = 0;
 
+
+static void usage()
+{
+	    fprintf(stderr, "\
+Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
+       -h        Print help message.\n\
+       -s        Enable logging to syslog.\n\
+       -v        Print version.\n\
+       -z        Zap disk storage -- deletes all objects in disk cache.\n\
+       -C        Do not catch fatal signals.\n\
+       -D        Disable initial DNS tests.\n\
+       -R        Do not set REUSEADDR on port.\n\
+       -f file   Use given config-file instead of\n\
+                 $HARVEST_HOME/lib/cached.conf.\n\
+       -a port	 Specify ASCII port number (default: %d).\n\
+       -u port	 Specify UDP port number (default: %d).\n",
+		CACHE_HTTP_PORT, CACHE_ICP_PORT);
+	exit(1);
+}
+
 int main(argc, argv)
      int argc;
      char **argv;
@@ -47,11 +67,6 @@ int main(argc, argv)
     char *s = NULL;
     int n;			/* # of GC'd objects */
     time_t last_maintain = 0;
-
-#ifdef WRITE_PID_FILE
-    FILE *pid_fp = NULL;
-    static char pidfn[MAXPATHLEN];
-#endif
 
     cached_starttime = cached_curtime = time((time_t *) NULL);
     failure_notify = fatal_dump;
@@ -101,14 +116,6 @@ int main(argc, argv)
     /*init comm module */
     comm_init();
 
-#ifdef DAEMON
-    if (daemonize()) {
-	fprintf(stderr, "Error: couldn't create daemon process\n");
-	exit(0);
-    }
-    /*  signal( SIGHUP, restart ); *//* restart if/when proc dies */
-#endif /* DAEMON */
-
     /* we have to init fdstat here. */
     fdstat_init(PREOPEN_FD);
     fdstat_open(0, LOG);
@@ -126,14 +133,12 @@ int main(argc, argv)
     }
 
     /* enable syslog by default */
-    syslog_enable = 1;
-    /* disable stderr debug printout by default */
-    stderr_enable = 0;
+    syslog_enable = 0;
     /* preinit for debug module */
     debug_log = stderr;
     hash_init(0);
 
-    while ((c = getopt(argc, argv, "vCDRVseif:a:p:u:d:m:zh?")) != -1)
+    while ((c = getopt(argc, argv, "vCDRVsif:a:p:u:m:zh?")) != -1)
 	switch (c) {
 	case 'v':
 	    printf("Harvest Cache: Version %s\n", SQUID_VERSION);
@@ -151,8 +156,6 @@ int main(argc, argv)
 	case 's':
 	    syslog_enable = 0;
 	    break;
-	case 'e':
-	    stderr_enable = 1;
 	    break;
 	case 'R':
 	    do_reuse = 0;
@@ -179,23 +182,7 @@ int main(argc, argv)
 	case '?':
 	case 'h':
 	default:
-	    printf("\
-Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
-       -e        Print messages to stderr.\n\
-       -h        Print help message.\n\
-       -s        Disable syslog output.\n\
-       -v        Print version.\n\
-       -z        Zap disk storage -- deletes all objects in disk cache.\n\
-       -C        Do not catch fatal signals.\n\
-       -D        Disable initial DNS tests.\n\
-       -R        Do not set REUSEADDR on port.\n\
-       -f file   Use given config-file instead of\n\
-                 $HARVEST_HOME/lib/cached.conf.\n\
-       -a port	 Specify ASCII port number (default: %d).\n\
-       -u port	 Specify UDP port number (default: %d).\n",
-		CACHE_HTTP_PORT, CACHE_ICP_PORT);
-
-	    exit(1);
+	    usage();
 	    break;
 	}
 
@@ -223,7 +210,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
     if (udpPortNumOverride > 0)
 	setUdpPortNum(udpPortNumOverride);
 
-    _db_init("cached", getCacheLogFile());
+    _db_init(getCacheLogFile());
     fdstat_open(fileno(debug_log), LOG);
     fd_note(fileno(debug_log), getCacheLogFile());
 
@@ -307,22 +294,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
     stat_init(&CacheInfo, getAccessLogFile());
     storeInit();
     stmemInit();
-
-#ifdef WRITE_PID_FILE
-    /* Try to write the pid to cached.pid in the same directory as
-     * cached.conf */
-    memset(pidfn, '\0', MAXPATHLEN);
-    strcpy(pidfn, config_file);
-    if ((s = strrchr(pidfn, '/')) != NULL)
-	strcpy(s, "/cached.pid");
-    else
-	strcpy(pidfn, "/usr/local/harvest/lib/cached.pid");
-    pid_fp = fopen(pidfn, "w");
-    if (pid_fp != NULL) {
-	fprintf(pid_fp, "%d\n", (int) getpid());
-	fclose(pid_fp);
-    }
-#endif
+    writePidFile();
 
     /* after this point we want to see the mallinfo() output */
     do_mallinfo = 1;
