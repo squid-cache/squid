@@ -449,7 +449,6 @@ struct _fileMap {
 struct _hash_link {
     char *key;
     hash_link *next;
-    void *item;
 };
 
 struct _hash_table {
