@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.148 1996/11/05 17:02:58 wessels Exp $
+ * $Id: store.cc,v 1.149 1996/11/05 17:08:29 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -465,7 +465,7 @@ time_describe(time_t t)
 }
 
 static void
-storeLog(int tag, const StoreEntry *e)
+storeLog(int tag, const StoreEntry * e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     time_t t = -1;
@@ -921,7 +921,7 @@ storeUnregister(StoreEntry * e, int fd)
 }
 
 int
-storeGetLowestReaderOffset(const StoreEntry *entry)
+storeGetLowestReaderOffset(const StoreEntry * entry)
 {
     const MemObject *mem = entry->mem_obj;
     int lowest = mem->e_current_len;
@@ -1004,7 +1004,7 @@ storeStartDeleteBehind(StoreEntry * e)
 
 /* Append incoming data from a primary server to an entry. */
 void
-storeAppend(StoreEntry *e, const char *data, int len)
+storeAppend(StoreEntry * e, const char *data, int len)
 {
     MemObject *mem;
     /* sanity check */
@@ -1035,7 +1035,7 @@ storeAppend(StoreEntry *e, const char *data, int len)
 
 #ifdef __STDC__
 void
-storeAppendPrintf(StoreEntry *e, const char *fmt,...)
+storeAppendPrintf(StoreEntry * e, const char *fmt,...)
 {
     va_list args;
     LOCAL_ARRAY(char, buf, 4096);
@@ -1109,7 +1109,7 @@ storeSwapFullPath(int fn, char *fullpath)
 
 /* swapping in handle */
 static int
-storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry *e, int offset_notused)
+storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry * e, int offset_notused)
 {
     MemObject *mem = e->mem_obj;
     SIH handler = NULL;
@@ -1228,7 +1228,7 @@ storeSwapInStart(StoreEntry * e, SIH swapin_complete_handler, void *swapin_compl
 }
 
 static void
-storeSwapLog(const StoreEntry *e)
+storeSwapLog(const StoreEntry * e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     /* Note this printf format appears in storeWriteCleanLog() too */
@@ -2153,7 +2153,7 @@ storeRelease(StoreEntry * e)
 
 /* return if the current key is the original one. */
 int
-storeOriginalKey(const StoreEntry *e)
+storeOriginalKey(const StoreEntry * e)
 {
     if (!e)
 	return 1;
@@ -2162,7 +2162,7 @@ storeOriginalKey(const StoreEntry *e)
 
 /* return 1 if a store entry is locked */
 static int
-storeEntryLocked(const StoreEntry *e)
+storeEntryLocked(const StoreEntry * e)
 {
     if (e->lock_count)
 	return 1;
@@ -2177,7 +2177,7 @@ storeEntryLocked(const StoreEntry *e)
 
 /*  use this for internal call only */
 static int
-storeCopy(const StoreEntry *e, int stateoffset, int maxSize, char *buf, int *size)
+storeCopy(const StoreEntry * e, int stateoffset, int maxSize, char *buf, int *size)
 {
     int available_to_write = 0;
 
@@ -2206,7 +2206,7 @@ storeCopy(const StoreEntry *e, int stateoffset, int maxSize, char *buf, int *siz
 /* check if there is any client waiting for this object at all */
 /* return 1 if there is at least one client */
 int
-storeClientWaiting(const StoreEntry *e)
+storeClientWaiting(const StoreEntry * e)
 {
     int i;
     MemObject *mem = e->mem_obj;
@@ -2227,7 +2227,7 @@ storeClientWaiting(const StoreEntry *e)
 
 /* return index to matched clientstatus in client_list, -1 on NOT_FOUND */
 static int
-storeClientListSearch(const MemObject *mem, int fd)
+storeClientListSearch(const MemObject * mem, int fd)
 {
     int i;
     if (mem->client_list) {
@@ -2316,7 +2316,7 @@ storeClientCopy(StoreEntry * e,
 }
 
 static int
-storeEntryValidLength(const StoreEntry *e)
+storeEntryValidLength(const StoreEntry * e)
 {
     int diff;
     int hdr_sz;
@@ -2715,7 +2715,7 @@ swapInError(int fd_unused, StoreEntry * entry)
 }
 
 int
-storePendingNClients(const StoreEntry *e)
+storePendingNClients(const StoreEntry * e)
 {
     int npend = 0;
     int i;
@@ -2769,7 +2769,7 @@ storeRotateLog(void)
 }
 
 static int
-storeShouldPurgeMem(const StoreEntry *e)
+storeShouldPurgeMem(const StoreEntry * e)
 {
     if (storeCheckPurgeMem(e) == 0)
 	return 0;
@@ -2785,7 +2785,7 @@ storeShouldPurgeMem(const StoreEntry *e)
  * storeUnlockObject() and storeSwapOutHandle().
  */
 static int
-storeCheckPurgeMem(const StoreEntry *e)
+storeCheckPurgeMem(const StoreEntry * e)
 {
     if (storeEntryLocked(e))
 	return 0;
@@ -2797,7 +2797,7 @@ storeCheckPurgeMem(const StoreEntry *e)
 }
 
 static int
-storeCheckExpired(const StoreEntry *e)
+storeCheckExpired(const StoreEntry * e)
 {
     if (storeEntryLocked(e))
 	return 0;
@@ -2809,7 +2809,7 @@ storeCheckExpired(const StoreEntry *e)
 }
 
 static const char *
-storeDescribeStatus(const StoreEntry *e)
+storeDescribeStatus(const StoreEntry * e)
 {
     static char buf[MAX_URL << 1];
     sprintf(buf, "mem:%13s ping:%12s store:%13s swap:%12s locks:%d %s\n",

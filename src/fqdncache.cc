@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.31 1996/11/04 18:12:33 wessels Exp $
+ * $Id: fqdncache.cc,v 1.32 1996/11/05 17:08:06 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -279,7 +279,7 @@ fqdncache_compareLastRef(fqdncache_entry ** e1, fqdncache_entry ** e2)
 }
 
 static int
-fqdncacheExpiredEntry(const fqdncache_entry *f)
+fqdncacheExpiredEntry(const fqdncache_entry * f)
 {
     if (f->status == FQDN_PENDING)
 	return 0;
@@ -381,7 +381,7 @@ fqdncache_add_to_hash(fqdncache_entry * f)
 
 
 static void
-fqdncache_add(const char *name, fqdncache_entry *f, const struct hostent *hp, int cached)
+fqdncache_add(const char *name, fqdncache_entry * f, const struct hostent *hp, int cached)
 {
     int k;
 
@@ -443,7 +443,7 @@ fqdncache_call_pending_badname(int fd, FQDNH handler, void *data)
 }
 
 static fqdncache_entry *
-fqdncache_parsebuffer(const char *inbuf, dnsserver_t *dnsData)
+fqdncache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
 {
     char *buf = xstrdup(inbuf);
     char *token;
@@ -829,7 +829,7 @@ dummy_handler(int u1, const char *u2, void *u3)
 }
 
 static int
-fqdncacheHasPending(const fqdncache_entry *f)
+fqdncacheHasPending(const fqdncache_entry * f)
 {
     const struct _fqdn_pending *p = NULL;
     if (f->status != FQDN_PENDING)

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.79 1996/11/05 16:59:44 wessels Exp $
+ * $Id: neighbors.cc,v 1.80 1996/11/05 17:08:17 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -155,7 +155,7 @@ whichEdge(const struct sockaddr_in *from)
 }
 
 void
-hierarchyNote(request_t *request, hier_code code, int timeout, const char *cache_host)
+hierarchyNote(request_t * request, hier_code code, int timeout, const char *cache_host)
 {
     if (request) {
 	request->hierarchy.code = code;
@@ -165,7 +165,7 @@ hierarchyNote(request_t *request, hier_code code, int timeout, const char *cache
 }
 
 static neighbor_t
-neighborType(const edge *e, const request_t *request)
+neighborType(const edge * e, const request_t * request)
 {
     const dom_list *d = NULL;
     for (d = e->domains; d; d = d->next) {
@@ -177,7 +177,7 @@ neighborType(const edge *e, const request_t *request)
 }
 
 static int
-edgeWouldBePinged(const edge *e, request_t *request)
+edgeWouldBePinged(const edge * e, request_t * request)
 {
     const dom_list *d = NULL;
     int do_ping = 1;
@@ -527,7 +527,7 @@ neighborsUdpPing(protodispatch_data * proto)
 }
 
 static void
-neighborAlive(edge *e, const MemObject *mem, const icp_common_t *header)
+neighborAlive(edge * e, const MemObject * mem, const icp_common_t * header)
 {
     int rtt;
     int n;
@@ -566,7 +566,7 @@ neighborCountIgnored(edge * e, icp_opcode op_unused)
  * If a hit process is already started, then sobeit
  */
 void
-neighborsUdpAck(int fd, const char *url, icp_common_t *header, const struct sockaddr_in *from, StoreEntry *entry, char *data, int data_sz)
+neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct sockaddr_in *from, StoreEntry * entry, char *data, int data_sz)
 {
     edge *e = NULL;
     MemObject *mem = entry->mem_obj;

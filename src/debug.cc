@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.34 1996/11/04 18:12:22 wessels Exp $
+ * $Id: debug.cc,v 1.35 1996/11/05 17:08:03 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -118,7 +118,7 @@ static char *accessLogTime _PARAMS((time_t));
 
 #ifdef __STDC__
 void
-_db_print(int section, int level, const char *format, ...)
+_db_print(int section, int level, const char *format,...)
 {
     va_list args;
 #else

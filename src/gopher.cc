@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.61 1996/11/05 16:54:49 wessels Exp $
+ * $Id: gopher.cc,v 1.62 1996/11/05 17:08:10 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -403,10 +403,10 @@ gopherToHTML(GopherStateData * data, char *inbuf, int len)
 
     if (data->conversion == HTML_INDEX_PAGE) {
 	sprintf(outbuf, "<HTML><HEAD><TITLE>Gopher Index %s</TITLE></HEAD>\n"
-		"<BODY><H1>%s<BR>Gopher Search</H1>\n"
-		"<p>This is a searchable Gopher index. Use the search\n"
-		"function of your browser to enter search terms.\n"
-		"<ISINDEX></BODY></HTML>\n", entry->url, entry->url);
+	    "<BODY><H1>%s<BR>Gopher Search</H1>\n"
+	    "<p>This is a searchable Gopher index. Use the search\n"
+	    "function of your browser to enter search terms.\n"
+	    "<ISINDEX></BODY></HTML>\n", entry->url, entry->url);
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
 	BIT_RESET(entry->flag, DELAY_SENDING);
@@ -416,10 +416,10 @@ gopherToHTML(GopherStateData * data, char *inbuf, int len)
     }
     if (data->conversion == HTML_CSO_PAGE) {
 	sprintf(outbuf, "<HTML><HEAD><TITLE>CSO Search of %s</TITLE></HEAD>\n"
-		"<BODY><H1>%s<BR>CSO Search</H1>\n"
-		"<P>A CSO database usually contains a phonebook or\n"
-		"directory.  Use the search function of your browser to enter\n"
-		"search terms.</P><ISINDEX></BODY></HTML>\n",
+	    "<BODY><H1>%s<BR>CSO Search</H1>\n"
+	    "<P>A CSO database usually contains a phonebook or\n"
+	    "directory.  Use the search function of your browser to enter\n"
+	    "search terms.</P><ISINDEX></BODY></HTML>\n",
 	    entry->url, entry->url);
 
 	storeAppend(entry, outbuf, strlen(outbuf));

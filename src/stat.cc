@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.98 1996/11/04 18:13:05 wessels Exp $
+ * $Id: stat.cc,v 1.99 1996/11/05 17:08:26 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -169,7 +169,7 @@ static void info_get_mallstat _PARAMS((int, int, StoreEntry *));
 
 /* process utilization information */
 static void
-stat_utilization_get(cacheinfo *obj, StoreEntry *sentry, const char *desc)
+stat_utilization_get(cacheinfo * obj, StoreEntry * sentry, const char *desc)
 {
     protocol_t proto_id;
     proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
@@ -297,7 +297,7 @@ stat_io_get(StoreEntry * sentry)
  * may not reflect the retrieving object....
  * something need to be done here to get more accurate cache size */
 static int
-cache_size_get(const cacheinfo *obj)
+cache_size_get(const cacheinfo * obj)
 {
     int size = 0;
     protocol_t proto_id;
@@ -308,7 +308,7 @@ cache_size_get(const cacheinfo *obj)
 }
 
 static const char *
-describeStatuses(const StoreEntry *entry)
+describeStatuses(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
     sprintf(buf, "%-13s %-13s %-12s %-12s",
@@ -320,7 +320,7 @@ describeStatuses(const StoreEntry *entry)
 }
 
 static const char *
-describeFlags(const StoreEntry *entry)
+describeFlags(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
     int flags = (int) entry->flag;
@@ -364,7 +364,7 @@ describeFlags(const StoreEntry *entry)
 }
 
 static const char *
-describeTimestamps(const StoreEntry *entry)
+describeTimestamps(const StoreEntry * entry)
 {
     LOCAL_ARRAY(char, buf, 256);
     sprintf(buf, "LV:%-9d LU:%-9d LM:%-9d EX:%-9d",
@@ -377,7 +377,7 @@ describeTimestamps(const StoreEntry *entry)
 
 /* process objects list */
 static void
-stat_objects_get(const cacheinfo *obj, StoreEntry *sentry, int vm_or_not)
+stat_objects_get(const cacheinfo * obj, StoreEntry * sentry, int vm_or_not)
 {
     StoreEntry *entry = NULL;
     MemObject *mem;
@@ -409,7 +409,7 @@ stat_objects_get(const cacheinfo *obj, StoreEntry *sentry, int vm_or_not)
 
 /* process a requested object into a manager format */
 static void
-stat_get(const cacheinfo *obj, const char *req, StoreEntry *sentry)
+stat_get(const cacheinfo * obj, const char *req, StoreEntry * sentry)
 {
 
     if (strcmp(req, "objects") == 0) {
@@ -441,7 +441,7 @@ stat_get(const cacheinfo *obj, const char *req, StoreEntry *sentry)
 
 /* generate logfile status information */
 static void
-log_status_get(const cacheinfo *obj, StoreEntry *sentry)
+log_status_get(const cacheinfo * obj, StoreEntry * sentry)
 {
     if (obj->logfile_status == LOG_ENABLE) {
 	storeAppendPrintf(sentry, "{\"Logfile is Enabled. Filename: %s\"}\n",
@@ -456,7 +456,7 @@ log_status_get(const cacheinfo *obj, StoreEntry *sentry)
 /* log convert handler */
 /* call for each line in file, use fileWalk routine */
 static int
-logReadHandler(int fd_unused, const char *buf, int size_unused, log_read_data_t *data)
+logReadHandler(int fd_unused, const char *buf, int size_unused, log_read_data_t * data)
 {
     storeAppendPrintf(data->sentry, "{%s}\n", buf);
     return 0;
@@ -477,7 +477,7 @@ logReadEndHandler(int fd, int errflag_unused, log_read_data_t * data)
 
 /* start converting logfile to processed format */
 static void
-log_get_start(const cacheinfo *obj, StoreEntry *sentry)
+log_get_start(const cacheinfo * obj, StoreEntry * sentry)
 {
     log_read_data_t *data = NULL;
     int fd;
@@ -509,7 +509,7 @@ log_get_start(const cacheinfo *obj, StoreEntry *sentry)
 /* squid convert handler */
 /* call for each line in file, use fileWalk routine */
 static int
-squidReadHandler(int fd_unused, const char *buf, int size_unused, squid_read_data_t *data)
+squidReadHandler(int fd_unused, const char *buf, int size_unused, squid_read_data_t * data)
 {
     storeAppendPrintf(data->sentry, "{\"%s\"}\n", buf);
     return 0;
@@ -529,7 +529,7 @@ squidReadEndHandler(int fd_unused, int errflag_unused, squid_read_data_t * data)
 
 /* start convert squid.conf file to processed format */
 static void
-squid_get_start(const cacheinfo *obj, StoreEntry *sentry)
+squid_get_start(const cacheinfo * obj, StoreEntry * sentry)
 {
     squid_read_data_t *data;
 
@@ -549,7 +549,7 @@ dummyhandler(cacheinfo * obj, StoreEntry * sentry)
 }
 
 static void
-server_list(const cacheinfo *obj, StoreEntry *sentry)
+server_list(const cacheinfo * obj, StoreEntry * sentry)
 {
     edge *e = NULL;
     dom_list *d = NULL;
@@ -721,7 +721,7 @@ mallinfoTotal(void)
 #endif
 
 static void
-info_get(const cacheinfo *obj, StoreEntry *sentry)
+info_get(const cacheinfo * obj, StoreEntry * sentry)
 {
     const char *tod = NULL;
     float f;
@@ -935,7 +935,7 @@ info_get(const cacheinfo *obj, StoreEntry *sentry)
 }
 
 static void
-parameter_get(const cacheinfo *obj, StoreEntry *sentry)
+parameter_get(const cacheinfo * obj, StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, open_bracket);
     storeAppendPrintf(sentry,
@@ -1048,7 +1048,7 @@ log_quote(const char *header)
 
 
 static void
-log_append(const cacheinfo *obj,
+log_append(const cacheinfo * obj,
     const char *url,
     struct in_addr caddr,
     int size,
@@ -1258,7 +1258,7 @@ proto_count(cacheinfo * obj, protocol_t proto_id, log_type type)
 
 
 void
-stat_init(cacheinfo **object, const char *logfilename)
+stat_init(cacheinfo ** object, const char *logfilename)
 {
     cacheinfo *obj = NULL;
     int i;

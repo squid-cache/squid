@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.48 1996/11/05 16:53:44 wessels Exp $
+ * $Id: errorpage.cc,v 1.49 1996/11/05 17:08:05 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -153,7 +153,7 @@ errorInitialize(void)
 }
 
 void
-squid_error_entry(StoreEntry *entry, log_type type, const char *msg)
+squid_error_entry(StoreEntry * entry, log_type type, const char *msg)
 {
     int error_index;
 
@@ -337,7 +337,7 @@ access_denied_redirect(int code, int method, const char *url, const char *client
 }
 
 char *
-authorization_needed_msg(const request_t *request, const char *realm)
+authorization_needed_msg(const request_t * request, const char *realm)
 {
     sprintf(auth_msg, "<HTML><HEAD><TITLE>Authorization needed</TITLE>\n\
 </HEAD><BODY><H1>Authorization needed</H1>\n\

@@ -1,6 +1,7 @@
 
+
 /*
- * $Id: pinger.cc,v 1.13 1996/11/04 18:12:56 wessels Exp $
+ * $Id: pinger.cc,v 1.14 1996/11/05 17:08:20 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels

@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.37 1996/11/04 18:13:13 wessels Exp $
+ * $Id: url.cc,v 1.38 1996/11/05 17:08:32 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -249,7 +249,7 @@ urlParse(method_t method, char *url)
 }
 
 char *
-urlCanonical(const request_t *request, char *buf)
+urlCanonical(const request_t * request, char *buf)
 {
     LOCAL_ARRAY(char, urlbuf, MAX_URL + 1);
     LOCAL_ARRAY(char, portbuf, 32);
@@ -312,7 +312,7 @@ matchDomainName(const char *domain, const char *host)
 }
 
 int
-urlCheckRequest(const request_t *r)
+urlCheckRequest(const request_t * r)
 {
     int rc = 0;
     if (r->method == METHOD_CONNECT)

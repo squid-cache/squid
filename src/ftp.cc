@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.75 1996/11/05 16:54:47 wessels Exp $
+ * $Id: ftp.cc,v 1.76 1996/11/05 17:08:07 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -545,7 +545,7 @@ ftpGetBasicAuth(const char *req_hdr)
 
 
 int
-ftpStart(int unusedfd, const char *url, request_t *request, StoreEntry *entry)
+ftpStart(int unusedfd, const char *url, request_t * request, StoreEntry * entry)
 {
     LOCAL_ARRAY(char, realm, 8192);
     FtpStateData *ftpData = NULL;
