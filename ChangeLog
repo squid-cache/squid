@@ -9,6 +9,8 @@ Changes to squid-1.1.beta20 (November 13, 1996):
 	- More const fixes (Markus Gyger).
 	- Added xstrncpy() which null-terminates (Markus Gyger).
 	- Fixed Cache-Control counting in HTTP reply header stats.
+	- Relocated rfc1738_unescape() calls in ftpget so that
+	  ftp://foo.org/%2fbar/ works (Jonathan Larmour).
 
 Changes to squid-1.1.beta19 (November 13, 1996):
 
