@@ -20,6 +20,7 @@ Our Todo List
 	- Make sure the lib/*.c files do not use printf/fprintf.
 	- Replace bzero with memset
 	- Replace bcopy with xmemcpy
+(2) Add "Squid" trailer to all error messages.
 
 (3) request-range
 (3) hit metering
