@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.248 1998/04/01 21:23:02 wessels Exp $
+ * $Id: client_side.cc,v 1.249 1998/04/02 04:45:04 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -634,9 +634,8 @@ clientParseRequestHeaders(clientHttpRequest * http)
 		request->imslen = atoi(t + 7);
 	}
     }
-    if ((t = mime_get_header(request_hdr, "Pragma"))) {
-	if (!strcasecmp(t, "no-cache"))
-	    EBIT_SET(request->flags, REQ_NOCACHE);
+    if ((t = mime_get_header_field(request_hdr, "Pragma", "no-cache"))) {
+	EBIT_SET(request->flags, REQ_NOCACHE);
     }
     if (mime_get_header(request_hdr, "Range")) {
 	EBIT_SET(request->flags, REQ_NOCACHE);
@@ -674,10 +673,13 @@ clientParseRequestHeaders(clientHttpRequest * http)
     if ((t = mime_get_header(request_hdr, "X-Forwarded-For")))
 	fvdbCountForw(t);
 #endif
-    request->max_age = -1;
-    if ((t = mime_get_header(request_hdr, "Cache-control"))) {
-	if (!strncasecmp(t, "Max-age=", 8))
-	    request->max_age = atoi(t + 8);
+    if ((t = mime_get_header_field(request_hdr, "Cache-control", "max-age="))) {
+	request->max_age = atoi(t + 8);
+    } else {
+	request->max_age = -1;
+    }
+    if ((t = mime_get_header_field(request_hdr, "Cache-control", "only-if-cached"))) {
+	EBIT_SET(request->flags, REQ_CC_ONLY_IF_CACHED);
     }
     if (request->method == METHOD_TRACE) {
 	if ((t = mime_get_header(request_hdr, "Max-Forwards")))
@@ -1362,7 +1364,8 @@ clientProcessRequest(clientHttpRequest * http)
     }
     /* ok, it is a miss or a "dirty" hit (will contact other servers) */
     /* are we allowed to contact other servers? */
-    if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) {
+    if (EBIT_TEST(r->flags, REQ_CC_ONLY_IF_CACHED)) {
+    /* future interface: if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) { */
 	/* nope, bailing out */
 	clientProcessOnlyIfCachedMiss(http);
 	return;
