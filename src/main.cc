@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.244 1998/04/06 22:32:15 wessels Exp $
+ * $Id: main.cc,v 1.245 1998/04/08 16:56:32 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -432,8 +432,10 @@ mainInitialize(void)
     squid_signal(SIGPIPE, SIG_IGN, SA_RESTART);
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
 
-    if (!configured_once)
+    if (!configured_once) {
 	cbdataInit();
+	memInit();		/* memInit must go before config parsing */
+    }
     if (ConfigFile == NULL)
 	ConfigFile = xstrdup(DefaultConfigFile);
     parseConfigFile(ConfigFile);
@@ -456,10 +458,8 @@ mainInitialize(void)
     debug(1, 0) ("Process ID %d\n", (int) getpid());
     debug(1, 1) ("With %d file descriptors available\n", Squid_MaxFD);
 
-    if (!configured_once) {
-	memInit();		/* memInit must go before at least redirect */
+    if (!configured_once)
 	disk_init();		/* disk_init must go before ipcache_init() */
-    }
     ipcache_init();
     fqdncache_init();
     dnsOpenServers();
