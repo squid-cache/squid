@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.38 1999/12/30 17:36:28 wessels Exp $
+ * $Id: comm_select.cc,v 1.39 2000/01/03 19:25:52 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -37,7 +37,7 @@
 #if USE_ASYNC_IO
 #define MAX_POLL_TIME 10
 #elif USE_DISKD
-#define MAX_POLL_TIME 10
+#define MAX_POLL_TIME 100
 #else
 #define MAX_POLL_TIME 1000
 #endif
