@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.208 1997/07/16 04:48:27 wessels Exp $
+ * $Id: cache_cf.cc,v 1.209 1997/07/16 05:25:04 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -140,7 +140,7 @@ parseConfigFile(const char *file_name)
 {
     FILE *fp = NULL;
     char *token = NULL;
-    LOCAL_ARRAY(char, tmp_line, BUFSIZ);
+    char *tmp_line;
     free_all();
     default_all();
     if ((fp = fopen(file_name, "r")) == NULL) {
@@ -162,12 +162,13 @@ parseConfigFile(const char *file_name)
 	if (config_input_line[0] == '\0')
 	    continue;
 	debug(3, 5) ("Processing: '%s'\n", config_input_line);
-	xstrncpy(tmp_line, config_input_line, BUFSIZ);
+	tmp_line = xstrdup(config_input_line);
 	if (!parse_line(tmp_line)) {
 	    debug(3, 0) ("parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
 		config_input_line);
 	}
+	safe_free(tmp_line);
     }
 
     /* Sanity checks */
@@ -487,11 +488,15 @@ parse_peer(peer ** head)
     int i;
     ushortlist *u;
     const char *me = getMyHostname();
+debug(0,0)("this be cache_peer()\n");
+debug(0,0)("%s\n", strtok(NULL, null_string));
     p = xcalloc(1, sizeof(peer));
     p->http_port = CACHE_HTTP_PORT;
     p->icp_port = CACHE_ICP_PORT;
     p->weight = 1;
-    if ((token = strtok(NULL, w_space)) == NULL) {
+    token = strtok(NULL, w_space);
+debug(0,0)("token = %p\n", token);
+    if (token == NULL) {
 	debug(0,0)("bad hostname\n");
 	self_destruct();
     }
