@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.248 2002/01/16 02:55:40 hno Exp $
+# $Id: cf.data.pre,v 1.249 2002/02/23 01:36:31 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -82,6 +82,11 @@ DOC_START
 	address, however.
 
 	You may specify multiple socket addresses on multiple lines.
+
+	If you run Squid on a dual-homed machine with a internal
+	and an external interface then we recommend you to specify the
+	internal address:port in http_port. This way Squid will only be
+	visible on the internal address.
 DOC_END
 
 NAME: https_port
@@ -1995,6 +2000,12 @@ http_access deny CONNECT !SSL_ports
 #http_access deny to_localhost
 #
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+
+# Exampe rule allowing access from your local networks. Adapt
+# to list your (internal) IP networks from where browsing should
+# be allowed
+#acl our_networks src 192.168.1.0/24 192.168.2.0/24
+#http_access allow our_networks
 
 # And finally deny all other access to this proxy
 http_access deny all
