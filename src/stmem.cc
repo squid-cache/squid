@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.55 1998/01/12 04:30:12 wessels Exp $
+ * $Id: stmem.cc,v 1.56 1998/02/02 21:15:06 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -220,6 +220,10 @@ stmemCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
     /* Seek our way into store */
     while ((t_off + p->len) < offset) {
 	t_off += p->len;
+	if(!p->next) {
+	    debug(19,1) ("memCopy: p->next == NULL\n");
+	    return 0;
+	}
 	assert(p->next);
 	p = p->next;
     }

@@ -789,6 +789,7 @@ struct _store_client {
     void *callback_data;
     MemObject *mem;		/* ptr to the parent structure, argh! */
     int swapin_fd;
+    int disk_op_in_progress;
     struct _store_client *next;
 };
 

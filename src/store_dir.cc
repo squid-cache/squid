@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.41 1998/02/02 07:20:57 wessels Exp $
+ * $Id: store_dir.cc,v 1.42 1998/02/02 21:15:09 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -52,11 +52,19 @@ storeSwapFullPath(int fn, char *fullpath)
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
+#if MONOTONIC_STORE
+    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
+	Config.cacheSwap.swapDirs[dirn].path,
+	((filn / Config.cacheSwap.swapDirs[dirn].l2) / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l1,
+	(filn / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l2,
+	filn);
+#else
     snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
 	Config.cacheSwap.swapDirs[dirn].path,
 	filn % Config.cacheSwap.swapDirs[dirn].l1,
 	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2,
 	filn);
+#endif
     return fullpath;
 }
 
@@ -83,10 +91,17 @@ storeSwapSubSubDir(int fn, char *fullpath)
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
+#if MONOTONIC_STORE
     snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
+	Config.cacheSwap.swapDirs[dirn].path,
+	((filn / Config.cacheSwap.swapDirs[dirn].l2) / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l1,
+	(filn / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l2);
+#else
+    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
 	Config.cacheSwap.swapDirs[dirn].path,
 	filn % Config.cacheSwap.swapDirs[dirn].l1,
 	filn / Config.cacheSwap.swapDirs[dirn].l1 % Config.cacheSwap.swapDirs[dirn].l2);
+#endif
     return fullpath;
 }
 
@@ -212,7 +227,9 @@ storeDirMapBitSet(int fn)
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
     file_map_bit_set(Config.cacheSwap.swapDirs[dirn].map, filn);
+#if !MONOTONIC_STORE
     Config.cacheSwap.swapDirs[dirn].suggest++;
+#endif
 }
 
 void
@@ -221,8 +238,10 @@ storeDirMapBitReset(int fn)
     int dirn = fn >> SWAP_DIR_SHIFT;
     int filn = fn & SWAP_FILE_MASK;
     file_map_bit_reset(Config.cacheSwap.swapDirs[dirn].map, filn);
+#if !MONOTONIC_STORE
     if (fn < Config.cacheSwap.swapDirs[dirn].suggest)
 	Config.cacheSwap.swapDirs[dirn].suggest = fn;
+#endif
 }
 
 int
@@ -231,6 +250,9 @@ storeDirMapAllocate(void)
     int dirn = storeMostFreeSwapDir();
     SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     int filn = file_map_allocate(SD->map, SD->suggest);
+#if MONOTONIC_STORE
+    SD->suggest = filn + 1;
+#endif
     return (dirn << SWAP_DIR_SHIFT) | (filn & SWAP_FILE_MASK);
 }
 
@@ -258,12 +280,15 @@ storeDirSwapLog(const StoreEntry * e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     int dirn;
+
     assert(e->swap_file_number >= 0);
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
+#if !USE_ASYNC_IO
     assert(!EBIT_TEST(e->flag, KEY_PRIVATE));
+#endif
     /* Note this printf format appears in storeWriteCleanLog() too */
-    snprintf(logmsg, MAX_URL << 1, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
+    snprintf(logmsg, MAX_URL << 1, "%08x %08x %08x %08x %08x %d %6d %08x %s\n",
 	(int) e->swap_file_number,
 	(int) e->timestamp,
 	(int) e->lastref,
@@ -311,7 +336,7 @@ storeDirOpenSwapLogs(void)
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	SD = &Config.cacheSwap.swapDirs[i];
 	path = storeDirSwapLogFile(i, NULL);
-	fd = file_open(path, O_WRONLY | O_CREAT, NULL, NULL);
+	fd = file_open(path, O_WRONLY | O_CREAT, NULL, NULL, NULL);
 	if (fd < 0) {
 	    debug(50, 1) ("%s: %s\n", path, xstrerror());
 	    fatal("storeDirOpenSwapLogs: Failed to open swap log.");
@@ -358,7 +383,7 @@ storeDirOpenTmpSwapLog(int dirn, int *clean_flag)
     if (SD->swaplog_fd >= 0)
 	file_close(SD->swaplog_fd);
     /* open a write-only FD for the new log */
-    fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL);
+    fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", new_path, xstrerror());
 	fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
@@ -396,7 +421,7 @@ storeDirCloseTmpSwapLog(int dirn)
 	fatal("storeDirCloseTmpSwapLog: rename failed");
     }
     file_close(SD->swaplog_fd);
-    fd = file_open(swaplog_path, O_WRONLY | O_CREAT, NULL, NULL);
+    fd = file_open(swaplog_path, O_WRONLY | O_CREAT, NULL, NULL, NULL);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("storeDirCloseTmpSwapLog: Failed to open swap log.");

@@ -23,7 +23,51 @@
 	- Use memmove/bcopy as detected by configure Some systems does
 	  not have memmove, but have the older bcopy implementation
 	  (Henrik Nordstrom).
-
+	- Completely rewritten aiops.c that creates and manages a pool
+	  of threads so thread creation overhead is eliminated (SLF).
+	- Lots of mods to store.c to detect and cancel outstanding
+	  ASYNC ops.  Code is not proven exhaustive and there are
+	  definately still cases to be found where outstanding disk ops
+	  aren't cancelled properly (SLF).
+	- Changes to call interface to a few routines to support disk
+	  op `tagging', so operations can be cleanly cancelled on
+	  store_abort()s (SLF).
+	- Implementation of swap.state files as transaction logs.
+	  Removed objects are now noted with a negative object size.
+	  This allows reliatively clean rebuilds from non-clean
+	  shutdowns (SLF).
+	- Now that the swap.state files are transaction logs, there's
+	  now no need to validate by stat()ing.  All the validation
+	  procedure does is now just set the valid bit AFTER all the
+	  swap.state files have been read, because by that time, only
+	  valid objects can be left.  Object still need to be marked
+	  invalid when reading the swap.state file because there's no
+	  guarantee the file has been retaken or deleted (SLF).
+	- An fstat() call is now added after every
+	  storeSwapInFileOpened() so object sizes can be checked.   Added
+	  code to storeRelease() the object if the sizes don't match (SLF).
+        - #defining USE_ASYNC_IO now uses the async unlink() rather than
+          unlinkd() (SLF).
+	- #defining MONOTONIC_STORE will support the creation of disk
+	  objects clustered into directories.  This GREATLY improves disk
+	  performance (factor of 3) over old `write-over-old-object'
+	  method.  If using the MONOTONIC_STORE, the
+	  {get/put}_unusedFileno stack stuff is disabled.  This is
+	  actually a good thing and greatly reduces the risk of serving
+	  up bad objects (SLF).
+	- Fixed unlink() in storeWriteCleanLogs to be real unlink()
+	  rather than ASYNC/unlinkd unlinks.  swap.state.new files were
+	  being removed just after they were created due to delayed
+	  unlinks (SLF).
+	- Disabled various assertions and made these into debug warning
+	  messages to make the code more stable until the bugs can be
+	  tracked down (SLF).
+	- Added most of Michael O'Reilly's patches which included many
+	  bug fixes.  Ask him for full details (SLF).
+	- Moved aio_check_callbacks in comm_{poll|select}().  It was
+	  called after the fdset had been built which was wrong because
+	  the callbacks were changing the state of the read/write
+	  handlers prior to the poll/select() calls (SLF).
 
 Changes to squid-1.2.beta12 (Jan 30, 1998):
 

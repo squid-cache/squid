@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.21 1997/11/12 23:47:38 wessels Exp $
+ * $Id: filemap.cc,v 1.22 1998/02/02 21:15:01 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -174,6 +174,8 @@ file_map_allocate(fileMap * fm, int suggestion)
     int word;
     int bit;
     int count;
+    if (suggestion > fm->max_n_files)
+	suggestion = 0;
     if (!file_map_bit_test(fm, suggestion)) {
 	fm->last_file_number_allocated = suggestion;
 	return file_map_bit_set(fm, suggestion);

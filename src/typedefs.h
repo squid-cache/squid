@@ -77,11 +77,12 @@ typedef struct _dlink_node dlink_node;
 typedef struct _dlink_list dlink_list;
 typedef struct _StatCounters StatCounters;
 
+/* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);
 typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
 typedef void CNCB(int fd, int status, void *);
 typedef void FREE(void *);
-typedef void FOCB(void *, int fd);
+typedef void FOCB(void *, int fd, int errcode);
 typedef void EVH(void *);
 typedef void PF(int, void *);
 typedef void DRCB(int fd, const char *buf, int size, int errflag, void *data);

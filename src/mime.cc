@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.46 1998/01/12 04:30:41 wessels Exp $
+ * $Id: mime.cc,v 1.47 1998/02/02 21:15:03 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -405,7 +405,7 @@ mimeLoadIconFile(const char *icon)
     if (storeGet(key))
 	return;
     snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
-    fd = file_open(path, O_RDONLY, NULL, NULL);
+    fd = file_open(path, O_RDONLY, NULL, NULL, NULL);
     if (fd < 0) {
 	debug(25, 0) ("mimeLoadIconFile: %s: %s\n", path, xstrerror());
 	return;

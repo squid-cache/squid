@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.96 1998/02/02 07:20:54 wessels Exp $
+ * $Id: disk.cc,v 1.97 1998/02/02 21:14:59 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -135,7 +135,7 @@ disk_init(void)
 
 /* Open a disk file. Return a file descriptor */
 int
-file_open(const char *path, int mode, FOCB * callback, void *callback_data)
+file_open(const char *path, int mode, FOCB * callback, void *callback_data, void *tag)
 {
     int fd;
     open_ctrl_t *ctrlp;
@@ -152,7 +152,7 @@ file_open(const char *path, int mode, FOCB * callback, void *callback_data)
     /* Open file */
 #if USE_ASYNC_IO
     if (callback != NULL) {
-	aioOpen(path, mode, 0644, file_open_complete, ctrlp);
+	aioOpen(path, mode, 0644, file_open_complete, ctrlp, tag);
 	return DISK_OK;
     }
 #endif
@@ -168,12 +168,20 @@ static void
 file_open_complete(void *data, int fd, int errcode)
 {
     open_ctrl_t *ctrlp = (open_ctrl_t *) data;
+
+    if(fd == -2 && errcode == -2) {	/* Cancelled - clean up */
+	if (ctrlp->callback)
+	    (ctrlp->callback) (ctrlp->callback_data, fd, errcode);
+	xfree(ctrlp->path);
+	xfree(ctrlp);
+	return;
+    }
     if (fd < 0) {
 	errno = errcode;
 	debug(50, 0) ("file_open: error opening file %s: %s\n", ctrlp->path,
 	    xstrerror());
 	if (ctrlp->callback)
-	    (ctrlp->callback) (ctrlp->callback_data, DISK_ERROR);
+	    (ctrlp->callback) (ctrlp->callback_data, DISK_ERROR, errcode);
 	xfree(ctrlp->path);
 	xfree(ctrlp);
 	return;
@@ -182,7 +190,7 @@ file_open_complete(void *data, int fd, int errcode)
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, ctrlp->path);
     if (ctrlp->callback)
-	(ctrlp->callback) (ctrlp->callback_data, fd);
+	(ctrlp->callback) (ctrlp->callback_data, fd, errcode);
     xfree(ctrlp->path);
     xfree(ctrlp);
 }
@@ -192,7 +200,10 @@ void
 file_close(int fd)
 {
     fde *F = &fd_table[fd];
-    assert(fd >= 0);
+    if(fd < 0) {
+	debug(6, 0) ("file_close: FD less than zero: %d\n", fd);
+	return;
+    }
     assert(F->open);
     if (EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
 	EBIT_SET(F->flags, FD_CLOSE_REQUEST);
@@ -202,13 +213,13 @@ file_close(int fd)
 	EBIT_SET(F->flags, FD_CLOSE_REQUEST);
 	return;
     }
-    fd_close(fd);
-    debug(6, 5) ("file_close: FD %d\n", fd);
 #if USE_ASYNC_IO
     aioClose(fd);
 #else
     close(fd);
 #endif
+    debug(6, 5) ("file_close: FD %d\n", fd);
+    fd_close(fd);
 }
 
 
@@ -277,16 +288,28 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     errno = errcode;
+
     safe_free(data);
-    fd_bytes(fd, len, FD_WRITE);
     if (q == NULL)		/* Someone aborted then write completed */
 	return;
+
+    if(len == -2 && errcode == -2) {	/* Write cancelled - cleanup */
+	do {
+	    fdd->write_q = q->next;
+	    if (q->free)
+		(q->free) (q->buf);
+	    safe_free(q);
+	} while ((q = fdd->write_q));
+	return;
+    }
+
+    fd_bytes(fd, len, FD_WRITE);
     if (len < 0) {
 	if (!ignoreErrno(errno)) {
 	    status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
 	    debug(50, 1) ("diskHandleWrite: FD %d: disk write error: %s\n",
 		fd, xstrerror());
-	    if (fdd->wrt_handle == NULL) {
+	    if (fdd->wrt_handle == NULL || status != DISK_NO_SPACE_LEFT) {
 		/* FLUSH PENDING BUFFERS */
 		do {
 		    fdd->write_q = q->next;
@@ -301,6 +324,9 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (q != NULL) {
 	/* q might become NULL from write failure above */
 	q->buf_offset += len;
+	if (q->buf_offset > q->len)
+	    debug(50, 1) ("diskHandleWriteComplete: q->buf_offset > q->len (%p,%d, %d, %d FD %d)\n",
+		q, q->buf_offset, q->len, len, fd);
 	assert(q->buf_offset <= q->len);
 	if (q->buf_offset == q->len) {
 	    /* complete write */
@@ -414,7 +440,15 @@ diskHandleReadComplete(void *data, int len, int errcode)
     int fd = ctrlp->fd;
     int rc = DISK_OK;
     errno = errcode;
+
     xfree(data);
+
+    if(len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
+	cbdataUnlock(ctrl_dat->client_data);
+	safe_free(ctrl_dat);
+	return;
+    }
+
     fd_bytes(fd, len, FD_READ);
     if (len < 0) {
 	if (ignoreErrno(errno)) {
