@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.405 1998/09/30 02:53:18 wessels Exp $
+ * $Id: client_side.cc,v 1.406 1998/10/03 03:56:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1615,17 +1615,21 @@ clientProcessRequest2(clientHttpRequest * http)
     } else if (!storeEntryValidToSend(e)) {
 	http->entry = NULL;
 	return LOG_TCP_MISS;
-    } else if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
+    }
+    if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
 	/* Special entries are always hits, no matter what the client says */
 	http->entry = e;
 	return LOG_TCP_HIT;
+    }
 #if HTTP_VIOLATIONS
-    } else if (r->flags.nocache_hack) {
-	http->entry = NULL;
+    if (r->flags.nocache_hack) {
+        /* if nocache_hack is set, nocache should always be clear, right? */
+        assert(!r->flags.nocache);
 	ipcacheReleaseInvalid(r->host);
-	return LOG_TCP_CLIENT_REFRESH_MISS;
+	/* continue! */
+    }
 #endif
-    } else if (r->flags.nocache) {
+    if (r->flags.nocache) {
 	http->entry = NULL;
 	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
@@ -1635,10 +1639,9 @@ clientProcessRequest2(clientHttpRequest * http)
 	 * that is also a HIT. Thus, let's prevent HITs on complex Range requests */
 	http->entry = NULL;
 	return LOG_TCP_MISS;
-    } else {
-	http->entry = e;
-	return LOG_TCP_HIT;
     }
+    http->entry = e;
+    return LOG_TCP_HIT;
 }
 
 static void

@@ -4,14 +4,16 @@ Changes to Squid-2.1 ():
 	- Replaced comm_select FD scanning loops with global fd_set
 	  structures.  Inspired by Jeff Mogul's patch for squid 1.1.
 
-Changes to Squid-2.0 (September 25, 1998):
+Changes to Squid-2.0 (October 2, 1998):
 
 	- Added NAT/Transparent hijacking code from Quinton Dolan.
 	- Added actual filesystem usage to cachemgr 'storedir' page.
-	  Only works for some operating systems.
+	  Only works for operating systems which support statvfs().
 	- Fixed HTCP compile-time bugs.
 	- Fixed quick_abort bugs.  Configured values are stored as
 	  Kbytes, not bytes.
+	- Removed fwdAbortFetch().  It breaks quick_abort and seems
+	  mostly useless.
 	- Changed storeDirSelectSwapDir() to skip swap directories
 	  when their utilization is over the high water mark ratio.
 	- Fixed off-by-one bug for dead neighbor detection (Joe Ramey).
@@ -28,16 +30,22 @@ Changes to Squid-2.0 (September 25, 1998):
 	  send a "200" response instead of "206" (because we cannot
 	  handle complex ranges, even for hits) Note: Support for
 	  complex ranges requires storage of partial objects.
-	 - removed mib-2.system group from squid.
-        - removed the ability to iterate through: ipcache/dnscache.
-        - added ipcache/dnscache/fqdncache basic statistics.
-        - converted SQUID-MIB to SMIv2.
-        - moved SQUID-MIB to enterprises section of the tree in preparation
+	- Removed SNMP mib-2.system group from squid.
+        - Removed SNMP ability to iterate through ipcache and friends.
+        - Added SNMP ipcache/fqdncache basic statistics.
+        - Converted SQUID-MIB to SMIv2 (RFC 1902).
+        - Moved SQUID-MIB to enterprises section of the tree in preparation
           of the split into PROXY-MIB & SQUID-MIB.
-        - corrected minor errors in SQUID-MIB.
-        - moved uptime into cacheSystem from cacheConfig.
-        - corrected a number of get-next-request bugs, a snmpwalk should now
+        - Corrected minor errors in SQUID-MIB.
+        - Moved uptime into cacheSystem from cacheConfig.
+        - Corrected a number of get-next-request bugs, snmpwalk should now
           return all objects and not skip some.
+	- Fixed netdbClosestParent() so it won't return sibling
+	  peers.
+	- Fixed a bug with secondary clients on entries with
+	  ENTRY_BAD_LENGTH set.  We should release the
+	  bad entry to prevent secondary clients jumping on.
+	- Changed MIB to prevent parse warnings at startup.
 
 Changes to squid-1.2.beta25 (September 21, 1998):
 

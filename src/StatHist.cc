@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.12 1998/07/22 20:36:54 wessels Exp $
+ * $Id: StatHist.cc,v 1.13 1998/10/03 03:56:51 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -127,8 +127,12 @@ static int
 statHistBin(const StatHist * H, double v)
 {
     int bin;
+#if BROKEN_STAT_HIST_BIN
+    return 0;
+    /* NOTREACHED */
+#endif
     v -= H->min;		/* offset */
-    if (v < 0.0)		/* too small */
+    if (v <= 0.0)		/* too small */
 	return 0;
     bin = (int) (H->scale * H->val_in(v) + 0.5);
     if (bin < 0)		/* should not happen */

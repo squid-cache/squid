@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.255 1998/09/29 01:32:59 wessels Exp $
+ * $Id: neighbors.cc,v 1.256 1998/10/03 03:56:54 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -719,7 +719,8 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     if (opcode > ICP_END)
 	return;
     opcode_d = icp_opcode_str[opcode];
-    neighborUpdateRtt(p, mem);
+    if (p)
+	neighborUpdateRtt(p, mem);
     /* Does the entry exist? */
     if (NULL == entry) {
 	debug(12, 3) ("neighborsUdpAck: Cache key '%s' not found\n",

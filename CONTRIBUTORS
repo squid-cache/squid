@@ -1,4 +1,5 @@
-Special thanks go to people who have volunteered their time, effort, and ideas to make this software available.
+Special thanks go to people who have volunteered their time, effort,
+and ideas to make this software available.
 
 	Henrik Nordstrom <hno@hem.passagen.se>
 	Mark Treacy <mark@aone.com.au>
@@ -68,10 +69,11 @@ Special thanks go to people who have volunteered their time, effort, and ideas t
 	Michael Lupp <mike@nemesis.saar.de>
 
 Development of this caching software is funded by the National Science
-Foundation (grant NCR-9521745).  Paid staff members on the caching
-project are:
+Foundation (grants NCR-9616602 and NCR-9521745).  Paid staff members on
+the caching project are:
 
-	Duane Wessels <wessels@nlanr.net>
-	Alex Rousskov <rousskov@nlanr.net>
+	Duane Wessels <wessels@ircache.net>
+	Alex Rousskov <rousskov@ircache.net>
+	Glenn Chisholm <glenn@ircache.net>
 	K Claffy <kc@nlanr.net>
 	Hans-Werner Braun <hwb@nlanr.net>
