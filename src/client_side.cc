@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.456 1999/05/19 19:57:39 wessels Exp $
+ * $Id: client_side.cc,v 1.457 1999/05/21 22:16:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1581,7 +1581,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    }
 	}
 	rep = clientBuildReply(http, buf, size);
-	if (clientReplyBodyTooLarge(rep->content_length)) {
+	if (rep && clientReplyBodyTooLarge(rep->content_length)) {
 	    ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN);
 	    err->request = requestLink(http->request);
 	    storeUnregister(http->entry, http);
