@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.9 1999/04/19 04:45:03 wessels Exp $
+ * $Id: dns_internal.cc,v 1.10 1999/04/19 05:13:41 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -250,7 +250,7 @@ idnsGrokReply(const char *buf, size_t sz)
     }
     q = idnsFindQuery(rid);
     if (q == NULL) {
-	debug(78, 1) ("idnsGrokReply: Didn't find query!\n");
+	debug(78, 3) ("idnsGrokReply: Late response\n");
 	rfc1035RRDestroy(answers, n);
 	return;
     }
@@ -324,15 +324,16 @@ idnsCheckQueue(void *unused)
 	q = n->data;
 	if (tvSubDsec(q->sent_t, current_time) < 5.0)
 	    break;
-	debug(78, 1) ("idnsCheckQueue: ID %#04x timeout\n",
+	debug(78, 3) ("idnsCheckQueue: ID %#04x timeout\n",
 	    q->id);
 	dlinkDelete(&q->lru, &lru_list);
 	if (q->nsends < IDNS_MAX_TRIES) {
 	    idnsSendQuery(q);
 	} else {
 	    int v = cbdataValid(q->callback_data);
-	    debug(78, 1) ("idnsCheckQueue: ID %x: giving up after %d tries\n",
-		(int) q->id, q->nsends);
+	    debug(78, 1) ("idnsCheckQueue: ID %x: giving up after %d tries and %5.1f seconds\n",
+		(int) q->id, q->nsends,
+		tvSubDsec(q->start_t, current_time));
 	    cbdataUnlock(q->callback_data);
 	    if (v)
 		q->callback(q->callback_data, NULL, 0);
