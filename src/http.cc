@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.12 1996/03/28 20:42:48 wessels Exp $ */
+/* $Id: http.cc,v 1.13 1996/03/28 23:11:20 wessels Exp $ */
 
 #include "squid.h"
 
@@ -58,7 +58,7 @@ int httpCachable(url, type, mime_hdr)
      char *type;
      char *mime_hdr;
 {
-    stoplist *p;
+    stoplist *p = NULL;
 
     /* GET and HEAD are cachable. Others are not. */
     if (((strncasecmp(type, "GET", 3) != 0)) &&
