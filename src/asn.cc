@@ -266,7 +266,7 @@ asnAddNet(char *as_string, int as_number)
     char *t;
     int bitl;
 
-    t = index(as_string, '/');
+    t = strchr(as_string, '/');
     if (t == NULL) {
 	debug(53, 3) ("asnAddNet: failed, invalid response from whois server.\n");
 	return 0;
