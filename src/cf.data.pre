@@ -36,11 +36,24 @@ TYPE: ushort
 DEFAULT: 3130
 LOC: Config.Port.icp
 DOC_START
-	The port number where Squid send and receive ICP requests to
+	The port number where Squid sends and receives ICP requests to
 	and from neighbor caches.  Default is 3130.  To disable use
 	"0".  May be overridden with -u on the command line.
 
 icp_port 3130
+DOC_END
+
+NAME: htcp_port
+IFDEF: USE_HTCP
+TYPE: ushort
+DEFAULT: 4827
+LOC: Config.Port.htcp
+DOC_START
+	The port number where Squid sends and receives ICP requests to
+	and from neighbor caches.  Default is 4827.  To disable use
+	"0".
+
+htcp_port 4827
 DOC_END
 
 
