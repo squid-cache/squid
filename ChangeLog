@@ -6,6 +6,7 @@ Changes to squid-1.1.alpha5:
 	  can free memory after its been written.
 	- Changed file_open() to not allow files to be opened O_RDWR.
 	- Changed file_open() to always set O_APPEND for O_WRONLY files.
+	- Includes all squid-1.0 changes up to squid-1.0.2.
 
 Changes to squid-1.1.alpha4:
 
@@ -37,6 +38,17 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+
+Changes to squid-1.0.2 (July 16, 1996):
+
+	- Fixed HTTP code in access.log for TCP_IFMODSINCE requests.
+	- Fixed SSL to not read again until previous write is complete.
+	- Added CPU usage percentage in cachemgr 'info' output.
+	- Fixed bug when removing a neighbor.  Forgetting to decrement
+	  friends->n causes a duplicate ICP query to be sent in
+	  neighborsUdpPing().
+	- Increased some MAX_URL sized character buffers to prevent
+	  overflows.
 
 Changes to squid-1.0.1 (July 8, 1996):
 
