@@ -5,8 +5,10 @@
 <H2>The requested URL could not be retrieved</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
-<A HREF="%U">%U</A>
+While trying to process the request:
+<PRE>
+%R
+</PRE>
 <P>
 The following error was encountered:
 <UL>
