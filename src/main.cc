@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.373 2003/04/24 06:35:09 hno Exp $
+ * $Id: main.cc,v 1.374 2003/04/25 22:32:21 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -621,6 +621,15 @@ mainInitialize(void)
 
     debug(1, 1) ("With %d file descriptors available\n", Squid_MaxFD);
 
+#ifdef _SQUID_MSWIN_
+
+    debug(1, 1) ("With %d CRT stdio descriptors available\n", _getmaxstdio());
+
+    if (WIN32_Socks_initialized)
+        debug(1, 1)("Windows sockets initialized\n");
+
+#endif
+
     if (!configured_once)
         disk_init();		/* disk_init must go before ipcache_init() */
 
@@ -758,16 +767,18 @@ mainInitialize(void)
     configured_once = 1;
 }
 
+#if USE_WIN32_SERVICE
+/* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
+extern "C" void WINAPI
+    SquidMain(int argc, char **argv)
+#else
 int
 main(int argc, char **argv)
+#endif
 {
     int errcount = 0;
     int n;			/* # of GC'd objects */
     mode_t oldmask;
-#ifdef _SQUID_WIN32_
-
-    int WIN32_init_err;
-#endif
 
 #if HAVE_SBRK
 
@@ -780,9 +791,20 @@ main(int argc, char **argv)
         Squid_MaxFD = FD_SETSIZE;
 
 #ifdef _SQUID_WIN32_
+#ifdef USE_WIN32_SERVICE
 
-    if ((WIN32_init_err = WIN32_Subsystem_Init()))
-        return WIN32_init_err;
+    if (WIN32_Subsystem_Init(&argc, &argv))
+        return;
+
+#else
+
+    {
+        int WIN32_init_err;
+
+        if ((WIN32_init_err = WIN32_Subsystem_Init()))
+            return WIN32_init_err;
+    }
+#endif
 
 #endif
 
@@ -836,7 +858,32 @@ main(int argc, char **argv)
 
     failure_notify = fatal_dump;
 
+#if USE_WIN32_SERVICE
+
+    WIN32_svcstatusupdate(SERVICE_START_PENDING, 10000);
+
+#endif
+
     mainParseOptions(argc, argv);
+
+#if USE_WIN32_SERVICE
+
+    if (opt_install_service) {
+        WIN32_InstallService();
+        return;
+    }
+
+    if (opt_remove_service) {
+        WIN32_RemoveService();
+        return;
+    }
+
+    if (opt_command_line) {
+        WIN32_SetServiceCommandLine();
+        return;
+    }
+
+#endif
 
     /* parse configuration file
      * note: in "normal" case this used to be called from mainInitialize() */
@@ -867,7 +914,16 @@ main(int argc, char **argv)
         parse_err = parseConfigFile(ConfigFile);
 
         if (opt_parse_cfg_only)
+#if USE_WIN32_SERVICE
+
+            return;
+
+#else
+
             return parse_err;
+
+#endif
+
     }
     if (-1 == opt_send_signal)
         if (checkRunningPid())
@@ -909,7 +965,14 @@ main(int argc, char **argv)
         setEffectiveUser();
         debug(0, 0) ("Creating Swap Directories\n");
         storeCreateSwapDirectories();
+#if USE_WIN32_SERVICE
+
+        return;
+#else
+
         return 0;
+#endif
+
     }
 
     if (!opt_no_daemon)
@@ -933,7 +996,19 @@ main(int argc, char **argv)
         fd_open(2, FD_LOG, "stderr");
     }
 
+#if USE_WIN32_SERVICE
+
+    WIN32_svcstatusupdate(SERVICE_START_PENDING, 10000);
+
+#endif
+
     mainInitialize();
+
+#if USE_WIN32_SERVICE
+
+    WIN32_svcstatusupdate(SERVICE_RUNNING, 0);
+
+#endif
 
     /* main loop */
 
@@ -952,6 +1027,11 @@ main(int argc, char **argv)
                          (int) wait);
             do_shutdown = 0;
             shutting_down = 1;
+#if USE_WIN32_SERVICE
+
+            WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
+#endif
+
             serverConnectionsClose();
 #if USE_DNSSERVERS
 
@@ -1008,7 +1088,14 @@ main(int argc, char **argv)
     }
 
     /* NOTREACHED */
+#if USE_WIN32_SERVICE
+    return;
+
+#else
+
     return 0;
+
+#endif
 }
 
 static void
@@ -1019,6 +1106,25 @@ sendSignal(void)
     pid = readPidFile();
 
     if (pid > 1) {
+#if USE_WIN32_SERVICE
+
+        if (opt_signal_service) {
+            WIN32_sendSignal(opt_send_signal);
+            exit(0);
+        } else
+#ifdef _SQUID_MSWIN_
+        {
+            fprintf(stderr, "%s: ERROR: Could not send ", appname);
+            fprintf(stderr, "signal to Squid Service:\n");
+            fprintf(stderr, "missing -n command line switch.\n");
+            exit(1);
+        }
+
+        /* NOTREACHED */
+#endif
+
+#endif
+
         if (kill(pid, opt_send_signal) &&
                 /* ignore permissions if just running check */
                 !(opt_send_signal == 0 && errno == EPERM)) {
@@ -1245,6 +1351,10 @@ watch_child(char *argv[])
 static void
 SquidShutdown(void *unused)
 {
+#if USE_WIN32_SERVICE
+    WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
+#endif
+
     debug(1, 1) ("Shutting down...\n");
     icpConnectionClose();
 #if USE_HTCP
@@ -1271,6 +1381,10 @@ SquidShutdown(void *unused)
 #if USE_UNLINKD
 
     unlinkdClose();
+#endif
+#if USE_WIN32_SERVICE
+
+    WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif
 
     storeDirSync();		/* Flush pending object writes/unlinks */
