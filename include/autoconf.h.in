@@ -799,6 +799,9 @@
 /* Define to enable WCCP */
 #undef USE_WCCP
 
+/* Define Windows NT & Windows 2000 run service mode */
+#undef USE_WIN32_SERVICE
+
 /* Define to enable CPU profiling within Squid */
 #undef USE_XPROF_STATS
 
