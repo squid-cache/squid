@@ -491,7 +491,6 @@ extern int storeDirNumber(int fileno);
 extern void storeDirUpdateSwapSize(int fn, size_t size, int sign);
 extern int storeDirProperFileno(int dirn, int fn);
 
-
 extern const char *getMyHostname(void);
 extern void safeunlink(const char *path, int quiet);
 extern void death(int sig);
@@ -558,7 +557,7 @@ extern OBJH neighborDumpNonPeers;
 extern OBJH dump_config;
 extern OBJH storeDirStats;
 extern OBJH pconnHistDump;
-extern void dump_peers(StoreEntry * sentry, peer * peers);
+extern void dump_peers(StoreEntry *, peer * );
 
 extern void pconnPush(int, const char *host, u_short port);
 extern int pconnPop(const char *host, u_short port);
