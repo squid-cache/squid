@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.54 1997/06/04 06:16:09 wessels Exp $
+ * $Id: tunnel.cc,v 1.55 1997/06/18 01:43:45 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -112,7 +112,8 @@ sslStateFree(int fd, void *data)
     safe_free(sslState->client.buf);
     xfree(sslState->url);
     requestUnlink(sslState->request);
-    safe_free(sslState);
+    sslState->request = NULL;
+    cbdataFree(sslState);
 }
 
 /* Read from server side and queue it for writing to the client */
@@ -388,6 +389,7 @@ sslStart(int fd, const char *url, request_t * request, int *size_ptr)
 	return;
     }
     sslState = xcalloc(1, sizeof(SslStateData));
+    cbdataAdd(sslState);
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
     sslState->timeout = Config.Timeout.read;

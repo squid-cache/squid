@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.76 1997/06/04 06:16:17 wessels Exp $
+ * $Id: wais.cc,v 1.77 1997/06/18 01:43:46 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -134,7 +134,7 @@ waisStateFree(int fd, void *data)
 	return;
     storeUnregisterAbort(waisState->entry);
     storeUnlockObject(waisState->entry);
-    xfree(waisState);
+    cbdataFree(waisState);
 }
 
 /* This will be called when socket lifetime is expired. */
@@ -320,6 +320,7 @@ waisStart(request_t * request, StoreEntry * entry)
 	return;
     }
     waisState = xcalloc(1, sizeof(WaisStateData));
+    cbdataAdd(waisState);
     waisState->method = method;
     waisState->relayhost = Config.Wais.relayHost;
     waisState->relayport = Config.Wais.relayPort;
