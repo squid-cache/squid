@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde inte hämtas</H2>
+<HR>
+<P>
+Vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Mottogs följande fel:
+<UL>
+<LI>
+<STRONG>
+Kunde ej vidarebefodra förfrågan vid detta tillfälle.
+</STRONG>
+</UL>
+
+<P>
+Denna förfrågan kunde ej vidarebefodras till ursprunglig server eller till 
+överliggande cache-noder.  Den mest sannolika anledningen till detta fel är:
+<UL>
+<LI>Cacheadministratorn tillåter inte denna cache att göra  
+    direkta anslutningar till ursprungliga servrar, och
+<LI>alla överliggande cache-noder kan ej nås för tillfället.
+</UL>
+</P>

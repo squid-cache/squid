@@ -1,0 +1,15 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde inte hämtas</H2>
+<HR>
+<P>
+Vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Mottogs följande fel:
+<UL>
+<P>
+Denna cache håller på att stänga av sig och kan därför inte behandla din förfrågan. Vänligen försök igen lite senare.
+</P>

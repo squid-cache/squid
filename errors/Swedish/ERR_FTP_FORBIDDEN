@@ -1,0 +1,18 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde inte hämtas</H2>
+<HR>
+<P>
+Ett misslyckande vid FTP autentifiering inträffade
+vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Squid sände följande FTP kommando:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+och fick till svar
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+</P>
+

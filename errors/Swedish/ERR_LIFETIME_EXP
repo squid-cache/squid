@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde inte hämtas</H2>
+<HR>
+<P>
+Vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Mottogs följande fel:
+<UL>
+<LI>
+<STRONG>
+Anslutnings levnadstid tog slut
+</STRONG>
+</UL>
+
+<P>
+Squid har terminerat Er begäran på grund av att den har överskridikt den tillåtna livstiden för en anslutning.
+</P>

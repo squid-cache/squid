@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde inte hämtas</TITLE>
+</HEAD><BODY>
+<H2>Begärd URL kunde inte hämtas</H2>
+<HR>
+<P>
+Vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Mottogs följande fel:
+<BLOCKQUOTE>
+Kunde inte få fram IP-adressen för värdnamnet.
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+Namnservern returnerade:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Detta betyder att:
+<PRE>
+ Cachen kunde inte lösa upp värdnamnet angivet i sökvägen. 
+ Kontrollera att adressen är korrekt. 
+</PRE>
+</P>
+

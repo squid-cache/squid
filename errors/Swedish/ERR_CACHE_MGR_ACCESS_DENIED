@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>FEL: Tillträde till Cachehanteraren Nekas</TITLE>
+</HEAD>
+<BODY>
+<H1>FEL</H1>
+<H2>Tillträde till Cachehanteraren Nekas</H2>
+<HR>
+<P>
+Vid försöket att hämta URL:
+<A HREF="%U">%U</A>
+<P>
+Mottogs följande fel:
+<UL>
+<LI>
+<STRONG>
+Tillträde till Cachehanteraren Nekas
+</STRONG>
+</UL>
+</P>
+
+<P>Ledsen, Ni är förnärvarande ej berättigad att begära:
+<PRE>    %U</PRE>
+från denna cache tills det att Ni har autentifierat Er.
+</P>
+
+<P> Ni måste använda Netscape version 2.0 eller högre, eller Microsoft Internet
+Explorer 3.0, eller en HTTP/1.1 kompatibel läsare för att detta skall fungera.
+Vänligen kontakta <A HREF="mailto:%w">cacheadministratorn</a> om Ni har svårigheter 
+med att autentifiera Er själv, om Ni <em>är</em> 
+administratorn, läs Squid dokumentationen om cache hanterar interfacet och kontrollera 
+cache loggen för mer detaljerade felmeddelanden.</P>

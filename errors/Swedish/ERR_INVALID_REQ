@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>FEL: Begärd URL kunde ej hämtas</TITLE>
+</HEAD><BODY>
+<H1>FEL</H1>
+<H2>Begärd URL kunde ej hämtas</H2>
+<HR>
+<P>
+Vid försöket att behandla förfrågan:
+<PRE>
+%R
+</PRE>
+<P>
+Mottogs följande fel:
+<UL>
+<LI>
+<STRONG>
+Felaktig Förfrågan
+</STRONG>
+</UL>
+
+<P>
+Någon eller några aspekter av HTTP förfrågan är felaktiga.  Möjliga problem:
+<UL>
+<LI>Avsaknad eller okänd method för förfrågan
+<LI>Avsaknad URL
+<LI>Avsaknad HTTP identifierare (HTTP/1.0)
+<LI>Förfrågan är för stor
+<LI>Innehållslängden saknas för POST(posta) eller PUT(sätt) förfrågan
+<LI>Ej tillåtet tecken i värdnamnet; '_' är ej tillåtna
+</UL>
+</P>
