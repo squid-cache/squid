@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.164 2002/04/21 22:14:08 hno Exp $
+ * $Id: gopher.cc,v 1.165 2002/07/15 00:30:54 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -238,12 +238,38 @@ gopherCachable(const request_t * req)
 }
 
 static void
+gopherHTMLHeader(StoreEntry * e, const char *title, const char *substring)
+{
+    storeAppendPrintf(e, "<HTML><HEAD><TITLE>");
+    storeAppendPrintf(e, title, substring);
+    storeAppendPrintf(e, "</TITLE></HEAD>\n<BODY><H1>");
+    storeAppendPrintf(e, title, substring);
+    storeAppendPrintf(e, "</H1>\n");
+}
+
+static void
+gopherHTMLFooter(StoreEntry * e)
+{
+    storeAppendPrintf(e, "<HR>\n");
+    storeAppendPrintf(e, "<ADDRESS>\n");
+    storeAppendPrintf(e, "Generated %s by %s (%s)\n",
+	mkrfc1123(squid_curtime),
+	getMyHostname(),
+	full_appname_string);
+    storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
+}
+
+static void
 gopherEndHTML(GopherStateData * gopherState)
 {
-    if (!gopherState->data_in)
-	storeAppendPrintf(gopherState->entry,
-	    "<HTML><HEAD><TITLE>Server Return Nothing.</TITLE>\n"
-	    "</HEAD><BODY><HR><H1>Server Return Nothing.</H1></BODY></HTML>\n");
+    StoreEntry *e = gopherState->entry;
+    if (!gopherState->data_in) {
+	gopherHTMLHeader(e, "Server Return Nothing", NULL);
+	storeAppendPrintf(e, "<P>The Gopher query resulted in a blank response</P>");
+    } else {
+	storeAppendPrintf(e, "</PRE>\n");
+    }
+    gopherHTMLFooter(e);
 }
 
 
@@ -274,13 +300,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
     if (gopherState->conversion == HTML_INDEX_PAGE) {
 	char *html_url = html_quote(storeUrl(entry));
+	gopherHTMLHeader(entry, "Gopher Index %s", html_url);
 	storeAppendPrintf(entry,
-	    "<HTML><HEAD><TITLE>Gopher Index %s</TITLE></HEAD>\n"
-	    "<BODY><H1>%s<BR>Gopher Search</H1>\n"
 	    "<p>This is a searchable Gopher index. Use the search\n"
 	    "function of your browser to enter search terms.\n"
-	    "<ISINDEX></BODY></HTML>\n",
-	    html_url, html_url);
+	    "<ISINDEX>\n");
+	gopherHTMLFooter(entry);
 	/* now let start sending stuff to client */
 	storeBufferFlush(entry);
 	gopherState->data_in = 1;
@@ -289,13 +314,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     }
     if (gopherState->conversion == HTML_CSO_PAGE) {
 	char *html_url = html_quote(storeUrl(entry));
+	gopherHTMLHeader(entry, "CSO Search of %s", html_url);
 	storeAppendPrintf(entry,
-	    "<HTML><HEAD><TITLE>CSO Search of %s</TITLE></HEAD>\n"
-	    "<BODY><H1>%s<BR>CSO Search</H1>\n"
 	    "<P>A CSO database usually contains a phonebook or\n"
 	    "directory.  Use the search function of your browser to enter\n"
-	    "search terms.</P><ISINDEX></BODY></HTML>\n",
-	    html_url, html_url);
+	    "search terms.</P><ISINDEX>\n");
+	gopherHTMLFooter(entry);
 	/* now let start sending stuff to client */
 	storeBufferFlush(entry);
 	gopherState->data_in = 1;
@@ -306,11 +330,10 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
     if (!gopherState->HTML_header_added) {
 	if (gopherState->conversion == HTML_CSO_RESULT)
-	    strCat(outbuf, "<HTML><HEAD><TITLE>CSO Search Result</TITLE></HEAD>\n"
-		"<BODY><H1>CSO Search Result</H1>\n<PRE>\n");
+	    gopherHTMLHeader(entry, "CSO Search Result", NULL);
 	else
-	    strCat(outbuf, "<HTML><HEAD><TITLE>Gopher Menu</TITLE></HEAD>\n"
-		"<BODY><H1>Gopher Menu</H1>\n<PRE>\n");
+	    gopherHTMLHeader(entry, "Gopher Menu", NULL);
+	strCat(outbuf, "<PRE>");
 	gopherState->HTML_header_added = 1;
     }
     while ((pos != NULL) && (pos < inbuf + len)) {
@@ -746,7 +769,7 @@ gopherSendRequest(int fd, void *data)
     if (gopherState->type_id == GOPHER_CSO) {
 	const char *t = strchr(gopherState->request, '?');
 	if (t != NULL)
-	    t++; /* skip the ? */
+	    t++;		/* skip the ? */
 	else
 	    t = "";
 	snprintf(buf, 4096, "query %s\r\nquit\r\n", t);
