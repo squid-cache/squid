@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.272 1998/07/30 22:07:54 wessels Exp $
+ * $Id: stat.cc,v 1.273 1998/07/30 23:31:09 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -305,7 +305,7 @@ statObjects(void *data)
 	cbdataFree(state);
 	return;
     } else if (fwdCheckDeferRead(-1, state->sentry)) {
-        eventAdd("statObjects", statObjects, state, 0.1, 1);
+	eventAdd("statObjects", statObjects, state, 0.1, 1);
 	return;
     }
     storeBuffer(state->sentry);
@@ -558,7 +558,7 @@ info_get(StoreEntry * sentry)
 #endif /* HAVE_MALLINFO */
     storeAppendPrintf(sentry, "Memory accounted for:\n");
     storeAppendPrintf(sentry, "\tTotal accounted:       %6d KB\n",
-	memTotalAllocated()>>10);
+	memTotalAllocated() >> 10);
 
     storeAppendPrintf(sentry, "File descriptor usage for %s:\n", appname);
     storeAppendPrintf(sentry, "\tMaximum number of file descriptors:   %4d\n",
