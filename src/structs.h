@@ -613,7 +613,7 @@ struct _HierarchyLogEntry {
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
     icp_ping_data icp;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     char cd_host[SQUIDHOSTNAMELEN]; /* the host of selected by cd peer */
     peer_select_alg_t alg; /* peer selection algorithm */
     lookup_t cd_lookup;    /* cd prediction: none, miss, hit */
@@ -665,7 +665,7 @@ struct _clientHttpRequest {
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     const char *lookup_type;	/* temporary hack: storeGet() result: HIT/MISS/NONE */
 #endif
     http_status http_code;
@@ -1206,7 +1206,7 @@ struct _StatCounters {
 	StatHist query_svc_time;
 	StatHist reply_svc_time;
         int query_timeouts;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
 	StatHist client_svc_time;
 	StatHist server_svc_time;
 	int times_used;
@@ -1218,7 +1218,7 @@ struct _StatCounters {
     struct {
 	StatHist svc_time;
     } dns;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     struct {
 	int times_used;
 	kb_t kbytes_sent;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.243 1998/04/22 16:24:13 rousskov Exp $
+ * $Id: stat.cc,v 1.244 1998/04/24 06:08:21 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -656,7 +656,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
 	x / 1000.0);
 
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     storeAppendPrintf(sentry, "cd.msgs_sent = %f/sec\n",
 	XAVG(cd.msgs_sent));
     storeAppendPrintf(sentry, "cd.msgs_recv = %f/sec\n",
@@ -876,7 +876,7 @@ statCountersInitSpecial(StatCounters * C)
      * DNS svc_time hist is kept in milli-seconds; max of 10 minutes.
      */
     statHistLogInit(&C->dns.svc_time, 300, 0.0, 60000.0 * 10.0);
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     /*
      * Digested and ICPed cvs times in milli-seconds; max of 3 hours.
      */
@@ -902,7 +902,7 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->icp.query_svc_time);
     statHistClean(&C->icp.reply_svc_time);
     statHistClean(&C->dns.svc_time);
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     statHistClean(&C->cd.client_svc_time);
     statHistClean(&C->icp.client_svc_time);
     statHistClean(&C->cd.server_svc_time);
@@ -931,7 +931,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statHistCopy(&dest->icp.query_svc_time, &orig->icp.query_svc_time);
     statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
     statHistCopy(&dest->dns.svc_time, &orig->dns.svc_time);
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     statHistCopy(&dest->cd.client_svc_time, &orig->cd.client_svc_time);
     statHistCopy(&dest->icp.client_svc_time, &orig->icp.client_svc_time);
     statHistCopy(&dest->cd.server_svc_time, &orig->cd.server_svc_time);
@@ -945,7 +945,6 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 static void
 statCountersHistograms(StoreEntry * sentry)
 {
-    StatCounters *f = &Counter;
 #if TOO_MUCH_OUTPUT
     storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
     statHistDump(&f->client_http.all_svc_time, sentry, NULL);
@@ -956,7 +955,8 @@ statCountersHistograms(StoreEntry * sentry)
     storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
     statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
 #endif
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
+    StatCounters *f = &Counter;
     storeAppendPrintf(sentry, "\nicp.query_svc_time histogram:\n");
     statHistDump(&f->icp.query_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "\nicp.reply_svc_time histogram:\n");
@@ -1075,7 +1075,7 @@ statCountersDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "icp.r_kbytes_recv = %d\n",
 	(int) f->icp.r_kbytes_recv.kb);
 
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     storeAppendPrintf(sentry, "icp.times_used = %d\n",
 	f->icp.times_used);
     storeAppendPrintf(sentry, "cd.times_used = %d\n",
@@ -1109,7 +1109,7 @@ statCountersDump(StoreEntry * sentry)
 static void
 statPeerSelect(StoreEntry * sentry)
 {
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     StatCounters *f = &Counter;
     peer *peer;
     const int tot_used = f->cd.times_used + f->icp.times_used;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.52 1998/04/22 16:24:14 rousskov Exp $
+ * $Id: peer_select.cc,v 1.53 1998/04/24 06:08:20 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -47,7 +47,7 @@ const char *hier_strings[] =
     "NO_DIRECT_FAIL",
     "SOURCE_FASTEST",
     "ROUNDROBIN_PARENT",
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     "CACHE_DIGEST_HIT",
     "NO_CACHE_DIGEST_DIRECT",
 #endif
@@ -146,7 +146,7 @@ peerSelect(request_t * request,
     psstate->callback = callback;
     psstate->fail_callback = fail_callback;
     psstate->callback_data = callback_data;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     request->hier.peer_select_start = current_time;
 #endif
     cbdataLock(callback_data);
@@ -307,7 +307,7 @@ peerSelectFoo(ps_state * psstate)
 	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
     } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
 	/* which algorithm to use? */
 	if (squid_random() & 1) {
 	    debug(44, 2) ("peerSelect: Using Cache Digest\n");
@@ -359,7 +359,7 @@ peerSelectFoo(ps_state * psstate)
 		    Config.neighborTimeout);
 		return;
 	    }
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
 	}
 #endif
     }
@@ -459,7 +459,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
 	icp_opcode_str[op],
 	storeUrl(psstate->entry));
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     /* do cd lookup to count false misses */
     if (p && request)
 	peerNoteDigestLookup(request, p, 
