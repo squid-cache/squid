@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.18 2002/11/10 02:29:58 hno Exp $
+ * $Id: aiops.cc,v 1.19 2003/01/04 01:28:13 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -146,6 +146,8 @@ static struct {
 
     NULL, &done_requests.head
 };
+static int done_fd = 0;
+static int done_signalled = 0;
 static pthread_attr_t globattr;
 #if HAVE_SCHED_H
 static struct sched_param globsched;
@@ -222,9 +224,19 @@ squidaio_xstrfree(char *str)
 }
 
 static void
+squidaio_fdhandler(int fd, void *data)
+{
+    char buf[256];
+    done_signalled = 0;
+    read(fd, buf, sizeof(buf));
+    commSetSelect(fd, COMM_SELECT_READ, squidaio_fdhandler, NULL, 0);
+}
+
+static void
 squidaio_init(void)
 {
     int i;
+    int done_pipe[2];
     squidaio_thread_t *threadp;
 
     if (squidaio_initialised)
@@ -267,6 +279,15 @@ squidaio_init(void)
     done_queue.tailp = &done_queue.head;
     done_queue.requests = 0;
     done_queue.blocked = 0;
+
+    /* Initialize done pipe signal */
+    pipe(done_pipe);
+    done_fd = done_pipe[1];
+    fd_open(done_pipe[0], FD_PIPE, "async-io completetion event: main");
+    fd_open(done_pipe[1], FD_PIPE, "async-io completetion event: threads");
+    commSetNonBlocking(done_pipe[0]);
+    commSetNonBlocking(done_pipe[1]);
+    commSetSelect(done_pipe[0], COMM_SELECT_READ, squidaio_fdhandler, NULL, 0);
 
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
@@ -389,6 +410,10 @@ squidaio_thread_loop(void *ptr)
 	*done_queue.tailp = request;
 	done_queue.tailp = &request->next;
 	pthread_mutex_unlock(&done_queue.mutex);
+	if (!done_signalled) {
+	    done_signalled = 1;
+	    write(done_fd, "!", 1);
+	}
 	threadp->requests++;
     }				/* while forever */
     return NULL;
@@ -790,19 +815,6 @@ squidaio_poll_queues(void)
 	}
 	done_requests.tailp = &requests->next;
     }
-#if HAVE_SCHED_H
-    /* Give up the CPU to allow the threads to do their work */
-    /*
-     * For Andres thoughts about yield(), see
-     * http://www.squid-cache.org/mail-archive/squid-dev/200012/0001.html
-     */
-    if (done_queue.head || request_queue.head)
-#ifndef _SQUID_SOLARIS_
-	sched_yield();
-#else
-	yield();
-#endif
-#endif
 }
 
 squidaio_result_t *
