@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.6 2003/06/09 04:02:16 robertc Exp $
+#  $Id: Makefile.am,v 1.7 2003/06/22 08:04:28 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -14,14 +14,25 @@ INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/incl
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
 
 ## Sort by dependencies - test lowest layers first
-TESTS = rfc1738 refcount splay mem_node_test http_range_test
+TESTS = rfc1738 \
+	refcount\
+	splay\
+	mem_node_test\
+	MemPoolTest\
+	http_range_test
 
 ## Sort by dependencies - test lowest layers first
-check_PROGRAMS= rfc1738 refcount splay mem_node_test http_range_test
+check_PROGRAMS= rfc1738\
+		refcount\
+		splay\
+		MemPoolTest\
+		mem_node_test\
+		http_range_test
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
+MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
 
 DEBUG_OBJECTS = $(top_builddir)/src/debug.o\
