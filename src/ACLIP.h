@@ -60,7 +60,7 @@ public:
 
 private:
 
-    static bool DecodeAddress(const char *asc, struct in_addr *addr, struct in_addr *mask);
+    static bool DecodeMask(const char *asc, struct in_addr *mask);
 };
 
 MEMPROXY_CLASS_INLINE(acl_ip_data)
