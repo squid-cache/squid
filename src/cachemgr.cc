@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.97 2002/07/21 17:12:22 hno Exp $
+ * $Id: cachemgr.cc,v 1.98 2002/08/27 02:08:59 robertc Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -237,7 +237,7 @@ auth_html(const char *host, int port, const char *user_name)
     printf("Content-Type: text/html\r\n\r\n");
     printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
     printf("<HTML><HEAD><TITLE>Cache Manager Interface</TITLE>\n");
-    printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE></HEAD>\n");
+    printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE></HEAD>\n");
     printf("<BODY><H1>Cache Manager Interface</H1>\n");
     printf("<P>This is a WWW interface to the instrumentation interface\n");
     printf("for the Squid object cache.</P>\n");
@@ -264,7 +264,7 @@ error_html(const char *msg)
     printf("Content-Type: text/html\r\n\r\n");
     printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
     printf("<HTML><HEAD><TITLE>Cache Manager Error</TITLE>\n");
-    printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE></HEAD>\n");
+    printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE></HEAD>\n");
     printf("<BODY><H1>Cache Manager Error</H1>\n");
     printf("<P>\n%s</P>\n", msg);
     print_trailer();
@@ -368,7 +368,7 @@ munge_other_line(const char *buf, cachemgr_request * req)
     }
     /* start html table */
     if (!table_line_num) {
-	l += snprintf(html + l, sizeof(html) - l, "</pre><table border=\"1\" cellpadding=\"2\" cellspacing=\"1\">\n");
+	l += snprintf(html + l, sizeof(html) - l, "</pre><table cellpadding=\"2\" cellspacing=\"1\">\n");
 	next_is_header = 0;
     }
     /* remove '\n' */
@@ -456,7 +456,7 @@ read_reply(int s, cachemgr_request * req)
 	    printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
 	    printf("<HTML><HEAD><TITLE>CacheMgr@%s: %s</TITLE>\n",
 		req->hostname, action);
-	    printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
+	    printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}TABLE{background-color:#333333;border:0pt;padding:0pt}TH,TD{background-color:#ffffff}--></STYLE>\n");
 	    printf("</HEAD><BODY>\n");
 	    if (parse_menu) {
 		printf("<H2><a href=\"%s\">Cache Manager</a> menu for %s:</H2>",

@@ -2,7 +2,7 @@
 <HTML><HEAD>
 <meta charset=gb2312">
 <TITLE>错误：您所请求的 URN 无法获取</TITLE>
-<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>错误</H1>
 <H2>URN 中的一个网址（URL）无法获取</H2>
