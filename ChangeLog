@@ -1,7 +1,16 @@
+Changes to squid-1.2.beta14 (Feb 6, 1998):
+
 	- Replaced snmplib free() calls with xfree().
 	- Changed the 'net_db_name' hash table structure to
 	  make it easier to move names from one network to another
 	  (copied from 1.1 code).
+	- Filled in some of the config dump routines (dump_acl,
+	  dump_acl_access).
+	- Full memory debugging option (--enable-xmalloc-debug-trace)
+	  (Henrik Nordstrom).
+	- Filled-in and clarified many squid.conf comments (Oskar
+	  Pearson).
+	- Fixed up handling of SWAP_LOG_DEL swap.state entries.
 
 Changes to squid-1.2.beta13 (Feb 4, 1998):
 
