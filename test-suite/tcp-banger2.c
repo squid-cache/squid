@@ -76,6 +76,12 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+#if HAVE_ASSERT_H
+#include <assert.h>
+#endif
 
 #define PROXY_PORT 3128
 #define PROXY_ADDR "127.0.0.1"
@@ -91,13 +97,28 @@ static int opt_ims = 0;
 static int max_connections = 64;
 static time_t lifetime = 60;
 static struct timeval now;
+static long total_bytes_written = 0;
+static long total_bytes_read = 0;
+static int opt_checksum = 0;
 
 typedef void (CB) (int, void *);
 
 struct _f {
     CB *cb;
+    CB *ccb;
     void *data;
     time_t start;
+};
+struct _request {
+    int fd;
+    char url[8192];
+    char buf[READ_BUF_SZ * 2 + 1];
+    int headfound;
+    long validsize;
+    long validsum;
+    long bodysize;
+    long sum;
+    int content_length;
 };
 
 struct _f FD[MAX_FDS];
@@ -120,6 +141,9 @@ void
 fd_close(int fd)
 {
     close(fd);
+    if (FD[fd].ccb)
+	FD[fd].ccb(fd, FD[fd].data);
+    FD[fd].ccb = NULL;
     FD[fd].cb = NULL;
     FD[fd].data = NULL;
     nfds--;
@@ -131,9 +155,10 @@ fd_close(int fd)
 }
 
 void
-fd_open(int fd, CB * cb, void *data)
+fd_open(int fd, CB * cb, void *data, CB *ccb)
 {
     FD[fd].cb = cb;
+    FD[fd].ccb = ccb;
     FD[fd].data = data;
     FD[fd].start = now.tv_sec;
     if (fd > maxfd)
@@ -145,6 +170,7 @@ void
 sig_intr(int sig)
 {
     fd_close(0);
+    nfds++;
     printf("\rWaiting for open connections to finish...\n");
     signal(sig, SIG_DFL);
 }
@@ -152,26 +178,104 @@ sig_intr(int sig)
 void
 read_reply(int fd, void *data)
 {
-    static char buf[READ_BUF_SZ];
-    if (read(fd, buf, READ_BUF_SZ) <= 0) {
+    struct _request *r = data;
+    static unsigned char buf[READ_BUF_SZ];
+    int len;
+    char *p;
+    if ((len=read(fd, buf, READ_BUF_SZ)) <= 0) {
 	fd_close(fd);
 	reqpersec++;
 	nrequests++;
+    } else {
+	int used=0;
+	total_bytes_read+=len;
+	if (r->headfound < 2) {
+	    char *p,*header = NULL;
+	    int oldlen = strlen(r->buf);
+	    int newlen = oldlen + len;
+	    assert(oldlen <= READ_BUF_SZ);
+	    memcpy(r->buf+oldlen, buf, len);
+	    r->buf[newlen+1]='\0';
+	    for(p=r->buf; r->headfound < 2 && used<newlen; p++,used++) {
+		switch(*p) {
+		case '\n':
+		    r->headfound++;
+		    if (header) {
+			/* Decode header */
+			if (strncasecmp(header,"Content-Length:",15)==0)
+			    r->content_length = atoi(header+15);
+			if (strncasecmp(header,"X-Request-URI:",14)==0) {
+			    /* Check URI */
+			    if (strncmp(r->url, header+15, strcspn(header+15,"\r\n"))) {
+				char url[8192];
+				strncpy(url, header+15, strcspn(header+15,"\r\n"));
+				url[strcspn(header+15, "\r\n")]='\n';
+				fprintf(stderr,"ERROR: Sent %s received %s\n",
+					r->url, url);
+			    }
+			}
+			header=NULL;
+		    }
+		    break;
+		case '\r':
+		    break;
+		default:
+		    r->headfound=0;
+		    if (!header)
+			header = p;
+		    break;
+		}
+	    }
+	    if (header) {
+		memmove(r->buf, header, newlen - (header - r->buf) + 1);
+	    }
+	}
+	r->bodysize+=len-used;
+	if (opt_checksum) {
+	    for (; used<len ; used++) {
+		r->sum += buf[used];
+	    }
+	}
     }
 }
 
-int
-request(url)
-     char *url;
+void
+reply_done(int fd, void *data)
 {
-    int s;
+    struct _request *r = data;
+    if (r->bodysize != r->content_length)
+	fprintf(stderr,"ERROR: %s expected %d bytes got %d\n",
+		r->url, r->content_length, r->bodysize);
+    else if (r->validsize >= 0) {
+	if (r->validsize != r->bodysize)
+	    fprintf(stderr,"WARNING: %s size mismatch wanted %d bytes got %d\n",
+		    r->url, r->validsize, r->bodysize);
+	else if (opt_checksum && r->validsum != r->sum)
+	    fprintf(stderr,"WARNING: %s invalid checksum wanted %d got %d\n",
+		    r->url, r->validsum, r->sum);
+    } else if (opt_checksum) {
+	fprintf(stderr,"DONE: %s checksum %d size %d\n",
+		r->url, r->sum, r->bodysize);
+    }
+    free(r);
+}
+
+struct _request *
+request(char *urlin)
+{
+    int s=-1,f=-1;
     char buf[4096];
-    int len;
+    char msg[8192];
+    char *method, *url, *file, *size, *checksum;
+    char urlbuf[8192];
+    int len,len2;
     time_t w;
+    struct stat st;
     struct sockaddr_in S;
+    struct _request *r;
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 	perror("socket");
-	return -1;
+	return NULL;
     }
     memset(&S, '\0', sizeof(struct sockaddr_in));
     S.sin_family = AF_INET;
@@ -180,52 +284,100 @@ request(url)
     if (connect(s, (struct sockaddr *) &S, sizeof(S)) < 0) {
 	close(s);
 	perror("connect");
-	return -1;
+	return NULL;
     }
-    buf[0] = '\0';
-    strcat(buf, "GET ");
-    strcat(buf, url);
-    strcat(buf, " HTTP/1.0\r\n");
-    strcat(buf, "Accept: */*\r\n");
+    strcpy(urlbuf,urlin);
+    method=strtok(urlbuf," ");
+    url=strtok(NULL," ");
+    file=strtok(NULL," ");
+    size=strtok(NULL," ");
+    checksum=strtok(NULL," ");
+    if (!url) {
+	url=method;
+	method="GET";
+    }
+    r=calloc(1,sizeof *r);
+    assert(r!=NULL);
+    strcpy(r->url, url);
+    r->fd = s;
+    if (size && strcmp(size,"-")!=0)
+	r->validsize=atoi(size);
+    else
+	r->validsize=-1; /* Unknown */
+    if (checksum && strcmp(checksum,"-")!=0)
+	r->validsum=atoi(checksum);
+    msg[0] = '\0';
+    sprintf(buf,"%s %s HTTP/1.0\r\n", method, url);
+    strcat(msg, buf);
+    strcat(msg, "Accept: */*\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
 	w = time(NULL) - (lrand48() & 0x3FFFF);
-	strcat(buf, "If-Modified-Since: ");
-	strcat(buf, mkrfc850(&w));
-	strcat(buf, "\r\n");
+	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
+	strcat(msg,buf);
     }
-    strcat(buf, "\r\n");
-    len = strlen(buf);
-    if (write(s, buf, len) < 0) {
+    if (file && strcmp(file, "-")!=0) {
+	f = open(file,O_RDONLY);
+	if (f < 0) {
+	    perror("open file");
+	    exit(1);
+	}
+	fstat(f, &st);
+	sprintf(buf,"Content-Length: %d\r\n", st.st_size);
+	strcat(msg,buf);
+    }
+    strcat(msg, "\r\n");
+    len = strlen(msg);
+    if ((len2=write(s, msg, len)) != len) {
 	close(s);
-	perror("write");
-	return -1;
+	perror("write request");
+	free(r);
+	return NULL;
+    } else
+	total_bytes_written += len2;
+    if (f>=0) {
+	while ((len = read(f, buf, sizeof(buf)))>0) {
+	    len2 = write(s, buf, len);
+	    if (len2 < 0) {
+		perror("write body");
+		close(s);
+		free(r);
+	    }
+	}
+	if (len < 0) {
+	    perror("read body");
+	    exit(1);
+	}
     }
+
 /*
  * if (fcntl(s, F_SETFL, O_NDELAY) < 0)
  * perror("fcntl O_NDELAY");
  */
-    return s;
+    return r;
 }
 
 void
 read_url(int fd, void *junk)
 {
+    struct _request *r;
     static char buf[8192];
     char *t;
     int s;
     if (fgets(buf, 8191, stdin) == NULL) {
 	printf("Done Reading URLS\n");
 	fd_close(0);
+	nfds++;
 	return;
     }
     if ((t = strchr(buf, '\n')))
 	*t = '\0';
-    s = request(buf);
-    if (s < 0) {
+    r = request(buf);
+    if (!r) {
 	max_connections = nfds - 1;
 	printf("NOTE: max_connections set at %d\n", max_connections);
+    } else {
+	fd_open(r->fd, read_reply, r, reply_done);
     }
-    fd_open(s, read_reply, NULL);
 }
 
 void
@@ -242,16 +394,17 @@ main(argc, argv)
     int i;
     int c;
     int dt;
-    fd_set R;
+    int j;
+    fd_set R,R2;
     struct timeval start;
     struct timeval last;
     struct timeval to;
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
     progname = strdup(argv[0]);
-    gettimeofday(&start, NULL);
-    last = start;
-    while ((c = getopt(argc, argv, "p:h:n:il:")) != -1) {
+    gettimeofday(&now, NULL);
+    start = last = now;
+    while ((c = getopt(argc, argv, "p:h:n:icl:")) != -1) {
 	switch (c) {
 	case 'p':
 	    proxy_port = atoi(optarg);
@@ -268,15 +421,20 @@ main(argc, argv)
 	case 'l':
 	    lifetime = (time_t) atoi(optarg);
 	    break;
+	case 'c':
+	    opt_checksum = 1;
+	    break;
 	default:
 	    usage();
 	    return 1;
 	}
     }
-    fd_open(0, read_url, NULL);
+    fd_open(0, read_url, NULL, NULL);
+    nfds--;
     signal(SIGINT, sig_intr);
     signal(SIGPIPE, SIG_IGN);
-    while (nfds) {
+    FD_ZERO(&R2);
+    while (nfds || FD[0].cb) {
 	FD_ZERO(&R);
 	to.tv_sec = 0;
 	to.tv_usec = 100000;
@@ -292,26 +450,36 @@ main(argc, argv)
 	    FD_SET(i, &R);
 	}
 	if (select(maxfd + 1, &R, NULL, NULL, &to) < 0) {
-	    printf("maxfd=%d\n", maxfd);
+	    fprintf(stderr, "maxfd=%d\n", maxfd);
 	    if (errno != EINTR)
 		perror("select");
 	    continue;
 	}
+	gettimeofday(&now, NULL);
 	for (i = 0; i <= maxfd; i++) {
 	    if (!FD_ISSET(i, &R))
 		continue;
 	    FD[i].cb(i, FD[i].data);
+            if (nfds < max_connections && FD[0].cb) {
+		j=0;
+		FD_SET(0,&R2);
+		to.tv_sec=0;
+		to.tv_usec=0;
+		if(select(1,&R2,NULL,NULL,&to) == 1)
+		    FD[0].cb(0, FD[0].data);
+	    }
 	}
-	gettimeofday(&now, NULL);
 	if (now.tv_sec > last.tv_sec) {
 	    last = now;
 	    dt = (int) (now.tv_sec - start.tv_sec);
-	    printf("T+ %6d: %9d req (%+4d), %4d conn, %3d/sec avg\n",
+	    printf("T+ %6d: %9d req (%+4d), %4d conn, %3d/sec avg, %dmb, %dkb/sec avg\n",
 		dt,
 		nrequests,
 		reqpersec,
 		nfds,
-		(int) (nrequests / dt));
+		(int) (nrequests / dt),
+		(int)total_bytes_read / 1024 / 1024,
+		(int)total_bytes_read / 1024 / dt);
 	    reqpersec = 0;
 	}
     }

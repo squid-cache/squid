@@ -1,5 +1,5 @@
 CC	= gcc
-CFLAGS	= -O3 -DWITH_LIB
+CFLAGS	= -O3 -I../include -I../src
 OBJS	= membanger.o hash.o SizeToPool.o
 LIB	= -L. -lMem
 TARGLIB = libMem.a
