@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACLEntry.cc,v 1.1 2003/05/20 12:17:38 robertc Exp $
+ * $Id: ExternalACLEntry.cc,v 1.2 2003/06/27 20:54:45 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -76,16 +76,12 @@ ExternalACLEntry::ExternalACLEntry()
     lru.next = lru.prev = NULL;
     result = 0;
     date = 0;
-    user = NULL;
-    error = NULL;
     def = NULL;
 }
 
 ExternalACLEntry::~ExternalACLEntry()
 {
     safe_free(key);
-    safe_free(user);
-    safe_free(error);
 }
 
 void
@@ -93,14 +89,8 @@ ExternalACLEntry::update(ExternalACLEntryData const &someData)
 {
     date = squid_curtime;
     result = someData.result;
-    safe_free(user);
-    safe_free(error);
 
-    if (someData.user)
-        user = xstrdup(someData.user);
-
-    if (someData.error)
-        error = xstrdup(someData.error);
-
+    user = someData.user;
+    message = someData.message;
     tag = someData.tag;
 }

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.324 2003/06/19 21:28:50 wessels Exp $
+# $Id: cf.data.pre,v 1.325 2003/06/27 20:54:45 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1803,9 +1803,9 @@ DOC_START
 	Defined keywords:
 
 	  user=		The users name (login)
-	  error=	Error description (only defined for ERR results)
+	  message=	Message describing the reason
 	  tag=		Apply a tag to a request (for both ERR and OK results)
-	  		  Only sets a tag, does not alter existing tags.
+	  		Only sets a tag, does not alter existing tags.
 
 	Keyword values need to be enclosed in quotes if they may
 	contain whitespace, or the whitespace escaped using \. Any
