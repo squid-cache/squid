@@ -803,6 +803,8 @@ extern void dumpMallocStats(void);
 
 extern void pumpInit(int fd, request_t * r, char *uri);
 extern void pumpStart(int, StoreEntry *, request_t *, CWCB *callback, void *);
+extern int pumpMethod(method_t method);
+extern int pumpRestart(request_t *);
 
 extern void unlinkdInit(void);
 extern void unlinkdClose(void);

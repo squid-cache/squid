@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.252 1998/03/13 06:37:40 wessels Exp $
+ * $Id: http.cc,v 1.253 1998/03/16 17:03:26 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -140,6 +140,7 @@ static STABH httpAbort;
 static HttpStateData *httpBuildState(int, StoreEntry *, request_t *, peer *);
 static int httpSocketOpen(StoreEntry *, request_t *);
 static void httpRestart(HttpStateData *);
+static int httpTryRestart(HttpStateData *);
 static int httpCachableReply(HttpStateData *);
 
 static void
@@ -471,7 +472,7 @@ httpReadReply(int fd, void *data)
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
-	if (fd_table[fd].uses > 1) {
+	if (httpTryRestart(httpState)) {
 	    httpRestart(httpState);
 	} else {
 	    httpState->eof = 1;
@@ -728,7 +729,7 @@ httpSendRequest(int fd, void *data)
 	buflen += req->headers_sz + 1;
     buflen += 512;		/* lots of extra */
 
-    if ((req->method == METHOD_POST || req->method == METHOD_PUT))
+    if (pumpMethod(req->method))
 	sendHeaderDone = httpSendRequestEntry;
     else
 	sendHeaderDone = httpSendComplete;
@@ -749,14 +750,15 @@ httpSendRequest(int fd, void *data)
 	cfd = entry->mem_obj->fd;
     if (p != NULL)
 	EBIT_SET(httpState->flags, HTTP_PROXYING);
-    if (req->method == METHOD_GET) {
-	if (p == NULL)
-	    EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
-	else if (p->stats.n_keepalives_sent < 10)
-	    EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
-	else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
-	    EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
-    }
+    /*
+     * Is Keepalive okay for all request methods?
+     */
+    if (p == NULL)
+	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
+    else if (p->stats.n_keepalives_sent < 10)
+	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
+    else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
+	EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
     len = httpBuildRequestHeader(req,
 	httpState->orig_request,
 	entry,
@@ -772,10 +774,6 @@ httpSendRequest(int fd, void *data)
 	sendHeaderDone,
 	httpState,
 	buftype == BUF_TYPE_8K ? memFree8K : xfree);
-#ifdef BREAKS_PCONN_RESTART
-    requestUnlink(httpState->orig_request);
-    httpState->orig_request = NULL;
-#endif
 }
 
 static int
@@ -876,15 +874,30 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	httpState);
 }
 
+static int
+httpTryRestart(HttpStateData * httpState)
+{
+    /*
+     * We only retry the request if it looks like it was
+     * on a persistent/pipelined connection
+     */
+    if (fd_table[httpState->fd].uses < 2)
+	return 0;
+    if (pumpMethod(httpState->orig_request->method))
+	if (0 == pumpRestart(httpState->orig_request))
+	    return 0;
+    return 1;
+}
+
 static void
 httpRestart(HttpStateData * httpState)
 {
     /* restart a botched request from a persistent connection */
     debug(11, 2) ("Retrying HTTP request for %s\n", storeUrl(httpState->entry));
     if (httpState->orig_request->method != METHOD_GET) {
-        debug(11, 1)("Potential Coredump: httpRestart %s %s\n",
-		RequestMethodStr[httpState->orig_request->method],
-		storeUrl(httpState->entry));
+	debug(11, 1) ("Potential Coredump: httpRestart %s %s\n",
+	    RequestMethodStr[httpState->orig_request->method],
+	    storeUrl(httpState->entry));
     }
     if (httpState->fd >= 0) {
 	comm_remove_close_handler(httpState->fd, httpStateFree, httpState);
