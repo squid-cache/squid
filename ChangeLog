@@ -29,6 +29,8 @@
 	- Allocate FwdState from mem pools.
 	- Minor HTCP progress.
 	- Moved 'miss_access' ACL check from client_side.c to forward.c
+	- Fixed logging of usernames for requests which require
+	  proxy-authentication.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
 
