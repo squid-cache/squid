@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.20 2002/10/15 09:25:34 robertc Exp $
+ * $Id: auth_basic.cc,v 1.21 2003/01/09 11:44:05 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -307,7 +307,7 @@ authBasicCfgDump(StoreEntry * entry, const char *name, authScheme * scheme)
     storeAppendPrintf(entry, "\n%s %s realm %s\n%s %s children %d\n%s %s credentialsttl %d seconds\n",
 	name, "basic", config->basicAuthRealm,
 	name, "basic", config->authenticateChildren,
-	name, "basic", (int)config->credentialsTTL);
+	name, "basic", (int) config->credentialsTTL);
 
 }
 
@@ -546,7 +546,7 @@ authBasicInit(authScheme * scheme)
 	helperOpenServers(basicauthenticators);
 	if (!init) {
 	    cachemgrRegister("basicauthenticator",
-		"User Authenticator Stats",
+		"Basic User Authenticator Stats",
 		authenticateBasicStats, 0, 1);
 	    init++;
 	}
