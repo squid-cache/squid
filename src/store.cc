@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.266 1997/07/14 19:24:40 wessels Exp $
+ * $Id: store.cc,v 1.267 1997/07/14 19:53:12 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2745,7 +2745,6 @@ void
 storeRegisterAbort(StoreEntry * e, STABH * cb, void *data)
 {
     MemObject *mem = e->mem_obj;
-    debug(0, 0) ("storeRegisterAbort: %s\n", e->url);
     assert(mem);
     assert(mem->abort.callback == NULL);
     mem->abort.callback = cb;
@@ -2756,7 +2755,6 @@ void
 storeUnregisterAbort(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    debug(0, 0) ("storeUnregisterAbort: %s\n", e->url);
     assert(mem);
     mem->abort.callback = NULL;
 }
