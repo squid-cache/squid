@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.662 2003/09/29 10:24:00 robertc Exp $
+ * $Id: client_side.cc,v 1.663 2003/10/16 20:47:58 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2555,12 +2555,13 @@ clientAbortBody(HttpRequest * request)
         assert(request == conn->body.request);
         conn->body.buf = NULL;
         conn->body.callback = NULL;
-        conn->body.cbdata = NULL;
         conn->body.request = NULL;
         void *cbdata;
 
         if (cbdataReferenceValidDone(conn->body.cbdata, &cbdata))
             callback(buf, -1, cbdata);	/* Signal abort to clientReadBody caller */
+
+        conn->body.cbdata = NULL;
 
         requestUnlink(request);
     }
