@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.501 2000/10/04 02:18:48 wessels Exp $
+ * $Id: client_side.cc,v 1.502 2000/10/04 03:41:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2049,7 +2049,7 @@ clientProcessRequest2(clientHttpRequest * http)
 	r->flags.we_dont_do_ranges = 1;
 	return LOG_TCP_MISS;
     } else if (clientCheckRangeOffsetLimit(e, r->range)) {
-	debug(33, 1) ("clientProcessRequest2: forcing miss due to range_offset_limit\n");
+	debug(33, 3) ("clientProcessRequest2: forcing miss due to range_offset_limit\n");
 	http->entry = NULL;
 	r->flags.we_dont_do_ranges = 1;
 	return LOG_TCP_MISS;
