@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.144 1996/10/30 09:28:04 wessels Exp $
+ * $Id: store.cc,v 1.145 1996/11/01 21:25:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -262,8 +262,8 @@ static int storelog_fd = -1;
 
 /* key temp buffer */
 static char key_temp_buffer[MAX_URL + 100];
-static char swaplog_file[MAX_FILE_NAME_LEN];
-static char tmp_filename[MAX_FILE_NAME_LEN];
+static char swaplog_file[SQUID_MAXPATHLEN+1];
+static char tmp_filename[SQUID_MAXPATHLEN+1];
 
 /* patch cache_dir to accomodate multiple disk storage */
 static char **CacheDirs = NULL;
@@ -1065,6 +1065,8 @@ storeAddSwapDisk(char *path)
 {
     char **tmp = NULL;
     int i;
+    if (strlen(path) > (SQUID_MAXPATHLEN-32))
+	fatal_dump("cache_dir pathname is too long");
     if (CacheDirs == NULL) {
 	CacheDirsAllocated = 4;
 	CacheDirs = xcalloc(CacheDirsAllocated, sizeof(char *));
@@ -1093,7 +1095,7 @@ swappath(int n)
 static char *
 storeSwapFullPath(int fn, char *fullpath)
 {
-    LOCAL_ARRAY(char, fullfilename, MAX_FILE_NAME_LEN);
+    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN+1);
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
@@ -1249,7 +1251,7 @@ storeSwapLog(StoreEntry * e)
 static void
 storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 {
-    LOCAL_ARRAY(char, filename, MAX_FILE_NAME_LEN);
+    LOCAL_ARRAY(char, filename, SQUID_MAXPATHLEN+1);
     MemObject *mem = e->mem_obj;
 
     debug(20, 3, "storeSwapOutHandle: '%s'\n", e->key);
@@ -1334,7 +1336,7 @@ storeSwapOutStart(StoreEntry * e)
 {
     int fd;
     int x;
-    LOCAL_ARRAY(char, swapfilename, MAX_FILE_NAME_LEN);
+    LOCAL_ARRAY(char, swapfilename, SQUID_MAXPATHLEN+1);
     MemObject *mem = e->mem_obj;
     /* Suggest a new swap file number */
     swapfileno = (swapfileno + 1) % (MAX_SWAP_FILE);
@@ -1577,7 +1579,7 @@ storeStartRebuildFromDisk(void)
     data->start = getCurrentTime();
 
     /* Check if log is clean */
-    sprintf(tmp_filename, "%s/log-last-clean", swappath(0));
+    sprintf(tmp_filename, "%s-last-clean", swaplog_file);
     if (stat(tmp_filename, &sb) >= 0) {
 	last_clean = sb.st_mtime;
 	if (stat(swaplog_file, &sb) >= 0)
@@ -2478,7 +2480,10 @@ storeInit(void)
 	storeAddSwapDisk(w->key);
     storeSanityCheck();
     dir_created = storeVerifySwapDirs(opt_zap_disk_store);
-    sprintf(swaplog_file, "%s/log", swappath(0));
+    if (Config.Log.swap)
+        strncpy(swaplog_file, Config.Log.swap, SQUID_MAXPATHLEN);
+    else
+	sprintf(swaplog_file, "%s/log", swappath(0));
     swaplog_fd = file_open(swaplog_file, NULL, O_WRONLY | O_CREAT);
     debug(20, 3, "swaplog_fd %d is now '%s'\n", swaplog_fd, swaplog_file);
     if (swaplog_fd < 0) {
@@ -2617,7 +2622,6 @@ int
 storeWriteCleanLog(void)
 {
     StoreEntry *e = NULL;
-    LOCAL_ARRAY(char, swapfilename, MAX_FILE_NAME_LEN);
     FILE *fp = NULL;
     int n = 0;
     int x = 0;
@@ -2630,7 +2634,7 @@ storeWriteCleanLog(void)
     }
     debug(20, 1, "storeWriteCleanLog: Starting...\n");
     start = getCurrentTime();
-    sprintf(tmp_filename, "%s/log_clean", swappath(0));
+    sprintf(tmp_filename, "%s_clean", swaplog_file);
     if ((fp = fopen(tmp_filename, "a+")) == NULL) {
 	debug(20, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
 	return 0;
@@ -2646,7 +2650,6 @@ storeWriteCleanLog(void)
 	    continue;
 	if (BIT_TEST(e->flag, KEY_PRIVATE))
 	    continue;
-	storeSwapFullPath(e->swap_file_number, swapfilename);
 	x = fprintf(fp, "%08x %08x %08x %08x %9d %s\n",
 	    (int) e->swap_file_number,
 	    (int) e->timestamp,
@@ -2697,7 +2700,7 @@ storeWriteCleanLog(void)
 	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
 
     /* touch a timestamp file */
-    sprintf(tmp_filename, "%s/log-last-clean", swappath(0));
+    sprintf(tmp_filename, "%s-last-clean", swaplog_file);
     file_close(file_open(tmp_filename, NULL, O_WRONLY | O_CREAT | O_TRUNC));
     return n;
 }

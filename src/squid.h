@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.63 1996/10/27 07:12:00 wessels Exp $
+ * $Id: squid.h,v 1.64 1996/11/01 21:25:05 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -153,6 +153,8 @@
 #else
 #define SQUIDHOSTNAMELEN MAXHOSTNAMELEN
 #endif
+
+#define SQUID_MAXPATHLEN 256
 
 #ifndef INADDR_NONE
 #define INADDR_NONE ((unsigned long) -1)

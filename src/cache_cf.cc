@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.121 1996/10/30 06:02:49 wessels Exp $
+ * $Id: cache_cf.cc,v 1.122 1996/11/01 21:25:00 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -137,6 +137,7 @@ struct SquidConfig Config;
 #define DefaultCacheLogFile	DEFAULT_CACHE_LOG
 #define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
 #define DefaultStoreLogFile	DEFAULT_STORE_LOG
+#define DefaultSwapLogFile	(char *)NULL	/* default swappath(0) */
 #if USE_PROXY_AUTH
 #define DefaultProxyAuthFile    (char *)NULL	/* default NONE */
 #define DefaultProxyAuthIgnoreDomain (char *)NULL	/* default NONE */
@@ -215,14 +216,12 @@ static void wordlistAdd _PARAMS((wordlist **, char *));
 
 static void configDoConfigure _PARAMS((void));
 static void configSetFactoryDefaults _PARAMS((void));
-static void parseAccessLogLine _PARAMS((void));
 static void parseAddressLine _PARAMS((struct in_addr *));
 static void parseAnnounceToLine _PARAMS((void));
 static void parseAppendDomainLine _PARAMS((void));
 static void parseCacheAnnounceLine _PARAMS((void));
 static void parseCacheHostLine _PARAMS((void));
 static void parseDebugOptionsLine _PARAMS((void));
-static void parseDnsProgramLine _PARAMS((void));
 static void parseEffectiveUserLine _PARAMS((void));
 static void parseErrHtmlLine _PARAMS((void));
 static void parseFtpOptionsLine _PARAMS((void));
@@ -238,18 +237,17 @@ static void parseIcpPortLine _PARAMS((void));
 static void parseLocalDomainFile _PARAMS((char *fname));
 static void parseLocalDomainLine _PARAMS((void));
 static void parseMcastGroupLine _PARAMS((void));
-static void parseLogLine _PARAMS((void));
 static void parseMemLine _PARAMS((void));
 static void parseMgrLine _PARAMS((void));
 static void parsePidFilenameLine _PARAMS((void));
 static void parseKilobytes _PARAMS((int *));
-static void parseStoreLogLine _PARAMS((void));
 static void parseSwapLine _PARAMS((void));
 static void parseRefreshPattern _PARAMS((int icase));
 static void parseVisibleHostnameLine _PARAMS((void));
 static void parseWAISRelayLine _PARAMS((void));
 static void parseMinutesLine _PARAMS((int *));
 static void ip_acl_destroy _PARAMS((ip_acl **));
+static void parsePathname _PARAMS((char **));
 
 static void
 self_destruct(void)
@@ -640,7 +638,6 @@ static void
 parseProxyAuthLine(void)
 {
     char *token;
-
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
@@ -658,7 +655,6 @@ parseHttpdAccelLine(void)
     char *token;
     LOCAL_ARRAY(char, buf, BUFSIZ);
     int i;
-
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
@@ -676,14 +672,12 @@ static void
 parseEffectiveUserLine(void)
 {
     char *token;
-
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
     safe_free(Config.effectiveUser);
     safe_free(Config.effectiveGroup);
     Config.effectiveUser = xstrdup(token);
-
     token = strtok(NULL, w_space);
     if (token == NULL)
 	return;			/* group is optional */
@@ -691,36 +685,14 @@ parseEffectiveUserLine(void)
 }
 
 static void
-parseLogLine(void)
+parsePathname(char **path)
 {
     char *token;
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
-    safe_free(Config.Log.log);
-    Config.Log.log = xstrdup(token);
-}
-
-static void
-parseAccessLogLine(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Log.access);
-    Config.Log.access = xstrdup(token);
-}
-
-static void
-parseStoreLogLine(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Log.store);
-    Config.Log.store = xstrdup(token);
+    safe_free(*path);
+    *path = xstrdup(token);
 }
 
 static void
@@ -743,28 +715,6 @@ parseFtpOptionsLine(void)
 	self_destruct();
     safe_free(Config.Program.ftpget_opts);
     Config.Program.ftpget_opts = xstrdup(token);
-}
-
-static void
-parseDnsProgramLine(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Program.dnsserver);
-    Config.Program.dnsserver = xstrdup(token);
-}
-
-static void
-parseRedirectProgramLine(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    safe_free(Config.Program.redirect);
-    Config.Program.redirect = xstrdup(token);
 }
 
 static void
@@ -846,7 +796,6 @@ parseLocalDomainFile(char *fname)
     LOCAL_ARRAY(char, tmp_line, BUFSIZ);
     FILE *fp = NULL;
     char *t = NULL;
-
     if ((fp = fopen(fname, "r")) == NULL) {
 	debug(3, 1, "parseLocalDomainFile: %s: %s\n", fname, xstrerror());
 	return;
@@ -925,17 +874,6 @@ parseDebugOptionsLine(void)
 }
 
 static void
-parsePidFilenameLine(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    safe_free(Config.pidFilename);
-    if (token == NULL)
-	self_destruct();
-    Config.pidFilename = xstrdup(token);
-}
-
-static void
 parseVisibleHostnameLine(void)
 {
     char *token;
@@ -1010,9 +948,6 @@ parseVizHackLine(void)
 	self_destruct();
     if (sscanf(token, "%d", &i) == 1)
 	Config.vizHackAddr.sin_port = htons(i);
-    debug(0, 0, "parseVizHackLine: got %s %d\n",
-	inet_ntoa(Config.vizHackAddr.sin_addr),
-	ntohs(Config.vizHackAddr.sin_port));
 }
 
 static void
@@ -1107,13 +1042,16 @@ parseConfigFile(char *file_name)
 	    parseWordlist(&Config.cache_dirs);
 
 	else if (!strcmp(token, "cache_log"))
-	    parseLogLine();
+	    parsePathname(&Config.Log.log);
 
 	else if (!strcmp(token, "cache_access_log"))
-	    parseAccessLogLine();
+	    parsePathname(&Config.Log.access);
 
 	else if (!strcmp(token, "cache_store_log"))
-	    parseStoreLogLine();
+	    parsePathname(&Config.Log.store);
+
+	else if (!strcmp(token, "cache_swap_log"))
+	    parsePathname(&Config.Log.swap);
 
 	else if (!strcmp(token, "logfile_rotate"))
 	    parseIntegerValue(&Config.Log.rotateNumber);
@@ -1217,13 +1155,13 @@ parseConfigFile(char *file_name)
 	    parseFtpOptionsLine();
 
 	else if (!strcmp(token, "cache_dns_program"))
-	    parseDnsProgramLine();
+	    parsePathname(&Config.Program.dnsserver);
 
 	else if (!strcmp(token, "dns_children"))
 	    parseIntegerValue(&Config.dnsChildren);
 
 	else if (!strcmp(token, "redirect_program"))
-	    parseRedirectProgramLine();
+	    parsePathname(&Config.Program.redirect);
 
 	else if (!strcmp(token, "redirect_children"))
 	    parseIntegerValue(&Config.redirectChildren);
@@ -1311,7 +1249,7 @@ parseConfigFile(char *file_name)
 	    parseDebugOptionsLine();
 
 	else if (!strcmp(token, "pid_filename"))
-	    parsePidFilenameLine();
+	    parsePathname(&Config.pidFilename);
 
 	else if (!strcmp(token, "visible_hostname"))
 	    parseVisibleHostnameLine();
@@ -1435,6 +1373,7 @@ configFreeMemory(void)
     safe_free(Config.Log.log);
     safe_free(Config.Log.access);
     safe_free(Config.Log.store);
+    safe_free(Config.Log.swap);
     safe_free(Config.adminEmail);
     safe_free(Config.effectiveUser);
     safe_free(Config.effectiveGroup);
@@ -1520,6 +1459,7 @@ configSetFactoryDefaults(void)
     Config.Log.log = safe_xstrdup(DefaultCacheLogFile);
     Config.Log.access = safe_xstrdup(DefaultAccessLogFile);
     Config.Log.store = safe_xstrdup(DefaultStoreLogFile);
+    Config.Log.swap = safe_xstrdup(DefaultSwapLogFile);
     Config.Log.rotateNumber = DefaultLogRotateNumber;
     Config.Program.ftpget = safe_xstrdup(DefaultFtpgetProgram);
     Config.Program.ftpget_opts = safe_xstrdup(DefaultFtpgetOptions);

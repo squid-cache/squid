@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.35 1996/10/11 23:11:53 wessels Exp $
+ * $Id: disk.cc,v 1.36 1996/11/01 21:25:02 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -173,7 +173,7 @@ file_open(char *path, int (*handler) _PARAMS((void)), int mode)
     commSetCloseOnExec(fd);
 
     /* init table */
-    strncpy(file_table[fd].filename, path, MAX_FILE_NAME_LEN);
+    strncpy(file_table[fd].filename, path, SQUID_MAXPATHLEN);
     file_table[fd].at_eof = NO;
     file_table[fd].open_stat = FILE_OPEN;
     file_table[fd].close_request = NOT_REQUEST;
