@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.199 1997/10/24 18:10:39 wessels Exp $
+ * $Id: http.cc,v 1.200 1997/10/25 06:26:40 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -666,7 +666,6 @@ httpReadReply(int fd, void *data)
 	httpState->eof = 1;
 	if (httpState->reply_hdr_state < 2)
 	    httpProcessReplyHeader(httpState, buf, len);
-	/* storeAppend(entry, buf, len);        /* invoke handlers! */
 	storeComplete(entry);	/* deallocates mem_obj->request */
 	comm_close(fd);
     } else {
