@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.94 1996/10/29 02:38:16 wessels Exp $
+ * $Id: comm.cc,v 1.95 1996/10/30 21:56:35 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -497,10 +497,21 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 }
 
 void
+commCallCloseHandlers(int fd)
+{
+    FD_ENTRY *conn = &fd_table[fd];
+    struct close_handler *ch;
+    while ((ch = conn->close_handler) != NULL) {
+	conn->close_handler = ch->next;
+	ch->handler(fd, ch->data);
+	safe_free(ch);
+    }
+}
+
+void
 comm_close(int fd)
 {
     FD_ENTRY *conn = NULL;
-    struct close_handler *ch = NULL;
     debug(5, 5, "comm_close: FD %d\n", fd);
     if (fd < 0 || fd >= FD_SETSIZE)
 	return;
@@ -515,11 +526,7 @@ comm_close(int fd)
     RWStateCallbackAndFree(fd, COMM_ERROR);
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
     fdstat_close(fd);		/* update fdstat */
-    while ((ch = conn->close_handler) != NULL) {	/* Call close handlers */
-	conn->close_handler = ch->next;
-	ch->handler(fd, ch->data);
-	safe_free(ch);
-    }
+    commCallCloseHandlers(fd);
     memset(conn, '\0', sizeof(FD_ENTRY));
     close(fd);
 }
