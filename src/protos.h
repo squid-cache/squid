@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.419 2001/10/22 23:55:43 hno Exp $
+ * $Id: protos.h,v 1.420 2001/11/13 21:27:48 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -195,7 +195,7 @@ extern void packerClean(Packer * p);
 extern void packerAppend(Packer * p, const char *buf, int size);
 #if STDC_HEADERS
 extern void
-packerPrintf(Packer * p, const char *fmt,...) PRINTF_FORMAT_ARG(2);
+packerPrintf(Packer * p, const char *fmt,...) PRINTF_FORMAT_ARG2;
 #else
 extern void packerPrintf();
 #endif
@@ -210,7 +210,7 @@ extern void _db_rotate_log(void);
 
 #if STDC_HEADERS
 extern void
-_db_print(const char *,...) PRINTF_FORMAT_ARG(1);
+_db_print(const char *,...) PRINTF_FORMAT_ARG1;
 #else
 extern void _db_print();
 #endif
@@ -412,7 +412,7 @@ extern int httpHeaderParseSize(const char *start, ssize_t * sz);
 extern int httpHeaderReset(HttpHeader * hdr);
 #if STDC_HEADERS
 extern void
-httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG(3);
+httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 #else
 extern void httpHeaderPutStrf();
 #endif
@@ -610,7 +610,7 @@ extern void memBufAppend(MemBuf * mb, const char *buf, mb_size_t size);
 /* calls snprintf, extends buffer if needed */
 #if STDC_HEADERS
 extern void
-memBufPrintf(MemBuf * mb, const char *fmt,...) PRINTF_FORMAT_ARG(2);
+memBufPrintf(MemBuf * mb, const char *fmt,...) PRINTF_FORMAT_ARG2;
 #else
 extern void memBufPrintf();
 #endif
@@ -918,7 +918,7 @@ extern void storeHashInsert(StoreEntry * e, const cache_key *);
 extern void storeSetMemStatus(StoreEntry * e, int);
 #if STDC_HEADERS
 extern void
-storeAppendPrintf(StoreEntry *, const char *,...) PRINTF_FORMAT_ARG(2);
+storeAppendPrintf(StoreEntry *, const char *,...) PRINTF_FORMAT_ARG2;
 #else
 extern void storeAppendPrintf();
 #endif
@@ -1065,7 +1065,7 @@ extern void death(int sig);
 extern void fatal(const char *message);
 #if STDC_HEADERS
 extern void
-fatalf(const char *fmt,...) PRINTF_FORMAT_ARG(1);
+fatalf(const char *fmt,...) PRINTF_FORMAT_ARG1;
 #else
 extern void fatalf();
 #endif
@@ -1191,7 +1191,7 @@ extern String stringDup(const String * s);
 extern void stringClean(String * s);
 extern void stringReset(String * s, const char *str);
 extern void stringAppend(String * s, const char *buf, int len);
-/* extern void stringAppendf(String *s, const char *fmt, ...) PRINTF_FORMAT_ARG(2); */
+/* extern void stringAppendf(String *s, const char *fmt, ...) PRINTF_FORMAT_ARG2; */
 
 /*
  * ipc.c
@@ -1288,7 +1288,7 @@ extern void logfileWrite(Logfile * lf, void *buf, size_t len);
 extern void logfileFlush(Logfile * lf);
 #if STDC_HEADERS
 extern void
-logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG(2);
+logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
 #else
 extern void logfilePrintf(va_alist);
 #endif
