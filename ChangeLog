@@ -1,3 +1,4 @@
+	- Added support for only-if-cached cache-control directive.
 	- Added STRICT_HTTP_PARSER pp directive to control parsing of invalid
 	  but commonly used HTTP formats (e.g. buggy SpyGame queries).
 	  STRICT_HTTP_PARSER is "off" by default.
