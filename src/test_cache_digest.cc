@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.8 1998/04/01 05:02:21 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.9 1998/04/01 06:22:04 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -50,6 +50,7 @@ struct _Cache {
     Cache *peer;
     CacheQueryStats qstats;
     int count;			/* #currently cached entries */
+    int req_count;              /* #requests to this cache */
     int bad_add_count;		/* #duplicate adds */
     int bad_del_count;		/* #dels with no prior add */
 };
@@ -320,7 +321,10 @@ cacheQueryPeer(Cache * cache, const cache_key * key)
 static void
 cacheQueryReport(Cache * cache, CacheQueryStats *stats)
 {
-    fprintf(stdout, "%s: icp: %d\n", cache->name, stats->query_count);
+    fprintf(stdout, "%s: peer queries: %d (%d%%)\n", 
+	cache->name, 
+	stats->query_count, xpercentInt(stats->query_count, cache->req_count)
+	);
     fprintf(stdout, "%s: t-hit: %d (%d%%) t-miss: %d (%d%%) t-*: %d (%d%%)\n",
 	cache->name, 
 	stats->true_hit_count, xpercentInt(stats->true_hit_count, stats->query_count),
@@ -338,9 +342,34 @@ cacheQueryReport(Cache * cache, CacheQueryStats *stats)
 }
 
 static void
+cacheReport(Cache * cache)
+{
+    fprintf(stdout, "%s: entries: %d reqs: %d bad-add: %d bad-del: %d\n", 
+	cache->name, cache->count, cache->req_count,
+	cache->bad_add_count, cache->bad_del_count);
+
+    if (cache->digest) {
+	int bit_count, on_count;
+	cacheDigestUtil(cache->digest, &bit_count, &on_count);
+	fprintf(stdout, "%s: digest entries: cnt: %d cap: %d util: %d%% size: %d b\n", 
+	    cache->name, 
+	    cache->digest->count, cache->digest->capacity,
+	    xpercentInt(cache->digest->count, cache->digest->capacity),
+	    bit_count*8
+	);
+	fprintf(stdout, "%s: digest bits: on: %d cap: %d util: %d%%\n", 
+	    cache->name,
+	    on_count, bit_count,
+	    xpercentInt(on_count, bit_count)
+	);
+    }
+}
+
+static void
 cacheFetch(Cache *cache, const RawAccessLogEntry *e)
 {
     assert(e);
+    cache->req_count++;
     if (e->use_icp)
 	cacheQueryPeer(cache, e->key);
 }
@@ -420,8 +449,6 @@ accessLogReader(FileIterator * fi)
 	strcmp(hier, "PASSTHROUGH_PARENT") &&
 	strcmp(hier, "SSL_PARENT_MISS") &&
 	strcmp(hier, "DEFAULT_PARENT");
-    if (!entry->use_icp)
-	return frMore;
     memcpy(entry->key, storeKeyPublic(url, method_id), sizeof(entry->key));
     /*fprintf(stdout, "%s:%d: %s %s %s %s\n",
 	fname, count, method, storeKeyText(entry->key), url, hier); */
@@ -504,6 +531,7 @@ main(int argc, char *argv[])
     fis[0] = fileIteratorCreate(argv[1], accessLogReader);
     for (i = 2; i < argc; ++i) {
 	fis[i-1] = fileIteratorCreate(argv[i], swapStateReader);
+	if (!fis[i-1]) return -2;
     }
     /* read prefix to get start-up contents of the peer cache */
     ready_time = -1;
@@ -547,12 +575,14 @@ main(int argc, char *argv[])
 	    if (next_i == 0)
 		cacheFetch(us, fis[next_i]->entry);
 	    else
-		cacheUpdateStore(them, fis[next_i]->entry, 0);
+		cacheUpdateStore(them, fis[next_i]->entry, 1);
 	    fileIteratorAdvance(fis[next_i]);
 	}
     } while (active_fi_count);
 
     /* report */
+    cacheReport(them);
+    cacheReport(us);
     cacheQueryReport(us, &us->qstats);
 
     /* clean */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.3 1998/04/01 00:14:00 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.4 1998/04/01 06:22:03 rousskov Exp $
  *
  * DEBUG: section ??    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -66,22 +66,9 @@ cacheDigestClone(const CacheDigest * cd)
     CacheDigest *clone;
     assert(cd);
     clone = cacheDigestCreate(cd->capacity);
+    clone->count = cd->count;
     xmemcpy(clone->mask, cd->mask, cd->mask_size);
     return clone;
-}
-
-void
-cacheDigestAdd(CacheDigest * cd, const cache_key * key)
-{
-    assert(cd && key);
-    /* hash */
-    cacheDigestHashKey(cd->capacity * BitsPerEntry, key);
-    /* turn on corresponding bits */
-    CBIT_SET(cd->mask, hashed_keys[0]);
-    CBIT_SET(cd->mask, hashed_keys[1]);
-    CBIT_SET(cd->mask, hashed_keys[2]);
-    CBIT_SET(cd->mask, hashed_keys[3]);
-    cd->count++;
 }
 
 /* returns true if the key belongs to the digest */
@@ -100,6 +87,20 @@ cacheDigestTest(const CacheDigest * cd, const cache_key * key)
 }
 
 void
+cacheDigestAdd(CacheDigest * cd, const cache_key * key)
+{
+    assert(cd && key);
+    /* hash */
+    cacheDigestHashKey(cd->capacity * BitsPerEntry, key);
+    /* turn on corresponding bits */
+    CBIT_SET(cd->mask, hashed_keys[0]);
+    CBIT_SET(cd->mask, hashed_keys[1]);
+    CBIT_SET(cd->mask, hashed_keys[2]);
+    CBIT_SET(cd->mask, hashed_keys[3]);
+    cd->count++;
+}
+
+void
 cacheDigestDel(CacheDigest * cd, const cache_key * key)
 {
     assert(cd && key);
@@ -107,6 +108,23 @@ cacheDigestDel(CacheDigest * cd, const cache_key * key)
     /* we do not support deletions from the digest */
 }
 
+/* returns mask utilization parameters */
+double
+cacheDigestUtil(const CacheDigest * cd, int *bit_cnt_p, int *on_cnt_p)
+{
+    const int bit_count = cd->capacity * BitsPerEntry;
+    int pos = bit_count;
+    int on_count = 0;
+    while (pos-- > 0) {
+	if (CBIT_TEST(cd->mask, pos))
+	    on_count++;
+    }
+    if (bit_cnt_p)
+	*bit_cnt_p = bit_count;
+    if (on_cnt_p)
+	*on_cnt_p = on_count;
+    return xpercent(on_count, bit_count);
+}
 
 static void
 cacheDigestHashKey(int bit_count, const char *key)

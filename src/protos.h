@@ -899,6 +899,7 @@ extern CacheDigest *cacheDigestClone(const CacheDigest * cd);
 extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
+extern double cacheDigestUtil(const CacheDigest * cd, int *bit_cnt_p, int *on_cnt_p);
 
 /*
  * prototypes for system functions missing from system includes
