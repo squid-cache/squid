@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.49 1997/10/17 00:00:02 wessels Exp $
+ * $Id: stmem.cc,v 1.50 1997/10/22 17:07:25 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -128,12 +128,14 @@ memFree(mem_hdr * mem)
 	    p = p->next;
 	    if (lastp) {
 		put_free_4k_page(lastp->data);
+	        store_mem_size -= SM_PAGE_SIZE;
 		safe_free(lastp);
 	    }
 	}
 
 	if (p) {
 	    put_free_4k_page(p->data);
+	    store_mem_size -= SM_PAGE_SIZE;
 	    safe_free(p);
 	}
     }
@@ -158,6 +160,7 @@ memFreeDataUpto(mem_hdr * mem, int target_offset)
 	    p = p->next;
 	    current_offset += lastp->len;
 	    put_free_4k_page(lastp->data);
+	    store_mem_size -= SM_PAGE_SIZE;
 	    safe_free(lastp);
 	}
     }
@@ -197,6 +200,7 @@ memAppend(mem_hdr * mem, const char *data, int len)
 	p->next = NULL;
 	p->len = len_to_copy;
 	p->data = get_free_4k_page();
+	store_mem_size += SM_PAGE_SIZE;
 	xmemcpy(p->data, data, len_to_copy);
 	if (!mem->head) {
 	    /* The chain is empty */
