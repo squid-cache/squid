@@ -937,12 +937,13 @@ DOC_START
 	As a part of normal operation, Squid performs Least Recently
 	Used removal of cached objects.  The LRU age for removal is
 	computed dynamically, based on the amount of disk space in
-	use.  The 'reference_age' value defines the maximum LRU age.
-	For example, setting reference_age to '1 week' will cause
-	objects to be removed if they have not been accessed for a week
-	or more.  If set to zero, LRU removal is disabled, and objects
-	will be removed only when disk usage is over the high water
-	mark.  The default value is one month.
+	use.  The dynamic value can be seen in the Cache Manager 'info'
+	output.
+
+	The 'reference_age' parameter defines the maximum LRU age.  For
+	example, setting reference_age to '1 week' will cause objects
+	to be removed if they have not been accessed for a week or
+	more.  The default value is one month.
 
 	Specify a number here, followed by units of time.  For example:
 		1 week
