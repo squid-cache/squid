@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpReply.h,v 1.3 2003/05/11 13:53:03 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -73,7 +73,6 @@ extern time_t httpReplyExpires(const HttpReply * rep);
 extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
 extern void httpRedirectReply(HttpReply *, http_status, const char *);
 extern int httpReplyBodySize(method_t, HttpReply const *);
-extern void httpReplyBodyBuildSize(request_t *, HttpReply *, dlink_list *);
 extern int httpReplyValidatorsMatch (HttpReply const *, HttpReply const *);
 
 #endif /* SQUID_HTTPREPLY_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.9 2003/03/15 04:17:39 robertc Exp $
+ * $Id: client_side_request.h,v 1.10 2003/05/11 13:53:03 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -123,7 +123,12 @@ unsigned int purging:
     dlink_list client_stream;
     int mRangeCLen();
 
+    ssize_t maxReplyBodySize() const;
+    void maxReplyBodySize(ssize_t size);
+    bool isReplyBodyTooLarge(ssize_t len) const;
+
 private:
+    ssize_t maxReplyBodySize_;
     CBDATA_CLASS(ClientHttpRequest);
 };
 
