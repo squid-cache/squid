@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.15 2003/01/23 00:37:01 robertc Exp $
+ * $Id: MemPool.c,v 1.16 2003/02/08 01:45:47 robertc Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -132,8 +132,8 @@ static int Pool_id_counter = 0;
 static MemPool *lastPool;
 
 /* local prototypes */
-static int memCompChunks(MemChunk * chunkA, MemChunk * chunkB);
-static int memCompObjChunks(void *obj, MemChunk * chunk);
+static SPLAYCMP memCompChunks;
+static SPLAYCMP memCompObjChunks;
 #if !DISABLE_POOLS
 static MemChunk *memPoolChunkNew(MemPool * pool);
 #endif
@@ -187,7 +187,15 @@ memPoolSetIdleLimit(size_t new_idle_limit)
 
 /* Compare chunks */
 static int
-memCompChunks(MemChunk * chunkA, MemChunk * chunkB)
+memCompChunksSafe(MemChunk * chunkA, MemChunk * chunkB);
+static int
+memCompChunks(const void **chunkA, const void **chunkB)
+{
+    return memCompChunksSafe((MemChunk *)*chunkA, (MemChunk *)*chunkB);
+}
+
+static int
+memCompChunksSafe(MemChunk * chunkA, MemChunk * chunkB)
 {
     if (chunkA->objCache > chunkB->objCache)
 	return 1;
@@ -199,8 +207,14 @@ memCompChunks(MemChunk * chunkA, MemChunk * chunkB)
 
 /* Compare object to chunk */
 /* XXX Note: this depends on lastPool */
+static int memCompObjChunksSafe(void *obj, MemChunk * chunk);
 static int
-memCompObjChunks(void *obj, MemChunk * chunk)
+memCompObjChunks(const void **obj, const void **chunk)
+{
+    return memCompObjChunksSafe((void *)*obj, (MemChunk *)*chunk);
+}
+
+static int memCompObjChunksSafe(void *obj, MemChunk * chunk)
 {
     if (obj < chunk->objCache)
 	return -1;
@@ -234,7 +248,7 @@ memPoolChunkNew(MemPool * pool)
     pool->chunkCount++;
     chunk->lastref = squid_curtime;
     lastPool = pool;
-    pool->allChunks = splay_insert(chunk, pool->allChunks, (SPLAYCMP *) memCompChunks);
+    pool->allChunks = splay_insert(chunk, pool->allChunks, memCompChunks);
     return chunk;
 }
 #endif
@@ -247,7 +261,7 @@ memPoolChunkDestroy(MemPool * pool, MemChunk * chunk)
     pool->idle -= pool->chunk_capacity;
     pool->chunkCount--;
     lastPool = pool;
-    pool->allChunks = splay_delete(chunk, pool->allChunks, (SPLAYCMP *) memCompChunks);
+    pool->allChunks = splay_delete(chunk, pool->allChunks, memCompChunks);
     xfree(chunk->objCache);
     xfree(chunk);
 }
@@ -574,7 +588,7 @@ memPoolCleanOne(MemPool * pool, time_t maxage)
 
     while ((Free = pool->freeCache) != NULL) {
 	lastPool = pool;
-	pool->allChunks = splay_splay(Free, pool->allChunks, (SPLAYCMP *) memCompObjChunks);
+	pool->allChunks = splay_splay((const void **)&Free, pool->allChunks, memCompObjChunks);
 	assert(splayLastResult == 0);
 	chunk = pool->allChunks->data;
 	assert(chunk->inuse_count > 0);

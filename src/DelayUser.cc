@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.cc,v 1.2 2003/02/06 09:57:36 robertc Exp $
+ * $Id: DelayUser.cc,v 1.3 2003/02/08 01:45:47 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -69,9 +69,32 @@ DelayUser::DelayUser()
     DelayPools::registerForUpdates (this);
 }
 
+static SplayNode<DelayUserBucket::Pointer>::SPLAYFREE DelayUserFree;
+
 DelayUser::~DelayUser()
 {
     DelayPools::deregisterForUpdates (this);
+    buckets.head->destroy (DelayUserFree);
+}
+
+static SplayNode<DelayUserBucket::Pointer>::SPLAYCMP DelayUserCmp;
+
+int
+DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer const &right)
+{
+    /* for rate limiting, case insensitive */
+    return strcasecmp(left->authUser->username(), right->authUser->username());
+}
+
+void
+DelayUserFree(DelayUserBucket::Pointer &)
+{
+}
+
+void
+DelayUserStatsWalkee(DelayUserBucket::Pointer const &current, void *state)
+{
+    current->stats ((StoreEntry *)state);
 }
 
 void
@@ -81,15 +104,11 @@ DelayUser::stats(StoreEntry * sentry)
     if (spec.restore_bps == -1)
 	return;
     storeAppendPrintf(sentry, "\t\tCurrent: ");
-    if (!buckets.size()) {
+    if (!buckets.head) {
 	storeAppendPrintf (sentry, "Not used yet.\n\n");
 	return;
     }
-    iterator pos = buckets.begin();
-    while (pos != buckets.end()) {
-	(*pos)->stats(sentry);
-	++pos;
-    }
+    buckets.head->walk(DelayUserStatsWalkee, sentry);
     storeAppendPrintf(sentry, "\n\n");
 }
 
@@ -99,14 +118,24 @@ DelayUser::dump(StoreEntry *entry) const
     spec.dump(entry);
 }
 
+struct DelayUserUpdater 
+{
+    DelayUserUpdater (DelaySpec &_spec, int _incr):spec(_spec),incr(_incr){};
+    DelaySpec spec;
+    int incr;
+};
+void
+DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
+{
+    DelayUserUpdater *t = (DelayUserUpdater *)state;
+    /* This doesn't change the value of the DelayUserBucket, so is safe */
+    const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
+}
 void
 DelayUser::update(int incr)
 {
-    iterator pos = buckets.begin();
-    while (pos != buckets.end()) {
-	(*pos)->theBucket.update(spec, incr);
-	++pos;
-    }
+    DelayUserUpdater updater(spec, incr);
+    buckets.head->walk (DelayUserUpdateWalkee, &updater);
 }
 
 void
@@ -178,18 +207,14 @@ DelayUserBucket::stats (StoreEntry *entry) const
 
 DelayUser::Id::Id(DelayUser::Pointer aDelayUser,AuthUser *aUser) : theUser(aDelayUser)
 {
-    DelayUser::iterator pos = theUser->buckets.begin();
-    while (pos != theUser->buckets.end()) {
-	if ((*pos)->authUser == aUser) {
-	    theBucket = (*pos);
-	    return;
-	}
-	++pos;
-    }
-    
     theBucket = new DelayUserBucket(aUser);
+    DelayUserBucket::Pointer const *existing = theUser->buckets.find(theBucket, DelayUserCmp);
+    if (existing) {
+	theBucket = *existing;
+	return;
+    }
     theBucket->theBucket.init(theUser->spec);
-    theUser->buckets.push_back (theBucket);
+    theUser->buckets.head = theUser->buckets.head->insert (theBucket, DelayUserCmp);
 }
 
 DelayUser::Id::~Id()

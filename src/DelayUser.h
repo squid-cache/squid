@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.h,v 1.1 2003/02/05 21:06:30 robertc Exp $
+ * $Id: DelayUser.h,v 1.2 2003/02/08 01:45:47 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -47,6 +47,7 @@
 #include "DelayBucket.h"
 #include "DelaySpec.h"
 #include "Array.h"
+#include "splay.h"
 
 class DelayUserBucket : public RefCountable {
   public:
@@ -90,7 +91,6 @@ private:
 	DelayUserBucket::Pointer theBucket;
     };
     DelaySpec spec;
-    Vector<DelayUserBucket::Pointer> buckets;
-    typedef Vector<DelayUserBucket::Pointer>::iterator iterator;
+    Splay<DelayUserBucket::Pointer> buckets;
 };
 #endif /* DELAYUSER_H */

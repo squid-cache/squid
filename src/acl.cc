@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.297 2003/01/28 01:29:33 robertc Exp $
+ * $Id: acl.cc,v 1.298 2003/02/08 01:45:47 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "ACL.h"
 #include "ACLChecklist.h"
 #include "splay.h"
 #include "HttpRequest.h"
@@ -87,21 +88,21 @@ static wordlist *aclDumpIntlistList(intlist * data);
 static wordlist *aclDumpIntRangeList(intrange * data);
 static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
-static SPLAYCMP aclIpAddrNetworkCompare;
-static SPLAYCMP aclIpNetworkCompare;
-static SPLAYCMP aclHostDomainCompare;
-static SPLAYCMP aclDomainCompare;
-static SPLAYWALKEE aclDumpIpListWalkee;
-static SPLAYWALKEE aclDumpDomainListWalkee;
-static SPLAYFREE aclFreeIpData;
+static splayNode::SPLAYCMP aclIpAddrNetworkCompare;
+static splayNode::SPLAYCMP aclIpNetworkCompare;
+static splayNode::SPLAYCMP aclHostDomainCompare;
+template<class T> int aclDomainCompare(T const &a, T const &b);
+static splayNode::SPLAYWALKEE aclDumpIpListWalkee;
+static splayNode::SPLAYWALKEE aclDumpDomainListWalkee;
+static splayNode::SPLAYFREE aclFreeIpData;
 
 #if USE_ARP_ACL
 static void aclParseArpList(void *curlist);
 static int decode_eth(const char *asc, char *eth);
 static int aclMatchArp(void *dataptr, struct in_addr c);
 static wordlist *aclDumpArpList(void *);
-static SPLAYCMP aclArpCompare;
-static SPLAYWALKEE aclDumpArpListWalkee;
+static splayNode::SPLAYCMP aclArpCompare;
+static splayNode::SPLAYWALKEE aclDumpArpListWalkee;
 #endif
 static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char const *MatchParam);
 #if USE_SSL
@@ -111,6 +112,27 @@ static int aclMatchCACert(void *data, ACLChecklist *);
 static wordlist *aclDumpCertList(void *data);
 static void aclDestroyCertList(void *data);
 #endif
+
+template<class T>
+inline void
+xRefFree(T &thing)
+{
+    xfree (thing);
+}
+
+template<class T>
+inline int
+splaystrcmp (T&l, T&r)
+{
+    return strcmp ((char *)l,(char *)r);
+}
+
+template<class T>
+inline int
+splaystrcasecmp (T&l, T&r)
+{
+    return strcasecmp ((char *)l,(char *)r);
+}
 
 static squid_acl
 aclStrToType(const char *s)
@@ -640,12 +662,12 @@ aclParseUserList(void **current)
 {
     char *t = NULL;
     acl_user_data *data;
-    splayNode *Top = NULL;
+    SplayNode<char *> *Top = NULL;
 
     debug(28, 2) ("aclParseUserList: parsing user list\n");
     if (*current == NULL) {
 	debug(28, 3) ("aclParseUserList: current is null. Creating\n");
-	*current = memAllocate(MEM_ACL_USER_DATA);
+	*current = new acl_user_data;
     }
     data = (acl_user_data*)*current;
     Top = data->names;
@@ -660,7 +682,7 @@ aclParseUserList(void **current)
 	} else {
 	    if (data->flags.case_insensitive)
 		Tolower(t);
-	    Top = splay_insert(xstrdup(t), Top, (SPLAYCMP *) strcmp);
+	    Top = Top->insert(xstrdup(t), splaystrcmp);
 	}
     }
     debug(28, 3) ("aclParseUserList: Case-insensitive-switch is %d\n",
@@ -672,7 +694,7 @@ aclParseUserList(void **current)
 	debug(28, 6) ("aclParseUserList: Got token: %s\n", t);
 	if (data->flags.case_insensitive)
 	    Tolower(t);
-	Top = splay_insert(xstrdup(t), Top, (SPLAYCMP *) strcmp);
+	Top = Top->insert(xstrdup(t), splaystrcmp);
     }
     data->names = Top;
 }
@@ -698,7 +720,7 @@ static void
 aclParseCertList(void *curlist)
 {
     acl_cert_data **datap = (acl_cert_data **)curlist;
-    splayNode **Top;
+    SplayNode<char *> **Top;
     char *t;
     char *attribute = strtokFile();
     if (!attribute)
@@ -707,12 +729,12 @@ aclParseCertList(void *curlist)
 	if (strcasecmp((*datap)->attribute, attribute) != 0)
 	    self_destruct();
     } else {
-	*datap = (acl_cert_data *)memAllocate(MEM_ACL_CERT_DATA);
+	*datap = new acl_cert_data;
 	(*datap)->attribute = xstrdup(attribute);
     }
     Top = &(*datap)->values;
     while ((t = strtokFile())) {
-	*Top = splay_insert(xstrdup(t), *Top, aclDomainCompare);
+	*Top = (*Top)->insert(xstrdup(t), aclDomainCompare);
     }
 }
 
@@ -728,7 +750,7 @@ aclMatchUserCert(void *data, ACLChecklist * checklist)
     value = sslGetUserAttribute(ssl, cert_data->attribute);
     if (!value)
 	return 0;
-    cert_data->values = splay_splay(value, cert_data->values, (SPLAYCMP *) strcmp);
+    cert_data->values = cert_data->values->splay(const_cast<char *>(value), splaystrcmp);
     return !splayLastResult;
 }
 
@@ -744,7 +766,7 @@ aclMatchCACert(void *data, ACLChecklist * checklist)
     value = sslGetCAAttribute(ssl, cert_data->attribute);
     if (!value)
 	return 0;
-    cert_data->values = splay_splay(value, cert_data->values, (SPLAYCMP *) strcmp);
+    cert_data->values = cert_data->values->splay(const_cast<char *>(value), splaystrcmp);
     return !splayLastResult;
 }
 
@@ -754,16 +776,16 @@ aclDestroyCertList(void *curlist)
     acl_cert_data **datap = (acl_cert_data **)curlist;
     if (!*datap)
 	return;
-    splay_destroy((*datap)->values, xfree);
-    memFree(*datap, MEM_ACL_CERT_DATA);
+    (*datap)->values->destroy(xRefFree);
+    delete *datap;
     *datap = NULL;
 }
 
 static void
-aclDumpCertListWalkee(void *node_data, void *outlist)
+aclDumpCertListWalkee(char *const&node_data, void *outlist)
 {
     wordlist **wl = (wordlist **)outlist;
-    wordlistAdd(wl, (const char *)node_data);
+    wordlistAdd(wl, node_data);
 }
 
 static wordlist *
@@ -772,8 +794,7 @@ aclDumpCertList(void *curlist)
     acl_cert_data *data = (acl_cert_data *)curlist;
     wordlist *wl = NULL;
     wordlistAdd(&wl, data->attribute);
-    if (data->values)
-	splay_walk(data->values, aclDumpCertListWalkee, &wl);
+    data->values->walk(aclDumpCertListWalkee, &wl);
     return wl;
 }
 #endif
@@ -1131,7 +1152,8 @@ aclMatchIp(void *dataptr, struct in_addr c)
     x.addr2 = any_addr;
     x.mask = no_addr;
     x.next = NULL;
-    *Top = splay_splay(&x, *Top, aclIpAddrNetworkCompare);
+    const void *X = &x;
+    *Top = splay_splay(&X, *Top, aclIpAddrNetworkCompare);
     debug(28, 3) ("aclMatchIp: '%s' %s\n",
 	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
@@ -1148,7 +1170,8 @@ aclMatchDomainList(void *dataptr, const char *host)
     if (host == NULL)
 	return 0;
     debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
-    *Top = splay_splay(host, *Top, aclHostDomainCompare);
+    const void * __host = host;
+    *Top = splay_splay(&__host, *Top, aclHostDomainCompare);
     debug(28, 3) ("aclMatchDomainList: '%s' %s\n",
 	host, splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
@@ -1185,7 +1208,7 @@ static int
 aclMatchUser(void *proxyauth_acl, char const *user)
 {
     acl_user_data *data = (acl_user_data *) proxyauth_acl;
-    splayNode *Top = data->names;
+    SplayNode<char *> *Top = data->names;
 
     debug(28, 7) ("aclMatchUser: user is %s, case_insensitive is %d\n",
 	user, data->flags.case_insensitive);
@@ -1200,10 +1223,10 @@ aclMatchUser(void *proxyauth_acl, char const *user)
 	return 1;
     }
     if (data->flags.case_insensitive)
-	Top = splay_splay(user, Top, (SPLAYCMP *) strcasecmp);
+	Top = Top->splay((char *)user, splaystrcasecmp);
     else
-	Top = splay_splay(user, Top, (SPLAYCMP *) strcmp);
-    /* Top=splay_splay(user,Top,(SPLAYCMP *)dumping_strcmp); */
+	Top = Top->splay((char *)user, splaystrcmp);
+    /* Top=splay_splay(user,Top,(splayNode::SPLAYCMP *)dumping_strcmp); */
     debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
 	!splayLastResult, Top, (char *) (Top ? Top->data : "Unavailable"));
     data->names = Top;
@@ -2212,7 +2235,7 @@ aclDestroyRegexList(relist * data)
 }
 
 static void
-aclFreeIpData(void *p)
+aclFreeIpData(void * &p)
 {
     memFree(p, MEM_ACL_IP_DATA);
 }
@@ -2222,8 +2245,8 @@ aclFreeUserData(void *data)
 {
     acl_user_data *d = (acl_user_data *)data;
     if (d->names)
-	splay_destroy(d->names, xfree);
-    memFree(d, MEM_ACL_USER_DATA);
+	d->names->destroy(xRefFree);
+    delete d;
 }
 
 
@@ -2246,7 +2269,7 @@ aclDestroyAcls(acl ** head)
 #endif
 	case ACL_DST_DOMAIN:
 	case ACL_SRC_DOMAIN:
-	    splay_destroy((splayNode *)a->data, xfree);
+	    splay_destroy((splayNode *)a->data, xRefFree);
 	    break;
 #if SQUID_SNMP
 	case ACL_SNMP_COMMUNITY:
@@ -2379,20 +2402,20 @@ aclDestroyIntRange(intrange * list)
 
 /* compare two domains */
 
-static int
-aclDomainCompare(const void *a, const void *b)
+template<class T>
+int
+aclDomainCompare(T const &a, T const &b)
 {
-    const char *d1;
-    const char *d2;
+    char * const d1 = (char *const)b;
+    char * const d2 = (char *const )a;
     int ret;
-    d1 = (const char *)b;
-    d2 = (const char *)a;
     ret = aclHostDomainCompare(d1, d2);
     if (ret != 0) {
-	d1 = (const char *)a;
-	d2 = (const char *)b;
-	ret = aclHostDomainCompare(d1, d2);
+	char *const d3 = d2;
+	char *const d4 = d1;
+	ret = aclHostDomainCompare(d3, d4);
     }
+    /* FIXME this warning may display d1 and d2 when it should display d3 and d4 */
     if (ret == 0) {
 	debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
 	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", (char *) a);
@@ -2404,7 +2427,7 @@ aclDomainCompare(const void *a, const void *b)
 /* compare a host and a domain */
 
 static int
-aclHostDomainCompare(const void *a, const void *b)
+aclHostDomainCompare( void *const &a, void * const &b)
 {
     const char *h = (const char *)a;
     const char *d = (const char *)b;
@@ -2441,7 +2464,7 @@ aclIpDataToStr(const acl_ip_data * ip, char *buf, int len)
  * bits with the network subnet mask.
  */
 static int
-aclIpNetworkCompare2(const acl_ip_data * p, const acl_ip_data * q)
+aclIpNetworkCompare2(acl_ip_data * const &p, acl_ip_data * const &q)
 {
     struct in_addr A = p->addr1;
     const struct in_addr B = q->addr1;
@@ -2473,18 +2496,16 @@ aclIpNetworkCompare2(const acl_ip_data * p, const acl_ip_data * q)
  * sorting algorithm.  Much like aclDomainCompare.
  */
 static int
-aclIpNetworkCompare(const void *a, const void *b)
+aclIpNetworkCompare(void * const & a, void * const &b)
 {
-    const acl_ip_data *n1;
-    const acl_ip_data *n2;
+    acl_ip_data * const n1 = (acl_ip_data *const)b;
+    acl_ip_data * const n2 = (acl_ip_data *const)a;
     int ret;
-    n1 = (const acl_ip_data *)b;
-    n2 = (const acl_ip_data *)a;
     ret = aclIpNetworkCompare2(n1, n2);
     if (ret != 0) {
-	n1 = (const acl_ip_data *)a;
-	n2 = (const acl_ip_data *)b;
-	ret = aclIpNetworkCompare2(n1, n2);
+	acl_ip_data * const n3 = n2;
+	acl_ip_data * const n4 = n1;
+	ret = aclIpNetworkCompare2(n3, n4);
     }
     if (ret == 0) {
 	char buf_n1[60];
@@ -2493,6 +2514,7 @@ aclIpNetworkCompare(const void *a, const void *b)
 	aclIpDataToStr(n1, buf_n1, 60);
 	aclIpDataToStr(n2, buf_n2, 60);
 	aclIpDataToStr((acl_ip_data *) a, buf_a, 60);
+	/* TODO: this warning may display the wrong way around */
 	debug(28, 0) ("WARNING: '%s' is a subnetwork of "
 	    "'%s'\n", buf_n1, buf_n2);
 	debug(28, 0) ("WARNING: because of this '%s' is ignored "
@@ -2511,13 +2533,13 @@ aclIpNetworkCompare(const void *a, const void *b)
  * function is called via aclMatchIp() and the splay library.
  */
 static int
-aclIpAddrNetworkCompare(const void *a, const void *b)
+aclIpAddrNetworkCompare(void *const &a, void * const &b)
 {
-    return aclIpNetworkCompare2((const acl_ip_data *)a, (const acl_ip_data *)b);
+    return aclIpNetworkCompare2((acl_ip_data * const)a, (acl_ip_data * const)b);
 }
 
 static void
-aclDumpUserListWalkee(void *node_data, void *outlist)
+aclDumpUserListWalkee(char * const & node_data, void *outlist)
 {
     /* outlist is really a wordlist ** */
     wordlistAdd((wordlist **)outlist, (char const *)node_data);
@@ -2536,12 +2558,12 @@ aclDumpUserList(acl_user_data * data)
     if (data->flags.required)
 	wordlistAdd(&wl, "REQUIRED");
     else if (data->names)
-	splay_walk(data->names, aclDumpUserListWalkee, &wl);
+	data->names->walk(aclDumpUserListWalkee, &wl);
     return wl;
 }
 
 static void
-aclDumpIpListWalkee(void *node, void *state)
+aclDumpIpListWalkee(void * const & node, void *state)
 {
     acl_ip_data *ip = (acl_ip_data *)node;
     MemBuf mb;
@@ -2565,7 +2587,7 @@ aclDumpIpList(void *data)
 }
 
 static void
-aclDumpDomainListWalkee(void *node, void *state)
+aclDumpDomainListWalkee(void * const &node, void *state)
 {
     char *domain = (char *)node;
     wordlistAdd((wordlist **)state, domain);
@@ -3023,7 +3045,7 @@ aclMatchArp(void *dataptr, struct in_addr c)
 }
 
 static int
-aclArpCompare(const void *a, const void *b)
+aclArpCompare(void * const &a, void * const &b)
 {
 #if defined(_SQUID_LINUX_)
     const unsigned short *d1 = (const unsigned short *)a;
@@ -3105,7 +3127,7 @@ checkARP(u_long ip, char *eth)
 #endif
 
 static void
-aclDumpArpListWalkee(void *node, void *state)
+aclDumpArpListWalkee(void * &node, void *state)
 {
     acl_arp_data *arp = (acl_arp_data *)node;
     static char buf[24];
@@ -3125,3 +3147,53 @@ aclDumpArpList(void *data)
 
 /* ==== END ARP ACL SUPPORT =============================================== */
 #endif /* USE_ARP_ACL */
+
+/* to be split into separate files in the future */
+
+MemPool *acl_user_data::Pool(NULL);
+void *
+acl_user_data::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (acl_user_data));
+    if (!Pool)
+	Pool = memPoolCreate("acl_user_data", sizeof (acl_user_data));
+    return memPoolAlloc(Pool);
+}
+
+void
+acl_user_data::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+acl_user_data::deleteSelf() const
+{
+    delete this;
+}
+
+#if USE_SSL
+MemPool *acl_cert_data::Pool(NULL);
+void *
+acl_cert_data::operator new (size_t byteCount)
+{
+    /* derived classes with different sizes must implement their own new */
+    assert (byteCount == sizeof (acl_cert_data));
+    if (!Pool)
+	Pool = memPoolCreate("acl_cert_data", sizeof (acl_cert_data));
+    return memPoolAlloc(Pool);
+}
+
+void
+acl_cert_data::operator delete (void *address)
+{
+    memPoolFree (Pool, address);
+}
+
+void
+acl_cert_data::deleteSelf() const
+{
+    delete this;
+}
+#endif /* USE_SSL */

@@ -5,7 +5,13 @@
 #include "config.h"
 #include "Array.h"
 #include "util.h"
+#ifdef __cplusplus
+template <class V>
+class SplayNode;
+typedef SplayNode<void *> splayNode;
+#else
 #include "splay.h"
+#endif
 #include "memMeter.h"
 
 #if HAVE_GNUMALLOC_H

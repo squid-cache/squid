@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.446 2003/02/05 10:36:55 robertc Exp $
+ * $Id: structs.h,v 1.447 2003/02/08 01:45:50 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,7 +35,6 @@
 #define SQUID_STRUCTS_H
 
 #include "config.h"
-#include "splay.h"
 
 struct _dlink_node {
     void *data;
@@ -46,21 +45,6 @@ struct _dlink_node {
 struct _dlink_list {
     dlink_node *head;
     dlink_node *tail;
-};
-
-#if USE_SSL
-struct _acl_cert_data {
-    splayNode *values;
-    char *attribute;
-};
-#endif
-
-struct _acl_user_data {
-    splayNode *names;
-    struct {
-	unsigned int case_insensitive:1;
-	unsigned int required:1;
-    } flags;
 };
 
 struct _acl_user_ip_data {
