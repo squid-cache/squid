@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.71 1996/07/19 17:36:19 wessels Exp $
+ * $Id: store.cc,v 1.72 1996/07/19 17:41:30 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -412,7 +412,7 @@ static void storeLog(tag, e)
      int tag;
      StoreEntry *e;
 {
-    LOCAL_ARRAY(char,logmsg,MAX_URL<<1);
+    LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     time_t t;
     int expect_len = 0;
     int actual_len = 0;
@@ -1206,7 +1206,7 @@ static int storeSwapInStart(e, swapin_complete_handler, swapin_complete_data)
 static void storeSwapLog(e)
      StoreEntry *e;
 {
-    LOCAL_ARRAY(char,logmsg,MAX_URL<<1);
+    LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
     /* Note this printf format appears in storeWriteCleanLog() too */
     sprintf(logmsg, "%08x %08x %08x %08x %9d %s\n",
 	(int) e->swap_file_number,
@@ -1407,15 +1407,15 @@ static int storeDoRebuildFromDisk(data)
 	scan3 = 0;
 	scan4 = 0;
 	x = sscanf(data->line_in, "%x %x %x %x %d %s",
-		&sfileno,	/* swap_file_number */
-		&scan1,		/* timestamp */
-		&scan2,		/* expires */
-		&scan3,		/* last modified */
-		&scan4,		/* size */
-		url);		/* url */
+	    &sfileno,		/* swap_file_number */
+	    &scan1,		/* timestamp */
+	    &scan2,		/* expires */
+	    &scan3,		/* last modified */
+	    &scan4,		/* size */
+	    url);		/* url */
 	debug(20, 9, "x = %d\n", x);
 	if (x > 0)
-		storeSwapFullPath(sfileno, swapfile);
+	    storeSwapFullPath(sfileno, swapfile);
 	if (x != 6) {
 	    if (opt_unlink_on_reload && swapfile[0])
 		safeunlink(swapfile, 0);
@@ -2699,8 +2699,8 @@ void storeSanityCheck()
     if (ncache_dirs < 1)
 	storeAddSwapDisk(DefaultSwapDir);
 
-     for (i = 0; i < SWAP_DIRECTORIES_L1; i++) {
-       sprintf(name, "%s/%02X", swappath(i), i);
+    for (i = 0; i < SWAP_DIRECTORIES_L1; i++) {
+	sprintf(name, "%s/%02X", swappath(i), i);
 	errno = 0;
 	if (access(name, W_OK)) {
 	    /* A very annoying problem occurs when access() fails because
