@@ -1,8 +1,7 @@
+
 /*
- * $Id: ACLASN.cc,v 1.2 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLMethod.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
  *
- * DEBUG: section 28    Access Control
- * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,10 +29,28 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "ACLASN.h"
+#include "ACLMethod.h"
+#include "ACLMethodData.h"
 #include "ACLChecklist.h"
 
+ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
+ACLStrategised<method_t> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");
+
+int
+ACLMethodStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+{
+    return data->match (checklist->request->method);
+}
+
+ACLMethodStrategy *
+ACLMethodStrategy::Instance()
+{
+    return &Instance_;
+}
+
+ACLMethodStrategy ACLMethodStrategy::Instance_;

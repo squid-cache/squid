@@ -1,8 +1,8 @@
 /*
- * $Id: ACLASN.cc,v 1.2 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLReplyMIMEType.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
  *
  * DEBUG: section 28    Access Control
- * AUTHOR: Robert Collins
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,10 +30,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "ACLASN.h"
+#include "ACLReplyMIMEType.h"
 #include "ACLChecklist.h"
+#include "ACLRegexData.h"
 
+ACL::Prototype ACLReplyMIMEType::RegistryProtoype(&ACLReplyMIMEType::RegistryEntry_, "rep_mime_type");
+ACLStrategised<char const *> ACLReplyMIMEType::RegistryEntry_(new ACLRegexData, ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::Instance(), "rep_mime_type");

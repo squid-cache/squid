@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.4 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLStringData.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,43 +35,41 @@
  */
 
 #include "squid.h"
-#include "ACLCertificateData.h"
-#include "authenticate.h"
+#include "ACLStringData.h"
 #include "ACLChecklist.h"
 
-MemPool *ACLCertificateData::Pool(NULL);
+MemPool *ACLStringData::Pool(NULL);
 void *
-ACLCertificateData::operator new (size_t byteCount)
+ACLStringData::operator new (size_t byteCount)
 {
     /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLCertificateData));
+    assert (byteCount == sizeof (ACLStringData));
 
     if (!Pool)
-        Pool = memPoolCreate("ACLCertificateData", sizeof (ACLCertificateData));
+        Pool = memPoolCreate("ACLStringData", sizeof (ACLStringData));
 
     return memPoolAlloc(Pool);
 }
 
 void
-ACLCertificateData::operator delete (void *address)
+ACLStringData::operator delete (void *address)
 {
     memPoolFree (Pool, address);
 }
 
 void
-ACLCertificateData::deleteSelf() const
+ACLStringData::deleteSelf() const
 {
     delete this;
 }
 
 
-ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (), sslAttributeCall (sslStrategy)
+ACLStringData::ACLStringData() : values (NULL)
 {}
 
-ACLCertificateData::ACLCertificateData(ACLCertificateData const &old) : attribute (NULL), values (old.values), sslAttributeCall (old.sslAttributeCall)
+ACLStringData::ACLStringData(ACLStringData const &old) : values (NULL)
 {
-    if (old.attribute)
-        attribute = xstrdup (old.attribute);
+    assert (!old.values);
 }
 
 template<class T>
@@ -81,9 +79,10 @@ xRefFree(T &thing)
     xfree (thing);
 }
 
-ACLCertificateData::~ACLCertificateData()
+ACLStringData::~ACLStringData()
 {
-    safe_free (attribute);
+    if (values)
+        values->destroy(xRefFree);
 }
 
 template<class T>
@@ -94,62 +93,53 @@ splaystrcmp (T&l, T&r)
 }
 
 bool
-ACLCertificateData::match(SSL *ssl)
+ACLStringData::match(char const *toFind)
 {
-    if (!ssl)
+    if (!values || !toFind)
         return 0;
 
-    char const *value = sslAttributeCall(ssl, attribute);
+    debug(28, 3) ("aclMatchStringList: checking '%s'\n", toFind);
 
-    if (value == NULL)
-        return 0;
+    values = values->splay((char *)toFind, splaystrcmp);
 
-    return values.match(value);
+    debug(28, 3) ("aclMatchStringList: '%s' %s\n",
+                  toFind, splayLastResult ? "NOT found" : "found");
+
+    return !splayLastResult;
 }
 
 static void
-aclDumpAttributeListWalkee(char * const & node_data, void *outlist)
+aclDumpStringWalkee(char * const & node_data, void *outlist)
 {
     /* outlist is really a wordlist ** */
     wordlistAdd((wordlist **)outlist, node_data);
 }
 
 wordlist *
-ACLCertificateData::dump()
+ACLStringData::dump()
 {
     wordlist *wl = NULL;
-    wordlistAdd(&wl, attribute);
     /* damn this is VERY inefficient for long ACL lists... filling
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    /* XXX FIXME: don't break abstraction */
-    values.values->walk(aclDumpAttributeListWalkee, &wl);
+    values->walk(aclDumpStringWalkee, &wl);
     return wl;
 }
 
 void
-ACLCertificateData::parse()
+ACLStringData::parse()
 {
-    char *newAttribute = strtokFile();
+    char *t;
 
-    if (!newAttribute)
-        self_destruct();
-
-    /* an acl must use consistent attributes in all config lines */
-    if (attribute) {
-        if (strcasecmp(newAttribute, attribute) != 0)
-            self_destruct();
-    } else
-        attribute = xstrdup(newAttribute);
-
-    values.parse();
+    while ((t = strtokFile()))
+        values = values->insert(xstrdup(t), splaystrcmp);
 }
 
-
-ACLData<SSL *> *
-ACLCertificateData::clone() const
+ACLData<char const *> *
+ACLStringData::clone() const
 {
     /* Splay trees don't clone yet. */
-    return new ACLCertificateData(*this);
+    assert (!values);
+    return new ACLStringData(*this);
 }

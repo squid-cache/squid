@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.3 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLRegexData.cc,v 1.4 2003/02/25 12:16:55 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -65,21 +65,118 @@ ACLRegexData::deleteSelf() const
     delete this;
 }
 
+static void aclDestroyRegexList(relist * data);
+void
+aclDestroyRegexList(relist * data)
+{
+    relist *next = NULL;
+
+    for (; data; data = next) {
+        next = data->next;
+        regfree(&data->regex);
+        safe_free(data->pattern);
+        memFree(data, MEM_RELIST);
+    }
+}
+
 ACLRegexData::~ACLRegexData()
 {
     aclDestroyRegexList(data);
 }
 
 bool
-ACLRegexData::match(char const *user)
+ACLRegexData::match(char const *word)
 {
-    return aclMatchRegex(data, user);
+    if (word == NULL)
+        return 0;
+
+    debug(28, 3) ("aclRegexData::match: checking '%s'\n", word);
+
+    relist *first, *prev;
+
+    first = data;
+
+    prev = NULL;
+
+    relist *current = first;
+
+    while (current) {
+        debug(28, 3) ("aclRegexData::match: looking for '%s'\n", current->pattern);
+
+        if (regexec(&current->regex, word, 0, 0, 0) == 0) {
+            if (prev != NULL) {
+                /* shift the element just found to the second position
+                 * in the list */
+                prev->next = current->next;
+                current->next = first->next;
+                first->next = current;
+            }
+
+            return 1;
+        }
+
+        prev = current;
+        current = current->next;
+    }
+
+    return 0;
 }
 
 wordlist *
 ACLRegexData::dump()
 {
-    return aclDumpRegexList(data);
+    wordlist *W = NULL;
+    relist *temp = data;
+
+    while (temp != NULL) {
+        wordlistAdd(&W, temp->pattern);
+        temp = temp->next;
+    }
+
+    return W;
+}
+
+static void aclParseRegexList(relist **curlist);
+void
+aclParseRegexList(relist **curlist)
+{
+    relist **Tail;
+    relist *q = NULL;
+    char *t = NULL;
+    regex_t comp;
+    int errcode;
+    int flags = REG_EXTENDED | REG_NOSUB;
+
+    for (Tail = (relist **)curlist; *Tail; Tail = &((*Tail)->next))
+
+        ;
+    while ((t = strtokFile())) {
+        if (strcmp(t, "-i") == 0) {
+            flags |= REG_ICASE;
+            continue;
+        }
+
+        if (strcmp(t, "+i") == 0) {
+            flags &= ~REG_ICASE;
+            continue;
+        }
+
+        if ((errcode = regcomp(&comp, t, flags)) != 0) {
+            char errbuf[256];
+            regerror(errcode, &comp, errbuf, sizeof errbuf);
+            debug(28, 0) ("%s line %d: %s\n",
+                          cfg_filename, config_lineno, config_input_line);
+            debug(28, 0) ("aclParseRegexList: Invalid regular expression '%s': %s\n",
+                          t, errbuf);
+            continue;
+        }
+
+        q = (relist *)memAllocate(MEM_RELIST);
+        q->pattern = xstrdup(t);
+        q->regex = comp;
+        *(Tail) = q;
+        Tail = &q->next;
+    }
 }
 
 void
