@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.63 1997/10/29 15:18:20 wessels Exp $
+ * $Id: fqdncache.cc,v 1.64 1997/10/30 02:40:59 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -762,9 +762,7 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
 {
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
-    const struct hostent *hp = NULL;
     struct in_addr ip;
-    static char *static_name = NULL;
 
     if (!name)
 	fatal_dump("fqdncache_gethostbyaddr: NULL name");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.135 1997/10/28 20:42:50 wessels Exp $
+ * $Id: client_side.cc,v 1.136 1997/10/30 02:40:57 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -94,19 +94,21 @@ clientAccessCheckDone(int answer, void *data)
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->url);
 	redirectUrl = aclGetDenyInfoUrl(&Config.denyInfoList, AclMatchedName);
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_ACCESS_DENIED;
-	err->request = requestLink(http->request);
-	err->src_addr = http->conn->peer.sin_addr;
 	if (redirectUrl) {
-	    err->http_status = HTTP_MOVED_TEMPORARILY;
+	    err = errorCon(ERR_ACCESS_DENIED, HTTP_MOVED_TEMPORARILY);
+	    err->request = requestLink(http->request);
+	    err->src_addr = http->conn->peer.sin_addr;
 	    err->redirect_url = xstrdup(redirectUrl);
+	    errorSend(fd, err);
+
 	} else {
 	    /* NOTE: don't use HTTP_UNAUTHORIZED because then the
 	     * stupid browser wants us to authenticate */
-	    err->http_status = HTTP_FORBIDDEN;
+	    err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
+	    err->request = requestLink(http->request);
+	    err->src_addr = http->conn->peer.sin_addr;
+	    errorSend(fd, err);
 	}
-	errorSend(fd, err);
     }
 }
 
@@ -355,11 +357,9 @@ clientPurgeRequest(clientHttpRequest * http)
     ErrorState *err = NULL;
     debug(33, 3) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
     if (!Config.onoff.enable_purge) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_ACCESS_DENIED;
+	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
-	err->http_status = HTTP_FORBIDDEN;
 	errorSend(fd, err);
 	return;
     }

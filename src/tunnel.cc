@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.65 1997/10/25 17:22:58 wessels Exp $
+ * $Id: tunnel.cc,v 1.66 1997/10/30 02:41:08 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -321,19 +321,16 @@ sslConnectDone(int fd, int status, void *data)
     ErrorState *err = NULL;
     if (status == COMM_ERR_DNS) {
 	debug(26, 4) ("sslConnect: Unknown host: %s\n", sslState->host);
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_DNS_FAIL;
-	err->http_status = HTTP_NOT_FOUND;
+
+	err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND);
 	err->request = requestLink(request);
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->callback = sslErrorComplete;
 	err->callback_data = sslState;
 	errorSend(sslState->client.fd, err);
-	return;
+
     } else if (status != COMM_OK) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_CONNECT_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->host = xstrdup(sslState->host);
 	err->port = sslState->port;
@@ -341,12 +338,13 @@ sslConnectDone(int fd, int status, void *data)
 	err->callback = sslErrorComplete;
 	err->callback_data = sslState;
 	errorSend(sslState->client.fd, err);
-	return;
+
+    } else {
+	if (sslState->proxying)
+	    sslProxyConnected(sslState->server.fd, sslState);
+        else
+	    sslConnected(sslState->server.fd, sslState);
     }
-    if (sslState->proxying)
-	sslProxyConnected(sslState->server.fd, sslState);
-    else
-	sslConnected(sslState->server.fd, sslState);
 }
 
 void
@@ -367,9 +365,8 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
 	url);
     if (sock == COMM_ERROR) {
 	debug(26, 4) ("sslStart: Failed because we're out of sockets.\n");
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_SOCKET_FAILURE;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+
+	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
 	err->request = requestLink(request);
 	errorSend(fd, err);
@@ -457,9 +454,9 @@ static void
 sslPeerSelectFail(peer * p, void *data)
 {
     SslStateData *sslState = data;
-    ErrorState *err = xcalloc(1, sizeof(ErrorState));
-    err->type = ERR_CANNOT_FORWARD;
-    err->http_status = HTTP_SERVICE_UNAVAILABLE;
+    ErrorState *err;
+
+    err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(sslState->request);
     err->callback = sslErrorComplete;
     err->callback_data = sslState;

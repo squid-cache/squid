@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.157 1997/10/30 00:47:48 wessels Exp $
+ * $Id: ftp.cc,v 1.158 1997/10/30 02:40:59 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -237,9 +237,7 @@ ftpTimeout(int fd, void *data)
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url);
     if (entry->store_status == STORE_PENDING) {
 	if (entry->mem_obj->inmem_hi == 0) {
-	    err = xcalloc(1, sizeof(ErrorState));
-	    err->type = ERR_READ_TIMEOUT;
-	    err->http_status = HTTP_GATEWAY_TIMEOUT;
+	    err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	    err->request = requestLink(ftpState->request);
 	    errorAppendEntry(entry, err);
 	}
@@ -650,10 +648,8 @@ ftpReadData(int fd, void *data)
 	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, Config.Timeout.read);
 	} else {
 	    if (entry->mem_obj->inmem_hi == 0) {
-		err = xcalloc(1, sizeof(ErrorState));
-		err->type = ERR_READ_ERROR;
+		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 		err->xerrno = errno;
-		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
 		err->request = requestLink(ftpState->request);
 		errorAppendEntry(entry, err);
 	    }
@@ -661,12 +657,11 @@ ftpReadData(int fd, void *data)
 	    ftpDataTransferDone(ftpState);
 	}
     } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_ZERO_SIZE_OBJECT;
+	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
 	err->request = requestLink(ftpState->request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	ftpDataTransferDone(ftpState);
     } else if (len == 0) {
@@ -872,12 +867,12 @@ ftpStart(request_t * request, StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(9, 4) ("ftpStart: Failed to open a socket.\n");
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_SOCKET_FAILURE;
-	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+
+	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
 	err->request = requestLink(ftpState->request);
 	errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	return;
     }
@@ -901,23 +896,23 @@ ftpConnectDone(int fd, int status, void *data)
     debug(9, 3) ("ftpConnectDone, status = %d\n", status);
     if (status == COMM_ERR_DNS) {
 	debug(9, 4) ("ftpConnectDone: Unknown host: %s\n", request->host);
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_DNS_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+
+	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
+
 	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_CONNECT_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+
+	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->host = xstrdup(request->host);
 	err->port = request->port;
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
+
 	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
     } else {
@@ -967,9 +962,7 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
     if (errflag) {
 	debug(50, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
 	if (entry->mem_obj->inmem_hi == 0) {
-	    err = xcalloc(1, sizeof(ErrorState));
-	    err->type = ERR_WRITE_ERROR;
-	    err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	    err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
 	    err->xerrno = errno;
 	    err->request = requestLink(ftpState->request);
 	    errorAppendEntry(entry, err);
@@ -1044,9 +1037,7 @@ ftpReadControlReply(int fd, void *data)
 		Config.Timeout.read);
 	} else {
 	    if (entry->mem_obj->inmem_hi == 0) {
-		err = xcalloc(1, sizeof(ErrorState));
-		err->type = ERR_READ_ERROR;
-		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 		err->xerrno = errno;
 		err->request = requestLink(ftpState->request);
 		errorAppendEntry(entry, err);
@@ -1062,9 +1053,7 @@ ftpReadControlReply(int fd, void *data)
 	if (entry->store_status == STORE_PENDING) {
 	    storeReleaseRequest(entry);
 	    if (entry->mem_obj->inmem_hi == 0) {
-		err = xcalloc(1, sizeof(ErrorState));
-		err->type = ERR_READ_ERROR;
-		err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 		err->xerrno = errno;
 		err->request = requestLink(ftpState->request);
 		errorAppendEntry(entry, err);
@@ -1361,14 +1350,13 @@ ftpPasvCallback(int fd, int status, void *data)
     ErrorState *err;
     debug(9, 3) ("ftpPasvCallback\n");
     if (status != COMM_OK) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_CONNECT_FAIL;
-	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
 	err->host = xstrdup(ftpState->data.host);
 	err->port = ftpState->data.port;
 	err->request = requestLink(request);
 	errorAppendEntry(ftpState->entry, err);
+
 	storeAbort(ftpState->entry, 0);
 	comm_close(fd);
 	return;
