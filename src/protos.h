@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.257 1998/08/26 19:08:56 wessels Exp $
+ * $Id: protos.h,v 1.258 1998/08/27 06:28:58 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -36,7 +36,7 @@ extern void accessLogRotate(void);
 extern void accessLogClose(void);
 extern void accessLogInit(void);
 extern const char *accessLogTime(time_t);
-extern void hierarchyNote(HierarchyLogEntry *, hier_code, icp_ping_data *, const char *);
+extern void hierarchyNote(HierarchyLogEntry *, hier_code, ping_data *, const char *);
 #if FORW_VIA_DB
 extern void fvdbCountVia(const char *key);
 extern void fvdbCountForw(const char *key);

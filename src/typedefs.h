@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.72 1998/08/26 05:36:47 wessels Exp $
+ * $Id: typedefs.h,v 1.73 1998/08/27 06:28:59 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -115,7 +115,7 @@ typedef struct _peer peer;
 typedef struct _net_db_name net_db_name;
 typedef struct _net_db_peer net_db_peer;
 typedef struct _netdbEntry netdbEntry;
-typedef struct _icp_ping_data icp_ping_data;
+typedef struct _ping_data ping_data;
 typedef struct _ps_state ps_state;
 typedef struct _HierarchyLogEntry HierarchyLogEntry;
 typedef struct _pingerEchoData pingerEchoData;

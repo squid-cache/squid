@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.211 1998/08/26 19:08:57 wessels Exp $
+ * $Id: structs.h,v 1.212 1998/08/27 06:28:58 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -708,7 +708,7 @@ struct _icpUdpData {
     struct timeval queue_time;
 };
 
-struct _icp_ping_data {
+struct _ping_data {
     struct timeval start;
     struct timeval stop;
     int n_sent;
@@ -723,7 +723,7 @@ struct _icp_ping_data {
 struct _HierarchyLogEntry {
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
-    icp_ping_data icp;
+    ping_data ping;
     char cd_host[SQUIDHOSTNAMELEN];	/* the host of selected by cd peer */
     peer_select_alg_t alg;	/* peer selection algorithm */
     lookup_t cd_lookup;		/* cd prediction: none, miss, hit */
@@ -1055,7 +1055,7 @@ struct _ps_state {
     struct sockaddr_in first_parent_miss;
     struct sockaddr_in closest_parent_miss;
     struct sockaddr_in single_parent;
-    icp_ping_data icp;
+    ping_data ping;
     aclCheck_t *acl_checklist;
 };
 
@@ -1148,7 +1148,7 @@ struct _MemObject {
     HttpReply *reply;
     request_t *request;
     struct timeval start_ping;
-    IRCB *icp_reply_callback;
+    IRCB *ping_reply_callback;
     void *ircb_data;
     int fd;			/* FD of client creating this entry */
     struct {
@@ -1505,5 +1505,11 @@ struct _htcpReplyData {
 	HttpHeader hdr;
 	u_num32 msg_id;
 	double version;
+	struct {
+	/* cache-to-origin */
+		double rtt;
+		int samp;
+		int hops;
+	} cto;
 };
 #endif

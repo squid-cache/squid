@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.239 1998/08/26 21:42:05 wessels Exp $
+ * $Id: neighbors.cc,v 1.240 1998/08/27 06:28:57 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -357,7 +357,7 @@ neighborsUdpPing(request_t * request,
 	fatal("neighborsUdpPing: There is no ICP socket!");
     assert(entry->swap_status == SWAPOUT_NONE);
     mem->start_ping = current_time;
-    mem->icp_reply_callback = callback;
+    mem->ping_reply_callback = callback;
     mem->ircb_data = callback_data;
     *timeout = 0.0;
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
@@ -764,20 +764,20 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    /* if we reach here, source-ping reply is the first 'parent',
 	     * so fetch directly from the source */
 	    debug(15, 6) ("Source is the first to respond.\n");
-	    mem->icp_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
+	    mem->ping_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_MISS) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else {
-	    mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+	    mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_HIT) {
 	if (p == NULL) {
 	    neighborIgnoreNonPeer(from, opcode);
 	} else {
 	    header->opcode = ICP_HIT;
-	    mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+	    mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_DECHO) {
 	if (p == NULL) {
@@ -786,7 +786,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
 	    debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
 	} else {
-	    mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+	    mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
 	}
     } else if (opcode == ICP_SECHO) {
 	if (p) {
@@ -794,7 +794,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    neighborCountIgnored(p);
 #if ALLOW_SOURCE_PING
 	} else if (Config.onoff.source_ping) {
-	    mem->icp_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
+	    mem->ping_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
 #endif
 	} else {
 	    debug(15, 1) ("Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
@@ -813,7 +813,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	    }
 	}
     } else if (opcode == ICP_MISS_NOFETCH) {
-	mem->icp_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+	mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
     } else {
 	debug(15, 0) ("neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
     }
@@ -997,12 +997,12 @@ peerCountMcastPeersStart(void *data)
     psstate->callback = NULL;
     psstate->fail_callback = NULL;
     psstate->callback_data = p;
-    psstate->icp.start = current_time;
+    psstate->ping.start = current_time;
     cbdataAdd(psstate, MEM_NONE);
     mem = fake->mem_obj;
     mem->request = requestLink(psstate->request);
     mem->start_ping = current_time;
-    mem->icp_reply_callback = peerCountHandleIcpReply;
+    mem->ping_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
     mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
     p->mcast.reqnum = mem->reqnum;
@@ -1029,12 +1029,12 @@ peerCountMcastPeersDone(void *data)
     StoreEntry *fake = psstate->entry;
     p->mcast.flags &= ~PEER_COUNTING;
     p->mcast.avg_n_members = doubleAverage(p->mcast.avg_n_members,
-	(double) psstate->icp.n_recv,
+	(double) psstate->ping.n_recv,
 	++p->mcast.n_times_counted,
 	10);
     debug(15, 1) ("Group %s: %d replies, %4.1f average, RTT %d\n",
 	p->host,
-	psstate->icp.n_recv,
+	psstate->ping.n_recv,
 	p->mcast.avg_n_members,
 	p->stats.rtt);
     p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
@@ -1057,8 +1057,8 @@ peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void * hdrnotus
     assert(proto == PROTO_ICP);
     assert(fake);
     assert(mem);
-    psstate->icp.n_recv++;
-    p->stats.rtt = intAverage(p->stats.rtt, rtt, psstate->icp.n_recv, RTT_AV_FACTOR);
+    psstate->ping.n_recv++;
+    p->stats.rtt = intAverage(p->stats.rtt, rtt, psstate->ping.n_recv, RTT_AV_FACTOR);
 }
 
 static void
@@ -1187,12 +1187,10 @@ dump_peers(StoreEntry * sentry, peer * peers)
 void
 neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct sockaddr_in *from)
 {
-    StoreEntry *e;
+    StoreEntry *e = storeGet(key);
     MemObject *mem = NULL;
     peer *p;
     peer_t ntype = PEER_NONE;
-    debug(15, 1) ("neighborsHtcpReply: write me\n");
-    e = storeGet(key);
     debug(15, 6) ("neighborsHtcpReply: %s %s\n",
 	htcp->hit ? "HIT" : "MISS", storeKeyText(key));
     if (NULL != (e = storeGet(key)))
@@ -1238,6 +1236,6 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct soc
 	return;
     }
     debug(15, 1) ("neighborsHtcpReply: e = %p\n", e);
-    mem->icp_reply_callback(p, ntype, PROTO_HTCP, htcp, mem->ircb_data);
+    mem->ping_reply_callback(p, ntype, PROTO_HTCP, htcp, mem->ircb_data);
 }
 #endif

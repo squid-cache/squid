@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.32 1998/08/25 04:11:37 wessels Exp $
+ * $Id: mem.cc,v 1.33 1998/08/27 06:28:56 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -244,7 +244,7 @@ memInit(void)
     memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_ICPUDPDATA, "icpUdpData", sizeof(icpUdpData), 0);
     memDataInit(MEM_ICP_COMMON_T, "icp_common_t", sizeof(icp_common_t), 0);
-    memDataInit(MEM_ICP_PING_DATA, "icp_ping_data", sizeof(icp_ping_data), 0);
+    memDataInit(MEM_ICP_PING_DATA, "ping_data", sizeof(ping_data), 0);
     memDataInit(MEM_INTLIST, "intlist", sizeof(intlist), 0);
     memDataInit(MEM_IOSTATS, "iostats", sizeof(iostats), 0);
     memDataInit(MEM_IPCACHE_PENDING, "ip_pending", sizeof(ip_pending), 0);
