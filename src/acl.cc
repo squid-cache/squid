@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.269 2001/11/13 18:50:43 hno Exp $
+ * $Id: acl.cc,v 1.270 2001/12/21 09:47:34 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -198,6 +198,8 @@ aclStrToType(const char *s)
 	return ACL_METHOD;
     if (!strcmp(s, "browser"))
 	return ACL_BROWSER;
+    if (!strcmp(s, "referer_regex"))
+	return ACL_REFERER_REGEX;
     if (!strcmp(s, "proxy_auth"))
 	return ACL_PROXY_AUTH;
     if (!strcmp(s, "proxy_auth_regex"))
@@ -268,6 +270,8 @@ aclTypeToStr(squid_acl type)
 	return "method";
     if (type == ACL_BROWSER)
 	return "browser";
+    if (type == ACL_REFERER_REGEX)
+	return "referer_regex";
     if (type == ACL_PROXY_AUTH)
 	return "proxy_auth";
     if (type == ACL_PROXY_AUTH_REGEX)
@@ -781,6 +785,7 @@ aclParseAclLine(acl ** head)
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
     case ACL_BROWSER:
+    case ACL_REFERER_REGEX:
     case ACL_SRC_DOM_REGEX:
     case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:
@@ -1425,6 +1430,7 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return 0;
     switch (ae->type) {
     case ACL_BROWSER:
+    case ACL_REFERER_REGEX:
     case ACL_DST_ASN:
     case ACL_DST_DOMAIN:
     case ACL_DST_DOM_REGEX:
@@ -1582,6 +1588,12 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	if (NULL == browser)
 	    return 0;
 	return aclMatchRegex(ae->data, browser);
+	/* NOTREACHED */
+    case ACL_REFERER_REGEX:
+	header = httpHeaderGetStr(&checklist->request->header, HDR_REFERER);
+	if (NULL == header)
+	    return 0;
+	return aclMatchRegex(ae->data, header);
 	/* NOTREACHED */
     case ACL_PROXY_AUTH:
     case ACL_PROXY_AUTH_REGEX:
@@ -2081,6 +2093,7 @@ aclDestroyAcls(acl ** head)
 	case ACL_URL_REGEX:
 	case ACL_URLPATH_REGEX:
 	case ACL_BROWSER:
+	case ACL_REFERER_REGEX:
 	case ACL_SRC_DOM_REGEX:
 	case ACL_DST_DOM_REGEX:
 	case ACL_REP_MIME_TYPE:
@@ -2427,6 +2440,7 @@ aclDumpGeneric(const acl * a)
     case ACL_URL_REGEX:
     case ACL_URLPATH_REGEX:
     case ACL_BROWSER:
+    case ACL_REFERER_REGEX:
     case ACL_SRC_DOM_REGEX:
     case ACL_DST_DOM_REGEX:
     case ACL_REQ_MIME_TYPE:

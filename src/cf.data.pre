@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.244 2001/12/11 02:35:54 hno Exp $
+# $Id: cf.data.pre,v 1.245 2001/12/21 09:47:34 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1823,8 +1823,7 @@ DOC_START
 
 	when using "file", the file should contain one item per line
 
-	acltype is one of src dst srcdomain dstdomain url_pattern
-		urlpath_pattern time port proto method browser user
+	acltype is one of the types described below
 
 	By default, regular expressions are CASE-SENSITIVE.  To make
 	them case-insensitive, use the -i option.
@@ -1859,8 +1858,11 @@ DOC_START
 	acl aclname myport   3128 ...		# (local socket TCP port)
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
-	acl aclname browser  [-i] regexp
+	acl aclname browser  [-i] regexp ...
 	  # pattern match on User-Agent header
+        acl aclname referer_regex  [-i] regexp ...
+          # pattern match on Referer header
+          # Referer is highly unreliable, so use with care
 	acl aclname ident    username ...
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output.
