@@ -5,6 +5,16 @@ UPCOMING CHANGES:
 	- Experiment with returning network probe measurments in ICP
 	  replies.
 
+Changes to squid-1.1.beta20 (November 13, 1996):
+
+	- Changed neighbor_domain_type to neighbor_type_domain in
+	  squid.conf.
+	- Protect squid_error_entry() calls with check that store_status
+	  == STORE_PENDING.
+	- Changed all 'xstrerror' debug messages to section 50.
+	- More const fixes (Markus Gyger).
+	- Added xstrncpy() which null-terminates (Markus Gyger).
+
 Changes to squid-1.1.beta19 (November 13, 1996):
 
 	- Fixed havoc-wreaking getsockname() bug (Noriyuki Soda
