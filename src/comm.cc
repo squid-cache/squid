@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.258 1998/05/20 22:07:10 wessels Exp $
+ * $Id: comm.cc,v 1.259 1998/05/27 20:31:34 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -118,6 +118,10 @@
 #define MAX_POLL_TIME 1000
 #endif
 
+#define commCheckIncoming \
+	((++incoming_counter & \
+	(lastinc > 0 ? Config.incoming_rate.max : Config.incoming_rate.min)) == 0)
+
 typedef struct {
     char *host;
     u_short port;
@@ -133,7 +137,7 @@ typedef struct {
 } ConnectStateData;
 
 /* STATIC */
-static int polledinc = 0;
+static int incame = 0;
 static int commBind(int s, struct in_addr, u_short port);
 #if !HAVE_POLL
 static int examine_select(fd_set *, fd_set *);
@@ -141,11 +145,7 @@ static int examine_select(fd_set *, fd_set *);
 static void checkTimeouts(void);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
-#if HAVE_POLL
-static void comm_poll_incoming(void);
-#else
-static void comm_select_incoming(void);
-#endif
+static void comm_incoming(void);
 static void CommWriteStateCallbackAndFree(int fd, int code);
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay(int);
@@ -741,6 +741,7 @@ commDeferRead(int fd)
     return F->defer_check(fd, F->defer_data);
 }
 
+#if OLD_CODE
 #if HAVE_POLL
 
 /* poll() version by:
@@ -816,7 +817,6 @@ comm_poll_incoming(void)
     }
     /* TO FIX: repoll ICP connection here */
 }
-
 #else
 
 static void
@@ -891,6 +891,25 @@ comm_select_incoming(void)
 }
 #endif
 
+#endif /* OLD_CODE */
+
+static void
+comm_incoming(void)
+{
+    int j;
+    incame = 0;
+    if (theInIcpConnection > 0)
+	icpHandleUdp(theInIcpConnection, &incame);
+    if (theInIcpConnection != theOutIcpConnection)
+	icpHandleUdp(theOutIcpConnection, &incame);
+    for (j = 0; j < NHttpSockets; j++) {
+	if (HttpSockets[j] < 0)
+	    continue;
+	httpAccept(HttpSockets[j], &incame);
+    }
+    statHistCount(&Counter.comm_incoming, incame);
+}
+
 static int
 fdIsHttpOrIcp(int fd)
 {
@@ -941,7 +960,7 @@ comm_poll(int msec)
 #if USE_ASYNC_IO
 	aioCheckCallbacks();
 #endif
-	comm_poll_incoming();
+	comm_incoming();
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
@@ -1000,8 +1019,8 @@ comm_poll(int msec)
 		    fd_table[fd].read_handler = NULL;
 		    hdl(fd, fd_table[fd].read_data);
 		}
-		if ((++incoming_counter & 15) == 0)
-		    comm_poll_incoming();
+		if (commCheckIncoming)
+		    comm_incoming();
 	    }
 	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
 		debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
@@ -1009,8 +1028,8 @@ comm_poll(int msec)
 		    fd_table[fd].write_handler = NULL;
 		    hdl(fd, fd_table[fd].write_data);
 		}
-		if ((++incoming_counter & 15) == 0)
-		    comm_poll_incoming();
+		if (commCheckIncoming)
+		    comm_incoming();
 	    }
 	    if (revents & POLLNVAL) {
 		close_handler *ch;
@@ -1037,7 +1056,7 @@ comm_poll(int msec)
 		if (F->open != 0)
 		    fd_close(fd);
 	    }
-	    lastinc = polledinc;
+	    lastinc = incame;
 	}
 	return COMM_OK;
     } while (timeout > current_dtime);
@@ -1088,7 +1107,7 @@ comm_select(int msec)
 	    else
 		setSocketShutdownLifetimes(1);
 	}
-	comm_select_incoming();
+	comm_incoming();
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
 	for (i = 0; i < maxfd; i++) {
@@ -1153,8 +1172,8 @@ comm_select(int msec)
 		    fd_table[fd].read_handler = NULL;
 		    hdl(fd, fd_table[fd].read_data);
 		}
-		if ((++incoming_counter & 15) == 0)
-		    comm_select_incoming();
+		if (commCheckIncoming)
+		    comm_incoming();
 	    }
 	    if (FD_ISSET(fd, &writefds)) {
 		debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
@@ -1163,10 +1182,10 @@ comm_select(int msec)
 		    fd_table[fd].write_handler = NULL;
 		    hdl(fd, fd_table[fd].write_data);
 		}
-		if ((++incoming_counter & 15) == 0)
-		    comm_select_incoming();
+		if (commCheckIncoming)
+		    comm_incoming();
 	    }
-	    lastinc = polledinc;
+	    lastinc = incame;
 	}
 	return COMM_OK;
     } while (timeout > current_dtime);

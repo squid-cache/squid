@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.255 1998/05/26 17:37:48 wessels Exp $
+ * $Id: stat.cc,v 1.256 1998/05/27 20:31:37 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -138,6 +138,7 @@ static OBJH statDigestBlob;
 static OBJH statAvg5min;
 static OBJH statAvg60min;
 static OBJH statUtilization;
+static OBJH statCountersHistograms;
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -815,6 +816,9 @@ statInit(void)
 	"Display cache metrics graphically",
 	statGraphDump, 0);
 #endif
+    cachemgrRegister("histograms",
+	"Full Histogram Counts",
+	statCountersHistograms, 0);
 }
 
 static void
@@ -879,6 +883,7 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashFuncCount);
+    statHistEnumInit(&C->comm_incoming, 20);
 }
 
 /* add special cases here as they arrive */
@@ -894,6 +899,7 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->icp.reply_svc_time);
     statHistClean(&C->dns.svc_time);
     statHistClean(&C->cd.on_xition_count);
+    statHistClean(&C->comm_incoming);
 }
 
 /* add special cases here as they arrive */
@@ -915,11 +921,13 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
     statHistCopy(&dest->dns.svc_time, &orig->dns.svc_time);
     statHistCopy(&dest->cd.on_xition_count, &orig->cd.on_xition_count);
+    statHistCopy(&dest->comm_incoming, &orig->comm_incoming);
 }
 
 static void
 statCountersHistograms(StoreEntry * sentry)
 {
+    StatCounters *f = &Counter;
 #if TOO_MUCH_OUTPUT
     storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
     statHistDump(&f->client_http.all_svc_time, sentry, NULL);
@@ -936,6 +944,8 @@ statCountersHistograms(StoreEntry * sentry)
     storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
     statHistDump(&f->dns.svc_time, sentry, NULL);
 #endif
+    storeAppendPrintf(sentry, "comm_incoming histogram:\n");
+    statHistDump(&f->comm_incoming, sentry, statHistIntDumper);
 }
 
 static void
