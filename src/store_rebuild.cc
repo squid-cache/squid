@@ -35,6 +35,7 @@ struct storeRebuildState {
     int invalid;		/* # bad lines */
     int badflags;		/* # bad e->flags */
     int need_to_validate;
+    int bad_log_op;
     int zero_object_len;
     time_t start;
     time_t stop;
@@ -187,6 +188,7 @@ storeRebuildFromSwapLog(rebuild_dir * d)
     int count;
     int used;			/* is swapfile already in use? */
     int newer;			/* is the log entry newer than current entry? */
+    double x;
     assert(d != NULL);
     /* load a number of objects per invocation */
     for (count = 0; count < d->speed; count++) {
@@ -202,10 +204,14 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 	if (s.op == SWAP_LOG_ADD) {
 	    (void) 0;
 	} else if (s.op == SWAP_LOG_DEL) {
-	    /* XXX we should just storeRelease()? */
+	    if ((e = storeGet(s.key)) != NULL)
+		storeReleaseRequest(e);
 	    continue;
 	} else {
-	    debug(20, 1) ("storeRebuildFromSwapLog: Invalid swap entry\n");
+	    x = log(++RebuildState.bad_log_op) / log(10.0);
+	    if (0.0 == x - (double) (int) x)
+		debug(20, 1) ("WARNING: %d invalid swap log entries found\n",
+		    RebuildState.bad_log_op);
 	    RebuildState.invalid++;
 	    continue;
 	}
