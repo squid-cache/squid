@@ -98,7 +98,6 @@ extern int comm_select(time_t);
 extern void commSetSelect(int, unsigned int, PF *, void *, time_t);
 extern void comm_add_close_handler(int fd, PF *, void *);
 extern void comm_remove_close_handler(int fd, PF *, void *);
-extern int comm_udp_send(int fd, const char *host, u_short port, const char *buf, int len);
 extern int comm_udp_sendto(int fd, const struct sockaddr_in *, int size, const char *buf, int len);
 extern void comm_write(int fd,
     char *buf,
