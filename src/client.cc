@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: client.cc,v 1.69 1998/05/26 15:25:30 wessels Exp $
+ * $Id: client.cc,v 1.70 1998/05/28 05:15:44 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -445,7 +445,7 @@ catch(int sig)
     fprintf(stderr, "Interrupted.\n");
 }
 
-void
+static void
 pipe_handler(int sig)
 {
     fprintf(stderr, "SIGPIPE received.\n");
