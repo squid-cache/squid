@@ -10,8 +10,6 @@ TODO LIST before official squid-1.1:
 		- Don't do TTL calculation whn object is fetched.  Instead
 		  do refresh time calculation when object is requested.
 		- lose 'max_expire_age' business?
-	- Write Perl script to convert squid-1.0 store to squid-1.1
-	  structure.
 
 Changes to squid-1.1.beta8 ():
 
@@ -35,8 +33,9 @@ Changes to squid-1.1.beta8 ():
 	  final blank line.
 	- Added failure detection to icmpRecv().
 	- Fixed backwards logic in debug_trap().
-	- Reorganized handling ICP replies so dead neighbors should
-	  now get revived.
+	- Fixed neighbor caches remaining in 'DEAD' state.  Reorganized
+	  handling ICP replies so neighborsUdpAck gets called for
+	  most every reply.
 
 Changes to squid-1.1.beta7 (October 14, 1996):
 
