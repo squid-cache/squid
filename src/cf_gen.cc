@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.38 2001/01/04 03:42:34 wessels Exp $
+ * $Id: cf_gen.cc,v 1.39 2001/01/04 19:05:28 wessels Exp $
  *
  * DEBUG: none          Generate squid.conf and cf_parser.c
  * AUTHOR: Max Okumoto
@@ -102,6 +102,7 @@ typedef struct Entry {
     char *ifdef;
     Line *doc;
     Line *nocomment;
+    int array_flag;
     struct Entry *next;
 } Entry;
 
@@ -220,6 +221,11 @@ main(int argc, char *argv[])
 		if ((ptr = strtok(buff + 5, WS)) == NULL) {
 		    printf("Error on line %d\n", linenum);
 		    exit(1);
+		}
+		/* hack to support arrays, rather than pointers */
+		if (0 == strcmp(ptr + strlen(ptr) - 2, "[]")) {
+		    curr->array_flag = 1;
+		    *(ptr + strlen(ptr) - 2) = '\0';
 		}
 		curr->type = xstrdup(ptr);
 	    } else if (!strncmp(buff, "IFDEF:", 6)) {
@@ -485,8 +491,9 @@ gen_parse(Entry * head, FILE * fp)
 		);
 	} else {
 	    fprintf(fp,
-		"\t\tparse_%s(&%s);\n",
-		entry->type, entry->loc
+		"\t\tparse_%s(&%s%s);\n",
+		entry->type, entry->loc,
+		entry->array_flag ? "[0]" : ""
 		);
 	}
 	if (entry->ifdef)
@@ -545,7 +552,9 @@ gen_free(Entry * head, FILE * fp)
 	    continue;
 	if (entry->ifdef)
 	    fprintf(fp, "#if %s\n", entry->ifdef);
-	fprintf(fp, "\tfree_%s(&%s);\n", entry->type, entry->loc);
+	fprintf(fp, "\tfree_%s(&%s%s);\n",
+	    entry->type, entry->loc,
+	    entry->array_flag ? "[0]" : "");
 	if (entry->ifdef)
 	    fprintf(fp, "#endif\n");
     }
