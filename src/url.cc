@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.130 2001/04/14 00:03:24 hno Exp $
+ * $Id: url.cc,v 1.131 2001/09/28 20:02:40 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -317,7 +317,7 @@ urlParse(method_t method, char *url)
 #ifdef HARDCODE_DENY_PORTS
     /* These ports are filtered in the default squid.conf, but
      * maybe someone wants them hardcoded... */
-    if (port == 7 || port == 9 || port = 19) {
+    if (port == 7 || port == 9 || port == 19) {
 	debug(23, 0) ("urlParse: Deny access to port %d\n", port);
 	return NULL;
     }
