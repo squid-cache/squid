@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.61 1998/11/25 09:00:23 wessels Exp $
+ * $Id: peer_digest.cc,v 1.62 1998/12/05 00:00:44 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -43,6 +43,7 @@
 static time_t peerDigestIncDelay(const PeerDigest * pd);
 static time_t peerDigestNewDelay(const StoreEntry * e);
 static void peerDigestSetCheck(PeerDigest * pd, time_t delay);
+static void peerDigestClean(PeerDigest *);
 static EVH peerDigestCheck;
 static void peerDigestRequest(PeerDigest * pd);
 static STCB peerDigestFetchReply;
