@@ -1,5 +1,8 @@
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
+	- Added French Error pages by Frank DENIS.
+	- Added Dutch Error pages by Mark Visser
+	- Added German Error pages by Mark Visser
 	- Added support for only-if-cached cache-control directive.
 	- Added RELAXED_HTTP_PARSER #define to allow requests which are
 	  missing the HTTP identifier on the request line (e.g. buggy
@@ -24,7 +27,7 @@ Changes to squid-1.2.beta19 (Apr 8, 1998):
 	- Added generic 'hashFreeItems()' function for efficiently
 	  freeing hash table pointers.
 	- Added whoisTimeout() for ASN code.
-XXX	- Remove BINARY TREE junk
+	- Removed BINARY TREE code.
 	- Fixed forgetting to reset Config.Swap.maxSize in
 	  configDoConfigure.
 	- Fixed httpReplyUpdateOnNotModified() arguments-in-wrong-order
@@ -174,6 +177,7 @@ Changes to squid-1.2.beta17 (Mar 17, 1998):
 
 Changes to squid-1.2.beta16 (Mar 4, 1998):
 
+	- Added Spanish error messages from Javier Puche.
 	- Added Portuguese error messages from Pedro Lineu Orso
 	- Added a simple but very effective hack to cachemgr.cgi that tries to
 	  interpret lines with '\t' as table records and formats them
