@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.104 1997/05/05 03:43:42 wessels Exp $
+ * $Id: ftp.cc,v 1.105 1997/05/15 01:06:54 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -141,7 +141,6 @@ static PF ftpServerClosed;
 static PF ftpStateFree;
 static PF ftpTimeout;
 static char *ftpGetBasicAuth _PARAMS((const char *));
-static const char *ftpTransferMode _PARAMS((const char *));
 static void ftpProcessReplyHeader _PARAMS((FtpStateData *, const char *, int));
 static void ftpStartComplete _PARAMS((void *, int));
 static void ftpLoginParser _PARAMS((const char *, FtpStateData *));
@@ -412,26 +411,6 @@ ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	ftpState, 0);
 }
 
-static const char *
-ftpTransferMode(const char *urlpath)
-{
-    const char *const ftpASCII = "A";
-    const char *const ftpBinary = "I";
-    char *ext = NULL;
-    const ext_table_entry *mime = NULL;
-    int len;
-    len = strlen(urlpath);
-    if (*(urlpath + len - 1) == '/')
-	return ftpASCII;
-    if ((ext = strrchr(urlpath, '.')) == NULL)
-	return ftpBinary;
-    if ((mime = mime_ext_to_type(++ext)) == NULL)
-	return ftpBinary;
-    if (!strcmp(mime->mime_encoding, "7bit"))
-	return ftpASCII;
-    return ftpBinary;
-}
-
 static void
 ftpSendRequest(int fd, void *data)
 {
@@ -451,7 +430,7 @@ ftpSendRequest(int fd, void *data)
     buf = get_free_8k_page();
 
     path = ftpState->request->urlpath;
-    mode = ftpTransferMode(path);
+    mode = "-";		/* let ftpget figure it out */
 
     /* Start building the buffer ... */
     strcat(buf, Config.Program.ftpget);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.10 1997/04/28 04:22:59 wessels Exp $
+ * $Id: client_db.cc,v 1.11 1997/05/15 01:06:51 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -71,7 +71,7 @@ clientdbInit(void)
 }
 
 void
-clientdbUpdate(struct in_addr addr, log_type log_type, u_short port)
+clientdbUpdate(struct in_addr addr, log_type log_type, protocol_t p)
 {
     char *key;
     ClientInfo *c;
@@ -83,10 +83,10 @@ clientdbUpdate(struct in_addr addr, log_type log_type, u_short port)
 	c = clientdbAdd(addr);
     if (c == NULL)
 	debug_trap("clientdbUpdate: Failed to add entry");
-    if (port == Config.Port.http) {
+    if (p == PROTO_HTTP) {
 	c->Http.n_requests++;
 	c->Http.result_hist[log_type]++;
-    } else if (port == Config.Port.icp) {
+    } else if (p == PROTO_ICP) {
 	c->Icp.n_requests++;
 	c->Icp.result_hist[log_type]++;
     }

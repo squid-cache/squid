@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.70 1997/05/14 21:08:15 wessels Exp $
+#  $Id: Makefile.in,v 1.71 1997/05/15 01:06:49 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -12,7 +12,6 @@ ICMP_OPT	= # -DUSE_ICMP=1
 DELAY_HACK      = # -DDELAY_HACK=1
 USERAGENT_OPT	= # -DUSE_USERAGENT_LOG=1
 KILL_PARENT_OPT	= # -DKILL_PARENT_OPT
-USE_POLL_OPT    = # -DUSE_POLL
 # do NOT define both USE_SPLAY_TREE and USE_BIN_TREE at the same time!
 USE_SPLAY_TREE  = # -DUSE_SPLAY_TREE
 USE_BIN_TREE    = # -DUSE_BIN_TREE
@@ -33,6 +32,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
+DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_FTPGET          = $(libexecdir)/ftpget
 DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver
 DEFAULT_CACHE_LOG       = $(localstatedir)/logs/cache.log
@@ -126,6 +126,7 @@ OBJS	 	= \
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
+	-DDEFAULT_MIME_TABLE=\"$(DEFAULT_MIME_TABLE)\" \
 	-DDEFAULT_FTPGET=\"$(DEFAULT_FTPGET)\" \
 	-DDEFAULT_DNSSERVER=\"$(DEFAULT_DNSSERVER)\" \
 	-DDEFAULT_CACHE_LOG=\"$(DEFAULT_CACHE_LOG)\" \
@@ -156,7 +157,7 @@ cachemgr.cgi:	cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
 
 ftpget: ftpget.o
-	$(CC) -o $@ $(LDFLAGS) ftpget.o debug.o $(FTPGET_LIBS)
+	$(CC) -o $@ $(LDFLAGS) ftpget.o debug.o mime.o $(FTPGET_LIBS) $(REGEXLIB)
 
 pinger: pinger.o
 	$(CC) -o $@ $(LDFLAGS) pinger.o debug.o $(PINGER_LIBS)
@@ -167,6 +168,7 @@ unlinkd: unlinkd.c
 squid.conf: squid.conf.pre Makefile
 	sed "\
 	s%@DEFAULT_CONFIG_FILE@%$(DEFAULT_CONFIG_FILE)%g;\
+	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
 	s%@DEFAULT_FTPGET@%$(DEFAULT_FTPGET)%g;\
 	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
 	s%@DEFAULT_UNLINKD@%$(DEFAULT_UNLINKD)%g;\
@@ -252,6 +254,13 @@ install: all install-mkdirs
 	else \
 		echo "$(INSTALL_FILE) squid.conf $(sysconfdir)"; \
 		$(INSTALL_FILE) squid.conf $(sysconfdir); \
+	fi
+	$(INSTALL_FILE) mime.conf $(sysconfdir)/mime.conf.default
+	@if test -f $(sysconfdir)/mime.conf ; then \
+		echo "$@ will not overwrite existing $(sysconfdir)/mime.conf" ; \
+	else \
+		echo "$(INSTALL_FILE) mime.conf $(sysconfdir)"; \
+		$(INSTALL_FILE) mime.conf $(sysconfdir); \
 	fi
 
 install-pinger:

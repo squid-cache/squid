@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.150 1997/05/05 03:43:38 wessels Exp $
+ * $Id: comm.cc,v 1.151 1997/05/15 01:06:53 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -134,13 +134,17 @@ FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int commBind _PARAMS((int s, struct in_addr, u_short port));
-#ifndef USE_POLL
+#ifndef HAVE_POLL
 static int examine_select _PARAMS((fd_set *, fd_set *));
 #endif
 static void checkTimeouts _PARAMS((void));
 static void commSetReuseAddr _PARAMS((int));
 static void commSetNoLinger _PARAMS((int));
+#if HAVE_POLL
+static void comm_poll_incoming _PARAMS((void));
+#else
 static void comm_select_incoming _PARAMS((void));
+#endif
 static void CommWriteStateCallbackAndFree _PARAMS((int fd, int code));
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay _PARAMS((int));
@@ -149,6 +153,7 @@ static void commSetTcpRcvbuf _PARAMS((int, int));
 static void commConnectFree _PARAMS((int fd, void *data));
 static void commConnectHandle _PARAMS((int fd, void *data));
 static void commHandleWrite _PARAMS((int fd, void *data));
+static int fdIsHttpOrIcp _PARAMS((int fd));
 
 static struct timeval zero_tv;
 
@@ -595,29 +600,34 @@ comm_set_stall(int fd, int delta)
 }
 
 
-#ifdef USE_POLL
+#ifdef HAVE_POLL
 
 /* poll() version by:
  * Stewart Forster <slf@connect.com.au>, and
  * Anthony Baxter <arb@connect.com.au> */
 
 static void
-comm_select_incoming(void)
+comm_poll_incoming(void)
 {
     int fd;
     int fds[4];
-    struct pollfd pfds[4];
+    struct pollfd pfds[3+MAXHTTPPORTS];
     unsigned long N = 0;
     unsigned long i, nfds;
-    int dopoll = 0;
+    int j;
     PF *hdl = NULL;
     if (theInIcpConnection >= 0)
 	fds[N++] = theInIcpConnection;
     if (theInIcpConnection != theOutIcpConnection)
 	if (theOutIcpConnection >= 0)
 	    fds[N++] = theOutIcpConnection;
-    if (theHttpConnection >= 0 && fdstat_are_n_free_fd(RESERVED_FD))
-	fds[N++] = theHttpConnection;
+    for (j=0; j<NHttpSockets; j++) {
+	if (HttpSockets[j] < 0)
+		continue;
+	if (fd_table[HttpSockets[j]].stall_until > squid_curtime)
+		continue;
+	fds[N++] = HttpSockets[j];
+    }
     for (i = nfds = 0; i < N; i++) {
 	int events;
 	fd = fds[i];
@@ -667,14 +677,19 @@ comm_select_incoming(void)
     fd_set write_mask;
     int maxfd = 0;
     int fd = 0;
-    int fds[4];
+    int fds[3+MAXHTTPPORTS];
     int N = 0;
     int i = 0;
     PF *hdl = NULL;
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
-    if (theHttpConnection >= 0 && fdstat_are_n_free_fd(RESERVED_FD))
-	fds[N++] = theHttpConnection;
+    for (i=0; i<NHttpSockets; i++) {
+	if (HttpSockets[i] < 0)
+		continue;
+	if (fd_table[HttpSockets[i]].stall_until > squid_curtime)
+		continue;
+	fds[N++] = HttpSockets[i];
+    }
     if (theInIcpConnection >= 0)
 	fds[N++] = theInIcpConnection;
     if (theInIcpConnection != theOutIcpConnection)
@@ -717,10 +732,25 @@ comm_select_incoming(void)
 }
 #endif
 
-#ifdef USE_POLL
+static int
+fdIsHttpOrIcp(int fd)
+{
+    int j;
+    if (fd == theInIcpConnection)
+	return 1;
+    if (fd == theOutIcpConnection)
+	return 1;
+    for (j = 0; j < NHttpSockets; j++) {
+	if (fd == HttpSockets[j])
+	    return 1;
+    }
+    return 0;
+}
+
+#ifdef HAVE_POLL
 /* poll all sockets; call handlers for those that are ready. */
 int
-comm_select(time_t sec)
+comm_poll(time_t sec)
 {
     struct pollfd pfds[SQUID_MAXFD];
     PF *hdl = NULL;
@@ -732,6 +762,7 @@ comm_select(time_t sec)
     static time_t last_timeout = 0;
     static time_t pending_time;
     int poll_time;
+    static int incoming_counter = 0;
     time_t timeout;
     /* assume all process are very fast (less than 1 second). Call
      * time() only once */
@@ -757,7 +788,6 @@ comm_select(time_t sec)
 	}
 	nfds = 0;
 	maxfd = Biggest_FD + 1;
-	httpindex = -1;
 	for (i = 0; i < maxfd; i++) {
 	    int events;
 	    events = 0;
@@ -767,8 +797,6 @@ comm_select(time_t sec)
 	    if (fd_table[i].write_handler)
 		events |= POLLWRNORM;
 	    if (events) {
-		if (i == theHttpConnection)
-		    httpindex = nfds;
 		pfds[nfds].fd = i;
 		pfds[nfds].events = events;
 		pfds[nfds].revents = 0;
@@ -777,12 +805,8 @@ comm_select(time_t sec)
 		    pfds[i].fd = -1;
 	    }
 	    /* If we're out of free fd's, don't poll the http incoming fd */
-	    if (!fdstat_are_n_free_fd(RESERVED_FD) && httpindex >= 0) {
-		pfds[httpindex].fd = -1;
-		pfds[httpindex].events = 0;
-	    }
 	    if (shutdown_pending || reread_pending)
-		debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
+		debug(5, 2, "comm_poll: Still waiting on %d FDs\n", nfds);
 	    if (pending_time == 0)
 		pending_time = squid_curtime;
 	    if ((squid_curtime - pending_time) > (Config.shutdownLifetime + 5)) {
@@ -814,21 +838,14 @@ comm_select(time_t sec)
 		break;
 	    if (errno == EINTR)
 		continue;
-	    debug(5, 0, "comm_select: poll failure: %s\n",
-		xstrerror());
-	    if (errno == EINVAL) {
-		/* nfds greater than OPEN_MAX?? How possible? Time */
-		/* to bail - write out nfds to cache.log and start */
-		/* emergency shutdown by sending SIGTERM to self */
-		debug(20, 1, "Poll returned EINVAL. Polled %d FD's\n", nfds);
-		kill(getpid(), SIGTERM);
-	    }
+	    debug(5, 0, "comm_poll: poll failure: %s\n", xstrerror());
+	    if (errno == EINVAL) 
+		fatal_dump("Poll returned EINVAL");
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
 	getCurrentTime();
-	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
-	    num, (int) squid_curtime);
+	debug(5, num ? 5 : 8, "comm_poll: %d sockets ready\n", num);
 	/* Check timeout handlers ONCE each second. */
 	if (squid_curtime > last_timeout) {
 	    last_timeout = squid_curtime;
@@ -843,22 +860,18 @@ comm_select(time_t sec)
 	    int revents;
 	    if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
 		continue;
-	    /*
-	     * Admit more connections quickly until we hit the hard limit.
-	     * Don't forget to keep the UDP acks coming and going.
-	     */
-	    if ((i % 2) == 0)
-		comm_select_incoming();
-	    if ((fd == theInIcpConnection) || (fd == theHttpConnection) || (fd == theOutIcpConnection) || (fd == 0))
+	    if ((incoming_counter++ % 2) == 0)
+		comm_poll_incoming();
+	    if (fdIsHttpOrIcp(fd))
 		continue;
 	    if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
-		debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
+		debug(5, 6, "comm_poll: FD %d ready for reading\n", fd);
 		hdl = fd_table[fd].read_handler;
 		fd_table[fd].read_handler = 0;
 		hdl(fd, fd_table[fd].read_data);
 	    }
 	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
-		debug(5, 5, "comm_select: FD %d ready for writing\n", fd);
+		debug(5, 5, "comm_poll: FD %d ready for writing\n", fd);
 		hdl = fd_table[fd].write_handler;
 		fd_table[fd].write_handler = 0;
 		hdl(fd, fd_table[fd].write_data);
@@ -869,7 +882,7 @@ comm_select(time_t sec)
 		FD_ENTRY *fde = &fd_table[fd];
 		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
 		debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fd_table[fd].type]);
-		debug(5, 0, "--> %s\n", fd_note(fd, NULL));
+		debug(5, 0, "--> %s\n", fd_table[fd].desc);
 		debug(5, 0, "tmout:%p read:%p write:%p\n",
 		    fde->timeout_handler,
 		    fde->read_handler,
@@ -883,7 +896,7 @@ comm_select(time_t sec)
 			safe_free(ch);
 		    }
 		} else if (fde->timeout_handler) {
-		    debug(5, 0, "examine_select: Calling Timeout Handler\n");
+		    debug(5, 0, "comm_poll: Calling Timeout Handler\n");
 		    fde->timeout_handler(fd, fde->timeout_data);
 		}
 		fde->close_handler = NULL;
@@ -894,7 +907,7 @@ comm_select(time_t sec)
 	}
 	return COMM_OK;
     } while (timeout > getCurrentTime());
-    debug(5, 8, "comm_select: time out: %d.\n", squid_curtime);
+    debug(5, 8, "comm_poll: time out: %d.\n", squid_curtime);
     return COMM_TIMEOUT;
 }
 
@@ -957,9 +970,6 @@ comm_select(time_t sec)
 		FD_SET(i, &writefds);
 	    }
 	}
-	if (!fdstat_are_n_free_fd(RESERVED_FD) && theHttpConnection >= 0) {
-	    FD_CLR(theHttpConnection, &readfds);
-	}
 	if (shutdown_pending || reread_pending)
 	    debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
 	if (nfds == 0)
@@ -1009,11 +1019,8 @@ comm_select(time_t sec)
 	     * Don't forget to keep the UDP acks coming and going.
 	     */
 	    comm_select_incoming();
-	    if (fd == theInIcpConnection)
-		continue;
-	    if (fd == theOutIcpConnection)
-		continue;
-	    if (fd == theHttpConnection)
+
+	    if (fdIsHttpOrIcp(fd))
 		continue;
 	    if (FD_ISSET(fd, &readfds)) {
 		debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
@@ -1226,7 +1233,7 @@ comm_init(void)
 }
 
 
-#ifndef USE_POLL
+#ifndef HAVE_POLL
 /*
  * examine_select - debug routine.
  *

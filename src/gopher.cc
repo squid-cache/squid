@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.78 1997/05/05 03:43:43 wessels Exp $
+ * $Id: gopher.cc,v 1.79 1997/05/15 01:06:55 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -198,50 +198,14 @@ gopherStateFree(int fd, void *data)
 
 /* figure out content type from file extension */
 static void
-gopher_mime_content(char *buf, const char *name, const char *def)
+gopher_mime_content(char *buf, const char *name, const char *def_ctype)
 {
-    LOCAL_ARRAY(char, temp, MAX_URL);
-    char *ext1 = NULL;
-    char *ext2 = NULL;
-    const char *str = NULL;
-    const ext_table_entry *e = NULL;
-
-    ext2 = NULL;
-    strcpy(temp, name);
-    for (ext1 = temp; *ext1; ext1++)
-	if (isupper(*ext1))
-	    *ext1 = tolower(*ext1);
-    if ((ext1 = strrchr(temp, '.')) == NULL) {
-	/* use default */
-	sprintf(buf + strlen(buf), "Content-Type: %s\r\n", def);
-	return;
-    }
-    /* try extension table */
-    *ext1++ = 0;
-    if (strcmp("gz", ext1) == 0 || strcmp("z", ext1) == 0) {
-	ext2 = ext1;
-	if ((ext1 = strrchr(temp, '.')) == NULL) {
-	    ext1 = ext2;
-	    ext2 = NULL;
-	} else
-	    ext1++;
-    }
-    if ((e = mime_ext_to_type(ext1)) == NULL) {
-	/* mime_ext_to_type() can return a NULL */
-	if (ext2 && (e = mime_ext_to_type(ext2))) {
-	    str = e->mime_type;
-	    ext2 = NULL;
-	} else {
-	    str = def;
-	}
-    } else {
-	str = e->mime_type;
-    }
-    sprintf(buf + strlen(buf), "Content-Type: %s\r\n", str);
-    if (ext2 && (e = mime_ext_to_type(ext2))) {
-	sprintf(buf + strlen(buf), "Content-Encoding: %s\r\n",
-	    e->mime_encoding);
-    }
+    char *ctype = mimeGetContentType(name);
+    char *cenc = mimeGetContentEncoding(name);
+    if (cenc)
+	sprintf(buf + strlen(buf), "Content-Encoding: %s\r\n", cenc);
+    sprintf(buf + strlen(buf), "Content-Type: %s\r\n",
+	ctype ? ctype : def_ctype);
 }
 
 
@@ -287,14 +251,11 @@ gopherMimeCreate(GopherStateData * gopherState)
 	/* Rightnow We have no idea what it is. */
 	gopher_mime_content(tempMIME, gopherState->request, def_gopher_bin);
 	break;
-
     case GOPHER_FILE:
     default:
 	gopher_mime_content(tempMIME, gopherState->request, def_gopher_text);
 	break;
-
     }
-
     strcat(tempMIME, "\r\n");
     storeAppend(gopherState->entry, tempMIME, strlen(tempMIME));
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.184 1997/05/14 21:07:51 wessels Exp $
+ * $Id: cache_cf.cc,v 1.185 1997/05/15 01:06:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -127,6 +127,7 @@ struct SquidConfig Config;
 #define DefaultReadTimeout      (15 * 60)	/* 15 min */
 #define DefaultConnectTimeout   120	/* 2 min */
 #define DefaultDeferTimeout     3600	/* 1 hour */
+#define DefaultRequestTimeout   30	/* 30 seconds */
 #define DefaultClientLifetime   86400	/* 1 day */
 #define DefaultShutdownLifetime 30	/* 30 seconds */
 #define DefaultCleanRate        -1	/* disabled */
@@ -179,6 +180,7 @@ struct SquidConfig Config;
 #define DefaultStallDelay	1	/* 1 seconds */
 #define DefaultSingleParentBypass 0	/* default off */
 #define DefaultPidFilename      DEFAULT_PID_FILE
+#define DefaultMimeTable        DEFAULT_MIME_TABLE
 #define DefaultVisibleHostname  (char *)NULL	/* default NONE */
 #define DefaultFtpUser		"squid@"	/* Default without domain */
 #define DefaultAnnounceHost	"sd.cache.nlanr.net"
@@ -662,10 +664,15 @@ parseHttpPortLine(void)
 {
     char *token;
     int i;
+    if (Config.Port.n_http == MAXHTTPPORTS) {
+	sprintf(fatal_str, "Limit of %d HTTP Ports exceeded, redefine MAXHTTPPORTS.\n",
+	    MAXHTTPPORTS);
+	fatal(fatal_str);
+    }
     GetInteger(i);
     if (i < 0)
 	i = 0;
-    Config.Port.http = (u_short) i;
+    Config.Port.http[Config.Port.n_http++] = (u_short) i;
 }
 
 static void
@@ -1031,6 +1038,8 @@ parseConfigFile(const char *file_name)
 	    parseTimeLine(&Config.Timeout.connect, T_SECOND_STR);
 	else if (!strcmp(token, "defer_timeout"))
 	    parseTimeLine(&Config.Timeout.defer, T_MINUTE_STR);
+	else if (!strcmp(token, "request_timeout"))
+	    parseTimeLine(&Config.Timeout.request, T_SECOND_STR);
 	else if (!strcmp(token, "client_lifetime"))
 	    parseTimeLine(&Config.Timeout.lifetime, T_MINUTE_STR);
 	else if (!strcmp(token, "shutdown_lifetime"))
@@ -1147,7 +1156,8 @@ parseConfigFile(const char *file_name)
 
 	else if (!strcmp(token, "pid_filename"))
 	    parsePathname(&Config.pidFilename, 0);
-
+        else if (!strcmp(token, "mime_table"))
+           parsePathname(&Config.mimeTablePathname, 1);
 	else if (!strcmp(token, "visible_hostname"))
 	    parseVisibleHostnameLine();
 
@@ -1291,6 +1301,7 @@ configFreeMemory(void)
     safe_free(Config.appendDomain);
     safe_free(Config.debugOptions);
     safe_free(Config.pidFilename);
+    safe_free(Config.mimeTablePathname);
     safe_free(Config.visibleHostname);
     safe_free(Config.ftpUser);
 #if USE_PROXY_AUTH
@@ -1336,6 +1347,7 @@ configSetFactoryDefaults(void)
     Config.Timeout.read = DefaultReadTimeout;
     Config.Timeout.connect = DefaultConnectTimeout;
     Config.Timeout.defer = DefaultDeferTimeout;
+    Config.Timeout.request = DefaultRequestTimeout;
     Config.Timeout.lifetime = DefaultClientLifetime;
     Config.shutdownLifetime = DefaultShutdownLifetime;
     Config.maxRequestSize = DefaultMaxRequestSize;
@@ -1360,7 +1372,8 @@ configSetFactoryDefaults(void)
     Config.effectiveGroup = safe_xstrdup(DefaultEffectiveGroup);
     Config.appendDomain = safe_xstrdup(DefaultAppendDomain);
     Config.errHtmlText = safe_xstrdup(DefaultErrHtmlText);
-    Config.Port.http = DefaultHttpPortNum;
+    Config.Port.n_http = 0;
+    Config.Port.http[0] = DefaultHttpPortNum;
     Config.Port.icp = DefaultIcpPortNum;
     Config.Log.log_fqdn = DefaultLogLogFqdn;
     Config.Log.log = safe_xstrdup(DefaultCacheLogFile);
@@ -1382,6 +1395,7 @@ configSetFactoryDefaults(void)
     Config.Accel.port = DefaultAccelPort;
     Config.Accel.withProxy = DefaultAccelWithProxy;
     Config.pidFilename = safe_xstrdup(DefaultPidFilename);
+    Config.mimeTablePathname = safe_xstrdup(DefaultMimeTable);
     Config.visibleHostname = safe_xstrdup(DefaultVisibleHostname);
 #if USE_PROXY_AUTH
     Config.proxyAuth.File = safe_xstrdup(DefaultProxyAuthFile);
@@ -1432,7 +1446,7 @@ configDoConfigure(void)
 	vhost_mode = 1;
     sprintf(ThisCache, "%s:%d (Squid/%s)",
 	getMyHostname(),
-	(int) Config.Port.http,
+	(int) Config.Port.http[0],
 	SQUID_VERSION);
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
 	Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
