@@ -21,7 +21,7 @@ storeKeyScan(const char *buf)
     static unsigned char digest[MD5_DIGEST_CHARS];
     int i;
     int j = 0;
-    unsigned char t[3];
+    char t[3];
     for (i = 0; i < MD5_DIGEST_CHARS; i++) {
 	t[0] = *(buf + (j++));
 	t[1] = *(buf + (j++));
@@ -72,7 +72,7 @@ storeKeyPrivate(const char *url, method_t method, int num)
 	RequestMethodStr[method],
 	url);
     MD5Init(&M);
-    MD5Update(&M, key_buf, n);
+    MD5Update(&M, (unsigned char *) key_buf, n);
     MD5Final(digest, &M);
     return digest;
 }
@@ -88,7 +88,7 @@ storeKeyPublic(const char *url, method_t method)
 	RequestMethodStr[method],
 	url);
     MD5Init(&M);
-    MD5Update(&M, key_buf, n);
+    MD5Update(&M, (unsigned char *) key_buf, n);
     MD5Final(digest, &M);
     return digest;
 }
