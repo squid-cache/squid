@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.59 1998/12/05 00:54:11 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.60 1999/01/22 19:06:58 glenn Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -234,15 +234,16 @@ httpHeaderInitModule()
     assert(8 * sizeof(HttpHeaderMask) >= HDR_ENUM_END);
     /* all headers must be described */
     assert(countof(HeadersAttrs) == HDR_ENUM_END);
-    Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+    if(!Headers)
+        Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
     /* create masks */
-    httpHeaderMaskInit(&ListHeadersMask);
+    httpHeaderMaskInit(&ListHeadersMask, 0);
     httpHeaderCalcMask(&ListHeadersMask, (const int *) ListHeadersArr, countof(ListHeadersArr));
-    httpHeaderMaskInit(&ReplyHeadersMask);
+    httpHeaderMaskInit(&ReplyHeadersMask, 0);
     httpHeaderCalcMask(&ReplyHeadersMask, (const int *) ReplyHeadersArr, countof(ReplyHeadersArr));
     httpHeaderCalcMask(&ReplyHeadersMask, (const int *) GeneralHeadersArr, countof(GeneralHeadersArr));
     httpHeaderCalcMask(&ReplyHeadersMask, (const int *) EntityHeadersArr, countof(EntityHeadersArr));
-    httpHeaderMaskInit(&RequestHeadersMask);
+    httpHeaderMaskInit(&RequestHeadersMask, 0);
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) RequestHeadersArr, countof(RequestHeadersArr));
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) GeneralHeadersArr, countof(GeneralHeadersArr));
     httpHeaderCalcMask(&RequestHeadersMask, (const int *) EntityHeadersArr, countof(EntityHeadersArr));
@@ -488,7 +489,7 @@ httpHeaderDelByName(HttpHeader * hdr, const char *name)
     int count = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    httpHeaderMaskInit(&hdr->mask);	/* temporal inconsistency */
+    httpHeaderMaskInit(&hdr->mask, 0);	/* temporal inconsistency */
     debug(55, 7) ("deleting '%s' fields in hdr %p\n", name, hdr);
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
 	if (!strCaseCmp(e->name, name)) {
@@ -1061,3 +1062,26 @@ httpHeaderStoreReport(StoreEntry * e)
 	HttpHeaderStats[0].parsedCount);
     storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
 }
+
+int
+httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * info, int end)
+{
+    int i;
+    for (i = 0; i < end; ++i) {
+        if (name_len >= 0 && name_len != strLen(info[i].name))
+            continue;
+        if (!strncasecmp(name, strBuf(info[i].name),
+                name_len < 0 ? strLen(info[i].name) + 1 : name_len))
+            return i;
+    }
+    return -1;
+}
+
+int
+httpHeaderIdByNameDef(const char *name, int name_len)
+{
+   if (!Headers)
+       Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+   return httpHeaderIdByName(name, name_len, Headers, HDR_ENUM_END);
+}
+

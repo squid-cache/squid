@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.22 1999/01/11 21:55:36 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.23 1999/01/22 19:06:59 glenn Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -76,9 +76,9 @@ httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
 }
 
 void
-httpHeaderMaskInit(HttpHeaderMask * mask)
+httpHeaderMaskInit(HttpHeaderMask * mask, int value)
 {
-    memset(mask, 0, sizeof(*mask));
+    memset(mask, value, sizeof(*mask));
 }
 
 /* calculates a bit mask of a given array; does not reset mask! */
@@ -93,21 +93,6 @@ httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, int count)
 	assert(!CBIT_TEST(*mask, enums[i]));	/* check for duplicates */
 	CBIT_SET(*mask, enums[i]);
     }
-}
-
-
-int
-httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * info, int end)
-{
-    int i;
-    for (i = 0; i < end; ++i) {
-	if (name_len >= 0 && name_len != strLen(info[i].name))
-	    continue;
-	if (!strncasecmp(name, strBuf(info[i].name),
-		name_len < 0 ? strLen(info[i].name) + 1 : name_len))
-	    return i;
-    }
-    return -1;
 }
 
 /* same as httpHeaderPutStr, but formats the string using snprintf first */

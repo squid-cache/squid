@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.133 1999/01/21 23:58:41 wessels Exp $
+# $Id: cf.data.pre,v 1.134 1999/01/22 19:07:03 glenn Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2062,25 +2062,6 @@ DOC_START
 store_objects_per_bucket 20
 DOC_END
 
-
-NAME: http_anonymizer
-TYPE: httpanonymizer
-LOC: Config.onoff.anonymizer
-DEFAULT: off
-DOC_START
-	If you want to filter out certain HTTP request headers for
-	privacy reasons, enable this option.  There are three
-	appropriate settings:
-		'off'		All HTTP request headers are passed.
-		'standard'	Specific headers are removed
-		'paranoid'	Only specific headers are allowed.
-	To see which headers are allowed or denied, please see the
-	http-anon.c source file.
-
-http_anonymizer off
-DOC_END
-
-
 NAME: client_db
 COMMENT: on|off
 TYPE: onoff
@@ -2262,14 +2243,46 @@ DOC_START
 	and firewall_ip.
 DOC_END
 
+NAME: http_header
+TYPE: http_header
+LOC: Config.http_header
+DEFAULT: none
+DOC_START
+        Lets you to configure which headers are passed by squid
+	to allow you to anonymize the requests delivered by your
+	proxy server. Please read the HTTP rfc's for header names
+	and functions.
+
+	There are two methods of using this command. You can choose
+	two methods either:
+		
+		http_header allow header_name ...
+
+	Which denys all headers expect for those listed. Or :
+
+		http_header deny header_name ...
+
+	Which allows all headers except for those listed. By default
+	all headers are allowed. You CAN NOT have allow and deny
+	commands together in the same configuration.
+
+        usage:
+
+        http_header allow|deny header_name ...
+
+Example:
+This example acts like the old standard configuration:
+
+http_header deny From Referer Server User-Agent WWW-Authenticate Link
+DOC_END
+
 NAME: fake_user_agent
 TYPE: eol
 LOC: Config.fake_ua
 DEFAULT: none
 DOC_START
-	If you use the paranoid http_anonymizer setting, Squid will strip
-	your User-agent string from the request.  Some Web servers will
-	refuse your request without a User-agent string.  Use this to
+	If you filter the User-Agent header with 'http_header' it will
+	cause some Web servers to refuse your request. Use this to
 	fake one up.  For example:
 
 	fake_user_agent Nutscrape/1.0 (CP/M; 8-bit)
