@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.123 1997/08/25 02:19:31 wessels Exp $
+ * $Id: client_side.cc,v 1.124 1997/08/25 16:37:18 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -308,17 +308,20 @@ proxyAuthenticate(const char *headers)
     passwd++;
 
     /* See if we've already validated them */
+    passwd[0] |= 0x80;		/* check mutated password */
     if (strcmp(hashr->item, passwd) == 0) {
 	debug(33, 5) ("proxyAuthenticate: user %s previously validated\n", sent_user);
 	xfree(clear_userandpw);
 	return sent_user;
     }
+    passwd[0] &= ~(0x80);	/* check vs crypt */
     if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
 	/* Passwords differ, deny access */
 	debug(33, 4) ("proxyAuthenticate: authentication failed: user %s passwords differ\n", sent_user);
 	xfree(clear_userandpw);
 	return (dash_str);
     }
+    passwd[0] |= 0x80;		/* store mutated password away */
     debug(33, 5) ("proxyAuthenticate: user %s validated\n", sent_user);
     hash_delete(validated, sent_user);
     hash_insert(validated, xstrdup(sent_user), xstrdup(passwd));
