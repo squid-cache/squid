@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.246 1998/03/05 00:42:55 wessels Exp $
+ * $Id: http.cc,v 1.247 1998/03/06 05:43:37 kostas Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -206,6 +206,9 @@ static struct {
 
 static CNCB httpConnectDone;
 static CWCB httpSendComplete;
+static void *sendHeaderDone;
+static CWCB httpSendRequestEntry;
+
 static PF httpReadReply;
 static PF httpSendRequest;
 static PF httpStateFree;
@@ -943,10 +946,11 @@ httpSendRequest(int fd, void *data)
 	buflen += req->headers_sz + 1;
     buflen += 512;		/* lots of extra */
 
-    if ((req->method == METHOD_POST || req->method == METHOD_PUT)) {
-	debug_trap("httpSendRequest: should not be handling POST/PUT request");
-	return;
-    }
+    if ((req->method == METHOD_POST || req->method == METHOD_PUT))
+           sendHeaderDone= httpSendRequestEntry;
+       else
+           sendHeaderDone= httpSendComplete;
+
     if (buflen < DISK_PAGE_SIZE) {
 	buf = memAllocate(MEM_8K_BUF);
 	buftype = BUF_TYPE_8K;
@@ -983,7 +987,7 @@ httpSendRequest(int fd, void *data)
     comm_write(fd,
 	buf,
 	len,
-	httpSendComplete,
+	sendHeaderDone,
 	httpState,
 	buftype == BUF_TYPE_8K ? memFree8K : xfree);
 #ifdef BREAKS_PCONN_RESTART
@@ -1334,3 +1338,30 @@ httpReplyHeader(double ver,
     return buf;
 }
 #endif
+
+static void
+httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void  *data)
+{
+    HttpStateData *httpState = data;
+    StoreEntry *entry = httpState->entry;
+    ErrorState *err;
+    debug(11, 5) ("httpSendRequestEntry: FD %d: size %d: errflag %d.\n",
+        fd, size, errflag);
+    if (size > 0) {
+        fd_bytes(fd, size, FD_WRITE);
+	kb_incr(&Counter.server.all.kbytes_out, size);
+	kb_incr(&Counter.server.http.kbytes_out, size);
+    }
+    if (errflag == COMM_ERR_CLOSING)
+        return;
+    if (errflag) {
+        err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+        err->xerrno = errno;
+        err->request = requestLink(httpState->orig_request);
+        errorAppendEntry(entry, err);
+        comm_close(fd);
+        return;
+    } else {
+	pumpStart(fd, entry, httpState->orig_request , httpSendComplete, httpState);
+    }
+}

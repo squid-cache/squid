@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.201 1998/03/05 00:42:52 wessels Exp $
+ * $Id: ftp.cc,v 1.202 1998/03/06 05:43:36 kostas Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -46,6 +46,8 @@ enum {
     FTP_HTML_HEADER_SENT,
     FTP_BINARY,
     FTP_TRY_SLASH_HACK,
+    FTP_PUT,
+    FTP_PUT_MKDIR,
     FTP_LISTFORMAT_UNKNOWN
 };
 
@@ -66,8 +68,11 @@ typedef enum {
     SENT_NLST,
     SENT_REST,
     SENT_RETR,
+    SENT_STOR,
     SENT_QUIT,
-    READING_DATA
+    READING_DATA,
+    WRITING_DATA,
+    SENT_MKDIR
 } ftp_state_t;
 
 typedef struct _Ftpdata {
@@ -141,6 +146,8 @@ static void ftpAppendSuccessHeader(FtpStateData * ftpState);
 static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
 static STABH ftpAbort;
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
+static void ftpPutStart(FtpStateData *);
+static CWCB ftpPutTransferDone;
 
 /* State machine functions
  * send == state transition
@@ -180,7 +187,11 @@ static FTPSM ftpReadQuit;
 static FTPSM ftpFail;
 static FTPSM ftpDataTransferDone;
 static FTPSM ftpRestOrList;
-
+static FTPSM ftpSendStor;
+static FTPSM ftpReadStor;
+static FTPSM ftpSendReply;
+static FTPSM ftpTryMkdir;
+static FTPSM ftpReadMkdir;
 /************************************************
 ** State Machine Description (excluding hacks) **
 *************************************************
@@ -221,8 +232,11 @@ FTPSM *FTP_SM_FUNCS[] =
     ftpReadList,		/* SENT_NLST */
     ftpReadRest,
     ftpReadRetr,
+    ftpReadStor,
     ftpReadQuit,
-    ftpReadTransferDone
+    ftpReadTransferDone,
+    ftpSendReply,
+    ftpReadMkdir
 };
 
 static void
@@ -231,7 +245,7 @@ ftpStateFree(int fdnotused, void *data)
     FtpStateData *ftpState = data;
     if (ftpState == NULL)
 	return;
-    debug(9, 3) ("ftpStateFree: %s\n", storeUrl(ftpState->entry));
+    debug(9, 3) ("ftpStateFree: %d\n", storeUrl(ftpState->entry));
     storeUnregisterAbort(ftpState->entry);
     storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
@@ -735,8 +749,10 @@ ftpReadComplete(FtpStateData * ftpState)
     /* Connection closed; retrieval done. */
     if (EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
 	ftpListingFinish(ftpState);
-    storeTimestampsSet(ftpState->entry);
-    storeComplete(ftpState->entry);
+    if (!EBIT_TEST(ftpState->flags, FTP_PUT)) {
+    	storeTimestampsSet(ftpState->entry);
+    	storeComplete(ftpState->entry);
+    }
     /* expect the "transfer complete" message on the control socket */
     commSetSelect(ftpState->ctrl.fd,
 	COMM_SELECT_READ,
@@ -918,6 +934,8 @@ ftpStart(request_t * request, StoreEntry * entry)
     ftpState->data.fd = -1;
     EBIT_SET(ftpState->flags, FTP_PASV_SUPPORTED);
     EBIT_SET(ftpState->flags, FTP_REST_SUPPORTED);
+    if (ftpState->request->method == METHOD_PUT)
+    	EBIT_SET(ftpState->flags, FTP_PUT);
     if (!ftpCheckAuth(ftpState, request->headers)) {
 	/* This request is not fully authenticated */
 	if (request->port == 21) {
@@ -1166,6 +1184,7 @@ ftpReadControlReply(int fd, void *data)
     ftpState->ctrl.last_reply = (*W)->key;
     safe_free(*W);
     ftpState->ctrl.offset = 0;
+    debug(9,8)("ftpReadControlReply: state=%d\n",ftpState->state);
     FTP_SM_FUNCS[ftpState->state] (ftpState);
 }
 
@@ -1304,7 +1323,7 @@ static void
 ftpTraverseDirectory(FtpStateData * ftpState)
 {
     wordlist *w;
-    debug(9, 4) ("ftpTraverseDirectory\n");
+    debug(9, 4) ("ftpTraverseDirectory %s\n", ftpState->filepath);
 
     safe_free(ftpState->filepath);
     /* Done? */
@@ -1358,8 +1377,39 @@ ftpReadCwd(FtpStateData * ftpState)
 	ftpTraverseDirectory(ftpState);
     } else {
 	/* CWD FAILED */
-	ftpFail(ftpState);
+	if (!EBIT_TEST(ftpState->flags, FTP_PUT)) 
+		ftpFail(ftpState);
+	else
+		ftpTryMkdir(ftpState);
     }
+}
+
+static void
+ftpTryMkdir(FtpStateData *ftpState)
+{
+	char *path=ftpState->filepath;
+	debug(9,3)("ftpTryMkdir: with path=%s\n",path);
+    	snprintf(cbuf, 1024, "MKD %s\r\n", path);
+    	ftpWriteCommand(cbuf, ftpState);
+    	ftpState->state = SENT_MKDIR;
+}
+
+static void
+ftpReadMkdir(FtpStateData *ftpState)
+{
+	char *path=ftpState->filepath;
+    	int code = ftpState->ctrl.replycode;
+	
+	debug(9,3)("Here, with code %d\n",path,code);
+	if (code==257) { /* success */
+		ftpSendCwd(ftpState);	
+	} else if (code==550) { /* dir exists */
+		if (EBIT_TEST(ftpState->flags, FTP_PUT_MKDIR)) { 
+		  	EBIT_SET(ftpState->flags, FTP_PUT_MKDIR);
+			ftpSendCwd(ftpState);
+		} else 
+			ftpSendReply(ftpState);
+	} else ftpSendReply(ftpState);
 }
 
 static void
@@ -1659,8 +1709,12 @@ ftpAcceptDataConnection(int fd, void *data)
 static void
 ftpRestOrList(FtpStateData * ftpState)
 {
+
     debug(9, 3) ("This is ftpRestOrList\n");
-    if (ftpState->typecode == 'D') {
+    if (EBIT_TEST(ftpState->flags, FTP_PUT)) {
+        debug(9,3)("ftpRestOrList: Sending STOR request...\n");
+	ftpSendStor(ftpState);
+    } else if (ftpState->typecode == 'D') {
 	/* XXX This should NOT be here */
 	ftpSendNlst(ftpState);	/* sec 3.2.2 of RFC 1738 */
 	EBIT_SET(ftpState->flags, FTP_ISDIR);
@@ -1671,6 +1725,36 @@ ftpRestOrList(FtpStateData * ftpState)
 	ftpSendRest(ftpState);
     else
 	ftpSendRetr(ftpState);
+}
+
+static void
+ftpSendStor(FtpStateData * ftpState)
+{
+    assert(ftpState->filepath != NULL);
+    snprintf(cbuf, 1024, "STOR %s\r\n", ftpState->filepath);
+    ftpWriteCommand(cbuf, ftpState);
+    ftpState->state = SENT_STOR;
+}
+
+static void
+ftpReadStor(FtpStateData * ftpState)
+{
+    int code = ftpState->ctrl.replycode;
+    debug(9, 3) ("This is ftpReadStor\n");
+    if (code >= 100 && code < 200) {
+      ftpPutStart(ftpState);
+      debug(9, 3) ("ftpReadStor: writing data channel\n");
+      ftpState->state = WRITING_DATA;
+    }
+    else if (code==553) { /* directory does not exist, have to create, sigh */
+#if 0
+	ftpTraverseDirectory(ftpState);
+#endif
+	ftpSendReply(ftpState);
+    } else {
+      debug(9, 3) ("ftpReadStor: that's all folks\n");
+	ftpSendReply(ftpState);
+    }
 }
 
 static void
@@ -1916,6 +2000,62 @@ ftpFail(FtpStateData * ftpState)
     else
 	err->ftp.reply = ftpState->ctrl.last_reply;
     errorAppendEntry(ftpState->entry, err);
+    comm_close(ftpState->ctrl.fd);
+}
+
+static void
+ftpPutStart(FtpStateData * ftpState)
+{
+    debug(9, 3) ("ftpPutStart\n");
+    pumpStart(ftpState->data.fd, ftpState->entry , 
+		ftpState->request, ftpPutTransferDone, ftpState);
+}
+
+static void 
+ftpPutTransferDone(int fd, char *bufnotused, size_t size, int errflag, void *data)
+{
+    FtpStateData * ftpState=(FtpStateData *)data;
+    if (ftpState->data.fd >= 0) {
+        comm_close(ftpState->data.fd);
+        ftpState->data.fd = -1;
+    }
+    ftpReadComplete(ftpState);
+}
+
+static void
+ftpSendReply(FtpStateData * ftpState)
+{
+    ErrorState *err;
+    int code=ftpState->ctrl.replycode;
+    int http_code;
+    int err_code=ERR_NONE;
+    debug(9,5)("ftpSendReply for %x (%d)\n", ftpState,code);
+    if (cbdataValid(ftpState))
+    debug(9,5)("ftpSendReply: ftpState (%p) is valid!\n", ftpState);
+
+
+    if (code==226)  {
+        err_code= (ftpState->mdtm>0)?ERR_FTP_PUT_MODIFIED:ERR_FTP_PUT_CREATED;
+	http_code= (ftpState->mdtm>0)?HTTP_ACCEPTED:HTTP_CREATED;
+    } else {
+	err_code = ERR_FTP_PUT_ERROR;
+	http_code=HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    err = errorCon(err_code, http_code);
+    err->request = requestLink(ftpState->request);
+    if (ftpState->old_request)
+        err->ftp.request = ftpState->old_request;
+    else
+        err->ftp.request = ftpState->ctrl.last_command;
+    if (ftpState->old_reply)
+        err->ftp.reply = ftpState->old_reply;
+    else
+        err->ftp.reply = ftpState->ctrl.last_reply;
+
+    errorAppendEntry(ftpState->entry, err);
+
+    storeBufferFlush(ftpState->entry);
     comm_close(ftpState->ctrl.fd);
 }
 

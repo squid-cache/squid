@@ -3,7 +3,7 @@
 
 
 /*
- * $Id: client.cc,v 1.58 1998/03/05 00:42:48 wessels Exp $
+ * $Id: client.cc,v 1.59 1998/03/06 05:43:33 kostas Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -118,9 +118,12 @@ static int client_comm_connect(int, char *, u_short, struct timeval *);
 static void usage(const char *progname);
 static int Now(struct timeval *);
 static SIGHDLR catch;
+static SIGHDLR pipe_handler;
+static void set_our_signal();
 static int put_fd;
 static char *put_file = NULL;
 static struct stat p;
+int total_bytes=0;
 
 static void
 usage(const char *progname)
@@ -253,6 +256,7 @@ main(int argc, char *argv[])
 	opt_put = 1;
 	method = xstrdup("PUT");
 	put_fd = open(put_file, O_RDONLY);
+	set_our_signal();
 	if (put_fd < 0) {
 	    fprintf(stderr, "%s: can't open file (%s)\n", argv[0],
 		xstrerror());
@@ -341,16 +345,17 @@ main(int argc, char *argv[])
 	    int x;
 	    while ((x = read(put_fd, msg, BUFSIZ)) > 0) {
 		x = write(conn, msg, x);
+		total_bytes+=x;
 		if (x <= 0)
 		    break;
 	    }
-	    if (x != 0) {
+	    if (x != 0) 
 		fprintf(stderr, "client: ERROR: Cannot send file.\n");
-		exit(1);
-	    }
+	    fprintf(stderr, "TOTAL SENT: %d\n",total_bytes);
 	    close(put_fd);
 	}
 	/* Read the data */
+
 	while ((len = read(conn, buf, sizeof(buf))) > 0) {
 	    if (to_stdout)
 		fwrite(buf, len, 1, stdout);
@@ -438,4 +443,27 @@ catch(int sig)
 {
     interrupted = 1;
     fprintf(stderr, "Interrupted.\n");
+}
+void
+pipe_handler(int sig)
+{
+	fprintf(stderr,"SIGPIPE received.\n");
+}
+
+static void
+set_our_signal()
+{
+#if HAVE_SIGACTION
+    struct sigaction sa;
+    sa.sa_handler = pipe_handler;
+    sa.sa_flags = SA_RESTART;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIGPIPE, &sa, NULL) < 0) {
+	fprintf(stderr,"Cannot set PIPE signal.\n");
+	exit(-1);
+    }
+#else
+    signal(SIGPIPE, pipe_handler);
+#endif
+
 }
