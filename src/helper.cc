@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.41 2002/08/11 22:59:56 hno Exp $
+ * $Id: helper.cc,v 1.42 2002/08/14 07:46:43 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -536,6 +536,7 @@ helperStatefulShutdown(statefulhelper * hlp)
 {
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
+    int wfd;
     while (link) {
 	srv = link->data;
 	link = link->next;
@@ -566,8 +567,9 @@ helperStatefulShutdown(statefulhelper * hlp)
 	    continue;
 	}
 	srv->flags.closing = 1;
-	comm_close(srv->wfd);
+	wfd = srv->wfd;
 	srv->wfd = -1;
+	comm_close(wfd);
     }
 }
 
@@ -1051,8 +1053,9 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
 	    if (srv->flags.shutdown
 		&& srv->flags.reserved == S_HELPER_FREE
 		&& !srv->deferred_requests) {
-		comm_close(srv->wfd);
+		int wfd = srv->wfd;
 		srv->wfd = -1;
+		comm_close(wfd);
 	    } else {
 		if (srv->queue.head)
 		    helperStatefulServerKickQueue(srv);
