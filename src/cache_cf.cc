@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.331 1999/05/26 20:41:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.332 1999/05/27 02:42:31 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -805,8 +805,10 @@ parse_cachedir(cacheSwap * swap)
 	self_destruct();
     if (0 == strcasecmp(type_str, "ufs")) {
 	storeUfsDirParse(swap);
+#if USE_ASYNC_IO
     } else if (0 == strcasecmp(type_str, "asyncufs")) {
 	storeAufsDirParse(swap);
+#endif
     } else {
 	fatalf("Unknown cache_dir type '%s'\n", type_str);
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.64 1999/05/26 04:58:52 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.65 1999/05/27 02:42:32 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -47,7 +47,7 @@ storeCleanupDoubleCheck(const StoreEntry * e)
     int dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     if (Config.cacheSwap.swapDirs[dirn].type == SWAPDIR_UFS)
 	(void) 0;
-    if (Config.cacheSwap.swapDirs[dirn].type == SWAPDIR_UFS_ASYNC)
+    if (Config.cacheSwap.swapDirs[dirn].type == SWAPDIR_ASYNCUFS)
 	(void) 0;
     else
 	return 0;
