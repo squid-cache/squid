@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.171 1997/12/03 23:12:11 wessels Exp $
+ * $Id: client_side.cc,v 1.172 1997/12/04 00:07:33 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1527,7 +1527,6 @@ clientReadRequest(int fd, void *data)
     request_t *request = NULL;
     char *tmp;
     int size;
-    int len;
     method_t method;
     clientHttpRequest *http = NULL;
     clientHttpRequest **H = NULL;
@@ -1535,13 +1534,18 @@ clientReadRequest(int fd, void *data)
     size_t headers_sz;
     ErrorState *err = NULL;
     fde *F = &fd_table[fd];
-
-    len = conn->in.size - conn->in.offset - 1;
+    int len = conn->in.size - conn->in.offset - 1;
     debug(12, 4) ("clientReadRequest: FD %d: reading request...\n", fd);
     size = read(fd, conn->in.buf + conn->in.offset, len);
     fd_bytes(fd, size, FD_READ);
-    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, Config.Timeout.read);
-
+    /*
+     * Don't reset the timeout value here.  The timeout value will be
+     * set to Config.Timeout.request by httpAccept() and
+     * clientWriteComplete(), and should apply to the request as a
+     * whole, not individual read() calls.  Plus, it breaks our
+     * lame half-close detection
+     */
+    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
     if (size == 0) {
 	if (conn->chr == NULL) {
 	    /* no current or pending requests */
@@ -1553,7 +1557,7 @@ clientReadRequest(int fd, void *data)
 	EBIT_SET(F->flags, FD_SOCKET_EOF);
 	conn->defer.until = squid_curtime + 1;
 	conn->defer.n++;
-        fd_note(fd, "half-closed");
+	fd_note(fd, "half-closed");
 	return;
     } else if (size < 0) {
 	if (!ignoreErrno(errno)) {
@@ -1564,7 +1568,6 @@ clientReadRequest(int fd, void *data)
     }
     conn->in.offset += size;
     conn->in.buf[conn->in.offset] = '\0';	/* Terminate the string */
-
     while (conn->in.offset > 0) {
 	http = parseHttpRequest(conn,
 	    &method,
