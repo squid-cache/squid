@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.6 1998/03/11 22:18:43 rousskov Exp $
+ * $Id: HttpHdrCc.cc,v 1.7 1998/03/18 00:29:55 wessels Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -164,7 +164,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     int pcount = 0;
     assert(cc && p);
     if (cc->max_age >= 0) {
-	packerPrintf(p, "max-age=%d", (int)cc->max_age);
+	packerPrintf(p, "max-age=%d", (int) cc->max_age);
 	pcount++;
     }
     for (flag = 0; flag < CC_ENUM_END; flag++) {
