@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.173 1998/03/29 08:51:00 wessels Exp $
+ * $Id: ipcache.cc,v 1.174 1998/03/31 04:08:32 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -563,10 +563,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     ipcache_entry *i = NULL;
     dnsserver_t *dnsData = NULL;
     const ipcache_addrs *addrs = NULL;
-
-    if (!handler)
-	fatal_dump("ipcache_nbgethostbyname: NULL handler");
-
+    assert(handler != NULL);
     debug(14, 4) ("ipcache_nbgethostbyname: Name '%s'.\n", name);
     IpcacheStats.requests++;
 
