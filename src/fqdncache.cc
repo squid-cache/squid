@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.82 1998/02/19 23:09:50 wessels Exp $
+ * $Id: fqdncache.cc,v 1.83 1998/02/22 11:59:00 kostas Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -895,77 +895,85 @@ fqdncache_restart(void)
 }
 
 #ifdef SQUID_SNMP
-u_char *
-var_fqdn_entry(struct variable *vp, oid * name, int *length, int exact, int
-    *var_len,
-    SNMPWM ** write_method)
+
+int
+fqdn_getMax()
 {
-    static int current = 0;
-    static long long_return;
-    static char *cp = NULL;
-    static fqdncache_entry *fq;
-    static struct in_addr fqaddr;
-    int i;
-    oid newname[MAX_NAME_LEN];
-    int result;
-    static char snbuf[256];
+	int i=0;
+	fqdncache_entry *fq=NULL;
 
-    debug(49, 3) ("snmp: var_fqdn_entry called with magic=%d \n", vp->magic);
-    debug(49, 3) ("snmp: var_fqdn_entry with (%d,%d)\n", *length, *var_len);
-    sprint_objid(snbuf, name, *length);
-    debug(49, 3) ("snmp: var_fqdn_entry oid: %s\n", snbuf);
+  	fq=(fqdncache_entry *) hash_first(fqdn_table);
+	if (fq!=NULL) {
+        	i=1;
+        	while ((fq=(fqdncache_entry *)hash_next(fqdn_table))) i++;
+  	}
+	return i;
+} 
 
-    memcpy((char *) newname, (char *) vp->name, (int) vp->namelen * sizeof(oid));
-    newname[vp->namelen] = (oid) 1;
+variable_list *snmp_fqdncacheFn(variable_list *Var, long *ErrP)
+{
+  variable_list *Answer;
+  static fqdncache_entry *fq=NULL;
+  static struct in_addr fqaddr;
+  int cnt=0;
 
-    debug(49, 5) ("snmp var_fqdn_entry: hey, here we are.\n");
+  debug(49,5)("snmp_fqdncacheFn: Processing request with %d.%d!\n",Var->name[11],Var->name[12]);
 
-    fq = NULL;
-    i = 0;
-    while (fq != NULL) {
-	newname[vp->namelen] = i + 1;
-	result = snmpCompare(name, *length, newname, (int) vp->namelen + 1);
-	if ((exact && (result == 0)) || (!exact && (result < 0))) {
-	    debug(49, 5) ("snmp var_fqdn_entry: yup, a match.\n");
-	    break;
-	}
-	i++;
-	fq = NULL;
-    }
-    if (fq == NULL)
+  cnt=Var->name[12];
+
+  fq=(fqdncache_entry *) hash_first(fqdn_table);
+  while (fq && --cnt) 
+	fq = (fqdncache_entry *) hash_next(fqdn_table);
+  if (fq==NULL || cnt!=0) {
+	*ErrP = SNMP_ERR_NOSUCHNAME;
 	return NULL;
+  }	
+  Answer = snmp_var_new(Var->name, Var->name_length);
+  *ErrP = SNMP_ERR_NOERROR;
 
-    debug(49, 5) ("hey, matched.\n");
-    memcpy((char *) name, (char *) newname, ((int) vp->namelen + 1) * sizeof(oid));
-    *length = vp->namelen + 1;
-    *write_method = 0;
-    *var_len = sizeof(long);	/* default length */
-    sprint_objid(snbuf, newname, *length);
-    debug(49, 5) ("snmp var_fqdn_entry  request for %s (%d)\n", snbuf, current);
-
-    switch (vp->magic) {
+  switch(Var->name[11]) {
     case NET_FQDN_ID:
-	long_return = (long) i;
-	return (u_char *) & long_return;
+	Answer->type = ASN_INTEGER;
+	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val_len = sizeof(long);
+        *(Answer->val.integer)= Var->name[12];
+	break;
     case NET_FQDN_NAME:
-	cp = fq->names[0];
-	*var_len = strlen(cp);
-	return (u_char *) cp;
+        Answer->type = SMI_STRING;
+	Answer->val_len=strlen(fq->names[0]);
+	Answer->val.string=xstrdup((char *)fq->names[0]);
+	break;
     case NET_FQDN_IP:
-	safe_inet_addr(fq->name, &fqaddr);
-	long_return = (long) fqaddr.s_addr;
-	return (u_char *) & long_return;
+	Answer->type = SMI_IPADDRESS;
+	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val_len = sizeof(long);
+        safe_inet_addr(fq->name, &fqaddr);
+        *(Answer->val.integer)= (long) fqaddr.s_addr;
+	break;
     case NET_FQDN_LASTREF:
-	long_return = fq->lastref;
-	return (u_char *) & long_return;
+	Answer->type = SMI_TIMETICKS;
+	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val_len = sizeof(long);
+        *(Answer->val.integer)= fq->lastref;
+	break;
     case NET_FQDN_EXPIRES:
-	long_return = fq->expires;
-	return (u_char *) & long_return;
+	Answer->type = SMI_TIMETICKS;
+	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val_len = sizeof(long);
+        *(Answer->val.integer)= fq->expires;
+	break;
     case NET_FQDN_STATE:
-	long_return = fq->status;
-	return (u_char *) & long_return;
+	Answer->type = ASN_INTEGER;
+	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val_len = sizeof(long);
+        *(Answer->val.integer)= fq->status;
+	break;
     default:
-	return NULL;
-    }
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        snmp_var_free(Answer);
+        xfree(Answer->val.integer);
+        return(NULL);
+  }
+  return Answer;
 }
 #endif

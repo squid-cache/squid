@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.66 1998/02/19 23:09:56 wessels Exp $
+ * $Id: net_db.cc,v 1.67 1998/02/22 11:59:33 kostas Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -699,76 +699,97 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
 }
 
 #ifdef SQUID_SNMP
-u_char *
-var_netdb_entry(struct variable *vp, oid * name, int *length, int exact, int *var_len, SNMPWM ** write_method)
+int netdb_getMax()
 {
-    oid newname[MAX_NAME_LEN];
-    static char snbuf[256];
-    static netdbEntry *n = NULL;
-    static long long_return;
-    int cnt = 1;
-    int result;
+  int i=0;
+#if USE_ICMP
+  static netdbEntry *n=NULL;
 
-    debug(49, 3) ("snmp: var_netdb_entry called with magic=%d\n", vp->magic);
-    debug(49, 3) ("snmp: var_netdb_entry with (%d,%d)\n", *length, *var_len);
-    sprint_objid(snbuf, name, *length);
-    debug(49, 3) ("snmp: var_netdb_entry oid: %s\n", snbuf);
-
-    memcpy((char *) newname, (char *) vp->name, (int) vp->namelen * sizeof(oid));
-    newname[vp->namelen] = (oid) 1;
-
-    debug(49, 5) ("snmp var_netdb_entry: hey, here we are.\n");
-#ifdef USE_ICMP
-    n = (netdbEntry *) hash_first(addr_table);
-    while (n != NULL) {
-	newname[vp->namelen] = cnt++;
-	result = snmpCompare(name, *length, newname, (int) vp->namelen + 1);
-	if ((exact && (result == 0)) || (!exact && (result < 0))) {
-	    debug(49, 5) ("snmp var_netdb_entry: yup, a match.\n");
-	    break;
-	}
-	n = (netdbEntry *) hash_next(addr_table);
-    }
+  n = (netdbEntry *) hash_first(addr_table);
+  if (n!=NULL) {
+	i=1;
+	while ((n=(netdbEntry *)hash_next(addr_table))) i++;
+  }
 #endif
-    if (n == NULL)
-	return NULL;
+  return i;
+}
 
-    debug(49, 5) ("hey, matched.\n");
-    memcpy((char *) name, (char *) newname, ((int) vp->namelen + 1) * sizeof(oid));
-    *length = vp->namelen + 1;
-    *write_method = 0;
-    *var_len = sizeof(long);	/* default length */
-    sprint_objid(snbuf, newname, *length);
-    debug(49, 5) ("snmp var_netdb_entry with peertable request for %s (%d)\n", snbuf, newname[10]);
+variable_list *snmp_netdbFn(variable_list *Var, long *ErrP)
+{
+  variable_list *Answer;
+  int cnt;
+  static netdbEntry *n = NULL;
+#if USE_ICMP
+  struct in_addr addr;
+#endif
+  debug(49,5)("snmp_netdbFn: Processing request with %d.%d!\n",Var->name[10],Var->name[11]);
 
-    switch (vp->magic) {
+  Answer = snmp_var_new(Var->name, Var->name_length);
+  *ErrP = SNMP_ERR_NOERROR;
+
+  cnt=Var->name[11];
+#if USE_ICMP
+  n = (netdbEntry *) hash_first(addr_table);
+  if (n==NULL) debug(49,6)("NO FUCKING ENTRIES HERE :((( - cnt=%d\n",cnt);
+  while (n != NULL)  
+	if (--cnt!=0){ 
+		 debug(49,6)("hmmmmm... getting another one while cnt=%d\n",
+				cnt);
+		 n = (netdbEntry *) hash_next(addr_table); 
+	}
+	else break;
+#endif
+  if (n==NULL) {
+	debug(49,6)("snmp_netdbFn: No more entries.\n");
+       *ErrP = SNMP_ERR_NOSUCHNAME;
+        snmp_var_free(Answer);
+        return(NULL);
+  }
+#if USE_ICMP
+  Answer->val.integer = xmalloc(Answer->val_len);
+  Answer->val_len = sizeof(long);
+  switch(Var->name[10]) {
     case NETDB_ID:
-	long_return = (long) cnt - 1;
-	return (u_char *) & long_return;
+	Answer->type = SMI_INTEGER;
+        *(Answer->val.integer)= (long) cnt - 1;
+	break;
     case NETDB_NET:
-	long_return = (long) n->network;
-	return (u_char *) & long_return;
+	Answer->type = SMI_IPADDRESS;
+	safe_inet_addr(n->network, &addr);
+        *(Answer->val.integer)= addr.s_addr;
+	break;
     case NETDB_PING_S:
-	long_return = (long) n->pings_sent;
-	return (u_char *) & long_return;
+	Answer->type = SMI_COUNTER32;
+        *(Answer->val.integer) = (long) n->pings_sent;
+	break;
     case NETDB_PING_R:
-	long_return = (long) n->pings_recv;
-	return (u_char *) & long_return;
+	Answer->type = SMI_COUNTER32;
+        *(Answer->val.integer) = (long) n->pings_recv;
+	break;
     case NETDB_HOPS:
-	long_return = (long) n->hops;
-	return (u_char *) & long_return;
+	Answer->type = SMI_COUNTER32;
+        *(Answer->val.integer) = (long) n->hops;
+	break;
     case NETDB_RTT:
-	long_return = (long) n->rtt;
-	return (u_char *) & long_return;
+	Answer->type = SMI_TIMETICKS;
+        *(Answer->val.integer) = (long) n->rtt;
+	break;
     case NETDB_PINGTIME:
-	long_return = (long) n->next_ping_time;
-	return (u_char *) & long_return;
+	Answer->type = SMI_TIMETICKS;
+        *(Answer->val.integer) = (long) n->next_ping_time;
+	break;
     case NETDB_LASTUSE:
-	long_return = (long) n->last_use_time;
-	return (u_char *) & long_return;
+	Answer->type = SMI_TIMETICKS;
+        *(Answer->val.integer) = (long) n->last_use_time;
+	break;
     default:
-	return NULL;
-    }
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        snmp_var_free(Answer);
+	xfree(Answer->val.integer);
+        return(NULL);
+  }
+#endif
+  return Answer;
 }
 #endif
 

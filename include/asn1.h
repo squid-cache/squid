@@ -1,48 +1,46 @@
+#ifndef _SNMP_ASN1_H_
+#define _SNMP_ASN1_H_
+
 /*
  * Definitions for Abstract Syntax Notation One, ASN.1
  * As defined in ISO/IS 8824 and ISO/IS 8825
  *
- *
  */
-/***********************************************************
-	Copyright 1988, 1989 by Carnegie Mellon University
-
-                      All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
-provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
-supporting documentation, and that the name of CMU not be
-used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
-
-CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
-ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
-CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
-ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
-SOFTWARE.
-******************************************************************/
-
-#ifndef ASN1_H
-#define ASN1_H
-
-/* assume someone else includes "config.h" for us */
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+/**********************************************************************
+ *
+ *           Copyright 1997 by Carnegie Mellon University
+ * 
+ *                       All Rights Reserved
+ * 
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and that
+ * both that copyright notice and this permission notice appear in
+ * supporting documentation, and that the name of CMU not be
+ * used in advertising or publicity pertaining to distribution of the
+ * software without specific, written prior permission.
+ * 
+ * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+ * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ * SOFTWARE.
+ * 
+ * $Id: asn1.h,v 1.7 1998/02/22 11:51:06 kostas Exp $
+ * 
+ **********************************************************************/
 
 #ifndef EIGHTBIT_SUBIDS
-typedef u_long oid;
+typedef u_int	oid;
 #define MAX_SUBID   0xFFFFFFFF
 #else
-typedef u_char oid;
+typedef u_char	oid;
 #define MAX_SUBID   0xFF
 #endif
 
-#define MAX_OID_LEN	    64	/* max subid's in an oid */
+#define MAX_OID_LEN	    128	/* max subid's in an oid, per SNMP spec. */
 
 #define ASN_BOOLEAN	    (0x01)
 #define ASN_INTEGER	    (0x02)
@@ -68,113 +66,34 @@ typedef u_char oid;
 #define IS_CONSTRUCTOR(byte)	((byte) & ASN_CONSTRUCTOR)
 #define IS_EXTENSION_ID(byte)	(((byte) & ASN_EXTENSION_ID) == ASN_EXTENSION_ID)
 
-/* 
- * internal 64 bit representation:
- */
-struct counter64 {
-    u_num32 high;
-    u_num32 low;
-};
-
-extern u_char *asn_parse_int(u_char * data,
-    int *datalength,
-    u_char * type,
-    long *intp,
-    int intsize);
-
-extern u_char *asn_build_int(u_char * data,
-    int *datalength,
-    u_char type,
-    long *intp,
-    int intsize);
-
-extern u_char *asn_parse_unsigned_int(u_char * data,
-    int *datalength,
-    u_char * type,
-    u_long * intp,
-    int intsize);
-
-extern u_char *asn_build_unsigned_int(u_char * data,
-    int *datalength,
-    u_char type,
-    u_long * intp,
-    int intsize);
-
-extern u_char *asn_parse_string(u_char * data,
-    int *datalength,
-    u_char * type,
-    u_char * string,
-    int *len);
-
-extern u_char *asn_build_string(u_char * data,
-    int *datalength,
-    u_char type,
-    u_char * str,
-    int len);
-
-extern u_char *asn_parse_header(u_char * data,
-    int *datalength,
-    u_char * type);
-
-extern u_char *asn_build_header(u_char * data,
-    int *datalength,
-    u_char type,
-    int len);
-
-extern u_char *asn_build_sequence(u_char * data,
-    int *datalength,
-    u_char type,
-    int len);
-
-extern u_char *asn_parse_length(u_char * data,
-    u_long * eln);
-
-extern u_char *asn_build_length(u_char * data,
-    int *datalength,
-    int len);
-
-extern u_char *asn_parse_objid(
-    u_char * data,
-    int *datalength,
-    u_char * type,
-    oid * objid,
-    int *objidlength);
-
-extern u_char *asn_build_objid(u_char * data,
-    int *datalength,
-    u_char type,
-    oid * objid,
-    int objidlength);
-
-extern u_char *asn_parse_null(u_char * data,
-    int *datalength,
-    u_char * type);
-
-extern u_char *asn_build_null(u_char * data,
-    int *datalength,
-    u_char type);
-extern u_char *asn_parse_bitstring(u_char * data,
-    int *datalength,
-    u_char * type,
-    u_char * str,
-    int *len);
-
-extern u_char *asn_build_bitstring(u_char * data,
-    int *datalength,
-    u_char type,
-    u_char * str,
-    int len);
-
-extern u_char *asn_parse_unsigned_int64(u_char * data,
-    int *datalength,
-    u_char * type,
-    struct counter64 *cp,
-    int cp_size);
-
-extern u_char *asn_build_unsigned_int64(u_char * data,
-    int *datalength,
-    u_char type,
-    struct counter64 *cp,
-    int cp_size);
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+u_char	*asn_build_header(u_char *, int *, u_char, int);
+u_char	*asn_parse_int(u_char *, int *, u_char *, int *, int);
+u_char	*asn_parse_unsigned_int(u_char *, int *, u_char *, u_int *, int);
+u_char	*asn_build_int(u_char *, int *, u_char, int *, int);
+u_char	*asn_build_unsigned_int(u_char *, int *, u_char, u_int *, int);
+u_char	*asn_parse_string(u_char *, int *, u_char *, u_char *, int *);
+u_char	*asn_build_string(u_char *, int *, u_char, u_char *, int);
+u_char	*asn_parse_header(u_char *, int *, u_char *);
+u_char	*asn_build_header_with_truth(u_char *, int *, u_char, int, int);
+
+u_char	*asn_parse_length(u_char *, u_int *);
+u_char	*asn_build_length(u_char *, int *, int, int);
+u_char	*asn_parse_objid(u_char *, int *, u_char *, oid *, int *);
+u_char	*asn_build_objid(u_char *, int *, u_char, oid *, int);
+u_char	*asn_parse_null(u_char *, int *, u_char *);
+u_char	*asn_build_null(u_char *, int *, u_char);
+
+u_char *asn_parse_bitstring(u_char *, int *, u_char *, u_char *, int *);
+u_char *asn_build_bitstring(u_char *, int *, u_char, u_char *, int);
+
+u_char *asn_build_exception(u_char *, int *, u_char);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _SNMP_ASN1_H_ */

@@ -1,0 +1,230 @@
+Release Notes, Version 1.8
+
+Ryan Troll <ryan@andrew.cmu.edu>
+
+Major Changes:
+
+Portability / Bug Fixes
+#######################
+
+Incorporated patches from Par Westesson <pw@cbc.chalmers.se>.  Par's
+description of the patches sent to me:
+
+- The SNMPv2 error code definitions in asn1.c have been fixed.  [ They
+  were previously listed as Hex values, instead of decimal. ]
+
+- The function snmp_var_EncodeVarBind in snmp_vars.c has been modified
+  to be able to encode the exception values noSuchObject,
+  noSuchInstance and endOfMibView. It does so using the definitions
+  added in snmp_vars.h and the function asn_build_exception added in
+  asn1.c.
+
+  Note that we haven't included support for decoding these exceptions
+  (since we're using the library in an agent rather than a manager).
+  Including support for this would however only require some small
+  changes to the function snmp_var_DecodeVarBind and the addition of
+  an asn_parse_exception function.
+
+  We also haven't made any changes to the print_type function in
+  mib.c, so these values can't be printed. Otherwise, no other changes
+  to the library should be necessary because of the inclusion of the
+  support for the exceptions.
+
+- All calls to the macro ASN_PARSE_ERROR which increments the counter
+  snmpInASNParseErrs have been removed from the functions that encode
+  SNMP packets since it should only be used when decoding. This
+  affects the files snmp_vars.c, snmp_msg.c and snmp_pdu.c.
+
+Incorporated patches from Sebastien Rosset
+(sebastien.rosset@cstelecom.cie-signaux.fr):
+
+- Patches that augment Par's changes for noSuchObject, etc.
+
+- Fixed a bug when trying to deal with Bulk requests
+
+
+
+MAX_OID_LEN is now correctly set to 128 subids.
+
+Removed bcmp, bzero calls, for Solaris 2.4.
+
+Parser now handles description fields that begin with a quote
+immediately followed by a word, instead of failing.  (Thanks to Simon
+Burr <simonb@uk.uu.net>)
+
+
+----------------------------------------------------------------------
+
+Release Notes, Version 1.7
+October 14, 1997
+Ryan Troll <ryan@andrew.cmu.edu>
+
+Major changes:
+
+Portability / Bug Fixes
+#######################
+
+Incorporated patches for compilation under Visual C++ 4.0 / WinNT.
+(Thanks to Steven Chew <smchew@ibm.net>)
+
+It is now possible to compile the Irix version with '-n32', '-32', or
+'-o32' and have it installed into the appropriate place with the
+"--with-mips-abi=[n32,o32,32]" flag to configure.  (Thanks to Rob
+Earhart <earhart+@cmu.edu>)
+
+Incorporated patch for socket options under Linux.  Now sending UDP
+packets to remote hosts that are unavailable should not hurt anything
+else.  (Thanks to Chaskiel Grundman <cg2v+@andrew.cmu.edu>)
+
+Other
+#####
+
+The included MIB is now correct, and expanded.
+
+----------------------------------------------------------------------
+
+Release Notes, Version 1.6
+May 27, 1997
+Ryan Troll <ryan@andrew.cmu.edu>
+
+Major changes:
+
+Portability / Bug Fixes
+#######################
+
+Correct use of int/long, so that machines using 64bit longs may use
+the library.
+
+Miniclient function declarations (and others) are now wrapped within
+the appropriate c++ wrappers.
+
+Added timer defines, to allow the library to compile with the Cygnus
+Win32 compiler.
+
+Now handles returns strings that are (supposedly) allocated yet
+contain no information.
+
+Fixed a few calls to asn functions that were passing sizeof(Pointer)
+rather than sizeof(what pointer points to), which weren't caught when
+these were the same.  (But, on 64 bit machines...)
+
+
+Informs
+#######
+
+The built-in snmp PDU/Session management now correctly handles SNMP
+Informs.  
+
+
+Parser
+######
+
+The parser now accepts two additional pieces of information in a mib:
+DESCRIPTION and INDEX.  It also handles "ACCESS" and "MAX-ACCESS".
+With these additions, SNMPv2 SMI MIBs can be parsed with minimal
+changes.  (Specificly, with the removal of text conventions, etc.)
+
+The included CMU MIB should be a good example.
+
+
+Other
+#####
+
+Changed some symbol names to static, to help reduce symbol name
+conflict with applications.
+
+Corrected incorrect backwards-compatibility defines.
+
+----------------------------------------------------------------------
+
+Release Notes, Version 1.5
+March 31, 1997
+Ryan Troll <ryan@andrew.cmu.edu>
+
+
+
+This SNMP library is based on the SNMP1.1b library that has been
+available via ftp.net.cmu.edu since September of 1991.  Many changes
+have been made to increase it's performance, clean up memory leaks,
+and prepare it for use with SNMPv2 managers and agents.
+
+
+This is the last release of the CMU SNMP Library, aside from bug fixes
+and portability patches. Future SNMP development will be in a new
+direction. The new CMU SNMP library will be fully object oriented;
+compatible with SNMPv1, SNMPv2 Classic, and possibly others; and
+handle SMIv2 MIBs with the use of a MIB Compiler (IE: SMICng). 
+
+The major changes since CMU SNMP 1.1b are:
+
+Autoconf
+########
+
+The SNMP Library now uses GNU Autoconf to determine system specific
+information. 
+
+Trap and PDU Type Definitions
+#############################
+
+All well-known traps and PDUs are now defined snmp_pdu.h, and are of
+the format SNMP_TRAP_${TrapType} and SNMP_PDU_${PDUType}.  All defines
+previously used to specify trap and pdu type should still work. 
+
+Installation Directories
+########################
+
+The library is now installed in $(exec_prefix)/lib, and the include
+files are installed in $(exec_prefix)/include.
+
+Includes
+########
+
+Applications now only need to include <snmp/snmp.h>, instead of
+all the separate headers required previously.
+
+MiniClient
+##########
+
+This library now contains a mini-client.  The miniclient only
+implements the Get, GetNext, and Set functions.  By using the
+miniclient, SNMP capable applications may be quickly generated.  (We
+use the miniclient for most of our internal monitoring stuff.)
+
+Optimizations
+#############
+
+Various parts of the library have been optimized.  The most
+significant optimization adds 6 bytes to every outgoing packet the
+length identifiers for the Message, PDU, and Variable List SEQUENCEs
+are now all encoded in three bytes instead of 1.  However, this
+reduces the number of iterations over the variable list during
+encoding from 4 to 1.  There is also no delayed range shifting of the
+entire encoded stream to insert a better length.
+
+Purify
+######
+
+All of the SNMP Applications we've compiled using this library have
+been purified, and all errors / complaints / warnings have been taken
+care of.  Based on this, we believe the library is free of memory
+leaks
+
+Trap Generation
+###############
+
+There are no longer routines for trap generation within this library.
+This may be done by the application.
+
+V1 - V2 Coexistance
+###################
+
+There are two functions (snmp_coexist_V2toV1 and snmp_coexist_V1toV2)
+that should provide V1-V2 coexistance per RFC 1908.  However, these
+have not been tested.
+
+Version
+#######
+
+The snmp_session structure now contains a variable called "Version".
+This variable specifies the default version of all incoming / outgoing
+data for this session.

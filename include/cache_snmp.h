@@ -2,125 +2,126 @@
 #ifndef CACHE_SNMP_H
 #define CACHE_SNMP_H
 
-/* mib stuff here */
+#include "snmp.h"
+#include "snmp_impl.h"
+#include "asn1.h"
+#include "snmp_api.h"
+#include "snmp_client.h"
+#include "snmp_vars.h"
+#include "snmp_oidlist.h"
+#include "mib.h"
 
-struct subtree {
-    oid name[16];		/* objid prefix of subtree */
-    u_char namelen;		/* number of subid's in name above */
-    struct variable *variables;	/* pointer to variables array */
-    int variables_len;		/* number of entries in above array */
-    int variables_width;	/* sizeof each variable entry */
-    struct subtree *next;
-};
+/* debugging redirected to squid (DW approach) */
 
-#if 1
-#define variable2 variable
-#define variable4 variable
-#define variable5 variable
-#define variable7 variable
-#define variable13 variable
+#ifdef __STDC__
+void (*snmplib_debug) (int,...); 
 #else
-/**
- * This is a new variable structure that doesn't have as much memory
- * tied up in the object identifier.  It's elements have also been re-arranged
- * so that the name field can be variable length.  Any number of these
- * structures can be created with lengths tailor made to a particular
- * application.  The first 5 elements of the structure must remain constant.
- */
-struct variable2 {
-    u_char magic;		/* passed to function as a hint */
-    char type;			/* type of variable */
-    u_short acl;		/* access control list for variable */
-    u_char *(*findVar) ();	/* function that finds variable */
-    u_char namelen;		/* length of name below */
-    oid name[2];		/* object identifier of variable */
-};
-
-struct variable4 {
-    u_char magic;		/* passed to function as a hint */
-    char type;			/* type of variable */
-    u_short acl;		/* access control list for variable */
-    u_char *(*findVar) ();	/* function that finds variable */
-    u_char namelen;		/* length of name below */
-    oid name[4];		/* object identifier of variable */
-};
-
-struct variable7 {
-    u_char magic;		/* passed to function as a hint */
-    char type;			/* type of variable */
-    u_short acl;		/* access control list for variable */
-    u_char *(*findVar) ();	/* function that finds variable */
-    u_char namelen;		/* length of name below */
-    oid name[7];		/* object identifier of variable */
-};
-struct variable13 {
-    u_char magic;		/* passed to function as a hint */
-    char type;			/* type of variable */
-    u_short acl;		/* access control list for variable */
-    u_char *(*findVar) ();	/* function that finds variable */
-    u_char namelen;		/* length of name below */
-    oid name[13];		/* object identifier of variable */
-};
-
+void (*snmplib_debug) (va_alist));
 #endif
 
+/* mib stuff here */
 
 /* MIB definitions
  * We start from the SQUIDMIB as the root of the subtree
  *
  * we are under : iso.org.dod.internet.experimental.nsfnet.squid
- *
+ *                 1   3   6     1          3         25     17
  */
 
+#define SQUIDMIB 1, 3, 6, 1, 3, 25, 17     /* length is 7 */
+#define LEN_SQUIDMIB 7
 
-#define SQUIDMIB 1, 3, 6, 1, 3, 25, 17
-
+#define SYSMIB 1, 3, 6, 1, 2, 1, 1	/* basic system vars */
+#define LEN_SYSMIB 7
 
 /* basic groups under .squid */
 
-#define SQ_SYS SQUIDMIB, 1
+#define SQ_SYS  SQUIDMIB, 1		/* length is 8 */
+#define LEN_SQ_SYS LEN_SQUIDMIB+1
 #define SQ_CONF SQUIDMIB, 2
-#define SQ_PRF SQUIDMIB, 3
-#define SQ_ACC SQUIDMIB, 6
-#define SQ_SEC SQUIDMIB, 5
-#define SQ_NET SQUIDMIB, 4
+#define LEN_SQ_CONF LEN_SQUIDMIB+1
+#define SQ_PRF  SQUIDMIB, 3
+#define LEN_SQ_PRF LEN_SQUIDMIB+1
+#define SQ_NET  SQUIDMIB, 4
+#define LEN_SQ_NET LEN_SQUIDMIB+1
+#define SQ_SEC  SQUIDMIB, 5
+#define LEN_SQ_SEC LEN_SQUIDMIB+1
+#define SQ_ACC  SQUIDMIB, 6
+#define LEN_SQ_ACC LEN_SQUIDMIB+1
+
+enum {	/* basic system mib info group */
+SYSMIB_START,
+VERSION_DESCR,
+VERSION_ID,
+UPTIME,
+SYSCONTACT,
+SYSYSNAME,
+SYSLOCATION,
+SYSSERVICES,
+SYSORLASTCHANGE,
+SYSMIB_END
+};
 
 /* cacheSystem group */
 
 enum {
+    SYS_START,
     SYSVMSIZ,
-    SYSSTOR
+    SYSSTOR,
+    SYSFDTBL,
+    SYS_END
 };
 
 /* cacheConfig group */
 
 enum {
+    CONF_START,
     CONF_ADMIN,
     CONF_UPTIME,
+    CONF_WAIS_RHOST,
+    CONF_WAIS_RPORT,
+    CONF_LOG_LVL,
+    CONF_PTBL,
+    CONF_STORAGE,
+    CONF_TIO,
+    CONF_END
+};
+
+enum {
+    CONF_ST_START,
     CONF_ST_MMAXSZ,
     CONF_ST_MHIWM,
     CONF_ST_MLOWM,
     CONF_ST_SWMAXSZ,
     CONF_ST_SWHIWM,
     CONF_ST_SWLOWM,
-    CONF_WAIS_RHOST,
-    CONF_WAIS_RPORT,
+    CONF_ST_END
+};
+
+enum {
+    CONF_TIO_START,
     CONF_TIO_RD,
     CONF_TIO_CON,
     CONF_TIO_REQ,
-    CONF_LOG_LVL,
+    CONF_TIO_END
+};
+
+enum {
+    CONF_PTBL_START,
     CONF_PTBL_ID,
     CONF_PTBL_NAME,
     CONF_PTBL_IP,
     CONF_PTBL_HTTP,
     CONF_PTBL_ICP,
     CONF_PTBL_TYPE,
-    CONF_PTBL_STATE
+    CONF_PTBL_STATE,
+    CONF_PTBL_END
 };
 
 /* cacheNetwork group */
 
 enum {
+    NETDB_START,
     NETDB_ID,
     NETDB_NET,
     NETDB_PING_S,
@@ -129,45 +130,85 @@ enum {
     NETDB_RTT,
     NETDB_PINGTIME,
     NETDB_LASTUSE,
-    NETDB_LINKCOUNT,
+    NETDB_END
+};
+
+enum {
+    NET_IPC_START,
     NET_IPC_ID,
     NET_IPC_NAME,
     NET_IPC_IP,
     NET_IPC_STATE,
+    NET_IPC_END
+};
+
+enum {
+    NET_DNS_START,
+    NET_DNS_IPCACHE,
+    NET_DNS_FQDNCACHE,
+    NET_DNS_END
+};
+
+
+enum {
+    NET_FQDN_START,
     NET_FQDN_ID,
     NET_FQDN_NAME,
     NET_FQDN_IP,
     NET_FQDN_LASTREF,
     NET_FQDN_EXPIRES,
     NET_FQDN_STATE,
-    NET_TCPCONNS,
-    NET_UDPCONNS,
-    NET_INTHRPUT,
-    NET_OUTHRPUT
+    NET_FQDN_END
 };
 
 enum {
+    NET_START,
+    NET_NETDBTBL,
+    NET_DNS,
+    NET_NETSTAT,
+    NET_END
+};
+
+enum {
+    NETSTAT_START,
+    NETSTAT_TCPCONNS,
+    NETSTAT_UDPCONNS,
+    NETSTAT_INTHRPUT,
+    NETSTAT_OUTHRPUT
+};
+
+enum { 
+    PERF_START,
+    PERF_SYS,
+    PERF_PROTO,
+    PERF_PEER,
+    PERF_END
+};
+
+enum {
+    PERF_SYS_START,
     PERF_SYS_PF,
     PERF_SYS_NUMR,
     PERF_SYS_DEFR,
     PERF_SYS_MEMUSAGE,
     PERF_SYS_CPUUSAGE,
     PERF_SYS_MAXRESSZ,
-    PERF_SYS_CURMEMSZ,
+    PERF_SYS_NUMOBJCNT,
     PERF_SYS_CURLRUEXP,
     PERF_SYS_CURUNLREQ,
     PERF_SYS_CURUNUSED_FD,
     PERF_SYS_CURRESERVED_FD,
-    PERF_SYS_NUMOBJCNT,
-    PERF_PROTOSTAT_ID,
-    PERF_PROTOSTAT_KBMAX,
-    PERF_PROTOSTAT_KBMIN,
-    PERF_PROTOSTAT_KBAVG,
-    PERF_PROTOSTAT_KBNOW,
-    PERF_PROTOSTAT_HIT,
-    PERF_PROTOSTAT_MISS,
-    PERF_PROTOSTAT_REFCOUNT,
-    PERF_PROTOSTAT_TRNFRB,
+    PERF_SYS_END
+};
+
+enum {
+    PERF_PROTOSTAT_START,
+    PERF_PROTOSTAT_AGGR,
+    PERF_PROTOSTAT_END
+};
+
+enum {
+    PERF_PROTOSTAT_AGGR_START,
     PERF_PROTOSTAT_AGGR_HTTP_REQ,
     PERF_PROTOSTAT_AGGR_HTTP_HITS,
     PERF_PROTOSTAT_AGGR_HTTP_ERRORS,
@@ -178,13 +219,29 @@ enum {
     PERF_PROTOSTAT_AGGR_KBYTES_IN,
     PERF_PROTOSTAT_AGGR_KBYTES_OUT,
     PERF_PROTOSTAT_AGGR_CURSWAP,
-    PERF_SYS_FD_NUMBER,
-    PERF_SYS_FD_TYPE,
-    PERF_SYS_FD_TOUT,
-    PERF_SYS_FD_NREAD,
-    PERF_SYS_FD_NWRITE,
-    PERF_SYS_FD_ADDR,
-    PERF_SYS_FD_NAME,
+    PERF_PROTOSTAT_AGGR_HTTP_SVC_5,
+    PERF_PROTOSTAT_AGGR_HTTP_SVC_60,
+    PERF_PROTOSTAT_AGGR_ICP_SVC_5,
+    PERF_PROTOSTAT_AGGR_ICP_SVC_60,
+    PERF_PROTOSTAT_AGGR_DNS_SVC_5,
+    PERF_PROTOSTAT_AGGR_DNS_SVC_60,
+    PERF_PROTOSTAT_AGGR_END
+};
+
+enum {
+    SYS_FD_START,
+    SYS_FD_NUMBER,
+    SYS_FD_TYPE,
+    SYS_FD_TOUT,
+    SYS_FD_NREAD,
+    SYS_FD_NWRITE,
+    SYS_FD_ADDR,
+    SYS_FD_NAME,
+    SYS_FD_END
+};
+
+enum {
+    PERF_PEERSTAT_START,
     PERF_PEERSTAT_ID,
     PERF_PEERSTAT_SENT,
     PERF_PEERSTAT_PACKED,
@@ -192,8 +249,30 @@ enum {
     PERF_PEERSTAT_RTT,
     PERF_PEERSTAT_IGN,
     PERF_PEERSTAT_KEEPAL_S,
-    PERF_PEERSTAT_KEEPAL_R
+    PERF_PEERSTAT_KEEPAL_R,
+    PERF_PEERSTAT_END
 };
+
+/* First, we have a huge array of MIBs this agent knows about */
+ 
+struct MIBListEntry {
+  oid            Name[9]; /* Change as appropriate */
+  long           NameLen;
+  oid_GetFn     *GetFn;
+  oid_GetNextFn *GetNextFn;
+};
+
+variable_list *snmp_basicFn(variable_list *, long *);
+variable_list *snmp_confPtblFn(variable_list *, long *);
+variable_list *snmp_confFn(variable_list *, long *);
+variable_list *snmp_sysFn(variable_list *, long *);
+variable_list *snmp_prfSysFn(variable_list *, long *);
+variable_list *snmp_prfProtoFn(variable_list *, long *);
+variable_list *snmp_prfPeerFn(variable_list *, long *);
+variable_list *snmp_netdbFn(variable_list *, long *);
+variable_list *snmp_dnsFn(variable_list *, long *);
+variable_list *snmp_ipcacheFn(variable_list *, long *);
+variable_list *snmp_fqdncacheFn(variable_list *, long *);
 
 #endif
 #endif
