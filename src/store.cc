@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.359 1997/12/30 23:09:45 wessels Exp $
+ * $Id: store.cc,v 1.360 1997/12/31 05:53:19 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1945,6 +1945,7 @@ storeWriteCleanLogs(int reopen)
     char **new;
     char **cln;
     int dirn;
+    dlink_node *m;
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeWriteCleanLogs: Operation aborted.\n");
@@ -1978,7 +1979,8 @@ storeWriteCleanLogs(int reopen)
 #endif
     }
     line = xcalloc(1, 16384);
-    for (e = storeGetFirst(); e; e = storeGetNext()) {
+    for (m = all_list.head; m; m = m->next) {
+	e = m->data;
 	if (e->swap_file_number < 0)
 	    continue;
 	if (e->swap_status != SWAPOUT_DONE)
