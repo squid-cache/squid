@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.313 2003/01/18 02:27:14 hno Exp $
+dnl  $Id: configure.in,v 1.314 2003/01/18 02:30:05 hno Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 3.0-DEVEL)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.313 $)dnl
+AC_REVISION($Revision: 1.314 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -902,20 +902,17 @@ AC_ARG_ENABLE(truncate,
 ])
 
 dnl Disable hostname checks
-enable_hostname_checks=1
+enable_hostname_checks=0
 AC_ARG_ENABLE(hostname_checks,
-[  --disable-hostname-checks
-                          Squid by default rejects any host names with
+[  --enable-hostname-checks
+                          Tells Squid to rejects any host names with
 			  odd characters in their name to conform with
-			  internet standards. If you disagree with this
-			  you may use this switch to turn off any such
-			  checks, provided that the resolver used by
-			  Squid does not reject such host names.. This
-			  may be required to participate in testbeds for
-			  international domain names.],
-[ if test "$enableval" = "no"; then
+			  internet standards. This was the default in
+			  prior Squid versions, but since Squid-3 Squid
+			  no longer tries to police the use of DNS],
+[ if test "$enableval" = "yes"; then
     echo "Disabling hostname sanity checks"
-    enable_hostname_checks=0
+    enable_hostname_checks=1
   fi
 ])
 if test "$enable_hostname_checks" = 1; then
