@@ -172,7 +172,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
-    } else if (e->store_status == STORE_PENDING && sc->seen_offset == mem->inmem_hi) {
+    } else if (e->store_status == STORE_PENDING && sc->seen_offset >= mem->inmem_hi) {
 	/* client has already seen this, wait for more */
 	debug(20, 3) ("storeClientCopy2: Waiting for more\n");
     } else if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
