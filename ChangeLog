@@ -5,6 +5,7 @@ Changes to squid-1.1.beta24 ():
 	- Added 'passthrough_proxy' support.
 	- Added 'default' option for cache_host line.
 	- Upgraded autoconf to 2.10.
+	- Strip Proxy-Connection request headers.
 
 Changes to squid-1.1.beta23 (November 25, 1996):
 
