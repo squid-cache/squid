@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.74 1996/10/28 07:44:24 wessels Exp $
+ * $Id: neighbors.cc,v 1.75 1996/10/30 09:28:02 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -697,8 +697,10 @@ neighborsUdpAck(int fd, char *url, icp_common_t * header, struct sockaddr_in *fr
 		debug(15, 0, "95%% of replies from '%s' are UDP_DENIED\n", e->host);
 		debug(15, 0, "Disabling '%s', please check your configuration.\n", e->host);
 		neighborRemove(e);
+		e = NULL;
+	    } else {
+	        neighborCountIgnored(e, opcode);
 	    }
-	    neighborCountIgnored(e, opcode);
 	}
     } else if (opcode == ICP_OP_RELOADING) {
 	if (e)
