@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: diskd.cc,v 1.2 2004/12/21 15:47:33 robertc Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -370,8 +370,9 @@ main(int argc, char *argv[])
         alarm(1);
         memset(&rmsg, '\0', sizeof(rmsg));
         DEBUG(2)
-        fprintf(stderr, "msgrcv: %ld, %p, %u, %ld, %d \n",
-                rmsgid, &rmsg, diomsg::msg_snd_rcv_sz, 0, 0);
+        std::cerr << "msgrcv: " << rmsgid << ", "
+        << &rmsg << ", " << diomsg::msg_snd_rcv_sz
+        << ", " << 0 << ", " << 0 << std::endl;
         rlen = msgrcv(rmsgid, &rmsg, diomsg::msg_snd_rcv_sz, 0, 0);
 
         if (rlen < 0) {
