@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.149 1996/11/05 17:08:29 wessels Exp $
+ * $Id: store.cc,v 1.150 1996/11/06 08:14:50 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1169,9 +1169,9 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	    mem->swapin_complete_data = NULL;
 	    handler(0, data);
 	}
-	if (BIT_TEST(e->flag, RELEASE_REQUEST))
+	if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
 	    storeRelease(e);
-	else {
+	} else if ((mem = e->mem_obj)) {
 	    requestUnlink(mem->request);
 	    mem->request = NULL;
 	}
@@ -2825,8 +2825,10 @@ storeDescribeStatus(const StoreEntry * e)
 void
 storeCloseLog(void)
 {
-    file_close(swaplog_fd);
-    file_close(storelog_fd);
+    if (swaplog_fd >= 0)
+	    file_close(swaplog_fd);
+    if (storelog_fd >= 0)
+    	file_close(storelog_fd);
 }
 
 void
