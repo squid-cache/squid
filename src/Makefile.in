@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.146 1998/04/08 22:48:54 rousskov Exp $
+#  $Id: Makefile.in,v 1.147 1998/04/23 22:30:19 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -182,7 +182,7 @@ all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 
 $(OBJS): $(top_srcdir)/include/version.h
 
-$(SNMP_OBJS): $(top_srcdir)/snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
+$(SNMP_OBJS): ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
 $(SQUID_EXE): $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
