@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.28 2001/04/20 21:26:22 hno Exp $
+ * $Id: MemBuf.cc,v 1.29 2002/02/13 19:34:02 hno Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -131,7 +131,7 @@ memBufInit(MemBuf * mb, mb_size_t szInit, mb_size_t szMax)
     mb->size = 0;
     mb->max_capacity = szMax;
     mb->capacity = 0;
-    mb->freefunc = NULL;
+    mb->stolen = 0;
 
     memBufGrow(mb, szInit);
 }
@@ -145,10 +145,9 @@ memBufClean(MemBuf * mb)
 {
     assert(mb);
     assert(mb->buf);
-    assert(mb->freefunc);	/* not frozen */
+    assert(!mb->stolen);	/* not frozen */
 
-    (*mb->freefunc) (mb->buf);	/* free */
-    mb->freefunc = NULL;	/* freeze */
+    memFreeBuf(mb->capacity, mb->buf);
     mb->buf = NULL;
     mb->size = mb->capacity = 0;
 }
@@ -163,7 +162,7 @@ memBufReset(MemBuf * mb)
     if (memBufIsNull(mb)) {
 	memBufDefInit(mb);
     } else {
-	assert(mb->freefunc);	/* not frozen */
+	assert(!mb->stolen);	/* not frozen */
 	/* reset */
 	memset(mb->buf, 0, mb->capacity);
 	mb->size = 0;
@@ -188,7 +187,7 @@ memBufAppend(MemBuf * mb, const char *buf, mb_size_t sz)
 {
     assert(mb && buf && sz >= 0);
     assert(mb->buf);
-    assert(mb->freefunc);	/* not frozen */
+    assert(!mb->stolen);	/* not frozen */
 
     if (sz > 0) {
 	if (mb->size + sz > mb->capacity)
@@ -231,7 +230,7 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
     int sz = 0;
     assert(mb && fmt);
     assert(mb->buf);
-    assert(mb->freefunc);	/* not frozen */
+    assert(!mb->stolen);	/* not frozen */
     /* assert in Grow should quit first, but we do not want to have a scary infinite loop */
     while (mb->capacity <= mb->max_capacity) {
 	mb_size_t free_space = mb->capacity - mb->size;
@@ -269,10 +268,10 @@ memBufFreeFunc(MemBuf * mb)
     FREE *ff;
     assert(mb);
     assert(mb->buf);
-    assert(mb->freefunc);	/* not frozen */
+    assert(!mb->stolen);	/* not frozen */
 
-    ff = mb->freefunc;
-    mb->freefunc = NULL;	/* freeze */
+    ff = memFreeBufFunc((size_t)mb->capacity);
+    mb->stolen = 1;	/* freeze */
     return ff;
 }
 
@@ -280,79 +279,34 @@ memBufFreeFunc(MemBuf * mb)
 static void
 memBufGrow(MemBuf * mb, mb_size_t min_cap)
 {
-    mb_size_t new_cap;
-    MemBuf old_mb;
+    size_t new_cap;
+    size_t buf_cap;
 
     assert(mb);
+    assert(!mb->stolen);
     assert(mb->capacity < min_cap);
 
     /* determine next capacity */
-    new_cap = mb->capacity;
-    if (new_cap > 0)
-	while (new_cap < min_cap)
-	    new_cap *= 2;	/* double */
-    else
-	new_cap = min_cap;
+    if (min_cap > 64*1024) {
+	new_cap = 64*1024;
+	while (new_cap < (size_t)min_cap)
+	    new_cap += 64*1024;	/* increase in reasonable steps */
+    } else {
+	new_cap = (size_t)min_cap;
+    }
 
     /* last chance to fit before we assert(!overflow) */
-    if (new_cap > mb->max_capacity)
-	new_cap = mb->max_capacity;
+    if (new_cap > (size_t)mb->max_capacity)
+	new_cap = (size_t)mb->max_capacity;
 
-    assert(new_cap <= mb->max_capacity);	/* no overflow */
-    assert(new_cap > mb->capacity);	/* progress */
+    assert(new_cap <= (size_t)mb->max_capacity);	/* no overflow */
+    assert(new_cap > (size_t)mb->capacity);	/* progress */
 
-    old_mb = *mb;
-
-    /* allocate new memory */
-    switch (new_cap) {
-    case 2048:
-	mb->buf = memAllocate(MEM_2K_BUF);
-	mb->freefunc = &memFree2K;
-	break;
-    case 4096:
-	mb->buf = memAllocate(MEM_4K_BUF);
-	mb->freefunc = &memFree4K;
-	break;
-    case 8192:
-	mb->buf = memAllocate(MEM_8K_BUF);
-	mb->freefunc = &memFree8K;
-	break;
-    case 16384:
-	mb->buf = memAllocate(MEM_16K_BUF);
-	mb->freefunc = &memFree16K;
-	break;
-    case 32768:
-	mb->buf = memAllocate(MEM_32K_BUF);
-	mb->freefunc = &memFree32K;
-	break;
-    case 65536:
-	mb->buf = memAllocate(MEM_64K_BUF);
-	mb->freefunc = &memFree64K;
-	break;
-    default:
-	/* recycle if old buffer was not "pool"ed */
-	if (old_mb.freefunc == &xfree) {
-	    mb->buf = xrealloc(old_mb.buf, new_cap);
-	    old_mb.buf = NULL;
-	    old_mb.freefunc = NULL;
-	    /* init tail, just in case */
-	    memset(mb->buf + mb->size, 0, new_cap - mb->size);
-	} else {
-	    mb->buf = xcalloc(1, new_cap);
-	    mb->freefunc = &xfree;
-	}
-    }
-
-    /* copy and free old buffer if needed */
-    if (old_mb.buf && old_mb.freefunc) {
-	xmemcpy(mb->buf, old_mb.buf, old_mb.size);
-	(*old_mb.freefunc) (old_mb.buf);
-    } else {
-	assert(!old_mb.buf && !old_mb.freefunc);
-    }
+    buf_cap = (size_t)mb->capacity;
+    mb->buf = memReallocBuf(mb->buf, new_cap, &buf_cap);
 
     /* done */
-    mb->capacity = new_cap;
+    mb->capacity = (mb_size_t)buf_cap;
 }
 
 
