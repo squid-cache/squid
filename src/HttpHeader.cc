@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.89 2003/03/10 04:56:36 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.90 2003/07/10 17:48:04 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -608,7 +608,7 @@ httpHeaderDelById(HttpHeader * hdr, http_hdr_type id)
     debug(55, 8) ("%p del-by-id %d\n", hdr, id);
     assert(hdr);
     assert_eid(id);
-    assert_eid(id != HDR_OTHER);	/* does not make sense */
+    assert(id != HDR_OTHER);		/* does not make sense */
 
     if (!CBIT_TEST(hdr->mask, id))
         return 0;
