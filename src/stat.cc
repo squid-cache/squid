@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.43 1996/07/20 03:16:55 wessels Exp $
+ * $Id: stat.cc,v 1.44 1996/07/22 16:40:29 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -312,8 +312,10 @@ void stat_get(obj, req, sentry)
 	stat_objects_get(obj, sentry, 0);
     } else if (strcmp(req, "vm_objects") == 0) {
 	stat_objects_get(obj, sentry, 1);
-    } else if (strcmp(req, "general") == 0) {
+    } else if (strcmp(req, "ipcache") == 0) {
 	stat_ipcache_get(sentry);
+    } else if (strcmp(req, "fqdncache") == 0) {
+	fqdnStats(sentry);
     } else if (strcmp(req, "redirector") == 0) {
 	redirectStats(sentry);
     } else if (strcmp(req, "utilization") == 0) {
@@ -594,6 +596,7 @@ int memoryAccounted()
     return (int)
 	meta_data.store_entries * sizeof(StoreEntry) +
 	meta_data.ipcache_count * sizeof(ipcache_entry) +
+	meta_data.fqdncache_count * sizeof(fqdncache_entry) +
 	meta_data.hash_links * sizeof(hash_link) +
 	sm_stats.total_pages_allocated * sm_stats.page_size +
 	disk_stats.total_pages_allocated * disk_stats.page_size +
@@ -766,6 +769,12 @@ void info_get(obj, sentry)
 	meta_data.ipcache_count,
 	(int) sizeof(ipcache_entry),
 	(int) (meta_data.ipcache_count * sizeof(ipcache_entry) >> 10));
+
+    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
+	"FQDNCacheEntry",
+	meta_data.fqdncache_count,
+	(int) sizeof(fqdncache_entry),
+	(int) (meta_data.fqdncache_count * sizeof(fqdncache_entry) >> 10));
 
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
 	"Hash link",

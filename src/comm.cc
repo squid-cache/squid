@@ -1,6 +1,7 @@
 
+
 /*
- * $Id: comm.cc,v 1.43 1996/07/20 04:22:23 wessels Exp $
+ * $Id: comm.cc,v 1.44 1996/07/22 16:40:22 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -684,7 +685,7 @@ int comm_select(sec, failtime)
 	if (shutdown_pending || reread_pending) {
 	    serverConnectionsClose();
 	    ftpServerClose();
-	    ipcacheShutdownServers();
+	    dnsShutdownServers();
 	    redirectShutdownServers();
 	    setSocketShutdownLifetimes();
 	}

@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.21 1996/07/20 04:22:21 wessels Exp $
+ * $Id: acl.cc,v 1.22 1996/07/22 16:40:19 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -46,7 +46,9 @@ static int aclMatchInteger _PARAMS((intlist * data, int i));
 static int aclMatchIp _PARAMS((struct _acl_ip_data * data, struct in_addr c));
 static int aclMatchRegex _PARAMS((relist * data, char *word));
 static int aclMatchTime _PARAMS((struct _acl_time_data * data, time_t when));
+#ifdef UNUSED_CODE
 static int aclMatchEndOfWord _PARAMS((wordlist * data, char *word));
+#endif
 static intlist *aclParseIntlist _PARAMS((void));
 static struct _acl_ip_data *aclParseIpList _PARAMS((void));
 static intlist *aclParseMethodList _PARAMS((void));
@@ -54,6 +56,7 @@ static intlist *aclParseProtoList _PARAMS((void));
 static struct _relist *aclParseRegexList _PARAMS((void));
 static struct _acl_time_data *aclParseTimeSpec _PARAMS((void));
 static wordlist *aclParseWordList _PARAMS((void));
+static wordlist *aclParseDomainList _PARAMS((void));
 static squid_acl aclType _PARAMS((char *s));
 
 static squid_acl aclType(s)
@@ -65,6 +68,10 @@ static squid_acl aclType(s)
 	return ACL_DST_IP;
     if (!strcmp(s, "domain"))
 	return ACL_DST_DOMAIN;
+    if (!strcmp(s, "dstdomain"))
+	return ACL_DST_DOMAIN;
+    if (!strcmp(s, "srcdomain"))
+	return ACL_SRC_DOMAIN;
     if (!strcmp(s, "time"))
 	return ACL_TIME;
     if (!strcmp(s, "pattern"))
@@ -367,6 +374,21 @@ static wordlist *aclParseWordList()
     return head;
 }
 
+static wordlist *aclParseDomainList()
+{
+    wordlist *head = NULL;
+    wordlist **Tail = &head;
+    wordlist *q = NULL;
+    char *t = NULL;
+    while ((t = strtok(NULL, w_space))) {
+	Tolower(t);
+	q = xcalloc(1, sizeof(wordlist));
+	q->key = xstrdup(t);
+	*(Tail) = q;
+	Tail = &q->next;
+    }
+    return head;
+}
 
 
 void aclParseAclLine()
@@ -405,8 +427,9 @@ void aclParseAclLine()
     case ACL_DST_IP:
 	A->data = (void *) aclParseIpList();
 	break;
+    case ACL_SRC_DOMAIN:
     case ACL_DST_DOMAIN:
-	A->data = (void *) aclParseWordList();
+	A->data = (void *) aclParseDomainList();
 	break;
     case ACL_TIME:
 	A->data = (void *) aclParseTimeSpec();
@@ -556,7 +579,6 @@ static int aclMatchWord(data, word)
     }
     return 0;
 }
-#endif
 
 static int aclMatchEndOfWord(data, word)
      wordlist *data;
@@ -571,6 +593,23 @@ static int aclMatchEndOfWord(data, word)
 	if ((offset = strlen(word) - strlen(data->key)) < 0)
 	    continue;
 	if (strcasecmp(word + offset, data->key) == 0)
+	    return 1;
+    }
+    return 0;
+}
+#endif
+
+static int aclMatchDomainList(data, host)
+     wordlist *data;
+     char *host;
+{
+    int offset;
+    if (host == NULL)
+	return 0;
+    debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
+    for (; data; data = data->next) {
+	debug(28, 3, "aclMatchDomainList: looking for '%s'\n", data->key);
+	if (matchDomainName(data->key, host))
 	    return 1;
     }
     return 0;
@@ -631,6 +670,7 @@ int aclMatchAcl(acl, checklist)
 {
     request_t *r = checklist->request;
     struct hostent *hp = NULL;
+    char *fqdn = NULL;
     int k;
     if (!acl)
 	return 0;
@@ -643,7 +683,8 @@ int aclMatchAcl(acl, checklist)
 	if ((hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS)) == NULL) {
 	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, r->host);
-	    return 0;		/* cant check, return no match */
+	    checklist->need |= (1 << ACL_DST_IP);
+	    return 0;
 	}
 	for (k = 0; *(hp->h_addr_list + k); k++) {
 	    xmemcpy(&checklist->dst_addr.s_addr,
@@ -655,8 +696,17 @@ int aclMatchAcl(acl, checklist)
 	return 0;
 	/* NOTREACHED */
     case ACL_DST_DOMAIN:
-	/* XXX This probably needs to use matchDomainName() */
-	return aclMatchEndOfWord(acl->data, r->host);
+	return aclMatchDomainList(acl->data, r->host);
+	/* NOTREACHED */
+    case ACL_SRC_DOMAIN:
+	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
+	if (fqdn == NULL) {
+	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+		acl->name, inet_ntoa(checklist->src_addr));
+	    checklist->need |= (1 << ACL_SRC_DOMAIN);
+	    return 0;
+	}
+	return aclMatchDomainList(acl->data, fqdn);
 	/* NOTREACHED */
     case ACL_TIME:
 	return aclMatchTime(acl->data, squid_curtime);
@@ -690,8 +740,9 @@ static int aclMatchAclList(list, checklist)
      struct _acl_list *list;
      aclCheck_t *checklist;
 {
-    debug(28, 3, "aclMatchAclList: list=%p  op=%d\n", list, list->op);
     while (list) {
+	debug(28, 3, "aclMatchAclList: checking %s%s\n",
+	    list->op ? "" : "!", list->acl->name);
 	if (aclMatchAcl(list->acl, checklist) != list->op) {
 	    debug(28, 3, "aclMatchAclList: returning 0\n");
 	    return 0;
