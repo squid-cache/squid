@@ -183,7 +183,7 @@ fetch_credentials(ntlm_authenticate * auth, int auth_length)
 char *
 ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 {
-    int rv, retries = 0;
+    int rv;
     char pass[25];
     char *domain = credentials;
     char *user;
