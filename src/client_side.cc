@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.634 2003/03/15 04:17:39 robertc Exp $
+ * $Id: client_side.cc,v 1.635 2003/04/06 08:23:10 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -142,7 +142,25 @@ static int clientIsContentLengthValid(request_t * r);
 static bool okToAccept();
 static int clientIsRequestBodyValid(int bodyLength);
 static int clientIsRequestBodyTooLargeForPolicy(size_t bodyLength);
-static void clientProcessBody(ConnStateData * conn);
+/* convenience class while splitting up body handling */
+/* temporary existence only - on stack use expected */
+
+class ClientBody
+{
+
+public:
+    ClientBody (ConnStateData *);
+    void process();
+    void preProcessing();
+    void processBuffer();
+
+private:
+    ConnStateData *conn;
+    char *buf;
+    CBCB *callback;
+    request_t *request;
+};
+
 static void clientUpdateStatHistCounters(log_type logType, int svc_time);
 static void clientUpdateStatCounters(log_type logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
@@ -2032,7 +2050,7 @@ clientAfterReadingRequests(int fd, ConnStateData *conn, int do_next_read)
         if (conn->in.notYetUsed != conn->body.size_left) {
             /* != 0 when no request body */
             /* Partial request received. Abort client connection! */
-            debug(33, 3) ("clientReadRequest: FD %d aborted, partial request\n",+                         fd);
+            debug(33, 3) ("clientAfterReadingRequests: FD %d aborted, partial request\n",+                         fd);
             comm_close(fd);
             return;
         }
@@ -2054,7 +2072,7 @@ clientProcessRequest(ConnStateData *conn, ClientSocketContext *context, method_t
 
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
-        debug(33, 1) ("clientReadRequest: Invalid Request\n");
+        debug(33, 1) ("clientProcessRequest: Invalid Request\n");
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL,
@@ -2189,9 +2207,9 @@ connOkToAddRequest(ConnStateData *conn)
     int result = conn->getConcurrentRequestCount() < (Config.onoff.pipeline_prefetch ? 2 : 1);
 
     if (!result) {
-        debug(33, 3) ("clientReadRequest: FD %d max concurrent requests reached\n",
+        debug(33, 3) ("connOkToAddRequest: FD %d max concurrent requests reached\n",
                       conn->fd);
-        debug(33, 5) ("clientReadRequest: FD %d defering new request until one is done\n",
+        debug(33, 5) ("connOkToAddRequest: FD %d defering new request until one is done\n",
                       conn->fd);
     }
 
@@ -2261,8 +2279,10 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 
 
     /* Process request body if any */
-    if (conn->in.notYetUsed > 0 && conn->body.callback != NULL)
-        clientProcessBody(conn);
+    if (conn->in.notYetUsed > 0 && conn->body.callback != NULL) {
+        ClientBody body(conn);
+        body.process();
+    }
 
     /* Process next request */
     if (conn->getConcurrentRequestCount() == 0)
@@ -2353,79 +2373,96 @@ clientReadBody(request_t * request, char *buf, size_t size, CBCB * callback,
     conn->body.buf = buf;
     conn->body.bufsize = size;
     conn->body.request = requestLink(request);
-    clientProcessBody(conn);
+    ClientBody body (conn);
+    body.process();
+}
+
+ClientBody::ClientBody(ConnStateData *aConn) : conn(aConn), buf (NULL), callback(NULL), request(NULL)
+{}
+
+void
+ClientBody::preProcessing()
+{
+    callback = conn->body.callback;
+    request = conn->body.request;
+    /* Note: request is null while eating "aborted" transfers */
+    debug(33, 2) ("clientBody::process: start fd=%d body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
+                  conn->fd, (unsigned long int) conn->body.size_left,
+                  (unsigned long int) conn->in.notYetUsed, callback, request);
 }
 
 /* Called by clientReadRequest to process body content */
-static void
-clientProcessBody(ConnStateData * conn)
+void
+ClientBody::process()
 {
-    size_t size;
-    char *buf = conn->body.buf;
-    void *cbdata = conn->body.cbdata;
-    CBCB *callback = conn->body.callback;
-    request_t *request = conn->body.request;
-    /* Note: request is null while eating "aborted" transfers */
-    debug(33, 2) ("clientProcessBody: start fd=%d body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
-                  conn->fd, (unsigned long int) conn->body.size_left,
-                  (unsigned long int) conn->in.notYetUsed, callback, request);
+    preProcessing();
 
-    if (conn->in.notYetUsed) {
-        /* Some sanity checks... */
-        assert(conn->body.size_left > 0);
-        assert(conn->in.notYetUsed > 0);
-        assert(callback != NULL);
-        assert(buf != NULL);
-        /* How much do we have to process? */
-        size = conn->in.notYetUsed;
+    if (conn->in.notYetUsed)
+        processBuffer();
+    else
+        conn->readSomeData();
+}
 
-        if (size > conn->body.size_left)	/* only process the body part */
-            size = conn->body.size_left;
+void
+ClientBody::processBuffer()
+{
+    /* Some sanity checks... */
+    assert(conn->body.size_left > 0);
+    assert(conn->in.notYetUsed > 0);
+    assert(callback != NULL);
+    buf = conn->body.buf;
+    assert(buf != NULL);
+    /* How much do we have to process? */
+    size_t size = conn->in.notYetUsed;
 
-        if (size > conn->body.bufsize)	/* don't copy more than requested */
-            size = conn->body.bufsize;
+    if (size > conn->body.size_left)	/* only process the body part */
+        size = conn->body.size_left;
 
-        xmemcpy(buf, conn->in.buf, size);
+    if (size > conn->body.bufsize)	/* don't copy more than requested */
+        size = conn->body.bufsize;
 
-        conn->body.size_left -= size;
+    xmemcpy(buf, conn->in.buf, size);
 
-        /* Move any remaining data */
-        conn->in.notYetUsed -= size;
+    conn->body.size_left -= size;
 
-        if (conn->in.notYetUsed > 0)
-            xmemmove(conn->in.buf, conn->in.buf + size, conn->in.notYetUsed);
+    /* Move any remaining data */
+    conn->in.notYetUsed -= size;
 
-        /* Remove request link if this is the last part of the body, as
-         * clientReadRequest automatically continues to process next request */
-        if (conn->body.size_left <= 0 && request != NULL)
-            request->body_connection = NULL;
+    if (conn->in.notYetUsed > 0)
+        xmemmove(conn->in.buf, conn->in.buf + size, conn->in.notYetUsed);
 
-        /* Remove clientReadBody arguments (the call is completed) */
+    /* Remove request link if this is the last part of the body, as
+     * clientReadRequest automatically continues to process next request */
+    if (conn->body.size_left <= 0 && request != NULL)
+        request->body_connection = NULL;
+
+    /* Remove clientReadBody arguments (the call is completed) */
+    conn->body.request = NULL;
+
+    conn->body.callback = NULL;
+
+    conn->body.buf = NULL;
+
+    conn->body.bufsize = 0;
+
+    /* Remember that we have touched the body, not restartable */
+    if (request != NULL) {
+        request->flags.body_sent = 1;
         conn->body.request = NULL;
-
-        conn->body.callback = NULL;
-
-        conn->body.buf = NULL;
-
-        conn->body.bufsize = 0;
-
-        /* Remember that we have touched the body, not restartable */
-        if (request != NULL) {
-            request->flags.body_sent = 1;
-            conn->body.request = NULL;
-        }
-
-        /* Invoke callback function */
-        callback(buf, size, cbdata);
-
-        if (request != NULL) {
-            requestUnlink(request);	/* Linked in clientReadBody */
-        }
-
-        debug(33, 2) ("clientProcessBody: end fd=%d size=%lu body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
-                      conn->fd, (unsigned long int)size, (unsigned long int) conn->body.size_left,
-                      (unsigned long) conn->in.notYetUsed, callback, request);
     }
+
+    /* Invoke callback function */
+    void *cbdata = conn->body.cbdata;
+
+    callback(buf, size, cbdata);
+
+    if (request != NULL) {
+        requestUnlink(request);	/* Linked in clientReadBody */
+    }
+
+    debug(33, 2) ("ClientBody::process: end fd=%d size=%lu body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
+                  conn->fd, (unsigned long int)size, (unsigned long int) conn->body.size_left,
+                  (unsigned long) conn->in.notYetUsed, callback, request);
 }
 
 /* A dummy handler that throws away a request-body */
@@ -2475,7 +2512,7 @@ clientAbortBody(request_t * request)
     }
 
     clientReadBodyAbortHandler(NULL, -1, conn);	/* Install abort handler */
-    /* clientProcessBody() */
+    /* ClientBody::process() */
     return 1;			/* Aborted */
 }
 
