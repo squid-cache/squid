@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.333 2000/06/27 22:06:04 hno Exp $
+ * $Id: stat.cc,v 1.334 2000/09/05 19:40:18 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -908,7 +908,7 @@ statAvgTick(void *notused)
 	NCountHourHist++;
     }
     if (Config.warnings.high_rptm > 0) {
-	int i = (int) statMedianSvc(1, MEDIAN_HTTP);
+	int i = (int) statMedianSvc(5, MEDIAN_HTTP);
 	if (Config.warnings.high_rptm < i)
 	    debug(18, 0) ("WARNING: Median response time is %d milliseconds\n", i);
     }
