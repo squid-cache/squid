@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.87 1997/02/27 02:57:04 wessels Exp $
+ * $Id: acl.cc,v 1.88 1997/02/28 21:33:34 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1145,10 +1145,10 @@ aclCheckFast(const struct _acl_access *A, aclCheck_t * checklist)
 {
     int allow = 0;
     while (A) {
-        allow = A->allow;
-        if (aclMatchAclList(A->acl_list, checklist))
-            return allow;
-        A = A->next;
+	allow = A->allow;
+	if (aclMatchAclList(A->acl_list, checklist))
+	    return allow;
+	A = A->next;
     }
     return !allow;
 }
@@ -1164,38 +1164,38 @@ aclCheck(aclCheck_t * checklist)
 	debug(28, 3, "aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
 	match = aclMatchAclList(A->acl_list, checklist);
-        if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEED) {
-            checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
-            ipcache_nbgethostbyname(checklist->request->host,
-                -1,
-                aclLookupDstIPDone,
-                checklist);
-            return;
-        } else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEED) {
-            checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
-            fqdncache_nbgethostbyaddr(checklist->src_addr,
-                -1,
-                aclLookupSrcFQDNDone,
-                checklist);
-            return;
-        } else if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEED) {
-            if ((ia = ipcacheCheckNumeric(checklist->request->host)) != NULL) {
-                checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
-                fqdncache_nbgethostbyaddr(ia->in_addrs[0],
-                    -1,
-                    aclLookupDstFQDNDone,
-                    checklist);
+	if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEED) {
+	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
+	    ipcache_nbgethostbyname(checklist->request->host,
+		-1,
+		aclLookupDstIPDone,
+		checklist);
+	    return;
+	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEED) {
+	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
+	    fqdncache_nbgethostbyaddr(checklist->src_addr,
+		-1,
+		aclLookupSrcFQDNDone,
+		checklist);
+	    return;
+	} else if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEED) {
+	    if ((ia = ipcacheCheckNumeric(checklist->request->host)) != NULL) {
+		checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
+		fqdncache_nbgethostbyaddr(ia->in_addrs[0],
+		    -1,
+		    aclLookupDstFQDNDone,
+		    checklist);
 	    } else {
-                checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
+		checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
 	    }
-            return;
-        }
-	if (match) {
-	    debug(28, 3, "aclCheck: match found, returning %d\n", allow);
-    	    aclCheckCallback(checklist, !allow);
 	    return;
 	}
-	checklist->access_list  = A->next;
+	if (match) {
+	    debug(28, 3, "aclCheck: match found, returning %d\n", allow);
+	    aclCheckCallback(checklist, allow);
+	    return;
+	}
+	checklist->access_list = A->next;
     }
     aclCheckCallback(checklist, !allow);
 }
@@ -1204,55 +1204,56 @@ aclCheck(aclCheck_t * checklist)
 static void
 aclCheckCallback(aclCheck_t * checklist, int answer)
 {
-	checklist->callback(answer, checklist->callback_data);
-	requestUnlink(checklist->request);
-	xfree(checklist);
+    debug(28, 3, "aclCheckCallback: answer=%d\n", answer);
+    checklist->callback(answer, checklist->callback_data);
+    requestUnlink(checklist->request);
+    xfree(checklist);
 }
 
 static void
 aclLookupDstIPDone(int fd, const ipcache_addrs * ia, void *data)
 {
-	aclCheck_t * checklist = data;
-	checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
-	aclCheck(checklist);
+    aclCheck_t *checklist = data;
+    checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
+    aclCheck(checklist);
 }
 
 static void
 aclLookupSrcFQDNDone(int fd, const char *fqdn, void *data)
 {
-	aclCheck_t * checklist = data;
-	checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
-	aclCheck(checklist);
+    aclCheck_t *checklist = data;
+    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
+    aclCheck(checklist);
 }
 
 static void
 aclLookupDstFQDNDone(int fd, const char *fqdn, void *data)
 {
-    aclCheck_t * checklist = data;
+    aclCheck_t *checklist = data;
     checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
 
 void
 aclNBCheck(const struct _acl_access *A,
-	request_t *request,
-	struct in_addr src_addr,
-	char *user_agent,
-	char *ident,
-	PF callback,
-	void *callback_data)
+    request_t * request,
+    struct in_addr src_addr,
+    char *user_agent,
+    char *ident,
+    PF callback,
+    void *callback_data)
 {
-	aclCheck_t *checklist = xcalloc(1, sizeof(aclCheck_t));;
-	checklist->access_list = A;
-	checklist->request = requestLink(request);
-	checklist->src_addr = src_addr;
-	if (user_agent)
-	    xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
-	if (ident)
-	    xstrncpy(checklist->ident, ident, ICP_IDENT_SZ);
-	checklist->callback = callback;
-	checklist->callback_data = callback_data;
-	aclCheck(checklist);
+    aclCheck_t *checklist = xcalloc(1, sizeof(aclCheck_t));;
+    checklist->access_list = A;
+    checklist->request = requestLink(request);
+    checklist->src_addr = src_addr;
+    if (user_agent)
+	xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
+    if (ident)
+	xstrncpy(checklist->ident, ident, ICP_IDENT_SZ);
+    checklist->callback = callback;
+    checklist->callback_data = callback_data;
+    aclCheck(checklist);
 }
 
 

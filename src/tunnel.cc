@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.40 1997/02/26 19:46:22 wessels Exp $
+ * $Id: tunnel.cc,v 1.41 1997/02/28 21:33:42 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -65,7 +65,8 @@ static void sslClose _PARAMS((SslStateData * sslState));
 static void sslClientClosed _PARAMS((int fd, void *));
 static void sslConnectDone _PARAMS((int fd, int status, void *data));
 static void sslStateFree _PARAMS((int fd, void *data));
-static void sslSelectNeighbor _PARAMS((int fd, const ipcache_addrs *, void *));
+static void sslPeerSelectComplete _PARAMS((peer * p, void *data));
+static void sslPeerSelectFail _PARAMS((peer * p, void *data));
 
 static void
 sslClose(SslStateData * sslState)
@@ -417,10 +418,8 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     SslStateData *sslState = NULL;
     int sock;
     char *buf = NULL;
-
     debug(26, 3, "sslStart: '%s %s'\n",
 	RequestMethodStr[request->method], url);
-
     /* Create socket. */
     sock = comm_open(SOCK_STREAM,
 	0,
@@ -461,20 +460,11 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
     comm_add_close_handler(sslState->client.fd,
 	sslClientClosed,
 	(void *) sslState);
-
-    if (Config.sslProxy) {
-	ipcache_nbgethostbyname(request->host,
-	    sslState->server.fd,
-	    sslSelectNeighbor,
-	    sslState);
-    } else {
-	sslState->host = request->host;
-	sslState->port = request->port;
-	ipcache_nbgethostbyname(request->host,
-	    sslState->server.fd,
-	    sslConnect,
-	    sslState);
-    }
+    peerSelect(request,
+	NULL,	
+	sslPeerSelectComplete,
+	sslPeerSelectFail,
+	sslState);
     return COMM_OK;
 }
 
@@ -499,27 +489,18 @@ sslProxyConnected(int fd, void *data)
 }
 
 static void
-sslSelectNeighbor(int fd, const ipcache_addrs * ia, void *data)
+sslPeerSelectComplete (peer * p, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
-    peer *e = NULL;
     peer *g = NULL;
-    hier_code code;
-    if (peerSelectDirect(request)) {
-	hierarchyNote(request, HIER_DIRECT, 0, request->host);
-    } else if ((e = peerGetSomeParent(request, &code))) {
-	hierarchyNote(request, code, 0, e->host);
-    } else {
-	hierarchyNote(request, HIER_DIRECT, 0, request->host);
-    }
-    sslState->proxying = e ? 1 : 0;
-    sslState->host = e ? e->host : request->host;
-    if (e == NULL) {
+    sslState->proxying = p ? 1 : 0;
+    sslState->host = p ? p->host : request->host;
+    if (p == NULL) {
 	sslState->port = request->port;
-    } else if (e->http_port != 0) {
-	sslState->port = e->http_port;
-    } else if ((g = neighborFindByName(e->host))) {
+    } else if (p->http_port != 0) {
+	sslState->port = p->http_port;
+    } else if ((g = neighborFindByName(p->host))) {
 	sslState->port = g->http_port;
     } else {
 	sslState->port = CACHE_HTTP_PORT;
@@ -528,4 +509,12 @@ sslSelectNeighbor(int fd, const ipcache_addrs * ia, void *data)
 	sslState->server.fd,
 	sslConnect,
 	sslState);
+}
+
+static void
+sslPeerSelectFail (peer * p, void *data)
+{
+    SslStateData *sslState = data;
+    squid_error_request(sslState->url, ERR_CANNOT_FETCH, 400);
+    sslClose(sslState);
 }

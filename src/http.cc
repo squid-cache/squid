@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.151 1997/02/27 02:57:09 wessels Exp $
+ * $Id: http.cc,v 1.152 1997/02/28 21:33:37 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -959,7 +959,6 @@ proxyhttpStartComplete(void *data, int status)
 	sock,
 	httpConnect,
 	httpState);
-    xfree(url);
     return;
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.127 1997/02/27 06:29:15 wessels Exp $
+ * $Id: neighbors.cc,v 1.128 1997/02/28 21:33:39 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -112,7 +112,7 @@ static void neighborRemove _PARAMS((peer *));
 static peer *whichPeer _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((peer *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((peer * e, icp_opcode op_unused));
-static neighbor_t parseNeighborType _PARAMS((const char *s));
+static peer_t parseNeighborType _PARAMS((const char *s));
 static void peerRefreshDNS _PARAMS((void *));
 static void peerDNSConfigure _PARAMS((int fd, const ipcache_addrs * ia, void *data));
 
@@ -184,16 +184,20 @@ whichPeer(const struct sockaddr_in *from)
 }
 
 void
-hierarchyNote(request_t * request, hier_code code, int timeout, const char *cache_host)
+hierarchyNote(request_t * request,
+	hier_code code,
+	icp_ping_data *icpdata,
+	const char *cache_host)
 {
     if (request) {
 	request->hierarchy.code = code;
-	request->hierarchy.timeout = timeout;
+	request->hierarchy.icp = *icpdata;
 	request->hierarchy.host = xstrdup(cache_host);
+	request->hierarchy.icp.stop = current_time;
     }
 }
 
-static neighbor_t
+static peer_t
 neighborType(const peer * e, const request_t * request)
 {
     const struct _domain_type *d = NULL;
@@ -433,15 +437,19 @@ neighbors_open(int fd)
 }
 
 int
-neighborsUdpPing(request_t * request, StoreEntry * entry, int *exprep)
+neighborsUdpPing(request_t * request,
+	StoreEntry * entry,
+	IRCB callback,
+	void *callback_data,
+	int *exprep)
 {
     char *host = request->host;
     char *url = entry->url;
+    MemObject *mem = entry->mem_obj;
     const ipcache_addrs *ia = NULL;
     struct sockaddr_in to_addr;
     peer *e = NULL;
     int i;
-    MemObject *mem = entry->mem_obj;
     int reqnum = 0;
     int flags;
     icp_common_t *query;
@@ -459,7 +467,9 @@ neighborsUdpPing(request_t * request, StoreEntry * entry, int *exprep)
     }
     if (entry->swap_status != NO_SWAP)
 	fatal_dump("neighborsUdpPing: bad swap_status");
-
+    mem->start_ping = current_time;
+    mem->icp_reply_callback = callback;
+    mem->ircb_data = callback_data;
     for (i = 0, e = Peers.first_ping; i++ < Peers.n; e = e->next) {
 	if (e == NULL)
 	    e = Peers.peers_head;
@@ -510,7 +520,7 @@ neighborsUdpPing(request_t * request, StoreEntry * entry, int *exprep)
 	    ICP_mcasts_sent++;
 	} else if (neighborUp(e)) {
 	    /* its alive, expect a reply from it */
-	    *exprep++;
+	    (*exprep)++;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
@@ -596,9 +606,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 {
     peer *e = NULL;
     MemObject *mem = entry->mem_obj;
-    int w_rtt;
-    HttpStateData *httpState = NULL;
-    neighbor_t ntype = PEER_NONE;
+    peer_t ntype = PEER_NONE;
     char *opcode_d;
     icp_opcode opcode = (icp_opcode) header->opcode;
 
@@ -646,14 +654,14 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	} else if (ntype != PEER_PARENT) {
 	    (void) 0;		/* ignore MISS from non-parent */
 	} else {
-	    mem->icp_reply_callback(e, ntype, opcode, mem->cb_data);
+	    mem->icp_reply_callback(e, ntype, opcode, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_HIT || opcode == ICP_OP_HIT_OBJ) {
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring HIT from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else {
-	    mem->icp_reply_callback(e, ntype, ICP_OP_HIT, mem->cb_data);
+	    mem->icp_reply_callback(e, ntype, ICP_OP_HIT, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_DECHO) {
 	if (e == NULL) {
@@ -663,14 +671,16 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
 	    debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
 	} else {
-	    mem->icp_reply_callback(e, ntype, opcode, mem->cb_data);
+	    mem->icp_reply_callback(e, ntype, opcode, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_SECHO) {
 	if (e) {
 	    debug(15, 1, "Ignoring SECHO from neighbor %s\n", e->host);
 	    neighborCountIgnored(e, opcode);
+	} else if (!Config.sourcePing) {
+	    debug(15, 1, "Unsolicited SECHO from %s\n", inet_ntoa(from->sin_addr));
 	} else {
-	    mem->icp_reply_callback(NULL, ntype, opcode, mem->cb_data);
+	    mem->icp_reply_callback(NULL, ntype, opcode, mem->ircb_data);
 	}
     } else if (opcode == ICP_OP_DENIED) {
 	if (e == NULL) {
@@ -687,7 +697,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	    }
 	}
     } else if (opcode == ICP_OP_MISSNOFETCH) {
-	mem->icp_reply_callback(e, ntype, opcode, mem->cb_data);
+	mem->icp_reply_callback(e, ntype, opcode, mem->ircb_data);
     } else {
 	debug(15, 0, "neighborsUdpAck: Unexpected ICP reply: %s\n", opcode_d);
     }
@@ -828,7 +838,7 @@ neighborFindByName(const char *name)
     return e;
 }
 
-static neighbor_t
+static peer_t
 parseNeighborType(const char *s)
 {
     if (!strcasecmp(s, "parent"))
