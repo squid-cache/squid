@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.372 2003/04/22 15:06:10 hno Exp $
+ * $Id: main.cc,v 1.373 2003/04/24 06:35:09 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -607,7 +607,7 @@ mainInitialize(void)
                  version_string,
                  CONFIG_HOST_TYPE);
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         debug(1, 0) ("Running as %s Windows System Service on %s\n", WIN32_Service_name, WIN32_OS_string);
@@ -764,7 +764,7 @@ main(int argc, char **argv)
     int errcount = 0;
     int n;			/* # of GC'd objects */
     mode_t oldmask;
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 
     int WIN32_init_err;
 #endif
@@ -779,7 +779,7 @@ main(int argc, char **argv)
     if (FD_SETSIZE < Squid_MaxFD)
         Squid_MaxFD = FD_SETSIZE;
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 
     if ((WIN32_init_err = WIN32_Subsystem_Init()))
         return WIN32_init_err;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_diff.cc,v 1.18 2003/02/21 22:50:06 robertc Exp $
+ * $Id: cache_diff.cc,v 1.19 2003/04/24 06:35:08 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -153,7 +153,7 @@ cacheIndexAddLog(CacheIndex * idx, const char *fname)
         return 0;
     }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
     setmode(fileno(file), O_BINARY);
 
 #endif

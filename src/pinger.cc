@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.51 2003/02/23 00:08:04 robertc Exp $
+ * $Id: pinger.cc,v 1.52 2003/04/24 06:35:09 hno Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -42,7 +42,7 @@
    to use the native Windows port definitions.
  */
 
-#if !defined(_SQUID_MSWIN_) && !defined(_SQUID_CYGWIN_)
+#ifndef _SQUID_WIN32_
 
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
@@ -54,7 +54,7 @@
 static int socket_from_squid = 0;
 static int socket_to_squid = 1;
 
-#else /* _SQUID_MSWIN_ or _SQUID_CYGWIN_ */
+#else /* _SQUID_WIN32_ */
 
 #ifdef _SQUID_MSWIN_
 

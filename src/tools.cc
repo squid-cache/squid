@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.234 2003/04/20 05:29:00 robertc Exp $
+ * $Id: tools.cc,v 1.235 2003/04/24 06:35:09 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1170,7 +1170,7 @@ parseEtcHosts(void)
         return;
     }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
     setmode(fileno(fp), O_TEXT);
 
 #endif

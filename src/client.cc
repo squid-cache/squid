@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.105 2003/02/21 22:50:07 robertc Exp $
+ * $Id: client.cc,v 1.106 2003/04/24 06:35:08 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -283,7 +283,7 @@ main(int argc, char *argv[])
             exit(-1);
         }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
         setmode(put_fd, O_BINARY);
 
 #endif

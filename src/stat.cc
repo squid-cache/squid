@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.373 2003/04/22 15:06:10 hno Exp $
+ * $Id: stat.cc,v 1.374 2003/04/24 06:35:09 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -455,7 +455,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.32 2003/02/03 21:33:15 robertc Exp $
+ * $Id: rfc1123.c,v 1.33 2003/04/24 06:35:04 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -270,7 +270,7 @@ parse_rfc1123(const char *str)
 	 */
 	if (tm->tm_isdst > 0)
 	    dst = -3600;
-#if defined ( _timezone) || defined(_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
+#if defined ( _timezone) || defined(_SQUID_WIN32_)
 	t -= (_timezone + dst);
 #else
 	t -= (timezone + dst);

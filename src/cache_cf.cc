@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.439 2003/04/17 15:25:43 hno Exp $
+ * $Id: cache_cf.cc,v 1.440 2003/04/24 06:35:04 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -294,7 +294,7 @@ parseConfigFile(const char *file_name)
         fatalf("Unable to open configuration file: %s: %s",
                file_name, xstrerror());
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
 
     setmode(fileno(fp), O_TEXT);
 
@@ -3043,7 +3043,7 @@ strtok_again:
                 return (NULL);
             }
 
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+#ifdef _SQUID_WIN32_
             setmode(fileno(wordFile), O_TEXT);
 
 #endif

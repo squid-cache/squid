@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.57 2003/03/06 06:21:41 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.58 2003/04/24 06:35:10 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -773,7 +773,7 @@ UFSSwapDir::closeTmpSwapLog()
     char *new_path = xstrdup(logFile(".new"));
     int fd;
     file_close(swaplog_fd);
-#if defined (_SQUID_OS2_) || defined (_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
+#if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
 
     if (::unlink(swaplog_path) < 0) {
         debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
@@ -1020,7 +1020,7 @@ UFSSwapDir::writeCleanDone()
     /* rename */
 
     if (state->fd >= 0) {
-#if defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
+#if defined(_SQUID_OS2_) || defined (_SQUID_WIN32_)
         file_close(state->fd);
         state->fd = -1;
 
