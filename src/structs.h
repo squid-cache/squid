@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.319 2000/05/02 18:35:09 hno Exp $
+ * $Id: structs.h,v 1.320 2000/05/02 18:51:51 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1093,6 +1093,7 @@ struct _peer {
 #if DELAY_POOLS
 	unsigned int no_delay:1;
 #endif
+	unsigned int allow_miss:1;
     } options;
     int weight;
     struct {

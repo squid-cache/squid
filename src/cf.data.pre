@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.169 2000/05/02 18:35:09 hno Exp $
+# $Id: cf.data.pre,v 1.170 2000/05/02 18:51:51 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -234,6 +234,7 @@ DOC_START
 		     login=user:password
 		     connect-timeout=nn
 		     digest-url=url
+		     allow-miss
 
 		     use 'proxy-only' to specify that objects fetched
 		     from this cache should not be saved locally.
@@ -291,11 +292,19 @@ DOC_START
 		     the specified URL rather than the Squid default
 		     location.
 
+		     use 'allow-miss' to disable Squid's use of only-if-cached
+		     when forwarding requests to siblings. This is primarily
+		     useful when icp_hit_stale is used by the sibling. To
+		     extensive use of this option may result in forwarding
+		     loops, and you should avoid having two-way peerings
+		     with this option. (for example to deny peer usage on
+		     requests from peer by denying cache_peer_access if the
+		     source is a peer)
+
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 
 cache_peer hostname type 3128 3130
 DOC_END
-
 
 NAME: cache_peer_domain cache_host_domain
 TYPE: hostdomain
