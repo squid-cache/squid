@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.143 1997/10/22 05:50:28 wessels Exp $
+ * $Id: ftp.cc,v 1.144 1997/10/22 18:51:15 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -233,14 +233,16 @@ ftpTimeout(int fd, void *data)
     StoreEntry *entry = ftpState->entry;
     ErrorState *err;
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url);
-    if (entry->mem_obj->inmem_hi == 0) {
-	err = xcalloc(1, sizeof(ErrorState));
-	err->type = ERR_READ_TIMEOUT;
-	err->http_status = HTTP_GATEWAY_TIMEOUT;
-	err->request = requestLink(ftpState->request);
-	errorAppendEntry(entry, err);
+    if (entry->store_status == STORE_PENDING) {
+	if (entry->mem_obj->inmem_hi == 0) {
+	    err = xcalloc(1, sizeof(ErrorState));
+	    err->type = ERR_READ_TIMEOUT;
+	    err->http_status = HTTP_GATEWAY_TIMEOUT;
+	    err->request = requestLink(ftpState->request);
+	    errorAppendEntry(entry, err);
+	}
+	storeAbort(entry, 0);
     }
-    storeAbort(entry, 0);
     if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
 	ftpState->data.fd = -1;
@@ -881,7 +883,7 @@ ftpStart(request_t * request, StoreEntry * entry)
 	COMM_NONBLOCKING,
 	url);
     if (fd == COMM_ERROR) {
-	debug(9, 4) ("ftpStart: Failed because we're out of sockets.\n");
+	debug(9, 4) ("ftpStart: Failed to open a socket.\n");
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_SOCKET_FAILURE;
 	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
