@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.68 1996/08/19 22:44:50 wessels Exp $
+ * $Id: cache_cf.cc,v 1.69 1996/08/20 15:43:41 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1440,6 +1440,8 @@ static void configDoConfigure()
     httpd_accel_mode = Config.Accel.prefix ? 1 : 0;
     sprintf(ForwardedBy, "Forwarded: by http://%s:%d/",
 	getMyHostname(), Config.Port.http);
+    if (Config.errHtmlText == NULL)
+	Config.errHtmlText = xstrdup("");
 
 #if !ALLOW_HOT_CACHE
     if (!httpd_accel_mode || Config.Accel.withProxy) {
