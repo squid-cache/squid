@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.78 1996/11/04 18:12:53 wessels Exp $
+ * $Id: neighbors.cc,v 1.79 1996/11/05 16:59:44 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -429,7 +429,7 @@ neighborsUdpPing(protodispatch_data * proto)
 	if (e->options & NEIGHBOR_NO_QUERY)
 	    continue;
 
-	debug(15, 4, "neighborsUdpPing: pinging cache %s for <URL:%s>\n",
+	debug(15, 4, "neighborsUdpPing: pinging cache %s for '%s'\n",
 	    e->host, url);
 
 	if (BIT_TEST(entry->flag, KEY_PRIVATE))
