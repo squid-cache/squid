@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.78 2003/03/10 04:56:38 robertc Exp $
+ * $Id: mem.cc,v 1.79 2003/06/19 13:27:50 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -198,7 +198,7 @@ memAllocString(size_t net_size, size_t * gross_size)
         }
     }
 
-    *gross_size = pool ? pool->obj_size : net_size;
+    *gross_size = pool ? StrPoolsAttrs[i].obj_size : net_size;
     assert(*gross_size >= net_size);
     memMeterInc(StrCountMeter);
     memMeterAdd(StrVolumeMeter, *gross_size);
@@ -423,6 +423,9 @@ Mem::Init(void)
 
     for (i = 0; i < mem_str_pool_count; i++) {
         StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
+
+        if (StrPools[i].pool->obj_size != StrPoolsAttrs[i].obj_size)
+            debug(13, 1) ("Notice: %s is %d bytes instead of requested %d bytes\n", StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size, StrPoolsAttrs[i].obj_size);
     }
 
     cachemgrRegister("mem",
