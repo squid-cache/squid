@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_hdr_test.cc,v 1.2 2003/06/26 12:52:00 robertc Exp $
+ * $Id: mem_hdr_test.cc,v 1.3 2003/09/22 02:43:11 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -85,18 +85,22 @@ testSplayOfNodes()
     temp14 = new mem_node (14);
     temp14->nodeBuffer.length = 1;
     assert (aSplay.find(temp14,mem_hdr::NodeCompare));
+    delete temp14;
 
     mem_node ref13  (13);
     assert (!aSplay.find(&ref13,mem_hdr::NodeCompare));
     ref13.nodeBuffer.length = 1;
     assert (aSplay.find(&ref13,mem_hdr::NodeCompare));
+    aSplay.destroy(SplayNode<mem_node *>::DefaultFree);
 }
 
 int
 main (int argc, char *argv)
 {
+    assert (mem_node::InUseCount() == 0);
     testLowAndHigh();
     assert (mem_node::InUseCount() == 0);
     testSplayOfNodes();
+    assert (mem_node::InUseCount() == 0);
     return 0;
 }
