@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.649 2003/07/11 02:11:47 robertc Exp $
+ * $Id: client_side.cc,v 1.650 2003/07/13 23:00:09 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -523,7 +523,7 @@ ClientHttpRequest::logRequest()
 
 #if USE_SSL
 
-        if (getConn())
+        if (getConn().getRaw() != NULL)
             al.cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
 
 #endif
