@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.32 1997/10/23 20:47:53 wessels Exp $
+ * $Id: store_dir.cc,v 1.33 1997/10/25 16:49:06 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -82,8 +82,6 @@ storeVerifyOrCreateDir(const char *path)
     safeunlink(path, 1);
     if (mkdir(path, 0777) < 0) {
 	if (errno != EEXIST) {
-	    /* NOTE: couldn't figure size of tmp_error_buf, assumed
-	     * ERROR_BUF_SZ */
 	    snprintf(tmp_error_buf, ERROR_BUF_SZ,
 		"Failed to create swap directory %s: %s",
 		path,
@@ -93,8 +91,6 @@ storeVerifyOrCreateDir(const char *path)
     }
     debug(47, 1) ("Created directory %s\n", path);
     if (stat(path, &sb) < 0 || !S_ISDIR(sb.st_mode)) {
-	/* NOTE: couldn't figure size of tmp_error_buf, assumed
-	 * ERROR_BUF_SZ */
 	snprintf(tmp_error_buf, ERROR_BUF_SZ,
 	    "Failed to create directory %s: %s", path, xstrerror());
 	fatal(tmp_error_buf);
