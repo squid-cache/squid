@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.47 2002/10/24 22:53:44 adrian Exp $
+ * $Id: cbdata.cc,v 1.48 2002/10/24 22:59:29 adrian Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -218,6 +218,7 @@ cbdataInternalLock(const void *p)
     debug(45, 3) ("cbdataLock: %p=%d\n", p, c ? c->locks + 1 : -1);
 #endif
     CBDATA_CHECK(c);
+    assert(c->locks < 65535);
     c->locks++;
 }
 
