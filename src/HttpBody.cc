@@ -1,5 +1,5 @@
 /*
- * $Id: HttpBody.cc,v 1.4 1998/02/26 08:10:53 rousskov Exp $
+ * $Id: HttpBody.cc,v 1.5 1998/02/26 18:00:30 wessels Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -37,7 +37,7 @@
 
 
 void
-httpBodyInit(HttpBody *body)
+httpBodyInit(HttpBody * body)
 {
     body->buf = NULL;
     body->size = 0;
@@ -45,12 +45,12 @@ httpBodyInit(HttpBody *body)
 }
 
 void
-httpBodyClean(HttpBody *body)
+httpBodyClean(HttpBody * body)
 {
     assert(body);
     if (body->buf) {
 	assert(body->freefunc);
-	(*body->freefunc)(body->buf);
+	(*body->freefunc) (body->buf);
     }
     body->buf = NULL;
     body->size = 0;
@@ -58,14 +58,14 @@ httpBodyClean(HttpBody *body)
 
 /* set body, if freefunc is NULL the content will be copied, otherwise not */
 void
-httpBodySet(HttpBody *body, const char *buf, int size, FREE *freefunc)
+httpBodySet(HttpBody * body, const char *buf, int size, FREE * freefunc)
 {
     assert(body);
     assert(!body->buf);
     assert(buf);
     assert(size);
-    assert(buf[size-1] == '\0'); /* paranoid */
-    if (!freefunc) { /* they want us to make our own copy */
+    assert(buf[size - 1] == '\0');	/* paranoid */
+    if (!freefunc) {		/* they want us to make our own copy */
 	body->buf = xmalloc(size);
 	xmemcpy(body->buf, buf, size);
 	freefunc = &xfree;
@@ -75,16 +75,16 @@ httpBodySet(HttpBody *body, const char *buf, int size, FREE *freefunc)
 }
 
 void
-httpBodyPackInto(const HttpBody *body, Packer *p)
+httpBodyPackInto(const HttpBody * body, Packer * p)
 {
     assert(body && p);
     /* assume it was a 0-terminating buffer */
     if (body->size)
-	packerAppend(p, body->buf, body->size-1);
+	packerAppend(p, body->buf, body->size - 1);
 }
 
 const char *
-httpBodyPtr(const HttpBody *body)
+httpBodyPtr(const HttpBody * body)
 {
     return body->buf ? body->buf : "";
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.118 1998/02/25 23:56:53 rousskov Exp $
+ * $Id: errorpage.cc,v 1.119 1998/02/26 18:00:42 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -42,14 +42,19 @@
  * note: hard coded error messages are not appended with %S automagically
  * to give you more control on the format
  */
-static const struct { err_type type; const char *text; } error_hard_text[] = {
-    { ERR_SQUID_SIGNATURE,
-	"\n<br clear=\"all\">\n"
-	"<hr noshade size=1>\n"
-	"Generated on %T by <a href=\"http://squid.nlanr.net/\">%s</a>@%h"
+static const struct {
+    err_type type;
+    const char *text;
+} error_hard_text[] = {
+
+    {
+	ERR_SQUID_SIGNATURE,
+	    "\n<br clear=\"all\">\n"
+	    "<hr noshade size=1>\n"
+	    "Generated on %T by <a href=\"http://squid.nlanr.net/\">%s</a>@%h"
     }
 };
-static const int error_hard_text_count = sizeof(error_hard_text)/sizeof(*error_hard_text);
+static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
 static char *error_text[ERR_MAX];
 
 static char *errorTryLoadText(err_type type, const char *dir);
@@ -135,7 +140,7 @@ errorTryLoadText(err_type type, const char *dir)
 	text = NULL;
     }
     file_close(fd);
-    strcat(text, "%S"); /* add signature */
+    strcat(text, "%S");		/* add signature */
     return text;
 }
 
@@ -442,13 +447,13 @@ errorConvert(char token, ErrorState * err)
 
 /* allocates and initializes an error response */
 HttpReply *
-errorBuildReply(ErrorState *err)
+errorBuildReply(ErrorState * err)
 {
     HttpReply *rep = httpReplyCreate();
     MemBuf content = errorBuildContent(err);
     /* no LMT for error pages; error pages expire immediately */
     httpReplySetHeaders(rep, 1.0, err->http_status, NULL, "text/html", content.size, 0, squid_curtime);
-    httpBodySet(&rep->body, content.buf, content.size+1, NULL);
+    httpBodySet(&rep->body, content.buf, content.size + 1, NULL);
     memBufClean(&content);
     return rep;
 }
@@ -457,7 +462,7 @@ static MemBuf
 errorBuildContent(ErrorState * err)
 {
     MemBuf content;
-#if 0 /* use MemBuf so we can support recursion;  const pointers: no xstrdup */
+#if 0				/* use MemBuf so we can support recursion;  const pointers: no xstrdup */
     LOCAL_ARRAY(char, content, ERROR_BUF_SZ);
     int clen;
     char *m;
@@ -469,14 +474,14 @@ errorBuildContent(ErrorState * err)
     const char *t;
     assert(err != NULL);
     assert(err->type > ERR_NONE && err->type < ERR_MAX);
-#if 0 /* use MemBuf so we can support recursion */
+#if 0				/* use MemBuf so we can support recursion */
     mx = m = xstrdup(error_text[err->type]);
 #endif
     memBufDefInit(&content);
     m = error_text[err->type];
     assert(m);
     while ((p = strchr(m, '%'))) {
-#if 0 /* use MemBuf so we can support recursion */
+#if 0				/* use MemBuf so we can support recursion */
 	*p = '\0';		/* terminate */
 	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);	/* copy */
 	clen += (p - m);	/* advance */
@@ -490,12 +495,12 @@ errorBuildContent(ErrorState * err)
 	if (clen >= ERROR_BUF_SZ)
 	    break;
 #endif
-	memBufAppend(&content, m, p - m);                       /* copy */
-	t = errorConvert(*++p, err);                         /* convert */
-	memBufPrintf(&content, "%s", t);                        /* copy */
-        m = p + 1;                                           /* advance */
+	memBufAppend(&content, m, p - m);	/* copy */
+	t = errorConvert(*++p, err);	/* convert */
+	memBufPrintf(&content, "%s", t);	/* copy */
+	m = p + 1;		/* advance */
     }
-#if 0 /* use MemBuf so we can support recursion */
+#if 0				/* use MemBuf so we can support recursion */
     if (clen < ERROR_BUF_SZ && m != NULL) {
 	xstrncpy(content + clen, m, ERROR_BUF_SZ - clen);
 	clen += strlen(m);
@@ -510,12 +515,12 @@ errorBuildContent(ErrorState * err)
     xfree(mx);
 #endif
     if (*m)
-	memBufPrintf(&content, "%s", m);                     /* copy tail */
+	memBufPrintf(&content, "%s", m);	/* copy tail */
     assert(content.size == strlen(content.buf));
     return content;
 }
 
-#if 0 /* we use httpReply instead of a buffer now */
+#if 0				/* we use httpReply instead of a buffer now */
 const char *
 errorBuildBuf(ErrorState * err, int *len)
 {

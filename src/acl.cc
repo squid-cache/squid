@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.143 1998/02/25 21:30:39 wessels Exp $
+ * $Id: acl.cc,v 1.144 1998/02/26 18:00:35 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1485,7 +1485,7 @@ aclChecklistFree(aclCheck_t * checklist)
     if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_PENDING)
 	ipcacheUnregister(checklist->request->host, checklist);
     if (checklist->request)
-    requestUnlink(checklist->request);
+	requestUnlink(checklist->request);
     checklist->request = NULL;
     cbdataFree(checklist);
 }
@@ -1550,7 +1550,7 @@ aclChecklistCreate(const acl_access * A,
      */
     cbdataLock(A);
     if (request != NULL)
-    	checklist->request = requestLink(request);
+	checklist->request = requestLink(request);
     checklist->src_addr = src_addr;
     for (i = 0; i < ACL_ENUM_MAX; i++)
 	checklist->state[i] = ACL_LOOKUP_NONE;

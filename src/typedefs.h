@@ -42,7 +42,7 @@ typedef struct _fileMap fileMap;
 typedef struct _fqdncache_entry fqdncache_entry;
 typedef struct _hash_link hash_link;
 typedef struct _hash_table hash_table;
-#if 0 /* use new interfaces */
+#if 0				/* use new interfaces */
 typedef struct _http_reply http_reply;
 #else
 typedef struct _HttpReply http_reply;
@@ -127,15 +127,15 @@ typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
 
-typedef double (*hbase_f)(double);
-typedef void (*StatHistBinDumper)(StoreEntry *, int idx, double val, double size, int count);
+typedef double (*hbase_f) (double);
+typedef void (*StatHistBinDumper) (StoreEntry *, int idx, double val, double size, int count);
 
 /* append/vprintf's for Packer */
-typedef void (*append_f)(void *, const char *buf, int size);
+typedef void (*append_f) (void *, const char *buf, int size);
 #ifdef __STDC__
-typedef void (*vprintf_f)(void *, const char *fmt, ...);
+typedef void (*vprintf_f) (void *, const char *fmt,...);
 #else
-typedef void (*vprintf_f)();
+typedef void (*vprintf_f) ();
 #endif
 
 /* MD5 cache keys */

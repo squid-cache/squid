@@ -1,6 +1,4 @@
 
-
-
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -54,16 +52,16 @@ struct _snmpconf {
 };
 
 struct _snmp_request_t {
-	char *buf;
-	char *outbuf;
-	int len;
-	int sock;
-        long reqid;
-	int outlen;
-	struct sockaddr_in from;
-	struct snmp_pdu *PDU;
-	aclCheck_t *acl_checklist;
-        char *community;
+    char *buf;
+    char *outbuf;
+    int len;
+    int sock;
+    long reqid;
+    int outlen;
+    struct sockaddr_in from;
+    struct snmp_pdu *PDU;
+    aclCheck_t *acl_checklist;
+    char *community;
 };
 
 typedef struct _viewEntry {
@@ -448,7 +446,7 @@ struct _hash_table {
 struct _HttpStatusLine {
     /* public, read only */
     double version;
-    const char *reason; /* points to a _constant_ string (default or supplied), never free()d */
+    const char *reason;		/* points to a _constant_ string (default or supplied), never free()d */
     http_status status;
 };
 
@@ -458,8 +456,8 @@ struct _HttpStatusLine {
  */
 struct _HttpBody {
     /* private, never dereference these */
-    char *buf;      /* null terminating _text_ buffer, not for binary stuff */
-    FREE *freefunc; /* used to free() .buf */
+    char *buf;			/* null terminating _text_ buffer, not for binary stuff */
+    FREE *freefunc;		/* used to free() .buf */
     int size;
 };
 
@@ -482,26 +480,26 @@ union _field_store {
 
 struct _HttpHeader {
     /* public, read only */
-    int emask;           /* bits set for present entries */
+    int emask;			/* bits set for present entries */
 
     /* protected, do not use these, use interface functions instead */
-    int capacity;        /* max #entries before we have to grow */
-    int ucount;          /* #entries used, including holes */
+    int capacity;		/* max #entries before we have to grow */
+    int ucount;			/* #entries used, including holes */
     HttpHeaderEntry *entries;
 };
 
 
 struct _HttpReply {
     /* unsupported, writable, may disappear/change in the future */
-    int hdr_sz;   /* sums _stored_ status-line, headers, and <CRLF> */
+    int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
 
     /* public, readable */
-    HttpMsgParseState pstate; /* the current parsing state */
+    HttpMsgParseState pstate;	/* the current parsing state */
 
     /* public, writable, but use interfaces below when possible */
     HttpStatusLine sline;
     HttpHeader hdr;
-    HttpBody body;  /* used for small constant memory-resident text bodies only */
+    HttpBody body;		/* used for small constant memory-resident text bodies only */
 };
 
 
@@ -831,12 +829,12 @@ struct _iostats {
 struct _MemBuf {
     /* public, read-only */
     char *buf;
-    mb_size_t size;  /* used space, does not count 0-terminator */
+    mb_size_t size;		/* used space, does not count 0-terminator */
 
     /* private, stay away; use interface function instead */
-    mb_size_t max_capacity; /* when grows: assert(new_capacity <= max_capacity) */
-    mb_size_t capacity;     /* allocated space */
-    FREE *freefunc;  /* what to use to free the buffer, NULL after memBufFreeFunc() is called */
+    mb_size_t max_capacity;	/* when grows: assert(new_capacity <= max_capacity) */
+    mb_size_t capacity;		/* allocated space */
+    FREE *freefunc;		/* what to use to free the buffer, NULL after memBufFreeFunc() is called */
 };
 
 /* see Packer.c for description */
@@ -844,7 +842,7 @@ struct _Packer {
     /* protected, use interface functions instead */
     append_f append;
     vprintf_f vprintf;
-    void *real_handler; /* first parameter to real append and vprintf */
+    void *real_handler;		/* first parameter to real append and vprintf */
 };
 
 
@@ -1021,8 +1019,8 @@ struct _StatHist {
     double min;
     double max;
     double scale;
-    hbase_f val_in;   /* e.g., log() for log-based histogram */
-    hbase_f val_out;  /* e.g., exp() for log based histogram */
+    hbase_f val_in;		/* e.g., log() for log-based histogram */
+    hbase_f val_out;		/* e.g., exp() for log based histogram */
 };
 
 /*

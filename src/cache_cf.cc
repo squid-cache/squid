@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.253 1998/02/26 09:01:11 kostas Exp $
+ * $Id: cache_cf.cc,v 1.254 1998/02/26 18:00:37 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -445,19 +445,19 @@ dump_snmp_access(StoreEntry * entry, const char *name, communityEntry * Head)
     acl_list *l;
     communityEntry *cp;
     acl_access *head;
- 
+
     for (cp = Head; cp; cp = cp->next) {
-	head=cp->acls;
-       while (head != NULL) {
-	for (l = head->acl_list; l != NULL; l = l->next) {
-	    storeAppendPrintf(entry, "%s %s %s %s%s\n",
-		name, cp->name, 
-		head->allow ? "Allow" : "Deny",
-		l->op ? "" : "!",
-		l->acl->name);
+	head = cp->acls;
+	while (head != NULL) {
+	    for (l = head->acl_list; l != NULL; l = l->next) {
+		storeAppendPrintf(entry, "%s %s %s %s%s\n",
+		    name, cp->name,
+		    head->allow ? "Allow" : "Deny",
+		    l->op ? "" : "!",
+		    l->acl->name);
+	    }
+	    head = head->next;
 	}
-	head = head->next;
-       }
     }
 }
 #endif
@@ -481,26 +481,26 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 #if SQUID_SNMP
 
 static void
-parse_snmp_access(communityEntry  **head)
+parse_snmp_access(communityEntry ** head)
 {
     char *t;
     communityEntry *cp;
- 
-    t=strtok(NULL, w_space);
-    for (cp = *head; cp; cp = cp->next) 
-        if (!strcmp(t, cp->name)) {
-    		aclParseAccessLine(&cp->acls);
-		return;
+
+    t = strtok(NULL, w_space);
+    for (cp = *head; cp; cp = cp->next)
+	if (!strcmp(t, cp->name)) {
+	    aclParseAccessLine(&cp->acls);
+	    return;
 	}
-     debug(15,0)("parse_snmp_access: You need to define community %s first!\n",t);
+    debug(15, 0) ("parse_snmp_access: You need to define community %s first!\n", t);
 }
 
 static void
 free_snmp_access(communityEntry ** Head)
 {
     communityEntry *cp;
-    
-    for (cp = *Head; cp; cp = cp->next) 
+
+    for (cp = *Head; cp; cp = cp->next)
 	aclDestroyAccessList(&cp->acls);
 }
 #endif

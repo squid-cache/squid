@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.161 1998/02/26 09:01:13 kostas Exp $
+ * $Id: ipcache.cc,v 1.162 1998/02/26 18:00:44 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1059,7 +1059,7 @@ ipcache_restart(void)
 
 #ifdef SQUID_SNMP
 
-int 
+int
 ipcache_getMax()
 {
     int i = 0;
