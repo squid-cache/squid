@@ -1,5 +1,14 @@
 	- Added v1.1 'test_reachability' option.
 	- Fixed hash4() len == 0 bug.
+	- Fixed Config.Swap.maxSize reconfigure bug.
+	- Fixed ICP query bug determining request method.
+	- Moved ICP's storeGet() cache lookup into neighborsUdpAck()
+	  so that we know neighbors are alive even when they send
+	  us replies for unknown entries.
+	- Changed configure script to add '-std1' for Digital Unix cc.
+	- Fixed SNMP sizeof(int) / sizeof(long) bugs for 64-bit
+	  systems.
+	- Added support for 'Cache-Control: Only-If-Cached' request header.
 
 Changes to squid-1.2.beta17 (Mar 17, 1998):
 
