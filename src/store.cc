@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.37 1996/04/10 03:53:22 wessels Exp $ */
-#ident "$Id: store.cc,v 1.37 1996/04/10 03:53:22 wessels Exp $"
+/* $Id: store.cc,v 1.38 1996/04/10 03:54:44 wessels Exp $ */
+#ident "$Id: store.cc,v 1.38 1996/04/10 03:54:44 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -435,7 +435,7 @@ void storeReleaseRequest(e, file, line)
 	return;
     debug(20, 1, "storeReleaseRequest: FROM %s:%d FOR '%s'\n",
 	file, line, e->key ? e->key : e->url);
-    e->flag |=  RELEASE_REQUEST;
+    e->flag |= RELEASE_REQUEST;
 }
 
 /* unlock object, return -1 if object get released after unlock

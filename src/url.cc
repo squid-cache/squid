@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.7 1996/04/10 03:54:00 wessels Exp $ */
+/* $Id: url.cc,v 1.8 1996/04/10 03:54:45 wessels Exp $ */
 
 /* 
  * DEBUG: Section 23          url
@@ -16,7 +16,7 @@ static char hex[17] = "0123456789abcdef";
 
 char *url_convert_hex(org_url, allocate)
      char *org_url;
-    int allocate;
+     int allocate;
 {
     static char *code = "00";
     char *url = NULL;
@@ -25,13 +25,13 @@ char *url_convert_hex(org_url, allocate)
 
     url = allocate ? (char *) xstrdup(org_url) : org_url;
 
-    for (s=t=url; *(s+2); s++) {
-        if (*s == '%') {
-		*code = *++s;
-		*(code+1) = *++s;
-		*t++ = (char) strtol(code, NULL, 16);
-        } else {
-		*t++ = *s;
+    for (s = t = url; *(s + 2); s++) {
+	if (*s == '%') {
+	    *code = *++s;
+	    *(code + 1) = *++s;
+	    *t++ = (char) strtol(code, NULL, 16);
+	} else {
+	    *t++ = *s;
 	}
     }
     do {
