@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.349 2001/10/24 06:16:17 hno Exp $
+ * $Id: stat.cc,v 1.350 2001/10/24 06:55:44 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1410,7 +1410,7 @@ statClientRequests(StoreEntry * s)
 		fd_table[fd].bytes_read, fd_table[fd].bytes_written);
 	    storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
 	    storeAppendPrintf(s, "\tin: buf %p, offset %ld, size %ld\n",
-		conn->in.buf, (long int)conn->in.offset, (long int)conn->in.size);
+		conn->in.buf, (long int) conn->in.offset, (long int) conn->in.size);
 	    storeAppendPrintf(s, "\tpeer: %s:%d\n",
 		inet_ntoa(conn->peer.sin_addr),
 		ntohs(conn->peer.sin_port));
@@ -1420,20 +1420,20 @@ statClientRequests(StoreEntry * s)
 	    storeAppendPrintf(s, "\tnrequests: %d\n",
 		conn->nrequests);
 	    storeAppendPrintf(s, "\tdefer: n %d, until %ld\n",
-		conn->defer.n, (long int)conn->defer.until);
+		conn->defer.n, (long int) conn->defer.until);
 	}
 	storeAppendPrintf(s, "uri %s\n", http->uri);
 	storeAppendPrintf(s, "log_type %s\n", log_tags[http->log_type]);
 	storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
-	    (long int)http->out.offset, (unsigned long int)http->out.size);
+	    (long int) http->out.offset, (unsigned long int) http->out.size);
 	storeAppendPrintf(s, "req_sz %d\n", http->req_sz);
 	e = http->entry;
 	storeAppendPrintf(s, "entry %p/%s\n", e, e ? storeKeyText(e->hash.key) : "N/A");
 	e = http->old_entry;
 	storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? storeKeyText(e->hash.key) : "N/A");
 	storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
-	    (long int)http->start.tv_sec,
-	    (int)http->start.tv_usec,
+	    (long int) http->start.tv_sec,
+	    (int) http->start.tv_usec,
 	    tvSubDsec(http->start, current_time));
 	storeAppendPrintf(s, "\n");
     }

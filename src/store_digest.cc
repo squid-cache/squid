@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.50 2001/10/24 06:16:18 hno Exp $
+ * $Id: store_digest.cc,v 1.51 2001/10/24 06:55:44 hno Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -104,7 +104,7 @@ storeDigestInit(void)
     }
     store_digest = cacheDigestCreate(cap, Config.digest.bits_per_entry);
     debug(71, 1) ("Local cache digest enabled; rebuild/rewrite every %d/%d sec\n",
-	(int)Config.digest.rebuild_period, (int)Config.digest.rewrite_period);
+	(int) Config.digest.rebuild_period, (int) Config.digest.rewrite_period);
     memset(&sd_state, 0, sizeof(sd_state));
     cachemgrRegister("store_digest", "Store Digest",
 	storeDigestReport, 0, 1);
@@ -219,7 +219,7 @@ storeDigestAddable(const StoreEntry * e)
     /* Note: We should use the time of the next rebuild, not (cur_time+period) */
     if (refreshCheckDigest(e, Config.digest.rebuild_period)) {
 	debug(71, 6) ("storeDigestAdd: entry expires within %d secs, ignoring\n",
-	    (int)Config.digest.rebuild_period);
+	    (int) Config.digest.rebuild_period);
 	return 0;
     }
     /*
@@ -384,7 +384,7 @@ storeDigestRewriteResume(void)
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
 	squid_curtime, squid_curtime + Config.digest.rewrite_period);
     debug(71, 3) ("storeDigestRewrite: entry expires on %ld (%+d)\n",
-	(long int)e->mem_obj->reply->expires, (int)(e->mem_obj->reply->expires - squid_curtime));
+	(long int) e->mem_obj->reply->expires, (int) (e->mem_obj->reply->expires - squid_curtime));
     storeBuffer(e);
     httpReplySwapOut(e->mem_obj->reply, e);
     storeDigestCBlockSwapOut(e);
@@ -400,7 +400,7 @@ storeDigestRewriteFinish(StoreEntry * e)
     storeComplete(e);
     storeTimestampsSet(e);
     debug(71, 2) ("storeDigestRewriteFinish: digest expires at %ld (%+d)\n",
-	(long int)e->expires, (int)(e->expires - squid_curtime));
+	(long int) e->expires, (int) (e->expires - squid_curtime));
     /* is this the write order? @?@ */
     requestUnlink(e->mem_obj->request);
     e->mem_obj->request = NULL;

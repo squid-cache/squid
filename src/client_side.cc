@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.553 2001/10/24 05:46:27 hno Exp $
+ * $Id: client_side.cc,v 1.554 2001/10/24 06:55:44 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2978,7 +2978,7 @@ clientReadBody(request_t * request, char *buf, size_t size, CBCB * callback, voi
 	callback(buf, 0, cbdata);	/* Signal end of body */
 	return;
     }
-    debug(33, 2) ("clientReadBody: start fd=%d body_size=%lu in.offset=%ld cb=%p req=%p\n", conn->fd, (unsigned long int)conn->body.size_left, (long int)conn->in.offset, callback, request);
+    debug(33, 2) ("clientReadBody: start fd=%d body_size=%lu in.offset=%ld cb=%p req=%p\n", conn->fd, (unsigned long int) conn->body.size_left, (long int) conn->in.offset, callback, request);
     conn->body.callback = callback;
     conn->body.cbdata = cbdata;
     conn->body.buf = buf;
@@ -2997,7 +2997,7 @@ clientProcessBody(ConnStateData * conn)
     CBCB *callback = conn->body.callback;
     request_t *request = conn->body.request;
     /* Note: request is null while eating "aborted" transfers */
-    debug(33, 2) ("clientProcessBody: start fd=%d body_size=%lu in.offset=%ld cb=%p req=%p\n", conn->fd, (unsigned long int)conn->body.size_left, (long int)conn->in.offset, callback, request);
+    debug(33, 2) ("clientProcessBody: start fd=%d body_size=%lu in.offset=%ld cb=%p req=%p\n", conn->fd, (unsigned long int) conn->body.size_left, (long int) conn->in.offset, callback, request);
     if (conn->in.offset) {
 	/* Some sanity checks... */
 	assert(conn->body.size_left > 0);
@@ -3032,7 +3032,7 @@ clientProcessBody(ConnStateData * conn)
 	callback(buf, size, cbdata);
 	if (request != NULL)
 	    requestUnlink(request);	/* Linked in clientReadBody */
-	debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%lu in.offset=%ld cb=%p req=%p\n", conn->fd, size, (unsigned long int)conn->body.size_left, (long int)conn->in.offset, callback, request);
+	debug(33, 2) ("clientProcessBody: end fd=%d size=%d body_size=%lu in.offset=%ld cb=%p req=%p\n", conn->fd, size, (unsigned long int) conn->body.size_left, (long int) conn->in.offset, callback, request);
     }
 }
 
@@ -3042,7 +3042,7 @@ static void
 clientReadBodyAbortHandler(char *buf, size_t size, void *data)
 {
     ConnStateData *conn = (ConnStateData *) data;
-    debug(33, 2) ("clientReadBodyAbortHandler: fd=%d body_size=%lu in.offset=%ld\n", conn->fd, (unsigned long int)conn->body.size_left, (long int)conn->in.offset);
+    debug(33, 2) ("clientReadBodyAbortHandler: fd=%d body_size=%lu in.offset=%ld\n", conn->fd, (unsigned long int) conn->body.size_left, (long int) conn->in.offset);
     if (size != 0 && conn->body.size_left != 0) {
 	debug(33, 3) ("clientReadBodyAbortHandler: fd=%d shedule next read\n", conn->fd);
 	conn->body.callback = clientReadBodyAbortHandler;
