@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.16 2002/04/04 21:03:46 hno Exp $
+ * $Id: carp.cc,v 1.17 2002/04/13 15:46:42 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -143,7 +143,7 @@ carpSelectParent(request_t * request)
     if (n_carp_peers == 0)
 	return NULL;
 
-    key = urlCanonical(url);
+    key = urlCanonical(request);
 
     /* calculate hash key */
     debug(39, 2) ("carpSelectParent: Calculating hash for %s\n", key);
