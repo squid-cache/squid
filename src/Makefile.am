@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2001/08/31 11:19:12 robertc Exp $
+#  $Id: Makefile.am,v 1.2 2001/09/03 22:46:09 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -179,7 +179,7 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
-store_modules.c: store_modules.sh
+store_modules.c: store_modules.sh Makefile
 	$(SHELL) $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
 
 repl_modules.c: repl_modules.sh 
