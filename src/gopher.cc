@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.75 1997/04/29 22:12:56 wessels Exp $
+ * $Id: gopher.cc,v 1.76 1997/04/30 03:12:06 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -168,8 +168,7 @@ static int gopher_url_parser(const char *url,
     char *request);
 static void gopherEndHTML _PARAMS((GopherStateData *));
 static void gopherToHTML _PARAMS((GopherStateData *, char *inbuf, int len));
-static PF gopherReadReplyTimeout;
-static PF gopherLifetimeExpire;
+static PF gopherTimeout;
 static PF gopherReadReply;
 static void gopherSendComplete(int fd,
     char *buf,
@@ -678,32 +677,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 }
 
 static void
-gopherReadReplyTimeout(int fd, void *data)
-{
-    GopherStateData *gopherState = data;
-    StoreEntry *entry = NULL;
-    entry = gopherState->entry;
-    debug(10, 4, "GopherReadReplyTimeout: Timeout on %d\n url: %s\n",
-	fd, entry->url);
-    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
-    comm_close(fd);
-}
-
-/* This will be called when socket lifetime is expired. */
-static void
-gopherLifetimeExpire(int fd, void *data)
+gopherTimeout(int fd, void *data)
 {
     GopherStateData *gopherState = data;
     StoreEntry *entry = gopherState->entry;
-    debug(10, 4, "gopherLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    commSetSelect(fd,
-	COMM_SELECT_READ | COMM_SELECT_WRITE,
-	NULL,
-	NULL, 0);
+    debug(10, 4, "gopherTimeout: FD %d: '%s'\n", fd, entry->url);
+    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_close(fd);
 }
-
 
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
@@ -745,13 +726,8 @@ gopherReadReply(int fd, void *data)
 	    gopherReadReply,
 	    data, 0);
 	/* don't install read timeout until we are below the GAP */
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    NULL,
-	    NULL,
-	    0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
+            commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
@@ -766,6 +742,7 @@ gopherReadReply(int fd, void *data)
     len = read(fd, buf, TEMP_BUF_SIZE - 1);
     debug(10, 5, "gopherReadReply: FD %d read len=%d\n", fd, len);
     if (len > 0) {
+        commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Gopher.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -780,11 +757,6 @@ gopherReadReply(int fd, void *data)
 		COMM_SELECT_READ,
 		gopherReadReply,
 		data, 0);
-	    commSetSelect(fd,
-		COMM_SELECT_TIMEOUT,
-		gopherReadReplyTimeout,
-		data,
-		Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
@@ -828,11 +800,6 @@ gopherReadReply(int fd, void *data)
 	    COMM_SELECT_READ,
 	    gopherReadReply,
 	    data, 0);
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    gopherReadReplyTimeout,
-	    data,
-	    Config.readTimeout);
     }
     put_free_4k_page(buf);
     return;
@@ -897,13 +864,6 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	COMM_SELECT_READ,
 	gopherReadReply,
 	gopherState, 0);
-    commSetSelect(fd,
-	COMM_SELECT_TIMEOUT,
-	gopherReadReplyTimeout,
-	gopherState,
-	Config.readTimeout);
-    comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
-
     if (buf)
 	put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
 }
@@ -1007,6 +967,7 @@ gopherStartComplete(void *datap, int status)
 	comm_close(sock);
 	return;
     }
+    commSetTimeout(sock, Config.Timeout.connect, gopherTimeout, gopherState);
     commConnectStart(sock,
 	gopherState->host,
 	gopherState->port,
@@ -1026,10 +987,6 @@ gopherConnectDone(int fd, int status, void *data)
     /* Install connection complete handler. */
     if (opt_no_ipcache)
 	ipcacheInvalidate(gopherState->host);
-    commSetSelect(fd,
-	COMM_SELECT_LIFETIME,
-	gopherLifetimeExpire,
-	gopherState, 0);
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	gopherSendRequest,

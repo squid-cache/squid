@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.2 1997/04/28 04:23:32 wessels Exp $
+ * $Id: unlinkd.cc,v 1.3 1997/04/30 03:12:16 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -127,7 +127,7 @@ unlinkdCreate(void)
 	    close(wfd1);
 	    return -1;
 	}
-	comm_set_fd_lifetime(wfd1, -1);
+	commSetTimeout(wfd1, -1, NULL, NULL);
 	slp.tv_sec = 0;
 	slp.tv_usec = 250000;
 	select(0, NULL, NULL, NULL, &slp);

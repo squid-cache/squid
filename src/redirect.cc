@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.37 1997/04/29 22:13:06 wessels Exp $
+ * $Id: redirect.cc,v 1.38 1997/04/30 03:12:12 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -133,7 +133,7 @@ redirectCreateRedirector(const char *command)
 	    comm_close(sfd);
 	    return -1;
 	}
-	comm_set_fd_lifetime(sfd, -1);
+        commSetTimeout(sfd, -1, NULL, NULL);
 	debug(29, 4, "redirect_create_redirector: FD %d connected to %s #%d.\n",
 	    sfd, command, ++n_redirector);
 	slp.tv_sec = 0;
@@ -374,7 +374,7 @@ redirectOpenServers(void)
     char *prg = Config.Program.redirect;
     int k;
     int redirectsocket;
-    LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
+    LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
     static int first_time = 0;
 
     redirectFreeMemory();

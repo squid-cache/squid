@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.101 1997/04/29 22:12:56 wessels Exp $
+ * $Id: ftp.cc,v 1.102 1997/04/30 03:12:05 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -139,7 +139,7 @@ static void ftpStateFree _PARAMS((int, void *));
 static void ftpReadReply _PARAMS((int, void *));
 static void ftpStartComplete _PARAMS((void *, int));
 static void ftpConnectDone _PARAMS((int fd, int status, void *data));
-static void ftpLifetimeExpire _PARAMS((int, void *));
+static PF ftpTimeout;
 static void ftpProcessReplyHeader _PARAMS((FtpStateData *, const char *, int));
 static void ftpSendComplete _PARAMS((int, char *, int, int, void *));
 static void ftpSendRequest _PARAMS((int, void *));
@@ -181,17 +181,15 @@ ftp_login_parser(const char *login, FtpStateData * ftpState)
     xstrncpy(ftpState->password, Config.ftpUser, MAX_URL);
 }
 
-/* This will be called when socket lifetime is expired. */
 static void
-ftpLifetimeExpire(int fd, void *data)
+ftpTimeout(int fd, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
     debug(9, 4, "ftpLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_close(fd);
 }
-
 
 /* This is too much duplicated code from httpProcessReplyHeader.  Only
  * difference is FtpStateData vs HttpData. */
@@ -304,7 +302,7 @@ ftpReadReply(int fd, void *data)
 	    ftpReadReply,
 	    data, 0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    /* NOTE there is no read timeout handler to disable */
+	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
@@ -317,6 +315,7 @@ ftpReadReply(int fd, void *data)
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(9, 5, "ftpReadReply: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
+	commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Ftp.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -355,7 +354,6 @@ ftpReadReply(int fd, void *data)
 	} else if (!(entry->flag & DELETE_BEHIND)) {
 	    storeTimestampsSet(entry);
 	}
-	/* update fdstat and fdtable */
 	storeComplete(entry);
 	comm_close(fd);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
@@ -385,11 +383,6 @@ ftpReadReply(int fd, void *data)
 	    COMM_SELECT_READ,
 	    ftpReadReply,
 	    data, 0);
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    ftpLifetimeExpire,
-	    data,
-	    Config.readTimeout);
     }
 }
 
@@ -416,10 +409,6 @@ ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	COMM_SELECT_READ,
 	ftpReadReply,
 	ftpState, 0);
-    commSetSelect(ftpState->ftp_fd,
-	COMM_SELECT_TIMEOUT,
-	ftpLifetimeExpire,
-	ftpState, Config.readTimeout);
 }
 
 static const char *
@@ -477,7 +466,7 @@ ftpSendRequest(int fd, void *data)
 	    got_negttl = 1;
     }
     if (!got_timeout) {
-	sprintf(tbuf, "-t %d ", Config.readTimeout);
+	sprintf(tbuf, "-t %d ", Config.Timeout.read);
 	strcat(buf, tbuf);
     }
     if (!got_negttl) {
@@ -596,80 +585,77 @@ ftpStartComplete(void *data, int status)
     request_t *request = ctrlp->request;
     StoreEntry *entry = ctrlp->entry;
     char *url = entry->url;
-    FtpStateData *ftpData = xcalloc(1, sizeof(FtpStateData));
+    FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
     char *req_hdr;
     char *response;
-    ftpData->entry = entry;
+    ftpState->entry = entry;
     xfree(ctrlp);
     req_hdr = entry->mem_obj->mime_hdr;
-    ftpData->request = requestLink(request);
-    if (!ftpCheckAuth(ftpData, req_hdr)) {
+    ftpState->request = requestLink(request);
+    if (!ftpCheckAuth(ftpState, req_hdr)) {
 	/* This request is not fully authenticated */
 	if (request->port == 21) {
-	    sprintf(realm, "ftp %s", ftpData->user);
+	    sprintf(realm, "ftp %s", ftpState->user);
 	} else {
 	    sprintf(realm, "ftp %s port %d",
-		ftpData->user, request->port);
+		ftpState->user, request->port);
 	}
 	response = authorization_needed_msg(request, realm);
 	storeAppend(entry, response, strlen(response));
 	httpParseReplyHeaders(response, entry->mem_obj->reply);
 	storeComplete(entry);
-	ftpStateFree(-1, ftpData);
+	ftpStateFree(-1, ftpState);
 	return;
     }
     debug(9, 5, "FtpStart: host=%s, path=%s, user=%s, passwd=%s\n",
-	ftpData->request->host, ftpData->request->urlpath,
-	ftpData->user, ftpData->password);
-    ftpData->ftp_fd = comm_open(SOCK_STREAM,
+	ftpState->request->host, ftpState->request->urlpath,
+	ftpState->user, ftpState->password);
+    ftpState->ftp_fd = comm_open(SOCK_STREAM,
 	0,
 	local_addr,
 	0,
 	COMM_NONBLOCKING,
 	url);
-    if (ftpData->ftp_fd == COMM_ERROR) {
+    if (ftpState->ftp_fd == COMM_ERROR) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	ftpStateFree(-1, ftpData);
+	ftpStateFree(-1, ftpState);
 	return;
     }
     /* Pipe/socket created ok */
     /* register close handler */
-    comm_add_close_handler(ftpData->ftp_fd,
+    comm_add_close_handler(ftpState->ftp_fd,
 	ftpStateFree,
-	ftpData);
-    /* Now connect ... */
-    commConnectStart(ftpData->ftp_fd,
+	ftpState);
+    commSetTimeout(ftpState->ftp_fd,
+        Config.Timeout.connect,
+        ftpTimeout,
+        ftpState);
+    commConnectStart(ftpState->ftp_fd,
 	localhost,
 	ftpget_port,
 	ftpConnectDone,
-	ftpData);
+	ftpState);
 }
 
 static void
 ftpConnectDone(int fd, int status, void *data)
 {
-    FtpStateData *ftpData = data;
+    FtpStateData *ftpState = data;
     if (status == COMM_ERROR) {
-	squid_error_entry(ftpData->entry, ERR_CONNECT_FAIL, xstrerror());
+	squid_error_entry(ftpState->entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
 	return;
     }
     commSetNonBlocking(fd);
-    (void) fd_note(fd, ftpData->entry->url);
+    (void) fd_note(fd, ftpState->entry->url);
     /* Install connection complete handler. */
-    fd_note(fd, ftpData->entry->url);
+    fd_note(fd, ftpState->entry->url);
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	ftpSendRequest,
 	data, 0);
-    comm_set_fd_lifetime(fd,
-	Config.lifetimeDefault);
-    commSetSelect(fd,
-	COMM_SELECT_LIFETIME,
-	ftpLifetimeExpire,
-	ftpData, 0);
     if (opt_no_ipcache)
-	ipcacheInvalidate(ftpData->request->host);
+	ipcacheInvalidate(ftpState->request->host);
 }
 
 static void
@@ -700,11 +686,11 @@ ftpServerClose(void)
 	COMM_SELECT_READ,
 	NULL,
 	NULL, 0);
-    fdstat_close(ftpget_server_read);
+    fd_close(ftpget_server_read);
     close(ftpget_server_read);
-    fdstat_close(ftpget_server_write);
-    close(ftpget_server_write);
     ftpget_server_read = -1;
+    fd_close(ftpget_server_write);
+    close(ftpget_server_write);
     ftpget_server_write = -1;
 }
 
@@ -764,10 +750,8 @@ ftpInitialize(void)
 	comm_close(cfd);
 	close(squid_to_ftpget[0]);
 	close(ftpget_to_squid[1]);
-	fdstat_open(squid_to_ftpget[1], FD_PIPE);
-	fdstat_open(ftpget_to_squid[0], FD_PIPE);
-	fd_note(squid_to_ftpget[1], "ftpget -S");
-	fd_note(ftpget_to_squid[0], "ftpget -S");
+	fd_open(squid_to_ftpget[1], FD_PIPE, "squid->ftpget");
+	fd_open(ftpget_to_squid[0], FD_PIPE, "ftpget->squid");
 	commSetCloseOnExec(squid_to_ftpget[1]);
 	commSetCloseOnExec(ftpget_to_squid[0]);
 	/* if ftpget -S goes away, this handler should get called */

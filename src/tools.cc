@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.100 1997/04/29 23:34:54 wessels Exp $
+ * $Id: tools.cc,v 1.101 1997/04/30 03:12:15 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -122,6 +122,8 @@ Thanks!\n"
 
 static void fatal_common _PARAMS((const char *));
 static void mail_warranty _PARAMS((void));
+static void shutdownTimeoutHandler _PARAMS((int fd, void *data));
+
 #if USE_ASYNC_IO
 static void safeunlinkComplete _PARAMS((void *data, int retcode, int errcode));
 #endif
@@ -315,20 +317,30 @@ sigusr2_handle(int sig)
 #endif
 }
 
+static void
+shutdownTimeoutHandler(int fd, void *data)
+{
+    debug(21, 1, "Forcing close of FD %d\n", fd);
+    comm_close(fd);
+}
+
 void
-setSocketShutdownLifetimes(int lft)
+setSocketShutdownLifetimes(int to)
 {
     FD_ENTRY *f = NULL;
     int i;
     for (i = Biggest_FD; i >= 0; i--) {
-	f = &fd_table[i];
-	if (!f->read_handler && !f->write_handler)
-	    continue;
-	if (fd_table[i].type != FD_SOCKET)
-	    continue;
-	if (f->lifetime > 0 && (f->lifetime - squid_curtime) <= lft)
-	    continue;
-	comm_set_fd_lifetime(i, lft);
+        f = &fd_table[i];
+        if (!f->read_handler && !f->write_handler)
+            continue;
+        if (f->type != FD_SOCKET)
+            continue;
+        if (f->timeout > 0 && (int) (f->timeout - squid_curtime) <= to)
+            continue;
+        commSetTimeout(i,
+            to,
+            f->timeout_handler ? f->timeout_handler : shutdownTimeoutHandler,
+            f->timeout_data);
     }
 }
 

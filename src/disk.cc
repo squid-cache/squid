@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.61 1997/04/29 23:34:47 wessels Exp $
+ * $Id: disk.cc,v 1.62 1997/04/30 03:12:02 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -203,9 +203,8 @@ file_open_complete(void *data, int fd, int errcode)
 	return;
     }
     commSetCloseOnExec(fd);
+    fd_open(fd, FD_FILE, ctrlp->path);
     fde = &fd_table[fd];
-    memset(fde, '\0', sizeof(FD_ENTRY));
-    fdstat_open(fd, FD_FILE);
     xstrncpy(fde->disk.filename, ctrlp->path, SQUID_MAXPATHLEN);
     if (ctrlp->callback)
 	(ctrlp->callback) (ctrlp->callback_data, fd);
@@ -247,10 +246,7 @@ void
 file_open_fd(int fd, const char *name, unsigned int type)
 {
     FD_ENTRY *fde = &fd_table[fd];
-    if (fde->open)
-	fatal_dump("file_open_fd: already open");
-    memset(fde, '\0', sizeof(FD_ENTRY));
-    fdstat_open(fd, type);
+    fd_open(fd, type, name);
     commSetCloseOnExec(fd);
     xstrncpy(fde->disk.filename, name, SQUID_MAXPATHLEN);
 }
@@ -276,10 +272,7 @@ file_close(int fd)
 	BIT_SET(fde->flags, FD_CLOSE_REQUEST);
 	return;
     }
-    /* update fdstat */
-    fdstat_close(fd);
-    memset(fde, '\0', sizeof(FD_ENTRY));
-    comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
+    fd_close(fd);
 #if USE_ASYNC_IO
     aioClose(fd);
 #else

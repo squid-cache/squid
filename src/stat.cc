@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.136 1997/04/29 23:34:53 wessels Exp $
+ * $Id: stat.cc,v 1.137 1997/04/30 03:12:14 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -631,8 +631,7 @@ static void
 statFiledescriptors(StoreEntry * sentry)
 {
     int i;
-    int lft;
-    int to;
+    int to = 0;
     FD_ENTRY *f;
 
     storeAppendPrintf(sentry, open_bracket);
@@ -647,42 +646,36 @@ statFiledescriptors(StoreEntry * sentry)
     storeAppendPrintf(sentry, "{---- ------ ---- ---- --------------------- ------------------------------}\n");
     for (i = 0; i < Squid_MaxFD; i++) {
 	f = &fd_table[i];
-	if (!fdstat_isopen(i))
+	if (!f->open)
 	    continue;
 	storeAppendPrintf(sentry, "{%4d %-6s ",
 	    i,
 	    fdstatTypeStr[f->type]);
 	switch (f->type) {
 	case FD_SOCKET:
-	    if ((lft = f->lifetime) < 0)
-		lft = 0;
-	    to = f->timeout_time;
-	    if (lft > 0)
-		lft = (lft - squid_curtime) / 60;
-	    if (to > 0)
-		to = (to - squid_curtime) / 60;
-	    if (f->timeout_handler == NULL)
-		to = 0;
-	    storeAppendPrintf(sentry, "%4d %4d %-21s %s}\n",
-		lft,
-		to,
-		host_port_fmt(f->ipaddr, f->remote_port),
-		fd_note(i, NULL));
-	    break;
+            if (f->timeout > 0)
+                to = (int) (f->timeout - squid_curtime) / 60;
+            if (f->timeout_handler == NULL)
+                to = 0;
+            storeAppendPrintf(sentry, "%4d %-21s %s}\n",
+                to,
+                host_port_fmt(f->ipaddr, f->remote_port),
+                f->desc);
+            break;
 	case FD_FILE:
 	    storeAppendPrintf(sentry, "%31s %s}\n",
 		null_string,
 		f->disk.filename);
 	    break;
 	case FD_PIPE:
-	    storeAppendPrintf(sentry, "%31s %s}\n", null_string, fd_note(i, NULL));
+	    storeAppendPrintf(sentry, "%31s %s}\n", null_string, f->desc);
 	    break;
 	case FD_LOG:
-	    storeAppendPrintf(sentry, "%31s %s}\n", null_string, fd_note(i, NULL));
+	    storeAppendPrintf(sentry, "%31s %s}\n", null_string, f->desc);
 	    break;
 	case FD_UNKNOWN:
 	default:
-	    storeAppendPrintf(sentry, "%31s %s}\n", null_string, fd_note(i, NULL));
+	    storeAppendPrintf(sentry, "%31s %s}\n", null_string, f->desc);
 	    break;
 	}
     }
@@ -982,10 +975,9 @@ parameter_get(const cacheinfo * obj, StoreEntry * sentry)
 	Config.negativeTtl);
     storeAppendPrintf(sentry,
 	"{ReadTimeout %d \"# Maximum idle connection (s)\"}\n",
-	Config.readTimeout);
-    storeAppendPrintf(sentry,
-	"{ClientLifetime %d \"# Lifetime for incoming HTTP requests\"}\n",
-	Config.lifetimeDefault);
+	Config.Timeout.read);
+    storeAppendPrintf(sentry, "{DeferTimeout %d\n", Config.Timeout.defer);
+    storeAppendPrintf(sentry, "{ClientLifetime %d\n", Config.Timeout.lifetime);
     storeAppendPrintf(sentry,
 	"{CleanRate %d \"# Rate for periodic object expiring\"}\n",
 	Config.cleanRate);

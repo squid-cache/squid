@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.31 1997/04/28 04:23:04 wessels Exp $
+ * $Id: dns.cc,v 1.32 1997/04/30 03:12:03 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -184,7 +184,7 @@ dnsOpenServer(const char *command)
 	    comm_close(sfd);
 	    return -1;
 	}
-	comm_set_fd_lifetime(sfd, -1);
+	commSetTimeout(sfd, -1, NULL, NULL);
 	return sfd;
     }
     /* child */
@@ -246,7 +246,7 @@ dnsOpenServers(void)
     char *prg = Config.Program.dnsserver;
     int k;
     int dnssocket;
-    LOCAL_ARRAY(char, fd_note_buf, FD_ASCII_NOTE_SZ);
+    LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
 
     dnsFreeMemory();
     dns_child_table = xcalloc(N, sizeof(dnsserver_t *));

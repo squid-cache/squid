@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.155 1997/04/28 05:32:43 wessels Exp $
+ * $Id: http.cc,v 1.156 1997/04/30 03:12:07 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -214,8 +214,7 @@ static struct {
 } ReplyHeaderStats;
 
 static void httpStateFree _PARAMS((int fd, void *));
-static void httpReadReplyTimeout _PARAMS((int fd, void *));
-static void httpLifetimeExpire _PARAMS((int fd, void *));
+static PF httpTimeout;
 static void httpMakePublic _PARAMS((StoreEntry *));
 static void httpMakePrivate _PARAMS((StoreEntry *));
 static void httpCacheNegatively _PARAMS((StoreEntry *));
@@ -257,28 +256,13 @@ httpCachable(method_t method)
     return 1;
 }
 
-/* This will be called when timeout on read. */
 static void
-httpReadReplyTimeout(int fd, void *data)
-{
-    HttpStateData *httpState = data;
-    StoreEntry *entry = NULL;
-    entry = httpState->entry;
-    debug(11, 4, "httpReadReplyTimeout: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
-    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-    comm_close(fd);
-}
-
-/* This will be called when socket lifetime is expired. */
-static void
-httpLifetimeExpire(int fd, void *data)
+httpTimeout(int fd, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
-    debug(11, 4, "httpLifeTimeExpire: FD %d: '%s'\n", fd, entry->url);
-    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    commSetSelect(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, NULL, NULL, 0);
+    debug(11, 4, "httpTimeout: FD %d: '%s'\n", fd, entry->url);
+    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_close(fd);
 }
 
@@ -591,13 +575,8 @@ httpReadReply(int fd, void *data)
 	    httpReadReply,
 	    httpState, 0);
 	/* disable read timeout until we are below the GAP */
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    NULL,
-	    NULL,
-	    0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
-	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
+	    commSetTimeout(fd, Config.Timeout.defer, NULL, NULL);
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
@@ -610,7 +589,7 @@ httpReadReply(int fd, void *data)
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     debug(11, 5, "httpReadReply: FD %d: len %d.\n", fd, len);
     if (len > 0) {
-	comm_set_fd_lifetime(fd, 86400);	/* extend after good read */
+        commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
 	IOStats.Http.reads++;
 	for (clen = len - 1, bin = 0; clen; bin++)
 	    clen >>= 1;
@@ -622,8 +601,6 @@ httpReadReply(int fd, void *data)
 	    /* XXX This may loop forever */
 	    commSetSelect(fd, COMM_SELECT_READ,
 		httpReadReply, httpState, 0);
-	    commSetSelect(fd, COMM_SELECT_TIMEOUT,
-		httpReadReplyTimeout, httpState, Config.readTimeout);
 	} else {
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
@@ -656,11 +633,6 @@ httpReadReply(int fd, void *data)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);
 	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    httpReadReplyTimeout,
-	    httpState,
-	    Config.readTimeout);
-	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    httpReadReply,
 	    httpState, 0);
@@ -689,12 +661,6 @@ httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	    COMM_SELECT_READ,
 	    httpReadReply,
 	    httpState, 0);
-	commSetSelect(fd,
-	    COMM_SELECT_TIMEOUT,
-	    httpReadReplyTimeout,
-	    httpState,
-	    Config.readTimeout);
-	comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     }
 }
 
@@ -932,6 +898,7 @@ proxyhttpStartComplete(void *data, int status)
     char *url = entry->url;
     HttpStateData *httpState = NULL;
     request_t *request = NULL;
+    int fd = ctrlp->sock;
     xfree(ctrlp);
     httpState = xcalloc(1, sizeof(HttpStateData));
     httpState->entry = entry;
@@ -946,6 +913,7 @@ proxyhttpStartComplete(void *data, int status)
     comm_add_close_handler(httpState->fd,
 	httpStateFree,
 	httpState);
+    commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
     request->method = orig_request->method;
     xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
     request->port = e->http_port;
@@ -973,6 +941,7 @@ httpConnect(int fd, const ipcache_addrs * ia, void *data)
 	return;
     }
     /* Open connection. */
+    commSetTimeout(fd, Config.Timeout.connect, httpTimeout, httpState);
     commConnectStart(fd,
 	request->host,
 	request->port,
@@ -996,8 +965,6 @@ httpConnectDone(int fd, int status, void *data)
 	if (opt_no_ipcache)
 	    ipcacheInvalidate(request->host);
 	fd_note(fd, entry->url);
-	commSetSelect(fd, COMM_SELECT_LIFETIME,
-	    httpLifetimeExpire, httpState, 0);
 	commSetSelect(fd, COMM_SELECT_WRITE,
 	    httpSendRequest, httpState, 0);
     }
@@ -1065,6 +1032,7 @@ httpStartComplete(void *data, int status)
     comm_add_close_handler(httpState->fd,
 	httpStateFree,
 	httpState);
+    commSetTimeout(sock, Config.Timeout.read, httpTimeout, httpState);
     httpState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(request->host,
 	httpState->fd,

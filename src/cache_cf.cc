@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.181 1997/04/28 04:22:57 wessels Exp $
+ * $Id: cache_cf.cc,v 1.182 1997/04/30 03:11:58 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -124,11 +124,12 @@ struct SquidConfig Config;
 #define DefaultNegativeTtl	(5 * 60)	/* 5 min */
 #define DefaultNegativeDnsTtl	(2 * 60)	/* 2 min */
 #define DefaultPositiveDnsTtl	(360 * 60)	/* 6 hours */
-#define DefaultReadTimeout	(15 * 60)	/* 15 min */
-#define DefaultLifetimeDefault	(200 * 60)	/* 3+ hours */
-#define DefaultLifetimeShutdown	30	/* 30 seconds */
-#define DefaultConnectTimeout	(2 * 60)	/* 2 min */
-#define DefaultCleanRate	-1	/* disabled */
+#define DefaultReadTimeout      (15 * 60)       /* 15 min */
+#define DefaultConnectTimeout   120     /* 2 min */
+#define DefaultDeferTimeout     3600    /* 1 hour */
+#define DefaultClientLifetime   86400   /* 1 day */
+#define DefaultShutdownLifetime 30      /* 30 seconds */
+#define DefaultCleanRate        -1      /* disabled */
 #define DefaultDnsChildren	5	/* 5 processes */
 #define DefaultOptionsResDefnames 0	/* default off */
 #define DefaultOptionsAnonymizer  0	/* default off */
@@ -1025,23 +1026,23 @@ parseConfigFile(const char *file_name)
 	    parseMinutesLine(&Config.negativeDnsTtl);
 	else if (!strcmp(token, "positive_dns_ttl"))
 	    parseMinutesLine(&Config.positiveDnsTtl);
-	else if (!strcmp(token, "read_timeout"))
-	    parseMinutesLine(&Config.readTimeout);
+        else if (!strcmp(token, "read_timeout"))
+            parseMinutesLine(&Config.Timeout.read);
+        else if (!strcmp(token, "connect_timeout"))
+            parseIntegerValue(&Config.Timeout.connect);
+        else if (!strcmp(token, "defer_timeout"))
+            parseIntegerValue(&Config.Timeout.defer);
+        else if (!strcmp(token, "client_lifetime"))
+            parseIntegerValue(&Config.Timeout.lifetime);
+        else if (!strcmp(token, "shutdown_lifetime"))
+            parseIntegerValue(&Config.shutdownLifetime);
 	else if (!strcmp(token, "clean_rate"))
 	    parseMinutesLine(&Config.cleanRate);
-	else if (!strcmp(token, "client_lifetime"))
-	    parseMinutesLine(&Config.lifetimeDefault);
 	else if (!strcmp(token, "reference_age"))
 	    parseTimeLine(&Config.referenceAge, "minutes");
 
-	else if (!strcmp(token, "shutdown_lifetime"))
-	    parseIntegerValue(&Config.lifetimeShutdown);
-
 	else if (!strcmp(token, "request_size"))
 	    parseKilobytes(&Config.maxRequestSize);
-
-	else if (!strcmp(token, "connect_timeout"))
-	    parseIntegerValue(&Config.connectTimeout);
 
 	else if (!strcmp(token, "cache_ftp_program"))
 	    parsePathname(&Config.Program.ftpget, 1);
@@ -1224,13 +1225,6 @@ parseConfigFile(const char *file_name)
     }
 
     /* Sanity checks */
-    if (Config.lifetimeDefault < Config.readTimeout) {
-	printf("WARNING: client_lifetime (%d seconds) is less than read_timeout (%d seconds).\n",
-	    Config.lifetimeDefault, Config.readTimeout);
-	printf("         This may cause serious problems with your cache!!!\n");
-	printf("         Change your configuration file.\n");
-	fflush(stdout);		/* print message */
-    }
     if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10)) {
 	printf("WARNING: cache_swap (%d kbytes) is less than cache_mem (%d bytes).\n", Config.Swap.maxSize, Config.Mem.maxSize);
 	printf("         This will cause serious problems with your cache!!!\n");
@@ -1340,11 +1334,12 @@ configSetFactoryDefaults(void)
     Config.negativeTtl = DefaultNegativeTtl;
     Config.negativeDnsTtl = DefaultNegativeDnsTtl;
     Config.positiveDnsTtl = DefaultPositiveDnsTtl;
-    Config.readTimeout = DefaultReadTimeout;
-    Config.lifetimeDefault = DefaultLifetimeDefault;
-    Config.lifetimeShutdown = DefaultLifetimeShutdown;
+    Config.Timeout.read = DefaultReadTimeout;
+    Config.Timeout.connect = DefaultConnectTimeout;
+    Config.Timeout.defer = DefaultDeferTimeout;
+    Config.Timeout.lifetime = DefaultClientLifetime;
+    Config.shutdownLifetime = DefaultShutdownLifetime;
     Config.maxRequestSize = DefaultMaxRequestSize;
-    Config.connectTimeout = DefaultConnectTimeout;
     Config.cleanRate = DefaultCleanRate;
     Config.dnsChildren = DefaultDnsChildren;
     Config.redirectChildren = DefaultRedirectChildren;
