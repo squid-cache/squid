@@ -217,6 +217,7 @@ typedef enum {
     HDR_WARNING,
     HDR_WWW_AUTHENTICATE,
     HDR_X_CACHE,
+    HDR_X_CACHE_LOOKUP, /* tmp hack, remove later */
     HDR_PROXY_CONNECTION,
     HDR_OTHER,
     HDR_ENUM_END

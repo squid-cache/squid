@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.31 1998/04/06 22:32:07 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.32 1998/04/22 16:23:41 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -115,6 +115,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Warning", HDR_WARNING, ftStr},	/* for now */
     {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
     {"X-Cache", HDR_X_CACHE, ftStr},
+    {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
     {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
 };
 static HttpHeaderFieldInfo *Headers = NULL;
@@ -149,7 +150,8 @@ static http_hdr_type ReplyHeadersArr[] =
     HDR_CONTENT_MD5, HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_DATE, HDR_ETAG,
     HDR_EXPIRES, HDR_LAST_MODIFIED, HDR_LOCATION, HDR_MAX_FORWARDS,
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
-    HDR_UPGRADE, HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE, HDR_OTHER
+    HDR_UPGRADE, HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
+    HDR_X_CACHE_LOOKUP, HDR_OTHER
 };
 
 static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
