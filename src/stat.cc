@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.328 2000/05/16 07:09:34 wessels Exp $
+ * $Id: stat.cc,v 1.329 2000/06/26 01:38:37 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -902,6 +902,31 @@ statAvgTick(void *notused)
 	xmemmove(p, t, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
 	statCountersCopy(t, c);
 	NCountHourHist++;
+    }
+    if (Config.warnings.high_rptm > 0) {
+	int i = (int) statMedianSvc(1, MEDIAN_HTTP);
+	if (Config.warnings.high_rptm < i)
+	    debug(18, 0) ("WARNING: Median response time is %d milliseconds\n", i);
+    }
+    if (Config.warnings.high_pf) {
+	int i = (CountHist[0].page_faults - CountHist[1].page_faults);
+	double dt = tvSubDsec(CountHist[0].timestamp, CountHist[1].timestamp);
+	if (i > 0 && dt > 0.0)
+	    i /= (int) dt;
+	if (Config.warnings.high_pf < i)
+	    debug(18, 0) ("WARNING: Page faults occuring at %d/sec\n", i);
+    }
+    if (Config.warnings.high_memory) {
+	int i = 0;
+#if HAVE_MSTATS && HAVE_GNUMALLOC_H
+	struct mstats ms = mstats();
+	i = ms.bytes_total;
+#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
+	struct mallinfo mp = mallinfo();
+	i = mp.arena;
+#endif
+	if (Config.warnings.high_pf < i)
+	    debug(18, 0) ("WARNING: Memory usage at %d MB\n", i >> 20);
     }
 }
 

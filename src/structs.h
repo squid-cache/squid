@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.341 2000/06/25 22:41:22 wessels Exp $
+ * $Id: structs.h,v 1.342 2000/06/26 01:38:38 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -499,6 +499,11 @@ struct _SquidConfig {
     } digest;
 #endif
     wordlist *ext_methods;
+    struct {
+	int high_rptm;
+	int high_pf;
+	int high_memory;
+    } warnings;
 };
 
 struct _SquidConfig2 {
