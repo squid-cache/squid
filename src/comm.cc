@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.357 2002/10/27 14:15:49 adrian Exp $
+ * $Id: comm.cc,v 1.358 2002/10/27 14:19:39 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -745,7 +745,7 @@ comm_accept_check_event(void *data)
 	static time_t last_warn = 0;
 	int fd = ((fdc_t *)(data))->fd;
 
-	if (fdNFree() >= RESERVED_FD) {
+	if (fdNFree() < RESERVED_FD) {
 		commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
 		return;
 	}
@@ -1822,7 +1822,7 @@ comm_accept_try(int fd, void *data)
 
 	for (count = 0; count < MAX_ACCEPT_PER_LOOP; count++) {
 		/* If we're out of fds, register an event and return now */
-		if (fdNFree() >= RESERVED_FD) {
+		if (fdNFree() < RESERVED_FD) {
 			debug(5, 3) ("comm_accept_try: we're out of fds - deferring io!\n");
 			eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
 			    1000.0 / (double)(fdc_table[fd].accept.check_delay), 1);
