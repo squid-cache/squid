@@ -2,7 +2,7 @@
 
 
 /*
- * $Id: structs.h,v 1.259 1999/01/12 23:38:40 wessels Exp $
+ * $Id: structs.h,v 1.260 1999/01/15 06:11:46 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1593,11 +1593,7 @@ struct _FwdState {
     request_t *request;
     FwdServer *servers;
     int server_fd;
-    struct {
-	int err_code;
-	http_status http_code;
-	int xerrno;
-    } fail;
+    ErrorState *err;
     time_t start;
     int n_tries;
 };

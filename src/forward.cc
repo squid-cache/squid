@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.45 1999/01/13 21:59:52 wessels Exp $
+ * $Id: forward.cc,v 1.46 1999/01/15 06:11:42 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -75,7 +75,6 @@ static void
 fwdStateFree(FwdState * fwdState)
 {
     StoreEntry *e = fwdState->entry;
-    ErrorState *err;
     int sfd;
     static int loop_detect = 0;
     debug(17, 3) ("fwdStateFree: %p\n", fwdState);
@@ -83,11 +82,8 @@ fwdStateFree(FwdState * fwdState)
     assert(e->mem_obj);
     if (e->store_status == STORE_PENDING) {
 	if (e->mem_obj->inmem_hi == 0) {
-	    assert(fwdState->fail.err_code);
-	    err = errorCon(fwdState->fail.err_code, fwdState->fail.http_code);
-	    err->request = requestLink(fwdState->request);
-	    err->xerrno = fwdState->fail.xerrno;
-	    errorAppendEntry(e, err);
+	    assert(fwdState->err);
+	    errorAppendEntry(e, fwdState->err);
 	}
     }
     fwdServersFree(&fwdState->servers);
@@ -128,7 +124,7 @@ static void
 fwdServerClosed(int fd, void *data)
 {
     FwdState *fwdState = data;
-    debug(17, 3) ("fwdServerClosed: FD %d %s\n", fd, storeUrl(fwdState->entry));
+    debug(17, 2) ("fwdServerClosed: FD %d %s\n", fd, storeUrl(fwdState->entry));
     assert(fwdState->server_fd == fd);
     fwdState->server_fd = -1;
     if (fwdCheckRetry(fwdState)) {
@@ -155,7 +151,7 @@ fwdConnectDone(int server_fd, int status, void *data)
 	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->dnsserver_msg = xstrdup(dns_error_message);
 	err->request = requestLink(request);
-	errorAppendEntry(fwdState->entry, err);
+	fwdFail(fwdState, err);
 	comm_close(server_fd);
     } else if (status != COMM_OK) {
 	assert(fs);
@@ -169,7 +165,7 @@ fwdConnectDone(int server_fd, int status, void *data)
 	    err->port = request->port;
 	}
 	err->request = requestLink(request);
-	errorAppendEntry(fwdState->entry, err);
+	fwdFail(fwdState, err);
 	if (fs->peer)
 	    peerCheckConnectStart(fs->peer);
 	comm_close(server_fd);
@@ -186,13 +182,13 @@ fwdConnectTimeout(int fd, void *data)
     FwdState *fwdState = data;
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
-    debug(17, 3) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+    debug(17, 2) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(fd == fwdState->server_fd);
     if (entry->mem_obj->inmem_hi == 0) {
 	err = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT);
 	err->request = requestLink(fwdState->request);
-	err->xerrno = ETIMEDOUT;	/* cheat */
-	errorAppendEntry(entry, err);
+	err->xerrno = ETIMEDOUT;
+	fwdFail(fwdState, err);
     }
     comm_close(fd);
 }
@@ -236,7 +232,7 @@ fwdConnectStart(FwdState * fwdState)
 	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
 	err->request = requestLink(fwdState->request);
-	errorAppendEntry(fwdState->entry, err);
+	fwdFail(fwdState, err);
 	fwdStateFree(fwdState);
 	return;
     }
@@ -268,7 +264,8 @@ fwdStartFail(FwdState * fwdState)
     ErrorState *err;
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
     err->request = requestLink(fwdState->request);
-    errorAppendEntry(fwdState->entry, err);
+    err->xerrno = errno;
+    fwdFail(fwdState, err);
     fwdStateFree(fwdState);
 }
 
@@ -321,7 +318,7 @@ fwdDispatch(FwdState * fwdState)
 	default:
 	    debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
 		storeUrl(entry));
-	    fwdFail(fwdState, ERR_UNSUP_REQ, HTTP_BAD_REQUEST, -1);
+	    fwdFail(fwdState, errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST));
 	    comm_close(fwdState->server_fd);
 	    break;
 	}
@@ -432,6 +429,7 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
     fwdState->request = requestLink(r);
     fwdState->start = squid_curtime;
     storeLockObject(e);
+    EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
     storeRegisterAbort(e, fwdAbort, fwdState);
     peerSelect(r, e, fwdStartComplete, fwdState);
 }
@@ -453,16 +451,16 @@ fwdCheckDeferRead(int fdnotused, void *data)
 }
 
 void
-fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
+fwdFail(FwdState * fwdState, ErrorState *errorState)
 {
     assert(EBIT_TEST(fwdState->entry->flags, ENTRY_FWD_HDR_WAIT));
     debug(17, 3) ("fwdFail: %s \"%s\"\n\t%s\n",
-	err_type_str[err_code],
-	httpStatusString(http_code),
+	err_type_str[errorState->type],
+	httpStatusString(errorState->http_status),
 	storeUrl(fwdState->entry));
-    fwdState->fail.err_code = err_code;
-    fwdState->fail.http_code = http_code;
-    fwdState->fail.xerrno = xerrno;
+    if (fwdState->err)
+	errorStateFree(fwdState->err);
+    fwdState->err = errorState;
 }
 
 /*
@@ -472,7 +470,7 @@ void
 fwdAbort(void *data)
 {
     FwdState *fwdState = data;
-    debug(17, 3) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
+    debug(17, 2) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
     fwdStateFree(fwdState);
 }
 

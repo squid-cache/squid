@@ -177,7 +177,7 @@ helperShutdown(helper * hlp)
 	    continue;
 	}
 	srv->flags.closing = 1;
-	comm_close(srv->wfd);
+	comm_close(srv->rfd);
     }
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.126 1999/01/12 23:37:53 wessels Exp $
+ * $Id: wais.cc,v 1.127 1999/01/15 06:11:47 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -207,6 +207,7 @@ waisSendRequest(int fd, void *data)
     comm_write_mbuf(fd, mb, waisSendComplete, waisState);
     if (EBIT_TEST(waisState->entry->flags, ENTRY_CACHABLE))
 	storeSetPublicKey(waisState->entry);	/* Make it public */
+    EBIT_CLR(waisState->entry->flags, ENTRY_FWD_HDR_WAIT);
 }
 
 void
