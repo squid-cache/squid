@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.21 2002/10/26 02:18:12 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.22 2002/10/26 02:42:31 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -58,6 +58,8 @@ public:
     void doGetMoreData();
     void identifyStoreObject();
     void identifyFoundObject(_StoreEntry *entry);
+    int storeOKTransferDone() const;
+    int storeNotOKTransferDone() const;
     
     http_status purgeStatus;
 
@@ -987,19 +989,14 @@ clientTraceReply(clientStreamNode * node, clientReplyContext * context)
 int
 clientCheckTransferDone(clientReplyContext * context)
 {
-    clientHttpRequest *http = context->http;
-    int sending = SENDING_BODY;
-    StoreEntry *entry = http->entry;
-    MemObject *mem;
-    http_reply *reply;
-    size_t sendlen;
+    StoreEntry *entry = context->http->entry;
     if (entry == NULL)
 	return 0;
     /*  
      * For now, 'done_copying' is used for special cases like
      * Range and HEAD requests.
      */
-    if (http->flags.done_copying)
+    if (context->http->flags.done_copying)
 	return 1;
     /*
      * Handle STORE_OK objects.
@@ -1008,43 +1005,51 @@ clientCheckTransferDone(clientReplyContext * context)
      * RC: Yes.
      */
     if (entry->store_status == STORE_OK) {
-	if (http->out.offset >= objectLen(entry) - context->headers_sz)
-	    return 1;
-	else
-	    return 0;
+	return context->storeOKTransferDone();
+    } else {
+	return context->storeNotOKTransferDone();
     }
+}
+
+int
+clientReplyContext::storeOKTransferDone() const
+{
+    if (http->out.offset >= objectLen(http->entry) - headers_sz)
+	return 1;
+    return 0;
+}
+
+int
+clientReplyContext::storeNotOKTransferDone() const
+{
     /*
      * Now, handle STORE_PENDING objects
      */
-    mem = entry->mem_obj;
+    MemObject *mem = http->entry->mem_obj;
     assert(mem != NULL);
     assert(http->request != NULL);
     /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
-    reply = mem->reply;
-    if (context->headers_sz == 0)
+    http_reply *reply = mem->reply;
+    if (headers_sz == 0)
 	/* haven't found end of headers yet */
 	return 0;
-    else if (reply->sline.status == HTTP_NO_CONTENT ||
+
+    int sending = SENDING_BODY;
+    if (reply->sline.status == HTTP_NO_CONTENT ||
 	     reply->sline.status == HTTP_NOT_MODIFIED ||
 	     reply->sline.status < HTTP_OK ||
 	     http->request->method == METHOD_HEAD)
 	sending = SENDING_HDRSONLY;
-    else
-	sending = SENDING_BODY;
     /*
      * Figure out how much data we are supposed to send.
      * If we are sending a body and we don't have a content-length,
      * then we must wait for the object to become STORE_OK.
      */
-    sendlen = http->out.headers_sz;
     if (reply->content_length < 0)
 	return 0;
-    else
-	sendlen += reply->content_length;
-    /*
-     * Now that we have the expected length, did we send it all?
-     */
-    if (http->out.size < sendlen)
+
+    size_t expectedLength = http->out.headers_sz + reply->content_length;
+    if (http->out.size < expectedLength)
 	return 0;
     else
 	return 1;
