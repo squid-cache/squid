@@ -382,7 +382,7 @@ snmp_confFn(variable_list * Var, long *ErrP)
     case CONF_UPTIME:
 	Answer->val_len = sizeof(long);
 	Answer->val.integer = xmalloc(Answer->val_len);
-	Answer->type = ASN_TIMETICKS;
+	Answer->type = SMI_TIMETICKS;
 	*(Answer->val.integer) = tvSubDsec(squid_start, current_time);
 	break;
     case CONF_STORAGE:

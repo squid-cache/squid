@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.83 1998/02/22 11:59:00 kostas Exp $
+ * $Id: fqdncache.cc,v 1.84 1998/02/23 21:07:12 kostas Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -899,81 +899,83 @@ fqdncache_restart(void)
 int
 fqdn_getMax()
 {
-	int i=0;
-	fqdncache_entry *fq=NULL;
+    int i = 0;
+    fqdncache_entry *fq = NULL;
 
-  	fq=(fqdncache_entry *) hash_first(fqdn_table);
-	if (fq!=NULL) {
-        	i=1;
-        	while ((fq=(fqdncache_entry *)hash_next(fqdn_table))) i++;
-  	}
-	return i;
-} 
+    fq = (fqdncache_entry *) hash_first(fqdn_table);
+    if (fq != NULL) {
+	i = 1;
+	while ((fq = (fqdncache_entry *) hash_next(fqdn_table)))
+	    i++;
+    }
+    return i;
+}
 
-variable_list *snmp_fqdncacheFn(variable_list *Var, long *ErrP)
+variable_list *
+snmp_fqdncacheFn(variable_list * Var, long *ErrP)
 {
-  variable_list *Answer;
-  static fqdncache_entry *fq=NULL;
-  static struct in_addr fqaddr;
-  int cnt=0;
+    variable_list *Answer;
+    static fqdncache_entry *fq = NULL;
+    static struct in_addr fqaddr;
+    int cnt = 0;
 
-  debug(49,5)("snmp_fqdncacheFn: Processing request with %d.%d!\n",Var->name[11],Var->name[12]);
+    debug(49, 5) ("snmp_fqdncacheFn: Processing request with %d.%d!\n", Var->name[11], Var->name[12]);
 
-  cnt=Var->name[12];
+    cnt = Var->name[12];
 
-  fq=(fqdncache_entry *) hash_first(fqdn_table);
-  while (fq && --cnt) 
+    fq = (fqdncache_entry *) hash_first(fqdn_table);
+    while (fq && --cnt)
 	fq = (fqdncache_entry *) hash_next(fqdn_table);
-  if (fq==NULL || cnt!=0) {
+    if (fq == NULL || cnt != 0) {
 	*ErrP = SNMP_ERR_NOSUCHNAME;
 	return NULL;
-  }	
-  Answer = snmp_var_new(Var->name, Var->name_length);
-  *ErrP = SNMP_ERR_NOERROR;
+    }
+    Answer = snmp_var_new(Var->name, Var->name_length);
+    *ErrP = SNMP_ERR_NOERROR;
 
-  switch(Var->name[11]) {
+    switch (Var->name[11]) {
     case NET_FQDN_ID:
 	Answer->type = ASN_INTEGER;
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->val_len = sizeof(long);
-        *(Answer->val.integer)= Var->name[12];
+	*(Answer->val.integer) = Var->name[12];
 	break;
     case NET_FQDN_NAME:
-        Answer->type = SMI_STRING;
-	Answer->val_len=strlen(fq->names[0]);
-	Answer->val.string=xstrdup((char *)fq->names[0]);
+	Answer->type = SMI_STRING;
+	Answer->val_len = strlen(fq->names[0]);
+	Answer->val.string = xstrdup((char *) fq->names[0]);
 	break;
     case NET_FQDN_IP:
 	Answer->type = SMI_IPADDRESS;
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->val_len = sizeof(long);
-        safe_inet_addr(fq->name, &fqaddr);
-        *(Answer->val.integer)= (long) fqaddr.s_addr;
+	safe_inet_addr(fq->name, &fqaddr);
+	*(Answer->val.integer) = (long) fqaddr.s_addr;
 	break;
     case NET_FQDN_LASTREF:
 	Answer->type = SMI_TIMETICKS;
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->val_len = sizeof(long);
-        *(Answer->val.integer)= fq->lastref;
+	*(Answer->val.integer) = fq->lastref;
 	break;
     case NET_FQDN_EXPIRES:
 	Answer->type = SMI_TIMETICKS;
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->val_len = sizeof(long);
-        *(Answer->val.integer)= fq->expires;
+	*(Answer->val.integer) = fq->expires;
 	break;
     case NET_FQDN_STATE:
 	Answer->type = ASN_INTEGER;
 	Answer->val.integer = xmalloc(Answer->val_len);
 	Answer->val_len = sizeof(long);
-        *(Answer->val.integer)= fq->status;
+	*(Answer->val.integer) = fq->status;
 	break;
     default:
-        *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
-        xfree(Answer->val.integer);
-        return(NULL);
-  }
-  return Answer;
+	*ErrP = SNMP_ERR_NOSUCHNAME;
+	snmp_var_free(Answer);
+	xfree(Answer->val.integer);
+	return (NULL);
+    }
+    return Answer;
 }
 #endif
