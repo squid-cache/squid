@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.474 2000/03/28 17:41:39 wessels Exp $
+ * $Id: client_side.cc,v 1.475 2000/04/18 03:20:26 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -645,11 +645,18 @@ httpRequestFree(void *data)
     MemObject *mem = NULL;
     debug(33, 3) ("httpRequestFree: %s\n", storeUrl(http->entry));
     if (!clientCheckTransferDone(http)) {
+#if MYSTERIOUS_CODE
+	/*
+	 * DW: this seems odd here, is it really needed?  It causes
+	 * incomplete transfers to get logged with "000" status
+	 * code because http->entry becomes NULL.
+	 */
 	if ((e = http->entry)) {
 	    http->entry = NULL;
 	    storeUnregister(e, http);
 	    storeUnlockObject(e);
 	}
+#endif
 	if (http->entry && http->entry->ping_status == PING_WAITING)
 	    storeReleaseRequest(http->entry);
     }
