@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.73 1997/12/02 17:59:33 kostas Exp $
+ * $Id: fqdncache.cc,v 1.74 1997/12/03 01:31:59 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -142,7 +142,6 @@ static fqdncache_entry *fqdncache_parsebuffer(const char *buf, dnsserver_t *);
 static void fqdncache_purgelru(void);
 static void fqdncache_release(fqdncache_entry *);
 static fqdncache_entry *fqdncache_create(const char *name);
-static void fqdncache_add_to_hash(fqdncache_entry *);
 static void fqdncache_call_pending(fqdncache_entry *);
 static void fqdncacheAddHostent(fqdncache_entry *, const struct hostent *);
 static int fqdncacheHasPending(const fqdncache_entry *);
@@ -290,16 +289,9 @@ fqdncache_create(const char *name)
     f = xcalloc(1, sizeof(fqdncache_entry));
     f->name = xstrdup(name);
     f->expires = squid_curtime + Config.negativeDnsTtl;
-    fqdncache_add_to_hash(f);
+    hash_join(fqdn_table, (hash_link *) f);
     dlinkAdd(f, &f->lru, &lru_list);
     return f;
-}
-
-static void
-fqdncache_add_to_hash(fqdncache_entry * f)
-{
-    debug(35, 5) ("fqdncache_add_to_hash: name <%s>\n", f->name);
-    hash_join(fqdn_table, (hash_link *) f);
 }
 
 static void
@@ -879,7 +871,7 @@ fqdncacheChangeKey(fqdncache_entry * f)
     debug(14, 1) ("fqdncacheChangeKey: from '%s' to '%s'\n", f->name, new_key);
     safe_free(f->name);
     f->name = xstrdup(new_key);
-    fqdncache_add_to_hash(f);
+    hash_join(fqdn_table, (hash_link *) f);
 }
 
 /* call during reconfigure phase to clear out all the
