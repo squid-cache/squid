@@ -1,6 +1,6 @@
 SQUID-MIB  DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.19 1998/11/13 22:28:10 glenn Exp $
+-- $Id: mib.txt,v 1.20 1998/11/17 23:16:49 glenn Exp $
 --
 
 IMPORTS
@@ -500,11 +500,6 @@ squid MODULE-IDENTITY
                 STATUS current
         ::= { cacheIpCache 8 } 
 
-	cacheQueueLength OBJECT-TYPE
-                SYNTAX Gauge32
-                MAX-ACCESS read-only
-                STATUS current
-        ::= { cacheIpCache 9 } 
 --
 -- cacheFqdnCache
 --
@@ -550,12 +545,6 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
         ::= { cacheFqdnCache 7 } 
-
-	cacheQueueLength OBJECT-TYPE
-                SYNTAX Gauge32
-                MAX-ACCESS read-only
-                STATUS current
-        ::= { cacheFqdnCache 8 } 
 
 --
 --	cacheDNS 
