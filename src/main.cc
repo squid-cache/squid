@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.101 1996/10/24 06:12:45 wessels Exp $
+ * $Id: main.cc,v 1.102 1996/10/24 21:57:39 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -141,7 +141,6 @@ static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
 #endif
-static char *get_url;
 
 static time_t next_cleaning;
 static time_t next_maintain;
