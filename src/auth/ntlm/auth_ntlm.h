@@ -5,6 +5,7 @@
 
 #ifndef __AUTH_NTLM_H__
 #define __AUTH_NTLM_H__
+#include "authenticate.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
@@ -35,8 +36,18 @@ struct _ntlm_user
     dlink_list proxy_auth_list;
 };
 
-struct _ntlm_request
+class ntlm_request_t : public AuthUserRequestState
 {
+
+public:
+    void *operator new(size_t);
+    void operator delete (void *);
+    void deleteSelf() const;
+
+    ~ntlm_request_t();
+    virtual int authenticated() const;
+    virtual void authenticate(request_t * request, ConnStateData * conn, http_hdr_type type);
+    virtual int direction();
     /* what negotiate string did the client use? */
     char *ntlmnegotiate;
     /* what challenge did we give the client? */
@@ -51,6 +62,9 @@ struct _ntlm_request
     int authserver_deferred;
     /* what connection is this associated with */
     ConnStateData *conn;
+
+private:
+    static MemPool *Pool;
 };
 
 struct _ntlm_helper_state_t
@@ -80,7 +94,6 @@ struct ProxyAuthCachePointer : public hash_link
 
 typedef struct _ntlm_user ntlm_user_t;
 
-typedef struct _ntlm_request ntlm_request_t;
 
 typedef struct _ntlm_helper_state_t ntlm_helper_state_t;
 

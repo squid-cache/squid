@@ -6,7 +6,7 @@
 #ifndef __AUTH_DIGEST_H__
 #define __AUTH_DIGEST_H__
 #include "rfc2617.h"
-
+#include "authenticate.h"
 /* Generic */
 
 class DigestAuthenticateStateData
@@ -18,36 +18,58 @@ public:
     RH *handler;
 };
 
-typedef struct _digest_request_h digest_request_h;
-
-typedef struct _digest_user_h digest_user_h;
-
 typedef struct _digest_nonce_data digest_nonce_data;
 
 typedef struct _digest_nonce_h digest_nonce_h;
 
-struct _digest_user_h
+class digest_user_h
 {
+
+public:
+    void *operator new(size_t);
+    void operator delete (void *);
+    void deleteSelf() const;
+
+    digest_user_h();
+    ~digest_user_h();
+    int authenticated() const;
     char *username;
     HASH HA1;
     int HA1created;
 
-    struct
-    {
-
-unsigned int credentials_ok:
-        2;	/*0=unchecked,1=ok,2=failed */
-    }
-
-    flags;
     /* what nonces have been allocated to this user */
     dlink_list nonces;
+
+private:
+    static MemPool *Pool;
 };
 
 /* the digest_request structure is what follows the http_request around */
 
-struct _digest_request_h
+class digest_request_h : public AuthUserRequestState
 {
+
+public:
+    enum CredentialsState {Unchecked, Ok, Pending, Failed};
+    void *operator new(size_t);
+    void operator delete (void *);
+    void deleteSelf() const;
+
+    digest_request_h();
+    digest_request_h(auth_user_t *);
+    ~digest_request_h();
+
+    int authenticated() const;
+    virtual void authenticate(request_t * request, ConnStateData * conn, http_hdr_type type);
+    virtual int direction();
+    virtual void addHeader(HttpReply * rep, int accel);
+
+    CredentialsState credentials() const;
+    void credentials(CredentialsState);
+
+    void authUser(auth_user_t *);
+    auth_user_t *authUser() const;
+
     char *nonceb64;		/* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;		/* "0a4f113b" */
     char *realm;		/* = "testrealm@host.com" */
@@ -68,6 +90,11 @@ unsigned int authinfo_sent:
 
     flags;
     digest_nonce_h *nonce;
+    auth_user_t *theUser;
+
+private:
+    static MemPool *Pool;
+    CredentialsState credentials_ok;
 };
 
 /* data to be encoded into the nonce's b64 representation */

@@ -5,6 +5,7 @@
 
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
+#include "authenticate.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 

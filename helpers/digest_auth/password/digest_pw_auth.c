@@ -74,13 +74,15 @@ my_free(void *p)
 }
 
 static void
-read_passwd_file(const char *passwdfile)
+read_passwd_file(const char *passwdfile, int ha1mode)
 {
     FILE *f;
     char buf[8192];
     user_data *u;
     char *user;
     char *passwd;
+    int passwdha1;
+
     if (hash != NULL) {
 	hashFreeItems(hash, my_free);
     }
@@ -98,11 +100,20 @@ read_passwd_file(const char *passwdfile)
 	user = strtok(buf, ":\n");
 	passwd = strtok(NULL, ":\n");
 	if ((strlen(user) > 0) && passwd) {
-	    u = xmalloc(sizeof(*u));
-	    u->hash.key = xstrdup(user);
-	    u->passwd = xstrdup(passwd);
-	    hash_join(hash, &u->hash);
-	}
+ 	    passwdha1 = (strncmp("{HHA1}", passwd, 6))?0:1;
+ 	    if (!ha1mode || passwdha1) {
+		u = xmalloc(sizeof(*u));
+		u->hash.key = xstrdup(user);
+		u->passwd = xstrdup(passwd);
+		hash_join(hash, &u->hash);
+	    } else {
+		/* We cannot accept plaintext passwords when using HA1 encoding,
+		 * as the passwords may be output to cache.log if debugging is on.
+		 */
+		fprintf(stderr, "digest_pw_auth: ignoring %s password for %s\n",
+			"plaintext", user);
+ 	    }
+  	}
     }
     fclose(f);
 }
@@ -113,27 +124,41 @@ main(int argc, char **argv)
     struct stat sb;
     time_t change_time = 0;
     char buf[256];
-    char *user, *realm, *p;
+    char *user, *realm, *p, *passwdfile=NULL;
     user_data *u;
     HASH HA1;
     HASHHEX HHA1;
+    int ha1mode=0;
+
     setbuf(stdout, NULL);
-    if (argc != 2) {
-	fprintf(stderr, "Usage: digest_pw_auth <passwordfile>\n");
+    if(argc == 2){
+        passwdfile = argv[1];
+    }
+    if((argc == 3) && !strcmp("-c", argv[1])){
+        ha1mode=1;
+        passwdfile = argv[2];
+    }
+    if (!passwdfile) {
+        fprintf(stderr, "Usage: digest_pw_auth [OPTIONS] <passwordfile>\n");
+        fprintf(stderr, "  -c   accept HHA1 passwords rather than plaintext in passwordfile\n");
 	exit(1);
     }
-    if (stat(argv[1], &sb) != 0) {
-	fprintf(stderr, "cannot stat %s\n", argv[1]);
+    if (stat(passwdfile, &sb) != 0) {
+	fprintf(stderr, "cannot stat %s\n", passwdfile);
 	exit(1);
     }
     while (fgets(buf, 256, stdin) != NULL) {
 	if ((p = strchr(buf, '\n')) != NULL)
 	    *p = '\0';		/* strip \n */
-	if (stat(argv[1], &sb) == 0) {
+	if (stat(passwdfile, &sb) == 0) {
 	    if (sb.st_mtime != change_time) {
-		read_passwd_file(argv[1]);
+		read_passwd_file(passwdfile, ha1mode);
 		change_time = sb.st_mtime;
 	    }
+	}
+	if (!hash) {
+	    printf("ERR\n");
+	    continue;
 	}
 	if ((user = strtok(buf, "\"")) == NULL) {
 	    printf("ERR\n");
@@ -151,8 +176,17 @@ main(int argc, char **argv)
 	if (u == NULL) {
 	    printf("ERR\n");
 	} else {
-	    DigestCalcHA1("md5", user, realm, u->passwd, NULL, NULL, HA1, HHA1);
-	    printf("%s\n", HHA1);
+
+	    if(! ha1mode )
+            {
+                DigestCalcHA1("md5", user, realm, u->passwd, NULL, NULL, HA1, HHA1);
+                printf("%s\n", HHA1);
+                /* fprintf(stderr, "digest_pw_auth: %s:{HHA1}%s\n", user, HHA1); */
+            }
+            else
+            {
+		printf("%s\n", &u->passwd[6]);
+            }
 	}
     }
     exit(0);
