@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.510 2000/11/01 09:36:05 wessels Exp $
+ * $Id: client_side.cc,v 1.511 2000/11/09 20:20:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -79,6 +79,7 @@ static CWCB clientWriteBodyComplete;
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
+static PF clientLifetimeTimeout;
 static int clientCheckTransferDone(clientHttpRequest *);
 static int clientGotNotEnough(clientHttpRequest *);
 static void checkFailureRatio(err_type, hier_code);
@@ -2572,7 +2573,8 @@ clientReadRequest(int fd, void *data)
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
 	    conn->nrequests++;
-	    commSetTimeout(fd, Config.Timeout.lifetime, NULL, NULL);
+	    cbdataLock(http);	/* lock for clientLifetimeTimeout() */
+	    commSetTimeout(fd, Config.Timeout.lifetime, clientLifetimeTimeout, http);
 	    if (parser_return_code < 0) {
 		debug(33, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
 		err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
@@ -2782,6 +2784,22 @@ requestTimeout(int fd, void *data)
     debug(33, 3) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
     comm_close(fd);
 #endif
+}
+
+static void
+clientLifetimeTimeout(int fd, void *data)
+{
+    clientHttpRequest *http = data;
+    ConnStateData *conn;
+    int valid = cbdataValid(http);
+    cbdataUnlock(http);
+    if (!valid)
+	return;
+    conn = http->conn;
+    debug(33, 1) ("WARNING: Closing client %s connection due to lifetime timeout\n",
+	inet_ntoa(conn->peer.sin_addr));
+    debug(33, 1) ("\t%s\n", http->uri);
+    comm_close(fd);
 }
 
 static int
