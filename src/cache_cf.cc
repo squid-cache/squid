@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.371 2001/01/25 23:01:56 hno Exp $
+ * $Id: cache_cf.cc,v 1.372 2001/01/28 00:45:45 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1232,6 +1232,7 @@ parse_peer(peer ** head)
 #endif
 	} else if (!strncasecmp(token, "login=", 6)) {
 	    p->login = xstrdup(token + 6);
+	    rfc1738_unescape(p->login);
 	} else if (!strncasecmp(token, "connect-timeout=", 16)) {
 	    p->connect_timeout = atoi(token + 16);
 #if USE_CACHE_DIGESTS

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.208 2001/01/25 22:54:52 hno Exp $
+# $Id: cf.data.pre,v 1.209 2001/01/28 00:45:45 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -279,6 +279,8 @@ DOC_START
 
 		     use 'login=user:password' if this is a personal/workgroup
 		     proxy and your parent requires proxy authentication.
+		     Note: The string can include URL escapes (i.e. %20 for
+		     spaces). This also means that % must be written as %%.
 
 		     use 'login=PASS' if users must authenticate against
 		     the upstream proxy. Note: To combine this with
