@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.180 1997/04/25 22:01:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.181 1997/04/28 04:22:57 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -115,11 +115,12 @@ struct SquidConfig Config;
 #define DefaultSwapLowWaterMark  90	/* 90% */
 #define DefaultNetdbHigh	1000	/* counts, not percents */
 #define DefaultNetdbLow		 900
+#define DefaultNetdbPeriod       300	/* 5 minutes */
 
 #define DefaultWaisRelayHost	(char *)NULL
 #define DefaultWaisRelayPort	0
 
-#define DefaultReferenceAge	0	/* disabled */
+#define DefaultReferenceAge	(86400*365)	/* 1 year */
 #define DefaultNegativeTtl	(5 * 60)	/* 5 min */
 #define DefaultNegativeDnsTtl	(2 * 60)	/* 2 min */
 #define DefaultPositiveDnsTtl	(360 * 60)	/* 6 hours */
@@ -152,6 +153,7 @@ struct SquidConfig Config;
 #define DefaultFtpgetOptions	""
 #define DefaultDnsserverProgram DEFAULT_DNSSERVER
 #define DefaultPingerProgram    DEFAULT_PINGER
+#define DefaultUnlinkdProgram   DEFAULT_UNLINKD
 #define DefaultRedirectProgram  (char *)NULL	/* default NONE */
 #define DefaultEffectiveUser	(char *)NULL	/* default NONE */
 #define DefaultEffectiveGroup	(char *)NULL	/* default NONE */
@@ -185,9 +187,9 @@ struct SquidConfig Config;
 #define DefaultTcpRcvBufsz	0	/* use system default */
 #define DefaultUdpMaxHitObjsz	SQUID_UDP_SO_SNDBUF	/* from configure */
 #define DefaultTcpIncomingAddr	INADDR_ANY
-#define DefaultTcpOutgoingAddr	inaddr_none
+#define DefaultTcpOutgoingAddr	no_addr.s_addr
 #define DefaultUdpIncomingAddr	INADDR_ANY
-#define DefaultUdpOutgoingAddr	inaddr_none
+#define DefaultUdpOutgoingAddr	no_addr.s_addr
 #define DefaultClientNetmask    0xFFFFFFFFul
 #define DefaultPassProxy	NULL
 #define DefaultSslProxy		NULL
@@ -201,6 +203,9 @@ struct SquidConfig Config;
 
 #define DefaultOptionsLogUdp	1	/* on */
 #define DefaultOptionsEnablePurge 0	/* default off */
+#define DefaultOptionsClientDb	1	/* default on */
+#define DefaultOptionsQueryIcmp	0	/* default off */
+
 
 int httpd_accel_mode = 0;	/* for fast access */
 const char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -232,7 +237,6 @@ static void parseDebugOptionsLine _PARAMS((void));
 static void parseEffectiveUserLine _PARAMS((void));
 static void parseErrHtmlLine _PARAMS((void));
 static void parseFtpOptionsLine _PARAMS((void));
-static void parseFtpProgramLine _PARAMS((void));
 static void parseFtpUserLine _PARAMS((void));
 static void parseWordlist _PARAMS((wordlist **));
 static void parseHostAclLine _PARAMS((void));
@@ -250,9 +254,11 @@ static void parseVisibleHostnameLine _PARAMS((void));
 static void parseWAISRelayLine _PARAMS((void));
 static void parseMinutesLine _PARAMS((int *));
 static void parseCachemgrPasswd _PARAMS((void));
-static void parsePathname _PARAMS((char **));
+static void parsePathname _PARAMS((char **, int fatal));
 static void parseProxyLine _PARAMS((peer **));
 static void parseHttpAnonymizer _PARAMS((int *));
+static int parseTimeUnits _PARAMS((const char *unit));
+static void parseTimeLine _PARAMS((int *iptr, const char *units));
 
 static void
 self_destruct(void)
@@ -358,6 +364,10 @@ parseCacheHostLine(void)
 	    weight = atoi(token + 7);
 	} else if (!strncasecmp(token, "ttl=", 4)) {
 	    mcast_ttl = atoi(token + 4);
+	    if (mcast_ttl < 0)
+		mcast_ttl = 0;
+	    if (mcast_ttl > 128)
+		mcast_ttl = 128;
 	} else if (!strncasecmp(token, "default", 7)) {
 	    options |= NEIGHBOR_DEFAULT_PARENT;
 	} else if (!strncasecmp(token, "round-robin", 11)) {
@@ -549,25 +559,19 @@ parseEffectiveUserLine(void)
 }
 
 static void
-parsePathname(char **path)
+parsePathname(char **path, int fatal)
 {
     char *token;
+    struct stat sb;
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
     safe_free(*path);
     *path = xstrdup(token);
-}
-
-static void
-parseFtpProgramLine(void)
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == NULL)
+    if (fatal && stat(token, &sb) < 0) {
+	debug(50, 1, "parsePathname: %s: %s\n", token, xstrerror());
 	self_destruct();
-    safe_free(Config.Program.ftpget);
-    Config.Program.ftpget = xstrdup(token);
+    }
 }
 
 static void
@@ -637,8 +641,8 @@ parseAddressLine(struct in_addr *addr)
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
-    if (inet_addr(token) != inaddr_none)
-	(*addr).s_addr = inet_addr(token);
+    if (safe_inet_addr(token, addr) == 1)
+	(void) 0;
     else if ((hp = gethostbyname(token)))	/* dont use ipcache */
 	*addr = inaddrFromHostent(hp);
     else
@@ -752,8 +756,8 @@ parseVizHackLine(void)
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
-    if (inet_addr(token) != inaddr_none)
-	Config.vizHack.addr.s_addr = inet_addr(token);
+    if (safe_inet_addr(token, &Config.vizHack.addr) == 1)
+	(void) 0;
     else if ((hp = gethostbyname(token)))	/* dont use ipcache */
 	Config.vizHack.addr = inaddrFromHostent(hp);
     else
@@ -931,20 +935,20 @@ parseConfigFile(const char *file_name)
 	    parseCacheDir();
 
 	else if (!strcmp(token, "cache_log"))
-	    parsePathname(&Config.Log.log);
+	    parsePathname(&Config.Log.log, 0);
 
 	else if (!strcmp(token, "cache_access_log"))
-	    parsePathname(&Config.Log.access);
+	    parsePathname(&Config.Log.access, 0);
 
 	else if (!strcmp(token, "cache_store_log"))
-	    parsePathname(&Config.Log.store);
+	    parsePathname(&Config.Log.store, 0);
 
 	else if (!strcmp(token, "cache_swap_log"))
-	    parsePathname(&Config.Log.swap);
+	    parsePathname(&Config.Log.swap, 0);
 
 #if USE_USERAGENT_LOG
 	else if (!strcmp(token, "useragent_log"))
-	    parsePathname(&Config.Log.useragent);
+	    parsePathname(&Config.Log.useragent, 0);
 #endif
 
 	else if (!strcmp(token, "logfile_rotate"))
@@ -1028,7 +1032,7 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "client_lifetime"))
 	    parseMinutesLine(&Config.lifetimeDefault);
 	else if (!strcmp(token, "reference_age"))
-	    parseMinutesLine(&Config.referenceAge);
+	    parseTimeLine(&Config.referenceAge, "minutes");
 
 	else if (!strcmp(token, "shutdown_lifetime"))
 	    parseIntegerValue(&Config.lifetimeShutdown);
@@ -1040,9 +1044,9 @@ parseConfigFile(const char *file_name)
 	    parseIntegerValue(&Config.connectTimeout);
 
 	else if (!strcmp(token, "cache_ftp_program"))
-	    parseFtpProgramLine();
+	    parsePathname(&Config.Program.ftpget, 1);
 	else if (!strcmp(token, "ftpget_program"))
-	    parseFtpProgramLine();
+	    parsePathname(&Config.Program.ftpget, 1);
 
 	else if (!strcmp(token, "cache_ftp_options"))
 	    parseFtpOptionsLine();
@@ -1050,7 +1054,7 @@ parseConfigFile(const char *file_name)
 	    parseFtpOptionsLine();
 
 	else if (!strcmp(token, "cache_dns_program"))
-	    parsePathname(&Config.Program.dnsserver);
+	    parsePathname(&Config.Program.dnsserver, 1);
 
 	else if (!strcmp(token, "dns_children"))
 	    parseIntegerValue(&Config.dnsChildren);
@@ -1058,10 +1062,16 @@ parseConfigFile(const char *file_name)
 	    parseOnOff(&Config.Options.res_defnames);
 
 	else if (!strcmp(token, "redirect_program"))
-	    parsePathname(&Config.Program.redirect);
+	    parsePathname(&Config.Program.redirect, 1);
 
 	else if (!strcmp(token, "redirect_children"))
 	    parseIntegerValue(&Config.redirectChildren);
+
+	else if (!strcmp(token, "pinger_program"))
+	    parsePathname(&Config.Program.pinger, 1);
+
+	else if (!strcmp(token, "unlinkd_program"))
+	    parsePathname(&Config.Program.unlinkd, 1);
 
 #if USE_PROXY_AUTH
 	else if (!strcmp(token, "proxy_auth"))
@@ -1136,7 +1146,7 @@ parseConfigFile(const char *file_name)
 	    parseDebugOptionsLine();
 
 	else if (!strcmp(token, "pid_filename"))
-	    parsePathname(&Config.pidFilename);
+	    parsePathname(&Config.pidFilename, 0);
 
 	else if (!strcmp(token, "visible_hostname"))
 	    parseVisibleHostnameLine();
@@ -1177,6 +1187,10 @@ parseConfigFile(const char *file_name)
 	    parseOnOff(&Config.Options.log_udp);
 	else if (!strcmp(token, "http_anonymizer"))
 	    parseHttpAnonymizer(&Config.Options.anonymizer);
+	else if (!strcmp(token, "client_db"))
+	    parseOnOff(&Config.Options.client_db);
+	else if (!strcmp(token, "query_icmp"))
+	    parseOnOff(&Config.Options.query_icmp);
 
 	else if (!strcmp(token, "minimum_direct_hops"))
 	    parseIntegerValue(&Config.minDirectHops);
@@ -1198,8 +1212,8 @@ parseConfigFile(const char *file_name)
 	    parseIntegerValue(&Config.Netdb.high);
 	else if (!strcmp(token, "netdb_low"))
 	    parseIntegerValue(&Config.Netdb.low);
-	else if (!strcmp(token, "netdb_ttl"))
-	    parseIntegerValue(&Config.Netdb.ttl);
+	else if (!strcmp(token, "netdb_ping_period"))
+	    parseTimeLine(&Config.Netdb.period, "seconds");
 
 	/* If unknown, treat as a comment line */
 	else {
@@ -1277,6 +1291,7 @@ configFreeMemory(void)
     safe_free(Config.Program.ftpget_opts);
     safe_free(Config.Program.dnsserver);
     safe_free(Config.Program.redirect);
+    safe_free(Config.Program.unlinkd);
     safe_free(Config.Program.pinger);
     safe_free(Config.Accel.host);
     safe_free(Config.Accel.prefix);
@@ -1316,6 +1331,7 @@ configSetFactoryDefaults(void)
     Config.Swap.lowWaterMark = DefaultSwapLowWaterMark;
     Config.Netdb.high = DefaultNetdbHigh;
     Config.Netdb.low = DefaultNetdbLow;
+    Config.Netdb.period = DefaultNetdbPeriod;
 
     Config.Wais.relayHost = safe_xstrdup(DefaultWaisRelayHost);
     Config.Wais.relayPort = DefaultWaisRelayPort;
@@ -1366,6 +1382,7 @@ configSetFactoryDefaults(void)
     Config.Program.dnsserver = safe_xstrdup(DefaultDnsserverProgram);
     Config.Program.redirect = safe_xstrdup(DefaultRedirectProgram);
     Config.Program.pinger = safe_xstrdup(DefaultPingerProgram);
+    Config.Program.unlinkd = safe_xstrdup(DefaultUnlinkdProgram);
     Config.Accel.host = safe_xstrdup(DefaultAccelHost);
     Config.Accel.prefix = safe_xstrdup(DefaultAccelPrefix);
     Config.Accel.port = DefaultAccelPort;
@@ -1402,6 +1419,8 @@ configSetFactoryDefaults(void)
     Config.Options.res_defnames = DefaultOptionsResDefnames;
     Config.Options.anonymizer = DefaultOptionsAnonymizer;
     Config.Options.enable_purge = DefaultOptionsEnablePurge;
+    Config.Options.client_db = DefaultOptionsClientDb;
+    Config.Options.query_icmp = DefaultOptionsQueryIcmp;
 }
 
 static void
@@ -1427,4 +1446,51 @@ configDoConfigure(void)
 	Config.appendDomainLen = strlen(Config.appendDomain);
     else
 	Config.appendDomainLen = 0;
+}
+
+/* Parse a time specification from the config file.  Store the
+ * result in 'iptr', after converting it to 'units' */
+static void
+parseTimeLine(int *iptr, const char *units)
+{
+    char *token;
+    double d;
+    int m;
+    int u;
+    if ((u = parseTimeUnits(units)) == 0)
+	self_destruct();
+    if ((token = strtok(NULL, w_space)) == NULL)
+	self_destruct();
+    d = atof(token);
+    m = u;			/* default to 'units' if none specified */
+    if ((token = strtok(NULL, w_space)) != NULL) {
+	if ((m = parseTimeUnits(token)) == 0)
+	    self_destruct();
+    }
+    *iptr = m * d / u;
+}
+
+static int
+parseTimeUnits(const char *unit)
+{
+    if (!strncasecmp(unit, "second", 6))
+	return 1;
+    if (!strncasecmp(unit, "minute", 6))
+	return 60;
+    if (!strncasecmp(unit, "hour", 4))
+	return 3600;
+    if (!strncasecmp(unit, "day", 3))
+	return 86400;
+    if (!strncasecmp(unit, "week", 4))
+	return 86400 * 7;
+    if (!strncasecmp(unit, "fortnight", 9))
+	return 86400 * 14;
+    if (!strncasecmp(unit, "month", 5))
+	return 86400 * 30;
+    if (!strncasecmp(unit, "year", 4))
+	return 86400 * 365.2522;
+    if (!strncasecmp(unit, "decade", 6))
+	return 86400 * 365.2522 * 10;
+    debug(3, 1, "parseTimeUnits: unknown time unit '%s'\n", unit);
+    return 0;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.32 1997/02/06 18:02:10 wessels Exp $
+ * $Id: dnsserver.cc,v 1.33 1997/04/28 04:23:05 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -227,7 +227,7 @@ struct hostent *_res_gethostbyname(char *name);
 #endif /* _SQUID_NEXT_ */
 
 static int do_debug = 0;
-static unsigned int inaddr_none;
+static struct in_addr no_addr;
 
 /* error messages from gethostbyname() */
 static char *
@@ -261,7 +261,7 @@ main(int argc, char *argv[])
     int i;
     int c;
 
-    inaddr_none = inet_addr("255.255.255.255");
+    safe_inet_addr("255.255.255.255", &no_addr);
 
 #if HAVE_RES_INIT
     res_init();
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
 
     for (;;) {
 	int retry_count = 0;
-	int addrbuf;
+	struct in_addr ip;
 	memset(request, '\0', 256);
 
 	/* read from ipcache */
@@ -323,7 +323,7 @@ main(int argc, char *argv[])
 	result = NULL;
 	start = time(NULL);
 	/* check if it's already an IP address in text form. */
-	if (inet_addr(request) != inaddr_none) {
+	if (safe_inet_addr(request, &ip)) {
 #if NO_REVERSE_LOOKUP
 	    printf("$name %s\n", request);
 	    printf("$h_name %s\n", request);
@@ -335,9 +335,8 @@ main(int argc, char *argv[])
 	    fflush(stdout);
 	    continue;
 #endif
-	    addrbuf = inet_addr(request);
 	    for (;;) {
-		result = gethostbyaddr((char *) &addrbuf, 4, AF_INET);
+		result = gethostbyaddr((char *) &ip.s_addr, 4, AF_INET);
 		if (result || h_errno != TRY_AGAIN)
 		    break;
 		if (++retry_count == 2)

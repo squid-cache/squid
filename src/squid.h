@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.103 1997/04/02 05:22:14 wessels Exp $
+ * $Id: squid.h,v 1.104 1997/04/28 04:23:27 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -271,7 +271,6 @@ typedef int (*QS) (const void *, const void *);
 #include "cache_cf.h"
 #include "comm.h"
 #include "debug.h"
-#include "disk.h"
 #include "fdstat.h"
 #include "hash.h"
 #include "proto.h"		/* must go before neighbors.h */
@@ -305,6 +304,8 @@ typedef int (*QS) (const void *, const void *);
 #include "client_db.h"
 #include "objcache.h"
 #include "refresh.h"
+#include "unlinkd.h"
+#include "disk.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
@@ -331,12 +332,13 @@ extern int opt_catch_signals;	/* main.c */
 extern int opt_no_ipcache;	/* main.c */
 extern int vhost_mode;		/* main.c */
 extern int Squid_MaxFD;		/* main.c */
+extern int Biggest_FD;		/* main.c */
+extern int select_loops;	/* main.c */
 extern const char *const version_string;	/* main.c */
 extern const char *const appname;	/* main.c */
 extern struct in_addr local_addr;	/* main.c */
 extern struct in_addr theOutICPAddr;	/* main.c */
 extern const char *const localhost;
-extern unsigned int inaddr_none;
 extern struct in_addr no_addr;	/* comm.c */
 extern int opt_udp_hit_obj;	/* main.c */
 extern int opt_mem_pools;	/* main.c */
@@ -344,7 +346,7 @@ extern int opt_forwarded_for;	/* main.c */
 extern int opt_accel_uses_host;	/* main.c */
 extern char ThisCache[];	/* main.c */
 
-/* Prototypes and definitions which don't really deserve a seaprate
+/* Prototypes and definitions which don't really deserve a separate
  * include file */
 
 #define  CONNECT_PORT        443

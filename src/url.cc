@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.54 1997/02/19 17:05:24 wessels Exp $
+ * $Id: url.cc,v 1.55 1997/04/28 04:23:34 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -168,8 +168,6 @@ urlParseProtocol(const char *s)
 	return PROTO_WAIS;
     if (strncasecmp(s, "cache_object", 12) == 0)
 	return PROTO_CACHEOBJ;
-    if (strncasecmp(s, "file", 4) == 0)
-	return PROTO_FTP;
     return PROTO_NONE;
 }
 
@@ -246,6 +244,14 @@ urlParse(method_t method, char *url)
 	debug(23, 0, "urlParse: Invalid port == 0\n");
 	return NULL;
     }
+#ifdef HARDCODE_DENY_PORTS
+    /* These ports are filtered in the default squid.conf, but
+     * maybe someone wants them hardcoded... */
+    if (port == 7 || port == 9 || port = 19) {
+	debug(23, 0, "urlParse: Deny access to port %d\n", port);
+	return NULL;
+    }
+#endif
 #ifdef REMOVE_FTP_TRAILING_SLASHES
     /* remove trailing slashes from FTP URLs */
     if (protocol == PROTO_FTP) {

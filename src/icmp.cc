@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.32 1997/03/04 05:16:32 wessels Exp $
+ * $Id: icmp.cc,v 1.33 1997/04/28 04:23:12 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -259,7 +259,7 @@ icmpOpen(void)
 	local_addr,
 	0,
 	COMM_NONBLOCKING,
-	"ICMP Socket");
+	"Pinger Socket");
     if (icmp_sock < 0) {
 	debug(50, 0, "icmpOpen: icmp_sock: %s\n", xstrerror());
 	return;
@@ -288,7 +288,7 @@ icmpOpen(void)
     }
     if (pid == 0) {		/* child */
 	char *x = xcalloc(strlen(Config.debugOptions) + 32, 1);
-	sprintf(x, "SQUID_DEBUG=%s\n", Config.debugOptions);
+	sprintf(x, "SQUID_DEBUG=%s", Config.debugOptions);
 	putenv(x);
 	comm_close(icmp_sock);
 	dup2(child_sock, 0);

@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.30 1997/02/07 04:57:13 wessels Exp $
+ * $Id: dns.cc,v 1.31 1997/04/28 04:23:04 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -266,7 +266,8 @@ dnsOpenServers(void)
 	    dns_child_table[k]->id = k + 1;
 	    dns_child_table[k]->inpipe = dnssocket;
 	    dns_child_table[k]->outpipe = dnssocket;
-	    dns_child_table[k]->lastcall = squid_curtime;
+	    dns_child_table[k]->answer = squid_curtime;
+	    dns_child_table[k]->dispatch_time = current_time;
 	    dns_child_table[k]->size = DNS_INBUF_SZ - 1;
 	    dns_child_table[k]->offset = 0;
 	    dns_child_table[k]->ip_inbuf = xcalloc(DNS_INBUF_SZ, 1);
@@ -278,7 +279,7 @@ dnsOpenServers(void)
 	    NDnsServersAlloc++;
 	}
     }
-    if (NDnsServersAlloc == 0)
+    if (NDnsServersAlloc == 0 && Config.dnsChildren > 0)
 	fatal("Failed to start any dnsservers");
     debug(34, 1, "Started %d 'dnsserver' processes\n", NDnsServersAlloc);
 }
@@ -288,7 +289,7 @@ void
 dnsStats(StoreEntry * sentry)
 {
     int k;
-
+    dnsserver_t *dns = NULL;
     storeAppendPrintf(sentry, "{DNSServer Statistics:\n");
     storeAppendPrintf(sentry, "{dnsserver requests: %d}\n",
 	DnsStats.requests);
@@ -302,7 +303,31 @@ dnsStats(StoreEntry * sentry)
 	    k + 1,
 	    DnsStats.hist[k]);
     }
-    storeAppendPrintf(sentry, "}\n\n");
+    storeAppendPrintf(sentry, "{}\n");
+    storeAppendPrintf(sentry, "{dnsservers status:}\n");
+    for (k = 0; k < NDnsServersAlloc; k++) {
+	dns = *(dns_child_table + k);
+	storeAppendPrintf(sentry, "{dnsserver #%d:}\n", k + 1);
+	storeAppendPrintf(sentry, "{    Flags: %c%c%c}\n",
+	    dns->flags & DNS_FLAG_ALIVE ? 'A' : ' ',
+	    dns->flags & DNS_FLAG_BUSY ? 'B' : ' ',
+	    dns->flags & DNS_FLAG_CLOSING ? 'C' : ' ');
+	storeAppendPrintf(sentry, "{    FDs (in/out): %d/%d}\n",
+	    dns->inpipe, dns->outpipe);
+	storeAppendPrintf(sentry, "{    Alive since: %s}\n",
+	    mkrfc1123(dns->answer));
+	storeAppendPrintf(sentry, "{    Last Dispatched: %0.3f seconds ago}\n",
+	    0.001 * tvSubMsec(dns->dispatch_time, current_time));
+	storeAppendPrintf(sentry, "{    Read Buffer Size: %d bytes}\n",
+	    dns->size);
+	storeAppendPrintf(sentry, "{    Read Offset: %d bytes}\n",
+	    dns->offset);
+    }
+    storeAppendPrintf(sentry, "\n{Flags key:}\n\n");
+    storeAppendPrintf(sentry, "{   A = ALIVE}\n");
+    storeAppendPrintf(sentry, "{   B = BUSY}\n");
+    storeAppendPrintf(sentry, "{   C = CLOSING}\n");
+
     storeAppendPrintf(sentry, close_bracket);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.8 1997/03/29 04:45:19 wessels Exp $
+ * $Id: peer_select.cc,v 1.9 1997/04/28 04:23:21 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -30,6 +30,29 @@
  */
 
 #include "squid.h"
+
+const char *hier_strings[] =
+{
+    "NONE",
+    "DIRECT",
+    "SIBLING_HIT",
+    "PARENT_HIT",
+    "DEFAULT_PARENT",
+    "SINGLE_PARENT",
+    "FIRST_UP_PARENT",
+    "NO_PARENT_DIRECT",
+    "FIRST_PARENT_MISS",
+    "CLOSEST_PARENT_MISS",
+    "CLOSEST_DIRECT",
+    "NO_DIRECT_FAIL",
+    "SOURCE_FASTEST",
+    "SIBLING_UDP_HIT_OBJ",
+    "PARENT_UDP_HIT_OBJ",
+    "PASSTHROUGH_PARENT",
+    "SSL_PARENT_MISS",
+    "ROUNDROBIN_PARENT",
+    "INVALID CODE"
+};
 
 static struct {
     int timeouts;
@@ -68,28 +91,28 @@ peerGetSomeParent(request_t * request, hier_code * code)
     peer *p;
     if (request->method == METHOD_CONNECT)
 	if ((p = Config.sslProxy)) {
-	    *code = HIER_SSL_PARENT;
+	    *code = SSL_PARENT;
 	    return p;
 	}
     if (request->method != METHOD_GET)
 	if ((p = Config.passProxy)) {
-	    *code = HIER_PASS_PARENT;
+	    *code = PASS_PARENT;
 	    return p;
 	}
     if ((p = getDefaultParent(request))) {
-	*code = HIER_DEFAULT_PARENT;
+	*code = DEFAULT_PARENT;
 	return p;
     }
     if ((p = getSingleParent(request))) {
-	*code = HIER_SINGLE_PARENT;
+	*code = SINGLE_PARENT;
 	return p;
     }
     if ((p = getRoundRobinParent(request))) {
-	*code = HIER_ROUNDROBIN_PARENT;
+	*code = ROUNDROBIN_PARENT;
 	return p;
     }
     if ((p = getFirstUpParent(request))) {
-	*code = HIER_FIRSTUP_PARENT;
+	*code = FIRSTUP_PARENT;
 	return p;
     }
     return NULL;
@@ -196,8 +219,8 @@ peerSelectFoo(ps_state * psstate)
     }
     debug(44, 3, "peerSelect: direct = %d\n", direct);
     if (direct == DIRECT_YES) {
-	debug(44, 3, "peerSelect: HIER_DIRECT\n");
-	hierarchyNote(request, HIER_DIRECT, &psstate->icp, request->host);
+	debug(44, 3, "peerSelect: DIRECT\n");
+	hierarchyNote(request, DIRECT, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
 	return;
     }
@@ -220,13 +243,13 @@ peerSelectFoo(ps_state * psstate)
 	}
 	debug_trap("peerSelect: neighborsUdpPing returned 0");
     }
-    if ((p = psstate->best_parent)) {
-	code = HIER_BEST_PARENT_MISS;
+    if ((p = psstate->first_parent_miss)) {
+	code = FIRST_PARENT_MISS;
 	debug(44, 3, "peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(request, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
     } else if (direct != DIRECT_NO) {
-	code = HIER_DIRECT;
+	code = DIRECT;
 	debug(44, 3, "peerSelect: %s/%s\n", hier_strings[code], request->host);
 	hierarchyNote(request, code, &psstate->icp, request->host);
 	peerSelectCallback(psstate, NULL);
@@ -235,7 +258,7 @@ peerSelectFoo(ps_state * psstate)
 	hierarchyNote(request, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);
     } else {
-	code = HIER_NO_DIRECT_FAIL;
+	code = NO_DIRECT_FAIL;
 	hierarchyNote(request, code, &psstate->icp, NULL);
 	peerSelectCallbackFail(psstate);
     }
@@ -271,20 +294,20 @@ peerHandleIcpReply(peer * p, peer_t type, icp_opcode op, void *data)
 	if (type == PEER_PARENT) {
 	    w_rtt = tvSubMsec(psstate->icp.start, current_time) / p->weight;
 	    if (psstate->icp.w_rtt == 0 || w_rtt < psstate->icp.w_rtt) {
-		psstate->best_parent = p;
+		psstate->first_parent_miss = p;
 		psstate->icp.w_rtt = w_rtt;
 	    }
 	}
     } else if (op == ICP_OP_HIT || op == ICP_OP_HIT_OBJ) {
 	hierarchyNote(request,
-	    type == PEER_PARENT ? HIER_PARENT_HIT : HIER_SIBLING_HIT,
+	    type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT,
 	    &psstate->icp,
 	    p->host);
 	peerSelectCallback(psstate, p);
 	return;
     } else if (op == ICP_OP_SECHO) {
 	hierarchyNote(request,
-	    HIER_SOURCE_FASTEST,
+	    SOURCE_FASTEST,
 	    &psstate->icp,
 	    request->host);
 	peerSelectCallback(psstate, p);

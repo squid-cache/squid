@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.90 1997/03/04 05:16:24 wessels Exp $
+ * $Id: acl.cc,v 1.91 1997/04/28 04:22:56 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -234,16 +234,15 @@ aclParseMethodList(void *curlist)
 static int
 decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 {
-    u_num32 a = 0;
+    u_num32 a;
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0;
     struct hostent *hp = NULL;
 
     switch (sscanf(asc, "%d.%d.%d.%d", &a1, &a2, &a3, &a4)) {
     case 4:			/* a dotted quad */
-	if ((a = (u_num32) inet_addr(asc)) != inaddr_none ||
-	    !strcmp(asc, "255.255.255.255")) {
-	    addr->s_addr = a;
-	    /* inet_addr() outputs in network byte order */
+	if (!safe_inet_addr(asc, addr)) {
+	    debug(28, 0, "decode_addr: unsafe IP address: '%s'\n", asc);
+	    fatal("decode_addr: unsafe IP address");
 	}
 	break;
     case 1:			/* a significant bits value for a mask */
@@ -1583,23 +1582,23 @@ networkCompare(struct _acl_ip_data *net, struct _acl_ip_data *data)
 static int
 aclIpNetworkCompare(const void *a, splayNode * n)
 {
-    struct in_addr *A = (struct in_addr *) a;
+    struct in_addr A = *(struct in_addr *) a;
     struct _acl_ip_data *q = n->data;
     struct in_addr B = q->addr1;
     struct in_addr C = q->addr2;
     int rc = 0;
-    A->s_addr &= q->mask.s_addr;	/* apply netmask */
+    A.s_addr &= q->mask.s_addr;	/* apply netmask */
     if (C.s_addr == 0) {	/* single address check */
-	if (ntohl(A->s_addr) > ntohl(B.s_addr))
+	if (ntohl(A.s_addr) > ntohl(B.s_addr))
 	    rc = 1;
-	else if (ntohl(A->s_addr) < ntohl(B.s_addr))
+	else if (ntohl(A.s_addr) < ntohl(B.s_addr))
 	    rc = -1;
 	else
 	    rc = 0;
     } else {			/* range address check */
-	if (ntohl(A->s_addr) > ntohl(C.s_addr))
+	if (ntohl(A.s_addr) > ntohl(C.s_addr))
 	    rc = 1;
-	else if (ntohl(A->s_addr) < ntohl(B.s_addr))
+	else if (ntohl(A.s_addr) < ntohl(B.s_addr))
 	    rc = -1;
 	else
 	    rc = 0;
