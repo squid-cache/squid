@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.67 1999/05/04 21:20:43 wessels Exp $
+ * $Id: util.c,v 1.68 1999/12/01 04:25:59 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -603,8 +603,9 @@ xstrerror(void)
 {
     static char xstrerror_buf[BUFSIZ];
     if (errno < 0 || errno >= sys_nerr)
-	return ("Unknown");
-    snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", errno, strerror(errno));
+	snprintf(xstrerror_buf, BUFSIZ, "(%d) Unknown", errno);
+    else
+        snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", errno, strerror(errno));
     return xstrerror_buf;
 }
 
