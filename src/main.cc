@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.75 1996/09/16 17:21:43 wessels Exp $
+ * $Id: main.cc,v 1.76 1996/09/16 21:11:11 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -320,9 +320,11 @@ serverConnectionsOpen()
 
     /* Open server ports */
     enter_suid();
-    theHttpConnection = comm_open(COMM_NONBLOCKING,
+    theHttpConnection = comm_open(SOCK_STREAM,
+	0,
 	Config.Addrs.tcp_incoming,
 	Config.Port.http,
+	COMM_NONBLOCKING,
 	"HTTP Port");
     leave_suid();
     if (theHttpConnection < 0) {
@@ -339,9 +341,11 @@ serverConnectionsOpen()
 
     if (!httpd_accel_mode || Config.Accel.withProxy) {
 	if ((port = Config.Port.icp) > (u_short) 0) {
-	    theInIcpConnection = comm_open(COMM_NONBLOCKING | COMM_DGRAM,
+	    theInIcpConnection = comm_open(SOCK_DGRAM,
+		0,
 		Config.Addrs.udp_incoming,
 		port,
+		COMM_NONBLOCKING,
 		"ICP Port");
 	    if (theInIcpConnection < 0)
 		fatal("Cannot open ICP Port");
@@ -354,9 +358,11 @@ serverConnectionsOpen()
 		theInIcpConnection);
 
 	    if ((addr = Config.Addrs.udp_outgoing).s_addr != INADDR_NONE) {
-		theOutIcpConnection = comm_open(COMM_NONBLOCKING | COMM_DGRAM,
+		theOutIcpConnection = comm_open(SOCK_DGRAM,
+			0,
 		    addr,
 		    port,
+			COMM_NONBLOCKING,
 		    "ICP Port");
 		if (theOutIcpConnection < 0)
 		    fatal("Cannot open Outgoing ICP Port");
@@ -373,6 +379,7 @@ serverConnectionsOpen()
 	    }
 	}
     }
+    icmpOpen();
 }
 
 void
@@ -408,6 +415,7 @@ serverConnectionsClose()
 		0);
 	theInIcpConnection = -1;
     }
+    icmpClose();
 }
 
 static void

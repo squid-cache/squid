@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.56 1996/09/15 05:04:26 wessels Exp $
+ * $Id: ftp.cc,v 1.57 1996/09/16 21:11:07 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -615,9 +615,11 @@ ftpStart(int unusedfd, char *url, request_t * request, StoreEntry * entry)
 	unusedfd, data->request->host, data->request->urlpath,
 	data->user, data->password);
 
-    data->ftp_fd = comm_open(COMM_NONBLOCKING,
+    data->ftp_fd = comm_open(SOCK_STREAM,
+	0,
 	local_addr,
 	0,
+	COMM_NONBLOCKING,
 	url);
     if (data->ftp_fd == COMM_ERROR) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -724,9 +726,11 @@ ftpInitialize()
 	debug(9, 0, "ftpInitialize: pipe: %s\n", xstrerror());
 	return -1;
     }
-    cfd = comm_open(COMM_NOCLOEXEC,
+    cfd = comm_open(SOCK_STREAM,
+	0,
 	local_addr,
 	0,
+	COMM_NOCLOEXEC,
 	"ftpget -S socket");
     debug(9, 5, "ftpget -S socket on FD %d\n", cfd);
     if (cfd == COMM_ERROR) {

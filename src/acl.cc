@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.38 1996/09/16 17:21:36 wessels Exp $
+ * $Id: acl.cc,v 1.39 1996/09/16 21:11:03 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -179,7 +179,7 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
     default:
 	if ((hp = gethostbyname(asc)) != NULL) {
 	    /* We got a host name */
-	    xmemcpy(addr, hp->h_addr, hp->h_length);
+	    *addr = inaddrFromHostent(hp);
 	} else {
 	    /* XXX: Here we could use getnetbyname */
 	    debug(28, 0, "decode_addr: Invalid IP address or hostname  '%s'\n", asc);
@@ -732,9 +732,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
 	if (hp) {
 	    for (k = 0; *(hp->h_addr_list + k); k++) {
-		xmemcpy(&checklist->dst_addr.s_addr,
-		    *(hp->h_addr_list + k),
-		    hp->h_length);
+		checklist->dst_addr = inaddrFromHostent(hp);
 		if (aclMatchIp(acl->data, checklist->dst_addr))
 		    return 1;
 	    }

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.75 1996/09/15 05:04:31 wessels Exp $
+ * $Id: http.cc,v 1.76 1996/09/16 21:11:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -683,7 +683,12 @@ proxyhttpStart(edge * e, char *url, StoreEntry * entry)
 	storeStartDeleteBehind(entry);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
+    sock = comm_open(SOCK_STREAM,
+	0,
+	Config.Addrs.tcp_outgoing,
+	0,
+	COMM_NONBLOCKING,
+	url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
@@ -767,7 +772,12 @@ httpStart(int unusedfd, char *url, request_t * request, char *req_hdr, StoreEntr
     debug(11, 10, "httpStart: req_hdr '%s'\n", req_hdr);
 
     /* Create socket. */
-    sock = comm_open(COMM_NONBLOCKING, Config.Addrs.tcp_outgoing, 0, url);
+    sock = comm_open(SOCK_STREAM,
+	0,
+	Config.Addrs.tcp_outgoing,
+	0,
+	COMM_NONBLOCKING,
+	url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());

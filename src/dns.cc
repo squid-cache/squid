@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.8 1996/09/15 05:04:20 wessels Exp $
+ * $Id: dns.cc,v 1.9 1996/09/16 21:11:06 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -129,9 +129,11 @@ dnsOpenServer(char *command)
     int len;
     LOCAL_ARRAY(char, buf, 128);
 
-    cfd = comm_open(COMM_NOCLOEXEC,
+    cfd = comm_open(SOCK_STREAM,
+	0,
 	local_addr,
 	0,
+	COMM_NOCLOEXEC,
 	"socket to dnsserver");
     if (cfd == COMM_ERROR) {
 	debug(34, 0, "dnsOpenServer: Failed to create dnsserver\n");
@@ -155,7 +157,12 @@ dnsOpenServer(char *command)
     if (pid > 0) {		/* parent */
 	comm_close(cfd);	/* close shared socket with child */
 	/* open new socket for parent process */
-	sfd = comm_open(0, local_addr, 0, NULL);	/* blocking! */
+	sfd = comm_open(SOCK_STREAM,
+		0,		/* protocol */
+		local_addr,
+		0,		/* port */
+		0,		/* flags */
+		NULL);	/* blocking! */
 	if (sfd == COMM_ERROR)
 	    return -1;
 	if (comm_connect(sfd, localhost, port) == COMM_ERROR) {
