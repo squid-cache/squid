@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.39 2002/07/20 23:51:02 hno Exp $
+ * $Id: helper.cc,v 1.40 2002/07/20 23:56:01 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -859,11 +859,11 @@ Enqueue(helper * hlp, helper_request * r)
     if (shutting_down || reconfiguring)
 	return;
     hlp->last_queue_warn = squid_curtime;
-    debug(14, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
-    debug(14, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+    debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+    debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
     if (hlp->stats.queue_size > hlp->n_running * 2)
 	fatalf("Too many queued %s requests", hlp->id_name);
-    debug(14, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
+    debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
 }
 
 static void
@@ -881,9 +881,9 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
     if (shutting_down || reconfiguring)
 	return;
     hlp->last_queue_warn = squid_curtime;
-    debug(14, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
-    debug(14, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
-    debug(14, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
+    debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+    debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+    debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
 }
 
 static void
@@ -903,11 +903,11 @@ StatefulServerEnqueue(helper_stateful_server * srv, helper_stateful_request * r)
  * if (shutting_down || reconfiguring)
  * return;
  * hlp->last_queue_warn = squid_curtime;
- * debug(14, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
- * debug(14, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+ * debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+ * debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
  * if (hlp->stats.queue_size > hlp->n_running * 2)
  * fatalf("Too many queued %s requests", hlp->id_name);
- * debug(14, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);  */
+ * debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);  */
 }
 
 
