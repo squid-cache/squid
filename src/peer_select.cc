@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.33 1997/11/20 06:25:29 wessels Exp $
+ * $Id: peer_select.cc,v 1.34 1997/12/21 11:00:19 kostas Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -64,9 +64,11 @@ static char *DirectStr[] =
 };
 
 static void peerSelectFoo(ps_state *);
+static void peerSelectCheckAS(ps_state *);
 static void peerPingTimeout(void *data);
 static void peerSelectCallbackFail(ps_state * psstate);
 static IRCB peerHandleIcpReply;
+static IPH peerSelectCheckASDone;
 static void peerSelectStateFree(ps_state * psstate);
 static void peerIcpParentMiss(peer *, icp_common_t *, ps_state *);
 static int peerCheckNetdbDirect(ps_state * psstate);
@@ -112,6 +114,7 @@ peer *
 peerGetSomeParent(request_t * request, hier_code * code)
 {
     peer *p;
+    debug(44, 3) ("peerGetSomeParent: called.\n");
     if ((p = getDefaultParent(request))) {
 	*code = DEFAULT_PARENT;
 	return p;
@@ -151,8 +154,32 @@ peerSelect(request_t * request,
     psstate->callback_data = callback_data;
     cbdataLock(callback_data);
     psstate->icp.start = current_time;
+    peerSelectCheckAS(psstate);
+}
+
+static void
+peerSelectCheckASDone(const ipcache_addrs * ia, void *data)
+{
+    ps_state *psstate = data;
     peerSelectFoo(psstate);
 }
+
+static void
+peerSelectCheckAS(ps_state * psstate)
+{
+    request_t *request = psstate->request;
+
+/* XXXX Just a quick hack to get the destination address to the 
+ * ipcache, because peerSelectIcpPing requires non-blocking ACL
+ * check. 
+ * We should handle AS acl's differently than cache_host ones.   */
+
+    ipcache_nbgethostbyname(request->host,
+	peerSelectCheckASDone,
+	psstate);
+    return;
+}
+
 
 static void
 peerCheckNeverDirectDone(int answer, void *data)
@@ -297,6 +324,7 @@ peerSelectFoo(ps_state * psstate)
 	}
 	debug_trap("peerSelect: neighborsUdpPing returned 0");
     }
+    debug(44, 3) ("peerSelectFoo: After peerSelectIcpPing.\n");
     if (peerCheckNetdbDirect(psstate)) {
 	code = CLOSEST_DIRECT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
