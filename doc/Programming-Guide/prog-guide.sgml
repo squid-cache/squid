@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.43 2001/06/18 16:32:35 wessels Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.44 2001/06/18 16:34:15 wessels Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2423,9 +2423,9 @@ line, separated by a space:
 <USERNAME> <PASSWORD>
 </verb>
 <p>
-The authentication module process reads username, password
-pairs on stdin and returns either ``OK'' or ``ERR'' for
-each line.
+The authentication module process reads username, password pairs
+on stdin and returns either ``OK'' or ``ERR'' on stdout for
+each input line.
 
 <p>
 The following simple perl script demonstrates how the
@@ -2435,7 +2435,7 @@ and allows any user that uses the password ``Sekrit'':
 
 <verb>
 #!/usr/bin/perl -w
-$|=1;
+$|=1;		# no buffering, important!
 while (<>) {
         chop;
         ($u,$p) = split;
