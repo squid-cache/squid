@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.177 1999/06/30 05:49:37 wessels Exp $
+#  $Id: Makefile.in,v 1.178 1999/06/30 06:28:58 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -225,7 +225,7 @@ $(DNSSERVER_EXE): dnsserver.o
 	$(CC) -o $@ $(LDFLAGS) dnsserver.o $(DNSSERVER_LIBS)
 
 $(DISKD_EXE): diskd-daemon.o
-	$(CC) -o $@ $(LDFLAGS) diskd.o $(DISKD_LIBS)
+	$(CC) -o $@ $(LDFLAGS) diskd-daemon.o $(DISKD_LIBS)
 
 diskd-daemon.o: diskd.c
 	$(CC) -c $(CFLAGS) -DDISKD_DAEMON=1 $(srcdir)/diskd.c -o $@

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.302 1999/06/30 05:49:44 wessels Exp $
+ * $Id: structs.h,v 1.303 1999/06/30 06:29:02 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1325,9 +1325,12 @@ struct _SwapDir {
 	    int smsgid;
 	    int rmsgid;
 	    int wfd;
-	    int send_no;
-	    int recv_no;
 	    int away;
+	    struct {
+		char *buf;
+		link_list *stack;
+		int id;
+	    } shm;
 	} diskd;
 #endif
     } u;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.96 1999/06/25 23:37:35 wessels Exp $
+ * $Id: typedefs.h,v 1.97 1999/06/30 06:29:04 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -30,6 +30,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#ifndef _TYPEDEFS_H_
+#define _TYPEDEFS_H_
 
 typedef unsigned int store_status_t;
 typedef unsigned int mem_status_t;
@@ -264,3 +267,5 @@ typedef unsigned int delay_id;
 #if USE_HTCP
 typedef struct _htcpReplyData htcpReplyData;
 #endif
+
+#endif /* _TYPEDEFS_H_ */
