@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.26 1996/04/16 05:05:30 wessels Exp $ */
+/* $Id: stat.cc,v 1.27 1996/04/16 16:35:31 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -408,7 +408,7 @@ void info_get(obj, sentry)
 
     storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
 
-    sprintf(line, "{Harvest Object Cache: Version %s}\n", version_string);
+    sprintf(line, "{Squid Object Cache: Version %s}\n", version_string);
     storeAppend(sentry, line, strlen(line));
 
     tod = mkrfc850(&squid_starttime);
