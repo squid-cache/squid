@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.25 2001/08/10 03:20:37 adrian Exp $
+ * $Id: store_dir_coss.cc,v 1.26 2001/08/12 10:20:41 adrian Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -34,7 +34,9 @@
  */
 
 #include "squid.h"
+#include <aio.h>
 
+#include "async_io.h"
 #include "store_coss.h"
 
 #define STORE_META_BUFSZ 4096
@@ -152,6 +154,7 @@ static void
 storeCossDirInit(SwapDir * sd)
 {
     CossInfo *cs = (CossInfo *) sd->fsdata;
+    a_file_setupqueue(&cs->aq);
     storeCossDirOpenSwapLog(sd);
     storeCossDirRebuild(sd);
     cs->fd = file_open(sd->path, O_RDWR | O_CREAT);
@@ -653,8 +656,8 @@ storeCossDirShutdown(SwapDir * SD)
 {
     CossInfo *cs = (CossInfo *) SD->fsdata;
 
-    storeCossSync(SD);
-
+    storeCossSync(SD); /* This'll call a_file_syncqueue() */
+    a_file_closequeue(&cs->aq);
     file_close(cs->fd);
     cs->fd = -1;
 
