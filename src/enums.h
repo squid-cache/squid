@@ -438,7 +438,9 @@ enum {
     NEIGHBOR_ROUNDROBIN,
     NEIGHBOR_MCAST_RESPONDER,
     NEIGHBOR_CLOSEST_ONLY,
+#if USE_HTCP
     NEIGHBOR_HTCP
+#endif
 };
 
 typedef enum {

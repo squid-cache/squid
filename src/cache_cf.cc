@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.266 1998/03/28 06:26:42 wessels Exp $
+ * $Id: cache_cf.cc,v 1.267 1998/03/28 18:37:05 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -698,8 +698,10 @@ parse_peer(peer ** head)
 	    EBIT_SET(p->options, NEIGHBOR_DEFAULT_PARENT);
 	} else if (!strncasecmp(token, "round-robin", 11)) {
 	    EBIT_SET(p->options, NEIGHBOR_ROUNDROBIN);
+#if USE_HTCP
 	} else if (!strncasecmp(token, "htcp", 4)) {
 	    EBIT_SET(p->options, NEIGHBOR_HTCP);
+#endif
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();
