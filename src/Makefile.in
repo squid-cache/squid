@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.269 2003/01/23 00:42:44 robertc Exp $
+#  $Id: Makefile.in,v 1.270 2003/01/25 21:16:42 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -310,6 +310,7 @@ squid_SOURCES = \
 	StatHist.cc \
 	String.cc \
 	stmem.cc \
+	stmem.h \
 	store.cc \
 	Store.h \
 	store_io.cc \
