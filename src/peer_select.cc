@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.18 1997/07/14 05:57:55 wessels Exp $
+ * $Id: peer_select.cc,v 1.19 1997/07/15 23:15:36 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -102,16 +102,6 @@ peer *
 peerGetSomeParent(request_t * request, hier_code * code)
 {
     peer *p;
-    if (request->method == METHOD_CONNECT)
-	if ((p = getSslParent())) {
-	    *code = SSL_PARENT;
-	    return p;
-	}
-    if (request->method != METHOD_GET)
-	if ((p = getPassParent())) {
-	    *code = PASS_PARENT;
-	    return p;
-	}
     if ((p = getDefaultParent(request))) {
 	*code = DEFAULT_PARENT;
 	return p;
