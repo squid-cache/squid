@@ -25,7 +25,7 @@
 	- Changed URN menu output to be sorted.
 	- Added fast select(2) timeouts when using ASYNC_IO.
 	- Added ARP ACL support for Linux (David Luyer).
-        - Added binary http headers to requests
+        - Added binary http headers to requests (still under construction)
         - request_t objects are now created and destroyed in a consistent way
         - Fixed cache control printf bug
         - Added a lot of new http header ids
