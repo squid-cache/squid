@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.7 1996/03/22 21:55:31 wessels Exp $
+#  $Id: Makefile.in,v 1.8 1996/03/25 19:01:04 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -34,6 +34,7 @@ STD_LDFLAGS	= @STD_LDFLAGS@
 XTRA_CFLAGS	= @XTRA_CFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 XTRA_OBJS 	= @XTRA_OBJS@
+SHELL		= /bin/sh
 
 
 ## AIX users might need to use these values
