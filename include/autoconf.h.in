@@ -147,9 +147,11 @@
  * functions found in 4.4 BSD derviations (e.g. FreeBSD, ?).
  */
 #undef USE_ARP_ACL
-/********************************
- *  END OF CONFIGURABLE OPTIONS *
- ********************************/
+
+/*
+ * Define this to include code for the Hypertext Cache Protocol (HTCP)
+ */
+#undef USE_HTCP
 
 /* Define if struct tm has tm_gmtoff member */
 #undef HAVE_TM_GMTOFF
