@@ -1,6 +1,8 @@
 Changes to squid-2.6 ():
 	
-	- CARP now plays well with the other peering algorithms
+	- CARP now plays well with the other peering algorithms,
+	  and support for CARP peerings is compiled by default. Can be
+	  disabled by --disable-carp
 	- Configuration file can be read from an external program
 	  or preprocessor. See squid.8 man page.
 	- http_port is now optional, allowing for SSL only operation
