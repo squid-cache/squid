@@ -513,12 +513,12 @@ LOC: Config.cacheSwap
 DOC_START
 	Directory for on-disk cache storage.  The cache will change into
 	this directory when running.  The default is
-	/usr/local/squid/cache.
+	@DEFAULT_SWAP_DIR@.
 
 	You can specify multiple cache_dir lines to spread the
 	cache among different disk partitions.
 
-cache_dir /usr/local/squid/cache 1000 16 256
+cache_dir @DEFAULT_SWAP_DIR@ 100 16 256
 DOC_END
 
 
@@ -530,7 +530,7 @@ DOC_START
 	Logs the client request activity.  Contains an entry for
 	every HTTP and ICP request received.
 
-cache_access_log /usr/local/squid/logs/access.log
+cache_access_log @DEFAULT_ACCESS_LOG@
 DOC_END
 
 
