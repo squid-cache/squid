@@ -161,11 +161,11 @@
 #define DISK_PAGE_SIZE  8192
 
 #define BIT_SET(flag, bit) 	((flag) |= (bit))
-#define BIT_RESET(flag, bit) 	((flag) &= ~(bit))
+#define BIT_CLR(flag, bit) 	((flag) &= ~(bit))
 #define BIT_TEST(flag, bit) 	((flag) & (bit))
 
 #define EBIT_SET(flag, bit) 	((flag) |= ((1<<bit)))
-#define EBIT_RESET(flag, bit) 	((flag) &= ~((1<<bit)))
+#define EBIT_CLR(flag, bit) 	((flag) &= ~((1<<bit)))
 #define EBIT_TEST(flag, bit) 	((flag) & ((1<<bit)))
 
 /* 

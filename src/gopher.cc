@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.107 1997/10/27 20:05:13 wessels Exp $
+ * $Id: gopher.cc,v 1.108 1997/10/28 21:59:06 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -375,7 +375,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    "<ISINDEX></BODY></HTML>\n", entry->url, entry->url);
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	BIT_RESET(entry->flag, DELAY_SENDING);
+	BIT_CLR(entry->flag, DELAY_SENDING);
 	gopherState->data_in = 1;
 
 	return;
@@ -391,7 +391,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	BIT_RESET(entry->flag, DELAY_SENDING);
+	BIT_CLR(entry->flag, DELAY_SENDING);
 	gopherState->data_in = 1;
 
 	return;
@@ -639,7 +639,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     if ((int) strlen(outbuf) > 0) {
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	BIT_RESET(entry->flag, DELAY_SENDING);
+	BIT_CLR(entry->flag, DELAY_SENDING);
     }
     return;
 }
@@ -732,7 +732,7 @@ gopherReadReply(int fd, void *data)
 	if (gopherState->conversion != NORMAL)
 	    gopherEndHTML(data);
 	storeTimestampsSet(entry);
-	BIT_RESET(entry->flag, DELAY_SENDING);
+	BIT_CLR(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	comm_close(fd);
     } else {
