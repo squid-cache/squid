@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.11 1996/09/20 23:33:17 wessels Exp $
+ * $Id: icmp.cc,v 1.12 1996/09/24 18:50:06 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -62,7 +62,6 @@ icmpOpen(void)
     struct sockaddr_in S;
     int namelen = sizeof(struct sockaddr_in);
     pid_t pid;
-    char *command = "pinger";
     int child_sock;
     icmp_sock = comm_open(SOCK_DGRAM,
 	0,
@@ -97,6 +96,9 @@ icmpOpen(void)
 	return;
     }
     if (pid == 0) {		/* child */
+	char *x = xcalloc(strlen(Config.debugOptions)+32, 1);
+	sprintf(x, "SQUID_DEBUG=%s\n", Config.debugOptions);
+	putenv(x);
 	comm_close(icmp_sock);
 	dup2(child_sock, 0);
 	dup2(child_sock, 1);
@@ -104,8 +106,8 @@ icmpOpen(void)
 	dup2(fileno(debug_log), 2);
 	fclose(debug_log);
 	enter_suid();
-	execlp(command, "(pinger)", NULL);
-	debug(29, 0, "icmpOpen: %s: %s\n", command, xstrerror());
+	execlp(Config.Program.pinger, "(pinger)", NULL);
+	debug(29, 0, "icmpOpen: %s: %s\n", Config.Program.pinger, xstrerror());
 	_exit(1);
     }
     comm_close(child_sock);
@@ -146,10 +148,17 @@ icmpRecv(int unused1, void *unused2)
 	COMM_SELECT_READ,
 	(PF) icmpRecv,
 	(void *) -1);
+    memset((char *) &preply, '\0', sizeof(pingerReplyData));
     n = recv(icmp_sock,
 	(char *) &preply,
 	sizeof(pingerReplyData),
 	0);
+    if (n < 0) {
+	debug(37,0,"icmpRecv: recv: %s\n", xstrerror());
+	return;
+    }
+    if (n == 0)		/* test probe from pinger */
+	return;
     F.sin_family = AF_INET;
     F.sin_addr = preply.from;
     F.sin_port = 0;
