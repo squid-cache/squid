@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.20 2002/12/27 10:26:35 robertc Exp $
+ * $Id: async_io.cc,v 1.21 2003/01/04 01:28:13 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -95,6 +95,7 @@ aioFDWasClosed(int fd)
 	fd_close(fd);
 }
 
+
 void
 aioInit(void)
 {
@@ -104,7 +105,6 @@ aioInit(void)
     cachemgrRegister("squidaio_counts", "Async IO Function Counters",
 	aioStats, 0, 1);
     initialised = 1;
-    comm_quick_poll_required();
 }
 
 void
