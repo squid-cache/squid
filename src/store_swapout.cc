@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.25 1998/08/21 06:40:00 wessels Exp $
+ * $Id: store_swapout.cc,v 1.26 1998/08/24 21:11:30 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -43,6 +43,7 @@ typedef struct swapout_ctrl_t {
 
 static FOCB storeSwapOutFileOpened;
 static off_t storeSwapOutObjectBytesOnDisk(const MemObject *);
+static int storeSwapOutAble(const StoreEntry *e);
 
 /* start swapping object to disk */
 void
@@ -165,27 +166,23 @@ storeCheckSwapOut(StoreEntry * e)
     lowest_offset = storeLowestMemReaderOffset(e);
     debug(20, 3) ("storeCheckSwapOut: lowest_offset = %d\n",
 	(int) lowest_offset);
-    assert(lowest_offset >= mem->inmem_lo);
-
     new_mem_lo = lowest_offset;
-    if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
-	if (!EBIT_TEST(e->flag, KEY_PRIVATE))
-	    debug(20, 3) ("storeCheckSwapOut: Attempt to swap out a non-cacheable non-private object!\n");
-	stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
-	mem->inmem_lo = new_mem_lo;
-	return;
-    }
+    assert(new_mem_lo >= mem->inmem_lo);
     /*
      * We should only free up to what we know has been written to
      * disk, not what has been queued for writing.  Otherwise there
      * will be a chunk of the data which is not in memory and is
      * not yet on disk.
      */
-    if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
-	new_mem_lo = on_disk;
+    if (storeSwapOutAble(e))
+        if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
+	    new_mem_lo = on_disk;
     stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
     mem->inmem_lo = new_mem_lo;
-
+    if (e->swap_status == SWAPOUT_WRITING)
+	assert(mem->inmem_lo <= mem->swapout.done_offset);
+    if (!storeSwapOutAble(e))
+	    return;
     swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
     debug(20, 3) ("storeCheckSwapOut: swapout_size = %d\n",
 	(int) swapout_size);
@@ -196,6 +193,7 @@ storeCheckSwapOut(StoreEntry * e)
     /* Ok, we have stuff to swap out.  Is there a swapout.fd open? */
     if (e->swap_status == SWAPOUT_NONE) {
 	assert(mem->swapout.fd == -1);
+	assert(mem->inmem_lo == 0);
 	if (storeCheckCachable(e))
 	    storeSwapOutStart(e);
 	/* else ENTRY_CACHABLE will be cleared and we'll never get
@@ -347,4 +345,18 @@ storeSwapOutObjectBytesOnDisk(const MemObject * mem)
     if (mem->swapout.done_offset <= mem->swap_hdr_sz)
 	return 0;
     return mem->swapout.done_offset - mem->swap_hdr_sz;
+}
+
+/*
+ * Is this entry a candidate for writing to disk?
+ */
+static int
+storeSwapOutAble(const StoreEntry * e)
+{
+    if (e->mem_obj->swapout.fd > -1)
+	return 1;
+    if (e->mem_obj->inmem_lo > 0)
+	return 0;
+    /* swapout.fd == -1 && inmem_lo == 0 */
+    return EBIT_TEST(e->flag, ENTRY_CACHABLE);
 }
