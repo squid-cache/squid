@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.186 1998/01/02 02:06:03 wessels Exp $
+ * $Id: client_side.cc,v 1.187 1998/01/02 18:09:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -250,7 +250,7 @@ clientRedirectDone(void *data, char *result)
 	http->uri = xcalloc(l, 1);
 	xstrncpy(http->uri, result, l);
 	new_request->http_ver = old_request->http_ver;
-	new_request->headers = old_request->headers;
+	new_request->headers = xstrdup(old_request->headers);
 	new_request->headers_sz = old_request->headers_sz;
 	requestUnlink(old_request);
 	http->request = requestLink(new_request);
