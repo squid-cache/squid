@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.9 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreClient.h,v 1.10 2003/07/11 04:02:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -110,6 +110,10 @@ private:
     static MemPool *pool;
 
     void fileRead();
+    void scheduleDiskRead();
+    void scheduleMemRead();
+    void scheduleRead();
+    void startSwapin();
     void unpackHeader(char const *buf, ssize_t len);
 
     int type;

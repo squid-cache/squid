@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.95 2003/06/26 12:51:58 robertc Exp $
+ * $Id: store_swapout.cc,v 1.96 2003/07/11 04:02:01 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -377,6 +377,8 @@ storeSwapOutAble(const StoreEntry * e)
      * even if its not cachable
      * RBC: Surely we should not create disk client on non cacheable objects?
      * therefore this should be an assert?
+     * RBC 20030708: We can use disk to avoid mem races, so this shouldn't be
+     * an assert.
      */
     for (node = e->mem_obj->clients.head; node; node = node->next) {
         if (((store_client *) node->data)->getType() == STORE_DISK_CLIENT)

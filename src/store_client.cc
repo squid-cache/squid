@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.129 2003/07/11 01:40:37 robertc Exp $
+ * $Id: store_client.cc,v 1.130 2003/07/11 04:02:01 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -368,47 +368,61 @@ store_client::doCopy(StoreEntry *anEntry)
      * if needed.
      */
 
-    if (STORE_DISK_CLIENT == getType() && NULL == swapin_sio.getRaw()) {
-        debug(90, 3)("store_client::doCopy: Need to open swap in file\n");
-        /* gotta open the swapin file */
+    if (STORE_DISK_CLIENT == getType() && NULL == swapin_sio.getRaw())
+        startSwapin();
+    else
+        scheduleRead();
+}
 
-        if (storeTooManyDiskFilesOpen()) {
-            /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
+void
+store_client::startSwapin()
+{
+    debug(90, 3)("store_client::doCopy: Need to open swap in file\n");
+    /* gotta open the swapin file */
+
+    if (storeTooManyDiskFilesOpen()) {
+        /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
+        fail();
+        flags.store_copying = 0;
+        return;
+    } else if (!flags.disk_io_pending) {
+        /* Don't set store_io_pending here */
+        storeSwapInStart(this);
+
+        if (NULL == swapin_sio.getRaw()) {
             fail();
             flags.store_copying = 0;
             return;
-        } else if (!flags.disk_io_pending) {
-            /* Don't set store_io_pending here */
-            storeSwapInStart(this);
-
-            if (NULL == swapin_sio.getRaw()) {
-                fail();
-                flags.store_copying = 0;
-                return;
-            }
-
-            /*
-             * If the open succeeds we either copy from memory, or
-             * schedule a disk read in the next block.
-             */
-        } else {
-            debug (90, 1)("WARNING: Averted multiple fd operation (1)\n");
-            flags.store_copying = 0;
-            return;
         }
-    }
 
-    if (copyInto.offset >= mem->inmem_lo && copyInto.offset < mem->endOffset()) {
-        /* What the client wants is in memory */
-        /* Old style */
-        debug(90, 3)("store_client::doCopy: Copying normal from memory\n");
-        size_t sz = mem->data_hdr.copy(copyInto.offset, copyInto.data,
-                                       copyInto.length);
-        callback(sz);
+        /*
+         * If the open succeeds we either copy from memory, or
+         * schedule a disk read in the next block.
+         */
+        scheduleRead();
+
+        return;
+    } else {
+        debug (90, 1)("WARNING: Averted multiple fd operation (1)\n");
         flags.store_copying = 0;
         return;
     }
+}
 
+void
+store_client::scheduleRead()
+{
+    MemObject *mem = entry->mem_obj;
+
+    if (copyInto.offset >= mem->inmem_lo && copyInto.offset < mem->endOffset())
+        scheduleMemRead();
+    else
+        scheduleDiskRead();
+}
+
+void
+store_client::scheduleDiskRead()
+{
     /* What the client wants is not in memory. Schedule a disk read */
     assert(STORE_DISK_CLIENT == getType());
 
@@ -418,6 +432,19 @@ store_client::doCopy(StoreEntry *anEntry)
 
     fileRead();
 
+    flags.store_copying = 0;
+}
+
+void
+store_client::scheduleMemRead()
+{
+    /* What the client wants is in memory */
+    /* Old style */
+    debug(90, 3)("store_client::doCopy: Copying normal from memory\n");
+    MemObject *mem = entry->mem_obj;
+    size_t sz = mem->data_hdr.copy(copyInto.offset, copyInto.data,
+                                   copyInto.length);
+    callback(sz);
     flags.store_copying = 0;
 }
 
