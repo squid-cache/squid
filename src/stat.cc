@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.173 1997/11/15 06:36:36 wessels Exp $
+ * $Id: stat.cc,v 1.174 1997/11/18 01:02:40 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -329,7 +329,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	if ((++N & 0xFF) == 0) {
 	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
 	}
-	EBIT_SET(sentry->flag, DELAY_SENDING);
+	storeBuffer(sentry);
 	storeAppendPrintf(sentry, "KEY %s\n", storeKeyText(entry->key));
 	storeAppendPrintf(sentry, "\t%s %s\n",
 	    RequestMethodStr[entry->method], storeUrl(entry));
@@ -364,8 +364,8 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    storeAppendPrintf(sentry, "\t\tswapin_fd: %d\n",
 		(int) sc->swapin_fd);
 	}
-	EBIT_CLR(sentry->flag, DELAY_SENDING);
 	storeAppendPrintf(sentry, "\n");
+	storeBufferFlush(sentry);
     }
 }
 
@@ -975,7 +975,7 @@ statAvgDump(StoreEntry * sentry)
 	A.select_loops /= N;
 	A.cputime /= N;
     }
-    EBIT_SET(sentry->flag, DELAY_SENDING);
+    storeBuffer(sentry);
     storeAppendPrintf(sentry, "client_http.requests = %d\n", A.client_http.requests);
     storeAppendPrintf(sentry, "client_http.hits = %d\n", A.client_http.hits);
     storeAppendPrintf(sentry, "client_http.errors = %d\n", A.client_http.errors);
@@ -988,6 +988,6 @@ statAvgDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "unlink.requests = %d\n", A.unlink.requests);
     storeAppendPrintf(sentry, "page_faults = %d\n", A.page_faults);
     storeAppendPrintf(sentry, "select_loops = %d\n", A.select_loops);
-    EBIT_CLR(sentry->flag, DELAY_SENDING);
     storeAppendPrintf(sentry, "cputime = %f seconds\n", A.cputime);
+    storeBufferFlush(sentry);
 }

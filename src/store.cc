@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.345 1997/11/18 00:48:46 wessels Exp $
+ * $Id: store.cc,v 1.346 1997/11/18 01:02:42 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2374,4 +2374,19 @@ storeCopyNotModifiedReplyHeaders(MemObject * oldmem, MemObject * newmem)
 	oldreply->last_modified = newreply->last_modified;
     if (newreply->expires > -1)
 	oldreply->expires = newreply->expires;
+}
+
+/* this just sets DELAY_SENDING */
+void
+storeBuffer(StoreEntry *e)
+{
+	EBIT_SET(e->flag, DELAY_SENDING);
+}
+
+/* this just clears DELAY_SENDING and Invokes the handlers */
+void
+storeBufferFlush(StoreEntry *e)
+{
+	EBIT_CLR(e->flag, DELAY_SENDING);
+	InvokeHandlers(e);
 }

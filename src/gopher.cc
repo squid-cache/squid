@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.113 1997/11/14 17:21:19 wessels Exp $
+ * $Id: gopher.cc,v 1.114 1997/11/18 01:02:38 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -371,7 +371,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    "<ISINDEX></BODY></HTML>\n", storeUrl(entry), storeUrl(entry));
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	EBIT_CLR(entry->flag, DELAY_SENDING);
+	storeBufferFlush(entry);
 	gopherState->data_in = 1;
 
 	return;
@@ -387,7 +387,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	EBIT_CLR(entry->flag, DELAY_SENDING);
+	storeBufferFlush(entry);
 	gopherState->data_in = 1;
 
 	return;
@@ -635,7 +635,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     if ((int) strlen(outbuf) > 0) {
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	EBIT_CLR(entry->flag, DELAY_SENDING);
+	storeBufferFlush(entry);
     }
     return;
 }
@@ -715,7 +715,7 @@ gopherReadReply(int fd, void *data)
 	if (gopherState->conversion != NORMAL)
 	    gopherEndHTML(data);
 	storeTimestampsSet(entry);
-	EBIT_CLR(entry->flag, DELAY_SENDING);
+	storeBufferFlush(entry);
 	storeComplete(entry);
 	comm_close(fd);
     } else {
@@ -765,19 +765,19 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
     switch (gopherState->type_id) {
     case GOPHER_DIRECTORY:
 	/* we got to convert it first */
-	EBIT_SET(entry->flag, DELAY_SENDING);
+	storeBuffer(entry);
 	gopherState->conversion = HTML_DIR;
 	gopherState->HTML_header_added = 0;
 	break;
     case GOPHER_INDEX:
 	/* we got to convert it first */
-	EBIT_SET(entry->flag, DELAY_SENDING);
+	storeBuffer(entry);
 	gopherState->conversion = HTML_INDEX_RESULT;
 	gopherState->HTML_header_added = 0;
 	break;
     case GOPHER_CSO:
 	/* we got to convert it first */
-	EBIT_SET(entry->flag, DELAY_SENDING);
+	storeBuffer(entry);
 	gopherState->conversion = HTML_CSO_RESULT;
 	gopherState->cso_recno = 0;
 	gopherState->HTML_header_added = 0;
