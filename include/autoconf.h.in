@@ -1,4 +1,28 @@
 /* include/autoconf.h.in.  Generated automatically from configure.in by autoheader.  */
+/* 
+ * All configurable options are enabled by using --enable-....
+ * when running configure. See configure --help for a list
+ * of all available options.
+ *
+ * You are free to edit this file, but it will be overwritten
+ * each time you run configure. You may need to edit this file
+ * if configure falsely picks up a library function or structure
+ * that doesn't really work on your system.
+ *
+ * Another way to block a function that should not be detected
+ * is to
+ * setenv ac_cv_func_<functionname> no
+ * before running configure, as in
+ * setenv ac_cv_func_setresuid no
+ *
+ * It is possible to enable some of the configurable options
+ * by editing this file alone, but some of them requires changes
+ * in the Makefiles, wich is done automatically by configure.
+ *
+ */
+
+#ifndef __CONFIGURE_H__
+#define __CONFIGURE_H__
 
 /* Define if using alloca.c.  */
 #undef C_ALLOCA
@@ -301,11 +325,59 @@
  */
 #undef LINUX_NETFILTER
 
+#undef int16_t
+
+#undef u_int16_t
+
+#undef int32_t
+
+#undef u_int32_t
+
+#undef int64_t
+
+#undef u_int64_t
+
+/* The number of bytes in a __int64.  */
+#undef SIZEOF___INT64
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
+/* The number of bytes in a int16_t.  */
+#undef SIZEOF_INT16_T
+
+/* The number of bytes in a int32_t.  */
+#undef SIZEOF_INT32_T
+
+/* The number of bytes in a int64_t.  */
+#undef SIZEOF_INT64_T
+
 /* The number of bytes in a long.  */
 #undef SIZEOF_LONG
+
+/* The number of bytes in a long long.  */
+#undef SIZEOF_LONG_LONG
+
+/* The number of bytes in a short.  */
+#undef SIZEOF_SHORT
+
+/* The number of bytes in a u_int16_t.  */
+#undef SIZEOF_U_INT16_T
+
+/* The number of bytes in a u_int32_t.  */
+#undef SIZEOF_U_INT32_T
+
+/* The number of bytes in a u_int64_t.  */
+#undef SIZEOF_U_INT64_T
+
+/* The number of bytes in a uint16_t.  */
+#undef SIZEOF_UINT16_T
+
+/* The number of bytes in a uint32_t.  */
+#undef SIZEOF_UINT32_T
+
+/* The number of bytes in a uint64_t.  */
+#undef SIZEOF_UINT64_T
 
 /* The number of bytes in a void *.  */
 #undef SIZEOF_VOID_P
@@ -315,6 +387,12 @@
 
 /* Define if you have the bcopy function.  */
 #undef HAVE_BCOPY
+
+/* Define if you have the bswap_16 function.  */
+#undef HAVE_BSWAP_16
+
+/* Define if you have the bswap_32 function.  */
+#undef HAVE_BSWAP_32
 
 /* Define if you have the crypt function.  */
 #undef HAVE_CRYPT
@@ -466,6 +544,9 @@
 /* Define if you have the <bstring.h> header file.  */
 #undef HAVE_BSTRING_H
 
+/* Define if you have the <byteswap.h> header file.  */
+#undef HAVE_BYTESWAP_H
+
 /* Define if you have the <config.h> header file.  */
 #undef HAVE_CONFIG_H
 
@@ -489,6 +570,9 @@
 
 /* Define if you have the <getopt.h> header file.  */
 #undef HAVE_GETOPT_H
+
+/* Define if you have the <glib.h> header file.  */
+#undef HAVE_GLIB_H
 
 /* Define if you have the <gnumalloc.h> header file.  */
 #undef HAVE_GNUMALLOC_H
@@ -690,3 +774,5 @@
 
 /* Define if you have the socket library (-lsocket).  */
 #undef HAVE_LIBSOCKET
+
+#endif /* __CONFIGURE_H__ */
