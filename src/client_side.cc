@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.551 2001/10/23 11:05:16 hno Exp $
+ * $Id: client_side.cc,v 1.552 2001/10/24 02:25:08 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -130,6 +130,8 @@ checkAccelOnly(clientHttpRequest * http)
     if (http->request->protocol == PROTO_CACHEOBJ)
 	return 0;
     if (http->flags.accel)
+	return 0;
+    if (http->request->method == METHOD_PURGE)
 	return 0;
     return 1;
 }
