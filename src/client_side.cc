@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.496 2000/08/03 21:27:54 hno Exp $
+ * $Id: client_side.cc,v 1.497 2000/09/07 04:03:37 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -166,7 +166,8 @@ clientAccessCheck(void *data)
 {
     clientHttpRequest *http = data;
     if (checkAccelOnly(http)) {
-	clientAccessCheckDone(ACCESS_ALLOWED, http);
+	/* deny proxy requests in accel_only mode */
+	clientAccessCheckDone(ACCESS_DENIED, http);
 	return;
     }
     http->acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
