@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.42 1996/08/27 18:01:37 wessels Exp $
+ * $Id: squid.h,v 1.43 1996/09/03 18:54:09 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -260,7 +260,6 @@ extern void shut_down _PARAMS((int));
 
 
 extern time_t squid_starttime;	/* main.c */
-extern time_t next_cleaning;	/* main.c */
 extern int do_reuse;		/* main.c */
 extern int theHttpConnection;	/* main.c */
 extern int theInIcpConnection;	/* main.c */
