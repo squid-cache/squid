@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.39 1998/07/22 20:36:56 wessels Exp $
+ * $Id: access_log.cc,v 1.40 1998/07/24 14:40:51 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -178,7 +178,7 @@ accessLogSquid(AccessLogEntry * al, MemBuf * mb)
 	al->private.method_str,
 	al->url,
 	al->cache.ident,
-	al->hier.icp.timeout ? "TIMEOUT_" : "",
+	al->hier.icp.timedout ? "TIMEOUT_" : "",
 	hier_strings[al->hier.code],
 	al->hier.host,
 	al->http.content_type);
