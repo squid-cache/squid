@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.62 1997/08/10 06:34:33 wessels Exp $
+ * $Id: url.cc,v 1.63 1997/08/24 01:49:26 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -43,7 +43,7 @@ const char *RequestMethodStr[] =
     "PURGE"
 };
 
-static char *ProtocolStr[] =
+const char *ProtocolStr[] =
 {
     "NONE",
     "http",
