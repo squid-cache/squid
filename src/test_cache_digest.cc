@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.30 2003/02/21 22:50:12 robertc Exp $
+ * $Id: test_cache_digest.cc,v 1.31 2004/11/07 13:55:21 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -460,7 +460,7 @@ accessLogReader(FileIterator * fi)
 
     method = url;
 
-    while (!isdigit(*method)) {
+    while (!xisdigit(*method)) {
         if (*method == ' ')
             *method = '\0';
 

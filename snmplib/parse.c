@@ -488,9 +488,9 @@ get_token(register FILE *fp, register char *token)
     register struct tok *tp;
 
     *cp = 0;
-    ch = last;
+    ch = (unsigned char)last;
     /* skip all white space */
-    while (isspace(ch) && ch != -1) {
+    while (xisspace(ch) && ch != -1) {
 	ch = getc(fp);
 	if (ch == '\n')
 	    Line++;
@@ -506,10 +506,10 @@ get_token(register FILE *fp, register char *token)
     do {
 	if (ch == '\n')
 	    Line++;
-	if (isspace(ch) || ch == '(' || ch == ')' ||
+	if (xisspace(ch) || ch == '(' || ch == ')' ||
 	    ch == '{' || ch == '}' || ch == ',' ||
 	    ch == '"') {
-	    if (!isspace(ch) && *token == 0) {
+	    if (!xisspace(ch) && *token == 0) {
 		hash += ch;
 		*cp++ = ch;
 		last = ' ';
@@ -540,7 +540,7 @@ get_token(register FILE *fp, register char *token)
 		return get_token(fp, token);
 	    }
 	    for (cp = token; *cp; cp++)
-		if (!isdigit(*cp))
+		if (!xisdigit(*cp))
 		    return LABEL;
 	    return NUMBER;
 	} else {

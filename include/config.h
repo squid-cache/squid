@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.9 2003/04/24 06:35:03 hno Exp $
+ * $Id: config.h,v 1.10 2004/11/07 13:55:20 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -327,6 +327,12 @@ typedef long mtyp_t;
 #define xisascii(x) isascii((unsigned char)x)
 #define xislower(x) islower((unsigned char)x)
 #define xisalpha(x) isalpha((unsigned char)x)
+#define xisprint(x) isprint((unsigned char)x)
+#define xisalnum(x) isalnum((unsigned char)x)
+#define xiscntrl(x) iscntrl((unsigned char)x)
+#define xispunct(x) ispunct((unsigned char)x)
+#define xisupper(x) isupper((unsigned char)x)
+#define xisxdigit(x) isxdigit((unsigned char)x)
 
 #if HAVE_RANDOM
 #define squid_random random
