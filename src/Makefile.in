@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.123 1998/02/21 00:56:46 rousskov Exp $
+#  $Id: Makefile.in,v 1.124 1998/02/22 12:01:36 kostas Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -140,9 +140,9 @@ OBJS	 	= \
 
 SNMP_OBJS	= \
 		snmp.o \
-                snmp_vars.o \
-                snmp_agent.o \
-                snmp_config.o 
+                snmp_oidlist.o \
+                snmp_agent.o  \
+		snmp_config.o
 
 ASYNC_OBJS	= \
 		aiops.o \
