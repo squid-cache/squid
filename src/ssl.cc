@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.82 1998/07/16 22:22:53 wessels Exp $
+ * $Id: ssl.cc,v 1.83 1998/07/18 07:33:56 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -39,7 +39,6 @@ typedef struct {
     struct {
 	int fd;
 	int len;
-	int offset;
 	char *buf;
     } client, server;
     size_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
@@ -50,61 +49,101 @@ static const char *const conn_established = "HTTP/1.0 200 Connection established
 
 static CNCB sslConnectDone;
 static ERCB sslErrorComplete;
+static PF sslServerClosed;
 static PF sslClientClosed;
 static PF sslReadClient;
 static PF sslReadServer;
-static PF sslStateFree;
 static PF sslTimeout;
 static PF sslWriteClient;
 static PF sslWriteServer;
 static PSC sslPeerSelectComplete;
 static PSC sslPeerSelectFail;
-static void sslClose(SslStateData * sslState);
+static void sslStateFree(SslStateData * sslState);
 static void sslConnected(int fd, void *);
 static void sslProxyConnected(int fd, void *);
+static void sslSetSelect(SslStateData * sslState);
 
 static void
-sslClose(SslStateData * sslState)
+sslServerClosed(int fd, void *data)
 {
-    if (sslState->client.fd > -1) {
-	/* remove the "unexpected" client close handler */
-	comm_remove_close_handler(sslState->client.fd,
-	    sslClientClosed,
-	    sslState);
-	comm_close(sslState->client.fd);
-	sslState->client.fd = -1;
-    }
-    if (sslState->server.fd > -1) {
-	comm_close(sslState->server.fd);
-    }
+    SslStateData *sslState = data;
+    debug(26, 3) ("sslServerClosed: FD %d\n", fd);
+    assert(fd == sslState->server.fd);
+    sslState->server.fd = -1;
+    if (sslState->client.fd == -1)
+	sslStateFree(sslState);
 }
 
-/* This is called only if the client connect closes unexpectedly,
- * ie from icpDetectClientClose() */
 static void
 sslClientClosed(int fd, void *data)
 {
     SslStateData *sslState = data;
     debug(26, 3) ("sslClientClosed: FD %d\n", fd);
-    /* we have been called from comm_close for the client side, so
-     * just need to clean up the server side */
-    comm_close(sslState->server.fd);
+    assert(fd == sslState->client.fd);
+    sslState->client.fd = -1;
+    if (sslState->server.fd == -1)
+	sslStateFree(sslState);
 }
 
 static void
-sslStateFree(int fd, void *data)
+sslStateFree(SslStateData * sslState)
 {
-    SslStateData *sslState = data;
-    debug(26, 3) ("sslStateFree: FD %d, sslState=%p\n", fd, sslState);
-    if (sslState == NULL)
-	return;
-    assert(fd == sslState->server.fd);
+    debug(26, 3) ("sslStateFree: sslState=%p\n", sslState);
+    assert(sslState != NULL);
+    assert(sslState->client.fd == -1);
+    assert(sslState->server.fd == -1);
     safe_free(sslState->server.buf);
     safe_free(sslState->client.buf);
-    xfree(sslState->url);
+    safe_free(sslState->url);
+    sslState->host = NULL;
     requestUnlink(sslState->request);
     sslState->request = NULL;
     cbdataFree(sslState);
+}
+
+static void
+sslSetSelect(SslStateData * sslState)
+{
+    assert(sslState->server.fd > -1 || sslState->client.fd > -1);
+    if (sslState->client.fd > -1) {
+	if (sslState->server.len > 0) {
+	    commSetSelect(sslState->client.fd,
+		COMM_SELECT_WRITE,
+		sslWriteClient,
+		sslState,
+		0);
+	}
+	if (sslState->client.len < SQUID_TCP_SO_RCVBUF) {
+	    commSetSelect(sslState->client.fd,
+		COMM_SELECT_READ,
+		sslReadClient,
+		sslState,
+		Config.Timeout.read);
+	}
+    } else if (sslState->client.len == 0) {
+	comm_close(sslState->server.fd);
+    }
+    if (sslState->server.fd > -1) {
+	if (sslState->client.len > 0) {
+	    commSetSelect(sslState->server.fd,
+		COMM_SELECT_WRITE,
+		sslWriteServer,
+		sslState,
+		0);
+	}
+	if (sslState->server.len < SQUID_TCP_SO_RCVBUF) {
+	    /* Have room to read more */
+	    commSetSelect(sslState->server.fd,
+		COMM_SELECT_READ,
+		sslReadServer,
+		sslState,
+		Config.Timeout.read);
+	}
+    } else if (sslState->client.fd == -1) {
+	/* client already closed, nothing more to do */
+    } else if (sslState->server.len == 0) {
+	comm_close(sslState->client.fd);
+    }
 }
 
 /* Read from server side and queue it for writing to the client */
@@ -113,40 +152,32 @@ sslReadServer(int fd, void *data)
 {
     SslStateData *sslState = data;
     int len;
-    len = read(sslState->server.fd, sslState->server.buf, SQUID_TCP_SO_RCVBUF);
+    assert(fd == sslState->server.fd);
+    debug(26, 3) ("sslReadServer: FD %d, reading %d bytes at offset %d\n",
+	fd, SQUID_TCP_SO_RCVBUF - sslState->server.len,
+	sslState->server.len);
+    len = read(fd,
+	sslState->server.buf + sslState->server.len,
+	SQUID_TCP_SO_RCVBUF - sslState->server.len);
+    debug(26, 3) ("sslReadServer: FD %d, read   %d bytes\n", fd, len);
     if (len > 0) {
-	fd_bytes(sslState->server.fd, len, FD_READ);
+	fd_bytes(fd, len, FD_READ);
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.other.kbytes_in, len);
+	sslState->server.len += len;
     }
-    debug(26, 5) ("sslReadServer FD %d, read %d bytes\n", fd, len);
+    cbdataLock(sslState);
     if (len < 0) {
 	debug(50, 1) ("sslReadServer: FD %d: read failure: %s\n",
-	    sslState->server.fd, xstrerror());
-	if (ignoreErrno(errno)) {
-	    /* reinstall handlers */
-	    /* XXX This may loop forever */
-	    commSetSelect(sslState->server.fd,
-		COMM_SELECT_READ,
-		sslReadServer,
-		sslState,
-		Config.Timeout.read);
-	} else {
-	    sslClose(sslState);
-	}
+	    fd, xstrerror());
+	if (!ignoreErrno(errno))
+	    comm_close(fd);
     } else if (len == 0) {
-	/* Connection closed; retrieval done. */
-	sslClose(sslState);
-    } else {
-	sslState->server.offset = 0;
-	sslState->server.len = len;
-	/* extend server read timeout */
-	commSetSelect(sslState->client.fd,
-	    COMM_SELECT_WRITE,
-	    sslWriteClient,
-	    sslState,
-	    Config.Timeout.read);
+	comm_close(sslState->server.fd);
     }
+    if (cbdataValid(sslState))
+	sslSetSelect(sslState);
+    cbdataUnlock(sslState);
 }
 
 /* Read from client side and queue it for writing to the server */
@@ -155,39 +186,31 @@ sslReadClient(int fd, void *data)
 {
     SslStateData *sslState = data;
     int len;
-    len = read(sslState->client.fd, sslState->client.buf, SQUID_TCP_SO_RCVBUF);
+    assert(fd == sslState->client.fd);
+    debug(26, 3) ("sslReadClient: FD %d, reading %d bytes at offset %d\n",
+	fd, SQUID_TCP_SO_RCVBUF - sslState->client.len,
+	sslState->client.len);
+    len = read(fd,
+	sslState->client.buf + sslState->client.len,
+	SQUID_TCP_SO_RCVBUF - sslState->client.len);
+    debug(26, 3) ("sslReadClient: FD %d, read   %d bytes\n", fd, len);
     if (len > 0) {
-	fd_bytes(sslState->client.fd, len, FD_READ);
+	fd_bytes(fd, len, FD_READ);
 	kb_incr(&Counter.client_http.kbytes_in, len);
+	sslState->client.len += len;
     }
-    debug(26, 5) ("sslReadClient FD %d, read %d bytes\n",
-	sslState->client.fd, len);
+    cbdataLock(sslState);
     if (len < 0) {
 	debug(50, 1) ("sslReadClient: FD %d: read failure: %s\n",
 	    fd, xstrerror());
-	if (ignoreErrno(errno)) {
-	    /* reinstall handlers */
-	    /* XXX This may loop forever */
-	    commSetSelect(sslState->client.fd,
-		COMM_SELECT_READ,
-		sslReadClient,
-		sslState, 0);
-	} else {
-	    sslClose(sslState);
-	}
+	if (!ignoreErrno(errno))
+	    comm_close(fd);
     } else if (len == 0) {
-	/* Connection closed; retrieval done. */
-#if DONT
-	sslClose(sslState);
-#endif
-    } else {
-	sslState->client.offset = 0;
-	sslState->client.len = len;
-	commSetSelect(sslState->server.fd,
-	    COMM_SELECT_WRITE,
-	    sslWriteServer,
-	    sslState, 0);
+	comm_close(fd);
     }
+    if (cbdataValid(sslState))
+	sslSetSelect(sslState);
+    cbdataUnlock(sslState);
 }
 
 /* Writes data from the client buffer to the server side */
@@ -196,42 +219,36 @@ sslWriteServer(int fd, void *data)
 {
     SslStateData *sslState = data;
     int len;
-    len = write(sslState->server.fd,
-	sslState->client.buf + sslState->client.offset,
-	sslState->client.len - sslState->client.offset);
+    assert(fd == sslState->server.fd);
+    debug(26, 3) ("sslWriteServer: FD %d, %d bytes to write\n",
+	fd, sslState->client.len);
+    len = write(fd,
+	sslState->client.buf,
+	sslState->client.len);
+    debug(26, 3) ("sslWriteServer: FD %d, %d bytes written\n", fd, len);
     if (len > 0) {
-	fd_bytes(sslState->server.fd, len, FD_WRITE);
+	fd_bytes(fd, len, FD_WRITE);
 	kb_incr(&Counter.server.all.kbytes_out, len);
 	kb_incr(&Counter.server.other.kbytes_out, len);
-    }
-    debug(26, 5) ("sslWriteServer FD %d, wrote %d bytes\n", fd, len);
-    if (len < 0) {
-	if (ignoreErrno(errno)) {
-	    commSetSelect(sslState->server.fd,
-		COMM_SELECT_WRITE,
-		sslWriteServer,
-		sslState, 0);
-	    return;
+	assert(len <= sslState->client.len);
+	sslState->client.len -= len;
+	if (sslState->client.len > 0) {
+	    /* we didn't write the whole thing */
+	    xmemmove(sslState->client.buf,
+		sslState->client.buf + len,
+		sslState->client.len);
 	}
-	debug(50, 2) ("sslWriteServer: FD %d: write failure: %s.\n",
-	    sslState->server.fd, xstrerror());
-	sslClose(sslState);
-	return;
     }
-    if ((sslState->client.offset += len) >= sslState->client.len) {
-	/* Done writing, read more */
-	commSetSelect(sslState->client.fd,
-	    COMM_SELECT_READ,
-	    sslReadClient,
-	    sslState,
-	    Config.Timeout.read);
-    } else {
-	/* still have more to write */
-	commSetSelect(sslState->server.fd,
-	    COMM_SELECT_WRITE,
-	    sslWriteServer,
-	    sslState, 0);
+    cbdataLock(sslState);
+    if (len < 0) {
+	debug(50, 1) ("sslWriteServer: FD %d: write failure: %s.\n",
+	    fd, xstrerror());
+	if (!ignoreErrno(errno))
+	    comm_close(fd);
     }
+    if (cbdataValid(sslState))
+	sslSetSelect(sslState);
+    cbdataUnlock(sslState);
 }
 
 /* Writes data from the server buffer to the client side */
@@ -240,47 +257,38 @@ sslWriteClient(int fd, void *data)
 {
     SslStateData *sslState = data;
     int len;
-    debug(26, 5) ("sslWriteClient FD %d len=%d offset=%d\n",
-	fd,
-	sslState->server.len,
-	sslState->server.offset);
-    len = write(sslState->client.fd,
-	sslState->server.buf + sslState->server.offset,
-	sslState->server.len - sslState->server.offset);
+    assert(fd == sslState->client.fd);
+    debug(26, 3) ("sslWriteClient: FD %d, %d bytes to write\n",
+	fd, sslState->server.len);
+    len = write(fd,
+	sslState->server.buf,
+	sslState->server.len);
+    debug(26, 3) ("sslWriteClient: FD %d, %d bytes written\n", fd, len);
     if (len > 0) {
-	fd_bytes(sslState->client.fd, len, FD_WRITE);
+	fd_bytes(fd, len, FD_WRITE);
 	kb_incr(&Counter.client_http.kbytes_out, len);
-    }
-    debug(26, 5) ("sslWriteClient FD %d, wrote %d bytes\n", fd, len);
-    if (len < 0) {
-	if (ignoreErrno(errno)) {
-	    commSetSelect(sslState->client.fd,
-		COMM_SELECT_WRITE,
-		sslWriteClient,
-		sslState, 0);
-	    return;
+	assert(len <= sslState->server.len);
+	sslState->server.len -= len;
+	/* increment total object size */
+	if (sslState->size_ptr)
+	    *sslState->size_ptr += len;
+	if (sslState->server.len > 0) {
+	    /* we didn't write the whole thing */
+	    xmemmove(sslState->server.buf,
+		sslState->server.buf + len,
+		sslState->server.len);
 	}
-	debug(50, 2) ("sslWriteClient: FD %d: write failure: %s.\n",
-	    sslState->client.fd, xstrerror());
-	sslClose(sslState);
-	return;
     }
-    if (sslState->size_ptr)
-	*sslState->size_ptr += len;	/* increment total object size */
-    if ((sslState->server.offset += len) >= sslState->server.len) {
-	/* Done writing, read more */
-	commSetSelect(sslState->server.fd,
-	    COMM_SELECT_READ,
-	    sslReadServer,
-	    sslState,
-	    Config.Timeout.read);
-    } else {
-	/* still have more to write */
-	commSetSelect(sslState->client.fd,
-	    COMM_SELECT_WRITE,
-	    sslWriteClient,
-	    sslState, 0);
+    cbdataLock(sslState);
+    if (len < 0) {
+	debug(50, 1) ("sslWriteClient: FD %d: write failure: %s.\n",
+	    fd, xstrerror());
+	if (!ignoreErrno(errno))
+	    comm_close(fd);
     }
+    if (cbdataValid(sslState))
+	sslSetSelect(sslState);
+    cbdataUnlock(sslState);
 }
 
 static void
@@ -288,7 +296,10 @@ sslTimeout(int fd, void *data)
 {
     SslStateData *sslState = data;
     debug(26, 3) ("sslTimeout: FD %d\n", fd);
-    sslClose(sslState);
+    if (sslState->client.fd > -1)
+	comm_close(sslState->client.fd);
+    if (sslState->server.fd > -1)
+	comm_close(sslState->server.fd);
 }
 
 static void
@@ -298,22 +309,18 @@ sslConnected(int fd, void *data)
     debug(26, 3) ("sslConnected: FD %d sslState=%p\n", fd, sslState);
     xstrncpy(sslState->server.buf, conn_established, SQUID_TCP_SO_RCVBUF);
     sslState->server.len = strlen(conn_established);
-    sslState->server.offset = 0;
-    commSetSelect(sslState->client.fd,
-	COMM_SELECT_WRITE,
-	sslWriteClient,
-	sslState, 0);
-    commSetSelect(sslState->client.fd,
-	COMM_SELECT_READ,
-	sslReadClient,
-	sslState, 0);
+    sslSetSelect(sslState);
 }
 
 static void
-sslErrorComplete(int fdnotused, void *sslState, size_t sizenotused)
+sslErrorComplete(int fdnotused, void *data, size_t sizenotused)
 {
+    SslStateData *sslState = data;
     assert(sslState != NULL);
-    sslClose(sslState);
+    if (sslState->client.fd > -1)
+	comm_close(sslState->client.fd);
+    if (sslState->server.fd > -1)
+	comm_close(sslState->server.fd);
 }
 
 
@@ -388,7 +395,7 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
     sslState->server.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     sslState->client.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     comm_add_close_handler(sslState->server.fd,
-	sslStateFree,
+	sslServerClosed,
 	sslState);
     comm_add_close_handler(sslState->client.fd,
 	sslClientClosed,
@@ -406,6 +413,11 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
 	sslPeerSelectComplete,
 	sslPeerSelectFail,
 	sslState);
+    /*
+     * Disable the client read handler until peer selection is complete
+     * Take control away from client_side.c.
+     */
+    commSetSelect(sslState->client.fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 static void
@@ -432,20 +444,12 @@ sslProxyConnected(int fd, void *data)
     xstrncpy(sslState->client.buf, mb.buf, SQUID_TCP_SO_RCVBUF);
     debug(26, 3) ("sslProxyConnected: Sending {%s}\n", sslState->client.buf);
     sslState->client.len = mb.size;
-    sslState->client.offset = 0;
     memBufClean(&mb);
-    commSetSelect(sslState->server.fd,
-	COMM_SELECT_WRITE,
-	sslWriteServer,
-	sslState, 0);
     commSetTimeout(sslState->server.fd,
 	Config.Timeout.read,
 	sslTimeout,
 	sslState);
-    commSetSelect(sslState->server.fd,
-	COMM_SELECT_READ,
-	sslReadServer,
-	sslState, 0);
+    sslSetSelect(sslState);
 }
 
 static void
