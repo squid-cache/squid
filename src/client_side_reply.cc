@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.33 2003/01/28 10:01:19 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.34 2003/02/02 12:06:32 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -225,7 +225,7 @@ void
 clientReplyContext::saveState(clientHttpRequest * http)
 {
     assert(old_sc == NULL);
-    debug(88, 1)("clientReplyContext::saveState: saving store context");
+    debug(88, 1)("clientReplyContext::saveState: saving store context\n");
     http->old_entry = http->entry;
     old_sc = sc;
     old_reqsize = reqsize;
@@ -241,7 +241,7 @@ void
 clientReplyContext::restoreState(clientHttpRequest * http)
 {
     assert(old_sc != NULL);
-    debug(88, 1)("clientReplyContext::restoreState: Restoring store context");
+    debug(88, 1)("clientReplyContext::restoreState: Restoring store context\n");
     http->entry = http->old_entry;
     sc = old_sc;
     reqsize = old_reqsize;
