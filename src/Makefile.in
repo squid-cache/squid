@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.88 1997/10/29 05:01:10 wessels Exp $
+#  $Id: Makefile.in,v 1.89 1997/10/29 17:47:40 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -147,7 +147,7 @@ globals.o: globals.c Makefile
 	$(CC) -c $< $(CFLAGS) $(DEFAULTS)
 
 globals.c: globals.h mk-globals-c.pl
-	perl mk-globals-c.pl < globals.h > $@
+	$(PERL) mk-globals-c.pl < globals.h > $@
 
 client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)
