@@ -394,7 +394,7 @@ checkLDAP(LDAP * ld, char *userid, char *password)
 	    return 1;
 	}
 	snprintf(dn, sizeof(dn), "%s", userdn);
-	free(userdn);
+	squid_ldap_memfree(userdn);
 	ldap_msgfree(res);
     } else {
 	snprintf(dn, sizeof(dn), "%s=%s,%s", userattr, userid, basedn);
