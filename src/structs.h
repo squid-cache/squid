@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.352 2000/10/04 00:24:17 wessels Exp $
+ * $Id: structs.h,v 1.353 2000/10/04 02:14:54 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -877,7 +877,6 @@ struct _clientHttpRequest {
 #if USE_CACHE_DIGESTS
     const char *lookup_type;	/* temporary hack: storeGet() result: HIT/MISS/NONE */
 #endif
-    http_status http_code;
     struct timeval start;
     float http_ver;
     int redirect_state;
