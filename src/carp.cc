@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.10 2000/07/18 06:16:41 wessels Exp $
+ * $Id: carp.cc,v 1.11 2000/08/01 22:01:29 wessels Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -61,7 +61,7 @@ carpInit(void)
      * sum of carp-load-factor's for all cache_peer's in squid.conf
      * must equal 1.0
      */
-    assert(a == 1.0);
+    assert(1000 == (int) (1000.0 * a));
     k = 1;
     P_last = 0;
     p = Config.peers;
