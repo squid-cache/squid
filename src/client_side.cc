@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.475 2000/04/18 03:20:26 wessels Exp $
+ * $Id: client_side.cc,v 1.476 2000/05/02 19:53:53 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -83,6 +83,8 @@ static void clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep);
 static clientHttpRequest *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
 static RH clientRedirectDone;
+static void clientCheckNoCache(clientHttpRequest *);
+static void clientCheckNoCacheDone(int answer, void *data);
 static STCB clientHandleIMSReply;
 static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
 static int checkAccelOnly(clientHttpRequest *);
@@ -135,16 +137,12 @@ clientIdentDone(const char *ident, void *data)
 }
 #endif
 
-void
-clientAccessCheck(void *data)
+static aclCheck_t *
+clientAclChecklistCreate(const acl_access *acl, const clientHttpRequest *http)
 {
-    clientHttpRequest *http = data;
+    aclCheck_t *ch;
     ConnStateData *conn = http->conn;
-    if (checkAccelOnly(http)) {
-	clientAccessCheckDone(ACCESS_ALLOWED, http);
-	return;
-    }
-    http->acl_checklist = aclChecklistCreate(Config.accessList.http,
+    ch = aclChecklistCreate(Config.accessList.http,
 	http->request,
 	conn->ident);
 #if USE_IDENT
@@ -152,9 +150,21 @@ clientAccessCheck(void *data)
      * hack for ident ACL. It needs to get full addresses, and a
      * place to store the ident result on persistent connections...
      */
-    http->acl_checklist->conn = conn;
-    cbdataLock(http->acl_checklist->conn);
+    ch->conn = conn;
+    cbdataLock(ch->conn);
 #endif
+    return ch;
+}
+
+void
+clientAccessCheck(void *data)
+{
+    clientHttpRequest *http = data;
+    if (checkAccelOnly(http)) {
+	clientAccessCheckDone(0, http);
+	return;
+    }
+    http->acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
     aclNBCheck(http->acl_checklist, clientAccessCheckDone, http);
 }
 
@@ -292,6 +302,26 @@ clientRedirectDone(void *data, char *result)
     headersLog(0, 1, request->method, request);
 #endif
     fd_note(http->conn->fd, http->uri);
+    clientCheckNoCache(http);
+}
+
+static void
+clientCheckNoCache(clientHttpRequest * http)
+{
+    if (Config.accessList.noCache && http->request->flags.cachable) {
+	http->acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
+	aclNBCheck(http->acl_checklist, clientCheckNoCacheDone, http);
+    } else {
+	clientCheckNoCacheDone(http->request->flags.cachable, http);
+    }
+}
+
+void
+clientCheckNoCacheDone(int answer, void *data)
+{
+    clientHttpRequest *http = data;
+    http->request->flags.cachable = answer;
+    http->acl_checklist = NULL;
     clientProcessRequest(http);
 }
 
@@ -894,28 +924,6 @@ clientCachable(clientHttpRequest * http)
     const char *url = http->uri;
     request_t *req = http->request;
     method_t method = req->method;
-    aclCheck_t ch;
-    memset(&ch, '\0', sizeof(ch));
-    /*
-     * Hopefully, nobody really wants 'no_cache' by client's IP
-     * address, but if they do, this should work if they use IP
-     * addresses in their ACLs, or if the client's address is in
-     * the FQDN cache.
-     *
-     * This may not work yet for 'dst' and 'dst_domain' ACLs.
-     */
-    ch.src_addr = http->conn->peer.sin_addr;
-    ch.my_addr = http->conn->me.sin_addr;
-    ch.my_port = ntohs(http->conn->me.sin_port);
-    ch.request = http->request;
-    /*
-     * aclCheckFast returns 1 for ALLOW and 0 for DENY.  The default
-     * is ALLOW, so we require 'no_cache DENY foo' in squid.conf
-     * to indicate uncachable objects.
-     */
-    if (Config.accessList.noCache)
-	if (!aclCheckFast(Config.accessList.noCache, &ch))
-	    return 0;
     if (req->protocol == PROTO_HTTP)
 	return httpCachable(method);
     /* FTP is always cachable */
