@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.47 1996/09/15 05:04:41 wessels Exp $
+ * $Id: squid.h,v 1.48 1996/09/16 17:31:51 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -223,7 +223,6 @@ typedef int (*QS) (const void *, const void *);
 #include "comm.h"
 #include "debug.h"
 #include "disk.h"
-#include "dynamic_array.h"
 #include "fdstat.h"
 #include "filemap.h"
 #include "hash.h"
