@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.40 2001/08/16 00:16:16 hno Exp $
+ * $Id: dns_internal.cc,v 1.41 2001/10/01 14:20:02 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -579,7 +579,7 @@ idnsCheckQueue(void *unused)
 	    idnsSendQuery(q);
 	} else {
 	    int v = cbdataValid(q->callback_data);
-	    debug(78, 1) ("idnsCheckQueue: ID %x: giving up after %d tries and %5.1f seconds\n",
+	    debug(78, 2) ("idnsCheckQueue: ID %x: giving up after %d tries and %5.1f seconds\n",
 		(int) q->id, q->nsends,
 		tvSubDsec(q->start_t, current_time));
 	    cbdataUnlock(q->callback_data);
@@ -613,15 +613,27 @@ idnsInit(void)
 {
     static int init = 0;
     if (DnsSocket < 0) {
+	int port;
+	struct in_addr addr;
+	if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr)
+	    addr = Config.Addrs.udp_outgoing;
+	else
+	    addr = Config.Addrs.udp_incoming;
 	DnsSocket = comm_open(SOCK_DGRAM,
 	    0,
-	    Config.Addrs.udp_outgoing,
+	    addr,
 	    0,
 	    COMM_NONBLOCKING,
 	    "DNS Socket");
 	if (DnsSocket < 0)
 	    fatal("Could not create a DNS socket");
-	debug(78, 1) ("DNS Socket created on FD %d\n", DnsSocket);
+	/* Ouch... we can't call functions using debug from a debug
+	 * statement. Doing so messes up the internal _db_level
+	 */
+	port = comm_local_port(DnsSocket);
+	debug(78, 1) ("DNS Socket created at %s, port %d, FD %d\n", 
+	    inet_ntoa(addr),
+	    port, DnsSocket);
     }
     assert(0 == nns);
     idnsParseNameservers();
