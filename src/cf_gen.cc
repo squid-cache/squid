@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.10 1997/10/22 19:23:45 wessels Exp $
+ * $Id: cf_gen.cc,v 1.11 1997/10/22 19:25:17 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -357,7 +357,7 @@ gen_parse(Entry * head, FILE * fp)
     Entry *entry;
 
     fprintf(fp,
-	"int\n"
+	"static int\n"
 	"parse_line(char *buff)\n"
 	"{\n"
 	"\tint\tresult = 1;\n"
@@ -400,7 +400,7 @@ gen_dump(Entry * head, FILE * fp)
 {
     Entry *entry;
     fprintf(fp,
-	"static void\n"
+	"void\n"
 	"dump_config(StoreEntry *entry)\n"
 	"{\n"
 	);
