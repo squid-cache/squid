@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.12 2001/01/02 22:55:15 hno Exp $
+# $Id: Makefile.in,v 1.13 2001/01/16 21:11:25 hno Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -70,15 +70,15 @@ install: install-mkdirs anthony-xpm.gif
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
-		mkdir $(prefix); \
+		mkdir -p $(prefix); \
 	fi
 	-@if test ! -d $(sysconfdir); then \
 		echo "mkdir $(sysconfdir)"; \
-		mkdir $(sysconfdir); \
+		mkdir -p $(sysconfdir); \
 	fi
 	-@if test ! -d $(DEFAULT_ICON_DIR); then \
 		echo "mkdir $(DEFAULT_ICON_DIR)"; \
-		mkdir $(DEFAULT_ICON_DIR); \
+		mkdir -p $(DEFAULT_ICON_DIR); \
 	fi
 
 clean:

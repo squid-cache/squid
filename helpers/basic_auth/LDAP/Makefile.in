@@ -45,11 +45,11 @@ $(LDAP_EXE): $(OBJS)
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
-		mkdir $(prefix); \
+		mkdir -p $(prefix); \
 	fi
 	-@if test ! -d $(libexecdir); then \
 		echo "mkdir $(libexecdir)"; \
-		mkdir $(libexecdir); \
+		mkdir -p $(libexecdir); \
 	fi
 
 # Michael Lupp <mike@nemesis.saar.de> wants to know about additions
