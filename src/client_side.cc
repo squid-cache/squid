@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.166 1997/12/02 23:55:05 wessels Exp $
+ * $Id: client_side.cc,v 1.167 1997/12/03 07:30:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -75,7 +75,7 @@ static void clientProcessExpired(void *data);
 static char *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
-static StoreEntry *clientCreateStoreEntry(clientHttpRequest *, int);
+static StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, int);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -166,10 +166,10 @@ clientConstructProxyAuthReply(clientHttpRequest * http)
 }
 
 static StoreEntry *
-clientCreateStoreEntry(clientHttpRequest * h, int flags)
+clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
 {
     StoreEntry *e;
-    e = storeCreateEntry(h->url, h->log_url, 0, h->request->method);
+    e = storeCreateEntry(h->url, h->log_url, 0, m);
     storeClientListAdd(e, h);
     storeClientCopy(e, 0, 0, 4096, get_free_4k_page(), clientSendMoreData, h);
     return e;
@@ -194,12 +194,12 @@ clientAccessCheckDone(int answer, void *data)
 	http->al.http.code = HTTP_PROXY_AUTHENTICATION_REQUIRED;
 	http->log_type = LOG_TCP_DENIED;
 	buf = clientConstructProxyAuthReply(http);
-	http->entry = clientCreateStoreEntry(http, 0);
+	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
 	storeAppend(http->entry, buf, strlen(buf));
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->url);
 	http->log_type = LOG_TCP_DENIED;
-	http->entry = clientCreateStoreEntry(http, 0);
+	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
 	redirectUrl = aclGetDenyInfoUrl(&Config.denyInfoList, AclMatchedName);
 	if (redirectUrl) {
 	    err = errorCon(ERR_ACCESS_DENIED, HTTP_MOVED_TEMPORARILY);
@@ -464,7 +464,7 @@ clientPurgeRequest(clientHttpRequest * http)
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
-	http->entry = clientCreateStoreEntry(http, 0);
+	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
 	errorAppendEntry(http->entry, err);
 	return;
     }
@@ -1264,12 +1264,13 @@ static void
 clientProcessMiss(clientHttpRequest * http)
 {
     char *url = http->url;
-    char *request_hdr = http->request->headers;
+    request_t *r = http->request;
+    char *request_hdr = r->headers;
     aclCheck_t ch;
     int answer;
     ErrorState *err = NULL;
     debug(12, 4) ("clientProcessMiss: '%s %s'\n",
-	RequestMethodStr[http->request->method], url);
+	RequestMethodStr[r->method], url);
     debug(12, 10) ("clientProcessMiss: request_hdr:\n%s\n", request_hdr);
     /*
      * We might have a left-over StoreEntry from a failed cache hit
@@ -1285,22 +1286,22 @@ clientProcessMiss(clientHttpRequest * http)
      */
     memset(&ch, '\0', sizeof(aclCheck_t));
     ch.src_addr = http->conn->peer.sin_addr;
-    ch.request = http->request;
+    ch.request = r;
     answer = aclCheckFast(Config.accessList.miss, &ch);
     if (answer == 0) {
 	http->al.http.code = HTTP_FORBIDDEN;
 	err = errorCon(ERR_CANNOT_FORWARD, HTTP_FORBIDDEN);
-	err->request = requestLink(http->request);
+	err->request = requestLink(r);
 	err->src_addr = http->conn->peer.sin_addr;
-	http->entry = clientCreateStoreEntry(http, 0);
+	http->entry = clientCreateStoreEntry(http, r->method, 0);
 	errorAppendEntry(http->entry, err);
 	return;
     }
     assert(http->out.offset == 0);
-    http->entry = clientCreateStoreEntry(http, http->request->flags);
+    http->entry = clientCreateStoreEntry(http, r->method, r->flags);
     http->entry->mem_obj->fd = http->conn->fd;
     http->entry->refcount++;
-    protoDispatch(http->conn->fd, http->entry, http->request);
+    protoDispatch(http->conn->fd, http->entry, r);
 }
 
 /*
@@ -1541,7 +1542,7 @@ clientReadRequest(int fd, void *data)
 		err->src_addr = conn->peer.sin_addr;
 		err->url = xstrdup(http->url);
 		http->al.http.code = err->http_status;
-		http->entry = clientCreateStoreEntry(http, 0);
+		http->entry = clientCreateStoreEntry(http, method, 0);
 		errorAppendEntry(http->entry, err);
 		safe_free(headers);
 		break;
@@ -1557,7 +1558,7 @@ clientReadRequest(int fd, void *data)
 		err->src_addr = conn->peer.sin_addr;
 		err->request = requestLink(request);
 		http->al.http.code = err->http_status;
-		http->entry = clientCreateStoreEntry(http, 0);
+		http->entry = clientCreateStoreEntry(http, request->method, 0);
 		errorAppendEntry(http->entry, err);
 		return;
 	    }
@@ -1591,7 +1592,7 @@ clientReadRequest(int fd, void *data)
 		    debug(12, 0) ("This request = %d bytes.\n",
 			conn->in.offset);
 		    err = errorCon(ERR_INVALID_REQ, HTTP_REQUEST_ENTITY_TOO_LARGE);
-		    http->entry = clientCreateStoreEntry(http, 0);
+		    http->entry = clientCreateStoreEntry(http, request->method, 0);
 		    errorAppendEntry(http->entry, err);
 		    return;
 		}
@@ -1610,7 +1611,9 @@ clientReadRequest(int fd, void *data)
 	    debug(12, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
 	    err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
 	    err->request_hdrs = xstrdup(conn->in.buf);
-	    http->entry = clientCreateStoreEntry(http, 0);
+	    http->url = http->log_url = "BAD-REQUEST";
+	    http->entry = clientCreateStoreEntry(http, METHOD_NONE, 0);
+	    http->url = http->log_url = NULL;
 	    errorAppendEntry(http->entry, err);
 	    return;
 	}
