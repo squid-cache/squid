@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.85 1997/10/17 00:00:51 wessels Exp $
+ * $Id: wais.cc,v 1.86 1997/10/21 19:38:54 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -199,7 +199,7 @@ waisReadReply(int fd, void *data)
 	    BIT_SET(entry->flag, READ_DEFERRED);
 	}
 	/* dont try reading again for a while */
-	comm_set_stall(fd, Config.stallDelay);
+	comm_set_stall(fd, 1);
 	return;
     } else {
 	BIT_RESET(entry->flag, READ_DEFERRED);
