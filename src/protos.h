@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.318 1999/04/18 05:30:56 wessels Exp $
+ * $Id: protos.h,v 1.319 1999/04/19 04:45:06 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -737,10 +737,10 @@ extern void memMeterSyncHWater(MemMeter * m);
 
 /* mem */
 extern void memInit(void);
-extern void memClean();
-extern void memInitModule();
-extern void memCleanModule();
-extern void memConfigure();
+extern void memClean(void);
+extern void memInitModule(void);
+extern void memCleanModule(void);
+extern void memConfigure(void);
 extern void *memAllocate(mem_type);
 extern void *memAllocBuf(size_t net_size, size_t * gross_size);
 extern CBDUNL memFree;
@@ -751,6 +751,8 @@ extern void memFree8K(void *);
 extern void memFreeDISK(void *);
 extern int memInUse(mem_type);
 extern size_t memTotalAllocated(void);
+extern void memDataInit(mem_type, const char *, size_t, int);
+extern void memCheckInit(void);
 
 /* MemPool */
 extern MemPool *memPoolCreate(const char *label, size_t obj_size);
@@ -871,11 +873,11 @@ extern HASHCMP storeKeyHashCmp;
 extern EVH storeDirClean;
 
 /* store_digest.c */
-extern void storeDigestInit();
-extern void storeDigestNoteStoreReady();
-extern void storeDigestScheduleRebuild();
+extern void storeDigestInit(void);
+extern void storeDigestNoteStoreReady(void);
+extern void storeDigestScheduleRebuild(void);
 extern void storeDigestDel(const StoreEntry * entry);
-extern void storeDigestReport();
+extern void storeDigestReport(void);
 
 /*
  * store_dir.c
@@ -1115,11 +1117,11 @@ extern peer *carpSelectParent(request_t *);
 #if DELAY_POOLS
 extern void delayPoolsInit(void);
 extern void delayInitDelayData(unsigned short pools);
-extern void delayFreeDelayData();
+extern void delayFreeDelayData(void);
 extern void delayCreateDelayPool(unsigned short pool, u_char class);
 extern void delayInitDelayPool(unsigned short pool, u_char class, delaySpecSet * rates);
 extern void delayFreeDelayPool(unsigned short pool);
-extern void delayPoolsReconfigure();
+extern void delayPoolsReconfigure(void);
 extern void delaySetNoDelay(int fd);
 extern void delayClearNoDelay(int fd);
 extern int delayIsNoDelay(int fd);

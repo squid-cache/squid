@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.26 1999/04/19 03:53:36 wessels Exp $
+ * $Id: event.cc,v 1.27 1999/04/19 04:45:04 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -53,7 +53,7 @@ static int run_id = 0;
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight)
 {
-    struct ev_entry *event = xcalloc(1, sizeof(struct ev_entry));
+    struct ev_entry *event = memAllocate(MEM_EVENT);
     struct ev_entry **E;
     event->func = func;
     event->arg = arg;
@@ -101,7 +101,7 @@ eventDelete(EVH * func, void *arg)
 	*E = event->next;
 	if (NULL != event->arg)
 	    cbdataUnlock(event->arg);
-	xfree(event);
+	memFree(event, MEM_EVENT);
 	return;
     }
     debug_trap("eventDelete: event not found");
@@ -121,6 +121,7 @@ eventRun(void)
     run_id++;
     debug(41, 5) ("eventRun: RUN ID %d\n", run_id);
     while ((event = tasks)) {
+	int valid = 1;
 	if (event->when > current_dtime)
 	    break;
 	if (event->id == run_id)	/* was added during this run */
@@ -133,15 +134,16 @@ eventRun(void)
 	event->arg = NULL;
 	tasks = event->next;
 	if (NULL != arg) {
-	    int valid = cbdataValid(arg);
+	    valid = cbdataValid(arg);
 	    cbdataUnlock(arg);
-	    if (!valid)
-		return;
 	}
-	weight += event->weight;
-	debug(41, 5) ("eventRun: Running '%s', id %d\n", event->name, event->id);
-	func(arg);
-	safe_free(event);
+	if (valid) {
+	    weight += event->weight;
+	    debug(41, 5) ("eventRun: Running '%s', id %d\n",
+		event->name, event->id);
+	    func(arg);
+	}
+	memFree(event, MEM_EVENT);
     }
 }
 
@@ -156,6 +158,7 @@ eventNextTime(void)
 void
 eventInit(void)
 {
+    memDataInit(MEM_EVENT, "event", sizeof(struct ev_entry), 0);
     cachemgrRegister("events",
 	"Event Queue",
 	eventDump, 0, 1);
@@ -185,7 +188,7 @@ eventFreeMemory(void)
     while ((event = tasks)) {
 	if (NULL != event->arg)
 	    cbdataUnlock(event->arg);
-	xfree(event);
+	memFree(event, MEM_EVENT);
     }
     tasks = NULL;
 }
