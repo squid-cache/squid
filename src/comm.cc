@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.364 2003/02/12 06:11:02 robertc Exp $
+ * $Id: comm.cc,v 1.365 2003/02/14 13:59:49 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -37,6 +37,7 @@
 #include "StoreIOBuffer.h"
 #include "comm.h"
 #include "fde.h"
+#include "ConnectionDetail.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -85,6 +86,13 @@ CBDATA_TYPE(ConnectStateData);
 
 static PF comm_accept_try;
 
+class AcceptFD {
+  public:
+    int check_delay;
+    IOACB *handler;
+    void *handler_data;
+};
+
 struct _fdc_t {
 	int active;
 	int fd;
@@ -104,11 +112,10 @@ struct _fdc_t {
 	} write;
 	struct {
 		/* how often (in msec) to re-check if we're out of fds on an accept() */
-		int check_delay;	
-		struct sockaddr_in me;
-		struct sockaddr_in pn;
-		IOACB *handler;
-		void *handler_data;
+		struct sockaddr_in & me() {return connDetails.me;}
+		struct sockaddr_in & pn() {return connDetails.peer;}
+		AcceptFD accept;
+		ConnectionDetail connDetails;
 	} accept;
 	struct CommFiller {
 		StoreIOBuffer requestedData;
@@ -145,8 +152,7 @@ struct _CommCallbackData {
 	comm_err_t errcode;
 	int xerrno;
 	int seqnum;
-	struct sockaddr_in me;
-	struct sockaddr_in pn;
+	ConnectionDetail details;
 	StoreIOBuffer sb;
 };
 typedef struct _CommCallbackData CommCallbackData;
@@ -215,9 +221,9 @@ comm_addreadcallback(int fd, IOCB *callback, char *buf, size_t retval, comm_err_
 }
 
 
+
 static void
-comm_addacceptcallback(int fd, int newfd, IOACB *callback, struct sockaddr_in *pn,
-  struct sockaddr_in *me, comm_err_t errcode, int xerrno, void *callback_data)
+comm_addacceptcallback(int fd, int newfd, IOACB *callback, ConnectionDetail details, comm_err_t errcode, int xerrno, void *callback_data)
 {
 	CommCallbackData *cio;
 
@@ -235,8 +241,7 @@ comm_addacceptcallback(int fd, int newfd, IOACB *callback, struct sockaddr_in *p
 	cio->seqnum = CommCallbackSeqnum;
 	cio->type = COMM_CB_ACCEPT;
 	cio->newfd = newfd;
-	cio->pn = *pn;
-	cio->me = *me;
+	cio->details = details;
 
 	/* Add it to the end of the list */
 	dlinkAddTail(cio, &(cio->h_node), &CommCallbackList);
@@ -325,7 +330,7 @@ comm_call_io_callback(CommCallbackData *cio)
 			  cio->callback_data);
 		        break;
 		    case COMM_CB_ACCEPT:
-                        cio->c.a_callback(cio->fd, cio->newfd, &cio->me, &cio->pn, cio->errcode,
+                        cio->c.a_callback(cio->fd, cio->newfd, &cio->details, cio->errcode,
 			  cio->xerrno, cio->callback_data);
 			break;
 		    case COMM_CB_FILL:
@@ -732,7 +737,7 @@ comm_accept_setcheckperiod(int fd, int mdelay)
 {
 	assert(fdc_table[fd].active == 1);
 	assert(mdelay != 0);
-	fdc_table[fd].accept.check_delay = mdelay;
+	fdc_table[fd].accept.accept.check_delay = mdelay;
 }
 
 /*
@@ -753,7 +758,7 @@ comm_accept_check_event(void *data)
 		last_warn = squid_curtime;
 	}
 	eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
-	    1000.0 / (double)(fdc_table[fd].accept.check_delay), 1);
+	    1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1);
 }
 
 
@@ -1194,18 +1199,14 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 
 /* Wait for an incoming connection on FD.  FD should be a socket returned
  * from comm_listen. */
-int
-comm_old_accept(int fd, struct sockaddr_in *pn, struct sockaddr_in *me)
+static int
+comm_old_accept(int fd, ConnectionDetail &details)
 {
-    int sock;
-    struct sockaddr_in P;
-    struct sockaddr_in M;
-    socklen_t Slen;
-    fde *F = NULL;
-    Slen = sizeof(P);
-    statCounter.syscalls.sock.accepts++;
     PROF_start(comm_accept);
-    if ((sock = accept(fd, (struct sockaddr *) &P, &Slen)) < 0) {
+    statCounter.syscalls.sock.accepts++;
+    int sock;
+    socklen_t Slen = sizeof(details.peer);
+    if ((sock = accept(fd, (struct sockaddr *) &details.peer, &Slen)) < 0) {
 	PROF_stop(comm_accept);
 	if (ignoreErrno(errno)) {
 	    debug(50, 5) ("comm_old_accept: FD %d: %s\n", fd, xstrerror());
@@ -1218,23 +1219,19 @@ comm_old_accept(int fd, struct sockaddr_in *pn, struct sockaddr_in *me)
 	    return COMM_ERROR;
 	}
     }
-    if (pn)
-	*pn = P;
-    Slen = sizeof(M);
-    memset(&M, '\0', Slen);
-    getsockname(sock, (struct sockaddr *) &M, &Slen);
-    if (me)
-	*me = M;
+    Slen = sizeof(details.me);
+    memset(&details.me, '\0', Slen);
+    getsockname(sock, (struct sockaddr *) &details.me, &Slen);
     commSetCloseOnExec(sock);
     /* fdstat update */
     fd_open(sock, FD_SOCKET, "HTTP Request");
     fdd_table[sock].close_file = NULL;
     fdd_table[sock].close_line = 0;
     fdc_table[sock].active = 1;
-    F = &fd_table[sock];
-    xstrncpy(F->ipaddr, inet_ntoa(P.sin_addr), 16);
-    F->remote_port = htons(P.sin_port);
-    F->local_port = htons(M.sin_port);
+    fde *F = &fd_table[sock];
+    xstrncpy(F->ipaddr, inet_ntoa(details.peer.sin_addr), 16);
+    F->remote_port = htons(details.peer.sin_port);
+    F->local_port = htons(details.me.sin_port);
     commSetNonBlocking(sock);
     PROF_stop(comm_accept);
     return sock;
@@ -1361,10 +1358,10 @@ _comm_close(int fd, char *file, int line)
           COMM_ERR_CLOSING, 0, fdc_table[fd].read.handler_data);
 	fdc_table[fd].read.handler = NULL;
     }
-    if (fdc_table[fd].accept.handler) {
-        fdc_table[fd].accept.handler(fd, -1, NULL, NULL, COMM_ERR_CLOSING,
-          0, fdc_table[fd].accept.handler_data);
-	fdc_table[fd].accept.handler = NULL;
+    if (fdc_table[fd].accept.accept.handler) {
+        fdc_table[fd].accept.accept.handler(fd, -1, NULL, COMM_ERR_CLOSING,
+          0, fdc_table[fd].accept.accept.handler_data);
+	fdc_table[fd].accept.accept.handler = NULL;
     }
     if (fdc_table[fd].fill.handler) {
         fdc_table[fd].fill.handler(fd, fdc_table[fd].fill.requestedData, COMM_ERR_CLOSING, 0,
@@ -1825,11 +1822,11 @@ comm_accept_try(int fd, void *data)
 		if (fdNFree() < RESERVED_FD) {
 			debug(5, 3) ("comm_accept_try: we're out of fds - deferring io!\n");
 			eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
-			    1000.0 / (double)(fdc_table[fd].accept.check_delay), 1);
+			    1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1);
 			return;
 		}
 		/* Accept a new connection */
-		newfd = comm_old_accept(fd, &Fc->accept.pn, &Fc->accept.me);
+		newfd = comm_old_accept(fd, Fc->accept.connDetails);
 		/* Check for errors */
 		if (newfd < 0) {
 			if (newfd == COMM_NOMESSAGE) {
@@ -1838,20 +1835,19 @@ comm_accept_try(int fd, void *data)
 				return;
 			}
 			/* A non-recoverable error - register an error callback */
-			comm_addacceptcallback(fd, -1, Fc->accept.handler, &Fc->accept.pn,
-			    &Fc->accept.me, COMM_ERROR, errno, Fc->accept.handler_data);
-			Fc->accept.handler = NULL;
-			Fc->accept.handler_data = NULL;
+			comm_addacceptcallback(fd, -1, Fc->accept.accept.handler, Fc->accept.connDetails, COMM_ERROR, errno, Fc->accept.accept.handler_data);
+			Fc->accept.accept.handler = NULL;
+			Fc->accept.accept.handler_data = NULL;
 			return;
 		}
 
 		/* Try the callback! */
-		hdl = Fc->accept.handler;
-		Fc->accept.handler = NULL;
-		hdl(fd, newfd, &Fc->accept.pn, &Fc->accept.me, COMM_OK, 0, Fc->accept.handler_data);
+		hdl = Fc->accept.accept.handler;
+		Fc->accept.accept.handler = NULL;
+		hdl(fd, newfd, &Fc->accept.connDetails, COMM_OK, 0, Fc->accept.accept.handler_data);
 
 		/* If we weren't re-registed, don't bother trying again! */
-		if (Fc->accept.handler == NULL)
+		if (Fc->accept.accept.handler == NULL)
 			return;
 	}
 }
@@ -1871,12 +1867,12 @@ comm_accept(int fd, IOACB *handler, void *handler_data)
 	assert(fdc_table[fd].active == 1);
 
 	/* make sure we're not pending! */
-	assert(fdc_table[fd].accept.handler == NULL);
+	assert(fdc_table[fd].accept.accept.handler == NULL);
 
 	/* Record our details */
 	Fc = &fdc_table[fd];
-	Fc->accept.handler = handler;
-	Fc->accept.handler_data = handler_data;
+	Fc->accept.accept.handler = handler;
+	Fc->accept.accept.handler_data = handler_data;
 
 	/* Kick off the accept */
 #if OPTIMISTIC_IO

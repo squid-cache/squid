@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.58 2003/02/13 08:07:47 robertc Exp $
+#  $Id: Makefile.am,v 1.59 2003/02/14 13:59:50 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -191,6 +191,7 @@ squid_SOURCES = \
 	comm_poll.cc \
 	comm_kqueue.cc \
 	Config.h \
+	ConnectionDetail.h \
 	debug.cc \
 	Debug.h \
 	defines.h \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.340 2003/02/05 10:36:51 robertc Exp $
+ * $Id: ftp.cc,v 1.341 2003/02/14 13:59:50 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -45,6 +45,7 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "ConnectionDetail.h"
 
 static const char *const crlf = "\r\n";
 static char cbuf[1024];
@@ -1908,7 +1909,7 @@ ftpReadPort(FtpStateData * ftpState)
 
 /* "read" handler to accept data connection */
 static void
-ftpAcceptDataConnection(int fd, int newfd, struct sockaddr_in *me, struct sockaddr_in *my_peer,
+ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
   comm_err_t flag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
@@ -1924,9 +1925,9 @@ ftpAcceptDataConnection(int fd, int newfd, struct sockaddr_in *me, struct sockad
     }
 
     if (Config.Ftp.sanitycheck) {
-	char *ipaddr = inet_ntoa(my_peer->sin_addr);
+	char *ipaddr = inet_ntoa(details->peer.sin_addr);
 	if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
-	    debug(9, 1) ("FTP data connection from unexpected server (%s:%d), expecting %s\n", ipaddr, (int) ntohs(my_peer->sin_port), fd_table[ftpState->ctrl.fd].ipaddr);
+	    debug(9, 1) ("FTP data connection from unexpected server (%s:%d), expecting %s\n", ipaddr, (int) ntohs(details->peer.sin_port), fd_table[ftpState->ctrl.fd].ipaddr);
 	    comm_close(newfd);
 	    comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
 	    return;
@@ -1943,8 +1944,8 @@ ftpAcceptDataConnection(int fd, int newfd, struct sockaddr_in *me, struct sockad
     comm_close(ftpState->data.fd);
     debug(9, 3) ("ftpAcceptDataConnection: Connected data socket on FD %d\n", newfd);
     ftpState->data.fd = newfd;
-    ftpState->data.port = ntohs(my_peer->sin_port);
-    ftpState->data.host = xstrdup(inet_ntoa(my_peer->sin_addr));
+    ftpState->data.port = ntohs(details->peer.sin_port);
+    ftpState->data.host = xstrdup(inet_ntoa(details->peer.sin_addr));
     commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
     commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout,
 	ftpState);

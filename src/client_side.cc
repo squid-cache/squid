@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.619 2003/02/12 06:11:00 robertc Exp $
+ * $Id: client_side.cc,v 1.620 2003/02/14 13:59:49 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -67,6 +67,7 @@
 #include "fde.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
+#include "ConnectionDetail.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -2217,7 +2218,7 @@ connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd)
 
 /* Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer,
+httpAccept(int sock, int newfd, ConnectionDetail *details,
   comm_err_t flag, int xerrno, void *data)
 {
     int *N = &incoming_sockets_accepted;
@@ -2240,22 +2241,22 @@ httpAccept(int sock, int newfd, struct sockaddr_in *me, struct sockaddr_in *peer
 	}
 	
 	debug(33, 4) ("httpAccept: FD %d: accepted\n", newfd);
-	connState = connStateCreate(peer, me, newfd);
+	connState = connStateCreate(&details->peer, &details->me, newfd);
 	comm_add_close_handler(newfd, connStateFree, connState);
 	if (Config.onoff.log_fqdn)
-	    fqdncache_gethostbyaddr(peer->sin_addr, FQDN_LOOKUP_IF_MISS);
+	    fqdncache_gethostbyaddr(details->peer.sin_addr, FQDN_LOOKUP_IF_MISS);
 	commSetTimeout(newfd, Config.Timeout.request, requestTimeout, connState);
 #if USE_IDENT
         ACLChecklist identChecklist;
-	identChecklist.src_addr = peer->sin_addr;
-	identChecklist.my_addr = me->sin_addr;
-	identChecklist.my_port = ntohs(me->sin_port);
+	identChecklist.src_addr = details->peer.sin_addr;
+	identChecklist.my_addr = details->me.sin_addr;
+	identChecklist.my_port = ntohs(details->me.sin_port);
 	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
-	    identStart(me, peer, clientIdentDone, connState);
+	    identStart(&details->me, &details->peer, clientIdentDone, connState);
 #endif
 	clientReadSomeData(connState);
 	commSetDefer(newfd, clientReadDefer, connState);
-	clientdbEstablished(peer->sin_addr, 1);
+	clientdbEstablished(details->peer.sin_addr, 1);
 	assert(N);
 	(*N)++;
 }

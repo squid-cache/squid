@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.464 2003/02/12 06:11:04 robertc Exp $
+ * $Id: protos.h,v 1.465 2003/02/14 13:59:50 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -124,12 +124,10 @@ extern int comm_existsiocallback(void);
 extern void comm_calliocallback(void);
 extern void comm_read(int fd, char *buf, int len, IOCB *handler, void *data);
 
-extern void comm_accept(int fd, IOACB *handler, void *handler_data);
 extern int comm_listen(int fd);
 SQUIDCEXTERN int commSetNonBlocking(int fd);
 SQUIDCEXTERN int commUnsetNonBlocking(int fd);
 SQUIDCEXTERN void commSetCloseOnExec(int fd);
-extern int comm_old_accept(int fd, struct sockaddr_in *, struct sockaddr_in *);
 extern void _comm_close(int fd, char *file, int line);
 #define comm_close(fd) (_comm_close((fd), __FILE__, __LINE__))
 SQUIDCEXTERN void comm_reset_close(int fd);

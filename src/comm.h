@@ -8,6 +8,10 @@ typedef void IOWCB(int fd, char *data, size_t len, comm_err_t flag, int xerrno, 
 /* fill sb with up to length data from fd */
 extern void comm_fill_immediate(int fd, StoreIOBuffer sb, IOFCB *callback, void *data);
 
+class ConnectionDetail;
+typedef void IOACB(int fd, int nfd, ConnectionDetail *details, comm_err_t flag, int xerrno, void *data);
+extern void comm_accept(int fd, IOACB *handler, void *handler_data);
+
 extern int comm_has_pending_read_callback(int fd);
 extern bool comm_has_pending_read(int fd);
 extern void comm_read_cancel(int fd, IOCB *callback, void *data);
