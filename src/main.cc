@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.325 2000/12/30 23:29:07 wessels Exp $
+ * $Id: main.cc,v 1.326 2001/01/01 16:24:39 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -346,7 +346,6 @@ mainReconfigure(void)
     authenticateShutdown();
     storeDirCloseSwapLogs();
     errorClean();
-    mimeFreeMemory();
     parseConfigFile(ConfigFile);
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
