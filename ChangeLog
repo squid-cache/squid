@@ -71,3 +71,6 @@
 	- Check specifically for tm_gmtoff and set HAVE_TM_GMTOFF
 	- Fixed memory problem for colon but no port ("http://foo.com:/")
 	- Added support for weighted neighbors.
+	-fixed SSL/CONNECT
+	-Added background processing for rebuilding store
+	-Removed check for "\r\n" in icpRead, use 'immed' flag instead
