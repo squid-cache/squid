@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.82 1996/09/26 19:54:45 wessels Exp $
+ * $Id: comm.cc,v 1.83 1996/10/07 14:59:39 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -944,14 +944,12 @@ commSetNonBlocking(int fd)
 {
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
     if (fcntl(fd, F_SETFL, O_NONBLOCK)) {
-	debug(5, 0, "comm_open: FD %d: error setting O_NONBLOCK: %s\n",
-	    fd, xstrerror());
+	debug(5, 0, "FD %d: error setting O_NONBLOCK: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
 #else
     if (fcntl(fd, F_SETFL, O_NDELAY)) {
-	debug(5, 0, "comm_open: FD %d: error setting O_NDELAY: %s\n",
-	    fd, xstrerror());
+	debug(5, 0, "FD %d: error setting O_NDELAY: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
 #endif
