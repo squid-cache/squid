@@ -7,18 +7,15 @@
 <P>
 Ha ocurrido un error de protocolo FTP:
 
-Mientras se intentaba traer el URL:
+mientras se intentaba traer el documento con URL:
 <A HREF="%U">%U</A>
 <P>
-Squid ordenó el siguiente comando FTP:
-<PRE><STRONG>
-	%f
-</STRONG></PRE>
+Squid envió la siguiente orden FTP:
+<BLOCKQUOTE><PRE><STRONG>%f</STRONG></PRE></BLOCKQUOTE>
 y recibió la siguiente respuesta:
-<PRE><STRONG>
-	%F
-</STRONG></PRE>
+<BLOCKQUOTE><PRE><STRONG>%F</STRONG></PRE></BLOCKQUOTE>
+<BLOCKQUOTE><PRE><STRONG>%g</STRONG></PRE></BLOCKQUOTE>
 <P>
-Esto puede ser causado por una URL de protocolo FTP con un camino
+Esto puede ser causado por una URL de protocolo FTP con una ruta
 de directorios absoluto(que no cumple el RFC 1738). Si esta es la
 causa, el fichero podría encontrarse en <A HREF="%B">%B</A>.

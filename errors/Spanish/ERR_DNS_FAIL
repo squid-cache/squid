@@ -22,10 +22,11 @@ El programa dnsserver ha devuelto el siguiente mensaje:
 </BLOCKQUOTE>
 
 <P>
-Esto quiere decir que:
+Esto significa que:
 <PRE>
  La caché no ha sido capaz de resolver el nombre de máquina
  presente en la URL.
- Compruebe que la dirección es correcta.
+ Compruebe que la dirección sea correcta.
 </PRE>
+</P>
 

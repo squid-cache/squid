@@ -1,25 +1,25 @@
 <HTML><HEAD>
-<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+<TITLE>ERREUR&nbsp;: L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</TITLE>
 </HEAD><BODY>
 <H1>ERREUR</H1>
-<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<H2>L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</H2>
 <HR>
 <P>
 Une erreur du protocole FTP est survenue
-en essayant de charger l'URL suivante:
+en essayant de charger l'URL suivante&nbsp;:
 <A HREF="%U">%U</A>
 <P>
-Squid a envoy&eacute; la commande FTP suivante:
+Squid a envoy&eacute; la commande FTP suivante&nbsp;:
 <PRE><STRONG>
 	%f
 </STRONG></PRE>
-et recut alors la r&eacute;ponse
+et a re&ccedil;u la r&eacute;ponse&nbsp;:
 <PRE><STRONG>
 	%F
 </STRONG></PRE>
 <P>
-Ceci pourrait etre caus&eacute; par une URL FTP avec un chemin absolu (ce
-qui est en contradiction avec le RFC 1738). Si il s'agit bien de cette
-cause, alors le fichier peut etre trouv&eacute; &agrave; <A HREF="%B">%B</A>.
+Ceci pourrait &ecirc;tre d&ucirc; &agrave; une URL FTP contenant un chemin absolu&nbsp;(ce
+qui est en contradiction avec la RFC 1738). Dans ce cas,
+ le fichier peut &ecirc;tre r&eacute;cup&eacute;r&eacute; &agrave; l'URL&nbsp;: <A HREF="%B">%B</A>.
 </P>
 

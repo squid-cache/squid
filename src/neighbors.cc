@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.258 1998/10/12 21:40:59 wessels Exp $
+ * $Id: neighbors.cc,v 1.259 1998/11/12 06:28:16 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1116,6 +1116,8 @@ dump_peer_options(StoreEntry * sentry, peer * p)
     if (p->options.no_delay)
 	storeAppendPrintf(sentry, " no-delay");
 #endif
+    if (p->login)
+	storeAppendPrintf(sentry, " login=%s", p->login);
     if (p->mcast.ttl > 0)
 	storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
     storeAppendPrintf(sentry, "\n");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.57 1998/09/29 16:33:40 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.58 1998/11/12 06:27:50 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -89,7 +89,9 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Expires", HDR_EXPIRES, ftDate_1123},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
+    {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
     {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
+    {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
     {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
     {"Link", HDR_LINK, ftStr},
@@ -137,7 +139,7 @@ static http_hdr_type ListHeadersArr[] =
     HDR_CONTENT_ENCODING,
     HDR_CONTENT_LANGUAGE,
     HDR_CONNECTION,
-    /*  HDR_IF_MATCH, HDR_IF_NONE_MATCH, */
+    HDR_IF_MATCH, HDR_IF_NONE_MATCH,
     HDR_LINK, HDR_PRAGMA,
     /* HDR_TRANSFER_ENCODING, */
     HDR_UPGRADE,
@@ -185,7 +187,8 @@ static http_hdr_type ReplyHeadersArr[] =
 static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
 static http_hdr_type RequestHeadersArr[] =
 {
-    HDR_AUTHORIZATION, HDR_FROM, HDR_HOST, HDR_IF_MODIFIED_SINCE,
+    HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
+    HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
     HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
     HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
     HDR_USER_AGENT, HDR_X_FORWARDED_FOR
@@ -308,15 +311,15 @@ httpHeaderClean(HttpHeader * hdr)
     HttpHeaderStats[hdr->owner].destroyedCount++;
     HttpHeaderStats[hdr->owner].busyDestroyedCount += hdr->entries.count > 0;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	statHistCount(&HttpHeaderStats[hdr->owner].fieldTypeDistr, e->id);
-	/* tmp hack to avoid coredumps */
-	if (e->id < 0 || e->id >= HDR_ENUM_END)
+	/* tmp hack to try to avoid coredumps */
+	if (e->id < 0 || e->id >= HDR_ENUM_END) {
 	    debug(55, 0) ("httpHeaderClean BUG: entry[%d] is invalid (%d). Ignored.\n",
 		pos, e->id);
-	else
-	    /* end of hack */
+	} else {
+	    statHistCount(&HttpHeaderStats[hdr->owner].fieldTypeDistr, e->id);
 	    /* yes, this destroy() leaves us in an incosistent state */
 	    httpHeaderEntryDestroy(e);
+	}
     }
     arrayClean(&hdr->entries);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.34 1998/08/30 05:21:42 wessels Exp $
+ * $Id: mem.cc,v 1.35 1998/11/12 06:28:14 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -207,7 +207,9 @@ memInit(void)
     memDataInit(MEM_AIO_RESULT_T, "aio_result_t", sizeof(aio_result_t), 0);
     memDataInit(MEM_CACHEMGR_PASSWD, "cachemgr_passwd",
 	sizeof(cachemgr_passwd), 0);
+#if USE_CACHE_DIGESTS
     memDataInit(MEM_CACHE_DIGEST, "CacheDigest", sizeof(CacheDigest), 0);
+#endif
     memDataInit(MEM_CLIENTHTTPREQUEST, "clientHttpRequest",
 	sizeof(clientHttpRequest), 0);
     memDataInit(MEM_CLOSE_HANDLER, "close_handler", sizeof(close_handler), 0);
@@ -255,7 +257,9 @@ memInit(void)
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_NET_DB_PEER, "net_db_peer", sizeof(net_db_peer), 0);
+#if USE_CACHE_DIGESTS
     memDataInit(MEM_DIGEST_FETCH_STATE, "DigestFetchState", sizeof(DigestFetchState), 0);
+#endif
     memDataInit(MEM_PEER, "peer", sizeof(peer), 0);
     memDataInit(MEM_PINGERECHODATA, "pingerEchoData",
 	sizeof(pingerEchoData), 0);
@@ -278,6 +282,11 @@ memInit(void)
     memDataInit(MEM_WORDLIST, "wordlist", sizeof(wordlist), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", MD5_DIGEST_CHARS, 0);
+    memDataInit(MEM_HELPER, "helper", sizeof(helper), 0);
+    memDataInit(MEM_HELPER_REQUEST, "helper_request",
+	sizeof(helper_request), 0);
+    memDataInit(MEM_HELPER_SERVER, "helper_server",
+	sizeof(helper_server), 0);
     /* test that all entries are initialized */
     for (t = MEM_NONE, t++; t < MEM_MAX; t++) {
 	if (MEM_DONTFREE == t)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.284 1998/11/11 20:04:17 glenn Exp $
+ * $Id: protos.h,v 1.285 1998/11/12 06:28:20 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -89,7 +89,7 @@ extern void aioCheckCallbacks(void);
 extern int parseConfigFile(const char *file_name);
 extern void intlistDestroy(intlist **);
 extern int intlistFind(intlist * list, int i);
-extern void wordlistAdd(wordlist **, const char *);
+extern wordlist *wordlistAdd(wordlist **, const char *);
 extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
 extern void wordlistCat(const wordlist *, MemBuf * mb);
@@ -329,6 +329,8 @@ extern int httpHdrRangeCanonize(HttpHdrRange * range, size_t clen);
 extern String httpHdrRangeBoundaryStr(clientHttpRequest * http);
 extern int httpHdrRangeIsComplex(const HttpHdrRange * range);
 extern int httpHdrRangeWillBeComplex(const HttpHdrRange * range);
+extern size_t httpHdrRangeFirstOffset(const HttpHdrRange * range);
+
 
 /* Http Content Range Header Field */
 extern HttpHdrContRange *httpHdrContRangeCreate();
@@ -483,7 +485,7 @@ extern void snmpConnectionShutdown(void);
 extern void snmpConnectionClose(void);
 extern void snmpDebugOid(int lvl, oid * Name, snint Len);
 extern void addr2oid(struct in_addr addr, oid * Dest);
-extern struct in_addr* oid2addr(oid * id); 
+extern struct in_addr *oid2addr(oid * id);
 variable_list *snmp_basicFn(variable_list *, snint *);
 variable_list *snmp_confFn(variable_list *, snint *);
 variable_list *snmp_sysFn(variable_list *, snint *);
@@ -555,6 +557,7 @@ extern size_t headersEnd(const char *, size_t);
 extern const char *mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field);
 
 extern void mimeInit(char *filename);
+extern void mimeFreeMemory(void);
 extern char *mimeGetContentEncoding(const char *fn);
 extern char *mimeGetContentType(const char *fn);
 extern char *mimeGetIcon(const char *fn);
@@ -987,13 +990,13 @@ extern void useragentRotateLog(void);
 extern void logUserAgent(const char *, const char *);
 extern peer_t parseNeighborType(const char *s);
 
+extern void errorInitialize(void);
+extern void errorClean(void);
 extern HttpReply *errorBuildReply(ErrorState * err);
 extern void errorSend(int fd, ErrorState *);
 extern void errorAppendEntry(StoreEntry *, ErrorState *);
 extern void errorStateFree(ErrorState * err);
-extern void errorInitialize(void);
 extern int errorReservePageId(const char *page_name);
-extern void errorFree(void);
 extern ErrorState *errorCon(err_type type, http_status);
 
 extern void pconnPush(int, const char *host, u_short port);
@@ -1072,6 +1075,7 @@ extern int internalCheck(const char *urlpath);
 extern int internalStaticCheck(const char *urlpath);
 extern char *internalLocalUri(const char *dir, const char *name);
 extern char *internalRemoteUri(const char *, u_short, const char *, const char *);
+extern const char *internalHostname(void);
 
 #if USE_CARP
 extern void carpInit(void);

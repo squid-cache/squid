@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.18 1998/10/19 22:36:56 wessels Exp $
+ * $Id: StatHist.cc,v 1.19 1998/11/12 06:27:52 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -273,7 +273,7 @@ statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int co
 void
 statHistIntInit(StatHist * H, int n)
 {
-    statHistInit(H, n, Null, Null, 0, n - 1);
+    statHistInit(H, n, Null, Null, (double) 0, (double) n - 1);
 }
 
 void

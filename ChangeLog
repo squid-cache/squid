@@ -21,6 +21,61 @@ Changes to Squid-2.1 ():
 	  potentially causing under-utilized cache digests
 	- Maintain refreshCheck statistics on per-protocol basis so we
 	  can tell why ICP or Digests return too many misses, etc.
+	- Fixed delay_pools.c class2/class3 typo (Simon Woods).
+	- Changed squid.conf's default access controls to deny all
+	  HTTP requests.  Admins must write ACL rules to specifically
+	  allow their local clients.
+	- Patched French error messages (Mathias HERBERTS).
+	- NextStep porting fixes by Mike Laster:
+		- use xstrdup() in cf_gen.c
+		- check for putenv() in configure
+		- #define S_ISDIR macro
+	- Added --disable-poll configure option (Henrik Nordstrom).
+	- Fixed internal URL hostname case bugs (Henrik Nordstrom).
+	- Patched ftp.c so we never cache autenticated FTP requests
+	  (Henrik Nordstrom).
+	- Fixed FTP authentication. We tried to unescape authentication
+	  given by basic authentication which is not URL escaped
+	  (Henrik Nordstrom).
+	- Fixed HTTP version for common logfile format (Henrik Nordstrom).
+	- Added 'redirect_rewrites_host_header' option to disable rewriting
+	  of Host header for redirector responses (Henrik Nordstrom).
+	- Allow semi-customized error message signatures (Henrik Nordstrom).
+	- Fixed bug with errors for unsupported requests (Henrik Nordstrom).
+	- Fixed handling of blank lines in ACL input files (Henrik
+	  Nordstrom).
+	- Changed proxy_auth ACL type to consist of a list of valid
+	  users. REQUIRED == any (same as ident ACL). ACL type user
+	  changed to ident since this is what it really is.
+	  (Henrik Nordstrom).
+	- Fixed long URL bugs; make sure 'log_uri' never exceeds
+	  MAX_URL bytes.
+	- Allow comments in external ACL files (Gerhard Wiesinger).
+	- Added 'range_offset_limit' configuration option.  Requests
+	  with ranges that start after this value will be passed
+	  on unmodified, and Squid will not cache the response
+	  (Henrik Nordstrom).
+	- Added Client HTTP Hit byte counters to 'counters' output
+	  (Douglas Swarin).
+	- Got Squid to compile with --enable-async-io on FreeBSD.
+	- Fixed infinite loop bug for cachemgr 'config' option.
+	- Fixed cachability bugs for replies with Pragma: no-cache.
+	- Made content-type multipart/x-mixed-replace uncachable.
+	- Y2K fix for parsing dates in "Wed Jun  9 01:29:59 1993 GMT"
+	  format (Richard Kettlewell).
+	- Fixed passing -s option to dnsserver processes (Alvaro Jose
+	  Fernandez Lago).
+	- Changed proxy_auth to work on internal objects and when in
+	  accelerator mode. (Henrik Nordstrom)
+	- Added login=user:password option to cache_peer directive to
+	  be used from a dial-up cache where the parent requires proxy
+	  authentication. (Henrik Nordstrom)
+	- If you want to "auto-login", then use a URL on the form
+	  http://username:password@server/.... Squid now picks this up
+	  when going direct, and turns it into basic WWW
+	  authentication.  It is also possible to do automatic login to
+	  certain servers by using a redirector to add the needed
+	  authentication information.  (Henrik Nordstrom)
 
 Changes to Squid-2.0 (October 2, 1998):
 

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.162 1998/11/11 20:04:09 glenn Exp $
+#  $Id: Makefile.in,v 1.163 1998/11/12 06:27:51 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -173,7 +173,7 @@ OBJS	 	= \
 
 SNMP_OBJS	= \
 		snmp_core.o \
-                snmp_agent.o
+		snmp_agent.o
 
 HTCP_OBJS	= htcp.o
 
@@ -234,7 +234,7 @@ squid.conf cf_parser.c: cf.data cf_gen
 	./cf_gen cf.data
 
 cf_gen: cf_gen.o
-	$(CC) -o $@ cf_gen.o
+	$(CC) -o $@ cf_gen.o $(STD_APP_LIBS)
 
 cf.data: cf.data.pre Makefile
 	sed "\
@@ -248,7 +248,7 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_PID_FILE@%$(DEFAULT_PID_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
-        s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
+	s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;"\
 	< $(srcdir)/cf.data.pre >$@

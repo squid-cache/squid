@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.297 1998/10/19 22:37:03 wessels Exp $
+ * $Id: stat.cc,v 1.298 1998/11/12 06:28:25 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1009,6 +1009,8 @@ statCountersDump(StoreEntry * sentry)
 	(int) f->client_http.kbytes_in.kb);
     storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
 	(int) f->client_http.kbytes_out.kb);
+    storeAppendPrintf(sentry, "client_http.hit_kbytes_out = %d\n",
+	(int) f->client_http.hit_kbytes_out.kb);
 
     storeAppendPrintf(sentry, "server.all.requests = %d\n",
 	(int) f->server.all.requests);

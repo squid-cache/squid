@@ -1,22 +1,22 @@
 <HTML><HEAD>
-<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+<TITLE>ERREUR&nbsp;: L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</TITLE>
 </HEAD><BODY>
 <H1>ERREUR</H1>
-<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<H2>L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</H2>
 <HR>
 <P>
-En essayant de charger l'URL:
+En essayant de charger l'URL&nbsp;:
 <A HREF="%U">%U</A>
 <P>
-L'erreur suivante fut rencontr&eacute;e:
+L'erreur suivante a &eacute;t&eacute; rencontr&eacute;e&nbsp;:
 <UL>
 <LI>
 <STRONG>
-Relayage interdit.
+Relais interdit.
 </STRONG>
 </UL>
 
 <P>
-Ce cache ne fera pas suivre votre requete car il devrait violer une relation
-hi&eacute;rarchique. Le client %i est peut-etre un cache mal configur&eacute.
+Ce cache ne fera pas suivre votre requ&ecirc;te car il tente de respecter une relation
+de voisinage. Le client %i est peut-&ecirc;tre un cache mal configur&eacute;.
 </P>

@@ -12,9 +12,10 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Servicio FTP deshabilitado.
+Servicio FTP deshabilitado
 </STRONG>
 </UL>
 
 <P>
-Esta caché no soporta el protocolo FTP.
+Esta caché no proporciona servicio caché para el protocolo FTP.
+</P>

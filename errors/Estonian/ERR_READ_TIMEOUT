@@ -5,7 +5,7 @@
 <H2>P&auml;ringule ei saabunud vastust</H2>
 <HR>
 <P>
-Sooritades p&auml;ringut URLile:
+Sooritades p&auml;ringut URLile
 <A HREF="%U">%U</A>
 <P>
 tekkis j&auml;rgnev viga:
@@ -21,6 +21,6 @@ S&uuml;steem vastas:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Lugejal katkes v&otilde;rgust andmete lugemisel kannatus. V&otilde;rk v&otilde;i
+Lugejal katkes v&otilde;rgust andmeid lugedes kannatus. V&otilde;rk v&otilde;i
 server v&otilde;ib olla maas v&otilde;i umbes. Proovige uuesti.
 </P>

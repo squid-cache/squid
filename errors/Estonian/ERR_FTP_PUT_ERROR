@@ -5,7 +5,7 @@
 <H2>FTP PUT eba&otilde;nnestus</H2>
 <HR>
 <P>
-PUT operatsioon URLil:
+PUT operatsioon URLil
 <A HREF="%U">%U</A>
 <P>
 Squid saatis j&auml;rgneva FTP k&auml;su:

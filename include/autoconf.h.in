@@ -242,6 +242,16 @@
  */
 #undef fd_mask
 
+/*
+ * If _res structure has nsaddr_list member
+ */
+#undef HAVE_RES_NSADDR_LIST
+
+/*
+ * If _res structure has ns_list member
+ */
+#undef HAVE_RES_NS_LIST
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
@@ -301,6 +311,18 @@
 
 /* Define if you have the poll function.  */
 #undef HAVE_POLL
+
+/* Define if you have the pthread_attr_setschedparam function.  */
+#undef HAVE_PTHREAD_ATTR_SETSCHEDPARAM
+
+/* Define if you have the pthread_attr_setscope function.  */
+#undef HAVE_PTHREAD_ATTR_SETSCOPE
+
+/* Define if you have the pthread_setschedparam function.  */
+#undef HAVE_PTHREAD_SETSCHEDPARAM
+
+/* Define if you have the putenv function.  */
+#undef HAVE_PUTENV
 
 /* Define if you have the random function.  */
 #undef HAVE_RANDOM
@@ -460,6 +482,9 @@
 
 /* Define if you have the <resolv.h> header file.  */
 #undef HAVE_RESOLV_H
+
+/* Define if you have the <sched.h> header file.  */
+#undef HAVE_SCHED_H
 
 /* Define if you have the <signal.h> header file.  */
 #undef HAVE_SIGNAL_H

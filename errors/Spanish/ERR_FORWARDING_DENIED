@@ -12,11 +12,12 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Tramitación denegada.
+Reenvío denegado.
 </STRONG>
 </UL>
 
 <P>
-Esta caché no permitirá hacer seguir su petición porque trata de obligar a
+Esta caché no permite reenviar su petición porque trata de obligar a
 mantener una relación de hermandad.
 Quizás el cliente en %i es una caché que ha sido mal configurada.
+</P>

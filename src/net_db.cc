@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.131 1998/10/13 23:33:34 wessels Exp $
+ * $Id: net_db.cc,v 1.132 1998/11/12 06:28:17 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -75,7 +75,6 @@ static void netdbExchangeDone(void *);
  * remain persisitent, so _net_db_peer->peername points into this
  * linked list */
 static wordlist *peer_names = NULL;
-static wordlist **peer_names_tail = &peer_names;
 
 static void
 netdbHashInsert(netdbEntry * n, struct in_addr addr)
@@ -474,10 +473,7 @@ netdbPeerName(const char *name)
 	if (!strcmp(w->key, name))
 	    return w->key;
     }
-    w = xcalloc(1, sizeof(wordlist));
-    w->key = xstrdup(name);
-    *peer_names_tail = w;
-    peer_names_tail = &w->next;
+    w = wordlistAdd(&peer_names, name);
     return w->key;
 }
 
@@ -691,7 +687,6 @@ netdbFreeMemory(void)
     host_table = NULL;
     wordlistDestroy(&peer_names);
     peer_names = NULL;
-    peer_names_tail = &peer_names;
 #endif
 }
 

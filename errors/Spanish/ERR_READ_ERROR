@@ -12,14 +12,16 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-Error de lectura.
+Error de lectura
 </STRONG>
 </UL>
 
 <P>
 El sistema ha devuelto el siguiente mensaje:
 <PRE><I>    %E</I></PRE>
+</P>
 
 <P>
-Algún problema ocurrió mientras se intentaba leer los datos de la red.
-Por favor inténtelo de nuevo.
+Ha ocurrido algún problema mientras se leían datos de la red.
+Por favor, inténtelo de nuevo.
+</P>

@@ -21,8 +21,8 @@ El sistema ha devuelto el siguiente mensaje:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Que significa que:
+Esto significa que:
 <PRE>
     @LONG_DESCRIPTION@
 </PRE>
-
+</P>

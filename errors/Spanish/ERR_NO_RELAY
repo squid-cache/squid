@@ -12,10 +12,10 @@ Ha ocurrido el siguiente problema:
 <UL>
 <LI>
 <STRONG>
-No hay un retransmisor de protocolo Wais.
+No hay una pasarela para protocolo Wais.
 </STRONG>
 </UL>
 
 <P>
-Esta caché no tiene definido ningún retransmisor para el protocolo WAIS !!
-Gríteselo al administrador de la caché !!
+Esta caché no tiene definido ninguna pasarela para el protocolo WAIS !!
+¡Gríteselo al administrador de la caché !

@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.8 1998/10/19 22:36:57 wessels Exp $
+ * $Id: authenticate.cc,v 1.9 1998/11/12 06:27:56 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -51,11 +51,13 @@ authenticateHandleReply(void *data, char *reply)
     authenticateStateData *r = data;
     int valid;
     char *t = NULL;
-    debug(29, 5) ("authenticateHandleReply: {%s}\n", reply);
-    if ((t = strchr(reply, ' ')))
-	*t = '\0';
-    if (*reply == '\0')
-	reply = NULL;
+    debug(29, 5) ("authenticateHandleReply: {%s}\n", reply ? reply : "<NULL>");
+    if (reply) {
+	if ((t = strchr(reply, ' ')))
+	    *t = '\0';
+	if (*reply == '\0')
+	    reply = NULL;
+    }
     valid = cbdataValid(r->data);
     cbdataUnlock(r->data);
     if (valid)
@@ -95,6 +97,7 @@ authenticateStart(acl_proxy_auth_user * auth_user, RH * handler, void *data)
     r = xcalloc(1, sizeof(authenticateStateData));
     cbdataAdd(r, MEM_NONE);
     r->handler = handler;
+    cbdataLock(data);
     r->data = data;
     r->auth_user = auth_user;
     snprintf(buf, 8192, "%s %s\n", r->auth_user->user, r->auth_user->passwd);

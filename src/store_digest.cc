@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.30 1998/10/19 22:37:04 wessels Exp $
+ * $Id: store_digest.cc,v 1.31 1998/11/12 06:28:28 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -180,25 +180,60 @@ storeDigestReport(StoreEntry * e)
 
 #if USE_CACHE_DIGESTS
 
+/* should we digest this entry? used by storeDigestAdd() */
+static int
+storeDigestAddable(const StoreEntry * e)
+{
+    /* add some stats! XXX */
+
+    debug(71, 6) ("storeDigestAddable: checking entry, key: %s\n",
+	storeKeyText(e->key));
+
+    /* check various entry flags (mimics storeCheckCachable XXX) */
+    if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
+	debug(71, 6) ("storeDigestAddable: NO: not cachable\n");
+	return 0;
+    }
+    if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
+	debug(71, 6) ("storeDigestAddable: NO: private key\n");
+	return 0;
+    }
+    if (EBIT_TEST(e->flags, ENTRY_NEGCACHED)) {
+	debug(71, 6) ("storeDigestAddable: NO: negative cached\n");
+	return 0;
+    }
+    if (EBIT_TEST(e->flags, RELEASE_REQUEST)) {
+	debug(71, 6) ("storeDigestAddable: NO: release requested\n");
+	return 0;
+    }
+    if (e->store_status == STORE_OK && EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
+	debug(71, 6) ("storeDigestAddable: NO: wrong content-length\n");
+	return 0;
+    }
+    /* do not digest huge objects */
+    if (e->swap_file_sz > Config.Store.maxObjectSize) {
+	debug(71, 6) ("storeDigestAddable: NO: too big\n");
+	return 0;
+    }
+    /* still here? check staleness */
+    /* Note: We should use the time of the next rebuild, not (cur_time+period) */
+    if (refreshCheckDigest(e, StoreDigestRebuildPeriod)) {
+	debug(71, 6) ("storeDigestAdd: entry expires within %d secs, ignoring\n",
+	    StoreDigestRebuildPeriod);
+	return 0;
+    }
+    /* idea: how about also skipping very fresh (thus, potentially unstable) 
+     * entries? Should be configurable through cd_refresh_pattern, of course */
+
+    return 1;
+}
+
 static void
 storeDigestAdd(const StoreEntry * entry)
 {
-    int good_entry = 0;
     assert(entry && store_digest);
-    debug(71, 6) ("storeDigestAdd: checking entry, key: %s\n",
-	storeKeyText(entry->key));
-    /* only public entries are digested */
-    if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-	/* if expires too soon, ignore */
-	/* Note: We should use the time of the next rebuild, not (cur_time+period) */
-	if (refreshCheckDigest(entry, StoreDigestRebuildPeriod)) {
-	    debug(71, 6) ("storeDigestAdd: entry expires within %d secs, ignoring\n",
-		StoreDigestRebuildPeriod);
-	} else {
-	    good_entry = 1;
-	}
-    }
-    if (good_entry) {
+
+    if (storeDigestAddable(entry)) {
 	sd_stats.add_count++;
 	if (cacheDigestTest(store_digest, entry->key))
 	    sd_stats.add_coll_count++;

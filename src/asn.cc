@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.50 1998/10/21 06:54:18 wessels Exp $
+ * $Id: asn.cc,v 1.51 1998/11/12 06:27:55 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -151,7 +151,7 @@ asnInit(void)
     static int inited = 0;
     max_keylen = 40;
     if (0 == inited++)
-        rn_init();
+	rn_init();
     rn_inithead((void **) &AS_tree_head, 8);
     asnAclInitialize(Config.aclList);
     cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
@@ -300,7 +300,7 @@ asnAddNet(char *as_string, int as_number)
     char dbg1[32], dbg2[32];
     intlist **Tail = NULL;
     intlist *q = NULL;
-    as_info *as_info = NULL;
+    as_info *asinfo = NULL;
     struct in_addr in_a, in_m;
     long mask, addr;
     char *t;
@@ -332,34 +332,34 @@ asnAddNet(char *as_string, int as_number)
     store_m_int(mask, e->e_mask);
     rn = rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
     if (rn != NULL) {
-	as_info = ((rtentry *) rn)->e_info;
-	if (intlistFind(as_info->as_number, as_number)) {
+	asinfo = ((rtentry *) rn)->e_info;
+	if (intlistFind(asinfo->as_number, as_number)) {
 	    debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
 		dbg1, bitl, as_number);
 	} else {
 	    debug(53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
-	    for (Tail = &as_info->as_number; *Tail; Tail = &(*Tail)->next);
+	    for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next);
 	    q = xcalloc(1, sizeof(intlist));
 	    q->i = as_number;
 	    *(Tail) = q;
-	    e->e_info = as_info;
+	    e->e_info = asinfo;
 	}
     } else {
 	q = xcalloc(1, sizeof(intlist));
 	q->i = as_number;
-	as_info = xmalloc(sizeof(as_info));
-	as_info->as_number = q;
+	asinfo = xmalloc(sizeof(asinfo));
+	asinfo->as_number = q;
 	rn = rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
 	rn = rn_match(e->e_addr, AS_tree_head);
 	assert(rn != NULL);
-	e->e_info = as_info;
+	e->e_info = asinfo;
     }
     if (rn == 0) {
 	xfree(e);
 	debug(53, 3) ("asnAddNet: Could not add entry.\n");
 	return 0;
     }
-    e->e_info = as_info;
+    e->e_info = asinfo;
     return 1;
 }
 
@@ -409,17 +409,18 @@ printRadixNode(struct radix_node *rn, void *w)
     StoreEntry *sentry = w;
     rtentry *e = (rtentry *) rn;
     intlist *q;
-    as_info *as_info;
+    as_info *asinfo;
     struct in_addr addr;
     struct in_addr mask;
     assert(e);
+    assert(e->e_info);
     (void) get_m_int(addr.s_addr, e->e_addr);
     (void) get_m_int(mask.s_addr, e->e_mask);
     storeAppendPrintf(sentry, "%15s/%d\t",
 	inet_ntoa(addr), mask_len(ntohl(mask.s_addr)));
-    assert(as_info = e->e_info);
-    assert(as_info->as_number);
-    for (q = as_info->as_number; q; q = q->next)
+    asinfo = e->e_info;
+    assert(asinfo->as_number);
+    for (q = asinfo->as_number; q; q = q->next)
 	storeAppendPrintf(sentry, " %d", q->i);
     storeAppendPrintf(sentry, "\n");
     return 0;

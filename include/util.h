@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.51 1998/07/22 20:36:31 wessels Exp $
+ * $Id: util.h,v 1.52 1998/11/12 06:30:12 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -62,6 +62,7 @@ extern const char *mkhttpdlogtime(const time_t *);
 extern const char *mkrfc1123(time_t);
 extern char *uudecode(const char *);
 extern char *xstrdup(const char *);
+extern char *xstrndup(const char *, size_t);
 extern const char *xstrerror(void);
 extern const char *xbstrerror(int);
 extern int tvSubMsec(struct timeval, struct timeval);

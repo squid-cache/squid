@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.469 1998/10/16 19:18:16 wessels Exp $
+ * $Id: store.cc,v 1.470 1998/11/12 06:28:27 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1007,8 +1007,10 @@ storeFreeMemory(void)
     hashFreeItems(store_table, destroy_StoreEntry);
     hashFreeMemory(store_table);
     store_table = NULL;
+#if USE_CACHE_DIGEST
     if (store_digest)
 	cacheDigestDestroy(store_digest);
+#endif
     store_digest = NULL;
 }
 

@@ -1,14 +1,14 @@
 <HTML><HEAD>
-<TITLE>ERREUR: L'URL demand&eacute;e n'a pu etre charg&eacute;e</TITLE>
+<TITLE>ERREUR&nbsp;: L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</TITLE>
 </HEAD><BODY>
 <H1>ERREUR</H1>
-<H2>L'URL demand&eacute;e n'a pu etre charg&eacute;e</H2>
+<H2>L'URL demand&eacute;e n'a pu &ecirc;tre charg&eacute;e</H2>
 <HR>
 <P>
-En essayant de charger l'URL:
+En essayant de charger l'URL&nbsp;:
 <A HREF="%U">%U</A>
 <P>
-L'erreur suivante fut rencontr&eacute;e:
+L'erreur suivante a &eacute;t&eacute; rencontr&eacute;e&nbsp;:
 <UL>
 <LI>
 <STRONG>
@@ -17,11 +17,11 @@ URL invalide
 </UL>
 
 <P>
-Quelque chose dans l'URL est incorrect.  Probl&egrave;mes envisageables:
+Quelque chose dans l'URL est incorrect.  Probl&egrave;mes envisageables&nbsp;:
 <UL>
-<LI>Protocole d'acc&egrave;s absent ou incorrect (il devrait etre de la forme `http://')
+<LI>Protocole d'acc&egrave;s absent ou incorrect (il devrait &ecirc;tre de la forme `http://')
 <LI>Nom de machine absent
 <LI>Double &eacute;chappement ill&eacute;gal dans le chemin de l'URL
-<LI>Caract&egrave;re ill&eacute;gal dans le nom de la machine; les underscores ne sont pas autoris&eacute;s
+<LI>Caract&egrave;re ill&eacute;gal dans le nom de la machine, les soulign&eacute;s (underscores) ne sont pas autoris&eacute;s
 </UL>
 </P>

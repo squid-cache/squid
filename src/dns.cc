@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.71 1998/10/19 22:36:59 wessels Exp $
+ * $Id: dns.cc,v 1.72 1998/11/12 06:28:03 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -59,10 +59,9 @@ dnsInit(void)
     wordlistAdd(&dnsservers->cmdline, Config.Program.dnsserver);
     if (Config.onoff.res_defnames)
 	wordlistAdd(&dnsservers->cmdline, "-D");
-    if (Config.dns_nameservers) {
+    for (w = Config.dns_nameservers; w != NULL; w = w->next) {
 	wordlistAdd(&dnsservers->cmdline, "-s");
-	for (w = Config.dns_nameservers; w != NULL; w = w->next)
-	    wordlistAdd(&dnsservers->cmdline, w->key);
+	wordlistAdd(&dnsservers->cmdline, w->key);
     }
     helperOpenServers(dnsservers);
     if (!init) {
