@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta24 (August 21, 1998):
+
 	- Added Bulgarian error pages by Evgeny Gechev.
 	- Changed StoreEntry->lock_count to a u_short.
 	- Replaced urlcmp with strcmp
@@ -56,6 +58,10 @@
 	  certain responses even though they are uncachable.  This is
 	  needed, for example, when an initially cachable object
 	  later becomes uncachable.
+	- Added refresh_pattern options to ignore client reloads
+	  (Henrik Nordstrom)
+	- Relocated disk.c code which combines blocks for writing
+	  (Stewart Forster).
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
