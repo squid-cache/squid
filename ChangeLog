@@ -10,3 +10,4 @@
 	- Changed default behaviour to unbuffered, use -b to make buffered.
 	- fix byte order conversion bug on echo port
 	- Removed all code and references to binary port
+	- WAIS fully compiled in always.
