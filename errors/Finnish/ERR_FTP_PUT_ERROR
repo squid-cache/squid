@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>VIRHE: FTP-l&auml;hetys ep&auml;onnistui </TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>FTP PUT/l&auml;hetys ep&auml;onnistui</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; l&auml;hett&auml;&auml; seuraavaa URL-osoitetta:
+<A HREF="%U">%U</A>
+<P>
+Squid l&auml;hetti seuraavan FTP-komennon:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+ja vastaanotti seuraavan vastauksen:
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+T&auml;m&auml; tarkoittaa, ett&auml;
+<PRE>
+Tarkista polku, oikeudet sek&auml; levytila ja kokeile uudelleen.
+</PRE>
+</P>
+

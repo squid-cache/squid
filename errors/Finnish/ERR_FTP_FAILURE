@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Tapahtui FTP-protokollavirhe yritett&auml;ess&auml;
+hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Squid l&auml;hetti seuraavan FTP-komennon:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+ja vastaanotti seuraavan vastauksen:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+T&auml;m&auml; saattaa johtua FTP-osoitteesta, jossa on absoluuttinen polku
+(joka ei ole yhteensopiva RFC:n 1738 kanssa). Jos syy on t&auml;m&auml;,
+tiedosto l&ouml;ytyy osoitteesta <A HREF="%B">%B</A>.
+</P>
+

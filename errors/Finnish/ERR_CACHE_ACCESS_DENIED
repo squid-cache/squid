@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<TITLE>VIRHE: P&auml;&auml;sy v&auml;lityspalvelimeen ev&auml;tty</TITLE>
+</HEAD>
+<BODY>
+<H1>VIRHE</H1>
+<H2>P&auml;&auml;sy v&auml;lityspalvelimeen ev&auml;tty</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava virhe:
+<UL>
+<LI>
+<STRONG>
+P&auml;&auml;sy v&auml;lityspalvelimeen ev&auml;tty.
+</STRONG>
+</UL>
+</P>
+
+<P>Sinulla ei t&auml;ll&auml; hetkell&auml; ole oikeutta pyyt&auml;&auml; osoitetta
+<PRE>    %U</PRE>
+t&auml;st&auml; v&auml;lityspalvelimesta ennen kuin olet todentanut henkil&ouml;llisyytesi.
+</P>
+
+<P>
+Jotta t&auml;m&auml; onnistuisi, sinun tulee k&auml;ytt&auml;&auml; Netscapen versiota 2.0 tai uudempaa,
+Microsoft Internet Explorer 3.0:aa tai HTTP/1.1 -yhteensopivaa selainta.
+Jos sinulla on hankaluuksia hekil&ouml;llisyytesi todentamisessa, ota yhteytt&auml;
+<A HREF="mailto:%w">v&auml;lityspalvelimen yll&auml;pitoon</a> tai
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">vaihda</a> oletussalasanasi.
+</P>

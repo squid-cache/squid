@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava ongelma:
+<UL>
+<LI>
+<STRONG>
+Virheellinen URL-osoite
+</STRONG>
+</UL>
+
+<P>
+Joku osa URL-osoitetta on virheellinen. Mahdollisia ongelmia:
+<UL>
+<LI>Puuttuva tai virheellinen yhteysk&auml;yt&auml;nt&ouml; (tulisi olla "http://" tai vastaava)
+<LI>Puuttuva palvelinnimi
+<LI>Kielletty kaksois-escape URL-osoitteessa
+<LI>Virheellinen merkki palvelinnimess&auml;; alaviivat eiv&auml;t ole sallittuja
+</UL>
+</P>

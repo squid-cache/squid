@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitetta ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta:
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava virhe:
+<BLOCKQUOTE>
+Nimelle
+<I>%H</I>
+ei voitu m&auml;&auml;ritt&auml;&auml; IP-osoitetta.
+</BLOCKQUOTE>
+</UL>
+
+<P>
+DNS-palvelin palautti viestin:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+T&auml;m&auml; tarkoittaa, ett&auml;
+<PRE>
+ V&auml;lityspalvelin ei voinut selvitt&auml;&auml; URL:ss&auml; esitetty&auml; palvelinnime&auml;.
+ Tarkista, ett&auml; osoite on oikein.
+</PRE>
+</P>
+

@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>VIRHE: Pyydetty&auml; URL-osoitettua ei voitu hakea</TITLE>
+</HEAD><BODY>
+<H1>VIRHE</H1>
+<H2>Pyydetty&auml; URL-osoitetta ei voitu hakea</H2>
+<HR>
+<P>
+Yritett&auml;ess&auml; hakea URL-osoitetta
+<A HREF="%U">%U</A>
+<P>
+Ilmeni seuraava virhe:
+<UL>
+<LI>
+<STRONG>
+P&auml;&auml;sy ev&auml;tty.
+</STRONG>
+<P>
+P&auml;&auml;synvalvonnan asetukset ev&auml;&auml;v&auml;t pyynt&ouml;si.
+Jos koet, ett&auml; t&auml;m&auml; on v&auml;&auml;rin, ota yhteytt&auml; palveluntarjoajaasi.
+</UL>
+</P>
+
