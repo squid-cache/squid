@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.229 2000/12/31 05:15:38 hno Exp $
+ * $Id: ipcache.cc,v 1.230 2001/01/01 22:14:32 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -738,7 +738,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 	if (1 == i->flags.fromhosts) {
 	    ipcacheUnlockEntry(i);
 	} else if (i->locks > 0) {
-	    debug(35, 1) ("ipcacheAddEntryFromHosts: can't add static entry"
+	    debug(14, 1) ("ipcacheAddEntryFromHosts: can't add static entry"
 		" for locked name '%s'\n", name);
 	    return 1;
 	} else {
