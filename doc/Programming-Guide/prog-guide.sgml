@@ -298,16 +298,24 @@ chapter.
 <!-- %%%% Chapter : IP CACHE %%%% -->
 <sect>IP Cache
 
+<sect1> Introduction
+
 <P>
 The IP cache is a built-in component of squid providing
 Hostname to IP-Number translation functionality and managing 
-the involved data-structures . It usually 
-doesn't block on a request except for special cases where this
-is desired (explained below).
+the involved data-structures. Efficiency concerns require
+mechanisms that allow non-blocking access to these mappings.
+The IP cache usually doesn't block on a request except for special 
+cases where this is desired (see below).
+
+<sect1> Data Structures 
+
+<P>
 The data structure used for storing name-address mappings
 is a small hashtable (<em>static hash_table *ip_table</em>),
 where structures of type <em>ipcache_entry</em> whose most
 interesting members are:
+
 <verb>
 struct _ipcache_entry {
 char *name;
@@ -320,6 +328,10 @@ ipcache_status_t status:3;
 }
 </verb>
 
+
+<sect1> External overview
+
+<P>
 Main functionality
 is provided through calls to:
 <descrip>
@@ -341,6 +353,20 @@ cancel all pending requests. Currently, it is only called from
 <em/mainReconfigure/.
 </descrip>
 
+<sect1> Internal Operation 
+
+<P>
+Internally, the execution flow is as follows: On a miss, 
+ <em/ipcache_getnbhostbyname/ checks whether a request for this name is already
+pending, and if positive, it creates a new entry using <em/ipcacheAddNew/ with
+the <em/IP_PENDING/ flag set . Then it calls <em/ipcacheAddPending/ to add a
+request to the queue together with data and handler.
+Else, <em/ipcache_dnsDispatch()/ is called to
+directly create a DNS query or to <em/ipcacheEnqueue()/ if all no DNS port is
+free.
+<em/ipcache_call_pending()/ is called regularly to walk down the pending
+list and call handlers. LRU clean-up is performed through <em/ipcache_purgelru()/
+according to the <em/ipcache_high/ threshold.
 
 <!-- %%%% Chapter : SERVER PROTOCOLS %%%% -->
 <sect>Server Protocols
@@ -362,6 +388,11 @@ cancel all pending requests. Currently, it is only called from
 
 <!-- %%%% Chapter : ICP %%%% -->
 <sect>ICP
+
+<!-- %%%% Chapter : Error Pages %%%% -->
+<sect>Error Pages
+
+As of version 1.2, squid has external custom error page support. 
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager
