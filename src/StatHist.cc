@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.16 1998/10/15 17:34:32 wessels Exp $
+ * $Id: StatHist.cc,v 1.17 1998/10/16 19:20:17 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -97,14 +97,17 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
     debug(62,3)("statHistCopy: Dest=%p, Orig=%p\n", Dest, Orig);
     assert(Dest->bins);
     /* better be safe than sorry */
+    debug(62,3)("statHistCopy: capacity %d %d\n",
+	Dest->capacity, Orig->capacity);
     assert(Dest->capacity == Orig->capacity);
+    debug(62,3)("statHistCopy: min %f %f\n", Dest->min, Orig->min);
     assert(Dest->min == Orig->min);
+    debug(62,3)("statHistCopy: max %f %f\n", Dest->max, Orig->max);
     assert(Dest->max == Orig->max);
+    debug(62,3)("statHistCopy: scale %f %f\n", Dest->scale, Orig->scale);
     assert(Dest->scale == Orig->scale);
     assert(Dest->val_in == Orig->val_in);
     assert(Dest->val_out == Orig->val_out);
-    debug(62,3)("statHistCopy: capacity %d, min %f, max %f, scale %f\n",
-	Dest->capacity, Dest->min, Dest->max, Dest->scale);
     /* actual copy */
     debug(62,3)("statHistCopy: copying %d bytes to %p from %p\n",
 	Dest->capacity * sizeof(*Dest->bins),
