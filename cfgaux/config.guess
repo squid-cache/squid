@@ -552,6 +552,9 @@ EOF
                            # says <Richard.M.Bartel@ccMail.Census.GOV>
         echo i586-unisys-sysv4
         exit 0 ;;
+    news*:NEWS-OS:[56].*:*)
+	echo mips-sony-newsos${UNAME_RELEASE}
+	exit 0 ;;
 esac
 
 #echo '(No uname command or uname output not recognized.)' 1>&2
