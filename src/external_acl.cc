@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.55 2003/11/19 17:18:35 hno Exp $
+ * $Id: external_acl.cc,v 1.56 2004/08/14 21:15:16 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -114,6 +114,14 @@ public:
     dlink_list queue;
 
     int require_auth;
+
+    enum
+    {
+        QUOTE_METHOD_SHELL = 1,
+        QUOTE_METHOD_URL
+    }
+
+    quote;
 };
 
 struct _external_acl_format
@@ -215,6 +223,8 @@ parse_externalAclHelper(external_acl ** list)
 
     token = strtok(NULL, w_space);
 
+    a->quote = external_acl::QUOTE_METHOD_URL;
+
     /* Parse options */
     while (token) {
         if (strncmp(token, "ttl=", 4) == 0) {
@@ -229,6 +239,14 @@ parse_externalAclHelper(external_acl ** list)
             a->cache_size = atoi(token + 6);
         } else if (strncmp(token, "grace=", 6) == 0) {
             a->grace = atoi(token + 6);
+        } else if (strcmp(token, "protocol=2.5") == 0) {
+            a->quote = external_acl::QUOTE_METHOD_SHELL;
+        } else if (strcmp(token, "protocol=3.0") == 0) {
+            a->quote = external_acl::QUOTE_METHOD_URL;
+        } else if (strcmp(token, "quote=url") == 0) {
+            a->quote = external_acl::QUOTE_METHOD_URL;
+        } else if (strcmp(token, "quote=shell") == 0) {
+            a->quote = external_acl::QUOTE_METHOD_SHELL;
         } else {
             break;
         }
@@ -405,9 +423,9 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 storeAppendPrintf(sentry, " %%{%s:%s}", format->header, format->member);
                 break;
 #define DUMP_EXT_ACL_TYPE(a) \
-	    case _external_acl_format::EXT_ACL_##a: \
-		storeAppendPrintf(sentry, " %%%s", #a); \
-		break
+            case _external_acl_format::EXT_ACL_##a: \
+                storeAppendPrintf(sentry, " %%%s", #a); \
+                break
 
                 DUMP_EXT_ACL_TYPE(LOGIN);
 #if USE_IDENT
@@ -811,7 +829,12 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
         if (!first)
             memBufAppend(&mb, " ", 1);
 
-        strwordquote(&mb, str);
+        if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
+            const char *quoted = rfc1738_escape(str);
+            memBufAppend(&mb, quoted, strlen(quoted));
+        } else {
+            strwordquote(&mb, str);
+        }
 
         sb.clean();
 
@@ -822,7 +845,12 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
         if (!first)
             memBufAppend(&mb, " ", 1);
 
-        strwordquote(&mb, arg->key);
+        if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
+            const char *quoted = rfc1738_escape(arg->key);
+            memBufAppend(&mb, quoted, strlen(quoted));
+        } else {
+            strwordquote(&mb, arg->key);
+        }
 
         first = 0;
     }
@@ -962,6 +990,9 @@ externalAclHandleReply(void *data, char *reply)
 
             if (value) {
                 *value++ = '\0';	/* terminate the token, and move up to the value */
+
+                if (state->def->quote == external_acl::QUOTE_METHOD_URL)
+                    rfc1738_unescape(value);
 
                 if (strcmp(token, "user") == 0)
                     entryData.user = value;
