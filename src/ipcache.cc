@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.75 1996/10/15 23:32:53 wessels Exp $
+ * $Id: ipcache.cc,v 1.76 1996/10/24 05:07:21 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -735,7 +735,7 @@ ipcache_init(void)
     if (!opt_dns_tests) {
 	debug(14, 4, "ipcache_init: Skipping DNS name lookup tests.\n");
     } else if (!ipcache_testname()) {
-	fatal("ipcache_init: DNS name lookup tests failed/");
+	fatal("ipcache_init: DNS name lookup tests failed.");
     } else {
 	debug(14, 1, "Successful DNS name lookup tests...\n");
     }
