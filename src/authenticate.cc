@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.10 1998/12/05 00:54:15 wessels Exp $
+ * $Id: authenticate.cc,v 1.11 1999/04/27 22:11:28 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -120,8 +120,8 @@ authenticateInit(void)
 	cachemgrRegister("authenticator",
 	    "User Authenticator Stats",
 	    authenticateStats, 0, 1);
+	init++;
     }
-    init++;
 }
 
 void
