@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.196 2000/08/30 19:17:29 hno Exp $
+# $Id: cf.data.pre,v 1.197 2000/09/17 09:01:34 adrian Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2904,10 +2904,22 @@ DEFAULT: 4
 LOC: Config.comm_incoming.http_average
 DOC_NONE
 
+NAME: incoming_dns_average
+TYPE: int
+DEFAULT: 4
+LOC: Config.comm_incoming.dns_average
+DOC_NONE
+
 NAME: min_icp_poll_cnt
 TYPE: int
 DEFAULT: 8
 LOC: Config.comm_incoming.icp_min_poll
+DOC_NONE
+
+NAME: min_dns_poll_cnt
+TYPE: int
+DEFAULT: 8
+LOC: Config.comm_incoming.dns_min_poll
 DOC_NONE
 
 NAME: min_http_poll_cnt
