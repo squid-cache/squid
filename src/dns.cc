@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.85 2001/01/12 00:37:17 wessels Exp $
+ * $Id: dns.cc,v 1.86 2001/03/13 23:22:42 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -98,6 +98,7 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
 	    fatal("DNS servers not responding for 3 minutes");
 	debug(34, 1) ("dnsSubmit: queue overload, rejecting %s\n", lookup);
 	callback(data, "$fail temporary network problem, pleas retry later");
+	return;
     }
     first_warn = 0;
     helperSubmit(dnsservers, buf, callback, data);
