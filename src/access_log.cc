@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.5 1997/08/25 15:55:21 wessels Exp $
+ * $Id: access_log.cc,v 1.6 1997/10/17 15:44:32 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ log_quote(const char *header)
 static int
 accessLogSquid(AccessLogEntry * al)
 {
-    const char *client = dash_str;
+    const char *client = NULL;
     if (Config.onoff.log_fqdn)
 	client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
     if (client == NULL)
