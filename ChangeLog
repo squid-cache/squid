@@ -1,5 +1,5 @@
 
-Changes to Squid ():
+Changes to Squid-2.4.DEVEL4 ():
 
 	- Added --enable-auth-modules=... configure option
 	- Improved ICP dead peer detection to also work when the workload
@@ -66,6 +66,24 @@ Changes to Squid ():
 	  did not provide a request in a timely manner after opening the
 	  connection. Now the connection is silently closed. The error message
 	  was confusing user agents utilizing persistent connections.
+	- Fixed configure --enable descriptions to match the arg names.
+	- Eliminated compile warnings from auth_modules/MSNT code.
+	- Require first character of hostnames to be alphanumeric.
+	- Made ARP ACL work for Solaris.
+	- Removed storeClientListSearch().
+	- Added counters to track diskd operation success and
+	  failures.
+	- Fixed range_offset_limit.
+	- Added code to retry ServFail replies for internal DNS
+	  lookups.
+	- Added referer header logging (Jens-S. Voeckler).
+	- Added "multi-domain-NTLM" authentication module, a Perl
+	  script from Thomas Jarosch.
+	- Added configurable warning messages for high memory usage,
+	  high response time, and high page faults.
+	- Made store dir selection algorithm configurable.
+	- Added support for admin-definable extension methods,
+	  up to 20.
 
 Changes to Squid-2.4.DEVEL3 ():
 
