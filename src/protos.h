@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.430 2002/04/01 06:02:16 wessels Exp $
+ * $Id: protos.h,v 1.431 2002/04/04 21:33:27 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -101,6 +101,7 @@ extern void requirePathnameExists(const char *name, const char *path);
 extern void parse_time_t(time_t * var);
 extern void parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring);
 extern void dump_cachedir_options(StoreEntry * e, struct cache_dir_option *options, SwapDir * sd);
+extern void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
 
 
 /*
@@ -1162,6 +1163,7 @@ extern void *linklistShift(link_list **);
 extern int xrename(const char *from, const char *to);
 extern int isPowTen(int);
 extern void parseEtcHosts(void);
+extern int getMyPort(void);
 
 #if USE_HTCP
 extern void htcpInit(void);

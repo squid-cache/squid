@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.403 2002/04/04 21:17:25 hno Exp $
+ * $Id: cache_cf.cc,v 1.404 2002/04/04 21:33:26 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -96,7 +96,9 @@ static void free_denyinfo(acl_deny_info_list ** var);
 static void parse_sockaddr_in_list(sockaddr_in_list **);
 static void dump_sockaddr_in_list(StoreEntry *, const char *, const sockaddr_in_list *);
 static void free_sockaddr_in_list(sockaddr_in_list **);
+#if 0
 static int check_null_sockaddr_in_list(const sockaddr_in_list *);
+#endif
 #if USE_SSL
 static void parse_https_port_list(https_port_list **);
 static void dump_https_port_list(StoreEntry *, const char *, const https_port_list *);
@@ -367,19 +369,15 @@ configDoConfigure(void)
 	if (Config.Accel.port == 0)
 	    vport_mode = 1;
     }
-    if (Config.Sockaddr.http == NULL)
-	fatal("No http_port specified!");
-    snprintf(ThisCache, sizeof(ThisCache), "%s:%d (%s)",
+    snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
 	uniqueHostname(),
-	(int) ntohs(Config.Sockaddr.http->s.sin_port),
 	full_appname_string);
     /*
      * the extra space is for loop detection in client_side.c -- we search
      * for substrings in the Via header.
      */
-    snprintf(ThisCache2, sizeof(ThisCache), " %s:%d (%s)",
+    snprintf(ThisCache2, sizeof(ThisCache), " %s (%s)",
 	uniqueHostname(),
-	(int) ntohs(Config.Sockaddr.http->s.sin_port),
 	full_appname_string);
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
 	Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
@@ -2230,43 +2228,50 @@ parseNeighborType(const char *s)
     return PEER_SIBLING;
 }
 
-static void
-parse_sockaddr_in_list(sockaddr_in_list ** head)
+void
+parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
 {
-    char *token;
     char *t;
     char *host;
     const struct hostent *hp;
     unsigned short port;
     sockaddr_in_list *s;
+
+    host = NULL;
+    port = 0;
+    if ((t = strchr(token, ':'))) {
+	/* host:port */
+	host = token;
+	*t = '\0';
+	port = (unsigned short) atoi(t + 1);
+	if (0 == port)
+	    self_destruct();
+    } else if ((port = atoi(token)) > 0) {
+	/* port */
+    } else {
+	self_destruct();
+    }
+    s = xcalloc(1, sizeof(*s));
+    s->s.sin_port = htons(port);
+    if (NULL == host)
+	s->s.sin_addr = any_addr;
+    else if (1 == safe_inet_addr(host, &s->s.sin_addr))
+	(void) 0;
+    else if ((hp = gethostbyname(host)))	/* dont use ipcache */
+	s->s.sin_addr = inaddrFromHostent(hp);
+    else
+	self_destruct();
+    while (*head)
+	head = &(*head)->next;
+    *head = s;
+}
+
+static void
+parse_sockaddr_in_list(sockaddr_in_list ** head)
+{
+    char *token;
     while ((token = strtok(NULL, w_space))) {
-	host = NULL;
-	port = 0;
-	if ((t = strchr(token, ':'))) {
-	    /* host:port */
-	    host = token;
-	    *t = '\0';
-	    port = (unsigned short) atoi(t + 1);
-	    if (0 == port)
-		self_destruct();
-	} else if ((port = atoi(token)) > 0) {
-	    /* port */
-	} else {
-	    self_destruct();
-	}
-	s = xcalloc(1, sizeof(*s));
-	s->s.sin_port = htons(port);
-	if (NULL == host)
-	    s->s.sin_addr = any_addr;
-	else if (1 == safe_inet_addr(host, &s->s.sin_addr))
-	    (void) 0;
-	else if ((hp = gethostbyname(host)))	/* dont use ipcache */
-	    s->s.sin_addr = inaddrFromHostent(hp);
-	else
-	    self_destruct();
-	while (*head)
-	    head = &(*head)->next;
-	*head = s;
+	parse_sockaddr_in_list_token(head, token);
     }
 }
 
@@ -2292,11 +2297,13 @@ free_sockaddr_in_list(sockaddr_in_list ** head)
     }
 }
 
+#if 0
 static int
 check_null_sockaddr_in_list(const sockaddr_in_list * s)
 {
     return NULL == s;
 }
+#endif
 
 #if USE_SSL
 static void

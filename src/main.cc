@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.347 2002/01/15 16:49:19 hno Exp $
+ * $Id: main.cc,v 1.348 2002/04/04 21:33:27 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -41,7 +41,6 @@ extern void (*failure_notify) (const char *);
 static int opt_send_signal = -1;
 static int opt_no_daemon = 0;
 static int opt_parse_cfg_only = 0;
-static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
 #if MALLOC_DBG
@@ -146,7 +145,7 @@ mainParseOptions(int argc, char *argv[])
 	    opt_reload_hit_only = 1;
 	    break;
 	case 'a':
-	    httpPortNumOverride = atoi(optarg);
+	    parse_sockaddr_in_list_token(&Config.Sockaddr.http, optarg);
 	    break;
 	case 'd':
 	    opt_debug_stderr = atoi(optarg);
@@ -458,9 +457,6 @@ mainInitialize(void)
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
 
     setEffectiveUser();
-    assert(Config.Sockaddr.http);
-    if (httpPortNumOverride != 1)
-	Config.Sockaddr.http->s.sin_port = htons(httpPortNumOverride);
     if (icpPortNumOverride != 1)
 	Config.Port.icp = (u_short) icpPortNumOverride;
 

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.252 2002/04/02 20:32:43 hno Exp $
+# $Id: cf.data.pre,v 1.253 2002/04/04 21:33:26 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -56,7 +56,6 @@ COMMENT_END
 NAME: http_port ascii_port
 TYPE: sockaddr_in_list
 DEFAULT: none
-DEFAULT_IF_NONE: 3128
 LOC: Config.Sockaddr.http
 DOC_START
 	Usage:	port
@@ -72,8 +71,6 @@ DOC_START
 	option.  Most likely, you do not need to bind to a specific
 	address, so you can use the port number alone.
 
-	The default port number is 3128.
-
 	If you are running Squid in accelerator mode, then you
 	probably want to listen on port 80 also, or instead.
 
@@ -87,6 +84,11 @@ DOC_START
 	and an external interface then we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
+
+NOCOMMENT_START
+# Squid normally listens to port 3128
+http_port 3128
+NOCOMMENT_END
 DOC_END
 
 NAME: https_port
