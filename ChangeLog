@@ -1,7 +1,11 @@
+Changes to squid-1.1.alpha8:
+
 	- Removed all references to hierarchy.log.
 	- Changed hierarchy_log_append() to hierarchyNote() and added
 	  _hierarchyLogData structure.
- 
+	- Fixed "tty input" bug where a reverse lookup request was
+	  written to stdout.
+	- Cleaned up pointers in protoUnregister().
 
 Changes to squid-1.1.alpha7:
 
