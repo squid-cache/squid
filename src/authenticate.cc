@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.49 2003/01/23 00:37:16 robertc Exp $
+ * $Id: authenticate.cc,v 1.50 2003/02/02 13:35:53 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -1055,6 +1055,7 @@ authSchemeAdd(const char *type, AUTHSSETUP * setup)
     }
     /* add the new type */
     authscheme_list = static_cast<authscheme_entry_t *>(xrealloc(authscheme_list, (i + 2) * sizeof(authscheme_entry_t)));
+    memset(&authscheme_list[i], 0, sizeof(authscheme_entry_t));
     memset(&authscheme_list[i + 1], 0, sizeof(authscheme_entry_t));
     authscheme_list[i].typestr = type;
     /* Call the scheme module to set up capabilities and initialize any global data */
