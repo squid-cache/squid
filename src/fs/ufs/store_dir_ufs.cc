@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.63 2003/08/10 07:43:42 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.64 2003/09/07 07:35:50 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -117,11 +117,10 @@ UFSSwapDir::reconfigure(int index, char *path)
 void
 UFSSwapDir::parse (int anIndex, char *aPath)
 {
-    parseSizeL1L2();
-
     index = anIndex;
-
     path = xstrdup(aPath);
+
+    parseSizeL1L2();
 
     /* Initialise replacement policy stuff */
     repl = createRemovalPolicy(Config.replPolicy);
