@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.12 1996/04/04 17:46:39 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.13 1996/04/04 18:41:23 wessels Exp $ */
 
 /* DEBUG: Section 4             cached_error: Error printing routines */
 
@@ -130,7 +130,7 @@ void cached_error_entry(entry, type, msg)
     strcat(tmp_error_buf, tbuf);
     entry->mem_obj->abort_code = type;
     if (entry->mem_obj->http_code == 0)
-        entry->mem_obj->http_code = 400;
+	entry->mem_obj->http_code = 400;
     storeAbort(entry, tmp_error_buf);
 }
 

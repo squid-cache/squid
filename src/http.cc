@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.25 1996/04/04 01:30:45 wessels Exp $ */
+/* $Id: http.cc,v 1.26 1996/04/04 18:41:25 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -50,7 +50,13 @@ static void httpCloseAndFree(fd, data)
 	comm_close(fd);
     if (data) {
 	if (data->reply_hdr)
-	    xfree(data->reply_hdr);
+	    put_free_8k_page(data->reply_hdr, __FILE__, __LINE__);
+	if (data->icp_page_ptr) {
+	    put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
+	    data->icp_page_ptr = NULL;
+	}
+	if (data->icp_rwd_ptr)
+	    safe_free(data->icp_rwd_ptr);
 	xfree(data);
     }
 }
@@ -111,12 +117,14 @@ static void httpReadReplyTimeout(fd, data)
     entry = data->entry;
     debug(11, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
     cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+#ifdef NOW_DONE_IN_CLOSE_AND_FREE
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
     if (data->icp_page_ptr) {
-	put_free_8k_page(data->icp_page_ptr);
+	put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
 	data->icp_page_ptr = NULL;
     }
+#endif
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     httpCloseAndFree(fd, data);
 }
@@ -132,12 +140,14 @@ static void httpLifetimeExpire(fd, data)
     debug(11, 4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+#ifdef NOW_DONE_IN_CLOSE_AND_FREE
     if (data->icp_page_ptr) {
-	put_free_8k_page(data->icp_page_ptr);
+	put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
 	data->icp_page_ptr = NULL;
     }
     if (data->icp_rwd_ptr)
 	safe_free(data->icp_rwd_ptr);
+#endif
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     httpCloseAndFree(fd, data);
 }
@@ -153,7 +163,7 @@ static void httpProcessReplyHeader(data, buf)
     char *headers = NULL;
 
     if (data->reply_hdr == NULL) {
-	data->reply_hdr = get_free_8k_page();
+	data->reply_hdr = get_free_8k_page(__FILE__, __LINE__);
 	memset(data->reply_hdr, '\0', 8192);
     }
     if (data->reply_hdr_state == 0) {
@@ -365,7 +375,7 @@ static void httpSendComplete(fd, buf, size, errflag, data)
 	fd, size, errflag);
 
     if (buf) {
-	put_free_8k_page(buf);	/* Allocated by httpSendRequest. */
+	put_free_8k_page(buf, __FILE__, __LINE__);	/* Allocated by httpSendRequest. */
 	buf = NULL;
     }
     data->icp_page_ptr = NULL;	/* So lifetime expire doesn't re-free */
@@ -419,7 +429,7 @@ static void httpSendRequest(fd, data)
     }
     /* Since we limit the URL read to a 4K page, I doubt that the
      * mime header could be longer than an 8K page */
-    buf = (char *) get_free_8k_page();
+    buf = (char *) get_free_8k_page(__FILE__, __LINE__);
     data->icp_page_ptr = buf;
     if (buflen > DISK_PAGE_SIZE) {
 	debug(11, 0, "Mime header length %d is breaking ICP code\n", buflen);
@@ -432,7 +442,7 @@ static void httpSendRequest(fd, data)
 	xbuf = xstrdup(data->req_hdr);
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
 	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
-		ybuf = (char *) get_free_4k_page();
+		ybuf = (char *) get_free_4k_page(__FILE__, __LINE__);
 		memset(ybuf, '\0', SM_PAGE_SIZE);
 		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, SQUID_VERSION);
 		t = ybuf;
@@ -445,7 +455,7 @@ static void httpSendRequest(fd, data)
 	}
 	xfree(xbuf);
 	if (ybuf) {
-	    put_free_4k_page(ybuf);
+	    put_free_4k_page(ybuf, __FILE__, __LINE__);
 	    ybuf = NULL;
 	}
     }

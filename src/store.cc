@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.25 1996/04/04 05:19:50 wessels Exp $ */
+/* $Id: store.cc,v 1.26 1996/04/04 18:41:29 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -890,7 +890,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
 
     if ((flag < 0) && (flag != DISK_EOF)) {
 	debug(20, 0, "storeSwapInHandle: SwapIn failure (err code = %d).\n", flag);
-	put_free_8k_page(e->mem_obj->e_swap_buf);
+	put_free_8k_page(e->mem_obj->e_swap_buf, __FILE__, __LINE__);
 	storeSetMemStatus(e, NOT_IN_MEMORY);
 	file_close(e->mem_obj->swap_fd);
 	swapInError(-1, e);	/* Invokes storeAbort() and completes the I/O */
@@ -920,7 +920,7 @@ int storeSwapInHandle(fd_notused, buf, len, flag, e, offset_notused)
     } else {
 	/* complete swapping in */
 	storeSetMemStatus(e, IN_MEMORY);
-	put_free_8k_page(e->mem_obj->e_swap_buf);
+	put_free_8k_page(e->mem_obj->e_swap_buf, __FILE__, __LINE__);
 	file_close(e->mem_obj->swap_fd);
 	debug(20, 5, "storeSwapInHandle: SwapIn complete: <URL:%s> from %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
@@ -973,7 +973,7 @@ int storeSwapInStart(e)
     storeSetMemStatus(e, SWAPPING_IN);
     e->mem_obj->data = new_MemObjectData();
     e->mem_obj->swap_offset = 0;
-    e->mem_obj->e_swap_buf = get_free_8k_page();
+    e->mem_obj->e_swap_buf = get_free_8k_page(__FILE__, __LINE__);
 
     /* start swapping daemon */
     file_read(fd,
@@ -1004,7 +1004,7 @@ void storeSwapOutHandle(fd, flag, e)
 	debug(20, 1, "storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
 	e->swap_status = NO_SWAP;
-	put_free_8k_page(page_ptr);
+	put_free_8k_page(page_ptr, __FILE__, __LINE__);
 	file_close(fd);
 	BIT_SET(e->flag, RELEASE_REQUEST);
 	if (e->swap_file_number != -1) {
@@ -1040,7 +1040,7 @@ void storeSwapOutHandle(fd, flag, e)
 	file_close(e->mem_obj->swap_fd);
 	debug(20, 5, "storeSwapOutHandle: SwapOut complete: <URL:%s> to %s.\n",
 	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
-	put_free_8k_page(page_ptr);
+	put_free_8k_page(page_ptr, __FILE__, __LINE__);
 	sprintf(logmsg, "%s %s %d %d %d\n",
 	    filename,
 	    e->url,
@@ -1105,7 +1105,7 @@ int storeSwapOutStart(e)
     }
     e->swap_status = SWAPPING_OUT;
     e->mem_obj->swap_offset = 0;
-    e->mem_obj->e_swap_buf = get_free_8k_page();
+    e->mem_obj->e_swap_buf = get_free_8k_page(__FILE__, __LINE__);
     e->mem_obj->e_swap_buf_len = 0;
 
     storeCopy(e, 0, SWAP_BUF, e->mem_obj->e_swap_buf,
@@ -2347,8 +2347,8 @@ void storeSanityCheck()
 	     * errno indicates that the directory doesn't exist */
 	    if (errno != ENOENT)
 		continue;
-	    debug(20,0, "WARNING: Cannot write to '%s' for storage swap area.\n", name);
-	    debug(20,0, "Forcing a *full restart* (e.g., cached -z)...");
+	    debug(20, 0, "WARNING: Cannot write to '%s' for storage swap area.\n", name);
+	    debug(20, 0, "Forcing a *full restart* (e.g., cached -z)...");
 	    zap_disk_store = 1;
 	    return;
 	}

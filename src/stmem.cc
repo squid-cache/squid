@@ -1,4 +1,4 @@
-/* $Id: stmem.cc,v 1.5 1996/03/29 21:19:26 wessels Exp $ */
+/* $Id: stmem.cc,v 1.6 1996/04/04 18:41:27 wessels Exp $ */
 
 /* 
  * DEBUG: Section 19          stmem:
@@ -23,13 +23,13 @@ void memFree(mem)
 	    lastp = p;
 	    p = p->next;
 	    if (lastp) {
-		put_free_4k_page(lastp->data);
+		put_free_4k_page(lastp->data, __FILE__, __LINE__);
 		safe_free(lastp);
 	    }
 	}
 
 	if (p) {
-	    put_free_4k_page(p->data);
+	    put_free_4k_page(p->data, __FILE__, __LINE__);
 	    safe_free(p);
 	}
     }
@@ -45,12 +45,12 @@ void memFreeData(mem)
     while (p != mem->tail) {
 	lastp = p;
 	p = p->next;
-	put_free_4k_page(lastp->data);
+	put_free_4k_page(lastp->data, __FILE__, __LINE__);
 	safe_free(lastp);
     }
 
     if (p != NULL) {
-	put_free_4k_page(p->data);
+	put_free_4k_page(p->data, __FILE__, __LINE__);
 	safe_free(p);
 	p = NULL;
     }
@@ -75,7 +75,7 @@ int memFreeDataUpto(mem, target_offset)
 	    lastp = p;
 	    p = p->next;
 	    current_offset += lastp->len;
-	    put_free_4k_page(lastp->data);
+	    put_free_4k_page(lastp->data, __FILE__, __LINE__);
 	    safe_free(lastp);
 	}
     }
@@ -126,7 +126,7 @@ int memAppend(mem, data, len)
 	p = (mem_node) xcalloc(1, sizeof(Mem_Node));
 	p->next = NULL;
 	p->len = len_to_copy;
-	p->data = get_free_4k_page();
+	p->data = get_free_4k_page(__FILE__, __LINE__);
 	memcpy(p->data, data, len_to_copy);
 
 	if (!mem->head) {
@@ -271,8 +271,9 @@ mem_ptr memInit()
 
 /* PBD 12/95: Memory allocator routines for saving and reallocating fixed 
  * size blocks rather than mallocing and freeing them */
-char *
-     get_free_4k_page()
+char *get_free_4k_page(file, line)
+     char *file;
+     int line;
 {
     char *page = NULL;
 
@@ -289,23 +290,23 @@ char *
 	sm_stats.total_pages_allocated++;
     }
     sm_stats.n_pages_in_use++;
-    if (page == NULL) {
-	debug(19, 0, "Null page pointer?");
-	fatal_dump(NULL);
-    }
+    debug(19, 5, "get_free_4k_page: Giving out %p, count=%d  %s:%d\n",
+	page, sm_stats.n_pages_in_use, file, line);
+    if (page == NULL)
+	fatal_dump("get_free_4k_page: Null page pointer?");
     return (page);
 }
 
-void put_free_4k_page(page)
+void put_free_4k_page(page, file, line)
      char *page;
+     char *file;
+     int line;
 {
     static stack_overflow_warning_toggle;
 
 #if USE_MEMALIGN
-    if ((int) page % SM_PAGE_SIZE) {
-	debug(19, 0, "Someone tossed a string into the 4k page pool\n");
-	fatal_dump(NULL);
-    }
+    if ((int) page % SM_PAGE_SIZE)
+	fatal_dump("Someone tossed a string into the 4k page pool");
 #endif
     if (full_stack(&sm_stats.free_page_stack)) {
 	sm_stats.total_pages_allocated--;
@@ -315,12 +316,15 @@ void put_free_4k_page(page)
 	}
     }
     sm_stats.n_pages_in_use--;
+    debug(19, 5, "put_free_4k_page: Putting back %p, count=%d  %s:%d\n", page, sm_stats.n_pages_in_use, file, line);
     /* Call push regardless if it's full, cause it's just going to release the
      * page if stack is full */
     push(&sm_stats.free_page_stack, page);
 }
 
-char *get_free_8k_page()
+char *get_free_8k_page(file, line)
+     char *file;
+     int line;
 {
     char *page = NULL;
 
@@ -337,23 +341,23 @@ char *get_free_8k_page()
 	disk_stats.total_pages_allocated++;
     }
     disk_stats.n_pages_in_use++;
-    if (page == NULL) {
-	debug(19, 0, "Null page pointer?");
-	fatal_dump(NULL);
-    }
+    debug(19, 5, "get_free_8k_page: Giving out %p, count=%d  %s:%d\n",
+	page, disk_stats.n_pages_in_use, file, line);
+    if (page == NULL)
+	fatal_dump("get_free_8k_page: Null page pointer?");
     return (page);
 }
 
-void put_free_8k_page(page)
+void put_free_8k_page(page, file, line)
      char *page;
+     char *file;
+     int line;
 {
     static stack_overflow_warning_toggle;
 
 #if USE_MEMALIGN
-    if ((int) page % DISK_PAGE_SIZE) {
-	debug(19, 0, "Someone tossed a string into the 8k page pool\n");
-	fatal_dump(NULL);
-    }
+    if ((int) page % DISK_PAGE_SIZE)
+	fatal_dump("Someone tossed a string into the 8k page pool");
 #endif
 
     if (full_stack(&disk_stats.free_page_stack)) {
@@ -364,6 +368,7 @@ void put_free_8k_page(page)
 	}
     }
     disk_stats.n_pages_in_use--;
+    debug(19, 5, "put_free_8k_page: Putting back %p, count=%d  %s:%d\n", page, disk_stats.n_pages_in_use, file, line);
     /* Call push regardless if it's full, cause it's just going to release the
      * page if stack is full */
     push(&disk_stats.free_page_stack, page);
