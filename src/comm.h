@@ -30,6 +30,8 @@ extern void comm_accept_setcheckperiod(int fd, int mdelay);
 extern void comm_write(int s, const char *buf, size_t len, IOWCB *callback, void *callback_data);
 #include "Store.h"
 extern void commMarkHalfClosed(int);
+extern int commIsHalfClosed(int);
+extern void commCheckHalfClosed(void *);
 extern bool comm_has_incomplete_write(int);
 
 /* Where should this belong? */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.668 2003/12/22 10:28:49 robertc Exp $
+ * $Id: client_side.cc,v 1.669 2004/03/01 01:37:34 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -119,6 +119,8 @@ static ClientSocketContext *ClientSocketContextNew(clientHttpRequest *);
 static CWCB clientWriteComplete;
 static IOWCB clientWriteBodyComplete;
 static IOCB clientReadRequest;
+static bool clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read);
+static void clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_read);
 static PF connStateFree;
 static PF requestTimeout;
 static PF clientLifetimeTimeout;
@@ -1307,16 +1309,54 @@ void
 ClientSocketContext::keepaliveNextRequest()
 {
     ConnStateData::Pointer conn = http->getConn();
+    bool do_next_read = false;
 
     debug(33, 3) ("ClientSocketContext::keepaliveNextRequest: FD %d\n", conn->fd);
     connIsFinished();
 
+    /*
+     * Attempt to parse a request from the request buffer.
+     * If we've been fed a pipelined request it may already
+     * be in our read buffer.
+     *
+     * This needs to fall through - if we're unlucky and parse the _last_ request
+     * from our read buffer we may never re-register for another client read.
+     */
+
+    if (clientParseRequest(conn, do_next_read)) {
+        debug(33, 3) ("clientSocketContext::keepaliveNextRequest: FD %d: parsed next request from buffer\n", conn->fd);
+    }
+
+    /*
+     * Either we need to kick-start another read or, if we have
+     * a half-closed connection, kill it after the last request.
+     * This saves waiting for half-closed connections to finished being
+     * half-closed _AND_ then, sometimes, spending "Timeout" time in
+     * the keepalive "Waiting for next request" state.
+     */
+    if (commIsHalfClosed(conn->fd) && (conn->getConcurrentRequestCount() == 0)) {
+        debug(33, 3) ("ClientSocketContext::keepaliveNextRequest: half-closed client with no pending requests, closing\n");
+        comm_close(conn->fd);
+        return;
+    }
+
     ClientSocketContext::Pointer deferredRequest;
 
-    if ((deferredRequest = conn->getCurrentContext()).getRaw() == NULL)
-        conn->readNextRequest();
-    else
+    /*
+     * At this point we either have a parsed request (which we've
+     * kicked off the processing for) or not. If we have a deferred
+     * request (parsed but deferred for pipeling processing reasons)
+     * then look at processing it. If not, simply kickstart
+     * another read.
+     */
+
+    if ((deferredRequest = conn->getCurrentContext()).getRaw()) {
+        debug(33, 3) ("ClientSocketContext:: FD %d: calling PushDeferredIfNeeded\n", conn->fd);
         ClientSocketContextPushDeferredIfNeeded(deferredRequest, conn);
+    } else {
+        debug(33, 3) ("ClientSocketContext:: FD %d: calling conn->readNextRequest()\n", conn->fd);
+        conn->readNextRequest();
+    }
 }
 
 void
@@ -2275,15 +2315,85 @@ connOkToAddRequest(ConnStateData::Pointer &conn)
     return result;
 }
 
+/*
+ * Attempt to parse one or more requests from the input buffer.
+ * If a request is successfully parsed, even if the next request
+ * is only partially parsed, it will return TRUE.
+ * do_next_read is updated to indicate whether a read should be
+ * scheduled.
+ */
+static bool
+clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
+{
+    method_t method;
+    char *prefix = NULL;
+    ClientSocketContext *context;
+    bool parsed_req = false;
+
+    debug(33, 5) ("clientParseRequest: FD %d: attempting to parse\n", conn->fd);
+
+    while (conn->in.notYetUsed > 0 && conn->body.size_left == 0) {
+        size_t req_line_sz;
+        connStripBufferWhitespace (conn);
+
+        /* Limit the number of concurrent requests to 2 */
+
+        if (!connOkToAddRequest(conn)) {
+            break;
+        }
+
+        /* Should not be needed anymore */
+        /* Terminate the string */
+        conn->in.buf[conn->in.notYetUsed] = '\0';
+
+        /* Process request */
+        context = parseHttpRequest(conn, &method, &prefix, &req_line_sz);
+
+        /* partial or incomplete request */
+        if (!context) {
+            safe_free(prefix);
+
+            if (!connKeepReadingIncompleteRequest(conn))
+                connCancelIncompleteRequests(conn);
+
+            break;
+        }
+
+        /* status -1 or 1 */
+        if (context) {
+            debug(33, 5) ("clientParseRequest: FD %d: parsed a request\n", conn->fd);
+            commSetTimeout(conn->fd, Config.Timeout.lifetime, clientLifetimeTimeout,
+                           context->http);
+
+            clientProcessRequest(conn, context, method, prefix, req_line_sz);
+
+            safe_free(prefix);
+            parsed_req = true;
+
+            if (context->mayUseConnection()) {
+                debug (33, 3) ("clientReadRequest: Not reading, as this request may need the connection\n");
+                do_next_read = 0;
+                break;
+            }
+
+            if (!conn->flags.readMoreRequests) {
+                conn->flags.readMoreRequests = 1;
+                break;
+            }
+
+            continue;		/* while offset > 0 && body.size_left == 0 */
+        }
+    }				/* while offset > 0 && conn->body.size_left == 0 */
+
+    return parsed_req;
+}
+
 static void
 clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
                   void *data)
 {
     ConnStateData::Pointer conn ((ConnStateData *)data);
     conn->reading(false);
-    method_t method;
-    char *prefix = NULL;
-    ClientSocketContext *context;
     bool do_next_read = 1; /* the default _is_ to read data! - adrian */
 
     assert (fd == conn->fd);
@@ -2347,68 +2457,22 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
     if (conn->getConcurrentRequestCount() == 0)
         fd_note(conn->fd, "Reading next request");
 
-    /* XXX: if we read *exactly* two requests, and the client sends no more,
-     * if pipelined requests are off, we will *never* parse and insert the 
-     * second.  the corner condition is due to the parsing being tied to the 
-     * read, not the presence of data in the buffer.
-     */
-    while (conn->in.notYetUsed > 0 && conn->body.size_left == 0) {
-        size_t req_line_sz;
-        connStripBufferWhitespace (conn);
+    if (! clientParseRequest(conn, do_next_read)) {
+        /*
+         * If the client here is half closed and we failed
+         * to parse a request, close the connection.
+         * The above check with connFinishedWithConn() only
+         * succeeds _if_ the buffer is empty which it won't
+         * be if we have an incomplete request.
+         */
 
-        if (conn->in.notYetUsed == 0) {
-            clientAfterReadingRequests(fd, conn, do_next_read);
-            return;
+        if (conn->getConcurrentRequestCount() == 0 && commIsHalfClosed(fd)) {
+            debug(33, 5) ("clientReadRequest: FD %d: half-closed connection, no completed request parsed, connection closing.\n", fd);
+            comm_close(fd);
         }
 
-        /* Limit the number of concurrent requests to 2 */
-        if (!connOkToAddRequest(conn)) {
-            return;
-        }
-
-        /* Should not be needed anymore */
-        /* Terminate the string */
-        conn->in.buf[conn->in.notYetUsed] = '\0';
-
-        /* Process request */
-        context = parseHttpRequest(conn,
-                                   &method, &prefix, &req_line_sz);
-
-        /* partial or incomplete request */
-        if (!context) {
-            safe_free(prefix);
-
-            if (!connKeepReadingIncompleteRequest(conn))
-                connCancelIncompleteRequests(conn);
-
-            break; /* conn->in.notYetUsed > 0 && conn->body.size_left == 0 */
-        }
-
-        /* status -1 or 1 */
-        if (context) {
-            commSetTimeout(fd, Config.Timeout.lifetime, clientLifetimeTimeout,
-                           context->http);
-
-            clientProcessRequest(conn, context, method, prefix, req_line_sz);
-
-            safe_free(prefix);
-
-            if (context->mayUseConnection()) {
-                debug (33, 3) ("clientReadRequest: Not reading, as this request may need the connection\n");
-                do_next_read = 0;
-                break;
-            }
-
-            if (!conn->flags.readMoreRequests) {
-                conn->flags.readMoreRequests = 1;
-                break;
-            }
-
-            continue;		/* while offset > 0 && body.size_left == 0 */
-        }
-    }				/* while offset > 0 && conn->body.size_left == 0 */
-
-    clientAfterReadingRequests(fd, conn, do_next_read);
+        clientAfterReadingRequests(fd, conn, do_next_read);
+    }
 }
 
 /* file_read like function, for reading body content */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.389 2003/09/19 07:06:19 hno Exp $
+ * $Id: main.cc,v 1.390 2004/03/01 01:37:34 adrian Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -44,6 +44,7 @@
 #include "ACL.h"
 #include "htcp.h"
 #include "StoreFileSystem.h"
+#include "comm.h"
 
 #if USE_WIN32_SERVICE
 
@@ -837,6 +838,8 @@ mainInitialize(void)
 #endif
 
         eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, NULL, 15.0, 1);
+
+        eventAdd("commCheckHalfClosed", commCheckHalfClosed, NULL, 1.0, false);
     }
 
     configured_once = 1;
