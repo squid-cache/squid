@@ -1,5 +1,5 @@
 /*
- * $Id: md5.c,v 1.12 2001/04/14 00:03:20 hno Exp $
+ * $Id: md5.c,v 1.13 2001/10/17 13:30:50 hno Exp $
  */
 
 /* taken from RFC-1321/Appendix A.3 */
@@ -146,9 +146,10 @@ MD5Init(MD5_CTX * context)
  * processing another message block, and updating the context.
  */
 void
-MD5Update(MD5_CTX * context, const unsigned char *input, unsigned int inputLen)
+MD5Update(MD5_CTX * context, const void *input_p, unsigned long inputLen)
 {
     unsigned int i, index, partLen;
+    const unsigned char *input = input_p;
 
     /* Compute number of bytes mod 64 */
     index = (unsigned int) ((context->count[0] >> 3) & 0x3F);
@@ -184,7 +185,7 @@ MD5Update(MD5_CTX * context, const unsigned char *input, unsigned int inputLen)
  * message digest and zeroizing the context.
  */
 void
-MD5Final(unsigned char digest[16], MD5_CTX * context)
+MD5Final(unsigned char *digest, MD5_CTX * context)
 {
     unsigned char bits[8];
     unsigned int index, padLen;

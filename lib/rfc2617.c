@@ -13,7 +13,7 @@
 
 
 /*
- * $Id: rfc2617.c,v 1.4 2001/10/17 12:41:48 hno Exp $
+ * $Id: rfc2617.c,v 1.5 2001/10/17 13:30:50 hno Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -68,9 +68,9 @@ CvtHex(const HASH Bin, HASHHEX Hex)
 	    Hex[i * 2 + 1] = (j + '0');
 	else
 	    Hex[i * 2 + 1] = (j + 'a' - 10);
-    };
+    }
     Hex[HASHHEXLEN] = '\0';
-};
+}
 
 void
 CvtBin(const HASHHEX Hex, HASH Bin)
@@ -84,9 +84,9 @@ CvtBin(const HASHHEX Hex, HASH Bin)
 	    Bin[i / 2] |= ((j - '0') << ((i % 2 == 0) ? 4 : 0));
 	else
 	    Bin[i / 2] |= ((j - 'a' + 10) << ((i % 2 == 0) ? 4 : 0));
-    };
+    }
     Bin[HASHLEN] = '\0';
-};
+}
 
 
 /* calculate H(A1) as per spec */
@@ -111,7 +111,7 @@ DigestCalcHA1(
 	MD5Update(&Md5Ctx, pszRealm, strlen(pszRealm));
 	MD5Update(&Md5Ctx, ":", 1);
 	MD5Update(&Md5Ctx, pszPassword, strlen(pszPassword));
-	MD5Final(HA1, &Md5Ctx);
+	MD5Final((unsigned char *)HA1, &Md5Ctx);
     }
     if (strcasecmp(pszAlg, "md5-sess") == 0) {
 	MD5Init(&Md5Ctx);
@@ -120,10 +120,10 @@ DigestCalcHA1(
 	MD5Update(&Md5Ctx, pszNonce, strlen(pszNonce));
 	MD5Update(&Md5Ctx, ":", 1);
 	MD5Update(&Md5Ctx, pszCNonce, strlen(pszCNonce));
-	MD5Final(HA1, &Md5Ctx);
-    };
+	MD5Final((unsigned char *)HA1, &Md5Ctx);
+    }
     CvtHex(HA1, SessionKey);
-};
+}
 
 /* calculate request-digest/response-digest as per HTTP Digest spec */
 void
@@ -153,8 +153,8 @@ DigestCalcResponse(
     if (strcasecmp(pszQop, "auth-int") == 0) {
 	MD5Update(&Md5Ctx, ":", 1);
 	MD5Update(&Md5Ctx, HEntity, HASHHEXLEN);
-    };
-    MD5Final(HA2, &Md5Ctx);
+    }
+    MD5Final((unsigned char *)HA2, &Md5Ctx);
     CvtHex(HA2, HA2Hex);
 
     /* calculate response
@@ -171,8 +171,8 @@ DigestCalcResponse(
 	MD5Update(&Md5Ctx, ":", 1);
 	MD5Update(&Md5Ctx, pszQop, strlen(pszQop));
 	MD5Update(&Md5Ctx, ":", 1);
-    };
+    }
     MD5Update(&Md5Ctx, HA2Hex, HASHHEXLEN);
-    MD5Final(RespHash, &Md5Ctx);
+    MD5Final((unsigned char *)RespHash, &Md5Ctx);
     CvtHex(RespHash, Response);
-};
+}

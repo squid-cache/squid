@@ -1,5 +1,5 @@
 /*
- * $Id: ntlmauth.h,v 1.6 2001/10/08 16:18:31 hno Exp $
+ * $Id: ntlmauth.h,v 1.7 2001/10/17 13:30:49 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -70,10 +70,10 @@
 #define bswap16(x) bswap_16(x)
 #define bswap32(x) bswap_32(x)
 #else	 /* HAVE_BISTWAP_H */
-#define bswap16(x) ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
+#define bswap16(x) (((((uint16_t)x) >> 8) & 0xff) | ((((uint16_t)x) & 0xff) << 8))
 #define bswap32(x) \
-    ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) | \
-     (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
+    (((((uint32_t)x) & 0xff000000) >> 24) | ((((uint32_t)x) & 0x00ff0000) >>  8) | \
+     ((((uint32_t)x) & 0x0000ff00) <<  8) | ((((uint32_t)x) & 0x000000ff) << 24))
 #endif /* HAVE_BITSWAP_H */
 
 /* Used internally. Microsoft seems to think this is right, I believe them.
