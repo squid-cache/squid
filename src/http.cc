@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.312 1998/08/21 03:15:17 wessels Exp $
+ * $Id: http.cc,v 1.313 1998/08/21 08:40:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -115,8 +115,8 @@ static void
 httpMakePrivate(StoreEntry * entry)
 {
     storeExpireNow(entry);
-    EBIT_CLR(entry->flag, ENTRY_CACHABLE);
     storeReleaseRequest(entry);	/* delete object when not used */
+    /* storeReleaseRequest clears ENTRY_CACHABLE flag */
 }
 
 /* This object may be negatively cached */
