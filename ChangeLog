@@ -314,6 +314,16 @@ Changes to squid-1.1.alpha2:
 
 ==============================================================================
 
+Changes to squid-1.0.17 (September 24, 1996):
+
+	- Fixed cachemgr.cgi to handle an arbitrary IP address (Ron
+	  Gomes)
+	- Fixed syslog() calls to use syslog(X, "%s", buf) (Yoichi
+	  Shinoda).
+	- Copied ipcache locking stuff from v1.1.
+	- Copied httpConnect() from v1.1 for non-blocking DNS lookups.
+	- Fixed "\r\n\0" bug in gopherSendRequest();
+
 Changes to squid-1.0.16 (September 16, 1996):
 
 	- Fixed shadow passwd support (John Saunders).

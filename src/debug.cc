@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.28 1996/09/20 23:26:55 wessels Exp $
+ * $Id: debug.cc,v 1.29 1996/09/24 20:16:39 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -130,7 +130,9 @@ _db_print(va_alist)
     char *format = NULL;
 #endif
     LOCAL_ARRAY(char, f, BUFSIZ);
+#if HAVE_SYSLOG
     LOCAL_ARRAY(char, tmpbuf, BUFSIZ);
+#endif
 
     if (debug_log == NULL)
 	return;
@@ -165,7 +167,8 @@ _db_print(va_alist)
     if ((level == 0) && opt_syslog_enable) {
 	tmpbuf[0] = '\0';
 	vsprintf(tmpbuf, f, args);
-	syslog(LOG_ERR, tmpbuf);
+	tmpbuf[1023] = '\0';
+	syslog(LOG_ERR, "%s", tmpbuf);
     }
 #endif /* HAVE_SYSLOG */
 
