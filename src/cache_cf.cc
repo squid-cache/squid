@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.249 1998/02/19 23:28:38 wessels Exp $
+ * $Id: cache_cf.cc,v 1.250 1998/02/21 00:18:10 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -615,7 +615,30 @@ free_cachedir(cacheSwap * swap)
 static void
 dump_peer(StoreEntry * entry, const char *name, peer * p)
 {
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    while (p != NULL) {
+	storeAppendPrintf(entry, "%s %s %s %d %d",
+	    name,
+	    p->host,
+	    neighborTypeStr(p),
+	    p->http_port,
+	    p->icp_port);
+	if (EBIT_TEST(p->options, NEIGHBOR_PROXY_ONLY))
+	    storeAppendPrintf(entry, " proxy-only");
+	if (EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
+	    storeAppendPrintf(entry, " no-query");
+	if (EBIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
+	    storeAppendPrintf(entry, " default");
+	if (EBIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
+	    storeAppendPrintf(entry, " round-robin");
+	if (EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
+	    storeAppendPrintf(entry, " multicast-responder");
+	if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+	    storeAppendPrintf(entry, " closest-only");
+	if (p->mcast.ttl > 0)
+	    storeAppendPrintf(entry, " ttl=%d", p->mcast.ttl);
+	storeAppendPrintf(entry, "\n");
+	p = p->next;
+    }
 }
 
 static void
@@ -701,7 +724,15 @@ free_peer(peer ** P)
 static void
 dump_cachemgrpasswd(StoreEntry * entry, const char *name, cachemgr_passwd * list)
 {
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    wordlist *w;
+    while (list != NULL) {
+	storeAppendPrintf(entry, "%s XXXXXXXXXX", name);
+	for (w = list->actions; w != NULL; w = w->next) {
+	    storeAppendPrintf(entry, " %s", w->key);
+	}
+	storeAppendPrintf(entry, "\n");
+	list = list->next;
+    }
 }
 
 static void
@@ -735,7 +766,14 @@ free_cachemgrpasswd(cachemgr_passwd ** head)
 static void
 dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
 {
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    acl_name_list *a;
+    while (var != NULL) {
+	storeAppendPrintf(entry, "%s %s", name, var->url);
+	for (a = var->acl_list; a != NULL; a = a->next)
+	    storeAppendPrintf(entry, " %s", a->name);
+	storeAppendPrintf(entry, "\n");
+	var = var->next;
+    }
 }
 
 static void
@@ -980,7 +1018,12 @@ parse_onoff(int *var)
 static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 {
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    while (head != NULL) {
+	storeAppendPrintf(entry, "%s %s %d %d%% %d\n",
+	    name, head->pattern,
+	    (int) head->min, head->pct, (int) head->max);
+	head = head->next;
+    }
 }
 
 static void
@@ -1053,7 +1096,12 @@ free_refreshpattern(refresh_t ** head)
 static void
 dump_regexlist(StoreEntry * entry, const char *name, relist * var)
 {
-    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
+    storeAppendPrintf(entry, "%s", name);
+    while (var != NULL) {
+	storeAppendPrintf(entry, " %s", var->pattern);
+	var = var->next;
+    }
+    storeAppendPrintf(entry, "\n");
 }
 
 static void
