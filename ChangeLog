@@ -21,6 +21,7 @@
 	  Forster).
 	- Give always_direct higher precedence than never_direct
 	  (Henrik Nordstrom).
+	- experimental attempt to fix "peer disappeared" coredumps
 
 Changes to squid-1.2.beta24 (August 21, 1998):
 
