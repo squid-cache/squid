@@ -1,4 +1,4 @@
-/* $Id: send-announce.cc,v 1.6 1996/04/09 18:20:28 wessels Exp $ */
+/* $Id: send-announce.cc,v 1.7 1996/04/09 18:23:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 27          send-announce
@@ -33,7 +33,7 @@ void send_announce()
 	(int) cached_curtime,
 	mkhttpdlogtime(&cached_curtime));
     strcat(sndbuf, tbuf);
-    l = strlen(buf);
+    l = strlen(sndbuf);
 
     host = getAnnounceHost();
     port = getAnnouncePort();
