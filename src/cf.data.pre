@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.140 1999/01/26 06:16:31 glenn Exp $
+# $Id: cf.data.pre,v 1.141 1999/01/29 21:05:21 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1494,6 +1494,7 @@ NAME: http_access
 TYPE: acl_access
 LOC: Config.accessList.http
 DEFAULT: none
+DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access based on defined access lists
 
@@ -1533,6 +1534,7 @@ NAME: icp_access
 TYPE: acl_access
 LOC: Config.accessList.icp
 DEFAULT: none
+DEFAULT_IF_NONE: deny all
 DOC_START
 	Reply to all ICP queries we receive
 
