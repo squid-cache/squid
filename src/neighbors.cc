@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.35 1996/07/25 05:46:38 wessels Exp $
+ * $Id: neighbors.cc,v 1.36 1996/07/25 07:10:38 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -182,7 +182,7 @@ void hierarchy_log_append(entry, code, timeout, cache_host)
     if (mem && cache_host)
 	mem->hierarchy_host = xstrdup(cache_host);
 
-    if (emulate_httpd_log) {
+    if (Config.commonLogFormat) {
 	if (squid_curtime != last_time) {
 	    s = mkhttpdlogtime(&squid_curtime);
 	    strcpy(time_str, s);
@@ -684,7 +684,7 @@ void neighborsUdpAck(fd, url, header, from, entry, data, data_sz)
 	    storeAppend(entry, data, data_sz);
 	    storeComplete(entry);
 	    hierarchy_log_append(entry,
-		e->type==EDGE_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
+		e->type == EDGE_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
 		0,
 		e->host);
 	    if (httpState->reply_hdr)
@@ -866,12 +866,12 @@ void neighbors_init()
     if (friends == NULL)
 	friends = xcalloc(1, sizeof(neighbors));
 
-    if ((fname = getHierarchyLogFile()))
+    if ((fname = Config.Log.hierarchy))
 	neighborsOpenLog(fname);
 
     for (t = Neighbor_cf; t; t = next) {
 	next = t->next;
-	if (!strcmp(t->host, me) && t->http_port == getHttpPortNum()) {
+	if (!strcmp(t->host, me) && t->http_port == Config.Port.http) {
 	    debug(15, 0, "neighbors_init: skipping cache_host %s %s %d %d\n",
 		t->type, t->host, t->http_port, t->icp_port);
 	    continue;
@@ -918,20 +918,20 @@ void neighbors_rotate_log()
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
 
-    if ((fname = getHierarchyLogFile()) == NULL)
+    if ((fname = Config.Log.hierarchy) == NULL)
 	return;
 
     debug(15, 1, "neighbors_rotate_log: Rotating.\n");
 
     /* Rotate numbers 0 through N up one */
-    for (i = getLogfileRotateNumber(); i > 1;) {
+    for (i = Config.Log.rotateNumber; i > 1;) {
 	i--;
 	sprintf(from, "%s.%d", fname, i - 1);
 	sprintf(to, "%s.%d", fname, i);
 	rename(from, to);
     }
     /* Rotate the current log to .0 */
-    if (getLogfileRotateNumber() > 0) {
+    if (Config.Log.rotateNumber > 0) {
 	sprintf(to, "%s.%d", fname, 0);
 	rename(fname, to);
     }

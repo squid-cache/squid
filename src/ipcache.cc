@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.37 1996/07/25 05:49:16 wessels Exp $
+ * $Id: ipcache.cc,v 1.38 1996/07/25 07:10:37 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -208,7 +208,7 @@ static int ipcache_testname()
 {
     wordlist *w = NULL;
     debug(14, 1, "Performing DNS Tests...\n");
-    if ((w = getDnsTestnameList()) == NULL)
+    if ((w = Config.dns_testname_list) == NULL)
 	return 1;
     for (; w; w = w->next) {
 	IpcacheStats.ghbn_calls++;
@@ -456,11 +456,11 @@ static void ipcache_add(name, i, hp, cached)
 	i->entry.h_name = xstrdup(hp->h_name);
 	i->lastref = i->timestamp = squid_curtime;
 	i->status = IP_CACHED;
-	i->ttl = DnsPositiveTtl;
+	i->ttl = Config.positiveDnsTtl;
     } else {
 	i->lastref = i->timestamp = squid_curtime;
 	i->status = IP_NEGATIVE_CACHED;
-	i->ttl = getNegativeDNSTTL();
+	i->ttl = Config.negativeDnsTtl;
     }
     ipcache_add_to_hash(i);
 }
@@ -590,7 +590,7 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 		line_cur = line_head->next;
 		i = dnsData->data;
 		i->lastref = i->timestamp = squid_curtime;
-		i->ttl = getNegativeDNSTTL();
+		i->ttl = Config.negativeDnsTtl;
 		i->status = IP_NEGATIVE_CACHED;
 		if (line_cur && !strncmp(line_cur->line, "$message", 8))
 		    i->error_message = xstrdup(line_cur->line + 8);
@@ -610,7 +610,7 @@ static int ipcache_parsebuffer(buf, offset, dnsData)
 		    debug(14, 0, "ipcache_parsebuffer: DNS record already resolved.\n");
 		} else {
 		    i->lastref = i->timestamp = squid_curtime;
-		    i->ttl = DnsPositiveTtl;
+		    i->ttl = Config.positiveDnsTtl;
 		    i->status = IP_CACHED;
 
 		    line_cur = line_head->next;

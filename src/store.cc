@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.74 1996/07/25 05:49:18 wessels Exp $
+ * $Id: store.cc,v 1.75 1996/07/25 07:10:43 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -349,7 +349,7 @@ static int storeHashInsert(e)
  */
 
 static int storeHashDelete(e)
-    StoreEntry *e;
+     StoreEntry *e;
 {
     hash_link *hptr = NULL;
     if (e->mem_status == IN_MEMORY && e->key) {
@@ -1248,10 +1248,10 @@ void storeSwapOutHandle(fd, flag, e)
 	if (flag == DISK_NO_SPACE_LEFT) {
 	    /* reduce the swap_size limit to the current size. */
 	    setCacheSwapMax(store_swap_size);
-	    store_swap_high = (long) (((float) getCacheSwapMax() *
-		    (float) getCacheSwapHighWaterMark()) / (float) 100);
-	    store_swap_low = (long) (((float) getCacheSwapMax() *
-		    (float) getCacheSwapLowWaterMark()) / (float) 100);
+	    store_swap_high = (long) (((float) Config.Swap.maxSize *
+		    (float) Config.Swap.highWaterMark) / (float) 100);
+	    store_swap_low = (long) (((float) Config.Swap.maxSize *
+		    (float) Config.Swap.lowWaterMark) / (float) 100);
 	}
 	return;
     }
@@ -1681,7 +1681,7 @@ int storeAbort(e, msg)
     LOCAL_ARRAY(char, abort_msg, 2000);
 
     debug(20, 6, "storeAbort: '%s'\n", e->key);
-    e->expires = squid_curtime + getNegativeTTL();
+    e->expires = squid_curtime + Config.negativeTtl;
     e->store_status = STORE_ABORTED;
     storeSetMemStatus(e, IN_MEMORY);
     /* No DISK swap for negative cached object */
@@ -1700,7 +1700,7 @@ int storeAbort(e, msg)
 	e->mem_obj->request->protocol,
 	e->mem_obj->e_current_len);
     mk_mime_hdr(mime_hdr,
-	(time_t) getNegativeTTL(),
+	(time_t) Config.negativeTtl,
 	6 + strlen(msg),
 	squid_curtime,
 	"text/html");
@@ -1972,7 +1972,7 @@ int storeGetMemSpace(size, check_vm_number)
 	debug(20, 2, "storeGetMemSpace: Done.\n");
 	return 0;
     }
-    if ((store_mem_size + size) < getCacheMemMax()) {
+    if ((store_mem_size + size) < Config.Mem.maxSize) {
 	/* We're over high water mark here, but still under absolute max */
 	if (!over_highwater) {
 	    /* print only once when the condition occur until it clears. */
@@ -2627,18 +2627,18 @@ int storeInit()
     wordlist *w = NULL;
     char *fname = NULL;
 
-    if (strcmp((fname = getStoreLogFile()), "none") == 0)
+    if (strcmp((fname = Config.Log.store), "none") == 0)
 	storelog_fd = -1;
     else
 	storelog_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
     if (storelog_fd < 0)
 	debug(20, 1, "Store logging disabled\n");
 
-    for (w = getCacheDirs(); w; w = w->next)
+    for (w = Config.cache_dirs; w; w = w->next)
 	storeAddSwapDisk(w->key);
     storeSanityCheck();
     file_map_create(MAX_SWAP_FILE);
-    dir_created = storeVerifySwapDirs(zap_disk_store);
+    dir_created = storeVerifySwapDirs(opt_zap_disk_store);
     storeCreateHashTable(urlcmp);
 
     sprintf(swaplog_file, "%s/log", swappath(0));
@@ -2651,32 +2651,32 @@ int storeInit()
     }
     swaplog_lock = file_write_lock(swaplog_fd);
 
-    if (!zap_disk_store)
+    if (!opt_zap_disk_store)
 	storeStartRebuildFromDisk();
     else
 	store_rebuilding = STORE_NOT_REBUILDING;
 
-    if (dir_created || zap_disk_store)
+    if (dir_created || opt_zap_disk_store)
 	storeCreateSwapSubDirs();
 
-    store_mem_high = (long) (getCacheMemMax() / 100) *
-	getCacheMemHighWaterMark();
-    store_mem_low = (long) (getCacheMemMax() / 100) *
-	getCacheMemLowWaterMark();
+    store_mem_high = (long) (Config.Mem.maxSize / 100) *
+	Config.Mem.highWaterMark;
+    store_mem_low = (long) (Config.Mem.maxSize / 100) *
+	Config.Mem.lowWaterMark;
 
-    store_hotobj_high = (int) (getCacheHotVmFactor() *
+    store_hotobj_high = (int) (Config.hotVmFactor *
 	store_mem_high / (1 << 20));
-    store_hotobj_low = (int) (getCacheHotVmFactor() *
+    store_hotobj_low = (int) (Config.hotVmFactor *
 	store_mem_low / (1 << 20));
 
     /* check for validity */
     if (store_hotobj_low > store_hotobj_high)
 	store_hotobj_low = store_hotobj_high;
 
-    store_swap_high = (long) (getCacheSwapMax() / 100) *
-	getCacheSwapHighWaterMark();
-    store_swap_low = (long) (getCacheSwapMax() / 100) *
-	getCacheSwapLowWaterMark();
+    store_swap_high = (long) (Config.Swap.maxSize / 100) *
+	Config.Swap.highWaterMark;
+    store_swap_low = (long) (Config.Swap.maxSize / 100) *
+	Config.Swap.lowWaterMark;
 
     return 0;
 }
@@ -2707,7 +2707,7 @@ void storeSanityCheck()
 		name);
 	    debug(20, 0, "Forcing a *full restart* (e.g., %s -z)...\n",
 		appname);
-	    zap_disk_store = 1;
+	    opt_zap_disk_store = 1;
 	    return;
 	}
     }
@@ -2895,7 +2895,7 @@ void storeRotateLog()
 	file_close(storelog_fd);
 	storelog_fd = -1;
     }
-    if ((fname = getStoreLogFile()) == NULL)
+    if ((fname = Config.Log.store) == NULL)
 	return;
 
     if (strcmp(fname, "none") == 0)
@@ -2904,14 +2904,14 @@ void storeRotateLog()
     debug(20, 1, "storeRotateLog: Rotating.\n");
 
     /* Rotate numbers 0 through N up one */
-    for (i = getLogfileRotateNumber(); i > 1;) {
+    for (i = Config.Log.rotateNumber; i > 1;) {
 	i--;
 	sprintf(from, "%s.%d", fname, i - 1);
 	sprintf(to, "%s.%d", fname, i);
 	rename(from, to);
     }
     /* Rotate the current log to .0 */
-    if (getLogfileRotateNumber() > 0) {
+    if (Config.Log.rotateNumber > 0) {
 	sprintf(to, "%s.%d", fname, 0);
 	rename(fname, to);
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.47 1996/07/25 05:48:40 wessels Exp $
+ * $Id: stat.cc,v 1.48 1996/07/25 07:10:42 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -105,8 +105,6 @@
 
 
 #include "squid.h"
-
-extern int emulate_httpd_log;
 
 #define MAX_LINELEN (4096)
 #define max(a,b)  ((a)>(b)? (a): (b))
@@ -732,21 +730,21 @@ void info_get(obj, sentry)
 	RESERVED_FD);
 
     storeAppendPrintf(sentry, "{Stop List:}\n");
-    if ((p = getHttpStoplist())) {
+    if ((p = Config.http_stoplist)) {
 	storeAppendPrintf(sentry, "{\tHTTP:}\n");
 	while (p) {
 	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
 	    p = p->next;
 	}
     }
-    if ((p = getGopherStoplist())) {
+    if ((p = Config.gopher_stoplist)) {
 	storeAppendPrintf(sentry, "{\tGOPHER:}\n");
 	while (p) {
 	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
 	    p = p->next;
 	}
     }
-    if ((p = getFtpStoplist())) {
+    if ((p = Config.ftp_stoplist)) {
 	storeAppendPrintf(sentry, "{\tFTP:}\n");
 	while (p) {
 	    storeAppendPrintf(sentry, "{\t\t%s}\n", p->key);
@@ -839,52 +837,52 @@ void parameter_get(obj, sentry)
     storeAppendPrintf(sentry, open_bracket);
     storeAppendPrintf(sentry,
 	"{VM-Max %d \"# Maximum hot-vm cache (MB)\"}\n",
-	getCacheMemMax() / (1 << 20));
+	Config.Mem.maxSize / (1 << 20));
     storeAppendPrintf(sentry,
 	"{VM-High %d \"# High water mark hot-vm cache (%%)\"}\n",
-	getCacheMemHighWaterMark());
+	Config.Mem.highWaterMark);
     storeAppendPrintf(sentry,
 	"{VM-Low %d \"# Low water-mark hot-vm cache (%%)\"}\n",
-	getCacheMemLowWaterMark());
+	Config.Mem.lowWaterMark);
     storeAppendPrintf(sentry,
 	"{Swap-Max %d \"# Maximum disk cache (MB)\"}\n",
-	getCacheSwapMax() / (1 << 10));
+	Config.Swap.maxSize / (1 << 10));
     storeAppendPrintf(sentry,
 	"{Swap-High %d \"# High Water mark disk cache (%%)\"}\n",
-	getCacheSwapHighWaterMark());
+	Config.Swap.highWaterMark);
     storeAppendPrintf(sentry,
 	"{Swap-Low %d \"# Low water mark disk cache (%%)\"}\n",
-	getCacheSwapLowWaterMark());
+	Config.Swap.lowWaterMark);
     storeAppendPrintf(sentry,
 	"{HTTP-Max %d\"# Maximum size HTTP objects (KB)\"}\n",
-	getHttpMax() / (1 << 10));
+	Config.Http.maxObjSize / (1 << 10));
     storeAppendPrintf(sentry,
 	"{HTTP-TTL %d \"# Http object default TTL (hrs)\"}\n",
-	getHttpTTL() / 3600);
+	Config.Http.defaultTtl / 3600);
     storeAppendPrintf(sentry,
 	"{Gopher-Max %d \"# Maximum size gopher objects (KB)\"}\n",
-	getGopherMax() / (1 << 10));
+	Config.Gopher.maxObjSize / (1 << 10));
     storeAppendPrintf(sentry,
 	"{Gopher-TTL %d \"# TTL for gopher objects (hrs)\"}\n",
-	getGopherTTL() / 3600);
+	Config.Gopher.defaultTtl / 3600);
     storeAppendPrintf(sentry,
 	"{FTP-Max %d \"# Maximum size FTP objects (KB)\"}\n",
-	getFtpMax() / (1 << 10));
+	Config.Ftp.maxObjSize / (1 << 10));
     storeAppendPrintf(sentry,
 	"{FTP-TTL %d \"# TTL for FTP objects (hrs)\"}\n",
-	getFtpTTL() / 3600);
+	Config.Ftp.defaultTtl / 3600);
     storeAppendPrintf(sentry,
 	"{Neg-TTL %d \"# TTL for negative cache (s)\"}\n",
-	getNegativeTTL());
+	Config.negativeTtl);
     storeAppendPrintf(sentry,
 	"{ReadTimeout %d \"# Maximum idle connection (s)\"}\n",
-	getReadTimeout());
+	Config.readTimeout);
     storeAppendPrintf(sentry,
 	"{ClientLifetime %d \"# Lifetime for incoming HTTP requests\"}\n",
-	getClientLifetime());
+	Config.lifetimeDefault);
     storeAppendPrintf(sentry,
 	"{CleanRate %d \"# Rate for periodic object expiring\"}\n",
-	getCleanRate());
+	Config.cleanRate);
     /* Cachemgr.cgi expects an integer in the second field of the string */
     storeAppendPrintf(sentry,
 	"{HttpAccelMode %d \"# Is operating as an HTTP accelerator\"}\n",
@@ -911,7 +909,7 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
     static char *dash = "-";
     char *client = NULL;
 
-    if (opt_log_fqdn)
+    if (Config.Log.log_fqdn)
 	client = fqdncache_gethostbyaddr(caddr, 0);
     if (client == NULL)
 	client = inet_ntoa(caddr);
@@ -928,7 +926,7 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 	neighbor = dash;
 
     if (obj->logfile_status == LOG_ENABLE) {
-	if (emulate_httpd_log)
+	if (Config.commonLogFormat)
 	    sprintf(tmp, "%s %s - [%s] \"%s %s\" %s %d\n",
 		client,
 		ident,
@@ -1324,14 +1322,14 @@ void stat_rotate_log()
     debug(18, 1, "stat_rotate_log: Rotating\n");
 
     /* Rotate numbers 0 through N up one */
-    for (i = getLogfileRotateNumber(); i > 1;) {
+    for (i = Config.Log.rotateNumber; i > 1;) {
 	i--;
 	sprintf(from, "%s.%d", fname, i - 1);
 	sprintf(to, "%s.%d", fname, i);
 	rename(from, to);
     }
     /* Rotate the current log to .0 */
-    if (getLogfileRotateNumber() > 0) {
+    if (Config.Log.rotateNumber > 0) {
 	sprintf(to, "%s.%d", fname, 0);
 	rename(fname, to);
     }

@@ -59,7 +59,7 @@ void clientAccessCheck(icpState, handler)
     }
     ch = icpState->aclChecklist;
     icpState->aclHandler = handler;
-    if (httpd_accel_mode && !getAccelWithProxy() && r->protocol != PROTO_CACHEOBJ) {
+    if (httpd_accel_mode && !Config.Accel.withProxy && r->protocol != PROTO_CACHEOBJ) {
 	/* this cache is an httpd accelerator ONLY */
 	if (!BIT_TEST(icpState->flags, REQ_ACCEL))
 	    answer = 0;

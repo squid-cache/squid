@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.46 1996/07/25 05:45:46 wessels Exp $
+ * $Id: comm.cc,v 1.47 1996/07/25 07:10:30 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -235,7 +235,7 @@ int comm_open(io_type, addr, port, note)
     int new_socket;
     FD_ENTRY *conn = NULL;
     int sock_type = io_type & COMM_DGRAM ? SOCK_DGRAM : SOCK_STREAM;
-    int tcp_rcv_bufsz = getTcpRcvBufsz();
+    int tcp_rcv_bufsz = Config.tcpRcvBufsz;
 
     /* Create socket for accepting new connections. */
     if ((new_socket = socket(AF_INET, sock_type, 0)) < 0) {
@@ -413,11 +413,11 @@ int comm_connect_addr(sock, address)
     conn->remote_port = ntohs(address->sin_port);
     /* set the lifetime for this client */
     if (status == COMM_OK) {
-	lft = comm_set_fd_lifetime(sock, getClientLifetime());
+	lft = comm_set_fd_lifetime(sock, Config.lifetimeDefault);
 	debug(5, 10, "comm_connect_addr: FD %d connected to %s:%d, lifetime %d.\n",
 	    sock, conn->ipaddr, conn->remote_port, lft);
     } else if (status == EINPROGRESS) {
-	lft = comm_set_fd_lifetime(sock, getConnectTimeout());
+	lft = comm_set_fd_lifetime(sock, Config.connectTimeout);
 	debug(5, 10, "comm_connect_addr: FD %d connection pending, lifetime %d\n",
 	    sock, lft);
     }
@@ -968,7 +968,7 @@ static void commSetTcpRcvbuf(fd, size)
 {
     if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0)
 	debug(5, 1, "commSetTcpRcvbuf: FD %d, SIZE %d: %s\n",
-	fd, size, xstrerror());
+	    fd, size, xstrerror());
 }
 
 

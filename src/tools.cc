@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.45 1996/07/18 20:27:12 wessels Exp $
+ * $Id: tools.cc,v 1.46 1996/07/25 07:10:44 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -137,10 +137,10 @@ void mail_warranty()
     fp = fopen(filename, "w");
     if (fp != NULL) {
 	fprintf(fp, "From: %s\n", appname);
-	fprintf(fp, "To: %s\n", getAdminEmail());
+	fprintf(fp, "To: %s\n", Config.adminEmail);
 	fprintf(fp, "Subject: %s\n", dead_msg());
 	fclose(fp);
-	sprintf(command, "mail %s < %s", getAdminEmail(), filename);
+	sprintf(command, "mail %s < %s", Config.adminEmail, filename);
 	system(command);	/* XXX should avoid system(3) */
 	unlink(filename);
     }
@@ -148,7 +148,7 @@ void mail_warranty()
 
 void print_warranty()
 {
-    if (getAdminEmail())
+    if (Config.adminEmail)
 	mail_warranty();
     else
 	puts(dead_msg());
@@ -254,10 +254,10 @@ void sigusr2_handle(sig)
     static int state = 0;
     debug(21, 1, "sigusr2_handle: SIGUSR2 received.\n");
     if (state == 0) {
-	_db_init(getCacheLogFile(), "ALL,10");
+	_db_init(Config.Log.log, "ALL,10");
 	state = 1;
     } else {
-	_db_init(getCacheLogFile(), getDebugOptions());
+	_db_init(Config.Log.log, Config.debugOptions);
 	state = 0;
     }
 #if !HAVE_SIGACTION
@@ -268,7 +268,7 @@ void sigusr2_handle(sig)
 void setSocketShutdownLifetimes()
 {
     FD_ENTRY *f = NULL;
-    int lft = getShutdownLifetime();
+    int lft = Config.lifetimeShutdown;
     int cur;
     int i;
     for (i = fdstat_biggest_fd(); i >= 0; i--) {
@@ -287,9 +287,9 @@ void setSocketShutdownLifetimes()
 void normal_shutdown()
 {
     debug(21, 1, "Shutting down...\n");
-    if (getPidFilename()) {
+    if (Config.pidFilename) {
 	enter_suid();
-	safeunlink(getPidFilename(), 0);
+	safeunlink(Config.pidFilename, 0);
 	leave_suid();
     }
     storeWriteCleanLog();
@@ -364,7 +364,7 @@ char *getMyHostname()
     struct hostent *h = NULL;
     char *t = NULL;
 
-    if ((t = getVisibleHostname()))
+    if ((t = Config.visibleHostname))
 	return t;
 
     /* Get the host name and store it in host to return */
@@ -410,11 +410,11 @@ void leave_suid()
     if (geteuid() != 0)
 	return;
     /* Started as a root, check suid option */
-    if (getEffectiveUser() == NULL)
+    if (Config.effectiveUser == NULL)
 	return;
-    if ((pwd = getpwnam(getEffectiveUser())) == NULL)
+    if ((pwd = getpwnam(Config.effectiveUser)) == NULL)
 	return;
-    if (getEffectiveGroup() && (grp = getgrnam(getEffectiveGroup()))) {
+    if (Config.effectiveGroup && (grp = getgrnam(Config.effectiveGroup))) {
 	setgid(grp->gr_gid);
     } else {
 	setgid(pwd->pw_gid);
@@ -463,7 +463,7 @@ void writePidFile()
     FILE *pid_fp = NULL;
     char *f = NULL;
 
-    if ((f = getPidFilename()) == NULL)
+    if ((f = Config.pidFilename) == NULL)
 	return;
     enter_suid();
     pid_fp = fopen(f, "w");
