@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.344 1999/01/20 19:27:10 wessels Exp $
+ * $Id: http.cc,v 1.345 1999/01/21 23:58:45 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -45,6 +45,7 @@ static const char *const crlf = "\r\n";
 static CNCB httpConnectDone;
 static CWCB httpSendComplete;
 static CWCB httpSendRequestEntry;
+static CWCB httpSendRequestEntryDone;
 
 static PF httpReadReply;
 static PF httpSendRequest;
@@ -934,5 +935,43 @@ httpSendRequestEntry(int fd, char *bufnotused, size_t size, int errflag, void *d
 	comm_close(fd);
 	return;
     }
-    pumpStart(fd, httpState->fwd, httpSendComplete, httpState);
+    pumpStart(fd, httpState->fwd, httpSendRequestEntryDone, httpState);
+}
+
+static void
+httpSendRequestEntryDone(int fd, char *bufnotused, size_t size, int errflag, void *data)
+{
+    HttpStateData *httpState = data;
+    StoreEntry *entry = httpState->entry;
+    ErrorState *err;
+    aclCheck_t ch;
+    debug(11, 5) ("httpSendRequestEntryDone: FD %d: size %d: errflag %d.\n",
+	fd, size, errflag);
+    if (size > 0) {
+	fd_bytes(fd, size, FD_WRITE);
+	kb_incr(&Counter.server.all.kbytes_out, size);
+	kb_incr(&Counter.server.http.kbytes_out, size);
+    }
+    if (errflag == COMM_ERR_CLOSING)
+	return;
+    if (errflag) {
+	err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+	err->xerrno = errno;
+	err->request = requestLink(httpState->orig_request);
+	errorAppendEntry(entry, err);
+	comm_close(fd);
+	return;
+    }
+    memset(&ch, '\0', sizeof(ch));
+    ch.request = httpState->request;
+    if (!Config.accessList.brokenPosts) {
+	debug(11, 5) ("httpSendRequestEntryDone: No brokenPosts list\n");
+	httpSendComplete(fd, NULL, 0, 0, data);
+    } else if (!aclCheckFast(Config.accessList.brokenPosts, &ch)) {
+	debug(11, 5) ("httpSendRequestEntryDone: didn't match brokenPosts\n");
+	httpSendComplete(fd, NULL, 0, 0, data);
+    } else {
+	debug(11, 2) ("httpSendRequestEntryDone: matched brokenPosts\n");
+	comm_write(fd, "\r\n", 2, httpSendComplete, data, NULL);
+    }
 }

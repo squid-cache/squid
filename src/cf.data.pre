@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.132 1999/01/21 23:15:36 wessels Exp $
+# $Id: cf.data.pre,v 1.133 1999/01/21 23:58:41 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2691,17 +2691,26 @@ DOC_START
 uri_whitespace deny
 DOC_END
 
-NAME: persistent_client_posts
-TYPE: onoff
-LOC: Config.onoff.persistent_client_posts
-DEFAULT: on
+NAME: broken_posts
+TYPE: acl_access
+DEFAULT: none
+LOC: Config.accessList.brokenPosts
 DOC_START
-	Turn this 'off' to disable persistent connections for POST
-	requests.  When you disable this, Squid reads all bytes
-	from the client request and sends them to the server.  This
-	makes Squid work with broken HTTP servers which expect the
-	additional CRLF pair from broken web clients.
-persistent_client_posts on
+	A list of ACL elements which, if matched, causes Squid to send
+	a extra CRLF pair after the body of a PUT/POST request.
+
+	Some HTTP servers has broken implementations of PUT/POST,
+	and rely on a extra CRLF pair sent by some WWW clients.
+
+	Quote from RFC 2068 section 4.1 on this matter:
+
+	  Note: certain buggy HTTP/1.0 client implementations generate an
+	  extra CRLF's after a POST request. To restate what is explicitly
+	  forbidden by the BNF, an HTTP/1.1 client must not preface or follow
+	  a request with an extra CRLF.
+
+acl buggy_server url_regex ^http://....
+broken_posts allow buggy_server
 DOC_END
 
 NAME: mcast_miss_addr

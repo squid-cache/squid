@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.266 1999/01/21 23:15:41 wessels Exp $
+ * $Id: structs.h,v 1.267 1999/01/21 23:58:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -367,6 +367,7 @@ struct _SquidConfig {
 #if SQUID_SNMP
 	acl_access *snmp;
 #endif
+	acl_access *brokenPosts;
     } accessList;
     acl_deny_info_list *denyInfoList;
     char *proxyAuthRealm;
