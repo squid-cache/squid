@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.42 1997/03/04 05:16:42 wessels Exp $
+ * $Id: ssl.cc,v 1.43 1997/03/29 04:45:20 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -456,7 +456,7 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
 	sslClientClosed,
 	(void *) sslState);
     peerSelect(request,
-	NULL,	
+	NULL,
 	sslPeerSelectComplete,
 	sslPeerSelectFail,
 	sslState);
@@ -484,7 +484,7 @@ sslProxyConnected(int fd, void *data)
 }
 
 static void
-sslPeerSelectComplete (peer * p, void *data)
+sslPeerSelectComplete(peer * p, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
@@ -507,7 +507,7 @@ sslPeerSelectComplete (peer * p, void *data)
 }
 
 static void
-sslPeerSelectFail (peer * p, void *data)
+sslPeerSelectFail(peer * p, void *data)
 {
     SslStateData *sslState = data;
     squid_error_request(sslState->url, ERR_CANNOT_FETCH, 400);

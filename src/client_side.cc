@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.94 1997/03/04 05:16:26 wessels Exp $
+ * $Id: client_side.cc,v 1.95 1997/03/29 04:45:14 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -117,11 +117,11 @@ clientAccessCheck(icpStateData * icpState, PF handler)
     }
 #endif /* USE_PROXY_AUTH */
     if (checkAccelOnly(icpState)) {
-        clientAccessCheckDone(0, icpState);
+	clientAccessCheckDone(0, icpState);
 	return;
     }
     browser = mime_get_header(icpState->request_hdr, "User-Agent"),
-    aclNBCheck(Config.accessList.HTTP,
+	aclNBCheck(Config.accessList.HTTP,
 	icpState->request,
 	icpState->peer.sin_addr,
 	browser,
@@ -133,7 +133,7 @@ clientAccessCheck(icpStateData * icpState, PF handler)
 void
 clientAccessCheckDone(int answer, void *data)
 {
-    icpStateData * icpState = data;
+    icpStateData *icpState = data;
     int fd = icpState->fd;
     char *buf = NULL;
     char *redirectUrl = NULL;

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.129 1997/03/04 05:16:37 wessels Exp $
+ * $Id: neighbors.cc,v 1.130 1997/03/29 04:45:18 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -188,9 +188,9 @@ whichPeer(const struct sockaddr_in *from)
 
 void
 hierarchyNote(request_t * request,
-	hier_code code,
-	icp_ping_data *icpdata,
-	const char *cache_host)
+    hier_code code,
+    icp_ping_data * icpdata,
+    const char *cache_host)
 {
     if (request) {
 	request->hierarchy.code = code;
@@ -446,10 +446,10 @@ neighbors_open(int fd)
 
 int
 neighborsUdpPing(request_t * request,
-	StoreEntry * entry,
-	IRCB callback,
-	void *callback_data,
-	int *exprep)
+    StoreEntry * entry,
+    IRCB callback,
+    void *callback_data,
+    int *exprep)
 {
     char *host = request->host;
     char *url = entry->url;

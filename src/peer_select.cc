@@ -1,5 +1,6 @@
+
 /*
- * $Id: peer_select.cc,v 1.7 1997/03/02 05:35:08 wessels Exp $
+ * $Id: peer_select.cc,v 1.8 1997/03/29 04:45:19 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels

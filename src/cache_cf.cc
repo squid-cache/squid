@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.176 1997/03/04 05:16:24 wessels Exp $
+ * $Id: cache_cf.cc,v 1.177 1997/03/29 04:45:13 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -199,8 +199,6 @@ struct SquidConfig Config;
 #define DefaultAvgObjectSize	20	/* 20k */
 #define DefaultObjectsPerBucket	50
 
-#define DefaultLevelOneDirs	16
-#define DefaultLevelTwoDirs	256
 #define DefaultOptionsLogUdp	1	/* on */
 #define DefaultOptionsEnablePurge 0	/* default off */
 
@@ -855,6 +853,31 @@ parseHttpAnonymizer(int *iptr)
 	*iptr = ANONYMIZER_STANDARD;
 }
 
+static void
+parseCacheDir(void)
+{
+    char *token;
+    char *dir;
+    int i;
+    int size;
+    int l1;
+    int l2;
+    int readonly = 0;
+    if ((token = strtok(NULL, w_space)) == NULL)
+	self_destruct();
+    dir = token;
+    GetInteger(i);
+    size = i;
+    GetInteger(i);
+    l1 = i;
+    GetInteger(i);
+    l2 = i;
+    if ((token = strtok(NULL, w_space)))
+	if (!strcasecmp(token, "read-only"))
+	    readonly = 1;
+    storeAddSwapDisk(dir, size, l1, l2, readonly);
+}
+
 int
 parseConfigFile(const char *file_name)
 {
@@ -913,7 +936,7 @@ parseConfigFile(const char *file_name)
 	    parseIntegerValue(&Config.neighborTimeout);
 
 	else if (!strcmp(token, "cache_dir"))
-	    parseWordlist(&Config.cache_dirs);
+	    parseCacheDir();
 
 	else if (!strcmp(token, "cache_log"))
 	    parsePathname(&Config.Log.log);
@@ -1182,11 +1205,6 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "viz_hack_addr"))
 	    parseVizHackLine();
 
-	else if (!strcmp(token, "swap_level1_dirs"))
-	    parseIntegerValue(&Config.levelOneDirs);
-	else if (!strcmp(token, "swap_level2_dirs"))
-	    parseIntegerValue(&Config.levelTwoDirs);
-
 	else if (!strcmp(token, "netdb_high"))
 	    parseIntegerValue(&Config.Netdb.high);
 	else if (!strcmp(token, "netdb_low"))
@@ -1288,7 +1306,6 @@ configFreeMemory(void)
     safe_free(Config.errHtmlText);
     peerDestroy(Config.sslProxy);
     peerDestroy(Config.passProxy);
-    wordlistDestroy(&Config.cache_dirs);
     wordlistDestroy(&Config.hierarchy_stoplist);
     wordlistDestroy(&Config.mcast_group_list);
     wordlistDestroy(&Config.dns_testname_list);
@@ -1392,8 +1409,6 @@ configSetFactoryDefaults(void)
     Config.Store.maxObjectSize = DefaultMaxObjectSize;
     Config.Store.avgObjectSize = DefaultAvgObjectSize;
     Config.Store.objectsPerBucket = DefaultObjectsPerBucket;
-    Config.levelOneDirs = DefaultLevelOneDirs;
-    Config.levelTwoDirs = DefaultLevelTwoDirs;
     Config.Options.log_udp = DefaultOptionsLogUdp;
     Config.Options.res_defnames = DefaultOptionsResDefnames;
     Config.Options.anonymizer = DefaultOptionsAnonymizer;

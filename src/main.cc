@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.138 1997/03/04 05:16:36 wessels Exp $
+ * $Id: main.cc,v 1.139 1997/03/29 04:45:17 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -111,7 +111,6 @@ int theInIcpConnection = -1;
 int theOutIcpConnection = -1;
 int vizSock = -1;
 int do_reuse = 1;
-int opt_unlink_on_reload = 0;
 int opt_reload_hit_only = 0;	/* only UDP_HIT during store relaod */
 int opt_catch_signals = 1;
 int opt_dns_tests = 1;
@@ -193,7 +192,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFRUVYXa:bf:hik:m:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFRVYXa:bf:hik:m:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -206,9 +205,6 @@ mainParseOptions(int argc, char *argv[])
 	    break;
 	case 'R':
 	    do_reuse = 0;
-	    break;
-	case 'U':
-	    opt_unlink_on_reload = 1;
 	    break;
 	case 'V':
 	    vhost_mode = 1;
@@ -578,8 +574,8 @@ mainInitialize(void)
 	if (Config.effectiveUser) {
 	    /* we were probably started as root, so cd to a swap
 	     * directory in case we dump core */
-	    if (chdir(swappath(0)) < 0) {
-		debug(50, 0, "%s: %s\n", swappath(0), xstrerror());
+	    if (chdir(storeSwapDir(0)) < 0) {
+		debug(50, 0, "%s: %s\n", storeSwapDir(0), xstrerror());
 		fatal_dump("Cannot cd to swap directory?");
 	    }
 	}

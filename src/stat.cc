@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.129 1997/03/04 05:16:43 wessels Exp $
+ * $Id: stat.cc,v 1.130 1997/03/29 04:45:21 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1134,7 +1134,7 @@ log_append(const cacheinfo * obj,
 	    ident,
 	    hier_strings[hier_code],
 	    hier_host,
-	    ns,ne,nr,tt,
+	    ns, ne, nr, tt,
 	    content_type);
 #if LOG_FULL_HEADERS
     if (Config.logMimeHdrs) {

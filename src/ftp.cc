@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.97 1997/03/04 05:16:28 wessels Exp $
+ * $Id: ftp.cc,v 1.98 1997/03/29 04:45:16 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -567,7 +567,7 @@ ftpStartComplete(void *data, int status)
 {
     LOCAL_ARRAY(char, realm, 8192);
     ftp_ctrl_t *ctrlp = data;
-    request_t * request = ctrlp->request;
+    request_t *request = ctrlp->request;
     StoreEntry *entry = ctrlp->entry;
     char *url = entry->url;
     FtpStateData *ftpData = xcalloc(1, sizeof(FtpStateData));
