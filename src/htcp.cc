@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.12 1998/07/22 20:53:56 wessels Exp $
+ * $Id: htcp.cc,v 1.13 1998/08/25 06:20:42 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -103,6 +103,9 @@ struct _htcpStuff {
     const char *uri;
     const char *version;
     const char *req_hdrs;
+    const char *resp_hdrs;
+    const char *entity_hdrs;
+    const char *cache_hdrs;
 };
 
 enum {
@@ -148,14 +151,50 @@ static u_num32 msg_id_counter = 0;
 static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 
-static size_t htcpBuildDetail(char *, size_t, htcpStuff *);
-static void htcpTstReply(StoreEntry *, htcpSpecifier *, peer *);
+static char *htcpBuildPacket(htcpStuff * stuff, ssize_t * len);
+static htcpSpecifier *htcpUnpackSpecifier(char *buf, int sz);
+static int htcpUnpackCountstr(char *buf, int sz, char **str);
+static ssize_t htcpBuildAuth(char *buf, size_t buflen);
+static ssize_t htcpBuildCountstr(char *buf, size_t buflen, const char *s);
+static ssize_t htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff);
+static ssize_t htcpBuildDetail(char *buf, size_t buflen, htcpStuff * stuff);
+static ssize_t htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff);
+static ssize_t htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff);
+static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
+static void htcpFreeSpecifier(htcpSpecifier * s);
+static void htcpHandle(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleData(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleMon(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleNop(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleSet(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleTst(char *buf, int sz, struct sockaddr_in *from);
+static void htcpRecv(int fd, void *data);
+static void htcpSend(const char *buf, int len, struct sockaddr_in *to);
+static void htcpTstReply(StoreEntry *, htcpSpecifier *, struct sockaddr_in *);
+
+static void
+htcpHexdump(const char *tag, const char *s, int sz)
+{
+	int i;
+	int k;
+	char hex[80];
+	debug(31,1)("htcpHexdump %s\n", tag);
+	memset(hex, '\0', 80);
+	for (i=0; i<sz; i++) {
+		k = i % 16;
+		snprintf(&hex[k*3], 4, " %02x", (int) *(s+i));
+		if (k < 15 && i < (sz-1))
+			continue;
+		debug(31,1)("\t%s\n", hex);
+		memset(hex, '\0', 80);
+	}
+}
 
 /*
  * STUFF FOR SENDING HTCP MESSAGES
  */
 
-ssize_t
+static ssize_t
 htcpBuildAuth(char *buf, size_t buflen)
 {
     htcpAuthHeader auth;
@@ -168,26 +207,32 @@ htcpBuildAuth(char *buf, size_t buflen)
     return copy_sz;
 }
 
-ssize_t
+static ssize_t
 htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 {
     u_short length;
-    size_t len = strlen(s);
+    size_t len;
     off_t off = 0;
     if (buflen - off < 2)
 	return -1;
+    if (s)
+        len = strlen(s);
+    else
+	len = 0;
+    debug(31,1)("htcpBuildCountstr: LENGTH = %d\n", len);
+    debug(31,1)("htcpBuildCountstr: TEXT = {%s}\n", s);
     length = htons((u_short) len);
     xmemcpy(buf + off, &length, 2);
     off += 2;
     if (buflen - off < len)
 	return -1;
-    xmemcpy(buf + off, s, len);
+    if (len)
+        xmemcpy(buf + off, s, len);
     off += len;
     return off;
 }
 
-
-ssize_t
+static ssize_t
 htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
@@ -208,16 +253,39 @@ htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
     if (s < 0)
 	return s;
     off += s;
+    debug(31,1)("htcpBuildSpecifier: size %d\n", (int) off);
     return off;
 }
 
-ssize_t
+static ssize_t
+htcpBuildDetail(char *buf, size_t buflen, htcpStuff * stuff)
+{
+    ssize_t off = 0;
+    ssize_t s;
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->resp_hdrs);
+    if (s < 0)
+	return s;
+    off += s;
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->entity_hdrs);
+    if (s < 0)
+	return s;
+    off += s;
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->cache_hdrs);
+    if (s < 0)
+	return s;
+    off += s;
+    return off;
+}
+
+static ssize_t
 htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     switch (stuff->rr) {
     case RR_REQUEST:
+    	debug(31,1)("htcpBuildTstOpData: RR_REQUEST\n");
 	return htcpBuildSpecifier(buf, buflen, stuff);
     case RR_RESPONSE:
+    	debug(31,1)("htcpBuildTstOpData: RR_RESPONSE\n");
 	return htcpBuildDetail(buf, buflen, stuff);
     default:
 	fatal_dump("htcpBuildTstOpData: bad RR value");
@@ -225,10 +293,12 @@ htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
     return 0;
 }
 
-ssize_t
+static ssize_t
 htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
+    debug(31,1)("htcpBuildOpData: opcode %s\n",
+	htcpOpcodeStr[stuff->op]);
     switch (stuff->op) {
     case HTCP_TST:
 	off = htcpBuildTstOpData(buf + off, buflen, stuff);
@@ -240,7 +310,7 @@ htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff)
     return off;
 }
 
-ssize_t
+static ssize_t
 htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
@@ -254,6 +324,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     if (op_data_sz < 0)
 	return op_data_sz;
     off += op_data_sz;
+    debug(31,1)("htcpBuildData: hdr.length = %d\n", (int) off);
     hdr.length = (u_short) off;
     hdr.opcode = stuff->op;
     hdr.response = stuff->response;
@@ -264,10 +335,11 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     hdr.length = htons(hdr.length);
     hdr.msg_id = htonl(hdr.msg_id);
     xmemcpy(buf, &hdr, hdr_sz);
+    debug(31,1)("htcpBuildData: size %d\n", (int) off);
     return off;
 }
 
-char *
+static char *
 htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
 {
     size_t buflen = 8192;
@@ -293,54 +365,24 @@ htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
     hdr.minor = 0;
     xmemcpy(buf, &hdr, hdr_sz);
     *len = off;
+    debug(31,1)("htcpBuildPacket: size %d\n", (int) off);
     return buf;
 }
 
-void
-htcpSend(const char *buf, int len, peer * p)
+static void
+htcpSend(const char *buf, int len, struct sockaddr_in *to)
 {
     int x;
+    debug(31,1)("htcpSend: %s/%d\n",
+	inet_ntoa(to->sin_addr), (int) ntohs(to->sin_port));
+    htcpHexdump("htcpSend", buf, len);
     x = comm_udp_sendto(htcpOutSocket,
-	&p->in_addr,
+	to,
 	sizeof(struct sockaddr_in),
 	buf,
 	len);
     if (x < 0)
 	debug(31, 0) ("htcpSend: FD %d sendto: %s\n", htcpOutSocket, xstrerror());
-}
-
-void
-htcpQuery(StoreEntry * e, request_t * req, peer * p)
-{
-    char *pkt;
-    ssize_t pktlen;
-    char vbuf[32];
-    htcpStuff stuff;
-    HttpHeader hdr;
-    Packer pa;
-    MemBuf mb;
-    snprintf(vbuf, sizeof(vbuf), "%3.1f", req->http_ver);
-    stuff.op = HTCP_TST;
-    stuff.rr = RR_REQUEST;
-    stuff.f1 = 1;
-    stuff.response = 0;
-    stuff.method = RequestMethodStr[req->method];
-    stuff.uri = storeUrl(e);
-    stuff.version = vbuf;
-    httpBuildRequestHeader(req, req, e, &hdr, -1, 0);
-    memBufDefInit(&mb);
-    packerToMemInit(&pa, &mb);
-    httpHeaderPackInto(&hdr, &pa);
-    httpHeaderClean(&hdr);
-    packerClean(&pa);
-    stuff.req_hdrs = mb.buf;
-    pkt = htcpBuildPacket(&stuff, &pktlen);
-    if (pkt == NULL) {
-	debug(31, 0) ("htcpQuery: htcpBuildPacket() failed\n");
-	return;
-    }
-    htcpSend(pkt, (int) pktlen, p);
-    xfree(pkt);
 }
 
 /*
@@ -357,7 +399,7 @@ htcpFreeSpecifier(htcpSpecifier * s)
     xfree(s);
 }
 
-int
+static int
 htcpUnpackCountstr(char *buf, int sz, char **str)
 {
     u_short l;
@@ -366,8 +408,9 @@ htcpUnpackCountstr(char *buf, int sz, char **str)
 	debug(31, 1) ("htcpUnpackCountstr: sz < 2\n");
 	return -1;
     }
+    htcpHexdump("htcpUnpackCountstr", buf, sz);
     xmemcpy(&l, buf, 2);
-    l = ntohl(l);
+    l = ntohs(l);
     buf += 2;
     sz -= 2;
     debug(31, 1) ("htcpUnpackCountstr: LENGTH = %d\n", (int) l);
@@ -378,18 +421,17 @@ htcpUnpackCountstr(char *buf, int sz, char **str)
     if (str) {
 	*str = xmalloc(l + 1);
 	xstrncpy(*str, buf, l + 1);
-	debug(31, 1) ("htcpUnpackCountstr: TEXT = %s\n", *str);
+	debug(31, 1) ("htcpUnpackCountstr: TEXT = {%s}\n", *str);
     }
     return (int) l + 2;
 }
 
-
-htcpSpecifier *
+static htcpSpecifier *
 htcpUnpackSpecifier(char *buf, int sz)
 {
     htcpSpecifier *s = xcalloc(1, sizeof(htcpSpecifier));
     int o;
-
+    debug(31, 1) ("htcpUnpackSpecifier: %d bytes\n", (int) sz);
     o = htcpUnpackCountstr(buf, sz, &s->method);
     if (o < 0) {
 	debug(31, 1) ("htcpUnpackSpecifier: failed to unpack METHOD\n");
@@ -426,23 +468,32 @@ htcpUnpackSpecifier(char *buf, int sz)
     buf += o;
     sz -= o;
 
+    debug(31,1)("htcpUnpackSpecifier: %d bytes left\n", sz);
     return s;
 }
 
 static void
-htcpHandleNop(char *buf, int sz, peer * p)
+htcpHandleNop(char *buf, int sz, struct sockaddr_in *from)
 {
     debug(31, 1) ("htcpHandleNop: Unimplemented\n");
 }
 
 static void
-htcpHandleTst(char *buf, int sz, peer * p)
+htcpHandleTst(char *buf, int sz, struct sockaddr_in *from)
 {
     /* buf should be a SPECIFIER */
     htcpSpecifier *s = htcpUnpackSpecifier(buf, sz);
     StoreEntry *e;
     const cache_key *key;
     method_t m;
+    debug(31, 1) ("htcpHandleTst: sz = %d\n", (int) sz);
+#if WIP
+    if (NULL == p) {
+	debug(31, 1) ("htcpHandle: HTCP message from non-peer: %s:%d\n",
+	    inet_ntoa(from->sin_addr), (int) ntohs(from->sin_port));
+	return;
+    }
+#endif
     if (NULL == s) {
 	debug(31, 1) ("htcpHandleTst: htcpUnpackSpecifier failed\n");
 	return;
@@ -457,24 +508,28 @@ htcpHandleTst(char *buf, int sz, peer * p)
     e = storeGet(key);
     if (NULL == e) {
 	/* cache miss */
-	htcpTstReply(NULL, NULL, p);
+	htcpTstReply(NULL, NULL, from);
 #if WIP
     } else if (!checkHeaders()) {
 	/* refresh/other miss */
-	htcpTstReply(NULL, NULL, p);
+	htcpTstReply(NULL, NULL, from);
 #endif
     } else {
 	/* hit */
-	htcpTstReply(e, s, p);
+	assert(e);
+	assert(s);
+	assert(from);
+	htcpTstReply(e, s, from);
     }
 }
 
 static void
-htcpTstReply(StoreEntry * e, htcpSpecifier * spec, peer * p)
+htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 {
     htcpStuff stuff;
     char *pkt;
     ssize_t pktlen;
+    assert(spec);
     stuff.op = HTCP_TST;
     stuff.rr = RR_RESPONSE;
     stuff.f1 = e ? 0 : 1;
@@ -482,29 +537,32 @@ htcpTstReply(StoreEntry * e, htcpSpecifier * spec, peer * p)
     stuff.uri = spec->uri;
     stuff.version = spec->version;
     stuff.req_hdrs = spec->req_hdrs;
+    stuff.resp_hdrs = NULL;
+    stuff.entity_hdrs = NULL;
+    stuff.cache_hdrs = NULL;
     pkt = htcpBuildPacket(&stuff, &pktlen);
     if (pkt == NULL) {
 	debug(31, 0) ("htcpTstReply: htcpBuildPacket() failed\n");
 	return;
     }
-    htcpSend(pkt, (int) pktlen, p);
+    htcpSend(pkt, (int) pktlen, from);
     xfree(pkt);
 }
 
 static void
-htcpHandleMon(char *buf, int sz, peer * p)
+htcpHandleMon(char *buf, int sz, struct sockaddr_in *from)
 {
     debug(31, 1) ("htcpHandleMon: Unimplemented\n");
 }
 
 static void
-htcpHandleSet(char *buf, int sz, peer * p)
+htcpHandleSet(char *buf, int sz, struct sockaddr_in *from)
 {
     debug(31, 1) ("htcpHandleSet: Unimplemented\n");
 }
 
 static void
-htcpHandleData(char *buf, int sz, peer * p)
+htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpDataHeader hdr;
     if (sz < sizeof(htcpDataHeader)) {
@@ -514,6 +572,7 @@ htcpHandleData(char *buf, int sz, peer * p)
     xmemcpy(&hdr, buf, sizeof(htcpDataHeader));
     hdr.length = ntohs(hdr.length);
     hdr.msg_id = ntohs(hdr.msg_id);
+    debug(31, 1) ("htcpHandleData: sz = %d\n", sz);
     debug(31, 1) ("htcpHandleData: length = %d\n", (int) hdr.length);
     if (hdr.opcode < HTCP_NOP || hdr.opcode > HTCP_END) {
 	debug(31, 0) ("htcpHandleData: opcode %d out of range\n",
@@ -532,18 +591,20 @@ htcpHandleData(char *buf, int sz, peer * p)
     }
     buf += sizeof(htcpDataHeader);
     sz -= sizeof(htcpDataHeader);
+    debug(31, 1) ("htcpHandleData: sz = %d\n", sz);
+    htcpHexdump("htcpHandleData", buf, sz);
     switch (hdr.opcode) {
     case HTCP_NOP:
-	htcpHandleNop(buf, sz, p);
+	htcpHandleNop(buf, sz, from);
 	break;
     case HTCP_TST:
-	htcpHandleTst(buf, sz, p);
+	htcpHandleTst(buf, sz, from);
 	break;
     case HTCP_MON:
-	htcpHandleMon(buf, sz, p);
+	htcpHandleMon(buf, sz, from);
 	break;
     case HTCP_SET:
-	htcpHandleSet(buf, sz, p);
+	htcpHandleSet(buf, sz, from);
 	break;
     default:
 	assert(0);
@@ -555,17 +616,11 @@ static void
 htcpHandle(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpHeader htcpHdr;
-    peer *p;
-    p = whichPeer(from);
-    if (NULL == p) {
-	debug(31, 1) ("htcpHandle: HTCP message from non-peer: %s:%d\n",
-	    inet_ntoa(from->sin_addr), (int) ntohs(from->sin_port));
-	return;
-    }
     if (sz < sizeof(htcpHeader)) {
 	debug(31, 0) ("htcpHandle: msg size less than htcpHeader size\n");
 	return;
     }
+    htcpHexdump("htcpHandle", buf, sz);
     xmemcpy(&htcpHdr, buf, sizeof(htcpHeader));
     htcpHdr.length = ntohs(htcpHdr.length);
     debug(31, 1) ("htcpHandle: htcpHdr.length = %d\n", (int) htcpHdr.length);
@@ -577,10 +632,10 @@ htcpHandle(char *buf, int sz, struct sockaddr_in *from)
     }
     buf += sizeof(htcpHeader);
     sz -= sizeof(htcpHeader);
-    htcpHandleData(buf, sz, p);
+    htcpHandleData(buf, sz, from);
 }
 
-void
+static void
 htcpRecv(int fd, void *data)
 {
     static char buf[8192];
@@ -594,6 +649,12 @@ htcpRecv(int fd, void *data)
     htcpHandle(buf, len, &from);
     commSetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 }
+
+/*
+ * ======================================================================
+ * PUBLIC FUNCTIONS
+ * ======================================================================
+ */
 
 void
 htcpInit(void)
@@ -629,6 +690,40 @@ htcpInit(void)
     } else {
 	htcpOutSocket = htcpInSocket;
     }
+}
+
+void
+htcpQuery(StoreEntry * e, request_t * req, peer * p)
+{
+    char *pkt;
+    ssize_t pktlen;
+    char vbuf[32];
+    htcpStuff stuff;
+    HttpHeader hdr;
+    Packer pa;
+    MemBuf mb;
+    snprintf(vbuf, sizeof(vbuf), "%3.1f", req->http_ver);
+    stuff.op = HTCP_TST;
+    stuff.rr = RR_REQUEST;
+    stuff.f1 = 1;
+    stuff.response = 0;
+    stuff.method = RequestMethodStr[req->method];
+    stuff.uri = storeUrl(e);
+    stuff.version = vbuf;
+    httpBuildRequestHeader(req, req, e, &hdr, -1, 0);
+    memBufDefInit(&mb);
+    packerToMemInit(&pa, &mb);
+    httpHeaderPackInto(&hdr, &pa);
+    httpHeaderClean(&hdr);
+    packerClean(&pa);
+    stuff.req_hdrs = mb.buf;
+    pkt = htcpBuildPacket(&stuff, &pktlen);
+    if (pkt == NULL) {
+	debug(31, 0) ("htcpQuery: htcpBuildPacket() failed\n");
+	return;
+    }
+    htcpSend(pkt, (int) pktlen, &p->in_addr);
+    xfree(pkt);
 }
 
 /*  
