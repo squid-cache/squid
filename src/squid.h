@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.155 1998/02/04 23:36:06 wessels Exp $
+ * $Id: squid.h,v 1.156 1998/02/05 20:53:38 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -344,5 +344,13 @@ struct rusage {
 
 #define XMIN(x,y) ((x)<(y)? (x) : (y))
 #define XMAX(a,b) ((a)>(b)? (a) : (b))
+
+/*
+ * Squid source files should not call these functions directly
+ */
+#define malloc +
+#define free +
+#define calloc +
+#define sprintf +
 
 #endif /* SQUID_H */
