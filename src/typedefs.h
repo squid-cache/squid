@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.100 2000/03/06 16:23:36 wessels Exp $
+ * $Id: typedefs.h,v 1.101 2000/03/14 23:07:51 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -168,6 +168,7 @@ typedef struct _helper_request helper_request;
 typedef struct _generic_cbdata generic_cbdata;
 typedef struct _storeIOState storeIOState;
 typedef struct _link_list link_list;
+typedef struct _Logfile Logfile;
 
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);

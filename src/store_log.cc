@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.10 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store_log.cc,v 1.11 2000/03/14 23:07:51 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -43,15 +43,14 @@ static char *storeLogTags[] =
     "RELEASE"
 };
 
-static int storelog_fd = -1;
+static Logfile *storelog = NULL;
 
 void
 storeLog(int tag, const StoreEntry * e)
 {
-    MemBuf mb;
     MemObject *mem = e->mem_obj;
     HttpReply *reply;
-    if (storelog_fd < 0)
+    if (NULL == storelog)
 	return;
     if (mem == NULL)
 	return;
@@ -62,9 +61,8 @@ storeLog(int tag, const StoreEntry * e)
 	storeMemObjectDump(mem);
 	mem->log_url = xstrdup(mem->url);
     }
-    memBufDefInit(&mb);
     reply = mem->reply;
-    memBufPrintf(&mb, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
+    logfilePrintf(storelog, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
@@ -78,69 +76,31 @@ storeLog(int tag, const StoreEntry * e)
 	(int) (mem->inmem_hi - mem->reply->hdr_sz),
 	RequestMethodStr[mem->method],
 	mem->log_url);
-    file_write_mbuf(storelog_fd, -1, mb, NULL, NULL);
 }
 
 void
 storeLogRotate(void)
 {
-    char *fname = NULL;
-    int i;
-    LOCAL_ARRAY(char, from, MAXPATHLEN);
-    LOCAL_ARRAY(char, to, MAXPATHLEN);
-#ifdef S_ISREG
-    struct stat sb;
-#endif
-
-    if (storelog_fd > -1) {
-	file_close(storelog_fd);
-	storelog_fd = -1;
-    }
-    if ((fname = Config.Log.store) == NULL)
+    if (NULL == storelog)
 	return;
-    if (strcmp(fname, "none") == 0)
-	return;
-#ifdef S_ISREG
-    if (stat(fname, &sb) == 0)
-	if (S_ISREG(sb.st_mode) == 0)
-	    return;
-#endif
-
-    debug(20, 1) ("storeLogRotate: Rotating.\n");
-
-    /* Rotate numbers 0 through N up one */
-    for (i = Config.Log.rotateNumber; i > 1;) {
-	i--;
-	snprintf(from, MAXPATHLEN, "%s.%d", fname, i - 1);
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, i);
-	xrename(from, to);
-    }
-    /* Rotate the current log to .0 */
-    if (Config.Log.rotateNumber > 0) {
-	snprintf(to, MAXPATHLEN, "%s.%d", fname, 0);
-	xrename(fname, to);
-    }
-    storelog_fd = file_open(fname, O_WRONLY | O_CREAT);
-    if (storelog_fd < 0) {
-	debug(50, 0) ("storeLogRotate: %s: %s\n", fname, xstrerror());
-	debug(20, 1) ("Store logging disabled\n");
-    }
+    logfileRotate(storelog);
 }
 
 void
 storeLogClose(void)
 {
-    if (storelog_fd >= 0)
-	file_close(storelog_fd);
+    if (NULL == storelog)
+	return;
+    logfileClose(storelog);
+    storelog = NULL;
 }
 
 void
 storeLogOpen(void)
 {
-    if (strcmp(Config.Log.store, "none") == 0)
-	storelog_fd = -1;
-    else
-	storelog_fd = file_open(Config.Log.store, O_WRONLY | O_CREAT);
-    if (storelog_fd < 0)
+    if (strcmp(Config.Log.store, "none") == 0) {
 	debug(20, 1) ("Store logging disabled\n");
+	return;
+    }
+    logfileOpen(Config.Log.store, 0);
 }
