@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.24 1996/04/16 05:05:24 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.25 1996/04/16 20:30:45 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -1363,7 +1363,7 @@ void ipcacheShutdownServers()
     int i;
     static char *shutdown = "$shutdown\n";
 
-    debug(14, 1, "ipcacheShutdownServers:\n");
+    debug(14, 3, "ipcacheShutdownServers:\n");
 
     for (i = 0; i < getDnsChildren(); i++) {
 	dns = *(dns_child_table + i);
