@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.88 1996/11/25 02:36:46 wessels Exp $
+ * $Id: tools.cc,v 1.89 1996/11/28 07:31:05 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -184,10 +184,6 @@ dumpMallocStats(FILE * f)
     t = mp.fsmblks + mp.fordblks;
     fprintf(f, "\tTotal free:            %6d KB %d%%\n",
 	t >> 10, percent(t, mp.arena));
-#ifdef WE_DONT_USE_KEEP
-    fprintf(f, "\tKeep option:           %6d KB\n",
-	mp.keepcost >> 10);
-#endif
 #if HAVE_EXT_MALLINFO
     fprintf(f, "\tmax size of small blocks:\t%d\n",
 	mp.mxfast);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.169 1996/11/22 05:06:00 wessels Exp $
+ * $Id: store.cc,v 1.170 1996/11/28 07:31:04 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1419,24 +1419,12 @@ storeDoRebuildFromDisk(void *data)
 		    safeunlink(swapfile, 1);
 		continue;
 	    }
-#ifdef DONT_DO_THIS
-	    /* timestamp might be a little bigger than sb.st_mtime */
-	    delta = (int) (timestamp - sb.st_mtime);
-	    if (delta > REBUILD_TIMESTAMP_DELTA_MAX || delta < 0) {
-		/* this log entry doesn't correspond to this file */
-		rebuildData->clashcount++;
-		continue;
-	    }
-#endif
 	    /* Wrong size? */
 	    if (sb.st_size != size) {
 		/* this log entry doesn't correspond to this file */
 		rebuildData->clashcount++;
 		continue;
 	    }
-#ifdef DONT_DO_THIS
-	    timestamp = sb.st_mtime;
-#endif
 	    debug(20, 9, "storeRebuildFromDisk: swap file exists: '%s': %s\n",
 		url, swapfile);
 	}

@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.46 1996/11/24 04:19:10 wessels Exp $
+ * $Id: disk.cc,v 1.47 1996/11/28 07:30:59 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -185,10 +185,6 @@ file_open(const char *path, int (*handler) _PARAMS((void)), int mode)
 
     conn = &fd_table[fd];
     memset(conn, '\0', sizeof(FD_ENTRY));
-#ifdef DONT_DO_THIS
-    if (commSetNonBlocking(fd) != COMM_ERROR)
-	conn->comm_type = COMM_NONBLOCKING;
-#endif
     return fd;
 }
 
