@@ -31,6 +31,20 @@
 	- Fixed incorrectly applying htonl() on icp_common_t->shostid.
 	- Call setsid() before exec() in ipc.c so that child processes
 	  don't receive SIGINT (etc) when running squid on a tty.
+	- Changed StoreEntry->object_len to ->swap_file_sz so we
+	  can verify the disk file size at restart.  Moved object_len
+	  to MemObject->object_sz.  Note object_sz is initialized
+	  to -1.  If object_sz < 0, then we need to open the swap
+	  file and read the swap metadata.
+	- Changed store_client->mem to ->entry because we need
+	  e->swap_file_sz to set mem->object_sz at swapin.
+	- Removed some superfluous checks for e->key != NULL in 
+	  storeSet*Key().
+	- Renamed storeSwapData structure to storeSwapLogData.
+	- Fixed storeGetNextFile to not increment d->dirn.  Added
+	  check for opendir() failure.
+	- Fixed storeRebuildStart to properly link the directory
+	  list for storeRebuildfromDirectory mode.
 
 Changes to squid-1.2.beta14 (Feb 6, 1998):
 
