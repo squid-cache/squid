@@ -58,6 +58,23 @@ Changes to Squid-2.2 ():
 	- Fixed pconnPush() bug that prevented holding on to
 	  persistent connections (Manfred Bathelt).
 	- Pid file now rewritten on SIGHUP.
+	- Numerous Ident changes:
+		- Ident lookups will now be done on demand if you use the
+		  'ident' ACL type.
+		- The 'ident_lookup on|off' option has been replaced with
+		  an access list, so you can do lookups only for some
+		  client addresses.
+		- Added an 'ident_timeout' option to specifiy the amount
+		  of time to wait for an ident lookup.
+	- Added a (local) hit rate to mempool metering.
+	- FTP Restarts (REST command) is now supported.
+	- Check for libintl.a on SCO3.2.
+	- Disable poll() on SCO3.2.
+	- Numerous Async IO enhancements from Henrik.
+	- Removed cache_mem_low and cache_mem_high options (Henrik
+	  Nordstrom).
+	- Replaced 'persistent_client_posts' with 'broken_posts' access
+	  list.
 	- Rewrote the anonymizer.
 	- Removed the http_anonymizer option.
 	- Added the http_header option to allow individual referencing of
@@ -162,6 +179,18 @@ Changes to Squid-2.1 (November 16, 1998):
 	  Martin Lathoud).
 	- Fixed reading replies from buggy ident servers.  Replies
 	  might not have terminating CR or LF (Henrik Nordstrom).
+	- Changed internal StoreEntry key so that the request method
+	  is encoded as a single octet.  Encoding an enumerated type
+	  has size and byte-order incompatibilities, especially for
+	  cache digests.
+	- Fixed storeEntryLocked so that SPECIAL, but PRIVATE entries
+	  are not always locked.  This fixes having multiple
+	  store_digest's stuck in memory.
+	- Fixed clientProcessOnlyIfCachedMiss so it unlocks and
+	  unregisters from "cache hit" entries.
+	* Changes below have been made to SQUID_2_1_PATCH3
+	- Fixed memory leak in clientHandleIMSReply for
+	  storeClientCopy failures.
 
 Changes to Squid-2.0 (October 2, 1998):
 
