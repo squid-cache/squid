@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.3 2003/04/22 07:38:30 robertc Exp $
+ * $Id: comm_epoll.cc,v 1.4 2003/08/03 21:38:15 robertc Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -56,7 +56,6 @@
 #include "Store.h"
 #include "fde.h"
 
-#if USE_EPOLL
 #define DEBUG_EPOLL 0
 
 #include <sys/epoll.h>
@@ -274,4 +273,3 @@ comm_quick_poll_required(void)
     max_poll_time = 100;
 }
 
-#endif /* USE_EPOLL */
