@@ -1,4 +1,4 @@
-Changes to squid-1.1.beta4 ():
+Changes to squid-1.1.beta4 (September 24, 1996):
 
 	- Fixed coredump in icpStateFree() when calling
 	  checkFailureRatio().
