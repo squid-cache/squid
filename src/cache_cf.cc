@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.21 1996/04/08 16:01:05 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.22 1996/04/08 17:07:59 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -194,7 +194,6 @@ ip_access_type ip_access_check(address, list)
 	localhost.s_addr = inet_addr("127.0.0.1");
 	init = 1;
     }
-
     naddr.s_addr = address.s_addr;
     if (naddr.s_addr == localhost.s_addr)
 	return IP_ALLOW;

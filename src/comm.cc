@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.16 1996/04/05 17:48:27 wessels Exp $ */
+/* $Id: comm.cc,v 1.17 1996/04/08 17:08:00 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -21,8 +21,10 @@ FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int *fd_lifetime = NULL;
+#ifdef UNUSED_CODE
 static fd_set send_sockets;
 static fd_set receive_sockets;
+#endif
 static int (*app_handler) ();
 static void checkTimeouts();
 static void checkLifetimes();
@@ -30,16 +32,6 @@ static void Reserve_More_FDs _PARAMS((void));
 static int commSetReuseAddr _PARAMS((int));
 static int examine_select _PARAMS((fd_set *, fd_set *, fd_set *));
 static int commSetNoLinger _PARAMS((int));
-
-/* EXTERN */
-extern int errno;
-extern int do_reuse;
-extern int getMaxFD();
-extern int theAsciiConnection;
-extern int theUdpConnection;
-extern int getConnectTimeout();
-
-extern int fd_of_first_client _PARAMS((StoreEntry *));
 
 void comm_handler()
 {
@@ -196,7 +188,9 @@ int comm_listen(sock)
      int sock;
 {
     int x;
+#ifdef UNUSED_CODE
     FD_SET(sock, &receive_sockets);
+#endif
     if ((x = listen(sock, 50)) < 0) {
 	debug(5, 0, "comm_listen: listen(%d, 50): %s\n",
 	    sock, xstrerror());
@@ -307,7 +301,9 @@ int comm_connect_addr(sock, address)
 	    sock, lft);
     }
     /* Add new socket to list of open sockets. */
+#ifdef UNUSED_CODE
     FD_SET(sock, &send_sockets);
+#endif
     conn->sender = 1;
     return status;
 }
@@ -364,7 +360,9 @@ int comm_accept(fd, peer, me)
     conn->comm_type = listener->comm_type;
     strcpy(conn->ipaddr, inet_ntoa(P.sin_addr));
 
+#ifdef UNUSED_CODE
     FD_SET(sock, &receive_sockets);
+#endif
     commSetNonBlocking(sock);
 
     return sock;
@@ -384,8 +382,10 @@ int comm_close(fd)
     }
     conn = &fd_table[fd];
 
+#ifdef UNUSED_SOCKETS
     FD_CLR(fd, &receive_sockets);
     FD_CLR(fd, &send_sockets);
+#endif
 
     comm_set_fd_lifetime(fd, -1);	/* invalidate the lifetime */
     debug(5, 10, "comm_close: FD %d\n", fd);
@@ -502,6 +502,11 @@ int comm_select(sec, usec, failtime)
     struct timeval poll_time;
     struct timeval zero_tv;
     int sel_fd_width;
+    int nfds;
+
+    fd_set read_mask, write_mask;
+    int (*tmp) () = NULL;
+    int maxfd;
 
     /* assume all process are very fast (less than 1 second). Call
      * time() only once */
@@ -519,26 +524,40 @@ int comm_select(sec, usec, failtime)
 	FD_ZERO(&writefds);
 	FD_ZERO(&exceptfds);
 
-	for (i = 0; i < fdstat_biggest_fd() + 1; i++) {
+	nfds = 0;
+	maxfd = fdstat_biggest_fd() + 1;
+	for (i = 0; i < maxfd; i++) {
 	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler && fd_table[i].stall_until <= cached_curtime)
+	    if (fd_table[i].read_handler && fd_table[i].stall_until <= cached_curtime) {
+		nfds++;
 		FD_SET(i, &readfds);
-	    if (fd_table[i].write_handler)
+	    }
+	    if (fd_table[i].write_handler) {
+		nfds++;
 		FD_SET(i, &writefds);
-	    if (fd_table[i].except_handler)
+	    }
+	    if (fd_table[i].except_handler) {
+		nfds++;
 		FD_SET(i, &exceptfds);
+	    }
 	}
 	if (!fdstat_are_n_free_fd(RESERVED_FD)) {
 	    FD_CLR(theAsciiConnection, &readfds);
 	}
+	debug(5, 1, "comm_select: nfds = %d\n", nfds);
+	if (nfds == 0)
+	    return COMM_SHUTDOWN;
 	while (1) {
 	    poll_time.tv_sec = 1;
 	    poll_time.tv_usec = 0;
 	    num = select(fdstat_biggest_fd() + 1,
 		&readfds, &writefds, &exceptfds, &poll_time);
+	    debug(0, 0, "num=%d errno=%d\n", num, errno);
 	    if (num >= 0)
 		break;
 
+	    if (errno == EINTR)
+		break;
 	    if (errno != EINTR) {
 		debug(5, 0, "comm_select: select failure: %s (errno %d).\n",
 		    xstrerror(), errno);
@@ -547,6 +566,8 @@ int comm_select(sec, usec, failtime)
 	    }
 	    /* if select interrupted, try again */
 	}
+	if (num < 0)
+	    continue;
 
 	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
 	    num, cached_curtime);
@@ -563,7 +584,8 @@ int comm_select(sec, usec, failtime)
 	 * limit in SunOS */
 
 	if (num) {
-	    for (fd = 0; (fd < (fdstat_biggest_fd() + 1)) && (num > 0); fd++) {
+	    maxfd = fdstat_biggest_fd() + 1;
+	    for (fd = 0; fd < maxfd && num > 0; fd++) {
 
 		if (!(FD_ISSET(fd, &readfds) || FD_ISSET(fd, &writefds) ||
 			FD_ISSET(fd, &exceptfds)))
@@ -576,16 +598,17 @@ int comm_select(sec, usec, failtime)
 		 * Don't forget to keep the UDP acks coming and going.
 		 */
 		{
-		    fd_set read_mask, write_mask;
-		    int (*tmp) () = NULL;
 
 		    FD_ZERO(&read_mask);
 		    FD_ZERO(&write_mask);
 
-		    if ((fdstat_are_n_free_fd(RESERVED_FD)) && (fd_table[theAsciiConnection].read_handler))
+		    if (theAsciiConnection >= 0) {
+		    if ((fdstat_are_n_free_fd(RESERVED_FD))
+			&& (fd_table[theAsciiConnection].read_handler))
 			FD_SET(theAsciiConnection, &read_mask);
 		    else
 			FD_CLR(theAsciiConnection, &read_mask);
+		    }
 		    if (theUdpConnection >= 0) {
 			if (fd_table[theUdpConnection].read_handler)
 			    FD_SET(theUdpConnection, &read_mask);
@@ -613,13 +636,14 @@ int comm_select(sec, usec, failtime)
 			}
 		    }
 		}
+
 		if ((fd == theUdpConnection) || (fd == theAsciiConnection))
 		    continue;
 
 		if (FD_ISSET(fd, &readfds)) {
 		    debug(5, 6, "comm_select: FD %d ready for reading\n", fd);
 		    if (fd_table[fd].read_handler) {
-			int (*tmp) () = fd_table[fd].read_handler;
+			tmp = fd_table[fd].read_handler;
 			fd_table[fd].read_handler = 0;
 			debug(5, 10, "calling read handler %p(%d,%p)\n",
 			    tmp, fd, fd_table[fd].read_data);
@@ -629,7 +653,7 @@ int comm_select(sec, usec, failtime)
 		if (FD_ISSET(fd, &writefds)) {
 		    debug(5, 5, "comm_select: FD %d ready for writing\n", fd);
 		    if (fd_table[fd].write_handler) {
-			int (*tmp) () = fd_table[fd].write_handler;
+			tmp = fd_table[fd].write_handler;
 			fd_table[fd].write_handler = 0;
 			debug(5, 10, "calling write handler %p(%d,%p)\n",
 			    tmp, fd, fd_table[fd].write_data);
@@ -639,7 +663,7 @@ int comm_select(sec, usec, failtime)
 		if (FD_ISSET(fd, &exceptfds)) {
 		    debug(5, 5, "comm_select: FD %d has an exception\n", fd);
 		    if (fd_table[fd].except_handler) {
-			int (*tmp) () = fd_table[fd].except_handler;
+			tmp = fd_table[fd].except_handler;
 			fd_table[fd].except_handler = 0;
 			debug(5, 10, "calling except handler %p(%d,%p)\n",
 			    tmp, fd, fd_table[fd].except_data);
@@ -943,15 +967,20 @@ char *fd_note(fd, s)
 static void checkTimeouts()
 {
     int fd;
+    int (*tmp) () = NULL;
+    FD_ENTRY *f = NULL;
+    int maxfd = fdstat_biggest_fd() + 1;
+
     /* scan for timeout */
-    for (fd = 0; fd < (fdstat_biggest_fd() + 1); ++fd) {
-	if ((fd_table[fd].timeout_handler) &&
-	    (fd_table[fd].timeout_time <= cached_curtime)) {
-	    int (*tmp) () = fd_table[fd].timeout_handler;
+    for (fd = 0; fd < maxfd; ++fd) {
+	f = &fd_table[fd];
+	if ((f->timeout_handler) &&
+	    (f->timeout_time <= cached_curtime)) {
+	    tmp = f->timeout_handler;
 	    debug(5, 5, "comm_select: timeout on socket %d at %d\n",
 		fd, cached_curtime);
-	    fd_table[fd].timeout_handler = 0;
-	    tmp(fd, fd_table[fd].timeout_data);
+	    f->timeout_handler = 0;
+	    tmp(fd, f->timeout_data);
 	}
     }
 }

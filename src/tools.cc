@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.23 1996/04/04 19:03:36 wessels Exp $ */
+/* $Id: tools.cc,v 1.24 1996/04/08 17:08:04 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -148,6 +148,19 @@ void rotate_logs(sig)
 #endif
 }
 
+void normal_shutdown()
+{
+    debug(21, 1, "Shutting down...\n");
+    if (getPidFilename())
+	safeunlink(getPidFilename(), 0);
+    storeWriteCleanLog();
+    PrintRusage(NULL, debug_log);
+    debug(21, 0, "Harvest Cache (Version %s): Exiting normally.\n",
+	SQUID_VERSION);
+    exit(0);
+}
+
+#ifdef OLD_SHUTDOWN
 void shut_down(sig)
      int sig;
 {
@@ -160,6 +173,34 @@ void shut_down(sig)
 	SQUID_VERSION, sig);
     exit(1);
 }
+#else
+void shut_down(sig)
+     int sig;
+{
+    debug(21, 1, "Preparing for shutdown...\n");
+    if (theAsciiConnection) {
+	debug(21, 1, "FD %d Closing Ascii connection\n",
+	    theAsciiConnection);
+	comm_close(theAsciiConnection);
+	comm_set_select_handler(theAsciiConnection,
+	    COMM_SELECT_READ,
+	    NULL,
+	    0);
+	theAsciiConnection = -1;
+    }
+    if (theUdpConnection) {
+	debug(21, 1, "FD %d Closing Udp connection\n",
+	    theUdpConnection);
+	comm_close(theUdpConnection);
+	comm_set_select_handler(theUdpConnection,
+	    COMM_SELECT_READ,
+	    NULL,
+	    0);
+	theUdpConnection = -1;
+    }
+    ipcacheShutdownServers();
+}
+#endif
 
 void fatal_common(message)
      char *message;
