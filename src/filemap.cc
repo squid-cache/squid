@@ -1,5 +1,5 @@
 /*
- * $Id: filemap.cc,v 1.19 1997/07/07 05:29:45 wessels Exp $
+ * $Id: filemap.cc,v 1.20 1997/10/28 21:55:12 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -147,8 +147,7 @@ file_map_bit_set(fileMap * fm, int file_number)
 	fm->toggle++;
 	debug(8, 0) ("You should increment MAX_SWAP_FILE\n");
     } else if (fm->n_files_in_map > (fm->max_n_files - 100)) {
-	debug(8, 0) ("You've run out of swap file numbers. Freeing 1MB\n");
-	storeGetSwapSpace(1000000);
+	fatal("You've run out of swap file numbers.");
     }
     return (file_number);
 }
