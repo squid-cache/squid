@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.5 2002/09/24 10:46:43 robertc Exp $
+ * $Id: client_side_request.cc,v 1.6 2002/10/03 06:45:53 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines AUTHOR: Robert Collins
  * (Originally Duane Wessels in client_side.c)
@@ -66,9 +66,6 @@ FREE clientRequestContextFree;
 /* other */
 static int checkAccelOnly(clientHttpRequest *);
 static void clientAccessCheckDone(int, void *);
- /* static */ aclCheck_t *
-           clientAclChecklistCreate(const acl_access * acl,
-    const clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static void clientInterpretRequestHeaders(clientHttpRequest * http);
@@ -194,30 +191,6 @@ checkAccelOnly(clientHttpRequest * http)
     if (http->request->method == METHOD_PURGE)
 	return 0;
     return 1;
-}
-
-aclCheck_t *
-clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http)
-{
-    aclCheck_t *ch;
-    ConnStateData *conn = http->conn;
-    ch = aclChecklistCreate(acl, http->request, conn ? conn->rfc931 : dash_str);
-
-    /*
-     * hack for ident ACL. It needs to get full addresses, and a place to store
-     * the ident result on persistent connections...
-     */
-    /* connection oriented auth also needs these two lines for it's operation. */
-    /*
-     * Internal requests do not have a connection reference, because: A) their
-     * byte count may be transformed before being applied to an outbound
-     * connection B) they are internal - any limiting on them should be done on
-     * the server end.
-     */
-    if (conn)
-	ch->conn = cbdataReference(conn);	/* unreferenced in acl.c */
-
-    return ch;
 }
 
 /* This is the entry point for external users of the client_side routines */
