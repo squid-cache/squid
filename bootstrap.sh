@@ -64,7 +64,7 @@ AUTOCONF="autoconf${acver}" ; export AUTOCONF
 
 for dir in \
 	"" \
-	lib/libTrie
+	lib/libTrie \
 	lib/cppunit-1.10.0
 do
     if [ -z "$dir" ] || [ -d $dir ] && [ ! -f $dir/configure ]; then
