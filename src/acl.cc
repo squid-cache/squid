@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.18 1996/07/19 17:36:57 wessels Exp $
+ * $Id: acl.cc,v 1.19 1996/07/20 03:06:46 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -611,7 +611,6 @@ static int aclMatchTime(data, when)
     static time_t last_when = 0;
     static struct tm tm;
     time_t t;
-    int rc;
 
     if (when != last_when) {
 	last_when = when;
