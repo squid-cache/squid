@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.201 1998/01/05 00:45:46 wessels Exp $
+ * $Id: main.cc,v 1.202 1998/01/05 20:49:11 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -152,7 +152,7 @@ usage(void)
 	"       -N        No daemon mode.\n"
 	"       -R        Do not set REUSEADDR on port.\n"
 	"       -V        Virtual host httpd-accelerator.\n"
-	"	-X        Force full debugging.\n"
+	"       -X        Force full debugging.\n"
 	"       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
 	appname, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
     exit(1);
