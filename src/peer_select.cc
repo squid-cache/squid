@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.106 2000/05/02 18:32:41 hno Exp $
+ * $Id: peer_select.cc,v 1.107 2000/05/02 18:35:09 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -89,6 +89,7 @@ static void peerGetSomeNeighbor(ps_state *);
 static void peerGetSomeNeighborReplies(ps_state *);
 static void peerGetSomeDirect(ps_state *);
 static void peerGetSomeParent(ps_state *);
+static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, peer *, hier_code);
 
 static void
@@ -273,11 +274,23 @@ peerSelectFoo(ps_state * ps)
 	peerGetSomeNeighborReplies(ps);
 	entry->ping_status = PING_DONE;
     }
-    if (Config.onoff.prefer_direct)
+    switch (ps->direct) {
+    case DIRECT_YES:
 	peerGetSomeDirect(ps);
-    peerGetSomeParent(ps);
-    /* Have direct as a last resort if possible.. */
-    peerGetSomeDirect(ps);
+	break;
+    case DIRECT_NO:
+	peerGetSomeParent(ps);
+	peerGetAllParents(ps);
+	break;
+    default:
+	if (Config.onoff.prefer_direct)
+	    peerGetSomeDirect(ps);
+	if (request->flags.hierarchical || !Config.onoff.nonhierarchical_direct)
+	    peerGetSomeParent(ps);
+	if (!Config.onoff.prefer_direct)
+	    peerGetSomeDirect(ps);
+	break;
+    }
     peerSelectCallback(ps);
 }
 
@@ -431,6 +444,35 @@ peerGetSomeParent(ps_state * ps)
     if (code != HIER_NONE) {
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	peerAddFwdServer(&ps->servers, p, code);
+    }
+}
+
+/* Adds alive parents. Used as a last resort for never_direct.
+ */
+static void
+peerGetAllParents(ps_state * ps)
+{
+    peer *p;
+    request_t *request = ps->request;
+    /* Add all alive parents */
+    for (p = Config.peers; p; p = p->next) {
+	/* XXX: neighbors.c lacks a public interface for enumerating
+	 * parents to a request so we have to dig some here..
+	 */
+	if (neighborType(p, request) != PEER_PARENT)
+	    continue;
+	if (!peerHTTPOkay(p, request))
+	    continue;
+	debug(15, 3) ("peerGetAllParents: adding alive parent %s\n", p->host);
+	peerAddFwdServer(&ps->servers, p, ANY_OLD_PARENT);
+    }
+    /* XXX: should add dead parents here, but it is currently
+     * not possible to find out which parents are dead or which
+     * simply are not configured to handle the request.
+     */
+    /* Add default parent as a last resort */
+    if ((p = getDefaultParent(request))) {
+	peerAddFwdServer(&ps->servers, p, DEFAULT_PARENT);
     }
 }
 
