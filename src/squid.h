@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.66 1996/11/04 18:13:02 wessels Exp $
+ * $Id: squid.h,v 1.67 1996/11/04 22:07:28 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -201,6 +201,7 @@ typedef struct _cacheinfo cacheinfo;
 typedef struct _aclCheck_t aclCheck_t;
 typedef struct _request request_t;
 typedef struct _MemObject MemObject;
+typedef struct _cachemgr_passwd cachemgr_passwd;
 
 /* 32 bit integer compatability hack */
 #if SIZEOF_INT == 4
@@ -263,6 +264,7 @@ typedef int (*QS) (const void *, const void *);
 #include "icmp.h"
 #include "net_db.h"
 #include "client_db.h"
+#include "objcache.h"
 #include "refresh.h"
 
 #if !HAVE_TEMPNAM

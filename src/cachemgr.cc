@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.39 1996/11/04 18:12:13 wessels Exp $
+ * $Id: cachemgr.cc,v 1.40 1996/11/04 22:07:25 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -288,7 +288,7 @@ static char *op_cmds_descr[] =
     "HTTP Reply Headers",
     "Filedescriptor Usage",
     "Network Probe Database",
-    "Shutdown Cache (password required)",
+    "Shutdown Cache",
     "Refresh Object (URL required)",
 #ifdef REMOVE_OBJECT
     "Remove Object (URL required)",
@@ -709,7 +709,8 @@ main(int argc, char *argv[])
 	    hasTables = TRUE;
 	}
     }
-    if (!operation[0] || !strcmp(operation, "empty")) {		/* prints HTML form if no args */
+    /* prints HTML form if no args */
+    if (!operation[0] || !strcmp(operation, "empty")) {
 	noargs_html(hostname, portnum, url);
 	exit(0);
     }
@@ -744,9 +745,6 @@ main(int argc, char *argv[])
     case STATS_HDRS:
     case STATS_FDS:
     case STATS_NETDB:
-	sprintf(msg, "GET cache_object://%s/%s HTTP/1.0\r\n\r\n",
-	    hostname, op_cmds[op]);
-	break;
     case SHUTDOWN:
 	sprintf(msg, "GET cache_object://%s/%s@%s HTTP/1.0\r\n\r\n",
 	    hostname, op_cmds[op], password);
@@ -871,7 +869,7 @@ main(int argc, char *argv[])
 
     p_state = 0;
     cpy_ind = 0;
-    n_loops = 0;		/* Keep track of the number of passes through while */
+    n_loops = 0;		/* Keep track of passes through loop */
     while ((len = read(conn, buf, sizeof(buf))) > 0) {
 	n_loops++;
 	/* Simple state machine for parsing a {{ } { } ...} style list */
@@ -981,7 +979,7 @@ main(int argc, char *argv[])
     return 0;
 }
 
-static int
+static int 
 client_comm_connect(int sock, char *dest_host, u_short dest_port)
 {
     const struct hostent *hp;
