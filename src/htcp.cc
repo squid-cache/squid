@@ -247,7 +247,6 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
 {
     char *pkt;
     ssize_t pktlen;
-    int x;
     char vbuf[32];
     htcpStuff stuff;
     snprintf(vbuf, 32, "%3.1f", req->http_ver);
@@ -271,7 +270,6 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
 void
 htcpInit(void)
 {
-    wordlist *s;
     enter_suid();
     htcpInSocket = comm_open(SOCK_DGRAM,
 	0,
@@ -283,9 +281,7 @@ htcpInit(void)
     if (htcpInSocket < 0)
 	fatal("Cannot open HTCP Socket");
     commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
-    for (s = Config.mcast_group_list; s; s = s->next)
-	ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
-    debug(12, 1) ("Accepting HTCP messages on port %d, FD %d.\n",
+    debug(31, 1) ("Accepting HTCP messages on port %d, FD %d.\n",
 	(int) Config.Port.htcp, htcpInSocket);
     if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr) {
 	enter_suid();
@@ -299,7 +295,7 @@ htcpInit(void)
 	if (htcpOutSocket < 0)
 	    fatal("Cannot open Outgoing HTCP Socket");
 	commSetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
-	debug(12, 1) ("Outgoing HTCP messages on port %d, FD %d.\n",
+	debug(31, 1) ("Outgoing HTCP messages on port %d, FD %d.\n",
 	    (int) Config.Port.htcp, htcpOutSocket);
 	fd_note(htcpInSocket, "Incoming HTCP socket");
     } else {
