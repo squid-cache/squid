@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.122 1997/02/25 16:09:12 wessels Exp $
+ * $Id: neighbors.cc,v 1.123 1997/02/25 19:18:21 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -433,12 +433,10 @@ neighbors_open(int fd)
 }
 
 int
-neighborsUdpPing(protodispatch_data * proto)
+neighborsUdpPing(request_t *request, StoreEntry *entry)
 {
-    request_t *request = proto->request;
     char *host = request->host;
-    char *url = proto->url;
-    StoreEntry *entry = proto->entry;
+    char *url = entry->url;
     const ipcache_addrs *ia = NULL;
     struct sockaddr_in to_addr;
     peer *e = NULL;
@@ -532,7 +530,7 @@ neighborsUdpPing(protodispatch_data * proto)
 
     /* only do source_ping if we have neighbors */
     if (Peers.n) {
-	if (!proto->source_ping) {
+	if (Config.sourcePing) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
