@@ -12,13 +12,8 @@ static int clientLookupDstIPDone(fd, hp, data)
     debug(33, 5, "clientLookupDstIPDone: FD %d, '%s'\n",
 	fd,
 	icpState->url);
-    icpState->aclChecklist->need &= ~(1 << ACL_DST_IP);
-    icpState->aclChecklist->pend &= ~(1 << ACL_DST_IP);
-    if (hp == NULL) {
-	debug(33, 5, "clientLookupDstIPDone: Unknown host %s\n",
-	    icpState->request->host);
-	icpState->aclChecklist->dst_addr.s_addr = INADDR_NONE;
-    } else {
+    icpState->aclChecklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
+    if (hp) {
 	xmemcpy(&icpState->aclChecklist->dst_addr.s_addr,
 	    *(hp->h_addr_list),
 	    hp->h_length);
@@ -40,8 +35,7 @@ static void clientLookupSrcFQDNDone(fd, fqdn, data)
 	fd,
 	icpState->url,
 	fqdn ? fqdn : "NULL");
-    icpState->aclChecklist->need &= ~(1 << ACL_SRC_DOMAIN);
-    icpState->aclChecklist->pend &= ~(1 << ACL_SRC_DOMAIN);
+    icpState->aclChecklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
     clientAccessCheck(icpState, icpState->aclHandler);
 }
 
@@ -57,6 +51,7 @@ void clientAccessCheck(icpState, handler)
     int answer = 1;
     request_t *r = icpState->request;
     aclCheck_t *ch = NULL;
+    acl_lookup_state i;
     if (icpState->aclChecklist == NULL) {
 	icpState->aclChecklist = xcalloc(1, sizeof(aclCheck_t));
 	icpState->aclChecklist->src_addr = icpState->peer.sin_addr;
@@ -64,34 +59,29 @@ void clientAccessCheck(icpState, handler)
     }
     ch = icpState->aclChecklist;
     icpState->aclHandler = handler;
-    if (ch->pend) {
-	debug(33, 1, "clientAccessCheck: ACL's still pending: %x\n",
-	    ch->pend);
-	return;
-    }
     if (httpd_accel_mode && !getAccelWithProxy() && r->protocol != PROTO_CACHEOBJ) {
 	/* this cache is an httpd accelerator ONLY */
 	if (!BIT_TEST(icpState->flags, REQ_ACCEL))
 	    answer = 0;
     } else {
 	answer = aclCheck(HTTPAccessList, ch);
-	if (ch->need) {
-	    if (ch->need & (1 << ACL_DST_IP)) {
-		ipcache_nbgethostbyname(icpState->request->host,
-		    icpState->fd,
-		    clientLookupDstIPDone,
-		    icpState);
-		ch->pend |= (1 << ACL_DST_IP);
-	    } else if (ch->need & (1 << ACL_SRC_DOMAIN)) {
-		fqdncache_nbgethostbyaddr(icpState->peer.sin_addr,
-		    icpState->fd,
-		    clientLookupSrcFQDNDone,
-		    icpState);
-		ch->pend |= (1 << ACL_SRC_DOMAIN);
-	    }
-	    return;
+	if (ch->state[ACL_DST_IP] == ACL_LOOKUP_NEED) {
+	    ipcache_nbgethostbyname(icpState->request->host,
+		icpState->fd,
+		clientLookupDstIPDone,
+		icpState);
+	    ch->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
+	} else if (ch->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEED) {
+	    fqdncache_nbgethostbyaddr(icpState->peer.sin_addr,
+		icpState->fd,
+		clientLookupSrcFQDNDone,
+		icpState);
+	    ch->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
 	}
     }
+    for (i = ACL_NONE + 1; i < ACL_ENUM_MAX; i++)
+	if (ch->state[i] == ACL_LOOKUP_PENDING)
+	    return;
     requestUnlink(icpState->aclChecklist->request);
     safe_free(icpState->aclChecklist);
     icpState->aclHandler = NULL;
