@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.8 1998/03/03 00:31:09 rousskov Exp $
+ * $Id: mem.cc,v 1.9 1998/03/03 22:17:54 rousskov Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -46,21 +46,9 @@ memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused)
 static void
 memStats(StoreEntry * sentry)
 {
-    mem_type t;
     storeBuffer(sentry);
-    storeAppendPrintf(sentry, "%-20s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\n",
-	"Pool",	"Obj Size",
-	"Capacity (#)", "Capacity (KB)", "Used (KB)", "HWater (KB)", 
-	"Util (%)", "Grow Count",
-	"Malloc (#)", "Malloc (KB)", "MHWater (KB)");
-    for (t = MEM_NONE + 1; t < MEM_MAX; t++) {
-	const MemPool *pool = MemPools[t];
-	if (!memPoolWasNeverUsed(pool))
-	    memPoolReport(pool, sentry);
-    }
-    storeAppendPrintf(sentry, "\n");
+    memReport(sentry);
     /* memStringStats(sentry); */
-    memReportTotals(sentry);
     storeBufferFlush(sentry);
 }
 
@@ -197,7 +185,7 @@ memClean()
     int dirty_count = 0;
     for (t = MEM_NONE + 1; t < MEM_MAX; t++) {
 	MemPool *pool = MemPools[t];
-	if (memPoolIsUsedNow(pool)) {
+	if (memPoolInUseCount(pool)) {
 	    memPoolDescribe(pool);
 	    dirty_count++;
 	}
@@ -212,7 +200,7 @@ memClean()
 int
 memInUse(mem_type type)
 {
-    return memPoolUsedCount(MemPools[type]);
+    return memPoolInUseCount(MemPools[type]);
 }
 
 /* ick */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.88 1998/02/26 22:16:28 kostas Exp $
+ * $Id: fqdncache.cc,v 1.89 1998/03/03 22:17:52 rousskov Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -943,7 +943,7 @@ snmp_fqdncacheFn(variable_list * Var, long *ErrP)
     case NET_FQDN_NAME:
 	Answer->type = SMI_STRING;
 	Answer->val_len = strlen(fq->names[0]);
-	Answer->val.string = xstrdup((char *) fq->names[0]);
+	Answer->val.string = (u_char *)xstrdup(fq->names[0]);
 	break;
     case NET_FQDN_IP:
 	Answer->type = SMI_IPADDRESS;
