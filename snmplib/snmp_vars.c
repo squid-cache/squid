@@ -99,8 +99,6 @@
 /* #define DEBUG_VARS_DECODE 1 */
 /* #define DEBUG_VARS_ENCODE 1 */
 
-#define ASN_PARSE_ERROR(x) { return(x); }
-
 /* Create a new variable_list structure representing oid Name of length Len.
  *
  * Returns NULL upon error.
@@ -230,12 +228,12 @@ snmp_var_clone(struct variable_list *Src)
 void
 snmp_var_free(struct variable_list *Ptr)
 {
-    if (Ptr->name && Ptr->name_length > 0)
+    if (Ptr->name)
 	xfree((char *) Ptr->name);
 
-    if (Ptr->val.string && Ptr->val_len > 0)
+    if (Ptr->val.string)
 	xfree((char *) Ptr->val.string);
-    else if (Ptr->val.integer && Ptr->val_len > 0)
+    else if (Ptr->val.integer)
 	xfree((char *) Ptr->val.integer);
 
     xfree(Ptr);
@@ -376,7 +374,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
     struct variable_list ** VarP,
     int Version)
 {
-    struct variable_list *Var, **VarLastP;
+    struct variable_list *Var = NULL, **VarLastP;
     u_char *bufp, *tmp;
     u_char VarBindType;
     u_char *DataPtr;
@@ -394,15 +392,17 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
     /* Now parse the variables */
     bufp = asn_parse_header(Buffer, &AllVarLen, &VarBindType);
     if (bufp == NULL)
-	ASN_PARSE_ERROR(NULL);
+	return (NULL);
 
     if (VarBindType != (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR)) {
 	snmp_set_api_error(SNMPERR_PDU_PARSE);
-	ASN_PARSE_ERROR(NULL);
+	return (NULL);
     }
 #ifdef DEBUG_VARS_DECODE
     printf("VARS: All Variable length %d\n", AllVarLen);
 #endif
+
+#define PARSE_ERROR { snmp_var_free(Var); return(NULL); }
 
     /* We know how long the variable list is.  Parse it. */
     while ((int) AllVarLen > 0) {
@@ -416,7 +416,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	ThisVarLen = AllVarLen;
 	tmp = asn_parse_header(bufp, &ThisVarLen, &VarBindType);
 	if (tmp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+	    PARSE_ERROR;
 
 	/* Now that we know the length , figure out how it relates to 
 	 * the entire variable list
@@ -427,7 +427,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	/* Is it valid? */
 	if (VarBindType != (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR)) {
 	    snmp_set_api_error(SNMPERR_PDU_PARSE);
-	    ASN_PARSE_ERROR(NULL);
+	    PARSE_ERROR;
 	}
 #ifdef DEBUG_VARS_DECODE
 	printf("VARS: Header type 0x%x (%d bytes left)\n", VarBindType, ThisVarLen);
@@ -437,13 +437,13 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	bufp = asn_parse_objid(bufp, &ThisVarLen, &VarBindType,
 	    Var->name, &(Var->name_length));
 	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+	    PARSE_ERROR;
 
 	if (VarBindType != (u_char) (ASN_UNIVERSAL |
 		ASN_PRIMITIVE |
 		ASN_OBJECT_ID)) {
 	    snmp_set_api_error(SNMPERR_PDU_PARSE);
-	    ASN_PARSE_ERROR(NULL);
+	    PARSE_ERROR;
 	}
 #ifdef DEBUG_VARS_DECODE
 	printf("VARS: Decoded OBJID (%d bytes). (%d bytes left)\n",
@@ -457,7 +457,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	/* find out type of object */
 	bufp = asn_parse_header(bufp, &ThisVarLen, &(Var->type));
 	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+	    PARSE_ERROR;
 	ThisVarLen = DataLen;
 
 #ifdef DEBUG_VARS_DECODE
@@ -472,7 +472,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	    Var->val.integer = (int *) xmalloc(sizeof(int));
 	    if (Var->val.integer == NULL) {
 		snmp_set_api_error(SNMPERR_OS_ERR);
-		return (NULL);
+		PARSE_ERROR;
 	    }
 	    Var->val_len = sizeof(int);
 	    bufp = asn_parse_int(DataPtr, &ThisVarLen,
@@ -491,7 +491,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	    Var->val.integer = (int *) xmalloc(sizeof(u_int));
 	    if (Var->val.integer == NULL) {
 		snmp_set_api_error(SNMPERR_OS_ERR);
-		return (NULL);
+		PARSE_ERROR;
 	    }
 	    Var->val_len = sizeof(u_int);
 	    bufp = asn_parse_unsigned_int(DataPtr, &ThisVarLen,
@@ -510,7 +510,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	    Var->val.string = (u_char *) xmalloc((unsigned) Var->val_len);
 	    if (Var->val.string == NULL) {
 		snmp_set_api_error(SNMPERR_OS_ERR);
-		return (NULL);
+		PARSE_ERROR;
 	    }
 	    bufp = asn_parse_string(DataPtr, &ThisVarLen,
 		&Var->type, Var->val.string,
@@ -529,7 +529,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	    Var->val.objid = (oid *) xmalloc((unsigned) Var->val_len);
 	    if (Var->val.integer == NULL) {
 		snmp_set_api_error(SNMPERR_OS_ERR);
-		return (NULL);
+		PARSE_ERROR;
 	    }
 	    /* Only copy if we successfully decoded something */
 	    if (bufp) {
@@ -550,18 +550,16 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	case SMI_COUNTER64:
 	    snmplib_debug(2, "Unable to parse type SMI_COUNTER64!\n");
 	    snmp_set_api_error(SNMPERR_UNSUPPORTED_TYPE);
-	    return (NULL);
-	    break;
+	    PARSE_ERROR;
 
 	default:
 	    snmplib_debug(2, "bad type returned (%x)\n", Var->type);
 	    snmp_set_api_error(SNMPERR_PDU_PARSE);
-	    return (NULL);
-	    break;
+	    PARSE_ERROR;
 	}			/* End of var type switch */
 
 	if (bufp == NULL)
-	    return (NULL);
+	    PARSE_ERROR;
 
 #ifdef DEBUG_VARS_DECODE
 	printf("VARS:  Adding to list.\n");
@@ -570,6 +568,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 	*VarLastP = Var;
 	VarLastP = &(Var->next_variable);
     }
+#undef PARSE_ERROR
 
     return (bufp);
 }
