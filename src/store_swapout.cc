@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.62 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store_swapout.cc,v 1.63 2000/03/06 16:24:56 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -245,7 +245,7 @@ storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
 	if (errno == EPERM)
 	    storeDirMapBitSet(bad);
 	if (errflag == DISK_NO_SPACE_LEFT) {
-	    storeDirDiskFull(e->swap_file_number);
+	    storeDirDiskFull(bad);
 	    storeDirConfigure();
 	    storeConfigure();
 	}
