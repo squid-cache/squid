@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.2 1998/04/06 22:32:18 wessels Exp $
+ * $Id: snmp_core.cc,v 1.3 1998/04/08 17:22:13 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -432,7 +432,7 @@ snmpUdpReply(int fd, void *data)
 	    queue->msg,
 	    queue->len);
 	if (x < 0) {
-	    if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+	    if (ignoreErrno(errno))
 		break;		/* don't de-queue */
 	}
 	snmpUdpHead = queue->next;
