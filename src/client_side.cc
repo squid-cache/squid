@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.365 1998/07/23 23:50:51 wessels Exp $
+ * $Id: client_side.cc,v 1.366 1998/07/24 17:02:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -660,37 +660,14 @@ static void
 clientInterpretRequestHeaders(clientHttpRequest * http)
 {
     request_t *request = http->request;
-#if OLD_CODE
-    char *request_hdr = request->headers;
-    const char *t = NULL;
-#else
     const HttpHeader *req_hdr = &request->header;
 #if USE_USERAGENT_LOG
     const char *str;
 #endif
-#endif
-#if OLD_CODE
-    request->ims = -2;
-    request->imslen = -1;
-    if ((t = httpHeaderGetStr(req_hdr, HDR_IF_MODIFIED_SINCE))) {
-	EBIT_SET(request->flags, REQ_IMS);
-	request->ims = parse_rfc1123(t);
-	/*
-	 * "length=..." is not in the HTTP/1.1 specs. Any real proof that we
-	 * should hornor it? Send complains to rousskov@nlanr.net
-	 */
-	while ((t = strchr(t, ';'))) {
-	    for (t++; isspace(*t); t++);
-	    if (strncasecmp(t, "length=", 7) == 0)
-		request->imslen = atoi(t + 7);
-	}
-    }
-#else
     request->imslen = -1;
     request->ims = httpHeaderGetTime(req_hdr, HDR_IF_MODIFIED_SINCE);
     if (request->ims > 0)
 	EBIT_SET(request->flags, REQ_IMS);
-#endif
     if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
 	if (strListIsMember(&s, "no-cache", ',')) {
@@ -701,33 +678,18 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	}
 	stringClean(&s);
     }
-#if OLD_CODE
-    if (httpHeaderHas(req_hdr, HDR_RANGE)) {
-	EBIT_SET(request->flags, REQ_NOCACHE);
-	EBIT_SET(request->flags, REQ_RANGE);
-	/* Request-Range: deleted, not in the specs. Does it exist? */
-    }
-#else
     /* ignore range header in non-GETs */
     if (request->method == METHOD_GET) {
 	request->range = httpHeaderGetRange(req_hdr);
 	if (request->range)
 	    EBIT_SET(request->flags, REQ_RANGE);
     }
-#endif
     if (httpHeaderHas(req_hdr, HDR_AUTHORIZATION))
 	EBIT_SET(request->flags, REQ_AUTH);
     if (request->login[0] != '\0')
 	EBIT_SET(request->flags, REQ_AUTH);
-#if OLD_CODE
-    if ((t = httpHeaderGetStr(req_hdr, HDR_PROXY_CONNECTION))) {
-	if (!strcasecmp(t, "Keep-Alive"))
-	    EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
-    }
-#else
     if (httpMsgIsPersistent(request->http_ver, req_hdr))
 	EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
-#endif
     if (httpHeaderHas(req_hdr, HDR_VIA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_VIA);
 	/* ThisCache cannot be a member of Via header, "1.0 ThisCache" can */
@@ -753,25 +715,9 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 	stringClean(&s);
     }
 #endif
-#if OLD_CODE
-    if ((t = mime_get_header_field(request_hdr, "Cache-control", "max-age="))) {
-	request->max_age = atoi(t + 8);
-    } else {
-	request->max_age = -1;
-    }
-    if ((t = mime_get_header_field(request_hdr, "Cache-control", "only-if-cached"))) {
-	EBIT_SET(request->flags, REQ_CC_ONLY_IF_CACHED);
-    }
-#else
     request->cache_control = httpHeaderGetCc(req_hdr);
-#endif
     if (request->method == METHOD_TRACE) {
-#if OLD_CODE
-	if ((t = mime_get_header(request_hdr, "Max-Forwards")))
-	    request->max_forwards = atoi(t);
-#else
 	request->max_forwards = httpHeaderGetInt(req_hdr, HDR_MAX_FORWARDS);
-#endif
     }
     if (clientCachable(http))
 	EBIT_SET(request->flags, REQ_CACHABLE);
