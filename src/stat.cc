@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.54 1996/08/26 22:47:57 wessels Exp $
+ * $Id: stat.cc,v 1.55 1996/08/27 05:51:38 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -659,8 +659,6 @@ void info_get(obj, sentry)
 	storeGetSwapSize() >> 10);
     storeAppendPrintf(sentry, "{\tStorage Mem size:\t%d KB}\n",
 	storeGetMemSize() >> 10);
-    tod = mkrfc850(&next_cleaning);
-    storeAppendPrintf(sentry, "{\tStorage Expiration at:\t%s}\n", tod);
 
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.63 1996/08/26 22:47:54 wessels Exp $
+ * $Id: main.cc,v 1.64 1996/08/27 05:51:38 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -106,7 +106,6 @@
 #include "squid.h"
 
 time_t squid_starttime = 0;
-time_t next_cleaning = 0;
 int theHttpConnection = -1;
 int theInIcpConnection = -1;
 int theOutIcpConnection = -1;
@@ -140,6 +139,11 @@ static int malloc_debug_level = 0;
 #endif
 static void rotate_logs _PARAMS((int));
 static void reconfigure _PARAMS((int));
+static void mainInitialize _PARAMS((void));
+static void mainRenitialize _PARAMS((void));
+static void mainMaintenance _PARAMS((void));
+static void usage _PARAMS((void));
+static void mainParseOptions _PARAMS((int, char **));
 
 static void usage()
 {
@@ -480,15 +484,56 @@ static void mainInitialize()
 }
 
 
+static void mainMaintenance()
+{
+    static time_t last_cleaning = 0;
+    static time_t last_maintain = 0;
+    static time_t last_dirclean = 0;
+    static time_t last_announce = 0;
+    static time_t last_ip_purge = 0;
+    int n;
+    if (squid_curtime > last_maintain) {
+	storeMaintainSwapSpace();
+	last_maintain = squid_curtime;
+	return;
+    }
+    if (squid_curtime >= last_dirclean + 15
+	&& store_rebuilding == STORE_NOT_REBUILDING) {
+	/* clean a cache directory every 15 seconds */
+	/* 15 * 16 * 256 = 17 hrs */
+	storeDirClean();
+	last_dirclean = squid_curtime;
+	return;
+    }
+    if (squid_curtime >= last_ip_purge + 10) {
+	ipcache_purgelru();
+	last_ip_purge = squid_curtime;
+	return;
+    }
+    if (Config.cleanRate > 0) {
+	if (squid_curtime >= last_cleaning + Config.cleanRate) {
+	    debug(1, 1, "Performing a garbage collection...\n");
+	    n = storePurgeOld();
+	    debug(1, 1, "Garbage collection done, %d objects removed\n", n);
+	    last_cleaning = squid_curtime + Config.cleanRate;
+	    return;
+	}
+    }
+    if (Config.Announce.rate > 0) {
+	if (squid_curtime >= last_announce + Config.Announce.rate) {
+	    send_announce();
+	    last_announce = squid_curtime;
+	    return;
+	}
+    }
+}
+
 int main(argc, argv)
      int argc;
      char **argv;
 {
     int errcount = 0;
     int n;			/* # of GC'd objects */
-    time_t last_maintain = 0;
-    time_t last_dirclean = 0;
-    time_t last_announce = 0;
     time_t loop_delay;
 
     /* call mallopt() before anything else */
@@ -542,22 +587,9 @@ int main(argc, argv)
     mainInitialize();
 
     /* main loop */
-    if (Config.cleanRate > 0)
-	next_cleaning = time(NULL) + Config.cleanRate;
     for (;;) {
 	loop_delay = (time_t) 10;
-	/* maintain cache storage */
-	if (squid_curtime > last_maintain) {
-	    storeMaintainSwapSpace();
-	    last_maintain = squid_curtime;
-	}
-	if (squid_curtime - last_dirclean > 15
-	    && store_rebuilding == STORE_NOT_REBUILDING) {
-	    /* clean a cache directory every 15 seconds */
-	    /* 15 * 16 * 256 = 17 hrs */
-	    storeDirClean();
-	    last_dirclean = squid_curtime;
-	}
+	mainMaintenance();
 	if (rotate_pending) {
 	    ftpServerClose();
 	    _db_rotate_log();	/* cache.log */
@@ -570,7 +602,7 @@ int main(argc, argv)
 	/* do background processing */
 	if (doBackgroundProcessing())
 	    loop_delay = (time_t) 0;
-	switch (comm_select(loop_delay, next_cleaning)) {
+	switch (comm_select(loop_delay)) {
 	case COMM_OK:
 	    errcount = 0;	/* reset if successful */
 	    break;
@@ -579,21 +611,6 @@ int main(argc, argv)
 	    debug(1, 0, "Select loop Error. Retry %d\n", errcount);
 	    if (errcount == 10)
 		fatal_dump("Select Loop failed!");
-	    break;
-	case COMM_TIMEOUT:
-	    if (Config.cleanRate > 0 && squid_curtime >= next_cleaning) {
-		debug(1, 1, "Performing a garbage collection...\n");
-		n = storePurgeOld();
-		debug(1, 1, "Garbage collection done, %d objects removed\n", n);
-		next_cleaning = squid_curtime + Config.cleanRate;
-	    }
-	    if ((n = Config.Announce.rate) > 0) {
-		if (squid_curtime > last_announce + n)
-		    send_announce();
-		last_announce = squid_curtime;
-	    }
-	    ipcache_purgelru();
-	    /* house keeping */
 	    break;
 	case COMM_SHUTDOWN:
 	    /* delayed close so we can transmit while shutdown pending */
@@ -611,6 +628,8 @@ int main(argc, argv)
 		fatal_dump("MAIN: SHUTDOWN from comm_select, but nothing pending.");
 	    }
 	    break;
+	case COMM_TIMEOUT:
+		break;
 	default:
 	    fatal_dump("MAIN: Internal error -- this should never happen.");
 	    break;
