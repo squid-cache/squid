@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.8 2002/12/06 23:19:16 hno Exp $
+ * $Id: ssl_support.cc,v 1.9 2002/12/07 01:55:22 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -381,14 +381,14 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     debug(83, 1) ("Using certificate in %s\n", certfile);
     if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
 	ssl_error = ERR_get_error();
-	debug(83, 1) ("Failed to acquire SSL certificate '%s': %s\n",
+	debug(83, 0) ("Failed to acquire SSL certificate '%s': %s\n",
 	    certfile, ERR_error_string(ssl_error, NULL));
 	goto error;
     }
     debug(83, 1) ("Using private key in %s\n", keyfile);
     if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
 	ssl_error = ERR_get_error();
-	debug(83, 1) ("Failed to acquire SSL private key '%s': %s\n",
+	debug(83, 0) ("Failed to acquire SSL private key '%s': %s\n",
 	    keyfile, ERR_error_string(ssl_error, NULL));
 	goto error;
     }
