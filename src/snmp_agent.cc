@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.50 1998/07/22 20:37:47 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.51 1998/07/22 21:18:20 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -58,7 +58,6 @@ snmp_basicFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer;
     char *pp;
-    oid object_id[LEN_SQUID_OBJ_ID] = {SQUID_OBJ_ID};
 
     debug(49, 5) ("snmp_basicFn: Processing request with magic %d!\n", Var->name[7]);
 
@@ -73,9 +72,10 @@ snmp_basicFn(variable_list * Var, snint * ErrP)
 	Answer->val.string = (u_char *) xstrdup(pp);
 	break;
     case SYS_OBJECT_ID:
-	Answer->type = ASN_OBJECT_ID;
-        Answer->val_len = sizeof(object_id);
-        Answer->val.objid = oiddup(object_id, LEN_SQUID_OBJ_ID);
+	pp = SQUID_VERSION;
+	Answer->type = ASN_OCTET_STR;
+	Answer->val_len = strlen(pp);
+	Answer->val.string = (u_char *) xstrdup(pp);
 	break;
     case SYS_UPTIME:
 	Answer->val_len = sizeof(snint);
