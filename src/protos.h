@@ -257,6 +257,9 @@ extern void icpUdpSend _PARAMS((int fd,
 	protocol_t));
 extern PF icpHandleUdp;
 extern PF httpAccept;
+#ifdef SQUID_SNMP
+extern PF snmpAccept;
+#endif /* SQUID_SNMP */
 extern void icpSendERROR _PARAMS((int fd,
 	log_type errorCode,
 	const char *text,
