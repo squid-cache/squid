@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.234 2003/04/24 06:35:09 hno Exp $
+ * $Id: squid.h,v 1.235 2003/04/25 21:45:29 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -366,9 +366,10 @@ extern "C"
 #include "snprintf.h"
 #endif
 
+#ifndef min
+
 template<class A>
 inline A const &
-#ifndef min
 min(A const & lhs, A const & rhs)
 {
     if (rhs < lhs)
