@@ -368,12 +368,13 @@ snmp_agent_parse(sn_data, length, out_sn_data, out_length, sourceip, ireqid)
 	break;
     case SNMP_ERR_TOOBIG:
 	snmp_intoobigs++;
-#if notdone
+#ifdef NOT_DONE
 	if (session->version == SNMP_VERSION_2) {
 	    create_toobig(out_auth, *out_length, reqid, pi);
 	    break;
-	}			/* else FALLTHRU */
-#lendif
+	}
+	/* else FALLTHRU */
+#endif
     case SNMP_ERR_NOACCESS:
     case SNMP_ERR_WRONGTYPE:
     case SNMP_ERR_WRONGLENGTH:
