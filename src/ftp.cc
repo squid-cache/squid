@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.10 1996/03/25 21:25:51 wessels Exp $ */
+/* $Id: ftp.cc,v 1.11 1996/03/26 05:17:20 wessels Exp $ */
 
 #include "config.h"
 #include <stdio.h>
@@ -176,6 +176,7 @@ int ftpReadReply(fd, data)
 		    COMM_SELECT_READ,
 		    (PF) ftpReadReply,
 		    (caddr_t) data);
+		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
 		return 0;
 	    }
 	} else {

@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.8 1996/03/25 21:28:18 wessels Exp $ */
+/* $Id: http.cc,v 1.9 1996/03/26 05:17:21 wessels Exp $ */
 
 #include "config.h"
 #include <sys/errno.h>
@@ -164,18 +164,14 @@ void httpReadReply(fd, data)
 	    clen = entry->mem_obj->e_current_len;
 	    off = entry->mem_obj->e_lowest_offset;
 	    if ((clen - off) > HTTP_DELETE_GAP) {
-		debug(3, "httpReadReply: Read deferred for Object: %s\n",
-		    entry->key);
-		debug(3, "                Current Gap: %d bytes\n",
-		    clen - off);
-
+		debug(3, "httpReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(3, "                Current Gap: %d bytes\n", clen - off);
 		/* reschedule, so it will be automatically reactivated
 		 * when Gap is big enough. */
 		comm_set_select_handler(fd,
 		    COMM_SELECT_READ,
 		    (PF) httpReadReply,
 		    (caddr_t) data);
-
 /* don't install read timeout until we are below the GAP */
 #ifdef INSTALL_READ_TIMEOUT_ABOVE_GAP
 		comm_set_select_handler_plus_timeout(fd,
@@ -190,6 +186,7 @@ void httpReadReply(fd, data)
 		    (caddr_t) NULL,
 		    (time_t) 0);
 #endif
+		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
 		return;
 	    }
 	} else {
