@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.241 1998/01/05 00:45:43 wessels Exp $
+ * $Id: cache_cf.cc,v 1.242 1998/01/12 04:29:56 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -645,7 +645,7 @@ parse_peer(peer ** head)
 	p->weight = 1;
     p->icp_version = ICP_VERSION_CURRENT;
     p->tcp_up = 1;
-    cbdataAdd(p);
+    cbdataAdd(p, MEM_NONE);
     while (*head != NULL)
 	head = &(*head)->next;
     *head = p;

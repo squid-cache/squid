@@ -55,9 +55,9 @@ extern void configFreeMemory(void);
 
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
-extern void cbdataAddDbg(const void *p, const char *, int);
+extern void cbdataAddDbg(const void *p, mem_type, const char *, int);
 #else
-extern void cbdataAdd(const void *p);
+extern void cbdataAdd(const void *p, mem_type);
 #endif
 extern void cbdataFree(void *p);
 extern void cbdataLock(const void *p);
@@ -376,42 +376,26 @@ extern void storeDirClean(void *unused);
 extern void passStart(int, const char *, request_t *, size_t *);
 extern void identStart(int, ConnStateData *, IDCB * callback);
 
-extern void *pop(Stack *);
-extern int empty_stack(const Stack *);
-extern int full_stack(const Stack *);
-extern void push(Stack *, void *);
-extern void init_stack(Stack *, int);
-extern void stackFreeMemory(Stack *);
-
 extern void stat_init(cacheinfo **, const char *);
 extern void pconnHistCount(int, int);
 extern void statAvgInit(void);
 extern int statMemoryAccounted(void);
 
-/* To reduce memory fragmentation, we now store the memory version of an
- * object in fixed size blocks of size PAGE_SIZE and instead of calling 
- * malloc and free, we manage our own fixed block free list.   
- */
+extern void memInit(void);
+extern void memFreeMemory(void);
+extern void *memAllocate(mem_type, int);
+extern void memFree(mem_type, void *);
+extern void memFree4K(void *);
+extern void memFree8K(void *);
+extern void memFreeDISK(void *);
+extern int memInUse(mem_type);
+extern OBJH memStats;
 
-extern char *get_free_4k_page(void);
-extern char *get_free_8k_page(void);
-extern void *get_free_request_t(void);
-extern void *get_free_mem_obj(void);
-extern mem_hdr *memInit(void);
-extern void put_free_4k_page(void *);
-extern void put_free_8k_page(void *);
-extern void put_free_request_t(void *);
-extern void put_free_mem_obj(void *);
-extern void stmemInit(void);
-extern void stmemFreeMemory(void);
-
-extern int memFreeDataUpto(mem_hdr *, int);
-extern void memAppend(mem_hdr *, const char *, int);
-extern ssize_t memCopy(const mem_hdr *, off_t, char *, size_t);
-extern void memFree(mem_hdr *);
-extern void memFreeData(mem_hdr *);
-
-
+extern int stmemFreeDataUpto(mem_hdr *, int);
+extern void stmemAppend(mem_hdr *, const char *, int);
+extern ssize_t stmemCopy(const mem_hdr *, off_t, char *, size_t);
+extern void stmemFree(mem_hdr *);
+extern void stmemFreeData(mem_hdr *);
 
 /* ----------------------------------------------------------------- */
 

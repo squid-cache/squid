@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: cbdata.cc,v 1.12 1998/01/02 23:41:02 wessels Exp $
+ * $Id: cbdata.cc,v 1.13 1998/01/12 04:29:56 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -72,6 +71,7 @@ typedef struct _cbdata {
     struct _cbdata *next;
     int valid;
     int locks;
+    mem_type mem_type;
 #if CBDATA_DEBUG
     const char *file;
     int line;
@@ -103,9 +103,9 @@ cbdataInit(void)
 
 void
 #if CBDATA_DEBUG
-cbdataAddDbg(const void *p, const char *file, int line)
+cbdataAddDbg(const void *p, mem_type, const char *file, int line)
 #else
-cbdataAdd(const void *p)
+cbdataAdd(const void *p, mem_type mem_type)
 #endif
 {
     cbdata *c;
@@ -116,6 +116,7 @@ cbdataAdd(const void *p)
     c = xcalloc(1, sizeof(cbdata));
     c->key = p;
     c->valid = 1;
+    c->mem_type = mem_type;
 #if CBDATA_DEBUG
     c->file = file;
     c->line = line;
@@ -128,6 +129,7 @@ void
 cbdataFree(void *p)
 {
     cbdata *c = (cbdata *) hash_lookup(htable, p);
+    mem_type mem_type;
     assert(p);
     debug(45, 3) ("cbdataFree: %p\n", p);
     assert(c != NULL);
@@ -139,9 +141,13 @@ cbdataFree(void *p)
     }
     hash_remove_link(htable, (hash_link *) c);
     cbdataCount--;
+    mem_type = c->mem_type;
     xfree(c);
     debug(45, 3) ("cbdataFree: freeing %p\n", p);
-    xfree(p);
+    if (mem_type == MEM_NONE)
+        xfree(p);
+    else
+	memFree(mem_type, p);
 }
 
 void

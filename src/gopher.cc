@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.117 1998/01/05 21:44:42 wessels Exp $
+ * $Id: gopher.cc,v 1.118 1998/01/12 04:30:02 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -190,7 +190,7 @@ gopherStateFree(int fdnotused, void *data)
 	storeUnregisterAbort(gopherState->entry);
 	storeUnlockObject(gopherState->entry);
     }
-    put_free_4k_page(gopherState->buf);
+    memFree(MEM_4K_BUF, gopherState->buf);
     gopherState->buf = NULL;
     cbdataFree(gopherState);
 }
@@ -680,7 +680,7 @@ gopherReadReply(int fd, void *data)
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
-    buf = get_free_4k_page();
+    buf = memAllocate(MEM_4K_BUF, 1);
     errno = 0;
     /* leave one space for \0 in gopherToHTML */
     len = read(fd, buf, TEMP_BUF_SIZE - 1);
@@ -735,7 +735,7 @@ gopherReadReply(int fd, void *data)
 	    gopherReadReply,
 	    data, 0);
     }
-    put_free_4k_page(buf);
+    memFree(MEM_4K_BUF, buf);
     return;
 }
 
@@ -758,7 +758,7 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
 	errorAppendEntry(entry, err);
 	comm_close(fd);
 	if (buf)
-	    put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
+	    memFree(MEM_4K_BUF, buf);	/* Allocated by gopherSendRequest. */
 	return;
     }
     /* 
@@ -793,7 +793,7 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
     commSetSelect(fd, COMM_SELECT_READ, gopherReadReply, gopherState, 0);
     commSetDefer(fd, protoCheckDeferRead, entry);
     if (buf)
-	put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
+	memFree(MEM_4K_BUF, buf);	/* Allocated by gopherSendRequest. */
 }
 
 /* This will be called when connect completes. Write request. */
@@ -802,7 +802,7 @@ gopherSendRequest(int fd, void *data)
 {
     GopherStateData *gopherState = data;
     LOCAL_ARRAY(char, query, MAX_URL);
-    char *buf = get_free_4k_page();
+    char *buf = memAllocate(MEM_4K_BUF, 1);
     char *t;
     if (gopherState->type_id == GOPHER_CSO) {
 	sscanf(gopherState->request, "?%s", query);
@@ -820,7 +820,7 @@ gopherSendRequest(int fd, void *data)
 	strlen(buf),
 	gopherSendComplete,
 	data,
-	put_free_4k_page);
+	memFree4K);
     if (EBIT_TEST(gopherState->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(gopherState->entry);	/* Make it public */
 }
@@ -923,8 +923,8 @@ static GopherStateData *
 CreateGopherStateData(void)
 {
     GopherStateData *gd = xcalloc(1, sizeof(GopherStateData));
-    cbdataAdd(gd);
-    gd->buf = get_free_4k_page();
+    cbdataAdd(gd, MEM_NONE);
+    gd->buf = memAllocate(MEM_4K_BUF, 1);
     return (gd);
 }
 

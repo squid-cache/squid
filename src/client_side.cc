@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.197 1998/01/10 08:15:13 kostas Exp $
+ * $Id: client_side.cc,v 1.198 1998/01/12 04:29:58 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -166,14 +166,14 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, int flags)
      * so make a fake one.
      */
     if (h->request == NULL) {
-	r = get_free_request_t();
+	r = memAllocate(MEM_REQUEST_T, 1);
 	r->method = m;
 	r->protocol = PROTO_NONE;
 	h->request = requestLink(r);
     }
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     storeClientListAdd(e, h);
-    storeClientCopy(e, 0, 0, 4096, get_free_4k_page(), clientSendMoreData, h);
+    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF, 1), clientSendMoreData, h);
     return e;
 }
 
@@ -281,7 +281,7 @@ clientProcessExpired(void *data)
 	http->out.offset,
 	http->out.offset,
 	4096,
-	get_free_4k_page(),
+	memAllocate(MEM_4K_BUF, 1),
 	clientHandleIMSReply,
 	http);
 }
@@ -322,7 +322,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     int unlink_request = 0;
     StoreEntry *oldentry;
     debug(33, 3) ("clientHandleIMSReply: %s\n", url);
-    put_free_4k_page(buf);
+    memFree(MEM_4K_BUF, buf);
     buf = NULL;
     /* unregister this handler */
     if (size < 0 || entry->store_status == STORE_ABORTED) {
@@ -340,7 +340,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    http->out.offset + size,
 	    http->out.offset,
 	    4096,
-	    get_free_4k_page(),
+	    memAllocate(MEM_4K_BUF, 1),
 	    clientHandleIMSReply,
 	    http);
 	return;
@@ -387,7 +387,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	http->out.offset,
 	http->out.offset,
 	4096,
-	get_free_4k_page(),
+	memAllocate(MEM_4K_BUF, 1),
 	clientCacheHit,
 	http);
 }
@@ -784,9 +784,8 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	debug(12, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
 	return 0;
     }
-    xbuf = get_free_4k_page();
-    ybuf = get_free_4k_page();
-
+    xbuf = memAllocate(MEM_4K_BUF, 1);
+    ybuf = memAllocate(MEM_4K_BUF, 1);
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	hdr_len = t - hdr_in;
 	l = strcspn(t, crlf) + 1;
@@ -828,8 +827,8 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	len = l;
     }
     debug(12, 3) ("clientBuildReplyHeader: OUTPUT:\n%s\n", hdr_out);
-    put_free_4k_page(xbuf);
-    put_free_4k_page(ybuf);
+    memFree(MEM_4K_BUF, xbuf);
+    memFree(MEM_4K_BUF, ybuf);
     return len;
 }
 
@@ -860,7 +859,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     size_t l = 0;
     size_t writelen;
     char *newbuf;
-    FREE *freefunc = put_free_4k_page;
+    FREE *freefunc = memFree4K;
     int hack = 0;
     char C = '\0';
     assert(size <= SM_PAGE_SIZE);
@@ -899,7 +898,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    C = *(buf + size);
 	}
 	*(buf + size) = '\0';
-	newbuf = get_free_8k_page();
+	newbuf = memAllocate(MEM_8K_BUF, 1);
 	hdrlen = 0;
 
 	l = clientBuildReplyHeader(http, buf, &hdrlen, newbuf, 8192);
@@ -919,10 +918,10 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	    /* replace buf with newbuf */
 	    freefunc(buf);
 	    buf = newbuf;
-	    freefunc = put_free_8k_page;
+	    freefunc = memFree8K;
 	    newbuf = NULL;
 	} else {
-	    put_free_8k_page(newbuf);
+	    memFree(MEM_8K_BUF, newbuf);
 	    newbuf = NULL;
 	    if (size < SM_PAGE_SIZE && entry->store_status == STORE_PENDING) {
 		/* wait for more to arrive */
@@ -1003,7 +1002,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 			http->out.offset,
 			http->out.offset,
 			SM_PAGE_SIZE,
-			get_free_4k_page(),
+			memAllocate(MEM_4K_BUF, 1),
 			clientSendMoreData,
 			http);
 	    } else {
@@ -1028,7 +1027,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    get_free_4k_page(),
+	    memAllocate(MEM_4K_BUF, 1),
 	    clientSendMoreData,
 	    http);
     }
@@ -1042,7 +1041,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
     MemObject *mem = entry->mem_obj;
     char *reply = NULL;
     assert(size <= SM_PAGE_SIZE);
-    put_free_4k_page(buf);
+    memFree(MEM_4K_BUF, buf);
     buf = NULL;
     if (size < 0) {
 	debug(12, 1) ("clientGetHeadersForIMS: storeClientCopy failed for '%s'\n",
@@ -1060,7 +1059,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    http->out.offset + size,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    get_free_4k_page(),
+	    memAllocate(MEM_4K_BUF, 1),
 	    clientGetHeadersForIMS,
 	    http);
 	return;
@@ -1094,7 +1093,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    get_free_4k_page(),
+	    memAllocate(MEM_4K_BUF, 1),
 	    clientSendMoreData,
 	    http);
 	return;
@@ -1247,7 +1246,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    get_free_4k_page(),
+	    memAllocate(MEM_4K_BUF, 1),
 	    clientCacheHit,
 	    http);
 	break;
@@ -1256,7 +1255,7 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    http->out.offset,
 	    SM_PAGE_SIZE,
-	    get_free_4k_page(),
+	    memAllocate(MEM_4K_BUF, 1),
 	    clientGetHeadersForIMS,
 	    http);
 	break;
@@ -1358,7 +1357,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if ((mstr = strtok(inbuf, "\t ")) == NULL) {
 	debug(12, 1) ("parseHttpRequest: Can't get request method\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http);
+	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
 	http->start = current_time;
 	http->req_sz = conn->in.offset;
@@ -1374,7 +1373,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if (method == METHOD_NONE) {
 	debug(12, 1) ("parseHttpRequest: Unsupported method '%s'\n", mstr);
 	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http);
+	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
 	http->start = current_time;
 	http->req_sz = conn->in.offset;
@@ -1393,7 +1392,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if ((url = strtok(NULL, "\r\n\t ")) == NULL) {
 	debug(12, 1) ("parseHttpRequest: Missing URL\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http);
+	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
 	http->start = current_time;
 	http->req_sz = conn->in.offset;
@@ -1411,7 +1410,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     if (t == NULL || *t == '\0' || t == token || strncmp(token, "HTTP/", 5)) {
 	debug(12, 3) ("parseHttpRequest: Missing HTTP identifier\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http);
+	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
 	http->start = current_time;
 	http->req_sz = conn->in.offset;
@@ -1442,7 +1441,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	/* Invalid request */
 	debug(12, 3) ("parseHttpRequest: No request headers?\n");
 	http = xcalloc(1, sizeof(clientHttpRequest));
-	cbdataAdd(http);
+	cbdataAdd(http, MEM_NONE);
 	http->conn = conn;
 	http->start = current_time;
 	http->req_sz = conn->in.offset;
@@ -1458,7 +1457,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 
     /* Ok, all headers are received */
     http = xcalloc(1, sizeof(clientHttpRequest));
-    cbdataAdd(http);
+    cbdataAdd(http, MEM_NONE);
     http->http_ver = http_ver;
     http->conn = conn;
     http->start = current_time;
@@ -1775,7 +1774,7 @@ httpAccept(int sock, void *notused)
     connState->ident.fd = -1;
     connState->in.size = REQUEST_BUF_SIZE;
     connState->in.buf = xcalloc(connState->in.size, 1);
-    cbdataAdd(connState);
+    cbdataAdd(connState, MEM_NONE);
     meta_data.misc += connState->in.size;
     comm_add_close_handler(fd, connStateFree, connState);
     if (Config.onoff.log_fqdn)

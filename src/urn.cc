@@ -63,7 +63,7 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
 	if (rtt == 0) {
 	    debug(50, 3) ("Pinging %s\n", r->host);
 	    netdbPingSite(r->host);
-	    put_free_request_t(r);
+	    memFree(MEM_REQUEST_T, r);
 	    continue;
 	}
 	debug(50, 3) ("%s rtt=%d\n", r->host, rtt);
@@ -73,7 +73,7 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
 	    continue;
 	min_rtt = rtt;
 	min_w = w;
-	put_free_request_t(r);
+	memFree(MEM_REQUEST_T, r);
     }
     if (rtt_ret)
 	*rtt_ret = min_rtt;
@@ -97,7 +97,7 @@ urnStart(request_t * r, StoreEntry * e)
     urnState = xcalloc(1, sizeof(UrnState));
     urnState->entry = e;
     urnState->request = requestLink(r);
-    cbdataAdd(urnState);
+    cbdataAdd(urnState, MEM_NONE);
     storeLockObject(urnState->entry);
     if (strncasecmp(r->urlpath, "menu.", 5) == 0) {
 	EBIT_SET(urnState->flags, URN_FORCE_MENU);
@@ -131,7 +131,7 @@ urnStart(request_t * r, StoreEntry * e)
 	0,
 	0,
 	4096,
-	get_free_4k_page(),
+	memAllocate(MEM_4K_BUF, 1),
 	urnHandleReply,
 	urnState);
 }
@@ -156,14 +156,14 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 
     debug(50, 3) ("urnHandleReply: Called with size=%d.\n", size);
     if (urlres_e->store_status == STORE_ABORTED) {
-	put_free_4k_page(buf);
+	memFree(MEM_4K_BUF, buf);
 	return;
     }
     if (size == 0) {
-	put_free_4k_page(buf);
+	memFree(MEM_4K_BUF, buf);
 	return;
     } else if (size < 0) {
-	put_free_4k_page(buf);
+	memFree(MEM_4K_BUF, buf);
 	return;
     }
     if (urlres_e->store_status == STORE_PENDING) {
@@ -250,7 +250,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     storeAppend(e, "\r\n", 2);
     storeAppend(e, S->buf, stringLength(S));
     storeComplete(e);
-    put_free_4k_page(buf);
+    memFree(MEM_4K_BUF, buf);
     wordlistDestroy(&urls);
     stringFree(S);
     storeUnregister(urlres_e, urnState);

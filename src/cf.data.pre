@@ -1602,7 +1602,7 @@ NAME: memory_pools
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: on
-LOC: opt_mem_pools
+LOC: Config.onoff.mem_pools
 DOC_START
 	If set, Squid will keep pools of allocated (but unused) memory
 	available for future use.  If memory is a premium on your

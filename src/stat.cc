@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.184 1998/01/08 03:39:22 wessels Exp $
+ * $Id: stat.cc,v 1.185 1998/01/12 04:30:11 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -502,15 +502,10 @@ int
 statMemoryAccounted(void)
 {
     return (int)
-	meta_data.store_entries * sizeof(StoreEntry) +
 	meta_data.store_keys +
 	meta_data.ipcache_count * sizeof(ipcache_entry) +
 	meta_data.fqdncache_count * sizeof(fqdncache_entry) +
 	hash_links_allocated * sizeof(hash_link) +
-	sm_stats.total_pages_allocated * sm_stats.page_size +
-	disk_stats.total_pages_allocated * disk_stats.page_size +
-	request_pool.total_pages_allocated * request_pool.page_size +
-	mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
 	meta_data.netdb_addrs * sizeof(netdbEntry) +
 	meta_data.netdb_hosts * sizeof(struct _net_db_name) +
                  meta_data.netdb_peers * sizeof(struct _net_db_peer) +
@@ -642,20 +637,13 @@ info_get(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "{Internal Data Structures:}\n");
     storeAppendPrintf(sentry, "{\t%6d StoreEntries}\n",
-	meta_data.store_entries);
+	memInUse(MEM_STOREENTRY));
     storeAppendPrintf(sentry, "{\t%6d StoreEntries with MemObjects}\n",
-	meta_data.mem_obj_count);
+	memInUse(MEM_MEMOBJECT));
     storeAppendPrintf(sentry, "{\t%6d StoreEntries with MemObject Data}\n",
-	meta_data.mem_data_count);
+	memInUse(MEM_MEM_HDR));
     storeAppendPrintf(sentry, "{\t%6d Hot Object Cache Items}\n",
 	meta_data.hot_vm);
-
-    storeAppendPrintf(sentry, "{Accounted Memory Usage:}\n");
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
-	"StoreEntry",
-	meta_data.store_entries,
-	(int) sizeof(StoreEntry),
-	(int) (meta_data.store_entries * sizeof(StoreEntry) >> 10));
 
     storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
 	"StoreEntry Keys",
@@ -678,34 +666,6 @@ info_get(StoreEntry * sentry)
 	hash_links_allocated,
 	(int) sizeof(hash_link),
 	(int) (hash_links_allocated * sizeof(hash_link) >> 10));
-
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB (%6d free)}\n",
-	"Pool MemObject structures",
-	mem_obj_pool.total_pages_allocated,
-	mem_obj_pool.page_size,
-	mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size >> 10,
-	(mem_obj_pool.total_pages_allocated - mem_obj_pool.n_pages_in_use) * mem_obj_pool.page_size >> 10);
-
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB (%6d free)}\n",
-	"Pool for Request structures",
-	request_pool.total_pages_allocated,
-	request_pool.page_size,
-	request_pool.total_pages_allocated * request_pool.page_size >> 10,
-	(request_pool.total_pages_allocated - request_pool.n_pages_in_use) * request_pool.page_size >> 10);
-
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB (%6d free)}\n",
-	"Pool for in-memory object data",
-	sm_stats.total_pages_allocated,
-	sm_stats.page_size,
-	sm_stats.total_pages_allocated * sm_stats.page_size >> 10,
-	(sm_stats.total_pages_allocated - sm_stats.n_pages_in_use) * sm_stats.page_size >> 10);
-
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB (%6d free)}\n",
-	"Pool for disk I/O",
-	disk_stats.total_pages_allocated,
-	disk_stats.page_size,
-	disk_stats.total_pages_allocated * disk_stats.page_size >> 10,
-	(disk_stats.total_pages_allocated - disk_stats.n_pages_in_use) * disk_stats.page_size >> 10);
 
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
 	"NetDB Address Entries",

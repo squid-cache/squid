@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.114 1998/01/07 21:16:29 wessels Exp $
+#  $Id: Makefile.in,v 1.115 1998/01/12 04:29:54 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -95,6 +95,7 @@ OBJS	 	= \
 		ident.o \
 		ipcache.o \
 		main.o \
+		mem.o \
 		mime.o \
 		multicast.o \
 		neighbors.o \
@@ -109,7 +110,6 @@ OBJS	 	= \
 		send-announce.o \
 		@SNMP_OBJS@ \
 		ssl.o \
-		stack.o \
 		stat.o \
 		stmem.o \
 		store.o \

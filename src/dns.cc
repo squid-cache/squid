@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.49 1998/01/06 05:15:40 wessels Exp $
+ * $Id: dns.cc,v 1.50 1998/01/12 04:29:59 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -259,7 +259,7 @@ dnsOpenServers(void)
     NDnsServersAlloc = 0;
     for (k = 0; k < N; k++) {
 	dns_child_table[k] = xcalloc(1, sizeof(dnsserver_t));
-	cbdataAdd(dns_child_table[k]);
+	cbdataAdd(dns_child_table[k], MEM_NONE);
 	if ((dnssocket = dnsOpenServer(prg)) < 0) {
 	    debug(34, 1) ("dnsOpenServers: WARNING: Failed to start 'dnsserver' #%d.\n", k + 1);
 	    EBIT_CLR(dns_child_table[k]->flags, HELPER_ALIVE);

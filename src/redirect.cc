@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.51 1997/12/06 05:16:59 wessels Exp $
+ * $Id: redirect.cc,v 1.52 1998/01/12 04:30:10 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -181,7 +181,7 @@ redirectHandleRead(int fd, void *data)
 	    ("FD %d: Connection from Redirector #%d is closed, disabling\n",
 	    fd, redirector->index + 1);
 	redirector->flags = 0;
-	put_free_8k_page(redirector->inbuf);
+	memFree(MEM_8K_BUF, redirector->inbuf);
 	redirector->inbuf = NULL;
 	comm_close(fd);
 	if (--NRedirectorsOpen == 0 && !shutdown_pending && !reconfigure_pending)
@@ -301,7 +301,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
     redirect->dispatch_time = current_time;
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
 	fqdn = dash_str;
-    buf = get_free_8k_page();
+    buf = memAllocate(MEM_8K_BUF, 1);
     snprintf(buf, 8192, "%s %s/%s %s %s\n",
 	r->orig_url,
 	inet_ntoa(r->client_addr),
@@ -314,7 +314,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
 	len,
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
-	put_free_8k_page);
+	memFree8K);
     debug(29, 5) ("redirectDispatch: Request sent to Redirector #%d, %d bytes\n",
 	redirect->index + 1, len);
     RedirectStats.use_hist[redirect->index]++;
@@ -365,7 +365,7 @@ redirectFreeMemory(void)
     if (redirect_child_table) {
 	for (k = 0; k < NRedirectors; k++) {
 	    if (redirect_child_table[k]->inbuf)
-		put_free_8k_page(redirect_child_table[k]->inbuf);
+		memFree(MEM_8K_BUF, redirect_child_table[k]->inbuf);
 	    safe_free(redirect_child_table[k]);
 	}
 	safe_free(redirect_child_table);
@@ -398,7 +398,7 @@ redirectOpenServers(void)
 	    EBIT_SET(redirect_child_table[k]->flags, HELPER_ALIVE);
 	    redirect_child_table[k]->index = k;
 	    redirect_child_table[k]->fd = redirectsocket;
-	    redirect_child_table[k]->inbuf = get_free_8k_page();
+	    redirect_child_table[k]->inbuf = memAllocate(MEM_8K_BUF, 1);
 	    redirect_child_table[k]->size = 8192;
 	    redirect_child_table[k]->offset = 0;
 	    if ((s = strrchr(prg, '/')))
