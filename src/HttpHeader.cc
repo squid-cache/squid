@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.40 1998/06/02 21:38:05 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.41 1998/06/02 22:15:18 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -99,6 +99,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
     {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
+    {"If-Range", HDR_IF_RANGE, ftDate_1123}, /* for now (ftDate_1123 or ftStr!) */
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
     {"Link", HDR_LINK, ftStr},
     {"Location", HDR_LOCATION, ftStr},
@@ -193,8 +194,9 @@ static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders *
 static http_hdr_type RequestHeadersArr[] =
 {
     HDR_AUTHORIZATION, HDR_FROM, HDR_HOST, HDR_IF_MODIFIED_SINCE,
-    HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION, HDR_PROXY_AUTHORIZATION,
-    HDR_RANGE, HDR_REFERER, HDR_USER_AGENT, HDR_X_FORWARDED_FOR
+    HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
+    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_USER_AGENT,
+    HDR_X_FORWARDED_FOR
 };
 
 /* header accounting */

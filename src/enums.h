@@ -205,6 +205,7 @@ typedef enum {
     HDR_FROM,
     HDR_HOST,
     HDR_IF_MODIFIED_SINCE,
+    HDR_IF_RANGE,
     HDR_LAST_MODIFIED,
     HDR_LINK,
     HDR_LOCATION,
