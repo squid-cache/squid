@@ -175,7 +175,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     } else if (e->store_status == STORE_PENDING && sc->seen_offset == mem->inmem_hi) {
 	/* client has already seen this, wait for more */
 	debug(20, 3) ("storeClientCopy2: Waiting for more\n");
-    } else if (sc->copy_offset >= mem->inmem_lo && mem->inmem_lo < mem->inmem_hi) {
+    } else if (sc->copy_offset >= mem->inmem_lo && sc->copy_offset < mem->inmem_hi) {
 	/* What the client wants is in memory */
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
 	sz = stmemCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
