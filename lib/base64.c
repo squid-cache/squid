@@ -60,6 +60,6 @@ base64_decode(char *p)
 	    val = c = 0;
 	}
     }
-
+    *d = 0;
     return *result ? result : NULL;
 }
