@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.44 2003/03/06 11:51:55 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.45 2003/03/10 04:56:37 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -41,6 +41,9 @@
 
 #include "clientStream.h"
 #include "authenticate.h"
+#if ESI
+#include "ESI.h"
+#endif
 #include "MemObject.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
@@ -1920,14 +1923,12 @@ clientReplyContext::pushStreamData(StoreIOBuffer const &result, char *source)
         flags.complete = 1;
     }
 
-    /* REMOVE ME: Only useful for two node streams */
-    assert(result.offset - headers_sz == ((clientStreamNode *) http->client_stream.tail->data)->readBuffer.offset);
-
+    assert(result.offset - headers_sz == next()->readBuffer.offset);
     tempBuffer.offset = result.offset - headers_sz;
-
     tempBuffer.length = result.length;
 
-    tempBuffer.data = source;
+    if (tempBuffer.length)
+        tempBuffer.data = source;
 
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, NULL,
                          tempBuffer);
@@ -2030,7 +2031,17 @@ clientReplyContext::processReply(bool accessAllowed)
     debug(88,3)
     ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
      (int) body_size, rep->hdr_sz);
+#if ESI
 
+    if (http->flags.accel && rep->sline.status != HTTP_FORBIDDEN &&
+            !clientAlwaysAllowResponse(rep->sline.status) &&
+            esiEnableProcessing(rep)) {
+        debug(88, 2) ("Enabling ESI processing for %s\n", http->uri);
+        clientStreamInsertHead(&http->client_stream, esiStreamRead,
+                               esiProcessStream, esiStreamDetach, esiStreamStatus, NULL);
+    }
+
+#endif
     if (http->request->method == METHOD_HEAD) {
         /* do not forward body for HEAD replies */
         body_size = 0;
@@ -2157,6 +2168,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         holdingBuffer = result;
         processReplyAccess ();
         return;
+
     } else if (reqofs < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
         waitForMoreData(result);
         return;

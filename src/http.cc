@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.412 2003/03/06 06:21:38 robertc Exp $
+ * $Id: http.cc,v 1.413 2003/03/10 04:56:38 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -287,6 +287,48 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     }
 }
 
+void
+HttpStateData::processSurrogateControl(HttpReply *reply)
+{
+#if ESI
+
+    if (request->flags.accelerated && reply->surrogate_control) {
+        HttpHdrScTarget *sctusable =
+            httpHdrScGetMergedTarget(reply->surrogate_control,
+                                     Config.Accel.surrogate_id);
+
+        if (sctusable) {
+            if (EBIT_TEST(sctusable->mask, SC_NO_STORE) ||
+                    (Config.onoff.surrogate_is_remote
+                     && EBIT_TEST(sctusable->mask, SC_NO_STORE_REMOTE))) {
+                surrogateNoStore = true;
+                httpMakePrivate(entry);
+            }
+
+            /* The HttpHeader logic cannot tell if the header it's parsing is a reply to an
+             * accelerated request or not...
+             * Still, this is an abtraction breach. - RC
+             */
+            if (sctusable->max_age != -1) {
+                if (sctusable->max_age < sctusable->max_stale)
+                    reply->expires = reply->date + sctusable->max_age;
+                else
+                    reply->expires = reply->date + sctusable->max_stale;
+
+                /* And update the timestamps */
+                storeTimestampsSet(entry);
+            }
+
+            /* We ignore cache-control directives as per the Surrogate specification */
+            ignoreCacheControl = true;
+
+            httpHdrScTargetDestroy(sctusable);
+        }
+    }
+
+#endif
+}
+
 int
 cacheControlAllowsCaching(HttpHdrCc *cc)
 {
@@ -314,8 +356,22 @@ httpCachableReply(HttpStateData * httpState)
     const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
 
+    if (httpState->surrogateNoStore)
+        return 0;
+
     if (!cacheControlAllowsCaching(rep->cache_control))
         return 0;
+
+    if (!httpState->ignoreCacheControl) {
+        if (EBIT_TEST(cc_mask, CC_PRIVATE))
+            return 0;
+
+        if (EBIT_TEST(cc_mask, CC_NO_CACHE))
+            return 0;
+
+        if (EBIT_TEST(cc_mask, CC_NO_STORE))
+            return 0;
+    }
 
     if (httpState->request->flags.auth) {
         /*
@@ -596,6 +652,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     /* Parse headers into reply structure */
     /* what happens if we fail to parse here? */
     httpReplyParse(reply, reply_hdr, hdr_len);
+    processSurrogateControl (reply);
     /* TODO: we need our own reply * in the httpState, as we probably don't want to replace
      * the storeEntry with interim headers
      */
@@ -656,7 +713,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         break;
     }
 
-    if (entry->getReply()->cache_control) {
+    if (!ignoreCacheControl && entry->getReply()->cache_control) {
         if (EBIT_TEST(entry->getReply()->cache_control->mask, CC_PROXY_REVALIDATE))
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
         else if (EBIT_TEST(entry->getReply()->cache_control->mask, CC_MUST_REVALIDATE))
@@ -1068,7 +1125,7 @@ httpBuildRequestHeader(request_t * request,
     while ((e = httpHeaderGetEntry(hdr_in, &pos)))
         copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, orig_request, hdr_out, we_do_ranges, flags);
 
-    /* Abstraction break: We should interpret myultipart/byterange responses
+    /* Abstraction break: We should interpret multipart/byterange responses
      * into offset-length data, and this works around our inability to do so.
      */
     if (!we_do_ranges && orig_request->multipartRangeRequest()) {
@@ -1083,7 +1140,8 @@ httpBuildRequestHeader(request_t * request,
 
     /* append Via */
     if (Config.onoff.via) {
-        String strVia = httpHeaderGetList(hdr_in, HDR_VIA);
+        String strVia;
+        strVia = httpHeaderGetList(hdr_in, HDR_VIA);
         snprintf(bbuf, BBUF_SZ, "%d.%d %s",
                  orig_request->http_ver.major,
                  orig_request->http_ver.minor, ThisCache);
@@ -1091,6 +1149,17 @@ httpBuildRequestHeader(request_t * request,
         httpHeaderPutStr(hdr_out, HDR_VIA, strVia.buf());
         strVia.clean();
     }
+
+#if ESI
+    {
+        /* Append Surrogate-Capabilities */
+        String strSurrogate (httpHeaderGetList(hdr_in, HDR_SURROGATE_CAPABILITY));
+        snprintf(bbuf, BBUF_SZ, "%s=Surrogate/1.0 ESI/1.0",
+                 Config.Accel.surrogate_id);
+        strListAdd(&strSurrogate, bbuf, ',');
+        httpHeaderPutStr(hdr_out, HDR_SURROGATE_CAPABILITY, strSurrogate.buf());
+    }
+#endif
 
     /* append X-Forwarded-For */
     strFwd = httpHeaderGetList(hdr_in, HDR_X_FORWARDED_FOR);
@@ -1190,7 +1259,8 @@ httpBuildRequestHeader(request_t * request,
             cc = httpHdrCcCreate();
 
         if (!EBIT_TEST(cc->mask, CC_MAX_AGE)) {
-            const char *url = entry ? storeUrl(entry) : urlCanonical(orig_request);
+            const char *url =
+                entry ? storeUrl(entry) : urlCanonical(orig_request);
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
 
             if (request->urlpath.size())
@@ -1409,7 +1479,8 @@ httpSendRequest(HttpStateData * httpState)
     peer *p = httpState->_peer;
     CWCB *sendHeaderDone;
 
-    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd, httpState);
+    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd,
+                  httpState);
 
     if (httpState->orig_request->body_connection)
         sendHeaderDone = httpSendRequestEntity;
@@ -1438,7 +1509,8 @@ httpSendRequest(HttpStateData * httpState)
         httpState->flags.keepalive = 1;
     else if (p->stats.n_keepalives_sent < 10)
         httpState->flags.keepalive = 1;
-    else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
+    else if ((double) p->stats.n_keepalives_recv /
+             (double) p->stats.n_keepalives_sent > 0.50)
         httpState->flags.keepalive = 1;
 
     if (httpState->_peer) {
@@ -1471,6 +1543,8 @@ httpStart(FwdState * fwd)
                   storeUrl(fwd->entry));
     CBDATA_INIT_TYPE(HttpStateData);
     httpState = cbdataAlloc(HttpStateData);
+    httpState->ignoreCacheControl = false;
+    httpState->surrogateNoStore = false;
     storeLockObject(fwd->entry);
     httpState->fwd = fwd;
     httpState->entry = fwd->entry;
@@ -1546,8 +1620,7 @@ httpSendRequestEntityDone(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     ACLChecklist ch;
-    debug(11, 5) ("httpSendRequestEntityDone: FD %d\n",
-                  fd);
+    debug(11, 5) ("httpSendRequestEntityDone: FD %d\n", fd);
     ch.request = requestLink(httpState->request);
 
     if (!Config.accessList.brokenPosts) {

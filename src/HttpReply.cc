@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.57 2003/03/09 12:29:40 robertc Exp $
+ * $Id: HttpReply.cc,v 1.58 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -462,6 +462,8 @@ httpReplyHdrCacheInit(HttpReply * rep)
 
     rep->cache_control = httpHeaderGetCc(hdr);
 
+    rep->surrogate_control = httpHeaderGetSc(hdr);
+
     rep->content_range = httpHeaderGetContRange(hdr);
 
     rep->keep_alive = httpMsgIsPersistent(rep->sline.version, &rep->header);
@@ -478,6 +480,9 @@ httpReplyHdrCacheClean(HttpReply * rep)
 
     if (rep->cache_control)
         httpHdrCcDestroy(rep->cache_control);
+
+    if (rep->surrogate_control)
+        httpHdrScDestroy(rep->surrogate_control);
 
     if (rep->content_range)
         httpHdrContRangeDestroy(rep->content_range);

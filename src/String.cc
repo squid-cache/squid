@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.16 2003/03/08 09:35:15 robertc Exp $
+ * $Id: String.cc,v 1.17 2003/03/10 04:56:36 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -164,6 +164,15 @@ String::append(char const *str)
 {
     assert (str);
     append (str, strlen(str));
+}
+
+void
+String::append (char chr)
+{
+    char myString[2];
+    myString[0]=chr;
+    myString[1]='\0';
+    append (myString, 1);
 }
 
 void

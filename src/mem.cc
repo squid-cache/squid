@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.77 2003/03/09 12:29:41 robertc Exp $
+ * $Id: mem.cc,v 1.78 2003/03/10 04:56:38 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -401,6 +401,8 @@ Mem::Init(void)
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
     memDataInit(MEM_FWD_SERVER, "FwdServer", sizeof(FwdServer), 0);
     memDataInit(MEM_HTTP_HDR_CC, "HttpHdrCc", sizeof(HttpHdrCc), 0);
+    memDataInit(MEM_HTTP_HDR_SC, "HttpHdrSc", sizeof(HttpHdrSc), 0);
+    memDataInit(MEM_HTTP_HDR_SCTARGET, "HttpHdrScTarget", sizeof(HttpHdrScTarget), 0);
     memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);

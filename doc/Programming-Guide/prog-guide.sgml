@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.55 2003/02/05 10:35:30 robertc Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.56 2003/03/10 04:55:35 robertc Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -384,6 +384,14 @@ Squid consists of the following major components
 	(the ``standard'' mode), or only specific request headers
 	will be allowed (the ``paranoid'' mode).
 
+<sect1>Delay Pools
+
+	<P>
+	Delay pools provide bandwidth regulation by restricting the rate
+	at which squid reads from a server before sending to a client. They
+	do not prevent cache hits from being sent at maximal capacity. Delay
+	pools can aggregate the bandwidth from multiple machines and users
+	to provide more or less general restrictions.
 
 <sect1>Internet Cache Protocol
 
@@ -459,14 +467,12 @@ Squid consists of the following major components
 	see <url        url="http://squid.nlanr.net/Squid/urn-support.html"
 	name="URN support in Squid">.
 
-<sect1>Delay Pools
-
+<sect1>ESI
 	<P>
-	Delay pools provide bandwidth regulation by restricting the rate
-	at which squid reads from a server before sending to a client. They
-	do not prevent cache hits from being sent at maximal capacity. Delay
-	pools can aggregate the bandwidth from multiple machines and users
-	to provide more or less general restrictions.
+	ESI is an implementation of Edge Side Includes (<url url="http://www.esi.org">.)
+	ESI is implemented as a client side stream and a small 
+	modification to client_side_reply.c to check whether
+	ESI should be inserted into the reply stream or not.
 
 <sect>External Programs
 

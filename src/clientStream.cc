@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.5 2003/02/21 22:50:07 robertc Exp $
+ * $Id: clientStream.cc,v 1.6 2003/03/10 04:56:37 robertc Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -146,8 +146,6 @@ clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
  * Doesn't actually insert at head. Instead it inserts one *after*
  * head. This is because HEAD is a special node, as is tail
  * This function is not suitable for inserting the real HEAD.
- * TODO: should we always initalise the buffers and length, to 
- * allow safe insertion of elements in the downstream cycle?
  */
 void
 clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
@@ -163,7 +161,12 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
     debug(87, 3)
     ("clientStreamInsertHead: Inserted node %p with data %p after head\n",
      temp, data);
+
+    if (list->head->next)
+        temp->readBuffer = ((clientStreamNode *)list->head->next->data)->readBuffer;
+
     dlinkAddAfter(temp, &temp->node, list->head, list);
+
     cbdataReference(temp);
 }
 
@@ -276,22 +279,23 @@ clientStreamFree(void *foo)
     if (thisObject->node.next || thisObject->node.prev) {
         dlinkDelete(&thisObject->node, thisObject->head);
     }
+
 }
 
-_clientStreamNode *
-_clientStreamNode::prev() const
+clientStreamNode *
+clientStreamNode::prev() const
 {
     if (node.prev)
-        return (_clientStreamNode *)node.prev->data;
+        return (clientStreamNode *)node.prev->data;
     else
         return NULL;
 }
 
-_clientStreamNode *
-_clientStreamNode::next() const
+clientStreamNode *
+clientStreamNode::next() const
 {
     if (node.next)
-        return (_clientStreamNode *)node.next->data;
+        return (clientStreamNode *)node.next->data;
     else
         return NULL;
 }

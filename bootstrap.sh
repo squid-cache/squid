@@ -69,3 +69,6 @@ bootstrap automake$amver --foreign --add-missing
 bootstrap autoconf$acver
 
 echo "Autotool bootstrapping complete."
+echo "bootstrapping sub projects."
+cd lib/libTrie && $SHELL ./bootstrap.sh
+

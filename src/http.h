@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.6 2003/03/04 01:40:28 robertc Exp $
+ * $Id: http.h,v 1.7 2003/03/10 04:56:38 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -62,6 +62,9 @@ public:
     int do_next_read;
     size_t read_sz;
     char buf[SQUID_TCP_SO_RCVBUF];
+    bool ignoreCacheControl;
+    bool surrogateNoStore;
+    void processSurrogateControl(HttpReply *);
 
 private:
     enum ConnectionStatus {

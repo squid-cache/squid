@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.64 2003/03/08 09:43:49 robertc Exp $
+#  $Id: Makefile.am,v 1.65 2003/03/10 04:56:36 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -46,6 +46,33 @@ DELAY_POOL_SOURCE = \
 	NullDelayId.h
 else
 DELAY_POOL_SOURCE = 
+endif
+
+ESI_ALL_SOURCE = \
+	ElementList.h \
+	ESI.cc \
+	ESI.h \
+	ESIAttempt.h \
+	ESIContext.cc \
+	ESIContext.h \
+	ESICustomParser.cc \
+	ESICustomParser.h \
+	ESIElement.h \
+	ESIExcept.h \
+	ESIExpatParser.cc \
+	ESIExpatParser.h \
+	ESIExpression.cc \
+	ESILiteral.h \
+	ESIParser.cc \
+	ESIParser.h \
+	ESISegment.cc \
+	ESISegment.h \
+	ESISequence.cc \
+	ESISequence.h
+if USE_ESI
+  ESI_SOURCE = $(ESI_ALL_SOURCE)
+else
+  ESI_SOURCE = 
 endif
 
 if ENABLE_XPROF_STATS
@@ -107,12 +134,12 @@ else
 ARP_ACL_SOURCE =
 endif
 
-AM_CFLAGS = -Werror -Wall
-AM_CXXFLAGS = -Werror -Wall
+AM_CFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
+AM_CXXFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
 
 SUBDIRS		= fs repl auth
 
-INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include
+INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 
 EXTRA_PROGRAMS = \
 	unlinkd \
@@ -150,6 +177,7 @@ EXTRA_squid_SOURCES = \
 	dnsserver.cc \
 	dns_internal.cc \
 	htcp.cc \
+	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
 	leakfinder.cc \
 	snmp_core.cc \
@@ -268,6 +296,7 @@ squid_SOURCES = \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
+	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
 	external_acl.cc \
@@ -289,6 +318,8 @@ squid_SOURCES = \
 	HttpStatusLine.cc \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHeader.cc \
@@ -448,6 +479,7 @@ ufsdump_SOURCES = debug.cc \
 	StoreMetaVary.h \
 	access_log.cc \
 	acl.cc \
+	ACLChecklist.cc \
 	$(squid_ACLSOURCES) \
 	ACLChecklist.cc \
 	asn.cc \
@@ -476,6 +508,7 @@ ufsdump_SOURCES = debug.cc \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
+	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
 	external_acl.cc \
@@ -493,6 +526,8 @@ ufsdump_SOURCES = debug.cc \
 	HttpStatusLine.cc \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
 	HttpHdrContRange.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -535,8 +570,8 @@ ufsdump_SOURCES = debug.cc \
 	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
-	tunnel.cc \
 	$(SSLSOURCE) \
+	tunnel.cc \
 	stat.cc \
 	StatHist.cc \
 	String.cc \

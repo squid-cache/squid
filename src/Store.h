@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.8 2003/03/04 01:40:25 robertc Exp $
+ * $Id: Store.h,v 1.9 2003/03/10 04:56:36 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,10 @@
 #include "Range.h"
 #include "CommRead.h"
 
+#if ESI
+#include "ESIElement.h"
+#endif
+
 class StoreClient;
 
 class MemObject;
@@ -53,6 +57,8 @@ public:
     bool checkDeferRead(int fd) const;
 
     virtual const char *getMD5Text() const;
+    virtual ~StoreEntry(){}
+
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);
     virtual _SQUID_INLINE_ bool isEmpty() const;
@@ -64,6 +70,7 @@ public:
     virtual void trimMemory();
 
     void delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data);
+
     void setNoDelay (bool const);
 
     MemObject *mem_obj;
@@ -110,6 +117,11 @@ public:
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
+    void setReleaseFlag();
+#if ESI
+
+    ESIElement::Pointer cachedESITree;
+#endif
 
 private:
     static MemPool *pool;
@@ -150,6 +162,7 @@ private:
     static NullStoreEntry _instance;
 };
 
+SQUIDCEXTERN size_t storeEntryInUse();
 SQUIDCEXTERN off_t storeLowestMemReaderOffset(const StoreEntry * entry);
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *);
 SQUIDCEXTERN int storeEntryLocked(const StoreEntry *);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.458 2003/03/08 09:35:16 robertc Exp $
+ * $Id: structs.h,v 1.459 2003/03/10 04:56:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -400,6 +400,16 @@ struct _SquidConfig
     time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;
+
+    struct
+    {
+#if ESI
+        char *surrogate_id;
+#endif
+
+    }
+
+    Accel;
     char *appendDomain;
     size_t appendDomainLen;
     char *debugOptions;
@@ -534,6 +544,11 @@ struct _SquidConfig
         int ie_refresh;
         int vary_ignore_expire;
         int pipeline_prefetch;
+#if ESI
+
+        int surrogate_is_remote;
+#endif
+
         int request_entities;
         int check_hostnames;
         int via;
@@ -905,6 +920,25 @@ struct _HttpHeader
     int len;			/* length when packed, not counting terminating '\0' */
 };
 
+/* http surogate control header field */
+
+struct _HttpHdrScTarget
+{
+    dlink_node node;
+    int mask;
+    int max_age;
+    int max_stale;
+    String content;
+    String target;
+};
+
+struct _HttpHdrSc
+{
+    dlink_list targets;
+};
+
+/* Sync changes here with HttpReply.c */
+
 class HttpHdrContRange;
 
 class HttpReply
@@ -923,6 +957,7 @@ public:
     time_t expires;
     String content_type;
     HttpHdrCc *cache_control;
+    HttpHdrSc *surrogate_control;
     HttpHdrContRange *content_range;
     short int keep_alive;
 
@@ -1749,6 +1784,7 @@ unsigned int flag_cbdata:
 
     ftp;
     char *request_hdrs;
+    char *err_msg; /* Preformatted error message from the cache */
 };
 
 /*
@@ -1949,9 +1985,11 @@ struct _HttpHeaderStat
     StatHist hdrUCountDistr;
     StatHist fieldTypeDistr;
     StatHist ccTypeDistr;
+    StatHist scTypeDistr;
 
     int parsedCount;
     int ccParsedCount;
+    int scParsedCount;
     int destroyedCount;
     int busyDestroyedCount;
 };
