@@ -1677,7 +1677,7 @@ fi
 
 if test "$use_dnsserver" = "yes"; then
     cat >> confdefs.h <<\EOF
-#define USE_DNSSERVER 1
+#define USE_DNSSERVERS 1
 EOF
 
     OPT_DNSSERVER_EXE='$(OPT_DNSSERVER_EXE)'
