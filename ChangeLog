@@ -8,6 +8,10 @@ Changes to Squid-2.1 ():
 	- Changed storeClientCopy2() so that it keeps sending the remainder
 	  of a STORE_ABORTED request, instead of cutting off the client as
 	  soon as the object becomes aborted.
+	- Fixed combined ipf-transparent proxy and a local http-accelerator
+	  operation (Quinton Dolan).
+	- Rewrote base64_decode.c because of potential buffer overrun
+	  bugs.
 
 Changes to Squid-2.0 (October 2, 1998):
 
@@ -51,6 +55,7 @@ Changes to Squid-2.0 (October 2, 1998):
 	  ENTRY_BAD_LENGTH set.  We should release the
 	  bad entry to prevent secondary clients jumping on.
 	- Changed MIB to prevent parse warnings at startup.
+	* Changes below have been made to SQUID_2_0_PATCH1
 	- Fixed a forwarding loop bug.  Even though we were detecting
 	  a loop, it was not being broken.
 	- Try to prevent sibling forwarding loops by NOT forwarding a
@@ -64,6 +69,12 @@ Changes to Squid-2.0 (October 2, 1998):
 	  because there can be more than one client hanging on the
 	  StoreEntry.  This hopefully fixes "store_status !=
 	  STORE_ABORTED" assertions.
+	- Added temporary fix to httpMakePublic() to prevent assertions
+	  (!EBIT_TEST(e->flags, RELEASE_REQUEST)) in storeSetPublicKey().
+	* Changes below have been made to SQUID_2_0_PATCH2
+	- PATCH1 introduced a seriously stupid bug which prevented ICP
+	  queries for all requests.  Fixed by checking
+	  request->hierarchical in peerSelectFoo().
 
 Changes to squid-1.2.beta25 (September 21, 1998):
 
