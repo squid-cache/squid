@@ -26,9 +26,10 @@ Changes to squid-1.2.beta23 (June 22, 1998):
 	  headers are now filtered out for cache hits on the client
 	  side.
 	- Fixed SNMP bugs caused by using snmpwalk.
-	- Fixed snmpwalk crash. snmpwalks do not crash squid anymore.
 	- Fixed snmp system Group; all objects are now returned.
 	- Fixed snmp system Group sysDescr and sysContact.
+	- Fixed snmp system Group sysObjectID it now returns a OBJECT
+	  IDENTIFIER.
 	- Allocate FwdState from mem pools.
 	- Minor HTCP progress.
 	- Moved 'miss_access' ACL check from client_side.c to forward.c
