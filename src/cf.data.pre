@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.304 2003/02/21 19:53:01 hno Exp $
+# $Id: cf.data.pre,v 1.305 2003/02/21 21:01:16 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -388,6 +388,7 @@ DOC_START
 		     default
 		     round-robin
 		     weighted-round-robin
+		     carp
 		     multicast-responder
 		     closest-only
 		     no-digest
@@ -451,6 +452,11 @@ DOC_START
 		     frequency of each parent being based on the round trip 
 		     time. Closer parents are used more often. 
 		     Usually used for background-ping parents.
+
+		     use 'carp' to define a set of parents which should
+		     be used as a CARP array. The requests will then be
+		     distributed among the parents based on the CARP load
+		     balancing hash function based on their weigth.
 
 		     'multicast-responder' indicates that the named peer
 		     is a member of a multicast group.  ICP queries will
