@@ -134,8 +134,8 @@
 #define SM_PAGE_SIZE 4096
 #define DISK_PAGE_SIZE  8192
 
-#define EBIT_SET(flag, bit) 	((flag) |= ((1<<bit)))
-#define EBIT_CLR(flag, bit) 	((flag) &= ~((1<<bit)))
+#define EBIT_SET(flag, bit) 	((void)((flag) |= ((1<<bit))))
+#define EBIT_CLR(flag, bit) 	((void)((flag) &= ~((1<<bit))))
 #define EBIT_TEST(flag, bit) 	((flag) & ((1<<bit)))
 
 #define MAX_FILES_PER_DIR (1<<20)

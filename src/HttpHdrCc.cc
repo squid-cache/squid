@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.5 1998/03/08 21:02:07 rousskov Exp $
+ * $Id: HttpHdrCc.cc,v 1.6 1998/03/11 22:18:43 rousskov Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -31,8 +31,8 @@
 
 #include "squid.h"
 
-/* this table is used for parsing server cache control header */
-static field_attrs_t CcAttrs[CC_ENUM_END] =
+/* this table is used for parsing cache control header */
+static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] =
 {
     {"public", CC_PUBLIC},
     {"private", CC_PRIVATE},
@@ -43,7 +43,7 @@ static field_attrs_t CcAttrs[CC_ENUM_END] =
     {"proxy-revalidate", CC_PROXY_REVALIDATE},
     {"max-age", CC_MAX_AGE}
 };
-
+HttpHeaderFieldInfo *CcFieldsInfo = NULL;
 
 /* counters */
 static int CcParsedCount = 0;
@@ -57,7 +57,14 @@ static int httpHdrCcParseInit(HttpHdrCc * cc, const char *str);
 void
 httpHdrCcInitModule()
 {
-    httpHeaderInitAttrTable((field_attrs_t *) CcAttrs, CC_ENUM_END);
+    CcFieldsInfo = httpHeaderBuildFieldsInfo(CcAttrs, CC_ENUM_END);
+}
+
+void
+httpHdrCcCleanModule()
+{
+    httpHeaderDestroyFieldsInfo(CcFieldsInfo, CC_ENUM_END);
+    CcFieldsInfo = NULL;
 }
 
 /* implementation */
@@ -101,14 +108,14 @@ httpHdrCcParseInit(HttpHdrCc * cc, const char *str)
 	    ilen = p++ - item;
 	/* find type */
 	type = httpHeaderIdByName(item, ilen,
-	    CcAttrs, CC_ENUM_END, -1);
+	    CcFieldsInfo, CC_ENUM_END, -1);
 	if (type < 0) {
 	    debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
 	    continue;
 	}
 	if (EBIT_TEST(cc->mask, type)) {
 	    debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
-	    CcAttrs[type].stat.repCount++;
+	    CcFieldsInfo[type].stat.repCount++;
 	    continue;
 	}
 	/* update mask */
@@ -162,7 +169,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     }
     for (flag = 0; flag < CC_ENUM_END; flag++) {
 	if (EBIT_TEST(cc->mask, flag)) {
-	    packerPrintf(p, pcount ? ", %s" : "%s", CcAttrs[flag].name);
+	    packerPrintf(p, pcount ? ", %s" : "%s", CcFieldsInfo[flag].name);
 	    pcount++;
 	}
     }
@@ -192,7 +199,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
 {
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
-    const char *name = valid_id ? CcAttrs[id].name : "INVALID";
+    const char *name = valid_id ? strBuf(CcFieldsInfo[id].name) : "INVALID";
     if (count || valid_id)
 	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
 	    id, name, count, xdiv(count, CcParsedCount));

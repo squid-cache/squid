@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.56 1998/03/08 04:42:25 wessels Exp $
+ * $Id: util.c,v 1.57 1998/03/11 22:18:43 rousskov Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -752,10 +752,18 @@ xpercentInt(double part, double whole)
     return (int) rint(xpercent(part, whole));
 }
 
-
 /* somewhat safer division */
 double
 xdiv(double nom, double denom)
 {
     return (denom != 0.0) ? nom / denom : -1.0;
+}
+
+/* integer to string */
+const char *
+xitoa(int num)
+{
+    static char buf[24]; /* 2^64 = 18446744073709551616 */
+    snprintf(buf, sizeof(buf), "%d", num);
+    return buf;
 }
