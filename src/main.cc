@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.78 1996/09/16 21:50:25 wessels Exp $
+ * $Id: main.cc,v 1.79 1996/09/17 02:30:00 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -155,7 +155,7 @@ static void mainParseOptions __P((int, char **));
 static void sendSignal __P((void));
 
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "\
 Usage: %s [-hsvzCDFRUVY] [-f config-file] [-[au] port] [-k signal]\n\
@@ -312,7 +312,7 @@ shut_down(int sig)
 }
 
 void
-serverConnectionsOpen()
+serverConnectionsOpen(void)
 {
     struct in_addr addr;
     u_short port;
@@ -385,7 +385,7 @@ serverConnectionsOpen()
 }
 
 void
-serverConnectionsClose()
+serverConnectionsClose(void)
 {
     /* NOTE, this function will be called repeatedly while shutdown
      * is pending */
@@ -423,7 +423,7 @@ serverConnectionsClose()
 }
 
 static void
-mainReinitialize()
+mainReinitialize(void)
 {
     debug(1, 0, "Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
@@ -441,7 +441,7 @@ mainReinitialize()
 }
 
 static void
-mainInitialize()
+mainInitialize(void)
 {
     static int first_time = 1;
     if (opt_catch_signals) {
@@ -537,7 +537,7 @@ mainInitialize()
 }
 
 static time_t
-mainMaintenance()
+mainMaintenance(void)
 {
     time_t next;
     int n;
@@ -690,7 +690,7 @@ main(int argc, char **argv)
 }
 
 static void
-sendSignal()
+sendSignal(void)
 {
     int pid;
     debug_log = stderr;

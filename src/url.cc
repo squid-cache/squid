@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.33 1996/09/14 08:46:36 wessels Exp $
+ * $Id: url.cc,v 1.34 1996/09/17 02:30:07 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -90,7 +90,7 @@ url_convert_hex(char *org_url, int allocate)
 /* INIT Acceptable table. 
  * Borrow from libwww2 with Mosaic2.4 Distribution   */
 void
-urlInitialize()
+urlInitialize(void)
 {
     unsigned int i;
     char *good =

@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.13 1996/09/12 03:23:59 wessels Exp $
+#  $Id: Makefile.in,v 1.14 1996/09/17 02:29:44 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -47,7 +47,7 @@ libregex.a: $(REGEXOBJS)
 	$(RANLIB) $@
 
 clean:
-	-rm -f $(UTILOBJS) $(REGEXOBJS) $(LIBS) core
+	-rm -f *.o $(LIBS) core
 
 realclean: clean
 	-rm -f libregex.a

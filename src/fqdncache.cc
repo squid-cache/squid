@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.19 1996/09/16 16:28:38 wessels Exp $
+ * $Id: fqdncache.cc,v 1.20 1996/09/17 02:29:55 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -182,7 +182,7 @@ fqdncacheEnqueue(fqdncache_entry * f)
 }
 
 static void *
-fqdncacheDequeue()
+fqdncacheDequeue(void)
 {
     struct fqdncacheQueueData *old = NULL;
     fqdncache_entry *f = NULL;
@@ -255,13 +255,13 @@ fqdncache_get(char *name)
 }
 
 static fqdncache_entry *
-fqdncache_GetFirst()
+fqdncache_GetFirst(void)
 {
     return (fqdncache_entry *) hash_first(fqdn_table);
 }
 
 static fqdncache_entry *
-fqdncache_GetNext()
+fqdncache_GetNext(void)
 {
     return (fqdncache_entry *) hash_next(fqdn_table);
 }
@@ -292,7 +292,7 @@ fqdncacheExpiredEntry(fqdncache_entry * f)
 
 /* finds the LRU and deletes */
 static int
-fqdncache_purgelru()
+fqdncache_purgelru(void)
 {
     fqdncache_entry *f = NULL;
     int local_fqdn_count = 0;
@@ -356,7 +356,7 @@ fqdncache_purgelru()
 
 /* create blank fqdncache_entry */
 static fqdncache_entry *
-fqdncache_create()
+fqdncache_create(void)
 {
     static fqdncache_entry *new;
 
@@ -684,7 +684,7 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 
 /* initialize the fqdncache */
 void
-fqdncache_init()
+fqdncache_init(void)
 {
     debug(35, 3, "Initializing FQDN Cache...\n");
     memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
@@ -862,7 +862,7 @@ fqdnFromAddr(struct in_addr addr)
 }
 
 int
-fqdncacheQueueDrain()
+fqdncacheQueueDrain(void)
 {
     fqdncache_entry *i;
     dnsserver_t *dnsData;

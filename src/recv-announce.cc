@@ -1,5 +1,5 @@
 /*
- * $Id: recv-announce.cc,v 1.8 1996/09/15 05:04:40 wessels Exp $
+ * $Id: recv-announce.cc,v 1.9 1996/09/17 02:30:01 wessels Exp $
  *
  * DEBUG: section 0     Announement Server
  * AUTHOR: Harvest Derived
@@ -141,7 +141,7 @@ extern void xmemcpy __P((void *from, void *to, int len));
  */
 
 void
-sig_handle()
+sig_handle(void)
 {
     fflush(stdout);
     close(2);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.18 1996/09/16 21:11:14 wessels Exp $
+ * $Id: send-announce.cc,v 1.19 1996/09/17 02:30:02 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -32,7 +32,7 @@
 #include "squid.h"
 
 void
-send_announce()
+send_announce(void)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);

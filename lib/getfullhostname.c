@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.6 1996/09/14 08:50:47 wessels Exp $
+ * $Id: getfullhostname.c,v 1.7 1996/09/17 02:29:46 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -144,7 +144,7 @@
  *  to the gethost*() functions.
  */
 char *
-getfullhostname()
+getfullhostname(void)
 {
     struct hostent *hp = NULL;
     static char buf[SQUIDHOSTNAMELEN + 1];

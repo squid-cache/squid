@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.54 1996/09/16 21:50:26 wessels Exp $
+ * $Id: neighbors.cc,v 1.55 1996/09/17 02:30:01 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -282,7 +282,7 @@ neighborRemove(edge * target)
 }
 
 void
-neighborsDestroy()
+neighborsDestroy(void)
 {
     edge *e = NULL;
     edge *next = NULL;
@@ -789,7 +789,7 @@ neighbors_cf_acl(char *host, char *aclname)
 }
 
 void
-neighbors_init()
+neighbors_init(void)
 {
     struct neighbor_cf *t = NULL;
     struct neighbor_cf *next = NULL;

@@ -1,5 +1,5 @@
 /*
- * $Id: dns.cc,v 1.10 1996/09/16 21:20:45 wessels Exp $
+ * $Id: dns.cc,v 1.11 1996/09/17 02:29:54 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -195,7 +195,7 @@ dnsOpenServer(char *command)
 }
 
 dnsserver_t *
-dnsGetFirstAvailable()
+dnsGetFirstAvailable(void)
 {
     int k;
     dnsserver_t *dns = NULL;
@@ -209,7 +209,7 @@ dnsGetFirstAvailable()
 
 
 void
-dnsOpenServers()
+dnsOpenServers(void)
 {
     int N = Config.dnsChildren;
     char *prg = Config.Program.dnsserver;
@@ -281,7 +281,7 @@ dnsStats(StoreEntry * sentry)
 }
 
 void
-dnsShutdownServers()
+dnsShutdownServers(void)
 {
     dnsserver_t *dnsData = NULL;
     int k;

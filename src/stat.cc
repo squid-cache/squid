@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.70 1996/09/16 17:16:33 wessels Exp $
+ * $Id: stat.cc,v 1.71 1996/09/17 02:30:03 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -628,7 +628,7 @@ statFiledescriptors(StoreEntry * sentry)
 }
 
 static int
-memoryAccounted()
+memoryAccounted(void)
 {
     return (int)
 	meta_data.store_entries * sizeof(StoreEntry) +
@@ -645,7 +645,7 @@ memoryAccounted()
 
 #ifdef UNUSED_CODE
 static int
-mallinfoTotal()
+mallinfoTotal(void)
 {
     int total = 0;
 #if HAVE_MALLINFO
@@ -1373,7 +1373,7 @@ flags_describe(StoreEntry * entry)
 }
 
 void
-stat_rotate_log()
+stat_rotate_log(void)
 {
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
@@ -1410,7 +1410,7 @@ stat_rotate_log()
 }
 
 void
-statCloseLog()
+statCloseLog(void)
 {
     file_close(HTTPCacheInfo->logfile_fd);
 }

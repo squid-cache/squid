@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.38 1996/09/14 08:45:52 wessels Exp $
+ * $Id: errorpage.cc,v 1.39 1996/09/17 02:29:54 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -135,7 +135,7 @@ static char *tbuf = NULL;
 static char *auth_msg = NULL;
 
 void
-errorInitialize()
+errorInitialize(void)
 {
 #ifndef USE_PROXY_AUTH
     tmp_error_buf = xmalloc(MAX_URL * 4);

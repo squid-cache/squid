@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.17 1996/09/16 17:22:02 wessels Exp $
+ * $Id: util.h,v 1.18 1996/09/17 02:29:36 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -185,8 +185,8 @@ extern void log_errno2 __P((char *, int, char *));
 extern void Log __P((char *,...));
 extern void errorlog __P((char *,...));
 #else
-extern void Log __P((void));
-extern void errorlog __P((void));
+extern void Log __P(());
+extern void errorlog __P(());
 #endif /* __STRICT_ANSI__ */
 
 extern void Tolower __P((char *));

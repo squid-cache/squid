@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.72 1996/09/16 21:20:45 wessels Exp $
+ * $Id: comm.cc,v 1.73 1996/09/17 02:29:52 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -580,7 +580,7 @@ comm_set_stall(int fd, int delta)
 }
 
 static void
-comm_select_incoming()
+comm_select_incoming(void)
 {
     fd_set read_mask;
     fd_set write_mask;
@@ -1000,7 +1000,7 @@ getAddress(char *name)
  *  squid initiated clients a maximum lifetime.
  */
 int
-comm_init()
+comm_init(void)
 {
     int i;
 
@@ -1113,7 +1113,7 @@ fd_note(int fd, char *s)
 }
 
 static void
-checkTimeouts()
+checkTimeouts(void)
 {
     int fd;
     int (*hdl) () = NULL;
@@ -1135,7 +1135,7 @@ checkTimeouts()
 }
 
 static void
-checkLifetimes()
+checkLifetimes(void)
 {
     int fd;
     time_t lft;
@@ -1184,7 +1184,7 @@ checkLifetimes()
  * Reserve_More_FDs() called when acceopt(), open(), or socket is failing
  */
 static void
-Reserve_More_FDs()
+Reserve_More_FDs(void)
 {
     if (RESERVED_FD < FD_SETSIZE - 64) {
 	RESERVED_FD = RESERVED_FD + 1;

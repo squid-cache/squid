@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.89 1996/09/16 21:11:03 wessels Exp $
+ * $Id: cache_cf.cc,v 1.90 1996/09/17 02:29:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -257,7 +257,7 @@ static void parseWAISRelayLine __P((void));
 static void parseMinutesLine __P((int *));
 
 void
-self_destruct()
+self_destruct(void)
 {
     sprintf(fatal_str, "Bungled %s line %d: %s",
 	cfg_filename, config_lineno, config_input_line);
@@ -450,7 +450,7 @@ intlistDestroy(intlist ** list)
 
 
 static void
-parseCacheHostLine()
+parseCacheHostLine(void)
 {
     char *type = NULL;
     char *hostname = NULL;
@@ -488,7 +488,7 @@ parseCacheHostLine()
 }
 
 static void
-parseHostDomainLine()
+parseHostDomainLine(void)
 {
     char *host = NULL;
     char *domain = NULL;
@@ -499,7 +499,7 @@ parseHostDomainLine()
 }
 
 static void
-parseHostAclLine()
+parseHostAclLine(void)
 {
     char *host = NULL;
     char *aclname = NULL;
@@ -511,7 +511,7 @@ parseHostAclLine()
 
 
 static void
-parseMemLine()
+parseMemLine(void)
 {
     char *token;
     int i;
@@ -520,7 +520,7 @@ parseMemLine()
 }
 
 static void
-parseHotVmFactorLine()
+parseHotVmFactorLine(void)
 {
     char *token = NULL;
     double d;
@@ -536,7 +536,7 @@ parseHotVmFactorLine()
 }
 
 static void
-parseSwapLine()
+parseSwapLine(void)
 {
     char *token;
     int i;
@@ -545,7 +545,7 @@ parseSwapLine()
 }
 
 static void
-parseHttpLine()
+parseHttpLine(void)
 {
     char *token;
     int i;
@@ -556,7 +556,7 @@ parseHttpLine()
 }
 
 static void
-parseGopherLine()
+parseGopherLine(void)
 {
     char *token;
     int i;
@@ -567,7 +567,7 @@ parseGopherLine()
 }
 
 static void
-parseFtpLine()
+parseFtpLine(void)
 {
     char *token;
     int i;
@@ -612,7 +612,7 @@ parseTTLPattern(int icase, int force)
 }
 
 static void
-parseQuickAbort()
+parseQuickAbort(void)
 {
     char *token;
     int i;
@@ -646,7 +646,7 @@ parseMinutesLine(int *iptr)
 }
 
 static void
-parseRequestSizeLine()
+parseRequestSizeLine(void)
 {
     char *token;
     int i;
@@ -655,7 +655,7 @@ parseRequestSizeLine()
 }
 
 static void
-parseMgrLine()
+parseMgrLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -666,7 +666,7 @@ parseMgrLine()
 }
 
 static void
-parseDirLine()
+parseDirLine(void)
 {
     char *token;
 
@@ -678,7 +678,7 @@ parseDirLine()
 
 #if USE_PROXY_AUTH
 static void
-parseProxyAuthLine()
+parseProxyAuthLine(void)
 {
     char *token;
 
@@ -694,7 +694,7 @@ parseProxyAuthLine()
 #endif /* USE_PROXY_AUTH */
 
 static void
-parseHttpdAccelLine()
+parseHttpdAccelLine(void)
 {
     char *token;
     LOCAL_ARRAY(char, buf, BUFSIZ);
@@ -714,7 +714,7 @@ parseHttpdAccelLine()
 }
 
 static void
-parseEffectiveUserLine()
+parseEffectiveUserLine(void)
 {
     char *token;
 
@@ -732,7 +732,7 @@ parseEffectiveUserLine()
 }
 
 static void
-parseLogLine()
+parseLogLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -743,7 +743,7 @@ parseLogLine()
 }
 
 static void
-parseAccessLogLine()
+parseAccessLogLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -754,7 +754,7 @@ parseAccessLogLine()
 }
 
 static void
-parseStoreLogLine()
+parseStoreLogLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -765,7 +765,7 @@ parseStoreLogLine()
 }
 
 static void
-parseFtpProgramLine()
+parseFtpProgramLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -776,7 +776,7 @@ parseFtpProgramLine()
 }
 
 static void
-parseFtpOptionsLine()
+parseFtpOptionsLine(void)
 {
     char *token;
     token = strtok(NULL, "");	/* Note "", don't separate these */
@@ -787,7 +787,7 @@ parseFtpOptionsLine()
 }
 
 static void
-parseDnsProgramLine()
+parseDnsProgramLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -798,7 +798,7 @@ parseDnsProgramLine()
 }
 
 static void
-parseRedirectProgramLine()
+parseRedirectProgramLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -822,7 +822,7 @@ parseOnOff(int *var)
 }
 
 static void
-parseWAISRelayLine()
+parseWAISRelayLine(void)
 {
     char *token;
     int i;
@@ -847,7 +847,7 @@ parseIPLine(ip_acl ** list)
 }
 
 static void
-parseHierarchyStoplistLine()
+parseHierarchyStoplistLine(void)
 {
     char *token;
     while ((token = strtok(NULL, w_space)))
@@ -855,7 +855,7 @@ parseHierarchyStoplistLine()
 }
 
 static void
-parseAppendDomainLine()
+parseAppendDomainLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -911,7 +911,7 @@ parseLocalDomainFile(char *fname)
 }
 
 static void
-parseLocalDomainLine()
+parseLocalDomainLine(void)
 {
     char *token = NULL;
     struct stat sb;
@@ -925,7 +925,7 @@ parseLocalDomainLine()
 }
 
 static void
-parseInsideFirewallLine()
+parseInsideFirewallLine(void)
 {
     char *token;
     while ((token = strtok(NULL, w_space))) {
@@ -934,7 +934,7 @@ parseInsideFirewallLine()
 }
 
 static void
-parseDnsTestnameLine()
+parseDnsTestnameLine(void)
 {
     char *token;
     while ((token = strtok(NULL, w_space))) {
@@ -943,7 +943,7 @@ parseDnsTestnameLine()
 }
 
 static void
-parseHttpPortLine()
+parseHttpPortLine(void)
 {
     char *token;
     int i;
@@ -954,7 +954,7 @@ parseHttpPortLine()
 }
 
 static void
-parseIcpPortLine()
+parseIcpPortLine(void)
 {
     char *token;
     int i;
@@ -965,7 +965,7 @@ parseIcpPortLine()
 }
 
 static void
-parseDebugOptionsLine()
+parseDebugOptionsLine(void)
 {
     char *token;
     token = strtok(NULL, "");	/* Note "", don't separate these */
@@ -978,7 +978,7 @@ parseDebugOptionsLine()
 }
 
 static void
-parsePidFilenameLine()
+parsePidFilenameLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -989,7 +989,7 @@ parsePidFilenameLine()
 }
 
 static void
-parseVisibleHostnameLine()
+parseVisibleHostnameLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -1000,7 +1000,7 @@ parseVisibleHostnameLine()
 }
 
 static void
-parseFtpUserLine()
+parseFtpUserLine(void)
 {
     char *token;
     token = strtok(NULL, w_space);
@@ -1011,7 +1011,7 @@ parseFtpUserLine()
 }
 
 static void
-parseCacheAnnounceLine()
+parseCacheAnnounceLine(void)
 {
     char *token;
     int i;
@@ -1020,7 +1020,7 @@ parseCacheAnnounceLine()
 }
 
 static void
-parseAnnounceToLine()
+parseAnnounceToLine(void)
 {
     char *token;
     int i;
@@ -1042,7 +1042,7 @@ parseAnnounceToLine()
 }
 
 static void
-parseSslProxyLine()
+parseSslProxyLine(void)
 {
     char *token;
     char *t;
@@ -1068,7 +1068,7 @@ parseIntegerValue(int *iptr)
 }
 
 static void
-parseErrHtmlLine()
+parseErrHtmlLine(void)
 {
     char *token;
     if ((token = strtok(NULL, "")))
@@ -1429,7 +1429,7 @@ safe_xstrdup(char *p)
 }
 
 static void
-configFreeMemory()
+configFreeMemory(void)
 {
     safe_free(Config.Wais.relayHost);
     safe_free(Config.Log.log);
@@ -1467,7 +1467,7 @@ configFreeMemory()
 
 
 static void
-configSetFactoryDefaults()
+configSetFactoryDefaults(void)
 {
     Config.Mem.maxSize = DefaultMemMaxSize;
     Config.Mem.highWaterMark = DefaultMemHighWaterMark;
@@ -1558,7 +1558,7 @@ configSetFactoryDefaults()
 }
 
 static void
-configDoConfigure()
+configDoConfigure(void)
 {
     httpd_accel_mode = Config.Accel.prefix ? 1 : 0;
     sprintf(ForwardedBy, "Forwarded: by http://%s:%d/",

@@ -7,12 +7,14 @@
 #include <stdlib.h>
 #endif
 
+static void base64_init __P((void));
+
 static int base64_initialized = 0;
 int base64_value[256];
 char base64_code[] = "ABCDEFGHIJKLMNOPQRSTUVWZYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static void
-base64_init()
+base64_init(void)
 {
     int i;
 
