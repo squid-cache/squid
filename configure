@@ -4750,8 +4750,8 @@ else
 #line 4751 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -4795,8 +4795,8 @@ else
 #line 4796 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -4840,8 +4840,8 @@ else
 #line 4841 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -4885,8 +4885,8 @@ else
 #line 4886 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -4930,8 +4930,8 @@ else
 #line 4931 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -4975,8 +4975,8 @@ else
 #line 4976 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -5020,8 +5020,8 @@ else
 #line 5021 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -5065,8 +5065,8 @@ else
 #line 5066 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -5110,8 +5110,8 @@ else
 #line 5111 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -5155,8 +5155,8 @@ else
 #line 5156 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -5985,8 +5985,8 @@ else
 #line 5986 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -6030,8 +6030,8 @@ else
 #line 6031 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-#if HAVE_STDINT_H
-#include <stdint.h>
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
