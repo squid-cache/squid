@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.47 1998/03/17 05:07:35 wessels Exp $
+ * $Id: util.h,v 1.48 1998/03/23 19:54:56 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -170,7 +170,7 @@ extern int xmalloc_line;
 extern char *xmalloc_file;
 extern char *xmalloc_func;
 extern int xmalloc_trace;
-extern int xmalloc_total;
+extern size_t xmalloc_total;
 extern void xmalloc_find_leaks(void);
 #endif
 
