@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.26 1996/04/09 23:27:58 wessels Exp $ */
+/* $Id: main.cc,v 1.27 1996/04/10 17:28:37 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -108,7 +108,6 @@ void serverConnectionsOpen()
     if (theAsciiConnection < 0) {
 	fatal("Cannot open ascii Port");
     }
-    fdstat_open(theAsciiConnection, Socket);
     fd_note(theAsciiConnection, "HTTP (Ascii) socket");
     comm_listen(theAsciiConnection);
     comm_set_select_handler(theAsciiConnection,
@@ -126,7 +125,6 @@ void serverConnectionsOpen()
 		"Ping Port");
 	    if (theUdpConnection < 0)
 		fatal("Cannot open UDP Port");
-	    fdstat_open(theUdpConnection, Socket);
 	    fd_note(theUdpConnection, "ICP (UDP) socket");
 	    comm_set_select_handler(theUdpConnection,
 		COMM_SELECT_READ,
@@ -143,7 +141,6 @@ void serverConnectionsClose()
     if (theAsciiConnection >= 0) {
 	debug(21, 1, "FD %d Closing Ascii connection\n",
 	    theAsciiConnection);
-	fdstat_close(theAsciiConnection);
 	comm_close(theAsciiConnection);
 	comm_set_select_handler(theAsciiConnection,
 	    COMM_SELECT_READ,
@@ -154,7 +151,6 @@ void serverConnectionsClose()
     if (theUdpConnection >= 0) {
 	debug(21, 1, "FD %d Closing Udp connection\n",
 	    theUdpConnection);
-	fdstat_close(theUdpConnection);
 	comm_close(theUdpConnection);
 	comm_set_select_handler(theUdpConnection,
 	    COMM_SELECT_READ,
