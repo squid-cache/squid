@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.52 1996/08/29 17:59:05 wessels Exp $
+ * $Id: ipcache.cc,v 1.53 1996/08/30 22:37:58 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1010,4 +1010,15 @@ static struct hostent *ipcacheCheckNumeric(name)
     *((u_num32 *) (void *) static_result->h_addr_list[0]) = ip;
     strncpy(static_result->h_name, name, MAX_HOST_NAME);
     return static_result;
+}
+
+int ipcacheQueueDrain()
+{
+    ipcache_entry *i;
+    dnsserver_t *dnsData;
+    if (!ipcacheQueueHead)
+	return 0;
+    while ((dnsData = dnsGetFirstAvailable()) && (i = ipcacheDequeue()))
+	ipcache_dnsDispatch(dnsData, i);
+    return 1;
 }
