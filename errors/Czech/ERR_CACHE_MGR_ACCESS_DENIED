@@ -29,7 +29,7 @@ je dostupný pouze po Va¹í autorizaci.
 <P> 
 Pro úspì¹nou autorizaci potøebujete prohlí¾eèe NETSCAPE 2.0 a vy¹¹í,
 Microsoft Internet Explorer 3.0 nebo prohlí¾eè podporující protokol
-HTTP/1.1. V pøípadì problému se prosím obra»te na <A HREF="mailto:%w">cache
+HTTP/1.1. V pøípadì problému se prosím obra»te na <A HREF="mailto:%w%W">cache
 administratora</a> nebo si zmìòte
 <A HREF="http://%h/cgi-bin/chpasswd.cgi">heslo</a>.
 </P>

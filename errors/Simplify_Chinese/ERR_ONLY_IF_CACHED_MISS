@@ -33,4 +33,4 @@ revalidation prohibited by <code>only-if-cached</code> directive.
 而所要的文件并未存在于本缓存服务器中，<em>或者</em>这个连结请求需要刷新文件而
 <code>only-if-cached</code> 指令禁止这么做。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

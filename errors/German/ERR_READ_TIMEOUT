@@ -27,4 +27,4 @@ Das Netzwerk oder der Server k&ouml;nnten deaktiviert oder
 </P>
 
 <P>
-Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
+Ihr Cache Administrator ist <A HREF="mailto:%w%W">%w</A>.

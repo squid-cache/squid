@@ -19,4 +19,4 @@ zu laden, trat der folgende Fehler auf:
 Dieser Cache unterst&uuml;tzt kein FTP.
 </P>
 <P>
-Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
+Ihr Cache Administrator ist <A HREF="mailto:%w%W">%w</A>.

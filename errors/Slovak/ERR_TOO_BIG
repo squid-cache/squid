@@ -26,4 +26,4 @@ by the Internet Service Provider who operates this cache.  Please
 contact them directly if you feel this is an error.
 </UL>
 <P>
-Your cache administrator is <A HREF="mailto:%w">%w</A>.
+Your cache administrator is <A HREF="mailto:%w%W">%w</A>.

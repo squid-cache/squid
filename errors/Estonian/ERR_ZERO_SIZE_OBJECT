@@ -20,4 +20,4 @@ Vastus on t&uuml;hi
 
 <P>
 Squid ei saanud selle p&auml;ringu vastuseks midagi...
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

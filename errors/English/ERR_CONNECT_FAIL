@@ -24,4 +24,4 @@ The system returned:
 
 <P>
 The remote host or network may be down.  Please try the request again.
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

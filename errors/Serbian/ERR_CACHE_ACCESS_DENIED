@@ -28,6 +28,6 @@ iz ovog proxy servera pre nego što se ne autentifikujete.
 Da bi to funkcionisalo potreban vam je Netscape verzija 2 i više ili 
 Microsoft Internet Explorer 3.0, ili browser koji podržava HTTP/1.1.
 Ukoliko budete imali problema oko autentifikacije molimo kontaktirajte 
-<A HREF="mailto:%w">proxy administratora</a> ili želite da  
+<A HREF="mailto:%w%W">proxy administratora</a> ili želite da  
 <A HREF="http://%h/cgi-bin/chpasswd.cgi">promenite</a> svoju poèetnu lozinku.
 </P>

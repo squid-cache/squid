@@ -21,4 +21,4 @@ Tundmatu p&auml;ringu meetod ja protokoll
 <P>
 Squid ei toeta k&otilde;iki p&auml;ringu meetodeid k&otilde;ikide protokollidega.
 N&auml;iteks, te ei saa teha POST operatsiooni Gopher p&auml;ringus.
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

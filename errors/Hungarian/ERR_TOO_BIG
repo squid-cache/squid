@@ -27,4 +27,4 @@ közvetlenül szolgáltatójához amennyiben a szerver helytelen
 beállításában látja a hiba okát.
 </UL>
 <P>
-A cache adminisztrátora: <A HREF="mailto:%w">%w</A>.
+A cache adminisztrátora: <A HREF="mailto:%w%W">%w</A>.

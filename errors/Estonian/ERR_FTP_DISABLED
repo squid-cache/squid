@@ -20,4 +20,4 @@ FTP on blokeeritud
 
 <P>
 See vahemälu server ei toeta FTPd.
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

@@ -27,4 +27,4 @@ connection lifetime.
 <BR>
 缓存服务器已终止您的连接请求，因为已经超过了最大连接等待时间。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

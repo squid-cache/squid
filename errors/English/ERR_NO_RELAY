@@ -20,4 +20,4 @@ No Wais Relay
 
 <P>
 There is no WAIS Relay host defined for this Cache!  Yell at the administrator.
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

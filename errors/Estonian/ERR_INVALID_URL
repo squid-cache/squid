@@ -26,4 +26,4 @@ M&otilde;ni osa URList on vigane. V&otilde;imalikud probleemid:
 <LI>Vigane topelt-kaldkriips URLi teel
 <LI>Vigane s&uuml;mbol hosti nimes; alakriipsud pole lubatud
 </UL>
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

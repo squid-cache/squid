@@ -19,5 +19,5 @@ To može da bude prouzrokovano što je FTP adresa (URL) sa
 apsolutnom putanjom (što se ne slaže sa RFC 1738). Ukoliko je to 
 sluèaj, datoteku možete da naðete na <A HREF="%B">%B</A>.
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w">%w</A>. 
+<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
 

@@ -26,4 +26,4 @@ This cache does not support FTP.
 <BR>
 本缓存服务器未开放文件传输服务。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

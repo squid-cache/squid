@@ -27,7 +27,7 @@ from this cache manager until you have authenticated yourself.
 
 <P> You need to use Netscape version 2.0 or greater, or Microsoft Internet
 Explorer 3.0, or an HTTP/1.1 compliant browser for this to work.  Please
-contact the <A HREF="mailto:%w">cache administrator</a> if you have
+contact the <A HREF="mailto:%w%W">cache administrator</a> if you have
 difficulties authenticating yourself or, if you <em>are</em> the
 administrator, read Squid documentation on cache manager interface and check
 cache log for more detailed error messages.</P>

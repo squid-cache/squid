@@ -26,4 +26,4 @@ El sistema ha respost:
 Hi ha hagut un exc&eacute;s en el temps de lectura de dades de la xarxa.
 Hi ha congesti&oacute; o indisposici&oacute; del servidor i/o la xarxa.
 Intenteu-ho d'aqui a una estona.
-<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w%W">%w</A>.

@@ -20,4 +20,4 @@ Cannot Resolve URN
 
 <P>
 Hey, don't expect too much from URNs on %T :)
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

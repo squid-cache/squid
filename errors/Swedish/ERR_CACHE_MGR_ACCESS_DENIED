@@ -27,7 +27,7 @@ fr&aring;n denna cache tills det att Ni har autentifierat Er.
 
 <P> Ni m&aring;ste anv&auml;nda Netscape version 2.0 eller h&ouml;gre, eller Microsoft Internet
 Explorer 3.0, eller en HTTP/1.1 kompatibel l&auml;sare f&ouml;r att detta skall fungera.
-V&auml;nligen kontakta <A HREF="mailto:%w">cacheadministratorn</a> om Ni har sv&aring;righeter 
+V&auml;nligen kontakta <A HREF="mailto:%w%W">cacheadministratorn</a> om Ni har sv&aring;righeter 
 med att autentifiera Er sj&auml;lv, om Ni <em>&auml;r</em> 
 administratorn, l&auml;s Squid dokumentationen om cache hanterar interfacet och kontrollera 
 cache loggen f&ouml;r mer detaljerade felmeddelanden.</P>

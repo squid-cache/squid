@@ -25,4 +25,4 @@ The system returned:
 <P>
 An error condition occurred while reading data from the network.  Please
 retry your request.
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

@@ -26,4 +26,4 @@ Hey, don't expect too much from URNs on %T :)
 <BR>
 抱歉！您不能对 %T 上的 URNs 期待太多 :)
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

@@ -21,4 +21,4 @@ request again soon.
 本缓存服务器正在关闭，暂时无法为您服务。
 请稍侯再试。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

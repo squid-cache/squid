@@ -20,4 +20,4 @@ tekkis j&auml;rgnev viga:
 
 <P>
 Squid katkestas p&auml;ringu, kuna see kestis liiga kaua.
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

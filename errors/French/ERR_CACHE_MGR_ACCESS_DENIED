@@ -27,7 +27,7 @@ au travers de ce gestionnaire de cache sans vous &ecirc;tre identifi&eacute;.
 
 <P> Vous avez besoin de Netscape version 2.0 ou sup&eacute;rieure, ou
 Microsoft Internet Explorer 3.0, ou un navigateur conforme &agrave; HTTP/1.1
-pour que ceci fonctionne. Veuillez contacter l'<A HREF="mailto:%w">administrateur du cache</a>
+pour que ceci fonctionne. Veuillez contacter l'<A HREF="mailto:%w%W">administrateur du cache</a>
 si vous avez des difficult&eacute;s &agrave; vous authentifier ou, si vous
 <em>&ecirc;tes</em> l'administrateur, lisez la documentation de Squid sur
 l'interface du gestionnaire de cache, et v&eacute;rifiez l'historique du

@@ -28,7 +28,7 @@
 <P>
 인증 절차를 위해서는 Netscape 2.0 이상의 버젼이나, Microsoft 
 Internet Explorer 3.0 또는 HTTP/1.1이 지원되는 브라우져를 
-사용해야 합니다. 문제가 있을 때는 <A HREF="mailto:%w">캐쉬 관리자</a> 
+사용해야 합니다. 문제가 있을 때는 <A HREF="mailto:%w%W">캐쉬 관리자</a> 
 에게 요청하시거나 처음에 부여되는 패스워드를  
 <A HREF="http://%h/cgi-bin/chpasswd.cgi">바꾸십시오.</a> 
 </P>

@@ -21,4 +21,4 @@ Edastamine keelatud.
 <P>
 Meie vahemälu server ei edasta teie p&auml;ringut, kuna ta kasutab andmete edastamisel
 ainult naaber vahemälu serverite meetodit. Ilmselt on %i vigaselt konfigureeritud vahemälu server.
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

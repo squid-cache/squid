@@ -26,4 +26,4 @@ Some aspect of the requested URL is incorrect.  Possible problems:
 <LI>Illegal double-escape in the URL-Path
 <LI>Illegal character in hostname; underscores are not allowed
 </UL>
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

@@ -25,4 +25,4 @@ You have issued a request with a <code>only-if-cached</code> cache control
 directive. The document was not found in the cache, <em>or</em> it required
 revalidation prohibited by <code>only-if-cached</code> directive.
 
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

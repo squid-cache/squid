@@ -21,4 +21,4 @@ Unsupported Request Method and Protocol
 <P>
 Squid does not support all request methods for all access protocols.
 For example, you can not POST a Gopher request.
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 
