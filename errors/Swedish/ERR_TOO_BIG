@@ -1,26 +1,26 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>FEL: Den beg\xe4rda URL:en kunde inte h\xe4mtas</TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>FEL</H1>
+<H2>Den beg\xe4rda URL:en kunde inte h\xe4mtas</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+När följande URL försöktes hämtas:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+Inträffade följande fel:
 <UL>
 <LI>
 <STRONG>
-The request or reply is too large.
+Begäran är för stor.
 </STRONG>
 <P>
-If you are making a POST or PUT request, then your request body
-(the thing you are trying to upload) is too large.  If you are 
-making a GET request, then the reply body (what you are trying
-to download) is too large.   These limits have been established
-by the Internet Service Provider who operates this cache.  Please
-contact them directly if you feel this is an error.
+Ifall du utför en POST eller PUT begäran, så är begäran
+(det du försöker ladda upp) för stor. Ifall du utförde
+en GET begäran, så är svaret (det du försöker ladda ned)
+för stort.   Dessa gränser är inställda av den internet
+leverantör som handhar den här cacheservern. Var vänlig
+kontakta dem direkt ifall du anser att detta är ett fel.
 </UL>
 <P>
-Your cache administrator is <A HREF="mailto:%w">%w</A>.
+Din cacheserver administratör är <A HREF="mailto:%w">%w</A>.
