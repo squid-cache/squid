@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.cc,v 1.2 2003/05/22 10:14:09 robertc Exp $
+ * $Id: DelayTagged.cc,v 1.3 2003/05/22 11:14:43 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -142,6 +142,7 @@ DelayTagged::update(int incr)
 {
     DelayTaggedUpdater updater(spec, incr);
     buckets.head->walk (DelayTaggedUpdateWalkee, &updater);
+    kickReads();
 }
 
 void
