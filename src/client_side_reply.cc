@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.7 2002/09/24 10:46:43 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.8 2002/09/24 12:09:24 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1455,7 +1455,7 @@ clientSendMoreData(void *data, StoreIOBuffer result)
 	    context->flags.complete = 1;
 	/* REMOVE ME: Only useful for two node streams */
 	assert(result.offset - context->headers_sz == ((clientStreamNode *) http->client_stream.tail->data)->readBuffer.offset);
-	tempBuffer.offset = result.offset;
+	tempBuffer.offset = result.offset - context->headers_sz;
 	tempBuffer.length = result.length;
 	tempBuffer.data = buf;
 	clientStreamCallback(http->client_stream.head->data, http, NULL,
