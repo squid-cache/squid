@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.200 1998/01/02 06:56:52 wessels Exp $
+ * $Id: main.cc,v 1.201 1998/01/05 00:45:46 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -331,8 +331,10 @@ serverConnectionsOpen(void)
 void
 serverConnectionsClose(void)
 {
-    /* NOTE, this function will be called repeatedly while shutdown
-     * is pending */
+    /*
+     * NOTE, this function will be called repeatedly while shutdown
+     * is pending
+     */
     int i;
     for (i = 0; i < NHttpSockets; i++) {
 	if (HttpSockets[i] >= 0) {
@@ -343,28 +345,35 @@ serverConnectionsClose(void)
     }
     NHttpSockets = 0;
     if (theInIcpConnection > -1) {
-	/* NOTE, don't close outgoing ICP connection, we need to write to
-	 * it during shutdown */
+	/*
+	 * NOTE, don't close outgoing ICP connection, we need to write
+	 * to it during shutdown.
+	 */
 	debug(1, 1) ("FD %d Closing ICP connection\n",
 	    theInIcpConnection);
-	if (theInIcpConnection != theOutIcpConnection)
+	if (theInIcpConnection != theOutIcpConnection) {
 	    comm_close(theInIcpConnection);
-	else
+	    assert(theOutIcpConnection > -1);
+	    /*
+	     * Normally we only write to the outgoing ICP socket, but
+	     * we also have a read handler there to catch messages sent
+	     * to that specific interface.  During shutdown, we must
+	     * disable reading on the outgoing socket.
+	     */
+	    commSetSelect(theOutIcpConnection,
+		COMM_SELECT_READ,
+		NULL,
+		NULL,
+		0);
+	} else {
 	    commSetSelect(theInIcpConnection,
 		COMM_SELECT_READ,
 		NULL,
 		NULL,
 		0);
+	}
 	theInIcpConnection = -1;
     }
-    /*
-     * Normally we only write to the outgoing ICP socket, but we
-     * also have a read handler there to catch messages sent to that
-     * specific interface.  During shutdown, we must disable reading
-     * on the outgoing socket.
-     */
-    if (theOutIcpConnection > -1)
-	commSetSelect(theOutIcpConnection, COMM_SELECT_READ, NULL, NULL, 0);
     if (icmp_sock > -1)
 	icmpClose();
 #ifdef SQUID_SNMP

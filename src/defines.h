@@ -161,6 +161,9 @@
 #define PEER_COUNTING		 2
 #define ICP_AUTH_SIZE (2)	/* size of authenticator field */
 
+#define PEER_DEAD 0
+#define PEER_ALIVE 1
+
 #define ICON_MENU	"anthony-dir.gif"
 #define ICON_DIRUP	"anthony-dirup.gif"
 #define ICON_LINK	"anthony-link.gif"

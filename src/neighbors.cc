@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.170 1998/01/02 21:59:47 wessels Exp $
+ * $Id: neighbors.cc,v 1.171 1998/01/05 00:45:47 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -462,12 +462,13 @@ neighborsUdpPing(request_t * request,
 	}
 	queries_sent++;
 
-	p->stats.ack_deficit++;
 	p->stats.pings_sent++;
-	debug(15, 3) ("neighborsUdpPing: %s: ack_deficit = %d\n",
-	    p->host, p->stats.ack_deficit);
 	if (p->type == PEER_MULTICAST) {
-	    p->stats.ack_deficit = 0;
+	    /*
+	     * set a bogus last_reply time so neighborUp() never
+	     * says a multicast peer is dead.
+	     */
+	    p->stats.last_reply = squid_curtime;
 	    (*exprep) += p->mcast.n_replies_expected;
 	} else if (neighborUp(p)) {
 	    /* its alive, expect a reply from it */
@@ -475,12 +476,14 @@ neighborsUdpPing(request_t * request,
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
-	    if ((p->stats.ack_deficit == HIER_MAX_DEFICIT)) {
+	    if (p->stats.logged_state == PEER_ALIVE) {
 		debug(15, 0) ("Detected DEAD %s: %s/%d/%d\n",
 		    neighborTypeStr(p),
 		    p->host, p->http_port, p->icp_port);
+		p->stats.logged_state = PEER_DEAD;
 	    }
 	}
+	p->stats.last_query = squid_curtime;
     }
     if ((first_ping = first_ping->next) == NULL)
 	first_ping = Config.peers;
@@ -523,13 +526,13 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 {
     int rtt;
     int n;
-    /* Neighbor is alive, reset the ack deficit */
-    if (p->stats.ack_deficit >= HIER_MAX_DEFICIT) {
+    if (p->stats.logged_state == PEER_DEAD) {
 	debug(15, 0) ("Detected REVIVED %s: %s/%d/%d\n",
 	    neighborTypeStr(p),
 	    p->host, p->http_port, p->icp_port);
+	p->stats.logged_state = PEER_ALIVE;
     }
-    p->stats.ack_deficit = 0;
+    p->stats.last_reply = squid_curtime;
     n = ++p->stats.pings_acked;
     if ((icp_opcode) header->opcode <= ICP_END)
 	p->stats.counts[header->opcode]++;
@@ -732,7 +735,9 @@ neighborUp(const peer * p)
 {
     if (!p->tcp_up)
 	return 0;
-    if (p->stats.ack_deficit >= HIER_MAX_DEFICIT)
+    if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
+	return 1;
+    if (p->stats.last_query - p->stats.last_reply >= Config.Timeout.deadPeer)
 	return 0;
     return 1;
 }

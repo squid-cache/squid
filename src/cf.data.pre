@@ -328,6 +328,22 @@ DOC_START
 neighbor_timeout 2 seconds
 DOC_END
 
+NAME: dead_peer_timeout
+COMMENT: (seconds)
+DEFAULT: 10 seconds
+TYPE: time_t
+LOC: Config.Timeout.deadPeer
+DOC_START
+	This controls how long Squid waits to declare a peer cache
+	as "dead."  If there are no ICP replies received in this
+	amount of time, Squid will declare the peer dead and not
+	expect to receive any further ICP replies.  However, it
+	continues to send ICP queries, and will mark the peer as
+	alive upon receipt of the first subsequent ICP reply.
+
+dead_peer_timeout 10 seconds
+DOC_END
+
 
 NAME: hierarchy_stoplist
 TYPE: wordlist

@@ -172,6 +172,7 @@ struct _SquidConfig {
 	time_t request;
 	time_t pconn;
 	time_t siteSelect;
+	time_t deadPeer;
     } Timeout;
     size_t maxRequestSize;
     struct {
@@ -629,13 +630,15 @@ struct _peer {
     struct {
 	int pings_sent;
 	int pings_acked;
-	int ack_deficit;
 	int fetches;
 	int rtt;
 	int counts[ICP_END];
 	int ignored_replies;
 	int n_keepalives_sent;
 	int n_keepalives_recv;
+	time_t last_query;
+	time_t last_reply;
+	int logged_state;	/* so we can print dead/revived msgs */
     } stats;
     u_short icp_port;
     u_short http_port;
