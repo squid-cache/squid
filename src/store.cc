@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.488 1999/02/02 18:14:23 wessels Exp $
+ * $Id: store.cc,v 1.489 1999/04/08 07:16:41 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -518,6 +518,10 @@ storeCheckCachable(StoreEntry * e)
 	 * out the object yet.
 	 */
 	return 1;
+#if USE_ASYNC_IO
+    } else if (aio_overloaded()) {
+	debug(20, 2) ("storeCheckCachable: NO: Async-IO overloaded\n");
+#endif
     } else if (storeTooManyDiskFilesOpen()) {
 	debug(20, 2) ("storeCheckCachable: NO: too many disk files open\n");
 	store_check_cachable_hist.no.too_many_open_files++;
