@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.10 2001/10/17 12:41:54 hno Exp $
+ * $Id: aiops.cc,v 1.11 2001/10/17 19:33:06 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -108,17 +108,6 @@ struct squidaio_thread_t {
     struct squidaio_request_t *current_req;
     unsigned long requests;
 };
-
-int squidaio_cancel(squidaio_result_t *);
-int squidaio_open(const char *, int, mode_t, squidaio_result_t *);
-int squidaio_read(int, char *, int, off_t, int, squidaio_result_t *);
-int squidaio_write(int, char *, int, off_t, int, squidaio_result_t *);
-int squidaio_close(int, squidaio_result_t *);
-int squidaio_unlink(const char *, squidaio_result_t *);
-int squidaio_truncate(const char *, off_t length, squidaio_result_t *);
-int squidaio_opendir(const char *, squidaio_result_t *);
-squidaio_result_t *squidaio_poll_done();
-int squidaio_sync(void);
 
 static void squidaio_init(void);
 static void squidaio_queue_request(squidaio_request_t *);
