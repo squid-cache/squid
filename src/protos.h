@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.251 1998/08/19 06:05:54 wessels Exp $
+ * $Id: protos.h,v 1.252 1998/08/20 02:49:11 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -852,6 +852,8 @@ extern int storeDirValidFileno(int fn);
 extern int storeFilenoBelongsHere(int, int, int, int);
 extern OBJH storeDirStats;
 extern int storeDirMapBitsInUse(void);
+extern void storeDirConfigure(void);
+extern void storeDirDiskFull(int fn);
 
 
 /*

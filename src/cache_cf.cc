@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.298 1998/08/17 23:27:58 wessels Exp $
+ * $Id: cache_cf.cc,v 1.299 1998/08/20 02:49:10 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -210,11 +210,7 @@ static void
 configDoConfigure(void)
 {
     LOCAL_ARRAY(char, buf, BUFSIZ);
-    int i;
-    SwapDir *SD;
-    fileMap *fm;
     const refresh_t *R;
-    int n;
     memset(&Config2, '\0', sizeof(SquidConfig2));
     /* init memory as early as possible */
     memConfigure();
@@ -222,23 +218,7 @@ configDoConfigure(void)
     if (Config.cacheSwap.swapDirs == NULL)
 	fatal("No cache_dir's specified in config file");
     /* calculate Config.Swap.maxSize */
-    Config.Swap.maxSize = 0;
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	SD = &Config.cacheSwap.swapDirs[i];;
-	Config.Swap.maxSize += SD->max_size;
-	n = 2 * SD->max_size / Config.Store.avgObjectSize;
-	if (NULL == SD->map) {
-	    /* first time */
-	    SD->map = file_map_create(n);
-	} else if (n > SD->map->max_n_files) {
-	    /* it grew, need to expand */
-	    fm = file_map_create(n);
-	    filemapCopy(SD->map, fm);
-	    filemapFreeMemory(SD->map);
-	    SD->map = fm;
-	}
-	/* else it shrunk, and we leave the old one in place */
-    }
+    storeDirConfigure();
     if (Config.Swap.maxSize < (Config.Mem.maxSize >> 10))
 	fatal("cache_swap is lower than cache_mem");
     if (Config.Announce.period > 0) {
