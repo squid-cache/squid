@@ -1,5 +1,5 @@
 #
-#  $Id: Makefile.in,v 1.41 1999/04/07 19:48:57 wessels Exp $
+#  $Id: Makefile.in,v 1.42 1999/04/13 21:17:11 wessels Exp $
 #
 prefix		= @prefix@
 top_srcdir	= @top_srcdir@
@@ -23,6 +23,7 @@ AR_R		= @AR_R@
 INCLUDE		= -I../include -I$(top_srcdir)/include
 UTILOBJS	= rfc1123.o \
 		  rfc1738.o \
+		  rfc1035.o \
 		  util.o \
 		  getfullhostname.o \
 		  base64.o \
