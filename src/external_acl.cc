@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.30 2003/02/25 12:24:35 robertc Exp $
+ * $Id: external_acl.cc,v 1.31 2003/02/25 13:47:43 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -606,7 +606,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
         switch (format->type) {
 
         case _external_acl_format::EXT_ACL_LOGIN:
-            str = authenticateUserRequestUsername(request->auth_user_request);
+            str = authenticateUserRequestUsername(ch->auth_user_request);
             break;
 #if USE_IDENT
 
