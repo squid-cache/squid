@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.207 1997/11/28 19:47:22 wessels Exp $
+ * $Id: comm.cc,v 1.208 1997/11/28 23:48:07 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -912,7 +912,6 @@ comm_poll(time_t sec)
 	    }
 	    if (revents & POLLNVAL) {
 		close_handler *ch;
-		close_handler *next;
 		fde *F = &fd_table[fd];
 		debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
 		debug(5, 0) ("FD %d is a %s\n", fd, fdstatTypeStr[fd_table[fd].type]);
@@ -924,13 +923,7 @@ comm_poll(time_t sec)
 		for (ch = F->close_handler; ch; ch = ch->next)
 		    debug(5, 0) (" close handler: %p\n", ch->handler);
 		if (F->close_handler) {
-		    for (ch = F->close_handler; ch; ch = next) {
-			next = ch->next;
-			if (cbdataValid(ch->data))
-			    ch->handler(fd, ch->data);
-			cbdataUnlock(ch->data);
-			safe_free(ch);
-		    }
+		    commCallCloseHandlers(fd);
 		} else if (F->timeout_handler) {
 		    debug(5, 0) ("comm_poll: Calling Timeout Handler\n");
 		    F->timeout_handler(fd, F->timeout_data);
@@ -1232,7 +1225,6 @@ examine_select(fd_set * readfds, fd_set * writefds)
     int num;
     struct timeval tv;
     close_handler *ch = NULL;
-    close_handler *next = NULL;
     fde *F = NULL;
 
     debug(5, 0) ("examine_select: Examining open file descriptors...\n");
@@ -1265,13 +1257,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	for (ch = F->close_handler; ch; ch = ch->next)
 	    debug(5, 0) (" close handler: %p\n", ch->handler);
 	if (F->close_handler) {
-	    for (ch = F->close_handler; ch; ch = next) {
-		next = ch->next;
-		if (cbdataValid(ch->data))
-		    ch->handler(fd, ch->data);
-		cbdataUnlock(ch->data);
-		safe_free(ch);
-	    }
+	    commCallCloseHandlers(fd);
 	} else if (F->timeout_handler) {
 	    debug(5, 0) ("examine_select: Calling Timeout Handler\n");
 	    F->timeout_handler(fd, F->timeout_data);
