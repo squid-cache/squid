@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.37 1996/09/03 19:24:09 wessels Exp $
+ * $Id: wais.cc,v 1.38 1996/09/12 16:39:57 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -168,7 +168,6 @@ static void waisLifetimeExpire(fd, waisState)
 
 
 
-
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 static void waisReadReply(fd, waisState)
@@ -178,44 +177,60 @@ static void waisReadReply(fd, waisState)
     LOCAL_ARRAY(char, buf, 4096);
     int len;
     StoreEntry *entry = NULL;
+    int clen;
+    int off;
+    int bin;
 
     entry = waisState->entry;
-    if (entry->flag & DELETE_BEHIND) {
-	if (storeClientWaiting(entry)) {
-	    /* check if we want to defer reading */
-	    if ((entry->mem_obj->e_current_len -
-		    entry->mem_obj->e_lowest_offset) > WAIS_DELETE_GAP) {
-		debug(24, 3, "waisReadReply: Read deferred for Object: %s\n",
-		    entry->url);
-		debug(24, 3, "                Current Gap: %d bytes\n",
-		    entry->mem_obj->e_current_len -
-		    entry->mem_obj->e_lowest_offset);
-		/* reschedule, so it will automatically reactivated
-		 * when Gap is big enough. */
-		comm_set_select_handler(fd,
-		    COMM_SELECT_READ,
-		    (PF) waisReadReply,
-		    (void *) waisState);
-		/* don't install read handler while we're above the gap */
-		comm_set_select_handler_plus_timeout(fd,
-		    COMM_SELECT_TIMEOUT,
-		    (PF) NULL,
-		    (void *) NULL,
-		    (time_t) 0);
-		/* dont try reading again for a while */
-		comm_set_stall(fd, Config.stallDelay);
-		return;
-	    }
-	} else {
-	    /* we can terminate connection right now */
-	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+    if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
+	/* we can terminate connection right now */
+	squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+	comm_close(fd);
+	return;
+    }
+    /* check if we want to defer reading */
+    clen = entry->mem_obj->e_current_len;
+    off = storeGetLowestReaderOffset(entry);
+    if ((clen - off) > WAIS_DELETE_GAP) {
+	if (entry->flag & CLIENT_ABORT_REQUEST) {
+	    squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	    comm_close(fd);
 	    return;
 	}
+	IOStats.Wais.reads_deferred++;
+	debug(24, 3, "waisReadReply: Read deferred for Object: %s\n",
+	    entry->url);
+	debug(24, 3, "                Current Gap: %d bytes\n", clen - off);
+	/* reschedule, so it will automatically reactivated
+	 * when Gap is big enough. */
+	comm_set_select_handler(fd,
+	    COMM_SELECT_READ,
+	    (PF) waisReadReply,
+	    (void *) waisState);
+	/* don't install read handler while we're above the gap */
+	comm_set_select_handler_plus_timeout(fd,
+	    COMM_SELECT_TIMEOUT,
+	    (PF) NULL,
+	    (void *) NULL,
+	    (time_t) 0);
+	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
+	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
+	    BIT_SET(entry->flag, READ_DEFERRED);
+	}
+	/* dont try reading again for a while */
+	comm_set_stall(fd, Config.stallDelay);
+	return;
+    } else {
+	BIT_RESET(entry->flag, READ_DEFERRED);
     }
     len = read(fd, buf, 4096);
-    debug(24, 5, "waisReadReply - fd: %d read len:%d\n", fd, len);
-
+    debug(24, 5, "waisReadReply: FD %d read len:%d\n", fd, len);
+    if (len > 0) {
+        IOStats.Wais.reads++;
+        for (clen = len - 1, bin = 0; clen; bin++)
+            clen >>= 1;
+        IOStats.Wais.read_hist[bin]++;
+    }
     if (len < 0) {
 	debug(24, 1, "waisReadReply: FD %d: read failure: %s.\n", xstrerror());
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -281,7 +296,7 @@ static void waisSendComplete(fd, buf, size, errflag, data)
     StoreEntry *entry = NULL;
     WaisStateData *waisState = data;
     entry = waisState->entry;
-    debug(24, 5, "waisSendComplete - fd: %d size: %d errflag: %d\n",
+    debug(24, 5, "waisSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -309,7 +324,7 @@ static void waisSendRequest(fd, waisState)
     char *buf = NULL;
     char *Method = RequestMethodStr[waisState->method];
 
-    debug(24, 5, "waisSendRequest - fd: %d\n", fd);
+    debug(24, 5, "waisSendRequest: FD %d\n", fd);
 
     if (Method)
 	len += strlen(Method);
@@ -323,7 +338,7 @@ static void waisSendRequest(fd, waisState)
 	    waisState->mime_hdr);
     else
 	sprintf(buf, "%s %s\r\n", Method, waisState->request);
-    debug(24, 6, "waisSendRequest - buf:%s\n", buf);
+    debug(24, 6, "waisSendRequest: buf: %s\n", buf);
     comm_write(fd,
 	buf,
 	len,
