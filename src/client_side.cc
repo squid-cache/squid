@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.255 1998/04/04 05:17:38 wessels Exp $
+ * $Id: client_side.cc,v 1.256 1998/04/05 02:23:52 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -332,7 +332,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	 * www.thegist.com (Netscape/1.13) returns a content-length for
 	 * 304's which seems to be the length of the 304 HEADERS!!! and
 	 * not the body they refer to.  */
-	httpReplyUpdateOnNotModified(entry->mem_obj->reply, oldentry->mem_obj->reply);
+	httpReplyUpdateOnNotModified(oldentry->mem_obj->reply, entry->mem_obj->reply);
 	storeTimestampsSet(oldentry);
 	storeUnregister(entry, http);
 	storeUnlockObject(entry);
@@ -1658,10 +1658,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     /* handle internal objects */
     if (*url == '/' && strncmp(url, "/squid-internal/", 16) == 0) {
 	/* prepend our name & port */
-	url_sz = 7 + strlen(getMyHostname()) + 6 + strlen(url) + 1;
-	http->uri = xcalloc(url_sz, 1);
-	snprintf(http->uri, url_sz, "http://%s:%d%s",
-	    getMyHostname(), Config.Port.http->i, url);
+	http->uri = xstrdup(urlInternal(NULL, url+16));
 	http->internal = 1;
     }
     /* see if we running in Config2.Accel.on, if so got to convert it to URL */
