@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.73 2002/02/26 08:13:07 hno Exp $
+ * $Id: access_log.cc,v 1.74 2002/06/16 11:24:00 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -252,7 +252,7 @@ accessLogSquid(AccessLogEntry * al)
 	(long int) al->cache.size,
 	al->private.method_str,
 	al->url,
-	user ? user : dash_str,
+	user && *user ? user : dash_str,
 	al->hier.ping.timedout ? "TIMEOUT_" : "",
 	hier_strings[al->hier.code],
 	al->hier.host,
