@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.160 1998/04/16 18:06:32 wessels Exp $
+ * $Id: acl.cc,v 1.161 1998/04/22 16:24:12 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1402,12 +1402,14 @@ int
 aclCheckFast(const acl_access * A, aclCheck_t * checklist)
 {
     int allow = 0;
+    debug(28, 5) ("aclCheckFast: list: %p\n", A);
     while (A) {
 	allow = A->allow;
 	if (aclMatchAclList(A->acl_list, checklist))
 	    return allow;
 	A = A->next;
     }
+    debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", !allow);
     return !allow;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.51 1998/04/18 05:41:54 rousskov Exp $
+ * $Id: peer_select.cc,v 1.52 1998/04/22 16:24:14 rousskov Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -310,7 +310,7 @@ peerSelectFoo(ps_state * psstate)
 #if SQUID_PEER_DIGEST
 	/* which algorithm to use? */
 	if (squid_random() & 1) {
-	    debug(44, 3) ("peerSelect: Using Cache Digest\n");
+	    debug(44, 2) ("peerSelect: Using Cache Digest\n");
 	    request->hier.alg = PEER_SA_DIGEST;
 	    if (1 /* global_digested_peer_count */)
 		p = neighborsDigestSelect(request, entry);
@@ -322,7 +322,7 @@ peerSelectFoo(ps_state * psstate)
 	    case LOOKUP_HIT:
 		assert(p);
 		code = CACHE_DIGEST_HIT;
-		debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
+		debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 		hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 		peerSelectCallback(psstate, p); /* @?@: p used to be NULL */
 		return;
@@ -331,7 +331,7 @@ peerSelectFoo(ps_state * psstate)
 		/* fall through */
 	    case LOOKUP_NONE:
 		/* go direct */
-		debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
+		debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
 		hierarchyNote(&request->hier, code, &psstate->icp, request->host);
 		peerSelectCallback(psstate, NULL);
 		return;

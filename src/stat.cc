@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.242 1998/04/22 05:41:11 wessels Exp $
+ * $Id: stat.cc,v 1.243 1998/04/22 16:24:13 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -886,7 +886,7 @@ statCountersInitSpecial(StatCounters * C)
     statHistLogInit(&C->icp.server_svc_time, 300, 0.0, 3600000.0 * 30.0);
     statHistEnumInit(&C->cd.peer_choice_count, Config.npeers);
     statHistEnumInit(&C->cd.peer_ichoice_count, Config.npeers);
-    statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashCount);
+    statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashFuncCount);
 #endif
 }
 
