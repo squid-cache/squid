@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.313 2003/02/15 00:15:51 hno Exp $
+ * $Id: neighbors.cc,v 1.314 2003/02/15 12:42:09 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1283,6 +1283,8 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 	storeAppendPrintf(sentry, " weighted-round-robin");
     if (p->options.mcast_responder)
 	storeAppendPrintf(sentry, " multicast-responder");
+    if (p->weight != 1)
+	storeAppendPrintf(sentry, " weight=%d", p->weight);
     if (p->options.closest_only)
 	storeAppendPrintf(sentry, " closest-only");
 #if USE_HTCP
