@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.165 1998/07/25 00:16:30 wessels Exp $
+ * $Id: tools.cc,v 1.166 1998/07/25 04:47:29 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -739,6 +739,19 @@ dlinkAdd(void *data, dlink_node * m, dlink_list * list)
     list->head = m;
     if (list->tail == NULL)
 	list->tail = m;
+}
+
+void
+dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
+{
+    m->data = data;
+    m->next = NULL;
+    m->prev = list->tail;
+    if (list->tail)
+	list->tail->next = m;
+    list->tail = m;
+    if (list->head == NULL)
+	list->head = m;
 }
 
 void
