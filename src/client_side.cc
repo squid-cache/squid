@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.282 1998/04/21 21:33:20 wessels Exp $
+ * $Id: client_side.cc,v 1.283 1998/04/22 16:21:10 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -605,17 +605,27 @@ clientUpdateCounters(clientHttpRequest * http)
 	/* paranoid: we have a reply pointer */
 	(reply = storeEntryReply(http->entry))) {
 
+	/* tmp, remove this later */
+	const char *x_cache_lookup_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE_LOOKUP);
+	const int lookup_hit = x_cache_lookup_fld && !strncmp(x_cache_lookup_fld, "HIT", 3);
+	/* end of tmp hack */
 	const char *x_cache_fld = httpHeaderGetLastStr(&reply->header, HDR_X_CACHE);
 	const int real_hit = x_cache_fld && !strncmp(x_cache_fld, "HIT", 3);
 	const int guess_hit = LOOKUP_HIT == H->cd_lookup;
 	peer *peer = peerFindByName(H->cd_host);
 
-	debug(33,2) ("clientUpdateCounters: peer %s real/guess: %d/%d for %s!\n",
-	    H->cd_host, real_hit, guess_hit, http->request->host);
+	debug(33,3) ("clientUpdateCounters: peer %s real/guess: %d/%d (%d) for %s!\n",
+	    H->cd_host, real_hit, guess_hit, lookup_hit, http->request->host);
 	cacheDigestGuessStatsUpdate(&Counter.cd.guess, real_hit, guess_hit);
+	/* tmp hack */
+	if (lookup_hit && guess_hit && !real_hit)
+	    Counter.cd.guess.close_hits++;
 	if (peer) {
 	    cacheDigestGuessStatsUpdate(&peer->digest.stats.guess,
 		real_hit, guess_hit);
+	    /* tmp hack */
+	    if (lookup_hit && guess_hit && !real_hit)
+		peer->digest.stats.guess.close_hits++;
 	} else {
 	    /* temporary paranoid debug @?@ */
 	    static int max_count = 200;
@@ -1004,6 +1014,13 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	isTcpHit(http->log_type) ? "HIT" : "MISS",
 	getMyHostname());
     clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
+#if SQUID_PEER_DIGEST
+    /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
+    snprintf(ybuf, 4096, "X-Cache-Lookup: %s from %s:%d",
+	http->lookup_type ? http->lookup_type : "NONE",
+	getMyHostname(), Config.Port.http->i);
+    clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
+#endif
     /* Append Proxy-Connection: */
     if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
 	snprintf(ybuf, 4096, "Proxy-Connection: Keep-Alive");
@@ -1439,17 +1456,15 @@ clientProcessRequest2(clientHttpRequest * http)
     const request_t *r = http->request;
     const cache_key *key = storeKeyPublic(http->uri, r->method);
     StoreEntry *e;
-    if ((e = http->entry = storeGet(key)) == NULL) {
+    e = http->entry = storeGet(key);
+    http->lookup_type = e ? "HIT" : "MISS";
+    if (!e) {
 	/* this object isn't in the cache */
 	return LOG_TCP_MISS;
     } else if (EBIT_TEST(e->flag, ENTRY_SPECIAL)) {
 	/* ideally, special entries should be processed later, 
 	 * so we can use std processing routines for IMS and such */
-/*
- * temporary disabled to prevent coredumps on caches running old buggy code
- * that could not handle 304 replies for Cache Digests
- */
-	if (0 && EBIT_TEST(r->flags, REQ_IMS) && e->lastmod <= r->ims)
+	if (EBIT_TEST(r->flags, REQ_IMS) && e->lastmod <= r->ims)
 	    return LOG_TCP_IMS_HIT;
 	else if (e->mem_status == IN_MEMORY)
 	    return LOG_TCP_MEM_HIT;
