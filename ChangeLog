@@ -33,6 +33,7 @@ Changes to Squid-2.4.DEVEL3 ():
 	  the last path component of cache_dir.
 	- no_cache is now a full ACL check without, allowing most ACL types
 	  to be used.
+	- The CONNECT method now obeys miss_access requirements
 
 Changes to Squid-2.4.DEVEL2 ():
 
