@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.91 1996/09/17 16:32:32 wessels Exp $
+ * $Id: cache_cf.cc,v 1.92 1996/09/18 20:12:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -222,9 +222,7 @@ static void parseAppendDomainLine __P((void));
 static void parseCacheAnnounceLine __P((void));
 static void parseCacheHostLine __P((void));
 static void parseDebugOptionsLine __P((void));
-static void parseDirLine __P((void));
 static void parseDnsProgramLine __P((void));
-static void parseDnsTestnameLine __P((void));
 static void parseEffectiveUserLine __P((void));
 static void parseErrHtmlLine __P((void));
 static void parseFtpLine __P((void));
@@ -232,7 +230,7 @@ static void parseFtpOptionsLine __P((void));
 static void parseFtpProgramLine __P((void));
 static void parseFtpUserLine __P((void));
 static void parseGopherLine __P((void));
-static void parseHierarchyStoplistLine __P((void));
+static void parseWordlist __P((wordlist **));
 static void parseHostAclLine __P((void));
 static void parseHostDomainLine __P((void));
 static void parseHotVmFactorLine __P((void));
@@ -241,7 +239,6 @@ static void parseHttpPortLine __P((void));
 static void parseHttpdAccelLine __P((void));
 static void parseIPLine __P((ip_acl ** list));
 static void parseIcpPortLine __P((void));
-static void parseInsideFirewallLine __P((void));
 static void parseLocalDomainFile __P((char *fname));
 static void parseLocalDomainLine __P((void));
 static void parseLogLine __P((void));
@@ -665,17 +662,6 @@ parseMgrLine(void)
     Config.adminEmail = xstrdup(token);
 }
 
-static void
-parseDirLine(void)
-{
-    char *token;
-
-    token = strtok(NULL, w_space);
-    if (token == NULL)
-	self_destruct();
-    wordlistAdd(&Config.cache_dirs, token);
-}
-
 #if USE_PROXY_AUTH
 static void
 parseProxyAuthLine(void)
@@ -847,11 +833,11 @@ parseIPLine(ip_acl ** list)
 }
 
 static void
-parseHierarchyStoplistLine(void)
+parseWordlist(wordlist **list)
 {
     char *token;
     while ((token = strtok(NULL, w_space)))
-	wordlistAdd(&Config.hierarchy_stoplist, token);
+	wordlistAdd(list, token);
 }
 
 static void
@@ -921,24 +907,6 @@ parseLocalDomainLine(void)
 	} else {
 	    parseLocalDomainFile(token);
 	}
-    }
-}
-
-static void
-parseInsideFirewallLine(void)
-{
-    char *token;
-    while ((token = strtok(NULL, w_space))) {
-	wordlistAdd(&Config.inside_firewall_list, token);
-    }
-}
-
-static void
-parseDnsTestnameLine(void)
-{
-    char *token;
-    while ((token = strtok(NULL, w_space))) {
-	wordlistAdd(&Config.dns_testname_list, token);
     }
 }
 
@@ -1126,7 +1094,7 @@ parseConfigFile(char *file_name)
 	    parseIntegerValue(&Config.neighborTimeout);
 
 	else if (!strcmp(token, "cache_dir"))
-	    parseDirLine();
+	    parseWordlist(&Config.cache_dirs);
 
 	else if (!strcmp(token, "cache_log"))
 	    parseLogLine();
@@ -1186,7 +1154,10 @@ parseConfigFile(char *file_name)
 	    aclParseAccessLine(&ICPAccessList);
 
 	else if (!strcmp(token, "hierarchy_stoplist"))
-	    parseHierarchyStoplistLine();
+	    parseWordlist(&Config.hierarchy_stoplist);
+
+	else if (!strcmp(token, "cache_stoplist"))
+	    parseWordlist(&Config.cache_stoplist);
 
 	else if (!strcmp(token, "gopher"))
 	    parseGopherLine();
@@ -1319,10 +1290,10 @@ parseConfigFile(char *file_name)
 	    parseIcpPortLine();
 
 	else if (!strcmp(token, "inside_firewall"))
-	    parseInsideFirewallLine();
+	    parseWordlist(&Config.inside_firewall_list);
 
 	else if (!strcmp(token, "dns_testnames"))
-	    parseDnsTestnameLine();
+	    parseWordlist(&Config.dns_testname_list);
 
 	else if (!strcmp(token, "single_parent_bypass"))
 	    parseOnOff(&Config.singleParentBypass);

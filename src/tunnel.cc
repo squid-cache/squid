@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.16 1996/09/16 21:11:15 wessels Exp $
+ * $Id: tunnel.cc,v 1.17 1996/09/18 20:12:22 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -57,7 +57,7 @@ static void sslWriteServer __P((int fd, SslStateData * sslState));
 static void sslWriteClient __P((int fd, SslStateData * sslState));
 static void sslConnected __P((int fd, SslStateData * sslState));
 static void sslProxyConnected __P((int fd, SslStateData * sslState));
-static int sslConnect __P((int fd, struct hostent *, SslStateData *));
+static void sslConnect __P((int fd, struct hostent *, void *));
 static void sslConnInProgress __P((int fd, SslStateData * sslState));
 static void sslErrorComplete __P((int, char *, int, int, void *));
 static void sslClose __P((SslStateData * sslState));
@@ -346,9 +346,10 @@ sslConnInProgress(int fd, SslStateData * sslState)
     return;
 }
 
-static int
-sslConnect(int fd, struct hostent *hp, SslStateData * sslState)
+static void
+sslConnect(int fd, struct hostent *hp, void *data)
 {
+    SslStateData *sslState = data;
     request_t *request = sslState->request;
     int status;
     char *buf = NULL;
@@ -367,7 +368,7 @@ sslConnect(int fd, struct hostent *hp, SslStateData * sslState)
 	    sslErrorComplete,
 	    (void *) sslState,
 	    xfree);
-	return COMM_ERROR;
+	return;
     }
     debug(26, 5, "sslConnect: client=%d server=%d\n",
 	sslState->client.fd,
@@ -401,7 +402,7 @@ sslConnect(int fd, struct hostent *hp, SslStateData * sslState)
 		sslErrorComplete,
 		(void *) sslState,
 		xfree);
-	    return COMM_ERROR;
+	    return;
 	} else {
 	    debug(26, 5, "sslConnect: conn %d EINPROGRESS\n", fd);
 	    /* The connection is in progress, install ssl handler */
@@ -409,7 +410,7 @@ sslConnect(int fd, struct hostent *hp, SslStateData * sslState)
 		COMM_SELECT_WRITE,
 		(PF) sslConnInProgress,
 		(void *) sslState);
-	    return COMM_OK;
+	    return;
 	}
     }
     if (opt_no_ipcache)
@@ -418,7 +419,6 @@ sslConnect(int fd, struct hostent *hp, SslStateData * sslState)
 	sslProxyConnected(sslState->server.fd, sslState);
     else
 	sslConnected(sslState->server.fd, sslState);
-    return COMM_OK;
 }
 
 int
@@ -486,7 +486,7 @@ sslStart(int fd, char *url, request_t * request, char *mime_hdr, int *size_ptr)
 	(void *) sslState);
     ipcache_nbgethostbyname(sslState->host,
 	sslState->server.fd,
-	(IPH) sslConnect,
+	sslConnect,
 	sslState);
     return COMM_OK;
 }
