@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta22 (June 1, 1998):
+
 	- do not cut off "; parameter" from "digitized" Content-Type 
 	  http fields
 	- Added X-Request-URI for persistent connection debugging 
@@ -17,6 +19,9 @@
 	- Replaced "complex" (offset accounting) calls to snprintf with MemBuf
 	- Do not send only-if-cached cc directive with requests 
           for peer's digests.
+	- Added "automatic tuning" for incoming request rate, i.e.
+	  how often to check HTTP and ICP sockets.  See comm.c
+	  comments for details.
 
 Changes to squid-1.2.beta21 (May 22, 1998):
 
