@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.342 2001/10/03 09:16:13 hno Exp $
+ * $Id: main.cc,v 1.343 2001/10/23 12:14:49 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -214,7 +214,7 @@ mainParseOptions(int argc, char *argv[])
 		icpPortNumOverride = 0;
 	    break;
 	case 'v':
-	    printf("Squid Cache: Version %s\n", version_string);
+	    printf("Squid Cache: Version %s\nconfigure options: %s\n", version_string, SQUID_CONFIGURE_OPTIONS);
 	    exit(0);
 	    /* NOTREACHED */
 	case 'z':
