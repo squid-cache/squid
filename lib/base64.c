@@ -13,7 +13,7 @@ static void base64_init _PARAMS((void));
 
 static int base64_initialized = 0;
 int base64_value[256];
-char base64_code[] = "ABCDEFGHIJKLMNOPQRSTUVWZYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+char base64_code[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static void
 base64_init(void)
