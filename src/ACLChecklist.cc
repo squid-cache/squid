@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.15 2003/09/21 00:30:48 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.16 2003/09/21 12:06:06 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -192,8 +192,17 @@ ACLChecklist::markFinished()
 }
 
 void
+ACLChecklist::preCheck()
+{
+    debug(28, 3) ("ACLChecklist::preCheck: %p checking '%s'\n", this, accessList->cfgline);
+    /* what is our result on a match? */
+    currentAnswer(accessList->allow);
+}
+
+void
 ACLChecklist::checkAccessList()
 {
+    preCheck();
     /* does the current AND clause match */
     matchAclListSlow(accessList->aclList);
 }
@@ -236,9 +245,6 @@ void
 ACLChecklist::matchAclList(const acl_list * head, bool const fast)
 {
     PROF_start(aclMatchAclList);
-    debug(28, 3) ("ACLChecklist::matchAclList: %p checking '%s'\n", this, accessList->cfgline);
-    /* what is our result on a match? */
-    currentAnswer(accessList->allow);
     const acl_list *node = head;
 
     while (node) {
@@ -399,6 +405,7 @@ ACLChecklist::fastCheck()
     debug(28, 5) ("aclCheckFast: list: %p\n", accessList);
 
     while (accessList) {
+        preCheck();
         matchAclListFast(accessList->aclList);
 
         if (finished()) {
