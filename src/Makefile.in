@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.319 2003/08/14 23:31:51 robertc Exp $
+#  $Id: Makefile.in,v 1.320 2003/09/02 00:14:34 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -465,6 +465,7 @@ squid_ACLSOURCES = \
 
 squid_SOURCES = \
 	access_log.cc \
+	AccessLogEntry.h \
 	acl.cc \
 	ACL.h \
 	ACLChecklist.cc \
@@ -527,6 +528,7 @@ squid_SOURCES = \
 	http.cc \
 	http.h \
 	HttpStatusLine.cc \
+	HttpStatusLine.h \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -543,6 +545,7 @@ squid_SOURCES = \
 	HttpReply.h \
 	HttpRequest.cc \
 	HttpRequest.h \
+	HttpVersion.h \
 	icmp.cc \
 	ICP.h \
 	icp_v2.cc \
@@ -985,30 +988,30 @@ recv_announce_OBJECTS = $(am_recv_announce_OBJECTS)
 recv_announce_LDADD = $(LDADD)
 recv_announce_DEPENDENCIES =
 recv_announce_LDFLAGS =
-am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
-	ACLChecklist.h ACLARP.cc ACLARP.h ACLASN.cc ACLASN.h \
-	ACLDestinationASN.h ACLSourceASN.h ACLBrowser.cc ACLBrowser.h \
-	ACLData.h ACLDestinationDomain.cc ACLDestinationDomain.h \
-	ACLDestinationIP.cc ACLDestinationIP.h ACLDomainData.h \
-	ACLDomainData.cc ACLExtUser.h ACLExtUser.cc ACLIntRange.cc \
-	ACLIntRange.h ACLIP.cc ACLIP.h ACLMaxConnection.cc \
-	ACLMaxConnection.h ACLMaxUserIP.cc ACLMaxUserIP.h ACLMethod.cc \
-	ACLMethod.h ACLMethodData.cc ACLMethodData.h ACLMyIP.cc \
-	ACLMyIP.h ACLMyPort.cc ACLMyPort.h ACLProtocol.cc ACLProtocol.h \
-	ACLProtocolData.cc ACLProtocolData.h ACLProxyAuth.cc \
-	ACLProxyAuth.h ACLReferer.cc ACLReferer.h ACLRegexData.cc \
-	ACLRegexData.h ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc \
-	ACLReplyMIMEType.h ACLRequestHeaderStrategy.h \
-	ACLRequestMIMEType.cc ACLRequestMIMEType.h ACLSourceDomain.cc \
-	ACLSourceDomain.h ACLSourceIP.cc ACLSourceIP.h \
-	ACLStrategised.cc ACLStrategised.h ACLStrategy.h \
-	ACLStringData.cc ACLStringData.h ACLTime.cc ACLTime.h \
-	ACLTimeData.cc ACLTimeData.h ACLUrl.cc ACLUrl.h ACLUrlPath.cc \
-	ACLUrlPath.h ACLUrlPort.cc ACLUrlPort.h ACLUserData.cc \
-	ACLUserData.h asn.cc authenticate.cc authenticate.h cache_cf.cc \
-	CacheDigest.cc cache_manager.cc carp.cc cbdata.cc client_db.cc \
-	client_side.cc client_side.h client_side_reply.cc \
-	client_side_reply.h client_side_request.cc \
+am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
+	ACLChecklist.cc ACLChecklist.h ACLARP.cc ACLARP.h ACLASN.cc \
+	ACLASN.h ACLDestinationASN.h ACLSourceASN.h ACLBrowser.cc \
+	ACLBrowser.h ACLData.h ACLDestinationDomain.cc \
+	ACLDestinationDomain.h ACLDestinationIP.cc ACLDestinationIP.h \
+	ACLDomainData.h ACLDomainData.cc ACLExtUser.h ACLExtUser.cc \
+	ACLIntRange.cc ACLIntRange.h ACLIP.cc ACLIP.h \
+	ACLMaxConnection.cc ACLMaxConnection.h ACLMaxUserIP.cc \
+	ACLMaxUserIP.h ACLMethod.cc ACLMethod.h ACLMethodData.cc \
+	ACLMethodData.h ACLMyIP.cc ACLMyIP.h ACLMyPort.cc ACLMyPort.h \
+	ACLProtocol.cc ACLProtocol.h ACLProtocolData.cc \
+	ACLProtocolData.h ACLProxyAuth.cc ACLProxyAuth.h ACLReferer.cc \
+	ACLReferer.h ACLRegexData.cc ACLRegexData.h \
+	ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc ACLReplyMIMEType.h \
+	ACLRequestHeaderStrategy.h ACLRequestMIMEType.cc \
+	ACLRequestMIMEType.h ACLSourceDomain.cc ACLSourceDomain.h \
+	ACLSourceIP.cc ACLSourceIP.h ACLStrategised.cc ACLStrategised.h \
+	ACLStrategy.h ACLStringData.cc ACLStringData.h ACLTime.cc \
+	ACLTime.h ACLTimeData.cc ACLTimeData.h ACLUrl.cc ACLUrl.h \
+	ACLUrlPath.cc ACLUrlPath.h ACLUrlPort.cc ACLUrlPort.h \
+	ACLUserData.cc ACLUserData.h asn.cc authenticate.cc \
+	authenticate.h cache_cf.cc CacheDigest.cc cache_manager.cc \
+	carp.cc cbdata.cc client_db.cc client_side.cc client_side.h \
+	client_side_reply.cc client_side_reply.h client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h comm.cc \
 	comm.h comm_select.cc comm_poll.cc comm_kqueue.cc CommRead.h \
 	ConfigParser.h ConnectionDetail.h debug.cc Debug.h defines.h \
@@ -1030,29 +1033,29 @@ am__squid_SOURCES_DIST = access_log.cc acl.cc ACL.h ACLChecklist.cc \
 	ExternalACLEntry.h fd.cc fde.cc fde.h filemap.cc forward.cc \
 	fqdncache.cc ftp.cc Generic.h globals.h gopher.cc helper.cc \
 	helper.h htcp.cc htcp.h http.cc http.h HttpStatusLine.cc \
-	HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
-	HttpHdrContRange.cc HttpHdrContRange.h HttpHeader.cc \
-	HttpHeader.h HttpHeaderRange.h HttpHeaderTools.cc HttpBody.cc \
-	HttpMsg.cc HttpReply.cc HttpReply.h HttpRequest.cc \
-	HttpRequest.h icmp.cc ICP.h icp_v2.cc icp_v3.cc ACLIdent.cc \
-	ACLIdent.h ident.cc int.cc internal.cc ipc.cc ipcache.cc \
-	IPInterception.cc IPInterception.h leakfinder.cc logfile.cc \
-	main.cc mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc \
-	MemObject.cc MemObject.h mime.cc multicast.cc neighbors.cc \
-	net_db.cc Packer.cc ProfStats.cc pconn.cc peer_digest.cc \
-	peer_select.cc protos.h redirect.cc referer.cc refresh.cc \
-	send-announce.cc snmp_core.cc snmp_agent.cc squid.h SquidNew.cc \
-	tunnel.cc ACLCertificateData.cc ACLCertificateData.h \
-	ACLCertificate.cc ACLCertificate.h ssl_support.cc ssl_support.h \
-	stat.cc StatHist.cc String.cc stmem.cc stmem.h store.cc Store.h \
-	StoreFileSystem.cc StoreFileSystem.h store_io.cc \
-	StoreIOBuffer.h StoreIOState.cc StoreIOState.h store_client.cc \
-	StoreClient.h store_digest.cc store_dir.cc store_key_md5.cc \
-	store_log.cc store_rebuild.cc store_swapin.cc store_swapmeta.cc \
-	store_swapout.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
-	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
-	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
-	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h \
+	HttpStatusLine.h HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc HttpHdrContRange.cc HttpHdrContRange.h \
+	HttpHeader.cc HttpHeader.h HttpHeaderRange.h HttpHeaderTools.cc \
+	HttpBody.cc HttpMsg.cc HttpReply.cc HttpReply.h HttpRequest.cc \
+	HttpRequest.h HttpVersion.h icmp.cc ICP.h icp_v2.cc icp_v3.cc \
+	ACLIdent.cc ACLIdent.h ident.cc int.cc internal.cc ipc.cc \
+	ipcache.cc IPInterception.cc IPInterception.h leakfinder.cc \
+	logfile.cc main.cc mem.cc mem_node.cc mem_node.h Mem.h \
+	MemBuf.cc MemObject.cc MemObject.h mime.cc multicast.cc \
+	neighbors.cc net_db.cc Packer.cc ProfStats.cc pconn.cc \
+	peer_digest.cc peer_select.cc protos.h redirect.cc referer.cc \
+	refresh.cc send-announce.cc snmp_core.cc snmp_agent.cc squid.h \
+	SquidNew.cc tunnel.cc ACLCertificateData.cc \
+	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
+	ssl_support.cc ssl_support.h stat.cc StatHist.cc String.cc \
+	stmem.cc stmem.h store.cc Store.h StoreFileSystem.cc \
+	StoreFileSystem.h store_io.cc StoreIOBuffer.h StoreIOState.cc \
+	StoreIOState.h store_client.cc StoreClient.h store_digest.cc \
+	store_dir.cc store_key_md5.cc store_log.cc store_rebuild.cc \
+	store_swapin.cc store_swapmeta.cc store_swapout.cc StoreMeta.cc \
+	StoreMeta.h StoreMetaMD5.cc StoreMetaMD5.h StoreMetaSTD.cc \
+	StoreMetaSTD.h StoreMetaUnpacker.cc StoreMetaUnpacker.h \
+	StoreMetaURL.cc StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h \
 	StoreSwapLogData.cc StoreSwapLogData.h structs.h SwapDir.cc \
 	SwapDir.h tools.cc typedefs.h ufscommon.cc ufscommon.h \
 	unlinkd.cc url.cc urn.cc useragent.cc wais.cc wccp.cc whois.cc \
