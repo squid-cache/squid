@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.197 2001/01/11 23:30:47 wessels Exp $
+#  $Id: Makefile.in,v 1.198 2001/01/16 21:11:25 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -312,31 +312,31 @@ $(AUTH_OBJS):
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
-		mkdir $(prefix); \
+		mkdir -p $(prefix); \
 	fi
 	-@if test ! -d $(exec_prefix); then \
 		echo "mkdir $(exec_prefix)"; \
-		mkdir $(exec_prefix); \
+		mkdir -p $(exec_prefix); \
 	fi
 	-@if test ! -d $(bindir); then \
 		echo "mkdir $(bindir)"; \
-		mkdir $(bindir); \
+		mkdir -p $(bindir); \
 	fi
 	-@if test ! -d $(libexecdir); then \
-		echo "mkdir -p $(libexecdir)"; \
+		echo "mkdir $(libexecdir)"; \
 		mkdir -p $(libexecdir); \
 	fi
 	-@if test ! -d $(sysconfdir); then \
 		echo "mkdir $(sysconfdir)"; \
-		mkdir $(sysconfdir); \
+		mkdir -p $(sysconfdir); \
 	fi
 	-@if test ! -d $(localstatedir); then \
 		echo "mkdir $(localstatedir)"; \
-		mkdir $(localstatedir); \
+		mkdir -p $(localstatedir); \
 	fi
 	-@if test ! -d $(localstatedir)/logs; then \
 		echo "mkdir $(localstatedir)/logs"; \
-		mkdir $(localstatedir)/logs; \
+		mkdir -p $(localstatedir)/logs; \
 	fi
 
 # Michael Lupp <mike@nemesis.saar.de> wants to know about additions

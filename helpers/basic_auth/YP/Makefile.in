@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2001/01/07 23:36:46 hno Exp $
+#  $Id: Makefile.in,v 1.2 2001/01/16 21:11:28 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -64,11 +64,11 @@ $(YP_AUTH_EXE): $(OBJS)
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
-		mkdir $(prefix); \
+		mkdir -p $(prefix); \
 	fi
 	-@if test ! -d $(bindir); then \
 		echo "mkdir $(bindir)"; \
-		mkdir $(bindir); \
+		mkdir -p $(bindir); \
 	fi
 
 # Michael Lupp <mike@nemesis.saar.de> wants to know about additions

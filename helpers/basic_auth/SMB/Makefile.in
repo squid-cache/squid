@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2001/01/07 23:36:46 hno Exp $
+#  $Id: Makefile.in,v 1.2 2001/01/16 21:11:27 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -70,11 +70,11 @@ $(SMB_AUTH_EXE): smb_auth.o
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
-		mkdir $(prefix); \
+		mkdir -p $(prefix); \
 	fi
 	-@if test ! -d $(libexecdir); then \
 		echo "mkdir $(libexecdir)"; \
-		mkdir $(libexecdir); \
+		mkdir -p $(libexecdir); \
 	fi
 
 # Michael Lupp <mike@nemesis.saar.de> wants to know about additions
