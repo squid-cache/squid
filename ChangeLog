@@ -24,6 +24,9 @@ Changes to squid-1.1.beta8 ():
 	- If IMS verification fails, send the old object and log it
 	  as TCP_EXP_FAIL_HIT.
 	- Added Host: header to HTTP requests.
+	- Disable dnsservers with 'dns_children 0' in the config file.
+	- Disable ftpget with 'ftpget_program none' in the config
+	  file.  Also ftpget is disabled for http_accel mode.
 
 Changes to squid-1.1.beta7 (October 14, 1996):
 
