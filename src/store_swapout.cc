@@ -7,6 +7,7 @@ typedef struct swapout_ctrl_t {
 } swapout_ctrl_t;
 
 static FOCB storeSwapOutFileOpened;
+static off_t storeSwapOutObjectBytesOnDisk(const MemObject *);
 
 /* start swapping object to disk */
 void
@@ -92,6 +93,7 @@ storeCheckSwapOut(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     off_t lowest_offset;
     off_t new_mem_lo;
+    off_t on_disk;
     size_t swapout_size;
     char *swap_buf;
     ssize_t swap_buf_len;
@@ -148,8 +150,8 @@ storeCheckSwapOut(StoreEntry * e)
     if (mem->swapout.queue_offset < new_mem_lo)
 	new_mem_lo = mem->swapout.queue_offset;
 #else
-    if (mem->swapout.done_offset < new_mem_lo)
-	new_mem_lo = mem->swapout.done_offset;
+    if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
+	new_mem_lo = on_disk;
 #endif
     stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
     mem->inmem_lo = new_mem_lo;
@@ -292,4 +294,27 @@ storeSwapOutWriteQueued(MemObject * mem)
     size_t hdr = mem->swap_hdr_sz;
     assert(queued + hdr >= done);
     return (queued + hdr > done);
+}
+
+
+/*
+ * How much of the object data is on the disk?
+ */
+static off_t
+storeSwapOutObjectBytesOnDisk(const MemObject * mem)
+{
+    /*
+     * NOTE: done_offset represents the disk file size,
+     * not the amount of object data on disk.
+     * 
+     * If we don't have at least 'swap_hdr_sz' bytes
+     * then none of the object data is on disk.
+     *
+     * This should still be safe if swap_hdr_sz == 0,
+     * meaning we haven't even opened the swapout file
+     * yet.
+     */
+    if (mem->swapout.done_offset <= mem->swap_hdr_sz)
+	return 0;
+    return mem->swapout.done_offset - mem->swap_hdr_sz;
 }
