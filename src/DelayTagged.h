@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.h,v 1.1 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayTagged.h,v 1.2 2003/05/22 10:14:09 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -95,6 +95,7 @@ class Id:public DelayIdComposite
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
+        virtual void delayRead(DeferredRead const &);
 
     private:
         DelayTagged::Pointer theTagged;
