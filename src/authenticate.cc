@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.29 2001/09/03 10:33:02 robertc Exp $
+ * $Id: authenticate.cc,v 1.30 2001/10/03 20:12:47 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -934,7 +934,7 @@ void
 authSchemeAdd(char *type, AUTHSSETUP * setup)
 {
     int i;
-    debug(29, 4) ("authSchemeAdd: adding %s", type);
+    debug(29, 4) ("authSchemeAdd: adding %s\n", type);
     /* find the number of currently known authscheme types */
     for (i = 0; authscheme_list && authscheme_list[i].typestr; i++) {
 	assert(strcmp(authscheme_list[i].typestr, type) != 0);
