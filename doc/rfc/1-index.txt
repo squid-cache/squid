@@ -22,6 +22,13 @@ rfc1738.txt
 rfc1945.txt
 	Hypertext Transfer Protocol -- HTTP/1.0
 	
+rfc2227.txt
+	Simple Hit-Metering and Usage-Limiting for HTTP
+
+rfc2518.txt
+	HTTP Extensions for Distributed Authoring -- WEBDAV
+	Numerous extension methods to HTTP
+
 rfc2817.txt
 	Upgrading to TLS Within HTTP/1.1
 	Not currently in use, but scheduled to replace https://
