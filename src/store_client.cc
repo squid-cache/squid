@@ -221,8 +221,8 @@ storeClientFileRead(store_client * sc)
     assert(sc->callback != NULL);
     if (mem->swap_hdr_sz == 0)
 	file_read(sc->swapin_fd,
-	    memAllocate(MEM_DISK_BUF, 1),
-	    DISK_PAGE_SIZE,
+	    sc->copy_buf,
+	    sc->copy_size,
 	    0,
 	    storeClientReadHeader,
 	    sc);
@@ -254,9 +254,6 @@ storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *dat
 static void
 storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *data)
 {
-    /*
-     * 'buf' should have been allocated by memAllocate(MEM_DISK_BUF)
-     */
     store_client *sc = data;
     StoreEntry *e = sc->entry;
     MemObject *mem = e->mem_obj;
@@ -271,7 +268,6 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
     debug(20, 3) ("storeClientReadHeader: FD %d, len %d\n", fd, len);
     if (len < 0) {
 	debug(20, 3) ("storeClientReadHeader: FD %d: %s\n", fd, xstrerror());
-	memFree(MEM_DISK_BUF, (void *) buf);
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, len);
 	return;
@@ -279,7 +275,6 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
     tlv_list = storeSwapMetaUnpack(buf, &swap_hdr_sz);
     if (tlv_list == NULL) {
 	debug(20, 1) ("storeClientReadHeader: failed to unpack meta data\n");
-	memFree(MEM_DISK_BUF, (void *) buf);
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, -1);
 	return;
@@ -303,8 +298,7 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
 	copy_sz = XMIN(sc->copy_size, body_sz);
 	debug(20, 3) ("storeClientReadHeader: copying %d bytes of body\n",
 	    copy_sz);
-	xmemcpy(sc->copy_buf, buf + swap_hdr_sz, copy_sz);
-	memFree(MEM_DISK_BUF, (void *) buf);
+	xmemmove(sc->copy_buf, sc->copy_buf + swap_hdr_sz, copy_sz);
 	if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
 	    httpReplyParse(mem->reply, sc->copy_buf);
 	sc->callback = NULL;
@@ -315,7 +309,6 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
      * we don't have what the client wants, but at least we now
      * know the swap header size.
      */
-    memFree(MEM_DISK_BUF, (void *) buf);
     storeClientFileRead(sc);
 }
 
