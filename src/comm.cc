@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.47 1996/07/25 07:10:30 wessels Exp $
+ * $Id: comm.cc,v 1.48 1996/07/26 19:29:54 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -404,7 +404,7 @@ int comm_connect_addr(sock, address)
 		errno = x;
 	default:
 	    debug(5, 1, "connect: %s:%d: %s.\n",
-		inet_ntoa(address->sin_addr),
+		fqdnFromAddr(address->sin_addr),
 		ntohs(address->sin_port),
 		xstrerror());
 	    return COMM_ERROR;

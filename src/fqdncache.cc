@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.4 1996/07/25 07:10:33 wessels Exp $
+ * $Id: fqdncache.cc,v 1.5 1996/07/26 19:29:55 wessels Exp $
  *
  * DEBUG: section 34    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -1024,4 +1024,13 @@ void fqdncacheReleaseInvalid(name)
     if (f->status != FQDN_NEGATIVE_CACHED)
 	return;
     fqdncache_release(f);
+}
+
+char *fqdnFromAddr(addr)
+     struct in_addr addr;
+{
+    char *n;
+    if ((n = fqdncache_gethostbyaddr(addr, 0)))
+	return n;
+    return inet_ntoa(addr);
 }
