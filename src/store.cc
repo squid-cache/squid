@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.26 1996/04/04 18:41:29 wessels Exp $ */
+/* $Id: store.cc,v 1.27 1996/04/04 21:34:26 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -188,7 +188,7 @@ HashID storeCreateHashTable(cmp_func)
  * if object is in memory, also insert into in_mem_table
  */
 
-int storeHashInsert(e)
+static int storeHashInsert(e)
      StoreEntry *e;
 {
     debug(20, 3, "storeHashInsert: Inserting Entry %p key '%s'\n",
@@ -250,7 +250,7 @@ void storeFreeEntry(e)
     if (!e)
 	fatal_dump("storeFreeEntry: NULL Entry");
 
-    debug(20, 5, "storeFreeEntry: Freeing %s\n", e->url);
+    debug(20, 3, "storeFreeEntry: Freeing %s\n", e->url);
 
     if (has_mem_obj(e)) {
 	destroy_MemObjectData(e->mem_obj);
@@ -283,7 +283,7 @@ void storeFreeEntry(e)
 void storePurgeMem(e)
      StoreEntry *e;
 {
-    debug(20, 5, "storePurgeMem: Freeing memory-copy of %s\n", e->url);
+    debug(20, 3, "storePurgeMem: Freeing memory-copy of %s\n", e->url);
     if (!has_mem_obj(e))
 	return;
 
@@ -323,7 +323,7 @@ int storeLockObject(e)
     int status = 0;
 
     e->lock_count++;
-    debug(20, 5, "storeLockObject: locks %d: <URL:%s>\n", e->lock_count, e->url);
+    debug(20, 3, "storeLockObject: locks %d: <URL:%s>\n", e->lock_count, e->url);
 
     if ((e->mem_status == NOT_IN_MEMORY) &&	/* Not in memory */
 	(e->swap_status != SWAP_OK) &&	/* Not on disk */
@@ -360,6 +360,8 @@ int storeUnlockObject(e)
 {
     int e_lock_count;
 
+    debug(20, 0, "storeUnlockObject: key '%s' count=%d\n", e->key, e->lock_count);
+
     if ((int) e->lock_count > 0)
 	e->lock_count--;
     else if (e->lock_count == 0) {
@@ -369,7 +371,6 @@ int storeUnlockObject(e)
     e_lock_count = (int) e->lock_count;
 
     if (e->lock_count == 0) {
-
 	if (e->flag & RELEASE_REQUEST) {
 	    storeRelease(e);
 	} else if (e->flag & ABORT_MSG_PENDING) {
@@ -397,7 +398,7 @@ StoreEntry *storeGet(url)
 {
     hash_link *hptr = NULL;
 
-    debug(20, 5, "storeGet: looking up %s\n", url);
+    debug(20, 3, "storeGet: looking up %s\n", url);
 
     if ((hptr = hash_lookup(table, url)) != NULL)
 	return (StoreEntry *) hptr;
@@ -426,7 +427,7 @@ char *storeGeneratePublicKey(url, request_type_id)
      char *url;
      int request_type_id;
 {
-    debug(20, 5, "storeGeneratePublicKey: type=%d %s\n", request_type_id, url);
+    debug(20, 3, "storeGeneratePublicKey: type=%d %s\n", request_type_id, url);
     switch (request_type_id) {
     case METHOD_GET:
 	return url;
@@ -513,9 +514,7 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
 {
     StoreEntry *e = NULL;
     MemObject *m = NULL;
-    debug(20, 5, "storeCreateEntry: '%s'\n", url);
-    debug(20, 5, "storeCreateEntry: public=%d\n",
-	BIT_TEST(flags, REQ_PUBLIC) ? 1 : 0);
+    debug(20, 3, "storeCreateEntry: '%s' icp flags=%x\n", url, flags);
 
     if (meta_data.hot_vm > store_hotobj_high)
 	storeGetMemSpace(0, 1);
@@ -626,7 +625,7 @@ int storeRegister(e, fd, handler, data)
     PendingEntry *pe = (PendingEntry *) xmalloc(sizeof(PendingEntry));
     int old_size, i, j;
 
-    debug(20, 5, "storeRegister: FD %d <URL:%s>\n", fd, e->url);
+    debug(20, 3, "storeRegister: FD %d <URL:%s>\n", fd, e->url);
 
     memset(pe, '\0', sizeof(PendingEntry));
     pe->fd = fd;
@@ -994,7 +993,7 @@ void storeSwapOutHandle(fd, flag, e)
     static char logmsg[6000];
     char *page_ptr = NULL;
 
-    debug(20, 5, "storeSwapOutHandle: <URL:%s>\n", e->url);
+    debug(20, 3, "storeSwapOutHandle: <URL:%s>\n", e->url);
 
     e->timestamp = cached_curtime;
     storeSwapFullPath(e->swap_file_number, filename);
@@ -1324,31 +1323,46 @@ int storeGetMemSize()
     return store_mem_size;
 }
 
+static int storeCheckSwapable(e)
+     StoreEntry *e;
+{
+
+    if (BIT_TEST(e->flag, ENTRY_PRIVATE)) {
+	debug(20, 3, "storeCheckSwapable: NO: private entry\n");
+    } else if (e->expires <= cached_curtime) {
+	debug(20, 3, "storeCheckSwapable: NO: already expired\n");
+    } else if (e->type_id != METHOD_GET) {
+	debug(20, 3, "storeCheckSwapable: NO: non-GET method\n");
+    } else if (!BIT_TEST(e->flag, CACHABLE)) {
+	debug(20, 3, "storeCheckSwapable: NO: not cachable\n");
+    } else if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
+	debug(20, 3, "storeCheckSwapable: NO: release requested\n");
+    } else if (!storeEntryValidLength(e)) {
+	debug(20, 3, "storeCheckSwapable: NO: wrong content-length\n");
+    } else
+	return 1;
+
+    BIT_SET(e->flag, RELEASE_REQUEST);
+    BIT_RESET(e->flag, CACHABLE);
+    return 0;
+}
+
+
 
 /* Complete transfer into the local cache.  */
 void storeComplete(e)
      StoreEntry *e;
 {
-    debug(20, 5, "storeComplete: <URL:%s>\n", e->url);
+    debug(20, 3, "storeComplete: <URL:%s>\n", e->url);
 
-    if (e->flag & ENTRY_PRIVATE) {
-	debug(20, 5, "storeComplete: Private object, set RELEASE_REQUEST\n");
-	/* Never cache private objects */
-	BIT_SET(e->flag, RELEASE_REQUEST);
-	BIT_RESET(e->flag, CACHABLE);
-    }
     e->object_len = e->mem_obj->e_current_len;
     InvokeHandlers(e);
     e->lastref = cached_curtime;
     e->status = STORE_OK;
     storeSetMemStatus(e, IN_MEMORY);
     e->swap_status = NO_SWAP;
-    /* start writing it to disk */
-    if ((e->flag & CACHABLE) &&
-	!(e->flag & RELEASE_REQUEST) &&
-	(e->type_id == METHOD_GET)) {
+    if (storeCheckSwapable(e))
 	storeSwapOutStart(e);
-    }
     /* free up incoming MIME */
     safe_free(e->mem_obj->mime_hdr);
     CacheInfo->proto_newobject(CacheInfo, CacheInfo->proto_id(e->url),
@@ -1598,18 +1612,18 @@ int storeGetMemSpace(size, check_vm_number)
 		debug(20, 5, "storeGetMemSpace: --> e->lock_count %d\n", e->lock_count);
 	}
     }
-    debug(20, 2, "storeGetMemSpace: Current size:     %7d bytes\n", store_mem_size);
-    debug(20, 2, "storeGetMemSpace: High W Mark:      %7d bytes\n", store_mem_high);
-    debug(20, 2, "storeGetMemSpace: Low W Mark:       %7d bytes\n", store_mem_low);
-    debug(20, 2, "storeGetMemSpace: Entry count:      %7d items\n", meta_data.store_entries);
-    debug(20, 2, "storeGetMemSpace: Scanned:          %7d items\n", n_scanned);
-    debug(20, 2, "storeGetMemSpace: In memory:        %7d items\n", n_inmem);
-    debug(20, 2, "storeGetMemSpace: Hot vm count:     %7d items\n", meta_data.hot_vm);
-    debug(20, 2, "storeGetMemSpace: Expired:          %7d items\n", n_expired);
-    debug(20, 2, "storeGetMemSpace: Negative Cached:  %7d items\n", n_aborted);
-    debug(20, 2, "storeGetMemSpace: Can't purge:      %7d items\n", n_cantpurge);
-    debug(20, 2, "storeGetMemSpace: Can't purge size: %7d bytes\n", mem_cantpurge);
-    debug(20, 2, "storeGetMemSpace: Sorting LRU_list: %7d items\n", LRU_list->index);
+    debug(20, 5, "storeGetMemSpace: Current size:     %7d bytes\n", store_mem_size);
+    debug(20, 5, "storeGetMemSpace: High W Mark:      %7d bytes\n", store_mem_high);
+    debug(20, 5, "storeGetMemSpace: Low W Mark:       %7d bytes\n", store_mem_low);
+    debug(20, 5, "storeGetMemSpace: Entry count:      %7d items\n", meta_data.store_entries);
+    debug(20, 5, "storeGetMemSpace: Scanned:          %7d items\n", n_scanned);
+    debug(20, 5, "storeGetMemSpace: In memory:        %7d items\n", n_inmem);
+    debug(20, 5, "storeGetMemSpace: Hot vm count:     %7d items\n", meta_data.hot_vm);
+    debug(20, 5, "storeGetMemSpace: Expired:          %7d items\n", n_expired);
+    debug(20, 5, "storeGetMemSpace: Negative Cached:  %7d items\n", n_aborted);
+    debug(20, 5, "storeGetMemSpace: Can't purge:      %7d items\n", n_cantpurge);
+    debug(20, 5, "storeGetMemSpace: Can't purge size: %7d bytes\n", mem_cantpurge);
+    debug(20, 5, "storeGetMemSpace: Sorting LRU_list: %7d items\n", LRU_list->index);
     qsort((char *) LRU_list->collection, LRU_list->index, sizeof(e), (int (*)(const void *, const void *)) compareLastRef);
 
     /* Kick LRU out until we have enough memory space */
@@ -1917,15 +1931,16 @@ int storeRelease(e)
     hash_link *hptr = NULL;
     hash_link *head_table_entry = NULL;
 
+    debug(20, 3, "storeRelease: Releasing: '%s'\n", e->key);
+
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
     if (storeEntryLocked(e)) {
 	storeExpireNow(e);
+	debug(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit\n");
 	BIT_SET(e->flag, RELEASE_REQUEST);
 	return -1;
     }
-    debug(20, 3, "storeRelease: Releasing: %s\n", e->url);
-
     if (e->key != NULL) {
 	if ((hptr = hash_lookup(table, e->key)) == NULL) {
 	    debug(20, 0, "storeRelease: Not Found: %s\n", e->url);
@@ -2201,6 +2216,37 @@ int storeEntryValidToSend(e)
     if (e->expires == 0 && e->status == STORE_PENDING)
 	return 1;
     return 0;
+}
+
+int storeEntryValidLength(e)
+     StoreEntry *e;
+{
+    int headerlength;
+    int length;
+    static char buf[BUFSIZ];
+    char *header = NULL;
+
+    header = storeMatchMime(e, "content-length: ", buf, BUFSIZ);
+    if (!header) {
+	debug(20, 1, "storeEntryValidLength: no content-length: %s\n", e->key);
+	return 0;
+    }
+    length = atoi(header);
+    if (!length) {
+	debug(20, 1, "storeEntryValidLength: can't parse content-length: %s\n", e->key);
+	return 0;
+    }
+    headerlength = storeGrep(e, "\r\n\r\n", 300);
+    if (!headerlength) {
+	debug(20, 1, "storeEntryValidLength: can't get headersize: %s\n", e->key);
+	return 0;
+    }
+    if (length + headerlength != e->object_len) {
+	debug(20, 1, "storeEntryValidLength: invalid content-length for '%s'\n", e->key);
+	debug(20, 1, "--> %d + %d != %d\n", headerlength, length, e->object_len);
+	return 0;
+    }
+    return 1;
 }
 
 static int storeVerifySwapDirs(clean)
