@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.25 2002/07/01 15:51:32 hno Exp $
+#  $Id: Makefile.am,v 1.26 2002/07/01 16:11:23 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -59,7 +59,6 @@ WIN32SOURCE =
 endif
 
 SUBDIRS		= fs repl auth
-CGIEXT = @CGIEXT@
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include
 
