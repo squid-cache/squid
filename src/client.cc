@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: client.cc,v 1.43 1997/11/28 08:02:31 wessels Exp $
+ * $Id: client.cc,v 1.44 1997/12/01 05:34:55 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -243,7 +243,10 @@ main(int argc, char *argv[])
 	strcat(msg, buf);
     }
     if (keep_alive) {
-	snprintf(buf, BUFSIZ, "Proxy-Connection: Keep-Alive\r\n");
+	if (port != 80)
+		snprintf(buf, BUFSIZ, "Proxy-Connection: Keep-Alive\r\n");
+	else
+		snprintf(buf, BUFSIZ, "Connection: Keep-Alive\r\n");
 	strcat(msg, buf);
     }
     snprintf(buf, BUFSIZ, "\r\n");
