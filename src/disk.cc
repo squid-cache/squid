@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.79 1997/10/17 00:00:33 wessels Exp $
+ * $Id: disk.cc,v 1.80 1997/10/17 05:20:18 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ typedef struct open_ctrl_t {
     char *path;
 } open_ctrl_t;
 
-
+#if UNUSED_CODE
 typedef struct _dwalk_ctrl {
     int fd;
     off_t offset;
@@ -130,14 +130,18 @@ typedef struct _dwalk_ctrl {
     FILE_WALK_LHD *line_handler;
     void *line_data;
 } dwalk_ctrl;
+#endif
 
 static AIOCB diskHandleWriteComplete;
 static AIOCB diskHandleReadComplete;
-static AIOCB diskHandleWalkComplete;
-static PF diskHandleWalk;
 static PF diskHandleRead;
 static PF diskHandleWrite;
 static void file_open_complete _PARAMS((void *, int, int));
+
+#if UNUSED_CODE
+static AIOCB diskHandleWalkComplete;
+static PF diskHandleWalk;
+#endif
 
 /* initialize table */
 int
@@ -401,6 +405,7 @@ static void
 diskHandleRead(int fd, void *data)
 {
     dread_ctrl *ctrl_dat = data;
+    fde *F = &fd_table[fd];
 #if !USE_ASYNC_IO
     int len;
 #endif
@@ -409,14 +414,19 @@ diskHandleRead(int fd, void *data)
     ctrlp->data = ctrl_dat;
 #if USE_ASYNC_IO
     aioRead(fd,
-	ctrl_dat->buf + ctrl_dat->offset,
-	ctrl_dat->req_len - ctrl_dat->offset,
+	ctrl_dat->buf,
+	ctrl_dat->req_len,
 	diskHandleReadComplete,
 	ctrlp);
 #else
-    len = read(fd,
-	ctrl_dat->buf + ctrl_dat->offset,
-	ctrl_dat->req_len - ctrl_dat->offset);
+    if (F->disk.offset != ctrl_dat->offset) {
+	debug(6,1)("diskHandleRead: seeking to offset %d\n",
+		(int) ctrl_dat->offset);
+	lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
+    }
+    len = read(fd, ctrl_dat->buf, ctrl_dat->req_len);
+    F->disk.offset += len;
+    debug(0,0)("diskHandleRead: FD %d read %d bytes\n", fd, len);
     diskHandleReadComplete(ctrlp, len, errno);
 #endif
 }
@@ -441,8 +451,9 @@ diskHandleReadComplete(void *data, int len, int errcode)
 	}
 	debug(50, 1) ("diskHandleRead: FD %d: error reading: %s\n",
 	    fd, xstrerror());
-	ctrl_dat->handler(fd, ctrl_dat->buf,
-	    ctrl_dat->offset,
+	ctrl_dat->handler(fd,
+	    ctrl_dat->buf,
+	    0,
 	    DISK_ERROR,
 	    ctrl_dat->client_data);
 	safe_free(ctrl_dat);
@@ -453,33 +464,18 @@ diskHandleReadComplete(void *data, int len, int errcode)
 	/* call handler */
 	ctrl_dat->handler(fd,
 	    ctrl_dat->buf,
-	    ctrl_dat->offset,
+	    len,
 	    DISK_EOF,
 	    ctrl_dat->client_data);
 	safe_free(ctrl_dat);
 	return;
-    } else {
-	ctrl_dat->offset += len;
     }
-    /* reschedule if need more data. */
-    if (ctrl_dat->offset < ctrl_dat->req_len) {
-	commSetSelect(fd,
-	    COMM_SELECT_READ,
-	    diskHandleRead,
-	    ctrl_dat,
-	    0);
-	return;
-    } else {
-	/* all data we need is here. */
-	/* call handler */
 	ctrl_dat->handler(fd,
 	    ctrl_dat->buf,
-	    ctrl_dat->offset,
+	    len,
 	    DISK_OK,
 	    ctrl_dat->client_data);
 	safe_free(ctrl_dat);
-	return;
-    }
 }
 
 
@@ -491,17 +487,16 @@ int
 file_read(int fd, char *buf, int req_len, int offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
-    if (fd < 0)
-	fatal_dump("file_read: bad FD");
+    assert(fd >= 0);
     ctrl_dat = xcalloc(1, sizeof(dread_ctrl));
     ctrl_dat->fd = fd;
     ctrl_dat->offset = offset;
     ctrl_dat->req_len = req_len;
     ctrl_dat->buf = buf;
-    ctrl_dat->offset = 0;
     ctrl_dat->end_of_file = 0;
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = client_data;
+    debug(0,0)("file_read: FD %d queueing read for %d bytes at %d\n", fd, req_len, offset);
 #if USE_ASYNC_IO
     diskHandleRead(fd, ctrl_dat);
 #else
@@ -515,6 +510,7 @@ file_read(int fd, char *buf, int req_len, int offset, DRCB * handler, void *clie
 }
 
 
+#if UNUSED_CODE
 /* Read from FD and pass a line to routine. Walk to EOF. */
 static void
 diskHandleWalk(int fd, void *data)
@@ -537,8 +533,9 @@ diskHandleWalk(int fd, void *data)
     diskHandleWalkComplete(ctrlp, len, errno);
 #endif
 }
+#endif
 
-
+#if UNUSED_CODE
 static void
 diskHandleWalkComplete(void *data, int retcode, int errcode)
 {
@@ -550,13 +547,11 @@ diskHandleWalkComplete(void *data, int retcode, int errcode)
     int end_pos;
     int st_pos;
     int used_bytes;
-
     walk_dat = (dwalk_ctrl *) ctrlp->data;
     fd = ctrlp->fd;
     len = retcode;
     errno = errcode;
     xfree(data);
-
     if (len < 0) {
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk, walk_dat, 0);
@@ -583,25 +578,22 @@ diskHandleWalkComplete(void *data, int retcode, int errcode)
 	    /* new line found */
 	    xstrncpy(temp_line, walk_dat->buf + st_pos, end_pos - st_pos + 1);
 	    used_bytes += end_pos - st_pos + 1;
-
 	    /* invoke line handler */
 	    walk_dat->line_handler(fd, temp_line, strlen(temp_line),
 		walk_dat->line_data);
-
 	    /* skip to next line */
 	    st_pos = end_pos + 1;
 	}
 	end_pos++;
     }
-
     /* update file pointer to the next to be read character */
     walk_dat->offset += used_bytes;
-
     /* reschedule it for next line. */
     commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk, walk_dat, 0);
 }
+#endif
 
-
+#if UNUSED_CODE
 /* start walk through whole file operation 
  * read one block and chop it to a line and pass it to provided 
  * handler one line at a time.
@@ -614,7 +606,6 @@ file_walk(int fd,
     void *line_data)
 {
     dwalk_ctrl *walk_dat;
-
     walk_dat = xcalloc(1, sizeof(dwalk_ctrl));
     walk_dat->fd = fd;
     walk_dat->offset = 0;
@@ -624,7 +615,6 @@ file_walk(int fd,
     walk_dat->client_data = client_data;
     walk_dat->line_handler = line_handler;
     walk_dat->line_data = line_data;
-
 #if USE_ASYNC_IO
     diskHandleWalk(fd, walk_dat);
 #else
@@ -632,6 +622,7 @@ file_walk(int fd,
 #endif
     return DISK_OK;
 }
+#endif
 
 int
 diskWriteIsComplete(int fd)

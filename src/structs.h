@@ -311,6 +311,7 @@ struct _fde {
 	void *wrt_handle_data;
 	dwrite_q *write_q;
 	dwrite_q *write_q_tail;
+	off_t offset;
     } disk;
     PF *read_handler;
     void *read_data;
