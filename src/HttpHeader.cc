@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.96 2004/08/30 05:12:31 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.97 2004/09/24 22:24:33 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1477,7 +1477,7 @@ httpHeaderNameById(int id)
 
     assert(id >= 0 && id < HDR_ENUM_END);
 
-    return HeadersAttrs[id].name;
+    return strBuf(Headers[id].name);
 }
 
 int
