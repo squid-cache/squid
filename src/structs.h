@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.363 2000/12/05 09:16:00 wessels Exp $
+ * $Id: structs.h,v 1.364 2000/12/05 10:10:59 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1103,8 +1103,8 @@ struct _peer {
     int test_fd;
 #if USE_CARP
     struct {
-	unsigned long hash;
-	unsigned long load_multiplier;
+	unsigned int hash;
+	double load_multiplier;
 	float load_factor;
     } carp;
 #endif
