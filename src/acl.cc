@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.126 1998/01/02 19:52:23 wessels Exp $
+ * $Id: acl.cc,v 1.127 1998/01/02 23:39:54 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -879,8 +879,11 @@ aclParseAccessLine(struct _acl_access **head)
 	return;
     }
     A->cfgline = xstrdup(config_input_line);
-    for (B = *head, T = head; B; T = &B->next, B = B->next);	/* find the tail */
+    /* Append to the end of this list */
+    for (B = *head, T = head; B; T = &B->next, B = B->next);
     *T = A;
+    /* We lock _acl_access structures in aclCheck() */
+    cbdataAdd(A);
 }
 
 /**************/
@@ -1339,6 +1342,15 @@ aclCheck(aclCheck_t * checklist)
     int match;
     ipcache_addrs *ia;
     while ((A = checklist->access_list) != NULL) {
+	/*
+	 * If the _acl_access is no longer valid (i.e. its been
+	 * freed because of a reconfigure), then bail on this
+	 * access check.  For now, return ACCESS_DENIED.
+	 */
+	if (!cbdataValid(A)) {
+	    cbdataUnlock(A);
+	    break;
+	}
 	debug(28, 3) ("aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
 	match = aclMatchAclList(A->acl_list, checklist);
@@ -1374,6 +1386,11 @@ aclCheck(aclCheck_t * checklist)
 		checklist);
 	    return;
 	}
+	/*
+	 * We are done with this _acl_access entry.  Either the request
+	 * is allowed, denied, or we move on to the next entry.
+	 */
+	cbdataUnlock(A);
 	if (checklist->state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED) {
 	    allow = ACCESS_REQ_PROXY_AUTH;
 	    debug(28, 3) ("aclCheck: match pending, returning %d\n", allow);
@@ -1386,6 +1403,11 @@ aclCheck(aclCheck_t * checklist)
 	    return;
 	}
 	checklist->access_list = A->next;
+	/*
+	 * Lock the next _acl_access entry
+	 */
+	if (A->next)
+	    cbdataLock(A->next);
     }
     debug(28, 3) ("aclCheck: NO match found, returning %d\n", !allow);
     aclCheckCallback(checklist, !allow);
@@ -1459,6 +1481,11 @@ aclChecklistCreate(const struct _acl_access *A,
     aclCheck_t *checklist = xcalloc(1, sizeof(aclCheck_t));;
     cbdataAdd(checklist);
     checklist->access_list = A;
+    /*
+     * aclCheck() makes sure checklist->access_list is a valid
+     * pointer, so lock it.
+     */
+    cbdataLock(A);
     checklist->request = requestLink(request);
     checklist->src_addr = src_addr;
     for (i = 0; i < ACL_ENUM_MAX; i++)
@@ -1639,7 +1666,7 @@ aclDestroyAccessList(struct _acl_access **list)
 	aclDestroyAclList(l->acl_list);
 	l->acl_list = NULL;
 	safe_free(l->cfgline);
-	safe_free(l);
+	cbdataFree(l);
     }
     *list = NULL;
 }
