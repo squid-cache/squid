@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.10 1996/08/21 05:59:20 wessels Exp $
+ * $Id: fqdncache.cc,v 1.11 1996/08/29 17:58:55 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -698,6 +698,7 @@ static int fqdncache_dnsHandleRead(fd, dnsData)
 	return 0;
     }
     n = ++FqdncacheStats.replies;
+    DnsStats.replies++;
     dnsData->offset += len;
     dnsData->ip_inbuf[dnsData->offset] = '\0';
 
@@ -1030,7 +1031,7 @@ char *fqdnFromAddr(addr)
 {
     char *n;
     static char buf[32];
-    if ((n = fqdncache_gethostbyaddr(addr, 0)))
+    if (Config.Log.log_fqdn && (n = fqdncache_gethostbyaddr(addr, 0)))
 	return n;
     strncpy(buf, inet_ntoa(addr), 31);
     return buf;
