@@ -1,5 +1,5 @@
 /*
- * $Id: squid_types.h,v 1.2 2001/10/08 16:18:31 hno Exp $
+ * $Id: squid_types.h,v 1.3 2001/10/22 23:35:07 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -58,18 +58,5 @@
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-
-/* unsigned variants are defined by default by configure */
-#if HAVE_GLIB_H
-#ifndef int16_t
-#define int16_t gint16
-#endif
-#ifndef int32_t
-#define int32_t gint32
-#endif
-#ifndef int64_t
-#define int64_t gint64
-#endif
-#endif /* HAVE_GLIB_H */
 
 #endif /* SQUID_TYPES_H */
