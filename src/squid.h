@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.67 1996/11/04 22:07:28 wessels Exp $
+ * $Id: squid.h,v 1.68 1996/11/05 17:08:23 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -292,7 +292,7 @@ extern int opt_catch_signals;	/* main.c */
 extern int opt_no_ipcache;	/* main.c */
 extern int vhost_mode;		/* main.c */
 extern const char *const version_string;	/* main.c */
-extern const char *const appname;		/* main.c */
+extern const char *const appname;	/* main.c */
 extern struct in_addr local_addr;	/* main.c */
 extern const char *const localhost;
 extern struct in_addr any_addr;	/* comm.c */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.40 1996/11/04 22:07:25 wessels Exp $
+ * $Id: cachemgr.cc,v 1.41 1996/11/05 17:08:01 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -979,7 +979,7 @@ main(int argc, char *argv[])
     return 0;
 }
 
-static int 
+static int
 client_comm_connect(int sock, char *dest_host, u_short dest_port)
 {
     const struct hostent *hp;

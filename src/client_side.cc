@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.57 1996/11/04 22:51:35 wessels Exp $
+ * $Id: client_side.cc,v 1.58 1996/11/05 17:08:02 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -38,7 +38,7 @@ static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *dat
 
 
 static void
-clientLookupDstIPDone(int fd, const ipcache_addrs *ia, void *data)
+clientLookupDstIPDone(int fd, const ipcache_addrs * ia, void *data)
 {
     icpStateData *icpState = data;
     debug(33, 5, "clientLookupDstIPDone: FD %d, '%s'\n",

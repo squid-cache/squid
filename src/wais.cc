@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.51 1996/11/05 16:54:52 wessels Exp $
+ * $Id: wais.cc,v 1.52 1996/11/05 17:08:34 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -372,7 +372,7 @@ waisStart(int unusedfd, const char *url, method_t method, char *mime_hdr, StoreE
 
 
 static void
-waisConnect(int fd, const ipcache_addrs *ia, void *data)
+waisConnect(int fd, const ipcache_addrs * ia, void *data)
 {
     WaisStateData *waisState = data;
     if (!ipcache_gethostbyname(waisState->relayhost, 0)) {

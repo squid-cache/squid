@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.94 1996/11/05 16:54:50 wessels Exp $
+ * $Id: http.cc,v 1.95 1996/11/05 17:08:12 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -653,7 +653,7 @@ httpSendRequest(int fd, void *data)
 }
 
 int
-proxyhttpStart(edge *e, const char *url, StoreEntry *entry)
+proxyhttpStart(edge * e, const char *url, StoreEntry * entry)
 {
     int sock;
     HttpStateData *httpState = NULL;
@@ -702,7 +702,7 @@ proxyhttpStart(edge *e, const char *url, StoreEntry *entry)
 }
 
 static void
-httpConnect(int fd, const ipcache_addrs *ia, void *data)
+httpConnect(int fd, const ipcache_addrs * ia, void *data)
 {
     HttpStateData *httpState = data;
     request_t *request = httpState->request;

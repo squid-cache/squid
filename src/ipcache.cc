@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.82 1996/11/04 18:12:49 wessels Exp $
+ * $Id: ipcache.cc,v 1.83 1996/11/05 17:08:16 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -923,7 +923,7 @@ stat_ipcache_get(StoreEntry * sentry)
 }
 
 static void
-dummy_handler(int u1, const ipcache_addrs *addrs, void *u3)
+dummy_handler(int u1, const ipcache_addrs * addrs, void *u3)
 {
     return;
 }

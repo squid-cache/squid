@@ -166,7 +166,7 @@ netdbAdd(struct in_addr addr, const char *hostname)
 }
 
 static void
-netdbSendPing(int fdunused, const ipcache_addrs *ia, void *data)
+netdbSendPing(int fdunused, const ipcache_addrs * ia, void *data)
 {
     struct in_addr addr;
     char *hostname = data;
