@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.463 1999/12/11 15:55:08 wessels Exp $
+ * $Id: client_side.cc,v 1.464 1999/12/13 05:54:54 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -867,7 +867,9 @@ clientSetKeepaliveFlag(clientHttpRequest * http)
 	request->http_ver);
     debug(33, 3) ("clientSetKeepaliveFlag: method = %s\n",
 	RequestMethodStr[request->method]);
-    if (httpMsgIsPersistent(request->http_ver, req_hdr))
+    if (memInUse(MEM_CONNSTATEDATA) > 300)
+	(void) 0;
+    else if (httpMsgIsPersistent(request->http_ver, req_hdr))
 	request->flags.proxy_keepalive = 1;
 }
 
@@ -2624,7 +2626,7 @@ httpAccept(int sock, void *data)
 	    break;
 	}
 	debug(33, 4) ("httpAccept: FD %d: accepted\n", fd);
-	connState = xcalloc(1, sizeof(ConnStateData));
+	connState = memAllocate(MEM_CONNSTATEDATA);
 	connState->peer = peer;
 	connState->log_addr = peer.sin_addr;
 	connState->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
@@ -2632,7 +2634,7 @@ httpAccept(int sock, void *data)
 	connState->fd = fd;
 	connState->in.size = REQUEST_BUF_SIZE;
 	connState->in.buf = xcalloc(connState->in.size, 1);
-	cbdataAdd(connState, cbdataXfree, 0);
+	cbdataAdd(connState, memFree, MEM_CONNSTATEDATA);
 	/* XXX account connState->in.buf */
 	comm_add_close_handler(fd, connStateFree, connState);
 	if (Config.onoff.log_fqdn)
