@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.310 1997/10/24 04:06:23 wessels Exp $
+ * $Id: store.cc,v 1.311 1997/10/24 04:41:56 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1771,6 +1771,7 @@ storeGetSwapSpace(int size)
 	debug(20, DL) ("--> store_swap_high = %d KB\n", store_swap_high);
 	debug(20, DL) ("--> store_swap_size = %d KB\n", store_swap_size);
 	debug(20, DL) ("--> asking for        %d KB\n", kb_size);
+	assert(swap_help < 10);
     } else {
 	swap_help = 0;
 	DL = 3;
