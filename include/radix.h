@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.10 2001/10/08 16:18:31 hno Exp $
+ * $Id: radix.h,v 1.11 2001/10/17 17:55:23 hno Exp $
  */
 
 #ifndef SQUID_RADIX_H
@@ -41,9 +41,6 @@
  */
 
 #undef RN_DEBUG
-#ifndef __P
-#define __P(x) x
-#endif
 /*
  * Radix search tree node layout.
  */
@@ -116,44 +113,45 @@ struct radix_node_head {
     int rnh_addrsize;		/* permit, but not require fixed keys */
     int rnh_pktsize;		/* permit, but not require fixed keys */
     struct radix_node *(*rnh_addaddr)	/* add based on sockaddr */
-               __P((void *v, void *mask,
-	    struct radix_node_head * head, struct radix_node nodes[]));
+               (void *v, void *mask,
+	    struct radix_node_head * head, struct radix_node nodes[]);
     struct radix_node *(*rnh_addpkt)	/* add based on packet hdr */
-               __P((void *v, void *mask,
-	    struct radix_node_head * head, struct radix_node nodes[]));
+               (void *v, void *mask,
+	    struct radix_node_head * head, struct radix_node nodes[]);
     struct radix_node *(*rnh_deladdr)	/* remove based on sockaddr */
-               __P((void *v, void *mask, struct radix_node_head * head));
+               (void *v, void *mask, struct radix_node_head * head);
     struct radix_node *(*rnh_delpkt)	/* remove based on packet hdr */
-               __P((void *v, void *mask, struct radix_node_head * head));
+               (void *v, void *mask, struct radix_node_head * head);
     struct radix_node *(*rnh_matchaddr)		/* locate based on sockaddr */
-               __P((void *v, struct radix_node_head * head));
+               (void *v, struct radix_node_head * head);
     struct radix_node *(*rnh_lookup)	/* locate based on sockaddr */
-               __P((void *v, void *mask, struct radix_node_head * head));
+               (void *v, void *mask, struct radix_node_head * head);
     struct radix_node *(*rnh_matchpkt)	/* locate based on packet hdr */
-               __P((void *v, struct radix_node_head * head));
+               (void *v, struct radix_node_head * head);
     int (*rnh_walktree)		/* traverse tree */
-        __P((struct radix_node_head * head, int (*f) (), void *w));
+        (struct radix_node_head * head, int (*f) (struct radix_node *, void *), void *w);
     struct radix_node rnh_nodes[3];	/* empty tree for common case */
 };
 
 
 #define Bcmp(a, b, n) memcmp(((char *)(a)), ((char *)(b)), (n))
 #define Bcopy(a, b, n) memcpy(((char *)(b)), ((char *)(a)), (unsigned)(n))
-#define Bzero(p, n) memset((char *)(p),'\0', (int)(n));
+#define Bzero(p, n) memset((char *)(p),'\0', (int)(n))
 #define R_Malloc(p, t, n) (p = (t) xmalloc((unsigned int)(n)))
-#define Free(p) xfree((char *)p);
+#define Free(p) xfree((char *)p)
 
-void rn_init __P((void));
-int rn_inithead __P((void **, int));
-int rn_refines __P((void *, void *));
-int rn_walktree __P((struct radix_node_head *, int (*)(), void *));
-struct radix_node
-          *rn_addmask __P((void *, int, int)), *rn_addroute __P((void *, void *, struct radix_node_head *,
-	struct radix_node[2])), *rn_delete __P((void *, void *, struct radix_node_head *)),
-          *rn_insert __P((void *, struct radix_node_head *, int *,
-	struct radix_node[2])), *rn_match __P((void *, struct radix_node_head *)),
-          *rn_newpair __P((void *, int, struct radix_node[2])), *rn_search __P((void *, struct radix_node *)),
-          *rn_search_m __P((void *, struct radix_node *, void *));
+extern void rn_init (void);
+extern int rn_inithead(void **, int);
+extern int rn_refines(void *, void *);
+extern int rn_walktree(struct radix_node_head *, int (*)(struct radix_node *, void *), void *);
+extern struct radix_node *rn_addmask(void *, int, int);
+extern struct radix_node *rn_addroute(void *, void *, struct radix_node_head *, struct radix_node[2]);
+extern struct radix_node *rn_delete(void *, void *, struct radix_node_head *);
+extern struct radix_node *rn_insert(void *, struct radix_node_head *, int *, struct radix_node[2]);
+extern struct radix_node *rn_match(void *, struct radix_node_head *);
+extern struct radix_node *rn_newpair(void *, int, struct radix_node[2]);
+extern struct radix_node *rn_search(void *, struct radix_node *);
+extern struct radix_node *rn_search_m(void *, struct radix_node *, void *);
 extern struct radix_node *rn_lookup(void *, void *, struct radix_node_head *);
 #define min(x,y) ((x)<(y)? (x) : (y))
 
