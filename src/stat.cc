@@ -1,4 +1,4 @@
-static char rcsid[] = "$Id: stat.cc,v 1.3 1996/02/23 06:56:34 wessels Exp $";
+static char rcsid[] = "$Id: stat.cc,v 1.4 1996/02/23 07:07:25 wessels Exp $";
 /* 
  *  File:         stat.c
  *  Description:  stat module for object cache
@@ -143,6 +143,8 @@ extern int fdstat_are_n_free_fd _PARAMS((int));
 extern int comm_get_fd_timeout _PARAMS((int));
 extern int file_write_lock _PARAMS((int));
 extern void fatal _PARAMS((char *));
+extern void fatal_dump _PARAMS((char *));
+
 char *stat_describe();
 char *mem_describe();
 char *ttl_describe();
@@ -279,7 +281,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	if (entry->mem_obj)
 	    obj_size = entry->mem_obj->e_current_len;
 	tempbuf[0] = '\0';
-	sprintf(tempbuf, "{ %s %d %s %s %s %s %d %ld %s %s }\n",
+	sprintf(tempbuf, "{ %s %d %s %s %s %s %d %d %s %s }\n",
 	    entry->url,
 	    obj_size,
 	    elapsed_time(entry, (int) entry->timestamp, space),
@@ -287,7 +289,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	    elapsed_time(entry, (int) entry->lastref, space2),
 	    ttl_describe(entry, (int) entry->expires),
 	    npend,
-	    entry->refcount,
+	    (int) entry->refcount,
 	    mem_describe(entry),
 	    stat_describe(entry));
 	storeAppend(sentry, tempbuf, strlen(tempbuf));
@@ -673,10 +675,10 @@ void info_get(obj, sentry)
 		/* the lifetime should be greater than curtime */
 		lft = comm_get_fd_lifetime(i);
 		to = comm_get_fd_timeout(i);
-		sprintf(line, "{\t\t(%3d = %3ld, %3ld) NET %s}\n",
+		sprintf(line, "{\t\t(%3d = %3d, %3d) NET %s}\n",
 		    i,
-		    lft > 0 ? lft - cached_curtime : -1,
-		    max((to - cached_curtime), 0),
+		    (int) (lft > 0 ? lft - cached_curtime : -1),
+		    (int) max((to - cached_curtime), 0),
 		    fd_note(i, NULL));
 		break;
 	    case File:
