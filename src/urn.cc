@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.64 2001/01/12 00:37:23 wessels Exp $
+ * $Id: urn.cc,v 1.65 2001/02/07 19:04:09 hno Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -60,7 +60,7 @@ static url_entry *urnParseReply(const char *inbuf, method_t);
 static const char *const crlf = "\r\n";
 static QS url_entry_sort;
 
-url_entry *
+static url_entry *
 urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
 {
     int min_rtt = 0;
