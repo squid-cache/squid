@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.90 2003/04/24 06:35:08 hno Exp $
+ * $Id: debug.cc,v 1.91 2003/07/06 12:12:28 hno Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -41,7 +41,7 @@ int Debug::level;
 
 static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
-static const char *debugLogTime(time_t);
+static const char *debugLogTime(void);
 static void ctx_print(void);
 #if HAVE_SYSLOG
 static void _db_print_syslog(const char *format, va_list args);
@@ -90,7 +90,7 @@ va_dcl
 #endif
 
     snprintf(f, BUFSIZ, "%s| %s",
-             debugLogTime(squid_curtime),
+             debugLogTime(),
              format);
 
     _db_print_file(f, args1);
@@ -329,18 +329,28 @@ _db_rotate_log(void) {
 }
 
 static const char *
-debugLogTime(time_t t) {
+debugLogTime(void) {
+
+    time_t t = getCurrentTime();
 
     struct tm *tm;
     static char buf[128];
     static time_t last_t = 0;
 
-    if (t != last_t) {
+    if (Debug::level > 1) {
+        char buf2[128];
+        tm = localtime(&t);
+        strftime(buf2, 127, "%Y/%m/%d %H:%M:%S", tm);
+        buf2[127] = '\0';
+        snprintf(buf, 127, "%s.%03d", buf2, (int) current_time.tv_usec / 1000);
+        last_t = t;
+    } else if (t != last_t) {
         tm = localtime(&t);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = t;
     }
 
+    buf[127] = '\0';
     return buf;
 }
 
