@@ -47,6 +47,10 @@ relnotes=$tmpdir/doc/release-notes/release-`echo $VERSION | cut -d. -f1,2 | cut 
 if [ -f $relnotes ]; then
 	cp -p $relnotes ${PACKAGE}-${VERSION}-${date}-RELEASENOTES.html
 	echo ${PACKAGE}-${VERSION}-${date}-RELEASENOTES.html >>${tag}.out
+	ed -s ${PACKAGE}-${VERSION}-${date}-RELEASENOTES.html <<EOF
+g/"ChangeLog"/ s//"${PACKAGE}-${VERSION}-${date}-ChangeLog.txt"/g
+w
+EOF
 fi
 cp -p $tmpdir/ChangeLog ${PACKAGE}-${VERSION}-${date}-ChangeLog.txt
 echo ${PACKAGE}-${VERSION}-${date}-ChangeLog.txt >>${tag}.out
