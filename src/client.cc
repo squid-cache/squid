@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: client.cc,v 1.42 1997/11/21 01:59:15 wessels Exp $
+ * $Id: client.cc,v 1.43 1997/11/28 08:02:31 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -220,6 +220,11 @@ main(int argc, char *argv[])
 	    }
     }
     /* Build the HTTP request */
+    if (strncmp(url, "mgr:", 4) == 0) {
+	char *t = xstrdup(url + 4);
+	snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
+	free(t);
+    }
     snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);
     if (reload) {
 	snprintf(buf, BUFSIZ, "Pragma: no-cache\r\n");
