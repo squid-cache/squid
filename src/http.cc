@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.397 2002/10/14 08:16:58 robertc Exp $
+ * $Id: http.cc,v 1.398 2002/10/14 08:47:47 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -367,7 +367,7 @@ httpMakeVaryMark(request_t * request, HttpReply * reply)
 #if X_ACCELERATOR_VARY
     vary = httpHeaderGetList(&reply->header, HDR_X_ACCELERATOR_VARY);
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
-	char *name = xmalloc(ilen + 1);
+	char *name = (char *)xmalloc(ilen + 1);
 	xstrncpy(name, item, ilen + 1);
 	Tolower(name);
 	strListAdd(&vstr, name, ',');
