@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.362 2003/01/23 00:37:23 robertc Exp $
+ * $Id: main.cc,v 1.363 2003/02/01 13:36:09 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -935,11 +935,6 @@ static void
 SquidShutdown(void *unused)
 {
     debug(1, 1) ("Shutting down...\n");
-    if (Config.pidFilename && strcmp(Config.pidFilename, "none")) {
-	enter_suid();
-	safeunlink(Config.pidFilename, 0);
-	leave_suid();
-    }
     icpConnectionClose();
 #if USE_HTCP
     htcpSocketClose();
@@ -1002,6 +997,11 @@ SquidShutdown(void *unused)
 #if MEM_GEN_TRACE
     log_trace_done();
 #endif
+    if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
+	enter_suid();
+	safeunlink(Config.pidFilename, 0);
+	leave_suid();
+    }
     debug(1, 1) ("Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
     if (debug_log)
