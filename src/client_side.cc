@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.243 1998/03/31 06:06:33 wessels Exp $
+ * $Id: client_side.cc,v 1.244 1998/03/31 08:45:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1551,16 +1551,18 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     while (isspace(*t))
 	if (*(t++) == '\n')
 	    break;
+    req_hdr = t;
+debug(0,0)("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
 
     /* Check if headers are received */
-    header_sz = headersEnd(t, conn->in.offset);
+    header_sz = headersEnd(req_hdr, conn->in.offset - (req_hdr - inbuf));
     if (0 == header_sz) {
 	xfree(inbuf);
 	*status = 0;
 	return NULL;
     }
-    req_hdr = t;
     end = req_hdr + header_sz;
+debug(0,0)("parseHttpRequest: end = {%s}\n", end);
 
     if (end <= req_hdr) {
 	/* Invalid request */
@@ -1578,6 +1580,8 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	return http;
     }
     req_sz = end - inbuf;
+debug(0,0)("parseHttpRequest: req_sz = %d\n", (int) req_sz);
+assert(req_sz <= conn->in.offset);
 
     /* Ok, all headers are received */
     http = xcalloc(1, sizeof(clientHttpRequest));
