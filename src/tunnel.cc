@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.31 1996/12/17 07:16:57 wessels Exp $
+ * $Id: tunnel.cc,v 1.32 1997/01/21 16:42:04 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -308,6 +308,10 @@ static void
 sslErrorComplete(int fd, char *buf, int size, int errflag, void *sslState)
 {
     safe_free(buf);
+    if (sslState == NULL) {
+	debug_trap("sslErrorComplete: NULL sslState\n");
+	return;
+    }
     sslClose(sslState);
 }
 
@@ -416,12 +420,12 @@ sslStart(int fd, const char *url, request_t * request, char *mime_hdr, int *size
 	    fd_table[fd].ipaddr,
 	    500,
 	    xstrerror());
-	comm_write(sslState->client.fd,
+	comm_write(fd,
 	    xstrdup(buf),
 	    strlen(buf),
 	    30,
-	    sslErrorComplete,
-	    (void *) sslState,
+	    NULL,
+	    NULL,
 	    xfree);
 	return COMM_ERROR;
     }
