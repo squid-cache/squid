@@ -195,6 +195,7 @@ void
 storeSwapOutFileClose(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
+    assert(mem != NULL);
     if (mem->swapout.fd > -1) {
 	file_close(mem->swapout.fd);
 	mem->swapout.fd = -1;
