@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.183 1997/10/30 18:27:20 wessels Exp $
+ * $Id: main.cc,v 1.184 1997/10/30 20:38:16 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -755,10 +755,10 @@ watch_child(char *argv[])
 	time(&stop);
 	if (stop - start < 10)
 	    failcount++;
+	else
+	    failcount = 0;
 	if (failcount == 5)
 	    exit(1);
-	debug(0, 0) ("exit status = %d\n", WEXITSTATUS(status));
-	debug(0, 0) ("term sig    = %d\n", WTERMSIG(status));
 	if (WIFEXITED(status))
 	    if (WEXITSTATUS(status) == 0)
 		exit(0);
