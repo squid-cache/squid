@@ -1,5 +1,64 @@
 
-/* DEBUG: 45 */
+/*
+ * $Id: cbdata.cc,v 1.7 1997/10/28 18:10:46 wessels Exp $
+ *
+ * DEBUG: section 45    Callback Data Registry
+ * AUTHOR: Duane Wessels
+ *
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
+
+/*
+ * These routines manage a set of registered callback data pointers.
+ * One of the easiest ways to make Squid coredump is to issue a 
+ * callback to for some data structure which has previously been
+ * freed.  With these routines, we register (add) callback data
+ * pointers, lock them just before registering the callback function,
+ * validate them before issuing the callback, and then free them
+ * when finished.
+ * 
+ * In terms of time, the sequence goes something like this:
+ * 
+ * foo = xcalloc(sizeof(foo));
+ * cbdataAdd(foo);
+ * ...
+ * cbdataLock(foo);
+ * some_blocking_operation(..., callback_func, foo);
+ * ...
+ * some_blocking_operation_completes()
+ * if (cbdataValid(foo))
+ * callback_func(..., foo)
+ * cbdataUnlock(foo);
+ * ...
+ * cbdataFree(foo);
+ * 
+ * The nice thing is that, we do not need to require that Unlock
+ * occurs before Free.  If the Free happens first, then the 
+ * callback data is marked invalid and the callback will never
+ * be made.  When we Unlock and the lock count reaches zero,
+ * we free the memory if it is marked invalid.
+ */
 
 #include "squid.h"
 
