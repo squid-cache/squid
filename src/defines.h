@@ -6,8 +6,6 @@
 #define FALSE 0
 #endif
 
-#define OR(A,B) (A ? A : B)
-
 #define ACL_NAME_SZ 32
 #define BROWSERNAMELEN 128
 
