@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.23 2003/06/19 18:57:00 hno Exp $
+ * $Id: auth_digest.cc,v 1.24 2003/06/19 19:56:11 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -760,7 +760,7 @@ digest_request_h::direction()
 
     case Failed:
 
-        if (digest_request->flags.nonce_stale)
+        if (flags.nonce_stale)
             /* nonce is stale, send new challenge */
             return 1;
 
