@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.8 1998/07/22 20:36:44 wessels Exp $
+ * $Id: HttpHdrContRange.cc,v 1.9 1998/09/23 21:52:20 rousskov Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -101,7 +101,7 @@ httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
     if (!known_spec(spec->offset) || !known_spec(spec->length))
 	packerPrintf(p, "*");
     else
-	packerPrintf(p, "%d-%d",
+	packerPrintf(p, "bytes %d-%d",
 	    spec->offset, spec->offset + spec->length - 1);
 }
 
