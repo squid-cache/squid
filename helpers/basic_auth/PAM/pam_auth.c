@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.14 2003/11/05 18:06:34 hno Exp $
+ * $Id: pam_auth.c,v 1.15 2003/11/05 18:14:25 hno Exp $
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999,2002,2003 Henrik Nordstrom <hno@squid-cache.org>
@@ -249,17 +249,19 @@ error:
 	    fprintf(stdout, "ERR\n");
 	}
 	/* cleanup */
+	retval = PAM_SUCCESS;
+#ifdef PAM_AUTHTOK
+	if (ttl != 0) {
+	    if (retval == PAM_SUCCESS)
+		retval = pam_set_item(pamh, PAM_AUTHTOK, NULL);
+	}
+#endif
 	if (ttl == 0 || retval != PAM_SUCCESS) {
 	    retval = pam_end(pamh, retval);
 	    if (retval != PAM_SUCCESS) {
 		fprintf(stderr, "WARNING: failed to release PAM authenticator\n");
 	    }
 	    pamh = NULL;
-#ifdef PAM_AUTHTOK
-	} else if (ttl != 0) {
-	    if (retval == PAM_SUCCESS)
-		retval = pam_set_item(pamh, PAM_AUTHTOK, NULL);
-#endif
 	}
     }
 
