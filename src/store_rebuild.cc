@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.52 1998/10/09 17:46:37 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.53 1998/12/02 05:07:25 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -155,6 +155,10 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	file_close(fd);
 	fd = -1;
 	swap_hdr_len = 0;
+#if USE_TRUNCATE_NOT_UNLINK
+	if (sb.st_size == 0)
+		continue;
+#endif
 	tlv_list = storeSwapMetaUnpack(hdr_buf, &swap_hdr_len);
 	if (tlv_list == NULL) {
 	    debug(20, 1) ("storeRebuildFromDirectory: failed to get meta data\n");
