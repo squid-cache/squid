@@ -190,12 +190,10 @@ storeDirMapBitReset(int fn)
 int
 storeDirMapAllocate(void)
 {
-    int fn;
     int dirn = storeMostFreeSwapDir();
     SwapDir *SD = &SwapDirs[dirn];
     int filn = file_map_allocate(SD->map, SD->suggest);
-    fn = (dirn << SWAP_DIR_SHIFT) | (filn & SWAP_FILE_MASK);
-    return fn;
+    return (dirn << SWAP_DIR_SHIFT) | (filn & SWAP_FILE_MASK);
 }
 
 char *
