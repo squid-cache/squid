@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.300 1999/06/24 20:20:19 wessels Exp $
+ * $Id: structs.h,v 1.301 1999/06/30 05:23:44 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1371,14 +1371,14 @@ struct _storeIOState {
 	} ufs;
 	struct {
 	    int fd;
-	    const char *read_buf;
-	    link_list *pending_writes;
 	    struct {
 		unsigned int close_request:1;
 		unsigned int reading:1;
 		unsigned int writing:1;
 		unsigned int opening:1;
 	    } flags;
+	    const char *read_buf;
+	    link_list *pending_writes;
 	} aufs;
     } type;
 };
