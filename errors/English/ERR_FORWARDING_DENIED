@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>The requested URL could not be retrieved</H2>
+<HR>
+<P>
+While trying to retrieve the URL:
+<A HREF="%U">%U</A>
+<P>
+The following error was encountered:
+<UL>
+<LI>
+<STRONG>
+Forwarding Denied.
+</STRONG>
+</UL>
+
+<P>
+This cache will not forward your request because it is trying to enforce a
+sibling relationship.  Perhaps the client at %i is a cache which has been
+misconfigured.
