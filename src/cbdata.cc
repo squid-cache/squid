@@ -1,10 +1,11 @@
 
 /*
- * $Id: cbdata.cc,v 1.48 2002/10/24 22:59:29 adrian Exp $
+ * $Id: cbdata.cc,v 1.49 2002/10/25 03:13:51 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
  * Modified by Moez Mahfoudh (08/12/2000)
+ * History added by Robert Collins (2002-10-25)
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -46,20 +47,45 @@
 
 #include "squid.h"
 #include "Store.h"
+#if CBDATA_DEBUG
+#include "Stack.h"
+#endif
+#include "Generic.h"
 
 static int cbdataCount = 0;
 #if CBDATA_DEBUG
 dlink_list cbdataEntries;
 #endif
 
+#if CBDATA_DEBUG
+class CBDataCall {
+public:
+    CBDataCall (char const *callLabel, char const *aFile, int aLine) : label(callLabel), file(aFile), line(aLine){}
+    char const *label;
+    char const *file;
+    int line;
+};
+#endif
+
 typedef struct _cbdata {
+#if CBDATA_DEBUG
+    void dump(StoreEntry *)const;
+#endif
+    void deleteSelf();
     int valid;
     int locks;
     int type;
 #if CBDATA_DEBUG
+    void addHistory(char const *label, char const *file, int line) const
+      {
+	if (calls->count > 100)
+	    return;
+        stackPush (calls, new CBDataCall(label, file, line));
+      }
     dlink_node link;
     const char *file;
     int line;
+    Stack *calls;
 #endif
     long y;			/* cookie used while debugging */
     union {
@@ -70,6 +96,9 @@ typedef struct _cbdata {
 } cbdata;
 
 static OBJH cbdataDump;
+#ifdef CBDATA_DEBUG
+static OBJH cbdataDumpHistory;
+#endif
 
 struct CBDataIndex {
     MemPool *pool;
@@ -80,6 +109,21 @@ int cbdata_types = 0;
 #define OFFSET_OF(type, member) ((int)(char *)&((type *)0L)->member)
 #define CBDATA_COOKIE	(long)0xDEADBEEF
 #define CBDATA_CHECK(c) assert(c->y == ((long)c ^ CBDATA_COOKIE))
+
+void
+_cbdata::deleteSelf()
+{
+#if CBDATA_DEBUG
+    CBDataCall *aCall;
+    while ((aCall = (CBDataCall *)stackPop(calls)))
+	delete aCall;
+    stackDestroy(calls);
+#endif
+    FREE *free_func = cbdata_index[type].free_func;
+    if (free_func)
+	free_func(&data);
+    memPoolFree(cbdata_index[type].pool, this);
+}
 
 static void
 cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free_func)
@@ -117,6 +161,11 @@ cbdataInit(void)
     cachemgrRegister("cbdata",
 	"Callback Data Registry Contents",
 	cbdataDump, 0, 1);
+#if CBDATA_DEBUG
+    cachemgrRegister("cbdatahistory", 
+	"Detailed call history for all current cbdata contents",
+	cbdataDumpHistory, 0, 1);
+#endif
 #define CREATE_CBDATA(type) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), NULL)
 #define CREATE_CBDATA_FREE(type, free_func) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), free_func)
     /* XXX
@@ -153,14 +202,13 @@ cbdataInternalAlloc(cbdata_type type)
     p->type = type;
     p->valid = 1;
     p->locks = 0;
+    p->y = (long) p ^ CBDATA_COOKIE;
+    cbdataCount++;
 #if CBDATA_DEBUG
     p->file = file;
     p->line = line;
-#endif
-    p->y = (long) p ^ CBDATA_COOKIE;
-    cbdataCount++;
-
-#if CBDATA_DEBUG
+    p->calls = stackCreate();
+    p->addHistory("Alloc", file, line);
     dlinkAdd(p, &p->link, &cbdataEntries);
     debug(45, 3) ("cbdataAlloc: %p %s:%d\n", &p->data, file, line);
 #endif
@@ -175,7 +223,6 @@ cbdataInternalFree(void *p)
 #endif
 {
     cbdata *c;
-    FREE *free_func;
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
 #if CBDATA_DEBUG
     debug(45, 3) ("cbdataFree: %p %s:%d\n", p, file, line);
@@ -184,6 +231,9 @@ cbdataInternalFree(void *p)
 #endif
     CBDATA_CHECK(c);
     c->valid = 0;
+#if CBDATA_DEBUG
+    c->addHistory("Free", file, line);
+#endif
     if (c->locks) {
 	debug(45, 3) ("cbdataFree: %p has %d locks, not freeing\n",
 	    p, c->locks);
@@ -194,10 +244,7 @@ cbdataInternalFree(void *p)
 #if CBDATA_DEBUG
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
-    free_func = cbdata_index[c->type].free_func;
-    if (free_func)
-	free_func((void *) p);
-    memPoolFree(cbdata_index[c->type].pool, c);
+    c->deleteSelf();
     return NULL;
 }
 
@@ -214,6 +261,7 @@ cbdataInternalLock(const void *p)
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
 #if CBDATA_DEBUG
     debug(45, 3) ("cbdataLock: %p=%d %s:%d\n", p, c ? c->locks + 1 : -1, file, line);
+    c->addHistory("Reference", file, line);
 #else
     debug(45, 3) ("cbdataLock: %p=%d\n", p, c ? c->locks + 1 : -1);
 #endif
@@ -230,12 +278,12 @@ cbdataInternalUnlock(const void *p)
 #endif
 {
     cbdata *c;
-    FREE *free_func;
     if (p == NULL)
 	return;
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
 #if CBDATA_DEBUG
     debug(45, 3) ("cbdataUnlock: %p=%d %s:%d\n", p, c ? c->locks - 1 : -1, file, line);
+    c->addHistory("Dereference", file, line);
 #else
     debug(45, 3) ("cbdataUnlock: %p=%d\n", p, c ? c->locks - 1 : -1);
 #endif
@@ -250,10 +298,7 @@ cbdataInternalUnlock(const void *p)
 #if CBDATA_DEBUG
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
-    free_func = cbdata_index[c->type].free_func;
-    if (free_func)
-	free_func((void *) p);
-    memPoolFree(cbdata_index[c->type].pool, c);
+    c->deleteSelf();
 }
 
 int
@@ -293,25 +338,35 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
     }
 }
 
+#if CBDATA_DEBUG
+void
+_cbdata::dump(StoreEntry *sentry) const
+{
+    storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", valid ? ' ' :
+		      '!', &data, type, locks, file, line);
+}
+
+struct CBDataDumper : public unary_function<_cbdata, void>
+{
+    CBDataDumper(StoreEntry *anEntry):where(anEntry){}
+    void operator()(_cbdata const &x) {
+	x.dump(where);
+    }
+    StoreEntry *where;
+};
+#endif
 
 static void
 cbdataDump(StoreEntry * sentry)
 {
-#if CBDATA_DEBUG
-    dlink_node *n;
-    cbdata *p;
-    int i;
-#endif
     storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
 #if CBDATA_DEBUG
     storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
-    for (n = cbdataEntries.head; n; n = n->next) {
-	p = (cbdata *)n->data;
-	storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", p->valid ? ' ' : '!', &p->data, p->type, p->locks, p->file, p->line);
-    }
+    CBDataDumper dumper(sentry);
+    for_each (cbdataEntries, dumper);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
-    for (i = 1; i < cbdata_types; i++) {
+    for (int i = 1; i < cbdata_types; i++) {
 	MemPool *pool = cbdata_index[i].pool;
 	if (pool) {
 	    int obj_size = pool->obj_size - OFFSET_OF(cbdata, data);
@@ -323,3 +378,46 @@ cbdataDump(StoreEntry * sentry)
 #endif
     storeAppendPrintf(sentry, "\nsee also \"Memory utilization\" for detailed per type statistics\n");
 }
+
+#if CBDATA_DEBUG
+
+template <class T>
+T& for_each(Stack const &collection, T& visitor)
+{
+    for (int index = 0; index < collection.count; ++index)
+	visitor(*(typename T::argument_type const *)collection.items[index]);
+    return visitor;
+};
+
+struct CBDataCallDumper : public unary_function<CBDataCall, void>
+{
+    CBDataCallDumper (StoreEntry *anEntry):where(anEntry){}
+    void operator()(CBDataCall const &x) {
+	storeAppendPrintf(where, "%s\t%s\t%d\n", x.label, x.file, x.line);
+    }
+    StoreEntry *where;
+};
+
+struct CBDataHistoryDumper : public CBDataDumper
+{
+    CBDataHistoryDumper(StoreEntry *anEntry):CBDataDumper(anEntry),where(anEntry), callDumper(anEntry){}
+    void operator()(_cbdata const &x) {
+	CBDataDumper::operator()(x);
+	storeAppendPrintf(where, "\n");
+	storeAppendPrintf(where, "Action\tFile\tLine\n");
+	for_each (*x.calls,callDumper);
+	storeAppendPrintf(where, "\n");
+    }
+    StoreEntry *where;
+    CBDataCallDumper callDumper;
+};
+
+void
+cbdataDumpHistory(StoreEntry *sentry)
+{
+    storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
+    storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
+    CBDataHistoryDumper dumper(sentry);
+    for_each (cbdataEntries, dumper);
+}
+#endif

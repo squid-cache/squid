@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.7 2002/10/13 20:34:51 robertc Exp $
+ * $Id: Array.h,v 1.8 2002/10/25 03:13:51 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -43,10 +43,10 @@ typedef struct {
 } Array;
 
 
-extern Array *arrayCreate(void);
+SQUIDCEXTERN Array *arrayCreate(void);
 SQUIDCEXTERN void arrayInit(Array * s);
 SQUIDCEXTERN void arrayClean(Array * s);
-extern void arrayDestroy(Array * s);
+SQUIDCEXTERN void arrayDestroy(Array * s);
 SQUIDCEXTERN void arrayAppend(Array * s, void *obj);
 SQUIDCEXTERN void arrayPreAppend(Array * s, int app_count);
 
