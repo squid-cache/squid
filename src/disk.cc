@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.101 1998/02/04 23:34:00 wessels Exp $
+ * $Id: disk.cc,v 1.102 1998/02/05 20:47:35 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -246,15 +246,15 @@ diskHandleWrite(int fd, void *notused)
 	wq->len = 0;
 	wq->buf_offset = 0;
 	wq->next = NULL;
-	wq->free = xfree;
+	wq->free_func = xfree;
 	do {
 	    q = fdd->write_q->next;
 	    len = q->len - q->buf_offset;
 	    xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
 	    wq->len += len;
 	    fdd->write_q->next = q->next;
-	    if (q->free)
-		(q->free) (q->buf);
+	    if (q->free_func)
+		(q->free_func) (q->buf);
 	    safe_free(q);
 	} while (fdd->write_q->next != NULL);
 	fdd->write_q_tail = wq;
@@ -296,8 +296,8 @@ diskHandleWriteComplete(void *data, int len, int errcode)
     if (len == -2 && errcode == -2) {	/* Write cancelled - cleanup */
 	do {
 	    fdd->write_q = q->next;
-	    if (q->free)
-		(q->free) (q->buf);
+	    if (q->free_func)
+		(q->free_func) (q->buf);
 	    safe_free(q);
 	} while ((q = fdd->write_q));
 	return;
@@ -312,8 +312,8 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 		/* FLUSH PENDING BUFFERS */
 		do {
 		    fdd->write_q = q->next;
-		    if (q->free)
-			(q->free) (q->buf);
+		    if (q->free_func)
+			(q->free_func) (q->buf);
 		    safe_free(q);
 		} while ((q = fdd->write_q));
 	    }
@@ -330,8 +330,8 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	if (q->buf_offset == q->len) {
 	    /* complete write */
 	    fdd->write_q = q->next;
-	    if (q->free)
-		(q->free) (q->buf);
+	    if (q->free_func)
+		(q->free_func) (q->buf);
 	    safe_free(q);
 	}
     }
@@ -375,7 +375,7 @@ file_write(int fd,
     wq->len = len;
     wq->buf_offset = 0;
     wq->next = NULL;
-    wq->free = free_func;
+    wq->free_func = free_func;
     F->disk.wrt_handle = handle;
     F->disk.wrt_handle_data = handle_data;
     /* add to queue */
