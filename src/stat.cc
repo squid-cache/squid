@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.319 1999/06/24 20:20:08 wessels Exp $
+ * $Id: stat.cc,v 1.320 1999/07/13 14:51:19 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -440,7 +440,7 @@ info_get(StoreEntry * sentry)
     double runtime;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     struct mstats ms;
-#elif HAVE_MALLINFO
+#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
     struct mallinfo mp;
     int t;
 #endif
@@ -546,7 +546,7 @@ info_get(StoreEntry * sentry)
 	ms.bytes_total >> 10);
     storeAppendPrintf(sentry, "\tTotal free:            %6d KB %d%%\n",
 	ms.bytes_free >> 10, percent(ms.bytes_free, ms.bytes_total));
-#elif HAVE_MALLINFO
+#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
     mp = mallinfo();
     storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",
 	appname);

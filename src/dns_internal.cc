@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.13 1999/04/26 22:34:06 wessels Exp $
+ * $Id: dns_internal.cc,v 1.14 1999/07/13 14:51:11 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+
+#if !USE_DNSSERVERS
 
 #ifndef _PATH_RESOLV_CONF
 #define _PATH_RESOLV_CONF "/etc/resolv.conf"
@@ -412,3 +414,5 @@ idnsPTRLookup(const struct in_addr addr, IDNSCB * callback, void *data)
     q->start_t = current_time;
     idnsSendQuery(q);
 }
+
+#endif /* !USE_DNSSERVERS */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.73 1999/06/25 23:37:31 wessels Exp $
+ * $Id: store_client.cc,v 1.74 1999/07/13 14:51:23 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -419,8 +419,10 @@ storeUnregister(StoreEntry * e, void *data)
     sc->flags.disk_io_pending = 0;
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
 	storeSwapOut(e);
-    if (sc->swapin_sio)
+    if (sc->swapin_sio) {
 	storeClose(sc->swapin_sio);
+	sc->swapin_sio = NULL;
+    }
     if ((callback = sc->callback) != NULL) {
 	/* callback with ssize = -1 to indicate unexpected termination */
 	debug(20, 3) ("storeUnregister: store_client for %s has a callback\n",

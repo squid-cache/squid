@@ -809,6 +809,11 @@ Squid consists of the following major components
 	assume the open request will succeed, and may begin reading
 	or writing immediately.
 
+	<P>
+	<tt/storeOpen()/ may return NULL if the requested object
+	can not be openeed.  In this case the <tt/callback/ function
+	will not be called.
+
 <sect4><tt/storeClose()/
 
 	<P>

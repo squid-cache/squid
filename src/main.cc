@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.302 1999/06/24 23:07:09 wessels Exp $
+ * $Id: main.cc,v 1.303 1999/07/13 14:51:15 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -280,7 +280,7 @@ serverConnectionsOpen(void)
 #ifdef SQUID_SNMP
     snmpConnectionOpen();
 #endif
-#ifdef WCCP
+#if USE_WCCP
     wccpConnectionOpen();
 #endif
     clientdbInit();
@@ -306,7 +306,7 @@ serverConnectionsClose(void)
 #ifdef SQUID_SNMP
     snmpConnectionShutdown();
 #endif
-#ifdef WCCP
+#if USE_WCCP
     wccpConnectionShutdown();
 #endif
     asnFreeMemory();
@@ -326,11 +326,13 @@ mainReconfigure(void)
 #ifdef SQUID_SNMP
     snmpConnectionClose();
 #endif
-#ifdef WCCP
+#if USE_WCCP
     wccpConnectionClose();
 #endif
     dnsShutdown();
+#if !USE_DNSSERVERS
     idnsShutdown();
+#endif
     redirectShutdown();
     authenticateShutdown();
     storeDirCloseSwapLogs();
@@ -342,7 +344,9 @@ mainReconfigure(void)
     fqdncache_restart();	/* sigh, fqdncache too */
     errorInitialize();		/* reload error pages */
     dnsInit();
+#if !USE_DNSSERVERS
     idnsInit();
+#endif
     redirectInit();
     authenticateInit();
     serverConnectionsOpen();
@@ -448,7 +452,9 @@ mainInitialize(void)
     ipcache_init();
     fqdncache_init();
     dnsInit();
+#if !USE_DNSSERVERS
     idnsInit();
+#endif
     redirectInit();
     authenticateInit();
     useragentOpenLog();
@@ -462,7 +468,7 @@ mainInitialize(void)
 #ifdef SQUID_SNMP
     snmpInit();
 #endif
-#ifdef WCCP
+#if USE_WCCP
     wccpInit();
 #endif
 #if MALLOC_DBG
@@ -519,7 +525,7 @@ mainInitialize(void)
 	    eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
 	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15.0, 1);
-#ifdef WCCP
+#if USE_WCCP
 	if (Config.Wccp.router.s_addr != inet_addr("0.0.0.0"))
 	    eventAdd("wccpHereIam", wccpHereIam, NULL, 10.0, 1);
 #endif
@@ -635,7 +641,9 @@ main(int argc, char **argv)
 	    shutting_down = 1;
 	    serverConnectionsClose();
 	    dnsShutdown();
+#if !USE_DNSSERVERS
 	    idnsShutdown();
+#endif
 	    redirectShutdown();
 	    authenticateShutdown();
 	    eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
@@ -790,7 +798,7 @@ SquidShutdown(void *unused)
 #ifdef SQUID_SNMP
     snmpConnectionClose();
 #endif
-#ifdef WCCP
+#if USE_WCCP
     wccpConnectionClose();
 #endif
     releaseServerSockets();

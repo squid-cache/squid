@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.97 1999/06/10 21:06:26 wessels Exp $
+ * $Id: ssl.cc,v 1.98 1999/07/13 14:51:18 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -240,7 +240,7 @@ sslReadClient(int fd, void *data)
     }
     cbdataLock(sslState);
     if (len < 0) {
-	debug(50, 1) ("sslReadClient: FD %d: read failure: %s\n",
+	debug(50, ECONNRESET == errno ? 3 : 1) ("sslReadClient: FD %d: read failure: %s\n",
 	    fd, xstrerror());
 	if (!ignoreErrno(errno))
 	    comm_close(fd);

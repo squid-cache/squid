@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.178 1999/06/30 06:28:58 wessels Exp $
+#  $Id: Makefile.in,v 1.179 1999/07/13 14:51:05 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -174,7 +174,7 @@ OBJS	 	= \
 		urn.o \
 		useragent.o \
 		wais.o \
-		@WCCP_OBJS@ \
+		wccp.o \
 		whois.o \
 		$(XTRA_OBJS)
 
@@ -193,9 +193,6 @@ ASYNC_OBJS	= \
 
 LEAKFINDER_OBJS	= \
 		leakfinder.o
-
-WCCP_OBJS	= \
-		wccp.o
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.184 1999/06/30 06:29:03 wessels Exp $
+ * $Id: tools.cc,v 1.185 1999/07/13 14:51:28 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -105,7 +105,7 @@ dumpMallocStats(void)
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
 	(int) (ms.bytes_free >> 10),
 	percent(ms.bytes_free, ms.bytes_total));
-#elif HAVE_MALLINFO
+#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
     struct mallinfo mp;
     int t;
     if (!do_mallinfo)

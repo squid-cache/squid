@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.459 1999/06/24 22:53:43 wessels Exp $
+ * $Id: client_side.cc,v 1.460 1999/07/13 14:51:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -172,7 +172,7 @@ clientCreateStoreEntry(clientHttpRequest * h, method_t m, request_flags flags)
      * so make a fake one.
      */
     if (h->request == NULL)
-	h->request = requestLink(requestCreate(m, PROTO_NONE, NULL));
+	h->request = requestLink(requestCreate(m, PROTO_NONE, null_string));
     e = storeCreateEntry(h->uri, h->log_uri, flags, m);
     storeClientListAdd(e, h);
 #if DELAY_POOLS

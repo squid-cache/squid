@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.36 1999/06/30 05:49:40 wessels Exp $
+ * $Id: comm_select.cc,v 1.37 1999/07/13 14:51:10 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -215,7 +215,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 	    if ((hdl = fd_table[fd].read_handler)) {
 		fd_table[fd].read_handler = NULL;
 		hdl(fd, &incame);
-	    } else
+	    } else if (pfds[i].events & POLLRDNORM)
 		debug(5, 1) ("comm_poll_incoming: FD %d NULL read handler\n",
 		    fd);
 	}
@@ -223,7 +223,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 	    if ((hdl = fd_table[fd].write_handler)) {
 		fd_table[fd].write_handler = NULL;
 		hdl(fd, &incame);
-	    } else
+	    } else if (pfds[i].events & POLLWRNORM)
 		debug(5, 1) ("comm_poll_incoming: FD %d NULL write_handler\n",
 		    fd);
 	}
