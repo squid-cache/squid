@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.65 2003/08/13 00:17:26 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.66 2003/08/19 22:30:36 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1453,6 +1453,7 @@ clientReplyContext::buildReply(const char *buf, size_t size)
             //          clientBuildRangeHeader(http, holdingReply);
         }
 
+        return;
     }
 
     /* enforce 1.0 reply version */
