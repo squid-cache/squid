@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.57 1996/08/26 19:09:34 wessels Exp $
+ * $Id: comm.cc,v 1.58 1996/08/26 19:57:03 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1082,48 +1082,53 @@ static int examine_select(readfds, writefds, exceptfds)
 	FD_ZERO(&write_x);
 	FD_ZERO(&except_x);
 	tv.tv_sec = tv.tv_usec = 0;
-	if ((FD_ISSET(fd, readfds)) ||
-	    (FD_ISSET(fd, writefds)) ||
-	    (FD_ISSET(fd, exceptfds))) {
+	if (FD_ISSET(fd, readfds))
 	    FD_SET(fd, &read_x);
-	    num = select(FD_SETSIZE, &read_x, &read_x, &read_x, &tv);
-	    if (num < 0) {
-		f = &fd_table[fd];
-		debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
-		debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fdstatGetType(fd)]);
-		debug(5, 0, "--> %s\n", fd_note(fd, NULL));
-		debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p expt:%p\n",
-		    f->lifetime_handler,
-		    f->timeout_handler,
-		    f->read_handler,
-		    f->write_handler,
-		    f->except_handler);
-		for (ch = f->close_handler; ch; ch = ch->next)
-		    debug(5, 0, " close handler: %p\n", ch->handler);
-		if (f->close_handler) {
-		    for (ch = f->close_handler; ch; ch = next) {
-			next = ch->next;
-			ch->handler(fd, ch->data);
-			safe_free(ch);
-		    }
-		} else if (f->lifetime_handler) {
-		    debug(5, 0, "examine_select: Calling Lifetime Handler\n");
-		    f->lifetime_handler(fd, f->lifetime_data);
-		} else if (f->timeout_handler) {
-		    debug(5, 0, "examine_select: Calling Timeout Handler\n");
-		    f->timeout_handler(fd, f->timeout_data);
-		}
-		f->close_handler = 0;
-		f->lifetime_handler = 0;
-		f->timeout_handler = 0;
-		f->read_handler = 0;
-		f->write_handler = 0;
-		f->except_handler = 0;
-		FD_CLR(fd, readfds);
-		FD_CLR(fd, writefds);
-		FD_CLR(fd, exceptfds);
-	    }
+	else if (FD_ISSET(fd, writefds))
+	    FD_SET(fd, &write_x);
+	else if (FD_ISSET(fd, exceptfds))
+	    FD_SET(fd, &except_x);
+	else
+	    continue;
+	num = select(FD_SETSIZE, &read_x, &write_x, &except_x, &tv);
+	if (num > -1) {
+	    debug(5, 5, "FD %d is valid.\n", fd);
+	    continue;
 	}
+	f = &fd_table[fd];
+	debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
+	debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fdstatGetType(fd)]);
+	debug(5, 0, "--> %s\n", fd_note(fd, NULL));
+	debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p expt:%p\n",
+	    f->lifetime_handler,
+	    f->timeout_handler,
+	    f->read_handler,
+	    f->write_handler,
+	    f->except_handler);
+	for (ch = f->close_handler; ch; ch = ch->next)
+	    debug(5, 0, " close handler: %p\n", ch->handler);
+	if (f->close_handler) {
+	    for (ch = f->close_handler; ch; ch = next) {
+		next = ch->next;
+		ch->handler(fd, ch->data);
+		safe_free(ch);
+	    }
+	} else if (f->lifetime_handler) {
+	    debug(5, 0, "examine_select: Calling Lifetime Handler\n");
+	    f->lifetime_handler(fd, f->lifetime_data);
+	} else if (f->timeout_handler) {
+	    debug(5, 0, "examine_select: Calling Timeout Handler\n");
+	    f->timeout_handler(fd, f->timeout_data);
+	}
+	f->close_handler = NULL;
+	f->lifetime_handler = NULL;
+	f->timeout_handler = NULL;
+	f->read_handler = NULL;
+	f->write_handler = NULL;
+	f->except_handler = NULL;
+	FD_CLR(fd, readfds);
+	FD_CLR(fd, writefds);
+	FD_CLR(fd, exceptfds);
     }
     return 0;
 }

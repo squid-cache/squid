@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.38 1996/08/26 19:15:41 wessels Exp $
+ * $Id: squid.h,v 1.39 1996/08/26 19:57:11 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -174,6 +174,7 @@
 #define SA_RESETHAND 0
 #endif
 #if SA_RESETHAND == 0 && defined(SA_ONESHOT)
+#undef SA_RESETHAND
 #define SA_RESETHAND SA_ONESHOT
 #endif
 
