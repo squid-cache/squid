@@ -643,7 +643,7 @@ fi
 
 
 
-# From configure.in Revision: 1.185 
+# From configure.in Revision: 1.186 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -1243,7 +1243,7 @@ else
 
 fi
 
-echo "Store moules built: $STORE_MODULES"
+echo "Store modules built: $STORE_MODULES"
 
 STORE_OBJS="fs/`echo $STORE_MODULES|sed -e's% %.a fs/%g'`.a"
 
