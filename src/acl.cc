@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.241 2001/01/12 00:37:14 wessels Exp $
+ * $Id: acl.cc,v 1.242 2001/01/28 16:23:36 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -823,7 +823,7 @@ because no authentication schemes are fully configured.\n", A->cfgline);
 	break;
 #endif
     case ACL_REQ_MIME_TYPE:
-	aclParseWordList(&A->data);
+	aclParseRegexList(&A->data);
 	break;
     case ACL_NONE:
     default:
