@@ -572,3 +572,14 @@ typedef enum {
     psParsed,
     psError
 } HttpMsgParseState;
+
+
+enum {
+    MEDIAN_HTTP,
+    MEDIAN_ICP_QUERY,
+    MEDIAN_DNS,
+    MEDIAN_HIT,
+    MEDIAN_MISS,
+    MEDIAN_NM,
+    MEDIAN_ICP_REPLY
+};

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.174 1998/03/31 04:08:32 wessels Exp $
+ * $Id: ipcache.cc,v 1.175 1998/04/01 05:38:57 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -511,7 +511,7 @@ ipcache_dnsHandleRead(int fd, void *data)
     if (strstr(dnsData->ip_inbuf, "$end\n")) {
 	/* end of record found */
 	statHistCount(&Counter.dns.svc_time,
-	    tvSubMsec(dnsData->dispatch_time, current_time));
+	    tvSubMsec(i->request_time, current_time));
 	if ((x = ipcache_parsebuffer(dnsData->ip_inbuf, dnsData)) == NULL) {
 	    debug(14, 0) ("ipcache_dnsHandleRead: ipcache_parsebuffer failed?!\n");
 	} else {
@@ -588,6 +588,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 	IpcacheStats.misses++;
 	i = ipcacheAddNew(name, NULL, IP_PENDING);
 	ipcacheAddPending(i, handler, handlerData);
+	i->request_time = current_time;
     } else if (i->status == IP_CACHED || i->status == IP_NEGATIVE_CACHED) {
 	/* HIT */
 	debug(14, 4) ("ipcache_nbgethostbyname: HIT for '%s'\n", name);

@@ -726,6 +726,7 @@ struct _ipcache_entry {
     ipcache_addrs addrs;
     ip_pending *pending_head;
     char *error_message;
+    struct timeval request_time;
     dlink_node lru;
     u_char locks;
     ipcache_status_t status:3;
