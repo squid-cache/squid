@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.44 2000/05/16 07:06:06 wessels Exp $
+ * $Id: pinger.cc,v 1.45 2000/10/20 23:51:00 hno Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -43,11 +43,13 @@
 #include <netinet/ip_icmp.h>
 
 #ifndef _SQUID_LINUX_
+#ifndef _SQUID_CYGWIN_
 #define icmphdr icmp
 #define iphdr ip
 #endif
+#endif
 
-#ifdef _SQUID_LINUX_
+#if defined (_SQUID_LINUX_) || defined (_SQUID_CYGWIN_)
 #ifdef icmp_id
 #undef icmp_id
 #endif

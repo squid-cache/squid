@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.12 2000/08/01 22:31:16 wessels Exp $
+ * $Id: carp.cc,v 1.13 2000/10/20 23:50:59 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -86,7 +86,7 @@ carpInit(void)
 peer *
 carpSelectParent(request_t * request)
 {
-#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> ((sizeof(u_long)*8)-(n))))
+#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (((sizeof(unsigned long)*8)-(n)))))
     const char *c;
     peer *p = NULL;
     peer *tp;
