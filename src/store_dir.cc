@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.77 1998/09/15 19:38:02 wessels Exp $
+ * $Id: store_dir.cc,v 1.78 1998/09/18 15:14:42 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -246,11 +246,9 @@ storeDirSelectSwapDir(void)
     if (nconf != Config.cacheSwap.n_configured) {
 	nconf = Config.cacheSwap.n_configured;
 	nleast = (nconf * 3) / 4;
-	if (dirq != NULL)
-	    xfree(dirq);
+	safe_free(dirq);
 	dirq = (int *) xmalloc(sizeof(int) * nleast);
-	if (diru != NULL)
-	    xfree(diru);
+	safe_free(diru);
 	diru = (double *) xmalloc(sizeof(double) * nconf);
 	for (j = 0; j < nleast; j++)
 	    dirq[j] = -1;
