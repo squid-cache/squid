@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.15 1998/10/03 03:39:46 wessels Exp $
+ * $Id: comm_select.cc,v 1.16 1998/10/18 08:26:40 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -565,7 +565,7 @@ comm_select(int msec)
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
-		if ((tmask & (1 << k)) == 0)
+		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
@@ -626,7 +626,7 @@ comm_select(int msec)
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
-		if ((tmask & (1 << k)) == 0)
+		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
@@ -653,7 +653,7 @@ comm_select(int msec)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)
 		    comm_select_http_incoming();
-		tmask = tmask - (1 << k);	/* this bit is done */
+		EBIT_CLR(tmask, k);	/* this bit is done */
 		if (tmask == 0)
 		    break;	/* and no more bits left */
 	    }
@@ -663,7 +663,7 @@ comm_select(int msec)
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < (sizeof(*fdsp) * NBBY); k++) {
-		if ((tmask & (1 << k)) == 0)
+		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
 		fd = (j * (sizeof(*fdsp) * NBBY)) + k;
@@ -690,7 +690,7 @@ comm_select(int msec)
 		    comm_select_icp_incoming();
 		if (commCheckHTTPIncoming)
 		    comm_select_http_incoming();
-		tmask = tmask - (1 << k);	/* this bit is done */
+		EBIT_CLR(tmask, k);	/* this bit is done */
 		if (tmask == 0)
 		    break;	/* and no more bits left */
 	    }
