@@ -1,13 +1,13 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.11 2004/12/20 16:30:40 robertc Exp $
+#  $Id: Makefile.am,v 1.12 2004/12/20 17:25:28 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
-DIST_SUBDIRS	= coss null ufs
+##DIST_SUBDIRS	= coss null ufs
 
 EXTRA_LIBRARIES = libcoss.a libnull.a libufs.a
 noinst_LIBRARIES = @STORE_LIBS@

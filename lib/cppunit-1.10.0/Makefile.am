@@ -45,6 +45,10 @@ dist-hook:
 	cp -pR $(top_srcdir)/examples/qt $(distdir)/examples
 	mkdir $(distdir)/lib
 	find $(distdir) -name CVS | xargs rm -rf
+	## THIS IS fundamentally broken. TODO pusha  fix upstream.
+	find $(distdir) -name CVS | xargs rm -rf
+	find $(distdir) -name .arch-ids | xargs rm -rf
+	find $(distdir) -name .arch-inventory | xargs rm -rf
 	perl -pi -e 's/\n/\r\n/g' `find $(distdir) -name '*.ds?'` \
 		$(distdir)/contrib/msvc/*			  \
 		$(distdir)/INSTALL-WIN32.txt
