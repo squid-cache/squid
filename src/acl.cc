@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.22 1996/07/22 16:40:19 wessels Exp $
+ * $Id: acl.cc,v 1.23 1996/07/22 17:19:12 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -603,7 +603,6 @@ static int aclMatchDomainList(data, host)
      wordlist *data;
      char *host;
 {
-    int offset;
     if (host == NULL)
 	return 0;
     debug(28, 3, "aclMatchDomainList: checking '%s'\n", host);
@@ -816,6 +815,7 @@ void aclDestroyAcls()
 	    aclDestroyIpList(a->data);
 	    break;
 	case ACL_DST_DOMAIN:
+	case ACL_SRC_DOMAIN:
 	case ACL_USER:
 	    wordlistDestroy((wordlist **) & a->data);
 	    break;
