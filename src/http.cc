@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.196 1997/10/23 20:42:18 wessels Exp $
+ * $Id: http.cc,v 1.197 1997/10/23 23:22:15 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -300,6 +300,7 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     time_t delta;
     size_t l;
 
+    assert(reply != NULL);
     reply->code = 600;
     ReplyHeaderStats.parsed++;
     xstrncpy(headers, buf, 4096);
@@ -665,7 +666,7 @@ httpReadReply(int fd, void *data)
 	httpState->eof = 1;
 	if (httpState->reply_hdr_state < 2)
 	    httpProcessReplyHeader(httpState, buf, len);
-	storeAppend(entry, buf, len);	/* invoke handlers! */
+	/* storeAppend(entry, buf, len);	/* invoke handlers! */
 	storeComplete(entry);	/* deallocates mem_obj->request */
 	comm_close(fd);
     } else {
@@ -673,7 +674,10 @@ httpReadReply(int fd, void *data)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);
 	if (httpPconnTransferDone(httpState)) {
+	    /* yes we have to clear all these! */
 	    commSetDefer(fd, NULL, NULL);
+	    commSetTimeout(fd, -1, NULL, NULL);
+	    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 	    comm_remove_close_handler(fd, httpStateFree, httpState);
 	    storeComplete(entry);	/* deallocates mem_obj->request */
 	    pconnPush(fd, request->host, request->port);
