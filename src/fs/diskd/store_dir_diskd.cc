@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.17 2000/10/03 15:31:40 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.18 2000/10/06 05:21:58 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -470,9 +470,14 @@ storeDiskdStats(StoreEntry * sentry)
 static void
 storeDiskdDirSync(SwapDir * SD)
 {
+    static time_t lastmsg = 0;
     diskdinfo_t *diskdinfo = SD->fsdata;
     while (diskdinfo->away > 0) {
-	debug(47, 1) ("storeDiskdDirSync: %d messages away\n", diskdinfo->away);
+	if (squid_curtime > lastmsg) {
+	    debug(47, 1) ("storeDiskdDirSync: %d messages away\n",
+		diskdinfo->away);
+	    lastmsg = squid_curtime;
+	}
 	storeDiskdDirCallback(SD);
     }
 }
