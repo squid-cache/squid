@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.47 2002/12/27 10:26:33 robertc Exp $
+ * $Id: authenticate.cc,v 1.48 2003/01/09 07:55:13 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -468,6 +468,17 @@ authenticateAuthenticateUser(auth_user_request_t * auth_user_request, request_t 
 	authscheme_list[auth_user_request->auth_user->auth_module - 1].authAuthenticate(auth_user_request, request, conn, type);
 }
 
+static auth_user_request_t *
+authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData * conn)
+{
+    if (*auth_user_request)
+	return *auth_user_request;
+    else if (conn)
+	return conn->auth_user_request;
+    else
+	return NULL;
+}
+      
 /* returns one of
  * AUTH_ACL_CHALLENGE,
  * AUTH_ACL_HELPER,
@@ -495,28 +506,21 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
     proxy_auth = httpHeaderGetStr(&request->header, headertype);
 
-    if (conn == NULL) {
-	debug(28, 1) ("authenticateAuthenticate: no connection data, cannot process authentication\n");
-	/*
-	 * deny access: clientreadrequest requires conn data, and it is always
-	 * compiled in so we should have it too.
-	 */
-	return AUTH_ACL_CANNOT_AUTHENTICATE;
-    }
     /*
      * a note on proxy_auth logix here:
      * proxy_auth==NULL -> unauthenticated request || already
      * authenticated connection so we test for an authenticated
      * connection when we recieve no authentication header.
      */
-    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(*auth_user_request ? *auth_user_request : conn->auth_user_request)))
-	|| (conn->auth_type == AUTH_BROKEN)) {
+    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(authTryGetUser(auth_user_request,conn))))
+	|| (conn && conn->auth_type == AUTH_BROKEN)) {
 	/* no header or authentication failed/got corrupted - restart */
-	conn->auth_type = AUTH_UNKNOWN;
 	debug(28, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
 	/* something wrong with the AUTH credentials. Force a new attempt */
-	if (conn->auth_user_request) {
-	    conn->auth_user_request->unlock();
+	if (conn) {
+	    conn->auth_type = AUTH_UNKNOWN;
+	    if (conn->auth_user_request)
+		conn->auth_user_request->unlock();
 	    conn->auth_user_request = NULL;
 	}
 	if (*auth_user_request) {
@@ -531,7 +535,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
      * No check for function required in the if: its compulsory for conn based 
      * auth modules
      */
-    if (proxy_auth && conn->auth_user_request &&
+    if (proxy_auth && conn && conn->auth_user_request &&
 	authenticateUserAuthenticated(conn->auth_user_request) &&
 	strcmp(proxy_auth, authscheme_list[conn->auth_user_request->auth_user->auth_module - 1].authConnLastHeader(conn->auth_user_request))) {
 	debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, conn->auth_user_request->username(), proxy_auth);
@@ -555,9 +559,9 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
     debug(28, 9) ("authenticateAuthenticate: header %s.\n", proxy_auth);
     if (*auth_user_request == NULL) {
 	debug(28, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
-	    conn->fd);
+	    conn ? conn->fd : -1);
 	if ((!request->auth_user_request)
-	    && (conn->auth_type == AUTH_UNKNOWN)) {
+	    && (!conn || conn->auth_type == AUTH_UNKNOWN)) {
 	    /* beginning of a new request check */
 	    debug(28, 4) ("authenticateAuthenticate: no connection authentication type\n");
 	    if (!authenticateValidateUser(*auth_user_request =
@@ -580,6 +584,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 	    /* lock the user request for this ACL processing */
 	    (*auth_user_request)->lock();
 	} else {
+	    assert (conn);
 	    if (conn->auth_user_request != NULL) {
 		*auth_user_request = conn->auth_user_request;
 		/* lock the user request for this ACL processing */
@@ -644,8 +649,7 @@ auth_acl_t
 AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, request_t * request, ConnStateData * conn, struct in_addr src_addr)
 {
     /* If we have already been called, return the cached value */
-    auth_user_request_t *t = *auth_user_request ? *auth_user_request : conn->auth_user_request;
-    auth_acl_t result;
+    auth_user_request_t *t = authTryGetUser (auth_user_request, conn);
     if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
 	&& t->lastReply != AUTH_ACL_HELPER) {
 	if (!*auth_user_request)
@@ -653,8 +657,8 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_use
 	return t->lastReply;
     }
     /* ok, call the actual authenticator routine. */
-    result = authenticate(auth_user_request, headertype, request, conn, src_addr);
-    t = *auth_user_request ? *auth_user_request : conn->auth_user_request;
+    auth_acl_t result = authenticate(auth_user_request, headertype, request, conn, src_addr);
+    t = authTryGetUser (auth_user_request, conn);
     if (t && result != AUTH_ACL_CANNOT_AUTHENTICATE &&
 	result != AUTH_ACL_HELPER)
 	t->lastReply = result;
