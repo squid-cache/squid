@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.62 2004/12/22 14:10:09 serassio Exp $
+ * $Id: helper.cc,v 1.63 2004/12/22 15:05:09 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -383,7 +383,7 @@ helperStatefulDefer(statefulhelper * hlp)
             if (srv->flags.reserved == S_HELPER_RESERVED)
                 continue;
 
-            if (!srv->flags.alive)
+            if (!srv->flags.shutdown)
                 continue;
 
             if ((hlp->IsAvailable != NULL) && (srv->data != NULL) &&
@@ -571,7 +571,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     for (link = hlp->servers.head; link; link = link->next) {
         srv = (helper_stateful_server *)link->data;
         tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->rfd,
                           srv->pid,
