@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.208 1998/08/21 03:15:26 wessels Exp $
+ * $Id: structs.h,v 1.209 1998/08/21 04:03:49 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -363,7 +363,9 @@ struct _SquidConfig {
 	int mem_pools;
 	int test_reachability;
 	int half_closed_clients;
+#if HTTP_VIOLATIONS
 	int reload_into_ims;
+#endif
     } onoff;
     acl *aclList;
     struct {
@@ -1197,7 +1199,9 @@ struct _request_flags {
     int refresh:1;
     int used_proxy_auth:1;
     int redirected:1;
+#if HTTP_VIOLATIONS
     int nocache_hack:1;		/* for changing/ignoring no-cache requests */
+#endif
 };
 
 struct _request_t {
@@ -1244,10 +1248,12 @@ struct _refresh_t {
     refresh_t *next;
     struct {
 	unsigned int icase:1;
+#if HTTP_VIOLATIONS
 	unsigned int override_expire:1;
 	unsigned int override_lastmod:1;
 	unsigned int reload_into_ims:1;
 	unsigned int ignore_reload:1;
+#endif
     } flags;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.300 1998/08/20 22:45:44 wessels Exp $
+ * $Id: cache_cf.cc,v 1.301 1998/08/21 04:03:44 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -210,7 +210,6 @@ static void
 configDoConfigure(void)
 {
     LOCAL_ARRAY(char, buf, BUFSIZ);
-    const refresh_t *R;
     memset(&Config2, '\0', sizeof(SquidConfig2));
     /* init memory as early as possible */
     memConfigure();
@@ -306,6 +305,9 @@ configDoConfigure(void)
 	requirePathnameExists("authenticate_program", Config.Program.authenticate->key);
     requirePathnameExists("Icon Directory", Config.icons.directory);
     requirePathnameExists("Error Directory", Config.errorDirectory);
+#if HTTP_VIOLATIONS
+    {
+    const refresh_t *R;
     for (R = Config.Refresh; R; R = R->next) {
 	if (!R->flags.override_expire)
 	    continue;
@@ -318,6 +320,8 @@ configDoConfigure(void)
 	debug(22, 1) ("WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP\n");
 	break;
     }
+    }
+#endif
 }
 
 /* Parse a time specification from the config file.  Store the
@@ -1115,17 +1119,24 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 {
     while (head != NULL) {
-	storeAppendPrintf(entry, "%s%s %s %d %d%% %d%s%s%s%s\n",
+	storeAppendPrintf(entry, "%s%s %s %d %d%% %d\n",
 	    name,
 	    head->flags.icase ? " -i" : null_string,
 	    head->pattern,
 	    (int) head->min / 60,
 	    (int) (100.0 * head->pct + 0.5),
-	    (int) head->max / 60,
-	    head->flags.override_expire ? " override-expire" : null_string,
-	    head->flags.override_lastmod ? " override-lastmod" : null_string,
-	    head->flags.reload_into_ims ? " reload-into-ims" : null_string,
-	    head->flags.ignore_reload ? " ignore-reload" : null_string);
+	    (int) head->max / 60);
+#if HTTP_VIOLATIONS
+	if (head->flags.override_expire)
+	    storeAppendPrintf(entry, " override-expire");
+	if (head->flags.override_lastmod)
+	    storeAppendPrintf(entry, " override-lastmod");
+	if (head->flags.reload_into_ims)
+	    storeAppendPrintf(entry, " reload-into-ims");
+	if (head->flags.ignore_reload)
+	    storeAppendPrintf(entry, " ignore-reload");
+#endif
+	storeAppendPrintf(entry, "\n");
 	head = head->next;
     }
 }
@@ -1138,10 +1149,12 @@ parse_refreshpattern(refresh_t ** head)
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
+#if HTTP_VIOLATIONS
     int override_expire = 0;
     int override_lastmod = 0;
     int reload_into_ims = 0;
     int ignore_reload = 0;
+#endif
     int i;
     refresh_t *t;
     regex_t comp;
@@ -1167,6 +1180,7 @@ parse_refreshpattern(refresh_t ** head)
     max = (time_t) (i * 60);	/* convert minutes to seconds */
     /* Options */
     while ((token = strtok(NULL, w_space)) != NULL) {
+#if HTTP_VIOLATIONS
 	if (!strcmp(token, "override-expire"))
 	    override_expire = 1;
 	else if (!strcmp(token, "override-expire"))
@@ -1180,6 +1194,7 @@ parse_refreshpattern(refresh_t ** head)
 	    refresh_nocache_hack = 1;
 	    /* tell client_side.c that this is used */
 	} else
+#endif
 	    debug(22, 0) ("redreshAddToList: Unknown option '%s': %s\n",
 		pattern, token);
     }
@@ -1202,6 +1217,7 @@ parse_refreshpattern(refresh_t ** head)
     t->max = max;
     if (flags & REG_ICASE)
 	t->flags.icase = 1;
+#if HTTP_VIOLATIONS
     if (override_expire)
 	t->flags.override_expire = 1;
     if (override_lastmod)
@@ -1210,6 +1226,7 @@ parse_refreshpattern(refresh_t ** head)
 	t->flags.reload_into_ims = 1;
     if (ignore_reload)
 	t->flags.ignore_reload = 1;
+#endif
     t->next = NULL;
     while (*head)
 	head = &(*head)->next;
