@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.91 1997/04/28 04:22:56 wessels Exp $
+ * $Id: acl.cc,v 1.92 1997/04/30 20:06:23 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -60,7 +60,7 @@ static int decode_addr _PARAMS((const char *, struct in_addr *, struct in_addr *
 static void aclCheck _PARAMS((aclCheck_t * checklist));
 
 static void aclCheckCallback _PARAMS((aclCheck_t * checklist, int answer));
-static void aclLookupDstIPDone _PARAMS((int fd, const ipcache_addrs * ia, void *data));
+static IPH aclLookupDstIPDone;
 static void aclLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
 static void aclLookupDstFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
 
@@ -1167,7 +1167,6 @@ aclCheck(aclCheck_t * checklist)
 {
     int allow = 0;
     const struct _acl_access *A;
-    ipcache_addrs *ia = NULL;
     int match;
     while ((A = checklist->access_list)) {
 	debug(28, 3, "aclCheck: checking '%s'\n", A->cfgline);
@@ -1179,6 +1178,7 @@ aclCheck(aclCheck_t * checklist)
 		-1,
 		aclLookupDstIPDone,
 		checklist);
+	    checklist->dst_ip_lookup_pending = 1;
 	    return;
 	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NEED) {
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_PENDING;
@@ -1186,14 +1186,17 @@ aclCheck(aclCheck_t * checklist)
 		-1,
 		aclLookupSrcFQDNDone,
 		checklist);
+	    checklist->src_fqdn_lookup_pending = 1;
 	    return;
 	} else if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEED) {
-	    if ((ia = ipcacheCheckNumeric(checklist->request->host)) != NULL) {
+	    checklist->dst_ia = ipcacheCheckNumeric(checklist->request->host);
+	    if (checklist->dst_ia != NULL) {
 		checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;
-		fqdncache_nbgethostbyaddr(ia->in_addrs[0],
+		fqdncache_nbgethostbyaddr(checklist->dst_ia->in_addrs[0],
 		    -1,
 		    aclLookupDstFQDNDone,
 		    checklist);
+	        checklist->dst_fqdn_lookup_pending = 1;
 	    } else {
 		checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_DONE;
 	    }
@@ -1216,6 +1219,12 @@ aclCheckCallback(aclCheck_t * checklist, int answer)
 {
     debug(28, 3, "aclCheckCallback: answer=%d\n", answer);
     checklist->callback(answer, checklist->callback_data);
+    if (checklist->src_fqdn_lookup_pending)
+	fqdncacheUnregister(checklist->src_addr, checklist);
+    if (checklist->dst_fqdn_lookup_pending)
+	fqdncacheUnregister(checklist->dst_ia->in_addrs[0], checklist);
+    if (checklist->dst_ip_lookup_pending)
+	ipcacheUnregister(checklist->request->host, checklist);
     requestUnlink(checklist->request);
     xfree(checklist);
 }
@@ -1224,6 +1233,7 @@ static void
 aclLookupDstIPDone(int fd, const ipcache_addrs * ia, void *data)
 {
     aclCheck_t *checklist = data;
+    checklist->dst_ip_lookup_pending = 0;
     checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -1232,6 +1242,7 @@ static void
 aclLookupSrcFQDNDone(int fd, const char *fqdn, void *data)
 {
     aclCheck_t *checklist = data;
+    checklist->src_fqdn_lookup_pending = 0;
     checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }
@@ -1240,6 +1251,7 @@ static void
 aclLookupDstFQDNDone(int fd, const char *fqdn, void *data)
 {
     aclCheck_t *checklist = data;
+    checklist->dst_fqdn_lookup_pending = 0;
     checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
     aclCheck(checklist);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.112 1997/04/30 18:30:56 wessels Exp $
+ * $Id: ipcache.cc,v 1.113 1997/04/30 20:06:31 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -771,25 +771,26 @@ ipcache_init(void)
 /* clean up the pending entries in dnsserver */
 /* return 1 if we found the host, 0 otherwise */
 int
-ipcache_unregister(const char *name, int fd)
+ipcacheUnregister(const char *name, void *data)
 {
     ipcache_entry *i = NULL;
     struct _ip_pending *p = NULL;
     int n = 0;
-
-    debug(14, 3, "ipcache_unregister: FD %d, name '%s'\n", fd, name);
+    debug(14, 3, "ipcacheUnregister: FD %d, name '%s'\n", name);
     if ((i = ipcache_get(name)) == NULL)
 	return 0;
     if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
 	for (p = i->pending_head; p; p = p->next) {
-	    if (p->fd == fd && p->handler != NULL) {
-		p->handler = NULL;
-		p->fd = -1;
-		n++;
-	    }
+	    if (p->handlerData != data)
+		continue;
+	    p->handler = NULL;
+	    p->fd = -1;
+	    n++;
 	}
     }
-    debug(14, 3, "ipcache_unregister: unregistered %d handlers\n", n);
+    if (n == 0)
+	debug_trap("ipcacheUnregister: callback data not found");
+    debug(14, 3, "ipcacheUnregister: unregistered %d handlers\n", n);
     return n;
 }
 

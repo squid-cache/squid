@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.50 1997/04/30 18:30:50 wessels Exp $
+ * $Id: fqdncache.cc,v 1.51 1997/04/30 20:06:26 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -740,26 +740,27 @@ fqdncache_init(void)
 /* clean up the pending entries in dnsserver */
 /* return 1 if we found the host, 0 otherwise */
 int
-fqdncacheUnregister(struct in_addr addr, int fd)
+fqdncacheUnregister(struct in_addr addr, void *data)
 {
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
     struct _fqdn_pending *p = NULL;
     int n = 0;
-
-    debug(35, 3, "fqdncache_unregister: FD %d, name '%s'\n", fd, name);
+    debug(35, 3, "fqdncacheUnregister: FD %d, name '%s'\n", name);
     if ((f = fqdncache_get(name)) == NULL)
 	return 0;
     if (f->status == FQDN_PENDING || f->status == FQDN_DISPATCHED) {
 	for (p = f->pending_head; p; p = p->next) {
-	    if (p->fd == fd && p->handler != NULL) {
-		p->handler = NULL;
-		p->fd = -1;
-		n++;
-	    }
+	    if (p->handlerData != data)
+		continue;
+	    p->handler = NULL;
+	    p->fd = -1;
+	    n++;
 	}
     }
-    debug(35, 3, "fqdncache_unregister: unregistered %d handlers\n", n);
+    if (n == 0)
+	debug_trap("fqdncacheUnregister: callback data not found");
+    debug(35, 3, "fqdncacheUnregister: unregistered %d handlers\n", n);
     return n;
 }
 

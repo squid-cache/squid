@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.64 1997/04/30 18:30:46 wessels Exp $
+ * $Id: disk.cc,v 1.65 1997/04/30 20:06:26 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -317,15 +317,15 @@ diskHandleWrite(int fd, void *unused)
 }
 
 static int
-diskHandleWriteComplete(void *data, int retcode, int errcode)
+diskHandleWriteComplete(void *data, int len, int errcode)
 {
     disk_ctrl_t *ctrlp = data;
     int fd = ctrlp->fd;
     FD_ENTRY *fde = &fd_table[fd];
     dwrite_q *q = fde->disk.write_q;
-    int len = retcode;
     errno = errcode;
     safe_free(data);
+    fd_bytes(fd, len, FD_WRITE);
     if (q == NULL)		/* Someone aborted and then the write */
 	return DISK_ERROR;	/* completed anyway. :( */
     BIT_SET(fde->flags, FD_AT_EOF);
