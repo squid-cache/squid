@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.55 2003/06/22 09:30:00 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.56 2003/07/06 21:50:56 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1836,9 +1836,7 @@ clientReplyContext::buildMaxBodySize(HttpReply * reply)
     ch->reply = reply;
 
     for (l = Config.ReplyBodySize; l; l = l -> next) {
-        ch->matchAclListFast(l->aclList);
-
-        if (ch->finished()) {
+        if (ch->matchAclListFast(l->aclList)) {
             if (l->size != static_cast<size_t>(-1)) {
                 debug(58, 3) ("clientReplyContext: Setting maxBodySize to %ld\n", (long int) l->size);
                 http->maxReplyBodySize(l->size);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.468 2003/07/06 21:43:36 hno Exp $
+ * $Id: structs.h,v 1.469 2003/07/06 21:50:56 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -357,7 +357,6 @@ struct _SquidConfig
     struct
     {
         char *log;
-        char *access;
         char *store;
         char *swap;
 #if USE_USERAGENT_LOG
@@ -372,6 +371,10 @@ struct _SquidConfig
 
         char *forward;
 #endif
+
+        logformat *logformats;
+
+        customlog *accesslogs;
 
         int rotateNumber;
     }
@@ -578,6 +581,7 @@ struct _SquidConfig
         acl_access *AlwaysDirect;
         acl_access *ASlists;
         acl_access *noCache;
+        acl_access *log;
 #if SQUID_SNMP
 
         acl_access *snmp;
@@ -1091,6 +1095,8 @@ struct _AccessLogEntry
 
     _private;
     HierarchyLogEntry hier;
+    HttpReply *reply;
+    request_t *request;
 };
 
 struct _ipcache_addrs
@@ -2372,6 +2378,23 @@ unsigned int fatal:
     }
 
     flags;
+};
+
+struct _logformat
+{
+    char *name;
+    logformat_token *format;
+    logformat *next;
+};
+
+struct _customlog
+{
+    char *filename;
+    acl_list *aclList;
+    logformat *logFormat;
+    Logfile *logfile;
+    customlog *next;
+    customlog_type type;
 };
 
 struct cache_dir_option

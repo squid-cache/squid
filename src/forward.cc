@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.103 2003/06/19 13:47:25 hno Exp $
+ * $Id: forward.cc,v 1.104 2003/07/06 21:50:56 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -487,9 +487,7 @@ static struct in_addr
 
     for (l = head; l; l = l->next)
     {
-        ch->matchAclListFast(l->aclList);
-
-        if (ch->finished())
+        if (ch->matchAclListFast(l->aclList))
             return l->addr;
     }
 
@@ -503,9 +501,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     acl_tos *l;
 
     for (l = head; l; l = l->next) {
-        ch->matchAclListFast(l->aclList);
-
-        if (ch->finished())
+        if (ch->matchAclListFast(l->aclList))
             return l->tos;
     }
 

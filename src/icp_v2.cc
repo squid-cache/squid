@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.80 2003/02/25 12:24:35 robertc Exp $
+ * $Id: icp_v2.cc,v 1.81 2003/07/06 21:50:56 hno Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -183,7 +183,7 @@ icpLogIcp(struct in_addr caddr, log_type logcode, int len, const char *url, int 
 
     al.cache.msec = delay;
 
-    accessLogLog(&al);
+    accessLogLog(&al, NULL);
 }
 
 void

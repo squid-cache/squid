@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.645 2003/07/06 21:43:36 hno Exp $
+ * $Id: client_side.cc,v 1.646 2003/07/06 21:50:55 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -465,16 +465,22 @@ ClientHttpRequest::updateCounters()
 void
 clientPrepareLogWithRequestDetails(request_t * request, AccessLogEntry * aLogEntry)
 {
-    Packer p;
-    MemBuf mb;
     assert(request);
     assert(aLogEntry);
-    memBufDefInit(&mb);
-    packerToMemInit(&p, &mb);
-    httpHeaderPackInto(&request->header, &p);
+
+    if (Config.onoff.log_mime_hdrs) {
+        Packer p;
+        MemBuf mb;
+        memBufDefInit(&mb);
+        packerToMemInit(&p, &mb);
+        httpHeaderPackInto(&request->header, &p);
+        aLogEntry->headers.request = xstrdup(mb.buf);
+        packerClean(&p);
+        memBufClean(&mb);
+    }
+
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
-    aLogEntry->headers.request = xstrdup(mb.buf);
     aLogEntry->hier = request->hier;
 
     aLogEntry->cache.extuser = request->extacl_user.buf();
@@ -489,8 +495,6 @@ clientPrepareLogWithRequestDetails(request_t * request, AccessLogEntry * aLogEnt
         request->auth_user_request = NULL;
     }
 
-    packerClean(&p);
-    memBufClean(&mb);
 }
 
 void
@@ -524,14 +528,22 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-        accessLogLog(&al);
+        ACLChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
+
+        checklist->reply = al.reply;
+
+        if (!Config.accessList.log || aclCheckFast(Config.accessList.log, checklist)) {
+            al.request = requestLink(request);
+            accessLogLog(&al, checklist);
+            updateCounters();
+
+            if (conn)
+                clientdbUpdate(conn->peer.sin_addr, logType, PROTO_HTTP, out.size);
+        }
+
+        delete checklist;
 
         accessLogFreeMemory(&al);
-
-        updateCounters();
-
-        if (conn)
-            clientdbUpdate(conn->peer.sin_addr, logType, PROTO_HTTP, out.size);
     }
 }
 
@@ -1142,9 +1154,6 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     headersLog(0, 0, http->request->method, rep);
 #endif
 
-    httpReplyDestroy(rep);
-    rep = NULL;
-
     if (bodyData.data && bodyData.length) {
         if (!multipartRangeRequest()) {
             size_t length = lengthToSend(bodyData.length);
@@ -1205,8 +1214,10 @@ clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
 
     if (!context->startOfOutput())
         context->sendBody(rep, recievedData);
-    else
+    else {
+        http->al.reply = rep;
         context->sendStartOfMessage(rep, recievedData);
+    }
 }
 
 /* Called when a downstream node is no longer interested in
