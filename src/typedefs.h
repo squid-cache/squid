@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.71 1998/08/21 03:15:27 wessels Exp $
+ * $Id: typedefs.h,v 1.72 1998/08/26 05:36:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -176,7 +176,7 @@ typedef void DWCB(int, int, size_t, void *);
 typedef void FQDNH(const char *, void *);
 typedef void IDCB(void *);
 typedef void IPH(const ipcache_addrs *, void *);
-typedef void IRCB(peer *, peer_t, icp_common_t *, void *data);
+typedef void IRCB(peer *, peer_t, protocol_t, void *, void *data);
 typedef void PSC(peer *, void *);
 typedef void RH(void *data, char *);
 typedef void UH(void *data, wordlist *);
@@ -225,4 +225,8 @@ typedef void (*ObjPackMethod) (void *obj, Packer * p);
 
 #if DELAY_POOLS
 typedef int delay_id;
+#endif
+
+#if USE_HTCP
+typedef struct _htcpReplyData htcpReplyData;
 #endif
