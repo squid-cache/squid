@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.125 1997/02/07 04:57:16 wessels Exp $
+ * $Id: stat.cc,v 1.126 1997/02/24 23:43:14 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -765,7 +765,14 @@ info_get(const cacheinfo * obj, StoreEntry * sentry)
 
 #if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
     storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);
+#ifdef _SQUID_SOLARIS_
+    /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
+    enter_suid();
+#endif
     getrusage(RUSAGE_SELF, &rusage);
+#ifdef _SQUID_SOLARIS_
+    leave_suid();
+#endif
     storeAppendPrintf(sentry, "{\tCPU Time: %d seconds (%d user %d sys)}\n",
 	(int) rusage.ru_utime.tv_sec + (int) rusage.ru_stime.tv_sec,
 	(int) rusage.ru_utime.tv_sec,
