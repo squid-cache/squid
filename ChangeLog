@@ -25,6 +25,7 @@ Changes to squid-1.1.alpha17:
 	- Added storeCheckExpired().
 	- Removed storeWalkThrough() and removeOldEntry(), changed
 	  storePurgeOld() to do the walking through instead.
+	- Added storeConfigure() so HUP signal affects store_swap size.
 
 Changes to squid-1.1.alpha16:
 
