@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.5 2002/09/15 06:40:57 robertc Exp $
+ * $Id: comm_poll.cc,v 1.6 2002/10/02 11:06:31 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -208,6 +208,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     PF *hdl = NULL;
     int npfds;
     struct pollfd pfds[3 + MAXHTTPPORTS];
+    PROF_start(comm_check_incoming);
     incoming_sockets_accepted = 0;
     for (i = npfds = 0; i < nfds; i++) {
 	int events;
@@ -224,12 +225,16 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 	    npfds++;
 	}
     }
-    if (!nfds)
+    if (!nfds) {
+	PROF_stop(comm_check_incoming);
 	return -1;
+    }
     getCurrentTime();
     statCounter.syscalls.polls++;
-    if (poll(pfds, npfds, 0) < 1)
+    if (poll(pfds, npfds, 0) < 1) {
+	PROF_stop(comm_check_incoming);
 	return incoming_sockets_accepted;
+    }
     for (i = 0; i < npfds; i++) {
 	int revents;
 	if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
@@ -251,6 +256,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 		    fd);
 	}
     }
+    PROF_stop(comm_check_incoming);
     return incoming_sockets_accepted;
 }
 
@@ -340,6 +346,7 @@ comm_select(int msec)
 	    comm_poll_dns_incoming();
 	if (commCheckHTTPIncoming)
 	    comm_poll_http_incoming();
+	PROF_start(comm_poll_prep_pfds);
 	callicp = calldns = callhttp = 0;
 	nfds = 0;
 	npending = 0;
@@ -376,6 +383,7 @@ comm_select(int msec)
 		    npending++;
 	    }
 	}
+	PROF_stop(comm_poll_prep_pfds);
 	if (nfds == 0) {
 	    assert(shutting_down);
 	    return COMM_SHUTDOWN;
@@ -385,9 +393,11 @@ comm_select(int msec)
 	if (msec > MAX_POLL_TIME)
 	    msec = MAX_POLL_TIME;
 	for (;;) {
+	    PROF_start(comm_poll_normal);
 	    statCounter.syscalls.polls++;
 	    num = poll(pfds, nfds, msec);
 	    statCounter.select_loops++;
+	    PROF_stop(comm_poll_normal);
 	    if (num >= 0 || npending >= 0)
 		break;
 	    if (ignoreErrno(errno))
@@ -409,6 +419,7 @@ comm_select(int msec)
 	/* scan each socket but the accept socket. Poll this 
 	 * more frequently to minimize losses due to the 5 connect 
 	 * limit in SunOS */
+	PROF_start(comm_handle_ready_fd);
 	for (i = 0; i < nfds; i++) {
 	    fde *F;
 	    int revents = pfds[i].revents;
@@ -441,8 +452,10 @@ comm_select(int msec)
 		    commAddSlowFd(fd);
 #endif
 		else {
+		    PROF_start(comm_read_handler);
 		    F->read_handler = NULL;
 		    hdl(fd, F->read_data);
+		    PROF_stop(comm_read_handler);
 		    statCounter.select_fds++;
 		    if (commCheckICPIncoming)
 			comm_poll_icp_incoming();
@@ -455,8 +468,10 @@ comm_select(int msec)
 	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
 		debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
 		if ((hdl = F->write_handler)) {
+		    PROF_start(comm_write_handler);
 		    F->write_handler = NULL;
 		    hdl(fd, F->write_data);
+		    PROF_stop(comm_write_handler);
 		    statCounter.select_fds++;
 		    if (commCheckICPIncoming)
 			comm_poll_icp_incoming();
@@ -491,6 +506,7 @@ comm_select(int msec)
 		    fd_close(fd);
 	    }
 	}
+	PROF_stop(comm_handle_ready_fd);
 	if (callicp)
 	    comm_poll_icp_incoming();
 	if (calldns)

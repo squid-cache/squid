@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.334 2002/09/15 06:40:57 robertc Exp $
+ * $Id: comm.cc,v 1.335 2002/10/02 11:06:31 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -174,6 +174,7 @@ comm_openex(int sock_type,
     int tos = 0;
     fde *F = NULL;
 
+    PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     statCounter.syscalls.sock.sockets++;
     if ((new_socket = socket(AF_INET, sock_type, proto)) < 0) {
@@ -189,6 +190,7 @@ comm_openex(int sock_type,
 	default:
 	    debug(50, 0) ("comm_open: socket failure: %s\n", xstrerror());
 	}
+	PROF_stop(comm_open);
 	return -1;
     }
     /* set TOS if needed */
@@ -221,19 +223,23 @@ comm_openex(int sock_type,
 	if (commBind(new_socket, addr, port) != COMM_OK) {
 	    comm_close(new_socket);
 	    return -1;
+	    PROF_stop(comm_open);
 	}
     }
     F->local_port = port;
 
     if (flags & COMM_NONBLOCKING)
-	if (commSetNonBlocking(new_socket) == COMM_ERROR)
+	if (commSetNonBlocking(new_socket) == COMM_ERROR) {
 	    return -1;
+	    PROF_stop(comm_open);
+	}
 #ifdef TCP_NODELAY
     if (sock_type == SOCK_STREAM)
 	commSetTcpNoDelay(new_socket);
 #endif
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
 	commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
+    PROF_stop(comm_open);
     return new_socket;
 }
 
@@ -463,6 +469,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     int err = 0;
     socklen_t errlen;
     assert(ntohs(address->sin_port) != 0);
+    PROF_start(comm_connect_addr);
     /* Establish connection. */
     errno = 0;
     if (!F->flags.called_connect) {
@@ -498,6 +505,7 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 #endif
 #endif
     }
+    PROF_stop(comm_connect_addr);
     if (errno == 0 || errno == EISCONN)
 	status = COMM_OK;
     else if (ignoreErrno(errno))
@@ -527,7 +535,9 @@ comm_accept(int fd, struct sockaddr_in *pn, struct sockaddr_in *me)
     fde *F = NULL;
     Slen = sizeof(P);
     statCounter.syscalls.sock.accepts++;
+    PROF_start(comm_accept);
     if ((sock = accept(fd, (struct sockaddr *) &P, &Slen)) < 0) {
+	PROF_stop(comm_accept);
 	if (ignoreErrno(errno)) {
 	    debug(50, 5) ("comm_accept: FD %d: %s\n", fd, xstrerror());
 	    return COMM_NOMESSAGE;
@@ -554,6 +564,7 @@ comm_accept(int fd, struct sockaddr_in *pn, struct sockaddr_in *me)
     F->remote_port = htons(P.sin_port);
     F->local_port = htons(M.sin_port);
     commSetNonBlocking(sock);
+    PROF_stop(comm_accept);
     return sock;
 }
 
@@ -643,6 +654,7 @@ comm_close(int fd)
 	return;
     assert(F->flags.open);
     assert(F->type != FD_FILE);
+    PROF_start(comm_close);
     F->flags.closing = 1;
 #if USE_SSL
     if (F->ssl)
@@ -662,6 +674,7 @@ comm_close(int fd)
     fd_close(fd);		/* update fdstat */
     close(fd);
     statCounter.syscalls.sock.closes++;
+    PROF_stop(comm_close);
 }
 
 /* Send a udp datagram to specified TO_ADDR. */
@@ -673,8 +686,10 @@ comm_udp_sendto(int fd,
     int len)
 {
     int x;
+    PROF_start(comm_udp_sendto);
     statCounter.syscalls.sock.sendtos++;
     x = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len);
+    PROF_stop(comm_udp_sendto);
     if (x < 0) {
 #ifdef _SQUID_LINUX_
 	if (ECONNREFUSED != errno)
@@ -856,6 +871,7 @@ commHandleWrite(int fd, void *data)
     int len = 0;
     int nleft;
 
+    PROF_start(commHandleWrite);
     debug(5, 5) ("commHandleWrite: FD %d: off %ld, sz %ld.\n",
 	fd, (long int) state->offset, (long int) state->size);
 
@@ -904,6 +920,7 @@ commHandleWrite(int fd, void *data)
 	    CommWriteStateCallbackAndFree(fd, COMM_OK);
 	}
     }
+    PROF_stop(commHandleWrite);
 }
 
 

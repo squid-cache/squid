@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.67 2002/09/30 00:23:01 hno Exp $
+#  $Id: Makefile.in,v 1.68 2002/10/02 11:06:30 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -117,6 +117,9 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
+@ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = Profiler.c
+@ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
+
 @NEED_OWN_SNPRINTF_TRUE@SNPRINTFSOURCE = snprintf.c
 @NEED_OWN_SNPRINTF_FALSE@SNPRINTFSOURCE = 
 @NEED_OWN_MD5_TRUE@MD5SOURCE = md5.c
@@ -134,6 +137,7 @@ noinst_LIBRARIES = \
 
 EXTRA_libmiscutil_a_SOURCES = \
 	md5.c \
+	Profiler.c \
 	snprintf.c
 
 libmiscutil_a_SOURCES = \
@@ -157,7 +161,8 @@ libmiscutil_a_SOURCES = \
 	Stack.c \
 	stub_memaccount.c \
 	util.c \
-	uudecode.c
+	uudecode.c \
+	$(XPROF_STATS_SOURCE)
 
 libmiscutil_a_LIBADD = \
 	@LIBOBJS@
@@ -193,6 +198,8 @@ libmiscutil_a_DEPENDENCIES = @LIBOBJS@
 @NEED_OWN_MD5_FALSE@am__objects_1 =
 @NEED_OWN_SNPRINTF_TRUE@am__objects_2 = snprintf.$(OBJEXT)
 @NEED_OWN_SNPRINTF_FALSE@am__objects_2 =
+@ENABLE_XPROF_STATS_TRUE@am__objects_3 = Profiler.$(OBJEXT)
+@ENABLE_XPROF_STATS_FALSE@am__objects_3 =
 am_libmiscutil_a_OBJECTS = MemPool.$(OBJEXT) Array.$(OBJEXT) \
 	base64.$(OBJEXT) getfullhostname.$(OBJEXT) hash.$(OBJEXT) \
 	heap.$(OBJEXT) html_quote.$(OBJEXT) iso3307.$(OBJEXT) \
@@ -200,7 +207,7 @@ am_libmiscutil_a_OBJECTS = MemPool.$(OBJEXT) Array.$(OBJEXT) \
 	rfc1123.$(OBJEXT) rfc1738.$(OBJEXT) rfc2617.$(OBJEXT) \
 	safe_inet_addr.$(OBJEXT) $(am__objects_2) splay.$(OBJEXT) \
 	Stack.$(OBJEXT) stub_memaccount.$(OBJEXT) util.$(OBJEXT) \
-	uudecode.$(OBJEXT)
+	uudecode.$(OBJEXT) $(am__objects_3)
 libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
 libntlmauth_a_AR = $(AR) cru
 libntlmauth_a_DEPENDENCIES = @LIBOBJS@
@@ -218,19 +225,20 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@DEP_FILES = $(DEPDIR)/Array.Po $(DEPDIR)/GNUregex.Po \
-@AMDEP_TRUE@	$(DEPDIR)/MemPool.Po $(DEPDIR)/Stack.Po \
-@AMDEP_TRUE@	$(DEPDIR)/base64.Po $(DEPDIR)/dlmalloc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/drand48.Po $(DEPDIR)/getfullhostname.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hash.Po $(DEPDIR)/heap.Po \
-@AMDEP_TRUE@	$(DEPDIR)/html_quote.Po $(DEPDIR)/inet_ntoa.Po \
-@AMDEP_TRUE@	$(DEPDIR)/iso3307.Po $(DEPDIR)/md5.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ntlmauth.Po $(DEPDIR)/radix.Po \
-@AMDEP_TRUE@	$(DEPDIR)/rfc1035.Po $(DEPDIR)/rfc1123.Po \
-@AMDEP_TRUE@	$(DEPDIR)/rfc1738.Po $(DEPDIR)/rfc2617.Po \
-@AMDEP_TRUE@	$(DEPDIR)/safe_inet_addr.Po $(DEPDIR)/snprintf.Po \
-@AMDEP_TRUE@	$(DEPDIR)/splay.Po $(DEPDIR)/strerror.Po \
-@AMDEP_TRUE@	$(DEPDIR)/stub_memaccount.Po $(DEPDIR)/tempnam.Po \
-@AMDEP_TRUE@	$(DEPDIR)/util.Po $(DEPDIR)/uudecode.Po
+@AMDEP_TRUE@	$(DEPDIR)/MemPool.Po $(DEPDIR)/Profiler.Po \
+@AMDEP_TRUE@	$(DEPDIR)/Stack.Po $(DEPDIR)/base64.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dlmalloc.Po $(DEPDIR)/drand48.Po \
+@AMDEP_TRUE@	$(DEPDIR)/getfullhostname.Po $(DEPDIR)/hash.Po \
+@AMDEP_TRUE@	$(DEPDIR)/heap.Po $(DEPDIR)/html_quote.Po \
+@AMDEP_TRUE@	$(DEPDIR)/inet_ntoa.Po $(DEPDIR)/iso3307.Po \
+@AMDEP_TRUE@	$(DEPDIR)/md5.Po $(DEPDIR)/ntlmauth.Po \
+@AMDEP_TRUE@	$(DEPDIR)/radix.Po $(DEPDIR)/rfc1035.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rfc1123.Po $(DEPDIR)/rfc1738.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rfc2617.Po $(DEPDIR)/safe_inet_addr.Po \
+@AMDEP_TRUE@	$(DEPDIR)/snprintf.Po $(DEPDIR)/splay.Po \
+@AMDEP_TRUE@	$(DEPDIR)/strerror.Po $(DEPDIR)/stub_memaccount.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tempnam.Po $(DEPDIR)/util.Po \
+@AMDEP_TRUE@	$(DEPDIR)/uudecode.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -285,6 +293,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Array.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/GNUregex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemPool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Profiler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Stack.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/base64.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dlmalloc.Po@am__quote@

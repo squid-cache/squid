@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.353 2002/07/28 21:55:33 hno Exp $
+ * $Id: main.cc,v 1.354 2002/10/02 11:06:31 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -546,6 +546,9 @@ mainInitialize(void)
 	    eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
 	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15.0, 1);
+#if USE_XPROF_STATS
+	eventAdd("cpuProfiling", xprof_event, NULL, 1.0, 1);
+#endif
 	eventAdd("memPoolCleanIdlePools", memPoolCleanIdlePools, NULL, 15.0, 1);
     }
     configured_once = 1;

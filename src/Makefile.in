@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.247 2002/09/30 00:23:55 hno Exp $
+#  $Id: Makefile.in,v 1.248 2002/10/02 11:06:31 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -131,6 +131,9 @@ makesnmplib = @makesnmplib@
 
 @USE_DELAY_POOLS_TRUE@DELAY_POOL_SOURCE = delay_pools.c
 @USE_DELAY_POOLS_FALSE@DELAY_POOL_SOURCE = 
+
+@ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = ProfStats.c
+@ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
 
 @ENABLE_HTCP_TRUE@HTCPSOURCE = htcp.c
 
@@ -272,6 +275,7 @@ squid_SOURCES = \
 	neighbors.c \
 	net_db.c \
 	Packer.c \
+	$(XPROF_STATS_SOURCE) \
 	pconn.c \
 	peer_digest.c \
 	peer_select.c \
@@ -467,21 +471,23 @@ pinger_OBJECTS = $(am_pinger_OBJECTS) $(nodist_pinger_OBJECTS)
 pinger_LDADD = $(LDADD)
 pinger_DEPENDENCIES =
 pinger_LDFLAGS =
-@USE_DELAY_POOLS_FALSE@am__objects_3 =
-@USE_DELAY_POOLS_TRUE@am__objects_3 = delay_pools.$(OBJEXT)
-@USE_DNSSERVER_FALSE@am__objects_4 = dns_internal.$(OBJEXT)
-@USE_DNSSERVER_TRUE@am__objects_4 = dns.$(OBJEXT)
-@ENABLE_HTCP_TRUE@am__objects_5 = htcp.$(OBJEXT)
-@MAKE_LEAKFINDER_TRUE@am__objects_6 = leakfinder.$(OBJEXT)
-@MAKE_LEAKFINDER_FALSE@am__objects_6 =
-@USE_SNMP_TRUE@am__objects_7 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
-@USE_SNMP_FALSE@am__objects_7 =
-@ENABLE_SSL_FALSE@am__objects_8 =
-@ENABLE_SSL_TRUE@am__objects_8 = ssl_support.$(OBJEXT)
-@ENABLE_UNLINKD_TRUE@am__objects_9 = unlinkd.$(OBJEXT)
-@ENABLE_UNLINKD_FALSE@am__objects_9 =
-@ENABLE_WIN32SPECIFIC_FALSE@am__objects_10 =
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_10 = win32.$(OBJEXT)
+@USE_DELAY_POOLS_FALSE@am__objects_4 =
+@USE_DELAY_POOLS_TRUE@am__objects_4 = delay_pools.$(OBJEXT)
+@USE_DNSSERVER_FALSE@am__objects_5 = dns_internal.$(OBJEXT)
+@USE_DNSSERVER_TRUE@am__objects_5 = dns.$(OBJEXT)
+@ENABLE_HTCP_TRUE@am__objects_6 = htcp.$(OBJEXT)
+@MAKE_LEAKFINDER_TRUE@am__objects_7 = leakfinder.$(OBJEXT)
+@MAKE_LEAKFINDER_FALSE@am__objects_7 =
+@ENABLE_XPROF_STATS_TRUE@am__objects_3 = ProfStats.$(OBJEXT)
+@ENABLE_XPROF_STATS_FALSE@am__objects_3 =
+@USE_SNMP_TRUE@am__objects_8 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_FALSE@am__objects_8 =
+@ENABLE_SSL_FALSE@am__objects_9 =
+@ENABLE_SSL_TRUE@am__objects_9 = ssl_support.$(OBJEXT)
+@ENABLE_UNLINKD_TRUE@am__objects_10 = unlinkd.$(OBJEXT)
+@ENABLE_UNLINKD_FALSE@am__objects_10 =
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_11 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_11 = win32.$(OBJEXT)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
@@ -489,11 +495,11 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
 	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) debug.$(OBJEXT) \
-	$(am__objects_3) disk.$(OBJEXT) $(am__objects_4) \
+	$(am__objects_4) disk.$(OBJEXT) $(am__objects_5) \
 	errorpage.$(OBJEXT) ETag.$(OBJEXT) event.$(OBJEXT) \
 	external_acl.$(OBJEXT) fd.$(OBJEXT) filemap.$(OBJEXT) \
 	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
-	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_5) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_6) \
 	http.$(OBJEXT) HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
 	HttpHdrRange.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
@@ -501,22 +507,22 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
 	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
 	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
-	$(am__objects_6) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
+	$(am__objects_7) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
 	MemBuf.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
-	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
-	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	send-announce.$(OBJEXT) $(am__objects_7) ssl.$(OBJEXT) \
-	$(am__objects_8) stat.$(OBJEXT) StatHist.$(OBJEXT) \
-	String.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
-	store_io.$(OBJEXT) store_client.$(OBJEXT) \
+	$(am__objects_3) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_8) \
+	ssl.$(OBJEXT) $(am__objects_9) stat.$(OBJEXT) \
+	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
+	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	tools.$(OBJEXT) $(am__objects_9) url.$(OBJEXT) urn.$(OBJEXT) \
+	tools.$(OBJEXT) $(am__objects_10) url.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_10)
+	whois.$(OBJEXT) $(am__objects_11)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -544,15 +550,16 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/HttpReply.Po $(DEPDIR)/HttpRequest.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po \
 @AMDEP_TRUE@	$(DEPDIR)/IPInterception.Po $(DEPDIR)/MemBuf.Po \
-@AMDEP_TRUE@	$(DEPDIR)/Packer.Po $(DEPDIR)/StatHist.Po \
-@AMDEP_TRUE@	$(DEPDIR)/String.Po $(DEPDIR)/access_log.Po \
-@AMDEP_TRUE@	$(DEPDIR)/acl.Po $(DEPDIR)/asn.Po \
-@AMDEP_TRUE@	$(DEPDIR)/auth_modules.Po $(DEPDIR)/authenticate.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cache_cf.Po $(DEPDIR)/cache_manager.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cachemgr.Po $(DEPDIR)/carp.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cbdata.Po $(DEPDIR)/cf_gen.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client.Po $(DEPDIR)/clientStream.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client_db.Po $(DEPDIR)/client_side.Po \
+@AMDEP_TRUE@	$(DEPDIR)/Packer.Po $(DEPDIR)/ProfStats.Po \
+@AMDEP_TRUE@	$(DEPDIR)/StatHist.Po $(DEPDIR)/String.Po \
+@AMDEP_TRUE@	$(DEPDIR)/access_log.Po $(DEPDIR)/acl.Po \
+@AMDEP_TRUE@	$(DEPDIR)/asn.Po $(DEPDIR)/auth_modules.Po \
+@AMDEP_TRUE@	$(DEPDIR)/authenticate.Po $(DEPDIR)/cache_cf.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cache_manager.Po $(DEPDIR)/cachemgr.Po \
+@AMDEP_TRUE@	$(DEPDIR)/carp.Po $(DEPDIR)/cbdata.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cf_gen.Po $(DEPDIR)/client.Po \
+@AMDEP_TRUE@	$(DEPDIR)/clientStream.Po $(DEPDIR)/client_db.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client_side.Po \
 @AMDEP_TRUE@	$(DEPDIR)/client_side_reply.Po \
 @AMDEP_TRUE@	$(DEPDIR)/client_side_request.Po $(DEPDIR)/comm.Po \
 @AMDEP_TRUE@	$(DEPDIR)/comm_kqueue.Po $(DEPDIR)/comm_poll.Po \
@@ -742,6 +749,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/IPInterception.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemBuf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Packer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ProfStats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StatHist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/String.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/access_log.Po@am__quote@

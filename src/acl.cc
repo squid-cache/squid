@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.286 2002/09/26 13:33:07 robertc Exp $
+ * $Id: acl.cc,v 1.287 2002/10/02 11:06:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1682,17 +1682,20 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 int
 aclMatchAclList(const acl_list * list, aclCheck_t * checklist)
 {
+    PROF_start(aclMatchAclList);
     while (list) {
 	AclMatchedName = list->_acl->name;
 	debug(28, 3) ("aclMatchAclList: checking %s%s\n",
 	    list->op ? null_string : "!", list->_acl->name);
 	if (aclMatchAcl(list->_acl, checklist) != list->op) {
 	    debug(28, 3) ("aclMatchAclList: returning 0\n");
+	    PROF_stop(aclMatchAclList);
 	    return 0;
 	}
 	list = list->next;
     }
     debug(28, 3) ("aclMatchAclList: returning 1\n");
+    PROF_stop(aclMatchAclList);
     return 1;
 }
 
@@ -1709,17 +1712,20 @@ int
 aclCheckFast(const acl_access * A, aclCheck_t * checklist)
 {
     allow_t allow = ACCESS_DENIED;
+    PROF_start(aclCheckFast);
     debug(28, 5) ("aclCheckFast: list: %p\n", A);
     while (A) {
 	allow = A->allow;
 	if (aclMatchAclList(A->aclList, checklist)) {
 	    aclCheckCleanup(checklist);
+	    PROF_stop(aclCheckFast);
 	    return allow == ACCESS_ALLOWED;
 	}
 	A = A->next;
     }
     debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", allow == ACCESS_DENIED);
     aclCheckCleanup(checklist);
+    PROF_stop(aclCheckFast);
     return allow == ACCESS_DENIED;
 }
 

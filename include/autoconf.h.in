@@ -107,6 +107,9 @@
 
 #undef FORW_VIA_DB
 
+/* Define to enable CPU profiling within Squid */
+#undef USE_XPROF_STATS
+
 /* Define if you have problems with memPools and want to disable Pools */
 #undef DISABLE_POOLS
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.546 2002/09/15 05:41:57 robertc Exp $
+ * $Id: store.cc,v 1.547 2002/10/02 11:06:31 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -316,8 +316,12 @@ storeUnlockObject(StoreEntry * e)
 StoreEntry *
 storeGet(const cache_key * key)
 {
+    void *p;
+    PROF_start(storeGet);
     debug(20, 3) ("storeGet: looking up %s\n", storeKeyText(key));
-    return (StoreEntry *) hash_lookup(store_table, key);
+    p = hash_lookup(store_table, key);
+    PROF_stop(storeGet);
+    return (StoreEntry *) p;
 }
 
 StoreEntry *
@@ -819,6 +823,7 @@ storeMaintainSwapSpace(void *datanotused)
     SwapDir *SD;
     static time_t last_warn_time = 0;
 
+    PROF_start(storeMaintainSwapSpace);
     /* walk each fs */
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	/* call the maintain function .. */
@@ -838,6 +843,7 @@ storeMaintainSwapSpace(void *datanotused)
     }
     /* Reregister a maintain event .. */
     eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
+    PROF_stop(storeMaintainSwapSpace);
 }
 
 
@@ -845,6 +851,7 @@ storeMaintainSwapSpace(void *datanotused)
 void
 storeRelease(StoreEntry * e)
 {
+    PROF_start(storeRelease);
     debug(20, 3) ("storeRelease: Releasing: '%s'\n", storeKeyText(e->hash.key));
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
@@ -852,6 +859,7 @@ storeRelease(StoreEntry * e)
 	storeExpireNow(e);
 	debug(20, 3) ("storeRelease: Only setting RELEASE_REQUEST bit\n");
 	storeReleaseRequest(e);
+	PROF_stop(storeRelease);
 	return;
     }
     if (store_dirs_rebuilding && e->swap_filen > -1) {
@@ -868,6 +876,7 @@ storeRelease(StoreEntry * e)
 	    e->lock_count++;
 	    EBIT_SET(e->flags, RELEASE_REQUEST);
 	    stackPush(&LateReleaseStack, e);
+	    PROF_stop(storeRelease);
 	    return;
 	} else {
 	    destroy_StoreEntry(e);
@@ -888,6 +897,7 @@ storeRelease(StoreEntry * e)
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_StoreEntry(e);
+    PROF_stop(storeRelease);
 }
 
 static void
