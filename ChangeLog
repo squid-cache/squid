@@ -1,6 +1,15 @@
+Changes to squid-1.1.alpha4:
+
+	- Changed cachemgr detailed filedescriptor info to be a separate item.
+	- 'no-cache' reload now discards bad IP cache entries too.
+	- Added 'echo request' URL hack:  http://cachehost:3128/echo
+	- Added URL redirector feature.
+	- Addeed 'ident_lookup' option to config file
+
 Changes to squid-1.1.alpha3:
 
 	- Added Asynchronous Disk I/O routines from Pete Bentley.
+	  (NOTE, not yet working for IRIX 5.3).
 	- Made squid native access log the default format.
 
 Changes to squid-1.1.alpha2:
