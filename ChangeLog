@@ -10,6 +10,27 @@
 	  USE_ASYNC_IO is defined.
 	- Fixed pointer bug when freeing AS# ACL entries.
 	- Fixed forgetting to reset Config.npeers to zero in free_peer().
+	- Fixed ICP bug causing excessive TIMEOUTs with sibling
+	  neighbors.  We must call the ICP reply callback even for
+	  sibling misses.
+	- Fixed some dnsserver-related reconfigure bugs. Need to 
+	  use cbdataLock, etc in fqdncache.c.  Also don't want to
+	  use ipcacheQueueDrain() and fqdncacheQueueDrain().
+	- Fixed persistent connection bug.  We were incorrectly
+	  deciding that non-200 replies without content-length
+	  would not have a reply body.
+	- Fixed intAverage() precedence bug.
+	- Fixed memmove() 'len' arg bug.
+	- Changed algorithm for determining alive/dead state of peers.
+	  Instead of using a fixed number of unacknowledged ICP
+	  replies, it is now based on timeouts.  If there are no ICP
+	  replies received from a peer within 'dead_peer_timeout'
+	  seconds, then we call it dead.
+	- Added calls to getCurrentTime() in
+	  comm_{select,poll}_incoming() when ALARM_UPDATES_TIME is not
+	  being used.
+	- Fixed shutdown bug when the incoming and outgoing ICP socket
+	  is the same file descriptor.
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
 
