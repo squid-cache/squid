@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.437 2002/04/21 21:52:47 hno Exp $
+ * $Id: protos.h,v 1.438 2002/06/16 17:46:26 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -74,6 +74,7 @@ extern const char *aclTypeToStr(squid_acl);
 extern wordlist *aclDumpGeneric(const acl *);
 extern int aclPurgeMethodInUse(acl_access *);
 extern void aclCacheMatchFlush(dlink_list * cache);
+extern int aclAuthenticated(aclCheck_t * checklist);
 
 /*
  * cache_cf.c
