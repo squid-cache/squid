@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.29 2000/03/06 16:23:31 wessels Exp $
+ * $Id: event.cc,v 1.30 2000/04/16 21:55:10 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -191,6 +191,7 @@ eventFreeMemory(void)
 {
     struct ev_entry *event;
     while ((event = tasks)) {
+	tasks = event->next;
 	if (NULL != event->arg)
 	    cbdataUnlock(event->arg);
 	memFree(event, MEM_EVENT);
