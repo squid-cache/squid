@@ -61,6 +61,9 @@
 /* The number of bytes in a long.  */
 #undef SIZEOF_LONG
 
+/* Define if you have the aio_init function.  */
+#undef HAVE_AIO_INIT
+
 /* Define if you have the bcopy function.  */
 #undef HAVE_BCOPY
 
