@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.39 1996/08/19 22:44:53 wessels Exp $
+ * $Id: ipcache.cc,v 1.40 1996/08/21 05:50:08 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -145,7 +145,6 @@ static int ipcache_testname _PARAMS((void));
 static int ipcache_compareLastRef _PARAMS((ipcache_entry **, ipcache_entry **));
 static int ipcache_dnsHandleRead _PARAMS((int, dnsserver_t *));
 static int ipcache_parsebuffer _PARAMS((char *buf, unsigned int offset, dnsserver_t *));
-static int ipcache_purgelru _PARAMS((void));
 static void ipcache_release _PARAMS((ipcache_entry *));
 static ipcache_entry *ipcache_GetFirst _PARAMS((void));
 static ipcache_entry *ipcache_GetNext _PARAMS((void));
@@ -315,7 +314,7 @@ static int ipcacheExpiredEntry(i)
 }
 
 /* finds the LRU and deletes */
-static int ipcache_purgelru()
+int ipcache_purgelru()
 {
     ipcache_entry *i = NULL;
     int local_ip_count = 0;
@@ -1058,7 +1057,7 @@ void stat_ipcache_get(sentry)
 	if (i->status == IP_PENDING || i->status == IP_DISPATCHED)
 	    ttl = 0;
 	else
-	    ttl = (i->ttl - squid_curtime + i->timestamp);
+	    ttl = (i->ttl + i->timestamp - squid_curtime);
 	storeAppendPrintf(sentry, " {%-32.32s %c %6d %d",
 	    i->name,
 	    ipcache_status_char[i->status],
