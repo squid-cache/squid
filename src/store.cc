@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.290 1997/10/17 16:21:51 wessels Exp $
+ * $Id: store.cc,v 1.291 1997/10/17 19:39:32 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1065,7 +1065,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 	    return;
 	}
     }
-    assert(e->swap_status == SWAPOUT_DONE);
+    assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
     assert(e->swap_file_number >= 0);
     assert(e->mem_obj != NULL);
     ctrlp = xmalloc(sizeof(swapin_ctrl_t));
