@@ -1,0 +1,19 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html"; charset=EUC-KR">
+<TITLE>에러: 요청된 URL을 가져올 수 없습니다.</TITLE>
+</HEAD><BODY>
+<H1>에러</H1>
+<H2>요청된 URL을 가져올 수 없습니다.</H2>
+<HR>
+<P>
+다음 URL을 처리 하던 중:
+<A HREF="%U">%U</A>
+<P>
+아래와 같은 에러가 발생했습니다:
+<UL>
+<P>
+이 캐쉬는 서비스를 마치려고 하기 때문에 
+현재는 요청된 서비스를 수행할 수 없습니다. 
+조금 후 다시 시도해 주십시오.
+</P>
+

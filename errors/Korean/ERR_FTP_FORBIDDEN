@@ -1,0 +1,18 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html"; charset=EUC-KR">
+<TITLE>에러: 요청된 URL을 가져올 수 없습니다.</TITLE>
+</HEAD><BODY>
+<H1>에러</H1>
+<H2>요청된 URL을 가져올 수 없습니다.</H2>
+<HR>
+<P>
+다음 URL을 처리 하던 중 FTP 인증 문제가 발생했습니다:
+<A HREF="%U">%U</A>
+<P>
+Squid는 다음과 같은 FTP 명령어를 전송했고:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+아래의 응답을 받았습니다.
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+</P>
+
