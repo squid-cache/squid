@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.20 2003/07/22 15:23:15 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.21 2003/07/28 09:27:29 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -125,7 +125,7 @@ UFSFile::operator delete (void *address)
 void
 UFSFile::deleteSelf() const {delete this;}
 
-UFSFile::UFSFile (char const *aPath) : fd (-1), closed (true)
+UFSFile::UFSFile (char const *aPath) : fd (-1), closed (true), error_(false)
 {
     assert (aPath);
     debug (79,3)("UFSFile::UFSFile: %s\n", aPath);
@@ -147,6 +147,7 @@ UFSFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
 
     if (fd < 0) {
         debug(79, 3) ("UFSFile::open: got failure (%d)\n", errno);
+        error(true);
     } else {
         closed = false;
         store_open_disk_fd++;
@@ -192,10 +193,15 @@ UFSFile::canRead() const
 bool
 UFSFile::error() const
 {
-    if (fd < 0 && !closed)
+    if ((fd < 0 && !closed) || error_)
         return true;
 
     return false;
+}
+
+void UFSFile::error(bool const &aBool)
+{
+    error_ = aBool;
 }
 
 void

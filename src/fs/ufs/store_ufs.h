@@ -35,6 +35,8 @@ private:
     CBDATA_CLASS(UFSFile);
     int fd;
     bool closed;
+    void error (bool const &);
+    bool error_;
     char const *path_;
     IORequestor::Pointer ioRequestor;
     void doClose();
