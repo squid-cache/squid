@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.29 1998/09/10 02:55:59 wessels Exp $
+ * $Id: store_swapout.cc,v 1.30 1998/09/10 19:50:58 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -198,8 +198,17 @@ storeCheckSwapOut(StoreEntry * e)
 	}
 	return;
     }
-    if (e->store_status == STORE_PENDING && swapout_size < VM_WINDOW_SZ)
-	return;			/* wait for a full block */
+    if (e->store_status == STORE_PENDING) {
+	/* wait for a full block to write */
+	if (swapout_size < VM_WINDOW_SZ)
+	    return;
+	/*
+	 * Wait until we are below the disk FD limit, only if the
+	 * next server-side read won't be deferred.
+	 */
+	if (storeTooManyDiskFilesOpen() && !fwdCheckDeferRead(-1, e))
+	    return;
+    }
     /* Ok, we have stuff to swap out.  Is there a swapout.fd open? */
     if (e->swap_status == SWAPOUT_NONE) {
 	assert(mem->swapout.fd == -1);

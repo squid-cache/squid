@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.455 1998/09/09 20:05:52 wessels Exp $
+ * $Id: store.cc,v 1.456 1998/09/10 19:50:56 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -465,6 +465,16 @@ struct _store_check_cachable_hist {
 } store_check_cachable_hist;
 
 int
+storeTooManyDiskFilesOpen(void)
+{
+    if (Config.max_open_disk_fds == 0)
+	return 0;
+    if (open_disk_fd > Config.max_open_disk_fds)
+	return 1;
+    return 0;
+}
+
+int
 storeCheckCachable(StoreEntry * e)
 {
 #if CACHE_ALL_METHODS
@@ -492,7 +502,7 @@ storeCheckCachable(StoreEntry * e)
     } else if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
 	store_check_cachable_hist.no.private_key++;
-    } else if (Config.max_open_disk_fds && open_disk_fd > Config.max_open_disk_fds) {
+    } else if (storeTooManyDiskFilesOpen()) {
 	debug(20, 2) ("storeCheckCachable: NO: too many disk files open\n");
 	store_check_cachable_hist.no.too_many_open_files++;
     } else if (storeExpiredReferenceAge() < 300) {
