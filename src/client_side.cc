@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.129 1997/10/20 22:59:43 wessels Exp $
+ * $Id: client_side.cc,v 1.130 1997/10/21 15:58:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -223,19 +223,12 @@ icpHandleIMSReply(void *data, char *buf, ssize_t size)
     if (entry->store_status == STORE_ABORTED) {
 	debug(33, 3) ("icpHandleIMSReply: ABORTED '%s'\n", entry->url);
 	/* We have an existing entry, but failed to validate it */
-	if (BIT_SET(entry->flag, ENTRY_REVALIDATE)) {
-	    /* We can't send the old one, so send the abort message */
-	    http->log_type = LOG_TCP_REFRESH_MISS;
-	    storeUnregister(http->old_entry, http);
-	    storeUnlockObject(http->old_entry);
-	} else {
-	    /* Its okay to send the old one anyway */
-	    http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
-	    storeUnregister(entry, http);
-	    storeUnlockObject(entry);
-	    entry = http->entry = http->old_entry;
-	    entry->refcount++;
-	}
+	/* Its okay to send the old one anyway */
+	http->log_type = LOG_TCP_REFRESH_FAIL_HIT;
+	storeUnregister(entry, http);
+	storeUnlockObject(entry);
+	entry = http->entry = http->old_entry;
+	entry->refcount++;
     } else if (mem->reply->code == 0) {
 	debug(33, 3) ("icpHandleIMSReply: Incomplete headers for '%s'\n",
 	    entry->url);
