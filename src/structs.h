@@ -444,9 +444,6 @@ struct _hash_table {
     hash_link *current_ptr;
 };
 
-#include "MemBuf.h"
-#include "Packer.h"
-
 /* server cache control */
 struct _HttpScc {
     int mask;
@@ -800,6 +797,19 @@ struct _iostats {
     } Http, Ftp, Gopher, Wais;
 };
 
+/* auto-growing memory-resident buffer with printf interface */
+struct _MemBuf {
+    /* public, read-only */
+    char *buf;
+    mb_size_t size;  /* used space, does not count 0-terminator */
+
+    /* private, stay away; use interface function instead */
+    mb_size_t max_capacity; /* when grows: assert(new_capacity <= max_capacity) */
+    mb_size_t capacity;     /* allocated space */
+    FREE *freefunc;  /* what to use to free the buffer, NULL after memBufFreeFunc() is called */
+};
+
+
 struct _mem_node {
     char *data;
     int len;
@@ -827,6 +837,8 @@ struct _store_client {
     struct _store_client *next;
 };
 
+#include "Packer.h"
+
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
     method_t method;
@@ -842,11 +854,7 @@ struct _MemObject {
 	int fd;
 	void *ctrl;
     } swapout;
-#if 0
-    struct _http_reply *reply;
-#else
     HttpReply *reply;
-#endif
     request_t *request;
     struct timeval start_ping;
     IRCB *icp_reply_callback;
