@@ -1,10 +1,10 @@
 /*
- * $Id: http.cc,v 1.97 1996/11/06 08:15:21 wessels Exp $
+ * $Id: http.cc,v 1.98 1996/11/06 23:14:39 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

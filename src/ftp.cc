@@ -1,11 +1,11 @@
 
 /*
- * $Id: ftp.cc,v 1.76 1996/11/05 17:08:07 wessels Exp $
+ * $Id: ftp.cc,v 1.77 1996/11/06 23:14:34 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

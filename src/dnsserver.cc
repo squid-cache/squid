@@ -1,11 +1,11 @@
 
 /*
- * $Id: dnsserver.cc,v 1.27 1996/11/04 18:12:27 wessels Exp $
+ * $Id: dnsserver.cc,v 1.28 1996/11/06 23:14:29 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

@@ -1,11 +1,11 @@
 
 /*
- * $Id: client_side.cc,v 1.59 1996/11/06 22:18:11 wessels Exp $
+ * $Id: client_side.cc,v 1.60 1996/11/06 23:14:24 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

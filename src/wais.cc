@@ -1,11 +1,11 @@
 
 /*
- * $Id: wais.cc,v 1.52 1996/11/05 17:08:34 wessels Exp $
+ * $Id: wais.cc,v 1.53 1996/11/06 23:15:07 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

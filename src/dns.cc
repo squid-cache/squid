@@ -1,10 +1,10 @@
 /*
- * $Id: dns.cc,v 1.22 1996/11/04 18:12:26 wessels Exp $
+ * $Id: dns.cc,v 1.23 1996/11/06 23:14:28 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

@@ -1,10 +1,10 @@
 /*
- * $Id: cache_cf.cc,v 1.132 1996/11/06 22:21:27 wessels Exp $
+ * $Id: cache_cf.cc,v 1.133 1996/11/06 23:14:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

@@ -1,11 +1,11 @@
 
 /*
- * $Id: getfullhostname.c,v 1.11 1996/11/04 18:14:01 wessels Exp $
+ * $Id: getfullhostname.c,v 1.12 1996/11/06 23:14:13 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

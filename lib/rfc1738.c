@@ -1,10 +1,10 @@
 /*
- * $Id: rfc1738.c,v 1.7 1996/11/04 18:14:03 wessels Exp $
+ * $Id: rfc1738.c,v 1.8 1996/11/06 23:14:15 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

@@ -1,11 +1,11 @@
 
 /*
- * $Id: stat.cc,v 1.99 1996/11/05 17:08:26 wessels Exp $
+ * $Id: stat.cc,v 1.100 1996/11/06 23:14:57 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

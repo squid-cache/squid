@@ -1,10 +1,10 @@
 /*
- * $Id: gopher.cc,v 1.62 1996/11/05 17:08:10 wessels Exp $
+ * $Id: gopher.cc,v 1.63 1996/11/06 23:14:36 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

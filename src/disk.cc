@@ -1,10 +1,10 @@
 /*
- * $Id: disk.cc,v 1.39 1996/11/06 08:17:31 wessels Exp $
+ * $Id: disk.cc,v 1.40 1996/11/06 23:14:27 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

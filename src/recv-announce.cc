@@ -1,10 +1,10 @@
 /*
- * $Id: recv-announce.cc,v 1.11 1996/10/09 15:34:35 wessels Exp $
+ * $Id: recv-announce.cc,v 1.12 1996/11/06 23:14:51 wessels Exp $
  *
  * DEBUG: section 0     Announement Server
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

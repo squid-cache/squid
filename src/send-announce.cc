@@ -1,11 +1,11 @@
 
 /*
- * $Id: send-announce.cc,v 1.22 1996/11/04 18:13:01 wessels Exp $
+ * $Id: send-announce.cc,v 1.23 1996/11/06 23:14:54 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the

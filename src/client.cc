@@ -1,11 +1,11 @@
 
 /*
- * $Id: client.cc,v 1.14 1996/11/05 17:08:01 wessels Exp $
+ * $Id: client.cc,v 1.15 1996/11/06 23:14:23 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
  *
- * SQUID Internet Object Cache  http://www.nlanr.net/Squid/
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
  *
  *  Squid is the result of efforts by numerous individuals from the
