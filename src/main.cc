@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.24 1996/04/09 18:18:50 wessels Exp $ */
+/* $Id: main.cc,v 1.25 1996/04/09 18:20:28 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -320,8 +320,8 @@ int main(argc, argv)
 	    }
 	    if ((n = getAnnounceRate()) > 0) {
 		if (cached_curtime > last_announce + n)
-			send_announce();
-			last_announce = cached_curtime;
+		    send_announce();
+		last_announce = cached_curtime;
 	    }
 	    /* house keeping */
 	    break;
