@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.126 2002/10/14 08:16:59 robertc Exp $
+ * $Id: ssl.cc,v 1.127 2002/10/14 08:51:03 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -138,7 +138,7 @@ sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
     assert(fd == sslState->server.fd);
     errno = 0;
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(sslState->delayId, 1, read_sz);
+    len = delayBytesWanted(sslState->delayId, 1, len);
 #endif
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
     if (errcode == COMM_ERR_CLOSING) {
