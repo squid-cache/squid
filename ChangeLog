@@ -5,7 +5,7 @@ UPCOMING CHANGES:
 	- Experiment with returning network probe measurments in ICP
 	  replies.
 
-Changes to squid-1.1.beta16 ():
+Changes to squid-1.1.beta16 (November 8, 1996):
 
 	- Fixed type of Config.level{One,Two}Dirs.
 	- Fixed calling storeRegister and storeUnregister with NULL a entry.
