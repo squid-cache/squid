@@ -47,6 +47,8 @@ SOFTWARE.
 
 #include "util.h"
 
+#define free +
+
 /* A quoted string value-- too long for a general "token" */
 char *quoted_string_buffer;
 
@@ -524,11 +526,11 @@ do_subtree(struct tree *root, struct node **nodes)
     oldnp = NULL;
     for (np = child_list; np; np = np->next) {
 	if (oldnp)
-	    free(oldnp);
+	    xfree(oldnp);
 	oldnp = np;
     }
     if (oldnp)
-	free(oldnp);
+	xfree(oldnp);
 }
 
 
@@ -601,9 +603,9 @@ free_node(struct node *np)
     while (ep) {
 	tep = ep;
 	ep = ep->next;
-	free((char *) tep);
+	xfree((char *) tep);
     }
-    free((char *) np);
+    xfree((char *) np);
 }
 
 /*
@@ -686,7 +688,7 @@ parse_objectid(FILE * fp, char *name)
 	/* free the oid array */
 	for (count = 0, op = oid; count < length; count++, op++) {
 	    if (op->label)
-		free(op->label);
+		xfree(op->label);
 	    op->label = 0;
 	}
 	return root;
@@ -1130,7 +1132,7 @@ parse_objecttype(FILE * fp, char *name)
     /* free oid array */
     for (count = 0; count < length; count++) {
 	if (oid[count].label)
-	    free(oid[count].label);
+	    xfree(oid[count].label);
 	oid[count].label = 0;
     }
     return np;
@@ -1196,7 +1198,7 @@ parse_objectgroup(FILE * fp, char *name)
     /* free oid array */
     for (count = 0; count < length; count++) {
 	if (oid[count].label)
-	    free(oid[count].label);
+	    xfree(oid[count].label);
 	oid[count].label = 0;
     }
     return np;
@@ -1261,7 +1263,7 @@ parse_notificationDefinition(FILE * fp, char *name)
     /* free oid array */
     for (count = 0; count < length; count++) {
 	if (oid[count].label)
-	    free(oid[count].label);
+	    xfree(oid[count].label);
 	oid[count].label = 0;
     }
     return np;
@@ -1307,7 +1309,7 @@ parse_compliance(FILE * fp, char *name)
     /* free oid array */
     for (count = 0; count < length; count++) {
 	if (oid[count].label)
-	    free(oid[count].label);
+	    xfree(oid[count].label);
 	oid[count].label = 0;
     }
     return np;
@@ -1355,7 +1357,7 @@ parse_moduleIdentity(FILE * fp, char *name)
     /* free oid array */
     for (count = 0; count < length; count++) {
 	if (oid[count].label)
-	    free(oid[count].label);
+	    xfree(oid[count].label);
 	oid[count].label = 0;
     }
     return np;

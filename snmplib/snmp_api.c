@@ -64,6 +64,8 @@
 #include <arpa/inet.h>
 #endif
 
+#define free +
+
 #define DEBUG_SNMPTRACE		0	/* set to 1 to print all SNMP actions */
 #define DEBUG_SNMPFULLDUMP	0	/* set to 1 to dump all SNMP packets */
 
@@ -440,7 +442,7 @@ free_one_request(struct snmp_internal_session *isp, struct request_list *orp)
     if (orp->pdu != NULL) {
 	snmp_free_pdu(orp->pdu);
     }
-    free((char *) orp);
+    xfree((char *) orp);
 }
 
 /*
@@ -456,7 +458,7 @@ free_request_list(struct request_list *rp)
 	rp = rp->next_request;
 	if (orp->pdu != NULL)
 	    snmp_free_pdu(orp->pdu);
-	free((char *) orp);
+	xfree((char *) orp);
     }
 }
 
@@ -486,15 +488,15 @@ snmp_close(struct snmp_session *session)
     /* If we found the session, free all data associated with it */
     if (slp) {
 	if (slp->session->community != NULL)
-	    free((char *) slp->session->community);
+	    xfree((char *) slp->session->community);
 	if (slp->session->peername != NULL)
-	    free((char *) slp->session->peername);
-	free((char *) slp->session);
+	    xfree((char *) slp->session->peername);
+	xfree((char *) slp->session);
 	if (slp->internal->sd != -1)
 	    close(slp->internal->sd);
 	free_request_list(slp->internal->requests);
-	free((char *) slp->internal);
-	free((char *) slp);
+	xfree((char *) slp->internal);
+	xfree((char *) slp);
     } else {
 	snmp_errno = SNMPERR_BAD_SESSION;
 	return 0;
@@ -902,19 +904,19 @@ snmp_free_pdu(struct snmp_pdu *pdu)
     vp = pdu->variables;
     while (vp) {
 	if (vp->name) {
-	    free((char *) vp->name);
+	    xfree((char *) vp->name);
 	}
 	if (vp->val.string) {
-	    free((char *) vp->val.string);
+	    xfree((char *) vp->val.string);
 	}
 	ovp = vp;
 	vp = vp->next_variable;
-	free((char *) ovp);
+	xfree((char *) ovp);
     }
     if (pdu->enterprise) {
-	free((char *) pdu->enterprise);
+	xfree((char *) pdu->enterprise);
     }
-    free((char *) pdu);
+    xfree((char *) pdu);
 }
 
 
