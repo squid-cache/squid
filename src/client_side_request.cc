@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.11 2003/01/28 06:18:13 robertc Exp $
+ * $Id: client_side_request.cc,v 1.12 2003/02/05 01:42:20 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -703,11 +703,13 @@ ClientRequestContext::checkNoCacheDone(int answer)
 {    
     acl_checklist = NULL;
     clientHttpRequest *http_ = http;
-    deleteSelf();
 
-    if (!cbdataReferenceValid (http_))
+    if (!cbdataReferenceValid (http_)) {
+	deleteSelf();
 	return;
+    }
     
+    deleteSelf();
     http_->request->flags.cachable = answer;
     http_->processRequest();
 }
