@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.253 2001/04/06 01:49:58 hno Exp $
+ * $Id: acl.cc,v 1.254 2001/06/14 19:10:29 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -42,9 +42,7 @@ static FILE *aclFile;
 static void aclParseDomainList(void *curlist);
 static void aclParseUserList(void **current);
 static void aclParseIpList(void *curlist);
-#if UNUSED_CODE
 static void aclParseIntlist(void *curlist);
-#endif
 #if SQUID_SNMP
 static void aclParseWordList(void *curlist);
 #endif
@@ -303,7 +301,6 @@ aclFindByName(const char *name)
     return NULL;
 }
 
-#if UNUSED_CODE
 static void
 aclParseIntlist(void *curlist)
 {
@@ -318,7 +315,6 @@ aclParseIntlist(void *curlist)
 	Tail = &q->next;
     }
 }
-#endif
 
 static void
 aclParseIntRange(void *curlist)
@@ -786,6 +782,8 @@ aclParseAclLine(acl ** head)
     case ACL_SRC_ASN:
     case ACL_MAXCONN:
     case ACL_DST_ASN:
+	aclParseIntlist(&A->data);
+	break;
 #if SRC_RTT_NOT_YET_FINISHED
     case ACL_NETDB_SRC_RTT:
 	aclParseIntlist(&A->data);
