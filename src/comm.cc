@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.53 1996/08/14 22:57:09 wessels Exp $
+ * $Id: comm.cc,v 1.54 1996/08/21 20:10:41 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1213,21 +1213,6 @@ static void Reserve_More_FDs()
 	debug(5, 0, "Don't you have a tiny open-file table size of %d\n",
 	    FD_SETSIZE - RESERVED_FD);
     }
-}
-
-int fd_of_first_client(e)
-     StoreEntry *e;
-{
-    int fd;
-
-    fd = e->mem_obj->fd_of_first_client;
-
-    if (fd > 0) {
-	if (e == fd_table[fd].store_entry) {
-	    return (fd);
-	}
-    }
-    return (-1);
 }
 
 /* Read from FD. */
