@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.300 1997/10/22 17:07:24 wessels Exp $
+ * $Id: store.cc,v 1.301 1997/10/22 17:08:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1615,10 +1615,10 @@ storeGetMemSpace(int size)
 	if (sm_stats.n_pages_in_use + pages_needed < store_pages_low)
 	    break;
     }
-    debug(20, 0) ("storeGetMemSpace stats:\n");
-    debug(20, 0) ("  %6d HOT objects\n", meta_data.hot_vm);
-    debug(20, 0) ("  %6d were purged\n", n_purged);
-    debug(20, 0) ("  %6d were released\n", n_released);
+    debug(20, 3) ("storeGetMemSpace stats:\n");
+    debug(20, 3) ("  %6d HOT objects\n", meta_data.hot_vm);
+    debug(20, 3) ("  %6d were purged\n", n_purged);
+    debug(20, 3) ("  %6d were released\n", n_released);
 }
 
 static int
