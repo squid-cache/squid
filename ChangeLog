@@ -4,6 +4,10 @@
 	  clientRedirectDone() (Michael O'Reilly).
 	- Workaround for Solaris pthreads closing FD 0 upon fork()
 	  (Michael O'Reilly).
+	- Fixed shutdown bug with outgoing UDP sockets; we need to
+	  disable their read handlers.
+	- For comm_poll(), use the fast 50 msec timeout only when
+	  USE_ASYNC_IO is defined.
 
 Changes to squid-1.2.beta10 (Jan 1, 1998):
 
