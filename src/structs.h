@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.474 2003/07/15 11:33:22 robertc Exp $
+ * $Id: structs.h,v 1.475 2003/07/17 22:22:53 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1795,6 +1795,14 @@ struct _StatCounters
     }
 
     icp;
+
+    struct
+    {
+        int pkts_sent;
+        int pkts_recv;
+    }
+
+    htcp;
 
     struct
     {
