@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.323 2003/06/19 18:56:59 hno Exp $
+# $Id: cf.data.pre,v 1.324 2003/06/19 21:28:50 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -643,7 +643,7 @@ TYPE: hostdomaintype
 DEFAULT: none
 LOC: none
 DOC_START
-	usage: neighbor_type_domain parent|sibling domain domain ...
+	usage: neighbor_type_domain neighbor parent|sibling domain domain ...
 
 	Modifying the neighbor type for specific domains is now
 	possible.  You can treat some domains differently than the the
