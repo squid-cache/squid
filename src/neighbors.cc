@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.238 1998/08/26 19:53:40 wessels Exp $
+ * $Id: neighbors.cc,v 1.239 1998/08/26 21:42:05 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -833,17 +833,13 @@ peerFindByName(const char *name)
 int
 neighborUp(const peer * p)
 {
-    int rc = 0;
     if (!p->tcp_up)
-	rc = 0;
-    else if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
-	rc = 1;
-    else if (p->stats.last_query - p->stats.last_reply >= Config.Timeout.deadPeer)
-	rc = 0;
-    else
-	rc = 1;
-    debug(1, 1) ("neighborUp: %s is %s\n", p->host, rc ? "UP" : "DOWN");
-    return rc;
+	return 0;
+    if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
+	return 1;
+    if (p->stats.last_query - p->stats.last_reply >= Config.Timeout.deadPeer)
+	return 0;
+    return 1;
 }
 
 void
@@ -1242,5 +1238,6 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct soc
 	return;
     }
     debug(15, 1) ("neighborsHtcpReply: e = %p\n", e);
+    mem->icp_reply_callback(p, ntype, PROTO_HTCP, htcp, mem->ircb_data);
 }
 #endif
