@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.83 1997/01/18 06:03:26 wessels Exp $
+ * $Id: client_side.cc,v 1.84 1997/01/23 17:29:10 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -108,7 +108,7 @@ clientProxyAuthCheck(icpStateData * icpState)
 	    return 1;
     proxy_user = proxyAuthenticate(icpState->request_hdr);
     xstrncpy(icpState->ident.ident, proxy_user, ICP_IDENT_SZ);
-    debug(33, 6, "jrmt: user = %s\n", icpState->ident.ident);
+    debug(33, 6, "clientProxyAuthCheck: user = %s\n", icpState->ident.ident);
 
     if (strcmp(icpState->ident.ident, dash_str) == 0)
 	return 0;
@@ -307,7 +307,7 @@ proxyAuthenticate(const char *headers)
      * headers sent by the client
      */
     if ((s = mime_get_header(headers, "Proxy-authorization:")) == NULL) {
-	debug(33, 5, "jrmt: Can't find authorization header\n");
+	debug(33, 5, "proxyAuthenticate: Can't find authorization header\n");
 	return (dash_str);
     }
     /* Skip the 'Basic' part */
@@ -319,7 +319,7 @@ proxyAuthenticate(const char *headers)
 
     xstrncpy(sent_user, clear_userandpw, ICP_IDENT_SZ);
     strtok(sent_user, ":");	/* Remove :password */
-    debug(33, 5, "jrmt: user = %s\n", sent_user);
+    debug(33, 5, "proxyAuthenticate: user = %s\n", sent_user);
 
     /* Look at the Last-modified time of the proxy.passwords
      * file every five minutes, to see if it's been changed via
@@ -329,17 +329,17 @@ proxyAuthenticate(const char *headers)
     current_time = time(NULL);
 
     if ((current_time - last_time) > CHECK_PROXY_FILE_TIME) {
-	debug(33, 5, "jrmt: checking password file %s hasn't changed\n", Config.proxyAuthFile);
+	debug(33, 5, "proxyAuthenticate: checking password file %s hasn't changed\n", Config.proxyAuthFile);
 
 	if (stat(Config.proxyAuthFile, &buf) == 0) {
 	    if (buf.st_mtime != change_time) {
-		debug(33, 0, "jrmt: reloading changed proxy authentication password file %s \n", Config.proxyAuthFile);
+		debug(33, 0, "proxyAuthenticate: reloading changed proxy authentication password file %s \n", Config.proxyAuthFile);
 		change_time = buf.st_mtime;
 
 		if (validated != 0) {
-		    debug(33, 5, "jrmt: invalidating old entries\n");
+		    debug(33, 5, "proxyAuthenticate: invalidating old entries\n");
 		    for (i = 0, hashr = hash_first(validated); hashr; hashr = hash_next(validated)) {
-			debug(33, 6, "jrmt: deleting %s\n", hashr->key);
+			debug(33, 6, "proxyAuthenticate: deleting %s\n", hashr->key);
 			hash_delete(validated, hashr->key);
 		    }
 		} else {
@@ -362,10 +362,10 @@ proxyAuthenticate(const char *headers)
 		user = strtok(passwords, ":");
 		passwd = strtok(NULL, "\n");
 
-		debug(33, 5, "jrmt: adding new passwords to hash table\n");
+		debug(33, 5, "proxyAuthenticate: adding new passwords to hash table\n");
 		while (user != NULL) {
 		    if (strlen(user) > 1 && strlen(passwd) > 1) {
-			debug(33, 6, "jrmt: adding %s, %s to hash table\n", user, passwd);
+			debug(33, 6, "proxyAuthenticate: adding %s, %s to hash table\n", user, passwd);
 			hash_insert(validated, xstrdup(user), (void *) xstrdup(passwd));
 		    }
 		    user = strtok(NULL, ":");
@@ -386,7 +386,7 @@ proxyAuthenticate(const char *headers)
     hashr = hash_lookup(validated, sent_user);
     if (hashr == NULL) {
 	/* User doesn't exist; deny them */
-	debug(33, 4, "jrmt: user %s doesn't exist\n", sent_user);
+	debug(33, 4, "proxyAuthenticate: user %s doesn't exist\n", sent_user);
 	xfree(clear_userandpw);
 	return (dash_str);
     }
@@ -395,17 +395,17 @@ proxyAuthenticate(const char *headers)
 
     /* See if we've already validated them */
     if (strcmp(hashr->item, passwd) == 0) {
-	debug(33, 5, "jrmt: user %s previously validated\n", sent_user);
+	debug(33, 5, "proxyAuthenticate: user %s previously validated\n", sent_user);
 	xfree(clear_userandpw);
 	return sent_user;
     }
     if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
 	/* Passwords differ, deny access */
-	debug(33, 4, "jrmt: authentication failed: user %s passwords differ\n", sent_user);
+	debug(33, 4, "proxyAuthenticate: authentication failed: user %s passwords differ\n", sent_user);
 	xfree(clear_userandpw);
 	return (dash_str);
     }
-    debug(33, 5, "jrmt: user %s validated\n", sent_user);
+    debug(33, 5, "proxyAuthenticate: user %s validated\n", sent_user);
     hash_delete(validated, sent_user);
     hash_insert(validated, xstrdup(sent_user), (void *) xstrdup(passwd));
 
