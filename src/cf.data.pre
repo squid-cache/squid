@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.241 2001/11/23 23:38:52 hno Exp $
+# $Id: cf.data.pre,v 1.242 2001/12/01 18:03:10 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1723,11 +1723,20 @@ DOC_END
 NAME: request_timeout
 TYPE: time_t
 LOC: Config.Timeout.request
-DEFAULT: 30 seconds
+DEFAULT: 5 minutes
 DOC_START
-	How long to wait for an HTTP request after connection
-	establishment.  For persistent connections, wait this long
-	after the previous request completes.
+	How long to wait for an HTTP request after initial
+	connection establishment.
+DOC_END
+
+
+NAME: persistent_request_timeout
+TYPE: time_t
+LOC: Config.Timeout.persistent_request
+DEFAULT: 1 minute
+DOC_START
+	How long to wait for the next HTTP request on a persistent
+	connection after the previous request completes.
 DOC_END
 
 
@@ -1750,7 +1759,7 @@ DOC_START
 	should probably change client_lifetime only as a last resort.
 	If you seem to have many client connections tying up
 	filedescriptors, we recommend first tuning the read_timeout,
-	request_timeout, pconn_timeout and quick_abort values.
+	request_timeout, persistent_request_timeout and quick_abort values.
 DOC_END
 
 NAME: half_closed_clients
