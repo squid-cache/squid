@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.197 1998/02/24 21:17:03 wessels Exp $
+ * $Id: ftp.cc,v 1.198 1998/02/25 16:57:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -303,7 +303,7 @@ ftpTimeout(int fd, void *data)
 	    storeAbort(entry, 0);
 	}
     }
-    if (ftpState->data.fd >= 0) {
+    if (ftpState->data.fd > -1) {
 	comm_close(ftpState->data.fd);
 	ftpState->data.fd = -1;
     }
@@ -1817,10 +1817,13 @@ ftpReadRetr(FtpStateData * ftpState)
 	    Config.Timeout.read);
 	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
-	/* Cancel the timeout on the Control socket and establish one
-	 * on the data socket */
+	/*
+	 * Cancel the timeout on the Control socket and establish one
+	 * on the data socket
+	 */
 	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
-	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout, ftpState);
+	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout,
+	    ftpState);
     } else if (code == 150) {
 	/* Accept data channel */
 	commSetSelect(ftpState->data.fd,
@@ -1828,7 +1831,13 @@ ftpReadRetr(FtpStateData * ftpState)
 	    ftpAcceptDataConnection,
 	    ftpState,
 	    Config.Timeout.read);
-	return;
+	/*
+	 * Cancel the timeout on the Control socket and establish one
+	 * on the data socket
+	 */
+	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
+	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout,
+	    ftpState);
     } else if (code >= 300) {
 	if (!EBIT_TEST(ftpState->flags, FTP_TRY_SLASH_HACK)) {
 	    /* Try this as a directory missing trailing slash... */
