@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.56 1998/09/23 21:25:11 glenn Exp $
+ * $Id: snmp_agent.cc,v 1.57 1998/09/23 23:15:53 glenn Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -109,10 +109,9 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 	Answer->val.string = (u_char *) xstrdup(Config.adminEmail);
 	break;
     case CONF_VERSION:
-	pp = "Squid";
 	Answer->type = ASN_OCTET_STR;
-	Answer->val_len = strlen(pp);
-	Answer->val.string = (u_char *) xstrdup(pp);
+	Answer->val_len = strlen(appname);
+	Answer->val.string = (u_char *) xstrdup(appname);
 	break;
     case CONF_VERSION_ID:
 	pp = SQUID_VERSION;
