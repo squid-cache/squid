@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.202 1998/08/17 23:00:42 wessels Exp $
+ * $Id: structs.h,v 1.203 1998/08/18 19:19:57 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -81,11 +81,7 @@ struct _acl_deny_info_list {
 #if USE_ARP_ACL
 struct _acl_arp_data {
     char eth[6];
-#ifndef USE_SPLAY_TREE
-    acl_arp_data *next;
-#endif
 };
-
 #endif
 
 struct _String {

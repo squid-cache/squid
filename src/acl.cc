@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.177 1998/08/17 23:26:58 wessels Exp $
+ * $Id: acl.cc,v 1.178 1998/08/18 19:19:54 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -34,10 +34,7 @@
  */
 
 #include "squid.h"
-
-#if defined(USE_SPLAY_TREE)
 #include "splay.h"
-#endif
 
 static int aclFromFile = 0;
 static FILE *aclFile;
@@ -66,15 +63,10 @@ static wordlist *aclDumpDomainList(void *data);
 static wordlist *aclDumpTimeSpecList(acl_time_data *);
 static wordlist *aclDumpRegexList(relist * data);
 static wordlist *aclDumpIntlistList(intlist * data);
-#ifndef USE_SPLAY_TREE
-static wordlist *aclDumpWordList(wordlist * data);
-#endif
 static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
 static wordlist *aclDumpProxyAuthList(acl_proxy_auth * data);
-#if USE_SPLAY_TREE
 static wordlist *aclDumpUnimplemented(void);
-#endif
 
 #if USE_ARP_ACL
 static int checkARP(u_long ip, char *eth);
@@ -83,18 +75,12 @@ static int aclMatchArp(void *dataptr, struct in_addr c);
 static wordlist *aclDumpArpList(acl_arp_data *);
 #endif
 
-#if defined(USE_SPLAY_TREE)
 static int aclIpNetworkCompare(const void *, splayNode *);
 static int aclHostDomainCompare(const void *, splayNode *);
 static int aclDomainCompare(const void *, splayNode *);
 #if USE_ARP_ACL
 static int aclArpNetworkCompare(const void *, splayNode *);
 #endif
-
-#else /* LINKED LIST */
-static void aclDestroyIpList(acl_ip_data * data);
-
-#endif /* USE_SPLAY_TREE */
 
 static void aclParseDomainList(void *curlist);
 static void aclParseIpList(void *curlist);
@@ -447,7 +433,6 @@ aclParseIpData(const char *t)
 /* aclParseIpList */
 /******************/
 
-#if defined(USE_SPLAY_TREE)
 static void
 aclParseIpList(void *curlist)
 {
@@ -462,26 +447,6 @@ aclParseIpList(void *curlist)
 	}
     }
 }
-
-#else
-static void
-aclParseIpList(void *curlist)
-{
-    char *t = NULL;
-    acl_ip_data **Tail;
-    acl_ip_data *q = NULL;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    while ((t = strtokFile())) {
-	q = aclParseIpData(t);
-	*(Tail) = q;
-	while (q != NULL) {
-	    Tail = &q->next;
-	    q = q->next;
-	}
-    }
-}
-
-#endif /* USE_SPLAY_TREE */
 
 static void
 aclParseTimeSpec(void *curlist)
@@ -615,7 +580,6 @@ aclParseWordList(void *curlist)
 /* aclParseDomainList */
 /**********************/
 
-#if defined(USE_SPLAY_TREE)
 static void
 aclParseDomainList(void *curlist)
 {
@@ -626,25 +590,6 @@ aclParseDomainList(void *curlist)
 	*Top = splay_insert(xstrdup(t), *Top, aclDomainCompare);
     }
 }
-
-#else
-static void
-aclParseDomainList(void *curlist)
-{
-    wordlist **Tail;
-    wordlist *q = NULL;
-    char *t = NULL;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    while ((t = strtokFile())) {
-	Tolower(t);
-	q = xcalloc(1, sizeof(wordlist));
-	q->key = xstrdup(t);
-	*(Tail) = q;
-	Tail = &q->next;
-    }
-}
-
-#endif /* USE_SPLAY_TREE */
 
 /* default proxy_auth timeout is 3600 seconds */
 #define PROXY_AUTH_TIMEOUT 3600
@@ -954,7 +899,6 @@ aclParseAccessLine(acl_access ** head)
 /* aclMatchIp */
 /**************/
 
-#if defined(USE_SPLAY_TREE)
 static int
 aclMatchIp(void *dataptr, struct in_addr c)
 {
@@ -965,66 +909,10 @@ aclMatchIp(void *dataptr, struct in_addr c)
     return !splayLastResult;
 }
 
-#else
-static int
-aclMatchIp(void *dataptr, struct in_addr c)
-{
-    acl_ip_data **D = dataptr;
-    acl_ip_data *data = *D;
-    struct in_addr h;
-    unsigned long lh, la1, la2;
-    acl_ip_data *first, *prev;
-
-    first = data;		/* remember first element, this will never be moved */
-    prev = NULL;		/* previous element in the list */
-    while (data) {
-	h.s_addr = c.s_addr & data->mask.s_addr;
-	debug(28, 3) ("aclMatchIp: h     = %s\n", inet_ntoa(h));
-	debug(28, 3) ("aclMatchIp: addr1 = %s\n", inet_ntoa(data->addr1));
-	debug(28, 3) ("aclMatchIp: addr2 = %s\n", inet_ntoa(data->addr2));
-	if (!data->addr2.s_addr) {
-	    if (h.s_addr == data->addr1.s_addr) {
-		debug(28, 3) ("aclMatchIp: returning 1\n");
-		if (prev != NULL) {
-		    /* shift the element just found to the second position
-		     * in the list */
-		    prev->next = data->next;
-		    data->next = first->next;
-		    first->next = data;
-		}
-		return 1;
-	    }
-	} else {
-	    /* This is a range check */
-	    lh = ntohl(h.s_addr);
-	    la1 = ntohl(data->addr1.s_addr);
-	    la2 = ntohl(data->addr2.s_addr);
-	    if (lh >= la1 && lh <= la2) {
-		debug(28, 3) ("aclMatchIp: returning 1\n");
-		if (prev != NULL) {
-		    /* shift the element just found to the second position
-		     * in the list */
-		    prev->next = data->next;
-		    data->next = first->next;
-		    first->next = data;
-		}
-		return 1;
-	    }
-	}
-	prev = data;
-	data = data->next;
-    }
-    debug(28, 3) ("aclMatchIp: returning 0\n");
-    return 0;
-}
-
-#endif /* USE_SPLAY_TREE */
-
 /**********************/
 /* aclMatchDomainList */
 /**********************/
 
-#if defined(USE_SPLAY_TREE)
 static int
 aclMatchDomainList(void *dataptr, const char *host)
 {
@@ -1037,34 +925,6 @@ aclMatchDomainList(void *dataptr, const char *host)
 	host, splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
-
-#else /* LINKED LIST */
-static int
-aclMatchDomainList(void *dataptr, const char *host)
-{
-    wordlist **Head = dataptr;
-    wordlist *data;
-    wordlist *prev = NULL;
-    if (host == NULL)
-	return 0;
-    debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
-    for (data = *Head; data; data = data->next) {
-	debug(28, 3) ("aclMatchDomainList: looking for '%s'\n", data->key);
-	if (matchDomainName(data->key, host)) {
-	    if (prev) {
-		/* shift the element just found to the top of the list */
-		prev->next = data->next;
-		data->next = *Head;
-		*Head = data;
-	    }
-	    return 1;
-	}
-	prev = data;
-    }
-    return 0;
-}
-
-#endif /* USE_SPLAY_TREE */
 
 int
 aclMatchRegex(relist * data, const char *word)
@@ -1643,26 +1503,9 @@ aclNBCheck(aclCheck_t * checklist, PF callback, void *callback_data)
 
 
 
-
-
-
-
 /*********************/
 /* Destroy functions */
 /*********************/
-
-#if !defined(USE_SPLAY_TREE)
-static void
-aclDestroyIpList(acl_ip_data * data)
-{
-    acl_ip_data *next = NULL;
-    for (; data; data = next) {
-	next = data->next;
-	safe_free(data);
-    }
-}
-
-#endif /* USE_SPLAY_TREE */
 
 static void
 aclDestroyTimeList(acl_time_data * data)
@@ -1716,19 +1559,11 @@ aclDestroyAcls(acl ** head)
 	case ACL_SRC_IP:
 	case ACL_DST_IP:
 	case ACL_SRC_ARP:
-#if defined (USE_SPLAY_TREE)
 	    splay_destroy(a->data, xfree);
-#else /* LINKED LIST */
-	    aclDestroyIpList(a->data);
-#endif
 	    break;
 	case ACL_DST_DOMAIN:
 	case ACL_SRC_DOMAIN:
-#if defined(USE_SPLAY_TREE)
 	    splay_destroy(a->data, xfree);
-#else /* LINKED LIST */
-	    wordlistDestroy((wordlist **) & a->data);
-#endif
 	    break;
 	case ACL_USER:
 	    wordlistDestroy((wordlist **) & a->data);
@@ -1816,7 +1651,6 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 
 /* compare two domains */
 
-#if defined(USE_SPLAY_TREE)
 static int
 aclDomainCompare(const void *data, splayNode * n)
 {
@@ -1835,11 +1669,8 @@ aclDomainCompare(const void *data, splayNode * n)
     return (d1[l1] - d2[l2]);
 }
 
-#endif /* SPLAY_TREE */
-
 /* compare a host and a domain */
 
-#if defined(USE_SPLAY_TREE)
 static int
 aclHostDomainCompare(const void *data, splayNode * n)
 {
@@ -1868,8 +1699,6 @@ aclHostDomainCompare(const void *data, splayNode * n)
     return (h[l1] - d[l2]);
 }
 
-#endif /* USE_SPLAY_TREE */
-
 /* compare two network specs
  * 
  * NOTE: this is very similar to aclIpNetworkCompare and it's not yet
@@ -1883,7 +1712,6 @@ aclHostDomainCompare(const void *data, splayNode * n)
 
 /* compare an address and a network spec */
 
-#if defined(USE_SPLAY_TREE)
 static int
 aclIpNetworkCompare(const void *a, splayNode * n)
 {
@@ -1910,48 +1738,19 @@ aclIpNetworkCompare(const void *a, splayNode * n)
     }
     return rc;
 }
-#endif /* USE_SPLAY_TREE */
-
 
 /* compare functions for different kind of tree search algorithms */
 
 static wordlist *
 aclDumpIpList(acl_ip_data * ip)
 {
-#if USE_SPLAY_TREE
     return aclDumpUnimplemented();
-#else
-    wordlist *W = NULL;
-    wordlist **T = &W;
-    MemBuf mb;
-
-    memBufDefInit(&mb);
-    while (ip != NULL) {
-	wordlist *w = xcalloc(1, sizeof(wordlist));
-	memBufReset(&mb);
-	memBufPrintf(&mb, "%s", inet_ntoa(ip->addr1));
-	if (ip->addr2.s_addr != any_addr.s_addr)
-	    memBufPrintf(&mb, "-%s", inet_ntoa(ip->addr2));
-	if (ip->mask.s_addr != no_addr.s_addr)
-	    memBufPrintf(&mb, "/%s", inet_ntoa(ip->mask));
-	w->key = xstrdup(mb.buf);
-	*T = w;
-	T = &w->next;
-	ip = ip->next;
-    }
-    memBufClean(&mb);
-    return W;
-#endif
 }
 
 static wordlist *
 aclDumpDomainList(void *data)
 {
-#if USE_SPLAY_TREE
     return aclDumpUnimplemented();
-#else
-    return aclDumpWordList(data);
-#endif
 }
 
 static wordlist *
@@ -2015,24 +1814,6 @@ aclDumpIntlistList(intlist * data)
     return W;
 }
 
-#ifndef USE_SPLAY_TREE
-static wordlist *
-aclDumpWordList(wordlist * data)
-{
-    wordlist *W = NULL;
-    wordlist **T = &W;
-    wordlist *w;
-    while (data != NULL) {
-	w = xcalloc(1, sizeof(wordlist));
-	w->key = xstrdup(data->key);
-	*T = w;
-	T = &w->next;
-	data = data->next;
-    }
-    return W;
-}
-#endif
-
 static wordlist *
 aclDumpProtoList(intlist * data)
 {
@@ -2080,7 +1861,6 @@ aclDumpProxyAuthList(acl_proxy_auth * data)
     return W;
 }
 
-#if USE_SPLAY_TREE
 static wordlist *
 aclDumpUnimplemented(void)
 {
@@ -2088,7 +1868,6 @@ aclDumpUnimplemented(void)
     w->key = xstrdup("UNIMPLEMENTED");
     return w;
 }
-#endif
 
 wordlist *
 aclDumpGeneric(const acl * a)
@@ -2222,7 +2001,6 @@ aclParseArpData(const char *t)
 /*******************/
 /* aclParseArpList */
 /*******************/
-#if defined(USE_SPLAY_TREE)
 static void
 aclParseArpList(void *curlist)
 {
@@ -2235,28 +2013,10 @@ aclParseArpList(void *curlist)
 	*Top = splay_insert(q, *Top, aclArpNetworkCompare);
     }
 }
-#else
-static void
-aclParseArpList(void *curlist)
-{
-    char *t = NULL;
-    acl_arp_data **Tail;
-    acl_arp_data *q = NULL;
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    while ((t = strtokFile())) {
-	if ((q = aclParseArpData(t)) == NULL)
-	    continue;
-	*(Tail) = q;
-	Tail = &q->next;
-    }
-}
-#endif /* USE_SPLAY_TREE */
-
 
 /***************/
 /* aclMatchArp */
 /***************/
-#if defined(USE_SPLAY_TREE)
 static int
 aclMatchArp(void *dataptr, struct in_addr c)
 {
@@ -2266,38 +2026,6 @@ aclMatchArp(void *dataptr, struct in_addr c)
 	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
 }
-#else
-static int
-aclMatchArp(void *dataptr, struct in_addr c)
-{
-    acl_arp_data **D = dataptr;
-    acl_arp_data *data = *D;
-    acl_arp_data *first, *prev;
-    first = data;		/* remember first element, will never be moved */
-    prev = NULL;		/* previous element in the list */
-    while (data) {
-	debug(28, 3) ("aclMatchArp: ip    = %s\n", inet_ntoa(c));
-	debug(28, 3) ("aclMatchArp: arp   = %x:%x:%x:%x:%x:%x\n",
-	    data->eth[0], data->eth[1], data->eth[2], data->eth[3],
-	    data->eth[4], data->eth[5]);
-	if (checkARP(c.s_addr, data->eth)) {
-	    debug(28, 3) ("aclMatchArp: returning 1\n");
-	    if (prev != NULL) {
-		/* shift the element just found to the second position
-		 * in the list */
-		prev->next = data->next;
-		data->next = first->next;
-		first->next = data;
-	    }
-	    return 1;
-	}
-	prev = data;
-	data = data->next;
-    }
-    debug(28, 3) ("aclMatchArp: returning 0\n");
-    return 0;
-}
-#endif /* USE_SPLAY_TREE */
 
 #ifdef _SQUID_LINUX_
 static int
