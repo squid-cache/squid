@@ -75,7 +75,6 @@ icpCreateMessage(
     char *urloffset = NULL;
     int buf_len;
     buf_len = sizeof(icp_common_t) + strlen(url) + 1;
-    assert(reqnum);
     if (opcode == ICP_OP_QUERY)
 	buf_len += sizeof(u_num32);
     buf = xcalloc(buf_len, 1);
