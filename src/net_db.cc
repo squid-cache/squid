@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.62 1998/02/05 20:54:38 wessels Exp $
+ * $Id: net_db.cc,v 1.63 1998/02/05 21:10:36 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ netdbHashDelete(const char *key)
 static void
 netdbHostInsert(netdbEntry * n, const char *hostname)
 {
-    net_db_name *x = memAllocate(MEM_NET_DB_NAME, 0);
+    net_db_name *x = memAllocate(MEM_NET_DB_NAME, 1);
     x->name = xstrdup(hostname);
     x->next = n->hosts;
     n->hosts = x;
@@ -197,7 +197,7 @@ netdbAdd(struct in_addr addr)
     if (memInUse(MEM_NETDBENTRY) > Config.Netdb.high)
 	netdbPurgeLRU();
     if ((n = netdbLookupAddr(addr)) == NULL) {
-	n = memAllocate(MEM_NETDBENTRY, 0);
+	n = memAllocate(MEM_NETDBENTRY, 1);
 	netdbHashInsert(n, addr);
     }
     return n;
@@ -436,7 +436,7 @@ netdbReloadState(void)
 	if ((t = strtok(NULL, w_space)) == NULL)
 	    continue;
 	N.last_use_time = (time_t) atoi(t);
-	n = memAllocate(MEM_NETDBENTRY, 0);
+	n = memAllocate(MEM_NETDBENTRY, 1);
 	xmemcpy(n, &N, sizeof(netdbEntry));
 	netdbHashInsert(n, addr);
 	while ((t = strtok(NULL, w_space)) != NULL) {
