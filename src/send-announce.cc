@@ -1,4 +1,4 @@
-/* $Id: send-announce.cc,v 1.8 1996/04/11 04:47:24 wessels Exp $ */
+/* $Id: send-announce.cc,v 1.9 1996/04/16 05:05:29 wessels Exp $ */
 
 /*
  * DEBUG: Section 27          send-announce
@@ -30,8 +30,8 @@ void send_announce()
 	getUdpPortNum());
     strcat(sndbuf, tbuf);
     sprintf(tbuf, "generated %d [%s]\n",
-	(int) cached_curtime,
-	mkhttpdlogtime(&cached_curtime));
+	(int) squid_curtime,
+	mkhttpdlogtime(&squid_curtime));
     strcat(sndbuf, tbuf);
     l = strlen(sndbuf);
 

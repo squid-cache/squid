@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.18 1996/04/15 22:50:00 wessels Exp $
+#  $Id: Makefile.in,v 1.19 1996/04/16 05:05:16 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -47,10 +47,10 @@ LDFLAGS         = $(STD_LDFLAGS)
 LIBS		= -L../lib -lregex -lutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lutil $(XTRA_LIBS)
 
-PROGS		= cached 
+PROGS		= squid 
 UTILS		= client dnsserver ftpget
 CGIPROGS	= cachemgr.cgi
-OBJS	 	= acl.o background.o cache_cf.o cached_error.o comm.o \
+OBJS	 	= acl.o background.o cache_cf.o errorpage.o comm.o \
 		connect.o debug.o disk.o dynamic_array.o \
 		fdstat.o filemap.o ftp.o gopher.o \
 		hash.o http.o icp.o ipcache.o \
@@ -60,7 +60,7 @@ OBJS	 	= acl.o background.o cache_cf.o cached_error.o comm.o \
 		url.o wais.o $(XTRA_OBJS)
 
 DEFAULTS        = \
-	-DDEFAULT_CONFIG_FILE=\"$(sysconfdir)/cached.conf\" \
+	-DDEFAULT_CONFIG_FILE=\"$(sysconfdir)/squid.conf\" \
 	-DDEFAULT_FTPGET=\"$(bindir)/ftpget\" \
 	-DDEFAULT_DNSSERVER=\"$(bindir)/dnsserver\" \
 	-DDEFAULT_CACHE_LOG=\"$(prefix)/logs/cache.log\" \
@@ -70,7 +70,7 @@ DEFAULTS        = \
 
 all:	$(PROGS) $(UTILS) $(CGIPROGS)
 
-cached:	$(OBJS)
+squid:	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(CRYPT_LIB) $(LIBS)
 
 cache_cf.o: cache_cf.c
@@ -123,19 +123,15 @@ install: all install-mkdirs
 		echo $(INSTALL_BIN) $$f $(bindir); \
 		$(INSTALL_BIN) $$f $(bindir); \
 	done
-	@if test -f $(sysconfdir)/cached.conf ; then \
-		echo "$@ will not overwrite existing $(sysconfdir)/cached.conf" ; \
+	@if test -f $(sysconfdir)/squid.conf ; then \
+		echo "$@ will not overwrite existing $(sysconfdir)/squid.conf" ; \
 	else \
-		echo "$(INSTALL_FILE) cached.conf $(sysconfdir)"; \
-		$(INSTALL_FILE) cached.conf $(sysconfdir); \
+		echo "$(INSTALL_FILE) squid.conf $(sysconfdir)"; \
+		$(INSTALL_FILE) squid.conf $(sysconfdir); \
 	fi
 
 clean: 
-	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS)
+	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) squid.conf
 
 realclean:	clean
 	-rm -f Makefile
-
-tar:
-	-rm -f cache.tar
-	tar cf cache.tar *.c *.h cached.conf Makefile*

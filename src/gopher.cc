@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.25 1996/04/12 21:41:37 wessels Exp $ */
+/* $Id: gopher.cc,v 1.26 1996/04/16 05:05:22 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -567,7 +567,7 @@ int gopherReadReplyTimeout(fd, data)
     StoreEntry *entry = NULL;
     entry = data->entry;
     debug(10, 4, "GopherReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
-    cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     if (data->icp_page_ptr)
 	put_free_4k_page(data->icp_page_ptr);
     if (data->icp_rwd_ptr)
@@ -584,7 +584,7 @@ void gopherLifetimeExpire(fd, data)
     StoreEntry *entry = NULL;
     entry = data->entry;
     debug(10, 4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     if (data->icp_page_ptr)
 	put_free_4k_page(data->icp_page_ptr);
     if (data->icp_rwd_ptr)
@@ -639,7 +639,7 @@ int gopherReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    gopherCloseAndFree(fd, data);
 	    return 0;
 	}
@@ -661,11 +661,11 @@ int gopherReadReply(fd, data)
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
-	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    gopherCloseAndFree(fd, data);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	cached_error_entry(entry,
+	squid_error_entry(entry,
 	    ERR_ZERO_SIZE_OBJECT,
 	    errno ? xstrerror() : NULL);
 	gopherCloseAndFree(fd, data);
@@ -675,7 +675,7 @@ int gopherReadReply(fd, data)
 	if (data->conversion != NORMAL)
 	    gopherEndHTML(data);
 	if (!(entry->flag & DELETE_BEHIND))
-	    entry->expires = cached_curtime + ttlSet(entry);
+	    entry->expires = squid_curtime + ttlSet(entry);
 	BIT_RESET(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	gopherCloseAndFree(fd, data);
@@ -705,7 +705,7 @@ int gopherReadReply(fd, data)
 	} else {
 	    storeAppend(entry, buf, len);
 	}
-	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	if (data->conversion != NORMAL)
 	    gopherEndHTML(data);
 	BIT_RESET(entry->flag, DELAY_SENDING);
@@ -744,7 +744,7 @@ void gopherSendComplete(fd, buf, size, errflag, data)
     debug(10, 5, "gopherSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	gopherCloseAndFree(fd, data);
 	if (buf)
 	    put_free_4k_page(buf);	/* Allocated by gopherSendRequest. */
@@ -859,7 +859,7 @@ int gopherStart(unusedfd, url, entry)
     /* Parse url. */
     if (gopher_url_parser(url, data->host, &data->port,
 	    &data->type_id, data->request)) {
-	cached_error_entry(entry, ERR_INVALID_URL, NULL);
+	squid_error_entry(entry, ERR_INVALID_URL, NULL);
 	gopherCloseAndFree(-1, data);
 	return COMM_ERROR;
     }
@@ -867,7 +867,7 @@ int gopherStart(unusedfd, url, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
-	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
+	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	gopherCloseAndFree(-1, data);
 	return COMM_ERROR;
     }
@@ -876,7 +876,7 @@ int gopherStart(unusedfd, url, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
 	debug(10, 4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
-	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
+	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	gopherCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
@@ -904,7 +904,7 @@ int gopherStart(unusedfd, url, entry)
     /* Open connection. */
     if ((status = comm_connect(sock, data->host, data->port)) != 0) {
 	if (status != EINPROGRESS) {
-	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    gopherCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {

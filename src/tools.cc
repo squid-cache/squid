@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.33 1996/04/15 22:54:55 wessels Exp $ */
+/* $Id: tools.cc,v 1.34 1996/04/16 05:05:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -8,7 +8,7 @@
 #include "squid.h"
 
 int do_mallinfo = 0;		/* don't do mallinfo() unless this gets set */
-time_t cached_curtime;
+time_t squid_curtime;
 struct timeval current_time;
 
 extern void serverConnectionsClose _PARAMS((void));
@@ -18,7 +18,7 @@ The Harvest Cache (version %s) died.\n\
 \n\
 You've encountered a fatal error in the Harvest Cache version %s.\n\
 If a core file was created (possibly in the swap directory),\n\
-please execute 'gdb cached core' or 'dbx cached core', then type 'where',\n\
+please execute 'gdb squid core' or 'dbx squid core', then type 'where',\n\
 and report the trace back to harvest-dvl@cs.colorado.edu.\n\
 \n\
 Thanks!\n"
@@ -39,7 +39,7 @@ void mail_warranty()
     sprintf(filename, "/tmp/mailin%d", (int) getpid());
     fp = fopen(filename, "w");
     if (fp != NULL) {
-	fprintf(fp, "From: cached\n");
+	fprintf(fp, "From: %s\n", appname);
 	fprintf(fp, "To: %s\n", getAdminEmail());
 	fprintf(fp, "Subject: %s\n", dead_msg());
 	fclose(fp);
@@ -339,9 +339,9 @@ void check_suid()
     if ((pwd = getpwnam(getEffectiveUser())) == NULL)
 	return;
     /* change current directory to swap space so we can get core */
-    if (chdir(swappath(0))) {
-	debug(21, 1, "Chdir Failed: Cached cannot write core file when it crash: %s\n",
-	    xstrerror());
+    if (chdir(swappath(0)))
+	debug(21, 0, "%s: %s\n", swappath(0), xstrerror());
+	fatal_dump("Cannot cd to swap directory?");
     }
     if (getEffectiveGroup() && (grp = getgrnam(getEffectiveGroup()))) {
 	setgid(grp->gr_gid);
@@ -402,7 +402,7 @@ void setMaxFD()
 time_t getCurrentTime()
 {
     gettimeofday(&current_time, NULL);
-    return cached_curtime = current_time.tv_sec;
+    return squid_curtime = current_time.tv_sec;
 }
 
 

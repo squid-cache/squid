@@ -1,4 +1,4 @@
-/* $Id: cachemgr.cc,v 1.5 1996/04/01 23:22:03 wessels Exp $ */
+/* $Id: cachemgr.cc,v 1.6 1996/04/16 05:05:18 wessels Exp $ */
 
 #include "squid.h"
 
@@ -76,7 +76,7 @@ void noargs_html()
     printf("<BR><STRONG>Operation :</STRONG>");
     printf("<SELECT NAME=\"operation\">\n");
     printf("<OPTION SELECTED VALUE=\"info\">Cache Information\n");
-    printf("<OPTION VALUE=\"cached.conf\">Cache Configuration File\n");
+    printf("<OPTION VALUE=\"squid.conf\">Cache Configuration File\n");
     printf("<OPTION VALUE=\"parameter\">Cache Parameters\n");
 #ifdef MENU_RESPONSETIME
     printf("<OPTION VALUE=\"responsetime\">Cache Response Time Histogram\n");
@@ -356,10 +356,10 @@ int main(int argc, char *argv[])
 	!strncmp(operation, "Cache Information", 17)) {
 	op = INFO;
 	sprintf(msg, "GET cache_object://%s/info\r\n", hostname);
-    } else if (!strncmp(operation, "cached.conf", 10) ||
+    } else if (!strncmp(operation, "squid.conf", 10) ||
 	!strncmp(operation, "Cache Configuration File", 24)) {
 	op = CACHED;
-	sprintf(msg, "GET cache_object://%s/cached.conf\r\n", hostname);
+	sprintf(msg, "GET cache_object://%s/squid.conf\r\n", hostname);
     } else if (!strncmp(operation, "server_list", 11) ||
 	!strncmp(operation, "Cache Server List", 17)) {
 	op = SERVER;
@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
     printf("<SELECT NAME=\"operation\">\n");
     printf("<OPTION SELECTED VALUE=\"%s\">Current\n", operation);
     printf("<OPTION VALUE=\"info\">Cache Information\n");
-    printf("<OPTION VALUE=\"cached.conf\">Cache Configuration File\n");
+    printf("<OPTION VALUE=\"squid.conf\">Cache Configuration File\n");
     printf("<OPTION VALUE=\"parameter\">Cache Parameters\n");
 #ifdef MENU_RESPONSETIME
     printf("<OPTION VALUE=\"responsetime\">Cache Response Time Histogram\n");

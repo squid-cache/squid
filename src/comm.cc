@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.24 1996/04/15 22:50:55 wessels Exp $ */
+/* $Id: comm.cc,v 1.25 1996/04/16 05:05:18 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -222,7 +222,7 @@ int comm_set_fd_lifetime(fd, lifetime)
 	return 0;
     if (lifetime < 0)
 	return fd_lifetime[fd] = -1;
-    return fd_lifetime[fd] = (int) cached_curtime + lifetime;
+    return fd_lifetime[fd] = (int) squid_curtime + lifetime;
 }
 
 int comm_get_fd_lifetime(fd)
@@ -463,7 +463,7 @@ void comm_set_stall(fd, delta)
 {
     if (fd < 0)
 	return;
-    fd_table[fd].stall_until = cached_curtime + delta;
+    fd_table[fd].stall_until = squid_curtime + delta;
 }
 
 
@@ -496,10 +496,10 @@ int comm_select(sec, failtime)
     /* use only 1 second granularity */
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
-    timeout = cached_curtime + sec;
+    timeout = squid_curtime + sec;
 
     while (timeout > getCurrentTime()) {
-	if (0 < failtime && failtime < cached_curtime)
+	if (0 < failtime && failtime < squid_curtime)
 	    break;
 
 	FD_ZERO(&readfds);
@@ -510,7 +510,7 @@ int comm_select(sec, failtime)
 	maxfd = fdstat_biggest_fd() + 1;
 	for (i = 0; i < maxfd; i++) {
 	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler && fd_table[i].stall_until <= cached_curtime) {
+	    if (fd_table[i].read_handler && fd_table[i].stall_until <= squid_curtime) {
 		nfds++;
 		FD_SET(i, &readfds);
 	    }
@@ -546,12 +546,12 @@ int comm_select(sec, failtime)
 	    continue;
 
 	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
-	    num, cached_curtime);
+	    num, squid_curtime);
 
 	/* Check lifetime and timeout handlers ONCE each second.
 	 * Replaces brain-dead check every time through the loop! */
-	if (cached_curtime > last_timeout) {
-	    last_timeout = cached_curtime;
+	if (squid_curtime > last_timeout) {
+	    last_timeout = squid_curtime;
 	    checkTimeouts();
 	    checkLifetimes();
 	}
@@ -649,7 +649,7 @@ int comm_select(sec, failtime)
 	return COMM_OK;
     }
 
-    debug(5, 8, "comm_select: time out: %d.\n", cached_curtime);
+    debug(5, 8, "comm_select: time out: %d.\n", squid_curtime);
     return COMM_TIMEOUT;
 }
 
@@ -856,9 +856,9 @@ struct in_addr *getAddress(name)
 /*
  *  the fd_lifetime is used as a hardlimit to timeout dead sockets.
  *  The basic problem is that many WWW clients are abusive and
- *  it results in cached having lots of CLOSE_WAIT states.  Until
+ *  it results in squid having lots of CLOSE_WAIT states.  Until
  *  we can find a better solution, we give all asciiPort or
- *  cached initiated clients a maximum lifetime.
+ *  squid initiated clients a maximum lifetime.
  */
 int comm_init()
 {
@@ -962,10 +962,10 @@ static void checkTimeouts()
     for (fd = 0; fd < maxfd; ++fd) {
 	f = &fd_table[fd];
 	if ((f->timeout_handler) &&
-	    (f->timeout_time <= cached_curtime)) {
+	    (f->timeout_time <= squid_curtime)) {
 	    tmp = f->timeout_handler;
 	    debug(5, 5, "comm_select: timeout on socket %d at %d\n",
-		fd, cached_curtime);
+		fd, squid_curtime);
 	    f->timeout_handler = 0;
 	    tmp(fd, f->timeout_data);
 	}
@@ -984,7 +984,7 @@ static void checkLifetimes()
     /* scan for hardwired lifetime expires, do the timeouts first though */
     for (fd = 0; fd < max_fd; fd++) {
 	lft = comm_get_fd_lifetime(fd);
-	if ((lft != -1) && (lft < cached_curtime)) {
+	if ((lft != -1) && (lft < squid_curtime)) {
 	    if (fd_table[fd].lifetime_handler != NULL) {
 		use_lifetime_handler = 1;
 		tmp_local = fd_table[fd].lifetime_handler;
@@ -1004,15 +1004,15 @@ static void checkLifetimes()
 	    if (tmp_local) {
 		if (use_lifetime_handler) {
 		    debug(5, 2, "comm_select: FD %d lifetime expire: %d < %d (Lifetime handler %p)\n",
-			fd, lft, cached_curtime, tmp_local);
+			fd, lft, squid_curtime, tmp_local);
 		} else {
 		    debug(5, 2, "comm_select: FD %d lifetime expire: %d < %d (%s handler %p)\n",
-			fd, lft, cached_curtime,
+			fd, lft, squid_curtime,
 			use_read ? "read" : "write", tmp_local);
 		}
 	    } else {
 		debug(5, 1, "comm_select: FD %d lifetime expire: %d < %d (handler not available.)\n",
-		    fd, lft, cached_curtime);
+		    fd, lft, squid_curtime);
 	    }
 
 	    if (tmp_local != NULL) {
@@ -1030,7 +1030,7 @@ static void checkLifetimes()
 		if (fd_table[fd].openned) {
 		    /* hmm.. still openned. do full comm_close */
 		    debug(5, 5, "comm_select: FD %d lifetime expire: %d < %d : Handler did not close the socket.\n comm_select will do.\n",
-			fd, lft, cached_curtime);
+			fd, lft, squid_curtime);
 		    comm_close(fd);
 		} else {
 		    /* seems like handle closed it. 
@@ -1043,7 +1043,7 @@ static void checkLifetimes()
 	    } else {
 		/* no handle. do full comm_close */
 		debug(5, 5, "comm_select: FD %d lifetime expire: %d < %d : No handler to close the socket.\n comm_select will do.\n",
-		    fd, lft, cached_curtime);
+		    fd, lft, squid_curtime);
 		comm_close(fd);
 	    }
 	}

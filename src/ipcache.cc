@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.23 1996/04/14 03:06:34 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.24 1996/04/16 05:05:24 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -120,7 +120,7 @@ int ipcache_create_dnsserver(command)
     static int n_dnsserver = 0;
     char socketname[256];
     int cfd;			/* socket for child (dnsserver) */
-    int sfd;			/* socket for server (cached) */
+    int sfd;			/* socket for server (squid) */
     int fd;
 
     if ((cfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -250,7 +250,7 @@ ipcache_entry *ipcache_get(name)
     if (result == NULL)
 	return NULL;
 
-    if (((result->timestamp + result->ttl) < cached_curtime) &&
+    if (((result->timestamp + result->ttl) < squid_curtime) &&
 	(result->status != PENDING)) {	/* expired? */
 	ipcache_release(result);
 	return NULL;
@@ -445,11 +445,11 @@ void ipcache_add(name, e, data, cached)
 	}
 	e->entry.h_length = data->h_length;
 	e->entry.h_name = xstrdup(data->h_name);
-	e->lastref = e->timestamp = cached_curtime;
+	e->lastref = e->timestamp = squid_curtime;
 	e->status = CACHED;
 	e->ttl = DnsPositiveTtl;
     } else {
-	e->lastref = e->timestamp = cached_curtime;
+	e->lastref = e->timestamp = squid_curtime;
 	e->status = NEGATIVE_CACHED;
 	e->ttl = getNegativeDNSTTL();
     }
@@ -508,11 +508,11 @@ void ipcache_update_content(name, e, data, cached)
 
 	e->entry.h_length = data->h_length;
 	e->entry.h_name = xstrdup(data->h_name);
-	e->lastref = e->timestamp = cached_curtime;
+	e->lastref = e->timestamp = squid_curtime;
 	e->status = CACHED;
 	e->ttl = DnsPositiveTtl;
     } else {
-	e->lastref = e->timestamp = cached_curtime;
+	e->lastref = e->timestamp = squid_curtime;
 	e->status = NEGATIVE_CACHED;
 	e->ttl = getNegativeDNSTTL();
     }
@@ -528,7 +528,7 @@ void ipcache_call_pending(entry)
     IpPending *p;
     int nhandler = 0;
 
-    entry->lastref = cached_curtime;
+    entry->lastref = squid_curtime;
 
     while (entry->pending_head != NULL) {
 	p = entry->pending_head;
@@ -719,7 +719,7 @@ int ipcache_parsebuffer(buf, offset, data)
 	 *  Start parsing...
 	 */
 	if (strstr(line_head->line, "$alive")) {
-	    data->answer = cached_curtime;
+	    data->answer = squid_curtime;
 	    free_lines(line_head);
 	    debug(14, 10, "ipcache_parsebuffer: $alive succeeded.\n");
 	} else if (strstr(line_head->line, "$fail")) {
@@ -739,7 +739,7 @@ int ipcache_parsebuffer(buf, offset, data)
 	    } else {
 		plist = globalpending_search(token, data->global_pending);
 		if (plist) {
-		    plist->entry->lastref = plist->entry->timestamp = cached_curtime;
+		    plist->entry->lastref = plist->entry->timestamp = squid_curtime;
 		    plist->entry->ttl = getNegativeDNSTTL();
 		    plist->entry->status = NEGATIVE_CACHED;
 		    ipcache_call_pending(plist->entry);
@@ -768,7 +768,7 @@ int ipcache_parsebuffer(buf, offset, data)
 		    if (e->status != PENDING) {
 			debug(14, 4, "ipcache_parsebuffer: DNS record already resolved.\n");
 		    } else {
-			e->lastref = e->timestamp = cached_curtime;
+			e->lastref = e->timestamp = squid_curtime;
 			e->ttl = DnsPositiveTtl;
 			e->status = CACHED;
 
@@ -1089,7 +1089,7 @@ void ipcacheOpenServers()
 	    dns_child_table[i]->id = i;
 	    dns_child_table[i]->inpipe = dnssocket;
 	    dns_child_table[i]->outpipe = dnssocket;
-	    dns_child_table[i]->lastcall = cached_curtime;
+	    dns_child_table[i]->lastcall = squid_curtime;
 	    dns_child_table[i]->pending_count = 0;
 	    dns_child_table[i]->size = IP_INBUF - 1;	/* spare one for \0 */
 	    dns_child_table[i]->offset = 0;
@@ -1272,7 +1272,7 @@ struct hostent *ipcache_gethostbyname(name)
     }
     /* cache hit */
     debug(14, 5, "ipcache_gethostbyname: Hit for '%s'.\n", name ? name : "NULL");
-    result->lastref = cached_curtime;
+    result->lastref = squid_curtime;
     return (result->status == CACHED) ? &(result->entry) : NULL;
 }
 
@@ -1294,7 +1294,7 @@ void stat_ipcache_get(sentry, obj)
 
     for (e = ipcache_GetFirst(); (e); e = ipcache_GetNext()) {
 	if (e) {
-	    ttl = (e->ttl - cached_curtime + e->lastref);
+	    ttl = (e->ttl - squid_curtime + e->lastref);
 	    status = ipcache_status_char(e);
 	    if (status == 'P')
 		ttl = 0;

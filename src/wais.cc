@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.25 1996/04/16 04:23:18 wessels Exp $ */
+/* $Id: wais.cc,v 1.26 1996/04/16 05:05:35 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -35,7 +35,7 @@ static void waisReadReplyTimeout(fd, data)
 
     entry = data->entry;
     debug(24, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
-    cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     waisCloseAndFree(fd, data);
 }
@@ -49,7 +49,7 @@ void waisLifetimeExpire(fd, data)
 
     entry = data->entry;
     debug(24, 4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     waisCloseAndFree(fd, data);
 }
@@ -96,7 +96,7 @@ void waisReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    waisCloseAndFree(fd, data);
 	    return;
 	}
@@ -116,17 +116,17 @@ void waisReadReply(fd, data)
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
-	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    waisCloseAndFree(fd, data);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	cached_error_entry(entry,
+	squid_error_entry(entry,
 	    ERR_ZERO_SIZE_OBJECT,
 	    errno ? xstrerror() : NULL);
 	waisCloseAndFree(fd, data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
-	entry->expires = cached_curtime;
+	entry->expires = squid_curtime;
 	storeComplete(entry);
 	waisCloseAndFree(fd, data);
     } else if (((entry->mem_obj->e_current_len + len) > getWAISMax()) &&
@@ -171,7 +171,7 @@ void waisSendComplete(fd, buf, size, errflag, data)
     debug(24, 5, "waisSendComplete - fd: %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	waisCloseAndFree(fd, data);
     } else {
 	/* Schedule read reply. */
@@ -246,7 +246,7 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
 
     if (!getWaisRelayHost()) {
 	debug(24, 0, "waisStart: Failed because no relay host defined!\n");
-	cached_error_entry(entry, ERR_NO_RELAY, NULL);
+	squid_error_entry(entry, ERR_NO_RELAY, NULL);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -255,7 +255,7 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(24, 4, "waisStart: Failed because we're out of sockets.\n");
-	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
+	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -264,14 +264,14 @@ int waisStart(unusedfd, url, method, mime_hdr, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->relayhost)) {
 	debug(24, 4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
-	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
+	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	waisCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, data->relayhost, data->relayport))) {
 	if (status != EINPROGRESS) {
-	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    waisCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {

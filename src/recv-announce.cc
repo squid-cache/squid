@@ -1,4 +1,4 @@
-/* $Id: recv-announce.cc,v 1.2 1996/02/29 07:23:19 wessels Exp $ */
+/* $Id: recv-announce.cc,v 1.3 1996/04/16 05:05:28 wessels Exp $ */
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -15,7 +15,7 @@
  * This program must be run from inetd.  First add something like this
  * to /etc/services:
  * 
- * cached_announce 3131/udp             # harvest cached announcements
+ * cached_announce 3131/udp             # harvest cache announcements
  * 
  * And then add something like this to /etc/inetd/conf:
  * 

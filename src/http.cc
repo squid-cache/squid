@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.48 1996/04/16 04:23:12 wessels Exp $ */
+/* $Id: http.cc,v 1.49 1996/04/16 05:05:23 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -76,7 +76,7 @@ static void httpReadReplyTimeout(fd, data)
 
     entry = data->entry;
     debug(11, 4, "httpReadReplyTimeout: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
+    squid_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     httpCloseAndFree(fd, data);
 }
@@ -91,7 +91,7 @@ static void httpLifetimeExpire(fd, data)
     entry = data->entry;
     debug(11, 4, "httpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
 
-    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     httpCloseAndFree(fd, data);
 }
@@ -200,7 +200,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	case 301:		/* Moved Permanently */
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
-	    entry->expires = cached_curtime + ttlSet(entry);
+	    entry->expires = squid_curtime + ttlSet(entry);
 	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
 		storeSetPublicKey(entry);
 	    break;
@@ -215,7 +215,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
-	    entry->expires = cached_curtime + getNegativeTTL();
+	    entry->expires = squid_curtime + getNegativeTTL();
 	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
 		storeSetPublicKey(entry);
 	    break;
@@ -265,7 +265,7 @@ static void httpReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    httpCloseAndFree(fd, data);
 	    return;
 	}
@@ -287,11 +287,11 @@ static void httpReadReply(fd, data)
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
-	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    httpCloseAndFree(fd, data);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	cached_error_entry(entry,
+	squid_error_entry(entry,
 	    ERR_ZERO_SIZE_OBJECT,
 	    errno ? xstrerror() : NULL);
 	httpCloseAndFree(fd, data);
@@ -316,7 +316,7 @@ static void httpReadReply(fd, data)
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
-	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	httpCloseAndFree(fd, data);
     } else {
 	storeAppend(entry, buf, len);
@@ -357,7 +357,7 @@ static void httpSendComplete(fd, buf, size, errflag, data)
     data->icp_rwd_ptr = NULL;	/* Don't double free in lifetimeexpire */
 
     if (errflag) {
-	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	httpCloseAndFree(fd, data);
 	return;
     } else {
@@ -492,7 +492,7 @@ static void httpConnInProgress(fd, data)
 	case EISCONN:
 	    break;		/* cool, we're connected */
 	default:
-	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    httpCloseAndFree(fd, data);
 	    return;
 	}
@@ -535,7 +535,7 @@ int proxyhttpStart(e, url, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "proxyhttpStart: Failed because we're out of sockets.\n");
-	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
+	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -544,16 +544,16 @@ int proxyhttpStart(e, url, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(request->host)) {
 	debug(11, 4, "proxyhttpstart: Called without IP entry in ipcache. OR lookup failed.\n");
-	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
+	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, request->host, request->port))) {
 	if (status != EINPROGRESS) {
-	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    httpCloseAndFree(sock, data);
-	    e->last_fail_time = cached_curtime;
+	    e->last_fail_time = squid_curtime;
 	    e->neighbor_up = 0;
 	    return COMM_ERROR;
 	} else {
@@ -598,7 +598,7 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(11, 4, "httpStart: Failed because we're out of sockets.\n");
-	cached_error_entry(entry, ERR_NO_FDS, xstrerror());
+	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -607,14 +607,14 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(request->host)) {
 	debug(11, 4, "httpstart: Called without IP entry in ipcache. OR lookup failed.\n");
-	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
+	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	httpCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, request->host, request->port))) {
 	if (status != EINPROGRESS) {
-	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    httpCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {

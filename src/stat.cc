@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.25 1996/04/15 18:06:33 wessels Exp $ */
+/* $Id: stat.cc,v 1.26 1996/04/16 05:05:30 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -22,10 +22,10 @@ typedef struct _log_read_data_t {
     StoreEntry *sentry;
 } log_read_data_t;
 
-typedef struct _cached_read_data_t {
+typedef struct _squid_read_data_t {
     StoreEntry *sentry;
     int fd;
-} cached_read_data_t;
+} squid_read_data_t;
 
 /* GLOBALS */
 Meta_data meta_data;
@@ -53,7 +53,7 @@ void stat_utilization_get(obj, sentry)
     proto_stat *q = NULL;
     int secs = 0;
 
-    secs = (int) (cached_curtime - cached_starttime);
+    secs = (int) (squid_curtime - squid_starttime);
 
     storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
 
@@ -275,13 +275,13 @@ void log_get_start(obj, sentry)
 }
 
 
-/* cached convert handler */
+/* squid convert handler */
 /* call for each line in file, use fileWalk routine */
-int cachedReadHandler(fd_unused, buf, size_unused, data)
+int squidReadHandler(fd_unused, buf, size_unused, data)
      int fd_unused;
      char *buf;
      int size_unused;
-     cached_read_data_t *data;
+     squid_read_data_t *data;
 {
     static char tempbuf[MAX_LINELEN];
     tempbuf[0] = '\0';
@@ -292,12 +292,12 @@ int cachedReadHandler(fd_unused, buf, size_unused, data)
     return 0;
 }
 
-/* cached convert end handler */
+/* squid convert end handler */
 /* call when a walk is completed or error. */
-void cachedReadEndHandler(fd_unused, errflag_unused, data)
+void squidReadEndHandler(fd_unused, errflag_unused, data)
      int fd_unused;
      int errflag_unused;
-     cached_read_data_t *data;
+     squid_read_data_t *data;
 {
     storeAppend(data->sentry, close_bracket, strlen(close_bracket));
     storeComplete(data->sentry);
@@ -306,21 +306,21 @@ void cachedReadEndHandler(fd_unused, errflag_unused, data)
 }
 
 
-/* start convert cached.conf file to processed format */
-void cached_get_start(obj, sentry)
+/* start convert squid.conf file to processed format */
+void squid_get_start(obj, sentry)
      cacheinfo *obj;
      StoreEntry *sentry;
 {
-    cached_read_data_t *data;
+    squid_read_data_t *data;
     extern char *config_file;
 
-    data = (cached_read_data_t *) xmalloc(sizeof(cached_read_data_t));
-    memset(data, '\0', sizeof(cached_read_data_t));
+    data = (squid_read_data_t *) xmalloc(sizeof(squid_read_data_t));
+    memset(data, '\0', sizeof(squid_read_data_t));
     data->sentry = sentry;
     data->fd = file_open((char *) config_file, NULL, O_RDONLY);
     storeAppend(sentry, open_bracket, (int) strlen(open_bracket));
-    file_walk(data->fd, (FILE_WALK_HD) cachedReadEndHandler, (void *) data,
-	(FILE_WALK_LHD) cachedReadHandler, (void *) data);
+    file_walk(data->fd, (FILE_WALK_HD) squidReadEndHandler, (void *) data,
+	(FILE_WALK_LHD) squidReadHandler, (void *) data);
 }
 
 
@@ -411,18 +411,18 @@ void info_get(obj, sentry)
     sprintf(line, "{Harvest Object Cache: Version %s}\n", version_string);
     storeAppend(sentry, line, strlen(line));
 
-    tod = mkrfc850(&cached_starttime);
+    tod = mkrfc850(&squid_starttime);
 
     sprintf(line, "{Start Time:\t%s}\n", tod);
     storeAppend(sentry, line, strlen(line));
 
-    tod = mkrfc850(&cached_curtime);
+    tod = mkrfc850(&squid_curtime);
     sprintf(line, "{Current Time:\t%s}\n", tod);
     storeAppend(sentry, line, strlen(line));
 
     /* -------------------------------------------------- */
 
-    sprintf(line, "{Connection information for cached:}\n");
+    sprintf(line, "{Connection information for %s:}\n", appname);
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\tNumber of connections:\t%lu}\n", nconn);
@@ -430,7 +430,7 @@ void info_get(obj, sentry)
 
     {
 	float f;
-	f = cached_curtime - cached_starttime;
+	f = squid_curtime - squid_starttime;
 	sprintf(line, "{\tConnections per hour:\t%.1f}\n", f == 0.0 ? 0.0 :
 	    (nconn / (f / 3600)));
 	storeAppend(sentry, line, strlen(line));
@@ -440,7 +440,7 @@ void info_get(obj, sentry)
 
 
 
-    sprintf(line, "{Cache information for cached:}\n");
+    sprintf(line, "{Cache information for %s:}\n", appname);
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\tStorage Swap size:\t%d MB}\n", storeGetSwapSize() >> 10);
@@ -454,7 +454,7 @@ void info_get(obj, sentry)
     storeAppend(sentry, line, strlen(line));
 
 #if defined(HAVE_GETRUSAGE) && defined(RUSAGE_SELF)
-    sprintf(line, "{Resource usage for cached:}\n");
+    sprintf(line, "{Resource usage for %s:}\n", appname);
     storeAppend(sentry, line, strlen(line));
 
     getrusage(RUSAGE_SELF, &rusage);
@@ -472,7 +472,7 @@ void info_get(obj, sentry)
 #if HAVE_MALLINFO
     mp = mallinfo();
 
-    sprintf(line, "{Memory usage for cached via mallinfo():}\n");
+    sprintf(line, "{Memory usage for %s via mallinfo():}\n", appname);
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\ttotal space in arena:\t%d KB}\n", mp.arena >> 10);
@@ -527,7 +527,7 @@ void info_get(obj, sentry)
 
 #endif /* HAVE_MALLINFO */
 
-    sprintf(line, "{File descriptor usage for cached:}\n");
+    sprintf(line, "{File descriptor usage for %s:}\n", appname);
     storeAppend(sentry, line, strlen(line));
 
     sprintf(line, "{\tMax number of file desc available:\t%d}\n", getMaxFD());
@@ -564,8 +564,8 @@ void info_get(obj, sentry)
 		to = comm_get_fd_timeout(i);
 		sprintf(line, "{\t\t(%3d = %3d, %3d) NET %s}\n",
 		    i,
-		    (int) (lft > 0 ? lft - cached_curtime : -1),
-		    (int) max((to - cached_curtime), 0),
+		    (int) (lft > 0 ? lft - squid_curtime : -1),
+		    (int) max((to - squid_curtime), 0),
 		    fd_note(i, NULL));
 		break;
 	    case File:
@@ -798,7 +798,7 @@ void log_append(obj, url, id, size, action, method, http_code, msec)
     if (obj->logfile_status == LOG_ENABLE) {
 	if (emulate_httpd_log)
 	    sprintf(tmp, "%s - - [%s] \"%s %s\" %s %d\n",
-		id, mkhttpdlogtime(&cached_curtime), method, url, action, size);
+		id, mkhttpdlogtime(&squid_curtime), method, url, action, size);
 	else
 	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s\n",
 		(int) current_time.tv_sec,
@@ -971,7 +971,7 @@ void stat_init(object, logfilename)
     obj->log_disable = log_disable;
     obj->logfile_status = LOG_ENABLE;
 
-    obj->cached_get_start = cached_get_start;
+    obj->squid_get_start = squid_get_start;
 
     obj->parameter_get = parameter_get;
     obj->server_list = server_list;
@@ -1109,7 +1109,7 @@ char *ttl_describe(entry)
 
     TTL[0] = '\0';
     strcpy(TTL, "UNKNOWN");	/* sometimes the TTL isn't set below */
-    ttl = entry->expires - cached_curtime;
+    ttl = entry->expires - squid_curtime;
     if (ttl < 0)
 	strcpy(TTL, "EXPIRED");
     else {
@@ -1134,7 +1134,7 @@ char *elapsed_time(entry, since, TTL)
 
     TTL[0] = '\0';
     strcpy(TTL, "UNKNOWN");	/* sometimes TTL doesn't get set */
-    ttl = cached_curtime - since;
+    ttl = squid_curtime - since;
     if (since == 0) {
 	strcpy(TTL, "NEVER");
     } else if (ttl < 0) {

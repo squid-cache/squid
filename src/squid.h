@@ -1,5 +1,5 @@
 
-/* $Id: squid.h,v 1.17 1996/04/15 22:56:06 wessels Exp $ */
+/* $Id: squid.h,v 1.18 1996/04/16 05:05:29 wessels Exp $ */
 
 #include "config.h"
 #include "autoconf.h"
@@ -98,7 +98,7 @@ typedef unsigned long u_num32;
 #include "url.h"
 #include "proto.h"
 #include "icp.h"
-#include "cached_error.h"	/* must go after icp.h */
+#include "errorpage.h"	/* must go after icp.h */
 #include "ipcache.h"
 #include "mime.h"
 #include "neighbors.h"
@@ -120,7 +120,7 @@ typedef unsigned long u_num32;
 #include "util.h"
 #include "background.h"
 
-extern time_t cached_starttime;	/* main.c */
+extern time_t squid_starttime;	/* main.c */
 extern time_t next_cleaning;	/* main.c */
 extern int catch_signals;	/* main.c */
 extern int do_reuse;		/* main.c */
@@ -131,3 +131,4 @@ extern int reread_pending;	/* main.c */
 extern int opt_unlink_on_reload;	/* main.c */
 extern int vhost_mode;		/* main.c */
 extern char *version_string;	/* main.c */
+extern char *appname;		/* main.c */

@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.35 1996/04/15 04:08:51 wessels Exp $ */
+/* $Id: ftp.cc,v 1.36 1996/04/16 05:05:22 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -142,7 +142,7 @@ void ftpLifetimeExpire(fd, data)
     StoreEntry *entry = NULL;
     entry = data->entry;
     debug(9, 4, "ftpLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
+    squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     ftpCloseAndFree(fd, data);
 }
 
@@ -252,7 +252,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 	case 301:		/* Moved Permanently */
 	case 410:		/* Gone */
 	    /* These can be cached for a long time, make the key public */
-	    entry->expires = cached_curtime + ttlSet(entry);
+	    entry->expires = squid_curtime + ttlSet(entry);
 	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
 		storeSetPublicKey(entry);
 	    break;
@@ -267,7 +267,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
-	    entry->expires = cached_curtime + getNegativeTTL();
+	    entry->expires = squid_curtime + getNegativeTTL();
 	    if (!BIT_TEST(entry->flag, ENTRY_PRIVATE))
 		storeSetPublicKey(entry);
 	    break;
@@ -310,7 +310,7 @@ int ftpReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
+	    squid_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
 	    ftpCloseAndFree(fd, data);
 	    return 0;
 	}
@@ -331,11 +331,11 @@ int ftpReadReply(fd, data)
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
-	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
+	    squid_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    ftpCloseAndFree(fd, data);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	cached_error_entry(entry,
+	squid_error_entry(entry,
 	    ERR_ZERO_SIZE_OBJECT,
 	    errno ? xstrerror() : NULL);
 	ftpCloseAndFree(fd, data);
@@ -346,11 +346,11 @@ int ftpReadReply(fd, data)
 	     * failed and arrange so the object gets ejected and
 	     * never gets to disk. */
 	    debug(9, 1, "ftpReadReply: Didn't see magic marker, purging <URL:%s>.\n", entry->url);
-	    entry->expires = cached_curtime + getNegativeTTL();
+	    entry->expires = squid_curtime + getNegativeTTL();
 	    BIT_RESET(entry->flag, CACHABLE);
 	    storeReleaseRequest(entry);
 	} else if (!(entry->flag & DELETE_BEHIND)) {
-	    entry->expires = cached_curtime + ttlSet(entry);
+	    entry->expires = squid_curtime + ttlSet(entry);
 	}
 	/* update fdstat and fdtable */
 	storeComplete(entry);
@@ -367,7 +367,7 @@ int ftpReadReply(fd, data)
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
-	cached_error_entry(entry, ERR_CLIENT_ABORT, NULL);
+	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	ftpCloseAndFree(fd, data);
     } else {
 	/* check for a magic marker at the end of the read */
@@ -415,7 +415,7 @@ void ftpSendComplete(fd, buf, size, errflag, data)
     data->icp_rwd_ptr = NULL;	/* Don't double free in lifetimeexpire */
 
     if (errflag) {
-	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	ftpCloseAndFree(fd, data);
 	return;
     } else {
@@ -548,7 +548,7 @@ void ftpConnInProgress(fd, data)
 	    debug(9, 5, "ftpConnInProgress: FD %d is now connected.", fd);
 	    break;		/* cool, we're connected */
 	default:
-	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    ftpCloseAndFree(fd, data);
 	    return;
 	}
@@ -575,7 +575,7 @@ int ftpStart(unusedfd, url, entry)
 
     /* Parse url. */
     if (ftp_url_parser(url, data)) {
-	cached_error_entry(entry, ERR_INVALID_URL, NULL);
+	squid_error_entry(entry, ERR_INVALID_URL, NULL);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -584,7 +584,7 @@ int ftpStart(unusedfd, url, entry)
 
     data->ftp_fd = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (data->ftp_fd == COMM_ERROR) {
-	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -593,7 +593,7 @@ int ftpStart(unusedfd, url, entry)
     /* Now connect ... */
     if ((status = comm_connect(data->ftp_fd, "localhost", CACHE_FTP_PORT))) {
 	if (status != EINPROGRESS) {
-	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    ftpCloseAndFree(data->ftp_fd, data);
 	    return COMM_ERROR;
 	} else {
