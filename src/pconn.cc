@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.37 2003/06/19 13:47:25 hno Exp $
+ * $Id: pconn.cc,v 1.38 2003/06/22 07:47:43 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -90,6 +90,7 @@ static struct _pconn *
     p = cbdataAlloc(pconn);
     p->hash.key = xstrdup(key);
     p->nfds_alloc = PCONN_FDS_SZ;
+    p->nfds = 0;
     p->fds = (int *)memPoolAlloc(pconn_fds_pool);
     debug(48, 3) ("pconnNew: adding %s\n", hashKeyStr(&p->hash));
     hash_join(table, &p->hash);
