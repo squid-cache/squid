@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm_select.cc,v 1.6 1998/09/03 03:37:33 wessels Exp $
+ * $Id: comm_select.cc,v 1.7 1998/09/03 03:48:39 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -320,7 +320,8 @@ comm_poll(int msec)
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
-	debug(5, num ? 5 : 8) ("comm_poll: %d sockets ready\n", num);
+	debug(5, num ? 5 : 8) ("comm_poll: %d FDs ready\n", num);
+	statHistCount(&Counter.select_fds_hist, num);
 	/* Check timeout handlers ONCE each second. */
 	if (squid_curtime > last_timeout) {
 	    last_timeout = squid_curtime;
@@ -586,8 +587,9 @@ comm_select(int msec)
 	}
 	if (num < 0)
 	    continue;
-	debug(5, num ? 5 : 8) ("comm_select: %d sockets ready at %d\n",
+	debug(5, num ? 5 : 8) ("comm_select: %d FDs ready at %d\n",
 	    num, (int) squid_curtime);
+	statHistCount(&Counter.select_fds_hist, num);
 	/* Check lifetime and timeout handlers ONCE each second.
 	 * Replaces brain-dead check every time through the loop! */
 	if (squid_curtime > last_timeout) {
