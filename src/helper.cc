@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.61 2004/08/30 05:12:31 robertc Exp $
+ * $Id: helper.cc,v 1.62 2004/12/22 14:10:09 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -119,9 +119,9 @@ helperOpenServers(helper * hlp)
         }
 
         hlp->n_running++;
+        hlp->n_active++;
         srv = cbdataAlloc(helper_server);
         srv->pid = x;
-        srv->flags.alive = 1;
         srv->index = k;
         srv->rfd = rfd;
         srv->wfd = wfd;
@@ -215,9 +215,9 @@ helperStatefulOpenServers(statefulhelper * hlp)
         }
 
         hlp->n_running++;
+        hlp->n_active++;
         srv = cbdataAlloc(helper_stateful_server);
         srv->pid = x;
-        srv->flags.alive = 1;
         srv->flags.reserved = S_HELPER_FREE;
         srv->deferred_requests = 0;
         srv->stats.deferbyfunc = 0;
@@ -519,12 +519,11 @@ helperStats(StoreEntry * sentry, helper * hlp)
     for (link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
         double tt = srv->requests[0] ? 0.001 * tvSubMsec(srv->requests[0]->dispatch_time, current_time) : 0.0;
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->rfd,
                           srv->pid,
                           srv->stats.uses,
-                          srv->flags.alive ? 'A' : ' ',
                           srv->stats.pending ? 'B' : ' ',
                           srv->flags.writing ? 'W' : ' ',
                           srv->flags.closing ? 'C' : ' ',
@@ -535,7 +534,6 @@ helperStats(StoreEntry * sentry, helper * hlp)
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
-    storeAppendPrintf(sentry, "   A = ALIVE\n");
     storeAppendPrintf(sentry, "   B = BUSY\n");
     storeAppendPrintf(sentry, "   W = BUSY\n");
     storeAppendPrintf(sentry, "   C = CLOSING\n");
@@ -573,13 +571,12 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     for (link = hlp->servers.head; link; link = link->next) {
         srv = (helper_stateful_server *)link->data;
         tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->rfd,
                           srv->pid,
                           srv->stats.uses,
                           (int) srv->deferred_requests,
-                          srv->flags.alive ? 'A' : ' ',
                           srv->flags.busy ? 'B' : ' ',
                           srv->flags.closing ? 'C' : ' ',
                           srv->flags.reserved != S_HELPER_FREE ? 'R' : ' ',
@@ -591,7 +588,6 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
-    storeAppendPrintf(sentry, "   A = ALIVE\n");
     storeAppendPrintf(sentry, "   B = BUSY\n");
     storeAppendPrintf(sentry, "   C = CLOSING\n");
     storeAppendPrintf(sentry, "   R = RESERVED or DEFERRED\n");
@@ -609,22 +605,25 @@ helperShutdown(helper * hlp)
         srv = (helper_server *)link->data;
         link = link->next;
 
-        if (!srv->flags.alive) {
-            debug(84, 3) ("helperShutdown: %s #%d is NOT ALIVE.\n",
+        if (!srv->flags.shutdown) {
+            debug(84, 3) ("helperShutdown: %s #%d has already SHUT DOWN.\n",
                           hlp->id_name, srv->index + 1);
             continue;
         }
+
+        hlp->n_active--;
+        assert(hlp->n_active >= 0);
 
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
-        if (srv->stats.pending) {
-            debug(84, 3) ("helperShutdown: %s #%d is BUSY.\n",
+        if (srv->flags.closing) {
+            debug(84, 3) ("helperShutdown: %s #%d is CLOSING.\n",
                           hlp->id_name, srv->index + 1);
             continue;
         }
 
-        if (srv->flags.closing) {
-            debug(84, 3) ("helperShutdown: %s #%d is CLOSING.\n",
+        if (srv->stats.pending) {
+            debug(84, 3) ("helperShutdown: %s #%d is BUSY.\n",
                           hlp->id_name, srv->index + 1);
             continue;
         }
@@ -647,12 +646,14 @@ helperStatefulShutdown(statefulhelper * hlp)
         srv = (helper_stateful_server *)link->data;
         link = link->next;
 
-        if (!srv->flags.alive) {
-            debug(84, 3) ("helperStatefulShutdown: %s #%d is NOT ALIVE.\n",
+        if (!srv->flags.shutdown) {
+            debug(84, 3) ("helperStatefulShutdown: %s #%d has already SHUT DOWN.\n",
                           hlp->id_name, srv->index + 1);
             continue;
         }
 
+        hlp->n_active--;
+        assert(hlp->n_active >= 0);
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.busy) {
@@ -786,11 +787,13 @@ helperServerFree(int fd, void *data)
     assert(hlp->n_running >= 0);
 
     if (!srv->flags.shutdown) {
+        hlp->n_active--;
+        assert(hlp->n_active >= 0);
         debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
                       hlp->id_name, srv->index + 1, fd);
 
-        if (hlp->n_running < hlp->n_to_start / 2)
-            fatalf("Too few %s processes are running", hlp->id_name);
+        if (hlp->n_active < hlp->n_to_start / 2)
+            fatalf("Too few %s processes are running\n", hlp->id_name);
     }
 
     cbdataReferenceDone(srv->parent);
@@ -838,11 +841,13 @@ helperStatefulServerFree(int fd, void *data)
     assert(hlp->n_running >= 0);
 
     if (!srv->flags.shutdown) {
+        hlp->n_active--;
+        assert( hlp->n_active >= 0);
         debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
                       hlp->id_name, srv->index + 1, fd);
 
-        if (hlp->n_running < hlp->n_to_start / 2)
-            fatalf("Too few %s processes are running", hlp->id_name);
+        if (hlp->n_active < hlp->n_to_start / 2)
+            fatalf("Too few %s processes are running\n", hlp->id_name);
     }
 
     if (srv->data != NULL)
@@ -942,6 +947,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         if (srv->flags.shutdown) {
             int wfd = srv->wfd;
             srv->wfd = -1;
+            srv->flags.closing=1;
             comm_close(wfd);
         } else
             helperKickQueue(hlp);
@@ -1062,6 +1068,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                 && !srv->deferred_requests) {
             int wfd = srv->wfd;
             srv->wfd = -1;
+            srv->flags.closing=1;
             comm_close(wfd);
         } else {
             if (srv->queue.head)
@@ -1220,7 +1227,7 @@ GetFirstAvailable(helper * hlp)
         if (selected && selected->stats.pending <= srv->stats.pending)
             continue;
 
-        if (!srv->flags.alive)
+        if (srv->flags.shutdown)
             continue;
 
         if (!srv->stats.pending)
@@ -1263,7 +1270,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
         if (srv->flags.reserved == S_HELPER_RESERVED)
             continue;
 
-        if (!srv->flags.alive)
+        if (srv->flags.shutdown)
             continue;
 
         if ((hlp->IsAvailable != NULL) && (srv->data != NULL) && !(hlp->IsAvailable(srv->data)))

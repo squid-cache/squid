@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.499 2004/12/21 17:52:53 robertc Exp $
+ * $Id: structs.h,v 1.500 2004/12/22 14:10:09 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1892,6 +1892,7 @@ struct _helper
     const char *id_name;
     int n_to_start;
     int n_running;
+    int n_active;
     int ipc_type;
     unsigned int concurrency;
     time_t last_queue_warn;
@@ -1915,6 +1916,7 @@ struct _helper_stateful
     const char *id_name;
     int n_to_start;
     int n_running;
+    int n_active;
     int ipc_type;
     MemAllocatorProxy *datapool;
     HLPSAVAIL *IsAvailable;
@@ -1952,9 +1954,6 @@ struct _helper_server
     {
 
 unsigned int writing:
-        1;
-
-unsigned int alive:
         1;
 
 unsigned int closing:
@@ -1999,9 +1998,6 @@ struct _helper_stateful_server
 
     struct _helper_stateful_flags
     {
-
-unsigned int alive:
-        1;
 
 unsigned int busy:
         1;
