@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.33 2001/03/14 22:28:37 wessels Exp $
+ * $Id: store_dir_aufs.cc,v 1.34 2001/03/17 13:31:16 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -322,7 +322,7 @@ storeAufsDirOpenSwapLog(SwapDir * sd)
     char *path;
     int fd;
     path = storeAufsDirSwapLogFile(sd, NULL);
-    fd = file_open(path, O_WRONLY | O_CREAT);
+    fd = file_open(path, O_WRONLY | O_CREAT | O_BINARY);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", path, xstrerror());
 	fatal("storeAufsDirOpenSwapLog: Failed to open swap log.");
@@ -755,7 +755,7 @@ storeAufsDirGetNextFile(RebuildState * rb, int *sfileno, int *size)
 	    snprintf(rb->fullfilename, SQUID_MAXPATHLEN, "%s/%s",
 		rb->fullpath, rb->entry->d_name);
 	    debug(20, 3) ("storeAufsDirGetNextFile: Opening %s\n", rb->fullfilename);
-	    fd = file_open(rb->fullfilename, O_RDONLY);
+	    fd = file_open(rb->fullfilename, O_RDONLY | O_BINARY);
 	    if (fd < 0)
 		debug(50, 1) ("storeAufsDirGetNextFile: %s: %s\n", rb->fullfilename, xstrerror());
 	    else
@@ -864,7 +864,7 @@ storeAufsDirCloseTmpSwapLog(SwapDir * sd)
     char *new_path = xstrdup(storeAufsDirSwapLogFile(sd, ".new"));
     int fd;
     file_close(aioinfo->swaplog_fd);
-#ifdef _SQUID_OS2_
+#if defined (_SQUID_OS2_) || defined (_SQUID_CYGWIN_)
     if (unlink(swaplog_path) < 0) {
 	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("storeAufsDirCloseTmpSwapLog: unlink failed");
@@ -873,7 +873,7 @@ storeAufsDirCloseTmpSwapLog(SwapDir * sd)
     if (xrename(new_path, swaplog_path) < 0) {
 	fatal("storeAufsDirCloseTmpSwapLog: rename failed");
     }
-    fd = file_open(swaplog_path, O_WRONLY | O_CREAT);
+    fd = file_open(swaplog_path, O_WRONLY | O_CREAT | O_BINARY);
     if (fd < 0) {
 	debug(50, 1) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("storeAufsDirCloseTmpSwapLog: Failed to open swap log.");
@@ -919,6 +919,9 @@ storeAufsDirOpenTmpSwapLog(SwapDir * sd, int *clean_flag, int *zero_flag)
 	debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
 	fatal("Failed to open swap log for reading");
     }
+#if defined(_SQUID_CYGWIN_)
+    setmode(fileno(fp), O_BINARY);
+#endif
     memset(&clean_sb, '\0', sizeof(struct stat));
     if (stat(clean_path, &clean_sb) < 0)
 	*clean_flag = 0;
@@ -957,7 +960,7 @@ storeAufsDirWriteCleanStart(SwapDir * sd)
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
     state->new = xstrdup(storeAufsDirSwapLogFile(sd, ".clean"));
-    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
+    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
     if (state->fd < 0) {
 	xfree(state->new);
 	xfree(state);
@@ -968,7 +971,9 @@ storeAufsDirWriteCleanStart(SwapDir * sd)
     state->outbuf = xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
     state->walker = sd->repl->WalkInit(sd->repl);
+#if !(defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_))
     unlink(state->new);
+#endif
     unlink(state->cln);
     debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
@@ -1036,6 +1041,7 @@ storeAufsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
 static void
 storeAufsDirWriteCleanDone(SwapDir * sd)
 {
+    int fd;
     struct _clean_state *state = sd->log.clean.state;
     if (NULL == state)
 	return;
@@ -1057,24 +1063,26 @@ storeAufsDirWriteCleanDone(SwapDir * sd)
      * so we have to close before renaming.
      */
     storeAufsDirCloseSwapLog(sd);
+    /* save the fd value for a later test */
+    fd = state->fd;
     /* rename */
     if (state->fd >= 0) {
-#ifdef _SQUID_OS2_
+#if defined(_SQUID_OS2_) || defined (_SQUID_CYGWIN_)
 	file_close(state->fd);
 	state->fd = -1;
-	if (unlink(cur) < 0)
+	if (unlink(state->cur) < 0)
 	    debug(50, 0) ("storeDirWriteCleanLogs: unlinkd failed: %s, %s\n",
-		xstrerror(), cur);
+		xstrerror(), state->cur);
 #endif
 	xrename(state->new, state->cur);
     }
     /* touch a timestamp file if we're not still validating */
     if (store_dirs_rebuilding)
 	(void) 0;
-    else if (state->fd < 0)
+    else if (fd < 0)
 	(void) 0;
     else
-	file_close(file_open(state->cln, O_WRONLY | O_CREAT | O_TRUNC));
+	file_close(file_open(state->cln, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY));
     /* close */
     safe_free(state->cur);
     safe_free(state->new);
