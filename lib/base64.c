@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #endif
 
+#include "ansiproto.h"
+
 static void base64_init __P((void));
 
 static int base64_initialized = 0;

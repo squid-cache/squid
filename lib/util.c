@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.15 1996/09/17 02:29:47 wessels Exp $
+ * $Id: util.c,v 1.16 1996/09/17 16:39:03 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -128,6 +128,7 @@
 #endif
 
 #include "util.h"
+#include "ansiproto.h"
 
 void (*failure_notify) __P((char *)) = NULL;
 static char msg[128];
