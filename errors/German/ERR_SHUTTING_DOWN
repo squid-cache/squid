@@ -7,14 +7,13 @@
 <H2>Der angeforderte URL konnte nicht geholt werden</H2>
 <HR noshade size="1px">
 <P>
-auml;hrend des Versuches, den URL<BR>
+W&auml;hrend des Versuches, den URL<BR>
 <A HREF="%U">%U</A><BR>
 zu laden, trat folgendes Problem auf:
 
 <UL>
-<LI>This cache is in the process of shutting down and can not
-service your request at this time.  Please retry your
-request again soon.
+<LI>Dieser Cache ist im Begriff herunterzufahren und kann Ihre Anfrage
+zur Zeit nicht bearbeiten. Bitte wiederholen Sie Ihre Anfrage etwas sp&auml;ter.
 </UL>
 
 <P>

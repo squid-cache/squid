@@ -19,6 +19,8 @@ zu laden, trat der folgende Fehler auf:
 Dieser Cache wird Ihre Anfrage nicht weiterleiten, da er versucht, eine
 Sibling-Beziehung zu erzwingen.
 Wahrscheinlich ist der Client bei %i ein Cache, der falsch
-konfiguriert wurde. Informieren Sie dessen Administrator und/oder &uuml;berprüfen
+konfiguriert wurde. Informieren Sie dessen Administrator und/oder &uuml;berpr&uuml;fen
 Sie Ihre Proxy-Einstellungen.
 </P>
+<P>
+Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
