@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.250 1998/04/02 05:35:21 rousskov Exp $
+ * $Id: client_side.cc,v 1.251 1998/04/02 06:35:51 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1019,11 +1019,48 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     comm_write(fd, buf, writelen, clientWriteComplete, http, freefunc);
 }
 
+static
+void
+clientKeepaliveNextRequest(clientHttpRequest * http)
+{
+    ConnStateData *conn = http->conn;
+    StoreEntry *entry;
+    conn->defer.until = 0;	/* Kick it to read a new request */
+    httpRequestFree(http);
+    if ((http = conn->chr) != NULL) {
+	debug(33, 1) ("clientKeepaliveNextRequest: FD %d Sending next\n",
+	    conn->fd);
+	entry = http->entry;
+	if (0 == storeClientCopyPending(entry, http)) {
+	    if (entry->store_status == STORE_ABORTED)
+		debug(33, 0) ("clientWriteComplete: entry->swap_status == STORE_ABORTED\n");
+	    storeClientCopy(entry,
+		http->out.offset,
+		http->out.offset,
+		SM_PAGE_SIZE,
+		memAllocate(MEM_4K_BUF),
+		clientSendMoreData,
+		http);
+	}
+    } else {
+	debug(33, 5) ("clientWriteComplete: FD %d reading next request\n",
+	    conn->fd);
+	fd_note(conn->fd, "Reading next request");
+	/*
+	 * Set the timeout BEFORE calling clientReadRequest().
+	 */
+	commSetTimeout(conn->fd, 15, requestTimeout, conn);
+	clientReadRequest(conn->fd, conn);	/* Read next request */
+	/*
+	 * Note, the FD may be closed at this point.
+	 */
+    }
+}
+
 static void
 clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     clientHttpRequest *http = data;
-    ConnStateData *conn;
     StoreEntry *entry = http->entry;
     int done;
     http->out.size += size;
@@ -1056,34 +1093,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	    comm_close(fd);
 	} else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
 	    debug(33, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
-	    conn = http->conn;
-	    conn->defer.until = 0;	/* Kick it to read a new request */
-	    httpRequestFree(http);
-	    if ((http = conn->chr) != NULL) {
-		debug(33, 1) ("clientWriteComplete: FD %d Sending next request\n", fd);
-		if (!storeClientCopyPending(http->entry, http)) {
-		    if (entry->store_status == STORE_ABORTED)
-			debug(33, 0) ("clientWriteComplete: entry->swap_status == STORE_ABORTED\n");
-		    storeClientCopy(http->entry,
-			http->out.offset,
-			http->out.offset,
-			SM_PAGE_SIZE,
-			memAllocate(MEM_4K_BUF),
-			clientSendMoreData,
-			http);
-		}
-	    } else {
-		debug(33, 5) ("clientWriteComplete: FD %d reading next request\n", fd);
-		fd_note(fd, "Reading next request");
-		/*
-		 * Set the timeout BEFORE calling clientReadRequest().
-		 */
-		commSetTimeout(fd, 15, requestTimeout, conn);
-		clientReadRequest(fd, conn);	/* Read next request */
-		/*
-		 * Note, the FD may be closed at this point.
-		 */
-	    }
+	    clientKeepaliveNextRequest(http);
 	} else {
 	    comm_close(fd);
 	}
@@ -1207,8 +1217,16 @@ clientHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *d
     http->entry = NULL;
     http->out.size += size;
     http->al.http.code = 304;
-    if (flag != COMM_ERR_CLOSING)
+    if (flag == COMM_ERR_CLOSING) {
+	(void) 0;
+    } else if (flag != COMM_OK) {
 	comm_close(fd);
+    } else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
+	debug(33, 5) ("clientHandleIMSComplete: FD %d Keeping Alive\n", fd);
+	clientKeepaliveNextRequest(http);
+    } else {
+	comm_close(fd);
+    }
 }
 
 /*
@@ -1359,7 +1377,7 @@ clientProcessRequest(clientHttpRequest * http)
     /* ok, it is a miss or a "dirty" hit (will contact other servers) */
     /* are we allowed to contact other servers? */
     if (EBIT_TEST(r->flags, REQ_CC_ONLY_IF_CACHED)) {
-    /* future interface: if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) { */
+	/* future interface: if (r->cache_control && EBIT_TEST(r->cache_control->mask, CC_ONLY_IF_CACHED)) { */
 	/* nope, bailing out */
 	clientProcessOnlyIfCachedMiss(http);
 	return;
@@ -1548,7 +1566,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     req_hdr = t;
     header_sz = headersEnd(req_hdr, conn->in.offset - (req_hdr - inbuf));
     if (0 == header_sz) {
-	debug(33,3)("parseHttpRequest: header_sz == 0\n");
+	debug(33, 3) ("parseHttpRequest: header_sz == 0\n");
 	xfree(inbuf);
 	*status = 0;
 	return NULL;
