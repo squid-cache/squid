@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.221 1998/04/25 07:19:55 wessels Exp $
+ * $Id: ftp.cc,v 1.222 1998/04/25 07:25:41 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -368,11 +368,11 @@ ftpListingFinish(FtpStateData * ftpState)
     }
     storeAppendPrintf(e, "<HR>\n");
     storeAppendPrintf(e, "<ADDRESS>\n");
-    storeAppendPrintf(e, "Generated %s, by %s/%s@%s\n",
+    storeAppendPrintf(e, "Generated %s by %s (<a href=\"http://squid.nlanr.net/Squid/\">%s</a>)\n",
 	mkrfc1123(squid_curtime),
-	appname,
-	version_string,
-	getMyHostname());
+	getMyHostname(),
+	full_appname_string,
+	version_string);
     storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
     storeBufferFlush(e);
 }
