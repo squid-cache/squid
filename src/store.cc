@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.35 1996/04/09 23:27:59 wessels Exp $ */
-#ident "$Id: store.cc,v 1.35 1996/04/09 23:27:59 wessels Exp $"
+/* $Id: store.cc,v 1.36 1996/04/09 23:28:36 wessels Exp $ */
+#ident "$Id: store.cc,v 1.36 1996/04/09 23:28:36 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -56,11 +56,12 @@
 #define STORE_LOG_SWAPOUT	2
 #define STORE_LOG_RELEASE	3
 
-static char *storeLogTags[] = {
-	"CREATE",
-	"SWAPIN",
-	"SWAPOUT",
-	"RELEASE"
+static char *storeLogTags[] =
+{
+    "CREATE",
+    "SWAPIN",
+    "SWAPOUT",
+    "RELEASE"
 };
 
 /* Now, this table is inaccessible to outsider. They have to use a method
@@ -108,7 +109,7 @@ static MemObject *new_MemObject()
 {
     MemObject *m = NULL;
     m = (MemObject *) xcalloc(1, sizeof(MemObject));
-    m->reply = (struct _http_reply *) xcalloc (1, sizeof(struct _http_reply));
+    m->reply = (struct _http_reply *) xcalloc(1, sizeof(struct _http_reply));
     meta_data.store_in_mem_objects++;
     debug(20, 3, "new_MemObject: returning %p\n", m);
     return m;
@@ -293,27 +294,27 @@ void storeFreeEntry(e)
     destroy_StoreEntry(e);
 }
 
-static char *time_describe (t)
-	time_t t;
+static char *time_describe(t)
+     time_t t;
 {
-	static char buf[128];
+    static char buf[128];
 
-	if (t < 60) {
-		sprintf (buf, "%ds", (int) t);
-	} else if (t < 3600) {
-		sprintf(buf, "%dm", (int) t/60);
-	} else if (t < 86400) {
-		sprintf(buf, "%dh", (int) t/3600);
-	} else if (t < 604800) {
-		sprintf(buf, "%dD", (int) t/86400);
-	} else if (t < 2592000) {
-		sprintf(buf, "%dW", (int) t/604800);
-	} else if (t < 31536000) {
-		sprintf(buf, "%dM", (int) t/2592000);
-	} else {
-		sprintf(buf, "%dY", (int) t/31536000);
-	}
-	return buf;
+    if (t < 60) {
+	sprintf(buf, "%ds", (int) t);
+    } else if (t < 3600) {
+	sprintf(buf, "%dm", (int) t / 60);
+    } else if (t < 86400) {
+	sprintf(buf, "%dh", (int) t / 3600);
+    } else if (t < 604800) {
+	sprintf(buf, "%dD", (int) t / 86400);
+    } else if (t < 2592000) {
+	sprintf(buf, "%dW", (int) t / 604800);
+    } else if (t < 31536000) {
+	sprintf(buf, "%dM", (int) t / 2592000);
+    } else {
+	sprintf(buf, "%dY", (int) t / 31536000);
+    }
+    return buf;
 }
 
 static void storeLog(tag, e)
@@ -425,14 +426,14 @@ int storeLockObject(e)
     return status;
 }
 
-void storeReleaseRequest (e, file, line)
-	StoreEntry *e;
-	char *file;
-	int line;
+void storeReleaseRequest(e, file, line)
+     StoreEntry *e;
+     char *file;
+     int line;
 {
-	debug(20,1,"storeReleaseRequest: FROM %s:%d FOR '%s'\n",
-		file, line, e->key ? e->key : e->url);
-	BIT_SET(e->flag, RELEASE_REQUEST);
+    debug(20, 1, "storeReleaseRequest: FROM %s:%d FOR '%s'\n",
+	file, line, e->key ? e->key : e->url);
+    BIT_SET(e->flag, RELEASE_REQUEST);
 }
 
 /* unlock object, return -1 if object get released after unlock
@@ -574,7 +575,7 @@ void storeSetPublicKey(e)
 	debug(20, 0, "storeSetPublicKey: Making old '%s' private.\n", newkey);
 	e2 = (StoreEntry *) table_entry;
 	storeSetPrivateKey(e2);
-	storeReleaseRequest(e2, __FILE__,__LINE__);
+	storeReleaseRequest(e2, __FILE__, __LINE__);
     }
     if (e->key)
 	storeHashDelete(e);
@@ -620,7 +621,7 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
 	BIT_RESET(e->flag, ENTRY_PRIVATE);
     } else {
 	BIT_RESET(e->flag, CACHABLE);
-	storeReleaseRequest(e, __FILE__,__LINE__);
+	storeReleaseRequest(e, __FILE__, __LINE__);
 	BIT_SET(e->flag, ENTRY_PRIVATE);
     }
     if (neighbors_do_private_keys || !BIT_TEST(flags, REQ_PUBLIC))
@@ -883,7 +884,7 @@ void storeStartDeleteBehind(e)
     /* change its key, so it couldn't be found by other client */
     storeSetPrivateKey(e);
     BIT_SET(e->flag, DELETE_BEHIND);
-    storeReleaseRequest(e, __FILE__,__LINE__);
+    storeReleaseRequest(e, __FILE__, __LINE__);
     BIT_RESET(e->flag, CACHABLE);
     storeExpireNow(e);
 }
@@ -1094,7 +1095,7 @@ void storeSwapOutHandle(fd, flag, e)
 	e->swap_status = NO_SWAP;
 	put_free_8k_page(page_ptr, __FILE__, __LINE__);
 	file_close(fd);
-	storeReleaseRequest(e, __FILE__,__LINE__);
+	storeReleaseRequest(e, __FILE__, __LINE__);
 	if (e->swap_file_number != -1) {
 	    file_map_bit_reset(e->swap_file_number);
 	    safeunlink(filename, 0);	/* remove it */
@@ -1432,7 +1433,7 @@ static int storeCheckSwapable(e)
     } else
 	return 1;
 
-    storeReleaseRequest(e, __FILE__,__LINE__);
+    storeReleaseRequest(e, __FILE__, __LINE__);
     BIT_RESET(e->flag, CACHABLE);
     return 0;
 }
@@ -2029,7 +2030,7 @@ int storeRelease(e)
 	storeExpireNow(e);
 	debug(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit\n");
 	if (!BIT_TEST(e->flag, RELEASE_REQUEST))
-		storeReleaseRequest(e, __FILE__,__LINE__);
+	    storeReleaseRequest(e, __FILE__, __LINE__);
 	return -1;
     }
     if (e->key != NULL) {
@@ -2076,7 +2077,7 @@ int storeRelease(e)
 	e->object_len);
     if (hptr)
 	storeHashDelete(hptr);
-    storeLog(STORE_LOG_RELEASE,e);
+    storeLog(STORE_LOG_RELEASE, e);
     storeFreeEntry(e);
     return 0;
 }
@@ -2323,7 +2324,7 @@ int storeEntryValidLength(e)
 	fatal_dump("storeEntryValidLength: NULL mem_obj");
 
     hdr_sz = e->mem_obj->reply->hdr_sz;
-    content_length   = e->mem_obj->reply->content_length;
+    content_length = e->mem_obj->reply->content_length;
 
     debug(20, 3, "storeEntryValidLength: Checking '%s'\n", e->key);
     debug(20, 5, "storeEntryValidLength:     object_len = %d\n", e->object_len);
@@ -2420,7 +2421,7 @@ int storeInit()
 {
     int dir_created;
 
-    storelog_fd = file_open("store.log", NULL, O_WRONLY|O_APPEND|O_CREAT);
+    storelog_fd = file_open("store.log", NULL, O_WRONLY | O_APPEND | O_CREAT);
 
     storeSanityCheck();
     file_map_create(MAX_SWAP_FILE);
