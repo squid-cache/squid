@@ -133,7 +133,7 @@ struct _SquidConfig {
 	char *mibPath;
 	u_short localPort;
 	int do_queueing;
-	} Snmp;
+    } Snmp;
     struct {
 	char *log;
 	char *access;
@@ -511,6 +511,17 @@ struct _ConnStateData {
     } defer;
 };
 
+struct _dlink_node {
+    void *data;
+    dlink_node *prev;
+    dlink_node *next;
+};
+
+struct _dlink_list {
+    dlink_node *head;
+    dlink_node *tail;
+};
+
 struct _ipcache_addrs {
     struct in_addr *in_addrs;
     unsigned char *bad_mask;
@@ -528,7 +539,8 @@ struct _ipcache_entry {
     ipcache_addrs addrs;
     struct _ip_pending *pending_head;
     char *error_message;
-    unsigned char locks;
+    dlink_node lru;
+    u_char locks;
     ipcache_status_t status:3;
 };
 
@@ -748,19 +760,9 @@ struct _store_client {
     struct _store_client *next;
 };
 
-struct _dlink_node {
-    void *data;
-    dlink_node *prev;
-    dlink_node *next;
-};
-
-struct _dlink_list {
-    dlink_node *head;
-    dlink_node *tail;
-};
-
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
+    method_t method;
     char *url;
     mem_hdr *data;
     off_t inmem_hi;
@@ -792,8 +794,6 @@ struct _StoreEntry {
     const cache_key *key;
     struct _StoreEntry *next;
     MemObject *mem_obj;
-    u_num32 flag;
-    u_num32 refcount;
     time_t timestamp;
     time_t lastref;
     time_t expires;
@@ -801,12 +801,13 @@ struct _StoreEntry {
     int object_len;
     int swap_file_number;
     dlink_node lru;
+    u_short flag;
+    u_short refcount;
+    u_char lock_count;		/* Assume < 256! */
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;
     store_status_t store_status:3;
     swap_status_t swap_status:3;
-    method_t method:4;
-    unsigned char lock_count;	/* Assume < 256! */
 };
 
 struct _SwapDir {
