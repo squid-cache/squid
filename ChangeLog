@@ -1,3 +1,31 @@
+Changes to squid-1.1.alpha17:
+
+	- Added more IMS support.  Now Squid issues IMS requests for
+	  expired objects in the cache.  Log type will be either
+	  TCP_EXPIRED_HIT if the server sends "304 Not Modified" or
+	  TCP_EXPIRED_MISS if the server send a new object.
+	- Fixed storeGetMemSpace() bug; need to check
+	  storeCheckPurgeMem() instead of storeEntryLocked().
+	- Renamed icp_hit_or_miss() to icpProcessRequest().
+	- Changed mkrfc850() to use normal variable instaed of a
+	  pointer.
+	- Removed store_entry member from fd_table[] in comm.h.
+	- Changed httpSendRequest to not tack Squid onto the 'User-Agent'
+	  line, Use HTTP/1.1 'Forwarded' instead.
+	- Removed icpProcessHIT() which only called icpSendMoreData().
+	- Removed icpProcessIMS() which only called icpGetHeadersForIMS().
+	- Removed some 'Reset header fields for reply' crap.
+	- added old_entry member to icpStateData for handling IMS
+	  requests.
+	- Added 'locks' member to ipcache_entry; need to lock an
+	  ipcache entry during ipcache_call_pending().
+	- Removed ipcache_call_pending_badname().
+	- Cleaned up setting/clearing IP_LOOKUP_PENDING bit.
+	- Removed storeEntryLocked() trap in storePurgeMem().
+	- Added storeCheckExpired().
+	- Removed storeWalkThrough() and removeOldEntry(), changed
+	  storePurgeOld() to do the walking through instead.
+
 Changes to squid-1.1.alpha16:
 
 	- Fixed ipcache TTL bug from new ipcache_parsebuffer().
