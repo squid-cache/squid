@@ -238,6 +238,7 @@ extern size_t httpBuildRequestPrefix(request_t * request,
 extern void httpAnonInitModule();
 extern int httpAnonHdrAllowed(http_hdr_type hdr_id);
 extern int httpAnonHdrDenied(http_hdr_type hdr_id);
+extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, int);
 
 /* Http Status Line */
 /* init/clean */

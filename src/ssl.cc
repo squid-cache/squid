@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.77 1998/03/31 05:37:49 wessels Exp $
+ * $Id: ssl.cc,v 1.78 1998/05/21 22:01:08 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -411,12 +411,28 @@ static void
 sslProxyConnected(int fd, void *data)
 {
     SslStateData *sslState = data;
+    MemBuf mb;
+    HttpHeader hdr_out;
+    Packer p;
     debug(26, 3) ("sslProxyConnected: FD %d sslState=%p\n", fd, sslState);
-    snprintf(sslState->client.buf, SQUID_TCP_SO_RCVBUF,
-	"CONNECT %s HTTP/1.0\r\n\r\n", sslState->url);
-    debug(26, 3) ("sslProxyConnected: Sending '%s'\n", sslState->client.buf);
-    sslState->client.len = strlen(sslState->client.buf);
+    memBufDefInit(&mb);
+    memBufPrintf(&mb, "CONNECT %s HTTP/1.0\r\n", sslState->url);
+    httpBuildRequestHeader(sslState->request,
+	sslState->request,
+	NULL,	/* StoreEntry */
+	&hdr_out,
+	sslState->client.fd,
+	0);	/* flags */
+    packerToMemInit(&p, &mb);
+    httpHeaderPackInto(&hdr_out, &p);
+    httpHeaderClean(&hdr_out);
+    packerClean(&p);
+    memBufAppend(&mb, "\r\n", 2);
+    xstrncpy(sslState->client.buf, mb.buf, SQUID_TCP_SO_RCVBUF);
+    debug(26, 3) ("sslProxyConnected: Sending {%s}\n", sslState->client.buf);
+    sslState->client.len = mb.size;
     sslState->client.offset = 0;
+    memBufClean(&mb);
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_WRITE,
 	sslWriteServer,
