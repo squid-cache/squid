@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.150 1996/11/06 08:14:50 wessels Exp $
+ * $Id: store.cc,v 1.151 1996/11/06 08:17:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2826,9 +2826,9 @@ void
 storeCloseLog(void)
 {
     if (swaplog_fd >= 0)
-	    file_close(swaplog_fd);
+	file_close(swaplog_fd);
     if (storelog_fd >= 0)
-    	file_close(storelog_fd);
+	file_close(storelog_fd);
 }
 
 void

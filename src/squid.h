@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.69 1996/11/05 20:43:56 wessels Exp $
+ * $Id: squid.h,v 1.70 1996/11/06 08:17:33 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -315,11 +315,11 @@ extern int waisStart _PARAMS((int, const char *, method_t, char *, StoreEntry *)
 extern void storeDirClean _PARAMS((void));
 int
 passStart _PARAMS((int fd,
-        const char *url,
-        request_t * request,
-        char *buf,
-        int buflen,
-        int *size_ptr));
+	const char *url,
+	request_t * request,
+	char *buf,
+	int buflen,
+	int *size_ptr));
 
 extern const char *const dash_str;
 extern const char *const null_string;
