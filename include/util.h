@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.15 1996/09/15 05:04:08 wessels Exp $
+ * $Id: util.h,v 1.16 1996/09/15 07:04:01 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -124,21 +124,21 @@
 #if !HAVE_STRDUP
 extern char *strdup __P((char *));
 #endif
-extern char *xstrdup(char *);	/* Duplicate a string */
+extern char *xstrdup __P((char *));	/* Duplicate a string */
 
 /* from xmalloc.c */
-void *xmalloc(size_t);		/* Wrapper for malloc(3) */
-void *xrealloc(void *, size_t);	/* Wrapper for realloc(3) */
-void *xcalloc(int, size_t);	/* Wrapper for calloc(3) */
-void xfree(void *);		/* Wrapper for free(3) */
-void xxfree(void *);		/* Wrapper for free(3) */
-char *xstrdup(char *);
-char *xstrerror(void);
-char *getfullhostname(void);
-void xmemcpy(void *, void *, int);
+void *xmalloc __P((size_t));		/* Wrapper for malloc(3) */
+void *xrealloc __P((void *, size_t));	/* Wrapper for realloc(3) */
+void *xcalloc __P((int, size_t));	/* Wrapper for calloc(3) */
+void xfree __P((void *));		/* Wrapper for free(3) */
+void xxfree __P((void *));		/* Wrapper for free(3) */
+char *xstrdup __P((char *));
+char *xstrerror __P((void));
+char *getfullhostname __P((void));
+void xmemcpy __P((void *, void *, int));
 
 #if XMALLOC_STATISTICS
-void malloc_statistics(void (*)(int, int, void *), void *);
+void malloc_statistics __P((void (*) __P((int, int, void *)), void *));
 #endif
 
 /* from debug.c */
@@ -172,9 +172,9 @@ extern int Harvest_debug_levels[];
         {if (debug_ok_fast((section),(level))) {Log X;}}
 #endif
 
-void debug_flag(char *);
+void debug_flag __P((char *));
 
-char *mkhttpdlogtime(time_t *);
+char *mkhttpdlogtime __P((time_t *));
 extern char *mkrfc850 __P((time_t));
 extern time_t parse_rfc850 __P((char *str));
 extern void init_log3 __P((char *pn, FILE * a, FILE * b));
