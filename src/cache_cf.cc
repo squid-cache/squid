@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.243 1998/02/03 17:26:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.244 1998/02/05 20:32:35 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -372,7 +372,7 @@ parse_snmp_conf(snmpconf ** s)
 	    fatal("snmp_mib_path should be defined before any snmp_agent_conf\n");
     }
     p = strtok(NULL, null_string);
-    strcpy(buff, p);
+    xstrncpy(buff, p, 256);
     tokenize(buff, tokens, 10);
     if (!strcmp("view", tokens[0])) {
 	if (create_view(tokens) < 0)
