@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.279 1997/08/10 04:42:48 wessels Exp $
+ * $Id: store.cc,v 1.280 1997/08/10 05:05:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -854,7 +854,7 @@ storeDeleteBehind(StoreEntry * e)
 
 /* Call handlers waiting for  data to be appended to E. */
 void
-InvokeHandlers(StoreEntry * e)
+InvokeHandlers(const StoreEntry * e)
 {
     int i;
     MemObject *mem = e->mem_obj;
@@ -909,7 +909,7 @@ storeStartDeleteBehind(StoreEntry * e)
 
 /* Append incoming data from a primary server to an entry. */
 void
-storeAppend(const StoreEntry * e, const char *buf, int len)
+storeAppend(StoreEntry * e, const char *buf, int len)
 {
     MemObject *mem = e->mem_obj;
     assert(mem != NULL);
