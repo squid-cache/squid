@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.30 2001/02/10 16:40:41 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.31 2001/02/19 23:10:06 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -569,8 +569,8 @@ storeAufsDirRebuildFromSwapLog(void *data)
 		 */
 		storeExpireNow(e);
 		storeReleaseRequest(e);
-		storeAufsDirReplRemove(e);
 		if (e->swap_filen > -1) {
+		    storeAufsDirReplRemove(e);
 		    storeAufsDirMapBitReset(SD, e->swap_filen);
 		    e->swap_filen = -1;
 		    e->swap_dirn = -1;
@@ -657,8 +657,8 @@ storeAufsDirRebuildFromSwapLog(void *data)
 	    /* junk old, load new */
 	    storeExpireNow(e);
 	    storeReleaseRequest(e);
-	    storeAufsDirReplRemove(e);
 	    if (e->swap_filen > -1) {
+		storeAufsDirReplRemove(e);
 		/* Make sure we don't actually unlink the file */
 		storeAufsDirMapBitReset(SD, e->swap_filen);
 		e->swap_filen = -1;

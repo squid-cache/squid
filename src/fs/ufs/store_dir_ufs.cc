@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.29 2001/02/10 16:40:43 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.30 2001/02/19 23:10:07 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -566,8 +566,8 @@ storeUfsDirRebuildFromSwapLog(void *data)
 		 */
 		storeExpireNow(e);
 		storeReleaseRequest(e);
-		storeUfsDirReplRemove(e);
 		if (e->swap_filen > -1) {
+		    storeUfsDirReplRemove(e);
 		    storeUfsDirMapBitReset(SD, e->swap_filen);
 		    e->swap_filen = -1;
 		    e->swap_dirn = -1;
@@ -654,8 +654,8 @@ storeUfsDirRebuildFromSwapLog(void *data)
 	    /* junk old, load new */
 	    storeExpireNow(e);
 	    storeReleaseRequest(e);
-	    storeUfsDirReplRemove(e);
 	    if (e->swap_filen > -1) {
+		storeUfsDirReplRemove(e);
 		/* Make sure we don't actually unlink the file */
 		storeUfsDirMapBitReset(SD, e->swap_filen);
 		e->swap_filen = -1;

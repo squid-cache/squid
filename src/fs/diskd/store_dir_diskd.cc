@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.40 2001/02/10 16:40:42 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.41 2001/02/19 23:10:07 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -761,8 +761,8 @@ storeDiskdDirRebuildFromSwapLog(void *data)
 		 */
 		storeExpireNow(e);
 		storeReleaseRequest(e);
-		storeDiskdDirReplRemove(e);
 		if (e->swap_filen > -1) {
+		    storeDiskdDirReplRemove(e);
 		    storeDiskdDirMapBitReset(SD, e->swap_filen);
 		    e->swap_filen = -1;
 		    e->swap_dirn = -1;
@@ -849,8 +849,8 @@ storeDiskdDirRebuildFromSwapLog(void *data)
 	    /* junk old, load new */
 	    storeExpireNow(e);
 	    storeReleaseRequest(e);
-	    storeDiskdDirReplRemove(e);
 	    if (e->swap_filen > -1) {
+		storeDiskdDirReplRemove(e);
 		/* Make sure we don't actually unlink the file */
 		storeDiskdDirMapBitReset(SD, e->swap_filen);
 		e->swap_filen = -1;
