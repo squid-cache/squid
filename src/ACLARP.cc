@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.10 2004/12/21 19:40:16 serassio Exp $
+ * $Id: ACLARP.cc,v 1.11 2005/01/06 10:44:39 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,7 +35,24 @@
  */
 
 #include "config.h"
+#ifdef _SQUID_CYGWIN_
+#include <squid_windows.h>
+#endif
 #include "squid.h"
+
+#ifdef _SQUID_WIN32_
+
+struct arpreq
+{
+
+    struct sockaddr arp_pa;   /* protocol address */
+
+    struct sockaddr arp_ha;   /* hardware address */
+    int arp_flags;            /* flags */
+};
+
+#include <Iphlpapi.h>
+#else
 
 #ifdef _SQUID_SOLARIS_
 #include <sys/sockio.h>
@@ -55,6 +72,7 @@
 #endif
 #if HAVE_NETINET_IF_ETHER_H
 #include <netinet/if_ether.h>
+#endif
 #endif
 
 #include "ACLARP.h"
@@ -505,6 +523,67 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
     }
 
     xfree(buf);
+
+    if (arpReq.arp_ha.sa_data[0] == 0 && arpReq.arp_ha.sa_data[1] == 0 &&
+            arpReq.arp_ha.sa_data[2] == 0 && arpReq.arp_ha.sa_data[3] == 0 &&
+            arpReq.arp_ha.sa_data[4] == 0 && arpReq.arp_ha.sa_data[5] == 0)
+        return 0;
+
+    debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
+                  arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
+                  arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
+                  arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+
+    /* Do lookup */
+    *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
+
+    debug(28, 3) ("aclMatchArp: '%s' %s\n",
+                  inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+
+    return (0 == splayLastResult);
+
+#elif defined(_SQUID_WIN32_)
+
+    DWORD           dwNetTable = 0;
+
+    DWORD           ipNetTableLen = 0;
+
+    PMIB_IPNETTABLE NetTable = NULL;
+
+    DWORD            i;
+
+    SplayNode<acl_arp_data *> **Top = dataptr;
+
+    struct arpreq arpReq;
+
+    /* Get size of Windows ARP table */
+    if (GetIpNetTable(NetTable, &ipNetTableLen, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
+        debug(28, 0) ("Can't estimate ARP table size!\n");
+        return 0;
+    }
+
+    /* Allocate space for ARP table and assign pointers */
+    if ((NetTable = (PMIB_IPNETTABLE)xmalloc(ipNetTableLen)) == NULL) {
+        debug(28, 0) ("Can't allocate temporary ARP table!\n");
+        return 0;
+    }
+
+    /* Get actual ARP table */
+    if ((dwNetTable = GetIpNetTable(NetTable, &ipNetTableLen, FALSE)) != NO_ERROR) {
+        debug(28, 0) ("Can't retrieve ARP table!\n");
+        xfree(NetTable);
+        return 0;
+    }
+
+    /* Find MAC address from net table */
+    for (i = 0 ; i < NetTable->dwNumEntries ; i++) {
+        if ((c.s_addr == NetTable->table[i].dwAddr) && (NetTable->table[i].dwType > 2)) {
+            arpReq.arp_ha.sa_family = AF_UNSPEC;
+            memcpy(arpReq.arp_ha.sa_data, NetTable->table[i].bPhysAddr, NetTable[i].table->dwPhysAddrLen);
+        }
+    }
+
+    xfree(NetTable);
 
     if (arpReq.arp_ha.sa_data[0] == 0 && arpReq.arp_ha.sa_data[1] == 0 &&
             arpReq.arp_ha.sa_data[2] == 0 && arpReq.arp_ha.sa_data[3] == 0 &&
