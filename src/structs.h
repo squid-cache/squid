@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.482 2003/09/21 04:31:25 robertc Exp $
+ * $Id: structs.h,v 1.483 2003/10/16 21:40:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -950,37 +950,6 @@ unsigned int originpeer:
     1;
 };
 
-struct _ping_data
-{
-
-    struct timeval start;
-
-    struct timeval stop;
-    int n_sent;
-    int n_recv;
-    int n_replies_expected;
-    int timeout;		/* msec */
-    int timedout;
-    int w_rtt;
-    int p_rtt;
-};
-
-struct _HierarchyLogEntry
-{
-    hier_code code;
-    char host[SQUIDHOSTNAMELEN];
-    ping_data ping;
-    char cd_host[SQUIDHOSTNAMELEN];	/* the host of selected by cd peer */
-    lookup_t cd_lookup;		/* cd prediction: none, miss, hit */
-    int n_choices;		/* #peers we selected from (cd only) */
-    int n_ichoices;		/* #peers with known rtt we selected from (cd only) */
-
-    struct timeval peer_select_start;
-
-    struct timeval store_complete_stop;
-};
-
-
 struct _ipcache_addrs
 {
 
@@ -1345,41 +1314,6 @@ struct _netdbEntry
     int n_peers;
 };
 
-struct _ps_state
-{
-    HttpRequest *request;
-    StoreEntry *entry;
-    int always_direct;
-    int never_direct;
-    int direct;
-    PSC *callback;
-    void *callback_data;
-    FwdServer *servers;
-    /*
-     * Why are these struct sockaddr_in instead of peer *?  Because a
-     * peer structure can become invalid during the peer selection
-     * phase, specifically after a reconfigure.  Thus we need to lookup
-     * the peer * based on the address when we are finally ready to
-     * reference the peer structure.
-     */
-
-    struct sockaddr_in first_parent_miss;
-
-    struct sockaddr_in closest_parent_miss;
-    /*
-     * ->hit and ->secho can be peer* because they should only be
-     * accessed during the thread when they are set
-     */
-    peer *hit;
-    peer_t hit_type;
-#if ALLOW_SOURCE_PING
-
-    peer *secho;
-#endif
-
-    ping_data ping;
-    ACLChecklist *acl_checklist;
-};
 
 #if USE_ICMP
 

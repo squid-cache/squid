@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.90 2003/09/01 03:49:37 robertc Exp $
+#  $Id: Makefile.am,v 1.91 2003/10/16 21:40:17 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -352,6 +352,7 @@ squid_SOURCES = \
 	gopher.cc \
 	helper.cc \
 	helper.h \
+	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
 	http.cc \
 	http.h \
@@ -404,6 +405,8 @@ squid_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	PeerSelectState.h \
+	PingData.h \
 	protos.h \
 	redirect.cc \
 	referer.cc \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.131 2003/08/10 11:00:44 robertc Exp $
+ * $Id: peer_select.cc,v 1.132 2003/10/16 21:40:16 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "PeerSelectState.h"
 #include "Store.h"
 #include "ICP.h"
 #include "HttpRequest.h"
@@ -157,7 +158,7 @@ peerSelect(HttpRequest * request,
     else
         debug(44, 3) ("peerSelect: %s\n", RequestMethodStr[request->method]);
 
-    psstate = cbdataAlloc(ps_state);
+    psstate = new ps_state;
 
     psstate->request = requestLink(request);
 
@@ -782,4 +783,45 @@ peerAddFwdServer(FwdServer ** FS, peer * p, hier_code code)
         FS = &(*FS)->next;
 
     *FS = fs;
+}
+
+void *
+ps_state::operator new(size_t)
+{
+    return cbdataAlloc(ps_state);
+}
+
+ps_state::ps_state() : request (NULL),
+        entry (NULL),
+        always_direct (0),
+        never_direct (0),
+        direct (0),
+        callback (NULL),
+        callback_data (NULL),
+        servers (NULL),
+        hit(NULL),
+        hit_type(PEER_NONE),
+#if ALLOW_SOURCE_PING
+
+        secho( NULL),
+#endif
+        acl_checklist (NULL)
+{
+    memset(&first_parent_miss, '\0', sizeof(first_parent_miss));
+    memset(&closest_parent_miss, '\0', sizeof(closest_parent_miss));
+}
+
+ping_data::ping_data() :
+        n_sent(0),
+        n_recv(0),
+        n_replies_expected(0),
+        timeout(0),
+        timedout(0),
+        w_rtt(0),
+        p_rtt(0)
+{
+    start.tv_sec = 0;
+    start.tv_usec = 0;
+    stop.tv_sec = 0;
+    stop.tv_usec = 0;
 }

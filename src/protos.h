@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.492 2003/09/01 03:49:39 robertc Exp $
+ * $Id: protos.h,v 1.493 2003/10/16 21:40:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,7 +34,6 @@
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
 
-SQUIDCEXTERN void hierarchyNote(HierarchyLogEntry *, hier_code, const char *);
 #if FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
 SQUIDCEXTERN void fvdbCountForw(const char *key);

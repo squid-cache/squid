@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.323 2003/09/21 00:30:47 robertc Exp $
+ * $Id: neighbors.cc,v 1.324 2003/10/16 21:40:16 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -40,6 +40,7 @@
 #include "MemObject.h"
 #include "ACLChecklist.h"
 #include "htcp.h"
+#include "PeerSelectState.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -1470,7 +1471,7 @@ peerCountMcastPeersStart(void *data)
     p->mcast.flags.count_event_pending = 0;
     snprintf(url, MAX_URL, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
     fake = storeCreateEntry(url, url, request_flags(), METHOD_GET);
-    psstate = cbdataAlloc(ps_state);
+    psstate = new ps_state;
     psstate->request = requestLink(urlParse(METHOD_GET, url));
     psstate->entry = fake;
     psstate->callback = NULL;

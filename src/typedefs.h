@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.170 2003/09/01 03:49:40 robertc Exp $
+ * $Id: typedefs.h,v 1.171 2003/10/16 21:40:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -162,12 +162,6 @@ typedef struct _net_db_name net_db_name;
 typedef struct _net_db_peer net_db_peer;
 
 typedef struct _netdbEntry netdbEntry;
-
-typedef struct _ping_data ping_data;
-
-typedef struct _ps_state ps_state;
-
-typedef struct _HierarchyLogEntry HierarchyLogEntry;
 
 typedef struct _pingerEchoData pingerEchoData;
 
