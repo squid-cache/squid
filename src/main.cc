@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.379 2003/05/06 00:29:45 hno Exp $
+ * $Id: main.cc,v 1.380 2003/06/08 23:27:50 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1319,6 +1319,9 @@ watch_child(char *argv[])
      */
     /* Connect stdio to /dev/null in daemon mode */
     nullfd = open("/dev/null", O_RDWR | O_TEXT);
+
+    if (nullfd < 0)
+        fatalf("/dev/null: %s\n", xstrerror());
 
     dup2(nullfd, 0);
 
