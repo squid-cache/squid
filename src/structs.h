@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.210 1998/08/26 05:36:46 wessels Exp $
+ * $Id: structs.h,v 1.211 1998/08/26 19:08:57 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -955,7 +955,6 @@ struct _peer {
 	int pings_acked;
 	int fetches;
 	int rtt;
-	int counts[ICP_END];
 	int ignored_replies;
 	int n_keepalives_sent;
 	int n_keepalives_recv;
@@ -963,9 +962,19 @@ struct _peer {
 	time_t last_reply;
 	int logged_state;	/* so we can print dead/revived msgs */
     } stats;
-    u_short icp_port;
+    struct {
+        int version;
+	int counts[ICP_END];
+        u_short port;
+    } icp;
+#if USE_HTCP
+    struct {
+	double version;
+	int counts[2];
+        u_short port;
+    } htcp;
+#endif
     u_short http_port;
-    int icp_version;
     domain_ping *pinglist;
     domain_type *typelist;
     acl_access *access;
@@ -1495,5 +1504,6 @@ struct _htcpReplyData {
 	int hit;
 	HttpHeader hdr;
 	u_num32 msg_id;
+	double version;
 };
 #endif
