@@ -1,3 +1,18 @@
+	- Fixed Authorized responses getting swapped out when they
+	  don't have Proxy-Revalidate reply header.
+	- Fixed Proxy Authentication support.  We never sent back
+	  a 407 reply, and were incorrectly incrementing the passwd
+	  before comparing it.
+	- Fixed stat()ing pathnames for default values before parsing
+	  config file (Ron Gomes).
+	- Fixed logging request and response headers on separate lines
+	  (Ron Gomes).
+	- Fixed FTP Authentication message (Henrik Nordstrom).
+	- Changed Proxy Authentication to trigger a reread of the passwd
+	  file if a password check fails (Henrik Nordstrom).
+	- Changed FTP to retry the first CWD with a leading slash if it
+	  fails without one.
+
 Changes to squid-1.2.beta5 (Nov 6, 1997):
 
 	- Track the 'keep-alive ratio' for a peer as the ratio of
