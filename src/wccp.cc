@@ -1,8 +1,8 @@
 
 /*
- * $Id: wccp.cc,v 1.11 1999/12/11 15:56:11 wessels Exp $
+ * $Id: wccp.cc,v 1.12 1999/12/30 17:37:05 wessels Exp $
  *
- * DEBUG: section 80	WCCP Support
+ * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -43,6 +43,7 @@
 #define WCCP_ACTIVE_CACHES 32
 #define WCCP_HASH_SIZE 32
 #define WCCP_BUCKETS 256
+#define WCCP_CACHE_LEN 4
 
 #define WCCP_HERE_I_AM 7
 #define WCCP_I_SEE_YOU 8
@@ -89,7 +90,7 @@ static struct in_addr local_ip;
 static PF wccpHandleUdp;
 static int wccpLowestIP(void);
 static EVH wccpHereIam;
-static EVH wccpAssignBuckets;
+static void wccpAssignBuckets(void);
 
 /*
  * The functions used during startup:
@@ -109,10 +110,10 @@ wccpInit(void)
     wccp_here_i_am.type = htonl(WCCP_HERE_I_AM);
     wccp_here_i_am.version = htonl(WCCP_VERSION);
     wccp_here_i_am.revision = htonl(WCCP_REVISION);
-    change = 1;
+    change = 0;
     if (Config.Wccp.router.s_addr != any_addr.s_addr)
 	if (!eventFind(wccpHereIam, NULL))
-	    eventAdd("wccpHereIam", wccpHereIam, NULL, 10.0, 1);
+	    eventAdd("wccpHereIam", wccpHereIam, NULL, 5.0, 1);
 }
 
 void
@@ -241,9 +242,8 @@ wccpHandleUdp(int sock, void *not_used)
     }
     if (change != wccp_i_see_you.change) {
 	change = wccp_i_see_you.change;
-	if (wccpLowestIP())
-	    if (!eventFind(wccpAssignBuckets, NULL))
-		eventAdd("wccpAssignBuckets", wccpAssignBuckets, NULL, 30.0, 1);
+	if (wccpLowestIP() && wccp_i_see_you.number)
+	    wccpAssignBuckets();
     }
 }
 
@@ -274,26 +274,35 @@ wccpHereIam(void *voidnotused)
 }
 
 static void
-wccpAssignBuckets(void *voidnotused)
+wccpAssignBuckets(void)
 {
-    struct wccp_assign_bucket_t wccp_assign_bucket;
+    struct wccp_assign_bucket_t *wccp_assign_bucket;
+    int wab_len;
+    char *buckets;
     int buckets_per_cache;
     int loop;
     int number_caches;
     int bucket = 0;
     int *caches;
-    int offset;
-    char buckets[WCCP_BUCKETS];
+    int cache_len;
     char *buf;
 
     debug(80, 6) ("wccpAssignBuckets: Called\n");
-    memset(&wccp_assign_bucket, '\0', sizeof(wccp_assign_bucket));
-    memset(buckets, 0xFF, WCCP_BUCKETS);
-
     number_caches = ntohl(wccp_i_see_you.number);
     if (number_caches > WCCP_ACTIVE_CACHES)
 	number_caches = WCCP_ACTIVE_CACHES;
-    caches = xmalloc(sizeof(int) * number_caches);
+    wab_len = sizeof(struct wccp_assign_bucket_t);
+    cache_len = WCCP_CACHE_LEN * number_caches;
+
+    buf = xmalloc(wab_len +
+	WCCP_BUCKETS +
+	cache_len);
+    wccp_assign_bucket = (struct wccp_assign_bucket_t *) buf;
+    caches = (int *) (buf + wab_len);
+    buckets = buf + wab_len + cache_len;
+
+    memset(wccp_assign_bucket, '\0', sizeof(wccp_assign_bucket));
+    memset(buckets, 0xFF, WCCP_BUCKETS);
 
     buckets_per_cache = WCCP_BUCKETS / number_caches;
     for (loop = 0; loop < number_caches; loop++) {
@@ -306,23 +315,15 @@ wccpAssignBuckets(void *voidnotused)
 	    buckets[bucket++] = loop;
 	}
     }
-    offset = sizeof(wccp_assign_bucket);
-    buf = xmalloc(offset + WCCP_BUCKETS + (sizeof(*caches) * number_caches));
-    wccp_assign_bucket.type = htonl(WCCP_ASSIGN_BUCKET);
-    wccp_assign_bucket.id = wccp_i_see_you.id;
-    wccp_assign_bucket.number = wccp_i_see_you.number;
+    wccp_assign_bucket->type = htonl(WCCP_ASSIGN_BUCKET);
+    wccp_assign_bucket->id = wccp_i_see_you.id;
+    wccp_assign_bucket->number = wccp_i_see_you.number;
 
-    xmemcpy(buf, &wccp_assign_bucket, offset);
-    xmemcpy(buf + offset, caches, (sizeof(*caches) * number_caches));
-    offset += (sizeof(*caches) * number_caches);
-    xmemcpy(buf + offset, buckets, WCCP_BUCKETS);
-    offset += WCCP_BUCKETS;
     send(theOutWccpConnection,
 	buf,
-	offset,
+	wab_len + WCCP_BUCKETS + cache_len,
 	0);
     change = 0;
-    xfree(caches);
     xfree(buf);
 }
 

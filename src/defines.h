@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.76 1999/08/02 06:18:34 wessels Exp $
+ * $Id: defines.h,v 1.77 1999/12/30 17:36:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -206,8 +206,6 @@
 #define STORE_ENTRY_WITH_MEMOBJ		1
 #define STORE_ENTRY_WITHOUT_MEMOBJ	0
 
-#define SKIP_BASIC_SZ ((size_t) 6)
-
 #define PINGER_PAYLOAD_SZ 8192
 
 #define COUNT_INTERVAL 60
@@ -262,10 +260,11 @@
 
 #define CLIENT_SOCK_SZ 4096
 
-#define URI_WHITESPACE_DENY 0
+#define URI_WHITESPACE_STRIP 0
 #define URI_WHITESPACE_ALLOW 1
 #define URI_WHITESPACE_ENCODE 2
 #define URI_WHITESPACE_CHOP 3
+#define URI_WHITESPACE_DENY 4
 
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "/dev/null"

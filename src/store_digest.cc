@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.35 1999/09/07 22:15:11 wessels Exp $
+ * $Id: store_digest.cc,v 1.36 1999/12/30 17:36:55 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -66,21 +66,6 @@ typedef struct {
     int rej_coll_count;		/* #not accepted entries that collided with existing ones */
 } StoreDigestStats;
 
-/*
- * local constants (many of these are good candidates for SquidConfig
- */
-
-/* #bits per entry in store digest */
-static const int StoreDigestBitsPerEntry = 5;
-/* how often we want to rebuild the digest, in seconds */
-static const time_t StoreDigestRebuildPeriod = 60 * 60;
-/* how often we want to rewrite the digest after rebuild, in seconds */
-static const int StoreDigestRewritePeriod = 60 * 60;
-/* how many bytes to swap out at a time */
-static const int StoreDigestSwapOutChunkSize = SM_PAGE_SIZE;
-/* portion (0,1] of a hash table to be rescanned at a time */
-static const double StoreDigestRebuildChunkPercent = 0.10;
-
 /* local vars */
 static StoreDigestState sd_state;
 static StoreDigestStats sd_stats;
@@ -110,9 +95,15 @@ storeDigestInit(void)
 {
 #if USE_CACHE_DIGESTS
     const int cap = storeDigestCalcCap();
-    store_digest = cacheDigestCreate(cap, StoreDigestBitsPerEntry);
+
+    if (!Config.onoff.digest_generation) {
+	store_digest = NULL;
+	debug(71, 3) ("Local cache digest generation disabled\n");
+	return;
+    }
+    store_digest = cacheDigestCreate(cap, Config.digest.bits_per_entry);
     debug(71, 1) ("Local cache digest enabled; rebuild/rewrite every %d/%d sec\n",
-	StoreDigestRebuildPeriod, StoreDigestRewritePeriod);
+	Config.digest.rebuild_period, Config.digest.rewrite_period);
     memset(&sd_state, 0, sizeof(sd_state));
     cachemgrRegister("store_digest", "Store Digest",
 	storeDigestReport, 0, 1);
@@ -127,8 +118,10 @@ void
 storeDigestNoteStoreReady(void)
 {
 #if USE_CACHE_DIGESTS
-    storeDigestRebuildStart(NULL);
-    storeDigestRewriteStart(NULL);
+    if (Config.onoff.digest_generation) {
+	storeDigestRebuildStart(NULL);
+	storeDigestRewriteStart(NULL);
+    }
 #endif
 }
 
@@ -136,6 +129,9 @@ void
 storeDigestDel(const StoreEntry * entry)
 {
 #if USE_CACHE_DIGESTS
+    if (!Config.onoff.digest_generation) {
+	return;
+    }
     assert(entry && store_digest);
     debug(71, 6) ("storeDigestDel: checking entry, key: %s\n",
 	storeKeyText(entry->key));
@@ -158,6 +154,9 @@ void
 storeDigestReport(StoreEntry * e)
 {
 #if USE_CACHE_DIGESTS
+    if (!Config.onoff.digest_generation) {
+	return;
+    }
     if (store_digest) {
 	cacheDigestReport(store_digest, "store", e);
 	storeAppendPrintf(e, "\t added: %d rejected: %d ( %.2f %%) del-ed: %d\n",
@@ -217,9 +216,9 @@ storeDigestAddable(const StoreEntry * e)
     }
     /* still here? check staleness */
     /* Note: We should use the time of the next rebuild, not (cur_time+period) */
-    if (refreshCheckDigest(e, StoreDigestRebuildPeriod)) {
+    if (refreshCheckDigest(e, Config.digest.rebuild_period)) {
 	debug(71, 6) ("storeDigestAdd: entry expires within %d secs, ignoring\n",
-	    StoreDigestRebuildPeriod);
+	    Config.digest.rebuild_period);
 	return 0;
     }
     /*
@@ -298,7 +297,8 @@ storeDigestRebuildFinish(void)
     sd_state.rebuild_lock = 0;
     sd_state.rebuild_count++;
     debug(71, 2) ("storeDigestRebuildFinish: done.\n");
-    eventAdd("storeDigestRebuildStart", storeDigestRebuildStart, NULL, (double) StoreDigestRebuildPeriod, 1);
+    eventAdd("storeDigestRebuildStart", storeDigestRebuildStart, NULL, (double)
+	Config.digest.rebuild_period, 1);
     /* resume pending Rewrite if any */
     if (sd_state.rewrite_lock)
 	storeDigestRewriteResume();
@@ -308,7 +308,8 @@ storeDigestRebuildFinish(void)
 static void
 storeDigestRebuildStep(void *datanotused)
 {
-    int bcount = (int) ceil(store_hash_buckets * StoreDigestRebuildChunkPercent);
+    int bcount = (int) ceil((double) store_hash_buckets *
+	(double) Config.digest.rebuild_chunk_percentage / 100.0);
     assert(sd_state.rebuild_lock);
     if (sd_state.rebuild_offset + bcount > store_hash_buckets)
 	bcount = store_hash_buckets - sd_state.rebuild_offset;
@@ -376,7 +377,7 @@ storeDigestRewriteResume(void)
     httpReplyReset(e->mem_obj->reply);
     httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, "Cache Digest OK",
 	"application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
-	squid_curtime, squid_curtime + StoreDigestRewritePeriod);
+	squid_curtime, squid_curtime + Config.digest.rewrite_period);
     debug(71, 3) ("storeDigestRewrite: entry expires on %d (%+d)\n",
 	e->mem_obj->reply->expires, e->mem_obj->reply->expires - squid_curtime);
     storeBuffer(e);
@@ -406,7 +407,8 @@ storeDigestRewriteFinish(StoreEntry * e)
     cbdataFree(sd_state.rewrite_lock);
     sd_state.rewrite_lock = e = NULL;
     sd_state.rewrite_count++;
-    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double) StoreDigestRewritePeriod, 1);
+    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)
+	Config.digest.rewrite_period, 1);
     /* resume pending Rebuild if any */
     if (sd_state.rebuild_lock)
 	storeDigestRebuildResume();
@@ -417,7 +419,7 @@ static void
 storeDigestSwapOutStep(void *data)
 {
     StoreEntry *e = data;
-    int chunk_size = StoreDigestSwapOutChunkSize;
+    int chunk_size = Config.digest.swapout_chunk_size;
     assert(e);
     assert(e == sd_state.rewrite_lock);
     /* _add_ check that nothing bad happened while we were waiting @?@ @?@ */
@@ -444,7 +446,8 @@ storeDigestCBlockSwapOut(StoreEntry * e)
     sd_state.cblock.count = htonl(store_digest->count);
     sd_state.cblock.del_count = htonl(store_digest->del_count);
     sd_state.cblock.mask_size = htonl(store_digest->mask_size);
-    sd_state.cblock.bits_per_entry = (unsigned char) StoreDigestBitsPerEntry;
+    sd_state.cblock.bits_per_entry = (unsigned char)
+	Config.digest.bits_per_entry;
     sd_state.cblock.hash_func_count = (unsigned char) CacheDigestHashFuncCount;
     storeAppend(e, (char *) &sd_state.cblock, sizeof(sd_state.cblock));
 }

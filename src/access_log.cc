@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.52 1999/08/02 06:18:26 wessels Exp $
+ * $Id: access_log.cc,v 1.53 1999/12/30 17:36:19 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -135,28 +135,44 @@ log_quote(const char *header)
      * more readable.
      */
     while ((c = *(const unsigned char *) header++) != '\0') {
-	if (c <= 0x1F
-	    || c >= 0x7F
-	    || c == '"'
-	    || c == '#'
-	    || c == '%'
-	    || c == ';'
-	    || c == '<'
-	    || c == '>'
-	    || c == '?'
-	    || c == '{'
-	    || c == '}'
-	    || c == '|'
-	    || c == '\\'
-	    || c == '^'
-	    || c == '~'
-	    || c == '`'
-	    || c == '['
+#if !OLD_LOG_MIME
+	if (c == '\r') {
+	    *buf_cursor++ = '\\';
+	    *buf_cursor++ = 'r';
+	} else if (c == '\n') {
+	    *buf_cursor++ = '\\';
+	    *buf_cursor++ = 'n';
+	} else
+#endif
+	    if (c <= 0x1F
+		|| c >= 0x7F
+#if OLD_LOG_MIME
+		|| c == '"'
+		|| c == '#'
+		|| c == '%'
+		|| c == ';'
+		|| c == '<'
+		|| c == '>'
+		|| c == '?'
+		|| c == '{'
+		|| c == '}'
+		|| c == '|'
+		|| c == '\\'
+		|| c == '^'
+		|| c == '~'
+		|| c == '`'
+#endif
+		|| c == '['
 	    || c == ']') {
 	    *buf_cursor++ = '%';
 	    i = c * 2;
 	    *buf_cursor++ = c2x[i];
 	    *buf_cursor++ = c2x[i + 1];
+#if !OLD_LOG_MIME
+	} else if (c == '\\') {
+	    *buf_cursor++ = '\\';
+	    *buf_cursor++ = '\\';
+#endif
 	} else {
 	    *buf_cursor++ = (char) c;
 	}
@@ -371,7 +387,7 @@ accessLogInit(void)
 	    fatal("Cannot open Multicast Miss Stream Socket");
 	debug(46, 1) ("Multicast Miss Stream Socket opened on FD %d\n",
 	    mcast_miss_fd);
-	mcastSetTtl(mcast_miss_fd, 128);
+	mcastSetTtl(mcast_miss_fd, Config.mcast_miss.ttl);
 	if (strlen(Config.mcast_miss.encode_key) < 16)
 	    fatal("mcast_encode_key is too short, must be 16 characters");
     }

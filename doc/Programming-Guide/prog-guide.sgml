@@ -1641,4 +1641,97 @@ struct _storeSwapLogData {
 Note that <em/storeSwapLogData/ entries are written in native machine
 byte order.  They are not necessarily portable across architectures.
 
+<sect>Store ``swap meta'' Description
+<p>
+``swap meta'' refers to a section of meta data stored at the beginning
+of an object that is stored on disk.  This meta data includes information
+such as the object's cache key (MD5), URL, and part of the StoreEntry
+structure.
+
+<p>
+The meta data is stored using a TYPE-LENGTH-VALUE format.  That is,
+each chunk of meta information consists of a TYPE identifier, a
+LENGTH field, and then the VALUE (which is LENGTH octets long).
+
+<sect1>Types
+
+<p>
+As of Squid-2.3, the following TYPES are defined (from <em/enums.h/):
+<descrip>
+<tag/STORE_META_VOID/
+	Just a placeholder for the zeroth value.   It is never used
+	on disk.
+
+<tag/STORE_META_KEY_URL/
+	This represents the case when we use the URL as the cache
+	key, as Squid-1.1 does.  Currently we don't support using
+	a URL as a cache key, so this is not used.
+
+<tag/STORE_META_KEY_SHA/
+	For a brief time we considered supporting SHA (secure
+	hash algorithm) as a cache key.  Nobody liked it, and
+	this type is not currently used.
+
+<tag/STORE_META_KEY_MD5/
+	This represents the MD5 cache key that Squid currently uses.
+	When Squid opens a disk file for reading, it can check that
+	this MD5 matches the MD5 of the user's request.  If not, then
+	something went wrong and this is probably the wrong object.
+
+<tag/STORE_META_URL/
+	The object's URL.  This also may be matched against a user's
+	request for cache hits to make sure we got the right object.
+
+<tag/STORE_META_STD/
+	This is the ``standard metadata'' for an object.  Really
+	its just this middle chunk of the StoreEntry structure:
+<verb>
+	time_t timestamp;
+	time_t lastref;
+	time_t expires;
+	time_t lastmod;
+	size_t swap_file_sz;
+	u_short refcount;
+	u_short flags;
+</verb>
+
+<tag/STORE_META_HITMETERING/
+	Reserved for future hit-metering (RFC 2227) stuff.
+
+<tag/STORE_META_VALID/
+	?
+
+<tag/STORE_META_END/
+	Marks the last valid META type.
+
+</descrip>
+
+
+<sect1>Implementation Notes
+
+<p>
+When writing an object to disk, we must first write the meta data.
+This is done with a couple of functions.  First, <tt/storeSwapMetaPack()/
+takes a <em/StoreEntry/ as a parameter and returns a <em/tlv/ linked
+list.  Second, <tt/storeSwapMetaPack()/ converts the <em/tlv/ list
+into a character buffer that we can write.
+
+<p>
+Note that the <em/MemObject/ has a member called <em/swap_hdr_sz/.
+This value is the size of that character buffer; the size of the
+swap file meta data.  The <em/StoreEntry/ has a member named
+<em/swap_file_sz/ that represents the size of the disk file.
+Thus, the size of the object ``content'' is
+<verb>
+	StoreEntry->swap_file_sz  - MemObject->swap_hdr_sz;
+</verb>
+Note that the swap file content includes the HTTP reply headers
+and the HTTP reply body (if any).
+
+<p>
+When reading a swap file, there is a similar process to extract
+the swap meta data.  First, <tt/storeSwapMetaUnpack()/ converts a
+character buffer into a <em/tlv/ linked list.  It also tells us
+the value for <em/MemObject->swap_hdr_sz/.
+
 </article>

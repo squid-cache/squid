@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.276 1999/10/04 05:05:19 wessels Exp $
+ * $Id: neighbors.cc,v 1.277 1999/12/30 17:36:43 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -102,7 +102,7 @@ neighborType(const peer * p, const request_t * request)
 {
     const struct _domain_type *d = NULL;
     for (d = p->typelist; d; d = d->next) {
-	if (0 == matchDomainName(d->domain, request->host))
+	if (0 == matchDomainName(request->host, d->domain))
 	    if (d->type != PEER_NONE)
 		return d->type;
     }
@@ -136,7 +136,7 @@ peerAllowedToUse(const peer * p, request_t * request)
 	return do_ping;
     do_ping = 0;
     for (d = p->peer_domain; d; d = d->next) {
-	if (0 == matchDomainName(d->domain, request->host)) {
+	if (0 == matchDomainName(request->host, d->domain)) {
 	    do_ping = d->do_ping;
 	    break;
 	}
@@ -148,6 +148,7 @@ peerAllowedToUse(const peer * p, request_t * request)
 	return do_ping;
     checklist.src_addr = request->client_addr;
     checklist.my_addr = request->my_addr;
+    checklist.my_port = request->my_port;
     checklist.request = request;
     return aclCheckFast(p->access, &checklist);
 }

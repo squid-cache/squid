@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.79 1999/12/01 04:24:27 wessels Exp $
+ * $Id: store_client.cc,v 1.80 1999/12/30 17:36:54 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -102,7 +102,7 @@ storeClientType(StoreEntry * e)
      * If there is no disk file to open yet, we must make this a
      * mem client.  If we can't open the swapin file before writing
      * to the client, there is no guarantee that we will be able
-     * to open it later.
+     * to open it later when we really need it.
      */
     else if (e->swap_status == SWAPOUT_NONE)
 	return STORE_MEM_CLIENT;
@@ -124,9 +124,11 @@ storeClientListAdd(StoreEntry * e, void *data)
     assert(mem);
     if (storeClientListSearch(mem, data) != NULL)
 	return;
+    e->refcount++;
     mem->nclients++;
     sc = memAllocate(MEM_STORE_CLIENT);
     cbdataAdd(sc, memFree, MEM_STORE_CLIENT);	/* sc is callback_data for file_read */
+    cbdataLock(data);		/* locked while we point to it */
     sc->callback_data = data;
     sc->seen_offset = 0;
     sc->copy_offset = 0;
@@ -276,7 +278,18 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
 	    /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
 	    sc->callback = NULL;
 	    callback(sc->callback_data, sc->copy_buf, -1);
-	    return;
+	} else if (!sc->flags.disk_io_pending) {
+	    sc->flags.disk_io_pending = 1;
+	    storeSwapInStart(sc);
+	    if (NULL == sc->swapin_sio) {
+		sc->flags.disk_io_pending = 0;
+		sc->callback = NULL;
+		callback(sc->callback_data, sc->copy_buf, -1);
+	    } else {
+		storeClientFileRead(sc);
+	    }
+	} else {
+	    debug(20, 2) ("storeClientCopy2: Averted multiple fd operation\n");
 	}
 	assert(!sc->flags.disk_io_pending);
 	storeSwapInStart(sc);
@@ -357,6 +370,8 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
     size_t body_sz;
     size_t copy_sz;
     tlv *tlv_list;
+    tlv *t;
+    int swap_object_ok = 1;
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->callback != NULL);
@@ -382,10 +397,40 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	return;
     }
     /*
-     * XXX Here we should check the meta data and make sure we got
-     * the right object.
+     * Check the meta data and make sure we got the right object.
      */
+    for (t = tlv_list; t; t = t->next) {
+	switch (t->type) {
+	case STORE_META_KEY:
+	    assert(t->length == MD5_DIGEST_CHARS);
+	    if (memcmp(t->value, e->key, MD5_DIGEST_CHARS))
+		debug(20, 1) ("WARNING: swapin MD5 mismatch\n");
+	    break;
+	case STORE_META_URL:
+	    if (NULL == mem->url)
+		(void) 0;	/* can't check */
+	    else if (0 == strcasecmp(mem->url, t->value))
+		(void) 0;	/* a match! */
+	    else {
+		debug(20, 1) ("storeClientReadHeader: URL mismatch\n");
+		debug(20, 1) ("\t{%s} != {%s}\n", t->value, mem->url);
+		swap_object_ok = 0;
+		break;
+	    }
+	    break;
+	case STORE_META_STD:
+	    break;
+	default:
+	    debug(20, 1) ("WARNING: got unused STORE_META type %d\n", t->type);
+	    break;
+	}
+    }
     storeSwapTLVFree(tlv_list);
+    if (!swap_object_ok) {
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, -1);
+	return;
+    }
     mem->swap_hdr_sz = swap_hdr_sz;
     mem->object_sz = e->swap_file_sz - swap_hdr_sz;
     /*
@@ -465,11 +510,13 @@ storeUnregister(StoreEntry * e, void *data)
 	debug(20, 3) ("storeUnregister: store_client for %s has a callback\n",
 	    mem->url);
 	sc->callback = NULL;
-	callback(sc->callback_data, sc->copy_buf, -1);
+	if (cbdataValid(sc->callback_data))
+	    callback(sc->callback_data, sc->copy_buf, -1);
     }
 #if DELAY_POOLS
     delayUnregisterDelayIdPtr(&sc->delay_id);
 #endif
+    cbdataUnlock(sc->callback_data);	/* we're done with it now */
     cbdataFree(sc);
     assert(e->lock_count > 0);
     if (mem->nclients == 0)

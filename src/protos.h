@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.348 1999/12/01 04:28:08 wessels Exp $
+ * $Id: protos.h,v 1.349 1999/12/30 17:36:46 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -44,8 +44,6 @@ extern void fvdbCountForw(const char *key);
 
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
     request_t *,
-    struct in_addr src,
-    struct in_addr me,
     const char *user_agent,
     const char *ident);
 extern void aclNBCheck(aclCheck_t *, PF *, void *);
@@ -143,6 +141,7 @@ extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, request
 extern int isTcpHit(log_type);
 
 extern int commSetNonBlocking(int fd);
+extern int commUnsetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
 extern int comm_accept(int fd, struct sockaddr_in *, struct sockaddr_in *);
 extern void comm_close(int fd);
@@ -336,6 +335,7 @@ extern HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
 extern void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
 extern void httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc);
 extern void httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age);
+extern void httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage);
 extern void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
@@ -487,6 +487,7 @@ extern void httpRequestSwapOut(const request_t * req, StoreEntry * e);
 extern void httpRequestPack(const request_t * req, Packer * p);
 extern int httpRequestPrefixLen(const request_t * req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
+extern int httpRequestHdrAllowedByName(http_hdr_type id);
 
 extern void icmpOpen(void);
 extern void icmpClose(void);
@@ -677,7 +678,7 @@ extern void peerDigestNotePeerGone(PeerDigest * pd);
 extern void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 /* forward.c */
-extern void fwdStart(int, StoreEntry *, request_t *, struct in_addr, struct in_addr);
+extern void fwdStart(int, StoreEntry *, request_t *);
 extern DEFER fwdCheckDeferRead;
 extern void fwdFail(FwdState *, ErrorState *);
 extern void fwdUnregister(int fd, FwdState *);
@@ -831,7 +832,9 @@ extern int storeClientCopyPending(StoreEntry *, void *);
 extern void InvokeHandlers(StoreEntry *);
 extern int storeEntryValidToSend(StoreEntry *);
 extern void storeTimestampsSet(StoreEntry *);
+#if !HEAP_REPLACEMENT
 extern time_t storeExpiredReferenceAge(void);
+#endif
 extern void storeRegisterAbort(StoreEntry * e, STABH * cb, void *);
 extern void storeUnregisterAbort(StoreEntry * e);
 extern void storeMemObjectDump(MemObject * mem);
@@ -1074,7 +1077,7 @@ extern request_t *urlParse(method_t, char *);
 extern const char *urlCanonical(request_t *);
 extern char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
 extern char *urlInternal(const char *dir, const char *name);
-extern int matchDomainName(const char *d, const char *h);
+extern int matchDomainName(const char *host, const char *domain);
 extern int urlCheckRequest(const request_t *);
 extern int urlDefaultPort(protocol_t p);
 extern char *urlCanonicalClean(const request_t *);

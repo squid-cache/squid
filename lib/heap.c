@@ -1,6 +1,6 @@
 
 /*
- * $Id: heap.c,v 1.4 1999/10/04 05:04:50 wessels Exp $
+ * $Id: heap.c,v 1.5 1999/12/30 17:36:14 wessels Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -53,6 +53,7 @@
 #endif
 
 #include "heap.h"
+#include "util.h"
 
 /*
  * Hacks for non-synchronized heap implementation.
@@ -95,12 +96,12 @@ void _heap_print_tree(heap * hp, heap_node * node);
 heap *
 new_heap(int initSize, heap_key_func gen_key)
 {
-    heap *hp = malloc(sizeof(*hp));
+    heap *hp = xmalloc(sizeof(*hp));
     assert(hp != NULL);
 
     if (initSize <= 0)
 	initSize = MinSize;
-    hp->nodes = calloc(initSize, sizeof(heap_node *));
+    hp->nodes = xcalloc(initSize, sizeof(heap_node *));
     assert(hp->nodes != NULL);
 
     hp->size = initSize;
@@ -122,25 +123,26 @@ delete_heap(heap * hp)
     int i;
     assert(hp);
     for (i = 0; i < hp->last; i++) {
-	free(hp->nodes[i]);
+	xfree(hp->nodes[i]);
     }
-    free(hp->nodes);
-    free(hp);
+    xfree(hp->nodes);
+    xfree(hp);
 }
 
 /*
- * Insert DAT based on KY into HP maintaining the heap property.  Return the
- * newly inserted heap node. The fields of ELM other than ID are never
- * changed until ELM is deleted from HP, i.e. caller can assume that the
- * heap node always exist at the same place in memory unless heap_delete or
- * heap_extractmin is called on that node.  This function exposes the heap's
- * internal data structure to the caller.  This is required in order to do
- * O(lgN) deletion.
+ * Insert DAT based on KY into HP maintaining the heap property.
+ * Return the newly inserted heap node. The fields of ELM other
+ * than ID are never changed until ELM is deleted from HP, i.e.
+ * caller can assume that the heap node always exist at the same
+ * place in memory unless heap_delete or heap_extractmin is called
+ * on that node.  This function exposes the heap's internal data
+ * structure to the caller.  This is required in order to do O(lgN)
+ * deletion.
  */
 heap_node *
 heap_insert(heap * hp, void *dat)
 {
-    heap_node *elm = (heap_node *) malloc(sizeof(heap_node));
+    heap_node *elm = xmalloc(sizeof(*elm));
 
     elm->key = heap_gen_key(hp, dat);
     elm->data = dat;
@@ -175,7 +177,13 @@ heap_delete(heap * hp, heap_node * elm)
     _heap_swap_element(hp, lastNode, elm);
     heap_extractlast(hp);
 
-    if (hp->last > 0) {
+    if (elm == lastNode) {
+	/*
+	 * lastNode just got freed, so don't access it in the next
+	 * block.
+	 */
+	(void) 0;
+    } else if (hp->last > 0) {
 	if (lastNode->key < hp->nodes[Parent(lastNode->id)]->key)
 	    _heap_ify_up(hp, lastNode);		/* COOL! */
 	_heap_ify_down(hp, lastNode);
@@ -234,7 +242,7 @@ heap_extractlast(heap * hp)
     assert(_heap_node_exist(hp, hp->last - 1));
     hp->last -= 1;
     data = hp->nodes[hp->last]->data;
-    free(hp->nodes[hp->last]);
+    xfree(hp->nodes[hp->last]);
     return data;
 }
 
@@ -445,11 +453,11 @@ _heap_grow(heap * hp)
     else
 	newSize = hp->size * NormalRate;
 
-    hp->nodes = (heap_node * *)realloc(hp->nodes, newSize * sizeof(heap_node *));
+    hp->nodes = xrealloc(hp->nodes, newSize * sizeof(heap_node *));
 #if COMMENTED_OUT
     for (i = 0; i < hp->size; i++)
 	newNodes[i] = hp->nodes[i];
-    free(hp->nodes);
+    xfree(hp->nodes);
     hp->nodes = newNodes;
 #endif
     hp->size = newSize;
@@ -558,7 +566,7 @@ calc_heap_skew(heap * heap, int replace)
     /* 
      * Copy the heap nodes to a new storage area for offline sorting.
      */
-    nodes = (heap_node **) malloc(max * sizeof(heap_node *));
+    nodes = xmalloc(max * sizeof(heap_node *));
     memcpy(nodes, heap->nodes, max * sizeof(heap_node *));
 
     if (replace == 0) {
@@ -612,7 +620,7 @@ calc_heap_skew(heap * heap, int replace)
     /* 
      * Free the nodes array; note this is just an array of pointers, not data!
      */
-    free(nodes);
+    xfree(nodes);
     return norm;
 }
 

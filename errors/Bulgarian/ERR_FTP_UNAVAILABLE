@@ -1,16 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<TITLE>ГРЕШКА: Заявеният обект не може да бъде доставен </TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>ГРЕШКА</H1>
+<H2> Заявеният обект не може да бъде доставен </H2>
 <HR>
 <P>
-The FTP server was too busy while trying to retrieve the URL:
+FTP сървъртът е недостъпен в момента
 <A HREF="%U">%U</A>
 <P>
-Squid sent the following FTP command:
+Кеш сървъра изпрати следната FTP команда:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-and then received this reply
+и получи този отговор
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 </P>

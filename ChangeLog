@@ -1,3 +1,129 @@
+Changes to Squid-2.3.DEVEL3 ():
+
+	- Added --enable-underscores configure option.  This allows
+	  Squid to accept hostnames with underscores in them.  Your
+	  DNS resolver may still complain about them, however.
+	- Added --heap-replacement configure option.  This enables
+	  the alternative cache replacement policies, such as
+	  GDSF, and LFUDA.
+	- WCCP establishes and registers with the router faster.	
+	- Added 'maxconn' acl type to limit the number of established
+	  connections from a single client IP address.  Submitted
+	  by Vadim Kolontsov.
+	- Close FTP data socket as soon as transfer completes
+	  (Alexander V. Lukyanov).
+	- Fixed ftpReadPass() to not clobber ctrl.message when
+	  the PASS command fails.
+	- Added a redirect.c patch so squidGuard is able to do
+	  per-user access control (Antony T Curtis).
+	- discard the pumpMethod() function, and instead use the
+	  fact that the request has a request entity (content-length
+	  present) (Henrik).
+	- Reload the MIME icons at reconfigure time (Radu Greab).
+	- Updated Richard Huveneers' SMB authentication module to
+	  his version 0.05 package.
+	- Fixed lib/heap.c::heap_delete() bug when deleting the
+	  last node.
+	- Fixed an integer conversion bug in
+	  lib/rfc1035.c::rfc1035AnswersUnpack().
+	- Fixed lib/rfc1738 routines to encode reserved characters,
+	  in addition to encoding the unsafe characters (Henrik).
+	- Changed the interface for splay compare and "walk"
+	  functions to take a void pointer, instead of a splayNode
+	  pointer (Henrik).
+	- Changed numerous HTTP parsing routines to use ssize_t
+	  instead of size_t.  This was done because size_t may be
+	  signed or unsigned.  When it is unsigned, gcc emits
+	  numerous "comparison is always true" warnings.  At least
+	  we know ssize_t is always signed.
+	- Fixed src/HttpHeaderTools::httpHeaderHasConnDir() and
+	  friends so that it properly handles multi-value lists.
+	- Added an "end" (ssize_t) parameter to
+	  src/HttpReply::httpReplyParse() so that we know exactly
+	  where to terminate the header buffer.
+	- Changed src/access_log.c::log_quote() so that it only
+	  encodes whitespace characters, and not all URL-special
+	  characters (Henrik).
+	- Added local port ACL type ("myport") (Henrik).
+	- Added maximum number of connections per client ("maxconn")
+	  as an ACL type.
+	- Fixed proxy authentication username/password parsing to
+	  be more robust (Henrik).
+	- Fixed ACL domain/host and domain/domain comparison
+	  functions yet again.  Eliminated duplicate code so that
+	  only src/url.c::matchDomainName() contains this mysterious
+	  code.
+	- Changed the 'http_port' option to accept an IP address
+	  or hostname as well (Henrik).
+	- Removed 'tcp_incoming_addr' option.
+	- Added an access control list for the redirector
+	  ('redirector_access').  Requests which match are sent to
+	  the redirector.  All requests. are redirected by default.
+	- Added the 'authenticate_ip_ttl' option.  It specifies
+	  how long a valid proxy authentication credential is
+	  bound to a specific address.
+	- Added 280, 488, 591, and 777 to "Safe_ports" ACL.
+	- Removed the unused and highly questionable 'forward_snmpd_port'
+	  option.
+	- Added an option to accept DNS messages from unknown nameservers.
+	  This may be necessary if replies come from a different address
+	  than queries are sent to.
+	- Added #includes for IP Filter files in netinet directory.
+	- Fixed a bug with retrying forwarded IMS requests (Henrik).
+	- Fixed a bug in src/client_side.c::clientInterpretRequestHeaders()
+	  where we were checking a cache-control bit before getting the
+	  mask from the HTTP headers (pallo@initio.no).
+	- Fixed a bug with "no_cache" access list.  If not defined,
+	  everything was uncachable by default.
+	- Fixed a bug with timed-out client-side HTTP connections.
+	  We didn't cancel the read handler, which could lead to 
+	  "rwstate != NULL" warnings.
+	- Changed comm_open() to only call fdAdjustReserved() for
+	  specific errors (ENFILE, EMFILE);
+	- Fixed NULL pointer bug in idnsParseResolvConf().
+	- Split CACHE_DIGEST_HIT into CD_PARENT_HIT and CD_SIBLING_HIT.
+	- Added DELETE request method.
+	- Added RFC 2518 HTTP status codes.
+	- Fixed handling of URL passwords when we need to rewrite a
+	  BASE HREF URL (Henrik).
+	- Fixed a bug with FTP requests where a request gets aborted,
+	  but we try to complete it anyway.  It would result in a
+	  "store_status != STORE_PENDING" assertion.  The solution
+	  is to check for ENTRY_ABORTED before reading from
+	  the control channel too.
+	- Changed FTP to retry a request if Squid fails to establish
+	  a PASV data connection (Henrik).
+	- Fixed numerous HTCP memory leaks and an uninitialized memory
+	  bug.
+	- Changed httpMaybeRemovePublic() with RFC 2518 and 2616 in
+	  mind (Henrik).
+	- Minor fixes for Rhapsody systems.
+	- Define _XOPEN_SOURCE_EXTENDED in squid.h so that AIX systems
+	  don't include varargs.h.
+	- Changed src/store_client.c::storeClientType() so that
+	  an entry can have more than one STORE_MEM_CLIENT.
+	- Changed src/store_client.c::storeClientReadHeader()
+	  to check swapfile metadata (Henrik).
+	- Changed src/url.c::urlCheckRequest() to return FALSE for
+	  any "https://" URL.  These should always be CONNECT
+	  instead.  If Squid gets an "https://" URL, it is a browser
+	  bug.
+	- Added numerous squid.conf options for controlling cache
+	  digests.   Previously these were hard-coded in
+	  src/store_digest.c.  (Martin Hamilton)
+	- Added 'cache_peer' option called 'digest-url' that
+	  lets you specify the URL for a peer's digest.
+	  (Martin Hamilton)
+	- Added DELAY_POOLS hacks to scan "slow" connections in
+	  a random order (David Luyer).
+	- ARP_ACL fixes from Damien Miller.  Linux 2.2.x uses a
+	  per-interface arp/neighbour cache, whereas 2.0.x uses a
+	  unified cache. Under 2.2.x you are required to specify
+	  a interface name when looking up ARP table entries with
+	  SIOCGARP.
+	- If the process umask is not set (i.e. 0), then Squid
+	  changes it to 007.
+
 Changes to Squid-2.3.DEVEL2 ():
 
 	- Added --enable-truncate configure option.
@@ -31,12 +157,6 @@ Changes to Squid-2.3.DEVEL2 ():
 	  (Henrik Nordstrom).
 	- Added queue length to async I/O cachemgr stats (Henrik Nordstrom).
 	- Added OPTIONS request method.
-	- WCCP establishes and registers with the router faster.	
-	- Added 'maxconn' acl type to limit the number of established
-	  connections from a single client IP address.  Submitted
-	  by Vadim Kolontsov.
-	- Close FTP data socket as soon as transfer completes
-	  (Alexander V. Lukyanov).
 
 Changes to Squid-2.3.DEVEL1 ():
 

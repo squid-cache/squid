@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.464 1999/12/13 05:54:54 wessels Exp $
+ * $Id: client_side.cc,v 1.465 1999/12/30 17:36:26 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -147,8 +147,6 @@ clientAccessCheck(void *data)
     browser = httpHeaderGetStr(&http->request->header, HDR_USER_AGENT);
     http->acl_checklist = aclChecklistCreate(Config.accessList.http,
 	http->request,
-	conn->peer.sin_addr,
-	conn->me.sin_addr,
 	browser,
 	conn->ident);
 #if USE_IDENT
@@ -280,12 +278,14 @@ clientRedirectDone(void *data, char *result)
 	httpHeaderAppend(&new_request->header, &old_request->header);
 	new_request->client_addr = old_request->client_addr;
 	new_request->my_addr = old_request->my_addr;
+	new_request->my_port = old_request->my_port;
 	new_request->flags.redirected = 1;
 	if (old_request->body) {
 	    new_request->body = xmalloc(old_request->body_sz);
 	    xmemcpy(new_request->body, old_request->body, old_request->body_sz);
 	    new_request->body_sz = old_request->body_sz;
 	}
+	new_request->content_length = old_request->content_length;
 	requestUnlink(old_request);
 	http->request = requestLink(new_request);
     }
@@ -331,14 +331,9 @@ clientProcessExpired(void *data)
 #endif
     http->request->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: lastmod %d\n", (int) entry->lastmod);
-    entry->refcount++;		/* EXPIRED CASE */
-#if HEAP_REPLACEMENT
-    storeHeapPositionUpdate(entry);
-#endif
     http->entry = entry;
     http->out.offset = 0;
-    fwdStart(http->conn->fd, http->entry, http->request,
-	http->conn->peer.sin_addr, http->conn->me.sin_addr);
+    fwdStart(http->conn->fd, http->entry, http->request);
     /* Register with storage manager to receive updates when data comes in. */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	debug(33, 0) ("clientProcessExpired: found ENTRY_ABORTED object\n");
@@ -419,10 +414,6 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnregister(entry, http);
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
-	entry->refcount++;
-#if HEAP_REPLACEMENT
-	storeHeapPositionUpdate(entry);
-#endif
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	if (size >= CLIENT_SOCK_SZ) {
@@ -433,10 +424,6 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnregister(entry, http);
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
-	    entry->refcount++;
-#if HEAP_REPLACEMENT
-	    storeHeapPositionUpdate(entry);
-#endif
 	    /* continue */
 	} else {
 	    storeClientCopy(entry,
@@ -479,10 +466,6 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    httpReplyUpdateOnNotModified(http->old_entry->mem_obj->reply,
 		mem->reply);
 	    storeTimestampsSet(http->old_entry);
-	    http->old_entry->refcount++;
-#if HEAP_REPLACEMENT
-	    storeHeapPositionUpdate(http->old_entry);
-#endif
 	    http->log_type = LOG_TCP_REFRESH_HIT;
 	}
 	storeUnregister(http->old_entry, http);
@@ -911,14 +894,16 @@ clientCachable(clientHttpRequest * http)
      */
     ch.src_addr = http->conn->peer.sin_addr;
     ch.my_addr = http->conn->me.sin_addr;
+    ch.my_port = ntohs(http->conn->me.sin_port);
     ch.request = http->request;
     /*
      * aclCheckFast returns 1 for ALLOW and 0 for DENY.  The default
      * is ALLOW, so we require 'no_cache DENY foo' in squid.conf
      * to indicate uncachable objects.
      */
-    if (!aclCheckFast(Config.accessList.noCache, &ch))
-	return 0;
+    if (Config.accessList.noCache)
+	if (!aclCheckFast(Config.accessList.noCache, &ch))
+	    return 0;
     if (req->protocol == PROTO_HTTP)
 	return httpCachable(method);
     /* FTP is always cachable */
@@ -1202,7 +1187,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
     /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
     httpHeaderPutStrf(hdr, HDR_X_CACHE_LOOKUP, "%s from %s:%d",
 	http->lookup_type ? http->lookup_type : "NONE",
-	getMyHostname(), Config.Port.http->i);
+	getMyHostname(), ntohs(Config.Sockaddr.http->s.sin_port));
 #endif
     if (httpReplyBodySize(request->method, rep) < 0) {
 	debug(33, 3) ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
@@ -1967,10 +1952,6 @@ clientProcessRequest(clientHttpRequest * http)
 #if DELAY_POOLS
 	delaySetStoreClient(http->entry, http, delayClient(r));
 #endif
-	http->entry->refcount++;
-#if HEAP_REPLACEMENT
-	storeHeapPositionUpdate(http->entry);
-#endif
 	storeClientCopy(http->entry,
 	    http->out.offset,
 	    http->out.offset,
@@ -2025,10 +2006,6 @@ clientProcessMiss(clientHttpRequest * http)
     }
     assert(http->out.offset == 0);
     http->entry = clientCreateStoreEntry(http, r->method, r->flags);
-    http->entry->refcount++;
-#if HEAP_REPLACEMENT
-    storeHeapPositionUpdate(http->entry);
-#endif
     if (http->redirect.status) {
 	HttpReply *rep = httpReplyCreate();
 	storeReleaseRequest(http->entry);
@@ -2040,8 +2017,7 @@ clientProcessMiss(clientHttpRequest * http)
     }
     if (http->flags.internal)
 	r->protocol = PROTO_INTERNAL;
-    fwdStart(http->conn->fd, http->entry, r,
-	http->conn->peer.sin_addr, http->conn->me.sin_addr);
+    fwdStart(http->conn->fd, http->entry, r);
 }
 
 static clientHttpRequest *
@@ -2275,7 +2251,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	strcpy(http->uri, url);
 	http->flags.accel = 0;
     }
-    if (!stringHasCntl((unsigned char *) http->uri))
+    if (!stringHasCntl(http->uri))
 	http->log_uri = xstrndup(http->uri, MAX_URL);
     else
 	http->log_uri = xstrndup(rfc1738_escape_unescaped(http->uri), MAX_URL);
@@ -2428,11 +2404,11 @@ clientReadRequest(int fd, void *data)
 	    if (!http->flags.internal) {
 		if (internalCheck(strBuf(request->urlpath))) {
 		    if (internalHostnameIs(request->host) &&
-			request->port == Config.Port.http->i) {
+			request->port == ntohs(Config.Sockaddr.http->s.sin_port)) {
 			http->flags.internal = 1;
 		    } else if (internalStaticCheck(strBuf(request->urlpath))) {
 			xstrncpy(request->host, internalHostname(), SQUIDHOSTNAMELEN);
-			request->port = Config.Port.http->i;
+			request->port = ntohs(Config.Sockaddr.http->s.sin_port);
 			http->flags.internal = 1;
 		    }
 		}
@@ -2448,6 +2424,7 @@ clientReadRequest(int fd, void *data)
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;
 	    request->my_addr = conn->me.sin_addr;
+	    request->my_port = ntohs(conn->me.sin_port);
 	    request->http_ver = http->http_ver;
 	    if (!urlCheckRequest(request)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);
@@ -2525,7 +2502,7 @@ clientReadRequest(int fd, void *data)
 			close(fd);
 		    }
 		    /* The request is too large to handle */
-		    debug(33, 0) ("Request header is too large (%d bytes)\n",
+		    debug(33, 1) ("Request header is too large (%d bytes)\n",
 			(int) conn->in.offset);
 		    debug(33, 1) ("Config 'request_header_max_size'= %d bytes.\n",
 			Config.maxRequestHeaderSize);
@@ -2586,6 +2563,10 @@ requestTimeout(int fd, void *data)
 	 * if we don't close() here, we still need a timeout handler!
 	 */
 	commSetTimeout(fd, 30, requestTimeout, conn);
+	/*
+	 * Aha, but we don't want a read handler!
+	 */
+	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
     }
 }
 
@@ -2643,6 +2624,7 @@ httpAccept(int sock, void *data)
 #if USE_IDENT
 	identChecklist.src_addr = peer.sin_addr;
 	identChecklist.my_addr = me.sin_addr;
+	identChecklist.my_port = ntohs(me.sin_port);
 	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
 	    identStart(&me, &peer, clientIdentDone, connState);
 #endif
@@ -2780,14 +2762,14 @@ checkFailureRatio(err_type etype, hier_code hcode)
 void
 clientHttpConnectionsOpen(void)
 {
-    ushortlist *u;
+    sockaddr_in_list *s;
     int fd;
-    for (u = Config.Port.http; u; u = u->next) {
+    for (s = Config.Sockaddr.http; s; s = s->next) {
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
 	    0,
-	    Config.Addrs.tcp_incoming,
-	    u->i,
+	    s->s.sin_addr,
+	    ntohs(s->s.sin_port),
 	    COMM_NONBLOCKING,
 	    "HTTP Socket");
 	leave_suid();
@@ -2796,8 +2778,10 @@ clientHttpConnectionsOpen(void)
 	comm_listen(fd);
 	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
 	/*commSetDefer(fd, httpAcceptDefer, NULL); */
-	debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
-	    (int) u->i, fd);
+	debug(1, 1) ("Accepting HTTP connections at %s, port %d, FD %d.\n",
+	    inet_ntoa(s->s.sin_addr),
+	    (int) ntohs(s->s.sin_port),
+	    fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
     if (NHttpSockets < 1)

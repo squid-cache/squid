@@ -1,17 +1,17 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<TITLE>ГРЕШКА: Заявеният обект не може да бъде доставен </TITLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>ГРЕШКА</H1>
+<H2> Заявеният обект не може да бъде доставен </H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+При опит за доставка на URL-a:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+Възникна следната грешка:
 <UL>
 <P>
-This cache is in the process of shutting down and can not
-service your request at this time.  Please retry your
-request again soon.
+Кеш сървърът е в процес на рестартиране и в момента не може да изпълни вашата заявка. 
+Моля опитайте отново след няколко минути.
 </P>

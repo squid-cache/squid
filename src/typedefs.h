@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.98 1999/10/04 05:05:37 wessels Exp $
+ * $Id: typedefs.h,v 1.99 1999/12/30 17:37:02 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -74,6 +74,7 @@ typedef struct _intlist intlist;
 typedef struct _intrange intrange;
 typedef struct _ushortlist ushortlist;
 typedef struct _relist relist;
+typedef struct _sockaddr_in_list sockaddr_in_list;
 typedef struct _SquidConfig SquidConfig;
 typedef struct _SquidConfig2 SquidConfig2;
 typedef struct _close_handler close_handler;

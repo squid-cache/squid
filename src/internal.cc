@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.16 1999/08/02 06:18:38 wessels Exp $
+ * $Id: internal.cc,v 1.17 1999/12/30 17:36:38 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -117,7 +117,8 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
 char *
 internalLocalUri(const char *dir, const char *name)
 {
-    return internalRemoteUri(getMyHostname(), Config.Port.http->i, dir, name);
+    return internalRemoteUri(getMyHostname(),
+	ntohs(Config.Sockaddr.http->s.sin_port), dir, name);
 }
 
 const char *

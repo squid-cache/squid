@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.79 1999/06/17 22:20:37 wessels Exp $
+ * $Id: dns.cc,v 1.80 1999/12/30 17:36:30 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -72,8 +72,8 @@ dnsInit(void)
 	cachemgrRegister("dns",
 	    "Dnsserver Statistics",
 	    dnsStats, 0, 1);
+	init = 1;
     }
-    init++;
 #endif
 }
 

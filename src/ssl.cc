@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.100 1999/10/04 05:05:28 wessels Exp $
+ * $Id: ssl.cc,v 1.101 1999/12/30 17:36:51 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -119,7 +119,12 @@ static int
 sslDeferServerRead(int fdnotused, void *data)
 {
     SslStateData *s = data;
-    return delayBytesWanted(s->delay_id, 0, 1) == 0;
+    int i = delayBytesWanted(s->delay_id, 0, INT_MAX);
+    if (i == INT_MAX)
+	return 0;
+    if (i == 0)
+	return 1;
+    return -1;
 }
 #endif
 
@@ -155,7 +160,8 @@ sslSetSelect(SslStateData * sslState)
 		0);
 	}
 #if DELAY_POOLS
-	/* If this was allowed to return 0, there would be a possibility
+	/*
+	 * If this was allowed to return 0, there would be a possibility
 	 * of the socket becoming "hung" with data accumulating but no
 	 * write handler (server.len==0) and no read handler (!(0<0)) and
 	 * no data flowing in the other direction.  Hence the argument of

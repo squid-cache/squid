@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.18 1999/10/04 05:04:53 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.19 1999/12/30 17:36:16 wessels Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -47,6 +47,7 @@ static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] =
     {"proxy-revalidate", CC_PROXY_REVALIDATE},
     {"only-if-cached", CC_ONLY_IF_CACHED},
     {"max-age", CC_MAX_AGE},
+    {"s-maxage", CC_S_MAXAGE},
     {"Other,", CC_OTHER}	/* ',' will protect from matches */
 };
 HttpHeaderFieldInfo *CcFieldsInfo = NULL;
@@ -76,7 +77,7 @@ HttpHdrCc *
 httpHdrCcCreate(void)
 {
     HttpHdrCc *cc = memAllocate(MEM_HTTP_HDR_CC);
-    cc->max_age = -1;
+    cc->max_age = cc->s_maxage = -1;
     return cc;
 }
 
@@ -132,6 +133,13 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 		EBIT_CLR(cc->mask, type);
 	    }
 	    break;
+	case CC_S_MAXAGE:
+	    if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
+		debug(65, 2) ("cc: invalid s-maxage specs near '%s'\n", item);
+		cc->s_maxage = -1;
+		EBIT_CLR(cc->mask, type);
+	    }
+	    break;
 	default:
 	    /* note that we ignore most of '=' specs */
 	    break;
@@ -155,6 +163,7 @@ httpHdrCcDup(const HttpHdrCc * cc)
     dup = httpHdrCcCreate();
     dup->mask = cc->mask;
     dup->max_age = cc->max_age;
+    dup->s_maxage = cc->s_maxage;
     return dup;
 }
 
@@ -174,6 +183,9 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 	    if (flag == CC_MAX_AGE)
 		packerPrintf(p, "=%d", (int) cc->max_age);
 
+	    if (flag == CC_S_MAXAGE)
+		packerPrintf(p, "=%d", (int) cc->s_maxage);
+
 	    pcount++;
 	}
     }
@@ -185,6 +197,8 @@ httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc)
     assert(cc && new_cc);
     if (cc->max_age < 0)
 	cc->max_age = new_cc->max_age;
+    if (cc->s_maxage < 0)
+	cc->s_maxage = new_cc->s_maxage;
     cc->mask |= new_cc->mask;
 }
 
@@ -198,6 +212,18 @@ httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age)
 	EBIT_SET(cc->mask, CC_MAX_AGE);
     else
 	EBIT_CLR(cc->mask, CC_MAX_AGE);
+}
+
+/* negative s_maxage will clean old s-maxage setting */
+void
+httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage)
+{
+    assert(cc);
+    cc->s_maxage = s_maxage;
+    if (s_maxage >= 0)
+	EBIT_SET(cc->mask, CC_S_MAXAGE);
+    else
+	EBIT_CLR(cc->mask, CC_S_MAXAGE);
 }
 
 void

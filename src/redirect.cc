@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.82 1999/10/04 05:05:24 wessels Exp $
+ * $Id: redirect.cc,v 1.83 1999/12/30 17:36:48 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -163,8 +163,8 @@ redirectInit(void)
 	cachemgrRegister("redirector",
 	    "URL Redirector Stats",
 	    redirectStats, 0, 1);
+	init = 1;
     }
-    init++;
 }
 
 void
