@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.59 2001/09/04 01:02:50 robertc Exp $
+ * $Id: dnsserver.cc,v 1.60 2002/07/01 08:55:32 hno Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -127,6 +127,9 @@
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_GETOPT_H
+#include <getopt.h>
 #endif
 
 #if HAVE_ARPA_NAMESER_H
