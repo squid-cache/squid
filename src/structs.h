@@ -541,8 +541,8 @@ struct _TimeOrTag {
 
 /* data for iterating thru range specs */
 struct _HttpHdrRangeIter  {
-    HttpHdrRangeSpec spec;
     HttpHdrRangePos pos;
+    const HttpHdrRangeSpec *spec; /* current spec at pos */
     size_t debt_size;	/* bytes left to send from the current spec */
     size_t prefix_size; /* the size of the incoming HTTP msg prefix */
     String boundary;    /* boundary for multipart responses */

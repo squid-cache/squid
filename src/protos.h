@@ -293,7 +293,7 @@ extern void httpHdrRangeDestroy(HttpHdrRange * range);
 extern HttpHdrRange *httpHdrRangeDup(const HttpHdrRange * range);
 extern void httpHdrRangePackInto(const HttpHdrRange * range, Packer * p);
 /* iterate through specs */
-extern int httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, HttpHdrRangePos * pos);
+extern HttpHdrRangeSpec *httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangePos * pos);
 /* adjust specs after the length is known */
 extern int httpHdrRangeCanonize(HttpHdrRange * range, size_t clen);
 /* other */

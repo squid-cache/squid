@@ -3,9 +3,9 @@
 	  potentially cachable Range request for a not cached object, Squid
 	  requests the whole object from origin server and then replies with
 	  specified range(s) to the client. Multi-range requests are
-	  supported. If-Range requests are supported.  Limitations:
-	  Multi-range requests with out of order or overlapping ranges are not
-	  supported.
+	  supported. Adjacent overlapping ranges are merged. If-Range requests
+	  are supported.  Limitations:  Multi-range requests with out of order
+	  ranges are not supported.
 	- Made md5.c use standard memcpy and memset if they are avaliable.
 	- Memory pools will now shrink if Squid is run-time reconfigured with
 	  smaller value of memory_pools_limit tag.

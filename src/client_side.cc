@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.330 1998/06/04 18:57:08 wessels Exp $
+ * $Id: client_side.cc,v 1.331 1998/06/04 20:25:04 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1130,15 +1130,15 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	/* append appropriate header(s) */ 
 	if (spec_count == 1) {
 	    HttpHdrRangePos pos = HttpHdrRangeInitPos;
-	    HttpHdrRangeSpec spec;
-	    assert(httpHdrRangeGetSpec(http->request->range, &spec, &pos));
+	    const HttpHdrRangeSpec *spec = httpHdrRangeGetSpec(http->request->range, &pos);
+	    assert(spec);
 	    /* append Content-Range */
-	    httpHeaderAddContRange(hdr, spec, rep->content_length);
+	    httpHeaderAddContRange(hdr, *spec, rep->content_length);
 	    /* set new Content-Length to the actual number of OCTETs
 	     * transmitted in the message-body */
 	    httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
-	    httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, spec.length);
-	    debug(33, 2) ("clientBuildRangeHeader: actual content length: %d\n", spec.length);
+	    httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, spec->length);
+	    debug(33, 2) ("clientBuildRangeHeader: actual content length: %d\n", spec->length);
 	} else {
 	    /* multipart! */
 	    /* generate boundary string */
@@ -1282,11 +1282,12 @@ clientPackRange(clientHttpRequest *http, HttpHdrRangeIter *i, const char **buf, 
     const size_t copy_sz = i->debt_size <= *size ? i->debt_size : *size;
     off_t body_off = http->out.offset - i->prefix_size;
     assert(*size > 0);
+    assert(i->spec);
     /* intersection of "have" and "need" ranges must not be empty */
-    assert(body_off < i->spec.offset + i->spec.length);
-    assert(body_off + *size > i->spec.offset);
+    assert(body_off < i->spec->offset + i->spec->length);
+    assert(body_off + *size > i->spec->offset);
     /* put boundary and headers at the beginning of range in a multi-range */
-    if (http->request->range->specs.count > 1 && i->debt_size == i->spec.length) {
+    if (http->request->range->specs.count > 1 && i->debt_size == i->spec->length) {
 	HttpReply *rep = http->entry->mem_obj ? /* original reply */
 	    http->entry->mem_obj->reply : NULL;
 	HttpHeader hdr;
@@ -1299,7 +1300,7 @@ clientPackRange(clientHttpRequest *http, HttpHdrRangeIter *i, const char **buf, 
 	httpHeaderInit(&hdr, hoReply);
 	if (httpHeaderHas(&rep->header, HDR_CONTENT_TYPE))
 	    httpHeaderPutStr(&hdr, HDR_CONTENT_TYPE, httpHeaderGetStr(&rep->header, HDR_CONTENT_TYPE));
-	httpHeaderAddContRange(&hdr, i->spec, rep->content_length);
+	httpHeaderAddContRange(&hdr, *i->spec, rep->content_length);
 	packerToMemInit(&p, mb);
 	httpHeaderPackInto(&hdr, &p);
 	packerClean(&p);
@@ -1320,6 +1321,21 @@ clientPackRange(clientHttpRequest *http, HttpHdrRangeIter *i, const char **buf, 
     assert(*size >= 0 && i->debt_size >= 0);
 }
 
+/* returns true if there is still data available to pack more ranges
+ * increments iterator "i"
+ * used by clientPackMoreRanges */
+static int
+clientCanPackMoreRanges(const clientHttpRequest *http, HttpHdrRangeIter *i, ssize_t size)
+{
+    /* first update "i" if needed */
+    if (!i->debt_size) {
+	if ((i->spec = httpHdrRangeGetSpec(http->request->range, &i->pos)))
+	    i->debt_size = i->spec->length;
+    }
+    assert(!i->debt_size == !i->spec); /* paranoid sync condition */
+    /* continue condition: need_more_data && have_more_data */
+    return i->spec && size > 0;
+}
 
 /* extracts "ranges" from buf and appends them to mb, updating all offsets and such */
 /* returns true if we need more data */
@@ -1327,24 +1343,19 @@ static int
 clientPackMoreRanges(clientHttpRequest *http, const char *buf, ssize_t size, MemBuf *mb)
 {
     HttpHdrRangeIter *i = &http->range_iter;
-    int need_more = i->debt_size > 0;
     /* offset in range specs does not count the prefix of an http msg */
     off_t body_off = http->out.offset - i->prefix_size;
     assert(size >= 0);
     /* filter out data according to range specs */
     /* note: order of loop conditions is significant! */
-    while ((i->debt_size || (need_more = httpHdrRangeGetSpec(http->request->range, &i->spec, &i->pos))) &&
-	   size > 0) {
+    while (clientCanPackMoreRanges(http, i, size)) {
 	off_t start; /* offset of still missing data */
-	if (!i->debt_size)
-	    i->debt_size = i->spec.length;
-	if (!i->debt_size)
-	    continue;
-	start = i->spec.offset + i->spec.length - i->debt_size;
+	assert(i->spec);
+	start = i->spec->offset + i->spec->length - i->debt_size;
 	debug(33, 2) ("clientPackMoreRanges: in:  offset: %d size: %d\n",
 	    (int)body_off, size);
 	debug(33, 2) ("clientPackMoreRanges: out: start: %d spec[%d]: [%d, %d), len: %d debt: %d\n",
-	    (int)start, (int)i->pos, i->spec.offset, (int)(i->spec.offset+i->spec.length), i->spec.length, i->debt_size);
+	    (int)start, (int)i->pos, i->spec->offset, (int)(i->spec->offset+i->spec->length), i->spec->length, i->debt_size);
 	assert(body_off <= start); /* we did not miss it */
 	/* skip up to start */
 	if (body_off + size > start) {
@@ -1365,17 +1376,17 @@ clientPackMoreRanges(clientHttpRequest *http, const char *buf, ssize_t size, Mem
 	    body_off = http->out.offset - i->prefix_size; /* sync */
 	}
     }
+    assert(!i->debt_size == !i->spec); /* paranoid sync condition */
     debug(33, 2) ("clientPackMoreRanges: buf exhausted: in:  offset: %d size: %d need_more: %d\n",
-	(int)body_off, size, need_more);
-    debug(33, 2) ("clientPackMoreRanges: spec[%d]: [%d, %d), len: %d debt: %d\n",
-	(int)i->pos, i->spec.offset, (int)(i->spec.offset+i->spec.length), i->spec.length, i->debt_size);
-    /* skip the data we do not need */
-    /* maybe, we have not seen that data yet! */
-    if (need_more) {
-	if (i->debt_size == i->spec.length) /* at the start of the cur. spec */
-	    body_off = i->spec.offset;
+	(int)body_off, size, i->debt_size);
+    if (i->debt_size) {
+	debug(33, 2) ("clientPackMoreRanges: need more: spec[%d]: [%d, %d), len: %d\n",
+	    (int)i->pos, i->spec->offset, (int)(i->spec->offset+i->spec->length), i->spec->length);
+	/* skip the data we do not need if possible */
+	if (i->debt_size == i->spec->length) /* at the start of the cur. spec */
+	    body_off = i->spec->offset;
 	else
-	    assert(body_off == i->spec.offset + i->spec.length - i->debt_size);
+	    assert(body_off == i->spec->offset + i->spec->length - i->debt_size);
     } else 
     if (http->request->range->specs.count > 1) {
 	/* put terminating boundary for multiparts */
@@ -1383,7 +1394,7 @@ clientPackMoreRanges(clientHttpRequest *http, const char *buf, ssize_t size, Mem
     }
 
     http->out.offset = body_off + i->prefix_size; /* sync */
-    return need_more;
+    return i->debt_size > 0;
 }
 
 /*
