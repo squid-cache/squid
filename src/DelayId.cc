@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.2 2003/02/12 06:10:58 robertc Exp $
+ * $Id: DelayId.cc,v 1.3 2003/02/13 10:28:01 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -71,6 +71,7 @@ DelayId::DelayId () : pool_ (0), compositeId(NULL)
 DelayId::DelayId (unsigned short aPool) : 
 pool_ (aPool), compositeId (NULL)
 {
+    debug (77,3)("DelayId::DelayId: Pool %du\n", aPool);
 }
 
 DelayId::~DelayId ()
