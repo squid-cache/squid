@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.7 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLStrategised.h,v 1.8 2004/12/24 08:57:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -56,6 +56,8 @@ public:
 
     virtual char const *typeString() const;
     virtual bool requiresRequest() const {return matcher->requiresRequest();}
+
+    virtual bool requiresReply() const {return matcher->requiresReply();}
 
     virtual void prepareForUse() { data->prepareForUse();}
 
