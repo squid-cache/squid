@@ -1,7 +1,7 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.15 1996/04/11 04:47:18 wessels Exp $
+#  $Id: Makefile.in,v 1.16 1996/04/11 23:51:56 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -68,7 +68,8 @@ DEFAULTS        = \
 	-DDEFAULT_DNSSERVER=\"$(bindir)/dnsserver\" \
 	-DDEFAULT_CACHE_LOG=\"$(prefix)/logs/cache.log\" \
 	-DDEFAULT_ACCESS_LOG=\"$(prefix)/logs/access.log\" \
-	-DDEFAULT_HIERARCHY_LOG=\"$(prefix)/logs/hierarchy.log\"
+	-DDEFAULT_HIERARCHY_LOG=\"$(prefix)/logs/hierarchy.log\" \
+	-DDEFAULT_STORE_LOG=\"$(prefix)/logs/store.log\"
 
 all:	$(PROGS) $(UTILS) $(CGIPROGS)
 

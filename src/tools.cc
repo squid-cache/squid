@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.29 1996/04/11 04:47:28 wessels Exp $ */
+/* $Id: tools.cc,v 1.30 1996/04/11 23:52:01 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -142,6 +142,7 @@ void rotate_logs(sig)
     debug(21, 1, "rotate_logs: SIGUSR1 received.\n");
 
     storeWriteCleanLog();
+    storeRotateLog();
     neighbors_rotate_log();
     stat_rotate_log();
     _db_rotate_log();
