@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.487 1999/01/29 21:01:54 wessels Exp $
+ * $Id: store.cc,v 1.488 1999/02/02 18:14:23 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -714,25 +714,21 @@ storeMaintainSwapSpace(void *datanotused)
     int expired = 0;
     int max_scan;
     int max_remove;
+    double f;
     static time_t last_warn_time = 0;
     /* We can't delete objects while rebuilding swap */
     if (store_rebuilding) {
 	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
 	return;
-    } else if (store_swap_size < store_swap_mid) {
-	max_scan = 100;
-	max_remove = 8;
-	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
-    } else if (store_swap_size < store_swap_high) {
-	max_scan = 200;
-	max_remove = 8;
-	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 0.1, 1);
     } else {
-	max_scan = 500;
-	max_remove = 32;
-	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 0.0, 1);
+	f = (double) (store_swap_size - store_swap_low) / (store_swap_high - store_swap_low);
+	f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
+	max_scan = (int) (f * 400.0 + 100.0);
+	max_remove = (int) (f * 70.0 + 10.0);
+	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0 - f, 1);
     }
-    debug(20, 3) ("storeMaintainSwapSpace\n");
+    debug(20, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n",
+	f, max_scan, max_remove);
     for (m = store_list.tail; m; m = prev) {
 	prev = m->prev;
 	e = m->data;
