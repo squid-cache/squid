@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.183 1998/09/15 19:37:43 wessels Exp $
+ * $Id: acl.cc,v 1.184 1998/09/18 22:37:53 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -87,12 +87,11 @@ static SPLAYWALKEE aclDumpDomainListWalkee;
 
 #if USE_ARP_ACL
 static void aclParseArpList(void *curlist);
-static int checkARP(u_long ip, char *eth);
 static int decode_eth(const char *asc, char *eth);
 static int aclMatchArp(void *dataptr, struct in_addr c);
-static wordlist *aclDumpArpList(acl_arp_data *);
+static wordlist *aclDumpArpList(void *);
 static SPLAYCMP aclArpCompare;
-static SPLAYWALKEE aclDumpArpWalkee;
+static SPLAYWALKEE aclDumpArpListWalkee;
 #endif
 
 static char *
@@ -2048,6 +2047,9 @@ aclDumpGeneric(const acl * a)
  * For example,
  * 
  * acl students arp 00:00:21:55:ed:22 00:00:21:ff:55:38
+ *
+ * NOTE: Linux code by David Luyer <luyer@ucs.uwa.edu.au>.
+ *       Original (BSD-specific) code no longer works.
  */
 
 #include "squid.h"
@@ -2087,10 +2089,10 @@ decode_eth(const char *asc, char *eth)
 static acl_arp_data *
 aclParseArpData(const char *t)
 {
-    LOCAL_ARRAY(char, eth, 256);	/* addr1 ---> eth */
+    LOCAL_ARRAY(char, eth, 256);
     acl_arp_data *q = xcalloc(1, sizeof(acl_arp_data));
     debug(28, 5) ("aclParseArpData: %s\n", t);
-    if (sscanf(t, "%[0-9a-f:]", eth) != 1) {
+    if (sscanf(t, "%[0-9a-fA-F:]", eth) != 1) {
 	debug(28, 0) ("aclParseArpData: Bad ethernet address: '%s'\n", t);
 	safe_free(q);
 	return NULL;
@@ -2098,7 +2100,7 @@ aclParseArpData(const char *t)
     if (!decode_eth(eth, q->eth)) {
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
-	debug(28, 0) ("aclParseArpData: Ignoring invalid ARP acl entry: can't parse '%s'\n", q);
+	debug(28, 0) ("aclParseArpData: Ignoring invalid ARP acl entry: can't parse '%s'\n", eth);
 	safe_free(q);
 	return NULL;
     }
@@ -2129,7 +2131,6 @@ aclParseArpList(void *curlist)
 static int
 aclMatchArp(void *dataptr, struct in_addr c)
 {
-    /* WARNING: Untested, added to make it compile! */
     struct arpreq arpReq;
     struct sockaddr_in ipAddr;
     splayNode **Top = dataptr;
@@ -2168,30 +2169,6 @@ aclArpCompare(const void *data, splayNode * n)
 	return (d1[2] > d2[2]) ? 1 : -1;
     return 0;
 }
-
-static int
-checkARP(u_long ip, char *eth)
-{
-    struct arpreq arpReq;
-    struct sockaddr_in ipAddr;
-    ipAddr.sin_family = AF_INET;
-    ipAddr.sin_port = 0;
-    ipAddr.sin_addr.s_addr = ip;
-    memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
-    arpReq.arp_dev[0] = '\0';
-    arpReq.arp_flags = 0;
-    /* any AF_INET socket will do... gives back hardware type, device, etc */
-    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) == -1) {
-	debug(28, 1) ("ARP query failed - %d", errno);
-	return 0;
-    } else if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
-	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
-	    arpReq.arp_ha.sa_family);
-	/* update here and MAC address parsing to handle non-ethernet */
-	return 0;
-    } else
-	return !memcmp(&arpReq.arp_ha.sa_data, eth, 6);
-}
 #else
 
 static int
@@ -2206,6 +2183,11 @@ aclArpCompare(const void *data, splayNode * n)
     WRITE ME;
 }
 
+/**********************************************************************
+* This is from the pre-splay-tree code for BSD
+* I suspect the Linux approach will work on most O/S and be much
+* better - <luyer@ucs.uwa.edu.au>
+***********************************************************************
 static int
 checkARP(u_long ip, char *eth)
 {
@@ -2246,19 +2228,20 @@ checkARP(u_long ip, char *eth)
     xfree(buf);
     return 0;
 }
+**********************************************************************/
 #endif
 
-static wordlist *
-aclDumpArpWalkee(void *node, void *state)
+static void
+aclDumpArpListWalkee(void *node, void *state)
 {
-    acl_arp_data *arp = data;
+    acl_arp_data *arp = node;
     wordlist **W = state;
     static char buf[24];
     while (*W != NULL)
 	W = &(*W)->next;
     snprintf(buf, sizeof(buf), "%02x:%02x:02x:02x:02x:02x",
-	data->eth[0], data->eth[1], data->eth[2], data->eth[3],
-	data->eth[4], data->eth[5]);
+	arp->eth[0], arp->eth[1], arp->eth[2], arp->eth[3],
+	arp->eth[4], arp->eth[5]);
     *W = xcalloc(1, sizeof(wordlist));
     (*W)->key = xstrdup(buf);
 }
