@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.123 1997/12/27 18:15:08 kostas Exp $
+ * $Id: acl.cc,v 1.124 1997/12/30 02:46:35 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1376,11 +1376,13 @@ aclCheck(aclCheck_t * checklist)
 		checklist);
 	    return;
 	}
+	if (checklist->state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED) {
+	    allow = ACCESS_REQ_PROXY_AUTH;
+	    debug(28, 3) ("aclCheck: match pending, returning %d\n", allow);
+	    aclCheckCallback(checklist, allow);
+	    return;
+	}
 	if (match) {
-	    /* hack! */
-	    if (allow == ACCESS_DENIED)
-		if (checklist->state[ACL_PROXY_AUTH] == ACL_LOOKUP_NEEDED)
-		    allow = ACCESS_REQ_PROXY_AUTH;
 	    debug(28, 3) ("aclCheck: match found, returning %d\n", allow);
 	    aclCheckCallback(checklist, allow);
 	    return;
