@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.21 2002/04/06 08:49:27 adrian Exp $
+#  $Id: Makefile.am,v 1.22 2002/04/13 14:11:43 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -216,8 +216,6 @@ squid_LDADD = \
 	@AUTH_OBJS@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
-	@SQUID_AIO_LIB@ \
-	@SQUID_PTHREAD_LIB@ \
 	@SNMPLIB@ \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \

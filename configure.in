@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.261 2002/04/06 08:49:21 adrian Exp $
+dnl  $Id: configure.in,v 1.262 2002/04/13 14:11:43 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AC_INIT(src/main.c)
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 2.6-DEVEL)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.261 $)dnl
+AC_REVISION($Revision: 1.262 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -265,14 +265,12 @@ AC_ARG_ENABLE(async-io,
                           --enable-storeio=ufs,aufs],
 [ case $enableval in
   yes)
-  	with_pthreads=yes
 	STORE_MODULES="ufs aufs"
     ;;
   no)
     ;;
   *)
   	aufs_io_threads=$enableval
-	with_pthreads=yes
 	STORE_MODULES="ufs aufs"
     ;;
   esac
@@ -285,19 +283,13 @@ AC_ARG_WITH(aufs-threads,
 [ aufs_io_threads=$withval ])
 if test "$aufs_io_threads"; then
     echo "With $aufs_io_threads aufs threads"
-    with_pthreads=yes
     AC_DEFINE_UNQUOTED(AUFS_IO_THREADS,$aufs_io_threads)
 fi
 
 AC_ARG_WITH(pthreads,
-[  --with-pthreads         Use POSIX Threads],
-[ if test "$enableval" = "yes"; then
-    with_pthreads=yes
-  fi
-])
-if test "$with_pthreads"; then
+[  --with-pthreads         Use POSIX Threads])
+if test "$with_pthreads" = "yes"; then
     echo "With pthreads"
-    SQUID_PTHREAD_LIB='$(PTHREADLIB)'
     CFLAGS="$CFLAGS -D_REENTRANT"
     case "$host" in
     i386-unknown-freebsd*)
@@ -316,19 +308,18 @@ if test "$with_pthreads"; then
     ;;
     esac
 fi
-AC_SUBST(SQUID_PTHREAD_LIB)
 
 AC_ARG_WITH(aio,
-[  --with-aio              Use POSIX AIO],
-[ if test "$enableval" = "yes"; then
-    with_aio=yes
-  fi
-])
-if test "$with_aio"; then
+[  --with-aio              Use POSIX AIO])
+if test "$with_aio" = "yes"; then
     echo "With aio"
-    SQUID_AIO_LIB='$(AIOLIB)'
 fi
-AC_SUBST(SQUID_AIO_LIB)
+
+AC_ARG_WITH(dl,
+[  --with-dl               Use dynamic linking])
+if test "$with_dl" = "yes"; then
+    echo "With dl"
+fi
 
 AC_ARG_ENABLE(storeio,
 [  --enable-storeio=\"list of modules\"
@@ -342,7 +333,7 @@ AC_ARG_ENABLE(storeio,
 	for module in $srcdir/src/fs/*; do
 	    if test -f $module/Makefile.in; then
 		STORE_MODULES="$STORE_MODULES `basename $module`"
-	     fi
+	    fi
 	done
   	;;
   no)
@@ -364,10 +355,24 @@ dnl remove all but diskd - its the only module that needs to recurse
 dnl into the sub directory
 STORE_MODULE_SUBDIRS=
 for fs in $STORE_MODULES none; do
-    if test "$fs" = "diskd"; then
+    case "$fs" in
+    diskd)
         STORE_MODULE_SUBDIRS="$STORE_MODULE_SUBDIRS $fs"
 	OPT_DISKD_EXE='diskd$(EXEEXT)'
-    fi
+	;;
+    aufs)
+	if test -z "$with_pthreads"; then
+	    echo "aufs store used, pthreads support automatically enabled"
+	    with_pthreads=yes
+	fi
+	;;
+    coss)
+	if test -z "$with_aio"; then
+	    echo "coss store used, aio support automatically enabled"
+	    with_aio=yes
+	fi
+	;;
+    esac
 done
 AC_SUBST(STORE_MODULES)
 AC_SUBST(STORE_MODULE_SUBDIRS)
@@ -1295,16 +1300,16 @@ AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(long long)
-AC_CHECK_SIZEOF(__int64)
-AC_CHECK_SIZEOF(int16_t)
-AC_CHECK_SIZEOF(uint16_t)
-AC_CHECK_SIZEOF(u_int16_t)
-AC_CHECK_SIZEOF(int32_t)
-AC_CHECK_SIZEOF(uint32_t)
-AC_CHECK_SIZEOF(u_int32_t)
-AC_CHECK_SIZEOF(int64_t)
-AC_CHECK_SIZEOF(uint64_t)
-AC_CHECK_SIZEOF(u_int64_t)
+AC_CHECK_SIZEOF_SYSTYPE(__int64)
+AC_CHECK_SIZEOF_SYSTYPE(int16_t)
+AC_CHECK_SIZEOF_SYSTYPE(uint16_t)
+AC_CHECK_SIZEOF_SYSTYPE(u_int16_t)
+AC_CHECK_SIZEOF_SYSTYPE(int32_t)
+AC_CHECK_SIZEOF_SYSTYPE(uint32_t)
+AC_CHECK_SIZEOF_SYSTYPE(u_int32_t)
+AC_CHECK_SIZEOF_SYSTYPE(int64_t)
+AC_CHECK_SIZEOF_SYSTYPE(uint64_t)
+AC_CHECK_SIZEOF_SYSTYPE(u_int64_t)
 
 dnl int16_t
 if test "x$ac_cv_sizeof_short" = "x2"; then
@@ -1455,23 +1460,27 @@ fi
 AC_CHECK_LIB(m, main)
 
 dnl Check for libcrypt
-dnl We use crypt(3) which may be in libc, or in libcrypt (eg FreeBSD)
+dnl Some of our helpers use crypt(3) which may be in libc, or in
+dnl libcrypt (eg FreeBSD)
 AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
 AC_SUBST(CRYPTLIB)
 
 dnl Check for libdl, used by auth_modules/PAM
-AC_CHECK_LIB(dl, dlopen, [DLLIB="-ldl"])
-AC_SUBST(DLLIB)
+if test "$with_dl" = "yes"; then
+    AC_CHECK_LIB(dl, dlopen)
+fi
 
 dnl Check for pthreads
 dnl We use pthreads when doing ASYNC I/O
-AC_CHECK_LIB(pthread, main, [PTHREADLIB="-lpthread"])
-AC_SUBST(PTHREADLIB)
+if test "$with_pthreads" = "yes"; then
+    AC_CHECK_LIB(pthread, main)
+fi
 
 dnl Check for librt
 dnl We use AIO in the coss store
-AC_CHECK_LIB(rt, aio_read, [AIOLIB="-lrt"])
-AC_SUBST(AIOLIB)
+if test "$with_aio" = "yes"; then
+    AC_CHECK_LIB(rt, aio_read)
+fi
 
 dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
 dnl Robert Side <rside@aiinc.bc.ca>
