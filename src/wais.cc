@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.21 1996/04/09 23:28:01 wessels Exp $ */
+/* $Id: wais.cc,v 1.22 1996/04/09 23:28:37 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -130,7 +130,7 @@ void waisReadReply(fd, data)
 		(PF) waisReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__,__LINE__);
+	    storeReleaseRequest(entry, __FILE__, __LINE__);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    waisCloseAndFree(fd, data);
 	}
@@ -233,7 +233,7 @@ void waisSendRequest(fd, data)
 	waisSendComplete,
 	(void *) data);
     if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
-	storeSetPublicKey(data->entry);	/* Make it public */
+	storeSetPublicKey(data->entry);		/* Make it public */
 }
 
 int waisStart(unusedfd, url, type, mime_hdr, entry)

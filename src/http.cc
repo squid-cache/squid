@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.33 1996/04/09 23:27:56 wessels Exp $ */
+/* $Id: http.cc,v 1.34 1996/04/09 23:28:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -174,7 +174,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	else
 	    t = t2 ? t2 : t1;
 	if (!t)
-		return; 	/* headers not complete */
+	    return;		/* headers not complete */
 	t += (t == t1 ? 4 : 2);
 	*t = '\0';
 	reply = entry->mem_obj->reply;
@@ -193,7 +193,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	    while (*s == '\r')
 		*s-- = '\0';
 	    if (!strncasecmp(t, "HTTP", 4)) {
-		sscanf (t+1, "%lf", &reply->version);
+		sscanf(t + 1, "%lf", &reply->version);
 		if ((t = strchr(t, ' '))) {
 		    t++;
 		    reply->code = atoi(t);
@@ -201,7 +201,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	    } else if (!strncasecmp(t, "Content-type:", 13)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
-		    strncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ-1);
+		    strncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ - 1);
 		}
 	    } else if (!strncasecmp(t, "Content-length:", 15)) {
 		if ((t = strchr(t, ' '))) {
@@ -211,17 +211,17 @@ static void httpProcessReplyHeader(data, buf, size)
 	    } else if (!strncasecmp(t, "Date:", 5)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
-		    strncpy(reply->date, t, HTTP_REPLY_FIELD_SZ-1);
+		    strncpy(reply->date, t, HTTP_REPLY_FIELD_SZ - 1);
 		}
 	    } else if (!strncasecmp(t, "Expires:", 8)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
-		    strncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ-1);
+		    strncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ - 1);
 		}
 	    } else if (!strncasecmp(t, "Last-Modified:", 14)) {
 		if ((t = strchr(t, ' '))) {
 		    t++;
-		    strncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ-1);
+		    strncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ - 1);
 		}
 	    }
 	    t = strtok(NULL, "\n");
@@ -246,7 +246,7 @@ static void httpProcessReplyHeader(data, buf, size)
 		storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__,__LINE__);
+	    storeReleaseRequest(entry, __FILE__, __LINE__);
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
@@ -321,7 +321,7 @@ static void httpReadReply(fd, data)
 		(PF) httpReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__,__LINE__);
+	    storeReleaseRequest(entry, __FILE__, __LINE__);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    httpCloseAndFree(fd, data);
 	}

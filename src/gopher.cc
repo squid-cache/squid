@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.20 1996/04/09 23:27:55 wessels Exp $ */
+/* $Id: gopher.cc,v 1.21 1996/04/09 23:28:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -663,7 +663,7 @@ int gopherReadReply(fd, data)
 		(PF) gopherReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__,__LINE__);
+	    storeReleaseRequest(entry, __FILE__, __LINE__);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    gopherCloseAndFree(fd, data);
 	}
@@ -843,7 +843,7 @@ void gopherSendRequest(fd, data)
 	gopherSendComplete,
 	(void *) data);
     if (!BIT_TEST(data->entry->flag, ENTRY_PRIVATE))
-	storeSetPublicKey(data->entry);	/* Make it public */
+	storeSetPublicKey(data->entry);		/* Make it public */
 }
 
 int gopherStart(unusedfd, url, entry)

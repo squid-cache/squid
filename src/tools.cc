@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.25 1996/04/08 19:32:42 wessels Exp $ */
+/* $Id: tools.cc,v 1.26 1996/04/09 23:28:37 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -184,6 +184,7 @@ void shut_down(sig)
     ipcacheShutdownServers();
     shutdown_pending = 1;
 }
+
 #endif
 
 void fatal_common(message)
