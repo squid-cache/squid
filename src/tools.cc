@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.228 2003/01/17 05:37:24 robertc Exp $
+ * $Id: tools.cc,v 1.229 2003/01/17 08:21:51 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -60,7 +60,7 @@ SQUIDCEXTERN void backtrace_symbols_fd(void *, int, int);
 SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
 #endif /* _SQUID_LINUX */
 
-extern void (*failure_notify) (const char *);
+SQUIDCEXTERN void (*failure_notify) (const char *);
 
 MemPool *dlink_node_pool = NULL;
 
