@@ -283,10 +283,13 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
     aiostate->fd = fd;
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, storeAufsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
-    if (FILE_MODE(sio->mode) == O_WRONLY)
-	storeAufsKickWriteQueue(sio);
-    else if (FILE_MODE(sio->mode) == O_RDONLY)
-	storeAufsKickReadQueue(sio);
+    if (FILE_MODE(sio->mode) == O_WRONLY) {
+	if (storeAufsKickWriteQueue(sio))
+	    return;
+    } else if (FILE_MODE(sio->mode) == O_RDONLY) {
+	if (storeAufsKickReadQueue(sio))
+	    return;
+    }
     if (aiostate->flags.close_request)
 	storeAufsIOCallback(sio, errflag);
     debug(79, 3) ("storeAufsOpenDone: exiting\n");
