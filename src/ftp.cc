@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.121 1997/06/06 06:16:19 wessels Exp $
+ * $Id: ftp.cc,v 1.122 1997/06/16 22:01:45 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -40,7 +40,6 @@ enum {
     FTP_REST_SUPPORTED,
     FTP_PASV_ONLY,
     FTP_AUTHENTICATED,
-    FTP_IP_LOOKUP_PENDING,
     FTP_HTTP_HEADER_SENT,
     FTP_TRIED_NLST,
     FTP_USE_BASE,
@@ -124,7 +123,6 @@ typedef void (FTPSM) _PARAMS((FtpStateData *));
 /* Local functions */
 static CNCB ftpConnectDone;
 static CNCB ftpPasvCallback;
-static IPH ftpConnect;
 static PF ftpReadData;
 static PF ftpStateFree;
 static PF ftpTimeout;
@@ -860,28 +858,6 @@ ftpStart(request_t * request, StoreEntry * entry)
     ftpState->ctrl.fd = fd;
     comm_add_close_handler(fd, ftpStateFree, ftpState);
     commSetTimeout(fd, Config.Timeout.connect, ftpTimeout, ftpState);
-    storeRegisterAbort(entry, ftpAbort, ftpState);
-    ipcache_nbgethostbyname(request->host, fd, ftpConnect, ftpState);
-}
-
-static void
-ftpConnect(int fd, const ipcache_addrs * ia, void *data)
-{
-    FtpStateData *ftpState = data;
-    request_t *request = ftpState->request;
-    StoreEntry *entry = ftpState->entry;
-    EBIT_RESET(ftpState->flags, FTP_IP_LOOKUP_PENDING);
-    assert(fd == ftpState->ctrl.fd);
-    if (ia == NULL) {
-	debug(9, 4) ("ftpConnect: Unknown host: %s\n", request->host);
-	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	comm_close(fd);
-	return;
-    }
-    debug(9, 3) ("ftpConnect: %s is %s\n", request->host,
-	inet_ntoa(ia->in_addrs[0]));
-    /* Open connection. */
-    commSetTimeout(fd, Config.Timeout.connect, ftpTimeout, ftpState);
     commConnectStart(ftpState->ctrl.fd,
 	request->host,
 	request->port,
@@ -907,6 +883,7 @@ ftpConnectDone(int fd, int status, void *data)
     ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);
     ftpState->data.size = SQUID_TCP_SO_RCVBUF;
     ftpState->data.freefunc = xfree;
+    storeRegisterAbort(ftpState->entry, ftpAbort, ftpState);
     commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
 }
 

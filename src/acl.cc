@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.96 1997/06/04 06:15:44 wessels Exp $
+ * $Id: acl.cc,v 1.97 1997/06/16 22:01:43 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1175,7 +1175,6 @@ aclCheck(aclCheck_t * checklist)
 	if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NEEDED) {
 	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_PENDING;
 	    ipcache_nbgethostbyname(checklist->request->host,
-		-1,
 		aclLookupDstIPDone,
 		checklist);
 	    return;
@@ -1233,7 +1232,7 @@ aclCheckCallback(aclCheck_t * checklist, int answer)
 }
 
 static void
-aclLookupDstIPDone(int fd, const ipcache_addrs * ia, void *data)
+aclLookupDstIPDone(const ipcache_addrs * ia, void *data)
 {
     aclCheck_t *checklist = data;
     checklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;

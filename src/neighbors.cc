@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.143 1997/06/04 06:16:03 wessels Exp $
+ * $Id: neighbors.cc,v 1.144 1997/06/16 22:01:50 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -482,7 +482,7 @@ neighborsUdpPing(request_t * request,
 	debug(15, 4) ("neighborsUdpPing: pinging peer %s for '%s'\n",
 	    p->host, url);
 	if (p->type == PEER_MULTICAST)
-	    comm_set_mcast_ttl(theOutIcpConnection, p->mcast.ttl);
+	    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
 	reqnum = storeReqnum(entry, request->method);
 	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", entry->key);
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
@@ -930,7 +930,7 @@ peerDestroy(peer * p)
 }
 
 static void
-peerDNSConfigure(int fd, const ipcache_addrs * ia, void *data)
+peerDNSConfigure(const ipcache_addrs * ia, void *data)
 {
     peer *p = data;
     struct sockaddr_in *ap;
@@ -974,8 +974,8 @@ peerRefreshDNS(void *junk)
 	next = p->next;
 	p->ip_lookup_pending = 1;
 	/* some random, bogus FD for ipcache */
-	p->ipcache_fd = Squid_MaxFD + current_time.tv_usec;
-	ipcache_nbgethostbyname(p->host, p->ipcache_fd, peerDNSConfigure, p);
+	p->test_fd = Squid_MaxFD + current_time.tv_usec;
+	ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     }
     /* Reconfigure the peers every hour */
     eventAdd("peerRefreshDNS", peerRefreshDNS, NULL, 3600);
@@ -991,16 +991,16 @@ peerCheckConnect(void *data)
     if (fd < 0)
 	return;
     p->ip_lookup_pending = 1;
-    p->ipcache_fd = fd;
-    ipcache_nbgethostbyname(p->host, fd, peerCheckConnect2, p);
+    p->test_fd = fd;
+    ipcache_nbgethostbyname(p->host, peerCheckConnect2, p);
 }
 
 static void
-peerCheckConnect2(int fd, const ipcache_addrs * ia, void *data)
+peerCheckConnect2(const ipcache_addrs * ia, void *data)
 {
     peer *p = data;
     p->ip_lookup_pending = 0;
-    commConnectStart(fd,
+    commConnectStart(p->test_fd,
 	p->host,
 	p->http_port,
 	peerCheckConnectDone,
@@ -1070,7 +1070,7 @@ peerCountMcastPeersStart(void *data)
     mem->start_ping = current_time;
     mem->icp_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
-    comm_set_mcast_ttl(theOutIcpConnection, p->mcast.ttl);
+    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
     p->mcast.reqnum = storeReqnum(fake, METHOD_GET);
     query = icpCreateMessage(ICP_OP_QUERY, 0, url, p->mcast.reqnum, 0);
     icpUdpSend(theOutIcpConnection,
