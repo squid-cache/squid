@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.349 1998/07/14 22:28:10 wessels Exp $
+ * $Id: client_side.cc,v 1.350 1998/07/14 22:36:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -826,26 +826,12 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 static int
 clientCheckContentLength(request_t * r)
 {
-#if OLD_CODE
-    char *t;
-    int len;
-    /*
-     * We only require a content-length for "upload" methods
-     */
-    if (0 == pumpMethod(r->method))
-	return 1;
-    t = mime_get_header(r->headers, "Content-Length");
-    if (NULL == t)
-	return 0;
-    len = atoi(t);
-    if (len < 0)
+    /* We only require a content-length for "upload" methods */
+    if (!pumpMethod(r->method))
+        return 1;
+    if (httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) < 0)
 	return 0;
     return 1;
-#else
-    /* We only require a content-length for "upload" methods */
-    return !pumpMethod(r->method) ||
-	httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) >= 0;
-#endif
 }
 
 static int
@@ -943,110 +929,6 @@ isTcpHit(log_type code)
 	return 1;
     return 0;
 }
-
-#if OLD_CODE
-static void
-clientAppendReplyHeader(char *hdr, const char *line, size_t * sz, size_t max)
-{
-    size_t n = *sz + strlen(line) + 2;
-    if (n >= max)
-	return;
-    strcpy(hdr + (*sz), line);
-    strcat(hdr + (*sz), crlf);
-    *sz = n;
-}
-#endif
-
-#if OLD_CODE			/* use new interfaces instead */
-static size_t
-clientBuildReplyHeader(clientHttpRequest * http,
-    char *hdr_in,
-    size_t hdr_in_sz,
-    size_t * in_len,
-    char *hdr_out,
-    size_t out_sz)
-{
-    LOCAL_ARRAY(char, no_forward, 1024);
-    char *xbuf;
-    char *ybuf;
-    char *t = NULL;
-    char *end;
-    size_t len = 0;
-    size_t hdr_len = 0;
-    size_t l;
-    if (0 != strncmp(hdr_in, "HTTP/", 5))
-	return 0;
-    hdr_len = headersEnd(hdr_in, hdr_in_sz);
-    if (0 == hdr_len) {
-	debug(33, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
-	return 0;
-    }
-    xbuf = memAllocate(MEM_4K_BUF);
-    ybuf = memAllocate(MEM_4K_BUF);
-    end = hdr_in + hdr_len;
-    for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
-	l = strcspn(t, crlf) + 1;
-	/* Wow, we might find a NULL before 'end' */
-	if (1 == l)
-	    break;
-	xstrncpy(xbuf, t, l > 4096 ? 4096 : l);
-	/* enforce 1.0 reply version, this hack will be rewritten */
-	if (t == hdr_in && !strncasecmp(xbuf, "HTTP/", 5) && l > 8 &&
-	    (isspace(xbuf[8]) || isspace(xbuf[9])))
-	    xmemmove(xbuf + 5, "1.0 ", 4);
-#if DONT_FILTER_THESE
-	/*
-	 * but you might want to if you run Squid as an HTTP accelerator
-	 */
-	if (strncasecmp(xbuf, "Accept-Ranges:", 14) == 0)
-	    continue;
-	if (strncasecmp(xbuf, "Etag:", 5) == 0)
-	    continue;
-#endif
-	if (strncasecmp(xbuf, "Proxy-Connection:", 17) == 0)
-	    continue;
-	if (strncasecmp(xbuf, "Connection:", 11) == 0) {
-	    handleConnectionHeader(0, no_forward, &xbuf[11]);
-	    continue;
-	}
-	if (strncasecmp(xbuf, "keep-alive:", 11) == 0)
-	    continue;
-	if (strncasecmp(xbuf, "Set-Cookie:", 11) == 0)
-	    if (isTcpHit(http->log_type))
-		continue;
-	if (!handleConnectionHeader(1, no_forward, xbuf))
-	    clientAppendReplyHeader(hdr_out, xbuf, &len, out_sz - 512);
-    }
-    /* Append X-Cache: */
-    snprintf(ybuf, 4096, "X-Cache: %s from %s",
-	isTcpHit(http->log_type) ? "HIT" : "MISS",
-	getMyHostname());
-    clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
-#if USE_CACHE_DIGESTS
-    /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
-    snprintf(ybuf, 4096, "X-Cache-Lookup: %s from %s:%d",
-	http->lookup_type ? http->lookup_type : "NONE",
-	getMyHostname(), Config.Port.http->i);
-    clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
-#endif
-    /* Append Proxy-Connection: */
-    if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
-	snprintf(ybuf, 4096, "Proxy-Connection: keep-alive");
-	clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
-    }
-    clientAppendReplyHeader(hdr_out, null_string, &len, out_sz);
-    if (in_len)
-	*in_len = hdr_len;
-    if ((l = strlen(hdr_out)) != len) {
-	debug_trap("clientBuildReplyHeader: size mismatch");
-	len = l;
-    }
-    debug(33, 3) ("clientBuildReplyHeader: OUTPUT:\n%s\n", hdr_out);
-    memFree(MEM_4K_BUF, xbuf);
-    memFree(MEM_4K_BUF, ybuf);
-    return len;
-}
-#endif
 
 /* returns true if If-Range specs match reply, false otherwise */
 static int
@@ -2199,10 +2081,6 @@ clientReadRequest(int fd, void *data)
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;
 	    request->http_ver = http->http_ver;
-#if OLD_CODE
-	    request->prefix = prefix;
-	    request->prefix_sz = http->req_sz;
-#endif
 	    if (!urlCheckRequest(request)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);
 		err->src_addr = conn->peer.sin_addr;
@@ -2570,53 +2448,6 @@ clientHttpConnectionsOpen(void)
     if (NHttpSockets < 1)
 	fatal("Cannot open HTTP Port");
 }
-
-#if OLD_CODE
-static int
-handleConnectionHeader(int flag, char *where, char *what)
-{
-    char *t, *p, *wh;
-    int i;
-    LOCAL_ARRAY(char, mbuf, 256);
-
-    if (flag) {			/* lookup mode */
-	if (where[0] == '\0' || what[0] == '\0')
-	    return 0;
-	p = xstrdup(what);
-	t = strtok(p, ":");
-	if (t == NULL)
-	    return 0;
-	debug(20, 3) ("handleConnectionHeader: %s\n AND %s (%p)\n", where, t, p);
-	i = strstr(where, t) ? 1 : 0;
-	xfree(p);
-	return (i);
-    }
-    where[0] = '\0';
-    wh = xstrdup(what);
-    t = strtok(wh, ",");
-    while (t != NULL) {
-
-#ifdef BE_PARANOID
-	static char no_conn[] = "Expires:Host:Content-length:Content-type:";
-
-	if (handleConnectionHeader(1, no_conn, t)) {
-	    debug(1, 1) ("handleConnectionHeader: problematic header %s\n", t);
-	    t = strtok(NULL, ",\n");
-	    continue;
-	}
-#endif
-	if ((p = strchr(t, ':')))
-	    xstrncpy(mbuf, t, p - t + 1);
-	else
-	    snprintf(mbuf, 256, "%s:", t);
-	strcat(where, mbuf);
-	t = strtok(NULL, ",\n");
-    }
-    debug(20, 3) ("handleConnectionHeader: we have %s\n", where);
-    xfree(wh);
-    return 1;
-}
-#endif
 
 void
 clientHttpConnectionsClose(void)
