@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.116 1997/02/23 08:35:52 wessels Exp $
+ * $Id: neighbors.cc,v 1.117 1997/02/23 09:05:20 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -709,7 +709,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_HIT_OBJ) {
 	if (e == NULL) {
-	    debug(15, 0, "Ignoring ICP_OP_HIT_OBJ from non-neighbor %s\n",
+	    debug(15, 0, "Ignoring ICP_OP_HIT_OBJ from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else if (entry->object_len != 0) {
 	    debug(15, 1, "Too late UDP_HIT_OBJ '%s'?\n", entry->url);
@@ -739,7 +739,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_HIT) {
 	if (e == NULL) {
-	    debug(15, 1, "Ignoring HIT from non-neighbor %s\n",
+	    debug(15, 1, "Ignoring HIT from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else {
 	    hierarchyNote(entry->mem_obj->request,
@@ -752,7 +752,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_DECHO) {
 	if (e == NULL) {
-	    debug(15, 1, "Ignoring DECHO from non-neighbor %s\n",
+	    debug(15, 1, "Ignoring DECHO from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else if (ntype == PEER_SIBLING) {
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
@@ -766,9 +766,13 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_MISS) {
 	if (e == NULL) {
-	    debug(15, 1, "Ignoring MISS from non-neighbor %s\n",
+	    debug(15, 1, "Ignoring MISS from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
-	} else if (ntype == PEER_PARENT) {
+	} else if (ntype != PEER_PARENT) {
+		(void) 0;	/* ignore MISS from non-parent */
+	} else if (BIT_TEST(e->options, NEIGHBOR_MCAST_RESPONDER) && !peerHTTPOkay(e, mem->request)) {
+		(void) 0;	/* ignore multicast miss */
+	} else {
 	    w_rtt = tvSubMsec(mem->start_ping, current_time) / e->weight;
 	    if (mem->w_rtt == 0 || w_rtt < mem->w_rtt) {
 		mem->e_pings_first_miss = e;
@@ -777,7 +781,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	}
     } else if (opcode == ICP_OP_DENIED) {
 	if (e == NULL) {
-	    debug(15, 1, "Ignoring DENIED from non-neighbor %s\n",
+	    debug(15, 1, "Ignoring DENIED from non-peer %s\n",
 		inet_ntoa(from->sin_addr));
 	} else if (e->stats.pings_acked > 100) {
 	    if (100 * e->stats.counts[ICP_OP_DENIED] / e->stats.pings_acked > 95) {
