@@ -95,8 +95,8 @@ extern char *storeDiskdDirFullPath(SwapDir * SD, sfileno filn, char *fullpath);
 extern void storeDiskdDirUnlinkFile(SwapDir *, sfileno);
 extern void storeDiskdDirReplAdd(SwapDir *, StoreEntry *);
 extern void storeDiskdDirReplRemove(StoreEntry *);
-extern void storeDiskdShmPut(SwapDir *, int);
-extern void *storeDiskdShmGet(SwapDir *, int *);
+extern void storeDiskdShmPut(SwapDir *, off_t);
+extern void *storeDiskdShmGet(SwapDir *, off_t *);
 extern void storeDiskdHandle(diomsg * M);
 extern int storeDiskdDirCallback(SwapDir *);
 

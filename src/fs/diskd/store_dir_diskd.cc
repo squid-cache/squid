@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.49 2001/05/08 15:24:36 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.50 2001/05/30 17:40:26 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -531,7 +531,7 @@ storeDiskdDirCallback(SwapDir * SD)
 	storeDiskdHandle(&M);
 	retval = 1;		/* Return that we've actually done some work */
 	if (M.shm_offset > -1)
-	    storeDiskdShmPut(SD, M.shm_offset);
+	    storeDiskdShmPut(SD, (off_t) M.shm_offset);
     }
     return retval;
 }
@@ -1636,20 +1636,21 @@ storeDiskdDirReplRemove(StoreEntry * e)
  */
 
 void *
-storeDiskdShmGet(SwapDir * sd, int *shm_offset)
+storeDiskdShmGet(SwapDir * sd, off_t * shm_offset)
 {
     char *buf;
     diskdinfo_t *diskdinfo = sd->fsdata;
     buf = linklistShift(&diskdinfo->shm.stack);
     assert(buf);
+    assert(buf >= diskdinfo->shm.buf);
+    assert(buf < diskdinfo->shm.buf + (SHMBUFS * SHMBUF_BLKSZ));
     *shm_offset = buf - diskdinfo->shm.buf;
-    assert(0 <= *shm_offset && *shm_offset < SHMBUFS * SHMBUF_BLKSZ);
     diskd_stats.shmbuf_count++;
     return buf;
 }
 
 void
-storeDiskdShmPut(SwapDir * sd, int offset)
+storeDiskdShmPut(SwapDir * sd, off_t offset)
 {
     char *buf;
     diskdinfo_t *diskdinfo = sd->fsdata;
