@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.105 1997/11/24 18:27:15 wessels Exp $
+ * $Id: errorpage.cc,v 1.106 1997/11/30 03:08:37 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -188,6 +188,7 @@ errorStateFree(ErrorState * err)
 #define CVT_BUF_SZ 512
 
 /*
+ * B - URL with FTP %2f hack			x
  * c - Squid error code
  * d - seconds elapsed since request received
  * e - errno                                    x
@@ -218,6 +219,9 @@ errorConvert(char token, ErrorState * err)
     static char buf[CVT_BUF_SZ];
     const char *p = buf;
     switch (token) {
+    case 'B':
+	p = r ? ftpUrlWith2f(r) : "[no URL]";
+	break;
     case 'e':
 	snprintf(buf, CVT_BUF_SZ, "%d", err->xerrno);
 	break;
