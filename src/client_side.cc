@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.632 2003/03/11 23:27:37 hno Exp $
+ * $Id: client_side.cc,v 1.633 2003/03/13 07:51:38 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2793,7 +2793,10 @@ clientHttpConnectionsOpen(void)
 
         comm_accept(fd, httpAccept, s);
 
-        debug(1, 1) ("Accepting HTTP connections at %s, port %d, FD %d.\n",
+        debug(1, 1) ("Accepting %sHTTP connections at %s, port %d, FD %d.\n",
+                     s->transparent ? " transparently proxied" :
+                     s->accel ? " accelerated" :
+                     "",
                      inet_ntoa(s->s.sin_addr), (int) ntohs(s->s.sin_port), fd);
 
         HttpSockets[NHttpSockets++] = fd;
