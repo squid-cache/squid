@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.218 1998/03/16 23:10:38 wessels Exp $
+ * $Id: stat.cc,v 1.219 1998/03/25 05:50:41 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -453,6 +453,8 @@ info_get(StoreEntry * sentry)
 	Counter.icp.pkts_recv);
     storeAppendPrintf(sentry, "\tNumber of ICP messages sent:\t%u\n",
 	Counter.icp.pkts_sent);
+    storeAppendPrintf(sentry, "\tNumber of queued ICP replies:\t%u\n",
+	Counter.icp.replies_queued);
     storeAppendPrintf(sentry, "\tRequest failure ratio:\t%5.2f%%\n",
 	request_failure_ratio);
 
@@ -666,6 +668,8 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	XAVG(icp.pkts_sent));
     storeAppendPrintf(sentry, "icp.pkts_recv = %f/sec\n",
 	XAVG(icp.pkts_recv));
+    storeAppendPrintf(sentry, "icp.replies_queued = %f/sec\n",
+	XAVG(icp.replies_queued));
     storeAppendPrintf(sentry, "icp.kbytes_sent = %f/sec\n",
 	XAVG(icp.kbytes_sent.kb));
     storeAppendPrintf(sentry, "icp.kbytes_recv = %f/sec\n",
@@ -904,6 +908,8 @@ statCountersDump(StoreEntry * sentry)
 	f->icp.pkts_sent);
     storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
 	f->icp.pkts_recv);
+    storeAppendPrintf(sentry, "icp.replies_queued = %d\n",
+	f->icp.replies_queued);
     storeAppendPrintf(sentry, "icp.kbytes_sent = %d\n",
 	(int) f->icp.kbytes_sent.kb);
     storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
