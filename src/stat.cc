@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.354 2002/04/06 08:49:27 adrian Exp $
+ * $Id: stat.cc,v 1.355 2002/04/06 08:57:54 adrian Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -602,10 +602,12 @@ info_get(StoreEntry * sentry)
     {
 	MemPoolGlobalStats mp_stats;
 	memPoolGetGlobalStats(&mp_stats);
+#if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 	storeAppendPrintf(sentry, "\tmemPool accounted:     %6d KB %3d%%\n",
 	    mp_stats.TheMeter->alloc.level >> 10, percent(mp_stats.TheMeter->alloc.level, t));
 	storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6d KB %3d%%\n",
 	    (t - mp_stats.TheMeter->alloc.level) >> 10, percent((t - mp_stats.TheMeter->alloc.level), t));
+#endif
 	storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
 	    mp_stats.TheMeter->gb_saved.count);
 	storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
