@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.96 2002/06/14 17:50:07 hno Exp $
+ * $Id: client.cc,v 1.97 2002/06/14 17:51:39 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -176,7 +176,7 @@ main(int argc, char *argv[])
 			*t = '\r', *(t + 1) = '\n';
 		}
 		break;
-	    case 'T*':
+	    case 'T':
 		io_timeout = atoi(optarg);
 		break;
 	    case 'v':
