@@ -217,13 +217,6 @@ storeAufsWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
 	return;
     }
     aiostate->flags.writing = 1;
-    /*
-     * XXX it might be nice if aioWrite() gave is immediate
-     * feedback here about EWOULDBLOCK instead of in the
-     * callback function
-     * XXX Should never give EWOULDBLOCK under normal operations
-     * if it does then the MAGIC1/2 tuning is wrong.
-     */
     aioWrite(aiostate->fd, offset, buf, size, storeAufsWriteDone, sio,
 	free_func);
 #else
@@ -297,13 +290,6 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
     debug(78, 3) ("storeAufsOpenDone: exiting\n");
 }
 
-/*
- * XXX TODO
- * if errflag == EWOULDBLOCK, then we'll need to re-queue the
- * chunk at the beginning of the write_pending list and try
- * again later.
- * XXX Should not normally happen. 
- */
 #if ASYNC_READ
 static void
 storeAufsReadDone(int fd, void *my_data, int len, int errflag)
@@ -351,13 +337,6 @@ storeAufsReadDone(int fd, int errflag, size_t len, void *my_data)
 	storeAufsIOCallback(sio, errflag);
 }
 
-/*
- * XXX TODO
- * if errflag == EWOULDBLOCK, then we'll need to re-queue the
- * chunk at the beginning of the write_pending list and try
- * again later.
- * XXX Should not normally happen. 
- */
 #if ASYNC_WRITE
 static void
 storeAufsWriteDone(int fd, void *my_data, int len, int errflag)
