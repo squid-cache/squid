@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.7 2003/02/21 22:50:06 robertc Exp $
+ * $Id: authenticate.h,v 1.8 2003/02/26 06:11:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -104,6 +104,24 @@ private:
     static MemPool *pool;
 };
 
+/* Per scheme request data ABC */
+
+class AuthUserRequestState
+{
+
+public:
+    void *operator new (size_t);
+    void operator delete (void *);
+    virtual void deleteSelf() const = 0;
+    virtual ~AuthUserRequestState(){}
+
+    virtual int authenticated() const = 0;
+    virtual void authenticate(request_t * request, ConnStateData * conn, http_hdr_type type) = 0;
+    virtual int direction() = 0;
+    virtual void addHeader(HttpReply * rep, int accel) {}}
+
+;
+
 class AuthUserRequest
 {
 
@@ -112,8 +130,9 @@ public:
     /* it has request specific data, and links to user specific data */
     /* the user */
     auth_user_t *auth_user;
-    /* any scheme specific request related data */
-    void *scheme_data;
+    AuthUserRequestState *state() const { return state_;}
+
+    void state( AuthUserRequestState *aState) {assert ((!state() && aState) || (state() && !aState)); state_ = aState;}
 
 public:
 
@@ -158,6 +177,8 @@ private:
      * when using connection based authentication
      */
     auth_acl_t lastReply;
+
+    AuthUserRequestState *state_;
 };
 
 /* authenticate.c authenticate scheme routines typedefs */
@@ -169,7 +190,6 @@ typedef void AUTHSDECODE(auth_user_request_t *, const char *);
 typedef int AUTHSDIRECTION(auth_user_request_t *);
 typedef void AUTHSDUMP(StoreEntry *, const char *, authScheme *);
 typedef void AUTHSFIXERR(auth_user_request_t *, HttpReply *, http_hdr_type, request_t *);
-typedef void AUTHSADDHEADER(auth_user_request_t *, HttpReply *, int);
 typedef void AUTHSADDTRAILER(auth_user_request_t *, HttpReply *, int);
 typedef void AUTHSFREE(auth_user_t *);
 typedef void AUTHSFREECONFIG(authScheme *);
@@ -243,7 +263,6 @@ struct _authscheme_entry
 {
     const char *typestr;
     AUTHSACTIVE *Active;
-    AUTHSADDHEADER *AddHeader;
     AUTHSADDTRAILER *AddTrailer;
     AUTHSAUTHED *authenticated;
     AUTHSAUTHUSER *authAuthenticate;
@@ -280,6 +299,5 @@ struct _authScheme
     /* the scheme's configuration details. */
     void *scheme_data;
 };
-
 
 #endif /* SQUID_AUTHENTICATE_H */

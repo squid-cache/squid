@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.54 2003/02/21 22:50:06 robertc Exp $
+ * $Id: authenticate.cc,v 1.55 2003/02/26 06:11:38 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -273,8 +273,8 @@ AuthUserRequest::operator delete (void *address)
     memPoolFree(pool, address);
 }
 
-AuthUserRequest::AuthUserRequest():auth_user(NULL), scheme_data (NULL), message(NULL),
-        references (0), lastReply (AUTH_ACL_CANNOT_AUTHENTICATE)
+AuthUserRequest::AuthUserRequest():auth_user(NULL), message(NULL),
+        references (0), lastReply (AUTH_ACL_CANNOT_AUTHENTICATE), state_ (NULL)
 {}
 
 AuthUserRequest::~AuthUserRequest()
@@ -284,12 +284,16 @@ AuthUserRequest::~AuthUserRequest()
     assert(references == 0);
 
     if (auth_user) {
-        if (scheme_data != NULL) {
+        if (state() != NULL) {
             /* we MUST know the module */
             assert(auth_user->auth_module > 0);
-            /* and the module MUST support requestFree if it has created scheme data */
-            assert(authscheme_list[auth_user->auth_module - 1].requestFree != NULL);
-            authscheme_list[auth_user->auth_module - 1].requestFree(this);
+
+            if (authscheme_list[auth_user->auth_module - 1].requestFree != NULL)
+                authscheme_list[auth_user->auth_module - 1].requestFree(this);
+            else {
+                state()->deleteSelf();
+                state(NULL);
+            }
         }
 
         /* unlink from the auth_user struct */
@@ -309,7 +313,7 @@ AuthUserRequest::~AuthUserRequest()
 
         auth_user = NULL;
     } else
-        assert(scheme_data == NULL);
+        assert(state() == NULL);
 
     safe_free (message);
 }
@@ -510,9 +514,17 @@ authenticateUserAuthenticated(auth_user_request_t * auth_user_request)
     if (!authenticateValidateUser(auth_user_request))
         return 0;
 
-    if (auth_user_request->auth_user->auth_module > 0)
-        return authscheme_list[auth_user_request->auth_user->auth_module - 1].authenticated(auth_user_request);
-    else
+    if (auth_user_request->auth_user->auth_module > 0) {
+        /* legacy interface */
+
+        if (authscheme_list[auth_user_request->auth_user->auth_module - 1].authenticated)
+            return authscheme_list[auth_user_request->auth_user->auth_module - 1].authenticated(auth_user_request);
+        else {
+            /* state interface */
+            assert (auth_user_request->state());
+            return auth_user_request->state()->authenticated();
+        }
+    } else
         return 0;
 }
 
@@ -527,8 +539,14 @@ authenticateAuthenticateUser(auth_user_request_t * auth_user_request, request_t 
 {
     assert(auth_user_request != NULL);
 
-    if (auth_user_request->auth_user->auth_module > 0)
-        authscheme_list[auth_user_request->auth_user->auth_module - 1].authAuthenticate(auth_user_request, request, conn, type);
+    if (auth_user_request->auth_user->auth_module > 0) {
+        if (authscheme_list[auth_user_request->auth_user->auth_module - 1].authAuthenticate)
+            authscheme_list[auth_user_request->auth_user->auth_module - 1].authAuthenticate(auth_user_request, request, conn, type);
+        else {
+            assert (auth_user_request->state());
+            auth_user_request->state()->authenticate(request, conn, type);
+        }
+    }
 }
 
 static auth_user_request_t *
@@ -817,8 +835,14 @@ authenticateDirection(auth_user_request_t * auth_user_request)
     if (authenticateUserAuthenticated(auth_user_request))
         return 0;
 
-    if (auth_user_request->auth_user->auth_module > 0)
-        return authscheme_list[auth_user_request->auth_user->auth_module - 1].getdirection(auth_user_request);
+    if (auth_user_request->auth_user->auth_module > 0) {
+        if (authscheme_list[auth_user_request->auth_user->auth_module - 1].getdirection)
+            return authscheme_list[auth_user_request->auth_user->auth_module - 1].getdirection(auth_user_request);
+        else {
+            assert (auth_user_request->state());
+            return auth_user_request->state()->direction();
+        }
+    }
 
     return -2;
 }
@@ -956,9 +980,8 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_
      * response - ie digest auth
      */
 
-    if ((auth_user_request != NULL) && (auth_user_request->auth_user->auth_module > 0)
-            && (authscheme_list[auth_user_request->auth_user->auth_module - 1].AddHeader))
-        authscheme_list[auth_user_request->auth_user->auth_module - 1].AddHeader(auth_user_request, rep, accelerated);
+    if (auth_user_request != NULL && auth_user_request->state())
+        auth_user_request->state()->addHeader (rep, accelerated);
 
     if (auth_user_request != NULL)
         auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
@@ -1336,3 +1359,14 @@ authUserHashPointerUser (auth_user_hash_pointer *aHashEntry)
     return aHashEntry->user();
 }
 
+void *
+AuthUserRequestState::operator new (size_t)
+{
+    fatal ("unusable\n");
+}
+
+void
+AuthUserRequestState::operator delete (void *)
+{
+    fatal ("unusable\n");
+}
