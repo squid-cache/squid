@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.400 2001/03/03 10:39:33 hno Exp $
+ * $Id: protos.h,v 1.401 2001/03/20 01:10:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -110,7 +110,7 @@ extern void cbdataLock(const void *p);
 extern void cbdataUnlock(const void *p);
 #endif
 /* Note: Allocations is done using the cbdataAlloc macro */
-extern void cbdataInternalFree(void *p);
+extern void *cbdataInternalFree(void *p);
 extern int cbdataValid(const void *p);
 extern void cbdataInitType(cbdata_type type, char *label, int size, FREE * free_func);
 extern cbdata_type cbdataAddType(cbdata_type type, char *label, int size, FREE * free_func);

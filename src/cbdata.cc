@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.38 2001/03/03 10:39:31 hno Exp $
+ * $Id: cbdata.cc,v 1.39 2001/03/20 01:10:25 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -175,13 +175,11 @@ cbdataInternalAlloc(cbdata_type type)
     return (void *) &p->data;
 }
 
-void
+void *
 cbdataInternalFree(void *p)
 {
     cbdata *c;
     FREE *free_func;
-    if (!p)
-	return;
     debug(45, 3) ("cbdataFree: %p\n", p);
     c = (cbdata *) (((char *) p) - OFFSET_OF(cbdata, data));
     assert(c->y == c);
@@ -189,7 +187,7 @@ cbdataInternalFree(void *p)
     if (c->locks) {
 	debug(45, 3) ("cbdataFree: %p has %d locks, not freeing\n",
 	    p, c->locks);
-	return;
+	return NULL;
     }
     cbdataCount--;
     debug(45, 3) ("cbdataFree: Freeing %p\n", p);
@@ -197,6 +195,7 @@ cbdataInternalFree(void *p)
     if (free_func)
 	free_func((void *) p);
     memPoolFree(cbdata_index[c->type].pool, c);
+    return NULL;
 }
 
 int
