@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.9 2001/08/20 06:55:31 hno Exp $
+ * $Id: async_io.cc,v 1.10 2001/10/17 14:59:34 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -155,14 +155,10 @@ aioCancel(int fd)
     assert(initialised);
     squidaio_counts.cancel++;
     for (m = used_list.head; m; m = next) {
-	while (m) {
-	    curr = m->data;
-	    if (curr->fd == fd)
-		break;
-	    m = m->next;
-	}
-	if (m == NULL)
-	    break;
+	next = m->next;
+	curr = m->data;
+	if (curr->fd != fd)
+	    continue;
 
 	squidaio_cancel(&curr->result);
 
@@ -175,7 +171,6 @@ aioCancel(int fd)
 		done_handler(fd, their_data, -2, -2);
 	    cbdataUnlock(their_data);
 	}
-	next = m->next;
 	dlinkDelete(m, &used_list);
 	memPoolFree(squidaio_ctrl_pool, curr);
     }
