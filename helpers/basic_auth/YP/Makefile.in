@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4s from Makefile.am.
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
 
 # Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
 # Free Software Foundation, Inc.
@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.4 2001/08/31 11:19:19 robertc Exp $
+#  $Id: Makefile.in,v 1.5 2001/09/06 21:37:29 hno Exp $
 #
 #
 
@@ -94,7 +94,9 @@ MKDIR = @MKDIR@
 MV = @MV@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
+OPT_DISKD_EXE = @OPT_DISKD_EXE@
 OPT_DNSSERVER_EXE = @OPT_DNSSERVER_EXE@
+OPT_PINGER = @OPT_PINGER@
 OPT_PINGER_EXE = @OPT_PINGER_EXE@
 PACKAGE = @PACKAGE@
 PERL = @PERL@
@@ -126,7 +128,7 @@ makesnmplib = @makesnmplib@
 
 libexec_PROGRAMS = yp_auth
 yp_auth_SOURCES = yp_auth.c nis_support.c
-LDADD = -L$(top_builddir) -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
+LDADD = -L$(top_builddir)/lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 		  -I$(top_srcdir)/src/
 
