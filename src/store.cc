@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.349 1997/11/28 08:11:59 wessels Exp $
+ * $Id: store.cc,v 1.350 1997/11/28 23:48:26 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2004,6 +2004,7 @@ storeWriteCleanLogs(int reopen)
 	    continue;
 	}
 	if ((++n & 0x3FFF) == 0) {
+	    getCurrentTime();
 	    debug(20, 1) ("  %7d lines written so far.\n", n);
 	}
     }
