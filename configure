@@ -11,7 +11,7 @@
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
-ac_default_prefix=/usr/local/harvest
+ac_default_prefix=/usr/local/squid
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -517,13 +517,13 @@ fi
 
 
 
-# From configure.in Revision: 1.10.4.7 
+# From configure.in Revision: 1.1.1.1 
 
 
 if test -n "$prefix"; then
   myprefix="$prefix";
 else
-  myprefix='/usr/local/harvest';
+  myprefix='/usr/local/squid';
 fi
 
 INSTALL_TOPDIR="$myprefix";
@@ -632,20 +632,10 @@ if test "`basename $XXXCC`" != "gcc"
 then
         echo '**************************************************************';
         echo '**************************************************************';
-        echo '**************************************************************';
-        echo '**************************************************************';
-        echo '**************************************************************';
         echo '**';
-        echo '**   WARNING:  You should compile Harvest using GNU cc.';
+        echo '**   WARNING:  Squid is only guaranteed to compile with GNU cc.';
         echo "**   Currently, you're using $CC";
         echo '**   ';
-        echo '**   For more information about the platforms on which';
-        echo '**   Harvest works, see: ';
-        echo '**    http://harvest.cs.colorado.edu/harvest/FAQ.html#platforms';
-        echo '**   ';
-        echo '**************************************************************';
-        echo '**************************************************************';
-        echo '**************************************************************';
         echo '**************************************************************';
         echo '**************************************************************';
 	sleep 5
@@ -666,7 +656,7 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 670 "configure"
+#line 660 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
@@ -680,7 +670,7 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 684 "configure"
+#line 674 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
@@ -955,130 +945,6 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-# Extract the first word of "gzip", so it can be a program name with args.
-set dummy gzip; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-if eval "test \"`echo '$''{'ac_cv_path_CMD_GZIP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$CMD_GZIP" in
-  /*)
-  ac_cv_path_CMD_GZIP="$CMD_GZIP" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_CMD_GZIP="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_CMD_GZIP" && ac_cv_path_CMD_GZIP="/bin/false"
-  ;;
-esac
-fi
-CMD_GZIP="$ac_cv_path_CMD_GZIP"
-if test -n "$CMD_GZIP"; then
-  echo "$ac_t""$CMD_GZIP" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-# Extract the first word of "gunzip", so it can be a program name with args.
-set dummy gunzip; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-if eval "test \"`echo '$''{'ac_cv_path_CMD_GUNZIP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$CMD_GUNZIP" in
-  /*)
-  ac_cv_path_CMD_GUNZIP="$CMD_GUNZIP" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_CMD_GUNZIP="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_CMD_GUNZIP" && ac_cv_path_CMD_GUNZIP="/bin/false"
-  ;;
-esac
-fi
-CMD_GUNZIP="$ac_cv_path_CMD_GUNZIP"
-if test -n "$CMD_GUNZIP"; then
-  echo "$ac_t""$CMD_GUNZIP" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-# Extract the first word of "unzip", so it can be a program name with args.
-set dummy unzip; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-if eval "test \"`echo '$''{'ac_cv_path_CMD_UNZIP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$CMD_UNZIP" in
-  /*)
-  ac_cv_path_CMD_UNZIP="$CMD_UNZIP" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_CMD_UNZIP="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_CMD_UNZIP" && ac_cv_path_CMD_UNZIP="/bin/false"
-  ;;
-esac
-fi
-CMD_UNZIP="$ac_cv_path_CMD_UNZIP"
-if test -n "$CMD_UNZIP"; then
-  echo "$ac_t""$CMD_UNZIP" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-# Extract the first word of "uncompress", so it can be a program name with args.
-set dummy uncompress; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-if eval "test \"`echo '$''{'ac_cv_path_CMD_UNCOMPRESS'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$CMD_UNCOMPRESS" in
-  /*)
-  ac_cv_path_CMD_UNCOMPRESS="$CMD_UNCOMPRESS" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_CMD_UNCOMPRESS="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_CMD_UNCOMPRESS" && ac_cv_path_CMD_UNCOMPRESS="/bin/false"
-  ;;
-esac
-fi
-CMD_UNCOMPRESS="$ac_cv_path_CMD_UNCOMPRESS"
-if test -n "$CMD_UNCOMPRESS"; then
-  echo "$ac_t""$CMD_UNCOMPRESS" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
 # Extract the first word of "perl", so it can be a program name with args.
 set dummy perl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
@@ -1099,7 +965,7 @@ else
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_CMD_PERL" && ac_cv_path_CMD_PERL="/bin/false"
+  test -z "$ac_cv_path_CMD_PERL" && ac_cv_path_CMD_PERL="/usr/local/bin/perl"
   ;;
 esac
 fi
@@ -1123,7 +989,7 @@ if eval "test \"`echo '$''{'ac_cv_header_dirent_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1127 "configure"
+#line 993 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 #include <$ac_hdr>
@@ -1163,7 +1029,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldir  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1167 "configure"
+#line 1033 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1198,7 +1064,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lx  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1202 "configure"
+#line 1068 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1235,7 +1101,7 @@ else
   ac_cv_c_cross=yes
 else
 cat > conftest.$ac_ext <<EOF
-#line 1239 "configure"
+#line 1105 "configure"
 #include "confdefs.h"
 main(){return(0);}
 EOF
@@ -1257,7 +1123,7 @@ if eval "test \"`echo '$''{'ac_cv_header_stdc'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1261 "configure"
+#line 1127 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 #include <stdarg.h>
@@ -1279,7 +1145,7 @@ rm -f conftest*
 if test $ac_cv_header_stdc = yes; then
   # SunOS 4.x string.h does not declare mem*, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 1283 "configure"
+#line 1149 "configure"
 #include "confdefs.h"
 #include <string.h>
 EOF
@@ -1297,7 +1163,7 @@ fi
 if test $ac_cv_header_stdc = yes; then
   # ISC 2.0.2 stdlib.h does not declare free, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 1301 "configure"
+#line 1167 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
@@ -1318,7 +1184,7 @@ if test "$cross_compiling" = yes; then
   :
 else
 cat > conftest.$ac_ext <<EOF
-#line 1322 "configure"
+#line 1188 "configure"
 #include "confdefs.h"
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -1358,7 +1224,7 @@ if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1362 "configure"
+#line 1228 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
@@ -1387,7 +1253,7 @@ fi
 done
 
 cat > conftest.$ac_ext <<EOF
-#line 1391 "configure"
+#line 1257 "configure"
 #include "confdefs.h"
 #include <malloc.h>
 EOF
@@ -1410,7 +1276,7 @@ else
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 1414 "configure"
+#line 1280 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 main()
@@ -1444,7 +1310,7 @@ else
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 1448 "configure"
+#line 1314 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 main()
@@ -1473,7 +1339,7 @@ EOF
 
 
 if test -x "/bin/uname"; then
-        if /bin/uname -sr | grep 'SunOS 5.[0-4]' >/dev/null 2>&1; then
+        if /bin/uname -sr | grep 'SunOS 5.[0-9]' >/dev/null 2>&1; then
                 NO_LIBMALLOC=x
 		XTRA_CFLAGS="-DUSE_MALLINFO=0 -DUSE_MALLOPT=0 $XTRA_CFLAGS"
         fi
@@ -1488,7 +1354,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1492 "configure"
+#line 1358 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -1541,7 +1407,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1545 "configure"
+#line 1411 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1576,7 +1442,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lmalloc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1580 "configure"
+#line 1446 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1611,7 +1477,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1615 "configure"
+#line 1481 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1645,7 +1511,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1649 "configure"
+#line 1515 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1679,7 +1545,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lbsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1683 "configure"
+#line 1549 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1714,7 +1580,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-l44bsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1718 "configure"
+#line 1584 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1748,7 +1614,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1752 "configure"
+#line 1618 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1783,7 +1649,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1787 "configure"
+#line 1653 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1946,14 +1812,11 @@ ac_given_INSTALL="$INSTALL"
 
 trap 'rm -fr `echo "\
 	./lib/Makefile \
-	./server/Makefile \
+	./src/Makefile \
 	./include/paths.h \
-	./regex/Makefile \
-	./url/Makefile \
 	./scripts/Makefile \
 	./scripts/RunCache \
 	./scripts/RunAccel \
-	./announce/Makefile \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -2001,10 +1864,6 @@ s%@RM@%$RM%g
 s%@MV@%$MV%g
 s%@MKDIR@%$MKDIR%g
 s%@LN@%$LN%g
-s%@CMD_GZIP@%$CMD_GZIP%g
-s%@CMD_GUNZIP@%$CMD_GUNZIP%g
-s%@CMD_UNZIP@%$CMD_UNZIP%g
-s%@CMD_UNCOMPRESS@%$CMD_UNCOMPRESS%g
 s%@CMD_PERL@%$CMD_PERL%g
 s%@PERL@%$PERL%g
 s%@XTRA_OBJS@%$XTRA_OBJS%g
@@ -2018,14 +1877,11 @@ cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"\
 	./lib/Makefile \
-	./server/Makefile \
+	./src/Makefile \
 	./include/paths.h \
-	./regex/Makefile \
-	./url/Makefile \
 	./scripts/Makefile \
 	./scripts/RunCache \
 	./scripts/RunAccel \
-	./announce/Makefile \
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
