@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.173 1996/12/02 03:32:03 wessels Exp $
+ * $Id: store.cc,v 1.174 1996/12/03 20:27:01 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -283,6 +283,9 @@ new_MemObject(void)
 {
     MemObject *mem = get_free_mem_obj();
     mem->reply = xcalloc(1, sizeof(struct _http_reply));
+    mem->reply->date = -1;
+    mem->reply->expires = -1;
+    mem->reply->last_modified = -1;
     meta_data.mem_obj_count++;
     meta_data.misc += sizeof(struct _http_reply);
     debug(20, 3, "new_MemObject: returning %p\n", mem);
@@ -437,11 +440,11 @@ storeSetMemStatus(StoreEntry * e, mem_status_t status)
 
 /* -------------------------------------------------------------------------- */
 
+#ifdef OLD_CODE
 static char *
 time_describe(time_t t)
 {
     LOCAL_ARRAY(char, buf, 128);
-
     if (t < 60) {
 	sprintf(buf, "%ds", (int) t);
     } else if (t < 3600) {
@@ -459,33 +462,31 @@ time_describe(time_t t)
     }
     return buf;
 }
+#endif
 
 static void
 storeLog(int tag, const StoreEntry * e)
 {
     LOCAL_ARRAY(char, logmsg, MAX_URL << 1);
-    time_t t = -1;
-    int expect_len = 0;
-    int actual_len = 0;
-    int code = 0;
+    MemObject *mem = e->mem_obj;
+    struct _http_reply *reply;
     if (storelog_fd < 0)
 	return;
-    if (-1 < e->expires)
-	t = e->expires - squid_curtime;
-    if (e->mem_obj) {
-	code = e->mem_obj->reply->code;
-	expect_len = (int) e->mem_obj->reply->content_length;
-	actual_len = (int) e->mem_obj->e_current_len - e->mem_obj->reply->hdr_sz;
-    }
-    sprintf(logmsg, "%9d.%03d %-7s %4d %9d [%3s] %d/%d %s\n",
+    if (mem == NULL)
+	return;
+    reply = mem->reply;
+    sprintf(logmsg, "%9d.%03d %-7s %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
-	code,
-	(int) t,
-	time_describe(t),
-	expect_len,
-	actual_len,
+	reply->code,
+	(int) reply->date,
+	(int) reply->last_modified,
+	(int) reply->expires,
+	reply->content_type[0] ? reply->content_type : "unknown",
+	reply->content_length,
+	mem->e_current_len - mem->reply->hdr_sz,
+	RequestMethodStr[e->method],
 	e->key);
     file_write(storelog_fd,
 	xstrdup(logmsg),
@@ -790,7 +791,7 @@ storeCreateEntry(const char *url,
     mem->data = new_MemObjectData();
     e->refcount = 0;
     e->lastref = squid_curtime;
-    e->timestamp = 0;		/* set in timestampsSet() */
+    e->timestamp = 0;		/* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
 
     /* allocate client list */
@@ -1091,6 +1092,10 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
     debug(20, 5, "storeSwapInHandle: len              = %d\n", len);
     debug(20, 5, "storeSwapInHandle: e->e_current_len = %d\n", mem->e_current_len);
     debug(20, 5, "storeSwapInHandle: e->object_len    = %d\n", e->object_len);
+
+    if (len && mem->swap_offset == 0)
+	httpParseReplyHeaders(buf, mem->reply);
+    /* Assumes we got all the headers in one read() */
 
     /* always call these, even if len == 0 */
     mem->swap_offset += len;
@@ -2824,4 +2829,18 @@ storeFirstClientFD(MemObject * mem)
 	    return mem->clients[i].fd;
     }
     return -1;
+}
+
+void
+storeTimestampsSet(StoreEntry * entry)
+{
+    time_t served_date = -1;
+    struct _http_reply *reply = entry->mem_obj->reply;
+    served_date = reply->date > -1 ? reply->date : squid_curtime;
+    entry->expires = reply->expires;
+    if (reply->last_modified > -1)
+	entry->lastmod = reply->last_modified;
+    else
+	entry->lastmod = served_date;
+    entry->timestamp = served_date;
 }

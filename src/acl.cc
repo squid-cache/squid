@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.67 1996/11/26 19:05:10 wessels Exp $
+ * $Id: acl.cc,v 1.68 1996/12/03 20:26:47 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -220,7 +220,7 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 	break;
     case 1:			/* a significant bits value for a mask */
 	if (a1 >= 0 && a1 < 33) {
-	    addr->s_addr = htonl(0xfffffffful << (32 - a1));
+	    addr->s_addr = a1 ? htonl(0xfffffffful << (32 - a1)) : 0;
 	    break;
 	}
     default:

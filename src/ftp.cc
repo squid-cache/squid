@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.89 1996/12/02 05:55:07 wessels Exp $
+ * $Id: ftp.cc,v 1.90 1996/12/03 20:26:52 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -237,7 +237,7 @@ ftpProcessReplyHeader(FtpStateData * data, const char *buf, int size)
 	    data->reply_hdr);
 	/* Parse headers into reply structure */
 	httpParseReplyHeaders(data->reply_hdr, reply);
-	timestampsSet(entry);
+	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	if (reply->code)
 	    debug(11, 3, "ftpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
@@ -358,7 +358,7 @@ ftpReadReply(int fd, FtpStateData * data)
 	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	    storeReleaseRequest(entry);
 	} else if (!(entry->flag & DELETE_BEHIND)) {
-	    timestampsSet(entry);
+	    storeTimestampsSet(entry);
 	}
 	/* update fdstat and fdtable */
 	storeComplete(entry);

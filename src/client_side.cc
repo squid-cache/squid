@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.69 1996/11/27 22:19:18 wessels Exp $
+ * $Id: client_side.cc,v 1.70 1996/12/03 20:26:49 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -458,7 +458,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	entry = icpState->entry = oldentry;
 	if (mime_headers_end(hbuf)) {
 	    httpParseReplyHeaders(hbuf, entry->mem_obj->reply);
-	    timestampsSet(entry);
+	    storeTimestampsSet(entry);
 	} else {
 	    debug(33, 1, "icpHandleIMSReply: No end-of-headers, len=%d\n", len);
 	    debug(33, 1, "  --> '%s'\n", entry->url);
