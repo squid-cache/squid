@@ -143,6 +143,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     icp_common_t *reply;
     int src_rtt = 0;
     u_num32 flags = 0;
+    method_t method;
     xmemcpy(&header, buf, sizeof(icp_common_t));
     /*
      * Only these fields need to be converted
@@ -152,11 +153,12 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     header.flags = ntohl(header.flags);
     header.pad = ntohl(header.pad);
 
+    method = header.reqnum >> 24;
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
 	url = buf + sizeof(icp_common_t) + sizeof(u_num32);
-	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {
+	if ((icp_request = urlParse(method, url)) == NULL) {
 	    reply = icpCreateMessage(ICP_ERR, 0, url, header.reqnum, 0);
 	    icpUdpSend(fd, &from, reply, LOG_UDP_INVALID, PROTO_NONE);
 	    break;
@@ -187,7 +189,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 		flags |= ICP_FLAG_SRC_RTT;
 	}
 	/* The peer is allowed to use this cache */
-	key = storeKeyPublic(url, METHOD_GET);
+	key = storeKeyPublic(url, method);
 	entry = storeGet(key);
 	debug(12, 5) ("icpHandleIcpV2: OPCODE %s\n", icp_opcode_str[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
@@ -227,18 +229,11 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	    inet_ntoa(from.sin_addr),
 	    url);
 	if (neighbors_do_private_keys && header.reqnum)
-	    key = storeKeyPrivate(url, METHOD_GET, header.reqnum);
+	    key = storeKeyPrivate(url, method, header.reqnum);
 	else
-	    key = storeKeyPublic(url, METHOD_GET);
-	debug(12, 3) ("icpHandleIcpV2: Looking for key '%s'\n",
-	    storeKeyText(key));
-	if ((entry = storeGet(key)) == NULL) {
-	    debug(12, 3) ("icpHandleIcpV2: Ignoring %s for NULL Entry.\n",
-		icp_opcode_str[header.opcode]);
-	} else {
-	    /* call neighborsUdpAck even if ping_status != PING_WAITING */
-	    neighborsUdpAck(url, &header, &from, entry);
-	}
+	    key = storeKeyPublic(url, method);
+	/* call neighborsUdpAck even if ping_status != PING_WAITING */
+	neighborsUdpAck(key, &header, &from);
 	break;
 
     case ICP_INVALID:

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.180 1998/03/16 21:45:02 wessels Exp $
+ * $Id: neighbors.cc,v 1.181 1998/03/19 07:13:31 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -618,43 +618,58 @@ ignoreMulticastReply(peer * p, MemObject * mem)
  * If a hit process is already started, then sobeit
  */
 void
-neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in *from, StoreEntry * entry)
+neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct sockaddr_in *from)
 {
     peer *p = NULL;
-    MemObject *mem = entry->mem_obj;
+    StoreEntry *entry;
+    MemObject *mem = NULL;
     peer_t ntype = PEER_NONE;
     char *opcode_d;
     icp_opcode opcode = (icp_opcode) header->opcode;
 
-    debug(15, 6) ("neighborsUdpAck: opcode %d '%s'\n", (int) opcode, url);
+    debug(15, 6) ("neighborsUdpAck: opcode %d '%s'\n",
+	(int) opcode, storeKeyText(key));
+    if (NULL != (entry = storeGet(key)))
+	mem = entry->mem_obj;
     if ((p = whichPeer(from)))
 	neighborAlive(p, mem, header);
     if (opcode > ICP_END)
 	return;
     opcode_d = icp_opcode_str[opcode];
+    /* Does the entry exist? */
+    if (NULL == entry) {
+	debug(12, 3) ("neighborsUdpAck: Cache key '%s' not found\n",
+	    storeKeyText(key));
+	neighborCountIgnored(p, opcode);
+	return;
+    }
     /* check if someone is already fetching it */
     if (EBIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
-	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n", url);
+	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n",
+	    storeKeyText(key));
 	neighborCountIgnored(p, opcode);
 	return;
     }
     if (mem == NULL) {
-	debug(15, 2) ("Ignoring %s for missing mem_obj: %s\n", opcode_d, url);
+	debug(15, 2) ("Ignoring %s for missing mem_obj: %s\n",
+	    opcode_d, storeKeyText(key));
 	neighborCountIgnored(p, opcode);
 	return;
     }
     if (entry->ping_status != PING_WAITING) {
-	debug(15, 2) ("neighborsUdpAck: Unexpected %s for %s\n", opcode_d, url);
+	debug(15, 2) ("neighborsUdpAck: Unexpected %s for %s\n",
+	    opcode_d, storeKeyText(key));
 	neighborCountIgnored(p, opcode);
 	return;
     }
     if (entry->lock_count == 0) {
-	debug(12, 1) ("neighborsUdpAck: '%s' has no locks\n", url);
+	debug(12, 1) ("neighborsUdpAck: '%s' has no locks\n",
+	    storeKeyText(key));
 	neighborCountIgnored(p, opcode);
 	return;
     }
     debug(15, 3) ("neighborsUdpAck: %s for '%s' from %s \n",
-	opcode_d, url, p ? p->host : "source");
+	opcode_d, storeKeyText(key), p ? p->host : "source");
     if (p)
 	ntype = neighborType(p, mem->request);
     if (ignoreMulticastReply(p, mem)) {
