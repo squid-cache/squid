@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.185 2003/02/21 22:50:08 robertc Exp $
+ * $Id: errorpage.cc,v 1.186 2003/02/25 02:17:54 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -232,8 +232,6 @@ errorTryLoadText(const char *page_name, const char *dir)
     if (len < 0) {
         debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
                      path, xstrerror());
-        memBufClean(&textbuf);
-        text = NULL;
     }
 
     file_close(fd);
