@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.299 2003/02/13 08:07:47 robertc Exp $
+# $Id: cf.data.pre,v 1.300 2003/02/15 00:15:51 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -378,6 +378,9 @@ DOC_START
 		     digest-url=url
 		     allow-miss
 		     max-conn
+		     originserver
+		     name=xxx
+		     forceddomain=name
 		     ssl
 		     sslcert=/path/to/ssl/certificate
 		     sslkey=/path/to/ssl/key
@@ -385,9 +388,9 @@ DOC_START
 		     sslcipher=...
 		     ssloptions=...
 		     front-end-https[=on|auto]
-
-		     use 'proxy-only' to specify that objects fetched
-		     from this cache should not be saved locally.
+  
+  		     use 'proxy-only' to specify that objects fetched
+  		     from this cache should not be saved locally.
 
 		     use 'weight=n' to specify a weighted parent.
 		     The weight must be an integer.  The default weight
@@ -490,6 +493,20 @@ DOC_START
 
 		     use 'max-conn' to limit the amount of connections Squid
 		     may open to this peer.
+		     
+		     'originserver' causes this parent peer to be contacted as
+		     a origin server. Meant to be used in accelerator setups.
+
+		     use 'name=xxx' if you have multiple peers on the same
+		     host but different ports. This name can then be used to
+		     differentiate the peers in cache_peer_access and similar
+		     directives.
+
+		     use 'forceddomain=name' to forcibly set the Host header
+		     of requests forwarded to this peer. Useful in accelerator
+		     setups where the server (peer) expects a certain domain
+		     name and using redirectors to feed this domainname
+		     is not feasible.
 
 		     use 'ssl' to indicate that connections to this peer should
 		     bs SSL/TLS encrypted.
@@ -1433,6 +1450,9 @@ DOC_START
 	By default Squid rewrites any Host: header in redirected
 	requests.  If you are running an accelerator then this may
 	not be a wanted effect of a redirector.
+
+	WARNING: Entries are cached on the result of the URL rewriting
+	process, so be careful if you have domain-virtual hosts.
 DOC_END
 
 NAME: redirector_access

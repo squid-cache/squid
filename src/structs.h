@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.448 2003/02/12 06:11:04 robertc Exp $
+ * $Id: structs.h,v 1.449 2003/02/15 00:15:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -722,6 +722,7 @@ struct _http_state_flags {
     unsigned int only_if_cached:1;
     unsigned int headers_pushed:1;
     unsigned int front_end_https:2;
+    unsigned int originpeer:1;
 };
 
 struct _ping_data {
@@ -920,6 +921,7 @@ struct _PeerDigest {
 #endif
 
 struct _peer {
+    char *name;
     char *host;
     peer_t type;
     struct sockaddr_in in_addr;
@@ -976,6 +978,7 @@ struct _peer {
 #if USE_CARP
 	unsigned int carp:1;
 #endif
+	unsigned int originserver:1;
     } options;
     int weight;
     int basetime;
@@ -1011,6 +1014,7 @@ struct _peer {
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
     int max_conn;
+    char *domain;		/* Forced domain */
 #if USE_SSL
     int use_ssl;
     char *sslcert;
@@ -1169,7 +1173,7 @@ struct request_flags {
     unsigned int hierarchical:1;
     unsigned int loopdetect:1;
     unsigned int proxy_keepalive:1;
-    unsigned int proxying:1;
+    unsigned int proxying:1;	/* this should be killed, also in httpstateflags */
     unsigned int refresh:1;
     unsigned int redirected:1;
     unsigned int need_validation:1;
@@ -1228,6 +1232,7 @@ public:
     char *peer_login;		/* Configured peer login:password */
     time_t lastmod;		/* Used on refreshes */
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
+    char *peer_domain;		/* Configured peer forceddomain */
 };
 #endif
 struct _cachemgr_passwd {
