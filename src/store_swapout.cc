@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.24 1998/08/20 02:49:13 wessels Exp $
+ * $Id: store_swapout.cc,v 1.25 1998/08/21 06:40:00 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -175,19 +175,14 @@ storeCheckSwapOut(StoreEntry * e)
 	mem->inmem_lo = new_mem_lo;
 	return;
     }
-#if USE_QUEUE_OFFSET
     /*
-     * This feels wrong.  We should only free up to what we know
-     * has been written to disk, not what has been queued for
-     * writing.  Otherwise there will be a chunk of the data which
-     * is not in memory and is not yet on disk.
+     * We should only free up to what we know has been written to
+     * disk, not what has been queued for writing.  Otherwise there
+     * will be a chunk of the data which is not in memory and is
+     * not yet on disk.
      */
-    if (mem->swapout.queue_offset < new_mem_lo)
-	new_mem_lo = mem->swapout.queue_offset;
-#else
     if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
 	new_mem_lo = on_disk;
-#endif
     stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
     mem->inmem_lo = new_mem_lo;
 
