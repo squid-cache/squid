@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.667 2003/11/05 21:32:12 hno Exp $
+ * $Id: client_side.cc,v 1.668 2003/12/22 10:28:49 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1966,7 +1966,9 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
 int
 ConnStateData::getAvailableBufferLength() const
 {
-    return in.allocatedSize - in.notYetUsed;
+    int result = in.allocatedSize - in.notYetUsed - 1;
+    assert (result >= 0);
+    return result;
 }
 
 void
