@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1123.c,v 1.6 1996/11/14 19:02:11 wessels Exp $
+ * $Id: rfc1123.c,v 1.7 1997/02/18 23:53:48 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -181,6 +181,7 @@ parse_rfc1123(const char *str)
     if (!str)
 	return -1;
 
+    memset(&tm, '\0', sizeof(struct tm));
     if ((s = strchr(str, ','))) {	/* Thursday, 10-Jun-93 01:29:59 GMT */
 	s++;			/* or: Thu, 10 Jan 1993 01:29:59 GMT */
 	while (*s && *s == ' ')
