@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.113 2003/09/19 13:25:37 hno Exp $
+ * $Id: forward.cc,v 1.114 2003/09/21 00:30:47 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -864,7 +864,9 @@ fwdStart(int fd, StoreEntry * e, HttpRequest * r)
         ch.my_addr = r->my_addr;
         ch.my_port = r->my_port;
         ch.request = requestLink(r);
-        answer = aclCheckFast(Config.accessList.miss, &ch);
+        ch.accessList = Config.accessList.miss;
+        answer = ch.fastCheck();
+        ch.accessList = NULL;
 
         if (answer == 0) {
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.322 2003/08/13 00:39:16 wessels Exp $
+ * $Id: neighbors.cc,v 1.323 2003/09/21 00:30:47 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -185,6 +185,8 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
 
     checklist.request = requestLink(request);
 
+    checklist.accessList = p->access;
+
 #if 0 && USE_IDENT
     /*
      * this is currently broken because 'request->user_ident' has been
@@ -196,7 +198,11 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
 
 #endif
 
-    return aclCheckFast(p->access, &checklist);
+    int result = checklist.fastCheck();
+
+    checklist.accessList = NULL;
+
+    return result;
 }
 
 /* Return TRUE if it is okay to send an ICP request to this peer.   */

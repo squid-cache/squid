@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.101 2003/07/14 14:16:02 robertc Exp $
+ * $Id: redirect.cc,v 1.102 2003/09/21 00:30:47 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -129,12 +129,16 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
         }
 
         ch.request = requestLink(http->request);
+        ch.accessList = Config.accessList.redirector;
 
-        if (!aclCheckFast(Config.accessList.redirector, &ch)) {
+        if (!ch.fastCheck()) {
+            ch.accessList = NULL;
             /* denied -- bypass redirector */
             handler(data, NULL);
             return;
         }
+
+        ch.accessList = NULL;
     }
 
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {

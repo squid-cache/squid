@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.44 2003/08/10 11:00:40 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.45 2003/09/21 00:30:46 robertc Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -515,7 +515,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request)
     hm = &Config.header_access[e->id];
     checklist = aclChecklistCreate(hm->access_list, request, NULL);
 
-    if (1 == aclCheckFast(hm->access_list, checklist)) {
+    if (1 == checklist->fastCheck()) {
         /* aclCheckFast returns 1 for allow. */
         retval = 1;
     } else if (NULL == hm->replacement) {

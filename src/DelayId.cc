@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.14 2003/09/06 12:47:34 robertc Exp $
+ * $Id: DelayId.cc,v 1.15 2003/09/21 00:30:48 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -114,8 +114,11 @@ DelayId::DelayClient(clientHttpRequest * http)
 
         ch.request = requestLink(r);
 
+        ch.accessList = DelayPools::delay_data[pool].access;
+
         if (DelayPools::delay_data[pool].theComposite().getRaw() &&
-                aclCheckFast(DelayPools::delay_data[pool].access, &ch)) {
+                ch.fastCheck()) {
+            ch.accessList = NULL;
             DelayId result (pool + 1);
             CompositePoolNode::CompositeSelectionDetails details;
             details.src_addr = ch.src_addr;
@@ -124,6 +127,8 @@ DelayId::DelayClient(clientHttpRequest * http)
             result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(details));
             return result;
         }
+
+        ch.accessList = NULL;
     }
 
 

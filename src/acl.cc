@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.311 2003/08/10 11:00:40 robertc Exp $
+ * $Id: acl.cc,v 1.312 2003/09/21 00:30:46 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -476,77 +476,6 @@ ACLList::matches (ACLChecklist *checklist) const
     return true;
 }
 
-/* Warning: do not cbdata lock checklist here - it
- * may be static or on the stack
- */
-int
-aclCheckFast(const acl_access * A, ACLChecklist * checklist)
-{
-    allow_t allow = ACCESS_DENIED;
-    PROF_start(aclCheckFast);
-    debug(28, 5) ("aclCheckFast: list: %p\n", A);
-
-    while (A) {
-        allow = A->allow;
-        checklist->matchAclListFast(A->aclList);
-
-        if (checklist->finished()) {
-            PROF_stop(aclCheckFast);
-            return allow == ACCESS_ALLOWED;
-        }
-
-        A = A->next;
-    }
-
-    debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", allow == ACCESS_DENIED);
-    PROF_stop(aclCheckFast);
-    return allow == ACCESS_DENIED;
-}
-
-/*
- * Any ACLChecklist created by aclChecklistCreate() must eventually be
- * freed by ACLChecklist::operator delete().  There are two common cases:
- *
- * A) Using aclCheckFast():  The caller creates the ACLChecklist using
- *    aclChecklistCreate(), checks it using aclCheckFast(), and frees it
- *    using aclChecklistFree().
- *
- * B) Using aclNBCheck() and callbacks: The caller creates the
- *    ACLChecklist using aclChecklistCreate(), and passes it to
- *    aclNBCheck().  Control eventually passes to ACLChecklist::checkCallback(),
- *    which will invoke the callback function as requested by the
- *    original caller of aclNBCheck().  This callback function must
- *    *not* invoke aclChecklistFree().  After the callback function
- *    returns, ACLChecklist::checkCallback() will free the ACLChecklist using
- *    aclChecklistFree().
- */
-
-
-ACLChecklist *
-aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *ident)
-{
-    ACLChecklist *checklist = new ACLChecklist;
-
-    if (A)
-        checklist->accessList = cbdataReference(A);
-
-    if (request != NULL) {
-        checklist->request = requestLink(request);
-        checklist->src_addr = request->client_addr;
-        checklist->my_addr = request->my_addr;
-        checklist->my_port = request->my_port;
-    }
-
-#if USE_IDENT
-    if (ident)
-        xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
-
-#endif
-
-    checklist->auth_user_request = NULL;
-
-    return checklist;
-}
 
 /*********************/
 /* Destroy functions */

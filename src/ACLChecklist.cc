@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.14 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.15 2003/09/21 00:30:48 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -194,9 +194,6 @@ ACLChecklist::markFinished()
 void
 ACLChecklist::checkAccessList()
 {
-    debug(28, 3) ("ACLChecklist::checkAccessList: %p checking '%s'\n", this, accessList->cfgline);
-    /* what is our result on a match? */
-    currentAnswer(accessList->allow);
     /* does the current AND clause match */
     matchAclListSlow(accessList->aclList);
 }
@@ -239,6 +236,9 @@ void
 ACLChecklist::matchAclList(const acl_list * head, bool const fast)
 {
     PROF_start(aclMatchAclList);
+    debug(28, 3) ("ACLChecklist::matchAclList: %p checking '%s'\n", this, accessList->cfgline);
+    /* what is our result on a match? */
+    currentAnswer(accessList->allow);
     const acl_list *node = head;
 
     while (node) {
@@ -388,6 +388,33 @@ ACLChecklist::nonBlockingCheck(PF * callback_, void *callback_data_)
     check();
 }
 
+/* Warning: do not cbdata lock this here - it
+ * may be static or on the stack
+ */
+int
+ACLChecklist::fastCheck()
+{
+    PROF_start(aclCheckFast);
+    currentAnswer(ACCESS_DENIED);
+    debug(28, 5) ("aclCheckFast: list: %p\n", accessList);
+
+    while (accessList) {
+        matchAclListFast(accessList->aclList);
+
+        if (finished()) {
+            PROF_stop(aclCheckFast);
+            return currentAnswer() == ACCESS_ALLOWED;
+        }
+
+        accessList = accessList->next;
+    }
+
+    debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", currentAnswer() == ACCESS_DENIED);
+    PROF_stop(aclCheckFast);
+    return currentAnswer() == ACCESS_DENIED;
+}
+
+
 bool
 ACLChecklist::destinationDomainChecked() const
 {
@@ -424,6 +451,50 @@ void
 ACLChecklist::checking (bool const newValue)
 {
     checking_ = newValue;
+}
+
+/*
+ * Any ACLChecklist created by aclChecklistCreate() must eventually be
+ * freed by ACLChecklist::operator delete().  There are two common cases:
+ *
+ * A) Using aclCheckFast():  The caller creates the ACLChecklist using
+ *    aclChecklistCreate(), checks it using aclCheckFast(), and frees it
+ *    using aclChecklistFree().
+ *
+ * B) Using aclNBCheck() and callbacks: The caller creates the
+ *    ACLChecklist using aclChecklistCreate(), and passes it to
+ *    aclNBCheck().  Control eventually passes to ACLChecklist::checkCallback(),
+ *    which will invoke the callback function as requested by the
+ *    original caller of aclNBCheck().  This callback function must
+ *    *not* invoke aclChecklistFree().  After the callback function
+ *    returns, ACLChecklist::checkCallback() will free the ACLChecklist using
+ *    aclChecklistFree().
+ */
+
+ACLChecklist *
+aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *ident)
+{
+    ACLChecklist *checklist = new ACLChecklist;
+
+    if (A)
+        checklist->accessList = cbdataReference(A);
+
+    if (request != NULL) {
+        checklist->request = requestLink(request);
+        checklist->src_addr = request->client_addr;
+        checklist->my_addr = request->my_addr;
+        checklist->my_port = request->my_port;
+    }
+
+#if USE_IDENT
+    if (ident)
+        xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
+
+#endif
+
+    checklist->auth_user_request = NULL;
+
+    return checklist;
 }
 
 #ifndef _USE_INLINE_

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.145 2003/08/10 11:00:44 robertc Exp $
+ * $Id: tunnel.cc,v 1.146 2003/09/21 00:30:47 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -561,7 +561,9 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
         ch.my_addr = request->my_addr;
         ch.my_port = request->my_port;
         ch.request = requestLink(request);
-        answer = aclCheckFast(Config.accessList.miss, &ch);
+        ch.accessList = Config.accessList.miss;
+        answer = ch.fastCheck();
+        ch.accessList = NULL;
 
         if (answer == 0) {
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
