@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.79 1998/09/19 17:06:14 wessels Exp $
+ * $Id: store_dir.cc,v 1.80 1998/09/22 17:45:28 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,9 @@
  */
 
 #include "squid.h"
+#if HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
 
 #define SWAP_DIR_SHIFT 24
 #define SWAP_FILE_MASK 0x00FFFFFF
@@ -566,6 +569,9 @@ storeDirStats(StoreEntry * sentry)
 {
     int i;
     SwapDir *SD;
+#if HAVE_SYS_STATFS_H
+    struct statfs sfs;
+#endif
     storeAppendPrintf(sentry, "Store Directory Statistics:\n");
     storeAppendPrintf(sentry, "Store Entries          : %d\n",
 	memInUse(MEM_STOREENTRY));
@@ -589,6 +595,20 @@ storeDirStats(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "Filemap bits in use: %d of %d (%d%%)\n",
 	    SD->map->n_files_in_map, SD->map->max_n_files,
 	    percent(SD->map->n_files_in_map, SD->map->max_n_files));
+#if HAVE_SYS_STATFS_H
+#define fsbtoblk(num, fsbs, bs) \
+        (((fsbs) != 0 && (fsbs) < (bs)) ? \
+                (num) / ((bs) / (fsbs)) : (num) * ((fsbs) / (bs)))
+	if (!statfs(SD->path, &sfs, sizeof(sfs), 0)) {
+	    storeAppendPrintf(sentry, "Filesystem Space in use: %d/%d (%d%%)\n",
+		fsbtoblk((sfs.f_blocks - sfs.f_bfree), sfs.f_bsize, 1024),
+		fsbtoblk(sfs.f_blocks, sfs.f_bsize, 1024),
+		percent(sfs.f_blocks - sfs.f_bfree, sfs.f_blocks));
+	    storeAppendPrintf(sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
+		sfs.f_files - sfs.f_ffree, sfs.f_files,
+		percent(sfs.f_files - sfs.f_ffree, sfs.f_files));
+	}
+#endif
     }
 }
 
