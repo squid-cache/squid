@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.163 1997/10/27 22:53:12 wessels Exp $
+ * $Id: stat.cc,v 1.164 1997/10/27 22:54:38 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -109,10 +109,6 @@
 
 #define MAX_LINELEN (4096)
 #define max(a,b)  ((a)>(b)? (a): (b))
-
-#ifdef HIER_EXPERIMENT
-static FILE *hierexplog = NULL;
-#endif
 
 typedef struct _log_read_data_t {
     StoreEntry *sentry;
