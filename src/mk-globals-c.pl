@@ -5,6 +5,10 @@ while (<>) {
 		print;
 		next;
 	}
+	if (/^.\*/) {
+		print;
+		next;
+	}
 	next unless (/./);
 	next if (/\[\];$/);
 	die unless (/^extern\s+([^;]+);(.*)$/);
