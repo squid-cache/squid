@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.128 1996/10/10 18:52:23 wessels Exp $
+ * $Id: store.cc,v 1.129 1996/10/10 19:04:19 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2875,7 +2875,7 @@ storeFreeMemory(void)
     StoreEntry **list;
     int i = 0;
     int j;
-    list = xcalloc(meta_data.store_entries, sizeof(StoreEntry));
+    list = xcalloc(meta_data.store_entries, sizeof(StoreEntry *));
     e = (StoreEntry *) hash_first(store_table);
     while (e && i < meta_data.store_entries) {
 	*(list + i) = e;

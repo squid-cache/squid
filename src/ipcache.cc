@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.68 1996/10/09 22:49:37 wessels Exp $
+ * $Id: ipcache.cc,v 1.69 1996/10/10 19:04:16 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1009,4 +1009,29 @@ ipcacheRemoveBadAddr(char *name, struct in_addr addr)
 	i->expires = squid_curtime;
     if (ia->cur >= ia->count)
 	ia->cur = 0;
+}
+
+void
+ipcacheFreeMemory(void)
+{
+    ipcache_entry *i;
+    ipcache_entry **list;
+    int k = 0;
+    int j;
+    list = xcalloc(meta_data.ipcache_count, sizeof(ipcache_entry *));
+    i = (ipcache_entry *) hash_first(ip_table);
+    while (i && k < meta_data.ipcache_count) {
+        *(list + k) = i;
+        k++;
+        i = (ipcache_entry *) hash_next(ip_table);
+    }
+    for (j = 0; j < k; j++) {
+	i = *(list + j);
+        safe_free(i->addrs.in_addrs);
+        safe_free(i->name);
+        safe_free(i->error_message);
+        safe_free(i);
+    }
+    xfree(list);
+    hashFreeMemory(ip_table);
 }

@@ -310,7 +310,7 @@ netdbFreeMemory(void)
     int i = 0;
     int j;
 
-    L1 = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry));
+    L1 = xcalloc(meta_data.netdb_addrs, sizeof(netdbEntry *));
     n = (netdbEntry *) hash_first(addr_table);
     while (n && i < meta_data.netdb_addrs) {
 	*(L1 + i) = n;
@@ -328,7 +328,7 @@ netdbFreeMemory(void)
     xfree(L1);
 
     i = 0;
-    L2 = xcalloc(meta_data.netdb_hosts, sizeof(netdbEntry));
+    L2 = xcalloc(meta_data.netdb_hosts, sizeof(hash_link *));
     h = hash_first(host_table);
     while (h && i < meta_data.netdb_hosts) {
 	*(L2 + i) = h;
