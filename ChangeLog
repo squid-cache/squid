@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta17 (Mar 17, 1998):
+
 	- SNMP MIB version check changed to non-rcs.
 	- Added memory pools for variable size objects (strings).
 	  There are three pools; for small, medium, and large objects.  
@@ -31,6 +33,7 @@
 	- Surrounded 'source_ping' code with #ifdefs.
 	- Changed 'deny_info URL' to use a custom Error page.
 	- Modified src/client.c for testing POST requests.
+	- Fixed hash4() for SCO (Vlado Potisk).
 
 Changes to squid-1.2.beta16 (Mar 4, 1998):
 
