@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.204 2001/01/04 03:42:35 wessels Exp $
+ * $Id: squid.h,v 1.205 2001/01/04 21:57:58 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -157,6 +157,9 @@
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#if HAVE_SYS_VFS_H
+#include <sys/vfs.h>
 #endif
 #if HAVE_SYS_UN_H
 #include <sys/un.h>
