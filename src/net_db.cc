@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.95 1998/05/08 23:29:28 wessels Exp $
+ * $Id: net_db.cc,v 1.96 1998/05/09 16:31:39 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -508,6 +508,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
     int j;
     HttpReply *rep;
     size_t hdr_sz;
+    int nused = 0;
     rec_sz = 0;
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
@@ -515,16 +516,21 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
     ex->seen = ex->used + size;
     debug(37, 3) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
     if (!cbdataValid(ex->p)) {
+	debug(37, 3) ("netdbExchangeHandleReply: Peer became invalid\n");
 	netdbExchangeDone(ex);
 	return;
     }
+    debug(37, 3) ("netdbExchangeHandleReply: for '%s:%d'\n", ex->p->host, ex->p->http_port);
     p = buf;
     if (0 == ex->used) {
 	/* skip reply headers */
 	if ((hdr_sz = headersEnd(p, size))) {
+	    debug(37, 5) ("netdbExchangeHandleReply: hdr_sz = %d\n", hdr_sz);
 	    rep = ex->e->mem_obj->reply;
 	    if (0 == rep->sline.status)
 		httpReplyParse(rep, buf);
+	    debug(37, 3) ("netdbExchangeHandleReply: reply status %d\n",
+		rep->sline.status);
 	    if (HTTP_OK != rep->sline.status) {
 		netdbExchangeDone(ex);
 		return;
@@ -537,7 +543,11 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	    size = 0;
 	}
     }
+    debug(37, 5) ("netdbExchangeHandleReply: start parsing loop, size = %d\n",
+	size);
     while (size >= rec_sz) {
+	debug(37, 5) ("netdbExchangeHandleReply: in parsing loop, size = %d\n",
+	    size);
 	addr.s_addr = any_addr.s_addr;
 	hops = rtt = 0.0;
 	for (o = 0; o < rec_sz;) {
@@ -561,6 +571,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 		break;
 	    }
 	}
+	nused++;
 	if (addr.s_addr != any_addr.s_addr && rtt > 0)
 	    netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
 	assert(o == rec_sz);
@@ -568,16 +579,28 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	size -= rec_sz;
 	p += rec_sz;
     }
+    debug(37, 3) ("netdbExchangeHandleReply: used %d entries, (x %d bytes) == %d bytes total\n",
+	nused, rec_sz, nused * rec_sz);
+    debug(37, 3) ("netdbExchangeHandleReply: seen %d, used %d\n", ex->seen, ex->used);
     if (ex->e->store_status != STORE_OK) {
+	debug(37, 3) ("netdbExchangeHandleReply: store_status != STORE_OK\n");
 	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
 	    ex->buf, netdbExchangeHandleReply, ex);
+    } else if (ex->seen < ex->e->mem_obj->inmem_hi) {
+	debug(37, 3) ("netdbExchangeHandleReply: ex->e->mem_obj->inmem_hi\n");
+	storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
+	    ex->buf, netdbExchangeHandleReply, ex);
+    } else {
+	debug(37, 3) ("netdbExchangeHandleReply: Done\n");
+	netdbExchangeDone(ex);
     }
 }
 
 static void
 netdbExchangeDone(void *data)
 {
-    netdbExchangeState * ex = data;
+    netdbExchangeState *ex = data;
+    debug(37, 3) ("netdbExchangeDone: %s\n", storeUrl(ex->e));
     memFree(MEM_4K_BUF, ex->buf);
     requestUnlink(ex->r);
     storeUnregister(ex->e, ex);
