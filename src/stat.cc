@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.202 1998/02/19 23:28:42 wessels Exp $
+ * $Id: stat.cc,v 1.203 1998/02/22 12:05:24 kostas Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -115,7 +115,7 @@ static void statAvgTick(void *notused);
 static void statAvgDump(StoreEntry *, int minutes);
 static void statCountersDump(StoreEntry * sentry);
 static void statCounterInit(StatCounters *);
-static void statLogHistInit(StatLogHist *, double, double);
+void statLogHistInit(StatLogHist *, double, double);
 static int statLogHistBin(StatLogHist *, double);
 static double statLogHistVal(StatLogHist *, double);
 static double statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B);
@@ -137,7 +137,7 @@ static void info_get_mallstat(int, int, StoreEntry *);
  * An hour's worth, plus the 'current' counter
  */
 #define N_COUNT_HIST 61
-static StatCounters CountHist[N_COUNT_HIST];
+StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
 
 void
@@ -756,7 +756,7 @@ statAvg60min(StoreEntry * e)
     statAvgDump(e, 60);
 }
 
-static void
+void
 statLogHistInit(StatLogHist * H, double min, double max)
 {
     H->min = min;
@@ -773,7 +773,7 @@ statLogHistCount(StatLogHist * H, double val)
     H->bins[bin]++;
 }
 
-static double
+double
 statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B)
 {
     StatLogHist D;
@@ -842,6 +842,35 @@ statLogHistVal(StatLogHist * H, double bin)
     return exp(bin / H->scale) + H->min - 1.0;
 }
 
+enum { HTTP_SVC, ICP_SVC, DNS_SVC };
+
+int 
+get_median_svc(int interval, int which)
+{
+    StatCounters *f;
+    StatCounters *l;
+    double x;
+
+    f = &CountHist[0];
+    l = &CountHist[interval];
+	assert(f);
+	assert(l);
+    switch (which) {
+    case HTTP_SVC:
+        x = statLogHistDeltaMedian(&l->client_http.svc_time, &f->client_http.svc_time);
+        break;
+    case ICP_SVC:
+        x = statLogHistDeltaMedian(&l->icp.svc_time, &f->icp.svc_time);
+        break;
+    case DNS_SVC:
+        x = statLogHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
+        break;
+    default:
+        debug(49,5)("get_median_val: unknown type.\n");
+        x=0;
+    }
+    return (int)x;
+}
 static void
 statLogHistDump(StoreEntry * sentry, StatLogHist * H)
 {
