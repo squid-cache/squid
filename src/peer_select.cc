@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.30 1997/11/03 22:43:17 wessels Exp $
+ * $Id: peer_select.cc,v 1.31 1997/11/04 06:16:52 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -48,8 +48,6 @@ const char *hier_strings[] =
     "SOURCE_FASTEST",
     "SIBLING_UDP_HIT_OBJ",
     "PARENT_UDP_HIT_OBJ",
-    "PASSTHROUGH_PARENT",
-    "SSL_PARENT_MISS",
     "ROUNDROBIN_PARENT",
     "INVALID CODE"
 };
@@ -347,6 +345,7 @@ void
 peerSelectInit(void)
 {
     memset(&PeerStats, '\0', sizeof(PeerStats));
+    assert(sizeof(hier_strings) == (HIER_MAX + 1) * sizeof(char *));
 }
 
 static void
