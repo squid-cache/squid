@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.357 1998/07/20 17:19:28 wessels Exp $
+ * $Id: client_side.cc,v 1.358 1998/07/20 19:24:58 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1171,8 +1171,10 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	 * punt to clientProcessMiss.
 	 */
 	if (e->mem_status == IN_MEMORY) {
+	    memFree(MEM_4K_BUF, buf);
 	    clientProcessMiss(http);
 	} else if (size == SM_PAGE_SIZE && http->out.offset == 0) {
+	    memFree(MEM_4K_BUF, buf);
 	    clientProcessMiss(http);
 	} else {
 	    debug(33, 3) ("clientCacheHit: waiting for HTTP reply headers\n");
@@ -1204,6 +1206,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    http->log_type = LOG_TCP_MISS;
 	    clientProcessMiss(http);
 	}
+	memFree(MEM_4K_BUF, buf);
     } else if (EBIT_TEST(r->flags, REQ_IMS)) {
 	/*
 	 * Handle If-Modified-Since requests from the client
@@ -1211,6 +1214,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	if (mem->reply->sline.status != HTTP_OK) {
 	    debug(33, 4) ("clientCacheHit: Reply code %d != 200\n",
 		mem->reply->sline.status);
+	    memFree(MEM_4K_BUF, buf);
 	    clientProcessMiss(http);
 	} else if (modifiedSince(e, http->request)) {
 	    http->log_type = LOG_TCP_IMS_MISS;
@@ -1218,6 +1222,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	} else {
 	    MemBuf mb = httpPacked304Reply(e->mem_obj->reply);
 	    http->log_type = LOG_TCP_IMS_HIT;
+	    memFree(MEM_4K_BUF, buf);
 	    storeUnregister(e, http);
 	    storeUnlockObject(e);
 	    e = clientCreateStoreEntry(http, http->request->method, 0);
