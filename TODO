@@ -19,6 +19,16 @@
 + redo cachemgr utilization
 + internalize redirectors?
 
++ Efficient public peer access control *without ACLs*
+  Bill Wichers <billw@unix0.waveform.net>
+  Dave Zarzycki <zarzycki@ricochet.net>
+  # distant_peer_deny (icmp rtt) (hops)
+  #    If the ICP client is farther than "z" hops away,
+  #    or if more than y% of pings to the client exceed
+  #    x milliseconds, then deny.
+  distant_peer_deny   200  75  10
+
+
 DONE:
 + s/sprintf/snprintf/g
 + Write the text for all the error message files
