@@ -1,5 +1,5 @@
 /*
- * $Id: whois.cc,v 1.1 1998/06/04 19:06:15 wessels Exp $
+ * $Id: whois.cc,v 1.2 1998/06/28 16:17:31 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -35,6 +35,7 @@
 typedef struct {
     StoreEntry *entry;
     request_t *request;
+    FwdState *fwdState;
 } WhoisState;
 
 static PF whoisClose;
@@ -44,13 +45,14 @@ static PF whoisReadReply;
 /* PUBLIC */
 
 void
-whoisStart(request_t * request, StoreEntry * entry, int fd)
+whoisStart(FwdState * fwdState, int fd)
 {
     WhoisState *p = xcalloc(1, sizeof(*p));
     char *buf;
     size_t l;
-    p->request = request;
-    p->entry = entry;
+    p->request = fwdState->request;
+    p->entry = fwdState->entry;
+    p->fwdState = fwdState;
     cbdataAdd(p, MEM_NONE);
     storeLockObject(p->entry);
     comm_add_close_handler(fd, whoisClose, p);
@@ -83,17 +85,30 @@ whoisReadReply(int fd, void *data)
     buf[len] = '\0';
     debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
     debug(75, 5) ("{%s}\n", buf);
-    if (len <= 0) {
+    if (len > 0) {
+	fd_bytes(fd, len, FD_READ);
+	kb_incr(&Counter.server.all.kbytes_in, len);
+	kb_incr(&Counter.server.http.kbytes_in, len);
+	storeAppend(entry, buf, len);
+	commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
+    } else if (len < 0) {
+	debug(50, 2) ("whoisReadReply: FD %d: read failure: %s.\n",
+	    fd, xstrerror());
+	if (ignoreErrno(errno)) {
+	    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
+	} else if (entry->mem_obj->inmem_hi == 0) {
+	    fwdFail(p->fwdState, ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, errno);
+	    comm_close(fd);
+	} else {
+	    storeAbort(entry, 0);
+	    comm_close(fd);
+	}
+    } else {
 	storeComplete(entry);
 	debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
 	comm_close(fd);
-	memFree(MEM_4K_BUF, buf);
-	return;
     }
-    storeAppend(entry, buf, len);
     memFree(MEM_4K_BUF, buf);
-    fd_bytes(fd, len, FD_READ);
-    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
 }
 
 static void
