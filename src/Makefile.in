@@ -1,13 +1,11 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.60 1996/12/03 20:26:46 wessels Exp $
+#  $Id: Makefile.in,v 1.61 1996/12/05 21:23:52 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 HOST_OPT	= # -DCACHEMGR_HOSTNAME="getfullhostname()"
-AIO_OPT		= # -DUSE_ASYNC_IO=1
-AIO_LIBS	= # @AIO_LIBS@
 AUTH_OPT	= # -DUSE_PROXY_AUTH=1
 LOG_HDRS_OPT	= # -DLOG_FULL_HEADERS=1
 ICMP_OPT	= # -DUSE_ICMP=1
@@ -15,7 +13,7 @@ DELAY_HACK      = # -DDELAY_HACK=1
 USERAGENT_OPT	= # -DUSE_USERAGENT_LOG=1
 KILL_PARENT_OPT	= # -DKILL_PARENT_OPT
 USE_POLL_OPT    = # -DUSE_POLL
-DEFINES         = $(HOST_OPT) $(AIO_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) \
+DEFINES         = $(HOST_OPT) $(AUTH_OPT) $(LOG_HDRS_OPT) \
                   $(ICMP_OPT) $(DELAY_HACK) $(USERAGENT_OPT) \
                   $(KILL_PARENT_OPT) $(USE_POLL_OPT)
 
@@ -60,8 +58,7 @@ SHELL		= /bin/sh
 
 INCLUDE		= -I. -I../include -I$(srcdir)/../include
 CFLAGS 		= $(AC_CFLAGS) $(INCLUDE) $(DEFINES)
-SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) -lmiscutil $(XTRA_LIBS) \
-		   $(AIO_LIBS)
+SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) -lmiscutil $(XTRA_LIBS)
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 FTPGET_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
@@ -72,7 +69,6 @@ UTILS           = dnsserver ftpget pinger
 CGIPROGS	= cachemgr.cgi
 OBJS	 	= \
 		acl.o \
-		async_io.o \
 		cache_cf.o \
 		client_db.o \
 		client_side.o \

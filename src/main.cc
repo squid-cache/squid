@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.126 1996/12/04 18:38:16 wessels Exp $
+ * $Id: main.cc,v 1.127 1996/12/05 21:23:56 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -525,14 +525,6 @@ mainInitialize(void)
     parseConfigFile(ConfigFile);
 
     leave_suid();		/* Run as non privilegied user */
-
-#if USE_ASYNC_IO
-#if HAVE_AIO_INIT
-    if (first_time)
-	aio_init();
-#endif
-    squid_signal(SIGIO, aioSigHandler, SA_RESTART);
-#endif
 
     if (httpPortNumOverride != 1)
 	Config.Port.http = (u_short) httpPortNumOverride;
