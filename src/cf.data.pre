@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.228 2001/10/03 22:56:20 hno Exp $
+# $Id: cf.data.pre,v 1.229 2001/10/03 23:00:07 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1568,11 +1568,12 @@ TYPE: int
 DEFAULT: 95
 LOC: Config.quickAbort.pct
 DOC_START
-	The cache can be configured to continue downloading aborted
-	requests.  This may be undesirable on slow (e.g. SLIP) links
-	and/or very busy caches.  Impatient users may tie up file
-	descriptors and bandwidth by repeatedly requesting and
-	immediately aborting downloads.
+	The cache by defaults continues downloading aborted requests
+	which are almost completed (less than 16 KB remaining). This
+	may be undesirable on slow (e.g. SLIP) links and/or very busy
+	caches.  Impatient users may tie up file descriptors and
+	bandwidth by repeatedly requesting and immediately aborting
+	downloads.
 
 	When the user aborts a request, Squid will check the
 	quick_abort values to the amount of data transfered until
@@ -1587,11 +1588,11 @@ DOC_START
 	If more than 'quick_abort_pct' of the transfer has completed,
 	it will finish the retrieval.
 
-	If you do not want any requests to continue after the client
+	If you do not want any retrieval to continue after the client
 	has aborted, set both 'quick_abort_min' and 'quick_abort_max'
 	to '0 KB'.
 
-	If you want downloads to always continue if they are being
+	If you want retreivals to always continue if they are being
 	cached then set 'quick_abort_min' to '-1 KB'.
 DOC_END
 
