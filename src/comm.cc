@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.45 1996/07/23 04:11:03 wessels Exp $
+ * $Id: comm.cc,v 1.46 1996/07/25 05:45:46 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -150,6 +150,7 @@ static void RWStateCallbackAndFree _PARAMS((int fd, RWStateData *, int code));
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay _PARAMS((int));
 #endif
+static void commSetTcpRcvbuf _PARAMS((int, int));
 
 static int *fd_lifetime = NULL;
 static struct timeval zero_tv;
@@ -234,6 +235,7 @@ int comm_open(io_type, addr, port, note)
     int new_socket;
     FD_ENTRY *conn = NULL;
     int sock_type = io_type & COMM_DGRAM ? SOCK_DGRAM : SOCK_STREAM;
+    int tcp_rcv_bufsz = getTcpRcvBufsz();
 
     /* Create socket for accepting new connections. */
     if ((new_socket = socket(AF_INET, sock_type, 0)) < 0) {
@@ -283,6 +285,8 @@ int comm_open(io_type, addr, port, note)
     if (sock_type == SOCK_STREAM)
 	commSetTcpNoDelay(new_socket);
 #endif
+    if (tcp_rcv_bufsz > 0 && sock_type == SOCK_STREAM)
+	commSetTcpRcvbuf(new_socket, tcp_rcv_bufsz);
     conn->comm_type = io_type;
     return new_socket;
 }
@@ -957,6 +961,16 @@ static void commSetTcpNoDelay(fd)
 	debug(5, 1, "commSetTcpNoDelay: FD %d: %s\n", fd, xstrerror());
 }
 #endif
+
+static void commSetTcpRcvbuf(fd, size)
+     int fd;
+     int size;
+{
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0)
+	debug(5, 1, "commSetTcpRcvbuf: FD %d, SIZE %d: %s\n",
+	fd, size, xstrerror());
+}
+
 
 int commSetNonBlocking(fd)
      int fd;
