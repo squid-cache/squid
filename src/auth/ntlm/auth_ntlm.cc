@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.41 2004/08/30 05:12:32 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.42 2004/09/03 21:23:10 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -451,7 +451,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         if (helperstate == NULL)
             fatal("lost NTLM helper state! quitting\n");
 
-        helperstate->challenge = xstrndup(reply, NTLM_CHALLENGE_SZ + 5);
+        helperstate->challenge = xstrdup(reply);
 
         helperstate->challengeuses = 0;
 
@@ -480,7 +480,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 
         ntlm_request->authserver = static_cast<helper_stateful_server *>(lastserver);
 
-        ntlm_request->authchallenge = xstrndup(reply, NTLM_CHALLENGE_SZ + 5);
+        ntlm_request->authchallenge = xstrdup(reply);
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
         /* we're finished, release the helper */
         reply += 3;
@@ -495,7 +495,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         result = S_HELPER_RELEASE;
         /* we only expect OK when finishing the handshake */
         assert(ntlm_request->auth_state == AUTHENTICATE_STATE_RESPONSE);
-        ntlm_user->username(xstrndup(reply, MAX_LOGIN_SZ));
+        ntlm_user->username(xstrdup(reply));
         ntlm_request->authserver = NULL;
 #ifdef NTLM_FAIL_OPEN
 
@@ -521,7 +521,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         result = S_HELPER_RELEASE;
         /* we only expect LD when finishing the handshake */
         assert(ntlm_request->auth_state == AUTHENTICATE_STATE_RESPONSE);
-        ntlm_user->username_ = xstrndup(reply, MAX_LOGIN_SZ);
+        ntlm_user->username_ = xstrdup(reply);
         helperstate = static_cast<ntlm_helper_state_t *>(helperStatefulServerGetData(ntlm_request->authserver));
         ntlm_request->authserver = NULL;
         /* BH code: mark helper as broken */
@@ -775,7 +775,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
             /* increment the challenge uses */
             helperstate->challengeuses++;
             /* assign the challenge */
-            authchallenge = xstrndup(helperstate->challenge, NTLM_CHALLENGE_SZ + 5);
+            authchallenge = xstrdup(helperstate->challenge);
             /* we're not actually submitting a request, so we need to release the helper
              * should the connection close unexpectedly
              */
@@ -993,7 +993,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
         /* we've recieved a negotiate request. pass to a helper */
         debug(29, 9) ("authenticateNTLMAuthenticateUser: auth state ntlm none. %s\n", proxy_auth);
         ntlm_request->auth_state = AUTHENTICATE_STATE_NEGOTIATE;
-        ntlm_request->ntlmnegotiate = xstrndup(proxy_auth, NTLM_CHALLENGE_SZ + 5);
+        ntlm_request->ntlmnegotiate = xstrdup(proxy_auth);
         conn->auth_type = AUTH_NTLM;
         conn->auth_user_request = this;
         ntlm_request->conn = conn;
