@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.6 2001/03/03 10:39:39 hno Exp $
+ * $Id: store_repl_heap.cc,v 1.7 2001/03/14 22:28:44 wessels Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -233,11 +233,6 @@ heap_purgeInit(RemovalPolicy * policy, int max_scan)
     walker->max_scan = max_scan;
     walker->Next = heap_purgeNext;
     walker->Done = heap_purgeDone;
-#if HEAP_REPLACEMENT_DEBUG
-    if (!verify_heap_property(heap->heap)) {
-	debug(81, 1) ("Heap property violated!\n");
-    }
-#endif
     return walker;
 }
 

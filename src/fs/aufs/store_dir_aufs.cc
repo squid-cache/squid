@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.32 2001/03/03 10:39:37 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.33 2001/03/14 22:28:37 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1480,15 +1480,6 @@ storeAufsDirStats(SwapDir * SD, StoreEntry * sentry)
     if (SD->flags.read_only)
 	storeAppendPrintf(sentry, " READ-ONLY");
     storeAppendPrintf(sentry, "\n");
-#if OLD_UNUSED_CODE
-#if !HEAP_REPLACEMENT
-    storeAppendPrintf(sentry, "LRU Expiration Age: %6.2f days\n",
-	(double) storeAufsDirExpiredReferenceAge(SD) / 86400.0);
-#else
-    storeAppendPrintf(sentry, "Storage Replacement Threshold:\t%f\n",
-	heap_peepminkey(sd.repl.heap.heap));
-#endif
-#endif /* OLD_UNUSED_CODE */
 }
 
 static struct cache_dir_option options[] =
