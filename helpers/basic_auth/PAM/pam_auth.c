@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.4 2002/01/07 01:13:10 hno Exp $
+ * $Id: pam_auth.c,v 1.5 2002/01/07 01:20:10 hno Exp $
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999 Henrik Nordstrom <hno@squid-cache.org>
@@ -38,6 +38,17 @@
  *
  * Compile this program with: gcc -o pam_auth pam_auth.c -lpam -ldl
  *
+ * History:
+ *
+ *   Version 1.3, 1999-12-10
+ *   	Bugfix release 1.3 to work around Solaris 2.6
+ *      brokenness (not sending arguments to conversation
+ *      functions)
+ *
+ *   Version 1.2, never released
+ *
+ *   Version 1.1, 1999-05-11
+ *	Initial version
  */
 
 #include <stdio.h>
