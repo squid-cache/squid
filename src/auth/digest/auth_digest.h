@@ -82,6 +82,7 @@ struct _auth_digest_config {
     time_t nonceGCInterval;
     time_t noncemaxduration;
     int noncemaxuses;
+    int NonceStrictness;
 };
 
 typedef struct _auth_digest_config auth_digest_config;

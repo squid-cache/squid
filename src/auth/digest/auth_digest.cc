@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.10 2001/10/24 05:26:14 hno Exp $
+ * $Id: auth_digest.cc,v 1.11 2002/01/13 01:08:44 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -338,12 +338,13 @@ authenticateDigestNonceFindNonce(const char *nonceb64)
 static int
 authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 {
-    int intnc;
+    unsigned long intnc;
     /* do we have a nonce ? */
     if (!nonce)
 	return 0;
-    intnc = atoi(nc);
-    if (intnc != nonce->nc + 1) {
+    intnc = strtol(nc, NULL, 16);
+    if ((digestConfig->NonceStrictness && intnc != nonce->nc + 1) ||
+	intnc < nonce->nc + 1) {
 	debug(29, 4) ("authDigestNonceIsValid: Nonce count doesn't match\n");
 	nonce->flags.valid = 0;
 	return 0;
@@ -354,6 +355,10 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 	return 0;
     }
     /* seems ok */
+    /* increment the nonce count - we've already checked that intnc is a
+     *  valid representation for us, so we don't need the test here.
+     */
+    nonce->nc = intnc;
     return -1;
 }
 
@@ -393,7 +398,7 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
 	debug(29, 4) ("authDigestNoncelastRequest: Nonce count about to overflow\n");
 	return -1;
     }
-    if (nonce->nc == digestConfig->noncemaxuses - 1) {
+    if (nonce->nc >= digestConfig->noncemaxuses - 1) {
 	debug(29, 4) ("authDigestNoncelastRequest: Nonce count about to hit user limit\n");
 	return -1;
     }
@@ -919,6 +924,8 @@ authDigestParse(authScheme * scheme, int n_configured, char *param_str)
 	digestConfig->noncemaxduration = 30 * 60;
 	/* 50 requests */
 	digestConfig->noncemaxuses = 50;
+	/* strict nonce count behaviour */
+	digestConfig->NonceStrictness = 1;
     }
     digestConfig = scheme->scheme_data;
     if (strcasecmp(param_str, "program") == 0) {
@@ -936,6 +943,8 @@ authDigestParse(authScheme * scheme, int n_configured, char *param_str)
 	parse_time_t(&digestConfig->noncemaxduration);
     } else if (strcasecmp(param_str, "nonce_max_count") == 0) {
 	parse_int(&digestConfig->noncemaxuses);
+    } else if (strcasecmp(param_str, "nonce_strictness") == 0) {
+        parse_onoff(&digestConfig->NonceStrictness);
     } else {
 	debug(28, 0) ("unrecognised digest auth scheme parameter '%s'\n", param_str);
     }
@@ -1104,17 +1113,19 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	    /* white space */
 	    while (xisspace(*p))
 		p++;
-	    /* quote mark */
-	    p++;
-	    digest_request->qop = xstrndup(p, strchr(p, '"') + 1 - p);
+	    if (*p == '\"')
+	        /* quote mark */
+	        p++;
+	    digest_request->qop = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
 	    debug(29, 9) ("authDigestDecodeAuth: Found qop '%s'\n", digest_request->qop);
 	} else if (!strncmp(item, "algorithm", ilen)) {
 	    /* white space */
 	    while (xisspace(*p))
 		p++;
-	    /* quote mark */
-	    p++;
-	    digest_request->algorithm = xstrndup(p, strchr(p, '"') + 1 - p);
+	    if (*p == '\"')
+	        /* quote mark */
+	        p++;
+	    digest_request->algorithm = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}")+1);
 	    debug(29, 9) ("authDigestDecodeAuth: Found algorithm '%s'\n", digest_request->algorithm);
 	} else if (!strncmp(item, "uri", ilen)) {
 	    /* white space */
@@ -1193,12 +1204,11 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	return;
     }
     digest_request->nonce = nonce;
-    /* increment the nonce count */
-    nonce->nc++;
     authDigestNonceLink(nonce);
 
-    /* check the qop is what we expected */
-    if (digest_request->qop && strcmp(digest_request->qop, QOP_AUTH)) {
+    /* check the qop is what we expected. Note that for compatability with 
+     * RFC 2069 we should support a missing qop. Tough. */
+    if (!digest_request->qop || strcmp(digest_request->qop, QOP_AUTH)) {
 	/* we recieved a qop option we didn't send */
 	debug(29, 4) ("authenticateDigestDecode: Invalid qop option recieved\n");
 	authDigestLogUsername(auth_user_request, username);
@@ -1254,8 +1264,9 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	return;
     }
     /* check the algorithm is present and supported */
-    if (digest_request->algorithm
-	&& strcmp(digest_request->algorithm, "MD5")
+    if (!digest_request->algorithm)
+        digest_request->algorithm = xstrndup ("MD5", 4);
+    else if (strcmp(digest_request->algorithm, "MD5")
 	&& strcmp(digest_request->algorithm, "MD5-sess")) {
 	debug(29, 4) ("authenticateDigestDecode: invalid algorithm specified!\n");
 	authDigestLogUsername(auth_user_request, username);
