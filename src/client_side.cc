@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.419 1998/10/19 05:31:13 wessels Exp $
+ * $Id: client_side.cc,v 1.420 1998/10/19 06:15:29 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1205,7 +1205,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	    http->log_type = LOG_TCP_MEM_HIT;
 	clientSendMoreData(data, buf, size);
     } else if (refreshCheckHTTP(e, r) && !http->flags.internal) {
-	debug(0, 0) ("clientCacheHit: in refreshCheck() block\n");
+	debug(33, 5) ("clientCacheHit: in refreshCheck() block\n");
 	/*
 	 * We hold a stale copy; it needs to be validated
 	 */
