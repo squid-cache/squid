@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.41 1996/04/10 20:53:05 wessels Exp $ */
-#ident "$Id: store.cc,v 1.41 1996/04/10 20:53:05 wessels Exp $"
+/* $Id: store.cc,v 1.42 1996/04/10 20:57:26 wessels Exp $ */
+#ident "$Id: store.cc,v 1.42 1996/04/10 20:57:26 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -1322,18 +1322,18 @@ void storeRebuildFromDisk()
 	    if (stat(swapfile, &sb) < 0) {
 		if (expires < cached_curtime) {
 		    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-		    if (opt_unlink_on_relaod)
+		    if (opt_unlink_on_reload)
 			safeunlink(swapfile, 1);
 		    expcount++;
 		} else {
 		    debug(20, 3, "storeRebuildFromDisk: Swap file missing: <URL:%s>: %s: %s.\n", url, swapfile, xstrerror());
-		    if (opt_unlink_on_relaod)
+		    if (opt_unlink_on_reload)
 			safeunlink(log_swapfile, 1);
 		}
 		continue;
 	    }
 	    if ((size = sb.st_size) == 0) {
-		if (opt_unlink_on_relaod)
+		if (opt_unlink_on_reload)
 		    safeunlink(log_swapfile, 1);
 		continue;
 	    }
@@ -1356,7 +1356,7 @@ void storeRebuildFromDisk()
 	}
 	if (expires < cached_curtime) {
 	    debug(20, 3, "storeRebuildFromDisk: Expired: <URL:%s>\n", url);
-	    if (opt_unlink_on_relaod)
+	    if (opt_unlink_on_reload)
 		safeunlink(swapfile, 1);
 	    expcount++;
 	    continue;
