@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.326 2002/08/27 02:08:59 robertc Exp $
+ * $Id: ftp.cc,v 1.327 2002/09/05 18:07:45 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -257,7 +257,6 @@ FTPSM *FTP_SM_FUNCS[] =
     ftpReadQuit,		/* SENT_QUIT */
     ftpReadTransferDone,	/* READING_DATA (RETR,LIST,NLST) */
     ftpWriteTransferDone,	/* WRITING_DATA (STOR) */
-    ftpSendReply,		/* WRITTEN_DATA? (STOR) */
     ftpReadMkdir		/* SENT_MKDIR */
 };
 
