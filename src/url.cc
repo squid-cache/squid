@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.99 1998/07/16 22:22:55 wessels Exp $
+ * $Id: url.cc,v 1.100 1998/07/16 22:41:35 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -261,8 +261,8 @@ urnParse(method_t method, char *urn)
     return requestCreate(method, PROTO_URN, urn + 4);
 }
 
-char *
-urlCanonical(const request_t * request)
+const char *
+urlCanonical(request_t * request)
 {
     LOCAL_ARRAY(char, portbuf, 32);
     LOCAL_ARRAY(char, urlbuf, MAX_URL);
@@ -289,7 +289,7 @@ urlCanonical(const request_t * request)
 	    break;
 	}
     }
-    return request->canonical = xstrdup(urlbuf);
+    return (request->canonical = xstrdup(urlbuf));
 }
 
 char *
