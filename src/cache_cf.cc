@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.281 1998/05/01 21:09:55 wessels Exp $
+ * $Id: cache_cf.cc,v 1.282 1998/05/21 03:59:34 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1075,9 +1075,13 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 {
     while (head != NULL) {
-	storeAppendPrintf(entry, "%s %s %d %d%% %d\n",
-	    name, head->pattern,
-	    (int) head->min, head->pct, (int) head->max);
+	storeAppendPrintf(entry, "%s%s %s %d %d%% %d\n",
+	    name,
+	    head->flags.icase ? " -i" : null_string,
+	    head->pattern,
+	    (int) head->min / 60,
+	    (int) (100.0 * head->pct + 0.5),
+	    (int) head->max / 60);
 	head = head->next;
     }
 }
@@ -1088,7 +1092,7 @@ parse_refreshpattern(refresh_t ** head)
     char *token;
     char *pattern;
     time_t min = 0;
-    int pct = 0;
+    double pct = 0.0;
     time_t max = 0;
     int i;
     refresh_t *t;
@@ -1110,7 +1114,7 @@ parse_refreshpattern(refresh_t ** head)
     GetInteger(i);		/* token: min */
     min = (time_t) (i * 60);	/* convert minutes to seconds */
     GetInteger(i);		/* token: pct */
-    pct = i;
+    pct = (double) i / 100.0;
     GetInteger(i);		/* token: max */
     max = (time_t) (i * 60);	/* convert minutes to seconds */
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
@@ -1122,14 +1126,16 @@ parse_refreshpattern(refresh_t ** head)
 	    pattern, errbuf);
 	return;
     }
-    pct = pct < 0 ? 0 : pct;
+    pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
     t = xcalloc(1, sizeof(refresh_t));
     t->pattern = (char *) xstrdup(pattern);
     t->compiled_pattern = comp;
     t->min = min;
-    t->pct = pct * QUICK_ABORT_100PCT / 100;
+    t->pct = pct;
     t->max = max;
+    if (flags & REG_ICASE)
+	t->flags.icase = 1;
     t->next = NULL;
     while (*head)
 	head = &(*head)->next;
