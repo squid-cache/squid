@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.411 1998/05/08 23:54:02 wessels Exp $
+ * $Id: store.cc,v 1.412 1998/05/09 16:48:41 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -210,7 +210,11 @@ destroy_MemObject(StoreEntry * e)
     while (mem->clients != NULL)
 	storeUnregister(e, mem->clients->callback_data);
 #endif
-    assert(mem->clients == NULL);
+    /*
+     * There is no way to abort FD-less clients, so they might
+     * still have mem->clients set if mem->fd == -1
+     */
+    assert(mem->fd == -1 || mem->clients == NULL);
     httpReplyDestroy(mem->reply);
     requestUnlink(mem->request);
     mem->request = NULL;
