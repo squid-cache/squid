@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.46 1996/07/22 17:24:12 wessels Exp $
+ * $Id: stat.cc,v 1.47 1996/07/25 05:48:40 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -316,6 +316,8 @@ void stat_get(obj, req, sentry)
 	stat_ipcache_get(sentry);
     } else if (strcmp(req, "fqdncache") == 0) {
 	fqdnStats(sentry);
+    } else if (strcmp(req, "dns") == 0) {
+	dnsStats(sentry);
     } else if (strcmp(req, "redirector") == 0) {
 	redirectStats(sentry);
     } else if (strcmp(req, "utilization") == 0) {
