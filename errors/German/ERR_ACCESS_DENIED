@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Der angeforderte URL konnte nicht geholt werden</TITLE>
+</HEAD><BODY>
+<H1>FEHLER</H1>
+<H2>Der angeforderte URL konnte nicht geholt werden</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, den URL
+<A HREF="%U">%U</A>
+zu laden,
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Zugriff verweigert </STRONG>
+</UL>
+<P>
+Aufgrund von Zugriffsbeschr&auml;nkungen ist Ihre Anfrage zur Zeit
+nicht erlaubt.<br>
+Bitte kontaktieren Sie Ihren Service Provider, wenn Sie der Meinung
+sind, da&szlig; dies nicht korrekt ist.
+</P>
+

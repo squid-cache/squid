@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Der angeforderte URL konnte nicht geholt werden</TITLE>
+</HEAD><BODY>
+<H2>Der angeforderte URL konnte nicht geholt werden</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, den URL
+<A HREF="%U">%U</A>
+zu laden
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Es war unm&ouml;glich, eine IP-Adresse f&uuml;r <I>%H</I>
+zu bestimmen.
+</STRONG>
+</UL>
+
+<P>
+Der DNS-Server gab:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+zur&uuml;ck.
+<P>
+ Der Cache war nicht in der Lage, den in der URL enthaltenen Hostnamen
+ aufzul&ouml;sen.
+ &Uuml;berpr&uuml;fen Sie, ob die Adresse korrekt ist.
+</P>
+

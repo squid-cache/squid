@@ -1,0 +1,19 @@
+<HTML><HEAD>
+<TITLE>FEHLER: FTP Upload fehlgeschlagen</TITLE>
+</HEAD><BODY>
+<H1>FEHLER</H1>
+<H2>FTP PUT/Upload fehlgeschlagen</H2>
+<HR>
+<P>
+W&auml;hrend dem PUT/Upload-Versuch des URL:
+<A HREF="%U">%U</A>
+<P>
+Squid schickte das folgende FTP Kommando:
+<PRE><STRONG>         %f </STRONG></PRE>
+und erhielt die Antwort:
+<PRE><STRONG>         %F </STRONG></PRE>
+<P>
+&Uuml;berpr&uuml;fen Sie den Pfad, die Zugriffsrechte und den
+Plattenplatz. Versuchen Sie es dann erneut.
+</P>
+

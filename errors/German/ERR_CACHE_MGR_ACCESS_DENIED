@@ -1,0 +1,33 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Cache-Manager-Zugriff Verweigert</TITLE>
+</HEAD>
+<BODY>
+<H1>FEHLER</H1>
+<H2>Cache-Manager-Zugriff verweigert</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, den URL
+<A HREF="%U">%U</A>
+zu laden,
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Cache-Manager-Zugriff verweigert </STRONG>
+</UL>
+</P>
+
+<P>Leider sind Sie zur Zeit nicht berechtigt
+<PRE>    %U</PRE>
+von diesem Cache zu beziehen, bis Sie sich authentifiziert haben.
+</P>
+
+<P>
+Sie ben&ouml;tigen hierzu Netscape Version 2.0 (oder h&ouml;her), Microsoft Internet
+Explorer 3.0 oder einen anderen HTTP/1.1 Browser.
+Bitte kontaktieren Sie den <A HREF="mailto:%w">Cache-Administrator</a>, wenn Sie Probleme haben,
+sich zu authentifizieren, oder wenn Sie der Administrator <em>sind</em>,
+lesen Sie die Squid-Dokumentation &uuml;ber das Cache-Manager
+Interface und &uuml;berpr&uuml;fen Sie das Cache-Log für detailiertere
+Fehlermeldungen.
+</P>
