@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.26 1998/03/13 05:37:47 wessels Exp $
+ * $Id: asn.cc,v 1.27 1998/03/17 02:42:25 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -106,17 +106,17 @@ asnMatchIp(void *data, struct in_addr addr)
     intlist *a = NULL;
     intlist *b = NULL;
     lh = ntohl(addr.s_addr);
-    debug(53, 4) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
+    debug(53, 3) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
 
     if (AS_tree_head == 0 || !memcmp(&addr, &no_addr, sizeof(addr)))
 	return 0;
     store_m_int(lh, m_addr);
     rn = rn_match(m_addr, AS_tree_head);
     if (rn == 0) {
-	debug(53, 4) ("asnMatchIp: Address not in as db.\n");
+	debug(53, 3) ("asnMatchIp: Address not in as db.\n");
 	return 0;
     }
-    debug(53, 4) ("asnMatchIp: Found in db!\n");
+    debug(53, 3) ("asnMatchIp: Found in db!\n");
     e = ((rtentry *) rn)->e_info;
     for (a = (intlist *) data; a; a = a->next)
 	for (b = e->as_number; b; b = b->next)
@@ -221,7 +221,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
 	    asState);
 	return;
     }
-    debug(53,1)("asHandleReply: Done: %s\n", storeUrl(e));
+    debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
     s = buf;
     while (s - buf < size && *s != '\0') {
 	for (t = s; *t; t++) {
@@ -369,12 +369,13 @@ whoisConnectDone(int fd, int status, void *data)
     whoisState *p = data;
     char buf[128];
     if (status != COMM_OK) {
-	debug(53, 0) ("whoisConnectDone: connection failed\n");
+	debug(53, 1) ("whoisConnectDone: connect: %s: %s\n",
+	    p->request->host, xstrerror());
 	comm_close(fd);
 	return;
     }
     snprintf(buf, 128, "%s\r\n", strBuf(p->request->urlpath) + 1);
-    debug(53, 1) ("whoisConnectDone: FD %d, '%s'\n", fd, strBuf(p->request->urlpath) + 1);
+    debug(53, 3) ("whoisConnectDone: FD %d, '%s'\n", fd, strBuf(p->request->urlpath) + 1);
     comm_write(fd, xstrdup(buf), strlen(buf), NULL, p, xfree);
     commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
 }
@@ -388,10 +389,10 @@ whoisReadReply(int fd, void *data)
     int len;
 
     len = read(fd, buf, 4096);
-    debug(53, 6) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
+    debug(53, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
     if (len <= 0) {
 	storeComplete(entry);
-	debug(53,1)("whoisReadReply: Done: %s\n", storeUrl(entry));
+	debug(53, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
 	comm_close(fd);
 	memFree(MEM_4K_BUF, buf);
 	return;
@@ -406,7 +407,7 @@ static void
 whoisClose(int fd, void *data)
 {
     whoisState *p = data;
-    debug(53, 6) ("whoisClose: FD %d\n", fd);
+    debug(53, 3) ("whoisClose: FD %d\n", fd);
     storeUnlockObject(p->entry);
     cbdataFree(p);
 }
