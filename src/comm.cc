@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.262 1998/05/28 04:44:01 wessels Exp $
+ * $Id: comm.cc,v 1.263 1998/05/28 21:50:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -714,11 +714,14 @@ comm_udp_sendto(int fd,
     int x;
     x = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len);
     if (x < 0) {
-	debug(50, 1) ("comm_udp_sendto: FD %d, %s, port %d: %s\n",
-	    fd,
-	    inet_ntoa(to_addr->sin_addr),
-	    (int) htons(to_addr->sin_port),
-	    xstrerror());
+#ifdef _SQUID_LINUX_
+	if (ECONNREFUSED != errno)
+#endif
+	    debug(50, 1) ("comm_udp_sendto: FD %d, %s, port %d: %s\n",
+		fd,
+		inet_ntoa(to_addr->sin_addr),
+		(int) htons(to_addr->sin_port),
+		xstrerror());
 	return COMM_ERROR;
     }
     return x;
