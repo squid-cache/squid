@@ -26,7 +26,6 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 
     switch (header.opcode) {
     case ICP_OP_QUERY:
-	nudpconn++;
 	/* We have a valid packet */
 	url = buf + sizeof(header) + sizeof(u_num32);
 	if ((icp_request = urlParse(METHOD_GET, url)) == NULL) {

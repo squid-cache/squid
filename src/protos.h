@@ -366,6 +366,7 @@ extern void stackFreeMemory(Stack *);
 
 extern void stat_init(cacheinfo **, const char *);
 extern void pconnHistCount(int, int);
+extern void statAvgInit(void);
 
 /* To reduce memory fragmentation, we now store the memory version of an
  * object in fixed size blocks of size PAGE_SIZE and instead of calling 
@@ -494,6 +495,7 @@ extern void setMaxFD(void);
 extern time_t getCurrentTime(void);
 extern void normal_shutdown(void);
 extern int percent(int, int);
+extern int dpercent(double, double);
 extern void squid_signal(int sig, SIGHDLR *, int flags);
 extern pid_t readPidFile(void);
 extern struct in_addr inaddrFromHostent(const struct hostent *hp);
@@ -502,6 +504,10 @@ extern double doubleAverage(double, double, int, int);
 extern void debug_trap(const char *);
 extern void logsFlush(void);
 extern char *checkNullString(char *p);
+extern void squid_getrusage(struct rusage *r);
+extern double rusage_cputime(struct rusage *r);
+extern int rusage_maxrss(struct rusage *r);
+extern int rusage_pagefaults(struct rusage *r);
 
 extern void unlinkdInit(void);
 extern void unlinkdClose(void);
@@ -521,7 +527,6 @@ extern int urlCheckRequest(const request_t *);
 extern int urlDefaultPort(protocol_t p);
 extern char *urlClean(char *);
 extern char *urlCanonicalClean(const request_t *);
-
 
 extern void useragentOpenLog(void);
 extern void useragentRotateLog(void);

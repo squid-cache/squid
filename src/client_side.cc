@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.151 1997/11/14 17:20:13 wessels Exp $
+ * $Id: client_side.cc,v 1.152 1997/11/15 00:14:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1549,6 +1549,7 @@ clientReadRequest(int fd, void *data)
 	    for (H = &conn->chr; *H; H = &(*H)->next);
 	    *H = http;
 	    conn->nrequests++;
+	    Counter.client_http.requests++;
 	    commSetTimeout(fd, Config.Timeout.lifetime, NULL, NULL);
 	    if ((request = urlParse(method, http->url)) == NULL) {
 		debug(12, 5) ("Invalid URL: %s\n", http->url);
@@ -1624,6 +1625,7 @@ clientReadRequest(int fd, void *data)
 	    break;
 	} else {
 	    /* parser returned -1 */
+	    Counter.client_http.requests++;
 	    debug(12, 1) ("clientReadRequest: FD %d Invalid Request\n", fd);
 	    err = errorCon(ERR_INVALID_REQ, HTTP_BAD_REQUEST);
 	    err->callback = clientErrorComplete;
@@ -1680,7 +1682,6 @@ httpAccept(int sock, void *notused)
 	    sock, xstrerror());
 	return;
     }
-    ntcpconn++;
     debug(12, 4) ("httpAccept: FD %d: accepted\n", fd);
     connState = xcalloc(1, sizeof(ConnStateData));
     connState->peer = peer;

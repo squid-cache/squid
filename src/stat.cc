@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.171 1997/11/14 20:00:39 wessels Exp $
+ * $Id: stat.cc,v 1.172 1997/11/15 00:14:51 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -116,6 +116,7 @@ static void proto_newobject(cacheinfo *, protocol_t, int, int);
 static void proto_purgeobject(cacheinfo *, protocol_t, int);
 static void proto_touchobject(cacheinfo *, protocol_t, int);
 static int memoryAccounted(void);
+static void statAvgTick(void *notused);
 
 #ifdef XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, StoreEntry *);
@@ -125,6 +126,9 @@ static void info_get_mallstat(int, int, StoreEntry *);
 int client_pconn_hist[PCONN_HIST_SZ];
 int server_pconn_hist[PCONN_HIST_SZ];
 
+#define N_DELTAS 5
+static StatCounters Deltas[N_DELTAS];
+
 /* process utilization information */
 static void
 statUtilization(cacheinfo * obj, StoreEntry * sentry, const char *desc)
@@ -133,7 +137,7 @@ statUtilization(cacheinfo * obj, StoreEntry * sentry, const char *desc)
     proto_stat *p = &obj->proto_stat_data[PROTO_MAX];
     proto_stat *q = NULL;
     int secs = 0;
-    secs = (int) (squid_curtime - squid_starttime);
+    secs = (int) (squid_curtime - squid_start.tv_sec);
     storeAppendPrintf(sentry, "{ %s\n", desc);	/* } */
     strcpy(p->protoname, "TOTAL");
     p->object_count = 0;
@@ -513,11 +517,9 @@ memoryAccounted(void)
 void
 info_get(StoreEntry * sentry)
 {
-    const char *tod = NULL;
-    float f;
-#if defined(HAVE_GETRUSAGE) && defined(RUSAGE_SELF)
     struct rusage rusage;
-#endif
+    double cputime;
+    double runtime;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     struct mstats ms;
 #elif HAVE_MALLINFO
@@ -525,26 +527,31 @@ info_get(StoreEntry * sentry)
     int t;
 #endif
 
+    runtime = tvSubDsec(squid_start, current_time);
+    if (runtime == 0.0)
+	runtime = 1.0;
     storeAppendPrintf(sentry, open_bracket);
     storeAppendPrintf(sentry, "{Squid Object Cache: Version %s}\n",
 	version_string);
-    tod = mkrfc1123(squid_starttime);
-    storeAppendPrintf(sentry, "{Start Time:\t%s}\n", tod);
-    tod = mkrfc1123(squid_curtime);
-    storeAppendPrintf(sentry, "{Current Time:\t%s}\n", tod);
+    storeAppendPrintf(sentry, "{Start Time:\t%s}\n",
+	mkrfc1123(squid_start.tv_sec));
+    storeAppendPrintf(sentry, "{Current Time:\t%s}\n",
+	mkrfc1123(current_time.tv_sec));
     storeAppendPrintf(sentry, "{Connection information for %s:}\n",
 	appname);
-    storeAppendPrintf(sentry, "{\tNumber of TCP connections:\t%lu}\n",
-	ntcpconn);
-    storeAppendPrintf(sentry, "{\tNumber of UDP connections:\t%lu}\n",
-	nudpconn);
+    storeAppendPrintf(sentry, "{\tNumber of HTTP requests received:\t%u}\n",
+	Counter.client_http.requests);
+    storeAppendPrintf(sentry, "{\tNumber of ICP messages received:\t%u}\n",
+	Counter.icp.pkts_recv);
+    storeAppendPrintf(sentry, "{\tNumber of ICP messages sent:\t%u}\n",
+	Counter.icp.pkts_sent);
 
-
-    f = (float) (squid_curtime - squid_starttime);
-    storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n",
-	f == 0.0 ? 0.0 : ((ntcpconn + nudpconn) / (f / 3600.0)));
+    storeAppendPrintf(sentry, "{\tHTTP requests per minute:\t%.1f}\n",
+	Counter.client_http.requests / (runtime / 60.0));
+    storeAppendPrintf(sentry, "{\tICP messages per minute:\t%.1f}\n",
+	(Counter.icp.pkts_sent + Counter.icp.pkts_recv) / (runtime / 60.0));
     storeAppendPrintf(sentry, "{\tSelect loop called: %d times, %0.3f ms avg}\n",
-	select_loops, 1000.0 * f / select_loops);
+	Counter.select_loops, 1000.0 * runtime / Counter.select_loops);
 
     storeAppendPrintf(sentry, "{Cache information for %s:}\n",
 	appname);
@@ -555,37 +562,21 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "{\tStorage LRU Expiration Age:\t%6.2f days}\n",
 	(double) storeExpiredReferenceAge() / 86400.0);
     storeAppendPrintf(sentry, "{\tRequests given to unlinkd:\t%d}\n",
-	unlinkd_count);
+	Counter.unlink.requests);
     storeAppendPrintf(sentry, "{\tUnused fileno stack count:\t%d}\n",
 	fileno_stack_count);
 
-#if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
+    squid_getrusage(&rusage);
+    cputime = rusage_cputime(&rusage);
     storeAppendPrintf(sentry, "{Resource usage for %s:}\n", appname);
-#ifdef _SQUID_SOLARIS_
-    /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
-    enter_suid();
-#endif
-    getrusage(RUSAGE_SELF, &rusage);
-#ifdef _SQUID_SOLARIS_
-    leave_suid();
-#endif
-    storeAppendPrintf(sentry, "{\tCPU Time: %d seconds (%d user %d sys)}\n",
-	(int) rusage.ru_utime.tv_sec + (int) rusage.ru_stime.tv_sec,
-	(int) rusage.ru_utime.tv_sec,
-	(int) rusage.ru_stime.tv_sec);
-    storeAppendPrintf(sentry, "{\tCPU Usage: %d%%}\n",
-	percent(rusage.ru_utime.tv_sec + rusage.ru_stime.tv_sec,
-	    squid_curtime - squid_starttime));
-#if defined(_SQUID_SGI_) || defined(_SQUID_OSF_) || defined(BSD4_4)
+    storeAppendPrintf(sentry, "{\tUP Time:\t%.3f seconds}\n", runtime);
+    storeAppendPrintf(sentry, "{\tCPU Time:\t%.3f seconds}\n", cputime);
+    storeAppendPrintf(sentry, "{\tCPU Usage:\t%d%%}\n",
+	dpercent(cputime, runtime));
     storeAppendPrintf(sentry, "{\tMaximum Resident Size: %ld KB}\n",
-	rusage.ru_maxrss);
-#else
-    storeAppendPrintf(sentry, "{\tMaximum Resident Size: %ld KB}\n",
-	(rusage.ru_maxrss * getpagesize()) >> 10);
-#endif
+	rusage_maxrss(&rusage));
     storeAppendPrintf(sentry, "{\tPage faults with physical i/o: %ld}\n",
-	rusage.ru_majflt);
-#endif
+	rusage_pagefaults(&rusage));
 
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     ms = mstats();
@@ -907,4 +898,38 @@ pconnHistDump(StoreEntry * e)
 	    continue;
 	storeAppendPrintf(e, "\t%4d  %9d\n", i, server_pconn_hist[i]);
     }
+}
+
+void
+statAvgInit(void)
+{
+    memset(Deltas, '\0', N_DELTAS * sizeof(StatCounters));
+    eventAdd("statAvgTick", statAvgTick, NULL, 60);
+}
+
+static void
+statAvgTick(void *notused)
+{
+    StatCounters *t = &Deltas[0];
+    StatCounters *p = &Deltas[1];
+    StatCounters *c = &Counter;
+    struct rusage rusage;
+    eventAdd("statAvgTick", statAvgTick, NULL, 60);
+    memmove(p, t, (N_DELTAS - 1) * sizeof(StatCounters));
+    t->client_http.requests = c->client_http.requests - p->client_http.requests;
+    t->client_http.hits = c->client_http.hits - p->client_http.hits;
+    t->client_http.errors = c->client_http.errors - p->client_http.errors;
+    t->client_http.bytes_in = c->client_http.bytes_in - p->client_http.bytes_in;
+    t->client_http.bytes_out = c->client_http.bytes_out - p->client_http.bytes_out;
+    t->icp.pkts_sent = c->icp.pkts_sent - p->icp.pkts_sent;
+    t->icp.pkts_recv = c->icp.pkts_recv - p->icp.pkts_recv;
+    t->icp.bytes_sent = c->icp.bytes_sent - p->icp.bytes_sent;
+    t->icp.bytes_recv = c->icp.bytes_recv - p->icp.bytes_recv;
+    t->unlink.requests = c->unlink.requests - p->unlink.requests;
+    t->page_faults = c->page_faults - p->page_faults;
+    t->select_loops = c->select_loops - p->select_loops;
+    t->cputime = c->cputime - p->cputime;
+    squid_getrusage(&rusage);
+    c->page_faults = rusage_pagefaults(&rusage);
+    c->cputime = rusage_cputime(&rusage);
 }

@@ -883,3 +883,25 @@ struct _ErrorState {
 	char *reply;
     } ftp;
 };
+
+struct _StatCounters {
+    struct {
+	int requests;
+	int hits;
+	int errors;
+	int bytes_in;
+	int bytes_out;
+    } client_http;
+    struct {
+	int pkts_sent;
+	int pkts_recv;
+	int bytes_sent;
+	int bytes_recv;
+    } icp;
+    struct {
+	int requests;
+    } unlink;
+    int page_faults;
+    int select_loops;
+    double cputime;
+};

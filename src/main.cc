@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.191 1997/11/13 05:25:49 wessels Exp $
+ * $Id: main.cc,v 1.192 1997/11/15 00:14:49 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -294,8 +294,8 @@ void
 shut_down(int sig)
 {
     shutdown_pending = sig == SIGINT ? -1 : 1;
-    debug(1, 1) ("Preparing for shutdown after %d connections\n",
-	ntcpconn + nudpconn);
+    debug(1, 1) ("Preparing for shutdown after %d requests\n",
+	Counter.client_http.requests);
     debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
 	shutdown_pending > 0 ? Config.shutdownLifetime : 0);
 #ifdef KILL_PARENT_OPT
@@ -580,6 +580,7 @@ mainInitialize(void)
 	if (Config.onoff.announce)
 	    eventAdd("start_announce", start_announce, NULL, 3600);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
+	statAvgInit();
     }
     configured_once = 1;
 }
@@ -619,7 +620,8 @@ main(int argc, char **argv)
     safe_inet_addr("255.255.255.255", &no_addr);
     squid_srandom(time(NULL));
 
-    squid_starttime = getCurrentTime();
+    getCurrentTime();
+    squid_start = current_time;
     failure_notify = fatal_dump;
 
     mainParseOptions(argc, argv);
