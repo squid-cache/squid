@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.358 2002/09/24 10:46:42 robertc Exp $
+ * $Id: stat.cc,v 1.359 2002/10/06 02:05:23 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -561,7 +561,7 @@ info_get(StoreEntry * sentry)
     t = mp.arena + mp.hblkhd;
     storeAppendPrintf(sentry, "\tTotal size:            %6d KB\n",
 	t >> 10);
-#if HAVE_EXT_MALLINFO
+#if HAVE_STRUCT_MALLINFO_MXFAST
     storeAppendPrintf(sentry, "\tmax size of small blocks:\t%d\n", mp.mxfast);
     storeAppendPrintf(sentry, "\tnumber of small blocks in a holding block:\t%d\n",
 	mp.nlblks);
@@ -572,7 +572,7 @@ info_get(StoreEntry * sentry)
 	mp.allocated);
     storeAppendPrintf(sentry, "\tbytes used in maintaining the free tree:\t%d\n",
 	mp.treeoverhead);
-#endif /* HAVE_EXT_MALLINFO */
+#endif /* HAVE_STRUCT_MALLINFO_MXFAST */
 #endif /* HAVE_MALLINFO */
     storeAppendPrintf(sentry, "Memory accounted for:\n");
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO

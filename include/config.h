@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.4 2001/11/13 21:27:47 hno Exp $
+ * $Id: config.h,v 1.5 2002/10/06 02:05:22 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -120,26 +120,121 @@
  *  the return codes of programs in if statements.  These options
  *  need to be overridden.
  */
-#ifndef socklen_t
-#define socklen_t int
 #endif
-#ifndef fd_mask
-#define fd_mask unsigned long
+
+/* Typedefs for missing entries on a system */
+
+#include "squid_types.h"
+
+/* int16_t */
+#ifndef HAVE_INT16_T
+#if HAVE_SHORT && SIZEOF_SHORT == 2
+typedef short int16_t;
+#elif HAVE_INT && SIZEOF_INT == 2
+typedef int int16_t;
+#else
+#error NO 16 bit signed type available
 #endif
+#endif
+
+/* u_int16_t */
+#ifndef HAVE_U_INT16_T
+#if HAVE_UINT16_T
+typedef uint16_t u_int16_t;
+#else
+typedef unsigned int16_t u_int16_t;
+#endif
+#endif
+
+/* int32_t */
+#ifndef HAVE_INT32_T
+#if HAVE_INT && SIZEOF_INT == 4
+typedef int int32_t;
+#elif HAVE_LONG && SIZEOF_LONG == 4
+typedef long int32_t;
+#else
+#error NO 32 bit signed type available
+#endif
+#endif
+
+/* u_int32_t */
+#ifndef HAVE_U_INT32_T
+#if HAVE_UINT32_T
+typedef uint32_t u_int32_t;
+#else
+typedef unsigned int32_t u_int32_t;
+#endif
+#endif
+
+/* int64_t */
+#ifndef HAVE_INT64_T
+#if HAVE___INT64
+typedef __int64 int64_t;
+#elif HAVE_LONG && SIZEOF_LONG == 8
+typedef long int64_t;
+#elif HAVE_LONG_LONG && SIZEOF_LONG_LONG == 8
+typedef long long int64_t;
+#else
+#error NO 64 bit signed type available
+#endif
+#endif
+
+/* u_int64_t */
+#ifndef HAVE_U_INT64_T
+#if HAVE_UINT64_T
+typedef uint64_t u_int64_t;
+#else
+typedef unsigned int64_t u_int64_t;
+#endif
+#endif
+
+
+#ifndef HAVE_PID_T
+typedef int pid_t;
+#endif
+
+#ifndef HAVE_SIZE_T
+typedef unsigned int size_t;
+#endif
+
+#ifndef HAVE_SSIZE_T
+typedef int ssize_t;
+#endif
+
+#ifndef HAVE_OFF_T
+typedef int off_t;
+#endif
+
+#ifndef HAVE_MODE_T
+typedef unsigned short mode_t;
+#endif
+
+#ifndef HAVE_FD_MASK
+typedef unsigned long fd_mask;
+#endif
+
+#ifndef HAVE_SOCKLEN_T
+typedef int socklen_t;
+#endif
+
+#ifndef HAVE_MTYP_T
+typedef long mtyp_t;
 #endif
 
 #if !defined(CACHEMGR_HOSTNAME)
 #define CACHEMGR_HOSTNAME ""
 #endif
 
-#if SQUID_UDP_SO_SNDBUF > 16384
-#undef SQUID_UDP_SO_SNDBUF
+#if SQUID_DETECT_UDP_SO_SNDBUF > 16384
 #define SQUID_UDP_SO_SNDBUF 16384
+#else
+#define SQUID_UDP_SO_SNDBUF SQUID_DETECT_UDP_SO_SNDBUF
 #endif
 
-#if SQUID_UDP_SO_RCVBUF > 16384
-#undef SQUID_UDP_SO_RCVBUF
+#if SQUID_DETECT_UDP_SO_RCVBUF > 16384
 #define SQUID_UDP_SO_RCVBUF 16384
+#else
+#define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
 #endif
 
 #ifdef HAVE_MEMCPY

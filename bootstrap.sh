@@ -5,8 +5,8 @@
 # has been updated
 
 # Autotool versions required
-acver="2.13"
-amver="1.5"
+acver=""
+amver=""
 
 bootstrap() {
   if "$@"; then
@@ -23,14 +23,14 @@ bootstrap() {
 mkdir -p cfgaux
 
 # Adjust paths of required autool packages
-if autoconf --version | grep -q $acver; then
-  acver=""
-fi
-if automake --version | grep -q $amver; then
-  amver=""
-fi
+#if autoconf --version | grep -q $acver; then
+#  acver=""
+#fi
+#if automake --version | grep -q $amver; then
+#  amver=""
+#fi
 acver=`echo $acver | sed -e 's/\.//'`
-amver=`echo $amver | sed -e 's/\.//'`
+#amver=`echo $amver | sed -e 's/\.//'`
 
 # Bootstrap the autotool subsystems
 bootstrap aclocal$amver

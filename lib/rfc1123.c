@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.29 2001/10/17 19:46:43 hno Exp $
+ * $Id: rfc1123.c,v 1.30 2002/10/06 02:05:22 robertc Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -245,7 +245,7 @@ parse_rfc1123(const char *str)
     tm->tm_isdst = -1;
 #ifdef HAVE_TIMEGM
     t = timegm(tm);
-#elif HAVE_TM_GMTOFF
+#elif HAVE_TM_TM_GMTOFF
     t = mktime(tm);
     {
 	struct tm *local = localtime(&t);
