@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.107 1997/05/23 17:21:17 wessels Exp $
+ * $Id: client_side.cc,v 1.108 1997/06/01 18:19:51 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -328,7 +328,6 @@ icpProcessExpired(int fd, void *data)
 {
     clientHttpRequest *http = data;
     char *url = http->url;
-    char *request_hdr = http->request_hdr;
     StoreEntry *entry = NULL;
 
     debug(33, 3, "icpProcessExpired: FD %d '%s'\n", fd, http->url);
@@ -336,8 +335,6 @@ icpProcessExpired(int fd, void *data)
     BIT_SET(http->request->flags, REQ_REFRESH);
     http->old_entry = http->entry;
     entry = storeCreateEntry(url,
-	request_hdr,
-	http->req_hdr_sz,
 	http->request->flags,
 	http->request->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */

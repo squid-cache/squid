@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.245 1997/05/23 20:45:58 wessels Exp $
+ * $Id: store.cc,v 1.246 1997/06/01 18:19:56 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -365,7 +365,6 @@ destroy_MemObject(MemObject * mem)
     debug(20, 3, "destroy_MemObject: destroying %p\n", mem);
     destroy_MemObjectData(mem);
     safe_free(mem->clients);
-    safe_free(mem->request_hdr);
     safe_free(mem->reply);
     safe_free(mem->e_abort_msg);
     requestUnlink(mem->request);
@@ -737,11 +736,7 @@ storeSetPublicKey(StoreEntry * e)
 }
 
 StoreEntry *
-storeCreateEntry(const char *url,
-    const char *req_hdr,
-    int req_hdr_sz,
-    int flags,
-    method_t method)
+storeCreateEntry(const char *url, int flags, method_t method)
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
@@ -753,12 +748,6 @@ storeCreateEntry(const char *url,
     e->url = xstrdup(url);
     meta_data.url_strings += strlen(url);
     e->method = method;
-    if (req_hdr) {
-	mem->request_hdr_sz = req_hdr_sz;
-	mem->request_hdr = xmalloc(req_hdr_sz + 1);
-	xmemcpy(mem->request_hdr, req_hdr, req_hdr_sz);
-	*(mem->request_hdr + req_hdr_sz) = '\0';
-    }
     if (BIT_TEST(flags, REQ_CACHABLE)) {
 	BIT_SET(e->flag, ENTRY_CACHABLE);
 	BIT_RESET(e->flag, RELEASE_REQUEST);
@@ -1662,7 +1651,6 @@ storeComplete(StoreEntry * e)
     storeSetMemStatus(e, IN_MEMORY);
     e->swap_status = NO_SWAP;
     InvokeHandlers(e);
-    safe_free(e->mem_obj->request_hdr);
     if (BIT_TEST(e->flag, RELEASE_REQUEST))
 	storeRelease(e);
     else if (storeCheckSwapable(e))
