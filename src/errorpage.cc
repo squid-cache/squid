@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.145 1999/01/11 22:54:19 wessels Exp $
+ * $Id: errorpage.cc,v 1.146 1999/01/12 16:40:35 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -262,12 +262,19 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     HttpReply *rep;
     MemObject *mem = entry->mem_obj;
-    /*
-     *  Kostas sez PUT "success" replies might not be STORE_PENDING?
-     */
-    /* assert(entry->store_status == STORE_PENDING); */
     assert(mem != NULL);
     assert(mem->inmem_hi == 0);
+    if (entry->store_status != STORE_PENDING) {
+	/*
+	 * If the entry is not STORE_PENDING, then no clients
+	 * care about it, and we don't need to generate an
+	 * error message
+	 */
+	assert(EBIT_TEST(entry->flags, ENTRY_ABORTED));
+	assert(mem->nclients == 0);
+	errorStateFree(err);
+	return;
+    }
     storeBuffer(entry);
     rep = errorBuildReply(err);
     /* Add authentication header */
