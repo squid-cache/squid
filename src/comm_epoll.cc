@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.5 2003/11/09 17:11:10 hno Exp $
+ * $Id: comm_epoll.cc,v 1.6 2004/12/21 18:06:33 hno Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -128,12 +128,16 @@ commSetSelect(int fd, unsigned int type, PF * handler,
 
     struct epoll_event ev;
     assert(fd >= 0);
-    assert(F->flags.open);
     debug(5, DEBUG_EPOLL ? 0 : 8) ("commSetSelect(fd=%d,type=%u,handler=%p,client_data=%p,timeout=%ld)\n",
                                    fd,type,handler,client_data,timeout);
 
     ev.events = 0;
     ev.data.fd = fd;
+
+    if (!F->flags.open) {
+        epoll_ctl(kdpfd, EPOLL_CTL_DEL, fd, &ev);
+        return;
+    }
 
     // If read is an interest
 
@@ -215,6 +219,8 @@ comm_select(int msec)
         checkTimeouts();
     }
 
+    PROF_start(comm_check_incoming);
+
     if (msec > max_poll_time)
         msec = max_poll_time;
 
@@ -230,9 +236,12 @@ comm_select(int msec)
 
         getCurrentTime();
 
+        PROF_stop(comm_check_incoming);
+
         return COMM_ERROR;
     }
 
+    PROF_stop(comm_check_incoming);
     getCurrentTime();
 
     statHistCount(&statCounter.select_fds_hist, num);
@@ -251,7 +260,7 @@ comm_select(int msec)
         // TODO: add EPOLLPRI??
 
         if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR)) {
-            if((hdl = F->read_handler) != NULL) {
+            if ((hdl = F->read_handler) != NULL) {
                 debug(5, DEBUG_EPOLL ? 0 : 8) ("comm_select(): Calling read handler on fd=%d\n",fd);
                 PROF_start(comm_write_handler);
                 F->read_handler = NULL;
@@ -267,7 +276,7 @@ comm_select(int msec)
         }
 
         if (cevents->events & (EPOLLOUT|EPOLLHUP|EPOLLERR)) {
-            if((hdl = F->write_handler) != NULL) {
+            if ((hdl = F->write_handler) != NULL) {
                 debug(5, DEBUG_EPOLL ? 0 : 8) ("comm_select(): Calling write handler on fd=%d\n",fd);
                 PROF_start(comm_read_handler);
                 F->write_handler = NULL;
