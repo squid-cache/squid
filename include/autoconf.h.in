@@ -193,6 +193,9 @@
 /* Define if you have the timegm function.  */
 #undef HAVE_TIMEGM
 
+/* Define if you have the vsnprintf function.  */
+#undef HAVE_VSNPRINTF
+
 /* Define if you have the <alloca.h> header file.  */
 #undef HAVE_ALLOCA_H
 
