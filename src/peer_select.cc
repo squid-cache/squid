@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.60 1998/05/21 22:32:17 wessels Exp $
+ * $Id: peer_select.cc,v 1.61 1998/05/21 22:39:00 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -318,7 +318,7 @@ peerSelectFoo(ps_state * psstate)
 	    eventAdd("peerPingTimeout",
 		peerPingTimeout,
 		psstate,
-		expected_rtt,
+		expected_rtt / 1000.0,
 		0);
 	    return;
 	}
