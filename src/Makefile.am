@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.5 2001/09/04 01:02:50 robertc Exp $
+#  $Id: Makefile.am,v 1.6 2001/09/04 03:09:09 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -131,7 +131,7 @@ DEFAULT_ICON_DIR	= $(sysconfdir)/icons
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
 DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
 
-DEFS =  -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
+DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
