@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.271 1998/04/08 05:44:11 wessels Exp $
+ * $Id: cache_cf.cc,v 1.272 1998/04/08 21:38:35 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1084,7 +1084,7 @@ parse_refreshpattern(refresh_t ** head)
     t->pattern = (char *) xstrdup(pattern);
     t->compiled_pattern = comp;
     t->min = min;
-    t->pct = pct;
+    t->pct = pct * QUICK_ABORT_100PCT / 100;
     t->max = max;
     t->next = NULL;
     while (*head)
