@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.6 1996/10/11 19:35:29 wessels Exp $
+ * $Id: pinger.cc,v 1.7 1996/10/14 21:29:02 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -307,7 +307,7 @@ pingerSendtoSquid(pingerReplyData * preply)
 {
     int len = sizeof(pingerReplyData) - 8192 + preply->psize;
     if (send(1, preply, len, 0) < 0) {
-	debug(37, 0, "send: %s\n", xstrerror());
+	debug(37, 0, "pinger: send: %s\n", xstrerror());
 	exit(1);
     }
 }
@@ -332,16 +332,16 @@ main(int argc, char *argv[])
     struct timeval tv;
     char *debug_args = "ALL,1";
     char *t;
+    time_t last_check_time = 0;
 
     if ((t = getenv("SQUID_DEBUG")))
 	debug_args = xstrdup(t);
     getCurrentTime();
     _db_init(NULL, debug_args);
 
-
     pingerOpen();
     for (;;) {
-	tv.tv_sec = 30;
+	tv.tv_sec = 10;
 	tv.tv_usec = 0;
 	FD_ZERO(&R);
 	FD_SET(0, &R);
@@ -350,18 +350,18 @@ main(int argc, char *argv[])
 	getCurrentTime();
 	if (x < 0)
 	    return 1;
-	if (x == 0) {
-	    if (send(1, &tv, 0, 0) < 0) {
-		debug(37, 0, "send: %s\n", xstrerror());
-		exit(1);
-	    }
-	}
 	if (FD_ISSET(0, &R))
 	    if (pingerReadRequest() < 0)
 		return 1;
 	if (FD_ISSET(icmp_sock, &R))
 	    pingerRecv();
+	if (10 + last_check_time > squid_curtime) {
+	    if (send(1, &tv, 0, 0) < 0)
+	        return 1;
+	    last_check_time = squid_curtime;
+	}
     }
+    /* NOTREACHED */
 }
 
 #else
