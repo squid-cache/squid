@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.214 2002/09/15 06:27:49 adrian Exp $
+ * $Id: enums.h,v 1.215 2002/09/23 03:59:15 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -458,6 +458,7 @@ typedef enum {
     HTTP_SEE_OTHER = 303,
     HTTP_NOT_MODIFIED = 304,
     HTTP_USE_PROXY = 305,
+    HTTP_TEMPORARY_REDIRECT = 307,
     HTTP_BAD_REQUEST = 400,
     HTTP_UNAUTHORIZED = 401,
     HTTP_PAYMENT_REQUIRED = 402,
@@ -752,15 +753,15 @@ typedef enum {
 } digest_read_state_t;
 
 typedef enum {
-    COMM_OK 		= 0,
-    COMM_ERROR		= -1,
-    COMM_NOMESSAGE	= -3,
-    COMM_TIMEOUT	= -4,
-    COMM_SHUTDOWN	= -5,
-    COMM_INPROGRESS	= -6,
-    COMM_ERR_CONNECT	= -7,
-    COMM_ERR_DNS	= -8,
-    COMM_ERR_CLOSING	= -9
+    COMM_OK = 0,
+    COMM_ERROR = -1,
+    COMM_NOMESSAGE = -3,
+    COMM_TIMEOUT = -4,
+    COMM_SHUTDOWN = -5,
+    COMM_INPROGRESS = -6,
+    COMM_ERR_CONNECT = -7,
+    COMM_ERR_DNS = -8,
+    COMM_ERR_CLOSING = -9
 } comm_err_t;
 
 
