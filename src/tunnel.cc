@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.137 2003/02/23 00:08:04 robertc Exp $
+ * $Id: tunnel.cc,v 1.138 2003/03/02 14:46:15 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -156,10 +156,7 @@ sslReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, voi
 
     assert(fd == sslState->server.fd);
     errno = 0;
-#if DELAY_POOLS
 
-    len = sslState->delayId.bytesWanted(1, len);
-#endif
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
 
     if (errcode == COMM_ERR_CLOSING) {
@@ -345,7 +342,13 @@ sslWriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, v
 
     if (cbdataReferenceValid(sslState)) {
         assert(sslState->server.len == 0);
-        comm_read(sslState->server.fd, sslState->server.buf, SQUID_TCP_SO_RCVBUF,
+        int read_sz = SQUID_TCP_SO_RCVBUF;
+#if DELAY_POOLS
+
+        read_sz = sslState->delayId.bytesWanted(1, read_sz);
+#endif
+
+        comm_read(sslState->server.fd, sslState->server.buf, read_sz,
                   sslReadServer, sslState);
     }
 
