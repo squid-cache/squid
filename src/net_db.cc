@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.35 1997/05/15 01:18:47 wessels Exp $
+ * $Id: net_db.cc,v 1.36 1997/05/15 23:40:25 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -399,7 +399,7 @@ netdbReloadState(void)
 	    continue;
 	N.last_use_time = (time_t) atoi(t);
 	n = xcalloc(1, sizeof(netdbEntry));
-	memcpy(n, &N, sizeof(netdbEntry));
+	xmemcpy(n, &N, sizeof(netdbEntry));
 	netdbHashInsert(n, addr);
 	while ((t = strtok(NULL, w_space)) != NULL)
 	    netdbHashLink(n, t);
