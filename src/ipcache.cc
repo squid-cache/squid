@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.183 1998/05/08 23:29:27 wessels Exp $
+ * $Id: ipcache.cc,v 1.184 1998/05/13 21:24:47 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -240,11 +240,7 @@ ipcache_release(ipcache_entry * i)
 	IpcacheStats.release_locked++;
 	return;
     }
-    if (hash_remove_link(ip_table, table_entry)) {
-	debug(14, 0) ("ipcache_release: hash_remove_link() failed for '%s'\n",
-	    i->name);
-	return;
-    }
+    hash_remove_link(ip_table, table_entry);
     dlinkDelete(&i->lru, &lru_list);
     if (i->status == IP_CACHED) {
 	safe_free(i->addrs.in_addrs);
@@ -990,10 +986,7 @@ ipcacheChangeKey(ipcache_entry * i)
 	return;
     }
     assert(i == (ipcache_entry *) table_entry);
-    if (hash_remove_link(ip_table, table_entry)) {
-	debug_trap("ipcacheChangeKey: hash_remove_link() failed\n");
-	return;
-    }
+    hash_remove_link(ip_table, table_entry);
     snprintf(new_key, 256, "%d/", ++index);
     strncat(new_key, i->name, 128);
     debug(14, 1) ("ipcacheChangeKey: from '%s' to '%s'\n", i->name, new_key);
