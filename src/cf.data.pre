@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.220 2001/06/10 22:08:52 hno Exp $
+# $Id: cf.data.pre,v 1.221 2001/07/12 12:59:31 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1925,14 +1925,14 @@ DOC_START
 	  # This will be matched when the client's IP address has
 	  # more than <number> HTTP connections established.
 
-	acl req_mime_type mime-type1 ...
+	acl aclname req_mime_type mime-type1 ...
 	  # regex match agains the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
 	  # types HTTP tunelling requests.
 	  # NOTE: This does NOT match the reply. You cannot use this
 	  # to match the returned file type.
 
-	acl rep_mime_type mime-type1 ...
+	acl aclname rep_mime_type mime-type1 ...
 	  # regex match against the mime type of the reply recieved by
 	  # squid. Can be used to detect file download or some
 	  # types HTTP tunelling requests.
