@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.237 1997/05/22 15:52:00 wessels Exp $
+ * $Id: store.cc,v 1.238 1997/05/22 22:19:49 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -214,12 +214,12 @@ typedef struct storeCleanList {
     struct storeCleanList *next;
 } storeCleanList;
 
-typedef void (*VCB) _PARAMS((void *, int));
+typedef void (VCB) _PARAMS((void *, int));
 
 typedef struct valid_ctrl_t {
     struct stat *sb;
     StoreEntry *e;
-    VCB callback;
+    VCB *callback;
     void *callback_data;
 } valid_ctrl_t;
 
@@ -260,7 +260,7 @@ static void storeGetMemSpace _PARAMS((int));
 static int storeHashDelete _PARAMS((StoreEntry *));
 static int storeShouldPurgeMem _PARAMS((const StoreEntry *));
 static DRCB storeSwapInHandle;
-static void storeSwapInValidateComplete _PARAMS((void *, int));
+static VCB storeSwapInValidateComplete;
 static void storeSwapInStartComplete _PARAMS((void *, int));
 static int swapInError _PARAMS((int, StoreEntry *));
 static mem_ptr new_MemObjectData _PARAMS((void));
@@ -288,15 +288,16 @@ static DWCB storeSwapOutHandle;
 static void storeHashMemInsert _PARAMS((StoreEntry *));
 static void storeHashMemDelete _PARAMS((StoreEntry *));
 static void storeSetPrivateKey _PARAMS((StoreEntry *));
-static void storeDoRebuildFromDisk _PARAMS((void *data));
-static void storeCleanup _PARAMS((void *data));
-static void storeCleanupComplete _PARAMS((void *data, int));
-static void storeValidate _PARAMS((StoreEntry *, void (*)(), void *));
-static void storeValidateComplete _PARAMS((void *data, int, int));
+static EVH storeDoRebuildFromDisk;
+static EVH storeCleanup;
+static VCB storeCleanupComplete;
+static void storeValidate _PARAMS((StoreEntry *, VCB *, void *));
+static AIOCB storeValidateComplete;
 static void storeRebuiltFromDisk _PARAMS((struct storeRebuildState * data));
 static unsigned int getKeyCounter _PARAMS((void));
 static void storePutUnusedFileno _PARAMS((int fileno));
 static int storeGetUnusedFileno _PARAMS((void));
+static int storeSwapInCheck _PARAMS((StoreEntry * e));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -413,7 +414,7 @@ destroy_MemObjectData(MemObject * mem)
 	mem->data, mem->e_current_len);
     store_mem_size -= ENTRY_INMEM_SIZE(mem);
     if (mem->data) {
-	memFreeData(mem->data);
+	memFree(mem->data);
 	mem->data = NULL;
 	meta_data.mem_data_count--;
     }
@@ -1089,16 +1090,27 @@ storeSwapInHandle(int u1, const char *buf, int len, int flag, void *data)
     }
 }
 
+static int
+storeSwapInCheck(StoreEntry * e)
+{
+    if (e->mem_status != NOT_IN_MEMORY)
+	return 0;
+    if (e->store_status == STORE_PENDING)
+	return 0;
+    if (BIT_TEST(e->flag, ENTRY_VALIDATED))
+	return 1;
+    if (storeDirMapBitTest(e->swap_file_number))
+	/* someone took our file while we weren't looking */
+	return 0;
+    return 1;
+}
+
 /* start swapping in */
 void
 storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
-    if (e->mem_status != NOT_IN_MEMORY) {
-	callback(callback_data, 0);
-	return;
-    }
-    if (e->store_status == STORE_PENDING) {
+    if (!storeSwapInCheck(e)) {
 	callback(callback_data, 0);
 	return;
     }
@@ -1539,9 +1551,10 @@ storeValidate(StoreEntry * e, VCB callback, void *callback_data)
     char *path;
     struct stat *sb;
     int x;
+    assert(!BIT_TEST(e->flag, ENTRY_VALIDATED));
     if (e->swap_file_number < 0) {
 	BIT_RESET(e->flag, ENTRY_VALIDATED);
-	(callback) (callback_data, -1);
+	callback(callback_data, -1);
 	return;
     }
     path = storeSwapFullPath(e->swap_file_number, NULL);
@@ -2243,7 +2256,6 @@ storeClientCopy(StoreEntry * e,
 	return;
     }
     sz = memCopy(mem->data, offset, buf, size);
-debug(0,0,"storeClientCopy: size=%d\n", sz);
     callback(data, buf, sz);
     /* see if we can get rid of some data if we are in "delete behind" mode . */
     if (BIT_TEST(e->flag, DELETE_BEHIND))
