@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.380 2003/06/08 23:27:50 wessels Exp $
+ * $Id: main.cc,v 1.381 2003/07/06 14:37:45 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1117,7 +1117,14 @@ main(int argc, char **argv)
         /* Attempt any pending storedir IO */
         storeDirCallback();
 
+        /* twice to deal with indirectly queued events
+         * resulting from the first call. These are usually
+         * callbacks and should be dealt with immediately.
+         */
         comm_calliocallback();
+
+        if (comm_iocallbackpendin())
+            comm_calliocallback();
 
         switch (comm_select(loop_delay)) {
 
