@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.200 2001/11/16 17:02:20 hno Exp $
+ * $Id: enums.h,v 1.201 2001/11/17 11:09:24 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -728,5 +728,23 @@ enum {
     VARY_OTHER,
     VARY_CANCEL
 };
+
+/* CygWin & Windows NT Port */
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+/*
+ * Supported Windows OS types codes
+ */
+enum {
+    _WIN_OS_UNKNOWN,
+    _WIN_OS_WIN32S,
+    _WIN_OS_WIN95,
+    _WIN_OS_WIN98,
+    _WIN_OS_WINME,
+    _WIN_OS_WINNT,
+    _WIN_OS_WIN2K,
+    _WIN_OS_WINXP
+};
+
+#endif
 
 #endif /* SQUID_ENUMS_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.212 2001/11/15 15:01:37 hno Exp $
+ * $Id: tools.cc,v 1.213 2001/11/17 11:09:25 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -513,7 +513,7 @@ safeunlink(const char *s, int quiet)
 void
 leave_suid(void)
 {
-    debug(21, 3) ("leave_suid: PID %d called\n", (int)getpid());
+    debug(21, 3) ("leave_suid: PID %d called\n", (int) getpid());
     if (geteuid() != 0)
 	return;
     /* Started as a root, check suid option */
@@ -525,7 +525,7 @@ leave_suid(void)
     if (setgid(Config2.effectiveGroupID) < 0)
 	debug(50, 0) ("ALERT: setgid: %s\n", xstrerror());
     debug(21, 3) ("leave_suid: PID %d giving up root, becoming '%s'\n",
-	(int)getpid(), Config.effectiveUser);
+	(int) getpid(), Config.effectiveUser);
 #if HAVE_SETRESUID
     if (setresuid(Config2.effectiveUserID, Config2.effectiveUserID, 0) < 0)
 	debug(50, 0) ("ALERT: setresuid: %s\n", xstrerror());
@@ -542,7 +542,7 @@ leave_suid(void)
 void
 enter_suid(void)
 {
-    debug(21, 3) ("enter_suid: PID %d taking root priveleges\n", (int)getpid());
+    debug(21, 3) ("enter_suid: PID %d taking root priveleges\n", (int) getpid());
 #if HAVE_SETRESUID
     setresuid(-1, 0, -1);
 #else
@@ -559,7 +559,7 @@ no_suid(void)
     uid_t uid;
     leave_suid();
     uid = geteuid();
-    debug(21, 3) ("leave_suid: PID %d giving up root priveleges forever\n", (int)getpid());
+    debug(21, 3) ("leave_suid: PID %d giving up root priveleges forever\n", (int) getpid());
 #if HAVE_SETRESUID
     if (setresuid(uid, uid, uid) < 0)
 	debug(50, 1) ("no_suid: setresuid: %s\n", xstrerror());
@@ -1019,7 +1019,7 @@ parseEtcHosts(void)
 	    lt = nt + 1;
 	}
 	fqdncacheAddEntryFromHosts(addr, hosts);
-skip:
+      skip:
 	wordlistDestroy(&hosts);
     }
 }
