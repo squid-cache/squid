@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.4 2000/06/08 03:30:44 wessels Exp $
+ * $Id: logfile.cc,v 1.5 2000/07/12 16:15:15 wessels Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -176,7 +176,7 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
 {
     int s;
     s = write(lf->fd, buf, len);
-    fd_bytes(lf->fd, len, FD_WRITE);
+    fd_bytes(lf->fd, s, FD_WRITE);
     if (s == len)
 	return;
     fatalf("logfileWrite: %s: %s\n", lf->path, xstrerror());
