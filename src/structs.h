@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.344 2000/06/26 04:57:17 wessels Exp $
+ * $Id: structs.h,v 1.345 2000/06/26 05:11:13 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -502,7 +502,7 @@ struct _SquidConfig {
     struct {
 	int high_rptm;
 	int high_pf;
-	int high_memory;
+	size_t high_memory;
     } warnings;
     char *store_dir_select_algorithm;
 };
