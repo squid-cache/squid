@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.110 1996/11/28 07:07:27 wessels Exp $
+ * $Id: comm.cc,v 1.111 1996/11/28 07:31:47 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -509,7 +509,7 @@ commCallCloseHandlers(int fd)
 {
     FD_ENTRY *conn = &fd_table[fd];
     struct close_handler *ch;
-    debug(5,5,"commCallCloseHandlers: FD %d\n", fd);
+    debug(5, 5, "commCallCloseHandlers: FD %d\n", fd);
     while ((ch = conn->close_handler) != NULL) {
 	conn->close_handler = ch->next;
 	ch->handler(fd, ch->data);

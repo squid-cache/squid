@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.118 1996/11/28 07:11:51 wessels Exp $
+ * $Id: http.cc,v 1.119 1996/11/28 07:31:49 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -688,7 +688,7 @@ httpSendRequest(int fd, void *data)
 		continue;
 	    }
 	    if (EBIT_TEST(hdr_flags, HDR_IMS))
-	        if (!strncasecmp(t, "If-Modified-Since:", 18))
+		if (!strncasecmp(t, "If-Modified-Since:", 18))
 		    continue;
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
@@ -718,8 +718,8 @@ httpSendRequest(int fd, void *data)
 
     /* Append to X-Forwarded-For: */
     if (fwdbuf == NULL) {
-        fwdbuf = get_free_4k_page();
-        strcpy(fwdbuf, "X-Forwarded-For: ");
+	fwdbuf = get_free_4k_page();
+	strcpy(fwdbuf, "X-Forwarded-For: ");
     }
     ybuf = get_free_4k_page();
     if (!opt_forwarded_for)
