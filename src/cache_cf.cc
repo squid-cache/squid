@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.74 1996/08/27 17:48:12 wessels Exp $
+ * $Id: cache_cf.cc,v 1.75 1996/08/27 17:55:18 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -596,8 +596,8 @@ static void parseQuickAbort()
 	Config.quickAbort.pct = 0;
 	Config.quickAbort.max = 0;
     } else {
-        if (sscanf(token, "%d", &i) != 1)
-                self_destruct();
+	if (sscanf(token, "%d", &i) != 1)
+	    self_destruct();
 	Config.quickAbort.min = i * 1024;
 	GetInteger(i);
 	Config.quickAbort.pct = i * 128 / 100;	/* 128 is full scale */

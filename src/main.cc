@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.65 1996/08/27 16:05:08 wessels Exp $
+ * $Id: main.cc,v 1.66 1996/08/27 17:57:46 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -629,7 +629,7 @@ int main(argc, argv)
 	    }
 	    break;
 	case COMM_TIMEOUT:
-		break;
+	    break;
 	default:
 	    fatal_dump("MAIN: Internal error -- this should never happen.");
 	    break;
