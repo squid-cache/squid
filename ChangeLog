@@ -30,3 +30,8 @@
 	- Significant change to storage manager.  Now only add objects
 	  to the hash table if they are public.  This means some 
 	  StoreEntry's will be around with null keys.
+	- Had to add a flag for using private keys with ICP queries to
+	  neighbors.  If any neighbor returns a reqnum field of zero,
+	  then disable using private keys.  But still use private
+	  keys for things with bypass the ICP query step (such as
+	  POST and IMS-GET).
