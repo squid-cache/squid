@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.93 1996/10/28 20:26:48 wessels Exp $
+ * $Id: comm.cc,v 1.94 1996/10/29 02:38:16 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -139,7 +139,7 @@ FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 /* STATIC */
 static int commBind _PARAMS((int s, struct in_addr, u_short port));
 static int comm_cleanup_fd_entry _PARAMS((int));
-static int examine_select _PARAMS((fd_set *, fd_set *, fd_set *));
+static int examine_select _PARAMS((fd_set *, fd_set *));
 static void checkTimeouts _PARAMS((void));
 static void checkLifetimes _PARAMS((void));
 static void Reserve_More_FDs _PARAMS((void));
@@ -750,11 +750,9 @@ comm_select(time_t sec)
 	 * more frequently to minimiize losses due to the 5 connect 
 	 * limit in SunOS */
 
-	maxfd = fdstat_biggest_fd() + 1;
-	for (fd = 0; fd < maxfd && num > 0; fd++) {
+	for (fd = 0; fd < maxfd; fd++) {
 	    if (!FD_ISSET(fd, &readfds) && !FD_ISSET(fd, &writefds))
 		continue;
-	    --num;
 
 	    /*
 	     * Admit more connections quickly until we hit the hard limit.
@@ -1022,7 +1020,7 @@ comm_init(void)
  * Call this from where the select loop fails.
  */
 static int
-examine_select(fd_set * readfds, fd_set * writefds);
+examine_select(fd_set * readfds, fd_set * writefds)
 {
     int fd = 0;
     fd_set read_x;
