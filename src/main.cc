@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.405 2005/03/18 15:47:42 hno Exp $
+ * $Id: main.cc,v 1.406 2005/04/03 17:11:21 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -561,11 +561,18 @@ mainReconfigure(void)
 #endif
 
     serverConnectionsOpen();
-    neighbors_init();
+
+    if (theOutIcpConnection >= 0)
+        neighbors_init();
+
     storeDirOpenSwapLogs();
+
     mimeInit(Config.mimeTablePathname);
+
     writePidFile();		/* write PID file */
+
     debug(1, 1) ("Ready to serve requests.\n");
+
     reconfiguring = 0;
 }
 
@@ -791,7 +798,8 @@ mainInitialize(void)
 
     serverConnectionsOpen();
 
-    neighbors_init();
+    if (theOutIcpConnection >= 0)
+        neighbors_init();
 
     if (Config.chroot_dir)
         no_suid();
