@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.23 1996/10/17 11:14:46 wessels Exp $
+ * $Id: icmp.cc,v 1.24 1996/10/31 07:30:04 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -74,7 +74,7 @@ static void
 icmpRecv(int unused1, void *unused2)
 {
     int n;
-    int fail_count = 0;
+    static int fail_count = 0;
     pingerReplyData preply;
     static struct sockaddr_in F;
     commSetSelect(icmp_sock,
@@ -89,6 +89,11 @@ icmpRecv(int unused1, void *unused2)
     if (n < 0) {
 	debug(37, 0, "icmpRecv: recv: %s\n", xstrerror());
 	if (++fail_count == 10) {
+	    commSetSelect(icmp_sock,
+		COMM_SELECT_READ,
+		NULL,
+		NULL,	
+		0);
 	    comm_close(icmp_sock);
 	    icmp_sock = -1;
 	}
