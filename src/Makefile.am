@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.9 2001/10/16 14:25:57 hno Exp $
+#  $Id: Makefile.am,v 1.10 2001/10/29 08:10:21 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -334,7 +334,7 @@ repl_modules.c: repl_modules.sh Makefile
 auth_modules.c: auth_modules.sh Makefile
 	@$(SHELL) $(srcdir)/auth_modules.sh $(AUTH_MODULES) >auth_modules.c
 
-install-data-local:
+install-data-local: install-sysconfDATA
 	@if test -f $(DESTDIR)$(sysconfdir)/mime.conf ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/mime.conf" ; \
 	else \
