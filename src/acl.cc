@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.73 1997/01/10 23:14:20 wessels Exp $
+ * $Id: acl.cc,v 1.74 1997/01/13 23:09:44 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -329,7 +329,7 @@ aclParseIpList(void)
     struct _acl_ip_data *q = NULL;
     while ((t = strtokFile())) {
 	if ((q = aclParseIpData(t)) == NULL)
-		continue;
+	    continue;
 	*(Tail) = q;
 	Tail = &q->next;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.127 1997/01/07 20:31:19 wessels Exp $
+ * $Id: comm.cc,v 1.128 1997/01/13 23:09:47 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1200,7 +1200,7 @@ int
 commSetNonBlocking(int fd)
 {
     int flags;
-    int dummy=0;
+    int dummy = 0;
     if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
 	debug(50, 0, "FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
 	return COMM_ERROR;
