@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.85 1998/05/05 05:35:40 wessels Exp $
+ * $Id: net_db.cc,v 1.86 1998/05/05 16:11:31 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -927,7 +927,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
-    ex->seen += size;
+    ex->seen = ex->used + size;
     debug(0, 0) ("netdbExchangeHandleReply: %d bytes\n", (int) size);
     if (!cbdataValid(ex->p)) {
 	netdbExchangeDone(ex);
@@ -944,7 +944,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 		netdbExchangeDone(ex);
 		return;
 	    }
-	    assert(size > hdr_sz);
+	    assert(size >= hdr_sz);
 	    ex->used += hdr_sz;
 	    size -= hdr_sz;
 	    p += hdr_sz;
@@ -952,7 +952,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 	    size = 0;
 	}
     }
-    while (size > rec_sz) {
+    while (size >= rec_sz) {
 	addr.s_addr = 0;
 	hops = rtt = 0.0;
 	for (o = 0; o < rec_sz;) {
