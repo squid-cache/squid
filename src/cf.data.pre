@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.325 2003/06/27 20:54:45 hno Exp $
+# $Id: cf.data.pre,v 1.326 2003/06/27 22:42:08 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1803,6 +1803,7 @@ DOC_START
 	Defined keywords:
 
 	  user=		The users name (login)
+	  password=	The users password (for login= cache_peer option)
 	  message=	Message describing the reason
 	  tag=		Apply a tag to a request (for both ERR and OK results)
 	  		Only sets a tag, does not alter existing tags.
@@ -2320,6 +2321,11 @@ DOC_START
 	acl aclname ca_cert attribute values...
 	  # match against attributes a users issuing CA SSL certificate
 	  # attribute is one of DN/C/O/CN/L/ST
+
+	acl aclname ext_user username ...
+	acl aclname ext_user_regex [-i] pattern ...
+	  # string match on username returned by external acl processing
+	  # use REQUIRED to accept any non-null user name.
 
 Examples:
 acl myexample dst_as 1241
