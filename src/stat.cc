@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.182 1998/01/06 05:12:10 wessels Exp $
+ * $Id: stat.cc,v 1.183 1998/01/06 05:40:43 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -933,6 +933,7 @@ statAvgTick(void *notused)
     NCountHist++;
 }
 
+#define XAVG(X) (double) (f->X - l->X) / dt
 void
 statAvgDump(StoreEntry * sentry)
 {
@@ -944,9 +945,6 @@ statAvgDump(StoreEntry * sentry)
     statAvgTick(NULL);
     dt = tvSubDsec(l->timestamp, f->timestamp);
     ct = f->cputime - l->cputime;
-debug(0,0)("statAvgDump: dt=%f\n", dt);
-debug(0,0)("statAvgDump: ct=%f\n", ct);
-#define XAVG(X) (double) (f->X - l->X) / dt
     storeBuffer(sentry);
     storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
 	XAVG(client_http.requests));
