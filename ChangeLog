@@ -5,6 +5,28 @@ UPCOMING CHANGES:
 	- Experiment with returning network probe measurments in ICP
 	  replies.
 
+Changes to squid-1.1.beta17 (November 12, 1996):
+
+	- Fixed NULL friends coredump in neighbors_open().
+	- Added setting HAVE_TEMPNAM back to the configure script.
+	- Fixed h_errno bug on NeXTStep (frank@langen.bull.de).
+	- Fixed expiresMoreThan() bug causing all UDP_MISS replies.
+	- Changed 'background.c' to 'event.c' and merged all periodic
+	  functions into an event queue.
+	- Renamed httpParseHeaders() to httpParseReplyHeaders().
+	- Added support for sending HTTP/1.1 'Cache-Control: max-age=X'
+	  in requests.  The max-age value is taken from the
+	  'refresh_pattern' rules.
+	- Added support for parsing max-age in client request.
+	- Split icpUdpSend() into simpler icpUdpSend() plus
+	  icpCreateMessage().
+	- Force storeAbort() for dispatched objects in
+	  asciiLifetimeHandle().
+	- Fixed firewall-related bug when the DNS lookup fails.
+	- Fixed '#define HAVE_GETRUSAGE' bug (Takahiro Yugawa).
+	- Made storeStartDeleteBehind() quiet for 'no-proxy' neighbors.
+	- Fixed log_quote() signed/unsigned bug (Ron Gomes).
+
 Changes to squid-1.1.beta16 (November 8, 1996):
 
 	- Fixed type of Config.level{One,Two}Dirs.
@@ -27,7 +49,7 @@ Changes to squid-1.1.beta16 (November 8, 1996):
 	  may cause noticable delay while waiting for the ident
 	  lookup.
 	- Fixed storeSwapOutHandle() FMR bug.
-	- Stopeed inserting incorrect Host: header for proxy-HTTP requests.
+	- Stopped inserting incorrect Host: header for proxy-HTTP requests.
 
 Changes to squid-1.1.beta15 ():
 
