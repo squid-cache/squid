@@ -1,4 +1,4 @@
-$Id: CREDITS,v 1.6 2002/06/23 13:32:23 hno Exp $
+$Id: CREDITS,v 1.7 2002/07/05 09:20:56 hno Exp $
 
 ==============================================================================
 
@@ -302,3 +302,13 @@ This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
+
+==============================================================================
+
+helpers/external_acl/wbinfo_group/wbinfo_group.pl
+
+ This program is put in the public domain by Jerry Murdock 
+ <jmurdock@itraktech.com>. It is distributed in the hope that it will
+ be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
