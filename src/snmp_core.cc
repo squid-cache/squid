@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.14 1998/11/12 06:28:23 wessels Exp $
+ * $Id: snmp_core.cc,v 1.15 1998/11/13 20:36:51 glenn Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -73,6 +73,7 @@ static void snmpAppendUdp(snmpUdpData *);
 
 static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...);
 static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen);
+static oid_ParseFn *snmpTreeGet(oid * Current, snint CurrentLen);
 static mib_tree_entry *snmpTreeEntry(oid entry, snint len, mib_tree_entry * current);
 
 static oid *snmpCreateOid(int length,...);
@@ -149,185 +150,185 @@ snmpInit(void)
 					    snmpAddNode(snmpCreateOid(LEN_SQ_CONF + 2, SQ_CONF, 5, 6),
 						LEN_SQ_CONF + 2, snmp_confFn, 0))),
 				    snmpAddNode(snmpCreateOid(LEN_SQ_PRF, SQ_PRF),
-					LEN_SQ_PRF, snmp_confFn, 2,
+					LEN_SQ_PRF, NULL, 2,
 					snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 1, SQ_PRF, 1),
-					    LEN_SQ_PRF + 1, snmp_sysFn, 11,
+					    LEN_SQ_PRF + 1, NULL, 11,
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 1),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 2),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 3),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 4),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 5),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 6),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 7),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 8),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 9),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 10),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 1, 11),
-						LEN_SQ_PRF + 2, snmp_sysFn, 0)),
+						LEN_SQ_PRF + 2, snmp_prfSysFn, 0)),
 					snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 1, SQ_PRF, 2),
-					    LEN_SQ_PRF + 1, snmp_sysFn, 2,
+					    LEN_SQ_PRF + 1, NULL, 2,
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 2, 1),
-						LEN_SQ_PRF + 2, snmp_sysFn, 14,
+						LEN_SQ_PRF + 2, NULL, 14,
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 1),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 2),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 3),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 4),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 5),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 6),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 7),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 8),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 9),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 10),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 11),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 12),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 13),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 1, 14),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 0)),
+						    LEN_SQ_PRF + 3, snmp_prfProtoFn, 0)),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, 2, 2),
-						LEN_SQ_PRF + 2, snmp_sysFn, 1,
+						LEN_SQ_PRF + 2, NULL, 1,
 						snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, 2, 2, 1),
-						    LEN_SQ_PRF + 3, snmp_sysFn, 8,
+						    LEN_SQ_PRF + 3, NULL, 8,
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 1),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 2),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 3),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 4),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 5),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 6),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 7),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0),
 						    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, 2, 2, 1, 8),
-							LEN_SQ_PRF + 4, snmp_sysFn, 0))))),
+							LEN_SQ_PRF + 4, snmp_prfProtoFn, 0))))),
 				    snmpAddNode(snmpCreateOid(LEN_SQ_NET, SQ_NET),
-					LEN_SQ_NET, snmp_confFn, 3,
+					LEN_SQ_NET, NULL, 3,
 					snmpAddNode(snmpCreateOid(LEN_SQ_NET + 1, SQ_NET, 1),
-					    LEN_SQ_NET + 1, snmp_sysFn, 9,
+					    LEN_SQ_NET + 1, NULL, 9,
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 1),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 2),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 3),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 4),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 5),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 6),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 7),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 8),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 1, 9),
-						LEN_SQ_NET + 2, snmp_sysFn, 0)),
+						LEN_SQ_NET + 2, snmp_netIpFn, 0)),
 					snmpAddNode(snmpCreateOid(LEN_SQ_NET + 1, SQ_NET, 2),
-					    LEN_SQ_NET + 1, snmp_sysFn, 8,
+					    LEN_SQ_NET + 1, NULL, 8,
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 1),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 2),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 3),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 4),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 5),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 6),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 7),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 2, 8),
-						LEN_SQ_NET + 2, snmp_sysFn, 0)),
+						LEN_SQ_NET + 2, snmp_netFqdnFn, 0)),
 					snmpAddNode(snmpCreateOid(LEN_SQ_NET + 1, SQ_NET, 3),
-					    LEN_SQ_NET + 1, snmp_sysFn, 3,
+					    LEN_SQ_NET + 1, NULL, 3,
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 3, 1),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netDnsFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 3, 2),
-						LEN_SQ_NET + 2, snmp_sysFn, 0),
+						LEN_SQ_NET + 2, snmp_netDnsFn, 0),
 					    snmpAddNode(snmpCreateOid(LEN_SQ_NET + 2, SQ_NET, 3, 3),
-						LEN_SQ_NET + 2, snmp_sysFn, 0))),
+						LEN_SQ_NET + 2, snmp_netDnsFn, 0))),
 				    snmpAddNode(snmpCreateOid(LEN_SQ_MESH, SQ_MESH),
-					LEN_SQ_MESH, snmp_confFn, 2,
+					LEN_SQ_MESH, NULL, 2,
 					snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 1, SQ_MESH, 1),
-					    LEN_SQ_MESH + 1, snmp_sysFn, 1,
+					    LEN_SQ_MESH + 1, NULL, 1,
 					    snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 2, SQ_MESH, 1, 1),
-						LEN_SQ_MESH + 2, snmp_sysFn, 13,
+						LEN_SQ_MESH + 2, NULL, 13,
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 1),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 2),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 3),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 4),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 5),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 6),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 7),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 8),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 9),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 10),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 11),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 12),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 1, 1, 13),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0))),
+						    LEN_SQ_MESH + 3, snmp_meshPtblFn, 0))),
 					snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 1, SQ_MESH, 2),
-					    LEN_SQ_MESH + 1, snmp_sysFn, 1,
+					    LEN_SQ_MESH + 1, NULL, 1,
 					    snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 2, SQ_MESH, 2, 1),
-						LEN_SQ_MESH + 2, snmp_sysFn, 9,
+						LEN_SQ_MESH + 2, NULL, 9,
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 1),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 2),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 3),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 4),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 5),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 6),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 7),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 8),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0),
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0),
 						snmpAddNode(snmpCreateOid(LEN_SQ_MESH + 3, SQ_MESH, 2, 1, 9),
-						    LEN_SQ_MESH + 3, snmp_sysFn, 0))))
+						    LEN_SQ_MESH + 3, snmp_meshCtblFn, 0))))
 				)
 			    )
 			)
@@ -558,7 +559,9 @@ snmpAgentResponse(struct snmp_pdu *PDU)
 {
     struct snmp_pdu *Answer = NULL;
     oid_ParseFn *ParseFn = NULL;
-    variable_list *VarNew = NULL;
+
+    variable_list *VarPtr, *VarNew = NULL, **VarPtrP;
+    int index = 0;
 
     debug(49, 5) ("snmpAgentResponse: Called.\n");
 
@@ -566,7 +569,42 @@ snmpAgentResponse(struct snmp_pdu *PDU)
 	Answer->reqid = PDU->reqid;
 	Answer->errindex = 0;
 	if (PDU->command == SNMP_PDU_GET) {
+	    variable_list **RespVars;
 
+	    RespVars = &(Answer->variables);
+	    /* Loop through all variables */
+	    for (VarPtrP = &(PDU->variables);
+		*VarPtrP;
+		VarPtrP = &((*VarPtrP)->next_variable)) {
+		VarPtr = *VarPtrP;
+
+		index++;
+
+		/* Find the parsing function for this variable */
+		ParseFn = snmpTreeGet(VarPtr->name, VarPtr->name_length);
+
+		if (ParseFn == NULL) {
+		    Answer->errstat = SNMP_ERR_NOSUCHNAME;
+		    debug(49, 5) ("snmpAgentResponse: No such oid. ");
+		} else
+		    VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
+
+		/* Was there an error? */
+		if ((Answer->errstat != SNMP_ERR_NOERROR) ||
+		    (VarNew == NULL)) {
+		    Answer->errindex = index;
+		    debug(49, 5) ("snmpAgentParse: successful.\n");
+		    /* Just copy the rest of the variables.  Quickly. */
+		    *RespVars = VarPtr;
+		    *VarPtrP = NULL;
+		    return (Answer);
+		}
+		/* No error.  Insert this var at the end, and move on to the next.
+		 */
+		*RespVars = VarNew;
+		RespVars = &(VarNew->next_variable);
+	    }
+	    return (Answer);
 	} else if (PDU->command == SNMP_PDU_GETNEXT) {
 	    oid *NextOidName = NULL;
 	    int NextOidNameLen = 0;
@@ -605,6 +643,34 @@ snmpAgentResponse(struct snmp_pdu *PDU)
 }
 
 oid_ParseFn *
+snmpTreeGet(oid * Current, snint CurrentLen)
+{
+    oid_ParseFn *Fn = NULL;
+    mib_tree_entry *mibTreeEntry = NULL;
+    int count = 0;
+
+    debug(49, 5) ("snmpTreeGet: Called\n");
+
+    debug(49, 6) ("snmpTreeGet: Current : \n");
+    snmpDebugOid(6, Current, CurrentLen);
+
+    mibTreeEntry = mib_tree_head;
+    if (Current[count] == mibTreeEntry->name[count]) {
+        count++;
+        while ((mibTreeEntry) && (count < CurrentLen)) {
+            mibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
+            count++;
+        }
+    }
+    if (mibTreeEntry) {
+        Fn = mibTreeEntry->parsefunction;
+    }
+    debug(49, 5) ("snmpTreeGet: return\n");
+    return (Fn);
+}
+
+
+oid_ParseFn *
 snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 {
     oid_ParseFn *Fn = NULL;
@@ -625,24 +691,18 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 	}
 	debug(49, 5) ("snmpTreeNext: Past first\n");
 
-	if (mibTreeEntry->parsefunction) {
-	    while (!new_oid) {
-		new_oid = snmpTreeEntry(Current[count] + 1, count, mibTreeEntry->parent);
-		if (!new_oid) {
-		    mibTreeEntry = mibTreeEntry->parent;
-		    count--;
-		}
-	    }
+	if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
+	    count--;
+	    new_oid = snmpTreeEntry(Current[count] + 1, count, mibTreeEntry->parent);
+	    mibTreeEntry = new_oid;
+	    count++;
 	}
 	debug(49, 5) ("snmpTreeNext: Past Second\n");
 
-	if ((!mibTreeEntry->parsefunction) && (mibTreeEntry)) {
-	    while (!mibTreeEntry->parsefunction) {
-		mibTreeEntry = snmpTreeEntry(1, count, mibTreeEntry);
-		count++;
-	    }
+	while ((mibTreeEntry) && (!mibTreeEntry->parsefunction)) {
+	    mibTreeEntry = snmpTreeEntry(1, count, mibTreeEntry);
+	    count++;
 	}
-	debug(49, 5) ("snmpTreeNext: Past Third\n");
     }
     if (mibTreeEntry) {
 	*Next = snmpOidDup(mibTreeEntry->name, mibTreeEntry->len);
@@ -678,6 +738,45 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
     }
     return (next);
 }
+
+/*
+ * Utility functions
+ */
+
+/*
+ * Tree utility functions. 
+ */
+
+/*
+ * Adds a node to the MIB tree structure and adds the appropriate children
+ */
+mib_tree_entry *
+snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...)
+{
+    va_list args;
+    int loop;
+    mib_tree_entry *entry = NULL;
+
+    debug(49, 6) ("snmpAddNode: Children : %d, Oid : \n", children);
+    snmpDebugOid(6, name, len);
+
+    va_start(args, children);
+    entry = xmalloc(sizeof(mib_tree_entry));
+    entry->name = snmpOidDup(name, len);
+    entry->len = len;
+    entry->parsefunction = parsefunction;
+    entry->children = children;
+
+    if (children > 0) {
+	entry->leaves = xmalloc(sizeof(mib_tree_entry *) * children);
+	for (loop = 0; loop < children; loop++) {
+	    entry->leaves[loop] = va_arg(args, mib_tree_entry *);
+	    entry->leaves[loop]->parent = entry;
+	}
+    }
+    return (entry);
+}
+/* End of tree utility functions */
 
 /*
  * Send the UDP reply.
@@ -746,45 +845,6 @@ snmpAppendUdp(snmpUdpData * item)
     }
 
 }
-
-/*
- * Utility functions
- */
-
-/*
- * Tree utility functions. 
- */
-
-/*
- * Adds a node to the MIB tree structure and adds the appropriate children
- */
-mib_tree_entry *
-snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, int children,...)
-{
-    va_list args;
-    int loop;
-    mib_tree_entry *entry = NULL;
-
-    debug(49, 6) ("snmpAddNode: Children : %d, Oid : \n", children);
-    snmpDebugOid(6, name, len);
-
-    va_start(args, children);
-    entry = xmalloc(sizeof(mib_tree_entry));
-    entry->name = snmpOidDup(name, len);
-    entry->len = len;
-    entry->parsefunction = parsefunction;
-    entry->children = children;
-
-    if (children > 0) {
-	entry->leaves = xmalloc(sizeof(mib_tree_entry *) * children);
-	for (loop = 0; loop < children; loop++) {
-	    entry->leaves[loop] = va_arg(args, mib_tree_entry *);
-	    entry->leaves[loop]->parent = entry;
-	}
-    }
-    return (entry);
-}
-/* End of tree utility functions */
 
 /* 
  * Returns the list of parameters in an oid[]
