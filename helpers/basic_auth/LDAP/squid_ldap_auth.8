@@ -51,7 +51,7 @@ it is strongly recommended to use a account with minimal associated privileges.
 This to limit the damage in case someone could get hold of a copy of your
 Squid configuration file.
 .TP
-.BI -p
+.BI -P
 Use a persistent LDAP connection. Normally the LDAP connection
 is only open while validating a username to preserve resources
 at the LDAP server. This option causes the LDAP connection to
@@ -72,6 +72,9 @@ dereference aliases, only while
 or only to
 .B find
 the base object
+.TP
+.BI -p " ldapport"
+Specify an alternate TCP port where the ldap server is listening
 .
 .SH EXAMPLES
 For directories using the RFC2307 layout with a single domain, all

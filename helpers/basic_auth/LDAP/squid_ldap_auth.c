@@ -112,6 +112,7 @@ main(int argc, char **argv)
     char *ldapServer;
     LDAP *ld = NULL;
     int tryagain;
+    int port = LDAP_PORT;
 
     setbuf(stdout, NULL);
 
@@ -119,7 +120,7 @@ main(int argc, char **argv)
 	char *value = "";
 	char option = argv[1][1];
 	switch (option) {
-	case 'p':
+	case 'P':
 	case 'R':
 	    break;
 	default:
@@ -176,8 +177,11 @@ main(int argc, char **argv)
 	case 'w':
 	    bindpasswd = value;
 	    break;
-	case 'p':
+	case 'P':
 	    persistent = !persistent;
+	    break;
+	case 'p':
+	    port = atoi(value);
 	    break;
 	case 'R':
 	    noreferrals = !noreferrals;
@@ -221,9 +225,9 @@ main(int argc, char **argv)
 	tryagain = 1;
       recover:
 	if (ld == NULL) {
-	    if ((ld = ldap_init(ldapServer, LDAP_PORT)) == NULL) {
+	    if ((ld = ldap_init(ldapServer, port)) == NULL) {
 		fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n",
-		    ldapServer, LDAP_PORT);
+		    ldapServer, port);
 		exit(1);
 	    }
 	    squid_ldap_set_referrals(ld, !noreferrals);
