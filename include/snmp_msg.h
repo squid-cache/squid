@@ -26,24 +26,24 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_msg.h,v 1.1 1998/02/22 11:48:47 kostas Exp $
+ * $Id: snmp_msg.h,v 1.2 1998/04/04 01:43:48 kostas Exp $
  * 
  **********************************************************************/
 
-#define SNMP_VERSION_1	    0 /* RFC 1157 */
-#define SNMP_VERSION_2	    1 /* RFC 1901 */
+#define SNMP_VERSION_1	    0	/* RFC 1157 */
+#define SNMP_VERSION_2	    1	/* RFC 1901 */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-u_char *snmp_msg_Encode(u_char *, int *, u_char *, 
-			int, int, struct snmp_pdu *);
-u_char *snmp_msg_Decode(u_char *, int *, u_char *, 
-			int *, int *, struct snmp_pdu *);
+    u_char *snmp_msg_Encode(u_char *, int *, u_char *,
+	int, int, struct snmp_pdu *);
+    u_char *snmp_msg_Decode(u_char *, int *, u_char *,
+	int *, int *, struct snmp_pdu *);
 
 #ifdef __cplusplus
 }
-#endif
 
-#endif /* _SNMP_MSG_H_ */
+#endif
+#endif				/* _SNMP_MSG_H_ */

@@ -1,3 +1,4 @@
+
 /***********************************************************
 	Copyright 1988, 1989 by Carnegie Mellon University
 
@@ -88,10 +89,10 @@ static void sprint_by_type();
 #if 0
 static char *
 uptimeString(timeticks, buf)
-    int timeticks;
-    char *buf;
+     int timeticks;
+     char *buf;
 {
-    int	seconds, minutes, hours, days;
+    int seconds, minutes, hours, days;
 
     timeticks /= 100;
     days = timeticks / (60 * 60 * 24);
@@ -103,46 +104,48 @@ uptimeString(timeticks, buf)
     minutes = timeticks / 60;
     seconds = timeticks % 60;
 
-    if (days == 0){
-	snprintf(buf,32,  "%d:%02d:%02d", hours, minutes, seconds);
+    if (days == 0) {
+	snprintf(buf, 32, "%d:%02d:%02d", hours, minutes, seconds);
     } else if (days == 1) {
-	snprintf(buf,32, "%d day, %d:%02d:%02d", days, hours, minutes, seconds);
+	snprintf(buf, 32, "%d day, %d:%02d:%02d", days, hours, minutes, seconds);
     } else {
-	snprintf(buf,32,  "%d days, %d:%02d:%02d", days, hours, minutes, seconds);
+	snprintf(buf, 32, "%d days, %d:%02d:%02d", days, hours, minutes, seconds);
     }
     return buf;
 }
 
-static void sprint_hexstring(buf, cp, len)
-    char *buf;
-    u_char  *cp;
-    int	    len;
+static void 
+sprint_hexstring(buf, cp, len)
+     char *buf;
+     u_char *cp;
+     int len;
 {
 
-    for(; len >= 16; len -= 16){
-	snprintf(buf,26, "%02X %02X %02X %02X %02X %02X %02X %02X ", cp[0], cp[1], cp[2], cp[3], cp[4], cp[5], cp[6], cp[7]);
+    for (; len >= 16; len -= 16) {
+	snprintf(buf, 26, "%02X %02X %02X %02X %02X %02X %02X %02X ", cp[0], cp[1], cp[2], cp[3], cp[4], cp[5], cp[6], cp[7]);
 	buf += strlen(buf);
 	cp += 8;
-	snprintf(buf,26, "%02X %02X %02X %02X %02X %02X %02X %02X\n", cp[0], cp[1], cp[2], cp[3], cp[4], cp[5], cp[6], cp[7]);
+	snprintf(buf, 26, "%02X %02X %02X %02X %02X %02X %02X %02X\n", cp[0], cp[1], cp[2], cp[3], cp[4], cp[5], cp[6], cp[7]);
 	buf += strlen(buf);
 	cp += 8;
     }
-    for(; len > 0; len--){
+    for (; len > 0; len--) {
 	snprintf(buf, 4, "%02X ", *cp++);
 	buf += strlen(buf);
     }
     *buf = '\0';
 }
 
-static void sprint_asciistring(buf, cp, len)
-    char *buf;
-    u_char  *cp;
-    int	    len;
+static void 
+sprint_asciistring(buf, cp, len)
+     char *buf;
+     u_char *cp;
+     int len;
 {
-    int	x;
+    int x;
 
-    for(x = 0; x < len; x++){
-	if (isprint(*cp)){
+    for (x = 0; x < len; x++) {
+	if (isprint(*cp)) {
 	    *buf++ = *cp++;
 	} else {
 	    *buf++ = '.';
@@ -156,133 +159,131 @@ static void sprint_asciistring(buf, cp, len)
 
 static void
 sprint_octet_string(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
     int hex, x;
     u_char *cp;
 
-    if (var->type != ASN_OCTET_STR){
+    if (var->type != ASN_OCTET_STR) {
 	sprintf(buf, "Wrong Type (should be OCTET STRING): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     hex = 0;
-    for(cp = var->val.string, x = 0; x < var->val_len; x++, cp++){
+    for (cp = var->val.string, x = 0; x < var->val_len; x++, cp++) {
 	if (!(isprint(*cp) || isspace(*cp)))
 	    hex = 1;
     }
     if (var->val_len <= 4)
-	hex = 1;    /* not likely to be ascii */
-    if (hex){
-      if (!quiet) {
-	sprintf(buf, "OCTET STRING-   (hex):\t");
-	buf += strlen(buf);
-      }
+	hex = 1;		/* not likely to be ascii */
+    if (hex) {
+	if (!quiet) {
+	    sprintf(buf, "OCTET STRING-   (hex):\t");
+	    buf += strlen(buf);
+	}
 	sprint_hexstring(buf, var->val.string, var->val_len);
     } else {
-      if (!quiet) {
-	sprintf(buf, "OCTET STRING- (ascii):\t");
-	buf += strlen(buf);
-      }
+	if (!quiet) {
+	    sprintf(buf, "OCTET STRING- (ascii):\t");
+	    buf += strlen(buf);
+	}
 	sprint_asciistring(buf, var->val.string, var->val_len);
     }
 }
 
 static void
 sprint_opaque(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-    void *foo;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
 
-    if (var->type != SMI_OPAQUE){
+    if (var->type != SMI_OPAQUE) {
 	sprintf(buf, "Wrong Type (should be Opaque): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     if (!quiet) {
-      sprintf(buf, "OPAQUE -   (hex):\t");
-      buf += strlen(buf);
+	sprintf(buf, "OPAQUE -   (hex):\t");
+	buf += strlen(buf);
     }
     sprint_hexstring(buf, var->val.string, var->val_len);
 }
 
 static void
 sprint_object_identifier(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-    void *foo;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
-    if (var->type != SMI_OBJID){
+    if (var->type != SMI_OBJID) {
 	sprintf(buf, "Wrong Type (should be OBJECT IDENTIFIER): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     if (!quiet) {
-      sprintf(buf, "OBJECT IDENTIFIER:\t");
-      buf += strlen(buf);
+	sprintf(buf, "OBJECT IDENTIFIER:\t");
+	buf += strlen(buf);
     }
-    sprint_objid(buf, (oid *)(var->val.objid), var->val_len / sizeof(oid));
+    sprint_objid(buf, (oid *) (var->val.objid), var->val_len / sizeof(oid));
 }
 
 static void
 sprint_timeticks(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-    void *foo;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
     char timebuf[32];
 
-    if (var->type != SMI_TIMETICKS){
+    if (var->type != SMI_TIMETICKS) {
 	sprintf(buf, "Wrong Type (should be Timeticks): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     if (!quiet) {
-      sprintf(buf, "Timeticks: ");
-      buf += strlen(buf);
+	sprintf(buf, "Timeticks: ");
+	buf += strlen(buf);
     }
-    sprintf(buf, "(%u) %s", 
-	    *(var->val.integer), 
-	    uptimeString(*(var->val.integer), timebuf));
+    sprintf(buf, "(%u) %s",
+	*(var->val.integer),
+	uptimeString(*(var->val.integer), timebuf));
 }
 
 static void
 sprint_integer(buf, var, enums, quiet)
-    char *buf;
-    variable_list *var;
-    struct enum_list	    *enums;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     struct enum_list *enums;
+     int quiet;
 {
-    char    *enum_string = NULL;
+    char *enum_string = NULL;
 
-    if (var->type != SMI_INTEGER){
+    if (var->type != SMI_INTEGER) {
 	sprintf(buf, "Wrong Type (should be INTEGER): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     for (; enums; enums = enums->next)
-	if (enums->value == *var->val.integer){
+	if (enums->value == *var->val.integer) {
 	    enum_string = enums->label;
 	    break;
 	}
-
     if (!quiet) {
-      sprintf(buf, "INTEGER: ");
-      buf += strlen(buf);
+	sprintf(buf, "INTEGER: ");
+	buf += strlen(buf);
     }
- 
     if (enum_string == NULL)
 	sprintf(buf, "%u", *var->val.integer);
     else
@@ -291,61 +292,61 @@ sprint_integer(buf, var, enums, quiet)
 
 static void
 sprint_gauge(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
-    if (var->type != SMI_GAUGE32){
+    if (var->type != SMI_GAUGE32) {
 	sprintf(buf, "Wrong Type (should be Gauge): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     if (!quiet) {
-      sprintf(buf, "Gauge: ");
-      buf += strlen(buf);
+	sprintf(buf, "Gauge: ");
+	buf += strlen(buf);
     }
     sprintf(buf, "%u", *var->val.integer);
 }
 
 static void
 sprint_counter(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
-    if (var->type != SMI_COUNTER32){
+    if (var->type != SMI_COUNTER32) {
 	sprintf(buf, "Wrong Type (should be Counter): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     if (!quiet) {
-      sprintf(buf, "Counter: ");
-      buf += strlen(buf);
+	sprintf(buf, "Counter: ");
+	buf += strlen(buf);
     }
     sprintf(buf, "%u", *var->val.integer);
 }
 
 static void
 sprint_networkaddress(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
     int x, len;
     u_char *cp;
 
     if (!quiet) {
-      sprintf(buf, "Network Address:\t");
-      buf += strlen(buf);
+	sprintf(buf, "Network Address:\t");
+	buf += strlen(buf);
     }
-    cp = var->val.string;    
+    cp = var->val.string;
     len = var->val_len;
-    for(x = 0; x < len; x++){
+    for (x = 0; x < len; x++) {
 	sprintf(buf, "%02X", *cp++);
 	buf += strlen(buf);
 	if (x < (len - 1))
@@ -355,62 +356,62 @@ void *foo;
 
 static void
 sprint_ipaddress(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
     u_char *ip;
 
-    if (var->type != SMI_IPADDRESS){
+    if (var->type != SMI_IPADDRESS) {
 	sprintf(buf, "Wrong Type (should be Ipaddress): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     ip = var->val.string;
     if (!quiet) {
-      sprintf(buf, "IPAddress:\t");
-      buf += strlen(buf);
+	sprintf(buf, "IPAddress:\t");
+	buf += strlen(buf);
     }
-    sprintf(buf, "%d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
+    sprintf(buf, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 }
 #endif
 
 #if 0
 static void
 sprint_unsigned_short(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
-    if (var->type != SMI_INTEGER){
+    if (var->type != SMI_INTEGER) {
 	sprintf(buf, "Wrong Type (should be INTEGER): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     if (!quiet) {
-      sprintf(buf, "INTEGER (0..65535): ");
-      buf += strlen(buf);
+	sprintf(buf, "INTEGER (0..65535): ");
+	buf += strlen(buf);
     }
     sprintf(buf, "%u", *var->val.integer);
 }
-#endif 
+#endif
 
 #if 0
 static void
 sprint_null(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
-    if (var->type != SMI_NULLOBJ){
+    if (var->type != SMI_NULLOBJ) {
 	sprintf(buf, "Wrong Type (should be NULL): ");
 	buf += strlen(buf);
-	sprint_by_type(buf, var, (struct enum_list *)NULL, quiet);
+	sprint_by_type(buf, var, (struct enum_list *) NULL, quiet);
 	return;
     }
     sprintf(buf, "NULL");
@@ -418,10 +419,10 @@ int quiet;
 
 static void
 sprint_unknowntype(buf, var, foo, quiet)
-    char *buf;
-    variable_list *var;
-void *foo;
-int quiet;
+     char *buf;
+     variable_list *var;
+     void *foo;
+     int quiet;
 {
 /*    sprintf(buf, "Variable has bad type"); */
     sprint_by_type(buf, var, foo, quiet);
@@ -429,107 +430,109 @@ int quiet;
 
 static void
 sprint_badtype(buf)
-    char *buf;
+     char *buf;
 {
     sprintf(buf, "Variable has bad type");
 }
 
 static void
 sprint_by_type(buf, var, enums, quiet)
-    char *buf;
-    variable_list *var;
-    struct enum_list	    *enums;
-    int quiet;
+     char *buf;
+     variable_list *var;
+     struct enum_list *enums;
+     int quiet;
 {
-    switch (var->type){
-	case SMI_INTEGER:
-	    sprint_integer(buf, var, enums, quiet);
-	    break;
-	case SMI_STRING:
-	    sprint_octet_string(buf, var, enums, quiet);
-	    break;
-	case SMI_OPAQUE:
-	    sprint_opaque(buf, var, enums, quiet);
-	    break;
-	case SMI_OBJID:
-	    sprint_object_identifier(buf, var, enums, quiet);
-	    break;
-	case SMI_TIMETICKS:
-	    sprint_timeticks(buf, var, enums, quiet);
-	    break;
-	case SMI_GAUGE32:
-	    sprint_gauge(buf, var, enums, quiet);
-	    break;
-	case SMI_COUNTER32:
-	    sprint_counter(buf, var, enums, quiet);
-	    break;
-	case SMI_IPADDRESS:
-	    sprint_ipaddress(buf, var, enums, quiet);
-	    break;
-	case SMI_NULLOBJ:
-	    sprint_null(buf, var, enums, quiet);
-	    break;
-	default:
-	    sprint_badtype(buf, enums, quiet);
-	    break;
+    switch (var->type) {
+    case SMI_INTEGER:
+	sprint_integer(buf, var, enums, quiet);
+	break;
+    case SMI_STRING:
+	sprint_octet_string(buf, var, enums, quiet);
+	break;
+    case SMI_OPAQUE:
+	sprint_opaque(buf, var, enums, quiet);
+	break;
+    case SMI_OBJID:
+	sprint_object_identifier(buf, var, enums, quiet);
+	break;
+    case SMI_TIMETICKS:
+	sprint_timeticks(buf, var, enums, quiet);
+	break;
+    case SMI_GAUGE32:
+	sprint_gauge(buf, var, enums, quiet);
+	break;
+    case SMI_COUNTER32:
+	sprint_counter(buf, var, enums, quiet);
+	break;
+    case SMI_IPADDRESS:
+	sprint_ipaddress(buf, var, enums, quiet);
+	break;
+    case SMI_NULLOBJ:
+	sprint_null(buf, var, enums, quiet);
+	break;
+    default:
+	sprint_badtype(buf, enums, quiet);
+	break;
     }
 }
 #endif
 
 static struct snmp_mib_tree *get_symbol();
 
-oid RFC1066_MIB[] = { 1, 3, 6, 1, 2, 1 };
+oid RFC1066_MIB[] =
+{1, 3, 6, 1, 2, 1};
 unsigned char RFC1066_MIB_text[] = ".iso.org.dod.internet.mgmt.mib";
 struct snmp_mib_tree *Mib;
 
 #if 0
 static void
 set_functions(subtree)
-    struct snmp_mib_tree *subtree;
+     struct snmp_mib_tree *subtree;
 {
-    for(; subtree; subtree = subtree->next_peer){
-	switch(subtree->type){
-	    case TYPE_OBJID:
-		subtree->printer = sprint_object_identifier;
-		break;
-	    case TYPE_OCTETSTR:
-		subtree->printer = sprint_octet_string;
-		break;
-	    case TYPE_INTEGER:
-		subtree->printer = sprint_integer;
-		break;
-	    case TYPE_NETADDR:
-		subtree->printer = sprint_networkaddress;
-		break;
-	    case TYPE_IPADDR:
-		subtree->printer = sprint_ipaddress;
-		break;
-	    case TYPE_COUNTER:
-		subtree->printer = sprint_counter;
-		break;
-	    case TYPE_GAUGE:
-		subtree->printer = sprint_gauge;
-		break;
-	    case TYPE_TIMETICKS:
-		subtree->printer = sprint_timeticks;
-		break;
-	    case TYPE_OPAQUE:
-		subtree->printer = sprint_opaque;
-		break;
-	    case TYPE_NULL:
-		subtree->printer = sprint_null;
-		break;
-	    case TYPE_OTHER:
-	    default:
-		subtree->printer = sprint_unknowntype;
-		break;
+    for (; subtree; subtree = subtree->next_peer) {
+	switch (subtree->type) {
+	case TYPE_OBJID:
+	    subtree->printer = sprint_object_identifier;
+	    break;
+	case TYPE_OCTETSTR:
+	    subtree->printer = sprint_octet_string;
+	    break;
+	case TYPE_INTEGER:
+	    subtree->printer = sprint_integer;
+	    break;
+	case TYPE_NETADDR:
+	    subtree->printer = sprint_networkaddress;
+	    break;
+	case TYPE_IPADDR:
+	    subtree->printer = sprint_ipaddress;
+	    break;
+	case TYPE_COUNTER:
+	    subtree->printer = sprint_counter;
+	    break;
+	case TYPE_GAUGE:
+	    subtree->printer = sprint_gauge;
+	    break;
+	case TYPE_TIMETICKS:
+	    subtree->printer = sprint_timeticks;
+	    break;
+	case TYPE_OPAQUE:
+	    subtree->printer = sprint_opaque;
+	    break;
+	case TYPE_NULL:
+	    subtree->printer = sprint_null;
+	    break;
+	case TYPE_OTHER:
+	default:
+	    subtree->printer = sprint_unknowntype;
+	    break;
 	}
 	set_functions(subtree->child_list);
     }
 }
 #endif
 
-void init_mib(char *file)
+void 
+init_mib(char *file)
 {
     if (Mib != NULL)
 	return;
@@ -544,15 +547,15 @@ void init_mib(char *file)
 
 static struct snmp_mib_tree *
 find_rfc1066_mib(root)
-    struct snmp_mib_tree *root;
+     struct snmp_mib_tree *root;
 {
     oid *op = RFC1066_MIB;
     struct snmp_mib_tree *tp;
     int len;
 
-    for(len = sizeof(RFC1066_MIB)/sizeof(oid); len; len--, op++){
-	for(tp = root; tp; tp = tp->next_peer){
-	    if (tp->subid == *op){
+    for (len = sizeof(RFC1066_MIB) / sizeof(oid); len; len--, op++) {
+	for (tp = root; tp; tp = tp->next_peer) {
+	    if (tp->subid == *op) {
 		root = tp->child_list;
 		break;
 	    }
@@ -565,11 +568,11 @@ find_rfc1066_mib(root)
 
 static int
 lc_cmp(s1, s2)
-    char *s1, *s2;
+     char *s1, *s2;
 {
     char c1, c2;
 
-    while(*s1 && *s2){
+    while (*s1 && *s2) {
 	if (isupper(*s1))
 	    c1 = tolower(*s1);
 	else
@@ -593,10 +596,10 @@ lc_cmp(s1, s2)
 
 static int
 parse_subtree(subtree, input, output, out_len)
-    struct snmp_mib_tree *subtree;
-    char *input;
-    oid	*output;
-    int	*out_len;   /* number of subid's */
+     struct snmp_mib_tree *subtree;
+     char *input;
+     oid *output;
+     int *out_len;		/* number of subid's */
 {
     char buf[128], *to = buf;
     u_int subid = 0;
@@ -623,13 +626,12 @@ parse_subtree(subtree, input, output, out_len)
 		goto found;
 	}
 	tp = NULL;
-    }
-    else {
+    } else {
 	/*
 	 * Read the name into a buffer.
 	 */
 	while ((*input != '\0') &&
-	       (*input != '.')) {
+	    (*input != '.')) {
 	    *to++ = *input++;
 	}
 	*to = '\0';
@@ -653,13 +655,12 @@ parse_subtree(subtree, input, output, out_len)
 	}
     }
 
-found:
-    if(subid > (u_int)MAX_SUBID){
+  found:
+    if (subid > (u_int) MAX_SUBID) {
 	snmplib_debug(0, "sub-identifier too large: %s\n", buf);
 	return (0);
     }
-
-    if ((*out_len)-- <= 0){
+    if ((*out_len)-- <= 0) {
 	snmplib_debug(0, "object identifier too long\n");
 	return (0);
     }
@@ -668,15 +669,16 @@ found:
     if (*input != '.')
 	return (1);
     if ((*out_len =
-	 parse_subtree(tp ? tp->child_list : NULL, ++input, output, out_len)) == 0)
+	    parse_subtree(tp ? tp->child_list : NULL, ++input, output, out_len)) == 0)
 	return (0);
     return (++*out_len);
 }
 
-int read_objid(input, output, out_len)
-    char *input;
-    oid *output;
-    int	*out_len;   /* number of subid's in "output" */
+int 
+read_objid(input, output, out_len)
+     char *input;
+     oid *output;
+     int *out_len;		/* number of subid's in "output" */
 {
     struct snmp_mib_tree *root = Mib;
     oid *op = output;
@@ -686,7 +688,7 @@ int read_objid(input, output, out_len)
 	input++;
     else {
 	root = find_rfc1066_mib(root);
-	for (i = 0; i < sizeof (RFC1066_MIB)/sizeof(oid); i++) {
+	for (i = 0; i < sizeof(RFC1066_MIB) / sizeof(oid); i++) {
 	    if ((*out_len)-- > 0)
 		*output++ = RFC1066_MIB[i];
 	    else {
@@ -696,7 +698,7 @@ int read_objid(input, output, out_len)
 	}
     }
 
-    if (root == NULL){
+    if (root == NULL) {
 	snmplib_debug(0, "Mib not initialized.\n");
 	return 0;
     }
@@ -707,50 +709,53 @@ int read_objid(input, output, out_len)
     return (1);
 }
 
-void print_objid(objid, objidlen)
-    oid	    *objid;
-    int	    objidlen;	/* number of subidentifiers */
+void 
+print_objid(objid, objidlen)
+     oid *objid;
+     int objidlen;		/* number of subidentifiers */
 {
-    char    buf[256];
-    struct snmp_mib_tree    *subtree = Mib;
+    char buf[256];
+    struct snmp_mib_tree *subtree = Mib;
 
-    *buf = '.';	/* this is a fully qualified name */
+    *buf = '.';			/* this is a fully qualified name */
     get_symbol(objid, objidlen, subtree, buf + 1);
     snmplib_debug(7, "%s\n", buf);
-        
+
 }
 
-void sprint_objid(buf, objid, objidlen)
-    char *buf;
-    oid	    *objid;
-    int	    objidlen;	/* number of subidentifiers */
+void 
+sprint_objid(buf, objid, objidlen)
+     char *buf;
+     oid *objid;
+     int objidlen;		/* number of subidentifiers */
 {
-    struct snmp_mib_tree    *subtree = Mib;
+    struct snmp_mib_tree *subtree = Mib;
 
-    *buf = '.';	/* this is a fully qualified name */
+    *buf = '.';			/* this is a fully qualified name */
     get_symbol(objid, objidlen, subtree, buf + 1);
 }
 
 #if 0
-void print_variable(objid, objidlen, pvariable)
-    oid     *objid;
-    int	    objidlen;
-    struct  variable_list *pvariable;
+void 
+print_variable(objid, objidlen, pvariable)
+     oid *objid;
+     int objidlen;
+     struct variable_list *pvariable;
 {
-    char    buf[1024], *cp;
-    struct snmp_mib_tree    *subtree = Mib;
+    char buf[1024], *cp;
+    struct snmp_mib_tree *subtree = Mib;
 
-    *buf = '.';	/* this is a fully qualified name */
+    *buf = '.';			/* this is a fully qualified name */
     subtree = get_symbol(objid, objidlen, subtree, buf + 1);
     cp = buf;
-    if ((strlen(buf) >= strlen((char *)RFC1066_MIB_text)) && !memcmp(buf, (char *)RFC1066_MIB_text,
-	strlen((char *)RFC1066_MIB_text))){
-	    cp += sizeof(RFC1066_MIB_text);
+    if ((strlen(buf) >= strlen((char *) RFC1066_MIB_text)) && !memcmp(buf, (char *) RFC1066_MIB_text,
+	    strlen((char *) RFC1066_MIB_text))) {
+	cp += sizeof(RFC1066_MIB_text);
     }
     printf("Name: %s -> ", cp);
     *buf = '\0';
     if (subtree->printer)
-	(*subtree->printer)(buf, pvariable, subtree->enums, 0);
+	(*subtree->printer) (buf, pvariable, subtree->enums, 0);
     else {
 	sprint_by_type(buf, pvariable, subtree->enums, 0);
     }
@@ -758,60 +763,63 @@ void print_variable(objid, objidlen, pvariable)
 }
 
 
-void sprint_variable(buf, objid, objidlen, pvariable)
-    char *buf;
-    oid     *objid;
-    int	    objidlen;
-    struct  variable_list *pvariable;
+void 
+sprint_variable(buf, objid, objidlen, pvariable)
+     char *buf;
+     oid *objid;
+     int objidlen;
+     struct variable_list *pvariable;
 {
-    char    tempbuf[512], *cp;
-    struct snmp_mib_tree    *subtree = Mib;
+    char tempbuf[512], *cp;
+    struct snmp_mib_tree *subtree = Mib;
 
-    *tempbuf = '.';	/* this is a fully qualified name */
+    *tempbuf = '.';		/* this is a fully qualified name */
     subtree = get_symbol(objid, objidlen, subtree, tempbuf + 1);
     cp = tempbuf;
-    if ((strlen(buf) >= strlen((char *)RFC1066_MIB_text)) && !memcmp(buf, (char *)RFC1066_MIB_text,
-	strlen((char *)RFC1066_MIB_text))){
-	    cp += sizeof(RFC1066_MIB_text);
+    if ((strlen(buf) >= strlen((char *) RFC1066_MIB_text)) && !memcmp(buf, (char *) RFC1066_MIB_text,
+	    strlen((char *) RFC1066_MIB_text))) {
+	cp += sizeof(RFC1066_MIB_text);
     }
     sprintf(buf, "Name: %s -> ", cp);
     buf += strlen(buf);
     if (subtree->printer)
-	(*subtree->printer)(buf, pvariable, subtree->enums, 0);
+	(*subtree->printer) (buf, pvariable, subtree->enums, 0);
     else {
 	sprint_by_type(buf, pvariable, subtree->enums, 0);
     }
     strcat(buf, "\n");
 }
 
-void sprint_value(buf, objid, objidlen, pvariable)
-    char *buf;
-    oid     *objid;
-    int	    objidlen;
-    struct  variable_list *pvariable;
+void 
+sprint_value(buf, objid, objidlen, pvariable)
+     char *buf;
+     oid *objid;
+     int objidlen;
+     struct variable_list *pvariable;
 {
-    char    tempbuf[512];
-    struct snmp_mib_tree    *subtree = Mib;
+    char tempbuf[512];
+    struct snmp_mib_tree *subtree = Mib;
 
     subtree = get_symbol(objid, objidlen, subtree, tempbuf);
     if (subtree->printer)
-	(*subtree->printer)(buf, pvariable, subtree->enums, 0);
+	(*subtree->printer) (buf, pvariable, subtree->enums, 0);
     else {
 	sprint_by_type(buf, pvariable, subtree->enums, 0);
     }
 }
 
-void print_value(objid, objidlen, pvariable)
-    oid     *objid;
-    int	    objidlen;
-    struct  variable_list *pvariable;
+void 
+print_value(objid, objidlen, pvariable)
+     oid *objid;
+     int objidlen;
+     struct variable_list *pvariable;
 {
-    char    tempbuf[512];
-    struct snmp_mib_tree    *subtree = Mib;
+    char tempbuf[512];
+    struct snmp_mib_tree *subtree = Mib;
 
     subtree = get_symbol(objid, objidlen, subtree, tempbuf);
     if (subtree->printer)
-	(*subtree->printer)(tempbuf, pvariable, subtree->enums, 0);
+	(*subtree->printer) (tempbuf, pvariable, subtree->enums, 0);
     else {
 	sprint_by_type(tempbuf, pvariable, subtree->enums, 0);
     }
@@ -821,37 +829,37 @@ void print_value(objid, objidlen, pvariable)
 
 static struct snmp_mib_tree *
 get_symbol(objid, objidlen, subtree, buf)
-    oid	    *objid;
-    int	    objidlen;
-    struct snmp_mib_tree    *subtree;
-    char    *buf;
+     oid *objid;
+     int objidlen;
+     struct snmp_mib_tree *subtree;
+     char *buf;
 {
-    struct snmp_mib_tree    *return_tree = NULL;
+    struct snmp_mib_tree *return_tree = NULL;
 
-    for(; subtree; subtree = subtree->next_peer){
-	if (*objid == subtree->subid){
+    for (; subtree; subtree = subtree->next_peer) {
+	if (*objid == subtree->subid) {
 	    strcpy(buf, subtree->label);
 	    goto found;
 	}
     }
 
     /* subtree not found */
-    while(objidlen--){	/* output rest of name, uninterpreted */
+    while (objidlen--) {	/* output rest of name, uninterpreted */
 	sprintf(buf, "%u.", *objid++);
-	while(*buf)
+	while (*buf)
 	    buf++;
     }
-    *(buf - 1) = '\0'; /* remove trailing dot */
+    *(buf - 1) = '\0';		/* remove trailing dot */
     return NULL;
 
-found:
-    if (objidlen > 1){
-	while(*buf)
+  found:
+    if (objidlen > 1) {
+	while (*buf)
 	    buf++;
 	*buf++ = '.';
 	*buf = '\0';
 	return_tree = get_symbol(objid + 1, objidlen - 1, subtree->child_list, buf);
-    } 
+    }
     if (return_tree != NULL)
 	return return_tree;
     else
@@ -862,69 +870,73 @@ found:
 
 
 #if 0
-void print_variable_list(variable_list *V)
+void 
+print_variable_list(variable_list * V)
 {
-  print_variable(V->name, V->name_length, V);
+    print_variable(V->name, V->name_length, V);
 }
 
-void print_variable_list_value(variable_list *pvariable)
+void 
+print_variable_list_value(variable_list * pvariable)
 {
-  char    buf[512];
-  struct snmp_mib_tree    *subtree = Mib;
+    char buf[512];
+    struct snmp_mib_tree *subtree = Mib;
 
-  *buf = '.';	/* this is a fully qualified name */
-  subtree = get_symbol(pvariable->name, pvariable->name_length, subtree, buf + 1);
-  *buf = '\0';
+    *buf = '.';			/* this is a fully qualified name */
+    subtree = get_symbol(pvariable->name, pvariable->name_length, subtree, buf + 1);
+    *buf = '\0';
 
-  if (subtree->printer)
-    (*subtree->printer)(buf, pvariable, subtree->enums, 1);
-  else {
-    sprint_by_type(buf, pvariable, subtree->enums, 1);
-  }
-  printf("%s", buf);
+    if (subtree->printer)
+	(*subtree->printer) (buf, pvariable, subtree->enums, 1);
+    else {
+	sprint_by_type(buf, pvariable, subtree->enums, 1);
+    }
+    printf("%s", buf);
 }
 #endif
 
-void print_type(variable_list *var)
+void 
+print_type(variable_list * var)
 {
-  switch (var->type){
-  case SMI_INTEGER:
-    printf("Integer");
-    break;
-  case SMI_STRING:
-    printf("Octet String");
-    break;
-  case SMI_OPAQUE:
-    printf("Opaque");
-    break;
-  case SMI_OBJID:
-    printf("Object Identifier");
-    break;
-  case SMI_TIMETICKS:
-    printf("Timeticks");
-    break;
-  case SMI_GAUGE32:
-    printf("Gauge");
-    break;
-  case SMI_COUNTER32:
-    printf("Counter");
-    break;
-  case SMI_IPADDRESS:
-    printf("IP Address");
-    break;
-  case SMI_NULLOBJ:
-    printf("NULL");
-    break;
-  default:
-    printf("Unknown type %d\n", var->type);
-    break;
-  }
+    switch (var->type) {
+    case SMI_INTEGER:
+	printf("Integer");
+	break;
+    case SMI_STRING:
+	printf("Octet String");
+	break;
+    case SMI_OPAQUE:
+	printf("Opaque");
+	break;
+    case SMI_OBJID:
+	printf("Object Identifier");
+	break;
+    case SMI_TIMETICKS:
+	printf("Timeticks");
+	break;
+    case SMI_GAUGE32:
+	printf("Gauge");
+	break;
+    case SMI_COUNTER32:
+	printf("Counter");
+	break;
+    case SMI_IPADDRESS:
+	printf("IP Address");
+	break;
+    case SMI_NULLOBJ:
+	printf("NULL");
+	break;
+    default:
+	printf("Unknown type %d\n", var->type);
+	break;
+    }
 }
 
-void print_oid_nums(oid *O, int len)
+void 
+print_oid_nums(oid * O, int len)
 {
-  int x;
+    int x;
 
-  for (x=0;x<len;x++)
-    printf(".%u", O[x]);
+    for (x = 0; x < len; x++)
+	printf(".%u", O[x]);
 }

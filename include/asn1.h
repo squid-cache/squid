@@ -28,15 +28,15 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: asn1.h,v 1.8 1998/02/24 22:46:13 kostas Exp $
+ * $Id: asn1.h,v 1.9 1998/04/04 01:43:39 kostas Exp $
  * 
  **********************************************************************/
 
 #ifndef EIGHTBIT_SUBIDS
-typedef u_int	oid;
+typedef u_int oid;
 #define MAX_SUBID   0xFFFFFFFF
 #else
-typedef u_char	oid;
+typedef u_char oid;
 #define MAX_SUBID   0xFF
 #endif
 
@@ -70,32 +70,32 @@ typedef u_char	oid;
 extern "C" {
 #endif
 
-u_char	*asn_build_header(u_char *, int *, u_char, int);
-u_char	*asn_parse_int(u_char *, int *, u_char *, int *, int);
-u_char	*asn_parse_unsigned_int(u_char *, int *, u_char *, u_int *, int);
-u_char	*asn_build_int(u_char *, int *, u_char, int *, int);
-u_char	*asn_build_unsigned_int(u_char *, int *, u_char, u_int *, int);
-u_char	*asn_parse_string(u_char *, int *, u_char *, u_char *, int *);
-u_char	*asn_build_string(u_char *, int *, u_char, u_char *, int);
-u_char	*asn_parse_header(u_char *, int *, u_char *);
-u_char	*asn_build_header_with_truth(u_char *, int *, u_char, int, int);
+    u_char *asn_build_header(u_char *, int *, u_char, int);
+    u_char *asn_parse_int(u_char *, int *, u_char *, int *, int);
+    u_char *asn_parse_unsigned_int(u_char *, int *, u_char *, u_int *, int);
+    u_char *asn_build_int(u_char *, int *, u_char, int *, int);
+    u_char *asn_build_unsigned_int(u_char *, int *, u_char, u_int *, int);
+    u_char *asn_parse_string(u_char *, int *, u_char *, u_char *, int *);
+    u_char *asn_build_string(u_char *, int *, u_char, u_char *, int);
+    u_char *asn_parse_header(u_char *, int *, u_char *);
+    u_char *asn_build_header_with_truth(u_char *, int *, u_char, int, int);
 
-u_char	*asn_parse_length(u_char *, u_int *);
-u_char	*asn_build_length(u_char *, int *, int, int);
-u_char	*asn_parse_objid(u_char *, int *, u_char *, oid *, int *);
-u_char	*asn_build_objid(u_char *, int *, u_char, oid *, int);
-u_char	*asn_parse_null(u_char *, int *, u_char *);
-u_char	*asn_build_null(u_char *, int *, u_char);
+    u_char *asn_parse_length(u_char *, u_int *);
+    u_char *asn_build_length(u_char *, int *, int, int);
+    u_char *asn_parse_objid(u_char *, int *, u_char *, oid *, int *);
+    u_char *asn_build_objid(u_char *, int *, u_char, oid *, int);
+    u_char *asn_parse_null(u_char *, int *, u_char *);
+    u_char *asn_build_null(u_char *, int *, u_char);
 
 #if 0
-u_char *asn_parse_bitstring(u_char *, int *, u_char *, u_char *, int *);
-u_char *asn_build_bitstring(u_char *, int *, u_char, u_char *, int);
+    u_char *asn_parse_bitstring(u_char *, int *, u_char *, u_char *, int *);
+    u_char *asn_build_bitstring(u_char *, int *, u_char, u_char *, int);
 
 #endif
-u_char *asn_build_exception(u_char *, int *, u_char);
+    u_char *asn_build_exception(u_char *, int *, u_char);
 
 #ifdef __cplusplus
 }
-#endif
 
-#endif /* _SNMP_ASN1_H_ */
+#endif
+#endif				/* _SNMP_ASN1_H_ */

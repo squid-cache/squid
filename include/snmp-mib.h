@@ -26,12 +26,13 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp-mib.h,v 1.1 1998/02/22 11:48:42 kostas Exp $
+ * $Id: snmp-mib.h,v 1.2 1998/04/04 01:43:42 kostas Exp $
  * 
  ***************************************************************************/
 
-#include <asn1.h>       /* Need OID Definition */
-#include <snmp_vars.h>  /* Need variable_list */
-#include <mib.h>        /* Then the function definitions */
-
+#include <asn1.h>		/* Need OID Definition */
+#include <snmp_vars.h>		/* Need variable_list */
+#if 0
+#include <mib.h>		/* Then the function definitions */
+#endif
 #endif /* _SNMP_MIB_H_ */

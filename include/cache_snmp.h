@@ -8,14 +8,20 @@
 #define snint long
 #endif
 
+#ifndef MIN
+#define MIN(a,b) (a<b?a:b)
+#endif
+
 #include "snmp.h"
 #include "snmp_impl.h"
 #include "asn1.h"
 #include "snmp_api.h"
+#if 0
 #include "snmp_client.h"
+#include "mib.h"
+#endif
 #include "snmp_vars.h"
 #include "snmp_oidlist.h"
-#include "mib.h"
 
 /* mib stuff here */
 
@@ -30,7 +36,7 @@
  *                 1   3   6     1          3         25     17
  */
 
-#define SQUIDMIB 1, 3, 6, 1, 3, 25, 17     /* length is 7 */
+#define SQUIDMIB 1, 3, 6, 1, 3, 25, 17	/* length is 7 */
 #define LEN_SQUIDMIB 7
 
 #define SYSMIB 1, 3, 6, 1, 2, 1, 1	/* basic system vars */
@@ -38,7 +44,7 @@
 
 /* basic groups under .squid */
 
-#define SQ_SYS  SQUIDMIB, 1		/* length is 8 */
+#define SQ_SYS  SQUIDMIB, 1	/* length is 8 */
 #define LEN_SQ_SYS LEN_SQUIDMIB+1
 #define SQ_CONF SQUIDMIB, 2
 #define LEN_SQ_CONF LEN_SQUIDMIB+1
@@ -51,17 +57,17 @@
 #define SQ_ACC  SQUIDMIB, 6
 #define LEN_SQ_ACC LEN_SQUIDMIB+1
 
-enum {	/* basic system mib info group */
-SYSMIB_START,
-VERSION_DESCR,
-VERSION_ID,
-UPTIME,
-SYSCONTACT,
-SYSYSNAME,
-SYSLOCATION,
-SYSSERVICES,
-SYSORLASTCHANGE,
-SYSMIB_END
+enum {				/* basic system mib info group */
+    SYSMIB_START,
+    VERSION_DESCR,
+    VERSION_ID,
+    UPTIME,
+    SYSCONTACT,
+    SYSYSNAME,
+    SYSLOCATION,
+    SYSSERVICES,
+    SYSORLASTCHANGE,
+    SYSMIB_END
 };
 
 /* cacheSystem group */
@@ -108,7 +114,7 @@ enum {
     MESH_END
 };
 
-enum {	/* cachePeerTable */
+enum {				/* cachePeerTable */
     MESH_PTBL_START,
     MESH_PTBL_NAME,
     MESH_PTBL_IP,
@@ -126,18 +132,18 @@ enum {	/* cachePeerTable */
     MESH_PTBL_END
 };
 
-enum { /* cacheClientTable */
-	MESH_CTBL_START,
-	MESH_CTBL_ADDR,
-	MESH_CTBL_HTREQ,
-	MESH_CTBL_HTBYTES,
-	MESH_CTBL_HTHITS,
-	MESH_CTBL_HTHITBYTES,
-	MESH_CTBL_ICPREQ,
-	MESH_CTBL_ICPBYTES,
-	MESH_CTBL_ICPHITS,
-	MESH_CTBL_ICPHITBYTES,
-	MESH_CTBL_END
+enum {				/* cacheClientTable */
+    MESH_CTBL_START,
+    MESH_CTBL_ADDR,
+    MESH_CTBL_HTREQ,
+    MESH_CTBL_HTBYTES,
+    MESH_CTBL_HTHITS,
+    MESH_CTBL_HTHITBYTES,
+    MESH_CTBL_ICPREQ,
+    MESH_CTBL_ICPBYTES,
+    MESH_CTBL_ICPHITS,
+    MESH_CTBL_ICPHITBYTES,
+    MESH_CTBL_END
 };
 
 /* cacheNetwork group */
@@ -198,7 +204,7 @@ enum {
     NETSTAT_OUTHRPUT
 };
 
-enum { 
+enum {
     PERF_START,
     PERF_SYS,
     PERF_PROTO,
@@ -275,19 +281,19 @@ enum {
     SYS_CONN_FDNUM,
     SYS_CONN_READ,
     SYS_CONN_WRITE,
-    SYS_CONN_ADDR, 
+    SYS_CONN_ADDR,
     SYS_CONN_NAME,
     SYS_CONN_PORT,
     SYS_CONN_END
 };
 
 /* First, we have a huge array of MIBs this agent knows about */
- 
+
 struct MIBListEntry {
-  oid            Name[9]; /* Change as appropriate */
-  snint           NameLen;
-  oid_GetFn     *GetFn;
-  oid_GetNextFn *GetNextFn;
+    oid Name[9];		/* Change as appropriate */
+    snint NameLen;
+    oid_GetFn *GetFn;
+    oid_GetNextFn *GetNextFn;
 };
 
 variable_list *snmp_basicFn(variable_list *, snint *);
@@ -302,6 +308,62 @@ variable_list *snmp_netdbFn(variable_list *, snint *);
 variable_list *snmp_dnsFn(variable_list *, snint *);
 variable_list *snmp_ipcacheFn(variable_list *, snint *);
 variable_list *snmp_fqdncacheFn(variable_list *, snint *);
+
+extern int snmpInitAgentAuth();
+extern void snmpAgentParse(void *);
+extern int snmpDefaultAuth();
+extern int get_median_svc(int, int);
+extern void snmpAgentParseDone(int, void *);
+extern int meshCtblGetRowFn(oid *, oid *);
+extern int netdbGetRowFn(oid *, oid *);
+extern int fqdn_getMax();
+extern int ipcache_getMax();
+extern struct snmp_pdu *snmpAgentResponse(struct snmp_pdu *PDU);
+extern void snmpAclCheckStart(void *);
+extern struct snmp_session *Session;
+extern oid_ParseFn *genericGetNextFn(oid * Src, snint SrcLen, oid ** Dest, snint * DestLen,
+    oid * MIBRoot, int MIBRootLen, oid_GetRowFn * getRowFn, int tblen, oid * MIBTail,
+    oid_ParseFn * mygetFn, int MIBTailLen, int MIB_ACTION_INDEX);
+
+extern int oidcmp(oid * A, snint ALen, oid * B, snint BLen);
+extern int oidncmp(oid * A, snint ALen, oid * B, snint BLen, snint CompLen);
+extern oid *oiddup(oid * A, snint ALen);
+
+
+/* group handler definition */
+
+extern oid_ParseFn *basicGetFn(oid *, snint);
+extern oid_ParseFn *basicGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *sysGetFn(oid *, snint);
+extern oid_ParseFn *sysGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *sysFdGetFn(oid *, snint);
+extern oid_ParseFn *sysFdGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *sysConnGetFn(oid *, snint);
+extern oid_ParseFn *sysConnGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *confGetFn(oid *, snint);
+extern oid_ParseFn *confGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *confStGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *prfSysGetFn(oid *, snint);
+extern oid_ParseFn *prfSysGetFn(oid *, snint);
+extern oid_ParseFn *prfSysGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *prfProtoGetFn(oid *, snint);
+extern oid_ParseFn *prfProtoGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *netdbGetFn(oid *, snint);
+extern oid_ParseFn *netdbGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *dnsGetFn(oid *, snint);
+extern oid_ParseFn *dnsGetNextFn(oid *, snint, oid **, snint *);
+extern oid_ParseFn *meshGetFn(oid *, snint);
+extern oid_ParseFn *meshPtblGetNextFn(oid *, snint, oid **, snint *);
+extern int meshPtblGetRowFn(oid *, oid *);
+extern int sysConnGetRowFn(oid *, oid *);
+extern int meshCtblGetRowFn(oid *, oid *);
+extern int netdbGetRowFn(oid *, oid *);
+oid_ParseFn *meshCtblGetNextFn(oid *, snint, oid **, snint *);
+
+extern int fqdn_getMax();
+extern int ipcache_getMax();
+extern int fd_getMax();
+extern struct in_addr *gen_getMax();
 
 #endif
 #endif

@@ -24,28 +24,28 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp_session.h,v 1.1 1998/02/22 11:48:49 kostas Exp $
+ * $Id: snmp_session.h,v 1.2 1998/04/04 01:43:50 kostas Exp $
  * 
  **********************************************************************/
 
 struct snmp_session {
-  int Version; /* SNMP Version for this session */
+    int Version;		/* SNMP Version for this session */
 
 
-    u_char  *community;	/* community for outgoing requests. */
-    int	    community_len;  /* Length of community name. */
-    int	    retries;	/* Number of retries before timeout. */
-    int    timeout;    /* Number of uS until first timeout, then exponential backoff */
-    char    *peername;	/* Domain name or dotted IP address of default peer */
-    u_short remote_port;/* UDP port number of peer. */
-    u_short local_port; /* My UDP port number, 0 for default, picked randomly */
-  /* This isn't used, but is here so that libraries compiled with this
-   * in place still work.
-   */
-    u_char    *(*authenticator)();
-    int	    (*callback)();  /* Function to interpret incoming data */
+    u_char *community;		/* community for outgoing requests. */
+    int community_len;		/* Length of community name. */
+    int retries;		/* Number of retries before timeout. */
+    int timeout;		/* Number of uS until first timeout, then exponential backoff */
+    char *peername;		/* Domain name or dotted IP address of default peer */
+    u_short remote_port;	/* UDP port number of peer. */
+    u_short local_port;		/* My UDP port number, 0 for default, picked randomly */
+    /* This isn't used, but is here so that libraries compiled with this
+     * in place still work.
+     */
+    u_char *(*authenticator) ();
+    int (*callback) ();		/* Function to interpret incoming data */
     /* Pointer to data that the callback function may consider important */
-    void    *callback_magic;
+    void *callback_magic;
 };
 
 #define RECEIVED_MESSAGE   1

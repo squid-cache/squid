@@ -26,16 +26,16 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_api_error.h,v 1.1 1998/02/22 11:48:43 kostas Exp $
+ * $Id: snmp_api_error.h,v 1.2 1998/04/04 01:43:43 kostas Exp $
  * 
  ***************************************************************************/
 
 /* Error return values */
 #define SNMPERR_GENERR		-1
-#define SNMPERR_BAD_LOCPORT	-2  /* local port was already in use */
+#define SNMPERR_BAD_LOCPORT	-2	/* local port was already in use */
 #define SNMPERR_BAD_ADDRESS	-3
 #define SNMPERR_BAD_SESSION	-4
-#define SNMPERR_TOO_LONG	-5  /* data too long for provided buffer */
+#define SNMPERR_TOO_LONG	-5	/* data too long for provided buffer */
 
 #define SNMPERR_ASN_ENCODE      -6
 #define SNMPERR_ASN_DECODE      -7
@@ -49,7 +49,7 @@
 #define SNMPERR_PACKET_ERR      -14
 #define SNMPERR_NO_RESPONSE     -15
 
-#define SNMPERR_LAST            -16 /* Last error message */
+#define SNMPERR_LAST            -16	/* Last error message */
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,14 +57,14 @@ extern "C" {
 
 /* extern int snmp_errno */
 
-char *snmp_api_error(int);
-int   snmp_api_errno(void);
+    char *snmp_api_error(int);
+    int snmp_api_errno(void);
 
-char *api_errstring(int); /* Backwards compatibility */
-void snmp_set_api_error(int);
+    char *api_errstring(int);	/* Backwards compatibility */
+    void snmp_set_api_error(int);
 
 #ifdef __cplusplus
 }
-#endif
 
-#endif /* _SNMP_API_ERROR_H_ */
+#endif
+#endif				/* _SNMP_API_ERROR_H_ */

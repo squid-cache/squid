@@ -13,7 +13,7 @@
 #endif
 
 #ifdef __STDC__
-void (*snmplib_debug_hook) (int,char *,...) = NULL;
+void (*snmplib_debug_hook) (int, char *,...) = NULL;
 #else
 void (*snmplib_debug_hook) (va_alist) = NULL;
 #endif
@@ -45,4 +45,3 @@ snmplib_debug(va_alist)
     }
     va_end(args);
 }
-
