@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.48 1996/11/26 23:22:19 wessels Exp $
+ * $Id: url.cc,v 1.49 1996/11/28 07:54:52 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -241,7 +241,7 @@ urlParse(method_t method, char *url)
     /* remove trailing slashes from FTP URLs */
     if (protocol == PROTO_FTP) {
 	t = urlpath + strlen(urlpath);
-	while (*(--t) == '/')
+	while (t > urlpath && *(--t) == '/')
 	    *t = '\0';
     }
     request = get_free_request_t();
