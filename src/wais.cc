@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.102 1998/03/04 23:52:41 wessels Exp $
+ * $Id: wais.cc,v 1.103 1998/03/05 00:43:11 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -236,7 +236,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&Counter.server.all.kbytes_out, size);
-        kb_incr(&Counter.server.other.kbytes_out, size);
+	kb_incr(&Counter.server.other.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;

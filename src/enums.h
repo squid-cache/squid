@@ -207,7 +207,7 @@ typedef enum {
 
 /* possible types for http header fields */
 typedef enum {
-    ftInvalid = HDR_ENUM_END,   /* to catch nasty errors with hdr_id<->fld_type clashes */
+    ftInvalid = HDR_ENUM_END,	/* to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
     ftPChar,
     ftDate_1123,

@@ -204,7 +204,7 @@
 #define N_COUNT_HIST (3600 / COUNT_INTERVAL) + 1
 /*
  * keep 3 days' (72 hours) worth of hourly readings
-*/
+ */
 #define N_COUNT_HOUR_HIST (86400 * 3) / (60 * COUNT_INTERVAL)
 
 /* were to look for errors if config path fails */

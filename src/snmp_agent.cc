@@ -45,12 +45,12 @@ snmp_agent_parse(snmp_request_t * rq)
     cbdataAdd(rq, MEM_NONE);
     PDU = snmp_pdu_create(0);
     Community = snmp_parse(Session, PDU, buf, len);
-    
-    if (!snmp_coexist_V2toV1(PDU)) { /* incompatibility */
-        debug(49, 3) ("snmp_agent_parse: Incompatible V2 packet.\n");
-        snmp_free_pdu(PDU);
-        snmp_agent_parse_done(0, rq);
-        return;
+
+    if (!snmp_coexist_V2toV1(PDU)) {	/* incompatibility */
+	debug(49, 3) ("snmp_agent_parse: Incompatible V2 packet.\n");
+	snmp_free_pdu(PDU);
+	snmp_agent_parse_done(0, rq);
+	return;
     }
     rq->community = Community;
     rq->PDU = PDU;

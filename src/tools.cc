@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.150 1998/03/04 23:48:14 rousskov Exp $
+ * $Id: tools.cc,v 1.151 1998/03/05 00:43:09 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -123,9 +123,9 @@ static void shutdownTimeoutHandler(int fd, void *data);
 static void safeunlinkComplete(void *data, int retcode, int errcode);
 #endif
 #if MEM_GEN_TRACE
-extern void log_trace_done(); 
+extern void log_trace_done();
 extern void log_trace_init(char *);
-#endif 
+#endif
 
 void
 releaseServerSockets(void)
@@ -822,25 +822,25 @@ kb_incr(kb_t * k, size_t v)
 }
 
 void
-gb_flush(gb_t *g)
+gb_flush(gb_t * g)
 {
     g->gb += (g->bytes >> 30);
-    g->bytes &= (1<<30)-1;
+    g->bytes &= (1 << 30) - 1;
 }
 
 double
-gb_to_double(const gb_t *g)
+gb_to_double(const gb_t * g)
 {
-    return ((double)g->gb)*((double)(1<<30)) + ((double)g->bytes);
+    return ((double) g->gb) * ((double) (1 << 30)) + ((double) g->bytes);
 }
 
 const char *
-gb_to_str(const gb_t *g)
+gb_to_str(const gb_t * g)
 {
     /*
      * it is often convenient to call gb_to_str several times for _one_ printf
      */
-    #define max_cc_calls 5
+#define max_cc_calls 5
     typedef char GbBuf[32];
     static GbBuf bufs[max_cc_calls];
     static int call_id = 0;
@@ -848,11 +848,10 @@ gb_to_str(const gb_t *g)
     char *buf = bufs[call_id++];
     /* select format */
     if (value < 1e9)
-	snprintf(buf, sizeof(GbBuf), "%.2f MB", value/1e6);
+	snprintf(buf, sizeof(GbBuf), "%.2f MB", value / 1e6);
+    else if (value < 1e12)
+	snprintf(buf, sizeof(GbBuf), "%.2f GB", value / 1e9);
     else
-    if (value < 1e12)
-	snprintf(buf, sizeof(GbBuf), "%.2f GB", value/1e9);
-    else
-	snprintf(buf, sizeof(GbBuf), "%.2f TB", value/1e12);
+	snprintf(buf, sizeof(GbBuf), "%.2f TB", value / 1e12);
     return buf;
 }

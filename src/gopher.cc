@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.121 1998/03/04 23:52:41 wessels Exp $
+ * $Id: gopher.cc,v 1.122 1998/03/05 00:42:53 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -755,7 +755,7 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&Counter.server.all.kbytes_out, size);
-        kb_incr(&Counter.server.other.kbytes_out, size);
+	kb_incr(&Counter.server.other.kbytes_out, size);
     }
     if (errflag) {
 	ErrorState *err;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.164 1998/03/03 22:17:53 rousskov Exp $
+ * $Id: ipcache.cc,v 1.165 1998/03/05 00:42:57 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1099,7 +1099,7 @@ snmp_ipcacheFn(variable_list * Var, long *ErrP)
 	xfree(Answer->val.integer);
 	Answer->type = SMI_STRING;
 	Answer->val_len = strlen(IPc->name);
-	Answer->val.string = (u_char *)xstrdup(IPc->name);
+	Answer->val.string = (u_char *) xstrdup(IPc->name);
 	break;
     case NET_IPC_IP:
 	Answer->type = SMI_IPADDRESS;

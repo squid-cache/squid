@@ -530,7 +530,7 @@ extern void memClean();
 extern void memInitModule();
 extern void memCleanModule();
 extern void memConfigure();
-#if 0 /* not used */
+#if 0				/* not used */
 extern void memFreeMemory(void);
 #endif
 extern void *memAllocate(mem_type);
@@ -541,20 +541,20 @@ extern void memFreeDISK(void *);
 extern int memInUse(mem_type);
 
 extern DynPool *dynPoolCreate();
-extern void dynPoolDestroy(DynPool *pool);
-extern void *dynPoolAlloc(DynPool *pool, size_t size);
-extern void dynPoolFree(DynPool *pool, void *obj, size_t size);
+extern void dynPoolDestroy(DynPool * pool);
+extern void *dynPoolAlloc(DynPool * pool, size_t size);
+extern void dynPoolFree(DynPool * pool, void *obj, size_t size);
 extern MemPool *memPoolCreate(const char *label, size_t obj_size);
-extern void memPoolDestroy(MemPool *pool);
-extern void *memPoolAlloc(MemPool *pool);
-extern void memPoolFree(MemPool *pool, void *obj);
-extern int memPoolWasUsed(const MemPool *pool);
-extern int memPoolInUseCount(const MemPool *pool);
-extern size_t memPoolInUseSize(const MemPool *pool);
-extern int memPoolUsedCount(const MemPool *pool);
-extern void memPoolDescribe(const MemPool *pool);
-extern void memPoolReport(const MemPool *pool, StoreEntry *e);
-extern void memReport(StoreEntry *e);
+extern void memPoolDestroy(MemPool * pool);
+extern void *memPoolAlloc(MemPool * pool);
+extern void memPoolFree(MemPool * pool, void *obj);
+extern int memPoolWasUsed(const MemPool * pool);
+extern int memPoolInUseCount(const MemPool * pool);
+extern size_t memPoolInUseSize(const MemPool * pool);
+extern int memPoolUsedCount(const MemPool * pool);
+extern void memPoolDescribe(const MemPool * pool);
+extern void memPoolReport(const MemPool * pool, StoreEntry * e);
+extern void memReport(StoreEntry * e);
 
 extern int stmemFreeDataUpto(mem_hdr *, int);
 extern void stmemAppend(mem_hdr *, const char *, int);
@@ -808,7 +808,7 @@ extern void dlinkDelete(dlink_node * m, dlink_list * list);
 extern void kb_incr(kb_t *, size_t);
 extern double gb_to_double(const gb_t *);
 extern const char *gb_to_str(const gb_t *);
-extern void gb_flush(gb_t *); /* internal, do not use this */
+extern void gb_flush(gb_t *);	/* internal, do not use this */
 
 /*
  * prototypes for system functions missing from system includes

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.231 1998/03/03 00:31:08 rousskov Exp $
+ * $Id: main.cc,v 1.232 1998/03/05 00:42:58 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -519,7 +519,7 @@ main(int argc, char **argv)
     debug_log = stderr;
     if (FD_SETSIZE < Squid_MaxFD)
 	Squid_MaxFD = FD_SETSIZE;
-	
+
     /* call mallopt() before anything else */
 #if HAVE_MALLOPT
 #ifdef M_GRAIN
@@ -764,7 +764,7 @@ normal_shutdown(void)
     }
 #endif
 #if MEM_GEN_TRACE
-	log_trace_done();
+    log_trace_done();
 #endif
 
     debug(1, 0) ("Squid Cache (Version %s): Exiting normally.\n",

@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.14 1998/03/05 00:01:07 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.15 1998/03/05 00:42:42 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -263,9 +263,27 @@ static const char *getStringPrefix(const char *str);
  * some compilers do not want to convert a type into a union which that type
  * belongs to
  */
-field_store intField(int n) { field_store f; f.v_int = n; return f; }
-field_store timeField(time_t t) { field_store f; f.v_time = t; return f; }
-field_store ptrField(void *p) { field_store f; f.v_pchar = (char*)p; return f; }
+field_store 
+intField(int n)
+{
+    field_store f;
+    f.v_int = n;
+    return f;
+}
+field_store 
+timeField(time_t t)
+{
+    field_store f;
+    f.v_time = t;
+    return f;
+}
+field_store 
+ptrField(void *p)
+{
+    field_store f;
+    f.v_pchar = (char *) p;
+    return f;
+}
 
 /*
  * Module initialization routines
@@ -467,7 +485,7 @@ httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
 {
     assert(hdr && pos);
     assert(*pos >= HttpHeaderInitPos && *pos < hdr->capacity);
-    debug(55,8) ("searching next e in hdr %p from %d\n", hdr, *pos);
+    debug(55, 8) ("searching next e in hdr %p from %d\n", hdr, *pos);
     for ((*pos)++; *pos < hdr->ucount; (*pos)++) {
 	HttpHeaderEntry *e = hdr->entries + *pos;
 	if (httpHeaderEntryIsValid(e)) {
@@ -764,7 +782,7 @@ int
 httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftInt);    /* must be of an apropriate type */
+    assert(Headers[id].type == ftInt);	/* must be of an apropriate type */
     return httpHeaderGet(hdr, id).v_int;
 }
 
@@ -772,7 +790,7 @@ const char *
 httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftPChar);  /* must be of an apropriate type */
+    assert(Headers[id].type == ftPChar);	/* must be of an apropriate type */
     return httpHeaderGet(hdr, id).v_pchar;
 }
 
@@ -1185,7 +1203,7 @@ httpHeaderFieldBadValue(field_type type)
     return ptrField(NULL);	/* not reached */
 }
 
-#if 0 /* moved to HttpHdrCC.c */
+#if 0				/* moved to HttpHdrCC.c */
 
 /*
  * HttpScc (server cache control)
@@ -1437,7 +1455,7 @@ static void
 shortStringStatDump(StoreEntry * e)
 {
     storeAppendPrintf(e, "<h3>Short String Stats</h3>\n<p>");
-	memPoolReport(shortStrings, e);
+    memPoolReport(shortStrings, e);
     storeAppendPrintf(e, "\n</p>\n");
     storeAppendPrintf(e, "<br><h3>Long String Stats</h3>\n");
     storeAppendPrintf(e, "alive: %3d (%5.1f KB) high-water:  %3d (%5.1f KB)\n",

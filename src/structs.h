@@ -1,4 +1,5 @@
 
+
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -465,7 +466,7 @@ struct _HttpBody {
 };
 
 
-/* http cache control header field*/
+/* http cache control header field */
 struct _HttpHdrCc {
     int mask;
     time_t max_age;
@@ -484,10 +485,10 @@ union _field_store {
 
 /* per field statistics */
 struct _HttpHeaderFieldStat {
-    int aliveCount;       /* created but not destroyed (count) */
-    int parsCount;        /* #parsing attempts */
-    int errCount;         /* #pasring errors */
-    int repCount;         /* #repetitons */
+    int aliveCount;		/* created but not destroyed (count) */
+    int parsCount;		/* #parsing attempts */
+    int errCount;		/* #pasring errors */
+    int repCount;		/* #repetitons */
 };
 
 
@@ -1068,7 +1069,7 @@ struct _StatCounters {
 	    int errors;
 	    kb_t kbytes_in;
 	    kb_t kbytes_out;
-	} all,http,ftp,other;
+	} all , http, ftp, other;
     } server;
     struct {
 	int pkts_sent;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.245 1998/03/05 00:01:11 rousskov Exp $
+ * $Id: http.cc,v 1.246 1998/03/05 00:42:55 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -742,7 +742,7 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&Counter.server.all.kbytes_out, size);
-        kb_incr(&Counter.server.http.kbytes_out, size);
+	kb_incr(&Counter.server.http.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
