@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.100 1997/02/04 23:18:15 wessels Exp $
+ * $Id: ipcache.cc,v 1.101 1997/02/19 00:04:13 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -644,7 +644,7 @@ ipcache_nbgethostbyname(const char *name, int fd, IPH handler, void *handlerData
 {
     ipcache_entry *i = NULL;
     dnsserver_t *dnsData = NULL;
-    ipcache_addrs *addrs;
+    ipcache_addrs *addrs = NULL;
 
     if (!handler)
 	fatal_dump("ipcache_nbgethostbyname: NULL handler");
@@ -701,12 +701,18 @@ ipcache_nbgethostbyname(const char *name, int fd, IPH handler, void *handlerData
 
     if ((dnsData = dnsGetFirstAvailable())) {
 	ipcache_dnsDispatch(dnsData, i);
-    } else if (NDnsServersAlloc > 0) {
-	ipcacheEnqueue(i);
-    } else {
-	ipcache_gethostbyname(name, IP_BLOCKING_LOOKUP);
-	ipcache_call_pending(i);
+	return;
     }
+    if (addrs != NULL)		/* TEMPORARY */
+	debug_trap("ipcache_nbgethostbyname: Stack Trashed");
+    if (NDnsServersAlloc > 0) {
+	ipcacheEnqueue(i);
+	return;
+    }
+    if (addrs != NULL)		/* TEMPORARY */
+	debug_trap("ipcache_nbgethostbyname: Stack Trashed");
+    ipcache_gethostbyname(name, IP_BLOCKING_LOOKUP);
+    ipcache_call_pending(i);
 }
 
 static void
@@ -837,7 +843,8 @@ ipcache_gethostbyname(const char *name, int flags)
     IpcacheStats.misses++;
     if (BIT_TEST(flags, IP_BLOCKING_LOOKUP)) {
 	IpcacheStats.ghbn_calls++;
-	debug(14, 3, "ipcache_gethostbyname: blocking on gethostbyname() for '%s'\n", name);
+	debug(14, NDnsServersAlloc ? 0 : 3,
+	    "WARNING: blocking on gethostbyname() for '%s'\n", name);
 	hp = gethostbyname(name);
 	if (hp && hp->h_name && (hp->h_name[0] != '\0') && ip_table) {
 	    /* good address, cached */
