@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.59 2003/07/16 07:18:16 hno Exp $
+ * $Id: cbdata.cc,v 1.60 2003/09/01 23:41:17 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -83,10 +83,13 @@ public:
     void dump(StoreEntry *)const;
 #endif
 
-    void deleteSelf();
+    void *operator new(size_t size, void *where);
+    void operator delete(void *where, void *where);
+
+    ~cbdata();
     int valid;
     int locks;
-    int type;
+    cbdata_type type;
 #if CBDATA_DEBUG
 
     void addHistory(char const *label, char const *file, int line)
@@ -106,6 +109,8 @@ public:
     /* cookie used while debugging */
     long cookie;
     /* MUST be the last per-instance member */
+    /* TODO: examine making cbdata templated on this - so we get type
+     * safe access to data - RBC 20030902 */
     void *data;
 void check() const { assert(cookie == ((long)this ^ Cookie));}
 
@@ -118,6 +123,22 @@ void check() const { assert(cookie == ((long)this ^ Cookie));}
 
 const long cbdata::Cookie((long)0xDEADBEEF);
 const long cbdata::Offset(MakeOffset());
+
+void *
+cbdata::operator new(size_t size, void *where)
+{
+    // assert (size == sizeof(cbdata));
+    return where;
+}
+
+void
+cbdata::operator delete(void *where, void *where2)
+{
+    /* Only ever invoked when placement new throws
+     * an exception. Used to prevent an incorrect
+     * free.
+     */
+}
 
 long
 cbdata::MakeOffset()
@@ -141,8 +162,7 @@ struct CBDataIndex
 *cbdata_index = NULL;
 int cbdata_types = 0;
 
-void
-cbdata::deleteSelf()
+cbdata::~cbdata()
 {
 #if CBDATA_DEBUG
     CBDataCall *aCall;
@@ -156,8 +176,6 @@ cbdata::deleteSelf()
 
     if (free_func)
         free_func(&data);
-
-    memPoolFree(cbdata_index[type].pool, this);
 }
 
 static void
@@ -240,7 +258,9 @@ cbdataInternalAlloc(cbdata_type type)
 {
     cbdata *p;
     assert(type > 0 && type < cbdata_types);
-    p = (cbdata *)memPoolAlloc(cbdata_index[type].pool);
+    p = new (memPoolAlloc(cbdata_index[type].pool)) cbdata;
+    //    p = (cbdata *)memPoolAlloc(cbdata_index[type].pool);
+
     p->type = type;
     p->valid = 1;
     p->locks = 0;
@@ -297,7 +317,20 @@ cbdataInternalFree(void *p)
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
 
-    c->deleteSelf();
+    cbdata_type theType = c->type;
+    c->cbdata::~cbdata();
+
+    /* This is ugly. But: operator delete doesn't get
+     * the type parameter, so we can't use that 
+     * to free the memory.
+     * So, we free it ourselves.
+     * Note that this means a non-placement 
+     * new would be a seriously bad idea.
+     * Lastly, if we where a templated class,
+     * we could use the normal delete operator
+     * and it would Just Work. RBC 20030902
+     */
+    memPoolFree(cbdata_index[theType].pool, c);
     return NULL;
 }
 
@@ -381,7 +414,21 @@ cbdataInternalUnlock(const void *p)
 
 #endif
 
-    c->deleteSelf();
+    cbdata_type theType = c->type;
+
+    c->cbdata::~cbdata();
+
+    /* This is ugly. But: operator delete doesn't get
+     * the type parameter, so we can't use that 
+     * to free the memory.
+     * So, we free it ourselves.
+     * Note that this means a non-placement 
+     * new would be a seriously bad idea.
+     * Lastly, if we where a templated class,
+     * we could use the normal delete operator
+     * and it would Just Work. RBC 20030902
+     */
+    memPoolFree(cbdata_index[theType].pool, c);
 }
 
 int
