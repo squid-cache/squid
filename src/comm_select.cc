@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.18 1998/10/18 08:43:32 wessels Exp $
+ * $Id: comm_select.cc,v 1.19 1998/10/18 09:06:52 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -455,6 +455,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 	if (FD_ISSET(fd, &read_mask)) {
 	    if ((hdl = fd_table[fd].read_handler) != NULL) {
 		fd_table[fd].read_handler = NULL;
+		commUpdateReadBits(fd, NULL);
 		hdl(fd, &incame);
 	    } else {
 		debug(5, 1) ("comm_select_incoming: NULL read handler\n");
@@ -463,6 +464,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 	if (FD_ISSET(fd, &write_mask)) {
 	    if ((hdl = fd_table[fd].write_handler) != NULL) {
 		fd_table[fd].write_handler = NULL;
+		commUpdateWriteBits(fd, NULL);
 		hdl(fd, &incame);
 	    } else {
 		debug(5, 1) ("comm_select_incoming: NULL write handler\n");
