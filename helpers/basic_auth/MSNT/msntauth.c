@@ -94,8 +94,10 @@ main(int argc, char **argv)
 	    err = 1;
 	    continue;
 	}
-	if (err)
+	if (err) {
+	    syslog(LOG_WARNING, "oversized message");
 	    goto error;
+	}
 
 	/*
 	 * extract username and password.
@@ -119,11 +121,13 @@ main(int argc, char **argv)
 	 * Check if user is explicitly denied or allowed.
 	 * If user passes both checks, they can be authenticated.
 	 */
-	if (Check_user(username) == 1)
+	if (Check_user(username) == 1) {
+	    syslog(LOG_INFO, "'%s' denied", username);
 	    puts("ERR");
-	else if (QueryServers(username, password) == 0)
+	} else if (QueryServers(username, password) == 0)
 	    puts("OK");
 	else {
+	    syslog(LOG_INFO, "'%s' login failed", username);
 error:
 	    puts("ERR");
 	}
