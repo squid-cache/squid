@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.40 2003/05/17 19:02:15 hno Exp $
+ * $Id: external_acl.cc,v 1.41 2003/05/20 12:17:39 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -42,6 +42,7 @@
 
 #include "squid.h"
 #include "ExternalACL.h"
+#include "ExternalACLEntry.h"
 #include "authenticate.h"
 #include "Store.h"
 #include "fde.h"
@@ -65,41 +66,47 @@ static char *makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 static void external_acl_cache_delete(external_acl * def, external_acl_entry * entry);
 static int external_acl_entry_expired(external_acl * def, external_acl_entry * entry);
 static void external_acl_cache_touch(external_acl * def, external_acl_entry * entry);
-
-/*******************************************************************
- * external_acl cache entry
- * Used opaqueue in the interface
- */
-
-struct _external_acl_entry: public hash_link
-{
-    dlink_node lru;
-    int result;
-    time_t date;
-    char *user;
-    char *error;
-    external_acl *def;
-};
+static external_acl_entry *external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData const &data);
 
 /******************************************************************
  * external_acl directive
  */
 
-struct _external_acl
+class external_acl
 {
+
+public:
     external_acl *next;
+
+    void add
+        (ExternalACLEntry *);
+
+    void trimCache();
+
     int ttl;
+
     int negative_ttl;
+
     char *name;
+
     external_acl_format *format;
+
     wordlist *cmdline;
+
     int children;
+
     helper *theHelper;
+
     hash_table *cache;
+
     dlink_list lru_list;
+
     int cache_size;
+
     int cache_entries;
+
     dlink_list queue;
+
     int require_auth;
 };
 
@@ -433,6 +440,26 @@ find_externalAclHelper(const char *name)
     return NULL;
 }
 
+void
+
+external_acl::add
+    (ExternalACLEntry *anEntry)
+{
+    trimCache();
+    assert (anEntry->def == NULL);
+    anEntry->def = this;
+    hash_join(cache, anEntry);
+    dlinkAdd(anEntry, &anEntry->lru, &lru_list);
+    cache_entries++;
+}
+
+void
+external_acl::trimCache()
+{
+    if (cache_size && cache_entries >= cache_size)
+        external_acl_cache_delete(this, static_cast<external_acl_entry *>(lru_list.tail->data));
+}
+
 
 /******************************************************************
  * external acl type
@@ -553,6 +580,9 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
     if (entry->user && cbdataReferenceValid(ch->conn()) && !ch->conn()->rfc931[0])
         xstrncpy(ch->conn()->rfc931, entry->user, USER_IDENT_SZ);
 
+    if (ch->request && !ch->request->tag.size())
+        ch->request->tag = entry->tag;
+
     return result;
 }
 
@@ -584,8 +614,6 @@ ACLExternal::dump() const
 /******************************************************************
  * external_acl cache
  */
-
-CBDATA_TYPE(external_acl_entry);
 
 static void
 external_acl_cache_touch(external_acl * def, external_acl_entry * entry)
@@ -741,66 +769,38 @@ external_acl_entry_expired(external_acl * def, external_acl_entry * entry)
         return 0;
 }
 
-static void
-free_external_acl_entry(void *data)
-{
-    external_acl_entry *entry = static_cast<external_acl_entry *>(data);
-    safe_free(entry->key);
-    safe_free(entry->user);
-    safe_free(entry->error);
-}
-
 static external_acl_entry *
-external_acl_cache_add(external_acl * def, const char *key, int result, char *user, char *error)
+external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData const & data)
 {
-    external_acl_entry *entry = static_cast<external_acl_entry *>(hash_lookup(def->cache, key));
-    debug(82, 2) ("external_acl_cache_add: Adding '%s' = %d\n", key, result);
+    ExternalACLEntry *entry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key));
+    debug(82, 2) ("external_acl_cache_add: Adding '%s' = %d\n", key, data.result);
 
     if (entry) {
-        debug(82, 3) ("external_acl_cache_add: updating existing entry\n");
-        entry->date = squid_curtime;
-        entry->result = result;
-        safe_free(entry->user);
-        safe_free(entry->error);
-
-        if (user)
-            entry->user = xstrdup(user);
-
-        if (error)
-            entry->error = xstrdup(error);
-
+        debug(82, 3) ("ExternalACLEntry::update: updating existing entry\n");
+        entry->update (data);
         external_acl_cache_touch(def, entry);
 
         return entry;
     }
 
-    CBDATA_INIT_TYPE_FREECB(external_acl_entry, free_external_acl_entry);
-    /* Maintain cache size */
-
-    if (def->cache_size && def->cache_entries >= def->cache_size)
-        external_acl_cache_delete(def, static_cast<external_acl_entry *>(def->lru_list.tail->data));
-    entry = cbdataAlloc(external_acl_entry);
+    entry = new ExternalACLEntry;
     entry->key = xstrdup(key);
-    entry->date = squid_curtime;
-    entry->result = result;
-    if (user)
-        entry->user = xstrdup(user);
-    if (error)
-        entry->error = xstrdup(error);
-    entry->def = def;
-    hash_join(def->cache, entry);
-    dlinkAdd(entry, &entry->lru, &def->lru_list);
-    def->cache_entries += 1;
+    entry->update (data);
+
+    def->add
+    (entry);
+
     return entry;
 }
 
 static void
 external_acl_cache_delete(external_acl * def, external_acl_entry * entry)
 {
+    assert (entry->def == def);
     hash_remove_link(def->cache, entry);
     dlinkDelete(&entry->lru, &def->lru_list);
     def->cache_entries -= 1;
-    cbdataFree(entry);
+    entry->deleteSelf();
 }
 
 /******************************************************************
@@ -845,6 +845,9 @@ free_externalAclState(void *data)
  *
  *   user=        The users name (login)
  *   error=       Error description (only defined for ERR results)
+ *   tag= 	  A string tag to be applied to the request that triggered the acl match.
+ *   			applies to both OK and ERR responses.
+ *   			Won't override existing request tags.
  *
  * Other keywords may be added to the protocol later
  *
@@ -858,13 +861,12 @@ externalAclHandleReply(void *data, char *reply)
 {
     externalAclState *state = static_cast<externalAclState *>(data);
     externalAclState *next;
-    int result = 0;
     char *status;
     char *token;
     char *value;
     char *t;
-    char *user = NULL;
-    char *error = NULL;
+    ExternalACLEntryData entryData;
+    entryData.result = 0;
     external_acl_entry *entry = NULL;
 
     debug(82, 2) ("externalAclHandleReply: reply=\"%s\"\n", reply);
@@ -873,7 +875,7 @@ externalAclHandleReply(void *data, char *reply)
         status = strwordtok(reply, &t);
 
         if (status && strcmp(status, "OK") == 0)
-            result = 1;
+            entryData.result = 1;
 
         while ((token = strwordtok(NULL, &t))) {
             value = strchr(token, '=');
@@ -881,10 +883,13 @@ externalAclHandleReply(void *data, char *reply)
             if (value) {
                 *value++ = '\0';	/* terminate the token, and move up to the value */
 
+                if (strcmp(token, "tag") == 0)
+                    entryData.tag = value;
+
                 if (strcmp(token, "user") == 0)
-                    user = value;
+                    entryData.user = value;
                 else if (strcmp(token, "error") == 0)
-                    error = value;
+                    entryData.error = value;
             }
         }
     }
@@ -893,7 +898,7 @@ externalAclHandleReply(void *data, char *reply)
 
     if (cbdataReferenceValid(state->def)) {
         if (reply)
-            entry = external_acl_cache_add(state->def, state->key, result, user, error);
+            entry = external_acl_cache_add(state->def, state->key, entryData);
         else {
             if (reply)
                 entry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);
@@ -1003,7 +1008,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
 
     helperSubmit(def->theHelper, buf.buf, externalAclHandleReply, state);
 
-    external_acl_cache_add(def, key, -1, NULL, NULL);
+    external_acl_cache_add(def, key, ExternalACLEntryData());
 
     dlinkAdd(state, &state->list, &def->queue);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.cc,v 1.5 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayTagged.cc,v 1.1 2003/05/20 12:17:38 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -39,67 +39,67 @@
 
 #if DELAY_POOLS
 #include "squid.h"
-#include "DelayUser.h"
+#include "DelayTagged.h"
 #include "authenticate.h"
 #include "NullDelayId.h"
 #include "Store.h"
 
 void *
-DelayUser::operator new(size_t size)
+DelayTagged::operator new(size_t size)
 {
-    DelayPools::MemoryUsed += sizeof (DelayUser);
+    DelayPools::MemoryUsed += sizeof (DelayTagged);
     return ::operator new (size);
 }
 
 void
-DelayUser::operator delete (void *address)
+DelayTagged::operator delete (void *address)
 {
-    DelayPools::MemoryUsed -= sizeof (DelayUser);
+    DelayPools::MemoryUsed -= sizeof (DelayTagged);
     ::operator delete (address);
 }
 
 void
-DelayUser::deleteSelf() const
+DelayTagged::deleteSelf() const
 {
     delete this;
 }
 
-DelayUser::DelayUser()
+DelayTagged::DelayTagged()
 {
     DelayPools::registerForUpdates (this);
 }
 
-static SplayNode<DelayUserBucket::Pointer>::SPLAYFREE DelayUserFree;
+static SplayNode<DelayTaggedBucket::Pointer>::SPLAYFREE DelayTaggedFree;
 
-DelayUser::~DelayUser()
+DelayTagged::~DelayTagged()
 {
     DelayPools::deregisterForUpdates (this);
-    buckets.head->destroy (DelayUserFree);
+    buckets.head->destroy (DelayTaggedFree);
 }
 
-static SplayNode<DelayUserBucket::Pointer>::SPLAYCMP DelayUserCmp;
+static SplayNode<DelayTaggedBucket::Pointer>::SPLAYCMP DelayTaggedCmp;
 
 int
-DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer const &right)
+DelayTaggedCmp(DelayTaggedBucket::Pointer const &left, DelayTaggedBucket::Pointer const &right)
 {
     /* for rate limiting, case insensitive */
-    return strcasecmp(left->authUser->username(), right->authUser->username());
+    return left->tag.caseCmp(right->tag.buf());
 }
 
 void
-DelayUserFree(DelayUserBucket::Pointer &)
+DelayTaggedFree(DelayTaggedBucket::Pointer &)
 {}
 
 void
-DelayUserStatsWalkee(DelayUserBucket::Pointer const &current, void *state)
+DelayTaggedStatsWalkee(DelayTaggedBucket::Pointer const &current, void *state)
 {
     current->stats ((StoreEntry *)state);
 }
 
 void
-DelayUser::stats(StoreEntry * sentry)
+DelayTagged::stats(StoreEntry * sentry)
 {
-    spec.stats (sentry, "Per User");
+    spec.stats (sentry, "Per Tag");
 
     if (spec.restore_bps == -1)
         return;
@@ -111,134 +111,133 @@ DelayUser::stats(StoreEntry * sentry)
         return;
     }
 
-    buckets.head->walk(DelayUserStatsWalkee, sentry);
+    buckets.head->walk(DelayTaggedStatsWalkee, sentry);
     storeAppendPrintf(sentry, "\n\n");
 }
 
 void
-DelayUser::dump(StoreEntry *entry) const
+DelayTagged::dump(StoreEntry *entry) const
 {
     spec.dump(entry);
 }
 
-struct DelayUserUpdater
+struct DelayTaggedUpdater
 {
-    DelayUserUpdater (DelaySpec &_spec, int _incr):spec(_spec),incr(_incr){};
+    DelayTaggedUpdater (DelaySpec &_spec, int _incr):spec(_spec),incr(_incr){};
 
     DelaySpec spec;
     int incr;
 };
 
 void
-DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
+DelayTaggedUpdateWalkee(DelayTaggedBucket::Pointer const &current, void *state)
 {
-    DelayUserUpdater *t = (DelayUserUpdater *)state;
-    /* This doesn't change the value of the DelayUserBucket, so is safe */
-    const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
+    DelayTaggedUpdater *t = (DelayTaggedUpdater *)state;
+    /* This doesn't change the value of the DelayTaggedBucket, so is safe */
+    const_cast<DelayTaggedBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
 }
 
 void
-DelayUser::update(int incr)
+DelayTagged::update(int incr)
 {
-    DelayUserUpdater updater(spec, incr);
-    buckets.head->walk (DelayUserUpdateWalkee, &updater);
+    DelayTaggedUpdater updater(spec, incr);
+    buckets.head->walk (DelayTaggedUpdateWalkee, &updater);
 }
 
 void
-DelayUser::parse()
+DelayTagged::parse()
 {
     spec.parse();
 }
 
 DelayIdComposite::Pointer
-DelayUser::id(CompositePoolNode::CompositeSelectionDetails &details)
+
+DelayTagged::id(CompositePoolNode::CompositeSelectionDetails &details)
 {
-    if (!details.user)
+    if (!details.tag.size())
         return new NullDelayId;
 
-    return new Id(this, details.user->auth_user);
+    return new Id(this, details.tag);
 }
 
 void *
-DelayUser::Id::operator new(size_t size)
+DelayTagged::Id::operator new(size_t size)
 {
     DelayPools::MemoryUsed += sizeof (Id);
     return ::operator new (size);
 }
 
 void
-DelayUser::Id::operator delete (void *address)
+DelayTagged::Id::operator delete (void *address)
 {
     DelayPools::MemoryUsed -= sizeof (Id);
     ::operator delete (address);
 }
 
 void
-DelayUser::Id::deleteSelf() const
+DelayTagged::Id::deleteSelf() const
 {
     delete this;
 }
 
 void *
-DelayUserBucket::operator new(size_t size)
+DelayTaggedBucket::operator new(size_t size)
 {
-    DelayPools::MemoryUsed += sizeof (DelayUserBucket);
+    DelayPools::MemoryUsed += sizeof (DelayTaggedBucket);
     return ::operator new (size);
 }
 
 void
-DelayUserBucket::operator delete (void *address)
+DelayTaggedBucket::operator delete (void *address)
 {
-    DelayPools::MemoryUsed -= sizeof (DelayUserBucket);
+    DelayPools::MemoryUsed -= sizeof (DelayTaggedBucket);
     ::operator delete (address);
 }
 
-DelayUserBucket::DelayUserBucket(AuthUser *aUser) : authUser (aUser)
+DelayTaggedBucket::DelayTaggedBucket(String &aTag) : tag (aTag)
 {
-    debug (77,3) ("DelayUserBucket::DelayUserBucket\n");
-    authenticateAuthUserLock (authUser);
+    debug (77,3) ("DelayTaggedBucket::DelayTaggedBucket\n");
 }
 
-DelayUserBucket::~DelayUserBucket()
+DelayTaggedBucket::~DelayTaggedBucket()
 {
-    authenticateAuthUserUnlock(authUser);
-    debug (77,3) ("DelayUserBucket::~DelayUserBucket\n");
+    debug (77,3) ("DelayTaggedBucket::~DelayTaggedBucket\n");
 }
 
 void
-DelayUserBucket::stats (StoreEntry *entry) const
+DelayTaggedBucket::stats (StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " %s:", authUser->username());
+    storeAppendPrintf(entry, " %s:", tag.buf());
     theBucket.stats (entry);
 }
 
-DelayUser::Id::Id(DelayUser::Pointer aDelayUser,AuthUser *aUser) : theUser(aDelayUser)
+DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, String &aTag) : theTagged(aDelayTagged)
 {
-    theBucket = new DelayUserBucket(aUser);
-    DelayUserBucket::Pointer const *existing = theUser->buckets.find(theBucket, DelayUserCmp);
+    theBucket = new DelayTaggedBucket(aTag);
+    DelayTaggedBucket::Pointer const *existing = theTagged->buckets.find(theBucket, DelayTaggedCmp);
 
     if (existing) {
         theBucket = *existing;
         return;
     }
 
-    theBucket->theBucket.init(theUser->spec);
-    theUser->buckets.head = theUser->buckets.head->insert (theBucket, DelayUserCmp);
+    theBucket->theBucket.init(theTagged->spec);
+    theTagged->buckets.head = theTagged->buckets.head->insert (theBucket, DelayTaggedCmp);
 }
 
-DelayUser::Id::~Id()
+DelayTagged::Id::~Id()
 {
-    debug (77,3) ("DelayUser::Id::~Id\n");
+    debug (77,3) ("DelayTagged::Id::~Id\n");
 }
 
 int
-DelayUser::Id::bytesWanted (int min, int max) const
+DelayTagged::Id::bytesWanted (int min, int max) const
 {
     return theBucket->theBucket.bytesWanted(min,max);
 }
 
 void
-DelayUser::Id::bytesIn(int qty)
+DelayTagged::Id::bytesIn(int qty)
 {
     theBucket->theBucket.bytesIn(qty);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.463 2003/05/17 17:35:06 hno Exp $
+ * $Id: structs.h,v 1.464 2003/05/20 12:17:39 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -225,6 +225,8 @@ struct _RemovalPolicySettings
     char *type;
     wordlist *args;
 };
+
+class external_acl;
 
 struct _SquidConfig
 {
@@ -1699,6 +1701,7 @@ public:
     time_t lastmod;		/* Used on refreshes */
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
     char *peer_domain;		/* Configured peer forceddomain */
+    String tag;			/* Internal tag for this request */
 };
 
 #endif

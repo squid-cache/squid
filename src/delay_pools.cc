@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.38 2003/03/08 09:43:50 robertc Exp $
+ * $Id: delay_pools.cc,v 1.39 2003/05/20 12:17:39 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -58,21 +58,7 @@
 #include "NullDelayId.h"
 #include "DelayBucket.h"
 #include "DelayUser.h"
-
-/*
- * class 1		Everything is limited by a single aggregate
- * 			bucket.
- * 			
- * class 2		Everything is limited by a single aggregate
- * 			bucket as well as an "individual" bucket chosen
- * 			from bits 25 through 32 of the IP address.
- * 			
- * class 3		Everything is limited by a single aggregate
- * 			bucket as well as a "network" bucket chosen
- * 			from bits 17 through 24 of the IP address and a
- * 			"individual" bucket chosen from bits 17 through
- * 			32 of the IP address.
- */
+#include "DelayTagged.h"
 
 long DelayPools::MemoryUsed = 0;
 
@@ -95,7 +81,7 @@ public:
     virtual void update(int incr);
     virtual void parse();
 
-    virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
+    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
 
 private:
 
@@ -152,7 +138,7 @@ public:
     virtual void update(int incr);
     virtual void stats(StoreEntry * sentry);
 
-    virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
+    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
     VectorMap<unsigned char, DelayBucket> buckets;
     VectorPool();
     ~VectorPool();
@@ -243,7 +229,7 @@ public:
     virtual void update(int incr);
     virtual void stats(StoreEntry * sentry);
 
-    virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *);
+    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
     ClassCHostPool();
     ~ClassCHostPool();
 
@@ -359,6 +345,11 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
             temp->push_back (new DelayUser);
         }
 
+        break;
+
+    case 5:
+        result->typeLabel = "5";
+        compositeCopy = new DelayTagged;
         break;
 
     default:
@@ -523,7 +514,7 @@ Aggregate::parse()
 
 DelayIdComposite::Pointer
 
-Aggregate::id(struct in_addr &src_addr, AuthUserRequest *)
+Aggregate::id(CompositeSelectionDetails &details)
 {
     if (rate()->restore_bps != -1)
         return new AggregateId (this);
@@ -834,12 +825,12 @@ VectorMap<Key,Value>::findKeyIndex (Key const key) const
 
 DelayIdComposite::Pointer
 
-VectorPool::id(struct in_addr &src_addr, AuthUserRequest *)
+VectorPool::id(CompositeSelectionDetails &details)
 {
     if (rate()->restore_bps == -1)
         return new NullDelayId;
 
-    unsigned int key = makeKey (src_addr);
+    unsigned int key = makeKey (details.src_addr);
 
     if (keyAllocated (key))
         return new Id (this, buckets.findKeyIndex(key));
@@ -1006,14 +997,14 @@ ClassCHostPool::makeKey (struct in_addr &src_addr) const
 
 DelayIdComposite::Pointer
 
-ClassCHostPool::id(struct in_addr &src_addr, AuthUserRequest *)
+ClassCHostPool::id(CompositeSelectionDetails &details)
 {
     if (rate()->restore_bps == -1)
         return new NullDelayId;
 
-    unsigned int key = makeKey (src_addr);
+    unsigned int key = makeKey (details.src_addr);
 
-    unsigned char host = makeHostKey (src_addr);
+    unsigned char host = makeHostKey (details.src_addr);
 
     unsigned char hostIndex;
 

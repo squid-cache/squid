@@ -1,6 +1,6 @@
 
 /*
- * $Id: CompositePoolNode.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
+ * $Id: CompositePoolNode.h,v 1.4 2003/05/20 12:17:38 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -67,8 +67,20 @@ public:
     virtual void update(int incr) =0;
     virtual void parse() = 0;
 
-    virtual DelayIdComposite::Pointer id(struct in_addr &src_addr, AuthUserRequest *) = 0;
+    class CompositeSelectionDetails;
+    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &) = 0;
     void delayRead(DeferredRead const &);
+
+    class CompositeSelectionDetails
+    {
+
+    public:
+        CompositeSelectionDetails() {}
+
+        struct in_addr src_addr;
+        AuthUserRequest *user;
+        String tag;
+    };
 
 protected:
     void kickReads();

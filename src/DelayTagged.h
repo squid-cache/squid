@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayUser.h,v 1.5 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayTagged.h,v 1.1 2003/05/20 12:17:38 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -37,8 +37,8 @@
 
 #include "config.h"
 
-#ifndef DELAYUSER_H
-#define DELAYUSER_H
+#ifndef DELAYTAGGED_H
+#define DELAYTAGGED_H
 
 #include "squid.h"
 #include "authenticate.h"
@@ -49,32 +49,32 @@
 #include "Array.h"
 #include "splay.h"
 
-class DelayUserBucket : public RefCountable
+class DelayTaggedBucket : public RefCountable
 {
 
 public:
-    typedef RefCount<DelayUserBucket> Pointer;
+    typedef RefCount<DelayTaggedBucket> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const {delete this;}
 
     void stats(StoreEntry *)const;
-    DelayUserBucket(AuthUser *);
-    ~DelayUserBucket();
+    DelayTaggedBucket(String &aTag);
+    ~DelayTaggedBucket();
     DelayBucket theBucket;
-    AuthUser *authUser;
+    String tag;
 };
 
-class DelayUser : public CompositePoolNode
+class DelayTagged : public CompositePoolNode
 {
 
 public:
-    typedef RefCount<DelayUser> Pointer;
+    typedef RefCount<DelayTagged> Pointer;
     void *operator new(size_t);
     void operator delete (void *);
     virtual void deleteSelf() const;
-    DelayUser();
-    virtual ~DelayUser();
+    DelayTagged();
+    virtual ~DelayTagged();
     virtual void stats(StoreEntry * sentry);
     virtual void dump(StoreEntry *entry) const;
     virtual void update(int incr);
@@ -91,20 +91,20 @@ class Id:public DelayIdComposite
         void *operator new(size_t);
         void operator delete (void *);
         virtual void deleteSelf() const;
-        Id (DelayUser::Pointer, AuthUser *);
+        Id (DelayTagged::Pointer, String &);
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
 
     private:
-        DelayUser::Pointer theUser;
-        DelayUserBucket::Pointer theBucket;
+        DelayTagged::Pointer theTagged;
+        DelayTaggedBucket::Pointer theBucket;
     };
 
     friend class Id;
 
     DelaySpec spec;
-    Splay<DelayUserBucket::Pointer> buckets;
+    Splay<DelayTaggedBucket::Pointer> buckets;
 };
 
-#endif /* DELAYUSER_H */
+#endif /* DELAYTAGGED_H */
