@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.9 1998/08/10 19:37:48 wessels Exp $
+ * $Id: ipc.cc,v 1.10 1998/08/11 05:53:50 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -198,6 +198,8 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
 	    *rfd = prfd;
 	if (wfd)
 	    *wfd = pwfd;
+	fd_table[prfd].flags.ipc = 1;
+	fd_table[pwfd].flags.ipc = 1;
 	return pwfd;
     }
     /* child */
